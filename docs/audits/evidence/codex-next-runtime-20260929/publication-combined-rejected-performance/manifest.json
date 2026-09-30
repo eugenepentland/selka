@@ -1,0 +1,18 @@
+{
+  "source": "3226f1d66b08734824e5c799c25a9c7ed4a69438",
+  "acceptance": "rejected:13dev/14full/19smoke regression rows and3newsmoke cap misses",
+  "files": {
+    "identity.json": "85ac61cea12133fe02e54f75a643f35e626abf886cd3fdefb591160635ab17c5",
+    "install.log": "97933b2b4226286d385c5cd3ef9d5f13561ec572c576967c6d66adcc804cf3cb",
+    "corpus-build.log": "adf039098f12ed3a005c989e7b6fd5db92c4eda94733a37642bd0b7971a0420b",
+    "measure-dev.log": "d32a7300228bcf70f7e87eb897c8c411eebb7a16d40cdb9436d8387e27c43369",
+    "measure-smoke.log": "724335c4bb0c8b8ac7ba97b4967afdc951162c663060c21a1ad4ce8212bb204c",
+    "measure-full.log": "d44975ada0d1cce204c24a8f9ccde1f2e75be9608e850c3fde16f404241fa987",
+    "comparison.json": "68405a0bfb1cd79d6f991f83726ef1fe05c0c7426a8c1e12dd99aa7c239f5367",
+    "measurement-receipt.json": "00ab0b42304f214a6b9909ced3eabb7a5f62f8a891f0b94687682ddd3af96036",
+    "failed-rows.txt": "c189367af9a8bf24832a71b1f8a87bde710a7b0a536a07a8182694b8da7d18bf",
+    "results-dev.json": "f0d2044d1dd8626ccfed432c8f0dddcf82170b8d6b883ec987cfab8b41476d6c",
+    "results-smoke.json": "db92698d22d698e3028e7ee8b8a975ab76c69fb5080eb18d9a397298b39011ed",
+    "results-full.json": "10d286e88514b12b2bedeed9bd886cf42f34cb94c766876d92788b5457960152"
+  }
+}

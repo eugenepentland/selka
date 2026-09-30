@@ -1,0 +1,546 @@
+{
+  "cpu": 0,
+  "event": "cpu_core/instructions/upp",
+  "period": 20003,
+  "interpretation": "Hardware retired-instruction samples are statistical attribution, not exact routine/basic-block counts.",
+  "sides": {
+    "control": {
+      "allocated_sections_equal": true,
+      "allocated_sections": {
+        ".interp": [
+          1,
+          2,
+          16777952,
+          28,
+          "9097c98ea70f6f3b01d50145eb72bf55ad1f4e9713bccf27bd6405d6254eed00"
+        ],
+        ".note.ABI-tag": [
+          7,
+          2,
+          16777980,
+          32,
+          "6e48317ad93a8ac2dc04321465ede06d1274543fc8ab172e68171a9d684bb313"
+        ],
+        ".dynsym": [
+          11,
+          2,
+          16778016,
+          1848,
+          "de2cd9d3e1e50efeef8f04bd7322a48c2429831db160b20030d1abc164b9b012"
+        ],
+        ".gnu.version": [
+          1879048191,
+          2,
+          16779864,
+          154,
+          "ece81e833eeec5c6c660e8f75105ff71c4d3b395a8389455422f60d83cd592e8"
+        ],
+        ".gnu.version_r": [
+          1879048190,
+          2,
+          16780020,
+          144,
+          "8f9781d3fc01edbb64c880e814196159b7bd620a4f79de273f0b3f2733dfc384"
+        ],
+        ".gnu.hash": [
+          1879048182,
+          2,
+          16780168,
+          28,
+          "91c488e59e37da5f0141dd8c8191523a932f7cf96e8aaf5c5a14fdef26a656f7"
+        ],
+        ".hash": [
+          5,
+          2,
+          16780196,
+          624,
+          "e05a58a5e722c3a49ee4d4be61280378731a2e10ffdd42f9b54dfe0cca3cd261"
+        ],
+        ".dynstr": [
+          3,
+          2,
+          16780820,
+          770,
+          "f8b58010ca466f59183d653e00ec0b326f1a4a8935f29c2e452ae89eec5e033a"
+        ],
+        ".rela.dyn": [
+          4,
+          2,
+          16781592,
+          96,
+          "2e35eaac06aef6b5e0670a7883df805d8bee8741fcab983bb908565cb4122517"
+        ],
+        ".rela.plt": [
+          4,
+          66,
+          16781688,
+          1728,
+          "8a3478e481ce454a275036b8ddde2ee85282cfc0e30f8ffaa66cf6c032e40efb"
+        ],
+        ".rodata": [
+          1,
+          50,
+          16783424,
+          17564,
+          "25537a0ab0a00ef2f21e9ad8ba6f4fc834033be48aa5036f1d0942fa4b276608"
+        ],
+        "mylang_frame_map": [
+          1,
+          2097154,
+          16800988,
+          588,
+          "8a69d11ab1c75132923e23af4f0b87087f0b72bf33cda74db144c91b7185d759"
+        ],
+        ".eh_frame_hdr": [
+          1,
+          2,
+          16801576,
+          1180,
+          "d56f6915c2aa33743faf57a7320b6e26ad014bfbacf0a673227ccef460a0eb1a"
+        ],
+        ".eh_frame": [
+          1,
+          2,
+          16802760,
+          6204,
+          "3bd02744f94b07faaefd7c474b8df29b4c128fd1db541808b5416a1b00265d2c"
+        ],
+        ".text": [
+          1,
+          6,
+          16813072,
+          90946,
+          "ca0559869e790c8cc20aa89fe40682af75fa992b96772b4d1cfecfb007b8891a"
+        ],
+        ".init": [
+          1,
+          6,
+          16904020,
+          27,
+          "13d491dab96c6f9bb2529cd2a67de59771d89b2f5ae7ab35616724c7487d4183"
+        ],
+        ".fini": [
+          1,
+          6,
+          16904048,
+          13,
+          "6a4f3e5efc7c1f7ee7d6f21afd9ed040ba1d7f0b97bb12b016f5b176cc558bd8"
+        ],
+        ".plt": [
+          1,
+          6,
+          16904064,
+          1168,
+          "e3a797c9fbb938e813c726842c840588007dc5cadb1c5e5820c73707fcef45f0"
+        ],
+        ".tbss": [
+          8,
+          1027,
+          16905232,
+          4,
+          "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        ],
+        ".data.rel.ro": [
+          1,
+          3,
+          16909328,
+          136,
+          "32d8c072d77b5b2ea0f494c068c8e56524e2e100cef49a4836144c25b2938a9d"
+        ],
+        ".dynamic": [
+          6,
+          3,
+          16909464,
+          384,
+          "815bb449723c4bb7f3b66ae0687a31cbe5bc279da57b6726af1021ee8242ecc3"
+        ],
+        ".got": [
+          1,
+          3,
+          16909848,
+          56,
+          "d4b93a8f7d37854392d5de63babf73ca7e8d5468f1a47eef440d6425e3a852e0"
+        ],
+        ".got.plt": [
+          1,
+          3,
+          16909904,
+          600,
+          "b3b0e2c00b8851b1fe594a01fd0d927308151b49a220134a15abdbb68a78b05f"
+        ],
+        ".relro_padding": [
+          8,
+          3,
+          16910504,
+          1880,
+          "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        ],
+        ".data": [
+          1,
+          3,
+          16914608,
+          632,
+          "861ab6ec1637acd5fd5a64c7bfa95f2cf7171aeef83b8d7a52459b8d362588ab"
+        ],
+        ".bss": [
+          8,
+          3,
+          16915248,
+          2176,
+          "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        ]
+      },
+      "stat_command": [
+        "taskset",
+        "-c",
+        "0",
+        "perf",
+        "stat",
+        "-x,",
+        "-e",
+        "cpu_core/instructions/u",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-combined-module-review-20260930/.tmp/alloc-churn-attribution/control/stat.csv",
+        "--",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-combined-module-review-20260930/.tmp/alloc-churn-attribution/control/parity-micro-alloc_churn.llvm"
+      ],
+      "profile_command": [
+        "taskset",
+        "-c",
+        "0",
+        "perf",
+        "record",
+        "-e",
+        "cpu_core/instructions/upp",
+        "-c",
+        "20003",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-combined-module-review-20260930/.tmp/alloc-churn-attribution/control/perf.data",
+        "--",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-combined-module-review-20260930/.tmp/alloc-churn-attribution/control/alloc_churn.symbols"
+      ],
+      "stat_status": 0,
+      "record_status": 0,
+      "weighted_symbol_samples": {
+        "entry_run": 603290480,
+        "myl_rc_list_storage_reserve": 265479816,
+        "rc_list_insert_at": 242496369,
+        "drain_fast": 200690099,
+        "myl_rc_storage_retire": 149422410,
+        "raw_bytes": 127759161,
+        "drain_one": 101695252,
+        "myl_rc_edge_release": 79971994,
+        "storage_extend": 75771364,
+        "myl_rc_drain": 52807920,
+        "myl_rc_storage_alloc": 51407710,
+        "[unknown]": 37705655,
+        "myl_rc_hold_edge_release": 24043606,
+        "rc_list_edges": 23943591,
+        "memcpy@plt": 320048,
+        "builder_add": 20003
+      },
+      "stat_admission_command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-combined-module-review-20260930/scripts/build-slot.sh",
+        "build",
+        "taskset",
+        "-c",
+        "0",
+        "perf",
+        "stat",
+        "-x,",
+        "-e",
+        "cpu_core/instructions/u",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-combined-module-review-20260930/.tmp/alloc-churn-attribution/control/stat.csv",
+        "--",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-combined-module-review-20260930/.tmp/alloc-churn-attribution/control/parity-micro-alloc_churn.llvm"
+      ],
+      "profile_admission_command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-combined-module-review-20260930/scripts/build-slot.sh",
+        "build",
+        "taskset",
+        "-c",
+        "0",
+        "perf",
+        "record",
+        "-e",
+        "cpu_core/instructions/upp",
+        "-c",
+        "20003",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-combined-module-review-20260930/.tmp/alloc-churn-attribution/control/perf.data",
+        "--",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-combined-module-review-20260930/.tmp/alloc-churn-attribution/control/alloc_churn.symbols"
+      ]
+    },
+    "candidate": {
+      "allocated_sections_equal": true,
+      "allocated_sections": {
+        ".interp": [
+          1,
+          2,
+          16777952,
+          28,
+          "9097c98ea70f6f3b01d50145eb72bf55ad1f4e9713bccf27bd6405d6254eed00"
+        ],
+        ".note.ABI-tag": [
+          7,
+          2,
+          16777980,
+          32,
+          "6e48317ad93a8ac2dc04321465ede06d1274543fc8ab172e68171a9d684bb313"
+        ],
+        ".dynsym": [
+          11,
+          2,
+          16778016,
+          1872,
+          "b404aafcc4d0c4fb61851ea9c8850a4d39433052bfe6ece8599f8a8b7cd31525"
+        ],
+        ".gnu.version": [
+          1879048191,
+          2,
+          16779888,
+          156,
+          "16ea25f596c5d6b52b55f8bf15a2130de561dbbb36b09f3dbe490e611f79427a"
+        ],
+        ".gnu.version_r": [
+          1879048190,
+          2,
+          16780044,
+          144,
+          "c4b6e88f8366f57903d00aa5875892a5436efba6e4014e518c4e645abdf4ab0a"
+        ],
+        ".gnu.hash": [
+          1879048182,
+          2,
+          16780192,
+          28,
+          "262d8798f53a0681f386496e550b2c36ff1984dc473b3217e9a94aa9a1e1a859"
+        ],
+        ".hash": [
+          5,
+          2,
+          16780220,
+          632,
+          "299a3be9e29d140779ee75fcaba876fb1acef049c60ff33cefb8b31ce64a038b"
+        ],
+        ".dynstr": [
+          3,
+          2,
+          16780852,
+          779,
+          "38906451603c3f3f3180b8fff869953b607d2f598016153f444fddbb59d31521"
+        ],
+        ".rela.dyn": [
+          4,
+          2,
+          16781632,
+          96,
+          "6038ad62eb816307d94db07aeb19adfc8740fed952fb5b6d7c3027060c5cb4ad"
+        ],
+        ".rela.plt": [
+          4,
+          66,
+          16781728,
+          1752,
+          "1c99fddbd5317c4114bd0522b3346d7763f62ec2853108cc1416a7464f9d79e5"
+        ],
+        ".rodata": [
+          1,
+          50,
+          16783488,
+          23964,
+          "e6a86936ca8d54730b57fca7d60212f8b2f1848a4b23b8070ab6fb24f6415e36"
+        ],
+        "mylang_frame_map": [
+          1,
+          2097154,
+          16807452,
+          576,
+          "2f25fcf784a7e0ee4deae7406319b60c567566e4c72538567fb23200f34f443e"
+        ],
+        ".eh_frame_hdr": [
+          1,
+          2,
+          16808028,
+          1188,
+          "33a49cee1c55b5e3fbfc94787e9aa4118b56d3c7d08c8068fcdbd6e267312966"
+        ],
+        ".eh_frame": [
+          1,
+          2,
+          16809216,
+          6244,
+          "f84abea4e727ae953fa473d310090064332660894f94716323b35594ceab2370"
+        ],
+        ".text": [
+          1,
+          6,
+          16819568,
+          93170,
+          "b890c6a574e94edd9b748b949ee35e0748f7b7398fa096e049abe1debb0ba180"
+        ],
+        ".init": [
+          1,
+          6,
+          16912740,
+          27,
+          "664edf75ca593b1687db7b61afe5266c324af540d8c5d10fb2970dca79cccbd9"
+        ],
+        ".fini": [
+          1,
+          6,
+          16912768,
+          13,
+          "6a4f3e5efc7c1f7ee7d6f21afd9ed040ba1d7f0b97bb12b016f5b176cc558bd8"
+        ],
+        ".plt": [
+          1,
+          6,
+          16912784,
+          1184,
+          "6d2c97713615b59b4ee82fcc39885c966bc904e9ebb2928604e9e982e09e743b"
+        ],
+        ".tbss": [
+          8,
+          1027,
+          16913968,
+          4,
+          "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        ],
+        ".data.rel.ro": [
+          1,
+          3,
+          16918064,
+          136,
+          "56410bd49f1772b04731e4f5888ad03884a45638e0b59bdd723b8d2ee95a0f44"
+        ],
+        ".dynamic": [
+          6,
+          3,
+          16918200,
+          384,
+          "d6f9dfb13ec52ace2da1875c522fc343eac44ffcc3921800235bfb5e8e8f3dd1"
+        ],
+        ".got": [
+          1,
+          3,
+          16918584,
+          56,
+          "f8a7ef2cc44723d8f70c111d7ba0c2184d9e5dc54827e4bd5f18165fe6a80d28"
+        ],
+        ".got.plt": [
+          1,
+          3,
+          16918640,
+          608,
+          "4eaffd0adefa2d205ea988b6b76d741a0761a7dd647f4155cfdd760011d53901"
+        ],
+        ".relro_padding": [
+          8,
+          3,
+          16919248,
+          1328,
+          "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        ],
+        ".data": [
+          1,
+          3,
+          16923344,
+          632,
+          "c2d432d5476bd6a83a9bf6ee6d18342b452b099764eac13953229ff4755df144"
+        ],
+        ".bss": [
+          8,
+          3,
+          16923984,
+          2176,
+          "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        ]
+      },
+      "stat_command": [
+        "taskset",
+        "-c",
+        "0",
+        "perf",
+        "stat",
+        "-x,",
+        "-e",
+        "cpu_core/instructions/u",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-combined-module-review-20260930/.tmp/alloc-churn-attribution/candidate/stat.csv",
+        "--",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-combined-module-review-20260930/.tmp/alloc-churn-attribution/candidate/parity-micro-alloc_churn.llvm"
+      ],
+      "profile_command": [
+        "taskset",
+        "-c",
+        "0",
+        "perf",
+        "record",
+        "-e",
+        "cpu_core/instructions/upp",
+        "-c",
+        "20003",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-combined-module-review-20260930/.tmp/alloc-churn-attribution/candidate/perf.data",
+        "--",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-combined-module-review-20260930/.tmp/alloc-churn-attribution/candidate/alloc_churn.symbols"
+      ],
+      "stat_status": 0,
+      "record_status": 0,
+      "weighted_symbol_samples": {
+        "entry_run": 645216768,
+        "rc_list_insert_at": 258718802,
+        "myl_rc_edge_release": 162644393,
+        "myl_rc_list_storage_reserve": 153082959,
+        "drain_fast": 152262836,
+        "raw_bytes": 142381354,
+        "[unknown]": 114417160,
+        "myl_rc_drain": 101675249,
+        "drain_one": 95094262,
+        "storage_extend": 91033653,
+        "myl_rc_hold_edge_release": 48387257,
+        "myl_rc_storage_alloc": 47427113,
+        "myl_rc_list_plain_ready": 22623393,
+        "rc_list_edges": 11201680,
+        "myl_rc_storage_retire": 5640846,
+        "memcpy@plt": 360054
+      },
+      "stat_admission_command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-combined-module-review-20260930/scripts/build-slot.sh",
+        "build",
+        "taskset",
+        "-c",
+        "0",
+        "perf",
+        "stat",
+        "-x,",
+        "-e",
+        "cpu_core/instructions/u",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-combined-module-review-20260930/.tmp/alloc-churn-attribution/candidate/stat.csv",
+        "--",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-combined-module-review-20260930/.tmp/alloc-churn-attribution/candidate/parity-micro-alloc_churn.llvm"
+      ],
+      "profile_admission_command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-combined-module-review-20260930/scripts/build-slot.sh",
+        "build",
+        "taskset",
+        "-c",
+        "0",
+        "perf",
+        "record",
+        "-e",
+        "cpu_core/instructions/upp",
+        "-c",
+        "20003",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-combined-module-review-20260930/.tmp/alloc-churn-attribution/candidate/perf.data",
+        "--",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-combined-module-review-20260930/.tmp/alloc-churn-attribution/candidate/alloc_churn.symbols"
+      ]
+    }
+  }
+}
