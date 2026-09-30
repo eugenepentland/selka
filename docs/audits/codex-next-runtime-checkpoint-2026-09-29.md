@@ -246,3 +246,15 @@ The exact observations, generated experiment sources, failure logs and verified
 receipts are under `evidence/codex-next-runtime-20260929/list-images/`.
 Guardian source-checkpoint feedback is committed as `db487e44` in its own repo.
 Final combined broad tests and corpus acceptance remain pending.
+
+A subsequent combined checkpoint `264e1c3c` (text, static image emitter, and
+incremental-build source) uses frozen compiler
+`607bade9fae178dc6725bc347ac1e7863e43f6448a6d3feaec7e7c0415b4466c`.
+All nine sources now build on both backends, with all 18 outputs/statuses
+verified. At 1,000 elements QBE takes 0.337 / 0.467 / 0.551 s for integer /
+text / bytes; LLVM takes 1.525 / 1.480 / 1.770 s, against the control's
+23.929 / 27.382 / 29.091 s. These remain single shared-machine observations.
+New strong image definitions make this combination link; the separately
+committed assembly-filter fix `354d9ddd` verifies image-free and GC full/ThinLTO
+boundaries, so an emitted image cannot hide the original weak-directive bug.
+The combined scale receipt retains the prior rejected results unchanged.

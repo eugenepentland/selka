@@ -42,6 +42,17 @@
     "docs/audits/evidence/codex-next-runtime-20260929/list-images/candidate-str-8-llvm-build.err.gz": "c5ed3157f3d7fb957bd31e6e352520dd8f2fa474c79c00da8118270b5f7ce270",
     "docs/audits/evidence/codex-next-runtime-20260929/list-images/candidate-bytes-1000-llvm-build.err.gz": "21a12ce127395badf1d3e5114a37359b93ee2dcf4b5ccd84de8c73bf1975cd4a",
     "docs/audits/evidence/codex-next-runtime-20260929/list-images/list-image-project-main.my": "c4fdf9008b462c0effea50e02ffd2ce98975f9c1e3fad968cf9496c7368ab306",
-    "docs/audits/evidence/codex-next-runtime-20260929/list-images/list-image-projected-tests.my": "ed6b730771b57947aee7235712f18ece54ac6ceb15ecbc0758e689ab1044d907"
+    "docs/audits/evidence/codex-next-runtime-20260929/list-images/list-image-projected-tests.my": "ed6b730771b57947aee7235712f18ece54ac6ceb15ecbc0758e689ab1044d907",
+    "docs/audits/evidence/codex-next-runtime-20260929/list-images/combined-264e-scale.json": "5b27ded56b442c44abf593c1c038f54b79952d6bc9fa101f195667304134bf15"
+  },
+  "combined_scale": {
+    "source_commit": "264e1c3c",
+    "compiler_sha256": "607bade9fae178dc6725bc347ac1e7863e43f6448a6d3feaec7e7c0415b4466c",
+    "rows": 9,
+    "backends": 2,
+    "outputs_verified": 18,
+    "native_cache": "separate per-backend caches; warmed by first eight-element row; source objects cold",
+    "weak_symbol_boundary": "Strong new emission allows all retained-debugging LLVM configs here; image-free fix354d is checked separately.",
+    "elapsed_int1000_qbe": 0.336729
   }
 }
