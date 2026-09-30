@@ -18,31 +18,68 @@ fn lessThan(_: void, a: Item, b: Item) bool {
 pub fn generate(allocator: std.mem.Allocator, catalog: *native.Catalog) Error![]u8 {
     var arena = std.heap.ArenaAllocator.init(allocator);
     defer arena.deinit();
-    const a = arena.allocator();
-    const items = try a.alloc(Item, typed.Type.record_base + catalog.records.len);
-    for (items, 0..) |*item, index| {
-        const ty: typed.Type = @fromBackingInt(index);
-        item.* = .{ .ty = ty, .name = try symbol(a, catalog, ty) };
-    }
-    std.mem.sort(Item, items, {}, lessThan);
+    return render(allocator, try blocks(arena.allocator(), catalog));
+}
+
+/// One descriptor's definitions and the symbol they are ordered and merged by.
+pub const Block = struct { name: []const u8, text: []const u8 };
+
+/// The C unit `generate` writes for these descriptors, sorted by symbol: the
+/// header, a declaration of every descriptor, then each one's definitions. A
+/// link renders the union of its modules' blocks (MODULE-COMPILE-1), which is
+/// the whole program's text when the modules' types are the program's.
+pub fn render(allocator: std.mem.Allocator, items: []const Block) Error![]u8 {
     var output: std.Io.Writer.Allocating = .init(allocator);
     defer output.deinit();
     const writer = &output.writer;
     writer.writeAll("#include \"native_heap.h\"\n") catch return error.OutOfMemory;
     for (items) |item| {
         writer.print("extern const myl_native_type {s};\n", .{item.name}) catch return error.OutOfMemory;
-        // A box pointer names its body before the body is emitted (RECURSIVE-VALUES-2).
-        if (boxed(catalog, item.ty)) writer.print("extern const myl_native_type {s}_body;\n", .{item.name}) catch return error.OutOfMemory;
+        if (bodyBlock(item.text)) writer.print("extern const myl_native_type {s}_body;\n", .{item.name}) catch return error.OutOfMemory;
     }
-    // RC-TYPE-ID-1: a descriptor's id is its position in this one name-sorted
-    // order, a body directly after its type, which rc_descriptors.zig's module
-    // repeats entry for entry. The whole program's catalog is known here, so the
-    // ids are dense and unique however the modules were compiled.
     var next_id: u32 = 0;
-    for (items) |item| {
+    for (items) |item| try writeIds(writer, item.text, &next_id);
+    return output.toOwnedSlice();
+}
+
+/// Whether this group contains its adjacent separately allocated record body.
+fn bodyBlock(text: []const u8) bool {
+    return std.mem.indexOf(u8, text, "_body = {.size=") != null;
+}
+
+/// Assign dense IDs only after the program-wide symbol union is complete.
+fn writeIds(writer: *std.Io.Writer, text: []const u8, next: *u32) Error!void {
+    const marker = ".rc_id=MYL_RC_ID_FIRST_GENERATED+";
+    var cursor: usize = 0;
+    while (std.mem.indexOfPos(u8, text, cursor, marker)) |at| {
+        const number_start = at + marker.len;
+        var number_end = number_start;
+        while (number_end < text.len and std.ascii.isDigit(text[number_end])) : (number_end += 1) {}
+        if (number_end == number_start or next.* == std.math.maxInt(u32)) return error.InvalidType;
+        writer.writeAll(text[cursor..number_start]) catch return error.OutOfMemory;
+        writer.print("{d}", .{next.*}) catch return error.OutOfMemory;
+        next.* += 1;
+        cursor = number_end;
+    }
+    writer.writeAll(text[cursor..]) catch return error.OutOfMemory;
+}
+
+/// Every catalog type's descriptor definitions, sorted by symbol, allocated
+/// with `allocator`.
+pub fn blocks(allocator: std.mem.Allocator, catalog: *native.Catalog) Error![]Block {
+    const a = allocator;
+    const items = try a.alloc(Item, typed.Type.record_base + catalog.records.len);
+    for (items, 0..) |*item, index| {
+        const ty: typed.Type = @fromBackingInt(index);
+        item.* = .{ .ty = ty, .name = try symbol(a, catalog, ty) };
+    }
+    std.mem.sort(Item, items, {}, lessThan);
+    const out = try a.alloc(Block, items.len);
+    for (items, out) |item, *block| {
+        var output: std.Io.Writer.Allocating = .init(a);
+        const writer = &output.writer;
         const layout = try catalog.layout(item.ty);
-        const id = next_id;
-        next_id += 1;
+        const id: u32 = 0;
         if (layout.kind == .niche) {
             // QBE-NICHE-1: a niche optional's word is its payload reference or
             // null, and every descriptor walk — tracing, the region check, the
@@ -61,12 +98,12 @@ pub fn generate(allocator: std.mem.Allocator, catalog: *native.Catalog) Error![]
                 defer catalog.releaseLayout(body);
                 // QBE-GEN-BARRIER-1: a class body is the one object whose
                 // post-construction stores all run the generational barrier.
-                try emit(a, writer, catalog, .{ .name = try std.fmt.allocPrint(a, "{s}_body", .{item.name}), .ty = item.ty, .cell = true, .id = next_id }, body);
-                next_id += 1;
+                try emit(a, writer, catalog, .{ .name = try std.fmt.allocPrint(a, "{s}_body", .{item.name}), .ty = item.ty, .cell = true, .id = 1 }, body);
             }
         }
+        block.* = .{ .name = item.name, .text = try output.toOwnedSlice() };
     }
-    return output.toOwnedSlice();
+    return out;
 }
 /// Whether `ty` is a box record of the physical catalog (RECURSIVE-VALUES-2).
 fn boxed(catalog: *const native.Catalog, ty: typed.Type) bool {

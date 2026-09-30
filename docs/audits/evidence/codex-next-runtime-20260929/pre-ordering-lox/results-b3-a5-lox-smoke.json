@@ -1,0 +1,210 @@
+{
+ "compiler": {
+  "compiler": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/.tmp-rc-quick/compilers/m17-codex/bin/mylang",
+  "runtime": "--rc-runtime",
+  "sha256": "4059a85e3d081f8a73b370e03e7d86cba8eb8a47531bfcdd7c09e6cc109d74b1"
+ },
+ "failures": [],
+ "rows": [
+  {
+   "arm": "qbe",
+   "gc": 218918513,
+   "id": "lox/vm/binary_trees",
+   "ratio": 1.2166369136629391,
+   "rc": 266344344
+  },
+  {
+   "arm": "llvm",
+   "gc": 100266421,
+   "id": "lox/vm/binary_trees",
+   "ratio": 1.2739801094525953,
+   "rc": 127737426
+  },
+  {
+   "arm": "qbe",
+   "gc": 52797798,
+   "id": "lox/vm/closures",
+   "ratio": 1.2503128066060634,
+   "rc": 66013763
+  },
+  {
+   "arm": "llvm",
+   "gc": 22991713,
+   "id": "lox/vm/closures",
+   "ratio": 1.3310061325139193,
+   "rc": 30602111
+  },
+  {
+   "arm": "qbe",
+   "gc": 36885940,
+   "id": "lox/vm/equality",
+   "ratio": 1.0191224894905755,
+   "rc": 37591291
+  },
+  {
+   "arm": "llvm",
+   "gc": 13961339,
+   "id": "lox/vm/equality",
+   "ratio": 1.2628443446577724,
+   "rc": 17630998
+  },
+  {
+   "arm": "qbe",
+   "gc": 11508499,
+   "id": "lox/vm/fib",
+   "ratio": 1.214516767130101,
+   "rc": 13977265
+  },
+  {
+   "arm": "llvm",
+   "gc": 4830978,
+   "id": "lox/vm/fib",
+   "ratio": 1.2924842547409654,
+   "rc": 6243963
+  },
+  {
+   "arm": "qbe",
+   "gc": 142990097,
+   "id": "lox/vm/instantiation",
+   "ratio": 1.3220916480670686,
+   "rc": 189046013
+  },
+  {
+   "arm": "llvm",
+   "gc": 73398124,
+   "id": "lox/vm/instantiation",
+   "ratio": 1.2832469805359057,
+   "rc": 94187921
+  },
+  {
+   "arm": "qbe",
+   "gc": 103959573,
+   "id": "lox/vm/invocation",
+   "ratio": 1.3211026366951315,
+   "rc": 137341266
+  },
+  {
+   "arm": "llvm",
+   "gc": 44669599,
+   "id": "lox/vm/invocation",
+   "ratio": 1.4319474190936883,
+   "rc": 63964517
+  },
+  {
+   "arm": "qbe",
+   "gc": 296147519,
+   "id": "lox/vm/method_call",
+   "ratio": 1.216643239884782,
+   "rc": 360305877
+  },
+  {
+   "arm": "llvm",
+   "gc": 121972243,
+   "id": "lox/vm/method_call",
+   "ratio": 1.3091591666474478,
+   "rc": 159681080
+  },
+  {
+   "arm": "qbe",
+   "gc": 136983544,
+   "id": "lox/vm/properties",
+   "ratio": 1.3520901824528646,
+   "rc": 185214105
+  },
+  {
+   "arm": "llvm",
+   "gc": 60112396,
+   "id": "lox/vm/properties",
+   "ratio": 1.5161354240479783,
+   "rc": 91138533
+  },
+  {
+   "arm": "qbe",
+   "gc": 238595954,
+   "id": "lox/vm/string_equality",
+   "ratio": 1.370656243399668,
+   "rc": 327033034
+  },
+  {
+   "arm": "llvm",
+   "gc": 84395463,
+   "id": "lox/vm/string_equality",
+   "ratio": 2.3578307758084103,
+   "rc": 198990220
+  },
+  {
+   "arm": "qbe",
+   "gc": 28789669,
+   "id": "lox/vm/strings",
+   "ratio": 1.1209087537616358,
+   "rc": 32270592
+  },
+  {
+   "arm": "llvm",
+   "gc": 14614030,
+   "id": "lox/vm/strings",
+   "ratio": 1.2123308218198539,
+   "rc": 17717039
+  },
+  {
+   "arm": "qbe",
+   "gc": 17843248,
+   "id": "lox/vm/trees",
+   "ratio": 1.5047622495635324,
+   "rc": 26849846
+  },
+  {
+   "arm": "llvm",
+   "gc": 8803059,
+   "id": "lox/vm/trees",
+   "ratio": 1.711155633513305,
+   "rc": 15063404
+  },
+  {
+   "arm": "qbe",
+   "gc": 35123409,
+   "id": "lox/vm/zoo",
+   "ratio": 1.249626908367579,
+   "rc": 43891157
+  },
+  {
+   "arm": "llvm",
+   "gc": 15507249,
+   "id": "lox/vm/zoo",
+   "ratio": 1.3241044881655024,
+   "rc": 20533218
+  },
+  {
+   "arm": "qbe",
+   "gc": 690665195,
+   "id": "lox/vm/zoo_batch",
+   "ratio": 1.1376793353543753,
+   "rc": 785755520
+  },
+  {
+   "arm": "llvm",
+   "gc": 290956582,
+   "id": "lox/vm/zoo_batch",
+   "ratio": 1.1357481784000336,
+   "rc": 330453408
+  }
+ ],
+ "size": "smoke",
+ "summary": {
+  "llvm": {
+   "geomean": 1.3928392986678395,
+   "geomean_nonlox": NaN,
+   "rows": 13,
+   "within_1_3": 6,
+   "worst": 2.3578307758084103
+  },
+  "qbe": {
+   "geomean": 1.247812990079222,
+   "geomean_nonlox": NaN,
+   "rows": 13,
+   "within_1_3": 8,
+   "worst": 1.5047622495635324
+  }
+ },
+ "tag": "b3-equality-control"
+}

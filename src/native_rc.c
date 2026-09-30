@@ -4,12 +4,12 @@
 
 _Static_assert(sizeof(uintptr_t) == 8, "RC-v1 targets 64-bit native artifacts");
 _Static_assert(sizeof(myl_native_object) == 16, "GC/arena/literal common prefix remains 16 bytes");
-_Static_assert(sizeof(myl_rc_object) == MYL_RC_PREFIX_BYTES, "RC prefix is 32 bytes");
-_Static_assert(offsetof(myl_rc_object, owners) == 0, "owners at payload minus 32");
-_Static_assert(offsetof(myl_rc_object, holds) == 8, "holds at payload minus 24");
-_Static_assert(offsetof(myl_rc_object, common.mark) == 16, "mark at payload minus 16");
-_Static_assert(offsetof(myl_rc_object, common.element) == 24, "descriptor at payload minus 8");
-_Static_assert(sizeof(myl_rc_object) % _Alignof(max_align_t) == 0, "RC payload preserves alignment");
+_Static_assert(sizeof(myl_rc_object) == MYL_RC_PREFIX_BYTES, "RC prefix is 24 bytes");
+_Static_assert(offsetof(myl_rc_object, owners) == 0, "owners at payload minus 24");
+_Static_assert(offsetof(myl_rc_object, holds) == 4, "holds at payload minus 20");
+_Static_assert(offsetof(myl_rc_object, common.mark) == 8, "mark at payload minus 16");
+_Static_assert(offsetof(myl_rc_object, common.element) == 16, "descriptor at payload minus 8");
+_Static_assert(sizeof(myl_rc_object) + 8 == 2 * _Alignof(max_align_t), "RC allocator shifts its prefix to align payloads");
 _Static_assert(offsetof(myl_native_heap, inline_windows) == MYL_NATIVE_HEAP_INLINE_OFFSET, "GC inline window unchanged");
 _Static_assert(offsetof(myl_native_heap, arena_window) == MYL_NATIVE_HEAP_ARENA_OFFSET, "arena inline window unchanged");
 
@@ -159,7 +159,7 @@ void myl_rc_dead_outside(myl_native_heap *heap, myl_rc_object *object) {
     if (heap->rc->plain != element) {
         const myl_rc_binding *binding = myl_rc_binding_find(heap, element);
         if (!binding || binding->flat.count) {
-            object->owners = (uintptr_t)heap->rc->dead.head;
+            object->retired_link = (uintptr_t)heap->rc->dead.head;
             heap->rc->dead.head = object;
             return;
         }

@@ -88,7 +88,7 @@ test "RC dictionary tail retains first uniqueness and frame through repeated cap
     const il = try body(result.value, "counted");
     try t.expectEqual(@as(usize, 1), std.mem.count(u8, il, marker));
     try t.expectEqual(@as(usize, 1), std.mem.count(u8, il, "call $myl_qbe_rc_unique_local"));
-    try t.expectEqual(@as(usize, 0), std.mem.count(u8, il, "call $myl_qbe_rc_scope_begin"));
+    try t.expectEqual(@as(usize, 0), (std.mem.count(u8, il, "call $myl_qbe_rc_scope_begin") + std.mem.count(u8, il, "# RC-SCOPE-IL-1 begin")));
     try t.expect(std.mem.indexOf(u8, il, "# rc-frame") != null);
     try t.expect(std.mem.indexOf(u8, il, "call $myl_native_dictionary_write") != null);
     try t.expect(std.mem.indexOf(u8, try body(result.value, "snapshot"), marker) != null);
@@ -103,7 +103,7 @@ test "RC dictionary tail refuses parameter managed and function-wide held receiv
     for ([_][]const u8{ "parameter", "managed", "held", "held_key", "rebound", "nonlist_key", "parameter_key", "pattern_key" }) |name| {
         const il = try body(result.value, name);
         try t.expect(std.mem.indexOf(u8, il, marker) == null);
-        try t.expect(std.mem.indexOf(u8, il, "call $myl_qbe_rc_scope_begin") != null);
+        try t.expect((std.mem.indexOf(u8, il, "call $myl_qbe_rc_scope_begin") != null or std.mem.indexOf(u8, il, "# RC-SCOPE-IL-1 begin") != null));
     }
 }
 

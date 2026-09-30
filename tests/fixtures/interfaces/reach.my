@@ -1,0 +1,30 @@
+module reach
+import shapes
+
+# Every exported signature here reaches `shapes.Inner` only through a
+# composite type: a list element, a dictionary value, an Option payload, a
+# class field and a union payload. A change to `Inner` must change this
+# module's interface hash as well as `shapes`'s.
+
+
+public def firsts(h: shapes.Holder) -> list[shapes.Inner]:
+    return h.items
+
+
+public def table(h: shapes.Holder) -> dict[str, shapes.Inner]:
+    return h.index
+
+
+public def maybe(h: shapes.Holder) -> Option[shapes.Inner]:
+    return h.maybe
+
+
+public def holder() -> shapes.Holder:
+    first = shapes.Inner(x=1, y=2)
+    index: dict[str, shapes.Inner] = {}
+    index["a"] = first
+    return shapes.Holder(items=[first], index=index, maybe=Some(first), tint=shapes.Color.green)
+
+
+public def event() -> shapes.Event:
+    return shapes.Event.moved(to=shapes.origin(), steps=3)

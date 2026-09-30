@@ -76,6 +76,64 @@ const typed = @import("typed.zig");
 /// decodes to 20 octets in 11 scalars for a `str` and to its 12 ASCII-escaped
 const mixed_text = "ab (é→😀)\\n";
 const ascii_run = "(sym 1.5)\\n";
+/// Metadata for a generated literal, with storage freed by its caller.
+fn literalMetadata(a: std.mem.Allocator, run: []const u8, repeats: usize) ![]const u8 {
+    const source = try longLiteral(a, "", run, repeats);
+    defer a.free(source);
+    var c = try language.Compilation.init(a, "indexed_literal.my", source);
+    defer c.deinit();
+    const manifest = try c.emitQbe(a);
+    defer a.free(manifest);
+    var parsed = try std.json.parseFromSlice(std.json.Value, a, manifest, .{ .allocate = .alloc_always });
+    defer parsed.deinit();
+    return outputs.metadata(a, parsed.value);
+}
+// spec: TEXT-INDEX-4
+test "literal indexes preserve scalar samples and aligned runtime layout" {
+    const a = std.testing.allocator;
+    const generated = try literalMetadata(a, "é😀a", 130);
+    defer a.free(generated);
+    try std.testing.expect(std.mem.indexOf(u8, generated, "unsigned char storage[912]") != null);
+    try std.testing.expect(std.mem.indexOf(u8, generated, "const struct { uint64_t scalar, octet; uint32_t sample[3]; } index") != null);
+    try std.testing.expect(std.mem.indexOf(u8, generated, ".sample={300,597,896,}") != null);
+    try std.testing.expect(std.mem.indexOf(u8, generated, "MYL_TEXT_INDEXED|MYL_TEXT_SAMPLED|MYL_TEXT_STATIC_INDEX") != null);
+    try std.testing.expect(std.mem.indexOf(u8, generated, "sizeof(myl_native_text)+912") != null);
+}
+// spec-case: TEXT-INDEX-4
+test "short and ASCII literal payloads keep their original unindexed layout" {
+    const a = std.testing.allocator;
+    const short = try literalMetadata(a, "é", 127);
+    defer a.free(short);
+    const ascii = try literalMetadata(a, "a", 1000);
+    defer a.free(ascii);
+    const exact = try literalMetadata(a, "é", 128);
+    defer a.free(exact);
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, short, "MYL_TEXT_STATIC_INDEX"));
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, ascii, "MYL_TEXT_STATIC_INDEX"));
+    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, exact, "MYL_TEXT_STATIC_INDEX"));
+    try std.testing.expect(std.mem.indexOf(u8, exact, ".sample={0}") != null);
+}
+// spec: TEXT-VIEW-5
+test "omitted text upper endpoints select tails while bounded slices keep their helper" {
+    var parsed = try emitted(std.testing.allocator,
+        \\def tail(text: str, start: int) -> str:
+        \\    return text[start:]
+        \\def bounded(text: str, start: int, end: int) -> str:
+        \\    return text[start:end]
+        \\def main() -> i64:
+        \\    return int(len(tail("abcdefghijklmnop", 2)) + len(bounded("abcdefghijklmnop", 2, 12)))
+    );
+    defer parsed.deinit();
+    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, named(parsed.value, "tail").?.il, "$myl_native_text_tail"));
+    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, named(parsed.value, "bounded").?.il, "$myl_native_text_slice"));
+    const mutation = @import("mutation.zig").buffer(.text_tail, false);
+    try std.testing.expect(!mutation.writes_receiver and mutation.severs_outer);
+    try std.testing.expectEqual(@import("mutation.zig").Operation.shallow_copy, mutation.operation);
+    const runtime: @import("qbe_build_llvm_runtime.zig").Table = .{};
+    const signature = runtime.signature("myl_native_text_tail").?;
+    try std.testing.expectEqualStrings("ptr", signature.result);
+    try std.testing.expectEqualDeep(@as([]const []const u8, &.{ "ptr", "ptr", "i64", "i64" }), signature.parameters);
+}
 /// A `main` returning how many scalars or octets a literal of `repeats` runs holds.
 fn longLiteral(a: std.mem.Allocator, prefix: []const u8, run: []const u8, repeats: usize) ![]u8 {
     var source: std.ArrayList(u8) = .empty;

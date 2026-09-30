@@ -130,6 +130,7 @@ fn elementMetadata(e: *Emitter, out: *Lines) Error!void {
     // LLVM-RC-PREFIX-1: a prefix word is apart from the frame, every object
     // and every element storage block.
     if (e.module.metadata.prefix) try prefixMetadata(e, out, scopes.items);
+    if (e.module.metadata.rc_state) try stateMetadata(e, out, scopes.items);
     for (kinds, 0..) |kind, index| {
         const scope = emit.element_base + 3 * index;
         var others: Lines = .empty;
@@ -155,6 +156,18 @@ fn prefixMetadata(e: *Emitter, out: *Lines, elements: []const []const u8) Error!
     try e.line(out, "!{d} = distinct !{{!{d}, !0, !\"rc prefix\"}}", .{ prefix, prefix });
     try e.line(out, member_line, .{ prefix + 1, prefix });
     try e.line(out, list_line, .{ prefix + 2, try joinWith(e, "!1", apart.items) });
+}
+
+/// RC-SCOPE-IL-1: runtime heap/state/journal words never occupy guest storage.
+fn stateMetadata(e: *Emitter, out: *Lines, elements: []const []const u8) Error!void {
+    const scope = emit.rc_state_scope;
+    var apart: Lines = .empty;
+    try apart.append(e.arena, try e.print("!{d}", .{emit.object_scope}));
+    if (e.module.metadata.prefix) try apart.append(e.arena, try e.print("!{d}", .{emit.prefix_scope}));
+    try apart.appendSlice(e.arena, elements);
+    try e.line(out, "!{d} = distinct !{{!{d}, !0, !\"rc state\"}}", .{ scope, scope });
+    try e.line(out, member_line, .{ scope + 1, scope });
+    try e.line(out, list_line, .{ scope + 2, try joinWith(e, "!1", apart.items) });
 }
 
 fn joinWith(e: *Emitter, first: []const u8, rest: []const []const u8) Error![]const u8 {

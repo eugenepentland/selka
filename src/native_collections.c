@@ -1,6 +1,7 @@
 #include "native_collections.h"
 #include "native_equal.h"
 #include "native_text.h"
+#include "native_bytes.h"
 #include "native_rc_collections.h"
 #include "native_rc_internal.h"
 #include "native_rc_alloc.h"
@@ -15,17 +16,19 @@ static const myl_native_field list_fields[] = {
 static const myl_native_scan_entry list_scan[] = {
     { .offset = offsetof(myl_native_list, storage), .tag_offset = MYL_NATIVE_SCAN_ALWAYS }
 };
-static const myl_native_type list_type = {
+const myl_native_type myl_native_list_header_descriptor = {
     .size = sizeof(myl_native_list), .alignment = _Alignof(myl_native_list),
     .kind = MYL_NATIVE_RECORD, .fields = list_fields, .field_count = 1,
     .scan = list_scan, .scan_count = 1, .rc_id = MYL_RC_ID_LIST
 };
+/* RC-SCOPE-IL-1: exact list-header identity for generated backing capture. */
+const myl_native_type *const myl_native_list_header_type = &myl_native_list_header_descriptor;
 static myl_native_list *rc_list_new(myl_native_heap *, const myl_native_type *, size_t, unsigned, int);
 static myl_native_list *rc_list_clone(myl_native_heap *, const myl_native_list *, const myl_native_type *, unsigned);
 myl_native_list *myl_native_list_new(myl_native_heap *heap, const myl_native_type *element, size_t capacity) {
     if (!element) return NULL;
     if (myl_rc_enabled(heap)) return rc_list_new(heap,element,capacity,heap->region_depth,0);
-    myl_native_list *list = myl_native_heap_alloc(heap, &list_type, 1);
+    myl_native_list *list = myl_native_heap_alloc(heap, &myl_native_list_header_descriptor, 1);
     if (!list) return NULL;
     myl_native_root root;
     myl_native_root_push(heap, &root, &list, &myl_rc_pointer_leaf);
@@ -316,7 +319,7 @@ static int compare_unsigned(const void *left, const void *right, size_t size) {
    integer widths share one generic entry that keeps a per-comparison switch on
    the width. Sorting calls no guest code and allocates nothing managed, so no
    collection can run while text pointers sit in the scratch buffer. */
-enum { SORT_I64, SORT_U64, SORT_F64, SORT_TEXT, SORT_GENERIC };
+enum { SORT_I64, SORT_U64, SORT_F64, SORT_TEXT, SORT_GENERIC, SORT_BYTES };
 typedef struct { unsigned kind, order; size_t size; } sort_kind;
 typedef struct { size_t start, length; int power; } sort_run;
 /* Runs below this length are extended by insertion sort; `sort_minrun` picks
@@ -350,6 +353,12 @@ SORT_INLINE int sort_less(const unsigned char *left, const unsigned char *right,
         memcpy(&a, left, sizeof a);
         memcpy(&b, right, sizeof b);
         return myl_native_text_compare(a, b) < 0;
+    }
+    case SORT_BYTES: {
+        myl_native_bytes *a, *b;
+        memcpy(&a, left, sizeof a);
+        memcpy(&b, right, sizeof b);
+        return myl_native_bytes_compare(a, b) < 0;
     }
     default: return (kind.order == 0 ? compare_signed(left, right, kind.size) : compare_unsigned(left, right, kind.size)) < 0;
     }
@@ -585,19 +594,23 @@ static int sort_f64(unsigned char *base, size_t count) {
 static int sort_text(unsigned char *base, size_t count) {
     return sort_elements(base, count, (sort_kind){ .kind = SORT_TEXT, .order = 3, .size = 8 });
 }
+static int sort_bytes(unsigned char *base, size_t count) {
+    return sort_elements(base, count, (sort_kind){ .kind = SORT_BYTES, .order = 4, .size = 8 });
+}
 static int sort_generic(unsigned char *base, size_t count, unsigned order, size_t size) {
     return sort_elements(base, count, (sort_kind){ .kind = SORT_GENERIC, .order = order, .size = size });
 }
 int myl_native_list_sort(myl_native_list *list, unsigned order) {
-    if (order > 3) return 0;
+    if (order > 4) return 0;
     if (list->length < 2) return 1;
     size_t size = list->element->size;
     if (size != 1 && size != 2 && size != 4 && size != 8) return 0;
-    if ((order == 2 || order == 3) && size != 8) return 0;
+    if (order >= 2 && size != 8) return 0;
     if (list->length > SIZE_MAX / size) return 0;
     unsigned char *base = list->storage;
     if (order == 2) return sort_f64(base, list->length);
     if (order == 3) return sort_text(base, list->length);
+    if (order == 4) return sort_bytes(base, list->length);
     if (size == 8) return order == 0 ? sort_i64(base, list->length) : sort_u64(base, list->length);
     return sort_generic(base, list->length, order, size);
 }
@@ -632,7 +645,7 @@ int myl_native_list_sort(myl_native_list *list, unsigned order) {
    runs while elements sit in the temporary. On an allocation failure it
    returns 0 before any element has moved; the key list may by then hold
    packed words, which the guest never reads again. */
-enum { KEY_SIGNED, KEY_UNSIGNED, KEY_FLOAT, KEY_TEXT };
+enum { KEY_SIGNED, KEY_UNSIGNED, KEY_FLOAT, KEY_TEXT, KEY_BYTES };
 typedef struct { unsigned count; unsigned char kind[8], size[8], offset[8]; } key_shape;
 static int key_shape_decode(uint64_t shape, uint64_t offsets, size_t stride, key_shape *out) {
     static const unsigned char widths[4] = { 8, 4, 2, 1 };
@@ -640,8 +653,9 @@ static int key_shape_decode(uint64_t shape, uint64_t offsets, size_t stride, key
     if (out->count == 0 || out->count > 8) return 0;
     for (unsigned i = 0; i < out->count; i++) {
         unsigned field = (unsigned)(shape >> (4 + 4 * i)) & 15;
-        out->kind[i] = (unsigned char)(field & 3);
-        out->size[i] = widths[field >> 2];
+        /* Nibble 7 used to be invalid text/width4. Preserve every old code. */
+        out->kind[i] = field == 7 ? KEY_BYTES : (unsigned char)(field & 3);
+        out->size[i] = field == 7 ? 8 : widths[field >> 2];
         out->offset[i] = (unsigned char)(offsets >> (8 * i));
         if ((out->kind[i] == KEY_FLOAT || out->kind[i] == KEY_TEXT) && out->size[i] != 8) return 0;
         if ((size_t)out->offset[i] + out->size[i] > stride) return 0;
@@ -685,6 +699,12 @@ static inline int key_field_compare(const unsigned char *left, const unsigned ch
         memcpy(&y, b, sizeof y);
         int order = myl_native_text_compare(x, y);
         return order < 0 ? -1 : order > 0;
+    }
+    if (shape->kind[field] == KEY_BYTES) {
+        myl_native_bytes *x, *y;
+        memcpy(&x, a, sizeof x);
+        memcpy(&y, b, sizeof y);
+        return myl_native_bytes_compare(x, y);
     }
     uint64_t x = key_word(a, shape->kind[field], shape->size[field]);
     uint64_t y = key_word(b, shape->kind[field], shape->size[field]);
@@ -848,6 +868,12 @@ static inline int keyed_less(const keyed_entry *a, const keyed_entry *b, const k
         memcpy(&q, &y->word, sizeof q);
         return myl_native_text_compare(p, q) < 0;
     }
+    if (by->shape->count == 1 && by->shape->kind[0] == KEY_BYTES) {
+        myl_native_bytes *p, *q;
+        memcpy(&p, &x->word, sizeof p);
+        memcpy(&q, &y->word, sizeof q);
+        return myl_native_bytes_compare(p, q) < 0;
+    }
     const unsigned char *left = by->keys + (size_t)x->position * by->stride;
     const unsigned char *right = by->keys + (size_t)y->position * by->stride;
     for (unsigned field = 0; field < by->shape->count; field++) {
@@ -897,7 +923,7 @@ static int keyed_sort_entries(const keyed_target *target, const myl_native_list 
     for (size_t i = 0; i < count; i++) {
         entries[i].position = i;
         entries[i].word = 0;
-        if (shape->count == 1 && shape->kind[0] == KEY_TEXT) memcpy(&entries[i].word, rows + i * stride + shape->offset[0], 8);
+        if (shape->count == 1 && (shape->kind[0] == KEY_TEXT || shape->kind[0] == KEY_BYTES)) memcpy(&entries[i].word, rows + i * stride + shape->offset[0], 8);
     }
     keyed_order by = { .keys = rows, .stride = stride, .shape = shape, .reverse = reverse };
     keyed_entry *sorted = keyed_merge_sort(entries, entries + count, count, &by);
@@ -983,7 +1009,7 @@ int myl_native_list_sort_keyed(myl_native_list *values, myl_native_list *source,
     unsigned char *held = values != source || 2 * size <= sizeof inline_held ? inline_held : malloc(2 * size);
     if (!held) return 0;
     keyed_target target = { .values = values, .source = source, .held = held };
-    int done = decoded.count == 1 && decoded.kind[0] != KEY_TEXT
+    int done = decoded.count == 1 && decoded.kind[0] != KEY_TEXT && decoded.kind[0] != KEY_BYTES
         ? keyed_sort_words(&target, keys, &decoded, reverse != 0)
         : keyed_sort_entries(&target, keys, &decoded, reverse != 0);
     if (held != inline_held) free(held);
@@ -1003,14 +1029,23 @@ myl_native_list *myl_native_list_copy(myl_native_heap *heap, const myl_native_li
     return result;
 }
 int myl_native_list_header(const void *payload) {
-    return payload && ((const myl_native_object *)payload - 1)->element == &list_type;
+    return payload && ((const myl_native_object *)payload - 1)->element == &myl_native_list_header_descriptor;
+}
+/* LIST-LITERAL-PAYLOAD-1: legacy evaluations keep their own current-region value. */
+myl_native_list *myl_native_list_literal_copy(myl_native_heap *heap, const myl_native_list *image) {
+    return myl_native_list_clone_at(heap, image, image->element, heap->region_depth);
+}
+/* Capture creation region before a later write can observe younger values. */
+myl_native_list *myl_native_list_literal_value(myl_native_heap *heap, const myl_native_list *image) {
+    if (!heap->region_depth) return (myl_native_list *)image;
+    return myl_native_list_literal_copy(heap, image);
 }
 myl_native_list *myl_native_list_clone_at(myl_native_heap *heap, const myl_native_list *input, const myl_native_type *element, unsigned region) {
     if (myl_rc_enabled(heap)) return rc_list_clone(heap,input,element,region);
     const myl_native_list *rooted = input;
     myl_native_root source_root, clone_root;
     myl_native_root_push(heap, &source_root, &rooted, &myl_rc_pointer_leaf);
-    myl_native_list *clone = myl_native_heap_alloc_at(heap, &list_type, 1, region);
+    myl_native_list *clone = myl_native_heap_alloc_at(heap, &myl_native_list_header_descriptor, 1, region);
     if (clone) {
         myl_native_root_push(heap, &clone_root, &clone, &myl_rc_pointer_leaf);
         size_t capacity = rooted->capacity > rooted->length ? rooted->capacity : rooted->length;
@@ -1157,23 +1192,28 @@ static int rc_list_span(myl_native_heap *heap, const void *payload, void *target
     return 1;
 }
 static const myl_rc_descriptor rc_list_descriptors[]={
-    {.type=&list_type,.shape=&rc_list_shape,.edges=rc_list_edges,.clone=rc_list_clone_adapter,.shell=rc_list_shell,.next=rc_list_next,.span=rc_list_span},
+    {.type=&myl_native_list_header_descriptor,.shape=&rc_list_shape,.edges=rc_list_edges,.clone=rc_list_clone_adapter,.shell=rc_list_shell,.next=rc_list_next,.span=rc_list_span},
     {.type=&rc_storage_type,.shape=&rc_list_shape,.edges=rc_storage_edges}
 };
 static const myl_rc_module rc_list_module={
     .abi=MYL_RC_ABI_VERSION,.descriptors=rc_list_descriptors,.descriptor_count=2
 };
+myl_rc_status myl_rc_list_require(myl_native_heap *heap) {
+    if (heap->rc->lists) return MYL_RC_OK;
+    myl_rc_status status = myl_rc_module_register(heap, &rc_list_module);
+    if (status == MYL_RC_OK) heap->rc->lists = 1;
+    return status;
+}
 /* RC-LIST-HEADER-1: the header module is registered once per heap and a
  * header is allocated through the storage adapter's cached single-type path;
  * an element type already proved plain is known to be registered. */
 static myl_native_list *rc_list_new(myl_native_heap *heap, const myl_native_type *element, size_t capacity, unsigned region, int raw) {
     if (!raw && heap->rc->plain!=element && !myl_rc_native_shape(heap,element)) return NULL;
     if (!heap->rc->lists) {
-        myl_rc_status status=myl_rc_module_register(heap,&rc_list_module);
+        myl_rc_status status=myl_rc_list_require(heap);
         if (status!=MYL_RC_OK) { myl_rc_record_failure(heap,status); return NULL; }
-        heap->rc->lists=1;
     }
-    myl_native_list *list=myl_rc_storage_alloc(heap,raw?&rc_storage_type:&list_type,1,region);
+    myl_native_list *list=myl_rc_storage_alloc(heap,raw?&rc_storage_type:&myl_native_list_header_descriptor,1,region);
     if (!list) return NULL;
     list->element=element;
     if (capacity) list->storage=myl_rc_native_storage(heap,element,capacity,region);

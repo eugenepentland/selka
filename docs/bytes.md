@@ -399,10 +399,24 @@ objects that hold them; an unchanged file reuses every cached result, and
 deleting or replacing it changes the keys too. `mylang test` captures embedded
 files with the sources, so a test result is reused only while its fixture is
 unchanged. The `project-dependencies` receipt lists each embedded file with its
-BLAKE3 digest, and an interface file prints an embedded constant as
+BLAKE3 digest. Navigation and `mylang context` snapshots list the same embedded
+identities and recheck them before publishing facts, including same-length edits.
+An interface file prints an embedded constant as
 `embed_bytes("path")`, never as the file's bytes. In the native build each
 distinct file is one static object, however many times it is embedded, and the
 work to build it is linear in its size.
+
+Project `budgets.max_file_bytes` bounds each source or embedded file, and
+`budgets.max_total_bytes` bounds all loaded source bytes plus every successful
+embedded identity. Repeated calls in one module naming the same path share one
+read and charge; the same physical file named from different modules has separate
+module/path identities and charges. Test snapshots deduplicate physical copies
+before reading them and use the loaded closure's project allowances. Provider
+replacements capture and recheck their own reachable embedded fixtures, including
+ones the production graph did not use. The allowances reach the reader before
+it allocates; exceeding one reports `E_PROJECT_BYTES` at the embed literal
+and names the budget field to raise. The separate 16 MiB embed limit still applies
+when the project allows a larger file.
 
 ## Counting characters and parsing numbers
 
@@ -591,3 +605,5 @@ def main() -> int:
         return 4
     return escapes[0]
 ```
+
+See [Python text surface](python-text-surface.md) for stable bytes sorting, trim sets, ranged search and scalar repr.

@@ -153,8 +153,9 @@ fn aliasTarget(comptime E: type, self: *E, index: usize) Error!?usize {
     if (!ownSlot(E, self, target) and !caller) return null;
     // A second mutable parameter of the same type could be the same caller
     // variable. A write through it is invisible to the local write scan.
-    // MUT-EXCLUSIVE-1 now rejects such a call; this stays as defense in depth.
-    if (caller) for (f.scope.locals[0..f.signature.parameter_count], 0..) |parameter, other| {
+    // MUT-EXCLUSIVE-1 makes those arguments disjoint under value semantics.
+    // Keep the conservative refusal for legacy sharing.
+    if (caller and !@import("value_semantics.zig").enabled()) for (f.scope.locals[0..f.signature.parameter_count], 0..) |parameter, other| {
         if (other != target and parameter.ty == ty and self.callerStorage(other)) return null;
     };
     // COW-NESTED-1: a copy written back into a field of either local writes

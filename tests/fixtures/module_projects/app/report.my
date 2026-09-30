@@ -1,0 +1,12 @@
+module app.report
+import core.shapes
+import core.stats
+import hex
+
+
+public def describe(out: Stream, boxes: list[core.shapes.Box]) -> int:
+    count = len(boxes)
+    area = core.stats.total_area(boxes)
+    out.print(f"area {area} widest {core.stats.widest(boxes)}")
+    out.print(hex.encode(b"box"))
+    return area

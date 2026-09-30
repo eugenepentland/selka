@@ -10,6 +10,23 @@ typedef struct scope_entry {
      * after the payload, released right before it; NULL when there is none. */
     void *backing;
 } scope_entry;
+/* RC-SCOPE-IL-1: the production emitter mirrors only these checked fields. */
+_Static_assert(sizeof(scope_entry) == 40, "inline scope journal bytes");
+_Static_assert(offsetof(scope_entry, previous) == 0, "inline journal previous");
+_Static_assert(offsetof(scope_entry, pin.hold.payload) == 8, "inline journal payload");
+_Static_assert(offsetof(scope_entry, pin.previous) == 16, "inline journal previous pin");
+_Static_assert(offsetof(scope_entry, pinned) == 24, "inline journal pinned flag");
+_Static_assert(offsetof(scope_entry, backing) == 32, "inline journal backing");
+_Static_assert(offsetof(myl_native_heap, rc) == 5640, "inline scope heap rc");
+_Static_assert(offsetof(myl_native_heap, bytes) == 24, "inline scope heap bytes");
+_Static_assert(offsetof(myl_native_heap, limit) == 88, "inline scope heap limit");
+_Static_assert(offsetof(myl_native_heap, region_depth) == 112, "inline scope region");
+_Static_assert(offsetof(myl_rc_state, metadata.bytes) == 48, "inline scope metadata bytes");
+_Static_assert(offsetof(myl_rc_state, scopes) == 248, "inline scope chain");
+_Static_assert(offsetof(myl_rc_state, spare.entries) == 256, "inline scope spares");
+_Static_assert(offsetof(myl_rc_state, spare.count) == 264, "inline scope spare count");
+_Static_assert(offsetof(myl_rc_state, dead.head) == 200, "inline scope pending deaths");
+_Static_assert(MYL_RC_SPARE_ENTRIES == 32, "inline scope spare limit");
 /* RC-SCOPE-SPARE-1: journal nodes are recycled through a bounded, uncharged
  * spare list (see myl_rc_spare), so a receiver statement in a loop reaches the
  * host allocator only on its first iteration. A recycled node is admitted and

@@ -107,6 +107,65 @@ fn buildOnly(context: fs.Context, spec: Spec) !void {
     _ = try spawnOk(context, try buildArgv(context, spec, false), cwdOf(spec), spec.environment);
 }
 
+// spec-case: QBE-FRAMEMAP-ASM-1
+// spec-case: RC-STARTUP-IMAGE-1
+test "optional registration images link and run through direct and frame-map full and ThinLTO" {
+    var environment: std.process.Environ.Map = .init(std.testing.allocator);
+    defer environment.deinit();
+    var context = try fs.Context.init(std.testing.allocator, std.testing.io, &environment);
+    defer context.deinit();
+    const a = context.allocator;
+    const resolved = try tools(a);
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", a);
+    const source = try join(a, &.{ root, "entry.my" });
+    try context.write(source, "module entry\n" ++
+        "def main(out: Stream) -> int:\n" ++
+        "    values = [0, 1, 2, 3, 4, 5, 6, 7]\n" ++
+        "    out.print(len(values))\n" ++
+        "    return 0\n");
+    const Case = struct { rc: bool = true, image: bool = false, framed: bool = true, lto: []const u8 };
+    const cases = [_]Case{
+        .{ .framed = false, .lto = "--lto" },
+        .{ .framed = false, .lto = "--lto=thin" },
+        .{ .lto = "--lto" },
+        .{ .lto = "--lto=thin" },
+        .{ .image = true, .lto = "--lto" },
+        .{ .image = true, .lto = "--lto=thin" },
+        .{ .rc = false, .lto = "--lto" },
+        .{ .rc = false, .lto = "--lto=thin" },
+    };
+    const cache = try join(a, &.{ root, "cache" });
+    for (cases, 0..) |case, index| {
+        var emission: std.ArrayList([]const u8) = .empty;
+        try emission.appendSlice(a, &.{ resolved.compiler, "emit-project-qbe", source, if (case.rc) "--rc-runtime" else "--gc-runtime", "--drop-step-checks", "--drop-frame-checks" });
+        if (!case.framed) try emission.append(a, "--drop-debug");
+        const original = try spawnOk(context, emission.items, .inherit, null);
+        var manifest = try std.json.parseFromSliceLeaky(std.json.Value, a, original, .{ .allocate = .alloc_always });
+        if (case.rc and !case.image) {
+            const text = manifest.object.getPtr("runtime_data").?;
+            const definition = "const myl_rc_image myl_rc_generated_image =";
+            try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, text.string, definition));
+            // A public ABI4 module remains valid without the separate optional
+            // startup image, as for foreign/legacy native metadata producers.
+            text.string = try std.mem.replaceOwned(u8, a, text.string, definition, "const myl_rc_image myl_rc_generated_image_unused =");
+        }
+        const manifest_file = try std.fmt.allocPrint(a, "{s}/manifest-{d}.json", .{ root, index });
+        try context.write(manifest_file, try std.json.Stringify.valueAlloc(a, manifest, .{}));
+        const binary = try std.fmt.allocPrint(a, "{s}/program-{d}", .{ root, index });
+        _ = try spawnOk(context, &.{
+            resolved.compiler, "build",        source,        "--manifest-file", manifest_file,
+            "-o",              binary,         "--cache-dir", cache,             if (case.rc) "--rc-runtime" else "--gc-runtime",
+            "--backend=llvm",  "--llvm-opt=3", case.lto,      "--zig",           resolved.zig,
+        }, .inherit, null);
+        const ran = try std.process.run(a, context.io, .{ .argv = &.{binary} });
+        try std.testing.expectEqual(std.process.Child.Term{ .exited = 0 }, ran.term);
+        try std.testing.expectEqualStrings("8\n", ran.stdout);
+        try std.testing.expectEqualStrings("", ran.stderr);
+    }
+}
+
 /// Build with `--report`, then run the program, returning the facts the
 /// installed-runtime scenario asserts on.
 fn buildAndRun(context: fs.Context, spec: Spec) !BuildReport {
@@ -823,7 +882,7 @@ fn sitesRun(context: fs.Context, command: []const []const u8, environment: *std.
     const start = std.mem.indexOf(u8, result.stderr, marker).? + marker.len;
     const end = std.mem.indexOfScalarPos(u8, result.stderr, start, '\n').?;
     const counts = try std.json.parseFromSlice(std.json.Value, context.allocator, result.stderr[start..end], .{});
-    try std.testing.expectEqualStrings("rc-v3-sites", v.text(v.get(counts.value, "runtime")));
+    try std.testing.expectEqualStrings("rc-v4-sites", v.text(v.get(counts.value, "runtime")));
     try std.testing.expect(std.mem.indexOf(u8, result.stderr, "\nMYLANG_RC_SITES {\"version\":1,") != null);
     const parsed = try std.json.parseFromSlice(std.json.Value, context.allocator, try context.read(report), .{});
     const sites = v.array(v.get(parsed.value, "sites"));

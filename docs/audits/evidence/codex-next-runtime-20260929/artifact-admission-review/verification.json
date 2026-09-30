@@ -1,0 +1,21 @@
+{
+  "reviewed_source": "91bb0769e6a9752fdbfe9e9f4c1453d130c5b0fb",
+  "finding_count": 3,
+  "proof_consequence_cases": 1,
+  "original_result": "Four expected-rejection failures, including false readonly authority with forged decoded body ID; corrected-ID control returned null. Fault reproductions excluded from acceptance.",
+  "root_list_fix": "4fce2270",
+  "module_fix_checkpoint": "96b054808c6e9d0889d8ad23a1432d46d3943ff5",
+  "fixed_combined_source": "0801373b",
+  "root_focused_result": "22/22 (10 named and 12 imported blocks), including valid int/str/bytes payloads followed by rejected simultaneous blob authority.",
+  "final_independent_corrected_result": "pending",
+  "files": {
+    "docs/audits/evidence/codex-next-runtime-20260929/artifact-admission-review/review_runtime_contracts.zig": "163bbc43a7f175282a72ba561795439d4d53d7076353222f16b7f443ef5852f7",
+    "docs/audits/evidence/codex-next-runtime-20260929/artifact-admission-review/contracts.log.gz": "30a96e6a879927d554c2a106fd7a774f7aeeec4fce6c3a2098d079e885556f31",
+    "docs/audits/evidence/codex-next-runtime-20260929/artifact-admission-review/contracts-with-proof.log.gz": "43831563d90b36d9ceeaf7ec4805e219dc0cb90c67defb68f6ab7f4a092ddcb6",
+    "docs/audits/evidence/codex-next-runtime-20260929/artifact-admission-review/findings.md": "819c8330221890d987c90fcaaa7cf590cb13b143067b1e1e7ff3c276bb5cb947",
+    "docs/audits/evidence/codex-next-runtime-20260929/artifact-admission-review/list-blob-authority-focused.log.gz": "f6d96cdd317708d624b9bbe939236c9f51650158004bb1e7dd0bba69f1c2e4bb",
+    "docs/audits/evidence/codex-next-runtime-20260929/artifact-admission-review/fixes-96b-4fce-corrected.log.gz": "b920f52c16b2efd3501faa566a35690c9632a76f8903d046de1f1501c9f32e88",
+    "docs/audits/evidence/codex-next-runtime-20260929/artifact-admission-review/corrected-contracts-with-qualifier-repro.zig": "0f2ec2f5370c096c5225bee490bace3b8a7b6ddc65e17a2821fd9b81b4ee9ccb"
+  },
+  "independent_corrected_result": "Original four regressions pass; valid duplicate and ABI conflict controls pass. One additional declared_mutates conflict reproduced:6 passed,1 failed,0 skipped. Follow-up pending."
+}

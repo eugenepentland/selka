@@ -1,0 +1,19 @@
+module main
+import items
+import slots
+
+
+def main() -> int:
+    first = items.Item(id=1, weight=5)
+    store = slots.open([first, items.Item(id=2, weight=3)])
+    ticket = slots.issue(mut store, items.Item(id=3, weight=9))
+    total = 0
+    match slots.read(store, ticket):
+        case Some(found):
+            total += found.weight
+        case None:
+            total += 0
+    ranked = slots.ordered(store.values, items.weight_of)
+    numbers = slots.open([4, 7])
+    total += ranked[0].id + slots.smaller(numbers.values[0], numbers.values[1])
+    return total

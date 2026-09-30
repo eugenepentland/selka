@@ -30,7 +30,6 @@ pub fn finalize(comptime E: type, self: *E) Error!void {
 }
 
 fn certify(comptime E: type, self: *E, proof: model.Certificate, budget: *Budget) Error!?Entry {
-    if (proof.key_authority != .anchored) return null;
     const code = self.function.scope.instructions;
     if (!budget.take(code.len * 2)) return null;
     for (code) |instruction| if (instruction.op == .switch_variant and
@@ -53,8 +52,14 @@ fn certify(comptime E: type, self: *E, proof: model.Certificate, budget: *Budget
     if (at >= self.cow.?.plan.loops.back.len or definition >= at) return null;
     const back = self.cow.?.plan.loops.back[at];
     if (back == cow.none or back < at or back - at > 1024 or proof.start + 4 > back) return null;
-    if (proof.key_authority.anchored.capture - 1 < at or (self.states[at] orelse return null).len != 0) return null;
+    if ((self.states[at] orelse return null).len != 0) return null;
+    if (proof.key_authority == .anchored and proof.key_authority.anchored.capture - 1 < at) return null;
     const entry: Entry = .{ .head = at, .back = back, .definition = definition };
+    if (proof.key_authority == .canonical) {
+        for (code, 0..) |instruction, pc| if (!edges(instruction.op, pc, entry)) return null;
+        if (!try @import("qbe_rc_dictionary_text_loop.zig").lifetime(E, self, proof, definition, back, budget)) return null;
+        return entry;
+    }
     if (!try lifetime(E, self, proof, entry, budget)) return null;
     return entry;
 }

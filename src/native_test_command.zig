@@ -23,6 +23,10 @@ const generator = @import("property_generate.zig");
 const wire = @import("native_test_wire.zig");
 const bench = @import("native_bench.zig");
 const builtin = @import("builtin");
+const module_build = @import("module_build.zig");
+const compile_command = @import("module_compile_command.zig");
+const native_build = @import("qbe_build.zig");
+const bundled_identity = @import("qbe_build_assets").compiler_identity;
 /// Setup failures never produce a cached green test run.
 pub const Error = sessions.Error || cases.Error || planner.Error || receipts.Error || fanout.Error || contracts.Error || graph_store.Error || bench.Error;
 
@@ -33,8 +37,12 @@ const Graph = struct {
     project: sessions.Project,
     provider_identity: []const u8,
     source_identity: []const u8,
+    captured: ?snapshot.Snapshot = null,
     /// Name and symbol tables over the graph, built on first use.
     tables: ?*Tables = null,
+    /// MODULE-TEST-1: the per-module build the graph's facts came from, which
+    /// links its test library; null for a graph a whole-program session checked.
+    modules: ?*module_build.Tests = null,
 
     /// The graph's lookup tables, built once: planning a selection then costs
     /// each test's closure instead of a scan of the whole graph per test.
@@ -79,12 +87,15 @@ const Graphs = struct {
     directory: []const u8,
     entries: std.StringHashMapUnmanaged(*Graph) = .empty,
     /// The production graph's preparation begun before discovery, if any.
-    early: ?Early = null,
+    prepared: struct { early: ?Early = null, module_tests: ?*module_build.Tests = null } = .{},
 
     fn deinit(self: *Graphs) void {
-        abandon(self.early);
-        self.early = null;
+        abandon(self.prepared.early);
+        self.prepared.early = null;
         self.finishSessions();
+        var iterator = self.entries.valueIterator();
+        while (iterator.next()) |entry| if (entry.*.modules) |built| built.close();
+        if (self.prepared.module_tests) |built| built.close();
         self.entries.deinit(self.allocator);
     }
 
@@ -98,6 +109,13 @@ const Graphs = struct {
                 compile.finish(self.session);
                 project.compile = null;
             }
+        }
+    }
+
+    fn verifyAssets(self: *Graphs) Error!void {
+        var iterator = self.entries.valueIterator();
+        while (iterator.next()) |entry| {
+            if (entry.*.captured) |captured| try snapshot.verifyAssets(self.session.context, captured);
         }
     }
 
@@ -120,6 +138,14 @@ const Graphs = struct {
                 .project = try self.prepare(copied.entry_path, copied.identity, provider_identity),
                 .provider_identity = provider_identity,
                 .source_identity = copied.identity,
+                .captured = copied,
+            };
+        } else if (self.moduleBuilt()) |built| {
+            graph.* = .{
+                .project = try self.session.projectFromManifest(self.captured.entry_path, built.graph),
+                .provider_identity = provider_identity,
+                .source_identity = self.captured.identity,
+                .modules = built,
             };
         } else {
             graph.* = .{
@@ -137,6 +163,14 @@ const Graphs = struct {
         return graph;
     }
 
+    /// MODULE-TEST-1: the production graph's per-module build, once, when
+    /// this run took that path.
+    fn moduleBuilt(self: *Graphs) ?*module_build.Tests {
+        const built = self.prepared.module_tests orelse return null;
+        self.prepared.module_tests = null;
+        return built;
+    }
+
     /// Admit durable checked facts only after the project passes the shared query
     /// cache; otherwise check once through the retained `native-test-compile`
     /// session, which performs no lowering or QBE emission on the facts request.
@@ -144,8 +178,8 @@ const Graphs = struct {
         const session = self.session;
         const key = try graphKey(session, source_identity, provider_identity);
         // The production graph's preparation may already be under way.
-        if (provider_identity.len == 0) if (self.early) |early| {
-            self.early = null;
+        if (provider_identity.len == 0) if (self.prepared.early) |early| {
+            self.prepared.early = null;
             return switch (early) {
                 .stored => |facts| admit(session, entry_path, facts),
                 .compiling => |compile| self.compiled(entry_path, key, compile),
@@ -211,6 +245,172 @@ fn speculate(session: sessions.Session, captured: snapshot.Snapshot, directory: 
     const compile = sessions.Compile.begin(session, captured.entry_path) catch return null;
     return .{ .compiling = compile };
 }
+/// The production graph's early preparation, if any: none on the
+/// per-module path (MODULE-TEST-1), which checks module by module after the
+/// declaration check, so no whole-program session starts early.
+fn begin(session: sessions.Session, captured: snapshot.Snapshot, directory: []const u8) ?Early {
+    if (modulePath(session)) return null;
+    return speculate(session, captured, directory);
+}
+/// MODULE-TEST-1: the production graph compiled module by module, when this
+/// run can take that path; null sends it to the whole-program session, which
+/// reports whatever the modules could not build.
+fn openModuleTests(session: sessions.Session, captured: snapshot.Snapshot, place: ModulePlace) Error!?*module_build.Tests {
+    if (!modulePath(session)) return null;
+    // MODULE-TEST-6: module records are keyed by the stable path, so a run
+    // staged elsewhere (while a seeder or another run holds the path) is the
+    // whole-program run's, which replays the verdicts; it starts no seeder.
+    if (!place.stable) return null;
+    const directory = place.directory;
+    const a = session.context.allocator;
+    const settings: build_options.Options = .{
+        .source = captured.entry_path,
+        .project = true,
+        .cache = try std.fs.path.join(a, &.{ session.directory, "objects", session.environment.hash }),
+        .mode = session.options.mode,
+        .zig = session.tools.zig,
+        .codegen = .{ .qbe = session.tools.qbe },
+    };
+    var library = settings;
+    library.library = true;
+    // Whatever the per-module path cannot do, the whole-program session does
+    // and reports.
+    const outcome = module_build.openTests(session.context, .{ .settings = settings, .switches = native_build.emissionSwitches(library), .identity = bundled_identity, .cold = place.cold }) catch |err| switch (err) {
+        error.OutOfMemory => return error.OutOfMemory,
+        else => return null,
+    };
+    const built = switch (outcome) {
+        .ready => |ready| ready,
+        .status => return error.NativeToolFailed,
+        .fallback => |why| {
+            if (why == .cold) spawnSeeder(session);
+            return null;
+        },
+    };
+    // An unchanged module is not compiled again; the trace names each one
+    // that was, the per-module path's unit of work (NATIVE-TEST-SCALE-1).
+    for (built.compiled) |name| session.traceWork(&.{ "compile-module", name });
+    // The durable graph a whole-program run would have stored: the facts of
+    // the tests' closure.
+    if (directory.len != 0 and session.environment.cacheable) {
+        const key = try graphKey(session, captured.identity, "");
+        graph_store.store(session.context, directory, key, built.graph) catch |err| ignoreStoreFailure(err);
+    }
+    return built;
+}
+/// Where a per-module test build keeps its graphs, from how many modules a
+/// first run leaves the answer to the whole-program session (null: never),
+/// and whether the run holds the stable snapshot path its records are keyed by.
+const ModulePlace = struct { directory: []const u8, cold: ?usize, stable: bool };
+
+/// MODULE-TEST-5: the module count from which a first run is the whole
+/// program's and seeds in the background (`MYLANG_TEST_SEED_MODULES`), or
+/// null for the seeder itself.
+fn coldThreshold(context: fs.Context) ?usize {
+    if (seeding(context)) return null;
+    const text = context.environ.get("MYLANG_TEST_SEED_MODULES") orelse return module_build.seed_threshold;
+    return std.fmt.parseInt(usize, text, 10) catch module_build.seed_threshold;
+}
+
+/// MODULE-TEST-5: the variable that marks a detached seeder (`1`) or turns
+/// seeding off (`off`).
+const seed_variable = "MYLANG_TEST_SEED";
+
+/// Whether this process is a detached seeder (`MYLANG_TEST_SEED=1`).
+fn seeding(context: fs.Context) bool {
+    const value = context.environ.get(seed_variable) orelse return false;
+    return std.mem.eql(u8, value, "1");
+}
+
+/// MODULE-TEST-5: start this run again as a detached seeder (the same
+/// arguments, `MYLANG_TEST_SEED=1`, no standard streams, never waited for)
+/// unless `MYLANG_TEST_SEED` is `off`. It compiles every module once this run
+/// has released its snapshot, and the next run reads its records.
+fn spawnSeeder(session: sessions.Session) void {
+    const context = session.context;
+    if (context.environ.get(seed_variable)) |value| if (std.mem.eql(u8, value, "off")) return;
+    const a = context.allocator;
+    var environ = context.environ.clone(a) catch return;
+    environ.put(seed_variable, "1") catch return;
+    const self_exe = std.Io.Dir.cwd().realPathFileAlloc(context.io, "/proc/self/exe", a) catch return;
+    var argv: std.ArrayList([]const u8) = .empty;
+    argv.appendSlice(a, &.{ self_exe, "test" }) catch return;
+    argv.appendSlice(a, session.options.link_arguments) catch return;
+    _ = std.process.spawn(context.io, .{
+        .argv = argv.items,
+        .environ_map = &environ,
+        .stdin = .ignore,
+        .stdout = .ignore,
+        .stderr = .ignore,
+        .pgid = 0,
+    }) catch return;
+}
+
+const Paused = @import("module_seeder.zig").Paused;
+
+/// MODULE-TEST-6: stop the detached seeder holding this project's snapshot
+/// path for the length of this run, so the run beside it has the cores (a
+/// seeder at nice 19 still costs it the shared cores and the power budget).
+/// Only a process that leads its own process group and carries
+/// `MYLANG_TEST_SEED=1` is stopped, so a stale mark whose process is gone
+/// stops nothing. Its private watcher resumes the verified live group when
+/// the run ends, including a killed foreground; inherited locks stay closed.
+fn pauseSeeder(context: fs.Context, session: sessions.Session) Error!?Paused {
+    const scratch = try context.absolute(context.scratchRoot());
+    const pid = snapshot.seederProcess(context, scratch, try stableSeed(session)) orelse return null;
+    if (std.os.linux.getpgid(pid) != @as(usize, @intCast(pid))) return null;
+    if (!carriesSeed(try processEnviron(context, pid))) return null;
+    const paused = @import("module_seeder.zig").start(pid) orelse return null;
+    session.traceWork(&.{"pause-seeder"});
+    return paused;
+}
+
+/// Process `pid`'s environment (`/proc/PID/environ`), empty when it cannot
+/// be read. The file reports no length, so it is read to its end in pieces.
+fn processEnviron(context: fs.Context, pid: std.os.linux.pid_t) Error![]const u8 {
+    const path = try std.fmt.allocPrint(context.allocator, "/proc/{d}/environ", .{pid});
+    const file = std.Io.Dir.cwd().openFile(context.io, path, .{}) catch return "";
+    defer file.close(context.io);
+    var bytes: std.ArrayList(u8) = .empty;
+    var piece: [4096]u8 = undefined;
+    while (true) {
+        const count = file.readStreaming(context.io, &.{&piece}) catch 0;
+        if (count == 0) return bytes.items;
+        try bytes.appendSlice(context.allocator, piece[0..count]);
+    }
+}
+
+/// Whether a process environment (`/proc/PID/environ`, NUL-separated)
+/// marks a detached seeder (`MYLANG_TEST_SEED=1`).
+fn carriesSeed(environ: []const u8) bool {
+    var entries = std.mem.splitScalar(u8, environ, 0);
+    while (entries.next()) |entry| {
+        if (entry.len == seed_variable.len + 2 and std.mem.startsWith(u8, entry, seed_variable) and std.mem.endsWith(u8, entry, "=1")) return true;
+    }
+    return false;
+}
+
+/// MODULE-TEST-5: the detached seeder's whole run: wait for the stable
+/// snapshot, compile every module into the per-module test variant, and
+/// report nothing.
+fn seedModules(context: fs.Context, session: sessions.Session, prepared: snapshot.Snapshot) Error!u8 {
+    // MODULE-TEST-6: every foreground run beside the seeder keeps the cores.
+    compile_command.lowerPriority(compile_command.seeder_priority);
+    const stable = snapshot.claimStableWaiting(context, try context.absolute(context.scratchRoot()), try stableSeed(session)) orelse return 0;
+    defer stable.release(context);
+    snapshot.markSeeding(context, stable);
+    const captured = snapshot.materialize(context, prepared, stable.directory) catch return 0;
+    const built = (openModuleTests(session, captured, .{ .directory = "", .cold = null, .stable = true }) catch return 0) orelse return 0;
+    built.close();
+    return 0;
+}
+
+/// The declaration contracts tests are discovered from: the modules' own
+/// (MODULE-TEST-4), or the whole-program declaration check's.
+fn contractsOf(session: sessions.Session, captured: snapshot.Snapshot, built: ?*module_build.Tests) Error!std.json.Value {
+    if (built) |modules| return modules.contracts;
+    return session.interfaceCheckCached(captured.entry_path, captured.identity);
+}
 /// Whether a case configuration file parses and names no provider fixture.
 /// Anything else answers false, leaving the ordinary ordered preparation to
 /// report it.
@@ -233,21 +433,47 @@ fn abandon(early: ?Early) void {
         .compiling => |compile| compile.discard(),
     }
 }
+/// What names a project's stable snapshot root: its cache directory, root
+/// and entry.
+fn stableSeed(session: sessions.Session) error{OutOfMemory}![]const u8 {
+    return std.mem.join(session.context.allocator, "\x00", &.{ session.directory, session.source.root, session.source.entry });
+}
 /// A materialized snapshot and, when it sits at the project's stable root,
-/// the claim the run releases on exit.
-const Staged = struct { captured: snapshot.Snapshot, stable: ?snapshot.Stable };
+/// the claim the run releases on exit; otherwise the seeder holding that
+/// root that the run stopped, if any (MODULE-TEST-6).
+const Staged = struct {
+    captured: snapshot.Snapshot,
+    stable: ?snapshot.Stable,
+    paused: ?Paused = null,
+    /// Let a stopped seeder go on and release the claim.
+    fn end(self: Staged, context: fs.Context) void {
+        if (self.paused) |seeder| seeder.proceed();
+        if (self.stable) |claimed| claimed.release(context);
+    }
+};
 /// Materialize the run's snapshot at the project's stable root when this run
 /// can claim it (`snapshot.claimStable`), so the compiler children see the same
 /// source paths on every run and their path-keyed caches answer; otherwise, or
-/// when writing there fails, at a fresh private path under the session.
+/// when writing there fails, at a fresh private path under the session. The
+/// trace names how the run was staged (MODULE-TEST-6): at the stable path
+/// (`stage stable DIR`), apart because another run holds it (`stage
+/// private`), or apart because a detached seeder does (`stage seeding`),
+/// which the run then stops for its length.
 fn stage(context: fs.Context, session: sessions.Session, prepared: snapshot.Snapshot) Error!Staged {
-    const seed = try std.mem.join(context.allocator, "\x00", &.{ session.directory, session.source.root, session.source.entry });
-    if (snapshot.claimStable(context, try context.absolute(context.scratchRoot()), seed)) |claimed| {
+    const seed = try stableSeed(session);
+    const scratch = try context.absolute(context.scratchRoot());
+    // MODULE-TEST-6: a run never waits for the path, not even for a seeder
+    // holding it; it stages apart and is the whole-program run's.
+    if (snapshot.claimStable(context, scratch, seed)) |claimed| {
         if (snapshot.materialize(context, prepared, claimed.directory)) |captured| {
+            session.traceWork(&.{ "stage", "stable", claimed.directory });
             return .{ .captured = captured, .stable = claimed };
         } else |_| claimed.release(context);
     }
-    return .{ .captured = try snapshot.materialize(context, prepared, try context.temporary(session.temporary)), .stable = null };
+    const captured = try snapshot.materialize(context, prepared, try context.temporary(session.temporary));
+    const beside_seeder = snapshot.heldBySeeder(context, scratch, seed);
+    session.traceWork(&.{ "stage", if (beside_seeder) "seeding" else "private" });
+    return .{ .captured = captured, .stable = null, .paused = if (beside_seeder) try pauseSeeder(context, session) else null };
 }
 /// The fan-out width asked for: `--jobs` first, then `MYLANG_JOBS`, then none,
 /// which leaves the default derived from cores and free memory.
@@ -327,9 +553,20 @@ fn refusedLimits(context: fs.Context, opts: *options.Options) Error!?u8 {
         try std.Io.File.stderr().writeStreamingAll(context.io, options.usage);
         return 2;
     };
-    const refusal = try budget.frameRefusal(context.allocator, "test", "a test", opts.limits.max_frames, memory) orelse return null;
+    const refusal = try budget.frameRefusal(context.allocator, context.environ, "test", "a test", opts.limits.max_frames, memory) orelse return null;
     try std.Io.File.stderr().writeStreamingAll(context.io, refusal);
     return input_probe.refused_status;
+}
+/// Refuse the removed unchecked mode with the shared build diagnostic.
+fn refusedUnchecked(process: std.process.Init, args: []const []const u8) Error!bool {
+    if (!build_options.uncheckedRequested(args)) return false;
+    try std.Io.File.stderr().writeStreamingAll(process.io, "mylang test: " ++ build_options.unchecked_removed);
+    return true;
+}
+/// Check the held cases file before publishing any verdict from this run.
+fn verifyCases(context: fs.Context, path: ?[]const u8, held: []const u8) Error!void {
+    const file = path orelse return;
+    if (!std.mem.eql(u8, held, try context.read(file))) return error.SourceChanged;
 }
 /// Discover, check, selectively execute, and report native application tests.
 pub fn run(process: std.process.Init, args: []const []const u8) Error!u8 {
@@ -339,10 +576,7 @@ pub fn run(process: std.process.Init, args: []const []const u8) Error!u8 {
     }
     // RELEASE-CHECKED-1: `--unchecked` is refused by name rather than as an
     // unknown flag, with the same reason every build gives.
-    if (build_options.uncheckedRequested(args)) {
-        try std.Io.File.stderr().writeStreamingAll(process.io, "mylang test: " ++ build_options.unchecked_removed);
-        return 2;
-    }
+    if (try refusedUnchecked(process, args)) return 2;
     var opts = options.parse(args) catch {
         try std.Io.File.stderr().writeStreamingAll(process.io, options.usage);
         return 2;
@@ -360,25 +594,27 @@ pub fn run(process: std.process.Init, args: []const []const u8) Error!u8 {
     var work: invalidation.Work = .{ .command = "test" };
     if (opts.flags.output.report) session.work = &work;
     const prepared = try snapshot.withTestEntry(context, session.source);
+    if (seeding(context)) return seedModules(context, session, prepared);
     const staged = try stage(context, session, prepared);
-    defer if (staged.stable) |claimed| claimed.release(context);
+    defer staged.end(context);
     const captured = staged.captured;
     const directory = try std.fs.path.join(context.allocator, &.{ session.directory, "results" });
     const graphs_directory = if (opts.flags.no_cache) "" else try std.fs.path.join(context.allocator, &.{ session.directory, "graphs" });
     // When every case selects the production graph, its check starts now and
     // runs beside the declaration check below instead of after it.
-    var early = speculate(session, captured, graphs_directory);
+    var early = begin(session, captured, graphs_directory);
     defer abandon(early);
     // Resolve configuration first. `list-interfaces --contracts` parses every
     // module and validates exported signatures and explicit ceilings without
     // checking any body, so an unfinished replacement target cannot block
     // selection while its public declarations stay valid.
-    const production = session.interfaceCheckCached(captured.entry_path, captured.identity) catch |err| switch (err) {
+    const module_tests = try openModuleTests(session, captured, .{ .directory = graphs_directory, .cold = coldThreshold(context), .stable = staged.stable != null });
+    const production = contractsOf(session, captured, module_tests) catch |err| switch (err) {
         error.ProjectConfigurationFailed => return 2,
         error.ProjectPolicyRejected => return 3,
         else => return err,
     };
-    var graphs: Graphs = .{ .allocator = context.allocator, .session = session, .captured = captured, .production = production, .directory = graphs_directory, .early = early };
+    var graphs: Graphs = .{ .allocator = context.allocator, .session = session, .captured = captured, .production = production, .directory = graphs_directory, .prepared = .{ .early = early, .module_tests = module_tests } };
     early = null;
     defer graphs.deinit();
     const config_bytes = if (opts.cases) |path| try context.read(path) else "null";
@@ -422,10 +658,9 @@ pub fn run(process: std.process.Init, args: []const []const u8) Error!u8 {
     // Reap any retained checked-compilation sessions before the invocation's own
     // work report so their child counters are folded into it.
     graphs.finishSessions();
+    try graphs.verifyAssets();
     try session.verify();
-    if (opts.cases) |path| {
-        if (!std.mem.eql(u8, config_bytes, try context.read(path))) return error.SourceChanged;
-    }
+    try verifyCases(context, opts.cases, config_bytes);
     if (!opts.flags.no_cache) for (results, pure) |result, is_pure| {
         try receipts.write(context, directory, result);
         if (opts.flags.pure_skip and is_pure) try receipts.writeOutcome(context, directory, result);
@@ -805,6 +1040,7 @@ fn prepareSelectedGraphs(
         for (groups.items) |group| {
             group.symbols.deinit(context.allocator);
             group.names.deinit(context.allocator);
+            group.roots.deinit(context.allocator);
             context.allocator.destroy(group);
         }
         groups.deinit(context.allocator);
@@ -822,6 +1058,11 @@ fn prepareSelectedGraphs(
         for (entry.dependencies) |dependency| {
             _ = try group.?.symbols.getOrPut(context.allocator, dependency);
         }
+        const root = v.text(v.get(entry.selected, "name"));
+        const seen = for (group.?.roots.items) |known| {
+            if (std.mem.eql(u8, known, root)) break true;
+        } else false;
+        if (!seen) try group.?.roots.append(context.allocator, root);
     }
     for (groups.items) |group| {
         for (v.array(v.get(group.graph.project.manifest, contracts.functions_key))) |function| {
@@ -837,8 +1078,49 @@ fn prepareSelectedGraphs(
         }
         const select_path = try std.fs.path.join(context.allocator, &.{ group.graph.project.directory, "native-test-select.txt" });
         try context.write(select_path, text.items);
+        if (group.graph.modules) |built| {
+            try linkModules(context, session, group, built, select_path);
+            continue;
+        }
         _ = try session.executor(&group.graph.project, select_path);
     }
+}
+
+/// MODULE-TEST-1: link the test library of one per-module graph from its
+/// modules' objects, exporting the tests and benchmarks the pending cases
+/// select, and prepare its executor.
+fn linkModules(context: fs.Context, session: sessions.Session, group: *Group, built: *module_build.Tests, select_path: []const u8) Error!void {
+    const project = &group.graph.project;
+    if (project.executor) |_| if (project.select_file) |old| if (std.mem.eql(u8, old, select_path)) return;
+    var names: std.ArrayList([]const u8) = .empty;
+    for (group.roots.items) |name| try names.append(context.allocator, name);
+    // MODULE-TEST-3: one executable with the harness linked in, so no test
+    // process loads (and relocates) a library of the whole program.
+    const executable = try std.fs.path.join(context.allocator, &.{ project.directory, "tests" });
+    const harness = try session.linkedHarness();
+    session.traceWork(&.{ "module-link", executable });
+    const status = built.link(.{ .names = names.items, .output = executable, .harness = harness }) catch |err| switch (err) {
+        error.OutOfMemory => return error.OutOfMemory,
+        else => return error.NativeToolFailed,
+    };
+    if (status != 0) return error.NativeToolFailed;
+    if (session.work) |work| work.note(.links, 1, 0);
+    _ = try session.linkedExecutor(project, executable, select_path);
+}
+
+/// Whether a test run can take the per-module path: no `--whole-program`,
+/// `--no-cache`, release build, explicit link input, affected selection,
+/// benchmark or JSON diagnostics asks otherwise.
+fn modulePath(session: sessions.Session) bool {
+    const opts = session.options;
+    if (opts.flags.whole_program or opts.flags.no_cache or opts.flags.affected) return false;
+    if (opts.flags.output.diagnostics_json) return false;
+    // A provider fixture's declarations are validated against the declared
+    // contracts the whole-program declaration check publishes.
+    if (opts.cases) |path| if (!providerFree(session.context, path)) return false;
+    if (opts.bench.pattern != null or opts.bench.only) return false;
+    if (build_options.release(opts.link_arguments) or @import("native_link.zig").hasInputs(opts.link_arguments)) return false;
+    return session.environment.cacheable;
 }
 
 /// How many test processes one invocation keeps running at once: `--jobs` or
@@ -1005,6 +1287,9 @@ fn failureReason(context: fs.Context, failure: Failure) Error![]const u8 {
         }
     } else {
         reason = try stripRoot(context.allocator, failure.diagnostics, failure.project_source, failure.root);
+        if (std.mem.indexOf(u8, failure.diagnostics, "R_FRAME_LIMIT") != null) {
+            reason = try std.fmt.allocPrint(context.allocator, "{s}\ncall-depth budget exhausted; raise it with --max-frames=N (and enough --max-memory to back the frames)", .{reason});
+        }
     }
     if (failure.output.len == 0) return reason;
     const captured = try stripRoot(context.allocator, failure.output, failure.project_source, failure.root);
@@ -1146,6 +1431,8 @@ const Group = struct {
     graph: *Graph,
     symbols: std.StringHashMapUnmanaged(void) = .empty,
     names: std.ArrayList([]const u8) = .empty,
+    /// The qualified names of the tests and benchmarks the pending cases run.
+    roots: std.ArrayList([]const u8) = .empty,
 };
 
 /// The contract identity of one test module, memoized for the tests that share it.
@@ -1305,7 +1592,7 @@ test "the production check starts beside the declaration check unless a fixture 
     try std.testing.expect(early.compiling.child.stdin != null);
     try std.testing.expect(early.compiling.child.stdout != null);
     const production = try session.interfaceCheck(captured.entry_path);
-    var graphs: Graphs = .{ .allocator = context.allocator, .session = session, .captured = captured, .production = production, .directory = "", .early = early };
+    var graphs: Graphs = .{ .allocator = context.allocator, .session = session, .captured = captured, .production = production, .directory = "", .prepared = .{ .early = early } };
     defer graphs.deinit();
     const ordinary: cases.Case = .{ .name = "main::test_ordinary", .function = .null, .arguments = .null, .expected = .null, .providers = .null, .settings = .null };
     _ = try graphs.get(ordinary);
@@ -1404,4 +1691,25 @@ fn report(context: fs.Context, printed: Report, json: bool) Error!u8 {
     try std.Io.File.stdout().writeStreamingAll(context.io, try std.fmt.allocPrint(context.allocator, "{s}\n", .{output}));
     if (failed != 0) return 1;
     return if (passed + cached != 0) 0 else 3;
+}
+
+// spec: TEST-FRAME-ADVICE-1
+test "a guest frame-limit failure explains the test command budget controls" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    var environ: std.process.Environ.Map = .init(arena.allocator());
+    defer environ.deinit();
+    const context = try fs.Context.init(arena.allocator(), std.testing.io, &environ);
+    const reason = try failureReason(context, .{
+        .status = "trap",
+        .actual = .null,
+        .expected = .null,
+        .diagnostics = "R_FRAME_LIMIT: execution trapped",
+        .output = "",
+        .trace = "",
+        .project_source = "main.my",
+        .root = "scratch",
+    });
+    try std.testing.expect(std.mem.indexOf(u8, reason, "--max-frames=N") != null);
+    try std.testing.expect(std.mem.indexOf(u8, reason, "--max-memory") != null);
 }

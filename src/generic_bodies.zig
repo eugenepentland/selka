@@ -885,6 +885,24 @@ const Checker = struct {
         self.seedEffect(.managed_allocation);
         return expected.?;
     }
+    /// Python trim/search in generic bodies uses the receiver family and scalar bounds.
+    fn textOperation(self: *Checker, owner: Symbolic, operation: struct { kind: BufferKind, inputs: []const ast.NodeId, span: source.Span }) Error!Symbolic {
+        const family = self.shapes().collectionKind(owner);
+        if (family != .string and family != .bytes)
+            return self.sink.fail(eListType, operation.span, "search and trim require str or bytes");
+        for (operation.inputs, 0..) |input, index| {
+            if (buffer_operations.search(operation.kind) != null and index > 0)
+                try self.supports(try self.expression(input), .integer, operation.span)
+            else
+                try self.compatible(try self.expressionExpected(input, owner), owner, operation.span);
+        }
+        if (buffer_operations.trim(operation.kind) != null) {
+            self.seedEffect(.managed_allocation);
+            return owner;
+        }
+        const mode = buffer_operations.search(operation.kind).?;
+        return .{ .concrete = if (mode == .prefix or mode == .suffix) .bool else .i64 };
+    }
     fn collectionOperation(self: *Checker, owner: Symbolic, operation: struct { kind: BufferKind, inputs: []const ast.NodeId, span: source.Span, owner_node: ?ast.NodeId = null }) Error!Symbolic {
         if (self.shapes().isSet(owner)) {
             const input = if (operation.owner_node) |node_id| self.parameterIndex(node_id, 0) else null;
@@ -893,8 +911,10 @@ const Checker = struct {
         const family = self.shapes().collectionKind(owner) orelse return self.sink.fail(eListType, operation.span, "operation requires a managed collection");
         const element = try self.collectionElement(owner, operation.span);
         const key = if (family == .dictionary) try self.shapes().collectionKey(owner, operation.span) else element;
-        const kind = operation.kind;
+        const kind = buffer_operations.forFamily(operation.kind, family);
         if (operation.inputs.len != kind.arity()) return self.sink.fail("E_ARITY", operation.span, "collection argument count differs from its signature");
+        if (buffer_operations.search(kind) != null or buffer_operations.trim(kind) != null)
+            return self.textOperation(owner, .{ .kind = kind, .inputs = operation.inputs, .span = operation.span });
         if (family == .dictionary) if (dictionary_views.operation(kind)) |view|
             return self.shapes().nominal(self.catalog.templates.store.?.index.names.get(view.name()).?, &.{ key, element });
         const output: Symbolic = switch (kind) {
@@ -912,7 +932,7 @@ const Checker = struct {
             .join => owner,
             .copy => if (family == .list) owner else return self.sink.fail(eUnsupported, operation.span, "unsupported collection operation in generic body"),
             .sort => sorted: {
-                if (family != .list or !self.sortable(element)) return self.sink.fail("E_COLLECTION_METHOD", operation.span, "sort requires an integer, float or str element type");
+                if (family != .list or !self.sortable(element)) return self.sink.fail("E_COLLECTION_METHOD", operation.span, "sort requires an integer, float, str or bytes element type");
                 break :sorted .{ .concrete = .unit };
             },
             else => return self.sink.fail(eUnsupported, operation.span, "unsupported collection operation in generic body"),
@@ -997,7 +1017,7 @@ const Checker = struct {
         if (std.mem.eql(u8, name, "sort") and method.arguments.len != 0)
             return self.keyedSort(try self.expression(method.base), .{ .arguments = method.arguments, .names = method.argument_names, .span = node.span, .owner_node = method.base });
         if (method.argument_names.len != 0) return self.sink.fail(eCallArgument, method.name, "collection methods take their arguments by position; only a list's sort takes key= and reverse=");
-        const kind = buffer_operations.method(name) orelse return self.sink.fail(eListMethod, method.name, unknown_method);
+        const kind = buffer_operations.methodFor(name, method.arguments.len) orelse return self.sink.fail(eListMethod, method.name, unknown_method);
         if (method.arguments.len == 0 and (kind == .parse_int or kind == .parse_float))
             if (try self.immediateNumericRange(method.base, kind, node.span)) |output| return output;
         return self.listOperation(node, .{ .base = method.base, .kind = kind, .arguments = method.arguments });
@@ -1123,7 +1143,7 @@ const Checker = struct {
                     const sorted = try self.keyedSort(receiver, .{ .arguments = input_call.arguments, .names = input_call.argument_names, .span = span });
                     return sorted;
                 }
-                const kind = buffer_operations.method(self.src.text(input_call.name)) orelse return self.sink.fail(eListMethod, input_call.name, unknown_method);
+                const kind = buffer_operations.methodFor(self.src.text(input_call.name), input_call.arguments.len) orelse return self.sink.fail(eListMethod, input_call.name, unknown_method);
                 if (input_call.type_arguments.len != 0) return self.sink.fail("E_ARITY", span, "collection methods do not take explicit type arguments");
                 if (self.shapes().isSet(receiver)) {
                     const answer = try self.setOperation(receiver, .{ .kind = kind, .inputs = input_call.arguments, .span = span, .input = self.parameterIndexAt(owner) });
@@ -1148,7 +1168,7 @@ const Checker = struct {
         const index = (try constants.lookup(owner)) orelse return null;
         if ((try constants.literalType(index)) == null) return null;
         const receiver = try self.namedValue(owner);
-        const kind = buffer_operations.method(self.src.text(input_call.name)) orelse return self.sink.fail(eListMethod, input_call.name, unknown_method);
+        const kind = buffer_operations.methodFor(self.src.text(input_call.name), input_call.arguments.len) orelse return self.sink.fail(eListMethod, input_call.name, unknown_method);
         const answer = try self.collectionOperation(receiver, .{ .kind = kind, .inputs = input_call.arguments, .span = span });
         return answer;
     }
@@ -1187,7 +1207,7 @@ const Checker = struct {
             } else return self.sink.fail(eCallArgument, keyword orelse sort.span, "sort takes only key= and reverse=, by keyword");
         }
         if (!keyed and !self.sortable(try self.collectionElement(receiver, sort.span)))
-            return self.sink.fail("E_COLLECTION_METHOD", sort.span, "sort requires an integer, float or str element type");
+            return self.sink.fail("E_COLLECTION_METHOD", sort.span, "sort requires an integer, float, str or bytes element type");
         self.seedEffect(.managed_allocation);
         self.seedCollectionWrite(.sort, false, if (sort.owner_node) |node_id| self.parameterIndex(node_id, 0) else null);
         return .{ .concrete = .unit };
@@ -1199,12 +1219,12 @@ const Checker = struct {
         return value == .concrete and numeric_surface.isFloat(value.concrete, self.catalog.records);
     }
     /// Whether a list of `element` has a native order for `sort`: a concrete
-    /// integer, float or str element, the same set the concrete checker accepts.
+    /// integer, float, str or bytes element, matching the concrete checker.
     fn sortable(self: *Checker, element: Symbolic) bool {
+        if (self.shapes().collectionKind(element) == .string or self.immutableBytes(element)) return true;
         if (element != .concrete) return false;
         if (element.concrete.isInteger() or self.isFloat(element)) return true;
-        const text = self.catalog.names.get("str") orelse return false;
-        return element.concrete == text;
+        return false;
     }
     /// `T(x)` converts between integer widths wherever `T` names a type parameter of this
     /// template or a declared integer type, rather than a function.
@@ -1322,6 +1342,26 @@ const Checker = struct {
         try self.compatible(try self.expressionExpected(invocation.arguments[0], payload), payload, span);
         return expected;
     }
+    /// The scalar repr builtin in generic bodies respects ordinary shadowing.
+    fn reprCall(self: *Checker, invocation: Call, span: source.Span) Error!?Symbolic {
+        if (invocation.owner != null or !std.mem.eql(u8, self.src.text(invocation.name), "repr")) return null;
+        if (self.active.contains("repr") or self.functions.contains("repr")) return null;
+        if (self.module_names) |names| if (try names.topLevel(invocation.name)) return null;
+        if (invocation.arguments.len != 1 or invocation.type_arguments.len != 0 or invocation.argument_names.len != 0)
+            return self.sink.fail("E_ARITY", span, "repr requires one scalar argument");
+        const input = try self.expression(invocation.arguments[0]);
+        try self.requireReprScalar(input, span);
+        self.seedEffect(.managed_allocation);
+        return .{ .concrete = self.catalog.names.get("str") orelse return error.InternalError };
+    }
+    fn requireReprScalar(self: *Checker, input: Symbolic, span: source.Span) Error!void {
+        if (self.shapes().collectionKind(input) == .string or self.immutableBytes(input) or self.isFloat(input)) return;
+        if (input == .concrete) {
+            if (input.concrete == .bool or input.concrete.isInteger()) return;
+        }
+        if (input == .parameter) return self.supports(input, .integer, span);
+        return self.sink.fail("E_REPR_TYPE", span, "repr accepts str, bytes, int, float and bool; collections and records have no repr yet");
+    }
     fn textConstructor(self: *Checker, call_value: Call, span: source.Span) Error!?Symbolic {
         if (call_value.owner != null or !std.mem.eql(u8, self.src.text(call_value.name), "str")) return null;
         if (self.active.contains("str") or self.functions.contains("str")) return null;
@@ -1430,6 +1470,7 @@ const Checker = struct {
     fn specialCall(self: *Checker, input_call: Call, span: source.Span) Error!?Symbolic {
         if (try self.viewSnapshot(input_call, span)) |value| return value;
         if (try self.capabilityMethodCall(input_call, span)) |value| return value;
+        if (try self.reprCall(input_call, span)) |value| return value;
         if (try self.textConstructor(input_call, span)) |value| return value;
         if (try self.embedCall(input_call, span)) |value| return value;
         if (std.mem.eql(u8, self.src.text(input_call.name), "todo") and input_call.owner == null) {
@@ -1715,6 +1756,19 @@ const Checker = struct {
         try self.expected_types.put(self.allocator, self.program.nodes.items[@backingInt(id)].span, expected);
         return self.expression(id);
     }
+    /// Explicit byte literals have the managed bytes type; array contexts keep
+    /// their fixed-octet representation, as in concrete expression checking.
+    fn byteLiteral(self: *Checker, node: ast.Node) Error!Symbolic {
+        if (self.expected_types.get(node.span)) |expected| {
+            if (symbolic.array(expected, self.catalog.records) != null) return self.concreteType(node.span);
+        }
+        const spelling = self.src.text(node.span);
+        if (spelling.len != 0 and spelling[0] == 'b') {
+            self.seedEffect(.managed_allocation);
+            return .{ .concrete = self.catalog.names.get("bytes").? };
+        }
+        return self.concreteType(node.span);
+    }
     fn expression(self: *Checker, id: ast.NodeId) Error!Symbolic {
         const before = self.temporary_results;
         self.expression_depth += 1;
@@ -1771,7 +1825,8 @@ const Checker = struct {
             },
             .call => |invocation| try self.call(invocation, node.span),
             .propagate => |operand| try self.propagateValue(operand, node.span),
-            .bytes, .text => try self.concreteType(node.span),
+            .bytes => try self.byteLiteral(node),
+            .text => try self.concreteType(node.span),
             .membership => |membership| member: {
                 const needle = try self.expression(membership.needle);
                 const container = try self.expression(membership.container);
@@ -2643,6 +2698,18 @@ fn resolveTemplate(context: TemplateCheck, function: ast.Function) Error!?Resolv
     };
     return .{ .raw = raw, .parameters = parameters };
 }
+/// An imported interface's declared function has no body here: its
+/// interface's transitive effect mask is its direct mask, and it counts as
+/// already scheduled, so no template's call to it walks a body.
+fn seedDeclared(declared: []const ?effect_set.Mask, effect_masks: []effect_set.Mask, scheduled: []bool) void {
+    for (declared, 0..) |entry, index| {
+        const mask = entry orelse continue;
+        if (index >= effect_masks.len) break;
+        effect_masks[index] = mask;
+        scheduled[index] = true;
+    }
+}
+
 /// Count a rejected abstract check without branching in the hot loop.
 fn noteSymbolicFailure(symbolic_session: ?*generic_cache.Session, index: usize) void {
     if (symbolic_session) |reuse| reuse.noteFailed(index);
@@ -2668,13 +2735,20 @@ pub fn checkWithNames(allocator: std.mem.Allocator, src: source.Source, program:
 }
 /// Check symbolic bodies against the same concrete type catalog used by specialization.
 pub fn checkWithCatalog(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink, catalog: Catalog) Error!void {
-    return checkWithCatalogCached(allocator, src, program, sink, catalog, null);
+    return checkWithCatalogCached(allocator, src, program, sink, catalog, .{});
 }
+
+/// What one abstract template check may take instead of checking a body:
+/// retained direct results, and (MODULE-INTERFACE-1) for a module checked
+/// against imported interfaces, the transitive effect mask the interface
+/// declares for a function whose body the program does not have, by function.
+pub const Reuse = struct { symbolic: ?*generic_cache.Session = null, declared: []const ?effect_set.Mask = &.{} };
 /// Check symbolic bodies, reusing unchanged direct results from `symbolic`.
 /// The whole-graph `effects.checkAbstract` pass always runs from the combined
 /// fresh and replayed masks, so a changed callee body is re-derived even when a
 /// caller's own direct result is reusable.
-pub fn checkWithCatalogCached(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink, catalog: Catalog, symbolic_session: ?*generic_cache.Session) Error!void {
+pub fn checkWithCatalogCached(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink, catalog: Catalog, reuse_with: Reuse) Error!void {
+    const symbolic_session = reuse_with.symbolic;
     const module_names = catalog.module_names;
     var has_work = program.types.constraints.len != 0;
     for (program.functions) |function| if (function.signature.type_parameters.len != 0) {
@@ -2713,6 +2787,7 @@ pub fn checkWithCatalogCached(allocator: std.mem.Allocator, src: source.Source, 
         scheduled[index] = true;
         pending.appendAssumeCapacity(index);
     }
+    seedDeclared(reuse_with.declared, effect_masks, scheduled);
     var failed = false;
     var cursor: usize = 0;
     while (cursor < pending.items.len) : (cursor += 1) {

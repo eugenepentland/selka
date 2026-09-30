@@ -234,7 +234,10 @@ fn generateImpl(allocator: std.mem.Allocator, program_in: bytecode.Program, src:
     // EMIT-STANDIN-1: a stand-in emission lowers more functions as it goes,
     // so it works on its own copy of the function table and its own selection.
     const standins: ?*fragments.Standins = if (interface.reuse) |configured| configured.standins else null;
-    const selected: ?[]const bool = if (standins) |state| state.selected else requested;
+    // MODULE-COMPILE-1: a module's emission emits its own units and analyses
+    // every function it lowered, standing in the rest with their interfaces' facts.
+    const module = interface.module;
+    const selected = try selectionOf(interface, requested, program_in.functions.len);
     var program = program_in;
     if (standins != null) program.functions = try a.dupe(bytecode.Function, program_in.functions);
     var layouts = native_types.Catalog.initRecords(a, program.records) catch |err| return layoutError(err);
@@ -257,9 +260,9 @@ fn generateImpl(allocator: std.mem.Allocator, program_in: bytecode.Program, src:
         };
         // A lean unit's metadata is read from the store, or computed once
         // its key misses, by `metaPass` (EMIT-META-1).
-        if (emit and !shape.lean) try fillPositions(a, program, src, index, unit);
+        if (emit and !shape.lean) try fillPositions(a, program, .{ .src = src, .remap = remapOf(module) }, index, unit);
     }
-    const arenas = arena_lower.present(program);
+    const arenas = programArenas(module, program);
     // A `str` conversion names only its target type, so the renderers a program
     // needs are read back from each lowered function's typed operand stacks.
     const states = try a.alloc([]const ?[]const typed.Type, program.functions.len);
@@ -283,11 +286,14 @@ fn generateImpl(allocator: std.mem.Allocator, program_in: bytecode.Program, src:
         // COW-UNIQUE-1: the value-semantics switch enables the checks by
         // default; an explicit internal policy can request counting.
         .cow = if (interface.policy.cow != .off) interface.policy.cow else if (value_semantics.enabled()) .checks else .off,
+        .module = module,
     };
     var reuse: Reuse = try .init(a, pass, interface.reuse);
+    reuse.module = module;
     try runPasses(&pass, &reuse, src, standins, shape.lean);
-    const canonical = if (requested) |mask| try selectedUnits(a, units, mask) else units;
-    const emitted = try appendBorrowedUnits(pass, src, canonical, requested);
+    const canonical = if ((requested orelse emittedMask(module))) |mask| try selectedUnits(a, units, mask) else units;
+    const emitted = try appendBorrowedUnits(pass, src, canonical, requested orelse emittedMask(module));
+    try reportTo(allocator, interface, pass, &reuse);
     const entry_function = program.functions[@backingInt(program.main)];
     const entry_parameters = try a.alloc([]const u8, entry_function.signature.parameter_count);
     const entry_parameter_names = try a.alloc([]const u8, entry_function.signature.parameter_count);
@@ -300,7 +306,10 @@ fn generateImpl(allocator: std.mem.Allocator, program_in: bytecode.Program, src:
         @import("rc_descriptors.zig").generate(a, &layouts) catch |err| return layoutError(err),
         @import("rc_glue.zig").generate(a, &layouts) catch |err| return layoutError(err),
     }) else "";
-    const renderers = @import("native_render.zig").generate(a, &layouts, program, states) catch |err| return layoutError(err);
+    try partsTo(allocator, module, &layouts, .{ .program = program, .states = states, .emit = emittedMask(module) });
+    // A module's emission renders what its own units print; the union over
+    // the program's modules is what a whole-program emission renders.
+    const renderers = @import("native_render.zig").generateSelected(a, &layouts, program, states, emittedMask(module)) catch |err| return layoutError(err);
     // A program that neither prints nor renders a value into text carries no
     // renderers, and copies nothing.
     const runtime_data = if (renderers.len == 0 and owners.len == 0) descriptors else try std.mem.concat(a, u8, &.{ descriptors, renderers, owners });
@@ -311,6 +320,7 @@ fn generateImpl(allocator: std.mem.Allocator, program_in: bytecode.Program, src:
     const host = @import("qbe_host.zig").describe(a, program, &layouts) catch |err| return layoutError(err);
     // EMBED-1: the files the program embeds, each defined once beside the units that load them.
     const embedded = qbe_embeds.table(a, src, &layouts) catch |err| return layoutError(err);
+    const names_entry = requested == null and entryEmitted(module, program);
     return std.json.Stringify.valueAlloc(allocator, .{
         .host = host,
         .text_format = text_format,
@@ -328,8 +338,132 @@ fn generateImpl(allocator: std.mem.Allocator, program_in: bytecode.Program, src:
         .store = if (shape.lean) try interface.reuse.?.store.textRoot() else null,
         .embeds = if (embedded.len == 0) null else embedded,
         .functions = emitted,
-        .entry = if (requested == null) units[@backingInt(program.main)].symbol else "",
+        .entry = if (names_entry) units[@backingInt(program.main)].symbol else "",
     }, .{});
+}
+
+/// The functions an emission emits: a stand-in emission's selection, a
+/// module's own units (MODULE-COMPILE-1), a selective emission's closure, or
+/// all of them (null).
+fn selectionOf(interface: native_interface.Interface, requested: ?[]const bool, count: usize) GenerateError!?[]const bool {
+    if (interface.reuse) |configured| if (configured.standins) |state| return state.selected;
+    const one = interface.module orelse return requested;
+    if (one.emit.len != count or one.imported.len != count) return error.InternalError;
+    return one.emit;
+}
+
+/// The units a module emission emits, or null for a whole program.
+fn emittedMask(module: ?*const native_interface.Module) ?[]const bool {
+    const one = module orelse return null;
+    return one.emit;
+}
+
+/// The interface stretches a module emission reports positions through.
+fn remapOf(module: ?*const native_interface.Module) []const ?[]const native_interface.Stretch {
+    const one = module orelse return &.{};
+    return one.remap;
+}
+
+/// Whether any function opens an arena scope: a module's emission is told
+/// the program's switch (MODULE-COMPILE-1), a whole program reads its own.
+fn programArenas(module: ?*const native_interface.Module, program: bytecode.Program) bool {
+    const one = module orelse return arena_lower.present(program);
+    return one.arenas;
+}
+
+/// Whether this emission emits the program's entry.
+fn entryEmitted(module: ?*const native_interface.Module, program: bytecode.Program) bool {
+    const one = module orelse return true;
+    return one.emit[@backingInt(program.main)];
+}
+
+/// The units a manifest lists: those `mask` marks, or every one.
+fn manifestUnits(a: std.mem.Allocator, units: []const Unit, mask: ?[]const bool) GenerateError![]const Unit {
+    const selected = mask orelse return units;
+    return selectedUnits(a, units, selected);
+}
+
+/// Fill the report the caller asked for, from its own arena when it named one.
+fn reportTo(allocator: std.mem.Allocator, interface: native_interface.Interface, pass: EmitPass, reuse: *Reuse) GenerateError!void {
+    const configured: ?*fragments.Report = if (interface.reuse) |reused| reused.report else null;
+    const out = interface.report orelse configured orelse return;
+    const into = out.arena orelse allocator;
+    out.* = try reportOf(into, pass, reuse);
+    out.arena = into;
+}
+
+/// Hand a module emission's share of the runtime unit to its caller.
+fn partsTo(allocator: std.mem.Allocator, module: ?*const native_interface.Module, layouts: *native_types.Catalog, scope: PartsScope) GenerateError!void {
+    const one = module orelse return;
+    const parts = one.parts orelse return;
+    parts.* = try moduleParts(allocator, layouts, scope);
+}
+
+/// What a module's share of the runtime unit is rendered from.
+const PartsScope = struct { program: bytecode.Program, states: []const []const ?[]const typed.Type, emit: ?[]const bool };
+
+/// MODULE-COMPILE-1: the descriptors of every type this compilation knows
+/// and the renderers its emitted units call, as mergeable blocks.
+fn moduleParts(allocator: std.mem.Allocator, layouts: *native_types.Catalog, scope: PartsScope) GenerateError!native_interface.Parts {
+    const descriptors = native_descriptors.blocks(allocator, layouts) catch |err| return layoutError(err);
+    const renderers = @import("native_render.zig").blocks(allocator, .{ .catalog = layouts, .program = scope.program, .states = scope.states, .selected = scope.emit }) catch |err| return layoutError(err);
+    const out: native_interface.Parts = .{
+        .descriptors = try allocator.alloc(native_interface.Block, descriptors.len),
+        .renderers = try allocator.alloc(native_interface.Block, renderers.len),
+        .owners = if (runtime_mode.enabled()) @import("rc_descriptors.zig").blocks(allocator, layouts) catch |err| return layoutError(err) else &.{},
+        .glue = if (runtime_mode.enabled()) @import("rc_glue.zig").blocks(allocator, layouts) catch |err| return layoutError(err) else &.{},
+    };
+    for (descriptors, @constCast(out.descriptors)) |block, *copy| copy.* = .{ .name = block.name, .text = block.text };
+    for (renderers, @constCast(out.renderers)) |block, *copy| copy.* = .{ .name = block.name, .text = block.text };
+    return out;
+}
+
+/// Allocating scalar functions cannot grant a borrowed/readonly ABI or mutable
+/// parameter authority. Their body is implementation-only; every other body's
+/// physical inputs conservatively enter its dependents' emission identity.
+fn physicalIdentity(pass: EmitPass, index: usize) GenerateError!fragments.Digest {
+    if (!runtime_mode.enabled()) return @splat(0);
+    const function = pass.program.functions[index];
+    if (index >= pass.pure.len or !pass.pure[index]) {
+        var aggregate = function.signature.return_type.isAggregate();
+        for (function.scope.locals[0..function.signature.parameter_count]) |local| aggregate = aggregate or local.ty.isAggregate();
+        if (!aggregate) return @splat(0);
+    }
+    return @import("module_physical.zig").digest(pass.allocator, .{ .functions = pass.program.functions, .records = pass.program.records }, function);
+}
+
+/// What one emission computed about every function, copied into `allocator`
+/// so it outlives the emission's arena: the facts a module interface carries
+/// and, for each emitted unit, its fragment key and stored digests.
+fn reportOf(allocator: std.mem.Allocator, pass: EmitPass, reuse: *Reuse) GenerateError!fragments.Report {
+    const program = pass.program;
+    const out = try allocator.alloc(fragments.FunctionReport, program.functions.len);
+    for (program.functions, pass.units, out, 0..) |function, unit, *entry, index| {
+        const emitted = pass.selected == null or pass.selected.?[index];
+        const named = try calledNames(allocator, program, function);
+        const writes = try reuse.parameterWrites(pass.allocator, program, index);
+        entry.* = .{
+            .name = try allocator.dupe(u8, function.name),
+            .emitted = emitted,
+            .allocates = index >= pass.pure.len or !pass.pure[index],
+            .writes = try allocator.dupe(bool, writes),
+
+            .values = named[1],
+            .marks = .{
+                .arena = arena_lower.opens(function),
+                .text = needsText(program, function),
+                .physical = .{ .stable = try allocator.dupe(bool, pass.stable.of(index)), .identity = try physicalIdentity(pass, index) },
+            },
+        };
+        if (!emitted or reuse.configured == null) continue;
+        const stored = unit.stored orelse continue;
+        entry.keys = .{
+            .unit = try allocator.dupe(u8, &std.fmt.bytesToHex(reuse.finals[index], .lower)),
+            .il = try allocator.dupe(u8, stored.digest),
+            .meta = try allocator.dupe(u8, stored.meta),
+        };
+    }
+    return .{ .functions = out, .arenas = pass.arenas };
 }
 
 /// Emit once with roots everywhere to learn which functions can allocate,
@@ -356,10 +490,23 @@ fn runPasses(pass: *EmitPass, reuse: *Reuse, src: Source, standins: ?*fragments.
         break :plain own;
     };
     pass.stable = try rc_pin_summary.compute(pass.allocator, pass.program, pass.layouts);
+    try announceFacts(pass.*, reuse);
     try secondPass(pass.*, reuse);
     if (lean) try metaPass(pass.*, reuse, src);
     if (reuse.standin != null) try recordStandIns(pass.*, reuse, allocates);
     if (reuse.configured) |configured| configured.store.flush();
+}
+
+/// MODULE-SCHEDULE-5: hand a module emission's facts to its hook before the
+/// second pass, after every caller-visible RC pin and physical input is final.
+fn announceFacts(pass: EmitPass, reuse: *Reuse) GenerateError!void {
+    const one = pass.module orelse return;
+    const hook = one.analyzed orelse return;
+    const facts = try reportOf(hook.arena, pass, reuse);
+    hook.run(hook.context, facts) catch |err| switch (err) {
+        error.OutOfMemory => return error.OutOfMemory,
+        else => return error.WriteFailed,
+    };
 }
 
 fn selectedUnits(allocator: std.mem.Allocator, units: []const Unit, selected: []const bool) GenerateError![]const Unit {
@@ -397,7 +544,7 @@ fn appendBorrowedUnits(pass: EmitPass, src: Source, canonical: []const Unit, req
         unit.il = emitted.text;
         unit.stored = null;
         unit.@"export" = null;
-        try fillPositions(a, pass.program, src, index, &unit);
+        try fillPositions(a, pass.program, .{ .src = src, .remap = remapOf(pass.module) }, index, &unit);
         try result.append(a, unit);
     }
     return result.toOwnedSlice(a);
@@ -674,6 +821,24 @@ const EmitPass = struct {
     /// COW-PIN-ELIDE-1: the `mut` list parameters no callee shares. Empty during
     /// the first pass, so a stored first-pass answer never depends on it.
     stable: rc_pin_summary.Summary = .{},
+    /// Per function, which parameters its body writes (from its body, its
+    /// stand-in record or its module interface), for the second pass.
+    writes: []const []const bool = &.{},
+    /// MODULE-COMPILE-1: the module this emission emits, or null for all.
+    module: ?*const native_interface.Module = null,
+
+    /// Whether the first pass and the allocation analysis read this
+    /// function's own text: every function a module emission lowered (all
+    /// but its stand-ins), otherwise every emitted one.
+    fn analyzed(self: EmitPass, index: usize) bool {
+        if (self.module) |one| return one.imported[index] == null;
+        return self.selected == null or self.selected.?[index];
+    }
+    /// The imported emission facts standing in for function `index`, if any.
+    fn imported(self: EmitPass, index: usize) ?native_interface.Imported {
+        const one = self.module orelse return null;
+        return one.imported[index];
+    }
 };
 
 /// Lower one function into text allocated from `scratch`, with the pass's
@@ -701,6 +866,7 @@ fn emitEntry(pass: EmitPass, index: usize, scratch: std.mem.Allocator, certifica
         .pure = pass.pure,
         .stable = pass.stable,
         .cow = if (pass.cow == .off) null else try cow_lower.request(scratch, pass.cow == .counting),
+        .writes = pass.writes,
     };
     const name = if (certificate) |proof| try rc_borrow.entrySymbol(scratch, pass.units[index].symbol, proof) else pass.units[index].symbol;
     const text = try emitter.emit(name, certificate);
@@ -723,6 +889,9 @@ const Reuse = struct {
     /// EMIT-STANDIN-1: what an emission that lowers only some functions keeps
     /// about each one, or null for an emission that lowers them all.
     standin: ?StandIn = null,
+    /// MODULE-COMPILE-1: the interfaces' facts for functions this module's
+    /// emission did not lower.
+    module: ?*const native_interface.Module = null,
 
     fn init(a: std.mem.Allocator, pass: EmitPass, configured: ?fragments.Reuse) GenerateError!Reuse {
         var symbols: std.StringHashMapUnmanaged(void) = .empty;
@@ -759,6 +928,7 @@ const Reuse = struct {
     fn parameterWrites(self: *Reuse, a: std.mem.Allocator, program: bytecode.Program, index: usize) GenerateError![]const bool {
         if (self.writes[index]) |known| return known;
         if (self.stood(index)) |record| return record.facts.writes;
+        if (self.module) |one| if (one.imported[index]) |facts| return facts.writes;
         const function = program.functions[index];
         const count = @min(function.signature.parameter_count, function.scope.locals.len);
         const flags = try a.alloc(bool, count);
@@ -796,11 +966,34 @@ const Reuse = struct {
         for (try self.keys.?.callees(index)) |callee| {
             key.callee(callee < pass.pure.len and pass.pure[callee], try self.parameterWrites(a, program, callee));
             key.stable(pass.stable.of(callee));
+            if (runtime_mode.enabled()) key.physical(try physicalIdentity(pass, callee));
         }
-        if (invokes(program.functions[index])) key.targets(try self.valueTargets(a, program));
+        // EMIT-VALUE-TARGETS-1: the text of an indirect call never reads the
+        // program's function-value target set; only a library's test
+        // dependency facts list it. An executable's answers carry none of
+        // those edges, so its key names that instead of the whole program.
+        if (invokes(program.functions[index])) key.targets(if (self.executable()) fragments.executable_targets else try self.valueTargets(a, program));
         return key.finish();
     }
+    /// Whether this emission is an executable's, whose stored answers carry no
+    /// indirect-target dependency edges.
+    fn executable(self: *const Reuse) bool {
+        const configured = self.configured orelse return false;
+        return configured.executable;
+    }
 };
+
+/// EMIT-VALUE-TARGETS-1: an executable emission's dependency facts leave out
+/// the edges an indirect call has to every function value of the program
+/// (whole-program facts only a library's test planner reads), so an answer is
+/// a function of its key alone however many modules the program has.
+fn withoutIndirect(allocator: std.mem.Allocator, facts: test_dependencies.Metadata) GenerateError!test_dependencies.Metadata {
+    var kept: std.ArrayList(test_dependencies.Dependency) = .empty;
+    for (facts.dependencies) |dependency| if (dependency.kind != .indirect) try kept.append(allocator, dependency);
+    var out = facts;
+    out.dependencies = kept.items;
+    return out;
+}
 
 /// Whether a function invokes a function value.
 fn invokes(function: bytecode.Function) bool {
@@ -981,7 +1174,8 @@ fn snapshotOf(pass: EmitPass, reuse: *Reuse, reads: fragments.Reads, invoking: b
         };
         hash.update(&try reuse.keys.?.recordDigest(index));
     }
-    if (invoking) hash.update(&try reuse.valueTargets(pass.allocator, pass.program));
+    // An executable's unit reads no value-target set (EMIT-VALUE-TARGETS-1).
+    if (invoking and !reuse.executable()) hash.update(&try reuse.valueTargets(pass.allocator, pass.program));
     for (reads.sources) |path| {
         snapshotText(&hash, path);
         const digest = (try standin.digests.digestAt(path)) orelse {
@@ -1101,7 +1295,13 @@ fn firstPass(pass: EmitPass, reuse: *Reuse) GenerateError![]bool {
     var scratch = std.heap.ArenaAllocator.init(pass.backing);
     defer scratch.deinit();
     for (0..program.functions.len) |index| {
-        if (pass.selected != null and !pass.selected.?[index]) {
+        // A function a module emission stood in allocates as its interface
+        // says, transitively (MODULE-COMPILE-1).
+        if (pass.imported(index)) |facts| {
+            allocates[index] = facts.allocates;
+            continue;
+        }
+        if (!pass.analyzed(index)) {
             // A stood-in unit's own allocation fact is its record's.
             if (reuse.stood(index)) |record| allocates[index] = record.facts.allocates;
             continue;
@@ -1125,9 +1325,11 @@ fn firstPass(pass: EmitPass, reuse: *Reuse) GenerateError![]bool {
 /// Second pass: emit (or reuse) every selected unit with the allocation
 /// analysis in hand, and record its checked dependency facts. Only the unit
 /// text and the operand stacks a `str` renderer needs outlive one function.
-fn secondPass(pass: EmitPass, reuse: *Reuse) GenerateError!void {
-    const a = pass.allocator;
-    const program = pass.program;
+fn secondPass(pass_in: EmitPass, reuse: *Reuse) GenerateError!void {
+    const a = pass_in.allocator;
+    const program = pass_in.program;
+    var pass = pass_in;
+    pass.writes = try writesTable(pass, reuse);
     var scratch = std.heap.ArenaAllocator.init(pass.backing);
     defer scratch.deinit();
     for (program.functions, pass.units, pass.states, 0..) |function, *unit, *stacks, index| {
@@ -1151,6 +1353,7 @@ fn secondPass(pass: EmitPass, reuse: *Reuse) GenerateError!void {
         };
         const emitted = try emitOne(pass, index, scratch.allocator());
         unit.test_dependencies = test_dependencies.describe(a, program, index, emitted.text, pass.layouts, emitted.states) catch |err| return layoutError(err);
+        if (reuse.executable()) unit.test_dependencies = try withoutIndirect(a, unit.test_dependencies.?);
         if (rendersText(function, program.records)) stacks.* = try copyStates(a, emitted.states);
         if (reuse.configured) |configured| {
             const answer = try configured.store.remember(key, emitted.text, unit.test_dependencies.?);
@@ -1162,6 +1365,16 @@ fn secondPass(pass: EmitPass, reuse: *Reuse) GenerateError!void {
         }
         unit.il = try a.dupe(u8, emitted.text);
     }
+}
+
+/// EMIT-WRITES-1: which parameters each function's body writes, from the
+/// facts a caller's unit may read — the function's own lowered body, its
+/// stand-in record or its module interface — so a caller never scans a body
+/// its emission did not lower (which would read as writing nothing).
+fn writesTable(pass: EmitPass, reuse: *Reuse) GenerateError![]const []const bool {
+    const table = try pass.allocator.alloc([]const bool, pass.program.functions.len);
+    for (table, 0..) |*flags, index| flags.* = try reuse.parameterWrites(pass.allocator, pass.program, index);
+    return table;
 }
 
 /// The whole-program switches a unit's first-pass key covers.
@@ -1189,13 +1402,12 @@ const Shape = struct { lean: bool = false, executable: bool = false };
 
 /// Compute one unit's per-instruction positions and assertion messages and
 /// its inline frames into `a`.
-fn fillPositions(a: std.mem.Allocator, program: bytecode.Program, src: Source, index: usize, unit: *Unit) GenerateError!void {
+fn fillPositions(a: std.mem.Allocator, program: bytecode.Program, sources: Located, index: usize, unit: *Unit) GenerateError!void {
     const code = program.functions[index].scope.instructions;
     const locations = try a.alloc(Location, code.len);
     const messages = try a.alloc([]const u8, code.len);
     for (code, locations, messages) |instruction, *location, *message| {
-        const value = src.locate(instruction.span.start);
-        location.* = .{ .path = value.path, .line = value.line, .column = value.column };
+        location.* = sources.locate(instruction.span.start);
         // ERROR-TRACE-1: a converting `?` never traps, so its slot names the
         // union case the error trace reports it wrapped the error in.
         message.* = if (instruction.op == .assert_true) instruction.op.assert_true.message else try error_trace.conversionCase(a, program.records, instruction.op) orelse "";
@@ -1216,6 +1428,7 @@ fn metaPass(pass: EmitPass, reuse: *Reuse, src: Source) GenerateError!void {
     var own: SourceDigests = undefined;
     const sources = if (reuse.standin) |*standin| &standin.digests else own: {
         own = try .init(pass.allocator, src);
+        if (pass.module) |one| own.remap = one.remap;
         break :own &own;
     };
     var scratch = std.heap.ArenaAllocator.init(pass.backing);
@@ -1233,7 +1446,7 @@ fn metaPass(pass: EmitPass, reuse: *Reuse, src: Source) GenerateError!void {
             continue;
         }
         var positioned = unit.*;
-        try fillPositions(scratch.allocator(), pass.program, src, index, &positioned);
+        try fillPositions(scratch.allocator(), pass.program, .{ .src = src, .remap = sources.remap }, index, &positioned);
         const text = try std.json.Stringify.valueAlloc(scratch.allocator(), MetaRecord{ .unit = positioned }, .{});
         const digest = try store.rememberMeta(identity, text);
         unit.stored.?.meta = try pass.allocator.dupe(u8, &std.fmt.bytesToHex(digest, .lower));
@@ -1242,6 +1455,45 @@ fn metaPass(pass: EmitPass, reuse: *Reuse, src: Source) GenerateError!void {
         // it belongs to changed; handing it over inline saves reading it back.
         unit.stored.?.record = try pass.allocator.dupe(u8, text);
     }
+}
+
+/// Where an instruction's position is reported: the merged source, and for
+/// each input served from an interface text, the stretches that map it back
+/// onto the module's real source (MODULE-COMPILE-1).
+const Located = struct {
+    src: Source,
+    remap: []const ?[]const native_interface.Stretch = &.{},
+
+    /// The path, line and column a trap reports for merged offset `offset`.
+    fn locate(self: Located, offset: usize) Location {
+        if (self.remap.len != 0) if (self.src.originalSpan(.{ .start = offset, .end = offset })) |at| {
+            if (at.input < self.remap.len) if (self.remap[at.input]) |stretches| {
+                if (stretched(self.src.origins[at.input].original, stretches, at.span.start)) |location| return location;
+            };
+        } else |_| {};
+        const value = self.src.locate(offset);
+        return .{ .path = value.path, .line = value.line, .column = value.column };
+    }
+};
+
+/// A position inside an interface text as its place in the module's source:
+/// a verbatim stretch maps linearly, so the line and column advance over the
+/// text between the stretch's start and the offset exactly as they do in the
+/// source. Null for an offset no stretch covers.
+fn stretched(text: Source, stretches: []const native_interface.Stretch, offset: usize) ?Location {
+    for (stretches) |stretch| {
+        if (offset < stretch.text or offset > @as(usize, stretch.text) + stretch.extent or offset > text.bytes.len) continue;
+        var line: usize = stretch.line;
+        var column: usize = stretch.column;
+        for (text.bytes[stretch.text..offset]) |byte| {
+            if (byte == '\n') {
+                line += 1;
+                column = 1;
+            } else column += 1;
+        }
+        return .{ .path = text.path, .line = line, .column = column };
+    }
+    return null;
 }
 
 /// The digest of each source of a merged program, computed the first time a
@@ -1257,6 +1509,9 @@ const SourceDigests = struct {
     last: std.ArrayList(u32) = .empty,
     /// Each source's path, for looking a stored source up by it.
     paths: std.StringHashMapUnmanaged(u32) = .empty,
+    /// Per source, the interface stretches a module emission reports its
+    /// positions through (MODULE-COMPILE-1).
+    remap: []const ?[]const native_interface.Stretch = &.{},
 
     fn init(a: std.mem.Allocator, src: Source) GenerateError!SourceDigests {
         const count = @max(1, src.origins.len);
@@ -1312,7 +1567,15 @@ const SourceDigests = struct {
     fn digest(self: *SourceDigests, origin: usize) fragments.Digest {
         if (self.digests[origin]) |known| return known;
         const source = if (self.src.origins.len == 0) self.src else self.src.origins[origin].original;
-        const computed = fragments.sourceDigest(source.path, source.bytes);
+        var computed = fragments.sourceDigest(source.path, source.bytes);
+        // An interface text's positions come from its stretches as well.
+        if (origin < self.remap.len) if (self.remap[origin]) |stretches| {
+            var hash = std.crypto.hash.Blake3.init(.{});
+            hash.update("interface-positions");
+            hash.update(&computed);
+            for (stretches) |stretch| hash.update(std.mem.asBytes(&[4]u32{ stretch.text, stretch.extent, stretch.line, stretch.column }));
+            hash.final(&computed);
+        };
         self.digests[origin] = computed;
         return computed;
     }
@@ -1366,6 +1629,11 @@ fn allocateAnalysis(a: std.mem.Allocator, program: bytecode.Program, own: []cons
     if (reuse.standin) |standin| for (stood, 0..) |*calls, index| {
         const record = reuse.stood(index) orelse continue;
         calls.* = try standin.indices(a, record.facts.calls);
+    };
+    // A function a module emission stood in carries its transitive fact
+    // already, so it calls nothing the analysis must follow (MODULE-COMPILE-1).
+    if (reuse.module) |one| for (stood, one.imported) |*calls, facts| {
+        if (facts != null) calls.* = &.{};
     };
     var changed = true;
     while (changed) {
@@ -1479,6 +1747,9 @@ const Emitter = struct {
     pure: []const bool = &.{},
     /// COW-PIN-ELIDE-1: which `mut` list parameters of each function no callee shares.
     stable: rc_pin_summary.Summary = .{},
+    /// Per program function, which parameters its body writes, from its facts
+    /// (EMIT-WRITES-1); empty in the first pass, which borrows nothing.
+    writes: []const []const bool = &.{},
     /// Temps naming the native-stack frame record, `ctx->active_frame` and
     /// `ctx->frames` while a function with a linked record is being emitted.
     record: usize = 0,

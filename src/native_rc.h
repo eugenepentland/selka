@@ -3,7 +3,7 @@
 #include "native_heap.h"
 /* The versioned RC artifact/heap ABI is never inferred from an arbitrary
  * pointer. GC, arena and immortal objects keep their 16-byte common header. */
-#define MYL_RC_ABI_VERSION 3u
+#define MYL_RC_ABI_VERSION 4u
 /* RC-TYPE-ID-1: the reserved dense type ids (native_heap.h `rc_id`) of the
  * descriptors the runtime defines itself. A generated descriptor's id is
  * MYL_RC_ID_FIRST_GENERATED plus its position in the compiler's one program-wide
@@ -15,14 +15,17 @@ enum {
 };
 _Static_assert(MYL_RC_ID_WORD_LEAF < MYL_RC_ID_FIRST_GENERATED, "runtime ids stay below generated ids");
 
-#define MYL_RC_PREFIX_BYTES ((size_t)32)
-#define MYL_RC_COUNT_MAX UINTPTR_MAX
+#define MYL_RC_PREFIX_BYTES ((size_t)24)
+#define MYL_RC_COUNT_MAX UINT32_MAX
 #define MYL_RC_COUNT_LIMIT_CODE "R_REFERENCE_COUNT_LIMIT"
 /* Bit zero has no tracing meaning in an RC artifact. Set it exactly once when
- * O=H=0, before repurposing either count word as intrusive worklist storage. */
+ * O=H=0, before repurposing the count pair as full-width intrusive worklist storage. */
 #define MYL_RC_OBJECT_DYING ((uintptr_t)MYL_NATIVE_OBJECT_MARKED)
 typedef struct {
-    uintptr_t owners, holds;
+    union {
+        struct { uint32_t owners, holds; };
+        uintptr_t retired_link;
+    };
     myl_native_object common;
 } myl_rc_object;
 typedef enum {
@@ -114,6 +117,12 @@ typedef struct {
  * even if no allocation ever uses that shape. Repeated module registration is
  * idempotent. Failure preserves all old registrations and release capacity. */
 myl_rc_status myl_rc_module_register(myl_native_heap *, const myl_rc_module *);
+/* Independently versioned compiler image, opaque outside the matching runtime
+ * bundle. The five-field module ABI remains unchanged. Immutable graph/plan
+ * data lives through teardown; only bindings, indices and frames are charged
+ * private state. Admission publishes all of them together or nothing. */
+typedef struct myl_rc_image myl_rc_image;
+myl_rc_status myl_rc_module_register_image(myl_native_heap *, const myl_rc_module *, const myl_rc_image *);
 /* Runtime/foreign metadata with shorter lifetime uses import, which copies the
  * complete inline graph and returns a stable heap-lifetime shape. Source
  * metadata may be discarded immediately; its addresses are never identities. */

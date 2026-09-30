@@ -12,13 +12,19 @@ pub const Error = fs.Error || std.Io.Dir.OpenError || std.Io.Dir.SelectiveWalker
 /// Entry-point body appended to a library entry so it can be checked as a project.
 const main_stub = "def main() -> int:\n    return 0\n";
 /// Captured bytes are independent of subsequent source edits.
-pub const File = struct { path: []const u8, data: []const u8, hash: []const u8 };
+pub const File = struct {
+    path: []const u8,
+    data: []const u8,
+    hash: []const u8,
+    /// Length-only refused asset; never replayed as successful embedded contents.
+    refused_size: ?u64 = null,
+};
 /// Captured required-configuration files, their combined policy identity, and
 /// the project budgets the same configuration sets (PROJ-SCALE-1): the snapshot
 /// is bounded by its `max_total_bytes`, and the resolved identity loads under it.
 /// `assets` are the files the captured sources embed (`EMBED-1`), each named by
 /// the path it has relative to the snapshot root, which may climb above it.
-pub const Support = struct { files: []const File = &.{}, policy_identity: ?[]const u8 = null, budgets: project.Options = .{}, assets: []const File = &.{} };
+pub const Support = struct { files: []const File = &.{}, policy_identity: ?[]const u8 = null, budgets: project.Options = .{}, assets: []const File = &.{}, origin: ?AssetRoots = null };
 /// Paths and bytes belong to the enclosing native build context.
 pub const Snapshot = struct {
     root: []const u8,
@@ -98,7 +104,8 @@ fn inventory(context: fs.Context, entry: []const u8, excluded: ?[]const u8, hash
     }
     std.mem.sort(File, files.items, {}, less);
     if (find(files.items, name) == null) return error.InvalidTestSnapshot;
-    support.assets = try captureAssets(context, .{ .root = root, .entry = absolute }, files.items);
+    support.origin = .{ .root = root, .entry = absolute, .name = name };
+    support.assets = try captureAssets(context, support.origin.?, files.items, support);
     return .{
         .root = root,
         .entry = name,
@@ -112,31 +119,61 @@ fn inventory(context: fs.Context, entry: []const u8, excluded: ?[]const u8, hash
 
 /// Where a snapshot's embedded files are read from: the project root its sources
 /// are captured under, and the entry that locates the nearest `mylang.json`.
-const AssetRoots = struct { root: []const u8, entry: []const u8 };
+const AssetRoots = struct { root: []const u8, entry: []const u8, name: []const u8 };
 
 /// EMBED-1: read every file the captured sources' `embed_bytes`/`embed_str` calls
 /// name, by the same rules the compiler applies, so a test child compiled from
 /// the materialized copy finds them. A call whose file cannot be read is left
 /// for the child's own compile to report.
-fn captureAssets(context: fs.Context, roots: AssetRoots, files: []const File) Error![]const File {
-    var assets: std.ArrayList(File) = .empty;
+fn captureAssets(context: fs.Context, roots: AssetRoots, files: []const File, support: Support) Error![]const File {
     const config = project_config.discover(context.allocator, context.io, roots.entry) catch null;
-    const embed_root = if (config) |path| std.fs.path.dirname(path) orelse roots.root else roots.root;
-    for (files) |file| {
-        if (!embed.mayEmbed(file.data)) continue;
-        const found = try embed.scan(context.allocator, .{ .path = file.path, .bytes = file.data, .line_starts = &.{} });
-        for (found) |site| {
-            const read_roots: embed.Roots = .{ .io = context.io, .import_root = roots.root, .root = embed_root };
-            const outcome = try embed.read(context.allocator, read_roots, file.path, site.path);
-            if (outcome.status != .ok) continue;
-            const relative = try embed.relativeTarget(context.allocator, std.fs.path.dirname(file.path) orelse "", site.path);
-            if (find(assets.items, relative) != null) continue;
-            try assets.append(context.allocator, .{ .path = relative, .data = outcome.contents, .hash = try fileHash(context.allocator, outcome.contents) });
-        }
-    }
-    std.mem.sort(File, assets.items, {}, less);
-    return assets.items;
+    const prepared = try withTestEntry(context, .{ .root = roots.root, .entry = roots.name, .entry_path = roots.entry, .files = files, .support = support, .identity = "" });
+    var provider: AssetProvider = .{
+        .context = context,
+        .roots = .{ .io = context.io, .import_root = roots.root, .root = if (config) |path| std.fs.path.dirname(path) orelse roots.root else roots.root },
+        .files = prepared.files,
+    };
+    var loaded = project.Project.init(context.allocator);
+    defer loaded.deinit();
+    loaded.load(.{ .context = &provider, .read = AssetProvider.read, .embed = AssetProvider.readEmbed }, try entryModule(context.allocator, roots.name), support.budgets) catch |err| switch (err) {
+        error.OutOfMemory => return error.OutOfMemory,
+        else => {}, // The immutable child reports the located source refusal.
+    };
+    std.mem.sort(File, provider.assets.items, {}, less);
+    return provider.assets.items;
 }
+
+/// Capture the loaded closure through the same before-read caps as the compiler.
+const AssetProvider = struct {
+    context: fs.Context,
+    roots: embed.Roots,
+    files: []const File,
+    assets: std.ArrayList(File) = .empty,
+
+    fn read(raw: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, limit: usize) project.ReadError![]u8 {
+        const self: *AssetProvider = @ptrCast(@alignCast(raw.?));
+        var memory: MemoryProvider = .{ .files = self.files };
+        return MemoryProvider.read(&memory, allocator, path, limit);
+    }
+    fn readEmbed(raw: ?*anyopaque, _: std.mem.Allocator, module_path: []const u8, path: []const u8, limit: usize) std.mem.Allocator.Error!embed.Read {
+        const self: *AssetProvider = @ptrCast(@alignCast(raw.?));
+        const a = self.context.allocator;
+        if (embed.spelledStatus(path)) |status| return .{ .status = status };
+        const relative = try embed.relativeTarget(a, std.fs.path.dirname(module_path) orelse "", path);
+        if (find(self.assets.items, relative)) |index| {
+            const file = self.assets.items[index];
+            if (file.refused_size != null or file.data.len > limit) return .{ .status = .too_large };
+            return .{ .status = .ok, .contents = file.data };
+        }
+        const outcome = try embed.readLimited(a, self.roots, module_path, path, limit);
+        if (outcome.status == .ok) {
+            try self.assets.append(a, .{ .path = relative, .data = outcome.contents, .hash = try fileHash(a, outcome.contents) });
+        } else if (outcome.status == .too_large) {
+            try self.assets.append(a, .{ .path = relative, .data = "", .hash = try std.fmt.allocPrint(a, "refused:{d}", .{limit}), .refused_size = @as(u64, limit) + 1 });
+        }
+        return outcome;
+    }
+};
 
 /// Capture the winning `mylang.json` and, when it names a relative policy, the
 /// resolved policy bytes. A malformed configuration is still copied verbatim so
@@ -485,12 +522,14 @@ const MemoryProvider = struct {
         return .{ .context = self, .read = MemoryProvider.read, .embed = readEmbed };
     }
     /// The captured file an embed literal names, found by the path it has relative to the root.
-    fn readEmbed(raw: ?*anyopaque, allocator: std.mem.Allocator, module_path: []const u8, path: []const u8) std.mem.Allocator.Error!embed.Read {
+    fn readEmbed(raw: ?*anyopaque, allocator: std.mem.Allocator, module_path: []const u8, path: []const u8, limit: usize) std.mem.Allocator.Error!embed.Read {
         const self: *MemoryProvider = @ptrCast(@alignCast(raw.?));
         if (embed.spelledStatus(path)) |status| return .{ .status = status };
         const relative = try embed.relativeTarget(allocator, std.fs.path.dirname(module_path) orelse "", path);
         defer allocator.free(relative);
         const index = find(self.assets, relative) orelse return .{ .status = .missing };
+        if (self.assets[index].refused_size != null) return .{ .status = .too_large };
+        if (self.assets[index].data.len > limit) return .{ .status = .too_large };
         return .{ .status = .ok, .contents = try allocator.dupe(u8, self.assets[index].data) };
     }
     fn read(raw: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, limit: usize) project.ReadError![]u8 {
@@ -544,13 +583,14 @@ fn sameBytes(before: Snapshot, after: Snapshot) bool {
     }
     if (before.support.assets.len != after.support.assets.len) return false;
     for (before.support.assets, after.support.assets) |old, new| {
+        if (old.refused_size != new.refused_size) return false;
         if (!std.mem.eql(u8, old.path, new.path) or !std.mem.eql(u8, old.data, new.data)) return false;
     }
     return true;
 }
 /// Fingerprint of one captured file's bytes, for the resolved identity.
 /// BLAKE3: a large project hashes megabytes of source on every run.
-fn fileHash(allocator: std.mem.Allocator, bytes: []const u8) Error![]const u8 {
+fn fileHash(allocator: std.mem.Allocator, bytes: []const u8) std.mem.Allocator.Error![]const u8 {
     var digest: [32]u8 = undefined;
     std.crypto.hash.Blake3.hash(bytes, &digest, .{});
     return allocator.dupe(u8, &std.fmt.bytesToHex(digest, .lower));
@@ -582,25 +622,88 @@ pub const Stable = struct {
     }
 };
 /// Claim the stable snapshot root for `seed` (the cache directory, project
-/// root and entry). Null when another live run holds it, a concurrent sweep is
-/// removing it, or the scratch root cannot hold it; the caller then stages at
-/// a fresh private path exactly as before. Whatever a killed run left inside
-/// is cleared first, keeping only the marker.
+/// root and entry). Null when another live run holds it or the scratch root
+/// cannot hold it; the caller then stages at a fresh private path exactly as
+/// before. An attempt a concurrent sweep wins is made again. Whatever a killed
+/// run left inside is cleared first, keeping only the marker.
 pub fn claimStable(context: fs.Context, scratch: []const u8, seed: []const u8) ?Stable {
+    return claim(context, scratch, seed, false);
+}
+/// MODULE-TEST-5: `claimStable`, waiting while another run holds the path:
+/// a detached seeder takes the path once the run that started it released
+/// it. Only the seeder waits; a run never does (MODULE-TEST-6).
+pub fn claimStableWaiting(context: fs.Context, scratch: []const u8, seed: []const u8) ?Stable {
+    return claim(context, scratch, seed, true);
+}
+/// The file a detached seeder leaves in the stable snapshot it holds, so a
+/// run that finds the path held can tell a seeder from another run
+/// (MODULE-TEST-6).
+const seeding_name = "seeding";
+/// MODULE-TEST-5: mark a claimed stable snapshot as a detached seeder's,
+/// naming this process, which leads the seeder's process group (MODULE-TEST-6).
+pub fn markSeeding(context: fs.Context, stable: Stable) void {
+    const path = std.fs.path.join(context.allocator, &.{ stable.directory, seeding_name }) catch return;
+    const pid = std.fmt.allocPrint(context.allocator, "{d}", .{std.os.linux.getpid()}) catch return;
+    context.write(path, pid) catch return;
+}
+/// MODULE-TEST-6: the process the seeder mark of `seed`'s stable snapshot
+/// names, or null when there is no mark or it names none.
+pub fn seederProcess(context: fs.Context, scratch: []const u8, seed: []const u8) ?std.os.linux.pid_t {
+    const directory = stableDirectory(context.allocator, scratch, seed) catch return null;
+    const path = std.fs.path.join(context.allocator, &.{ directory, seeding_name }) catch return null;
+    const text = context.read(path) catch return null;
+    const pid = std.fmt.parseInt(std.os.linux.pid_t, std.mem.trim(u8, text, " \n"), 10) catch return null;
+    return if (pid > 1) pid else null;
+}
+/// MODULE-TEST-6: whether the stable snapshot of `seed` is marked as a
+/// detached seeder's. A seeder that was killed leaves its mark until the
+/// next claim clears the path.
+pub fn heldBySeeder(context: fs.Context, scratch: []const u8, seed: []const u8) bool {
+    const directory = stableDirectory(context.allocator, scratch, seed) catch return false;
+    const path = std.fs.path.join(context.allocator, &.{ directory, seeding_name }) catch return false;
+    return context.exists(path);
+}
+/// The stable snapshot directory of `seed` under `scratch`.
+fn stableDirectory(allocator: std.mem.Allocator, scratch: []const u8, seed: []const u8) error{OutOfMemory}![]const u8 {
     var digest: [16]u8 = undefined;
     std.crypto.hash.Blake3.hash(seed, &digest, .{});
-    const name = std.fmt.allocPrint(context.allocator, "snapshot-{s}", .{std.fmt.bytesToHex(digest, .lower)}) catch return null;
-    const directory = std.fs.path.join(context.allocator, &.{ scratch, ".pending", name }) catch return null;
-    const marker_path = std.fs.path.join(context.allocator, &.{ directory, fs.owner_name }) catch return null;
-    std.Io.Dir.cwd().createDirPath(context.io, directory) catch return null;
-    const marker = std.Io.Dir.cwd().createFile(context.io, marker_path, .{ .truncate = false, .permissions = .fromMode(0o600) }) catch return null;
-    const locked = marker.tryLock(context.io, .exclusive) catch false;
-    const claimed = locked and stillLinked(context, marker, marker_path);
-    if (!claimed or !clearExcept(context, directory, fs.owner_name)) {
+    const name = try std.fmt.allocPrint(allocator, "snapshot-{s}", .{std.fmt.bytesToHex(digest, .lower)});
+    return std.fs.path.join(allocator, &.{ scratch, ".pending", name });
+}
+/// How one attempt at the stable path ended: claimed, held by a live run
+/// (or not claimable at all), or lost to a sweep that removed the tree
+/// under it, or to the release of the run that held it.
+const Attempt = union(enum) { claimed: Stable, held, lost };
+fn claim(context: fs.Context, scratch: []const u8, seed: []const u8, wait: bool) ?Stable {
+    // NATIVE-TEST-STABLE-1: a sweep (`fs.Context.reclaim`, run by any
+    // process staging owned scratch) can take a fresh marker between its
+    // creation and this run's lock and delete the tree; a run that released
+    // the path unlinks the marker a waiting claim then holds. Either is a lost
+    // race, not a live holder, so the claim is made again.
+    for (0..3) |_| switch (attempt(context, scratch, seed, wait)) {
+        .claimed => |stable| return stable,
+        .held => return null,
+        .lost => {},
+    };
+    return null;
+}
+fn attempt(context: fs.Context, scratch: []const u8, seed: []const u8, wait: bool) Attempt {
+    const directory = stableDirectory(context.allocator, scratch, seed) catch return .held;
+    const marker_path = std.fs.path.join(context.allocator, &.{ directory, fs.owner_name }) catch return .held;
+    std.Io.Dir.cwd().createDirPath(context.io, directory) catch return .lost;
+    const marker = std.Io.Dir.cwd().createFile(context.io, marker_path, .{ .truncate = false, .permissions = .fromMode(0o600) }) catch return .lost;
+    const locked = if (wait) lockWaiting(context, marker) else marker.tryLock(context.io, .exclusive) catch false;
+    if (locked and stillLinked(context, marker, marker_path)) {
+        if (clearExcept(context, directory, fs.owner_name)) return .{ .claimed = .{ .directory = directory, .marker = marker } };
         marker.close(context.io);
-        return null;
+        return .held;
     }
-    return .{ .directory = directory, .marker = marker };
+    marker.close(context.io);
+    return if (locked) .lost else .held;
+}
+fn lockWaiting(context: fs.Context, marker: std.Io.File) bool {
+    marker.lock(context.io, .exclusive) catch return false;
+    return true;
 }
 /// Whether the locked marker is still the file at its path: a sweep that won
 /// the marker and deleted the tree before this lock leaves it unlinked.
@@ -656,7 +759,11 @@ fn writeAssets(context: fs.Context, assets: []const File, root: []const u8) Erro
     for (assets) |asset| {
         const path = try std.fs.path.resolve(context.allocator, &.{ root, asset.path });
         try context.mkdir(std.fs.path.dirname(path) orelse return error.InvalidTestSnapshot);
-        try context.write(path, asset.data);
+        if (asset.refused_size) |size| {
+            const file = try std.Io.Dir.cwd().createFile(context.io, path, .{});
+            defer file.close(context.io);
+            file.setLength(context.io, size) catch return error.InvalidTestSnapshot;
+        } else try context.write(path, asset.data);
     }
 }
 
@@ -736,27 +843,43 @@ pub fn replace(context: fs.Context, snapshot: Snapshot, replacements: std.json.V
         if (entry.value_ptr.* != .string) return error.InvalidTestProviders;
     }
     try verifyProviderInventory(context, snapshot);
+    const files = try context.allocator.dupe(File, snapshot.files);
     var total: usize = 0;
-    const temp_root = try context.absolute(directory);
-    const root = try mirrorPath(context.allocator, temp_root, snapshot.root);
-    for (snapshot.files) |file| {
-        const replacement = replacements.object.get(file.path);
-        const data = if (replacement) |value| value.string else file.data;
+    for (files) |*file| {
+        if (replacements.object.get(file.path)) |value| {
+            file.data = value.string;
+            file.hash = try fileHash(context.allocator, file.data);
+        }
         total = std.math.add(usize, total, file.path.len) catch return error.InvalidTestProviders;
-        total = std.math.add(usize, total, data.len) catch return error.InvalidTestProviders;
+        total = std.math.add(usize, total, file.data.len) catch return error.InvalidTestProviders;
         if (total > snapshot.support.budgets.max_total_bytes) return error.InvalidTestProviders;
-        const target = try std.fs.path.join(context.allocator, &.{ root, file.path });
-        try context.mkdir(std.fs.path.dirname(target).?);
-        try context.write(target, data);
     }
-    for (snapshot.support.files) |file| {
-        const target = try std.fs.path.join(context.allocator, &.{ temp_root, file.path });
-        try context.mkdir(std.fs.path.dirname(target).?);
-        try context.write(target, file.data);
+    var replaced = snapshot;
+    replaced.files = files;
+    if (snapshot.support.origin) |origin| {
+        replaced.support.assets = try captureAssets(context, origin, files, snapshot.support);
     }
-    try writeAssets(context, snapshot.support.assets, root);
-    return capture(context, try std.fs.path.join(context.allocator, &.{ root, snapshot.entry }));
+    replaced.identity = try identity(context.allocator, replaced.entry, files, replaced.support, null);
+    return materialize(context, replaced, directory);
 }
+
+/// Confirm the actual files a selected replacement closure embedded, including
+/// assets its production closure never needed, before publishing test receipts.
+pub fn verifyAssets(context: fs.Context, snapshot: Snapshot) Error!void {
+    const origin = snapshot.support.origin orelse return;
+    const current = try captureAssets(context, origin, snapshot.files, snapshot.support);
+    if (!sameAssets(snapshot.support.assets, current)) return error.SourceChanged;
+}
+
+fn sameAssets(before: []const File, after: []const File) bool {
+    if (before.len != after.len) return false;
+    for (before, after) |old, new| {
+        if (old.refused_size != new.refused_size) return false;
+        if (!std.mem.eql(u8, old.path, new.path) or !std.mem.eql(u8, old.data, new.data)) return false;
+    }
+    return true;
+}
+
 /// Require provider snapshots to preserve exported types and the selected test ABI.
 pub fn compatible(original: std.json.Value, replacement: std.json.Value, name: []const u8) Error!void {
     if (!equivalent(v.get(original, "types"), v.get(replacement, "types"))) return error.ProviderSignatureChanged;
@@ -1148,8 +1271,100 @@ test "the stable snapshot root is one path per seed, held by one run at a time a
     // The last release leaves the scratch root as it found it.
     try std.testing.expect(!context.exists(try std.fs.path.join(context.allocator, &.{ scratch, ".pending" })));
 }
+// spec-case: MODULE-TEST-5
+test "a stable snapshot a seeder holds is marked as its, and a waiting claim takes the path once it is released" {
+    var environment: std.process.Environ.Map = .init(std.testing.allocator);
+    defer environment.deinit();
+    var context = try fs.Context.init(std.testing.allocator, std.testing.io, &environment);
+    defer context.deinit();
+    var temporary_dir = std.testing.tmpDir(.{});
+    defer temporary_dir.cleanup();
+    const scratch = try temporary_dir.dir.realPathFileAlloc(context.io, ".", context.allocator);
+    const seeder = claimStable(context, scratch, "seed-a") orelse return error.TestUnexpectedResult;
+    try std.testing.expect(!heldBySeeder(context, scratch, "seed-a"));
+    markSeeding(context, seeder);
+    try std.testing.expect(heldBySeeder(context, scratch, "seed-a"));
+    // The mark names the process that made it.
+    try std.testing.expectEqual(@as(?std.os.linux.pid_t, std.os.linux.getpid()), seederProcess(context, scratch, "seed-a"));
+    try std.testing.expectEqual(@as(?std.os.linux.pid_t, null), seederProcess(context, scratch, "seed-b"));
+    try std.testing.expect(!heldBySeeder(context, scratch, "seed-b"));
+    const directory = seeder.directory;
+    seeder.release(context);
+    try std.testing.expect(!heldBySeeder(context, scratch, "seed-a"));
+    // The next claim, waiting or not, gets the very same path, unmarked.
+    const next = claimStableWaiting(context, scratch, "seed-a") orelse return error.TestUnexpectedResult;
+    try std.testing.expectEqualStrings(directory, next.directory);
+    try std.testing.expect(!heldBySeeder(context, scratch, "seed-a"));
+    next.release(context);
+}
 /// Create `path` and return it.
 fn makeDirectory(context: fs.Context, path: []const u8) ![]const u8 {
     try context.mkdir(path);
     return path;
+}
+
+// spec-case: EMBED-PROJECT-BUDGET-1
+test "snapshot embeds dedup before reading and refused assets remain length-only" {
+    var environment: std.process.Environ.Map = .init(std.testing.allocator);
+    defer environment.deinit();
+    var context = try fs.Context.init(std.testing.allocator, std.testing.io, &environment);
+    defer context.deinit();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const a = context.allocator;
+    const root = try temporary.dir.realPathFileAlloc(context.io, ".", a);
+    const entry = try std.fs.path.join(a, &.{ root, "main.my" });
+    const config = try std.fs.path.join(a, &.{ root, "mylang.json" });
+    const text = "module main\n\nconst A: bytes = embed_bytes(\"data.bin\")\nconst B: bytes = embed_bytes(\"data.bin\")\n\ndef main() -> int:\n    return 0\n";
+    try context.write(entry, text);
+    try context.write(try std.fs.path.join(a, &.{ root, "data.bin" }), "abcd");
+    try context.write(config, try std.fmt.allocPrint(a, "{{\"version\":1,\"budgets\":{{\"max_total_bytes\":{d}}}}}", .{text.len + 4}));
+    const exact = try capture(context, entry);
+    try std.testing.expectEqual(@as(usize, 1), exact.support.assets.len);
+    try std.testing.expectEqualStrings("abcd", exact.support.assets[0].data);
+    try std.testing.expect(exact.support.assets[0].refused_size == null);
+    try context.write(config, try std.fmt.allocPrint(a, "{{\"version\":1,\"budgets\":{{\"max_total_bytes\":{d}}}}}", .{text.len + 3}));
+    const refused = try capture(context, entry);
+    try std.testing.expectEqual(@as(usize, 1), refused.support.assets.len);
+    try std.testing.expectEqual(@as(?u64, 4), refused.support.assets[0].refused_size);
+    try std.testing.expectEqual(@as(usize, 0), refused.support.assets[0].data.len);
+    const mirror = try materialize(context, refused, try std.fs.path.join(a, &.{ root, "mirror" }));
+    try std.testing.expectEqual(@as(u64, 4), (try std.Io.Dir.cwd().statFile(context.io, try std.fs.path.join(a, &.{ mirror.root, "data.bin" }), .{})).size);
+    try context.write(config, try std.fmt.allocPrint(a, "{{\"version\":1,\"budgets\":{{\"max_total_bytes\":{d}}}}}", .{text.len + 4}));
+    try std.testing.expectError(error.SourceChanged, verify(context, refused));
+    const widened = try capture(context, entry);
+    try std.testing.expectEqualStrings("abcd", widened.support.assets[0].data);
+    try std.testing.expect(widened.support.assets[0].refused_size == null);
+}
+
+// spec-case: EMBED-PROJECT-BUDGET-1
+// spec-case: NATIVE-TEST-12
+test "provider snapshots capture newly reachable embedded assets and reject their mid-run edits" {
+    var environment: std.process.Environ.Map = .init(std.testing.allocator);
+    defer environment.deinit();
+    var context = try fs.Context.init(std.testing.allocator, std.testing.io, &environment);
+    defer context.deinit();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const a = context.allocator;
+    const root = try temporary.dir.realPathFileAlloc(context.io, ".", a);
+    const entry = try std.fs.path.join(a, &.{ root, "main.my" });
+    const asset = try std.fs.path.join(a, &.{ root, "fixture.bin" });
+    try context.write(entry, "module main\nimport dependency\n");
+    try context.write(try std.fs.path.join(a, &.{ root, "dependency.my" }), "module dependency\n");
+    try context.write(try std.fs.path.join(a, &.{ root, "fixture.my" }), "module fixture\nconst DATA: bytes = embed_bytes(\"fixture.bin\")\n");
+    try context.write(asset, "abcd");
+    const production = try capture(context, entry);
+    try std.testing.expectEqual(@as(usize, 0), production.support.assets.len);
+    const staged = try materialize(context, production, try std.fs.path.join(a, &.{ root, "staged" }));
+    const providers = try std.json.parseFromSlice(std.json.Value, a, "{\"dependency.my\":\"module dependency\\nimport fixture\\n\"}", .{});
+    const replaced = try replace(context, staged, providers.value, try std.fs.path.join(a, &.{ root, "provider" }));
+    try std.testing.expectEqual(@as(usize, 1), replaced.support.assets.len);
+    try std.testing.expectEqualStrings("abcd", try context.read(try std.fs.path.join(a, &.{ replaced.root, "fixture.bin" })));
+    try verifyAssets(context, replaced);
+    try context.write(asset, "dcba");
+    try std.testing.expectError(error.SourceChanged, verifyAssets(context, replaced));
+    const recaptured = try replace(context, staged, providers.value, try std.fs.path.join(a, &.{ root, "recaptured" }));
+    try std.testing.expect(!std.mem.eql(u8, replaced.identity, recaptured.identity));
+    try std.testing.expectEqualStrings("dcba", recaptured.support.assets[0].data);
 }

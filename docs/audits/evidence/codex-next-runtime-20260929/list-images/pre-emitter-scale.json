@@ -1,0 +1,1855 @@
+{
+  "protocol": "Single shared-machine observations, admitted once before script; separate role/backend caches, source objects cold, runtime cache warmed by each 8-element row. Native runs verify stdout and exit status. Timeout 180 seconds terminates only the process group started by this script. Not median or corpus acceptance.",
+  "compiler_sha256": {
+    "control": "4059a85e3d081f8a73b370e03e7d86cba8eb8a47531bfcdd7c09e6cc109d74b1",
+    "candidate": "4f37d5a8e78c8c064e88249e6f95ebd929b78c222aa17bd1697be09f5bea82af"
+  },
+  "source_commits": {
+    "control": "80dd51906c97ae76bf208474ac48c9baac3a11cd",
+    "candidate": "8f67ab8ad02a92ab5a37f6875d52282164104d15"
+  },
+  "rows": [
+    {
+      "role": "control",
+      "family": "int",
+      "elements": 8,
+      "source_sha256": "60b05ed898702deee79e6f9cfb3606ceda0b6c36c5f6fc526cb67b581f427004",
+      "emit": {
+        "status": 0,
+        "timeout": false,
+        "elapsed_seconds": 0.297448,
+        "max_rss_kib": 33168
+      },
+      "il_bytes": 70375,
+      "il_lines": 2816,
+      "qbe": {
+        "status": 0,
+        "timeout": false,
+        "elapsed_seconds": 2.103969,
+        "max_rss_kib": 98344,
+        "phase_reports": [
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "frontend",
+            "duration_ns": 181413646,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "codegen",
+            "duration_ns": 1708047350,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "link",
+            "duration_ns": 33686460,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "native",
+            "duration_ns": 1747667572,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "total",
+            "duration_ns": 1938477500,
+            "inclusive": true,
+            "counts": {},
+            "exit_code": 0
+          }
+        ],
+        "run_status": 0,
+        "stdout": "8\n",
+        "stderr": "",
+        "output_verified": true
+      },
+      "llvm": {
+        "status": 0,
+        "timeout": false,
+        "elapsed_seconds": 5.986218,
+        "max_rss_kib": 92488,
+        "phase_reports": [
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "frontend",
+            "duration_ns": 124036421,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "codegen",
+            "duration_ns": 4604638446,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "link",
+            "duration_ns": 1088447337,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "native",
+            "duration_ns": 5696930362,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "total",
+            "duration_ns": 5853796164,
+            "inclusive": true,
+            "counts": {},
+            "exit_code": 0
+          }
+        ],
+        "run_status": 0,
+        "stdout": "8\n",
+        "stderr": "",
+        "output_verified": true
+      },
+      "manifest_bytes": 123426
+    },
+    {
+      "role": "candidate",
+      "family": "int",
+      "elements": 8,
+      "source_sha256": "60b05ed898702deee79e6f9cfb3606ceda0b6c36c5f6fc526cb67b581f427004",
+      "emit": {
+        "status": 0,
+        "timeout": false,
+        "elapsed_seconds": 0.322829,
+        "max_rss_kib": 30988
+      },
+      "il_bytes": 72924,
+      "il_lines": 2906,
+      "qbe": {
+        "status": 0,
+        "timeout": false,
+        "elapsed_seconds": 1.760022,
+        "max_rss_kib": 99036,
+        "phase_reports": [
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "frontend",
+            "duration_ns": 205209340,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "codegen",
+            "duration_ns": 1332078177,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "link",
+            "duration_ns": 31701172,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "native",
+            "duration_ns": 1370138932,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "total",
+            "duration_ns": 1584190008,
+            "inclusive": true,
+            "counts": {},
+            "exit_code": 0
+          }
+        ],
+        "run_status": 0,
+        "stdout": "8\n",
+        "stderr": "",
+        "output_verified": true
+      },
+      "llvm": {
+        "status": 2,
+        "timeout": false,
+        "elapsed_seconds": 7.061093,
+        "max_rss_kib": 96728,
+        "phase_reports": []
+      },
+      "manifest_bytes": 128218
+    },
+    {
+      "role": "control",
+      "family": "int",
+      "elements": 250,
+      "source_sha256": "4b25b22ad52f495060e4c4e772a36f58e638045660914e1808bdaa4d0c834d76",
+      "emit": {
+        "status": 0,
+        "timeout": false,
+        "elapsed_seconds": 1.610329,
+        "max_rss_kib": 64436
+      },
+      "il_bytes": 1568111,
+      "il_lines": 57024,
+      "qbe": {
+        "status": 0,
+        "timeout": false,
+        "elapsed_seconds": 4.00121,
+        "max_rss_kib": 474996,
+        "phase_reports": [
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "frontend",
+            "duration_ns": 1645392056,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "codegen",
+            "duration_ns": 2154130826,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "link",
+            "duration_ns": 16699361,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "native",
+            "duration_ns": 2218176889,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "total",
+            "duration_ns": 3869945074,
+            "inclusive": true,
+            "counts": {},
+            "exit_code": 0
+          }
+        ],
+        "run_status": 0,
+        "stdout": "250\n",
+        "stderr": "",
+        "output_verified": true
+      },
+      "llvm": {
+        "status": 0,
+        "timeout": false,
+        "elapsed_seconds": 8.113436,
+        "max_rss_kib": 134032,
+        "phase_reports": [
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "frontend",
+            "duration_ns": 3023835534,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "codegen",
+            "duration_ns": 3287228901,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "link",
+            "duration_ns": 1547099561,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "native",
+            "duration_ns": 4913505384,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "total",
+            "duration_ns": 7972180078,
+            "inclusive": true,
+            "counts": {},
+            "exit_code": 0
+          }
+        ],
+        "run_status": 0,
+        "stdout": "250\n",
+        "stderr": "",
+        "output_verified": true
+      },
+      "manifest_bytes": 1776619
+    },
+    {
+      "role": "candidate",
+      "family": "int",
+      "elements": 250,
+      "source_sha256": "4b25b22ad52f495060e4c4e772a36f58e638045660914e1808bdaa4d0c834d76",
+      "emit": {
+        "status": 0,
+        "timeout": false,
+        "elapsed_seconds": 0.206412,
+        "max_rss_kib": 30928
+      },
+      "il_bytes": 14162,
+      "il_lines": 431,
+      "qbe": {
+        "status": 0,
+        "timeout": false,
+        "elapsed_seconds": 0.391072,
+        "max_rss_kib": 78312,
+        "phase_reports": [
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "frontend",
+            "duration_ns": 63232051,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "codegen",
+            "duration_ns": 119645644,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "link",
+            "duration_ns": 14992186,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "native",
+            "duration_ns": 138362077,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "total",
+            "duration_ns": 208104682,
+            "inclusive": true,
+            "counts": {},
+            "exit_code": 0
+          }
+        ],
+        "run_status": 0,
+        "stdout": "250\n",
+        "stderr": "",
+        "output_verified": true
+      },
+      "llvm": {
+        "status": 2,
+        "timeout": false,
+        "elapsed_seconds": 1.490368,
+        "max_rss_kib": 93152,
+        "phase_reports": []
+      },
+      "manifest_bytes": 63167
+    },
+    {
+      "role": "control",
+      "family": "int",
+      "elements": 1000,
+      "source_sha256": "35dc5ccf7164f1caee4c8335afc855d25c74f24987acf80ca9199a90ae5d9b07",
+      "emit": {
+        "status": 0,
+        "timeout": false,
+        "elapsed_seconds": 6.679966,
+        "max_rss_kib": 172644
+      },
+      "il_bytes": 6354963,
+      "il_lines": 225024,
+      "qbe": {
+        "status": 2,
+        "timeout": false,
+        "elapsed_seconds": 7.446131,
+        "max_rss_kib": 180488,
+        "phase_reports": []
+      },
+      "llvm": {
+        "status": 0,
+        "timeout": false,
+        "elapsed_seconds": 23.928559,
+        "max_rss_kib": 473072,
+        "phase_reports": [
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "frontend",
+            "duration_ns": 7021003109,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "codegen",
+            "duration_ns": 13163020073,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "link",
+            "duration_ns": 3301500875,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "native",
+            "duration_ns": 16711422607,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "total",
+            "duration_ns": 23767202741,
+            "inclusive": true,
+            "counts": {},
+            "exit_code": 0
+          }
+        ],
+        "run_status": 0,
+        "stdout": "1000\n",
+        "stderr": "",
+        "output_verified": true
+      },
+      "manifest_bytes": 7048736
+    },
+    {
+      "role": "candidate",
+      "family": "int",
+      "elements": 1000,
+      "source_sha256": "35dc5ccf7164f1caee4c8335afc855d25c74f24987acf80ca9199a90ae5d9b07",
+      "emit": {
+        "status": 0,
+        "timeout": false,
+        "elapsed_seconds": 0.289651,
+        "max_rss_kib": 31912
+      },
+      "il_bytes": 26163,
+      "il_lines": 431,
+      "qbe": {
+        "status": 0,
+        "timeout": false,
+        "elapsed_seconds": 0.396579,
+        "max_rss_kib": 79040,
+        "phase_reports": [
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "frontend",
+            "duration_ns": 91128422,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "codegen",
+            "duration_ns": 121374480,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "link",
+            "duration_ns": 14962457,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "native",
+            "duration_ns": 140451893,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "total",
+            "duration_ns": 237919009,
+            "inclusive": true,
+            "counts": {},
+            "exit_code": 0
+          }
+        ],
+        "run_status": 0,
+        "stdout": "1000\n",
+        "stderr": "",
+        "output_verified": true
+      },
+      "llvm": {
+        "status": 2,
+        "timeout": false,
+        "elapsed_seconds": 1.539505,
+        "max_rss_kib": 94408,
+        "phase_reports": []
+      },
+      "manifest_bytes": 75179
+    },
+    {
+      "role": "control",
+      "family": "str",
+      "elements": 8,
+      "source_sha256": "45a4ef23115b816af021be75ffd022a84a8611204ed4f8d5bb48abd6663348b1",
+      "emit": {
+        "status": 0,
+        "timeout": false,
+        "elapsed_seconds": 0.224388,
+        "max_rss_kib": 33036
+      },
+      "il_bytes": 85232,
+      "il_lines": 3352,
+      "qbe": {
+        "status": 0,
+        "timeout": false,
+        "elapsed_seconds": 0.428145,
+        "max_rss_kib": 76920,
+        "phase_reports": [
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "frontend",
+            "duration_ns": 140993792,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "codegen",
+            "duration_ns": 123407755,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "link",
+            "duration_ns": 14293296,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "native",
+            "duration_ns": 144963194,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "total",
+            "duration_ns": 292011052,
+            "inclusive": true,
+            "counts": {},
+            "exit_code": 0
+          }
+        ],
+        "run_status": 0,
+        "stdout": "8\n",
+        "stderr": "",
+        "output_verified": true
+      },
+      "llvm": {
+        "status": 0,
+        "timeout": false,
+        "elapsed_seconds": 1.728406,
+        "max_rss_kib": 93788,
+        "phase_reports": [
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "frontend",
+            "duration_ns": 142230703,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "codegen",
+            "duration_ns": 314043583,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "link",
+            "duration_ns": 1112106132,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "native",
+            "duration_ns": 1433677434,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "total",
+            "duration_ns": 1609074075,
+            "inclusive": true,
+            "counts": {},
+            "exit_code": 0
+          }
+        ],
+        "run_status": 0,
+        "stdout": "8\n",
+        "stderr": "",
+        "output_verified": true
+      },
+      "manifest_bytes": 140224
+    },
+    {
+      "role": "candidate",
+      "family": "str",
+      "elements": 8,
+      "source_sha256": "45a4ef23115b816af021be75ffd022a84a8611204ed4f8d5bb48abd6663348b1",
+      "emit": {
+        "status": 0,
+        "timeout": false,
+        "elapsed_seconds": 0.231092,
+        "max_rss_kib": 31300
+      },
+      "il_bytes": 88144,
+      "il_lines": 3458,
+      "qbe": {
+        "status": 0,
+        "timeout": false,
+        "elapsed_seconds": 0.585264,
+        "max_rss_kib": 78276,
+        "phase_reports": [
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "frontend",
+            "duration_ns": 226277642,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "codegen",
+            "duration_ns": 177205134,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "link",
+            "duration_ns": 14863693,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "native",
+            "duration_ns": 199531178,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "total",
+            "duration_ns": 432552280,
+            "inclusive": true,
+            "counts": {},
+            "exit_code": 0
+          }
+        ],
+        "run_status": 0,
+        "stdout": "8\n",
+        "stderr": "",
+        "output_verified": true
+      },
+      "llvm": {
+        "status": 2,
+        "timeout": false,
+        "elapsed_seconds": 2.278223,
+        "max_rss_kib": 95824,
+        "phase_reports": []
+      },
+      "manifest_bytes": 145395
+    },
+    {
+      "role": "control",
+      "family": "str",
+      "elements": 250,
+      "source_sha256": "5f80d7cc860036c1228706654d4b4dbf52af5999b15d28ca319619d1cbaf5eb7",
+      "emit": {
+        "status": 0,
+        "timeout": false,
+        "elapsed_seconds": 2.432758,
+        "max_rss_kib": 76268
+      },
+      "il_bytes": 2050313,
+      "il_lines": 73774,
+      "qbe": {
+        "status": 0,
+        "timeout": false,
+        "elapsed_seconds": 5.038366,
+        "max_rss_kib": 668368,
+        "phase_reports": [
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "frontend",
+            "duration_ns": 2147240821,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "codegen",
+            "duration_ns": 2614366861,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "link",
+            "duration_ns": 16926602,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "native",
+            "duration_ns": 2735215144,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "total",
+            "duration_ns": 4888759893,
+            "inclusive": true,
+            "counts": {},
+            "exit_code": 0
+          }
+        ],
+        "run_status": 0,
+        "stdout": "250\n",
+        "stderr": "",
+        "output_verified": true
+      },
+      "llvm": {
+        "status": 0,
+        "timeout": false,
+        "elapsed_seconds": 6.803691,
+        "max_rss_kib": 185688,
+        "phase_reports": [
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "frontend",
+            "duration_ns": 2082817975,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "codegen",
+            "duration_ns": 2915571460,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "link",
+            "duration_ns": 1573177401,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "native",
+            "duration_ns": 4591043713,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "total",
+            "duration_ns": 6704394430,
+            "inclusive": true,
+            "counts": {},
+            "exit_code": 0
+          }
+        ],
+        "run_status": 0,
+        "stdout": "250\n",
+        "stderr": "",
+        "output_verified": true
+      },
+      "manifest_bytes": 2277111
+    },
+    {
+      "role": "candidate",
+      "family": "str",
+      "elements": 250,
+      "source_sha256": "5f80d7cc860036c1228706654d4b4dbf52af5999b15d28ca319619d1cbaf5eb7",
+      "emit": {
+        "status": 0,
+        "timeout": false,
+        "elapsed_seconds": 0.234655,
+        "max_rss_kib": 31156
+      },
+      "il_bytes": 59655,
+      "il_lines": 681,
+      "qbe": {
+        "status": 0,
+        "timeout": false,
+        "elapsed_seconds": 0.441126,
+        "max_rss_kib": 79404,
+        "phase_reports": [
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "frontend",
+            "duration_ns": 117437932,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "codegen",
+            "duration_ns": 138273558,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "link",
+            "duration_ns": 13766443,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "native",
+            "duration_ns": 157987115,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "total",
+            "duration_ns": 281686556,
+            "inclusive": true,
+            "counts": {},
+            "exit_code": 0
+          }
+        ],
+        "run_status": 0,
+        "stdout": "250\n",
+        "stderr": "",
+        "output_verified": true
+      },
+      "llvm": {
+        "status": 2,
+        "timeout": false,
+        "elapsed_seconds": 2.096467,
+        "max_rss_kib": 98028,
+        "phase_reports": []
+      },
+      "manifest_bytes": 110315
+    },
+    {
+      "role": "control",
+      "family": "str",
+      "elements": 1000,
+      "source_sha256": "23b32d014ffa757f0c47031aecfe324577e60360ade0e119b1a5f597b111de63",
+      "emit": {
+        "status": 0,
+        "timeout": false,
+        "elapsed_seconds": 8.41803,
+        "max_rss_kib": 217344
+      },
+      "il_bytes": 8371256,
+      "il_lines": 292024,
+      "qbe": {
+        "status": 2,
+        "timeout": false,
+        "elapsed_seconds": 9.552303,
+        "max_rss_kib": 221144,
+        "phase_reports": []
+      },
+      "llvm": {
+        "status": 0,
+        "timeout": false,
+        "elapsed_seconds": 27.382074,
+        "max_rss_kib": 689416,
+        "phase_reports": [
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "frontend",
+            "duration_ns": 8741754985,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "codegen",
+            "duration_ns": 15115242841,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "link",
+            "duration_ns": 3124220945,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "native",
+            "duration_ns": 18477136999,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "total",
+            "duration_ns": 27253847010,
+            "inclusive": true,
+            "counts": {},
+            "exit_code": 0
+          }
+        ],
+        "run_status": 0,
+        "stdout": "1000\n",
+        "stderr": "",
+        "output_verified": true
+      },
+      "manifest_bytes": 9133570
+    },
+    {
+      "role": "candidate",
+      "family": "str",
+      "elements": 1000,
+      "source_sha256": "23b32d014ffa757f0c47031aecfe324577e60360ade0e119b1a5f597b111de63",
+      "emit": {
+        "status": 0,
+        "timeout": false,
+        "elapsed_seconds": 0.345548,
+        "max_rss_kib": 35056
+      },
+      "il_bytes": 208156,
+      "il_lines": 1431,
+      "qbe": {
+        "status": 0,
+        "timeout": false,
+        "elapsed_seconds": 0.545638,
+        "max_rss_kib": 78860,
+        "phase_reports": [
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "frontend",
+            "duration_ns": 212803001,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "codegen",
+            "duration_ns": 158844088,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "link",
+            "duration_ns": 14719079,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "native",
+            "duration_ns": 184427528,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "total",
+            "duration_ns": 403698278,
+            "inclusive": true,
+            "counts": {},
+            "exit_code": 0
+          }
+        ],
+        "run_status": 0,
+        "stdout": "1000\n",
+        "stderr": "",
+        "output_verified": true
+      },
+      "llvm": {
+        "status": 2,
+        "timeout": false,
+        "elapsed_seconds": 1.645134,
+        "max_rss_kib": 92980,
+        "phase_reports": []
+      },
+      "manifest_bytes": 259577
+    },
+    {
+      "role": "control",
+      "family": "bytes",
+      "elements": 8,
+      "source_sha256": "9e2c865ca272cc469ad80a1f3dcb98861e9349d91db99ca23f84599e5b8b07f8",
+      "emit": {
+        "status": 0,
+        "timeout": false,
+        "elapsed_seconds": 0.234911,
+        "max_rss_kib": 32780
+      },
+      "il_bytes": 85536,
+      "il_lines": 3352,
+      "qbe": {
+        "status": 0,
+        "timeout": false,
+        "elapsed_seconds": 0.463997,
+        "max_rss_kib": 78324,
+        "phase_reports": [
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "frontend",
+            "duration_ns": 205493673,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "codegen",
+            "duration_ns": 120320967,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "link",
+            "duration_ns": 15838893,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "native",
+            "duration_ns": 142626457,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "total",
+            "duration_ns": 353822272,
+            "inclusive": true,
+            "counts": {},
+            "exit_code": 0
+          }
+        ],
+        "run_status": 0,
+        "stdout": "8\n",
+        "stderr": "",
+        "output_verified": true
+      },
+      "llvm": {
+        "status": 0,
+        "timeout": false,
+        "elapsed_seconds": 1.571261,
+        "max_rss_kib": 92948,
+        "phase_reports": [
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "frontend",
+            "duration_ns": 143527924,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "codegen",
+            "duration_ns": 225001097,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "link",
+            "duration_ns": 1039770260,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "native",
+            "duration_ns": 1271897535,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "total",
+            "duration_ns": 1442765120,
+            "inclusive": true,
+            "counts": {},
+            "exit_code": 0
+          }
+        ],
+        "run_status": 0,
+        "stdout": "8\n",
+        "stderr": "",
+        "output_verified": true
+      },
+      "manifest_bytes": 142435
+    },
+    {
+      "role": "candidate",
+      "family": "bytes",
+      "elements": 8,
+      "source_sha256": "9e2c865ca272cc469ad80a1f3dcb98861e9349d91db99ca23f84599e5b8b07f8",
+      "emit": {
+        "status": 0,
+        "timeout": false,
+        "elapsed_seconds": 0.23547,
+        "max_rss_kib": 31432
+      },
+      "il_bytes": 88448,
+      "il_lines": 3458,
+      "qbe": {
+        "status": 0,
+        "timeout": false,
+        "elapsed_seconds": 0.50315,
+        "max_rss_kib": 78936,
+        "phase_reports": [
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "frontend",
+            "duration_ns": 162161709,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "codegen",
+            "duration_ns": 152708713,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "link",
+            "duration_ns": 14584748,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "native",
+            "duration_ns": 175069003,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "total",
+            "duration_ns": 342752579,
+            "inclusive": true,
+            "counts": {},
+            "exit_code": 0
+          }
+        ],
+        "run_status": 0,
+        "stdout": "8\n",
+        "stderr": "",
+        "output_verified": true
+      },
+      "llvm": {
+        "status": 2,
+        "timeout": false,
+        "elapsed_seconds": 1.982136,
+        "max_rss_kib": 97592,
+        "phase_reports": []
+      },
+      "manifest_bytes": 147606
+    },
+    {
+      "role": "control",
+      "family": "bytes",
+      "elements": 250,
+      "source_sha256": "c0d454426aeed55ae7560fcf058f2adca47e8a9e7de66bb99a24fbcb9bfed69a",
+      "emit": {
+        "status": 0,
+        "timeout": false,
+        "elapsed_seconds": 2.11318,
+        "max_rss_kib": 76128
+      },
+      "il_bytes": 2059813,
+      "il_lines": 73774,
+      "qbe": {
+        "status": 0,
+        "timeout": false,
+        "elapsed_seconds": 4.973438,
+        "max_rss_kib": 668188,
+        "phase_reports": [
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "frontend",
+            "duration_ns": 2318806121,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "codegen",
+            "duration_ns": 2426558564,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "link",
+            "duration_ns": 15138550,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "native",
+            "duration_ns": 2514797217,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "total",
+            "duration_ns": 4839955271,
+            "inclusive": true,
+            "counts": {},
+            "exit_code": 0
+          }
+        ],
+        "run_status": 0,
+        "stdout": "250\n",
+        "stderr": "",
+        "output_verified": true
+      },
+      "llvm": {
+        "status": 0,
+        "timeout": false,
+        "elapsed_seconds": 8.654554,
+        "max_rss_kib": 184872,
+        "phase_reports": [
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "frontend",
+            "duration_ns": 3154293611,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "codegen",
+            "duration_ns": 3239093470,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "link",
+            "duration_ns": 2050720275,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "native",
+            "duration_ns": 5358065066,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "total",
+            "duration_ns": 8540801888,
+            "inclusive": true,
+            "counts": {},
+            "exit_code": 0
+          }
+        ],
+        "run_status": 0,
+        "stdout": "250\n",
+        "stderr": "",
+        "output_verified": true
+      },
+      "manifest_bytes": 2289994
+    },
+    {
+      "role": "candidate",
+      "family": "bytes",
+      "elements": 250,
+      "source_sha256": "c0d454426aeed55ae7560fcf058f2adca47e8a9e7de66bb99a24fbcb9bfed69a",
+      "emit": {
+        "status": 0,
+        "timeout": false,
+        "elapsed_seconds": 0.249117,
+        "max_rss_kib": 31368
+      },
+      "il_bytes": 69155,
+      "il_lines": 681,
+      "qbe": {
+        "status": 0,
+        "timeout": false,
+        "elapsed_seconds": 0.549679,
+        "max_rss_kib": 79112,
+        "phase_reports": [
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "frontend",
+            "duration_ns": 157909806,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "codegen",
+            "duration_ns": 185387305,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "link",
+            "duration_ns": 15321285,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "native",
+            "duration_ns": 207092067,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "total",
+            "duration_ns": 371592456,
+            "inclusive": true,
+            "counts": {},
+            "exit_code": 0
+          }
+        ],
+        "run_status": 0,
+        "stdout": "250\n",
+        "stderr": "",
+        "output_verified": true
+      },
+      "llvm": {
+        "status": 2,
+        "timeout": false,
+        "elapsed_seconds": 1.83945,
+        "max_rss_kib": 94144,
+        "phase_reports": []
+      },
+      "manifest_bytes": 121665
+    },
+    {
+      "role": "control",
+      "family": "bytes",
+      "elements": 1000,
+      "source_sha256": "cd153c34146c1acddd8cd2ee067158531ae83c7829811df1ae6eca8d8a3fd860",
+      "emit": {
+        "status": 0,
+        "timeout": false,
+        "elapsed_seconds": 8.745725,
+        "max_rss_kib": 217588
+      },
+      "il_bytes": 8409256,
+      "il_lines": 292024,
+      "qbe": {
+        "status": 2,
+        "timeout": false,
+        "elapsed_seconds": 10.590748,
+        "max_rss_kib": 220856,
+        "phase_reports": []
+      },
+      "llvm": {
+        "status": 0,
+        "timeout": false,
+        "elapsed_seconds": 29.090967,
+        "max_rss_kib": 692244,
+        "phase_reports": [
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "frontend",
+            "duration_ns": 9152601713,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "codegen",
+            "duration_ns": 16169173791,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "link",
+            "duration_ns": 3209728454,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "native",
+            "duration_ns": 19775803127,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "total",
+            "duration_ns": 28961119804,
+            "inclusive": true,
+            "counts": {},
+            "exit_code": 0
+          }
+        ],
+        "run_status": 0,
+        "stdout": "1000\n",
+        "stderr": "",
+        "output_verified": true
+      },
+      "manifest_bytes": 9179683
+    },
+    {
+      "role": "candidate",
+      "family": "bytes",
+      "elements": 1000,
+      "source_sha256": "cd153c34146c1acddd8cd2ee067158531ae83c7829811df1ae6eca8d8a3fd860",
+      "emit": {
+        "status": 0,
+        "timeout": false,
+        "elapsed_seconds": 0.381494,
+        "max_rss_kib": 35516
+      },
+      "il_bytes": 246156,
+      "il_lines": 1431,
+      "qbe": {
+        "status": 0,
+        "timeout": false,
+        "elapsed_seconds": 0.586331,
+        "max_rss_kib": 78924,
+        "phase_reports": [
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "frontend",
+            "duration_ns": 267187373,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "codegen",
+            "duration_ns": 162583968,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "link",
+            "duration_ns": 15572330,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "native",
+            "duration_ns": 191702877,
+            "inclusive": false,
+            "counts": {},
+            "exit_code": 0
+          },
+          {
+            "version": "phase-timings-v1",
+            "kind": "timing",
+            "tool": "compiler",
+            "name": "total",
+            "duration_ns": 465079129,
+            "inclusive": true,
+            "counts": {},
+            "exit_code": 0
+          }
+        ],
+        "run_status": 0,
+        "stdout": "1000\n",
+        "stderr": "",
+        "output_verified": true
+      },
+      "llvm": {
+        "status": 2,
+        "timeout": false,
+        "elapsed_seconds": 1.655929,
+        "max_rss_kib": 93336,
+        "phase_reports": []
+      },
+      "manifest_bytes": 299427
+    }
+  ]
+}

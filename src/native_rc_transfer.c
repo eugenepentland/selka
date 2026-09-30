@@ -1,4 +1,5 @@
 #include "native_rc_internal.h"
+#include "native_rc_collections.h"
 #include <string.h>
 
 #define LOCAL_TRANSFER_FRAMES 8
@@ -194,6 +195,10 @@ static myl_rc_status schedule_clone(transfer_walk *walk, const void *payload, un
         if (reserved != MYL_RC_OK) return reserved;
     }
     const myl_native_object *common = (const myl_native_object *)payload - 1;
+    if (!walk->heap->rc->lists && common->element == &myl_native_list_header_descriptor) {
+        myl_rc_status status = myl_rc_list_require(walk->heap);
+        if (status != MYL_RC_OK) return status;
+    }
     const myl_rc_binding *binding = myl_rc_binding_find(walk->heap, common->element);
     myl_rc_invariant(binding && !binding->descriptor.finalize);
     const myl_rc_descriptor *descriptor = &binding->descriptor;

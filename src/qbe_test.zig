@@ -3149,14 +3149,15 @@ test "QBE-MOVE-ELIDE-1 a mut record parameter updates its scalar field in caller
     try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, named(parsed.value, "push").?.il, "memset(l %l"));
 }
 
-// `observe(mut p, mut p)` is E_MUTATION_OVERLAP (MUT-EXCLUSIVE-1), so the store
-// back is kept as defense in depth: the callee alone decides it.
-// spec-case: QBE-MOVE-ELIDE-1
-test "QBE-MOVE-ELIDE-1 two mut parameters of one type keep the observable store back" {
+// MUT-EXCLUSIVE-1 guarantees separate caller storage for accepted arguments.
+// spec: MUT-EXCLUSIVE-PROOFS-1
+test "exclusive mut parameters allow each scalar update in caller storage" {
     const saved = value_semantics.enabled();
     value_semantics.setEnabled(true);
     defer value_semantics.setEnabled(saved);
-    var parsed = try emitted(std.testing.allocator,
+    const collector = language.runtime_mode.pinCollector();
+    defer language.runtime_mode.set(collector);
+    const source =
         \\record Pair:
         \\    x: int
         \\    y: int
@@ -3171,9 +3172,14 @@ test "QBE-MOVE-ELIDE-1 two mut parameters of one type keep the observable store 
         \\    p = Pair(x=0, y=0)
         \\    q = Pair(x=0, y=0)
         \\    return observe(mut p, mut q) * 10 + p.x
-    );
+    ;
+    var parsed = try emitted(std.testing.allocator, source);
     defer parsed.deinit();
-    try std.testing.expect((try blits(parsed.value, "observe")) >= 2);
+    try std.testing.expectEqual(@as(usize, 0), try blits(parsed.value, "observe"));
+    value_semantics.setEnabled(false);
+    var legacy = try emitted(std.testing.allocator, source);
+    defer legacy.deinit();
+    try std.testing.expect((try blits(legacy.value, "observe")) >= 2);
 }
 
 // spec-case: QBE-MOVE-ELIDE-1

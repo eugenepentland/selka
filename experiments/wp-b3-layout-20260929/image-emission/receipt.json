@@ -1,0 +1,105 @@
+{
+  "base": "8e36c7b3",
+  "compiler_sha256": "96ceef07556f82afa64dcb738bce8c8917ad9c1b0eb6777078d564a3e7adc457",
+  "native_C_families": 30,
+  "native_image_contract_cases": 15,
+  "native_image_host_refusals": 6,
+  "native_image_budget_refusals": 6,
+  "whole_tree_guardian_checks": 88,
+  "fresh_guest_cases": 72,
+  "guests": [
+    {
+      "file": "image-gc-rc_dictionary_views.json",
+      "passed": 6,
+      "cached": 0,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "image-gc-rc_glue_values.json",
+      "passed": 6,
+      "cached": 0,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "image-llvm-rc_dictionary_views.json",
+      "passed": 6,
+      "cached": 0,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "image-llvm-rc_glue_values.json",
+      "passed": 6,
+      "cached": 0,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "image-rc-rc_dictionary_views.json",
+      "passed": 6,
+      "cached": 0,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "image-rc-rc_glue_values.json",
+      "passed": 6,
+      "cached": 0,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "image-sites-rc_dictionary_views.json",
+      "passed": 6,
+      "cached": 0,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "image-sites-rc_glue_values.json",
+      "passed": 6,
+      "cached": 0,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "image-stats-rc_dictionary_views.json",
+      "passed": 6,
+      "cached": 0,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "image-stats-rc_glue_values.json",
+      "passed": 6,
+      "cached": 0,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "image-stress-rc_dictionary_views.json",
+      "passed": 6,
+      "cached": 0,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "image-stress-rc_glue_values.json",
+      "passed": 6,
+      "cached": 0,
+      "failed": 0,
+      "skipped": 0
+    }
+  ],
+  "intermediate_only": true,
+  "final_broad_and_performance_acceptance": "pending",
+  "rejected_compiler_sha256": "9bec2745527d6c2f68f4389aee03c7c879b220c33b95f46892fd669b7bfcaa3c",
+  "held_defect": "native RECORD live view must use generic H traversal; pre-fix image emitted O flat leaves",
+  "controls": {
+    "prefix_f2_selected_guest": "passed",
+    "same_emitter_image_disabled_with_array_fallback": "passed",
+    "pre_fix_stats_image_guest": "ABRT during image admission"
+  }
+}

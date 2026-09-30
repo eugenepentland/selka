@@ -1,5 +1,6 @@
 //! Non-sharing RC holds for call arguments and pending receiver projections.
 const unique = @import("qbe_rc_unique.zig");
+const inline_scope = @import("qbe_rc_scope_inline.zig");
 /// Native emitter failures.
 pub const Error = unique.Error;
 /// Typed pending path; its stack request is reused only between synchronous calls.
@@ -28,14 +29,17 @@ pub fn borrowAddress(comptime E: type, self: *E, local: usize) Error!usize {
 /// Link before the first fallible pin; frame unwind owns every partial journal.
 pub fn begin(comptime E: type, self: *E, scope: usize) Error!void {
     try @import("qbe_rc_frame.zig").requireLinked(E, self);
+    if (try inline_scope.begin(E, self, scope)) return;
     try self.print(" call $myl_qbe_rc_scope_begin(l %ctx, l %v{d})\n", .{scope});
 }
 /// Restore prior pin bits before releasing this scope's lifetime holds.
 pub fn end(comptime E: type, self: *E, scope: usize) Error!void {
+    if (try inline_scope.end(E, self, scope)) return;
     try self.print(" call $myl_qbe_rc_scope_end(l %ctx, l %v{d})\n", .{scope});
 }
 /// Keep the header and any captured collection backing alive without sharing it.
 pub fn pin(comptime E: type, self: *E, scope: usize, payload: usize) Error!void {
+    if (try inline_scope.pin(E, self, scope, payload)) return;
     const done = self.temp();
     try self.print(" %v{d} =w call $myl_qbe_rc_scope_pin(l %ctx, l %v{d}, l %v{d})\n", .{ done, scope, payload });
     try unique.success(E, self, done);

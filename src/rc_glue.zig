@@ -56,21 +56,19 @@ pub const Operation = enum {
     }
 };
 
-/// Shared helpers; the count reasoning below is why no fast path checks a limit.
+/// Shared helpers for generated whole-value count preflight and token updates.
+const success_return = "return 1;\n}}\n";
+
 const prelude =
     \\#include "qbe_runtime.h"
     \\#include "native_rc_internal.h"
     \\#include "native_rc_values.h"
     \\#include "native_rc_collections.h"
     \\#include <string.h>
-    \\/* RC-GLUE-1 generated ownership glue. Owner and hold counts are uintptr_t,
-    \\ * and every token is a distinct stored pointer-sized word (a slot, field,
-    \\ * element, frame slot or loan copy) in the address space. Fewer than
-    \\ * 2^61 such words fit in a 64-bit address space, so a count can never reach
-    \\ * UINTPTR_MAX and the fast paths carry no count-limit check or status. The
-    \\ * invariants the runtime asserts on every operation (live object, no
-    \\ * underflow, no finalizer behind a loan) are checked here only in counting
-    \\ * builds or with MYL_RC_GLUE_CHECKED defined. */
+    \\/* RC-GLUE-1: active counts are unsigned 32-bit words. Generated glue
+    \\ * preflights its whole value before changing bytes or marks: a count
+    \\ * near saturation uses the runtime's exact alias-aware transaction.
+    \\ * Remaining paths can acquire every leaf without wrapping. */
     \\#if (defined(MYL_NATIVE_RC_COUNTING) && MYL_NATIVE_RC_COUNTING) || defined(MYL_RC_GLUE_CHECKED)
     \\#define MYL_RCG_CHECK(valid) myl_rc_invariant(valid)
     \\#define MYL_RCG_CHECKED 1
@@ -98,6 +96,11 @@ const prelude =
     \\    myl_rc_object *object = (myl_rc_object *)p - 1;
     \\    MYL_RCG_CHECK(!(mark & MYL_RC_OBJECT_DYING) && (object->owners || object->holds));
     \\    return object;
+    \\}
+    \\MYL_RCG_INLINE int myl_rcg_capacity(const void *p, size_t bound, int hold) {
+    \\    myl_rc_object *object = myl_rcg_counted(p);
+    \\    return !object || (bound <= MYL_RC_COUNT_MAX &&
+    \\        (hold ? object->holds : object->owners) <= MYL_RC_COUNT_MAX - bound);
     \\}
     \\MYL_RCG_INLINE void myl_rcg_owner_acquire(myl_native_heap *heap, void *p) {
     \\    myl_rc_object *object = myl_rcg_counted(p);
@@ -161,7 +164,7 @@ const prelude =
 ;
 
 /// What one edge visit does. Scans read marks; the rest change counts.
-const Action = enum { scan, share, loan, retain, drop, unloan };
+const Action = enum { scan, share, loan, retain, drop, unloan, loan_capacity, retain_capacity };
 /// Which token an edge owns: an ordinary owner or a live view's hold.
 const Edge = enum { owner, hold };
 
@@ -218,12 +221,18 @@ const Generator = struct {
     }
 
     fn edge(self: *Generator, kind: Edge, base: []const u8, action: Action) Error!void {
+        if (action == .loan_capacity or action == .retain_capacity) {
+            const hold = action == .loan_capacity or kind == .hold;
+            try self.print("capacity &= myl_rcg_capacity(myl_rcg_load((const unsigned char *)({s})), bound, {d});\n", .{ base, @intFromBool(hold) });
+            return;
+        }
         // Only ordinary payloads take part in semantic history.
         if (action == .share and kind == .hold) return;
         // A loan takes H on every edge and an unloan returns it; retain and
         // drop use each edge's own token.
         const token: Edge = if (action == .loan or action == .unloan) .hold else kind;
         const call: []const u8 = switch (action) {
+            .loan_capacity, .retain_capacity => unreachable,
             .scan => "any |= myl_rcg_flags",
             .share => "myl_rcg_share",
             .loan => "myl_rcg_loan_acquire",
@@ -244,10 +253,15 @@ const Generator = struct {
     /// type some collection stores.
     fn functions(self: *Generator, ty: typed.Type, name: []const u8, element: bool) Error!void {
         const size = (try self.catalog.layout(ty)).size;
-        try self.print("void {s}_rcg_loan(myl_native_heap *heap, void *dst, const void *src) {{\n", .{name});
-        try self.print("MYL_RCG_CHECK(!myl_rcg_overlap(dst, src, {d}));\nmemcpy(dst, src, {d});\n", .{ size, size });
-        try self.edges(ty, "dst", .loan);
-        try self.print("}}\n", .{});
+        try self.print("int {s}_rcg_loan(myl_native_heap *heap, void *dst, const void *src) {{\n", .{name});
+        try self.capacity(ty, size, .loan_capacity);
+        try self.print("if (!capacity) return myl_rc_native_loan(heap, &{s}, dst, src);\n", .{name});
+        try self.print("MYL_RCG_CHECK(!myl_rcg_overlap(dst, src, {d}));\n", .{size});
+        // Every refusal precedes acquisition. Reading the admitted source
+        // before copying keeps its tag and edge reads together for C codegen.
+        try self.edges(ty, "src", .loan);
+        try self.print("memcpy(dst, src, {d});\n", .{size});
+        try self.print(success_return, .{});
         inline for (.{ Action.unloan, Action.drop }) |action| {
             try self.print("void {s}_rcg_{s}(myl_native_heap *heap, void *value) {{\nint died = 0;\n", .{ name, @tagName(action) });
             try self.edges(ty, "value", action);
@@ -257,10 +271,12 @@ const Generator = struct {
         // runtime's region check, before any count changes.
         try self.print("int {s}_rcg_retain(myl_native_heap *heap, void *dst, const void *src, unsigned region) {{\nuintptr_t any = 0;\n", .{name});
         try self.edges(ty, "src", .scan);
-        try self.print("if (any & MYL_NATIVE_OBJECT_ARENA) return myl_rc_native_retain(heap, &{s}, dst, src, region);\n", .{name});
-        try self.print("MYL_RCG_CHECK(dst != src && region <= heap->region_depth);\nmemmove(dst, src, {d});\n", .{size});
-        try self.edges(ty, "dst", .retain);
-        try self.print("return 1;\n}}\n", .{});
+        try self.capacity(ty, size, .retain_capacity);
+        try self.print("if (!capacity || (any & MYL_NATIVE_OBJECT_ARENA)) return myl_rc_native_retain(heap, &{s}, dst, src, region);\n", .{name});
+        try self.print("MYL_RCG_CHECK(dst != src && region <= heap->region_depth);\n", .{});
+        try self.edges(ty, "src", .retain);
+        try self.print("memmove(dst, src, {d});\n", .{size});
+        try self.print(success_return, .{});
         // A pinned source needs the snapshot, an arena source the region
         // check and an overlapping move the staged copy: all runtime work.
         try self.print("int {s}_rcg_take(myl_native_heap *heap, void *dst, void *src, unsigned region) {{\nuintptr_t any = 0;\n", .{name});
@@ -274,12 +290,23 @@ const Generator = struct {
         try self.edges(ty, "src", .scan);
         try self.print("if ((mode & 3u) || (any & (MYL_NATIVE_OBJECT_ARENA | MYL_NATIVE_OBJECT_PINNED)) || myl_rcg_overlap(dst, src, {d}))\n", .{size});
         try self.print("return myl_rc_native_publish(heap, &{s}, dst, src, region, mode);\n", .{name});
+        try self.print("if (!(mode & MYL_RC_HISTORY_TAKE)) {{\n", .{});
+        try self.capacity(ty, size, .retain_capacity);
+        try self.print("if (!capacity) return myl_rc_native_publish(heap, &{s}, dst, src, region, mode);\n}}\n", .{name});
         try self.print("MYL_RCG_CHECK(!(any & MYL_RC_OBJECT_DYING) && region <= heap->region_depth);\n", .{});
         try self.edges(ty, "src", .share);
         try self.print("memcpy(dst, src, {d});\nif (mode & MYL_RC_HISTORY_TAKE) {{ memset(src, 0, {d}); return 1; }}\n", .{ size, size });
         try self.edges(ty, "dst", .retain);
-        try self.print("return 1;\n}}\n", .{});
+        try self.print(success_return, .{});
         if (element) try self.lists(name, size);
+    }
+
+    // Each live pointer occupies eight disjoint value bytes. This upper bound
+    // safely covers aliases across every variant/array arm; exact near-limit
+    // admission is left to the runtime transaction.
+    fn capacity(self: *Generator, ty: typed.Type, size: u64, action: Action) Error!void {
+        try self.print("int capacity = 1; const size_t bound = {d};\n", .{size / 8});
+        try self.edges(ty, "src", action);
     }
 
     /// List element writes with the runtime's contracts: set stages the new
@@ -347,21 +374,46 @@ pub fn plainAggregate(catalog: *native.Catalog, facts: *shapes.Catalog, ty: type
 pub fn generate(allocator: std.mem.Allocator, catalog: *native.Catalog) Error![]u8 {
     var arena = std.heap.ArenaAllocator.init(allocator);
     defer arena.deinit();
-    const a = arena.allocator();
+    return render(allocator, try blocks(arena.allocator(), catalog));
+}
+
+/// Independently mergeable ownership and collection-element definitions.
+pub const Block = struct { name: []const u8, text: []const u8 };
+
+/// Produce glue groups keyed by semantic symbol, independently of catalog order.
+pub fn blocks(a: std.mem.Allocator, catalog: *native.Catalog) Error![]Block {
     var facts = try shapes.Catalog.init(a, catalog);
-    var output: std.Io.Writer.Allocating = .init(allocator);
-    defer output.deinit();
-    var generator: Generator = .{ .allocator = a, .catalog = catalog, .facts = &facts, .writer = &output.writer };
-    try generator.print("{s}", .{prelude});
+    var out: std.ArrayList(Block) = .empty;
     for (0..typed.Type.record_base + catalog.records.len) |index| {
         const ty: typed.Type = @fromBackingInt(index);
-        const element = listElement(catalog, ty);
-        if (try plainAggregate(catalog, &facts, ty)) {
-            if (element) try generator.append(try descriptors.symbol(a, catalog, ty), (try catalog.layout(ty)).size, false);
-            continue;
+        const counted = (try facts.get(ty)).counted and (try catalog.layout(ty)).size != 0;
+        const plain = try plainAggregate(catalog, &facts, ty);
+        if (!counted and !plain) continue;
+        const name = try descriptors.symbol(a, catalog, ty);
+        var output: std.Io.Writer.Allocating = .init(a);
+        var generator: Generator = .{ .allocator = a, .catalog = catalog, .facts = &facts, .writer = &output.writer };
+        if (counted) {
+            try generator.functions(ty, name, false);
+            try out.append(a, .{ .name = name, .text = try output.toOwnedSlice() });
         }
-        if (!(try facts.get(ty)).counted or (try catalog.layout(ty)).size == 0) continue;
-        try generator.functions(ty, try descriptors.symbol(a, catalog, ty), element);
+        if (listElement(catalog, ty)) {
+            if (counted) try generator.lists(name, (try catalog.layout(ty)).size) else try generator.append(name, (try catalog.layout(ty)).size, false);
+            try out.append(a, .{ .name = try std.fmt.allocPrint(a, "{s}_list", .{name}), .text = try output.toOwnedSlice() });
+        }
     }
+    std.mem.sort(Block, out.items, {}, blockBefore);
+    return out.toOwnedSlice(a);
+}
+
+fn blockBefore(_: void, a: Block, b: Block) bool {
+    return std.mem.lessThan(u8, a.name, b.name);
+}
+
+/// Shared glue helpers followed by the program's symbol-sorted definition union.
+pub fn render(a: std.mem.Allocator, items: []const Block) Error![]u8 {
+    var output: std.Io.Writer.Allocating = .init(a);
+    defer output.deinit();
+    output.writer.writeAll(prelude) catch return error.OutOfMemory;
+    for (items) |item| output.writer.writeAll(item.text) catch return error.OutOfMemory;
     return output.toOwnedSlice();
 }

@@ -28,17 +28,22 @@ def main():
 def run_suite(root, command, directory, suite, sources):
     """Compile one C suite against the runtime sources it needs and run it."""
     executable = directory / suite
-    if suite == "native_text_index":
+    if suite in ("native_text_index", "native_python"):
         # The suite counts the octets the position machinery examines, so its
         # complexity bounds need no clock; only this build carries the counter.
         command = command + ["-DMYL_TEXT_STEPS=1"]
-    if suite in ("native_rc_stats", "native_rc_fast", "native_rc_execution", "native_argv"):
+    if suite == "native_python":
+        command = command + ["-DMYL_SEARCH_STEPS=1", "-DMYL_PYTHON_STEPS=1"]
+    if suite in ("native_rc_stats", "native_rc_fast", "native_rc_image", "native_rc_execution", "native_argv"):
         command = command + ["-DMYL_NATIVE_RC_COUNTING=1"]
     if suite in ("native_rc_execution", "native_argv", "native_rc_exit_skip"):
         command = command + ["-DMYL_NATIVE_RC=1"]
+    if suite == "native_rc_image":
+        command = command + ["-DMYL_RC_IMAGE_FAIL_TEST=1", "-Wl,--wrap=calloc"]
     if "native_heap.c" in sources:
         required = ("native_arena.c", "native_collections.c", "native_text.c",
                     "native_dictionary.c", "native_equal.c", "native_bytes.c",
+                    "native_search.c", "native_trim.c", "native_repr.c",
                     "native_rc.c", "native_rc_stats.c", "native_rc_shapes.c", "native_rc_walk.c",
                     "native_rc_scope.c", "native_rc_transfer.c", "native_rc_alloc.c", "native_rc_values.c")
         at = sources.index("native_heap.c") + 1
@@ -78,7 +83,7 @@ def verify_execution(executable):
                    for line in run.stderr.splitlines() if line.startswith("MYLANG_RC_COUNTS ")]
         assert len(records) == 1 and not run.stdout, (mode, run.stdout, run.stderr)
         counts = records[0]
-        assert counts["version"] == 1 and counts["runtime"] == "rc-v3-counting"
+        assert counts["version"] == 1 and counts["runtime"] == "rc-v4-counting"
         assert not counts["saturated"]
         assert counts["heap_allocate"] == counts["retire"] == 2
         assert counts["arena_allocate"] == 2
@@ -112,6 +117,7 @@ SUITES = (
     ("native_rc_history", ["native_heap.c", "native_regions.c"]),
     ("native_rc_hold", ["native_heap.c", "native_regions.c"]),
     ("native_rc_fast", ["native_heap.c", "native_regions.c"]),
+    ("native_rc_image", ["native_heap.c", "native_regions.c"]),
     ("native_file_cleanup", ["native_heap.c", "qbe_runtime.c", "qbe_files.c", "qbe_resources.c", "qbe_stand_ins.c"]),
     ("native_rc_execution", ["native_heap.c", "qbe_runtime.c", "qbe_runtime_rc.c", "qbe_stack.c"]),
     ("native_rc_exit_skip", ["native_heap.c", "qbe_runtime.c", "qbe_runtime_rc.c", "qbe_stack.c"]),
@@ -125,12 +131,14 @@ SUITES = (
     ("native_collections", ["native_heap.c", "native_collections.c"]),
     ("native_text_dictionary", ["native_heap.c", "native_collections.c", "native_text.c", "native_dictionary.c"]),
     ("native_equal", ["native_heap.c", "native_collections.c", "native_text.c", "native_dictionary.c", "native_equal.c"]),
+    ("native_equal_allocations", ["native_heap.c", "native_collections.c", "native_text.c", "native_dictionary.c", "native_equal.c"]),
     ("native_bytes", ["native_heap.c", "native_collections.c", "native_text.c", "native_bytes.c"]),
     ("native_regions", ["native_heap.c", "native_collections.c", "native_text.c", "native_dictionary.c", "native_equal.c", "native_regions.c"]),
     ("native_arena_chunks", ["native_heap.c", "native_collections.c", "native_text.c", "native_dictionary.c", "native_equal.c", "native_bytes.c", "native_regions.c"]),
     ("native_print", ["native_heap.c", "native_collections.c", "native_text.c", "native_dictionary.c", "native_print.c"]),
     ("native_text_methods", ["native_heap.c", "native_collections.c", "native_text.c", "native_text_methods.c"]),
     ("native_text_index", ["native_heap.c", "native_collections.c", "native_text.c", "native_text_methods.c", "native_dictionary.c", "native_equal.c", "native_regions.c"]),
+    ("native_python", ["native_heap.c", "native_regions.c"]),
     ("native_text_views", ["native_heap.c", "native_collections.c", "native_text.c", "native_text_methods.c", "native_dictionary.c", "native_equal.c", "native_regions.c"]),
     ("native_scoped", ["native_scoped.c"]),
     ("native_cow", ["native_heap.c", "native_collections.c", "native_text.c", "native_dictionary.c", "native_equal.c", "native_bytes.c", "native_regions.c", "native_cow.c"]),

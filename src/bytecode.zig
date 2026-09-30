@@ -18,6 +18,7 @@ pub const ValueCopy = model.ValueCopy;
 /// An element read or replace and whether it counts a negative index from the end.
 pub const Access = model.Access;
 pub const Function = model.Function;
+pub const Physical = model.Physical;
 pub const FunctionScope = model.FunctionScope;
 pub const Program = model.Program;
 pub const valueParameterCount = model.valueParameterCount;
@@ -367,20 +368,20 @@ fn validateManagedTextOperation(program: Program, local: typed.Local, schema: ty
     const element = schema.shape.buffer.?;
     const dictionary = schema.collection.kind == .dictionary;
     const byte_string = schema.collection.kind == .bytes;
+    if (try validatePythonTextOperation(program, local, schema, operation)) return;
     const expected: typed.Type = switch (operation.kind) {
         .length => .i64,
-        .find => if (dictionary) return error.InternalError else .i64,
         .find_any => if (byte_string) .i64 else return error.InternalError,
         .iteration_check => .unit,
         // A set's `pop` answers a key, as a positional key read does.
         .key_at, .pop => if (dictionary) schema.collection.key.? else return error.InternalError,
         .slice => if (!dictionary) local.ty else return error.InternalError,
+        .text_tail => if (schema.collection.kind == .string) local.ty else return error.InternalError,
         .slice_step => if (!dictionary and !byte_string) local.ty else return error.InternalError,
         .read => if (dictionary or byte_string) element else local.ty,
         .write => if (dictionary) .unit else return error.InternalError,
         .get, .value_at => if (dictionary) element else return error.InternalError,
         .contains => .bool,
-        .starts_with, .ends_with => if (dictionary) return error.InternalError else .bool,
         .to_list, .hex, .decode => if (byte_string) try validateConversion(program, operation) else return error.InternalError,
         .encode, .from_hex => if (schema.collection.kind == .string) try validateConversion(program, operation) else return error.InternalError,
         .buffer_reserve,
@@ -391,9 +392,8 @@ fn validateManagedTextOperation(program: Program, local: typed.Local, schema: ty
         .buffer_append_float,
         => try validateBufferAppend(byte_string),
         .join => if (!dictionary) local.ty else return error.InternalError,
-        .strip, .lstrip, .rstrip, .upper, .lower, .replace, .zfill => if (dictionary or byte_string) return error.InternalError else local.ty,
+        .upper, .lower, .replace, .zfill => if (dictionary or byte_string) return error.InternalError else local.ty,
         .is_digit, .is_alpha, .is_space => if (dictionary or byte_string) return error.InternalError else .bool,
-        .count => if (dictionary or byte_string) return error.InternalError else .i64,
         .splitlines => if (dictionary or byte_string) return error.InternalError else operation.output,
         // Both numeric parses read the receiver in place: a `str` through its
         // scalars and a byte string through its octets, so no decoded or copied
@@ -538,7 +538,8 @@ fn validateOpAcquireBuffer(program: Program, ty: @FieldType(@FieldType(Instructi
 fn validateOpMakeRecord(allocator: std.mem.Allocator, program: Program, record: @FieldType(@FieldType(Instruction, "op"), "make_record")) Error!void {
     if (!record.ty.isAggregate() or !validType(record.ty, program)) return error.InternalError;
     if (program.records[record.ty.recordIndex()].shape.resource != null) return error.InternalError;
-    if (record.payload.len != 0) return validateLiteralPayload(program.records[record.ty.recordIndex()], record);
+    if (record.payload.len != 0 and record.blob != null) return error.InternalError;
+    if (record.payload.len != 0) return validateLiteralPayload(program, record);
     // An embedded file is a whole `bytes` or `str` payload with no operands (`EMBED-1`).
     if (record.blob != null) {
         const schema = program.records[record.ty.recordIndex()];
@@ -562,10 +563,23 @@ fn validateOpMakeRecord(allocator: std.mem.Allocator, program: Program, record: 
     }
 }
 
-/// `LITERAL-PAYLOAD-1`: a constructor carrying a payload is a `str` literal of
-/// valid UTF-8 or a `bytes` literal, pops nothing and has no field order.
-fn validateLiteralPayload(schema: typed.Record, record: @FieldType(@FieldType(Instruction, "op"), "make_record")) Error!void {
+/// Packed text, bytes and inert-list payloads pop no fields. Validate UTF-8,
+/// immutable-element framing, scalar stride and boolean bits at the boundary.
+fn validateLiteralPayload(program: Program, record: @FieldType(@FieldType(Instruction, "op"), "make_record")) Error!void {
+    const schema = program.records[record.ty.recordIndex()];
     if (record.fields != 0 or record.order.len != 0 or !schema.managed) return error.InternalError;
+    if (schema.collection.kind == .list and !schema.collection.box) {
+        const element = schema.shape.buffer orelse return error.InternalError;
+        if (@import("constant_list_text.zig").family(program.records, element)) |text| {
+            if (!@import("constant_list_text.zig").valid(record.payload, text)) return error.InternalError;
+            return;
+        }
+        const stride = @import("constant_list.zig").width(program.records, element) orelse return error.InternalError;
+        if (record.payload.len % stride != 0) return error.InternalError;
+        if (@import("constant_list.zig").primitive(program.records, element) == .bool)
+            for (record.payload) |boolean| if (boolean > 1) return error.InternalError;
+        return;
+    }
     if (schema.collection.kind == .string) {
         if (!std.unicode.utf8ValidateSlice(record.payload)) return error.InternalError;
     } else if (!typed.isByteString(schema) or schema.shape.buffer != .u8) return error.InternalError;
@@ -842,4 +856,23 @@ fn validateFloatUnary(op: typed.UnaryOp) Error!void {
 
 fn validateFloatBinary(ty: typed.Type, op: typed.BinaryOp) Error!void {
     if (std.mem.startsWith(u8, @tagName(op), "f64_") and ty != .u64) return error.InternalError;
+}
+
+/// New Python text operations have one fixed result and no mapping interpretation.
+fn validatePythonTextOperation(program: Program, local: typed.Local, schema: typed.Record, operation: BufferOperation) Error!bool {
+    const vocabulary = @import("buffer_operations.zig");
+    const search = vocabulary.search(operation.kind);
+    if (search == null and vocabulary.trim(operation.kind) == null and operation.kind != .text_repr) return false;
+    if (schema.collection.kind != .string and schema.collection.kind != .bytes) return error.InternalError;
+    if (operation.kind == .text_repr) {
+        if (!operation.output.isAggregate()) return error.InternalError;
+        if (program.records[operation.output.recordIndex()].collection.kind != .string) return error.InternalError;
+        return true;
+    }
+    const expected = if (search) |mode|
+        (if (mode == .prefix or mode == .suffix) typed.Type.bool else typed.Type.i64)
+    else
+        local.ty;
+    if (operation.output != expected) return error.InternalError;
+    return true;
 }

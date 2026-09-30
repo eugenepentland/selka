@@ -233,7 +233,7 @@ fn emitOperation(comptime E: type, self: *E, op: BufferOperation, stack: []const
         },
         .sort => {
             const element = schema.shape.buffer.?;
-            const order: u32 = if (numeric_surface.isFloat(element, self.program.records)) 2 else if (element.isInteger()) (if (element.integer().?.signed) 0 else 1) else 3;
+            const order = sortOrder(self.program.records, element);
             try self.print(" %v{d} =w call $myl_native_list_sort(l %v{d}, w {d})\n", .{ output, list, order });
             try self.require(output, allocation_failure);
             try self.print(store_unit, .{base});
@@ -319,6 +319,7 @@ fn keyShape(comptime E: type, self: *E, key: typed.Type) Error!KeyShape {
 fn keyField(comptime E: type, self: *E, ty: typed.Type) Error!u4 {
     if (numeric_surface.isFloat(ty, self.program.records)) return 2;
     if (ty.isAggregate() and self.program.records[ty.recordIndex()].collection.kind == .string) return 3;
+    if (ty.isAggregate() and self.program.records[ty.recordIndex()].collection.kind == .bytes) return 7;
     const signed = if (ty.integer()) |integer| integer.signed else if (ty == .bool) false else return error.InternalError;
     const width: u4 = switch ((try self.layout(ty)).size) {
         8 => 0,
@@ -420,6 +421,7 @@ fn emitConstruct(comptime E: type, self: *E, record: MakeRecord, stack: []const 
         if (text or schema.collection.kind == .bytes) {
             if (try frozenLiteral(E, self, record, element, text)) |frozen| return emitFrozen(E, self, frozen, base);
         }
+        if (schema.collection.kind == .list and try @import("qbe_list_literal.zig").emit(E, self, record, element, base)) return;
         try self.print(" %v{d} =l call $myl_native_list_new(l %heap, l ${s}, l {d})\n", .{ result, try self.descriptor(element), record.fields });
         try self.require(result, allocation_failure);
         if (rc_mode.enabled()) try rc_values.holdRuntime(E, self, record.ty, result);
@@ -1006,13 +1008,7 @@ fn textOperation(comptime E: type, self: *E, op: BufferOperation, stack: []const
             try self.require(result, iteration_failure);
             try self.print(store_unit, .{base});
         },
-        .slice => {
-            if (self.range_keys.role(self.pc) == .slice) return range_keys.Lower(E).slice(self, input, base);
-            const start = try self.load("s", base);
-            const end = try self.load("s", base + 1);
-            try self.print(" %v{d} =l call $myl_native_text_slice(l %heap, l %v{d}, l %v{d}, l %v{d})\n", .{ result, input, start, end });
-            try checkedPointer(E, self, result, base);
-        },
+        .slice, .text_tail => try textSlice(E, self, op, input, result, base),
         .slice_step => try textStep(E, self, base, input),
         .split, .join => {
             const argument = try self.load("s", base);
@@ -1033,6 +1029,16 @@ fn textOperation(comptime E: type, self: *E, op: BufferOperation, stack: []const
         // The Python string methods and the number grammar lower on their own.
         else => return text_lower.Lower(E).operation(self, op, stack),
     }
+}
+/// Select suffix sharing only for an omitted upper endpoint; borrowed ranges
+/// still fuse before any allocating slice helper is emitted.
+fn textSlice(comptime E: type, self: *E, op: BufferOperation, input: usize, result: usize, base: usize) Error!void {
+    if (self.range_keys.role(self.pc) == .slice) return range_keys.Lower(E).slice(self, input, base);
+    const start = try self.load("s", base);
+    const end = try self.load("s", base + 1);
+    const callee = if (op.kind == .text_tail) "myl_native_text_tail" else "myl_native_text_slice";
+    try self.print(" %v{d} =l call ${s}(l %heap, l %v{d}, l %v{d}, l %v{d})\n", .{ result, callee, input, start, end });
+    try checkedPointer(E, self, result, base);
 }
 /// Leave in operand slot `base` the value a dictionary call that answered
 /// `found` copied out — through `pointer`, or this pc's aggregate scratch when it
@@ -1282,4 +1288,11 @@ fn emitCast(comptime E: type, self: *E, ty: typed.Type, stack: []const typed.Typ
     const result = self.temp();
     try self.print(" %v{d} =l call $myl_native_text_scalar(l %heap, l %v{d}, w {d})\n", .{ result, input, kind });
     try checkedPointer(E, self, result, base);
+}
+
+/// Sort dispatch is resolved once from the element type, before entering its engine.
+fn sortOrder(records: []const typed.Record, element: typed.Type) u32 {
+    if (numeric_surface.isFloat(element, records)) return 2;
+    if (element.integer()) |integer| return if (integer.signed) 0 else 1;
+    return if (records[element.recordIndex()].collection.kind == .bytes) 4 else 3;
 }

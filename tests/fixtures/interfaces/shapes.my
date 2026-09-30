@@ -1,0 +1,34 @@
+module shapes
+
+
+public enum Color:
+    red,
+    green,
+    blue
+
+
+public record Inner:
+    x: int
+    y: int
+    z: int = 0
+
+
+public record Holder:
+    items: list[Inner]
+    index: dict[str, Inner]
+    maybe: Option[Inner]
+    tint: Color
+
+
+public union Event:
+    moved(to: Inner, steps: int),
+    tagged: Inner,
+    idle
+
+
+record Hidden:
+    secret: int
+
+
+public def origin() -> Inner:
+    return Inner(x=0, y=0)

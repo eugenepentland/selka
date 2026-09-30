@@ -95,8 +95,8 @@ the `MYLANG_RC_COUNTS` totals event by event.
 $ mylang build tree.my -o tree --rc-runtime=sites
 $ MYLANG_RC_SITES=sites.json MYLANG_RC_SITES_TOP=6 ./tree
 26
-MYLANG_RC_COUNTS {"version":1,"runtime":"rc-v3-sites","saturated":false,"owner_acquire":92,"owner_release":138,"hold_acquire":122,"hold_release":122,"owner_limit":0,"hold_limit":0,"heap_allocate":46,"arena_allocate":0,"retire":46,"clone_shell":0,"unique_check":30}
-MYLANG_RC_SITES {"version":1,"runtime":"rc-v3-sites","sites":37,"events":799,"calls":702,"shown":6,"report":"sites.json"}
+MYLANG_RC_COUNTS {"version":1,"runtime":"rc-v4-sites","saturated":false,"owner_acquire":92,"owner_release":138,"hold_acquire":122,"hold_release":122,"owner_limit":0,"hold_limit":0,"heap_allocate":46,"arena_allocate":0,"retire":46,"clone_shell":0,"unique_check":30}
+MYLANG_RC_SITES {"version":1,"runtime":"rc-v4-sites","sites":37,"events":799,"calls":702,"shown":6,"report":"sites.json"}
       events        calls  operation                  type               function                 position pc counts
           92           31  myl_qbe_rc_frame_cleanup   -                  total                    tree.my:18:5 pc 36 hold_release=46 slot_drop=46
           92            1  rcg_slot_drop              Node               main                     tree.my:22:15 pc 3 owner_release=46 retire=46
@@ -105,7 +105,7 @@ MYLANG_RC_SITES {"version":1,"runtime":"rc-v3-sites","sites":37,"events":799,"ca
           31           31  rcg_retain                 List<Node>         build                    tree.my:7:5 pc 5 owner_acquire=31
           31           31  rcg_slot_drop              List<Node>         build                    tree.my:7:5 pc 5 owner_release=31
 $ head -n 2 sites.json
-{"version":1,"runtime":"rc-v3-sites","events":799,"calls":702,"sites":[
+{"version":1,"runtime":"rc-v4-sites","events":799,"calls":702,"sites":[
 {"function":"total","path":"/work/tree.my","line":18,"column":5,"pc":36,"operation":"myl_qbe_rc_frame_cleanup","type":"","calls":31,"events":92,"counts":{"hold_release":46,"slot_drop":46}},
 ```
 

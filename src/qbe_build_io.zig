@@ -476,6 +476,7 @@ pub const Context = struct {
         const environment = try self.allocator.create(std.process.Environ.Map);
         environment.* = try self.environ.clone(self.allocator);
         try environment.put(@import("memory_budget").variable, try std.fmt.allocPrint(self.allocator, "{d}", .{bytes}));
+        try @import("memory_budget").guestEnvironment(self.allocator, environment);
         return environment;
     }
     /// Capture frontend output and replay diagnostics without interpreting them.

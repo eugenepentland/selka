@@ -8,7 +8,8 @@ pub const list_type_error = "E_LIST_TYPE";
 /// Omitted slice endpoints, mirrored by `MYL_NATIVE_SLICE_FIRST`/`_LAST` in the runtime.
 const omitted_first: i128 = std.math.minInt(i64);
 const omitted_last: i128 = std.math.maxInt(i64);
-const Kind = @import("buffer_operations.zig").Kind;
+const operations = @import("buffer_operations.zig");
+const Kind = operations.Kind;
 const nominal = @import("nominal_catalog.zig");
 const Catalog = @import("type_catalog.zig").Catalog;
 
@@ -50,6 +51,9 @@ pub fn optionType(catalog: *Catalog, element: typed.Type, span: Span) Error!type
 
 /// Resolve the output of a Python string method that no other collection shares.
 fn textMethodType(catalog: *Catalog, owner: typed.Type, kind: Kind, span: Span) Error!typed.Type {
+    if (operations.search(kind)) |mode| return if (mode == .prefix or mode == .suffix) .bool else .i64;
+    if (operations.trim(kind) != null) return owner;
+    if (kind == .text_repr) return preludeType(catalog, "str", span);
     return switch (kind) {
         .strip, .lstrip, .rstrip, .upper, .lower, .replace, .zfill => owner,
         .splitlines, .split_whitespace => listType(catalog, owner, span),
@@ -66,6 +70,9 @@ fn textMethodType(catalog: *Catalog, owner: typed.Type, kind: Kind, span: Span) 
 
 /// Resolve the output of a managed byte-string operation.
 fn bytesOperationType(catalog: *Catalog, owner: typed.Type, kind: Kind, span: Span) Error!typed.Type {
+    if (operations.search(kind)) |mode| return if (mode == .prefix or mode == .suffix) .bool else .i64;
+    if (operations.trim(kind) != null) return owner;
+    if (kind == .text_repr) return preludeType(catalog, "str", span);
     const element = catalog.records[owner.recordIndex()].shape.buffer.?;
     return switch (kind) {
         .length, .find, .find_any => .i64,
@@ -124,6 +131,7 @@ pub fn operationType(catalog: *Catalog, owner: typed.Type, kind: Kind, span: Spa
         .key_at => if (dictionary) schema.collection.key.? else error.InternalError,
         .value_at => if (dictionary) element else error.InternalError,
         .slice, .join => if (!dictionary) owner else error.InternalError,
+        .text_tail => if (schema.collection.kind == .string) owner else error.InternalError,
         .slice_step => if (dictionary or schema.collection.kind == .bytes) error.InternalError else owner,
         .keys => if (dictionary) listType(catalog, schema.collection.key.?, span) else error.InternalError,
         .values => if (dictionary) listType(catalog, element, span) else error.InternalError,
@@ -294,6 +302,10 @@ pub fn Builder(comptime Checker: type) type {
         }
         /// Construct a fresh list and append elements in source order.
         pub fn literal(self: Self, ty: typed.Type, values: []const typed.NodeId) Error!typed.Node {
+            const records = self.checker.catalog.records;
+            const element = records[ty.recordIndex()].shape.buffer.?;
+            if (@import("constant_list.zig").canPack(records, self.checker.nodes.items, values, element))
+                return .{ .span = self.span, .ty = ty, .data = .{ .array = values } };
             const capacity = try self.integer(@intCast(values.len));
             const acquire = try self.node(ty, .{ .acquire_buffer = .{ .capacity = capacity } });
             const owner = try self.local(ty);
@@ -305,7 +317,10 @@ pub fn Builder(comptime Checker: type) type {
         /// Root text once, then evaluate each optional slice endpoint in order.
         pub fn textSlice(self: Self, base: typed.NodeId, start: ?typed.NodeId, end: ?typed.NodeId) Error!typed.Node {
             const owner = try self.local(self.checker.nodes.items[@backingInt(base)].ty);
-            return self.block(&.{try self.stmt(.{ .initialize = .{ .slot = owner, .value = base } })}, try self.operation(owner, .slice, &.{ start orelse try self.integer(0), end orelse try self.length(owner) }));
+            const ty = self.checker.nodes.items[@backingInt(base)].ty;
+            const family = self.checker.catalog.records[ty.recordIndex()].collection.kind;
+            const kind: Kind = if (end == null and family == .string) .text_tail else .slice;
+            return self.block(&.{try self.stmt(.{ .initialize = .{ .slot = owner, .value = base } })}, try self.operation(owner, kind, &.{ start orelse try self.integer(0), end orelse try self.length(owner) }));
         }
         /// Copy a stepped slice into fresh storage. An omitted endpoint stays a sentinel
         /// so the runtime can default it for the step's sign, and explicit endpoints are

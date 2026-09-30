@@ -100,7 +100,7 @@ def bump(rt: mut Runtime, at: int) -> None:
 
 
 # spec: RC-ITERATION-HOLD-TRANSFER-1
-public def test_write_back_through_a_field_keeps_the_iterated_list() -> bool:
+public def test_write_back_through_a_field_preserves_iteration_snapshot() -> bool:
     it = Interp(rt=Runtime(objects=[1, 2, 3]))
     seen: list[int] = []
     at = 0
@@ -110,12 +110,35 @@ public def test_write_back_through_a_field_keeps_the_iterated_list() -> bool:
         bump(mut wb, at + 1)
         it.rt = wb
         at += 1
-    return seen == [1, 12, 13] and it.rt.objects == [1, 12, 13]
+    return seen == [1, 2, 3] and it.rt.objects == [1, 12, 13]
+
+
+
+record Source:
+    items: list[int]
+    n: int
+
+
+def source() -> Source:
+    return Source([1, 2, 3], 1)
+
+
+# spec: ITERATION-FIELD-SNAPSHOT-1
+public def test_last_field_transfer_preserves_live_iteration() -> bool:
+    state = source()
+    total = 0
+    for value in state.items:
+        moved = state.items
+        moved.append(value)
+        total += len(moved)
+        state = source()
+    return total == 12
 
 
 def main() -> int:
     assert test_nonstructural_dictionary_writes_remain_visible()
-    assert test_write_back_through_a_field_keeps_the_iterated_list()
+    assert test_write_back_through_a_field_preserves_iteration_snapshot()
+    assert test_last_field_transfer_preserves_live_iteration()
     assert test_list_iteration_observes_later_element_writes()
     assert test_rebinding_source_preserves_original_iteration_storage()
     assert test_named_snapshot_remains_independent_of_iteration_writes()

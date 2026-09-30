@@ -381,6 +381,8 @@ const Emitter = struct {
         const schema = self.program.records[node.ty.recordIndex()];
         const text = schema.managed and schema.collection.kind == .string;
         const octets = typed.isByteString(schema) and schema.shape.buffer == .u8;
+        if (schema.managed and schema.collection.kind == .list and !schema.collection.box)
+            return @import("constant_list.zig").payload(self.allocator, self.program.records, self.program.nodes, values, schema.shape.buffer.?);
         if (!text and !octets) return null;
         const content = try @import("constant_literal.zig").payload(self.allocator, self.program.nodes, values, text);
         return content;

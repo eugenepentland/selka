@@ -142,6 +142,10 @@ pub const Request = struct {
     /// dependency contexts, region digests), kept for the build's
     /// lowering-free unit reuse (`EMIT-STANDIN-1`); allocated in the check's arena.
     prepared: ?semantic_key.Prepared = null,
+    /// MODULE-INTERFACE-1: `previous` holds the declared functions of imported
+    /// module interfaces, whose bodies the compilation does not have. Each one
+    /// stands in by its stable key alone, with the facts its interface carries.
+    declared: bool = false,
 };
 
 /// Convert the passes' in-memory facts to the persisted shape.

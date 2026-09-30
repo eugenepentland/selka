@@ -102,6 +102,171 @@ pub fn render(allocator: std.mem.Allocator, src: source.Source, input: typed.Pro
     return std.json.Stringify.valueAlloc(allocator, Graph{ .schema = schema, .entry = entry, .functions = units.items }, .{});
 }
 
+/// MODULE-TEST-1: one module's share of a program's checked facts: every
+/// function the module emits, described as `render` describes it except for
+/// the two program-wide dependency sets, which only a merge of every share
+/// knows: an invoking body keeps its `conservative-indirect-target-set`
+/// reason but no `indirect` edge, and no body gets `codec` runtime edges.
+/// `values` names every function an emitted body takes as a value and
+/// `codecs` every codec function the module's program declares; a merge's
+/// union of them is the whole program's.
+pub const Share = struct {
+    version: []const u8 = "module-test-facts-v1",
+    functions: []const Unit,
+    values: []const []const u8,
+    codecs: []const []const u8,
+};
+
+/// Render one module's `Share` of checked facts: `emitted` marks the
+/// functions the module emits and `roots` the tests and benchmarks among
+/// them, which carry their export name.
+pub fn renderShare(allocator: std.mem.Allocator, src: source.Source, input: typed.Program, emitted: []const bool, roots: []const bool) Error![]u8 {
+    if (emitted.len != input.functions.len or roots.len != input.functions.len) return error.InvalidProgram;
+    var arena = std.heap.ArenaAllocator.init(allocator);
+    defer arena.deinit();
+    const scratch = arena.allocator();
+    var program = input;
+    program.records = try @import("recursive_boxes.zig").physical(scratch, input.records);
+    var catalog = native_types.Catalog.initRecords(scratch, program.records) catch |err| return mapLayoutError(err);
+    defer catalog.deinit();
+    // The program-wide sets are the merge's: an invoking body finds no
+    // targets here, and no codec runtime set is added.
+    var address_taken: ?[]const typed.FunctionId = &.{};
+    const facts: FunctionFacts = .{
+        .allocator = scratch,
+        .src = src,
+        .program = program,
+        .catalog = &catalog,
+        .address_taken = &address_taken,
+        .codecs = &.{},
+    };
+    var units: std.ArrayList(Unit) = .empty;
+    var callees: std.ArrayList(typed.FunctionId) = .empty;
+    var values: std.ArrayList([]const u8) = .empty;
+    var seen_values: std.StringHashMapUnmanaged(void) = .empty;
+    for (program.functions, emitted, roots) |function, emit, root| {
+        if (!emit) continue;
+        callees.clearRetainingCapacity();
+        try units.append(scratch, .{
+            .name = function.name,
+            .symbol = try symbol(scratch, function.name),
+            .@"export" = if (root) .{ .name = function.name } else null,
+            .test_dependencies = try facts.describe(function, &callees),
+        });
+        var walker = walk.Walker.init(scratch, program, function.scope.body) catch |err| return mapError(err);
+        defer walker.deinit();
+        while (true) {
+            const item = walker.next() catch |err| return mapError(err);
+            const current = item orelse break;
+            const node = switch (current) {
+                .expression => |id| program.nodes[@backingInt(id)],
+                .statement => continue,
+            };
+            switch (node.data) {
+                .function_value => |id| {
+                    if (@backingInt(id) >= program.functions.len) return error.InvalidProgram;
+                    const name = program.functions[@backingInt(id)].name;
+                    if ((seen_values.getOrPut(scratch, name) catch return error.OutOfMemory).found_existing) continue;
+                    values.append(scratch, name) catch return error.OutOfMemory;
+                },
+                else => {},
+            }
+        }
+    }
+    const codec_ids = try collectCodecs(scratch, program);
+    const codecs = try scratch.alloc([]const u8, codec_ids.len);
+    for (codec_ids, codecs) |id, *name| name.* = program.functions[@backingInt(id)].name;
+    std.mem.sort([]const u8, values.items, {}, stringLess);
+    std.mem.sort([]const u8, codecs, {}, stringLess);
+    return std.json.Stringify.valueAlloc(allocator, Share{ .functions = units.items, .values = values.items, .codecs = codecs }, .{}) catch error.OutOfMemory;
+}
+
+/// What a merge of shares is rendered with: the schema of the roots, the
+/// entry's symbol and whether to keep only what the roots reach.
+pub const MergeOptions = struct { schema: []const u8, entry: []const u8, scope: Scope };
+
+/// MODULE-TEST-1: the checked facts graph of a program from its modules'
+/// shares, as `render` renders it: each identical function once, conflicting
+/// definitions rejected, every invoking body's `indirect` edges to the union of the
+/// shares' value sets, and, when any share declares a codec, every body's
+/// `codec` edges to the union of their codec sets. `.closure` keeps what the
+/// exported roots reach, in share order.
+pub fn mergeShares(allocator: std.mem.Allocator, shares: []const Share, options: MergeOptions) Error![]u8 {
+    var arena = std.heap.ArenaAllocator.init(allocator);
+    defer arena.deinit();
+    const scratch = arena.allocator();
+    var order: std.ArrayList(Unit) = .empty;
+    var by_symbol: std.StringHashMapUnmanaged(usize) = .empty;
+    var values: std.array_hash_map.String(void) = .empty;
+    var codecs: std.array_hash_map.String(void) = .empty;
+    for (shares) |share| {
+        for (share.functions) |unit| {
+            const slot = by_symbol.getOrPut(scratch, unit.symbol) catch return error.OutOfMemory;
+            if (slot.found_existing) {
+                const previous = std.json.Stringify.valueAlloc(scratch, order.items[slot.value_ptr.*], .{}) catch return error.OutOfMemory;
+                const next = std.json.Stringify.valueAlloc(scratch, unit, .{}) catch return error.OutOfMemory;
+                if (!std.mem.eql(u8, previous, next)) return error.InvalidProgram;
+                continue;
+            }
+            slot.value_ptr.* = order.items.len;
+            order.append(scratch, unit) catch return error.OutOfMemory;
+        }
+        for (share.values) |name| values.put(scratch, try symbol(scratch, name), {}) catch return error.OutOfMemory;
+        for (share.codecs) |name| codecs.put(scratch, try symbol(scratch, name), {}) catch return error.OutOfMemory;
+    }
+    for (order.items) |*unit| unit.test_dependencies = try completed(scratch, unit.test_dependencies, values.keys(), codecs.keys());
+    const keep = try scratch.alloc(bool, order.items.len);
+    @memset(keep, options.scope == .all);
+    if (options.scope == .closure) {
+        var pending: std.ArrayList(usize) = .empty;
+        for (order.items, 0..) |unit, index| if (unit.@"export" != null) pending.append(scratch, index) catch return error.OutOfMemory;
+        while (pending.pop()) |index| {
+            if (keep[index]) continue;
+            keep[index] = true;
+            for (order.items[index].test_dependencies.dependencies) |dependency| {
+                const next = by_symbol.get(dependency.symbol) orelse continue;
+                if (!keep[next]) pending.append(scratch, next) catch return error.OutOfMemory;
+            }
+        }
+    }
+    var units: std.ArrayList(Unit) = .empty;
+    for (order.items, keep) |unit, kept| if (kept) units.append(scratch, unit) catch return error.OutOfMemory;
+    return std.json.Stringify.valueAlloc(allocator, Graph{ .schema = options.schema, .entry = options.entry, .functions = units.items }, .{}) catch error.OutOfMemory;
+}
+
+/// One share's metadata with the program-wide edges `describe` would have
+/// added: `indirect` to every value target of an invoking body, `codec` to
+/// every codec function when the program declares one.
+fn completed(allocator: std.mem.Allocator, metadata: dependencies.Metadata, values: []const []const u8, codecs: []const []const u8) Error!dependencies.Metadata {
+    var reasons: std.ArrayList([]const u8) = .empty;
+    reasons.appendSlice(allocator, metadata.reasons) catch return error.OutOfMemory;
+    var edges: std.ArrayList(dependencies.Dependency) = .empty;
+    edges.appendSlice(allocator, metadata.dependencies) catch return error.OutOfMemory;
+    const invokes = for (metadata.reasons) |reason| {
+        if (std.mem.eql(u8, reason, "conservative-indirect-target-set")) break true;
+    } else false;
+    if (invokes) for (values) |target| try addEdge(allocator, &edges, target, .indirect);
+    if (codecs.len != 0) {
+        const reason = "conservative-codec-runtime-set";
+        const present = for (reasons.items) |existing| {
+            if (std.mem.eql(u8, existing, reason)) break true;
+        } else false;
+        if (!present) reasons.append(allocator, reason) catch return error.OutOfMemory;
+        for (codecs) |target| try addEdge(allocator, &edges, target, .codec);
+    }
+    std.mem.sort(dependencies.Dependency, edges.items, {}, dependencyLess);
+    std.mem.sort([]const u8, reasons.items, {}, stringLess);
+    var out = metadata;
+    out.dependencies = edges.items;
+    out.reasons = reasons.items;
+    return out;
+}
+
+fn addEdge(allocator: std.mem.Allocator, edges: *std.ArrayList(dependencies.Dependency), target: []const u8, kind: dependencies.Kind) Error!void {
+    for (edges.items) |existing| if (existing.kind == kind and std.mem.eql(u8, existing.symbol, target)) return;
+    edges.append(allocator, .{ .symbol = target, .kind = kind }) catch return error.OutOfMemory;
+}
+
 /// The stable native symbol for one qualified function name.
 pub fn symbol(allocator: std.mem.Allocator, name: []const u8) Error![]const u8 {
     var digest: [32]u8 = undefined;
@@ -486,6 +651,71 @@ fn mapDiagnosticError(err: anyerror) Error {
 
 fn mapLayoutError(err: native_types.Error) Error {
     return if (err == error.OutOfMemory) error.OutOfMemory else error.InvalidProgram;
+}
+
+/// A share's unit for `name`, depending on `calls` by call and giving
+/// `reasons`.
+fn shareUnit(allocator: std.mem.Allocator, name: []const u8, calls: []const []const u8, reasons: []const []const u8, root: bool) !Unit {
+    const edges = try allocator.alloc(dependencies.Dependency, calls.len);
+    for (calls, edges) |callee, *edge| edge.* = .{ .symbol = try symbol(allocator, callee), .kind = .call };
+    return .{
+        .name = name,
+        .symbol = try symbol(allocator, name),
+        .@"export" = if (root) .{ .name = name } else null,
+        .test_dependencies = .{ .implementation_hash = name, .dependencies = edges, .cacheable = true, .pure = true, .reasons = reasons },
+    };
+}
+
+// spec-case: MODULE-TEST-1
+test "merged shares add the program-wide indirect and codec edges and keep the roots' closure" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    // Module `m` invokes a function value; module `n` takes one and declares a codec.
+    const first: Share = .{
+        .functions = &.{
+            try shareUnit(a, "m::test_it", &.{"m::apply"}, &.{}, true),
+            try shareUnit(a, "m::apply", &.{}, &.{"conservative-indirect-target-set"}, false),
+        },
+        .values = &.{},
+        .codecs = &.{},
+    };
+    const second: Share = .{
+        .functions = &.{
+            try shareUnit(a, "n::target", &.{}, &.{}, false),
+            try shareUnit(a, "n::unused", &.{}, &.{}, false),
+            try shareUnit(a, "m::apply", &.{}, &.{"conservative-indirect-target-set"}, false),
+        },
+        .values = &.{"n::target"},
+        .codecs = &.{"n::decode"},
+    };
+    const merged = try mergeShares(a, &.{ first, second }, .{ .schema = "{}", .entry = "", .scope = .closure });
+    const graph = try std.json.parseFromSliceLeaky(Graph, a, merged, .{ .allocate = .alloc_always });
+    // The first share's `apply` wins; `unused` is reached by no root.
+    try std.testing.expectEqual(@as(usize, 3), graph.functions.len);
+    const apply = graph.functions[1].test_dependencies;
+    try std.testing.expectEqualStrings("m::apply", graph.functions[1].name);
+    try std.testing.expectEqual(@as(usize, 2), apply.dependencies.len);
+    try std.testing.expectEqual(dependencies.Kind.codec, apply.dependencies[0].kind);
+    try std.testing.expectEqual(dependencies.Kind.indirect, apply.dependencies[1].kind);
+    try std.testing.expectEqualStrings(try symbol(a, "n::target"), apply.dependencies[1].symbol);
+    try std.testing.expectEqualStrings("conservative-codec-runtime-set", apply.reasons[0]);
+    try std.testing.expectEqualStrings("n::target", graph.functions[2].name);
+}
+
+// spec-case: MODULE-TEST-1
+test "merged shares reject conflicting facts for one shared specialization" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const first = try shareUnit(a, "m::specialization", &.{}, &.{}, true);
+    var changed = first;
+    changed.test_dependencies.implementation_hash = "different body";
+    const shares = [_]Share{
+        .{ .functions = &.{first}, .values = &.{}, .codecs = &.{} },
+        .{ .functions = &.{changed}, .values = &.{}, .codecs = &.{} },
+    };
+    try std.testing.expectError(error.InvalidProgram, mergeShares(a, &shares, .{ .schema = "", .entry = "", .scope = .all }));
 }
 
 test "facts symbols are stable and length bounded" {

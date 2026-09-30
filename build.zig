@@ -87,7 +87,8 @@ const rss = struct {
     /// Observed (ReleaseFast `-Dcompiler-only`, 2026-09-24, after the incremental
     /// build frontend landed): the mylang executable compile peaked at 3.26-3.32G,
     /// over the 3G bound, so the install graph failed after writing the binary.
-    const compile: u64 = 3584 * mib;
+    /// Observed again (ReleaseFast, 2026-09-24, with per-module tests): 4.26G.
+    const compile: u64 = 4608 * mib;
     /// `zig build run`, which executes whatever program the caller names.
     /// Matches the 4 GiB ceiling `mylang run` gives a guest.
     const guest: u64 = 4096 * mib;
@@ -524,6 +525,7 @@ pub fn build(b: *std.Build) void {
     host_tools.addOption([]const u8, "zig", b.graph.zig_exe);
     const host_native = b.createModule(.{ .root_source_file = b.path("src/host_native.zig"), .target = target, .optimize = optimize });
     host_native.addImport("qbe_build", native_build);
+    host_native.addImport("memory_budget", budget);
     host_native.addImport("host_tools", host_tools.createModule());
     const host_imports: []const std.Build.Module.Import = &.{
         .{ .name = "mylang", .module = core },
@@ -560,7 +562,7 @@ pub fn build(b: *std.Build) void {
     unit.root_module.addIncludePath(b.path("src"));
     unit.root_module.addCSourceFiles(.{
         .root = b.path("."),
-        .files = &.{ "src/native_regions.c", "tests/native_rc_arena_test.c", "tests/native_rc_hold_test.c", "tests/native_rc_fast_test.c", "tests/native_rc_loan_test.c", "tests/native_rc_history_test.c", "tests/native_rc_stats_test.c", "tests/native_rc_contract_test.c", "tests/native_rc_collections_test.c", "tests/native_rc_codecs_test.c", "tests/native_rc_host_test.c", "src/native_print.c", "src/qbe_runtime.c", "src/native_cow.c", "src/native_rc.c", "src/native_rc_stats.c", "src/native_rc_shapes.c", "src/native_rc_walk.c", "src/native_rc_scope.c", "src/native_rc_transfer.c", "src/native_rc_alloc.c", "src/native_rc_values.c", "src/native_heap.c", "src/native_arena.c", "src/native_collections.c", "src/native_text.c", "src/native_text_methods.c", "src/native_dictionary.c", "src/native_equal.c", "src/native_bytes.c" },
+        .files = &.{ "src/native_regions.c", "tests/native_rc_arena_test.c", "tests/native_rc_hold_test.c", "tests/native_rc_fast_test.c", "tests/native_rc_image_test.c", "tests/native_rc_loan_test.c", "tests/native_rc_history_test.c", "tests/native_rc_stats_test.c", "tests/native_rc_contract_test.c", "tests/native_rc_collections_test.c", "tests/native_rc_codecs_test.c", "tests/native_rc_host_test.c", "src/native_print.c", "src/qbe_runtime.c", "src/native_cow.c", "src/native_rc.c", "src/native_rc_stats.c", "src/native_rc_shapes.c", "src/native_rc_walk.c", "src/native_rc_scope.c", "src/native_rc_transfer.c", "src/native_rc_alloc.c", "src/native_rc_values.c", "src/native_heap.c", "src/native_arena.c", "src/native_collections.c", "src/native_text.c", "src/native_search.c", "src/native_trim.c", "src/native_repr.c", "src/native_text_methods.c", "src/native_dictionary.c", "src/native_equal.c", "src/native_bytes.c" },
         .flags = &.{ "-std=c11", "-Wall", "-Wextra", "-Werror", "-UNDEBUG", "-DMYL_RC_CONTRACT_LIBRARY", "-DMYL_NATIVE_RC_COUNTING=1", "-DMYL_RC_STATS_LIBRARY", "-DMYL_RC_COLLECTIONS_LIBRARY", "-DMYL_RC_CODECS_LIBRARY", "-DMYL_RC_HOST_LIBRARY", "-ffunction-sections", "-fdata-sections" },
     });
     unit.root_module.addCSourceFiles(.{
@@ -670,6 +672,20 @@ pub fn build(b: *std.Build) void {
     b.step("test-interpreter", "Run the default interpreter acceptance suite").dependOn(test_step);
     guardian.addAllChecks(b, guardian_exe, test_step, .{});
     boundedChecks(test_step);
+    // Named modules' inline tests are excluded from importing roots by Zig.
+    // Give the byte ceilings their own runner so MEMORY-CEILING-* is gated.
+    const budget_unit = b.addTest(.{
+        .max_rss = rss.compile,
+        .test_runner = guardian.testRunner(guardian_dep),
+        .root_module = budget,
+    });
+    guardian.enableTestDiagnostics(budget_unit.root_module);
+    const run_budget_unit = bounded(b.addRunArtifact(budget_unit), rss.driver);
+    cached(run_budget_unit, "memory_budget");
+    const budget_step = b.step("test-memory-budget", "Verify guest byte ceilings, kernel guards and fan-out bounds");
+    budget_step.dependOn(&run_budget_unit.step);
+    test_step.dependOn(&run_budget_unit.step);
+    compile_tests.dependOn(&budget_unit.step);
     const run_unit = focused(b.addRunArtifact(unit), rss.suite);
     forwardFilters(b, run_unit, test_filters);
     // The gate runs each slow root as several concurrent shards; `test-units`
@@ -762,6 +778,9 @@ pub fn build(b: *std.Build) void {
             "src/native_dictionary.c",
             "src/native_equal.c",
             "src/native_text.c",
+            "src/native_search.c",
+            "src/native_trim.c",
+            "src/native_repr.c",
             "src/native_collections.c",
             "src/native_bytes.c",
         },
@@ -801,6 +820,9 @@ pub fn build(b: *std.Build) void {
             "src/native_arena.c",
             "src/native_collections.c",
             "src/native_text.c",
+            "src/native_search.c",
+            "src/native_trim.c",
+            "src/native_repr.c",
             "src/native_dictionary.c",
             "src/native_equal.c",
             "src/native_bytes.c",
@@ -841,6 +863,9 @@ pub fn build(b: *std.Build) void {
             "src/native_arena.c",
             "src/native_collections.c",
             "src/native_text.c",
+            "src/native_search.c",
+            "src/native_trim.c",
+            "src/native_repr.c",
             "src/native_dictionary.c",
             "src/native_equal.c",
             "src/native_bytes.c",
@@ -897,6 +922,9 @@ pub fn build(b: *std.Build) void {
             "src/native_arena.c",
             "src/native_collections.c",
             "src/native_text.c",
+            "src/native_search.c",
+            "src/native_trim.c",
+            "src/native_repr.c",
             "src/native_dictionary.c",
             "src/native_equal.c",
             "src/native_bytes.c",
@@ -1025,7 +1053,85 @@ pub fn build(b: *std.Build) void {
     incremental_run.addArgs(&.{ "python3", "tests/incremental_diff.py", "--steps", "120" });
     incremental_run.addArtifactArg(exe);
     incremental_step.dependOn(&incremental_run.step);
+    // MODULE-CHECK-1: the same walk over a project whose modules sit in
+    // subdirectories under a `mylang.json`, where `check` is per module.
+    const incremental_projects = driver(b, "python3 tests/incremental_diff.py --project tests/fixtures/module_projects", rss.driver, "incremental");
+    incremental_projects.addArgs(&.{ "python3", "tests/incremental_diff.py", "--steps", "60", "--project", "tests/fixtures/module_projects" });
+    incremental_projects.addArtifactArg(exe);
+    incremental_step.dependOn(&incremental_projects.step);
     test_step.dependOn(incremental_step);
+    // MODULE-INTERFACE-2/3: a seeded mutation walk asserts which edits keep a
+    // module's interface hash and which change it, and every module of
+    // `tests/lang` and the interface fixtures, checked against its imports'
+    // interfaces alone, must equal the whole-program check.
+    const interfaces_step = b.step("test-interfaces", "Module interface hashes over seeded mutations, and the per-module check oracle");
+    const interfaces_run = driver(b, "python3 tests/interface_diff.py", rss.driver, "interfaces");
+    interfaces_run.addArgs(&.{ "python3", "tests/interface_diff.py", "--steps", "120" });
+    interfaces_run.addArtifactArg(exe);
+    interfaces_step.dependOn(&interfaces_run.step);
+    const generic_run = driver(b, "python3 tests/interface_diff.py --project tests/fixtures/interfaces_generic", rss.driver, "interfaces");
+    generic_run.addArgs(&.{ "python3", "tests/interface_diff.py", "--steps", "40", "--project", "tests/fixtures/interfaces_generic" });
+    generic_run.addArtifactArg(exe);
+    interfaces_step.dependOn(&generic_run.step);
+    const oracle_run = driver(b, "python3 tests/interface_oracle.py", rss.driver, "interface_oracle");
+    oracle_run.addArgs(&.{ "python3", "tests/interface_oracle.py" });
+    oracle_run.addArtifactArg(exe);
+    oracle_run.addArgs(&.{ "tests/lang", "tests/fixtures/interfaces/main.my", "tests/fixtures/interfaces_generic/main.my", "tests/fixtures/incremental/main.my" });
+    interfaces_step.dependOn(&oracle_run.step);
+    test_step.dependOn(interfaces_step);
+    // MODULE-COMPILE-1..3: every module of `tests/lang` and the fixtures,
+    // compiled on its own from its imports' interfaces, emits the whole
+    // program's units key for key (Debug, and ReleaseFast switches) and links
+    // into the whole program's executable; the default build of each program
+    // (module by module, MODULE-SCHEDULE-1..4) makes the `--whole-program`
+    // build's executable and an unchanged rebuild compiles nothing; and an
+    // incremental default build after seeded edits builds what a clean
+    // whole-program build builds.
+    const module_compile_step = b.step("test-module-compile", "Per-module compilation and the default per-module build against the whole-program build, and its build differential");
+    const module_programs = [_][]const u8{ "tests/fixtures/interfaces/main.my", "tests/fixtures/interfaces_generic/main.my", "tests/fixtures/incremental/main.my", "tests/fixtures/module_compile/main.my", "tests/fixtures/module_projects/main.my" };
+    const module_oracle = driver(b, "python3 tests/module_compile_oracle.py", rss.driver, "module_compile");
+    module_oracle.addArgs(&.{ "python3", "tests/module_compile_oracle.py" });
+    module_oracle.addArtifactArg(exe);
+    module_oracle.addArg("tests/lang");
+    module_oracle.addArgs(&module_programs);
+    module_compile_step.dependOn(&module_oracle.step);
+    const module_release = driver(b, "python3 tests/module_compile_oracle.py --release", rss.driver, "module_compile");
+    module_release.addArgs(&.{ "python3", "tests/module_compile_oracle.py", "--release" });
+    module_release.addArtifactArg(exe);
+    module_release.addArgs(&module_programs);
+    module_compile_step.dependOn(&module_release.step);
+    const module_build = driver(b, "python3 tests/module_build_oracle.py", rss.driver, "module_compile");
+    module_build.addArgs(&.{ "python3", "tests/module_build_oracle.py" });
+    module_build.addArtifactArg(exe);
+    module_build.addArg("tests/lang");
+    module_build.addArgs(&module_programs);
+    module_compile_step.dependOn(&module_build.step);
+    // MODULE-CHECK-1: the default `check` (module by module) of the same
+    // programs against the whole-program check.
+    const module_check = driver(b, "python3 tests/module_check_oracle.py", rss.driver, "module_compile");
+    module_check.addArgs(&.{ "python3", "tests/module_check_oracle.py" });
+    module_check.addArtifactArg(exe);
+    module_check.addArg("tests/lang");
+    module_check.addArgs(&module_programs);
+    module_compile_step.dependOn(&module_check.step);
+    // MODULE-TEST-1: the default `test` (module by module) of the same
+    // programs against `test --whole-program`.
+    const module_tests = driver(b, "python3 tests/module_test_oracle.py", rss.driver, "module_compile");
+    module_tests.addArgs(&.{ "python3", "tests/module_test_oracle.py" });
+    module_tests.addArtifactArg(exe);
+    module_tests.addArg("tests/lang");
+    module_tests.addArgs(&module_programs);
+    module_compile_step.dependOn(&module_tests.step);
+    const module_diff = driver(b, "python3 tests/module_build_diff.py", rss.driver, "module_compile");
+    module_diff.addArgs(&.{ "python3", "tests/module_build_diff.py", "--steps", "20" });
+    module_diff.addArtifactArg(exe);
+    module_compile_step.dependOn(&module_diff.step);
+    // MODULE-PROJECT-1: the same differential over a project with a `mylang.json`.
+    const project_diff = driver(b, "python3 tests/module_build_diff.py --project tests/fixtures/module_projects", rss.driver, "module_compile");
+    project_diff.addArgs(&.{ "python3", "tests/module_build_diff.py", "--project", "tests/fixtures/module_projects", "--steps", "12" });
+    project_diff.addArtifactArg(exe);
+    module_compile_step.dependOn(&project_diff.step);
+    test_step.dependOn(module_compile_step);
     // The repair-round packages ship two Python drivers beside their Zig tests:
     // the parser-hint/classifier agreement (static, then end to end against this
     // compiler) and the friction harvest over its replay fixture. Registering
@@ -1042,6 +1148,18 @@ pub fn build(b: *std.Build) void {
     harvest_run.addArgs(&.{ "python3", "tests/test_friction_harvest.py" });
     usefulness_step.dependOn(&harvest_run.step);
     test_step.dependOn(usefulness_step);
+    const isolation_step = b.step("test-cache-isolation", "Verify no-cache and doctest scratch isolation, frame advice and guest ceilings");
+    const isolation_run = driver(b, "python3 tests/tooling_cache_isolation.py --compiler", rss.driver, "tooling_isolation");
+    isolation_run.addArgs(&.{ "python3", "tests/tooling_cache_isolation.py", "--compiler" });
+    isolation_run.addArtifactArg(exe);
+    isolation_step.dependOn(&isolation_run.step);
+    test_step.dependOn(isolation_step);
+    const selfhost_numeric_step = b.step("test-selfhost-numeric", "Compare bootstrap and live numeric token extents");
+    const selfhost_numeric_run = driver(b, "python3 selfhost/tests/run_lexer_diff.py --compiler", rss.driver, "selfhost_numeric");
+    selfhost_numeric_run.addArgs(&.{ "python3", "selfhost/tests/run_lexer_diff.py", "--compiler" });
+    selfhost_numeric_run.addArtifactArg(exe);
+    selfhost_numeric_step.dependOn(&selfhost_numeric_run.step);
+    test_step.dependOn(selfhost_numeric_step);
     // The SPEC.md merge driver (`scripts/merge_spec.py`): synthetic three-way
     // cases, a throwaway repository end to end, and a replay of real merges.
     const spec_merge_step = b.step("test-spec-merge", "Verify the SPEC.md merge driver, including replayed history");

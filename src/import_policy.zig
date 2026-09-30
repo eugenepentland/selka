@@ -109,21 +109,31 @@ pub fn evaluate(allocator: std.mem.Allocator, project: *const graph.Project, pol
     for (project.order.items) |id| {
         const module = project.modules.items[id];
         for (module.imports, 0..) |imported, i| {
-            var action = policy.parsed.value.default_action;
-            var chosen: ?usize = null;
-            for (policy.parsed.value.rules, 0..) |rule, r| {
-                if (!matches(rule.from, module.name) or !matches(rule.to, project.modules.items[imported.target].name)) continue;
-                action = rule.action;
-                chosen = r;
-                hits[r] += 1;
-                break;
-            }
+            const chosen = ruleFor(policy, module.name, project.modules.items[imported.target].name);
+            if (chosen) |r| hits[r] += 1;
+            const action = if (chosen) |r| policy.parsed.value.rules[r].action else policy.parsed.value.default_action;
             if (action == .deny) denied += 1;
             try decisions.append(scratch, .{ .module = id, .imported = i, .rule = chosen, .action = action });
         }
     }
     return .{ .arena = arena, .decisions = try decisions.toOwnedSlice(scratch), .rule_hits = hits, .denied = denied };
 }
+/// The first rule that matches the import edge `from` -> `to`, or null when
+/// the default action decides it.
+pub fn ruleFor(policy: Policy, from: []const u8, to: []const u8) ?usize {
+    for (policy.parsed.value.rules, 0..) |rule, r| {
+        if (matches(rule.from, from) and matches(rule.to, to)) return r;
+    }
+    return null;
+}
+
+/// MODULE-PROJECT-1: whether the policy denies the import edge `from` -> `to`,
+/// as `evaluate` decides it: the first matching rule, else the default action.
+pub fn denies(policy: Policy, from: []const u8, to: []const u8) bool {
+    const action = if (ruleFor(policy, from, to)) |r| policy.parsed.value.rules[r].action else policy.parsed.value.default_action;
+    return action == .deny;
+}
+
 /// Allocate the edge decisions, source evidence, and policy identity as a text report.
 pub fn render(allocator: std.mem.Allocator, report: Report, project: *const graph.Project, policy: Policy) std.mem.Allocator.Error![]u8 {
     var output: std.Io.Writer.Allocating = .init(allocator);

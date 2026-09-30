@@ -143,7 +143,7 @@ pub const Names = struct {
 
 /// Which alias metadata the module must define: any memory class at all, and
 /// the RC prefix scope (LLVM-RC-PREFIX-1).
-pub const MetadataUse = struct { alias: bool = false, prefix: bool = false };
+pub const MetadataUse = struct { alias: bool = false, prefix: bool = false, rc_state: bool = false };
 
 /// A scope list a two-class copy names, by its sorted members.
 pub const ScopeList = struct { members: []const u64, number: u64 };
@@ -166,6 +166,8 @@ pub const object_scope: u64 = 5;
 /// The RC prefix scope (LLVM-RC-PREFIX-1): `!8`, its list `!9`, and `!10`
 /// listing every scope a prefix word never aliases.
 pub const prefix_scope: u64 = 8;
+/// RC-SCOPE-IL-1 bookkeeping scope, outside element and copy-list numbering.
+pub const rc_state_scope: u64 = 9999997;
 /// Element kinds beyond this many stay plainly foreign.
 const max_element_kinds = 29;
 /// Scope lists a copy between two classes names are numbered from here.
@@ -519,6 +521,10 @@ pub const Emitter = struct {
                 self.module.metadata.prefix = true;
                 return ", !alias.scope !9, !noalias !10";
             },
+            .rc_state => {
+                self.module.metadata.rc_state = true;
+                return ", !alias.scope !9999998, !noalias !9999999";
+            },
             .element => |kind| {
                 const index = (try self.elementIndex(kind)) orelse return ", !alias.scope !4, !noalias !3";
                 const scope = element_base + 3 * index;
@@ -557,6 +563,14 @@ pub const Emitter = struct {
             try apart.appendSlice(self.arena, &.{ 1, object_scope });
             try apart.appendSlice(self.arena, kinds.items);
             return .{ try self.arena.dupe(u64, &.{prefix_scope}), apart.items };
+        }
+        if (class == .rc_state) {
+            self.module.metadata.rc_state = true;
+            var apart: std.ArrayList(u64) = .empty;
+            try apart.appendSlice(self.arena, &.{ 1, object_scope });
+            if (self.module.metadata.prefix) try apart.append(self.arena, prefix_scope);
+            try apart.appendSlice(self.arena, kinds.items);
+            return .{ try self.arena.dupe(u64, &.{rc_state_scope}), apart.items };
         }
         const index = (try self.elementIndex(class.element)) orelse return .{ &.{2}, &.{1} };
         const own = element_base + 3 * index;

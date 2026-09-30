@@ -181,7 +181,7 @@ fn pushed(comptime E: type, self: *E, view: anytype, pc: usize, remaining: usize
             // RC-ANCHORED-RANGE-KEY-1: a described `str` slice leaves its
             // receiver text itself in the operand, so it is anchored exactly
             // when that receiver is.
-            .slice => self.range_keys.role(pc) == .slice and view.local(E, self, @backingInt(operation.owner)),
+            .slice, .text_tail => self.range_keys.role(pc) == .slice and view.local(E, self, @backingInt(operation.owner)),
             else => false,
         },
         .value_copy => pc != 0 and !self.isBranchTarget(pc) and !copies(E, self, pc) and
@@ -310,7 +310,7 @@ fn candidate(comptime E: type, self: *E, bindings: []const input.Binding, catalo
 // Operations that only read their receiver: an element read, its length, or a
 // slice (a new value, or a described range over the receiver's own text).
 fn readOnly(kind: @FieldType(@FieldType(Op, "buffer_operation"), "kind")) bool {
-    return kind == .read or kind == .length or kind == .slice;
+    return kind == .read or kind == .length or kind == .slice or kind == .text_tail;
 }
 
 // Whether the copy-on-write plan can write or detach `index`: a place, a
@@ -383,7 +383,6 @@ pub fn bindIntervals(comptime E: type, self: *E, bindings: []input.Binding, cata
         const local = @backingInt(instruction.op.store_local);
         const root_local = chainRoot(E, self, pc - 1) orelse continue;
         if (root_local >= contract.parameters.len or contract.parameters[root_local] != .caller_storage) continue;
-        if (aliasable(E, self, contract, root_local)) continue;
         // Each candidate scans the function a few times.
         if (budget < 4 * code.len) return;
         budget -= 4 * code.len;
@@ -489,7 +488,6 @@ pub fn operandInterval(comptime E: type, self: *E, pc: usize) bool {
     const state = self.cow.?.rc orelse return false;
     const root_local = chainRoot(E, self, pc) orelse return false;
     if (root_local >= state.contract.parameters.len or state.contract.parameters[root_local] != .caller_storage) return false;
-    if (aliasable(E, self, state.contract, root_local)) return false;
     const pushed_depth = (self.states[pc] orelse return false).len - 1;
     var at = pc + 1;
     var remaining: usize = 256;
@@ -520,64 +518,9 @@ pub fn operandInterval(comptime E: type, self: *E, pc: usize) bool {
     return false;
 }
 
-/// RC-INTERVAL-ANCHOR-3: were two `mut` arguments to name one caller value, or
-/// one to sit inside the other (`f(mut r, mut r)`, `f(mut r, mut r.items)`,
-/// `f(mut xs, mut xs[0])`), a write through another writable parameter whose
-/// type equals, holds or is held by the root's could replace or release what
-/// a read out of the root borrowed, so such a root anchors nothing
-/// (RC-INTERVAL-ANCHOR-4 adds the containment cases). MUT-EXCLUSIVE-1 now
-/// rejects those calls; this refusal stays as defense in depth.
-fn aliasable(comptime E: type, self: *E, contract: model.CallContract, root_local: usize) bool {
-    const ty = self.function.scope.locals[root_local].ty;
-    for (contract.parameters, 0..) |mode, index| {
-        if (index == root_local or (mode != .caller_storage and mode != .mutable_payload)) continue;
-        const other = self.function.scope.locals[index].ty;
-        if (holds(E, self, other, ty) or holds(E, self, ty, other)) return true;
-    }
-    return false;
-}
-
-// Whether a value of type `outer` can hold one of type `inner`, itself
-// included: through fields, collection elements, fixed arrays, variant
-// payloads or a domain's base. A walk that outgrows its budget answers yes.
-fn holds(comptime E: type, self: *E, outer: typed.Type, inner: typed.Type) bool {
-    var pending: [256]typed.Type = undefined;
-    var seen: [256]typed.Type = undefined;
-    var count: usize = 1;
-    var visited: usize = 0;
-    pending[0] = outer;
-    while (count != 0) {
-        count -= 1;
-        const current = pending[count];
-        if (current == inner) return true;
-        if (for (seen[0..visited]) |previous| {
-            if (previous == current) break true;
-        } else false) continue;
-        if (visited == seen.len) return true;
-        seen[visited] = current;
-        visited += 1;
-        if (!current.isAggregate()) continue;
-        const record = self.program.records[current.recordIndex()];
-        var children: [4]?typed.Type = .{ record.shape.buffer, record.shape.domain, if (record.shape.array) |array| array.element else null, null };
-        for (&children) |*child| if (child.*) |ty| {
-            if (count == pending.len) return true;
-            pending[count] = ty;
-            count += 1;
-        };
-        if (record.shape.variants) |variants| for (variants.cases) |case| if (case.payload) |ty| {
-            if (count == pending.len) return true;
-            pending[count] = ty;
-            count += 1;
-        };
-        for (record.fields) |field| {
-            if (count == pending.len) return true;
-            pending[count] = field.ty;
-            count += 1;
-        }
-    }
-    return false;
-}
-
+// MUT-EXCLUSIVE-PROOFS-1: accepted mutable arguments are disjoint, so callee
+// parameter types alone do not veto these anchors. Legacy sharing always
+// lowers for the collector (runtime_mode.lowered), which does not use them.
 // Whether the instruction at `pc` can write the root's storage. Storing back
 // an update of count-free fields of the root, or passing it `mut` to a call
 // that only does that, changes no counted field (RC-PLAIN-UPDATE-CALL-1).
@@ -700,10 +643,10 @@ fn intervalRoot(comptime E: type, self: *E, bindings: []const input.Binding, cat
     if (text(E, self, self.program.records[local.ty.recordIndex()].shape.buffer orelse return false)) return false;
     if (bindings[index].anchor != null or @backingInt(bindings[index].storage) != index) return false;
     if (self.byReference(index) or self.callerStorage(index)) return false;
-    // RC-INTERVAL-ANCHOR-4: a `mut` list another writable parameter may name,
-    // or hold, or sit inside, is written by that parameter too.
+    // RC-INTERVAL-ANCHOR-4: mutable arguments are exclusive under the
+    // value semantics that RC lowering requires.
     if (index < self.function.signature.parameter_count) return index < contract.parameters.len and
-        contract.parameters[index] == .mutable_payload and !aliasable(E, self, contract, index);
+        contract.parameters[index] == .mutable_payload;
     if (local.usage.temporary or cow.iterationOwner(self.function, index)) return false;
     const plan = self.cow.?.plan;
     if (plan.place(index) != null) return false;

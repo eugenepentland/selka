@@ -1,0 +1,37 @@
+{
+  "rc": {
+    "passed": 6,
+    "failed": 0,
+    "cached": 0,
+    "skipped": 0,
+    "executed": 6
+  },
+  "gc": {
+    "passed": 6,
+    "failed": 0,
+    "cached": 0,
+    "skipped": 0,
+    "executed": 6
+  },
+  "stress": {
+    "passed": 6,
+    "failed": 0,
+    "cached": 0,
+    "skipped": 0,
+    "executed": 6
+  },
+  "stats": {
+    "passed": 6,
+    "failed": 0,
+    "cached": 0,
+    "skipped": 0,
+    "executed": 6
+  },
+  "release": {
+    "passed": 6,
+    "failed": 0,
+    "cached": 0,
+    "skipped": 0,
+    "executed": 6
+  }
+}

@@ -73,6 +73,22 @@ pub fn moduleOf(name: []const u8) []const u8 {
     return name[0..split];
 }
 
+/// QBE-BATCH-7: whether a unit is a generic specialization (`module::f[T]`).
+/// Every module that uses one emits it, so it is compiled alone: its object is
+/// keyed by its own text and is the same in each module's build and in the
+/// whole program's, and a link includes it once.
+pub fn specialization(name: []const u8) bool {
+    return name.len != 0 and name[name.len - 1] == ']';
+}
+
+/// The group a unit is planned in: its module, except that a specialization
+/// is a group of its own, so it never sits between two units of the module
+/// that declares its template and a module's batches are the same whichever
+/// modules' specializations a program has (QBE-BATCH-7).
+pub fn groupOf(name: []const u8) []const u8 {
+    return if (specialization(name)) name else moduleOf(name);
+}
+
 /// Plan order: by module, then by symbol.
 pub fn less(_: void, left: Unit, right: Unit) bool {
     const order = std.mem.order(u8, left.module, right.module);
@@ -422,6 +438,45 @@ test "batches follow modules, stay stable when a function is added, and honour t
     try std.testing.expect(isolatedAlone(try plan(a, units, .{}), 3));
     try std.testing.expectEqualStrings("m001", moduleOf("m001::f001_00"));
     try std.testing.expectEqualStrings("", moduleOf("main"));
+}
+
+/// `names` as planned units, each in its group, sorted in plan order.
+fn plannedUnits(a: std.mem.Allocator, names: []const []const u8) ![]Unit {
+    const units = try a.alloc(Unit, names.len);
+    for (names, units) |name, *unit| unit.* = .{ .module = groupOf(name), .symbol = name, .alone = specialization(name) };
+    std.mem.sort(Unit, units, {}, less);
+    return units;
+}
+
+/// How many batches of `batches` hold a specialization, each alone; null when
+/// one shares its batch.
+fn aloneSpecializations(units: []const Unit, batches: []const Batch) ?usize {
+    var count: usize = 0;
+    for (batches) |batch| {
+        if (!specialization(units[batch.first].symbol)) continue;
+        if (batch.count != 1) return null;
+        count += 1;
+    }
+    return count;
+}
+
+// spec: QBE-BATCH-7
+test "a specialization is compiled alone and never splits the batches of its template's module" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const own = [_][]const u8{ "lib::a", "lib::b", "lib::c", "lib::d" };
+    const plain = try plannedUnits(a, &own);
+    // The module's own units plan the same batches whether or not a module
+    // using `lib::pick` emitted its specializations beside them.
+    const mixed = try plannedUnits(a, &(own ++ [_][]const u8{ "lib::pick[i64]", "lib::pick[lib::Box]" }));
+    const without = try plan(a, plain, .{});
+    const with = try plan(a, mixed, .{});
+    try std.testing.expectEqual(@as(?usize, 2), aloneSpecializations(mixed, with));
+    try std.testing.expectEqual(without.len + 2, with.len);
+    try std.testing.expect(specialization("lib::pick[lib::Box]") and !specialization("lib::pick"));
+    try std.testing.expectEqualStrings("lib", groupOf("lib::pick"));
+    try std.testing.expectEqualStrings("lib::pick[i64]", groupOf("lib::pick[i64]"));
 }
 
 /// Every batch lies inside one module and holds at most `cap` units.

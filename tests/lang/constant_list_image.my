@@ -1,0 +1,110 @@
+def image() -> list[int]:
+    return [
+        0, 1, 2, 3, 4, 5, 6, 7,
+        8, 9, 10, 11, 12, 13, 14, 15,
+        16, 17, 18, 19, 20, 21, 22, 23,
+        24, 25, 26, 27, 28, 29, 30, 31,
+        32, 33, 34, 35, 36, 37, 38, 39,
+        40, 41, 42, 43, 44, 45, 46, 47,
+        48, 49, 50, 51, 52, 53, 54, 55,
+        56, 57, 58, 59, 60, 61, 62, 63,
+    ]
+
+def append(items: mut list[int]) -> int:
+    before = items
+    items.append(64)
+    return len(before)
+
+# spec-case: LIST-LITERAL-PAYLOAD-1
+public def test_constant_list_image_detaches_before_write_and_growth() -> bool:
+    first = image()
+    second = image()
+    saved = first
+    first[0] = -7
+    first.append(64)
+    return first[0] == -7 and len(first) == 65 and second[0] == 0 and len(second) == 64 and saved[0] == 0 and len(saved) == 64
+
+# spec-case: LIST-LITERAL-PAYLOAD-1
+public def test_constant_list_image_mut_parameter_preserves_snapshot() -> bool:
+    items = image()
+    before = items
+    count = append(mut items)
+    return count == 64 and len(items) == 65 and len(before) == 64 and len(image()) == 64
+
+# spec-case: LIST-LITERAL-PAYLOAD-1
+public def test_constant_list_image_arena_escape() -> bool:
+    items = image()
+    with arena() as scratch:
+        younger = image()
+        younger[63] = -3
+        items = scratch.escape(younger)
+    return items[63] == -3 and image()[63] == 63
+
+def tick(counter: mut list[int]) -> int:
+    counter[0] += 1
+    return counter[0]
+
+# spec-case: LIST-LITERAL-PAYLOAD-1
+public def test_nonconstant_list_elements_keep_order_and_run_once() -> bool:
+    counter = [0]
+    items = [
+        tick(mut counter),
+        0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0,
+        tick(mut counter),
+    ]
+    return counter[0] == 2 and items[0] == 1 and items[64] == 2
+
+def text_image() -> list[str]:
+    return [
+        "", "é😀", "", "é😀", "", "é😀", "", "é😀",
+        "", "é😀", "", "é😀", "", "é😀", "", "é😀",
+        "", "é😀", "", "é😀", "", "é😀", "", "é😀",
+        "", "é😀", "", "é😀", "", "é😀", "", "é😀",
+        "", "é😀", "", "é😀", "", "é😀", "", "é😀",
+        "", "é😀", "", "é😀", "", "é😀", "", "é😀",
+        "", "é😀", "", "é😀", "", "é😀", "", "é😀",
+        "", "é😀", "", "é😀", "", "é😀", "", "é😀",
+    ]
+
+def bytes_image() -> list[bytes]:
+    return [
+        b"", b"\x00\xff", b"", b"\x00\xff", b"", b"\x00\xff", b"", b"\x00\xff",
+        b"", b"\x00\xff", b"", b"\x00\xff", b"", b"\x00\xff", b"", b"\x00\xff",
+        b"", b"\x00\xff", b"", b"\x00\xff", b"", b"\x00\xff", b"", b"\x00\xff",
+        b"", b"\x00\xff", b"", b"\x00\xff", b"", b"\x00\xff", b"", b"\x00\xff",
+        b"", b"\x00\xff", b"", b"\x00\xff", b"", b"\x00\xff", b"", b"\x00\xff",
+        b"", b"\x00\xff", b"", b"\x00\xff", b"", b"\x00\xff", b"", b"\x00\xff",
+        b"", b"\x00\xff", b"", b"\x00\xff", b"", b"\x00\xff", b"", b"\x00\xff",
+        b"", b"\x00\xff", b"", b"\x00\xff", b"", b"\x00\xff", b"", b"\x00\xff",
+    ]
+
+# spec-case: LIST-LITERAL-PAYLOAD-1
+public def test_immortal_list_elements_detach_and_preserve_empty_values() -> bool:
+    texts = text_image()
+    saved_texts = texts
+    texts[1] = "changed"
+    texts.append("tail")
+    octets = bytes_image()
+    saved_octets = octets
+    octets[1] = b"changed"
+    octets.append(b"tail")
+    return (
+        texts[1] == "changed" and len(texts) == 65 and saved_texts[0] == "" and saved_texts[1] == "é😀"
+        and saved_octets[1] == b"\x00\xff" and octets[1] == b"changed" and len(octets) == 65 and bytes_image()[0] == b""
+    )
+
+# spec-case: LIST-LITERAL-PAYLOAD-1
+public def test_immortal_list_elements_survive_arena_escape_and_reads() -> bool:
+    texts = text_image()
+    with arena() as scratch:
+        younger = text_image()
+        younger[63] = "abcdef"[1:5]
+        texts = scratch.escape(younger)
+    return texts[63] == "bcde" and text_image()[63][1] == "😀" and bytes_image()[63][1] == 255

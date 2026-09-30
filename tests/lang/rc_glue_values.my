@@ -32,6 +32,16 @@ record Point:
     y: int
 
 
+record Aliased:
+    left: list[int]
+    right: list[int]
+
+
+union AliasChoice:
+    none,
+    both: Aliased
+
+
 def wide(seed: int) -> Wide:
     return Wide([seed], [seed + 1], b"c", [seed + 3], b"e", [seed + 5], [seed + 6], b"h", [seed + 8], [seed + 9], 10)
 
@@ -138,3 +148,22 @@ public def test_arena_values_escape_through_glue() -> bool:
         copy = local
         kept = scratch.escape(copy.a)
     return kept[0] == 3
+
+
+# spec-case: RC-ACQUIRE-COPY-1
+public def test_repeated_variant_edges_retain_an_independent_snapshot() -> bool:
+    row = [17]
+    pair = Aliased(row, row)
+    variants = [AliasChoice.both(pair)]
+    index = 0
+    while index < 40:
+        variants.append(variants[index])
+        index += 1
+    snapshot = variants[20]
+    pair.left.append(29)
+    row.append(31)
+    match snapshot:
+        case AliasChoice.none:
+            return False
+        case AliasChoice.both(saved):
+            return len(variants) == 41 and len(saved.left) == 1 and len(saved.right) == 1 and saved.left[0] == 17 and saved.right[0] == 17 and len(pair.left) == 2 and len(pair.right) == 1 and len(row) == 2

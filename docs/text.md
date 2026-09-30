@@ -96,10 +96,15 @@ choice is the runtime's, made per piece:
 
 - a piece shorter than 9 octets is copied, because its copy is no larger than a
   view;
-- a longer piece is a view when it is at least a quarter of the string that owns
+- a longer bounded piece is a view when it is at least a quarter of the string that owns
   the octets, and a copy otherwise, so a live piece keeps at most four times its
   own octets reachable and a short piece of a large text never keeps the large
   text alive;
+- an omitted upper endpoint, `text[a:]`, shares every suffix of at least 9
+  octets, even below a quarter of its owner. This streaming exception avoids
+  copying the final quarter repeatedly when a parser takes tails of its
+  original input. A retained tail can keep the whole input alive; use an
+  explicit upper endpoint, `text[a:len(text)]`, to request the bounded policy;
 - a piece that is the whole receiver is the receiver itself;
 - a piece of a view reads the first string's octets directly, so views never
   chain.
@@ -140,6 +145,11 @@ from whichever of the two ends, the last lookup or the table entry is nearest, a
 the table is built by the first lookup that is far from all of them, so text that
 is only scanned in order never builds it.
 
+Long non-ASCII literals use the same sample spacing, precomputed into their
+image data. Their tables are read-only and have no mutable last-lookup cursor;
+lookups walk from the nearest end or sample. ASCII and shorter literals retain
+their original layout.
+
 You do not have to choose between `str` and `bytes` for speed on account of one
 `é`. `for ch in text`, `text[i]` in any order, `text[a:b]`, `enumerate`, `find`,
 `strip` and `text[pos:]` in a parser loop are all linear in the text, on a
@@ -171,15 +181,18 @@ def main() -> int:
 ## String methods
 
 `str` answers `strip`, `lstrip`, `rstrip`, `upper`, `lower`, `zfill(width)`,
-`replace(old, new)`, `find(sub)`, `count(sub)`, `startswith`, `endswith`,
+`replace(old, new)`, `find`, `rfind`, `index`, `rindex`, `count`, `startswith`, `endswith`,
 `isdigit`, `isalpha`, `isspace`, `split(separator)` and `splitlines()`. Each one
 returns a fresh
 value and leaves the receiver and every alias untouched. `find` answers `-1`
 rather than raising when the needle is absent, the three classifications answer
 `False` for empty text, case mapping covers ASCII letters and leaves every other
-scalar alone, and `zfill` keeps a leading sign in front of its padding. An empty
-needle traps `R_EMPTY_SEPARATOR`, and these methods are rejected on lists and
-dictionaries. `ljust` and `rjust` are absent; use
+scalar alone, and `zfill` keeps a leading sign in front of its padding.
+Search methods accept positional start/end bounds; trim methods accept a
+character set and default to Unicode whitespace. Empty search needles match
+boundaries; empty split/replace needles trap `R_EMPTY_SEPARATOR`. See the
+[Python text surface](python-text-surface.md) for these exact rules. These text
+methods are rejected on lists and dictionaries. `ljust` and `rjust` are absent; use
 [`strings.pad_left` and `strings.pad_right`](standard-library.md#strings). Every
 one of these methods runs on the QBE native backend, over a single immutable
 text runtime.
@@ -485,3 +498,5 @@ def main() -> int:
             pass
     return port_of("8080") + port_of(" 42 ")
 ```
+
+See [Python text surface](python-text-surface.md) for ranged searches, trim character sets and scalar repr.

@@ -1,0 +1,14 @@
+{
+  "before": {
+    "comparisons": 6000,
+    "scratch_allocations": 12000,
+    "scratch_peak_bytes": 2304,
+    "scratch_live_bytes": 0
+  },
+  "after": {
+    "comparisons": 6000,
+    "scratch_allocations": 0,
+    "scratch_peak_bytes": 0,
+    "scratch_live_bytes": 0
+  }
+}

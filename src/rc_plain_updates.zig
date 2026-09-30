@@ -40,6 +40,7 @@ pub fn plainStore(program: Program, function: bytecode.Function, pc: usize) bool
 // `mut` only to calls that do the same.
 fn check(program: Program, function: bytecode.Function, parameter: usize, depth: usize) bool {
     const code = function.scope.instructions;
+    if (function.physical) |facts| if (facts.unknown) return false;
     if (depth == 0 or code.len > code_limit or parameter >= function.signature.parameter_count) return false;
     if (!plainRecord(program, function.scope.locals[parameter].ty)) return false;
     for (code, 0..) |instruction, pc| switch (instruction.op) {

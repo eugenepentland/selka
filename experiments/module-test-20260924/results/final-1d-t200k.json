@@ -1,0 +1,100 @@
+{
+ "label": "1d",
+ "tier": "t200k/mylang",
+ "load_start": 3.55,
+ "check": {
+  "cold": {
+   "wall_s": 1.726,
+   "rss_mb": 884.4,
+   "status": 0
+  },
+  "seeded_after_s": 0.957,
+  "noop": {
+   "wall_s": 0.017,
+   "rss_mb": 11.8,
+   "status": 0
+  },
+  "body_edit": {
+   "wall_s": 0.022,
+   "rss_mb": 12.1,
+   "status": 0
+  },
+  "body_edit_samples": [
+   0.027,
+   0.022,
+   0.022
+  ],
+  "interface_edit": {
+   "wall_s": 0.026,
+   "rss_mb": 11.9,
+   "status": 0
+  },
+  "interface_edit_samples": [
+   0.027,
+   0.026,
+   0.026
+  ]
+ },
+ "test": {
+  "cold": {
+   "wall_s": 4.364,
+   "rss_mb": 1229.5,
+   "status": 0,
+   "passed": 480,
+   "cached": 0,
+   "failed": 0
+  },
+  "after_cold": {
+   "wall_s": 19.461,
+   "rss_mb": 127.7,
+   "status": 0,
+   "passed": 0,
+   "cached": 480,
+   "failed": 0
+  },
+  "noop": {
+   "wall_s": 0.203,
+   "rss_mb": 128.4,
+   "status": 0,
+   "passed": 0,
+   "cached": 480,
+   "failed": 0
+  },
+  "body_edit": {
+   "wall_s": 0.646,
+   "rss_mb": 314.3,
+   "status": 0,
+   "passed": 240,
+   "cached": 240,
+   "failed": 0
+  },
+  "body_edit_samples": [
+   1.199,
+   0.646,
+   0.674
+  ]
+ },
+ "build": {
+  "cold": {
+   "wall_s": 15.025,
+   "rss_mb": 571.3,
+   "status": 0
+  },
+  "noop": {
+   "wall_s": 0.045,
+   "rss_mb": 36.3,
+   "status": 0
+  },
+  "body_edit": {
+   "wall_s": 0.437,
+   "rss_mb": 569.6,
+   "status": 0
+  },
+  "body_edit_samples": [
+   0.463,
+   0.465,
+   0.437
+  ]
+ },
+ "load_end": 11.91
+}
