@@ -174,8 +174,7 @@ const State = struct {
             parameter.origin = .local;
         }
         plain.physical = null;
-        plain.policy.effects = 0;
-        plain.policy.effect_bound = null;
+        if (plain.policy.host == null and !plain.policy.c_abi) plain.policy.effects = 0;
         plain.signature = .{
             .return_type = plain.signature.return_type,
             .parameter_count = count,
