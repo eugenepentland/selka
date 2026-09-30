@@ -1,0 +1,36 @@
+{
+  "implementation_tip": "d105943ef8f757f3b5683267245e63d0e9e5c322",
+  "final_compiler_source": "573ce9a4e97d4deb3e874dcaa35beb0eaacbfbb0",
+  "source_equality_proof": "git diff --exit-code 573ce9a4 d105943e -- src tests SPEC.md: exit 0; final changes only ReleaseFast reservation in build.zig",
+  "runtime_abi": 3,
+  "final_debug": {
+    "path": ".tmp/b2/key-noop-debug-final/bin/mylang",
+    "sha256": "27efa44b7107a77e0bc562949645f644392b5a6fcf57b5ae2a5bafcc2491893e"
+  },
+  "final_releasefast": {
+    "path": ".tmp/b2/frozen-final-rf/bin/mylang",
+    "sha256": "0bbc981a68e58df7df14a8d99f6cf6a18a705e438ca6d2d00f5b423cc4286682"
+  },
+  "approved_main_control": {
+    "source": "80dd51906c97ae76bf208474ac48c9baac3a11cd",
+    "sha256": "747e9584d0eb15afeaf75c6c3d63bce5d1775edbefaa43ad5c7a5753590e9d0c"
+  },
+  "acceptance_boundaries": {
+    "full_lane_gate": "a3fb19fcf8bbe59ee72266a7fce96093b52d8b84; all four required commands exit 0; QBE cached steps retained and labeled",
+    "final_focused_and_corpus": "573ce9a4 compiler source, d105943e scheduler reservation; 29 programs / 664 units, RC17, embed25, state16, native246, check5",
+    "fuzz_and_guest_perf": "62c95a7d, historical lane checkpoint; supplementary root final combined ABI5 gate/fuzz/performance still required",
+    "independent_review": "8/8 malformed authority cases, 14/14 explicit effect follow-up at a3; frozen 573 state guard read-only inspection, not independently executed"
+  },
+  "corrections": [
+    {
+      "receipt": "embed-invalidation-matrix-573ce9.json",
+      "original_source_label": "573ce9a4d14f1a515f0454961b70311c280bafdc",
+      "corrected_source": "573ce9a4e97d4deb3e874dcaa35beb0eaacbfbb0",
+      "reason": "short-prefix label substitution; compiler SHA is actual verified source binding"
+    },
+    {
+      "field": "totals.steps in RC/embed Differential receipts",
+      "interpretation": "Inherited counter remains zero. Actual stages are rows lengths: 17 and 25, with actual built/run counts 17 and 21."
+    }
+  ]
+}

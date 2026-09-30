@@ -1,0 +1,199 @@
+{
+  "compiler_sha256": "27efa44b7107a77e0bc562949645f644392b5a6fcf57b5ae2a5bafcc2491893e",
+  "results": [
+    {
+      "step": "cold",
+      "entry": "main.my",
+      "reference_status": 0,
+      "module_status": 0,
+      "rejection_expected": false,
+      "states_unchanged": false,
+      "compiled_results": [
+        "modules/standard-afb33d63660851310ac6903954a260827d85d50edf229701453a166a0cf4caff/out/math.result.json",
+        "modules/e855cdcadae63d19621369f41a2ca5edf5e10d03ec9d2fb1fe2e65c877d89b82/out/main.result.json",
+        "modules/e855cdcadae63d19621369f41a2ca5edf5e10d03ec9d2fb1fe2e65c877d89b82/out/bad.result.json",
+        "modules/e855cdcadae63d19621369f41a2ca5edf5e10d03ec9d2fb1fe2e65c877d89b82/out/good.result.json"
+      ],
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "724e2d777ac80df460698b17004252e3a11f12d3a60b77e5295ae1d82402c786"
+    },
+    {
+      "step": "warm",
+      "entry": "main.my",
+      "reference_status": 0,
+      "module_status": 0,
+      "rejection_expected": false,
+      "states_unchanged": true,
+      "compiled_results": [],
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "724e2d777ac80df460698b17004252e3a11f12d3a60b77e5295ae1d82402c786"
+    },
+    {
+      "step": "same bytes changed mtime",
+      "entry": "main.my",
+      "reference_status": 0,
+      "module_status": 0,
+      "rejection_expected": false,
+      "states_unchanged": true,
+      "compiled_results": [],
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "724e2d777ac80df460698b17004252e3a11f12d3a60b77e5295ae1d82402c786"
+    },
+    {
+      "step": "changed embed",
+      "entry": "main.my",
+      "reference_status": 0,
+      "module_status": 0,
+      "rejection_expected": false,
+      "states_unchanged": false,
+      "compiled_results": [
+        "modules/e855cdcadae63d19621369f41a2ca5edf5e10d03ec9d2fb1fe2e65c877d89b82/out/good.result.json"
+      ],
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "724e2d777ac80df460698b17004252e3a11f12d3a60b77e5295ae1d82402c786"
+    },
+    {
+      "step": "embed warm",
+      "entry": "main.my",
+      "reference_status": 0,
+      "module_status": 0,
+      "rejection_expected": false,
+      "states_unchanged": true,
+      "compiled_results": [],
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "724e2d777ac80df460698b17004252e3a11f12d3a60b77e5295ae1d82402c786"
+    },
+    {
+      "step": "partial failure preserves finished neighbor",
+      "entry": "main.my",
+      "reference_status": 1,
+      "module_status": 1,
+      "rejection_expected": true,
+      "states_unchanged": false,
+      "compiled_results": [
+        "modules/e855cdcadae63d19621369f41a2ca5edf5e10d03ec9d2fb1fe2e65c877d89b82/out/good.result.json"
+      ],
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "d22b083c09e22f97b3e666ae7f4eb68aa6710a9ad2cdee467fe50e9f5b03cc65"
+    },
+    {
+      "step": "repair failed module",
+      "entry": "main.my",
+      "reference_status": 0,
+      "module_status": 0,
+      "rejection_expected": false,
+      "states_unchanged": false,
+      "compiled_results": [
+        "modules/e855cdcadae63d19621369f41a2ca5edf5e10d03ec9d2fb1fe2e65c877d89b82/out/main.result.json",
+        "modules/e855cdcadae63d19621369f41a2ca5edf5e10d03ec9d2fb1fe2e65c877d89b82/out/bad.result.json"
+      ],
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "724e2d777ac80df460698b17004252e3a11f12d3a60b77e5295ae1d82402c786"
+    },
+    {
+      "step": "repair warm",
+      "entry": "main.my",
+      "reference_status": 0,
+      "module_status": 0,
+      "rejection_expected": false,
+      "states_unchanged": true,
+      "compiled_results": [],
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "724e2d777ac80df460698b17004252e3a11f12d3a60b77e5295ae1d82402c786"
+    },
+    {
+      "step": "remove unreachable import",
+      "entry": "main.my",
+      "reference_status": 0,
+      "module_status": 0,
+      "rejection_expected": false,
+      "states_unchanged": false,
+      "compiled_results": [
+        "modules/e855cdcadae63d19621369f41a2ca5edf5e10d03ec9d2fb1fe2e65c877d89b82/out/main.result.json"
+      ],
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "step": "removed graph warm",
+      "entry": "main.my",
+      "reference_status": 0,
+      "module_status": 0,
+      "rejection_expected": false,
+      "states_unchanged": true,
+      "compiled_results": [],
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "step": "renamed root separate variant",
+      "entry": "other.my",
+      "reference_status": 0,
+      "module_status": 0,
+      "rejection_expected": false,
+      "states_unchanged": false,
+      "compiled_results": [
+        "modules/cc2b4d04e3f165d01bfcb5b295f7c5dafc6badafb573a4508e6e4c3e6d1dba30/out/bad.result.json",
+        "modules/cc2b4d04e3f165d01bfcb5b295f7c5dafc6badafb573a4508e6e4c3e6d1dba30/out/other.result.json",
+        "modules/cc2b4d04e3f165d01bfcb5b295f7c5dafc6badafb573a4508e6e4c3e6d1dba30/out/good.result.json"
+      ],
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "724e2d777ac80df460698b17004252e3a11f12d3a60b77e5295ae1d82402c786"
+    },
+    {
+      "step": "other root warm",
+      "entry": "other.my",
+      "reference_status": 0,
+      "module_status": 0,
+      "rejection_expected": false,
+      "states_unchanged": true,
+      "compiled_results": [],
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "724e2d777ac80df460698b17004252e3a11f12d3a60b77e5295ae1d82402c786"
+    },
+    {
+      "step": "tightened loader budget",
+      "entry": "main.my",
+      "reference_status": 1,
+      "module_status": 1,
+      "rejection_expected": true,
+      "states_unchanged": true,
+      "compiled_results": [],
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e610f1257674345a52fc3c08271e73b76959c989853d8aed351fd1cd638ef1d1"
+    },
+    {
+      "step": "widened loader budget",
+      "entry": "main.my",
+      "reference_status": 0,
+      "module_status": 0,
+      "rejection_expected": false,
+      "states_unchanged": true,
+      "compiled_results": [],
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "step": "concurrent held project falls back safely",
+      "entry": "main.my",
+      "reference_status": 0,
+      "module_status": 0,
+      "rejection_expected": false,
+      "states_unchanged": true,
+      "compiled_results": [],
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "step": "lock release warm",
+      "entry": "main.my",
+      "reference_status": 0,
+      "module_status": 0,
+      "rejection_expected": false,
+      "states_unchanged": true,
+      "compiled_results": [],
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

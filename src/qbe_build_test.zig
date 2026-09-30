@@ -477,6 +477,39 @@ test "the vendored QBE allocates a parallel move wider than its initial table" {
     try std.testing.expect(std.mem.indexOf(u8, try context.read(assembly), "wide:") != null);
 }
 
+// spec: QBE-PHI-WIDTH-1
+test "the vendored QBE preserves phi widths under pressure and reuse" {
+    var environment: std.process.Environ.Map = .init(std.testing.allocator);
+    defer environment.deinit();
+    var context = try fs.Context.init(std.testing.allocator, std.testing.io, &environment);
+    defer context.deinit();
+    const resolved = try tools(context.allocator);
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", context.allocator);
+    const result = try phiWidthProbe(context, resolved, root);
+    try std.testing.expectEqualStrings("phi widths: 44 passed\n", result);
+}
+
+fn phiWidthProbe(context: fs.Context, resolved: Tools, root: []const u8) ![]u8 {
+    const a = context.allocator;
+    const source = try join(a, &.{ root, "phi.ssa" });
+    const driver = try join(a, &.{ root, "phi.c" });
+    const assembly = try join(a, &.{ root, "phi.s" });
+    const object = try join(a, &.{ root, "phi.o" });
+    const output = try join(a, &.{ root, "phi" });
+    try context.write(source, try context.read("tests/qbe_phi_width.ssa"));
+    try context.write(driver, try context.read("tests/qbe_phi_width.c"));
+    _ = try spawnOk(context, &.{ resolved.qbe, "-o", assembly, source }, .inherit, null);
+    _ = try spawnOk(context, &.{ resolved.zig, "cc", "-c", assembly, "-o", object }, .inherit, null);
+    const link = [_][]const u8{
+        resolved.zig, "cc",   "-std=c11", "-O2",  "-Wall", "-Wextra", "-Werror",
+        driver,       object, "-o",       output,
+    };
+    _ = try spawnOk(context, &link, .inherit, null);
+    return spawnOk(context, &.{output}, .inherit, null);
+}
+
 // spec-case: QBE-3
 test "a default build shares its runtime tree under XDG while an explicit cache-dir stays hermetic" {
     var environment: std.process.Environ.Map = .init(std.testing.allocator);
