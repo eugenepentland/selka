@@ -165,3 +165,24 @@ test "ABI5 generated increments are u64 and refuse saturation before storing a t
     try t.expect(std.mem.indexOf(u8, il, "$myl_qbe_rc_status(l %ctx, w 2)") != null);
     try t.expect(std.mem.indexOf(u8, il, " storel ") != null);
 }
+
+// spec: RC-COUNT-CARRY-1
+test "RC-COUNT-CARRY-1 inline increments admit before either count or token store" {
+    const il = try countedIl(
+        \\record Pair:
+        \\    values: list[int]
+        \\def keep(value: list[int], choose: bool) -> Pair:
+        \\    return Pair(value) if choose else Pair([1])
+        \\def main() -> int:
+        \\    return len(keep([1, 2], True).values)
+    , "keep");
+    defer t.allocator.free(il);
+    const start = std.mem.indexOf(u8, il, "@rcginc") orelse return error.TestUnexpectedResult;
+    const addition = start + (std.mem.indexOf(u8, il[start..], " =l add ") orelse return error.TestUnexpectedResult);
+    const carry = addition + (std.mem.indexOf(u8, il[addition..], " =w cultl ") orelse return error.TestUnexpectedResult);
+    const refusal = carry + (std.mem.indexOf(u8, il[carry..], "@rcglimit") orelse return error.TestUnexpectedResult);
+    const store = refusal + (std.mem.indexOf(u8, il[refusal..], " storel ") orelse return error.TestUnexpectedResult);
+    try t.expect(addition < carry and carry < refusal and refusal < store);
+    try t.expect(std.mem.indexOf(u8, il[carry..store], "$myl_qbe_rc_status(l %ctx, w 2)") != null);
+    try t.expect(std.mem.indexOf(u8, il[start..store], " storel ") == null);
+}

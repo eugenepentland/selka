@@ -396,9 +396,13 @@ fn increment(comptime E: type, self: *E, step: Increment) Error!usize {
     try self.print(prefix.load_count, .{ counter, step.payload, offset(step.count), counter, old, counter });
     const limit = self.temp();
     const status = self.temp();
-    try self.print(count_equal ++ "{d}\n jnz %v{d}, @rcglimit{d}, @rcgcapacity{d}\n@rcglimit{d}\n", .{ limit, old, prefix.count_max, limit, step.label, step.label, step.label });
+    // RC-COUNT-CARRY-1: the wrapped result stays private until admission.
+    // The LLVM translator recognizes this formula as unsigned-add overflow.
+    try self.print(count_result ++ " add %v{d}, 1\n", .{ new, old });
+    try self.print(" %v{d} =w cult" ++ prefix.count_type ++ " %v{d}, %v{d}\n", .{ limit, new, old });
+    try self.print(" jnz %v{d}, @rcglimit{d}, @rcgcapacity{d}\n@rcglimit{d}\n", .{ limit, step.label, step.label, step.label });
     try self.print(" %v{d} =w call $myl_qbe_rc_status(l %ctx, w 2)\n jmp @failure\n@rcgcapacity{d}\n", .{ status, step.label });
-    try self.print(count_result ++ " add %v{d}, 1\n " ++ prefix.count_store ++ " %v{d}, %v{d}\n", .{ new, old, new, counter });
+    try self.print(" " ++ prefix.count_store ++ " %v{d}, %v{d}\n", .{ new, counter });
     return mark;
 }
 

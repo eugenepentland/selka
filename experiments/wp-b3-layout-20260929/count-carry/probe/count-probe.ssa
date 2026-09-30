@@ -1,0 +1,37 @@
+export function w $owner(l %ctx, l %payload, l %output) {
+@start
+ %v484 =l sub %payload, 32
+ # myl-rc %v484
+ %v485 =l loadl %v484
+ %v486 =l add %v485, 1
+ %v489 =w cultl %v486, %v485
+ jnz %v489, @rcglimit480, @rcgcapacity480
+@rcglimit480
+ %v490 =w call $myl_qbe_rc_status(l %ctx, w 2)
+ jmp @failure
+@rcgcapacity480
+ storel %v486, %v484
+ storel %payload, %output
+ ret 1
+@failure
+ ret 0
+}
+
+export function w $hold(l %ctx, l %payload, l %output) {
+@start
+ %v367 =l sub %payload, 24
+ # myl-rc %v367
+ %v368 =l loadl %v367
+ %v369 =l add %v368, 1
+ %v372 =w cultl %v369, %v368
+ jnz %v372, @rcglimit363, @rcgcapacity363
+@rcglimit363
+ %v373 =w call $myl_qbe_rc_status(l %ctx, w 2)
+ jmp @failure
+@rcgcapacity363
+ storel %v369, %v367
+ storel %payload, %output
+ ret 1
+@failure
+ ret 0
+}

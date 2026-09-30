@@ -1,0 +1,31 @@
+{
+  "audit_before": "owned-cache-audit-before.json",
+  "reclaimed": [
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-runtime-layout-20260929/.zig-local-cache/o",
+      "apparent_bytes": 5295099533,
+      "allocated_bytes": 4654940160,
+      "absent_after": true
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-runtime-images-20260929/.zig-local-cache/o",
+      "apparent_bytes": 3894643089,
+      "allocated_bytes": 3583860736,
+      "absent_after": true
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-runtime-count-fusion-20260930/.zig-local-cache/o",
+      "apparent_bytes": 907853451,
+      "allocated_bytes": 864940032,
+      "absent_after": true
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-runtime-wide-counts-20260930/.zig-local-cache/o",
+      "apparent_bytes": 1881033405,
+      "allocated_bytes": 1713614848,
+      "absent_after": true,
+      "active_object_references_before": []
+    }
+  ],
+  "wide_deferred": "reviewer confirmed installed prefix only; idle object cache reclaimed"
+}
