@@ -1,0 +1,1143 @@
+{
+  "schema": 1,
+  "source": "e88fcf3c98d6f0e0090e0719472e1081fb81f119",
+  "compiler": "/home/epentland/ai/canopy/eda-bench-wt/mylang-e88fcf3c/bin/mylang",
+  "compiler_sha256": "6259edca26ea90f93b85037a17b5fc2692505a4e6f4cdd05cca23554b1bb0bcc",
+  "compiler_mode": "Debug; witness selected before future ReleaseFast compiler-build preference",
+  "production_difference_from_frozen_source": false,
+  "documentation_head_at_capture": "ccff69926cd2ad3f60da6ad317d25099ba29a170",
+  "scope": "remaining section4 common compiler lane checks; no full27 integration or performance gate",
+  "steps": [
+    {
+      "name": "native-heap",
+      "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930",
+      "command": [
+        "zig",
+        "build",
+        "test-native-heap",
+        "--summary",
+        "all"
+      ],
+      "admission_command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/scripts/build-slot.sh",
+        "build",
+        "python3",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/.tmp/trig-qualified-extras/admitted.py",
+        "zig",
+        "build",
+        "test-native-heap",
+        "--summary",
+        "all"
+      ],
+      "started_utc": "2026-09-30T13:22:49Z",
+      "exit": 0,
+      "wall_s": 292.8835135230329,
+      "log_sha256": "9e39a67f1d6552bf683d1cbbd7a6515d77191abd610bb27304103b0148e20533",
+      "log_bytes": 2092,
+      "guest_summaries": [],
+      "build_summaries": [
+        "Build Summary: 10/10 steps succeeded"
+      ],
+      "admission": {
+        "utc": "2026-09-30T13:27:39Z",
+        "cpus": [
+          0,
+          1,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19
+        ],
+        "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930",
+        "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/.tmp",
+        "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/.zig-global-cache",
+        "command": [
+          "zig",
+          "build",
+          "test-native-heap",
+          "--summary",
+          "all"
+        ]
+      }
+    },
+    {
+      "name": "lox-build-rc",
+      "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/.tmp/trig-qualified-extras/lox-port",
+      "command": [
+        "/home/epentland/ai/canopy/eda-bench-wt/mylang-e88fcf3c/bin/mylang",
+        "build",
+        "main.my",
+        "--project",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/.tmp/trig-qualified-extras/lox-rc",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/.tmp/trig-qualified-extras/lox-cache-rc"
+      ],
+      "admission_command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/scripts/build-slot.sh",
+        "build",
+        "python3",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/.tmp/trig-qualified-extras/admitted.py",
+        "/home/epentland/ai/canopy/eda-bench-wt/mylang-e88fcf3c/bin/mylang",
+        "build",
+        "main.my",
+        "--project",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/.tmp/trig-qualified-extras/lox-rc",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/.tmp/trig-qualified-extras/lox-cache-rc"
+      ],
+      "started_utc": "2026-09-30T13:27:42Z",
+      "exit": 0,
+      "wall_s": 54.48327007703483,
+      "log_sha256": "69ab621fe8eebd9ba0f9adbb3af8e60afb5153d3f8a7b9f67682065cb7d856bf",
+      "log_bytes": 823,
+      "guest_summaries": [],
+      "build_summaries": [],
+      "admission": {
+        "utc": "2026-09-30T13:27:44Z",
+        "cpus": [
+          0,
+          1,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19
+        ],
+        "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/.tmp/trig-qualified-extras/lox-port",
+        "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/.tmp",
+        "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/.zig-global-cache",
+        "command": [
+          "/home/epentland/ai/canopy/eda-bench-wt/mylang-e88fcf3c/bin/mylang",
+          "build",
+          "main.my",
+          "--project",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/.tmp/trig-qualified-extras/lox-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/.tmp/trig-qualified-extras/lox-cache-rc"
+        ]
+      }
+    },
+    {
+      "name": "lox-tests-rc",
+      "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/.tmp/trig-qualified-extras/lox-port",
+      "command": [
+        "/home/epentland/ai/canopy/eda-bench-wt/mylang-e88fcf3c/bin/mylang",
+        "test",
+        ".",
+        "--force",
+        "--jobs",
+        "4",
+        "--max-steps=100000000",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/.tmp/trig-qualified-extras/lox-cache-rc"
+      ],
+      "admission_command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/scripts/build-slot.sh",
+        "build",
+        "python3",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/.tmp/trig-qualified-extras/admitted.py",
+        "/home/epentland/ai/canopy/eda-bench-wt/mylang-e88fcf3c/bin/mylang",
+        "test",
+        ".",
+        "--force",
+        "--jobs",
+        "4",
+        "--max-steps=100000000",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/.tmp/trig-qualified-extras/lox-cache-rc"
+      ],
+      "started_utc": "2026-09-30T13:28:36Z",
+      "exit": 0,
+      "wall_s": 61.19158223795239,
+      "log_sha256": "6597df9b10f0348f3f6588d35ca810c126b13e1c6dc5c0481f269d6e0bca230e",
+      "log_bytes": 3830,
+      "guest_summaries": [
+        "65 passed, 0 cached, 0 failed, 0 skipped, 0 dropped across 10 programs"
+      ],
+      "build_summaries": [],
+      "admission": {
+        "utc": "2026-09-30T13:28:36Z",
+        "cpus": [
+          0,
+          1,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19
+        ],
+        "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/.tmp/trig-qualified-extras/lox-port",
+        "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/.tmp",
+        "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/.zig-global-cache",
+        "command": [
+          "/home/epentland/ai/canopy/eda-bench-wt/mylang-e88fcf3c/bin/mylang",
+          "test",
+          ".",
+          "--force",
+          "--jobs",
+          "4",
+          "--max-steps=100000000",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/.tmp/trig-qualified-extras/lox-cache-rc"
+        ]
+      }
+    },
+    {
+      "name": "lox-driver-rc",
+      "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/.tmp/trig-qualified-extras/lox-port",
+      "command": [
+        "/home/epentland/ai/canopy/eda-bench-wt/mylang-e88fcf3c/bin/mylang",
+        "test",
+        "driver_tests.my",
+        "--cases",
+        "driver_cases.json",
+        "--force",
+        "--jobs",
+        "4",
+        "--max-steps=100000000",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/.tmp/trig-qualified-extras/lox-cache-rc"
+      ],
+      "admission_command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/scripts/build-slot.sh",
+        "build",
+        "python3",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/.tmp/trig-qualified-extras/admitted.py",
+        "/home/epentland/ai/canopy/eda-bench-wt/mylang-e88fcf3c/bin/mylang",
+        "test",
+        "driver_tests.my",
+        "--cases",
+        "driver_cases.json",
+        "--force",
+        "--jobs",
+        "4",
+        "--max-steps=100000000",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/.tmp/trig-qualified-extras/lox-cache-rc"
+      ],
+      "started_utc": "2026-09-30T13:29:37Z",
+      "exit": 0,
+      "wall_s": 30.28678010602016,
+      "log_sha256": "668219f91ade40df8df05307a3bf46b0c2c6fd0f4bfd3bbc639a35de09bfde5e",
+      "log_bytes": 1465,
+      "guest_summaries": [],
+      "build_summaries": [],
+      "admission": {
+        "utc": "2026-09-30T13:29:37Z",
+        "cpus": [
+          0,
+          1,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19
+        ],
+        "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/.tmp/trig-qualified-extras/lox-port",
+        "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/.tmp",
+        "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/.zig-global-cache",
+        "command": [
+          "/home/epentland/ai/canopy/eda-bench-wt/mylang-e88fcf3c/bin/mylang",
+          "test",
+          "driver_tests.my",
+          "--cases",
+          "driver_cases.json",
+          "--force",
+          "--jobs",
+          "4",
+          "--max-steps=100000000",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/.tmp/trig-qualified-extras/lox-cache-rc"
+        ]
+      }
+    },
+    {
+      "name": "lox-build-gc",
+      "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/.tmp/trig-qualified-extras/lox-port",
+      "command": [
+        "/home/epentland/ai/canopy/eda-bench-wt/mylang-e88fcf3c/bin/mylang",
+        "build",
+        "main.my",
+        "--project",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/.tmp/trig-qualified-extras/lox-gc",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/.tmp/trig-qualified-extras/lox-cache-gc",
+        "--gc-runtime"
+      ],
+      "admission_command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/scripts/build-slot.sh",
+        "build",
+        "python3",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/.tmp/trig-qualified-extras/admitted.py",
+        "/home/epentland/ai/canopy/eda-bench-wt/mylang-e88fcf3c/bin/mylang",
+        "build",
+        "main.my",
+        "--project",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/.tmp/trig-qualified-extras/lox-gc",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/.tmp/trig-qualified-extras/lox-cache-gc",
+        "--gc-runtime"
+      ],
+      "started_utc": "2026-09-30T13:30:07Z",
+      "exit": 0,
+      "wall_s": 7.738561011035927,
+      "log_sha256": "08e2f38e7326330719fdb3db721ae4adff4042589464ffafbd4a9c6c124e599f",
+      "log_bytes": 839,
+      "guest_summaries": [],
+      "build_summaries": [],
+      "admission": {
+        "utc": "2026-09-30T13:30:08Z",
+        "cpus": [
+          0,
+          1,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19
+        ],
+        "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/.tmp/trig-qualified-extras/lox-port",
+        "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/.tmp",
+        "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/.zig-global-cache",
+        "command": [
+          "/home/epentland/ai/canopy/eda-bench-wt/mylang-e88fcf3c/bin/mylang",
+          "build",
+          "main.my",
+          "--project",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/.tmp/trig-qualified-extras/lox-gc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/.tmp/trig-qualified-extras/lox-cache-gc",
+          "--gc-runtime"
+        ]
+      }
+    },
+    {
+      "name": "lox-tests-gc",
+      "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/.tmp/trig-qualified-extras/lox-port",
+      "command": [
+        "/home/epentland/ai/canopy/eda-bench-wt/mylang-e88fcf3c/bin/mylang",
+        "test",
+        ".",
+        "--force",
+        "--jobs",
+        "4",
+        "--max-steps=100000000",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/.tmp/trig-qualified-extras/lox-cache-gc",
+        "--gc-runtime"
+      ],
+      "admission_command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/scripts/build-slot.sh",
+        "build",
+        "python3",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/.tmp/trig-qualified-extras/admitted.py",
+        "/home/epentland/ai/canopy/eda-bench-wt/mylang-e88fcf3c/bin/mylang",
+        "test",
+        ".",
+        "--force",
+        "--jobs",
+        "4",
+        "--max-steps=100000000",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/.tmp/trig-qualified-extras/lox-cache-gc",
+        "--gc-runtime"
+      ],
+      "started_utc": "2026-09-30T13:30:15Z",
+      "exit": 0,
+      "wall_s": 10.394918809994124,
+      "log_sha256": "103f1cd7284a91b0e3ef321cd325a6a8bff4cc552b190e6dcbcf916b29b87bc4",
+      "log_bytes": 3846,
+      "guest_summaries": [
+        "65 passed, 0 cached, 0 failed, 0 skipped, 0 dropped across 10 programs"
+      ],
+      "build_summaries": [],
+      "admission": {
+        "utc": "2026-09-30T13:30:15Z",
+        "cpus": [
+          0,
+          1,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19
+        ],
+        "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/.tmp/trig-qualified-extras/lox-port",
+        "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/.tmp",
+        "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/.zig-global-cache",
+        "command": [
+          "/home/epentland/ai/canopy/eda-bench-wt/mylang-e88fcf3c/bin/mylang",
+          "test",
+          ".",
+          "--force",
+          "--jobs",
+          "4",
+          "--max-steps=100000000",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/.tmp/trig-qualified-extras/lox-cache-gc",
+          "--gc-runtime"
+        ]
+      }
+    },
+    {
+      "name": "lox-driver-gc",
+      "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/.tmp/trig-qualified-extras/lox-port",
+      "command": [
+        "/home/epentland/ai/canopy/eda-bench-wt/mylang-e88fcf3c/bin/mylang",
+        "test",
+        "driver_tests.my",
+        "--cases",
+        "driver_cases.json",
+        "--force",
+        "--jobs",
+        "4",
+        "--max-steps=100000000",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/.tmp/trig-qualified-extras/lox-cache-gc",
+        "--gc-runtime"
+      ],
+      "admission_command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/scripts/build-slot.sh",
+        "build",
+        "python3",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/.tmp/trig-qualified-extras/admitted.py",
+        "/home/epentland/ai/canopy/eda-bench-wt/mylang-e88fcf3c/bin/mylang",
+        "test",
+        "driver_tests.my",
+        "--cases",
+        "driver_cases.json",
+        "--force",
+        "--jobs",
+        "4",
+        "--max-steps=100000000",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/.tmp/trig-qualified-extras/lox-cache-gc",
+        "--gc-runtime"
+      ],
+      "started_utc": "2026-09-30T13:30:26Z",
+      "exit": 0,
+      "wall_s": 6.468631890951656,
+      "log_sha256": "7591e18b92ae0bb6594eb76062d3b3b155e708c7d8510bcd9d55207718d33829",
+      "log_bytes": 1481,
+      "guest_summaries": [],
+      "build_summaries": [],
+      "admission": {
+        "utc": "2026-09-30T13:30:26Z",
+        "cpus": [
+          0,
+          1,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19
+        ],
+        "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/.tmp/trig-qualified-extras/lox-port",
+        "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/.tmp",
+        "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/.zig-global-cache",
+        "command": [
+          "/home/epentland/ai/canopy/eda-bench-wt/mylang-e88fcf3c/bin/mylang",
+          "test",
+          "driver_tests.my",
+          "--cases",
+          "driver_cases.json",
+          "--force",
+          "--jobs",
+          "4",
+          "--max-steps=100000000",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/.tmp/trig-qualified-extras/lox-cache-gc",
+          "--gc-runtime"
+        ]
+      }
+    },
+    {
+      "name": "lang-release",
+      "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930",
+      "command": [
+        "/home/epentland/ai/canopy/eda-bench-wt/mylang-e88fcf3c/bin/mylang",
+        "test",
+        "tests/lang",
+        "--force",
+        "--jobs",
+        "4",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/.mylang-cache/trig-extra-release",
+        "--release"
+      ],
+      "admission_command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/scripts/build-slot.sh",
+        "build",
+        "python3",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/.tmp/trig-qualified-extras/admitted.py",
+        "/home/epentland/ai/canopy/eda-bench-wt/mylang-e88fcf3c/bin/mylang",
+        "test",
+        "tests/lang",
+        "--force",
+        "--jobs",
+        "4",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/.mylang-cache/trig-extra-release",
+        "--release"
+      ],
+      "started_utc": "2026-09-30T13:30:32Z",
+      "exit": 0,
+      "wall_s": 729.3045453879749,
+      "log_sha256": "675052244565bd79e1111571bd697f5e6b32236e5357859f496015db3155fe4d",
+      "log_bytes": 119638,
+      "guest_summaries": [
+        "1490 passed, 0 cached, 0 failed, 0 skipped, 0 dropped across 228 programs"
+      ],
+      "build_summaries": [],
+      "admission": {
+        "utc": "2026-09-30T13:30:32Z",
+        "cpus": [
+          0,
+          1,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19
+        ],
+        "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930",
+        "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/.tmp",
+        "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/.zig-global-cache",
+        "command": [
+          "/home/epentland/ai/canopy/eda-bench-wt/mylang-e88fcf3c/bin/mylang",
+          "test",
+          "tests/lang",
+          "--force",
+          "--jobs",
+          "4",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/.mylang-cache/trig-extra-release",
+          "--release"
+        ]
+      }
+    },
+    {
+      "name": "lang-stats",
+      "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930",
+      "command": [
+        "/home/epentland/ai/canopy/eda-bench-wt/mylang-e88fcf3c/bin/mylang",
+        "test",
+        "tests/lang",
+        "--force",
+        "--jobs",
+        "4",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/.mylang-cache/trig-extra-stats",
+        "--rc-runtime=stats"
+      ],
+      "admission_command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/scripts/build-slot.sh",
+        "build",
+        "python3",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/.tmp/trig-qualified-extras/admitted.py",
+        "/home/epentland/ai/canopy/eda-bench-wt/mylang-e88fcf3c/bin/mylang",
+        "test",
+        "tests/lang",
+        "--force",
+        "--jobs",
+        "4",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/.mylang-cache/trig-extra-stats",
+        "--rc-runtime=stats"
+      ],
+      "started_utc": "2026-09-30T13:42:41Z",
+      "exit": 0,
+      "wall_s": 244.2520692520775,
+      "log_sha256": "af51d66f80a9bf6113117fbbebb3e64050f00cf92769ac1ad77522030d9928f7",
+      "log_bytes": 119645,
+      "guest_summaries": [
+        "1490 passed, 0 cached, 0 failed, 0 skipped, 0 dropped across 228 programs"
+      ],
+      "build_summaries": [],
+      "admission": {
+        "utc": "2026-09-30T13:42:41Z",
+        "cpus": [
+          0,
+          1,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19
+        ],
+        "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930",
+        "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/.tmp",
+        "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/.zig-global-cache",
+        "command": [
+          "/home/epentland/ai/canopy/eda-bench-wt/mylang-e88fcf3c/bin/mylang",
+          "test",
+          "tests/lang",
+          "--force",
+          "--jobs",
+          "4",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/.mylang-cache/trig-extra-stats",
+          "--rc-runtime=stats"
+        ]
+      }
+    },
+    {
+      "name": "rc-fuzz-100",
+      "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930",
+      "command": [
+        "zig",
+        "build",
+        "test-rc-fuzz",
+        "-Dfuzz-seeds=100",
+        "--summary",
+        "all",
+        "--",
+        "--compiler",
+        "/home/epentland/ai/canopy/eda-bench-wt/mylang-e88fcf3c/bin/mylang",
+        "--jobs",
+        "2",
+        "--out",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/.tmp/trig-qualified-extras/fuzz"
+      ],
+      "admission_command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/scripts/build-slot.sh",
+        "build",
+        "python3",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/.tmp/trig-qualified-extras/admitted.py",
+        "zig",
+        "build",
+        "test-rc-fuzz",
+        "-Dfuzz-seeds=100",
+        "--summary",
+        "all",
+        "--",
+        "--compiler",
+        "/home/epentland/ai/canopy/eda-bench-wt/mylang-e88fcf3c/bin/mylang",
+        "--jobs",
+        "2",
+        "--out",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/.tmp/trig-qualified-extras/fuzz"
+      ],
+      "started_utc": "2026-09-30T13:46:46Z",
+      "exit": 0,
+      "wall_s": 815.7785551039269,
+      "log_sha256": "a8f6288c74896c2e4b1af6ad19d31607b1065f2f0538c4cefa9c6f6083758457",
+      "log_bytes": 4985,
+      "guest_summaries": [],
+      "build_summaries": [
+        "Build Summary: 21/21 steps succeeded"
+      ],
+      "admission": {
+        "utc": "2026-09-30T13:46:46Z",
+        "cpus": [
+          0,
+          1,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19
+        ],
+        "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930",
+        "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/.tmp",
+        "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/.zig-global-cache",
+        "command": [
+          "zig",
+          "build",
+          "test-rc-fuzz",
+          "-Dfuzz-seeds=100",
+          "--summary",
+          "all",
+          "--",
+          "--compiler",
+          "/home/epentland/ai/canopy/eda-bench-wt/mylang-e88fcf3c/bin/mylang",
+          "--jobs",
+          "2",
+          "--out",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/.tmp/trig-qualified-extras/fuzz"
+        ]
+      }
+    }
+  ],
+  "fuzz_summary": {
+    "compiler": "/home/epentland/ai/canopy/eda-bench-wt/mylang-e88fcf3c/bin/mylang",
+    "start": 1,
+    "count": 100,
+    "tally": {
+      "ok": 98,
+      "invalid": 0,
+      "stress-only": 2,
+      "RC-DIFF": 0
+    },
+    "findings": [
+      {
+        "seed": 19,
+        "status": "stress-only",
+        "rc": [],
+        "stress": [
+          "stress: stdout differs"
+        ],
+        "program": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/.tmp/trig-qualified-extras/fuzz/found/s19.my"
+      },
+      {
+        "seed": 87,
+        "status": "stress-only",
+        "rc": [],
+        "stress": [
+          "stress: exit 139 vs 0",
+          "stress: stdout differs"
+        ],
+        "program": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/.tmp/trig-qualified-extras/fuzz/found/s87.my"
+      }
+    ]
+  },
+  "known_gc_stress_findings": {
+    "prior_verification_path": "docs/audits/evidence/codex-next-phase-b-final-20260930/verification.json",
+    "prior_verification_sha256": "43bc18a6b7228a728bb283e59b1cbe96cf1474045bcea0d1b1aeba887d6c1800",
+    "comparisons": [
+      {
+        "seed": 19,
+        "program_sha256": "7b4625131d1cece836792c3ef374848bd33f9c8ed1a7a9bd4e7a1d0881214155",
+        "prior_program_sha256": "7b4625131d1cece836792c3ef374848bd33f9c8ed1a7a9bd4e7a1d0881214155",
+        "same_reported_findings": true
+      },
+      {
+        "seed": 87,
+        "program_sha256": "c1658f510f5c94327f1cc98ec37a1766c7a507737d6b1e24742207e9cfbf9657",
+        "prior_program_sha256": "c1658f510f5c94327f1cc98ec37a1766c7a507737d6b1e24742207e9cfbf9657",
+        "same_reported_findings": true
+      }
+    ]
+  },
+  "lox_driver_cases": {
+    "rc": 13,
+    "gc": 13,
+    "cached": 0,
+    "failed": 0,
+    "skipped": 0
+  },
+  "lox_builds": [
+    {
+      "mode": "rc",
+      "binary_sha256": "b3a3d1ef3b1a996e54af4d2e9a3e6fc7ff50c658f66cb189a7e355fd947c1614"
+    },
+    {
+      "mode": "gc",
+      "binary_sha256": "1ee60b1d2aa39990a4b88a50d4e05263b97caf8470bfca0b0980c663804820a1"
+    }
+  ],
+  "archive": {
+    "path": "raw.tar.gz",
+    "bytes": 125284,
+    "sha256": "fe3beae023bfcfe78586ebee7c805724ee815aefb1c696e924ea47d635fc7d72",
+    "member_count": 61,
+    "payload_bytes": 617229,
+    "members": [
+      {
+        "path": "lox-inputs/NOTES.md",
+        "bytes": 16216,
+        "sha256": "85541175c32b6745ce2b9be34da5004bf16d7c8d0e83a5e46b46db41b5bf490c"
+      },
+      {
+        "path": "lox-inputs/ast.my",
+        "bytes": 8383,
+        "sha256": "e210fb35bf3125ba06ebb978bcb3592162020a77576542f2d049879a51479bf9"
+      },
+      {
+        "path": "lox-inputs/bench.json",
+        "bytes": 3920,
+        "sha256": "dbcc26195c024bc86d9e184284306f4849450f1042d1fe53092e7b52a3deea92"
+      },
+      {
+        "path": "lox-inputs/chunk.my",
+        "bytes": 2039,
+        "sha256": "b4f6e7ae6531b224f99e026f53fee3692c90d8f2b15d3c76ca5962f1803e4b66"
+      },
+      {
+        "path": "lox-inputs/compiler.my",
+        "bytes": 30163,
+        "sha256": "c550603195401ff6d9436b42d6fbf0c35051521da57e7b85281fc8fcf6ebe048"
+      },
+      {
+        "path": "lox-inputs/compiler_test.my",
+        "bytes": 3063,
+        "sha256": "582fe817dbeffa709961b5124370ce200510adb3ac0d246572ca1c0dc19ec08a"
+      },
+      {
+        "path": "lox-inputs/driver.my",
+        "bytes": 2689,
+        "sha256": "fe831d2ec08833d11139e790ab741903b27a8e0fb43582cac11ca664b4595836"
+      },
+      {
+        "path": "lox-inputs/driver_cases.json",
+        "bytes": 13854,
+        "sha256": "0f5d302b89952c44510d690c59322af42cd9bb54f66f4049fb122a26d184ab2f"
+      },
+      {
+        "path": "lox-inputs/driver_tests.my",
+        "bytes": 5696,
+        "sha256": "32615edbfcbe21e8d550910df45d9bfcb199ee9c8171405d38566b98d78e00bd"
+      },
+      {
+        "path": "lox-inputs/heap.my",
+        "bytes": 13683,
+        "sha256": "ca6b9078355230bd2e31fc92e58794a02e73f333a0b9b8138897330f72c4d3d8"
+      },
+      {
+        "path": "lox-inputs/heap_test.my",
+        "bytes": 2934,
+        "sha256": "c951153991a8d5d13ca1df6ded7c6f26c7b43a08ed2095f72c6091637b29b53f"
+      },
+      {
+        "path": "lox-inputs/interpreter.my",
+        "bytes": 29498,
+        "sha256": "94d8b5472b997d5f875b575f0cf1b5cc7fb670ac57a293c1c6a8081151a19fcd"
+      },
+      {
+        "path": "lox-inputs/lox.sh",
+        "bytes": 406,
+        "sha256": "9f82abeb4e1c21ce78a9f28d61281917927517f610403917aaf314f1294385fc"
+      },
+      {
+        "path": "lox-inputs/lox_strings.my",
+        "bytes": 2490,
+        "sha256": "383900dda10b9218caf2087e12a2e20089e4d48b0ec5fc3e17e960a3d70d83df"
+      },
+      {
+        "path": "lox-inputs/lox_strings_test.my",
+        "bytes": 985,
+        "sha256": "a44545c64e9f75cc5af761d6c703feec83c4fc0a14d2678a1b2fce28067bd0c0"
+      },
+      {
+        "path": "lox-inputs/main.my",
+        "bytes": 1191,
+        "sha256": "18c1f669b1683123e635256c9f66c6db2766383391371c3822e61df7d9732274"
+      },
+      {
+        "path": "lox-inputs/natives.my",
+        "bytes": 1668,
+        "sha256": "2ff45343fded6d303e6233e0f787e63c319e860903e2c0c81ccbb71c2749d665"
+      },
+      {
+        "path": "lox-inputs/object.my",
+        "bytes": 3448,
+        "sha256": "08c0d5c6ae304ef4d0e1f5929f52b5d1dd47cd46e6c409392c0b5b1df9567ad7"
+      },
+      {
+        "path": "lox-inputs/output.my",
+        "bytes": 4413,
+        "sha256": "cdc79c8a9a5eca0106fb139bca5492da201f027b0499e5e00a492368317d194c"
+      },
+      {
+        "path": "lox-inputs/parser.my",
+        "bytes": 20330,
+        "sha256": "e9bd5d9c37e307d060ce165dc4fa0f276c2ff9dbe7cb21bd27cbdd94644b4edd"
+      },
+      {
+        "path": "lox-inputs/parser_test.my",
+        "bytes": 1587,
+        "sha256": "ffe2658f030c75b40a7c54d8f0c64e848e6679e13fc69cbef9a131ed7b120e4b"
+      },
+      {
+        "path": "lox-inputs/repros/overlap_proof_blowup.my.txt",
+        "bytes": 1605,
+        "sha256": "5c510f5d5e2d441cb5397a7d6097e3689a040751373d2c9594db6754812b4dfb"
+      },
+      {
+        "path": "lox-inputs/repros/print_long_float.my.txt",
+        "bytes": 536,
+        "sha256": "0767918284593321e9589f14e3b90d9dc41239321d355be89aed055eef5cb132"
+      },
+      {
+        "path": "lox-inputs/repros/print_union_class_payload.my.txt",
+        "bytes": 453,
+        "sha256": "c03c987b6bf03db950bb8e98c238a76c0e7ea9c4c98c29c3e5748cd2c3a4ce8d"
+      },
+      {
+        "path": "lox-inputs/repros/qbe_pm_slots.my.txt",
+        "bytes": 5971,
+        "sha256": "3560079c67785824971ae6f10c3f04e49e87e5e5dbd20afdd7f1c0a1b258dbe9"
+      },
+      {
+        "path": "lox-inputs/repros/read_fifo.my.txt",
+        "bytes": 629,
+        "sha256": "2a3b1658eb6e4c9a0f40cfed13c0db92989e9c78de69150197df247a18e5becd"
+      },
+      {
+        "path": "lox-inputs/repros/runtime_flags.my.txt",
+        "bytes": 895,
+        "sha256": "2d314b6501ea5be517e904e0791461f5900745a77e386c8403f6d15fefdd67eb"
+      },
+      {
+        "path": "lox-inputs/repros/stream_field_method.my.txt",
+        "bytes": 408,
+        "sha256": "b551e742a030b770cc3861bebacbbc76beab0fc38aef78a54be7a3af4ee9eb97"
+      },
+      {
+        "path": "lox-inputs/resolver.my",
+        "bytes": 11576,
+        "sha256": "41d41b2a1ddb3f6ab3fb73ad9eff69415b0450d890554766bfee37eac8d0903d"
+      },
+      {
+        "path": "lox-inputs/resolver_test.my",
+        "bytes": 2248,
+        "sha256": "72c5176ff15db240d8ec8ff8073fcdb7736e8c60ab47410bb60fce934c179d31"
+      },
+      {
+        "path": "lox-inputs/scanner.my",
+        "bytes": 8089,
+        "sha256": "af4bc6a57859318051dc47d6e1f6344ee98fbfff037e9be93c0a103765cd3e83"
+      },
+      {
+        "path": "lox-inputs/scanner_test.my",
+        "bytes": 4518,
+        "sha256": "1d7fbb34b0de402657786641217e81c9ae286cab14baf2716de2db875ae39ad0"
+      },
+      {
+        "path": "lox-inputs/table.my",
+        "bytes": 3412,
+        "sha256": "c875ae493dbc0d6c1b70202746b0f1d2211190fa1276b9d492778455c0d0b2ca"
+      },
+      {
+        "path": "lox-inputs/table_test.my",
+        "bytes": 2510,
+        "sha256": "38279f9135e953484e6844994bc070c4156d1eb31ab4de0f295efbea17c19555"
+      },
+      {
+        "path": "lox-inputs/value.my",
+        "bytes": 2006,
+        "sha256": "3b2a444e77c6a703b1aedad3c89ef38cad70aa3bb6cba1716b623980ff9a76b0"
+      },
+      {
+        "path": "lox-inputs/value_test.my",
+        "bytes": 2151,
+        "sha256": "b766d22b25a8a8a090b4a059030cfc7462022fdacb66a0a91bf8a9e09a53fed4"
+      },
+      {
+        "path": "lox-inputs/vm.my",
+        "bytes": 25399,
+        "sha256": "0e468a351887cfbb9e26b9669e1e7a3e1f6f473512bce56395bbc639b2bf25e4"
+      },
+      {
+        "path": "prior-fuzz-verification.json",
+        "bytes": 1854,
+        "sha256": "0632c8810fcb0d5fee75cc327ce49c02b2dfbf5b02eb4058d83a96811105a021"
+      },
+      {
+        "path": "qualification.json",
+        "bytes": 3194,
+        "sha256": "5a2eafb68f0fe56e5319f6b36b103cd04e9ca38bbd11088bd67a77ffae6905c2"
+      },
+      {
+        "path": "raw/admitted.py",
+        "bytes": 358,
+        "sha256": "6faf8ff987ed24d7dc8fe32d72ce9b728429d7801a14565b01304f7ce80463b1"
+      },
+      {
+        "path": "raw/boundary-pause.json",
+        "bytes": 492,
+        "sha256": "2f7b246413c497affb7553b9f39abb67e73c103ffaa6c41e3bee502328bf1f25"
+      },
+      {
+        "path": "raw/fuzz/found/s19.my",
+        "bytes": 5953,
+        "sha256": "7b4625131d1cece836792c3ef374848bd33f9c8ed1a7a9bd4e7a1d0881214155"
+      },
+      {
+        "path": "raw/fuzz/found/s87.my",
+        "bytes": 7427,
+        "sha256": "c1658f510f5c94327f1cc98ec37a1766c7a507737d6b1e24742207e9cfbf9657"
+      },
+      {
+        "path": "raw/fuzz/summary.json",
+        "bytes": 813,
+        "sha256": "b147115572ccbfc6c6091a4482ac9125867294bd03ff656bdecc2cc6298512c2"
+      },
+      {
+        "path": "raw/lang-release.log",
+        "bytes": 119638,
+        "sha256": "675052244565bd79e1111571bd697f5e6b32236e5357859f496015db3155fe4d"
+      },
+      {
+        "path": "raw/lang-stats.log",
+        "bytes": 119645,
+        "sha256": "af51d66f80a9bf6113117fbbebb3e64050f00cf92769ac1ad77522030d9928f7"
+      },
+      {
+        "path": "raw/lox-build-gc.log",
+        "bytes": 839,
+        "sha256": "08e2f38e7326330719fdb3db721ae4adff4042589464ffafbd4a9c6c124e599f"
+      },
+      {
+        "path": "raw/lox-build-rc.log",
+        "bytes": 823,
+        "sha256": "69ab621fe8eebd9ba0f9adbb3af8e60afb5153d3f8a7b9f67682065cb7d856bf"
+      },
+      {
+        "path": "raw/lox-driver-gc.log",
+        "bytes": 1481,
+        "sha256": "7591e18b92ae0bb6594eb76062d3b3b155e708c7d8510bcd9d55207718d33829"
+      },
+      {
+        "path": "raw/lox-driver-rc.log",
+        "bytes": 1465,
+        "sha256": "668219f91ade40df8df05307a3bf46b0c2c6fd0f4bfd3bbc639a35de09bfde5e"
+      },
+      {
+        "path": "raw/lox-inputs.json",
+        "bytes": 5826,
+        "sha256": "6de17488d45c74adda65b78eb67b8e9e8c0c90b584f7c78a85be992af85bcc8c"
+      },
+      {
+        "path": "raw/lox-tests-gc.log",
+        "bytes": 3846,
+        "sha256": "103f1cd7284a91b0e3ef321cd325a6a8bff4cc552b190e6dcbcf916b29b87bc4"
+      },
+      {
+        "path": "raw/lox-tests-rc.log",
+        "bytes": 3830,
+        "sha256": "6597df9b10f0348f3f6588d35ca810c126b13e1c6dc5c0481f269d6e0bca230e"
+      },
+      {
+        "path": "raw/native-heap.log",
+        "bytes": 2092,
+        "sha256": "9e39a67f1d6552bf683d1cbbd7a6515d77191abd610bb27304103b0148e20533"
+      },
+      {
+        "path": "raw/rc-fuzz-100.log",
+        "bytes": 4985,
+        "sha256": "a8f6288c74896c2e4b1af6ad19d31607b1065f2f0538c4cefa9c6f6083758457"
+      },
+      {
+        "path": "raw/receipt.json",
+        "bytes": 26310,
+        "sha256": "ecc371a911bd4ecb7dbf589a945deadafcf311fe8bae9beb139a29e3d3a8c10e"
+      },
+      {
+        "path": "raw/run.py",
+        "bytes": 4164,
+        "sha256": "07ebedc1611de4f8083a69c504336f671407730183a69c935629055272cb9da1"
+      },
+      {
+        "path": "raw/supervisor.log",
+        "bytes": 19784,
+        "sha256": "a777726f496ab398e367a7cdc8636472603383b7d7747d995ed823bc3feaab50"
+      },
+      {
+        "path": "source/experiments/rc-fuzz/gen.py",
+        "bytes": 14564,
+        "sha256": "df15cdf966aba20dacf8b9aa2f3f86d57a4174fdba00daba43cf71fa02b9ad1b"
+      },
+      {
+        "path": "source/experiments/rc-fuzz/gen2.py",
+        "bytes": 18762,
+        "sha256": "bf2a9f58cb06a997ebea80bc18388faa57a9d3c674e86c60f4509b376e3a29b0"
+      },
+      {
+        "path": "source/experiments/rc-fuzz/run.py",
+        "bytes": 8022,
+        "sha256": "d70a55a80da4862ce31d392b7d27cee5474506ffd31f613a92a33322b7e9ba80"
+      }
+    ],
+    "verified": true
+  },
+  "integration_27_executed": false,
+  "performance_matrix_executed": false
+}

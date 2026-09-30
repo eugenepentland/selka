@@ -4,8 +4,9 @@ Source checkpoint: `e88fcf3c98d6f0e0090e0719472e1081fb81f119`, following the
 initial native trig implementation `0289edb6`. The four standard broad
 compiler targets now pass on this source, and the committed application pin
 is installed. The focused and broad receipts below retain their separate
-provenance. Additional common-lane checks are collected separately; this
-report does not claim the full 27-step integration or performance matrix.
+provenance. The requested remaining common-lane checks also pass, with the
+two previously recorded GC-stress-only fuzz findings retained. This report
+does not claim the full 27-step integration or performance matrix.
 
 Importing `math`, even without calling trig, exposed a module-interface
 failure. The new one-operation `sin` and `cos` wrappers were eligible for
@@ -155,8 +156,8 @@ The original rejected/focused archive above remains unchanged.
 
 The four broad targets do not invoke the opt-in 100-seed fuzz target, Lox
 project build/tests/driver under default and GC, or full release/stats guest
-sweeps. Those common-lane requirements are being recorded separately rather
-than inferred from the four-target success. The existing default and
+sweeps. The additive common-lane receipt below records those requirements
+separately rather than inferring them from the four-target success. The existing default and
 GC-stress sweeps were fresh despite lacking the explicit `--force` flag.
 
 A read-only three-argument `git merge-tree` preview compares this source with
@@ -166,3 +167,66 @@ combine without conflict markers. The branches have diverged, so landing is
 not a fast-forward. The preview changes no branch, index, or worktree and
 does not qualify the combined source; the integrator owns that decision and
 its required verification.
+
+The remaining requested common-lane checks completed on the same frozen
+source and committed Debug pin. All ten recorded process statuses are zero:
+
+| Check | Result | Elapsed |
+| --- | --- | --- |
+| Explicit native-heap target | 10/10 steps; heap/COW/arena executables cached success, Guardian 88 diff-scoped | 292.884 s, including 290 s waiting for admission |
+| Lox default project build / full suite / driver | Build success; 65 fresh tests across ten programs; 13 fresh driver cases | 54.483 / 61.192 / 30.287 s |
+| Lox GC project build / full suite / driver | Build success; 65 fresh tests across ten programs; 13 fresh driver cases | 7.739 / 10.395 / 6.469 s |
+| Full release guest sweep | 1,490 fresh passes across 228 programs | 729.305 s |
+| Full stats guest sweep | 1,490 fresh passes across 228 programs | 244.252 s |
+| 100-seed RC fuzz | 21/21 build steps; 98 ok, zero invalid, two GC-stress-only findings, zero RC divergences | 815.779 s |
+
+All guest and Lox results have zero cached, failed, or skipped cases; the
+full suites also report zero dropped tests. The Lox port is an owned copy
+of the approved setup inputs: 37 files, 241,062 bytes, copied without caches.
+Both driver runs use the actual `driver_cases.json` and 100,000,000-step
+limit. Release and stats sweeps use `--force --jobs 4`; fuzz runs seeds
+1–100 with two workers, both generators, the report-only GC-stress lane,
+and its default every-eight-seeds LLVM-release comparisons. The Zig fuzz
+target's explicit compiler override binds the same committed application
+pin; its summary confirms that path. All 100 stats comparisons balance and
+all RC comparisons match the ordinary GC baseline.
+
+The two collector findings exactly match the earlier Phase B final receipt,
+including generated-source hashes and reported symptoms: seed 19 differs
+in stdout under GC stress; seed 87 exits 139 instead of zero and differs
+in stdout. Their source hashes are respectively
+`7b4625131d1cece836792c3ef374848bd33f9c8ed1a7a9bd4e7a1d0881214155`
+and `c1658f510f5c94327f1cc98ec37a1766c7a507737d6b1e24742207e9cfbf9657`.
+They remain open collector findings; no compiler source repair or waiver
+was introduced in this addendum.
+
+Every heavy invocation has a separate absolute build-slot admission,
+absolute temp/cache paths, and recorded CPU affinity
+`0,1,4,5,6,7,8,9,12,13,14,15,16,17,18,19`, excluding reserved CPUs
+`2,3,10,11`. A brief supervisor-only pause allowed the integrator's waiting
+EDA timing job to admit; the current release sweep kept running. Release
+ran 13:30:32–13:42:41 UTC, stats 13:42:41–13:46:46, and fuzz
+13:46:46–14:00:21. Shared package/memory load during that interval is
+available to the EDA measurement report; this addendum makes no hardware
+timing or corpus-performance claim.
+
+This witness was selected before the user requested ReleaseFast for future
+compiler builds. The frozen Debug compiler was retained throughout; guest
+`--release` changes the guest backend rather than that compiler's mode.
+The preference is recorded separately by documentation checkpoint
+`ccff6992`; no replacement compiler or additional mode replay was needed.
+
+[Common-lane receipt](evidence/eda-trig-common-lane-20260930/receipt.json)
+and [common-lane raw archive](evidence/eda-trig-common-lane-20260930/raw.tar.gz)
+retain all ten commands, admission identities, logs/statuses, source/pin
+binding, copied Lox inputs, fuzz drivers and findings, and the comparison
+with the prior collector receipt. All 61 members were verified against
+lengths and SHA256 hashes; payload total is 617,229 bytes. Archive SHA256 is
+`fe3beae023bfcfe78586ebee7c805724ee815aefb1c696e924ea47d635fc7d72`;
+receipt SHA256 is
+`70525af56f9781456f18031f08678004546313a98ce6cf973627bb6fcf4e6055`.
+The earlier focused and broad archives are unchanged. Combining these
+receipts closes the requested standard broad and common-lane compiler
+checks, with cached native-heap coverage and known GC-only findings
+explicitly disclosed. It does not establish a new full 27-step integration,
+performance matrix, or acceptance of a merge with concurrent main.
