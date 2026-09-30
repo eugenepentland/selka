@@ -1,9 +1,9 @@
 {
   "source_tip": "178dad48c1eb76ec4124923589294f0b8ed57bfe",
   "base": "cfee0070",
-  "archive_sha256": "fc955210dd56bd6b5cf4d67f454d2bd0f8e6687f137670300b9e952552ac6046",
-  "archive_bytes": 58597701,
-  "verified_members": 3592,
+  "archive_sha256": "0952167d3914460d280fd6747cf6130dfff5e9fbe087dfac6b6f8e126c5f2789",
+  "archive_bytes": 58619099,
+  "verified_members": 3603,
   "independent_review": {
     "receipt_sha256": "0099070193f204a067afbdb07e7ddb86eba218c206080024af0533dda33320e0",
     "verified_members": 895,
