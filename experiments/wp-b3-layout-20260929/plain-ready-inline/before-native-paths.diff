@@ -1,0 +1,289 @@
+--- control/myl_rc_edge_release
++++ candidate/myl_rc_edge_release
+@@ -9,44 +9,45 @@
+ pop    %rbp
+ ret
+ test   %rdi,%rdi
+-je     <myl_rc_edge_release+0x105>
+-mov    0x1608(%rdi),%rax
++je     <myl_rc_edge_release+0x111>
++cmpq   $0x0,0x1608(%rdi)
++je     <myl_rc_edge_release+0x111>
++test   $0x1,%r9b
++jne    <myl_rc_edge_release+0x111>
++mov    -0x20(%rsi),%rax
+ test   %rax,%rax
+-je     <myl_rc_edge_release+0x105>
+-test   $0x1,%r9b
+-jne    <myl_rc_edge_release+0x105>
+-mov    -0x20(%rsi),%rcx
+-test   %rcx,%rcx
+-je     <myl_rc_edge_release+0x105>
++je     <myl_rc_edge_release+0x111>
+ lea    -0x20(%rsi),%r8
+-dec    %rcx
+-mov    %rcx,(%r8)
++dec    %rax
++mov    %rax,(%r8)
+ jne    <myl_rc_edge_release+0x1c>
+ cmpq   $0x0,-0x18(%rsi)
+ jne    <myl_rc_edge_release+0x1c>
+ or     $0x1,%r9
+ mov    %r9,-0x10(%rsi)
++mov    0x1608(%rdi),%rax
+ cmpl   $0x0,0xd0(%rax)
+-jne    <myl_rc_edge_release+0xb6>
++jne    <myl_rc_edge_release+0xbb>
+ mov    -0x8(%rsi),%rcx
+ cmp    %rcx,0x110(%rax)
+-je     <myl_rc_edge_release+0xcd>
++je     <myl_rc_edge_release+0xd9>
+ mov    0x34(%rcx),%r9d
+ cmp    %r9,0xa0(%rax)
+-jbe    <myl_rc_edge_release+0xe7>
++jbe    <myl_rc_edge_release+0xf3>
+ mov    0x98(%rax),%r10
+ shl    $0x4,%r9
+ cmp    %rcx,(%r10,%r9,1)
+-jne    <myl_rc_edge_release+0xe7>
++jne    <myl_rc_edge_release+0xf3>
+ add    %r9,%r10
+ mov    0x8(%r10),%rax
+ test   %rax,%rax
+-je     <myl_rc_edge_release+0xaf>
++je     <myl_rc_edge_release+0xb4>
+ cmpl   $0x0,0x40(%rax)
+-je     <myl_rc_edge_release+0xc9>
++je     <myl_rc_edge_release+0xd5>
+ mov    0x1608(%rdi),%rax
+-mov    0xc8(%rax),%rcx
+-mov    %rcx,(%r8)
++mov    0xc8(%rax),%rax
++mov    %rax,(%r8)
++mov    0x1608(%rdi),%rax
+ mov    %r8,0xc8(%rax)
+ pop    %rbp
+ ret
+@@ -54,7 +55,7 @@
+ inc    %rdx
+ and    %r9,%rdx
+ cmp    $0x1,%rdx
+-jne    <myl_rc_edge_release+0x105>
++jne    <myl_rc_edge_release+0x111>
+ mov    0x1608(%rdi),%rax
+ mov    0x8(%rax),%rax
+ pop    %rbp
+@@ -64,11 +65,11 @@
+ mov    %rsi,%r10
+ mov    %rcx,%rsi
+ call   <myl_rc_binding_find_slow>
++mov    %r10,%rsi
+ mov    %r9,%rdi
+-mov    %r10,%rsi
+ test   %rax,%rax
+-jne    <myl_rc_edge_release+0xa9>
+-jmp    <myl_rc_edge_release+0xaf>
++jne    <myl_rc_edge_release+0xae>
++jmp    <myl_rc_edge_release+0xb4>
+ call   <myl_rc_invariant_failed>
+ int3
+ int3
+@@ -76,3 +77,7 @@
+ int3
+ int3
+ int3
++int3
++int3
++int3
++int3
+--- control/myl_rc_hold_edge_release
++++ candidate/myl_rc_hold_edge_release
+@@ -9,43 +9,44 @@
+ pop    %rbp
+ ret
+ test   %rdi,%rdi
+-je     <myl_rc_hold_edge_release+0x103>
+-mov    0x1608(%rdi),%rax
++je     <myl_rc_hold_edge_release+0x10f>
++cmpq   $0x0,0x1608(%rdi)
++je     <myl_rc_hold_edge_release+0x10f>
++test   $0x1,%r9b
++jne    <myl_rc_hold_edge_release+0x10f>
++mov    -0x18(%rsi),%rax
+ test   %rax,%rax
+-je     <myl_rc_hold_edge_release+0x103>
+-test   $0x1,%r9b
+-jne    <myl_rc_hold_edge_release+0x103>
+-mov    -0x18(%rsi),%rcx
+-test   %rcx,%rcx
+-je     <myl_rc_hold_edge_release+0x103>
+-dec    %rcx
+-mov    %rcx,-0x18(%rsi)
+-or     -0x20(%rsi),%rcx
++je     <myl_rc_hold_edge_release+0x10f>
++dec    %rax
++mov    %rax,-0x18(%rsi)
++or     -0x20(%rsi),%rax
+ jne    <myl_rc_hold_edge_release+0x1c>
+ lea    -0x20(%rsi),%r8
+ or     $0x1,%r9
+ mov    %r9,-0x10(%rsi)
++mov    0x1608(%rdi),%rax
+ cmpl   $0x0,0xd0(%rax)
+-jne    <myl_rc_hold_edge_release+0xb4>
++jne    <myl_rc_hold_edge_release+0xb9>
+ mov    -0x8(%rsi),%rcx
+ cmp    %rcx,0x110(%rax)
+-je     <myl_rc_hold_edge_release+0xcb>
++je     <myl_rc_hold_edge_release+0xd7>
+ mov    0x34(%rcx),%r9d
+ cmp    %r9,0xa0(%rax)
+-jbe    <myl_rc_hold_edge_release+0xe5>
++jbe    <myl_rc_hold_edge_release+0xf1>
+ mov    0x98(%rax),%r10
+ shl    $0x4,%r9
+ cmp    %rcx,(%r10,%r9,1)
+-jne    <myl_rc_hold_edge_release+0xe5>
++jne    <myl_rc_hold_edge_release+0xf1>
+ add    %r9,%r10
+ mov    0x8(%r10),%rax
+ test   %rax,%rax
+-je     <myl_rc_hold_edge_release+0xad>
++je     <myl_rc_hold_edge_release+0xb2>
+ cmpl   $0x0,0x40(%rax)
+-je     <myl_rc_hold_edge_release+0xc7>
++je     <myl_rc_hold_edge_release+0xd3>
+ mov    0x1608(%rdi),%rax
+-mov    0xc8(%rax),%rcx
+-mov    %rcx,(%r8)
++mov    0xc8(%rax),%rax
++mov    %rax,(%r8)
++mov    0x1608(%rdi),%rax
+ mov    %r8,0xc8(%rax)
+ pop    %rbp
+ ret
+@@ -53,7 +54,7 @@
+ inc    %rdx
+ and    %r9,%rdx
+ cmp    $0x1,%rdx
+-jne    <myl_rc_hold_edge_release+0x103>
++jne    <myl_rc_hold_edge_release+0x10f>
+ mov    0x1608(%rdi),%rax
+ mov    0x8(%rax),%rax
+ pop    %rbp
+@@ -63,9 +64,9 @@
+ mov    %rsi,%r10
+ mov    %rcx,%rsi
+ call   <myl_rc_binding_find_slow>
++mov    %r10,%rsi
+ mov    %r9,%rdi
+-mov    %r10,%rsi
+ test   %rax,%rax
+-jne    <myl_rc_hold_edge_release+0xa7>
+-jmp    <myl_rc_hold_edge_release+0xad>
++jne    <myl_rc_hold_edge_release+0xac>
++jmp    <myl_rc_hold_edge_release+0xb2>
+ call   <myl_rc_invariant_failed>
+--- control/myl_rc_storage_retire
++++ candidate/myl_rc_storage_retire
+@@ -1,10 +1,10 @@
+ push   %rbp
+ mov    %rsp,%rbp
+ cmpq   $0x0,-0x10(%rsi)
+-js     <myl_rc_storage_retire+0x6a>
++js     <myl_rc_storage_retire+0x6d>
+ mov    0x40(%rdi),%rcx
+ test   %rcx,%rcx
+-je     <myl_rc_storage_retire+0xe6>
++je     <myl_rc_storage_retire+0xe9>
+ lea    -0x20(%rsi),%rax
+ mov    0x50(%rdi),%rdx
+ cmp    $0xffffffffffffffff,%rdx
+@@ -17,8 +17,9 @@
+ mov    %rcx,0x40(%rdi)
+ movq   $0x3,-0x10(%rsi)
+ mov    (%rdx),%rcx
+-mov    0x1610(%rdi,%rcx,8),%r8
+-mov    %r8,-0x20(%rsi)
++mov    0x1610(%rdi,%rcx,8),%rcx
++mov    %rcx,-0x20(%rsi)
++mov    (%rdx),%rcx
+ mov    %rax,0x1610(%rdi,%rcx,8)
+ mov    0x8(%rdx),%rax
+ add    %rax,0x1710(%rdi)
+@@ -26,23 +27,23 @@
+ ret
+ mov    0x50(%rdi),%rax
+ cmp    $0xffffffffffffffff,%rax
+-je     <myl_rc_storage_retire+0x7b>
++je     <myl_rc_storage_retire+0x7e>
+ inc    %rax
+ mov    %rax,0x50(%rdi)
+ decq   0x40(%rdi)
+ mov    -0x50(%rsi),%rax
+ test   %rax,%rax
+-je     <myl_rc_storage_retire+0xc4>
++je     <myl_rc_storage_retire+0xc7>
+ mov    -0x48(%rsi),%rcx
+ mov    %rcx,0x8(%rax)
+ test   %rcx,%rcx
+-je     <myl_rc_storage_retire+0x98>
++je     <myl_rc_storage_retire+0x9b>
+ mov    %rax,(%rcx)
+ mov    -0x40(%rsi),%rax
+ sub    %rax,0x18(%rdi)
+ mov    0x1608(%rdi),%rcx
+ test   %rcx,%rcx
+-je     <myl_rc_storage_retire+0xe6>
++je     <myl_rc_storage_retire+0xe9>
+ add    $0xffffffffffffffb0,%rsi
+ mov    0x20(%rcx),%rcx
+ sub    %rax,0x208(%rcx)
+@@ -51,16 +52,13 @@
+ jmp    <large_release>
+ mov    0x1608(%rdi),%rdx
+ test   %rdx,%rdx
+-je     <myl_rc_storage_retire+0xe6>
++je     <myl_rc_storage_retire+0xe9>
+ mov    -0x48(%rsi),%rcx
+ mov    0x20(%rdx),%rdx
+ mov    %rcx,0x200(%rdx)
+ test   %rcx,%rcx
+-jne    <myl_rc_storage_retire+0x95>
+-jmp    <myl_rc_storage_retire+0x98>
++jne    <myl_rc_storage_retire+0x98>
++jmp    <myl_rc_storage_retire+0x9b>
+ call   <myl_rc_invariant_failed>
+ int3
+ int3
+-int3
+-int3
+-int3
+--- control/drain_one
++++ candidate/drain_one
+@@ -147,7 +147,7 @@
+ setns  %cl
+ mov    0x1608(%rbx),%rax
+ mov    0x8(%rax),%rax
+-cmp    $0x101a1f0,%rax
++cmp    $0x101c400,%rax
+ sete   %dl
+ and    %cl,%dl
+ cmp    $0x1,%dl
+@@ -166,13 +166,13 @@
+ mov    %rax,0x40(%rbx)
+ movq   $0x3,0x10(%r14)
+ mov    (%rcx),%rax
+-mov    0x1610(%rbx,%rax,8),%rdx
+-mov    %rdx,(%r14)
++mov    0x1610(%rbx,%rax,8),%rax
++mov    %rax,(%r14)
++mov    (%rcx),%rax
+ mov    %r14,0x1610(%rbx,%rax,8)
+ mov    0x8(%rcx),%rax
+ add    %rax,0x1710(%rbx)
+ jmp    <drain_one+0x36b>
+-nopl   (%rax)
+ test   $0x1,%r9b
+ jne    <drain_one+0x3a3>
+ blsr   %edx,%edx
