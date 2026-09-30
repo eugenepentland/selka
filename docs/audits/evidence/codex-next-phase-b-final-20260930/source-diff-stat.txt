@@ -1,0 +1,1301 @@
+ CLAUDE.md                                          |      6 +-
+ SPEC.md                                            |    130 +-
+ build.zig                                          |    135 +-
+ build_test_inputs.zig                              |     49 +-
+ docs/README.md                                     |      2 +-
+ .../codex-next-integration-closeout-2026-09-29.md  |     15 +-
+ .../codex-next-modules-closeout-2026-09-30.md      |    185 +
+ .../codex-next-runtime-checkpoint-2026-09-29.md    |    618 +
+ docs/audits/devspeed-module-test-2026-09-24.md     |    420 +
+ .../evidence/codex-next-modules-20260930/README.md |     45 +
+ .../check-state-matrix-fixed.json                  |    199 +
+ .../corpus-byte-key-noop.json                      |    818 +
+ .../embed-invalidation-matrix-573ce9.json          |    565 +
+ .../codex-next-modules-20260930/identity.json      |     36 +
+ .../lox-a3fb19-verified.json                       |    441 +
+ .../codex-next-modules-20260930/raw-manifest.json  |   5563 +
+ .../raw-receipts.tar.gz                            |    Bin 0 -> 967663 bytes
+ .../rc-invalidation-matrix-573ce9.json             |    497 +
+ .../scale-interleaved-a3fb19.json                  |    655 +
+ .../scale-interleaved-final.json                   |    655 +
+ .../callgrind-receipt.json                         |     49 +
+ .../allocation-churn-attribution/manifest.json     |    400 +
+ .../profile-receipt.json                           |    546 +
+ .../allocation-churn-attribution/receipts.tar.gz   |    Bin 0 -> 2660369 bytes
+ .../allocation-churn-attribution/report.md         |     46 +
+ .../contracts-with-proof.log.gz                    |    Bin 0 -> 918 bytes
+ .../artifact-admission-review/contracts.log.gz     |    Bin 0 -> 809 bytes
+ .../corrected-contracts-with-qualifier-repro.zig   |    162 +
+ .../artifact-admission-review/findings.md          |    105 +
+ .../fixes-96b-4fce-corrected.log.gz                |    Bin 0 -> 824 bytes
+ .../fixes-978-final/fixes-978-final.log.gz         |    Bin 0 -> 359 bytes
+ .../fixes-978-final/module_physical.zig            |    133 +
+ .../fixes-978-final/module_physical_inputs.zig     |    198 +
+ .../fixes-978-final/receipt.json                   |     43 +
+ .../fixes-978-final/report.md                      |     22 +
+ .../fixes-978-final/review_runtime_contracts.zig   |    183 +
+ .../explicit-effects-and-standins-fixed.log.gz     |    Bin 0 -> 1734 bytes
+ .../explicit-effects-repro-9789436.log.gz          |    Bin 0 -> 1247 bytes
+ .../fixes-a3-effects-final.log.gz                  |    Bin 0 -> 477 bytes
+ .../module_physical_inputs.zig                     |    197 +
+ .../fixes-a3-effects-final/receipt.json            |     31 +
+ .../fixes-a3-effects-final/report.md               |     11 +
+ .../review_runtime_contracts.zig                   |    281 +
+ .../list-blob-authority-focused.log.gz             |    Bin 0 -> 1146 bytes
+ .../review_runtime_contracts.zig                   |     81 +
+ .../artifact-admission-review/verification.json    |     39 +
+ .../equality-allocations.json                      |     14 +
+ .../equality-performance.json                      |   3444 +
+ .../fannkuch-attribution/callgrind-receipt.json    |     73 +
+ .../fannkuch-attribution/manifest.json             |    247 +
+ .../fannkuch-attribution/receipt.json              |    321 +
+ .../fannkuch-attribution/receipts.tar.gz           |    Bin 0 -> 102592093 bytes
+ .../fannkuch-attribution/report.md                 |     34 +
+ .../fannkuch-attribution/root-existing-rows.json   |    200 +
+ .../final-corrections-combined/comparison.json     |   3591 +
+ .../final-corrections-combined/corpus-build.log    |     59 +
+ .../final-corrections-combined/identity.json       |      6 +
+ .../final-corrections-combined/install.log         |     41 +
+ .../final-corrections-combined/measure-dev.log     |     48 +
+ .../final-corrections-combined/measure-full.log    |     48 +
+ .../final-corrections-combined/measure-smoke.log   |     48 +
+ .../measurement-receipt.json                       |     28 +
+ .../pinned-control-identity.json                   |     67 +
+ .../pinned-control-measure-dev.log                 |     48 +
+ .../pinned-control-measure-full.log                |     48 +
+ .../pinned-control-measure-smoke.log               |     48 +
+ .../pinned-control-receipt.json                    |     81 +
+ .../pinned-control-results-dev.json                |    630 +
+ .../pinned-control-results-full.json               |    630 +
+ .../pinned-control-results-smoke.json              |    630 +
+ .../pinned-control-runner.sh                       |     29 +
+ .../final-corrections-combined/receipt.json        |    130 +
+ .../final-corrections-combined/results-dev.json    |    630 +
+ .../final-corrections-combined/results-full.json   |    630 +
+ .../final-corrections-combined/results-smoke.json  |    630 +
+ .../final-corrections-combined/runner.sh           |     27 +
+ .../candidate-bytes-1000-llvm-build.err.gz         |    Bin 0 -> 251 bytes
+ .../candidate-bytes-250-llvm-build.err.gz          |    Bin 0 -> 249 bytes
+ .../candidate-bytes-8-llvm-build.err.gz            |    Bin 0 -> 251 bytes
+ .../candidate-int-1000-llvm-build.err.gz           |    Bin 0 -> 251 bytes
+ .../candidate-int-250-llvm-build.err.gz            |    Bin 0 -> 249 bytes
+ .../list-images/candidate-int-8-llvm-build.err.gz  |    Bin 0 -> 253 bytes
+ .../candidate-str-1000-llvm-build.err.gz           |    Bin 0 -> 251 bytes
+ .../candidate-str-250-llvm-build.err.gz            |    Bin 0 -> 251 bytes
+ .../list-images/candidate-str-8-llvm-build.err.gz  |    Bin 0 -> 251 bytes
+ .../list-images/combined-264e-scale.json           |   1263 +
+ .../list-images/list-image-guest-summary.json      |     37 +
+ .../list-image-module-admission-gc.json            |     39 +
+ .../list-image-module-admission-matrix.log.gz      |    Bin 0 -> 171 bytes
+ .../list-image-module-admission-matrix.py          |     43 +
+ .../list-image-module-admission-rc.json            |     39 +
+ .../list-image-module-admission-sites.json         |     39 +
+ .../list-image-module-admission-stats.json         |     39 +
+ .../list-image-module-admission-summary.json       |    127 +
+ .../list-images/list-image-module-summary.json     |     38 +
+ .../list-images/list-image-project-main.my         |     18 +
+ .../list-images/list-image-projected-tests.my      |    111 +
+ ...st-immortal-final-native-refusal-focused.log.gz |    Bin 0 -> 1076 bytes
+ .../list-immortal-module-projected-gc-success.json |     39 +
+ .../list-immortal-module-projected-rc-success.json |     39 +
+ ...st-immortal-module-projected-sites-success.json |     39 +
+ ...st-immortal-module-projected-stats-success.json |     39 +
+ .../list-images/list-immortal-native-final.log.gz  |    Bin 0 -> 1835 bytes
+ .../list-indexed-combined-focused.log.gz           |    Bin 0 -> 1091 bytes
+ .../list-images/pre-emitter-scale.json             |   1855 +
+ .../list-images/scale.py                           |     90 +
+ .../list-images/verification.json                  |     76 +
+ .../llvm-constant-review/baseline-receipt.json     |    504 +
+ .../llvm-constant-review/candidate-receipt.json    |    504 +
+ .../llvm-constant-review/manifest.json             |   3027 +
+ .../llvm-constant-review/receipts.tar.gz           |    Bin 0 -> 6645589 bytes
+ .../llvm-constant-review/report.txt                |     13 +
+ .../llvm-constant-review/review-provenance.json    |     59 +
+ .../lox-qbe-attribution/inputs-selection.json      |      4 +
+ .../lox-qbe-attribution/inputs.json                |    459 +
+ .../lox-qbe-attribution/manifest.json              |    185 +
+ .../lox-qbe-attribution/profile-receipt.json       |    104 +
+ .../lox-qbe-attribution/receipts.tar.gz            |    Bin 0 -> 10114570 bytes
+ .../lox-qbe-attribution/report.md                  |     37 +
+ .../module-state-review/frozen-573-receipt.json    |     15 +
+ .../module-state-review/module_build.zig           |   1462 +
+ .../module-state-review/module_check_oracle.py     |    148 +
+ .../module-state-review/receipt.json               |     20 +
+ .../module-state-review/report.md                  |     15 +
+ .../module-state-review/verification.json          |     12 +
+ .../comparison.json                                |   4082 +
+ .../corpus-build.log                               |     59 +
+ .../failed-rows.txt                                |     46 +
+ .../identity.json                                  |      5 +
+ .../install.log                                    |     25 +
+ .../manifest.json                                  |     18 +
+ .../measure-dev.log                                |     48 +
+ .../measure-full.log                               |     48 +
+ .../measure-smoke.log                              |     48 +
+ .../measurement-receipt.json                       |     27 +
+ .../results-dev.json                               |    630 +
+ .../results-full.json                              |    630 +
+ .../results-smoke.json                             |    630 +
+ .../plain-ready-review/manifest.json               |     48 +
+ .../plain-ready-review/receipt.json                |    143 +
+ .../plain-ready-review/receipts.tar.gz             |    Bin 0 -> 1236173 bytes
+ .../plain-ready-review/report.md                   |     60 +
+ .../pre-final-zig-failures/receipt.json            |     32 +
+ .../pre-final-zig-failures/scope.json              |     10 +
+ .../pre-final-zig-failures/source.txt              |      1 +
+ .../pre-final-zig-failures/test.log                |   5072 +
+ .../pre-final-zig-failures/test.status             |      1 +
+ .../pre-ordering-lox/measure.log.gz                |    Bin 0 -> 781 bytes
+ .../pre-ordering-lox/results-b3-a5-lox-dev.json    |    210 +
+ .../pre-ordering-lox/results-b3-a5-lox-smoke.json  |    210 +
+ .../results-b3-linked-91bb-dev.json                |    210 +
+ .../results-b3-linked-91bb-smoke.json              |    210 +
+ .../pre-ordering-lox/verification.json             |    618 +
+ .../preliminary-abi5-module-review/manifest.json   |    226 +
+ .../preliminary-abi5-module-review/receipts.tar.gz |    Bin 0 -> 50243 bytes
+ .../preliminary-abi5-module-review/report.md       |     24 +
+ .../preliminary-abi5-module-review/summary.json    |     95 +
+ .../comparison.json                                |   4134 +
+ .../corpus-build.log                               |     59 +
+ .../failed-rows.txt                                |     49 +
+ .../identity.json                                  |      5 +
+ .../install.log                                    |     25 +
+ .../manifest.json                                  |     18 +
+ .../measure-dev.log                                |     48 +
+ .../measure-full.log                               |     48 +
+ .../measure-smoke.log                              |     48 +
+ .../measurement-receipt.json                       |     27 +
+ .../results-dev.json                               |    630 +
+ .../results-full.json                              |    630 +
+ .../results-smoke.json                             |    630 +
+ .../publication-review/manifest.json               |     96 +
+ .../publication-review/receipt.json                |    155 +
+ .../publication-review/receipts.tar.gz             |    Bin 0 -> 1198397 bytes
+ .../publication-review/report.md                   |     80 +
+ .../raytrace-text-attribution/archive.json         |      8 +
+ .../raytrace-text-attribution/manifest.json        |    714 +
+ .../raytrace-text-attribution/proof-summary.json   |     98 +
+ .../raytrace-text-attribution/receipt.json         |   1035 +
+ .../raytrace-text-attribution/receipts.tar.gz      |    Bin 0 -> 4042535 bytes
+ .../raytrace-text-attribution/report.md            |    140 +
+ .../accepted-gc-verification.json                  |     67 +
+ .../approved-a5-results-dev.json                   |    630 +
+ .../approved-a5-results-full.json                  |    630 +
+ .../approved-a5-results-smoke.json                 |    630 +
+ .../registered-release-combined/comparator.py      |     73 +
+ .../registered-release-combined/comparison.json    |   3577 +
+ .../registered-release-combined/corpus-build.log   |     59 +
+ .../registered-release-combined/identity.json      |      6 +
+ .../registered-release-combined/install.log        |     41 +
+ .../registered-release-combined/measure-dev.log    |     48 +
+ .../registered-release-combined/measure-full.log   |     48 +
+ .../registered-release-combined/measure-smoke.log  |     48 +
+ .../measurement-receipt.json                       |     28 +
+ .../pin-fixture-root-verification.json             |      9 +
+ .../pinned-control-identity.json                   |     67 +
+ .../pinned-control-measure-dev.log                 |     48 +
+ .../pinned-control-measure-full.log                |     48 +
+ .../pinned-control-measure-smoke.log               |     48 +
+ .../pinned-control-receipt.json                    |     81 +
+ .../pinned-control-results-dev.json                |    630 +
+ .../pinned-control-results-full.json               |    630 +
+ .../pinned-control-results-smoke.json              |    630 +
+ .../pinned-control-runner.sh                       |     29 +
+ .../registered-release-combined/receipt.json       |    183 +
+ .../registered-release-combined/results-dev.json   |    630 +
+ .../registered-release-combined/results-full.json  |    630 +
+ .../registered-release-combined/results-smoke.json |    630 +
+ .../registered-release-combined/runner.log         |    213 +
+ .../registered-release-combined/runner.sh          |     27 +
+ .../release-count-review/manifest.json             |    247 +
+ .../release-count-review/raw-review.tar.gz         |    Bin 0 -> 1029155 bytes
+ .../release-count-review/receipt.json              |    114 +
+ .../release-count-review/report.md                 |     74 +
+ .../corrected-790/assembly.log.gz                  |    Bin 0 -> 20 bytes
+ .../corrected-790/branch-types.json                |    132 +
+ .../scope-width-review/corrected-790/bridge.log.gz |    Bin 0 -> 20 bytes
+ .../scope-width-review/corrected-790/emit.log.gz   |    Bin 0 -> 126 bytes
+ .../corrected-790/frozen-after.json                |    799 +
+ .../corrected-790/frozen-before.json               |    799 +
+ .../scope-width-review/corrected-790/link.log.gz   |    Bin 0 -> 20 bytes
+ .../scope-width-review/corrected-790/qbe.log.gz    |    Bin 0 -> 20 bytes
+ .../corrected-790/qbe_rc_scope_inline.zig          |    249 +
+ .../scope-width-review/corrected-790/receipt.json  |    116 +
+ .../scope-width-review/corrected-790/report.md     |     11 +
+ .../corrected-790/review_scope_emit_790.zig        |     40 +
+ .../scope-width-review/corrected-790/run.log.gz    |    Bin 0 -> 461 bytes
+ .../corrected-790/runtime_rc_renamed.o.gz          |    Bin 0 -> 28002 bytes
+ .../scope-width-review/corrected-790/scope.o.gz    |    Bin 0 -> 1579 bytes
+ .../scope-width-review/corrected-790/scope.s       |    303 +
+ .../scope-width-review/corrected-790/scope.ssa     |    324 +
+ .../scope-width-review/corrected-790/scope_probe.c |    165 +
+ .../corrected-790/scope_probe.gz                   |    Bin 0 -> 643349 bytes
+ .../corrected-790/truth/assembly.log.gz            |    Bin 0 -> 20 bytes
+ .../corrected-790/truth/emit.log.gz                |    Bin 0 -> 132 bytes
+ .../corrected-790/truth/link.log.gz                |    Bin 0 -> 20 bytes
+ .../corrected-790/truth/pin-emission.txt           |    134 +
+ .../corrected-790/truth/qbe.log.gz                 |    Bin 0 -> 20 bytes
+ .../truth/review_scope_truth_emit_790.zig          |     49 +
+ .../corrected-790/truth/run.log.gz                 |    Bin 0 -> 139 bytes
+ .../corrected-790/truth/truth.o.gz                 |    Bin 0 -> 588 bytes
+ .../scope-width-review/corrected-790/truth/truth.s |     18 +
+ .../corrected-790/truth/truth.ssa                  |     10 +
+ .../corrected-790/truth/truth_probe.c              |     17 +
+ .../corrected-790/truth/truth_probe.gz             |    Bin 0 -> 2841 bytes
+ .../scope-1390/assembly-build.log.gz               |    Bin 0 -> 20 bytes
+ .../scope-width-review/scope-1390/design.md        |     11 +
+ .../scope-width-review/scope-1390/emit.log.gz      |    Bin 0 -> 325 bytes
+ .../scope-1390/frozen-before.json                  |    799 +
+ .../scope-1390/link-final-2.log.gz                 |    Bin 0 -> 20 bytes
+ .../scope-1390/link-final-3.log.gz                 |    Bin 0 -> 20 bytes
+ .../scope-1390/link-final.log.gz                   |    Bin 0 -> 130 bytes
+ .../scope-width-review/scope-1390/link.log.gz      |    Bin 0 -> 58 bytes
+ .../scope-width-review/scope-1390/qbe.log.gz       |    Bin 0 -> 20 bytes
+ .../scope-width-review/scope-1390/receipt.json     |     54 +
+ .../scope-width-review/scope-1390/report.md        |     23 +
+ .../scope-1390/review_scope_emit.zig               |     40 +
+ .../scope-width-review/scope-1390/run-final.log.gz |    Bin 0 -> 472 bytes
+ .../scope-width-review/scope-1390/run.log.gz       |    Bin 0 -> 170 bytes
+ .../scope-1390/runtime-bridge-build.log.gz         |    Bin 0 -> 20 bytes
+ .../scope-1390/runtime_rc_renamed.o.gz             |    Bin 0 -> 28002 bytes
+ .../scope-width-review/scope-1390/scope.o.gz       |    Bin 0 -> 1552 bytes
+ .../scope-width-review/scope-1390/scope.s          |    295 +
+ .../scope-width-review/scope-1390/scope.ssa        |    313 +
+ .../scope-width-review/scope-1390/scope_probe.c    |    165 +
+ .../scope-width-review/scope-1390/scope_probe.gz   |    Bin 0 -> 643268 bytes
+ .../truth-1390/assembly-1390.log.gz                |    Bin 0 -> 20 bytes
+ .../scope-width-review/truth-1390/emit-1390.log.gz |    Bin 0 -> 128 bytes
+ .../scope-width-review/truth-1390/link-1390.log.gz |    Bin 0 -> 20 bytes
+ .../scope-width-review/truth-1390/pin-emission.txt |    129 +
+ .../scope-width-review/truth-1390/qbe-1390.log.gz  |    Bin 0 -> 20 bytes
+ .../truth-1390/qbe_rc_scope_inline.zig             |    242 +
+ .../scope-width-review/truth-1390/receipt.json     |     51 +
+ .../truth-1390/review_scope_truth_emit.zig         |     49 +
+ .../scope-width-review/truth-1390/run-1390.log.gz  |    Bin 0 -> 145 bytes
+ .../scope-width-review/truth-1390/truth.s          |     18 +
+ .../scope-width-review/truth-1390/truth.ssa        |      9 +
+ .../scope-width-review/truth-1390/truth_probe.c    |     17 +
+ .../scope-width-review/truth-1390/truth_probe.gz   |    Bin 0 -> 2823 bytes
+ .../scope-width-review/verification.json           |    409 +
+ .../comparison.json                                |   3782 +
+ .../corpus-build.log                               |     59 +
+ .../failed-rows.txt                                |     25 +
+ .../identity.json                                  |      5 +
+ .../install.log                                    |     41 +
+ .../manifest.json                                  |     67 +
+ .../measure-dev.log                                |     48 +
+ .../measure-full.log                               |     48 +
+ .../measure-smoke.log                              |     48 +
+ .../measurement-receipt.json                       |     27 +
+ .../results-phase-b-targeted-combined-dev.json     |    630 +
+ .../results-phase-b-targeted-combined-full.json    |    630 +
+ .../results-phase-b-targeted-combined-smoke.json   |    630 +
+ .../text-operations-attribution/raw.tar.gz         |    Bin 0 -> 1955000 bytes
+ .../text-operations-attribution/receipt.json       |     11 +
+ .../text-operations-attribution/report.md          |    125 +
+ .../zero-combined-rejected-performance/a5-dev.json |    630 +
+ .../a5-full.json                                   |    630 +
+ .../a5-smoke.json                                  |    630 +
+ .../accepted-gc-verification.json                  |     67 +
+ .../comparison.json                                |   3456 +
+ .../corpus-build.log                               |     59 +
+ .../failed-rows.txt                                |     64 +
+ .../fresh-a5-dev.json                              |    630 +
+ .../fresh-a5-full.json                             |    630 +
+ .../fresh-a5-identity.json                         |     65 +
+ .../fresh-a5-receipt.json                          |     68 +
+ .../fresh-a5-smoke.json                            |    630 +
+ .../identity.json                                  |      5 +
+ .../zero-combined-rejected-performance/install.log |     25 +
+ .../manifest.json                                  |    157 +
+ .../measure-dev.log                                |     48 +
+ .../measure-full.log                               |     48 +
+ .../measure-smoke.log                              |     48 +
+ .../measurement-receipt.json                       |     21 +
+ .../phase-b-zero-composition-guardian.log          |      6 +
+ .../phase-b-zero-inputs-before.log                 |     77 +
+ .../phase-b-zero-inputs-final.log                  |     76 +
+ .../qbe-build.log                                  |     97 +
+ .../results-dev.json                               |    630 +
+ .../results-full.json                              |    630 +
+ .../results-smoke.json                             |    630 +
+ .../wp-b3-cold-fail-rejected-20260930/README.md    |      7 +
+ .../docs-guardian.stderr                           |      7 +
+ .../wp-b3-cold-fail-rejected-20260930/raw.tar.gz   |    Bin 0 -> 4156129 bytes
+ .../wp-b3-cold-fail-rejected-20260930/receipt.json |     11 +
+ .../wp-b3-cold-hint-20260930/docs-guardian.stderr  |      6 +
+ .../evidence/wp-b3-cold-hint-20260930/raw.tar.gz   |    Bin 0 -> 4324120 bytes
+ .../evidence/wp-b3-cold-hint-20260930/receipt.json |     44 +
+ .../root-independent-guardian.stderr               |      6 +
+ .../root-independent-receipt.json                  |     29 +
+ .../root-independent.tar.gz                        |    Bin 0 -> 2328916 bytes
+ .../followup-manifest.json                         |    218 +
+ .../followup-receipt.json                          |     11 +
+ .../followup.tar.gz                                |    Bin 0 -> 3121376 bytes
+ .../growth-receipt.json                            |     91 +
+ .../guardian-full.log                              |      7 +
+ .../guardian-receipt.json                          |     16 +
+ .../manifest.json                                  |    602 +
+ .../package-receipt.json                           |     11 +
+ .../performance-review-receipt.json                |    140 +
+ .../raw.tar.gz                                     |    Bin 0 -> 3798449 bytes
+ .../summary-receipt.json                           |    107 +
+ .../zero-branch-independent-20260930/README.md     |     23 +
+ .../assembly-summary.json                          |    151 +
+ .../zero-branch-independent-20260930/manifest.json |    423 +
+ .../raw-review.tar.gz                              |    Bin 0 -> 3021052 bytes
+ .../zero-branch-independent-20260930/receipt.json  |    130 +
+ .../zero-branch-independent-20260930/report.md     |     49 +
+ .../tail-regression-receipt.json                   |    143 +
+ .../fixed-receipt.json                             |    303 +
+ .../manifest.json                                  |    309 +
+ .../raw-review.tar.gz                              |    Bin 0 -> 2670928 bytes
+ .../report.md                                      |     51 +
+ docs/audits/next-work-plan-2026-09-29.md           |     98 +-
+ docs/audits/python-text-closeout-2026-09-29.md     |    162 +
+ .../python-text-closeout-gate-2026-09-29.json      |    240 +
+ ...ython-text-closeout-performance-2026-09-29.json |   2043 +
+ docs/audits/rc-future-performance-2026-09-28.md    |     61 +-
+ docs/audits/text-runtime-closeout-2026-09-29.md    |    162 +
+ .../text-runtime-closeout-gate-2026-09-29.json     |    549 +
+ ...xt-runtime-closeout-performance-2026-09-29.json |   5130 +
+ docs/audits/wp-b3-cold-fail-2026-09-30.md          |     35 +
+ .../wp-b3-final-zig-gate-repair-2026-09-30.md      |     42 +
+ docs/audits/wp-b3-layout-2026-09-29.md             |    553 +
+ docs/audits/wp-b3-llvm-constant-2026-09-30.md      |     72 +
+ docs/audits/wp-b3-llvm-induction-2026-09-30.md     |    135 +
+ docs/audits/wp-b3-nested-readiness-2026-09-30.md   |     11 +
+ docs/audits/wp-b3-qbe-phi-2026-09-30.md            |    114 +
+ docs/audits/wp-b3-qbe-sub-address-2026-09-30.md    |    123 +
+ docs/audits/wp-b3-registered-release-2026-09-30.md |     93 +
+ ...wp-b3-registered-release-combined-2026-09-30.md |     71 +
+ ...b3-registered-release-independent-2026-09-30.md |    115 +
+ docs/audits/wp-b3-text-view-inline-2026-09-30.md   |     50 +
+ docs/audits/wp-b4-tooling-2026-09-29.md            |    268 +
+ docs/bytes.md                                      |     18 +-
+ docs/lambdas.md                                    |      4 +-
+ docs/managed-memory.md                             |      6 +-
+ docs/python-syntax.md                              |      6 +-
+ docs/python-text-surface.md                        |     76 +
+ docs/standard-library.md                           |      2 +-
+ docs/text.md                                       |     25 +-
+ docs/tooling/agent-context.md                      |     15 +-
+ docs/tooling/caches.md                             |      5 +
+ docs/tooling/guest-tests.md                        |     77 +
+ docs/tooling/module-interfaces.md                  |    339 +
+ docs/tooling/native-build.md                       |      6 +-
+ docs/tooling/ownership.md                          |      6 +-
+ docs/tooling/runtime-budgets.md                    |     22 +-
+ experiments/module-compile-20260924/measure.py     |    142 +
+ experiments/module-interface-20260924/measure.py   |    125 +
+ experiments/module-nowait-20260925/measure.py      |    160 +
+ .../module-nowait-20260925/results/main-t200k.json |    167 +
+ .../module-nowait-20260925/results/main-t50k.json  |    167 +
+ .../results/nice19-main-t200k.json                 |    167 +
+ .../results/nice19-main-t50k.json                  |    167 +
+ .../results/nice19-t200k.json                      |    167 +
+ .../results/nice19-t50k.json                       |    167 +
+ .../results/paused-t200k.json                      |    167 +
+ .../results/paused-t50k.json                       |    167 +
+ .../results/private-idle-t200k.json                |     46 +
+ .../results/seeder-modes-t200k.json                |    152 +
+ .../results/stage1d-t200k.json                     |    167 +
+ .../results/stage1d-t50k.json                      |    167 +
+ experiments/module-nowait-20260925/seeder_modes.py |    104 +
+ experiments/module-scale-20260929/check_pair.py    |    115 +
+ experiments/module-scale-20260929/corpus_byte.py   |     79 +
+ .../module-scale-20260929/corpus_programs.json     |    498 +
+ experiments/module-scale-20260929/measure.py       |    147 +
+ experiments/module-schedule-20260924/measure.py    |    127 +
+ experiments/module-test-20260924/measure.py        |    161 +
+ .../results/final-1d-t200k.json                    |    100 +
+ .../results/final-1d-t50k.json                     |    100 +
+ .../results/final-base-t200k.json                  |     45 +
+ .../results/final-base-t50k.json                   |     45 +
+ .../results/final-main-t200k.json                  |     45 +
+ .../results/final-main-t50k.json                   |     45 +
+ .../results/pre-seed-1d-t200k.json                 |     92 +
+ .../results/pre-seed-1d-t50k.json                  |     92 +
+ .../results/pre-seed-base-t200k.json               |     92 +
+ .../results/pre-seed-base-t50k.json                |     92 +
+ .../results/pre-seed-main-t200k.json               |     92 +
+ .../results/pre-seed-main-t50k.json                |     92 +
+ .../acquire-gc-rc_dictionary_views.json            |      1 +
+ .../acquire-order/acquire-gc-rc_glue_values.json   |      1 +
+ .../acquire-order/acquire-glue-unit.log.gz         |    Bin 0 -> 1040 bytes
+ .../acquire-order/acquire-install.log.gz           |    Bin 0 -> 466 bytes
+ .../acquire-llvm-rc_dictionary_views.json          |      1 +
+ .../acquire-order/acquire-llvm-rc_glue_values.json |      1 +
+ .../acquire-order/acquire-order-actual.log.gz      |    Bin 0 -> 1206 bytes
+ .../acquire-order/acquire-order-actual2.log.gz     |    Bin 0 -> 944 bytes
+ .../acquire-order/acquire-order-guardian.log.gz    |    Bin 0 -> 599 bytes
+ .../acquire-order/acquire-order-guardian2.log.gz   |    Bin 0 -> 157 bytes
+ .../acquire-rc-rc_dictionary_views.json            |      1 +
+ .../acquire-order/acquire-rc-rc_glue_values.json   |      1 +
+ .../acquire-sites-rc_dictionary_views.json         |      1 +
+ .../acquire-sites-rc_glue_values.json              |      1 +
+ .../acquire-stats-rc_dictionary_views.json         |      1 +
+ .../acquire-stats-rc_glue_values.json              |      1 +
+ .../acquire-stress-rc_dictionary_views.json        |      1 +
+ .../acquire-stress-rc_glue_values.json             |      1 +
+ .../acquire-order/receipt.json                     |     78 +
+ .../count-carry/carry-glue-units.log.gz            |    Bin 0 -> 1027 bytes
+ .../count-carry/carry-guardian.log.gz              |    Bin 0 -> 249 bytes
+ .../count-carry/carry-install.log.gz               |    Bin 0 -> 611 bytes
+ .../count-carry/carry-units.log.gz                 |    Bin 0 -> 873 bytes
+ .../count-carry/owned-cache-audit-before.json      |     26 +
+ .../count-carry/owned-cache-reclamation.json       |     31 +
+ .../count-carry/probe/count-hold-llvm.log.gz       |    Bin 0 -> 20 bytes
+ .../count-carry/probe/count-hold-llvm.s            |     32 +
+ .../count-carry/probe/count-hold-object.log.gz     |    Bin 0 -> 125 bytes
+ .../count-carry/probe/count-hold.ll                |     69 +
+ .../probe/count-llvm-build-final.log.gz            |    Bin 0 -> 20 bytes
+ .../count-carry/probe/count-llvm-build.log.gz      |    Bin 0 -> 112 bytes
+ .../count-carry/probe/count-llvm-proof.log.gz      |    Bin 0 -> 81 bytes
+ .../count-carry/probe/count-owner-llvm.log.gz      |    Bin 0 -> 20 bytes
+ .../count-carry/probe/count-owner-llvm.s           |     32 +
+ .../count-carry/probe/count-owner-object.log.gz    |    Bin 0 -> 125 bytes
+ .../count-carry/probe/count-owner.ll               |     69 +
+ .../count-carry/probe/count-probe.c                |     34 +
+ .../count-carry/probe/count-probe.s                |     63 +
+ .../count-carry/probe/count-probe.ssa              |     37 +
+ .../count-carry/probe/count-proof.log.gz           |    Bin 0 -> 81 bytes
+ .../count-carry/probe/emit.stderr.gz               |    Bin 0 -> 20 bytes
+ .../count-carry/probe/input.my                     |      6 +
+ .../count-carry/probe/keep.il.gz                   |    Bin 0 -> 10200 bytes
+ .../count-carry/probe/translate-final.log.gz       |    Bin 0 -> 94 bytes
+ .../count-carry/probe/translate.log.gz             |    Bin 0 -> 167 bytes
+ .../count-carry/probe/translate.zig                |     21 +
+ .../count-carry/probe/zero-hold-llvm.log.gz        |    Bin 0 -> 172 bytes
+ .../count-carry/probe/zero-hold-llvm.s             |     31 +
+ .../count-carry/probe/zero-hold-object.log.gz      |    Bin 0 -> 125 bytes
+ .../count-carry/probe/zero-hold.ll                 |     68 +
+ .../count-carry/probe/zero-llvm-build-final.log.gz |    Bin 0 -> 20 bytes
+ .../count-carry/probe/zero-llvm-proof.log.gz       |    Bin 0 -> 81 bytes
+ .../count-carry/probe/zero-owner-llvm.log.gz       |    Bin 0 -> 172 bytes
+ .../count-carry/probe/zero-owner-llvm.s            |     31 +
+ .../count-carry/probe/zero-owner-object.log.gz     |    Bin 0 -> 125 bytes
+ .../count-carry/probe/zero-owner.ll                |     68 +
+ .../count-carry/probe/zero-probe.s                 |     61 +
+ .../count-carry/probe/zero-probe.ssa               |     37 +
+ .../wp-b3-layout-20260929/count-carry/receipt.json |     21 +
+ .../final/fusion-gc-rc_dictionary_views.json       |      1 +
+ .../final/fusion-gc-rc_glue_values.json            |      1 +
+ .../final/fusion-llvm-rc_dictionary_views.json     |      1 +
+ .../final/fusion-llvm-rc_glue_values.json          |      1 +
+ .../count-fusion/final/fusion-lox-measure.log.gz   |    Bin 0 -> 528 bytes
+ .../count-fusion/final/fusion-matrix.log.gz        |    Bin 0 -> 124 bytes
+ .../final/fusion-rc-rc_dictionary_views.json       |      1 +
+ .../final/fusion-rc-rc_glue_values.json            |      1 +
+ .../final/fusion-sites-rc_dictionary_views.json    |      1 +
+ .../final/fusion-sites-rc_glue_values.json         |      1 +
+ .../final/fusion-stats-rc_dictionary_views.json    |      1 +
+ .../final/fusion-stats-rc_glue_values.json         |      1 +
+ .../final/fusion-stress-rc_dictionary_views.json   |      1 +
+ .../final/fusion-stress-rc_glue_values.json        |      1 +
+ .../count-fusion/final/results-acquire-dev.json    |    630 +
+ .../count-fusion/final/results-acquire-smoke.json  |    630 +
+ .../count-fusion/final/results-fusion-lox-dev.json |    210 +
+ .../final/results-fusion-lox-smoke.json            |    210 +
+ .../final/results-image-control-dev.json           |    630 +
+ .../final/results-image-control-smoke.json         |    630 +
+ .../count-fusion/final/results-m17-codex-dev.json  |    630 +
+ .../count-fusion/final/verification.json           |   1411 +
+ .../count-fusion/fusion-c-final.log.gz             |    Bin 0 -> 894 bytes
+ .../count-fusion/fusion-c-test-2.log.gz            |    Bin 0 -> 912 bytes
+ .../count-fusion/fusion-c-test.log.gz              |    Bin 0 -> 1168 bytes
+ .../count-fusion/fusion-full-guardian.log.gz       |    Bin 0 -> 248 bytes
+ .../count-fusion/fusion-glue-test.log.gz           |    Bin 0 -> 1002 bytes
+ .../count-fusion/fusion-install-2.log.gz           |    Bin 0 -> 632 bytes
+ .../count-fusion/fusion-install.log.gz             |    Bin 0 -> 960 bytes
+ .../count-fusion/fusion-lox-build.log.gz           |    Bin 0 -> 91 bytes
+ .../count-fusion/receipt.json                      |     14 +
+ .../final-gate-script-review/README.md             |     45 +
+ .../final-gate-script-review/artifacts.tar.gz      |    Bin 0 -> 39181 bytes
+ .../final-gate-script-review/manifest.json         |    138 +
+ .../final-gate-script-review/receipt.json          |    108 +
+ .../image-emission/abort-4112412.txt               |     14 +
+ .../image-emission/abort-4120359.txt               |     14 +
+ .../image-emission/emitter-held-install.log.gz     |    Bin 0 -> 628 bytes
+ .../image-emission/image-actual-held.log.gz        |    Bin 0 -> 893 bytes
+ .../image-emission/image-contract-final.log.gz     |    Bin 0 -> 1017 bytes
+ .../image-gc-rc_dictionary_views.json              |      1 +
+ .../image-emission/image-gc-rc_glue_values.json    |      1 +
+ .../image-emission/image-held-guardian-full.log.gz |    Bin 0 -> 212 bytes
+ .../image-emission/image-held-module-gc.json       |     62 +
+ .../image-emission/image-held-module-rc.json       |     62 +
+ .../image-emission/image-held-module-sites.json    |     62 +
+ .../image-emission/image-held-module-stats.json    |     62 +
+ .../image-llvm-rc_dictionary_views.json            |      1 +
+ .../image-emission/image-llvm-rc_glue_values.json  |      1 +
+ .../image-emission/image-native-all-cc.log.gz      |    Bin 0 -> 689 bytes
+ .../image-emission/image-old-block.log.gz          |    Bin 0 -> 866 bytes
+ .../image-emission/image-prefix-control.json       |      1 +
+ .../image-rc-rc_dictionary_views.json              |      1 +
+ .../image-emission/image-rc-rc_glue_values.json    |      1 +
+ .../image-emission/image-recipe-units.log.gz       |    Bin 0 -> 807 bytes
+ .../image-sites-rc_dictionary_views.json           |      1 +
+ .../image-emission/image-sites-rc_glue_values.json |      1 +
+ .../image-stats-rc_dictionary_views.json           |      1 +
+ .../image-emission/image-stats-rc_glue_values.json |      1 +
+ .../image-emission/image-stats-recursive.json      |      1 +
+ .../image-stress-rc_dictionary_views.json          |      1 +
+ .../image-stress-rc_glue_values.json               |      1 +
+ .../image-emission/receipt.json                    |    105 +
+ .../image-emission/rejected-held-metadata.c.gz     |    Bin 0 -> 13063 bytes
+ .../image-weak-linkage/capture-build.log.gz        |    Bin 0 -> 249 bytes
+ .../captured-program-lto.lto.s.gz                  |    Bin 0 -> 101302 bytes
+ .../image-weak-linkage/captured-program.s.gz       |    Bin 0 -> 101499 bytes
+ .../image-weak-linkage/driver-test.log.gz          |    Bin 0 -> 871 bytes
+ .../image-weak-linkage/framed-before-build.log.gz  |    Bin 0 -> 250 bytes
+ .../image-weak-linkage/guardian-full.log.gz        |    Bin 0 -> 157 bytes
+ .../image-weak-linkage/install.log.gz              |    Bin 0 -> 610 bytes
+ .../image-weak-linkage/receipt.json                |     10 +
+ .../image-weak-linkage/scanner-test.log.gz         |    Bin 0 -> 791 bytes
+ .../llvm-constant-overflow/README.md               |     36 +
+ .../llvm-constant-overflow/arithmetic-matrix.py    |      7 +
+ .../llvm-constant-overflow/guest-receipt.json      |    124 +
+ .../llvm-constant-overflow/lox-proof.py            |     16 +
+ .../llvm-constant-overflow/lox-receipt.json        |    494 +
+ .../llvm-constant-overflow/raw.tar.gz              |    Bin 0 -> 16678384 bytes
+ .../llvm-constant-overflow/receipt.json            |   6398 +
+ .../llvm-induction-result/README.md                |     29 +
+ .../llvm-induction-result/raw-evidence.tar.gz      |    Bin 0 -> 58619099 bytes
+ .../llvm-induction-result/receipt.json             |   2884 +
+ .../lox-invocation-attribution/analyze.py          |     27 +
+ .../archive-receipt.json                           |    252 +
+ .../callgrind-receipt.json                         |     54 +
+ .../lox-invocation-attribution/callgrind.py        |     17 +
+ .../lox-invocation-attribution/exact-counts.json   | 113291 ++++++++++++++++++
+ .../lox-invocation-attribution/hot-disassembly.py  |     17 +
+ .../lox-invocation-attribution/inputs.json         |    466 +
+ .../lox-invocation-attribution/prepare.py          |     42 +
+ .../lox-invocation-attribution/raw.tar.gz          |    Bin 0 -> 6461816 bytes
+ .../lox-invocation-attribution/report.md           |     49 +
+ .../plain-ready-inline/README.md                   |      7 +
+ .../before-callgrind-receipt.json                  |     49 +
+ .../plain-ready-inline/before-exact-counts.json    |  46562 +++++++
+ .../plain-ready-inline/before-native-paths.diff    |    289 +
+ .../plain-ready-inline/before-report.md            |     46 +
+ .../plain-ready-inline/plain-guardian.log.gz       |    Bin 0 -> 268 bytes
+ .../plain-ready-inline/plain-guest-matrix.py       |     36 +
+ .../plain-ready-inline/plain-guest.log.gz          |    Bin 0 -> 68 bytes
+ .../llvm-full/alloc_churn.qbe-manifest.json        |      1 +
+ .../plain-guest/llvm-full/assembly.txt.gz          |    Bin 0 -> 241497 bytes
+ .../plain-guest/llvm-full/build.stderr             |      0
+ .../plain-guest/llvm-full/build.stdout             |      0
+ .../plain-guest/llvm-full/run.stderr               |      0
+ .../plain-guest/llvm-full/run.stdout               |      1 +
+ .../llvm-none/alloc_churn.qbe-manifest.json        |      1 +
+ .../plain-guest/llvm-none/assembly.txt.gz          |    Bin 0 -> 272976 bytes
+ .../plain-guest/llvm-none/build.stderr             |      1 +
+ .../plain-guest/llvm-none/build.stdout             |      0
+ .../plain-guest/llvm-none/run.stderr               |      0
+ .../plain-guest/llvm-none/run.stdout               |      1 +
+ .../llvm-thin/alloc_churn.qbe-manifest.json        |      1 +
+ .../plain-guest/llvm-thin/assembly.txt.gz          |    Bin 0 -> 274848 bytes
+ .../plain-guest/llvm-thin/build.stderr             |      0
+ .../plain-guest/llvm-thin/build.stdout             |      0
+ .../plain-guest/llvm-thin/run.stderr               |      0
+ .../plain-guest/llvm-thin/run.stdout               |      1 +
+ .../plain-guest/qbe/alloc_churn.qbe-manifest.json  |      1 +
+ .../plain-guest/qbe/assembly.txt.gz                |    Bin 0 -> 234537 bytes
+ .../plain-guest/qbe/build.stderr                   |      0
+ .../plain-guest/qbe/build.stdout                   |      0
+ .../plain-ready-inline/plain-guest/qbe/run.stderr  |      0
+ .../plain-ready-inline/plain-guest/qbe/run.stdout  |      1 +
+ .../plain-ready-inline/plain-guest/receipt.json    |    104 +
+ .../plain-ready-inline/plain-inputs-fmt.log.gz     |    Bin 0 -> 1080 bytes
+ .../plain-ready-inline/plain-install.log.gz        |    Bin 0 -> 625 bytes
+ .../plain-ready-inline/plain-native-matrix.py      |     24 +
+ .../plain-ready-inline/plain-native.log.gz         |    Bin 0 -> 95 bytes
+ .../plain-native/full/symbols.txt.gz               |    Bin 0 -> 11234 bytes
+ .../plain-native/none/symbols.txt.gz               |    Bin 0 -> 12148 bytes
+ .../plain-ready-inline/plain-native/receipt.json   |     20 +
+ .../plain-native/thin/symbols.txt.gz               |    Bin 0 -> 14408 bytes
+ .../plain-ready-inline/plain-units.log.gz          |    Bin 0 -> 863 bytes
+ .../plain-ready-inline/receipt.json                |     37 +
+ .../plain-ready-nested/README.md                   |     36 +
+ .../plain-ready-nested/abi-receipt.json            |     42 +
+ .../plain-ready-nested/alloc-emitted.ssa.gz        |    Bin 0 -> 12450 bytes
+ .../alloc-llvm-full-assembly.txt.gz                |    Bin 0 -> 241495 bytes
+ .../plain-ready-nested/alloc-llvm-full-run.stderr  |      0
+ .../plain-ready-nested/alloc-llvm-full-run.stdout  |      1 +
+ .../alloc-llvm-none-assembly.txt.gz                |    Bin 0 -> 273301 bytes
+ .../plain-ready-nested/alloc-llvm-none-run.stderr  |      0
+ .../plain-ready-nested/alloc-llvm-none-run.stdout  |      1 +
+ .../alloc-llvm-thin-assembly.txt.gz                |    Bin 0 -> 274850 bytes
+ .../plain-ready-nested/alloc-llvm-thin-run.stderr  |      0
+ .../plain-ready-nested/alloc-llvm-thin-run.stdout  |      1 +
+ .../plain-ready-nested/alloc-qbe-assembly.txt.gz   |    Bin 0 -> 235000 bytes
+ .../plain-ready-nested/alloc-qbe-run.stderr        |      0
+ .../plain-ready-nested/alloc-qbe-run.stdout        |      1 +
+ .../plain-ready-nested/body-and-source-proof.json  |     22 +
+ .../plain-ready-nested/fannkuch-emitted.ssa.gz     |    Bin 0 -> 64565 bytes
+ .../fannkuch-llvm-full-assembly.txt.gz             |    Bin 0 -> 380636 bytes
+ .../fannkuch-llvm-full-run.stderr                  |      0
+ .../fannkuch-llvm-full-run.stdout                  |      2 +
+ .../fannkuch-qbe-assembly.txt.gz                   |    Bin 0 -> 387910 bytes
+ .../plain-ready-nested/fannkuch-qbe-run.stderr     |      0
+ .../plain-ready-nested/fannkuch-qbe-run.stdout     |      2 +
+ .../fannkuch-section-comparison.json               |    244 +
+ .../plain-ready-nested/guest-receipt.json          |    180 +
+ .../plain-ready-nested/logs/abi.log.gz             |    Bin 0 -> 7244 bytes
+ .../plain-ready-nested/logs/append-units.log.gz    |    Bin 0 -> 886 bytes
+ .../logs/guardian-full-final.log.gz                |    Bin 0 -> 181 bytes
+ .../plain-ready-nested/logs/guest-final.log.gz     |    Bin 0 -> 139 bytes
+ .../logs/initial-filter-failure.log.gz             |    Bin 0 -> 1158 bytes
+ .../logs/initial-qbe-site-assumption.log.gz        |    Bin 0 -> 382 bytes
+ .../logs/initial-spec-failure.log.gz               |    Bin 0 -> 837 bytes
+ .../plain-ready-nested/logs/inputs-fmt.log.gz      |    Bin 0 -> 1073 bytes
+ .../plain-ready-nested/logs/install.log.gz         |    Bin 0 -> 622 bytes
+ .../plain-ready-nested/logs/native.log.gz          |    Bin 0 -> 89 bytes
+ .../logs/nested-units-final.log.gz                 |    Bin 0 -> 890 bytes
+ .../plain-ready-nested/logs/presized-units.log.gz  |    Bin 0 -> 899 bytes
+ .../plain-ready-nested/logs/room-units.log.gz      |    Bin 0 -> 816 bytes
+ .../plain-ready-nested/native-receipt.json         |     20 +
+ .../plain-ready-nested/probe/abi-matrix.py         |     32 +
+ .../plain-ready-nested/probe/caller.c              |      8 +
+ .../plain-ready-nested/probe/guest-matrix.py       |     27 +
+ .../plain-ready-nested/probe/native-matrix.py      |     24 +
+ .../plain-ready-nested/probe/oracle.c              |     66 +
+ .../plain-ready-nested/receipt.json                |    266 +
+ .../wp-b3-layout-20260929/prefix/acceptance.json   |   1640 +
+ .../prefix/control-runtime-verification.json       |    351 +
+ .../prefix/dev-instruction-deltas.txt              |     88 +
+ .../prefix/results-control-dev.json                |    630 +
+ .../prefix/results-control-smoke.json              |    630 +
+ .../prefix/results-prefix2-dev.json                |    630 +
+ .../prefix/results-prefix2-smoke.json              |    630 +
+ .../prefix/smoke-instruction-deltas.txt            |     88 +
+ .../publish-reuse/dominance-proof.md               |     17 +
+ .../wp-b3-layout-20260929/publish-reuse/extract.py |     18 +
+ .../guests/gc-rc_dictionary_views.json             |      1 +
+ .../publish-reuse/guests/gc-rc_glue_values.json    |      1 +
+ .../publish-reuse/guests/gc-rc_scope_inline.json   |      1 +
+ .../guests/llvm-rc_dictionary_views.json           |      1 +
+ .../publish-reuse/guests/llvm-rc_glue_values.json  |      1 +
+ .../publish-reuse/guests/llvm-rc_scope_inline.json |      1 +
+ .../guests/rc-rc_dictionary_views.json             |      1 +
+ .../publish-reuse/guests/rc-rc_glue_values.json    |      1 +
+ .../publish-reuse/guests/rc-rc_scope_inline.json   |      1 +
+ .../publish-reuse/guests/receipt.json              |    146 +
+ .../guests/sites-rc_dictionary_views.json          |      1 +
+ .../publish-reuse/guests/sites-rc_glue_values.json |      1 +
+ .../guests/sites-rc_scope_inline.json              |      1 +
+ .../guests/stats-rc_dictionary_views.json          |      1 +
+ .../publish-reuse/guests/stats-rc_glue_values.json |      1 +
+ .../guests/stats-rc_scope_inline.json              |      1 +
+ .../guests/stress-rc_dictionary_views.json         |      1 +
+ .../guests/stress-rc_glue_values.json              |      1 +
+ .../guests/stress-rc_scope_inline.json             |      1 +
+ .../publish-reuse/probe/build.log.gz               |    Bin 0 -> 20 bytes
+ .../publish-reuse/probe/emit.log.gz                |    Bin 0 -> 20 bytes
+ .../publish-reuse/probe/extraction.json            |     32 +
+ .../publish-reuse/probe/fragments.s                |    180 +
+ .../publish-reuse/probe/fragments.ssa              |    135 +
+ .../publish-reuse/probe/hold-llvm.log.gz           |    Bin 0 -> 125 bytes
+ .../publish-reuse/probe/hold.ll                    |    129 +
+ .../publish-reuse/probe/keep.ssa                   |   1812 +
+ .../publish-reuse/probe/llvm-link.log.gz           |    Bin 0 -> 20 bytes
+ .../publish-reuse/probe/llvm-proof.log.gz          |    Bin 0 -> 77 bytes
+ .../publish-reuse/probe/manifest.json              |      1 +
+ .../publish-reuse/probe/oracle.c                   |    126 +
+ .../publish-reuse/probe/owner-llvm.log.gz          |    Bin 0 -> 125 bytes
+ .../publish-reuse/probe/owner.ll                   |    129 +
+ .../publish-reuse/probe/proof.log.gz               |    Bin 0 -> 77 bytes
+ .../probe/publish-llvm-disassembly.txt             |     68 +
+ .../publish-reuse/probe/publish-llvm.log.gz        |    Bin 0 -> 125 bytes
+ .../publish-reuse/probe/publish.ll                 |    209 +
+ .../publish-reuse/probe/source.my                  |      6 +
+ .../publish-reuse/probe/symbols.h                  |      3 +
+ .../publish-reuse/probe/translate.log.gz           |    Bin 0 -> 98 bytes
+ .../publish-reuse/probe/translate.zig              |     18 +
+ .../publish-reuse/pub-glue.log.gz                  |    Bin 0 -> 932 bytes
+ .../publish-reuse/pub-guardian.log.gz              |    Bin 0 -> 249 bytes
+ .../publish-reuse/pub-guests.log.gz                |    Bin 0 -> 147 bytes
+ .../publish-reuse/pub-inputs-fmt.log.gz            |    Bin 0 -> 1049 bytes
+ .../publish-reuse/pub-install.log.gz               |    Bin 0 -> 614 bytes
+ .../publish-reuse/pub-qbe-build.log.gz             |    Bin 0 -> 1766 bytes
+ .../publish-reuse/pub-units.log.gz                 |    Bin 0 -> 891 bytes
+ .../publish-reuse/receipt.json                     |     32 +
+ .../registered-release/README.md                   |     68 +
+ .../registered-release/artifacts.tar.gz            |    Bin 0 -> 3521823 bytes
+ .../registered-release/manifest.json               |    536 +
+ .../registered-release/probe/native.py             |     26 +
+ .../registered-release/probe/source.py             |     24 +
+ .../registered-release/receipt.json                |    136 +
+ .../attribution-erratum/compiler.my.txt            |    902 +
+ .../attribution-erratum/current_chunk.ssa          |    326 +
+ .../sub-address/attribution-erratum/descriptor.c   |     23 +
+ .../sub-address/attribution-erratum/glue.c         |    275 +
+ .../attribution-erratum/provenance.json            |     16 +
+ .../sub-address/candidate-oracles-fixed.log.gz     |    Bin 0 -> 102 bytes
+ .../sub-address/candidate-oracles.log.gz           |    Bin 0 -> 445 bytes
+ .../candidate/qbe-sub-address-link.stderr          |      0
+ .../candidate/qbe-sub-address-link.stdout          |      0
+ .../candidate/qbe-sub-address-qbe.stderr           |      0
+ .../candidate/qbe-sub-address-qbe.stdout           |      0
+ .../candidate/qbe-sub-address-run.stderr           |      0
+ .../candidate/qbe-sub-address-run.stdout           |      1 +
+ .../sub-address/candidate/qbe-sub-address.s        |    290 +
+ .../candidate/qbe-zero-branch-link.stderr          |      0
+ .../candidate/qbe-zero-branch-link.stdout          |      0
+ .../candidate/qbe-zero-branch-qbe.stderr           |      0
+ .../candidate/qbe-zero-branch-qbe.stdout           |      0
+ .../candidate/qbe-zero-branch-run.stderr           |      0
+ .../candidate/qbe-zero-branch-run.stdout           |      1 +
+ .../sub-address/candidate/qbe-zero-branch.s        |    417 +
+ .../sub-address/candidate/receipt.json             |     74 +
+ .../sub-address/control-oracles-fixed.log.gz       |    Bin 0 -> 100 bytes
+ .../sub-address/control-oracles.log.gz             |    Bin 0 -> 443 bytes
+ .../control/qbe-sub-address-link.stderr            |      0
+ .../control/qbe-sub-address-link.stdout            |      0
+ .../sub-address/control/qbe-sub-address-qbe.stderr |      0
+ .../sub-address/control/qbe-sub-address-qbe.stdout |      0
+ .../sub-address/control/qbe-sub-address-run.stderr |      0
+ .../sub-address/control/qbe-sub-address-run.stdout |      1 +
+ .../sub-address/control/qbe-sub-address.s          |    307 +
+ .../control/qbe-zero-branch-link.stderr            |      0
+ .../control/qbe-zero-branch-link.stdout            |      0
+ .../sub-address/control/qbe-zero-branch-qbe.stderr |      0
+ .../sub-address/control/qbe-zero-branch-qbe.stdout |      0
+ .../sub-address/control/qbe-zero-branch-run.stderr |      0
+ .../sub-address/control/qbe-zero-branch-run.stdout |      1 +
+ .../sub-address/control/qbe-zero-branch.s          |    417 +
+ .../sub-address/control/receipt.json               |     74 +
+ .../sub-address/fmt-inputs.log.gz                  |    Bin 0 -> 1066 bytes
+ .../sub-address/focused-address-fixed.log.gz       |    Bin 0 -> 1119 bytes
+ .../sub-address/focused-address.log.gz             |    Bin 0 -> 1126 bytes
+ .../sub-address/guardian-full.log.gz               |    Bin 0 -> 268 bytes
+ .../sub-address/independent-review-receipt.json    |    194 +
+ .../sub-address/install-final.log.gz               |    Bin 0 -> 625 bytes
+ .../sub-address/install.log.gz                     |    Bin 0 -> 622 bytes
+ .../sub-address/production.log.gz                  |    Bin 0 -> 522 bytes
+ .../sub-address/production.py                      |     36 +
+ .../sub-address/production/assembly.gz             |    Bin 0 -> 2162079 bytes
+ .../sub-address/production/assembly.stderr         |      0
+ .../sub-address/production/build.stderr            |      0
+ .../sub-address/production/build.stdout            |      0
+ .../production/loan-glue-text-identity.json        |     10 +
+ .../production/lox.qbe.qbe-manifest.json           |      1 +
+ .../sub-address/production/properties.stderr       |      0
+ .../sub-address/production/properties.stdout       |      1 +
+ .../sub-address/production/receipt.json            |    143 +
+ .../sub-address/production/shape.json              |    166 +
+ .../sub-address/production/string_equality.stderr  |      0
+ .../sub-address/production/string_equality.stdout  |      1 +
+ .../production/vm-load_frame-candidate-qbe.stderr  |      0
+ .../production/vm-load_frame-candidate-qbe.stdout  |      0
+ .../production/vm-load_frame-candidate.s           |    793 +
+ .../production/vm-load_frame-control-qbe.stderr    |      0
+ .../production/vm-load_frame-control-qbe.stdout    |      0
+ .../sub-address/production/vm-load_frame-control.s |    826 +
+ .../sub-address/production/vm-load_frame.ssa       |   4481 +
+ .../production/vm-run-candidate-qbe.stderr         |      0
+ .../production/vm-run-candidate-qbe.stdout         |      0
+ .../sub-address/production/vm-run-candidate.s      |  16206 +++
+ .../production/vm-run-control-qbe.stderr           |      0
+ .../production/vm-run-control-qbe.stdout           |      0
+ .../sub-address/production/vm-run-control.s        |  16777 +++
+ .../sub-address/production/vm-run.ssa              |  14236 +++
+ .../sub-address/qbe-build.log.gz                   |    Bin 0 -> 2027 bytes
+ .../wp-b3-layout-20260929/sub-address/receipt.json |    370 +
+ .../sub-address/run-oracles.py                     |     16 +
+ .../wp-b3-layout-20260929/sub-address/shape.py     |     15 +
+ .../view-inline/manifest.json                      |    319 +
+ .../wp-b3-layout-20260929/view-inline/receipt.json |     13 +
+ .../view-inline/receipts.tar.gz                    |    Bin 0 -> 4931508 bytes
+ .../performance/results-m17-codex-dev.json         |    630 +
+ .../performance/results-wide-lox-dev.json          |    210 +
+ .../performance/results-wide-lox-smoke.json        |    210 +
+ .../wide-counts/performance/verification.json      |    628 +
+ .../performance/wide-gc-rc_dictionary_views.json   |      1 +
+ .../performance/wide-gc-rc_glue_values.json        |      1 +
+ .../performance/wide-gc-rc_scope_inline.json       |      1 +
+ .../performance/wide-llvm-rc_dictionary_views.json |      1 +
+ .../performance/wide-llvm-rc_glue_values.json      |      1 +
+ .../performance/wide-llvm-rc_scope_inline.json     |      1 +
+ .../wide-counts/performance/wide-lox-build.log.gz  |    Bin 0 -> 91 bytes
+ .../performance/wide-lox-measure.log.gz            |    Bin 0 -> 520 bytes
+ .../performance/wide-rc-rc_dictionary_views.json   |      1 +
+ .../performance/wide-rc-rc_glue_values.json        |      1 +
+ .../performance/wide-rc-rc_scope_inline.json       |      1 +
+ .../wide-sites-rc_dictionary_views.json            |      1 +
+ .../performance/wide-sites-rc_glue_values.json     |      1 +
+ .../performance/wide-sites-rc_scope_inline.json    |      1 +
+ .../wide-stats-rc_dictionary_views.json            |      1 +
+ .../performance/wide-stats-rc_glue_values.json     |      1 +
+ .../performance/wide-stats-rc_scope_inline.json    |      1 +
+ .../wide-stress-rc_dictionary_views.json           |      1 +
+ .../performance/wide-stress-rc_glue_values.json    |      1 +
+ .../performance/wide-stress-rc_scope_inline.json   |      1 +
+ .../wp-b3-layout-20260929/wide-counts/receipt.json |     17 +
+ .../wide-counts/truth/receipt.json                 |     75 +
+ .../wide-counts/truth/wide-fast-targeted.log.gz    |    Bin 0 -> 56 bytes
+ .../wide-counts/truth/wide-native-memory-2.log.gz  |    Bin 0 -> 1196 bytes
+ .../wide-counts/truth/wide-native-memory.log.gz    |    Bin 0 -> 1296 bytes
+ .../truth/wide-truth-gc-rc_scope_inline.json       |      1 +
+ .../truth/wide-truth-guardian-final.log.gz         |    Bin 0 -> 183 bytes
+ .../wide-counts/truth/wide-truth-guardian.log.gz   |    Bin 0 -> 384 bytes
+ .../wide-counts/truth/wide-truth-install.log.gz    |    Bin 0 -> 611 bytes
+ .../truth/wide-truth-llvm-rc_scope_inline.json     |      1 +
+ .../wide-counts/truth/wide-truth-matrix.log.gz     |    Bin 0 -> 67 bytes
+ .../truth/wide-truth-native-final.log.gz           |    Bin 0 -> 620 bytes
+ .../truth/wide-truth-rc-rc_scope_inline.json       |      1 +
+ .../truth/wide-truth-scope-units-final.log.gz      |    Bin 0 -> 915 bytes
+ .../truth/wide-truth-sites-rc_scope_inline.json    |      1 +
+ .../truth/wide-truth-stats-rc_scope_inline.json    |      1 +
+ .../truth/wide-truth-stress-rc_scope_inline.json   |      1 +
+ .../wide-counts/wide-actual-c-final.log.gz         |    Bin 0 -> 896 bytes
+ .../wide-counts/wide-alloc-units.log.gz            |    Bin 0 -> 989 bytes
+ .../wide-counts/wide-install-2.log.gz              |    Bin 0 -> 633 bytes
+ .../wide-counts/wide-install.log.gz                |    Bin 0 -> 951 bytes
+ .../wide-counts/wide-scope-units.log.gz            |    Bin 0 -> 929 bytes
+ .../zero-branch/extract_count_proof.py             |     23 +
+ .../zero-branch/probe/count-build.log.gz           |    Bin 0 -> 20 bytes
+ .../zero-branch/probe/count-hold-llvm.s            |     31 +
+ .../zero-branch/probe/count-hold.ll                |     68 +
+ .../zero-branch/probe/count-llvm-build.log.gz      |    Bin 0 -> 20 bytes
+ .../zero-branch/probe/count-llvm-proof.log.gz      |    Bin 0 -> 81 bytes
+ .../zero-branch/probe/count-owner-llvm.s           |     31 +
+ .../zero-branch/probe/count-owner.ll               |     68 +
+ .../zero-branch/probe/count-probe.c                |     34 +
+ .../zero-branch/probe/count-probe.s                |     59 +
+ .../zero-branch/probe/count-probe.ssa              |     37 +
+ .../zero-branch/probe/count-proof.log.gz           |    Bin 0 -> 81 bytes
+ .../zero-branch/probe/hold-llvm-assembly.log.gz    |    Bin 0 -> 172 bytes
+ .../zero-branch/probe/hold-llvm-object.log.gz      |    Bin 0 -> 125 bytes
+ .../zero-branch/probe/manifest.json                |      1 +
+ .../zero-branch/probe/original-pressure-probe.s    |    363 +
+ .../zero-branch/probe/owner-llvm-assembly.log.gz   |    Bin 0 -> 172 bytes
+ .../zero-branch/probe/owner-llvm-object.log.gz     |    Bin 0 -> 125 bytes
+ .../zero-branch/probe/probe-final.s                |    395 +
+ .../zero-branch/probe/probe.s                      |    363 +
+ .../zero-branch/probe/proof-final.log.gz           |    Bin 0 -> 57 bytes
+ .../zero-branch/probe/proof.log.gz                 |    Bin 0 -> 57 bytes
+ .../zero-branch/probe/translate.log.gz             |    Bin 0 -> 94 bytes
+ .../zero-branch/probe/translate.zig                |     21 +
+ .../wp-b3-layout-20260929/zero-branch/receipt.json |     31 +
+ .../zero-branch/zero-actual-count.log.gz           |    Bin 0 -> 81 bytes
+ .../zero-branch/zero-branch-units-2.log.gz         |    Bin 0 -> 145 bytes
+ .../zero-branch/zero-branch-units-final.log.gz     |    Bin 0 -> 486 bytes
+ .../zero-branch/zero-count-units.log.gz            |    Bin 0 -> 866 bytes
+ .../zero-branch/zero-guardian-final.log.gz         |    Bin 0 -> 182 bytes
+ .../zero-branch/zero-install-2.log.gz              |    Bin 0 -> 605 bytes
+ .../zero-branch/zero-install.log.gz                |    Bin 0 -> 915 bytes
+ .../zero-branch/zero-qbe-build-current.log.gz      |    Bin 0 -> 1769 bytes
+ .../zero-branch/zero-qbe-build-final.log.gz        |    Bin 0 -> 2105 bytes
+ .../zero-branch/zero-qbe-build-focus-2.log.gz      |    Bin 0 -> 2020 bytes
+ .../zero-release/corrected-selector/probe.s        |    417 +
+ .../zero-release/corrected-selector/proof.log      |      1 +
+ .../guests/gc-rc_dictionary_views.json             |      1 +
+ .../zero-release/guests/gc-rc_glue_values.json     |      1 +
+ .../zero-release/guests/gc-rc_scope_inline.json    |      1 +
+ .../guests/llvm-rc_dictionary_views.json           |      1 +
+ .../zero-release/guests/llvm-rc_glue_values.json   |      1 +
+ .../zero-release/guests/llvm-rc_scope_inline.json  |      1 +
+ .../guests/rc-rc_dictionary_views.json             |      1 +
+ .../zero-release/guests/rc-rc_glue_values.json     |      1 +
+ .../zero-release/guests/rc-rc_scope_inline.json    |      1 +
+ .../zero-release/guests/receipt.json               |    146 +
+ .../guests/sites-rc_dictionary_views.json          |      1 +
+ .../zero-release/guests/sites-rc_glue_values.json  |      1 +
+ .../zero-release/guests/sites-rc_scope_inline.json |      1 +
+ .../guests/stats-rc_dictionary_views.json          |      1 +
+ .../zero-release/guests/stats-rc_glue_values.json  |      1 +
+ .../zero-release/guests/stats-rc_scope_inline.json |      1 +
+ .../guests/stress-rc_dictionary_views.json         |      1 +
+ .../zero-release/guests/stress-rc_glue_values.json |      1 +
+ .../guests/stress-rc_scope_inline.json             |      1 +
+ .../zero-release/probe/baseline-build-final.log.gz |    Bin 0 -> 20 bytes
+ .../zero-release/probe/baseline-build.log.gz       |    Bin 0 -> 94 bytes
+ .../zero-release/probe/baseline-proof-final.log.gz |    Bin 0 -> 60 bytes
+ .../zero-release/probe/baseline-proof.log.gz       |    Bin 0 -> 130 bytes
+ .../zero-release/probe/baseline.s                  |     87 +
+ .../zero-release/probe/baseline.ssa                |     73 +
+ .../zero-release/probe/build-final.log.gz          |    Bin 0 -> 95 bytes
+ .../zero-release/probe/build.log.gz                |    Bin 0 -> 20 bytes
+ .../zero-release/probe/first-build-excluded.txt    |      1 +
+ .../zero-release/probe/hold-llvm-build.log.gz      |    Bin 0 -> 125 bytes
+ .../zero-release/probe/llvm-link-final.log.gz      |    Bin 0 -> 20 bytes
+ .../zero-release/probe/llvm-link.log.gz            |    Bin 0 -> 20 bytes
+ .../zero-release/probe/llvm-proof-final.log.gz     |    Bin 0 -> 60 bytes
+ .../zero-release/probe/llvm-proof.log.gz           |    Bin 0 -> 60 bytes
+ .../zero-release/probe/owner-llvm-build.log.gz     |    Bin 0 -> 125 bytes
+ .../zero-release/probe/probe.c                     |     49 +
+ .../zero-release/probe/proof-final.log.gz          |    Bin 0 -> 60 bytes
+ .../zero-release/probe/proof.log.gz                |    Bin 0 -> 60 bytes
+ .../zero-release/probe/release-hold.ll             |    127 +
+ .../zero-release/probe/release-owner.ll            |    127 +
+ .../zero-release/probe/release.s                   |     85 +
+ .../zero-release/probe/release.ssa                 |     73 +
+ .../zero-release/probe/translate.log.gz            |    Bin 0 -> 94 bytes
+ .../zero-release/probe/translate.zig               |     21 +
+ .../zero-release/receipt.json                      |     37 +
+ .../rejected-f4/inherited-qbe-gate.log.gz          |    Bin 0 -> 2362 bytes
+ .../zero-release/rejected-f4/receipt.json          |    143 +
+ .../rejected-f4/trailing-address-control.s         |     23 +
+ .../rejected-f4/trailing-address-installed-f4.s    |     22 +
+ .../rejected-f4/trailing-address-v2.log            |      1 +
+ .../zero-release/rejected-f4/trailing-address-v2.s |     29 +
+ .../rejected-f4/trailing-address-v3.log            |      3 +
+ .../zero-release/rejected-f4/trailing-address-v3.s |     29 +
+ .../zero-release/rejected-f4/trailing-address-v4.c |      9 +
+ .../rejected-f4/trailing-address-v4.log            |      3 +
+ .../zero-release/rejected-f4/trailing-address-v4.s |     22 +
+ .../rejected-f4/trailing-address-v4.ssa            |     14 +
+ .../zero-release/rejected-f4/trailing-address.c    |      9 +
+ .../zero-release/rejected-f4/trailing-address.log  |      2 +
+ .../zero-release/rejected-f4/trailing-address.s    |     29 +
+ .../zero-release/rejected-f4/trailing-address.ssa  |     17 +
+ .../zero-release/release-fixed-guardian.log.gz     |    Bin 0 -> 182 bytes
+ .../zero-release/release-fixed-install.log.gz      |    Bin 0 -> 614 bytes
+ .../zero-release/release-fixed-qbe-build.log.gz    |    Bin 0 -> 1778 bytes
+ .../zero-release/release-fixed-zero-units.log.gz   |    Bin 0 -> 145 bytes
+ .../zero-release/release-glue-current.log.gz       |    Bin 0 -> 890 bytes
+ .../zero-release/release-glue.log.gz               |    Bin 0 -> 1118 bytes
+ .../zero-release/release-guests.log.gz             |    Bin 0 -> 146 bytes
+ .../zero-release/release-install.log.gz            |    Bin 0 -> 614 bytes
+ .../zero-release/release-units.log.gz              |    Bin 0 -> 878 bytes
+ .../zig-gate-repair/focused-evidence.tar.gz        |    Bin 0 -> 93003 bytes
+ .../zig-gate-repair/followup-evidence.tar.gz       |    Bin 0 -> 157270 bytes
+ .../zig-gate-repair/receipt.json                   |     55 +
+ .../wp-b3-qbe-phi-20260930/after/debug.log.gz      |    Bin 0 -> 1291 bytes
+ .../wp-b3-qbe-phi-20260930/after/execute.log.gz    |    Bin 0 -> 42 bytes
+ .../wp-b3-qbe-phi-20260930/after/link.log.gz       |    Bin 0 -> 20 bytes
+ experiments/wp-b3-qbe-phi-20260930/after/phi.s     |    203 +
+ .../wp-b3-qbe-phi-20260930/after/receipt.json      |     57 +
+ .../wp-b3-qbe-phi-20260930/after/translate.log.gz  |    Bin 0 -> 20 bytes
+ .../wp-b3-qbe-phi-20260930/before/debug.log.gz     |    Bin 0 -> 1285 bytes
+ .../wp-b3-qbe-phi-20260930/before/execute.log.gz   |    Bin 0 -> 129 bytes
+ .../wp-b3-qbe-phi-20260930/before/link.log.gz      |    Bin 0 -> 20 bytes
+ experiments/wp-b3-qbe-phi-20260930/before/phi.s    |    203 +
+ .../wp-b3-qbe-phi-20260930/before/receipt.json     |     57 +
+ .../wp-b3-qbe-phi-20260930/before/translate.log.gz |    Bin 0 -> 20 bytes
+ .../minimal-after/debug.log.gz                     |    Bin 0 -> 758 bytes
+ .../minimal-after/execute.log.gz                   |    Bin 0 -> 118 bytes
+ .../minimal-after/link.log.gz                      |    Bin 0 -> 20 bytes
+ .../wp-b3-qbe-phi-20260930/minimal-after/minimal.s |     70 +
+ .../minimal-after/receipt.json                     |     57 +
+ .../minimal-after/translate.log.gz                 |    Bin 0 -> 20 bytes
+ .../original-reduction/assembly.log.gz             |    Bin 0 -> 20 bytes
+ .../original-reduction/candidates.c                |     41 +
+ .../original-reduction/candidates.log.gz           |    Bin 0 -> 542 bytes
+ .../original-reduction/candidates.s                |   1567 +
+ .../original-reduction/candidates.ssa              |   1259 +
+ .../original-reduction/link.log.gz                 |    Bin 0 -> 20 bytes
+ .../original-reduction/minimal-assembly.log.gz     |    Bin 0 -> 20 bytes
+ .../original-reduction/minimal-debug.log.gz        |    Bin 0 -> 770 bytes
+ .../original-reduction/minimal-debug.stdout.gz     |    Bin 0 -> 20 bytes
+ .../original-reduction/minimal-link.log.gz         |    Bin 0 -> 20 bytes
+ .../original-reduction/minimal-qbe.log.gz          |    Bin 0 -> 20 bytes
+ .../original-reduction/minimal-run.log.gz          |    Bin 0 -> 135 bytes
+ .../original-reduction/minimal.c                   |     23 +
+ .../original-reduction/minimal.s                   |     72 +
+ .../original-reduction/minimal.ssa                 |     56 +
+ .../original-reduction/qbe.log.gz                  |    Bin 0 -> 20 bytes
+ .../wp-b3-qbe-phi-20260930/phi-build.log.gz        |    Bin 0 -> 214 bytes
+ .../wp-b3-qbe-phi-20260930/phi-focused.log.gz      |    Bin 0 -> 845 bytes
+ .../phi-guardian-final.log.gz                      |    Bin 0 -> 249 bytes
+ .../wp-b3-qbe-phi-20260930/phi-guardian.log.gz     |    Bin 0 -> 703 bytes
+ .../phi-inputs-before.log.gz                       |    Bin 0 -> 287 bytes
+ .../phi-inputs-fmt-final.log.gz                    |    Bin 0 -> 1229 bytes
+ .../wp-b3-qbe-phi-20260930/phi-inputs-fmt.log.gz   |    Bin 0 -> 1419 bytes
+ experiments/wp-b3-qbe-phi-20260930/receipt.json    |    154 +
+ experiments/wp-b3-qbe-phi-20260930/run_minimal.py  |     14 +
+ experiments/wp-b3-qbe-phi-20260930/run_phi.py      |     17 +
+ .../accepted-gc-manifest.json                      |   1212 +
+ .../wp-b4-combined-20260929/fuzz-comparison.json   |     46 +
+ .../wp-b4-combined-20260929/gate-summary.txt       |     29 +
+ .../wp-b4-combined-20260929/gc-comparison.json     |   1594 +
+ .../historical-gc-repros.txt                       |      8 +
+ .../wp-b4-combined-20260929/rc-comparison.json     |   1620 +
+ .../wp-b4-combined-20260929/results-gc-dev.json    |    630 +
+ .../wp-b4-combined-20260929/results-rc-dev.json    |    630 +
+ .../wp-b4-combined-20260929/results-rc-smoke.json  |    630 +
+ .../wp-b4-combined-20260929/verification.json      |    255 +
+ experiments/wp-b4-gc-20260929/comparison.json      |     90 +
+ experiments/wp-b4-gc-20260929/fuzz19.my            |    212 +
+ experiments/wp-b4-gc-20260929/fuzz87.my            |    255 +
+ .../wp-b4-gc-20260929/gc-followup-comparison.json  |    616 +
+ .../results-tooling-gc-before-dev.json             |    630 +
+ .../wp-b4-gc-20260929/results-tooling-gc-dev.json  |    630 +
+ .../wp-b4-gc-20260929/results-tooling-rc-dev.json  |    630 +
+ scripts/test_native_memory.py                      |     15 +-
+ selfhost/README.md                                 |      5 +
+ selfhost/lexer.my                                  |     77 +-
+ selfhost/tests/fixtures/lexer/expect.json          |      7 +-
+ selfhost/tests/fixtures/lexer/numeric_spellings.my |      6 +
+ selfhost/tests/run_lexer_diff.py                   |     19 +-
+ src/buffer_operations.zig                          |    138 +-
+ src/bytecode.zig                                   |     49 +-
+ src/bytecode_model.zig                             |      4 +
+ src/collection_lower.zig                           |     19 +-
+ src/compiler.zig                                   |     19 +
+ src/constant_list.zig                              |     65 +
+ src/constant_list_text.zig                         |     99 +
+ src/context.zig                                    |     68 +-
+ src/context_test.zig                               |    100 +-
+ src/cow_plan.zig                                   |      6 +
+ src/cow_test.zig                                   |     30 +
+ src/doctest_command.zig                            |     26 +-
+ src/embed.zig                                      |     13 +-
+ src/embed_test.zig                                 |     95 +-
+ src/features.json                                  |     49 +-
+ src/generic_bodies.zig                             |     99 +-
+ src/host_native.zig                                |     43 +-
+ src/import_policy.zig                              |     28 +-
+ src/import_policy_test.zig                         |     13 +
+ src/interfaces.zig                                 |     48 +-
+ src/lower.zig                                      |      2 +
+ src/main.zig                                       |    162 +-
+ src/main_runtime_mode.zig                          |      6 +-
+ src/main_value_semantics.zig                       |      2 +-
+ src/memory_budget.zig                              |    104 +-
+ src/memory_budget_frames_test.zig                  |     11 +-
+ src/module_build.zig                               |   1462 +
+ src/module_codecs.zig                              |    199 +
+ src/module_compile.zig                             |    646 +
+ src/module_compile_command.zig                     |    602 +
+ src/module_compile_test.zig                        |    397 +
+ src/module_interface.zig                           |    443 +
+ src/module_interface_build.zig                     |    741 +
+ src/module_interface_command.zig                   |    397 +
+ src/module_interface_oracle.zig                    |    717 +
+ src/module_interface_test.zig                      |    445 +
+ src/module_link.zig                                |    220 +
+ src/module_physical.zig                            |    133 +
+ src/module_physical_inputs.zig                     |    197 +
+ src/module_physical_test.zig                       |    283 +
+ src/module_seeder.zig                              |    179 +
+ src/mutation.zig                                   |      6 +-
+ src/native_collections.c                           |     84 +-
+ src/native_collections.h                           |     11 +-
+ src/native_descriptors.zig                         |     75 +-
+ src/native_equal.c                                 |    103 +-
+ src/native_equal.h                                 |      2 +
+ src/native_execute.zig                             |      1 +
+ src/native_heap.c                                  |     36 +-
+ src/native_interface.zig                           |     69 +-
+ src/native_python.h                                |     23 +
+ src/native_rc.c                                    |      4 +-
+ src/native_rc.h                                    |     17 +-
+ src/native_rc_alloc.c                              |     17 +-
+ src/native_rc_collections.h                        |      4 +
+ src/native_rc_collections_test.zig                 |      7 +
+ src/native_rc_image_test.zig                       |      8 +
+ src/native_rc_internal.h                           |     22 +-
+ src/native_rc_scope.c                              |     17 +
+ src/native_rc_shapes.c                             |    155 +-
+ src/native_rc_stats.c                              |      4 +-
+ src/native_rc_transfer.c                           |      5 +
+ src/native_rc_walk.c                               |     16 +-
+ src/native_render.zig                              |     59 +-
+ src/native_repr.c                                  |    105 +
+ src/native_run.zig                                 |     14 +-
+ src/native_run_cache.zig                           |      4 +-
+ src/native_search.c                                |    126 +
+ src/native_test_cli_test.zig                       |      3 +
+ src/native_test_command.zig                        |    356 +-
+ src/native_test_directory.zig                      |      2 +-
+ src/native_test_environment.zig                    |      4 +-
+ src/native_test_execute.zig                        |     43 +-
+ src/native_test_facts.zig                          |    230 +
+ src/native_test_options.zig                        |      8 +
+ src/native_test_runner.c                           |     26 +-
+ src/native_test_session.zig                        |     66 +-
+ src/native_test_snapshot.zig                       |    319 +-
+ src/native_text.c                                  |     37 +-
+ src/native_text.h                                  |     19 +-
+ src/native_text_methods.c                          |     18 +-
+ src/native_text_methods.h                          |      4 +-
+ src/native_trim.c                                  |    116 +
+ src/native_unicode.h                               |     30 +
+ src/native_unicode_data.h                          |    747 +
+ src/navigation.zig                                 |     22 +-
+ src/ownership_classify.zig                         |     19 +
+ src/ownership_field_return.zig                     |      6 +-
+ src/ownership_index_return.zig                     |      4 +-
+ src/ownership_model.zig                            |      1 +
+ src/persist_codec.zig                              |     49 +-
+ src/prelude_builtins.zig                           |     34 +-
+ src/prelude_scalar_test.zig                        |      4 +-
+ src/project.zig                                    |     88 +-
+ src/project_compile.zig                            |     29 +
+ src/project_files.zig                              |      4 +-
+ src/python_strings_test.zig                        |      4 +-
+ src/python_text_surface_test.zig                   |     45 +
+ src/qbe.zig                                        |    309 +-
+ src/qbe_alloc.zig                                  |     13 +-
+ src/qbe_arena.zig                                  |      5 +-
+ src/qbe_borrow.zig                                 |      8 +
+ src/qbe_build.zig                                  |    259 +-
+ src/qbe_build_batch.zig                            |     55 +
+ src/qbe_build_cache.zig                            |     22 +-
+ src/qbe_build_io.zig                               |      1 +
+ src/qbe_build_list_literals.zig                    |     50 +
+ src/qbe_build_llvm_classes.zig                     |    128 +-
+ src/qbe_build_llvm_emit.zig                        |     16 +-
+ src/qbe_build_llvm_il.zig                          |     18 +
+ src/qbe_build_llvm_lower.zig                       |     30 +-
+ src/qbe_build_llvm_runtime.zig                     |      1 +
+ src/qbe_build_llvm_test.zig                        |    168 +-
+ src/qbe_build_options.zig                          |     41 +-
+ src/qbe_build_outputs.zig                          |     69 +-
+ src/qbe_build_sites.zig                            |     47 +-
+ src/qbe_build_test.zig                             |     96 +-
+ src/qbe_bytes.zig                                  |      2 +
+ src/qbe_codecs.zig                                 |     83 +-
+ src/qbe_embeds.zig                                 |     27 +-
+ src/qbe_fragments.zig                              |     91 +-
+ src/qbe_fragments_test.zig                         |    179 +
+ src/qbe_frame_map.zig                              |     29 +-
+ src/qbe_host.zig                                   |    118 +-
+ src/qbe_il_passes.zig                              |      6 +-
+ src/qbe_list_literal.zig                           |     88 +
+ src/qbe_list_literal_test.zig                      |    243 +
+ src/qbe_literals_test.zig                          |     58 +
+ src/qbe_liveness.zig                               |      9 +-
+ src/qbe_loop_facts.zig                             |     45 +
+ src/qbe_loop_facts_test.zig                        |    105 +
+ src/qbe_managed.zig                                |     29 +-
+ src/qbe_moves.zig                                  |      5 +-
+ src/qbe_python.zig                                 |     73 +
+ src/qbe_range_keys.zig                             |      2 +-
+ src/qbe_rc_alloc_test.zig                          |    138 +
+ src/qbe_rc_append.zig                              |      2 +-
+ src/qbe_rc_append_loop.zig                         |     33 +
+ src/qbe_rc_append_test.zig                         |     32 +
+ src/qbe_rc_cache.zig                               |      2 +-
+ src/qbe_rc_dictionary_loop.zig                     |      9 +-
+ src/qbe_rc_dictionary_loop_test.zig                |     22 +
+ src/qbe_rc_dictionary_tail_test.zig                |      4 +-
+ src/qbe_rc_dictionary_text_loop.zig                |    105 +
+ src/qbe_rc_element_take.zig                        |      9 +-
+ src/qbe_rc_field_transfer_test.zig                 |      6 +-
+ src/qbe_rc_fresh_root.zig                          |      2 +-
+ src/qbe_rc_glue.zig                                |     95 +-
+ src/qbe_rc_glue_inline_test.zig                    |     20 +
+ src/qbe_rc_inert_field_test.zig                    |      4 +-
+ src/qbe_rc_ops.zig                                 |      7 +-
+ src/qbe_rc_prefix.zig                              |     24 +
+ src/qbe_rc_readonly_anchor.zig                     |     73 +-
+ src/qbe_rc_readonly_anchor_test.zig                |     24 +-
+ src/qbe_rc_scope.zig                               |      4 +
+ src/qbe_rc_scope_inline.zig                        |    249 +
+ src/qbe_rc_scope_inline_test.zig                   |    126 +
+ src/qbe_roots.zig                                  |      2 +
+ src/qbe_runtime.c                                  |      3 +-
+ src/qbe_runtime.h                                  |      2 +
+ src/qbe_runtime_rc.c                               |     12 +-
+ src/qbe_runtime_rc_test.zig                        |      7 +
+ src/qbe_scalar.zig                                 |      2 +
+ src/qbe_sub_address_test.zig                       |     61 +
+ src/qbe_test.zig                                   |     20 +-
+ src/qbe_text.zig                                   |      3 +-
+ src/qbe_wire.zig                                   |     16 +-
+ src/qbe_zero_branch_test.zig                       |     65 +
+ src/rc_borrow_certificate.zig                      |      4 +-
+ src/rc_borrow_certificate_test.zig                 |      2 +-
+ src/rc_descriptors.zig                             |     63 +-
+ src/rc_field_transfer.zig                          |     23 -
+ src/rc_glue.zig                                    |    131 +-
+ src/rc_glue_acquisition.zig                        |    125 +
+ src/rc_glue_limits_test.zig                        |    123 +
+ src/rc_glue_test.zig                               |     42 +-
+ src/rc_image.zig                                   |    233 +
+ src/rc_immortal_certificate.zig                    |      4 +-
+ src/rc_immortal_certificate_test.zig               |     16 +-
+ src/rc_pin_summary.zig                             |      6 +-
+ src/rc_pin_summary_test.zig                        |     24 +-
+ src/rc_plain_updates.zig                           |      1 +
+ src/rc_plan_test.zig                               |    109 +-
+ src/rc_proof_identity.zig                          |     12 +
+ src/rc_readonly_calls.zig                          |      4 +-
+ src/rc_readonly_calls_test.zig                     |      8 +-
+ src/rc_readonly_entry_test.zig                     |      6 +-
+ src/root_test.zig                                  |     13 +
+ src/runtime_contract.zig                           |      6 +-
+ src/runtime_mode.zig                               |     24 +-
+ src/sema.zig                                       |     36 +-
+ src/sema_collections.zig                           |     69 +-
+ src/sema_expressions.zig                           |      2 +-
+ src/sema_summaries.zig                             |     11 +-
+ src/semantic_key.zig                               |     92 +-
+ src/semantic_summary.zig                           |      4 +
+ src/text_literal_index.zig                         |     40 +
+ src/value_semantics_test.zig                       |     21 +
+ src/wiring/native_session.zig                      |      2 +-
+ test/fixtures/llvm-translate/adapter-corpus.json   |     20 +-
+ test/fixtures/native-rc/glue-limit.c               |    170 +
+ test/integration.zig                               |   1228 +-
+ tests/fixtures/interfaces/api.my                   |      4 +
+ tests/fixtures/interfaces/dom.my                   |     14 +
+ tests/fixtures/interfaces/lib.my                   |     60 +
+ tests/fixtures/interfaces/main.my                  |     32 +
+ tests/fixtures/interfaces/reach.my                 |     30 +
+ tests/fixtures/interfaces/shapes.my                |     34 +
+ tests/fixtures/interfaces_generic/items.my         |     10 +
+ tests/fixtures/interfaces_generic/main.my          |     19 +
+ tests/fixtures/interfaces_generic/slots.my         |     50 +
+ tests/fixtures/module_compile/main.my              |     20 +
+ tests/fixtures/module_compile/stats.my             |     34 +
+ tests/fixtures/module_compile/util.my              |     42 +
+ tests/fixtures/module_projects/app/report.my       |     12 +
+ tests/fixtures/module_projects/core/shapes.my      |     26 +
+ tests/fixtures/module_projects/core/stats.my       |     20 +
+ tests/fixtures/module_projects/main.my             |     10 +
+ tests/fixtures/module_projects/mylang.json         |      6 +
+ tests/fixtures/module_projects/policy.json         |      8 +
+ tests/fixtures/module_rc/bridge.my                 |     10 +
+ tests/fixtures/module_rc/leaf.my                   |     15 +
+ tests/fixtures/module_rc/lib.my                    |     49 +
+ tests/fixtures/module_rc/main.my                   |     15 +
+ tests/fixtures/qbe-sub-address/probe.c             |     56 +
+ tests/fixtures/qbe-sub-address/probe.ssa           |    171 +
+ tests/fixtures/qbe-zero-branch/probe.c             |     42 +
+ tests/fixtures/qbe-zero-branch/probe.ssa           |    241 +
+ tests/goldens/qbe_text.json                        |     12 +-
+ tests/incremental_diff.py                          |      2 +-
+ tests/interface_diff.py                            |    260 +
+ tests/interface_oracle.py                          |     94 +
+ tests/lang/checked_arithmetic.my                   |     21 +
+ tests/lang/constant_list_image.my                  |    110 +
+ tests/lang/exclusive_ownership.my                  |     76 +
+ tests/lang/gc_arena_root_lifetimes.my              |     83 +
+ tests/lang/gc_mut_argument_roots.my                |     15 +
+ tests/lang/iteration_identity.my                   |     29 +-
+ tests/lang/python_text_surface.my                  |    142 +
+ tests/lang/rc_dictionary_text_loops.my             |     45 +
+ tests/lang/rc_glue_values.my                       |     29 +
+ tests/lang/rc_scope_inline.my                      |     48 +
+ tests/lang/recursive_values.my                     |     15 +
+ tests/lang/repr_shadowing.my                       |     13 +
+ tests/lang/text_literal_index.my                   |     52 +
+ tests/lang/text_views.my                           |     28 +-
+ tests/module_build_diff.py                         |    188 +
+ tests/module_build_oracle.py                       |    154 +
+ tests/module_check_oracle.py                       |    148 +
+ tests/module_compile_oracle.py                     |    344 +
+ tests/module_test_oracle.py                        |    137 +
+ tests/native_equal_allocations_test.c              |    125 +
+ tests/native_heap_test.c                           |     42 +
+ tests/native_python_test.c                         |    156 +
+ tests/native_rc_collections_test.c                 |     29 +-
+ tests/native_rc_contract_test.c                    |      9 +-
+ tests/native_rc_fast_test.c                        |      4 +-
+ tests/native_rc_image_test.c                       |    324 +
+ tests/native_rc_registered_release_test.c          |    202 +
+ tests/native_text_index_test.c                     |     44 +
+ tests/native_text_methods_test.c                   |      4 +-
+ tests/native_text_views_test.c                     |     70 +
+ tests/qbe_phi_width.c                              |     62 +
+ tests/qbe_phi_width.ssa                            |    166 +
+ tests/qbe_runtime_rc_test.c                        |     22 +
+ tests/test_inputs_coverage.py                      |      1 +
+ tests/tooling_cache_isolation.py                   |     68 +
+ vendor/README.md                                   |      9 +-
+ vendor/qbe/amd64/isel.c                            |    131 +-
+ vendor/qbe/copy.c                                  |     10 +-
+ 1300 files changed, 395113 insertions(+), 1043 deletions(-)

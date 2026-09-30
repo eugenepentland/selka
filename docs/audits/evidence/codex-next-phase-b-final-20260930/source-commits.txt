@@ -1,0 +1,182 @@
+a3e451d76ebfa875a989151f995ffc4e84687db0 audit: record final Phase B gate readiness
+3297d7472539d30264340c77ff1bf5818aad5ed0 Integrate independent registered release and corpus reviews
+5fa4e3faac40fa3429e07b755910b4aeb3898cc0 audit: independently verify registered RC release
+d48f38676a6473d7612ec642cf222c12ae45445a Integrate independent final gate provenance review
+1a443238a0f64de9fc1326b83a22ad2db5190309 Integrate registered release proof and combined performance evidence
+91fd6405afb9c642789db013656ceceac85a23fc Integrate bound RC count and scope assertion repairs
+5d216363f607e374dc9d7d51dd6250f432ac3376 audit: record Guardian evidence-commit checks accurately
+eb6f9c606584eb54a4de0f033f8976d84a4f845a test: bind RC assertions to admitted SSA and journal operations
+ce1943aaa206374a9fa2fecb8f83e9b19a2eff04 audit: preserve independent final gate identity review
+bf43ff289985bfb87e2156a78ab5fb328fe1f8b4 audit: preserve composed registered release performance pass
+375c4442d5be4babb30cdafbbfe3f82f27febc5e Archive registered release provenance and native gates
+21f3452232c22c6d80e3e36f5b1a1c9a0b7fd7b3 audit: preserve registered release proofs and variability limits
+5347c9c0d1c63965b687561a11f458c1ecc3361c Integrate current RC scope and ABI gate assertions
+4a7db02d4d49aecac9a388ea48977d7e95d08b6d Integrate registered release runtime continuation
+8c9d04eadc178c9638c3de7655f092a262039498 Integrate canonical registered collection release
+c13be022aa4a5260d15b002c377de15c5abb4480 runtime: release registered collection shapes directly
+06706119a7d6f563c45f5e0a6d00dd50e4ac7423 test: verify current inline RC scope and count contracts
+2113a781d185d6612c9e5f6590f458d840e8b92e audit: retain full pre-final failure and text-operation evidence
+f26a875dc243e65f0b746f5beb246d467b27e95a audit: retain exact text-operations attribution and scratch probes
+aab4292055ff73b742bb0aa19e630e24ca1df49f audit: distinguish pin and receiver scope failures
+6b181cfb6fe1e353fb3bac42a860f61a81777b09 audit: retain fourteen pre-final Zig failures for repair
+2cba126d2121805b707f06b4d6cbc5472635ad9c docs: clarify full and focused test installation prerequisites
+6f42861ca7eb357af8b59c98ce0512d0669a1d84 audit: complete induction proof and rejected trial archive
+13b701bfdcb8b778d1cd136cc846d7c9321d515d audit: include experimental float IR in verified bundle
+94b754c183bcddcfd8bf7a0d2800bcf97a01413a audit: retain induction proof and rejected lowering trials
+f7cc661aa822fb8b1b6fee814915d96630ac2f36 audit: preserve combined corrections and text-operations rejection
+5535e5a3f0b67e23d0fc9f92f594d7b3feb12a3f integrate: complete focused corpus performance corrections
+742c79faa4550d2e580e41eb4bbaaff2f3669c54 integrate: structural induction result preference for LLVM
+27fd75548cf01e78a6025c7c2f04f508f183ff4c audit: retain cold-hint independent native and corpus evidence
+34f469b55d591c9de246598e16c0df31a9f4c4c5 audit: preserve independent cold-hint replay and measurements
+178dad48c1eb76ec4124923589294f0b8ed57bfe llvm: preserve affine results only for structural induction hints
+a255ae08b327a45c3c8f94b38bf0d18f57cb274f audit: bind independent cold-hint replay and focused counts
+bc4b80b82bc5a43f7bd3f2a64a9a8af56e9d3e52 integrate: bounded QBE addresses and cold runtime failures
+22f679c39309230e3edb1ffefa2595f832628cca audit: complete bounded QBE address evidence
+f2989f11b081e23f6ed185599e6b52e038cea570 integrate: cold runtime failure hint with exact traces
+07dcc6012f38f19993d862f30d1fe59dc5bcdb5a audit: retain rejected preserve-all trace evidence
+9bd45026816f4fe473605c15c50253c72704ca8c audit: preserve QBE prefix address proof and parser attribution erratum
+5c2f572c62904aa22c4a848a9520f1af3ea3ef77 audit: archive cold failure shape and exact trace evidence
+c9ad8375605a5bb4575ba6773b14ff70bd63e169 perf: keep private runtime failures cold under C ABI
+93ac59db721c920b761a8c5fbd4de54a34884bbd merge: fold bounded QBE prefix displacements after independent replay
+ae291a848bc2758310e25fef52456734bef4f008 fix(qbe): fold bounded long subtraction into memory displacements
+933ed15c65e872271893f49ac5d9f06d3d8d6eb7 audit: reject preserve-all failure trace regression
+db7ec3846674401009532f1fdf33222286904edc audit: pin final acceptance to the approved A5 corpus criteria
+5f1c030ec7f859e648dfecfcbe8cf80d8304a745 merge: retain frozen targeted measurements and scoped review evidence
+3b1b7b4b743cb9e6e4c1e6e1bc1d7e27ea894e71 merge: preserve frozen constant-overflow functional receipts
+3ad3ad54bf7bb492204e8e725070a204a39b8958 merge: archive code-identical invocation attribution
+6453988d3195dcd6fb18dbf6252669a6ca828432 docs: record frozen literal-overflow checks and evidence
+a1461d97868e69e66e4984ab0395ad1ce16be6c1 audit: preserve four remaining composed performance regressions
+b8141e67d97e43494eff2c0863726abdaa33653e audit: preserve independent local overflow proof review
+861c9ade0a1938d8648a760e69c00ec62ae8f097 docs: archive frozen invocation hot-cost attribution
+cfee00704911a482bd09db880f0e20631f8b6cf1 merge: compose targeted runtime and LLVM continuations
+f98ec5d861ec2dc49687f95f9455130d6eb51be3 merge: compose local constant-overflow proof for preliminary measurement
+cda5e27b676c05c451c440b4abc48ae5405f121d merge: retain nested readiness proof and callable ABI receipts
+c216418a8ca14c18a7b6e5eb4bb867707bb29175 audit: archive exact fannkuch and QBE Lox attribution
+ebfda562d1d54ee18b474358cdd5a7e31a6f2e87 audit: preserve nested readiness executable and ABI proofs
+8a1bc3b36a8029095d8750cf3a7622a0229e1ed6 perf(llvm): prove local literal overflow bounds with intrinsics
+24d901bed47dcc1dfb382db84c47bd99c343b849 merge: compose selective readiness with text-view inlining
+630932b55faabde406e1f21ba8170690a2f67ffd merge: use nested-loop readiness hint without global inlining
+c28530b0a3f0f5e4e9f12a6f2cbed73702a0351d perf: inline readiness only in nested certified append loops
+3d9806c382a20db6c492d5f6ff6164c0bb475861 merge: compose native text view inlining and verified profile evidence
+97d411dcd55834ab1f6c06246a8ec5214c9b0475 merge: preserve profiled native text view inlining
+cb9c42a5659bde1e5eddbb8775a9aa0bf69bf6a6 perf: preserve native text view inlining
+f5f731da687fadf70ebce96fa305b838d0c7906b audit: preserve exact raytrace and text instruction attribution
+40bd74a0c52939c5f92d56f3a447269592077bd3 merge: archive inlining ABI and composed corpus rejection
+c490d92c54880c254a4606fd1ece43a6da577a61 audit: preserve readiness ABI proof and rejected all-corpus comparison
+1b32d30ad890e709cf7412373a5eb047523031c2 merge: correct non-LTO machine call-site receipt prose
+3277a3cd0840d495a3893458147075fc151860e8 merge: archive publication correctness and rejected composed measurements
+e642420d05ac2ffdafd7a71a8f563c2d13501b50 audit: correct readiness machine call-site counts
+7ec80b784eca287061f0ab42a6121a11e56171c4 docs: record reviewed publication and remaining Phase B gate blockers
+f132046e4a9fa1999ad86a01cdcaf164ac1ed3bf audit: preserve publication review and exact rejected runtime costs
+255cf730604cb6023ad5701165a100358d9c0cfe merge: compose plain append readiness inline continuation
+4f79982473ad2d58b5f03f359e9391cc00b3f705 merge: preserve LTO inlining of plain append readiness
+79fd7e25635a21813f41d8038832f41a0154d56c runtime: inline plain append readiness under LTO
+3226f1d66b08734824e5c799c25a9c7ed4a69438 merge: compose private publication reuse and independent runtime evidence
+a38ecd6d6a6877c71311bbc0cea84f8ac9a7fb48 merge: reuse admitted count in private ordinary publication
+f8165cc73437d73d2b97dcf307b05cf9077fe6b3 audit: preserve combined module checks and rejected runtime measurements
+ed48ecc8a3c65794c2513bae594ae07cfb2774d0 runtime: acquire publication owners in the admitted copy block
+f3ccf77f7c4966f5b59c6cfb0617eab1f5f35c37 test: declare zero-branch fixtures for the unit root
+bf415111821aac9c2184f9d73b7acc666fd1005d test: declare zero-branch fixtures for the unit root
+7f5068a54946bcbe0cf1f7e20abf844f120046cd merge: compose ABI5 count and corrected branch optimizations
+9bf0ef2c200afb9fdea440dbf9b9e7a85e86450b merge: compose reviewed selector and provisional release optimizations
+27b170076d1a21286857f7fc00583bded555497d docs: record QBE repairs and remaining corpus regressions
+b9a270e9c31c1bb19f553b97ecba5ddafb10e182 audit: approve corrected QBE zero-branch boundary with independent oracles
+35c948755249a060e9939d5c8c07d32f598c8f84 merge: archive independent QBE failure and repair proofs
+279501d17e6eb84b13fa311b7042434a70c2cc5d runtime: preserve release state and reject flag-clobber tails
+16cecfae7c1d4c067c0c9537a324843ef3ba36b1 audit: preserve independent rejection of QBE zero-branch tail fold
+79c391844e443bdaecb377a588f51badbc38459c merge: retain QBE phi before and after evidence
+20cab238c5db331dbb02076dcd15cf9984a32aba audit: preserve QBE phi failures and corrected receipts
+e789a32d42bd2f635e9e9f1e5da715f397b24517 merge: complete backend fixture input coverage
+5d7612f7bdbecfa1949b1b7c601dcdf9d84c5b0a merge: declare phi and dictionary test fixture inputs
+e5ed9195aa8bb649a113e458b51c686e49c85e27 test: declare phi and dictionary fixture inputs
+489d203f0b32d26f874c4bf0bc928e109bc48e35 merge: compose durable module closeout and QBE phi repair
+592a44f4e86a89059f1a94384be5afcb9be3bf05 merge: preserve QBE phi value widths during copy folding
+e364e7e4484e12f5d96a8c3ab9a36d881ee72697 merge: archive completed module build-chain evidence
+d0537d01108eda48339cb9b46abfd8510338cdea qbe: preserve result classes when replacing phis
+a5ad25a0f2e8070499602f32f8fb6a22323e00e8 audit: close module lane with strict receipts and paired scale measurements
+f4b6647de06e556823bc960a27fdfcd58193b3d0 qbe: checkpoint adjacent zero branches with count admission proofs
+284bbc057ae904d6538d42ca11e93aa99ca90b56 docs: record module timing gains and QBE spill blocker
+15608dcd8a05095d3ac123d5a1c6811010d0e261 merge: compose corrected module keys and unchanged state
+9e62bbc3f9dd698f1420b3f96dff4a611b604fd1 merge: reserve measured ReleaseFast compiler memory
+d105943ef8f757f3b5683267245e63d0e9e5c322 fix(build): select the current fast optimize tag
+2b819be677acf08f52a7265f662c1ed26714822e docs: retain module state review and corrected corpus identity
+ba0ad1d4b83d5f8986897382c495d3bca0d12acd build: reserve observed ReleaseFast compiler memory
+aa454bc264bfa7a8cd48dbe9a01669176983d614 merge: align module keys and preserve unchanged cache state
+573ce9a4e97d4deb3e874dcaa35beb0eaacbfbb0 perf(modules): preserve verified unchanged state files
+5d2f39dfc7ceb7dae763941ab9d106700c1b60a6 docs: record corrected module and wide-count checkpoints
+9f2a90368ba07a37fc47459c6466611d2303ee3b merge: retain independent scope boundary receipts
+e66b8035009674667352a09e95ab6e2b2bfb1d2c runtime: checkpoint pre-store count carry and actual emission proof
+aa0a31c1d6bc3fce932e48f5849f32adf437bdfd docs: retain independent full-width scope verification
+a06ed822bb2364a59d6cf5624a42a9b0e05e16ed fix(modules): key only consumed pure parameter writes
+09b5443fcfd03d2336eae6898ab0d1e4e32dca6f merge: compose ABI5 runtime with corrected module declarations
+97c7dea5e7878debfb3d2586a648abbece80fccd merge: integrate full-width runtime correctness checkpoint
+790cdfb1b38a06cae3741c0c9bba724f4cf8fb77 runtime: preserve full-width scope truth and ABI5 fixture geometry
+80d7fbd4c65f511a92c9b6c8c0a3bb2cb318df90 merge: integrate final module effect and artifact fixes
+19402e0ca2b9e944bdff22f03a66fb9785ce7874 docs: retain independent explicit-effect admission review
+cae9c833483d6130cd0ddaecc9a38447e622e920 merge: preserve explicit imported effects and realistic unit budgets
+a3fb19fcf8bbe59ee72266a7fce96093b52d8b84 modules: retain explicit effect authority and verify conservative stand-ins
+1390e0c76840baf8231f043a3802a8ddccc9b9d3 runtime: retain two wide counts under explicit ABI5
+358b04c52625213fadd31f196759afc230f6422f docs: retain independent artifact authority fix verification
+18c173dc486c8373e9f81a6c86bef57e91ddedea merge: correct module artifact and linked runner fidelity
+9789436dd14f1a515f0454961b70311c280bafdc modules: preserve declaration authority and complete positive CLI paths
+c435008b30d719331be6fd0998c3bec8aab2c427 perf(rc): fuse bounded whole-value admission and acquisition
+03203fb2c12b22921141704cc32b56420608ac07 docs: record integrated Phase B checkpoints and acceptance blockers
+b402db3e34f0d0ce0bb046f4d9900a7552a71cbc merge: integrate Phase B runtime and module checkpoints
+0b978d57fed2a8de5250aa2422a42aa16d1c3b0f docs: retain combined artifact checks and rejected runtime rows
+0801373befb4dc09599fc6d6d154e550c5dac6e0 merge: bind imported physical artifacts to semantic declarations
+96b054808c6e9d0889d8ad23a1432d46d3943ff5 modules: reject conflicting dependency signatures and forged body IDs
+3fe434c988123753f915bdcc801304f547e6c4d2 merge: acquire generated RC source edges before copying
+4fce2270df8b20a9b641da04b75e9318215ab8a2 fix: reject competing packed and embedded literal authority
+cb4336cfe6cc0f16f29894eefd1c3327a2af070d perf: acquire admitted RC source edges before value copy
+61c639d87123dc9f41947f81b52872fae7404910 merge: retain final B3 text gate and performance receipts
+dd9c1ca94e6a6d27158a010d17464e60d9eac307 docs: verify combined static list builds on both backends
+91bb0769e6a9752fdbfe9e9f4c1453d130c5b0fb merge: preserve LLVM assembly linkage outside probe sections
+24ff8386ace115ab3a71dc2319ceba77a855eb9f audit: record frozen text runtime gates and comparisons
+354d9ddd930d8d65a286571a51870f269f01809b fix: preserve optional symbol linkage through frame-map LTO
+f3b3d5c76ecdfbdf8a700a191d6862b1e2ef5d41 docs: retain static list correctness and rejected LLVM evidence
+264e1c3cfcf8eefd8695afd3a78bc824b5a39b11 merge: integrate frozen incremental build and seeder contracts
+c4c5251d7abc6904eb5ed80d5a221f2cbf9aed12 test: preserve indexed literal children through list detachment
+c36d73e75434249e92099d0f9e153f1a133ec05c merge: integrate static RC registration image emitter
+e1e6d0b5cdb6f1896c072ff4c4b193ff5d24c2b6 merge: retain frozen B4 gate and performance receipts
+62c95a7dece8e7cc2b81f7f8130290f4f24574a6 modules: validate external envelopes and make differential measurements nonvacuous
+062920d02a862dc20894ca845baab210ddbae1b1 merge: integrate frozen B3 text views and literal indices
+2dbeecaecf573957c875c6afcbaf5174c181a8bf perf: emit canonical immutable RC registration images
+fa8ae6e71f49ba4ba39b22712599784f56df24b1 modules: resume owned seeders on foreground death and refuse unknown body proofs
+8f67ab8ad02a92ab5a37f6875d52282164104d15 compiler: image immortal list elements and preserve arena creation
+458b9dfc84640b2d1e38a4eb30be1ec3745c0476 text: share streaming suffixes and index immutable literals
+ad37026ec8df4befeb8dd5992b911d7ed39a425c module metadata: share canonical codec and invariant table union
+a79802d5de0d6a3e24c600c164ee600a54e0832b module tests: keep foreground runs independent of seeders
+8e36c7b358490549953efd344b3b1b0e76e28d9d Merge commit '987a360aaed3a237b147ba7a41a0d93854be52fb' into codex/next-runtime-20260929
+09e3fa343f5a6bb4da759e82ebb850ff12253758 Merge commit '04166e6a' into codex/next-runtime-20260929
+3f12871a6d5436a1d0a95840181e786bed1a0929 Merge commit '5ef8b06a2e1dacd95ffb3a6e01e883ba9f615b39' into codex/next-runtime-20260929
+c7fa90008b31d301f2f014ae0d677039bd2b0494 module tests: share verdict identities and seed large cold projects
+f385b2b0c9442d6bf36ad10c1e8fce0c83e7bcb9 compiler: pack large primitive list literals into COW images
+04166e6a9611d3ec3384e0469d8013d937b2f71b module tests: link shared runners with complete current metadata
+987a360aaed3a237b147ba7a41a0d93854be52fb perf: admit immutable RC registration images atomically
+5ef8b06a2e1dacd95ffb3a6e01e883ba9f615b39 audit: close Python text surface with frozen gate evidence
+9246511b9f25995682ca55297ceb3104bab648b4 test: align empty text search goldens with Python semantics
+620e699744a8362c7a98a351d19a2a1da83f861a module projects: preserve loader policy and canonical host metadata
+e2c106c55f7daf4b082581b6d85dee175aaef64b runtime: use shared ABI4 word counts for inline scopes
+6b350286fe8ceb96fa887f5b292a609fdf40c2fd merge: use shared unsigned count loads for LLVM
+f2dc939aff0ed68ba256c2e7e22523d593615dfc fix: emit unsigned word RC count loads for LLVM
+843415b69c18fe8d86adf3d9f983783c5b0e0756 module scheduler: validate current inputs and RC proof dependencies
+6e2902a770b12886e2f44a3c4de6c3ba77479820 merge: integrate committed ABI4 counted prefix tranche
+62545bc246f1afcb30bbbe6e7d531f9987fbdaab runtime: hoist fresh dictionary checks through disjoint text work
+0362624949bc4ea1846b575d9329aa7adfe73386 perf: narrow RC counts and align a 24-byte object prefix
+0ce7fe20857cb23fe3b7d3e2c65d77f6f8ce1a26 merge: integrate frozen text compatibility corrections into runtime work
+70d1f8766bdcdda21a244b20818f7a0abf1d354e runtime: emit RC scope journal hot paths with native fallback
+c4c9e3d0eb8c5e41bb75ae7f8a26914ee2bfaa4c fix: preserve contextual octet declarations in text compatibility
+46242c06aa41e8c5165e168836addfe7f7780921 fix: preserve sorted element rules with byte support
+25d3a372af2718e466eb4621f9a9b82cdcc9f8fe module compilation: preserve RC physical contracts and shared metadata
+b2dac95179eb5f35a334fb5f4383887e618215ad merge: prepare Python text source for runtime follow-ups
+36e84c584391d8a8007a3329a10c11ab2657b48d feat: complete Python text and bytes surface
+909c4cd7b628a96491bb3e1c312d1c8fc8ee2017 docs: archive frozen B4 tooling closeout evidence
+1b91662740f2ae17338fc8176cb3948d943a6b5e perf: use mutable argument exclusivity in ownership proofs
+bd11421eaf80e52066dab541dc961a76eda1cacd perf: avoid scratch allocation for leaf and common structural equality
+7fe0ca76d704f037acf9d134bb4ad8a73517ed00 docs: record approved Phase A landing and remaining performance work
+d105fb7d57d9038a1ecadb78d0d2d813d1c4e903 Merge commit 'b5c04602' into codex/next-modules-20260929
+b5c04602459c3b405791ba31b488a15ceb001c8b fix tooling embed receipts and guest memory boundaries
+ac50447107b1258d24e9b0721cb9c77c8604c099 merge: prepare verified tooling fixes on combined compiler source
+029e9d7433964ae4413d2a4735abb4921a3b8d3e audit: attribute GC measurements and record final CLI gate
+2275f159506230c83e9dca8ad8bf4f37f61b1de2 fix: bound arena checks to source binding lifetimes
+e356e099a650ebeea96a840ba826e5098ddd7197 fix: close tooling gaps and preserve mutable snapshots

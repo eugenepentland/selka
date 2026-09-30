@@ -1,0 +1,508 @@
+{
+  "version": "independent-final-guest-counts-v1",
+  "generated_utc": "2026-09-30T08:31:52.973378+00:00",
+  "tag": "phase-b-final-20260930-codex",
+  "scope": "Read-only independent counting and provenance inspection; no test/build/retry/Guardian/timing run, no ROOT or source writes, no duplicate archive. Own receipt only. Root owns verification/acceptance/archive.",
+  "provenance": {
+    "expected_source_commit": "a3e451d76ebfa875a989151f995ffc4e84687db0",
+    "observed_root_HEAD": "a3e451d76ebfa875a989151f995ffc4e84687db0",
+    "source_identity_commit": "a3e451d76ebfa875a989151f995ffc4e84687db0",
+    "candidate_binaries_commit": "a3e451d76ebfa875a989151f995ffc4e84687db0",
+    "gate_script_expected_sha256": "ecc2eceb4101d6075f7a08e19c6e6ad8d5496ab6a73ceede8bb59df80163d301",
+    "gate_script_observed_sha256": "ecc2eceb4101d6075f7a08e19c6e6ad8d5496ab6a73ceede8bb59df80163d301",
+    "compiler_expected_sha256": "85fcf4408832492a601306f2ed5453595770fbb681081192d26b99935e0fc255",
+    "compiler_observed_sha256": "85fcf4408832492a601306f2ed5453595770fbb681081192d26b99935e0fc255",
+    "qbe_expected_sha256": "90e368d62b838c41cd2ba4bc68ec5d33843ebc661014d2ad40c835dded900d95",
+    "qbe_observed_sha256": "90e368d62b838c41cd2ba4bc68ec5d33843ebc661014d2ad40c835dded900d95",
+    "candidate_binary_count": 58
+  },
+  "root_summary": {
+    "path": ".tmp-gate/phase-b-final-20260930-codex/summary.txt",
+    "bytes": 1015,
+    "sha256": "888ec47c9f46b29d7361303120744d366d9def51352d61d522c0a2de7aa9197c",
+    "modified_utc": "2026-09-30T08:30:38.661902+00:00"
+  },
+  "recorded_stages": 27,
+  "expected_stage_count": 27,
+  "gate_done_marker": true,
+  "exact_expected_stage_set": true,
+  "all_recorded_statuses_zero": true,
+  "total_guest_pass_observations": 13374,
+  "total_lox_pass_observations": 312,
+  "completed_guest_sweeps": {
+    "sweep--rc-runtime=stats": {
+      "counts": {
+        "passed": 1486,
+        "failed": 0,
+        "skipped": 0,
+        "cached": 0,
+        "executed": 1486,
+        "programs": 227,
+        "dropped": 0,
+        "unloaded": 0
+      },
+      "test_entries": 1486,
+      "unique_test_names": 1486,
+      "test_names_sha256": "083b601eede46b7ee408713ceebd96c597999f0d2e6891e94d04ca4094ed2ba2",
+      "json": {
+        "path": ".tmp-gate/phase-b-final-20260930-codex/sweep--rc-runtime=stats.json",
+        "bytes": 962224,
+        "sha256": "66065b8f6156f5a60e8edc26e6a7dcb45a5351d09c2c30de991a5e41285b1b1e",
+        "modified_utc": "2026-09-30T08:04:27.715037+00:00"
+      },
+      "stderr": {
+        "path": ".tmp-gate/phase-b-final-20260930-codex/sweep--rc-runtime=stats.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "modified_utc": "2026-09-30T08:02:28.698578+00:00"
+      },
+      "summary_status": 0
+    },
+    "sweep--rc-runtime=stats-release": {
+      "counts": {
+        "passed": 1486,
+        "failed": 0,
+        "skipped": 0,
+        "cached": 0,
+        "executed": 1486,
+        "programs": 227,
+        "dropped": 0,
+        "unloaded": 0
+      },
+      "test_entries": 1486,
+      "unique_test_names": 1486,
+      "test_names_sha256": "083b601eede46b7ee408713ceebd96c597999f0d2e6891e94d04ca4094ed2ba2",
+      "json": {
+        "path": ".tmp-gate/phase-b-final-20260930-codex/sweep--rc-runtime=stats-release.json",
+        "bytes": 962224,
+        "sha256": "d371e5b3ee718f387ad94e4b4ebc8b9b52d023d40df59fa50ed137734bdf9434",
+        "modified_utc": "2026-09-30T08:10:52.937472+00:00"
+      },
+      "stderr": {
+        "path": ".tmp-gate/phase-b-final-20260930-codex/sweep--rc-runtime=stats-release.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "modified_utc": "2026-09-30T08:04:27.807041+00:00"
+      },
+      "summary_status": 0
+    },
+    "sweep--rc-runtime": {
+      "counts": {
+        "passed": 1486,
+        "failed": 0,
+        "skipped": 0,
+        "cached": 0,
+        "executed": 1486,
+        "programs": 227,
+        "dropped": 0,
+        "unloaded": 0
+      },
+      "test_entries": 1486,
+      "unique_test_names": 1486,
+      "test_names_sha256": "083b601eede46b7ee408713ceebd96c597999f0d2e6891e94d04ca4094ed2ba2",
+      "json": {
+        "path": ".tmp-gate/phase-b-final-20260930-codex/sweep--rc-runtime.json",
+        "bytes": 962224,
+        "sha256": "443344613933bcb0488f0a92baa0f5ab537987c4db7eea5e7b42bd253f7682d0",
+        "modified_utc": "2026-09-30T08:13:16.930868+00:00"
+      },
+      "stderr": {
+        "path": ".tmp-gate/phase-b-final-20260930-codex/sweep--rc-runtime.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "modified_utc": "2026-09-30T08:10:52.956473+00:00"
+      },
+      "summary_status": 0
+    },
+    "sweep--rc-runtime-release": {
+      "counts": {
+        "passed": 1486,
+        "failed": 0,
+        "skipped": 0,
+        "cached": 0,
+        "executed": 1486,
+        "programs": 227,
+        "dropped": 0,
+        "unloaded": 0
+      },
+      "test_entries": 1486,
+      "unique_test_names": 1486,
+      "test_names_sha256": "083b601eede46b7ee408713ceebd96c597999f0d2e6891e94d04ca4094ed2ba2",
+      "json": {
+        "path": ".tmp-gate/phase-b-final-20260930-codex/sweep--rc-runtime-release.json",
+        "bytes": 962224,
+        "sha256": "5cb8e7cc3dab61280f8d6badca57e6af33c92be823a31f6a2f4347cefb6f072f",
+        "modified_utc": "2026-09-30T08:18:33.941746+00:00"
+      },
+      "stderr": {
+        "path": ".tmp-gate/phase-b-final-20260930-codex/sweep--rc-runtime-release.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "modified_utc": "2026-09-30T08:13:16.948868+00:00"
+      },
+      "summary_status": 0
+    },
+    "sweep--gc-runtime": {
+      "counts": {
+        "passed": 1486,
+        "failed": 0,
+        "skipped": 0,
+        "cached": 0,
+        "executed": 1486,
+        "programs": 227,
+        "dropped": 0,
+        "unloaded": 0
+      },
+      "test_entries": 1486,
+      "unique_test_names": 1486,
+      "test_names_sha256": "083b601eede46b7ee408713ceebd96c597999f0d2e6891e94d04ca4094ed2ba2",
+      "json": {
+        "path": ".tmp-gate/phase-b-final-20260930-codex/sweep--gc-runtime.json",
+        "bytes": 962224,
+        "sha256": "ad48042155a051f5db73fa52ae5b400e0375ce8c61e081e1f3681eccbed5581c",
+        "modified_utc": "2026-09-30T08:19:17.331372+00:00"
+      },
+      "stderr": {
+        "path": ".tmp-gate/phase-b-final-20260930-codex/sweep--gc-runtime.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "modified_utc": "2026-09-30T08:18:33.960747+00:00"
+      },
+      "summary_status": 0
+    },
+    "sweep--gc-runtime-release": {
+      "counts": {
+        "passed": 1486,
+        "failed": 0,
+        "skipped": 0,
+        "cached": 0,
+        "executed": 1486,
+        "programs": 227,
+        "dropped": 0,
+        "unloaded": 0
+      },
+      "test_entries": 1486,
+      "unique_test_names": 1486,
+      "test_names_sha256": "083b601eede46b7ee408713ceebd96c597999f0d2e6891e94d04ca4094ed2ba2",
+      "json": {
+        "path": ".tmp-gate/phase-b-final-20260930-codex/sweep--gc-runtime-release.json",
+        "bytes": 962224,
+        "sha256": "f3fc16afa9179c485d148d7893355981c46f3dfbe445b5a8656f23c7ab424972",
+        "modified_utc": "2026-09-30T08:23:17.933388+00:00"
+      },
+      "stderr": {
+        "path": ".tmp-gate/phase-b-final-20260930-codex/sweep--gc-runtime-release.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "modified_utc": "2026-09-30T08:19:17.349373+00:00"
+      },
+      "summary_status": 0
+    },
+    "sweep=default": {
+      "counts": {
+        "passed": 1486,
+        "failed": 0,
+        "skipped": 0,
+        "cached": 0,
+        "executed": 1486,
+        "programs": 227,
+        "dropped": 0,
+        "unloaded": 0
+      },
+      "test_entries": 1486,
+      "unique_test_names": 1486,
+      "test_names_sha256": "083b601eede46b7ee408713ceebd96c597999f0d2e6891e94d04ca4094ed2ba2",
+      "json": {
+        "path": ".tmp-gate/phase-b-final-20260930-codex/sweep=default.json",
+        "bytes": 962224,
+        "sha256": "443344613933bcb0488f0a92baa0f5ab537987c4db7eea5e7b42bd253f7682d0",
+        "modified_utc": "2026-09-30T08:23:55.148782+00:00"
+      },
+      "stderr": {
+        "path": ".tmp-gate/phase-b-final-20260930-codex/sweep=default.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "modified_utc": "2026-09-30T08:23:17.952389+00:00"
+      },
+      "summary_status": 0
+    },
+    "sweep=default-release": {
+      "counts": {
+        "passed": 1486,
+        "failed": 0,
+        "skipped": 0,
+        "cached": 0,
+        "executed": 1486,
+        "programs": 227,
+        "dropped": 0,
+        "unloaded": 0
+      },
+      "test_entries": 1486,
+      "unique_test_names": 1486,
+      "test_names_sha256": "083b601eede46b7ee408713ceebd96c597999f0d2e6891e94d04ca4094ed2ba2",
+      "json": {
+        "path": ".tmp-gate/phase-b-final-20260930-codex/sweep=default-release.json",
+        "bytes": 962224,
+        "sha256": "5cb8e7cc3dab61280f8d6badca57e6af33c92be823a31f6a2f4347cefb6f072f",
+        "modified_utc": "2026-09-30T08:27:39.733198+00:00"
+      },
+      "stderr": {
+        "path": ".tmp-gate/phase-b-final-20260930-codex/sweep=default-release.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "modified_utc": "2026-09-30T08:23:55.166783+00:00"
+      },
+      "summary_status": 0
+    },
+    "sweep-gc-stress": {
+      "counts": {
+        "passed": 1486,
+        "failed": 0,
+        "skipped": 0,
+        "cached": 0,
+        "executed": 1486,
+        "programs": 227,
+        "dropped": 0,
+        "unloaded": 0
+      },
+      "test_entries": 1486,
+      "unique_test_names": 1486,
+      "test_names_sha256": "083b601eede46b7ee408713ceebd96c597999f0d2e6891e94d04ca4094ed2ba2",
+      "json": {
+        "path": ".tmp-gate/phase-b-final-20260930-codex/sweep-gc-stress.json",
+        "bytes": 962224,
+        "sha256": "a7bcd0e1267004da5e363f20537bf3c6cb7c76485d4eb25e132f272cd9ff210f",
+        "modified_utc": "2026-09-30T08:28:31.711145+00:00"
+      },
+      "stderr": {
+        "path": ".tmp-gate/phase-b-final-20260930-codex/sweep-gc-stress.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "modified_utc": "2026-09-30T08:27:39.751198+00:00"
+      },
+      "summary_status": 0
+    }
+  },
+  "pending_guest_sweeps": [],
+  "completed_lox_logs": {
+    "lox-tests": {
+      "expected_passed": 65,
+      "passed_lines": 65,
+      "unique_passed_names": 65,
+      "test_names_sha256": "60ecafbe4e6de6547bdb8ef2d0d2014325005c20e6e9953dd7b487a59a27eb74",
+      "parsed_outcome_summaries": [
+        [
+          65,
+          0,
+          0,
+          0
+        ]
+      ],
+      "artifact": {
+        "path": ".tmp-gate/phase-b-final-20260930-codex/lox-tests.log",
+        "bytes": 3095,
+        "sha256": "61ef4b846d3d5d2a8db652085cb50142c912d09f8d66365431c8528f0905acb7",
+        "modified_utc": "2026-09-30T08:28:51.049870+00:00"
+      },
+      "summary_status": 0,
+      "tail": [
+        "passed value_test::test_is_falsey_rules",
+        "passed value_test::test_values_equal_rules",
+        "65 passed, 0 cached, 0 failed, 0 skipped, 0 dropped across 10 programs"
+      ]
+    },
+    "lox-driver": {
+      "expected_passed": 13,
+      "passed_lines": 13,
+      "unique_passed_names": 13,
+      "test_names_sha256": "90f378b8afda709b148542c7466e2ce3cc2cde9ac430531a5c860431a9493abd",
+      "parsed_outcome_summaries": [
+        [
+          13,
+          0,
+          0,
+          0
+        ]
+      ],
+      "artifact": {
+        "path": ".tmp-gate/phase-b-final-20260930-codex/lox-driver.log",
+        "bytes": 684,
+        "sha256": "7d60a6e586ea1e3d39ea3482c78e1d93181fd74a96ffe9a736f3612cff715072",
+        "modified_utc": "2026-09-30T08:29:06.469448+00:00"
+      },
+      "summary_status": 0,
+      "tail": [
+        "passed driver_tests::test_run_stack_overflow",
+        "passed driver_tests::test_run_string_concat",
+        "13 passed, 0 cached, 0 failed, 0 skipped"
+      ]
+    },
+    "lox-tests--gc-runtime": {
+      "expected_passed": 65,
+      "passed_lines": 65,
+      "unique_passed_names": 65,
+      "test_names_sha256": "60ecafbe4e6de6547bdb8ef2d0d2014325005c20e6e9953dd7b487a59a27eb74",
+      "parsed_outcome_summaries": [
+        [
+          65,
+          0,
+          0,
+          0
+        ]
+      ],
+      "artifact": {
+        "path": ".tmp-gate/phase-b-final-20260930-codex/lox-tests--gc-runtime.log",
+        "bytes": 3095,
+        "sha256": "61ef4b846d3d5d2a8db652085cb50142c912d09f8d66365431c8528f0905acb7",
+        "modified_utc": "2026-09-30T08:29:11.771646+00:00"
+      },
+      "summary_status": 0,
+      "tail": [
+        "passed value_test::test_is_falsey_rules",
+        "passed value_test::test_values_equal_rules",
+        "65 passed, 0 cached, 0 failed, 0 skipped, 0 dropped across 10 programs"
+      ]
+    },
+    "lox-driver--gc-runtime": {
+      "expected_passed": 13,
+      "passed_lines": 13,
+      "unique_passed_names": 13,
+      "test_names_sha256": "90f378b8afda709b148542c7466e2ce3cc2cde9ac430531a5c860431a9493abd",
+      "parsed_outcome_summaries": [
+        [
+          13,
+          0,
+          0,
+          0
+        ]
+      ],
+      "artifact": {
+        "path": ".tmp-gate/phase-b-final-20260930-codex/lox-driver--gc-runtime.log",
+        "bytes": 684,
+        "sha256": "7d60a6e586ea1e3d39ea3482c78e1d93181fd74a96ffe9a736f3612cff715072",
+        "modified_utc": "2026-09-30T08:29:16.239814+00:00"
+      },
+      "summary_status": 0,
+      "tail": [
+        "passed driver_tests::test_run_stack_overflow",
+        "passed driver_tests::test_run_string_concat",
+        "13 passed, 0 cached, 0 failed, 0 skipped"
+      ]
+    },
+    "lox-tests--release": {
+      "expected_passed": 65,
+      "passed_lines": 65,
+      "unique_passed_names": 65,
+      "test_names_sha256": "60ecafbe4e6de6547bdb8ef2d0d2014325005c20e6e9953dd7b487a59a27eb74",
+      "parsed_outcome_summaries": [
+        [
+          65,
+          0,
+          0,
+          0
+        ]
+      ],
+      "artifact": {
+        "path": ".tmp-gate/phase-b-final-20260930-codex/lox-tests--release.log",
+        "bytes": 3095,
+        "sha256": "61ef4b846d3d5d2a8db652085cb50142c912d09f8d66365431c8528f0905acb7",
+        "modified_utc": "2026-09-30T08:29:40.061706+00:00"
+      },
+      "summary_status": 0,
+      "tail": [
+        "passed value_test::test_is_falsey_rules",
+        "passed value_test::test_values_equal_rules",
+        "65 passed, 0 cached, 0 failed, 0 skipped, 0 dropped across 10 programs"
+      ]
+    },
+    "lox-driver--release": {
+      "expected_passed": 13,
+      "passed_lines": 13,
+      "unique_passed_names": 13,
+      "test_names_sha256": "90f378b8afda709b148542c7466e2ce3cc2cde9ac430531a5c860431a9493abd",
+      "parsed_outcome_summaries": [
+        [
+          13,
+          0,
+          0,
+          0
+        ]
+      ],
+      "artifact": {
+        "path": ".tmp-gate/phase-b-final-20260930-codex/lox-driver--release.log",
+        "bytes": 684,
+        "sha256": "7d60a6e586ea1e3d39ea3482c78e1d93181fd74a96ffe9a736f3612cff715072",
+        "modified_utc": "2026-09-30T08:30:06.713705+00:00"
+      },
+      "summary_status": 0,
+      "tail": [
+        "passed driver_tests::test_run_stack_overflow",
+        "passed driver_tests::test_run_string_concat",
+        "13 passed, 0 cached, 0 failed, 0 skipped"
+      ]
+    },
+    "lox-tests--gc-runtime--release": {
+      "expected_passed": 65,
+      "passed_lines": 65,
+      "unique_passed_names": 65,
+      "test_names_sha256": "60ecafbe4e6de6547bdb8ef2d0d2014325005c20e6e9953dd7b487a59a27eb74",
+      "parsed_outcome_summaries": [
+        [
+          65,
+          0,
+          0,
+          0
+        ]
+      ],
+      "artifact": {
+        "path": ".tmp-gate/phase-b-final-20260930-codex/lox-tests--gc-runtime--release.log",
+        "bytes": 3095,
+        "sha256": "61ef4b846d3d5d2a8db652085cb50142c912d09f8d66365431c8528f0905acb7",
+        "modified_utc": "2026-09-30T08:30:26.187435+00:00"
+      },
+      "summary_status": 0,
+      "tail": [
+        "passed value_test::test_is_falsey_rules",
+        "passed value_test::test_values_equal_rules",
+        "65 passed, 0 cached, 0 failed, 0 skipped, 0 dropped across 10 programs"
+      ]
+    },
+    "lox-driver--gc-runtime--release": {
+      "expected_passed": 13,
+      "passed_lines": 13,
+      "unique_passed_names": 13,
+      "test_names_sha256": "90f378b8afda709b148542c7466e2ce3cc2cde9ac430531a5c860431a9493abd",
+      "parsed_outcome_summaries": [
+        [
+          13,
+          0,
+          0,
+          0
+        ]
+      ],
+      "artifact": {
+        "path": ".tmp-gate/phase-b-final-20260930-codex/lox-driver--gc-runtime--release.log",
+        "bytes": 684,
+        "sha256": "7d60a6e586ea1e3d39ea3482c78e1d93181fd74a96ffe9a736f3612cff715072",
+        "modified_utc": "2026-09-30T08:30:38.650902+00:00"
+      },
+      "summary_status": 0,
+      "tail": [
+        "passed driver_tests::test_run_stack_overflow",
+        "passed driver_tests::test_run_string_concat",
+        "13 passed, 0 cached, 0 failed, 0 skipped"
+      ]
+    }
+  },
+  "pending_lox_logs": [],
+  "guest_name_set_sha256": "083b601eede46b7ee408713ceebd96c597999f0d2e6891e94d04ca4094ed2ba2",
+  "findings": [],
+  "archive_checklist": [
+    "Preserve exact source-identity.json, candidate-binaries.json and derived gate script/adaptation hashes for frozen a3e451d7.",
+    "Preserve summary.txt with all27 distinct expected stage statuses0 and final done marker; running/unrecorded stages remain pending.",
+    "Preserve all9 fresh --force sweep JSONs and stderr logs; require passed=executed=unique entries, same test-name set, failed/cached/skipped/dropped/unloaded0.",
+    "Preserve all8 fresh Lox logs:65 source tests across10 programs and13 driver cases for RC/GC debug/release; cached/failed/skipped/dropped/unloaded0.",
+    "Preserve6 Zig target logs including actual unfiltered test summary and strict backend/LTO CLI outcome (separate independent-zig-triage receipt).",
+    "Root independently verifies/archives full candidate/control/denominator performance receipts and3 sizes; this count receipt does not replace acceptance verification."
+  ]
+}

@@ -20,70 +20,28 @@ archiving their logs and Guardian ROI receipts; their branches remain.
 Details, exact counts, performance rows and Guardian feedback are in
 [codex-next-integration-closeout-2026-09-29.md](codex-next-integration-closeout-2026-09-29.md).
 
-Phase B and Phase C remain open. B1 and B4 pass their lane gates and are integrated
-on the isolated closeout branch. B2 has corrected the positive-path CLI/interface
-and declaration-authority failures. Its independent artifact review passes 14/14,
-all twelve unit shards pass, and whole/module binaries, IL, metadata and cache
-keys match for all 29 distinct corpus programs (43 benchmark rows). The six
-schematic key-only differences are fixed, and identical warm state no longer
-rewrites its files. Final paired 200k checks show about 9% faster no-op and 80%
-faster edited checks; shared-machine load limits remain recorded. B3 implements equality,
-scope, list-image, exclusivity, dictionary, startup-image and text follow-ups.
-Its narrowed-count layout remains rejected for performance. The replacement
-ABI5 checkpoint preserves two 64-bit counts and full-width scope conditions;
-all 30 native families, 16 focused scope checks and the independent 4-condition/
-12-scope-case probe pass. Preliminary wide-count
-Lox measurements meet the dev 1.3x cap but still have sixteen rows above the
-1% regression limit. The QBE long-phi spill-width defect is repaired: the new
-44-assertion regression and original two-case reduction pass, and the composed
-backend build passes 139/139 tests. Independent review rejected an arithmetic
-zero-branch prototype that lost flags across an external-address load; its
-corrected selector passes 140 production cases, 3,754 independent assertions
-and the exact failed case. The independent release review passes 342 emitted
-cases in both candidate and control, 22 native cases and three alias cases.
-The independent publication review passes 774 emitted cases each for list,
-dictionary and control, 40 native cases, six alias cases and both CFG proofs.
-Composed source `3226f1d6` matches all 258 dev/smoke/full outputs but remains
-rejected: 13 dev, 14 full and 19 smoke rows exceed 1%, with three new smoke
-cap misses. Profiling identifies three million out-of-line readiness calls as
-the principal allocation-churn cost. Its attribute-only inlining continuation
-passes focused checks and independent callable ABI review. Composed `255cf730`
-reduces LLVM allocation churn to +0.415%, but introduces a +3.726% LLVM
-fannkuch regression; twelve dev, thirteen full and eighteen smoke rows remain
-above 1%, with two new smoke cap misses. The checkpoint remains rejected. The
-preliminary ABI5 module matrix passes all 29 corpus programs and four runtime
-fixture modes; its raw evidence is archived. A selective nested-loop readiness
-hint restores fannkuch's exact publication machine code, and independent
-LLVM literal-overflow review passes 54 admission decisions and 215,602
-executable assertions per translator. The composed text-view, nested-query
-and LLVM continuation at `cfee0070` matches all 258 outputs and introduces no
-cap miss, but remains rejected: four dev, four full and fourteen smoke rows
-exceed 1%. Dev/full failures are LLVM raytrace, a new LLVM float-loop
-regression, QBE properties and QBE string equality. Their raw evidence is
-archived; focused performance corrections and the final combined
-corpus/oracle/gate remain open. The subsequent QBE subtraction-address fix,
-cold runtime failure hint and LLVM induction-result preference compose at
-`5535e5a3`. All 258 outputs match; all dev rows and all dev/full RC-to-GC caps
-pass, resolving the four prior failures. The checkpoint remains rejected on
-one full LLVM text-operations row (+1.167106%). The same fixed program also
-shows 2–4 million-instruction variation across samples, reproduced in the
-unchanged A5 control. Its cause and a correction with sufficient margin remain
-open; samples are not selected to bypass the limit. All original rows and a new
-explicitly CPU-pinned A5 replay are archived. Final combined acceptance and
-the full corpus/module/runtime gates still remain open. The canonical registered
-collection-release continuation composes at `5347c9c0`: all 58 fresh builds and
-258 output pairs pass; every dev/full row meets 1% against both approved and
-explicitly pinned A5 controls and all dev/full caps pass. Full LLVM text
-operations is now +0.572385%, down from the rejected +1.167106%; smoke has six
-reported diagnostic increases and no new cap miss. Source/native provenance and
-an independent 60-execution UBSan review are green. The original fourteen full
-Zig assertion failures are repaired; strengthened SSA/journal oracles pass their
-focused lane checks. The independently reviewed final verifier binds source,
-compiler, tag, size and pre-measurement binary hashes; the complete integration
-gate remains pending. Details are in
-[wp-b3-registered-release-combined-2026-09-30.md](wp-b3-registered-release-combined-2026-09-30.md).
-All Phase B changes remain outside main;
-its approved tip is `80dd5190`.
+**Phase B is implemented and its complete final integration gate is green** on
+`codex/next-closeout-20260929`, frozen compiler source `a3e451d7`. All 27 steps
+pass: 2,804 selected Zig tests, 505 QBE tests, nine fresh guest sets of 1,486
+tests, all four Lox runtime/backend combinations and the native checks. The
+29-program / 43-row module corpus and all four runtime module matrices have
+identical interfaces, units and executables, with zero fallback or reference
+failure. The 100-seed fuzz run has zero RC divergences and the two previously
+known GC-stress-only findings remain reported. All 258 dev/full/smoke outputs
+match; every dev/full row passes the 1% limit against both approved and explicitly
+pinned A5 controls and every 1.3x cap. Smoke retains six reported diagnostic
+increases and has zero new cap miss.
+
+The strict final verifier and independent subagent reviews bind source/compiler,
+tag/size, all 58 measured binary hashes, fresh test names and retained module
+bytes. All final evidence is archived and hash-verified; earlier rejected
+checkpoints remain in their historical receipts. Details, exact counts,
+performance rows, known findings and Guardian feedback are in
+[codex-next-phase-b-closeout-2026-09-30.md](codex-next-phase-b-closeout-2026-09-30.md).
+
+**Phase B is ready for the required explicit user approval to fast-forward main.**
+It remains outside main at approved `80dd5190`. Phase C remains open and has not
+started; the EDA port waits for completed compiler work to land.
 
 Lane receipts are in [python-text-closeout-2026-09-29.md](python-text-closeout-2026-09-29.md),
 [wp-b4-tooling-2026-09-29.md](wp-b4-tooling-2026-09-29.md),

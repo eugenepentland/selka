@@ -1,0 +1,15 @@
+{
+  "source_commit": "a3e451d76ebfa875a989151f995ffc4e84687db0",
+  "source_tree": "bcdd90bbf7d95f5f92914086d140c1507a1034f6",
+  "tag": "phase-b-final-20260930-codex",
+  "compiler_sha256": "85fcf4408832492a601306f2ed5453595770fbb681081192d26b99935e0fc255",
+  "qbe_sha256": "90e368d62b838c41cd2ba4bc68ec5d33843ebc661014d2ad40c835dded900d95",
+  "final_verification_sha256": "43bc18a6b7228a728bb283e59b1cbe96cf1474045bcea0d1b1aeba887d6c1800",
+  "archive_sha256": "95fdde317eb23e647219ab115a7e748a8686cb5239016f4c486a68b4d5db661c",
+  "archive_bytes": 42874488,
+  "manifest_sha256": "b6b595f5a0646beaf9831297762c38f0dd8c31c50c1583a118492d2d704eaf47",
+  "payload_members_verified": 5197,
+  "payload_bytes": 176346815,
+  "retained_scope": "27-step logs and fresh guest JSONs; scripts, controls and policy; 58 measured candidate ELFs; actual 29-program corpus interfaces/units/ELFs; independent retained four-mode replay; fuzz reproductions.",
+  "excluded_scope": "Reproducible native runtime/object host build caches and Lox guest test caches; Debug compiler binary remains pinned in the isolated worktree."
+}
