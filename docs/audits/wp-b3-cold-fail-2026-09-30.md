@@ -16,3 +16,20 @@ Validation, all heavy commands admitted through build-slot:
 - Whole-tree Guardian: 88/88. A spec-case-only intermediate link was rejected, then corrected to a primary spec link on the executed Zig owner. A no-match comma-filter invocation was also rejected; repeated filters selected the two intended tests. Both rejected harness logs are retained separately and contribute no passing count.
 
 Raw input sources, source patch, exact admission commands, installed compiler/QBE identities, actual guest/native executables, assemblies/CFI and logs are in [the verified archive](evidence/wp-b3-cold-hint-20260930/raw.tar.gz); [receipt](evidence/wp-b3-cold-hint-20260930/receipt.json). Compiler prefix and regenerable guest cache are excluded from the archive; their executable hashes remain bound and the owned installed prefix is retained. Every raw archive member's length/SHA256 was verified after writing.
+
+Root subsequently completed independent source/ABI and evidence review: all 77 cold-hint and 67 rejected-preserve-all raw members matched their lengths/hashes; production source differs from `cfee0070` only by the private declaration attribute, and the header is byte-identical. Root independently reran Clang and GCC UBSan `native_rc_execution` success/trap/fast, six actual modes, with the official exact RC traffic checks. Existing replay scripts, logs, receipts and both native executables are retained without a new replay in this docs-only task.
+
+Root also measured the focused LLVM raytrace and float_loop pairs at development, smoke and full sizes (six output pairs, all exact). Their hardware instruction counts relative to the archived A5 originals are:
+
+| Program | Size | A5 RC instructions | Cold-hint RC instructions | Change |
+| --- | --- | ---: | ---: | ---: |
+| raytrace | dev | 1,261,221,624 | 1,260,954,309 | -0.021195% |
+| float_loop | dev | 164,220,409 | 168,218,325 | +2.434482% |
+| raytrace | full | 1,261,221,449 | 1,260,954,294 | -0.021182% |
+| float_loop | full | 164,220,230 | 168,218,326 | +2.434594% |
+| raytrace | smoke | 1,261,221,723 | 1,260,954,288 | -0.021204% |
+| float_loop | smoke | 164,220,432 | 168,218,313 | +2.434460% |
+
+Raytrace passes this focused comparison; the cold hint does not improve float_loop, whose development/full regression remains +2.434482%/+2.434594%. This evidence covers six focused output pairs, with no full 258-pair or final combined gate claim. Root composition and broad/performance acceptance remain the integrator's responsibility.
+
+The additive [root independent archive](evidence/wp-b3-cold-hint-20260930/root-independent.tar.gz) and [receipt](evidence/wp-b3-cold-hint-20260930/root-independent-receipt.json) bind source/ABI checks, copied native executables, candidate guest binaries/manifests, published A5 control binaries/results, six-row comparison and original build/measurement logs. Every comparison scalar was cross-checked against its actual archived candidate and A5 JSON row; every raw archive member's length/SHA256 was verified. Source and the owned compiler prefix remain frozen. Central Guardian feedback is committed at `4ec25313c6f1fabddf195250121b920e143590ed`; this agent made no Guardian-repository writes.

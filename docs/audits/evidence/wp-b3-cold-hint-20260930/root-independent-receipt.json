@@ -1,0 +1,29 @@
+{
+  "source_commit": "c9ad8375605a5bb4575ba6773b14ff70bd63e169",
+  "root_integration_HEAD_at_capture": "bc4b80b82bc5a43f7bd3f2a64a9a8af56e9d3e52",
+  "authority": "root independently reported replay/measurements; this docs-only task copied/hash-verified existing evidence and ran no new guest/native timing probes",
+  "root_native_execution_modes": 6,
+  "focused_hardware_output_pairs": 6,
+  "sizes": [
+    "dev",
+    "full",
+    "smoke"
+  ],
+  "rows_per_size": 2,
+  "baseline": "archived A5 m17-codex; actual control JSON rows independently matched to every comparison scalar",
+  "full_258_acceptance_claim": false,
+  "source_header_equal_at_capture": true,
+  "root_verified_prior_archive_raw_members": {
+    "cold_hint": 77,
+    "rejected_preserve_all": 67
+  },
+  "Guardian_feedback_commit": "4ec25313c6f1fabddf195250121b920e143590ed",
+  "production_and_owned_frozen_prefix_unchanged": true,
+  "archive_sha256": "ef69ea92e03f2155738ebf03b013cb801926a0b9acd431dbc58305daab8d2a89",
+  "archive_bytes": 2328916,
+  "raw_members_verified": 34,
+  "origin_files_verified": 32,
+  "archive_omits": "copied compiler prefix/runtime archives; identical installed compiler/QBE hashes bound by existing identity.json and frozen owned prefix retained",
+  "docs_full_Guardian": "88/88",
+  "docs_Guardian_sha256": "6597fb9abf3b409effe311cce9def599b30c5c44c8b75e5fbd6cecc3f9889064"
+}
