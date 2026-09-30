@@ -487,6 +487,16 @@ The precise LLVM inlining trigger and the smaller retirement alias explanation
 remain unproved. The 80-member verified attribution archive and report are in
 `allocation-churn-attribution/`. The minimal `79fd7e25` continuation preserves
 the exact helper body and callable ABI while requiring LTO inlining. Its focused
-native checks pass; independent ABI review and root quantitative acceptance are
-pending. Final combined performance, module matrix and integration gate remain
+native checks pass. The independent two-translation-unit ABI review passes
+15 cases each in four C build modes, preserving external definitions without
+LTO and valid callable addresses with LTO. Its 41-member verified archive is
+under `plain-ready-review/`; the body and public declaration are unchanged.
+
+Composed source `255cf730` matches all 258 outputs. Allocation churn improves
+from +2.999% to +0.415% on LLVM, but a new +3.726% LLVM fannkuch regression
+makes this checkpoint rejected. Twelve dev, thirteen full and eighteen smoke
+rows remain above 1%, with two new smoke cap misses. Every dev/full cap still
+passes. Exact rows and frozen identities are under
+`plain-combined-rejected-performance/`. The agents are profiling the remaining
+costs; final combined performance, module matrix and integration gate remain
 required before the explicit approval to land Phase B.
