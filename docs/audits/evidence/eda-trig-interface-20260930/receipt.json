@@ -1,0 +1,320 @@
+{
+  "source_commit": "e88fcf3c98d6f0e0090e0719472e1081fb81f119",
+  "original_source": "0289edb6f24a826302ff133f885b8867f61b748b",
+  "compiler_sha256": "c743ded197fac25bd23f042dfe725e5c34ee9d192a3105639a2d0ef95157dcbe",
+  "prefix": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/.tmp/trig-repair/compiler",
+  "qualification": "focused-only; four full compiler gates and final EDA pin replay are integrator-owned and pending",
+  "results": {
+    "guardian_install": {
+      "passed": 88,
+      "scope": "diff-scoped versus approved 2c05, 9/719 files"
+    },
+    "guardian_source_commit": {
+      "passed": 88,
+      "scope": "whole-tree commit hook"
+    },
+    "cli": {
+      "passed": 3,
+      "named": 1,
+      "unnamed": 2
+    },
+    "units": {
+      "passed": 13,
+      "named": 1,
+      "unnamed": 12
+    },
+    "qbe_guests": {
+      "passed": 4,
+      "cached": 0,
+      "failed": 0,
+      "skipped": 0
+    },
+    "llvm_guests": {
+      "passed": 4,
+      "cached": 0,
+      "failed": 0,
+      "skipped": 0
+    },
+    "module_check": {
+      "programs": 5,
+      "equal": 5,
+      "reference_failed": 0,
+      "per_module": 5,
+      "whole_program": 0,
+      "modules": 11,
+      "different": []
+    },
+    "module_build": {
+      "steps": 1,
+      "built": 2,
+      "rejected": 0,
+      "compiled": 6,
+      "reused": 4,
+      "mismatches": 0,
+      "runs": 2
+    }
+  },
+  "commands": {
+    "wrapper": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-eda-compiler-20260930/scripts/build-slot.sh build",
+    "install": "zig build -Dcompiler-only=true --prefix \"$PWD/.tmp/trig-repair/compiler\" --summary all",
+    "cli": "zig build test-cli -Dtest-filter=\"standard trigonometry checks\" --summary all",
+    "units": "zig build test-units -Dtest-filter=\"trigonometric intrinsics retain native bits\" --summary all",
+    "guests_and_module_oracles": "python3 .tmp/trig-repair/run-focused.py",
+    "formatter": "zig fmt --check src/generic_bodies.zig test/integration.zig; mylang fmt tests/lang/math_trig.my --check"
+  },
+  "archive": {
+    "path": "raw.tar.gz",
+    "bytes": 424644,
+    "sha256": "e7be66307710ccbdf901ed55e05c2131a65d727d13eef27487409e7eb11affa2",
+    "members": 49,
+    "payload_bytes": 1730600,
+    "verified": true
+  },
+  "members": [
+    {
+      "path": "focused/build-diff.json",
+      "bytes": 814,
+      "sha256": "3c24db20db670145c916726101fbdd2cfb0f4ed994ca76ee637bfe607c7cc38f"
+    },
+    {
+      "path": "focused/check-oracle.json",
+      "bytes": 983,
+      "sha256": "db96d687d44ec770fcd38e37f89c4dc960e5a49a1de59bb94e665eaf36f48f53"
+    },
+    {
+      "path": "focused/cli-repaired.log",
+      "bytes": 1811,
+      "sha256": "1ab0f9de3864beaa4c2c2cd2439aa472342ae30b09f5dac05a2582e8f2feb672"
+    },
+    {
+      "path": "focused/focused-repaired.log",
+      "bytes": 1124,
+      "sha256": "0276d1ef1bc08594f1fe136df4efc2118868972f77d0f8bf1c2b2f3f88704d16"
+    },
+    {
+      "path": "focused/focused.json",
+      "bytes": 3228,
+      "sha256": "202cf8e67aea39f9c5f620ac97c45434d645d77a4ece0b7ddc1a3015cb47a715"
+    },
+    {
+      "path": "focused/guest-llvm.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "focused/guest-llvm.stdout",
+      "bytes": 313,
+      "sha256": "f84ac6e6eaab6a9d9f51f8ecaaaac8ca4d2cc261e43ac92ce7d29f8548e17d86"
+    },
+    {
+      "path": "focused/guest-qbe.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "focused/guest-qbe.stdout",
+      "bytes": 313,
+      "sha256": "f84ac6e6eaab6a9d9f51f8ecaaaac8ca4d2cc261e43ac92ce7d29f8548e17d86"
+    },
+    {
+      "path": "focused/install-final.log",
+      "bytes": 2504,
+      "sha256": "4a18f010c5526de33e60a748dd0195a9017057b3c68a6880a2f3c4cdff465381"
+    },
+    {
+      "path": "focused/install-repaired.log",
+      "bytes": 1635,
+      "sha256": "0fa1edb5d4b75167ff292246430620095a0dfbc5460b443b50f761c9c5787540"
+    },
+    {
+      "path": "focused/install.log",
+      "bytes": 1635,
+      "sha256": "23bf890bf620a90a6ab558c5a26fb4c2b7da029de212ab35f0d77ed2df1ab442"
+    },
+    {
+      "path": "focused/mechanism-final.json",
+      "bytes": 2427,
+      "sha256": "581afffb877544e2078920effb84e28e9e6c4bdd0b61d0b34c99d836b0adc1a7"
+    },
+    {
+      "path": "focused/module-build-diff.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "focused/module-build-diff.stdout",
+      "bytes": 184,
+      "sha256": "ec2906b7fda7b0cb29ddd3af853dca25ed435195be64919783267d578f4903d0"
+    },
+    {
+      "path": "focused/module-check.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "focused/module-check.stdout",
+      "bytes": 129,
+      "sha256": "7ea4db6f8756ffd90831c70587743b53968d3da3474ca671a4564f1123087d09"
+    },
+    {
+      "path": "focused/run-focused.py",
+      "bytes": 1839,
+      "sha256": "702bee1a5fc3227c18c4add7aeeec49b72f381cb66161b283090ea061a68dcd1"
+    },
+    {
+      "path": "focused/units.log",
+      "bytes": 1688,
+      "sha256": "56649284d4cd69dfe1c2c3bf3391dba2ddd76a2674f16b3532f8ec862483e21b"
+    },
+    {
+      "path": "rejected-guards/cli.log",
+      "bytes": 3431,
+      "sha256": "2a2eee5cdc8dfe5510dbc9ab5db39fa954696bc7c2d27bd197fcbaef43b2dfd1"
+    },
+    {
+      "path": "rejected-guards/focused.json",
+      "bytes": 1771,
+      "sha256": "38ce2e232106194c5562ca53497a800c427372846f6d093d51f825fb01dfdc42"
+    },
+    {
+      "path": "rejected-guards/focused.log",
+      "bytes": 759,
+      "sha256": "67ea4518fe07c064cc28c2c0a2264399ffbaad9d665c9451c8a046556dcf2fe3"
+    },
+    {
+      "path": "rejected-guards/guest-llvm.stderr",
+      "bytes": 364,
+      "sha256": "e3564ed5c70b8d4e70c04c5e1940c560712e5637612c639d5abd6e3ff38fc265"
+    },
+    {
+      "path": "rejected-guards/guest-llvm.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "rejected-guards/guest-qbe.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "rejected-guards/guest-qbe.stdout",
+      "bytes": 313,
+      "sha256": "f84ac6e6eaab6a9d9f51f8ecaaaac8ca4d2cc261e43ac92ce7d29f8548e17d86"
+    },
+    {
+      "path": "rejected-guards/old-sqrt-repro.json",
+      "bytes": 476,
+      "sha256": "1eb2f2df9151469459f336271c2711ce79dfe1c5d1fc1495865d97b62921053e"
+    },
+    {
+      "path": "rejected-interface/check-cache/modules/62dc369c56724326275beb86be52b0a99f70d18d1c05fe6c74d108504415c6e8/state.json",
+      "bytes": 63,
+      "sha256": "7e128563fb92f7c32ee84704217574bc289b39a97060a767b570e5e42744c96d"
+    },
+    {
+      "path": "rejected-interface/check-cache/modules/standard-e4e886d188a5faa7daf0574f54854beccd435c1d36382d27c8935717f731b7c1/if/math.myi",
+      "bytes": 7369,
+      "sha256": "ecc8cf6bf9c0ac6a9dfd9a09b6818e5d42b90a96a8b030264b3753b9a5864c04"
+    },
+    {
+      "path": "rejected-interface/check-cache/modules/standard-e4e886d188a5faa7daf0574f54854beccd435c1d36382d27c8935717f731b7c1/state.json",
+      "bytes": 577,
+      "sha256": "013e9ab3a84bf0857bde6bed4f2fa9ccda40608c402f079f2c841f832a6766e3"
+    },
+    {
+      "path": "rejected-interface/check-rounds.json",
+      "bytes": 5867,
+      "sha256": "8debaf088e1179271f9331ba5d801b6b0081b2b150f376a7f8d63d4685eca12e"
+    },
+    {
+      "path": "rejected-interface/check.log",
+      "bytes": 604,
+      "sha256": "5bb0fd17f9f3b8dc42cdfca05484adad3846352a0142f0730bfaeec707d4c5d6"
+    },
+    {
+      "path": "rejected-interface/check.py",
+      "bytes": 1174,
+      "sha256": "f48bdfaf8be65442ca6a384fc6494e7fbfbf3241e5de921ba2bea705e8cdc750"
+    },
+    {
+      "path": "rejected-interface/constant-controls.json",
+      "bytes": 2233,
+      "sha256": "420b00659c5da0323ffc323df5773f47e2a9936affb3b9207e88514138b381fa"
+    },
+    {
+      "path": "rejected-interface/constant-controls/float_direct.my",
+      "bytes": 97,
+      "sha256": "520183f0fe95a8db84042fc26b41e15cf781c4529ccb01a70a60e77de856bc77"
+    },
+    {
+      "path": "rejected-interface/constant-controls/int_convert.my",
+      "bytes": 99,
+      "sha256": "1bd1ba3b8c7876aeab4862547306abfeecb3f761034543ae0c96ad76d3916227"
+    },
+    {
+      "path": "rejected-interface/constant-controls/int_helper.my",
+      "bytes": 136,
+      "sha256": "3d940fd8c7b47e4acf3358b2f1e5b5d4d464d857abd53b7ebda40776176d3bfd"
+    },
+    {
+      "path": "rejected-interface/constant-controls/sqrt_int_helper.my",
+      "bytes": 142,
+      "sha256": "67573950c06b94d19e1052060fd72827e4f947fb29dd10aa62ccdc78263d0c6c"
+    },
+    {
+      "path": "rejected-interface/manifest.json",
+      "bytes": 2795,
+      "sha256": "c71826a3ac052c51077b6a86be86883c276d237804fda7007ff3b189894f0944"
+    },
+    {
+      "path": "rejected-interface/manual-check-2.log",
+      "bytes": 207,
+      "sha256": "06754fd5515c08fc28ddb7e7a8e1f8c1fa3383235f7d5a935cb9071b6815d132"
+    },
+    {
+      "path": "rejected-interface/manual-check.log",
+      "bytes": 1509,
+      "sha256": "ef1806a24a01cb4ff185f1d28877ee26bef5a092f62cbc0813dda7a1d85f1587"
+    },
+    {
+      "path": "rejected-interface/manual-receipt.json",
+      "bytes": 8795,
+      "sha256": "4719891131aadd8e34476362da79fc6fcf349c2c03aff44e509b392f04625d4e"
+    },
+    {
+      "path": "rejected-interface/math/main.my",
+      "bytes": 75,
+      "sha256": "fdd074085b77afbe4257c19b9c5afe87873cfae1f1889988a2654ac5bf9e1d6f"
+    },
+    {
+      "path": "rejected-interface/triage.md",
+      "bytes": 3106,
+      "sha256": "802f3836e1a9621ad9e138b24b9eed890b68e5487d8fbd79efb1fc6fadf6f3cf"
+    },
+    {
+      "path": "source/SPEC.md",
+      "bytes": 737614,
+      "sha256": "3d87717876f27416f88041a80579424c3d41c6cde7a3b0d1fe9b630ec199ea90"
+    },
+    {
+      "path": "source/src/generic_bodies.zig",
+      "bytes": 194735,
+      "sha256": "46515b1f0e2165f1e08e46430bce00b41b26888dbd0cd0075f874b5040f0b93c"
+    },
+    {
+      "path": "source/src/stdlib/math.my",
+      "bytes": 7041,
+      "sha256": "baf89b1dae41a0c242b1f87dc892025655c3d39f68d545dc53d7412c95a6b07d"
+    },
+    {
+      "path": "source/test/integration.zig",
+      "bytes": 726663,
+      "sha256": "1a9ec620f96e92ad74936634f496d9b4f2b9f55140c3d4151759e03f067e4101"
+    },
+    {
+      "path": "source/tests/lang/math_trig.my",
+      "bytes": 1958,
+      "sha256": "95b51718498661dd060d385aa6f2308a998ddef738ba31258d7713f59a03bce1"
+    }
+  ]
+}
