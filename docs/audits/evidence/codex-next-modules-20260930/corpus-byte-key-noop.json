@@ -1,0 +1,818 @@
+{
+  "source": "573ce9a4e97d4deb3e874dcaa35beb0eaacbfbb0",
+  "compiler": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-modules-20260929/.tmp/b2/key-noop-debug-final/bin/mylang",
+  "compiler_sha256": "27efa44b7107a77e0bc562949645f644392b5a6fcf57b5ae2a5bafcc2491893e",
+  "protocol": "explicit compile-module for every module; zero whole fallback; provider supplied to both final links; no guest execution in this byte oracle",
+  "totals": {
+    "distinct_programs": 29,
+    "corpus_rows": 43,
+    "equal": 29,
+    "executables_identical": 29,
+    "modules": 62,
+    "units_compared": 664,
+    "interfaces_compared": 62,
+    "reference_failed": 0,
+    "different": []
+  },
+  "results": [
+    {
+      "entry": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-modules-20260929/bench/parity/suite/binary_trees.my",
+      "status": "equal",
+      "problems": [],
+      "whole_emit_seconds": 0.258,
+      "modules": 1,
+      "compile_seconds": 0.353,
+      "interfaces_compared": 1,
+      "units_compared": 3,
+      "units_whole": 3,
+      "specializations_shared": 0,
+      "physical_entries_compared": 3,
+      "physical_contracts": {
+        "borrowed": 0,
+        "immortal": 0,
+        "stable_parameters": 0,
+        "stood_in": 0
+      },
+      "link_seconds": 0.291,
+      "link_compiled_function_objects": 0,
+      "executables_identical": true,
+      "build_key": "parity-suite-binary_trees",
+      "corpus_rows": [
+        "parity/suite/binary_trees"
+      ],
+      "kind": "single"
+    },
+    {
+      "entry": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-modules-20260929/bench/parity/suite/fannkuch_redux.my",
+      "status": "equal",
+      "problems": [],
+      "whole_emit_seconds": 0.36,
+      "modules": 1,
+      "compile_seconds": 0.436,
+      "interfaces_compared": 1,
+      "units_compared": 2,
+      "units_whole": 2,
+      "specializations_shared": 0,
+      "physical_entries_compared": 2,
+      "physical_contracts": {
+        "borrowed": 0,
+        "immortal": 0,
+        "stable_parameters": 0,
+        "stood_in": 0
+      },
+      "link_seconds": 0.221,
+      "link_compiled_function_objects": 0,
+      "executables_identical": true,
+      "build_key": "parity-suite-fannkuch_redux",
+      "corpus_rows": [
+        "parity/suite/fannkuch_redux"
+      ],
+      "kind": "single"
+    },
+    {
+      "entry": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-modules-20260929/bench/parity/suite/knucleotide.my",
+      "status": "equal",
+      "problems": [],
+      "whole_emit_seconds": 0.523,
+      "modules": 1,
+      "compile_seconds": 0.756,
+      "interfaces_compared": 1,
+      "units_compared": 4,
+      "units_whole": 4,
+      "specializations_shared": 0,
+      "physical_entries_compared": 4,
+      "physical_contracts": {
+        "borrowed": 0,
+        "immortal": 0,
+        "stable_parameters": 0,
+        "stood_in": 0
+      },
+      "link_seconds": 0.275,
+      "link_compiled_function_objects": 0,
+      "executables_identical": true,
+      "build_key": "parity-suite-knucleotide",
+      "corpus_rows": [
+        "parity/suite/knucleotide"
+      ],
+      "kind": "single"
+    },
+    {
+      "entry": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-modules-20260929/bench/parity/suite/mandelbrot.my",
+      "status": "equal",
+      "problems": [],
+      "whole_emit_seconds": 0.221,
+      "modules": 1,
+      "compile_seconds": 0.267,
+      "interfaces_compared": 1,
+      "units_compared": 2,
+      "units_whole": 2,
+      "specializations_shared": 0,
+      "physical_entries_compared": 2,
+      "physical_contracts": {
+        "borrowed": 0,
+        "immortal": 0,
+        "stable_parameters": 0,
+        "stood_in": 0
+      },
+      "link_seconds": 0.232,
+      "link_compiled_function_objects": 0,
+      "executables_identical": true,
+      "build_key": "parity-suite-mandelbrot",
+      "corpus_rows": [
+        "parity/suite/mandelbrot"
+      ],
+      "kind": "single"
+    },
+    {
+      "entry": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-modules-20260929/bench/parity/suite/matmul.my",
+      "status": "equal",
+      "problems": [],
+      "whole_emit_seconds": 0.305,
+      "modules": 1,
+      "compile_seconds": 0.404,
+      "interfaces_compared": 1,
+      "units_compared": 3,
+      "units_whole": 3,
+      "specializations_shared": 0,
+      "physical_entries_compared": 3,
+      "physical_contracts": {
+        "borrowed": 0,
+        "immortal": 0,
+        "stable_parameters": 0,
+        "stood_in": 0
+      },
+      "link_seconds": 0.233,
+      "link_compiled_function_objects": 0,
+      "executables_identical": true,
+      "build_key": "parity-suite-matmul",
+      "corpus_rows": [
+        "parity/suite/matmul"
+      ],
+      "kind": "single"
+    },
+    {
+      "entry": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-modules-20260929/bench/parity/suite/nbody.my",
+      "status": "equal",
+      "problems": [],
+      "whole_emit_seconds": 0.706,
+      "modules": 1,
+      "compile_seconds": 0.868,
+      "interfaces_compared": 1,
+      "units_compared": 8,
+      "units_whole": 8,
+      "specializations_shared": 0,
+      "physical_entries_compared": 8,
+      "physical_contracts": {
+        "borrowed": 0,
+        "immortal": 0,
+        "stable_parameters": 1,
+        "stood_in": 0
+      },
+      "link_seconds": 0.246,
+      "link_compiled_function_objects": 0,
+      "executables_identical": true,
+      "build_key": "parity-suite-nbody",
+      "corpus_rows": [
+        "parity/suite/nbody"
+      ],
+      "kind": "single"
+    },
+    {
+      "entry": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-modules-20260929/bench/parity/suite/raytrace.my",
+      "status": "equal",
+      "problems": [],
+      "whole_emit_seconds": 0.368,
+      "modules": 1,
+      "compile_seconds": 0.446,
+      "interfaces_compared": 1,
+      "units_compared": 9,
+      "units_whole": 9,
+      "specializations_shared": 0,
+      "physical_entries_compared": 9,
+      "physical_contracts": {
+        "borrowed": 0,
+        "immortal": 0,
+        "stable_parameters": 0,
+        "stood_in": 0
+      },
+      "link_seconds": 0.218,
+      "link_compiled_function_objects": 0,
+      "executables_identical": true,
+      "build_key": "parity-suite-raytrace",
+      "corpus_rows": [
+        "parity/suite/raytrace"
+      ],
+      "kind": "single"
+    },
+    {
+      "entry": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-modules-20260929/bench/parity/suite/sieve.my",
+      "status": "equal",
+      "problems": [],
+      "whole_emit_seconds": 0.175,
+      "modules": 1,
+      "compile_seconds": 0.248,
+      "interfaces_compared": 1,
+      "units_compared": 1,
+      "units_whole": 1,
+      "specializations_shared": 0,
+      "physical_entries_compared": 1,
+      "physical_contracts": {
+        "borrowed": 0,
+        "immortal": 0,
+        "stable_parameters": 0,
+        "stood_in": 0
+      },
+      "link_seconds": 0.254,
+      "link_compiled_function_objects": 0,
+      "executables_identical": true,
+      "build_key": "parity-suite-sieve",
+      "corpus_rows": [
+        "parity/suite/sieve"
+      ],
+      "kind": "single"
+    },
+    {
+      "entry": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-modules-20260929/bench/parity/suite/sort_builtin.my",
+      "status": "equal",
+      "problems": [],
+      "whole_emit_seconds": 0.161,
+      "modules": 1,
+      "compile_seconds": 0.224,
+      "interfaces_compared": 1,
+      "units_compared": 3,
+      "units_whole": 3,
+      "specializations_shared": 0,
+      "physical_entries_compared": 3,
+      "physical_contracts": {
+        "borrowed": 0,
+        "immortal": 0,
+        "stable_parameters": 0,
+        "stood_in": 0
+      },
+      "link_seconds": 0.217,
+      "link_compiled_function_objects": 0,
+      "executables_identical": true,
+      "build_key": "parity-suite-sort_builtin",
+      "corpus_rows": [
+        "parity/suite/sort_builtin"
+      ],
+      "kind": "single"
+    },
+    {
+      "entry": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-modules-20260929/bench/parity/suite/sort_quick.my",
+      "status": "equal",
+      "problems": [],
+      "whole_emit_seconds": 0.25,
+      "modules": 1,
+      "compile_seconds": 0.276,
+      "interfaces_compared": 1,
+      "units_compared": 4,
+      "units_whole": 4,
+      "specializations_shared": 0,
+      "physical_entries_compared": 4,
+      "physical_contracts": {
+        "borrowed": 0,
+        "immortal": 0,
+        "stable_parameters": 1,
+        "stood_in": 0
+      },
+      "link_seconds": 0.213,
+      "link_compiled_function_objects": 0,
+      "executables_identical": true,
+      "build_key": "parity-suite-sort_quick",
+      "corpus_rows": [
+        "parity/suite/sort_quick"
+      ],
+      "kind": "single"
+    },
+    {
+      "entry": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-modules-20260929/bench/parity/suite/sort_records.my",
+      "status": "equal",
+      "problems": [],
+      "whole_emit_seconds": 0.683,
+      "modules": 2,
+      "compile_seconds": 1.044,
+      "interfaces_compared": 2,
+      "units_compared": 16,
+      "units_whole": 16,
+      "specializations_shared": 0,
+      "physical_entries_compared": 16,
+      "physical_contracts": {
+        "borrowed": 0,
+        "immortal": 0,
+        "stable_parameters": 0,
+        "stood_in": 0
+      },
+      "link_seconds": 0.273,
+      "link_compiled_function_objects": 0,
+      "executables_identical": true,
+      "build_key": "parity-suite-sort_records",
+      "corpus_rows": [
+        "parity/suite/sort_records"
+      ],
+      "kind": "single"
+    },
+    {
+      "entry": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-modules-20260929/bench/parity/suite/spectral_norm.my",
+      "status": "equal",
+      "problems": [],
+      "whole_emit_seconds": 0.311,
+      "modules": 1,
+      "compile_seconds": 0.379,
+      "interfaces_compared": 1,
+      "units_compared": 5,
+      "units_whole": 5,
+      "specializations_shared": 0,
+      "physical_entries_compared": 5,
+      "physical_contracts": {
+        "borrowed": 0,
+        "immortal": 0,
+        "stable_parameters": 3,
+        "stood_in": 0
+      },
+      "link_seconds": 0.25,
+      "link_compiled_function_objects": 0,
+      "executables_identical": true,
+      "build_key": "parity-suite-spectral_norm",
+      "corpus_rows": [
+        "parity/suite/spectral_norm"
+      ],
+      "kind": "single"
+    },
+    {
+      "entry": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-modules-20260929/bench/parity/suite/text_ops.my",
+      "status": "equal",
+      "problems": [],
+      "whole_emit_seconds": 1.612,
+      "modules": 3,
+      "compile_seconds": 2.934,
+      "interfaces_compared": 3,
+      "units_compared": 58,
+      "units_whole": 58,
+      "specializations_shared": 0,
+      "physical_entries_compared": 59,
+      "physical_contracts": {
+        "borrowed": 1,
+        "immortal": 0,
+        "stable_parameters": 0,
+        "stood_in": 0
+      },
+      "link_seconds": 0.365,
+      "link_compiled_function_objects": 0,
+      "executables_identical": true,
+      "build_key": "parity-suite-text_ops",
+      "corpus_rows": [
+        "parity/suite/text_ops"
+      ],
+      "kind": "single"
+    },
+    {
+      "entry": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-modules-20260929/bench/parity/lib/scan_count.my",
+      "status": "equal",
+      "problems": [],
+      "whole_emit_seconds": 0.329,
+      "modules": 1,
+      "compile_seconds": 0.425,
+      "interfaces_compared": 1,
+      "units_compared": 2,
+      "units_whole": 2,
+      "specializations_shared": 0,
+      "physical_entries_compared": 2,
+      "physical_contracts": {
+        "borrowed": 0,
+        "immortal": 0,
+        "stable_parameters": 0,
+        "stood_in": 0
+      },
+      "link_seconds": 0.237,
+      "link_compiled_function_objects": 0,
+      "executables_identical": true,
+      "build_key": "parity-lib-scan_count",
+      "corpus_rows": [
+        "parity/lib/scan_count"
+      ],
+      "kind": "single"
+    },
+    {
+      "entry": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-modules-20260929/bench/parity/lib/scan_replace.my",
+      "status": "equal",
+      "problems": [],
+      "whole_emit_seconds": 0.326,
+      "modules": 1,
+      "compile_seconds": 0.422,
+      "interfaces_compared": 1,
+      "units_compared": 2,
+      "units_whole": 2,
+      "specializations_shared": 0,
+      "physical_entries_compared": 2,
+      "physical_contracts": {
+        "borrowed": 0,
+        "immortal": 0,
+        "stable_parameters": 0,
+        "stood_in": 0
+      },
+      "link_seconds": 0.23,
+      "link_compiled_function_objects": 0,
+      "executables_identical": true,
+      "build_key": "parity-lib-scan_replace",
+      "corpus_rows": [
+        "parity/lib/scan_replace"
+      ],
+      "kind": "single"
+    },
+    {
+      "entry": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-modules-20260929/bench/parity/lib/scan_split.my",
+      "status": "equal",
+      "problems": [],
+      "whole_emit_seconds": 0.401,
+      "modules": 1,
+      "compile_seconds": 0.506,
+      "interfaces_compared": 1,
+      "units_compared": 2,
+      "units_whole": 2,
+      "specializations_shared": 0,
+      "physical_entries_compared": 2,
+      "physical_contracts": {
+        "borrowed": 0,
+        "immortal": 0,
+        "stable_parameters": 0,
+        "stood_in": 0
+      },
+      "link_seconds": 0.23,
+      "link_compiled_function_objects": 0,
+      "executables_identical": true,
+      "build_key": "parity-lib-scan_split",
+      "corpus_rows": [
+        "parity/lib/scan_split"
+      ],
+      "kind": "single"
+    },
+    {
+      "entry": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-modules-20260929/bench/parity/micro/alloc_churn.my",
+      "status": "equal",
+      "problems": [],
+      "whole_emit_seconds": 0.141,
+      "modules": 1,
+      "compile_seconds": 0.168,
+      "interfaces_compared": 1,
+      "units_compared": 1,
+      "units_whole": 1,
+      "specializations_shared": 0,
+      "physical_entries_compared": 1,
+      "physical_contracts": {
+        "borrowed": 0,
+        "immortal": 0,
+        "stable_parameters": 0,
+        "stood_in": 0
+      },
+      "link_seconds": 0.19,
+      "link_compiled_function_objects": 0,
+      "executables_identical": true,
+      "build_key": "parity-micro-alloc_churn",
+      "corpus_rows": [
+        "parity/micro/alloc_churn"
+      ],
+      "kind": "single"
+    },
+    {
+      "entry": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-modules-20260929/bench/parity/micro/bytes_scan.my",
+      "status": "equal",
+      "problems": [],
+      "whole_emit_seconds": 0.156,
+      "modules": 1,
+      "compile_seconds": 0.209,
+      "interfaces_compared": 1,
+      "units_compared": 1,
+      "units_whole": 1,
+      "specializations_shared": 0,
+      "physical_entries_compared": 1,
+      "physical_contracts": {
+        "borrowed": 0,
+        "immortal": 0,
+        "stable_parameters": 0,
+        "stood_in": 0
+      },
+      "link_seconds": 0.237,
+      "link_compiled_function_objects": 0,
+      "executables_identical": true,
+      "build_key": "parity-micro-bytes_scan",
+      "corpus_rows": [
+        "parity/micro/bytes_scan"
+      ],
+      "kind": "single"
+    },
+    {
+      "entry": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-modules-20260929/bench/parity/micro/calls.my",
+      "status": "equal",
+      "problems": [],
+      "whole_emit_seconds": 0.131,
+      "modules": 1,
+      "compile_seconds": 0.132,
+      "interfaces_compared": 1,
+      "units_compared": 2,
+      "units_whole": 2,
+      "specializations_shared": 0,
+      "physical_entries_compared": 2,
+      "physical_contracts": {
+        "borrowed": 0,
+        "immortal": 0,
+        "stable_parameters": 0,
+        "stood_in": 0
+      },
+      "link_seconds": 0.189,
+      "link_compiled_function_objects": 0,
+      "executables_identical": true,
+      "build_key": "parity-micro-calls",
+      "corpus_rows": [
+        "parity/micro/calls"
+      ],
+      "kind": "single"
+    },
+    {
+      "entry": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-modules-20260929/bench/parity/micro/dict_count.my",
+      "status": "equal",
+      "problems": [],
+      "whole_emit_seconds": 0.187,
+      "modules": 1,
+      "compile_seconds": 0.198,
+      "interfaces_compared": 1,
+      "units_compared": 1,
+      "units_whole": 1,
+      "specializations_shared": 0,
+      "physical_entries_compared": 1,
+      "physical_contracts": {
+        "borrowed": 0,
+        "immortal": 0,
+        "stable_parameters": 0,
+        "stood_in": 0
+      },
+      "link_seconds": 0.261,
+      "link_compiled_function_objects": 0,
+      "executables_identical": true,
+      "build_key": "parity-micro-dict_count",
+      "corpus_rows": [
+        "parity/micro/dict_count"
+      ],
+      "kind": "single"
+    },
+    {
+      "entry": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-modules-20260929/bench/parity/micro/fib.my",
+      "status": "equal",
+      "problems": [],
+      "whole_emit_seconds": 0.103,
+      "modules": 1,
+      "compile_seconds": 0.132,
+      "interfaces_compared": 1,
+      "units_compared": 2,
+      "units_whole": 2,
+      "specializations_shared": 0,
+      "physical_entries_compared": 2,
+      "physical_contracts": {
+        "borrowed": 0,
+        "immortal": 0,
+        "stable_parameters": 0,
+        "stood_in": 0
+      },
+      "link_seconds": 0.198,
+      "link_compiled_function_objects": 0,
+      "executables_identical": true,
+      "build_key": "parity-micro-fib",
+      "corpus_rows": [
+        "parity/micro/fib"
+      ],
+      "kind": "single"
+    },
+    {
+      "entry": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-modules-20260929/bench/parity/micro/float_loop.my",
+      "status": "equal",
+      "problems": [],
+      "whole_emit_seconds": 0.134,
+      "modules": 1,
+      "compile_seconds": 0.129,
+      "interfaces_compared": 1,
+      "units_compared": 1,
+      "units_whole": 1,
+      "specializations_shared": 0,
+      "physical_entries_compared": 1,
+      "physical_contracts": {
+        "borrowed": 0,
+        "immortal": 0,
+        "stable_parameters": 0,
+        "stood_in": 0
+      },
+      "link_seconds": 0.218,
+      "link_compiled_function_objects": 0,
+      "executables_identical": true,
+      "build_key": "parity-micro-float_loop",
+      "corpus_rows": [
+        "parity/micro/float_loop"
+      ],
+      "kind": "single"
+    },
+    {
+      "entry": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-modules-20260929/bench/parity/micro/intloop.my",
+      "status": "equal",
+      "problems": [],
+      "whole_emit_seconds": 0.099,
+      "modules": 1,
+      "compile_seconds": 0.141,
+      "interfaces_compared": 1,
+      "units_compared": 1,
+      "units_whole": 1,
+      "specializations_shared": 0,
+      "physical_entries_compared": 1,
+      "physical_contracts": {
+        "borrowed": 0,
+        "immortal": 0,
+        "stable_parameters": 0,
+        "stood_in": 0
+      },
+      "link_seconds": 0.24,
+      "link_compiled_function_objects": 0,
+      "executables_identical": true,
+      "build_key": "parity-micro-intloop",
+      "corpus_rows": [
+        "parity/micro/intloop"
+      ],
+      "kind": "single"
+    },
+    {
+      "entry": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-modules-20260929/bench/parity/micro/list_append_sum.my",
+      "status": "equal",
+      "problems": [],
+      "whole_emit_seconds": 0.117,
+      "modules": 1,
+      "compile_seconds": 0.15,
+      "interfaces_compared": 1,
+      "units_compared": 1,
+      "units_whole": 1,
+      "specializations_shared": 0,
+      "physical_entries_compared": 1,
+      "physical_contracts": {
+        "borrowed": 0,
+        "immortal": 0,
+        "stable_parameters": 0,
+        "stood_in": 0
+      },
+      "link_seconds": 0.255,
+      "link_compiled_function_objects": 0,
+      "executables_identical": true,
+      "build_key": "parity-micro-list_append_sum",
+      "corpus_rows": [
+        "parity/micro/list_append_sum"
+      ],
+      "kind": "single"
+    },
+    {
+      "entry": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-modules-20260929/bench/parity/micro/list_records.my",
+      "status": "equal",
+      "problems": [],
+      "whole_emit_seconds": 0.133,
+      "modules": 1,
+      "compile_seconds": 0.169,
+      "interfaces_compared": 1,
+      "units_compared": 1,
+      "units_whole": 1,
+      "specializations_shared": 0,
+      "physical_entries_compared": 1,
+      "physical_contracts": {
+        "borrowed": 0,
+        "immortal": 0,
+        "stable_parameters": 0,
+        "stood_in": 0
+      },
+      "link_seconds": 0.253,
+      "link_compiled_function_objects": 0,
+      "executables_identical": true,
+      "build_key": "parity-micro-list_records",
+      "corpus_rows": [
+        "parity/micro/list_records"
+      ],
+      "kind": "single"
+    },
+    {
+      "entry": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-modules-20260929/bench/parity/micro/records.my",
+      "status": "equal",
+      "problems": [],
+      "whole_emit_seconds": 0.114,
+      "modules": 1,
+      "compile_seconds": 0.139,
+      "interfaces_compared": 1,
+      "units_compared": 2,
+      "units_whole": 2,
+      "specializations_shared": 0,
+      "physical_entries_compared": 2,
+      "physical_contracts": {
+        "borrowed": 0,
+        "immortal": 0,
+        "stable_parameters": 0,
+        "stood_in": 0
+      },
+      "link_seconds": 0.251,
+      "link_compiled_function_objects": 0,
+      "executables_identical": true,
+      "build_key": "parity-micro-records",
+      "corpus_rows": [
+        "parity/micro/records"
+      ],
+      "kind": "single"
+    },
+    {
+      "entry": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-modules-20260929/bench/parity/micro/str_build.my",
+      "status": "equal",
+      "problems": [],
+      "whole_emit_seconds": 0.147,
+      "modules": 1,
+      "compile_seconds": 0.2,
+      "interfaces_compared": 1,
+      "units_compared": 1,
+      "units_whole": 1,
+      "specializations_shared": 0,
+      "physical_entries_compared": 1,
+      "physical_contracts": {
+        "borrowed": 0,
+        "immortal": 0,
+        "stable_parameters": 0,
+        "stood_in": 0
+      },
+      "link_seconds": 0.214,
+      "link_compiled_function_objects": 0,
+      "executables_identical": true,
+      "build_key": "parity-micro-str_build",
+      "corpus_rows": [
+        "parity/micro/str_build"
+      ],
+      "kind": "single"
+    },
+    {
+      "entry": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-modules-20260929/src/schematic/guest/main.my",
+      "status": "equal",
+      "problems": [],
+      "whole_emit_seconds": 6.592,
+      "modules": 14,
+      "compile_seconds": 14.697,
+      "interfaces_compared": 14,
+      "units_compared": 126,
+      "units_whole": 126,
+      "specializations_shared": 0,
+      "physical_entries_compared": 130,
+      "physical_contracts": {
+        "borrowed": 3,
+        "immortal": 1,
+        "stable_parameters": 1,
+        "stood_in": 273
+      },
+      "link_seconds": 0.973,
+      "link_compiled_function_objects": 0,
+      "executables_identical": true,
+      "build_key": "schematic",
+      "corpus_rows": [
+        "schematic/fixture",
+        "schematic/changed-net",
+        "schematic/changed-value"
+      ],
+      "kind": "schematic"
+    },
+    {
+      "entry": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-modules-20260929/.tmp/b2/quick/lox/benchmarks/lox/ports/mylang/main.my",
+      "status": "equal",
+      "problems": [],
+      "whole_emit_seconds": 14.684,
+      "modules": 18,
+      "compile_seconds": 37.281,
+      "interfaces_compared": 18,
+      "units_compared": 400,
+      "units_whole": 400,
+      "specializations_shared": 0,
+      "physical_entries_compared": 410,
+      "physical_contracts": {
+        "borrowed": 9,
+        "immortal": 1,
+        "stable_parameters": 0,
+        "stood_in": 502
+      },
+      "link_seconds": 1.423,
+      "link_compiled_function_objects": 0,
+      "executables_identical": true,
+      "build_key": "lox",
+      "corpus_rows": [
+        "lox/vm/binary_trees",
+        "lox/vm/closures",
+        "lox/vm/equality",
+        "lox/vm/fib",
+        "lox/vm/instantiation",
+        "lox/vm/invocation",
+        "lox/vm/method_call",
+        "lox/vm/properties",
+        "lox/vm/string_equality",
+        "lox/vm/strings",
+        "lox/vm/trees",
+        "lox/vm/zoo",
+        "lox/vm/zoo_batch"
+      ],
+      "kind": "lox"
+    }
+  ],
+  "source_original": "a06ed822+unchanged-state-v1",
+  "source_binding": "Compiler sources stayed fixed from build start through scoped commit; commit-only metadata and later scratch/doc work do not alter compiler SHA."
+}
