@@ -62,7 +62,12 @@ test "signature-only original imports cannot prove unique mutable parameters" {
     var arena = std.heap.ArenaAllocator.init(t.allocator);
     defer arena.deinit();
     const a = arena.allocator();
-    const signature: bytecode.Function = .{ .name = "lib.mutate", .id = @fromBackingInt(0), .signature = .{ .parameter_count = 1, .declared_mutates = &.{0} }, .scope = .{ .instructions = &.{} } };
+    const signature: bytecode.Function = .{
+        .name = "lib.mutate",
+        .id = @fromBackingInt(0),
+        .signature = .{ .parameter_count = 1, .declared_mutates = &.{0} },
+        .scope = .{ .locals = &.{.{ .name = "items", .ty = .i64, .declaration = .{ .start = 0, .end = 0 }, .mutable = true }}, .instructions = &.{} },
+    };
     const restored = try @import("module_physical_inputs.zig").restore(a, .{ .functions = &.{signature} }, &.{false}, &.{null}, &.{});
     try t.expect(!@import("ownership_model.zig").uniqueParameter(restored.code.functions[0], 0));
     try t.expect(restored.code.functions[0].physical.?.unknown);
@@ -142,7 +147,7 @@ test "physical imports compare declaration signatures without importing body-loc
     const signature: bytecode.Function = .{
         .name = "lib.helper",
         .id = @fromBackingInt(0),
-        .signature = .{ .parameter_count = 1 },
+        .signature = .{ .parameter_count = 1, .declared_mutates = &.{0} },
         .scope = .{ .locals = &.{.{ .name = "n", .ty = .i64, .declaration = .{ .start = 0, .end = 1 }, .mutable = false }}, .instructions = &.{} },
     };
     var actual = signature;
@@ -156,4 +161,58 @@ test "physical imports compare declaration signatures without importing body-loc
     const restored = try @import("module_physical_inputs.zig").restore(a, .{ .functions = &.{signature} }, &.{false}, &.{null}, &.{.{ .module = "lib", .text = "", .emission = .{ .physical = archive } }});
     try t.expectEqual(@as(usize, 2), restored.code.functions[0].scope.locals.len);
     try t.expect(restored.code.functions[0].signature.inferred.writes);
+    try t.expect(@import("ownership_model.zig").writesParameter(restored.code.functions[0], 0));
+}
+
+// spec-case: MODULE-COMPILE-1
+test "physical imports reject declaration mutation conflicts that change caller storage authority" {
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const array: typed.Record = .{
+        .id = @fromBackingInt(typed.Type.record_base),
+        .name = "Array[int,2]",
+        .declaration = .{ .start = 0, .end = 0 },
+        .fields = &.{},
+        .shape = .{ .array = .{ .element = .i64, .length = 2 } },
+    };
+    const plain: bytecode.Function = .{
+        .name = "lib.helper",
+        .id = @fromBackingInt(0),
+        .signature = .{ .parameter_count = 1 },
+        .scope = .{ .locals = &.{.{ .name = "items", .ty = array.id, .declaration = .{ .start = 0, .end = 0 }, .mutable = false }}, .instructions = &.{} },
+    };
+    var changed = plain;
+    changed.signature.declared_mutates = &.{0};
+    try t.expect(typed.referenceMut(&.{array}, array.id));
+    try t.expect(!@import("ownership_model.zig").writesParameter(plain, 0));
+    try t.expect(@import("ownership_model.zig").writesParameter(changed, 0));
+    const left: language.module_interface.Interface = .{ .module = "first", .text = "", .emission = .{ .physical = try physical.archive(a, .{ .functions = &.{plain}, .records = &.{array} }, &.{false}) } };
+    const right: language.module_interface.Interface = .{ .module = "second", .text = "", .emission = .{ .physical = try physical.archive(a, .{ .functions = &.{changed}, .records = &.{array} }, &.{false}) } };
+    const restore = @import("module_physical_inputs.zig").restore;
+    try t.expectError(error.InternalError, restore(a, .{ .functions = &.{} }, &.{}, &.{}, &.{ left, right }));
+    try t.expectError(error.InternalError, restore(a, .{ .functions = &.{} }, &.{}, &.{}, &.{ right, left }));
+    try t.expectError(error.InternalError, restore(a, .{ .functions = &.{plain}, .records = &.{array} }, &.{false}, &.{null}, &.{right}));
+}
+
+// spec-case: MODULE-COMPILE-1
+test "physical record imports erase source-local default node indexes but retain layout authority" {
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const original: typed.Record = .{
+        .id = @fromBackingInt(typed.Type.record_base),
+        .name = "lib.Item",
+        .declaration = .{ .start = 0, .end = 0 },
+        .fields = &.{.{ .name = "value", .ty = .i64, .declaration = .{ .start = 0, .end = 0 }, .default_value = 1 }},
+    };
+    var relocated = original;
+    relocated.fields = &.{.{ .name = "value", .ty = .i64, .declaration = .{ .start = 20, .end = 21 }, .default_value = 64 }};
+    const left = try physical.write(a, .{ .functions = &.{}, .records = &.{original} }, original);
+    const right = try physical.write(a, .{ .functions = &.{}, .records = &.{relocated} }, relocated);
+    try t.expectEqualSlices(u8, left.bytes, right.bytes);
+    const supplied: language.module_interface.Interface = .{ .module = "lib", .text = "", .emission = .{ .physical = .{ .records = &.{right} } } };
+    const restored = try @import("module_physical_inputs.zig").restore(a, .{ .functions = &.{}, .records = &.{original} }, &.{}, &.{}, &.{ supplied, supplied });
+    try t.expectEqual(typed.Type.i64, restored.code.records[0].fields[0].ty);
+    try t.expectEqual(@as(?usize, 1), restored.code.records[0].fields[0].default_value);
 }

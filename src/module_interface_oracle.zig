@@ -484,7 +484,7 @@ fn loweredDigests(allocator: std.mem.Allocator, inputs: ResultInputs, program: t
         error.OutOfMemory => return error.OutOfMemory,
         else => return error.InternalError,
     };
-    const canon: Canon = .{ .allocator = allocator, .inputs = inputs, .program = program };
+    const canon: Canon = .{ .allocator = allocator, .inputs = inputs, .program = program, .records = code.records };
     var out: std.ArrayList(Checked) = .empty;
     for (code.functions, selected, 0..) |function, chosen, index| {
         if (!chosen or std.mem.eql(u8, function.name, entry_adapter.wrapper_name)) continue;
@@ -510,9 +510,10 @@ const Canon = struct {
     allocator: std.mem.Allocator,
     inputs: ResultInputs,
     program: typed.Program,
+    records: []const typed.Record,
 
     fn value(self: Canon, hash: *std.crypto.hash.Blake3, comptime T: type, item: T) Error!void {
-        if (T == typed.Type) return frameHash(hash, typed.typeName(item, self.program.records));
+        if (T == typed.Type) return frameHash(hash, typed.typeName(item, self.records));
         if (T == typed.FunctionId) {
             const index = @backingInt(item);
             if (index >= self.program.functions.len) return frameHash(hash, "?");

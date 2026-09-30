@@ -190,13 +190,21 @@ static int finish(void) { return fflush(stdout) == 0 ? 0 : 2; }
    A library without the renderer, or a call that recorded no `Err`, sends an
    empty one; the parent shows it only when the test's value is an `Err`. */
 typedef size_t (*RenderTrace)(char *, size_t);
+#ifdef MYLANG_TEST_LINKED
+extern size_t myl_qbe_error_trace_render(char *, size_t);
+#endif
 static void put_error_trace(void *library) {
+    RenderTrace render = NULL;
+#ifdef MYLANG_TEST_LINKED
+    (void)library;
+    render = myl_qbe_error_trace_render;
+#else
     void *symbol = dlsym(library, "myl_qbe_error_trace_render");
-    RenderTrace render;
+    if (symbol) memcpy(&render, &symbol, sizeof render);
+#endif
     size_t length = 0;
     char *text = NULL;
-    if (symbol) {
-        memcpy(&render, &symbol, sizeof render);
+    if (render) {
         length = render(NULL, 0);
         if (length > TEST_OUTPUT_LIMIT) length = 0;
         text = length ? malloc(length + 1) : NULL;

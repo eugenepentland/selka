@@ -136,7 +136,10 @@ pub fn compile(gpa: std.mem.Allocator, arena: std.mem.Allocator, request: Reques
         return err;
     };
     out.single = single;
-    if (!single.declaredOnly()) return error.InternalError;
+    if (!single.declaredOnly()) {
+        out.problem = "module declarations required a whole-program recheck";
+        return error.InternalError;
+    }
     const compilation = &single.compilation;
     const program = compilation.program orelse return error.InternalError;
     if (single.request.prepared == null) return error.InternalError;
@@ -179,7 +182,10 @@ pub fn compile(gpa: std.mem.Allocator, arena: std.mem.Allocator, request: Reques
     for (emit) |chosen| counts.emitted += @intFromBool(chosen);
     const physical = try @import("module_physical.zig").archive(arena, code, emit);
     const imported_interfaces = try interfacesOf(arena, request, modules, own);
-    const restored = try @import("module_physical_inputs.zig").restore(arena, code, emit, imported, imported_interfaces);
+    const restored = @import("module_physical_inputs.zig").restore(arena, code, emit, imported, imported_interfaces) catch |err| {
+        out.problem = "invalid imported physical data";
+        return err;
+    };
     code = restored.code;
     emit = @constCast(restored.emit);
     var parts: native_interface.Parts = .{};
@@ -200,7 +206,10 @@ pub fn compile(gpa: std.mem.Allocator, arena: std.mem.Allocator, request: Reques
         error.OutOfMemory => return error.OutOfMemory,
         error.SourceError => return error.SourceError,
         error.WriteFailed => return if (step.failure) |failure| failure else error.WriteFailed,
-        else => return error.InternalError,
+        else => {
+            out.problem = "native module emission failed";
+            return error.InternalError;
+        },
     };
     out.units.parts = parts;
     out.report = report;

@@ -301,6 +301,16 @@ pub const Session = struct {
             try std.Io.File.stderr().writeStreamingAll(self.context.io, output.stderr);
             return mapExit(code);
         }
+        try self.forwardWork(output.stderr);
+    }
+
+    fn forwardWork(self: Session, stderr: []const u8) Error!void {
+        var lines = std.mem.splitScalar(u8, stderr, '\n');
+        while (lines.next()) |line| {
+            if (!std.mem.startsWith(u8, line, "{\"version\":\"work-report-v1\"")) continue;
+            try std.Io.File.stderr().writeStreamingAll(self.context.io, line);
+            try std.Io.File.stderr().writeStreamingAll(self.context.io, "\n");
+        }
     }
     /// Parse a compiler manifest and expose its checked schema.
     pub fn projectFromManifest(self: Session, source: []const u8, stdout: []const u8) Error!Project {
@@ -394,6 +404,7 @@ pub const Session = struct {
         const a = self.context.allocator;
         project.executor = try execute.Executor.init(self.context, project.manifest, executable, project.directory, executable);
         project.executor.?.stress = self.options.flags.gc_stress;
+        project.executor.?.seed = self.options.determinism.seed;
         project.select_file = try a.dupe(u8, select_file);
         return project.executor.?;
     }
