@@ -32,5 +32,13 @@
   "raw_members_verified": 77,
   "archive_omits": "compiler prefix and regenerable guest cache; installed hashes retained and prefix kept read-only in owned scratch",
   "final_docs_full_guardian": "88/88",
-  "final_docs_guardian_sha256": "6597fb9abf3b409effe311cce9def599b30c5c44c8b75e5fbd6cecc3f9889064"
+  "final_docs_guardian_sha256": "6597fb9abf3b409effe311cce9def599b30c5c44c8b75e5fbd6cecc3f9889064",
+  "subsequent_root_independent_evidence": {
+    "receipt": "root-independent-receipt.json",
+    "archive": "root-independent.tar.gz",
+    "archive_sha256": "ef69ea92e03f2155738ebf03b013cb801926a0b9acd431dbc58305daab8d2a89",
+    "raw_members_verified": 34,
+    "scope": "6 native replay modes and 6 focused LLVM hardware output pairs; no full258 claim",
+    "Guardian_feedback_commit": "4ec25313c6f1fabddf195250121b920e143590ed"
+  }
 }
