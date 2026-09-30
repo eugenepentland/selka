@@ -52,9 +52,17 @@ reduces LLVM allocation churn to +0.415%, but introduces a +3.726% LLVM
 fannkuch regression; twelve dev, thirteen full and eighteen smoke rows remain
 above 1%, with two new smoke cap misses. The checkpoint remains rejected. The
 preliminary ABI5 module matrix passes all 29 corpus programs and four runtime
-fixture modes; its raw evidence is archived. B3 performance corrections and
-the final combined ABI5 corpus/oracle/gate remain open. All
-Phase B changes remain outside main; its approved tip is `80dd5190`.
+fixture modes; its raw evidence is archived. A selective nested-loop readiness
+hint restores fannkuch's exact publication machine code, and independent
+LLVM literal-overflow review passes 54 admission decisions and 215,602
+executable assertions per translator. The composed text-view, nested-query
+and LLVM continuation at `cfee0070` matches all 258 outputs and introduces no
+cap miss, but remains rejected: four dev, four full and fourteen smoke rows
+exceed 1%. Dev/full failures are LLVM raytrace, a new LLVM float-loop
+regression, QBE properties and QBE string equality. Their raw evidence is
+archived; focused performance corrections and the final combined
+corpus/oracle/gate remain open. All Phase B changes remain outside main;
+its approved tip is `80dd5190`.
 
 Lane receipts are in [python-text-closeout-2026-09-29.md](python-text-closeout-2026-09-29.md),
 [wp-b4-tooling-2026-09-29.md](wp-b4-tooling-2026-09-29.md),

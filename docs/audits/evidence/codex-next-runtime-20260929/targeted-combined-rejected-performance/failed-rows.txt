@@ -1,0 +1,25 @@
+dev outputs86/86 regressions 4 cap-failures 0
+  parity/suite/raytrace llvm +1.067860%
+  parity/micro/float_loop llvm +2.434687%
+  lox/vm/properties qbe +1.058403%
+  lox/vm/string_equality qbe +1.451761%
+smoke outputs86/86 regressions 14 cap-failures 0
+  parity/suite/raytrace llvm +1.067853%
+  parity/suite/text_ops llvm +1.080012%
+  parity/micro/float_loop llvm +2.434672%
+  lox/vm/equality qbe +1.394799%
+  lox/vm/invocation qbe +1.198300%
+  lox/vm/invocation llvm +1.697778%
+  lox/vm/properties qbe +1.820606%
+  lox/vm/properties llvm +2.462998%
+  lox/vm/string_equality qbe +2.106809%
+  lox/vm/string_equality llvm +2.458067%
+  lox/vm/trees qbe +1.865092%
+  lox/vm/trees llvm +2.779448%
+  lox/vm/zoo qbe +1.680183%
+  lox/vm/zoo llvm +2.015981%
+full outputs86/86 regressions 4 cap-failures 0
+  parity/suite/raytrace llvm +1.067875%
+  parity/micro/float_loop llvm +2.434797%
+  lox/vm/properties qbe +1.019912%
+  lox/vm/string_equality qbe +1.353164%

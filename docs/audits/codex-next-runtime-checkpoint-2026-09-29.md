@@ -579,3 +579,30 @@ original fifty-case baseline are preserved with final source/IR/executables and
 provenance. No source-review gap remains; the review exercises no Guardian,
 broad gate or timing. Combined `cfee0070` performance and final integration
 acceptance remain pending.
+
+
+## Composed targeted continuation remains rejected
+
+Frozen source `cfee00704911a482bd09db880f0e20631f8b6cf1` composes the text-view,
+selective nested-query and independently reviewed local LLVM overflow changes.
+Compiler SHA256 is `5588d2b827f43478c3b4a4764cf60966902fba7ee5387a954bd4204917fbd766`;
+QBE remains `6ccecf27cda0378f59d7dc60cee74a6558a7d25a0c88fb877b5755136f0500de`.
+All 58 binaries build and all 258 outputs match the unchanged approved GC.
+Every dev/full cap passes, with no new smoke cap miss. Comparison against both
+approved and freshly measured A5 retains four dev, four full and fourteen
+smoke regressions over 1%; quantitative acceptance remains rejected.
+
+| Remaining dev/full row | Dev movement | Full movement |
+| --- | ---: | ---: |
+| LLVM raytrace | +1.067860% | +1.067875% |
+| LLVM float_loop | +2.434687% | +2.434797% |
+| QBE Lox properties | +1.058403% | +1.019912% |
+| QBE Lox string_equality | +1.451761% | +1.353164% |
+
+The float-loop increase is newly introduced by this composition and must be
+explained. Prior LLVM Lox dev/full regressions are resolved; averages do not
+waive the remaining rows. Twelve original measurement files and their manifest
+are retained under `targeted-combined-rejected-performance/`, with frozen
+source, compiler, 58 binary hashes, accepted GC identity, approved and fresh
+controls, and all per-row deltas. The timing pool has been released. Further
+scoped code-shape investigations and the final broad gate remain pending.

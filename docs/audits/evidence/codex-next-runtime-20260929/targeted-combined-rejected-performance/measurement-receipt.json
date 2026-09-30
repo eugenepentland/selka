@@ -1,0 +1,27 @@
+{
+  "identity": {
+    "source": "cfee00704911a482bd09db880f0e20631f8b6cf1",
+    "compiler_sha256": "5588d2b827f43478c3b4a4764cf60966902fba7ee5387a954bd4204917fbd766",
+    "qbe_sha256": "6ccecf27cda0378f59d7dc60cee74a6558a7d25a0c88fb877b5755136f0500de"
+  },
+  "acceptance": "rejected",
+  "coverage": {
+    "dev": 86,
+    "smoke": 86,
+    "full": 86
+  },
+  "measurement_cpus": "2,3,10,11",
+  "observations_per_row": 1,
+  "sha256": {
+    ".tmp/phase-b-targeted-combined/identity.json": "d7bf1eaae9aca3467f9451374d38d0d1fd792a476e1d9b133607c60d627d671e",
+    ".tmp/phase-b-targeted-combined/install.log": "1bc45b81520a7768d1c5d856cea2a7a42974f4ce409472af819e59fd531e300e",
+    ".tmp/phase-b-targeted-combined/corpus-build.log": "ebdbe535ef9887bd535e52b4b315cb35372f698e5809ce33921056e676e245e3",
+    ".tmp/phase-b-targeted-combined/measure-dev.log": "43d2a4cfb054f4e7f75e683c465b51c8df10f0ba4ac7adb31add303d47640616",
+    ".tmp-rc-quick/results-phase-b-targeted-combined-dev.json": "265e5c5b2511f0fd70e30a64df159b422ceb412aba94a7ae6adf6d1880736ff0",
+    ".tmp/phase-b-targeted-combined/measure-smoke.log": "aabf919be01d90d91ec22f87e48308da5ae806eb0fec09093684a3b9fa07c70a",
+    ".tmp-rc-quick/results-phase-b-targeted-combined-smoke.json": "0465e8180279cee2b1960927ea4c417a0fa2ee340fd660794a82d719be9f0ff3",
+    ".tmp/phase-b-targeted-combined/measure-full.log": "c8a5eb430c24fbf7b68d13151b0f80cc4013ebb696914b71815ebe8c6544f5ca",
+    ".tmp-rc-quick/results-phase-b-targeted-combined-full.json": "a867aef71d07a5ef8aa53501812d651f99e0b56d6e7d8f294401979a9c1237f3",
+    ".tmp/phase-b-targeted-combined/comparison.json": "513777920fcb31dacf865da825318635d30e171dee5209a3ae55e7235a9a0c12"
+  }
+}
