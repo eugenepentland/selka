@@ -1,0 +1,6 @@
+record Pair:
+    values: list[int]
+def keep(value: list[int], choose: bool) -> Pair:
+    return Pair(value) if choose else Pair([1])
+def main() -> int:
+    return len(keep([1, 2], True).values)

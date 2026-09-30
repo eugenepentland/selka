@@ -4,7 +4,7 @@ This plan is written to be handed to AI agents that did not see the conversation
 Each work package (WP) says where it starts, what to do, what "done" means and what has
 already gone wrong in this area. Read sections 1 to 5 before any WP.
 
-## Closeout status, 2026-09-29
+## Closeout status, 2026-09-30
 
 A1–A4 are implemented, integrated and verified on the isolated
 `codex/next-closeout-20260929` branch. A5 gate `m17-codex` is green at compiler
@@ -12,17 +12,50 @@ source `d8f66585`: all 27 steps pass, including 1,438 fresh guest tests in each
 of nine modes and all four Lox combinations. Dev/full corpus outputs match all
 86 pairs; every row meets the 1.3x cap and 1% regression limit.
 
-**A5 landing awaits the explicit user approval required below.** `main` remains
-`6d91f95b`. Original checkouts and paused lane worktrees were not edited.
+**A5 landed with explicit user approval** ("Yeah fast forward main") on
+2026-09-29. `main` fast-forwarded from `6d91f95b` to `80dd5190`; its compiler
+source is the gated `d8f66585`. Original checkouts and paused lane worktrees
+were not edited. The completed Codex A3/A4 worktrees were removed after
+archiving their logs and Guardian ROI receipts; their branches remain.
 Details, exact counts, performance rows and Guardian feedback are in
 [codex-next-integration-closeout-2026-09-29.md](codex-next-integration-closeout-2026-09-29.md).
 
-Phase B and Phase C remain open. B1/B2 have implementation maps, pinned oracles
-and fixtures; B3 has a current-source large-list reproduction. B4 has an
-independent tooling/GC checkpoint and a separate combined continuation under
-review; its remaining changes are outside the A5 source. EDA preparation has a
-verified test inventory and guide/checker reconciliation, without starting the
-port. Sections below retain the original handoff state and requirements.
+Phase B and Phase C remain open. B1 and B4 pass their lane gates and are integrated
+on the isolated closeout branch. B2 has corrected the positive-path CLI/interface
+and declaration-authority failures. Its independent artifact review passes 14/14,
+all twelve unit shards pass, and whole/module binaries, IL, metadata and cache
+keys match for all 29 distinct corpus programs (43 benchmark rows). The six
+schematic key-only differences are fixed, and identical warm state no longer
+rewrites its files. Final paired 200k checks show about 9% faster no-op and 80%
+faster edited checks; shared-machine load limits remain recorded. B3 implements equality,
+scope, list-image, exclusivity, dictionary, startup-image and text follow-ups.
+Its narrowed-count layout remains rejected for performance. The replacement
+ABI5 checkpoint preserves two 64-bit counts and full-width scope conditions;
+all 30 native families, 16 focused scope checks and the independent 4-condition/
+12-scope-case probe pass. Preliminary wide-count
+Lox measurements meet the dev 1.3x cap but still have sixteen rows above the
+1% regression limit. The QBE long-phi spill-width defect is repaired: the new
+44-assertion regression and original two-case reduction pass, and the composed
+backend build passes 139/139 tests. Independent review rejected an arithmetic
+zero-branch prototype that lost flags across an external-address load; its
+corrected selector passes 140 production cases, 3,754 independent assertions
+and the exact failed case. Release-count review and composition remain pending.
+A preliminary composed non-Lox comparison matches all 60 outputs and meets
+the 1.3x cap, but four rows exceed the 1% regression limit. B3 performance
+corrections and the final combined ABI5 corpus/oracle/gate remain open. All
+Phase B changes remain outside main; its approved tip is `80dd5190`.
+
+Lane receipts are in [python-text-closeout-2026-09-29.md](python-text-closeout-2026-09-29.md),
+[wp-b4-tooling-2026-09-29.md](wp-b4-tooling-2026-09-29.md),
+[codex-next-runtime-checkpoint-2026-09-29.md](codex-next-runtime-checkpoint-2026-09-29.md)
+and [text-runtime-closeout-2026-09-29.md](text-runtime-closeout-2026-09-29.md).
+The final module-lane receipts are in
+[codex-next-modules-closeout-2026-09-30.md](codex-next-modules-closeout-2026-09-30.md);
+the QBE phi fix is in [wp-b3-qbe-phi-2026-09-30.md](wp-b3-qbe-phi-2026-09-30.md).
+EDA preparation has a verified test inventory and guide/checker reconciliation.
+The port has not started: it waits for completed compiler work and the required
+explicit approval to land Phase B. Sections below retain the original handoff
+state and requirements.
 
 ## 1. Read first
 
@@ -34,9 +67,12 @@ port. Sections below retain the original handoff state and requirements.
 - For WP-B2 only: `git show merge/devspeed-into-main:docs/audits/merge-devspeed-into-main-2026-09-24.md`.
 - For WP-C1 only: in `/home/epentland/ai/canopy/eda-bench`, read `PORTING.md`, `mylang/PORTING-MYLANG.md`, `mylang/PLAN.md` and `mylang/GAPS.md`.
 
-## 2. Where things stand
+## 2. Original handoff state (historical)
 
-### `main` = `6d91f95b`
+The status above records the current closeout. The following snapshots describe
+the starting state, so original branch names and gate failures remain auditable.
+
+### Starting `main` = `6d91f95b`
 
 - Reference counting (RC) is the default runtime. On the 43-program corpus it runs at a geomean of 1.07x the tracing GC's instruction count, and every program is at or under 1.3x. `--gc-runtime` selects the GC.
 - The language-level copy bugs are fixed:

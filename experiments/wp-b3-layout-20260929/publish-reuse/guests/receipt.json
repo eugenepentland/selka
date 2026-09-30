@@ -1,0 +1,146 @@
+[
+  {
+    "mode": "rc",
+    "area": "rc_glue_values",
+    "passed": 7,
+    "failed": 0,
+    "skipped": 0,
+    "cached": 0
+  },
+  {
+    "mode": "rc",
+    "area": "rc_dictionary_views",
+    "passed": 6,
+    "failed": 0,
+    "skipped": 0,
+    "cached": 0
+  },
+  {
+    "mode": "rc",
+    "area": "rc_scope_inline",
+    "passed": 3,
+    "failed": 0,
+    "skipped": 0,
+    "cached": 0
+  },
+  {
+    "mode": "gc",
+    "area": "rc_glue_values",
+    "passed": 7,
+    "failed": 0,
+    "skipped": 0,
+    "cached": 0
+  },
+  {
+    "mode": "gc",
+    "area": "rc_dictionary_views",
+    "passed": 6,
+    "failed": 0,
+    "skipped": 0,
+    "cached": 0
+  },
+  {
+    "mode": "gc",
+    "area": "rc_scope_inline",
+    "passed": 3,
+    "failed": 0,
+    "skipped": 0,
+    "cached": 0
+  },
+  {
+    "mode": "stress",
+    "area": "rc_glue_values",
+    "passed": 7,
+    "failed": 0,
+    "skipped": 0,
+    "cached": 0
+  },
+  {
+    "mode": "stress",
+    "area": "rc_dictionary_views",
+    "passed": 6,
+    "failed": 0,
+    "skipped": 0,
+    "cached": 0
+  },
+  {
+    "mode": "stress",
+    "area": "rc_scope_inline",
+    "passed": 3,
+    "failed": 0,
+    "skipped": 0,
+    "cached": 0
+  },
+  {
+    "mode": "stats",
+    "area": "rc_glue_values",
+    "passed": 7,
+    "failed": 0,
+    "skipped": 0,
+    "cached": 0
+  },
+  {
+    "mode": "stats",
+    "area": "rc_dictionary_views",
+    "passed": 6,
+    "failed": 0,
+    "skipped": 0,
+    "cached": 0
+  },
+  {
+    "mode": "stats",
+    "area": "rc_scope_inline",
+    "passed": 3,
+    "failed": 0,
+    "skipped": 0,
+    "cached": 0
+  },
+  {
+    "mode": "sites",
+    "area": "rc_glue_values",
+    "passed": 7,
+    "failed": 0,
+    "skipped": 0,
+    "cached": 0
+  },
+  {
+    "mode": "sites",
+    "area": "rc_dictionary_views",
+    "passed": 6,
+    "failed": 0,
+    "skipped": 0,
+    "cached": 0
+  },
+  {
+    "mode": "sites",
+    "area": "rc_scope_inline",
+    "passed": 3,
+    "failed": 0,
+    "skipped": 0,
+    "cached": 0
+  },
+  {
+    "mode": "llvm",
+    "area": "rc_glue_values",
+    "passed": 7,
+    "failed": 0,
+    "skipped": 0,
+    "cached": 0
+  },
+  {
+    "mode": "llvm",
+    "area": "rc_dictionary_views",
+    "passed": 6,
+    "failed": 0,
+    "skipped": 0,
+    "cached": 0
+  },
+  {
+    "mode": "llvm",
+    "area": "rc_scope_inline",
+    "passed": 3,
+    "failed": 0,
+    "skipped": 0,
+    "cached": 0
+  }
+]

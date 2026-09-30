@@ -1,0 +1,135 @@
+export function w $review_owner(l %ctx, l %heap, l %slot) {
+@start
+ # RC-GLUE-1 drop
+ %v99 =l copy %heap
+ %v100 =l loadl %slot
+ %v111 =w cnel %v100, 0
+ jnz %v111, @rcgnn110, @rcgdone110
+@rcgnn110
+ %v101 =l sub %v100, 16
+ # myl-rc %v101
+ %v102 =l loadl %v101
+ %v103 =l and %v102, 4611686018427387906
+ %v112 =w cnel %v103, 0
+ jnz %v112, @rcgclear110, @rcgcounted110
+@rcgcounted110
+ %v104 =l sub %v100, 32
+ # myl-rc %v104
+ %v105 =l loadl %v104
+ %v109 =l sub %v105, 1
+ %v106 =w ceql %v109, 0
+ jnz %v106, @rcglast110, @rcgdec110
+@rcglast110
+ %v107 =l sub %v100, 24
+ # myl-rc %v107
+ %v108 =l loadl %v107
+ %v113 =w cnel %v108, 0
+ jnz %v113, @rcgdec110, @rcgslow110
+@rcgslow110
+ call $myl_t_1535267fc5a418ed8053a9a6290354ebfcee0a92538bece7aa6b84967f8fb527_rcg_drop(l %v99, l %slot)
+ jmp @rcgdone110
+@rcgdec110
+ storel %v109, %v104
+@rcgclear110
+ storel 0, %slot
+@rcgdone110
+ ret 1
+}
+
+export function w $review_hold(l %ctx, l %heap, l %slot) {
+@start
+ # RC-GLUE-1 unloan
+ %v84 =l copy %heap
+ %v85 =l loadl %slot
+ %v96 =w cnel %v85, 0
+ jnz %v96, @rcgnn95, @rcgdone95
+@rcgnn95
+ %v86 =l sub %v85, 16
+ # myl-rc %v86
+ %v87 =l loadl %v86
+ %v88 =l and %v87, 4611686018427387906
+ %v97 =w cnel %v88, 0
+ jnz %v97, @rcgclear95, @rcgcounted95
+@rcgcounted95
+ %v89 =l sub %v85, 24
+ # myl-rc %v89
+ %v90 =l loadl %v89
+ %v94 =l sub %v90, 1
+ %v91 =w ceql %v94, 0
+ jnz %v91, @rcglast95, @rcgdec95
+@rcglast95
+ %v92 =l sub %v85, 32
+ # myl-rc %v92
+ %v93 =l loadl %v92
+ %v98 =w cnel %v93, 0
+ jnz %v98, @rcgdec95, @rcgslow95
+@rcgslow95
+ call $myl_t_1535267fc5a418ed8053a9a6290354ebfcee0a92538bece7aa6b84967f8fb527_rcg_unloan(l %v84, l %slot)
+ jmp @rcgdone95
+@rcgdec95
+ storel %v94, %v89
+@rcgclear95
+ storel 0, %slot
+@rcgdone95
+ ret 1
+}
+
+export function w $review_publish(l %ctx, l %heap, l %dst, l %src, w %region, w %mode) {
+@start
+ # RC-GLUE-1 publish
+ %v54 =w and %mode, 3
+ jnz %v54, @rcgpublishslow53, @rcgpublishmode53
+@rcgpublishmode53
+ %v55 =l loadl %src
+ %v63 =w cnel %v55, 0
+ jnz %v63, @rcgpublishnn53, @rcgpublishstore53
+@rcgpublishnn53
+ %v56 =l sub %v55, 16
+ # myl-rc %v56
+ %v57 =l loadl %v56
+ %v58 =l and %v57, 5764607523034234880
+ %v64 =w cnel %v58, 0
+ jnz %v64, @rcgpublishslow53, @rcgpublishshare53
+@rcgpublishshare53
+ %v65 =w and %mode, 4
+ %v66 =l and %v57, 2
+ jnz %v65, @rcgpublishmarkcheck53, @rcgpublishordinary53
+@rcgpublishordinary53
+ %v70 =w cnel %v66, 0
+ jnz %v70, @rcgpublishmarkcheck53, @rcgpublishcapacity53
+@rcgpublishcapacity53
+ %v68 =l sub %v55, 32
+ # myl-rc %v68
+ %v67 =l loadl %v68
+ %v62 =l add %v67, 1
+ %v69 =w ceql %v62, 0
+ jnz %v69, @rcgpublishslow53, @rcgpublishacquire53
+@rcgpublishacquire53
+ storel %v62, %v68
+@rcgpublishmarkcheck53
+ %v59 =l and %v57, 2305843009213693954
+ %v71 =w cnel %v59, 0
+ jnz %v71, @rcgpublishstore53, @rcgpublishmark53
+@rcgpublishmark53
+ %v60 =l or %v57, 2305843009213693952
+ storel %v60, %v56
+@rcgpublishstore53
+ storel %v55, %dst
+ %v61 =w and %mode, 4
+ jnz %v61, @rcgpublishtake53, @rcgpublished53
+@rcgpublishtake53
+ storel 0, %src
+ jmp @rcgpublished53
+@rcgpublishslow53
+ %v72 =w call $myl_t_1535267fc5a418ed8053a9a6290354ebfcee0a92538bece7aa6b84967f8fb527_rcg_publish(l %heap, l %dst, l %src, w %region, w %mode)
+ jnz %v72, @rcsuccess73, @rcfailure73
+@rcfailure73
+ %v74 =w call $myl_rc_take_failure(l %heap)
+ %v75 =w call $myl_qbe_rc_status(l %ctx, w %v74)
+ jmp @failure
+@rcsuccess73
+@rcgpublished53
+ ret 1
+@failure
+ ret 0
+}

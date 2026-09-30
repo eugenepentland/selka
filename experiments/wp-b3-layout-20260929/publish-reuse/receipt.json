@@ -1,0 +1,32 @@
+{
+  "source_base": "7f5068a54946bcbe0cf1f7e20abf844f120046cd",
+  "source_sha256": {
+    "src/qbe_rc_glue.zig": "ff87a484a74f0511b618ad3caec97e232b3e0250e24db9467ad920c80d0d99ad",
+    "src/qbe_rc_glue_inline_test.zig": "f134a7b7369e24d380b65ee05e9859c5b3d9a2aa280920c6bbe15a6939934bee",
+    "build_test_inputs.zig": "b5315b989fac995d5601c3a580f69e2365ab0b91716fdcd7289b77be23f789c1"
+  },
+  "compiler_sha256": "6a3c138f666d7137088d09d8cb60bd19f3f2bd6ff0f0497b4b61a73e7f054153",
+  "qbe_sha256": "0a97f87ec92ecaea379f7fa01da0ac68fec9e92663434a9eb28b620ca895bd23",
+  "install_steps": 12,
+  "tagged_ordering_tests": 13,
+  "generated_checked_glue_tests": 13,
+  "qbe_build_tests": 140,
+  "inputs_fmt_steps": 27,
+  "guardian_whole_checks": 88,
+  "fresh_six_mode_lifetime_cases": 96,
+  "cached_failed_skipped": 0,
+  "actual_emitted_fragment_cases": {
+    "qbe": {
+      "release": 126,
+      "publication": 288
+    },
+    "llvm": {
+      "release": 126,
+      "publication": 288
+    }
+  },
+  "oracle_provenance": "Read-only source and independent C oracle from typing release-review lane; publication count vector extended with MAX-1, wrappers extracted fresh from this compiler with raw bodies and byte ranges archived. Forced slow stub checks unchanged count/history/source/empty output. Real generated-C checked runtime fixture separately covers alias/arena/foreign/budget/overlap/self-copy; no overlap admission removed from public/runtime functions.",
+  "status": "functional checkpoint; independent publication review and root full86 quantitative acceptance pending",
+  "no_measurements": true,
+  "retained_failures": "Root corrected combined7f full86 outputs all match at3sizes, but18dev/24smoke/19full rows exceed1%A5. This prototype has no quantitative result."
+}
