@@ -52,6 +52,9 @@ pub const module_interface_oracle = @import("module_interface_oracle.zig");
 /// One module compiled from its imports' interfaces (MODULE-COMPILE-1).
 pub const module_physical = @import("module_physical.zig");
 pub const module_compile = @import("module_compile.zig");
+/// What a module compile consumed of each import's emission section, by
+/// symbol (MODULE-SYMBOL-CUTOFF-1).
+pub const module_symbols = @import("module_symbols.zig");
 /// The per-module units of a program merged into one manifest (MODULE-COMPILE-3).
 pub const module_link = @import("module_link.zig");
 /// Canonical codec tables merged by explicit module links and linked tests.

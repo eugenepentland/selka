@@ -63,6 +63,17 @@ pub fn digest(a: std.mem.Allocator, names: Names, value: anytype) std.mem.Alloca
     return out;
 }
 
+/// MODULE-SYMBOL-CUTOFF-1: the name of every function `value` refers to (a
+/// call, a function value, an inline origin, a record's codec), in encoding
+/// order and with repeats: exactly the function references `write` spells.
+pub fn references(a: std.mem.Allocator, names: Names, comptime T: type, value: T) std.mem.Allocator.Error![]const []const u8 {
+    var writer: codec.Writer = .init(a);
+    defer writer.deinit();
+    var found: std.ArrayList([]const u8) = .empty;
+    try writer.writeMapped(T, value, Collect, .{ .names = names, .found = &found, .allocator = a });
+    return found.items;
+}
+
 /// Store every selected real body and signatures for every dependency it names.
 pub fn archive(a: std.mem.Allocator, code: bytecode.Program, selected: []const bool) std.mem.Allocator.Error!Archive {
     const names: Names = .{ .functions = code.functions, .records = code.records };
@@ -82,6 +93,27 @@ pub fn archive(a: std.mem.Allocator, code: bytecode.Program, selected: []const b
     }
     return .{ .records = records, .functions = bodies.items, .dependencies = dependencies.items };
 }
+
+/// The reference fields `References` encodes, with every function reference
+/// collected by name instead of written.
+const Collect = struct {
+    names: Names,
+    found: *std.ArrayList([]const u8),
+    allocator: std.mem.Allocator,
+
+    /// The same reference-bearing fields `References` handles.
+    pub fn handles(comptime T: type) bool {
+        return References.handles(T);
+    }
+
+    /// Record a function reference (an empty name for one outside the
+    /// catalog); every other reference names none.
+    pub fn encode(self: Collect, _: *codec.Writer, comptime T: type, value: T) std.mem.Allocator.Error!void {
+        if (T != typed.FunctionId) return;
+        const index = @backingInt(value);
+        try self.found.append(self.allocator, if (index < self.names.functions.len) self.names.functions[index].name else "");
+    }
+};
 
 /// The only reference-bearing physical fields with a supported stable encoding.
 const References = struct {

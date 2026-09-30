@@ -384,17 +384,15 @@ fn warningsOf(context: Context, compiled: *const compile_module.Compiled, module
     var foreign: std.ArrayList(Foreign) = .empty;
     const items = compilation.diagnostics.items.items;
     for (items[0..@min(count, items.len)]) |item| {
+        // The compile's own synthetic root is no module of the program, and
+        // an import an interface's text keeps is used by the body the
+        // interface left out.
+        if (!compile_module.rendersDiagnostic(compilation, module, item)) continue;
         const at = compilation.src.originalSpan(item.span) catch continue;
-        if (at.input >= modules.len) continue;
         const rendered = try diagnostic_output.render(context.gpa, item, compilation.src, .text);
         defer context.gpa.free(rendered);
         if (std.mem.eql(u8, modules[at.input].name, module)) {
             try text.appendSlice(context.arena, rendered);
-        } else if (std.mem.eql(u8, modules[at.input].name, oracle.root_module) or std.mem.eql(u8, item.code, "W_UNUSED_IMPORT")) {
-            // The compile's own synthetic root is no module of the program,
-            // and an import an interface's text keeps is used by the body
-            // the interface left out.
-            continue;
         } else try foreign.append(context.arena, .{ .module = modules[at.input].name, .text = try context.arena.dupe(u8, rendered) });
     }
     return .{ .own = text.items, .foreign = foreign.items };

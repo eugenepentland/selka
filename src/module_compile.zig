@@ -35,6 +35,8 @@ const project = @import("project.zig");
 const native_types = @import("native_types.zig");
 const project_compile = @import("project_compile.zig");
 const test_facts = @import("native_test_facts.zig");
+const symbols = @import("module_symbols.zig");
+const diagnostic = @import("diagnostic.zig");
 
 /// Failures of one module compile. `SourceError` means the module did not
 /// check (its diagnostics are on the returned compilation); `MissingEmission`
@@ -113,12 +115,19 @@ pub const Hashes = struct {
     emission: []const u8,
     positions: []const u8,
     inputs: []const Input = &.{},
+    /// MODULE-SYMBOL-CUTOFF-1: the sorted names of every function the
+    /// compile's output can depend on (`module_symbols.reach`); null when it
+    /// consumed every row of every import (a check, or a reached body that
+    /// invokes a function value).
+    reach: ?[]const []const u8 = null,
 };
 
 /// One interface a compile read, by module, with its interface, emission and
 /// positions hashes (lowercase hex); the positions hash is empty when no
-/// emitted unit's positions fell in that interface's text.
-pub const Input = struct { module: []const u8, interface: []const u8, emission: []const u8, positions: []const u8 };
+/// emitted unit's positions fell in that interface's text. `symbols` is the
+/// digest of what the compile's `reach` consumed of its emission section
+/// (`module_symbols.Table.digest`), empty with no reach.
+pub const Input = struct { module: []const u8, interface: []const u8, emission: []const u8, positions: []const u8, symbols: []const u8 = "" };
 
 /// How much one compile did: the program's functions, how many it lowered
 /// with their bodies, how many it stood in from interfaces, its units, and
@@ -335,16 +344,19 @@ const InterfaceStep = struct {
         }
         self.out.interface = interface;
         // A diagnostic's rendering may name places in an import's text (a
-        // note, an instantiated body), so a module that reported any reads
-        // every import's positions (MODULE-CHECK-1).
+        // note, an instantiated body), so a module that renders any reads
+        // every import's positions (MODULE-CHECK-1); one it never renders
+        // reads none (MODULE-SYMBOL-CUTOFF-4).
         const placed = try placedIn(arena, compilation, self.body.code, self.body.emit);
-        if (self.out.counts.diagnostics != 0) @memset(placed, true);
+        if (rendersAny(compilation, self.request.module.module, self.out.counts.diagnostics)) @memset(placed, true);
+        const reached = if (self.request.check_only) null else try symbols.reach(arena, self.body.code, self.body.emit);
         self.out.hashes = .{
             .interface = try hex(arena, iface.interfaceHash(interface)),
             .implementation = try hex(arena, built.implementation_hash),
             .emission = try hex(arena, iface.emissionHash(interface)),
             .positions = try hex(arena, iface.positionsHash(interface)),
-            .inputs = try inputsOf(arena, .{ .library = library, .modules = modules, .own = self.own, .placed = placed, .physical = self.body.dependencies }),
+            .inputs = try inputsOf(arena, .{ .library = library, .modules = modules, .own = self.own, .placed = placed, .physical = self.body.dependencies, .reach = reached }),
+            .reach = reached,
         };
         self.done = true;
     }
@@ -394,6 +406,28 @@ fn interfacesOf(a: std.mem.Allocator, request: Request, modules: []const project
     return out.items;
 }
 
+/// MODULE-SYMBOL-CUTOFF-4: whether a compile of `module` renders diagnostic
+/// `item` among its warnings: one located in its own text, or in another
+/// module's text unless that is the synthetic root a non-entry compile is
+/// checked under or the item is an unused import an interface's text keeps
+/// (the body the interface left out uses it). The rest are never shown.
+pub fn rendersDiagnostic(compilation: *const project_compile.Compilation, module: []const u8, item: diagnostic.Diagnostic) bool {
+    const modules = compilation.index.project.modules.items;
+    const at = compilation.src.originalSpan(item.span) catch return false;
+    if (at.input >= modules.len) return false;
+    const owner = modules[at.input].name;
+    if (std.mem.eql(u8, owner, module)) return true;
+    return !std.mem.eql(u8, owner, oracle.root_module) and !std.mem.eql(u8, item.code, "W_UNUSED_IMPORT");
+}
+
+/// Whether any of the first `count` diagnostics a compile of `module`
+/// reported is one it renders.
+fn rendersAny(compilation: *const project_compile.Compilation, module: []const u8, count: usize) bool {
+    const items = compilation.diagnostics.items.items;
+    for (items[0..@min(count, items.len)]) |item| if (rendersDiagnostic(compilation, module, item)) return true;
+    return false;
+}
+
 /// Which merged-source inputs the positions of the emitted units fall in: the
 /// interface texts whose positions this compile's metadata read.
 fn placedIn(allocator: std.mem.Allocator, compilation: *const project_compile.Compilation, code: bytecode.Program, emit: []const bool) Error![]bool {
@@ -415,7 +449,7 @@ fn placedIn(allocator: std.mem.Allocator, compilation: *const project_compile.Co
 }
 
 /// What the interfaces a compile read are listed from.
-const Read = struct { library: *oracle.Library, modules: []const project.Module, own: usize, placed: []const bool, physical: []const iface.Interface };
+const Read = struct { library: *oracle.Library, modules: []const project.Module, own: usize, placed: []const bool, physical: []const iface.Interface, reach: ?[]const []const u8 };
 
 /// Every interface the compile read, in module order, with its interface and
 /// emission hashes, and its positions hash when an emitted unit's positions
@@ -433,6 +467,7 @@ fn inputsOf(allocator: std.mem.Allocator, read: Read) Error![]const Input {
             .interface = try hex(allocator, iface.interfaceHash(interface)),
             .emission = try hex(allocator, iface.emissionHash(interface)),
             .positions = if (index < read.placed.len and read.placed[index]) try hex(allocator, iface.positionsHash(interface)) else "",
+            .symbols = try symbolsOf(allocator, interface, read.reach),
         });
     }
     for (read.physical) |interface| {
@@ -443,9 +478,19 @@ fn inputsOf(allocator: std.mem.Allocator, read: Read) Error![]const Input {
             .interface = try hex(allocator, iface.interfaceHash(interface)),
             .emission = try hex(allocator, iface.emissionHash(interface)),
             .positions = "",
+            .symbols = try symbolsOf(allocator, interface, read.reach),
         });
     }
     return out.items;
+}
+
+/// MODULE-SYMBOL-CUTOFF-1: the digest of what a compile that reached
+/// `reached` consumed of `interface`'s emission section, or empty without a
+/// reach.
+fn symbolsOf(allocator: std.mem.Allocator, interface: iface.Interface, reached: ?[]const []const u8) Error![]const u8 {
+    const names = reached orelse return "";
+    const table = try symbols.Table.of(allocator, interface);
+    return hex(allocator, try table.digest(allocator, names));
 }
 
 fn hex(allocator: std.mem.Allocator, digest: [32]u8) Error![]const u8 {
