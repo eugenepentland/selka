@@ -90,6 +90,9 @@ const rss = struct {
     /// over the 3G bound, so the install graph failed after writing the binary.
     /// Observed again (ReleaseFast, 2026-09-24, with per-module tests): 4.26G.
     const compile: u64 = 4608 * mib;
+    /// The B2 ReleaseFast compiler peaked at 5,226,618,880 bytes (2026-09-30).
+    /// Reserve 5.5 GiB for that artifact, retaining about 13% measured headroom.
+    const compiler_fast: u64 = 5632 * mib;
     /// `zig build run`, which executes whatever program the caller names.
     /// Matches the 4 GiB ceiling `mylang run` gives a guest.
     const guest: u64 = 4096 * mib;
@@ -445,7 +448,7 @@ pub fn build(b: *std.Build) void {
     });
     core.addImport("runtime_contract", runtime_contract);
     const exe = b.addExecutable(.{
-        .max_rss = rss.compile,
+        .max_rss = if (optimize == .fast) rss.compiler_fast else rss.compile,
         .name = "mylang",
         .root_module = b.createModule(.{
             .root_source_file = b.path("src/main.zig"),

@@ -34,7 +34,7 @@ pub const Digest = [32]u8;
 /// Bumped whenever the canonical encoding below or the pack layout changes, so
 /// an older store can never answer a newer compiler's question. The compiler
 /// identity already partitions the store; this guards the encoding itself.
-pub const format_version = "mylang-qbe-fragments-v2";
+pub const format_version = "mylang-qbe-fragments-v3";
 
 /// Whole-program switches that reach every unit's text.
 pub const Flags = struct {
@@ -455,6 +455,9 @@ pub const Final = struct {
     /// Add one named function's allocation fact and parameter-write facts.
     pub fn callee(self: *Final, pure: bool, writes: []const bool) void {
         self.hash.update(&.{@intFromBool(pure)});
+        // blindCall declines allocating calls before reading parameter writes.
+        // Their conservative imported flags therefore cannot change unit text.
+        if (!pure) return;
         var length: [8]u8 = undefined;
         std.mem.writeInt(u64, &length, writes.len, .little);
         self.hash.update(&length);
@@ -483,6 +486,25 @@ pub const Final = struct {
         return digestOf(&self.hash);
     }
 };
+
+// spec-case: QBE-FRAGMENT-REUSE-2
+test "final keys retain pure writes and ignore unconsumed impure writes" {
+    const local_key: Digest = @splat(0);
+    var impure_empty = Final.init(local_key);
+    impure_empty.callee(false, &.{});
+    var impure_clean = Final.init(local_key);
+    impure_clean.callee(false, &.{ false, false });
+    var impure_unknown = Final.init(local_key);
+    impure_unknown.callee(false, &.{ true, true });
+    try std.testing.expectEqual(impure_empty.finish(), impure_clean.finish());
+    try std.testing.expectEqual(impure_clean.finish(), impure_unknown.finish());
+    var pure_clean = Final.init(local_key);
+    pure_clean.callee(true, &.{false});
+    var pure_written = Final.init(local_key);
+    pure_written.callee(true, &.{true});
+    try std.testing.expect(!std.mem.eql(u8, &pure_clean.finish(), &pure_written.finish()));
+    try std.testing.expect(!std.mem.eql(u8, &pure_clean.finish(), &impure_clean.finish()));
+}
 
 /// The key of a unit's metadata (`EMIT-META-1`) — its per-instruction source
 /// positions, assertion messages and inline frames. Its second-pass key covers

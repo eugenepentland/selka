@@ -705,6 +705,7 @@ const Build = struct {
     /// Modules in dependency order: each after everything it imports.
     order: std.ArrayList(usize) = .empty,
     previous: std.StringHashMapUnmanaged(ModuleState) = .empty,
+    loaded_states: [2]?StateFile = .{ null, null },
     had_state: bool = false,
     previous_arenas: bool = false,
     arenas: bool = false,
@@ -724,10 +725,11 @@ const Build = struct {
     /// standard modules' shared ones.
     fn loadState(self: *Build) !void {
         const a = self.context.allocator;
-        for ([_][]const u8{ self.standard, self.variant }, [_]bool{ true, false }) |directory, standard| {
+        for ([_][]const u8{ self.standard, self.variant }, [_]bool{ true, false }, 0..) |directory, standard, index| {
             const bytes = self.context.read(try std.fs.path.join(a, &.{ directory, state_file })) catch continue;
             const file = std.json.parseFromSliceLeaky(StateFile, a, bytes, .{ .ignore_unknown_fields = true, .allocate = .alloc_always }) catch continue;
             if (!std.mem.eql(u8, file.version, state_version)) continue;
+            self.loaded_states[index] = file;
             if (!standard) {
                 self.had_state = true;
                 self.previous_arenas = file.arenas;
@@ -740,6 +742,10 @@ const Build = struct {
     /// their shared state (keeping those of standard modules this program
     /// does not import).
     fn saveState(self: *Build) !void {
+        // Both variant locks remain held from loadState through publication.
+        // Verify headers, graph order and every loaded row before avoiding
+        // serialization; changed graphs and partial repairs publish atomically.
+        if (self.unchangedState()) return;
         const a = self.context.allocator;
         var own: std.ArrayList(ModuleState) = .empty;
         var standard: Map(ModuleState) = .empty;
@@ -756,6 +762,28 @@ const Build = struct {
         }
         try self.context.atomic(try std.fs.path.join(a, &.{ self.variant, state_file }), try std.json.Stringify.valueAlloc(a, StateFile{ .arenas = self.arenas, .modules = own.items }, .{}));
         try self.context.atomic(try std.fs.path.join(a, &.{ self.standard, state_file }), try std.json.Stringify.valueAlloc(a, StateFile{ .arenas = self.arenas, .modules = standard.values() }, .{}));
+    }
+
+    fn unchangedState(self: *const Build) bool {
+        if (self.compiled != 0) return false;
+        const standard = self.loaded_states[0] orelse return false;
+        const own = self.loaded_states[1] orelse return false;
+        if (standard.arenas != self.arenas or own.arenas != self.arenas) return false;
+        if (self.previous.count() != standard.modules.len + own.modules.len) return false;
+        for (standard.modules) |row| {
+            if (!standardModule(row.name)) return false;
+            if (!std.meta.eql(row, self.previous.get(row.name) orelse return false)) return false;
+        }
+        var index: usize = 0;
+        for (self.nodes.items) |node| {
+            const record = node.record orelse return false;
+            if (!std.meta.eql(record, self.previous.get(node.name) orelse return false)) return false;
+            if (standardModule(node.name)) continue;
+            if (index == own.modules.len) return false;
+            if (!std.meta.eql(node.record orelse return false, own.modules[index])) return false;
+            index += 1;
+        }
+        return index == own.modules.len;
     }
 
     fn intern(self: *Build, name: []const u8) !?usize {
@@ -1388,4 +1416,47 @@ const SharedRender = struct {
 
 fn invalidBlocks(err: anyerror) native_build.Error {
     return if (err == error.OutOfMemory) error.OutOfMemory else error.InvalidNativeManifest;
+}
+
+// spec-case: MODULE-CHECK-1
+test "unchanged state proves graph rows and shared headers before skipping publication" {
+    const t = std.testing;
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const first: ModuleState = .{ .name = "main", .digest = "one", .imports = &.{"helper"}, .arenas = false, .hashes = .{ .interface = "i", .emission = "e", .positions = "p" } };
+    var second = first;
+    second.name = "helper";
+    var shared = first;
+    shared.name = "math";
+    var state: Build = .{ .context = undefined, .parsed = undefined, .entry = undefined, .variant = "", .standard = "", .switches = undefined, .had_state = true };
+    state.loaded_states = .{ .{ .modules = &.{shared} }, .{ .modules = &.{ first, second } } };
+    for ([_]ModuleState{ first, second, shared }) |row| {
+        try state.previous.put(a, row.name, row);
+        try state.nodes.append(a, .{ .name = row.name, .digest = row.digest, .imports = row.imports, .arena_text = false, .bytes = 1, .record = row });
+    }
+    try t.expect(state.unchangedState());
+    state.compiled = 1;
+    try t.expect(!state.unchangedState());
+    state.compiled = 0;
+    state.loaded_states[0].?.arenas = true;
+    try t.expect(!state.unchangedState());
+    state.loaded_states[0].?.arenas = false;
+    state.nodes.items[2].record.?.digest = "changed shared";
+    try t.expect(!state.unchangedState());
+    state.nodes.items[2].record = shared;
+    state.nodes.items[0].record.?.digest = "changed";
+    try t.expect(!state.unchangedState());
+    state.nodes.items[0].record = first;
+    state.nodes.items[0].record = second;
+    state.nodes.items[1].record = first;
+    try t.expect(!state.unchangedState());
+    state.nodes.items[0].record = first;
+    state.nodes.items[1].record = second;
+    const all = state.nodes.items;
+    state.nodes.items = all[0..1];
+    try t.expect(!state.unchangedState());
+    state.nodes.items = all;
+    state.loaded_states[0] = null;
+    try t.expect(!state.unchangedState());
 }
