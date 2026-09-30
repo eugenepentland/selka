@@ -55,6 +55,14 @@ EDA preparation has a verified test inventory and guide/checker reconciliation.
 Phase C begins after the approved Phase B landing. Sections below retain the
 original handoff state and requirements.
 
+## Compiler build preference — 2026-09-30
+
+The user requests ReleaseFast for future mylang compiler builds: pass
+`-Doptimize=ReleaseFast` to `zig build` / compiler installation. This supersedes
+the original WP-C1 Debug-build advice below. Existing qualified Debug binaries
+and in-flight homogeneous timing runs retain their recorded mode; no result
+is relabeled as ReleaseFast. Guest release/backend flags are separate.
+
 ## 1. Read first
 
 - `CLAUDE.md`: the build, the fast loops, the Guardian rules and the gate. Guardian blocks `zig build` and commits.
@@ -366,9 +374,10 @@ Phase C (after A, B1 and ideally B2 are on main)
 - **Prepare:**
   - Install a pinned compiler from the new `main`:
     ```
-    zig build --prefix /home/epentland/ai/canopy/eda-bench-wt/mylang-<commit>
+    zig build -Doptimize=ReleaseFast --prefix /home/epentland/ai/canopy/eda-bench-wt/mylang-<commit>
     ```
-    Use the Debug compiler; guest binaries are identical.
+    Use ReleaseFast for future compiler installations (updated user preference);
+    retain the recorded mode of existing qualification and timing evidence.
   - Point `harness/langs.toml` `[mylang]` at it.
   - Update `mylang/PORTING-MYLANG.md` and `PLAN.md` for what the compiler now has:
     - `embed_bytes`/`embed_str` for `stdlib/embed` and the fixtures (deviation D5);
