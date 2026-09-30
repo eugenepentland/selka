@@ -1,0 +1,5130 @@
+{
+  "source": {
+    "source": "458b9dfc84640b2d1e38a4eb30be1ec3745c0476",
+    "tree": "5e36024f5d2e5043a2449c6850e46435879535a4",
+    "prefix": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-text-runtime-20260929/.tmp/b3-frozen",
+    "sha256": {
+      ".tmp/b3-frozen/bin/mylang": "1aa5fe081f549c3653785625f3240e1c60d47e958dbd559dfd35c7001ffd7efb",
+      ".tmp/b3-frozen/bin/qbe": "3a82e47eab7323bf4b25f71a99bcde34f93ab661a57b3524f2641d7254ba2725"
+    }
+  },
+  "control": {
+    "source": "5ef8b06a2e1dacd95ffb3a6e01e883ba9f615b39",
+    "prefix": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-text-runtime-20260929/.tmp/b3-control",
+    "sha256": {
+      ".tmp/b3-control/bin/mylang": "7fd3fcad3a5d83d29e37f51c33fe3fdb36f69e54e0ad32f67bb57f49540ed23c",
+      ".tmp/b3-control/bin/qbe": "3a82e47eab7323bf4b25f71a99bcde34f93ab661a57b3524f2641d7254ba2725"
+    }
+  },
+  "cpus": "2,3,10,11",
+  "sizes": {
+    "dev": {
+      "outputs_matched": 86,
+      "files": {
+        "candidate": {
+          "path": ".tmp-rc-quick/results-b3-text-dev.json",
+          "sha256": "aaa76c23bcac2c54455615588ac0e6e3134c028f1417133ae3949b146105e4ef"
+        },
+        "control": {
+          "path": ".tmp-rc-quick/results-b3-text-control-dev.json",
+          "sha256": "18c26e65ef553d00eb777ac55f3e66ca27d069f00a38ace01fadd02759c80908"
+        },
+        "approved_A5": {
+          "path": ".tmp-rc-quick/baselines/results-m17-codex-dev.json",
+          "sha256": "42579ee700bdd8600fd9ff5c28ba16950a28e3be80cfa71758f9ef23548ac772"
+        },
+        "B1": {
+          "path": ".tmp-rc-quick/baselines/results-b1-compat-codex-dev.json",
+          "sha256": "6c1fc7f54dde712779c19c5dd450b8c19700efd53ef4a4ad77639a61058231ff"
+        }
+      },
+      "summary": {
+        "qbe": {
+          "candidate": {
+            "geomean": 1.064558974150543,
+            "geomean_nonlox": 1.0462509026678248,
+            "rows": 43,
+            "within_1_3": 43,
+            "worst": 1.2814187565277666
+          },
+          "control": {
+            "geomean": 1.0644856115591326,
+            "geomean_nonlox": 1.0461474359022003,
+            "rows": 43,
+            "within_1_3": 43,
+            "worst": 1.2814187661232193
+          },
+          "approved_A5": {
+            "geomean": 1.0644846095647313,
+            "geomean_nonlox": 1.046145654822888,
+            "rows": 43,
+            "within_1_3": 43,
+            "worst": 1.281418448435237
+          },
+          "cap_misses": {
+            "candidate": [],
+            "control": [],
+            "approved_A5": [],
+            "B1": []
+          },
+          "max_rc_increase_percent": {
+            "control": 0.2978565542389955,
+            "approved_A5": 0.2978467301250065,
+            "B1": 0.2978345071021238
+          }
+        },
+        "llvm": {
+          "candidate": {
+            "geomean": 1.0690933621585215,
+            "geomean_nonlox": 1.041444451940835,
+            "rows": 43,
+            "within_1_3": 43,
+            "worst": 1.2559556522138289
+          },
+          "control": {
+            "geomean": 1.0690969431214865,
+            "geomean_nonlox": 1.0414491838172184,
+            "rows": 43,
+            "within_1_3": 43,
+            "worst": 1.255953729591142
+          },
+          "approved_A5": {
+            "geomean": 1.0690907773352403,
+            "geomean_nonlox": 1.0414454578579437,
+            "rows": 43,
+            "within_1_3": 43,
+            "worst": 1.255954916754973
+          },
+          "cap_misses": {
+            "candidate": [],
+            "control": [],
+            "approved_A5": [],
+            "B1": []
+          },
+          "max_rc_increase_percent": {
+            "control": 0.008716527591712264,
+            "approved_A5": 0.00011351374520351953,
+            "B1": 0.00019156827728572523
+          }
+        }
+      },
+      "rows": [
+        {
+          "arm": "llvm",
+          "gc": 636875769,
+          "id": "lox/vm/binary_trees",
+          "ratio": 1.1695654038927645,
+          "rc": 744867866,
+          "references": {
+            "control": {
+              "rc": 744867088,
+              "gc": 636875769,
+              "ratio": 1.1695641823044456,
+              "rc_instruction_delta_percent": 0.00010444816431753878
+            },
+            "approved_A5": {
+              "rc": 744869520,
+              "gc": 636873958,
+              "ratio": 1.1695713267019783,
+              "rc_instruction_delta_percent": -0.00022205231327010466
+            },
+            "B1": {
+              "rc": 744868254,
+              "gc": 636874138,
+              "ratio": 1.1695690083116548,
+              "rc_instruction_delta_percent": -5.208974848125436e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 1346932681,
+          "id": "lox/vm/binary_trees",
+          "ratio": 1.1659959396292947,
+          "rc": 1570518037,
+          "references": {
+            "control": {
+              "rc": 1570518648,
+              "gc": 1346932681,
+              "ratio": 1.1659963932525592,
+              "rc_instruction_delta_percent": -3.8904345434076504e-05
+            },
+            "approved_A5": {
+              "rc": 1570515524,
+              "gc": 1346930807,
+              "ratio": 1.1659956961694173,
+              "rc_instruction_delta_percent": 0.0001600111531274706
+            },
+            "B1": {
+              "rc": 1570516787,
+              "gc": 1346930845,
+              "ratio": 1.1659966009613507,
+              "rc_instruction_delta_percent": 7.959163572657246e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 893618565,
+          "id": "lox/vm/closures",
+          "ratio": 1.161200312574079,
+          "rc": 1037670157,
+          "references": {
+            "control": {
+              "rc": 1037669562,
+              "gc": 893618565,
+              "ratio": 1.161199646741896,
+              "rc_instruction_delta_percent": 5.734002632706847e-05
+            },
+            "approved_A5": {
+              "rc": 1037669721,
+              "gc": 893617757,
+              "ratio": 1.1612008746151181,
+              "rc_instruction_delta_percent": 4.2017222945389676e-05
+            },
+            "B1": {
+              "rc": 1037670087,
+              "gc": 893617884,
+              "ratio": 1.1612011191575482,
+              "rc_instruction_delta_percent": 6.745882030756434e-06
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 2080041121,
+          "id": "lox/vm/closures",
+          "ratio": 1.15957265106395,
+          "rc": 2411958797,
+          "references": {
+            "control": {
+              "rc": 2411959086,
+              "gc": 2080041121,
+              "ratio": 1.1595727900035107,
+              "rc_instruction_delta_percent": -1.1981961123286311e-05
+            },
+            "approved_A5": {
+              "rc": 2411957745,
+              "gc": 2080040084,
+              "ratio": 1.15957272340719,
+              "rc_instruction_delta_percent": 4.361602115032781e-05
+            },
+            "B1": {
+              "rc": 2411961277,
+              "gc": 2080040330,
+              "ratio": 1.159574284312074,
+              "rc_instruction_delta_percent": -0.00010282088787061383
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 755710085,
+          "id": "lox/vm/equality",
+          "ratio": 0.9724548349781517,
+          "rc": 734893926,
+          "references": {
+            "control": {
+              "rc": 734896314,
+              "gc": 755710085,
+              "ratio": 0.9724579949201022,
+              "rc_instruction_delta_percent": -0.00032494379880176893
+            },
+            "approved_A5": {
+              "rc": 734894489,
+              "gc": 755709492,
+              "ratio": 0.9724563430519938,
+              "rc_instruction_delta_percent": -7.66096369564373e-05
+            },
+            "B1": {
+              "rc": 734894522,
+              "gc": 755709649,
+              "ratio": 0.9724561846900541,
+              "rc_instruction_delta_percent": -8.110007384543039e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 2092506070,
+          "id": "lox/vm/equality",
+          "ratio": 0.8760218215280972,
+          "rc": 1833080979,
+          "references": {
+            "control": {
+              "rc": 1833082447,
+              "gc": 2092506070,
+              "ratio": 0.8760225230792281,
+              "rc_instruction_delta_percent": -8.008368649337072e-05
+            },
+            "approved_A5": {
+              "rc": 1833079895,
+              "gc": 2092505322,
+              "ratio": 0.8760216166370162,
+              "rc_instruction_delta_percent": 5.913544756097622e-05
+            },
+            "B1": {
+              "rc": 1833081260,
+              "gc": 2092505531,
+              "ratio": 0.8760221814677727,
+              "rc_instruction_delta_percent": -1.5329380431694517e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 504034035,
+          "id": "lox/vm/fib",
+          "ratio": 1.0706455110714894,
+          "rc": 539641777,
+          "references": {
+            "control": {
+              "rc": 539642178,
+              "gc": 504034035,
+              "ratio": 1.0706463066526846,
+              "rc_instruction_delta_percent": -7.430849854328514e-05
+            },
+            "approved_A5": {
+              "rc": 539642310,
+              "gc": 504034321,
+              "ratio": 1.0706459610316894,
+              "rc_instruction_delta_percent": -9.876912727690978e-05
+            },
+            "B1": {
+              "rc": 539641960,
+              "gc": 504034410,
+              "ratio": 1.07064507758508,
+              "rc_instruction_delta_percent": -3.391137338715211e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 1291424247,
+          "id": "lox/vm/fib",
+          "ratio": 1.0870362990791824,
+          "rc": 1403825034,
+          "references": {
+            "control": {
+              "rc": 1403825003,
+              "gc": 1291424247,
+              "ratio": 1.0870362750746774,
+              "rc_instruction_delta_percent": 2.2082524475663945e-06
+            },
+            "approved_A5": {
+              "rc": 1403823699,
+              "gc": 1291424436,
+              "ratio": 1.0870351062491432,
+              "rc_instruction_delta_percent": 9.509741152324835e-05
+            },
+            "B1": {
+              "rc": 1403825321,
+              "gc": 1291424603,
+              "ratio": 1.0870362216569913,
+              "rc_instruction_delta_percent": -2.044413900392783e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 769156643,
+          "id": "lox/vm/instantiation",
+          "ratio": 1.2001387199876268,
+          "rc": 923094669,
+          "references": {
+            "control": {
+              "rc": 923094627,
+              "gc": 769156643,
+              "ratio": 1.2001386653823647,
+              "rc_instruction_delta_percent": 4.549912735463124e-06
+            },
+            "approved_A5": {
+              "rc": 923094744,
+              "gc": 769156862,
+              "ratio": 1.2001384757846703,
+              "rc_instruction_delta_percent": -8.12484314272055e-06
+            },
+            "B1": {
+              "rc": 923094998,
+              "gc": 769155097,
+              "ratio": 1.2001415600058098,
+              "rc_instruction_delta_percent": -3.5640968776284865e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 1478121659,
+          "id": "lox/vm/instantiation",
+          "ratio": 1.2612456773424494,
+          "rc": 1864274553,
+          "references": {
+            "control": {
+              "rc": 1864275862,
+              "gc": 1478121659,
+              "ratio": 1.2612465629258465,
+              "rc_instruction_delta_percent": -7.021493045877847e-05
+            },
+            "approved_A5": {
+              "rc": 1864273716,
+              "gc": 1478121666,
+              "ratio": 1.2612451051103124,
+              "rc_instruction_delta_percent": 4.489684066744104e-05
+            },
+            "B1": {
+              "rc": 1864274900,
+              "gc": 1478119924,
+              "ratio": 1.2612473925356547,
+              "rc_instruction_delta_percent": -1.861313478901394e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 1271921565,
+          "id": "lox/vm/invocation",
+          "ratio": 1.1659720534732816,
+          "rc": 1483024999,
+          "references": {
+            "control": {
+              "rc": 1483021847,
+              "gc": 1271921565,
+              "ratio": 1.1659695753330512,
+              "rc_instruction_delta_percent": 0.00021253901325568592
+            },
+            "approved_A5": {
+              "rc": 1483023798,
+              "gc": 1271920966,
+              "ratio": 1.1659716583365134,
+              "rc_instruction_delta_percent": 8.098319135285692e-05
+            },
+            "B1": {
+              "rc": 1483022158,
+              "gc": 1271921029,
+              "ratio": 1.1659703111961048,
+              "rc_instruction_delta_percent": 0.00019156827728572523
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 3015242436,
+          "id": "lox/vm/invocation",
+          "ratio": 1.1903661109126151,
+          "rc": 3589242412,
+          "references": {
+            "control": {
+              "rc": 3589246014,
+              "gc": 3015242436,
+              "ratio": 1.1903673055097583,
+              "rc_instruction_delta_percent": -0.00010035533886121328
+            },
+            "approved_A5": {
+              "rc": 3589241154,
+              "gc": 3015241060,
+              "ratio": 1.190366236920374,
+              "rc_instruction_delta_percent": 3.504919134922346e-05
+            },
+            "B1": {
+              "rc": 3589242901,
+              "gc": 3015241381,
+              "ratio": 1.1903666895847766,
+              "rc_instruction_delta_percent": -1.3624043104787376e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 1197322811,
+          "id": "lox/vm/method_call",
+          "ratio": 1.2559556522138289,
+          "rc": 1503784352,
+          "references": {
+            "control": {
+              "rc": 1503782050,
+              "gc": 1197322811,
+              "ratio": 1.255953729591142,
+              "rc_instruction_delta_percent": 0.00015308069409858405
+            },
+            "approved_A5": {
+              "rc": 1503782645,
+              "gc": 1197322153,
+              "ratio": 1.255954916754973,
+              "rc_instruction_delta_percent": 0.00011351374520351953
+            },
+            "B1": {
+              "rc": 1503782925,
+              "gc": 1197322266,
+              "ratio": 1.255955032076552,
+              "rc_instruction_delta_percent": 9.489401537887687e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 2927365060,
+          "id": "lox/vm/method_call",
+          "ratio": 1.1889003461016918,
+          "rc": 3480345333,
+          "references": {
+            "control": {
+              "rc": 3480344390,
+              "gc": 2927365060,
+              "ratio": 1.1889000239689955,
+              "rc_instruction_delta_percent": 2.709501976116968e-05
+            },
+            "approved_A5": {
+              "rc": 3480344602,
+              "gc": 2927363972,
+              "ratio": 1.1889005382621414,
+              "rc_instruction_delta_percent": 2.1003667272090354e-05
+            },
+            "B1": {
+              "rc": 3480345331,
+              "gc": 2927364317,
+              "ratio": 1.18890064717558,
+              "rc_instruction_delta_percent": 5.746556563934746e-08
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 1131580721,
+          "id": "lox/vm/properties",
+          "ratio": 1.1858204413505558,
+          "rc": 1341851550,
+          "references": {
+            "control": {
+              "rc": 1341855982,
+              "gc": 1131580721,
+              "ratio": 1.1858243579955796,
+              "rc_instruction_delta_percent": -0.00033028879845575787
+            },
+            "approved_A5": {
+              "rc": 1341852157,
+              "gc": 1131579684,
+              "ratio": 1.185822064476018,
+              "rc_instruction_delta_percent": -4.523598198247214e-05
+            },
+            "B1": {
+              "rc": 1341851950,
+              "gc": 1131579802,
+              "ratio": 1.185821757889595,
+              "rc_instruction_delta_percent": -2.9809547918979717e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 2629728386,
+          "id": "lox/vm/properties",
+          "ratio": 1.184705358388294,
+          "rc": 3115453310,
+          "references": {
+            "control": {
+              "rc": 3115450992,
+              "gc": 2629728386,
+              "ratio": 1.1847044769284396,
+              "rc_instruction_delta_percent": 7.440335303421364e-05
+            },
+            "approved_A5": {
+              "rc": 3115449534,
+              "gc": 2629726981,
+              "ratio": 1.1847045554574245,
+              "rc_instruction_delta_percent": 0.0001212024126395761
+            },
+            "B1": {
+              "rc": 3115451110,
+              "gc": 2629727291,
+              "ratio": 1.1847050151026477,
+              "rc_instruction_delta_percent": 7.061577673717068e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 654167493,
+          "id": "lox/vm/string_equality",
+          "ratio": 1.2486415447733048,
+          "rc": 816820709,
+          "references": {
+            "control": {
+              "rc": 816820720,
+              "gc": 654167493,
+              "ratio": 1.2486415615885702,
+              "rc_instruction_delta_percent": -1.3466847414989047e-06
+            },
+            "approved_A5": {
+              "rc": 816821302,
+              "gc": 654259906,
+              "ratio": 1.2484660828352823,
+              "rc_instruction_delta_percent": -7.259849841290134e-05
+            },
+            "B1": {
+              "rc": 816860373,
+              "gc": 654153861,
+              "ratio": 1.2487281994350257,
+              "rc_instruction_delta_percent": -0.0048556646045083696
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 2047083949,
+          "id": "lox/vm/string_equality",
+          "ratio": 0.9672760318243304,
+          "rc": 1980095239,
+          "references": {
+            "control": {
+              "rc": 1980095354,
+              "gc": 2047083949,
+              "ratio": 0.9672760880018019,
+              "rc_instruction_delta_percent": -5.807801117807543e-06
+            },
+            "approved_A5": {
+              "rc": 1980133255,
+              "gc": 2047084080,
+              "ratio": 0.9672945407303446,
+              "rc_instruction_delta_percent": -0.001919870791722289
+            },
+            "B1": {
+              "rc": 1980095667,
+              "gc": 2047069918,
+              "ratio": 0.9672828707944503,
+              "rc_instruction_delta_percent": -2.161511724052545e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 810163162,
+          "id": "lox/vm/strings",
+          "ratio": 1.0475487998058346,
+          "rc": 848685448,
+          "references": {
+            "control": {
+              "rc": 848685963,
+              "gc": 810163162,
+              "ratio": 1.047549435480257,
+              "rc_instruction_delta_percent": -6.0682045233129145e-05
+            },
+            "approved_A5": {
+              "rc": 848685496,
+              "gc": 810163435,
+              "ratio": 1.0475485060616194,
+              "rc_instruction_delta_percent": -5.6558053906918815e-06
+            },
+            "B1": {
+              "rc": 848688760,
+              "gc": 810163543,
+              "ratio": 1.0475523952328722,
+              "rc_instruction_delta_percent": -0.000390249070814086
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 1630729138,
+          "id": "lox/vm/strings",
+          "ratio": 1.0068535471278248,
+          "rc": 1641905417,
+          "references": {
+            "control": {
+              "rc": 1641908915,
+              "gc": 1630729138,
+              "ratio": 1.0068556921805614,
+              "rc_instruction_delta_percent": -0.0002130447047332673
+            },
+            "approved_A5": {
+              "rc": 1641904642,
+              "gc": 1630729139,
+              "ratio": 1.0068530712628665,
+              "rc_instruction_delta_percent": 4.7201279551600805e-05
+            },
+            "B1": {
+              "rc": 1641905967,
+              "gc": 1630729296,
+              "ratio": 1.0068537868470353,
+              "rc_instruction_delta_percent": -3.349765522742132e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 1991350869,
+          "id": "lox/vm/trees",
+          "ratio": 1.0863722866108334,
+          "rc": 2163348397,
+          "references": {
+            "control": {
+              "rc": 2163349230,
+              "gc": 1991350869,
+              "ratio": 1.086372704919838,
+              "rc_instruction_delta_percent": -3.8505109967168494e-05
+            },
+            "approved_A5": {
+              "rc": 2163348816,
+              "gc": 1991351003,
+              "ratio": 1.0863724239176733,
+              "rc_instruction_delta_percent": -1.9368120240947917e-05
+            },
+            "B1": {
+              "rc": 2163349338,
+              "gc": 1991351045,
+              "ratio": 1.086372663138357,
+              "rc_instruction_delta_percent": -4.349736695274942e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 4330048449,
+          "id": "lox/vm/trees",
+          "ratio": 1.1186825782789296,
+          "rc": 4843949763,
+          "references": {
+            "control": {
+              "rc": 4843949559,
+              "gc": 4330048449,
+              "ratio": 1.1186825311662927,
+              "rc_instruction_delta_percent": 4.2114393972170205e-06
+            },
+            "approved_A5": {
+              "rc": 4843947444,
+              "gc": 4330048516,
+              "ratio": 1.1186820254094354,
+              "rc_instruction_delta_percent": 4.787417755558465e-05
+            },
+            "B1": {
+              "rc": 4843949201,
+              "gc": 4330048560,
+              "ratio": 1.1186824198110148,
+              "rc_instruction_delta_percent": 1.1602103500152339e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 1418238440,
+          "id": "lox/vm/zoo",
+          "ratio": 1.109578466227442,
+          "rc": 1573646833,
+          "references": {
+            "control": {
+              "rc": 1573646629,
+              "gc": 1418238440,
+              "ratio": 1.109578322387031,
+              "rc_instruction_delta_percent": 1.2963520279463125e-05
+            },
+            "approved_A5": {
+              "rc": 1573647058,
+              "gc": 1418238623,
+              "ratio": 1.10957848170237,
+              "rc_instruction_delta_percent": -1.4297996420165049e-05
+            },
+            "B1": {
+              "rc": 1573647417,
+              "gc": 1418238776,
+              "ratio": 1.1095786151315892,
+              "rc_instruction_delta_percent": -3.7111235573483725e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 3317568221,
+          "id": "lox/vm/zoo",
+          "ratio": 1.1298266001807111,
+          "rc": 3748276824,
+          "references": {
+            "control": {
+              "rc": 3748276068,
+              "gc": 3317568221,
+              "ratio": 1.1298263723029556,
+              "rc_instruction_delta_percent": 2.016927211911934e-05
+            },
+            "approved_A5": {
+              "rc": 3748274144,
+              "gc": 3317568067,
+              "ratio": 1.1298258448060954,
+              "rc_instruction_delta_percent": 7.149957279573016e-05
+            },
+            "B1": {
+              "rc": 3748276410,
+              "gc": 3317568438,
+              "ratio": 1.1298264014892947,
+              "rc_instruction_delta_percent": 1.1045076586668756e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 1159113647,
+          "id": "lox/vm/zoo_batch",
+          "ratio": 1.125850008217529,
+          "rc": 1304988109,
+          "references": {
+            "control": {
+              "rc": 1304994466,
+              "gc": 1159113647,
+              "ratio": 1.1258554925805304,
+              "rc_instruction_delta_percent": -0.0004871285025020988
+            },
+            "approved_A5": {
+              "rc": 1304988281,
+              "gc": 1159113833,
+              "ratio": 1.125849975944511,
+              "rc_instruction_delta_percent": -1.318019499096934e-05
+            },
+            "B1": {
+              "rc": 1304988718,
+              "gc": 1159114050,
+              "ratio": 1.1258501421840241,
+              "rc_instruction_delta_percent": -4.666707010825277e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 2755788753,
+          "id": "lox/vm/zoo_batch",
+          "ratio": 1.1323935702991819,
+          "rc": 3120637465,
+          "references": {
+            "control": {
+              "rc": 3120636289,
+              "gc": 2755788753,
+              "ratio": 1.1323931435611023,
+              "rc_instruction_delta_percent": 3.7684622333777895e-05
+            },
+            "approved_A5": {
+              "rc": 3120634691,
+              "gc": 2755789092,
+              "ratio": 1.1323924243909447,
+              "rc_instruction_delta_percent": 8.889217337770816e-05
+            },
+            "B1": {
+              "rc": 3120638029,
+              "gc": 2755789124,
+              "ratio": 1.1323936225099929,
+              "rc_instruction_delta_percent": -1.807322717040094e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 1083295911,
+          "id": "parity/lib/scan_count",
+          "ratio": 1.0005359957460414,
+          "rc": 1083876553,
+          "references": {
+            "control": {
+              "rc": 1083883208,
+              "gc": 1083295911,
+              "ratio": 1.0005421390351763,
+              "rc_instruction_delta_percent": -0.000613996042275744
+            },
+            "approved_A5": {
+              "rc": 1083891248,
+              "gc": 1083296144,
+              "ratio": 1.0005493456275056,
+              "rc_instruction_delta_percent": -0.0013557633228522548
+            },
+            "B1": {
+              "rc": 1083883533,
+              "gc": 1083296316,
+              "ratio": 1.0005420649838155,
+              "rc_instruction_delta_percent": -0.0006439806295999162
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 1091192023,
+          "id": "parity/lib/scan_count",
+          "ratio": 1.0010191029411513,
+          "rc": 1092304060,
+          "references": {
+            "control": {
+              "rc": 1092310765,
+              "gc": 1091192023,
+              "ratio": 1.0010252475975074,
+              "rc_instruction_delta_percent": -0.0006138363014329684
+            },
+            "approved_A5": {
+              "rc": 1092310850,
+              "gc": 1091191521,
+              "ratio": 1.0010257860132328,
+              "rc_instruction_delta_percent": -0.0006216179213036632
+            },
+            "B1": {
+              "rc": 1092331309,
+              "gc": 1091191708,
+              "ratio": 1.001044363691224,
+              "rc_instruction_delta_percent": -0.0024945728256176025
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 698697182,
+          "id": "parity/lib/scan_replace",
+          "ratio": 0.9962931280292469,
+          "rc": 696107201,
+          "references": {
+            "control": {
+              "rc": 696111735,
+              "gc": 698697182,
+              "ratio": 0.996299617249637,
+              "rc_instruction_delta_percent": -0.0006513322175161207
+            },
+            "approved_A5": {
+              "rc": 696112008,
+              "gc": 698697442,
+              "ratio": 0.9962996372326779,
+              "rc_instruction_delta_percent": -0.0006905497886511291
+            },
+            "B1": {
+              "rc": 696112150,
+              "gc": 698697600,
+              "ratio": 0.99629961516971,
+              "rc_instruction_delta_percent": -0.0007109486596323933
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 721560726,
+          "id": "parity/lib/scan_replace",
+          "ratio": 1.0014161968122417,
+          "rc": 722582598,
+          "references": {
+            "control": {
+              "rc": 722584592,
+              "gc": 721560726,
+              "ratio": 1.0014189602664156,
+              "rc_instruction_delta_percent": -0.00027595384984868687
+            },
+            "approved_A5": {
+              "rc": 722583453,
+              "gc": 721560990,
+              "ratio": 1.0014170153516753,
+              "rc_instruction_delta_percent": -0.00011832543306278254
+            },
+            "B1": {
+              "rc": 722583715,
+              "gc": 721561159,
+              "ratio": 1.0014171439069934,
+              "rc_instruction_delta_percent": -0.00015458416469105174
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 1441433835,
+          "id": "parity/lib/scan_split",
+          "ratio": 0.6299975149396989,
+          "rc": 908099734,
+          "references": {
+            "control": {
+              "rc": 908099992,
+              "gc": 1441433835,
+              "ratio": 0.6299976939281434,
+              "rc_instruction_delta_percent": -2.8410968200276443e-05
+            },
+            "approved_A5": {
+              "rc": 908100077,
+              "gc": 1441434126,
+              "ratio": 0.6299976257118253,
+              "rc_instruction_delta_percent": -3.7771167371580816e-05
+            },
+            "B1": {
+              "rc": 908100308,
+              "gc": 1441434329,
+              "ratio": 0.6299976972450752,
+              "rc_instruction_delta_percent": -6.320887625532734e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 1521427270,
+          "id": "parity/lib/scan_split",
+          "ratio": 0.6878761690659061,
+          "rc": 1046553562,
+          "references": {
+            "control": {
+              "rc": 1046553761,
+              "gc": 1521427270,
+              "ratio": 0.6878762998641401,
+              "rc_instruction_delta_percent": -1.9014790009208582e-05
+            },
+            "approved_A5": {
+              "rc": 1046553752,
+              "gc": 1521427529,
+              "ratio": 0.6878761768481185,
+              "rc_instruction_delta_percent": -1.8154824787952606e-05
+            },
+            "B1": {
+              "rc": 1046553865,
+              "gc": 1521427554,
+              "ratio": 0.6878762398173315,
+              "rc_instruction_delta_percent": -2.8952164832229954e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 1950411304,
+          "id": "parity/micro/alloc_churn",
+          "ratio": 1.1111632985080362,
+          "rc": 2167225458,
+          "references": {
+            "control": {
+              "rc": 2167225625,
+              "gc": 1950411304,
+              "ratio": 1.1111633841310018,
+              "rc_instruction_delta_percent": -7.705704385685408e-06
+            },
+            "approved_A5": {
+              "rc": 2167225846,
+              "gc": 1950411938,
+              "ratio": 1.111163136246144,
+              "rc_instruction_delta_percent": -1.7903071836133932e-05
+            },
+            "B1": {
+              "rc": 2167226031,
+              "gc": 1950411673,
+              "ratio": 1.111163382070263,
+              "rc_instruction_delta_percent": -2.6439328049132627e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 3060155149,
+          "id": "parity/micro/alloc_churn",
+          "ratio": 1.0872731051192857,
+          "rc": 3327224391,
+          "references": {
+            "control": {
+              "rc": 3327224493,
+              "gc": 3060155149,
+              "ratio": 1.0872731384509289,
+              "rc_instruction_delta_percent": -3.0656182148369737e-06
+            },
+            "approved_A5": {
+              "rc": 3327224661,
+              "gc": 3060156384,
+              "ratio": 1.0872727545547554,
+              "rc_instruction_delta_percent": -8.114871330455742e-06
+            },
+            "B1": {
+              "rc": 3327224867,
+              "gc": 3060155528,
+              "ratio": 1.0872731260082542,
+              "rc_instruction_delta_percent": -1.4306216711279518e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 195529273,
+          "id": "parity/micro/bytes_scan",
+          "ratio": 1.0013887588074855,
+          "rc": 195800816,
+          "references": {
+            "control": {
+              "rc": 195800960,
+              "gc": 195529273,
+              "ratio": 1.0013894952701021,
+              "rc_instruction_delta_percent": -7.354407250970141e-05
+            },
+            "approved_A5": {
+              "rc": 195801073,
+              "gc": 195529555,
+              "ratio": 1.0013886289466571,
+              "rc_instruction_delta_percent": -0.00013125566477034667
+            },
+            "B1": {
+              "rc": 195801258,
+              "gc": 195529727,
+              "ratio": 1.0013886942111876,
+              "rc_instruction_delta_percent": -0.0002257391012228105
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 1503649884,
+          "id": "parity/micro/bytes_scan",
+          "ratio": 0.9999118657864373,
+          "rc": 1503517361,
+          "references": {
+            "control": {
+              "rc": 1503517431,
+              "gc": 1503649884,
+              "ratio": 0.9999119123398277,
+              "rc_instruction_delta_percent": -4.655749152870925e-06
+            },
+            "approved_A5": {
+              "rc": 1503517775,
+              "gc": 1503650239,
+              "ratio": 0.9999119050450934,
+              "rc_instruction_delta_percent": -2.7535424385050078e-05
+            },
+            "B1": {
+              "rc": 1503517811,
+              "gc": 1503650238,
+              "ratio": 0.9999119296518211,
+              "rc_instruction_delta_percent": -2.992980839833237e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 540201905,
+          "id": "parity/micro/calls",
+          "ratio": 1.0000340742967206,
+          "rc": 540220312,
+          "references": {
+            "control": {
+              "rc": 540220345,
+              "gc": 540201905,
+              "ratio": 1.0000341353849909,
+              "rc_instruction_delta_percent": -6.108618511024844e-06
+            },
+            "approved_A5": {
+              "rc": 540220561,
+              "gc": 540202392,
+              "ratio": 1.0000336336903892,
+              "rc_instruction_delta_percent": -4.6092284888832324e-05
+            },
+            "B1": {
+              "rc": 540220767,
+              "gc": 540202312,
+              "ratio": 1.0000341631266472,
+              "rc_instruction_delta_percent": -8.422482581371682e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 1710199679,
+          "id": "parity/micro/calls",
+          "ratio": 1.0000111256014335,
+          "rc": 1710218706,
+          "references": {
+            "control": {
+              "rc": 1710218893,
+              "gc": 1710199679,
+              "ratio": 1.0000112349453902,
+              "rc_instruction_delta_percent": -1.0934272842710868e-05
+            },
+            "approved_A5": {
+              "rc": 1710219163,
+              "gc": 1710201099,
+              "ratio": 1.0000105625005216,
+              "rc_instruction_delta_percent": -2.6721721391176345e-05
+            },
+            "B1": {
+              "rc": 1710219263,
+              "gc": 1710200046,
+              "ratio": 1.00001123669716,
+              "rc_instruction_delta_percent": -3.256892330272265e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 441035733,
+          "id": "parity/micro/dict_count",
+          "ratio": 1.1583575678209275,
+          "rc": 510877079,
+          "references": {
+            "control": {
+              "rc": 510877079,
+              "gc": 441035733,
+              "ratio": 1.1583575678209275,
+              "rc_instruction_delta_percent": 0.0
+            },
+            "approved_A5": {
+              "rc": 510877241,
+              "gc": 441036162,
+              "ratio": 1.1583568083925055,
+              "rc_instruction_delta_percent": -3.1710161851883356e-05
+            },
+            "B1": {
+              "rc": 510877362,
+              "gc": 441036187,
+              "ratio": 1.1583570170853124,
+              "rc_instruction_delta_percent": -5.5394899256544505e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 661306161,
+          "id": "parity/micro/dict_count",
+          "ratio": 1.1269659576028055,
+          "rc": 745269531,
+          "references": {
+            "control": {
+              "rc": 745269518,
+              "gc": 661306161,
+              "ratio": 1.1269659379447396,
+              "rc_instruction_delta_percent": 1.7443353872437228e-06
+            },
+            "approved_A5": {
+              "rc": 745269809,
+              "gc": 661306476,
+              "ratio": 1.1269658411752799,
+              "rc_instruction_delta_percent": -3.730192698059298e-05
+            },
+            "B1": {
+              "rc": 745269974,
+              "gc": 661306603,
+              "ratio": 1.1269658742542452,
+              "rc_instruction_delta_percent": -5.944154675141533e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 942356655,
+          "id": "parity/micro/fib",
+          "ratio": 1.0000196793856144,
+          "rc": 942375200,
+          "references": {
+            "control": {
+              "rc": 942375063,
+              "gc": 942356655,
+              "ratio": 1.0000195340054132,
+              "rc_instruction_delta_percent": 1.4537736126030154e-05
+            },
+            "approved_A5": {
+              "rc": 942375355,
+              "gc": 942357466,
+              "ratio": 1.0000189832421829,
+              "rc_instruction_delta_percent": -1.6447798556473714e-05
+            },
+            "B1": {
+              "rc": 942375582,
+              "gc": 942357136,
+              "ratio": 1.0000195743198574,
+              "rc_instruction_delta_percent": -4.053585505037205e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 1594615301,
+          "id": "parity/micro/fib",
+          "ratio": 1.000012002267875,
+          "rc": 1594634440,
+          "references": {
+            "control": {
+              "rc": 1594634545,
+              "gc": 1594615301,
+              "ratio": 1.0000120681144775,
+              "rc_instruction_delta_percent": -6.584580791724193e-06
+            },
+            "approved_A5": {
+              "rc": 1594634746,
+              "gc": 1594616693,
+              "ratio": 1.0000113212159882,
+              "rc_instruction_delta_percent": -1.9189347322257078e-05
+            },
+            "B1": {
+              "rc": 1594635040,
+              "gc": 1594615697,
+              "ratio": 1.0000121301954048,
+              "rc_instruction_delta_percent": -3.7626164295367914e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 164203013,
+          "id": "parity/micro/float_loop",
+          "ratio": 1.0001039566795282,
+          "rc": 164220083,
+          "references": {
+            "control": {
+              "rc": 164220102,
+              "gc": 164203013,
+              "ratio": 1.0001040723899506,
+              "rc_instruction_delta_percent": -1.1569838143099531e-05
+            },
+            "approved_A5": {
+              "rc": 164220409,
+              "gc": 164203507,
+              "ratio": 1.0001029332461213,
+              "rc_instruction_delta_percent": -0.00019851369387202666
+            },
+            "B1": {
+              "rc": 164220588,
+              "gc": 164203413,
+              "ratio": 1.0001045958770662,
+              "rc_instruction_delta_percent": -0.00030751320899691237
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 1260199442,
+          "id": "parity/micro/float_loop",
+          "ratio": 1.0793676386979387,
+          "rc": 1360218496,
+          "references": {
+            "control": {
+              "rc": 1360218560,
+              "gc": 1260199442,
+              "ratio": 1.0793676894835509,
+              "rc_instruction_delta_percent": -4.705126210868826e-06
+            },
+            "approved_A5": {
+              "rc": 1360218847,
+              "gc": 1260200402,
+              "ratio": 1.0793670949805014,
+              "rc_instruction_delta_percent": -2.580467112212048e-05
+            },
+            "B1": {
+              "rc": 1360219043,
+              "gc": 1260199849,
+              "ratio": 1.0793677241584878,
+              "rc_instruction_delta_percent": -4.0214111307612654e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 650201923,
+          "id": "parity/micro/intloop",
+          "ratio": 1.0000283112051023,
+          "rc": 650220331,
+          "references": {
+            "control": {
+              "rc": 650220327,
+              "gc": 650201923,
+              "ratio": 1.0000283050531673,
+              "rc_instruction_delta_percent": 6.151760878481127e-07
+            },
+            "approved_A5": {
+              "rc": 650220601,
+              "gc": 650202540,
+              "ratio": 1.0000277774983777,
+              "rc_instruction_delta_percent": -4.152436874349519e-05
+            },
+            "B1": {
+              "rc": 650220704,
+              "gc": 650202327,
+              "ratio": 1.0000282635100444,
+              "rc_instruction_delta_percent": -5.7365137362541674e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 1260199722,
+          "id": "parity/micro/intloop",
+          "ratio": 1.0000150896716353,
+          "rc": 1260218738,
+          "references": {
+            "control": {
+              "rc": 1260218884,
+              "gc": 1260199722,
+              "ratio": 1.0000152055262872,
+              "rc_instruction_delta_percent": -1.1585289017013167e-05
+            },
+            "approved_A5": {
+              "rc": 1260219160,
+              "gc": 1260200774,
+              "ratio": 1.0000145897386983,
+              "rc_instruction_delta_percent": -3.348623901500147e-05
+            },
+            "B1": {
+              "rc": 1260219308,
+              "gc": 1260200023,
+              "ratio": 1.0000153031262085,
+              "rc_instruction_delta_percent": -4.523022273383859e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 246274681,
+          "id": "parity/micro/list_append_sum",
+          "ratio": 1.1948759198677026,
+          "rc": 294267686,
+          "references": {
+            "control": {
+              "rc": 294267618,
+              "gc": 246274681,
+              "ratio": 1.1948756437532448,
+              "rc_instruction_delta_percent": 2.3108217095391126e-05
+            },
+            "approved_A5": {
+              "rc": 294268045,
+              "gc": 246275014,
+              "ratio": 1.1948757619398613,
+              "rc_instruction_delta_percent": -0.00012199761615372395
+            },
+            "B1": {
+              "rc": 294268162,
+              "gc": 246275112,
+              "ratio": 1.1948757615426442,
+              "rc_instruction_delta_percent": -0.00016175722061806397
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 592295010,
+          "id": "parity/micro/list_append_sum",
+          "ratio": 1.1350304149953923,
+          "rc": 672272851,
+          "references": {
+            "control": {
+              "rc": 672272845,
+              "gc": 592295010,
+              "ratio": 1.1350304048653053,
+              "rc_instruction_delta_percent": 8.924947669797234e-07
+            },
+            "approved_A5": {
+              "rc": 672273270,
+              "gc": 592295536,
+              "ratio": 1.1350301144258497,
+              "rc_instruction_delta_percent": -6.232584556231657e-05
+            },
+            "B1": {
+              "rc": 672273510,
+              "gc": 592295439,
+              "ratio": 1.13503070551249,
+              "rc_instruction_delta_percent": -9.802557890958852e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 103753066,
+          "id": "parity/micro/list_records",
+          "ratio": 1.096367542526406,
+          "rc": 113751494,
+          "references": {
+            "control": {
+              "rc": 113751620,
+              "gc": 103753066,
+              "ratio": 1.096368756948349,
+              "rc_instruction_delta_percent": -0.00011076765323858595
+            },
+            "approved_A5": {
+              "rc": 113751965,
+              "gc": 103753385,
+              "ratio": 1.0963687112473488,
+              "rc_instruction_delta_percent": -0.0004140587813172836
+            },
+            "B1": {
+              "rc": 113752057,
+              "gc": 103753459,
+              "ratio": 1.0963688160025584,
+              "rc_instruction_delta_percent": -0.0004949361047557055
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 508272273,
+          "id": "parity/micro/list_records",
+          "ratio": 1.058992730063794,
+          "rc": 538256642,
+          "references": {
+            "control": {
+              "rc": 538256656,
+              "gc": 508272273,
+              "ratio": 1.0589927576080862,
+              "rc_instruction_delta_percent": -2.600989668088971e-06
+            },
+            "approved_A5": {
+              "rc": 538256979,
+              "gc": 508272579,
+              "ratio": 1.058992755538756,
+              "rc_instruction_delta_percent": -6.26094993960713e-05
+            },
+            "B1": {
+              "rc": 538257044,
+              "gc": 508272729,
+              "ratio": 1.0589925708959294,
+              "rc_instruction_delta_percent": -7.468550657918627e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 620201814,
+          "id": "parity/micro/records",
+          "ratio": 1.0000314075185857,
+          "rc": 620221293,
+          "references": {
+            "control": {
+              "rc": 620221401,
+              "gc": 620201814,
+              "ratio": 1.0000315816554513,
+              "rc_instruction_delta_percent": -1.741313663261579e-05
+            },
+            "approved_A5": {
+              "rc": 620221618,
+              "gc": 620202125,
+              "ratio": 1.0000314300761224,
+              "rc_instruction_delta_percent": -5.240062431743908e-05
+            },
+            "B1": {
+              "rc": 620221657,
+              "gc": 620202247,
+              "ratio": 1.0000312962426272,
+              "rc_instruction_delta_percent": -5.868869554781497e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 1960199495,
+          "id": "parity/micro/records",
+          "ratio": 1.0000102402842421,
+          "rc": 1960219568,
+          "references": {
+            "control": {
+              "rc": 1960219615,
+              "gc": 1960199495,
+              "ratio": 1.0000102642613935,
+              "rc_instruction_delta_percent": -2.397690523903151e-06
+            },
+            "approved_A5": {
+              "rc": 1960220037,
+              "gc": 1960199849,
+              "ratio": 1.0000102989498802,
+              "rc_instruction_delta_percent": -2.392588541733076e-05
+            },
+            "B1": {
+              "rc": 1960220180,
+              "gc": 1960199949,
+              "ratio": 1.0000103208858924,
+              "rc_instruction_delta_percent": -3.12209825326093e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 259410118,
+          "id": "parity/micro/str_build",
+          "ratio": 1.1242994654510738,
+          "rc": 291654657,
+          "references": {
+            "control": {
+              "rc": 291654688,
+              "gc": 259410118,
+              "ratio": 1.1242995849529662,
+              "rc_instruction_delta_percent": -1.06290079626703e-05
+            },
+            "approved_A5": {
+              "rc": 291654938,
+              "gc": 259410376,
+              "ratio": 1.1242994304900125,
+              "rc_instruction_delta_percent": -9.63467314929467e-05
+            },
+            "B1": {
+              "rc": 291655152,
+              "gc": 259410568,
+              "ratio": 1.1242994232987455,
+              "rc_instruction_delta_percent": -0.0001697209861095672
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 983068882,
+          "id": "parity/micro/str_build",
+          "ratio": 0.9881704321915461,
+          "rc": 971439602,
+          "references": {
+            "control": {
+              "rc": 971439581,
+              "gc": 983068882,
+              "ratio": 0.988170410829869,
+              "rc_instruction_delta_percent": 2.161740209061236e-06
+            },
+            "approved_A5": {
+              "rc": 971439559,
+              "gc": 983069136,
+              "ratio": 0.9881701331329357,
+              "rc_instruction_delta_percent": 4.426420519010321e-06
+            },
+            "B1": {
+              "rc": 971439785,
+              "gc": 983069297,
+              "ratio": 0.9881702011897947,
+              "rc_instruction_delta_percent": -1.883801783453265e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 1404609331,
+          "id": "parity/suite/binary_trees",
+          "ratio": 1.1719236321946376,
+          "rc": 1646094869,
+          "references": {
+            "control": {
+              "rc": 1646094936,
+              "gc": 1404609331,
+              "ratio": 1.1719236798947337,
+              "rc_instruction_delta_percent": -4.070239112419216e-06
+            },
+            "approved_A5": {
+              "rc": 1646095263,
+              "gc": 1404609626,
+              "ratio": 1.1719236665689774,
+              "rc_instruction_delta_percent": -2.393543124812325e-05
+            },
+            "B1": {
+              "rc": 1646095385,
+              "gc": 1404609790,
+              "ratio": 1.171923616593901,
+              "rc_instruction_delta_percent": -3.1346907636287114e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 2633115719,
+          "id": "parity/suite/binary_trees",
+          "ratio": 1.1111913319598394,
+          "rc": 2925895363,
+          "references": {
+            "control": {
+              "rc": 2925895781,
+              "gc": 2633115719,
+              "ratio": 1.1111914907071352,
+              "rc_instruction_delta_percent": -1.4286223137816023e-05
+            },
+            "approved_A5": {
+              "rc": 2925895753,
+              "gc": 2633115907,
+              "ratio": 1.111191400736162,
+              "rc_instruction_delta_percent": -1.3329251380422846e-05
+            },
+            "B1": {
+              "rc": 2925896444,
+              "gc": 2633116042,
+              "ratio": 1.1111916061920373,
+              "rc_instruction_delta_percent": -3.694594189473932e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 1985384441,
+          "id": "parity/suite/fannkuch_redux",
+          "ratio": 0.9965880013663309,
+          "rc": 1978610312,
+          "references": {
+            "control": {
+              "rc": 1978610280,
+              "gc": 1985384441,
+              "ratio": 0.9965879852485456,
+              "rc_instruction_delta_percent": 1.6172967631788993e-06
+            },
+            "approved_A5": {
+              "rc": 1978610622,
+              "gc": 1985384623,
+              "ratio": 0.9965880661502434,
+              "rc_instruction_delta_percent": -1.5667559682963628e-05
+            },
+            "B1": {
+              "rc": 1978610670,
+              "gc": 1985384870,
+              "ratio": 0.9965879663422639,
+              "rc_instruction_delta_percent": -1.8093503961758017e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 5755840144,
+          "id": "parity/suite/fannkuch_redux",
+          "ratio": 1.0445730836127265,
+          "rc": 6012395688,
+          "references": {
+            "control": {
+              "rc": 6012395923,
+              "gc": 5755840144,
+              "ratio": 1.0445731244408236,
+              "rc_instruction_delta_percent": -3.908591561518904e-06
+            },
+            "approved_A5": {
+              "rc": 6012395760,
+              "gc": 5755840186,
+              "ratio": 1.044573088499577,
+              "rc_instruction_delta_percent": -1.1975259561758378e-06
+            },
+            "B1": {
+              "rc": 6012395984,
+              "gc": 5755840596,
+              "ratio": 1.0445730530095452,
+              "rc_instruction_delta_percent": -4.923162089109923e-06
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 1931471898,
+          "id": "parity/suite/knucleotide",
+          "ratio": 1.0899321590854438,
+          "rc": 2105173336,
+          "references": {
+            "control": {
+              "rc": 2105173623,
+              "gc": 1931471898,
+              "ratio": 1.089932307676785,
+              "rc_instruction_delta_percent": -1.3633079798403003e-05
+            },
+            "approved_A5": {
+              "rc": 2105173566,
+              "gc": 1931472109,
+              "ratio": 1.0899321590980322,
+              "rc_instruction_delta_percent": -1.0925464943856156e-05
+            },
+            "B1": {
+              "rc": 2105173587,
+              "gc": 1931472274,
+              "ratio": 1.0899320768608662,
+              "rc_instruction_delta_percent": -1.1923007281477993e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 2984431465,
+          "id": "parity/suite/knucleotide",
+          "ratio": 1.1101903105689177,
+          "rc": 3313286895,
+          "references": {
+            "control": {
+              "rc": 3313287320,
+              "gc": 2984431465,
+              "ratio": 1.1101904529746003,
+              "rc_instruction_delta_percent": -1.2827139905802198e-05
+            },
+            "approved_A5": {
+              "rc": 3313287448,
+              "gc": 2984432086,
+              "ratio": 1.1101902648556365,
+              "rc_instruction_delta_percent": -1.6690371984484642e-05
+            },
+            "B1": {
+              "rc": 3313287253,
+              "gc": 2984431818,
+              "ratio": 1.1101902992109167,
+              "rc_instruction_delta_percent": -1.0804979244660728e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 794663330,
+          "id": "parity/suite/mandelbrot",
+          "ratio": 1.0000254963318869,
+          "rc": 794683591,
+          "references": {
+            "control": {
+              "rc": 794683673,
+              "gc": 794663330,
+              "ratio": 1.0000255995202396,
+              "rc_instruction_delta_percent": -1.0318571119771747e-05
+            },
+            "approved_A5": {
+              "rc": 794683934,
+              "gc": 794663552,
+              "ratio": 1.0000256485904615,
+              "rc_instruction_delta_percent": -4.3161813811920524e-05
+            },
+            "B1": {
+              "rc": 794684211,
+              "gc": 794663714,
+              "ratio": 1.0000257933005356,
+              "rc_instruction_delta_percent": -7.801841176435786e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 3978702029,
+          "id": "parity/suite/mandelbrot",
+          "ratio": 1.0000057631860424,
+          "rc": 3978724959,
+          "references": {
+            "control": {
+              "rc": 3978725051,
+              "gc": 3978702029,
+              "ratio": 1.0000057863091611,
+              "rc_instruction_delta_percent": -2.3122985082224545e-06
+            },
+            "approved_A5": {
+              "rc": 3978725344,
+              "gc": 3978702171,
+              "ratio": 1.0000058242610288,
+              "rc_instruction_delta_percent": -9.676465873020845e-06
+            },
+            "B1": {
+              "rc": 3978725156,
+              "gc": 3978702392,
+              "ratio": 1.000005721463371,
+              "rc_instruction_delta_percent": -4.951334720004752e-06
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 148591133,
+          "id": "parity/suite/matmul",
+          "ratio": 1.127165656647897,
+          "rc": 167486822,
+          "references": {
+            "control": {
+              "rc": 167486775,
+              "gc": 148591133,
+              "ratio": 1.1271653403436934,
+              "rc_instruction_delta_percent": 2.806191712334538e-05
+            },
+            "approved_A5": {
+              "rc": 167487012,
+              "gc": 148591390,
+              "ratio": 1.127164985804359,
+              "rc_instruction_delta_percent": -0.00011344163212134717
+            },
+            "B1": {
+              "rc": 167487361,
+              "gc": 148591590,
+              "ratio": 1.1271658173924917,
+              "rc_instruction_delta_percent": -0.0003218153279083147
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 3206533868,
+          "id": "parity/suite/matmul",
+          "ratio": 1.0101361801677375,
+          "rc": 3239035873,
+          "references": {
+            "control": {
+              "rc": 3239036026,
+              "gc": 3206533868,
+              "ratio": 1.0101362278828112,
+              "rc_instruction_delta_percent": -4.723627611280534e-06
+            },
+            "approved_A5": {
+              "rc": 3239036222,
+              "gc": 3206533854,
+              "ratio": 1.0101362934183449,
+              "rc_instruction_delta_percent": -1.0774810033087334e-05
+            },
+            "B1": {
+              "rc": 3239036558,
+              "gc": 3206534185,
+              "ratio": 1.0101362939313245,
+              "rc_instruction_delta_percent": -2.114826392896063e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 3595208184,
+          "id": "parity/suite/nbody",
+          "ratio": 0.9749732320369017,
+          "rc": 3505231743,
+          "references": {
+            "control": {
+              "rc": 3505231817,
+              "gc": 3595208184,
+              "ratio": 0.9749732526198545,
+              "rc_instruction_delta_percent": -2.1111299819409624e-06
+            },
+            "approved_A5": {
+              "rc": 3505232179,
+              "gc": 3595208279,
+              "ratio": 0.9749733275466792,
+              "rc_instruction_delta_percent": -1.2438548369075875e-05
+            },
+            "B1": {
+              "rc": 3505232204,
+              "gc": 3595208532,
+              "ratio": 0.9749732658901022,
+              "rc_instruction_delta_percent": -1.3151767785934965e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 32990213349,
+          "id": "parity/suite/nbody",
+          "ratio": 1.0153082998178098,
+          "rc": 33495237426,
+          "references": {
+            "control": {
+              "rc": 33495239027,
+              "gc": 32990213349,
+              "ratio": 1.0153083483473533,
+              "rc_instruction_delta_percent": -4.7797837687824085e-06
+            },
+            "approved_A5": {
+              "rc": 33495236601,
+              "gc": 32990211666,
+              "ratio": 1.0153083266064789,
+              "rc_instruction_delta_percent": 2.4630367967404254e-06
+            },
+            "B1": {
+              "rc": 33495237956,
+              "gc": 32990212687,
+              "ratio": 1.0153083362569228,
+              "rc_instruction_delta_percent": -1.5823144794424593e-06
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 1197340333,
+          "id": "parity/suite/raytrace",
+          "ratio": 1.053352503243537,
+          "rc": 1261221437,
+          "references": {
+            "control": {
+              "rc": 1261221370,
+              "gc": 1197340333,
+              "ratio": 1.0533524472861802,
+              "rc_instruction_delta_percent": 5.3123108800789964e-06
+            },
+            "approved_A5": {
+              "rc": 1261221624,
+              "gc": 1197340559,
+              "ratio": 1.0533524606009776,
+              "rc_instruction_delta_percent": -1.4826894534358814e-05
+            },
+            "B1": {
+              "rc": 1261221892,
+              "gc": 1197340754,
+              "ratio": 1.0533525128803893,
+              "rc_instruction_delta_percent": -3.6076126086470595e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 6231730289,
+          "id": "parity/suite/raytrace",
+          "ratio": 1.05722016895202,
+          "rc": 6588310949,
+          "references": {
+            "control": {
+              "rc": 6588311153,
+              "gc": 6231730289,
+              "ratio": 1.0572202016877115,
+              "rc_instruction_delta_percent": -3.096392919843538e-06
+            },
+            "approved_A5": {
+              "rc": 6588311725,
+              "gc": 6231732385,
+              "ratio": 1.057219937887304,
+              "rc_instruction_delta_percent": -1.1778434783060732e-05
+            },
+            "B1": {
+              "rc": 6588311242,
+              "gc": 6231730639,
+              "ratio": 1.0572201565915595,
+              "rc_instruction_delta_percent": -4.447270163243644e-06
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 222097892,
+          "id": "parity/suite/sieve",
+          "ratio": 1.000091360614985,
+          "rc": 222118183,
+          "references": {
+            "control": {
+              "rc": 222118123,
+              "gc": 222097892,
+              "ratio": 1.0000910904638391,
+              "rc_instruction_delta_percent": 2.7012653980307277e-05
+            },
+            "approved_A5": {
+              "rc": 222118558,
+              "gc": 222098146,
+              "ratio": 1.000091905314689,
+              "rc_instruction_delta_percent": -0.00016882875675250375
+            },
+            "B1": {
+              "rc": 222118481,
+              "gc": 222098201,
+              "ratio": 1.000091310960236,
+              "rc_instruction_delta_percent": -0.00013416263188181787
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 822297430,
+          "id": "parity/suite/sieve",
+          "ratio": 1.0243494899406411,
+          "rc": 842319953,
+          "references": {
+            "control": {
+              "rc": 842320009,
+              "gc": 822297430,
+              "ratio": 1.02434955804252,
+              "rc_instruction_delta_percent": -6.6483046068377405e-06
+            },
+            "approved_A5": {
+              "rc": 842320407,
+              "gc": 822297605,
+              "ratio": 1.0243498240518407,
+              "rc_instruction_delta_percent": -5.3898729779344734e-05
+            },
+            "B1": {
+              "rc": 842320512,
+              "gc": 822297747,
+              "ratio": 1.0243497748510795,
+              "rc_instruction_delta_percent": -6.636428675488304e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 734453001,
+          "id": "parity/suite/sort_builtin",
+          "ratio": 1.0515199896364777,
+          "rc": 772292012,
+          "references": {
+            "control": {
+              "rc": 772292083,
+              "gc": 734453001,
+              "ratio": 1.051520086307061,
+              "rc_instruction_delta_percent": -9.193412897623432e-06
+            },
+            "approved_A5": {
+              "rc": 772292307,
+              "gc": 734453232,
+              "ratio": 1.05152006057208,
+              "rc_instruction_delta_percent": -3.819797210757869e-05
+            },
+            "B1": {
+              "rc": 772292489,
+              "gc": 734453417,
+              "ratio": 1.051520043510125,
+              "rc_instruction_delta_percent": -6.176416407210894e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 919565314,
+          "id": "parity/suite/sort_builtin",
+          "ratio": 1.1239611936906964,
+          "rc": 1033555728,
+          "references": {
+            "control": {
+              "rc": 1033555715,
+              "gc": 919565314,
+              "ratio": 1.123961179553582,
+              "rc_instruction_delta_percent": 1.2577938246494114e-06
+            },
+            "approved_A5": {
+              "rc": 1033555954,
+              "gc": 919565515,
+              "ratio": 1.1239611937818264,
+              "rc_instruction_delta_percent": -2.186625689404309e-05
+            },
+            "B1": {
+              "rc": 1033556547,
+              "gc": 919565701,
+              "ratio": 1.1239616113085105,
+              "rc_instruction_delta_percent": -7.924094742595145e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 1181716327,
+          "id": "parity/suite/sort_quick",
+          "ratio": 0.9855510974927911,
+          "rc": 1164641823,
+          "references": {
+            "control": {
+              "rc": 1164641837,
+              "gc": 1181716327,
+              "ratio": 0.985551109339966,
+              "rc_instruction_delta_percent": -1.202086308271788e-06
+            },
+            "approved_A5": {
+              "rc": 1164642219,
+              "gc": 1181716495,
+              "ratio": 0.9855512924866129,
+              "rc_instruction_delta_percent": -3.4001858562060505e-05
+            },
+            "B1": {
+              "rc": 1164642251,
+              "gc": 1181716683,
+              "ratio": 0.9855511627739286,
+              "rc_instruction_delta_percent": -3.674948247933685e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 2804351143,
+          "id": "parity/suite/sort_quick",
+          "ratio": 0.8638351185253123,
+          "rc": 2422497002,
+          "references": {
+            "control": {
+              "rc": 2422497120,
+              "gc": 2804351143,
+              "ratio": 0.8638351606027819,
+              "rc_instruction_delta_percent": -4.8710068201174295e-06
+            },
+            "approved_A5": {
+              "rc": 2422497412,
+              "gc": 2804351234,
+              "ratio": 0.8638352366956042,
+              "rc_instruction_delta_percent": -1.69246826886571e-05
+            },
+            "B1": {
+              "rc": 2422497606,
+              "gc": 2804351518,
+              "ratio": 0.8638352183921901,
+              "rc_instruction_delta_percent": -2.493294517513789e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 152627926,
+          "id": "parity/suite/sort_records",
+          "ratio": 1.2031120831714637,
+          "rc": 183628502,
+          "references": {
+            "control": {
+              "rc": 183628552,
+              "gc": 152627926,
+              "ratio": 1.203112410765511,
+              "rc_instruction_delta_percent": -2.7228881049889964e-05
+            },
+            "approved_A5": {
+              "rc": 183628756,
+              "gc": 152628206,
+              "ratio": 1.2031115402090227,
+              "rc_instruction_delta_percent": -0.0001383225620710249
+            },
+            "B1": {
+              "rc": 183628970,
+              "gc": 152628372,
+              "ratio": 1.203111633792438,
+              "rc_instruction_delta_percent": -0.0002548617464848135
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 312648091,
+          "id": "parity/suite/sort_records",
+          "ratio": 1.2814187565277666,
+          "rc": 400633128,
+          "references": {
+            "control": {
+              "rc": 400633131,
+              "gc": 312648091,
+              "ratio": 1.2814187661232193,
+              "rc_instruction_delta_percent": -7.488147546474977e-07
+            },
+            "approved_A5": {
+              "rc": 400633361,
+              "gc": 312648348,
+              "ratio": 1.281418448435237,
+              "rc_instruction_delta_percent": -5.815791261909453e-05
+            },
+            "B1": {
+              "rc": 400633595,
+              "gc": 312648537,
+              "ratio": 1.2814184222458076,
+              "rc_instruction_delta_percent": -0.00011656536191839706
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 1841811175,
+          "id": "parity/suite/spectral_norm",
+          "ratio": 1.0000279007971595,
+          "rc": 1841862563,
+          "references": {
+            "control": {
+              "rc": 1841862819,
+              "gc": 1841811175,
+              "ratio": 1.0000280397907781,
+              "rc_instruction_delta_percent": -1.3898972139880783e-05
+            },
+            "approved_A5": {
+              "rc": 1841862962,
+              "gc": 1841811367,
+              "ratio": 1.0000280131836106,
+              "rc_instruction_delta_percent": -2.1662849425396757e-05
+            },
+            "B1": {
+              "rc": 1841863186,
+              "gc": 1841811502,
+              "ratio": 1.000028061503549,
+              "rc_instruction_delta_percent": -3.3824444978236556e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 11523631854,
+          "id": "parity/suite/spectral_norm",
+          "ratio": 1.0138967804620045,
+          "rc": 11683773236,
+          "references": {
+            "control": {
+              "rc": 11683773648,
+              "gc": 11523631854,
+              "ratio": 1.0138968162146218,
+              "rc_instruction_delta_percent": -3.5262579745065636e-06
+            },
+            "approved_A5": {
+              "rc": 11683773677,
+              "gc": 11523632562,
+              "ratio": 1.0138967564384236,
+              "rc_instruction_delta_percent": -3.774465440198327e-06
+            },
+            "B1": {
+              "rc": 11683773775,
+              "gc": 11523631989,
+              "ratio": 1.0138968153575942,
+              "rc_instruction_delta_percent": -4.6132355047134865e-06
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 1401477699,
+          "id": "parity/suite/text_ops",
+          "ratio": 0.9597118883587744,
+          "rc": 1345014809,
+          "references": {
+            "control": {
+              "rc": 1345014739,
+              "gc": 1401477699,
+              "ratio": 0.9597118384114937,
+              "rc_instruction_delta_percent": 5.2044039300369604e-06
+            },
+            "approved_A5": {
+              "rc": 1345157947,
+              "gc": 1401477959,
+              "ratio": 0.959813843922179,
+              "rc_instruction_delta_percent": -0.010640980884013551
+            },
+            "B1": {
+              "rc": 1345015129,
+              "gc": 1401478130,
+              "ratio": 0.9597118215465839,
+              "rc_instruction_delta_percent": -2.379155394915955e-05
+            }
+          },
+          "interpretation": "Same binary and argv differ across dev/smoke runs by -0.113571% QBE and +0.297385% LLVM; consistent with documented address-dependent instruction-count variability."
+        },
+        {
+          "arm": "qbe",
+          "gc": 1601705033,
+          "id": "parity/suite/text_ops",
+          "ratio": 1.0996026413809739,
+          "rc": 1761239085,
+          "references": {
+            "control": {
+              "rc": 1756008698,
+              "gc": 1601705033,
+              "ratio": 1.0963371293845463,
+              "rc_instruction_delta_percent": 0.2978565542389955
+            },
+            "approved_A5": {
+              "rc": 1756008870,
+              "gc": 1601705280,
+              "ratio": 1.0963370677032418,
+              "rc_instruction_delta_percent": 0.2978467301250065
+            },
+            "B1": {
+              "rc": 1756009084,
+              "gc": 1601705508,
+              "ratio": 1.0963370452491445,
+              "rc_instruction_delta_percent": 0.2978345071021238
+            }
+          },
+          "interpretation": "Same binary and argv differ across dev/smoke runs by -0.113571% QBE and +0.297385% LLVM; consistent with documented address-dependent instruction-count variability."
+        },
+        {
+          "arm": "llvm",
+          "gc": 9063553,
+          "id": "schematic/changed-net",
+          "ratio": 1.1714196408406283,
+          "rc": 10617224,
+          "references": {
+            "control": {
+              "rc": 10618204,
+              "gc": 9063553,
+              "ratio": 1.1715277662082408,
+              "rc_instruction_delta_percent": -0.009229432774127133
+            },
+            "approved_A5": {
+              "rc": 10617707,
+              "gc": 9064254,
+              "ratio": 1.171382333284129,
+              "rc_instruction_delta_percent": -0.004549004789833333
+            },
+            "B1": {
+              "rc": 10617682,
+              "gc": 9064600,
+              "ratio": 1.1713348630937934,
+              "rc_instruction_delta_percent": -0.0043135592118881405
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 18604541,
+          "id": "schematic/changed-net",
+          "ratio": 1.2176152585543498,
+          "rc": 22653173,
+          "references": {
+            "control": {
+              "rc": 22652726,
+              "gc": 18604541,
+              "ratio": 1.2175912321620834,
+              "rc_instruction_delta_percent": 0.0019732724441112737
+            },
+            "approved_A5": {
+              "rc": 22653897,
+              "gc": 18605271,
+              "ratio": 1.2176063976708535,
+              "rc_instruction_delta_percent": -0.0031959181239327172
+            },
+            "B1": {
+              "rc": 22653733,
+              "gc": 18605833,
+              "ratio": 1.2175608047218311,
+              "rc_instruction_delta_percent": -0.0024719987650634323
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 9058089,
+          "id": "schematic/changed-value",
+          "ratio": 1.1715014060912847,
+          "rc": 10611564,
+          "references": {
+            "control": {
+              "rc": 10612796,
+              "gc": 9058089,
+              "ratio": 1.1716374171196595,
+              "rc_instruction_delta_percent": -0.011608627924253323
+            },
+            "approved_A5": {
+              "rc": 10612268,
+              "gc": 9058879,
+              "ratio": 1.1714769564755199,
+              "rc_instruction_delta_percent": -0.0066338317125103075
+            },
+            "B1": {
+              "rc": 10612057,
+              "gc": 9059415,
+              "ratio": 1.1713843553916008,
+              "rc_instruction_delta_percent": -0.0046456591780486
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 18594966,
+          "id": "schematic/changed-value",
+          "ratio": 1.2176014196530394,
+          "rc": 22641257,
+          "references": {
+            "control": {
+              "rc": 22642247,
+              "gc": 18594966,
+              "ratio": 1.2176546598686977,
+              "rc_instruction_delta_percent": -0.0043723575668064285
+            },
+            "approved_A5": {
+              "rc": 22641745,
+              "gc": 18595676,
+              "ratio": 1.2175811731716557,
+              "rc_instruction_delta_percent": -0.0021553109091243527
+            },
+            "B1": {
+              "rc": 22641759,
+              "gc": 18596333,
+              "ratio": 1.2175389094183247,
+              "rc_instruction_delta_percent": -0.002217142228211344
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 9057754,
+          "id": "schematic/fixture",
+          "ratio": 1.1716976416007765,
+          "rc": 10612949,
+          "references": {
+            "control": {
+              "rc": 10612024,
+              "gc": 9057754,
+              "ratio": 1.171595519154086,
+              "rc_instruction_delta_percent": 0.008716527591712264
+            },
+            "approved_A5": {
+              "rc": 10613311,
+              "gc": 9058444,
+              "ratio": 1.171648353734924,
+              "rc_instruction_delta_percent": -0.003410811197368524
+            },
+            "B1": {
+              "rc": 10613421,
+              "gc": 9058757,
+              "ratio": 1.1716200136508794,
+              "rc_instruction_delta_percent": -0.004447199446810934
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 18594532,
+          "id": "schematic/fixture",
+          "ratio": 1.2176910932740872,
+          "rc": 22642396,
+          "references": {
+            "control": {
+              "rc": 22641787,
+              "gc": 18594532,
+              "ratio": 1.217658341710348,
+              "rc_instruction_delta_percent": 0.0026897170263051606
+            },
+            "approved_A5": {
+              "rc": 22642746,
+              "gc": 18595275,
+              "ratio": 1.2176612607234902,
+              "rc_instruction_delta_percent": -0.0015457489122572277
+            },
+            "B1": {
+              "rc": 22642828,
+              "gc": 18595413,
+              "ratio": 1.2176566339236456,
+              "rc_instruction_delta_percent": -0.0019078888909063174
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        }
+      ]
+    },
+    "smoke": {
+      "outputs_matched": 86,
+      "files": {
+        "candidate": {
+          "path": ".tmp-rc-quick/results-b3-text-smoke.json",
+          "sha256": "29fd4ae281271408b86c689bce9f00455e092d1d1cab79d290cf52ae8605fec8"
+        },
+        "control": {
+          "path": ".tmp-rc-quick/results-b3-text-control-smoke.json",
+          "sha256": "1109e82af767d2ea9e76f1921f71f36295b7d0e9cfbdd4d1b905dd190846da14"
+        },
+        "approved_A5": {
+          "path": ".tmp-rc-quick/baselines/results-m17-codex-smoke.json",
+          "sha256": "3c4feb7471b08c2053b72b4c7130b04437997d061711de24dfa23dc48b508d42"
+        },
+        "B1": {
+          "path": ".tmp-rc-quick/baselines/results-b1-compat-codex-smoke.json",
+          "sha256": "5a680419a7a3760f4dead90c9a599a2bee2821bffe9ca7622ed52d39486ad202"
+        }
+      },
+      "summary": {
+        "qbe": {
+          "candidate": {
+            "geomean": 1.1034591084823195,
+            "geomean_nonlox": 1.0462113201956196,
+            "rows": 43,
+            "within_1_3": 38,
+            "worst": 1.5049532073783174
+          },
+          "control": {
+            "geomean": 1.1034436895682265,
+            "geomean_nonlox": 1.0461874218566205,
+            "rows": 43,
+            "within_1_3": 38,
+            "worst": 1.5048354580153185
+          },
+          "approved_A5": {
+            "geomean": 1.103400759705969,
+            "geomean_nonlox": 1.0461460547614172,
+            "rows": 43,
+            "within_1_3": 38,
+            "worst": 1.5047558344361318
+          },
+          "cap_misses": {
+            "candidate": [
+              "lox/vm/instantiation",
+              "lox/vm/invocation",
+              "lox/vm/properties",
+              "lox/vm/string_equality",
+              "lox/vm/trees"
+            ],
+            "control": [
+              "lox/vm/instantiation",
+              "lox/vm/invocation",
+              "lox/vm/properties",
+              "lox/vm/string_equality",
+              "lox/vm/trees"
+            ],
+            "approved_A5": [
+              "lox/vm/instantiation",
+              "lox/vm/invocation",
+              "lox/vm/properties",
+              "lox/vm/string_equality",
+              "lox/vm/trees"
+            ],
+            "B1": [
+              "lox/vm/instantiation",
+              "lox/vm/invocation",
+              "lox/vm/properties",
+              "lox/vm/string_equality",
+              "lox/vm/trees"
+            ]
+          },
+          "max_rc_increase_percent": {
+            "control": 0.0699741712821389,
+            "approved_A5": 0.1839249024341738,
+            "B1": 0.18392724156843787
+          }
+        },
+        "llvm": {
+          "candidate": {
+            "geomean": 1.1372051184889889,
+            "geomean_nonlox": 1.0415477450339745,
+            "rows": 43,
+            "within_1_3": 36,
+            "worst": 2.3578319882035954
+          },
+          "control": {
+            "geomean": 1.1371294067510944,
+            "geomean_nonlox": 1.0414498814936304,
+            "rows": 43,
+            "within_1_3": 36,
+            "worst": 2.357837853465727
+          },
+          "approved_A5": {
+            "geomean": 1.1371253438246616,
+            "geomean_nonlox": 1.0414451562494007,
+            "rows": 43,
+            "within_1_3": 36,
+            "worst": 2.3576263135043125
+          },
+          "cap_misses": {
+            "candidate": [
+              "lox/vm/closures",
+              "lox/vm/invocation",
+              "lox/vm/method_call",
+              "lox/vm/properties",
+              "lox/vm/string_equality",
+              "lox/vm/trees",
+              "lox/vm/zoo"
+            ],
+            "control": [
+              "lox/vm/closures",
+              "lox/vm/invocation",
+              "lox/vm/method_call",
+              "lox/vm/properties",
+              "lox/vm/string_equality",
+              "lox/vm/trees",
+              "lox/vm/zoo"
+            ],
+            "approved_A5": [
+              "lox/vm/closures",
+              "lox/vm/invocation",
+              "lox/vm/method_call",
+              "lox/vm/properties",
+              "lox/vm/string_equality",
+              "lox/vm/trees",
+              "lox/vm/zoo"
+            ],
+            "B1": [
+              "lox/vm/closures",
+              "lox/vm/invocation",
+              "lox/vm/method_call",
+              "lox/vm/properties",
+              "lox/vm/string_equality",
+              "lox/vm/trees",
+              "lox/vm/zoo"
+            ]
+          },
+          "max_rc_increase_percent": {
+            "control": 0.2973846812844849,
+            "approved_A5": 0.2867278611654589,
+            "B1": 0.2973636526263812
+          }
+        }
+      },
+      "rows": [
+        {
+          "arm": "llvm",
+          "gc": 100267061,
+          "id": "lox/vm/binary_trees",
+          "ratio": 1.2739592816029583,
+          "rc": 127736153,
+          "references": {
+            "control": {
+              "rc": 127735272,
+              "gc": 100267061,
+              "ratio": 1.2739504950683656,
+              "rc_instruction_delta_percent": 0.0006897076948231273
+            },
+            "approved_A5": {
+              "rc": 127735416,
+              "gc": 100266403,
+              "ratio": 1.2739602915644634,
+              "rc_instruction_delta_percent": 0.000576973891086574
+            },
+            "B1": {
+              "rc": 127735347,
+              "gc": 100266516,
+              "ratio": 1.273958167649906,
+              "rc_instruction_delta_percent": 0.0006309921403380159
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 218919247,
+          "id": "lox/vm/binary_trees",
+          "ratio": 1.216638841261865,
+          "rc": 266345659,
+          "references": {
+            "control": {
+              "rc": 266345428,
+              "gc": 218919247,
+              "ratio": 1.2166377860782611,
+              "rc_instruction_delta_percent": 8.672947822141452e-05
+            },
+            "approved_A5": {
+              "rc": 266345436,
+              "gc": 218918502,
+              "ratio": 1.2166419629529532,
+              "rc_instruction_delta_percent": 8.37258574248878e-05
+            },
+            "B1": {
+              "rc": 266346778,
+              "gc": 218918571,
+              "ratio": 1.2166477096180204,
+              "rc_instruction_delta_percent": -0.00042012897937260263
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 22991378,
+          "id": "lox/vm/closures",
+          "ratio": 1.3310617571508763,
+          "rc": 30602944,
+          "references": {
+            "control": {
+              "rc": 30603320,
+              "gc": 22991378,
+              "ratio": 1.3310781111075638,
+              "rc_instruction_delta_percent": -0.0012286248681547818
+            },
+            "approved_A5": {
+              "rc": 30603734,
+              "gc": 22991680,
+              "ratio": 1.331078633662264,
+              "rc_instruction_delta_percent": -0.0025813843500310796
+            },
+            "B1": {
+              "rc": 30603101,
+              "gc": 22991797,
+              "ratio": 1.331044328549004,
+              "rc_instruction_delta_percent": -0.0005130199060565666
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 52797514,
+          "id": "lox/vm/closures",
+          "ratio": 1.2503422983135153,
+          "rc": 66014965,
+          "references": {
+            "control": {
+              "rc": 66014660,
+              "gc": 52797514,
+              "ratio": 1.2503365215263733,
+              "rc_instruction_delta_percent": 0.00046201858798777806
+            },
+            "approved_A5": {
+              "rc": 66013871,
+              "gc": 52797761,
+              "ratio": 1.2503157283506776,
+              "rc_instruction_delta_percent": 0.0016572274636139639
+            },
+            "B1": {
+              "rc": 66015293,
+              "gc": 52797855,
+              "ratio": 1.2503404352316965,
+              "rc_instruction_delta_percent": -0.0004968545697425775
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 13961015,
+          "id": "lox/vm/equality",
+          "ratio": 1.2629485750140659,
+          "rc": 17632044,
+          "references": {
+            "control": {
+              "rc": 17631468,
+              "gc": 13961015,
+              "ratio": 1.2629073172688376,
+              "rc_instruction_delta_percent": 0.0032668862286477918
+            },
+            "approved_A5": {
+              "rc": 17630962,
+              "gc": 13961308,
+              "ratio": 1.2628445701505904,
+              "rc_instruction_delta_percent": 0.006136931155542591
+            },
+            "B1": {
+              "rc": 17631065,
+              "gc": 13961438,
+              "ratio": 1.2628401888114964,
+              "rc_instruction_delta_percent": 0.0055526991704635265
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 36885650,
+          "id": "lox/vm/equality",
+          "ratio": 1.0191522990648125,
+          "rc": 37592095,
+          "references": {
+            "control": {
+              "rc": 37593445,
+              "gc": 36885650,
+              "ratio": 1.0191888986638435,
+              "rc_instruction_delta_percent": -0.0035910515782777708
+            },
+            "approved_A5": {
+              "rc": 37591161,
+              "gc": 36885922,
+              "ratio": 1.0191194624333912,
+              "rc_instruction_delta_percent": 0.0024846266386990834
+            },
+            "B1": {
+              "rc": 37596392,
+              "gc": 36885995,
+              "ratio": 1.019259260865811,
+              "rc_instruction_delta_percent": -0.011429288214681588
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 4830676,
+          "id": "lox/vm/fib",
+          "ratio": 1.292459895882067,
+          "rc": 6243455,
+          "references": {
+            "control": {
+              "rc": 6243090,
+              "gc": 4830676,
+              "ratio": 1.2923843370989898,
+              "rc_instruction_delta_percent": 0.005846463850422978
+            },
+            "approved_A5": {
+              "rc": 6243176,
+              "gc": 4830968,
+              "ratio": 1.292324022845939,
+              "rc_instruction_delta_percent": 0.004468879301167128
+            },
+            "B1": {
+              "rc": 6243494,
+              "gc": 4831075,
+              "ratio": 1.292361223951191,
+              "rc_instruction_delta_percent": -0.0006246502359141815
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 11508232,
+          "id": "lox/vm/fib",
+          "ratio": 1.2145986455608473,
+          "rc": 13977883,
+          "references": {
+            "control": {
+              "rc": 13978509,
+              "gc": 11508232,
+              "ratio": 1.2146530414054912,
+              "rc_instruction_delta_percent": -0.004478303086541402
+            },
+            "approved_A5": {
+              "rc": 13977225,
+              "gc": 11508502,
+              "ratio": 1.2145129748424253,
+              "rc_instruction_delta_percent": 0.004707658351343902
+            },
+            "B1": {
+              "rc": 13978386,
+              "gc": 11508573,
+              "ratio": 1.2146063634474926,
+              "rc_instruction_delta_percent": -0.0035984125778210085
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 73398769,
+          "id": "lox/vm/instantiation",
+          "ratio": 1.2832379246033405,
+          "rc": 94188084,
+          "references": {
+            "control": {
+              "rc": 94186279,
+              "gc": 73398769,
+              "ratio": 1.2832133329102564,
+              "rc_instruction_delta_percent": 0.0019164150226069765
+            },
+            "approved_A5": {
+              "rc": 94187134,
+              "gc": 73399018,
+              "ratio": 1.2832206283740744,
+              "rc_instruction_delta_percent": 0.0010086303294798427
+            },
+            "B1": {
+              "rc": 94188517,
+              "gc": 73398275,
+              "ratio": 1.2832524606334412,
+              "rc_instruction_delta_percent": -0.0004597163367536794
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 142990786,
+          "id": "lox/vm/instantiation",
+          "ratio": 1.3220634090367194,
+          "rc": 189042886,
+          "references": {
+            "control": {
+              "rc": 189043696,
+              "gc": 142990786,
+              "ratio": 1.3220690737373806,
+              "rc_instruction_delta_percent": -0.00042847236757515006
+            },
+            "approved_A5": {
+              "rc": 189042404,
+              "gc": 142991035,
+              "ratio": 1.3220577359972252,
+              "rc_instruction_delta_percent": 0.00025496925017964855
+            },
+            "B1": {
+              "rc": 189043441,
+              "gc": 142990174,
+              "ratio": 1.3220729488726968,
+              "rc_instruction_delta_percent": -0.00029358331453677167
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 44670129,
+          "id": "lox/vm/invocation",
+          "ratio": 1.4319239597450009,
+          "rc": 63964228,
+          "references": {
+            "control": {
+              "rc": 63964191,
+              "gc": 44670129,
+              "ratio": 1.4319231314509973,
+              "rc_instruction_delta_percent": 5.78448650978558e-05
+            },
+            "approved_A5": {
+              "rc": 63968501,
+              "gc": 44669573,
+              "ratio": 1.4320374407877148,
+              "rc_instruction_delta_percent": -0.0066798501343612315
+            },
+            "B1": {
+              "rc": 63967038,
+              "gc": 44669696,
+              "ratio": 1.4320007460986526,
+              "rc_instruction_delta_percent": -0.004392887474324869
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 103960165,
+          "id": "lox/vm/invocation",
+          "ratio": 1.3211369566410365,
+          "rc": 137345616,
+          "references": {
+            "control": {
+              "rc": 137342373,
+              "gc": 103960165,
+              "ratio": 1.3211057620002815,
+              "rc_instruction_delta_percent": 0.0023612523427196663
+            },
+            "approved_A5": {
+              "rc": 137341187,
+              "gc": 103959544,
+              "ratio": 1.321102245311888,
+              "rc_instruction_delta_percent": 0.0032248155828140668
+            },
+            "B1": {
+              "rc": 137342567,
+              "gc": 103959648,
+              "ratio": 1.3211141980780852,
+              "rc_instruction_delta_percent": 0.0022199963686464486
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 121972779,
+          "id": "lox/vm/method_call",
+          "ratio": 1.3090415690209043,
+          "rc": 159667438,
+          "references": {
+            "control": {
+              "rc": 159667513,
+              "gc": 121972779,
+              "ratio": 1.309042183912199,
+              "rc_instruction_delta_percent": -4.6972611145168486e-05
+            },
+            "approved_A5": {
+              "rc": 159667999,
+              "gc": 121971843,
+              "ratio": 1.3090562139001212,
+              "rc_instruction_delta_percent": -0.0003513540618782507
+            },
+            "B1": {
+              "rc": 159668451,
+              "gc": 121971974,
+              "ratio": 1.309058513720537,
+              "rc_instruction_delta_percent": -0.0006344396739965674
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 296148149,
+          "id": "lox/vm/method_call",
+          "ratio": 1.2166444200871909,
+          "rc": 360306993,
+          "references": {
+            "control": {
+              "rc": 360306747,
+              "gc": 296148149,
+              "ratio": 1.2166435894218606,
+              "rc_instruction_delta_percent": 6.827515777185766e-05
+            },
+            "approved_A5": {
+              "rc": 360305995,
+              "gc": 296147477,
+              "ratio": 1.2166438108807525,
+              "rc_instruction_delta_percent": 0.00027698678730647686
+            },
+            "B1": {
+              "rc": 360308307,
+              "gc": 296147587,
+              "ratio": 1.2166511658931733,
+              "rc_instruction_delta_percent": -0.00036468767843356176
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 60112924,
+          "id": "lox/vm/properties",
+          "ratio": 1.5161130242142271,
+          "rc": 91137987,
+          "references": {
+            "control": {
+              "rc": 91137950,
+              "gc": 60112924,
+              "ratio": 1.516112408705988,
+              "rc_instruction_delta_percent": 4.0597797079655606e-05
+            },
+            "approved_A5": {
+              "rc": 91138308,
+              "gc": 60112356,
+              "ratio": 1.5161326899248466,
+              "rc_instruction_delta_percent": -0.00035221193704915166
+            },
+            "B1": {
+              "rc": 91138453,
+              "gc": 60112483,
+              "ratio": 1.5161318989268835,
+              "rc_instruction_delta_percent": -0.0005113099736275828
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 136984153,
+          "id": "lox/vm/properties",
+          "ratio": 1.3521297094854468,
+          "rc": 185220343,
+          "references": {
+            "control": {
+              "rc": 185217398,
+              "gc": 136984153,
+              "ratio": 1.3521082106482785,
+              "rc_instruction_delta_percent": 0.0015900234167087746
+            },
+            "approved_A5": {
+              "rc": 185211586,
+              "gc": 136983497,
+              "ratio": 1.352072257288044,
+              "rc_instruction_delta_percent": 0.004728105940410288
+            },
+            "B1": {
+              "rc": 185213194,
+              "gc": 136983615,
+              "ratio": 1.3520828312203617,
+              "rc_instruction_delta_percent": 0.003859876202993995
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 84395205,
+          "id": "lox/vm/string_equality",
+          "ratio": 2.3578319882035954,
+          "rc": 198989714,
+          "references": {
+            "control": {
+              "rc": 198990209,
+              "gc": 84395205,
+              "ratio": 2.357837853465727,
+              "rc_instruction_delta_percent": -0.00024875595763251823
+            },
+            "approved_A5": {
+              "rc": 198989918,
+              "gc": 84402654,
+              "ratio": 2.3576263135043125,
+              "rc_instruction_delta_percent": -0.00010251775670599983
+            },
+            "B1": {
+              "rc": 198990270,
+              "gc": 84384987,
+              "ratio": 2.3581240819531084,
+              "rc_instruction_delta_percent": -0.00027941064656422654
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 238683804,
+          "id": "lox/vm/string_equality",
+          "ratio": 1.3701549645153133,
+          "rc": 327033799,
+          "references": {
+            "control": {
+              "rc": 327073381,
+              "gc": 238683804,
+              "ratio": 1.370320798976373,
+              "rc_instruction_delta_percent": -0.012101871414593734
+            },
+            "approved_A5": {
+              "rc": 327033061,
+              "gc": 238683771,
+              "ratio": 1.370152061993356,
+              "rc_instruction_delta_percent": 0.00022566525774703194
+            },
+            "B1": {
+              "rc": 327034128,
+              "gc": 238599062,
+              "ratio": 1.3706429742795887,
+              "rc_instruction_delta_percent": -0.0001006011213555702
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 14613741,
+          "id": "lox/vm/strings",
+          "ratio": 1.2123398108670462,
+          "rc": 17716820,
+          "references": {
+            "control": {
+              "rc": 17717360,
+              "gc": 14613741,
+              "ratio": 1.212376762390958,
+              "rc_instruction_delta_percent": -0.0030478581459103538
+            },
+            "approved_A5": {
+              "rc": 17717923,
+              "gc": 14613993,
+              "ratio": 1.212394381193422,
+              "rc_instruction_delta_percent": -0.0062253346512441965
+            },
+            "B1": {
+              "rc": 17717166,
+              "gc": 14614136,
+              "ratio": 1.2123307186959256,
+              "rc_instruction_delta_percent": -0.001952908269864384
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 28789386,
+          "id": "lox/vm/strings",
+          "ratio": 1.1209432184486323,
+          "rc": 32271267,
+          "references": {
+            "control": {
+              "rc": 32271570,
+              "gc": 28789386,
+              "ratio": 1.1209537431607608,
+              "rc_instruction_delta_percent": -0.0009389069078435952
+            },
+            "approved_A5": {
+              "rc": 32270293,
+              "gc": 28789601,
+              "ratio": 1.1209010156132417,
+              "rc_instruction_delta_percent": 0.0030182558305336116
+            },
+            "B1": {
+              "rc": 32271713,
+              "gc": 28789726,
+              "ratio": 1.1209454720062288,
+              "rc_instruction_delta_percent": -0.0013820152651944362
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 8802777,
+          "id": "lox/vm/trees",
+          "ratio": 1.7111166169494012,
+          "rc": 15062578,
+          "references": {
+            "control": {
+              "rc": 15062615,
+              "gc": 8802777,
+              "ratio": 1.7111208201684536,
+              "rc_instruction_delta_percent": -0.00024564127809600933
+            },
+            "approved_A5": {
+              "rc": 15064072,
+              "gc": 8803044,
+              "ratio": 1.7112344320896271,
+              "rc_instruction_delta_percent": -0.009917637143530555
+            },
+            "B1": {
+              "rc": 15063054,
+              "gc": 8803148,
+              "ratio": 1.711098575191511,
+              "rc_instruction_delta_percent": -0.003160049748207605
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 17842984,
+          "id": "lox/vm/trees",
+          "ratio": 1.5049532073783174,
+          "rc": 26852856,
+          "references": {
+            "control": {
+              "rc": 26850755,
+              "gc": 17842984,
+              "ratio": 1.5048354580153185,
+              "rc_instruction_delta_percent": 0.007824733419981023
+            },
+            "approved_A5": {
+              "rc": 26849721,
+              "gc": 17843241,
+              "ratio": 1.5047558344361318,
+              "rc_instruction_delta_percent": 0.011676098980695215
+            },
+            "B1": {
+              "rc": 26851042,
+              "gc": 17843322,
+              "ratio": 1.504823036876205,
+              "rc_instruction_delta_percent": 0.0067557899615211525
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 15506929,
+          "id": "lox/vm/zoo",
+          "ratio": 1.3241152390650657,
+          "rc": 20532961,
+          "references": {
+            "control": {
+              "rc": 20533490,
+              "gc": 15506929,
+              "ratio": 1.3241493528473627,
+              "rc_instruction_delta_percent": -0.002576279044619323
+            },
+            "approved_A5": {
+              "rc": 20533227,
+              "gc": 15507222,
+              "ratio": 1.324107373970657,
+              "rc_instruction_delta_percent": -0.0012954612540916344
+            },
+            "B1": {
+              "rc": 20533327,
+              "gc": 15507321,
+              "ratio": 1.324105369328461,
+              "rc_instruction_delta_percent": -0.001782468082256461
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 35123135,
+          "id": "lox/vm/zoo",
+          "ratio": 1.2496673773568334,
+          "rc": 43892236,
+          "references": {
+            "control": {
+              "rc": 43891864,
+              "gc": 35123135,
+              "ratio": 1.2496567860471453,
+              "rc_instruction_delta_percent": 0.0008475374843941452
+            },
+            "approved_A5": {
+              "rc": 43891048,
+              "gc": 35123395,
+              "ratio": 1.2496243031176228,
+              "rc_instruction_delta_percent": 0.002706702286991991
+            },
+            "B1": {
+              "rc": 43892483,
+              "gc": 35123475,
+              "ratio": 1.2496623127409803,
+              "rc_instruction_delta_percent": -0.0005627387268059003
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 290956316,
+          "id": "lox/vm/zoo_batch",
+          "ratio": 1.13574775603084,
+          "rc": 330452983,
+          "references": {
+            "control": {
+              "rc": 330453066,
+              "gc": 290956316,
+              "ratio": 1.1357480412970309,
+              "rc_instruction_delta_percent": -2.5117031299259907e-05
+            },
+            "approved_A5": {
+              "rc": 330453867,
+              "gc": 290956543,
+              "ratio": 1.135749908191616,
+              "rc_instruction_delta_percent": -0.0002675108655925129
+            },
+            "B1": {
+              "rc": 330453098,
+              "gc": 290956683,
+              "ratio": 1.1357467186962673,
+              "rc_instruction_delta_percent": -3.48007026418351e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 690664977,
+          "id": "lox/vm/zoo_batch",
+          "ratio": 1.1376814507274486,
+          "rc": 785756733,
+          "references": {
+            "control": {
+              "rc": 785757867,
+              "gc": 690664977,
+              "ratio": 1.1376830926233574,
+              "rc_instruction_delta_percent": -0.00014431926775859694
+            },
+            "approved_A5": {
+              "rc": 785755470,
+              "gc": 690665169,
+              "ratio": 1.1376793057881858,
+              "rc_instruction_delta_percent": 0.00016073702928665057
+            },
+            "B1": {
+              "rc": 785757382,
+              "gc": 690665288,
+              "ratio": 1.1376818781140192,
+              "rc_instruction_delta_percent": -8.259546965261322e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 1083295911,
+          "id": "parity/lib/scan_count",
+          "ratio": 1.000536027131741,
+          "rc": 1083876587,
+          "references": {
+            "control": {
+              "rc": 1083883224,
+              "gc": 1083295911,
+              "ratio": 1.0005421538049173,
+              "rc_instruction_delta_percent": -0.0006123353377018859
+            },
+            "approved_A5": {
+              "rc": 1083891234,
+              "gc": 1083296144,
+              "ratio": 1.000549332703985,
+              "rc_instruction_delta_percent": -0.0013513348517402157
+            },
+            "B1": {
+              "rc": 1083883562,
+              "gc": 1083296316,
+              "ratio": 1.0005420917539611,
+              "rc_instruction_delta_percent": -0.0006435193082077184
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 1091192023,
+          "id": "parity/lib/scan_count",
+          "ratio": 1.0010191441804557,
+          "rc": 1092304105,
+          "references": {
+            "control": {
+              "rc": 1092310757,
+              "gc": 1091192023,
+              "ratio": 1.0010252402660755,
+              "rc_instruction_delta_percent": -0.0006089842068623952
+            },
+            "approved_A5": {
+              "rc": 1092310912,
+              "gc": 1091191521,
+              "ratio": 1.0010258428318561,
+              "rc_instruction_delta_percent": -0.000623174219460676
+            },
+            "B1": {
+              "rc": 1092311288,
+              "gc": 1091191708,
+              "ratio": 1.0010260158611837,
+              "rc_instruction_delta_percent": -0.0006575964268562551
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 698697182,
+          "id": "parity/lib/scan_replace",
+          "ratio": 0.99629315092901,
+          "rc": 696107217,
+          "references": {
+            "control": {
+              "rc": 696111698,
+              "gc": 698697182,
+              "ratio": 0.9962995642939347,
+              "rc_instruction_delta_percent": -0.0006437185315011362
+            },
+            "approved_A5": {
+              "rc": 696111945,
+              "gc": 698697442,
+              "ratio": 0.996299547064894,
+              "rc_instruction_delta_percent": -0.0006792011017719979
+            },
+            "B1": {
+              "rc": 696112210,
+              "gc": 698697600,
+              "ratio": 0.9962997010437706,
+              "rc_instruction_delta_percent": -0.0007172694183932293
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 721560726,
+          "id": "parity/lib/scan_replace",
+          "ratio": 1.0014162674923635,
+          "rc": 722582649,
+          "references": {
+            "control": {
+              "rc": 722584575,
+              "gc": 721560726,
+              "ratio": 1.001418936706375,
+              "rc_instruction_delta_percent": -0.00026654319322805264
+            },
+            "approved_A5": {
+              "rc": 722583452,
+              "gc": 721560990,
+              "ratio": 1.001417013965791,
+              "rc_instruction_delta_percent": -0.00011112903260945828
+            },
+            "B1": {
+              "rc": 722583645,
+              "gc": 721561159,
+              "ratio": 1.0014170468951198,
+              "rc_instruction_delta_percent": -0.0001378387134653991
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 1441433835,
+          "id": "parity/lib/scan_split",
+          "ratio": 0.6299974795582622,
+          "rc": 908099683,
+          "references": {
+            "control": {
+              "rc": 908099768,
+              "gc": 1441433835,
+              "ratio": 0.6299975385273234,
+              "rc_instruction_delta_percent": -9.360205011077483e-06
+            },
+            "approved_A5": {
+              "rc": 908100057,
+              "gc": 1441434126,
+              "ratio": 0.6299976118367548,
+              "rc_instruction_delta_percent": -4.118488894366834e-05
+            },
+            "B1": {
+              "rc": 908100278,
+              "gc": 1441434329,
+              "ratio": 0.6299976764324724,
+              "rc_instruction_delta_percent": -6.552139828475134e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 1521427270,
+          "id": "parity/lib/scan_split",
+          "ratio": 0.6878761808969022,
+          "rc": 1046553580,
+          "references": {
+            "control": {
+              "rc": 1046553755,
+              "gc": 1521427270,
+              "ratio": 0.6878762959204747,
+              "rc_instruction_delta_percent": -1.6721549100928712e-05
+            },
+            "approved_A5": {
+              "rc": 1046573788,
+              "gc": 1521427529,
+              "ratio": 0.6878893460590195,
+              "rc_instruction_delta_percent": -0.001930871977851023
+            },
+            "B1": {
+              "rc": 1046594040,
+              "gc": 1521427554,
+              "ratio": 0.6879026459382764,
+              "rc_instruction_delta_percent": -0.0038658733428342806
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 1950411304,
+          "id": "parity/micro/alloc_churn",
+          "ratio": 1.1111633349106143,
+          "rc": 2167225529,
+          "references": {
+            "control": {
+              "rc": 2167225590,
+              "gc": 1950411304,
+              "ratio": 1.111163366186069,
+              "rc_instruction_delta_percent": -2.8146585284716252e-06
+            },
+            "approved_A5": {
+              "rc": 2167225822,
+              "gc": 1950411938,
+              "ratio": 1.1111631239410513,
+              "rc_instruction_delta_percent": -1.351958790474228e-05
+            },
+            "B1": {
+              "rc": 2167225965,
+              "gc": 1950411673,
+              "ratio": 1.111163348231253,
+              "rc_instruction_delta_percent": -2.0117883736681108e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 3060155149,
+          "id": "parity/micro/alloc_churn",
+          "ratio": 1.0872731054460665,
+          "rc": 3327224392,
+          "references": {
+            "control": {
+              "rc": 3327224607,
+              "gc": 3060155149,
+              "ratio": 1.087273175703942,
+              "rc_instruction_delta_percent": -6.461842083638203e-06
+            },
+            "approved_A5": {
+              "rc": 3327224760,
+              "gc": 3060156384,
+              "ratio": 1.0872727869060432,
+              "rc_instruction_delta_percent": -1.1060268734208734e-05
+            },
+            "B1": {
+              "rc": 3327224880,
+              "gc": 3060155528,
+              "ratio": 1.0872731302564045,
+              "rc_instruction_delta_percent": -1.4666877579117e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 195529273,
+          "id": "parity/micro/bytes_scan",
+          "ratio": 1.0013884468337384,
+          "rc": 195800755,
+          "references": {
+            "control": {
+              "rc": 195800765,
+              "gc": 195529273,
+              "ratio": 1.0013884979769756,
+              "rc_instruction_delta_percent": -5.107232348144919e-06
+            },
+            "approved_A5": {
+              "rc": 195801080,
+              "gc": 195529555,
+              "ratio": 1.0013886647468717,
+              "rc_instruction_delta_percent": -0.00016598478415064122
+            },
+            "B1": {
+              "rc": 195801212,
+              "gc": 195529727,
+              "ratio": 1.0013884589528426,
+              "rc_instruction_delta_percent": -0.00023339998528326689
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 1503649884,
+          "id": "parity/micro/bytes_scan",
+          "ratio": 0.99991187310197,
+          "rc": 1503517372,
+          "references": {
+            "control": {
+              "rc": 1503517392,
+              "gc": 1503649884,
+              "ratio": 0.9999118864029387,
+              "rc_instruction_delta_percent": -1.3302140722259992e-06
+            },
+            "approved_A5": {
+              "rc": 1503517632,
+              "gc": 1503650239,
+              "ratio": 0.9999118099431898,
+              "rc_instruction_delta_percent": -1.729278024109604e-05
+            },
+            "B1": {
+              "rc": 1503517806,
+              "gc": 1503650238,
+              "ratio": 0.9999119263265797,
+              "rc_instruction_delta_percent": -2.8865637524688736e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 540201905,
+          "id": "parity/micro/calls",
+          "ratio": 1.0000340058038115,
+          "rc": 540220275,
+          "references": {
+            "control": {
+              "rc": 540220289,
+              "gc": 540201905,
+              "ratio": 1.0000340317200473,
+              "rc_instruction_delta_percent": -2.591535397389322e-06
+            },
+            "approved_A5": {
+              "rc": 540220622,
+              "gc": 540202392,
+              "ratio": 1.0000337466110294,
+              "rc_instruction_delta_percent": -6.423301626146127e-05
+            },
+            "B1": {
+              "rc": 540220773,
+              "gc": 540202312,
+              "ratio": 1.0000341742335972,
+              "rc_instruction_delta_percent": -9.218453359549628e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 1710199679,
+          "id": "parity/micro/calls",
+          "ratio": 1.0000112010312219,
+          "rc": 1710218835,
+          "references": {
+            "control": {
+              "rc": 1710219356,
+              "gc": 1710199679,
+              "ratio": 1.0000115056740109,
+              "rc_instruction_delta_percent": -3.0463928391011308e-05
+            },
+            "approved_A5": {
+              "rc": 1710219164,
+              "gc": 1710201099,
+              "ratio": 1.000010563085248,
+              "rc_instruction_delta_percent": -1.9237300508123667e-05
+            },
+            "B1": {
+              "rc": 1710219209,
+              "gc": 1710200046,
+              "ratio": 1.0000112051219066,
+              "rc_instruction_delta_percent": -2.1868541644209927e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 441035733,
+          "id": "parity/micro/dict_count",
+          "ratio": 1.1583574929970584,
+          "rc": 510877046,
+          "references": {
+            "control": {
+              "rc": 510877052,
+              "gc": 441035733,
+              "ratio": 1.1583575066013982,
+              "rc_instruction_delta_percent": -1.1744508698896539e-06
+            },
+            "approved_A5": {
+              "rc": 510877290,
+              "gc": 441036162,
+              "ratio": 1.1583569194945063,
+              "rc_instruction_delta_percent": -4.776097993763884e-05
+            },
+            "B1": {
+              "rc": 510877450,
+              "gc": 441036187,
+              "ratio": 1.1583572166154248,
+              "rc_instruction_delta_percent": -7.907963054387679e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 661306161,
+          "id": "parity/micro/dict_count",
+          "ratio": 1.1269658880434958,
+          "rc": 745269485,
+          "references": {
+            "control": {
+              "rc": 745269484,
+              "gc": 661306161,
+              "ratio": 1.1269658865313368,
+              "rc_instruction_delta_percent": 1.3417964517259406e-07
+            },
+            "approved_A5": {
+              "rc": 745269814,
+              "gc": 661306476,
+              "ratio": 1.1269658487360708,
+              "rc_instruction_delta_percent": -4.414508595340649e-05
+            },
+            "B1": {
+              "rc": 745269945,
+              "gc": 661306603,
+              "ratio": 1.126965830401666,
+              "rc_instruction_delta_percent": -6.172260172965238e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 942356655,
+          "id": "parity/micro/fib",
+          "ratio": 1.0000196104096066,
+          "rc": 942375135,
+          "references": {
+            "control": {
+              "rc": 942375102,
+              "gc": 942356655,
+              "ratio": 1.000019575391018,
+              "rc_instruction_delta_percent": 3.5017903021739016e-06
+            },
+            "approved_A5": {
+              "rc": 942375431,
+              "gc": 942357466,
+              "ratio": 1.0000190638909843,
+              "rc_instruction_delta_percent": -3.1409986955832636e-05
+            },
+            "B1": {
+              "rc": 942375565,
+              "gc": 942357136,
+              "ratio": 1.0000195562799876,
+              "rc_instruction_delta_percent": -4.562936646301807e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 1594615301,
+          "id": "parity/micro/fib",
+          "ratio": 1.0000120442842784,
+          "rc": 1594634507,
+          "references": {
+            "control": {
+              "rc": 1594634492,
+              "gc": 1594615301,
+              "ratio": 1.000012034877621,
+              "rc_instruction_delta_percent": 9.406544210222023e-07
+            },
+            "approved_A5": {
+              "rc": 1594634777,
+              "gc": 1594616693,
+              "ratio": 1.0000113406563969,
+              "rc_instruction_delta_percent": -1.693177672512647e-05
+            },
+            "B1": {
+              "rc": 1594634977,
+              "gc": 1594615697,
+              "ratio": 1.000012090687453,
+              "rc_instruction_delta_percent": -2.9473829854520517e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 164203013,
+          "id": "parity/micro/float_loop",
+          "ratio": 1.000103847059128,
+          "rc": 164220065,
+          "references": {
+            "control": {
+              "rc": 164220068,
+              "gc": 164203013,
+              "ratio": 1.0001038653291947,
+              "rc_instruction_delta_percent": -1.826816931060904e-06
+            },
+            "approved_A5": {
+              "rc": 164220432,
+              "gc": 164203507,
+              "ratio": 1.0001030733162113,
+              "rc_instruction_delta_percent": -0.00022348010874084778
+            },
+            "B1": {
+              "rc": 164220579,
+              "gc": 164203413,
+              "ratio": 1.0001045410669995,
+              "rc_instruction_delta_percent": -0.0003129936595791527
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 1260199442,
+          "id": "parity/micro/float_loop",
+          "ratio": 1.0793676767871478,
+          "rc": 1360218544,
+          "references": {
+            "control": {
+              "rc": 1360218641,
+              "gc": 1260199442,
+              "ratio": 1.079367753759091,
+              "rc_instruction_delta_percent": -7.1312064919837326e-06
+            },
+            "approved_A5": {
+              "rc": 1360218883,
+              "gc": 1260200402,
+              "ratio": 1.0793671235473863,
+              "rc_instruction_delta_percent": -2.4922459485043902e-05
+            },
+            "B1": {
+              "rc": 1360218998,
+              "gc": 1260199849,
+              "ratio": 1.079367688449866,
+              "rc_instruction_delta_percent": -3.337697831451436e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 650201923,
+          "id": "parity/micro/intloop",
+          "ratio": 1.0000282666035731,
+          "rc": 650220302,
+          "references": {
+            "control": {
+              "rc": 650220274,
+              "gc": 650201923,
+              "ratio": 1.000028223540028,
+              "rc_instruction_delta_percent": 4.3062329924126175e-06
+            },
+            "approved_A5": {
+              "rc": 650220617,
+              "gc": 650202540,
+              "ratio": 1.0000278021060944,
+              "rc_instruction_delta_percent": -4.8445095679472416e-05
+            },
+            "B1": {
+              "rc": 650220773,
+              "gc": 650202327,
+              "ratio": 1.000028369630858,
+              "rc_instruction_delta_percent": -7.24369352056442e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 1260199722,
+          "id": "parity/micro/intloop",
+          "ratio": 1.000015198384562,
+          "rc": 1260218875,
+          "references": {
+            "control": {
+              "rc": 1260218836,
+              "gc": 1260199722,
+              "ratio": 1.0000151674370865,
+              "rc_instruction_delta_percent": 3.094700606887102e-06
+            },
+            "approved_A5": {
+              "rc": 1260219148,
+              "gc": 1260200774,
+              "ratio": 1.000014580216406,
+              "rc_instruction_delta_percent": -2.1662898908036965e-05
+            },
+            "B1": {
+              "rc": 1260219314,
+              "gc": 1260200023,
+              "ratio": 1.0000153078873575,
+              "rc_instruction_delta_percent": -3.483520647495908e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 246274681,
+          "id": "parity/micro/list_append_sum",
+          "ratio": 1.194876049803918,
+          "rc": 294267718,
+          "references": {
+            "control": {
+              "rc": 294267665,
+              "gc": 246274681,
+              "ratio": 1.1948758345970611,
+              "rc_instruction_delta_percent": 1.801081339625199e-05
+            },
+            "approved_A5": {
+              "rc": 294267971,
+              "gc": 246275014,
+              "ratio": 1.1948754614627695,
+              "rc_instruction_delta_percent": -8.597605751781145e-05
+            },
+            "B1": {
+              "rc": 294268146,
+              "gc": 246275112,
+              "ratio": 1.1948756965746503,
+              "rc_instruction_delta_percent": -0.00014544557602746977
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 592295010,
+          "id": "parity/micro/list_append_sum",
+          "ratio": 1.135030448762349,
+          "rc": 672272871,
+          "references": {
+            "control": {
+              "rc": 672273004,
+              "gc": 592295010,
+              "ratio": 1.1350306733126116,
+              "rc_instruction_delta_percent": -1.9783629445768725e-05
+            },
+            "approved_A5": {
+              "rc": 672273220,
+              "gc": 592295536,
+              "ratio": 1.1350300300085328,
+              "rc_instruction_delta_percent": -5.191341698740359e-05
+            },
+            "B1": {
+              "rc": 672273469,
+              "gc": 592295439,
+              "ratio": 1.1350306362902787,
+              "rc_instruction_delta_percent": -8.895189644864132e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 103753066,
+          "id": "parity/micro/list_records",
+          "ratio": 1.0963679858867978,
+          "rc": 113751540,
+          "references": {
+            "control": {
+              "rc": 113751501,
+              "gc": 103753066,
+              "ratio": 1.0963676099942916,
+              "rc_instruction_delta_percent": 3.4285261873989725e-05
+            },
+            "approved_A5": {
+              "rc": 113751902,
+              "gc": 103753385,
+              "ratio": 1.0963681040382443,
+              "rc_instruction_delta_percent": -0.00031823643704687044
+            },
+            "B1": {
+              "rc": 113752097,
+              "gc": 103753459,
+              "ratio": 1.0963692015318738,
+              "rc_instruction_delta_percent": -0.0004896613026827978
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 508272273,
+          "id": "parity/micro/list_records",
+          "ratio": 1.05899270842185,
+          "rc": 538256631,
+          "references": {
+            "control": {
+              "rc": 538256692,
+              "gc": 508272273,
+              "ratio": 1.0589928284362662,
+              "rc_instruction_delta_percent": -1.1332882787762344e-05
+            },
+            "approved_A5": {
+              "rc": 538256977,
+              "gc": 508272579,
+              "ratio": 1.0589927516038593,
+              "rc_instruction_delta_percent": -6.428156341664604e-05
+            },
+            "B1": {
+              "rc": 538257034,
+              "gc": 508272729,
+              "ratio": 1.0589925512214526,
+              "rc_instruction_delta_percent": -7.487129281003035e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 620201814,
+          "id": "parity/micro/records",
+          "ratio": 1.000031417192856,
+          "rc": 620221299,
+          "references": {
+            "control": {
+              "rc": 620221270,
+              "gc": 620201814,
+              "ratio": 1.0000313704338826,
+              "rc_instruction_delta_percent": 4.675750631122355e-06
+            },
+            "approved_A5": {
+              "rc": 620221631,
+              "gc": 620202125,
+              "ratio": 1.000031451037031,
+              "rc_instruction_delta_percent": -5.352925203094827e-05
+            },
+            "B1": {
+              "rc": 620221762,
+              "gc": 620202247,
+              "ratio": 1.0000314655422395,
+              "rc_instruction_delta_percent": -7.465071824031e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 1960199495,
+          "id": "parity/micro/records",
+          "ratio": 1.000010269873067,
+          "rc": 1960219626,
+          "references": {
+            "control": {
+              "rc": 1960219670,
+              "gc": 1960199495,
+              "ratio": 1.000010292319762,
+              "rc_instruction_delta_percent": -2.2446463909808756e-06
+            },
+            "approved_A5": {
+              "rc": 1960220063,
+              "gc": 1960199849,
+              "ratio": 1.000010312213834,
+              "rc_instruction_delta_percent": -2.2293415324892152e-05
+            },
+            "B1": {
+              "rc": 1960220252,
+              "gc": 1960199949,
+              "ratio": 1.0000103576168393,
+              "rc_instruction_delta_percent": -3.1935186839415763e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 259410118,
+          "id": "parity/micro/str_build",
+          "ratio": 1.1242993960628782,
+          "rc": 291654639,
+          "references": {
+            "control": {
+              "rc": 291654637,
+              "gc": 259410118,
+              "ratio": 1.1242993883530787,
+              "rc_instruction_delta_percent": 6.857425738360234e-07
+            },
+            "approved_A5": {
+              "rc": 291654912,
+              "gc": 259410376,
+              "ratio": 1.1242993302627187,
+              "rc_instruction_delta_percent": -9.36037723886507e-05
+            },
+            "B1": {
+              "rc": 291655099,
+              "gc": 259410568,
+              "ratio": 1.124299218989413,
+              "rc_instruction_delta_percent": -0.00015772054100526844
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 983068882,
+          "id": "parity/micro/str_build",
+          "ratio": 0.9881703731926285,
+          "rc": 971439544,
+          "references": {
+            "control": {
+              "rc": 971439629,
+              "gc": 983068882,
+              "ratio": 0.9881704596565595,
+              "rc_instruction_delta_percent": -8.749900404225741e-06
+            },
+            "approved_A5": {
+              "rc": 971439522,
+              "gc": 983069136,
+              "ratio": 0.9881700954957048,
+              "rc_instruction_delta_percent": 2.2646803543580063e-06
+            },
+            "B1": {
+              "rc": 971439731,
+              "gc": 983069297,
+              "ratio": 0.988170146259791,
+              "rc_instruction_delta_percent": -1.924977885980894e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 1404609331,
+          "id": "parity/suite/binary_trees",
+          "ratio": 1.1719237254590045,
+          "rc": 1646095000,
+          "references": {
+            "control": {
+              "rc": 1646095195,
+              "gc": 1404609331,
+              "ratio": 1.1719238642876422,
+              "rc_instruction_delta_percent": -1.1846216463329284e-05
+            },
+            "approved_A5": {
+              "rc": 1646095222,
+              "gc": 1404609626,
+              "ratio": 1.1719236373793724,
+              "rc_instruction_delta_percent": -1.3486461603040567e-05
+            },
+            "B1": {
+              "rc": 1646095306,
+              "gc": 1404609790,
+              "ratio": 1.1719235603505227,
+              "rc_instruction_delta_percent": -1.8589446115768737e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 2633115719,
+          "id": "parity/suite/binary_trees",
+          "ratio": 1.1111913790523387,
+          "rc": 2925895487,
+          "references": {
+            "control": {
+              "rc": 2925895359,
+              "gc": 2633115719,
+              "ratio": 1.1111913304407264,
+              "rc_instruction_delta_percent": 4.37472924552651e-06
+            },
+            "approved_A5": {
+              "rc": 2925895801,
+              "gc": 2633115907,
+              "ratio": 1.1111914189655154,
+              "rc_instruction_delta_percent": -1.0731756061588271e-05
+            },
+            "B1": {
+              "rc": 2925896365,
+              "gc": 2633116042,
+              "ratio": 1.1111915761895617,
+              "rc_instruction_delta_percent": -3.0007898110806508e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 1985384441,
+          "id": "parity/suite/fannkuch_redux",
+          "ratio": 0.9965879822264609,
+          "rc": 1978610274,
+          "references": {
+            "control": {
+              "rc": 1978610313,
+              "gc": 1985384441,
+              "ratio": 0.9965880018700116,
+              "rc_instruction_delta_percent": -1.971080398899261e-06
+            },
+            "approved_A5": {
+              "rc": 1978610563,
+              "gc": 1985384623,
+              "ratio": 0.9965880364330796,
+              "rc_instruction_delta_percent": -1.4606209297607364e-05
+            },
+            "B1": {
+              "rc": 1978610644,
+              "gc": 1985384870,
+              "ratio": 0.9965879532465662,
+              "rc_instruction_delta_percent": -1.869999037840131e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 5755840144,
+          "id": "parity/suite/fannkuch_redux",
+          "ratio": 1.0445730643279658,
+          "rc": 6012395577,
+          "references": {
+            "control": {
+              "rc": 6012395681,
+              "gc": 5755840144,
+              "ratio": 1.0445730823965704,
+              "rc_instruction_delta_percent": -1.7297597465493197e-06
+            },
+            "approved_A5": {
+              "rc": 6012395654,
+              "gc": 5755840186,
+              "ratio": 1.0445730700834994,
+              "rc_instruction_delta_percent": -1.2806875115956018e-06
+            },
+            "B1": {
+              "rc": 6012395853,
+              "gc": 5755840596,
+              "ratio": 1.0445730302500547,
+              "rc_instruction_delta_percent": -4.590516111679932e-06
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 1931471898,
+          "id": "parity/suite/knucleotide",
+          "ratio": 1.0899322144836092,
+          "rc": 2105173443,
+          "references": {
+            "control": {
+              "rc": 2105173416,
+              "gc": 1931471898,
+              "ratio": 1.089932200504633,
+              "rc_instruction_delta_percent": 1.2825546624739559e-06
+            },
+            "approved_A5": {
+              "rc": 2105173775,
+              "gc": 1931472109,
+              "ratio": 1.0899322673056524,
+              "rc_instruction_delta_percent": -1.5770669570258633e-05
+            },
+            "B1": {
+              "rc": 2105173845,
+              "gc": 1931472274,
+              "ratio": 1.0899322104377254,
+              "rc_instruction_delta_percent": -1.9095810110947298e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 2984431465,
+          "id": "parity/suite/knucleotide",
+          "ratio": 1.1101903035324017,
+          "rc": 3313286874,
+          "references": {
+            "control": {
+              "rc": 3313287013,
+              "gc": 2984431465,
+              "ratio": 1.1101903501074366,
+              "rc_instruction_delta_percent": -4.195229674763823e-06
+            },
+            "approved_A5": {
+              "rc": 3313287190,
+              "gc": 2984432086,
+              "ratio": 1.1101901784070285,
+              "rc_instruction_delta_percent": -9.53735616038287e-06
+            },
+            "B1": {
+              "rc": 3313287256,
+              "gc": 2984431818,
+              "ratio": 1.110190300216133,
+              "rc_instruction_delta_percent": -1.1529335386395445e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 794663330,
+          "id": "parity/suite/mandelbrot",
+          "ratio": 1.000025471163996,
+          "rc": 794683571,
+          "references": {
+            "control": {
+              "rc": 794683658,
+              "gc": 794663330,
+              "ratio": 1.0000255806443215,
+              "rc_instruction_delta_percent": -1.0947752493439822e-05
+            },
+            "approved_A5": {
+              "rc": 794684035,
+              "gc": 794663552,
+              "ratio": 1.000025775688275,
+              "rc_instruction_delta_percent": -5.8387985613084226e-05
+            },
+            "B1": {
+              "rc": 794684158,
+              "gc": 794663714,
+              "ratio": 1.000025726605657,
+              "rc_instruction_delta_percent": -7.38658238130796e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 3978702029,
+          "id": "parity/suite/mandelbrot",
+          "ratio": 1.000005736544188,
+          "rc": 3978724853,
+          "references": {
+            "control": {
+              "rc": 3978724999,
+              "gc": 3978702029,
+              "ratio": 1.0000057732395722,
+              "rc_instruction_delta_percent": -3.669517245619147e-06
+            },
+            "approved_A5": {
+              "rc": 3978725022,
+              "gc": 3978702171,
+              "ratio": 1.0000057433301157,
+              "rc_instruction_delta_percent": -4.2475918560214154e-06
+            },
+            "B1": {
+              "rc": 3978725153,
+              "gc": 3978702392,
+              "ratio": 1.0000057207093564,
+              "rc_instruction_delta_percent": -7.540103641456852e-06
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 148591133,
+          "id": "parity/suite/matmul",
+          "ratio": 1.1271651047980098,
+          "rc": 167486740,
+          "references": {
+            "control": {
+              "rc": 167486758,
+              "gc": 148591133,
+              "ratio": 1.1271652259357898,
+              "rc_instruction_delta_percent": -1.0747118284193391e-05
+            },
+            "approved_A5": {
+              "rc": 167487128,
+              "gc": 148591390,
+              "ratio": 1.1271657664687031,
+              "rc_instruction_delta_percent": -0.00023165959356363786
+            },
+            "B1": {
+              "rc": 167487204,
+              "gc": 148591590,
+              "ratio": 1.1271647608051034,
+              "rc_instruction_delta_percent": -0.0002770360892800916
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 3206533868,
+          "id": "parity/suite/matmul",
+          "ratio": 1.010136196072762,
+          "rc": 3239035924,
+          "references": {
+            "control": {
+              "rc": 3239035922,
+              "gc": 3206533868,
+              "ratio": 1.0101361954490355,
+              "rc_instruction_delta_percent": 6.1746763257986e-08
+            },
+            "approved_A5": {
+              "rc": 3239036262,
+              "gc": 3206533854,
+              "ratio": 1.0101363058928738,
+              "rc_instruction_delta_percent": -1.0435202713043878e-05
+            },
+            "B1": {
+              "rc": 3239036443,
+              "gc": 3206534185,
+              "ratio": 1.010136258067057,
+              "rc_instruction_delta_percent": -1.602328374428197e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 3595208184,
+          "id": "parity/suite/nbody",
+          "ratio": 0.9749732562357786,
+          "rc": 3505231830,
+          "references": {
+            "control": {
+              "rc": 3505231871,
+              "gc": 3595208184,
+              "ratio": 0.9749732676398469,
+              "rc_instruction_delta_percent": -1.1696801083260766e-06
+            },
+            "approved_A5": {
+              "rc": 3505232119,
+              "gc": 3595208279,
+              "ratio": 0.9749733108577991,
+              "rc_instruction_delta_percent": -8.244817750746591e-06
+            },
+            "B1": {
+              "rc": 3505232151,
+              "gc": 3595208532,
+              "ratio": 0.9749732511482592,
+              "rc_instruction_delta_percent": -9.157738667386894e-06
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 32990213349,
+          "id": "parity/suite/nbody",
+          "ratio": 1.0153083103360805,
+          "rc": 33495237773,
+          "references": {
+            "control": {
+              "rc": 33495238089,
+              "gc": 32990213349,
+              "ratio": 1.0153083199146788,
+              "rc_instruction_delta_percent": -9.434176884148826e-07
+            },
+            "approved_A5": {
+              "rc": 33495237681,
+              "gc": 32990211666,
+              "ratio": 1.015308359343462,
+              "rc_instruction_delta_percent": 2.7466591223657133e-07
+            },
+            "B1": {
+              "rc": 33495237698,
+              "gc": 32990212687,
+              "ratio": 1.0153083284364217,
+              "rc_instruction_delta_percent": 2.2391242193720018e-07
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 1197340333,
+          "id": "parity/suite/raytrace",
+          "ratio": 1.0533524948916926,
+          "rc": 1261221427,
+          "references": {
+            "control": {
+              "rc": 1261221396,
+              "gc": 1197340333,
+              "ratio": 1.0533524690009755,
+              "rc_instruction_delta_percent": 2.457934833444142e-06
+            },
+            "approved_A5": {
+              "rc": 1261221723,
+              "gc": 1197340559,
+              "ratio": 1.0533525432842203,
+              "rc_instruction_delta_percent": -2.3469307153245467e-05
+            },
+            "B1": {
+              "rc": 1261221753,
+              "gc": 1197340754,
+              "ratio": 1.0533523967897946,
+              "rc_instruction_delta_percent": -2.584795253390837e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 6231730289,
+          "id": "parity/suite/raytrace",
+          "ratio": 1.0572201654217002,
+          "rc": 6588310927,
+          "references": {
+            "control": {
+              "rc": 6588311145,
+              "gc": 6231730289,
+              "ratio": 1.0572202004039588,
+              "rc_instruction_delta_percent": -3.308890472730752e-06
+            },
+            "approved_A5": {
+              "rc": 6588311679,
+              "gc": 6231732385,
+              "ratio": 1.0572199305057288,
+              "rc_instruction_delta_percent": -1.1414153378019876e-05
+            },
+            "B1": {
+              "rc": 6588311103,
+              "gc": 6231730639,
+              "ratio": 1.0572201342863594,
+              "rc_instruction_delta_percent": -2.67139783627357e-06
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 222097892,
+          "id": "parity/suite/sieve",
+          "ratio": 1.0000907707849833,
+          "rc": 222118052,
+          "references": {
+            "control": {
+              "rc": 222118264,
+              "gc": 222097892,
+              "ratio": 1.0000917253190318,
+              "rc_instruction_delta_percent": -9.544465014998949e-05
+            },
+            "approved_A5": {
+              "rc": 222118457,
+              "gc": 222098146,
+              "ratio": 1.0000914505607805,
+              "rc_instruction_delta_percent": -0.00018233514020860042
+            },
+            "B1": {
+              "rc": 222118486,
+              "gc": 222098201,
+              "ratio": 1.0000913334728,
+              "rc_instruction_delta_percent": -0.00019539121115519364
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 822297430,
+          "id": "parity/suite/sieve",
+          "ratio": 1.0243494023810824,
+          "rc": 842319881,
+          "references": {
+            "control": {
+              "rc": 842319950,
+              "gc": 822297430,
+              "ratio": 1.0243494862923261,
+              "rc_instruction_delta_percent": -8.191661615697399e-06
+            },
+            "approved_A5": {
+              "rc": 842320462,
+              "gc": 822297605,
+              "ratio": 1.0243498909376003,
+              "rc_instruction_delta_percent": -6.897612324641145e-05
+            },
+            "B1": {
+              "rc": 842320509,
+              "gc": 822297747,
+              "ratio": 1.024349771202766,
+              "rc_instruction_delta_percent": -7.455594317473668e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 734453001,
+          "id": "parity/suite/sort_builtin",
+          "ratio": 1.051519888881222,
+          "rc": 772291938,
+          "references": {
+            "control": {
+              "rc": 772292030,
+              "gc": 734453001,
+              "ratio": 1.051520014144513,
+              "rc_instruction_delta_percent": -1.1912592179363912e-05
+            },
+            "approved_A5": {
+              "rc": 772292315,
+              "gc": 734453232,
+              "ratio": 1.0515200714645367,
+              "rc_instruction_delta_percent": -4.8815712994088045e-05
+            },
+            "B1": {
+              "rc": 772292545,
+              "gc": 734453417,
+              "ratio": 1.0515201197573025,
+              "rc_instruction_delta_percent": -7.859715905889075e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 919565314,
+          "id": "parity/suite/sort_builtin",
+          "ratio": 1.1239611480169422,
+          "rc": 1033555686,
+          "references": {
+            "control": {
+              "rc": 1033555796,
+              "gc": 919565314,
+              "ratio": 1.1239612676386792,
+              "rc_instruction_delta_percent": -1.0642870029720086e-05
+            },
+            "approved_A5": {
+              "rc": 1033556012,
+              "gc": 919565515,
+              "ratio": 1.123961256855092,
+              "rc_instruction_delta_percent": -3.154159002871637e-05
+            },
+            "B1": {
+              "rc": 1033556516,
+              "gc": 919565701,
+              "ratio": 1.1239615775969443,
+              "rc_instruction_delta_percent": -8.03052360609513e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 1181716327,
+          "id": "parity/suite/sort_quick",
+          "ratio": 0.9855510907229769,
+          "rc": 1164641815,
+          "references": {
+            "control": {
+              "rc": 1164641831,
+              "gc": 1181716327,
+              "ratio": 0.9855511042626053,
+              "rc_instruction_delta_percent": -1.373812930083318e-06
+            },
+            "approved_A5": {
+              "rc": 1164642007,
+              "gc": 1181716495,
+              "ratio": 0.9855511130865614,
+              "rc_instruction_delta_percent": -1.648575260748686e-05
+            },
+            "B1": {
+              "rc": 1164642273,
+              "gc": 1181716683,
+              "ratio": 0.9855511813909121,
+              "rc_instruction_delta_percent": -3.932538004125519e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 2804351143,
+          "id": "parity/suite/sort_quick",
+          "ratio": 0.8638351288663854,
+          "rc": 2422497031,
+          "references": {
+            "control": {
+              "rc": 2422497060,
+              "gc": 2804351143,
+              "ratio": 0.8638351392074584,
+              "rc_instruction_delta_percent": -1.1971118762943433e-06
+            },
+            "approved_A5": {
+              "rc": 2422497462,
+              "gc": 2804351234,
+              "ratio": 0.86383525452504,
+              "rc_instruction_delta_percent": -1.7791556305990497e-05
+            },
+            "B1": {
+              "rc": 2422497576,
+              "gc": 2804351518,
+              "ratio": 0.8638352076945298,
+              "rc_instruction_delta_percent": -2.249744253113306e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 152627926,
+          "id": "parity/suite/sort_records",
+          "ratio": 1.203112181449678,
+          "rc": 183628517,
+          "references": {
+            "control": {
+              "rc": 183628505,
+              "gc": 152627926,
+              "ratio": 1.2031121028271066,
+              "rc_instruction_delta_percent": 6.534933127966269e-06
+            },
+            "approved_A5": {
+              "rc": 183628816,
+              "gc": 152628206,
+              "ratio": 1.2031119333211582,
+              "rc_instruction_delta_percent": -0.00016282847459248018
+            },
+            "B1": {
+              "rc": 183628921,
+              "gc": 152628372,
+              "ratio": 1.2031113127512099,
+              "rc_instruction_delta_percent": -0.00022000891678475298
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 312648091,
+          "id": "parity/suite/sort_records",
+          "ratio": 1.281418820497452,
+          "rc": 400633148,
+          "references": {
+            "control": {
+              "rc": 400633139,
+              "gc": 312648091,
+              "ratio": 1.2814187917110935,
+              "rc_instruction_delta_percent": 2.2464442306358023e-06
+            },
+            "approved_A5": {
+              "rc": 400633333,
+              "gc": 312648348,
+              "ratio": 1.281418358877751,
+              "rc_instruction_delta_percent": -4.617688663666186e-05
+            },
+            "B1": {
+              "rc": 400633568,
+              "gc": 312648537,
+              "ratio": 1.2814183358868556,
+              "rc_instruction_delta_percent": -0.00010483395140870044
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 1841811175,
+          "id": "parity/suite/spectral_norm",
+          "ratio": 1.0000279963552725,
+          "rc": 1841862739,
+          "references": {
+            "control": {
+              "rc": 1841862685,
+              "gc": 1841811175,
+              "ratio": 1.000027967036306,
+              "rc_instruction_delta_percent": 2.9318146577139714e-06
+            },
+            "approved_A5": {
+              "rc": 1841862843,
+              "gc": 1841811367,
+              "ratio": 1.0000279485733026,
+              "rc_instruction_delta_percent": -5.646457357233459e-06
+            },
+            "B1": {
+              "rc": 1841863108,
+              "gc": 1841811502,
+              "ratio": 1.0000280191539384,
+              "rc_instruction_delta_percent": -2.0034062164775435e-05
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 11523631854,
+          "id": "parity/suite/spectral_norm",
+          "ratio": 1.0138967687469478,
+          "rc": 11683773101,
+          "references": {
+            "control": {
+              "rc": 11683773305,
+              "gc": 11523631854,
+              "ratio": 1.0138967864497002,
+              "rc_instruction_delta_percent": -1.7460112800016248e-06
+            },
+            "approved_A5": {
+              "rc": 11683773196,
+              "gc": 11523632562,
+              "ratio": 1.013896714698113,
+              "rc_instruction_delta_percent": -8.130934925354438e-07
+            },
+            "B1": {
+              "rc": 11683773681,
+              "gc": 11523631989,
+              "ratio": 1.0138968072004437,
+              "rc_instruction_delta_percent": -4.96414955808433e-06
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 1401477699,
+          "id": "parity/suite/text_ops",
+          "ratio": 0.962565923783565,
+          "rc": 1349014676,
+          "references": {
+            "control": {
+              "rc": 1345014808,
+              "gc": 1401477699,
+              "ratio": 0.9597118876452418,
+              "rc_instruction_delta_percent": 0.2973846812844849
+            },
+            "approved_A5": {
+              "rc": 1345157734,
+              "gc": 1401477959,
+              "ratio": 0.9598136919397674,
+              "rc_instruction_delta_percent": 0.2867278611654589
+            },
+            "B1": {
+              "rc": 1345015090,
+              "gc": 1401478130,
+              "ratio": 0.9597117937188218,
+              "rc_instruction_delta_percent": 0.2973636526263812
+            }
+          },
+          "interpretation": "Same binary and argv differ across dev/smoke runs by -0.113571% QBE and +0.297385% LLVM; consistent with documented address-dependent instruction-count variability."
+        },
+        {
+          "arm": "qbe",
+          "gc": 1601705033,
+          "id": "parity/suite/text_ops",
+          "ratio": 1.0983538096929986,
+          "rc": 1759238825,
+          "references": {
+            "control": {
+              "rc": 1758008673,
+              "gc": 1601705033,
+              "ratio": 1.0975857831371376,
+              "rc_instruction_delta_percent": 0.0699741712821389
+            },
+            "approved_A5": {
+              "rc": 1756009087,
+              "gc": 1601705280,
+              "ratio": 1.0963372031838468,
+              "rc_instruction_delta_percent": 0.1839249024341738
+            },
+            "B1": {
+              "rc": 1756009046,
+              "gc": 1601705508,
+              "ratio": 1.0963370215244337,
+              "rc_instruction_delta_percent": 0.18392724156843787
+            }
+          },
+          "interpretation": "Same binary and argv differ across dev/smoke runs by -0.113571% QBE and +0.297385% LLVM; consistent with documented address-dependent instruction-count variability."
+        },
+        {
+          "arm": "llvm",
+          "gc": 9063553,
+          "id": "schematic/changed-net",
+          "ratio": 1.1714209648247216,
+          "rc": 10617236,
+          "references": {
+            "control": {
+              "rc": 10618342,
+              "gc": 9063553,
+              "ratio": 1.1715429920253129,
+              "rc_instruction_delta_percent": -0.010415938759555932
+            },
+            "approved_A5": {
+              "rc": 10617644,
+              "gc": 9064254,
+              "ratio": 1.171375382905201,
+              "rc_instruction_delta_percent": -0.0038426603868102482
+            },
+            "B1": {
+              "rc": 10617656,
+              "gc": 9064600,
+              "ratio": 1.1713319947929308,
+              "rc_instruction_delta_percent": -0.003955675339262221
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 18604541,
+          "id": "schematic/changed-net",
+          "ratio": 1.2176206335861766,
+          "rc": 22653273,
+          "references": {
+            "control": {
+              "rc": 22652831,
+              "gc": 18604541,
+              "ratio": 1.2175968759455016,
+              "rc_instruction_delta_percent": 0.0019511910012592892
+            },
+            "approved_A5": {
+              "rc": 22653811,
+              "gc": 18605271,
+              "ratio": 1.217601775324853,
+              "rc_instruction_delta_percent": -0.002374876350830224
+            },
+            "B1": {
+              "rc": 22653719,
+              "gc": 18605833,
+              "ratio": 1.2175600522696297,
+              "rc_instruction_delta_percent": -0.00196877166173115
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 9058089,
+          "id": "schematic/changed-value",
+          "ratio": 1.1715091339906243,
+          "rc": 10611634,
+          "references": {
+            "control": {
+              "rc": 10612936,
+              "gc": 9058089,
+              "ratio": 1.1716528729183384,
+              "rc_instruction_delta_percent": -0.01226804722086472
+            },
+            "approved_A5": {
+              "rc": 10612343,
+              "gc": 9058879,
+              "ratio": 1.1714852356456025,
+              "rc_instruction_delta_percent": -0.006680899778677141
+            },
+            "B1": {
+              "rc": 10612115,
+              "gc": 9059415,
+              "ratio": 1.171390757570991,
+              "rc_instruction_delta_percent": -0.004532555480218914
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 18594966,
+          "id": "schematic/changed-value",
+          "ratio": 1.2176009894290745,
+          "rc": 22641249,
+          "references": {
+            "control": {
+              "rc": 22642335,
+              "gc": 18594966,
+              "ratio": 1.2176593923323118,
+              "rc_instruction_delta_percent": -0.00479632511399819
+            },
+            "approved_A5": {
+              "rc": 22641731,
+              "gc": 18595676,
+              "ratio": 1.217580420308463,
+              "rc_instruction_delta_percent": -0.0021288125011342807
+            },
+            "B1": {
+              "rc": 22641783,
+              "gc": 18596333,
+              "ratio": 1.2175401999953432,
+              "rc_instruction_delta_percent": -0.002358471503771664
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "llvm",
+          "gc": 9057754,
+          "id": "schematic/fixture",
+          "ratio": 1.171696758379616,
+          "rc": 10612941,
+          "references": {
+            "control": {
+              "rc": 10611988,
+              "gc": 9057754,
+              "ratio": 1.1715915446588636,
+              "rc_instruction_delta_percent": 0.008980409702696868
+            },
+            "approved_A5": {
+              "rc": 10613208,
+              "gc": 9058444,
+              "ratio": 1.1716369831286697,
+              "rc_instruction_delta_percent": -0.0025157332259939658
+            },
+            "B1": {
+              "rc": 10613416,
+              "gc": 9058757,
+              "ratio": 1.1716194616987738,
+              "rc_instruction_delta_percent": -0.004475467653397569
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        },
+        {
+          "arm": "qbe",
+          "gc": 18594532,
+          "id": "schematic/fixture",
+          "ratio": 1.2176874900642833,
+          "rc": 22642329,
+          "references": {
+            "control": {
+              "rc": 22641779,
+              "gc": 18594532,
+              "ratio": 1.2176579114763415,
+              "rc_instruction_delta_percent": 0.0024291377457519303
+            },
+            "approved_A5": {
+              "rc": 22642673,
+              "gc": 18595275,
+              "ratio": 1.2176573349950457,
+              "rc_instruction_delta_percent": -0.0015192552575427065
+            },
+            "B1": {
+              "rc": 22642870,
+              "gc": 18595413,
+              "ratio": 1.217658892545167,
+              "rc_instruction_delta_percent": -0.0023892730912633553
+            }
+          },
+          "interpretation": "Small count movement; no corpus-speedup claim."
+        }
+      ]
+    }
+  },
+  "work_ledger": {
+    "control": [
+      {
+        "case": "original-owner-tail",
+        "size": 4096,
+        "views": 1,
+        "copied_octets": 523776
+      },
+      {
+        "case": "original-owner-tail",
+        "size": 32768,
+        "views": 1,
+        "copied_octets": 33550336
+      },
+      {
+        "case": "literal-forward-reverse",
+        "size": 4096,
+        "examined_octets": 16777216
+      },
+      {
+        "case": "literal-forward-reverse",
+        "size": 32768,
+        "examined_octets": 1073741824
+      }
+    ],
+    "candidate": [
+      {
+        "case": "original-owner-tail",
+        "size": 4096,
+        "views": 1016,
+        "copied_octets": 36
+      },
+      {
+        "case": "original-owner-tail",
+        "size": 32768,
+        "views": 8184,
+        "copied_octets": 36
+      },
+      {
+        "case": "literal-forward-reverse",
+        "size": 4096,
+        "examined_octets": 524288
+      },
+      {
+        "case": "literal-forward-reverse",
+        "size": 32768,
+        "examined_octets": 4194304
+      }
+    ]
+  }
+}
