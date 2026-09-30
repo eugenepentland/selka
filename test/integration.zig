@@ -1191,6 +1191,8 @@ test "a project build compiles a module again only when its source or an interfa
 
 const cutoff_leaf =
     \\module leaf
+    \\public def tiny(n: int) -> int:
+    \\    return n + 1
     \\def tweak(n: int) -> int:
     \\    values: list[int] = []
     \\    for k in range(n):
@@ -1234,6 +1236,7 @@ fn cutoffBuild(allocator: std.mem.Allocator, directory: []const u8, extra: []con
 
 // spec: MODULE-SYMBOL-CUTOFF-3
 // spec: MODULE-SYMBOL-CUTOFF-4
+// spec: MODULE-SYMBOL-CUTOFF-5
 // spec-case: MODULE-SYMBOL-CUTOFF-2
 test "a body edit no dependent reaches compiles its own module alone and links the whole-program executable" {
     var arena_state = std.heap.ArenaAllocator.init(testing.allocator);
@@ -1243,7 +1246,7 @@ test "a body edit no dependent reaches compiles its own module alone and links t
     defer temporary.cleanup();
     const directory = try temporary.dir.realPathFileAlloc(testing.io, ".", a);
     try temporary.dir.writeFile(testing.io, .{ .sub_path = "leaf.my", .data = cutoff_leaf });
-    try temporary.dir.writeFile(testing.io, .{ .sub_path = "mid.my", .data = "module mid\nimport leaf\npublic def twice(n: int) -> int:\n    return leaf.api(n) + leaf.api(n + 1)\n" });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "mid.my", .data = "module mid\nimport leaf\npublic def twice(n: int) -> int:\n    return leaf.api(n) + leaf.api(leaf.tiny(n))\n" });
     try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = "module main\nimport leaf\nimport mid\ndef main() -> int:\n    return mid.twice(3) + leaf.api(2)\n" });
     try testing.expect(try cutoffBuild(a, directory, "", "\"module_build\":{\"modules\":3,\"compiled\":3,\"reused\":0"));
     try testing.expect(try cutoffBuild(a, directory, "--gc-runtime", "\"module_build\":{\"modules\":3,\"compiled\":3,\"reused\":0"));
@@ -1252,8 +1255,9 @@ test "a body edit no dependent reaches compiles its own module alone and links t
     try testing.expect(try cutoffBuild(a, directory, "", "\"module_build\":{\"modules\":3,\"compiled\":1,\"reused\":2"));
     try testing.expect(try cutoffBuild(a, directory, "--gc-runtime", "\"module_build\":{\"modules\":3,\"compiled\":1,\"reused\":2"));
     // The public function no dependent calls, edited to another length: the
-    // declarations after it move in the source, but `mid`, whose compile
-    // reported only its synthetic root's unused import, read none of them.
+    // declarations after it move in the source. `mid` splices `tiny`, above
+    // the edit, and reads only that stretch's lines; its compile reported
+    // only its synthetic root's unused import, which is never rendered.
     const private_edit = try std.mem.replaceOwned(u8, a, cutoff_leaf, "k + 1", "k + 2");
     try temporary.dir.writeFile(testing.io, .{ .sub_path = "leaf.my", .data = try std.mem.replaceOwned(u8, a, private_edit, "tweak(k)", "tweak(k + 1)") });
     try testing.expect(try cutoffBuild(a, directory, "", "\"module_build\":{\"modules\":3,\"compiled\":1,\"reused\":2"));
