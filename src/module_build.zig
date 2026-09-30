@@ -6,7 +6,9 @@
 //! child process, over the import graph, as many at once as the cores and
 //! free memory allow. A module is stale when it has no record, its source or
 //! the program's arena switch changed, or an interface its last compile read
-//! (by interface, emission and positions hash) is not the one there now. A
+//! (by interface, emission and positions hash) is not the one there now,
+//! unless only its emission hash changed and nothing the compile consumed of
+//! it, symbol by symbol, did (MODULE-SYMBOL-CUTOFF-2). A
 //! compile signals as soon as its interface is written, so its dependents start
 //! while its units and objects are still being built, and a dependent whose
 //! inputs all held stays as it is: a body edit compiles one module, and an
@@ -44,7 +46,7 @@ const json_value = @import("qbe_build_value.zig");
 const field = json_value.get;
 const items = json_value.array;
 const stringOf = json_value.text;
-const state_version = "module-build-state-v2";
+const state_version = "module-build-state-v3";
 /// The file in a variant's directory that holds its modules' records.
 const state_file = "state.json";
 /// Resident memory one module compile (and the tools it starts) is budgeted
@@ -65,8 +67,10 @@ pub const Outcome = union(enum) { status: u8, fallback: Fallback };
 /// A module's interface, emission and positions hashes.
 const Hashes = struct { interface: []const u8, emission: []const u8, positions: []const u8 };
 
-/// One interface a compile read, and its hashes then.
-const Input = struct { module: []const u8, interface: []const u8, emission: []const u8, positions: []const u8 };
+/// One interface a compile read, its hashes then, and the digest of what the
+/// compile consumed of its emission section (MODULE-SYMBOL-CUTOFF-1; empty
+/// when the compile recorded no reach).
+const Input = struct { module: []const u8, interface: []const u8, emission: []const u8, positions: []const u8, symbols: []const u8 = "" };
 
 /// Whether a module's units open an arena scope or need the text runtime.
 const Marks = struct { arena: bool = false, text: bool = false };
@@ -88,6 +92,10 @@ const ModuleState = struct {
     objects: ?[]const u8 = null,
     /// Warnings its compile reported in other modules' text.
     foreign: []const Foreign = &.{},
+    /// MODULE-SYMBOL-CUTOFF-1: every function its compile's output can
+    /// depend on, sorted; null when the compile consumed every row of every
+    /// import.
+    reach: ?[]const []const u8 = null,
 };
 
 /// A test run's merged test documents.
@@ -710,6 +718,9 @@ const Build = struct {
     previous_arenas: bool = false,
     arenas: bool = false,
     compiled: usize = 0,
+    /// MODULE-SYMBOL-CUTOFF-2: each module's current interface rows, loaded
+    /// once a dependent asks what changed in them (null: not loadable).
+    tables: std.AutoHashMapUnmanaged(usize, ?language.module_symbols.Table) = .empty,
 
     /// The variant a module's outputs live in: the shared standard one for a
     /// standard module, the program's otherwise.
@@ -1017,6 +1028,7 @@ const Build = struct {
 
     /// Compile every module again under a new arena switch.
     fn restart(self: *Build) !void {
+        self.tables.clearRetainingCapacity();
         for (self.nodes.items) |*node| {
             node.status = .waiting;
             node.current = null;
@@ -1042,6 +1054,7 @@ const Build = struct {
             node.current = null;
         }
         if (!any) return false;
+        self.tables.clearRetainingCapacity();
         // Everything else stands as it is: a recompile keeps its interface.
         for (self.nodes.items) |*node| if (node.record) |record| {
             try self.previous.put(self.context.allocator, record.name, record);
@@ -1052,21 +1065,65 @@ const Build = struct {
         return true;
     }
 
-    /// Whether module `id` must compile: null while an input it read is not
-    /// final yet.
-    fn stale(self: *Build, id: usize) bool {
+    /// The record module `id` keeps when it need not compile, or null when it
+    /// must: it has a record under this source and arena switch, and every
+    /// interface its last compile read is final and holds what that compile
+    /// read. An input whose emission hash changed holds when what the compile
+    /// consumed of it, by symbol, did not (MODULE-SYMBOL-CUTOFF-2); the kept
+    /// record then states that input's hashes now.
+    fn reusable(self: *Build, id: usize) !?ModuleState {
         const node = self.nodes.items[id];
-        const known = self.previous.get(node.name) orelse return true;
-        if (!std.mem.eql(u8, known.digest, node.digest) or known.arenas != self.arenas) return true;
-        for (known.inputs) |input| {
-            const at = self.names.get(input.module) orelse return true;
-            const now = self.nodes.items[at].current orelse return true;
-            if (!std.mem.eql(u8, now.interface, input.interface) or !std.mem.eql(u8, now.emission, input.emission)) return true;
+        const known = self.previous.get(node.name) orelse return null;
+        if (!std.mem.eql(u8, known.digest, node.digest) or known.arenas != self.arenas) return null;
+        var updated: ?[]Input = null;
+        for (known.inputs, 0..) |input, index| {
+            const at = self.names.get(input.module) orelse return null;
+            const now = self.nodes.items[at].current orelse return null;
+            if (!std.mem.eql(u8, now.interface, input.interface)) return null;
             // Positions matter only to a compile whose units spliced or
             // instantiated a body of that interface's text.
-            if (input.positions.len != 0 and !std.mem.eql(u8, now.positions, input.positions)) return true;
+            if (input.positions.len != 0 and !std.mem.eql(u8, now.positions, input.positions)) return null;
+            if (std.mem.eql(u8, now.emission, input.emission)) continue;
+            if (!try self.symbolsHold(known, input, at)) return null;
+            const inputs = updated orelse try self.context.allocator.dupe(Input, known.inputs);
+            inputs[index].emission = now.emission;
+            updated = inputs;
         }
-        return false;
+        var kept = known;
+        if (updated) |inputs| kept.inputs = inputs;
+        return kept;
+    }
+
+    /// MODULE-SYMBOL-CUTOFF-2: whether what `known`'s compile consumed of the
+    /// emission section of module `at` (`input`) is what that module's
+    /// interface holds now. A compile with no reach, an input with no
+    /// digest, and an interface that cannot be read or is not the one its
+    /// module's hashes name all answer no.
+    fn symbolsHold(self: *Build, known: ModuleState, input: Input, at: usize) !bool {
+        const reached = known.reach orelse return false;
+        if (input.symbols.len == 0) return false;
+        const table = (try self.tableOf(at)) orelse return false;
+        const digest = try table.digest(self.context.allocator, reached);
+        return std.mem.eql(u8, &std.fmt.bytesToHex(digest, .lower), input.symbols);
+    }
+
+    /// The rows of module `at`'s current interface, read once; null when
+    /// its interface file is missing, malformed, or not the one its current
+    /// interface and emission hashes name.
+    fn tableOf(self: *Build, at: usize) !?language.module_symbols.Table {
+        const slot = try self.tables.getOrPut(self.context.allocator, at);
+        if (slot.found_existing) return slot.value_ptr.*;
+        slot.value_ptr.* = null;
+        const a = self.context.allocator;
+        const node = self.nodes.items[at];
+        const now = node.current orelse return null;
+        const path = try std.fs.path.join(a, &.{ self.home(node.name), "if", try language.module_interface.fileName(a, node.name) });
+        const bytes = self.context.read(path) catch return null;
+        const interface = language.module_interface.decode(a, bytes) orelse return null;
+        if (!std.mem.eql(u8, &std.fmt.bytesToHex(language.module_interface.interfaceHash(interface), .lower), now.interface)) return null;
+        if (!std.mem.eql(u8, &std.fmt.bytesToHex(language.module_interface.emissionHash(interface), .lower), now.emission)) return null;
+        slot.value_ptr.* = try language.module_symbols.Table.of(a, interface);
+        return slot.value_ptr.*;
     }
 
     /// Whether every module `id` imports has its final interface.
@@ -1099,8 +1156,7 @@ const Build = struct {
                 progress = false;
                 for (self.order.items) |id| {
                     if (self.nodes.items[id].status != .waiting or !self.importsReady(id)) continue;
-                    if (!self.stale(id)) {
-                        const known = self.previous.get(self.nodes.items[id].name).?;
+                    if (try self.reusable(id)) |known| {
                         self.nodes.items[id].record = known;
                         self.nodes.items[id].current = known.hashes;
                         self.nodes.items[id].status = .done;
@@ -1184,7 +1240,7 @@ const Build = struct {
         const node = &self.nodes.items[id];
         const bytes = self.context.read(try self.outFile(node.name, ".result.json")) catch return false;
         const Result = struct {
-            hashes: struct { interface: []const u8, emission: []const u8, positions: []const u8, inputs: []const Input = &.{} },
+            hashes: struct { interface: []const u8, emission: []const u8, positions: []const u8, inputs: []const Input = &.{}, reach: ?[]const []const u8 = null },
             warnings: []const u8 = "",
             marks: Marks = .{},
             text_format: bool = false,
@@ -1213,6 +1269,7 @@ const Build = struct {
             .entry = result.entry,
             .objects = listed,
             .foreign = result.foreign,
+            .reach = result.hashes.reach,
         };
         node.current = node.record.?.hashes;
         node.status = .done;
@@ -1459,4 +1516,37 @@ test "unchanged state proves graph rows and shared headers before skipping publi
     state.nodes.items = all;
     state.loaded_states[0] = null;
     try t.expect(!state.unchangedState());
+}
+
+// spec: MODULE-SYMBOL-CUTOFF-2
+test "a module outlives an import's emission change only through a symbol record" {
+    const t = std.testing;
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const read: Input = .{ .module = "leaf", .interface = "i", .emission = "e", .positions = "" };
+    var row: ModuleState = .{ .name = "main", .digest = "d", .imports = &.{"leaf"}, .arenas = false, .hashes = .{ .interface = "mi", .emission = "me", .positions = "mp" }, .inputs = &.{read} };
+    var state: Build = .{ .context = undefined, .parsed = undefined, .entry = undefined, .variant = "", .standard = "", .switches = undefined };
+    try state.previous.put(a, "main", row);
+    try state.nodes.append(a, .{ .name = "main", .digest = "d", .imports = &.{"leaf"}, .arena_text = false, .bytes = 1 });
+    try state.nodes.append(a, .{ .name = "leaf", .digest = "l", .imports = &.{}, .arena_text = false, .bytes = 1, .current = .{ .interface = "i", .emission = "e", .positions = "p" } });
+    try state.names.put(a, "main", 0);
+    try state.names.put(a, "leaf", 1);
+    // Every hash held: the record as it was.
+    try t.expectEqualStrings("e", (try state.reusable(0)).?.inputs[0].emission);
+    // The emission hash moved and the record has no reach: compile.
+    state.nodes.items[1].current.?.emission = "e2";
+    try t.expect((try state.reusable(0)) == null);
+    // A reach without a digest for that input still compiles.
+    row.reach = &.{"leaf::api"};
+    try state.previous.put(a, "main", row);
+    try t.expect((try state.reusable(0)) == null);
+    // An interface change is never cut off by symbols.
+    state.nodes.items[1].current.?.emission = "e";
+    state.nodes.items[1].current.?.interface = "i2";
+    try t.expect((try state.reusable(0)) == null);
+    // Nor is a new source.
+    state.nodes.items[1].current.?.interface = "i";
+    state.nodes.items[0].digest = "d2";
+    try t.expect((try state.reusable(0)) == null);
 }
