@@ -219,15 +219,21 @@ identical
   consumed of every import, symbol by symbol: its *reach* (every function its
   emitted units reach through the physical bodies they restore) with a digest
   of each import's rows for those functions, and the stretches of an
-  import's text its positions came through. When only an import's emission
-  or positions hash changed, the scheduler recomputes those digests from the
-  import's new interface and keeps the module when they held
-  (MODULE-SYMBOL-CUTOFF-1..5). So a body edit compiles its own module and
-  only the dependents whose units reach the edited body (under the RC
-  runtime, a callee's body is part of what a caller's code reads), and an
-  edit that keeps its line count moves no dependent's positions. A body that
-  invokes a function value may reach any function value, so its module keeps
-  the whole-module rule. An
+  import's text its positions came through, and the import's declarations
+  it used (by fingerprint) with an *outline* of everything a lookup into it
+  could find. When an import's hashes changed, the scheduler recomputes
+  those digests from the import's new interface and keeps the module when
+  they held (MODULE-SYMBOL-CUTOFF-1..5, MODULE-INTERFACE-CUTOFF-1..3). So a
+  body edit compiles its own module and only the dependents whose units
+  reach the edited body (under the RC runtime, a callee's body is part of
+  what a caller's code reads); an edit that keeps its line count moves no
+  dependent's positions; and a signature change, or a new or removed free
+  function, compiles only the readers that use it. A body the interface
+  keeps (an inlined function, a template, a constant), a domain member, a
+  re-export or a type declaration is part of the outline, so editing one
+  still compiles every reader, and a test run takes no interface-level
+  cutoff. A body that invokes a function value may reach any function value,
+  so its module keeps the whole-module rule for emission changes. An
   interface edit compiles the modules that read the changed interface, and
   stops at any of them whose own interface and emission facts held (early
   cutoff).
