@@ -606,3 +606,13 @@ are retained under `targeted-combined-rejected-performance/`, with frozen
 source, compiler, 58 binary hashes, accepted GC identity, approved and fresh
 controls, and all per-row deltas. The timing pool has been released. Further
 scoped code-shape investigations and the final broad gate remain pending.
+
+
+The final acceptance script follows the already approved A5 interpretation:
+`quick.py` lines 18–20 define smoke as a differential output check, and the
+A5 integration audit explicitly retains its short-input startup overhead.
+Dev and full keep the strict 1% limits against both approved and fresh A5,
+with all 43 rows per backend at or below 1.3x. Every smoke output and instruction
+movement remains reported, and the script additionally rejects new smoke cap
+misses. The four dev/full failures above still reject the composed checkpoint;
+this clarification does not accept it or waive any performance failure.
