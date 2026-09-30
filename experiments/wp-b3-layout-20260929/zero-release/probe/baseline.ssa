@@ -1,0 +1,73 @@
+export function l $owner(l %ctx, l %slot) {
+@start
+ %v110 =l copy %ctx
+ %v111 =l loadl %slot
+ %v122 =w cnel %v111, 0
+ jnz %v122, @rcgnn121, @rcgdone121
+@rcgnn121
+ %v112 =l sub %v111, 16
+ # myl-rc %v112
+ %v113 =l loadl %v112
+ %v114 =l and %v113, 4611686018427387906
+ %v123 =w cnel %v114, 0
+ jnz %v123, @rcgclear121, @rcgcounted121
+@rcgcounted121
+ %v115 =l sub %v111, 32
+ # myl-rc %v115
+ %v116 =l loadl %v115
+ %v117 =w ceql %v116, 1
+ jnz %v117, @rcglast121, @rcgdec121
+@rcglast121
+ %v118 =l sub %v111, 24
+ # myl-rc %v118
+ %v119 =l loadl %v118
+ %v124 =w cnel %v119, 0
+ jnz %v124, @rcgdec121, @rcgslow121
+@rcgslow121
+ call $boundary_drop(l %v110, l %slot)
+ jmp @rcgdone121
+@rcgdec121
+ %v120 =l sub %v116, 1
+ storel %v120, %v115
+@rcgclear121
+ storel 0, %slot
+@rcgdone121
+ ret 0
+}
+
+export function l $hold(l %ctx, l %slot) {
+@start
+ %v95 =l copy %ctx
+ %v96 =l loadl %slot
+ %v107 =w cnel %v96, 0
+ jnz %v107, @rcgnn106, @rcgdone106
+@rcgnn106
+ %v97 =l sub %v96, 16
+ # myl-rc %v97
+ %v98 =l loadl %v97
+ %v99 =l and %v98, 4611686018427387906
+ %v108 =w cnel %v99, 0
+ jnz %v108, @rcgclear106, @rcgcounted106
+@rcgcounted106
+ %v100 =l sub %v96, 24
+ # myl-rc %v100
+ %v101 =l loadl %v100
+ %v102 =w ceql %v101, 1
+ jnz %v102, @rcglast106, @rcgdec106
+@rcglast106
+ %v103 =l sub %v96, 32
+ # myl-rc %v103
+ %v104 =l loadl %v103
+ %v109 =w cnel %v104, 0
+ jnz %v109, @rcgdec106, @rcgslow106
+@rcgslow106
+ call $boundary_unloan(l %v95, l %slot)
+ jmp @rcgdone106
+@rcgdec106
+ %v105 =l sub %v101, 1
+ storel %v105, %v100
+@rcgclear106
+ storel 0, %slot
+@rcgdone106
+ ret 0
+}
