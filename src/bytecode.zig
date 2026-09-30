@@ -538,6 +538,7 @@ fn validateOpAcquireBuffer(program: Program, ty: @FieldType(@FieldType(Instructi
 fn validateOpMakeRecord(allocator: std.mem.Allocator, program: Program, record: @FieldType(@FieldType(Instruction, "op"), "make_record")) Error!void {
     if (!record.ty.isAggregate() or !validType(record.ty, program)) return error.InternalError;
     if (program.records[record.ty.recordIndex()].shape.resource != null) return error.InternalError;
+    if (record.payload.len != 0 and record.blob != null) return error.InternalError;
     if (record.payload.len != 0) return validateLiteralPayload(program, record);
     // An embedded file is a whole `bytes` or `str` payload with no operands (`EMBED-1`).
     if (record.blob != null) {

@@ -3,6 +3,7 @@ const std = @import("std");
 const compiler = @import("compiler.zig");
 const outputs = @import("qbe_build_outputs.zig");
 const native = @import("native_execute.zig");
+const bytecode = @import("bytecode.zig");
 const t = std.testing;
 
 fn listSource(allocator: std.mem.Allocator, ty: []const u8, value: []const u8, count: usize) ![]u8 {
@@ -220,6 +221,23 @@ test "LIST-LITERAL-PAYLOAD-1 malformed stride and boolean payloads fail the byte
         const op = &@constCast(c.code.?.functions[@backingInt(c.code.?.main)].scope.instructions)[0].op;
         try t.expect(op.* == .make_record);
         if (std.mem.eql(u8, ty, "bool")) @constCast(op.make_record.payload)[0] = 2 else op.make_record.payload = op.make_record.payload[0 .. op.make_record.payload.len - 1];
-        try t.expectError(error.InternalError, @import("bytecode.zig").validate(t.allocator, c.code.?));
+        try t.expectError(error.InternalError, bytecode.validate(t.allocator, c.code.?));
+    }
+}
+
+// spec-case: LIST-LITERAL-PAYLOAD-1
+test "LIST-LITERAL-PAYLOAD-1 a packed list rejects competing embedded blob authority" {
+    for ([_][]const u8{ "int", "str", "bytes" }, [_][]const u8{ "17", "\"é\"", "b\"x\"" }) |ty, value| {
+        const source = try listSource(t.allocator, ty, value, 64);
+        defer t.allocator.free(source);
+        var c = try compiler.Compilation.init(t.allocator, "list_blob_conflict.my", source);
+        defer c.deinit();
+        try c.emit();
+        try bytecode.validate(t.allocator, c.code.?);
+        const op = &@constCast(c.code.?.functions[@backingInt(c.code.?.main)].scope.instructions)[0].op;
+        try t.expect(op.* == .make_record and op.make_record.payload.len != 0);
+        const blob: @import("typed.zig").Blob = .{ .digest = @splat(0), .length = op.make_record.payload.len };
+        op.make_record.blob = &blob;
+        try t.expectError(error.InternalError, bytecode.validate(t.allocator, c.code.?));
     }
 }
