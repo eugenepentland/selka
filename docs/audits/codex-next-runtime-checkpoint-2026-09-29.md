@@ -369,3 +369,32 @@ SSA, assembly, drivers, logs and 789-source-file hash receipts are retained in
 files were verified against the independent manifests. A separate pre-store
 overflow-check prototype is being evaluated for the remaining performance
 rows; no final ABI5 or Phase B performance acceptance is claimed.
+
+
+## Module-key equality and unchanged state
+
+Module follow-up `a06ed822` hashes parameter-write flags only for allocation-free
+callees, where the emitter actually reads them. Allocating calls retain
+conservative imported host facts and all explicit mutation/effect authority.
+The fragment encoding advances to v3. This removes six schematic key-only
+differences without treating an empty host body as readonly. Its focused key
+checks pass 12/12.
+
+Follow-up `573ce9a4`, integrated at `aa454bc2`, avoids publishing identical
+module state. It requires matching saved headers, row sets/order/cardinality
+and complete row equality while both own/shared-standard locks remain held.
+Fresh source/embed capture and current capability/policy/budget checks run
+first; a zero compilation counter alone grants no skip. Removal, reordered
+rows, missing state and changed shared headers retain normal publication.
+
+The lane reports 246/246 focused entries, a 16-stage CLI state matrix and five
+strict project fixtures with unchanged warm state bytes/inodes/mtimes. Its
+strict corpus oracle now matches keys, IL, metadata and binaries for all 29
+distinct programs (43 rows, 62 modules, 664 units, 62 interfaces), with zero
+reference failures. These lane checks use its approved-base ABI3 runtime;
+combined ABI5 corpus/oracle verification remains required. Independent frozen
+source inspection found no false-positive state skip; the exact receipt and
+reviewed source are in `evidence/codex-next-runtime-20260929/module-state-review/`.
+It is source-review evidence, not an independent execution or timing result.
+The earlier paired a3 check sample retained a 13 ms no-op regression despite
+about 80% edited-check gains; final paired timings of the new source are pending.
