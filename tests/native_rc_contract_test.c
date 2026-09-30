@@ -14,11 +14,11 @@
 typedef struct { size_t live, retired, allocations; unsigned finalizing, max_finalizing; void *expect_unpinned; } TestAllocator;
 static myl_rc_status allocate(myl_native_heap *heap, const myl_rc_alloc_request *request, void **out) {
     assert(!request->region);
-    size_t bytes = 8 + MYL_RC_PREFIX_BYTES + request->element->size * request->count;
+    size_t bytes = MYL_RC_PREFIX_BYTES + request->element->size * request->count;
     if (heap->limit && bytes > heap->limit - heap->bytes) return MYL_RC_ALLOCATION_REFUSED;
     unsigned char *reservation = calloc(1, bytes);
     if (!reservation) return MYL_RC_ALLOCATION_REFUSED;
-    myl_rc_object *object = (myl_rc_object *)(reservation + 8);
+    myl_rc_object *object = (myl_rc_object *)reservation;
     object->owners = 1;
     object->common.mark = request->count << MYL_NATIVE_OBJECT_COUNT_SHIFT;
     object->common.element = request->element;
@@ -33,11 +33,11 @@ static void retire(myl_native_heap *heap, void *payload) {
     myl_rc_object *object = (myl_rc_object *)payload - 1;
     assert(object->common.mark & MYL_RC_OBJECT_DYING);
     size_t count = (object->common.mark & MYL_NATIVE_OBJECT_COUNT_BITS) >> MYL_NATIVE_OBJECT_COUNT_SHIFT;
-    heap->bytes -= 8 + MYL_RC_PREFIX_BYTES + count * object->common.element->size;
+    heap->bytes -= MYL_RC_PREFIX_BYTES + count * object->common.element->size;
     TestAllocator *state = myl_rc_allocator_context(heap);
     --state->live;
     ++state->retired;
-    free((unsigned char *)object - 8);
+    free(object);
 }
 static void destroy(myl_native_heap *heap) {
     TestAllocator *state = myl_rc_allocator_context(heap);

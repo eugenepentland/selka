@@ -1,0 +1,210 @@
+{
+ "compiler": {
+  "compiler": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-runtime-wide-counts-20260930/.tmp/wide/bin/mylang",
+  "runtime": "--rc-runtime",
+  "sha256": "ad246f743ee32235a7c325c751927c20512ba6c5a5671dfe7df9980c7da6b45a"
+ },
+ "failures": [],
+ "rows": [
+  {
+   "arm": "qbe",
+   "gc": 218918502,
+   "id": "lox/vm/binary_trees",
+   "ratio": 1.2056599035197126,
+   "rc": 263941260
+  },
+  {
+   "arm": "llvm",
+   "gc": 100266403,
+   "id": "lox/vm/binary_trees",
+   "ratio": 1.2576093808810513,
+   "rc": 126095969
+  },
+  {
+   "arm": "qbe",
+   "gc": 52797761,
+   "id": "lox/vm/closures",
+   "ratio": 1.2732546366880975,
+   "rc": 67224994
+  },
+  {
+   "arm": "llvm",
+   "gc": 22991680,
+   "id": "lox/vm/closures",
+   "ratio": 1.3727802839983856,
+   "rc": 31562525
+  },
+  {
+   "arm": "qbe",
+   "gc": 36885922,
+   "id": "lox/vm/equality",
+   "ratio": 1.0334296916856247,
+   "rc": 38119007
+  },
+  {
+   "arm": "llvm",
+   "gc": 13961308,
+   "id": "lox/vm/equality",
+   "ratio": 1.3196922523305123,
+   "rc": 18424630
+  },
+  {
+   "arm": "qbe",
+   "gc": 11508502,
+   "id": "lox/vm/fib",
+   "ratio": 1.2369852305712767,
+   "rc": 14235847
+  },
+  {
+   "arm": "llvm",
+   "gc": 4830968,
+   "id": "lox/vm/fib",
+   "ratio": 1.3248671901780347,
+   "rc": 6400391
+  },
+  {
+   "arm": "qbe",
+   "gc": 142991035,
+   "id": "lox/vm/instantiation",
+   "ratio": 1.3369266681648957,
+   "rc": 191168528
+  },
+  {
+   "arm": "llvm",
+   "gc": 73399018,
+   "id": "lox/vm/instantiation",
+   "ratio": 1.3105918392532172,
+   "rc": 96196154
+  },
+  {
+   "arm": "qbe",
+   "gc": 103959544,
+   "id": "lox/vm/invocation",
+   "ratio": 1.3577573022059428,
+   "rc": 141151830
+  },
+  {
+   "arm": "llvm",
+   "gc": 44669573,
+   "id": "lox/vm/invocation",
+   "ratio": 1.5010924326498487,
+   "rc": 67053158
+  },
+  {
+   "arm": "qbe",
+   "gc": 296147477,
+   "id": "lox/vm/method_call",
+   "ratio": 1.2260748552654392,
+   "rc": 363098975
+  },
+  {
+   "arm": "llvm",
+   "gc": 121971843,
+   "id": "lox/vm/method_call",
+   "ratio": 1.3267753197760568,
+   "rc": 161829231
+  },
+  {
+   "arm": "qbe",
+   "gc": 136983497,
+   "id": "lox/vm/properties",
+   "ratio": 1.3925431835047983,
+   "rc": 190755435
+  },
+  {
+   "arm": "llvm",
+   "gc": 60112356,
+   "id": "lox/vm/properties",
+   "ratio": 1.5923492168565145,
+   "rc": 95719863
+  },
+  {
+   "arm": "qbe",
+   "gc": 238683771,
+   "id": "lox/vm/string_equality",
+   "ratio": 1.3995177493655402,
+   "rc": 334042174
+  },
+  {
+   "arm": "llvm",
+   "gc": 84402654,
+   "id": "lox/vm/string_equality",
+   "ratio": 2.4349433016644237,
+   "rc": 205515677
+  },
+  {
+   "arm": "qbe",
+   "gc": 28789601,
+   "id": "lox/vm/strings",
+   "ratio": 0.9743245833799503,
+   "rc": 28050416
+  },
+  {
+   "arm": "llvm",
+   "gc": 14613993,
+   "id": "lox/vm/strings",
+   "ratio": 0.9312193457325455,
+   "rc": 13608833
+  },
+  {
+   "arm": "qbe",
+   "gc": 17843241,
+   "id": "lox/vm/trees",
+   "ratio": 1.5375693799125394,
+   "rc": 27435221
+  },
+  {
+   "arm": "llvm",
+   "gc": 8803044,
+   "id": "lox/vm/trees",
+   "ratio": 1.784214414922838,
+   "rc": 15706518
+  },
+  {
+   "arm": "qbe",
+   "gc": 35123395,
+   "id": "lox/vm/zoo",
+   "ratio": 1.2830208184601746,
+   "rc": 45064047
+  },
+  {
+   "arm": "llvm",
+   "gc": 15507222,
+   "id": "lox/vm/zoo",
+   "ratio": 1.3884844106829708,
+   "rc": 21531536
+  },
+  {
+   "arm": "qbe",
+   "gc": 690665169,
+   "id": "lox/vm/zoo_batch",
+   "ratio": 1.160302499632785,
+   "rc": 801380522
+  },
+  {
+   "arm": "llvm",
+   "gc": 290956543,
+   "id": "lox/vm/zoo_batch",
+   "ratio": 1.1728548067056186,
+   "rc": 341249780
+  }
+ ],
+ "size": "smoke",
+ "summary": {
+  "llvm": {
+   "geomean": 1.4043738535596126,
+   "geomean_nonlox": NaN,
+   "rows": 13,
+   "within_1_3": 3,
+   "worst": 2.4349433016644237
+  },
+  "qbe": {
+   "geomean": 1.2541098774115087,
+   "geomean_nonlox": NaN,
+   "rows": 13,
+   "within_1_3": 8,
+   "worst": 1.5375693799125394
+  }
+ },
+ "tag": "wide"
+}

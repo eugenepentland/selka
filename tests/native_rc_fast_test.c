@@ -387,7 +387,7 @@ static void storage_visit_and_release_all(void) {
      * reusing a released slab range (64 KiB aligned) from the spare list. */
     void *again = myl_native_heap_alloc(&heap, &outer, 1);
     assert(again && myl_rc_binding_find(&heap, &outer));
-    assert(!(((uintptr_t)again - MYL_RC_PREFIX_BYTES - 88) & 0xffff));
+    assert(!(((uintptr_t)again - MYL_RC_PREFIX_BYTES - 80) & 0xffff));
     myl_rc_owner_release(&heap, again);
     finish(&heap);
 }
@@ -737,17 +737,17 @@ static void allocation_cache_reuse(void) {
     void *values[64];
     for (size_t i = 0; i < 64; ++i) values[i] = bytes8(&heap);
     for (size_t i = 0; i < 64; ++i) myl_rc_owner_release(&heap, values[i]);
-    assert(heap.rc_cache.free[1]);
+    assert(heap.rc_cache.free[2]);
     size_t reserved = myl_rc_storage_reserved(&heap);
     heap.limit = heap.bytes + 1024;
     void *large = myl_rc_storage_bytes(&heap, 16384, 0);
-    assert(large && !heap.rc_cache.free[1] && !heap.rc_cache.pushed);
+    assert(large && !heap.rc_cache.free[2] && !heap.rc_cache.pushed);
     assert(myl_rc_storage_reserved(&heap) < reserved + 16384);
     myl_rc_owner_release(&heap, large);
     heap.limit = 64u << 20;
     /* The class refills from a fresh slab in address order. */
     void *fresh = bytes8(&heap);
-    assert(fresh && !(((uintptr_t)fresh - MYL_RC_PREFIX_BYTES - 88) & 0xffff));
+    assert(fresh && !(((uintptr_t)fresh - MYL_RC_PREFIX_BYTES - 80) & 0xffff));
     myl_rc_owner_release(&heap, fresh);
     finish(&heap);
 }
@@ -847,14 +847,14 @@ static void drain_pairs_keep_counts_exact(void) {
     assert(myl_rc_stats_snapshot(&heap, &before));
     size_t pushed = heap.rc_cache.pushed;
     /* 65 nodes and the 32 extents of their bottom nodes die, alternating
-     * types within one drain; node slots are 64 bytes and leaf slots 48. */
+     * types within one drain; node and leaf slots are both 48 bytes. */
     myl_rc_owner_release(&heap, root);
     assert(!heap.rc->dead.head && !heap.rc->dead.active);
     assert(heap.objects_live == live + 95 && header(leaf)->owners == 33);
     assert(header(kept)->owners == 1 && !header(held)->owners && header(held)->holds == 1);
     assert(myl_rc_stats_snapshot(&heap, &after));
     assert(after.events[MYL_RC_STAT_RETIRE] == before.events[MYL_RC_STAT_RETIRE] + 97);
-    assert(heap.rc_cache.pushed == pushed + 65 * 64 + 32 * 48);
+    assert(heap.rc_cache.pushed == pushed + 65 * 48 + 32 * 48);
     myl_rc_hold_release(&heap, &hold);
     assert(heap.objects_live == live + 48 && header(leaf)->owners == 17);
     myl_rc_owner_release(&heap, kept);
