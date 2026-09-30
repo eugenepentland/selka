@@ -74,12 +74,42 @@ EDITS = [
      "import driver\n", "import driver\nimport value\n"),
     ("value-body", "body of the function taken as a value", "value.my",
      "    return values[0] % 3\n", "    return values[0] % 5\n"),
+    # Interface-level cutoff (MODULE-INTERFACE-CUTOFF-1..3).
+    ("hazard-add", "add public value.count, a name other modules use for locals and fields", "value.my", None,
+     "\npublic def count(n: int) -> int:\n    values: list[int] = [n]\n    return len(values)\n"),
+    ("unused-public-add", "add a public function nobody calls (table.probe_unused)", "table.my", None,
+     "\npublic def probe_unused(n: int) -> int:\n    values: list[int] = [n]\n    return len(values)\n"),
+    ("unused-public-remove", "remove that public function", "table.my",
+     "\npublic def probe_unused(n: int) -> int:\n    values: list[int] = [n]\n    return len(values)\n", ""),
+    ("unused-signature", "signature change of a public function nobody calls (value.count)", "value.my",
+     "public def count(n: int) -> int:\n    values: list[int] = [n]\n",
+     "public def count(n: int, m: int = 0) -> int:\n    values: list[int] = [n + m]\n"),
+    ("field-rename", "rename a record field nobody reads (chunk.Chunk.spare)", "chunk.my",
+     "    spare: int = 0\n", "    spare_slot: int = 0\n"),
+    ("constant-unused-add", "add a public constant nobody reads", "chunk.my", None,
+     "\npublic const PROBE_LIMIT: int = 1\n"),
+    ("constant-unused", "change that constant", "chunk.my",
+     "public const PROBE_LIMIT: int = 1\n", "public const PROBE_LIMIT: int = 2\n"),
+    ("template-add", "add a generic template to value", "value.my", None,
+     "\npublic def probe_first[T: integer](items: list[T]) -> T:\n    return items[0]\n"),
+    ("template-use", "table.new_table instantiates it", "table.my",
+     "    return Table(entries=[], count=0)\n", "    return Table(entries=[], count=value.probe_first([0]))\n"),
+    ("template-body", "generic template body edit", "value.my",
+     "    return items[0]\n", "    return items[len(items) - 1]\n"),
+    ("facade-add", "a facade module re-exporting value.is_falsey", "facade.my", None,
+     "module facade\nimport value\nexport value.is_falsey\n"),
+    ("facade-use-import", "(main imports it)", "main.my", "import value\n", "import value\nimport facade\n"),
+    ("facade-use", "main calls through the facade", "main.my",
+     "    if len(paths) != 1:\n", "    _ = facade.is_falsey(value.Value.nil)\n    if len(paths) != 1:\n"),
+    ("facade-chain", "the facade re-exports one more name", "facade.my", None, "export value.values_equal\n"),
+    ("facade-target-body", "body of the re-exported inlined function (is_falsey)", "value.my",
+     "            return not flag\n", "            return flag == False\n"),
     ("noop", "no edit at all", None, None, None),
 ]
 
 # Edits whose file text is only half of one logical change: the build runs
 # after the second half.
-PAIRED = {"private-helper-add", "value-use"}
+PAIRED = {"private-helper-add", "value-use", "template-add", "facade-add", "facade-use-import"}
 
 
 def apply(project, edit):
@@ -87,8 +117,10 @@ def apply(project, edit):
     if path is None:
         return
     full = os.path.join(project, path)
-    with open(full) as handle:
-        text = handle.read()
+    text = ""
+    if old is not None or os.path.exists(full):
+        with open(full) as handle:
+            text = handle.read()
     if old is None:
         text += new
     else:

@@ -1,0 +1,279 @@
+{
+ "compiler": "/home/epentland/ai/canopy/mylang-worktrees/claude-tool-gaps/.tmp/rf-lane1/bin/mylang",
+ "gc_runtime": false,
+ "rows": [
+  {
+   "edit": "cold",
+   "kind": "first build",
+   "matched": true,
+   "compiled": 18,
+   "modules": 18,
+   "seconds": 5.28
+  },
+  {
+   "edit": "private-add",
+   "kind": "add a private function to the leaf",
+   "matched": true,
+   "compiled": 1,
+   "modules": 18,
+   "seconds": 0.07
+  },
+  {
+   "edit": "private-body",
+   "kind": "body of a private function nobody reaches",
+   "matched": true,
+   "compiled": 1,
+   "modules": 18,
+   "seconds": 0.06
+  },
+  {
+   "edit": "private-mid-add",
+   "kind": "add a private function mid-file",
+   "matched": true,
+   "compiled": 3,
+   "modules": 18,
+   "seconds": 0.128
+  },
+  {
+   "edit": "private-mid-body",
+   "kind": "mid-file private body, same line count",
+   "matched": true,
+   "compiled": 1,
+   "modules": 18,
+   "seconds": 0.07
+  },
+  {
+   "edit": "private-mid-lines",
+   "kind": "mid-file private body, one line longer",
+   "matched": true,
+   "compiled": 2,
+   "modules": 18,
+   "seconds": 0.281
+  },
+  {
+   "edit": "private-helper-add-def",
+   "kind": "(the helper itself)",
+   "matched": true,
+   "compiled": 7,
+   "modules": 18,
+   "seconds": 1.147
+  },
+  {
+   "edit": "private-helper-body",
+   "kind": "body of a private helper a public function reaches",
+   "matched": true,
+   "compiled": 7,
+   "modules": 18,
+   "seconds": 0.26
+  },
+  {
+   "edit": "public-body",
+   "kind": "public non-inlined body (format_number)",
+   "matched": true,
+   "compiled": 7,
+   "modules": 18,
+   "seconds": 0.195
+  },
+  {
+   "edit": "public-inlined",
+   "kind": "small public function inlined into callers (values_equal)",
+   "matched": true,
+   "compiled": 16,
+   "modules": 18,
+   "seconds": 1.079
+  },
+  {
+   "edit": "signature",
+   "kind": "signature change (table.capacity gains a defaulted parameter)",
+   "matched": true,
+   "compiled": 13,
+   "modules": 18,
+   "seconds": 0.254
+  },
+  {
+   "edit": "public-add",
+   "kind": "add a public function",
+   "matched": true,
+   "compiled": 16,
+   "modules": 18,
+   "seconds": 0.687
+  },
+  {
+   "edit": "public-remove",
+   "kind": "remove that public function",
+   "matched": true,
+   "compiled": 16,
+   "modules": 18,
+   "seconds": 0.637
+  },
+  {
+   "edit": "record-field",
+   "kind": "record field added (chunk.Chunk)",
+   "matched": true,
+   "compiled": 13,
+   "modules": 18,
+   "seconds": 3.212
+  },
+  {
+   "edit": "constant",
+   "kind": "public constant changed (chunk.OP_METHOD)",
+   "matched": true,
+   "compiled": 13,
+   "modules": 18,
+   "seconds": 1.051
+  },
+  {
+   "edit": "rc-facts",
+   "kind": "function starts allocating (table.capacity)",
+   "matched": true,
+   "compiled": 13,
+   "modules": 18,
+   "seconds": 0.346
+  },
+  {
+   "edit": "table-private-reached",
+   "kind": "private helper its callers reach (table.find_entry)",
+   "matched": true,
+   "compiled": 10,
+   "modules": 18,
+   "seconds": 0.254
+  },
+  {
+   "edit": "private-starts-allocating",
+   "kind": "a reached private helper starts allocating (table.is_tombstone)",
+   "matched": true,
+   "compiled": 13,
+   "modules": 18,
+   "seconds": 0.34
+  },
+  {
+   "edit": "value-add",
+   "kind": "add a public function taken as a value",
+   "matched": true,
+   "compiled": 16,
+   "modules": 18,
+   "seconds": 2.075
+  },
+  {
+   "edit": "value-use-import",
+   "kind": "(the entry imports value)",
+   "matched": true,
+   "compiled": 1,
+   "modules": 18,
+   "seconds": 2.113
+  },
+  {
+   "edit": "value-body",
+   "kind": "body of the function taken as a value",
+   "matched": true,
+   "compiled": 2,
+   "modules": 18,
+   "seconds": 0.106
+  },
+  {
+   "edit": "hazard-add",
+   "kind": "add public value.count, a name other modules use for locals and fields",
+   "matched": true,
+   "compiled": 16,
+   "modules": 18,
+   "seconds": 0.253
+  },
+  {
+   "edit": "unused-public-add",
+   "kind": "add a public function nobody calls (table.probe_unused)",
+   "matched": true,
+   "compiled": 13,
+   "modules": 18,
+   "seconds": 0.256
+  },
+  {
+   "edit": "unused-public-remove",
+   "kind": "remove that public function",
+   "matched": true,
+   "compiled": 13,
+   "modules": 18,
+   "seconds": 0.249
+  },
+  {
+   "edit": "unused-signature",
+   "kind": "signature change of a public function nobody calls (value.count)",
+   "matched": true,
+   "compiled": 16,
+   "modules": 18,
+   "seconds": 0.247
+  },
+  {
+   "edit": "field-rename",
+   "kind": "rename a record field nobody reads (chunk.Chunk.spare)",
+   "matched": true,
+   "compiled": 13,
+   "modules": 18,
+   "seconds": 1.181
+  },
+  {
+   "edit": "constant-unused-add",
+   "kind": "add a public constant nobody reads",
+   "matched": true,
+   "compiled": 13,
+   "modules": 18,
+   "seconds": 0.236
+  },
+  {
+   "edit": "constant-unused",
+   "kind": "change that constant",
+   "matched": true,
+   "compiled": 13,
+   "modules": 18,
+   "seconds": 0.418
+  },
+  {
+   "edit": "template-use",
+   "kind": "table.new_table instantiates it",
+   "matched": true,
+   "compiled": 16,
+   "modules": 18,
+   "seconds": 0.444
+  },
+  {
+   "edit": "template-body",
+   "kind": "generic template body edit",
+   "matched": true,
+   "compiled": 16,
+   "modules": 18,
+   "seconds": 0.324
+  },
+  {
+   "edit": "facade-use",
+   "kind": "main calls through the facade",
+   "matched": true,
+   "compiled": 2,
+   "modules": 19,
+   "seconds": 2.324
+  },
+  {
+   "edit": "facade-chain",
+   "kind": "the facade re-exports one more name",
+   "matched": true,
+   "compiled": 2,
+   "modules": 19,
+   "seconds": 0.08
+  },
+  {
+   "edit": "facade-target-body",
+   "kind": "body of the re-exported inlined function (is_falsey)",
+   "matched": true,
+   "compiled": 17,
+   "modules": 19,
+   "seconds": 0.46
+  },
+  {
+   "edit": "noop",
+   "kind": "no edit at all",
+   "matched": true,
+   "compiled": 0,
+   "modules": 19,
+   "seconds": 0.018
+  }
+ ],
+ "ok": true
+}
