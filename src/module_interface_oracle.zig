@@ -207,6 +207,11 @@ const Parts = struct {
             error.OutOfMemory => return error.OutOfMemory,
             else => return error.SourceError,
         };
+        // MODULE-INTERFACE-CUTOFF-1: every name the check looks up in a
+        // module; the index's own validation above resolves only types.
+        const lookups = try self.project.arena.allocator().create(std.ArrayList(interfaces.Lookup));
+        lookups.* = .empty;
+        self.index.lookups = lookups;
         self.compilation.* = project_compile.Compilation.init(self.index) catch |err| switch (err) {
             error.OutOfMemory => return error.OutOfMemory,
             else => return error.InternalError,

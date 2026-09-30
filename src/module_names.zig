@@ -103,6 +103,7 @@ pub const Names = struct {
             if (!found) return null;
         }
         const unit = self.index.units[module];
+        try self.index.noteLookup(module, qualified.name);
         const id = unit.names.get(qualified.name) orelse return null;
         return .{ .module = module, .symbol = id };
     }

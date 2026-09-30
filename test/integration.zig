@@ -1312,6 +1312,36 @@ test "a signature change no reader uses compiles its own module alone and links 
     try testing.expectEqual(std.process.Child.Term{ .exited = 20 }, ran.term);
 }
 
+// spec: MODULE-INTERFACE-CUTOFF-4
+test "a rename behind a dotted import path compiles and checks its caller again" {
+    var arena_state = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena_state.deinit();
+    const a = arena_state.allocator();
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const directory = try temporary.dir.realPathFileAlloc(testing.io, ".", a);
+    try temporary.dir.createDirPath(testing.io, "app");
+    const report = "module app.report\npublic def describe(n: int) -> int:\n    values: list[int] = [n]\n    return len(values) + n\n";
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "app/report.my", .data = report });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = "module main\nimport app.report\ndef main() -> int:\n    return app.report.describe(2)\n" });
+    var check_args: std.ArrayList([]const u8) = .empty;
+    try check_args.appendSlice(a, &.{ "check", try std.fs.path.join(a, &.{ directory, "main.my" }), try std.fmt.allocPrint(a, "--cache-dir={s}/check-cache", .{directory}) });
+    const first = try runInterfaces(check_args.items);
+    defer freeRun(first);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, first.term);
+    try testing.expect(builtModules(try projectBuild(a, directory, "prog", "cache", &.{}), "\"module_build\":{\"modules\":2,\"compiled\":2,\"reused\":0"));
+    // `main` names `describe` only as `app.report.describe`.
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "app/report.my", .data = try std.mem.replaceOwned(u8, a, report, "def describe(", "def summarize(") });
+    const checked = try runInterfaces(check_args.items);
+    defer freeRun(checked);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, checked.term);
+    try testing.expect(std.mem.indexOf(u8, checked.stderr, "E_UNKNOWN_SYMBOL") != null);
+    const built = try projectBuild(a, directory, "prog", "cache", &.{});
+    const whole = try projectBuild(a, directory, "whole", "whole-cache", &.{"--whole-program"});
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, built.term);
+    try testing.expectEqualStrings(whole.stderr, built.stderr);
+}
+
 const schedule_generic =
     \\module util
     \\public def largest[T: integer](values: list[T]) -> T:

@@ -336,6 +336,18 @@ const InterfaceStep = struct {
         };
     }
 
+    /// The units whose calls count as the compile's uses: those it emits, or
+    /// for a check that emits nothing, those it would (MODULE-INTERFACE-CUTOFF-1).
+    fn checkedUnits(self: *InterfaceStep, remap: []const ?[]const native_interface.Stretch) Error!Emitted {
+        if (!self.request.check_only) return .{ .code = self.body.code, .emit = self.body.emit, .remap = remap, .own = self.own };
+        const single = self.out.single.?;
+        const compilation = &single.compilation;
+        const code = self.body.lowered[@intFromBool(self.request.config.drop_debug)];
+        const modules = compilation.index.project.modules.items;
+        const emit = try emitted(self.arena, .{ .compilation = compilation, .program = compilation.program.?, .code = code, .own = modules[self.own].name, .is_entry = self.request.module.is_entry });
+        return .{ .code = code, .emit = emit, .remap = remap, .own = self.own };
+    }
+
     /// Build the module's interface, with its emission section from `facts`,
     /// and its hashes.
     fn finish(self: *InterfaceStep, facts: fragments.Report) Error!void {
@@ -386,7 +398,7 @@ const InterfaceStep = struct {
                 .placed = placed,
                 .physical = self.body.dependencies,
                 .reach = reached,
-                .uses = try usesOf(arena, compilation, .{ .code = self.body.code, .emit = self.body.emit, .remap = remap, .own = self.own }, built.uses),
+                .uses = try usesOf(arena, compilation, try self.checkedUnits(remap), built.uses),
             }),
             .reach = reached,
         };
@@ -518,7 +530,10 @@ const Read = struct { library: *oracle.Library, modules: []const project.Module,
 /// MODULE-INTERFACE-CUTOFF-1: per module of the compilation, the sorted,
 /// unique identities of the declarations the compile used, and whether it
 /// used one it cannot name.
-const Uses = struct { identities: [][]const []const u8, unmapped: []bool };
+/// `identities` must each be a declaration of their module's interface;
+/// `lookups` are names the check looked up there, found or missing, whose
+/// presence and content must hold as they are.
+const Uses = struct { identities: [][]const []const u8, lookups: [][]const []const u8, unmapped: []bool };
 
 /// The declarations of other modules a compile used: those its own
 /// declarations name (`found`, from the interface builder) and every function
@@ -529,8 +544,29 @@ fn usesOf(allocator: std.mem.Allocator, compilation: *const project_compile.Comp
     const program = compilation.program.?;
     const lists = try allocator.alloc(std.ArrayList([]const u8), modules.len);
     for (lists) |*list| list.* = .empty;
-    const out: Uses = .{ .identities = try allocator.alloc([]const []const u8, modules.len), .unmapped = try allocator.alloc(bool, modules.len) };
+    const out: Uses = .{
+        .identities = try allocator.alloc([]const []const u8, modules.len),
+        .lookups = try allocator.alloc([]const []const u8, modules.len),
+        .unmapped = try allocator.alloc(bool, modules.len),
+    };
     @memset(out.unmapped, false);
+    // Every name the check looked up in another module, as the function
+    // (or domain member) and the type it could name.
+    const looked = try allocator.alloc(std.ArrayList([]const u8), modules.len);
+    for (looked) |*list| list.* = .empty;
+    if (compilation.index.lookups) |recorded| for (recorded.items) |lookup| {
+        if (lookup.module >= modules.len or lookup.module == units.own) continue;
+        const dot = std.mem.lastIndexOfScalar(u8, lookup.name, '.');
+        const owner = if (dot) |at| lookup.name[0..at] else "";
+        const local = if (dot) |at| lookup.name[at + 1 ..] else lookup.name;
+        const key = try std.fmt.allocPrint(allocator, "fn\x1f{s}\x1f{s}\x1f{s}", .{ modules[lookup.module].name, owner, local });
+        try looked[lookup.module].append(allocator, try builder.useIdentity(allocator, .function, key));
+        if (dot == null) try looked[lookup.module].append(allocator, try builder.useIdentity(allocator, .type, lookup.name));
+    };
+    for (looked, out.lookups) |*list, *names| {
+        std.mem.sort([]const u8, list.items, {}, lessText);
+        names.* = symbols.uniqueNames(list.items);
+    }
     for (found) |use| if (use.module < modules.len) try lists[use.module].append(allocator, use.identity);
     const code = units.code;
     const count = @min(units.emit.len, @min(code.functions.len, program.functions.len));
@@ -595,8 +631,12 @@ fn inputsOf(allocator: std.mem.Allocator, read: Read) Error![]const Input {
                 if (symbols.usedFingerprint(interface, identity) == null) break false;
             } else true;
             if (accounted) {
-                cutoff.used = used;
-                cutoff.uses = try hex(allocator, symbols.usesDigest(interface, used));
+                const joined = try allocator.alloc([]const u8, used.len + read.uses.lookups[index].len);
+                @memcpy(joined[0..used.len], used);
+                @memcpy(joined[used.len..], read.uses.lookups[index]);
+                std.mem.sort([]const u8, joined, {}, lessText);
+                cutoff.used = symbols.uniqueNames(joined);
+                cutoff.uses = try hex(allocator, symbols.usesDigest(interface, cutoff.used));
                 cutoff.outline = try hex(allocator, symbols.outlineDigest(interface));
             }
         }

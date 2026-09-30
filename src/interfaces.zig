@@ -113,10 +113,18 @@ const ConstraintLookup = struct {
         };
     }
 };
+/// MODULE-INTERFACE-CUTOFF-1: one name a check looked up in a module's
+/// declaration namespace, found or not.
+pub const Lookup = struct { module: usize, name: []const u8 };
+
 /// Storage belongs to project.arena. Do not retain this index after project.deinit.
 pub const Index = struct {
     project: *graph.Project,
     units: []Unit,
+    /// MODULE-INTERFACE-CUTOFF-1: when set, every name `resolve` (and a
+    /// kind or constant probe) looks up in a module, found or missing, and
+    /// the declaration a re-export resolves to, in project-arena storage.
+    lookups: ?*std.ArrayList(Lookup) = null,
     /// Checked bodies, when the caller has them, so `renderContracts` can publish
     /// each unannotated callable's frozen inferred ceiling instead of demanding
     /// the author retype it. Null during pure interface pre-validation.
@@ -159,6 +167,7 @@ pub const Index = struct {
             }
             if (!found) return self.project.fail(eUnknownImport, "name does not identify a direct import alias", site, null);
         }
+        try self.noteLookup(target, name);
         const symbol_id = self.units[target].names.get(name) orelse {
             const message = if (kind == .function)
                 try self.functionMissMessage(from, target, name)
@@ -174,8 +183,17 @@ pub const Index = struct {
         if (symbol.kind != kind) return self.project.fail(eSymbolKind, "declaration has the wrong kind for this reference", site, declaration);
         // A facade re-export resolves to the declaration that defines it, so the
         // caller sees the defining module's identity and the facade is only a name.
-        if (symbol.re_export) |identity| return identity;
+        if (symbol.re_export) |identity| {
+            try self.noteLookup(identity.module, self.units[identity.module].symbols.items[identity.symbol].name);
+            return identity;
+        }
         return .{ .module = target, .symbol = symbol_id };
+    }
+    /// MODULE-INTERFACE-CUTOFF-1: record one name looked up in module
+    /// `module`'s namespace when a caller asked for the record.
+    pub fn noteLookup(self: *Index, module: usize, name: []const u8) std.mem.Allocator.Error!void {
+        const list = self.lookups orelse return;
+        try list.append(self.project.arena.allocator(), .{ .module = module, .name = name });
     }
     /// Whether module `from` is the test file of module `target`: it is named
     /// `<target>_test` and no module imports it, so it is a test entry and
