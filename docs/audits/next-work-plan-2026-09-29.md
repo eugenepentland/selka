@@ -70,7 +70,17 @@ shows 2–4 million-instruction variation across samples, reproduced in the
 unchanged A5 control. Its cause and a correction with sufficient margin remain
 open; samples are not selected to bypass the limit. All original rows and a new
 explicitly CPU-pinned A5 replay are archived. Final combined acceptance and
-the full corpus/module/runtime gates still remain open. All Phase B changes remain outside main;
+the full corpus/module/runtime gates still remain open. The canonical registered
+collection-release continuation composes at `5347c9c0`: all 58 fresh builds and
+258 output pairs pass; every dev/full row meets 1% against both approved and
+explicitly pinned A5 controls and all dev/full caps pass. Full LLVM text
+operations is now +0.572385%, down from the rejected +1.167106%; smoke has six
+reported diagnostic increases and no new cap miss. Source/native provenance and
+an independent 60-execution UBSan review are green. The original fourteen full
+Zig assertion failures are repaired; stronger SSA/journal oracles and the final
+complete gate remain pending. Details are in
+[wp-b3-registered-release-combined-2026-09-30.md](wp-b3-registered-release-combined-2026-09-30.md).
+All Phase B changes remain outside main;
 its approved tip is `80dd5190`.
 
 Lane receipts are in [python-text-closeout-2026-09-29.md](python-text-closeout-2026-09-29.md),

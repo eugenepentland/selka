@@ -1,0 +1,28 @@
+{
+  "identity": {
+    "source": "5347c9c0d1c63965b687561a11f458c1ecc3361c",
+    "compiler_sha256": "85fcf4408832492a601306f2ed5453595770fbb681081192d26b99935e0fc255",
+    "qbe_sha256": "90e368d62b838c41cd2ba4bc68ec5d33843ebc661014d2ad40c835dded900d95",
+    "scope": "Combined58binary/258output performance check; finalfullgate remains required"
+  },
+  "acceptance": "preliminary performance checks pass; final integration gate still required",
+  "coverage": {
+    "dev": 86,
+    "smoke": 86,
+    "full": 86
+  },
+  "measurement_cpus": "2,3,10,11",
+  "observations_per_row": 1,
+  "sha256": {
+    ".tmp/phase-b-registered-release-combined/identity.json": "cb0cd818c91f2ef2ca921fb49a02861c78eb0a73ebfea8bf5d8e27defd62ac57",
+    ".tmp/phase-b-registered-release-combined/install.log": "9299494f96414059db59eb0bc48decce85beb6008cc76c20c7fccc17c34be7c3",
+    ".tmp/phase-b-registered-release-combined/corpus-build.log": "c8f436663bc71b33317f9e6e26b4599430e263143bc35eaace7dabaf6f1a1429",
+    ".tmp/phase-b-registered-release-combined/measure-dev.log": "3d2bc85099b1b5a1a818cde3c4ffd88d19df72026d23e46cc730101a9dfbd71f",
+    ".tmp-rc-quick/results-phase-b-registered-release-combined-dev.json": "9485b7032fc151f06233fbc271d496706cca79d28ff736ab756315d8529a2d3b",
+    ".tmp/phase-b-registered-release-combined/measure-smoke.log": "af4716c553e3a91d1b00ebf55fa10af889f9baaee86432b520c35874eb7b64ea",
+    ".tmp-rc-quick/results-phase-b-registered-release-combined-smoke.json": "59d992d019d8a7a7eb1f81026cf78a1e216079743213c0224649f394e88a2af7",
+    ".tmp/phase-b-registered-release-combined/measure-full.log": "040debe6697ca7a6b5d2cf3725c2ba46f5a99f9108c292c1977dab28b3864b66",
+    ".tmp-rc-quick/results-phase-b-registered-release-combined-full.json": "3ce2c15b458cbd55060e95e89060517a6f598abf099c44a510f91ac8ca2d4c32",
+    ".tmp/phase-b-registered-release-combined/comparison.json": "96e656e6bbf2d85a18232ce29992feff20fb73ecfe64f70546dc4cea7b45810d"
+  }
+}
