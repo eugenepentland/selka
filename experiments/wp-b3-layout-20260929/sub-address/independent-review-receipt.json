@@ -1,0 +1,194 @@
+{
+  "source": "ae291a848bc2758310e25fef52456734bef4f008",
+  "scope": "independent source review and native original323 plus additional784 memory/alias/address cases; no broad gate or timing",
+  "sides": {
+    "control": [
+      {
+        "family": "probe",
+        "command": [
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/.tmp/phase-b-targeted-combined/compiler/bin/qbe",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/.tmp/qbe-sub-address-independent/control/probe.s",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/.tmp/qbe-sub-address-independent/probe.ssa"
+        ],
+        "status": 0,
+        "stdout": ""
+      },
+      {
+        "family": "probe",
+        "command": [
+          "zig",
+          "cc",
+          "-std=c11",
+          "-O2",
+          "-UNDEBUG",
+          "-fsanitize=undefined",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/.tmp/qbe-sub-address-independent/probe.c",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/.tmp/qbe-sub-address-independent/control/probe.s",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/.tmp/qbe-sub-address-independent/control/probe"
+        ],
+        "status": 0,
+        "stdout": ""
+      },
+      {
+        "family": "probe",
+        "command": [
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/.tmp/qbe-sub-address-independent/control/probe"
+        ],
+        "status": 0,
+        "stdout": "sub address probes: 323 cases passed\n"
+      },
+      {
+        "family": "independent",
+        "command": [
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/.tmp/phase-b-targeted-combined/compiler/bin/qbe",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/.tmp/qbe-sub-address-independent/control/independent.s",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/.tmp/qbe-sub-address-independent/independent.ssa"
+        ],
+        "status": 0,
+        "stdout": ""
+      },
+      {
+        "family": "independent",
+        "command": [
+          "zig",
+          "cc",
+          "-std=c11",
+          "-O2",
+          "-UNDEBUG",
+          "-fsanitize=undefined",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/.tmp/qbe-sub-address-independent/independent.c",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/.tmp/qbe-sub-address-independent/control/independent.s",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/.tmp/qbe-sub-address-independent/control/independent"
+        ],
+        "status": 0,
+        "stdout": ""
+      },
+      {
+        "family": "independent",
+        "command": [
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/.tmp/qbe-sub-address-independent/control/independent"
+        ],
+        "status": 0,
+        "stdout": "independent address probes: 784 cases passed\n"
+      }
+    ],
+    "candidate": [
+      {
+        "family": "probe",
+        "command": [
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-next-qbe-sub-address-20260930/.tmp/sub-address/compiler/bin/qbe",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/.tmp/qbe-sub-address-independent/candidate/probe.s",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/.tmp/qbe-sub-address-independent/probe.ssa"
+        ],
+        "status": 0,
+        "stdout": ""
+      },
+      {
+        "family": "probe",
+        "command": [
+          "zig",
+          "cc",
+          "-std=c11",
+          "-O2",
+          "-UNDEBUG",
+          "-fsanitize=undefined",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/.tmp/qbe-sub-address-independent/probe.c",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/.tmp/qbe-sub-address-independent/candidate/probe.s",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/.tmp/qbe-sub-address-independent/candidate/probe"
+        ],
+        "status": 0,
+        "stdout": ""
+      },
+      {
+        "family": "probe",
+        "command": [
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/.tmp/qbe-sub-address-independent/candidate/probe"
+        ],
+        "status": 0,
+        "stdout": "sub address probes: 323 cases passed\n"
+      },
+      {
+        "family": "independent",
+        "command": [
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-next-qbe-sub-address-20260930/.tmp/sub-address/compiler/bin/qbe",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/.tmp/qbe-sub-address-independent/candidate/independent.s",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/.tmp/qbe-sub-address-independent/independent.ssa"
+        ],
+        "status": 0,
+        "stdout": ""
+      },
+      {
+        "family": "independent",
+        "command": [
+          "zig",
+          "cc",
+          "-std=c11",
+          "-O2",
+          "-UNDEBUG",
+          "-fsanitize=undefined",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/.tmp/qbe-sub-address-independent/independent.c",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/.tmp/qbe-sub-address-independent/candidate/independent.s",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/.tmp/qbe-sub-address-independent/candidate/independent"
+        ],
+        "status": 0,
+        "stdout": ""
+      },
+      {
+        "family": "independent",
+        "command": [
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/.tmp/qbe-sub-address-independent/candidate/independent"
+        ],
+        "status": 0,
+        "stdout": "independent address probes: 784 cases passed\n"
+      }
+    ]
+  },
+  "artifact_sha256": {
+    "probe.ssa": "c73463eff5d514d625bcd631d22a9cab1e48728c28d5cbdbe0b00cfc933200d1",
+    "probe.c": "7c59d307dbce201251f550eba7236a70cffc3f51502489b4311360af5493c951",
+    "run.py": "7498e3b1c6811972f3b3501a38c08875187252b803229146229ad78dacfaa1a8",
+    "independent.ssa": "c47ba37b053bcbc010f165ed8a2f85289ed7e1e58a49aac2c5c2efec9c9afb0d",
+    "independent.c": "d9c30228e85fd326433c6a1400396b95c8c398fe046366d9d2464000fd26dd9d",
+    "run.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "control/probe-1.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "control/independent-0.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "control/probe": "260d13eb55aa78b6ce5cc048cffbba4a12ae2cdcc69555d5651f090fe747466b",
+    "control/probe.s": "5faaf35a2df3f46cefa2f75caf7a7e20fe043b3cfa81c71d415cbd6664e257e1",
+    "control/independent-2.stdout": "b29b9c58d9e5b953dd6adfa22967bcecdc4f68eadb70c3362b6ae8310eaa462b",
+    "control/probe-1.stderr": "de2510ac500b4063c2008dda5173f6c1dc3e047fd58d5343dfcfcdb12785cc4e",
+    "control/independent-1.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "control/probe-0.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "control/probe-0.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "control/independent-2.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "control/independent-1.stderr": "de2510ac500b4063c2008dda5173f6c1dc3e047fd58d5343dfcfcdb12785cc4e",
+    "control/independent": "2d01d24837b800b52880a1d70d88dcddcceb0ae710b78a82e65e994268e99bce",
+    "control/probe-2.stdout": "7cf1462a7f2063082d99733ed0690f31ff92b844ef9bd736f9f6427b37ae2025",
+    "control/probe-2.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "control/independent.s": "73f4ee3f82fae252319d1b258d198e60398965f282b1026ac1b48b0b75175737",
+    "control/independent-0.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "candidate/probe-1.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "candidate/independent-0.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "candidate/probe": "6ad32ad05975692bb7f7b2170ac9d13f257fbf88202be3334e6474c87a4b69f8",
+    "candidate/probe.s": "41d81332835b12f9d36e0e87c5e6d4f0b05a676a2ce970c1ad5e1ad58faa1dcd",
+    "candidate/independent-2.stdout": "b29b9c58d9e5b953dd6adfa22967bcecdc4f68eadb70c3362b6ae8310eaa462b",
+    "candidate/probe-1.stderr": "de2510ac500b4063c2008dda5173f6c1dc3e047fd58d5343dfcfcdb12785cc4e",
+    "candidate/independent-1.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "candidate/probe-0.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "candidate/probe-0.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "candidate/independent-2.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "candidate/independent-1.stderr": "de2510ac500b4063c2008dda5173f6c1dc3e047fd58d5343dfcfcdb12785cc4e",
+    "candidate/independent": "f91b4328312709f46d8d543498f79da2609ecc82f9b4bb1a9a7a3fe753e28d9d",
+    "candidate/probe-2.stdout": "7cf1462a7f2063082d99733ed0690f31ff92b844ef9bd736f9f6427b37ae2025",
+    "candidate/probe-2.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "candidate/independent.s": "9ce77703fc6fd2067765a37c05feace739fbd8b7e52696ee79f6c50c9e4a9c6c",
+    "candidate/independent-0.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+}

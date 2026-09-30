@@ -1,0 +1,16 @@
+{
+  "symbol": "myl_t_702a6d907b417100aec372fbe640be7c932b6dc514fc7e2a91fc18f6ebf00bd0",
+  "original_vm_shared_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/.tmp/lox-qbe-attribution/candidate/cache/modules/5fd2812e6cb610dc328952d8ea41a77cd7102fd778ef5c21b022227ab59fc773/out/vm.shared.json",
+  "original_vm_shared_sha256": "454e48bdde0b40e9d2f0fe7dc6427052e4b7958a581f48d0023b9711e5cbe941",
+  "original_compiler_manifest_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/.tmp/lox-qbe-attribution/candidate/cache/modules/5fd2812e6cb610dc328952d8ea41a77cd7102fd778ef5c21b022227ab59fc773/out/compiler.manifest.json",
+  "original_compiler_manifest_sha256": "1030354786bfa2ecdbf04678604f1934865113d6514bfaa54ea42940a9c080d2",
+  "original_compiler_source_sha256": "c550603195401ff6d9436b42d6fbf0c35051521da57e7b85281fc8fcf6ebe048",
+  "original_report_sha256": "3bdb29be6d8bd6f6f67b1e755cf9a436a6c5cdb19aaad442a89cc040a2905d67",
+  "original_archive_sha256": "c6dcaa7b8c77a12084be76826fcf6e1ac08800e0efe1bea3c875619dcdadd44b",
+  "original_exact_counts_sha256": "cad28199a9f30be80f3e650962168177511dde5d55e5393e50c171eb797eb6af",
+  "size": 392,
+  "direct_fields": 10,
+  "emitted_capacity_edges": 19,
+  "counted_edges_on_profiled_path": 17,
+  "identity_evidence": "compiler::current_chunk has Parser as its source parameter,392-byte argument staging and matching702a glue drop/unloan; field offsets/types match Parser exactly. This is compiler.Parser, not string."
+}
