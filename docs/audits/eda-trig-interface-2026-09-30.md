@@ -1,10 +1,11 @@
 # Native trig module-interface qualification repair
 
 Source checkpoint: `e88fcf3c98d6f0e0090e0719472e1081fb81f119`, following the
-initial native trig implementation `0289edb6`. This is focused compiler
-evidence. The integrator owns the four full compiler gates, installation of
-the committed application pin, and final EDA replay; those were pending when
-this report was written.
+initial native trig implementation `0289edb6`. The four standard broad
+compiler targets now pass on this source, and the committed application pin
+is installed. The focused and broad receipts below retain their separate
+provenance. Additional common-lane checks are collected separately; this
+report does not claim the full 27-step integration or performance matrix.
 
 Importing `math`, even without calling trig, exposed a module-interface
 failure. The new one-operation `sin` and `cos` wrappers were eligible for
@@ -95,3 +96,73 @@ intrinsics need authenticated projection support. That limitation, the
 misleading symbolic type diagnostic, and the hidden module fallback belong
 in the EDA compiler-friction/GAPS handback, separately from the original
 missing native `sin`/`cos` APIs.
+
+The integrator's committed Debug pin is
+`/home/epentland/ai/canopy/eda-bench-wt/mylang-e88fcf3c/bin/mylang`, SHA256
+`6259edca26ea90f93b85037a17b5fc2692505a4e6f4cdd05cca23554b1bb0bcc`.
+The source checkpoint remains `e88fcf3c`; the later `c7d66ee0` checkpoint
+changes only audit/evidence files. The production source, build scripts,
+declared test inputs, and toolchain pin compare equal between them.
+
+The four standard broad targets completed with absolute temp/cache paths:
+
+| Target | Result | Elapsed |
+| --- | --- | --- |
+| `test` | 115/115 steps; 2,806 observed Zig-runner passes, zero runner failures | 1,235.334 s |
+| `test-qbe` | 51/51 steps; 505/505 tests | 119.287 s |
+| `test-qbe-build` | 29/29 steps; its test runner was cached, with no fresh test count | 3.117 s |
+| `fmt-check` | 2/2 steps | 0.267 s |
+
+Each target's recorded process status is zero and its log hash matches the
+integrator's receipt. Installation also reports 12/12 successful steps.
+The `test` Build Summary prints 28,542 sparse registration skips alongside
+2,806 passes; its 31,348 total is not a count of freshly executed tests.
+The 22 observed Guardian test-runner results sum to 2,806 passes and zero
+failures/skips. Default RC and stressed GC guest runs each independently
+report 1,490 fresh passes across 228 programs, with zero cached, failed,
+skipped, or dropped tests. The native-memory script executed successfully;
+the native heap, COW, and arena executables were cached successes.
+
+The previously failing module paths now pass broadly: the check oracle is
+326/326 equal with all 326 using per-module checking and 606 own modules.
+QBE compile comparison is 326/326 equal, 3,795 compared units, 638
+interfaces, and 326 byte-identical executables. The separate release
+comparison covers five fixtures and 185 units; it reports zero identical
+executable files and must not be read as LLVM executable byte equivalence.
+Build and test oracles are also 326/326 equal with zero reference failures;
+the test oracle accounts for 1,505 tests and 97 entries without tests.
+
+Guardian reports 88 successful checks during installation and the broad
+targets that invoke it. These invocations are diff-scoped against approved
+`2c05c41e`: nine of 719 source files for 50 per-file checks, while 38 checks
+read the whole tree. They are distinct from the whole-tree source-commit
+Guardian result above. The retained Guardian ROI summary covers the repair
+session, including two rejected invocations: six known subjects are labeled
+`useful-review`, while remaining advisory subjects stay pending. Central
+feedback is committed at
+`guardian-zig` `9faf6b82a07bf61615161bae27dd794363408c25`.
+
+[Broad receipt](evidence/eda-trig-qualified-20260930/receipt.json) and
+[broad raw archive](evidence/eda-trig-qualified-20260930/raw.tar.gz) retain
+the exact four-target receipt/logs, installation log, launcher, Guardian ROI
+summary, frozen source snapshots, and the read-only merge preview. All 32
+members were verified against lengths and SHA256 hashes; payload total is
+3,124,346 bytes. Archive SHA256 is
+`0d6d81989cdb67f0324053f59a628ce514727b1ac1c567387a4701af0eb52f76`;
+receipt SHA256 is
+`733a06f2a6ba681d2aa8277c6e3108702220c5712a0a46f07e7afae3c5a475a5`.
+The original rejected/focused archive above remains unchanged.
+
+The four broad targets do not invoke the opt-in 100-seed fuzz target, Lox
+project build/tests/driver under default and GC, or full release/stats guest
+sweeps. Those common-lane requirements are being recorded separately rather
+than inferred from the four-target success. The existing default and
+GC-stress sweeps were fresh despite lacking the explicit `--force` flag.
+
+A read-only three-argument `git merge-tree` preview compares this source with
+concurrent main `5041d690693587825015ca0a37e6a533ac605343`, using common base
+`2c05c41e`. Only `SPEC.md` and `test/integration.zig` overlap; their additions
+combine without conflict markers. The branches have diverged, so landing is
+not a fast-forward. The preview changes no branch, index, or worktree and
+does not qualify the combined source; the integrator owns that decision and
+its required verification.
