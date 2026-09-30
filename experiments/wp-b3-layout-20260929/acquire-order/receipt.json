@@ -1,0 +1,78 @@
+{
+  "source_base": "354d9ddd930d8d65a286571a51870f269f01809b",
+  "compiler_sha256": "bd3938aa034cfe9022ce6457ee35ea0d421f16694ef25a5389ddfd51a40e2388",
+  "modes": [
+    "rc",
+    "gc",
+    "stress",
+    "stats",
+    "sites",
+    "llvm-release"
+  ],
+  "guests": [
+    {
+      "file": "acquire-gc-rc_dictionary_views.json",
+      "passed": 6,
+      "executed": 6
+    },
+    {
+      "file": "acquire-gc-rc_glue_values.json",
+      "passed": 7,
+      "executed": 7
+    },
+    {
+      "file": "acquire-llvm-rc_dictionary_views.json",
+      "passed": 6,
+      "executed": 6
+    },
+    {
+      "file": "acquire-llvm-rc_glue_values.json",
+      "passed": 7,
+      "executed": 7
+    },
+    {
+      "file": "acquire-rc-rc_dictionary_views.json",
+      "passed": 6,
+      "executed": 6
+    },
+    {
+      "file": "acquire-rc-rc_glue_values.json",
+      "passed": 7,
+      "executed": 7
+    },
+    {
+      "file": "acquire-sites-rc_dictionary_views.json",
+      "passed": 6,
+      "executed": 6
+    },
+    {
+      "file": "acquire-sites-rc_glue_values.json",
+      "passed": 7,
+      "executed": 7
+    },
+    {
+      "file": "acquire-stats-rc_dictionary_views.json",
+      "passed": 6,
+      "executed": 6
+    },
+    {
+      "file": "acquire-stats-rc_glue_values.json",
+      "passed": 7,
+      "executed": 7
+    },
+    {
+      "file": "acquire-stress-rc_dictionary_views.json",
+      "passed": 6,
+      "executed": 6
+    },
+    {
+      "file": "acquire-stress-rc_glue_values.json",
+      "passed": 7,
+      "executed": 7
+    }
+  ],
+  "actual_generated_c_selected": 13,
+  "glue_unit_selected": 17,
+  "guardian_checks": 88,
+  "acceptance": "focused source checkpoint; performance and combined broad gate pending"
+}
