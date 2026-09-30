@@ -1,0 +1,618 @@
+{
+  "source_commit": "91bb0769e6a9752fdbfe9e9f4c1453d130c5b0fb",
+  "compiler_sha256": "4d8372ac10b607bf2a7fdc06b0886606ee84f4edb2c3489c7a5905e3d001736d",
+  "acceptance": false,
+  "reason": "Combined pre-source-acquisition-order observation. Quantitative limits fail; final source, complete corpus and gate pending.",
+  "protocol": "Frozen binaries; one instruction observation per row, four workers on CPUs2,3,10,11. Candidate dev, fresh A5 dev, fresh A5 smoke, candidate smoke; all measured outputs checked by quick.py against unchanged accepted GC. Not median-of-three.",
+  "sizes": {
+    "dev": {
+      "rows": [
+        {
+          "id": "lox/vm/binary_trees",
+          "backend": "qbe",
+          "control_rc": 1570516277,
+          "candidate_rc": 1571161980,
+          "gc": 1346930780,
+          "rc_gc": 1.1664756669975276,
+          "change_percent": 0.041114059717584084,
+          "over_change_limit": false,
+          "over_gc_cap": false
+        },
+        {
+          "id": "lox/vm/binary_trees",
+          "backend": "llvm",
+          "control_rc": 744867481,
+          "candidate_rc": 742037260,
+          "gc": 636874030,
+          "rc_gc": 1.1651240669995604,
+          "change_percent": -0.37996302324815323,
+          "over_change_limit": false,
+          "over_gc_cap": false
+        },
+        {
+          "id": "lox/vm/closures",
+          "backend": "qbe",
+          "control_rc": 2411957756,
+          "candidate_rc": 2471366444,
+          "gc": 2080040261,
+          "rc_gc": 1.188133946413069,
+          "change_percent": 2.4630899049626676,
+          "over_change_limit": true,
+          "over_gc_cap": false
+        },
+        {
+          "id": "lox/vm/closures",
+          "backend": "llvm",
+          "control_rc": 1037669723,
+          "candidate_rc": 1068662897,
+          "gc": 893617787,
+          "rc_gc": 1.1958836457224638,
+          "change_percent": 2.9868052727216376,
+          "over_change_limit": true,
+          "over_gc_cap": false
+        },
+        {
+          "id": "lox/vm/equality",
+          "backend": "qbe",
+          "control_rc": 1833079848,
+          "candidate_rc": 1834722320,
+          "gc": 2092505457,
+          "rc_gc": 0.8768064684669542,
+          "change_percent": 0.08960177058254803,
+          "over_change_limit": false,
+          "over_gc_cap": false
+        },
+        {
+          "id": "lox/vm/equality",
+          "backend": "llvm",
+          "control_rc": 734894504,
+          "candidate_rc": 729454798,
+          "gc": 755709525,
+          "rc_gc": 0.9652581764137483,
+          "change_percent": -0.7402022971177424,
+          "over_change_limit": false,
+          "over_gc_cap": false
+        },
+        {
+          "id": "lox/vm/fib",
+          "backend": "qbe",
+          "control_rc": 1403825310,
+          "candidate_rc": 1433374331,
+          "gc": 1291424551,
+          "rc_gc": 1.1099172072345092,
+          "change_percent": 2.1048930226226004,
+          "over_change_limit": true,
+          "over_gc_cap": false
+        },
+        {
+          "id": "lox/vm/fib",
+          "backend": "llvm",
+          "control_rc": 539641940,
+          "candidate_rc": 547807370,
+          "gc": 504034316,
+          "rc_gc": 1.0868453845511583,
+          "change_percent": 1.5131199772945747,
+          "over_change_limit": true,
+          "over_gc_cap": false
+        },
+        {
+          "id": "lox/vm/instantiation",
+          "backend": "qbe",
+          "control_rc": 1864273768,
+          "candidate_rc": 1927794070,
+          "gc": 1478121825,
+          "rc_gc": 1.3042186627614405,
+          "change_percent": 3.407241097864344,
+          "over_change_limit": true,
+          "over_gc_cap": true
+        },
+        {
+          "id": "lox/vm/instantiation",
+          "backend": "llvm",
+          "control_rc": 923094769,
+          "candidate_rc": 969365746,
+          "gc": 769156880,
+          "rc_gc": 1.2602965288433745,
+          "change_percent": 5.012592266135996,
+          "over_change_limit": true,
+          "over_gc_cap": false
+        },
+        {
+          "id": "lox/vm/invocation",
+          "backend": "qbe",
+          "control_rc": 3589243442,
+          "candidate_rc": 3695533499,
+          "gc": 3015241394,
+          "rc_gc": 1.225617791780687,
+          "change_percent": 2.9613498977593133,
+          "over_change_limit": true,
+          "over_gc_cap": false
+        },
+        {
+          "id": "lox/vm/invocation",
+          "backend": "llvm",
+          "control_rc": 1483021980,
+          "candidate_rc": 1546465656,
+          "gc": 1271920971,
+          "rc_gc": 1.2158504272353883,
+          "change_percent": 4.277999709754798,
+          "over_change_limit": true,
+          "over_gc_cap": false
+        },
+        {
+          "id": "lox/vm/method_call",
+          "backend": "qbe",
+          "control_rc": 3480343004,
+          "candidate_rc": 3527462778,
+          "gc": 2927364284,
+          "rc_gc": 1.2049961794232233,
+          "change_percent": 1.3538830496259813,
+          "over_change_limit": true,
+          "over_gc_cap": false
+        },
+        {
+          "id": "lox/vm/method_call",
+          "backend": "llvm",
+          "control_rc": 1503785859,
+          "candidate_rc": 1527962815,
+          "gc": 1197322234,
+          "rc_gc": 1.2761500384866318,
+          "change_percent": 1.607739283841747,
+          "over_change_limit": true,
+          "over_gc_cap": false
+        },
+        {
+          "id": "lox/vm/properties",
+          "backend": "qbe",
+          "control_rc": 3115449559,
+          "candidate_rc": 3217058673,
+          "gc": 2629727249,
+          "rc_gc": 1.2233430954572735,
+          "change_percent": 3.261459127350297,
+          "over_change_limit": true,
+          "over_gc_cap": false
+        },
+        {
+          "id": "lox/vm/properties",
+          "backend": "llvm",
+          "control_rc": 1341852140,
+          "candidate_rc": 1405336135,
+          "gc": 1131579718,
+          "rc_gc": 1.2419241107324266,
+          "change_percent": 4.731072307266282,
+          "over_change_limit": true,
+          "over_gc_cap": false
+        },
+        {
+          "id": "lox/vm/string_equality",
+          "backend": "qbe",
+          "control_rc": 1980249817,
+          "candidate_rc": 2010674206,
+          "gc": 2047084101,
+          "rc_gc": 0.9822137766678889,
+          "change_percent": 1.5363914562098957,
+          "over_change_limit": true,
+          "over_gc_cap": false
+        },
+        {
+          "id": "lox/vm/string_equality",
+          "backend": "llvm",
+          "control_rc": 816859752,
+          "candidate_rc": 801855170,
+          "gc": 654167628,
+          "rc_gc": 1.2257640636414984,
+          "change_percent": -1.8368614640717373,
+          "over_change_limit": false,
+          "over_gc_cap": false
+        },
+        {
+          "id": "lox/vm/strings",
+          "backend": "qbe",
+          "control_rc": 1641904195,
+          "candidate_rc": 1372462438,
+          "gc": 1630729342,
+          "rc_gc": 0.841624911413411,
+          "change_percent": -16.410321492600854,
+          "over_change_limit": false,
+          "over_gc_cap": false
+        },
+        {
+          "id": "lox/vm/strings",
+          "backend": "llvm",
+          "control_rc": 848686330,
+          "candidate_rc": 574849788,
+          "gc": 810163458,
+          "rc_gc": 0.7095479095281535,
+          "change_percent": -32.26593057060316,
+          "over_change_limit": false,
+          "over_gc_cap": false
+        },
+        {
+          "id": "lox/vm/trees",
+          "backend": "qbe",
+          "control_rc": 4843947986,
+          "candidate_rc": 4914895518,
+          "gc": 4330050044,
+          "rc_gc": 1.1350666777651681,
+          "change_percent": 1.4646633738647274,
+          "over_change_limit": true,
+          "over_gc_cap": false
+        },
+        {
+          "id": "lox/vm/trees",
+          "backend": "llvm",
+          "control_rc": 2163348805,
+          "candidate_rc": 2197545536,
+          "gc": 1991351428,
+          "rc_gc": 1.1035448113782154,
+          "change_percent": 1.5807312681599628,
+          "over_change_limit": true,
+          "over_gc_cap": false
+        },
+        {
+          "id": "lox/vm/zoo",
+          "backend": "qbe",
+          "control_rc": 3748274622,
+          "candidate_rc": 3851922788,
+          "gc": 3317569054,
+          "rc_gc": 1.1610678558011411,
+          "change_percent": 2.765223374820258,
+          "over_change_limit": true,
+          "over_gc_cap": false
+        },
+        {
+          "id": "lox/vm/zoo",
+          "backend": "llvm",
+          "control_rc": 1573645933,
+          "candidate_rc": 1637389675,
+          "gc": 1418238677,
+          "rc_gc": 1.154523354604579,
+          "change_percent": 4.050704206280953,
+          "over_change_limit": true,
+          "over_gc_cap": false
+        },
+        {
+          "id": "lox/vm/zoo_batch",
+          "backend": "qbe",
+          "control_rc": 3120634745,
+          "candidate_rc": 3201985920,
+          "gc": 2755790384,
+          "rc_gc": 1.1619120012140953,
+          "change_percent": 2.6068791014502324,
+          "over_change_limit": true,
+          "over_gc_cap": false
+        },
+        {
+          "id": "lox/vm/zoo_batch",
+          "backend": "llvm",
+          "control_rc": 1304988568,
+          "candidate_rc": 1350660251,
+          "gc": 1159114479,
+          "rc_gc": 1.1652518154766316,
+          "change_percent": 3.499776482333128,
+          "over_change_limit": true,
+          "over_gc_cap": false
+        }
+      ],
+      "outputs_matched": 26,
+      "over_change_limit": 19,
+      "over_gc_cap": 1,
+      "geomean_change_percent": {
+        "qbe": 0.4490735040311167,
+        "llvm": -1.0113252308624032
+      }
+    },
+    "smoke": {
+      "rows": [
+        {
+          "id": "lox/vm/binary_trees",
+          "backend": "qbe",
+          "control_rc": 266344344,
+          "candidate_rc": 266276628,
+          "gc": 218918513,
+          "rc_gc": 1.2163275930893975,
+          "change_percent": -0.02542423052167564,
+          "over_change_limit": false,
+          "over_gc_cap": false
+        },
+        {
+          "id": "lox/vm/binary_trees",
+          "backend": "llvm",
+          "control_rc": 127737426,
+          "candidate_rc": 127240512,
+          "gc": 100266421,
+          "rc_gc": 1.2690241731077645,
+          "change_percent": -0.38901206604867733,
+          "over_change_limit": false,
+          "over_gc_cap": false
+        },
+        {
+          "id": "lox/vm/closures",
+          "backend": "qbe",
+          "control_rc": 66013763,
+          "candidate_rc": 67591354,
+          "gc": 52797798,
+          "rc_gc": 1.2801926701564335,
+          "change_percent": 2.389791050087542,
+          "over_change_limit": true,
+          "over_gc_cap": false
+        },
+        {
+          "id": "lox/vm/closures",
+          "backend": "llvm",
+          "control_rc": 30602111,
+          "candidate_rc": 31573473,
+          "gc": 22991713,
+          "rc_gc": 1.3732544852138682,
+          "change_percent": 3.1741666449089045,
+          "over_change_limit": true,
+          "over_gc_cap": true
+        },
+        {
+          "id": "lox/vm/equality",
+          "backend": "qbe",
+          "control_rc": 37591291,
+          "candidate_rc": 38171602,
+          "gc": 36885940,
+          "rc_gc": 1.0348550694383822,
+          "change_percent": 1.5437378833304871,
+          "over_change_limit": true,
+          "over_gc_cap": false
+        },
+        {
+          "id": "lox/vm/equality",
+          "backend": "llvm",
+          "control_rc": 17630998,
+          "candidate_rc": 18091546,
+          "gc": 13961339,
+          "rc_gc": 1.2958317250229365,
+          "change_percent": 2.612149351953863,
+          "over_change_limit": true,
+          "over_gc_cap": false
+        },
+        {
+          "id": "lox/vm/fib",
+          "backend": "qbe",
+          "control_rc": 13977265,
+          "candidate_rc": 14268940,
+          "gc": 11508499,
+          "rc_gc": 1.2398610800591807,
+          "change_percent": 2.086781641472779,
+          "over_change_limit": true,
+          "over_gc_cap": false
+        },
+        {
+          "id": "lox/vm/fib",
+          "backend": "llvm",
+          "control_rc": 6243963,
+          "candidate_rc": 6341550,
+          "gc": 4830978,
+          "rc_gc": 1.3126845123285595,
+          "change_percent": 1.5629016379501204,
+          "over_change_limit": true,
+          "over_gc_cap": true
+        },
+        {
+          "id": "lox/vm/instantiation",
+          "backend": "qbe",
+          "control_rc": 189046013,
+          "candidate_rc": 193715228,
+          "gc": 142990097,
+          "rc_gc": 1.3547457625684385,
+          "change_percent": 2.4698828215964586,
+          "over_change_limit": true,
+          "over_gc_cap": true
+        },
+        {
+          "id": "lox/vm/instantiation",
+          "backend": "llvm",
+          "control_rc": 94187921,
+          "candidate_rc": 97705127,
+          "gc": 73398124,
+          "rc_gc": 1.331166543166689,
+          "change_percent": 3.734243162666262,
+          "over_change_limit": true,
+          "over_gc_cap": true
+        },
+        {
+          "id": "lox/vm/invocation",
+          "backend": "qbe",
+          "control_rc": 137341266,
+          "candidate_rc": 141901480,
+          "gc": 103959573,
+          "rc_gc": 1.364967899589199,
+          "change_percent": 3.320352384111569,
+          "over_change_limit": true,
+          "over_gc_cap": true
+        },
+        {
+          "id": "lox/vm/invocation",
+          "backend": "llvm",
+          "control_rc": 63964517,
+          "candidate_rc": 67117250,
+          "gc": 44669599,
+          "rc_gc": 1.5025263602657368,
+          "change_percent": 4.928877990277014,
+          "over_change_limit": true,
+          "over_gc_cap": true
+        },
+        {
+          "id": "lox/vm/method_call",
+          "backend": "qbe",
+          "control_rc": 360305877,
+          "candidate_rc": 366037783,
+          "gc": 296147519,
+          "rc_gc": 1.2359981411831447,
+          "change_percent": 1.5908444368782915,
+          "over_change_limit": true,
+          "over_gc_cap": false
+        },
+        {
+          "id": "lox/vm/method_call",
+          "backend": "llvm",
+          "control_rc": 159681080,
+          "candidate_rc": 163130433,
+          "gc": 121972243,
+          "rc_gc": 1.3374389860158593,
+          "change_percent": 2.160151346671757,
+          "over_change_limit": true,
+          "over_gc_cap": true
+        },
+        {
+          "id": "lox/vm/properties",
+          "backend": "qbe",
+          "control_rc": 185214105,
+          "candidate_rc": 192238723,
+          "gc": 136983544,
+          "rc_gc": 1.4033709260726968,
+          "change_percent": 3.7927014251965208,
+          "over_change_limit": true,
+          "over_gc_cap": true
+        },
+        {
+          "id": "lox/vm/properties",
+          "backend": "llvm",
+          "control_rc": 91138533,
+          "candidate_rc": 96311771,
+          "gc": 60112396,
+          "rc_gc": 1.602194845136434,
+          "change_percent": 5.676235758589621,
+          "over_change_limit": true,
+          "over_gc_cap": true
+        },
+        {
+          "id": "lox/vm/string_equality",
+          "backend": "qbe",
+          "control_rc": 327033034,
+          "candidate_rc": 335755103,
+          "gc": 238595954,
+          "rc_gc": 1.407212056077028,
+          "change_percent": 2.667029961260736,
+          "over_change_limit": true,
+          "over_gc_cap": true
+        },
+        {
+          "id": "lox/vm/string_equality",
+          "backend": "llvm",
+          "control_rc": 198990220,
+          "candidate_rc": 206170757,
+          "gc": 84395463,
+          "rc_gc": 2.442912802077998,
+          "change_percent": 3.6084873919934424,
+          "over_change_limit": true,
+          "over_gc_cap": true
+        },
+        {
+          "id": "lox/vm/strings",
+          "backend": "qbe",
+          "control_rc": 32270592,
+          "candidate_rc": 28203031,
+          "gc": 28789669,
+          "rc_gc": 0.9796233155719852,
+          "change_percent": -12.604544100089644,
+          "over_change_limit": false,
+          "over_gc_cap": false
+        },
+        {
+          "id": "lox/vm/strings",
+          "backend": "llvm",
+          "control_rc": 17717039,
+          "candidate_rc": 13568949,
+          "gc": 14614030,
+          "rc_gc": 0.9284878298457031,
+          "change_percent": -23.412998074904056,
+          "over_change_limit": false,
+          "over_gc_cap": false
+        },
+        {
+          "id": "lox/vm/trees",
+          "backend": "qbe",
+          "control_rc": 26849846,
+          "candidate_rc": 27674694,
+          "gc": 17843248,
+          "rc_gc": 1.5509897077034405,
+          "change_percent": 3.0720772104242178,
+          "over_change_limit": true,
+          "over_gc_cap": true
+        },
+        {
+          "id": "lox/vm/trees",
+          "backend": "llvm",
+          "control_rc": 15063404,
+          "candidate_rc": 15826356,
+          "gc": 8803059,
+          "rc_gc": 1.7978245971088005,
+          "change_percent": 5.064937513459777,
+          "over_change_limit": true,
+          "over_gc_cap": true
+        },
+        {
+          "id": "lox/vm/zoo",
+          "backend": "qbe",
+          "control_rc": 43891157,
+          "candidate_rc": 45371130,
+          "gc": 35123409,
+          "rc_gc": 1.2917632795837102,
+          "change_percent": 3.371916124243435,
+          "over_change_limit": true,
+          "over_gc_cap": false
+        },
+        {
+          "id": "lox/vm/zoo",
+          "backend": "llvm",
+          "control_rc": 20533218,
+          "candidate_rc": 21610090,
+          "gc": 15507249,
+          "rc_gc": 1.393547624082131,
+          "change_percent": 5.244535951451934,
+          "over_change_limit": true,
+          "over_gc_cap": true
+        },
+        {
+          "id": "lox/vm/zoo_batch",
+          "backend": "qbe",
+          "control_rc": 785755520,
+          "candidate_rc": 806506525,
+          "gc": 690665195,
+          "rc_gc": 1.1677242907831775,
+          "change_percent": 2.6408984056516704,
+          "over_change_limit": true,
+          "over_gc_cap": false
+        },
+        {
+          "id": "lox/vm/zoo_batch",
+          "backend": "llvm",
+          "control_rc": 330453408,
+          "candidate_rc": 342284827,
+          "gc": 290956582,
+          "rc_gc": 1.1764120428112534,
+          "change_percent": 3.580359201500505,
+          "over_change_limit": true,
+          "over_gc_cap": false
+        }
+      ],
+      "outputs_matched": 26,
+      "over_change_limit": 22,
+      "over_gc_cap": 14,
+      "geomean_change_percent": {
+        "qbe": 1.1643291959360313,
+        "llvm": 1.0392828456017078
+      }
+    }
+  },
+  "files": {
+    "docs/audits/evidence/codex-next-runtime-20260929/pre-ordering-lox/results-b3-linked-91bb-dev.json": "bb5aad827c1ec329cb0b6c1a04cb7179926a96bc8902aa03a7395c49bec83146",
+    "docs/audits/evidence/codex-next-runtime-20260929/pre-ordering-lox/results-b3-a5-lox-dev.json": "b756b6b793ed20cc41a9c2c0a9d1afc36bae539dce162e9bef9796ddd626bcc9",
+    "docs/audits/evidence/codex-next-runtime-20260929/pre-ordering-lox/results-b3-linked-91bb-smoke.json": "64890ef8acc7fc0c100fcc640b61fb2cb435aae55f8fdcbf7c9ea95783225167",
+    "docs/audits/evidence/codex-next-runtime-20260929/pre-ordering-lox/results-b3-a5-lox-smoke.json": "75f5e4f2f69745df23aa3480fbaeb956b00b69aeb03d326075dbddea026808c9",
+    "docs/audits/evidence/codex-next-runtime-20260929/pre-ordering-lox/measure.log.gz": "b01b7a10c3f1888c299925ffe3d5a8b339dad191b84780dfe5ed5a660725a7c7"
+  },
+  "binary_hashes": {
+    ".tmp-rc-quick/bin/b3-linked-91bb/lox.llvm": "6c97101b7a6be7a928a204d25d7fcb97621fb737b345007dc84d7843221a242b",
+    ".tmp-rc-quick/bin/b3-linked-91bb/lox.qbe": "87f8515de58215cf2f7e58b0ca6eecbee47194204f7fdc51bc9222d9d9c93117",
+    ".tmp-rc-quick/bin/b3-equality-control/lox.llvm": "01b3828e24cc90c650e1b9f039f8cf1c344f5189ac8a00522764c8a210a69433",
+    ".tmp-rc-quick/bin/b3-equality-control/lox.qbe": "1ac42945bc38c49b526145b269c179441fb6cd85e8ab6607552ebe4c54741a40",
+    ".tmp-rc-quick/bin/gc/lox.llvm": "83a0aecef7d9530aec11ebff83cc1149d91afa2495ecab63349c1a9452692c1f",
+    ".tmp-rc-quick/bin/gc/lox.qbe": "11890ca1713981322d67ce9bb534d772a552d7b330982703f55261a11133d3df"
+  }
+}

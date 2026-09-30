@@ -1,0 +1,210 @@
+{
+ "compiler": {
+  "compiler": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/.tmp-rc-quick/compilers/m17-codex/bin/mylang",
+  "runtime": "--rc-runtime",
+  "sha256": "4059a85e3d081f8a73b370e03e7d86cba8eb8a47531bfcdd7c09e6cc109d74b1"
+ },
+ "failures": [],
+ "rows": [
+  {
+   "arm": "qbe",
+   "gc": 1346930780,
+   "id": "lox/vm/binary_trees",
+   "ratio": 1.1659962785912428,
+   "rc": 1570516277
+  },
+  {
+   "arm": "llvm",
+   "gc": 636874030,
+   "id": "lox/vm/binary_trees",
+   "ratio": 1.1695679929043425,
+   "rc": 744867481
+  },
+  {
+   "arm": "qbe",
+   "gc": 2080040261,
+   "id": "lox/vm/closures",
+   "ratio": 1.1595726300222802,
+   "rc": 2411957756
+  },
+  {
+   "arm": "llvm",
+   "gc": 893617787,
+   "id": "lox/vm/closures",
+   "ratio": 1.1612008378700724,
+   "rc": 1037669723
+  },
+  {
+   "arm": "qbe",
+   "gc": 2092505457,
+   "id": "lox/vm/equality",
+   "ratio": 0.8760215376585276,
+   "rc": 1833079848
+  },
+  {
+   "arm": "llvm",
+   "gc": 755709525,
+   "id": "lox/vm/equality",
+   "ratio": 0.9724563204360829,
+   "rc": 734894504
+  },
+  {
+   "arm": "qbe",
+   "gc": 1291424551,
+   "id": "lox/vm/fib",
+   "ratio": 1.0870362569094445,
+   "rc": 1403825310
+  },
+  {
+   "arm": "llvm",
+   "gc": 504034316,
+   "id": "lox/vm/fib",
+   "ratio": 1.0706452375754512,
+   "rc": 539641940
+  },
+  {
+   "arm": "qbe",
+   "gc": 1478121825,
+   "id": "lox/vm/instantiation",
+   "ratio": 1.2612450046192911,
+   "rc": 1864273768
+  },
+  {
+   "arm": "llvm",
+   "gc": 769156880,
+   "id": "lox/vm/instantiation",
+   "ratio": 1.2001384802018542,
+   "rc": 923094769
+  },
+  {
+   "arm": "qbe",
+   "gc": 3015241394,
+   "id": "lox/vm/invocation",
+   "ratio": 1.190366863874382,
+   "rc": 3589243442
+  },
+  {
+   "arm": "llvm",
+   "gc": 1271920971,
+   "id": "lox/vm/invocation",
+   "ratio": 1.1659702244189194,
+   "rc": 1483021980
+  },
+  {
+   "arm": "qbe",
+   "gc": 2927364284,
+   "id": "lox/vm/method_call",
+   "ratio": 1.1888998656649594,
+   "rc": 3480343004
+  },
+  {
+   "arm": "llvm",
+   "gc": 1197322234,
+   "id": "lox/vm/method_call",
+   "ratio": 1.2559575161117404,
+   "rc": 1503785859
+  },
+  {
+   "arm": "qbe",
+   "gc": 2629727249,
+   "id": "lox/vm/properties",
+   "ratio": 1.184704444228847,
+   "rc": 3115449559
+  },
+  {
+   "arm": "llvm",
+   "gc": 1131579718,
+   "id": "lox/vm/properties",
+   "ratio": 1.1858220138229802,
+   "rc": 1341852140
+  },
+  {
+   "arm": "qbe",
+   "gc": 2047084101,
+   "id": "lox/vm/string_equality",
+   "ratio": 0.9673514713111437,
+   "rc": 1980249817
+  },
+  {
+   "arm": "llvm",
+   "gc": 654167628,
+   "id": "lox/vm/string_equality",
+   "ratio": 1.2487009705714145,
+   "rc": 816859752
+  },
+  {
+   "arm": "qbe",
+   "gc": 1630729342,
+   "id": "lox/vm/strings",
+   "ratio": 1.0068526718151123,
+   "rc": 1641904195
+  },
+  {
+   "arm": "llvm",
+   "gc": 810163458,
+   "id": "lox/vm/strings",
+   "ratio": 1.0475495057443087,
+   "rc": 848686330
+  },
+  {
+   "arm": "qbe",
+   "gc": 4330050044,
+   "id": "lox/vm/trees",
+   "ratio": 1.118681755817601,
+   "rc": 4843947986
+  },
+  {
+   "arm": "llvm",
+   "gc": 1991351428,
+   "id": "lox/vm/trees",
+   "ratio": 1.0863721865370315,
+   "rc": 2163348805
+  },
+  {
+   "arm": "qbe",
+   "gc": 3317569054,
+   "id": "lox/vm/zoo",
+   "ratio": 1.1298256527564052,
+   "rc": 3748274622
+  },
+  {
+   "arm": "llvm",
+   "gc": 1418238677,
+   "id": "lox/vm/zoo",
+   "ratio": 1.1095776462173017,
+   "rc": 1573645933
+  },
+  {
+   "arm": "qbe",
+   "gc": 2755790384,
+   "id": "lox/vm/zoo_batch",
+   "ratio": 1.1323919130853604,
+   "rc": 3120634745
+  },
+  {
+   "arm": "llvm",
+   "gc": 1159114479,
+   "id": "lox/vm/zoo_batch",
+   "ratio": 1.1258495960863586,
+   "rc": 1304988568
+  }
+ ],
+ "size": "dev",
+ "summary": {
+  "llvm": {
+   "geomean": 1.1357370880059825,
+   "geomean_nonlox": NaN,
+   "rows": 13,
+   "within_1_3": 13,
+   "worst": 1.2559575161117404
+  },
+  "qbe": {
+   "geomean": 1.108046630554873,
+   "geomean_nonlox": NaN,
+   "rows": 13,
+   "within_1_3": 13,
+   "worst": 1.2612450046192911
+  }
+ },
+ "tag": "b3-equality-control"
+}

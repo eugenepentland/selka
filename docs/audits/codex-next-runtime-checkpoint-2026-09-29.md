@@ -2,8 +2,8 @@
 
 This is a partial WP-B3 checkpoint from approved main `80dd5190`, in the isolated
 `codex/next-runtime-20260929` branch. B3 is still open: implemented checkpoints
-below need combined acceptance; startup image emission, count-layout performance
-and text follow-ups remain.
+below need combined acceptance. Startup image emission and the text follow-ups
+are integrated; count-layout performance and the final frozen gate remain open.
 Nothing from this lane has been merged into main.
 
 ## Equality allocations
@@ -258,3 +258,60 @@ New strong image definitions make this combination link; the separately
 committed assembly-filter fix `354d9ddd` verifies image-free and GC full/ThinLTO
 boundaries, so an emitted image cannot hide the original weak-directive bug.
 The combined scale receipt retains the prior rejected results unchanged.
+
+## Imported artifacts and constructor authority
+
+Independent review at `91bb0769` reproduced three malformed-input defects:
+a packed list could also carry an embedded blob, contradictory signature-only
+dependencies were accepted in interface order, and a decoded physical body could
+carry another function's identity. The wrong identity could grant a false
+readonly certificate by treating a printing-helper call as self recursion;
+the same body with its correct ID receives no certificate. No well-formed
+guest miscompile was reproduced. The four original failing rejection tests,
+minimal source and review are retained in
+`evidence/codex-next-runtime-20260929/artifact-admission-review/`.
+
+Root `4fce2270` rejects simultaneous packed and embedded constructor authority.
+The focused runner passes 22/22 entries, including valid integer/text/bytes
+payload controls followed by rejected blob additions. Module checkpoint
+`96b05480`, integrated at `0801373b`, binds decoded IDs to semantic names and
+compares normalized signatures against both duplicate and original declarations.
+The independent reviewer confirms the original four regressions are corrected,
+but has reproduced one additional conflict: normalization discards an explicit
+`declared_mutates` qualifier. The module lane owns that follow-up; imported
+artifact acceptance remains open until it passes the corrected review.
+
+At `0801373b`, frozen Debug compiler
+`e692c195934c7831937a0d3c95fc756324c0454f25cdab78355309f70c3e8375`
+passes the strict list-image whole/module comparison in RC, GC, stats and sites.
+Each compares two interfaces and all twelve units, with zero reference failures
+and one byte-identical executable pair. All eight binaries execute the six
+regressions, print exactly `list-image-ok\n` and return zero. These are narrow
+composition checks, not the final combined source gate.
+
+## Count layout and combined performance remain open
+
+The private ABI4 prefix uses two 32-bit counts and a retired-link union while
+preserving the existing common header. The single-count census found a live
+hold with zero owners, so the two counts remain necessary. Native overflow,
+alias rollback, region and descriptor tests pass, but the standalone narrowed
+layout fails the quantitative performance gate; its rejected rows are retained
+in `experiments/wp-b3-layout-20260929/prefix/`.
+
+The combined pre-acquisition-order source `91bb0769` was sampled using frozen
+QBE/LLVM binaries, a fresh A5 control, unchanged accepted GC binaries and four
+workers on CPUs 2, 3, 10 and 11. All 26 Lox output pairs match at dev and smoke;
+GC instruction counts match between control and candidate. Dev has nineteen
+rows above the 1% change limit, and QBE instantiation is 1.304219x GC, above
+the 1.3x cap. Its QBE/LLVM instruction geomean changes are +0.449074% /
+-1.011325%; these averages do not accept the failing rows. Smoke has twenty-two
+rows above the change limit and retains known tiny-program cap misses.
+The complete preliminary row receipts are in
+`evidence/codex-next-runtime-20260929/pre-ordering-lox/`.
+
+Checkpoint `cb4336cf`, integrated at `3fe434c9`, acquires admitted source edges
+before copying generated values. It removes the second destination variant
+dispatch and passes focused generated-C and guest checks. Its isolated timing
+still has failing rows, so further bounded count-acquisition work is underway.
+Final acceptance requires the complete combined source and all corpus rows;
+no count-layout or combined B3 performance acceptance is claimed here.
