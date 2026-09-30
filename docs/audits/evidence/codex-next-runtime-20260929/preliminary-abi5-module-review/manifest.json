@@ -1,0 +1,226 @@
+{
+  "archive": "receipts.tar.gz",
+  "sha256": "0987e3dd6828d086263789d69121a7b16d92858b32f61ec3da27b13e14d6723f",
+  "members": [
+    {
+      "member": "corpus29.json",
+      "bytes": 22341,
+      "sha256": "4a35cf77442e1038286dfdcb9aa226a122a9d532a4f247580bab3d676f9971b4"
+    },
+    {
+      "member": "corpus29.log",
+      "bytes": 1167,
+      "sha256": "63ac834b0c5221e7ed002d0498b17accb2160cb17412c32ad638e3b1be496e57"
+    },
+    {
+      "member": "inputs.json",
+      "bytes": 3170,
+      "sha256": "9aa8ffcadf381be27bd3b07fd0bf31ab8bd1702d11e6eb3b9a29b21c0061ba0a"
+    },
+    {
+      "member": "lox/ast.my",
+      "bytes": 8383,
+      "sha256": "e210fb35bf3125ba06ebb978bcb3592162020a77576542f2d049879a51479bf9"
+    },
+    {
+      "member": "lox/bench.json",
+      "bytes": 3920,
+      "sha256": "dbcc26195c024bc86d9e184284306f4849450f1042d1fe53092e7b52a3deea92"
+    },
+    {
+      "member": "lox/chunk.my",
+      "bytes": 2039,
+      "sha256": "b4f6e7ae6531b224f99e026f53fee3692c90d8f2b15d3c76ca5962f1803e4b66"
+    },
+    {
+      "member": "lox/compiler.my",
+      "bytes": 30163,
+      "sha256": "c550603195401ff6d9436b42d6fbf0c35051521da57e7b85281fc8fcf6ebe048"
+    },
+    {
+      "member": "lox/compiler_test.my",
+      "bytes": 3063,
+      "sha256": "582fe817dbeffa709961b5124370ce200510adb3ac0d246572ca1c0dc19ec08a"
+    },
+    {
+      "member": "lox/driver.my",
+      "bytes": 2689,
+      "sha256": "fe831d2ec08833d11139e790ab741903b27a8e0fb43582cac11ca664b4595836"
+    },
+    {
+      "member": "lox/driver_cases.json",
+      "bytes": 13854,
+      "sha256": "0f5d302b89952c44510d690c59322af42cd9bb54f66f4049fb122a26d184ab2f"
+    },
+    {
+      "member": "lox/driver_tests.my",
+      "bytes": 5696,
+      "sha256": "32615edbfcbe21e8d550910df45d9bfcb199ee9c8171405d38566b98d78e00bd"
+    },
+    {
+      "member": "lox/heap.my",
+      "bytes": 13683,
+      "sha256": "ca6b9078355230bd2e31fc92e58794a02e73f333a0b9b8138897330f72c4d3d8"
+    },
+    {
+      "member": "lox/heap_test.my",
+      "bytes": 2934,
+      "sha256": "c951153991a8d5d13ca1df6ded7c6f26c7b43a08ed2095f72c6091637b29b53f"
+    },
+    {
+      "member": "lox/interpreter.my",
+      "bytes": 29498,
+      "sha256": "94d8b5472b997d5f875b575f0cf1b5cc7fb670ac57a293c1c6a8081151a19fcd"
+    },
+    {
+      "member": "lox/lox_strings.my",
+      "bytes": 2490,
+      "sha256": "383900dda10b9218caf2087e12a2e20089e4d48b0ec5fc3e17e960a3d70d83df"
+    },
+    {
+      "member": "lox/lox_strings_test.my",
+      "bytes": 985,
+      "sha256": "a44545c64e9f75cc5af761d6c703feec83c4fc0a14d2678a1b2fce28067bd0c0"
+    },
+    {
+      "member": "lox/main.my",
+      "bytes": 1191,
+      "sha256": "18c1f669b1683123e635256c9f66c6db2766383391371c3822e61df7d9732274"
+    },
+    {
+      "member": "lox/natives.my",
+      "bytes": 1668,
+      "sha256": "2ff45343fded6d303e6233e0f787e63c319e860903e2c0c81ccbb71c2749d665"
+    },
+    {
+      "member": "lox/object.my",
+      "bytes": 3448,
+      "sha256": "08c0d5c6ae304ef4d0e1f5929f52b5d1dd47cd46e6c409392c0b5b1df9567ad7"
+    },
+    {
+      "member": "lox/output.my",
+      "bytes": 4413,
+      "sha256": "cdc79c8a9a5eca0106fb139bca5492da201f027b0499e5e00a492368317d194c"
+    },
+    {
+      "member": "lox/parser.my",
+      "bytes": 20330,
+      "sha256": "e9bd5d9c37e307d060ce165dc4fa0f276c2ff9dbe7cb21bd27cbdd94644b4edd"
+    },
+    {
+      "member": "lox/parser_test.my",
+      "bytes": 1587,
+      "sha256": "ffe2658f030c75b40a7c54d8f0c64e848e6679e13fc69cbef9a131ed7b120e4b"
+    },
+    {
+      "member": "lox/resolver.my",
+      "bytes": 11576,
+      "sha256": "41d41b2a1ddb3f6ab3fb73ad9eff69415b0450d890554766bfee37eac8d0903d"
+    },
+    {
+      "member": "lox/resolver_test.my",
+      "bytes": 2248,
+      "sha256": "72c5176ff15db240d8ec8ff8073fcdb7736e8c60ab47410bb60fce934c179d31"
+    },
+    {
+      "member": "lox/scanner.my",
+      "bytes": 8089,
+      "sha256": "af4bc6a57859318051dc47d6e1f6344ee98fbfff037e9be93c0a103765cd3e83"
+    },
+    {
+      "member": "lox/scanner_test.my",
+      "bytes": 4518,
+      "sha256": "1d7fbb34b0de402657786641217e81c9ae286cab14baf2716de2db875ae39ad0"
+    },
+    {
+      "member": "lox/table.my",
+      "bytes": 3412,
+      "sha256": "c875ae493dbc0d6c1b70202746b0f1d2211190fa1276b9d492778455c0d0b2ca"
+    },
+    {
+      "member": "lox/table_test.my",
+      "bytes": 2510,
+      "sha256": "38279f9135e953484e6844994bc070c4156d1eb31ab4de0f295efbea17c19555"
+    },
+    {
+      "member": "lox/value.my",
+      "bytes": 2006,
+      "sha256": "3b2a444e77c6a703b1aedad3c89ef38cad70aa3bb6cba1716b623980ff9a76b0"
+    },
+    {
+      "member": "lox/value_test.my",
+      "bytes": 2151,
+      "sha256": "b766d22b25a8a8a090b4a059030cfc7462022fdacb66a0a91bf8a9e09a53fed4"
+    },
+    {
+      "member": "lox/vm.my",
+      "bytes": 25399,
+      "sha256": "0e468a351887cfbb9e26b9669e1e7a3e1f6f473512bce56395bbc639b2bf25e4"
+    },
+    {
+      "member": "report.md",
+      "bytes": 1495,
+      "sha256": "5f5fa5a152ba7b006e8a0a7144758b045c61a8e6766a31e43cfda06462f46f72"
+    },
+    {
+      "member": "run.log",
+      "bytes": 1085,
+      "sha256": "0764b0e2bd2c969eec34ea72f2246e9e670e173e0e6e56fc9a1aa5907a63b596"
+    },
+    {
+      "member": "run.py",
+      "bytes": 1887,
+      "sha256": "6b8e9f2219c4f8896ba155482a3aaf90e58ae26e686d38eac40d55a9fc0ddf5b"
+    },
+    {
+      "member": "runtime-gc.json",
+      "bytes": 1552,
+      "sha256": "596f6bdc223ce601508962aed15542f8d3c17aea7b1527d1d0d0e87bb2aec511"
+    },
+    {
+      "member": "runtime-gc.log",
+      "bytes": 218,
+      "sha256": "913ef6af920fb4b2452589e5e9eceacd6510e01eaac1444066dab7ce8f8dab24"
+    },
+    {
+      "member": "runtime-rc.json",
+      "bytes": 1552,
+      "sha256": "8efd5dc1502cf7582ca386e747475bf444d3ba762298071b31c4adeaab2c7a23"
+    },
+    {
+      "member": "runtime-rc.log",
+      "bytes": 218,
+      "sha256": "913ef6af920fb4b2452589e5e9eceacd6510e01eaac1444066dab7ce8f8dab24"
+    },
+    {
+      "member": "runtime-sites.json",
+      "bytes": 1552,
+      "sha256": "e46edd5720ad7dec07026aaadfe8171e45b2fb9a8b81ad1b5be1f3ef28354c1f"
+    },
+    {
+      "member": "runtime-sites.log",
+      "bytes": 218,
+      "sha256": "913ef6af920fb4b2452589e5e9eceacd6510e01eaac1444066dab7ce8f8dab24"
+    },
+    {
+      "member": "runtime-stats.json",
+      "bytes": 1552,
+      "sha256": "f42cd67340c559a70f6c48d2ed08e881f96a00f59bbab68242b05eeb9e973b07"
+    },
+    {
+      "member": "runtime-stats.log",
+      "bytes": 218,
+      "sha256": "913ef6af920fb4b2452589e5e9eceacd6510e01eaac1444066dab7ce8f8dab24"
+    },
+    {
+      "member": "status.json",
+      "bytes": 3919,
+      "sha256": "01077c6212b1ea267f456a01a1697ecb716c2d3241d6c514eae795c6b76e9bb5"
+    },
+    {
+      "member": "summary.json",
+      "bytes": 2620,
+      "sha256": "04af84c5edc6da779d3179a263263fe56a2923dac45f238617a03d1352a1f343"
+    }
+  ]
+}

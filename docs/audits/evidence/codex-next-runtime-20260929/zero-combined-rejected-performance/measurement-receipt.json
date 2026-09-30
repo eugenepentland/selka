@@ -1,0 +1,21 @@
+{
+  "identity": {
+    "source": "7f5068a54946bcbe0cf1f7e20abf844f120046cd",
+    "compiler_sha256": "62147872cb192d103106bdf37616071a287b6e6fe19395461fe152e0d1fb1a42",
+    "qbe_sha256": "6ccecf27cda0378f59d7dc60cee74a6558a7d25a0c88fb877b5755136f0500de"
+  },
+  "coverage": {
+    "dev": 86,
+    "smoke": 86,
+    "full": 86
+  },
+  "acceptance": "rejected: individual >1% regressions and three new smoke cap misses",
+  "sha256": {
+    ".tmp/phase-b-zero-combined/measure-dev.log": "a99e57a14cfb080454b708c124e43f3217ba2dbd2fe10eb8a2861d14a6528a6b",
+    ".tmp-rc-quick/results-phase-b-zero-combined-dev.json": "502b0846e7b1cb03a1d07f0a5577139e1c0111bfc3cc593f4b6504b1597cc266",
+    ".tmp/phase-b-zero-combined/measure-smoke.log": "bdfd35c0d014815a8687f5194dd3e775c79b3f6bfb2c51f373db6097c9cd2eeb",
+    ".tmp-rc-quick/results-phase-b-zero-combined-smoke.json": "df0ddc80a5d0cb16885fe01e2d71f683c2d45106099615009ce097fbdb04c756",
+    ".tmp/phase-b-zero-combined/measure-full.log": "d1bce46f6cac767c4105b08f109bb9a5b75286930e5c6aace9cf4620b5873741",
+    ".tmp-rc-quick/results-phase-b-zero-combined-full.json": "5c91d33a1c38ef0362a1967b2654670d50d05663bdd7b64e7f8d15a13881d98c"
+  }
+}
