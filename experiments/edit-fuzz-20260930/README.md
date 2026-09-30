@@ -14,7 +14,7 @@ fixed 22-step oracle in `../symbol-invalidation-20260930/oracle.py`.
 ```
 edit_fuzz.py --compiler PATH --work DIR --seed N --steps K
              [--project-kind lox|synthetic] [--source DIR]
-             [--gc-runtime] [--json OUT] [--keep-going]
+             [--gc-runtime] [--json OUT] [--keep-going] [--exclude-kinds K1,K2]
 edit_fuzz.py --compiler PATH --work DIR --replay   REPRO_DIR
 edit_fuzz.py --compiler PATH --work DIR --minimize REPRO_DIR
 aggregate.py RESULT.json... > tables.md
@@ -29,6 +29,9 @@ aggregate.py RESULT.json... > tables.md
   timing. One JSON line per step goes to stdout (seed, step, kind, file, desc, compiled,
   modules, seconds, matched, verdict, error excerpt); `--json` writes the summary
   (per-kind counts, `compiled` histogram, medians, every row).
+- `--exclude-kinds` switches edit kinds off (for example to keep hunting past a known bug's
+  trigger); `run_matrix.sh COMPILER OUTDIR [STEPS]` runs the standard matrix (Lox and
+  synthetic, seeds 1-3, RC and `--gc-runtime`).
 - Run heavy loops through the shared-box wrapper, for example
   `scripts/build-slot.sh build python3 edit_fuzz.py ...`.
 

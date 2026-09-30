@@ -66,6 +66,14 @@ WEIGHTS = {
     "whitespace": 2,          # extra blank line / trailing spaces
     "move-function": 3,       # move a function within its file
     "noop": 1,                # no edit: the rebuild must reuse everything
+    # interface edits that break dependents unless nothing uses the symbol: they exercise the
+    # error path across modules (a caller nobody edited must still report the error)
+    "add-required-param": 3,  # required trailing parameter on a public function
+    "remove-public-fn": 3,    # delete an existing public function
+    "rename-public-def": 2,   # rename an existing public function's definition only
+    "change-return-type": 2,  # `-> int` becomes `-> float` (and so on)
+    "drop-record-field": 2,   # remove an existing field of a record
+    "break-type": 2,          # `return E` becomes a return of the wrong scalar type
 }
 
 # Chance that a function pick prefers small public functions (inline candidates).
@@ -861,6 +869,18 @@ def k_stop_alloc(rng, p):
     return f, f"stop allocating ({name})"
 
 
+def call_arguments(rng, p, name):
+    """Arguments for a call of tool-added `name`: the required int, then some of its defaulted parameters."""
+    home = p.added[name]["file"]
+    args = [str(rng.randint(0, 9))]
+    for fn in p.fns(home):
+        if fn.name == name:
+            inner = p.files[home][fn.line][fn.open_col + 1:fn.close_col]
+            defaulted = [part for part in split_top(inner) if "=" in part]
+            args += [str(rng.randint(0, 9)) for _ in range(rng.randint(0, len(defaulted)))]
+    return ", ".join(args)
+
+
 def k_use_added(rng, p):
     cands = [(s, d) for s, d in sorted(p.added.items()) if d["kind"] in ("fn", "const")]
     if not cands:
@@ -886,7 +906,7 @@ def k_use_added(rng, p):
         return None
     k, indent = pick(rng, spots)
     qual = name if consumer == home else f"{module_of(home)}.{name}"
-    stmt = f"{indent}_ = {qual}({rng.randint(0, 9)})" if d["kind"] == "fn" else f"{indent}_ = {qual}"
+    stmt = f"{indent}_ = {qual}" if d["kind"] == "const" else f"{indent}_ = {qual}({call_arguments(rng, p, name)})"
     lines.insert(k, stmt)
     return consumer, f"{fn.name}: use {qual}"
 
@@ -961,6 +981,93 @@ def k_move_function(rng, p):
     return f, f"move {fn.name}"
 
 
+def k_add_required_param(rng, p):
+    got = pick_fn(rng, p, lambda f, fn: fn.public and fn.name != "main" and fn.name not in p.added
+                  and "=" not in p.files[f][fn.line][fn.open_col:fn.close_col])
+    if not got:
+        return None
+    f, fn = got
+    lines = p.files[f]
+    text = lines[fn.line]
+    inner = text[fn.open_col + 1:fn.close_col]
+    param = p.fresh("fz_rq")
+    lines[fn.line] = text[:fn.close_col] + (", " if inner.strip() else "") + f"{param}: int" + text[fn.close_col:]
+    k = fn.line + 1
+    while lines[k].strip() == "" or lines[k].lstrip().startswith("#"):
+        k += 1
+    lines.insert(k, f"{body_indent(lines, fn)}_ = {param}")
+    return f, f"{fn.name}: add required {param}"
+
+
+def public_existing(p):
+    return [(f, fn) for f, fn in p.all_fns() if fn.public and fn.name != "main" and fn.name not in p.added]
+
+
+def k_remove_public_fn(rng, p):
+    got = pick(rng, public_existing(p))
+    if not got:
+        return None
+    f, fn = got
+    del p.files[f][fn.lead:fn.end]
+    return f, f"remove public {fn.name}"
+
+
+def k_rename_public_def(rng, p):
+    got = pick(rng, public_existing(p))
+    if not got:
+        return None
+    f, fn = got
+    new = p.fresh(f"{fn.name}_r")
+    text = p.files[f][fn.line]
+    p.files[f][fn.line] = re.sub(rf"\bdef\s+{re.escape(fn.name)}\b", f"def {new}", text, count=1)
+    return f, f"rename definition {fn.name} -> {new}"
+
+
+def k_change_return_type(rng, p):
+    cands = [(f, fn) for f, fn in p.all_fns() if fn.ret in ("int", "float", "bool", "bytes", "str") and fn.name != "main"]
+    got = pick(rng, cands)
+    if not got:
+        return None
+    f, fn = got
+    new = pick(rng, [t for t in ("int", "float", "bool", "bytes", "str") if t != fn.ret])
+    text = p.files[f][fn.line]
+    p.files[f][fn.line] = text[:text.rindex("->")] + f"-> {new}:"
+    return f, f"{fn.name}: return type {fn.ret} -> {new}"
+
+
+def k_drop_record_field(rng, p):
+    cands = []
+    for f, it in record_items(p):
+        for k in range(it.line + 1, it.end):
+            if p.files[f][k].strip() and "fz_f" not in p.files[f][k] and "=" not in p.files[f][k] \
+                    and sum(1 for t in p.files[f][it.line + 1:it.end] if t.strip()) > 1:
+                cands.append((f, it, k))
+    got = pick(rng, cands)
+    if not got:
+        return None
+    f, it, k = got
+    gone = p.files[f][k].strip()
+    del p.files[f][k]
+    return f, f"record {it.name}: drop `{gone}`"
+
+
+WRONG = {"int": "True", "bool": "1", "float": "True", "bytes": "1", "str": "1"}
+
+
+def k_break_type(rng, p):
+    cands = []
+    for f, fn in p.all_fns():
+        if fn.ret in WRONG:
+            for k, indent, expr in simple_return(p.files[f], fn):
+                cands.append((f, fn, k, indent))
+    got = pick(rng, cands)
+    if not got:
+        return None
+    f, fn, k, indent = got
+    p.files[f][k] = f"{indent}return {WRONG[fn.ret]}"
+    return f, f"{fn.name}: return of the wrong type"
+
+
 def k_noop(rng, p):
     return "-", "no edit"
 
@@ -977,12 +1084,18 @@ EDIT_KINDS: dict[str, Callable] = {
     "start-alloc": k_start_alloc, "stop-alloc": k_stop_alloc, "use-added": k_use_added,
     "toggle-visibility": k_toggle_visibility, "comment": k_comment, "whitespace": k_whitespace,
     "move-function": k_move_function, "noop": k_noop,
+    "add-required-param": k_add_required_param, "remove-public-fn": k_remove_public_fn,
+    "rename-public-def": k_rename_public_def, "change-return-type": k_change_return_type,
+    "drop-record-field": k_drop_record_field, "break-type": k_break_type,
 }
+
+
+EXCLUDED = set()     # kinds switched off by --exclude-kinds (a known bug's trigger)
 
 
 def choose_edit(rng, proj):
     """Draw kinds by weight until one applies; returns (kind, trial project, file, description)."""
-    kinds = sorted(WEIGHTS)
+    kinds = sorted(k for k in WEIGHTS if k not in EXCLUDED)
     for _ in range(40):
         kind = rng.choices(kinds, weights=[WEIGHTS[k] for k in kinds])[0]
         trial = proj.clone()
@@ -1026,6 +1139,8 @@ class Built:
         return self.timed_out or self.rc not in (0, 1) or "host failure" in text or "panic" in text.lower()
 
     def excerpt(self, limit=500):
+        if self.ok:
+            return "built ok"
         lines = [l for l in (self.stderr + "\n" + self.stdout).splitlines() if "error" in l or "failure" in l or "panic" in l.lower()]
         return ("\n".join(lines) or (self.stderr + self.stdout))[:limit]
 
@@ -1230,7 +1345,7 @@ def minimize(compiler, work, repro, extra, log):
 def gen_synthetic(seed, dest):
     """Write a small valid multi-module project: 6-10 modules in a chain/diamond/layered import graph."""
     r = random.Random(f"synthetic-{seed}")
-    n = r.randint(6, 10)
+    n = r.randint(5, 9)
     shape = r.choice(["chain", "diamond", "layered"])
     deps = {0: []}
     for i in range(1, n):
@@ -1279,11 +1394,15 @@ def gen_synthetic(seed, dest):
                 f"public def mix{i}_{d}(r: m{d}.Rec{d}) -> int:", "    return r.id + r.weight + len(r.label)", "",
                 f"public def pick{i}_{d}(x: int) -> m{d}.Kind{d}:", f"    r = m{d}.make{d}(x)", f"    return m{d}.kind{d}(r)", "",
                 f"public def shape{i}_{d}(x: int) -> int:", f"    return m{d}.area{d}(m{d}.Shape{d}.circle(x))", "",
+                # small and public: dependents of `i` take it inlined, and it builds a record `i` does
+                # not export a signature for, so a layout change of that record must reach them too
+                f"public def probe{i}_{d}(x: int) -> int:", f"    r = m{d}.make{d}(x)", "    return len(r.label) + x", "",
             ]
         out += [f"public def total{i}(count: int) -> int:", "    acc = 0", f"    for v in fill{i}(count):", "        acc += v"]
         out += [f"    acc += score{i}(make{i}(count))"]
         for d in deps[i]:
             out += [f"    acc += combine{i}_{d}(count) + shape{i}_{d}(count)"]
+            out += [f"    acc += m{d}.probe{d}_{e}(count)" for e in deps[d]]
         out += ["    return acc", ""]
         with open(os.path.join(dest, f"m{i}.my"), "w") as handle:
             handle.write("\n".join(out))
@@ -1292,6 +1411,7 @@ def gen_synthetic(seed, dest):
     for i in mains:
         out += [f"    acc += m{i}.total{i}(3)", f"    rec{i} = m{i}.make{i}(4)", f"    m{i}.bump{i}(mut rec{i}, 2)",
                 f"    acc += m{i}.score{i}(rec{i}) + m{i}.area{i}(m{i}.Shape{i}.box(2))"]
+        out += [f"    acc += m{i}.probe{i}_{d}(5)" for d in deps[i]]
     out += ["    return acc", ""]
     with open(os.path.join(dest, "main.my"), "w") as handle:
         handle.write("\n".join(out))
@@ -1325,7 +1445,7 @@ def fuzz(options):
     rng = random.Random(options.seed)
     proj = load_project(project_dir)
     header = {"seed": options.seed, "project_kind": options.project_kind, "gc_runtime": options.gc_runtime,
-              "compiler": compiler, **meta}
+              "compiler": compiler, "excluded_kinds": sorted(EXCLUDED), **meta}
     rows, timeline, findings = [], [], []
     by_kind = {}
     started = time.monotonic()
@@ -1457,9 +1577,14 @@ def main():
     parser.add_argument("--gc-runtime", action="store_true")
     parser.add_argument("--json")
     parser.add_argument("--keep-going", action="store_true")
+    parser.add_argument("--exclude-kinds", default="", help="comma-separated edit kinds to leave out")
     parser.add_argument("--replay", metavar="REPRO_DIR")
     parser.add_argument("--minimize", metavar="REPRO_DIR")
     options = parser.parse_args()
+    EXCLUDED.update(k for k in options.exclude_kinds.split(",") if k)
+    unknown = EXCLUDED - set(WEIGHTS)
+    if unknown:
+        parser.error(f"unknown edit kinds: {sorted(unknown)}")
     compiler = os.path.abspath(options.compiler)
     extra = ["--gc-runtime"] if options.gc_runtime else []
     if options.replay or options.minimize:
