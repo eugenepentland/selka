@@ -76,6 +76,39 @@ pub fn at(comptime E: type, self: *E) ?usize {
     return null;
 }
 
+/// Choose only an inlining hint: nested certified loops use the identical hot
+/// query; absent or first-level proofs retain ordinary runtime admission.
+pub fn query(comptime E: type, self: *E, index: ?usize) []const u8 {
+    const ordinary = "myl_rc_list_plain_ready";
+    const state = frame.get(E, self) orelse return ordinary;
+    const slot = index orelse return ordinary;
+    if (slot >= state.plan.append_loops.len) return ordinary;
+    if (nested(self.cow.?.plan.loops.back, state.plan.append_loops[slot])) return "myl_rc_list_plain_ready_hot";
+    return ordinary;
+}
+
+// Loop containment estimates re-entry only. It never authorizes caching,
+// removes admission checks or changes the already accepted closed-loop proof.
+fn nested(back: []const u32, proof: Certificate) bool {
+    for (back, 0..) |end, head| {
+        if (end != cow.none and head < proof.head and end > proof.back) return true;
+    }
+    return false;
+}
+
+// spec-case: RC-PLAIN-READY-NESTED-1
+test "RC-PLAIN-READY-NESTED-1 nested hint requires strict physical interval containment" {
+    const t = std.testing;
+    const proof: Certificate = .{ .head = 2, .back = 6, .root = 0 };
+    try t.expect(nested(&.{ 9, cow.none }, proof));
+    try t.expect(!nested(&.{}, proof));
+    try t.expect(!nested(&.{ cow.none, cow.none, 6 }, proof));
+    try t.expect(!nested(&.{6}, proof));
+    try t.expect(!nested(&.{ 1, cow.none }, proof));
+    try t.expect(!nested(&.{9}, .{ .head = 0, .back = 6, .root = 0 }));
+    try t.expect(!nested(&.{9}, .{ .head = 2, .back = 10, .root = 0 }));
+}
+
 fn scalar(comptime E: type, self: *E, ty: typed.Type) bool {
     if (!self.isScalar(ty)) return false;
     const value = self.cow.?.rc.?.catalog.get(ty) catch return false;
