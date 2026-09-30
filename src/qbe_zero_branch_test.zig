@@ -32,7 +32,7 @@ fn compileAndRun() ![]const u8 {
     try t.expectEqual(std.process.Child.Term{ .exited = 0 }, linked.term);
     const ran = try std.process.run(a, t.io, .{ .argv = &.{binary} });
     try t.expectEqual(std.process.Child.Term{ .exited = 0 }, ran.term);
-    try t.expectEqualStrings("zero branch probes: 130 cases passed\n", ran.stdout);
+    try t.expectEqualStrings("zero branch probes: 140 cases passed\n", ran.stdout);
     return t.allocator.dupe(u8, try context.read(assembly));
 }
 
@@ -60,5 +60,6 @@ test "QBE-ZERO-BRANCH-1 flags preserve full-width zero, negative admissions and 
     try t.expect(std.mem.indexOf(u8, try body(assembly, "branch_width:"), "cmp") != null);
     try t.expect(std.mem.indexOf(u8, try body(assembly, "branch_nonzero:"), "cmp") != null);
     try t.expect(std.mem.indexOf(u8, try body(assembly, "branch_call:"), "cmp") != null);
+    try t.expect(std.mem.indexOf(u8, try body(assembly, "branch_trailing:"), "cmp") != null);
     try t.expect(std.mem.indexOf(u8, try body(assembly, "branch_multi:"), "cmp") != null);
 }

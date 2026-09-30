@@ -600,11 +600,16 @@ selsel(Fn *fn, Blk *b, Ins *i, Num *tn)
 static Ins *
 zeroarith(Blk *b, Ins *cmp, int k, int c, Fn *fn)
 {
-	Ins *producer;
+	Ins *producer, *tail;
 	Ref value, zero;
 
 	if (c != Cieq && c != Cine)
 		return 0;
+	/* flagi may cross trailing loads/copies whose selected address
+	 * materialization changes flags.  Require adjacency to the jump too. */
+	for (tail = cmp + 1; tail < &b->ins[b->nins]; tail++)
+		if (tail->op != Onop && tail->op != Odbgloc)
+			return 0;
 	value = cmp->arg[0];
 	zero = cmp->arg[1];
 	if (rtype(value) == RCon) {

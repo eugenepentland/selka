@@ -7,6 +7,8 @@ DECLARE(branch_word); DECLARE(branch_width); DECLARE(branch_nonzero);
 DECLARE(branch_clobber); DECLARE(branch_other); DECLARE(branch_call);
 DECLARE(branch_multi); DECLARE(branch_wrongresult);
 extern uint64_t branch_spill(uint64_t, uint64_t *);
+extern uint64_t branch_trailing(uint64_t, uint64_t, uint64_t *);
+uint64_t branch_global[2]={123,456};
 static volatile unsigned touched;
 int touch(void) { return ++touched; }
 void record_yes(uint64_t *out) { out[24]=1; }
@@ -33,6 +35,7 @@ int main(void) {
         assert(branch_wrongresult(x,scratch)==(x==0) && scratch[0]==x-1); ++cases;
         for (size_t n=0;n<24;++n) scratch[n]=n+1;
         assert(branch_spill(x,scratch)==sum && scratch[24]==(uint64_t)zero); ++cases;
+        assert(branch_trailing(x,1,scratch)==456 && scratch[0]==(uint64_t)(zero?23:17)); ++cases;
     }
     assert(touched==sizeof(values)/sizeof(values[0]));
     printf("zero branch probes: %u cases passed\n",cases);

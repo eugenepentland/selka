@@ -224,3 +224,18 @@ export function l $branch_spill(l %x, l %out) {
  %sum22 =l add %sum21, %v23
  ret %sum22
 }
+
+export function l $branch_trailing(l %x, l %y, l %out) {
+@start
+ %sum =l add %x, %y
+ %cond =w cnel %sum, 0
+ %addr =l add extern $branch_global, 8
+ %loaded =l loadl %addr
+ jnz %cond, @yes, @no
+@yes
+ storel 17, %out
+ ret %loaded
+@no
+ storel 23, %out
+ ret %loaded
+}
