@@ -32,8 +32,9 @@ change only arithmetic/overflow-flag IR and retain the prior adapter IR in
 `expected_before_constant_overflow`. The new CLI test compares12 boundary
 pairs including full trap detail, trace and record against QBE; the existing
 28-width-boundary suite also passes. Pre-final extern-literal cleanup checks
-passed15 focused unit entries,13 golden entries,3+3 CLI entries,36 fresh guests
-across RC/GC/stress/release/GC-release/stats,140 QBE-build tests,27 input/format
+passed15 focused unit entries,13 golden entries,3+3 CLI entries,36 guest attempts
+across RC/GC/stress/release/GC-release plus an ineffective stats-labelled
+duplicate ordinary-RC run,140 QBE-build tests,27 input/format
 steps and88 Guardian checks. The final extern cleanup has passed the focused
 unit root and12 install steps; final functional receipts and independent
 review will be recorded separately without changing this frozen source.
@@ -43,3 +44,29 @@ QBE SHA256: `bcc56938e384d19a707870ff61f5d14fde1edeebe32d47b25058de39db4c93c6`.
 Root owns composed86-row dev/smoke/full measurements and the final broad gate.
 No timing CPUs were claimed, no samples were collected and no acceptance
 waiver is asserted by this checkpoint.
+
+## Final frozen verification
+
+Source8a1bc3b3 and compiler3b291af9/QBEbcc56938 stayed unchanged throughout
+final checks:15/15 focused entries,13/13 golden entries,3/3 new and3/3 existing
+CLI entries,140/140 QBE-build tests,27/27 input/format steps,12/12 install
+steps and36/36 fresh guest tests in six distinct modes. The scratch runner's
+initial MYLANG_RC_STATS environment setting was ineffective and its duplicate
+RC attempt is explicitly excluded; actual counting uses `--rc-runtime=stats`
+and passes6/6. The earlier missing-prefix proof following a rejected install
+is also retained/excluded. No failure was accepted as verification.
+
+The final tools reproduce the410 identical input-unit proof,32 ssub/48 sadd
+calls,42→0 minimum-int MOVabs sites and27→76 overflow branches; invocation
+prints30000. Independent54-case admission replay and43-function native
+oracles pass215,602 assertions each on baseline/candidate. Eleven malformed/
+marked raw probes are admission-only; the integrator archives that review.
+
+Durable final evidence is under
+`experiments/wp-b3-layout-20260929/llvm-constant-overflow/`:1273 verified
+raw members, full IL/IR/signatures, actual binary/assembly, strict-prototype
+source, frozen tools/source hashes, logs and receipts. The separate invocation
+archive is docs-only commit861c9ade with48 verified members. Guardian feedback
+is77dfbf3d6ec96e70ff31ad515f7fe7d2aa2a9af3. Root's composed quantitative
+acceptance and full integration gate remain authoritative and outstanding;
+no hardware samples or acceptance waiver were produced by this lane.
