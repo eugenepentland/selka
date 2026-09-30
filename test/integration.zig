@@ -1432,6 +1432,41 @@ fn checkSeeded(allocator: std.mem.Allocator, root: std.Io.Dir) !bool {
     return true;
 }
 
+// spec-case: STANDARD-MATH-TRIG-1
+// spec-case: MODULE-CHECK-1
+// spec: STANDARD-MATH-TRIG-GENERIC-1
+test "standard trigonometry checks through module interfaces and unchanged generic callers reuse their state" {
+    var arena_state = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena_state.deinit();
+    const a = arena_state.allocator();
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const directory = try temporary.dir.realPathFileAlloc(testing.io, ".", a);
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "angles.my", .data = "module angles\nimport math\npublic def wave[T](value: float, tag: T) -> float:\n    _ = tag\n    return math.sin(value) + math.cos(value)\n" });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = "module main\nimport angles\nimport math\ndef main() -> int:\n    return int(angles.wave[int](0.0, 1) + math.cos(0.0))\n" });
+    const first = try projectCheck(a, directory, "cache");
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, first.term);
+    try testing.expectEqualStrings("", first.stderr);
+    try testing.expectEqualStrings((try projectCheck(a, directory, null)).stderr, first.stderr);
+    const out = try checkVariant(a, temporary.dir);
+    // Successful own-module results exclude a silent whole-program fallback.
+    try temporary.dir.access(testing.io, try std.fmt.allocPrint(a, "{s}/main.result.json", .{out}), .{});
+    try temporary.dir.access(testing.io, try std.fmt.allocPrint(a, "{s}/angles.result.json", .{out}), .{});
+    const state = try std.fmt.allocPrint(a, "{s}/../state.json", .{out});
+    const before = try temporary.dir.statFile(testing.io, state, .{});
+    const contents = try temporary.dir.readFileAlloc(testing.io, state, a, .limited(1 << 20));
+    try forgetResults(a, temporary.dir, out, &.{ "main", "angles" });
+    const again = try projectCheck(a, directory, "cache");
+    try testing.expectEqual(first.term, again.term);
+    try testing.expectEqualStrings(first.stderr, again.stderr);
+    try testing.expectEqualStrings(contents, try temporary.dir.readFileAlloc(testing.io, state, a, .limited(1 << 20)));
+    const after = try temporary.dir.statFile(testing.io, state, .{});
+    try testing.expectEqual(before.inode, after.inode);
+    try testing.expectEqual(before.mtime.nanoseconds, after.mtime.nanoseconds);
+    try testing.expectError(error.FileNotFound, temporary.dir.access(testing.io, try std.fmt.allocPrint(a, "{s}/main.result.json", .{out}), .{}));
+    try testing.expectError(error.FileNotFound, temporary.dir.access(testing.io, try std.fmt.allocPrint(a, "{s}/angles.result.json", .{out}), .{}));
+}
+
 // spec: MODULE-CHECK-2
 test "a large project's first check is the whole-program check, and module records seeded after it answer the next" {
     var arena_state = std.heap.ArenaAllocator.init(testing.allocator);

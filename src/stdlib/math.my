@@ -112,11 +112,19 @@ public def sqrt(value: float) -> float effects():
 
 # Sine of an angle in radians, evaluated by the native binary64 operation.
 public def sin(value: float) -> float effects():
+    if value == 0.0:
+        return value
+    if not is_finite(value):
+        return nan()
     return __float_sin(value)
 
 
 # Cosine of an angle in radians, evaluated by the native binary64 operation.
 public def cos(value: float) -> float effects():
+    if value == 0.0:
+        return 1.0
+    if not is_finite(value):
+        return nan()
     return __float_cos(value)
 
 

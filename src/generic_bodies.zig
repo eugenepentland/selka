@@ -8,6 +8,7 @@ const dictionary_views = @import("dictionary_views.zig");
 const numeric_surface = @import("numeric_surface.zig");
 const set_lower = @import("set_lower.zig");
 const float_syntax = @import("float_syntax.zig");
+const float_intrinsics = @import("float_intrinsics.zig");
 const integer_literal = @import("integer_literal.zig");
 const buffer_operations = @import("buffer_operations.zig");
 const BufferKind = buffer_operations.Kind;
@@ -1844,23 +1845,7 @@ const Checker = struct {
             },
             .boolean => .{ .concrete = .bool },
             .integer => |span| try self.numericLiteral(span, false),
-            .unary => |unary| result: {
-                if (unary.op == .is_none) {
-                    const operand = try self.rawOptionExpression(unary.operand);
-                    _ = try self.optionElement(operand, unary.op_span);
-                    if (try self.transfers(operand)) return self.sink.fail("E_OPTION_TEST", unary.op_span, "use match for an Option carrying an owned value or checked Result");
-                    break :result .{ .concrete = .bool };
-                }
-                const child = self.program.nodes.items[@backingInt(unary.operand)];
-                const operand: Symbolic = if (unary.op == .neg and child.data == .integer)
-                    try self.numericLiteral(child.data.integer, true)
-                else
-                    try self.expression(unary.operand);
-                if (unary.op == .neg) {
-                    if (!self.isFloat(operand)) try self.supports(operand, .integer, unary.op_span);
-                } else try self.compatible(operand, .{ .concrete = if (unary.op == .not) .bool else .u64 }, unary.op_span);
-                break :result operand;
-            },
+            .unary => |unary| try self.unaryValue(unary),
             .binary => |operation| try self.binary(operation),
             .record => |record| try self.recordValue(record, node.span),
             .variant => |variant| try self.variantValue(variant, node.span),
@@ -2341,6 +2326,26 @@ const Checker = struct {
         const left = previous orelse if (early_right) |peer| try self.expressionExpected(operation.left, peer) else try self.expression(operation.left);
         const right = early_right orelse if (right_awaits and !left_awaits) try self.expressionExpected(operation.right, left) else try self.expression(operation.right);
         return .{ .left = left, .right = right };
+    }
+    /// Type a unary operation, keeping binary64 operands in their float domain.
+    fn unaryValue(self: *Checker, unary: @FieldType(@FieldType(ast.Node, "data"), "unary")) Error!Symbolic {
+        if (unary.op == .is_none) {
+            const operand = try self.rawOptionExpression(unary.operand);
+            _ = try self.optionElement(operand, unary.op_span);
+            if (try self.transfers(operand)) return self.sink.fail("E_OPTION_TEST", unary.op_span, "use match for an Option carrying an owned value or checked Result");
+            return .{ .concrete = .bool };
+        }
+        const child = self.program.nodes.items[@backingInt(unary.operand)];
+        const operand: Symbolic = if (unary.op == .neg and child.data == .integer)
+            try self.numericLiteral(child.data.integer, true)
+        else
+            try self.expression(unary.operand);
+        if (unary.op == .neg) {
+            if (!self.isFloat(operand)) try self.supports(operand, .integer, unary.op_span);
+        } else if (float_intrinsics.floatwise(unary.op)) {
+            try self.compatible(operand, self.floatType(), unary.op_span);
+        } else try self.compatible(operand, .{ .concrete = if (unary.op == .not) .bool else .u64 }, unary.op_span);
+        return operand;
     }
     fn binary(self: *Checker, operation: @FieldType(@FieldType(ast.Node, "data"), "binary")) Error!Symbolic {
         if (operation.chained) return self.chain(operation);
