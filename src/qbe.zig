@@ -1481,19 +1481,16 @@ const Located = struct {
 /// text between the stretch's start and the offset exactly as they do in the
 /// source. Null for an offset no stretch covers.
 fn stretched(text: Source, stretches: []const native_interface.Stretch, offset: usize) ?Location {
-    for (stretches) |stretch| {
-        if (offset < stretch.text or offset > @as(usize, stretch.text) + stretch.extent or offset > text.bytes.len) continue;
-        var line: usize = stretch.line;
-        var column: usize = stretch.column;
-        for (text.bytes[stretch.text..offset]) |byte| {
-            if (byte == '\n') {
-                line += 1;
-                column = 1;
-            } else column += 1;
-        }
-        return .{ .path = text.path, .line = line, .column = column };
+    const stretch = stretches[native_interface.stretchAt(stretches, text.bytes.len, offset) orelse return null];
+    var line: usize = stretch.line;
+    var column: usize = stretch.column;
+    for (text.bytes[stretch.text..offset]) |byte| {
+        if (byte == '\n') {
+            line += 1;
+            column = 1;
+        } else column += 1;
     }
-    return null;
+    return .{ .path = text.path, .line = line, .column = column };
 }
 
 /// The digest of each source of a merged program, computed the first time a

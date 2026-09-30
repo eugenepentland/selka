@@ -105,3 +105,36 @@ test "records, invariant callbacks and the modules dependency rows name are cons
     dependent.emission.physical.dependencies = &.{.{ .name = "other::far", .bytes = "z" }};
     try t.expect(!std.mem.eql(u8, &before, &(try digestOf(a, dependent, reached))));
 }
+
+// spec-case: MODULE-SYMBOL-CUTOFF-5
+test "positions read through some stretches ignore the others and every source offset" {
+    const text = "def a():\n    pass\n\ndef b():\n    pass\n";
+    const origins = [_]language.module_interface.Origin{
+        .{ .text = 0, .source = 0, .len = 17, .gap = 1, .line = 1, .column = 1 },
+        .{ .text = 18, .source = 30, .len = 17, .gap = 0, .line = 5, .column = 1 },
+    };
+    const interface: Interface = .{ .module = "lib", .text = text, .positions = .{ .origins = &origins } };
+    const before = symbols.stretchDigest(interface, &.{0});
+    // The second stretch moved down two lines and along the source.
+    var moved = origins;
+    moved[1].line = 7;
+    moved[1].source = 44;
+    var later = interface;
+    later.positions.origins = &moved;
+    try t.expectEqual(before, symbols.stretchDigest(later, &.{0}));
+    try t.expect(!std.mem.eql(u8, &symbols.stretchDigest(interface, &.{1}), &symbols.stretchDigest(later, &.{1})));
+    // The first stretch's own line, or where a stretch lies in the text, is read.
+    var shifted = origins;
+    shifted[0].line = 2;
+    later.positions.origins = &shifted;
+    try t.expect(!std.mem.eql(u8, &before, &symbols.stretchDigest(later, &.{0})));
+    var spread = origins;
+    spread[0].gap = 0;
+    later.positions.origins = &spread;
+    try t.expect(!std.mem.eql(u8, &before, &symbols.stretchDigest(later, &.{0})));
+    // A stretch after the last one read decides nothing.
+    var tail = origins;
+    tail[1].gap = 3;
+    later.positions.origins = &tail;
+    try t.expectEqual(before, symbols.stretchDigest(later, &.{0}));
+}

@@ -19,6 +19,10 @@
 //!   invariant callbacks, the modules its dependency rows send the restore to,
 //!   and its emission configuration (`digest`).
 //!
+//! A dependent whose units report positions inside an import's text (an
+//! inlined or instantiated body) reads only the stretches of that text those
+//! positions fall in (`stretchDigest`), unless it renders a diagnostic.
+//!
 //! A reached body that invokes a function value may reach any function taken
 //! as a value anywhere, so such a compile records no reach at all and any
 //! change of an import's emission hash recompiles it, as before.
@@ -155,6 +159,48 @@ pub const Table = struct {
         return out;
     }
 };
+
+/// MODULE-SYMBOL-CUTOFF-5: the digest of what the positions a compile's units
+/// took from `interface`'s text through the stretches `indices` read of its
+/// positions section: where each stretch up to the last of them lies in the
+/// text (which decides the stretch a position falls in), and the source line
+/// and column each of those
+/// starts at and the text it spans, its blanked gap included. A stretch's
+/// byte offset in the source is not read. An index past the last stretch
+/// stands for a position no stretch held: every stretch then decides.
+pub fn stretchDigest(interface: iface.Interface, indices: []const u32) [32]u8 {
+    const origins = interface.positions.origins;
+    var hash = std.crypto.hash.Blake3.init(.{});
+    frame(&hash, "module-stretches-v1");
+    // A position is reported through the first stretch that holds it, so
+    // the stretches up to the last one read decide which one that is.
+    var last: usize = 0;
+    for (indices) |index| last = @max(last, @as(usize, index) + 1);
+    const deciding = origins[0..@min(last, origins.len)];
+    count(&hash, deciding.len);
+    for (deciding) |origin| {
+        count(&hash, origin.text);
+        count(&hash, @as(usize, origin.len) + origin.gap);
+    }
+    count(&hash, indices.len);
+    for (indices) |index| {
+        count(&hash, index);
+        if (index >= origins.len) {
+            hash.update("missing");
+            continue;
+        }
+        const origin = origins[index];
+        count(&hash, origin.line);
+        count(&hash, origin.column);
+        // The bytes a position's line and column are counted over, the
+        // blanked gap's newlines included (the interface hash skips gaps).
+        const start = @min(@as(usize, origin.text), interface.text.len);
+        frame(&hash, interface.text[start..@min(start + origin.len + origin.gap, interface.text.len)]);
+    }
+    var out: [32]u8 = undefined;
+    hash.final(&out);
+    return out;
+}
 
 /// Drop adjacent repeats from a sorted list, in place.
 fn unique(sorted: [][]const u8) []const []const u8 {

@@ -127,7 +127,20 @@ pub const Hashes = struct {
 /// emitted unit's positions fell in that interface's text. `symbols` is the
 /// digest of what the compile's `reach` consumed of its emission section
 /// (`module_symbols.Table.digest`), empty with no reach.
-pub const Input = struct { module: []const u8, interface: []const u8, emission: []const u8, positions: []const u8, symbols: []const u8 = "" };
+pub const Input = struct {
+    module: []const u8,
+    interface: []const u8,
+    emission: []const u8,
+    positions: []const u8,
+    symbols: []const u8 = "",
+    /// MODULE-SYMBOL-CUTOFF-5: with a positions hash, the sorted indices of
+    /// the interface's stretches the emitted units' positions came through,
+    /// and the digest of what those positions read of the stretches
+    /// (`module_symbols.stretchDigest`); empty when a rendered diagnostic may
+    /// have read any position.
+    stretches: []const u32 = &.{},
+    lines: []const u8 = "",
+};
 
 /// How much one compile did: the program's functions, how many it lowered
 /// with their bodies, how many it stood in from interfaces, its units, and
@@ -347,8 +360,10 @@ const InterfaceStep = struct {
         // note, an instantiated body), so a module that renders any reads
         // every import's positions (MODULE-CHECK-1); one it never renders
         // reads none (MODULE-SYMBOL-CUTOFF-4).
-        const placed = try placedIn(arena, compilation, self.body.code, self.body.emit);
-        if (rendersAny(compilation, self.request.module.module, self.out.counts.diagnostics)) @memset(placed, true);
+        const remap = try remapOf(arena, library, modules, self.own);
+        var placed = try placedIn(arena, compilation, .{ .code = self.body.code, .emit = self.body.emit, .remap = remap });
+        placed.whole = rendersAny(compilation, self.request.module.module, self.out.counts.diagnostics);
+        if (placed.whole) @memset(placed.read, true);
         const reached = if (self.request.check_only) null else try symbols.reach(arena, self.body.code, self.body.emit);
         self.out.hashes = .{
             .interface = try hex(arena, iface.interfaceHash(interface)),
@@ -428,28 +443,60 @@ fn rendersAny(compilation: *const project_compile.Compilation, module: []const u
     return false;
 }
 
-/// Which merged-source inputs the positions of the emitted units fall in: the
-/// interface texts whose positions this compile's metadata read.
-fn placedIn(allocator: std.mem.Allocator, compilation: *const project_compile.Compilation, code: bytecode.Program, emit: []const bool) Error![]bool {
-    const out = try allocator.alloc(bool, compilation.index.project.modules.items.len);
-    @memset(out, false);
+/// The emitted units a placement is computed from, and each input's
+/// interface stretches (null for an input served from its source).
+const Emitted = struct { code: bytecode.Program, emit: []const bool, remap: []const ?[]const native_interface.Stretch };
+
+/// Which merged-source inputs the positions of the emitted units fall in (the
+/// interface texts whose positions this compile's metadata read), and in each
+/// interface text the stretches those positions are reported through
+/// (MODULE-SYMBOL-CUTOFF-5); `whole` when a rendered diagnostic may name any
+/// place in any of them.
+const Placement = struct { read: []bool, stretches: [][]const u32, whole: bool = false };
+
+fn placedIn(allocator: std.mem.Allocator, compilation: *const project_compile.Compilation, units: Emitted) Error!Placement {
+    const count = compilation.index.project.modules.items.len;
+    const out: Placement = .{ .read = try allocator.alloc(bool, count), .stretches = try allocator.alloc([]const u32, count) };
+    @memset(out.read, false);
+    @memset(out.stretches, &.{});
+    // Per input served from an interface, which of its stretches were used;
+    // one more mark for a position no stretch holds, which any stretch of
+    // a later text could come to hold.
+    const used = try allocator.alloc([]bool, count);
+    for (used, 0..) |*marks, input| {
+        const stretches = if (input < units.remap.len) units.remap[input] orelse &.{} else &.{};
+        marks.* = try allocator.alloc(bool, stretches.len + 1);
+        @memset(marks.*, false);
+    }
+    const code = units.code;
     // A check-only compile emitted nothing.
-    if (emit.len != code.functions.len) return out;
-    for (code.functions, emit) |function, chosen| {
+    if (units.emit.len != code.functions.len) return out;
+    for (code.functions, units.emit) |function, chosen| {
         if (!chosen) continue;
-        var last: ?usize = null;
         for (function.scope.instructions) |instruction| {
             const at = compilation.src.originalSpan(instruction.span) catch continue;
-            if (last == at.input or at.input >= out.len) continue;
-            last = at.input;
-            out[at.input] = true;
+            if (at.input < count) out.read[at.input] = true;
+            // Where a trap reports the instruction: its start, through the
+            // stretch that holds it (`qbe.Located.locate`).
+            const start = instruction.span.start;
+            const point = compilation.src.originalSpan(.{ .start = start, .end = start }) catch continue;
+            if (point.input >= count or point.input >= units.remap.len) continue;
+            out.read[point.input] = true;
+            const stretches = units.remap[point.input] orelse continue;
+            const text = compilation.src.origins[point.input].original.bytes;
+            used[point.input][native_interface.stretchAt(stretches, text.len, point.span.start) orelse stretches.len] = true;
         }
+    }
+    for (used, out.stretches) |marks, *indices| {
+        var list: std.ArrayList(u32) = .empty;
+        for (marks, 0..) |mark, index| if (mark) try list.append(allocator, @intCast(index));
+        indices.* = list.items;
     }
     return out;
 }
 
 /// What the interfaces a compile read are listed from.
-const Read = struct { library: *oracle.Library, modules: []const project.Module, own: usize, placed: []const bool, physical: []const iface.Interface, reach: ?[]const []const u8 };
+const Read = struct { library: *oracle.Library, modules: []const project.Module, own: usize, placed: Placement, physical: []const iface.Interface, reach: ?[]const []const u8 };
 
 /// Every interface the compile read, in module order, with its interface and
 /// emission hashes, and its positions hash when an emitted unit's positions
@@ -462,12 +509,18 @@ fn inputsOf(allocator: std.mem.Allocator, read: Read) Error![]const Input {
         if (index == read.own) continue;
         const interface = read.library.by_name.get(module.name) orelse continue;
         try seen.put(allocator, module.name, {});
+        const placed = index < read.placed.read.len and read.placed.read[index];
+        // MODULE-SYMBOL-CUTOFF-5: the stretches the units' positions came
+        // through, unless a rendered diagnostic may have read any place.
+        const stretches: []const u32 = if (placed and !read.placed.whole) read.placed.stretches[index] else &.{};
         try out.append(allocator, .{
             .module = module.name,
             .interface = try hex(allocator, iface.interfaceHash(interface)),
             .emission = try hex(allocator, iface.emissionHash(interface)),
-            .positions = if (index < read.placed.len and read.placed[index]) try hex(allocator, iface.positionsHash(interface)) else "",
+            .positions = if (placed) try hex(allocator, iface.positionsHash(interface)) else "",
             .symbols = try symbolsOf(allocator, interface, read.reach),
+            .stretches = stretches,
+            .lines = if (placed and !read.placed.whole) try hex(allocator, symbols.stretchDigest(interface, stretches)) else "",
         });
     }
     for (read.physical) |interface| {

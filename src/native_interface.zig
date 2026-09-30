@@ -97,3 +97,15 @@ pub const Imported = struct { allocates: bool, writes: []const bool };
 /// how many bytes map linearly onto the source (its copy and the blanked gap
 /// after it), and the one-based line and column in the source it starts at.
 pub const Stretch = struct { text: u32, extent: u32, line: u32, column: u32 };
+
+/// The index of the stretch a position at `offset` in an interface text of
+/// `length` bytes is reported through: the first whose extent holds it; null
+/// for an offset no stretch covers (MODULE-COMPILE-1, MODULE-SYMBOL-CUTOFF-5).
+pub fn stretchAt(stretches: []const Stretch, length: usize, offset: usize) ?usize {
+    if (offset > length) return null;
+    for (stretches, 0..) |stretch, index| {
+        if (offset < stretch.text or offset > @as(usize, stretch.text) + stretch.extent) continue;
+        return index;
+    }
+    return null;
+}
