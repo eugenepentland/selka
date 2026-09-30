@@ -50,9 +50,10 @@ const rss = struct {
     /// (its guest compiles included) at 275M-1.24G for a moment. The whole
     /// `zig build test` never held more than 5.8G at once, but at 1.5G per
     /// shard the declarations alone passed a 30G machine's budget, so the build
-    /// runner held the last shards back for most of a minute. 1G keeps a 1.8x
-    /// margin over the largest single process, which is what the runner checks.
-    const shard_unit: u64 = 1024 * mib;
+    /// runner held the last shards back for most of a minute. The module-era
+    /// semantic-cache shard later passed 199 tests with a 1.31G process peak
+    /// (2026-09-30); 2G admits that observed work while keeping it bounded.
+    const shard_unit: u64 = 2048 * mib;
     /// One shard of the CLI root, which builds far fewer guests. Observed on a
     /// clean cache: 103M-141M for the test process, up to 1.22G for a moment
     /// across its tree; the ceiling is a concurrency budget.

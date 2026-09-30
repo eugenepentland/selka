@@ -152,6 +152,7 @@ test "physical imports compare declaration signatures without importing body-loc
     };
     var actual = signature;
     actual.signature.inferred.writes = true;
+    actual.policy.effects = @import("effect_set.zig").bit(.managed_allocation);
     actual.scope.locals = &.{
         .{ .name = "n", .ty = .i64, .declaration = .{ .start = 9, .end = 10 }, .mutable = true, .usage = .{ .reads = 4 }, .origin = .parameter },
         .{ .name = "local", .ty = .bool, .declaration = .{ .start = 0, .end = 0 }, .mutable = false },
@@ -162,6 +163,70 @@ test "physical imports compare declaration signatures without importing body-loc
     try t.expectEqual(@as(usize, 2), restored.code.functions[0].scope.locals.len);
     try t.expect(restored.code.functions[0].signature.inferred.writes);
     try t.expect(@import("ownership_model.zig").writesParameter(restored.code.functions[0], 0));
+}
+
+// spec-case: MODULE-COMPILE-1
+test "physical imports reject host effect declarations that change emitted host authority" {
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const effects = @import("effect_set.zig");
+    const plain: bytecode.Function = .{
+        .name = "lib.hosted",
+        .id = @fromBackingInt(0),
+        .policy = .{ .host = .{ .start = 0, .end = 0 }, .effects = effects.bit(.host) },
+        .signature = .{ .parameter_count = 1 },
+        .scope = .{ .locals = &.{.{ .name = "host", .ty = .host_cap, .declaration = .{ .start = 0, .end = 0 }, .mutable = false }}, .instructions = &.{} },
+    };
+    var changed = plain;
+    changed.policy.effects |= effects.bit(.clock);
+    var layouts = try @import("native_types.zig").Catalog.initRecords(a, &.{});
+    defer layouts.deinit();
+    const before = try @import("qbe_host.zig").describe(a, .{ .functions = &.{plain} }, &layouts);
+    const after = try @import("qbe_host.zig").describe(a, .{ .functions = &.{changed} }, &layouts);
+    try t.expect(before.declarations[0].effects != after.declarations[0].effects);
+    const left: language.module_interface.Interface = .{ .module = "first", .text = "", .emission = .{ .physical = try physical.archive(a, .{ .functions = &.{plain} }, &.{false}) } };
+    const right: language.module_interface.Interface = .{ .module = "second", .text = "", .emission = .{ .physical = try physical.archive(a, .{ .functions = &.{changed} }, &.{false}) } };
+    const restore = @import("module_physical_inputs.zig").restore;
+    try t.expectError(error.InternalError, restore(a, .{ .functions = &.{} }, &.{}, &.{}, &.{ left, right }));
+    try t.expectError(error.InternalError, restore(a, .{ .functions = &.{} }, &.{}, &.{}, &.{ right, left }));
+    try t.expectError(error.InternalError, restore(a, .{ .functions = &.{plain} }, &.{false}, &.{null}, &.{right}));
+    var foreign = plain;
+    foreign.policy.host = null;
+    foreign.policy.c_abi = true;
+    changed = foreign;
+    changed.policy.effects |= effects.bit(.clock);
+    const orphan: language.module_interface.Interface = .{ .module = "third", .text = "", .emission = .{ .physical = try physical.archive(a, .{ .functions = &.{changed} }, &.{false}) } };
+    try t.expectError(error.InternalError, restore(a, .{ .functions = &.{foreign} }, &.{false}, &.{null}, &.{orphan}));
+}
+
+// spec-case: MODULE-COMPILE-1
+test "physical imports reject explicit callback effect ceilings while ignoring bound source spans" {
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const effects = @import("effect_set.zig");
+    const plain: bytecode.Function = .{
+        .name = "lib.callback",
+        .id = @fromBackingInt(0),
+        .policy = .{ .effect_bound = .{ .allowed = 0, .span = .{ .start = 0, .end = 1 } } },
+        .scope = .{ .instructions = &.{} },
+    };
+    var changed = plain;
+    changed.policy.effect_bound.?.allowed = effects.bit(.output);
+    const left: language.module_interface.Interface = .{ .module = "first", .text = "", .emission = .{ .physical = try physical.archive(a, .{ .functions = &.{plain} }, &.{false}) } };
+    const right: language.module_interface.Interface = .{ .module = "second", .text = "", .emission = .{ .physical = try physical.archive(a, .{ .functions = &.{changed} }, &.{false}) } };
+    const restore = @import("module_physical_inputs.zig").restore;
+    try t.expectError(error.InternalError, restore(a, .{ .functions = &.{} }, &.{}, &.{}, &.{ left, right }));
+    try t.expectError(error.InternalError, restore(a, .{ .functions = &.{} }, &.{}, &.{}, &.{ right, left }));
+    try t.expectError(error.InternalError, restore(a, .{ .functions = &.{plain} }, &.{false}, &.{null}, &.{right}));
+    changed = plain;
+    changed.policy.effect_bound.?.span = .{ .start = 40, .end = 45 };
+    const moved: language.module_interface.Interface = .{ .module = "third", .text = "", .emission = .{ .physical = try physical.archive(a, .{ .functions = &.{changed} }, &.{false}) } };
+    const valid = try restore(a, .{ .functions = &.{} }, &.{}, &.{}, &.{ left, moved });
+    try t.expectEqual(@as(effects.Mask, 0), valid.code.functions[0].policy.effect_bound.?.allowed);
+    changed.policy.effect_bound = null;
+    try t.expectError(error.InternalError, restore(a, .{ .functions = &.{changed} }, &.{false}, &.{null}, &.{left}));
 }
 
 // spec-case: MODULE-COMPILE-1

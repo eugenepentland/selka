@@ -732,6 +732,8 @@ const writing_edited: Files = .{ .main = replaced(writing.main, "a=3, b=4", "a=3
 
 // spec: EMIT-WRITES-1
 test "a caller reads a stood-in callee's parameter writes from its facts, not from a body it did not lower" {
+    const collector_runtime = language.runtime_mode.pinCollector();
+    defer language.runtime_mode.set(collector_runtime);
     var directory = t.tmpDir(.{});
     defer directory.cleanup();
     var arena = std.heap.ArenaAllocator.init(t.allocator);
@@ -746,6 +748,26 @@ test "a caller reads a stood-in callee's parameter writes from its facts, not fr
     // still be the full emission's, which copies each element before `flip`.
     const edited = try expectStandInMatches(a, root, reference, &writing_edited);
     try t.expect(edited.reused >= 3);
+}
+
+// spec-case: EMIT-WRITES-1
+test "RC callers preserve complete physical proofs instead of using bodyless write stand-ins" {
+    const runtime = language.runtime_mode;
+    const saved = runtime.get();
+    defer runtime.set(saved);
+    runtime.set(.rc);
+    var directory = t.tmpDir(.{});
+    defer directory.cleanup();
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const base = try directory.dir.realPathFileAlloc(t.io, ".", a);
+    const root = try std.fs.path.join(a, &.{ base, "standin" });
+    const reference = try std.fs.path.join(a, &.{ base, "full" });
+    const cold = try expectStandInMatches(a, root, reference, &writing);
+    const edited = try expectStandInMatches(a, root, reference, &writing_edited);
+    try t.expectEqual(@as(usize, 0), edited.reused);
+    try t.expectEqual(cold.lowered, edited.lowered);
 }
 
 /// The lean executable emission's report of `files`, through a store at `root`.
