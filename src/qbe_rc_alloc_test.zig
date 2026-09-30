@@ -160,7 +160,12 @@ test "ABI5 generated increments are u64 and refuse saturation before storing a t
     , "keep");
     defer t.allocator.free(il);
     try t.expect(std.mem.indexOf(u8, il, " =l loadl ") != null);
-    try t.expect(std.mem.indexOf(u8, il, ", 18446744073709551615\n") != null);
+    const start = std.mem.indexOf(u8, il, "@rcginc") orelse return error.TestUnexpectedResult;
+    const add = start + (std.mem.indexOf(u8, il[start..], " =l add ") orelse return error.TestUnexpectedResult);
+    const carry = add + (std.mem.indexOf(u8, il[add..], " =w ceql ") orelse return error.TestUnexpectedResult);
+    const store = carry + (std.mem.indexOf(u8, il[carry..], " storel ") orelse return error.TestUnexpectedResult);
+    try t.expect(std.mem.indexOf(u8, il[carry..store], ", 0\n") != null);
+    try t.expect(std.mem.indexOf(u8, il[start..store], " storel ") == null);
     try t.expect(std.mem.indexOf(u8, il, "@rcglimit") != null);
     try t.expect(std.mem.indexOf(u8, il, "$myl_qbe_rc_status(l %ctx, w 2)") != null);
     try t.expect(std.mem.indexOf(u8, il, " storel ") != null);

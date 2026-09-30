@@ -1,0 +1,16 @@
+{
+  "source_base": "5535e5a3f0b67e23d0fc9f92f594d7b3feb12a3f",
+  "archive": "focused-evidence.tar.gz",
+  "sha256": "8df822b24b119e2baaddabb27509763dabe366139a9ada04192751075b6ed10e",
+  "bytes": 93003,
+  "payload_members": 40,
+  "full_gate": "pending",
+  "focused_tests": 153,
+  "selected_cases": 31,
+  "native_scenarios": 68,
+  "fixture_runs": 39,
+  "nested_scope_guest_tests": 12,
+  "original_failures": 14,
+  "compiler_sha256": "700f2a7179f0f591d6e2fbf1317877293ef1393bc24a335c3983a872454a2fc2",
+  "qbe_sha256": "2fd151269a0d37b6689e4a0f8a3b7830ae01ce977894b5281e512071b114a792"
+}
