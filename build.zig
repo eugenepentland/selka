@@ -448,7 +448,7 @@ pub fn build(b: *std.Build) void {
     });
     core.addImport("runtime_contract", runtime_contract);
     const exe = b.addExecutable(.{
-        .max_rss = if (optimize == .ReleaseFast) rss.compiler_fast else rss.compile,
+        .max_rss = if (optimize == .fast) rss.compiler_fast else rss.compile,
         .name = "mylang",
         .root_module = b.createModule(.{
             .root_source_file = b.path("src/main.zig"),
