@@ -1,0 +1,16 @@
+{
+  "command": [
+    "scripts/build-slot.sh",
+    "gate",
+    "/home/epentland/ai/canopy/guardian-zig/zig-out/bin/guardian-check",
+    "all",
+    ".",
+    "--full"
+  ],
+  "source": "c13be022aa4a5260d15b002c377de15c5abb4480",
+  "status": 0,
+  "checks_passed": 88,
+  "full": true,
+  "log_sha256": "5a049b597dbe6b4ee8d5350561bb20ff78e96b9bb40b171614ca63287af3648a",
+  "scope": "Whole-tree source/spec/test-owner gate before independent docs-only evidence commit; production source unchanged."
+}

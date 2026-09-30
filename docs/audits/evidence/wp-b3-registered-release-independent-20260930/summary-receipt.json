@@ -1,0 +1,107 @@
+{
+  "scope": "Independent focused source and native behavioral approval; no performance/finalgate acceptance",
+  "frozen_source": "c13be022aa4a5260d15b002c377de15c5abb4480",
+  "production_diff_exit_code": 0,
+  "results": {
+    "clang-control": {
+      "passed": true,
+      "cases": 15,
+      "build_status": 0,
+      "run_status": 0,
+      "receipt_sha256": "db1a9acc4f00e0ca9c5bf12da92c8287d1a0c48ccfc4f15c8f0f48284fccd8ef",
+      "binary_sha256": "9a7179a39bffcf6be7580b0b315fe370285ad40b6d61a203e7c327009e7d8810",
+      "compiler_version": "clang version 22.1.8\nTarget: x86_64-unknown-linux7.0.0-gnu2.43.0\nThread model: posix\nInstalledDir: /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b\n"
+    },
+    "clang-candidate": {
+      "passed": true,
+      "cases": 15,
+      "build_status": 0,
+      "run_status": 0,
+      "receipt_sha256": "997a270fc6d3903263fee23e1a8f5235c3f888443bcb35f05a50ec031ea27a08",
+      "binary_sha256": "4bcaddd5164071bd78a1cb0430578d76f910ef36db938c03ed66a8b77b5b9d8c",
+      "compiler_version": "clang version 22.1.8\nTarget: x86_64-unknown-linux7.0.0-gnu2.43.0\nThread model: posix\nInstalledDir: /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b\n"
+    },
+    "gcc-control": {
+      "passed": true,
+      "cases": 15,
+      "build_status": 0,
+      "run_status": 0,
+      "receipt_sha256": "26507936d5d9ca97b63b25e396a0e8d1ecc7426ac7018473509ca52c0d342f76",
+      "binary_sha256": "7a62fc04a3fbf3ce892a2bae5e04d9c140b40e11c777d8d1e079d342e267c298",
+      "compiler_version": "gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0\nCopyright (C) 2025 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n"
+    },
+    "gcc-candidate": {
+      "passed": true,
+      "cases": 15,
+      "build_status": 0,
+      "run_status": 0,
+      "receipt_sha256": "87dda81ad2e8382cfd7d0f38402dba5584839b7a9b8c85e8840705eddc99ec4f",
+      "binary_sha256": "4c3fdca1f4f2ea42d965b4f521d8008b7fd34a08cd31541d9c678bf3912ae297",
+      "compiler_version": "gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0\nCopyright (C) 2025 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n"
+    }
+  },
+  "total_cases": 60,
+  "positive_executions": 36,
+  "expected_sigabrt_refusals": 24,
+  "ubsan_diagnostics": 0,
+  "native_failures": 0,
+  "hardware_measurements": false,
+  "timing_cpu_pool_used": false,
+  "guardian_exercised": false,
+  "source_proof": {
+    "frozen_source": "c13be022aa4a5260d15b002c377de15c5abb4480",
+    "matches_pre_freeze_reviewed_files": true,
+    "pre_freeze": {
+      "scope": "Pre-freeze read-only source/fixture review; no execution claim",
+      "base": "5535e5a3f0b67e23d0fc9f92f594d7b3feb12a3f",
+      "observed_source": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-runtime-registered-release-20260930",
+      "helper_body_byte_equal_to_old_body_minus_single_registry_lookup": true,
+      "public_guard_lookup_delegate_exact": true,
+      "collections_byte_equal_except_one_admitted_caller": true,
+      "files": {
+        "src/native_collections.c": {
+          "bytes": 72346,
+          "sha256": "737d7793f90f0ce5fa63b852386a312452f51527bc21dda65de90967bba2c4ce"
+        },
+        "src/native_rc_walk.c": {
+          "bytes": 27612,
+          "sha256": "46f1d46e3fc94b521e225597ee7b1d27dd416b67286811245f5f2ea13ebe5f57"
+        },
+        "src/native_rc_internal.h": {
+          "bytes": 27515,
+          "sha256": "2fb5175373436165e519d3f399a2b5f80a05c36407ccec13c3192d1ab228f081"
+        },
+        "tests/native_rc_registered_release_test.c": {
+          "bytes": 9918,
+          "sha256": "d83e6a9928882baff1922056a8af76ae1acf8aac9f805c835cbd1438493b4c92"
+        }
+      },
+      "diff_sha256": "a7478b5a460d48fa5fe71208593efd6fedfcd19f62c3fe60c37e631726030aeb"
+    },
+    "runtime_sources": [
+      "native_heap.c",
+      "native_arena.c",
+      "native_collections.c",
+      "native_text.c",
+      "native_dictionary.c",
+      "native_equal.c",
+      "native_bytes.c",
+      "native_search.c",
+      "native_trim.c",
+      "native_repr.c",
+      "native_rc.c",
+      "native_rc_stats.c",
+      "native_rc_shapes.c",
+      "native_rc_walk.c",
+      "native_rc_scope.c",
+      "native_rc_transfer.c",
+      "native_rc_alloc.c",
+      "native_rc_values.c"
+    ],
+    "baseline_source": "5535e5a3f0b67e23d0fc9f92f594d7b3feb12a3f",
+    "baseline_adapter": "Compile-only macro maps private registered helper calls in the candidate fixture to the public lookup API; baseline production code stays unchanged."
+  },
+  "fixture_sha256": "798138a5a146f5639ebc62c2864ec4d1cd417c85dff5c409d5d67143b79b23f5",
+  "admissions_sha256": "bf7007b795d64ddb70669791d7ec38da816a53213f944bd36d94a8bcc25b1600",
+  "initial_harness_setup_failures_preserved": 2
+}
