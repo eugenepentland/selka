@@ -113,10 +113,16 @@ Worktree: `/home/epentland/ai/canopy/mylang-worktrees/claude-rc-perf`. None of t
 ### Workspace
 
 - Work in your own git worktree under `/home/epentland/ai/canopy/mylang-worktrees/`, on your own branch. Never edit `/home/epentland/ai/canopy/mylang`: that main checkout holds other sessions' uncommitted work. Never touch another agent's worktree.
-- Set these in every shell, and keep every cache and scratch file inside your worktree. `~/ai` has about 180 GB free, shared by all agents.
+- Set these in every shell. Scratch stays inside your worktree; Zig's global cache is one shared directory for every agent. `~/ai` is shared by all agents and has filled up before.
   ```
-  export TMPDIR=$WT/.tmp ZIG_GLOBAL_CACHE_DIR=$WT/.zig-global-cache
+  export TMPDIR=$WT/.tmp ZIG_GLOBAL_CACHE_DIR=/home/epentland/ai/canopy/.zig-global-cache
   ```
+- Caches:
+  - Share only the global cache. Zig locks it per entry, so concurrent builds are safe, and a warm one avoids rebuilding compiler_rt/libc and the `ar rcs` flake below.
+  - Never share `ZIG_LOCAL_CACHE_DIR` (`.zig-cache`) between worktrees: Zig's configure cache ignores the build root, and the build refuses a tree it did not configure.
+  - Never share a `.mylang-cache` between worktrees running different compilers: each compiler generation evicts the others' objects.
+- Reuse worktrees. Before creating one, switch one of your own merged, clean worktrees to your new branch (`git switch -c <branch> main`), so its `.zig-cache` stays warm. When a lane is merged and you will not reuse its worktree, remove it with `git worktree remove <path>`; the branch stays.
+- `scripts/prune-caches.sh` runs hourly. A worktree idle for 3 days loses `.zig-cache`, `.mylang-cache`, `zig-out`, and the binaries, objects and `*cache*` folders in its `.tmp*` scratch. Any `.zig-cache` over 15 GiB is deleted while no build is running in it. Keep evidence you need as text (logs, JSON, notes), not in caches or binaries.
 - Run every `zig build`, and any heavy `mylang test <dir>`, through `scripts/build-slot.sh build|gate …`. It admits jobs by free slots and memory. At most about 4 build-heavy agents fit on this box.
 - Forbidden:
   - bare `git stash`;
@@ -149,7 +155,7 @@ Run all of these:
 - Driver cases: `mylang test driver_tests.my --cases driver_cases.json --max-steps=100000000`.
 - Run all three under the default runtime and `--gc-runtime`.
 
-**Known flake:** with a fresh `ZIG_GLOBAL_CACHE_DIR`, zig prints `ar rcs …` on stderr the first time it builds compiler_rt/libunwind. Two CLI tests that expect empty stderr then fail. Rerun with the warm cache before calling that a failure.
+**Known flake:** with a fresh `ZIG_GLOBAL_CACHE_DIR`, zig prints `ar rcs …` on stderr the first time it builds compiler_rt/libunwind. Two CLI tests that expect empty stderr then fail. The shared global cache above is warm, so this should no longer happen; if it does, rerun before calling it a failure.
 
 ### Performance acceptance
 

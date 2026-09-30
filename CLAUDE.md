@@ -154,6 +154,22 @@ fan-out from `MemAvailable` as well as cores (`--jobs N`, `MYLANG_JOBS`), and
 every build step declares `max_rss`, so `zig build --maxrss N` bounds the whole
 gate's concurrency. See `docs/tooling/runtime-budgets.md`.
 
+## Caches and worktrees (the disk fills up)
+
+- Share Zig's global cache across worktrees:
+  `export ZIG_GLOBAL_CACHE_DIR=/home/epentland/ai/canopy/.zig-global-cache`. Zig locks it
+  per entry, so concurrent builds are safe.
+- Never share `.zig-cache` (`ZIG_LOCAL_CACHE_DIR`) between worktrees: Zig's configure
+  cache ignores the build root. Never share a `.mylang-cache` between worktrees running
+  different compilers: each compiler generation evicts the others' objects.
+- Reuse a merged, clean worktree for new work (`git switch -c <branch> main`) instead of
+  creating one; remove a worktree you are done with (`git worktree remove <path>`).
+- `scripts/prune-caches.sh` (hourly on the dev box; dry run unless `--apply`) deletes the
+  caches, `zig-out` and scratch binaries of worktrees idle for 3 days, and any
+  `.zig-cache` over 15 GiB. Keep evidence as text, not in caches.
+- Guest builds keep `zig cc`'s own cache in their scratch (NATIVE-ZIG-CACHE-1), so
+  `mylang build`/`test` no longer add objects to `.zig-cache`.
+
 ## Guardian rules that actually bite
 
 Guardian runs **inside** `zig build test` and blocks; there are no baselines.
