@@ -1414,6 +1414,35 @@ test "a project whose modules declare copied host functions builds module by mod
     try testing.expectEqualSlices(u8, try temporary.dir.readFileAlloc(testing.io, "whole", a, .limited(1 << 30)), try temporary.dir.readFileAlloc(testing.io, "default", a, .limited(1 << 30)));
 }
 
+// spec: MODULE-EMISSION-RECORDS-1
+test "a record whose layout changed behind a callee's body compiles a dependent that never names it" {
+    var arena_state = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena_state.deinit();
+    const a = arena_state.allocator();
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const directory = try temporary.dir.realPathFileAlloc(testing.io, ".", a);
+    // `main -> mid -> leaf`: `mid.total` builds a `leaf.Leaf` in its body only,
+    // so `main` knows `Leaf` from `mid`'s physical archive alone.
+    const leaf = "module leaf\npublic record Leaf:\n    x: int\n    name: bytes\npublic def make_leaf(v: int) -> Leaf:\n    return Leaf(x=v, name=b\"a\")\n";
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "leaf.my", .data = leaf });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "mid.my", .data = "module mid\nimport leaf\npublic def total(v: int) -> int:\n    made = leaf.make_leaf(v)\n    return made.x + len(made.name)\n" });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = "module main\nimport mid\ndef main() -> int:\n    return mid.total(3)\n" });
+    try testing.expect(builtModules(try projectBuild(a, directory, "rc", "cache-rc", &.{}), "\"module_build\":{\"modules\":3,\"compiled\":3,\"reused\":0"));
+    try testing.expect(builtModules(try projectBuild(a, directory, "gc", "cache-gc", &.{"--gc-runtime"}), "\"module_build\":{\"modules\":3,\"compiled\":3,\"reused\":0"));
+    // A defaulted field changes `Leaf`'s layout: `main`'s share of the
+    // program's type descriptors changes with it.
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "leaf.my", .data = try std.mem.replaceOwned(u8, a, leaf, "    name: bytes\n", "    name: bytes\n    extra: int = 0\n") });
+    try testing.expect(builtModules(try projectBuild(a, directory, "rc", "cache-rc", &.{}), "\"module_build\":{\"modules\":3,\"compiled\":3,\"reused\":0"));
+    try testing.expect(builtModules(try projectBuild(a, directory, "gc", "cache-gc", &.{"--gc-runtime"}), "\"module_build\":{\"modules\":3,\"compiled\":3,\"reused\":0"));
+    try testing.expect(builtModules(try projectBuild(a, directory, "rc-whole", "whole-rc", &.{"--whole-program"}), "\"version\":\"qbe-build-v1\""));
+    try testing.expect(builtModules(try projectBuild(a, directory, "gc-whole", "whole-gc", &.{ "--gc-runtime", "--whole-program" }), "\"version\":\"qbe-build-v1\""));
+    try testing.expectEqualSlices(u8, try temporary.dir.readFileAlloc(testing.io, "rc-whole", a, .limited(1 << 30)), try temporary.dir.readFileAlloc(testing.io, "rc", a, .limited(1 << 30)));
+    try testing.expectEqualSlices(u8, try temporary.dir.readFileAlloc(testing.io, "gc-whole", a, .limited(1 << 30)), try temporary.dir.readFileAlloc(testing.io, "gc", a, .limited(1 << 30)));
+    const ran = try std.process.run(a, testing.io, .{ .argv = &.{try std.fs.path.join(a, &.{ directory, "rc" })} });
+    try testing.expectEqual(std.process.Child.Term{ .exited = 4 }, ran.term);
+}
+
 /// Build `main.my` in `directory` both ways into their own caches, and
 /// require the same exit status, the same standard error and, when both
 /// built, the same executable; the default build's result.

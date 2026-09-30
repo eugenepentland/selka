@@ -174,11 +174,15 @@ fn onOff(flag: bool) []const u8 {
 }
 
 /// The hash a dependent's code keys on besides the interface hash: the
-/// configuration and every declared function's emission facts. The program
+/// configuration, every declared function's emission facts and the physical
+/// archive's record rows, which every dependent restores into its record
+/// catalog (and so into its shared metadata part) whatever the runtime
+/// (MODULE-EMISSION-RECORDS-1); the function and dependency rows count once a
+/// physical body can affect a dependent's RC code generation. The program
 /// marks and value targets are link inputs, not a dependent's.
 pub fn emissionHash(interface: Interface) [32]u8 {
     var hash = std.crypto.hash.Blake3.init(.{});
-    hash.update("module-emission-hash-v3");
+    hash.update("module-emission-hash-v4");
     frame(&hash, interface.module);
     frame(&hash, interface.emission.config);
     count(&hash, interface.emission.functions.len);
@@ -191,8 +195,13 @@ pub fn emissionHash(interface: Interface) [32]u8 {
         for (function.stable) |flag| hash.update(&.{@intFromBool(flag)});
         hash.update(&function.physical);
     }
+    count(&hash, interface.emission.physical.records.len);
+    for (interface.emission.physical.records) |row| {
+        frame(&hash, row.name);
+        frame(&hash, row.bytes);
+    }
     if (physicalInputs(interface)) {
-        inline for (.{ interface.emission.physical.records, interface.emission.physical.functions, interface.emission.physical.dependencies }) |rows| {
+        inline for (.{ interface.emission.physical.functions, interface.emission.physical.dependencies }) |rows| {
             count(&hash, rows.len);
             for (rows) |row| {
                 frame(&hash, row.name);
