@@ -36,11 +36,37 @@ pub fn rendersConversion(records: []const typed.Record, target: typed.Type, inpu
 /// names only its target type; a function lowered without one contributes
 /// nothing.
 pub fn generate(allocator: std.mem.Allocator, catalog: *native.Catalog, program: bytecode.Program, states: []const []const ?[]const typed.Type) Error![]u8 {
+    return generateSelected(allocator, catalog, program, states, null);
+}
+
+/// `generate` over the functions `selected` marks (all when null): the
+/// renderers one module's units call (MODULE-COMPILE-1).
+pub fn generateSelected(allocator: std.mem.Allocator, catalog: *native.Catalog, program: bytecode.Program, states: []const []const ?[]const typed.Type, selected: ?[]const bool) Error![]u8 {
     var arena = std.heap.ArenaAllocator.init(allocator);
     defer arena.deinit();
-    const a = arena.allocator();
+    return render(allocator, try blocks(arena.allocator(), .{ .catalog = catalog, .program = program, .states = states, .selected = selected }));
+}
+
+/// What one set of renderers is discovered from.
+pub const Scope = struct {
+    catalog: *native.Catalog,
+    program: bytecode.Program,
+    states: []const []const ?[]const typed.Type,
+    /// The functions whose instructions are read; all when null.
+    selected: ?[]const bool = null,
+};
+
+/// The renderers `scope`'s functions need, sorted by symbol, allocated with
+/// `allocator` (an arena).
+pub fn blocks(allocator: std.mem.Allocator, scope: Scope) Error![]Block {
+    const a = allocator;
+    const catalog = scope.catalog;
+    const program = scope.program;
+    const states = scope.states;
+    const selected = scope.selected;
     var wanted: std.array_hash_map.Auto(typed.Type, void) = .empty;
-    for (program.functions, states) |function, stacks| {
+    for (program.functions, states, 0..) |function, stacks, index| {
+        if (selected) |mask| if (!mask[index]) continue;
         for (function.scope.instructions, 0..) |instruction, pc| {
             switch (instruction.op) {
                 .print => |output| for (output.types) |ty| try discover(a, catalog, ty, &wanted),
@@ -53,16 +79,33 @@ pub fn generate(allocator: std.mem.Allocator, catalog: *native.Catalog, program:
             }
         }
     }
-    var output: std.Io.Writer.Allocating = .init(allocator);
-    defer output.deinit();
-    if (wanted.count() == 0) return output.toOwnedSlice();
     const items = try a.alloc(Item, wanted.count());
     for (wanted.keys(), items) |ty, *item| item.* = .{ .ty = ty, .name = try symbol(a, catalog, ty) };
     std.mem.sort(Item, items, {}, lessThan);
+    const out = try a.alloc(Block, items.len);
+    for (items, out) |item, *block| {
+        var text: std.Io.Writer.Allocating = .init(a);
+        try emit(a, &text.writer, catalog, item);
+        block.* = .{ .name = item.name, .text = try text.toOwnedSlice() };
+    }
+    return out;
+}
+
+/// One renderer's definition and the symbol it is ordered and merged by.
+pub const Block = struct { name: []const u8, text: []const u8 };
+
+/// The C unit `generate` writes for these renderers, sorted by symbol:
+/// nothing when there are none, else the header, a prototype of each and each
+/// definition. A link renders the union of its modules' renderers
+/// (MODULE-COMPILE-1).
+pub fn render(allocator: std.mem.Allocator, items: []const Block) Error![]u8 {
+    var output: std.Io.Writer.Allocating = .init(allocator);
+    defer output.deinit();
+    if (items.len == 0) return output.toOwnedSlice();
     const writer = &output.writer;
     writer.writeAll("#include \"native_print.h\"\n") catch return error.OutOfMemory;
     for (items) |item| writer.print("void {s}(MylPrint *, const void *, unsigned);\n", .{item.name}) catch return error.OutOfMemory;
-    for (items) |item| try emit(a, writer, catalog, item);
+    for (items) |item| writer.writeAll(item.text) catch return error.OutOfMemory;
     return output.toOwnedSlice();
 }
 
@@ -208,9 +251,9 @@ fn variant(a: std.mem.Allocator, writer: *std.Io.Writer, catalog: *native.Catalo
     const variants = record.shape.variants.?;
     writer.print("static const MylPrintField {s}_cases[] = {{\n", .{item.name}) catch return error.OutOfMemory;
     for (variants.cases, 0..) |case, tag| {
-        const render = if (case.payload) |payload| try symbol(a, catalog, payload) else "NULL";
+        const renderer = if (case.payload) |payload| try symbol(a, catalog, payload) else "NULL";
         const label = try caseName(a, shortName(record.name), variants.fallible, case);
-        writer.print(" {{{d}, {s}, {s}, {d}}},\n", .{ layout.payload_offset, render, try quoted(a, label), tag }) catch return error.OutOfMemory;
+        writer.print(" {{{d}, {s}, {s}, {d}}},\n", .{ layout.payload_offset, renderer, try quoted(a, label), tag }) catch return error.OutOfMemory;
     }
     writer.writeAll("};\n") catch return error.OutOfMemory;
     // QBE-NICHE-1: a niche optional has no tag word; its case is whether the

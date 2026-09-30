@@ -1,0 +1,44 @@
+{
+  "source_commit": "c9ad8375605a5bb4575ba6773b14ff70bd63e169",
+  "base": "cfee00704911a482bd09db880f0e20631f8b6cf1",
+  "production_change": "only private fail declaration adds cold; body/header/callers unchanged",
+  "checks": [
+    {
+      "check": "units",
+      "status": 0,
+      "result": "14/14 tests passed",
+      "log": "final-units.stderr"
+    },
+    {
+      "check": "CLI",
+      "status": 0,
+      "result": "3/3 tests passed",
+      "log": "final-cli.stderr"
+    },
+    {
+      "check": "Guardian",
+      "status": 0,
+      "result": "88 check(s) passed",
+      "log": "guardian.stderr"
+    }
+  ],
+  "guest_outputs": 4,
+  "native_execution_modes": 6,
+  "no_timing_performance_acceptance": true,
+  "compiler_build": "same production-source bytes as frozen commit; supporting tests/spec added afterwards",
+  "rejected_preserve_all_docs_commit": "933ed15c",
+  "archive_sha256": "762c56ba1cde7ed843671369d84f4ff6329d118da658898ed5902aac8a13d1b7",
+  "archive_bytes": 4324120,
+  "raw_members_verified": 77,
+  "archive_omits": "compiler prefix and regenerable guest cache; installed hashes retained and prefix kept read-only in owned scratch",
+  "final_docs_full_guardian": "88/88",
+  "final_docs_guardian_sha256": "6597fb9abf3b409effe311cce9def599b30c5c44c8b75e5fbd6cecc3f9889064",
+  "subsequent_root_independent_evidence": {
+    "receipt": "root-independent-receipt.json",
+    "archive": "root-independent.tar.gz",
+    "archive_sha256": "ef69ea92e03f2155738ebf03b013cb801926a0b9acd431dbc58305daab8d2a89",
+    "raw_members_verified": 34,
+    "scope": "6 native replay modes and 6 focused LLVM hardware output pairs; no full258 claim",
+    "Guardian_feedback_commit": "4ec25313c6f1fabddf195250121b920e143590ed"
+  }
+}

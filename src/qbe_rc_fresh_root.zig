@@ -87,7 +87,7 @@ fn fresh(comptime E: type, self: *E, local: usize, op: Op) bool {
     if (shape.counted or shape.unique_drop) return false;
     return switch (op) {
         .acquire_buffer => |result| result == ty,
-        .make_record => |result| result.ty == ty,
+        .make_record => |result| result.ty == ty and result.payload.len == 0,
         else => false,
     };
 }

@@ -150,6 +150,32 @@ pub const Kind = enum {
     /// PRELUDE-ROUND-2: `round(x, n)`. The owner is the empty text naming the
     /// runtime family; the arguments are the float and the digit count.
     float_round,
+    /// Explicit charset trims; existing no-argument ordinals remain unchanged.
+    strip_chars,
+    lstrip_chars,
+    rstrip_chars,
+    /// Python search bounds; start-only and range variants have fixed IR arities.
+    find_start,
+    find_range,
+    rfind,
+    rfind_start,
+    rfind_range,
+    text_index,
+    text_index_start,
+    text_index_range,
+    rindex,
+    rindex_start,
+    rindex_range,
+    count_start,
+    count_range,
+    starts_with_start,
+    starts_with_range,
+    ends_with_start,
+    ends_with_range,
+    /// Exact Python scalar repr of a str or bytes receiver.
+    text_repr,
+    /// A str slice whose upper endpoint was omitted; its long suffix may share.
+    text_tail,
     /// Return the required source argument count for this buffer builtin.
     pub fn arity(self: Kind) usize {
         return switch (self) {
@@ -169,10 +195,16 @@ pub const Kind = enum {
             .number_format, .float_round => 2,
             .set_add, .set_discard, .set_union, .set_intersection, .set_difference, .set_symmetric_difference => 1,
             .set_subset, .set_superset, .set_disjoint => 1,
-            .write, .resize, .reserve, .get, .slice, .find_any, .view => 2,
+            .write, .resize, .reserve, .get, .slice, .text_tail, .find_any, .view => 2,
             .sort_keyed => 3,
             .parse_int_range, .parse_float_range, .scalar_count_range => 2,
             .slice_step => 3,
+            .strip_chars, .lstrip_chars, .rstrip_chars, .rfind, .text_index, .rindex => 1,
+            .find_start, .rfind_start, .text_index_start, .rindex_start => 2,
+            .count_start, .starts_with_start, .ends_with_start => 2,
+            .find_range, .rfind_range, .text_index_range, .rindex_range => 3,
+            .count_range, .starts_with_range, .ends_with_range => 3,
+            .text_repr => 0,
         };
     }
     /// Identify operations that may allocate new guest backing storage.
@@ -191,6 +223,7 @@ pub const Kind = enum {
     }
     /// Identify operations that modify buffer contents or initialized length.
     pub fn mutates(self: Kind) bool {
+        if (search(self) != null or trim(self) != null or self == .text_repr) return false;
         return switch (self) {
             .length, .capacity, .iteration_check, .key_at, .value_at, .read, .get, .contains, .keys, .values, .split, .join => false,
             .encode, .decode, .to_list, .hex, .from_hex, .starts_with, .ends_with, .find, .find_any => false,
@@ -236,7 +269,7 @@ const methods = [_]Method{
     .{ .spelling = "append_utf8", .kind = .buffer_append_utf8, .buffer = true },
     .{ .spelling = "clear", .kind = .clear, .list = true, .dictionary = true, .set = true },
     .{ .spelling = "copy", .kind = .copy, .list = true, .dictionary = true, .bytes = true, .set = true },
-    .{ .spelling = "count", .kind = .count, .string = true },
+    .{ .spelling = "count", .kind = .count, .string = true, .bytes = true },
     .{ .spelling = "decode", .kind = .decode, .bytes = true },
     .{ .spelling = "difference", .kind = .set_difference, .set = true },
     .{ .spelling = "discard", .kind = .set_discard, .set = true },
@@ -247,7 +280,7 @@ const methods = [_]Method{
     .{ .spelling = "find_any", .kind = .find_any, .bytes = true },
     .{ .spelling = "get", .kind = .get, .dictionary = true },
     .{ .spelling = "hex", .kind = .hex, .bytes = true },
-    .{ .spelling = "index", .kind = .index_of, .list = true },
+    .{ .spelling = "index", .kind = .index_of, .list = true, .string = true, .bytes = true },
     .{ .spelling = "insert", .kind = .insert, .list = true },
     .{ .spelling = "intersection", .kind = .set_intersection, .set = true },
     .{ .spelling = "isalpha", .kind = .is_alpha, .string = true },
@@ -260,7 +293,7 @@ const methods = [_]Method{
     .{ .spelling = "join", .kind = .join, .string = true, .bytes = true },
     .{ .spelling = "keys", .kind = .keys, .dictionary = true },
     .{ .spelling = "lower", .kind = .lower, .string = true },
-    .{ .spelling = "lstrip", .kind = .lstrip, .string = true },
+    .{ .spelling = "lstrip", .kind = .lstrip, .string = true, .bytes = true },
     .{ .spelling = "parse_float", .kind = .parse_float, .string = true, .bytes = true },
     .{ .spelling = "parse_float_range", .kind = .parse_float_range, .bytes = true },
     .{ .spelling = "parse_int", .kind = .parse_int, .string = true, .bytes = true },
@@ -270,7 +303,9 @@ const methods = [_]Method{
     .{ .spelling = "replace", .kind = .replace, .string = true },
     .{ .spelling = "reserve", .kind = .buffer_reserve, .buffer = true },
     .{ .spelling = "reverse", .kind = .reverse, .list = true },
-    .{ .spelling = "rstrip", .kind = .rstrip, .string = true },
+    .{ .spelling = "rfind", .kind = .rfind, .string = true, .bytes = true },
+    .{ .spelling = "rindex", .kind = .rindex, .string = true, .bytes = true },
+    .{ .spelling = "rstrip", .kind = .rstrip, .string = true, .bytes = true },
     .{ .spelling = "scalar_count", .kind = .scalar_count, .bytes = true },
     .{ .spelling = "scalar_count_range", .kind = .scalar_count_range, .bytes = true },
     .{ .spelling = "setdefault", .kind = .setdefault, .dictionary = true },
@@ -278,7 +313,7 @@ const methods = [_]Method{
     .{ .spelling = "split", .kind = .split, .string = true, .bytes = true },
     .{ .spelling = "splitlines", .kind = .splitlines, .string = true },
     .{ .spelling = "startswith", .kind = .starts_with, .string = true, .bytes = true },
-    .{ .spelling = "strip", .kind = .strip, .string = true },
+    .{ .spelling = "strip", .kind = .strip, .string = true, .bytes = true },
     .{ .spelling = "symmetric_difference", .kind = .set_symmetric_difference, .set = true },
     .{ .spelling = "to_list", .kind = .to_list, .bytes = true },
     .{ .spelling = "union", .kind = .set_union, .set = true },
@@ -317,7 +352,13 @@ pub fn method(name: []const u8) ?Kind {
 pub fn methodFor(name: []const u8, arguments: usize) ?Kind {
     const resolved = method(name) orelse return null;
     if (resolved == .split and arguments == 0) return .split_whitespace;
-    return resolved;
+    if (arguments == 1) return switch (resolved) {
+        .strip => .strip_chars,
+        .lstrip => .lstrip_chars,
+        .rstrip => .rstrip_chars,
+        else => resolved,
+    };
+    return boundedMethod(resolved, arguments);
 }
 
 /// The method spelling one operation is written with, or null for an operation
@@ -327,6 +368,18 @@ pub fn methodFor(name: []const u8, arguments: usize) ?Kind {
 /// argument list is what tells each family apart.
 pub fn spelling(kind: Kind) ?[]const u8 {
     if (kind == .split_whitespace) return "split";
+    if (search(kind)) |mode| return switch (mode) {
+        .find => "find",
+        .rfind => "rfind",
+        .index => "index",
+        .rindex => "rindex",
+        .count => "count",
+        .prefix => "startswith",
+        .suffix => "endswith",
+    };
+    if (kind == .strip_chars) return "strip";
+    if (kind == .lstrip_chars) return "lstrip";
+    if (kind == .rstrip_chars) return "rstrip";
     if (kind == .pop_at or kind == .pop_key or kind == .pop_default) return "pop";
     inline for (methods) |entry| {
         if (kind == entry.kind) return entry.spelling;
@@ -393,6 +446,12 @@ fn signatureBody(allocator: std.mem.Allocator, kind: Kind, names: SignatureNames
     const element = names.element;
     const key = names.key;
     const dictionary = names.family == .dictionary;
+    if (search(kind)) |mode| {
+        const result = if (mode == .prefix or mode == .suffix) "bool" else "int";
+        return std.fmt.allocPrint(allocator, "(sub: {s}, start: int = 0, end: int = len(self)) -> {s}", .{ receiver, result });
+    }
+    if (trim(kind) != null)
+        return std.fmt.allocPrint(allocator, "(chars: {s} = whitespace) -> {s}", .{ receiver, receiver });
     return switch (kind) {
         .strip, .lstrip, .rstrip, .upper, .lower => try std.fmt.allocPrint(allocator, fresh_signature, .{receiver}),
         .splitlines, .split_whitespace => try std.fmt.allocPrint(allocator, fresh_list_signature, .{receiver}),
@@ -414,7 +473,7 @@ fn signatureBody(allocator: std.mem.Allocator, kind: Kind, names: SignatureNames
         .to_list => try allocator.dupe(u8, "() -> list[int]"),
         .scalar_count => try allocator.dupe(u8, "() -> Result[int, str]"),
         .scalar_count_range => try allocator.dupe(u8, "(start: int, end: int) -> Result[int, str]"),
-        .view, .slice => try std.fmt.allocPrint(allocator, span_signature, .{receiver}),
+        .view, .slice, .text_tail => try std.fmt.allocPrint(allocator, span_signature, .{receiver}),
         .find_any => try std.fmt.allocPrint(allocator, "(values: {s}, start: int) -> int", .{receiver}),
         .slice_step => try std.fmt.allocPrint(allocator, "(start: int, end: int, step: int) -> {s}", .{receiver}),
         .length => try allocator.dupe(u8, "() -> int"),
@@ -538,8 +597,9 @@ pub fn byteBuffer(kind: Kind) bool {
 /// checked result's error text; the older whole-value spelling retains its
 /// compatibility classification.
 pub fn managedAllocation(kind: Kind, dictionary: bool) bool {
+    if (trim(kind) != null or kind == .text_repr) return true;
     return switch (kind) {
-        .append, .split, .join, .keys, .values, .slice, .slice_step => true,
+        .append, .split, .join, .keys, .values, .slice, .text_tail, .slice_step => true,
         .extend, .insert, .items, .copy, .update, .setdefault => true,
         .encode, .decode, .to_list, .hex, .from_hex => true,
         .strip, .lstrip, .rstrip, .upper, .lower, .splitlines, .replace, .zfill => true,
@@ -552,5 +612,65 @@ pub fn managedAllocation(kind: Kind, dictionary: bool) bool {
         // The set vocabulary that inserts or builds a fresh set (SET-1).
         .set_add, .set_union, .set_intersection, .set_difference, .set_symmetric_difference => true,
         else => false,
+    };
+}
+
+/// Search behavior passed unchanged to the nonallocating native range engines.
+pub const Search = enum(u3) { find, rfind, index, rindex, count, prefix, suffix };
+
+/// Search mode, including old whole-value operations whose ordinals are stable.
+pub fn search(kind: Kind) ?Search {
+    return switch (kind) {
+        .find, .find_start, .find_range => .find,
+        .rfind, .rfind_start, .rfind_range => .rfind,
+        .text_index, .text_index_start, .text_index_range => .index,
+        .rindex, .rindex_start, .rindex_range => .rindex,
+        .count, .count_start, .count_range => .count,
+        .starts_with, .starts_with_start, .starts_with_range => .prefix,
+        .ends_with, .ends_with_start, .ends_with_range => .suffix,
+        else => null,
+    };
+}
+
+/// Trim direction: both ends, leading only, or trailing only.
+pub fn trim(kind: Kind) ?u2 {
+    return switch (kind) {
+        .strip, .strip_chars => 0,
+        .lstrip, .lstrip_chars => 1,
+        .rstrip, .rstrip_chars => 2,
+        else => null,
+    };
+}
+
+/// Resolve the receiver-dependent index spelling without changing list.index.
+pub fn forFamily(kind: Kind, family: ManagedKind) Kind {
+    if (kind == .index_of and (family == .string or family == .bytes)) return .text_index;
+    return kind;
+}
+
+fn boundedMethod(kind: Kind, arguments: usize) Kind {
+    if (arguments != 2 and arguments != 3) return kind;
+    const range = arguments == 3;
+    return switch (kind) {
+        .find => if (range) .find_range else .find_start,
+        .rfind => if (range) .rfind_range else .rfind_start,
+        .index_of => if (range) .text_index_range else .text_index_start,
+        .rindex => if (range) .rindex_range else .rindex_start,
+        .count => if (range) .count_range else .count_start,
+        .starts_with => if (range) .starts_with_range else .starts_with_start,
+        .ends_with => if (range) .ends_with_range else .ends_with_start,
+        else => kind,
+    };
+}
+
+/// Whether one operation uses the new statically selected Python runtime entries.
+pub fn pythonOperation(kind: Kind, bytes: bool) bool {
+    if (kind == .text_repr) return true;
+    if (trim(kind) != null) return bytes or kind.arity() == 1;
+    if (search(kind) == null) return false;
+    return switch (kind) {
+        .find, .starts_with, .ends_with => false,
+        .count => bytes,
+        else => true,
     };
 }

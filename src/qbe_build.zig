@@ -44,7 +44,19 @@ pub const Error = fs.Error || std.json.ParseError(std.json.Scanner) || outputs.E
 /// side alone fails there rather than letting the driver accept a manifest the
 /// core would not emit.
 pub const native_abi = "mylang-qbe-native-v9";
-const Record = struct { name: []const u8, symbol: []const u8, key: []const u8, object: []const u8, reused: bool };
+/// Diagnostic presentation crosses the native driver into the source frontend.
+fn appendDiagnostics(allocator: std.mem.Allocator, arguments: *std.ArrayList([]const u8), given: []const []const u8) std.mem.Allocator.Error!void {
+    for (given) |argument| {
+        if (std.mem.startsWith(u8, argument, "--diagnostics=")) try arguments.append(allocator, argument);
+    }
+}
+/// One guest function's symbol, object identity and observed reuse.
+pub const Record = struct { name: []const u8, symbol: []const u8, key: []const u8, object: []const u8, reused: bool };
+/// MODULE-SCHEDULE-1: one object of a module's build and its place in a
+/// program's link order: code batches before metadata groups, each ordered by
+/// its plan group (a module, or a specialization of its own) and the symbol of
+/// its first member, as a whole-program build orders them.
+pub const Placed = struct { kind: enum { code, meta }, group: []const u8, first: []const u8, object: []const u8, key: []const u8 };
 /// Fixed runtime translation units archived together once per build environment.
 const runtime_units = [_][]const u8{
     "qbe_runtime_rc.c",
@@ -72,6 +84,9 @@ const runtime_units = [_][]const u8{
     "qbe_grants.c",
     "qbe_files.c",
     "native_text_methods.c",
+    "native_search.c",
+    "native_trim.c",
+    "native_repr.c",
     "qbe_stand_ins.c",
     "native_cow.c",
     "qbe_cow_runtime.c",
@@ -114,7 +129,26 @@ pub fn runMeasured(process: std.process.Init, args: []const []const u8, phases: 
     var context = try fs.Context.init(process.gpa, process.io, process.environ_map);
     defer context.deinit();
     const controls = try runtimeControls(context.allocator, args);
+    if (moduleObjectsRequested(parsed.link_arguments)) return moduleObjectsBuild(context, parsed);
     return build(context, parsed, controls, phases);
+}
+
+/// MODULE-COMPILE-1: `build --manifest-file=M --module-objects -o LIST`
+/// compiles one module's units into their batch and metadata objects in the
+/// cache and writes the object list to `LIST`; nothing is linked.
+fn moduleObjectsBuild(context: fs.Context, parsed: options.Options) !u8 {
+    const a = context.allocator;
+    const prepared = prepare(context, parsed) catch |err| switch (err) {
+        error.NativeToolFailed => return 2,
+        else => return err,
+    };
+    defer context.remove(prepared.cache.temporary);
+    const path = manifestFile(parsed.link_arguments) orelse return error.InvalidNativeManifest;
+    const units = (try std.json.parseFromSlice(std.json.Value, a, try context.read(path), .{ .allocate = .alloc_always })).value;
+    try validate(a, units, try contract.parse(context.environ.get(contract.variable)));
+    var state = State{ .context = prepared.cache.context, .cache = prepared.cache, .manifest = units };
+    try state.moduleObjects(try context.absolute(parsed.output));
+    return 0;
 }
 /// The four phase durations a build measures for `--report`, in seconds. A
 /// command that asked for `phase-timings-v1` records receives them here instead
@@ -132,7 +166,7 @@ pub const PhaseTimings = struct {
 /// Collect runtime/authority controls from a `build --run` command line. They
 /// travel to the temporary executable in `MYLANG_OPTIONS` and are revalidated by
 /// the native runtime; the values after `--` are the program's own arguments.
-fn runtimeControls(allocator: std.mem.Allocator, args: []const []const u8) ![]const []const u8 {
+pub fn runtimeControls(allocator: std.mem.Allocator, args: []const []const u8) error{OutOfMemory}![]const []const u8 {
     var list: std.ArrayList([]const u8) = .empty;
     for (args) |argument| {
         if (std.mem.eql(u8, argument, "--")) break;
@@ -276,27 +310,17 @@ fn build(context: fs.Context, parsed: options.Options, controls: []const []const
         // names each text and its metadata by digest (`QBE-FRAGMENT-REUSE-1`,
         // `EMIT-META-1`), and an executable's leaves out library-only facts.
         if (project) try arguments.append(a, leanManifestFlag(parsed));
+        try appendDiagnostics(a, &arguments, parsed.link_arguments);
         // RC-DEFAULT-1: the frontend inherits the real process environment,
         // which a host's own environment map need not match, so it is told the
         // contract this driver validates and links against explicitly.
         try arguments.append(a, (try contract.parse(context.environ.get(contract.variable))).flag());
-        if (std.mem.eql(u8, parsed.cache, options.no_cache)) {
+        if (options.noCache(parsed)) {
             try arguments.append(a, "--no-cache");
         } else if (!std.mem.eql(u8, parsed.cache, options.default_cache)) {
             try arguments.append(a, try std.fmt.allocPrint(a, "--cache-dir={s}", .{parsed.cache}));
         }
-        // A ReleaseFast `build` drops `debug` lines in lowering; `run` keeps them.
-        if (!parsed.run and std.mem.eql(u8, parsed.mode, release_fast)) try arguments.append(a, "--drop-debug");
-        // A ReleaseFast executable was not asked for an instruction ceiling, so it
-        // drops step-budget accounting. A library always keeps it: the embed API
-        // and the guest-test runner always run under a finite budget.
-        const fast_executable = !parsed.library and !stepAccounting(parsed.link_arguments) and std.mem.eql(u8, parsed.mode, release_fast);
-        if (fast_executable) try arguments.append(a, "--drop-step-checks");
-        // The same reasoning for call depth: a ReleaseFast executable that was not
-        // asked for a frame ceiling carries no depth accounting, and its entry
-        // refuses one at run time. A library always keeps it.
-        const frame_accounted = frameAccounting(parsed.link_arguments);
-        if (fast_executable and !frame_accounted) try arguments.append(a, "--drop-frame-checks");
+        try arguments.appendSlice(a, try frontendSwitches(a, emissionSwitches(parsed)));
         if (selectFile(parsed.link_arguments)) |path| {
             try arguments.append(a, try std.fmt.allocPrint(a, "--select-file={s}", .{path}));
             // Forward the work-report request for selective test builds so native-test
@@ -373,6 +397,121 @@ fn build(context: fs.Context, parsed: options.Options, controls: []const []const
     if (parsed.run) return spawnParts(context, output, controls, parsed);
     return 0;
 }
+/// MODULE-SCHEDULE-2: a program whose guest objects its modules' compiles
+/// built, ready to link without reading any unit.
+pub const ModuleProgram = struct {
+    /// Guest code batch and metadata group objects, in link order.
+    objects: []const []const u8,
+    /// Whether this build compiled any of them.
+    compiled: bool,
+    /// Every guest function's report record; read only for `--report`.
+    records: []const Record,
+    /// The program-wide metadata C unit: a key over what it is rendered from,
+    /// and its text, rendered only when no object has that key.
+    shared: SharedUnit,
+    /// The entry's fields and the text-runtime switch, shaped like a manifest.
+    manifest: std.json.Value,
+    /// A digest of everything above that decides the executable's bytes, the
+    /// input of the build receipt (BUILD-NOOP-1).
+    identity: []const u8,
+    /// MODULE-TEST-1: a shared library's wrapper C unit, linked in place of
+    /// the entry unit, or null for an executable.
+    library: ?[]const u8 = null,
+};
+
+/// The program-wide metadata unit of a module-built program.
+pub const SharedUnit = struct { key: []const u8, render: Render };
+
+/// Renders a C unit's text on demand.
+pub const Render = struct { context: *anyopaque, run: *const fn (context: *anyopaque, allocator: std.mem.Allocator) Error![]const u8 };
+
+/// What the module build observed before its link: how long its compiles took,
+/// where the phases go, the runtime controls of `--run`, and the module
+/// build's own report fields.
+pub const ModuleObserved = struct { frontend: f64, phases: ?*PhaseTimings, controls: []const []const u8, report: ?std.json.Value = null };
+
+/// MODULE-SCHEDULE-2: link a program from per-module objects. The shared
+/// metadata unit is found by its key and rendered only on a miss, the entry
+/// unit is keyed by its text, and the objects are linked in the order a
+/// whole-program build links them, so the executable is that build's, byte for
+/// byte. The build receipt, the link's reuse, the report and the phases work
+/// as in `build`.
+pub fn linkModules(prepared: Prepared, parsed: options.Options, program: ModuleProgram, observed: ModuleObserved) Error!u8 {
+    const cache = prepared.cache;
+    const context = cache.context;
+    const a = context.allocator;
+    const native_start = std.Io.Timestamp.now(context.io, .awake);
+    const output = if (parsed.run) try std.fs.path.join(a, &.{ cache.temporary, "program" }) else try context.absolute(parsed.output);
+    const receipt = receipts.Receipt.init(context, parsed, try receiptIdentity(a, cache), program.identity, output);
+    if (unchanged(receipt, observed.phases, observed.frontend)) return 0;
+    var state = State{ .context = context, .cache = cache, .manifest = program.manifest, .compiled = program.compiled, .modules = true };
+    const codegen_start = std.Io.Timestamp.now(context.io, .awake);
+    try state.objects.appendSlice(a, program.objects);
+    try state.records.appendSlice(a, program.records);
+    for (program.records) |record| state.reused += @intFromBool(record.reused);
+    const shared = try state.sharedUnit(program.shared);
+    state.metadata_reused = shared.reused;
+    try state.add(shared);
+    if (program.library) |wrapper| {
+        try state.add(try cache.object("library", wrapper, .c_text));
+    } else try state.add(try cache.object("entry", try outputs.entry(a, program.manifest, parsed.provider != null, std.mem.eql(u8, parsed.mode, release_fast)), .c_text));
+    if (v.boolean(v.get(program.manifest, "text_format"))) try state.add(try state.resolveFormat());
+    state.runtime = try state.resolveRuntime();
+    const codegen = seconds(context, codegen_start);
+    const link_start = std.Io.Timestamp.now(context.io, .awake);
+    const changed = try state.link(parsed, output);
+    if (receipt) |built| built.record();
+    const link = seconds(context, link_start);
+    if (parsed.report) try moduleReport(&state, .{ .prepared = prepared, .parsed = parsed, .output = output, .changed = changed, .observed = observed, .times = .{ codegen, link, seconds(context, native_start) } });
+    if (observed.phases) |measured| {
+        measured.* = .{ .frontend = observed.frontend, .codegen = codegen, .link = link, .native = seconds(context, native_start), .complete = true };
+    }
+    if (parsed.run) return spawnParts(context, output, observed.controls, parsed);
+    return 0;
+}
+
+/// What a module build's `--report` is made of besides the link's state.
+const ModuleReport = struct { prepared: Prepared, parsed: options.Options, output: []const u8, changed: bool, observed: ModuleObserved, times: [3]f64 };
+
+/// The `qbe-build-v1` report of a module build: the fields `build` reports,
+/// and `module_build` with the scheduler's own counts.
+fn moduleReport(state: *State, request: ModuleReport) !void {
+    const context = state.context;
+    const a = context.allocator;
+    const parsed = request.parsed;
+    const cache = request.prepared.cache;
+    const objects = try functionObjects(a, state.records.items);
+    const report = try std.json.Stringify.valueAlloc(a, .{
+        .version = "qbe-build-v1",
+        .output = request.output,
+        .output_changed = request.changed,
+        .compiled_functions = state.records.items.len - state.reused,
+        .reused_functions = state.reused,
+        .function_objects = objects.total,
+        .compiled_function_objects = objects.compiled,
+        .runtime_reused = state.runtime.reused,
+        .runtime_installed = state.runtime_installed,
+        .metadata_reused = state.metadata_reused,
+        .link_route = routeName(state.link_route),
+        .functions = state.records.items,
+        .frontend_seconds = request.observed.frontend,
+        .codegen_seconds = request.times[0],
+        .link_seconds = request.times[1],
+        .native_seconds = request.times[2],
+        .target = parsed.target,
+        .mode = parsed.mode,
+        .zig_version = request.prepared.zig_version,
+        .artifact_kind = "executable",
+        .backend = if (cache.codegen.llvm) "llvm" else "qbe",
+        .optimization = cache.codegen.optimization,
+        .lto = cache.codegen.lto.on(),
+        .thin_lto = cache.codegen.lto == .thin,
+        .module_build = request.observed.report,
+    }, .{});
+    const stream = if (parsed.run) std.Io.File.stderr() else std.Io.File.stdout();
+    try stream.writeStreamingAll(context.io, try std.fmt.allocPrint(a, "{s}\n", .{report}));
+}
+
 /// Whether this build's receipt says its output is already exactly what it
 /// would produce (`BUILD-NOOP-1`). A skipped build still reports its frontend
 /// phase, and codegen, link and native phases that did no work.
@@ -417,11 +556,47 @@ fn selectFile(args: []const []const u8) ?[]const u8 {
     return null;
 }
 
+/// Whether the build was asked only for one module's objects (internal
+/// `--module-objects`, MODULE-COMPILE-1).
+fn moduleObjectsRequested(args: []const []const u8) bool {
+    for (args) |argument| if (std.mem.eql(u8, argument, "--module-objects")) return true;
+    return false;
+}
+
 /// Find an internal `--manifest-file=PATH` in the original build arguments. It
 /// names a checked frontend manifest, so the driver skips the frontend child.
 fn manifestFile(args: []const []const u8) ?[]const u8 {
     for (args) |argument| if (std.mem.startsWith(u8, argument, "--manifest-file=")) return argument["--manifest-file=".len..];
     return null;
+}
+
+/// What a build's frontend lowers and emits under: whether `debug` lines are
+/// dropped and which accounting and value guards the units carry.
+pub const Switches = struct { drop_debug: bool, step_checks: bool, frame_checks: bool };
+
+/// The switches `build` emits a program under. A ReleaseFast `build` drops
+/// `debug` lines in lowering; `run` keeps them. A ReleaseFast executable that
+/// was not asked for an instruction ceiling drops step-budget accounting (a
+/// library always keeps it: the embed API and the guest-test runner always run
+/// under a finite budget), and likewise call-depth accounting when it was not
+/// asked for a frame ceiling.
+pub fn emissionSwitches(parsed: options.Options) Switches {
+    const fast = std.mem.eql(u8, parsed.mode, release_fast);
+    const fast_executable = !parsed.library and !stepAccounting(parsed.link_arguments) and fast;
+    return .{
+        .drop_debug = !parsed.run and fast,
+        .step_checks = !fast_executable,
+        .frame_checks = !(fast_executable and !frameAccounting(parsed.link_arguments)),
+    };
+}
+
+/// The frontend flags that spell `switches`.
+pub fn frontendSwitches(allocator: std.mem.Allocator, switches: Switches) error{OutOfMemory}![]const []const u8 {
+    var out: std.ArrayList([]const u8) = .empty;
+    if (switches.drop_debug) try out.append(allocator, "--drop-debug");
+    if (!switches.step_checks) try out.append(allocator, "--drop-step-checks");
+    if (!switches.frame_checks) try out.append(allocator, "--drop-frame-checks");
+    return out.items;
 }
 
 /// Whether the build arguments ask for instruction step accounting, either by
@@ -833,6 +1008,12 @@ const State = struct {
     compiled: bool = false,
     /// How the final link ran (BUILD-LINK-1), or null when it was skipped.
     link_route: ?direct_link.Route = null,
+    /// MODULE-SCHEDULE-1: where each code batch and metadata group object of
+    /// one module's build falls in a program's link order.
+    placed: std.ArrayList(Placed) = .empty,
+    /// MODULE-SCHEDULE-2: the guest objects came from module compiles; a
+    /// missing one is theirs to rebuild, not this state's.
+    modules: bool = false,
     /// The directory a lean manifest's stored texts and metadata live in.
     fn textStore(self: *const State) []const u8 {
         return v.text(v.get(self.manifest, "store"));
@@ -905,6 +1086,12 @@ const State = struct {
     /// compile in the same pool, so none of them waits for the others. Returns
     /// the shared metadata and entry objects, which link after every batch.
     fn compileBatches(self: *State, functions: []const std.json.Value, wrapper: []const u8) ![2]cache_api.Object {
+        return (try self.compileGuest(functions, wrapper)).?;
+    }
+    /// `compileBatches`, and with a null `wrapper` only the guest batches and
+    /// their metadata groups: one module's objects (MODULE-COMPILE-1), which
+    /// have no program-wide metadata or entry of their own.
+    fn compileGuest(self: *State, functions: []const std.json.Value, wrapper: ?[]const u8) !?[2]cache_api.Object {
         const a = self.context.allocator;
         const order = try a.alloc(usize, functions.len);
         for (order, 0..) |*slot, index| slot.* = index;
@@ -916,7 +1103,8 @@ const State = struct {
         // here (`QBE-FRAGMENT-REUSE-1`).
         for (order, units, keys) |index, *unit, *key| {
             const function = functions[index];
-            unit.* = .{ .module = batch.moduleOf(v.text(v.get(function, "name"))), .symbol = v.text(v.get(function, "symbol")), .alone = batch.definesData(lean.facts(function)) };
+            const name = v.text(v.get(function, "name"));
+            unit.* = .{ .module = batch.groupOf(name), .symbol = v.text(v.get(function, "symbol")), .alone = batch.definesData(lean.facts(function)) or batch.specialization(name) };
             key.* = try self.cache.digestKey(try lean.digest(a, function));
         }
         const batches = try batch.plan(a, units, batch.policy(self.context.environ));
@@ -924,7 +1112,8 @@ const State = struct {
         // code, since assembling it is little work next to starting a tool.
         const groups = try batch.plan(a, units, batch.metadata_policy);
         // Objects: each batch's code, each group's metadata, then the shared metadata and the entry.
-        const objects = try a.alloc(cache_api.Object, batches.len + groups.len + 2);
+        const program_units: usize = if (wrapper != null) 2 else 0;
+        const objects = try a.alloc(cache_api.Object, batches.len + groups.len + program_units);
         var misses: std.ArrayList(batch.Miss) = .empty;
         const owner = try a.alloc(usize, functions.len);
         for (batches, 0..) |group, index| {
@@ -951,8 +1140,10 @@ const State = struct {
         const shared = batches.len + groups.len;
         // The C units start first: the shared metadata is the largest single compile.
         var work: std.ArrayList(batch.Miss) = .empty;
-        try self.stageC(&work, "metadata", try outputs.sharedMetadata(a, self.manifest), &objects[shared]);
-        try self.stageC(&work, "entry", wrapper, &objects[shared + 1]);
+        if (wrapper) |entry| {
+            try self.stageC(&work, "metadata", try outputs.sharedMetadata(a, self.manifest), &objects[shared]);
+            try self.stageC(&work, "entry", entry, &objects[shared + 1]);
+        }
         try work.appendSlice(a, misses.items);
         try batch.build(self.cache, work.items, batch.width(self.context.io, work.items.len));
         for (objects[0..shared]) |object| try self.add(object);
@@ -963,7 +1154,30 @@ const State = struct {
             self.reused += @intFromBool(object.reused);
             try self.records.append(a, .{ .name = v.text(v.get(function, "name")), .symbol = v.text(v.get(function, "symbol")), .key = key, .object = object.path, .reused = object.reused });
         }
+        if (wrapper == null) {
+            for (batches, objects[0..batches.len]) |one, object| try self.placed.append(a, .{ .kind = .code, .group = units[one.first].module, .first = units[one.first].symbol, .object = object.path, .key = object.key });
+            for (groups, objects[batches.len..shared]) |one, object| try self.placed.append(a, .{ .kind = .meta, .group = units[one.first].module, .first = units[one.first].symbol, .object = object.path, .key = object.key });
+            return null;
+        }
         return .{ objects[shared], objects[shared + 1] };
+    }
+    /// MODULE-COMPILE-1: compile one module's units into their batch and
+    /// metadata objects in the cache, and write the object list to `output`.
+    /// The program-wide metadata object a module build names by `unit.key`,
+    /// rendering and compiling its text only when no object has that key.
+    fn sharedUnit(self: *State, unit: SharedUnit) !cache_api.Object {
+        const key = try self.cache.derived("module-metadata-v1", unit.key);
+        if (try self.cache.cached(key)) |hit| return hit;
+        const text = try unit.render.run(unit.render.context, self.context.allocator);
+        return self.cache.finish(try self.cache.stageAt(key, text, .c_text, null));
+    }
+    fn moduleObjects(self: *State, output: []const u8) !void {
+        const a = self.context.allocator;
+        const functions = try a.dupe(std.json.Value, v.array(v.get(self.manifest, manifest_functions)));
+        std.mem.sort(std.json.Value, functions, {}, less);
+        _ = try self.compileGuest(functions, null);
+        const document = try std.json.Stringify.valueAlloc(a, .{ .version = "module-objects-v2", .objects = self.objects.items, .compiled = self.compiled, .placed = self.placed.items, .functions = self.records.items }, .{});
+        std.Io.Dir.cwd().writeFile(self.context.io, .{ .sub_path = output, .data = document }) catch return error.WriteFailed;
     }
     /// The manifest units at `positions`, in that (plan) order.
     fn planned(allocator: std.mem.Allocator, functions: []const std.json.Value, positions: []const usize) ![]const std.json.Value {
@@ -1063,6 +1277,9 @@ const State = struct {
     /// Recreate this generation and rebuild every object it lost, discarding the
     /// records of the removed ones so the report counts what was really compiled.
     fn recompile(self: *State, parsed: options.Options) !void {
+        // A module build checked every object before linking; one that vanished
+        // since is refused rather than rebuilt from a manifest that has no units.
+        if (self.modules) return error.InvalidNativeManifest;
         try self.context.restore(self.cache.directory);
         self.objects.clearRetainingCapacity();
         self.records.clearRetainingCapacity();
@@ -1286,7 +1503,7 @@ fn less(_: void, left: std.json.Value, right: std.json.Value) bool {
 }
 /// A manifest unit as the batch planner orders it.
 fn planUnit(value: std.json.Value) batch.Unit {
-    return .{ .module = batch.moduleOf(v.text(v.get(value, "name"))), .symbol = v.text(v.get(value, "symbol")) };
+    return .{ .module = batch.groupOf(v.text(v.get(value, "name"))), .symbol = v.text(v.get(value, "symbol")) };
 }
 /// Batch plan order over manifest units, by index: module, then symbol.
 fn planLess(functions: []const std.json.Value, left: usize, right: usize) bool {
@@ -1633,7 +1850,7 @@ test "RC runtime contract partitions native objects archives and manifest replay
     const rc_archive = try runtimeInstalledHash(a, "archive", "Debug", "qbe", .rc);
     try std.testing.expect(!std.mem.eql(u8, gc_archive, rc_archive));
     try std.testing.expect(!std.mem.eql(u8, rc_archive, try runtimeInstalledHash(a, "archive", "Debug", "qbe", .rc_counting)));
-    const manifest = try std.json.parseFromSlice(std.json.Value, a, "{\"version\":\"qbe-units-v1\",\"abi\":\"" ++ native_abi ++ "\",\"entry\":\"\",\"functions\":[],\"runtime_contract\":\"rc-v3\"}", .{});
+    const manifest = try std.json.parseFromSlice(std.json.Value, a, "{\"version\":\"qbe-units-v1\",\"abi\":\"" ++ native_abi ++ "\",\"entry\":\"\",\"functions\":[],\"runtime_contract\":\"rc-v5\"}", .{});
     try validate(a, manifest.value, .rc);
     try std.testing.expectError(error.InvalidNativeManifest, validate(a, manifest.value, .gc));
     try std.testing.expectError(error.InvalidNativeManifest, validate(a, manifest.value, .rc_counting));

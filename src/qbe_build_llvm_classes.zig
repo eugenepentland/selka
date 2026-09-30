@@ -30,6 +30,7 @@ pub const Class = union(enum) {
     object,
     element: []const u8,
     prefix,
+    rc_state,
 
     /// Whether two classes are the same (an element class by its kind).
     pub fn eql(self: Class, other: Class) bool {
@@ -160,6 +161,7 @@ pub const MemoryClasses = struct {
         };
         for (self.function.hints.objects.keys()) |name| _ = try self.note(name, .foreign);
         for (self.function.hints.prefixes.keys()) |name| _ = try self.note(name, .foreign);
+        for (self.function.hints.rc_states.keys()) |name| _ = try self.note(name, .foreign);
         for (0..8) |_| {
             var changed = try self.derive();
             changed = (try self.throughSlots()) or changed;
@@ -280,6 +282,11 @@ pub const MemoryClasses = struct {
             if (!self.single(name) or !self.isForeign(name)) continue;
             try refined.put(self.arena, name, .prefix);
         }
+        for (hints.rc_states.keys()) |name| {
+            if (hints.objects.contains(name) or hints.elements.contains(name) or hints.prefixes.contains(name)) return .empty;
+            if (!self.single(name) or !self.isForeign(name)) continue;
+            try refined.put(self.arena, name, .rc_state);
+        }
         self.refined = refined;
         for (0..8) |_| {
             const changed = (try self.refineRound()) orelse return .empty;
@@ -312,6 +319,7 @@ pub const MemoryClasses = struct {
                 const name = argument.tempName() orelse continue;
                 const class = self.refined.get(name) orelse continue;
                 if (class == .prefix) return null;
+                if (class == .rc_state) continue;
                 if (seen) |existing| {
                     if (!existing.eql(class)) return null;
                 } else seen = class;
@@ -364,6 +372,25 @@ fn mergeInto(arena: Allocator, target: *?ClassMap, state: *const ClassMap) Error
     return true;
 }
 
+/// A local reaching store needs an address fixed by a single alloc8 8.
+/// Historical escapes establish no alias fact; all possible writers reset it.
+fn constantStackSlots(arena: Allocator, function: *const il.Function, counts: *const std.StringHashMapUnmanaged(u32)) Error!Names {
+    var slots: Names = .empty;
+    for (function.blocks.items) |block| for (block.instructions.items) |instruction| {
+        const dest = instruction.dest orelse continue;
+        if (instruction.opcode != .alloc8 or instruction.args.len != 1) continue;
+        if (instruction.args[0] != .constant or (counts.get(dest) orelse 0) != 1) continue;
+        if (integerLiteral(instruction.args[0].constant) == 8) try slots.put(arena, dest, {});
+    };
+    return slots;
+}
+
+/// An extern symbol's spelling is not an integer value, even if numeric.
+fn integerLiteral(literal: il.Literal) ?u64 {
+    if (literal.qbe_type != null and std.mem.eql(u8, literal.qbe_type.?, "extern")) return null;
+    return il.pythonInt(literal.text);
+}
+
 /// The labels control can reach from one block, fall-through included (a
 /// `jnz` names both of its targets, even when they are the same).
 pub fn successorLabels(arena: Allocator, block: *const il.Block, following: ?[]const u8) Error!std.ArrayList([]const u8) {
@@ -388,7 +415,7 @@ pub fn successorLabels(arena: Allocator, block: *const il.Block, following: ?[]c
 /// The pure 64-bit opcodes the symbolic evaluation models.
 fn pure(opcode: il.Opcode) bool {
     return switch (opcode) {
-        .add, .sub, .mul, .@"and", .xor, .shr, .sar, .neg, .csltl, .cultl, .cnel => true,
+        .add, .sub, .mul, .@"and", .xor, .shr, .sar, .neg, .csltl, .csgtl, .cultl, .cnel => true,
         else => false,
     };
 }
@@ -425,7 +452,7 @@ const Nodes = struct {
 pub const Stem = enum { sadd, uadd, ssub, usub, umul, smul };
 /// A flag that is exactly one arithmetic instruction's overflow bit.
 pub const Flag = struct { producer: *const Instruction, stem: Stem };
-const Expected = struct { instruction: *const Instruction, stem: Stem };
+const Expected = struct { instruction: *const Instruction, stem: Stem, literal_bound: bool = false };
 
 /// The checked 64-bit operations of one unit, found by value: which
 /// arithmetic instructions must also compute which intrinsics, and which
@@ -433,25 +460,57 @@ const Expected = struct { instruction: *const Instruction, stem: Stem };
 pub const OverflowChecks = struct {
     producers: std.AutoHashMapUnmanaged(*const Instruction, std.ArrayList(Stem)) = .empty,
     flags: std.AutoHashMapUnmanaged(*const Instruction, Flag) = .empty,
+    /// A proved literal-bound producer carrying a performance-only affine hint.
+    ordinary_results: std.AutoHashMapUnmanaged(*const Instruction, void) = .empty,
 
     /// Scan every block of `function`; `excluded` names the temporaries that
     /// hold object addresses, whose `add` is lowered as a `getelementptr`.
     pub fn of(arena: Allocator, function: *const il.Function, excluded: *const Names) Error!OverflowChecks {
         var self: OverflowChecks = .{};
         var nodes: Nodes = .{ .arena = arena };
-        for (function.blocks.items) |block| try self.scan(arena, &nodes, block, excluded);
+        const counts = try definitionCounts(arena, function);
+        const slots = try constantStackSlots(arena, function, &counts);
+        var marked: Names = .empty;
+        for (function.hints.objects.keys()) |name| try marked.put(arena, name, {});
+        for (function.hints.prefixes.keys()) |name| try marked.put(arena, name, {});
+        for (function.hints.rc_states.keys()) |name| try marked.put(arena, name, {});
+        for (function.blocks.items) |block| try self.scan(arena, &nodes, block, .{ .excluded = excluded, .slots = &slots, .marked = &marked, .affine = &function.hints.affine });
         return self;
     }
 
-    fn scan(self: *OverflowChecks, arena: Allocator, nodes: *Nodes, block: *const il.Block, excluded: *const Names) Error!void {
+    const Inputs = struct { excluded: *const Names, slots: *const Names, marked: *const Names, affine: *const std.array_hash_map.String(void) };
+
+    fn scan(self: *OverflowChecks, arena: Allocator, nodes: *Nodes, block: *const il.Block, inputs: Inputs) Error!void {
         var values: std.StringHashMapUnmanaged(NodeId) = .empty;
+        var stored: std.StringHashMapUnmanaged(NodeId) = .empty;
         var expected: std.AutoHashMapUnmanaged(NodeId, Expected) = .empty;
         for (block.instructions.items) |instruction| {
+            // LLVM-CONSTANT-OVERFLOW-1: one exact store is authoritative
+            // until any potential writer, address escape or control boundary.
+            if (constantMemoryBoundary(instruction, inputs.slots)) stored.clearRetainingCapacity();
+            if (instruction.opcode.isStore()) {
+                stored.clearRetainingCapacity();
+                const direct = instruction.opcode == .storel and instruction.args.len == 2;
+                if (direct and instruction.args[0] == .constant) {
+                    if (instruction.args[1].tempName()) |slot| if (inputs.slots.contains(slot)) {
+                        if (integerLiteral(instruction.args[0].constant)) |value|
+                            try stored.put(arena, slot, try nodes.constant(value));
+                    };
+                }
+            }
             const dest = instruction.dest orelse continue;
             // The operands' values are taken before the destination is
             // rebound: `%x =l add %x, 1` reads the old `%x`.
-            const node = try evaluate(nodes, &values, instruction);
+            const node = if (instruction.opcode == .loadl and instruction.args.len == 1 and longType(instruction))
+                if (instruction.args[0].tempName()) |slot|
+                    if (stored.get(slot)) |value| Evaluated{ .value = value } else try evaluate(nodes, &values, instruction)
+                else
+                    try evaluate(nodes, &values, instruction)
+            else
+                try evaluate(nodes, &values, instruction);
             if (expected.get(node.value)) |match| {
+                if (match.literal_bound and inputs.affine.contains(match.instruction.dest.?))
+                    try self.ordinary_results.put(arena, match.instruction, {});
                 try self.flags.put(arena, instruction, .{ .producer = match.instruction, .stem = match.stem });
                 const entry = try self.producers.getOrPut(arena, match.instruction);
                 if (!entry.found_existing) entry.value_ptr.* = .empty;
@@ -460,17 +519,55 @@ pub const OverflowChecks = struct {
             try values.put(arena, dest, node.value);
             const opcode = instruction.opcode;
             const checked = opcode == .add or opcode == .sub or opcode == .mul;
-            if (checked and isPureNode(instruction) and !addressAdd(instruction, excluded)) {
+            if (checked and isPureNode(instruction) and !addressAdd(instruction, inputs.excluded)) {
                 const formulas = try overflowFormulas(nodes, opcode, node);
                 for (formulas) |formula| try expected.put(arena, formula.flag, .{ .instruction = instruction, .stem = formula.stem });
+                const address = hasPointerOperand(instruction, inputs.excluded) or hasPointerOperand(instruction, inputs.marked);
+                if (!address) {
+                    if (try constantOverflow(nodes, opcode, node)) |formula|
+                        try expected.put(arena, formula.flag, .{ .instruction = instruction, .stem = formula.stem, .literal_bound = true });
+                }
             }
         }
     }
 };
 
+/// Reads and known scalar operations cannot change the reaching store.
+/// Any other operation, nested call or use of a root address resets all facts.
+fn constantMemoryBoundary(instruction: *const Instruction, slots: *const Names) bool {
+    const read = instruction.opcode.isLoad();
+    const scalar = instruction.opcode.arithmetic() or instruction.opcode.isComparison() or instruction.opcode.isConversion();
+    const simple = switch (instruction.opcode) {
+        .copy, .neg, .not, .dbgloc => true,
+        else => false,
+    };
+    const allowed = read or scalar or simple;
+    if (!allowed) return true;
+    for (instruction.args) |argument| {
+        if (argument == .call) return true;
+        if (argument.tempName()) |name| if (slots.contains(name) and !read) return true;
+    }
+    return false;
+}
+
+/// A pointer difference is not a checked integer expression for this proof.
+fn hasPointerOperand(instruction: *const Instruction, pointers: *const Names) bool {
+    for (instruction.args) |argument| switch (argument) {
+        .global => return true,
+        .temp => |ref| if (pointers.contains(ref.name)) return true,
+        else => {},
+    };
+    return false;
+}
+
+/// The instruction's destination preserves all 64 bits.
+fn longType(instruction: *const Instruction) bool {
+    return instruction.qbe_type != null and std.mem.eql(u8, instruction.qbe_type.?, "l");
+}
+
 fn isPureNode(instruction: *const Instruction) bool {
     const arity: usize = if (instruction.opcode == .neg) 1 else 2;
-    const typed = instruction.qbe_type != null and std.mem.eql(u8, instruction.qbe_type.?, "l");
+    const typed = longType(instruction);
     return pure(instruction.opcode) and typed and instruction.args.len == arity;
 }
 
@@ -478,6 +575,8 @@ fn isPureNode(instruction: *const Instruction) bool {
 const Evaluated = struct { value: NodeId, left: NodeId = 0, right: NodeId = 0 };
 
 fn evaluate(nodes: *Nodes, values: *const std.StringHashMapUnmanaged(NodeId), instruction: *const Instruction) Error!Evaluated {
+    if (instruction.opcode == .copy and instruction.args.len == 1 and longType(instruction))
+        return .{ .value = try operandValue(nodes, values, &instruction.args[0]) };
     if (!isPureNode(instruction)) return .{ .value = try nodes.leaf(@intFromPtr(instruction)) };
     const left = try operandValue(nodes, values, &instruction.args[0]);
     if (instruction.args.len == 1) return .{ .value = try nodes.op(instruction.opcode, left, null), .left = left };
@@ -510,6 +609,21 @@ fn addressAdd(instruction: *const Instruction, excluded: *const Names) bool {
 }
 
 const Formula = struct { stem: Stem, flag: NodeId };
+
+/// Signed add/sub by exactly +/-1: its bound test is the overflow bit.
+/// The producer and matching comparison remain in their original block.
+fn constantOverflow(nodes: *Nodes, opcode: il.Opcode, evaluated: Evaluated) Error!?Formula {
+    if (opcode != .add and opcode != .sub) return null;
+    const positive = evaluated.right == try nodes.constant(1);
+    const negative = evaluated.right == try nodes.constant(std.math.maxInt(u64));
+    if (!positive and !negative) return null;
+    const upward = (opcode == .add) == positive;
+    const limit: i64 = if (upward) std.math.maxInt(i64) - 1 else std.math.minInt(i64) + 1;
+    return .{
+        .stem = if (opcode == .add) .sadd else .ssub,
+        .flag = try nodes.op(if (upward) .csgtl else .csltl, evaluated.left, try nodes.constant(@bitCast(limit))),
+    };
+}
 
 /// The (stem, flag) pairs the frontend derives from one `add`, `sub` or `mul`.
 fn overflowFormulas(nodes: *Nodes, opcode: il.Opcode, evaluated: Evaluated) Error![2]Formula {

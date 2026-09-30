@@ -24,24 +24,49 @@ const Marker = struct { site: []const u8, unit: []const u8, pc: []const u8, oper
 /// Write every unit's site records and the site table, or nothing when no
 /// unit names a site.
 pub fn definitions(w: *std.Io.Writer, allocator: std.mem.Allocator, units: []const std.json.Value) Error!void {
-    var names: std.ArrayList([]const u8) = .empty;
-    defer names.deinit(allocator);
+    var markers: std.ArrayList(Marker) = .empty;
+    defer markers.deinit(allocator);
     for (units) |unit| {
         var lines: Lines = .{ .il = lean.facts(unit) };
-        var declared = false;
         while (lines.next()) |line| {
             const marker = parse(line) orelse continue;
-            if (names.items.len == 0) try w.writeAll("#include \"native_rc_stats.h\"\n#if defined(MYL_NATIVE_RC_SITES) && MYL_NATIVE_RC_SITES\n");
-            if (!declared) try w.print("extern const MylQbeFunction {s}_meta;\n", .{marker.unit});
-            declared = true;
-            try record(w, allocator, marker);
-            try names.append(allocator, marker.site);
+            try markers.append(allocator, marker);
         }
     }
-    if (names.items.len == 0) return;
+    if (markers.items.len == 0) return;
+    std.mem.sort(Marker, markers.items, {}, before);
+    try w.writeAll("#include \"native_rc_stats.h\"\n#if defined(MYL_NATIVE_RC_SITES) && MYL_NATIVE_RC_SITES\n");
+    var previous: []const u8 = "";
+    for (markers.items) |marker| {
+        if (!std.mem.eql(u8, previous, marker.unit)) try w.print("extern const MylQbeFunction {s}_meta;\n", .{marker.unit});
+        previous = marker.unit;
+        try record(w, allocator, marker);
+    }
     try w.writeAll("myl_rc_site *const myl_rc_site_table[] = {\n");
-    for (names.items) |name| try w.print("&{s},\n", .{name});
-    try w.print("}};\nconst size_t myl_rc_site_count = {d};\n#endif\n", .{names.items.len});
+    for (markers.items) |marker| try w.print("&{s},\n", .{marker.site});
+    try w.print("}};\nconst size_t myl_rc_site_count = {d};\n#endif\n", .{markers.items.len});
+}
+
+fn before(_: void, left: Marker, right: Marker) bool {
+    return std.mem.lessThan(u8, left.site, right.site);
+}
+
+// spec-case: MODULE-COMPILE-1
+test "site tables ignore whole-program versus module unit order" {
+    const a = std.testing.allocator;
+    const text =
+        \\[{"il":"# myl-rcsite myl_f_b_rcsite0 myl_f_b 1 myl_retain -\n"},{"il":"# myl-rcsite myl_f_a_rcsite0 myl_f_a 2 myl_release -\n"}]
+    ;
+    const parsed = try std.json.parseFromSlice([]std.json.Value, a, text, .{});
+    defer parsed.deinit();
+    var original: std.Io.Writer.Allocating = .init(a);
+    defer original.deinit();
+    try definitions(&original.writer, a, parsed.value);
+    std.mem.reverse(std.json.Value, parsed.value);
+    var reversed: std.Io.Writer.Allocating = .init(a);
+    defer reversed.deinit();
+    try definitions(&reversed.writer, a, parsed.value);
+    try std.testing.expectEqualStrings(original.written(), reversed.written());
 }
 
 fn record(w: *std.Io.Writer, allocator: std.mem.Allocator, marker: Marker) Error!void {

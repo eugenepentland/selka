@@ -109,8 +109,8 @@ pub const heap_rc_cache_offset: u64 = 5648;
 pub const heap_objects_live_offset: u64 = 64;
 /// Frozen byte offset of the 32-bit `myl_native_heap.region_depth`.
 pub const heap_region_depth_offset: u64 = 112;
-/// The 32-byte counted object prefix: owners, holds, mark, element.
-const rc_prefix_bytes: u64 = 32;
+const rc_prefix = @import("qbe_rc_prefix.zig");
+const rc_prefix_bytes = rc_prefix.bytes;
 
 /// The RC slab class holding one object of `payload` bytes behind its counted
 /// prefix, rounded to 16 bytes as the runtime's class table does, or null
@@ -151,10 +151,10 @@ fn rcCell(comptime E: type, self: E, body: RcBody) Error!void {
     const holds = self.temp();
     const mark = self.temp();
     const element = self.temp();
-    try self.print(" %v{d} =l loadl %v{d}\n storel %v{d}, %v{d}\n storel 1, %v{d}\n", .{ next, slot, next, head, slot });
-    try self.print(" %v{d} =l add %v{d}, 8\n storel 0, %v{d}\n", .{ holds, slot, holds });
-    try self.print(" %v{d} =l add %v{d}, 16\n storel {d}, %v{d}\n", .{ mark, slot, one_element_mark, mark });
-    try self.print(" %v{d} =l add %v{d}, 24\n storel extern ${s}_body, %v{d}\n", .{ element, slot, body.descriptor, element });
+    try self.print(" %v{d} =l loadl %v{d}\n storel %v{d}, %v{d}\n " ++ rc_prefix.count_store ++ " 1, %v{d}\n", .{ next, slot, next, head, slot });
+    try self.print(" %v{d} =l add %v{d}, {d}\n " ++ rc_prefix.count_store ++ " 0, %v{d}\n", .{ holds, slot, rc_prefix.bytes - rc_prefix.holds_offset, holds });
+    try self.print(" %v{d} =l add %v{d}, {d}\n storel {d}, %v{d}\n", .{ mark, slot, rc_prefix.bytes - rc_prefix.mark_offset, one_element_mark, mark });
+    try self.print(" %v{d} =l add %v{d}, {d}\n storel extern ${s}_body, %v{d}\n", .{ element, slot, rc_prefix.bytes - 8, body.descriptor, element });
     try self.print(" %v{d} =l add %v{d}, {d}\n", .{ body.pointer, slot, rc_prefix_bytes });
     try zeroPayload(E, self, body.pointer, body.size);
     const live_slot = self.temp();
@@ -263,6 +263,7 @@ fn runtimeStrides() ?[inline_class_strides.len]u64 {
 
 test "RC slab classes round a payload and its counted prefix up to a stride" {
     // spec-case: RC-ALLOC-CACHE-1
+    try std.testing.expectEqual(@as(u32, 64), rc_prefix.count_bits);
     try std.testing.expectEqual(@as(?usize, 1), rcCacheClass(0));
     try std.testing.expectEqual(@as(?usize, 2), rcCacheClass(16));
     try std.testing.expectEqual(@as(?usize, 3), rcCacheClass(32));

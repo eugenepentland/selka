@@ -31,6 +31,8 @@ pub fn Lower(comptime E: type) type {
 fn emitOperation(comptime E: type, self: *E, op: BufferOperation, stack: []const typed.Type) Error!void {
     const base = stack.len - op.kind.arity();
     const input = try self.load("l", @backingInt(op.owner));
+    if (@import("buffer_operations.zig").pythonOperation(op.kind, false))
+        return @import("qbe_python.zig").operation(E, self, .{ .op = op, .input = input, .base = base, .bytes = false, .stack = stack });
     switch (op.kind) {
         .strip, .lstrip, .rstrip, .upper, .lower, .splitlines, .split_whitespace => return emitFresh(E, self, op, input, base),
         .is_digit, .is_alpha, .is_space => return emitClass(E, self, op, input, base),
@@ -76,7 +78,6 @@ fn emitEdge(comptime E: type, self: *E, op: BufferOperation, input: usize, base:
 /// Lower `find` and `count`, both of which trap on an empty needle.
 fn emitSearch(comptime E: type, self: *E, op: BufferOperation, input: usize, base: usize) Error!void {
     const needle = try self.load("s", base);
-    try requireNeedle(E, self, needle);
     const result = self.temp();
     const name = if (op.kind == .find) "myl_native_text_find" else "myl_native_text_count";
     try self.print(" %v{d} =l call ${s}(l %v{d}, l %v{d})\n", .{ result, name, input, needle });

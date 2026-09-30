@@ -1,0 +1,143 @@
+{
+  "candidate_source": "f4b6647de06e556823bc960a27fdfcd58193b3d0",
+  "control_source": "e66b8035009674667352a09e95ab6e2b2bfb1d2c",
+  "attribution": "Only vendor/qbe/amd64/isel.c differs in the QBE translation units; control uses git-show parent isel and identical other files/headers. Installed owner artifact reproduces failure too.",
+  "commands": [
+    {
+      "name": "control-source-build",
+      "argv": [
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "cc",
+        "-std=c99",
+        "-O3",
+        "-fno-sanitize=undefined",
+        "-I",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/vendor/qbe/amd64",
+        "-I",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/vendor/qbe",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/vendor/qbe/main.c",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/vendor/qbe/util.c",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/vendor/qbe/parse.c",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/vendor/qbe/abi.c",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/vendor/qbe/cfg.c",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/vendor/qbe/mem.c",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/vendor/qbe/ssa.c",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/vendor/qbe/alias.c",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/vendor/qbe/load.c",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/vendor/qbe/copy.c",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/vendor/qbe/fold.c",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/vendor/qbe/gvn.c",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/vendor/qbe/gcm.c",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/vendor/qbe/simpl.c",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/vendor/qbe/ifopt.c",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/vendor/qbe/live.c",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/vendor/qbe/spill.c",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/vendor/qbe/rega.c",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/vendor/qbe/emit.c",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/vendor/qbe/amd64/targ.c",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/vendor/qbe/amd64/sysv.c",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/.tmp/zero-review/control-isel.c",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/vendor/qbe/amd64/emit.c",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/vendor/qbe/amd64/winabi.c",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/vendor/qbe/arm64/targ.c",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/vendor/qbe/arm64/abi.c",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/vendor/qbe/arm64/isel.c",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/vendor/qbe/arm64/emit.c",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/vendor/qbe/rv64/targ.c",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/vendor/qbe/rv64/abi.c",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/vendor/qbe/rv64/isel.c",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/vendor/qbe/rv64/emit.c",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/.tmp/zero-review/control-qbe"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "name": "control-tail-select",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/.tmp/zero-review/control-qbe",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/.tmp/zero-review/trailing-address-control.s",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/.tmp/zero-review/trailing-address-v4.ssa"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "name": "control-tail-link",
+      "argv": [
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "cc",
+        "-O2",
+        "-fsanitize=undefined",
+        "-fno-sanitize-recover=all",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/.tmp/zero-review/trailing-address-v4.c",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/.tmp/zero-review/trailing-address-control.s",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/.tmp/zero-review/trailing-address-control"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": "zig: warning: argument unused during compilation: '-fno-sanitize-recover=all' [-Wunused-command-line-argument]\n"
+    },
+    {
+      "name": "control-tail-execute",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/.tmp/zero-review/trailing-address-control"
+      ],
+      "status": 0,
+      "stdout": "zero result: payload=456 expected=456 branch=23 expected=23\n",
+      "stderr": ""
+    },
+    {
+      "name": "installed-f4-tail-select",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-runtime-zero-branch-20260930/.tmp/zero/bin/qbe",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/.tmp/zero-review/trailing-address-installed-f4.s",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/.tmp/zero-review/trailing-address-v4.ssa"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "name": "installed-f4-tail-link",
+      "argv": [
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "cc",
+        "-O2",
+        "-fsanitize=undefined",
+        "-fno-sanitize-recover=all",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/.tmp/zero-review/trailing-address-v4.c",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/.tmp/zero-review/trailing-address-installed-f4.s",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/.tmp/zero-review/trailing-address-installed-f4"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": "zig: warning: argument unused during compilation: '-fno-sanitize-recover=all' [-Wunused-command-line-argument]\n"
+    },
+    {
+      "name": "installed-f4-tail-execute",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/.tmp/zero-review/trailing-address-installed-f4"
+      ],
+      "status": 1,
+      "stdout": "zero result: payload=456 expected=456 branch=17 expected=23\n",
+      "stderr": ""
+    }
+  ],
+  "sha256": {
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/.tmp/zero-review/trailing-address-v4.ssa": "4af9bf0c96e7239e3aeb0aa3357b11af77275c8fa52b3f6653984512b83d10f4",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/.tmp/zero-review/trailing-address-v4.c": "d6c690b367fa2ed80263c12a58f6439c1f272b90310207ed6a8c10a4622bc6ce",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/.tmp/zero-review/trailing-address-v4.s": "30ded206de2ae352ceb943ae46022e5e009328a77d92f950eba86ad884cb7ef1",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/.tmp/zero-review/trailing-address-control.s": "f27f2acdb58653833ecb23fe7a82a47c5f8d54251ac63d8203690089d311bdaf",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/.tmp/zero-review/trailing-address-installed-f4.s": "30ded206de2ae352ceb943ae46022e5e009328a77d92f950eba86ad884cb7ef1",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/.tmp/zero-review/control-qbe": "87d2f12a9a334a28bd4f791d194a2f66bb0b01b466a3c617b7bd5bcae7931fa4",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-next-runtime-zero-branch-20260930/.tmp/zero/bin/qbe": "2f7ed7dfad3b4e8a8febd05cf201bfd2dc128ed8b0518fdd299705578a31ab3c"
+  }
+}

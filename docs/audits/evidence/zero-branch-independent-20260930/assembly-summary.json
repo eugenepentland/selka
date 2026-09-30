@@ -1,0 +1,151 @@
+{
+  "add64_ne": {
+    "comparisons": [],
+    "flags_setters": [
+      "addq"
+    ],
+    "stack_refs": 0
+  },
+  "add64_eq": {
+    "comparisons": [],
+    "flags_setters": [
+      "addq"
+    ],
+    "stack_refs": 0
+  },
+  "add64_swap_ne": {
+    "comparisons": [],
+    "flags_setters": [
+      "addq"
+    ],
+    "stack_refs": 0
+  },
+  "sub64_eq": {
+    "comparisons": [],
+    "flags_setters": [
+      "subq"
+    ],
+    "stack_refs": 0
+  },
+  "sub64_ne": {
+    "comparisons": [],
+    "flags_setters": [
+      "subq"
+    ],
+    "stack_refs": 0
+  },
+  "add32_ne": {
+    "comparisons": [],
+    "flags_setters": [
+      "addl"
+    ],
+    "stack_refs": 0
+  },
+  "sub32_eq": {
+    "comparisons": [],
+    "flags_setters": [
+      "subl"
+    ],
+    "stack_refs": 0
+  },
+  "width_mismatch": {
+    "comparisons": [
+      "cmpl"
+    ],
+    "flags_setters": [
+      "addq"
+    ],
+    "stack_refs": 0
+  },
+  "nonzero_comparand": {
+    "comparisons": [
+      "cmpq"
+    ],
+    "flags_setters": [
+      "addq"
+    ],
+    "stack_refs": 0
+  },
+  "boolean_multiuser": {
+    "comparisons": [
+      "cmpq",
+      "cmpl"
+    ],
+    "flags_setters": [
+      "addq"
+    ],
+    "stack_refs": 0
+  },
+  "intervening_call": {
+    "comparisons": [
+      "cmpq"
+    ],
+    "flags_setters": [
+      "addq"
+    ],
+    "stack_refs": 0
+  },
+  "intervening_arithmetic": {
+    "comparisons": [
+      "cmpq",
+      "cmpl"
+    ],
+    "flags_setters": [
+      "addq",
+      "andq"
+    ],
+    "stack_refs": 0
+  },
+  "arithmetic_multiuser": {
+    "comparisons": [
+      "cmpq",
+      "cmpl"
+    ],
+    "flags_setters": [
+      "subq"
+    ],
+    "stack_refs": 0
+  },
+  "address_use": {
+    "comparisons": [
+      "cmpq",
+      "cmpl"
+    ],
+    "flags_setters": [
+      "addq"
+    ],
+    "stack_refs": 0
+  },
+  "pressure": {
+    "comparisons": [],
+    "flags_setters": [
+      "subq",
+      "addq",
+      "addq",
+      "addq",
+      "addq",
+      "addq",
+      "addq",
+      "addq",
+      "addq",
+      "addq",
+      "addq",
+      "addq",
+      "addq",
+      "addq",
+      "addq",
+      "addq",
+      "addq",
+      "addq",
+      "addq",
+      "addq",
+      "addq",
+      "addq",
+      "addq",
+      "addq",
+      "addq",
+      "addq"
+    ],
+    "stack_refs": 48
+  }
+}

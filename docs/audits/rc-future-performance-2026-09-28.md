@@ -5,11 +5,45 @@ written after the RC performance rounds of 2026-09-27/28
 ([close-out report](rc-perf-closeout-2026-09-27.md)). It explains one design
 choice that is easy to question (two counts per object) and lists the
 performance work that remains, ranked, with the evidence behind each item.
-Nothing here is scheduled: the user accepted a geomean of about 1.08x the
-tracing GC's instructions, with every corpus row at or below 1.3x, made RC the
-default runtime (RC-DEFAULT-1; `--gc-runtime` is the opt-out) and paused.
+The historical estimates below describe the 2026-09-28 starting point. The user
+accepted about 1.07x the tracing GC's instructions, with every corpus row at or
+below 1.3x, and RC remains the default (RC-DEFAULT-1; `--gc-runtime` is the
+opt-out). The 2026-09-29 next-work plan supersedes the historical 1.0x target.
 
-## Where things stand
+## Landed update, 2026-09-29
+
+Phase A landed on main at `80dd5190` after explicit user approval. The frozen
+compiler source `d8f66585` passes the combined gate: 27/27 statuses, 2,655
+selected Zig tests, 480 QBE tests and 1,438 guest tests in each of nine modes.
+Dev RC/GC instruction geomeans are 1.064485 QBE and 1.069091 LLVM; full-size
+single observations are 1.062698 and 1.065301. All 86 output pairs match at each
+size, every dev/full row meets 1.3x and no row regresses more than 1% against
+A1. These are the plan's quick-harness measurements, not the historical
+median-of-three full-size protocol. Exact rows, hashes and protocol details
+are in [the integration audit](codex-next-integration-closeout-2026-09-29.md).
+
+Completed work from the ranked tables below:
+
+- Dense compiler-assigned type IDs, static class tables and lazy flat plans
+  (RC-TYPE-ID-1, RC-STARTUP-3, RC-CLASS-TABLE-1).
+- Entry-frame teardown skip when no live resource requires it (RC-EXIT-SKIP-1).
+- Never-sharing `mut` list summaries remove eligible per-call pins, and fresh
+  buffer classification removes redundant copies (COW-PIN-ELIDE-1,
+  VALUE-BUFFER-FRESH-1).
+- Constant text/bytes payload lowering and indexed long non-ASCII text
+  (LITERAL-PAYLOAD-1, TEXT-INDEX-1..3).
+- Python numeric spellings and the module-constant hint fix (NUM-LITERAL-1..7).
+
+Open follow-ups are assigned in the next-work plan: equality allocations;
+scope protocol emitted in IL; static constant lists; the four value-semantics
+alias refusals; dictionary uniqueness hoisting; static registration images;
+count/header layout; tail text views and static literal text indexes. Per-module
+builds must preserve all RC interface facts, canonical metadata and embed
+identities. Tooling/embed/memory/selfhost fixes and historical GC repros are
+under a separate B4 gate and are not yet claimed by main. The report-only GC
+stress fuzz seeds 19 and 87 remain unresolved in the Phase A source.
+
+## Historical measurements and remaining design notes
 
 - Corpus (43 programs x QBE/LLVM, full size, retired instructions vs the
   accepted GC binaries): geomean 1.072 (QBE) / 1.082 (LLVM), every row at or
@@ -23,8 +57,9 @@ default runtime (RC-DEFAULT-1; `--gc-runtime` is the opt-out) and paused.
   - The differential fuzzer, `experiments/rc-fuzz/` (`zig build test-rc-fuzz
     -Dfuzz-seeds=N`): GC vs RC modes on generated programs. It found four real
     bugs the suites missed.
-- The acceptance rule D9 set for WP-4 asks for a geomean of at most 1.0x; the
-  items below are what it would take.
+- The historical D9 WP-4 target was a geomean of at most 1.0x. The user
+  subsequently accepted about 1.07x; the items below describe possible further
+  gains rather than a remaining acceptance failure.
 
 ## Why each object has two counts
 
@@ -95,23 +130,23 @@ and run the fuzzer plus the adversarial repros before merging any new proof.
 | Callee summary "writes only scalar fields" | OWNERSHIP-MUT-RECORD-WRITE-1/2 (the review's GC value-semantics fix, narrowed by lane M) still makes real copies when a callee receiving a `mut` record only writes scalar fields, e.g. `frame.constants[read_byte(mut frame)]` in 29 Lox functions. Free under RC today but real copies under GC | GC-side copies; guards RC against the same regression class (lane M measured 1.18 -> 1.37 on Lox method_call before WRITE-2) |
 | No-alias fact for `mut` parameters | MUT-EXCLUSIVE-1 (2026-09-28) now rejects overlapping `mut` arguments, so no accepted program reaches four alias refusals that stay as defense in depth: `aliasable()` in `src/qbe_rc_readonly_anchor.zig` (RC-INTERVAL-ANCHOR-1/2, RC-OPERAND-ANCHOR-1 via -3/-4), the QBE-MOVE-ELIDE-1 refusal in `src/qbe_moves.zig`, `otherMutableParameter` in `src/ownership_field_return.zig` (COW-FIELD-RETURN-1) and the any-other-`mut` refusal in `src/ownership_index_return.zig` (COW-INDEX-RETURN-1). Deleting them is now sound under value semantics; under `--legacy-sharing` two names can still share a `class` object, so check that mode first. Lane M measured zero cost on this corpus | Multi-`mut` APIs in other programs, not the corpus |
 | Receiver scopes whose root is a `mut` list parameter | Lox `heap::set_object_field`'s element write and `set_instance_field`'s call scope keep their pin/scope (lane K) | A few % on Lox rows that set fields |
-| `mut` list argument pins per call | nbody and sort_quick pay scope begin/pin/end for every `mut` list argument (lane F); needs a summary that the callee never shares its `mut` parameter | nbody LLVM 1.26 and sort_quick LLVM 1.28 toward 1.0 |
+| **Done: eligible `mut` list argument pins per call** | nbody and sort_quick pay scope begin/pin/end for every `mut` list argument (lane F); needs a summary that the callee never shares its `mut` parameter | nbody LLVM 1.26 and sort_quick LLVM 1.28 toward 1.0 |
 | Per-call frame copies in Lox | `frame = load_frame(...)` copies the three-list ExecFrame on every call and return (lanes G, K) | Lox call-heavy rows (method_call, invocation, closures) |
 | Borrowed-call result copies | Schematic copies 128-byte `Pin` records returned by borrowed calls; GC points at the call's result buffer (lane J) | Schematic 1.23/1.19 toward 1.1 |
 | General last-use move | RC-LAST-USE-MOVE-1 was tried by lane K: +1% on Lox LLVM but alloc_churn LLVM +3.2%, list_records +1.1%; reverted | Worth revisiting with a cost model (move only where the source would otherwise be retained) |
 | Hoisted uniqueness checks on dictionaries | knucleotide still checks `counts` uniqueness every iteration (about 3%) (lane L) | Small |
-| `byte_buffer(list)` treated as fresh | str_build clones once at loop entry because the cast result is marked shared; treating a list->bytes cast as fresh in `value_semantics.classify` removes it in GC too (lane L) | Small, both runtimes |
+| **Done: `byte_buffer(list)` treated as fresh** | str_build clones once at loop entry because the cast result is marked shared; treating a list->bytes cast as fresh in `value_semantics.classify` removes it in GC too (lane L) | Small, both runtimes |
 
 ### 3. Runtime and code generation (instructions)
 
 | Item | Evidence | Expected effect |
 |---|---|---|
-| Dense compiler-assigned type ids | Metadata lookups still hash type-descriptor addresses (e.g. `drain_one`), which costs instructions and makes rows move 1-3% with binary layout alone (lanes C, J, L) | Removes layout noise and a lookup per death |
+| **Done: dense compiler-assigned type ids** | Metadata lookups still hash type-descriptor addresses (e.g. `drain_one`), which costs instructions and makes rows move 1-3% with binary layout alone (lanes C, J, L) | Removes layout noise and a lookup per death |
 | Scope protocol inline in IL | A pin+unpin is still 150-180 instructions after forced inlining; emitting it in IL with alias classes for the RC state would let LLVM cut 20-40 per pin (lane I) | About 2-4% LLVM geomean |
-| Skip the exit-time teardown walk | Schematic spends about 0.5M instructions (22% of its LLVM gap) walking the heap at normal exit (lane J). GC has an `exit_without_sweep` mode; RC could free extents wholesale at exit in non-counting builds, as trap teardown already does | Schematic LLVM; any program with a large live heap at exit |
+| **Done: skip the exit-time teardown walk** | Schematic spends about 0.5M instructions (22% of its LLVM gap) walking the heap at normal exit (lane J). GC has an `exit_without_sweep` mode; RC could free extents wholesale at exit in non-counting builds, as trap teardown already does | Schematic LLVM; any program with a large live heap at exit |
 | `myl_qbe_heap` inline | Still an out-of-line call wherever `%heap` is used; computing `%ctx + offset` needs the compiler to know the context layout (merge-B note) | Small, broad |
 | Role/owner drop paths | Static drops of one-word copyable values emit both paths inline; routing the role path out of line shrinks code (merge-B note) | Code size, i-cache |
-| RC startup cost | Tiny inputs are dominated by startup: at smoke size Lox rows read up to 2.4x on LLVM although full size is under 1.3x. Module/metadata registration at startup could become static tables or lazy registration | Short-running programs and tests |
+| **Partly done: RC startup cost** | Tiny inputs are dominated by startup: at smoke size Lox rows read up to 2.4x on LLVM although full size is under 1.3x. Module/metadata registration at startup could become static tables or lazy registration | Short-running programs and tests |
 | ThinLTO | Under ThinLTO the metadata unit stays machine code, so glue never inlines (lane I) | Matters only if ThinLTO becomes a supported release mode |
 | QBE register allocation artifacts | spectral_norm QBE moved +5.5% when slots stopped escaping (identical IL); fannkuch LLVM +4% from GEP addressing | Small; mostly QBE-side |
 
@@ -168,7 +203,7 @@ fixing or a proof before more aggressive elision is safe (repros in
 
 ## Suggested order
 
-1. Dense type ids and the exit-time teardown skip: cheap, broad, low risk.
+1. Dense type IDs and the exit-time teardown skip: **done on main 2026-09-29**.
 2. ~~The open language-level copy bugs~~: done 2026-09-28 (VALUE-SEMANTICS-14,
    OWNERSHIP-MUT-RECORD-WRITE-3, MUT-EXCLUSIVE-1).
 3. The `mut`-parameter summaries (scalar-only writes, never-shares) and

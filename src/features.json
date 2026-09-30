@@ -144,7 +144,7 @@
     },
     "functional-record-update": {
       "kind": "language",
-      "summary": "`replace(record, field=value, \u2026)` returns a copy with only the named fields changed.",
+      "summary": "`replace(record, field=value, …)` returns a copy with only the named fields changed.",
       "doc": "docs/records-and-unions.md#field-defaults-and-functional-update"
     },
     "collection-membership-and-value-equality": {
@@ -762,6 +762,31 @@
       "summary": "A project check stands stored per-function summaries (dependency context, region digest and referenced names, propagated effect and mutation facts, region-relative diagnostics, callees) in for every unchanged body, so a one-body edit checks only that body; a changed cross-function fact, a cycle through a stood-in body or a pass error repeats the check in full, and build/run use the summaries for pass facts only.",
       "doc": "docs/tooling/caches.md#check-summaries"
     },
+    "module-compile": {
+      "kind": "tooling",
+      "summary": "`mylang compile-module` compiles one module from its own source and its imports' interfaces to the units, interface (with the emission facts dependents read) and objects a whole-program build produces for it, key for key; `mylang link-modules` links a program from its modules' outputs into the whole-program build's executable.",
+      "doc": "docs/tooling/module-interfaces.md#compiling-a-module-on-its-own"
+    },
+    "module-build": {
+      "kind": "tooling",
+      "summary": "`mylang build`, `build --run` and `run` of a project compile it module by module: a scheduler compiles each stale module in a child process over the import graph, in parallel, starting a dependent once its imports have published their interfaces, and stops an edit at any module whose interface and emission facts held; the standard library is compiled once per cache and compiler; the link reads one record per module and makes the `--whole-program` build's executable, byte for byte.",
+      "doc": "docs/tooling/module-interfaces.md#building-a-project-module-by-module"
+    },
+    "module-check": {
+      "kind": "tooling",
+      "summary": "`mylang check` of a project checks it module by module: each stale module against its imports' interfaces, with no emission, its warnings replayed in the whole-program order; a module that does not check goes to the whole-program check, and the modules that did keep their records.",
+      "doc": "docs/tooling/module-interfaces.md#checking-a-project-module-by-module"
+    },
+    "module-test": {
+      "kind": "tooling",
+      "summary": "`mylang test` of a project builds its tests module by module: each stale module's compile also writes its share of the test facts, contracts, test exports and wire and codec tables; the run merges them (adding the program-wide indirect and codec edges), replays receipts as before, and links the tests it runs into one executable with the harness from the modules' objects; `--whole-program` keeps the whole-program session.",
+      "doc": "docs/tooling/guest-tests.md#tests-module-by-module"
+    },
+    "module-interfaces": {
+      "kind": "tooling",
+      "summary": "`mylang interfaces emit` writes one `module-interface-v2` artifact per module from the whole-program check (declaration text with only the bodies a dependent reads, the facts that stand in for the rest, interface fingerprints and reached shapes) with an interface hash that a body-only edit keeps and an implementation hash; `interfaces check` checks one module against interfaces alone and `interfaces oracle` proves every module's such check equals the whole-program check.",
+      "doc": "docs/tooling/module-interfaces.md#module-interfaces"
+    },
     "persistent-checked-bodies": {
       "kind": "tooling",
       "summary": "Ordinary checked bodies persist across compiler processes as versioned, validated semantic-cache-v2 entries with atomic publication, remap-or-miss decoding, contract isolation and --no-cache correctness.",
@@ -1106,6 +1131,26 @@
       "kind": "tooling",
       "summary": "`mylang test ENTRY` without `--cases` applies the `<stem>.cases.json` beside the entry, so a directory run applies each entry's own cases file to that entry and a single-file run sees the same cases.",
       "doc": "docs/tooling/guest-tests.md#per-entry-cases-files"
+    },
+    "bytes-sorting": {
+      "kind": "language",
+      "summary": "Stable sorted and list.sort accept bytes elements and scalar/tuple bytes keys.",
+      "doc": "docs/python-text-surface.md#python-text-surface"
+    },
+    "text-trim-charsets": {
+      "kind": "language",
+      "summary": "Text and bytes trim explicit character sets with Python defaults.",
+      "doc": "docs/python-text-surface.md#trimming-character-sets"
+    },
+    "text-search-ranges": {
+      "kind": "language",
+      "summary": "Text and bytes accept Python search/count/prefix/suffix ranges and checked index lookup.",
+      "doc": "docs/python-text-surface.md#ranged-search"
+    },
+    "scalar-repr": {
+      "kind": "language",
+      "summary": "Exact CPython scalar repr with Unicode16 printability and shortest float formatting.",
+      "doc": "docs/python-text-surface.md#scalar-repr"
     }
   },
   "unsupported": [
@@ -1160,7 +1205,7 @@
     },
     "legacy-syntax": {
       "date": "2026-09-13",
-      "note": "the brace dialect: fn/let/let mut/struct/new, `T { \u2026 }` record literals, `::` qualification, `::<T>` turbofish, `cast<T>(x)`, `//` comments, `{ }` scope blocks, match expressions, `true`/`false`/`unit`, `else if` and `a..b` ranges. Indentation, `def`/`class`, `T(f=v)`, `alias.name`, `f[T](x)`, `T(x)`, `#` comments, `match`/`case`, `True`/`False`/`None`, `elif` and `range(a, b)` are the surface."
+      "note": "the brace dialect: fn/let/let mut/struct/new, `T { … }` record literals, `::` qualification, `::<T>` turbofish, `cast<T>(x)`, `//` comments, `{ }` scope blocks, match expressions, `true`/`false`/`unit`, `else if` and `a..b` ranges. Indentation, `def`/`class`, `T(f=v)`, `alias.name`, `f[T](x)`, `T(x)`, `#` comments, `match`/`case`, `True`/`False`/`None`, `elif` and `range(a, b)` are the surface."
     },
     "named-executable-laws": {
       "date": "2026-09-24",

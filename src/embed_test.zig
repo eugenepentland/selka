@@ -323,7 +323,7 @@ fn embedProvider(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8,
     return allocator.dupe(u8, "module main\n\nconst DATA: bytes = embed_bytes(\"data.bin\")\n\ndef main() -> int:\n    return len(DATA)\n");
 }
 
-fn embedFile(_: ?*anyopaque, allocator: std.mem.Allocator, module_path: []const u8, path: []const u8) std.mem.Allocator.Error!embed.Read {
+fn embedFile(_: ?*anyopaque, allocator: std.mem.Allocator, module_path: []const u8, path: []const u8, _: usize) std.mem.Allocator.Error!embed.Read {
     if (!std.mem.eql(u8, module_path, "main.my") or !std.mem.eql(u8, path, "data.bin")) return .{ .status = .missing };
     return .{ .status = .ok, .contents = try allocator.dupe(u8, "abcd") };
 }
@@ -353,7 +353,7 @@ fn servedSource(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, 
     return error.NotFound;
 }
 
-fn servedFile(context: ?*anyopaque, allocator: std.mem.Allocator, module_path: []const u8, path: []const u8) std.mem.Allocator.Error!embed.Read {
+fn servedFile(context: ?*anyopaque, allocator: std.mem.Allocator, module_path: []const u8, path: []const u8, _: usize) std.mem.Allocator.Error!embed.Read {
     const served: *const Served = @ptrCast(@alignCast(context.?));
     if (!std.mem.eql(u8, module_path, "data.my") or !std.mem.eql(u8, path, "table.bin")) return .{ .status = .missing };
     return .{ .status = .ok, .contents = try allocator.dupe(u8, served.payload) };
@@ -399,4 +399,95 @@ test "formatting keeps embed calls, an interface names the file, and a receipt l
     var digest: [32]u8 = undefined;
     embed.digest("abcdef", &digest);
     try t.expectEqualStrings(&std.fmt.bytesToHex(digest, .lower), listed[0].blake3);
+}
+
+const BudgetFiles = struct {
+    payload: []const u8,
+    received_limit: usize = 0,
+    honor_limit: bool = true,
+    status: language.source.EmbedStatus = .ok,
+};
+
+fn boundedEmbed(raw: ?*anyopaque, allocator: std.mem.Allocator, _: []const u8, _: []const u8, limit: usize) std.mem.Allocator.Error!embed.Read {
+    const files: *BudgetFiles = @ptrCast(@alignCast(raw.?));
+    files.received_limit = limit;
+    if (files.status != .ok) return .{ .status = files.status };
+    if (files.honor_limit and files.payload.len > limit) return .{ .status = .too_large };
+    return .{ .status = .ok, .contents = try allocator.dupe(u8, files.payload) };
+}
+
+// spec: EMBED-PROJECT-BUDGET-1
+test "project budgets bound embedded reads before allocation and charge imported payloads" {
+    const payload: [128]u8 = @splat('x');
+    var files: BudgetFiles = .{ .payload = &payload };
+    const provider: language.project.Provider = .{ .context = &files, .read = servedSource, .embed = boundedEmbed };
+    var baseline = language.project.Project.init(t.allocator);
+    defer baseline.deinit();
+    try baseline.load(provider, "main", .{});
+    try t.expectEqual(@as(usize, 128), baseline.counts.embedded_bytes);
+    const total = baseline.counts.bytes + baseline.counts.embedded_bytes;
+    var exact = language.project.Project.init(t.allocator);
+    defer exact.deinit();
+    try exact.load(provider, "main", .{ .max_file_bytes = 128, .max_total_bytes = total });
+    try t.expectEqual(@as(usize, 128), files.received_limit);
+    var over_total = language.project.Project.init(t.allocator);
+    defer over_total.deinit();
+    try t.expectError(error.SourceError, over_total.load(provider, "main", .{ .max_file_bytes = 128, .max_total_bytes = total - 1 }));
+    try t.expectEqual(@as(usize, 127), files.received_limit);
+    try t.expectEqualStrings("E_PROJECT_BYTES", over_total.problem.?.code);
+    try t.expectEqualStrings("\"table.bin\"", over_total.modules.items[over_total.problem.?.site.module].src.text(over_total.problem.?.site.span));
+    var over_file = language.project.Project.init(t.allocator);
+    defer over_file.deinit();
+    try t.expectError(error.SourceError, over_file.load(provider, "main", .{ .max_file_bytes = 100 }));
+    try t.expectEqual(@as(usize, 100), files.received_limit);
+    try t.expectEqualStrings("E_PROJECT_BYTES", over_file.problem.?.code);
+    files.honor_limit = false;
+    var broken_provider = language.project.Project.init(t.allocator);
+    defer broken_provider.deinit();
+    try t.expectError(error.SourceError, broken_provider.load(provider, "main", .{ .max_file_bytes = 100 }));
+    try t.expectEqualStrings("E_PROJECT_BYTES", broken_provider.problem.?.code);
+    files.status = .too_large;
+    var embed_cap = language.project.Project.init(t.allocator);
+    defer embed_cap.deinit();
+    try embed_cap.load(provider, "main", .{ .max_file_bytes = embed.size_cap, .max_total_bytes = embed.size_cap * 2 });
+    try t.expectEqual(language.source.EmbedStatus.too_large, embed_cap.modules.items[embed_cap.names.get("data").?].src.embeds[0].status);
+    try t.expectEqualStrings("E_EMBED_TOO_LARGE", embed.codeOf(.too_large).?);
+}
+
+// spec-case: EMBED-PROJECT-BUDGET-1
+test "a bounded disk embed refuses an overlong file before reading its contents" {
+    var temporary = t.tmpDir(.{});
+    defer temporary.cleanup();
+    try temporary.dir.writeFile(t.io, .{ .sub_path = "data.bin", .data = "abcde" });
+    const root = try rootOf(&temporary);
+    defer t.allocator.free(root);
+    const roots: embed.Roots = .{ .io = t.io, .root = root, .import_root = root };
+    const over = try embed.readLimited(t.allocator, roots, "main.my", "data.bin", 4);
+    try t.expectEqual(language.source.EmbedStatus.too_large, over.status);
+    try t.expectEqual(@as(usize, 0), over.contents.len);
+    const exact = try embed.readLimited(t.allocator, roots, "main.my", "data.bin", 5);
+    defer t.allocator.free(exact.contents);
+    try t.expectEqualStrings("abcde", exact.contents);
+}
+
+fn repeatedEmbedSource(_: ?*anyopaque, allocator: std.mem.Allocator, _: []const u8, limit: usize) language.project.ReadError![]u8 {
+    const text = "module main\n\nconst A: bytes = embed_bytes(\"data.bin\")\nconst B: bytes = embed_bytes(\"data.bin\")\n";
+    if (text.len > limit) return error.TooLarge;
+    return allocator.dupe(u8, text);
+}
+
+// spec-case: EMBED-PROJECT-BUDGET-1
+test "repeated embedded calls share one provider identity and byte charge" {
+    var files: BudgetFiles = .{ .payload = "abcd" };
+    const provider: language.project.Provider = .{ .context = &files, .read = repeatedEmbedSource, .embed = boundedEmbed };
+    var baseline = language.project.Project.init(t.allocator);
+    defer baseline.deinit();
+    try baseline.load(provider, "main", .{});
+    try t.expectEqual(@as(usize, 4), baseline.counts.embedded_bytes);
+    var refused = language.project.Project.init(t.allocator);
+    defer refused.deinit();
+    try t.expectError(error.SourceError, refused.load(provider, "main", .{ .max_total_bytes = baseline.counts.bytes + 3 }));
+    try t.expectEqual(@as(usize, 3), files.received_limit);
+    try t.expectEqual(@as(usize, 0), refused.counts.embedded_bytes);
+    try t.expectEqualStrings("E_PROJECT_BYTES", refused.problem.?.code);
 }

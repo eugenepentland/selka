@@ -52,6 +52,7 @@ const curated = [_]Entry{
     entry("myl_native_text_ord", &.{P}, i64_type),
     entry("myl_native_text_scalar", &.{ P, P, i32_type }, P),
     entry("myl_native_text_slice", &.{ P, P, i64_type, i64_type }, P),
+    entry("myl_native_text_tail", &.{ P, P, i64_type, i64_type }, P),
     entry("myl_native_text_split_whitespace", &.{ P, P }, P),
     entry("myl_qbe_bytes_decode_range", &.{ P, P, i64_type, i64_type, P }, i32_type),
     entry("myl_qbe_bytes_decode", &.{ P, P, P }, i32_type),

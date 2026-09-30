@@ -1,0 +1,76 @@
+module exclusive_ownership
+
+
+record Box:
+    items: list[int]
+
+
+record Owner:
+    box: Box
+    count: int
+
+
+record Payload:
+    number: int
+    items: list[int]
+
+
+union Item:
+    payload: Payload,
+    empty
+
+
+record Pair:
+    x: int
+    y: int
+
+
+def change_owners(owner: mut Owner, other: mut Owner):
+    work = owner.box
+    work.items.append(2)
+    other.count += 1
+    owner.box = work
+
+
+def change_items(items: mut list[Item], other: mut list[Item], index: int):
+    match items[index]:
+        case Item.payload(old):
+            fields = old.items
+            fields.append(2)
+            other.append(Item.empty)
+            items[index] = Item.payload(Payload(0, fields))
+        case Item.empty:
+            pass
+
+
+def change_pairs(a: mut Pair, b: mut Pair) -> int:
+    a.x += 1
+    seen = b.x
+    b.x += 2
+    return seen
+
+
+# spec-case: MUT-EXCLUSIVE-PROOFS-1
+public def test_disjoint_mut_record_parameters_keep_shared_inputs_independent() -> bool:
+    owner = Owner(Box([1]), 0)
+    other = owner
+    kept = owner
+    change_owners(mut owner, mut other)
+    return owner.box.items == [1, 2] and owner.count == 0 and other.box.items == [1] and other.count == 1 and kept.box.items == [1] and kept.count == 0
+
+
+# spec-case: MUT-EXCLUSIVE-PROOFS-1
+public def test_disjoint_mut_list_parameters_return_only_the_selected_payload() -> bool:
+    items = [Item.payload(Payload(3, [1]))]
+    other = items
+    kept = items
+    change_items(mut items, mut other, -1)
+    return items == [Item.payload(Payload(0, [1, 2]))] and other == [Item.payload(Payload(3, [1])), Item.empty] and kept == [Item.payload(Payload(3, [1]))]
+
+
+# spec-case: MUT-EXCLUSIVE-PROOFS-1
+public def test_disjoint_mut_plain_record_parameters_use_their_own_storage() -> bool:
+    a = Pair(5, 9)
+    b = a
+    seen = change_pairs(mut a, mut b)
+    return seen == 5 and a.x == 6 and b.x == 7 and a.y == 9 and b.y == 9

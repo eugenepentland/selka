@@ -4,7 +4,7 @@ This plan is written to be handed to AI agents that did not see the conversation
 Each work package (WP) says where it starts, what to do, what "done" means and what has
 already gone wrong in this area. Read sections 1 to 5 before any WP.
 
-## Closeout status, 2026-09-29
+## Closeout status, 2026-09-30
 
 A1–A4 are implemented, integrated and verified on the isolated
 `codex/next-closeout-20260929` branch. A5 gate `m17-codex` is green at compiler
@@ -12,17 +12,48 @@ source `d8f66585`: all 27 steps pass, including 1,438 fresh guest tests in each
 of nine modes and all four Lox combinations. Dev/full corpus outputs match all
 86 pairs; every row meets the 1.3x cap and 1% regression limit.
 
-**A5 landing awaits the explicit user approval required below.** `main` remains
-`6d91f95b`. Original checkouts and paused lane worktrees were not edited.
+**A5 landed with explicit user approval** ("Yeah fast forward main") on
+2026-09-29. `main` fast-forwarded from `6d91f95b` to `80dd5190`; its compiler
+source is the gated `d8f66585`. Original checkouts and paused lane worktrees
+were not edited. The completed Codex A3/A4 worktrees were removed after
+archiving their logs and Guardian ROI receipts; their branches remain.
 Details, exact counts, performance rows and Guardian feedback are in
 [codex-next-integration-closeout-2026-09-29.md](codex-next-integration-closeout-2026-09-29.md).
 
-Phase B and Phase C remain open. B1/B2 have implementation maps, pinned oracles
-and fixtures; B3 has a current-source large-list reproduction. B4 has an
-independent tooling/GC checkpoint and a separate combined continuation under
-review; its remaining changes are outside the A5 source. EDA preparation has a
-verified test inventory and guide/checker reconciliation, without starting the
-port. Sections below retain the original handoff state and requirements.
+**Phase B is implemented and its complete final integration gate is green** on
+`codex/next-closeout-20260929`, frozen compiler source `a3e451d7`. All 27 steps
+pass: 2,804 selected Zig tests, 505 QBE tests, nine fresh guest sets of 1,486
+tests, all four Lox runtime/backend combinations and the native checks. The
+29-program / 43-row module corpus and all four runtime module matrices have
+identical interfaces, units and executables, with zero fallback or reference
+failure. The 100-seed fuzz run has zero RC divergences and the two previously
+known GC-stress-only findings remain reported. All 258 dev/full/smoke outputs
+match; every dev/full row passes the 1% limit against both approved and explicitly
+pinned A5 controls and every 1.3x cap. Smoke retains six reported diagnostic
+increases and has zero new cap miss.
+
+The strict final verifier and independent subagent reviews bind source/compiler,
+tag/size, all 58 measured binary hashes, fresh test names and retained module
+bytes. All final evidence is archived and hash-verified; earlier rejected
+checkpoints remain in their historical receipts. Details, exact counts,
+performance rows, known findings and Guardian feedback are in
+[codex-next-phase-b-closeout-2026-09-30.md](codex-next-phase-b-closeout-2026-09-30.md).
+
+**Phase B is ready for the required explicit user approval to fast-forward main.**
+It remains outside main at approved `80dd5190`. Phase C remains open and has not
+started; the EDA port waits for completed compiler work to land.
+
+Lane receipts are in [python-text-closeout-2026-09-29.md](python-text-closeout-2026-09-29.md),
+[wp-b4-tooling-2026-09-29.md](wp-b4-tooling-2026-09-29.md),
+[codex-next-runtime-checkpoint-2026-09-29.md](codex-next-runtime-checkpoint-2026-09-29.md)
+and [text-runtime-closeout-2026-09-29.md](text-runtime-closeout-2026-09-29.md).
+The final module-lane receipts are in
+[codex-next-modules-closeout-2026-09-30.md](codex-next-modules-closeout-2026-09-30.md);
+the QBE phi fix is in [wp-b3-qbe-phi-2026-09-30.md](wp-b3-qbe-phi-2026-09-30.md).
+EDA preparation has a verified test inventory and guide/checker reconciliation.
+The port has not started: it waits for completed compiler work and the required
+explicit approval to land Phase B. Sections below retain the original handoff
+state and requirements.
 
 ## 1. Read first
 
@@ -34,9 +65,12 @@ port. Sections below retain the original handoff state and requirements.
 - For WP-B2 only: `git show merge/devspeed-into-main:docs/audits/merge-devspeed-into-main-2026-09-24.md`.
 - For WP-C1 only: in `/home/epentland/ai/canopy/eda-bench`, read `PORTING.md`, `mylang/PORTING-MYLANG.md`, `mylang/PLAN.md` and `mylang/GAPS.md`.
 
-## 2. Where things stand
+## 2. Original handoff state (historical)
 
-### `main` = `6d91f95b`
+The status above records the current closeout. The following snapshots describe
+the starting state, so original branch names and gate failures remain auditable.
+
+### Starting `main` = `6d91f95b`
 
 - Reference counting (RC) is the default runtime. On the 43-program corpus it runs at a geomean of 1.07x the tracing GC's instruction count, and every program is at or under 1.3x. `--gc-runtime` selects the GC.
 - The language-level copy bugs are fixed:

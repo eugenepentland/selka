@@ -88,6 +88,10 @@ unsigned myl_rc_value_region(myl_native_heap *heap, const myl_rc_shape *source, 
 void myl_rc_edges_release(myl_native_heap *heap, const myl_rc_shape *source, void *address, size_t count) {
     myl_rc_invariant(heap && heap->rc && !heap->rc->walk.depth);
     const myl_rc_shape *shape = myl_rc_shape_find(heap, source);
+    myl_rc_registered_edges_release(heap, shape, address, count);
+}
+void myl_rc_registered_edges_release(myl_native_heap *heap, const myl_rc_shape *shape, void *address, size_t count) {
+    myl_rc_invariant(heap && heap->rc && !heap->rc->walk.depth);
     myl_rc_invariant(shape != NULL);
     size_t bytes;
     myl_rc_invariant(myl_rc_size_mul(shape->size, count, &bytes));
@@ -158,7 +162,7 @@ static inline __attribute__((always_inline)) myl_rc_object *drain_leaf(myl_nativ
     MYL_RC_STAT(heap, MYL_RC_STAT_OWNER_RELEASE);
     if (owners == 1 && !object->holds) {
         object->common.mark = mark | MYL_RC_OBJECT_DYING;
-        object->owners = (uintptr_t)head;
+        object->retired_link = (uintptr_t)head;
         return object;
     }
     myl_rc_invariant(owners != 0);
@@ -275,12 +279,12 @@ static __attribute__((noinline)) myl_rc_object *drain_pairs(myl_native_heap *hea
         head = drain_leaf(heap, payload + second, head);
         MYL_RC_STAT(heap, MYL_RC_STAT_RETIRE);
         object->common.mark = MYL_RC_RETIRED_MARK;
-        object->owners = (uintptr_t)top;
+        object->retired_link = (uintptr_t)top;
         top = object;
         ++count;
         if (!head || head->common.element != type || (head->common.mark & DRAIN_ONE_MASK) != DRAIN_ONE_WANT) break;
         object = head;
-        head = (myl_rc_object *)object->owners;
+        head = (myl_rc_object *)object->retired_link;
     }
     *list = top;
     tally->retired += count;
@@ -303,7 +307,7 @@ static __attribute__((noinline)) myl_rc_object *drain_fast(myl_native_heap *heap
     myl_rc_object *slow = NULL;
     while (head) {
         myl_rc_object *object = head;
-        head = (myl_rc_object *)object->owners;
+        head = (myl_rc_object *)object->retired_link;
         const myl_native_type *element = object->common.element;
         if (element != last) {
             last = element;
@@ -335,13 +339,13 @@ static __attribute__((noinline)) myl_rc_object *drain_fast(myl_native_heap *heap
             const myl_rc_slab_class *slab = (const myl_rc_slab_class *)((uintptr_t)object & ~(uintptr_t)(MYL_RC_SLAB_BYTES - 1));
             size_t index = slab->index;
             object->common.mark = MYL_RC_RETIRED_MARK;
-            object->owners = (uintptr_t)heap->rc_cache.free[index];
+            object->retired_link = (uintptr_t)heap->rc_cache.free[index];
             heap->rc_cache.free[index] = object;
             pushed += slab->stride;
             ++retired;
             if (!head || head->common.element != last || (head->common.mark & mask) != want) break;
             object = head;
-            head = (myl_rc_object *)object->owners;
+            head = (myl_rc_object *)object->retired_link;
         }
     }
     *cursor = (drain_cursor){.head = head, .last = last, .flat = flat, .mask = mask, .want = want, .all = all,

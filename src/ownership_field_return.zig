@@ -27,6 +27,7 @@ fn extraction(ctx: *const Context, owners: []const bool, pc: usize) ?Transfer {
     if (code[pc - 2].op != .load_local or code[pc - 1].op != .get_field or code[pc + 1].op != .store_local) return null;
     const source = li(code[pc - 2].op.load_local);
     const target = li(code[pc + 1].op.store_local);
+    if (@import("ownership_classify.zig").iterationKeeps(ctx, .{ .origin = .local, .local = source, .part = .field, .read = @intCast(pc - 2) })) return null;
     const ty = ctx.locals.list[source].ty;
     if (!ty.isAggregate()) return null;
     if (@import("value_semantics.zig").containsLiveView(ctx.code.program.records, ty)) return null;
@@ -39,8 +40,9 @@ fn extraction(ctx: *const Context, owners: []const bool, pc: usize) ?Transfer {
 }
 
 fn otherMutableParameter(ctx: *const Context, source: u32) bool {
-    // Two `mut` parameters may name the same caller variable. A read through
-    // the second parameter can therefore observe the first one's field.
+    if (@import("value_semantics.zig").enabled()) return false;
+    // Legacy sharing lets two `mut` parameters name the same caller variable.
+    // A read through the second can observe the first one's field.
     for (0..ctx.locals.params) |index| {
         if (index != source and ctx.role(@intCast(index)) == .mut_param) return true;
     }

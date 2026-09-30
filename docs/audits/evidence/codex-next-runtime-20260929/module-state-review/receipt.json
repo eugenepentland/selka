@@ -1,0 +1,20 @@
+{
+  "parent_source": "573ce9a4e97d4deb3e874dcaa35beb0eaacbfbb0",
+  "candidate_worktree": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-modules-20260929",
+  "candidate_files_sha256": {
+    "src/module_build.zig": "3742c88d5c78ceea03d8543d017ebfbb0b58deb4e80aa1ede084cc45503d0f3d",
+    "tests/module_check_oracle.py": "cb818a3fac6c92ecec036b74e40bb6321a2b58405f5ad08e0fc4f28ecb9cfe99"
+  },
+  "inspection_only": true,
+  "source_edits": false,
+  "builds": false,
+  "guardian_exercised": false,
+  "timing_claimed": false,
+  "actionable_findings": [],
+  "scope": "No-op state publication guard and lock/config/capture/scheduling context, not general module artifact admission.",
+  "files": {
+    "report.md": "a19287c1ad0ab2fb5cb93d26c83cd2c1f70909670763f9910c80432216a444d9",
+    "module_build.zig": "3742c88d5c78ceea03d8543d017ebfbb0b58deb4e80aa1ede084cc45503d0f3d",
+    "module_check_oracle.py": "cb818a3fac6c92ecec036b74e40bb6321a2b58405f5ad08e0fc4f28ecb9cfe99"
+  }
+}

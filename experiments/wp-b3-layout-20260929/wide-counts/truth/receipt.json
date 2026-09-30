@@ -1,0 +1,75 @@
+{
+  "source_base": "1390e0c76840baf8231f043a3802a8ddccc9b9d3",
+  "compiler_sha256": "e58b3ba5140999ae7ff33ac9afc922279cdf936d70acf697e7d9104a08b31437",
+  "source_files": {
+    "src/qbe_rc_scope_inline.zig": "d9ed1e55293b22be4c5a9d9c780cf94ac84e07d43812c4b4e646fb08b2b1eb20",
+    "src/qbe_rc_scope_inline_test.zig": "31816e5a54a0d6052876880c1992dad9bd1e825d0c18f3c520fa127583dbb2c8",
+    "tests/native_rc_contract_test.c": "4fb12233896cf0ad152d6da0373ed7bdbf86302b1b501be2a178e195e823d386",
+    "tests/native_rc_fast_test.c": "675be390f9ebd9e55736fd518f5ab18ebee713479616b9d303170d790c8ddd71",
+    "SPEC.md": "7b948edd7488e39a2ca69452638747f698aeaeb3e428a855e9ebe0bc2d6f4c4a"
+  },
+  "guardian_full_checks": 88,
+  "scope_units_selected": 16,
+  "native_c_families": 30,
+  "native_fast_cases": 27,
+  "native_contract_cases": 25,
+  "image_cases": 15,
+  "host_fault_points": 6,
+  "budget_fault_points": 6,
+  "scope_guests": [
+    {
+      "mode": "rc",
+      "passed": 3,
+      "executed": 3,
+      "failed": 0,
+      "cached": 0,
+      "skipped": 0
+    },
+    {
+      "mode": "gc",
+      "passed": 3,
+      "executed": 3,
+      "failed": 0,
+      "cached": 0,
+      "skipped": 0
+    },
+    {
+      "mode": "stress",
+      "passed": 3,
+      "executed": 3,
+      "failed": 0,
+      "cached": 0,
+      "skipped": 0
+    },
+    {
+      "mode": "stats",
+      "passed": 3,
+      "executed": 3,
+      "failed": 0,
+      "cached": 0,
+      "skipped": 0
+    },
+    {
+      "mode": "sites",
+      "passed": 3,
+      "executed": 3,
+      "failed": 0,
+      "cached": 0,
+      "skipped": 0
+    },
+    {
+      "mode": "llvm",
+      "passed": 3,
+      "executed": 3,
+      "failed": 0,
+      "cached": 0,
+      "skipped": 0
+    }
+  ],
+  "excluded_logs": [
+    "wide-truth-guardian.log.gz",
+    "wide-native-memory.log.gz",
+    "wide-native-memory-2.log.gz"
+  ],
+  "status": "truth64 correctness checkpoint; independent emitted predicate/count review pending; no performance acceptance claim"
+}

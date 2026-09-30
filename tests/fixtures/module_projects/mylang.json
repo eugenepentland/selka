@@ -1,0 +1,6 @@
+{
+  "version": 2,
+  "import_policy": "policy.json",
+  "budgets": {"max_modules": 64, "max_imports": 256, "max_file_bytes": 65536, "max_total_bytes": 1048576},
+  "lint": {"warnings": "report"}
+}

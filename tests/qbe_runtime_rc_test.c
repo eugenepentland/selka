@@ -13,10 +13,30 @@
 static const myl_rc_shape pointer = {.size = sizeof(void *), .kind = MYL_RC_SHAPE_POINTER};
 static const myl_rc_shape *const shapes[] = {&pointer};
 const myl_rc_module myl_rc_generated_module = {.abi = MYL_RC_ABI_VERSION, .shapes = shapes, .shape_count = 1};
+static const myl_rc_shape_entry image_entry = {.source=&pointer,
+    .shape={.size=sizeof(void *),.kind=MYL_RC_SHAPE_POINTER},.depth=1,.inline_depth=1};
+static const myl_rc_shape_entry *const image_entries[] = {&image_entry};
+const myl_rc_image myl_rc_generated_image = {.abi=MYL_RC_IMAGE_ABI_VERSION,
+    .shapes=image_entries,.shape_count=1,.depth=1};
 /* Capture the same status delivered to the located native trap entry. These
  * tests exercise initialization before an active guest frame exists. */
 #ifndef MYL_RC_CONTRACT_LIBRARY
 void myl_qbe_fail(void *context, const char *code) { MylQbeContext *ctx=context; if (!ctx->trap) ctx->trap=code; }
+#endif
+#ifdef MYL_RC_CONTRACT_LIBRARY
+int myl_qbe_fail_return_verify(void) {
+    MylQbeContext context = {0};
+    myl_qbe_fail_overflow_op(&context, 0, INT64_MAX, 1, 64);
+    assert(!strcmp(context.trap, "R_OVERFLOW") && !context.unwind);
+    assert(context.trap_detail.left == INT64_MAX && context.trap_detail.right == 1);
+    unsigned char first[sizeof context.trap_detail];
+    memcpy(first, &context.trap_detail, sizeof first);
+    myl_qbe_fail(&context, "R_REFERENCE_COUNT_LIMIT");
+    myl_qbe_fail_overflow_op(&context, 1, INT64_MIN, 1, 64);
+    assert(!strcmp(context.trap, "R_OVERFLOW"));
+    assert(!memcmp(first, &context.trap_detail, sizeof first));
+    return 3;
+}
 #endif
 static myl_rc_status no_allocate(myl_native_heap *heap, const myl_rc_alloc_request *request, void **out) {
     (void)heap;
@@ -731,6 +751,7 @@ static void held_unique_bridge_test(void) {
     myl_native_heap_destroy(&context.heap);
     assert(!context.heap.bytes);
 }
+// spec-case: RC-STARTUP-IMAGE-1
 int myl_qbe_rc_contract_verify(void) {
     MylQbeContext context = {0};
     context.heap.limit = 65536;
@@ -745,6 +766,7 @@ int myl_qbe_rc_contract_verify(void) {
     context.trap = NULL;
     assert(myl_qbe_rc_initialize(&context));
     assert(!context.trap && myl_rc_shape_resolve(&context.heap, &pointer));
+    assert(myl_rc_shape_resolve(&context.heap, &pointer) == &image_entry.shape);
     size_t bytes = context.heap.bytes;
     assert(myl_qbe_rc_register(&context, &myl_rc_generated_module));
     assert(context.heap.bytes == bytes);

@@ -1,0 +1,100 @@
+{
+ "label": "1d",
+ "tier": "t50k/mylang",
+ "load_start": 9.56,
+ "check": {
+  "cold": {
+   "wall_s": 0.427,
+   "rss_mb": 230.5,
+   "status": 0
+  },
+  "seeded_after_s": 0.252,
+  "noop": {
+   "wall_s": 0.008,
+   "rss_mb": 4.9,
+   "status": 0
+  },
+  "body_edit": {
+   "wall_s": 0.015,
+   "rss_mb": 9.9,
+   "status": 0
+  },
+  "body_edit_samples": [
+   0.021,
+   0.015,
+   0.017
+  ],
+  "interface_edit": {
+   "wall_s": 0.021,
+   "rss_mb": 9.9,
+   "status": 0
+  },
+  "interface_edit_samples": [
+   0.022,
+   0.021,
+   0.023
+  ]
+ },
+ "test": {
+  "cold": {
+   "wall_s": 1.222,
+   "rss_mb": 324.6,
+   "status": 0,
+   "passed": 120,
+   "cached": 0,
+   "failed": 0
+  },
+  "after_cold": {
+   "wall_s": 4.687,
+   "rss_mb": 36.3,
+   "status": 0,
+   "passed": 0,
+   "cached": 120,
+   "failed": 0
+  },
+  "noop": {
+   "wall_s": 0.046,
+   "rss_mb": 36.1,
+   "status": 0,
+   "passed": 0,
+   "cached": 120,
+   "failed": 0
+  },
+  "body_edit": {
+   "wall_s": 0.156,
+   "rss_mb": 118.1,
+   "status": 0,
+   "passed": 60,
+   "cached": 60,
+   "failed": 0
+  },
+  "body_edit_samples": [
+   0.448,
+   0.166,
+   0.156
+  ]
+ },
+ "build": {
+  "cold": {
+   "wall_s": 3.431,
+   "rss_mb": 177.7,
+   "status": 0
+  },
+  "noop": {
+   "wall_s": 0.014,
+   "rss_mb": 36.3,
+   "status": 0
+  },
+  "body_edit": {
+   "wall_s": 0.11,
+   "rss_mb": 177.1,
+   "status": 0
+  },
+  "body_edit_samples": [
+   0.115,
+   0.11,
+   0.111
+  ]
+ },
+ "load_end": 9.89
+}

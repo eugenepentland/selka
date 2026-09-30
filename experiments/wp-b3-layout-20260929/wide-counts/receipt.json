@@ -1,0 +1,17 @@
+{
+  "source_base": "c435008b",
+  "compiler_sha256": "ad246f743ee32235a7c325c751927c20512ba6c5a5671dfe7df9980c7da6b45a",
+  "native_abi": 5,
+  "image_abi": 1,
+  "count_width": 64,
+  "prefix_bytes": 32,
+  "owners_distance": 32,
+  "holds_distance": 24,
+  "count_max": "18446744073709551615",
+  "state_offsets_changed": false,
+  "actual_generated_c_selected": 13,
+  "scope_units_selected": 16,
+  "allocation_units_selected": 14,
+  "install_steps": 12,
+  "status": "functional source checkpoint; native full/fault corpus, guest modes and quantitative results pending"
+}

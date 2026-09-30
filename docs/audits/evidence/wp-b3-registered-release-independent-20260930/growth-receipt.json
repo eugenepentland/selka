@@ -1,0 +1,91 @@
+{
+  "source": "c13be022aa4a5260d15b002c377de15c5abb4480",
+  "scope": "Focused replay of the two added growth controls after replacing the saved former frame pointer with an integer address snapshot; no production change.",
+  "previous_raw_archive_sha256": "c728d5834f40a51908eb1d7c2ac949edf21b21dfc14274b53637dcfba3ff7282",
+  "fixture_sha256": "557572eb56a87808b1deb573a563245a0ee7475988b043414a368fe990c2d247",
+  "cases": 8,
+  "positive_executions": 8,
+  "ubsan_diagnostics": 0,
+  "results": {
+    "clang-control": {
+      "cases": 2,
+      "status": 0,
+      "receipt_sha256": "fa2a7aa326a2687e8a2f8aeb33e804b9823044473f32baaeba4b3cdf14533b5e",
+      "binary_sha256": "eb6ce3f0a1eacad8282b66c09bca9c1fda75e99644eeabe0261d35706f6af2ee",
+      "admission": [
+        "scripts/build-slot.sh",
+        "build",
+        "taskset",
+        "-c",
+        "0",
+        "python3",
+        ".tmp/registered-release-independent/run.py",
+        "--compiler",
+        "clang",
+        "--side",
+        "control",
+        "--growth-only"
+      ]
+    },
+    "clang-candidate": {
+      "cases": 2,
+      "status": 0,
+      "receipt_sha256": "42445ce51bba9318a430d6bda5a04b2e828ae5dabc5cf16838f7a604db5a6eb1",
+      "binary_sha256": "137ee16a5272c2cc95994d7e908e0bb96dee6ff89f82b1b00f47ce0933c41f08",
+      "admission": [
+        "scripts/build-slot.sh",
+        "build",
+        "taskset",
+        "-c",
+        "0",
+        "python3",
+        ".tmp/registered-release-independent/run.py",
+        "--compiler",
+        "clang",
+        "--side",
+        "candidate",
+        "--growth-only"
+      ]
+    },
+    "gcc-control": {
+      "cases": 2,
+      "status": 0,
+      "receipt_sha256": "e176a5383d05b5ec3efd01fb4afcc6351e597d29e4d2b4d5534cdbd8dcf0443a",
+      "binary_sha256": "1ffe6aefc4488f4d4494418eef42eca9b14bfb6fa18a33a9b3fe23ed4da5575f",
+      "admission": [
+        "scripts/build-slot.sh",
+        "build",
+        "taskset",
+        "-c",
+        "0",
+        "python3",
+        ".tmp/registered-release-independent/run.py",
+        "--compiler",
+        "gcc",
+        "--side",
+        "control",
+        "--growth-only"
+      ]
+    },
+    "gcc-candidate": {
+      "cases": 2,
+      "status": 0,
+      "receipt_sha256": "01f89b94b6ade34107c3d3116f86889d27b922a0b778e6c9aa87f1c932a84bbc",
+      "binary_sha256": "0e4c691ae00ab7d72f0240ad8d70df24785f330376ea643421b08b73a72bd7ad",
+      "admission": [
+        "scripts/build-slot.sh",
+        "build",
+        "taskset",
+        "-c",
+        "0",
+        "python3",
+        ".tmp/registered-release-independent/run.py",
+        "--compiler",
+        "gcc",
+        "--side",
+        "candidate",
+        "--growth-only"
+      ]
+    }
+  }
+}

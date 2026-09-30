@@ -1,0 +1,210 @@
+{
+ "compiler": {
+  "compiler": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-runtime-20260929/.tmp/b3-linked-checkpoint/bin/mylang",
+  "runtime": "--rc-runtime",
+  "sha256": "4d8372ac10b607bf2a7fdc06b0886606ee84f4edb2c3489c7a5905e3d001736d"
+ },
+ "failures": [],
+ "rows": [
+  {
+   "arm": "qbe",
+   "gc": 218918513,
+   "id": "lox/vm/binary_trees",
+   "ratio": 1.2163275930893975,
+   "rc": 266276628
+  },
+  {
+   "arm": "llvm",
+   "gc": 100266421,
+   "id": "lox/vm/binary_trees",
+   "ratio": 1.2690241731077645,
+   "rc": 127240512
+  },
+  {
+   "arm": "qbe",
+   "gc": 52797798,
+   "id": "lox/vm/closures",
+   "ratio": 1.2801926701564335,
+   "rc": 67591354
+  },
+  {
+   "arm": "llvm",
+   "gc": 22991713,
+   "id": "lox/vm/closures",
+   "ratio": 1.3732544852138682,
+   "rc": 31573473
+  },
+  {
+   "arm": "qbe",
+   "gc": 36885940,
+   "id": "lox/vm/equality",
+   "ratio": 1.0348550694383822,
+   "rc": 38171602
+  },
+  {
+   "arm": "llvm",
+   "gc": 13961339,
+   "id": "lox/vm/equality",
+   "ratio": 1.2958317250229365,
+   "rc": 18091546
+  },
+  {
+   "arm": "qbe",
+   "gc": 11508499,
+   "id": "lox/vm/fib",
+   "ratio": 1.2398610800591807,
+   "rc": 14268940
+  },
+  {
+   "arm": "llvm",
+   "gc": 4830978,
+   "id": "lox/vm/fib",
+   "ratio": 1.3126845123285595,
+   "rc": 6341550
+  },
+  {
+   "arm": "qbe",
+   "gc": 142990097,
+   "id": "lox/vm/instantiation",
+   "ratio": 1.3547457625684385,
+   "rc": 193715228
+  },
+  {
+   "arm": "llvm",
+   "gc": 73398124,
+   "id": "lox/vm/instantiation",
+   "ratio": 1.331166543166689,
+   "rc": 97705127
+  },
+  {
+   "arm": "qbe",
+   "gc": 103959573,
+   "id": "lox/vm/invocation",
+   "ratio": 1.364967899589199,
+   "rc": 141901480
+  },
+  {
+   "arm": "llvm",
+   "gc": 44669599,
+   "id": "lox/vm/invocation",
+   "ratio": 1.5025263602657368,
+   "rc": 67117250
+  },
+  {
+   "arm": "qbe",
+   "gc": 296147519,
+   "id": "lox/vm/method_call",
+   "ratio": 1.2359981411831447,
+   "rc": 366037783
+  },
+  {
+   "arm": "llvm",
+   "gc": 121972243,
+   "id": "lox/vm/method_call",
+   "ratio": 1.3374389860158593,
+   "rc": 163130433
+  },
+  {
+   "arm": "qbe",
+   "gc": 136983544,
+   "id": "lox/vm/properties",
+   "ratio": 1.4033709260726968,
+   "rc": 192238723
+  },
+  {
+   "arm": "llvm",
+   "gc": 60112396,
+   "id": "lox/vm/properties",
+   "ratio": 1.602194845136434,
+   "rc": 96311771
+  },
+  {
+   "arm": "qbe",
+   "gc": 238595954,
+   "id": "lox/vm/string_equality",
+   "ratio": 1.407212056077028,
+   "rc": 335755103
+  },
+  {
+   "arm": "llvm",
+   "gc": 84395463,
+   "id": "lox/vm/string_equality",
+   "ratio": 2.442912802077998,
+   "rc": 206170757
+  },
+  {
+   "arm": "qbe",
+   "gc": 28789669,
+   "id": "lox/vm/strings",
+   "ratio": 0.9796233155719852,
+   "rc": 28203031
+  },
+  {
+   "arm": "llvm",
+   "gc": 14614030,
+   "id": "lox/vm/strings",
+   "ratio": 0.9284878298457031,
+   "rc": 13568949
+  },
+  {
+   "arm": "qbe",
+   "gc": 17843248,
+   "id": "lox/vm/trees",
+   "ratio": 1.5509897077034405,
+   "rc": 27674694
+  },
+  {
+   "arm": "llvm",
+   "gc": 8803059,
+   "id": "lox/vm/trees",
+   "ratio": 1.7978245971088005,
+   "rc": 15826356
+  },
+  {
+   "arm": "qbe",
+   "gc": 35123409,
+   "id": "lox/vm/zoo",
+   "ratio": 1.2917632795837102,
+   "rc": 45371130
+  },
+  {
+   "arm": "llvm",
+   "gc": 15507249,
+   "id": "lox/vm/zoo",
+   "ratio": 1.393547624082131,
+   "rc": 21610090
+  },
+  {
+   "arm": "qbe",
+   "gc": 690665195,
+   "id": "lox/vm/zoo_batch",
+   "ratio": 1.1677242907831775,
+   "rc": 806506525
+  },
+  {
+   "arm": "llvm",
+   "gc": 290956582,
+   "id": "lox/vm/zoo_batch",
+   "ratio": 1.1764120428112534,
+   "rc": 342284827
+  }
+ ],
+ "size": "smoke",
+ "summary": {
+  "llvm": {
+   "geomean": 1.4073148385656937,
+   "geomean_nonlox": NaN,
+   "rows": 13,
+   "within_1_3": 4,
+   "worst": 2.442912802077998
+  },
+  "qbe": {
+   "geomean": 1.2623416410333965,
+   "geomean_nonlox": NaN,
+   "rows": 13,
+   "within_1_3": 8,
+   "worst": 1.5509897077034405
+  }
+ },
+ "tag": "b3-linked-91bb"
+}

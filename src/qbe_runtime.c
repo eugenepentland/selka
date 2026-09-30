@@ -391,7 +391,7 @@ static int trace_visit(Context *ctx, const MylQbeFunction *function, uint64_t po
     trace_frame(ctx, function, position, 0, state);
     return 1;
 }
-static __attribute__((noinline)) uint64_t fail(void *context, const char *code) {
+static __attribute__((noinline, cold)) uint64_t fail(void *context, const char *code) {
     Context *ctx = context;
     if (!ctx->trap) {
         ctx->trap = code;
@@ -510,6 +510,7 @@ void myl_qbe_fail_buffer_bounds(void *context) { fail(context, "R_BUFFER_BOUNDS"
 void myl_qbe_fail_list_bounds(void *context) { fail(context, "R_LIST_BOUNDS"); }
 void myl_qbe_fail_list_capacity(void *context) { fail(context, "R_LIST_CAPACITY"); }
 void myl_qbe_fail_list_value(void *context) { fail(context, "R_LIST_VALUE"); }
+void myl_qbe_fail_substring(void *context) { fail(context, "R_SUBSTRING_NOT_FOUND"); }
 /* A refused managed allocation names the budget when the heap declined it and
    the host only when the process itself could not produce the bytes. */
 void myl_qbe_fail_allocation(void *context) {

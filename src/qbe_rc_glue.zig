@@ -30,9 +30,12 @@ const pinned_or_arena: u64 = (@as(u64, 1) << 62) | (@as(u64, 1) << 60);
 const shared_or_immortal: u64 = (@as(u64, 1) << 61) | 2;
 const shared_mark: u64 = @as(u64, 1) << 61;
 // Prefix words below the payload (native_rc.h): owners, holds, mark.
-const owners_offset: u64 = 32;
-const holds_offset: u64 = 24;
-const mark_offset: u64 = 16;
+const prefix = @import("qbe_rc_prefix.zig");
+const owners_offset = prefix.owners_offset;
+const holds_offset = prefix.holds_offset;
+const mark_offset = prefix.mark_offset;
+const count_result = " %v{d} =" ++ prefix.count_type;
+const count_equal = " %v{d} =w ceq" ++ prefix.count_type ++ " %v{d}, ";
 
 // A fallible glue entry returning its w status; a word loaded below a payload.
 const status_call = " %v{d} =w call ${s}{s}(l %heap, l %v{d}, l %v{d}, w %v{d})\n";
@@ -75,18 +78,20 @@ pub fn listRouted(comptime E: type, self: *E, ty: typed.Type, operation: glue.Op
     return glue.plainAggregate(self.layouts, &state.catalog, ty) catch |err| translate(err);
 }
 
-/// Copy the value and acquire one hold per edge. A loan cannot fail or kill.
+/// Copy the value and acquire one hold per edge, mapping a refused count before publishing the loan.
 pub fn loan(comptime E: type, self: *E, operation: Transfer) Error!void {
     try marker(E, self, .loan);
     if (try pointerEdge(E, self, operation.ty)) |_| {
         const payload = self.temp();
-        try self.print(" %v{d} =l loadl %v{d}\n storel %v{d}, %v{d}\n", .{ payload, operation.source, payload, operation.destination });
+        try self.print(" %v{d} =l loadl %v{d}\n", .{ payload, operation.source });
         const label = self.temp();
-        _ = try increment(E, self, .{ .payload = payload, .count = .holds, .label = label, .on_null = "done", .on_special = "done" });
-        try self.print("@rcgdone{d}\n", .{label});
+        _ = try increment(E, self, .{ .payload = payload, .count = .holds, .label = label, .on_null = "store", .on_special = "store" });
+        try self.print("@rcgstore{d}\n storel %v{d}, %v{d}\n", .{ label, payload, operation.destination });
         return;
     }
-    try self.print(" call ${s}{s}(l %heap, l %v{d}, l %v{d})\n", .{ try self.descriptor(operation.ty), glue.Operation.loan.suffix(), operation.destination, operation.source });
+    const result = self.temp();
+    try self.print(" %v{d} =w call ${s}{s}(l %heap, l %v{d}, l %v{d})\n", .{ result, try self.descriptor(operation.ty), glue.Operation.loan.suffix(), operation.destination, operation.source });
+    try requireSuccess(E, self, result);
 }
 
 /// Take one H token on the payload in %v{payload} into the empty hold slot at
@@ -94,15 +99,14 @@ pub fn loan(comptime E: type, self: *E, operation: Transfer) Error!void {
 /// the caller must use the runtime's counting hold acquisition instead.
 pub fn holdAcquire(comptime E: type, self: *E, ty: typed.Type, payload: usize, slot: usize) Error!bool {
     if (try pointerEdge(E, self, ty) == null) return false;
-    try self.print(" # RC-GLUE-1 hold\n storel %v{d}, %v{d}\n", .{ payload, slot });
+    try self.print(" # RC-GLUE-1 hold\n", .{});
     const label = self.temp();
-    _ = try increment(E, self, .{ .payload = payload, .count = .holds, .label = label, .on_null = "done", .on_special = "done" });
-    try self.print("@rcgdone{d}\n", .{label});
+    _ = try increment(E, self, .{ .payload = payload, .count = .holds, .label = label, .on_null = "store", .on_special = "store" });
+    try self.print("@rcgstore{d}\n storel %v{d}, %v{d}\n", .{ label, payload, slot });
     return true;
 }
 
-/// Copy the value and acquire each edge's own token; only an arena edge can
-/// refuse, through the glue's runtime fallback and the usual failure path.
+/// Copy the value and acquire each edge's own token, mapping count and region refusals before publishing output.
 pub fn retain(comptime E: type, self: *E, operation: Transfer) Error!void {
     try marker(E, self, .retain);
     const symbol = try self.descriptor(operation.ty);
@@ -159,8 +163,8 @@ fn mutablePointer(comptime E: type, self: *E, ty: typed.Type) Error!bool {
 /// RC-PUBLISH-FAST-1: the direct publication of one list or dictionary
 /// pointer runs inline exactly as its glue does: a null copies through; a
 /// payload neither pinned nor in an arena is marked shared unless it already
-/// is (or is immortal), its pointer is stored, and then either the source is
-/// cleared (a take) or one owner is acquired (immortal payloads count none).
+/// is (or is immortal), and its pointer is stored. A copy acquires its owner
+/// before marking or storing; a take clears the source after publication.
 /// Child-history modes, pinned and arena payloads fall through to the glue.
 fn publishFast(comptime E: type, self: *E, operation: Publish, label: usize) Error!void {
     const move = operation.move;
@@ -172,33 +176,34 @@ fn publishFast(comptime E: type, self: *E, operation: Publish, label: usize) Err
     const already = self.temp();
     const marked = self.temp();
     const taken = self.temp();
-    const immortal = self.temp();
-    const counter = self.temp();
-    const old = self.temp();
     const new = self.temp();
     // Every emitted publication targets private work or aggregate scratch,
     // never its own source, so the glue's overlap test cannot fire here.
     try self.print(" %v{d} =w and %v{d}, 3\n", .{ child, operation.mode });
-    try self.print(" jnz %v{d}, @rcgpublishslow{d}, @rcgpublishmode{d}\n@rcgpublishmode{d}\n", .{ try wordFlag(E, self, child), label, label, label });
+    try self.print(" jnz %v{d}, @rcgpublishslow{d}, @rcgpublishmode{d}\n@rcgpublishmode{d}\n", .{ child, label, label, label });
     try self.print(load_word, .{ payload, move.source });
     try self.print(" jnz %v{d}, @rcgpublishnn{d}, @rcgpublishstore{d}\n@rcgpublishnn{d}\n", .{ try nonzero(E, self, payload), label, label, label });
     try self.print(load_below ++ mask, .{ header, payload, mark_offset, header, mark, header, special, mark, pinned_or_arena });
     try self.print(" jnz %v{d}, @rcgpublishslow{d}, @rcgpublishshare{d}\n@rcgpublishshare{d}\n", .{ try nonzero(E, self, special), label, label, label });
+    const copy_mode = self.temp();
+    const ordinary = self.temp();
+    const capacity = self.temp();
+    const capacity_at = self.temp();
+    const saturated = self.temp();
+    try self.print(" %v{d} =w and %v{d}, 4\n %v{d} =l and %v{d}, 2\n", .{ copy_mode, operation.mode, ordinary, mark });
+    try self.print(" jnz %v{d}, @rcgpublishmarkcheck{d}, @rcgpublishordinary{d}\n@rcgpublishordinary{d}\n", .{ copy_mode, label, label, label });
+    try self.print(" jnz %v{d}, @rcgpublishmarkcheck{d}, @rcgpublishcapacity{d}\n@rcgpublishcapacity{d}\n", .{ try nonzero(E, self, ordinary), label, label, label });
+    try self.print(prefix.load_count, .{ capacity_at, payload, owners_offset, capacity_at, capacity, capacity_at });
+    // RC-PUBLISH-ACQUIRE-1: only this counted COPY block owns capacity.
+    // Every admission is complete; no call/refusal occurs before publication.
+    try self.print(count_result ++ " add %v{d}, 1\n" ++ count_equal ++ "0\n", .{ new, capacity, saturated, new });
+    try self.print(" jnz %v{d}, @rcgpublishslow{d}, @rcgpublishacquire{d}\n@rcgpublishacquire{d}\n " ++ prefix.count_store ++ " %v{d}, %v{d}\n@rcgpublishmarkcheck{d}\n", .{ saturated, label, label, label, new, capacity_at, label });
     try self.print(mask, .{ already, mark, shared_or_immortal });
     try self.print(" jnz %v{d}, @rcgpublishstore{d}, @rcgpublishmark{d}\n@rcgpublishmark{d}\n", .{ try nonzero(E, self, already), label, label, label });
     try self.print(" %v{d} =l or %v{d}, {d}\n storel %v{d}, %v{d}\n", .{ marked, mark, shared_mark, marked, header });
     try self.print("@rcgpublishstore{d}\n storel %v{d}, %v{d}\n %v{d} =w and %v{d}, 4\n", .{ label, payload, move.destination, taken, operation.mode });
-    const moves = try wordFlag(E, self, taken);
-    try self.print(" jnz %v{d}, @rcgpublishtake{d}, @rcgpublishnull{d}\n@rcgpublishtake{d}\n storel 0, %v{d}\n jmp @rcgpublished{d}\n", .{ moves, label, label, label, move.source, label });
-    // A null payload acquires nothing; an immortal one counts no owners.
-    try self.print("@rcgpublishnull{d}\n", .{label});
-    const present = try nonzero(E, self, payload);
-    try self.print(" jnz %v{d}, @rcgpublishcount{d}, @rcgpublished{d}\n@rcgpublishcount{d}\n", .{ present, label, label, label });
-    try self.print(" %v{d} =l and %v{d}, 2\n", .{ immortal, mark });
-    const uncounted = try nonzero(E, self, immortal);
-    try self.print(" jnz %v{d}, @rcgpublished{d}, @rcgpublishinc{d}\n@rcgpublishinc{d}\n", .{ uncounted, label, label, label });
-    try self.print(load_below, .{ counter, payload, owners_offset, counter, old, counter });
-    try self.print(" %v{d} =l add %v{d}, 1\n storel %v{d}, %v{d}\n jmp @rcgpublished{d}\n@rcgpublishslow{d}\n", .{ new, old, new, counter, label, label });
+    const moves = taken;
+    try self.print(" jnz %v{d}, @rcgpublishtake{d}, @rcgpublished{d}\n@rcgpublishtake{d}\n storel 0, %v{d}\n jmp @rcgpublished{d}\n@rcgpublishslow{d}\n", .{ moves, label, label, label, move.source, label, label });
 }
 
 /// One list element write: the list payload, the element index (set only)
@@ -327,7 +332,7 @@ pub fn uniqueFast(comptime E: type, self: *E, address: usize, label: usize) Erro
     try self.print(" jnz %v{d}, @rcguniquenn{d}, @rcgunique{d}\n@rcguniquenn{d}\n", .{ try nonzero(E, self, payload), label, label, label });
     try self.print(load_below ++ mask, .{ header, payload, mark_offset, header, mark, header, shared, mark, shared_marks });
     try self.print(" jnz %v{d}, @rcguniqueslow{d}, @rcguniquecount{d}\n@rcguniquecount{d}\n", .{ try nonzero(E, self, shared), label, label, label });
-    try self.print(load_below ++ " %v{d} =w cultl %v{d}, 2\n", .{ counter, payload, owners_offset, counter, owners, counter, single, owners });
+    try self.print(prefix.load_count ++ " %v{d} =w cult" ++ prefix.count_type ++ " %v{d}, 2\n", .{ counter, payload, owners_offset, counter, owners, counter, single, owners });
     try self.print(" jnz %v{d}, @rcgunique{d}, @rcguniqueslow{d}\n@rcguniqueslow{d}\n", .{ single, label, label, label });
 }
 
@@ -379,8 +384,16 @@ fn increment(comptime E: type, self: *E, step: Increment) Error!usize {
     try self.print(load_below, .{ header, step.payload, mark_offset, header, mark, header });
     try self.print(mask, .{ special, mark, uncounted_marks });
     try self.print(" jnz %v{d}, @rcg{s}{d}, @rcginc{d}\n@rcginc{d}\n", .{ try nonzero(E, self, special), step.on_special, step.label, step.label, step.label });
-    try self.print(load_below, .{ counter, step.payload, offset(step.count), counter, old, counter });
-    try self.print(" %v{d} =l add %v{d}, 1\n storel %v{d}, %v{d}\n", .{ new, old, new, counter });
+    try self.print(prefix.load_count, .{ counter, step.payload, offset(step.count), counter, old, counter });
+    const limit = self.temp();
+    const status = self.temp();
+    // RC-COUNT-CARRY-1: the wrapped result stays private until admission.
+    // Incrementing by one wraps only at MAX, so zero is the refusal flag.
+    try self.print(count_result ++ " add %v{d}, 1\n", .{ new, old });
+    try self.print(count_equal ++ "0\n", .{ limit, new });
+    try self.print(" jnz %v{d}, @rcglimit{d}, @rcgcapacity{d}\n@rcglimit{d}\n", .{ limit, step.label, step.label, step.label });
+    try self.print(" %v{d} =w call $myl_qbe_rc_status(l %ctx, w 2)\n jmp @failure\n@rcgcapacity{d}\n", .{ status, step.label });
+    try self.print(" " ++ prefix.count_store ++ " %v{d}, %v{d}\n", .{ new, counter });
     return mark;
 }
 
@@ -416,22 +429,16 @@ fn release(comptime E: type, self: *E, operation: Release, operation_kind: glue.
     try self.print(" jnz %v{d}, @rcgnn{d}, @rcgdone{d}\n@rcgnn{d}\n", .{ try nonzero(E, self, payload), label, label, label });
     try self.print(load_below ++ mask, .{ header, payload, mark_offset, header, mark, header, special, mark, uncounted_marks });
     try self.print(" jnz %v{d}, @rcgclear{d}, @rcgcounted{d}\n@rcgcounted{d}\n", .{ try nonzero(E, self, special), label, label, label });
-    try self.print(load_below ++ " %v{d} =w ceql %v{d}, 1\n", .{ counter, payload, offset(count), counter, value, counter, last, value });
+    try self.print(prefix.load_count, .{ counter, payload, offset(count), counter, value, counter });
+    // Compute privately; the final-token helper must still observe the old count.
+    try self.print(count_result ++ " sub %v{d}, 1\n" ++ count_equal ++ "0\n", .{ reduced, value, last, reduced });
     try self.print(" jnz %v{d}, @rcglast{d}, @rcgdec{d}\n@rcglast{d}\n", .{ last, label, label, label });
-    try self.print(load_below, .{ other_counter, payload, offset(other), other_counter, other_value, other_counter });
+    try self.print(prefix.load_count, .{ other_counter, payload, offset(other), other_counter, other_value, other_counter });
     // The last token of an otherwise unheld object dies: the glue clears the
     // slot, queues the death and drains.
     try self.print(" jnz %v{d}, @rcgdec{d}, @rcgslow{d}\n@rcgslow{d}\n", .{ try nonzero(E, self, other_value), label, label, label });
     try self.print(" call ${s}{s}(l %v{d}, l %v{d})\n jmp @rcgdone{d}\n@rcgdec{d}\n", .{ symbol, suffix, heap, operation.address, label, label });
-    try self.print(" %v{d} =l sub %v{d}, 1\n storel %v{d}, %v{d}\n@rcgclear{d}\n storel 0, %v{d}\n@rcgdone{d}\n", .{ reduced, value, reduced, counter, label, operation.address, label });
-}
-
-/// A word flag for a w value, compared at full width like every inline
-/// glue branch.
-fn wordFlag(comptime E: type, self: *E, value: usize) Error!usize {
-    const wide = self.temp();
-    try self.print(" %v{d} =l extuw %v{d}\n", .{ wide, value });
-    return nonzero(E, self, wide);
+    try self.print(" " ++ prefix.count_store ++ " %v{d}, %v{d}\n@rcgclear{d}\n storel 0, %v{d}\n@rcgdone{d}\n", .{ reduced, counter, label, operation.address, label });
 }
 
 /// A word flag for a full-width l value. QBE's jnz reads only the low word,

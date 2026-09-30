@@ -35,6 +35,6 @@ A sort key's result type is the lambda body's own type, so `key=lambda p: p.name
 sorts by a `str` and `key=lambda p: float(p.score) / 2.0` by a `float`. A body that does
 not type by itself is `E_SORT_KEY`, which quotes the underlying error.
 
-`sorted(values)` keeps its existing ordering for lists of `int`, `float`, or `str`.
+`sorted(values)` keeps its existing ordering for lists of integer, `float`, `str`, or `bytes`.
 `sorted(values, key=callback)` accepts a callback from the element type to an ordered key
-(`def(T) -> K effects(managed_allocation)`: it may build a `str`, and nothing else), evaluates it while performing a stable merge, and leaves the input list unchanged.
+(`def(T) -> K effects(managed_allocation)`: it may build a `str`, and nothing else), evaluates it once per element in input order before a stable merge, and leaves the input list unchanged.

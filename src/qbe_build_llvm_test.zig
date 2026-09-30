@@ -1,5 +1,5 @@
 //! Tests of the in-process LLVM translator (LLVM-ZIG-1): the retired Python
-//! adapter's translations replayed byte for byte, refusals, the runtime
+//! adapter's translations plus reviewed constant-overflow deltas, refusals, the runtime
 //! helper registry, float and integer literal spellings, and the clang command
 //! the build derives from `zig cc -###`.
 const std = @import("std");
@@ -87,7 +87,8 @@ test "the in-process translator reproduces the retired Python adapter's IR for i
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const replay = try replayCorpus(arena.allocator());
-    // Every case matched byte for byte, or was refused by both translators.
+    // Historical cases match byte for byte, with five explicit constant-bound
+    // expectations updated for LLVM-CONSTANT-OVERFLOW-1. Each keeps its old IR.
     try std.testing.expectEqualStrings("", replay.first_difference);
     try std.testing.expectEqual(replay.cases, replay.identical + replay.refused);
     try std.testing.expect(replay.identical >= 100);
@@ -308,9 +309,9 @@ const prefix_unit =
     \\ %p =l loadl %a0
     \\ %h =l sub %p, 24
     \\ # myl-rc %h
-    \\ %c =l loadl %h
-    \\ %n =l add %c, 1
-    \\ storel %n, %h
+    \\ %c =w loaduw %h
+    \\ %n =w add %c, 1
+    \\ storew %n, %h
     \\ %m =l sub %p, 16
     \\ # myl-rc %m
     \\ %k =l loadl %m
@@ -347,4 +348,161 @@ test "a marked RC prefix word is a getelementptr from its payload in a scope apa
     const plain = try llvm.translate(a, prefix_unit, .{ .signatures = &signatures, .runtime = &table, .alias = false, .element_gep = false }, &diagnostic);
     try std.testing.expect(std.mem.indexOf(u8, plain, "getelementptr") == null);
     try std.testing.expect(std.mem.indexOf(u8, plain, "rc prefix") == null);
+}
+
+/// Translate one constant-bound test without invoking loop versioning.
+fn constantOverflowIr(arena: std.mem.Allocator, body: []const u8) ![]const u8 {
+    var signatures: llvm.Signatures = .empty;
+    try signatures.put(arena, "touch", .{ .parameters = &.{"l"}, .result = null });
+    const table: llvm.RuntimeTable = .{};
+    var diagnostic: llvm.Diagnostic = .{ .unit = "constant-overflow" };
+    const source = try std.fmt.allocPrint(arena, "export function l $probe(l %a, l %other) {{\n@start\n{s}\n ret %flag\n}}\n", .{body});
+    return llvm.translate(arena, source, .{ .signatures = &signatures, .runtime = &table, .sticky = false }, &diagnostic);
+}
+
+const overflow_extract = "extractvalue { i64, i1 }";
+const unit_overflow_cases = [_][4][]const u8{
+    .{ "sub", "1", "csltl", "-9223372036854775807" },
+    .{ "add", "-1", "csltl", "-9223372036854775807" },
+    .{ "add", "1", "csgtl", "9223372036854775806" },
+    .{ "sub", "-1", "csgtl", "9223372036854775806" },
+};
+
+/// The four +/-1 arithmetic forms have exactly one signed overflow bound.
+fn constantOverflowPositive(arena: std.mem.Allocator) !usize {
+    const cases = unit_overflow_cases;
+    var accepted: usize = 0;
+    for (cases) |case| {
+        const body = try std.fmt.allocPrint(arena, " %slot =l alloc8 8\n storel {s}, %slot\n %rhs =l loadl %slot\n %result =l {s} %a, %rhs\n %flag =l {s} %a, {s}", .{ case[1], case[0], case[2], case[3] });
+        const ir = try constantOverflowIr(arena, body);
+        const stem = if (std.mem.eql(u8, case[0], "add")) "sadd" else "ssub";
+        const intrinsic = try std.fmt.allocPrint(arena, "call {{ i64, i1 }} @llvm.{s}.with.overflow.i64", .{stem});
+        try std.testing.expect(std.mem.indexOf(u8, ir, intrinsic) != null);
+        try std.testing.expect(std.mem.indexOf(u8, ir, "load i64") != null);
+        try std.testing.expect(std.mem.indexOf(u8, ir, overflow_extract) != null);
+        accepted += 1;
+    }
+    return accepted;
+}
+
+/// Refuse facts lacking an exact private eight-byte slot and local value.
+fn constantOverflowNegative(arena: std.mem.Allocator) !usize {
+    const before = " %slot =l alloc8 8\n storel 1, %slot\n";
+    const after = " %rhs =l loadl %slot\n %result =l sub %a, %rhs\n %flag =l csltl %a, -9223372036854775807";
+    const cases = [_][]const u8{
+        " %slot =l alloc4 8\n storel 1, %slot\n" ++ after,
+        " %slot =l alloc8 4\n storel 1, %slot\n" ++ after,
+        before ++ " call $touch(l %slot)\n" ++ after,
+        before ++ " %alias =l copy %slot\n" ++ after,
+        before ++ " # myl-obj %a\n" ++ after,
+        before ++ " %slot =l copy %other\n" ++ after,
+        before ++ " %alias =l add %slot, 0\n storel 2, %alias\n" ++ after,
+        before ++ " storew 1, %slot\n" ++ after,
+        before ++ " storel 2, %slot\n" ++ after,
+        before ++ " storel 1, %other\n" ++ after,
+        before ++ " blit %other, %slot, 8\n" ++ after,
+        before ++ " %other_slot =l alloc8 8\n storel 99, %other_slot\n" ++ after,
+        " %slot =l alloc8 8\n %alias =l copy %slot\n storel 1, %slot\n storel 2, %alias\n" ++ after,
+        " %slot =l alloc8 8\n %alias =l copy %slot\n storel 1, %slot\n blit %other, %alias, 8\n" ++ after,
+        before ++ " call $touch(l %other)\n" ++ after,
+        before ++ " jmp @next\n@next\n" ++ after,
+        before ++ " %rhs =l loadl %slot\n %result =l sub %a, %rhs\n jmp @next\n@next\n %flag =l csltl %a, -9223372036854775807",
+        before ++ " %rhs =l loadl %slot\n %result =l sub %a, %rhs\n %a =l copy 7\n %flag =l csltl %a, -9223372036854775807",
+        before ++ " %rhs =l loadl %slot\n %result =l sub %a, %rhs\n %flag =l csltl %a, -9223372036854775808",
+        " %slot =l alloc8 8\n storel extern $1, %slot\n" ++ after,
+        " %slot =l alloc8 extern $8\n storel 1, %slot\n" ++ after,
+        " %slot =l alloc8 8\n %rhs =l loadl %slot\n %result =l sub %a, %rhs\n %flag =l csltl %a, -9223372036854775807",
+        " %slot =l alloc8 8\n storel -1, %slot\n %rhs =w loadl %slot\n %result =l add %a, %rhs\n %flag =l csltl %a, -9223372036854775807",
+        " %rhs =w copy 1\n %result =w sub %a, %rhs\n %flag =l csltl %a, -9223372036854775807",
+    };
+    for (cases) |body| {
+        const ir = try constantOverflowIr(arena, body);
+        try std.testing.expect(std.mem.indexOf(u8, ir, ".with.overflow") == null);
+    }
+    return cases.len;
+}
+
+/// A fresh store can prove a value after a historical escape, without noalias.
+fn constantOverflowLocal(arena: std.mem.Allocator) !usize {
+    const after = " %rhs =l loadl %slot\n %result =l sub %a, %rhs\n %flag =l csltl %a, -9223372036854775807";
+    const cases = [_][]const u8{
+        " %slot =l alloc8 8\n call $touch(l %slot)\n storel 1, %slot\n" ++ after,
+        " %slot =l alloc8 8\n %alias =l copy %slot\n storel 1, %slot\n" ++ after,
+        " %slot =l alloc8 8\n %alias =l copy %slot\n storel 2, %alias\n storel 1, %slot\n" ++ after,
+        " %slot =l alloc8 8\n storel 2, %slot\n storel 1, %slot\n" ++ after,
+        " %slot =l alloc8 8\n storel 1, %slot\n %rhs =l loadl %slot\n call $touch(l %slot)\n %result =l sub %a, %rhs\n %flag =l csltl %a, -9223372036854775807",
+        " %slot =l alloc8 8\n %alias =l copy %slot\n storel 1, %slot\n %rhs =l loadl %slot\n blit %other, %alias, 8\n %result =l sub %a, %rhs\n %flag =l csltl %a, -9223372036854775807",
+    };
+    for (cases) |body| {
+        const ir = try constantOverflowIr(arena, body);
+        try std.testing.expect(std.mem.indexOf(u8, ir, "@llvm.ssub.with.overflow.i64") != null);
+    }
+    return cases.len;
+}
+
+// spec-case: LLVM-CONSTANT-OVERFLOW-1
+test "constant overflow reaching stores survive historical escapes and captured values survive later writes" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    try std.testing.expectEqual(@as(usize, 6), try constantOverflowLocal(arena.allocator()));
+}
+
+// spec: LLVM-CONSTANT-OVERFLOW-1
+test "constant overflow intrinsics admit the four exact local signed bounds" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    try std.testing.expectEqual(@as(usize, 4), try constantOverflowPositive(arena.allocator()));
+}
+
+// spec-case: LLVM-CONSTANT-OVERFLOW-1
+test "constant overflow intrinsics refuse escaping alias wrong width reset and cross-block facts" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    try std.testing.expectEqual(@as(usize, 24), try constantOverflowNegative(arena.allocator()));
+}
+
+fn affineOverflowCases(arena: std.mem.Allocator) !usize {
+    const cases = unit_overflow_cases;
+    for (cases) |case| {
+        const body = try std.fmt.allocPrint(arena, " %slot =l alloc8 8\n storel {s}, %slot\n %rhs =l loadl %slot\n # myl-affine %result\n %result =l {s} %a, %rhs\n %flag =l {s} %a, {s}", .{ case[1], case[0], case[2], case[3] });
+        const hinted = try constantOverflowIr(arena, body);
+        const ordinary = try std.fmt.allocPrint(arena, " = {s} i64 ", .{case[0]});
+        try std.testing.expect(std.mem.indexOf(u8, hinted, ordinary) != null);
+        try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, hinted, overflow_extract));
+        try std.testing.expect(std.mem.indexOf(u8, hinted, "load i64") != null);
+        const unmarked = try std.mem.replaceOwned(u8, arena, body, "# myl-affine %result", "# no hint");
+        const original = try constantOverflowIr(arena, unmarked);
+        try std.testing.expectEqual(@as(usize, 2), std.mem.count(u8, original, overflow_extract));
+    }
+    return cases.len;
+}
+
+// spec: LLVM-INDUCTION-RESULT-1
+test "induction result manual hints keep wrapped operations and exact overflow flags for all unit forms" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    try std.testing.expectEqual(@as(usize, 4), try affineOverflowCases(arena.allocator()));
+}
+
+fn affineRefusals(arena: std.mem.Allocator) !usize {
+    const cases = [_][]const u8{
+        " # myl-affine %result\n %result =l sub %a, %other\n %flag =l csltl %a, -9223372036854775807",
+        " # myl-affine %result\n %result =w sub %a, 1\n %flag =l csltl %a, -9223372036854775807",
+        " # myl-affine %result\n %result =l sub %a, 1\n %flag =l csltl %a, -9223372036854775808",
+        " # myl-affine %result\n # myl-obj %a\n %result =l sub %a, 1\n %flag =l csltl %a, -9223372036854775807",
+        " # myl-affine %result\n # myl-rc %a\n %result =l sub %a, 1\n %flag =l csltl %a, -9223372036854775807",
+    };
+    for (cases) |body| {
+        const refused = try constantOverflowIr(arena, body);
+        try std.testing.expect(std.mem.indexOf(u8, refused, ".with.overflow") == null);
+        try std.testing.expect(std.mem.indexOf(u8, refused, "icmp slt") != null);
+    }
+    return cases.len;
+}
+
+// spec-case: LLVM-INDUCTION-RESULT-1
+test "induction result hints grant no literal width pointer or range authority" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    try std.testing.expectEqual(@as(usize, 5), try affineRefusals(arena.allocator()));
 }

@@ -14,6 +14,7 @@ _Static_assert(offsetof(myl_rc_scope, active) == MYL_QBE_RC_SCOPE_ACTIVE_OFFSET,
 /* The compiler emits exactly one externally visible module in runtime_data.
  * A foreign/old artifact cannot enter RC with missing ownership metadata. */
 extern const myl_rc_module myl_rc_generated_module __attribute__((weak));
+extern const myl_rc_image myl_rc_generated_image __attribute__((weak));
 int myl_qbe_rc_status(void *context, myl_rc_status status) {
     if (status == MYL_RC_OK) return 1;
     MylQbeContext *ctx = context;
@@ -30,6 +31,13 @@ int myl_qbe_rc_register(void *context, const myl_rc_module *module) {
 int myl_qbe_rc_initialize(void *context) {
     MylQbeContext *ctx = context;
     if (!ctx->heap.rc) return myl_qbe_rc_status(context, MYL_RC_ALLOCATION_REFUSED);
+    if (&myl_rc_generated_image) {
+        if (!&myl_rc_generated_module || myl_rc_generated_module.abi != MYL_RC_ABI_VERSION) {
+            myl_qbe_fail(context, "R_INTERNAL");
+            return 0;
+        }
+        return myl_qbe_rc_status(context, myl_rc_module_register_image(&ctx->heap, &myl_rc_generated_module, &myl_rc_generated_image));
+    }
     return myl_qbe_rc_register(context, &myl_rc_generated_module);
 }
 void myl_qbe_rc_drop_role(void *context, const myl_native_type *type, void *address, unsigned flags) {
@@ -379,7 +387,7 @@ static void site_pc(FILE *out, uint64_t pc, int quoted) {
     else fprintf(out, quoted ? "\"%s\"" : "%s", name);
 }
 static void site_json(FILE *out, myl_rc_site *const *sites, size_t count, uint64_t events, uint64_t calls) {
-    fprintf(out, "{\"version\":1,\"runtime\":\"rc-v3-sites\",\"events\":%" PRIu64 ",\"calls\":%" PRIu64 ",\"sites\":[", events, calls);
+    fprintf(out, "{\"version\":1,\"runtime\":\"rc-v5-sites\",\"events\":%" PRIu64 ",\"calls\":%" PRIu64 ",\"sites\":[", events, calls);
     for (size_t i = 0; i < count; ++i) {
         const myl_rc_site *site = sites[i];
         site_place place = site_place_of(site);
@@ -445,7 +453,7 @@ void myl_qbe_rc_sites_report(void) {
     const char *limit = getenv("MYLANG_RC_SITES_TOP");
     size_t top = limit && *limit ? (size_t)strtoull(limit, NULL, 10) : 20;
     if (top > used) top = used;
-    fprintf(stderr, "MYLANG_RC_SITES {\"version\":1,\"runtime\":\"rc-v3-sites\",\"sites\":%zu,\"events\":%" PRIu64 ",\"calls\":%" PRIu64 ",\"shown\":%zu,\"report\":", used, events, calls, top);
+    fprintf(stderr, "MYLANG_RC_SITES {\"version\":1,\"runtime\":\"rc-v5-sites\",\"sites\":%zu,\"events\":%" PRIu64 ",\"calls\":%" PRIu64 ",\"shown\":%zu,\"report\":", used, events, calls, top);
     if (written) site_json_string(stderr, path);
     else fputs(path && *path ? "\"unwritable\"" : "null", stderr);
     fputs("}\n", stderr);

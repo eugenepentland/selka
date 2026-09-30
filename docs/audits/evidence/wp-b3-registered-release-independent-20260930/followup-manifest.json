@@ -1,0 +1,218 @@
+{
+  "guardian/guardian-full.log": {
+    "bytes": 521,
+    "sha256": "5a049b597dbe6b4ee8d5350561bb20ff78e96b9bb40b171614ca63287af3648a"
+  },
+  "guardian/guardian-receipt.json": {
+    "bytes": 492,
+    "sha256": "277b060ed1d083eb2bd09b7322177727a174777498c731538b893bf55273633d"
+  },
+  "native-growth/archive-followup.py": {
+    "bytes": 3448,
+    "sha256": "ba263b19f8df3d411a65595c026e5834e7254bd28814d2fb50bdc09c3694a175"
+  },
+  "native-growth/clang-candidate-growth/build.stderr": {
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "native-growth/clang-candidate-growth/build.stdout": {
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "native-growth/clang-candidate-growth/compiler-version.txt": {
+    "bytes": 156,
+    "sha256": "11d97b15537e3b19512ea7d5f610c60167c26bd5ac429467305a7151772d48b3"
+  },
+  "native-growth/clang-candidate-growth/receipt.json": {
+    "bytes": 4175,
+    "sha256": "42445ce51bba9318a430d6bda5a04b2e828ae5dabc5cf16838f7a604db5a6eb1"
+  },
+  "native-growth/clang-candidate-growth/run.stderr": {
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "native-growth/clang-candidate-growth/run.stdout": {
+    "bytes": 54,
+    "sha256": "357e96bd4db948b00c4a5ad4b6de3e4bdd144ecebc86ad72950d66782c56e871"
+  },
+  "native-growth/clang-candidate-growth/verify": {
+    "bytes": 5233352,
+    "sha256": "137ee16a5272c2cc95994d7e908e0bb96dee6ff89f82b1b00f47ce0933c41f08"
+  },
+  "native-growth/clang-control-growth/build.stderr": {
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "native-growth/clang-control-growth/build.stdout": {
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "native-growth/clang-control-growth/compiler-version.txt": {
+    "bytes": 156,
+    "sha256": "11d97b15537e3b19512ea7d5f610c60167c26bd5ac429467305a7151772d48b3"
+  },
+  "native-growth/clang-control-growth/receipt.json": {
+    "bytes": 5146,
+    "sha256": "fa2a7aa326a2687e8a2f8aeb33e804b9823044473f32baaeba4b3cdf14533b5e"
+  },
+  "native-growth/clang-control-growth/run.stderr": {
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "native-growth/clang-control-growth/run.stdout": {
+    "bytes": 54,
+    "sha256": "357e96bd4db948b00c4a5ad4b6de3e4bdd144ecebc86ad72950d66782c56e871"
+  },
+  "native-growth/clang-control-growth/verify": {
+    "bytes": 5234328,
+    "sha256": "eb6ce3f0a1eacad8282b66c09bca9c1fda75e99644eeabe0261d35706f6af2ee"
+  },
+  "native-growth/gcc-candidate-growth/build.stderr": {
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "native-growth/gcc-candidate-growth/build.stdout": {
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "native-growth/gcc-candidate-growth/compiler-version.txt": {
+    "bytes": 239,
+    "sha256": "6e876a25bb7fdb71ab2914e8f1eeaa00cc61d20a36a6c2981ab7d4d7ceab42f8"
+  },
+  "native-growth/gcc-candidate-growth/receipt.json": {
+    "bytes": 4139,
+    "sha256": "01f89b94b6ade34107c3d3116f86889d27b922a0b778e6c9aa87f1c932a84bbc"
+  },
+  "native-growth/gcc-candidate-growth/run.stderr": {
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "native-growth/gcc-candidate-growth/run.stdout": {
+    "bytes": 54,
+    "sha256": "357e96bd4db948b00c4a5ad4b6de3e4bdd144ecebc86ad72950d66782c56e871"
+  },
+  "native-growth/gcc-candidate-growth/verify": {
+    "bytes": 376336,
+    "sha256": "0e4c691ae00ab7d72f0240ad8d70df24785f330376ea643421b08b73a72bd7ad"
+  },
+  "native-growth/gcc-control-growth/build.stderr": {
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "native-growth/gcc-control-growth/build.stdout": {
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "native-growth/gcc-control-growth/compiler-version.txt": {
+    "bytes": 239,
+    "sha256": "6e876a25bb7fdb71ab2914e8f1eeaa00cc61d20a36a6c2981ab7d4d7ceab42f8"
+  },
+  "native-growth/gcc-control-growth/receipt.json": {
+    "bytes": 5110,
+    "sha256": "e176a5383d05b5ec3efd01fb4afcc6351e597d29e4d2b4d5534cdbd8dcf0443a"
+  },
+  "native-growth/gcc-control-growth/run.stderr": {
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "native-growth/gcc-control-growth/run.stdout": {
+    "bytes": 54,
+    "sha256": "357e96bd4db948b00c4a5ad4b6de3e4bdd144ecebc86ad72950d66782c56e871"
+  },
+  "native-growth/gcc-control-growth/verify": {
+    "bytes": 376088,
+    "sha256": "1ffe6aefc4488f4d4494418eef42eca9b14bfb6fa18a33a9b3fe23ed4da5575f"
+  },
+  "native-growth/growth-controls.c": {
+    "bytes": 6715,
+    "sha256": "557572eb56a87808b1deb573a563245a0ee7475988b043414a368fe990c2d247"
+  },
+  "native-growth/growth-receipt.json": {
+    "bytes": 2692,
+    "sha256": "d96a6a8cddd8844d776746e1faffef2ef807e870b4bd18aedf3d28057e25d494"
+  },
+  "native-growth/run.py": {
+    "bytes": 4048,
+    "sha256": "2a57f645fb060cd583093a26ccae929693cd00c595586d67ec935cd78d246a29"
+  },
+  "native-growth/source-receipt.json": {
+    "bytes": 2000,
+    "sha256": "f0b8385a7554d462f9049b2a1e66a06967b21db4758d14974c220fefc59a811a"
+  },
+  "performance-review/approved/results-dev.json": {
+    "bytes": 11969,
+    "sha256": "42579ee700bdd8600fd9ff5c28ba16950a28e3be80cfa71758f9ef23548ac772"
+  },
+  "performance-review/approved/results-full.json": {
+    "bytes": 12002,
+    "sha256": "29bdae3a7a7f53972d219da5885ebfc02b6b23939267766577fd6f7da59cb32d"
+  },
+  "performance-review/approved/results-smoke.json": {
+    "bytes": 11896,
+    "sha256": "3c4feb7471b08c2053b72b4c7130b04437997d061711de24dfa23dc48b508d42"
+  },
+  "performance-review/candidate/results-dev.json": {
+    "bytes": 12012,
+    "sha256": "9485b7032fc151f06233fbc271d496706cca79d28ff736ab756315d8529a2d3b"
+  },
+  "performance-review/candidate/results-full.json": {
+    "bytes": 12036,
+    "sha256": "3ce2c15b458cbd55060e95e89060517a6f598abf099c44a510f91ac8ca2d4c32"
+  },
+  "performance-review/candidate/results-smoke.json": {
+    "bytes": 11942,
+    "sha256": "59d992d019d8a7a7eb1f81026cf78a1e216079743213c0224649f394e88a2af7"
+  },
+  "performance-review/combined/comparison.json": {
+    "bytes": 125316,
+    "sha256": "96e656e6bbf2d85a18232ce29992feff20fb73ecfe64f70546dc4cea7b45810d"
+  },
+  "performance-review/combined/corpus-build.log": {
+    "bytes": 2251,
+    "sha256": "c8f436663bc71b33317f9e6e26b4599430e263143bc35eaace7dabaf6f1a1429"
+  },
+  "performance-review/combined/identity.json": {
+    "bytes": 323,
+    "sha256": "cb0cd818c91f2ef2ca921fb49a02861c78eb0a73ebfea8bf5d8e27defd62ac57"
+  },
+  "performance-review/combined/install.log": {
+    "bytes": 2599,
+    "sha256": "9299494f96414059db59eb0bc48decce85beb6008cc76c20c7fccc17c34be7c3"
+  },
+  "performance-review/combined/measure-dev.log": {
+    "bytes": 3066,
+    "sha256": "3d2bc85099b1b5a1a818cde3c4ffd88d19df72026d23e46cc730101a9dfbd71f"
+  },
+  "performance-review/combined/measure-full.log": {
+    "bytes": 3069,
+    "sha256": "040debe6697ca7a6b5d2cf3725c2ba46f5a99f9108c292c1977dab28b3864b66"
+  },
+  "performance-review/combined/measure-smoke.log": {
+    "bytes": 3070,
+    "sha256": "af4716c553e3a91d1b00ebf55fa10af889f9baaee86432b520c35874eb7b64ea"
+  },
+  "performance-review/combined/measurement-receipt.json": {
+    "bytes": 1946,
+    "sha256": "3197fb79495f98ddbb368c88e9d13f9efbdcdb5afe3d901e90f58fba7f99a062"
+  },
+  "performance-review/pinned/results-dev.json": {
+    "bytes": 11969,
+    "sha256": "f9658f1f5e5f57b42e59a92f8cd3c31ac144ea6fc85b844def0fbe94eaa0d6f0"
+  },
+  "performance-review/pinned/results-full.json": {
+    "bytes": 12000,
+    "sha256": "ccdbd62a2a3a620c6832e7724498754bfd317f5fe76f8912e1e51504e3dcab03"
+  },
+  "performance-review/pinned/results-smoke.json": {
+    "bytes": 11905,
+    "sha256": "975f2649d3fbc48a5a94b5306b36ff042ff4673aa126d19bb27fe628ba34c17b"
+  },
+  "performance-review/receipt.json": {
+    "bytes": 4972,
+    "sha256": "78b91d367c710fec8d4d481ed378246549bd82215ca7a5e987dc00700aea0e16"
+  },
+  "performance-review/verify.py": {
+    "bytes": 6205,
+    "sha256": "279c5c4f122810effc13ec549e6512fd2f0f2495b4ac863a238b9345e5b4ca22"
+  }
+}

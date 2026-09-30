@@ -100,6 +100,14 @@ const loop_source =
     \\    for i in range(n):
     \\        items.append([i])
     \\    return len(items)
+    \\def nested_calls(n: int) -> int:
+    \\    total = 0
+    \\    for outer in range(3):
+    \\        items: list[int] = []
+    \\        for i in range(n):
+    \\            items.append(value(i))
+    \\        total += len(items)
+    \\    return total
     \\def main() -> int:
     \\    return grown(0) + comprehension(0) + repeated(0)
 ;
@@ -133,6 +141,30 @@ fn refusedLoops(manifest: Manifest) !void {
 }
 
 const reset_flag = " storew 0, %rcappend0\n";
+
+// spec: RC-PLAIN-READY-NESTED-1
+test "RC-PLAIN-READY-NESTED-1 certified append selects hot query only inside another loop" {
+    const saved = runtime.get();
+    defer runtime.set(saved);
+    runtime.set(.rc);
+    var compilation = try compiler.Compilation.init(t.allocator, "rc_append_hint.my", loop_source);
+    defer compilation.deinit();
+    const text = try compilation.emitQbe(t.allocator);
+    defer t.allocator.free(text);
+    var manifest = try std.json.parseFromSlice(Manifest, t.allocator, text, .{ .allocate = .alloc_always, .ignore_unknown_fields = true });
+    defer manifest.deinit();
+    try t.expect(std.mem.indexOf(u8, try named(manifest.value, "repeated"), "call $myl_rc_list_plain_ready_hot(") != null);
+    try t.expect(std.mem.indexOf(u8, try named(manifest.value, "grown"), "call $myl_rc_list_plain_ready(") != null);
+    try t.expect(std.mem.indexOf(u8, try named(manifest.value, "comprehension"), "myl_rc_list_plain_ready_hot") == null);
+    try t.expect(std.mem.indexOf(u8, try named(manifest.value, "heap_frame"), "myl_rc_list_plain_ready_hot") == null);
+    try t.expect(std.mem.indexOf(u8, try named(manifest.value, "calls"), "myl_rc_list_plain_ready_hot") == null);
+    try t.expect(std.mem.indexOf(u8, try named(manifest.value, "parameter"), "myl_rc_list_plain_ready_hot") == null);
+    try t.expect(std.mem.indexOf(u8, try named(manifest.value, "snapshots"), "myl_rc_list_plain_ready_hot") == null);
+    try t.expect(std.mem.indexOf(u8, try named(manifest.value, "managed_loop"), "myl_rc_list_plain_ready_hot") == null);
+    try t.expect(std.mem.indexOf(u8, try named(manifest.value, "nested_calls"), "myl_rc_list_plain_ready_hot") == null);
+    try admissionOrder(try named(manifest.value, "repeated"));
+}
+
 fn admissionOrder(il: []const u8) !void {
     try t.expect(std.mem.indexOf(u8, il, "%rcappend0 =l alloc8 8") != null);
     const reset = std.mem.indexOf(u8, il, reset_flag) orelse return error.TestUnexpectedResult;

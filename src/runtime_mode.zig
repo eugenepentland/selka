@@ -70,21 +70,21 @@ test "runtime mode keeps compiler selection separate from its ABI decoding" {
     try std.testing.expectEqualStrings("gc-v1", identity());
     set(.rc);
     try std.testing.expect(enabled() and !counting());
-    try std.testing.expectEqualStrings("rc-v3", identity());
+    try std.testing.expectEqualStrings("rc-v5", identity());
     set(.rc_counting);
     try std.testing.expect(enabled() and counting() and !sites());
-    try std.testing.expectEqualStrings("rc-v3-counting", identity());
+    try std.testing.expectEqualStrings("rc-v5-counting", identity());
     set(.rc_sites);
     try std.testing.expect(enabled() and counting() and sites());
-    try std.testing.expectEqualStrings("rc-v3-sites", identity());
+    try std.testing.expectEqualStrings("rc-v5-sites", identity());
 }
 
 // spec: RC-RUNTIME-CONTRACT-1
 test "runtime contract versions reject unknown ABIs and preserve legacy GC" {
     try std.testing.expectEqual(Selection.gc, try contract.parse("gc-v1"));
-    try std.testing.expectEqual(Selection.rc, try contract.parse("rc-v3"));
-    try std.testing.expectEqual(Selection.rc_counting, try contract.parse("rc-v3-counting"));
-    try std.testing.expectEqual(Selection.rc_sites, try contract.parse("rc-v3-sites"));
+    try std.testing.expectEqual(Selection.rc, try contract.parse("rc-v5"));
+    try std.testing.expectEqual(Selection.rc_counting, try contract.parse("rc-v5-counting"));
+    try std.testing.expectEqual(Selection.rc_sites, try contract.parse("rc-v5-sites"));
     try std.testing.expectError(error.InvalidRuntimeContract, contract.parse("rc-v1"));
     try std.testing.expectError(error.InvalidRuntimeContract, contract.parse("rc-v1-counting"));
     try std.testing.expectError(error.InvalidRuntimeContract, contract.parse("rc-v2"));
@@ -111,7 +111,7 @@ test "reference counting is the process default and GC stays a selectable opt-ou
     try std.testing.expectEqual(Selection.gc, try contract.resolve(contract.default, false, false));
     try std.testing.expectEqual(Selection.rc, try contract.resolve(contract.default, true, false));
     try std.testing.expectEqual(Selection.gc, try contract.resolve(.gc, true, true));
-    try std.testing.expectEqualStrings("rc-v3", contract.default.identity());
+    try std.testing.expectEqualStrings("rc-v5", contract.default.identity());
     // A build driver names the contract to its frontend child by these flags.
     try std.testing.expectEqualStrings("--gc-runtime", Selection.gc.flag());
     try std.testing.expectEqualStrings("--rc-runtime", Selection.rc.flag());
@@ -136,4 +136,14 @@ test "legacy sharing lowers for the collector whatever runtime is selected" {
     const pinned = pinCollector();
     try std.testing.expectEqual(Selection.rc, pinned);
     try std.testing.expectEqual(Selection.gc, lowered());
+}
+
+// spec-case: RC-RUNTIME-CONTRACT-1
+test "ABI5 rejects obsolete counted artifact identities" {
+    try std.testing.expectError(error.InvalidRuntimeContract, contract.parse("rc-v3"));
+    try std.testing.expectError(error.InvalidRuntimeContract, contract.parse("rc-v3-counting"));
+    try std.testing.expectError(error.InvalidRuntimeContract, contract.parse("rc-v3-sites"));
+    try std.testing.expectError(error.InvalidRuntimeContract, contract.parse("rc-v4"));
+    try std.testing.expectError(error.InvalidRuntimeContract, contract.parse("rc-v4-counting"));
+    try std.testing.expectError(error.InvalidRuntimeContract, contract.parse("rc-v4-sites"));
 }

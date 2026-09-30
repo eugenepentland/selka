@@ -234,11 +234,11 @@ test "RC runtime contract separates manifest cache keys before any emission" {
     const default = try keyFor(context, input);
     try environment.put(runtime.variable, "gc-v1");
     const gc = try keyFor(context, input);
-    try environment.put(runtime.variable, "rc-v3");
+    try environment.put(runtime.variable, "rc-v5");
     const rc = try keyFor(context, input);
     try std.testing.expect(!std.mem.eql(u8, gc, rc));
     try std.testing.expectEqualStrings(rc, default);
-    try environment.put(runtime.variable, "rc-v3-counting");
+    try environment.put(runtime.variable, "rc-v5-counting");
     try std.testing.expect(!std.mem.eql(u8, rc, try keyFor(context, input)));
     try environment.put(runtime.variable, "future");
     try std.testing.expectError(error.InvalidRuntimeContract, keyFor(context, input));

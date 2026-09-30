@@ -626,3 +626,33 @@ test "copy on write: receiver stays pinned across later argument callbacks" {
     try std.testing.expectEqual(@as(i64, 21), try run(std.testing.allocator, source, false));
     try std.testing.expectEqual(@as(i64, 21), try run(std.testing.allocator, source, true));
 }
+
+// spec-case: MUT-EXCLUSIVE-PROOFS-1
+test "exclusive mut list parameters permit a closed element field return" {
+    const saved = value_semantics.enabled();
+    value_semantics.setEnabled(true);
+    defer value_semantics.setEnabled(saved);
+    const source =
+        \\record Payload:
+        \\    number: int
+        \\    items: list[int]
+        \\union Item:
+        \\    payload: Payload,
+        \\    empty
+        \\def change(items: mut list[Item], other: mut list[Item], index: int):
+        \\    match items[index]:
+        \\        case Item.payload(old):
+        \\            fields = old.items
+        \\            fields.append(2)
+        \\            other.append(Item.empty)
+        \\            items[index] = Item.payload(Payload(0, fields))
+        \\        case Item.empty:
+        \\            pass
+        \\def main() -> int:
+        \\    return 0
+    ;
+    const a = std.testing.allocator;
+    const il = try unitText(a, source, "change", checks);
+    defer a.free(il);
+    try std.testing.expectEqual(@as(usize, 0), count(il, "call $myl_qbe_cow_transfer("));
+}

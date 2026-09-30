@@ -269,7 +269,7 @@ fn carriable(ty: typed.Type, included: []const bool) bool {
 /// reads `ids` rather than matching names back onto the catalog, which would
 /// silently pick the wrong record if two entries ever shared a spelling.
 pub const Table = struct {
-    /// The serializable manifest entries, in catalog order.
+    /// The serializable manifest entries, sorted by name (MODULE-TEST-2).
     types: []const Type,
     /// The catalog type whose layout each entry records.
     ids: []const typed.Type,
@@ -281,6 +281,8 @@ pub fn describe(allocator: std.mem.Allocator, catalog: *native.Catalog) Error!Ta
 }
 
 /// Include codec-owned domain backing nodes only for the normative JSON boundary.
+/// MODULE-TEST-2: the entries are sorted by name, so a table merged from
+/// each module's own entries (the union by name, sorted) is this one.
 pub fn describeWithDomains(allocator: std.mem.Allocator, catalog: *native.Catalog, codecs: bool) Error!Table {
     const flags = try @import("native_wire.zig").supported(allocator, catalog.records, codecs);
     defer allocator.free(flags);
@@ -351,6 +353,18 @@ pub fn describeWithDomains(allocator: std.mem.Allocator, catalog: *native.Catalo
     const owned_types = try types.toOwnedSlice(allocator);
     errdefer allocator.free(owned_types);
     const owned_ids = try ids.toOwnedSlice(allocator);
+    const Pair = struct {
+        types: []Type,
+        ids: []typed.Type,
+        pub fn lessThan(self: @This(), left: usize, right: usize) bool {
+            return std.mem.lessThan(u8, self.types[left].name, self.types[right].name);
+        }
+        pub fn swap(self: @This(), left: usize, right: usize) void {
+            std.mem.swap(Type, &self.types[left], &self.types[right]);
+            std.mem.swap(typed.Type, &self.ids[left], &self.ids[right]);
+        }
+    };
+    std.sort.pdqContext(0, owned_types.len, Pair{ .types = owned_types, .ids = owned_ids });
     return .{ .types = owned_types, .ids = owned_ids };
 }
 

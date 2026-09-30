@@ -129,6 +129,17 @@ static MylangWireNode *read_nodes(FILE *input, uint64_t count) {
     }
     return nodes;
 }
+#ifdef MYLANG_TEST_LINKED
+/* MODULE-TEST-3: the harness linked into one test executable with the guest
+   objects calls the adapter directly; there is no library to load, and so no
+   relocation of the guest's tables in every test process. */
+static Invoke load_invoke(void **library_out, const char *library_path) {
+    (void)library_path;
+    *library_out = NULL;
+    return mylang_native_call_codecs_v1;
+}
+#define dlclose(library) ((void)(library))
+#else
 static Invoke load_invoke(void **library_out, const char *library_path) {
     void *library = dlopen(library_path, RTLD_NOW | RTLD_LOCAL);
     if (!library) fail(dlerror());
@@ -140,6 +151,7 @@ static Invoke load_invoke(void **library_out, const char *library_path) {
     *library_out = library;
     return invoke;
 }
+#endif
 /* Run one copied-value call and normalize its status: a nonzero ABI return
    with no guest status recorded is a host failure, while a guest trap keeps
    its own status. Returns 0 exactly when the call produced a value. */
@@ -178,13 +190,21 @@ static int finish(void) { return fflush(stdout) == 0 ? 0 : 2; }
    A library without the renderer, or a call that recorded no `Err`, sends an
    empty one; the parent shows it only when the test's value is an `Err`. */
 typedef size_t (*RenderTrace)(char *, size_t);
+#ifdef MYLANG_TEST_LINKED
+extern size_t myl_qbe_error_trace_render(char *, size_t);
+#endif
 static void put_error_trace(void *library) {
+    RenderTrace render = NULL;
+#ifdef MYLANG_TEST_LINKED
+    (void)library;
+    render = myl_qbe_error_trace_render;
+#else
     void *symbol = dlsym(library, "myl_qbe_error_trace_render");
-    RenderTrace render;
+    if (symbol) memcpy(&render, &symbol, sizeof render);
+#endif
     size_t length = 0;
     char *text = NULL;
-    if (symbol) {
-        memcpy(&render, &symbol, sizeof render);
+    if (render) {
         length = render(NULL, 0);
         if (length > TEST_OUTPUT_LIMIT) length = 0;
         text = length ? malloc(length + 1) : NULL;

@@ -403,17 +403,21 @@ phicopyref(Fn *fn, Blk *b, Phi *p)
 	if (n == p->narg)
 		return r;
 
-	/* same as a previous phi */
+	/* mylang local change: identical incoming values do not make
+	 * phis interchangeable when their result classes differ. */
 	for (p1=b->phi; p1!=p; p1=p1->link) {
 		assert(p1);
-		if (phieq(p1, p))
+		if (p1->cls == p->cls && phieq(p1, p))
 			return p1->to;
 	}
 
 	/* can be replaced by a
 	 * dominating jnz arg */
 	d = b->idom;
-	if (p->narg != 2
+	/* mylang local change: jnz's boolean argument is a word. Reusing
+	 * it for a long phi loses the upper half of a spilled result. */
+	if (p->cls != Kw
+	|| p->narg != 2
 	|| d->jmp.type != Jjnz
 	|| !isw1(fn, d->jmp.arg))
 		return R;

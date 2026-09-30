@@ -542,6 +542,83 @@ passed main::test_sum
 1 passed, 1 cached, 0 failed, 0 skipped
 ```
 
+## Tests module by module
+
+`mylang test` of a project builds its tests from the same per-module artifacts
+`build` and `check` use (see
+[building a project module by module](module-interfaces.md#building-a-project-module-by-module)).
+`--whole-program` asks for the whole-program session described above.
+
+```console
+$ mylang test app/main.my --cache-dir /tmp/test-cache
+passed main::test_square
+passed util::test_sum
+2 passed, 0 cached, 0 failed, 0 skipped
+$ mylang test app/main.my --cache-dir /tmp/test-cache --whole-program
+passed main::test_square
+passed util::test_sum
+2 passed, 0 cached, 0 failed, 0 skipped
+```
+
+- **Compiles.** Every stale module is compiled as `compile-module --tests`.
+  Besides its objects, the compile writes `NAME.tests.json`, which holds:
+  - its share of the test facts: every function it emits, described as the
+    whole program's facts describe it, but without the two program-wide
+    dependency sets;
+  - its own entry of the declaration contracts;
+  - the schema and export descriptions of its tests and benchmarks;
+  - its wire and codec tables.
+
+  An unchanged module is not compiled again.
+- **Facts.** The run merges the shares into the facts of the tests' closure
+  and adds the program-wide edges: every body that invokes a function value
+  gets an `indirect` edge to every function any module takes as a value, and,
+  when any module declares a domain codec, every body gets its codec edges.
+  Tests are discovered from the merged contracts, so the run starts no
+  declaration check, and results are planned and replayed from receipts as
+  before. The merge is kept, so a run in which no module changed reads one
+  file.
+- **The test executable.** The tests that must run are linked into one
+  executable, with the harness, from the modules' objects and a wrapper that
+  exports those tests. A test process then maps the executable instead of
+  loading and relocating a library of the whole program. The wire and codec
+  tables are sorted by name (MODULE-TEST-2), so the merged tables are the
+  whole-program library's.
+- **Work follows the edit.** An unchanged rerun compiles, links and starts
+  nothing but the tests that are not cacheable. An edit compiles the edited
+  module and the modules that read an interface it changed, never a module
+  below it, and runs exactly the tests whose closure reaches the edit. The
+  trace (`MYLANG_TEST_TRACE`) names each `compile-module` and `module-link`.
+- **Whole-program instead.** `--whole-program` takes the whole-program path, and
+  so do the following:
+  - `--no-cache`, `--release`, explicit link inputs, `--affected`,
+    benchmarks and `--diagnostics=json`;
+  - a case configuration that names provider fixtures;
+  - a project the modules cannot build (the session then reports it).
+
+  The two paths key receipts alike (a module's contract entry is rendered as
+  `list-interfaces --contracts` renders it), so a verdict recorded on one
+  replays on the other.
+- **Cold.** A first run module by module compiles every module, as a first
+  `build` does, where the whole-program session lowers and compiles only the
+  tests' closure. So the first run of a project of at least 64 modules
+  (`MYLANG_TEST_SEED_MODULES` sets the count) is the whole-program run's, and
+  it starts a detached seeder (`MYLANG_TEST_SEED=1`, no standard streams, never
+  waited for). The seeder waits until the run has released the project's
+  snapshot path, compiles every module into the test variant, runs no test and
+  prints nothing, at nice 19. `MYLANG_TEST_SEED=off` starts no seeder.
+- **Never waiting.** A run started while the seeder works does not wait for
+  it: it stages at a private path and is the whole-program run's, which
+  replays the verdicts of every test the edit did not reach. The same holds
+  while another run of the project holds its snapshot path or its modules.
+  The seeder is stopped while such a run works, so the run has the cores,
+  and goes on when the run ends. A private watcher also resumes it after
+  foreground death, including SIGKILL, without retaining snapshot/cache locks.
+  Failed watcher setup stops nothing. Once the seeder is done, runs are module by
+  module again, replaying the earlier runs' verdicts. The trace names how a
+  run was staged: `stage stable`, `stage private` or `stage seeding`, and
+  `pause-seeder` when it stopped the seeder.
+
 ## Collector stress
 
 `mylang test --gc-stress` runs every collected test's copied-value call with the

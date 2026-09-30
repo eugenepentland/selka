@@ -1,0 +1,497 @@
+{
+  "source": "573ce9a4e97d4deb3e874dcaa35beb0eaacbfbb0",
+  "compiler_sha256": "27efa44b7107a77e0bc562949645f644392b5a6fcf57b5ae2a5bafcc2491893e",
+  "totals": {
+    "steps": 0,
+    "built": 17,
+    "rejected": 0,
+    "compiled": 35,
+    "reused": 33,
+    "mismatches": 0,
+    "runs": 17
+  },
+  "fixture": "module_rc with managed_allocation permitted bounds, so body-only allocation mutations remain accepted",
+  "source_sha256": {
+    "lib.my": "35333d2d29245b5e7111fc71ecf97f6bdef3b0b404c2b45e3372bb0fda771fa0",
+    "main.my": "54c1329d41705736da231416e5c6957141c3f02e70c2166c898dfb9144d22a57",
+    "leaf.my": "3d5606c5bf92c6826e3a3d12cc651934bf1ced61e80feb8ec1a622d108c6330e",
+    "bridge.my": "b33a62f77fb506a6456e0d6e6bceb04604c4b428e7d3a0a8e68a4f8c86be8f87"
+  },
+  "rows": [
+    {
+      "case": "pristine",
+      "module_status": 0,
+      "whole_status": 0,
+      "module_build": {
+        "modules": 4,
+        "compiled": 4,
+        "reused": 0,
+        "arenas": false
+      },
+      "executable_sha256": "8f4cedbdcce9e561f1e6063e3c3109a4dd583fcbd749a58b49352f104cff37c7",
+      "changed_hashes": {
+        "main": {
+          "interface": {
+            "before": null,
+            "after": "7ff6a2375c1b1b2ed6f401102b6f46daf254324e8beb135824b44b2d01b87c1c"
+          },
+          "emission": {
+            "before": null,
+            "after": "16d1bd1880941261af1e5d1c69854194045305a72fa701e276f0cba882b058c0"
+          },
+          "positions": {
+            "before": null,
+            "after": "212bc94b274458444dca6521ca964fd9725037781825f19d1c9e2366d6cf335e"
+          }
+        },
+        "lib": {
+          "interface": {
+            "before": null,
+            "after": "5fd3de00633be4cea0217cd1c4bd91164aac57231dddf5559c8be27e561094f9"
+          },
+          "emission": {
+            "before": null,
+            "after": "609ab26bf6dd3ca394a034728e8d1b12fddb70f3fd569491b966b0d650c38fc1"
+          },
+          "positions": {
+            "before": null,
+            "after": "ab7fb64504d7f3384cfb778b35a79438771125fef28fc084d918feb2f72c253b"
+          }
+        },
+        "leaf": {
+          "interface": {
+            "before": null,
+            "after": "fc472be51a7dfaf6fc249ca7f66d394c9e77d2584cd53d9c50066ff1e95867c7"
+          },
+          "emission": {
+            "before": null,
+            "after": "c81bf2eea0618327a278d80eb624c19b06b2d80e49b378335e45e587b3aaaab5"
+          },
+          "positions": {
+            "before": null,
+            "after": "da22ec90a2eae68d2f8d5aa9b159d04788826cde79658f83436923e34b367094"
+          }
+        },
+        "bridge": {
+          "interface": {
+            "before": null,
+            "after": "976651d4d3f0f8c2f9bdfc54d64196edf6f3f7bba275626b0ae2d6a231663081"
+          },
+          "emission": {
+            "before": null,
+            "after": "0caae15502c117806eabeae2fd4634d4c5dc7c413c117b511dedaa5ec5ddf3a3"
+          },
+          "positions": {
+            "before": null,
+            "after": "639600f022fda1f35adf55cdce5e52e374196305d46be5dd9dbbb05e25a0836b"
+          }
+        }
+      }
+    },
+    {
+      "case": "warm pristine",
+      "module_status": 0,
+      "whole_status": 0,
+      "module_build": {
+        "modules": 4,
+        "compiled": 0,
+        "reused": 4,
+        "arenas": false
+      },
+      "executable_sha256": "8f4cedbdcce9e561f1e6063e3c3109a4dd583fcbd749a58b49352f104cff37c7",
+      "changed_hashes": {}
+    },
+    {
+      "case": "restore before private transitive loop proof",
+      "module_status": 0,
+      "whole_status": 0,
+      "module_build": {
+        "modules": 4,
+        "compiled": 0,
+        "reused": 4,
+        "arenas": false
+      },
+      "executable_sha256": "8f4cedbdcce9e561f1e6063e3c3109a4dd583fcbd749a58b49352f104cff37c7",
+      "changed_hashes": {}
+    },
+    {
+      "case": "private transitive loop proof",
+      "module_status": 0,
+      "whole_status": 0,
+      "module_build": {
+        "modules": 4,
+        "compiled": 4,
+        "reused": 0,
+        "arenas": false
+      },
+      "executable_sha256": "615dfd443e4077ac51e2c4a103b389b92594d2502bf259fd4f6eee6d167b542a",
+      "changed_hashes": {
+        "leaf": {
+          "emission": {
+            "before": "c81bf2eea0618327a278d80eb624c19b06b2d80e49b378335e45e587b3aaaab5",
+            "after": "a601e5ca273e38d8bb8ebc3d60203fa6dd9eb3635775d7d212623613e593cab6"
+          },
+          "positions": {
+            "before": "da22ec90a2eae68d2f8d5aa9b159d04788826cde79658f83436923e34b367094",
+            "after": "e6f1f793d19f7d009134fbbd6f97d74ee547b5faacfd159143aa81b775ceaf6c"
+          }
+        }
+      }
+    },
+    {
+      "case": "warm private transitive loop proof",
+      "module_status": 0,
+      "whole_status": 0,
+      "module_build": {
+        "modules": 4,
+        "compiled": 0,
+        "reused": 4,
+        "arenas": false
+      },
+      "executable_sha256": "615dfd443e4077ac51e2c4a103b389b92594d2502bf259fd4f6eee6d167b542a",
+      "changed_hashes": {}
+    },
+    {
+      "case": "restore before callee starts allocating and sharing",
+      "module_status": 0,
+      "whole_status": 0,
+      "module_build": {
+        "modules": 4,
+        "compiled": 4,
+        "reused": 0,
+        "arenas": false
+      },
+      "executable_sha256": "8f4cedbdcce9e561f1e6063e3c3109a4dd583fcbd749a58b49352f104cff37c7",
+      "changed_hashes": {
+        "leaf": {
+          "emission": {
+            "before": "a601e5ca273e38d8bb8ebc3d60203fa6dd9eb3635775d7d212623613e593cab6",
+            "after": "c81bf2eea0618327a278d80eb624c19b06b2d80e49b378335e45e587b3aaaab5"
+          },
+          "positions": {
+            "before": "e6f1f793d19f7d009134fbbd6f97d74ee547b5faacfd159143aa81b775ceaf6c",
+            "after": "da22ec90a2eae68d2f8d5aa9b159d04788826cde79658f83436923e34b367094"
+          }
+        }
+      }
+    },
+    {
+      "case": "callee starts allocating and sharing",
+      "module_status": 0,
+      "whole_status": 0,
+      "module_build": {
+        "modules": 4,
+        "compiled": 4,
+        "reused": 0,
+        "arenas": false
+      },
+      "executable_sha256": "3f5bb2a05e10b26ece6057d20b25c8f199087ce51d2dc6987887aa7a17df5272",
+      "changed_hashes": {
+        "lib": {
+          "interface": {
+            "before": "5fd3de00633be4cea0217cd1c4bd91164aac57231dddf5559c8be27e561094f9",
+            "after": "7b044344bf90334228e5b095e53c5cb74865bfc8c11c29be8d85d354c82476bd"
+          },
+          "emission": {
+            "before": "609ab26bf6dd3ca394a034728e8d1b12fddb70f3fd569491b966b0d650c38fc1",
+            "after": "c1ba1f27c242e4976504a84274cdfc8ce2d6ca3fdadf35810851e3fb6cb53b1a"
+          }
+        },
+        "leaf": {
+          "interface": {
+            "before": "fc472be51a7dfaf6fc249ca7f66d394c9e77d2584cd53d9c50066ff1e95867c7",
+            "after": "61ceece1119210f2b00f1c768c9f8ab17af9575c3aa197c9e7253cd9ec7cac14"
+          },
+          "emission": {
+            "before": "c81bf2eea0618327a278d80eb624c19b06b2d80e49b378335e45e587b3aaaab5",
+            "after": "d227bf5d95bc0243cfcbbddd32fc2c74e6b433026b6e53ca303569f101df2928"
+          },
+          "positions": {
+            "before": "da22ec90a2eae68d2f8d5aa9b159d04788826cde79658f83436923e34b367094",
+            "after": "b1498b951e76d05b1078e7c98ca5f018f31a9ed83f9b6869baabaf02cae6c227"
+          }
+        },
+        "bridge": {
+          "interface": {
+            "before": "976651d4d3f0f8c2f9bdfc54d64196edf6f3f7bba275626b0ae2d6a231663081",
+            "after": "e222953b6015fdda06511b91a9f37099fe874e0ed4a4d8b9e5c00f05004d73af"
+          },
+          "emission": {
+            "before": "0caae15502c117806eabeae2fd4634d4c5dc7c413c117b511dedaa5ec5ddf3a3",
+            "after": "5058e3a3c257bdc7b6b0b653feef3e3aa1af8205f755d0cfbdbbea268b3a0b29"
+          }
+        }
+      }
+    },
+    {
+      "case": "warm callee starts allocating and sharing",
+      "module_status": 0,
+      "whole_status": 0,
+      "module_build": {
+        "modules": 4,
+        "compiled": 0,
+        "reused": 4,
+        "arenas": false
+      },
+      "executable_sha256": "3f5bb2a05e10b26ece6057d20b25c8f199087ce51d2dc6987887aa7a17df5272",
+      "changed_hashes": {}
+    },
+    {
+      "case": "restore before borrowed return becomes owned",
+      "module_status": 0,
+      "whole_status": 0,
+      "module_build": {
+        "modules": 4,
+        "compiled": 4,
+        "reused": 0,
+        "arenas": false
+      },
+      "executable_sha256": "8f4cedbdcce9e561f1e6063e3c3109a4dd583fcbd749a58b49352f104cff37c7",
+      "changed_hashes": {
+        "lib": {
+          "interface": {
+            "before": "7b044344bf90334228e5b095e53c5cb74865bfc8c11c29be8d85d354c82476bd",
+            "after": "5fd3de00633be4cea0217cd1c4bd91164aac57231dddf5559c8be27e561094f9"
+          },
+          "emission": {
+            "before": "c1ba1f27c242e4976504a84274cdfc8ce2d6ca3fdadf35810851e3fb6cb53b1a",
+            "after": "609ab26bf6dd3ca394a034728e8d1b12fddb70f3fd569491b966b0d650c38fc1"
+          }
+        },
+        "leaf": {
+          "interface": {
+            "before": "61ceece1119210f2b00f1c768c9f8ab17af9575c3aa197c9e7253cd9ec7cac14",
+            "after": "fc472be51a7dfaf6fc249ca7f66d394c9e77d2584cd53d9c50066ff1e95867c7"
+          },
+          "emission": {
+            "before": "d227bf5d95bc0243cfcbbddd32fc2c74e6b433026b6e53ca303569f101df2928",
+            "after": "c81bf2eea0618327a278d80eb624c19b06b2d80e49b378335e45e587b3aaaab5"
+          },
+          "positions": {
+            "before": "b1498b951e76d05b1078e7c98ca5f018f31a9ed83f9b6869baabaf02cae6c227",
+            "after": "da22ec90a2eae68d2f8d5aa9b159d04788826cde79658f83436923e34b367094"
+          }
+        },
+        "bridge": {
+          "interface": {
+            "before": "e222953b6015fdda06511b91a9f37099fe874e0ed4a4d8b9e5c00f05004d73af",
+            "after": "976651d4d3f0f8c2f9bdfc54d64196edf6f3f7bba275626b0ae2d6a231663081"
+          },
+          "emission": {
+            "before": "5058e3a3c257bdc7b6b0b653feef3e3aa1af8205f755d0cfbdbbea268b3a0b29",
+            "after": "0caae15502c117806eabeae2fd4634d4c5dc7c413c117b511dedaa5ec5ddf3a3"
+          }
+        }
+      }
+    },
+    {
+      "case": "borrowed return becomes owned",
+      "module_status": 0,
+      "whole_status": 0,
+      "module_build": {
+        "modules": 4,
+        "compiled": 3,
+        "reused": 1,
+        "arenas": false
+      },
+      "executable_sha256": "a3b7dccacbbbea7329f3a02f1b5a7bfef79cf90a64a902144be17509754dcb2e",
+      "changed_hashes": {
+        "lib": {
+          "interface": {
+            "before": "5fd3de00633be4cea0217cd1c4bd91164aac57231dddf5559c8be27e561094f9",
+            "after": "40f57bb8260d553f306569a97066bbd276fad144b2da89431d70df5eb66d03b2"
+          },
+          "emission": {
+            "before": "609ab26bf6dd3ca394a034728e8d1b12fddb70f3fd569491b966b0d650c38fc1",
+            "after": "8dfdfc2a8600ef452fa17c13076be8e16cb84151498531c19f72607db9d77350"
+          },
+          "positions": {
+            "before": "ab7fb64504d7f3384cfb778b35a79438771125fef28fc084d918feb2f72c253b",
+            "after": "11d0fc8fd5f2da41749208c23580f7ea05db530f18418c5d29fc90cb2b45794d"
+          }
+        },
+        "bridge": {
+          "emission": {
+            "before": "0caae15502c117806eabeae2fd4634d4c5dc7c413c117b511dedaa5ec5ddf3a3",
+            "after": "2888d711313dd8ea4b7aa7aa7f1d5703542de1e64d5ad1d061b9d314a238e706"
+          }
+        }
+      }
+    },
+    {
+      "case": "warm borrowed return becomes owned",
+      "module_status": 0,
+      "whole_status": 0,
+      "module_build": {
+        "modules": 4,
+        "compiled": 0,
+        "reused": 4,
+        "arenas": false
+      },
+      "executable_sha256": "a3b7dccacbbbea7329f3a02f1b5a7bfef79cf90a64a902144be17509754dcb2e",
+      "changed_hashes": {}
+    },
+    {
+      "case": "restore before immortal return becomes allocated",
+      "module_status": 0,
+      "whole_status": 0,
+      "module_build": {
+        "modules": 4,
+        "compiled": 3,
+        "reused": 1,
+        "arenas": false
+      },
+      "executable_sha256": "8f4cedbdcce9e561f1e6063e3c3109a4dd583fcbd749a58b49352f104cff37c7",
+      "changed_hashes": {
+        "lib": {
+          "interface": {
+            "before": "40f57bb8260d553f306569a97066bbd276fad144b2da89431d70df5eb66d03b2",
+            "after": "5fd3de00633be4cea0217cd1c4bd91164aac57231dddf5559c8be27e561094f9"
+          },
+          "emission": {
+            "before": "8dfdfc2a8600ef452fa17c13076be8e16cb84151498531c19f72607db9d77350",
+            "after": "609ab26bf6dd3ca394a034728e8d1b12fddb70f3fd569491b966b0d650c38fc1"
+          },
+          "positions": {
+            "before": "11d0fc8fd5f2da41749208c23580f7ea05db530f18418c5d29fc90cb2b45794d",
+            "after": "ab7fb64504d7f3384cfb778b35a79438771125fef28fc084d918feb2f72c253b"
+          }
+        },
+        "bridge": {
+          "emission": {
+            "before": "2888d711313dd8ea4b7aa7aa7f1d5703542de1e64d5ad1d061b9d314a238e706",
+            "after": "0caae15502c117806eabeae2fd4634d4c5dc7c413c117b511dedaa5ec5ddf3a3"
+          }
+        }
+      }
+    },
+    {
+      "case": "immortal return becomes allocated",
+      "module_status": 0,
+      "whole_status": 0,
+      "module_build": {
+        "modules": 4,
+        "compiled": 3,
+        "reused": 1,
+        "arenas": false
+      },
+      "executable_sha256": "8d8f463e9055e9ecc2e17e2eb59a5213f31754d916b8450f97378a15099e9389",
+      "changed_hashes": {
+        "lib": {
+          "interface": {
+            "before": "5fd3de00633be4cea0217cd1c4bd91164aac57231dddf5559c8be27e561094f9",
+            "after": "68ed1a00dff08699ac690b2d61e60cfb04b65d3d3dce55fc7b0f11f28c6d23d6"
+          },
+          "emission": {
+            "before": "609ab26bf6dd3ca394a034728e8d1b12fddb70f3fd569491b966b0d650c38fc1",
+            "after": "f1d29fbb37537a6d56569fd0aa9831b53c41af0a1eb3d27abb0caedf48c171a0"
+          },
+          "positions": {
+            "before": "ab7fb64504d7f3384cfb778b35a79438771125fef28fc084d918feb2f72c253b",
+            "after": "0910938057d3e597f97e5f57700ec42751bed85683acbd915929111e1ff974b5"
+          }
+        },
+        "bridge": {
+          "emission": {
+            "before": "0caae15502c117806eabeae2fd4634d4c5dc7c413c117b511dedaa5ec5ddf3a3",
+            "after": "bdd7f5b3db9fcc4c10e154916879d91f3d02da88e747f802992c77519154cc05"
+          }
+        }
+      }
+    },
+    {
+      "case": "warm immortal return becomes allocated",
+      "module_status": 0,
+      "whole_status": 0,
+      "module_build": {
+        "modules": 4,
+        "compiled": 0,
+        "reused": 4,
+        "arenas": false
+      },
+      "executable_sha256": "8d8f463e9055e9ecc2e17e2eb59a5213f31754d916b8450f97378a15099e9389",
+      "changed_hashes": {}
+    },
+    {
+      "case": "restore before mutable parameter loses original slot",
+      "module_status": 0,
+      "whole_status": 0,
+      "module_build": {
+        "modules": 4,
+        "compiled": 3,
+        "reused": 1,
+        "arenas": false
+      },
+      "executable_sha256": "8f4cedbdcce9e561f1e6063e3c3109a4dd583fcbd749a58b49352f104cff37c7",
+      "changed_hashes": {
+        "lib": {
+          "interface": {
+            "before": "68ed1a00dff08699ac690b2d61e60cfb04b65d3d3dce55fc7b0f11f28c6d23d6",
+            "after": "5fd3de00633be4cea0217cd1c4bd91164aac57231dddf5559c8be27e561094f9"
+          },
+          "emission": {
+            "before": "f1d29fbb37537a6d56569fd0aa9831b53c41af0a1eb3d27abb0caedf48c171a0",
+            "after": "609ab26bf6dd3ca394a034728e8d1b12fddb70f3fd569491b966b0d650c38fc1"
+          },
+          "positions": {
+            "before": "0910938057d3e597f97e5f57700ec42751bed85683acbd915929111e1ff974b5",
+            "after": "ab7fb64504d7f3384cfb778b35a79438771125fef28fc084d918feb2f72c253b"
+          }
+        },
+        "bridge": {
+          "emission": {
+            "before": "bdd7f5b3db9fcc4c10e154916879d91f3d02da88e747f802992c77519154cc05",
+            "after": "0caae15502c117806eabeae2fd4634d4c5dc7c413c117b511dedaa5ec5ddf3a3"
+          }
+        }
+      }
+    },
+    {
+      "case": "mutable parameter loses original slot",
+      "module_status": 0,
+      "whole_status": 0,
+      "module_build": {
+        "modules": 4,
+        "compiled": 3,
+        "reused": 1,
+        "arenas": false
+      },
+      "executable_sha256": "72fad8bb77b8ad73078684bb2af46718f616b937b8ba152c5e47e94b8eb48df7",
+      "changed_hashes": {
+        "lib": {
+          "interface": {
+            "before": "5fd3de00633be4cea0217cd1c4bd91164aac57231dddf5559c8be27e561094f9",
+            "after": "e9c2d38079af4bc8314fe9595b6ccd6811b93f6f5ad0c8e101e2c122cb91ffa8"
+          },
+          "emission": {
+            "before": "609ab26bf6dd3ca394a034728e8d1b12fddb70f3fd569491b966b0d650c38fc1",
+            "after": "3850c22212b97d7fb3c8c7755a0af3482d0fdd0aa40dc1e80ced6a932700c3ec"
+          },
+          "positions": {
+            "before": "ab7fb64504d7f3384cfb778b35a79438771125fef28fc084d918feb2f72c253b",
+            "after": "6e45db6c3226dfdae7421a862f1e71fe2ed7b75701956a81db528ff4855201bb"
+          }
+        },
+        "bridge": {
+          "emission": {
+            "before": "0caae15502c117806eabeae2fd4634d4c5dc7c413c117b511dedaa5ec5ddf3a3",
+            "after": "2891905edd71587211b396ea1ec86c40c28f2e57bf2be54d7e838b1c78d1a593"
+          }
+        }
+      }
+    },
+    {
+      "case": "warm mutable parameter loses original slot",
+      "module_status": 0,
+      "whole_status": 0,
+      "module_build": {
+        "modules": 4,
+        "compiled": 0,
+        "reused": 4,
+        "arenas": false
+      },
+      "executable_sha256": "72fad8bb77b8ad73078684bb2af46718f616b937b8ba152c5e47e94b8eb48df7",
+      "changed_hashes": {}
+    }
+  ]
+}

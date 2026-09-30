@@ -107,7 +107,7 @@ test "RC-OWNERSHIP-PLAN-1 mixed fresh provenance keeps canonical owned result" {
     var facts = try shapes.Catalog.init(t.allocator, &fixture.layouts);
     defer facts.deinit();
     const function = try namedFunction(fixture.compilation.code.?, "choose");
-    const contract = try calls.guest(fixture.arena.allocator(), &facts, function, "rc-v3");
+    const contract = try calls.guest(fixture.arena.allocator(), &facts, function, "rc-v5");
     try t.expect(function.signature.inferred.borrow_origin == .params);
     try t.expectEqualSlices(u16, &.{0}, function.signature.inferred.borrow_origin.params);
     try t.expect(contract.result == .owned);
@@ -138,7 +138,7 @@ test "RC-OWNERSHIP-PLAN-1 mut aggregates and mutable payloads keep distinct call
     var facts = try shapes.Catalog.init(t.allocator, &fixture.layouts);
     defer facts.deinit();
     const function = try namedFunction(fixture.compilation.code.?, "change");
-    const contract = try calls.guest(fixture.arena.allocator(), &facts, function, "rc-v3");
+    const contract = try calls.guest(fixture.arena.allocator(), &facts, function, "rc-v5");
     try t.expect(contract.result == .plain);
     try t.expectEqualSlices(model.Parameter, &.{ .caller_storage, .mutable_payload, .caller_storage }, contract.parameters);
 }
@@ -370,7 +370,7 @@ test "RC-OWNERSHIP-PLAN-1 move-only guest parameters preserve callee drop owners
     var facts = try shapes.Catalog.init(t.allocator, &fixture.layouts);
     defer facts.deinit();
     const function = try namedFunction(fixture.compilation.code.?, "consume");
-    const contract = try calls.guest(fixture.arena.allocator(), &facts, function, "rc-v3");
+    const contract = try calls.guest(fixture.arena.allocator(), &facts, function, "rc-v5");
     try t.expectEqualSlices(model.Parameter, &.{.consume_on_entry}, contract.parameters);
     try t.expect(contract.failure == .parameter_contracts);
 }
@@ -391,8 +391,8 @@ fn planInput(fixture: *ShapeFixture, facts: *shapes.Catalog, name: []const u8) !
         .code = .{ .program = program, .function = function, .states = ir.states },
         .flow = .{ .live = live, .ownership = analysis },
         .physical = .{ .catalog = facts, .locals = bindings },
-        .contracts = .{ .current = try calls.guest(a, facts, function, "rc-v3") },
-        .policy = .{ .abi = "rc-v3" },
+        .contracts = .{ .current = try calls.guest(a, facts, function, "rc-v5") },
+        .policy = .{ .abi = "rc-v5" },
     };
 }
 
@@ -758,6 +758,62 @@ test "RC-UNIQUE-LOWER-1 nested receiver replaces its owned field before borrowin
     try t.expect(std.mem.indexOf(u8, text, "call $myl_native_cow_unique") == null);
 }
 
+fn scopeStoredAt(text: []const u8, address: []const u8) ?[]const u8 {
+    var lines = std.mem.splitScalar(u8, text, '\n');
+    while (lines.next()) |raw| {
+        const line = std.mem.trim(u8, raw, " ");
+        if (!std.mem.startsWith(u8, line, "storel ")) continue;
+        const comma = std.mem.indexOfScalar(u8, line, ',') orelse continue;
+        if (std.mem.eql(u8, std.mem.trim(u8, line[comma + 1 ..], " "), address)) return line[7..comma];
+    }
+    return null;
+}
+
+fn scopeFieldStore(text: []const u8, scope: []const u8, offset: usize) !bool {
+    const addition = try std.fmt.allocPrint(t.allocator, " =l add {s}, {d}", .{ scope, offset });
+    defer t.allocator.free(addition);
+    var lines = std.mem.splitScalar(u8, text, '\n');
+    while (lines.next()) |raw| {
+        const line = std.mem.trim(u8, raw, " ");
+        const equal = std.mem.indexOf(u8, line, addition) orelse continue;
+        if (equal + addition.len == line.len and scopeStoredAt(text, line[0..equal]) != null) return true;
+    }
+    return false;
+}
+
+/// Ordered markers must enclose physical initialization, guarded journal capture and unwind.
+fn outgoingScopeOperations(text: []const u8) !bool {
+    const begin = std.mem.indexOf(u8, text, "# RC-SCOPE-IL-1 begin") orelse return false;
+    const pin = std.mem.indexOf(u8, text, "# RC-SCOPE-IL-1 pin") orelse return false;
+    const end = std.mem.indexOf(u8, text, "# RC-SCOPE-IL-1 end") orelse return false;
+    if (!(begin < pin and pin < end)) return false;
+    const initialized = text[begin..pin];
+    const heap_store = " storel %heap, ";
+    const heap_at = (std.mem.indexOf(u8, initialized, heap_store) orelse return false) + heap_store.len;
+    const scope = initialized[heap_at .. heap_at + (std.mem.indexOfScalar(u8, initialized[heap_at..], '\n') orelse return false)];
+    if (!try scopeFieldStore(initialized, scope, 8) or !try scopeFieldStore(initialized, scope, 16)) return false;
+    const link = try std.fmt.allocPrint(t.allocator, " storel {s}, ", .{scope});
+    defer t.allocator.free(link);
+    if (std.mem.indexOf(u8, initialized, link) == null or std.mem.indexOf(u8, initialized, " storew 1, ") == null) return false;
+    const captured = text[pin..end];
+    const commit = std.mem.indexOf(u8, captured, "\n@rcspincommit") orelse return false;
+    const slow = std.mem.indexOf(u8, captured, "\n@rcspinslow") orelse return false;
+    if (commit >= slow or std.mem.indexOf(u8, captured[0..commit], ", @rcspinslow") == null or
+        !try scopeFieldStore(captured[commit..slow], scope, 16)) return false;
+    const pin_call = try std.fmt.allocPrint(t.allocator, "call $myl_qbe_rc_scope_pin(l %ctx, l {s}, l ", .{scope});
+    defer t.allocator.free(pin_call);
+    if (std.mem.indexOf(u8, captured[slow..], pin_call) == null) return false;
+    const end_call = try std.fmt.allocPrint(t.allocator, "call $myl_qbe_rc_scope_end(l %ctx, l {s})", .{scope});
+    defer t.allocator.free(end_call);
+    return std.mem.indexOf(u8, text[end..], end_call) != null and
+        try scopeFieldStore(text[end..], scope, 8) and std.mem.indexOf(u8, text[end..], " storew 0, ") != null;
+}
+
+// spec-case: RC-RECEIVER-LOWER-1
+test "RC-RECEIVER-LOWER-1 scope oracle refuses comments without journal operations" {
+    try t.expect(!try outgoingScopeOperations("# RC-SCOPE-IL-1 begin\n# RC-SCOPE-IL-1 pin\n# RC-SCOPE-IL-1 end\n"));
+}
+
 // spec: RC-RECEIVER-LOWER-1
 test "RC-RECEIVER-LOWER-1 outgoing mutable arguments hold a nested runtime scope" {
     const mode = @import("runtime_mode.zig");
@@ -774,8 +830,20 @@ test "RC-RECEIVER-LOWER-1 outgoing mutable arguments hold a nested runtime scope
     );
     defer result.deinit();
     const text = try functionText(result.value, "main");
-    try t.expect(try at(text, "call $myl_qbe_rc_scope_begin") < try at(text, "call $myl_qbe_rc_scope_pin"));
-    try t.expect(try at(text, "call $myl_qbe_rc_scope_pin") < try at(text, "call $myl_qbe_rc_scope_end"));
+    try t.expect(try outgoingScopeOperations(text));
+    const callee = try functionText(result.value, "change");
+    const symbol_start = try at(callee, "$myl_f_");
+    const symbol_end = symbol_start + try at(callee[symbol_start..], "(");
+    const call = try std.fmt.allocPrint(t.allocator, "call {s}(", .{callee[symbol_start..symbol_end]});
+    defer t.allocator.free(call);
+    try t.expect(try at(text, "\n@rcspindone") < try at(text, call));
+    try t.expect(try at(text, call) < try at(text, "# RC-SCOPE-IL-1 end"));
+    const no_writes = try std.mem.replaceOwned(u8, t.allocator, text, " storel ", " # removed storel ");
+    defer t.allocator.free(no_writes);
+    try t.expect(!try outgoingScopeOperations(no_writes));
+    const wrong_scope = try std.mem.replaceOwned(u8, t.allocator, text, "$myl_qbe_rc_scope_pin(l %ctx, l %", "$myl_qbe_rc_scope_pin(l %ctx, l %wrong_");
+    defer t.allocator.free(wrong_scope);
+    try t.expect(!try outgoingScopeOperations(wrong_scope));
     try t.expect(std.mem.indexOf(u8, text, "call $myl_native_cow_unique") == null);
 }
 
@@ -862,4 +930,31 @@ test "RC-SEMANTIC-LOWERING-1 borrowed fields loan before semantic publication" {
     try t.expect(std.mem.indexOf(u8, text, "# RC-GLUE-1 loan") != null);
     try t.expect(std.mem.indexOf(u8, text, "# RC-GLUE-1 publish") != null);
     try t.expect(try at(text, "# RC-GLUE-1 loan") < try at(text, "# RC-GLUE-1 publish"));
+}
+
+// spec-case: RC-STARTUP-IMAGE-1
+test "RC startup image blocks keep graph recipes independent of unrelated catalog declarations" {
+    var first = try ShapeFixture.init("record Data:\n    values: [2]bytes\n    choice: Result[bytes, int]\n\ndef main() -> int:\n    return 0\n");
+    defer first.deinit();
+    var second = try ShapeFixture.init("record Unrelated:\n    value: int\n\nrecord Data:\n    values: [2]bytes\n    choice: Result[bytes, int]\n\ndef main() -> int:\n    return 0\n");
+    defer second.deinit();
+    const a = first.arena.allocator();
+    const one = try @import("rc_descriptors.zig").blocks(a, &first.layouts);
+    const two = try @import("rc_descriptors.zig").blocks(a, &second.layouts);
+    const name = try @import("native_descriptors.zig").symbol(a, &first.layouts, try first.typeNamed("Data"));
+    try t.expectEqualStrings(try imageBlockNamed(one, name), try imageBlockNamed(two, name));
+    const text = try @import("rc_descriptors.zig").render(a, one);
+    try t.expectEqual(@as(usize, 1), std.mem.count(u8, text, "const myl_rc_image myl_rc_generated_image ="));
+    try t.expect(std.mem.indexOf(u8, text, ".conditional=1") != null);
+    try t.expect(std.mem.indexOf(u8, text, ".depth=3,.inline_depth=3") != null);
+}
+
+fn imageBlockNamed(blocks: []const @import("rc_descriptors.zig").Block, name: []const u8) ![]const u8 {
+    for (blocks) |block| if (std.mem.eql(u8, block.name, name)) return block.text;
+    return error.TestUnexpectedResult;
+}
+
+// spec-case: RC-STARTUP-IMAGE-1
+test "RC startup image renderer refuses old ownership blocks before output" {
+    try t.expectError(error.InvalidType, @import("rc_descriptors.zig").render(t.allocator, &.{.{ .name = "old", .text = "const myl_rc_shape old_rc = {0};\n" }}));
 }

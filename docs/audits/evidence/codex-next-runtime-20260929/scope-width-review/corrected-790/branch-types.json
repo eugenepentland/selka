@@ -1,0 +1,132 @@
+{
+  "branches": [
+    {
+      "line": "jnz %v13, @rcspinmark12, @rcspindone12",
+      "type": "w"
+    },
+    {
+      "line": "jnz %v17, @rcspindone12, @rcspintype12",
+      "type": "w"
+    },
+    {
+      "line": "jnz %v19, @rcs20, @rcspinslow12",
+      "type": "w"
+    },
+    {
+      "line": "jnz %v24, @rcs25, @rcspinslow12",
+      "type": "w"
+    },
+    {
+      "line": "jnz %v30, @rcs31, @rcspinslow12",
+      "type": "w"
+    },
+    {
+      "line": "jnz %v35, @rcs36, @rcspinslow12",
+      "type": "w"
+    },
+    {
+      "line": "jnz %v41, @rcs42, @rcspinslow12",
+      "type": "w"
+    },
+    {
+      "line": "jnz %v45, @rcs46, @rcspinslow12",
+      "type": "w"
+    },
+    {
+      "line": "jnz %v49, @rcspinbacking12, @rcspincommit12",
+      "type": "w"
+    },
+    {
+      "line": "jnz %v53, @rcs54, @rcspinslow12",
+      "type": "w"
+    },
+    {
+      "line": "jnz %v57, @rcs58, @rcspinslow12",
+      "type": "w"
+    },
+    {
+      "line": "jnz %v73, @rcspinhold12, @rcspinjournal12",
+      "type": "w"
+    },
+    {
+      "line": "jnz %v88, @rcunique89, @failure",
+      "type": "w"
+    },
+    {
+      "line": "jnz %v91, @rcsendactive90, @rcsenddone90",
+      "type": "w"
+    },
+    {
+      "line": "jnz %v97, @rcs98, @rcsendslow90",
+      "type": "w"
+    },
+    {
+      "line": "jnz %v101, @rcs102, @rcsendslow90",
+      "type": "w"
+    },
+    {
+      "line": "jnz %v105, @rcsendnode90, @rcsendunlink90",
+      "type": "w"
+    },
+    {
+      "line": "jnz %v108, @rcs109, @rcsendslow90",
+      "type": "w"
+    },
+    {
+      "line": "jnz %v112, @rcs113, @rcsendslow90",
+      "type": "w"
+    },
+    {
+      "line": "jnz %v116, @rcs117, @rcsendslow90",
+      "type": "w"
+    },
+    {
+      "line": "jnz %v121, @rcs122, @rcsendslow90",
+      "type": "w"
+    },
+    {
+      "line": "jnz %v125, @rcs126, @rcsendslow90",
+      "type": "w"
+    },
+    {
+      "line": "jnz %v131, @rcs132, @rcsendslow90",
+      "type": "w"
+    },
+    {
+      "line": "jnz %v135, @rcsendbacking90, @rcsendcommit90",
+      "type": "w"
+    },
+    {
+      "line": "jnz %v139, @rcs140, @rcsendslow90",
+      "type": "w"
+    },
+    {
+      "line": "jnz %v143, @rcs144, @rcsendslow90",
+      "type": "w"
+    },
+    {
+      "line": "jnz %v149, @rcs150, @rcsendslow90",
+      "type": "w"
+    },
+    {
+      "line": "jnz %v151, @rcsendrestore90, @rcsendreturned90",
+      "type": "w"
+    },
+    {
+      "line": "jnz %v172, @rcsenddropbacking90, @rcsenddroppayload90",
+      "type": "w"
+    }
+  ],
+  "state_offsets": {
+    "entry_bytes": 40,
+    "state_offset": 5640,
+    "metadata_bytes": 48,
+    "scopes": 248,
+    "spare": 256,
+    "spare_count": 264,
+    "deaths": 200,
+    "heap_bytes": 24,
+    "heap_limit": 88,
+    "heap_region": 112
+  }
+}

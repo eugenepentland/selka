@@ -1,0 +1,2 @@
+zig: warning: argument unused during compilation: '-U NDEBUG' [-Wunused-command-line-argument]
+zero result: got=0 expected=0 payload=456 branch=23

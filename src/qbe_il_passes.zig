@@ -289,8 +289,8 @@ pub fn stickyTrap(text: []const u8) bool {
 /// and with no drop, nothing reads one before its first assignment, so both the
 /// root mark and its restore, and every per-local `memset`, are dead. A function
 /// that does push a root keeps all of them. An inner push is the only code that
-/// computes a `%root{i}` field address; the restore is the only code that adds
-/// `%heap` to the frozen root offset.
+/// computes a `%root{i}` field address. Remove only the frozen root-chain
+/// offset, preserving RC bookkeeping and every other heap-field address.
 pub fn dropUnusedRoots(a: std.mem.Allocator, text: []const u8) GenerateError![]u8 {
     if (std.mem.indexOf(u8, text, "=l add %root") != null) return a.dupe(u8, text);
     // A closing arena scope scans every local declared before it through its
@@ -304,7 +304,7 @@ pub fn dropUnusedRoots(a: std.mem.Allocator, text: []const u8) GenerateError![]u
     while (scan.next()) |line| {
         if (std.mem.startsWith(u8, line, " %root_mark =l call $myl_qbe_root_mark")) continue;
         if (std.mem.startsWith(u8, line, " storel %root_mark, ")) continue;
-        if (std.mem.indexOf(u8, line, "=l add %heap, ") != null) continue;
+        if (std.mem.endsWith(u8, line, "=l add %heap, 16")) continue;
         if (!drops and isLocalZero(line)) continue;
         try kept.append(a, line);
     }

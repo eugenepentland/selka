@@ -294,3 +294,18 @@ public def test_printing_a_deep_value_stops_at_the_depth_cap() -> bool:
 # spec-case: RECURSIVE-VALUES-3
 public def test_generated_recursive_tree_is_reflexive(tree: Expr) -> bool:
     return tree == tree
+
+
+# spec: EQUALITY-SCRATCH-1
+public def test_scratch_growth_keeps_nan_and_signed_zero_inside_shared_boxes() -> bool:
+    nan = 0.0 / 0.0
+    leaf_nan: Shape[float] = Shape.leaf(nan)
+    tree: Shape[float] = Shape.both(leaf_nan, leaf_nan)
+    for _ in range(10):
+        tree = Shape.both(tree, tree)
+    negative: Shape[float] = Shape.leaf(-0.0)
+    positive: Shape[float] = Shape.leaf(0.0)
+    for _ in range(40):
+        negative = Shape.both(negative, negative)
+        positive = Shape.both(positive, positive)
+    return tree != tree and negative == positive

@@ -1,0 +1,11 @@
+{
+  "source": "5535e5a3f0b67e23d0fc9f92f594d7b3feb12a3f",
+  "archive_sha256": "37bb03ae32af923e93244792a73d421b41b4e9f5774bff8a8d79ed729fb0386f",
+  "raw_members_verified": 95,
+  "scope": "Code-identical low-variant Callgrind attribution and scratch C layout probes; no hardware/performance acceptance",
+  "low_profile_delta": 11697353,
+  "managed_append_delta": 4371458,
+  "variable_component": "Separate2\u20134million observed hardware term; exact full-run attribution remains open",
+  "required_MAX_acquire_before_copy_unchanged": true,
+  "probe_compiler_source_changes": false
+}

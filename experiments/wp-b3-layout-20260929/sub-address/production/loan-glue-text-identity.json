@@ -1,0 +1,10 @@
+{
+  "old_manifest": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/.tmp/lox-qbe-attribution/candidate/cache/modules/5fd2812e6cb610dc328952d8ea41a77cd7102fd778ef5c21b022227ab59fc773/out/vm.shared.json",
+  "new_manifest": ".tmp/sub-address/production/cache/modules/200ab8c1219edddc475237ed8d2f892bf137b6060b23aeb26d9eb76c272870ff/out/vm.shared.json",
+  "checks": {
+    "myl_t_702a6d907b417100aec372fbe640be7c932b6dc514fc7e2a91fc18f6ebf00bd0": true,
+    "myl_t_81d71c98b196ce876b8748e8f5e1c439a764a7854aeb5e4ef7865d0716f2ecef": true,
+    "myl_t_a83873657e77deb1bf51281383ae925ccb1b4b6510284b93a36500031c0efc14": true,
+    "myl_t_a83873657e77deb1bf51281383ae925ccb1b4b6510284b93a36500031c0efc14_list": true
+  }
+}

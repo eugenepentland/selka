@@ -89,10 +89,7 @@ myl_native_text *myl_native_text_build_keeping(myl_native_heap *heap, size_t byt
  * lookup is near, so a text that is only ever scanned in order never pays for
  * it. Both parts are functions of the immutable payload, so filling or moving
  * them is invisible to every reader and to every alias of the text. */
-typedef struct {
-    uint64_t scalar, octet;
-    uint32_t sample[];
-} text_index;
+typedef myl_native_text_positions text_index;
 /* Sample entries an indexed text of `scalars` scalars holds: one for every
  * multiple of the stride below its length. */
 static size_t samples_in(size_t scalars) {
@@ -326,6 +323,7 @@ static void nearer(anchor *best, size_t *gap, size_t index, anchor candidate) {
 #define LAZY_OCTETS ((size_t)1024)
 /* Fill the sample table of an indexed text: one pass over its payload. */
 static __attribute__((noinline)) void fill_samples(myl_native_text *text) {
+    if (text->flags&MYL_TEXT_STATIC_INDEX) return;
     text_index *index=index_of(text);
     const unsigned char *bytes=myl_native_text_storage(text);
     const size_t count=samples_in(text->length);
@@ -336,12 +334,27 @@ static __attribute__((noinline)) void fill_samples(myl_native_text *text) {
     }
     text->flags|=MYL_TEXT_SAMPLED;
 }
+/* Image-owned samples have no mutable last-position cursor (TEXT-INDEX-4).
+ * Choose an end or the nearest sample and walk at most half one stride. */
+static __attribute__((noinline)) size_t locate_static(const myl_native_text *text, size_t index) {
+    anchor best={0,0};
+    size_t gap=index;
+    nearer(&best,&gap,index,(anchor){text->length,text->bytes});
+    const text_index *table=index_of(text);
+    size_t entry=(index+MYL_TEXT_SAMPLE_STRIDE/2)/MYL_TEXT_SAMPLE_STRIDE;
+    if (entry>samples_in(text->length)) entry=samples_in(text->length);
+    if (entry) nearer(&best,&gap,index,(anchor){entry*MYL_TEXT_SAMPLE_STRIDE,table->sample[entry-1]});
+    const unsigned char *bytes=myl_native_text_storage(text);
+    return best.scalar<=index ? advance(bytes,text->bytes,best.octet,index-best.scalar)
+                              : retreat(bytes,best.octet,best.scalar-index);
+}
 /* The octet where scalar `index`, which is below the length of an owned
  * non-ASCII text, begins: a walk from the nearest of the payload's two ends,
  * the last scalar an earlier lookup found, and the sample table entry nearest
  * the scalar. Only a lookup far from every one of them but the table fills it,
  * and every lookup of an indexed text records where it ended. */
 static __attribute__((noinline)) size_t locate(myl_native_text *text, size_t index) {
+    if (text->flags&MYL_TEXT_STATIC_INDEX) return locate_static(text,index);
     const unsigned char *bytes=myl_native_text_storage(text);
     anchor best={0,0};
     size_t gap=index;
@@ -474,7 +487,7 @@ static int shares(const myl_native_heap *heap, const myl_native_text *owner, siz
 /* One view of `count` octets of `input`'s owner from octet `offset` on. `input`
  * is rooted across the allocation because it is what keeps the owner alive
  * until the view records it. */
-static myl_native_text *view(myl_native_heap *heap, myl_native_text *input, size_t offset, size_t count, size_t scalars, int plain) {
+static inline __attribute__((always_inline)) myl_native_text *view(myl_native_heap *heap, myl_native_text *input, size_t offset, size_t count, size_t scalars, int plain) {
     if (myl_rc_enabled(heap)) {
         myl_rc_status status=myl_rc_module_register(heap,&rc_text_view_module);
         if (status!=MYL_RC_OK) { myl_rc_record_failure(heap,status); return NULL; }
@@ -741,6 +754,20 @@ myl_native_text *myl_native_text_at(myl_native_heap *heap, myl_native_text *inpu
 myl_native_text *myl_native_text_slice(myl_native_heap *heap, myl_native_text *input, int64_t start, int64_t end) {
     size_t first=endpoint(input->length,start), last=endpoint(input->length,end);
     return myl_native_text_copy(heap,input,first,last>first ? last-first : 0);
+}
+/* An omitted upper endpoint is a streaming tail. Long tails retain one owner
+ * even below its quarter; explicit slices and splitting keep their old bound. */
+myl_native_text *myl_native_text_tail(myl_native_heap *heap, myl_native_text *input, int64_t start, int64_t end) {
+    size_t first=endpoint(input->length,start), last=endpoint(input->length,end);
+    if (last!=input->length) return myl_native_text_copy(heap,input,first,last>first ? last-first : 0);
+    size_t from=offset_of(input,first), count=input->bytes-from, scalars=last-first;
+    if (count<MYL_TEXT_VIEW_MIN) return myl_native_text_copy(heap,input,first,scalars);
+    const myl_native_text *owner=myl_native_text_owner(input);
+    size_t offset=(size_t)(myl_native_text_storage(input)+from-(const unsigned char *)(owner+1));
+    if (offset>UINT32_MAX || myl_native_header_region(owner)>heap->region_depth)
+        return myl_native_text_copy(heap,input,first,scalars);
+    if (count==input->bytes && myl_native_header_region(input)==heap->region_depth) return rc_text_result(heap,input);
+    return view(heap,input,offset,count,scalars,scalars==count);
 }
 void myl_native_text_range(const myl_native_text *input, int64_t start, int64_t end, myl_native_text_span *span) {
     size_t first=endpoint(input->length,start), last=endpoint(input->length,end);

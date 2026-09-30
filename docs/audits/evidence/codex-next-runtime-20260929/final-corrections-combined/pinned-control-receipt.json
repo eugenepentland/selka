@@ -1,0 +1,81 @@
+{
+  "identity_sha256": "a1c570019d9469dfa26da1af9abbb00ef25981442b8b39106a992d54ff94ebf2",
+  "sizes": {
+    "dev": {
+      "matching_output_pairs": 86,
+      "gc_denominators_unchanged": true,
+      "summary": {
+        "llvm": {
+          "geomean": 1.0691650151165335,
+          "geomean_nonlox": 1.0415492054572735,
+          "rows": 43,
+          "within_1_3": 43,
+          "worst": 1.25595498691153
+        },
+        "qbe": {
+          "geomean": 1.0645143587284929,
+          "geomean_nonlox": 1.0461854522576077,
+          "rows": 43,
+          "within_1_3": 43,
+          "worst": 1.2814184324428286
+        }
+      },
+      "results_sha256": "f9658f1f5e5f57b42e59a92f8cd3c31ac144ea6fc85b844def0fbe94eaa0d6f0",
+      "maximum_absolute_control_movement_percent": 0.29735675345194945
+    },
+    "full": {
+      "matching_output_pairs": 86,
+      "gc_denominators_unchanged": true,
+      "summary": {
+        "llvm": {
+          "geomean": 1.0653030415370388,
+          "geomean_nonlox": 1.0414457436752549,
+          "rows": 43,
+          "within_1_3": 43,
+          "worst": 1.2511384980569804
+        },
+        "qbe": {
+          "geomean": 1.0626991029370911,
+          "geomean_nonlox": 1.0461456226915797,
+          "rows": 43,
+          "within_1_3": 43,
+          "worst": 1.2814184132519388
+        }
+      },
+      "results_sha256": "ccdbd62a2a3a620c6832e7724498754bfd317f5fe76f8912e1e51504e3dcab03",
+      "maximum_absolute_control_movement_percent": 0.0029950595644923084
+    },
+    "smoke": {
+      "matching_output_pairs": 86,
+      "gc_denominators_unchanged": true,
+      "summary": {
+        "llvm": {
+          "geomean": 1.1371224041077184,
+          "geomean_nonlox": 1.041446582510101,
+          "rows": 43,
+          "within_1_3": 36,
+          "worst": 2.357627557541022
+        },
+        "qbe": {
+          "geomean": 1.103402017465164,
+          "geomean_nonlox": 1.0461466312178525,
+          "rows": 43,
+          "within_1_3": 38,
+          "worst": 1.5047751134449172
+        }
+      },
+      "results_sha256": "975f2649d3fbc48a5a94b5306b36ff042ff4673aa126d19bb27fe628ba34c17b",
+      "maximum_absolute_control_movement_percent": 0.007541121683429797
+    }
+  },
+  "environment": {
+    "RC_QUICK_CPUS": "2,3,10,11",
+    "inherited_by_quick_py": true
+  },
+  "artifacts_sha256": {
+    "measure-full.log": "8195a7f5e7d37c03c24a157b21ec6740f77fefda9c023931e2c6339f532743c8",
+    "measure-dev.log": "2e44631181bd1ecc96538914472a7a6074d50ad04c24cb72dea2c56f2d3cf8b8",
+    "measure-smoke.log": "46e7cdaa833350984e239e51aa1afb6bc10b532bfdaea6981766f44f1193e7c6"
+  },
+  "runner_sha256": "f5c6f684d157395dc4db4e181763bdb624226ab78f6ab00578822dcc4fe394c5"
+}

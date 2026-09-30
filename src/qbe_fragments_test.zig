@@ -680,3 +680,182 @@ test "RC-BORROW-COMPOSE-1 caller cache follows transitive callee certificate los
     try t.expect(refused.misses >= 3);
     _ = try expectReusedEqualsFresh(root, &composed);
 }
+
+/// `other` with a pure function that writes its record parameter: a caller
+/// may pass the record's address without a copy only while no such write
+/// exists, and it learns that from the callee's facts.
+const writing_other_source =
+    \\module other
+    \\
+    \\
+    \\public record Box:
+    \\    a: int
+    \\    b: int
+    \\
+    \\
+    \\public def flip(box: Box) -> int effects():
+    \\    box = Box(a=box.b, b=box.a)
+    \\    if box.a > 1000:
+    \\        return flip(box)
+    \\    return box.a * 10 + box.b
+    \\
+    \\
+    \\public def keep(box: Box) -> int effects():
+    \\    if box.a > 1000:
+    \\        return keep(box)
+    \\    return box.a * 10 + box.b
+    \\
+    \\
+    \\public def merge(box: Box, extra: int) -> int effects():
+    \\    if box.a > 1000:
+    \\        return merge(box, extra)
+    \\    return box.a + extra
+    \\
+;
+
+/// Reads each element of a list of records in place across pure calls.
+const borrowing_loop = "    boxes = [other.Box(a=1, b=2), other.Box(a=3, b=4)]\n    spare = 0\n    for s in boxes:\n" ++
+    "        spare += other.flip(s) + s.b + other.keep(s)\n    out.print(spare)\n";
+
+/// The three-module project whose entry reads each list element in place
+/// across calls to `other.flip` and `other.keep`: the element may stay
+/// borrowed across a pure call only when the callee writes no record
+/// parameter (`QBE-ELEMREF-4`), and `flip` writes one.
+const writing: Files = .{
+    .main = replaced(three_main_source, "    ys = other.grow(xs, 4)\n    out.print(other.last(ys))\n", borrowing_loop),
+    .helper = helper_source,
+    .other = writing_other_source,
+};
+
+/// `writing` after an edit to its entry only.
+const writing_edited: Files = .{ .main = replaced(writing.main, "a=3, b=4", "a=3, b=5"), .helper = helper_source, .other = writing_other_source };
+
+// spec: EMIT-WRITES-1
+test "a caller reads a stood-in callee's parameter writes from its facts, not from a body it did not lower" {
+    const collector_runtime = language.runtime_mode.pinCollector();
+    defer language.runtime_mode.set(collector_runtime);
+    var directory = t.tmpDir(.{});
+    defer directory.cleanup();
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const base = try directory.dir.realPathFileAlloc(t.io, ".", a);
+    const root = try std.fs.path.join(a, &.{ base, "standin" });
+    const reference = try std.fs.path.join(a, &.{ base, "full" });
+    _ = try expectStandInMatches(a, root, reference, &writing);
+    // An edit to the entry alone: `flip`, `keep` and `merge` are stood in with
+    // empty bodies, and the entry's unit is emitted afresh — the text must
+    // still be the full emission's, which copies each element before `flip`.
+    const edited = try expectStandInMatches(a, root, reference, &writing_edited);
+    try t.expect(edited.reused >= 3);
+}
+
+// spec-case: EMIT-WRITES-1
+test "RC callers preserve complete physical proofs instead of using bodyless write stand-ins" {
+    const runtime = language.runtime_mode;
+    const saved = runtime.get();
+    defer runtime.set(saved);
+    runtime.set(.rc);
+    var directory = t.tmpDir(.{});
+    defer directory.cleanup();
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const base = try directory.dir.realPathFileAlloc(t.io, ".", a);
+    const root = try std.fs.path.join(a, &.{ base, "standin" });
+    const reference = try std.fs.path.join(a, &.{ base, "full" });
+    const cold = try expectStandInMatches(a, root, reference, &writing);
+    const edited = try expectStandInMatches(a, root, reference, &writing_edited);
+    try t.expectEqual(@as(usize, 0), edited.reused);
+    try t.expectEqual(cold.lowered, edited.lowered);
+}
+
+/// The lean executable emission's report of `files`, through a store at `root`.
+fn reportOf(allocator: std.mem.Allocator, root: []const u8, files: *const Files, executable: bool) !fragments.Report {
+    var opened: Opened = undefined;
+    try opened.init(root);
+    defer opened.deinit();
+    var report: fragments.Report = .{ .arena = allocator };
+    const manifest = try emit(t.allocator, files, .{ .store = &opened.store, .lean = true, .executable = executable, .report = &report });
+    t.allocator.free(manifest);
+    return report;
+}
+
+fn unitKey(report: fragments.Report, name: []const u8) []const u8 {
+    for (report.functions) |entry| if (std.mem.eql(u8, entry.name, name)) return entry.keys.unit;
+    return "";
+}
+
+/// `helper` with a function that invokes a function value, and `other` taking
+/// one more function as a value where nothing reaches it.
+const invoking_helper_source = helper_source ++
+    \\
+    \\
+    \\public def apply(f: def(int) -> int effects(), value: int) -> int effects():
+    \\    return f(value)
+    \\
+    \\
+    \\public def bump(value: int) -> int effects():
+    \\    return value + 1
+    \\
+;
+const invoking: Files = .{
+    .main = replaced(main_source, "    return 0\n", "    return helper.apply(helper.bump, 1)\n"),
+    .helper = invoking_helper_source,
+};
+const invoking_more: Files = .{
+    .main = invoking.main,
+    .helper = invoking_helper_source ++ "\n\npublic def pick() -> def(int) -> int effects():\n    return total_of\n\n\ndef total_of(value: int) -> int effects():\n    return value\n",
+};
+
+// spec: EMIT-VALUE-TARGETS-1
+test "an executable's invoking unit keys on no program-wide function-value target set" {
+    var directory = t.tmpDir(.{});
+    defer directory.cleanup();
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const base = try directory.dir.realPathFileAlloc(t.io, ".", a);
+    // A function value taken somewhere else in the program: the executable's
+    // key of `apply` holds, since its text never read the target set.
+    const before = try reportOf(a, try std.fs.path.join(a, &.{ base, "e1" }), &invoking, true);
+    const after = try reportOf(a, try std.fs.path.join(a, &.{ base, "e2" }), &invoking_more, true);
+    try t.expect(unitKey(before, "helper::apply").len != 0);
+    try t.expectEqualStrings(unitKey(before, "helper::apply"), unitKey(after, "helper::apply"));
+    // A library's unit lists every target as a dependency, so its key moves.
+    const library_before = try reportOf(a, try std.fs.path.join(a, &.{ base, "l1" }), &invoking, false);
+    const library_after = try reportOf(a, try std.fs.path.join(a, &.{ base, "l2" }), &invoking_more, false);
+    try t.expect(!std.mem.eql(u8, unitKey(library_before, "helper::apply"), unitKey(library_after, "helper::apply")));
+    try t.expect(!std.mem.eql(u8, unitKey(before, "helper::apply"), unitKey(library_before, "helper::apply")));
+}
+
+/// Lower `files` and return the first-pass key of the function named `name`.
+fn localKey(allocator: std.mem.Allocator, files: *const Files, name: []const u8) !fragments.Digest {
+    var project = language.project.Project.init(allocator);
+    defer project.deinit();
+    try project.load(.{ .context = @constCast(files), .read = read }, "main", .{});
+    var index = try language.interfaces.build(&project);
+    var compilation = try language.project_compile.Compilation.init(&index);
+    try compilation.emit();
+    const code = compilation.code.?;
+    var keys = try fragments.Keys.init(allocator, code);
+    defer keys.deinit();
+    for (code.functions, 0..) |function, at| {
+        if (std.mem.eql(u8, function.name, name)) return keys.local(at, .{ .step_checks = true, .frame_checks = true, .arenas = false, .entry = false });
+    }
+    return error.TestUnexpectedResult;
+}
+
+// spec: QBE-FRAGMENT-REUSE-2
+test "a caller's key reads each callee parameter's name and type, not the callee body's use of it" {
+    // `keep` reassigning its parameter makes that local mutable in its own
+    // check; a module compiled against `other`'s interface sees `pass`.
+    const reassigning: Files = .{
+        .main = writing.main,
+        .helper = helper_source,
+        .other = comptime replaced(writing_other_source, "    if box.a > 1000:\n        return keep(box)\n", "    box = Box(a=box.a, b=box.b)\n    if box.a > 1000:\n        return keep(box)\n"),
+    };
+    const plain = try localKey(t.allocator, &writing, "main::main");
+    const moved = try localKey(t.allocator, &reassigning, "main::main");
+    try t.expectEqualSlices(u8, &plain, &moved);
+}

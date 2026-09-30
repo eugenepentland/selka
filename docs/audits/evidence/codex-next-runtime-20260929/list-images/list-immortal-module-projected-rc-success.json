@@ -1,0 +1,39 @@
+{
+ "totals": {
+  "programs": 1,
+  "equal": 1,
+  "reference_failed": 0,
+  "modules": 2,
+  "units_compared": 12,
+  "units_whole": 12,
+  "specializations_shared": 0,
+  "interfaces_compared": 2,
+  "executables_identical": 1,
+  "different": []
+ },
+ "results": [
+  {
+   "entry": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-runtime-20260929/.tmp/list-image-project/main.my",
+   "status": "equal",
+   "problems": [],
+   "whole_emit_seconds": 2.433,
+   "modules": 2,
+   "compile_seconds": 2.93,
+   "interfaces_compared": 2,
+   "units_compared": 12,
+   "units_whole": 12,
+   "specializations_shared": 0,
+   "physical_entries_compared": 12,
+   "physical_contracts": {
+    "borrowed": 0,
+    "immortal": 0,
+    "stable_parameters": 1,
+    "stood_in": 6
+   },
+   "link_seconds": 1.785,
+   "link_compiled_function_objects": 0,
+   "executables_identical": true,
+   "exit_status": 0
+  }
+ ]
+}

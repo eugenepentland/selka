@@ -3,6 +3,8 @@
 pub const snapshot_project = @import("project.zig");
 /// Compile-time file embedding exposed to native-test snapshot capture.
 pub const snapshot_embed = @import("embed.zig");
+/// The compiler's language module, for the per-module build `mylang test` runs through.
+pub const compiler_language = @import("compiler.zig");
 test {
     _ = @import("qbe_rc_plain_aggregate_test.zig");
     _ = @import("qbe_rc_fresh_constructor_test.zig");
@@ -25,6 +27,7 @@ test {
     _ = @import("native_rc_arena_test.zig");
     _ = @import("native_rc_hold_test.zig");
     _ = @import("native_rc_fast_test.zig");
+    _ = @import("native_rc_image_test.zig");
     _ = @import("native_file_cleanup_test.zig");
     _ = @import("input_probe_test.zig");
     _ = @import("native_argv_test.zig");
@@ -36,6 +39,8 @@ test {
     _ = @import("native_test_cli_test.zig");
     _ = @import("native_test_cases.zig");
     _ = @import("native_test_snapshot.zig");
+    _ = @import("module_seeder.zig");
+    _ = @import("module_compile_command.zig");
     _ = @import("native_test_plan.zig");
     _ = @import("native_test_dependencies.zig");
     _ = @import("native_test_execute.zig");
@@ -88,6 +93,7 @@ test {
     // so the QBE-TEXT/QBE-LIST checks that pin them existed without running.
     _ = @import("qbe_wire.zig");
     _ = @import("qbe_codecs.zig");
+    _ = @import("module_codecs.zig");
 
     _ = @import("cli_grants.zig");
 
@@ -101,6 +107,7 @@ test {
     _ = @import("python_assert_test.zig");
     _ = @import("contracts_test.zig");
     _ = @import("python_strings_test.zig");
+    _ = @import("python_text_surface_test.zig");
     _ = @import("python_format_test.zig");
     _ = @import("python_comprehension_test.zig");
     _ = @import("collections_fidelity_test.zig");
@@ -160,6 +167,10 @@ test {
     _ = @import("check_cache_test.zig");
     _ = @import("semantic_cache_test.zig");
     _ = @import("check_scale_test.zig");
+    _ = @import("module_interface_test.zig");
+    _ = @import("module_compile_test.zig");
+    _ = @import("module_physical_test.zig");
+    _ = @import("qbe_embeds.zig");
     _ = @import("semantic_key.zig");
     _ = @import("sema_builtins.zig");
     _ = @import("sema_places.zig");
@@ -284,6 +295,8 @@ test {
     _ = @import("qbe_rc_inert_field_test.zig");
     _ = @import("qbe_rc_unique_test.zig");
     _ = @import("qbe_rc_hoist_test.zig");
+    _ = @import("qbe_rc_scope_inline_test.zig");
+    _ = @import("qbe_list_literal_test.zig");
     _ = @import("qbe_rc_fresh_root_test.zig");
     _ = @import("qbe_rc_loop_version_test.zig");
     _ = @import("qbe_rc_scalar_version_test.zig");

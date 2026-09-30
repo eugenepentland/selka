@@ -576,7 +576,7 @@ and a local binding or declared function of the same name still wins. `sum`,
 `zip` cover the scalar folds and list materialization. `sum`, `any`, `all`,
 `min` and `max` accept a list of the element type they name; text extrema compare
 the stored Unicode scalars without allocating an encoding. `sorted` accepts a
-list of `int`, `float` or `str` and returns a new stable ascending list without
+list of integer, `float`, `str` or `bytes` and returns a new stable ascending list without
 changing its input. It and `values.sort()` use a stable merge that keeps the runs
 a list already has, with one work buffer of at most half the list, so ordered
 and reverse-ordered lists sort in linear time and every list in `O(n log n)`. For
@@ -616,7 +616,7 @@ Byte-oriented code uses the managed `bytes` type; see
 `values.sort(key=f, reverse=b)` sorts a list in place and
 `sorted(values, key=f, reverse=b)` returns a sorted copy, spelled as in Python:
 both keywords are optional and keyword-only. The key maps one element to the
-value it is ordered by — any integer type, `bool`, `float`, `str`, or a tuple of
+value it is ordered by — any integer type, `bool`, `float`, `str`, `bytes`, or a tuple of
 those, compared field by field.
 
 ```mylang
@@ -656,7 +656,7 @@ The rules, which match Python's wherever Python defines them:
   Python leaves NaN ordering undefined; this is the one total order the language
   uses everywhere.
 - **Without a key**, `values.sort(reverse=True)` and `sorted(values, reverse=True)`
-  order an `int`, `float` or `str` list by its elements, stably.
+  order an integer, `float`, `str` or `bytes` list by its elements, stably.
 - **In place means in place**: the list keeps its identity, so every alias of it
   sees the new order, and no second list of the elements is built. The extra
   memory is one key per element plus the sort's scratch. `sorted` builds its

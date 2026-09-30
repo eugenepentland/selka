@@ -516,12 +516,10 @@ test "RC an inlined call's first argument read out of an anchored local is bound
     try t.expectEqual(@as(usize, 1), try markersIn(carried, "matches", "# RC-ELEMENT-BORROW-3 local"));
 }
 
-// MUT-EXCLUSIVE-1 rejects `interval(mut frame, mut frame)`, so these refusals
-// are defense in depth: the callee's parameter types alone decide them.
 // spec: RC-INTERVAL-ANCHOR-3
-test "RC mut record roots another mut parameter of their type may name keep their loans" {
-    try t.expect(try operationsIn(aliases, "interval") > try operationsIn(aliases, "distinct_interval"));
-    try t.expect(try operationsIn(aliases, "operand") > try operationsIn(aliases, "distinct_operand"));
+test "RC disjoint mut record parameters anchor interval and operand reads" {
+    try t.expectEqual(try operationsIn(aliases, "distinct_interval"), try operationsIn(aliases, "interval"));
+    try t.expectEqual(try operationsIn(aliases, "distinct_operand"), try operationsIn(aliases, "operand"));
 }
 
 const list_aliases =
@@ -550,8 +548,18 @@ const list_aliases =
 ;
 
 // spec: RC-INTERVAL-ANCHOR-4
-test "RC a mut list another mut parameter of its type may name anchors nothing" {
+test "RC disjoint mut list parameters do not veto readonly anchors" {
+    try t.expect(try markersIn(list_aliases, "aliased", "# RC-READONLY-ANCHOR-1 local") > 0);
+}
+
+// spec-case: MUT-EXCLUSIVE-PROOFS-1
+test "legacy sharing uses collector roots instead of RC anchors" {
+    const legacy = @import("test_support.zig").LegacySharing.enter();
+    defer legacy.restore();
+    const selected = runtime.get();
+    runtime.set(.rc);
+    defer runtime.set(selected);
+    try t.expectEqual(runtime.Selection.gc, runtime.lowered());
+    try t.expectEqual(@as(usize, 0), try operationsIn(aliases, "interval"));
     try t.expectEqual(@as(usize, 0), try markersIn(list_aliases, "aliased", "# RC-READONLY-ANCHOR-1 local"));
-    try t.expect(try markersIn(list_aliases, "distinct", "# RC-READONLY-ANCHOR-1 local") > 0);
-    try t.expect(try operationsIn(list_aliases, "aliased") > try operationsIn(list_aliases, "distinct"));
 }

@@ -1,0 +1,62 @@
+{
+ "totals": {
+  "programs": 2,
+  "equal": 2,
+  "reference_failed": 0,
+  "modules": 8,
+  "units_compared": 78,
+  "units_whole": 77,
+  "specializations_shared": 1,
+  "interfaces_compared": 8,
+  "executables_identical": 2,
+  "different": []
+ },
+ "results": [
+  {
+   "entry": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-runtime-images-20260929/tests/fixtures/module_compile/main.my",
+   "status": "equal",
+   "problems": [],
+   "whole_emit_seconds": 3.428,
+   "modules": 5,
+   "compile_seconds": 4.982,
+   "interfaces_compared": 5,
+   "units_compared": 69,
+   "units_whole": 68,
+   "specializations_shared": 1,
+   "physical_entries_compared": 69,
+   "physical_contracts": {
+    "borrowed": 1,
+    "immortal": 0,
+    "stable_parameters": 0,
+    "stood_in": 7
+   },
+   "link_seconds": 0.798,
+   "link_compiled_function_objects": 0,
+   "executables_identical": true,
+   "exit_status": 1
+  },
+  {
+   "entry": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-runtime-images-20260929/tests/fixtures/interfaces_generic/main.my",
+   "status": "equal",
+   "problems": [],
+   "whole_emit_seconds": 0.674,
+   "modules": 3,
+   "compile_seconds": 1.587,
+   "interfaces_compared": 3,
+   "units_compared": 9,
+   "units_whole": 9,
+   "specializations_shared": 0,
+   "physical_entries_compared": 9,
+   "physical_contracts": {
+    "borrowed": 0,
+    "immortal": 0,
+    "stable_parameters": 0,
+    "stood_in": 1
+   },
+   "link_seconds": 0.54,
+   "link_compiled_function_objects": 0,
+   "executables_identical": true,
+   "exit_status": 15
+  }
+ ]
+}

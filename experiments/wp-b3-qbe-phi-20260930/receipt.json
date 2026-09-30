@@ -1,0 +1,154 @@
+{
+  "base": "790cdfb1b38a06cae3741c0c9bba724f4cf8fb77",
+  "compiler": {
+    "path": ".tmp/phi-install/focus/mylang",
+    "sha256": "bed9ad6ba9f332a2158f9f26aa9a5d4a9e4bf8c836656425b3fdfe96af390b6e"
+  },
+  "qbe_before": {
+    "sha256": "90422d79a9e3bfac7e700857a1fdcaa359aecbdac973c376500432784990e633",
+    "source": "790cdfb1b38a06cae3741c0c9bba724f4cf8fb77"
+  },
+  "qbe_after": {
+    "path": ".tmp/phi-install/focus/qbe",
+    "sha256": "ac76b99fcf254bae3b7ed3cccbe467f223f005014419ce887446ea1444869324"
+  },
+  "results": {
+    "new_native_before": {
+      "assertions": 44,
+      "passed": 36,
+      "failed": 8,
+      "exit": 1
+    },
+    "new_native_after": {
+      "assertions": 44,
+      "passed": 44,
+      "failed": 0,
+      "exit": 0
+    },
+    "minimal_before": {
+      "passed": 0,
+      "failed": 2,
+      "exit": 1
+    },
+    "minimal_after": {
+      "passed": 2,
+      "failed": 0,
+      "exit": 0
+    },
+    "focused_zig": {
+      "passed": 14,
+      "failed": 0,
+      "exit": 0
+    },
+    "guardian_full": {
+      "passed": 88,
+      "failed": 0,
+      "exit": 0
+    },
+    "inputs_and_format": {
+      "before_exit": 1,
+      "before_missing": 4,
+      "after_exit": 0,
+      "after_steps": 27
+    }
+  },
+  "structural_gvn_checks": {
+    "long_boolean_phi_retained": true,
+    "word_boolean_phi_elided": true,
+    "cross_class_both_phis_retained": true,
+    "same_long_phi_reused": true,
+    "same_word_phi_reused": true
+  },
+  "source_hashes": {
+    "vendor/qbe/copy.c": "b0f8a07300c3d66a5fe3e533e88cc968b68af8fedd44a19615675dce1de3bd48",
+    "src/qbe_build_test.zig": "0f0f44453d49914d16b2da34d6f3587352fd5785a8020951ff7ee70576daed92",
+    "tests/qbe_phi_width.c": "b28383775bb28abae9061d535e4c408f3de8be2680067cfb184fc2437de5a162",
+    "tests/qbe_phi_width.ssa": "fcb911550e1b119916b3f00f40246b3b69f926dff4c05d553717c8934e49e14c",
+    "SPEC.md": "872427caf72bd3ccfe9ff29db962810d218686f57461f1096eff19407116da9b",
+    "vendor/README.md": "d60d90fada9ea4d4137a1b31ca76943680735f411dec3895018beb8cc319516f"
+  },
+  "original_binaries": {
+    ".tmp/phi-original/minimal": "79a368a7b92fac1e71ae4bc7a3f7930f54f0fa0821ec46fedee5d805cda0614d",
+    ".tmp/phi-original/candidates.o": "e7868f4465a8811b6167c3f8e709afcbc3e500a3a234d8bbd2cb462abb05e14c",
+    ".tmp/phi-original/candidates": "bb7d9b4d2f03f250528fc449f766e24933749fe7fc01fa3f3354ef273ccee1e1",
+    ".tmp/phi-original/minimal.o": "feacb374d738b26044dc9cb3e590d6182c2914ae804ed2b18b9c2fdc932082bc"
+  },
+  "scope": "Narrow QBE phi-class correctness fix; no timing or broad compiler acceptance claim.",
+  "manifest": {
+    "experiments/wp-b3-qbe-phi-20260930/after/debug.log.gz": "5dc1c01bc3b537c83d9d8b47f076fdc31ecbfa03c8af1308d95823ddd791abb7",
+    "experiments/wp-b3-qbe-phi-20260930/after/execute.log.gz": "d4f30c160f25e89e2668b43300bb576da45f629d9e31447304cc2e02a00d6c5c",
+    "experiments/wp-b3-qbe-phi-20260930/after/link.log.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "experiments/wp-b3-qbe-phi-20260930/after/phi.s": "8003cb135df602a0820ae15c49ae7fdad1ccd3bc7bbe1f350d244884d4ba2163",
+    "experiments/wp-b3-qbe-phi-20260930/after/receipt.json": "0fa6c601900e1bd7e8817bbcfd266969ce619daf36d21a3229e84e38b0ca45dd",
+    "experiments/wp-b3-qbe-phi-20260930/after/translate.log.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "experiments/wp-b3-qbe-phi-20260930/before/debug.log.gz": "7a40d77d9916aced006be067c89e00d9a7ea2eb59a89cca210445fea4bbf996f",
+    "experiments/wp-b3-qbe-phi-20260930/before/execute.log.gz": "64d013b73c0ab46561f3dcb2042bbc65b34ef851752e895319d6a2f7c51a2ab7",
+    "experiments/wp-b3-qbe-phi-20260930/before/link.log.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "experiments/wp-b3-qbe-phi-20260930/before/phi.s": "7f274400db16899fb0ce97024660129f50006f775c2a0e42e4314939b8d3f570",
+    "experiments/wp-b3-qbe-phi-20260930/before/receipt.json": "5138477dcaf34f6f010c1b6ada476834521d22cd0aad161977c522154459c35e",
+    "experiments/wp-b3-qbe-phi-20260930/before/translate.log.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "experiments/wp-b3-qbe-phi-20260930/minimal-after/debug.log.gz": "115e5ad6a0131e441ea858830b5721cbb408a8653e403dd7ce60147315c414e1",
+    "experiments/wp-b3-qbe-phi-20260930/minimal-after/execute.log.gz": "d7d821eb0b338b47a5d7a6a72146e6eb2c720e9db52e58af0b71f1ba1ba492b3",
+    "experiments/wp-b3-qbe-phi-20260930/minimal-after/link.log.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "experiments/wp-b3-qbe-phi-20260930/minimal-after/minimal.s": "a6fc30905ef5c7cadb01ee31355006b756e3707fca57d00bb8bcfd610825ad0b",
+    "experiments/wp-b3-qbe-phi-20260930/minimal-after/receipt.json": "6e65651762f18ac59caefe4a28c9eeb825244d567935d834c8be0745c496990f",
+    "experiments/wp-b3-qbe-phi-20260930/minimal-after/translate.log.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "experiments/wp-b3-qbe-phi-20260930/original-reduction/assembly.log.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "experiments/wp-b3-qbe-phi-20260930/original-reduction/candidates.c": "358d5f69a967804e21c62776eac0b9999193e81a4d6efed589042a869a25768e",
+    "experiments/wp-b3-qbe-phi-20260930/original-reduction/candidates.log.gz": "af799c555f8fd4ee502c0a2f662d242a63117635f22e7dcdf9fcdc2c5c21916e",
+    "experiments/wp-b3-qbe-phi-20260930/original-reduction/candidates.s": "f425b94232ee9598bc04ad08291af4ce8fdda1ba791cc3182fee78fc109b5f97",
+    "experiments/wp-b3-qbe-phi-20260930/original-reduction/candidates.ssa": "93206c4ecda496220ccff1086849e756f5c9de4145c8a8f5fd39609e61acc301",
+    "experiments/wp-b3-qbe-phi-20260930/original-reduction/link.log.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "experiments/wp-b3-qbe-phi-20260930/original-reduction/minimal-assembly.log.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "experiments/wp-b3-qbe-phi-20260930/original-reduction/minimal-debug.log.gz": "943404f1a150c3e5750669432bd6211475698f75e58b34cb86b8a0cc78245522",
+    "experiments/wp-b3-qbe-phi-20260930/original-reduction/minimal-debug.stdout.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "experiments/wp-b3-qbe-phi-20260930/original-reduction/minimal-link.log.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "experiments/wp-b3-qbe-phi-20260930/original-reduction/minimal-qbe.log.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "experiments/wp-b3-qbe-phi-20260930/original-reduction/minimal-run.log.gz": "0d19f2fca902afe60e5b50a4052285a5a6880b34fdeded4fa7f4958f2d6e44ff",
+    "experiments/wp-b3-qbe-phi-20260930/original-reduction/minimal.c": "0e6b87077e82554b2689bc67aa738e403431ee90d7bc14617ed1f9bc47f24afc",
+    "experiments/wp-b3-qbe-phi-20260930/original-reduction/minimal.s": "4d7d20686ea143d030bf425f97a48b2ad88bd60a4424dcd3a7fa1d95d36acfde",
+    "experiments/wp-b3-qbe-phi-20260930/original-reduction/minimal.ssa": "35e42eed28985d6f8c885aed73150ededfcd490a8741e9e0e8f73165fc179bce",
+    "experiments/wp-b3-qbe-phi-20260930/original-reduction/qbe.log.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "experiments/wp-b3-qbe-phi-20260930/phi-build.log.gz": "3ddd97df018330236a1bdc929c4e66d9e2e8e4bd7f04383a16129fec7a24c0ca",
+    "experiments/wp-b3-qbe-phi-20260930/phi-focused.log.gz": "7c180b2017f5757eb75bc979c65aa6b82f4763b429aaf61ffdfc46c8e22c13fa",
+    "experiments/wp-b3-qbe-phi-20260930/phi-guardian-final.log.gz": "3f05b2d229d477e640a683479176b15fe2bff6e382188bb14dc9012d828074f1",
+    "experiments/wp-b3-qbe-phi-20260930/phi-guardian.log.gz": "b64e4a699f3a388338f9769e6a25242905d39bc90e76dcddfdfe3710950a9f34",
+    "experiments/wp-b3-qbe-phi-20260930/phi-inputs-before.log.gz": "e3ea97106efee95e5a9f2449cd2e4bf082b71a52e0af918718d1d7fdb371cf2b",
+    "experiments/wp-b3-qbe-phi-20260930/phi-inputs-fmt-final.log.gz": "5f20b337afb2b7dde8fbc91a62ceda3c3e8b3d625c4f59d191e26ef1334699e6",
+    "experiments/wp-b3-qbe-phi-20260930/phi-inputs-fmt.log.gz": "8df90169c349f6a10d1c982b0c966a0fcde6e7a6238fbef9ccae9f1d70b94d89",
+    "experiments/wp-b3-qbe-phi-20260930/run_minimal.py": "ab4819023e4f64b195c772259478477beb940a0d4e8a90e91ff4c29ca0fb8cda",
+    "experiments/wp-b3-qbe-phi-20260930/run_phi.py": "379db960dce72d9b6f10a75d85cd3ade0593783f22acfc7fc26ec10384991616"
+  },
+  "compiler_source_checkpoint": "d0537d01108eda48339cb9b46abfd8510338cdea",
+  "input_checkpoint": "e5ed9195aa8bb649a113e458b51c686e49c85e27",
+  "input_declarations_sha256": "a9bfd50e027b7471ccb5d89823d0db592cb6615bc4b43fed1b9c3824e5320b22",
+  "original_raw_hashes": {
+    ".tmp/phi-original/assembly.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    ".tmp/phi-original/candidates": "bb7d9b4d2f03f250528fc449f766e24933749fe7fc01fa3f3354ef273ccee1e1",
+    ".tmp/phi-original/candidates.c": "358d5f69a967804e21c62776eac0b9999193e81a4d6efed589042a869a25768e",
+    ".tmp/phi-original/candidates.log": "c8e6c2dd465f093ab34d5967caed2e3c82a6a62399a13a7a507fadd0ea0c87f8",
+    ".tmp/phi-original/candidates.o": "e7868f4465a8811b6167c3f8e709afcbc3e500a3a234d8bbd2cb462abb05e14c",
+    ".tmp/phi-original/candidates.s": "f425b94232ee9598bc04ad08291af4ce8fdda1ba791cc3182fee78fc109b5f97",
+    ".tmp/phi-original/candidates.ssa": "93206c4ecda496220ccff1086849e756f5c9de4145c8a8f5fd39609e61acc301",
+    ".tmp/phi-original/link.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    ".tmp/phi-original/minimal": "79a368a7b92fac1e71ae4bc7a3f7930f54f0fa0821ec46fedee5d805cda0614d",
+    ".tmp/phi-original/minimal-assembly.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    ".tmp/phi-original/minimal-debug.log": "e6cc99c3cf9ec69735fecc18aa699f13d15de4678fdadc528d9e033c58af4a3f",
+    ".tmp/phi-original/minimal-debug.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    ".tmp/phi-original/minimal-link.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    ".tmp/phi-original/minimal-qbe.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    ".tmp/phi-original/minimal-run.log": "7492bb0e862a8e571db33f5f8a5bd8105a42cc90e1977945e809be61906df3ef",
+    ".tmp/phi-original/minimal.c": "0e6b87077e82554b2689bc67aa738e403431ee90d7bc14617ed1f9bc47f24afc",
+    ".tmp/phi-original/minimal.o": "feacb374d738b26044dc9cb3e590d6182c2914ae804ed2b18b9c2fdc932082bc",
+    ".tmp/phi-original/minimal.s": "4d7d20686ea143d030bf425f97a48b2ad88bd60a4424dcd3a7fa1d95d36acfde",
+    ".tmp/phi-original/minimal.ssa": "35e42eed28985d6f8c885aed73150ededfcd490a8741e9e0e8f73165fc179bce",
+    ".tmp/phi-original/qbe.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "binary_stability": {
+    "compiler_before": "bed9ad6ba9f332a2158f9f26aa9a5d4a9e4bf8c836656425b3fdfe96af390b6e",
+    "compiler_after": "bed9ad6ba9f332a2158f9f26aa9a5d4a9e4bf8c836656425b3fdfe96af390b6e",
+    "qbe_before": "ac76b99fcf254bae3b7ed3cccbe467f223f005014419ce887446ea1444869324",
+    "qbe_after": "ac76b99fcf254bae3b7ed3cccbe467f223f005014419ce887446ea1444869324"
+  },
+  "guardian_feedback": "a5c4aa3db35f3a593b31539dc403d1baaacce70b"
+}

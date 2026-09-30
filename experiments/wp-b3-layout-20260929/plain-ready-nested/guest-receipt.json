@@ -1,0 +1,180 @@
+[
+  {
+    "program": "fannkuch",
+    "mode": "qbe",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-next-runtime-plain-query-20260930/.tmp/plain-query/compiler/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/bench/parity/suite/fannkuch_redux.my",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-next-runtime-plain-query-20260930/.tmp/plain-query/guest-final/fannkuch-qbe/fannkuch",
+      "--rc-runtime",
+      "--keep-symbols",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-next-runtime-plain-query-20260930/.tmp/plain-query/guest-final/cache",
+      "--backend",
+      "qbe"
+    ],
+    "status": 0,
+    "stdout": "73196\nPfannkuchen(10) = 38\n",
+    "emitted_ordinary_calls": 3,
+    "emitted_hot_calls": 0,
+    "machine_calls": [
+      " 10111cd:\te8 ae 46 01 00       \tcall   1025880 <myl_rc_list_plain_ready>",
+      " 101127f:\te8 fc 45 01 00       \tcall   1025880 <myl_rc_list_plain_ready>",
+      " 1011d04:\te8 77 3b 01 00       \tcall   1025880 <myl_rc_list_plain_ready>",
+      " 1011daf:\te8 cc 3a 01 00       \tcall   1025880 <myl_rc_list_plain_ready>",
+      " 1012823:\te8 58 30 01 00       \tcall   1025880 <myl_rc_list_plain_ready>",
+      " 10128cf:\te8 ac 2f 01 00       \tcall   1025880 <myl_rc_list_plain_ready>"
+    ],
+    "binary_sha256": "81fad6e99f705f1c6bbf9cf77cc7c2a8ef92c6609aa8f637d8f492f1a5785b46",
+    "source_sha256": "0a7441bd509f728d0b3db53ddfdf6a5c027fcb3468d467c42d00850839d9a8f4",
+    "assembly_sha256": "03de0d57fae4d3cf171d1d15e301f783b4b964bd14f3f016bad4d1682e7c7aef"
+  },
+  {
+    "program": "fannkuch",
+    "mode": "llvm-full",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-next-runtime-plain-query-20260930/.tmp/plain-query/compiler/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/bench/parity/suite/fannkuch_redux.my",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-next-runtime-plain-query-20260930/.tmp/plain-query/guest-final/fannkuch-llvm-full/fannkuch",
+      "--rc-runtime",
+      "--keep-symbols",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-next-runtime-plain-query-20260930/.tmp/plain-query/guest-final/cache",
+      "--backend",
+      "llvm",
+      "--llvm-opt",
+      "3",
+      "--lto=full"
+    ],
+    "status": 0,
+    "stdout": "73196\nPfannkuchen(10) = 38\n",
+    "emitted_ordinary_calls": 3,
+    "emitted_hot_calls": 0,
+    "machine_calls": [
+      " 1023288:\te8 e3 65 00 00       \tcall   1029870 <myl_rc_list_plain_ready>",
+      " 1023507:\te8 64 63 00 00       \tcall   1029870 <myl_rc_list_plain_ready>",
+      " 10237e7:\te8 84 60 00 00       \tcall   1029870 <myl_rc_list_plain_ready>"
+    ],
+    "binary_sha256": "87ba3414b680875da8b77c78782d45a8a0bfc4c76a4bea90087aac0c8cd5764b",
+    "source_sha256": "0a7441bd509f728d0b3db53ddfdf6a5c027fcb3468d467c42d00850839d9a8f4",
+    "assembly_sha256": "9981274f5d06d7ed87b088ba9c259c4cd1c43ca9da727c8e5bfe96acc7d3b153"
+  },
+  {
+    "program": "alloc",
+    "mode": "qbe",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-next-runtime-plain-query-20260930/.tmp/plain-query/compiler/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/bench/parity/micro/alloc_churn.my",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-next-runtime-plain-query-20260930/.tmp/plain-query/guest-final/alloc-qbe/alloc",
+      "--rc-runtime",
+      "--keep-symbols",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-next-runtime-plain-query-20260930/.tmp/plain-query/guest-final/cache",
+      "--backend",
+      "qbe"
+    ],
+    "status": 0,
+    "stdout": "999739\n",
+    "emitted_ordinary_calls": 0,
+    "emitted_hot_calls": 1,
+    "machine_calls": [
+      " 1007d35:\te8 d6 79 00 00       \tcall   100f710 <myl_rc_list_plain_ready>",
+      " 1007df6:\te8 f5 79 00 00       \tcall   100f7f0 <myl_rc_list_plain_ready_hot>"
+    ],
+    "binary_sha256": "9bf088fa30b25b9668821d379a4d8359c0fb54b0af1c5ac58deb2993ec94150b",
+    "source_sha256": "d4a37e7fa38f210b45b9cc22c2fb8d88794c9380cdda43808222bf50c7dd78ee",
+    "assembly_sha256": "dad1a91132ca2c64577752ebbb17447c98e760561dc849d8ca5a83b0472b8d15"
+  },
+  {
+    "program": "alloc",
+    "mode": "llvm-none",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-next-runtime-plain-query-20260930/.tmp/plain-query/compiler/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/bench/parity/micro/alloc_churn.my",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-next-runtime-plain-query-20260930/.tmp/plain-query/guest-final/alloc-llvm-none/alloc",
+      "--rc-runtime",
+      "--keep-symbols",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-next-runtime-plain-query-20260930/.tmp/plain-query/guest-final/cache",
+      "--backend",
+      "llvm",
+      "--llvm-opt",
+      "3"
+    ],
+    "status": 0,
+    "stdout": "999739\n",
+    "emitted_ordinary_calls": 0,
+    "emitted_hot_calls": 1,
+    "machine_calls": [
+      " 1008da6:\te8 e5 79 00 00       \tcall   1010790 <myl_rc_list_plain_ready>",
+      " 1008f7f:\te8 ec 78 00 00       \tcall   1010870 <myl_rc_list_plain_ready_hot>"
+    ],
+    "binary_sha256": "aa39f394b3262625dccec5ada58e747da6646e3915db253449307dd031117271",
+    "source_sha256": "d4a37e7fa38f210b45b9cc22c2fb8d88794c9380cdda43808222bf50c7dd78ee",
+    "assembly_sha256": "253b618c279cd9419b28bfcbf0c4fdd0ac48832df370613026f501cf1be52035"
+  },
+  {
+    "program": "alloc",
+    "mode": "llvm-full",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-next-runtime-plain-query-20260930/.tmp/plain-query/compiler/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/bench/parity/micro/alloc_churn.my",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-next-runtime-plain-query-20260930/.tmp/plain-query/guest-final/alloc-llvm-full/alloc",
+      "--rc-runtime",
+      "--keep-symbols",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-next-runtime-plain-query-20260930/.tmp/plain-query/guest-final/cache",
+      "--backend",
+      "llvm",
+      "--llvm-opt",
+      "3",
+      "--lto=full"
+    ],
+    "status": 0,
+    "stdout": "999739\n",
+    "emitted_ordinary_calls": 0,
+    "emitted_hot_calls": 1,
+    "machine_calls": [],
+    "binary_sha256": "c2b19b9eefc0c6f0b8361d6adaa3218fcaf058018b566ad5694846bb87a129ae",
+    "source_sha256": "d4a37e7fa38f210b45b9cc22c2fb8d88794c9380cdda43808222bf50c7dd78ee",
+    "assembly_sha256": "5f414f02e580f75e08774af75fc33a28384a0dfdc323675a08b0dc4fed1a0230"
+  },
+  {
+    "program": "alloc",
+    "mode": "llvm-thin",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-next-runtime-plain-query-20260930/.tmp/plain-query/compiler/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/bench/parity/micro/alloc_churn.my",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-next-runtime-plain-query-20260930/.tmp/plain-query/guest-final/alloc-llvm-thin/alloc",
+      "--rc-runtime",
+      "--keep-symbols",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-next-runtime-plain-query-20260930/.tmp/plain-query/guest-final/cache",
+      "--backend",
+      "llvm",
+      "--llvm-opt",
+      "3",
+      "--lto=thin"
+    ],
+    "status": 0,
+    "stdout": "999739\n",
+    "emitted_ordinary_calls": 0,
+    "emitted_hot_calls": 1,
+    "machine_calls": [],
+    "binary_sha256": "aaeb9ea82e2d3cae9db6b18b99b72fedfc66caec780d8c5fb8db7d8e22479c6d",
+    "source_sha256": "d4a37e7fa38f210b45b9cc22c2fb8d88794c9380cdda43808222bf50c7dd78ee",
+    "assembly_sha256": "16e4f8e6cf3da67d9f6f7ad95df20d1ee19624efce5158dfc93756292e3d583a"
+  }
+]

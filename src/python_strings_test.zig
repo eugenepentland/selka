@@ -16,7 +16,7 @@ fn reject(source: []const u8, code: []const u8) !void {
 }
 
 // spec-case: PY-STR-2
-test "string methods are rejected on lists and empty needles trap" {
+test "string methods are rejected on lists and empty split separators trap" {
     try reject(
         \\def main() -> int:
         \\    values = [1, 2]
@@ -29,7 +29,7 @@ test "string methods are rejected on lists and empty needles trap" {
         \\    _ = counts.upper()
         \\    return 0
     , "E_COLLECTION_METHOD");
-    var c = try language.Compilation.init(t.allocator, "strings.my", "def main() -> int:\n    return \"ab\".find(\"\")\n");
+    var c = try language.Compilation.init(t.allocator, "strings.my", "def main() -> int:\n    return len(\"ab\".split(\"\"))\n");
     defer c.deinit();
     const result = try native.run(&c);
     try t.expect(result.trapped());

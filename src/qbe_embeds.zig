@@ -39,8 +39,8 @@ pub const Entry = struct {
     hex: []const u8,
 };
 
-/// Every distinct file the program's embed calls read, in the order their calls
-/// appear, ready for the manifest. A call whose file did not read is skipped:
+/// Every distinct file the program's embed calls read, in canonical symbol
+/// order, ready for the manifest. A call whose file did not read is skipped:
 /// the checker already rejected it.
 pub fn table(allocator: std.mem.Allocator, src: source.Source, layouts: *const native_types.Catalog) (std.mem.Allocator.Error || native_types.Error)![]const Entry {
     var entries: std.ArrayList(Entry) = .empty;
@@ -56,7 +56,12 @@ pub fn table(allocator: std.mem.Allocator, src: source.Source, layouts: *const n
         if ((try seen.getOrPut(allocator, name)).found_existing) continue;
         try entries.append(allocator, try entry(allocator, layouts, name, file));
     };
+    std.mem.sort(Entry, entries.items, {}, entryBefore);
     return entries.toOwnedSlice(allocator);
+}
+
+fn entryBefore(_: void, left: Entry, right: Entry) bool {
+    return std.mem.order(u8, left.symbol, right.symbol) == .lt;
 }
 
 /// The manifest row for one file.
@@ -94,4 +99,22 @@ test "embed symbols name the kind and the content digest" {
     try std.testing.expect(std.mem.startsWith(u8, &text_symbol, "myl_emb_s_abab"));
     digest[0] = 0;
     try std.testing.expect(!std.mem.eql(u8, &bytes_symbol, &symbol(false, digest)));
+}
+
+// spec-case: EMBED-1
+test "embed metadata uses the same canonical order across source and module visitation" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var layouts = try native_types.Catalog.initRecords(a, &.{});
+    defer layouts.deinit();
+    const first: source.Embed = .{ .literal = .{ .start = 0, .end = 1 }, .path = "first", .status = .ok, .digest = @splat(1), .contents = "a" };
+    const second: source.Embed = .{ .literal = .{ .start = 2, .end = 3 }, .path = "second", .status = .ok, .digest = @splat(2), .contents = "bb" };
+    const forward: source.Source = .{ .path = "main.my", .bytes = "", .line_starts = &.{0}, .embeds = &.{ first, second, first } };
+    var backward = forward;
+    backward.embeds = &.{ second, first };
+    const left = try table(a, forward, &layouts);
+    const right = try table(a, backward, &layouts);
+    try std.testing.expectEqual(@as(usize, 2), left.len);
+    try std.testing.expectEqualStrings(try std.json.Stringify.valueAlloc(a, left, .{}), try std.json.Stringify.valueAlloc(a, right, .{}));
 }

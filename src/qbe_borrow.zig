@@ -687,9 +687,17 @@ fn blindCall(comptime E: type, self: *E, callee: typed.FunctionId) Error!bool {
     if (id >= self.pure.len or !self.pure[id]) return false;
     const function = self.program.functions[id];
     if (function.signature.mutates.len != 0 or function.signature.declared_mutates.len != 0) return false;
+    // EMIT-WRITES-1: the callee's parameter writes come from its facts when
+    // the emission has them, since its body may be one this emission never
+    // lowered (a stand-in or another module's function).
+    const known: ?[]const bool = if (id < self.writes.len) self.writes[id] else null;
     for (function.scope.locals[0..function.signature.parameter_count], 0..) |parameter, index| {
         if ((try self.layout(parameter.ty)).trace) return false;
         if (self.isScalar(parameter.ty)) continue;
+        if (known) |flags| {
+            if (index >= flags.len or flags[index]) return false;
+            continue;
+        }
         for (0..function.scope.instructions.len) |at| if (writesLocalAt(function, at, index)) return false;
     }
     return true;

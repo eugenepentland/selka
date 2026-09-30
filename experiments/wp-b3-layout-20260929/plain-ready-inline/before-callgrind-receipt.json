@@ -1,0 +1,49 @@
+{
+  "tool": "valgrind-3.26.0",
+  "tool_deb_sha256": "70b10c31307700a388262baa9cff7a3b27814a9716b6f19e8f748a56bcbfa442",
+  "measurement": "Exact simulated retired instruction/basic-block counts on code-identical symbol-preserving counterparts; no system installation.",
+  "sides": {
+    "control": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-combined-module-review-20260930/scripts/build-slot.sh",
+        "build",
+        "taskset",
+        "-c",
+        "0",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-combined-module-review-20260930/.tmp/alloc-churn-attribution/valgrind-local/usr/bin/valgrind",
+        "--tool=callgrind",
+        "--dump-instr=yes",
+        "--collect-jumps=yes",
+        "--compress-pos=no",
+        "--compress-strings=no",
+        "--callgrind-out-file=/home/epentland/ai/canopy/mylang-worktrees/codex-next-combined-module-review-20260930/.tmp/alloc-churn-attribution/control/callgrind.out",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-combined-module-review-20260930/.tmp/alloc-churn-attribution/control/alloc_churn.symbols"
+      ],
+      "status": 0,
+      "elapsed_seconds": 7.231434321962297,
+      "stdout": "999739\n",
+      "stderr": "==2062457== Callgrind, a call-graph generating cache profiler\n==2062457== Copyright (C) 2002-2017, and GNU GPL'd, by Josef Weidendorfer et al.\n==2062457== Using Valgrind-3.26.0 and LibVEX; rerun with -h for copyright info\n==2062457== Command: /home/epentland/ai/canopy/mylang-worktrees/codex-next-combined-module-review-20260930/.tmp/alloc-churn-attribution/control/alloc_churn.symbols\n==2062457== \n==2062457== For interactive control, run 'callgrind_control -h'.\n==2062457== \n==2062457== Events    : Ir\n==2062457== Collected : 2140315994\n==2062457== \n==2062457== I   refs:      2,140,315,994\n"
+    },
+    "candidate": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-combined-module-review-20260930/scripts/build-slot.sh",
+        "build",
+        "taskset",
+        "-c",
+        "0",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-combined-module-review-20260930/.tmp/alloc-churn-attribution/valgrind-local/usr/bin/valgrind",
+        "--tool=callgrind",
+        "--dump-instr=yes",
+        "--collect-jumps=yes",
+        "--compress-pos=no",
+        "--compress-strings=no",
+        "--callgrind-out-file=/home/epentland/ai/canopy/mylang-worktrees/codex-next-combined-module-review-20260930/.tmp/alloc-churn-attribution/candidate/callgrind.out",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-combined-module-review-20260930/.tmp/alloc-churn-attribution/candidate/alloc_churn.symbols"
+      ],
+      "status": 0,
+      "elapsed_seconds": 7.5448411400429904,
+      "stdout": "999739\n",
+      "stderr": "==2062537== Callgrind, a call-graph generating cache profiler\n==2062537== Copyright (C) 2002-2017, and GNU GPL'd, by Josef Weidendorfer et al.\n==2062537== Using Valgrind-3.26.0 and LibVEX; rerun with -h for copyright info\n==2062537== Command: /home/epentland/ai/canopy/mylang-worktrees/codex-next-combined-module-review-20260930/.tmp/alloc-churn-attribution/candidate/alloc_churn.symbols\n==2062537== \n==2062537== For interactive control, run 'callgrind_control -h'.\n==2062537== \n==2062537== Events    : Ir\n==2062537== Collected : 2205312978\n==2062537== \n==2062537== I   refs:      2,205,312,978\n"
+    }
+  }
+}

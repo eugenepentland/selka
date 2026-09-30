@@ -1,0 +1,200 @@
+[
+  {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/.tmp-rc-quick/results-m17-codex-dev.json",
+    "sha256": "42579ee700bdd8600fd9ff5c28ba16950a28e3be80cfa71758f9ef23548ac772",
+    "tag": "m17-codex",
+    "size": "dev",
+    "rows": [
+      {
+        "arm": "qbe",
+        "gc": 5755840186,
+        "id": "parity/suite/fannkuch_redux",
+        "ratio": 1.044573088499577,
+        "rc": 6012395760
+      },
+      {
+        "arm": "llvm",
+        "gc": 1985384623,
+        "id": "parity/suite/fannkuch_redux",
+        "ratio": 0.9965880661502434,
+        "rc": 1978610622
+      }
+    ]
+  },
+  {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/.tmp-rc-quick/results-m17-codex-smoke.json",
+    "sha256": "3c4feb7471b08c2053b72b4c7130b04437997d061711de24dfa23dc48b508d42",
+    "tag": "m17-codex",
+    "size": "smoke",
+    "rows": [
+      {
+        "arm": "qbe",
+        "gc": 5755840186,
+        "id": "parity/suite/fannkuch_redux",
+        "ratio": 1.0445730700834994,
+        "rc": 6012395654
+      },
+      {
+        "arm": "llvm",
+        "gc": 1985384623,
+        "id": "parity/suite/fannkuch_redux",
+        "ratio": 0.9965880364330796,
+        "rc": 1978610563
+      }
+    ]
+  },
+  {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/.tmp-rc-quick/results-m17-codex-full.json",
+    "sha256": "29bdae3a7a7f53972d219da5885ebfc02b6b23939267766577fd6f7da59cb32d",
+    "tag": "m17-codex",
+    "size": "full",
+    "rows": [
+      {
+        "arm": "qbe",
+        "gc": 5755840186,
+        "id": "parity/suite/fannkuch_redux",
+        "ratio": 1.044573033251344,
+        "rc": 6012395442
+      },
+      {
+        "arm": "llvm",
+        "gc": 1985384623,
+        "id": "parity/suite/fannkuch_redux",
+        "ratio": 0.9965879034613637,
+        "rc": 1978610299
+      }
+    ]
+  },
+  {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/.tmp-rc-quick/results-phase-b-publish-combined-dev.json",
+    "sha256": "f0d2044d1dd8626ccfed432c8f0dddcf82170b8d6b883ec987cfab8b41476d6c",
+    "tag": "phase-b-publish-combined",
+    "size": "dev",
+    "rows": [
+      {
+        "arm": "qbe",
+        "gc": 5755840186,
+        "id": "parity/suite/fannkuch_redux",
+        "ratio": 1.0445728384926356,
+        "rc": 6012394321
+      },
+      {
+        "arm": "llvm",
+        "gc": 1985384623,
+        "id": "parity/suite/fannkuch_redux",
+        "ratio": 0.9965867339146809,
+        "rc": 1978607977
+      }
+    ]
+  },
+  {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/.tmp-rc-quick/results-phase-b-publish-combined-smoke.json",
+    "sha256": "db92698d22d698e3028e7ee8b8a975ab76c69fb5080eb18d9a397298b39011ed",
+    "tag": "phase-b-publish-combined",
+    "size": "smoke",
+    "rows": [
+      {
+        "arm": "qbe",
+        "gc": 5755840186,
+        "id": "parity/suite/fannkuch_redux",
+        "ratio": 1.044572841619894,
+        "rc": 6012394339
+      },
+      {
+        "arm": "llvm",
+        "gc": 1985384623,
+        "id": "parity/suite/fannkuch_redux",
+        "ratio": 0.9965867404625305,
+        "rc": 1978607990
+      }
+    ]
+  },
+  {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/.tmp-rc-quick/results-phase-b-publish-combined-full.json",
+    "sha256": "10d286e88514b12b2bedeed9bd886cf42f34cb94c766876d92788b5457960152",
+    "tag": "phase-b-publish-combined",
+    "size": "full",
+    "rows": [
+      {
+        "arm": "qbe",
+        "gc": 5755840186,
+        "id": "parity/suite/fannkuch_redux",
+        "ratio": 1.044572860383445,
+        "rc": 6012394447
+      },
+      {
+        "arm": "llvm",
+        "gc": 1985384623,
+        "id": "parity/suite/fannkuch_redux",
+        "ratio": 0.9965867354257231,
+        "rc": 1978607980
+      }
+    ]
+  },
+  {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/.tmp-rc-quick/results-phase-b-plain-combined-dev.json",
+    "sha256": "a0b656b930afb1d712fea996d1a0d02bd81fbb1ee853f3201fd3e76a633dc61e",
+    "tag": "phase-b-plain-combined",
+    "size": "dev",
+    "rows": [
+      {
+        "arm": "qbe",
+        "gc": 5755840186,
+        "id": "parity/suite/fannkuch_redux",
+        "ratio": 1.044572840403738,
+        "rc": 6012394332
+      },
+      {
+        "arm": "llvm",
+        "gc": 1985384623,
+        "id": "parity/suite/fannkuch_redux",
+        "ratio": 1.033724170230969,
+        "rc": 2052340072
+      }
+    ]
+  },
+  {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/.tmp-rc-quick/results-phase-b-plain-combined-smoke.json",
+    "sha256": "cdd5b4b4f6232c2d69863c2329a0803210cb306dbb1d21c18d4031ceefd76916",
+    "tag": "phase-b-plain-combined",
+    "size": "smoke",
+    "rows": [
+      {
+        "arm": "qbe",
+        "gc": 5755840186,
+        "id": "parity/suite/fannkuch_redux",
+        "ratio": 1.0445728440522062,
+        "rc": 6012394353
+      },
+      {
+        "arm": "llvm",
+        "gc": 1985384623,
+        "id": "parity/suite/fannkuch_redux",
+        "ratio": 1.0337241959186867,
+        "rc": 2052340123
+      }
+    ]
+  },
+  {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/.tmp-rc-quick/results-phase-b-plain-combined-full.json",
+    "sha256": "4db1dc28c1be45609ba356d328e4063dbbbc28341409d4084e398630b3d24c20",
+    "tag": "phase-b-plain-combined",
+    "size": "full",
+    "rows": [
+      {
+        "arm": "qbe",
+        "gc": 5755840186,
+        "id": "parity/suite/fannkuch_redux",
+        "ratio": 1.0445728390138453,
+        "rc": 6012394324
+      },
+      {
+        "arm": "llvm",
+        "gc": 1985384623,
+        "id": "parity/suite/fannkuch_redux",
+        "ratio": 1.0337241782898607,
+        "rc": 2052340088
+      }
+    ]
+  }
+]

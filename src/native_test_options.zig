@@ -21,6 +21,9 @@ pub const Flags = struct {
     /// `--gc-stress` runs every collected test with the runtime's stress
     /// collector, the same coverage `native_execute` gets from its own flag.
     gc_stress: bool = false,
+    /// `--whole-program` (MODULE-TEST-1) checks and builds the tests with the
+    /// whole-program session instead of module by module.
+    whole_program: bool = false,
     /// Output-channel switches, grouped apart from the execution switches.
     output: Output = .{},
     /// Output channel selection: the work report and the JSON report.
@@ -106,6 +109,7 @@ pub const usage = "usage: mylang test <entry.my|directory> [--filter SUBSTRING|G
     "  a test build uses QBE in either mode; --release builds the LLVM release path\n" ++
     "    (ReleaseFast, --llvm-opt 3 --lto) and refuses --mode and --qbe\n" ++
     "  --gc-stress  run every collected test under the runtime's stress collector\n" ++
+    "  --whole-program  check and build with one whole-program session, not module by module\n" ++
     "  --mode Debug|ReleaseFast\n" ++
     "  --max-steps N --max-frames N --max-calls N --timeout-ms N\n" ++
     "  --max-memory BYTES  per-test byte ceiling (K/M/G suffixes; default 512M)\n" ++
@@ -177,6 +181,10 @@ pub fn parse(args: []const []const u8) Error!Options {
         }
         if (std.mem.eql(u8, arg, "--gc-stress")) {
             result.flags.gc_stress = true;
+            continue;
+        }
+        if (std.mem.eql(u8, arg, "--whole-program")) {
+            result.flags.whole_program = true;
             continue;
         }
         // `--release` rides in `link_arguments`, where the session finds it and

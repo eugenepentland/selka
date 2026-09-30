@@ -1,0 +1,148 @@
+{
+  "source_commit": "a3e451d76ebfa875a989151f995ffc4e84687db0",
+  "source_tree": "bcdd90bbf7d95f5f92914086d140c1507a1034f6",
+  "compiler_sha256": "85fcf4408832492a601306f2ed5453595770fbb681081192d26b99935e0fc255",
+  "qbe_sha256": "90e368d62b838c41cd2ba4bc68ec5d33843ebc661014d2ad40c835dded900d95",
+  "scope": "Independent read-only final module/performance artifact verification, plus specifically authorized retained fixture replay.",
+  "corpus": {
+    "distinct_programs": 29,
+    "corpus_rows": 43,
+    "equal": 29,
+    "executables_identical": 29,
+    "modules": 62,
+    "units_compared": 664,
+    "interfaces_compared": 62,
+    "reference_failed": 0,
+    "different": [],
+    "physical_entries_compared": 679,
+    "serialized_il_meta_byte_pairs_equal": 1328
+  },
+  "additional_retained_fixture_replay": {
+    "runtime_modes": 4,
+    "program_mode_pairs": 8,
+    "modules_compared": 36,
+    "interfaces_compared": 36,
+    "unit_rows_compared": 320,
+    "physical_entries_compared": 325,
+    "runtime_elf_pairs_equal": 8,
+    "runtime_serialized_il_meta_pairs_equal": 640,
+    "corpus_serialized_il_meta_pairs_equal": 1328,
+    "compiled_function_objects": 0,
+    "problems": 0,
+    "reference_failures": 0
+  },
+  "performance": {
+    "dev": {
+      "pairs_reported_matching": 86,
+      "failure_rows": 0,
+      "regressions_above_one_percent": 0,
+      "fresh_regressions_above_one_percent": 0,
+      "max_approved_regression_percent": 0.7924673006262983,
+      "max_fresh_regression_percent": 0.7924634789858276,
+      "caps": []
+    },
+    "smoke": {
+      "pairs_reported_matching": 86,
+      "failure_rows": 0,
+      "regressions_above_one_percent": 6,
+      "fresh_regressions_above_one_percent": 6,
+      "max_approved_regression_percent": 2.919184135604236,
+      "max_fresh_regression_percent": 2.9269459818457744,
+      "caps": [
+        {
+          "id": "lox/vm/closures",
+          "arm": "llvm",
+          "ratio": 1.3383394340909407
+        },
+        {
+          "id": "lox/vm/invocation",
+          "arm": "qbe",
+          "ratio": 1.3030425951079585
+        },
+        {
+          "id": "lox/vm/invocation",
+          "arm": "llvm",
+          "ratio": 1.4588350329652804
+        },
+        {
+          "id": "lox/vm/properties",
+          "arm": "qbe",
+          "ratio": 1.348769968983928
+        },
+        {
+          "id": "lox/vm/properties",
+          "arm": "llvm",
+          "ratio": 1.554864410904141
+        },
+        {
+          "id": "lox/vm/string_equality",
+          "arm": "qbe",
+          "ratio": 1.3873169617384669
+        },
+        {
+          "id": "lox/vm/string_equality",
+          "arm": "llvm",
+          "ratio": 2.415996113108007
+        },
+        {
+          "id": "lox/vm/trees",
+          "arm": "qbe",
+          "ratio": 1.4964348685308908
+        },
+        {
+          "id": "lox/vm/trees",
+          "arm": "llvm",
+          "ratio": 1.761188516154185
+        },
+        {
+          "id": "lox/vm/zoo",
+          "arm": "llvm",
+          "ratio": 1.352889511738466
+        }
+      ]
+    },
+    "full": {
+      "pairs_reported_matching": 86,
+      "failure_rows": 0,
+      "regressions_above_one_percent": 0,
+      "fresh_regressions_above_one_percent": 0,
+      "max_approved_regression_percent": 0.8870108132322141,
+      "max_fresh_regression_percent": 0.8870032309810982,
+      "caps": []
+    }
+  },
+  "binary_sha256_checks": {
+    "candidate": 58,
+    "approved_a5": 58,
+    "accepted_gc": 58
+  },
+  "fresh_a5_metadata_explicitly_checked": {
+    "sizes": [
+      "dev",
+      "smoke",
+      "full"
+    ],
+    "tag": "m17-codex",
+    "compiler": {
+      "compiler": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/.tmp-rc-quick/compilers/m17-codex/bin/mylang",
+      "runtime": "--rc-runtime",
+      "sha256": "4059a85e3d081f8a73b370e03e7d86cba8eb8a47531bfcdd7c09e6cc109d74b1"
+    }
+  },
+  "full_measurement_receipt_valid": true,
+  "all_sources_compiler_inputs_stable": true,
+  "actionable_discrepancies": [],
+  "limits": [
+    "Original fixture runtime JSONs have no embedded identity and their successful work artifacts were deleted. The pinned wrapper/summary binds original source/compiler; authorized retained replay independently confirms the original result fields.",
+    "Interface container bytes differ between whole check and compilation; public interface, positions, implementation identity hashes match.",
+    "The first fixture intentionally traps with exit1; the oracle compares both stdout/stderr/exit tuples, not an assumed zero exit.",
+    "No new corpus builds, hardware timing, Guardian gate, source edits, or commits; overall final gate acceptance remains parent-owned."
+  ],
+  "receipt_sha256": "389a73b2ab37af3d0f96d9eef4732db0e0fdf28b73e3a101dcdb9e10862db44a",
+  "existing_artifact_receipt_sha256": "5c0f7a803d82dd088c64108cb86f9a16b3efb02a6b4005e239d25eb687665b92",
+  "raw_archive_sha256": "6ab4733a9e0754d7e529ef33d557b8ffcad6581cfb47ee54f0d47f8a013bd4d6",
+  "raw_manifest_sha256": "4ef2cd5d1d852f17133a140e31afc0d18680509dfa78e23a14881c5fa12c3af0",
+  "raw_member_count": 1504,
+  "raw_uncompressed_bytes": 31394177,
+  "raw_archive_bytes": 5610646
+}

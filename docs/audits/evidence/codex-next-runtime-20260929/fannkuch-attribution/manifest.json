@@ -1,0 +1,247 @@
+{
+  "scope": "read-only exact fannkuch instruction attribution; no timing, broad gate, Guardian or source edits",
+  "source": "255cf730604cb6023ad5701165a100358d9c0cfe",
+  "original_receipt_sha256": "5ab31c41a1a28fde4dfff8537442c485d94c402c431b2e8f469fbba5e2142624",
+  "members": {
+    "a5-plain-entry.diff": {
+      "bytes": 93413,
+      "sha256": "f9059a23fec6593b03c205ecf983e5be1135c14f772d7e7e9368c903ff001fdf"
+    },
+    "a5-publish-entry.diff": {
+      "bytes": 69705,
+      "sha256": "a98254bc94130276e8674a5cbec330b81fe1c8b14bb6dfad42576ecda1b0f325"
+    },
+    "a5/assembly.txt": {
+      "bytes": 2130917,
+      "sha256": "3df9e93a495bd85de1ccd9df127aa7d9781529ff1f23c445eb4bead7a9a86edf"
+    },
+    "a5/build.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "a5/build.stdout": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "a5/callgrind.annotate": {
+      "bytes": 34400,
+      "sha256": "2a776772cd9c1790f948decdada1aaf74f063ca0d0388e1e46ee502eee04d725"
+    },
+    "a5/callgrind.out": {
+      "bytes": 364644,
+      "sha256": "d83655552b28db6da8f80e8d32ac10ae8b5d44014a529b5876486f41b39c7922"
+    },
+    "a5/callgrind.stderr": {
+      "bytes": 571,
+      "sha256": "9877f9c413d2822ca86d678a785755f336c5ed63b618f198cb07e8dc1c1e1ad3"
+    },
+    "a5/callgrind.stdout": {
+      "bytes": 27,
+      "sha256": "26f4debed9b9f8db7609e17f35756a3f72c1d85d40977a4377a1ef34ffc4d4c8"
+    },
+    "a5/entry_run.asm": {
+      "bytes": 128901,
+      "sha256": "e41056ff11b2f139f0c1c23e1e8b01bd1a0518e83e7c6d8ee2c37e465512f393"
+    },
+    "alloc-emit.stderr": {
+      "bytes": 120,
+      "sha256": "16409ef11d89894886f224e688aebf9b46dd91b9c9cb4efa8778dae1cefb0b42"
+    },
+    "alloc-emitted-qbe.ssa": {
+      "bytes": 54790,
+      "sha256": "074d5be3d9d7275fa46ca1ff573c41e5df0d3d180b4313545630b019cab1fe18"
+    },
+    "alloc-production.json": {
+      "bytes": 149801,
+      "sha256": "efd7913f0744eea5febdc922e9f749561b03a6669495d04548dd50f0c8232ce9"
+    },
+    "alloc_churn.my": {
+      "bytes": 351,
+      "sha256": "d4a37e7fa38f210b45b9cc22c2fb8d88794c9380cdda43808222bf50c7dd78ee"
+    },
+    "analyze.py": {
+      "bytes": 2670,
+      "sha256": "de3a85cbabba10c76428a22c0554c05f5444e26e662a14d3d11486c157eb8b08"
+    },
+    "callgrind-receipt.json": {
+      "bytes": 5237,
+      "sha256": "6f491a48043b4c1c3f97f7b14fd1b8813894cabe084c52a046e96c88edf00f95"
+    },
+    "callgrind.py": {
+      "bytes": 2086,
+      "sha256": "d7995ff4dabe74aefa7d9770d657a23d7f845f663b01381eb4af14ee3d1a8470"
+    },
+    "emission-command.json": {
+      "bytes": 617,
+      "sha256": "76186f6160179a4d18efc5b1f4404ddd07876ea22feee8691c445b1c0b05711a"
+    },
+    "exact-counts.json": {
+      "bytes": 1836612,
+      "sha256": "f10917e2d82f63ad7298b1ab59cd468c0129929153643496580921bec6009ce2"
+    },
+    "fannkuch_redux.expected": {
+      "bytes": 27,
+      "sha256": "26f4debed9b9f8db7609e17f35756a3f72c1d85d40977a4377a1ef34ffc4d4c8"
+    },
+    "fannkuch_redux.my": {
+      "bytes": 1512,
+      "sha256": "0a7441bd509f728d0b3db53ddfdf6a5c027fcb3468d467c42d00850839d9a8f4"
+    },
+    "hot-paths.json": {
+      "bytes": 70450,
+      "sha256": "f35cefd42636bde3c3836db64e509f9e7c1cc75bf53276b5e028fad54e5ea5ce"
+    },
+    "hot-paths.py": {
+      "bytes": 4217,
+      "sha256": "98844fb602bfdde48e676e91d268bab0b5b862c6a01bdc35e48e5adde0b134ac"
+    },
+    "inputs.json": {
+      "bytes": 26883,
+      "sha256": "3fe770502ffb454d2285a588fcab40ba1d7bb832e71f9387612e26315a82581b"
+    },
+    "original-binaries/00-parity-suite-fannkuch_redux.llvm": {
+      "bytes": 235976,
+      "sha256": "d9aefc57a1a1fa38be6205cf2a7d6f80f3e2c9eb1afe1ea9fa6a341b9c3d6d80"
+    },
+    "original-binaries/01-mylang": {
+      "bytes": 206150562,
+      "sha256": "4059a85e3d081f8a73b370e03e7d86cba8eb8a47531bfcdd7c09e6cc109d74b1"
+    },
+    "original-binaries/02-fannkuch.original": {
+      "bytes": 235976,
+      "sha256": "d9aefc57a1a1fa38be6205cf2a7d6f80f3e2c9eb1afe1ea9fa6a341b9c3d6d80"
+    },
+    "original-binaries/03-fannkuch.symbols": {
+      "bytes": 378888,
+      "sha256": "456fb9fd2030156820f74097485251fb44d48700c12625a682ec6a69d914daf1"
+    },
+    "original-binaries/04-parity-suite-fannkuch_redux.llvm": {
+      "bytes": 245464,
+      "sha256": "65b080ee63090c9b6f42e9ffcc25f73ed833f4d315a9d07e422cebe6932acefe"
+    },
+    "original-binaries/05-mylang": {
+      "bytes": 196652982,
+      "sha256": "4715e1a5cab79a76a77e1ff15391c0b8f3146287f6bfa34f68ba23062fd4773b"
+    },
+    "original-binaries/06-fannkuch.original": {
+      "bytes": 245464,
+      "sha256": "65b080ee63090c9b6f42e9ffcc25f73ed833f4d315a9d07e422cebe6932acefe"
+    },
+    "original-binaries/07-fannkuch.symbols": {
+      "bytes": 391560,
+      "sha256": "524eadeabebb3785e0f3f5b6d981122b0cc148f1f07025dd295022c210e2bc7b"
+    },
+    "original-binaries/08-parity-suite-fannkuch_redux.llvm": {
+      "bytes": 246184,
+      "sha256": "deacc85a76009bde486eaacae9b6d7982566a059d00b33f399a0efe3aab8fdea"
+    },
+    "original-binaries/09-mylang": {
+      "bytes": 196639842,
+      "sha256": "774d870b08babccb1bbac5ab5a8a932ae134dd7f05768d2026c9949390504c6b"
+    },
+    "original-binaries/10-fannkuch.original": {
+      "bytes": 246184,
+      "sha256": "deacc85a76009bde486eaacae9b6d7982566a059d00b33f399a0efe3aab8fdea"
+    },
+    "original-binaries/11-fannkuch.symbols": {
+      "bytes": 392232,
+      "sha256": "9acf9b48485cda63b7230e8709c37a6a4beca5da29c6acc04bd62969b187a4d5"
+    },
+    "plain/assembly.txt": {
+      "bytes": 2169080,
+      "sha256": "1620bc112f23cc3fb30d7552c7b9ceb7722b15eb7f0a4daf3074b078e928c277"
+    },
+    "plain/build.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "plain/build.stdout": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "plain/callgrind.annotate": {
+      "bytes": 34260,
+      "sha256": "8dd4151c811fbd028f892fe4929940a7b37e0ed52c2186249d0dc959eb1e52be"
+    },
+    "plain/callgrind.out": {
+      "bytes": 359123,
+      "sha256": "4afbb1ecd969fb4aa38dd671a93520b40378a85356a65b17191e5738f1399754"
+    },
+    "plain/callgrind.stderr": {
+      "bytes": 574,
+      "sha256": "5a2348962876dadf76716a93567fa2429a60139680847e4d8e5a3e63d5bfa252"
+    },
+    "plain/callgrind.stdout": {
+      "bytes": 27,
+      "sha256": "26f4debed9b9f8db7609e17f35756a3f72c1d85d40977a4377a1ef34ffc4d4c8"
+    },
+    "plain/entry_run.asm": {
+      "bytes": 140011,
+      "sha256": "22f0d1a02aa9b1d1e18a5785411cfee9489ba58e6640341a7d2a512fb5884286"
+    },
+    "prepare.py": {
+      "bytes": 2580,
+      "sha256": "67621472bdf300a00c0197aa7f0ed8ea4ccd56d2c8581cb58196cfd88e0b6b93"
+    },
+    "publish-plain-entry.diff": {
+      "bytes": 89586,
+      "sha256": "c9d6ff7b9f96d75015b39b0848635493155f08db339358b501358e2cc9bf0e21"
+    },
+    "publish/assembly.txt": {
+      "bytes": 2161277,
+      "sha256": "fc88f35141ac316287447a71078444f4e59e321e06cdc19cc9b5a408732170c1"
+    },
+    "publish/build.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "publish/build.stdout": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "publish/callgrind.annotate": {
+      "bytes": 34610,
+      "sha256": "6c83a45a206c7a90744754b879248530d9b9b3de9ac04e9a0e086f2608f5cfa5"
+    },
+    "publish/callgrind.out": {
+      "bytes": 358984,
+      "sha256": "403720d1bb390281b574b480c8785e01faeb63f0f4179efa5deb79cd30198440"
+    },
+    "publish/callgrind.stderr": {
+      "bytes": 576,
+      "sha256": "028a9d2e4c092ec2f91e1cfb65deca2252a319a6ff7bdf3961a227c701fba4b0"
+    },
+    "publish/callgrind.stdout": {
+      "bytes": 27,
+      "sha256": "26f4debed9b9f8db7609e17f35756a3f72c1d85d40977a4377a1ef34ffc4d4c8"
+    },
+    "publish/emit.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "publish/emitted-qbe.ssa": {
+      "bytes": 247529,
+      "sha256": "f862027fc5cef72d5b7a2db1b4706da7d7131aa54539574f11c86dc437f82a2d"
+    },
+    "publish/entry_run.asm": {
+      "bytes": 128228,
+      "sha256": "17284a2b8275c3a788f96e6d2904cf7e9879b6c854665572ac14b4fac690fc2d"
+    },
+    "publish/production.ssa": {
+      "bytes": 508040,
+      "sha256": "2073660f083d63ab486736d7dac892779c77124f3c7deffa3b0cd65603218511"
+    },
+    "receipt.json": {
+      "bytes": 17033,
+      "sha256": "5ab31c41a1a28fde4dfff8537442c485d94c402c431b2e8f469fbba5e2142624"
+    },
+    "report.md": {
+      "bytes": 5248,
+      "sha256": "408cafa2cb30ad198c2f5b4c1f4aa4cddda896d1e9c6b2ad2e5d71263a562f15"
+    },
+    "root-existing-rows.json": {
+      "bytes": 5817,
+      "sha256": "53ea2b9af7b07e3f024adef7e186915d6e678e9f07edb55f10b012c54c8e642e"
+    }
+  }
+}

@@ -1,0 +1,241 @@
+export function w $branch_add(l %x, l %out) {
+@start
+ %new =l add %x, 1
+ %bool =w ceql %new, 0
+ jnz %bool, @yes, @no
+@yes
+ ret 1
+@no
+ ret 0
+}
+
+export function w $branch_sub(l %x, l %out) {
+@start
+ %new =l sub %x, 1
+ %bool =w ceql %new, 0
+ jnz %bool, @yes, @no
+@yes
+ ret 1
+@no
+ ret 0
+}
+
+export function w $branch_ne(l %x, l %out) {
+@start
+ %new =l add %x, 1
+ %bool =w cnel %new, 0
+ jnz %bool, @yes, @no
+@yes
+ ret 1
+@no
+ ret 0
+}
+
+export function w $branch_reverse(l %x, l %out) {
+@start
+ %new =l add %x, 1
+ %bool =w ceql 0, %new
+ jnz %bool, @yes, @no
+@yes
+ ret 1
+@no
+ ret 0
+}
+
+export function w $branch_word(l %x, l %out) {
+@start
+ %new =w add %x, 1
+ %bool =w ceqw %new, 0
+ jnz %bool, @yes, @no
+@yes
+ ret 1
+@no
+ ret 0
+}
+
+export function w $branch_width(l %x, l %out) {
+@start
+ %new =l add %x, 1
+ %bool =w ceqw %new, 0
+ jnz %bool, @yes, @no
+@yes
+ ret 1
+@no
+ ret 0
+}
+
+export function w $branch_nonzero(l %x, l %out) {
+@start
+ %new =l add %x, 1
+ %bool =w ceql %new, 7
+ jnz %bool, @yes, @no
+@yes
+ ret 1
+@no
+ ret 0
+}
+
+export function w $branch_clobber(l %x, l %out) {
+@start
+ %new =l add %x, 1
+ %noise =l xor %x, -1
+ storel %noise, %out
+ %bool =w ceql %new, 0
+ jnz %bool, @yes, @no
+@yes
+ ret 1
+@no
+ ret 0
+}
+
+export function w $branch_other(l %x, l %out) {
+@start
+ %new =l add %x, 1
+ %noise =l sub %x, 2
+ storel %noise, %out
+ %bool =w ceql %new, 0
+ jnz %bool, @yes, @no
+@yes
+ ret 1
+@no
+ ret 0
+}
+
+export function w $branch_call(l %x, l %out) {
+@start
+ %new =l add %x, 1
+ %ignored =w call $touch()
+ %bool =w ceql %new, 0
+ jnz %bool, @yes, @no
+@yes
+ ret 1
+@no
+ ret 0
+}
+
+export function w $branch_multi(l %x, l %out) {
+@start
+ %new =l add %x, 1
+ %bool =w ceql %new, 0
+ %wide =l extuw %bool
+ storel %wide, %out
+ jnz %bool, @yes, @no
+@yes
+ ret 1
+@no
+ ret 0
+}
+
+export function w $branch_wrongresult(l %x, l %out) {
+@start
+ %new =l sub %x, 1
+ %bool =w ceql %x, 0
+ jnz %bool, @yes, @no
+@yes
+ storel %new, %out
+ ret 1
+@no
+ storel %new, %out
+ ret 0
+}
+
+export function l $branch_spill(l %x, l %out) {
+@start
+ %p0 =l add %out, 0
+ %v0 =l loadl %p0
+ %p1 =l add %out, 8
+ %v1 =l loadl %p1
+ %p2 =l add %out, 16
+ %v2 =l loadl %p2
+ %p3 =l add %out, 24
+ %v3 =l loadl %p3
+ %p4 =l add %out, 32
+ %v4 =l loadl %p4
+ %p5 =l add %out, 40
+ %v5 =l loadl %p5
+ %p6 =l add %out, 48
+ %v6 =l loadl %p6
+ %p7 =l add %out, 56
+ %v7 =l loadl %p7
+ %p8 =l add %out, 64
+ %v8 =l loadl %p8
+ %p9 =l add %out, 72
+ %v9 =l loadl %p9
+ %p10 =l add %out, 80
+ %v10 =l loadl %p10
+ %p11 =l add %out, 88
+ %v11 =l loadl %p11
+ %p12 =l add %out, 96
+ %v12 =l loadl %p12
+ %p13 =l add %out, 104
+ %v13 =l loadl %p13
+ %p14 =l add %out, 112
+ %v14 =l loadl %p14
+ %p15 =l add %out, 120
+ %v15 =l loadl %p15
+ %p16 =l add %out, 128
+ %v16 =l loadl %p16
+ %p17 =l add %out, 136
+ %v17 =l loadl %p17
+ %p18 =l add %out, 144
+ %v18 =l loadl %p18
+ %p19 =l add %out, 152
+ %v19 =l loadl %p19
+ %p20 =l add %out, 160
+ %v20 =l loadl %p20
+ %p21 =l add %out, 168
+ %v21 =l loadl %p21
+ %p22 =l add %out, 176
+ %v22 =l loadl %p22
+ %p23 =l add %out, 184
+ %v23 =l loadl %p23
+ %new =l add %x, 1
+ %bool =w ceql %new, 0
+ jnz %bool, @yes, @no
+@yes
+ call $record_yes(l %out)
+ jmp @join
+@no
+ call $record_no(l %out)
+ jmp @join
+@join
+ %sum0 =l add %v0, %v1
+ %sum1 =l add %sum0, %v2
+ %sum2 =l add %sum1, %v3
+ %sum3 =l add %sum2, %v4
+ %sum4 =l add %sum3, %v5
+ %sum5 =l add %sum4, %v6
+ %sum6 =l add %sum5, %v7
+ %sum7 =l add %sum6, %v8
+ %sum8 =l add %sum7, %v9
+ %sum9 =l add %sum8, %v10
+ %sum10 =l add %sum9, %v11
+ %sum11 =l add %sum10, %v12
+ %sum12 =l add %sum11, %v13
+ %sum13 =l add %sum12, %v14
+ %sum14 =l add %sum13, %v15
+ %sum15 =l add %sum14, %v16
+ %sum16 =l add %sum15, %v17
+ %sum17 =l add %sum16, %v18
+ %sum18 =l add %sum17, %v19
+ %sum19 =l add %sum18, %v20
+ %sum20 =l add %sum19, %v21
+ %sum21 =l add %sum20, %v22
+ %sum22 =l add %sum21, %v23
+ ret %sum22
+}
+
+export function l $branch_trailing(l %x, l %y, l %out) {
+@start
+ %sum =l add %x, %y
+ %cond =w cnel %sum, 0
+ %addr =l add extern $branch_global, 8
+ %loaded =l loadl %addr
+ jnz %cond, @yes, @no
+@yes
+ storel 17, %out
+ ret %loaded
+@no
+ storel 23, %out
+ ret %loaded
+}

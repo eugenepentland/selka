@@ -26,7 +26,9 @@ int myl_native_list_clear(myl_native_list *);
 /* Python-shaped list methods. `extend`/`insert` may allocate and return zero on
  * refusal; `remove`/`index` answer 1 found, 0 absent and negative on comparison
  * failure. `sort` stably orders signed integers, unsigned integers, binary64
- * values (with NaNs last), or text pointers in Unicode scalar order. */
+ * values (with NaNs last), text pointers in Unicode scalar order, or bytes
+ * pointers in unsigned octet order. Dispatch codes 0..3 retain their meaning;
+ * code 4 is bytes. */
 int myl_native_list_extend(myl_native_heap *, myl_native_list *, const myl_native_list *other);
 int myl_native_list_insert(myl_native_heap *, myl_native_list *, int64_t index, const void *value);
 int myl_native_list_remove(myl_native_list *, const void *value);
@@ -45,6 +47,13 @@ myl_native_list *myl_native_list_copy(myl_native_heap *, const myl_native_list *
 /* Whether `payload` is a list header — a `list`, `bytes` or `byte_buffer` whose
  * storage it owns, not a byte-string view — read from its object header. */
 int myl_native_list_header(const void *payload);
+/* The exact descriptor identity, also used by the generated RC scope path. */
+extern const myl_native_type *const myl_native_list_header_type;
+/* LIST-LITERAL-PAYLOAD-1: static mutable headers use this exact identity. */
+extern const myl_native_type myl_native_list_header_descriptor;
+myl_native_list *myl_native_list_literal_copy(myl_native_heap *, const myl_native_list *);
+/* An arena evaluation needs fresh regional storage; ordinary heaps share the image. */
+myl_native_list *myl_native_list_literal_value(myl_native_heap *, const myl_native_list *);
 /* A fresh header and private storage holding `input`'s elements, both
  * allocated at arena depth `region` (COW-UNIQUE-1). `element` describes the
  * copy's elements and becomes its storage block's descriptor: `input`'s own

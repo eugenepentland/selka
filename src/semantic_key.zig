@@ -378,6 +378,13 @@ fn lessRecordName(records: []const typed.Record, a: usize, b: usize) bool {
     return std.mem.lessThan(u8, records[a].name, records[b].name);
 }
 
+/// Append to `out` every catalog record `ty` reaches through fields, cases,
+/// elements, keys, domain backing, buffer elements and callback slots that
+/// `seen` does not hold yet: the records a CHECK-SHAPES-1 digest covers.
+pub fn reachableRecords(allocator: std.mem.Allocator, ty: typed.Type, records: []const typed.Record, seen: *std.AutoHashMapUnmanaged(usize, void), out: *std.ArrayList(usize)) error{OutOfMemory}!void {
+    return collectProviderRecords(allocator, ty, records, seen, out);
+}
+
 fn collectProviderRecords(allocator: std.mem.Allocator, ty: typed.Type, records: []const typed.Record, seen: *std.AutoHashMapUnmanaged(usize, void), out: *std.ArrayList(usize)) error{OutOfMemory}!void {
     if (!ty.isAggregate()) return;
     const index = ty.recordIndex();
@@ -457,7 +464,8 @@ fn mixRecord(hash: *Hash, record: typed.Record, records: []const typed.Record) v
     }
 }
 
-const DeclKind = enum(u4) { function = 0, record = 1, domain = 2, variant = 3, alias = 4, constraint = 5, resource = 6 };
+/// Which merged-program declaration table a declaration key indexes.
+pub const DeclKind = enum(u4) { function = 0, record = 1, domain = 2, variant = 3, alias = 4, constraint = 5, resource = 6 };
 
 fn declKey(kind: DeclKind, index: usize) u64 {
     return (@as(u64, @backingInt(kind)) << 32) | @as(u64, @as(u32, @truncate(index)));
@@ -890,7 +898,87 @@ const Builder = struct {
 };
 
 /// One declaration's own digest and the declarations it references directly.
-const Own = struct { digest: [32]u8, edges: []const u64 };
+pub const Own = struct { digest: [32]u8, edges: []const u64 };
+
+/// A declaration key's table and its index in that table of the merged program.
+pub const Declaration = struct { kind: DeclKind, index: usize };
+
+/// MODULE-INTERFACE-1: the declaration graph of one merged program, for
+/// building module interfaces. Keys are the opaque declaration keys dependency
+/// contexts are folded from; `own` is a declaration's own digest with the
+/// declarations its declaration references (a function's signature, a type's
+/// fields, a constant's value), `bodyReferences` everything one whole function
+/// references, and `fingerprint` the transitive fingerprint callers' contexts
+/// fold, so an interface built from them agrees with the check's own keys.
+pub const Surface = struct {
+    builder: Builder,
+
+    /// Index the merged program's declarations; `resolution` names its modules
+    /// and import aliases. Everything it allocates is released by `deinit`.
+    pub fn init(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, resolution: *interfaces.Index) error{OutOfMemory}!Surface {
+        return .{ .builder = try Builder.init(allocator, src, program, resolution) };
+    }
+
+    /// Release the declaration tables and every memo.
+    pub fn deinit(self: *Surface) void {
+        self.builder.deinit();
+    }
+
+    /// The declarations module `module` binds under `name`: a bare name or a
+    /// `Domain.member` spelling, with a facade's re-exported names included.
+    pub fn named(self: *const Surface, module: usize, name: []const u8) []const u64 {
+        if (module >= self.builder.modules.len) return &.{};
+        const list = self.builder.modules[module].names.get(name) orelse return &.{};
+        return list.items;
+    }
+
+    /// The key of the merged program's function `index`.
+    pub fn functionKey(index: usize) u64 {
+        return declKey(.function, index);
+    }
+
+    /// The key of the merged program's type declaration `index` of `kind`.
+    pub fn typeKey(kind: DeclKind, index: usize) u64 {
+        return declKey(kind, index);
+    }
+
+    /// The table and index a key names.
+    pub fn declaration(key: u64) Declaration {
+        return .{ .kind = @fromBackingInt(@intCast(@as(u4, @truncate(key >> 32)))), .index = @intCast(@as(u32, @truncate(key))) };
+    }
+
+    /// The module (merged input) that declares `key`.
+    pub fn moduleOfKey(self: *Surface, key: u64) usize {
+        const decl = declaration(key);
+        return self.builder.declarationModule(decl.kind, decl.index);
+    }
+
+    /// A declaration's own digest and the declarations its declaration names.
+    pub fn own(self: *Surface, key: u64) error{OutOfMemory}!Own {
+        return self.builder.ownDigest(key);
+    }
+
+    /// Every declaration one whole function names, its body included, without
+    /// the function itself, sorted; allocated with `arena`, which keeps a
+    /// partial list after a failure.
+    pub fn bodyReferences(self: *Surface, arena: std.mem.Allocator, function: usize) error{OutOfMemory}![]u64 {
+        const allocator = arena;
+        const key = declKey(.function, function);
+        var collector = Collector.init(&self.builder, self.builder.declarationModule(.function, function));
+        defer collector.deinit();
+        try collector.collectValue(ast.Function, self.builder.program.functions[function]);
+        var out: std.ArrayList(u64) = .empty;
+        var references = collector.refs.keyIterator();
+        while (references.next()) |reference| if (reference.* != key) try out.append(allocator, reference.*);
+        std.mem.sort(u64, out.items, {}, std.sort.asc(u64));
+        return out.toOwnedSlice(allocator);
+    }
+
+    /// The transitive declaration fingerprint dependency contexts fold.
+    pub fn fingerprint(self: *Surface, key: u64) error{OutOfMemory}![32]u8 {
+        return self.builder.declFingerprint(key);
+    }
+};
 
 /// Hashable exact source span.
 const SpanKey = struct {

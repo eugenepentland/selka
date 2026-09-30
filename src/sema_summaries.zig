@@ -58,7 +58,16 @@ pub const Plan = struct {
         @memset(stand_ins, null);
         request.stood_in = 0;
         request.prepared = prepared.*;
-        if (request.previous) |previous| {
+        if (request.declared) {
+            // An imported interface's declared function has no body here, so
+            // its stored facts stand in unconditionally (MODULE-INTERFACE-1).
+            const previous = request.previous orelse return .{ .request = request, .prepared = prepared, .session = session, .stand_ins = stand_ins, .main = main };
+            for (prepared.ordinary_ast, 0..) |ast_index, instance| {
+                if (instance == main) continue;
+                stand_ins[instance] = previous.find(prepared.keys[ast_index]) orelse continue;
+                request.stood_in += 1;
+            }
+        } else if (request.previous) |previous| {
             // Previous table record position -> its shape in the fresh catalog.
             const shapes = try allocator.alloc(ShapeState, previous.records.len);
             defer allocator.free(shapes);

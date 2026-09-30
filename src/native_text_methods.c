@@ -1,6 +1,7 @@
 /* `memmem` is a GNU extension, so the feature macro has to precede <string.h>. */
 #define _GNU_SOURCE
 #include "native_text_methods.h"
+#include "native_python.h"
 #include "native_rc_collections.h"
 #include <string.h>
 /* Splits on maximal runs of ASCII whitespace, dropping every empty piece. It is
@@ -39,18 +40,19 @@ static int matches_at(const myl_native_text *input, size_t at, const myl_native_
 static size_t occurrences(const myl_native_text *input, const myl_native_text *needle) {
     return myl_native_octets_count(myl_native_text_storage(input),input->bytes,myl_native_text_storage(needle),needle->bytes);
 }
-/* An empty needle answers -1 here; the emitted call traps R_EMPTY_SEPARATOR
-   before this runs. A needle longer than the receiver is absent as before, and
+/* An empty needle finds boundary zero. A longer needle is absent, and
    the scan itself runs in the libc bulk primitive instead of one `memcmp` call
    per candidate scalar. The answer is a scalar index, which is the octet offset
-   itself for ASCII text and one walk otherwise. */
+   itself for ASCII text and the indexed inverse lookup otherwise. */
 int64_t myl_native_text_find(const myl_native_text *input, const myl_native_text *needle) {
-    if (!needle->length || needle->length>input->length) return -1;
+    if (!needle->length) return 0;
+    if (needle->length>input->length) return -1;
     size_t at=myl_native_text_find_bytes(input,needle);
     if (at==SIZE_MAX) return -1;
     return (int64_t)myl_native_text_index(input,at);
 }
 int64_t myl_native_text_count(const myl_native_text *input, const myl_native_text *needle) {
+    if (!needle->length) return (int64_t)input->length+1;
     return (int64_t)occurrences(input,needle);
 }
 int myl_native_text_edge(const myl_native_text *input, const myl_native_text *affix, int leading) {
@@ -64,13 +66,9 @@ int myl_native_text_every(const myl_native_text *input, int property) {
     return 1;
 }
 myl_native_text *myl_native_text_trim(myl_native_heap *heap, myl_native_text *input, int ends) {
-    const unsigned char *bytes=myl_native_text_storage(input);
-    size_t lower=0, upper=input->bytes;
-    if (ends!=MYL_TEXT_TRAILING) while (lower<upper && space_octet(bytes[lower])) lower++;
-    if (ends!=MYL_TEXT_LEADING) while (upper>lower && space_octet(bytes[upper-1])) upper--;
-    size_t first=myl_native_text_index(input,lower), last=myl_native_text_index(input,upper);
-    return myl_native_text_copy(heap,input,first,last-first);
+    return myl_native_text_trim_chars(heap,input,NULL,ends);
 }
+
 /* Case mapping rewrites ASCII letters one octet for one octet, so the payload
    stays valid UTF-8, the scalar count is unchanged and every non-ASCII scalar
    is copied through untouched. */

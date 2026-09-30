@@ -16,8 +16,9 @@ static myl_rc_status allocate(myl_native_heap *heap, const myl_rc_alloc_request 
     assert(!request->region);
     size_t bytes = MYL_RC_PREFIX_BYTES + request->element->size * request->count;
     if (heap->limit && bytes > heap->limit - heap->bytes) return MYL_RC_ALLOCATION_REFUSED;
-    myl_rc_object *object = calloc(1, bytes);
-    if (!object) return MYL_RC_ALLOCATION_REFUSED;
+    unsigned char *reservation = calloc(1, bytes);
+    if (!reservation) return MYL_RC_ALLOCATION_REFUSED;
+    myl_rc_object *object = (myl_rc_object *)reservation;
     object->owners = 1;
     object->common.mark = request->count << MYL_NATIVE_OBJECT_COUNT_SHIFT;
     object->common.element = request->element;
@@ -88,7 +89,7 @@ static void invariant_paths_test(void) {
 }
 // spec: RC-LAYOUT-1
 static void layout_test(void) {
-    assert(sizeof(myl_rc_object) == 32);
+    assert(MYL_RC_ABI_VERSION == 5u && sizeof(myl_rc_object) == 32);
     assert(sizeof(myl_native_object) == 16);
     assert(offsetof(myl_rc_object, common.mark) == 16);
     assert(offsetof(myl_rc_object, common.element) == 24);
@@ -99,7 +100,7 @@ static void layout_test(void) {
     start(&heap, &state);
     void *value = new_value(&heap, &scalar_type, 1);
     assert((uintptr_t)value % 16 == 0);
-    assert(*((uintptr_t *)value - 4) == 1 && *((uintptr_t *)value - 3) == 0);
+    assert(*((uint64_t *)value - 4) == 1 && *((uint64_t *)value - 3) == 0);
     assert(*((uintptr_t *)value - 2) == 4);
     assert(((const myl_native_type **)value)[-1] == &scalar_type);
     myl_rc_owner_release(&heap, value);

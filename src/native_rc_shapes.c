@@ -171,7 +171,7 @@ static void index_commit(myl_native_heap *heap, myl_rc_batch *batch, index_growt
     }
     if (batch->module) map_insert(&heap->rc->metadata.modules, batch->module, batch);
     for (size_t i = 0; i < batch->count.shapes; ++i) {
-        const myl_rc_shape_entry *shape = &batch->shapes[i];
+        const myl_rc_shape_entry *shape = batch->image ? batch->image->shapes[i] : &batch->shapes[i];
         map_insert(&heap->rc->metadata.shapes, &shape->shape, &shape->shape);
         if (shape->source) map_insert(&heap->rc->metadata.shapes, shape->source, &shape->shape);
     }
@@ -180,11 +180,11 @@ static void index_commit(myl_native_heap *heap, myl_rc_batch *batch, index_growt
         myl_rc_binding *binding = &batch->bindings[i];
         const myl_native_type *type = binding->descriptor.type;
         if (id_claims(ids, &claim, type)) {
-            /* Pending: the flat plan is built by the first lookup (RC-STARTUP-3). */
-            ids->entries[type->rc_id] = (myl_rc_map_entry){NULL, binding};
+            /* Images already own plans; dynamic bindings build on first use. */
+            ids->entries[type->rc_id] = (myl_rc_map_entry){batch->image ? type : NULL, binding};
             ++ids->count;
         } else {
-            flat_build(binding);
+            if (!batch->image) flat_build(binding);
             map_insert(&heap->rc->metadata.bindings, type, binding);
         }
     }
@@ -448,6 +448,10 @@ static void flat_build(myl_rc_binding *binding) {
             if (kind == MYL_RC_SHAPE_ARRAY && (type->count != shape->as.array.count || type->stride != shape->as.array.stride)) return;
             if (frame->cursor == type->count) { --depth; continue; }
             child = type->element;
+            /* Generated ARRAY descriptors use the canonical native walker's
+             * single zero-offset field; foreign descriptors may use element. */
+            if (!child && type->field_count == 1 && type->fields && !type->fields[0].offset)
+                child = type->fields[0].type;
             if (!myl_rc_size_mul(frame->cursor++, type->stride, &offset)) return;
             if (kind == MYL_RC_SHAPE_ARRAY) child_shape = shape->as.array.element;
         } else return; /* Owned buffers/pools and raw resources. */
@@ -589,6 +593,149 @@ myl_rc_status myl_rc_module_register(myl_native_heap *heap, const myl_rc_module 
 done:
     builder_free(&builder);
     return status;
+}
+/* The generated image is already a closed, validated semantic graph. Checked
+ * artifacts verify that contract independently; production admission scans
+ * only its fixed-size entries/recipes and performs no graph reconstruction. */
+static int image_contains(const myl_rc_image *image, const myl_rc_shape_entry *entry) {
+    for (size_t i = 0; i < image->shape_count; ++i)
+        if (image->shapes[i] == entry) return 1;
+    return 0;
+}
+static void image_shape_check(const myl_rc_image *image, const myl_rc_shape_entry *entry) {
+    const myl_rc_shape *source = entry->source, *shape = &entry->shape;
+    size_t children = child_count(source), depth = 0, inline_depth = 0, extent;
+    myl_rc_invariant(shape->kind == (entry->depth ? source->kind : MYL_RC_SHAPE_NONE));
+    if (source->kind == MYL_RC_SHAPE_POINTER || source->kind == MYL_RC_SHAPE_HOLD_POINTER)
+        myl_rc_invariant(source->size == sizeof(void *));
+    if (source->kind == MYL_RC_SHAPE_ARRAY) {
+        myl_rc_invariant(source->as.array.count == shape->as.array.count && source->as.array.stride == shape->as.array.stride);
+        if (children) {
+            myl_rc_invariant(source->as.array.element && source->as.array.stride >= source->as.array.element->size);
+            myl_rc_invariant(myl_rc_size_mul(source->as.array.count - 1, source->as.array.stride, &extent) &&
+                myl_rc_size_add(extent, source->as.array.element->size, &extent) && extent <= source->size);
+        }
+    } else if (source->kind == MYL_RC_SHAPE_RECORD || source->kind == MYL_RC_SHAPE_VARIANT) {
+        const myl_rc_field *original = shape_fields(source);
+        const myl_rc_field *fields = source->kind == MYL_RC_SHAPE_RECORD ? shape->as.record.fields : shape->as.variant.fields;
+        size_t count = source->kind == MYL_RC_SHAPE_RECORD ? shape->as.record.count : shape->as.variant.count;
+        myl_rc_invariant(count == children && (!children || (original && fields)));
+        for (size_t i = 0; i < children; ++i)
+            myl_rc_invariant(fields[i].offset == original[i].offset && fields[i].tag == original[i].tag &&
+                original[i].shape && myl_rc_size_add(original[i].offset, original[i].shape->size, &extent) && extent <= source->size);
+        if (source->kind == MYL_RC_SHAPE_VARIANT)
+            myl_rc_invariant(source->as.variant.tag_offset == shape->as.variant.tag_offset &&
+                myl_rc_size_add(source->as.variant.tag_offset, sizeof(uint32_t), &extent) && extent <= source->size);
+    }
+    for (size_t i = 0; i < children; ++i) {
+        const myl_rc_shape *child = source->kind == MYL_RC_SHAPE_ARRAY ? shape->as.array.element :
+            (source->kind == MYL_RC_SHAPE_RECORD ? shape->as.record.fields : shape->as.variant.fields)[i].shape;
+        myl_rc_invariant(child != NULL);
+        const myl_rc_shape_entry *next = shape_entry(child);
+        myl_rc_invariant(image_contains(image, next) && next->source == child_shape(source, i));
+        myl_rc_invariant(next->inline_depth < entry->inline_depth);
+        if (next->depth > depth) depth = next->depth;
+        if (next->inline_depth > inline_depth) inline_depth = next->inline_depth;
+    }
+    if (source->kind == MYL_RC_SHAPE_POINTER || source->kind == MYL_RC_SHAPE_HOLD_POINTER) depth = 1;
+    else if (depth) ++depth;
+    myl_rc_invariant(entry->depth == depth && entry->inline_depth == inline_depth + 1);
+}
+static int image_flat_matches(const myl_rc_flat *a, const myl_rc_flat *b) {
+    return a->count == b->count && a->loanable == b->loanable && a->native_unique == b->native_unique &&
+        a->conditional == b->conditional && a->arm_offset == b->arm_offset && a->size == b->size &&
+        a->all == b->all && a->always == b->always && !memcmp(a->arms, b->arms, sizeof a->arms) &&
+        !memcmp(a->offsets, b->offsets, sizeof a->offsets);
+}
+static void image_flat_check(const myl_rc_binding *binding) {
+    const myl_rc_flat *flat = &binding->flat;
+    myl_rc_invariant(!binding->alloc_class && flat->size == binding->descriptor.type->size &&
+        flat->count <= MYL_RC_FLAT_LEAVES + 1 && flat->loanable <= 1 && !flat->native_unique && flat->conditional <= 1);
+    if (flat->count > MYL_RC_FLAT_LEAVES) myl_rc_invariant(!flat->loanable && !flat->conditional);
+    else {
+        myl_rc_invariant(flat->all == (uint16_t)((1u << flat->count) - 1) && !(flat->always & ~flat->all));
+        for (unsigned i = 0; i < flat->count; ++i)
+            myl_rc_invariant(flat->size >= sizeof(void *) && flat->offsets[i] <= flat->size - sizeof(void *));
+        if (flat->conditional)
+            myl_rc_invariant(flat->size >= sizeof(uint32_t) && flat->arm_offset <= flat->size - sizeof(uint32_t));
+        else myl_rc_invariant(flat->always == flat->all && flat->arm_offset == MYL_RC_FLAT_ALWAYS);
+        for (unsigned i = 0; i < MYL_RC_FLAT_ARMS; ++i)
+            myl_rc_invariant(!(flat->arms[i] & ~flat->all) && (flat->arms[i] & flat->always) == flat->always);
+    }
+    if (MYL_RC_CHECKED) {
+        myl_rc_binding expected = {.descriptor = binding->descriptor};
+        flat_build(&expected);
+        myl_rc_invariant(image_flat_matches(flat, &expected.flat));
+    }
+}
+static void image_check(const myl_rc_module *module, const myl_rc_image *image) {
+    myl_rc_invariant(image && image->abi == MYL_RC_IMAGE_ABI_VERSION && image->shape_count == module->shape_count &&
+        image->descriptor_count == module->descriptor_count && (!image->shape_count || (image->shapes && module->shapes)) &&
+        (!image->descriptor_count || (image->bindings && module->descriptors)));
+    size_t maximum = 0;
+    for (size_t i = 0; i < image->shape_count; ++i) {
+        const myl_rc_shape_entry *entry = image->shapes[i];
+        myl_rc_invariant(entry && entry->source && entry->source == module->shapes[i] && entry->shape.size == entry->source->size &&
+            entry->inline_depth && entry->depth <= entry->inline_depth && entry->inline_depth <= image->depth);
+        if (entry->inline_depth > maximum) maximum = entry->inline_depth;
+        if (MYL_RC_CHECKED) image_shape_check(image, entry);
+    }
+    myl_rc_invariant(image->depth == maximum);
+    for (size_t i = 0; i < image->descriptor_count; ++i) {
+        const myl_rc_descriptor *descriptor = &image->bindings[i].descriptor, *source = &module->descriptors[i];
+        myl_rc_invariant(descriptor->type && descriptor->shape && descriptor->type == source->type &&
+            descriptor->type->size == descriptor->shape->size);
+        myl_rc_checked(image_contains(image, shape_entry(descriptor->shape)) && shape_entry(descriptor->shape)->source == source->shape &&
+            descriptor->edges == source->edges && descriptor->finalize == source->finalize && descriptor->clone == source->clone &&
+            descriptor->shell == source->shell && descriptor->next == source->next && descriptor->span == source->span);
+        image_flat_check(&image->bindings[i]);
+    }
+}
+myl_rc_status myl_rc_module_register_image(myl_native_heap *heap, const myl_rc_module *module, const myl_rc_image *image) {
+    myl_rc_invariant(heap && heap->rc && module && module->abi == MYL_RC_ABI_VERSION && !heap->rc->walk.depth);
+    image_check(module, image);
+    if (myl_rc_map_get(&heap->rc->metadata.modules, module)) return MYL_RC_OK;
+    if (MYL_RC_CHECKED)
+        for (size_t i = 0; i < image->descriptor_count; ++i) {
+            const myl_native_type *type = image->bindings[i].descriptor.type;
+            myl_rc_invariant(!myl_rc_descriptor_find(heap, type));
+            for (size_t j = 0; j < i; ++j) myl_rc_invariant(image->bindings[j].descriptor.type != type);
+        }
+    size_t binding_bytes, bytes = sizeof(myl_rc_batch), frame_bytes = 0, keys;
+    if (!myl_rc_size_mul(image->descriptor_count, sizeof(myl_rc_binding), &binding_bytes) ||
+        !myl_rc_size_add(bytes, binding_bytes, &bytes) || !myl_rc_size_mul(image->shape_count, 2, &keys))
+        return MYL_RC_ALLOCATION_REFUSED;
+    myl_rc_batch *batch = myl_rc_meta_alloc(heap, bytes);
+    if (!batch) return MYL_RC_ALLOCATION_REFUSED;
+    batch->module = module;
+    batch->image = image;
+    batch->count.shapes = image->shape_count;
+    batch->count.descriptors = image->descriptor_count;
+    batch->bytes = bytes;
+    batch->bindings = (myl_rc_binding *)(batch + 1);
+    if (binding_bytes) memcpy(batch->bindings, image->bindings, binding_bytes);
+    myl_rc_frame *frames = NULL;
+    index_growth growth;
+    if (image->depth > heap->rc->walk.capacity) {
+        if (!myl_rc_size_mul(image->depth, sizeof(myl_rc_frame), &frame_bytes) ||
+            !(frames = myl_rc_meta_alloc(heap, frame_bytes))) goto refused;
+    }
+    if (!index_prepare(heap, 1, keys, batch, &growth)) goto refused;
+    /* All private allocations succeeded. Immutable graphs are only borrowed;
+     * binding mutation, indices and independent drop frames belong to this heap. */
+    index_commit(heap, batch, &growth);
+    if (frames) {
+        myl_rc_meta_free(heap, heap->rc->walk.frames, heap->rc->walk.capacity * sizeof(myl_rc_frame));
+        heap->rc->walk.frames = frames;
+        heap->rc->walk.capacity = image->depth;
+    }
+    batch->next = heap->rc->metadata.batches;
+    heap->rc->metadata.batches = batch;
+    return MYL_RC_OK;
+refused:
+    myl_rc_meta_free(heap, frames, frame_bytes);
+    myl_rc_meta_free(heap, batch, bytes);
+    return MYL_RC_ALLOCATION_REFUSED;
 }
 myl_rc_status myl_rc_shape_import(myl_native_heap *heap, const myl_rc_shape *source, const myl_rc_shape **out) {
     myl_rc_invariant(heap && heap->rc && source && out && !heap->rc->walk.depth);

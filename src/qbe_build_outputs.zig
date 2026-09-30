@@ -4,6 +4,7 @@ const v = @import("qbe_build_value.zig");
 const host = @import("qbe_build_host.zig");
 const frame_map = @import("qbe_frame_map.zig");
 const lean = @import("qbe_build_units.zig");
+const text_index = @import("text_literal_index.zig");
 /// One packed-argument cleanup shared by every early grant exit.
 const free_arguments = "free(arguments);";
 // The argv owner surrounds capability grants and the borrowed guest call. Its
@@ -59,6 +60,7 @@ fn metadataUnit(allocator: std.mem.Allocator, manifest: std.json.Value, tables: 
     try w.print("#include \"qbe_runtime.h\"\n{s}\n{s}\n", .{ v.text(v.get(manifest, "runtime_data")), host_source });
     const functions = v.array(v.get(manifest, "functions"));
     try literalDefinitions(w, allocator, functions);
+    try @import("qbe_build_list_literals.zig").definitions(w, allocator, functions);
     try embedDefinitions(w, v.array(v.get(manifest, "embeds")));
     try @import("qbe_build_sites.zig").definitions(w, allocator, functions);
     // Every inline table names another unit's metadata, which may be defined
@@ -279,7 +281,7 @@ const Literal = struct {
     width: usize,
     count: usize,
     scalars: usize,
-    ascii: bool,
+    flags: struct { ascii: bool = false, mutable: bool = false } = .{},
     hex: []const u8,
 };
 /// Emit one C definition for every frozen `str`/`bytes` literal the emitted IL
@@ -305,7 +307,12 @@ const MarkerLines = struct {
 fn literalDefinitions(w: *std.Io.Writer, allocator: std.mem.Allocator, units: []const std.json.Value) Error!void {
     var seen: std.StringHashMapUnmanaged(void) = .empty;
     defer seen.deinit(allocator);
-    var header = false;
+    // QBE-LITERAL-ORDER-1: the pool is written in symbol order, so the shared
+    // unit is a function of the set of literals and not of the order the
+    // units come in: a program linked from per-module manifests gets the
+    // whole-program build's unit, byte for byte.
+    var literals: std.ArrayList(Literal) = .empty;
+    defer literals.deinit(allocator);
     for (units) |unit| {
         // A stored unit's facts hold its marker lines (`QBE-FRAGMENT-REUSE-1`).
         var lines: MarkerLines = .{ .il = lean.facts(unit) };
@@ -319,21 +326,26 @@ fn literalDefinitions(w: *std.Io.Writer, allocator: std.mem.Allocator, units: []
             try seen.put(allocator, symbol, {});
             const width = std.fmt.parseInt(usize, width_text, 10) catch continue;
             const count = std.fmt.parseInt(usize, count_text, 10) catch continue;
-            var literal: Literal = .{ .symbol = symbol, .element = element, .width = width, .count = count, .scalars = count, .ascii = false, .hex = "" };
+            var literal: Literal = .{ .symbol = symbol, .element = element, .width = width, .count = count, .scalars = count, .hex = "" };
             if (width == 0) {
                 const scalars_text = tokens.next() orelse continue;
                 const ascii_text = tokens.next() orelse continue;
                 literal.scalars = std.fmt.parseInt(usize, scalars_text, 10) catch continue;
-                literal.ascii = !std.mem.eql(u8, ascii_text, "0");
+                literal.flags.ascii = !std.mem.eql(u8, ascii_text, "0");
             }
             literal.hex = tokens.next() orelse "";
-            if (!header) {
-                try w.writeAll("#include \"native_text.h\"\n");
-                header = true;
-            }
-            try emitLiteral(w, literal);
+            literal.flags.mutable = std.mem.eql(u8, tokens.next() orelse "", "list");
+            try literals.append(allocator, literal);
         }
     }
+    if (literals.items.len == 0) return;
+    std.mem.sort(Literal, literals.items, {}, literalBefore);
+    try w.writeAll("#include \"native_text.h\"\n");
+    for (literals.items) |literal| try emitLiteral(w, literal);
+}
+
+fn literalBefore(_: void, a: Literal, b: Literal) bool {
+    return std.mem.lessThan(u8, a.symbol, b.symbol);
 }
 /// Emit one static object for every embedded file the manifest's `embeds` table
 /// names (`EMBED-1`), each laid out exactly as a frozen literal of the same
@@ -350,7 +362,7 @@ fn embedDefinitions(w: *std.Io.Writer, embeds: []const std.json.Value) Error!voi
             .width = width,
             .count = v.number(v.get(row, "count")),
             .scalars = v.number(v.get(row, "scalars")),
-            .ascii = v.boolean(v.get(row, "ascii")),
+            .flags = .{ .ascii = v.boolean(v.get(row, "ascii")) },
             .hex = v.text(v.get(row, "hex")),
         });
     }
@@ -366,15 +378,22 @@ fn emitLiteral(w: *std.Io.Writer, literal: Literal) Error!void {
     // literal's payload is its elements at `width` bytes each.
     const bytes = if (literal.width == 0) literal.count else literal.count * literal.width;
     const storage = if (bytes == 0) 1 else bytes;
+    const positions = if (literal.width == 0) text_index.layout(bytes, literal.scalars, literal.flags.ascii) else null;
     if (literal.width == 0) {
-        try w.print("typedef struct {{ myl_native_object header; myl_native_text value; unsigned char storage[{d}]; }} {s}_block;\n", .{ storage, symbol });
+        if (positions) |plan| {
+            try text_index.declaration(w, symbol, plan);
+        } else try w.print("typedef struct {{ myl_native_object header; myl_native_text value; unsigned char storage[{d}]; }} {s}_block;\n", .{ storage, symbol });
         try w.print("static {s}_block {s}_instance = {{\n", .{ symbol, symbol });
         try w.print(" .header = {{.mark = MYL_NATIVE_OBJECT_LITERAL_MARK, .element = &{s}}},\n", .{literal.element});
-        try w.print(" .value = {{.length = {d}, .bytes = {d}, .flags = {d}, .hash = 0}},\n", .{ literal.scalars, literal.count, @as(u32, if (literal.ascii) 1 else 0) });
+        try w.print(" .value = {{.length = {d}, .bytes = {d}, .flags = ", .{ literal.scalars, literal.count });
+        if (positions != null) try w.writeAll("MYL_TEXT_INDEXED|MYL_TEXT_SAMPLED|MYL_TEXT_STATIC_INDEX") else try w.print("{d}", .{@as(u32, if (literal.flags.ascii) 1 else 0)});
+        try w.writeAll(", .hash = 0},\n");
     } else {
         try w.print("typedef struct {{ myl_native_object header; myl_native_list value; myl_native_object storage_header; unsigned char storage[{d}]; }} {s}_block;\n", .{ storage, symbol });
         try w.print("static {s}_block {s}_instance = {{\n", .{ symbol, symbol });
-        try w.print(" .header = {{.mark = MYL_NATIVE_OBJECT_LITERAL_MARK, .element = &{s}}},\n", .{literal.element});
+        if (literal.flags.mutable) {
+            try w.writeAll(" .header = {.mark = MYL_NATIVE_OBJECT_LITERAL_MARK | MYL_NATIVE_OBJECT_SHARED, .element = &myl_native_list_header_descriptor},\n");
+        } else try w.print(" .header = {{.mark = MYL_NATIVE_OBJECT_LITERAL_MARK, .element = &{s}}},\n", .{literal.element});
         try w.print(" .value = {{.length = {d}, .capacity = {d}, .generation = 0, .element = &{s}", .{ literal.count, literal.count, literal.element });
         if (bytes == 0) try w.writeAll(", .storage = 0") else try w.print(", .storage = {s}_instance.storage", .{symbol});
         try w.writeAll(", .region = 0},\n");
@@ -396,6 +415,7 @@ fn emitLiteral(w: *std.Io.Writer, literal: Literal) Error!void {
         }
         try w.writeAll("},\n");
     }
+    if (positions) |plan| try text_index.initializer(w, literal.hex, plan);
     try w.writeAll("};\n");
     try w.print("const void *const {s} = &{s}_instance.value;\n", .{ symbol, symbol });
 }
@@ -608,6 +628,29 @@ test "a batch's function metadata is assembly holding the C unit's records, and 
     var failing = std.testing.FailingAllocator.init(std.testing.allocator, .{ .fail_index = 0 });
     // The allocating writer reports a failed allocation as a failed write.
     try std.testing.expectError(error.WriteFailed, metadataAssembly(failing.allocator(), functions));
+}
+
+// spec: QBE-LITERAL-ORDER-1
+test "the shared unit's literal pool is the same whatever order the units come in" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const forward = try std.json.parseFromSliceLeaky(std.json.Value, a,
+        \\{"entry":"main_native","entry_parameters":[],"runtime_data":"","functions":[
+        \\{"symbol":"main_native","name":"main","il":"# myl-lit myl_lit_bb myl_t_u8 1 2 6869\n"},
+        \\{"symbol":"myl_f_a","name":"m::a","il":"# myl-lit myl_lit_aa myl_t_u8 1 1 41\n# myl-lit myl_lit_bb myl_t_u8 1 2 6869\n"}]}
+    , .{});
+    const backward = try std.json.parseFromSliceLeaky(std.json.Value, a,
+        \\{"entry":"main_native","entry_parameters":[],"runtime_data":"","functions":[
+        \\{"symbol":"myl_f_a","name":"m::a","il":"# myl-lit myl_lit_aa myl_t_u8 1 1 41\n# myl-lit myl_lit_bb myl_t_u8 1 2 6869\n"},
+        \\{"symbol":"main_native","name":"main","il":"# myl-lit myl_lit_bb myl_t_u8 1 2 6869\n"}]}
+    , .{});
+    const one = try sharedMetadata(a, forward);
+    try std.testing.expectEqualStrings(one, try sharedMetadata(a, backward));
+    // In symbol order, whichever unit named a literal first.
+    const first = std.mem.indexOf(u8, one, "myl_lit_aa").?;
+    const second = std.mem.indexOf(u8, one, "myl_lit_bb").?;
+    try std.testing.expect(first < second);
 }
 
 // spec: QBE-BATCH-4

@@ -1,0 +1,167 @@
+{
+ "label": "1d",
+ "tier": "t200k/mylang",
+ "load_start": 7.68,
+ "repeats": [
+  {
+   "cold": {
+    "wall_s": 5.069,
+    "rss_mb": 1230.4,
+    "status": 0,
+    "passed": 480,
+    "cached": 0,
+    "failed": 0,
+    "stage": null,
+    "modules_compiled": 0
+   },
+   "after_cold": {
+    "wall_s": 19.148,
+    "rss_mb": 128.3,
+    "status": 0,
+    "passed": 0,
+    "cached": 480,
+    "failed": 0,
+    "stage": null,
+    "modules_compiled": 481
+   },
+   "after_cold_edit": {
+    "wall_s": 1.172,
+    "rss_mb": 316.4,
+    "status": 0,
+    "passed": 240,
+    "cached": 240,
+    "failed": 0,
+    "stage": null,
+    "modules_compiled": 2
+   },
+   "seeded_after_s": 0.0,
+   "noop": {
+    "wall_s": 0.205,
+    "rss_mb": 128.4,
+    "status": 0,
+    "passed": 0,
+    "cached": 480,
+    "failed": 0,
+    "stage": null,
+    "modules_compiled": 0
+   },
+   "body_edit": {
+    "wall_s": 0.67,
+    "rss_mb": 313.6,
+    "status": 0,
+    "passed": 240,
+    "cached": 240,
+    "failed": 0,
+    "stage": null,
+    "modules_compiled": 1
+   }
+  },
+  {
+   "cold": {
+    "wall_s": 5.138,
+    "rss_mb": 1230.6,
+    "status": 0,
+    "passed": 480,
+    "cached": 0,
+    "failed": 0,
+    "stage": null,
+    "modules_compiled": 0
+   },
+   "after_cold": {
+    "wall_s": 19.528,
+    "rss_mb": 128.4,
+    "status": 0,
+    "passed": 0,
+    "cached": 480,
+    "failed": 0,
+    "stage": null,
+    "modules_compiled": 481
+   },
+   "after_cold_edit": {
+    "wall_s": 1.148,
+    "rss_mb": 315.9,
+    "status": 0,
+    "passed": 240,
+    "cached": 240,
+    "failed": 0,
+    "stage": null,
+    "modules_compiled": 2
+   },
+   "seeded_after_s": 0.0,
+   "noop": {
+    "wall_s": 0.199,
+    "rss_mb": 128.4,
+    "status": 0,
+    "passed": 0,
+    "cached": 480,
+    "failed": 0,
+    "stage": null,
+    "modules_compiled": 0
+   },
+   "body_edit": {
+    "wall_s": 0.661,
+    "rss_mb": 313.2,
+    "status": 0,
+    "passed": 240,
+    "cached": 240,
+    "failed": 0,
+    "stage": null,
+    "modules_compiled": 1
+   }
+  },
+  {
+   "cold": {
+    "wall_s": 5.185,
+    "rss_mb": 1230.1,
+    "status": 0,
+    "passed": 480,
+    "cached": 0,
+    "failed": 0,
+    "stage": null,
+    "modules_compiled": 0
+   },
+   "after_cold": {
+    "wall_s": 19.519,
+    "rss_mb": 128.4,
+    "status": 0,
+    "passed": 0,
+    "cached": 480,
+    "failed": 0,
+    "stage": null,
+    "modules_compiled": 481
+   },
+   "after_cold_edit": {
+    "wall_s": 1.177,
+    "rss_mb": 316.1,
+    "status": 0,
+    "passed": 240,
+    "cached": 240,
+    "failed": 0,
+    "stage": null,
+    "modules_compiled": 2
+   },
+   "seeded_after_s": 0.0,
+   "noop": {
+    "wall_s": 0.21,
+    "rss_mb": 128.4,
+    "status": 0,
+    "passed": 0,
+    "cached": 480,
+    "failed": 0,
+    "stage": null,
+    "modules_compiled": 0
+   },
+   "body_edit": {
+    "wall_s": 0.655,
+    "rss_mb": 313.5,
+    "status": 0,
+    "passed": 240,
+    "cached": 240,
+    "failed": 0,
+    "stage": null,
+    "modules_compiled": 1
+   }
+  }
+ ],
+ "load_end": 18.18
+}

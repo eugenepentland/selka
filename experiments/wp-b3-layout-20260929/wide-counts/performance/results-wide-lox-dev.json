@@ -1,0 +1,210 @@
+{
+ "compiler": {
+  "compiler": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-runtime-wide-counts-20260930/.tmp/wide/bin/mylang",
+  "runtime": "--rc-runtime",
+  "sha256": "ad246f743ee32235a7c325c751927c20512ba6c5a5671dfe7df9980c7da6b45a"
+ },
+ "failures": [],
+ "rows": [
+  {
+   "arm": "qbe",
+   "gc": 1346930807,
+   "id": "lox/vm/binary_trees",
+   "ratio": 1.1550061049275562,
+   "rc": 1555713305
+  },
+  {
+   "arm": "llvm",
+   "gc": 636873958,
+   "id": "lox/vm/binary_trees",
+   "ratio": 1.152218667103986,
+   "rc": 733818063
+  },
+  {
+   "arm": "qbe",
+   "gc": 2080040084,
+   "id": "lox/vm/closures",
+   "ratio": 1.179222655788012,
+   "rc": 2452830392
+  },
+  {
+   "arm": "llvm",
+   "gc": 893617757,
+   "id": "lox/vm/closures",
+   "ratio": 1.1908846882951991,
+   "rc": 1064195704
+  },
+  {
+   "arm": "qbe",
+   "gc": 2092505322,
+   "id": "lox/vm/equality",
+   "ratio": 0.8767814550867843,
+   "rc": 1834669861
+  },
+  {
+   "arm": "llvm",
+   "gc": 755709492,
+   "id": "lox/vm/equality",
+   "ratio": 0.9934927931274417,
+   "rc": 750791934
+  },
+  {
+   "arm": "qbe",
+   "gc": 1291424436,
+   "id": "lox/vm/fib",
+   "ratio": 1.1080271017885557,
+   "rc": 1430933275
+  },
+  {
+   "arm": "llvm",
+   "gc": 504034321,
+   "id": "lox/vm/fib",
+   "ratio": 1.0998619754705157,
+   "rc": 554368184
+  },
+  {
+   "arm": "qbe",
+   "gc": 1478121666,
+   "id": "lox/vm/instantiation",
+   "ratio": 1.2852169464106888,
+   "rc": 1899707014
+  },
+  {
+   "arm": "llvm",
+   "gc": 769156862,
+   "id": "lox/vm/instantiation",
+   "ratio": 1.237474824738676,
+   "rc": 951812253
+  },
+  {
+   "arm": "qbe",
+   "gc": 3015241060,
+   "id": "lox/vm/invocation",
+   "ratio": 1.2193102520963945,
+   "rc": 3676514337
+  },
+  {
+   "arm": "llvm",
+   "gc": 1271920966,
+   "id": "lox/vm/invocation",
+   "ratio": 1.2160966462125289,
+   "rc": 1546778821
+  },
+  {
+   "arm": "qbe",
+   "gc": 2927363972,
+   "id": "lox/vm/method_call",
+   "ratio": 1.1953472159491345,
+   "rc": 3499216374
+  },
+  {
+   "arm": "llvm",
+   "gc": 1197322153,
+   "id": "lox/vm/method_call",
+   "ratio": 1.2658880161887391,
+   "rc": 1515675765
+  },
+  {
+   "arm": "qbe",
+   "gc": 2629726981,
+   "id": "lox/vm/properties",
+   "ratio": 1.2136757321424767,
+   "rc": 3191635819
+  },
+  {
+   "arm": "llvm",
+   "gc": 1131579684,
+   "id": "lox/vm/properties",
+   "ratio": 1.2340637568392399,
+   "rc": 1396441476
+  },
+  {
+   "arm": "qbe",
+   "gc": 2047084080,
+   "id": "lox/vm/string_equality",
+   "ratio": 0.9813751802515117,
+   "rc": 2008957508
+  },
+  {
+   "arm": "llvm",
+   "gc": 654259906,
+   "id": "lox/vm/string_equality",
+   "ratio": 1.2432920259062918,
+   "rc": 813436124
+  },
+  {
+   "arm": "qbe",
+   "gc": 1630729139,
+   "id": "lox/vm/strings",
+   "ratio": 0.8376115427958879,
+   "rc": 1365917550
+  },
+  {
+   "arm": "llvm",
+   "gc": 810163435,
+   "id": "lox/vm/strings",
+   "ratio": 0.7138574996290717,
+   "rc": 578341244
+  },
+  {
+   "arm": "qbe",
+   "gc": 4330048516,
+   "id": "lox/vm/trees",
+   "ratio": 1.1251614710545197,
+   "rc": 4872003758
+  },
+  {
+   "arm": "llvm",
+   "gc": 1991351003,
+   "id": "lox/vm/trees",
+   "ratio": 1.093503854779739,
+   "rc": 2177549998
+  },
+  {
+   "arm": "qbe",
+   "gc": 3317568067,
+   "id": "lox/vm/zoo",
+   "ratio": 1.1534557620879102,
+   "rc": 3826668003
+  },
+  {
+   "arm": "llvm",
+   "gc": 1418238623,
+   "id": "lox/vm/zoo",
+   "ratio": 1.150838269759912,
+   "rc": 1632163283
+  },
+  {
+   "arm": "qbe",
+   "gc": 2755789092,
+   "id": "lox/vm/zoo_batch",
+   "ratio": 1.1545441228562638,
+   "rc": 3181680100
+  },
+  {
+   "arm": "llvm",
+   "gc": 1159113833,
+   "id": "lox/vm/zoo_batch",
+   "ratio": 1.1617717679329946,
+   "rc": 1346625727
+  }
+ ],
+ "size": "dev",
+ "summary": {
+  "llvm": {
+   "geomean": 1.1240642938871341,
+   "geomean_nonlox": NaN,
+   "rows": 13,
+   "within_1_3": 13,
+   "worst": 1.2658880161887391
+  },
+  "qbe": {
+   "geomean": 1.1059993431892354,
+   "geomean_nonlox": NaN,
+   "rows": 13,
+   "within_1_3": 13,
+   "worst": 1.2852169464106888
+  }
+ },
+ "tag": "wide"
+}

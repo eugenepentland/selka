@@ -331,6 +331,10 @@ pub const Hints = struct {
     objects: std.array_hash_map.String(void) = .empty,
     elements: std.StringHashMapUnmanaged([]const u8) = .empty,
     prefixes: std.array_hash_map.String(void) = .empty,
+    /// Heap bookkeeping and journal words outside managed payload storage.
+    rc_states: std.array_hash_map.String(void) = .empty,
+    /// Preferred ordinary wrapped results; no alias or range authority.
+    affine: std.array_hash_map.String(void) = .empty,
 };
 
 /// The unit's one function.
@@ -650,6 +654,10 @@ const element_marker = "# myl-elem ";
 /// Marker line for the address of one word of the RC prefix below a managed
 /// payload: its owner or hold count or its common-header mark (`# myl-rc %temp`).
 const prefix_marker = "# myl-rc ";
+/// RC-SCOPE-IL-1: addresses in runtime bookkeeping, apart from guest values.
+const rc_state_marker = "# myl-rc-state ";
+/// A counted-loop arithmetic result, a performance-only lowering preference.
+const affine_marker = "# myl-affine ";
 
 /// A cursor over one unit's lines.
 const Reader = struct {
@@ -703,6 +711,16 @@ const Reader = struct {
             if (std.mem.startsWith(u8, stripped, prefix_marker)) {
                 const marked = strip(stripped[prefix_marker.len..]);
                 if (marked.len != 0 and marked[0] == '%') try function.hints.prefixes.put(self.arena, marked[1..], {});
+                continue;
+            }
+            if (std.mem.startsWith(u8, stripped, rc_state_marker)) {
+                const marked = strip(stripped[rc_state_marker.len..]);
+                if (marked.len != 0 and marked[0] == '%') try function.hints.rc_states.put(self.arena, marked[1..], {});
+                continue;
+            }
+            if (std.mem.startsWith(u8, stripped, affine_marker)) {
+                const marked = strip(stripped[affine_marker.len..]);
+                if (marked.len != 0 and marked[0] == '%') try function.hints.affine.put(self.arena, marked[1..], {});
                 continue;
             }
             const line = stripComment(raw);

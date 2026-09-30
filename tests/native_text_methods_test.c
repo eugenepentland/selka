@@ -134,11 +134,11 @@ int main(void) {
     assert(myl_native_text_find(line,raw(&heap,"na"))==2);
     assert(myl_native_text_find(line,raw(&heap,"zz"))==-1);
     assert(myl_native_text_find(line,raw(&heap,"bananas"))==-1);
-    assert(myl_native_text_find(line,empty)==-1);
+    assert(myl_native_text_find(line,empty)==0);
     assert(myl_native_text_count(line,raw(&heap,"na"))==2);
     assert(myl_native_text_count(line,raw(&heap,"ana"))==1);
     assert(myl_native_text_count(empty,raw(&heap,"a"))==0);
-    assert(myl_native_text_count(line,empty)==0);
+    assert(myl_native_text_count(line,empty)==(int64_t)line->length+1);
     assert(myl_native_text_edge(line,raw(&heap,"ban"),1));
     assert(myl_native_text_edge(line,raw(&heap,"ana"),0));
     assert(!myl_native_text_edge(line,raw(&heap,"nan"),1));

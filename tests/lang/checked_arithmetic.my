@@ -137,3 +137,24 @@ public def test_wrapping_and_saturating_keep_their_own_results() -> bool:
 
 public def test_the_program_passes_every_group() -> bool:
     return main() == 0
+
+
+def increment_literal(x: int) -> int:
+    return x + 1
+
+
+def decrement_literal(x: int) -> int:
+    return x - 1
+
+
+def add_negative_literal(x: int) -> int:
+    return x + -1
+
+
+def subtract_negative_literal(x: int) -> int:
+    return x - -1
+
+
+# spec-case: LLVM-CONSTANT-OVERFLOW-1
+public def test_literal_neighbors_keep_exact_signed_64_bit_results() -> bool:
+    return increment_literal(9223372036854775806) == 9223372036854775807 and decrement_literal(-9223372036854775807) == -9223372036854775808 and add_negative_literal(-9223372036854775807) == -9223372036854775808 and subtract_negative_literal(9223372036854775806) == 9223372036854775807 and increment_literal(-9223372036854775808) == -9223372036854775807 and decrement_literal(9223372036854775807) == 9223372036854775806 and increment_literal(4294967295) == 4294967296 and decrement_literal(4294967297) == 4294967296

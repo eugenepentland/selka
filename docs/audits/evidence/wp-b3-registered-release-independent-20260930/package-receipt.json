@@ -1,0 +1,11 @@
+{
+  "archive": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-registered-release-review-20260930/.tmp/registered-release-independent-package/raw.tar.gz",
+  "bytes": 3798449,
+  "sha256": "c728d5834f40a51908eb1d7c2ac949edf21b21dfc14274b53637dcfba3ff7282",
+  "manifest_sha256": "48d9e4ecbb0ab8afe2d7c299d0b3dc47849ab8c569021d3fa779e2e427446de6",
+  "raw_members": 150,
+  "total_members": 151,
+  "all_member_lengths_and_hashes_verified": true,
+  "summary_receipt_sha256": "98825d0f855fbbbf0f361d9d6a955ca68e767e95fa6d6db14b982d2330eec631",
+  "report_sha256": "b4a86745a86762ef9bd90aa313c9b7dbe7184682279ad16ca789f7d581d55670"
+}

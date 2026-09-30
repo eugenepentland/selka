@@ -159,7 +159,7 @@ static void native_allocation_budget(void) {
         if (!value) break;
         values[count++]=value;
     }
-    /* The aligned 80-byte slab metadata leaves exactly 1363 48-byte slots. */
+    /* The 80-byte slab metadata leaves exactly 1363 48-byte slots. */
     assert(count==1363 && heap.bytes==heap.limit && heap.objects_live==count);
     assert(myl_rc_take_failure(&heap)==MYL_RC_ALLOCATION_REFUSED);
     for (size_t i=0;i<count;i++) myl_rc_owner_release(&heap,values[i]);
@@ -1420,6 +1420,13 @@ static void plain_retain_excludes_tokens(void) {
     myl_rc_hold_release(&heap,&source_hold);
     finish(&heap);
 }
+/* spec-case: RC-PLAIN-READY-NESTED-1. Both callable aliases answer the same
+ * refusal/success without admitting a different binding or queued callback. */
+static int same_plain_ready(myl_native_heap *heap, const myl_native_list *list) {
+    int ordinary=myl_rc_list_plain_ready(heap,list);
+    assert(ordinary==myl_rc_list_plain_ready_hot(heap,list));
+    return ordinary;
+}
 /* spec-case: RC-PLAIN-APPEND-1. Admission neither registers cold metadata nor
  * allocates, and excludes empty/aggregate/managed/held/unique/finalized types. */
 static void plain_append_admission(void) {
@@ -1438,15 +1445,15 @@ static void plain_append_admission(void) {
     myl_native_heap heap;
     init(&heap);
     myl_native_list probe={0};
-    assert(!myl_rc_list_plain_ready(NULL,&probe) && !myl_rc_list_plain_ready(&heap,NULL));
+    assert(!same_plain_ready(NULL,&probe) && !same_plain_ready(&heap,NULL));
     for (size_t i=0;i<4;i++) {
         probe.element=&scalar[i];
         size_t bytes=heap.bytes, allocations=heap.allocations;
-        assert(!myl_rc_list_plain_ready(&heap,&probe));
+        assert(!same_plain_ready(&heap,&probe));
         assert(!myl_rc_descriptor_find(&heap,probe.element));
         assert(heap.bytes==bytes && heap.allocations==allocations);
         myl_native_list *list=myl_native_list_new(&heap,probe.element,4);
-        assert(list && myl_rc_list_plain_ready(&heap,list));
+        assert(list && same_plain_ready(&heap,list));
         myl_rc_owner_release(&heap,list);
     }
     assert(flat_count(&heap,&plain_pair,&plain_pair_shape)==0);
@@ -1455,7 +1462,7 @@ static void plain_append_admission(void) {
     const myl_native_type *refused[]={&empty,&plain_pair,&pointer,&held,&unique,&finalized};
     for (size_t i=0;i<sizeof refused/sizeof refused[0];i++) {
         probe.element=refused[i];
-        assert(!myl_rc_list_plain_ready(&heap,&probe));
+        assert(!same_plain_ready(&heap,&probe));
     }
     finish(&heap);
 }
@@ -1478,17 +1485,17 @@ static void plain_append_pending_death(void) {
     assert(list && myl_rc_list_append(&heap,list,&value));
     void *queued=myl_native_heap_alloc(&heap,&finalized,1);
     assert(queued);
-    assert(myl_rc_list_plain_ready(&heap,list)); /* Warm identity before queueing. */
+    assert(same_plain_ready(&heap,list)); /* Warm identity before queueing. */
     append_observed=list;
     heap.rc->dead.active=1;
     myl_rc_owner_release(&heap,queued);
     heap.rc->dead.active=0;
-    assert(heap.rc->dead.head && !myl_rc_list_plain_ready(&heap,list));
+    assert(heap.rc->dead.head && !same_plain_ready(&heap,list));
     assert(list->length==1 && *(uint64_t *)list->storage==7 && heap.rc->dead.head);
     assert(myl_rc_list_append(&heap,list,list->storage));
     assert(list->length==2 && list->generation==2 && !heap.rc->dead.head);
     assert(((uint64_t *)list->storage)[0]==99 && ((uint64_t *)list->storage)[1]==7);
-    assert(myl_rc_list_plain_ready(&heap,list));
+    assert(same_plain_ready(&heap,list));
     append_observed=NULL;
     myl_rc_owner_release(&heap,list);
     finish(&heap);
@@ -1502,7 +1509,7 @@ static void plain_append_fallback(void) {
     myl_native_list *list=myl_native_list_new(&heap,&number,1);
     uint64_t value=7;
     assert(list && myl_rc_list_append(&heap,list,&value));
-    assert(myl_rc_list_plain_ready(&heap,list));
+    assert(same_plain_ready(&heap,list));
     assert(myl_native_region_begin(&heap));
     assert(myl_rc_list_append(&heap,list,list->storage));
     assert(list->length==2 && !myl_native_header_region(list->storage));
@@ -1709,9 +1716,9 @@ static void dictionary_word_registration(void) {
     myl_native_list *list=myl_native_list_new(&heap,&floating,4);
     assert(list);
     for (value=14;value<18;value++) {
-        assert(myl_rc_list_plain_ready(&heap,list));
+        assert(same_plain_ready(&heap,list));
         assert(myl_native_dictionary_write(&heap,dict,&key,&value));
-        assert(myl_rc_list_plain_ready(&heap,list));
+        assert(same_plain_ready(&heap,list));
         assert(myl_native_dictionary_read(dict,&key,&output) && output==value);
     }
     myl_rc_owner_release(&heap,list);

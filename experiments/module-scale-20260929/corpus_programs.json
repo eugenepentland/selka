@@ -1,0 +1,498 @@
+[
+  {
+    "id": "parity/suite/binary_trees",
+    "kind": "single",
+    "src": "bench/parity/suite/binary_trees.my",
+    "build_key": "parity-suite-binary_trees",
+    "arms": [
+      "qbe",
+      "llvm"
+    ],
+    "expected_path": "bench/parity/suite/binary_trees.expected"
+  },
+  {
+    "id": "parity/suite/fannkuch_redux",
+    "kind": "single",
+    "src": "bench/parity/suite/fannkuch_redux.my",
+    "build_key": "parity-suite-fannkuch_redux",
+    "arms": [
+      "qbe",
+      "llvm"
+    ],
+    "expected_path": "bench/parity/suite/fannkuch_redux.expected"
+  },
+  {
+    "id": "parity/suite/knucleotide",
+    "kind": "single",
+    "src": "bench/parity/suite/knucleotide.my",
+    "build_key": "parity-suite-knucleotide",
+    "arms": [
+      "qbe",
+      "llvm"
+    ],
+    "expected_path": "bench/parity/suite/knucleotide.expected"
+  },
+  {
+    "id": "parity/suite/mandelbrot",
+    "kind": "single",
+    "src": "bench/parity/suite/mandelbrot.my",
+    "build_key": "parity-suite-mandelbrot",
+    "arms": [
+      "qbe",
+      "llvm"
+    ],
+    "expected_path": "bench/parity/suite/mandelbrot.expected"
+  },
+  {
+    "id": "parity/suite/matmul",
+    "kind": "single",
+    "src": "bench/parity/suite/matmul.my",
+    "build_key": "parity-suite-matmul",
+    "arms": [
+      "qbe",
+      "llvm"
+    ],
+    "expected_path": "bench/parity/suite/matmul.expected"
+  },
+  {
+    "id": "parity/suite/nbody",
+    "kind": "single",
+    "src": "bench/parity/suite/nbody.my",
+    "build_key": "parity-suite-nbody",
+    "arms": [
+      "qbe",
+      "llvm"
+    ],
+    "expected_path": "bench/parity/suite/nbody.expected"
+  },
+  {
+    "id": "parity/suite/raytrace",
+    "kind": "single",
+    "src": "bench/parity/suite/raytrace.my",
+    "build_key": "parity-suite-raytrace",
+    "arms": [
+      "qbe",
+      "llvm"
+    ],
+    "expected_path": "bench/parity/suite/raytrace.expected"
+  },
+  {
+    "id": "parity/suite/sieve",
+    "kind": "single",
+    "src": "bench/parity/suite/sieve.my",
+    "build_key": "parity-suite-sieve",
+    "arms": [
+      "qbe",
+      "llvm"
+    ],
+    "expected_path": "bench/parity/suite/sieve.expected"
+  },
+  {
+    "id": "parity/suite/sort_builtin",
+    "kind": "single",
+    "src": "bench/parity/suite/sort_builtin.my",
+    "build_key": "parity-suite-sort_builtin",
+    "arms": [
+      "qbe",
+      "llvm"
+    ],
+    "expected_path": "bench/parity/suite/sort_builtin.expected"
+  },
+  {
+    "id": "parity/suite/sort_quick",
+    "kind": "single",
+    "src": "bench/parity/suite/sort_quick.my",
+    "build_key": "parity-suite-sort_quick",
+    "arms": [
+      "qbe",
+      "llvm"
+    ],
+    "expected_path": "bench/parity/suite/sort_quick.expected"
+  },
+  {
+    "id": "parity/suite/sort_records",
+    "kind": "single",
+    "src": "bench/parity/suite/sort_records.my",
+    "build_key": "parity-suite-sort_records",
+    "arms": [
+      "qbe",
+      "llvm"
+    ],
+    "expected_path": "bench/parity/suite/sort_records.expected"
+  },
+  {
+    "id": "parity/suite/spectral_norm",
+    "kind": "single",
+    "src": "bench/parity/suite/spectral_norm.my",
+    "build_key": "parity-suite-spectral_norm",
+    "arms": [
+      "qbe",
+      "llvm"
+    ],
+    "expected_path": "bench/parity/suite/spectral_norm.expected"
+  },
+  {
+    "id": "parity/suite/text_ops",
+    "kind": "single",
+    "src": "bench/parity/suite/text_ops.my",
+    "build_key": "parity-suite-text_ops",
+    "arms": [
+      "qbe",
+      "llvm"
+    ],
+    "expected_path": "bench/parity/suite/text_ops.expected"
+  },
+  {
+    "id": "parity/lib/scan_count",
+    "kind": "single",
+    "src": "bench/parity/lib/scan_count.my",
+    "build_key": "parity-lib-scan_count",
+    "arms": [
+      "qbe",
+      "llvm"
+    ],
+    "expected_path": "bench/parity/lib/scan_count.expected"
+  },
+  {
+    "id": "parity/lib/scan_replace",
+    "kind": "single",
+    "src": "bench/parity/lib/scan_replace.my",
+    "build_key": "parity-lib-scan_replace",
+    "arms": [
+      "qbe",
+      "llvm"
+    ],
+    "expected_path": "bench/parity/lib/scan_replace.expected"
+  },
+  {
+    "id": "parity/lib/scan_split",
+    "kind": "single",
+    "src": "bench/parity/lib/scan_split.my",
+    "build_key": "parity-lib-scan_split",
+    "arms": [
+      "qbe",
+      "llvm"
+    ],
+    "expected_path": "bench/parity/lib/scan_split.expected"
+  },
+  {
+    "id": "parity/micro/alloc_churn",
+    "kind": "single",
+    "src": "bench/parity/micro/alloc_churn.my",
+    "build_key": "parity-micro-alloc_churn",
+    "arms": [
+      "qbe",
+      "llvm"
+    ],
+    "expected_path": "bench/parity/micro/alloc_churn.expected"
+  },
+  {
+    "id": "parity/micro/bytes_scan",
+    "kind": "single",
+    "src": "bench/parity/micro/bytes_scan.my",
+    "build_key": "parity-micro-bytes_scan",
+    "arms": [
+      "qbe",
+      "llvm"
+    ],
+    "expected_path": "bench/parity/micro/bytes_scan.expected"
+  },
+  {
+    "id": "parity/micro/calls",
+    "kind": "single",
+    "src": "bench/parity/micro/calls.my",
+    "build_key": "parity-micro-calls",
+    "arms": [
+      "qbe",
+      "llvm"
+    ],
+    "expected_path": "bench/parity/micro/calls.expected"
+  },
+  {
+    "id": "parity/micro/dict_count",
+    "kind": "single",
+    "src": "bench/parity/micro/dict_count.my",
+    "build_key": "parity-micro-dict_count",
+    "arms": [
+      "qbe",
+      "llvm"
+    ],
+    "expected_path": "bench/parity/micro/dict_count.expected"
+  },
+  {
+    "id": "parity/micro/fib",
+    "kind": "single",
+    "src": "bench/parity/micro/fib.my",
+    "build_key": "parity-micro-fib",
+    "arms": [
+      "qbe",
+      "llvm"
+    ],
+    "expected_path": "bench/parity/micro/fib.expected"
+  },
+  {
+    "id": "parity/micro/float_loop",
+    "kind": "single",
+    "src": "bench/parity/micro/float_loop.my",
+    "build_key": "parity-micro-float_loop",
+    "arms": [
+      "qbe",
+      "llvm"
+    ],
+    "expected_path": "bench/parity/micro/float_loop.expected"
+  },
+  {
+    "id": "parity/micro/intloop",
+    "kind": "single",
+    "src": "bench/parity/micro/intloop.my",
+    "build_key": "parity-micro-intloop",
+    "arms": [
+      "qbe",
+      "llvm"
+    ],
+    "expected_path": "bench/parity/micro/intloop.expected"
+  },
+  {
+    "id": "parity/micro/list_append_sum",
+    "kind": "single",
+    "src": "bench/parity/micro/list_append_sum.my",
+    "build_key": "parity-micro-list_append_sum",
+    "arms": [
+      "qbe",
+      "llvm"
+    ],
+    "expected_path": "bench/parity/micro/list_append_sum.expected"
+  },
+  {
+    "id": "parity/micro/list_records",
+    "kind": "single",
+    "src": "bench/parity/micro/list_records.my",
+    "build_key": "parity-micro-list_records",
+    "arms": [
+      "qbe",
+      "llvm"
+    ],
+    "expected_path": "bench/parity/micro/list_records.expected"
+  },
+  {
+    "id": "parity/micro/records",
+    "kind": "single",
+    "src": "bench/parity/micro/records.my",
+    "build_key": "parity-micro-records",
+    "arms": [
+      "qbe",
+      "llvm"
+    ],
+    "expected_path": "bench/parity/micro/records.expected"
+  },
+  {
+    "id": "parity/micro/str_build",
+    "kind": "single",
+    "src": "bench/parity/micro/str_build.my",
+    "build_key": "parity-micro-str_build",
+    "arms": [
+      "qbe",
+      "llvm"
+    ],
+    "expected_path": "bench/parity/micro/str_build.expected"
+  },
+  {
+    "id": "schematic/fixture",
+    "kind": "schematic",
+    "case": "fixture",
+    "build_key": "schematic",
+    "arms": [
+      "qbe",
+      "llvm"
+    ]
+  },
+  {
+    "id": "schematic/changed-net",
+    "kind": "schematic",
+    "case": "changed-net",
+    "build_key": "schematic",
+    "arms": [
+      "qbe",
+      "llvm"
+    ]
+  },
+  {
+    "id": "schematic/changed-value",
+    "kind": "schematic",
+    "case": "changed-value",
+    "build_key": "schematic",
+    "arms": [
+      "qbe",
+      "llvm"
+    ]
+  },
+  {
+    "id": "lox/vm/binary_trees",
+    "kind": "lox",
+    "script": "binary_trees",
+    "engine": "vm",
+    "size": 10,
+    "build_key": "lox",
+    "arms": [
+      "qbe",
+      "llvm"
+    ],
+    "expected_path": ".tmp/b2/quick/lox/bench/expected/binary_trees.tree.out"
+  },
+  {
+    "id": "lox/vm/closures",
+    "kind": "lox",
+    "script": "closures",
+    "engine": "vm",
+    "size": 200000,
+    "build_key": "lox",
+    "arms": [
+      "qbe",
+      "llvm"
+    ],
+    "expected_path": ".tmp/b2/quick/lox/bench/expected/closures.tree.out"
+  },
+  {
+    "id": "lox/vm/equality",
+    "kind": "lox",
+    "script": "equality",
+    "engine": "vm",
+    "size": 300000,
+    "build_key": "lox",
+    "arms": [
+      "qbe",
+      "llvm"
+    ],
+    "expected_path": ".tmp/b2/quick/lox/bench/expected/equality.tree.out"
+  },
+  {
+    "id": "lox/vm/fib",
+    "kind": "lox",
+    "script": "fib",
+    "engine": "vm",
+    "size": 28,
+    "build_key": "lox",
+    "arms": [
+      "qbe",
+      "llvm"
+    ],
+    "expected_path": ".tmp/b2/quick/lox/bench/expected/fib.tree.out"
+  },
+  {
+    "id": "lox/vm/instantiation",
+    "kind": "lox",
+    "script": "instantiation",
+    "engine": "vm",
+    "size": 50000,
+    "build_key": "lox",
+    "arms": [
+      "qbe",
+      "llvm"
+    ],
+    "expected_path": ".tmp/b2/quick/lox/bench/expected/instantiation.tree.out"
+  },
+  {
+    "id": "lox/vm/invocation",
+    "kind": "lox",
+    "script": "invocation",
+    "engine": "vm",
+    "size": 150000,
+    "build_key": "lox",
+    "arms": [
+      "qbe",
+      "llvm"
+    ],
+    "expected_path": ".tmp/b2/quick/lox/bench/expected/invocation.tree.out"
+  },
+  {
+    "id": "lox/vm/method_call",
+    "kind": "lox",
+    "script": "method_call",
+    "engine": "vm",
+    "size": 50000,
+    "build_key": "lox",
+    "arms": [
+      "qbe",
+      "llvm"
+    ],
+    "expected_path": ".tmp/b2/quick/lox/bench/expected/method_call.tree.out"
+  },
+  {
+    "id": "lox/vm/properties",
+    "kind": "lox",
+    "script": "properties",
+    "engine": "vm",
+    "size": 100000,
+    "build_key": "lox",
+    "arms": [
+      "qbe",
+      "llvm"
+    ],
+    "expected_path": ".tmp/b2/quick/lox/bench/expected/properties.tree.out"
+  },
+  {
+    "id": "lox/vm/string_equality",
+    "kind": "lox",
+    "script": "string_equality",
+    "engine": "vm",
+    "size": 10000,
+    "build_key": "lox",
+    "arms": [
+      "qbe",
+      "llvm"
+    ],
+    "expected_path": ".tmp/b2/quick/lox/bench/expected/string_equality.tree.out"
+  },
+  {
+    "id": "lox/vm/strings",
+    "kind": "lox",
+    "script": "strings",
+    "engine": "vm",
+    "size": 300000,
+    "build_key": "lox",
+    "arms": [
+      "qbe",
+      "llvm"
+    ],
+    "expected_path": ".tmp/b2/quick/lox/bench/expected/strings.tree.out"
+  },
+  {
+    "id": "lox/vm/trees",
+    "kind": "lox",
+    "script": "trees",
+    "engine": "vm",
+    "size": 5,
+    "build_key": "lox",
+    "arms": [
+      "qbe",
+      "llvm"
+    ],
+    "expected_path": ".tmp/b2/quick/lox/bench/expected/trees.tree.out"
+  },
+  {
+    "id": "lox/vm/zoo",
+    "kind": "lox",
+    "script": "zoo",
+    "engine": "vm",
+    "size": 3000000,
+    "build_key": "lox",
+    "arms": [
+      "qbe",
+      "llvm"
+    ],
+    "expected_path": ".tmp/b2/quick/lox/bench/expected/zoo.tree.out"
+  },
+  {
+    "id": "lox/vm/zoo_batch",
+    "kind": "lox",
+    "script": "zoo_batch",
+    "engine": "vm",
+    "size": 40,
+    "build_key": "lox",
+    "arms": [
+      "qbe",
+      "llvm"
+    ],
+    "expected_path": ".tmp/b2/quick/lox/bench/expected/zoo_batch.tree.out"
+  }
+]

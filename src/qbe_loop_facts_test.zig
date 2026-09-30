@@ -450,3 +450,108 @@ test "a loop shorter than the minimum span runs the original loop" {
     // Three elements: the original loop runs, with the same result.
     try t.expectEqual(@as(i64, 6), (try sameOutcome(list_sum)).value);
 }
+
+const induction_facts = @import("qbe_loop_facts.zig");
+const induction_code = @import("bytecode.zig");
+const InductionOp = @FieldType(induction_code.Instruction, "op");
+fn inductionInstruction(op: InductionOp) induction_code.Instruction {
+    return .{ .op = op, .span = .{ .start = 0, .end = 0 } };
+}
+fn inductionFixture() [12]induction_code.Instruction {
+    const counter: @import("typed.zig").LocalId = @fromBackingInt(@intCast(0));
+    return .{
+        inductionInstruction(.{ .load_local = counter }),
+        inductionInstruction(.{ .push_i64 = 7 }),
+        inductionInstruction(.{ .cmp_i64 = .lt }),
+        inductionInstruction(.{ .jump_if_false = 11 }),
+        inductionInstruction(.{ .push_i64 = 0 }),
+        inductionInstruction(.pop),
+        inductionInstruction(.{ .load_local = counter }),
+        inductionInstruction(.{ .push_i64 = 1 }),
+        inductionInstruction(.add_i64_checked),
+        inductionInstruction(.{ .store_local = counter }),
+        inductionInstruction(.{ .jump = 0 }),
+        inductionInstruction(.ret),
+    };
+}
+fn inductionDirections() !usize {
+    const cases = [_]struct { op: InductionOp, step: i64, predicate: induction_code.Predicate }{
+        .{ .op = .add_i64_checked, .step = 1, .predicate = .lt },
+        .{ .op = .{ .binary_integer = .{ .ty = .i64, .op = .sub } }, .step = -1, .predicate = .le },
+        .{ .op = .sub_i64_checked, .step = 1, .predicate = .gt },
+        .{ .op = .{ .binary_integer = .{ .ty = .i64, .op = .add } }, .step = -1, .predicate = .ge },
+    };
+    for (cases) |case| {
+        var code = inductionFixture();
+        code[2].op = .{ .cmp_i64 = case.predicate };
+        code[7].op = .{ .push_i64 = case.step };
+        code[8].op = case.op;
+        try t.expect(induction_facts.inductionAt(&code, 8));
+    }
+    return cases.len;
+}
+fn inductionRefusals() !usize {
+    const other: @import("typed.zig").LocalId = @fromBackingInt(@intCast(1));
+    const cases = [_]struct { at: usize, op: InductionOp }{
+        .{ .at = 9, .op = .{ .store_local = other } },
+        .{ .at = 6, .op = .{ .load_local = other } },
+        .{ .at = 0, .op = .{ .load_local = other } },
+        .{ .at = 0, .op = .{ .push_i64 = 0 } },
+        .{ .at = 1, .op = .{ .call = @fromBackingInt(@intCast(0)) } },
+        .{ .at = 2, .op = .{ .cmp_i64 = .eq } },
+        .{ .at = 2, .op = .{ .cmp_i64 = .gt } },
+        .{ .at = 3, .op = .{ .jump_if_false = 10 } },
+        .{ .at = 7, .op = .{ .push_i64 = 2 } },
+        .{ .at = 7, .op = .{ .push_integer = .{ .ty = .u64, .value = 1 } } },
+        .{ .at = 8, .op = .mul_i64_checked },
+        .{ .at = 8, .op = .{ .binary_integer = .{ .ty = .i32, .op = .add } } },
+        .{ .at = 10, .op = .{ .jump = 2 } },
+        .{ .at = 10, .op = .{ .jump = 11 } },
+        .{ .at = 10, .op = .pop },
+    };
+    for (cases) |case| {
+        var code = inductionFixture();
+        code[case.at].op = case.op;
+        try t.expect(!induction_facts.inductionAt(&code, 8));
+    }
+    const code = inductionFixture();
+    try t.expect(!induction_facts.inductionAt(&code, 0));
+    try t.expect(!induction_facts.inductionAt(&code, code.len));
+    return cases.len + 2;
+}
+
+// spec-case: LLVM-INDUCTION-RESULT-1
+test "induction result hints recognize both unit directions and reject broken or interior latches" {
+    try t.expectEqual(@as(usize, 4), try inductionDirections());
+    try t.expectEqual(@as(usize, 17), try inductionRefusals());
+}
+
+const induction_source =
+    \\def latch(n: int) -> float:
+    \\    x = 0.0
+    \\    for i in range(n):
+    \\        x = sqrt(float(i))
+    \\    return x
+    \\
+    \\def interior(n: int) -> float:
+    \\    x = 0.0
+    \\    i = 0
+    \\    while i < n:
+    \\        i += 1
+    \\        x = sqrt(float(i))
+    \\    return x
+    \\
+    \\def main() -> int:
+    \\    return int(latch(2) + interior(2))
+;
+
+// spec-case: LLVM-INDUCTION-RESULT-1
+test "induction result emission marks a counted latch but leaves an interior counter increment unmarked" {
+    const latch = try fastIl(induction_source, "latch");
+    defer t.allocator.free(latch);
+    const interior = try fastIl(induction_source, "interior");
+    defer t.allocator.free(interior);
+    try t.expectEqual(@as(usize, 1), std.mem.count(u8, latch, "# myl-affine"));
+    try t.expectEqual(@as(usize, 0), std.mem.count(u8, interior, "# myl-affine"));
+    try t.expect(std.mem.indexOf(u8, latch, "myl_qbe_fail_overflow_op") != null);
+}

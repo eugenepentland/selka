@@ -1,0 +1,95 @@
+{
+  "source": "e789a32d42bd2f635e9e9f1e5da715f397b24517",
+  "review_worktree_source": "27b170076d1a21286857f7fc00583bded555497d",
+  "native_rc_abi": 5,
+  "compiler_sha256": "c76f443347eec255873c1fe16a5c17ed8c92da0896b49251c603f82c8d7bfc0a",
+  "frozen_compiler_unchanged": true,
+  "corpus": {
+    "distinct_programs": 29,
+    "corpus_rows": 43,
+    "equal": 29,
+    "executables_identical": 29,
+    "modules": 62,
+    "units_compared": 664,
+    "interfaces_compared": 62,
+    "reference_failed": 0,
+    "different": []
+  },
+  "runtime_matrix": {
+    "rc": {
+      "totals": {
+        "programs": 2,
+        "equal": 2,
+        "reference_failed": 0,
+        "modules": 9,
+        "units_compared": 80,
+        "units_whole": 79,
+        "specializations_shared": 1,
+        "interfaces_compared": 9,
+        "executables_identical": 2,
+        "different": []
+      },
+      "actual_matched_exit_statuses": [
+        1,
+        0
+      ]
+    },
+    "gc": {
+      "totals": {
+        "programs": 2,
+        "equal": 2,
+        "reference_failed": 0,
+        "modules": 9,
+        "units_compared": 80,
+        "units_whole": 79,
+        "specializations_shared": 1,
+        "interfaces_compared": 9,
+        "executables_identical": 2,
+        "different": []
+      },
+      "actual_matched_exit_statuses": [
+        1,
+        0
+      ]
+    },
+    "stats": {
+      "totals": {
+        "programs": 2,
+        "equal": 2,
+        "reference_failed": 0,
+        "modules": 9,
+        "units_compared": 80,
+        "units_whole": 79,
+        "specializations_shared": 1,
+        "interfaces_compared": 9,
+        "executables_identical": 2,
+        "different": []
+      },
+      "actual_matched_exit_statuses": [
+        1,
+        0
+      ]
+    },
+    "sites": {
+      "totals": {
+        "programs": 2,
+        "equal": 2,
+        "reference_failed": 0,
+        "modules": 9,
+        "units_compared": 80,
+        "units_whole": 79,
+        "specializations_shared": 1,
+        "interfaces_compared": 9,
+        "executables_identical": 2,
+        "different": []
+      },
+      "actual_matched_exit_statuses": [
+        1,
+        0
+      ]
+    }
+  },
+  "protocol": "Strict explicit per-module compilation, zero fallback/link guest compilation/reference failures, byte equality; runtime modes execute each whole/module binary; all heavy calls via build-slot with2workers sequential suite admission",
+  "limitation": "Preliminary e789/27 source only; corrected release/isel not composed; no final combined gate/fuzz/performance acceptance",
+  "guardian": "Not invoked for this read-only preliminary native oracle task."
+}

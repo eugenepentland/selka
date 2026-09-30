@@ -592,12 +592,53 @@ selsel(Fn *fn, Blk *b, Ins *i, Num *tn)
 	return isel0;
 }
 
+/* A zero comparison immediately after an integer add/sub can use its ZF.
+ * Cross no selected instruction: even an IR load/copy can materialize an
+ * external/TLS address with an add.  Nops/debug locations emit no code.
+ * Matching the comparison operand width is essential for high-only bits.
+ */
+static Ins *
+zeroarith(Blk *b, Ins *cmp, int k, int c, Fn *fn)
+{
+	Ins *producer, *tail;
+	Ref value, zero;
+
+	if (c != Cieq && c != Cine)
+		return 0;
+	/* flagi may cross trailing loads/copies whose selected address
+	 * materialization changes flags.  Require adjacency to the jump too. */
+	for (tail = cmp + 1; tail < &b->ins[b->nins]; tail++)
+		if (tail->op != Onop && tail->op != Odbgloc)
+			return 0;
+	value = cmp->arg[0];
+	zero = cmp->arg[1];
+	if (rtype(value) == RCon) {
+		value = cmp->arg[1];
+		zero = cmp->arg[0];
+	}
+	if (rtype(value) != RTmp || rtype(zero) != RCon)
+		return 0;
+	if (fn->con[zero.val].type != CBits || fn->con[zero.val].bits.i)
+		return 0;
+	producer = cmp;
+	while (producer > b->ins) {
+		producer--;
+		if (producer->op == Onop || producer->op == Odbgloc)
+			continue;
+		if ((producer->op == Oadd || producer->op == Osub)
+		&& producer->cls == k && req(producer->to, value))
+			return producer;
+		return 0;
+	}
+	return 0;
+}
+
 static void
 seljmp(Blk *b, Fn *fn)
 {
 	Ref r;
 	int c, k, swap;
-	Ins *fi;
+	Ins *fi, *producer;
 	Tmp *t;
 
 	if (b->jmp.type == Jret0
@@ -623,12 +664,23 @@ seljmp(Blk *b, Fn *fn)
 	else if (iscmp(fi->op, &k, &c)
 	     && c != NCmpI+Cfeq /* see sel(), selsel() */
 	     && c != NCmpI+Cfne) {
-		swap = cmpswap(fi->arg, c);
-		if (swap)
-			c = cmpop(c);
-		if (t->nuse == 1) {
-			selcmp(fi->arg, k, swap, fn);
+		producer = t->nuse == 1 ? zeroarith(b, fi, k, c, fn) : 0;
+		if (producer) {
+			/* Flags are not live values.  Keep the producer's full-width
+			 * result live even if removing cmp would leave no data use.
+			 * Selection emits add/sub, not lea; allocator spill moves and
+			 * copies do not change flags, and edge moves get new blocks.
+			 */
+			emit(Ocopy, k, R, producer->to, R);
 			*fi = (Ins){.op = Onop};
+		} else {
+			swap = cmpswap(fi->arg, c);
+			if (swap)
+				c = cmpop(c);
+			if (t->nuse == 1) {
+				selcmp(fi->arg, k, swap, fn);
+				*fi = (Ins){.op = Onop};
+			}
 		}
 		b->jmp.type = Jjf + c;
 	}
@@ -776,11 +828,35 @@ static uchar *matcher[] = {
 
 /* end of generated code */
 
+/* Address numbering alone may view a long subtraction as an addition.
+ * Keep the actual instruction, its other uses, and flag selection intact.
+ */
+static Ref
+suboffset(Ins *i, Fn *fn)
+{
+	int64_t offset;
+	Ref base, imm;
+
+	base = i->arg[0];
+	imm = i->arg[1];
+	if (i->op != Osub || i->cls != Kl || fn->tmp[i->to.val].cls != Kl
+	|| rtype(base) != RTmp || fn->tmp[base.val].cls != Kl
+	|| rtype(imm) != RCon || fn->con[imm.val].type != CBits
+	|| fn->con[imm.val].flt)
+		return R;
+	offset = fn->con[imm.val].bits.i;
+	if (offset < 0 || offset > (int64_t)INT32_MAX + 1)
+		return R;
+	return getcon(-offset, fn);
+}
+
 static void
-anumber(Num *tn, Blk *b, Con *con)
+anumber(Num *tn, Blk *b, Fn *fn)
 {
 	Ins *i;
 	Num *n;
+	Ref offset;
+	int op;
 
 	for (i=b->ins; i<&b->ins[b->nins]; i++) {
 		if (rtype(i->to) != RTmp)
@@ -788,10 +864,36 @@ anumber(Num *tn, Blk *b, Con *con)
 		n = &tn[i->to.val];
 		n->l = i->arg[0];
 		n->r = i->arg[1];
-		n->nl = refn(n->l, tn, con);
-		n->nr = refn(n->r, tn, con);
-		n->n = opn(i->op, n->nl, n->nr);
+		op = i->op;
+		offset = suboffset(i, fn);
+		if (!req(offset, R)) {
+			n->r = offset;
+			op = Oadd;
+		}
+		n->nl = refn(n->l, tn, fn->con);
+		n->nr = refn(n->r, tn, fn->con);
+		n->n = opn(op, n->nl, n->nr);
 	}
+}
+
+/* Reject an unencodable intermediate displacement before addcon can
+ * overflow; leaving its original temporary preserves ordinary arithmetic.
+ */
+static int
+addradd(Con *a, Con *b, int scale)
+{
+	int64_t left, right;
+
+	left = a->type == CUndef ? 0 : a->bits.i;
+	right = b->bits.i;
+	if (left < INT32_MIN || left > INT32_MAX
+	|| right < INT32_MIN || right > INT32_MAX
+	|| (scale != 1 && scale != 2 && scale != 4 && scale != 8))
+		return 0;
+	right *= scale;
+	if (left + right < INT32_MIN || left + right > INT32_MAX)
+		return 0;
+	return addcon(a, b, scale);
 }
 
 static Ref
@@ -807,7 +909,8 @@ adisp(Con *c, Num *tn, Ref r, Fn *fn, int s)
 			break;
 		runmatch(matcher[Pob], tn, r, v);
 		assert(rtype(v[0]) == RCon);
-		addcon(c, &fn->con[v[0].val], s);
+		if (!addradd(c, &fn->con[v[0].val], s))
+			break;
 		r = v[1];
 	}
 	return r;
@@ -843,11 +946,11 @@ amatch(Addr *a, Num *tn, Ref r, Fn *fn)
 
 	if (*p < 0 && co.type != CUndef)
 	if (amatch(a, tn, rb, fn))
-		return addcon(&a->offset, &co, 1);
+		return addradd(&a->offset, &co, 1);
 	if (!req(ro, R)) {
 		assert(rtype(ro) == RCon);
 		c = &fn->con[ro.val];
-		if (!addcon(&co, c, 1))
+		if (!addradd(&co, c, 1))
 			return 0;
 	}
 	if (!req(rs, R)) {
@@ -923,7 +1026,7 @@ amd64_isel(Fn *fn)
 				fixarg(&p->arg[a], p->cls, 0, fn);
 			}
 		memset(num, 0, n * sizeof num[0]);
-		anumber(num, b, fn->con);
+		anumber(num, b, fn);
 		seljmp(b, fn);
 		for (i=&b->ins[b->nins]; i!=b->ins;) {
 			--i;

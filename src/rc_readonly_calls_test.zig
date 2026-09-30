@@ -47,7 +47,7 @@ fn witnessSource(allocator: std.mem.Allocator, source: []const u8) !Witness {
     defer catalog.deinit();
     for (program.functions, 0..) |function, index| if (std.mem.eql(u8, function.name, "selected")) {
         return .{
-            .admitted = (try calls.identity(&catalog, program.functions, function, "rc-v3")) != null,
+            .admitted = (try calls.identity(&catalog, program.functions, function, "rc-v5")) != null,
             .key = try cache.key(allocator, program, &layouts, index, @splat(1)),
         };
     };
@@ -297,7 +297,7 @@ fn routed(change: RouteChange) !?@import("rc_model.zig").EntryCertificate {
     defer layouts.deinit();
     var catalog = try shapes.Catalog.init(t.allocator, &layouts);
     defer catalog.deinit();
-    const certificate = (try @import("rc_calls.zig").borrowedIn(t.allocator, &catalog, program.functions, callee, "rc-v3")) orelse return error.TestUnexpectedResult;
+    const certificate = (try @import("rc_calls.zig").borrowedIn(t.allocator, &catalog, program.functions, callee, "rc-v5")) orelse return error.TestUnexpectedResult;
     var route = [_]calls.Route{.{ .pc = 0, .target = callee.id, .certificate = .{ .borrowed = certificate } }};
     switch (change) {
         .target => route[0].target = @fromBackingInt(999),
@@ -378,8 +378,8 @@ fn conservativeCapture() !bool {
     var budget: @import("rc_readonly_plan.zig").Budget = .{};
     const grammar = try @import("rc_readonly_body.zig").certify(&catalog, functions[0]);
     const physical = try @import("rc_readonly_plan.zig").certify(&catalog, functions, functions[0], &budget);
-    const leaf = try calls.identity(&catalog, functions, functions[0], "rc-v3");
-    const root = try calls.identity(&catalog, functions, functions[1], "rc-v3");
+    const leaf = try calls.identity(&catalog, functions, functions[0], "rc-v5");
+    const root = try calls.identity(&catalog, functions, functions[1], "rc-v5");
     return grammar and !physical and leaf == null and root == null;
 }
 

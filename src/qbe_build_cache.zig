@@ -85,8 +85,10 @@ fn fileStamp(context: fs.Context, path: []const u8) ?[48]u8 {
 }
 /// The version every object key starts with. `v3` moved the key from SHA-256
 /// to BLAKE3 and frames the contract fields instead of their fingerprint, so
-/// no key an older driver published can ever be looked up by this one.
-const object_key_version = "mylang-object-key-v3";
+/// no key an older driver published can ever be looked up by this one. `v4`
+/// compiles a generated C unit with its job directory mapped away
+/// (BUILD-REPRODUCIBLE-1), so no object that still names one is reused.
+const object_key_version = "mylang-object-key-v4";
 
 /// QBE-FRAMEMAP-1: a runtime or generated C function that can sit between a
 /// guest frame and the runtime's `fail` keeps a frame pointer wherever it
@@ -214,6 +216,16 @@ pub const Cache = struct {
                 try self.context.write(source, input);
                 var argv: std.ArrayList([]const u8) = .empty;
                 try argv.appendSlice(a, try self.generatedFlags());
+                // BUILD-REPRODUCIBLE-1: the unit's own path (which a Debug
+                // assertion spells) is its job's private directory, mapped away,
+                // and a Debug unit's sanitizer source locations keep only file
+                // names (the prefix maps do not reach them), so the object is
+                // the same whichever job and cache directory compiled it.
+                try argv.appendSlice(a, &.{
+                    try std.fmt.allocPrint(a, "-ffile-prefix-map={s}=mylang-unit", .{work}),
+                    try std.fmt.allocPrint(a, "-fdebug-prefix-map={s}=mylang-unit", .{work}),
+                    "-fsanitize-undefined-strip-path-components=-1",
+                });
                 try argv.appendSlice(a, &.{ "-c", source, "-o", candidate });
                 return .{ .key = key, .path = path, .candidate = candidate, .work = work, .argv = argv.items, .environment = null, .assemble = null };
             },
@@ -575,7 +587,7 @@ test "an object key is the BLAKE3 of its framed environment, contract fields, ki
     defer context.deinit();
     const cache: Cache = .{ .context = context, .directory = "objects", .temporary = "work", .assets = "/assets", .environment = "env", .zig = "/zig", .mode = "Debug", .codegen = .{ .tool = "/qbe" } };
     var hash = std.crypto.hash.Blake3.init(.{});
-    hash.update("mylang-object-key-v3");
+    hash.update("mylang-object-key-v4");
     const contract = Contract.default;
     const parts = [_][]const u8{ "env", contract.bootstrap_language, contract.target, contract.runtime_abi, contract.effects, contract.flags, contract.compiler_identity, "function-digest", "abc" };
     for (parts) |part| blakeFrame(&hash, part);
@@ -682,13 +694,13 @@ test "RC runtime contract reaches generated C and each merged archive source gro
     try environment.put(ownership_contract.variable, "gc-v1");
     const gc = try std.mem.join(a, " ", try cache.flags());
     try std.testing.expect(std.mem.indexOf(u8, gc, "MYL_NATIVE_RC") == null);
-    try environment.put(ownership_contract.variable, "rc-v3-counting");
+    try environment.put(ownership_contract.variable, "rc-v5-counting");
     const counted = try std.mem.join(a, " ", try cache.generatedFlags());
     try std.testing.expect(std.mem.indexOf(u8, counted, "-DMYL_NATIVE_RC=1") != null);
     try std.testing.expect(std.mem.indexOf(u8, counted, "-DMYL_NATIVE_RC_COUNTING=1") != null);
     const merged = try std.mem.join(a, " ", try cache.mergeCommand(&.{ "qbe_runtime.c", "native_heap.c" }, "out.o"));
     try std.testing.expectEqual(@as(usize, 2), std.mem.count(u8, merged, "-DMYL_NATIVE_RC=1"));
-    try environment.put(ownership_contract.variable, "rc-v3");
+    try environment.put(ownership_contract.variable, "rc-v5");
     const plain = try std.mem.join(a, " ", try cache.flags());
     try std.testing.expect(std.mem.indexOf(u8, plain, "-DMYL_NATIVE_RC=1") != null);
     try std.testing.expect(std.mem.indexOf(u8, plain, "MYL_NATIVE_RC_COUNTING") == null);

@@ -11,8 +11,10 @@ any other toolchain.
 
 - `zig build` — compiles **and installs** `zig-out/bin/{mylang,mylang-io,qbe,board-trial,schematic-svg}`.
   Run this after any `src/` change before using `zig-out/bin/mylang`.
-- `zig build test` — runs the gate. It **does not install**, so `zig-out/bin/mylang` stays
-  stale unless you also ran `zig build`.
+- `zig build test` — runs the full gate, including installation prerequisites for
+  drivers that build native guests. Focused `test-units` and `test-cli` use
+  unattached compiler copies and **do not install**. After a `src/` change, run
+  plain `zig build` before using `zig-out/bin/mylang` directly.
 - `zig build test-compile` — type-checks every Zig test root without running anything.
 - **Building and using mylang needs no Python.** `zig build` (the install graph) and
   every command of the installed compiler run none; `USE-WITHOUT-PYTHON-1` in

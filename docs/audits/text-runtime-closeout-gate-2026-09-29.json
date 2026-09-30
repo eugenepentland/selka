@@ -1,0 +1,549 @@
+{
+  "task": "WP-B3 text tail views and immutable literal position indexes",
+  "plan_date": "2026-09-29",
+  "completed_utc_date": "2026-09-30",
+  "source": {
+    "source": "458b9dfc84640b2d1e38a4eb30be1ec3745c0476",
+    "tree": "5e36024f5d2e5043a2449c6850e46435879535a4",
+    "prefix": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-text-runtime-20260929/.tmp/b3-frozen",
+    "sha256": {
+      ".tmp/b3-frozen/bin/mylang": "1aa5fe081f549c3653785625f3240e1c60d47e958dbd559dfd35c7001ffd7efb",
+      ".tmp/b3-frozen/bin/qbe": "3a82e47eab7323bf4b25f71a99bcde34f93ab661a57b3524f2641d7254ba2725"
+    }
+  },
+  "control": {
+    "source": "5ef8b06a2e1dacd95ffb3a6e01e883ba9f615b39",
+    "prefix": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-text-runtime-20260929/.tmp/b3-control",
+    "sha256": {
+      ".tmp/b3-control/bin/mylang": "7fd3fcad3a5d83d29e37f51c33fe3fdb36f69e54e0ad32f67bb57f49540ed23c",
+      ".tmp/b3-control/bin/qbe": "3a82e47eab7323bf4b25f71a99bcde34f93ab661a57b3524f2641d7254ba2725"
+    }
+  },
+  "compiler_equality_sha256": {
+    ".tmp/b3-frozen/bin/mylang": "1aa5fe081f549c3653785625f3240e1c60d47e958dbd559dfd35c7001ffd7efb",
+    ".tmp/b3-fuzz-install/bin/mylang": "1aa5fe081f549c3653785625f3240e1c60d47e958dbd559dfd35c7001ffd7efb",
+    "zig-out/bin/mylang": "1aa5fe081f549c3653785625f3240e1c60d47e958dbd559dfd35c7001ffd7efb"
+  },
+  "rules": {
+    "heavy_runs": "scripts/build-slot.sh",
+    "scratch_caches_tmpdir": "owned worktree",
+    "timing_cpus": [
+      2,
+      3,
+      10,
+      11
+    ],
+    "timing_claim_released": true,
+    "source_frozen_during_all_gates": true
+  },
+  "install": {
+    "path": ".tmp/b3-candidate-build-frozen.log",
+    "sha256": "d8ec4a05f6f64c35290f2eedbf521039d44fa56ff9c4d198f89dd33acdd81ca4",
+    "build_summary": "19/19 steps succeeded"
+  },
+  "full_zig": {
+    "initial": {
+      "path": ".tmp/b3-lane/test.log",
+      "sha256": "c0df991fd13efb4b8cb8cef617e99063e47c38ab05d617a9f5decf747f4d4841",
+      "driver": [
+        {
+          "stage": "test",
+          "exit": 1,
+          "seconds": 569.0061598980101
+        }
+      ],
+      "build_summary": "94/96 steps succeeded (1 failed); 2661/29865 tests passed (27203 skipped, 1 failed)",
+      "selected_unique": 2662,
+      "passed": 2661,
+      "failed": 1,
+      "shard_exclusions_aggregate": 27203,
+      "runner_skips": 0
+    },
+    "warm": {
+      "path": ".tmp/b3-lane-warm/test.log",
+      "sha256": "5a8833d628e748a6da131bf64ad6ae94a47191b0951f479351a06fad7943e2c1",
+      "build_summary": "96/96 steps succeeded; 45/275 tests passed (230 skipped)",
+      "rerun_passed": 45,
+      "rerun_failed": 0,
+      "shard_exclusions_aggregate": 230,
+      "other_verdicts": "cached prior successful tests"
+    },
+    "final_unique_selected_covered": 2662,
+    "known_cache_warmup": "Fresh global cache printed ar rcs libunwind.a to stderr in CLI backend parity; warmed affected shard passed without source changes or waiver."
+  },
+  "final_lane": [
+    {
+      "stage": "test",
+      "exit": 0,
+      "seconds": 83.78745812096167,
+      "path": ".tmp/b3-lane-warm/test.log",
+      "sha256": "5a8833d628e748a6da131bf64ad6ae94a47191b0951f479351a06fad7943e2c1",
+      "build_summary": "96/96 steps succeeded; 45/275 tests passed (230 skipped)"
+    },
+    {
+      "stage": "test-qbe",
+      "exit": 0,
+      "seconds": 113.56409299897496,
+      "path": ".tmp/b3-lane-warm/test-qbe.log",
+      "sha256": "cd8caa2f208fb4bab02be910241cec9c042906e1f279b798bc24d9023dbd476f",
+      "build_summary": "51/51 steps succeeded; 480/480 tests passed"
+    },
+    {
+      "stage": "test-qbe-build",
+      "exit": 0,
+      "seconds": 3.5391728200484067,
+      "path": ".tmp/b3-lane-warm/test-qbe-build.log",
+      "sha256": "fd79d40aa33100311d9fc855702bfa49864d2679ae2fa1a3278182c50ec150ec",
+      "build_summary": "29/29 steps succeeded"
+    },
+    {
+      "stage": "fmt-check",
+      "exit": 0,
+      "seconds": 1.7193772220052779,
+      "path": ".tmp/b3-lane-warm/fmt-check.log",
+      "sha256": "727fe2e22c982638ef4d6d75a47d5f97e1bb81c8b5f3ec3c0c55f158df48d93f",
+      "build_summary": "2/2 steps succeeded"
+    },
+    {
+      "stage": "test-native-memory",
+      "exit": 0,
+      "seconds": 6.079255540971644,
+      "path": ".tmp/b3-lane-warm/test-native-memory.log",
+      "sha256": "e8300c821e671fba4913867bdadef958f22d8d5aedbf70c2db37a2c101fa72ef",
+      "build_summary": "23/23 steps succeeded"
+    },
+    {
+      "stage": "test-native-heap",
+      "exit": 0,
+      "seconds": 5.068675460992381,
+      "path": ".tmp/b3-lane-warm/test-native-heap.log",
+      "sha256": "554c3dbec12d39c44ebbd66e7dc1a831f1f0436069fe5b78d8b04c8dcff9a336",
+      "build_summary": "10/10 steps succeeded"
+    },
+    {
+      "stage": "test-rc-fuzz",
+      "exit": 0,
+      "seconds": 503.82644397602417,
+      "path": ".tmp/b3-lane-warm/test-rc-fuzz.log",
+      "sha256": "6f7367bbbac1b061e69a8984c30632053efb38f77e1599f5b96b9d33cc72e0b0",
+      "build_summary": "21/21 steps succeeded"
+    }
+  ],
+  "guests": [
+    {
+      "mode": "default",
+      "exit": 0,
+      "seconds": 304.12527163897175,
+      "path": ".tmp/b3-guests/default.log",
+      "sha256": "919b2bf33a11c84de9826b273d304d97c229c1b8e92f0f7437c8e11a004ee0bf",
+      "counts": {
+        "passed": 1464,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "dropped": 0,
+        "programs": 221
+      }
+    },
+    {
+      "mode": "gc",
+      "exit": 0,
+      "seconds": 101.7689495900413,
+      "path": ".tmp/b3-guests/gc.log",
+      "sha256": "1c829c92f4ffeb32faa7514b621347d829d8a4f0c71cc96f03f69dd3b1735cab",
+      "counts": {
+        "passed": 1464,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "dropped": 0,
+        "programs": 221
+      }
+    },
+    {
+      "mode": "release",
+      "exit": 0,
+      "seconds": 471.8699791779509,
+      "path": ".tmp/b3-guests/release.log",
+      "sha256": "1c829c92f4ffeb32faa7514b621347d829d8a4f0c71cc96f03f69dd3b1735cab",
+      "counts": {
+        "passed": 1464,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "dropped": 0,
+        "programs": 221
+      }
+    },
+    {
+      "mode": "stats",
+      "exit": 0,
+      "seconds": 131.99577024707105,
+      "path": ".tmp/b3-guests/stats.log",
+      "sha256": "1c829c92f4ffeb32faa7514b621347d829d8a4f0c71cc96f03f69dd3b1735cab",
+      "counts": {
+        "passed": 1464,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "dropped": 0,
+        "programs": 221
+      }
+    },
+    {
+      "mode": "stress",
+      "exit": 0,
+      "seconds": 99.98937597905751,
+      "path": ".tmp/b3-guests/stress.log",
+      "sha256": "1c829c92f4ffeb32faa7514b621347d829d8a4f0c71cc96f03f69dd3b1735cab",
+      "counts": {
+        "passed": 1464,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "dropped": 0,
+        "programs": 221
+      }
+    }
+  ],
+  "lox": [
+    {
+      "mode": "default",
+      "stage": "build",
+      "exit": 0,
+      "seconds": 113.39444995194208,
+      "path": ".tmp/b3-lox-results/default-build.log",
+      "sha256": "4fc818e910b5bfaf72a40845146fd8e96c55a2420a0d4e47bcad34db8161bbf0"
+    },
+    {
+      "mode": "default",
+      "stage": "tests",
+      "exit": 0,
+      "seconds": 100.50632476899773,
+      "path": ".tmp/b3-lox-results/default-tests.log",
+      "sha256": "3b5fb314b7523e09e79bb99d5a2f078186d8daeb746b239163069d3fd0e4fdf2",
+      "counts": {
+        "passed": 65,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "dropped": 0,
+        "programs": 10
+      }
+    },
+    {
+      "mode": "default",
+      "stage": "driver",
+      "exit": 0,
+      "seconds": 25.633982507977635,
+      "path": ".tmp/b3-lox-results/default-driver.log",
+      "sha256": "7d60a6e586ea1e3d39ea3482c78e1d93181fd74a96ffe9a736f3612cff715072",
+      "counts": {
+        "passed": 13,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "dropped": null,
+        "programs": null
+      }
+    },
+    {
+      "mode": "gc",
+      "stage": "build",
+      "exit": 0,
+      "seconds": 9.761714502004907,
+      "path": ".tmp/b3-lox-results/gc-build.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "mode": "gc",
+      "stage": "tests",
+      "exit": 0,
+      "seconds": 13.083265485009179,
+      "path": ".tmp/b3-lox-results/gc-tests.log",
+      "sha256": "61ef4b846d3d5d2a8db652085cb50142c912d09f8d66365431c8528f0905acb7",
+      "counts": {
+        "passed": 65,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "dropped": 0,
+        "programs": 10
+      }
+    },
+    {
+      "mode": "gc",
+      "stage": "driver",
+      "exit": 0,
+      "seconds": 10.609997752937488,
+      "path": ".tmp/b3-lox-results/gc-driver.log",
+      "sha256": "7d60a6e586ea1e3d39ea3482c78e1d93181fd74a96ffe9a736f3612cff715072",
+      "counts": {
+        "passed": 13,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "dropped": null,
+        "programs": null
+      }
+    }
+  ],
+  "fuzz": {
+    "path": "experiments/rc-fuzz/out/summary.json",
+    "sha256": "f760d3dcaf1babc06f850b4a88ae1646e1fb71f8c6df8655b492391467196f7d",
+    "jobs": 3,
+    "generators": "both",
+    "llvm_release_every": 8,
+    "raw_summary": {
+      "compiler": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-text-runtime-20260929/.tmp/b3-fuzz-install/bin/mylang",
+      "start": 1,
+      "count": 100,
+      "tally": {
+        "ok": 98,
+        "invalid": 0,
+        "stress-only": 2,
+        "RC-DIFF": 0
+      },
+      "findings": [
+        {
+          "seed": 19,
+          "status": "stress-only",
+          "rc": [],
+          "stress": [
+            "stress: exit 134 vs 0",
+            "stress: stdout differs",
+            "stress: stderr differs: \"mylang runtime: a descriptor's scan plan disagrees with its fields\" vs ''"
+          ],
+          "program": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-text-runtime-20260929/experiments/rc-fuzz/out/found/s19.my",
+          "program_sha256": "7b4625131d1cece836792c3ef374848bd33f9c8ed1a7a9bd4e7a1d0881214155"
+        },
+        {
+          "seed": 87,
+          "status": "stress-only",
+          "rc": [],
+          "stress": [
+            "stress: exit 139 vs 0",
+            "stress: stdout differs"
+          ],
+          "program": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-text-runtime-20260929/experiments/rc-fuzz/out/found/s87.my",
+          "program_sha256": "c1658f510f5c94327f1cc98ec37a1766c7a507737d6b1e24742207e9cfbf9657"
+        }
+      ]
+    },
+    "classification": "Seeds 19 and 87 are existing GC-stress-only findings; no RC divergence."
+  },
+  "golden": {
+    "checked": 231,
+    "source": 175,
+    "fixtures": 56,
+    "skipped": 373,
+    "skip_categories": {
+      "docs": 27,
+      "unmatched_fixtures": 345,
+      "data_only": 1
+    },
+    "mismatches": 0,
+    "log": {
+      "path": ".tmp/b3-lane-warm/test-qbe.log",
+      "sha256": "cd8caa2f208fb4bab02be910241cec9c042906e1f279b798bc24d9023dbd476f"
+    }
+  },
+  "documentation": {
+    "features": 225,
+    "language": 154,
+    "tooling": 71,
+    "pages": 56,
+    "standard_modules": 14,
+    "exports": 176,
+    "files_scanned": 701,
+    "blocks": 1096,
+    "run": 227,
+    "checked": 57,
+    "explicit_skips": 11,
+    "mis_tagged": 0,
+    "failed": 0,
+    "log": {
+      "path": ".tmp/b3-lane/test.log",
+      "sha256": "c0df991fd13efb4b8cb8cef617e99063e47c38ab05d617a9f5decf747f4d4841"
+    }
+  },
+  "focused": [
+    {
+      "path": ".tmp/b3-literal-units-2.log",
+      "sha256": "506b958b906cfce311455b4771876503d9dd342c54a061b7dd5499c73af081cb",
+      "build_summary": "10/10 steps succeeded; 71/71 tests passed",
+      "anonymous_import_tests": 11
+    },
+    {
+      "path": ".tmp/b3-tail-units-final.log",
+      "sha256": "af575d94c86e3072fba55f510c3d771fc76a70807a5c30580db4c8acfbc38705",
+      "build_summary": "10/10 steps succeeded; 12/12 tests passed",
+      "anonymous_import_tests": 11
+    },
+    {
+      "path": ".tmp/b3-text-views-focused.log",
+      "sha256": "9eadfa2333fbce3d685253489d80b62002cd33e56f5d2d9bd472ccaf04d918d9",
+      "counts": {
+        "passed": 10,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "dropped": null,
+        "programs": null
+      }
+    },
+    {
+      "path": ".tmp/b3-literal-guest-3.log",
+      "sha256": "f3c125dea913009bb2805e44f7b0a10ecc352ec27b8af648094e67f3fb0c263f",
+      "counts": {
+        "passed": 2,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "dropped": null,
+        "programs": null
+      }
+    }
+  ],
+  "native_additional": {
+    "path": ".tmp/b3-native-memory-final.log",
+    "sha256": "39cf7f647a8373ff27e337f38b9691c9b4e1bad797523e3159019b02a9280d61",
+    "observed_pass_lines": [
+      "native argv: 15 passed",
+      "native RC live holds: 12 tests passed",
+      "native rc semantic history: 42 passed",
+      "native RC fast paths: 27 tests passed",
+      "native file cleanup: 44 passed",
+      "native RC arena: 10 passed",
+      "native rc loans: 19 passed",
+      "native RC contract: 25 tests passed",
+      "native RC collections: 47 passed",
+      "native heap tests passed",
+      "native collections tests passed",
+      "native text and dictionary tests passed",
+      "native structural equality tests passed",
+      "native byte string tests passed",
+      "native region tests passed",
+      "native print tests passed",
+      "native text method tests passed",
+      "native text index tests passed",
+      "native-python: 4000 reverse oracles, periodic linear bounds, indexed Unicode views, trim budget, repr arena/refusal passed",
+      "native scoped provider tests passed",
+      "native text view tests passed",
+      "native cow tests passed"
+    ],
+    "protected_page_index": "mmap/mprotect read-only index with forward/reverse/strided/random/inverse lookup, views, hash and GC",
+    "checked_in_work_bounds": true
+  },
+  "before_after_work": {
+    "path": ".tmp/b3-work-ledger.json",
+    "sha256": "12740c8d504ccff214b5e7b6bcc1462290f6a8ab921f50e96cfd6c109f4bcc73",
+    "data": {
+      "control": [
+        {
+          "case": "original-owner-tail",
+          "size": 4096,
+          "views": 1,
+          "copied_octets": 523776
+        },
+        {
+          "case": "original-owner-tail",
+          "size": 32768,
+          "views": 1,
+          "copied_octets": 33550336
+        },
+        {
+          "case": "literal-forward-reverse",
+          "size": 4096,
+          "examined_octets": 16777216
+        },
+        {
+          "case": "literal-forward-reverse",
+          "size": 32768,
+          "examined_octets": 1073741824
+        }
+      ],
+      "candidate": [
+        {
+          "case": "original-owner-tail",
+          "size": 4096,
+          "views": 1016,
+          "copied_octets": 36
+        },
+        {
+          "case": "original-owner-tail",
+          "size": 32768,
+          "views": 8184,
+          "copied_octets": 36
+        },
+        {
+          "case": "literal-forward-reverse",
+          "size": 4096,
+          "examined_octets": 524288
+        },
+        {
+          "case": "literal-forward-reverse",
+          "size": 32768,
+          "examined_octets": 4194304
+        }
+      ]
+    },
+    "instrumentation": "Existing test-only examined-position counter; copied-octet return ledger",
+    "compile": "-O2 with strict UBSan",
+    "source": {
+      "path": ".tmp/b3-work-ledger.c",
+      "sha256": "48ec8d85c2a54240e17a426d998bf57cd966d0cfe07b47e007c563f9ef9c4cb0"
+    },
+    "driver": {
+      "path": ".tmp/b3-work-ledger.py",
+      "sha256": "fea26818de7e71b9021e913362becf0e8c5d34ba6f4e2d5a3d47144dc9bbb573"
+    },
+    "log": {
+      "path": ".tmp/b3-work-ledger.log",
+      "sha256": "ae2add08b2613de6cf0898335efe1ad53a6d332b35aba12b8757e2b44dc752b7"
+    },
+    "wall_clock_claim": false
+  },
+  "corpus_builds": [
+    {
+      "path": ".tmp/b3-control-corpus-build.log",
+      "sha256": "103a6da5e512da8a663ab112e107b1222b6d6a7c3f7040f8133d7f1b732a890e",
+      "tag": "control",
+      "unique_binaries_built": 58,
+      "unique_binaries_selected": 58,
+      "seconds": 599
+    },
+    {
+      "path": ".tmp/b3-candidate-corpus-build.log",
+      "sha256": "904481797a5a3e289b2862eaedfda6809f0cceb29e406c20174f334a9e8dc152",
+      "tag": "candidate",
+      "unique_binaries_built": 58,
+      "unique_binaries_selected": 58,
+      "seconds": 679
+    }
+  ],
+  "performance": {
+    "path": ".tmp/b3-performance.json",
+    "sha256": "b511ad798fd8c6095c73419c8f7df98962bb64d715aae5ac336112ed7d335e09",
+    "tracked_companion": "docs/audits/text-runtime-closeout-performance-2026-09-29.json",
+    "all_rows_within_one_percent_vs_control_a5_b1": true,
+    "outputs_match_gc_dev_smoke_each": "86/86",
+    "preexisting_smoke_cap_misses": {
+      "qbe": 5,
+      "llvm": 7
+    },
+    "new_cap_misses": 0
+  },
+  "guardian": {
+    "checks_passed_source_commit": 88,
+    "waivers": 0,
+    "baseline_edits": 0,
+    "feedback_commit": "db487e44a4c69a7fd4e3eef2aceac4242793afed"
+  },
+  "integration": {
+    "source_already_merged_as": "062920d0",
+    "abi": "independent ABI3 lane; ABI4 combined validation belongs to integrator",
+    "main_merge_performed_here": false,
+    "push_performed_here": false
+  }
+}

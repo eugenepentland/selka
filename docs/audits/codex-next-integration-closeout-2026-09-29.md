@@ -168,9 +168,18 @@ measurement, not the historical median-of-three protocol. The additional A1 full
 control measures its unchanged frozen binaries against the same accepted GC.
 All 58 unique accepted GC binary hashes match their original manifest.
 
-`main` remains at `6d91f95b`; it is an ancestor of this integration and is not
-checked out in another worktree. The explicit approval required by WP-A5 is
-pending. No original checkout, paused lane worktree or main ref was changed.
+The user approved landing with "Yeah fast forward main" on 2026-09-29. After
+checking ancestry and confirming no worktree had main checked out, the integrator
+atomically fast-forwarded `main` from `6d91f95b` to the documentation/evidence tip
+`80dd51906c97ae76bf208474ac48c9baac3a11cd`. Its compiler source remains the
+gated `d8f66585`. No original checkout or paused lane worktree was edited.
+
+The completed Codex A3/A4 worktrees were removed after verifying both branch
+tips are ancestors of main and their tracked files were clean. Their branches
+remain. Raw logs, preparation fixtures and Guardian ROI receipts were copied
+into this integration worktree under `.tmp/phase-a-archive/` and
+`.tmp/phase-b-preparation/`, with per-file SHA-256 manifests and cleanup
+preflight receipts. Original paused Claude worktrees remain untouched.
 
 Phase B is still open. B1 has a pinned 86,730-case CPython oracle and a source
 implementation map; B2 has its RC/interface reconciliation matrix, strict

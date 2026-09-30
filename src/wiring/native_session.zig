@@ -109,7 +109,7 @@ test "each ownership contract gets its own native session and build environment"
     const rc = try acquire();
     try std.testing.expect(gc != rc);
     try std.testing.expectEqualStrings("gc-v1", gc.environ.get(contract.variable).?);
-    try std.testing.expectEqualStrings("rc-v3", rc.environ.get(contract.variable).?);
+    try std.testing.expectEqualStrings("rc-v5", rc.environ.get(contract.variable).?);
     try std.testing.expect(!std.mem.eql(u8, gc.toolchain.environment, rc.toolchain.environment));
     try std.testing.expectEqual(rc, try acquire());
 }

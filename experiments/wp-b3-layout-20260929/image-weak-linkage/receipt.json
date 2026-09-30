@@ -1,0 +1,10 @@
+{
+  "source_base": "2dbeecaecf573957c875c6afcbaf5174c181a8bf",
+  "compiler_sha256": "9ce5382e08981ae129aa53050016ee742e7f7b12cc03869b787b186e15d688bf",
+  "actual_driver_cases": 8,
+  "scanner_selected_tests": 13,
+  "driver_selected_tests": 13,
+  "whole_tree_guardian_checks": 88,
+  "before_failure": "frame-map full LTO image-free legacy module: undefined myl_rc_generated_image after scanner removed final .weak directives",
+  "acceptance": "focused follow-up only; broad/performance pending"
+}

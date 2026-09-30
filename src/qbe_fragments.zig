@@ -34,7 +34,7 @@ pub const Digest = [32]u8;
 /// Bumped whenever the canonical encoding below or the pack layout changes, so
 /// an older store can never answer a newer compiler's question. The compiler
 /// identity already partitions the store; this guards the encoding itself.
-pub const format_version = "mylang-qbe-fragments-v2";
+pub const format_version = "mylang-qbe-fragments-v3";
 
 /// Whole-program switches that reach every unit's text.
 pub const Flags = struct {
@@ -296,7 +296,11 @@ pub const Keys = struct {
     }
 
     /// What a caller's unit may read about function `index`: its name (and so
-    /// its symbol), policy, signature and parameter locals.
+    /// its symbol), policy, signature and each parameter's name and type.
+    /// QBE-FRAGMENT-REUSE-2: a parameter's mutability, ownership and origin
+    /// are facts of the callee's own body, which no caller's text reads; a
+    /// module compiled against the callee's interface has only its `pass`
+    /// body, and its callers' keys must still be the whole program's.
     fn interface(self: *Keys, index: usize) error{OutOfMemory}!Summary {
         if (self.interfaces[index]) |known| return known;
         const function = self.program.functions[index];
@@ -307,7 +311,11 @@ pub const Keys = struct {
         try canon.put(function.policy);
         try canon.put(function.signature);
         const count = @min(function.signature.parameter_count, function.scope.locals.len);
-        try canon.put(function.scope.locals[0..count]);
+        try canon.put(@as(u64, count));
+        for (function.scope.locals[0..count]) |parameter| {
+            try canon.text(parameter.name);
+            try canon.putType(parameter.ty);
+        }
         // The interface names functions only through codec or owner types; its
         // records are what a caller must also see.
         canon.functions.clearRetainingCapacity();
@@ -395,10 +403,20 @@ pub const Keys = struct {
     }
 };
 
+/// EMIT-VALUE-TARGETS-1: what an executable emission's invoking unit keys on
+/// in place of `targetsDigest`: its stored facts list no indirect targets, so
+/// it depends on no program-wide set, and no library key can equal it.
+pub const executable_targets: Digest = blk: {
+    @setEvalBranchQuota(100_000);
+    var out: Digest = undefined;
+    Sha.hash("executable-emission: no indirect-target dependency edges", &out, .{});
+    break :blk out;
+};
+
 /// Hash of the sorted names of every function some instruction takes as a
 /// value, one name per such instruction, in any order (they are sorted in
 /// place). An indirect call's checked dependency facts list all of them, so a
-/// unit that invokes a function value depends on this set.
+/// library unit that invokes a function value depends on this set.
 pub fn targetsDigest(names: [][]const u8) Digest {
     std.mem.sort([]const u8, names, {}, lessText);
     var hash = Sha.init(.{});
@@ -437,6 +455,9 @@ pub const Final = struct {
     /// Add one named function's allocation fact and parameter-write facts.
     pub fn callee(self: *Final, pure: bool, writes: []const bool) void {
         self.hash.update(&.{@intFromBool(pure)});
+        // blindCall declines allocating calls before reading parameter writes.
+        // Their conservative imported flags therefore cannot change unit text.
+        if (!pure) return;
         var length: [8]u8 = undefined;
         std.mem.writeInt(u64, &length, writes.len, .little);
         self.hash.update(&length);
@@ -451,6 +472,11 @@ pub const Final = struct {
         self.hash.update(&length);
         for (flags) |flag| self.hash.update(&.{@intFromBool(flag)});
     }
+    /// Bind physical callee inputs consumed by RC body-reading analyses.
+    pub fn physical(self: *Final, digest: Digest) void {
+        self.hash.update("physical-callee-v1");
+        self.hash.update(&digest);
+    }
     /// Add the function-value target set an indirect call depends on.
     pub fn targets(self: *Final, digest: Digest) void {
         self.hash.update(&digest);
@@ -460,6 +486,25 @@ pub const Final = struct {
         return digestOf(&self.hash);
     }
 };
+
+// spec-case: QBE-FRAGMENT-REUSE-2
+test "final keys retain pure writes and ignore unconsumed impure writes" {
+    const local_key: Digest = @splat(0);
+    var impure_empty = Final.init(local_key);
+    impure_empty.callee(false, &.{});
+    var impure_clean = Final.init(local_key);
+    impure_clean.callee(false, &.{ false, false });
+    var impure_unknown = Final.init(local_key);
+    impure_unknown.callee(false, &.{ true, true });
+    try std.testing.expectEqual(impure_empty.finish(), impure_clean.finish());
+    try std.testing.expectEqual(impure_clean.finish(), impure_unknown.finish());
+    var pure_clean = Final.init(local_key);
+    pure_clean.callee(true, &.{false});
+    var pure_written = Final.init(local_key);
+    pure_written.callee(true, &.{true});
+    try std.testing.expect(!std.mem.eql(u8, &pure_clean.finish(), &pure_written.finish()));
+    try std.testing.expect(!std.mem.eql(u8, &pure_clean.finish(), &impure_clean.finish()));
+}
 
 /// The key of a unit's metadata (`EMIT-META-1`) — its per-instruction source
 /// positions, assertion messages and inline frames. Its second-pass key covers
@@ -538,7 +583,43 @@ pub const Unit = struct {
 /// instead of the text and positions themselves (`EMIT-META-1`). An
 /// `executable` emission is for the native build of a program, which reads no
 /// export, schema, wire, codec or test-dependency facts, so it writes none.
-pub const Reuse = struct { store: *Store, lean: bool = false, executable: bool = false, standins: ?*Standins = null };
+pub const Reuse = struct {
+    store: *Store,
+    lean: bool = false,
+    executable: bool = false,
+    standins: ?*Standins = null,
+    /// MODULE-COMPILE-1: when set, the emission reports every function's
+    /// facts and unit keys here (`emit-project-qbe --emission-report`).
+    report: ?*Report = null,
+};
+
+/// What one emission computed, per program function, in function order.
+pub const Report = struct {
+    functions: []const FunctionReport = &.{},
+    /// Whether any function of the emission opens an arena scope.
+    arenas: bool = false,
+    /// Where the emission allocates the report (an arena the caller owns);
+    /// null uses the emission's own allocator.
+    arena: ?std.mem.Allocator = null,
+};
+
+/// One function's emission facts and, when it was emitted, its unit's keys.
+pub const FunctionReport = struct {
+    name: []const u8,
+    /// Whether this emission emitted its unit.
+    emitted: bool,
+    /// Whether a call to it may allocate, transitively (the root protocol's fact).
+    allocates: bool,
+    /// Which of its parameters its body writes.
+    writes: []const bool,
+    /// The functions its lowered body takes as values, one per instruction.
+    values: []const []const u8,
+    /// Whether it opens an arena scope, and whether it needs the text runtime.
+    marks: struct { arena: bool = false, text: bool = false, physical: struct { stable: []const bool = &.{}, identity: Digest = @splat(0) } = .{} } = .{},
+    /// The unit's second-pass fragment key, text digest and metadata digest,
+    /// hex, or empty when it was not emitted or no store was configured.
+    keys: struct { unit: []const u8 = "", il: []const u8 = "", meta: []const u8 = "" } = .{},
+};
 
 /// EMIT-STANDIN-1: an executable's lean emission that lowers only the
 /// functions it has to. A function whose source identity has a record and

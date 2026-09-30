@@ -25,7 +25,7 @@ pub fn settle(process: std.process.Init, args: []const [:0]const u8, values: boo
     // the default and the environment, and an explicit RC request is a conflict.
     if (parsed.stress and parsed.explicit != null and parsed.explicit.?.enabled()) return refuse(process, "--gc-stress stresses the tracing collector: use it with --gc-runtime or with no runtime flag, not --rc-runtime");
     const environment = process.environ_map.get(contract.variable);
-    const requested = parsed.explicit orelse if (parsed.stress) contract.Selection.gc else (contract.parse(environment) catch return refuse(process, "MYLANG_RUNTIME must be gc-v1, rc-v3, rc-v3-counting or rc-v3-sites"));
+    const requested = parsed.explicit orelse if (parsed.stress) contract.Selection.gc else (contract.parse(environment) catch return refuse(process, "MYLANG_RUNTIME must be gc-v1, rc-v5, rc-v5-counting or rc-v5-sites"));
     const selected = contract.resolve(requested, values, parsed.explicit != null) catch return refuse(process, "explicit RC requires value semantics; --legacy-sharing uses GC");
     if (environment == null or !std.mem.eql(u8, environment.?, selected.identity())) {
         return .{ .status = try restart.replace(process, parsed.args, contract.variable, selected.identity()) };
@@ -45,7 +45,9 @@ pub fn discoveryArgs(a: std.mem.Allocator, args: []const [:0]const u8) std.mem.A
 }
 
 fn accepts(command: []const u8) bool {
-    for ([_][]const u8{ "check", "check-module", "check-project", "build", "run", "run-project", "test", "emit-qbe", "emit-project-qbe", "dump-bytecode", "fix", "invoke", "emit-runtime" }) |name| {
+    for ([_][]const u8{
+        "interfaces", "compile-module", "link-modules", "check", "check-module", "check-project", "build", "run", "run-project", "test", "emit-qbe", "emit-project-qbe", "dump-bytecode", "fix", "invoke", "emit-runtime",
+    }) |name| {
         if (std.mem.eql(u8, name, command)) return true;
     }
     return false;

@@ -927,6 +927,637 @@ test "a cached check sees a field renamed in a record reached only through a lis
     try testing.expectEqualStrings(cold.stderr, cached.stderr);
 }
 
+/// Run the compiler with `argv` after its path; the caller frees both outputs.
+fn runInterfaces(argv: []const []const u8) !std.process.RunResult {
+    var args: std.ArrayList([]const u8) = .empty;
+    defer args.deinit(testing.allocator);
+    try args.append(testing.allocator, compiler_path);
+    try args.appendSlice(testing.allocator, argv);
+    return std.process.run(testing.allocator, testing.io, .{ .argv = args.items });
+}
+
+// spec-case: MODULE-INTERFACE-3
+test "a module checks against emitted interfaces after its imports' sources are gone" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const directory = try temporary.dir.realPathFileAlloc(testing.io, ".", testing.allocator);
+    defer testing.allocator.free(directory);
+    const entry = try std.fs.path.join(testing.allocator, &.{ directory, "main.my" });
+    defer testing.allocator.free(entry);
+    const out = try std.fmt.allocPrint(testing.allocator, "--out={s}/interfaces", .{directory});
+    defer testing.allocator.free(out);
+    const from = try std.fmt.allocPrint(testing.allocator, "--from={s}/interfaces", .{directory});
+    defer testing.allocator.free(from);
+    const artifact = try std.fs.path.join(testing.allocator, &.{ directory, "interfaces", "lib.myi" });
+    defer testing.allocator.free(artifact);
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "shapes.my", .data = "module shapes\npublic record Inner:\n    x: int\n" });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "lib.my", .data = "module lib\nimport shapes\npublic def firsts(items: list[shapes.Inner]) -> int:\n    total = 0\n    for item in items:\n        total += item.x\n    return total\n" });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = "module main\nimport shapes\nimport lib\ndef main() -> int:\n    return lib.firsts([shapes.Inner(x=2)])\n" });
+    const emitted = try runInterfaces(&.{ "interfaces", "emit", entry, out });
+    defer freeRun(emitted);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, emitted.term);
+    try testing.expect(std.mem.indexOf(u8, emitted.stdout, "\"version\":\"module-interface-index-v1\"") != null);
+    const shown = try runInterfaces(&.{ "interfaces", "show", artifact });
+    defer freeRun(shown);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, shown.term);
+    try testing.expect(std.mem.indexOf(u8, shown.stdout, "public def firsts(items: list[shapes.Inner]) -> int:\n    pass") != null);
+    const verified = try runInterfaces(&.{ "interfaces", "oracle", entry });
+    defer freeRun(verified);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, verified.term);
+    try testing.expect(std.mem.indexOf(u8, verified.stdout, "\"equal\":true") != null);
+    // Only the interfaces remain for `lib` and `shapes`: the module's check reads them alone.
+    try temporary.dir.deleteFile(testing.io, "lib.my");
+    try temporary.dir.deleteFile(testing.io, "shapes.my");
+    const alone = try runInterfaces(&.{ "interfaces", "check", entry, "--module=main", from });
+    defer freeRun(alone);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, alone.term);
+    try testing.expect(std.mem.indexOf(u8, alone.stdout, "\"stood_in\":1,\"declared_only\":true") != null);
+    // A call the interface's signature rejects is reported against the module's own source.
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = "module main\nimport shapes\nimport lib\ndef main() -> int:\n    return lib.firsts(3)\n" });
+    const rejected = try runInterfaces(&.{ "interfaces", "check", entry, "--module=main", from });
+    defer freeRun(rejected);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, rejected.term);
+    try testing.expect(std.mem.indexOf(u8, rejected.stdout, "main:") != null);
+}
+
+// spec: MODULE-INTERFACE-4
+test "the interfaces command is listed in help and answers a bad action with its usage" {
+    const help = try runInterfaces(&.{"--help"});
+    defer freeRun(help);
+    try testing.expect(std.mem.indexOf(u8, help.stdout, "mylang interfaces emit|check|oracle <entry.my> | show <module.myi>") != null);
+    const usage = try runInterfaces(&.{ "interfaces", "bogus", "main.my" });
+    defer freeRun(usage);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, usage.term);
+    try testing.expect(std.mem.startsWith(u8, usage.stderr, "usage: mylang interfaces emit <entry.my>"));
+    const missing = try runInterfaces(&.{"interfaces"});
+    defer freeRun(missing);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, missing.term);
+}
+
+/// A module compile of the per-module test project: its argument vector.
+fn compileModuleArgs(allocator: std.mem.Allocator, directory: []const u8, module: []const u8, into: []const u8) ![]const []const u8 {
+    var args: std.ArrayList([]const u8) = .empty;
+    try args.appendSlice(allocator, &.{
+        "compile-module",
+        try std.fs.path.join(allocator, &.{ directory, "main.my" }),
+        try std.fmt.allocPrint(allocator, "--module={s}", .{module}),
+        try std.fmt.allocPrint(allocator, "--interfaces={s}/{s}/if", .{ directory, into }),
+        try std.fmt.allocPrint(allocator, "--out={s}/{s}/out", .{ directory, into }),
+        try std.fmt.allocPrint(allocator, "--cache-dir={s}/{s}/cache", .{ directory, into }),
+        "--arenas=off",
+        "--objects",
+    });
+    try args.appendSlice(allocator, &tools);
+    return args.items;
+}
+
+/// The value of `"key":"…"` in a JSON text, or "".
+fn jsonString(text: []const u8, key: []const u8, from: usize) []const u8 {
+    var pattern: [64]u8 = undefined;
+    const needle = std.fmt.bufPrint(&pattern, "\"{s}\":\"", .{key}) catch return "";
+    const at = std.mem.indexOfPos(u8, text, from, needle) orelse return "";
+    const start = at + needle.len;
+    const end = std.mem.indexOfScalarPos(u8, text, start, '"') orelse return "";
+    return text[start..end];
+}
+
+// spec-case: MODULE-COMPILE-1
+test "modules compiled one by one from their imports' interfaces link into the program the build makes" {
+    var arena_state = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena_state.deinit();
+    const a = arena_state.allocator();
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const directory = try temporary.dir.realPathFileAlloc(testing.io, ".", a);
+    const entry = try std.fs.path.join(a, &.{ directory, "main.my" });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "util.my", .data = "module util\npublic def largest[T: integer](values: list[T]) -> T:\n    best = values[0]\n    for value in values:\n        if value > best:\n            best = value\n    return best\npublic def grow(values: list[int]) -> list[int]:\n    out: list[int] = []\n    for value in values:\n        out.append(value + largest(values))\n    return out\n" });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = "module main\nimport util\ndef main(out: Stream) -> int:\n    values = util.grow([3, 9, 4])\n    ranked = sorted(values, key=lambda v: v % 5)\n    out.print(ranked)\n    return util.largest(values) + values[7]\n" });
+    // The whole-program build, and what its emission computed per function.
+    const report = try std.fmt.allocPrint(a, "{s}/report.json", .{directory});
+    const whole = try runInterfaces(&.{ "emit-project-qbe", entry, "--lean-manifest=executable", try std.fmt.allocPrint(a, "--cache-dir={s}/whole", .{directory}), try std.fmt.allocPrint(a, "--emission-report={s}", .{report}) });
+    defer freeRun(whole);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, whole.term);
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "whole.json", .data = whole.stdout });
+    var build_args: std.ArrayList([]const u8) = .empty;
+    try build_args.appendSlice(a, &.{ "build", entry, "--project", try std.fmt.allocPrint(a, "--manifest-file={s}/whole.json", .{directory}), "-o", try std.fmt.allocPrint(a, "{s}/whole-program", .{directory}), try std.fmt.allocPrint(a, "--cache-dir={s}/whole", .{directory}) });
+    try build_args.appendSlice(a, &tools);
+    const built = try runInterfaces(build_args.items);
+    defer freeRun(built);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, built.term);
+    // `main` cannot compile before `util`: it reads `util`'s emission facts,
+    // which an interface emitted from a check alone does not carry.
+    const checked = try runInterfaces(&.{ "interfaces", "emit", entry, try std.fmt.allocPrint(a, "--out={s}/early/if", .{directory}) });
+    defer freeRun(checked);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, checked.term);
+    const early = try runInterfaces(try compileModuleArgs(a, directory, "main", "early"));
+    defer freeRun(early);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, early.term);
+    try testing.expect(std.mem.indexOf(u8, early.stderr, "compile its module first") != null);
+    // In import order, each module from its own source and `util`'s interface.
+    for ([_][]const u8{ "util", "main" }) |module| {
+        const compiled = try runInterfaces(try compileModuleArgs(a, directory, module, "modules"));
+        defer freeRun(compiled);
+        try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, compiled.term);
+        try testing.expect(std.mem.indexOf(u8, compiled.stdout, "\"version\":\"module-compile-v1\"") != null);
+    }
+    // Every unit the modules emitted is the whole program's: the same text
+    // and metadata digests and the same fragment key, function by function.
+    const reference = try std.Io.Dir.cwd().readFileAlloc(testing.io, report, a, .limited(1 << 24));
+    for ([_][]const u8{ "util::grow", "util::largest[i64]", "main::main" }) |name| {
+        const units_file = if (std.mem.startsWith(u8, name, "main")) "main.units.json" else "util.units.json";
+        const units = try std.Io.Dir.cwd().readFileAlloc(testing.io, try std.fs.path.join(a, &.{ directory, "modules", "out", units_file }), a, .limited(1 << 24));
+        const named = try std.fmt.allocPrint(a, "\"name\":\"{s}\"", .{name});
+        const in_module = std.mem.indexOf(u8, units, named).?;
+        const in_whole = std.mem.indexOf(u8, reference, named).?;
+        try testing.expectEqualStrings(jsonString(reference, "unit", in_whole), jsonString(units, "unit_key", in_module));
+        try testing.expectEqualStrings(jsonString(reference, "il", in_whole), jsonString(units, "il", in_module));
+    }
+    // The link builds no guest object: each came from its module's compile.
+    var link_args: std.ArrayList([]const u8) = .empty;
+    try link_args.appendSlice(a, &.{ "link-modules", entry, try std.fmt.allocPrint(a, "--units={s}/modules/out", .{directory}), "-o", try std.fmt.allocPrint(a, "{s}/module-program", .{directory}), try std.fmt.allocPrint(a, "--cache-dir={s}/modules/cache", .{directory}), "--report" });
+    try link_args.appendSlice(a, &tools);
+    const linked = try runInterfaces(link_args.items);
+    defer freeRun(linked);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, linked.term);
+    try testing.expect(std.mem.indexOf(u8, linked.stdout, "\"compiled_function_objects\":0") != null);
+    // The same executable, byte for byte, and so the same run and trap.
+    const one = try temporary.dir.readFileAlloc(testing.io, "whole-program", a, .limited(1 << 30));
+    const two = try temporary.dir.readFileAlloc(testing.io, "module-program", a, .limited(1 << 30));
+    try testing.expectEqualSlices(u8, one, two);
+    const ran = try std.process.run(a, testing.io, .{ .argv = &.{try std.fmt.allocPrint(a, "{s}/module-program", .{directory})} });
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, ran.term);
+    try testing.expect(std.mem.indexOf(u8, ran.stdout, "[12, 18, 13]") != null);
+    try testing.expect(std.mem.indexOf(u8, ran.stderr, "R_LIST_BOUNDS") != null);
+}
+
+// spec: MODULE-COMPILE-4
+test "the per-module commands are listed in help and answer a bad invocation with their usage" {
+    const help = try runInterfaces(&.{"--help"});
+    defer freeRun(help);
+    try testing.expect(std.mem.indexOf(u8, help.stdout, "mylang compile-module <entry.my> --module=NAME ... | link-modules <entry.my> --units=DIR -o OUT") != null);
+    const bare = try runInterfaces(&.{"compile-module"});
+    defer freeRun(bare);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, bare.term);
+    try testing.expect(std.mem.startsWith(u8, bare.stderr, "usage: mylang compile-module <entry.my>"));
+    // The program's arena switch is required: no one module can derive it.
+    const unswitched = try runInterfaces(&.{ "compile-module", "main.my", "--module=main", "--interfaces=if", "--out=out" });
+    defer freeRun(unswitched);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, unswitched.term);
+    const unlinked = try runInterfaces(&.{"link-modules"});
+    defer freeRun(unlinked);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, unlinked.term);
+}
+
+/// A build of the project whose entry is `main.my` in `directory`: into
+/// `output`, over the cache `cache` (both under `directory`), with `--report`,
+/// and `extra` after the build options.
+fn projectBuild(allocator: std.mem.Allocator, directory: []const u8, output: []const u8, cache: []const u8, extra: []const []const u8) !std.process.RunResult {
+    var args: std.ArrayList([]const u8) = .empty;
+    try args.appendSlice(allocator, &.{
+        "build",
+        try std.fs.path.join(allocator, &.{ directory, "main.my" }),
+        "-o",
+        try std.fs.path.join(allocator, &.{ directory, output }),
+        try std.fmt.allocPrint(allocator, "--cache-dir={s}/{s}", .{ directory, cache }),
+        "--report",
+    });
+    try args.appendSlice(allocator, &tools);
+    try args.appendSlice(allocator, extra);
+    const result = try runInterfaces(args.items);
+    // The caller's arena owns what the run printed.
+    defer freeRun(result);
+    return .{ .term = result.term, .stdout = try allocator.dupe(u8, result.stdout), .stderr = try allocator.dupe(u8, result.stderr) };
+}
+
+/// Whether a build succeeded and its report states `counts`.
+fn builtModules(result: std.process.RunResult, counts: []const u8) bool {
+    const succeeded = switch (result.term) {
+        .exited => |status| status == 0,
+        else => false,
+    };
+    return succeeded and std.mem.indexOf(u8, result.stdout, counts) != null;
+}
+
+const schedule_shapes =
+    \\module shapes
+    \\public record Pair:
+    \\    left: int
+    \\    right: int
+    \\public def total(pair: Pair) -> int:
+    \\    return pair.left + pair.right
+    \\
+;
+
+const schedule_util =
+    \\module util
+    \\import shapes
+    \\public def score(n: int) -> int:
+    \\    total = 0
+    \\    for k in range(n):
+    \\        total += shapes.total(shapes.Pair(left=k, right=2))
+    \\    return total
+    \\
+;
+
+// spec: MODULE-SCHEDULE-1
+test "a project build compiles a module again only when its source or an interface it read changed" {
+    var arena_state = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena_state.deinit();
+    const a = arena_state.allocator();
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const directory = try temporary.dir.realPathFileAlloc(testing.io, ".", a);
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "shapes.my", .data = schedule_shapes });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "util.my", .data = schedule_util });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = "module main\nimport util\ndef main() -> int:\n    return util.score(4)\n" });
+    try testing.expect(builtModules(try projectBuild(a, directory, "prog", "cache", &.{}), "\"module_build\":{\"modules\":3,\"compiled\":3,\"reused\":0"));
+    try testing.expect(builtModules(try projectBuild(a, directory, "prog-gc", "cache-gc", &.{"--gc-runtime"}), "\"module_build\":{\"modules\":3,\"compiled\":3,\"reused\":0"));
+    try testing.expect(builtModules(try projectBuild(a, directory, "prog", "cache", &.{}), "\"module_build\":{\"modules\":3,\"compiled\":0,\"reused\":3"));
+    // RC reads the callee's actual readonly body; GC needs only its unchanged
+    // semantic interface. Both preserve the edited code and their own cutoff.
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "util.my", .data = try std.mem.replaceOwned(u8, a, schedule_util, "right=2", "right=3") });
+    try testing.expect(builtModules(try projectBuild(a, directory, "prog", "cache", &.{}), "\"module_build\":{\"modules\":3,\"compiled\":2,\"reused\":1"));
+    try testing.expect(builtModules(try projectBuild(a, directory, "prog-gc", "cache-gc", &.{"--gc-runtime"}), "\"module_build\":{\"modules\":3,\"compiled\":1,\"reused\":2"));
+    // An interface edit: `util` read `shapes`'s interface and is compiled
+    // again. RC also refreshes the transitive physical archive; GC stops at
+    // the unchanged `util` interface.
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "shapes.my", .data = schedule_shapes ++ "public def unused() -> int:\n    return 1\n" });
+    try testing.expect(builtModules(try projectBuild(a, directory, "prog", "cache", &.{}), "\"module_build\":{\"modules\":3,\"compiled\":3,\"reused\":0"));
+    try testing.expect(builtModules(try projectBuild(a, directory, "prog-gc", "cache-gc", &.{"--gc-runtime"}), "\"module_build\":{\"modules\":3,\"compiled\":2,\"reused\":1"));
+    // The program runs the edited code: (0+3) + (1+3) + (2+3) + (3+3).
+    const ran = try std.process.run(a, testing.io, .{ .argv = &.{try std.fs.path.join(a, &.{ directory, "prog" })} });
+    try testing.expectEqual(std.process.Child.Term{ .exited = 18 }, ran.term);
+}
+
+const schedule_generic =
+    \\module util
+    \\public def largest[T: integer](values: list[T]) -> T:
+    \\    best = values[0]
+    \\    for value in values:
+    \\        if value > best:
+    \\            best = value
+    \\    return best
+    \\public def grow(values: list[int]) -> list[int]:
+    \\    out: list[int] = []
+    \\    for value in values:
+    \\        out.append(value + largest(values))
+    \\    return out
+    \\
+;
+
+const schedule_main =
+    \\module main
+    \\import util
+    \\def main(out: Stream) -> int:
+    \\    values = util.grow([3, 9, 4])
+    \\    ranked = sorted(values, key=lambda v: v % 5)
+    \\    out.print(ranked)
+    \\    return util.largest(values) + values[1]
+    \\
+;
+
+// spec: MODULE-SCHEDULE-2
+test "a module-built program links from its modules' records into the whole-program build's executable" {
+    var arena_state = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena_state.deinit();
+    const a = arena_state.allocator();
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const directory = try temporary.dir.realPathFileAlloc(testing.io, ".", a);
+    // `util` and `main` both emit `util::largest[i64]`; the link keeps one.
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "util.my", .data = schedule_generic });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = schedule_main });
+    try testing.expect(builtModules(try projectBuild(a, directory, "modules", "cache", &.{}), "\"module_build\":{\"modules\":2,\"compiled\":2"));
+    const whole = try projectBuild(a, directory, "whole", "whole-cache", &.{"--whole-program"});
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, whole.term);
+    try testing.expect(std.mem.indexOf(u8, whole.stdout, "\"module_build\"") == null);
+    try testing.expectEqualSlices(u8, try temporary.dir.readFileAlloc(testing.io, "whole", a, .limited(1 << 30)), try temporary.dir.readFileAlloc(testing.io, "modules", a, .limited(1 << 30)));
+    // After a body edit the program-wide metadata unit is found by its key,
+    // and the executable is still the whole-program build's.
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = try std.mem.replaceOwned(u8, a, schedule_main, "values[1]", "values[2]") });
+    const edited = try projectBuild(a, directory, "modules", "cache", &.{});
+    try testing.expect(builtModules(edited, "\"module_build\":{\"modules\":2,\"compiled\":1,\"reused\":1"));
+    try testing.expect(std.mem.indexOf(u8, edited.stdout, "\"metadata_reused\":true") != null);
+    try testing.expect(builtModules(try projectBuild(a, directory, "whole", "whole-cache", &.{"--whole-program"}), "\"version\":\"qbe-build-v1\""));
+    try testing.expectEqualSlices(u8, try temporary.dir.readFileAlloc(testing.io, "whole", a, .limited(1 << 30)), try temporary.dir.readFileAlloc(testing.io, "modules", a, .limited(1 << 30)));
+    const ran = try std.process.run(a, testing.io, .{ .argv = &.{try std.fs.path.join(a, &.{ directory, "modules" })} });
+    try testing.expectEqual(std.process.Child.Term{ .exited = 31 }, ran.term);
+    try testing.expectEqualStrings("[12, 18, 13]\n", ran.stdout);
+}
+
+// spec: MODULE-SCHEDULE-3
+test "run builds a project module by module, and a program the modules cannot build goes to the whole-program path" {
+    var arena_state = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena_state.deinit();
+    const a = arena_state.allocator();
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const directory = try temporary.dir.realPathFileAlloc(testing.io, ".", a);
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "shapes.my", .data = schedule_shapes });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "util.my", .data = schedule_util });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = "module main\nimport util\ndef main() -> int:\n    return util.score(3)\n" });
+    var run_args: std.ArrayList([]const u8) = .empty;
+    try run_args.appendSlice(a, &.{ "run", try std.fs.path.join(a, &.{ directory, "main.my" }), try std.fmt.allocPrint(a, "--cache-dir={s}/cache", .{directory}) });
+    try run_args.appendSlice(a, &tools);
+    const ran = try runInterfaces(run_args.items);
+    defer freeRun(ran);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 9 }, ran.term);
+    // The run's modules are in the cache's module variants.
+    try temporary.dir.access(testing.io, "cache/modules", .{});
+    // A check error: the per-module build hands the program to the
+    // whole-program build, which reports it exactly as before.
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "util.my", .data = try std.mem.replaceOwned(u8, a, schedule_util, "return total", "return missing") });
+    const module = try projectBuild(a, directory, "prog", "cache", &.{});
+    const whole = try projectBuild(a, directory, "prog", "whole-cache", &.{"--whole-program"});
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, module.term);
+    try testing.expectEqual(whole.term, module.term);
+    try testing.expect(std.mem.indexOf(u8, module.stderr, "E_UNKNOWN_NAME") != null);
+    try testing.expectEqualStrings(whole.stderr, module.stderr);
+}
+
+// spec: MODULE-HOST-1
+test "a project whose modules declare copied host functions builds module by module into the whole-program executable" {
+    var arena_state = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena_state.deinit();
+    const a = arena_state.allocator();
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const directory = try temporary.dir.realPathFileAlloc(testing.io, ".", a);
+    // Two modules' host rows: the whole program orders them by its own tables.
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "lib.my", .data = "module lib\npublic record Zed:\n    a: i64\n    b: i64\nhost def zmeasure(host: Host, z: Zed) -> i64 effects(host)\npublic def twice(host: Host, x: i64) -> i64 effects(host):\n    return zmeasure(host, Zed(a=x, b=1)) * 2\n" });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = "module main\nimport lib\nrecord Alpha:\n    q: i64\nhost def ameasure(host: Host, v: Alpha) -> i64 effects(host)\ndef main(host: Host) -> i64:\n    return lib.twice(host, 6) + ameasure(host, Alpha(q=2))\n" });
+    try testing.expect(builtModules(try projectBuild(a, directory, "default", "cache", &.{}), "\"module_build\":{\"modules\":2,\"compiled\":2"));
+    try testing.expect(builtModules(try projectBuild(a, directory, "whole", "whole-cache", &.{"--whole-program"}), "\"version\":\"qbe-build-v1\""));
+    try testing.expectEqualSlices(u8, try temporary.dir.readFileAlloc(testing.io, "whole", a, .limited(1 << 30)), try temporary.dir.readFileAlloc(testing.io, "default", a, .limited(1 << 30)));
+}
+
+/// Build `main.my` in `directory` both ways into their own caches, and
+/// require the same exit status, the same standard error and, when both
+/// built, the same executable; the default build's result.
+fn bothWays(allocator: std.mem.Allocator, directory: []const u8) !std.process.RunResult {
+    const module = try projectBuild(allocator, directory, "module-built", "cache", &.{});
+    const whole = try projectBuild(allocator, directory, "whole-built", "whole-cache", &.{"--whole-program"});
+    try testing.expectEqual(whole.term, module.term);
+    try testing.expectEqualStrings(whole.stderr, module.stderr);
+    return module;
+}
+
+const configured_json = "{\"version\":2,\"import_policy\":\"policy.json\",\"budgets\":{\"max_modules\":8},\"lint\":{\"warnings\":\"deny\"}}";
+
+// spec: MODULE-PROJECT-1
+test "a project with a mylang.json builds module by module, and what its configuration rejects is reported as the whole-program build reports it" {
+    var arena_state = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena_state.deinit();
+    const a = arena_state.allocator();
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const directory = try temporary.dir.realPathFileAlloc(testing.io, ".", a);
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "mylang.json", .data = configured_json });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "policy.json", .data = "{\"version\":1,\"default_action\":\"allow\",\"rules\":[{\"from\":\"core\",\"to\":\"util\",\"action\":\"deny\",\"reason\":\"core stays below util\"}]}" });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "util.my", .data = "module util\npublic def twice(n: int) -> int:\n    return n * 2\n" });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "core.my", .data = "module core\npublic def area(w: int, h: int) -> int:\n    return w * h\n" });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = "module main\nimport core\nimport util\ndef main() -> int:\n    return util.twice(core.area(3, 4))\n" });
+    // Budgets, a passing policy and a lint section: the per-module path.
+    const built = try bothWays(a, directory);
+    try testing.expect(builtModules(built, "\"module_build\":{\"modules\":3,\"compiled\":3"));
+    try testing.expectEqualSlices(u8, try temporary.dir.readFileAlloc(testing.io, "whole-built", a, .limited(1 << 30)), try temporary.dir.readFileAlloc(testing.io, "module-built", a, .limited(1 << 30)));
+    // `lint.warnings: "deny"`: a `run` with a warning prints it and stops.
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "util.my", .data = "module util\npublic def twice(n: int) -> int:\n    spare = n\n    return n * 2\n" });
+    var run_args: std.ArrayList([]const u8) = .empty;
+    try run_args.appendSlice(a, &.{ "run", try std.fs.path.join(a, &.{ directory, "main.my" }), try std.fmt.allocPrint(a, "--cache-dir={s}/cache", .{directory}) });
+    try run_args.appendSlice(a, &tools);
+    const denied = try runInterfaces(run_args.items);
+    defer freeRun(denied);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, denied.term);
+    try testing.expect(std.mem.indexOf(u8, denied.stderr, "W_UNUSED_BINDING") != null);
+    try testing.expectEqualStrings("", denied.stdout);
+    // An import the policy denies: exit 3 with the policy report.
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "core.my", .data = "module core\nimport util\npublic def area(w: int, h: int) -> int:\n    return util.twice(w) * h\n" });
+    try testing.expectEqual(std.process.Child.Term{ .exited = 3 }, (try bothWays(a, directory)).term);
+    // A graph over its module budget: exit 1 with the loader's diagnostic.
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "mylang.json", .data = "{\"version\":2,\"budgets\":{\"max_modules\":2}}" });
+    const over = try bothWays(a, directory);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, over.term);
+    try testing.expect(std.mem.indexOf(u8, over.stderr, "E_MODULE_LIMIT") != null);
+    // A configuration that does not load: exit 2.
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "mylang.json", .data = "{\"version\":2,\"budgets\":{\"max_modules\":0}}" });
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, (try bothWays(a, directory)).term);
+}
+
+/// `mylang check` of `main.my` in `directory`, over the cache `cache` under
+/// it or, when `cache` is null, with `--no-cache` (the whole-program check);
+/// the caller's arena owns the output.
+fn projectCheck(allocator: std.mem.Allocator, directory: []const u8, cache: ?[]const u8) !std.process.RunResult {
+    const flag = if (cache) |name| try std.fmt.allocPrint(allocator, "--cache-dir={s}/{s}", .{ directory, name }) else "--no-cache";
+    const result = try runInterfaces(&.{ "check", try std.fs.path.join(allocator, &.{ directory, "main.my" }), flag });
+    defer freeRun(result);
+    return .{ .term = result.term, .stdout = try allocator.dupe(u8, result.stdout), .stderr = try allocator.dupe(u8, result.stderr) };
+}
+
+/// The per-module check's program variant under `cache/modules`: the one
+/// directory that is not the standard modules' shared variant.
+fn checkVariant(allocator: std.mem.Allocator, root: std.Io.Dir) ![]const u8 {
+    var modules = try root.openDir(testing.io, "cache/modules", .{ .iterate = true });
+    defer modules.close(testing.io);
+    var walk = modules.iterate();
+    while (try walk.next(testing.io)) |entry| {
+        if (!std.mem.startsWith(u8, entry.name, "standard-")) return std.fmt.allocPrint(allocator, "cache/modules/{s}/out", .{entry.name});
+    }
+    return error.FileNotFound;
+}
+
+/// Delete the result file of each of `modules` a per-module check wrote.
+fn forgetResults(allocator: std.mem.Allocator, root: std.Io.Dir, out: []const u8, modules: []const []const u8) !void {
+    for (modules) |module| root.deleteFile(testing.io, try std.fmt.allocPrint(allocator, "{s}/{s}.result.json", .{ out, module })) catch {};
+}
+
+// spec: MODULE-CHECK-1
+test "check of a project re-checks only the modules whose source or read interfaces changed, and prints what the whole-program check prints" {
+    var arena_state = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena_state.deinit();
+    const a = arena_state.allocator();
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const directory = try temporary.dir.realPathFileAlloc(testing.io, ".", a);
+    const warned = try std.mem.replaceOwned(u8, a, schedule_util, "    total = 0\n", "    spare = n\n    total = 0\n");
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "shapes.my", .data = schedule_shapes });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "util.my", .data = warned });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = "module main\nimport util\ndef main() -> int:\n    return util.score(4)\n" });
+    const first = try projectCheck(a, directory, "cache");
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, first.term);
+    try testing.expect(std.mem.indexOf(u8, first.stderr, "util.my:4:5: warning[W_UNUSED_BINDING]") != null);
+    try testing.expectEqualStrings((try projectCheck(a, directory, null)).stderr, first.stderr);
+    const out = try checkVariant(a, temporary.dir);
+    const all = [_][]const u8{ "shapes", "util", "main" };
+    // A body edit: `util` alone is checked again, and its warning replayed.
+    try forgetResults(a, temporary.dir, out, &all);
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "util.my", .data = try std.mem.replaceOwned(u8, a, warned, "right=2", "right=3") });
+    const edited = try projectCheck(a, directory, "cache");
+    try testing.expectEqualStrings(first.stderr, edited.stderr);
+    try temporary.dir.access(testing.io, try std.fmt.allocPrint(a, "{s}/util.result.json", .{out}), .{});
+    try testing.expectError(error.FileNotFound, temporary.dir.access(testing.io, try std.fmt.allocPrint(a, "{s}/main.result.json", .{out}), .{}));
+    try testing.expectError(error.FileNotFound, temporary.dir.access(testing.io, try std.fmt.allocPrint(a, "{s}/shapes.result.json", .{out}), .{}));
+    // A module that does not check: the whole-program check reports it.
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "util.my", .data = try std.mem.replaceOwned(u8, a, warned, "return total", "return missing") });
+    const rejected = try projectCheck(a, directory, "cache");
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, rejected.term);
+    try testing.expect(std.mem.indexOf(u8, rejected.stderr, "E_UNKNOWN_NAME") != null);
+    try testing.expectEqualStrings((try projectCheck(a, directory, null)).stderr, rejected.stderr);
+    // Fixed again: the modules that checked before the failure keep their
+    // records, so only `util` is checked again.
+    try forgetResults(a, temporary.dir, out, &all);
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "util.my", .data = warned });
+    try testing.expectEqualStrings(first.stderr, (try projectCheck(a, directory, "cache")).stderr);
+    try temporary.dir.access(testing.io, try std.fmt.allocPrint(a, "{s}/util.result.json", .{out}), .{});
+    try testing.expectError(error.FileNotFound, temporary.dir.access(testing.io, try std.fmt.allocPrint(a, "{s}/main.result.json", .{out}), .{}));
+}
+
+/// `mylang check main.my --cache-dir=cache` in `directory` with the
+/// environment variables `extra` added; the caller's arena owns the output.
+fn checkWithEnvironment(allocator: std.mem.Allocator, directory: []const u8, extra: []const [2][]const u8) !std.process.RunResult {
+    var environment: std.process.Environ.Map = .init(allocator);
+    try environment.put("HOME", directory);
+    try environment.put("PATH", "/usr/bin:/bin");
+    try forwardZigCache(&environment);
+    for (extra) |pair| try environment.put(pair[0], pair[1]);
+    const argv = [_][]const u8{ compiler_path, "check", try std.fs.path.join(allocator, &.{ directory, "main.my" }), try std.fmt.allocPrint(allocator, "--cache-dir={s}/cache", .{directory}) };
+    return std.process.run(allocator, testing.io, .{ .argv = &argv, .environ_map = &environment });
+}
+
+/// Whether the per-module check's program variant has saved its records.
+fn checkSeeded(allocator: std.mem.Allocator, root: std.Io.Dir) !bool {
+    const out = checkVariant(allocator, root) catch return false;
+    const state = try std.fmt.allocPrint(allocator, "{s}/../state.json", .{out});
+    root.access(testing.io, state, .{}) catch return false;
+    return true;
+}
+
+// spec: MODULE-CHECK-2
+test "a large project's first check is the whole-program check, and module records seeded after it answer the next" {
+    var arena_state = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena_state.deinit();
+    const a = arena_state.allocator();
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const directory = try temporary.dir.realPathFileAlloc(testing.io, ".", a);
+    const warned = try std.mem.replaceOwned(u8, a, schedule_util, "    total = 0\n", "    spare = n\n    total = 0\n");
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "shapes.my", .data = schedule_shapes });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "util.my", .data = warned });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = "module main\nimport util\ndef main() -> int:\n    return util.score(4)\n" });
+    const whole = try projectCheck(a, directory, null);
+    // Three modules count as large here. The first check is the whole-program
+    // check's (with the seeder disabled, nothing runs behind it).
+    const first = try checkWithEnvironment(a, directory, &.{ .{ "MYLANG_CHECK_SEED_MODULES", "1" }, .{ "MYLANG_CHECK_SEED", "off" } });
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, first.term);
+    try testing.expectEqualStrings(whole.stderr, first.stderr);
+    try testing.expect(!try checkSeeded(a, temporary.dir));
+    // The seeder (run here in the foreground) builds the records, printing nothing.
+    const seeded = try checkWithEnvironment(a, directory, &.{.{ "MYLANG_CHECK_SEED", "1" }});
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, seeded.term);
+    try testing.expectEqualStrings("", seeded.stderr);
+    try testing.expect(try checkSeeded(a, temporary.dir));
+    // While a seeder or another check holds the variant, a check does not
+    // wait for it: the whole-program check answers and records nothing.
+    const out = try checkVariant(a, temporary.dir);
+    const held = try temporary.dir.createFile(testing.io, try std.fmt.allocPrint(a, "{s}/../.lock", .{out}), .{ .truncate = false });
+    try held.lock(testing.io, .exclusive);
+    try forgetResults(a, temporary.dir, out, &.{ "shapes", "util", "main" });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "util.my", .data = try std.mem.replaceOwned(u8, a, warned, "right=2", "right=4") });
+    const busy = try checkWithEnvironment(a, directory, &.{.{ "MYLANG_CHECK_SEED_MODULES", "1" }});
+    held.close(testing.io);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, busy.term);
+    try testing.expectEqualStrings(whole.stderr, busy.stderr);
+    try testing.expectError(error.FileNotFound, temporary.dir.access(testing.io, try std.fmt.allocPrint(a, "{s}/util.result.json", .{out}), .{}));
+    // The next check reads them: a body edit checks `util` alone.
+    try forgetResults(a, temporary.dir, out, &.{ "shapes", "util", "main" });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "util.my", .data = try std.mem.replaceOwned(u8, a, warned, "right=2", "right=3") });
+    const edited = try checkWithEnvironment(a, directory, &.{.{ "MYLANG_CHECK_SEED_MODULES", "1" }});
+    try testing.expectEqualStrings(whole.stderr, edited.stderr);
+    try temporary.dir.access(testing.io, try std.fmt.allocPrint(a, "{s}/util.result.json", .{out}), .{});
+    try testing.expectError(error.FileNotFound, temporary.dir.access(testing.io, try std.fmt.allocPrint(a, "{s}/main.result.json", .{out}), .{}));
+}
+
+// spec: MODULE-SCHEDULE-6
+test "a module compile builds its units and objects at a lower priority once its interface is published" {
+    var arena_state = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena_state.deinit();
+    const a = arena_state.allocator();
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const directory = try temporary.dir.realPathFileAlloc(testing.io, ".", a);
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "shapes.my", .data = schedule_shapes });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "util.my", .data = schedule_util });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = "module main\nimport util\ndef main() -> int:\n    return util.score(4)\n" });
+    try testing.expect(builtModules(try projectBuild(a, directory, "prog", "cache", &.{}), "\"module_build\":{\"modules\":3,\"compiled\":3"));
+    const out = try checkVariant(a, temporary.dir);
+    const result = try temporary.dir.readFileAlloc(testing.io, try std.fmt.allocPrint(a, "{s}/util.result.json", .{out}), a, .limited(1 << 20));
+    const marker = "\"nice\":";
+    const at = (std.mem.indexOf(u8, result, marker) orelse return error.TestUnexpectedResult) + marker.len;
+    var end = at;
+    while (end < result.len and std.ascii.isDigit(result[end])) end += 1;
+    try testing.expect(try std.fmt.parseInt(usize, result[at..end], 10) >= 10);
+}
+
+// spec: MODULE-SCHEDULE-4
+test "a standard module is compiled once per cache and compiler for every program that imports it" {
+    var arena_state = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena_state.deinit();
+    const a = arena_state.allocator();
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const directory = try temporary.dir.realPathFileAlloc(testing.io, ".", a);
+    try temporary.dir.createDirPath(testing.io, "one");
+    try temporary.dir.createDirPath(testing.io, "two");
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "one/main.my", .data = "module main\nimport hex\ndef main() -> int:\n    return len(hex.encode(b\"ab\"))\n" });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "two/main.my", .data = "module main\nimport hex\ndef main() -> int:\n    return len(hex.encode(b\"abc\"))\n" });
+    // The first program compiles `hex`, what it imports, and its entry.
+    try testing.expect(builtModules(try projectBuild(a, try std.fs.path.join(a, &.{ directory, "one" }), "prog", "../cache", &.{}), "\"reused\":0,"));
+    // The second, over the same cache, compiles its entry alone.
+    const second = try projectBuild(a, try std.fs.path.join(a, &.{ directory, "two" }), "prog", "../cache", &.{});
+    try testing.expect(builtModules(second, "\"compiled\":1,"));
+    try testing.expect(std.mem.indexOf(u8, second.stdout, "\"compiled\":1,\"reused\":0") == null);
+    const ran = try std.process.run(a, testing.io, .{ .argv = &.{try std.fs.path.join(a, &.{ directory, "two", "prog" })} });
+    try testing.expectEqual(std.process.Child.Term{ .exited = 6 }, ran.term);
+}
+
+// spec-case: MODULE-SCHEDULE-5
+test "a module compile run for the scheduler announces its interface on stderr" {
+    var arena_state = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena_state.deinit();
+    const a = arena_state.allocator();
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const directory = try temporary.dir.realPathFileAlloc(testing.io, ".", a);
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "shapes.my", .data = schedule_shapes });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "util.my", .data = schedule_util });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = "module main\nimport util\ndef main() -> int:\n    return util.score(4)\n" });
+    const args = try compileModuleArgs(a, directory, "shapes", "ready");
+    const compiled = try runInterfaces(try std.mem.concat(a, []const u8, &.{ args, &.{"--ready"} }));
+    defer freeRun(compiled);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, compiled.term);
+    try testing.expect(std.mem.startsWith(u8, compiled.stderr, "\x1emylang-module-ready "));
+    try temporary.dir.access(testing.io, "ready/if/shapes.myi", .{});
+    const result = try temporary.dir.readFileAlloc(testing.io, "ready/out/shapes.result.json", a, .limited(1 << 20));
+    try testing.expect(std.mem.indexOf(u8, result, "\"version\":\"module-result-v1\"") != null);
+}
+
+// spec: BUILD-REPRODUCIBLE-1
+test "a Debug build's executable does not depend on where its cache is" {
+    var arena_state = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena_state.deinit();
+    const a = arena_state.allocator();
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const directory = try temporary.dir.realPathFileAlloc(testing.io, ".", a);
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "util.my", .data = schedule_generic });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = schedule_main });
+    const one = try projectBuild(a, directory, "one", "first", &.{"--whole-program"});
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, one.term);
+    const two = try projectBuild(a, directory, "two", "second/nested", &.{"--whole-program"});
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, two.term);
+    try testing.expectEqualSlices(u8, try temporary.dir.readFileAlloc(testing.io, "one", a, .limited(1 << 30)), try temporary.dir.readFileAlloc(testing.io, "two", a, .limited(1 << 30)));
+}
+
 const SymbolicCounts = struct { performed: usize, reused: usize };
 
 fn symbolicCounts(stderr: []const u8) !SymbolicCounts {
@@ -2732,6 +3363,79 @@ test "checked arithmetic at every width reports the same result and trap from th
     defer a.free(wanted);
     try testing.expectEqualStrings(wanted, trapped);
 }
+/// Literal +/-1 operands retain their exact overflow details and cleanup.
+const literal_overflow_program =
+    \\def number(text: str) -> int:
+    \\    match int(text):
+    \\        case Some(value):
+    \\            return value
+    \\        case None:
+    \\            return 0
+    \\
+    \\
+    \\def calculate(form: str, value: int) -> int:
+    \\    if form == "add_one":
+    \\        return value + 1
+    \\    if form == "sub_one":
+    \\        return value - 1
+    \\    if form == "add_negative":
+    \\        return value + -1
+    \\    return value - -1
+    \\
+    \\
+    \\def main(args: list[str], out: Stream) -> int:
+    \\    out.print(calculate(args[0], number(args[1])))
+    \\    return 0
+;
+
+/// Exercise all four literal bounds, then their opposite safe extreme.
+fn expectLiteralBoundaries(binaries: [2][]const u8) !void {
+    const rows = [_][5][]const u8{
+        .{ "add_one", "9223372036854775806", "9223372036854775807", "-9223372036854775808", "-9223372036854775807" },
+        .{ "sub_one", "-9223372036854775807", "-9223372036854775808", "9223372036854775807", "9223372036854775806" },
+        .{ "add_negative", "-9223372036854775807", "-9223372036854775808", "9223372036854775807", "9223372036854775806" },
+        .{ "sub_negative", "9223372036854775806", "9223372036854775807", "-9223372036854775808", "-9223372036854775807" },
+    };
+    const a = testing.allocator;
+    for (rows) |row| {
+        const output = try std.fmt.allocPrint(a, "{s}\n", .{row[2]});
+        defer a.free(output);
+        const quiet = try expectSameBoundary(binaries, .{ row[0], row[1], "", "" }, 0, output);
+        defer a.free(quiet);
+        try testing.expectEqualStrings("", quiet);
+        const trapped = try expectSameBoundary(binaries, .{ row[0], row[2], "", "" }, 1, "");
+        defer a.free(trapped);
+        try testing.expect(std.mem.indexOf(u8, trapped, "error[R_OVERFLOW]") != null);
+        try testing.expect(std.mem.indexOf(u8, trapped, "MYLANG-TRAP ") != null);
+        const opposite = try std.fmt.allocPrint(a, "{s}\n", .{row[4]});
+        defer a.free(opposite);
+        const quiet_opposite = try expectSameBoundary(binaries, .{ row[0], row[3], "", "" }, 0, opposite);
+        defer a.free(quiet_opposite);
+        try testing.expectEqualStrings("", quiet_opposite);
+    }
+}
+
+// spec-case: LLVM-CONSTANT-OVERFLOW-1
+// spec-case: RC-FAIL-COLD-1
+test "literal signed overflow preserves exact QBE output trap details traces and records" {
+    const a = testing.allocator;
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "literal.my", .data = literal_overflow_program });
+    const entry = try temporary.dir.realPathFileAlloc(testing.io, "literal.my", a);
+    defer a.free(entry);
+    const directory = std.fs.path.dirname(entry).?;
+    const cache = try std.fmt.allocPrint(a, "--cache-dir={s}/cache", .{directory});
+    defer a.free(cache);
+    const llvm = try std.fmt.allocPrint(a, "{s}/literal-llvm", .{directory});
+    defer a.free(llvm);
+    const qbe = try std.fmt.allocPrint(a, "{s}/literal-qbe", .{directory});
+    defer a.free(qbe);
+    try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", llvm, "--release", cache, tools[1] }, "");
+    try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", qbe, cache, tools[0], tools[1] }, "");
+    try expectLiteralBoundaries(.{ llvm, qbe });
+}
+
 const sticky_reduction_program =
     \\# checked reductions in loops, operands from the command line
     \\
@@ -9337,7 +10041,8 @@ fn c4WorkStatus(line: []const u8, stage: []const u8) ![]const u8 {
 fn c4Invoke(entry: []const u8, cases_path: ?[]const u8, cache: []const u8, trace: []const u8, extra: []const []const u8) !std.process.RunResult {
     var args: std.ArrayList([]const u8) = .empty;
     defer args.deinit(testing.allocator);
-    try args.appendSlice(testing.allocator, &.{ compiler_path, "test", entry, "--json", "--report" });
+    // These fixtures count the whole-program session's children and work.
+    try args.appendSlice(testing.allocator, &.{ compiler_path, "test", entry, "--json", "--report", "--whole-program" });
     if (cases_path) |path| try args.appendSlice(testing.allocator, &.{ "--cases", path });
     try args.appendSlice(testing.allocator, extra);
     const cache_arg = try std.fmt.allocPrint(testing.allocator, "--cache-dir={s}", .{cache});
@@ -9550,7 +10255,7 @@ test "C4 expectation argument budget and force invalidate while irrelevant envir
     defer env_args.deinit(testing.allocator);
     const cache_arg = try std.fmt.allocPrint(testing.allocator, "--cache-dir={s}", .{project.cache});
     defer testing.allocator.free(cache_arg);
-    try env_args.appendSlice(testing.allocator, &.{ compiler_path, "test", project.entry, "--json", "--cases", project.cases_path, "--report", cache_arg });
+    try env_args.appendSlice(testing.allocator, &.{ compiler_path, "test", project.entry, "--json", "--cases", project.cases_path, "--report", "--whole-program", cache_arg });
     try env_args.appendSlice(testing.allocator, &tools);
     const changed_env = try spawnWithEnv(env_args.items, &environment);
     defer testing.allocator.free(changed_env.stdout);
@@ -9829,6 +10534,292 @@ fn scaleRun(paths: ScalePaths, extra: []const []const u8) !std.process.RunResult
     c4TraceReset(paths.trace);
     return c4Invoke(paths.entry, null, paths.cache, paths.trace, extra);
 }
+/// Run the chain's tests module by module (MODULE-TEST-1) with a fresh
+/// trace; the caller frees the result.
+fn moduleScaleRun(paths: ScalePaths) !std.process.RunResult {
+    return moduleScaleRunWith(paths, &.{});
+}
+/// `moduleScaleRun` with extra environment variables.
+fn moduleScaleRunWith(paths: ScalePaths, extra: []const [2][]const u8) !std.process.RunResult {
+    c4TraceReset(paths.trace);
+    const cache_arg = try std.fmt.allocPrint(testing.allocator, "--cache-dir={s}", .{paths.cache});
+    defer testing.allocator.free(cache_arg);
+    var args: std.ArrayList([]const u8) = .empty;
+    defer args.deinit(testing.allocator);
+    try args.appendSlice(testing.allocator, &.{ compiler_path, "test", paths.entry, "--json", cache_arg });
+    try args.appendSlice(testing.allocator, &tools);
+    var environment: std.process.Environ.Map = .init(testing.allocator);
+    defer environment.deinit();
+    try environment.put("MYLANG_TEST_TRACE", paths.trace);
+    try environment.put("HOME", std.fs.path.dirname(paths.entry) orelse ".");
+    for (extra) |pair| try environment.put(pair[0], pair[1]);
+    try forwardZigCache(&environment);
+    return spawnWithEnv(args.items, &environment);
+}
+
+// spec: MODULE-TEST-5
+test "a large project's first test run is the whole-program run, and a seeder's module records and that run's verdicts answer the next" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    const paths = try scaleProject(&temp);
+    defer freeScalePaths(paths);
+    // One module counts as large here. The first run is the whole-program
+    // run's (with the seeder disabled, nothing runs behind it).
+    const cold = try moduleScaleRunWith(paths, &.{ .{ "MYLANG_TEST_SEED_MODULES", "1" }, .{ "MYLANG_TEST_SEED", "off" } });
+    defer testing.allocator.free(cold.stdout);
+    defer testing.allocator.free(cold.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, cold.term);
+    try testing.expectEqual(@as(usize, 4), (try c4Counts(cold.stdout)).executed);
+    try testing.expectEqual(@as(usize, 0), try c4TraceCount(paths.trace, "compile-module "));
+    try testing.expect(try c4TraceCount(paths.trace, "native-test-compile") != 0);
+    // The seeder (run here in the foreground) compiles every module and
+    // prints nothing.
+    const seeded = try moduleScaleRunWith(paths, &.{.{ "MYLANG_TEST_SEED", "1" }});
+    defer testing.allocator.free(seeded.stdout);
+    defer testing.allocator.free(seeded.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, seeded.term);
+    try testing.expectEqualStrings("", seeded.stdout);
+    try testing.expectEqual(@as(usize, 5), try c4TraceCount(paths.trace, "compile-module "));
+    // The seeder and its compiles yield the cores (MODULE-TEST-6).
+    const result = try moduleResult(paths.cache, "m1.result.json");
+    defer testing.allocator.free(result);
+    try testing.expect(std.mem.indexOf(u8, result, "\"nice\":19") != null);
+    // The next run is module by module: it compiles nothing, and the
+    // whole-program run's verdicts answer every test.
+    const next = try moduleScaleRunWith(paths, &.{.{ "MYLANG_TEST_SEED_MODULES", "1" }});
+    defer testing.allocator.free(next.stdout);
+    defer testing.allocator.free(next.stderr);
+    const replayed = try c4Counts(next.stdout);
+    try testing.expectEqual(@as(usize, 0), replayed.executed);
+    try testing.expectEqual(@as(usize, 4), replayed.cached);
+    try testing.expectEqual(@as(usize, 0), try c4TraceCount(paths.trace, "compile-module "));
+    try testing.expectEqual(@as(usize, 0), try c4TraceCount(paths.trace, "native-test-compile"));
+    try testing.expectEqual(@as(usize, 0), try c4TraceCount(paths.trace, "module-link "));
+}
+
+/// The stable snapshot directory the last traced run claimed
+/// (`stage stable DIR`); the caller frees it.
+fn stagedDirectory(trace: []const u8) ![]const u8 {
+    const bytes = try std.Io.Dir.cwd().readFileAlloc(testing.io, trace, testing.allocator, .limited(1 << 20));
+    defer testing.allocator.free(bytes);
+    const marker = "stage stable ";
+    const at = (std.mem.lastIndexOf(u8, bytes, marker) orelse return error.TestUnexpectedResult) + marker.len;
+    const end = std.mem.indexOfScalarPos(u8, bytes, at, '\n') orelse bytes.len;
+    return testing.allocator.dupe(u8, bytes[at..end]);
+}
+
+/// The first `NAME.result.json` under a test cache's module variants.
+fn moduleResult(cache: []const u8, name: []const u8) ![]const u8 {
+    var root = try std.Io.Dir.cwd().openDir(testing.io, cache, .{ .iterate = true });
+    defer root.close(testing.io);
+    var walker = try root.walk(testing.allocator);
+    defer walker.deinit();
+    while (try walker.next(testing.io)) |entry| {
+        if (entry.kind == .file and std.mem.eql(u8, entry.basename, name)) return entry.dir.readFileAlloc(testing.io, entry.basename, testing.allocator, .limited(1 << 20));
+    }
+    return error.FileNotFound;
+}
+
+/// A stand-in for a detached seeder: a process that leads its own process
+/// group and carries `MYLANG_TEST_SEED=<seed>` (`1` for a seeder), as `mylang test`
+/// starts one. The caller kills it.
+fn standInSeeder(seed: []const u8) !std.process.Child {
+    var environment: std.process.Environ.Map = .init(testing.allocator);
+    defer environment.deinit();
+    try environment.put("PATH", "/usr/bin:/bin");
+    try environment.put("MYLANG_TEST_SEED", seed);
+    return std.process.spawn(testing.io, .{ .argv = &.{ "sleep", "600" }, .environ_map = &environment, .stdin = .ignore, .stdout = .ignore, .stderr = .ignore, .pgid = 0 });
+}
+
+/// The scheduler state of process `pid` (the field after the name in
+/// `/proc/PID/stat`): `T` while it is stopped. The file reports no length,
+/// so it is read as a stream.
+fn processState(pid: std.process.Child.Id) !u8 {
+    const path = try std.fmt.allocPrint(testing.allocator, "/proc/{d}/stat", .{pid});
+    defer testing.allocator.free(path);
+    const file = try std.Io.Dir.cwd().openFile(testing.io, path, .{});
+    defer file.close(testing.io);
+    var buffer: [4096]u8 = undefined;
+    const count = try file.readStreaming(testing.io, &.{&buffer});
+    const close = std.mem.lastIndexOfScalar(u8, buffer[0..count], ')') orelse return error.TestUnexpectedResult;
+    return buffer[close + 2];
+}
+
+/// Mark the stable snapshot `stable` as held by the seeder `pid`.
+fn markSeeder(stable: []const u8, pid: std.process.Child.Id) !void {
+    const mark = try std.fs.path.join(testing.allocator, &.{ stable, "seeding" });
+    defer testing.allocator.free(mark);
+    const text = try std.fmt.allocPrint(testing.allocator, "{d}", .{pid});
+    defer testing.allocator.free(text);
+    try std.Io.Dir.cwd().writeFile(testing.io, .{ .sub_path = mark, .data = text });
+}
+
+// spec: MODULE-TEST-6
+test "a test run started while a seeder holds the project's snapshot path does not wait for it and reports the verdicts the receipts hold" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    const paths = try scaleProject(&temp);
+    defer freeScalePaths(paths);
+    const scratch = try std.fs.path.join(testing.allocator, &.{ std.fs.path.dirname(paths.entry).?, "scratch" });
+    defer testing.allocator.free(scratch);
+    try std.Io.Dir.cwd().createDirPath(testing.io, scratch);
+    const quiet = [_][2][]const u8{ .{ "TMPDIR", scratch }, .{ "MYLANG_TEST_SEED", "off" } };
+    // A first run at the stable path records every verdict.
+    const first = try moduleScaleRunWith(paths, &quiet);
+    defer testing.allocator.free(first.stdout);
+    defer testing.allocator.free(first.stderr);
+    try testing.expectEqual(@as(usize, 4), (try c4Counts(first.stdout)).executed);
+    const stable = try stagedDirectory(paths.trace);
+    defer testing.allocator.free(stable);
+    // A seeder holds the path: its owner marker is locked and the path is
+    // marked as a seeder's, as for the whole of a background compile.
+    try std.Io.Dir.cwd().createDirPath(testing.io, stable);
+    const owner = try std.fs.path.join(testing.allocator, &.{ stable, ".owner" });
+    defer testing.allocator.free(owner);
+    const held = try std.Io.Dir.cwd().createFile(testing.io, owner, .{ .truncate = false });
+    defer held.close(testing.io);
+    try held.lock(testing.io, .exclusive);
+    var seeder = try standInSeeder("1");
+    defer seeder.kill(testing.io);
+    try markSeeder(stable, seeder.id.?);
+    // An unchanged run does not wait: it stages apart, compiles no module,
+    // links nothing, and every verdict is the first run's. It stops the
+    // seeder while it runs and lets it go on when it ends.
+    const unchanged = try moduleScaleRunWith(paths, &quiet);
+    defer testing.allocator.free(unchanged.stdout);
+    defer testing.allocator.free(unchanged.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, unchanged.term);
+    const replayed = try c4Counts(unchanged.stdout);
+    try testing.expectEqual(@as(usize, 0), replayed.executed);
+    try testing.expectEqual(@as(usize, 4), replayed.cached);
+    try testing.expectEqual(@as(usize, 1), try c4TraceCount(paths.trace, "stage seeding"));
+    try testing.expectEqual(@as(usize, 0), try c4TraceCount(paths.trace, "compile-module "));
+    try testing.expectEqual(@as(usize, 0), try c4TraceCount(paths.trace, "module-link "));
+    try testing.expectEqual(@as(usize, 1), try c4TraceCount(paths.trace, "pause-seeder"));
+    try testing.expect(try processState(seeder.id.?) != 'T');
+    // After an edit, the whole-program run executes the tests it reaches
+    // and replays the other.
+    try scaleEdit(&temp, 1, "return m0.f(n) + 2 - 1");
+    const edited = try moduleScaleRunWith(paths, &quiet);
+    defer testing.allocator.free(edited.stdout);
+    defer testing.allocator.free(edited.stderr);
+    const rerun = try c4Counts(edited.stdout);
+    try testing.expectEqual(@as(usize, 3), rerun.executed);
+    try testing.expectEqual(@as(usize, 1), rerun.cached);
+    try testing.expectEqual(@as(usize, 0), rerun.failed);
+    try testing.expectEqual(@as(usize, 1), try c4TraceCount(paths.trace, "stage seeding"));
+    try testing.expectEqual(@as(usize, 0), try c4TraceCount(paths.trace, "compile-module "));
+    try testing.expect(try processState(seeder.id.?) != 'T');
+    // A mark whose process is no seeder (it was reused) stops nothing.
+    var other = try standInSeeder("off");
+    defer other.kill(testing.io);
+    try markSeeder(stable, other.id.?);
+    const stale = try moduleScaleRunWith(paths, &quiet);
+    defer testing.allocator.free(stale.stdout);
+    defer testing.allocator.free(stale.stderr);
+    try testing.expectEqual(@as(usize, 4), (try c4Counts(stale.stdout)).cached);
+    try testing.expectEqual(@as(usize, 1), try c4TraceCount(paths.trace, "stage seeding"));
+    try testing.expectEqual(@as(usize, 0), try c4TraceCount(paths.trace, "pause-seeder"));
+}
+
+// spec: NATIVE-TEST-SCALE-1
+// spec: MODULE-TEST-1
+// spec: MODULE-TEST-4
+test "module by module, a body edit in module k compiles no module below k and re-runs exactly the tests that depend on it" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    const paths = try scaleProject(&temp);
+    defer freeScalePaths(paths);
+    // Cold: every module compiled once, one library, every test run.
+    const cold = try moduleScaleRun(paths);
+    defer testing.allocator.free(cold.stdout);
+    defer testing.allocator.free(cold.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, cold.term);
+    try testing.expectEqual(@as(usize, 4), (try c4Counts(cold.stdout)).executed);
+    try testing.expectEqual(@as(usize, 5), try c4TraceCount(paths.trace, "compile-module "));
+    try testing.expectEqual(@as(usize, 1), try c4TraceCount(paths.trace, "module-link "));
+    try testing.expectEqual(@as(usize, 0), try c4TraceCount(paths.trace, "native-test-compile"));
+    // The tests are discovered from the modules' own contracts: no declaration check.
+    try testing.expectEqual(@as(usize, 0), try c4TraceCount(paths.trace, "list-interfaces"));
+    // The merged facts cover the tests' closure only: no untested function.
+    try testing.expect(try storedGraphMentions(paths.cache, "m0::f"));
+    try testing.expect(!try storedGraphMentions(paths.cache, "m2::unused"));
+
+    // Unchanged: no module compiled, no library linked, no compiler child.
+    const unchanged = try moduleScaleRun(paths);
+    defer testing.allocator.free(unchanged.stdout);
+    defer testing.allocator.free(unchanged.stderr);
+    const idle = try c4Counts(unchanged.stdout);
+    try testing.expectEqual(@as(usize, 0), idle.executed);
+    try testing.expectEqual(@as(usize, 4), idle.cached);
+    try testing.expectEqual(@as(usize, 0), try c4TraceCount(paths.trace, "compile-module "));
+    try testing.expectEqual(@as(usize, 0), try c4TraceCount(paths.trace, "module-link "));
+    try testing.expectEqual(@as(usize, 0), try c4TraceCount(paths.trace, "list-interfaces"));
+    try testing.expectEqual(@as(usize, 0), try c4TraceCount(paths.trace, "check-project"));
+    try testing.expectEqual(@as(usize, 0), try c4TraceCount(paths.trace, "native-test-runner"));
+
+    // A body edit in module 1: module 1 is compiled, and the modules above it
+    // only because `f` is small enough to inline (its body is in the
+    // interface they read); module 0 is not. One library is linked, and the
+    // tests of modules 1, 2 and 3 run.
+    try scaleEdit(&temp, 1, "return m0.f(n) + 2 - 1");
+    const edited = try moduleScaleRun(paths);
+    defer testing.allocator.free(edited.stdout);
+    defer testing.allocator.free(edited.stderr);
+    const rerun = try c4Counts(edited.stdout);
+    try testing.expectEqual(@as(usize, 3), rerun.executed);
+    try testing.expectEqual(@as(usize, 1), rerun.cached);
+    try testing.expectEqual(@as(usize, 0), rerun.failed);
+    try testing.expectEqual(@as(usize, 1), try c4TraceCount(paths.trace, "compile-module m1\n"));
+    try testing.expectEqual(@as(usize, 0), try c4TraceCount(paths.trace, "compile-module m0\n"));
+    try testing.expectEqual(@as(usize, 1), try c4TraceCount(paths.trace, "module-link "));
+    try testing.expectEqual(@as(usize, 0), try c4TraceCount(paths.trace, "native-test-runner"));
+
+    // An edit that no test reaches compiles its module and runs nothing.
+    const original = try scaleModule(testing.allocator, 2, "");
+    defer testing.allocator.free(original);
+    const untouched = try std.mem.replaceOwned(u8, testing.allocator, original, "return n * 2", "return n * 3");
+    defer testing.allocator.free(untouched);
+    try writeProjectFile(&temp, "m2.my", untouched);
+    const unreached = try moduleScaleRun(paths);
+    defer testing.allocator.free(unreached.stdout);
+    defer testing.allocator.free(unreached.stderr);
+    const quiet = try c4Counts(unreached.stdout);
+    try testing.expectEqual(@as(usize, 0), quiet.executed);
+    try testing.expectEqual(@as(usize, 4), quiet.cached);
+    try testing.expectEqual(@as(usize, 1), try c4TraceCount(paths.trace, "compile-module m2\n"));
+    try testing.expectEqual(@as(usize, 0), try c4TraceCount(paths.trace, "compile-module m1\n"));
+    try testing.expectEqual(@as(usize, 0), try c4TraceCount(paths.trace, "module-link "));
+}
+
+// spec: MODULE-TEST-3
+test "module by module, a trapping and a printing test report what the whole-program run reports" {
+    var arena_state = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena_state.deinit();
+    const a = arena_state.allocator();
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const directory = try temporary.dir.realPathFileAlloc(testing.io, ".", a);
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "util.my", .data = "module util\npublic def ratio(n: int, d: int) -> int:\n    return n // d\npublic def test_ratio() -> bool:\n    return ratio(6, 0) == 1\n" });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = "module main\nimport util\ndef main() -> int:\n    return 0\npublic def test_said(out: Stream) -> bool effects(output):\n    out.print(\"said\")\n    return util.ratio(4, 2) == 3\n" });
+    const entry = try std.fs.path.join(a, &.{ directory, "main.my" });
+    var module_args: std.ArrayList([]const u8) = .empty;
+    try module_args.appendSlice(a, &.{ "test", entry, "--cache-dir", try std.fs.path.join(a, &.{ directory, "cm" }) });
+    try module_args.appendSlice(a, &tools);
+    var whole_args: std.ArrayList([]const u8) = .empty;
+    try whole_args.appendSlice(a, &.{ "test", entry, "--whole-program", "--cache-dir", try std.fs.path.join(a, &.{ directory, "cw" }) });
+    try whole_args.appendSlice(a, &tools);
+    const module = try runInterfaces(module_args.items);
+    defer freeRun(module);
+    const whole = try runInterfaces(whole_args.items);
+    defer freeRun(whole);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, module.term);
+    try testing.expectEqual(whole.term, module.term);
+    try testing.expect(std.mem.indexOf(u8, module.stdout, "said") != null);
+    try testing.expect(std.mem.indexOf(u8, module.stdout, "R_") != null);
+    try testing.expectEqualStrings(whole.stdout, module.stdout);
+}
+
 /// Whether any stored checked-facts graph under `cache` mentions `needle`.
 fn storedGraphMentions(cache: []const u8, needle: []const u8) !bool {
     const directory_path = try std.fs.path.join(testing.allocator, &.{ cache, "graphs" });
@@ -9845,7 +10836,7 @@ fn storedGraphMentions(cache: []const u8, needle: []const u8) !bool {
     return false;
 }
 
-// spec: NATIVE-TEST-SCALE-1
+// spec-case: NATIVE-TEST-SCALE-1
 // spec: NATIVE-TEST-FACTS-2
 // spec-case: NATIVE-TEST-STABLE-1
 // spec-case: NATIVE-TEST-INTERFACES-1
@@ -12185,18 +13176,21 @@ const iterated_write_back =
     \\    rt.objects.append(value)
     \\def main() -> int:
     \\    it = Interp(rt=Runtime(objects=[1, 2]))
+    \\    seen = 0
     \\    for x in it.rt.objects:
+    \\        seen = seen + x
     \\        wb = it.rt
     \\        push(mut wb, x)
     \\        it.rt = wb
-    \\    return len(it.rt.objects)
+    \\    return 0 if seen == 3 and len(it.rt.objects) == 4 else 1
 ;
 
 // spec-case: RC-ITERATION-HOLD-TRANSFER-1
-test "CLI RC growth written back through an iterated field traps like the collector" {
-    try invokeOptions("run", iterated_write_back, &.{}, 1, "", "R_LIST_ITERATION_MUTATION");
-    try invokeOptions("run", iterated_write_back, &.{"--rc-runtime"}, 1, "", "R_LIST_ITERATION_MUTATION");
-    try invokeOptions("run", iterated_write_back, &.{"--rc-runtime=stats"}, 1, "", "R_LIST_ITERATION_MUTATION");
+test "CLI growth written back through a named field preserves the iteration snapshot" {
+    try invokeOptions("run", iterated_write_back, &.{}, 0, "0\n", "");
+    try invokeOptions("run", iterated_write_back, &.{"--rc-runtime"}, 0, "0\n", "");
+    try invokeOptions("run", iterated_write_back, &.{"--rc-runtime=stats"}, 0, "0\n", "MYLANG_RC_COUNTS ");
+    try invokeOptions("run", iterated_write_back, &.{"--gc-stress"}, 0, "0\n", "");
 }
 
 // spec: RC-RUNTIME-CLI-1
@@ -12269,7 +13263,7 @@ test "CLI RC runtime contract inheritance respects project discovery and explici
     var environment = try std.process.Environ.createMap(testing.environ, testing.allocator);
     defer environment.deinit();
     _ = environment.swapRemove("MYLANG_VALUE_SEMANTICS");
-    try environment.put("MYLANG_RUNTIME", "rc-v3");
+    try environment.put("MYLANG_RUNTIME", "rc-v5");
     const inherited = try semanticModeRun(project.path, &environment, &.{});
     defer freeRun(inherited);
     try testing.expectEqual(std.process.Child.Term{ .exited = 22 }, inherited.term);
@@ -12510,13 +13504,6 @@ test "a call-depth budget the memory ceiling cannot back is refused up front wit
     try expectRunRefused(&.{ "--max-frames", "150000" }, null, "raise --max-memory to at least 5G, or lower --max-frames to at most 137984");
     // The same budget with a ceiling that holds it runs.
     try invokeOptions("run", trivial_run, &.{ "--max-frames", "30000", "--max-memory", "2G" }, 0, "ok\n0\n", "");
-    // Past what the compiler's own address-space ceiling lets a guest inherit, the
-    // cause is named instead of a silent cap at about 269,000 frames.
-    var environment = try std.process.Environ.createMap(testing.environ, testing.allocator);
-    defer environment.deinit();
-    try environment.put("MYLANG_HOST_MEMORY_LIMIT", "8G");
-    try expectRunRefused(&.{ "--max-frames=400000", "--max-memory=64G" }, &environment, "this process inherited an address-space limit below --max-memory");
-    try expectRunRefused(&.{ "--max-frames=400000", "--max-memory=64G" }, &environment, "MYLANG_HOST_MEMORY_LIMIT=0 removes it");
 }
 
 // spec-case: RUN-FRAME-BUDGET-1
@@ -12763,4 +13750,213 @@ test "mylang test runs a module that embeds and reruns it when only the fixture 
     try temporary.dir.writeFile(testing.io, .{ .sub_path = "fixtures/nul.bin", .data = "a\x00b" });
     const restored = try std.process.run(a, testing.io, .{ .argv = &argv });
     try testing.expect(std.mem.indexOf(u8, restored.stdout, "cached emb::test_nul") != null);
+}
+
+/// Exercise a real guest reservation and, optionally, a caller's soft ceiling.
+fn expectGuestFrames(frames: []const u8, external: bool, expected_status: u8) !void {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "prog.my", .data = trivial_run });
+    const path = try temp.dir.realPathFileAlloc(testing.io, "prog.my", a);
+    const root = try temp.dir.realPathFileAlloc(testing.io, ".", a);
+    const cache = try std.fs.path.join(a, &.{ root, "cache" });
+    var environment = try std.process.Environ.createMap(testing.environ, a);
+    try environment.put("MYLANG_HOST_MEMORY_LIMIT", if (external) "4G" else "8G");
+    var argv: std.ArrayList([]const u8) = .empty;
+    if (external) try argv.appendSlice(a, &.{ "sh", "-c", "ulimit -S -v 6291456; exec \"$@\"", "caller-limit" });
+    try argv.appendSlice(a, &.{ compiler_path, "run", path, frames, "--max-memory=12G", "--print-result", try std.fmt.allocPrint(a, "--cache-dir={s}", .{cache}) });
+    try argv.appendSlice(a, &tools);
+    const result = try std.process.run(a, testing.io, .{ .argv = argv.items, .environ_map = &environment });
+    testing.expectEqual(std.process.Child.Term{ .exited = expected_status }, result.term) catch |err| {
+        std.debug.print("guest frame preflight: {s}\n{s}\n", .{ result.stdout, result.stderr });
+        return err;
+    };
+    if (expected_status == 0) {
+        try testing.expectEqualStrings("ok\n0\n", result.stdout);
+        try testing.expectEqualStrings("", result.stderr);
+    } else {
+        try testing.expect(std.mem.indexOf(u8, result.stderr, "this process inherited an address-space limit below --max-memory") != null);
+        try testing.expect(std.mem.indexOf(u8, result.stderr, "raise the caller's RLIMIT_AS") != null);
+    }
+}
+
+// spec-case: MEMORY-HOST-GUEST-1
+test "CLI guest frame preflight permits a restored compiler limit and preserves a caller limit" {
+    try expectGuestFrames("--max-frames=300000", false, 0);
+    try expectGuestFrames("--max-frames=160000", true, 0);
+    try expectGuestFrames("--max-frames=300000", true, 2);
+}
+
+const embed_tooling_source =
+    \\module main
+    \\
+    \\const DATA: bytes = embed_bytes("data.bin")
+    \\
+    \\public def measure[T](value: T) -> int:
+    \\    return len(DATA)
+    \\
+    \\def main() -> int:
+    \\    return measure(1)
+;
+
+/// Invoke a file-backed tooling frontend over the temporary embedded project.
+fn embeddedTool(allocator: std.mem.Allocator, command: []const u8, entry: []const u8, extra: []const []const u8) !std.process.RunResult {
+    var argv: std.ArrayList([]const u8) = .empty;
+    try argv.appendSlice(allocator, &.{ compiler_path, command, entry });
+    try argv.appendSlice(allocator, extra);
+    return std.process.run(allocator, testing.io, .{ .argv = argv.items });
+}
+
+// spec-case: EMBED-CONTEXT-1
+// spec-case: EMBED-3
+// spec-case: EMBED-PROJECT-BUDGET-1
+test "CLI embedded inputs reach context and generic schema and obey project byte budgets" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = embed_tooling_source });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "data.bin", .data = "abcd" });
+    const entry = try temporary.dir.realPathFileAlloc(testing.io, "main.my", a);
+    const answer = try embeddedTool(a, "context", entry, &.{ "--symbol", "main::main" });
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, answer.term);
+    const first = try std.json.parseFromSliceLeaky(std.json.Value, a, answer.stdout, .{});
+    const file = first.object.get("snapshot").?.object.get("embeds").?.array.items[0];
+    try testing.expectEqualStrings("data.bin", file.object.get("path").?.string);
+    try testing.expectEqual(@as(i64, 4), file.object.get("bytes").?.integer);
+    const schema = try embeddedTool(a, "schema-project", entry, &.{});
+    testing.expectEqual(std.process.Child.Term{ .exited = 0 }, schema.term) catch |err| {
+        std.debug.print("embedded schema: {s}\n", .{schema.stderr});
+        return err;
+    };
+    try testing.expect(std.mem.indexOf(u8, schema.stdout, "measure") != null);
+    try testing.expect(std.mem.indexOf(u8, schema.stdout, "generic_templates") != null);
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "data.bin", .data = "dcba" });
+    const edited = try embeddedTool(a, "context", entry, &.{ "--symbol", "main::main" });
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, edited.term);
+    const second = try std.json.parseFromSliceLeaky(std.json.Value, a, edited.stdout, .{});
+    try testing.expect(!std.mem.eql(u8, first.object.get("snapshot_sha256").?.string, second.object.get("snapshot_sha256").?.string));
+    const total = embed_tooling_source.len + 3;
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "mylang.json", .data = try std.fmt.allocPrint(a, "{{\"version\":1,\"budgets\":{{\"max_total_bytes\":{d}}}}}", .{total}) });
+    const refused = try embeddedTool(a, "check-project", entry, &.{"--diagnostics=json"});
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, refused.term);
+    try testing.expect(std.mem.indexOf(u8, refused.stderr, "E_PROJECT_BYTES") != null);
+    try testing.expect(std.mem.indexOf(u8, refused.stderr, "max_total_bytes") != null);
+    try testing.expect(std.mem.indexOf(u8, refused.stderr, "data.bin") != null);
+}
+
+// spec-case: RUN-FRAME-BUDGET-1
+test "CLI rejects an unaddressable native frame reservation without a compiler panic" {
+    try invokeOptions("run", trivial_run, &.{"--max-frames=562949953421312"}, 2, "", "exceeds the addressable native stack size");
+}
+
+// spec-case: MEMORY-HOST-GUEST-1
+test "CLI directory tests forward the installed host receipt when modes are already normalized" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = "public def test_ok() -> bool:\n    return True\n" });
+    const root = try temporary.dir.realPathFileAlloc(testing.io, ".", a);
+    const cache = try std.fs.path.join(a, &.{ root, "cache" });
+    var environment = try std.process.Environ.createMap(testing.environ, a);
+    try environment.put("MYLANG_VALUE_SEMANTICS", "1");
+    try environment.put("MYLANG_RUNTIME", @import("runtime_contract").Selection.rc.identity());
+    try environment.put("MYLANG_HOST_MEMORY_LIMIT", "8G");
+    _ = environment.swapRemove("MYLANG_HOST_LIMIT_CHECKPOINT");
+    _ = environment.swapRemove("MYLANG_HOST_LIMIT_RESTORE");
+    const result = try std.process.run(a, testing.io, .{ .argv = &(.{ compiler_path, "test", root, "--max-memory=12G", "--max-frames=300000", "--jobs=1", "--cache-dir", cache } ++ tools), .environ_map = &environment });
+    testing.expectEqual(std.process.Child.Term{ .exited = 0 }, result.term) catch |err| {
+        std.debug.print("directory host receipt: {s}\n{s}\n", .{ result.stdout, result.stderr });
+        return err;
+    };
+    try testing.expect(std.mem.indexOf(u8, result.stdout, "1 passed") != null);
+}
+
+const snapshot_embed_main = "module main\nimport data\n\nconst A: bytes = embed_bytes(\"data.bin\")\nconst B: bytes = embed_bytes(\"data.bin\")\n\ndef main() -> int:\n    return 0\n\npublic def test_payload() -> bool:\n    return A == b\"abcd\" and B == A and data.C == A\n";
+const snapshot_embed_data = "module data\n\npublic const C: bytes = embed_bytes(\"data.bin\")\n";
+
+/// Run a real snapshot test and preserve the located budget diagnostic on refusal.
+fn expectSnapshotBudget(allocator: std.mem.Allocator, entry: []const u8, cache: []const u8, expected_status: u8) !void {
+    const result = try std.process.run(allocator, testing.io, .{ .argv = &(.{ compiler_path, "test", entry, "--cache-dir", cache, "--force", "--diagnostics=json" } ++ tools) });
+    testing.expectEqual(std.process.Child.Term{ .exited = expected_status }, result.term) catch |err| {
+        std.debug.print("snapshot embed budget: {s}\n{s}\n", .{ result.stdout, result.stderr });
+        return err;
+    };
+    if (expected_status == 0) {
+        try testing.expect(std.mem.indexOf(u8, result.stdout, "passed main::test_payload") != null);
+    } else {
+        try testing.expect(std.mem.indexOf(u8, result.stderr, "E_PROJECT_BYTES") != null);
+        try testing.expect(std.mem.indexOf(u8, result.stderr, "diagnostic-v1") != null);
+        try testing.expect(std.mem.indexOf(u8, result.stderr, "data.bin") != null);
+    }
+}
+
+// spec-case: EMBED-PROJECT-BUDGET-1
+// spec-case: DIAGNOSTIC-JSON-1
+test "CLI test snapshots retain exact embedded budgets and recapture tightened and widened policy" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = snapshot_embed_main });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "data.my", .data = snapshot_embed_data });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "data.bin", .data = "abcd" });
+    const entry = try temporary.dir.realPathFileAlloc(testing.io, "main.my", a);
+    const root = try temporary.dir.realPathFileAlloc(testing.io, ".", a);
+    const cache = try std.fs.path.join(a, &.{ root, "cache" });
+    const total = snapshot_embed_main.len + snapshot_embed_data.len + 8;
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "mylang.json", .data = try std.fmt.allocPrint(a, "{{\"version\":1,\"budgets\":{{\"max_total_bytes\":{d}}}}}", .{total}) });
+    try expectSnapshotBudget(a, entry, cache, 0);
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "mylang.json", .data = try std.fmt.allocPrint(a, "{{\"version\":1,\"budgets\":{{\"max_total_bytes\":{d}}}}}", .{total - 1}) });
+    try expectSnapshotBudget(a, entry, cache, 1);
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "mylang.json", .data = try std.fmt.allocPrint(a, "{{\"version\":1,\"budgets\":{{\"max_total_bytes\":{d}}}}}", .{total}) });
+    try expectSnapshotBudget(a, entry, cache, 0);
+    const oversized = try temporary.dir.createFile(testing.io, "data.bin", .{});
+    defer oversized.close(testing.io);
+    try oversized.setLength(testing.io, 1024 * 1024);
+    try expectSnapshotBudget(a, entry, cache, 1);
+}
+
+// spec-case: EMBED-PROJECT-BUDGET-1
+// spec-case: NATIVE-TEST-12
+test "CLI provider replacements recapture embedded fixture edits with a warm test cache" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    try writeProjectFile(&temporary, "main.my", "module main\nimport dependency\n\npublic def test_fixture() -> bool:\n    return dependency.value() == 7\n");
+    try writeProjectFile(&temporary, "dependency.my", "module dependency\n\npublic def value() -> int effects():\n    return 7\n");
+    try writeProjectFile(&temporary, "fixture.my", "module fixture\n\npublic const DATA: bytes = embed_bytes(\"fixture.bin\")\n");
+    try writeProjectFile(&temporary, "fixture.bin", "1234567");
+    try r3WriteCases(&temporary, "cases.json", "main::test_fixture", "dependency.my", "module dependency\nimport fixture\n\npublic def value() -> int effects():\n    return len(fixture.DATA)\n");
+    const entry = try temporary.dir.realPathFileAlloc(testing.io, "main.my", a);
+    const cases = try temporary.dir.realPathFileAlloc(testing.io, "cases.json", a);
+    const cache = try std.fs.path.join(a, &.{ std.fs.path.dirname(entry).?, "cache" });
+    const first = try r3TestInvoke(entry, cases, cache);
+    defer testing.allocator.free(first.stdout);
+    defer testing.allocator.free(first.stderr);
+    testing.expectEqual(std.process.Child.Term{ .exited = 0 }, first.term) catch |err| {
+        std.debug.print("provider embedded fixture: {s}\n{s}\n", .{ first.stdout, first.stderr });
+        return err;
+    };
+    try testing.expect(std.mem.indexOf(u8, first.stdout, "\"passed\":1") != null);
+    try writeProjectFile(&temporary, "fixture.bin", "12345678");
+    const changed = try r3TestInvoke(entry, cases, cache);
+    defer testing.allocator.free(changed.stdout);
+    defer testing.allocator.free(changed.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, changed.term);
+    try testing.expect(std.mem.indexOf(u8, changed.stdout, "\"failed\":1") != null);
+}
+
+// spec-case: DIAGNOSTIC-JSON-1
+test "CLI native build forwards diagnostic presentation to its source frontend" {
+    try invokeOptions("build", "def main() -> int:\n    return False\n", &.{ "--run", "--diagnostics=json" }, 1, "", "\"code\":\"E_TYPE\"");
 }

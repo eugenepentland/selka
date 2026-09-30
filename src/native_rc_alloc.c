@@ -112,7 +112,7 @@ static const unsigned char class_of[RC_CLASS_STEPS] = {
 #define RC_SLAB_OFFSET ((sizeof(rc_slab) + 15) & ~(size_t)15)
 _Static_assert(RC_SLAB_OFFSET == 80, "cached capacity fits the existing aligned slab metadata extent");
 _Static_assert(offsetof(rc_slab, class) == 0, "a slab starts with its class words");
-_Static_assert(sizeof(rc_large) % 16 == 0, "large allocator metadata preserves alignment");
+_Static_assert((sizeof(rc_large) + MYL_RC_PREFIX_BYTES) % _Alignof(max_align_t) == 0, "large allocator metadata preserves alignment");
 _Static_assert(sizeof(myl_rc_object) == MYL_RC_PREFIX_BYTES, "RC prefix ABI");
 _Static_assert(offsetof(myl_rc_object, common) == 16, "common header ABI");
 const myl_native_type myl_rc_pointer_leaf = {
@@ -227,7 +227,7 @@ static void cache_return(myl_native_heap *heap, size_t index) {
     myl_rc_object *object=heap->rc_cache.free[index];
     heap->rc_cache.free[index]=NULL;
     while (object) {
-        myl_rc_object *next=(myl_rc_object *)object->owners;
+        myl_rc_object *next=(myl_rc_object *)object->retired_link;
         rc_slab *slab=(rc_slab *)((uintptr_t)object&~(uintptr_t)(RC_SLAB_BYTES-1));
         if (slab_full(slab)) available_add(class,slab);
         memcpy(object,&slab->free,sizeof slab->free);
@@ -306,21 +306,21 @@ static __attribute__((noinline)) myl_rc_object *slab_refill(myl_native_heap *hea
         head=(myl_rc_object *)first;
         for (size_t i=0;i<run;i++) {
             myl_rc_object *slot=(myl_rc_object *)(first+i*stride);
-            slot->owners=i+1<run?(uintptr_t)(first+(i+1)*stride):0;
+            slot->retired_link=i+1<run?(uintptr_t)(first+(i+1)*stride):0;
             slot->common.mark=MYL_RC_RETIRED_MARK;
         }
         slab->used+=run;
         slab->live+=run;
     }
     if (slab_full(slab)) available_remove(class,slab);
-    heap->rc_cache.free[index]=(void *)head->owners;
+    heap->rc_cache.free[index]=(void *)head->retired_link;
     return head;
 }
 /* One free slot of a slab class: pop its class list, refilling it when empty. */
 static inline __attribute__((always_inline)) myl_rc_object *slab_take(myl_native_heap *heap, size_t index) {
     myl_rc_object *object=heap->rc_cache.free[index];
     if (!object) return slab_refill(heap,index);
-    heap->rc_cache.free[index]=(void *)object->owners;
+    heap->rc_cache.free[index]=(void *)object->retired_link;
     return object;
 }
 /* One zeroed large block of `bytes`: its own mapping from RC_MAP_BYTES up. */
@@ -374,9 +374,8 @@ static myl_rc_object *large_take(myl_native_heap *heap, size_t extent) {
     charge(heap,bytes);
     return (myl_rc_object *)(large+1);
 }
-/* Zero a slab payload in whole 16-byte units: the slot is 16-byte aligned and
- * its stride covers the rounded payload, so the tail is slot padding. Small
- * payloads use straight-line vector stores instead of a memset call. */
+/* The 32-byte prefix and slot stride preserve 16-byte payload alignment.
+ * A short payload may clear its padding up to the next complete vector. */
 typedef unsigned char rc_zero_unit __attribute__((vector_size(16), aligned(16), may_alias));
 static inline void zero_payload(unsigned char *payload, size_t bytes) {
     rc_zero_unit *unit=(rc_zero_unit *)payload;
@@ -503,7 +502,7 @@ void myl_rc_storage_retire(myl_native_heap *heap, void *payload) {
  * before the slabs themselves are released wholesale. */
 static void cache_discard(myl_native_heap *heap) {
     for (size_t i=0;i<RC_SLAB_CLASSES;i++) {
-        for (myl_rc_object *object=heap->rc_cache.free[i];object;object=(myl_rc_object *)object->owners) {
+        for (myl_rc_object *object=heap->rc_cache.free[i];object;object=(myl_rc_object *)object->retired_link) {
             rc_slab *slab=(rc_slab *)((uintptr_t)object&~(uintptr_t)(RC_SLAB_BYTES-1));
             assert(slab->live);
             slab->live--;

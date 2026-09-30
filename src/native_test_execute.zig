@@ -88,7 +88,10 @@ pub const BenchOutcome = struct {
     raw: []const Batch = &.{},
 };
 /// The embedded POSIX harness sources, in the order the runner key hashes them.
-const runner_sources = .{ "native_test_runner.c", "native_host.h", "native_providers.h", "native_embed.h" };
+const runner_source = "native_test_runner.c";
+const runner_sources = .{ runner_source, "native_host.h", "native_providers.h", "native_embed.h" };
+/// How the harness C source is compiled, beside its output flags.
+const runner_flags = [_][]const u8{ "cc", "-std=c11", "-O2" };
 /// Where the compiled harness is published and what builds it. `cache` is
 /// null for a `--no-cache` run, which compiles a private copy under `temporary`.
 pub const RunnerStore = struct { cache: ?[]const u8, temporary: []const u8, zig: []const u8, zig_stamp: []const u8 };
@@ -101,9 +104,8 @@ pub const Runner = struct { path: []const u8, compiled: bool };
 /// pays the C compile again; a miss compiles once and publishes by rename.
 pub fn runner(context: fs.Context, store: RunnerStore) Error!Runner {
     const a = context.allocator;
-    const flags = [_][]const u8{ "cc", "-std=c11", "-O2" };
     var hash = std.crypto.hash.Blake3.init(.{});
-    inline for (.{"native-test-runner-v2"} ++ flags) |part| framed(&hash, part);
+    inline for (.{"native-test-runner-v2"} ++ runner_flags) |part| framed(&hash, part);
     framed(&hash, store.zig_stamp);
     inline for (runner_sources) |name| framed(&hash, @embedFile(name));
     var digest: [32]u8 = undefined;
@@ -123,16 +125,49 @@ pub fn runner(context: fs.Context, store: RunnerStore) Error!Runner {
     context.rename(built, published) catch return .{ .path = try compileRunner(context, store, store.temporary), .compiled = true };
     return .{ .path = published, .compiled = true };
 }
+/// MODULE-TEST-3: the harness as an object for a test executable that links
+/// the guest in (`MYLANG_TEST_LINKED`: it calls the adapter directly instead
+/// of loading a library), compiled once per cache like `runner`.
+pub fn linkedRunner(context: fs.Context, store: RunnerStore) Error!Runner {
+    const a = context.allocator;
+    var hash = std.crypto.hash.Blake3.init(.{});
+    inline for (.{"native-test-runner-linked-v1"} ++ runner_flags ++ .{"-DMYLANG_TEST_LINKED"}) |part| framed(&hash, part);
+    framed(&hash, store.zig_stamp);
+    inline for (runner_sources) |name| framed(&hash, @embedFile(name));
+    var digest: [32]u8 = undefined;
+    hash.final(&digest);
+    const key = try std.fmt.allocPrint(a, "{s}.o", .{std.fmt.bytesToHex(digest, .lower)});
+    const cache = store.cache orelse return .{ .path = try compileLinkedRunner(context, store, store.temporary), .compiled = true };
+    const directory = try std.fs.path.join(a, &.{ cache, "runner" });
+    const published = try std.fs.path.join(a, &.{ directory, key });
+    if (context.exists(published)) return .{ .path = published, .compiled = false };
+    try context.mkdir(directory);
+    const staging = try context.temporary(directory);
+    defer context.remove(staging);
+    const built = try compileLinkedRunner(context, store, staging);
+    context.rename(built, published) catch return .{ .path = try compileLinkedRunner(context, store, store.temporary), .compiled = true };
+    return .{ .path = published, .compiled = true };
+}
+fn compileLinkedRunner(context: fs.Context, store: RunnerStore, directory: []const u8) Error![]const u8 {
+    const a = context.allocator;
+    inline for (runner_sources) |name| try context.write(try std.fs.path.join(a, &.{ directory, name }), @embedFile(name));
+    const source = try std.fs.path.join(a, &.{ directory, runner_source });
+    const object = try std.fs.path.join(a, &.{ directory, "native-test-runner.o" });
+    var tooling = context;
+    tooling.zig_cache = try std.fs.path.join(a, &.{ directory, "zig-local" });
+    try tooling.command(&(.{store.zig} ++ runner_flags ++ .{ "-DMYLANG_TEST_LINKED", "-c", source, "-o", object }), null);
+    return object;
+}
 /// Write the embedded harness sources beneath `directory` and compile them there.
 fn compileRunner(context: fs.Context, store: RunnerStore, directory: []const u8) Error![]const u8 {
     const a = context.allocator;
     inline for (runner_sources) |name| try context.write(try std.fs.path.join(a, &.{ directory, name }), @embedFile(name));
-    const source = try std.fs.path.join(a, &.{ directory, "native_test_runner.c" });
+    const source = try std.fs.path.join(a, &.{ directory, runner_source });
     const executable = try std.fs.path.join(a, &.{ directory, "native-test-runner" });
     // Zig's own cache for this compile stays in the scratch its caller removes.
     var tooling = context;
     tooling.zig_cache = try std.fs.path.join(a, &.{ directory, "zig-local" });
-    try tooling.command(&.{ store.zig, "cc", "-std=c11", "-O2", source, "-ldl", "-o", executable }, null);
+    try tooling.command(&(.{store.zig} ++ runner_flags ++ .{ source, "-ldl", "-o", executable }), null);
     return executable;
 }
 fn framed(hash: *std.crypto.hash.Blake3, bytes: []const u8) void {

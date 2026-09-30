@@ -1,0 +1,1 @@
+Initial scratch C probe used a named counts member, but native_rc.h exposes its count union anonymously. Compilation failed before any execution; corrected owner/hold fields read from the actual header. No production-source change.

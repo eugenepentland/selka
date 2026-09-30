@@ -5,6 +5,7 @@
 const std = @import("std");
 const qbe_build = @import("qbe_build");
 const tools = @import("host_tools");
+const memory_budget = @import("memory_budget");
 /// Build, transport and guest-outcome failures of one native invocation.
 pub const Error = qbe_build.Error || std.Io.Dir.CreateDirError || error{ GuestTrap, InvalidGuestResult, InvalidBuildConfiguration };
 /// Bound on what one child may leave on a captured stream before publication.
@@ -167,9 +168,12 @@ pub const Program = struct {
     /// otherwise failing child leaves its diagnostics on the host's stderr.
     pub fn invoke(self: *Program, arguments: []const []const u8) Error!i64 {
         try qbe_build.runtime_options.apply(self.allocator, &self.environment, try command(self.allocator, arguments));
+        var environment = try self.environment.clone(self.allocator);
+        defer environment.deinit();
+        try memory_budget.guestEnvironment(self.allocator, &environment);
         const result = try std.process.run(self.allocator, self.io, .{
             .argv = &.{self.path},
-            .environ_map = &self.environment,
+            .environ_map = &environment,
             .stdout_limit = .limited(stream_limit),
             .stderr_limit = .limited(stream_limit),
         });
@@ -272,4 +276,41 @@ test "a host LLVM policy carries optimization and LTO to the driver and names no
     });
     defer allocator.free(joined);
     try std.testing.expectEqualStrings("--step-accounting --backend llvm --llvm-opt 3 --lto", joined);
+}
+
+// spec-case: EMBED-3
+// spec-case: MEMORY-HOST-GUEST-1
+test "the host native public build reads embedded files through its actual project frontend" {
+    const t = std.testing;
+    var temporary = t.tmpDir(.{});
+    defer temporary.cleanup();
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    try temporary.dir.writeFile(t.io, .{ .sub_path = "main.my", .data = "module main\n\nconst DATA: bytes = embed_bytes(\"data.bin\")\n\ndef main() -> int:\n    return len(DATA) + 40\n" });
+    try temporary.dir.writeFile(t.io, .{ .sub_path = "data.bin", .data = "abc" });
+    const root = try temporary.dir.realPathFileAlloc(t.io, ".", a);
+    const qbe = t.environ.getPosix("MYLANG_QBE") orelse return error.ToolNotFound;
+    const zig = t.environ.getPosix("MYLANG_ZIG") orelse return error.ToolNotFound;
+    const compiler = try std.fs.path.join(a, &.{ std.fs.path.dirname(qbe) orelse return error.ToolNotFound, "mylang" });
+    var environment = try std.process.Environ.createMap(t.environ, a);
+    try environment.put("MYLANG_HOST_COMPILER", compiler);
+    const process: std.process.Init = .{ .minimal = .{ .environ = t.environ, .args = .{ .vector = &.{} } }, .arena = &arena, .gpa = t.allocator, .io = t.io, .environ_map = &environment, .preopens = .empty };
+    var program = try Program.build(process, .{
+        .project = root,
+        .provider = "#include \"native_providers.h\"\nMylangNativeProviders mylang_native_providers(void) { return (MylangNativeProviders){0}; }\n",
+        .build = .{ .cache = try std.fs.path.join(a, &.{ root, "cache" }), .qbe = qbe, .zig = zig },
+    });
+    defer program.deinit();
+    try t.expectEqual(@as(i64, 43), try program.invoke(&.{}));
+    // The real host limit remains on the host while its child maps more frames.
+    const before = try std.posix.getrlimit(.AS);
+    defer std.posix.setrlimit(.AS, before) catch unreachable;
+    try program.environment.put(memory_budget.host_variable, "1G");
+    try std.testing.expect(memory_budget.guardHost(&program.environment));
+    const host = try std.posix.getrlimit(.AS);
+    try program.environment.put(memory_budget.variable, "12G");
+    try std.testing.expectEqual(@as(i64, 43), try program.invoke(&.{"--max-frames=300000"}));
+    try std.testing.expectEqual(host.cur, (try std.posix.getrlimit(.AS)).cur);
+    try std.testing.expect(program.environment.get(memory_budget.restore_variable) == null);
 }

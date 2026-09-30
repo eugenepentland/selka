@@ -1,0 +1,57 @@
+{
+  "commands": [
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-qbe-phi-20260930/.tmp/phi-install/focus/qbe",
+        "-dPGI",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-qbe-phi-20260930/.tmp/phi-original/minimal.ssa"
+      ],
+      "log": "debug.log",
+      "exit": 0
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-qbe-phi-20260930/.tmp/phi-install/focus/qbe",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-qbe-phi-20260930/.tmp/phi-minimal-after/minimal.s",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-qbe-phi-20260930/.tmp/phi-original/minimal.ssa"
+      ],
+      "log": "translate.log",
+      "exit": 0
+    },
+    {
+      "argv": [
+        "cc",
+        "-std=c11",
+        "-O2",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-qbe-phi-20260930/.tmp/phi-original/minimal.c",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-qbe-phi-20260930/.tmp/phi-minimal-after/minimal.s",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-qbe-phi-20260930/.tmp/phi-minimal-after/minimal"
+      ],
+      "log": "link.log",
+      "exit": 0
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-qbe-phi-20260930/.tmp/phi-minimal-after/minimal"
+      ],
+      "log": "execute.log",
+      "exit": 0
+    }
+  ],
+  "manifest": {
+    ".tmp/phi-original/minimal.ssa": "35e42eed28985d6f8c885aed73150ededfcd490a8741e9e0e8f73165fc179bce",
+    ".tmp/phi-original/minimal.c": "0e6b87077e82554b2689bc67aa738e403431ee90d7bc14617ed1f9bc47f24afc",
+    ".tmp/phi-install/focus/qbe": "ac76b99fcf254bae3b7ed3cccbe467f223f005014419ce887446ea1444869324",
+    ".tmp/phi-minimal-after/minimal": "92253a591feb3107ae5386d5125364b794d99681b748a1a9ace220054f7fbdf2",
+    ".tmp/phi-minimal-after/execute.log": "681326ad736805f70333f6bbe3205faec3570e492128df7af96d7e92fca43491",
+    ".tmp/phi-minimal-after/translate.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    ".tmp/phi-minimal-after/minimal.s": "a6fc30905ef5c7cadb01ee31355006b756e3707fca57d00bb8bcfd610825ad0b",
+    ".tmp/phi-minimal-after/debug.log": "05aac3a588ea033928b7d37ffbcd298c29c5c6b9f2161f64cd2e4401d7cb7b46",
+    ".tmp/phi-minimal-after/link.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+}

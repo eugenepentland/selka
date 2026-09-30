@@ -1,0 +1,127 @@
+{
+  "source_commit": "0801373befb4dc09599fc6d6d154e550c5dac6e0",
+  "compiler_sha256": "e692c195934c7831937a0d3c95fc756324c0454f25cdab78355309f70c3e8375",
+  "purpose": "Narrow combined list image and malformed-archive admission checkpoint; final full source gate and corpus pending.",
+  "modes": {
+    "rc": {
+      "totals": {
+        "programs": 1,
+        "equal": 1,
+        "reference_failed": 0,
+        "modules": 2,
+        "units_compared": 12,
+        "units_whole": 12,
+        "specializations_shared": 0,
+        "interfaces_compared": 2,
+        "executables_identical": 1,
+        "different": []
+      },
+      "executions": [
+        {
+          "kind": "whole",
+          "binary_sha256": "436c010f4dbae11cac2d81c8865f4503df9bd5a36b089f515f8ec862ec1d711e",
+          "exit_status": 0,
+          "stdout": "list-image-ok\n",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "kind": "modules",
+          "binary_sha256": "436c010f4dbae11cac2d81c8865f4503df9bd5a36b089f515f8ec862ec1d711e",
+          "exit_status": 0,
+          "stdout": "list-image-ok\n",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ]
+    },
+    "gc": {
+      "totals": {
+        "programs": 1,
+        "equal": 1,
+        "reference_failed": 0,
+        "modules": 2,
+        "units_compared": 12,
+        "units_whole": 12,
+        "specializations_shared": 0,
+        "interfaces_compared": 2,
+        "executables_identical": 1,
+        "different": []
+      },
+      "executions": [
+        {
+          "kind": "whole",
+          "binary_sha256": "4e36231dbc4e8df4f834fce33b1e455585f0d68e17e4583c46bf9652c5e48474",
+          "exit_status": 0,
+          "stdout": "list-image-ok\n",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "kind": "modules",
+          "binary_sha256": "4e36231dbc4e8df4f834fce33b1e455585f0d68e17e4583c46bf9652c5e48474",
+          "exit_status": 0,
+          "stdout": "list-image-ok\n",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ]
+    },
+    "stats": {
+      "totals": {
+        "programs": 1,
+        "equal": 1,
+        "reference_failed": 0,
+        "modules": 2,
+        "units_compared": 12,
+        "units_whole": 12,
+        "specializations_shared": 0,
+        "interfaces_compared": 2,
+        "executables_identical": 1,
+        "different": []
+      },
+      "executions": [
+        {
+          "kind": "whole",
+          "binary_sha256": "3b88b82215bdb279d92f635768782126187a4a6b5eeac6373b3a7c420dd02304",
+          "exit_status": 0,
+          "stdout": "list-image-ok\n",
+          "stderr_sha256": "28442da9133b663816541c32551609ef9434235474e6ba122d03f9c03fa57a23"
+        },
+        {
+          "kind": "modules",
+          "binary_sha256": "3b88b82215bdb279d92f635768782126187a4a6b5eeac6373b3a7c420dd02304",
+          "exit_status": 0,
+          "stdout": "list-image-ok\n",
+          "stderr_sha256": "28442da9133b663816541c32551609ef9434235474e6ba122d03f9c03fa57a23"
+        }
+      ]
+    },
+    "sites": {
+      "totals": {
+        "programs": 1,
+        "equal": 1,
+        "reference_failed": 0,
+        "modules": 2,
+        "units_compared": 12,
+        "units_whole": 12,
+        "specializations_shared": 0,
+        "interfaces_compared": 2,
+        "executables_identical": 1,
+        "different": []
+      },
+      "executions": [
+        {
+          "kind": "whole",
+          "binary_sha256": "7e4db0ec52c8e06a90c2d9a9d5ed981b5741adf3a1a4389d0981347c9768920d",
+          "exit_status": 0,
+          "stdout": "list-image-ok\n",
+          "stderr_sha256": "a55c6a5b25bf55276bef685fb8b6dace7a3f095e1e9dacb347b2318c4dd72c82"
+        },
+        {
+          "kind": "modules",
+          "binary_sha256": "7e4db0ec52c8e06a90c2d9a9d5ed981b5741adf3a1a4389d0981347c9768920d",
+          "exit_status": 0,
+          "stdout": "list-image-ok\n",
+          "stderr_sha256": "a55c6a5b25bf55276bef685fb8b6dace7a3f095e1e9dacb347b2318c4dd72c82"
+        }
+      ]
+    }
+  }
+}

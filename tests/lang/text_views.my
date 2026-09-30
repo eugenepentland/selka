@@ -108,7 +108,7 @@ public def test_a_short_piece_does_not_keep_a_large_receiver_alive() -> bool:
     for index in range(600):
         large = block + f"{index}"
         kept.append(large[index:index + 40])
-        kept.append(large[-60:])
+        kept.append(large[-60:len(large)])
     ok = len(kept) == 1200 and kept[0] == "0123456789abcdef0123456789abcdef01234567"
     ok = ok and kept[2] == "123456789abcdef0123456789abcdef012345678" and kept[1][:4] == "5678"
     return ok and kept[1199] == "789abcdef0123456789abcdef0123456789abcdef0123456789abcdef599"
@@ -181,6 +181,32 @@ public def test_pieces_in_arenas_read_and_escape() -> bool:
     ok = len(kept) == 4 and kept[0] == inner_piece(49) and kept[1] == outer[49:349]
     ok = ok and len(kept[2]) == 1089 and kept[2][:11] == "inner-text-" and kept[3] == "x"
     return ok and one == "outer-text-" and outer[:11] == "outer-text-"
+
+
+# Omitted upper bounds keep streaming tails, including a tail of a tail. A
+# bounded slice still asks for the ordinary retention policy.
+# spec-case: TEXT-VIEW-5
+public def test_streaming_tails_preserve_scalars_and_consumers() -> bool:
+    owner = repeated("abcdefé😀", 40) + "é😀abcdefghi"
+    tail = owner[-11:]
+    nested = tail[1:]
+    ok = tail == "é😀abcdefghi" and nested == "😀abcdefghi"
+    ok = ok and nested[1:] == "abcdefghi" and nested[2:] == "bcdefghi"
+    ok = ok and owner[len(owner):] == "" and owner[len(owner) + 5:] == ""
+    ok = ok and owner[-10000:] == owner and nested[:9] == "😀abcdefgh"
+    ok = ok and nested.find("ghi") == 7 and nested.rfind("a", 0, 10) == 1
+    ok = ok and nested.strip("😀i") == "abcdefgh" and repr(nested) == "'😀abcdefghi'"
+    return ok and nested.encode() == b"\xf0\x9f\x98\x80abcdefghi"
+
+
+# spec-case: TEXT-VIEW-5
+public def test_streaming_arena_tails_escape_as_independent_text() -> bool:
+    escaped = ""
+    with arena() as scratch:
+        owner = repeated("é😀abcdefghijklmnop", 100)
+        tail = owner[-11:]
+        escaped = scratch.escape(tail[1:])
+    return escaped == "ghijklmnop" and len(escaped) == 10 and escaped[0] == "g"
 
 
 def main() -> int:

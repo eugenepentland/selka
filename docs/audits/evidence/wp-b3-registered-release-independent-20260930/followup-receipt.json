@@ -1,0 +1,11 @@
+{
+  "sha256": "5d0a49ded9793e7c6bde678d5478a5e4a0cc842cb919365375cefc938026b216",
+  "bytes": 3121376,
+  "raw_members": 54,
+  "total_members": 55,
+  "all_member_lengths_and_hashes_verified": true,
+  "manifest_sha256": "4834ef262aa4a24bfa978c4ce522f3bff02bd47b0a34473e291dc5f86f9dbb10",
+  "growth_receipt_sha256": "d96a6a8cddd8844d776746e1faffef2ef807e870b4bd18aedf3d28057e25d494",
+  "performance_review_receipt_sha256": "78b91d367c710fec8d4d481ed378246549bd82215ca7a5e987dc00700aea0e16",
+  "previous_native_archive_sha256": "c728d5834f40a51908eb1d7c2ac949edf21b21dfc14274b53637dcfba3ff7282"
+}

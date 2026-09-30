@@ -91,7 +91,7 @@ def run(compiler, args, rng, work):
     tree = work / "tree"
     cache = work / "cache"
     shutil.copytree(args.project, tree)
-    pristine = {path.name: path.read_text() for path in sorted(tree.glob("*.my"))}
+    pristine = {str(path.relative_to(tree)): path.read_text() for path in sorted(tree.rglob("*.my")) if ".mylang-cache" not in path.parts}
     environment = dict(os.environ)
 
     def check(cached):

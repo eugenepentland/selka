@@ -15,8 +15,9 @@ pub const Binding = struct { scrutinee: usize, payload: usize, work: usize, ty: 
 // arena objects never count as physically unique here.
 const shared_marks: u64 = (@as(u64, 1) << 62) | (@as(u64, 1) << 61) | 2;
 // Prefix words below a counted payload (native_rc.h): owners and mark.
-const owners_offset: u64 = 32;
-const mark_offset: u64 = 16;
+const prefix = @import("qbe_rc_prefix.zig");
+const owners_offset = prefix.owners_offset;
+const mark_offset = prefix.mark_offset;
 
 /// Move or copy the payload into `binding.work`; either way the work storage
 /// then holds one ordinary owner, exactly as the ordinary retain leaves it.
@@ -60,8 +61,8 @@ fn movable(comptime E: type, self: *E, take: Take, scrutinee: usize) Error!usize
     try self.print(" jnz %v{d}, @rctakedone{d}, @rctakecount{d}\n@rctakecount{d}\n", .{ try nonzero(E, self, special), label, label, label });
     const counter = self.temp();
     const owners = self.temp();
-    try self.print(" %v{d} =l sub %v{d}, {d}\n # myl-rc %v{d}\n %v{d} =l loadl %v{d}\n", .{ counter, list, owners_offset, counter, owners, counter });
-    try self.print(" %v{d} =w cultl %v{d}, 2\n@rctakedone{d}\n", .{ result, owners, label });
+    try self.print(prefix.load_count, .{ counter, list, owners_offset, counter, owners, counter });
+    try self.print(" %v{d} =w cult" ++ prefix.count_type ++ " %v{d}, 2\n@rctakedone{d}\n", .{ result, owners, label });
     return result;
 }
 

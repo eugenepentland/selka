@@ -1,0 +1,1259 @@
+export function l $reduce1(l %x,l %values,l %out) {
+@start
+ %a0 =l add %values,0
+ %p0 =l loadl %a0
+ %cond =w cnel %x,0
+ jnz %cond,@yes,@no
+@yes
+ storew 17,%out
+ jmp @join
+@no
+ storew 23,%out
+ jmp @join
+@join
+ %truth =l phi @yes 1,@no 0
+ %s0 =l add %truth,%p0
+ ret %s0
+}
+
+export function l $reduce2(l %x,l %values,l %out) {
+@start
+ %a0 =l add %values,0
+ %p0 =l loadl %a0
+ %a1 =l add %values,8
+ %p1 =l loadl %a1
+ %cond =w cnel %x,0
+ jnz %cond,@yes,@no
+@yes
+ storew 17,%out
+ jmp @join
+@no
+ storew 23,%out
+ jmp @join
+@join
+ %truth =l phi @yes 1,@no 0
+ %s0 =l add %truth,%p0
+ %s1 =l add %s0,%p1
+ ret %s1
+}
+
+export function l $reduce3(l %x,l %values,l %out) {
+@start
+ %a0 =l add %values,0
+ %p0 =l loadl %a0
+ %a1 =l add %values,8
+ %p1 =l loadl %a1
+ %a2 =l add %values,16
+ %p2 =l loadl %a2
+ %cond =w cnel %x,0
+ jnz %cond,@yes,@no
+@yes
+ storew 17,%out
+ jmp @join
+@no
+ storew 23,%out
+ jmp @join
+@join
+ %truth =l phi @yes 1,@no 0
+ %s0 =l add %truth,%p0
+ %s1 =l add %s0,%p1
+ %s2 =l add %s1,%p2
+ ret %s2
+}
+
+export function l $reduce4(l %x,l %values,l %out) {
+@start
+ %a0 =l add %values,0
+ %p0 =l loadl %a0
+ %a1 =l add %values,8
+ %p1 =l loadl %a1
+ %a2 =l add %values,16
+ %p2 =l loadl %a2
+ %a3 =l add %values,24
+ %p3 =l loadl %a3
+ %cond =w cnel %x,0
+ jnz %cond,@yes,@no
+@yes
+ storew 17,%out
+ jmp @join
+@no
+ storew 23,%out
+ jmp @join
+@join
+ %truth =l phi @yes 1,@no 0
+ %s0 =l add %truth,%p0
+ %s1 =l add %s0,%p1
+ %s2 =l add %s1,%p2
+ %s3 =l add %s2,%p3
+ ret %s3
+}
+
+export function l $reduce5(l %x,l %values,l %out) {
+@start
+ %a0 =l add %values,0
+ %p0 =l loadl %a0
+ %a1 =l add %values,8
+ %p1 =l loadl %a1
+ %a2 =l add %values,16
+ %p2 =l loadl %a2
+ %a3 =l add %values,24
+ %p3 =l loadl %a3
+ %a4 =l add %values,32
+ %p4 =l loadl %a4
+ %cond =w cnel %x,0
+ jnz %cond,@yes,@no
+@yes
+ storew 17,%out
+ jmp @join
+@no
+ storew 23,%out
+ jmp @join
+@join
+ %truth =l phi @yes 1,@no 0
+ %s0 =l add %truth,%p0
+ %s1 =l add %s0,%p1
+ %s2 =l add %s1,%p2
+ %s3 =l add %s2,%p3
+ %s4 =l add %s3,%p4
+ ret %s4
+}
+
+export function l $reduce6(l %x,l %values,l %out) {
+@start
+ %a0 =l add %values,0
+ %p0 =l loadl %a0
+ %a1 =l add %values,8
+ %p1 =l loadl %a1
+ %a2 =l add %values,16
+ %p2 =l loadl %a2
+ %a3 =l add %values,24
+ %p3 =l loadl %a3
+ %a4 =l add %values,32
+ %p4 =l loadl %a4
+ %a5 =l add %values,40
+ %p5 =l loadl %a5
+ %cond =w cnel %x,0
+ jnz %cond,@yes,@no
+@yes
+ storew 17,%out
+ jmp @join
+@no
+ storew 23,%out
+ jmp @join
+@join
+ %truth =l phi @yes 1,@no 0
+ %s0 =l add %truth,%p0
+ %s1 =l add %s0,%p1
+ %s2 =l add %s1,%p2
+ %s3 =l add %s2,%p3
+ %s4 =l add %s3,%p4
+ %s5 =l add %s4,%p5
+ ret %s5
+}
+
+export function l $reduce7(l %x,l %values,l %out) {
+@start
+ %a0 =l add %values,0
+ %p0 =l loadl %a0
+ %a1 =l add %values,8
+ %p1 =l loadl %a1
+ %a2 =l add %values,16
+ %p2 =l loadl %a2
+ %a3 =l add %values,24
+ %p3 =l loadl %a3
+ %a4 =l add %values,32
+ %p4 =l loadl %a4
+ %a5 =l add %values,40
+ %p5 =l loadl %a5
+ %a6 =l add %values,48
+ %p6 =l loadl %a6
+ %cond =w cnel %x,0
+ jnz %cond,@yes,@no
+@yes
+ storew 17,%out
+ jmp @join
+@no
+ storew 23,%out
+ jmp @join
+@join
+ %truth =l phi @yes 1,@no 0
+ %s0 =l add %truth,%p0
+ %s1 =l add %s0,%p1
+ %s2 =l add %s1,%p2
+ %s3 =l add %s2,%p3
+ %s4 =l add %s3,%p4
+ %s5 =l add %s4,%p5
+ %s6 =l add %s5,%p6
+ ret %s6
+}
+
+export function l $reduce8(l %x,l %values,l %out) {
+@start
+ %a0 =l add %values,0
+ %p0 =l loadl %a0
+ %a1 =l add %values,8
+ %p1 =l loadl %a1
+ %a2 =l add %values,16
+ %p2 =l loadl %a2
+ %a3 =l add %values,24
+ %p3 =l loadl %a3
+ %a4 =l add %values,32
+ %p4 =l loadl %a4
+ %a5 =l add %values,40
+ %p5 =l loadl %a5
+ %a6 =l add %values,48
+ %p6 =l loadl %a6
+ %a7 =l add %values,56
+ %p7 =l loadl %a7
+ %cond =w cnel %x,0
+ jnz %cond,@yes,@no
+@yes
+ storew 17,%out
+ jmp @join
+@no
+ storew 23,%out
+ jmp @join
+@join
+ %truth =l phi @yes 1,@no 0
+ %s0 =l add %truth,%p0
+ %s1 =l add %s0,%p1
+ %s2 =l add %s1,%p2
+ %s3 =l add %s2,%p3
+ %s4 =l add %s3,%p4
+ %s5 =l add %s4,%p5
+ %s6 =l add %s5,%p6
+ %s7 =l add %s6,%p7
+ ret %s7
+}
+
+export function l $reduce9(l %x,l %values,l %out) {
+@start
+ %a0 =l add %values,0
+ %p0 =l loadl %a0
+ %a1 =l add %values,8
+ %p1 =l loadl %a1
+ %a2 =l add %values,16
+ %p2 =l loadl %a2
+ %a3 =l add %values,24
+ %p3 =l loadl %a3
+ %a4 =l add %values,32
+ %p4 =l loadl %a4
+ %a5 =l add %values,40
+ %p5 =l loadl %a5
+ %a6 =l add %values,48
+ %p6 =l loadl %a6
+ %a7 =l add %values,56
+ %p7 =l loadl %a7
+ %a8 =l add %values,64
+ %p8 =l loadl %a8
+ %cond =w cnel %x,0
+ jnz %cond,@yes,@no
+@yes
+ storew 17,%out
+ jmp @join
+@no
+ storew 23,%out
+ jmp @join
+@join
+ %truth =l phi @yes 1,@no 0
+ %s0 =l add %truth,%p0
+ %s1 =l add %s0,%p1
+ %s2 =l add %s1,%p2
+ %s3 =l add %s2,%p3
+ %s4 =l add %s3,%p4
+ %s5 =l add %s4,%p5
+ %s6 =l add %s5,%p6
+ %s7 =l add %s6,%p7
+ %s8 =l add %s7,%p8
+ ret %s8
+}
+
+export function l $reduce10(l %x,l %values,l %out) {
+@start
+ %a0 =l add %values,0
+ %p0 =l loadl %a0
+ %a1 =l add %values,8
+ %p1 =l loadl %a1
+ %a2 =l add %values,16
+ %p2 =l loadl %a2
+ %a3 =l add %values,24
+ %p3 =l loadl %a3
+ %a4 =l add %values,32
+ %p4 =l loadl %a4
+ %a5 =l add %values,40
+ %p5 =l loadl %a5
+ %a6 =l add %values,48
+ %p6 =l loadl %a6
+ %a7 =l add %values,56
+ %p7 =l loadl %a7
+ %a8 =l add %values,64
+ %p8 =l loadl %a8
+ %a9 =l add %values,72
+ %p9 =l loadl %a9
+ %cond =w cnel %x,0
+ jnz %cond,@yes,@no
+@yes
+ storew 17,%out
+ jmp @join
+@no
+ storew 23,%out
+ jmp @join
+@join
+ %truth =l phi @yes 1,@no 0
+ %s0 =l add %truth,%p0
+ %s1 =l add %s0,%p1
+ %s2 =l add %s1,%p2
+ %s3 =l add %s2,%p3
+ %s4 =l add %s3,%p4
+ %s5 =l add %s4,%p5
+ %s6 =l add %s5,%p6
+ %s7 =l add %s6,%p7
+ %s8 =l add %s7,%p8
+ %s9 =l add %s8,%p9
+ ret %s9
+}
+
+export function l $reduce11(l %x,l %values,l %out) {
+@start
+ %a0 =l add %values,0
+ %p0 =l loadl %a0
+ %a1 =l add %values,8
+ %p1 =l loadl %a1
+ %a2 =l add %values,16
+ %p2 =l loadl %a2
+ %a3 =l add %values,24
+ %p3 =l loadl %a3
+ %a4 =l add %values,32
+ %p4 =l loadl %a4
+ %a5 =l add %values,40
+ %p5 =l loadl %a5
+ %a6 =l add %values,48
+ %p6 =l loadl %a6
+ %a7 =l add %values,56
+ %p7 =l loadl %a7
+ %a8 =l add %values,64
+ %p8 =l loadl %a8
+ %a9 =l add %values,72
+ %p9 =l loadl %a9
+ %a10 =l add %values,80
+ %p10 =l loadl %a10
+ %cond =w cnel %x,0
+ jnz %cond,@yes,@no
+@yes
+ storew 17,%out
+ jmp @join
+@no
+ storew 23,%out
+ jmp @join
+@join
+ %truth =l phi @yes 1,@no 0
+ %s0 =l add %truth,%p0
+ %s1 =l add %s0,%p1
+ %s2 =l add %s1,%p2
+ %s3 =l add %s2,%p3
+ %s4 =l add %s3,%p4
+ %s5 =l add %s4,%p5
+ %s6 =l add %s5,%p6
+ %s7 =l add %s6,%p7
+ %s8 =l add %s7,%p8
+ %s9 =l add %s8,%p9
+ %s10 =l add %s9,%p10
+ ret %s10
+}
+
+export function l $reduce12(l %x,l %values,l %out) {
+@start
+ %a0 =l add %values,0
+ %p0 =l loadl %a0
+ %a1 =l add %values,8
+ %p1 =l loadl %a1
+ %a2 =l add %values,16
+ %p2 =l loadl %a2
+ %a3 =l add %values,24
+ %p3 =l loadl %a3
+ %a4 =l add %values,32
+ %p4 =l loadl %a4
+ %a5 =l add %values,40
+ %p5 =l loadl %a5
+ %a6 =l add %values,48
+ %p6 =l loadl %a6
+ %a7 =l add %values,56
+ %p7 =l loadl %a7
+ %a8 =l add %values,64
+ %p8 =l loadl %a8
+ %a9 =l add %values,72
+ %p9 =l loadl %a9
+ %a10 =l add %values,80
+ %p10 =l loadl %a10
+ %a11 =l add %values,88
+ %p11 =l loadl %a11
+ %cond =w cnel %x,0
+ jnz %cond,@yes,@no
+@yes
+ storew 17,%out
+ jmp @join
+@no
+ storew 23,%out
+ jmp @join
+@join
+ %truth =l phi @yes 1,@no 0
+ %s0 =l add %truth,%p0
+ %s1 =l add %s0,%p1
+ %s2 =l add %s1,%p2
+ %s3 =l add %s2,%p3
+ %s4 =l add %s3,%p4
+ %s5 =l add %s4,%p5
+ %s6 =l add %s5,%p6
+ %s7 =l add %s6,%p7
+ %s8 =l add %s7,%p8
+ %s9 =l add %s8,%p9
+ %s10 =l add %s9,%p10
+ %s11 =l add %s10,%p11
+ ret %s11
+}
+
+export function l $reduce13(l %x,l %values,l %out) {
+@start
+ %a0 =l add %values,0
+ %p0 =l loadl %a0
+ %a1 =l add %values,8
+ %p1 =l loadl %a1
+ %a2 =l add %values,16
+ %p2 =l loadl %a2
+ %a3 =l add %values,24
+ %p3 =l loadl %a3
+ %a4 =l add %values,32
+ %p4 =l loadl %a4
+ %a5 =l add %values,40
+ %p5 =l loadl %a5
+ %a6 =l add %values,48
+ %p6 =l loadl %a6
+ %a7 =l add %values,56
+ %p7 =l loadl %a7
+ %a8 =l add %values,64
+ %p8 =l loadl %a8
+ %a9 =l add %values,72
+ %p9 =l loadl %a9
+ %a10 =l add %values,80
+ %p10 =l loadl %a10
+ %a11 =l add %values,88
+ %p11 =l loadl %a11
+ %a12 =l add %values,96
+ %p12 =l loadl %a12
+ %cond =w cnel %x,0
+ jnz %cond,@yes,@no
+@yes
+ storew 17,%out
+ jmp @join
+@no
+ storew 23,%out
+ jmp @join
+@join
+ %truth =l phi @yes 1,@no 0
+ %s0 =l add %truth,%p0
+ %s1 =l add %s0,%p1
+ %s2 =l add %s1,%p2
+ %s3 =l add %s2,%p3
+ %s4 =l add %s3,%p4
+ %s5 =l add %s4,%p5
+ %s6 =l add %s5,%p6
+ %s7 =l add %s6,%p7
+ %s8 =l add %s7,%p8
+ %s9 =l add %s8,%p9
+ %s10 =l add %s9,%p10
+ %s11 =l add %s10,%p11
+ %s12 =l add %s11,%p12
+ ret %s12
+}
+
+export function l $reduce14(l %x,l %values,l %out) {
+@start
+ %a0 =l add %values,0
+ %p0 =l loadl %a0
+ %a1 =l add %values,8
+ %p1 =l loadl %a1
+ %a2 =l add %values,16
+ %p2 =l loadl %a2
+ %a3 =l add %values,24
+ %p3 =l loadl %a3
+ %a4 =l add %values,32
+ %p4 =l loadl %a4
+ %a5 =l add %values,40
+ %p5 =l loadl %a5
+ %a6 =l add %values,48
+ %p6 =l loadl %a6
+ %a7 =l add %values,56
+ %p7 =l loadl %a7
+ %a8 =l add %values,64
+ %p8 =l loadl %a8
+ %a9 =l add %values,72
+ %p9 =l loadl %a9
+ %a10 =l add %values,80
+ %p10 =l loadl %a10
+ %a11 =l add %values,88
+ %p11 =l loadl %a11
+ %a12 =l add %values,96
+ %p12 =l loadl %a12
+ %a13 =l add %values,104
+ %p13 =l loadl %a13
+ %cond =w cnel %x,0
+ jnz %cond,@yes,@no
+@yes
+ storew 17,%out
+ jmp @join
+@no
+ storew 23,%out
+ jmp @join
+@join
+ %truth =l phi @yes 1,@no 0
+ %s0 =l add %truth,%p0
+ %s1 =l add %s0,%p1
+ %s2 =l add %s1,%p2
+ %s3 =l add %s2,%p3
+ %s4 =l add %s3,%p4
+ %s5 =l add %s4,%p5
+ %s6 =l add %s5,%p6
+ %s7 =l add %s6,%p7
+ %s8 =l add %s7,%p8
+ %s9 =l add %s8,%p9
+ %s10 =l add %s9,%p10
+ %s11 =l add %s10,%p11
+ %s12 =l add %s11,%p12
+ %s13 =l add %s12,%p13
+ ret %s13
+}
+
+export function l $reduce15(l %x,l %values,l %out) {
+@start
+ %a0 =l add %values,0
+ %p0 =l loadl %a0
+ %a1 =l add %values,8
+ %p1 =l loadl %a1
+ %a2 =l add %values,16
+ %p2 =l loadl %a2
+ %a3 =l add %values,24
+ %p3 =l loadl %a3
+ %a4 =l add %values,32
+ %p4 =l loadl %a4
+ %a5 =l add %values,40
+ %p5 =l loadl %a5
+ %a6 =l add %values,48
+ %p6 =l loadl %a6
+ %a7 =l add %values,56
+ %p7 =l loadl %a7
+ %a8 =l add %values,64
+ %p8 =l loadl %a8
+ %a9 =l add %values,72
+ %p9 =l loadl %a9
+ %a10 =l add %values,80
+ %p10 =l loadl %a10
+ %a11 =l add %values,88
+ %p11 =l loadl %a11
+ %a12 =l add %values,96
+ %p12 =l loadl %a12
+ %a13 =l add %values,104
+ %p13 =l loadl %a13
+ %a14 =l add %values,112
+ %p14 =l loadl %a14
+ %cond =w cnel %x,0
+ jnz %cond,@yes,@no
+@yes
+ storew 17,%out
+ jmp @join
+@no
+ storew 23,%out
+ jmp @join
+@join
+ %truth =l phi @yes 1,@no 0
+ %s0 =l add %truth,%p0
+ %s1 =l add %s0,%p1
+ %s2 =l add %s1,%p2
+ %s3 =l add %s2,%p3
+ %s4 =l add %s3,%p4
+ %s5 =l add %s4,%p5
+ %s6 =l add %s5,%p6
+ %s7 =l add %s6,%p7
+ %s8 =l add %s7,%p8
+ %s9 =l add %s8,%p9
+ %s10 =l add %s9,%p10
+ %s11 =l add %s10,%p11
+ %s12 =l add %s11,%p12
+ %s13 =l add %s12,%p13
+ %s14 =l add %s13,%p14
+ ret %s14
+}
+
+export function l $reduce16(l %x,l %values,l %out) {
+@start
+ %a0 =l add %values,0
+ %p0 =l loadl %a0
+ %a1 =l add %values,8
+ %p1 =l loadl %a1
+ %a2 =l add %values,16
+ %p2 =l loadl %a2
+ %a3 =l add %values,24
+ %p3 =l loadl %a3
+ %a4 =l add %values,32
+ %p4 =l loadl %a4
+ %a5 =l add %values,40
+ %p5 =l loadl %a5
+ %a6 =l add %values,48
+ %p6 =l loadl %a6
+ %a7 =l add %values,56
+ %p7 =l loadl %a7
+ %a8 =l add %values,64
+ %p8 =l loadl %a8
+ %a9 =l add %values,72
+ %p9 =l loadl %a9
+ %a10 =l add %values,80
+ %p10 =l loadl %a10
+ %a11 =l add %values,88
+ %p11 =l loadl %a11
+ %a12 =l add %values,96
+ %p12 =l loadl %a12
+ %a13 =l add %values,104
+ %p13 =l loadl %a13
+ %a14 =l add %values,112
+ %p14 =l loadl %a14
+ %a15 =l add %values,120
+ %p15 =l loadl %a15
+ %cond =w cnel %x,0
+ jnz %cond,@yes,@no
+@yes
+ storew 17,%out
+ jmp @join
+@no
+ storew 23,%out
+ jmp @join
+@join
+ %truth =l phi @yes 1,@no 0
+ %s0 =l add %truth,%p0
+ %s1 =l add %s0,%p1
+ %s2 =l add %s1,%p2
+ %s3 =l add %s2,%p3
+ %s4 =l add %s3,%p4
+ %s5 =l add %s4,%p5
+ %s6 =l add %s5,%p6
+ %s7 =l add %s6,%p7
+ %s8 =l add %s7,%p8
+ %s9 =l add %s8,%p9
+ %s10 =l add %s9,%p10
+ %s11 =l add %s10,%p11
+ %s12 =l add %s11,%p12
+ %s13 =l add %s12,%p13
+ %s14 =l add %s13,%p14
+ %s15 =l add %s14,%p15
+ ret %s15
+}
+
+export function l $reduce17(l %x,l %values,l %out) {
+@start
+ %a0 =l add %values,0
+ %p0 =l loadl %a0
+ %a1 =l add %values,8
+ %p1 =l loadl %a1
+ %a2 =l add %values,16
+ %p2 =l loadl %a2
+ %a3 =l add %values,24
+ %p3 =l loadl %a3
+ %a4 =l add %values,32
+ %p4 =l loadl %a4
+ %a5 =l add %values,40
+ %p5 =l loadl %a5
+ %a6 =l add %values,48
+ %p6 =l loadl %a6
+ %a7 =l add %values,56
+ %p7 =l loadl %a7
+ %a8 =l add %values,64
+ %p8 =l loadl %a8
+ %a9 =l add %values,72
+ %p9 =l loadl %a9
+ %a10 =l add %values,80
+ %p10 =l loadl %a10
+ %a11 =l add %values,88
+ %p11 =l loadl %a11
+ %a12 =l add %values,96
+ %p12 =l loadl %a12
+ %a13 =l add %values,104
+ %p13 =l loadl %a13
+ %a14 =l add %values,112
+ %p14 =l loadl %a14
+ %a15 =l add %values,120
+ %p15 =l loadl %a15
+ %a16 =l add %values,128
+ %p16 =l loadl %a16
+ %cond =w cnel %x,0
+ jnz %cond,@yes,@no
+@yes
+ storew 17,%out
+ jmp @join
+@no
+ storew 23,%out
+ jmp @join
+@join
+ %truth =l phi @yes 1,@no 0
+ %s0 =l add %truth,%p0
+ %s1 =l add %s0,%p1
+ %s2 =l add %s1,%p2
+ %s3 =l add %s2,%p3
+ %s4 =l add %s3,%p4
+ %s5 =l add %s4,%p5
+ %s6 =l add %s5,%p6
+ %s7 =l add %s6,%p7
+ %s8 =l add %s7,%p8
+ %s9 =l add %s8,%p9
+ %s10 =l add %s9,%p10
+ %s11 =l add %s10,%p11
+ %s12 =l add %s11,%p12
+ %s13 =l add %s12,%p13
+ %s14 =l add %s13,%p14
+ %s15 =l add %s14,%p15
+ %s16 =l add %s15,%p16
+ ret %s16
+}
+
+export function l $reduce18(l %x,l %values,l %out) {
+@start
+ %a0 =l add %values,0
+ %p0 =l loadl %a0
+ %a1 =l add %values,8
+ %p1 =l loadl %a1
+ %a2 =l add %values,16
+ %p2 =l loadl %a2
+ %a3 =l add %values,24
+ %p3 =l loadl %a3
+ %a4 =l add %values,32
+ %p4 =l loadl %a4
+ %a5 =l add %values,40
+ %p5 =l loadl %a5
+ %a6 =l add %values,48
+ %p6 =l loadl %a6
+ %a7 =l add %values,56
+ %p7 =l loadl %a7
+ %a8 =l add %values,64
+ %p8 =l loadl %a8
+ %a9 =l add %values,72
+ %p9 =l loadl %a9
+ %a10 =l add %values,80
+ %p10 =l loadl %a10
+ %a11 =l add %values,88
+ %p11 =l loadl %a11
+ %a12 =l add %values,96
+ %p12 =l loadl %a12
+ %a13 =l add %values,104
+ %p13 =l loadl %a13
+ %a14 =l add %values,112
+ %p14 =l loadl %a14
+ %a15 =l add %values,120
+ %p15 =l loadl %a15
+ %a16 =l add %values,128
+ %p16 =l loadl %a16
+ %a17 =l add %values,136
+ %p17 =l loadl %a17
+ %cond =w cnel %x,0
+ jnz %cond,@yes,@no
+@yes
+ storew 17,%out
+ jmp @join
+@no
+ storew 23,%out
+ jmp @join
+@join
+ %truth =l phi @yes 1,@no 0
+ %s0 =l add %truth,%p0
+ %s1 =l add %s0,%p1
+ %s2 =l add %s1,%p2
+ %s3 =l add %s2,%p3
+ %s4 =l add %s3,%p4
+ %s5 =l add %s4,%p5
+ %s6 =l add %s5,%p6
+ %s7 =l add %s6,%p7
+ %s8 =l add %s7,%p8
+ %s9 =l add %s8,%p9
+ %s10 =l add %s9,%p10
+ %s11 =l add %s10,%p11
+ %s12 =l add %s11,%p12
+ %s13 =l add %s12,%p13
+ %s14 =l add %s13,%p14
+ %s15 =l add %s14,%p15
+ %s16 =l add %s15,%p16
+ %s17 =l add %s16,%p17
+ ret %s17
+}
+
+export function l $reduce19(l %x,l %values,l %out) {
+@start
+ %a0 =l add %values,0
+ %p0 =l loadl %a0
+ %a1 =l add %values,8
+ %p1 =l loadl %a1
+ %a2 =l add %values,16
+ %p2 =l loadl %a2
+ %a3 =l add %values,24
+ %p3 =l loadl %a3
+ %a4 =l add %values,32
+ %p4 =l loadl %a4
+ %a5 =l add %values,40
+ %p5 =l loadl %a5
+ %a6 =l add %values,48
+ %p6 =l loadl %a6
+ %a7 =l add %values,56
+ %p7 =l loadl %a7
+ %a8 =l add %values,64
+ %p8 =l loadl %a8
+ %a9 =l add %values,72
+ %p9 =l loadl %a9
+ %a10 =l add %values,80
+ %p10 =l loadl %a10
+ %a11 =l add %values,88
+ %p11 =l loadl %a11
+ %a12 =l add %values,96
+ %p12 =l loadl %a12
+ %a13 =l add %values,104
+ %p13 =l loadl %a13
+ %a14 =l add %values,112
+ %p14 =l loadl %a14
+ %a15 =l add %values,120
+ %p15 =l loadl %a15
+ %a16 =l add %values,128
+ %p16 =l loadl %a16
+ %a17 =l add %values,136
+ %p17 =l loadl %a17
+ %a18 =l add %values,144
+ %p18 =l loadl %a18
+ %cond =w cnel %x,0
+ jnz %cond,@yes,@no
+@yes
+ storew 17,%out
+ jmp @join
+@no
+ storew 23,%out
+ jmp @join
+@join
+ %truth =l phi @yes 1,@no 0
+ %s0 =l add %truth,%p0
+ %s1 =l add %s0,%p1
+ %s2 =l add %s1,%p2
+ %s3 =l add %s2,%p3
+ %s4 =l add %s3,%p4
+ %s5 =l add %s4,%p5
+ %s6 =l add %s5,%p6
+ %s7 =l add %s6,%p7
+ %s8 =l add %s7,%p8
+ %s9 =l add %s8,%p9
+ %s10 =l add %s9,%p10
+ %s11 =l add %s10,%p11
+ %s12 =l add %s11,%p12
+ %s13 =l add %s12,%p13
+ %s14 =l add %s13,%p14
+ %s15 =l add %s14,%p15
+ %s16 =l add %s15,%p16
+ %s17 =l add %s16,%p17
+ %s18 =l add %s17,%p18
+ ret %s18
+}
+
+export function l $reduce20(l %x,l %values,l %out) {
+@start
+ %a0 =l add %values,0
+ %p0 =l loadl %a0
+ %a1 =l add %values,8
+ %p1 =l loadl %a1
+ %a2 =l add %values,16
+ %p2 =l loadl %a2
+ %a3 =l add %values,24
+ %p3 =l loadl %a3
+ %a4 =l add %values,32
+ %p4 =l loadl %a4
+ %a5 =l add %values,40
+ %p5 =l loadl %a5
+ %a6 =l add %values,48
+ %p6 =l loadl %a6
+ %a7 =l add %values,56
+ %p7 =l loadl %a7
+ %a8 =l add %values,64
+ %p8 =l loadl %a8
+ %a9 =l add %values,72
+ %p9 =l loadl %a9
+ %a10 =l add %values,80
+ %p10 =l loadl %a10
+ %a11 =l add %values,88
+ %p11 =l loadl %a11
+ %a12 =l add %values,96
+ %p12 =l loadl %a12
+ %a13 =l add %values,104
+ %p13 =l loadl %a13
+ %a14 =l add %values,112
+ %p14 =l loadl %a14
+ %a15 =l add %values,120
+ %p15 =l loadl %a15
+ %a16 =l add %values,128
+ %p16 =l loadl %a16
+ %a17 =l add %values,136
+ %p17 =l loadl %a17
+ %a18 =l add %values,144
+ %p18 =l loadl %a18
+ %a19 =l add %values,152
+ %p19 =l loadl %a19
+ %cond =w cnel %x,0
+ jnz %cond,@yes,@no
+@yes
+ storew 17,%out
+ jmp @join
+@no
+ storew 23,%out
+ jmp @join
+@join
+ %truth =l phi @yes 1,@no 0
+ %s0 =l add %truth,%p0
+ %s1 =l add %s0,%p1
+ %s2 =l add %s1,%p2
+ %s3 =l add %s2,%p3
+ %s4 =l add %s3,%p4
+ %s5 =l add %s4,%p5
+ %s6 =l add %s5,%p6
+ %s7 =l add %s6,%p7
+ %s8 =l add %s7,%p8
+ %s9 =l add %s8,%p9
+ %s10 =l add %s9,%p10
+ %s11 =l add %s10,%p11
+ %s12 =l add %s11,%p12
+ %s13 =l add %s12,%p13
+ %s14 =l add %s13,%p14
+ %s15 =l add %s14,%p15
+ %s16 =l add %s15,%p16
+ %s17 =l add %s16,%p17
+ %s18 =l add %s17,%p18
+ %s19 =l add %s18,%p19
+ ret %s19
+}
+
+export function l $reduce21(l %x,l %values,l %out) {
+@start
+ %a0 =l add %values,0
+ %p0 =l loadl %a0
+ %a1 =l add %values,8
+ %p1 =l loadl %a1
+ %a2 =l add %values,16
+ %p2 =l loadl %a2
+ %a3 =l add %values,24
+ %p3 =l loadl %a3
+ %a4 =l add %values,32
+ %p4 =l loadl %a4
+ %a5 =l add %values,40
+ %p5 =l loadl %a5
+ %a6 =l add %values,48
+ %p6 =l loadl %a6
+ %a7 =l add %values,56
+ %p7 =l loadl %a7
+ %a8 =l add %values,64
+ %p8 =l loadl %a8
+ %a9 =l add %values,72
+ %p9 =l loadl %a9
+ %a10 =l add %values,80
+ %p10 =l loadl %a10
+ %a11 =l add %values,88
+ %p11 =l loadl %a11
+ %a12 =l add %values,96
+ %p12 =l loadl %a12
+ %a13 =l add %values,104
+ %p13 =l loadl %a13
+ %a14 =l add %values,112
+ %p14 =l loadl %a14
+ %a15 =l add %values,120
+ %p15 =l loadl %a15
+ %a16 =l add %values,128
+ %p16 =l loadl %a16
+ %a17 =l add %values,136
+ %p17 =l loadl %a17
+ %a18 =l add %values,144
+ %p18 =l loadl %a18
+ %a19 =l add %values,152
+ %p19 =l loadl %a19
+ %a20 =l add %values,160
+ %p20 =l loadl %a20
+ %cond =w cnel %x,0
+ jnz %cond,@yes,@no
+@yes
+ storew 17,%out
+ jmp @join
+@no
+ storew 23,%out
+ jmp @join
+@join
+ %truth =l phi @yes 1,@no 0
+ %s0 =l add %truth,%p0
+ %s1 =l add %s0,%p1
+ %s2 =l add %s1,%p2
+ %s3 =l add %s2,%p3
+ %s4 =l add %s3,%p4
+ %s5 =l add %s4,%p5
+ %s6 =l add %s5,%p6
+ %s7 =l add %s6,%p7
+ %s8 =l add %s7,%p8
+ %s9 =l add %s8,%p9
+ %s10 =l add %s9,%p10
+ %s11 =l add %s10,%p11
+ %s12 =l add %s11,%p12
+ %s13 =l add %s12,%p13
+ %s14 =l add %s13,%p14
+ %s15 =l add %s14,%p15
+ %s16 =l add %s15,%p16
+ %s17 =l add %s16,%p17
+ %s18 =l add %s17,%p18
+ %s19 =l add %s18,%p19
+ %s20 =l add %s19,%p20
+ ret %s20
+}
+
+export function l $reduce22(l %x,l %values,l %out) {
+@start
+ %a0 =l add %values,0
+ %p0 =l loadl %a0
+ %a1 =l add %values,8
+ %p1 =l loadl %a1
+ %a2 =l add %values,16
+ %p2 =l loadl %a2
+ %a3 =l add %values,24
+ %p3 =l loadl %a3
+ %a4 =l add %values,32
+ %p4 =l loadl %a4
+ %a5 =l add %values,40
+ %p5 =l loadl %a5
+ %a6 =l add %values,48
+ %p6 =l loadl %a6
+ %a7 =l add %values,56
+ %p7 =l loadl %a7
+ %a8 =l add %values,64
+ %p8 =l loadl %a8
+ %a9 =l add %values,72
+ %p9 =l loadl %a9
+ %a10 =l add %values,80
+ %p10 =l loadl %a10
+ %a11 =l add %values,88
+ %p11 =l loadl %a11
+ %a12 =l add %values,96
+ %p12 =l loadl %a12
+ %a13 =l add %values,104
+ %p13 =l loadl %a13
+ %a14 =l add %values,112
+ %p14 =l loadl %a14
+ %a15 =l add %values,120
+ %p15 =l loadl %a15
+ %a16 =l add %values,128
+ %p16 =l loadl %a16
+ %a17 =l add %values,136
+ %p17 =l loadl %a17
+ %a18 =l add %values,144
+ %p18 =l loadl %a18
+ %a19 =l add %values,152
+ %p19 =l loadl %a19
+ %a20 =l add %values,160
+ %p20 =l loadl %a20
+ %a21 =l add %values,168
+ %p21 =l loadl %a21
+ %cond =w cnel %x,0
+ jnz %cond,@yes,@no
+@yes
+ storew 17,%out
+ jmp @join
+@no
+ storew 23,%out
+ jmp @join
+@join
+ %truth =l phi @yes 1,@no 0
+ %s0 =l add %truth,%p0
+ %s1 =l add %s0,%p1
+ %s2 =l add %s1,%p2
+ %s3 =l add %s2,%p3
+ %s4 =l add %s3,%p4
+ %s5 =l add %s4,%p5
+ %s6 =l add %s5,%p6
+ %s7 =l add %s6,%p7
+ %s8 =l add %s7,%p8
+ %s9 =l add %s8,%p9
+ %s10 =l add %s9,%p10
+ %s11 =l add %s10,%p11
+ %s12 =l add %s11,%p12
+ %s13 =l add %s12,%p13
+ %s14 =l add %s13,%p14
+ %s15 =l add %s14,%p15
+ %s16 =l add %s15,%p16
+ %s17 =l add %s16,%p17
+ %s18 =l add %s17,%p18
+ %s19 =l add %s18,%p19
+ %s20 =l add %s19,%p20
+ %s21 =l add %s20,%p21
+ ret %s21
+}
+
+export function l $reduce23(l %x,l %values,l %out) {
+@start
+ %a0 =l add %values,0
+ %p0 =l loadl %a0
+ %a1 =l add %values,8
+ %p1 =l loadl %a1
+ %a2 =l add %values,16
+ %p2 =l loadl %a2
+ %a3 =l add %values,24
+ %p3 =l loadl %a3
+ %a4 =l add %values,32
+ %p4 =l loadl %a4
+ %a5 =l add %values,40
+ %p5 =l loadl %a5
+ %a6 =l add %values,48
+ %p6 =l loadl %a6
+ %a7 =l add %values,56
+ %p7 =l loadl %a7
+ %a8 =l add %values,64
+ %p8 =l loadl %a8
+ %a9 =l add %values,72
+ %p9 =l loadl %a9
+ %a10 =l add %values,80
+ %p10 =l loadl %a10
+ %a11 =l add %values,88
+ %p11 =l loadl %a11
+ %a12 =l add %values,96
+ %p12 =l loadl %a12
+ %a13 =l add %values,104
+ %p13 =l loadl %a13
+ %a14 =l add %values,112
+ %p14 =l loadl %a14
+ %a15 =l add %values,120
+ %p15 =l loadl %a15
+ %a16 =l add %values,128
+ %p16 =l loadl %a16
+ %a17 =l add %values,136
+ %p17 =l loadl %a17
+ %a18 =l add %values,144
+ %p18 =l loadl %a18
+ %a19 =l add %values,152
+ %p19 =l loadl %a19
+ %a20 =l add %values,160
+ %p20 =l loadl %a20
+ %a21 =l add %values,168
+ %p21 =l loadl %a21
+ %a22 =l add %values,176
+ %p22 =l loadl %a22
+ %cond =w cnel %x,0
+ jnz %cond,@yes,@no
+@yes
+ storew 17,%out
+ jmp @join
+@no
+ storew 23,%out
+ jmp @join
+@join
+ %truth =l phi @yes 1,@no 0
+ %s0 =l add %truth,%p0
+ %s1 =l add %s0,%p1
+ %s2 =l add %s1,%p2
+ %s3 =l add %s2,%p3
+ %s4 =l add %s3,%p4
+ %s5 =l add %s4,%p5
+ %s6 =l add %s5,%p6
+ %s7 =l add %s6,%p7
+ %s8 =l add %s7,%p8
+ %s9 =l add %s8,%p9
+ %s10 =l add %s9,%p10
+ %s11 =l add %s10,%p11
+ %s12 =l add %s11,%p12
+ %s13 =l add %s12,%p13
+ %s14 =l add %s13,%p14
+ %s15 =l add %s14,%p15
+ %s16 =l add %s15,%p16
+ %s17 =l add %s16,%p17
+ %s18 =l add %s17,%p18
+ %s19 =l add %s18,%p19
+ %s20 =l add %s19,%p20
+ %s21 =l add %s20,%p21
+ %s22 =l add %s21,%p22
+ ret %s22
+}
+
+export function l $reduce24(l %x,l %values,l %out) {
+@start
+ %a0 =l add %values,0
+ %p0 =l loadl %a0
+ %a1 =l add %values,8
+ %p1 =l loadl %a1
+ %a2 =l add %values,16
+ %p2 =l loadl %a2
+ %a3 =l add %values,24
+ %p3 =l loadl %a3
+ %a4 =l add %values,32
+ %p4 =l loadl %a4
+ %a5 =l add %values,40
+ %p5 =l loadl %a5
+ %a6 =l add %values,48
+ %p6 =l loadl %a6
+ %a7 =l add %values,56
+ %p7 =l loadl %a7
+ %a8 =l add %values,64
+ %p8 =l loadl %a8
+ %a9 =l add %values,72
+ %p9 =l loadl %a9
+ %a10 =l add %values,80
+ %p10 =l loadl %a10
+ %a11 =l add %values,88
+ %p11 =l loadl %a11
+ %a12 =l add %values,96
+ %p12 =l loadl %a12
+ %a13 =l add %values,104
+ %p13 =l loadl %a13
+ %a14 =l add %values,112
+ %p14 =l loadl %a14
+ %a15 =l add %values,120
+ %p15 =l loadl %a15
+ %a16 =l add %values,128
+ %p16 =l loadl %a16
+ %a17 =l add %values,136
+ %p17 =l loadl %a17
+ %a18 =l add %values,144
+ %p18 =l loadl %a18
+ %a19 =l add %values,152
+ %p19 =l loadl %a19
+ %a20 =l add %values,160
+ %p20 =l loadl %a20
+ %a21 =l add %values,168
+ %p21 =l loadl %a21
+ %a22 =l add %values,176
+ %p22 =l loadl %a22
+ %a23 =l add %values,184
+ %p23 =l loadl %a23
+ %cond =w cnel %x,0
+ jnz %cond,@yes,@no
+@yes
+ storew 17,%out
+ jmp @join
+@no
+ storew 23,%out
+ jmp @join
+@join
+ %truth =l phi @yes 1,@no 0
+ %s0 =l add %truth,%p0
+ %s1 =l add %s0,%p1
+ %s2 =l add %s1,%p2
+ %s3 =l add %s2,%p3
+ %s4 =l add %s3,%p4
+ %s5 =l add %s4,%p5
+ %s6 =l add %s5,%p6
+ %s7 =l add %s6,%p7
+ %s8 =l add %s7,%p8
+ %s9 =l add %s8,%p9
+ %s10 =l add %s9,%p10
+ %s11 =l add %s10,%p11
+ %s12 =l add %s11,%p12
+ %s13 =l add %s12,%p13
+ %s14 =l add %s13,%p14
+ %s15 =l add %s14,%p15
+ %s16 =l add %s15,%p16
+ %s17 =l add %s16,%p17
+ %s18 =l add %s17,%p18
+ %s19 =l add %s18,%p19
+ %s20 =l add %s19,%p20
+ %s21 =l add %s20,%p21
+ %s22 =l add %s21,%p22
+ %s23 =l add %s22,%p23
+ ret %s23
+}

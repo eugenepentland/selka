@@ -1,0 +1,55 @@
+{
+  "source_base": "5535e5a3f0b67e23d0fc9f92f594d7b3feb12a3f",
+  "archive": "focused-evidence.tar.gz",
+  "sha256": "8df822b24b119e2baaddabb27509763dabe366139a9ada04192751075b6ed10e",
+  "bytes": 93003,
+  "payload_members": 40,
+  "full_gate": {
+    "full_gate_source": "06706119a7d6f563c45f5e0a6d00dd50e4ac7423",
+    "production_source_base": "5535e5a3f0b67e23d0fc9f92f594d7b3feb12a3f",
+    "compiler_sha256": "700f2a7179f0f591d6e2fbf1317877293ef1393bc24a335c3983a872454a2fc2",
+    "qbe_sha256": "2fd151269a0d37b6689e4a0f8a3b7830ae01ce977894b5281e512071b114a792",
+    "full_gate_exit": 1,
+    "full_gate_summary": {
+      "passed": 2800,
+      "skipped": 28493,
+      "failed": 1,
+      "steps_succeeded": 113,
+      "steps_total": 115
+    },
+    "cli_unchanged_repeat_passed": 3,
+    "strengthened_focused": {
+      "count_oracle": 13,
+      "abi5_emission": 13,
+      "receiver": 14
+    },
+    "source_files": {
+      "src/rc_plan_test.zig": "e1c4ead7a102bd3ada38462ffe2b5d4302fcbf2b5a6539feb01b27fe3f470211",
+      "src/qbe_rc_alloc_test.zig": "08823f5e2cd418794bb5db28fbcab36f808610d8656af4b9c0276a146288860a"
+    },
+    "full_gate_fully_composed": "root pending"
+  },
+  "focused_tests": 153,
+  "selected_cases": 31,
+  "native_scenarios": 68,
+  "fixture_runs": 39,
+  "nested_scope_guest_tests": 12,
+  "original_failures": 14,
+  "compiler_sha256": "700f2a7179f0f591d6e2fbf1317877293ef1393bc24a335c3983a872454a2fc2",
+  "qbe_sha256": "2fd151269a0d37b6689e4a0f8a3b7830ae01ce977894b5281e512071b114a792",
+  "followup_archive": {
+    "archive": "followup-evidence.tar.gz",
+    "sha256": "0bff49a4ef7a5a98ec0995b6afca684ae2db91e70cee0f5d991a0189cc1ec6cb",
+    "bytes": 157270,
+    "payload_members": 17
+  },
+  "root_focused_archive_verification": {
+    "archive_sha256": "8df822b24b119e2baaddabb27509763dabe366139a9ada04192751075b6ed10e",
+    "verified_payloads": 40,
+    "source": "06706119a7d6f563c45f5e0a6d00dd50e4ac7423",
+    "archive_payloads_verified": 40,
+    "exact_pin_fixture_runs": 39,
+    "fresh_nested_guests": 12,
+    "rejected_driver_runs_excluded": true
+  }
+}

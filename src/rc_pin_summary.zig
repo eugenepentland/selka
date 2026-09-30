@@ -80,6 +80,10 @@ pub fn compute(a: std.mem.Allocator, program: bytecode.Program, layouts: *native
         @memset(row.*, false);
         // Positions the emitter looks up by function id must be the array index.
         if (@backingInt(function.id) != index) return .{};
+        if (function.physical) |facts| {
+            if (!facts.unknown and facts.stable.len == row.*.len) @memcpy(row.*, facts.stable);
+            continue;
+        }
         if (function.policy.host != null or function.scope.instructions.len == 0) continue;
         for (row.*, 0..) |*flag, position| {
             flag.* = plainMutList(program, &catalog, function, position);
@@ -95,7 +99,7 @@ pub fn compute(a: std.mem.Allocator, program: bytecode.Program, layouts: *native
     while (changed) {
         changed = false;
         for (program.functions, rows) |function, row| for (row, 0..) |*flag, position| {
-            if (!flag.*) continue;
+            if (!flag.* or function.physical != null) continue;
             defer _ = scratch.reset(.retain_capacity);
             if (try accepts(scratch.allocator(), program, result, function, position)) continue;
             flag.* = false;

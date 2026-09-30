@@ -38,7 +38,19 @@ pub const Format = enum { text, json };
 pub fn execute(allocator: std.mem.Allocator, request: Request) Error!u8 {
     var context = try fs.Context.init(allocator, request.io, request.environ);
     defer context.deinit();
-    const path = try publish(context, request.settings, request.manifest);
+    return launchAt(context, request, try publish(context, request.settings, request.manifest));
+}
+
+/// MODULE-SCHEDULE-3: run an executable a per-module build already made, as
+/// `execute` runs the one it publishes; `request.manifest` is not read.
+pub fn executeBuilt(allocator: std.mem.Allocator, request: Request, path: []const u8) Error!u8 {
+    var context = try fs.Context.init(allocator, request.io, request.environ);
+    defer context.deinit();
+    return launchAt(context, request, path);
+}
+
+/// Launch the program at `path` and pass its streams through.
+fn launchAt(context: fs.Context, request: Request, path: []const u8) Error!u8 {
     // Runtime options travel in `MYLANG_OPTIONS`; the program's argv is only
     // what followed `--` on this command line.
     const started = try builder.launch(context, path, request.settings.arguments, request.settings);

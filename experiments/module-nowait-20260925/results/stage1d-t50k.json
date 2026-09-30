@@ -1,0 +1,167 @@
+{
+ "label": "1d",
+ "tier": "t50k/mylang",
+ "load_start": 13.85,
+ "repeats": [
+  {
+   "cold": {
+    "wall_s": 1.421,
+    "rss_mb": 324.4,
+    "status": 0,
+    "passed": 120,
+    "cached": 0,
+    "failed": 0,
+    "stage": null,
+    "modules_compiled": 0
+   },
+   "after_cold": {
+    "wall_s": 4.977,
+    "rss_mb": 36.2,
+    "status": 0,
+    "passed": 0,
+    "cached": 120,
+    "failed": 0,
+    "stage": null,
+    "modules_compiled": 121
+   },
+   "after_cold_edit": {
+    "wall_s": 0.502,
+    "rss_mb": 118.4,
+    "status": 0,
+    "passed": 60,
+    "cached": 60,
+    "failed": 0,
+    "stage": null,
+    "modules_compiled": 2
+   },
+   "seeded_after_s": 0.0,
+   "noop": {
+    "wall_s": 0.045,
+    "rss_mb": 36.2,
+    "status": 0,
+    "passed": 0,
+    "cached": 120,
+    "failed": 0,
+    "stage": null,
+    "modules_compiled": 0
+   },
+   "body_edit": {
+    "wall_s": 0.185,
+    "rss_mb": 118.2,
+    "status": 0,
+    "passed": 60,
+    "cached": 60,
+    "failed": 0,
+    "stage": null,
+    "modules_compiled": 1
+   }
+  },
+  {
+   "cold": {
+    "wall_s": 1.458,
+    "rss_mb": 324.5,
+    "status": 0,
+    "passed": 120,
+    "cached": 0,
+    "failed": 0,
+    "stage": null,
+    "modules_compiled": 0
+   },
+   "after_cold": {
+    "wall_s": 4.908,
+    "rss_mb": 36.2,
+    "status": 0,
+    "passed": 0,
+    "cached": 120,
+    "failed": 0,
+    "stage": null,
+    "modules_compiled": 121
+   },
+   "after_cold_edit": {
+    "wall_s": 0.505,
+    "rss_mb": 118.5,
+    "status": 0,
+    "passed": 60,
+    "cached": 60,
+    "failed": 0,
+    "stage": null,
+    "modules_compiled": 2
+   },
+   "seeded_after_s": 0.0,
+   "noop": {
+    "wall_s": 0.045,
+    "rss_mb": 36.2,
+    "status": 0,
+    "passed": 0,
+    "cached": 120,
+    "failed": 0,
+    "stage": null,
+    "modules_compiled": 0
+   },
+   "body_edit": {
+    "wall_s": 0.182,
+    "rss_mb": 118.0,
+    "status": 0,
+    "passed": 60,
+    "cached": 60,
+    "failed": 0,
+    "stage": null,
+    "modules_compiled": 1
+   }
+  },
+  {
+   "cold": {
+    "wall_s": 1.434,
+    "rss_mb": 324.5,
+    "status": 0,
+    "passed": 120,
+    "cached": 0,
+    "failed": 0,
+    "stage": null,
+    "modules_compiled": 0
+   },
+   "after_cold": {
+    "wall_s": 4.936,
+    "rss_mb": 36.2,
+    "status": 0,
+    "passed": 0,
+    "cached": 120,
+    "failed": 0,
+    "stage": null,
+    "modules_compiled": 121
+   },
+   "after_cold_edit": {
+    "wall_s": 0.513,
+    "rss_mb": 118.0,
+    "status": 0,
+    "passed": 60,
+    "cached": 60,
+    "failed": 0,
+    "stage": null,
+    "modules_compiled": 2
+   },
+   "seeded_after_s": 0.0,
+   "noop": {
+    "wall_s": 0.047,
+    "rss_mb": 36.2,
+    "status": 0,
+    "passed": 0,
+    "cached": 120,
+    "failed": 0,
+    "stage": null,
+    "modules_compiled": 0
+   },
+   "body_edit": {
+    "wall_s": 0.194,
+    "rss_mb": 118.3,
+    "status": 0,
+    "passed": 60,
+    "cached": 60,
+    "failed": 0,
+    "stage": null,
+    "modules_compiled": 1
+   }
+  }
+ ],
+ "load_end": 16.86
+}
