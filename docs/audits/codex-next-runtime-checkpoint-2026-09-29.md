@@ -119,11 +119,12 @@ logs remain as `.tmp/scope-guest-first-rc.*`; corrected receipts are
 `.tmp/scope-guest-summary.json` and `.tmp/scope-focused-final.log`.
 
 These checks do not replace the final frozen B3 gate or performance comparison.
-The scope source now uses the shared ABI4 prefix offsets and unsigned word
-loads/stores. It refuses capture at UINT32_MAX before changing state and sends
-zero/final holds to native unwind. The first narrowing compile caught a local
-name shadowing its count helper; renaming the helper corrected it. The separate
-header tranche's LLVM load-opcode correction is integrated before guest checks.
+The narrowed checkpoint used shared ABI4 prefix offsets and unsigned word
+loads/stores, refusing capture at UINT32_MAX before changing state and sending
+zero/final holds to native unwind. Its first compile caught a local name shadowing
+the count helper; renaming it corrected that failure. The separate header tranche's
+LLVM load-opcode correction was integrated before guest checks. The later ABI5
+checkpoint described below restores wide counts and checks full-width conditions.
 
 ## Owning text dictionary keys
 
@@ -328,3 +329,43 @@ dispatch and passes focused generated-C and guest checks. Its isolated timing
 still has failing rows, so further bounded count-acquisition work is underway.
 Final acceptance requires the complete combined source and all corpus rows;
 no count-layout or combined B3 performance acceptance is claimed here.
+
+
+## Wide-count correctness checkpoint
+
+The replacement `1390e0c7` keeps two separate 64-bit owner/hold counts under
+module/runtime ABI5. Prefix32 has owner/hold fields at -32/-24 and the common
+mark/descriptor at -16/-8; immutable generated images retain their separate
+ABI1. Narrowed ABI4 modules are rejected before registration. Checked count
+acquisition still refuses before stores, and alias, arena and final-release
+boundaries keep their transactional/native paths.
+
+Its frozen Lox sample has all 26 output pairs matching and all dev rows at or
+below 1.3x GC. Sixteen rows still exceed the 1% regression limit against approved
+A5; the worst is LLVM invocation at +4.298989%. Wide counts alone do not resolve
+the performance blocker. The failed rows, frozen compiler and unchanged GC
+denominators are retained in `experiments/wp-b3-layout-20260929/wide-counts/`.
+
+Correctness follow-up `790cdfb1` normalizes every l-valued scope pointer/count
+condition to a w boolean before QBE jnz. A high-bit-only input otherwise appeared
+zero to that branch. Independent review first reproduced this in an extracted
+production predicate without a memory dereference; no native pointer-corruption
+reproduction is claimed. The observed count crossing at 2^32 had safely taken
+the native unwind path. The fix leaves w flags and heap/journal offsets intact.
+
+The corrected source passes all 30 native C families, 16 focused scope entries
+and 18 fresh scope guest executions across six modes. Two stale test-fixture
+geometry failures were corrected to prefix32/slab80 and remain separate failed
+logs. Its compiler SHA-256 is
+`e58b3ba5140999ae7ff33ac9afc922279cdf936d70acf697e7d9104a08b31437`.
+Independent corrected review passes all four extracted production-condition
+cases (0, 1, 2^32 and 2^48) and all twelve actual QBE scope cases. All seven
+wide-count successes take fast pin/end; three MAX refusals preserve counts,
+pins, journal, budgets and spares, and final retirement/old-ABI refusal pass.
+Every one of 29 emitted branch operands is a w boolean. The original1390
+two-failure predicate result, safe native fallback and corrected790 source,
+SSA, assembly, drivers, logs and 789-source-file hash receipts are retained in
+`evidence/codex-next-runtime-20260929/scope-width-review/`. All 65 archived
+files were verified against the independent manifests. A separate pre-store
+overflow-check prototype is being evaluated for the remaining performance
+rows; no final ABI5 or Phase B performance acceptance is claimed.

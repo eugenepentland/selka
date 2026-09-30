@@ -1,0 +1,10 @@
+export function w $review_pin_entry_truth(l %v1) {
+@start
+ %v3 =w cnel %v1, 0
+ # RC-SCOPE-IL-1 pin
+ jnz %v3, @rcspinmark2, @rcspindone2
+@rcspinmark2
+ ret 1
+@rcspindone2
+ ret 0
+}
