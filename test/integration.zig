@@ -3416,6 +3416,7 @@ fn expectLiteralBoundaries(binaries: [2][]const u8) !void {
 }
 
 // spec-case: LLVM-CONSTANT-OVERFLOW-1
+// spec-case: RC-FAIL-COLD-1
 test "literal signed overflow preserves exact QBE output trap details traces and records" {
     const a = testing.allocator;
     var temporary = testing.tmpDir(.{});

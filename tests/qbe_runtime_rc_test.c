@@ -23,6 +23,21 @@ const myl_rc_image myl_rc_generated_image = {.abi=MYL_RC_IMAGE_ABI_VERSION,
 #ifndef MYL_RC_CONTRACT_LIBRARY
 void myl_qbe_fail(void *context, const char *code) { MylQbeContext *ctx=context; if (!ctx->trap) ctx->trap=code; }
 #endif
+#ifdef MYL_RC_CONTRACT_LIBRARY
+int myl_qbe_fail_return_verify(void) {
+    MylQbeContext context = {0};
+    myl_qbe_fail_overflow_op(&context, 0, INT64_MAX, 1, 64);
+    assert(!strcmp(context.trap, "R_OVERFLOW") && !context.unwind);
+    assert(context.trap_detail.left == INT64_MAX && context.trap_detail.right == 1);
+    unsigned char first[sizeof context.trap_detail];
+    memcpy(first, &context.trap_detail, sizeof first);
+    myl_qbe_fail(&context, "R_REFERENCE_COUNT_LIMIT");
+    myl_qbe_fail_overflow_op(&context, 1, INT64_MIN, 1, 64);
+    assert(!strcmp(context.trap, "R_OVERFLOW"));
+    assert(!memcmp(first, &context.trap_detail, sizeof first));
+    return 3;
+}
+#endif
 static myl_rc_status no_allocate(myl_native_heap *heap, const myl_rc_alloc_request *request, void **out) {
     (void)heap;
     (void)request;
