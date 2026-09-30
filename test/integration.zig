@@ -4150,6 +4150,34 @@ test "a guest build inside a build.zig project leaves no Zig cache in that proje
     try testing.expectError(error.FileNotFound, temporary.dir.access(testing.io, ".zig-cache", .{}));
 }
 
+// spec-case: NATIVE-ZIG-CACHE-2
+test "mylang test inside a build.zig project compiles its runner without a Zig cache there" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "build.zig", .data = "" });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "checks.my", .data = "public def test_adds() -> bool:\n    return 1 + 1 == 2\n" });
+    const compiler = try std.Io.Dir.cwd().realPathFileAlloc(testing.io, compiler_path, testing.allocator);
+    defer testing.allocator.free(compiler);
+    var environment = try std.process.Environ.createMap(testing.environ, testing.allocator);
+    defer environment.deinit();
+    _ = environment.swapRemove("ZIG_LOCAL_CACHE_DIR");
+    const tool = try std.Io.Dir.cwd().realPathFileAlloc(testing.io, @import("test_options").qbe_path, testing.allocator);
+    defer testing.allocator.free(tool);
+    const qbe = try std.fmt.allocPrint(testing.allocator, "--qbe={s}", .{tool});
+    defer testing.allocator.free(qbe);
+    // A fresh cache directory makes this run compile the runner harness itself.
+    const tested = try std.process.run(testing.allocator, testing.io, .{
+        .argv = &.{ compiler, "test", "checks.my", "--cache-dir=cache", qbe, tools[1] },
+        .cwd = .{ .dir = temporary.dir },
+        .environ_map = &environment,
+    });
+    defer testing.allocator.free(tested.stdout);
+    defer testing.allocator.free(tested.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, tested.term);
+    try testing.expect(std.mem.indexOf(u8, tested.stdout, "1 passed") != null);
+    try testing.expectError(error.FileNotFound, temporary.dir.access(testing.io, ".zig-cache", .{}));
+}
+
 // spec: NATIVE-SCRATCH-ROOT-2
 test "mylang test stages under TMPDIR, never under /tmp, and removes its staging after a passing run" {
     var temporary = testing.tmpDir(.{});

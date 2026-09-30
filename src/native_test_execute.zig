@@ -129,7 +129,10 @@ fn compileRunner(context: fs.Context, store: RunnerStore, directory: []const u8)
     inline for (runner_sources) |name| try context.write(try std.fs.path.join(a, &.{ directory, name }), @embedFile(name));
     const source = try std.fs.path.join(a, &.{ directory, "native_test_runner.c" });
     const executable = try std.fs.path.join(a, &.{ directory, "native-test-runner" });
-    try context.command(&.{ store.zig, "cc", "-std=c11", "-O2", source, "-ldl", "-o", executable }, null);
+    // Zig's own cache for this compile stays in the scratch its caller removes.
+    var tooling = context;
+    tooling.zig_cache = try std.fs.path.join(a, &.{ directory, "zig-local" });
+    try tooling.command(&.{ store.zig, "cc", "-std=c11", "-O2", source, "-ldl", "-o", executable }, null);
     return executable;
 }
 fn framed(hash: *std.crypto.hash.Blake3, bytes: []const u8) void {
