@@ -34,14 +34,24 @@ ABI5 checkpoint preserves two 64-bit counts and full-width scope conditions;
 all 30 native families, 16 focused scope checks and the independent 4-condition/
 12-scope-case probe pass. Preliminary wide-count
 Lox measurements meet the dev 1.3x cap but still have sixteen rows above the
-1% regression limit. B3 performance corrections, a newly reproduced QBE
-long-phi spill-width defect and the final combined ABI5 corpus/oracle/gate remain
-open. All Phase B changes remain outside main; its approved tip is `80dd5190`.
+1% regression limit. The QBE long-phi spill-width defect is repaired: the new
+44-assertion regression and original two-case reduction pass, and the composed
+backend build passes 139/139 tests. Independent review rejected an arithmetic
+zero-branch prototype that lost flags across an external-address load; its
+corrected selector passes 140 production cases, 3,754 independent assertions
+and the exact failed case. Release-count review and composition remain pending.
+A preliminary composed non-Lox comparison matches all 60 outputs and meets
+the 1.3x cap, but four rows exceed the 1% regression limit. B3 performance
+corrections and the final combined ABI5 corpus/oracle/gate remain open. All
+Phase B changes remain outside main; its approved tip is `80dd5190`.
 
 Lane receipts are in [python-text-closeout-2026-09-29.md](python-text-closeout-2026-09-29.md),
 [wp-b4-tooling-2026-09-29.md](wp-b4-tooling-2026-09-29.md),
 [codex-next-runtime-checkpoint-2026-09-29.md](codex-next-runtime-checkpoint-2026-09-29.md)
 and [text-runtime-closeout-2026-09-29.md](text-runtime-closeout-2026-09-29.md).
+The final module-lane receipts are in
+[codex-next-modules-closeout-2026-09-30.md](codex-next-modules-closeout-2026-09-30.md);
+the QBE phi fix is in [wp-b3-qbe-phi-2026-09-30.md](wp-b3-qbe-phi-2026-09-30.md).
 EDA preparation has a verified test inventory and guide/checker reconciliation.
 The port has not started: it waits for completed compiler work and the required
 explicit approval to land Phase B. Sections below retain the original handoff

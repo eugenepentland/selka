@@ -397,4 +397,49 @@ source inspection found no false-positive state skip; the exact receipt and
 reviewed source are in `evidence/codex-next-runtime-20260929/module-state-review/`.
 It is source-review evidence, not an independent execution or timing result.
 The earlier paired a3 check sample retained a 13 ms no-op regression despite
-about 80% edited-check gains; final paired timings of the new source are pending.
+about 80% edited-check gains. The final seven-pair 200k check sample improves
+no-op checks from 0.099882 to 0.091288 seconds (-8.60%), body edits from 0.757658
+to 0.138253 seconds (-81.75%) and interface edits from 0.749255 to 0.149342
+seconds (-80.07%). Forty-two warm measurements and two cold checks preserve
+answers and rebuild counts. Shared-machine load rose from 32.21 to 43.72;
+interleaved pinned pairs limit that confound without claiming the historical
+0.025-second absolute timing was reproduced. The final module audit and all
+926 raw archive members are integrated and independently hash-verified.
+
+## QBE correctness follow-ups
+
+QBE `phicopyref` reused a word branch predicate for a long phi and reused a
+previous phi without checking its result class. Under pressure, a word spill
+could be read as a long value; cross-class reuse could also lose sign bits.
+Checkpoint `d0537d01` permits branch-predicate reuse only for word phis and
+previous-phi reuse only for equal classes. The valid-SSA regression improves
+from 36/44 to 44/44 passed, and the original reduction improves from 0/2 to
+2/2. The composed `test-qbe-build` passes 29/29 steps and 139/139 tests, exit
+zero. Input follow-up `e5ed9195` declares both new phi fixtures and two inherited
+dictionary-loop fixtures. See the [phi audit](wp-b3-qbe-phi-2026-09-30.md) for
+the unchanged raw failures, corrected results and source/artifact identities.
+
+Independent selector review rejected frozen `f4b6647d`. Its arithmetic-zero
+fold crossed a later external-address load whose selected `addq $8` overwrote
+ZF: UINT64_MAX + 1 produced the correct payload but branch17 instead of23.
+The parent selector returned23; both independently built and installed f4
+QBE reproduced the error. Corrected `279501d1` permits only nop/debug-location
+instructions between comparison and branch. Its independent 140 production
+cases, 3,754 assertions across fifteen functions and the original failed case
+pass, preserving admitted folds and comparison fallbacks. The separate rejected
+and corrected archives retain 69 and 50 hash-verified members. This is scoped
+selector approval; release-count review, composition and final performance
+acceptance remain separate requirements.
+
+## Preliminary non-Lox composition measurement
+
+The Debug compiler at `e789a32d` has SHA256
+`c76f443347eec255873c1fe16a5c17ed8c92da0896b49251c603f82c8d7bfc0a`.
+This checkpoint includes wide counts, B1/B2/B4, text and phi fixes; it precedes
+the increment/release/selector continuation. All 60 non-Lox dev output pairs
+match the unchanged accepted GC binaries; all thirty rows on each backend
+meet 1.3x. Four exceed 1% against A5: LLVM raytrace +1.601970%, QBE text_ops
++1.118819%, LLVM text_ops +1.140108% and LLVM alloc_churn +3.229847%.
+QBE/LLVM geomeans are 1.045887x / 1.043466x. No performance acceptance is
+claimed. Frozen compiler, 56 guest binaries, logs and full comparison are in
+the integrator's `.tmp/phase-b-preliminary/` and `.tmp-rc-quick/` directories.
