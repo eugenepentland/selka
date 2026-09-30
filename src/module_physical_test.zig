@@ -41,7 +41,8 @@ test "physical imports refuse conflicting record shapes and real bodies" {
     defer arena.deinit();
     const a = arena.allocator();
     const record: typed.Record = .{ .id = @fromBackingInt(typed.Type.record_base), .name = "lib.Item", .declaration = .{ .start = 0, .end = 0 }, .fields = &.{} };
-    const body: bytecode.Function = .{ .name = "lib.read", .id = @fromBackingInt(0), .scope = .{ .instructions = &.{.{ .span = .{ .start = 0, .end = 0 }, .op = .{ .push_i64 = 1 } }} } };
+    // The body names the record, so its archive keeps the record's row.
+    const body: bytecode.Function = .{ .name = "lib.read", .id = @fromBackingInt(0), .signature = .{ .return_type = record.id }, .scope = .{ .instructions = &.{.{ .span = .{ .start = 0, .end = 0 }, .op = .{ .push_i64 = 1 } }} } };
     const code: bytecode.Program = .{ .functions = &.{body}, .records = &.{record} };
     const original = try physical.archive(a, code, &.{true});
     var other_record = record;
@@ -91,8 +92,8 @@ test "physical imports reject dependency signature conflicts in either order and
     const signature: bytecode.Function = .{ .name = "lib.helper", .id = @fromBackingInt(0), .scope = .{ .instructions = &.{} } };
     var different = signature;
     different.signature.return_type = .bool;
-    const left = try physical.archive(a, .{ .functions = &.{signature} }, &.{false});
-    const right = try physical.archive(a, .{ .functions = &.{different} }, &.{false});
+    const left = try signatureArchive(a, .{ .functions = &.{signature} });
+    const right = try signatureArchive(a, .{ .functions = &.{different} });
     const first: language.module_interface.Interface = .{ .module = "first", .text = "", .emission = .{ .physical = left } };
     const second: language.module_interface.Interface = .{ .module = "second", .text = "", .emission = .{ .physical = right } };
     const restore = @import("module_physical_inputs.zig").restore;
@@ -185,8 +186,8 @@ test "physical imports reject host effect declarations that change emitted host 
     const before = try @import("qbe_host.zig").describe(a, .{ .functions = &.{plain} }, &layouts);
     const after = try @import("qbe_host.zig").describe(a, .{ .functions = &.{changed} }, &layouts);
     try t.expect(before.declarations[0].effects != after.declarations[0].effects);
-    const left: language.module_interface.Interface = .{ .module = "first", .text = "", .emission = .{ .physical = try physical.archive(a, .{ .functions = &.{plain} }, &.{false}) } };
-    const right: language.module_interface.Interface = .{ .module = "second", .text = "", .emission = .{ .physical = try physical.archive(a, .{ .functions = &.{changed} }, &.{false}) } };
+    const left: language.module_interface.Interface = .{ .module = "first", .text = "", .emission = .{ .physical = try signatureArchive(a, .{ .functions = &.{plain} }) } };
+    const right: language.module_interface.Interface = .{ .module = "second", .text = "", .emission = .{ .physical = try signatureArchive(a, .{ .functions = &.{changed} }) } };
     const restore = @import("module_physical_inputs.zig").restore;
     try t.expectError(error.InternalError, restore(a, .{ .functions = &.{} }, &.{}, &.{}, &.{ left, right }));
     try t.expectError(error.InternalError, restore(a, .{ .functions = &.{} }, &.{}, &.{}, &.{ right, left }));
@@ -196,7 +197,7 @@ test "physical imports reject host effect declarations that change emitted host 
     foreign.policy.c_abi = true;
     changed = foreign;
     changed.policy.effects |= effects.bit(.clock);
-    const orphan: language.module_interface.Interface = .{ .module = "third", .text = "", .emission = .{ .physical = try physical.archive(a, .{ .functions = &.{changed} }, &.{false}) } };
+    const orphan: language.module_interface.Interface = .{ .module = "third", .text = "", .emission = .{ .physical = try signatureArchive(a, .{ .functions = &.{changed} }) } };
     try t.expectError(error.InternalError, restore(a, .{ .functions = &.{foreign} }, &.{false}, &.{null}, &.{orphan}));
 }
 
@@ -214,15 +215,15 @@ test "physical imports reject explicit callback effect ceilings while ignoring b
     };
     var changed = plain;
     changed.policy.effect_bound.?.allowed = effects.bit(.output);
-    const left: language.module_interface.Interface = .{ .module = "first", .text = "", .emission = .{ .physical = try physical.archive(a, .{ .functions = &.{plain} }, &.{false}) } };
-    const right: language.module_interface.Interface = .{ .module = "second", .text = "", .emission = .{ .physical = try physical.archive(a, .{ .functions = &.{changed} }, &.{false}) } };
+    const left: language.module_interface.Interface = .{ .module = "first", .text = "", .emission = .{ .physical = try signatureArchive(a, .{ .functions = &.{plain} }) } };
+    const right: language.module_interface.Interface = .{ .module = "second", .text = "", .emission = .{ .physical = try signatureArchive(a, .{ .functions = &.{changed} }) } };
     const restore = @import("module_physical_inputs.zig").restore;
     try t.expectError(error.InternalError, restore(a, .{ .functions = &.{} }, &.{}, &.{}, &.{ left, right }));
     try t.expectError(error.InternalError, restore(a, .{ .functions = &.{} }, &.{}, &.{}, &.{ right, left }));
     try t.expectError(error.InternalError, restore(a, .{ .functions = &.{plain} }, &.{false}, &.{null}, &.{right}));
     changed = plain;
     changed.policy.effect_bound.?.span = .{ .start = 40, .end = 45 };
-    const moved: language.module_interface.Interface = .{ .module = "third", .text = "", .emission = .{ .physical = try physical.archive(a, .{ .functions = &.{changed} }, &.{false}) } };
+    const moved: language.module_interface.Interface = .{ .module = "third", .text = "", .emission = .{ .physical = try signatureArchive(a, .{ .functions = &.{changed} }) } };
     const valid = try restore(a, .{ .functions = &.{} }, &.{}, &.{}, &.{ left, moved });
     try t.expectEqual(@as(effects.Mask, 0), valid.code.functions[0].policy.effect_bound.?.allowed);
     changed.policy.effect_bound = null;
@@ -252,8 +253,8 @@ test "physical imports reject declaration mutation conflicts that change caller 
     try t.expect(typed.referenceMut(&.{array}, array.id));
     try t.expect(!@import("ownership_model.zig").writesParameter(plain, 0));
     try t.expect(@import("ownership_model.zig").writesParameter(changed, 0));
-    const left: language.module_interface.Interface = .{ .module = "first", .text = "", .emission = .{ .physical = try physical.archive(a, .{ .functions = &.{plain}, .records = &.{array} }, &.{false}) } };
-    const right: language.module_interface.Interface = .{ .module = "second", .text = "", .emission = .{ .physical = try physical.archive(a, .{ .functions = &.{changed}, .records = &.{array} }, &.{false}) } };
+    const left: language.module_interface.Interface = .{ .module = "first", .text = "", .emission = .{ .physical = try signatureArchive(a, .{ .functions = &.{plain}, .records = &.{array} }) } };
+    const right: language.module_interface.Interface = .{ .module = "second", .text = "", .emission = .{ .physical = try signatureArchive(a, .{ .functions = &.{changed}, .records = &.{array} }) } };
     const restore = @import("module_physical_inputs.zig").restore;
     try t.expectError(error.InternalError, restore(a, .{ .functions = &.{} }, &.{}, &.{}, &.{ left, right }));
     try t.expectError(error.InternalError, restore(a, .{ .functions = &.{} }, &.{}, &.{}, &.{ right, left }));
@@ -280,4 +281,47 @@ test "physical record imports erase source-local default node indexes but retain
     const restored = try @import("module_physical_inputs.zig").restore(a, .{ .functions = &.{}, .records = &.{original} }, &.{}, &.{}, &.{ supplied, supplied });
     try t.expectEqual(typed.Type.i64, restored.code.records[0].fields[0].ty);
     try t.expectEqual(@as(?usize, 1), restored.code.records[0].fields[0].default_value);
+}
+
+/// An archive holding a signature-only dependency row for every function of
+/// `code` and a row for every record, as a module whose bodies name them all
+/// would publish.
+fn signatureArchive(a: std.mem.Allocator, code: bytecode.Program) !physical.Archive {
+    const names: physical.Names = .{ .functions = code.functions, .records = code.records };
+    const dependencies = try a.alloc(physical.Data, code.functions.len);
+    for (code.functions, dependencies) |function, *data| {
+        var plain = function;
+        plain.scope.instructions = &.{};
+        data.* = try physical.write(a, names, plain);
+    }
+    const records = try a.alloc(physical.Data, code.records.len);
+    for (code.records, records) |record, *data| data.* = try physical.write(a, names, record);
+    return .{ .records = records, .dependencies = dependencies };
+}
+
+// spec: MODULE-ARCHIVE-TRIM-1
+test "an archive keeps only the dependency and record rows its kept rows name" {
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const at: @import("source.zig").Span = .{ .start = 0, .end = 0 };
+    const used: typed.Record = .{ .id = @fromBackingInt(typed.Type.record_base), .name = "lib.Used", .declaration = at, .fields = &.{} };
+    const unused: typed.Record = .{ .id = @fromBackingInt(typed.Type.record_base + 1), .name = "lib.Unused", .declaration = at, .fields = &.{} };
+    // `lib.read` calls `lib.helper` and returns a `lib.Used`; `lib.other` is
+    // declared but named by nothing kept.
+    const functions = [_]bytecode.Function{
+        .{ .name = "lib.read", .id = @fromBackingInt(0), .signature = .{ .return_type = used.id }, .scope = .{ .instructions = &.{.{ .span = at, .op = .{ .call = @fromBackingInt(1) } }} } },
+        .{ .name = "lib.helper", .id = @fromBackingInt(1), .scope = .{ .instructions = &.{} } },
+        .{ .name = "lib.other", .id = @fromBackingInt(2), .signature = .{ .return_type = unused.id }, .scope = .{ .instructions = &.{} } },
+    };
+    const archive = try physical.archive(a, .{ .functions = &functions, .records = &.{ used, unused } }, &.{ true, false, false });
+    try t.expectEqual(@as(usize, 1), archive.functions.len);
+    try t.expectEqual(@as(usize, 1), archive.dependencies.len);
+    try t.expectEqualStrings("lib.helper", archive.dependencies[0].name);
+    try t.expectEqual(@as(usize, 1), archive.records.len);
+    try t.expectEqualStrings("lib.Used", archive.records[0].name);
+    // A dependent restores the trimmed archive: every name its rows spell is there.
+    const restored = try @import("module_physical_inputs.zig").restore(a, .{ .functions = &.{} }, &.{}, &.{}, &.{.{ .module = "lib", .text = "", .emission = .{ .physical = archive } }});
+    try t.expectEqual(@as(usize, 2), restored.code.functions.len);
+    try t.expectEqual(@as(usize, 1), restored.code.records.len);
 }

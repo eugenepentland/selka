@@ -67,38 +67,101 @@ pub fn digest(a: std.mem.Allocator, names: Names, value: anytype) std.mem.Alloca
 /// call, a function value, an inline origin, a record's codec), in encoding
 /// order and with repeats: exactly the function references `write` spells.
 pub fn references(a: std.mem.Allocator, names: Names, comptime T: type, value: T) std.mem.Allocator.Error![]const []const u8 {
+    const found = try referenced(a, T, value);
+    const out = try a.alloc([]const u8, found.functions.len);
+    for (found.functions, out) |index, *name| name.* = if (index < names.functions.len) names.functions[index].name else "";
+    return out;
+}
+
+/// The functions and records one physical value refers to, by index into
+/// its catalog, in encoding order and with repeats; an index outside the
+/// catalog is kept as it is.
+pub const Referenced = struct { functions: []const usize, records: []const usize };
+
+/// MODULE-ARCHIVE-TRIM-1: every function and record reference `write`
+/// spells in `value`.
+pub fn referenced(a: std.mem.Allocator, comptime T: type, value: T) std.mem.Allocator.Error!Referenced {
     var writer: codec.Writer = .init(a);
     defer writer.deinit();
-    var found: std.ArrayList([]const u8) = .empty;
-    try writer.writeMapped(T, value, Collect, .{ .names = names, .found = &found, .allocator = a });
-    return found.items;
+    var functions: std.ArrayList(usize) = .empty;
+    var records: std.ArrayList(usize) = .empty;
+    try writer.writeMapped(T, value, Collect, .{ .found = .{ .functions = &functions, .records = &records }, .allocator = a });
+    return .{ .functions = functions.items, .records = records.items };
 }
 
-/// Store every selected real body and signatures for every dependency it names.
+/// MODULE-ARCHIVE-TRIM-1: store every selected real body, a signature-only
+/// dependency row for every function those bodies (and the kept records'
+/// codecs) refer to, and every record the kept rows refer to, transitively.
+/// A function or record nothing kept refers to is left out: a dependent's
+/// restore reserves only the names the rows it reads spell.
 pub fn archive(a: std.mem.Allocator, code: bytecode.Program, selected: []const bool) std.mem.Allocator.Error!Archive {
     const names: Names = .{ .functions = code.functions, .records = code.records };
-    const records = try a.alloc(Data, code.records.len);
-    for (code.records, records) |record, *data| data.* = try write(a, names, record);
-    var bodies: std.ArrayList(Data) = .empty;
-    var dependencies: std.ArrayList(Data) = .empty;
-    for (code.functions, selected) |function, chosen| {
-        var plain = function;
-        plain.physical = null;
-        if (chosen) {
-            try bodies.append(a, try write(a, names, plain));
-        } else {
-            plain.scope.instructions = &.{};
-            try dependencies.append(a, try write(a, names, plain));
+    const keep_functions = try a.alloc(bool, code.functions.len);
+    @memset(keep_functions, false);
+    const keep_records = try a.alloc(bool, code.records.len);
+    @memset(keep_records, false);
+    var pending_functions: std.ArrayList(usize) = .empty;
+    var pending_records: std.ArrayList(usize) = .empty;
+    for (selected, 0..) |chosen, index| if (chosen and index < code.functions.len) {
+        keep_functions[index] = true;
+        try pending_functions.append(a, index);
+    };
+    var whole = false;
+    while (!whole and (pending_functions.items.len != 0 or pending_records.items.len != 0)) {
+        var found: Referenced = .{ .functions = &.{}, .records = &.{} };
+        if (pending_functions.pop()) |index| {
+            found = try referenced(a, bytecode.Function, row(code.functions[index], index < selected.len and selected[index]));
+        } else if (pending_records.pop()) |index| {
+            var plain = code.records[index];
+            const fields = try a.dupe(typed.Field, plain.fields);
+            for (fields) |*field| field.default_value = null;
+            plain.fields = fields;
+            found = try referenced(a, typed.Record, plain);
+        }
+        for (found.functions) |index| {
+            if (index >= keep_functions.len) whole = true;
+            if (whole or keep_functions[index]) continue;
+            keep_functions[index] = true;
+            try pending_functions.append(a, index);
+        }
+        for (found.records) |index| {
+            if (index >= keep_records.len) whole = true;
+            if (whole or keep_records[index]) continue;
+            keep_records[index] = true;
+            try pending_records.append(a, index);
         }
     }
-    return .{ .records = records, .functions = bodies.items, .dependencies = dependencies.items };
+    // A reference outside the catalog cannot be followed: keep every row.
+    if (whole) {
+        @memset(keep_functions, true);
+        @memset(keep_records, true);
+    }
+    var records: std.ArrayList(Data) = .empty;
+    for (code.records, keep_records) |record, kept| if (kept) try records.append(a, try write(a, names, record));
+    var bodies: std.ArrayList(Data) = .empty;
+    var dependencies: std.ArrayList(Data) = .empty;
+    for (code.functions, keep_functions, 0..) |function, kept, index| {
+        if (!kept) continue;
+        const chosen = index < selected.len and selected[index];
+        const data = try write(a, names, row(function, chosen));
+        if (chosen) try bodies.append(a, data) else try dependencies.append(a, data);
+    }
+    return .{ .records = records.items, .functions = bodies.items, .dependencies = dependencies.items };
 }
 
-/// The reference fields `References` encodes, with every function reference
-/// collected by name instead of written.
+/// The value one archive row stores for `function`: its body when it is
+/// emitted, its signature otherwise, never its imported facts.
+fn row(function: bytecode.Function, chosen: bool) bytecode.Function {
+    var plain = function;
+    plain.physical = null;
+    if (!chosen) plain.scope.instructions = &.{};
+    return plain;
+}
+
+/// The reference fields `References` encodes, with every function and
+/// record reference collected by catalog index instead of written.
 const Collect = struct {
-    names: Names,
-    found: *std.ArrayList([]const u8),
+    found: struct { functions: *std.ArrayList(usize), records: *std.ArrayList(usize) },
     allocator: std.mem.Allocator,
 
     /// The same reference-bearing fields `References` handles.
@@ -106,12 +169,11 @@ const Collect = struct {
         return References.handles(T);
     }
 
-    /// Record a function reference (an empty name for one outside the
-    /// catalog); every other reference names none.
+    /// Record a function or record reference; every other reference names
+    /// neither.
     pub fn encode(self: Collect, _: *codec.Writer, comptime T: type, value: T) std.mem.Allocator.Error!void {
-        if (T != typed.FunctionId) return;
-        const index = @backingInt(value);
-        try self.found.append(self.allocator, if (index < self.names.functions.len) self.names.functions[index].name else "");
+        if (T == typed.FunctionId) try self.found.functions.append(self.allocator, @backingInt(value));
+        if (T == typed.Type) if (value.isAggregate()) try self.found.records.append(self.allocator, value.recordIndex());
     }
 };
 
