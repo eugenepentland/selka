@@ -7,8 +7,9 @@
 //! free memory allow. A module is stale when it has no record, its source or
 //! the program's arena switch changed, or an interface its last compile read
 //! (by interface, emission and positions hash) is not the one there now,
-//! unless only its emission hash changed and nothing the compile consumed of
-//! it, symbol by symbol, did (MODULE-SYMBOL-CUTOFF-2). A
+//! unless only its emission or positions hash changed and nothing the compile
+//! consumed of them, symbol by symbol and stretch by stretch, did
+//! (MODULE-SYMBOL-CUTOFF-2, MODULE-SYMBOL-CUTOFF-5). A
 //! compile signals as soon as its interface is written, so its dependents start
 //! while its units and objects are still being built, and a dependent whose
 //! inputs all held stays as it is: a body edit compiles one module, and an
@@ -67,10 +68,20 @@ pub const Outcome = union(enum) { status: u8, fallback: Fallback };
 /// A module's interface, emission and positions hashes.
 const Hashes = struct { interface: []const u8, emission: []const u8, positions: []const u8 };
 
-/// One interface a compile read, its hashes then, and the digest of what the
+/// One interface a compile read, its hashes then, the digest of what the
 /// compile consumed of its emission section (MODULE-SYMBOL-CUTOFF-1; empty
-/// when the compile recorded no reach).
-const Input = struct { module: []const u8, interface: []const u8, emission: []const u8, positions: []const u8, symbols: []const u8 = "" };
+/// when the compile recorded no reach), and the stretches its positions came
+/// through with the digest of what they read (MODULE-SYMBOL-CUTOFF-5; empty
+/// when a rendered diagnostic may have read any).
+const Input = struct {
+    module: []const u8,
+    interface: []const u8,
+    emission: []const u8,
+    positions: []const u8,
+    symbols: []const u8 = "",
+    stretches: []const u32 = &.{},
+    lines: []const u8 = "",
+};
 
 /// Whether a module's units open an arena scope or need the text runtime.
 const Marks = struct { arena: bool = false, text: bool = false };
@@ -1069,8 +1080,10 @@ const Build = struct {
     /// must: it has a record under this source and arena switch, and every
     /// interface its last compile read is final and holds what that compile
     /// read. An input whose emission hash changed holds when what the compile
-    /// consumed of it, by symbol, did not (MODULE-SYMBOL-CUTOFF-2); the kept
-    /// record then states that input's hashes now.
+    /// consumed of it, by symbol, did not (MODULE-SYMBOL-CUTOFF-2), and one
+    /// whose positions hash changed when the stretches its units took
+    /// positions through did not (MODULE-SYMBOL-CUTOFF-5); the kept record
+    /// then states that input's hashes now.
     fn reusable(self: *Build, id: usize) !?ModuleState {
         const node = self.nodes.items[id];
         const known = self.previous.get(node.name) orelse return null;
@@ -1081,12 +1094,16 @@ const Build = struct {
             const now = self.nodes.items[at].current orelse return null;
             if (!std.mem.eql(u8, now.interface, input.interface)) return null;
             // Positions matter only to a compile whose units spliced or
-            // instantiated a body of that interface's text.
-            if (input.positions.len != 0 and !std.mem.eql(u8, now.positions, input.positions)) return null;
-            if (std.mem.eql(u8, now.emission, input.emission)) continue;
-            if (!try self.symbolsHold(known, input, at)) return null;
+            // instantiated a body of that interface's text, and then only
+            // those of the stretches its positions came through.
+            const moved = input.positions.len != 0 and !std.mem.eql(u8, now.positions, input.positions);
+            if (moved and !try self.linesHold(input, at)) return null;
+            const changed = !std.mem.eql(u8, now.emission, input.emission);
+            if (changed and !try self.symbolsHold(known, input, at)) return null;
+            if (!moved and !changed) continue;
             const inputs = updated orelse try self.context.allocator.dupe(Input, known.inputs);
-            inputs[index].emission = now.emission;
+            if (moved) inputs[index].positions = now.positions;
+            if (changed) inputs[index].emission = now.emission;
             updated = inputs;
         }
         var kept = known;
@@ -1107,9 +1124,19 @@ const Build = struct {
         return std.mem.eql(u8, &std.fmt.bytesToHex(digest, .lower), input.symbols);
     }
 
+    /// MODULE-SYMBOL-CUTOFF-5: whether the stretches of module `at`'s
+    /// interface text that `input`'s compile took positions through read
+    /// what they read then. An input with no such digest answers no.
+    fn linesHold(self: *Build, input: Input, at: usize) !bool {
+        if (input.lines.len == 0) return false;
+        const table = (try self.tableOf(at)) orelse return false;
+        const digest = language.module_symbols.stretchDigest(table.interface, input.stretches);
+        return std.mem.eql(u8, &std.fmt.bytesToHex(digest, .lower), input.lines);
+    }
+
     /// The rows of module `at`'s current interface, read once; null when
     /// its interface file is missing, malformed, or not the one its current
-    /// interface and emission hashes name.
+    /// interface, emission and positions hashes name.
     fn tableOf(self: *Build, at: usize) !?language.module_symbols.Table {
         const slot = try self.tables.getOrPut(self.context.allocator, at);
         if (slot.found_existing) return slot.value_ptr.*;
@@ -1122,6 +1149,7 @@ const Build = struct {
         const interface = language.module_interface.decode(a, bytes) orelse return null;
         if (!std.mem.eql(u8, &std.fmt.bytesToHex(language.module_interface.interfaceHash(interface), .lower), now.interface)) return null;
         if (!std.mem.eql(u8, &std.fmt.bytesToHex(language.module_interface.emissionHash(interface), .lower), now.emission)) return null;
+        if (!std.mem.eql(u8, &std.fmt.bytesToHex(language.module_interface.positionsHash(interface), .lower), now.positions)) return null;
         slot.value_ptr.* = try language.module_symbols.Table.of(a, interface);
         return slot.value_ptr.*;
     }
@@ -1537,6 +1565,14 @@ test "a module outlives an import's emission change only through a symbol record
     // The emission hash moved and the record has no reach: compile.
     state.nodes.items[1].current.?.emission = "e2";
     try t.expect((try state.reusable(0)) == null);
+    // Moved positions without a stretch digest compile.
+    state.nodes.items[1].current.?.emission = "e";
+    var placed = row;
+    placed.inputs = &.{.{ .module = "leaf", .interface = "i", .emission = "e", .positions = "p0" }};
+    try state.previous.put(a, "main", placed);
+    try t.expect((try state.reusable(0)) == null);
+    try state.previous.put(a, "main", row);
+    state.nodes.items[1].current.?.emission = "e2";
     // A reach without a digest for that input still compiles.
     row.reach = &.{"leaf::api"};
     try state.previous.put(a, "main", row);
