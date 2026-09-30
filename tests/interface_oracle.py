@@ -13,6 +13,9 @@ import argparse
 import concurrent.futures
 import json
 import os
+import re
+import shutil
+import tempfile
 import subprocess
 import sys
 import time
@@ -31,10 +34,21 @@ def entries(paths):
 
 
 def run(mylang, entry):
+    source = entry.read_text()
+    temporary = None
+    target = entry.resolve()
+    if not re.search(r"^module\s", source, re.M):
+        temporary = tempfile.TemporaryDirectory(prefix="interface-oracle-")
+        mirror = Path(temporary.name) / "src"
+        shutil.copytree(entry.parent, mirror, ignore=shutil.ignore_patterns(".mylang-cache"))
+        target = mirror / entry.name
+        target.write_text(f"module {entry.stem}; " + source)
     started = time.perf_counter()
-    proc = subprocess.run([mylang, "interfaces", "oracle", str(entry)], capture_output=True, text=True,
+    proc = subprocess.run([mylang, "interfaces", "oracle", str(target)], capture_output=True, text=True,
                           env=dict(os.environ))
     wall = time.perf_counter() - started
+    if temporary is not None:
+        temporary.cleanup()
     try:
         report = json.loads(proc.stdout)
     except json.JSONDecodeError:

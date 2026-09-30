@@ -28,7 +28,7 @@ import tempfile
 from pathlib import Path
 
 MAIN = re.compile(r"^(public\s+)?def\s+main\s*\(", re.M)
-RUNTIMES = {"rc": ["--rc-runtime"], "gc": ["--gc-runtime"], "gc-stress": ["--gc-runtime", "--gc-stress"], "stats": ["--rc-runtime", "--rc-stats"], "sites": ["--rc-runtime", "--rc-sites"]}
+RUNTIMES = {"rc": ["--rc-runtime"], "gc": ["--gc-runtime"], "gc-stress": ["--gc-runtime", "--gc-stress"], "stats": ["--rc-runtime=stats"], "sites": ["--rc-runtime=sites"]}
 
 
 def entries(paths):
@@ -60,12 +60,18 @@ def compare(args, number, entry, root):
     shutil.rmtree(work, ignore_errors=True)
     work.mkdir(parents=True)
     out = {"entry": str(entry), "status": "equal", "path": "whole", "problems": []}
+    source = entry.read_text()
     target = entry.resolve()
-    if not MAIN.search(entry.read_text()):
+    named = bool(re.search(r"^module\s", source, re.M))
+    if not MAIN.search(source) or not named:
         mirror = work / "src"
         shutil.copytree(entry.parent, mirror, ignore=shutil.ignore_patterns(".mylang-cache"))
-        target = mirror / f"mcdrv_{entry.stem}.my"
-        target.write_text(f"module mcdrv_{entry.stem}\nimport {entry.stem}\n\n\ndef main() -> int:\n    return 0\n")
+        target = mirror / entry.name
+        if not named:
+            target.write_text(f"module {entry.stem}; " + source)
+        if not MAIN.search(source):
+            target = mirror / f"mcdrv_{entry.stem}.my"
+            target.write_text(f"module mcdrv_{entry.stem}\nimport {entry.stem}\n\n\ndef main() -> int:\n    return 0\n")
     mylang = str(Path(args.mylang).resolve())
     cache = work / "cm"
     whole = run([mylang, "check", *RUNTIMES[args.runtime], str(target), "--no-cache"], cwd=target.parent)

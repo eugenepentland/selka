@@ -253,7 +253,9 @@ class Program:
         for exe in (whole_exe, module_exe):
             proc, _ = run([str(exe)], cwd=self.work, timeout=120, env=self.env)
             results.append(None if proc is None else (proc.returncode, proc.stdout, proc.stderr))
-        if results[0] != results[1]:
+        if any(result is None for result in results):
+            out["problems"].append("an executable timed out")
+        elif results[0] != results[1]:
             out["problems"].append("the executables' stdout, stderr or exit status differ")
         out["exit_status"] = None if results[0] is None else results[0][0]
 

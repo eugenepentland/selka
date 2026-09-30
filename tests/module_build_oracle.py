@@ -103,7 +103,9 @@ def compare(args, number, entry, root):
         for exe in (work / "whole", work / "module"):
             proc = run([str(exe)], cwd=work, timeout=60)
             results.append(None if proc is None else (proc.returncode, proc.stdout, proc.stderr))
-        if results[0] != results[1]:
+        if any(result is None for result in results):
+            out["problems"].append("an executable timed out")
+        elif results[0] != results[1]:
             out["problems"].append("runs differ")
     if out["problems"]:
         out["status"] = "different"

@@ -91,17 +91,18 @@ const State = struct {
     fn recordsFrom(self: *State, archive: physical.Archive) Error!void {
         for (archive.records) |data| {
             const ty = self.ids.records.get(data.name) orelse return error.InternalError;
-            const known = try self.restored.records.getOrPut(self.a, data.name);
-            if (known.found_existing) {
-                if (!std.mem.eql(u8, known.value_ptr.*, data.bytes)) return error.InternalError;
-                continue;
-            }
-            known.value_ptr.* = data.bytes;
             const record = physical.read(self.a, &self.ids, typed.Record, data) catch |err| return failed(err);
             if (record.id != ty) return error.InternalError;
+            const normalized = try physical.write(self.a, .{ .functions = self.functions.items, .records = self.records.items }, record);
+            const known = try self.restored.records.getOrPut(self.a, data.name);
+            if (known.found_existing) {
+                if (!std.mem.eql(u8, known.value_ptr.*, normalized.bytes)) return error.InternalError;
+                continue;
+            }
+            known.value_ptr.* = normalized.bytes;
             if (ty.recordIndex() < self.record_count) {
                 const existing = try physical.write(self.a, .{ .functions = self.functions.items, .records = self.records.items }, self.records.items[ty.recordIndex()]);
-                if (!std.mem.eql(u8, existing.bytes, data.bytes)) return error.InternalError;
+                if (!std.mem.eql(u8, existing.bytes, normalized.bytes)) return error.InternalError;
                 continue;
             }
             self.records.items[ty.recordIndex()] = record;
@@ -175,7 +176,12 @@ const State = struct {
         plain.physical = null;
         plain.policy.effects = 0;
         plain.policy.effect_bound = null;
-        plain.signature = .{ .return_type = plain.signature.return_type, .parameter_count = count, .constant_arguments = plain.signature.constant_arguments };
+        plain.signature = .{
+            .return_type = plain.signature.return_type,
+            .parameter_count = count,
+            .constant_arguments = plain.signature.constant_arguments,
+            .declared_mutates = plain.signature.declared_mutates,
+        };
         plain.scope = .{ .locals = parameters, .instructions = &.{} };
         return physical.write(self.a, .{ .functions = self.functions.items, .records = self.records.items }, plain);
     }
