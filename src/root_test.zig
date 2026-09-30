@@ -68,6 +68,7 @@ test {
     _ = @import("native_run.zig");
     _ = @import("native_run_cache.zig");
     _ = @import("wiring/native_session.zig");
+    _ = @import("zig_local_cache_test.zig");
     _ = @import("value_semantics_test.zig");
     _ = @import("runtime_mode.zig");
     _ = @import("main_runtime_flags.zig");

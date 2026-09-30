@@ -144,6 +144,10 @@ fn link(session: *wiring.Session, manifest: []const u8, output: []const u8) Erro
     defer context.deinit();
     const temporary = try context.temporary(session.toolchain.directory);
     defer context.remove(temporary);
+    // The session's environment names no local cache, so its tools would keep
+    // theirs in the project's `.zig-cache`; this build's scratch holds it, as
+    // `prepare` arranges for every other build (NATIVE-ZIG-CACHE-3).
+    context.zig_cache = try std.fs.path.join(context.allocator, &.{ temporary, "zig-local" });
     const cache: cache_api.Cache = .{
         .context = context,
         .directory = session.toolchain.directory,
@@ -295,6 +299,54 @@ fn sectionHeader(bytes: []const u8, header: std.elf.Elf64_Ehdr, index: u16) std.
 fn hasSection(names: []const []const u8, prefix: []const u8) bool {
     for (names) |name| if (std.mem.startsWith(u8, name, prefix)) return true;
     return false;
+}
+/// Whether `trace` holds at least one line and every line names a `zig-local`
+/// directory inside `directory`.
+fn scratchCaches(trace: []const u8, directory: []const u8) bool {
+    if (trace.len == 0 or trace[trace.len - 1] != '\n') return false;
+    var lines = std.mem.splitScalar(u8, trace[0 .. trace.len - 1], '\n');
+    while (lines.next()) |line| {
+        if (!std.mem.startsWith(u8, line, directory) or !std.mem.endsWith(u8, line, "/zig-local")) return false;
+    }
+    return true;
+}
+
+// spec: NATIVE-ZIG-CACHE-3
+test "an in-process guest build hands its tools a local cache inside its own scratch" {
+    var compilation = try language.Compilation.init(std.testing.allocator, "scratch.my",
+        \\def main() -> i64:
+        \\    return 5
+    );
+    defer compilation.deinit();
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const manifest = try compilation.emitQbe(a);
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", a);
+    const trace = try std.fs.path.join(a, &.{ root, "trace" });
+    const session = try wiring.acquire();
+    // A stand-in for `zig` that records the local cache each compiler run was
+    // handed and fails it, so the build stops at its first C unit. The batch
+    // assembler, `zig clang -cc1as`, runs Zig's bundled clang alone and never
+    // opens a Zig cache, so it goes to the real tool and the build reaches one.
+    const zig = try std.fs.path.join(a, &.{ root, "zig" });
+    const script = "#!/bin/sh\n[ \"$1\" = clang ] && exec '{s}' \"$@\"\nprintf '%s\\n' \"$ZIG_LOCAL_CACHE_DIR\" >> '{s}'\nexit 1\n";
+    try temporary.dir.writeFile(std.testing.io, .{ .sub_path = "zig", .data = try std.fmt.allocPrint(a, script, .{ session.toolchain.zig, trace }) });
+    try std.Io.Dir.cwd().setFilePermissions(std.testing.io, zig, .executable_file, .{});
+    // The session's own toolchain and environment, which names no local
+    // cache, over an empty object directory, so the build must compile.
+    var traced: wiring.Session = .{ .arena = std.heap.ArenaAllocator.init(std.testing.allocator), .io = session.io, .environ = try session.environ.clone(a), .toolchain = session.toolchain };
+    defer traced.arena.deinit();
+    traced.toolchain.zig = zig;
+    traced.toolchain.directory = try std.fs.path.join(a, &.{ root, "objects" });
+    try std.testing.expectEqual(@as(?[]const u8, null), traced.environ.get("ZIG_LOCAL_CACHE_DIR"));
+    try std.testing.expectError(error.NativeToolFailed, link(&traced, manifest, try std.fs.path.join(a, &.{ root, "program" })));
+    const recorded = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, trace, a, .limited(1 << 16));
+    try std.testing.expect(scratchCaches(recorded, traced.toolchain.directory));
+    // The build removed that cache with the rest of its scratch, though it failed.
+    try std.testing.expectError(error.FileNotFound, std.Io.Dir.cwd().access(std.testing.io, std.mem.sliceTo(recorded, '\n'), .{}));
 }
 
 // spec: QBE-STRIP-1

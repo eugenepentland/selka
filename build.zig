@@ -182,8 +182,10 @@ fn cached(run: *std.Build.Step.Run, list: []const u8) void {
 /// ran its tests in that stale environment. The shell resolves Zig's global
 /// cache the way `std.zig.resolveGlobalCacheDir` does, at make time, and names
 /// it explicitly: a test that redirects `HOME` for a child compiler would
-/// otherwise send its `zig cc` invocations to an empty cache. `env` then adds
-/// the tool paths, which depend only on this build's configuration.
+/// otherwise send its `zig cc` invocations to an empty cache. The command also
+/// gets a Zig local cache of its own for as long as it runs (see
+/// `tools_script`). `env` then adds the tool paths, which depend only on this
+/// build's configuration.
 fn withTools(step: *std.Build.Step.Run, qbe: []const u8) void {
     const b = step.step.owner;
     var prefix: std.ArrayList([]const u8) = .empty;
@@ -198,13 +200,25 @@ fn withTools(step: *std.Build.Step.Run, qbe: []const u8) void {
     step.argv.insertSlice(arena, 0, args) catch @panic("out of memory");
 }
 /// The shell half of `withTools`: export Zig's global cache directory as the
-/// Zig toolchain would resolve it here and now, then run `env TOOL=PATH… CMD…`.
+/// Zig toolchain would resolve it here and now, point `ZIG_LOCAL_CACHE_DIR` at
+/// a fresh directory under `$TMPDIR`, then run `env TOOL=PATH… CMD…`
+/// (NATIVE-ZIG-CACHE-4). A test or driver that runs `zig cc` itself works in a
+/// scratch directory inside the checkout (`.zig-cache/tmp`, or a `$TMPDIR`
+/// there), so Zig would find this project's `build.zig` above it and keep the
+/// object in its `.zig-cache` under a key naming that scratch path, which no
+/// later run can reuse. The command replaces this shell with `exec`, so it
+/// stays the build runner's own child, keeping its pid, exit status and
+/// resource accounting; a detached watcher that ignores interrupts removes
+/// the directory once that pid has gone, however the command ended.
 const tools_script =
     \\if [ -z "${ZIG_GLOBAL_CACHE_DIR+set}" ]; then
     \\  if [ -n "${XDG_CACHE_HOME:-}" ]; then ZIG_GLOBAL_CACHE_DIR="$XDG_CACHE_HOME/zig"
     \\  elif [ -n "${HOME:-}" ]; then ZIG_GLOBAL_CACHE_DIR="$HOME/.cache/zig"; fi
     \\fi
     \\if [ -n "${ZIG_GLOBAL_CACHE_DIR+set}" ]; then export ZIG_GLOBAL_CACHE_DIR; fi
+    \\ZIG_LOCAL_CACHE_DIR=$(mktemp -d "${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX") || exit 2
+    \\export ZIG_LOCAL_CACHE_DIR
+    \\(trap '' HUP INT TERM; while kill -0 $$ 2>/dev/null; do sleep 1; done; rm -rf "$ZIG_LOCAL_CACHE_DIR") </dev/null >/dev/null 2>&1 &
     \\exec env "$@"
 ;
 /// Refuse a configuration in which any Run step carries its own environment
