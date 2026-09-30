@@ -558,3 +558,24 @@ pair. The original hardware measurements remain authoritative; the simulated
 string result differs because emulation and allocation behavior differ.
 This read-only attribution neither establishes a source correction nor waives
 any performance row. The final gate remains open.
+
+
+## Independent literal-overflow review
+
+The frozen `8a1bc3b3` LLVM continuation passes all 54 independent admission
+decisions: nineteen admitted and thirty-five refused. Both the prior and
+candidate translators execute 215,602 assertions across 43 valid native
+functions with identical results. Eleven malformed or marked-address probes
+are admission-only and are not counted as executable acceptance. The review
+covers historical escapes followed by fresh stores, direct and aliased blit,
+unknown writes, nested calls, derived addresses, captured scalar values after
+calls, block boundaries, extern-symbol literals and width refusals. The actual
+loads, operands, trap branches and positions remain in place; every possible
+writer or unknown boundary clears reaching memory facts.
+
+Every member of the 605-member raw archive is independently verified under
+`evidence/codex-next-runtime-20260929/llvm-constant-review/`. Strict-v1 and the
+original fifty-case baseline are preserved with final source/IR/executables and
+provenance. No source-review gap remains; the review exercises no Guardian,
+broad gate or timing. Combined `cfee0070` performance and final integration
+acceptance remain pending.

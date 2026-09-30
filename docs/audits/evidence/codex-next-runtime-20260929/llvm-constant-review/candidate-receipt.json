@@ -1,0 +1,504 @@
+{
+  "side": "candidate",
+  "translator_sha256": "befae5ee3905165d4b7136c149177585a9dbae72709b2879e71bec24a1008481",
+  "rows": [
+    {
+      "case": "positive_add_plus_literal",
+      "status": 0,
+      "expected_intrinsic": true,
+      "actual_intrinsic": true,
+      "executable": true,
+      "ir_sha256": "9a2e3358bb5805a300f32bbf79d6709ede846ba66f72c5b1d1fadaf1170f6d7d"
+    },
+    {
+      "case": "positive_add_plus_slot",
+      "status": 0,
+      "expected_intrinsic": true,
+      "actual_intrinsic": true,
+      "executable": true,
+      "ir_sha256": "297d2f335d1f466eb61c17180505663fe37d982f37d134a0c934b832f59556cf"
+    },
+    {
+      "case": "positive_add_plus_copy",
+      "status": 0,
+      "expected_intrinsic": true,
+      "actual_intrinsic": true,
+      "executable": true,
+      "ir_sha256": "f03ce0538dcf5d4fe8238484a9bd72dadc2b931a599b39554f63bbc8a39b4c14"
+    },
+    {
+      "case": "positive_add_plus_two_private_slots",
+      "status": 0,
+      "expected_intrinsic": false,
+      "actual_intrinsic": false,
+      "executable": true,
+      "ir_sha256": "d8c82df4a6537ab2e829fb0d75dfd7b196b29955cc963b907c5348cd25d28327"
+    },
+    {
+      "case": "positive_add_minus_literal",
+      "status": 0,
+      "expected_intrinsic": true,
+      "actual_intrinsic": true,
+      "executable": true,
+      "ir_sha256": "13e29a4bae6f25f68e8560902a90d9fa959be50f90b32df2667ce83f9b49c48e"
+    },
+    {
+      "case": "positive_add_minus_slot",
+      "status": 0,
+      "expected_intrinsic": true,
+      "actual_intrinsic": true,
+      "executable": true,
+      "ir_sha256": "0d754b1cd0e856c5c62fad30729e8b33f058cb2a9dcf2d9cdf9cd7c52b2e77c9"
+    },
+    {
+      "case": "positive_add_minus_copy",
+      "status": 0,
+      "expected_intrinsic": true,
+      "actual_intrinsic": true,
+      "executable": true,
+      "ir_sha256": "b908fc27c747f3b5f668913bafe28c4646668dcc771c756fc8afe1fc6f4ae01e"
+    },
+    {
+      "case": "positive_add_minus_two_private_slots",
+      "status": 0,
+      "expected_intrinsic": false,
+      "actual_intrinsic": false,
+      "executable": true,
+      "ir_sha256": "8f8e38143cf6797012c1668d0974c8f2af4c8e20a5b66409d789d168af1d7843"
+    },
+    {
+      "case": "positive_sub_plus_literal",
+      "status": 0,
+      "expected_intrinsic": true,
+      "actual_intrinsic": true,
+      "executable": true,
+      "ir_sha256": "4a74572129a050c610c1036036c391dd3ccdad9b3acb900da7ed21fe9c0f5a61"
+    },
+    {
+      "case": "positive_sub_plus_slot",
+      "status": 0,
+      "expected_intrinsic": true,
+      "actual_intrinsic": true,
+      "executable": true,
+      "ir_sha256": "eb4a3681cd62efe79264b39e7d8651655b655cd3d56457c941ff8e2e82fc1aa9"
+    },
+    {
+      "case": "positive_sub_plus_copy",
+      "status": 0,
+      "expected_intrinsic": true,
+      "actual_intrinsic": true,
+      "executable": true,
+      "ir_sha256": "d5cd056337e2931e8a9b916d0acdc3a339b8a5fe1469297d6d11f290f254a623"
+    },
+    {
+      "case": "positive_sub_plus_two_private_slots",
+      "status": 0,
+      "expected_intrinsic": false,
+      "actual_intrinsic": false,
+      "executable": true,
+      "ir_sha256": "6928259f810d496a3563265a2cef36938292eee5848e71c2952b4e65c4f1c830"
+    },
+    {
+      "case": "positive_sub_minus_literal",
+      "status": 0,
+      "expected_intrinsic": true,
+      "actual_intrinsic": true,
+      "executable": true,
+      "ir_sha256": "6a1690c64fe254345f46802e28cc2e80756a489589b4bd05c6c44780e0b5104c"
+    },
+    {
+      "case": "positive_sub_minus_slot",
+      "status": 0,
+      "expected_intrinsic": true,
+      "actual_intrinsic": true,
+      "executable": true,
+      "ir_sha256": "c9050bfbb35a9db47cc8c0c7d5e338c98f0adcfd0b15bde0dfb616e59b2b5d8e"
+    },
+    {
+      "case": "positive_sub_minus_copy",
+      "status": 0,
+      "expected_intrinsic": true,
+      "actual_intrinsic": true,
+      "executable": true,
+      "ir_sha256": "9cf04381f9224cf4159e5bec6024423445fefc0432b2d9c96b51101f161b40ba"
+    },
+    {
+      "case": "positive_sub_minus_two_private_slots",
+      "status": 0,
+      "expected_intrinsic": false,
+      "actual_intrinsic": false,
+      "executable": true,
+      "ir_sha256": "fce1bb2fe4e4fab22a6b56ff64f42ef7c529712bcb41f76b4dcbc80a00c74761"
+    },
+    {
+      "case": "negative_escaped_call",
+      "status": 0,
+      "expected_intrinsic": false,
+      "actual_intrinsic": false,
+      "executable": true,
+      "ir_sha256": "ffaa2cc72236598281e65984a7101c1f423af827be4f452cead2fa22dc3114f5"
+    },
+    {
+      "case": "negative_nested_call_escape",
+      "status": 0,
+      "expected_intrinsic": false,
+      "actual_intrinsic": false,
+      "executable": true,
+      "ir_sha256": "4ed8d9d8e0d64fa61a2730160c80583b3d9d9b7cc506e185dcc2a3217a976724"
+    },
+    {
+      "case": "negative_copy_address_unused",
+      "status": 0,
+      "expected_intrinsic": false,
+      "actual_intrinsic": false,
+      "executable": true,
+      "ir_sha256": "a030ac6ec7b0171a36909b17bc7ed4dd9a7e864df108d9a18c9afe883e6777c1"
+    },
+    {
+      "case": "negative_derived_address_unused",
+      "status": 0,
+      "expected_intrinsic": false,
+      "actual_intrinsic": false,
+      "executable": true,
+      "ir_sha256": "1b926f76758c0370c1278d2812e0a0c7ac4b5bd6e84bba6cac3d46b2d169bb94"
+    },
+    {
+      "case": "negative_derived_alias_write",
+      "status": 0,
+      "expected_intrinsic": false,
+      "actual_intrinsic": false,
+      "executable": true,
+      "ir_sha256": "763420ffdd94b7361fdd52f6aeee10aed6cba536944e06325358ca9e12cc3aae"
+    },
+    {
+      "case": "negative_other_store_reset",
+      "status": 0,
+      "expected_intrinsic": false,
+      "actual_intrinsic": false,
+      "executable": true,
+      "ir_sha256": "8505b1dcf50f3e03f8f0c3dd4f66972fd0f98b4b9f18e692bd8753008e0a85b7"
+    },
+    {
+      "case": "negative_other_call_reset",
+      "status": 0,
+      "expected_intrinsic": false,
+      "actual_intrinsic": false,
+      "executable": true,
+      "ir_sha256": "1e1bb8cd4df61dfe1f14bca8d8d52cee5cd096f8f560a08ccf37903234350ce0"
+    },
+    {
+      "case": "negative_overwritten_slot",
+      "status": 0,
+      "expected_intrinsic": false,
+      "actual_intrinsic": false,
+      "executable": true,
+      "ir_sha256": "2694140fa6d151b82490898c47f397537b43feafcf6618b93a6190dc7d49c435"
+    },
+    {
+      "case": "negative_partial_word_store",
+      "status": 0,
+      "expected_intrinsic": false,
+      "actual_intrinsic": false,
+      "executable": true,
+      "ir_sha256": "967bc71d063d79e25f1ca83223b6a104764b19cb5e2879dae36b5daf4996e797"
+    },
+    {
+      "case": "negative_copied_bytes_slot",
+      "status": 0,
+      "expected_intrinsic": false,
+      "actual_intrinsic": false,
+      "executable": true,
+      "ir_sha256": "15af994c4f85e6e4d9941a917684a899233ec497a14436764254369e8e6f4d68"
+    },
+    {
+      "case": "negative_facts_cross_block",
+      "status": 0,
+      "expected_intrinsic": false,
+      "actual_intrinsic": false,
+      "executable": true,
+      "ir_sha256": "024c4a96f3900ccb09d219755e5683bbeb62d2da209e0517bc4be562eed9ace1"
+    },
+    {
+      "case": "negative_result_cross_block",
+      "status": 0,
+      "expected_intrinsic": false,
+      "actual_intrinsic": false,
+      "executable": true,
+      "ir_sha256": "e54d86a868f41802c994f58b2fe0303a21b9e08e7d8a68eed2a3a6c60be1e950"
+    },
+    {
+      "case": "negative_direct_literal_two",
+      "status": 0,
+      "expected_intrinsic": false,
+      "actual_intrinsic": false,
+      "executable": true,
+      "ir_sha256": "ae15790fce9c6c4a857af71e66dcd4658e3665010abcf0b87a8130ae50d3ebee"
+    },
+    {
+      "case": "negative_wrong_bound",
+      "status": 0,
+      "expected_intrinsic": false,
+      "actual_intrinsic": false,
+      "executable": true,
+      "ir_sha256": "a3bdff8c1bf7682e8e5817413c4a01f21fb2f46363e402b93b6b49d1676ef1f0"
+    },
+    {
+      "case": "negative_rebound_left",
+      "status": 0,
+      "expected_intrinsic": false,
+      "actual_intrinsic": false,
+      "executable": true,
+      "ir_sha256": "e938d18e4b7a8ba33257c0fd49a2843cb492f793b3afe1dcea50b2fd9c6577c6"
+    },
+    {
+      "case": "negative_commuted_sub_operands",
+      "status": 0,
+      "expected_intrinsic": false,
+      "actual_intrinsic": false,
+      "executable": true,
+      "ir_sha256": "c3d4c912939798309444c0e6d8eac17fab9391e44b7eb933e77194acab9d742f"
+    },
+    {
+      "case": "negative_redefined_slot",
+      "status": 0,
+      "expected_intrinsic": false,
+      "actual_intrinsic": false,
+      "executable": true,
+      "ir_sha256": "c4dee303574af01bcfc1afdcf3cfb56b5ffacc1b39aad390c6870bd287fe27a6"
+    },
+    {
+      "case": "negative_future_address_escape",
+      "status": 0,
+      "expected_intrinsic": true,
+      "actual_intrinsic": true,
+      "executable": true,
+      "ir_sha256": "c551f3d47804d4310c3a8f389af5dd55a7c828ce939360fbc6ed8ab89ef1c772"
+    },
+    {
+      "case": "admission_extent_four",
+      "status": 0,
+      "expected_intrinsic": false,
+      "actual_intrinsic": false,
+      "executable": false,
+      "ir_sha256": "55cf209ec9ff565decc2c21acb52397ee2b2bb1307469eaf93cf0222df547753"
+    },
+    {
+      "case": "admission_alignment_four",
+      "status": 0,
+      "expected_intrinsic": false,
+      "actual_intrinsic": false,
+      "executable": false,
+      "ir_sha256": "485518abd519cd5f2e56defe7c6ae45b4ff5a944d9411482399fd78a0109c91b"
+    },
+    {
+      "case": "admission_word_load_destination",
+      "status": 0,
+      "expected_intrinsic": false,
+      "actual_intrinsic": false,
+      "executable": false,
+      "ir_sha256": "6ba5c088e7127e625b1c646702eecfaa411bbd0cab8b39764e85bf428ec540d3"
+    },
+    {
+      "case": "admission_word_arithmetic",
+      "status": 0,
+      "expected_intrinsic": false,
+      "actual_intrinsic": false,
+      "executable": false,
+      "ir_sha256": "ef153b69109d1b774e6037f45efb05f258e0b68ac30c037c21d4d2744b710dee"
+    },
+    {
+      "case": "admission_uninitialized_slot",
+      "status": 0,
+      "expected_intrinsic": false,
+      "actual_intrinsic": false,
+      "executable": false,
+      "ir_sha256": "bd1831635ae6974cfc0f547a3454eed3ef11d4046f71d9589b51e8b53946e5a6"
+    },
+    {
+      "case": "admission_indirect_slot_callee",
+      "status": 0,
+      "expected_intrinsic": false,
+      "actual_intrinsic": false,
+      "executable": false,
+      "ir_sha256": "d9ba7c985d49d5349f88c88b73871a8927f5ec59bea5564e1c8702796eef837d"
+    },
+    {
+      "case": "admission_pointer_operand_marked",
+      "status": 0,
+      "expected_intrinsic": false,
+      "actual_intrinsic": false,
+      "executable": false,
+      "ir_sha256": "b5f24a95e075d62bb5725017e29cb4e18c251007f38e7332ba96d01649b1c65a"
+    },
+    {
+      "case": "historical_escape_add_plus",
+      "status": 0,
+      "expected_intrinsic": true,
+      "actual_intrinsic": true,
+      "executable": true,
+      "ir_sha256": "376f2cbd1161617ad5b5cce98efd3849c952db818426a0e9f0f0f6164b95f07c"
+    },
+    {
+      "case": "historical_escape_add_minus",
+      "status": 0,
+      "expected_intrinsic": true,
+      "actual_intrinsic": true,
+      "executable": true,
+      "ir_sha256": "8ff7aa7b64093882ce4a0c07dc53bd7d5826e26d256f110c3dcd85d2893bf256"
+    },
+    {
+      "case": "historical_escape_sub_plus",
+      "status": 0,
+      "expected_intrinsic": true,
+      "actual_intrinsic": true,
+      "executable": true,
+      "ir_sha256": "517afd84c546eef4aefd7440325eb0f66d402286ffd05bbce98cb9c2b80b4c1d"
+    },
+    {
+      "case": "historical_escape_sub_minus",
+      "status": 0,
+      "expected_intrinsic": true,
+      "actual_intrinsic": true,
+      "executable": true,
+      "ir_sha256": "df98a9143a48738147ee3d703e870b15595d0567a3eba529a6010c7e24cc8447"
+    },
+    {
+      "case": "fresh_store_after_call",
+      "status": 0,
+      "expected_intrinsic": true,
+      "actual_intrinsic": true,
+      "executable": true,
+      "ir_sha256": "98886bd7969fa71e0648fbab61c279029afd94f43eab6d3582fc738a83d865d8"
+    },
+    {
+      "case": "loaded_value_before_call",
+      "status": 0,
+      "expected_intrinsic": true,
+      "actual_intrinsic": true,
+      "executable": true,
+      "ir_sha256": "c7d3d803472b081cbbef9140ad688b71213ff64b0de74e1b145e1bce5ecf5ec7"
+    },
+    {
+      "case": "historical_alias_write",
+      "status": 0,
+      "expected_intrinsic": false,
+      "actual_intrinsic": false,
+      "executable": true,
+      "ir_sha256": "179583d212f8945154b5d5b83228c6a605cefa91c3037cd0cc8d811216feb0d5"
+    },
+    {
+      "case": "historical_alias_blit",
+      "status": 0,
+      "expected_intrinsic": false,
+      "actual_intrinsic": false,
+      "executable": true,
+      "ir_sha256": "8c546f11952e5db7c83977127ce26d10b44379fbd2a4960ac9466fe4af216bbb"
+    },
+    {
+      "case": "historical_alias_load",
+      "status": 0,
+      "expected_intrinsic": false,
+      "actual_intrinsic": false,
+      "executable": true,
+      "ir_sha256": "52959c65c09a4a488206df449b110fd9071d4e48cb87f962dfa7192b08bb8d26"
+    },
+    {
+      "case": "admission_external_symbol_store",
+      "status": 0,
+      "expected_intrinsic": false,
+      "actual_intrinsic": false,
+      "executable": false,
+      "ir_sha256": "d3533f5fa6140fdf4a912c9a1be3329147908fa4c3770b8b96e48c689df36411"
+    },
+    {
+      "case": "admission_external_symbol_extent",
+      "status": 0,
+      "expected_intrinsic": false,
+      "actual_intrinsic": false,
+      "executable": false,
+      "ir_sha256": "44854c92dbef600228b15071ff2a7dbc3a98bef7de6234b72c001eae0bc65526"
+    },
+    {
+      "case": "admission_marked_prefix_operand",
+      "status": 0,
+      "expected_intrinsic": false,
+      "actual_intrinsic": false,
+      "executable": false,
+      "ir_sha256": "df105ba96063ecf21044bbf0be869d270b3ddf534776353fdc8f27601c38ed9c"
+    },
+    {
+      "case": "admission_marked_state_operand",
+      "status": 0,
+      "expected_intrinsic": false,
+      "actual_intrinsic": false,
+      "executable": false,
+      "ir_sha256": "390f1fbfed32cb69e0cd1545c99de4318d0e0aca4a2dc000b6c66bb94d758f06"
+    }
+  ],
+  "commands": [
+    {
+      "command": [
+        "zig",
+        "cc",
+        "-O3",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-llvm-constant-review-20260930/.tmp/reaching-store-final-review/candidate/positive_add_plus_literal.ll",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-llvm-constant-review-20260930/.tmp/reaching-store-final-review/candidate/positive_add_plus_slot.ll",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-llvm-constant-review-20260930/.tmp/reaching-store-final-review/candidate/positive_add_plus_copy.ll",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-llvm-constant-review-20260930/.tmp/reaching-store-final-review/candidate/positive_add_plus_two_private_slots.ll",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-llvm-constant-review-20260930/.tmp/reaching-store-final-review/candidate/positive_add_minus_literal.ll",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-llvm-constant-review-20260930/.tmp/reaching-store-final-review/candidate/positive_add_minus_slot.ll",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-llvm-constant-review-20260930/.tmp/reaching-store-final-review/candidate/positive_add_minus_copy.ll",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-llvm-constant-review-20260930/.tmp/reaching-store-final-review/candidate/positive_add_minus_two_private_slots.ll",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-llvm-constant-review-20260930/.tmp/reaching-store-final-review/candidate/positive_sub_plus_literal.ll",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-llvm-constant-review-20260930/.tmp/reaching-store-final-review/candidate/positive_sub_plus_slot.ll",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-llvm-constant-review-20260930/.tmp/reaching-store-final-review/candidate/positive_sub_plus_copy.ll",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-llvm-constant-review-20260930/.tmp/reaching-store-final-review/candidate/positive_sub_plus_two_private_slots.ll",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-llvm-constant-review-20260930/.tmp/reaching-store-final-review/candidate/positive_sub_minus_literal.ll",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-llvm-constant-review-20260930/.tmp/reaching-store-final-review/candidate/positive_sub_minus_slot.ll",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-llvm-constant-review-20260930/.tmp/reaching-store-final-review/candidate/positive_sub_minus_copy.ll",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-llvm-constant-review-20260930/.tmp/reaching-store-final-review/candidate/positive_sub_minus_two_private_slots.ll",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-llvm-constant-review-20260930/.tmp/reaching-store-final-review/candidate/negative_escaped_call.ll",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-llvm-constant-review-20260930/.tmp/reaching-store-final-review/candidate/negative_nested_call_escape.ll",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-llvm-constant-review-20260930/.tmp/reaching-store-final-review/candidate/negative_copy_address_unused.ll",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-llvm-constant-review-20260930/.tmp/reaching-store-final-review/candidate/negative_derived_address_unused.ll",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-llvm-constant-review-20260930/.tmp/reaching-store-final-review/candidate/negative_derived_alias_write.ll",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-llvm-constant-review-20260930/.tmp/reaching-store-final-review/candidate/negative_other_store_reset.ll",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-llvm-constant-review-20260930/.tmp/reaching-store-final-review/candidate/negative_other_call_reset.ll",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-llvm-constant-review-20260930/.tmp/reaching-store-final-review/candidate/negative_overwritten_slot.ll",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-llvm-constant-review-20260930/.tmp/reaching-store-final-review/candidate/negative_partial_word_store.ll",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-llvm-constant-review-20260930/.tmp/reaching-store-final-review/candidate/negative_copied_bytes_slot.ll",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-llvm-constant-review-20260930/.tmp/reaching-store-final-review/candidate/negative_facts_cross_block.ll",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-llvm-constant-review-20260930/.tmp/reaching-store-final-review/candidate/negative_result_cross_block.ll",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-llvm-constant-review-20260930/.tmp/reaching-store-final-review/candidate/negative_direct_literal_two.ll",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-llvm-constant-review-20260930/.tmp/reaching-store-final-review/candidate/negative_wrong_bound.ll",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-llvm-constant-review-20260930/.tmp/reaching-store-final-review/candidate/negative_rebound_left.ll",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-llvm-constant-review-20260930/.tmp/reaching-store-final-review/candidate/negative_commuted_sub_operands.ll",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-llvm-constant-review-20260930/.tmp/reaching-store-final-review/candidate/negative_redefined_slot.ll",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-llvm-constant-review-20260930/.tmp/reaching-store-final-review/candidate/negative_future_address_escape.ll",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-llvm-constant-review-20260930/.tmp/reaching-store-final-review/candidate/historical_escape_add_plus.ll",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-llvm-constant-review-20260930/.tmp/reaching-store-final-review/candidate/historical_escape_add_minus.ll",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-llvm-constant-review-20260930/.tmp/reaching-store-final-review/candidate/historical_escape_sub_plus.ll",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-llvm-constant-review-20260930/.tmp/reaching-store-final-review/candidate/historical_escape_sub_minus.ll",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-llvm-constant-review-20260930/.tmp/reaching-store-final-review/candidate/fresh_store_after_call.ll",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-llvm-constant-review-20260930/.tmp/reaching-store-final-review/candidate/loaded_value_before_call.ll",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-llvm-constant-review-20260930/.tmp/reaching-store-final-review/candidate/historical_alias_write.ll",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-llvm-constant-review-20260930/.tmp/reaching-store-final-review/candidate/historical_alias_blit.ll",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-llvm-constant-review-20260930/.tmp/reaching-store-final-review/candidate/historical_alias_load.ll",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-llvm-constant-review-20260930/.tmp/reaching-store-final-review/oracle.c",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-llvm-constant-review-20260930/.tmp/reaching-store-final-review/candidate/oracle"
+      ],
+      "status": 0
+    },
+    {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-llvm-constant-review-20260930/.tmp/reaching-store-final-review/candidate/oracle"
+      ],
+      "status": 0
+    }
+  ],
+  "executable_functions": 43,
+  "assertions": 215602,
+  "passed": true,
+  "admission": "Entire serial side runner admitted through build-slot; no parallel compiler/guest processes."
+}
