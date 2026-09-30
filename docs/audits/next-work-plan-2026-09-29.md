@@ -39,9 +39,10 @@ checkpoints remain in their historical receipts. Details, exact counts,
 performance rows, known findings and Guardian feedback are in
 [codex-next-phase-b-closeout-2026-09-30.md](codex-next-phase-b-closeout-2026-09-30.md).
 
-**Phase B is ready for the required explicit user approval to fast-forward main.**
-It remains outside main at approved `80dd5190`. Phase C remains open and has not
-started; the EDA port waits for completed compiler work to land.
+**Phase B landed with explicit user approval** ("Yeah merge it in") on
+2026-09-30. Main fast-forwarded from `80dd5190` to `b6aed6cf`; its tested compiler
+source is `a3e451d7`. The original dirty checkout was verified unchanged.
+Phase C is now authorized to start on the completed compiler work.
 
 Lane receipts are in [python-text-closeout-2026-09-29.md](python-text-closeout-2026-09-29.md),
 [wp-b4-tooling-2026-09-29.md](wp-b4-tooling-2026-09-29.md),
@@ -51,9 +52,8 @@ The final module-lane receipts are in
 [codex-next-modules-closeout-2026-09-30.md](codex-next-modules-closeout-2026-09-30.md);
 the QBE phi fix is in [wp-b3-qbe-phi-2026-09-30.md](wp-b3-qbe-phi-2026-09-30.md).
 EDA preparation has a verified test inventory and guide/checker reconciliation.
-The port has not started: it waits for completed compiler work and the required
-explicit approval to land Phase B. Sections below retain the original handoff
-state and requirements.
+Phase C begins after the approved Phase B landing. Sections below retain the
+original handoff state and requirements.
 
 ## 1. Read first
 
