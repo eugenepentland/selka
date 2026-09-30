@@ -1,0 +1,130 @@
+{
+  "source": "f4b6647de06e556823bc960a27fdfcd58193b3d0",
+  "protocol": "Independent pinned Zig cc build from all committed QBE translation units; no compiler/cache reuse; UBSan unsigned C oracles, no timing claim",
+  "commands": [
+    {
+      "name": "qbe-source-build",
+      "argv": [
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "cc",
+        "-std=c99",
+        "-O3",
+        "-fno-sanitize=undefined",
+        "-I",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/vendor/qbe",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/vendor/qbe/main.c",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/vendor/qbe/util.c",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/vendor/qbe/parse.c",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/vendor/qbe/abi.c",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/vendor/qbe/cfg.c",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/vendor/qbe/mem.c",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/vendor/qbe/ssa.c",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/vendor/qbe/alias.c",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/vendor/qbe/load.c",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/vendor/qbe/copy.c",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/vendor/qbe/fold.c",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/vendor/qbe/gvn.c",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/vendor/qbe/gcm.c",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/vendor/qbe/simpl.c",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/vendor/qbe/ifopt.c",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/vendor/qbe/live.c",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/vendor/qbe/spill.c",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/vendor/qbe/rega.c",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/vendor/qbe/emit.c",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/vendor/qbe/amd64/targ.c",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/vendor/qbe/amd64/sysv.c",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/vendor/qbe/amd64/isel.c",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/vendor/qbe/amd64/emit.c",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/vendor/qbe/amd64/winabi.c",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/vendor/qbe/arm64/targ.c",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/vendor/qbe/arm64/abi.c",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/vendor/qbe/arm64/isel.c",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/vendor/qbe/arm64/emit.c",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/vendor/qbe/rv64/targ.c",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/vendor/qbe/rv64/abi.c",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/vendor/qbe/rv64/isel.c",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/vendor/qbe/rv64/emit.c",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/.tmp/zero-review/qbe"
+      ],
+      "status": 0
+    },
+    {
+      "name": "production-select",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/.tmp/zero-review/qbe",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/.tmp/zero-review/production.s",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/tests/fixtures/qbe-zero-branch/probe.ssa"
+      ],
+      "status": 0
+    },
+    {
+      "name": "production-link",
+      "argv": [
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "cc",
+        "-std=c11",
+        "-O2",
+        "-UNDEBUG",
+        "-fsanitize=undefined",
+        "-fno-sanitize-recover=all",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/tests/fixtures/qbe-zero-branch/probe.c",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/.tmp/zero-review/production.s",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/.tmp/zero-review/production"
+      ],
+      "status": 0
+    },
+    {
+      "name": "production-execute",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/.tmp/zero-review/production"
+      ],
+      "status": 0
+    },
+    {
+      "name": "independent-select",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/.tmp/zero-review/qbe",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/.tmp/zero-review/independent.s",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/.tmp/zero-review/fixtures.ssa"
+      ],
+      "status": 0
+    },
+    {
+      "name": "independent-link",
+      "argv": [
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "cc",
+        "-std=c11",
+        "-O2",
+        "-UNDEBUG",
+        "-fsanitize=undefined",
+        "-fno-sanitize-recover=all",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/.tmp/zero-review/oracle.c",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/.tmp/zero-review/independent.s",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/.tmp/zero-review/independent"
+      ],
+      "status": 0
+    },
+    {
+      "name": "independent-execute",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930/.tmp/zero-review/independent"
+      ],
+      "status": 0
+    }
+  ],
+  "sha256": {
+    "vendor/qbe/amd64/isel.c": "3a6bb4a9a98886b599549d710988e2ec576a459f6750a71f57263ac2ee49b350",
+    "vendor/qbe/copy.c": "f1b6ebcb4802e2aa32239c905ae47aea0c6d1335cedcbb2a0e3aad8d18f4e06f",
+    ".tmp/zero-review/fixtures.ssa": "33f581e0bf2d8bbb4cad59a719212286114a07b3b80899be651641763c585532",
+    ".tmp/zero-review/oracle.c": "570498d60f75ad0348326e695447044e22b181ce6ab51a4eb8d1b18723fda72d",
+    ".tmp/zero-review/qbe": "09555380637b437c28a5ba04eaf36722c4d574d25438ce74e6bf4ffb170d2db7",
+    ".tmp/zero-review/production.s": "b07c2d9ce99a646624d014bf548dfbac13b7c250fbe9f4982d3ca7e792bcc2fa",
+    ".tmp/zero-review/independent.s": "fd25b9d40a899c02f479fd44d8d8553e042b7e6cff4878af4e71607bf57c767e"
+  }
+}
