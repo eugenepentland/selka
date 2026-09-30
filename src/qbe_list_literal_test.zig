@@ -113,7 +113,10 @@ test "LIST-LITERAL-PAYLOAD-1 thousand immortal text and byte elements emit bound
 
 // spec-case: LIST-LITERAL-PAYLOAD-1
 test "LIST-LITERAL-PAYLOAD-1 indexed immortal children keep samples after parent detachment" {
-    const value = "\"" ++ ("é😀" ** 80) ++ "\"";
+    var text: [480]u8 = undefined;
+    for (0..80) |index| @memcpy(text[index * 6 ..][0..6], "é😀");
+    const value = try std.fmt.allocPrint(t.allocator, "\"{s}\"", .{text});
+    defer t.allocator.free(value);
     const source = try literalSource(t.allocator, "def main() -> int:\n    items: list[str] = [", value, 64,
         \\]
         \\    saved = items
