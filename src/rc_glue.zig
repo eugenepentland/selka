@@ -17,6 +17,7 @@ const native = @import("native_types.zig");
 const descriptors = @import("native_descriptors.zig");
 const shapes = @import("rc_shape.zig");
 const semantics = @import("value_semantics.zig");
+const acquisition = @import("rc_glue_acquisition.zig");
 
 /// Layout, allocation or output failure while generating glue.
 pub const Error = native.Error;
@@ -117,14 +118,19 @@ const prelude =
     \\    MYL_RC_STAT(heap, MYL_RC_STAT_HOLD_ACQUIRE);
     \\}
     \\/* A loan never pins a finalizing body; checked builds prove it per edge. */
-    \\MYL_RCG_INLINE void myl_rcg_loan_acquire(myl_native_heap *heap, void *p) {
+    \\MYL_RCG_INLINE void myl_rcg_loan_check(myl_native_heap *heap, void *p) {
     \\#if MYL_RCG_CHECKED
     \\    if (p) {
     \\        const myl_native_object *header = (const myl_native_object *)p - 1;
     \\        const myl_rc_descriptor *descriptor = myl_rc_descriptor_find(heap, header->element);
     \\        myl_rc_invariant((header->mark & MYL_NATIVE_OBJECT_IMMORTAL) || (descriptor && !descriptor->finalize));
     \\    }
+    \\#else
+    \\    (void)heap; (void)p;
     \\#endif
+    \\}
+    \\MYL_RCG_INLINE void myl_rcg_loan_acquire(myl_native_heap *heap, void *p) {
+    \\    myl_rcg_loan_check(heap, p);
     \\    myl_rcg_hold_acquire(heap, p);
     \\}
     \\/* Returns 1 when the edge was the last token and its death is now queued. */
@@ -254,13 +260,16 @@ const Generator = struct {
     fn functions(self: *Generator, ty: typed.Type, name: []const u8, element: bool) Error!void {
         const size = (try self.catalog.layout(ty)).size;
         try self.print("int {s}_rcg_loan(myl_native_heap *heap, void *dst, const void *src) {{\n", .{name});
-        try self.capacity(ty, size, .loan_capacity);
-        try self.print("if (!capacity) return myl_rc_native_loan(heap, &{s}, dst, src);\n", .{name});
-        try self.print("MYL_RCG_CHECK(!myl_rcg_overlap(dst, src, {d}));\n", .{size});
-        // Every refusal precedes acquisition. Reading the admitted source
-        // before copying keeps its tag and edge reads together for C codegen.
-        try self.edges(ty, "src", .loan);
-        try self.print("memcpy(dst, src, {d});\n", .{size});
+        const loan: acquisition.Value = .{ .ty = ty, .name = name, .size = size, .loan = true };
+        if (!try acquisition.write(self.allocator, self.catalog, self.facts, loan, self.writer)) {
+            try self.capacity(ty, size, .loan_capacity);
+            try self.print("if (!capacity) return myl_rc_native_loan(heap, &{s}, dst, src);\n", .{name});
+            try self.print("MYL_RCG_CHECK(!myl_rcg_overlap(dst, src, {d}));\n", .{size});
+            // Every refusal precedes acquisition. Reading the admitted source
+            // before copying keeps its tag and edge reads together for C codegen.
+            try self.edges(ty, "src", .loan);
+            try self.print("memcpy(dst, src, {d});\n", .{size});
+        }
         try self.print(success_return, .{});
         inline for (.{ Action.unloan, Action.drop }) |action| {
             try self.print("void {s}_rcg_{s}(myl_native_heap *heap, void *value) {{\nint died = 0;\n", .{ name, @tagName(action) });
@@ -269,13 +278,17 @@ const Generator = struct {
         }
         // Physical retention ignores pins; only an arena edge needs the
         // runtime's region check, before any count changes.
-        try self.print("int {s}_rcg_retain(myl_native_heap *heap, void *dst, const void *src, unsigned region) {{\nuintptr_t any = 0;\n", .{name});
-        try self.edges(ty, "src", .scan);
-        try self.capacity(ty, size, .retain_capacity);
-        try self.print("if (!capacity || (any & MYL_NATIVE_OBJECT_ARENA)) return myl_rc_native_retain(heap, &{s}, dst, src, region);\n", .{name});
-        try self.print("MYL_RCG_CHECK(dst != src && region <= heap->region_depth);\n", .{});
-        try self.edges(ty, "src", .retain);
-        try self.print("memmove(dst, src, {d});\n", .{size});
+        try self.print("int {s}_rcg_retain(myl_native_heap *heap, void *dst, const void *src, unsigned region) {{\n", .{name});
+        const retained: acquisition.Value = .{ .ty = ty, .name = name, .size = size, .loan = false };
+        if (!try acquisition.write(self.allocator, self.catalog, self.facts, retained, self.writer)) {
+            try self.print("uintptr_t any = 0;\n", .{});
+            try self.edges(ty, "src", .scan);
+            try self.capacity(ty, size, .retain_capacity);
+            try self.print("if (!capacity || (any & MYL_NATIVE_OBJECT_ARENA)) return myl_rc_native_retain(heap, &{s}, dst, src, region);\n", .{name});
+            try self.print("MYL_RCG_CHECK(dst != src && region <= heap->region_depth);\n", .{});
+            try self.edges(ty, "src", .retain);
+            try self.print("memmove(dst, src, {d});\n", .{size});
+        }
         try self.print(success_return, .{});
         // A pinned source needs the snapshot, an arena source the region
         // check and an overlapping move the staged copy: all runtime work.
