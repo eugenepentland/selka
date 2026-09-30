@@ -1,0 +1,30 @@
+{
+  "source": "5535e5a3f0b67e23d0fc9f92f594d7b3feb12a3f",
+  "acceptance": "rejected14actualtestfailures; no nonzero step accepted",
+  "failures": {
+    "pin_negative_cases": 11,
+    "glue_branch_width": 1,
+    "ABI5_saturation_emission": 1,
+    "CLI_installed_host_receipt_runtime": 1
+  },
+  "compiler_sha256": "92af6924d4d80b40b55438b3531243ad4e66b5952e00aaeecd01220de8b6fb24",
+  "qbe_sha256": "90e368d62b838c41cd2ba4bc68ec5d33843ebc661014d2ad40c835dded900d95",
+  "files": {
+    "source.txt": {
+      "sha256": "817e5cfabce89e73b360b4aa26fd45f02c5b829b84f60b1e42d15c7f97060f7d",
+      "bytes": 41
+    },
+    "scope.json": {
+      "sha256": "94fe015ea439d3054510af5d3b56b8b0cc1688bf67f3e2b81da67546d7f58190",
+      "bytes": 756
+    },
+    "test.status": {
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "bytes": 2
+    },
+    "test.log": {
+      "sha256": "3de415a6fa205ce61b76f89e21b7a6a153cc38e88e6cd01645c0275d50da2709",
+      "bytes": 402310
+    }
+  }
+}

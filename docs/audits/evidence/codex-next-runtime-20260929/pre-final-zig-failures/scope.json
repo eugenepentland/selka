@@ -1,0 +1,10 @@
+{
+  "source": "5535e5a3f0b67e23d0fc9f92f594d7b3feb12a3f",
+  "installed_compiler_sha256": "92af6924d4d80b40b55438b3531243ad4e66b5952e00aaeecd01220de8b6fb24",
+  "candidate_compiler_sha256": "92af6924d4d80b40b55438b3531243ad4e66b5952e00aaeecd01220de8b6fb24",
+  "scope": "Pre-final integration check only; current installed compiler and QBE match frozen5535candidate by SHA. Full unfiltered test graph includes installed-artifact driver prerequisites. Final canonical27-step gate remains required.",
+  "exit_status": 1,
+  "summary": "102/115steps,12failed;2786/31282testentriespassed,28482skipped,14failed",
+  "log_sha256": "3de415a6fa205ce61b76f89e21b7a6a153cc38e88e6cd01645c0275d50da2709",
+  "acceptance": "rejected; fourteen failures assigned for triage"
+}
