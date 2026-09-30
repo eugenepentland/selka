@@ -1,0 +1,136 @@
+{
+  "artifacts": {
+    "archive": "artifacts.tar.gz",
+    "archive_bytes": 3521823,
+    "archive_sha256": "6b4a6cc11a603c0672dc69fc80945e837d97ad184721f88650cbf147b47b238f",
+    "manifest": "manifest.json",
+    "manifest_sha256": "fd2db0334c3cce9a31bcd2377d793e9578685b4994f84461f2f61ad8faa17fb5",
+    "members": 106,
+    "verified_members": 106
+  },
+  "base_git": "5535e5a3f0b67e23d0fc9f92f594d7b3feb12a3f",
+  "build": {
+    "includes": [
+      "install compiler-only",
+      "test-units named filter",
+      "test-agent-tools",
+      "fmt-check",
+      "test-inputs-coverage"
+    ],
+    "successful_steps": 28,
+    "total_steps": 28
+  },
+  "compiler": {
+    "freeze_and_final_sha256_equal": true,
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-runtime-registered-release-20260930/.tmp/registered-release/compiler/bin/mylang",
+    "sha256": "0d02371c065d586a350ce1504dba44be1c2c51b17755c70c3629130571b80570"
+  },
+  "date": "2026-09-30",
+  "guardian": {
+    "blocking_findings": 0,
+    "command": "guardian-check all . --full",
+    "feedback": "3a466a498125575d8aedc4e27853b3f26a5b1bcc",
+    "passed_checks": 88,
+    "waivers_or_baseline_edits": false,
+    "whole_tree": true
+  },
+  "guests": {
+    "llvm": {
+      "binary_sha256": "633069a464d9333aec815c1b344af90390d2546ad99483f41ae74b32bddb79f1",
+      "command": [
+        ".tmp/registered-release/compiler/bin/mylang",
+        "build",
+        "bench/parity/suite/text_ops.my",
+        "-o",
+        ".tmp/registered-release/text_ops.llvm",
+        "--release"
+      ],
+      "exit": 0,
+      "output": "10000066287 599994 20000\n4066669 3666669 22228\n"
+    },
+    "qbe": {
+      "binary_sha256": "0171869d7f844d4629db3d18a819a23c5c153319ad709e4b85d3adc4c10c0e96",
+      "command": [
+        ".tmp/registered-release/compiler/bin/mylang",
+        "build",
+        "bench/parity/suite/text_ops.my",
+        "-o",
+        ".tmp/registered-release/text_ops.qbe",
+        "--mode",
+        "ReleaseFast",
+        "--backend",
+        "qbe"
+      ],
+      "exit": 0,
+      "output": "10000066287 599994 20000\n4066669 3666669 22228\n"
+    }
+  },
+  "native_ubsan": {
+    "collections": 47,
+    "contract": 25,
+    "exit": 0,
+    "image": 15,
+    "image_budget_failure_points": 6,
+    "image_host_allocation_failure_points": 6,
+    "registered_release": 13
+  },
+  "qbe": {
+    "freeze_and_final_sha256_equal": true,
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-runtime-registered-release-20260930/.tmp/registered-release/compiler/bin/qbe",
+    "sha256": "93ec0b70f28762cbe5557d672c758fb621342399d4d59318b5b8c436a54ac0e4"
+  },
+  "scope_limits": [
+    "No new broad compiler/backend/guest-mode gate: integrator owns combined final gate.",
+    "No hardware timing or whole-corpus acceptance by this task.",
+    "Original failed developer command and extraction assumptions retained separately from green receipts."
+  ],
+  "source_and_code_shape": {
+    "c_o3_production_calls": [
+      "control: myl_rc_edges_release",
+      "candidate: myl_rc_registered_edges_release"
+    ],
+    "exact_old_walker_minus_lookup": true,
+    "hardware_timing": false,
+    "only_trusted_collection_caller_changed": true,
+    "public_heap_depth_lookup_retained": true
+  },
+  "source_git": "c13be022aa4a5260d15b002c377de15c5abb4480",
+  "source_sha256": {
+    "SPEC.md": "a914d8d4753026535818e8eace87e61d60c09fa82781e66d68eaae6776f9f6b7",
+    "build.zig": "950b7d819238a7af1247f888582e4c173557582cb0a3e25004b83218b858be42",
+    "build_test_inputs.zig": "b947d2f1b8851262315bad96c913ecfdf0562409069c0d075bedbfad40ca27e3",
+    "scripts/test_native_memory.py": "05437a763448f1b77cbd3978bc5354cc3b2aa38a27ef876fded6a3e30cf2026f",
+    "src/native_collections.c": "737d7793f90f0ce5fa63b852386a312452f51527bc21dda65de90967bba2c4ce",
+    "src/native_rc_collections_test.zig": "8ddcb33a1361138317645f1968f0a26b90a347a7b75178c2fdb78a229b3922c8",
+    "src/native_rc_internal.h": "2fb5175373436165e519d3f399a2b5f80a05c36407ccec13c3192d1ab228f081",
+    "src/native_rc_walk.c": "46f1d46e3fc94b521e225597ee7b1d27dd416b67286811245f5f2ea13ebe5f57",
+    "tests/native_rc_registered_release_test.c": "d83e6a9928882baff1922056a8af76ae1acf8aac9f805c835cbd1438493b4c92"
+  },
+  "tools": {
+    "native_cc": "cc (Ubuntu 15.2.0-16ubuntu1) 15.2.0",
+    "zig": "0.17.0-dev.1683+5ceec001b"
+  },
+  "variation": {
+    "baseline_git": "5535e5a3f0b67e23d0fc9f92f594d7b3feb12a3f",
+    "binary_sha256": "ca260ff687d44693b7eca8b2064e02f9e7eef83bf7a62064ddb409ec33fefe9b",
+    "complete_2m_4m_mechanism_proved": false,
+    "hardware_timing": false,
+    "initial_trials_zero_misses": 6,
+    "later_trials_one_miss": 1,
+    "later_trials_zero_misses": 5,
+    "low_profile_public_release_entries": 399999,
+    "occupied_miss_cycle_instructions": 10,
+    "predeclared_trials": 12,
+    "same_outputs": true,
+    "sampled_entries_per_trial": 100
+  },
+  "zig_primary": {
+    "executes_native_cases": 13,
+    "failed": 0,
+    "filter": "RC registered collection release preserves source admission",
+    "named_matches": 1,
+    "passed": 13,
+    "skipped": 0,
+    "unconditional_unnamed": 12
+  }
+}
