@@ -1,0 +1,13 @@
+{
+  "archive": "receipts.tar.gz",
+  "sha256": "e8c6312c1efe16671660086d893933d40cad18c2dff3b2ab9e1146748b47b32e",
+  "bytes": 4931508,
+  "members": 64,
+  "verified_members": 63,
+  "manifest_sha256": "501acd84fc27a66150c9b897940054a0791ca1a0ad32544d71209e63fea94b8a",
+  "base": "40bd74a0c52939c5f92d56f3a447269592077bd3",
+  "compiler_sha256": "873eb7fdfbecd7a904403b1e0c66dbc159881267312992db380b8abdc9c3c4b4",
+  "native_text_sha256": "3cff19ae3ee358d7918f0455f04354d7d3aaf089543f73c53497f6b474524839",
+  "guardian": "whole-tree88/88",
+  "scope": "Focused correctness/code-shape; final broad gate and performance remain integrator-owned."
+}
