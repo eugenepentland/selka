@@ -39,10 +39,18 @@ Lox measurements meet the dev 1.3x cap but still have sixteen rows above the
 backend build passes 139/139 tests. Independent review rejected an arithmetic
 zero-branch prototype that lost flags across an external-address load; its
 corrected selector passes 140 production cases, 3,754 independent assertions
-and the exact failed case. Release-count review and composition remain pending.
-A preliminary composed non-Lox comparison matches all 60 outputs and meets
-the 1.3x cap, but four rows exceed the 1% regression limit. B3 performance
-corrections and the final combined ABI5 corpus/oracle/gate remain open. All
+and the exact failed case. The independent release review passes 342 emitted
+cases in both candidate and control, 22 native cases and three alias cases.
+The independent publication review passes 774 emitted cases each for list,
+dictionary and control, 40 native cases, six alias cases and both CFG proofs.
+Composed source `3226f1d6` matches all 258 dev/smoke/full outputs but remains
+rejected: 13 dev, 14 full and 19 smoke rows exceed 1%, with three new smoke
+cap misses. Profiling identifies three million out-of-line readiness calls as
+the principal allocation-churn cost. Its attribute-only inlining continuation
+passes focused native checks and is undergoing combined measurement. The
+preliminary ABI5 module matrix passes all 29 corpus programs and four runtime
+fixture modes; its raw evidence is archived. B3 performance corrections and
+the final combined ABI5 corpus/oracle/gate remain open. All
 Phase B changes remain outside main; its approved tip is `80dd5190`.
 
 Lane receipts are in [python-text-closeout-2026-09-29.md](python-text-closeout-2026-09-29.md),
