@@ -8,7 +8,7 @@
    "matched": true,
    "compiled": 18,
    "modules": 18,
-   "seconds": 2.655
+   "seconds": 2.716
   },
   {
    "edit": "private-add",
@@ -16,7 +16,7 @@
    "matched": true,
    "compiled": 16,
    "modules": 18,
-   "seconds": 0.176
+   "seconds": 0.201
   },
   {
    "edit": "private-body",
@@ -24,7 +24,7 @@
    "matched": true,
    "compiled": 16,
    "modules": 18,
-   "seconds": 0.172
+   "seconds": 0.187
   },
   {
    "edit": "private-mid-add",
@@ -32,7 +32,7 @@
    "matched": true,
    "compiled": 16,
    "modules": 18,
-   "seconds": 0.169
+   "seconds": 0.182
   },
   {
    "edit": "private-mid-body",
@@ -40,7 +40,7 @@
    "matched": true,
    "compiled": 16,
    "modules": 18,
-   "seconds": 0.196
+   "seconds": 0.183
   },
   {
    "edit": "private-mid-lines",
@@ -48,7 +48,7 @@
    "matched": true,
    "compiled": 16,
    "modules": 18,
-   "seconds": 0.174
+   "seconds": 0.181
   },
   {
    "edit": "private-helper-add-def",
@@ -56,7 +56,7 @@
    "matched": true,
    "compiled": 16,
    "modules": 18,
-   "seconds": 0.187
+   "seconds": 0.203
   },
   {
    "edit": "private-helper-body",
@@ -64,7 +64,7 @@
    "matched": true,
    "compiled": 16,
    "modules": 18,
-   "seconds": 0.176
+   "seconds": 0.235
   },
   {
    "edit": "public-body",
@@ -72,7 +72,7 @@
    "matched": true,
    "compiled": 16,
    "modules": 18,
-   "seconds": 0.195
+   "seconds": 0.174
   },
   {
    "edit": "public-inlined",
@@ -80,7 +80,7 @@
    "matched": true,
    "compiled": 16,
    "modules": 18,
-   "seconds": 0.298
+   "seconds": 0.322
   },
   {
    "edit": "signature",
@@ -88,7 +88,7 @@
    "matched": true,
    "compiled": 13,
    "modules": 18,
-   "seconds": 0.178
+   "seconds": 0.187
   },
   {
    "edit": "public-add",
@@ -96,7 +96,7 @@
    "matched": true,
    "compiled": 16,
    "modules": 18,
-   "seconds": 0.187
+   "seconds": 0.178
   },
   {
    "edit": "public-remove",
@@ -104,7 +104,7 @@
    "matched": true,
    "compiled": 16,
    "modules": 18,
-   "seconds": 0.171
+   "seconds": 0.178
   },
   {
    "edit": "record-field",
@@ -112,7 +112,7 @@
    "matched": true,
    "compiled": 13,
    "modules": 18,
-   "seconds": 2.309
+   "seconds": 2.279
   },
   {
    "edit": "constant",
@@ -120,7 +120,7 @@
    "matched": true,
    "compiled": 13,
    "modules": 18,
-   "seconds": 0.323
+   "seconds": 0.3
   },
   {
    "edit": "rc-facts",
@@ -128,7 +128,23 @@
    "matched": true,
    "compiled": 13,
    "modules": 18,
-   "seconds": 0.173
+   "seconds": 0.209
+  },
+  {
+   "edit": "table-private-reached",
+   "kind": "private helper its callers reach (table.find_entry)",
+   "matched": true,
+   "compiled": 13,
+   "modules": 18,
+   "seconds": 0.176
+  },
+  {
+   "edit": "private-starts-allocating",
+   "kind": "a reached private helper starts allocating (table.is_tombstone)",
+   "matched": true,
+   "compiled": 13,
+   "modules": 18,
+   "seconds": 0.251
   },
   {
    "edit": "value-add",
@@ -136,7 +152,7 @@
    "matched": true,
    "compiled": 16,
    "modules": 18,
-   "seconds": 0.177
+   "seconds": 1.593
   },
   {
    "edit": "value-use-import",
@@ -144,7 +160,7 @@
    "matched": true,
    "compiled": 1,
    "modules": 18,
-   "seconds": 1.606
+   "seconds": 1.599
   },
   {
    "edit": "value-body",
@@ -152,7 +168,7 @@
    "matched": true,
    "compiled": 16,
    "modules": 18,
-   "seconds": 0.193
+   "seconds": 0.171
   },
   {
    "edit": "noop",
@@ -160,7 +176,7 @@
    "matched": true,
    "compiled": 0,
    "modules": 18,
-   "seconds": 0.017
+   "seconds": 0.015
   }
  ],
  "ok": true
