@@ -89,3 +89,6 @@ Compiler branch: `codex/next-eda-compiler-20260930` in this worktree.
 Reviewers can assess the concrete committed result without changing shared main
 or the original dirty checkout. The handoff plan's explicit-main-approval rule
 continues to apply to the new Phase C changes.
+
+The proposed follow-up work is in
+[eda-friction-repair-plan-2026-09-30.md](eda-friction-repair-plan-2026-09-30.md).
