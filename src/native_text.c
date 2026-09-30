@@ -487,7 +487,7 @@ static int shares(const myl_native_heap *heap, const myl_native_text *owner, siz
 /* One view of `count` octets of `input`'s owner from octet `offset` on. `input`
  * is rooted across the allocation because it is what keeps the owner alive
  * until the view records it. */
-static myl_native_text *view(myl_native_heap *heap, myl_native_text *input, size_t offset, size_t count, size_t scalars, int plain) {
+static inline __attribute__((always_inline)) myl_native_text *view(myl_native_heap *heap, myl_native_text *input, size_t offset, size_t count, size_t scalars, int plain) {
     if (myl_rc_enabled(heap)) {
         myl_rc_status status=myl_rc_module_register(heap,&rc_text_view_module);
         if (status!=MYL_RC_OK) { myl_rc_record_failure(heap,status); return NULL; }
