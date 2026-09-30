@@ -1,0 +1,138 @@
+{
+  "approved-dev.json": {
+    "bytes": 11969,
+    "sha256": "42579ee700bdd8600fd9ff5c28ba16950a28e3be80cfa71758f9ef23548ac772"
+  },
+  "approved-full.json": {
+    "bytes": 12002,
+    "sha256": "29bdae3a7a7f53972d219da5885ebfc02b6b23939267766577fd6f7da59cb32d"
+  },
+  "approved-smoke.json": {
+    "bytes": 11896,
+    "sha256": "3c4feb7471b08c2053b72b4c7130b04437997d061711de24dfa23dc48b508d42"
+  },
+  "bound-receipt.json": {
+    "bytes": 680,
+    "sha256": "91819335822765743aa501d54c6cd8d18720f129cb24327d02cb4c370f9cd164"
+  },
+  "bound.log": {
+    "bytes": 680,
+    "sha256": "91819335822765743aa501d54c6cd8d18720f129cb24327d02cb4c370f9cd164"
+  },
+  "final-performance-loop.py": {
+    "bytes": 2632,
+    "sha256": "c7a0c21cab61eff9b4944fad53d6e4379d9ce8cec0b90a8253b28917036fe9d5"
+  },
+  "final/manifest.json": {
+    "bytes": 776,
+    "sha256": "15128477b9ca4de5ff762c1205497beee529623cec75a69321985a45e58c1cdb"
+  },
+  "final/phase-b-final-module-matrix.sh": {
+    "bytes": 1327,
+    "sha256": "c96335cfb722951ced6b3cade9de811ca7c83d0206bef45475d22a215adbb8c4"
+  },
+  "final/phase-b-full-measure.sh": {
+    "bytes": 3171,
+    "sha256": "9c755ac6565148db523078d5a7a0189b7041534e4f0149594bf349f705c4f3b3"
+  },
+  "final/phase-b-gate-adaptation.json": {
+    "bytes": 1137,
+    "sha256": "61afb604ae9092935c4d68ab5ab3477fcb3e383ccba29299e869bf6e174ad5cc"
+  },
+  "final/phase-b-gate.sh": {
+    "bytes": 4408,
+    "sha256": "ecc2eceb4101d6075f7a08e19c6e6ad8d5496ab6a73ceede8bb59df80163d301"
+  },
+  "final/phase-b-supplement.sh": {
+    "bytes": 1798,
+    "sha256": "46f639f9e64273b8fa82dedffb3895c72032d749bfd18d3961466f233a46b694"
+  },
+  "final/prepare-phase-b.py": {
+    "bytes": 2603,
+    "sha256": "d18d2d3a2a757d5c1665d8df56e83eb052c8f365f1c3dfe61853922b4e44ef74"
+  },
+  "final/run-phase-b-pinned-control.sh": {
+    "bytes": 2583,
+    "sha256": "f5c6f684d157395dc4db4e181763bdb624226ab78f6ab00578822dcc4fe394c5"
+  },
+  "final/verify-phase-b.py": {
+    "bytes": 14031,
+    "sha256": "f94277d12526e8761afb2eee0321d83d96d5d3cbc8a6cfe43d57c6d470ad5bfe"
+  },
+  "fresh-dev.json": {
+    "bytes": 11969,
+    "sha256": "f9658f1f5e5f57b42e59a92f8cd3c31ac144ea6fc85b844def0fbe94eaa0d6f0"
+  },
+  "fresh-full.json": {
+    "bytes": 12000,
+    "sha256": "ccdbd62a2a3a620c6832e7724498754bfd317f5fe76f8912e1e51504e3dcab03"
+  },
+  "fresh-smoke.json": {
+    "bytes": 11905,
+    "sha256": "975f2649d3fbc48a5a94b5306b36ff042ff4673aa126d19bb27fe628ba34c17b"
+  },
+  "initial-performance-loop.py": {
+    "bytes": 2516,
+    "sha256": "24c290126d607c6f842d79bbddfa17763cef6973fd9661266ea3a250583463b3"
+  },
+  "initial/manifest.json": {
+    "bytes": 714,
+    "sha256": "c300a8dbd8971277bacbae25b72336cede4b2052efc7e7f0fc88bac675885c28"
+  },
+  "initial/phase-b-final-module-matrix.sh": {
+    "bytes": 1327,
+    "sha256": "c96335cfb722951ced6b3cade9de811ca7c83d0206bef45475d22a215adbb8c4"
+  },
+  "initial/phase-b-gate-adaptation.json": {
+    "bytes": 1137,
+    "sha256": "61afb604ae9092935c4d68ab5ab3477fcb3e383ccba29299e869bf6e174ad5cc"
+  },
+  "initial/phase-b-gate.sh": {
+    "bytes": 4408,
+    "sha256": "ecc2eceb4101d6075f7a08e19c6e6ad8d5496ab6a73ceede8bb59df80163d301"
+  },
+  "initial/phase-b-supplement.sh": {
+    "bytes": 1798,
+    "sha256": "46f639f9e64273b8fa82dedffb3895c72032d749bfd18d3961466f233a46b694"
+  },
+  "initial/prepare-phase-b.py": {
+    "bytes": 2603,
+    "sha256": "d18d2d3a2a757d5c1665d8df56e83eb052c8f365f1c3dfe61853922b4e44ef74"
+  },
+  "initial/run-phase-b-pinned-control.sh": {
+    "bytes": 2583,
+    "sha256": "f5c6f684d157395dc4db4e181763bdb624226ab78f6ab00578822dcc4fe394c5"
+  },
+  "initial/verify-phase-b.py": {
+    "bytes": 12124,
+    "sha256": "0004b65388ec51201bd6434299345593595a2a6033b48f376bcd86fbb8296e57"
+  },
+  "original-dev.json": {
+    "bytes": 11969,
+    "sha256": "fc6df539c50e10f553284851311281f7effd02d96d8f2031d7d0fd975ffd762e"
+  },
+  "original-full.json": {
+    "bytes": 11997,
+    "sha256": "a049de8b3cccb7735df974ac5fae93ae8679c911cf2b0efa0064359e758290eb"
+  },
+  "original-smoke.json": {
+    "bytes": 11894,
+    "sha256": "6dfbeb4553cd6cb2555bb8d2a56c71878d7d26f027a0bbb2c9f5f9aacd5ffd5c"
+  },
+  "replay-bound.py": {
+    "bytes": 2823,
+    "sha256": "eaebcef09e34dbe388d30f2fd07d236a61f80ddb880d1330867f889757c36070"
+  },
+  "replay-unbound.py": {
+    "bytes": 2552,
+    "sha256": "edf6e2c32d5b4eda808bffb246b5d4dd086f3253d5e30613d44cecdd0a035037"
+  },
+  "unbound-receipt.json": {
+    "bytes": 1264,
+    "sha256": "29c20aca1e56240ddaf0e567c499668ffe61ffea26a54f4645426d4c4cefc075"
+  },
+  "unbound.log": {
+    "bytes": 1264,
+    "sha256": "29c20aca1e56240ddaf0e567c499668ffe61ffea26a54f4645426d4c4cefc075"
+  }
+}
