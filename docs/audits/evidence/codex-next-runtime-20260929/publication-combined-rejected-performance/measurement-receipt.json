@@ -1,0 +1,27 @@
+{
+  "identity": {
+    "source": "3226f1d66b08734824e5c799c25a9c7ed4a69438",
+    "compiler_sha256": "4715e1a5cab79a76a77e1ff15391c0b8f3146287f6bfa34f68ba23062fd4773b",
+    "qbe_sha256": "6ccecf27cda0378f59d7dc60cee74a6558a7d25a0c88fb877b5755136f0500de"
+  },
+  "acceptance": "rejected",
+  "coverage": {
+    "dev": 86,
+    "smoke": 86,
+    "full": 86
+  },
+  "measurement_cpus": "2,3,10,11",
+  "observations_per_row": 1,
+  "sha256": {
+    ".tmp/phase-b-publish-combined/identity.json": "85ac61cea12133fe02e54f75a643f35e626abf886cd3fdefb591160635ab17c5",
+    ".tmp/phase-b-publish-combined/install.log": "97933b2b4226286d385c5cd3ef9d5f13561ec572c576967c6d66adcc804cf3cb",
+    ".tmp/phase-b-publish-combined/corpus-build.log": "adf039098f12ed3a005c989e7b6fd5db92c4eda94733a37642bd0b7971a0420b",
+    ".tmp/phase-b-publish-combined/measure-dev.log": "d32a7300228bcf70f7e87eb897c8c411eebb7a16d40cdb9436d8387e27c43369",
+    ".tmp-rc-quick/results-phase-b-publish-combined-dev.json": "f0d2044d1dd8626ccfed432c8f0dddcf82170b8d6b883ec987cfab8b41476d6c",
+    ".tmp/phase-b-publish-combined/measure-smoke.log": "724335c4bb0c8b8ac7ba97b4967afdc951162c663060c21a1ad4ce8212bb204c",
+    ".tmp-rc-quick/results-phase-b-publish-combined-smoke.json": "db92698d22d698e3028e7ee8b8a975ab76c69fb5080eb18d9a397298b39011ed",
+    ".tmp/phase-b-publish-combined/measure-full.log": "d44975ada0d1cce204c24a8f9ccde1f2e75be9608e850c3fde16f404241fa987",
+    ".tmp-rc-quick/results-phase-b-publish-combined-full.json": "10d286e88514b12b2bedeed9bd886cf42f34cb94c766876d92788b5457960152",
+    ".tmp/phase-b-publish-combined/comparison.json": "68405a0bfb1cd79d6f991f83726ef1fe05c0c7426a8c1e12dd99aa7c239f5367"
+  }
+}

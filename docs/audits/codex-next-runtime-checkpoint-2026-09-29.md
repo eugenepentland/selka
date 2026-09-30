@@ -443,3 +443,50 @@ meet 1.3x. Four exceed 1% against A5: LLVM raytrace +1.601970%, QBE text_ops
 QBE/LLVM geomeans are 1.045887x / 1.043466x. No performance acceptance is
 claimed. Frozen compiler, 56 guest binaries, logs and full comparison are in
 the integrator's `.tmp/phase-b-preliminary/` and `.tmp-rc-quick/` directories.
+
+
+## Corrected release and publication reviews
+
+The corrected selector and release continuation are composed at `7f5068a5`.
+The independent release review passes 342 actual emitted cases in both candidate
+and control, 22 checked/unchecked native cases and three repeated-alias cases.
+Its 48-member raw archive is verified under
+`evidence/codex-next-runtime-20260929/release-count-review/`. This is scoped
+correctness evidence, with no independent LLVM, broad-gate or timing claim.
+The earlier composed ABI5 module check at `e789a32d` passes the strict 29-program,
+43-row byte oracle and four runtime fixture modes. Its 44-member archive is in
+`preliminary-abi5-module-review/`; the final source must still repeat that matrix.
+
+The frozen `7f5068a5` comparison matches all 258 dev/smoke/full outputs but is
+rejected: 18 dev, 19 full and 24 smoke rows exceed 1%, and three smoke rows
+introduce cap misses. All raw rows, unchanged GC identity and baseline controls
+are preserved in `zero-combined-rejected-performance/`.
+
+Private ordinary COPY publication at `ed48ecc8` reuses its admitted owner count.
+The 64-bit overflow refusal precedes acquisition, and all later reachable work
+consists of infallible stores and tests of loaded values. Independent candidate
+list, dictionary and exact composed control each pass 774 emitted cases; native
+checked/unchecked probes pass 20 each, aliases pass six, and both production CFGs
+pass dominance and post-acquisition checks. The 89-member verified archive,
+receipt and boundary report are under `publication-review/`.
+
+Composed source `3226f1d6` builds all 58 corpus binaries and matches all 258 outputs.
+Publication reduces the failing performance rows, but the checkpoint is rejected:
+13 dev, 14 full and 19 smoke rows exceed 1%; the same three smoke cap misses remain.
+Dev/full meet every 1.3x cap. Per-row approved and fresh A5 comparisons, compiler
+and binary hashes, measurements and logs are in
+`publication-combined-rejected-performance/`. These observations use the reserved
+CPUs 2, 3, 10, 11 with one observation per row; averages do not waive failures.
+
+Read-only allocation-churn profiling explains the primary LLVM cost. The frozen
+A5 and `7f5068a5` symbol-preserving counterparts have identical allocated ELF
+sections to their original binaries. Hardware adds 64,998,196 instructions and
+Callgrind adds 64,996,984. Three million newly out-of-line list-readiness calls
+contribute 60,000,016 self instructions; scope routines execute zero calls.
+The precise LLVM inlining trigger and the smaller retirement alias explanation
+remain unproved. The 80-member verified attribution archive and report are in
+`allocation-churn-attribution/`. The minimal `79fd7e25` continuation preserves
+the exact helper body and callable ABI while requiring LTO inlining. Its focused
+native checks pass; independent ABI review and root quantitative acceptance are
+pending. Final combined performance, module matrix and integration gate remain
+required before the explicit approval to land Phase B.
