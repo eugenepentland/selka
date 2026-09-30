@@ -36,6 +36,10 @@ pub fn read(a: std.mem.Allocator, ids: *const Ids, comptime T: type, data: Data)
     var reader: codec.Reader = .init(a, data.bytes);
     const value = try reader.readMapped(T, References, .{ .ids = ids });
     if (!reader.done() or !std.mem.eql(u8, value.name, data.name)) return error.InvalidEncoding;
+    if (T == bytecode.Function) {
+        const id = ids.functions.get(data.name) orelse return error.InvalidEncoding;
+        if (value.id != id) return error.InvalidEncoding;
+    }
     return value;
 }
 
