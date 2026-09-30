@@ -44,7 +44,8 @@ does not account for that. On the Lox port the stale module is `driver` (reused,
   `original/` is the Lox port, `edits/001-edit-record-field-add.patch` adds `fz_f4: bool = False`
   to `ast.ThisExpr`. `sh lox-gc-minimal/replay.sh COMPILER WORKDIR --gc-runtime` prints
   `original: MATCH ...` then `001-...: MISMATCH (incremental exit 2, whole exit 0)`. The RC build
-  of the same edit succeeds on the Lox port (compiled 6 of 18).
+  of the same edit succeeds on the Lox port (compiled 6 of 18; the reused modules' stored descriptors
+  equal a fresh build's there, so RC on Lox is simply not affected; the 3-module reproducer fails under RC).
 - `lox-gc-seed{1,2,3}-full/`: the complete edit sequences the fuzzer ran before it hit the bug
   (steps 19, 18 and 15 respectively), `original` links to the minimal reproducer's copy of the
   Lox port. The bug does not need the earlier steps; the minimizer removed all of them.

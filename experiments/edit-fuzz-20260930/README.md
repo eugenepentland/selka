@@ -63,6 +63,7 @@ found only in code.
 | `toggle-visibility` | `public` <-> `private` for a tool-added symbol |
 | `comment`, `whitespace`, `move-function` | pure text edits; move a function within its file |
 | `noop` | rebuild an unchanged tree (must recompile nothing) |
+| `add-required-param`, `remove-public-fn`, `rename-public-def`, `change-return-type`, `drop-record-field`, `break-type` | interface edits that break dependents unless nothing uses the symbol (about 10% of steps, nearly all fail): a caller nobody edited must still report the error in the incremental build, identically to the whole-program build |
 
 Function picks prefer small public functions 40% of the time (inline candidates). Only
 modules reachable from `main.my` are edited. Names this tool introduces are `fz_*`/`FZ_*`.
@@ -95,4 +96,4 @@ only, and writes `minimal/` beside the work directory.
 executable once a `start-alloc` edit exists. `edit_fuzz.py --compiler ./sabotage.sh ...` must
 find a mismatch, save a reproducer that `replay.sh` reproduces, and `--minimize` shrinks
 it to the one `start-alloc` patch. That is how the mismatch path was checked; the 4f97aa7a
-compiler itself produced no mismatch (see `results-4f97aa7a.md`).
+compiler itself produced no byte mismatch, but one incremental-only failure (see `results-4f97aa7a.md` and `finding-invalid-native-manifest/`).

@@ -2,11 +2,35 @@
 """Aggregate edit_fuzz.py --json summaries into markdown tables.
 
     aggregate.py RESULT.json... > table.md
+    aggregate.py --combine OUT.json NAME=RESULT.json,RESULT.json ...   # trimmed JSON of several groups
 """
 import json
 import re
 import sys
 from collections import Counter, defaultdict
+
+
+KEEP_ROW = ("step", "kind", "file", "desc", "compiled", "modules", "seconds", "verdict", "engaged", "diagnostics_same")
+
+
+def compact(run):
+    """A run summary without the bulky per-row error text."""
+    out = {k: v for k, v in run.items() if k != "rows"}
+    out["rows"] = [{k: r[k] for k in KEEP_ROW if k in r} | ({"error": r["error"][:200]} if r.get("error") else {})
+                   for r in run["rows"]]
+    return out
+
+
+def combine(out_path, groups):
+    result = {}
+    for group in groups:
+        name, _, files = group.partition("=")
+        result[name] = []
+        for path in files.split(","):
+            with open(path) as handle:
+                result[name].append(compact(json.load(handle)))
+    with open(out_path, "w") as handle:
+        json.dump(result, handle, indent=1)
 
 
 def stats(values):
@@ -66,7 +90,8 @@ def main(paths):
         for x in r["rows"]:
             if x.get("verdict") == "both-failed":
                 m = re.search(r"error\[(\w+)\]", x.get("error") or "")
-                reasons[(x["kind"], m.group(1) if m else (x.get("error") or "?")[:60])] += 1
+                kind = "(several edits in one step)" if "+" in x["kind"] else x["kind"]
+                reasons[(kind, m.group(1) if m else (x.get("error") or "?")[:60])] += 1
     print("| kind | diagnostic | count |")
     print("|---|---|---|")
     for (k, code), n in reasons.most_common():
@@ -88,4 +113,7 @@ def main(paths):
 
 
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    if sys.argv[1] == "--combine":
+        combine(sys.argv[2], sys.argv[3:])
+    else:
+        main(sys.argv[1:])
