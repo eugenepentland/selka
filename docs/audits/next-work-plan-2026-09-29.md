@@ -61,7 +61,16 @@ cap miss, but remains rejected: four dev, four full and fourteen smoke rows
 exceed 1%. Dev/full failures are LLVM raytrace, a new LLVM float-loop
 regression, QBE properties and QBE string equality. Their raw evidence is
 archived; focused performance corrections and the final combined
-corpus/oracle/gate remain open. All Phase B changes remain outside main;
+corpus/oracle/gate remain open. The subsequent QBE subtraction-address fix,
+cold runtime failure hint and LLVM induction-result preference compose at
+`5535e5a3`. All 258 outputs match; all dev rows and all dev/full RC-to-GC caps
+pass, resolving the four prior failures. The checkpoint remains rejected on
+one full LLVM text-operations row (+1.167106%). The same fixed program also
+shows 2–4 million-instruction variation across samples, reproduced in the
+unchanged A5 control. Its cause and a correction with sufficient margin remain
+open; samples are not selected to bypass the limit. All original rows and a new
+explicitly CPU-pinned A5 replay are archived. Final combined acceptance and
+the full corpus/module/runtime gates still remain open. All Phase B changes remain outside main;
 its approved tip is `80dd5190`.
 
 Lane receipts are in [python-text-closeout-2026-09-29.md](python-text-closeout-2026-09-29.md),

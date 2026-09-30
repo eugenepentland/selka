@@ -1,0 +1,28 @@
+{
+  "identity": {
+    "source": "5535e5a3f0b67e23d0fc9f92f594d7b3feb12a3f",
+    "compiler_sha256": "92af6924d4d80b40b55438b3531243ad4e66b5952e00aaeecd01220de8b6fb24",
+    "qbe_sha256": "90e368d62b838c41cd2ba4bc68ec5d33843ebc661014d2ad40c835dded900d95",
+    "scope": "Combined58binary/258output performance check; finalfullgate remains required"
+  },
+  "acceptance": "rejected",
+  "coverage": {
+    "dev": 86,
+    "smoke": 86,
+    "full": 86
+  },
+  "measurement_cpus": "2,3,10,11",
+  "observations_per_row": 1,
+  "sha256": {
+    ".tmp/phase-b-final-corrections-combined/identity.json": "021f358b0733ed58116de7d0418fe17593b1dbb9f4232f6bcef2179410f6d42b",
+    ".tmp/phase-b-final-corrections-combined/install.log": "caf265ba9380b22a3b5248a4267df8cdf5ecf6fa3ada29002064520a62cb2417",
+    ".tmp/phase-b-final-corrections-combined/corpus-build.log": "d938950d817a4404516adb3a3989c2cc2aac4ccc6fb035f7ff4763b93ecf24b6",
+    ".tmp/phase-b-final-corrections-combined/measure-dev.log": "3658835088b5b38f3db80625fa3b29d5981a3d6d197a436276b9ce028c46e5c7",
+    ".tmp-rc-quick/results-phase-b-final-corrections-combined-dev.json": "45a90692183766d7251b957ba8997a0f8494d2bcf971adfc36be31198ebb7714",
+    ".tmp/phase-b-final-corrections-combined/measure-smoke.log": "e7c6beb6ae53aba032f760dabd1a4a3b3212c539dca7c3778872b87d10643363",
+    ".tmp-rc-quick/results-phase-b-final-corrections-combined-smoke.json": "d1d0edda5ad7239f8df8f81e793bf399e0cba40cd7535f885518e4d29a866efb",
+    ".tmp/phase-b-final-corrections-combined/measure-full.log": "7107bf42d33d6919b08f6fc70ea480160861f4fb7e6c475aaffd44776dc02241",
+    ".tmp-rc-quick/results-phase-b-final-corrections-combined-full.json": "50aa23ad32012216c32d1c14d79b63437ebc7b6b187c16746d50ee8ca5e90dc3",
+    ".tmp/phase-b-final-corrections-combined/comparison.json": "ef31095006a35cc0f10e6e26ad0136d0e94852d5b43c4e759ae3cb56a9e0be34"
+  }
+}
