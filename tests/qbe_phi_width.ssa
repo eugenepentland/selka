@@ -1,0 +1,166 @@
+# spec: QBE-PHI-WIDTH-1
+# Every source phi is well typed; high pressure makes width-losing reuse observable.
+export function l $long_phi(l %x,l %values,l %out) {
+@start
+ %a0 =l add %values,0
+ %p0 =l loadl %a0
+ %a1 =l add %values,8
+ %p1 =l loadl %a1
+ %a2 =l add %values,16
+ %p2 =l loadl %a2
+ %a3 =l add %values,24
+ %p3 =l loadl %a3
+ %a4 =l add %values,32
+ %p4 =l loadl %a4
+ %a5 =l add %values,40
+ %p5 =l loadl %a5
+ %a6 =l add %values,48
+ %p6 =l loadl %a6
+ %a7 =l add %values,56
+ %p7 =l loadl %a7
+ %a8 =l add %values,64
+ %p8 =l loadl %a8
+ %a9 =l add %values,72
+ %p9 =l loadl %a9
+ %a10 =l add %values,80
+ %p10 =l loadl %a10
+ %a11 =l add %values,88
+ %p11 =l loadl %a11
+ %a12 =l add %values,96
+ %p12 =l loadl %a12
+ %a13 =l add %values,104
+ %p13 =l loadl %a13
+ %cond =w cnel %x,0
+ jnz %cond,@yes,@no
+@yes
+ storew 17,%out
+ jmp @join
+@no
+ storew 23,%out
+ jmp @join
+@join
+ %truth =l phi @yes 1,@no 0
+ %s0 =l add %truth,%p0
+ %s1 =l add %s0,%p1
+ %s2 =l add %s1,%p2
+ %s3 =l add %s2,%p3
+ %s4 =l add %s3,%p4
+ %s5 =l add %s4,%p5
+ %s6 =l add %s5,%p6
+ %s7 =l add %s6,%p7
+ %s8 =l add %s7,%p8
+ %s9 =l add %s8,%p9
+ %s10 =l add %s9,%p10
+ %s11 =l add %s10,%p11
+ %s12 =l add %s11,%p12
+ %s13 =l add %s12,%p13
+ ret %s13
+}
+
+export function w $word_phi(l %x,l %values,l %out) {
+@start
+ %a0 =l add %values,0
+ %p0 =w loaduw %a0
+ %a1 =l add %values,8
+ %p1 =w loaduw %a1
+ %a2 =l add %values,16
+ %p2 =w loaduw %a2
+ %a3 =l add %values,24
+ %p3 =w loaduw %a3
+ %a4 =l add %values,32
+ %p4 =w loaduw %a4
+ %a5 =l add %values,40
+ %p5 =w loaduw %a5
+ %a6 =l add %values,48
+ %p6 =w loaduw %a6
+ %a7 =l add %values,56
+ %p7 =w loaduw %a7
+ %a8 =l add %values,64
+ %p8 =w loaduw %a8
+ %a9 =l add %values,72
+ %p9 =w loaduw %a9
+ %a10 =l add %values,80
+ %p10 =w loaduw %a10
+ %a11 =l add %values,88
+ %p11 =w loaduw %a11
+ %a12 =l add %values,96
+ %p12 =w loaduw %a12
+ %a13 =l add %values,104
+ %p13 =w loaduw %a13
+ %cond =w cnel %x,0
+ jnz %cond,@yes,@no
+@yes
+ storew 17,%out
+ jmp @join
+@no
+ storew 23,%out
+ jmp @join
+@join
+ %truth =w phi @yes 1,@no 0
+ %s0 =w add %truth,%p0
+ %s1 =w add %s0,%p1
+ %s2 =w add %s1,%p2
+ %s3 =w add %s2,%p3
+ %s4 =w add %s3,%p4
+ %s5 =w add %s4,%p5
+ %s6 =w add %s5,%p6
+ %s7 =w add %s6,%p7
+ %s8 =w add %s7,%p8
+ %s9 =w add %s8,%p9
+ %s10 =w add %s9,%p10
+ %s11 =w add %s10,%p11
+ %s12 =w add %s11,%p12
+ %s13 =w add %s12,%p13
+ ret %s13
+}
+
+export function l $cross_phi(w %choice,l %out) {
+@start
+ jnz %choice,@yes,@no
+@yes
+ storew 17,%out
+ jmp @join
+@no
+ storew 23,%out
+ jmp @join
+@join
+ %first =w phi @yes -1,@no 0
+ %second =l phi @yes -1,@no 0
+ %at =l add %out,8
+ storew %first,%at
+ ret %second
+}
+
+export function l $same_long_phi(w %choice,l %out) {
+@start
+ jnz %choice,@yes,@no
+@yes
+ storew 17,%out
+ jmp @join
+@no
+ storew 23,%out
+ jmp @join
+@join
+ %first =l phi @yes -1,@no 0
+ %second =l phi @yes -1,@no 0
+ %at =l add %out,8
+ storel %first,%at
+ ret %second
+}
+
+export function w $same_word_phi(w %choice,l %out) {
+@start
+ jnz %choice,@yes,@no
+@yes
+ storew 17,%out
+ jmp @join
+@no
+ storew 23,%out
+ jmp @join
+@join
+ %first =w phi @yes -1,@no 0
+ %second =w phi @yes -1,@no 0
+ %at =l add %out,8
+ storew %first,%at
+ ret %second
+}
