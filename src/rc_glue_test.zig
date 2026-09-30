@@ -109,19 +109,31 @@ test "RC-GLUE-1 counted inline types get straight-line glue that compiles in bot
     try t.expect(try compiles(data, &.{"-DMYL_NATIVE_RC_COUNTING=1"}));
 }
 
-/// Whether every inline glue branch tests a word computed at full width:
-/// QBE's jnz reads only the low word of a pointer or a high mark bit.
-fn fullWidthBranches(il: []const u8) bool {
+/// Every inline glue branch consumes a w value, including native w mode bits.
+/// Long pointers/counts/marks still need an explicit full-width predicate.
+fn fullWidthBranches(il: []const u8) !bool {
+    var widths: std.StringHashMapUnmanaged(u8) = .empty;
+    defer widths.deinit(t.allocator);
     var lines = std.mem.splitScalar(u8, il, '\n');
-    var previous: []const u8 = "";
-    while (lines.next()) |line| {
-        const inline_branch = std.mem.startsWith(u8, line, " jnz ") and std.mem.indexOf(u8, line, ", @rcg") != null;
-        const guarded = std.mem.indexOf(u8, previous, " =w cnel ") != null or std.mem.indexOf(u8, previous, " =w ceql ") != null or std.mem.indexOf(u8, previous, " =w ceqw ") != null or
-            std.mem.indexOf(u8, previous, " =w cultl ") != null or std.mem.indexOf(u8, previous, " =w cultw ") != null;
-        if (inline_branch and !guarded) return false;
-        previous = line;
+    while (lines.next()) |raw| {
+        const line = std.mem.trim(u8, raw, " ");
+        if (std.mem.indexOf(u8, line, " =")) |equal| {
+            if (equal + 2 < line.len) try widths.put(t.allocator, line[0..equal], line[equal + 2]);
+        }
+        if (!std.mem.startsWith(u8, line, "jnz ") or std.mem.indexOf(u8, line, ", @rcg") == null) continue;
+        const comma = std.mem.indexOfScalar(u8, line, ',') orelse return false;
+        if ((widths.get(line[4..comma]) orelse 0) != 'w') return false;
     }
     return true;
+}
+
+// spec-case: RC-GLUE-1
+test "RC-GLUE-1 branch oracle accepts word flags and refuses raw long high bits" {
+    try t.expect(try fullWidthBranches(" %flag =w and %mode, 4\n jnz %flag, @rcgyes, @rcgno\n"));
+    const long = " %pointer =l copy 4294967296\n";
+    try t.expect(!try fullWidthBranches(long ++ " jnz %pointer, @rcgyes, @rcgno\n"));
+    try t.expect(try fullWidthBranches(long ++ " %flag =w cnel %pointer, 0\n jnz %flag, @rcgyes, @rcgno\n"));
+    try t.expect(!try fullWidthBranches(" jnz %undefined, @rcgyes, @rcgno\n"));
 }
 
 // spec-case: RC-GLUE-1
@@ -135,7 +147,7 @@ test "RC-GLUE-1 loans, retains and drops call glue instead of the runtime walker
     try t.expect(!contains(il, "call $myl_rc_native_drop"));
     // One-word values keep their fast path inline: no glue call on success.
     try t.expect(contains(il, "@rcginc"));
-    try t.expect(fullWidthBranches(il));
+    try t.expect(try fullWidthBranches(il));
     try t.expect(contains(il, "_rcg_"));
 }
 

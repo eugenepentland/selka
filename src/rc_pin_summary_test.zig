@@ -1,7 +1,7 @@
 //! COW-PIN-ELIDE-1: a `mut` list argument is pinned across the call unless the
 //! callee's whole-program summary proves it never shares the parameter. Each
 //! test lowers a small program under the RC runtime and counts the caller's
-//! scope calls: none when the pin is elided, one begin, pin and end when not.
+//! scope operations: none when the pin is elided, one begin, pin and end when not.
 const std = @import("std");
 const compiler = @import("compiler.zig");
 const runtime_mode = @import("runtime_mode.zig");
@@ -18,7 +18,7 @@ fn occurrences(text: []const u8, needle: []const u8) usize {
     return std.mem.count(u8, text, needle);
 }
 
-/// The scope calls `caller`'s IL makes when `source` is lowered under RC.
+/// Inline journal operations retain exactly one native refusal path each.
 fn scopes(source: []const u8, caller: []const u8) !Scopes {
     const saved = runtime_mode.get();
     defer runtime_mode.set(saved);
@@ -29,10 +29,22 @@ fn scopes(source: []const u8, caller: []const u8) !Scopes {
     defer t.allocator.free(manifest);
     var parsed = try std.json.parseFromSlice(Emitted, t.allocator, manifest, .{ .allocate = .alloc_always, .ignore_unknown_fields = true });
     defer parsed.deinit();
-    for (parsed.value.functions) |function| if (std.mem.eql(u8, function.name, caller)) return .{
-        .begin = occurrences(function.il, "call $myl_qbe_rc_scope_begin"),
-        .pin = occurrences(function.il, "call $myl_qbe_rc_scope_pin"),
-        .end = occurrences(function.il, "call $myl_qbe_rc_scope_end"),
+    for (parsed.value.functions) |function| if (std.mem.eql(u8, function.name, caller)) {
+        const il = function.il;
+        const result: Scopes = .{
+            .begin = occurrences(il, "# RC-SCOPE-IL-1 begin"),
+            .pin = occurrences(il, "# RC-SCOPE-IL-1 pin"),
+            .end = occurrences(il, "# RC-SCOPE-IL-1 end"),
+        };
+        try t.expectEqual(@as(usize, 0), occurrences(il, "call $myl_qbe_rc_scope_begin"));
+        try t.expectEqual(result.pin, occurrences(il, "call $myl_qbe_rc_scope_pin"));
+        try t.expectEqual(result.end, occurrences(il, "call $myl_qbe_rc_scope_end"));
+        if (result.pin != 0) {
+            try t.expect(std.mem.indexOf(u8, il, "$myl_native_list_header_type") != null);
+            try t.expect(std.mem.indexOf(u8, il, "# myl-rc-state") != null);
+            try t.expect(std.mem.indexOf(u8, il, "@rcspincommit") != null);
+        }
+        return result;
     };
     return error.TestUnexpectedResult;
 }

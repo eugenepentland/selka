@@ -13801,7 +13801,7 @@ test "CLI directory tests forward the installed host receipt when modes are alre
     const cache = try std.fs.path.join(a, &.{ root, "cache" });
     var environment = try std.process.Environ.createMap(testing.environ, a);
     try environment.put("MYLANG_VALUE_SEMANTICS", "1");
-    try environment.put("MYLANG_RUNTIME", "rc-v3");
+    try environment.put("MYLANG_RUNTIME", @import("runtime_contract").Selection.rc.identity());
     try environment.put("MYLANG_HOST_MEMORY_LIMIT", "8G");
     _ = environment.swapRemove("MYLANG_HOST_LIMIT_CHECKPOINT");
     _ = environment.swapRemove("MYLANG_HOST_LIMIT_RESTORE");

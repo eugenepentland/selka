@@ -662,6 +662,7 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     }) });
     integration.root_module.addOptions("test_options", options);
+    integration.root_module.addImport("runtime_contract", runtime_contract);
     guardian.enableTestDiagnostics(unit.root_module);
     guardian.enableTestDiagnostics(integration.root_module);
     const compile_tests = b.step("test-compile", "Compile every Zig test without running the suite");

@@ -774,8 +774,8 @@ test "RC-RECEIVER-LOWER-1 outgoing mutable arguments hold a nested runtime scope
     );
     defer result.deinit();
     const text = try functionText(result.value, "main");
-    try t.expect(try at(text, "call $myl_qbe_rc_scope_begin") < try at(text, "call $myl_qbe_rc_scope_pin"));
-    try t.expect(try at(text, "call $myl_qbe_rc_scope_pin") < try at(text, "call $myl_qbe_rc_scope_end"));
+    try t.expect(try at(text, "# RC-SCOPE-IL-1 begin") < try at(text, "# RC-SCOPE-IL-1 pin"));
+    try t.expect(try at(text, "# RC-SCOPE-IL-1 pin") < try at(text, "# RC-SCOPE-IL-1 end"));
     try t.expect(std.mem.indexOf(u8, text, "call $myl_native_cow_unique") == null);
 }
 
