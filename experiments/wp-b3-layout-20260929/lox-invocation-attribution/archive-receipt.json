@@ -1,0 +1,252 @@
+{
+  "control_source": "80dd51906c97ae76bf208474ac48c9baac3a11cd",
+  "candidate_source": "3226f1d66b08734824e5c799c25a9c7ed4a69438",
+  "archive_sha256": "fc1df113da3b22c4c6a74ee570bd5adf26b706146cbf3f80e40c1f6997cda78f",
+  "members": [
+    {
+      "path": "analysis.log",
+      "bytes": 6771,
+      "sha256": "4e3aa85d0219ab785b0eb05239e4c45c12bac6ac61f58915cd98040c0607b118"
+    },
+    {
+      "path": "analyze.py",
+      "bytes": 2106,
+      "sha256": "e0ec3a5602a761feaa4e880b4104fec62f1611132cc8068c270f2fbe1b41b9a8"
+    },
+    {
+      "path": "callgrind-receipt.json",
+      "bytes": 4089,
+      "sha256": "3d6726d7048a62207b42264baf570a18d180dc8d170dce990400ed6c97f6e936"
+    },
+    {
+      "path": "callgrind.log",
+      "bytes": 50,
+      "sha256": "bcbe5ca8cd5cdd20ec9f8c9b80772848ecdf6574d755a79c4fce823f2224c752"
+    },
+    {
+      "path": "callgrind.py",
+      "bytes": 2015,
+      "sha256": "32ca5b71b8cc9a0f9907a61880cd1f32314ecb35a7d6dc4433edd344ceafdd1c"
+    },
+    {
+      "path": "candidate/assembly",
+      "bytes": 9240270,
+      "sha256": "d4936a84c50dbbc174d3799ae2d7159ff1cde657a938f61004a8b28b2cbfe357"
+    },
+    {
+      "path": "candidate/build.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "candidate/build.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "candidate/callgrind.annotate",
+      "bytes": 74369,
+      "sha256": "79401d979f3ab6f7ed88b5b3a2729cf15ced3a94147ba5cdd6ee35a74f735c61"
+    },
+    {
+      "path": "candidate/callgrind.out",
+      "bytes": 967148,
+      "sha256": "cfeeae7caacf70bfc0c77d8d74e54ce43cd43192cb6687491f87b9077d0c071b"
+    },
+    {
+      "path": "candidate/callgrind.stderr",
+      "bytes": 736,
+      "sha256": "c8e648023ddfee54409ea72a7204204cd97d9df4646aece1db48b3d41b28c065"
+    },
+    {
+      "path": "candidate/callgrind.stdout",
+      "bytes": 6,
+      "sha256": "5372588733824ecf5744e694f5d12b57d33e19ff1fd8b88a7e723e7426eea890"
+    },
+    {
+      "path": "candidate/compiler.json",
+      "bytes": 248,
+      "sha256": "ec28fe3601b3bcf0740db95899a1508aec451cfae945f002f9c50aacc57b04e5"
+    },
+    {
+      "path": "candidate/lox.llvm",
+      "bytes": 1996992,
+      "sha256": "92dc7d4de06df91c5cf1e4ccc5f0a6c1d602b542a33c4faf861e7fa74090d3bc"
+    },
+    {
+      "path": "candidate/lox.llvm.qbe-manifest.json",
+      "bytes": 192620,
+      "sha256": "57101b09ab4f68b41eee0e364b6ded22dd0f3991c80d823061c1765369ae49eb"
+    },
+    {
+      "path": "candidate/lox.symbols",
+      "bytes": 2383744,
+      "sha256": "638e30e2d54d57f2a7981122381e5ec7edd8a6f9d062a6a037f6197518cab893"
+    },
+    {
+      "path": "candidate/lox.symbols.qbe-manifest.json",
+      "bytes": 198360,
+      "sha256": "48e679465e958ef2533c54d15defbeaa9ed264f308f3757c32a58da05ecb36dd"
+    },
+    {
+      "path": "candidate/lox.symbols.qbe-receipt",
+      "bytes": 102,
+      "sha256": "65e681ca8912767961778130f92afbf9d672da64f43f837c75c9bf913a5a9027"
+    },
+    {
+      "path": "candidate/myl_f_a0e96f299197f34d601c1a9da1cbd514090305d2a21036d06ba179b733ea6e29.weighted-assembly.txt",
+      "bytes": 636636,
+      "sha256": "d7e6270352fd1f759cb71abe2c6f20daaa61003c2b0037a5ab8153624efaaa87"
+    },
+    {
+      "path": "candidate/myl_f_bf0431d3d9e553eacefcb10ebb00251bb8b43354cc87fd12c99ceb5644f705d6.weighted-assembly.txt",
+      "bytes": 27501,
+      "sha256": "5f032382701eab6edc78b4f0572466a8b0cbc15b4bdc120ac3d8d87670cea54b"
+    },
+    {
+      "path": "candidate/myl_t_a83873657e77deb1bf51281383ae925ccb1b4b6510284b93a36500031c0efc14_rcg_loan.weighted-assembly.txt",
+      "bytes": 8650,
+      "sha256": "f7910d269adb19943c1a1fac4e6545298a4b85c8c4d10b025617f2cab00c31e1"
+    },
+    {
+      "path": "candidate/symbols",
+      "bytes": 296723,
+      "sha256": "2d7ced4709a7b759d4131357ae099953c13ed9b86e4badc688e4c7abc3c87394"
+    },
+    {
+      "path": "control/assembly",
+      "bytes": 8602518,
+      "sha256": "fd9ec059b12787df490e2aee078acc5a26f1628aa97a595667365b0a49f9c372"
+    },
+    {
+      "path": "control/build.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "control/build.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "control/callgrind.annotate",
+      "bytes": 70939,
+      "sha256": "ee84c41ef3af3f780b014c19ff8653065fb8c021a4e7e45bb77d2fe153968bfd"
+    },
+    {
+      "path": "control/callgrind.out",
+      "bytes": 971089,
+      "sha256": "b671e96a35ef840b17a04474ec350c1733af71f2c1c1201628e740055160303c"
+    },
+    {
+      "path": "control/callgrind.stderr",
+      "bytes": 734,
+      "sha256": "cac1285f9ff3b7c90161b1375b207f5a87a281dda448a37b20684882338d6800"
+    },
+    {
+      "path": "control/callgrind.stdout",
+      "bytes": 6,
+      "sha256": "5372588733824ecf5744e694f5d12b57d33e19ff1fd8b88a7e723e7426eea890"
+    },
+    {
+      "path": "control/compiler.json",
+      "bytes": 243,
+      "sha256": "0a3638302889add17464fe8cc4e79281faa05a792a4010e84a173ec0a7547279"
+    },
+    {
+      "path": "control/lox.llvm",
+      "bytes": 1881152,
+      "sha256": "01b3828e24cc90c650e1b9f039f8cf1c344f5189ac8a00522764c8a210a69433"
+    },
+    {
+      "path": "control/lox.llvm.qbe-manifest.json",
+      "bytes": 186465,
+      "sha256": "9c8f9f244fb5107a5033c50eb8ca03fd0fae0fea35cc373709e756d2d463fad0"
+    },
+    {
+      "path": "control/lox.symbols",
+      "bytes": 2235912,
+      "sha256": "f8cc733f15824744bc965dd01a5d4fe7907cf0bbc6ec81f06c7fc4aff40a2c84"
+    },
+    {
+      "path": "control/lox.symbols.qbe-manifest.json",
+      "bytes": 197535,
+      "sha256": "cf2e07ffbbf0e6e43d25a948cb8df27ad14cbdeb7efbe8a7d4576677e0365348"
+    },
+    {
+      "path": "control/lox.symbols.qbe-receipt",
+      "bytes": 102,
+      "sha256": "b2a128d434ac490a6662de5b35b199e325f66c70df982412b3b3b6da4ce4d288"
+    },
+    {
+      "path": "control/myl_f_a0e96f299197f34d601c1a9da1cbd514090305d2a21036d06ba179b733ea6e29.weighted-assembly.txt",
+      "bytes": 619661,
+      "sha256": "18c7c6200b10d86dcfcd910d666bc9dbcef49d91ceb64b8a3559928229ea2172"
+    },
+    {
+      "path": "control/myl_f_bf0431d3d9e553eacefcb10ebb00251bb8b43354cc87fd12c99ceb5644f705d6.weighted-assembly.txt",
+      "bytes": 26189,
+      "sha256": "e760f585179c4f2515be8f6f711798468abb3c379738e10fd525d6e949c304e7"
+    },
+    {
+      "path": "control/myl_t_a83873657e77deb1bf51281383ae925ccb1b4b6510284b93a36500031c0efc14_rcg_loan.weighted-assembly.txt",
+      "bytes": 3161,
+      "sha256": "88bf3cc63e8622091dcb3271e8ca4a57a38e330944bda82ebfd7484872bd821e"
+    },
+    {
+      "path": "control/symbols",
+      "bytes": 261160,
+      "sha256": "bf3ee2e0a20db5cfb9de58c6775764cd1d6021ef2d013b0264156b4df11dd537"
+    },
+    {
+      "path": "exact-counts.json",
+      "bytes": 2894358,
+      "sha256": "fb9f9f62b0ce10d926e4fccd1b4bfb5f185babd90726bff11f1ae500b7c78d01"
+    },
+    {
+      "path": "hot-disassembly.py",
+      "bytes": 1211,
+      "sha256": "4747a1e3d4d3f93e462cc3d2b9fd48a94fec8449541c9c0023e0e88025196b09"
+    },
+    {
+      "path": "inputs.json",
+      "bytes": 14785,
+      "sha256": "72bf61003d1f4616081afbd02bdf41d817bf4a4362c36be70c05a8e86769bb88"
+    },
+    {
+      "path": "invocation.n30000.lox",
+      "bytes": 1151,
+      "sha256": "e93bfcd49591a1e05e17a7307f130b83ea3731620a0bcaf0f0ef11fe1ee712ff"
+    },
+    {
+      "path": "myl_f_a0e96f299197f34d601c1a9da1cbd514090305d2a21036d06ba179b733ea6e29.diff",
+      "bytes": 727762,
+      "sha256": "24dab04f1161de4b7fd9a656363a175e9bce54e4e8cf5d5949b69da0fbb67512"
+    },
+    {
+      "path": "myl_f_bf0431d3d9e553eacefcb10ebb00251bb8b43354cc87fd12c99ceb5644f705d6.diff",
+      "bytes": 23054,
+      "sha256": "95fb138d7ec7c57e5947f4cc637f7cfb37e65537a444f9a5379519a6effb0c2a"
+    },
+    {
+      "path": "myl_t_a83873657e77deb1bf51281383ae925ccb1b4b6510284b93a36500031c0efc14_rcg_loan.diff",
+      "bytes": 7322,
+      "sha256": "d10f5ae8bf1d04928615aff93c51c7834a3657b5d31ac3d416cd591c11d817d8"
+    },
+    {
+      "path": "prepare.log",
+      "bytes": 98,
+      "sha256": "7807e91aeca7782d3158e2e7984e3fec1e7cfed85e807a629dc97ba7a54eb8c8"
+    },
+    {
+      "path": "prepare.py",
+      "bytes": 3489,
+      "sha256": "4184d5533b1f068a0f8c1206f21e34076997ef633c8c7eaa43c9b3b35f540267"
+    }
+  ],
+  "verified_members": 48,
+  "tool_package_sha256": "70b10c31307700a388262baa9cff7a3b27814a9716b6f19e8f748a56bcbfa442",
+  "measurement": "CPU0 Callgrind attribution only; no timing/acceptance samples",
+  "all_allocated_sections_identical_on_both_sides": true,
+  "safe_output_pairs": 2
+}
