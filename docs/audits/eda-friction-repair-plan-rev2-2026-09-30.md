@@ -93,15 +93,14 @@ Gate results for the merged source:
 | Fresh-seed tester, 3 edits per step | 4 runs × 30 steps, 0 mismatches |
 | Lane's own tester runs | 1,680 steps, 0 mismatches |
 
-**Still to merge before the lanes start, each with the user's OK:**
+**Also merged into `main` (the user's OK, 2026-09-30):**
 
 4. `claude/test-zig-cache` (f2e53ada): `zig build test` no longer leaks `zig cc`
-   objects. Gated by its own session.
-5. `codex/next-eda-compiler-20260930` (Phase C: native sin/cos, G29/G30 repairs, and
-   revision 1 of this plan).
+   objects (NATIVE-ZIG-CACHE-3/4).
+5. `codex/next-eda-compiler-20260930` (395f68f4, Phase C): native sin/cos, the G29/G30
+   repairs, and revision 1 of this plan.
 
-`git merge-tree` reports no conflicts between (5) and (1)–(4). After those merges, the
-combined main is the base for every lane below.
+The combined main is the base for every lane below.
 
 ## Rules for every implementing agent
 
