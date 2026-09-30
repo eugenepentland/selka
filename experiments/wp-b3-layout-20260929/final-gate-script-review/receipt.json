@@ -1,0 +1,108 @@
+{
+  "archive": {
+    "bytes": 39181,
+    "file": "artifacts.tar.gz",
+    "manifest_sha256": "77a798a55fed519772c315acb6ae9caa278b2b7a00f476ebc8c8c0b03660c27c",
+    "sha256": "4e3564d39de0025eee16420489ec0e12bd10bfffbc0780f380dcdd663b11983a",
+    "verified_members": 34
+  },
+  "checks": {
+    "actual_metadata_probe_cases": 6,
+    "canonical_statuses": 27,
+    "full_size_auxiliary_receipt": "source/compiler/binary/script/log/result binding reviewed",
+    "gc_and_fresh_a5": "unchanged58 approvedGC+58 originalA5 binaries/cache/runner identities reviewed",
+    "negative_refusals": 5,
+    "positive_rows_per_size": 86,
+    "positive_sizes": 3,
+    "python_ast_and_bash_syntax": "passed",
+    "remaining_actionable_findings": [],
+    "required_tests_lang_module_oracles": "reachable via full test target"
+  },
+  "closure_guardian": {
+    "blocking_findings": 0,
+    "feedback": "centralized by root, hash pending",
+    "passed_checks": 88,
+    "waivers_or_baseline_changes": false,
+    "whole_tree": true
+  },
+  "corrected_bound_loop": {
+    "final_verifier_sha256": "f94277d12526e8761afb2eee0321d83d96d5d3cbc8a6cfe43d57c6d470ad5bfe",
+    "results": [
+      {
+        "accepted": true,
+        "case": "positive",
+        "rows": {
+          "dev": 86,
+          "full": 86,
+          "smoke": 86
+        }
+      },
+      {
+        "accepted": false,
+        "case": "tag"
+      },
+      {
+        "accepted": false,
+        "case": "size"
+      },
+      {
+        "accepted": false,
+        "case": "compiler_hash"
+      },
+      {
+        "accepted": false,
+        "case": "runtime"
+      },
+      {
+        "accepted": false,
+        "case": "compiler_path"
+      }
+    ],
+    "scope": "Performance-loop identity admission only, no physical sampling or final gate execution."
+  },
+  "date": "2026-09-30",
+  "limits": [
+    "The original verifier snapshot was taken before its metadata fix; other initially copied scripts already contained the preceding binary-manifest update.",
+    "Approved A5 counter rows are used only to exercise the verifier admission logic, never presented as candidate measurements.",
+    "No integration files were written; the root owns source changes and final gate execution.",
+    "No Guardian gate ran during source/metadata analysis; the evidence commit exercised its whole-tree pre-commit hook."
+  ],
+  "original_unbound_loop": {
+    "accepted_unrelated_candidate": true,
+    "input_sha256": {
+      "approved-dev.json": "42579ee700bdd8600fd9ff5c28ba16950a28e3be80cfa71758f9ef23548ac772",
+      "approved-full.json": "29bdae3a7a7f53972d219da5885ebfc02b6b23939267766577fd6f7da59cb32d",
+      "approved-smoke.json": "3c4feb7471b08c2053b72b4c7130b04437997d061711de24dfa23dc48b508d42",
+      "fresh-dev.json": "f9658f1f5e5f57b42e59a92f8cd3c31ac144ea6fc85b844def0fbe94eaa0d6f0",
+      "fresh-full.json": "ccdbd62a2a3a620c6832e7724498754bfd317f5fe76f8912e1e51504e3dcab03",
+      "fresh-smoke.json": "975f2649d3fbc48a5a94b5306b36ff042ff4673aa126d19bb27fe628ba34c17b",
+      "original-dev.json": "fc6df539c50e10f553284851311281f7effd02d96d8f2031d7d0fd975ffd762e",
+      "original-full.json": "a049de8b3cccb7735df974ac5fae93ae8679c911cf2b0efa0064359e758290eb",
+      "original-smoke.json": "6dfbeb4553cd6cb2555bb8d2a56c71878d7d26f027a0bbb2c9f5f9aacd5ffd5c"
+    },
+    "original_verifier_sha256": "0004b65388ec51201bd6434299345593595a2a6033b48f376bcd86fbb8296e57",
+    "sizes": {
+      "dev": 86,
+      "full": 86,
+      "smoke": 86
+    },
+    "unrelated_metadata": {
+      "compiler_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "runtime": "--gc-runtime",
+      "size": "WRONG",
+      "tag": "UNRELATED"
+    }
+  },
+  "reviewed_root_commit": "5347c9c0d1c63965b687561a11f458c1ecc3361c",
+  "reviewed_scripts_sha256": {
+    "phase-b-final-module-matrix.sh": "c96335cfb722951ced6b3cade9de811ca7c83d0206bef45475d22a215adbb8c4",
+    "phase-b-full-measure.sh": "9c755ac6565148db523078d5a7a0189b7041534e4f0149594bf349f705c4f3b3",
+    "phase-b-gate-adaptation.json": "61afb604ae9092935c4d68ab5ab3477fcb3e383ccba29299e869bf6e174ad5cc",
+    "phase-b-gate.sh": "ecc2eceb4101d6075f7a08e19c6e6ad8d5496ab6a73ceede8bb59df80163d301",
+    "phase-b-supplement.sh": "46f639f9e64273b8fa82dedffb3895c72032d749bfd18d3961466f233a46b694",
+    "prepare-phase-b.py": "d18d2d3a2a757d5c1665d8df56e83eb052c8f365f1c3dfe61853922b4e44ef74",
+    "run-phase-b-pinned-control.sh": "f5c6f684d157395dc4db4e181763bdb624226ab78f6ab00578822dcc4fe394c5",
+    "verify-phase-b.py": "f94277d12526e8761afb2eee0321d83d96d5d3cbc8a6cfe43d57c6d470ad5bfe"
+  },
+  "scope": "Read-only independent final gate script/acceptance review; metadata-loop probes only, no native execution, hardware sampling, or final gate acceptance."
+}
