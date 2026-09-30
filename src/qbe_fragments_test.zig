@@ -819,7 +819,7 @@ fn localKey(allocator: std.mem.Allocator, files: *const Files, name: []const u8)
     var keys = try fragments.Keys.init(allocator, code);
     defer keys.deinit();
     for (code.functions, 0..) |function, at| {
-        if (std.mem.eql(u8, function.name, name)) return keys.local(at, .{ .step_checks = true, .frame_checks = true, .checks = true, .arenas = false, .entry = false });
+        if (std.mem.eql(u8, function.name, name)) return keys.local(at, .{ .step_checks = true, .frame_checks = true, .arenas = false, .entry = false });
     }
     return error.TestUnexpectedResult;
 }

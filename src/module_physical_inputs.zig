@@ -111,8 +111,10 @@ const State = struct {
     fn dependenciesFrom(self: *State, archive: physical.Archive) Error!void {
         for (archive.dependencies) |data| {
             const id = self.ids.functions.get(data.name) orelse return error.InternalError;
-            if (@backingInt(id) < self.original or self.functions.items[@backingInt(id)].physical != null) continue;
             var function = physical.read(self.a, &self.ids, bytecode.Function, data) catch |err| return failed(err);
+            if (function.scope.instructions.len != 0) return error.InternalError;
+            try self.signatureFrom(function);
+            if (@backingInt(id) < self.original or self.functions.items[@backingInt(id)].physical != null) continue;
             const unknown = try self.a.create(bytecode.Physical);
             unknown.* = .{ .unknown = true };
             function.physical = unknown;
@@ -124,6 +126,8 @@ const State = struct {
         for (interface.emission.physical.functions) |data| {
             const id = self.ids.functions.get(data.name) orelse return error.InternalError;
             const index = @backingInt(id);
+            const decoded = physical.read(self.a, &self.ids, bytecode.Function, data) catch |err| return failed(err);
+            try self.signatureFrom(decoded);
             if (index < emit.len and emit[index]) continue;
             const known = try self.restored.functions.getOrPut(self.a, data.name);
             if (known.found_existing) {
@@ -134,7 +138,7 @@ const State = struct {
             var function = if (index < self.original and self.functions.items[index].scope.instructions.len != 0)
                 self.functions.items[index]
             else
-                physical.read(self.a, &self.ids, bytecode.Function, data) catch |err| return failed(err);
+                decoded;
             for (interface.emission.functions) |stated| if (std.mem.eql(u8, stated.name, data.name)) {
                 const facts = try self.a.create(bytecode.Physical);
                 facts.* = .{ .stable = stated.stable };
@@ -144,11 +148,43 @@ const State = struct {
             self.functions.items[index] = function;
         }
     }
+
+    fn signatureFrom(self: *State, function: bytecode.Function) Error!void {
+        const data = try self.signatureData(function);
+        const index = @backingInt(function.id);
+        if (index < self.original) {
+            const existing = try self.signatureData(self.functions.items[index]);
+            if (!std.mem.eql(u8, existing.bytes, data.bytes)) return error.InternalError;
+        }
+        const known = try self.restored.signatures.getOrPut(self.a, function.name);
+        if (known.found_existing and !std.mem.eql(u8, known.value_ptr.*, data.bytes)) return error.InternalError;
+        known.value_ptr.* = data.bytes;
+    }
+
+    fn signatureData(self: *State, function: bytecode.Function) Error!physical.Data {
+        var plain = function;
+        const count = plain.signature.parameter_count;
+        if (count > plain.scope.locals.len) return error.InternalError;
+        const parameters = try self.a.dupe(typed.Local, plain.scope.locals[0..count]);
+        for (parameters) |*parameter| {
+            parameter.ownership = .{};
+            parameter.usage = .{};
+            parameter.mutable = false;
+            parameter.origin = .local;
+        }
+        plain.physical = null;
+        plain.policy.effects = 0;
+        plain.policy.effect_bound = null;
+        plain.signature = .{ .return_type = plain.signature.return_type, .parameter_count = count, .constant_arguments = plain.signature.constant_arguments };
+        plain.scope = .{ .locals = parameters, .instructions = &.{} };
+        return physical.write(self.a, .{ .functions = self.functions.items, .records = self.records.items }, plain);
+    }
 };
 
 const Stored = struct {
     records: std.StringHashMapUnmanaged([]const u8) = .empty,
     functions: std.StringHashMapUnmanaged([]const u8) = .empty,
+    signatures: std.StringHashMapUnmanaged([]const u8) = .empty,
 };
 
 fn failed(err: anyerror) Error {
