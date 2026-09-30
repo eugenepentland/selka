@@ -147,6 +147,85 @@ test "RC-RANGE-KEY-1 a counted dictionary key slice borrows its text instead of 
     try t.expect(std.mem.indexOf(u8, il, " blit %rl") != null);
 }
 
+const CountDefinition = struct { value: []const u8, operands: []const u8, at: usize };
+
+fn countDefinition(il: []const u8, operation: []const u8) ?CountDefinition {
+    var lines = std.mem.splitScalar(u8, il, '\n');
+    var offset: usize = 0;
+    while (lines.next()) |raw| {
+        const line = std.mem.trim(u8, raw, " ");
+        if (std.mem.startsWith(u8, line, "%")) if (std.mem.indexOf(u8, line, operation)) |at_| {
+            return .{ .value = line[0..at_], .operands = line[at_ + operation.len ..], .at = offset };
+        };
+        offset += raw.len + 1;
+    }
+    return null;
+}
+
+fn countOperands(operands: []const u8, value: []const u8, literal: []const u8) bool {
+    const comma = std.mem.indexOfScalar(u8, operands, ',') orelse return false;
+    return std.mem.eql(u8, std.mem.trim(u8, operands[0..comma], " "), value) and
+        std.mem.eql(u8, std.mem.trim(u8, operands[comma + 1 ..], " "), literal);
+}
+
+/// The exact loaded long count feeds add-one, zero refusal and the admitted store.
+fn incrementAdmitted(il: []const u8) !bool {
+    const start = (std.mem.indexOf(u8, il, "\n@rcginc") orelse return false) + 1;
+    const newline = start + (std.mem.indexOfScalar(u8, il[start..], '\n') orelse return false);
+    const id = il[start + "@rcginc".len .. newline];
+    const capacity = try std.fmt.allocPrint(t.allocator, "\n@rcgcapacity{s}\n", .{id});
+    defer t.allocator.free(capacity);
+    const end = newline + (std.mem.indexOf(u8, il[newline..], capacity) orelse return false);
+    const block = il[newline .. end + 1];
+    const old = countDefinition(block, " =l loadl ") orelse return false;
+    const addition = countDefinition(block, " =l add ") orelse return false;
+    const zero = countDefinition(block, " =w ceql ") orelse return false;
+    if (old.at >= addition.at or addition.at >= zero.at) return false;
+    if (!countOperands(addition.operands, old.value, "1")) return false;
+    if (!countOperands(zero.operands, addition.value, "0")) return false;
+    const branch = try std.fmt.allocPrint(t.allocator, " jnz {s}, @rcglimit{s}, @rcgcapacity{s}\n@rcglimit{s}\n", .{ zero.value, id, id, id });
+    defer t.allocator.free(branch);
+    const branch_at = std.mem.indexOf(u8, block, branch) orelse return false;
+    if (branch_at <= zero.at or std.mem.indexOf(u8, block[branch_at..], "$myl_qbe_rc_status(l %ctx, w 2)\n jmp @failure\n") == null) return false;
+    if (std.mem.indexOf(u8, block, " store") != null) return false;
+    const store = try std.fmt.allocPrint(t.allocator, " storel {s}, {s}\n", .{ addition.value, old.operands });
+    defer t.allocator.free(store);
+    return std.mem.startsWith(u8, il[end + capacity.len ..], store);
+}
+
+// spec-case: RC-COUNTS-1
+test "RC-COUNTS-1 admission oracle rejects unrelated count, flag, branch and store" {
+    const valid = "\n" ++
+        \\@rcginc7
+        \\ %old =l loadl %counter
+        \\ %new =l add %old, 1
+        \\ %flag =w ceql %new, 0
+        \\ jnz %flag, @rcglimit7, @rcgcapacity7
+        \\@rcglimit7
+        \\ %status =w call $myl_qbe_rc_status(l %ctx, w 2)
+        \\ jmp @failure
+        \\@rcgcapacity7
+        \\ storel %new, %counter
+        \\
+    ;
+    try t.expect(try incrementAdmitted(valid));
+    const changes = [_][2][]const u8{
+        .{ "loadl %counter", "loaduw %counter" },
+        .{ "add %old, 1", "add %unrelated, 1" },
+        .{ "ceql %new, 0", "ceql %unrelated, 0" },
+        .{ "jnz %flag,", "jnz %unrelated," },
+        .{ "jnz %flag, @rcglimit7", "jnz %flag, @wrong_limit" },
+        .{ "storel %new, %counter", "storel %old, %counter" },
+        .{ "storel %new, %counter", "storel %new, %unrelated" },
+        .{ " %flag =w ceql", " storel %new, %counter\n %flag =w ceql" },
+    };
+    for (changes) |change| {
+        const broken = try std.mem.replaceOwned(u8, t.allocator, valid, change[0], change[1]);
+        defer t.allocator.free(broken);
+        try t.expect(!try incrementAdmitted(broken));
+    }
+}
+
 // spec-case: RC-LAYOUT-1
 // spec-case: RC-COUNTS-1
 test "ABI5 generated increments are u64 and refuse saturation before storing a token" {
@@ -159,16 +238,7 @@ test "ABI5 generated increments are u64 and refuse saturation before storing a t
         \\    return len(keep([1, 2], True).values)
     , "keep");
     defer t.allocator.free(il);
-    try t.expect(std.mem.indexOf(u8, il, " =l loadl ") != null);
-    const start = std.mem.indexOf(u8, il, "@rcginc") orelse return error.TestUnexpectedResult;
-    const add = start + (std.mem.indexOf(u8, il[start..], " =l add ") orelse return error.TestUnexpectedResult);
-    const carry = add + (std.mem.indexOf(u8, il[add..], " =w ceql ") orelse return error.TestUnexpectedResult);
-    const store = carry + (std.mem.indexOf(u8, il[carry..], " storel ") orelse return error.TestUnexpectedResult);
-    try t.expect(std.mem.indexOf(u8, il[carry..store], ", 0\n") != null);
-    try t.expect(std.mem.indexOf(u8, il[start..store], " storel ") == null);
-    try t.expect(std.mem.indexOf(u8, il, "@rcglimit") != null);
-    try t.expect(std.mem.indexOf(u8, il, "$myl_qbe_rc_status(l %ctx, w 2)") != null);
-    try t.expect(std.mem.indexOf(u8, il, " storel ") != null);
+    try t.expect(try incrementAdmitted(il));
 }
 
 // spec: RC-COUNT-CARRY-1

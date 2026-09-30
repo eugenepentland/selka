@@ -758,6 +758,62 @@ test "RC-UNIQUE-LOWER-1 nested receiver replaces its owned field before borrowin
     try t.expect(std.mem.indexOf(u8, text, "call $myl_native_cow_unique") == null);
 }
 
+fn scopeStoredAt(text: []const u8, address: []const u8) ?[]const u8 {
+    var lines = std.mem.splitScalar(u8, text, '\n');
+    while (lines.next()) |raw| {
+        const line = std.mem.trim(u8, raw, " ");
+        if (!std.mem.startsWith(u8, line, "storel ")) continue;
+        const comma = std.mem.indexOfScalar(u8, line, ',') orelse continue;
+        if (std.mem.eql(u8, std.mem.trim(u8, line[comma + 1 ..], " "), address)) return line[7..comma];
+    }
+    return null;
+}
+
+fn scopeFieldStore(text: []const u8, scope: []const u8, offset: usize) !bool {
+    const addition = try std.fmt.allocPrint(t.allocator, " =l add {s}, {d}", .{ scope, offset });
+    defer t.allocator.free(addition);
+    var lines = std.mem.splitScalar(u8, text, '\n');
+    while (lines.next()) |raw| {
+        const line = std.mem.trim(u8, raw, " ");
+        const equal = std.mem.indexOf(u8, line, addition) orelse continue;
+        if (equal + addition.len == line.len and scopeStoredAt(text, line[0..equal]) != null) return true;
+    }
+    return false;
+}
+
+/// Ordered markers must enclose physical initialization, guarded journal capture and unwind.
+fn outgoingScopeOperations(text: []const u8) !bool {
+    const begin = std.mem.indexOf(u8, text, "# RC-SCOPE-IL-1 begin") orelse return false;
+    const pin = std.mem.indexOf(u8, text, "# RC-SCOPE-IL-1 pin") orelse return false;
+    const end = std.mem.indexOf(u8, text, "# RC-SCOPE-IL-1 end") orelse return false;
+    if (!(begin < pin and pin < end)) return false;
+    const initialized = text[begin..pin];
+    const heap_store = " storel %heap, ";
+    const heap_at = (std.mem.indexOf(u8, initialized, heap_store) orelse return false) + heap_store.len;
+    const scope = initialized[heap_at .. heap_at + (std.mem.indexOfScalar(u8, initialized[heap_at..], '\n') orelse return false)];
+    if (!try scopeFieldStore(initialized, scope, 8) or !try scopeFieldStore(initialized, scope, 16)) return false;
+    const link = try std.fmt.allocPrint(t.allocator, " storel {s}, ", .{scope});
+    defer t.allocator.free(link);
+    if (std.mem.indexOf(u8, initialized, link) == null or std.mem.indexOf(u8, initialized, " storew 1, ") == null) return false;
+    const captured = text[pin..end];
+    const commit = std.mem.indexOf(u8, captured, "\n@rcspincommit") orelse return false;
+    const slow = std.mem.indexOf(u8, captured, "\n@rcspinslow") orelse return false;
+    if (commit >= slow or std.mem.indexOf(u8, captured[0..commit], ", @rcspinslow") == null or
+        !try scopeFieldStore(captured[commit..slow], scope, 16)) return false;
+    const pin_call = try std.fmt.allocPrint(t.allocator, "call $myl_qbe_rc_scope_pin(l %ctx, l {s}, l ", .{scope});
+    defer t.allocator.free(pin_call);
+    if (std.mem.indexOf(u8, captured[slow..], pin_call) == null) return false;
+    const end_call = try std.fmt.allocPrint(t.allocator, "call $myl_qbe_rc_scope_end(l %ctx, l {s})", .{scope});
+    defer t.allocator.free(end_call);
+    return std.mem.indexOf(u8, text[end..], end_call) != null and
+        try scopeFieldStore(text[end..], scope, 8) and std.mem.indexOf(u8, text[end..], " storew 0, ") != null;
+}
+
+// spec-case: RC-RECEIVER-LOWER-1
+test "RC-RECEIVER-LOWER-1 scope oracle refuses comments without journal operations" {
+    try t.expect(!try outgoingScopeOperations("# RC-SCOPE-IL-1 begin\n# RC-SCOPE-IL-1 pin\n# RC-SCOPE-IL-1 end\n"));
+}
+
 // spec: RC-RECEIVER-LOWER-1
 test "RC-RECEIVER-LOWER-1 outgoing mutable arguments hold a nested runtime scope" {
     const mode = @import("runtime_mode.zig");
@@ -774,8 +830,20 @@ test "RC-RECEIVER-LOWER-1 outgoing mutable arguments hold a nested runtime scope
     );
     defer result.deinit();
     const text = try functionText(result.value, "main");
-    try t.expect(try at(text, "# RC-SCOPE-IL-1 begin") < try at(text, "# RC-SCOPE-IL-1 pin"));
-    try t.expect(try at(text, "# RC-SCOPE-IL-1 pin") < try at(text, "# RC-SCOPE-IL-1 end"));
+    try t.expect(try outgoingScopeOperations(text));
+    const callee = try functionText(result.value, "change");
+    const symbol_start = try at(callee, "$myl_f_");
+    const symbol_end = symbol_start + try at(callee[symbol_start..], "(");
+    const call = try std.fmt.allocPrint(t.allocator, "call {s}(", .{callee[symbol_start..symbol_end]});
+    defer t.allocator.free(call);
+    try t.expect(try at(text, "\n@rcspindone") < try at(text, call));
+    try t.expect(try at(text, call) < try at(text, "# RC-SCOPE-IL-1 end"));
+    const no_writes = try std.mem.replaceOwned(u8, t.allocator, text, " storel ", " # removed storel ");
+    defer t.allocator.free(no_writes);
+    try t.expect(!try outgoingScopeOperations(no_writes));
+    const wrong_scope = try std.mem.replaceOwned(u8, t.allocator, text, "$myl_qbe_rc_scope_pin(l %ctx, l %", "$myl_qbe_rc_scope_pin(l %ctx, l %wrong_");
+    defer t.allocator.free(wrong_scope);
+    try t.expect(!try outgoingScopeOperations(wrong_scope));
     try t.expect(std.mem.indexOf(u8, text, "call $myl_native_cow_unique") == null);
 }
 
