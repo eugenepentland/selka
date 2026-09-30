@@ -199,3 +199,50 @@ The failed module marker receipt is `.tmp/list-immortal-missing-marker.*`;
 the failed region receipt is `.tmp/list-immortal-first-mutation-failure.json`.
 All corrected receipts remain under `.tmp/list-immortal-*`. Full native,
 guest-mode and module-oracle acceptance is recorded in the subsequent evidence.
+
+## List-image receipts and compile observations
+
+The frozen static-list source is `8f67ab8a`, compiler SHA-256
+`4f37d5a8e78c8c064e88249e6f95ebd929b78c222aa17bd1697be09f5bea82af`.
+The full native targets pass 31/31 steps (30 C families). The eight named list
+checks plus 12 imported blocks pass 20/20. All six guest cases execute freshly
+in each of RC, GC, GC stress, stats and LLVM release, with no failure, skip or
+cached result. Four strict whole/module oracles (RC, GC, stats, sites) each
+compare two modules, all 12 units and metadata, and byte-identical executables
+that invoke the six cases and print `list-image-ok`. Reference failures are zero.
+The source projection adds one explicit module header to the guest library on
+both sides; it does not alter the test bodies. Earlier header/Stream driver
+mistakes remain failed logs, excluded from acceptance.
+
+After merging frozen text `458b9dfc` and image emission `2dbeecae`, an additional
+integration test stores a 160-scalar indexed non-ASCII literal in a static list,
+detaches its parent, and reads across the sample boundary and through a tail.
+The combined focused run passes 21/21. A test-fixture Zig syntax mistake was
+corrected before this run; the commit gate's structural checks alone did not
+validate that syntax.
+
+Compile observations use the approved-main Debug compiler and the frozen
+static-list compiler on identical sources. Each role/backend uses its own
+runtime cache, warmed by its first eight-element row; source objects are cold.
+Admission waits are excluded. These are single observations on a shared
+machine, not medians or corpus performance acceptance.
+
+| Elements | Integer QBE control/candidate | Text QBE control/candidate | Bytes QBE control/candidate |
+|---|---:|---:|---:|
+| 250 | 4.001 / 0.391 s | 5.038 / 0.441 s | 4.973 / 0.550 s |
+| 1,000 | refused / 0.397 s | refused / 0.546 s | refused / 0.586 s |
+
+Every successful binary prints the expected count and returns zero. Integer IL
+at 1,000 elements shrinks from 6,354,963 bytes / 225,024 lines to 26,163 bytes /
+431 lines; immutable children add linear symbolic data, preserving bounded
+instruction lowering. Eight-element lists retain ordinary constructors.
+All nine candidate LLVM LTO configurations with retained debugging fail to
+link `myl_rc_generated_image`; the assembly scanner dropped weak directives
+after its final probe-data section. This pre-emitter result is explicitly
+rejected for LLVM acceptance, and the scanner correction plus a combined rerun
+remain required. LLVM `--release` guest tests above use different flags.
+
+The exact observations, generated experiment sources, failure logs and verified
+receipts are under `evidence/codex-next-runtime-20260929/list-images/`.
+Guardian source-checkpoint feedback is committed as `db487e44` in its own repo.
+Final combined broad tests and corpus acceptance remain pending.

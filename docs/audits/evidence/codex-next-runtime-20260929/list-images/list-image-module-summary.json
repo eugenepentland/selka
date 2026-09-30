@@ -1,0 +1,38 @@
+{
+  "gc": {
+    "programs": 1,
+    "equal": 1,
+    "reference_failed": 0,
+    "modules": 2,
+    "units_compared": 12,
+    "units_whole": 12,
+    "specializations_shared": 0,
+    "interfaces_compared": 2,
+    "executables_identical": 1,
+    "different": []
+  },
+  "stats": {
+    "programs": 1,
+    "equal": 1,
+    "reference_failed": 0,
+    "modules": 2,
+    "units_compared": 12,
+    "units_whole": 12,
+    "specializations_shared": 0,
+    "interfaces_compared": 2,
+    "executables_identical": 1,
+    "different": []
+  },
+  "sites": {
+    "programs": 1,
+    "equal": 1,
+    "reference_failed": 0,
+    "modules": 2,
+    "units_compared": 12,
+    "units_whole": 12,
+    "specializations_shared": 0,
+    "interfaces_compared": 2,
+    "executables_identical": 1,
+    "different": []
+  }
+}
