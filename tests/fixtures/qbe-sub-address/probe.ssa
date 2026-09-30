@@ -1,0 +1,171 @@
+export function l $addr_load(l %base) {
+@start
+ %address =l sub %base, 32
+ %value =l loadl %address
+ ret %value
+}
+
+export function w $addr_store(l %base, l %value) {
+@start
+ %address =l sub %base, 32
+ storel %value, %address
+ ret 0
+}
+
+export function l $addr_hold(l %base) {
+@start
+ %address =l sub %base, 24
+ %value =l loadl %address
+ ret %value
+}
+
+export function l $addr_mark(l %base) {
+@start
+ %address =l sub %base, 16
+ %value =l loadl %address
+ ret %value
+}
+
+export function l $addr_scaled(l %base, l %index) {
+@start
+ %prefix =l sub %base, 32
+ %offset =l mul %index, 8
+ %address =l add %prefix, %offset
+ %value =l loadl %address
+ ret %value
+}
+
+export function l $addr_scaled_sub(l %base, l %index) {
+@start
+ %adjusted =l sub %index, 1
+ %offset =l mul %adjusted, 8
+ %address =l add %base, %offset
+ %value =l loadl %address
+ ret %value
+}
+
+export function l $addr_min(l %base) {
+@start
+ %address =l sub %base, 2147483648
+ %value =l loadl %address
+ ret %value
+}
+
+export function l $addr_max(l %base) {
+@start
+ %address =l add %base, 2147483647
+ %value =l loadl %address
+ ret %value
+}
+
+export function l $addr_outside(l %base) {
+@start
+ %address =l sub %base, 2147483649
+ %value =l loadl %address
+ ret %value
+}
+
+export function l $addr_composed_outside(l %base) {
+@start
+ %prefix =l sub %base, 2147483648
+ %address =l sub %prefix, 1
+ %value =l loadl %address
+ ret %value
+}
+
+export function l $addr_composed_cancel(l %base) {
+@start
+ %prefix =l sub %base, 2147483648
+ %address =l add %prefix, 1
+ %value =l loadl %address
+ ret %value
+}
+
+export function l $addr_scaled_outside(l %base, l %index) {
+@start
+ %adjusted =l sub %index, 2147483648
+ %offset =l mul %adjusted, 8
+ %address =l add %base, %offset
+ %value =l loadl %address
+ ret %value
+}
+
+export function l $addr_negative(l %base) {
+@start
+ %address =l sub %base, -32
+ %value =l loadl %address
+ ret %value
+}
+
+export function l $addr_dynamic(l %base, l %offset) {
+@start
+ %address =l sub %base, %offset
+ %value =l loadl %address
+ ret %value
+}
+
+export function l $addr_swapped(l %base) {
+@start
+ %address =l sub 32, %base
+ %value =l loadl %address
+ ret %value
+}
+
+export function l $addr_multi(l %base, l %out) {
+@start
+ %address =l sub %base, 32
+ storel %address, %out
+ %value =l loadl %address
+ ret %value
+}
+
+export function w $addr_word(w %base) {
+@start
+ %address =w sub %base, 32
+ ret %address
+}
+
+export function d $addr_float(d %base) {
+@start
+ %address =d sub %base, d_32
+ ret %address
+}
+
+export function l $addr_large(l %base) {
+@start
+ %address =l sub %base, 9223372036854775807
+ %value =l loadl %address
+ ret %value
+}
+
+export function l $addr_negative_min(l %base) {
+@start
+ %address =l sub %base, -9223372036854775808
+ %value =l loadl %address
+ ret %value
+}
+
+export function w $addr_flags(l %base, l %out) {
+@start
+ %address =l sub %base, 32
+ %zero =w ceql %address, 0
+ jnz %zero, @yes, @no
+@yes
+ storel %address, %out
+ ret 1
+@no
+ storel %address, %out
+ ret 0
+}
+
+export function l $addr_loaded_flags(l %base) {
+@start
+ %address =l sub %base, 32
+ %value =l loadl %address
+ %zero =w ceql %address, 0
+ jnz %zero, @yes, @no
+@yes
+ ret 0
+@no
+ ret %value
+}
