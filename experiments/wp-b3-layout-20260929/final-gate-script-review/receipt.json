@@ -18,6 +18,13 @@
     "remaining_actionable_findings": [],
     "required_tests_lang_module_oracles": "reachable via full test target"
   },
+  "closure_guardian": {
+    "blocking_findings": 0,
+    "feedback": "centralized by root, hash pending",
+    "passed_checks": 88,
+    "waivers_or_baseline_changes": false,
+    "whole_tree": true
+  },
   "corrected_bound_loop": {
     "final_verifier_sha256": "f94277d12526e8761afb2eee0321d83d96d5d3cbc8a6cfe43d57c6d470ad5bfe",
     "results": [
@@ -58,7 +65,7 @@
     "The original verifier snapshot was taken before its metadata fix; other initially copied scripts already contained the preceding binary-manifest update.",
     "Approved A5 counter rows are used only to exercise the verifier admission logic, never presented as candidate measurements.",
     "No integration files were written; the root owns source changes and final gate execution.",
-    "No Guardian gate was exercised during the read-only review."
+    "No Guardian gate ran during source/metadata analysis; the evidence commit exercised its whole-tree pre-commit hook."
   ],
   "original_unbound_loop": {
     "accepted_unrelated_candidate": true,

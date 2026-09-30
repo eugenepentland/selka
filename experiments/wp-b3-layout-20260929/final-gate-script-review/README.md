@@ -39,5 +39,7 @@ checks passed on the exact copied final scripts. `receipt.json` and the verified
 archive preserve all script revisions/hashes, loop probes, original false-green
 receipt, corrected six-case receipt, and pinned oracle inputs.
 
-This review wrote only its owned worktree/scratch. It ran no native code, hardware
-sampling, broad gate, or Guardian gate. Root owns the final integration verdict.
+This review wrote only its owned worktree/scratch. Analysis ran no native code, hardware
+sampling or compiler/backend gate. The evidence commit then exercised its
+pre-commit Guardian hook: all 88 whole-tree checks passed. Feedback is centralized
+by root; root owns the final integration verdict.
