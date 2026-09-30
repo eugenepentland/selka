@@ -1,0 +1,31 @@
+{
+  "base": "3fe434c988123753f915bdcc801304f547e6c4d2",
+  "applied": [
+    "96b054808c6e9d0889d8ad23a1432d46d3943ff5",
+    "9789436dd14f1a515f0454961b70311c280bafdc",
+    "a3fb19fcf8bbe59ee72266a7fce96093b52d8b84"
+  ],
+  "normalization_matches_checkpoint": true,
+  "selected": 14,
+  "passed": 14,
+  "skipped": 0,
+  "failed": 0,
+  "exit": 0,
+  "negative_orderings": [
+    "first-second",
+    "second-first",
+    "original-second"
+  ],
+  "new_cases": 6,
+  "original_fixture_sha256": "163bbc43a7f175282a72ba561795439d4d53d7076353222f16b7f443ef5852f7",
+  "prior_8case_receipt_sha256": "3775a53589c9c32a3b02fd107a1f69a45a755050bdb037695a4390f547ceb513",
+  "guardian_exercised": false,
+  "timing": false,
+  "shared_source_edits": false,
+  "files": {
+    "fixes-a3-effects-final.log": "1d2185e29ff32d8a6a066a70031f1b8298c9fbb816cd41e9ef3793923ddb79ad",
+    "module_physical_inputs.zig": "aab2d406f78f5261f0208a6b6300b000151747b7bd89f16cdb0942b913f9d028",
+    "report.md": "06b057ebb4bdc765f8f261ca48a68257d31e4e50d12944247e4cb56d5749ce12",
+    "review_runtime_contracts.zig": "444d1670d0b687d8ca2d1e880f2d20109071e330ef155cc439ad0b84f252f794"
+  }
+}
