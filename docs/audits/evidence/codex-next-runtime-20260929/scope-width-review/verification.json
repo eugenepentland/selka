@@ -1,0 +1,409 @@
+{
+  "checkpoints": {
+    "scope-1390": {
+      "receipt_sha256": "cc4fdde9611cf7f049d956ce118b4ce34e7891c3ad9e6d2c0b648513493aa673",
+      "source": "1390e0c76840baf8231f043a3802a8ddccc9b9d3"
+    },
+    "truth-1390": {
+      "receipt_sha256": "43cc74672e7e5fbe0f3eb89313368793e5204c4a6821463ff06a14bb109cd4e3",
+      "source": "1390e0c76840baf8231f043a3802a8ddccc9b9d3"
+    },
+    "corrected-790": {
+      "receipt_sha256": "48e096aa52a2d31d387a396ad231e4540d5742a7e7c1fb9c7cef8b754a093106",
+      "source": "790cdfb1b38a06cae3741c0c9bba724f4cf8fb77"
+    }
+  },
+  "files": {
+    "docs/audits/evidence/codex-next-runtime-20260929/scope-width-review/scope-1390/receipt.json": {
+      "source_path": ".tmp/abi5-review/receipt.json",
+      "source_sha256": "cc4fdde9611cf7f049d956ce118b4ce34e7891c3ad9e6d2c0b648513493aa673",
+      "stored_sha256": "cc4fdde9611cf7f049d956ce118b4ce34e7891c3ad9e6d2c0b648513493aa673",
+      "gzip": false
+    },
+    "docs/audits/evidence/codex-next-runtime-20260929/scope-width-review/scope-1390/review_scope_emit.zig": {
+      "source_path": "src/review_scope_emit.zig",
+      "source_sha256": "94ba4fc5823c2edf4546e77830b173dfc6e85872df3fda6b433aaf2868e70e01",
+      "stored_sha256": "94ba4fc5823c2edf4546e77830b173dfc6e85872df3fda6b433aaf2868e70e01",
+      "gzip": false
+    },
+    "docs/audits/evidence/codex-next-runtime-20260929/scope-width-review/scope-1390/assembly-build.log.gz": {
+      "source_path": ".tmp/abi5-review/assembly-build.log",
+      "source_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stored_sha256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+      "gzip": true
+    },
+    "docs/audits/evidence/codex-next-runtime-20260929/scope-width-review/scope-1390/design.md": {
+      "source_path": ".tmp/abi5-review/design.md",
+      "source_sha256": "94411bdc71d9c759b0b9aac03105c65c486debaa0876908109b9e69bc77c3567",
+      "stored_sha256": "94411bdc71d9c759b0b9aac03105c65c486debaa0876908109b9e69bc77c3567",
+      "gzip": false
+    },
+    "docs/audits/evidence/codex-next-runtime-20260929/scope-width-review/scope-1390/emit.log.gz": {
+      "source_path": ".tmp/abi5-review/emit.log",
+      "source_sha256": "a04d1b807ba6329b8d843438e10193f8961e1b7bc1270b7faa03edeb3e55b28a",
+      "stored_sha256": "ff9e968c1d7132a76bd6bcdf3556bdd137c7f7370a6110d15c3c7765e039e546",
+      "gzip": true
+    },
+    "docs/audits/evidence/codex-next-runtime-20260929/scope-width-review/scope-1390/frozen-before.json": {
+      "source_path": ".tmp/abi5-review/frozen-before.json",
+      "source_sha256": "cb68d5b185f0b527eda09ef66664a4e0862532e640fe3fdc873cccaffea72663",
+      "stored_sha256": "cb68d5b185f0b527eda09ef66664a4e0862532e640fe3fdc873cccaffea72663",
+      "gzip": false
+    },
+    "docs/audits/evidence/codex-next-runtime-20260929/scope-width-review/scope-1390/link-final-2.log.gz": {
+      "source_path": ".tmp/abi5-review/link-final-2.log",
+      "source_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stored_sha256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+      "gzip": true
+    },
+    "docs/audits/evidence/codex-next-runtime-20260929/scope-width-review/scope-1390/link-final-3.log.gz": {
+      "source_path": ".tmp/abi5-review/link-final-3.log",
+      "source_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stored_sha256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+      "gzip": true
+    },
+    "docs/audits/evidence/codex-next-runtime-20260929/scope-width-review/scope-1390/link-final.log.gz": {
+      "source_path": ".tmp/abi5-review/link-final.log",
+      "source_sha256": "c4bba16d4150cd5a8bc2e9a0a2fbdb81481915ac5da7bf8b4cbf597aa5654486",
+      "stored_sha256": "48d9a74cc178a42c52ce035ef9423c00389cfabc57926eeeba856e74012c46e3",
+      "gzip": true
+    },
+    "docs/audits/evidence/codex-next-runtime-20260929/scope-width-review/scope-1390/link.log.gz": {
+      "source_path": ".tmp/abi5-review/link.log",
+      "source_sha256": "ae22de5b5a1262ccdff53210c0a4005873758d373ebc1327aeb03795d7361b89",
+      "stored_sha256": "ea57808d5a572d998c07decbd3f9e77e90b3dd9119a9c710e9c77cdc8c4142c7",
+      "gzip": true
+    },
+    "docs/audits/evidence/codex-next-runtime-20260929/scope-width-review/scope-1390/qbe.log.gz": {
+      "source_path": ".tmp/abi5-review/qbe.log",
+      "source_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stored_sha256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+      "gzip": true
+    },
+    "docs/audits/evidence/codex-next-runtime-20260929/scope-width-review/scope-1390/report.md": {
+      "source_path": ".tmp/abi5-review/report.md",
+      "source_sha256": "9e437d09dd33b054e24279f30852bc3ccf3a2cfdac566d51625aa14b56368340",
+      "stored_sha256": "9e437d09dd33b054e24279f30852bc3ccf3a2cfdac566d51625aa14b56368340",
+      "gzip": false
+    },
+    "docs/audits/evidence/codex-next-runtime-20260929/scope-width-review/scope-1390/run-final.log.gz": {
+      "source_path": ".tmp/abi5-review/run-final.log",
+      "source_sha256": "f9b688d76a045de6843ba9cbc91d15850bc305da0e95885d090a1786df08952f",
+      "stored_sha256": "90d027a63e6a1dd187df743e7559717fcaaf6c0cee5b425d4748a00314b36d9a",
+      "gzip": true
+    },
+    "docs/audits/evidence/codex-next-runtime-20260929/scope-width-review/scope-1390/run.log.gz": {
+      "source_path": ".tmp/abi5-review/run.log",
+      "source_sha256": "d389567baca739875e346053face8bfd6bb84d585a9a61d17b4eec56fcdd09eb",
+      "stored_sha256": "2ec4b1f989ee2c49ec9debfebee4dc7838c007540fc5b8ec82d7be0e749bc139",
+      "gzip": true
+    },
+    "docs/audits/evidence/codex-next-runtime-20260929/scope-width-review/scope-1390/runtime-bridge-build.log.gz": {
+      "source_path": ".tmp/abi5-review/runtime-bridge-build.log",
+      "source_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stored_sha256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+      "gzip": true
+    },
+    "docs/audits/evidence/codex-next-runtime-20260929/scope-width-review/scope-1390/runtime_rc_renamed.o.gz": {
+      "source_path": ".tmp/abi5-review/runtime_rc_renamed.o",
+      "source_sha256": "5193ae957de5ee6fc92fdaa85dab0ee55ab330b669416a040175e58ed107d7c2",
+      "stored_sha256": "32845de6c96874f14d1bde71df57c94c90e358c5b8207544205c7918e4ed5cc4",
+      "gzip": true
+    },
+    "docs/audits/evidence/codex-next-runtime-20260929/scope-width-review/scope-1390/scope.o.gz": {
+      "source_path": ".tmp/abi5-review/scope.o",
+      "source_sha256": "654a73966c332c1083448e2f80887b3f56126a78fed8245ec61af656882b571b",
+      "stored_sha256": "eba62822b2b34ae62b63c2d04ac5e4725e50b0efd6deff4bc6a2d299d4cfd1e3",
+      "gzip": true
+    },
+    "docs/audits/evidence/codex-next-runtime-20260929/scope-width-review/scope-1390/scope.s": {
+      "source_path": ".tmp/abi5-review/scope.s",
+      "source_sha256": "4d3c65e2a795bcc2ac600bb8c8f67b570ca630a7d1cefdab6777cb6793c4d46f",
+      "stored_sha256": "4d3c65e2a795bcc2ac600bb8c8f67b570ca630a7d1cefdab6777cb6793c4d46f",
+      "gzip": false
+    },
+    "docs/audits/evidence/codex-next-runtime-20260929/scope-width-review/scope-1390/scope.ssa": {
+      "source_path": ".tmp/abi5-review/scope.ssa",
+      "source_sha256": "66e178aa41fa107ab2655282692aed21f9eb8432a5396e84c33bd5f99904be2d",
+      "stored_sha256": "66e178aa41fa107ab2655282692aed21f9eb8432a5396e84c33bd5f99904be2d",
+      "gzip": false
+    },
+    "docs/audits/evidence/codex-next-runtime-20260929/scope-width-review/scope-1390/scope_probe.gz": {
+      "source_path": ".tmp/abi5-review/scope_probe",
+      "source_sha256": "daecbcb7ae2d404edb4f1c2d52a94f7ef8a701828747e6fc9c2cfec641084881",
+      "stored_sha256": "e6487ab6bc7ba12811eca818ad5990d2a05bf38eb279e0e217284a2b8819e02c",
+      "gzip": true
+    },
+    "docs/audits/evidence/codex-next-runtime-20260929/scope-width-review/scope-1390/scope_probe.c": {
+      "source_path": ".tmp/abi5-review/scope_probe.c",
+      "source_sha256": "0ecc679b8a52c6ad2aaac8dbda416560b524eea94de6995db69f50fa02dc3e13",
+      "stored_sha256": "0ecc679b8a52c6ad2aaac8dbda416560b524eea94de6995db69f50fa02dc3e13",
+      "gzip": false
+    },
+    "docs/audits/evidence/codex-next-runtime-20260929/scope-width-review/truth-1390/receipt.json": {
+      "source_path": ".tmp/abi5-truth/1390-before/receipt.json",
+      "source_sha256": "43cc74672e7e5fbe0f3eb89313368793e5204c4a6821463ff06a14bb109cd4e3",
+      "stored_sha256": "43cc74672e7e5fbe0f3eb89313368793e5204c4a6821463ff06a14bb109cd4e3",
+      "gzip": false
+    },
+    "docs/audits/evidence/codex-next-runtime-20260929/scope-width-review/truth-1390/assembly-1390.log.gz": {
+      "source_path": ".tmp/abi5-truth/1390-before/assembly-1390.log",
+      "source_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stored_sha256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+      "gzip": true
+    },
+    "docs/audits/evidence/codex-next-runtime-20260929/scope-width-review/truth-1390/emit-1390.log.gz": {
+      "source_path": ".tmp/abi5-truth/1390-before/emit-1390.log",
+      "source_sha256": "17508ae38f3bfc56e8f03ebc541ab90be1ad0604a735203422ccd40742383ed6",
+      "stored_sha256": "5dcc7def7ab4158a9b3bc0e124b87764e025f707cac21f692a0b859054cb0a7d",
+      "gzip": true
+    },
+    "docs/audits/evidence/codex-next-runtime-20260929/scope-width-review/truth-1390/link-1390.log.gz": {
+      "source_path": ".tmp/abi5-truth/1390-before/link-1390.log",
+      "source_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stored_sha256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+      "gzip": true
+    },
+    "docs/audits/evidence/codex-next-runtime-20260929/scope-width-review/truth-1390/pin-emission.txt": {
+      "source_path": ".tmp/abi5-truth/1390-before/pin-emission.txt",
+      "source_sha256": "458d09782acec721d17604725436380886bf4e67aef8d34005745ab5cc270acd",
+      "stored_sha256": "458d09782acec721d17604725436380886bf4e67aef8d34005745ab5cc270acd",
+      "gzip": false
+    },
+    "docs/audits/evidence/codex-next-runtime-20260929/scope-width-review/truth-1390/qbe-1390.log.gz": {
+      "source_path": ".tmp/abi5-truth/1390-before/qbe-1390.log",
+      "source_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stored_sha256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+      "gzip": true
+    },
+    "docs/audits/evidence/codex-next-runtime-20260929/scope-width-review/truth-1390/qbe_rc_scope_inline.zig": {
+      "source_path": ".tmp/abi5-truth/1390-before/qbe_rc_scope_inline.zig",
+      "source_sha256": "6720de3c32c4a4c4e584b7a23ebe8ae8e3a9b34531981170a76c22b11ea8af33",
+      "stored_sha256": "6720de3c32c4a4c4e584b7a23ebe8ae8e3a9b34531981170a76c22b11ea8af33",
+      "gzip": false
+    },
+    "docs/audits/evidence/codex-next-runtime-20260929/scope-width-review/truth-1390/review_scope_truth_emit.zig": {
+      "source_path": ".tmp/abi5-truth/1390-before/review_scope_truth_emit.zig",
+      "source_sha256": "a3ca088ade88dc2605034f4e3745cd537debbc7bc87e0b68027e44d78fa82fea",
+      "stored_sha256": "a3ca088ade88dc2605034f4e3745cd537debbc7bc87e0b68027e44d78fa82fea",
+      "gzip": false
+    },
+    "docs/audits/evidence/codex-next-runtime-20260929/scope-width-review/truth-1390/run-1390.log.gz": {
+      "source_path": ".tmp/abi5-truth/1390-before/run-1390.log",
+      "source_sha256": "fb9391c81edc6e38db4c1f024b1d9cb6fb06abe5d5add69846cf13e693360aa3",
+      "stored_sha256": "dc40c107cbaaff21239f3eb38547b418032deee81ba7c98b435ce5c5e92db80c",
+      "gzip": true
+    },
+    "docs/audits/evidence/codex-next-runtime-20260929/scope-width-review/truth-1390/truth.s": {
+      "source_path": ".tmp/abi5-truth/1390-before/truth.s",
+      "source_sha256": "7cbdafc2a3c44f8147e59b65288441fd1c15e8544083b795f06cdf1f67c29680",
+      "stored_sha256": "7cbdafc2a3c44f8147e59b65288441fd1c15e8544083b795f06cdf1f67c29680",
+      "gzip": false
+    },
+    "docs/audits/evidence/codex-next-runtime-20260929/scope-width-review/truth-1390/truth.ssa": {
+      "source_path": ".tmp/abi5-truth/1390-before/truth.ssa",
+      "source_sha256": "1e4aa118c50ef389132591bbf0c15b9fe284a7d716264291a4bd931278d3be7f",
+      "stored_sha256": "1e4aa118c50ef389132591bbf0c15b9fe284a7d716264291a4bd931278d3be7f",
+      "gzip": false
+    },
+    "docs/audits/evidence/codex-next-runtime-20260929/scope-width-review/truth-1390/truth_probe.gz": {
+      "source_path": ".tmp/abi5-truth/1390-before/truth_probe",
+      "source_sha256": "635afd302760063ee20355639239965bb6f24811d6eaf58aae30ae770c066df6",
+      "stored_sha256": "98af405405a9aa37e7bfe7a6e7a197738671fba1ea28acb9c0bd7968ed0baeeb",
+      "gzip": true
+    },
+    "docs/audits/evidence/codex-next-runtime-20260929/scope-width-review/truth-1390/truth_probe.c": {
+      "source_path": ".tmp/abi5-truth/1390-before/truth_probe.c",
+      "source_sha256": "3084bd2bf0c0e06646f79e860117c8cdddc1fecbe1f43c694e67350c4ee2202a",
+      "stored_sha256": "3084bd2bf0c0e06646f79e860117c8cdddc1fecbe1f43c694e67350c4ee2202a",
+      "gzip": false
+    },
+    "docs/audits/evidence/codex-next-runtime-20260929/scope-width-review/corrected-790/receipt.json": {
+      "source_path": ".tmp/abi5-corrected-790/receipt.json",
+      "source_sha256": "48e096aa52a2d31d387a396ad231e4540d5742a7e7c1fb9c7cef8b754a093106",
+      "stored_sha256": "48e096aa52a2d31d387a396ad231e4540d5742a7e7c1fb9c7cef8b754a093106",
+      "gzip": false
+    },
+    "docs/audits/evidence/codex-next-runtime-20260929/scope-width-review/corrected-790/assembly.log.gz": {
+      "source_path": ".tmp/abi5-corrected-790/assembly.log",
+      "source_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stored_sha256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+      "gzip": true
+    },
+    "docs/audits/evidence/codex-next-runtime-20260929/scope-width-review/corrected-790/branch-types.json": {
+      "source_path": ".tmp/abi5-corrected-790/branch-types.json",
+      "source_sha256": "29c69310b4dea69857193ded38a3ef341548cc5193379face14053c5cabf54e0",
+      "stored_sha256": "29c69310b4dea69857193ded38a3ef341548cc5193379face14053c5cabf54e0",
+      "gzip": false
+    },
+    "docs/audits/evidence/codex-next-runtime-20260929/scope-width-review/corrected-790/bridge.log.gz": {
+      "source_path": ".tmp/abi5-corrected-790/bridge.log",
+      "source_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stored_sha256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+      "gzip": true
+    },
+    "docs/audits/evidence/codex-next-runtime-20260929/scope-width-review/corrected-790/emit.log.gz": {
+      "source_path": ".tmp/abi5-corrected-790/emit.log",
+      "source_sha256": "dddd417e7d6d5b16420b2d425db5c5f9ed8a02ae7cf0ec6e73628731c31e120f",
+      "stored_sha256": "d33343c5d628084509fe7aca7788a8f1e5d072ea6ac500e6b50bff7a96c36ad7",
+      "gzip": true
+    },
+    "docs/audits/evidence/codex-next-runtime-20260929/scope-width-review/corrected-790/frozen-after.json": {
+      "source_path": ".tmp/abi5-corrected-790/frozen-after.json",
+      "source_sha256": "ce2d5492c1bbe64438547eff8c7f086ac96d57ef09b2ea5f189e569cfcac21bf",
+      "stored_sha256": "ce2d5492c1bbe64438547eff8c7f086ac96d57ef09b2ea5f189e569cfcac21bf",
+      "gzip": false
+    },
+    "docs/audits/evidence/codex-next-runtime-20260929/scope-width-review/corrected-790/frozen-before.json": {
+      "source_path": ".tmp/abi5-corrected-790/frozen-before.json",
+      "source_sha256": "ce2d5492c1bbe64438547eff8c7f086ac96d57ef09b2ea5f189e569cfcac21bf",
+      "stored_sha256": "ce2d5492c1bbe64438547eff8c7f086ac96d57ef09b2ea5f189e569cfcac21bf",
+      "gzip": false
+    },
+    "docs/audits/evidence/codex-next-runtime-20260929/scope-width-review/corrected-790/link.log.gz": {
+      "source_path": ".tmp/abi5-corrected-790/link.log",
+      "source_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stored_sha256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+      "gzip": true
+    },
+    "docs/audits/evidence/codex-next-runtime-20260929/scope-width-review/corrected-790/qbe.log.gz": {
+      "source_path": ".tmp/abi5-corrected-790/qbe.log",
+      "source_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stored_sha256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+      "gzip": true
+    },
+    "docs/audits/evidence/codex-next-runtime-20260929/scope-width-review/corrected-790/qbe_rc_scope_inline.zig": {
+      "source_path": ".tmp/abi5-corrected-790/qbe_rc_scope_inline.zig",
+      "source_sha256": "d9ed1e55293b22be4c5a9d9c780cf94ac84e07d43812c4b4e646fb08b2b1eb20",
+      "stored_sha256": "d9ed1e55293b22be4c5a9d9c780cf94ac84e07d43812c4b4e646fb08b2b1eb20",
+      "gzip": false
+    },
+    "docs/audits/evidence/codex-next-runtime-20260929/scope-width-review/corrected-790/report.md": {
+      "source_path": ".tmp/abi5-corrected-790/report.md",
+      "source_sha256": "b8d2c821807441669d39badaf1a9379e698b7049bf9ce60d6402ab97cfd45c1f",
+      "stored_sha256": "b8d2c821807441669d39badaf1a9379e698b7049bf9ce60d6402ab97cfd45c1f",
+      "gzip": false
+    },
+    "docs/audits/evidence/codex-next-runtime-20260929/scope-width-review/corrected-790/review_scope_emit_790.zig": {
+      "source_path": ".tmp/abi5-corrected-790/review_scope_emit_790.zig",
+      "source_sha256": "df721a72882258d9347be1e00d7b3020d71a6165b1ca67095071793f1b97c070",
+      "stored_sha256": "df721a72882258d9347be1e00d7b3020d71a6165b1ca67095071793f1b97c070",
+      "gzip": false
+    },
+    "docs/audits/evidence/codex-next-runtime-20260929/scope-width-review/corrected-790/run.log.gz": {
+      "source_path": ".tmp/abi5-corrected-790/run.log",
+      "source_sha256": "42a9b412b896c0b5cbdd7a914573c6f1292e8ee23f7fbb03ed760570f0fc7af0",
+      "stored_sha256": "5342efbc336e30800d1fc0a288eebb8ecea98fef6e726a4e2e27751fa6d7de25",
+      "gzip": true
+    },
+    "docs/audits/evidence/codex-next-runtime-20260929/scope-width-review/corrected-790/runtime_rc_renamed.o.gz": {
+      "source_path": ".tmp/abi5-corrected-790/runtime_rc_renamed.o",
+      "source_sha256": "5193ae957de5ee6fc92fdaa85dab0ee55ab330b669416a040175e58ed107d7c2",
+      "stored_sha256": "32845de6c96874f14d1bde71df57c94c90e358c5b8207544205c7918e4ed5cc4",
+      "gzip": true
+    },
+    "docs/audits/evidence/codex-next-runtime-20260929/scope-width-review/corrected-790/scope.o.gz": {
+      "source_path": ".tmp/abi5-corrected-790/scope.o",
+      "source_sha256": "99ea705c1c2a8a2d7bb7083f54a23d726d4c9ed884fb8dfd32cdac7010878ca3",
+      "stored_sha256": "c699c710dccad6bf21573654398efd48ab408d250a2801a1ae6f602298bbe7c7",
+      "gzip": true
+    },
+    "docs/audits/evidence/codex-next-runtime-20260929/scope-width-review/corrected-790/scope.s": {
+      "source_path": ".tmp/abi5-corrected-790/scope.s",
+      "source_sha256": "556f15e31534cec6ff8d2c480599b730ff5817ea1d31d4866697807b218c17ce",
+      "stored_sha256": "556f15e31534cec6ff8d2c480599b730ff5817ea1d31d4866697807b218c17ce",
+      "gzip": false
+    },
+    "docs/audits/evidence/codex-next-runtime-20260929/scope-width-review/corrected-790/scope.ssa": {
+      "source_path": ".tmp/abi5-corrected-790/scope.ssa",
+      "source_sha256": "fe0bb7c6bff18a7f169be9dadc0f0c025e0e8c7b4566208d22b8baad0cd1c6b2",
+      "stored_sha256": "fe0bb7c6bff18a7f169be9dadc0f0c025e0e8c7b4566208d22b8baad0cd1c6b2",
+      "gzip": false
+    },
+    "docs/audits/evidence/codex-next-runtime-20260929/scope-width-review/corrected-790/scope_probe.gz": {
+      "source_path": ".tmp/abi5-corrected-790/scope_probe",
+      "source_sha256": "8bef9112f9b51f3b59613c4205f7927cb0f02137c5fbb392d7e720dec145522c",
+      "stored_sha256": "3923474819b63bf4ff3fe76c912bdfe2c6a3da1c721886f25b0b4c6b9511f598",
+      "gzip": true
+    },
+    "docs/audits/evidence/codex-next-runtime-20260929/scope-width-review/corrected-790/scope_probe.c": {
+      "source_path": ".tmp/abi5-corrected-790/scope_probe.c",
+      "source_sha256": "c89689f0e55cdea9af27764dbfb77c8fbb775eebfa78aec59a0ae4a570c85a54",
+      "stored_sha256": "c89689f0e55cdea9af27764dbfb77c8fbb775eebfa78aec59a0ae4a570c85a54",
+      "gzip": false
+    },
+    "docs/audits/evidence/codex-next-runtime-20260929/scope-width-review/corrected-790/truth/assembly.log.gz": {
+      "source_path": ".tmp/abi5-truth/790-after/assembly.log",
+      "source_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stored_sha256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+      "gzip": true
+    },
+    "docs/audits/evidence/codex-next-runtime-20260929/scope-width-review/corrected-790/truth/emit.log.gz": {
+      "source_path": ".tmp/abi5-truth/790-after/emit.log",
+      "source_sha256": "9016672fc50f054e861302f675f3720219bc23d26508415b1b7012a803370b2b",
+      "stored_sha256": "8e0492c7c97f92e8813e80422faf175389f1291539f15e7a83047274888e30cf",
+      "gzip": true
+    },
+    "docs/audits/evidence/codex-next-runtime-20260929/scope-width-review/corrected-790/truth/link.log.gz": {
+      "source_path": ".tmp/abi5-truth/790-after/link.log",
+      "source_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stored_sha256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+      "gzip": true
+    },
+    "docs/audits/evidence/codex-next-runtime-20260929/scope-width-review/corrected-790/truth/pin-emission.txt": {
+      "source_path": ".tmp/abi5-truth/790-after/pin-emission.txt",
+      "source_sha256": "b3f87f2d8ad033935462a7cfa2ec86731f6ff0f8aca4574e057e5d84ca83430d",
+      "stored_sha256": "b3f87f2d8ad033935462a7cfa2ec86731f6ff0f8aca4574e057e5d84ca83430d",
+      "gzip": false
+    },
+    "docs/audits/evidence/codex-next-runtime-20260929/scope-width-review/corrected-790/truth/qbe.log.gz": {
+      "source_path": ".tmp/abi5-truth/790-after/qbe.log",
+      "source_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stored_sha256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+      "gzip": true
+    },
+    "docs/audits/evidence/codex-next-runtime-20260929/scope-width-review/corrected-790/truth/review_scope_truth_emit_790.zig": {
+      "source_path": ".tmp/abi5-truth/790-after/review_scope_truth_emit_790.zig",
+      "source_sha256": "e0c5e04c0cc1134ac5edc10c807c10579f2ea637fefb9c1cd3b664892b19b72c",
+      "stored_sha256": "e0c5e04c0cc1134ac5edc10c807c10579f2ea637fefb9c1cd3b664892b19b72c",
+      "gzip": false
+    },
+    "docs/audits/evidence/codex-next-runtime-20260929/scope-width-review/corrected-790/truth/run.log.gz": {
+      "source_path": ".tmp/abi5-truth/790-after/run.log",
+      "source_sha256": "8557d020fbea6eb33a50b0c2d4d4f63e6f74e2adb21d962af9db7ff97349dec8",
+      "stored_sha256": "1db952515926d1babfa4bda0059475c6127482ea56e3f1b5382aae38c029e019",
+      "gzip": true
+    },
+    "docs/audits/evidence/codex-next-runtime-20260929/scope-width-review/corrected-790/truth/truth.o.gz": {
+      "source_path": ".tmp/abi5-truth/790-after/truth.o",
+      "source_sha256": "a1870d10d1547074422f526a64dc69a8f307591003cdb4f03c5e5a4b13cba76d",
+      "stored_sha256": "adb9fa688259380778d237aef481d289002298c04acdd68740fd7b3fb97bea21",
+      "gzip": true
+    },
+    "docs/audits/evidence/codex-next-runtime-20260929/scope-width-review/corrected-790/truth/truth.s": {
+      "source_path": ".tmp/abi5-truth/790-after/truth.s",
+      "source_sha256": "b70a012a1a41e0bbc35a43153e0555f5faa7410caf82ab2c26aab4045f30e9d4",
+      "stored_sha256": "b70a012a1a41e0bbc35a43153e0555f5faa7410caf82ab2c26aab4045f30e9d4",
+      "gzip": false
+    },
+    "docs/audits/evidence/codex-next-runtime-20260929/scope-width-review/corrected-790/truth/truth.ssa": {
+      "source_path": ".tmp/abi5-truth/790-after/truth.ssa",
+      "source_sha256": "abc5252f6b2842b1ecb859f9412ea32ee15e995ef4ef484dab8f076eb2c256d3",
+      "stored_sha256": "abc5252f6b2842b1ecb859f9412ea32ee15e995ef4ef484dab8f076eb2c256d3",
+      "gzip": false
+    },
+    "docs/audits/evidence/codex-next-runtime-20260929/scope-width-review/corrected-790/truth/truth_probe.gz": {
+      "source_path": ".tmp/abi5-truth/790-after/truth_probe",
+      "source_sha256": "8188b8b134193ceebcdd4b287e742f118bc73faf3b67bc9b0122ee4e39d141ac",
+      "stored_sha256": "748668130ab1b2da3e029834d19328078f462c2335831ecd4b39a7f507682af5",
+      "gzip": true
+    },
+    "docs/audits/evidence/codex-next-runtime-20260929/scope-width-review/corrected-790/truth/truth_probe.c": {
+      "source_path": ".tmp/abi5-truth/790-after/truth_probe.c",
+      "source_sha256": "3084bd2bf0c0e06646f79e860117c8cdddc1fecbe1f43c694e67350c4ee2202a",
+      "stored_sha256": "3084bd2bf0c0e06646f79e860117c8cdddc1fecbe1f43c694e67350c4ee2202a",
+      "gzip": false
+    }
+  },
+  "scope": "Independent actual QBE predicate and native scope contract evidence only; original1390 truth2/4 is rejected, original1390 scope12/12 has one safe native fallback, corrected790 truth4/4 and scope12/12 have seven fast successes. No custom address placement, broad gate or performance acceptance."
+}

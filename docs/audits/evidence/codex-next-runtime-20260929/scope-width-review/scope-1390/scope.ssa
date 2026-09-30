@@ -1,0 +1,313 @@
+export function w $review_scope_pin(l %ctx, l %heap, l %v0, l %v1) {
+@start
+ # RC-SCOPE-IL-1 begin
+ storel %heap, %v0
+ %v2 =l add %heap, 5640
+ # myl-rc-state %v2
+ %v3 =l loadl %v2
+ %v4 =l add %v3, 248
+ # myl-rc-state %v4
+ %v5 =l loadl %v4
+ %v6 =l add %v0, 8
+ storel %v5, %v6
+ %v7 =l add %v0, 16
+ storel 0, %v7
+ %v9 =l add %heap, 112
+ # myl-rc-state %v9
+ %v10 =l add %v0, 24
+ %v11 =l add %v0, 28
+ %v8 =w loaduw %v9
+ storew 1, %v10
+ storew %v8, %v11
+ storel %v0, %v4
+ # RC-SCOPE-IL-1 pin
+ jnz %v1, @rcspinmark12, @rcspindone12
+@rcspinmark12
+ %v13 =l sub %v1, 16
+ # myl-rc %v13
+ %v14 =l loadl %v13
+ %v15 =l and %v14, 2
+ jnz %v15, @rcspindone12, @rcspintype12
+@rcspintype12
+ %v16 =l and %v14, 4611686018427387907
+ %v17 =w ceql %v16, 0
+ jnz %v17, @rcs18, @rcspinslow12
+@rcs18
+ %v19 =l sub %v1, 8
+ # myl-rc %v19
+ %v20 =l loadl %v19
+ %v21 =l loadl $myl_native_list_header_type
+ %v22 =w ceql %v20, %v21
+ jnz %v22, @rcs23, @rcspinslow12
+@rcs23
+ %v24 =l add %heap, 5640
+ # myl-rc-state %v24
+ %v25 =l loadl %v24
+ %v26 =l add %v25, 256
+ # myl-rc-state %v26
+ %v27 =l loadl %v26
+ jnz %v27, @rcs28, @rcspinslow12
+@rcs28
+ %v29 =l add %heap, 24
+ # myl-rc-state %v29
+ %v30 =l loadl %v29
+ %v31 =l add %v30, 40
+ %v32 =w cugel %v31, %v30
+ jnz %v32, @rcs33, @rcspinslow12
+@rcs33
+ %v34 =l add %heap, 88
+ # myl-rc-state %v34
+ %v35 =l loadl %v34
+ %v36 =w ceql %v35, 0
+ %v37 =w culel %v31, %v35
+ %v38 =w or %v36, %v37
+ jnz %v38, @rcs39, @rcspinslow12
+@rcs39
+ %v41 =l sub %v1, 24
+ # myl-rc %v41
+ %v40 =l loadl %v41
+ %v42 =w cnel %v40, 18446744073709551615
+ jnz %v42, @rcs43, @rcspinslow12
+@rcs43
+ %v44 =l add %v1, 32
+ %v45 =l loadl %v44
+ jnz %v45, @rcspinbacking12, @rcspincommit12
+@rcspinbacking12
+ %v46 =l sub %v45, 16
+ # myl-rc %v46
+ %v47 =l loadl %v46
+ %v48 =l and %v47, 4611686018427387907
+ %v49 =w ceql %v48, 0
+ jnz %v49, @rcs50, @rcspinslow12
+@rcs50
+ %v52 =l sub %v45, 24
+ # myl-rc %v52
+ %v51 =l loadl %v52
+ %v53 =w cnel %v51, 18446744073709551615
+ jnz %v53, @rcs54, @rcspinslow12
+@rcs54
+@rcspincommit12
+ %v55 =l loadl %v27
+ %v56 =l add %v25, 256
+ # myl-rc-state %v56
+ storel %v55, %v56
+ %v57 =l add %v25, 264
+ # myl-rc-state %v57
+ %v58 =l loadl %v57
+ %v59 =l add %v58, -1
+ storel %v59, %v57
+ %v60 =l add %heap, 24
+ # myl-rc-state %v60
+ %v61 =l loadl %v60
+ %v62 =l add %v61, 40
+ storel %v62, %v60
+ %v63 =l add %v25, 48
+ # myl-rc-state %v63
+ %v64 =l loadl %v63
+ %v65 =l add %v64, 40
+ storel %v65, %v63
+ %v66 =l sub %v1, 24
+ # myl-rc %v66
+ %v67 =l loadl %v66
+ %v68 =l add %v67, 1
+ storel %v68, %v66
+ jnz %v45, @rcspinhold12, @rcspinjournal12
+@rcspinhold12
+ %v69 =l sub %v45, 24
+ # myl-rc %v69
+ %v70 =l loadl %v69
+ %v71 =l add %v70, 1
+ storel %v71, %v69
+@rcspinjournal12
+ %v72 =l and %v14, 1152921504606846976
+ %v73 =l or %v14, 1152921504606846976
+ %v74 =l sub %v1, 16
+ # myl-rc %v74
+ storel %v73, %v74
+ %v75 =l add %v0, 16
+ %v76 =l loadl %v75
+ %v77 =l add %v27, 0
+ # myl-rc-state %v77
+ storel %v76, %v77
+ %v78 =l add %v27, 8
+ # myl-rc-state %v78
+ storel %v1, %v78
+ %v79 =l add %v27, 16
+ # myl-rc-state %v79
+ storel %v72, %v79
+ %v80 =l add %v27, 24
+ # myl-rc-state %v80
+ storew 1, %v80
+ %v81 =l add %v27, 32
+ # myl-rc-state %v81
+ storel %v45, %v81
+ %v82 =l add %v0, 16
+ storel %v27, %v82
+ jmp @rcspindone12
+@rcspinslow12
+ %v83 =w call $myl_qbe_rc_scope_pin(l %ctx, l %v0, l %v1)
+ jnz %v83, @rcunique84, @failure
+@rcunique84
+@rcspindone12
+ ret 1
+@failure
+ ret 0
+}
+export function $review_scope_end(l %ctx, l %heap, l %v0) {
+@start
+ %v87 =l add %v0, 24
+ # RC-SCOPE-IL-1 end
+ %v86 =w loaduw %v87
+ jnz %v86, @rcsendactive85, @rcsenddone85
+@rcsendactive85
+ %v88 =l add %heap, 5640
+ # myl-rc-state %v88
+ %v89 =l loadl %v88
+ %v90 =l add %v89, 248
+ # myl-rc-state %v90
+ %v91 =l loadl %v90
+ %v92 =w ceql %v91, %v0
+ jnz %v92, @rcs93, @rcsendslow85
+@rcs93
+ %v94 =l add %v89, 200
+ # myl-rc-state %v94
+ %v95 =l loadl %v94
+ %v96 =w ceql %v95, 0
+ jnz %v96, @rcs97, @rcsendslow85
+@rcs97
+ %v98 =l add %v0, 16
+ %v99 =l loadl %v98
+ jnz %v99, @rcsendnode85, @rcsendunlink85
+@rcsendnode85
+ %v100 =l add %v99, 0
+ # myl-rc-state %v100
+ %v101 =l loadl %v100
+ %v102 =w ceql %v101, 0
+ jnz %v102, @rcs103, @rcsendslow85
+@rcs103
+ %v104 =l add %v89, 264
+ # myl-rc-state %v104
+ %v105 =l loadl %v104
+ %v106 =w cultl %v105, 32
+ jnz %v106, @rcs107, @rcsendslow85
+@rcs107
+ %v108 =l add %v99, 8
+ # myl-rc-state %v108
+ %v109 =l loadl %v108
+ jnz %v109, @rcs110, @rcsendslow85
+@rcs110
+ %v111 =l sub %v109, 16
+ # myl-rc %v111
+ %v112 =l loadl %v111
+ %v113 =l and %v112, 4611686018427387907
+ %v114 =w ceql %v113, 0
+ jnz %v114, @rcs115, @rcsendslow85
+@rcs115
+ %v117 =l sub %v109, 24
+ # myl-rc %v117
+ %v116 =l loadl %v117
+ jnz %v116, @rcs118, @rcsendslow85
+@rcs118
+ %v120 =l sub %v109, 32
+ # myl-rc %v120
+ %v119 =l loadl %v120
+ %v121 =w cugtl %v116, 1
+ %v122 =w cnel %v119, 0
+ %v123 =w or %v121, %v122
+ jnz %v123, @rcs124, @rcsendslow85
+@rcs124
+ %v125 =l add %v99, 32
+ # myl-rc-state %v125
+ %v126 =l loadl %v125
+ jnz %v126, @rcsendbacking85, @rcsendcommit85
+@rcsendbacking85
+ %v127 =l sub %v126, 16
+ # myl-rc %v127
+ %v128 =l loadl %v127
+ %v129 =l and %v128, 4611686018427387907
+ %v130 =w ceql %v129, 0
+ jnz %v130, @rcs131, @rcsendslow85
+@rcs131
+ %v133 =l sub %v126, 24
+ # myl-rc %v133
+ %v132 =l loadl %v133
+ jnz %v132, @rcs134, @rcsendslow85
+@rcs134
+ %v136 =l sub %v126, 32
+ # myl-rc %v136
+ %v135 =l loadl %v136
+ %v137 =w cugtl %v132, 1
+ %v138 =w cnel %v135, 0
+ %v139 =w or %v137, %v138
+ jnz %v139, @rcs140, @rcsendslow85
+@rcs140
+@rcsendcommit85
+ %v142 =l add %v99, 24
+ # myl-rc-state %v142
+ %v141 =w loaduw %v142
+ jnz %v141, @rcsendrestore85, @rcsendreturned85
+@rcsendrestore85
+ %v143 =l add %v99, 16
+ # myl-rc-state %v143
+ %v144 =l loadl %v143
+ %v146 =l and %v112, 17293822569102704639
+ %v145 =l or %v146, %v144
+ %v147 =l sub %v109, 16
+ # myl-rc %v147
+ storel %v145, %v147
+ %v148 =l add %v0, 16
+@rcsendreturned85
+ storel 0, %v148
+ %v149 =l add %v89, 256
+ # myl-rc-state %v149
+ %v150 =l loadl %v149
+ %v151 =l add %v99, 0
+ # myl-rc-state %v151
+ storel %v150, %v151
+ %v152 =l add %v89, 256
+ # myl-rc-state %v152
+ storel %v99, %v152
+ %v153 =l add %v89, 264
+ # myl-rc-state %v153
+ %v154 =l loadl %v153
+ %v155 =l add %v154, 1
+ storel %v155, %v153
+ %v156 =l add %heap, 24
+ # myl-rc-state %v156
+ %v157 =l loadl %v156
+ %v158 =l add %v157, -40
+ storel %v158, %v156
+ %v159 =l add %v89, 48
+ # myl-rc-state %v159
+ %v160 =l loadl %v159
+ %v161 =l add %v160, -40
+ storel %v161, %v159
+ jnz %v126, @rcsenddropbacking85, @rcsenddroppayload85
+@rcsenddropbacking85
+ %v162 =l sub %v126, 24
+ # myl-rc %v162
+ %v163 =l loadl %v162
+ %v164 =l add %v163, -1
+ storel %v164, %v162
+@rcsenddroppayload85
+ %v165 =l sub %v109, 24
+ # myl-rc %v165
+ %v166 =l loadl %v165
+ %v167 =l add %v166, -1
+ storel %v167, %v165
+@rcsendunlink85
+ %v168 =l add %v0, 8
+ %v169 =l loadl %v168
+ %v170 =l add %v89, 248
+ # myl-rc-state %v170
+ storel %v169, %v170
+ %v171 =l add %v0, 24
+ %v172 =l add %v0, 8
+ storew 0, %v171
+ storel 0, %v172
+ jmp @rcsenddone85
+@rcsendslow85
+ call $myl_qbe_rc_scope_end(l %ctx, l %v0)
+@rcsenddone85
+ ret
+}

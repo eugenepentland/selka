@@ -1,0 +1,116 @@
+{
+  "source": "790cdfb1b38a06cae3741c0c9bba724f4cf8fb77",
+  "tree": "cb93d9c289defc9c36e2f64b5a1f19621d0dd3aa",
+  "compiler_sha256": "e58b3ba5140999ae7ff33ac9afc922279cdf936d70acf697e7d9104a08b31437",
+  "qbe_sha256": "90422d79a9e3bfac7e700857a1fdcaa359aecbdac973c376500432784990e633",
+  "compiler_runtime_source_files_verified_unchanged": 789,
+  "source_changed": [],
+  "binary_hashes_stable": true,
+  "old1390_receipt_file_digests_verified_unchanged": 20,
+  "emission_tests": {
+    "pure_condition": {
+      "selected": 1,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0
+    },
+    "actual_scope": {
+      "selected": 1,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "pure_conditional": {
+    "selected": 4,
+    "passed": 4,
+    "failed": 0,
+    "exit": 0,
+    "inputs": [
+      0,
+      1,
+      4294967296,
+      281474976710656
+    ],
+    "expected": [
+      0,
+      1,
+      1,
+      1
+    ],
+    "actual": [
+      0,
+      1,
+      1,
+      1
+    ]
+  },
+  "actual_scope": {
+    "selected": 12,
+    "passed": 12,
+    "failed": 0,
+    "exit": 0,
+    "wide_success_cases": 7,
+    "full_fast_end_cases": 7,
+    "safe_native_boundary_fallbacks": 0,
+    "count_limit_rollback_cases": 3,
+    "final_retirement_cases": 1,
+    "old_abi_refusal_cases": 1
+  },
+  "emitted_branch_types": {
+    "selected": 29,
+    "word": 29,
+    "raw_long": 0
+  },
+  "state_offsets_unchanged": {
+    "entry_bytes": 40,
+    "state_offset": 5640,
+    "metadata_bytes": 48,
+    "scopes": 248,
+    "spare": 256,
+    "spare_count": 264,
+    "deaths": 200,
+    "heap_bytes": 24,
+    "heap_limit": 88,
+    "heap_region": 112
+  },
+  "prior1390_scope_receipt_sha256": "cc4fdde9611cf7f049d956ce118b4ce34e7891c3ad9e6d2c0b648513493aa673",
+  "prior1390_pure_conditional_receipt_sha256": "43cc74672e7e5fbe0f3eb89313368793e5204c4a6821463ff06a14bb109cd4e3",
+  "guardian_exercised": false,
+  "timing_claimed": false,
+  "custom_address_placement": false,
+  "shared_source_edits": false,
+  "scope": "Listed actual QBE scope count and ABI contracts only; no broad gate or performance acceptance.",
+  "files": {
+    ".tmp/abi5-corrected-790/assembly.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    ".tmp/abi5-corrected-790/branch-types.json": "29c69310b4dea69857193ded38a3ef341548cc5193379face14053c5cabf54e0",
+    ".tmp/abi5-corrected-790/bridge.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    ".tmp/abi5-corrected-790/emit.log": "dddd417e7d6d5b16420b2d425db5c5f9ed8a02ae7cf0ec6e73628731c31e120f",
+    ".tmp/abi5-corrected-790/frozen-after.json": "ce2d5492c1bbe64438547eff8c7f086ac96d57ef09b2ea5f189e569cfcac21bf",
+    ".tmp/abi5-corrected-790/frozen-before.json": "ce2d5492c1bbe64438547eff8c7f086ac96d57ef09b2ea5f189e569cfcac21bf",
+    ".tmp/abi5-corrected-790/link.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    ".tmp/abi5-corrected-790/qbe.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    ".tmp/abi5-corrected-790/qbe_rc_scope_inline.zig": "d9ed1e55293b22be4c5a9d9c780cf94ac84e07d43812c4b4e646fb08b2b1eb20",
+    ".tmp/abi5-corrected-790/report.md": "b8d2c821807441669d39badaf1a9379e698b7049bf9ce60d6402ab97cfd45c1f",
+    ".tmp/abi5-corrected-790/review_scope_emit_790.zig": "df721a72882258d9347be1e00d7b3020d71a6165b1ca67095071793f1b97c070",
+    ".tmp/abi5-corrected-790/run.log": "42a9b412b896c0b5cbdd7a914573c6f1292e8ee23f7fbb03ed760570f0fc7af0",
+    ".tmp/abi5-corrected-790/runtime_rc_renamed.o": "5193ae957de5ee6fc92fdaa85dab0ee55ab330b669416a040175e58ed107d7c2",
+    ".tmp/abi5-corrected-790/scope.o": "99ea705c1c2a8a2d7bb7083f54a23d726d4c9ed884fb8dfd32cdac7010878ca3",
+    ".tmp/abi5-corrected-790/scope.s": "556f15e31534cec6ff8d2c480599b730ff5817ea1d31d4866697807b218c17ce",
+    ".tmp/abi5-corrected-790/scope.ssa": "fe0bb7c6bff18a7f169be9dadc0f0c025e0e8c7b4566208d22b8baad0cd1c6b2",
+    ".tmp/abi5-corrected-790/scope_probe": "8bef9112f9b51f3b59613c4205f7927cb0f02137c5fbb392d7e720dec145522c",
+    ".tmp/abi5-corrected-790/scope_probe.c": "c89689f0e55cdea9af27764dbfb77c8fbb775eebfa78aec59a0ae4a570c85a54",
+    ".tmp/abi5-truth/790-after/assembly.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    ".tmp/abi5-truth/790-after/emit.log": "9016672fc50f054e861302f675f3720219bc23d26508415b1b7012a803370b2b",
+    ".tmp/abi5-truth/790-after/link.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    ".tmp/abi5-truth/790-after/pin-emission.txt": "b3f87f2d8ad033935462a7cfa2ec86731f6ff0f8aca4574e057e5d84ca83430d",
+    ".tmp/abi5-truth/790-after/qbe.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    ".tmp/abi5-truth/790-after/review_scope_truth_emit_790.zig": "e0c5e04c0cc1134ac5edc10c807c10579f2ea637fefb9c1cd3b664892b19b72c",
+    ".tmp/abi5-truth/790-after/run.log": "8557d020fbea6eb33a50b0c2d4d4f63e6f74e2adb21d962af9db7ff97349dec8",
+    ".tmp/abi5-truth/790-after/truth.o": "a1870d10d1547074422f526a64dc69a8f307591003cdb4f03c5e5a4b13cba76d",
+    ".tmp/abi5-truth/790-after/truth.s": "b70a012a1a41e0bbc35a43153e0555f5faa7410caf82ab2c26aab4045f30e9d4",
+    ".tmp/abi5-truth/790-after/truth.ssa": "abc5252f6b2842b1ecb859f9412ea32ee15e995ef4ef484dab8f076eb2c256d3",
+    ".tmp/abi5-truth/790-after/truth_probe": "8188b8b134193ceebcdd4b287e742f118bc73faf3b67bc9b0122ee4e39d141ac",
+    ".tmp/abi5-truth/790-after/truth_probe.c": "3084bd2bf0c0e06646f79e860117c8cdddc1fecbe1f43c694e67350c4ee2202a"
+  }
+}

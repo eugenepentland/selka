@@ -1,0 +1,51 @@
+{
+  "source": "1390e0c76840baf8231f043a3802a8ddccc9b9d3",
+  "generator_test": {
+    "selected": 1,
+    "passed": 1,
+    "failed": 0,
+    "exit": 0
+  },
+  "truth_execution": {
+    "selected": 4,
+    "passed": 2,
+    "failed": 2,
+    "exit": 1,
+    "inputs": [
+      0,
+      1,
+      4294967296,
+      281474976710656
+    ],
+    "actual": [
+      0,
+      1,
+      0,
+      0
+    ],
+    "expected": [
+      0,
+      1,
+      1,
+      1
+    ]
+  },
+  "probe": "Actual production pin-entry conditional extracted without memory dereference; targets return true/false.",
+  "custom_address_placement": false,
+  "prior_12case_receipt_sha256": "cc4fdde9611cf7f049d956ce118b4ce34e7891c3ad9e6d2c0b648513493aa673",
+  "qbe_sha256": "90422d79a9e3bfac7e700857a1fdcaa359aecbdac973c376500432784990e633",
+  "files": {
+    "assembly-1390.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "emit-1390.log": "17508ae38f3bfc56e8f03ebc541ab90be1ad0604a735203422ccd40742383ed6",
+    "link-1390.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "pin-emission.txt": "458d09782acec721d17604725436380886bf4e67aef8d34005745ab5cc270acd",
+    "qbe-1390.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "qbe_rc_scope_inline.zig": "6720de3c32c4a4c4e584b7a23ebe8ae8e3a9b34531981170a76c22b11ea8af33",
+    "review_scope_truth_emit.zig": "a3ca088ade88dc2605034f4e3745cd537debbc7bc87e0b68027e44d78fa82fea",
+    "run-1390.log": "fb9391c81edc6e38db4c1f024b1d9cb6fb06abe5d5add69846cf13e693360aa3",
+    "truth.s": "7cbdafc2a3c44f8147e59b65288441fd1c15e8544083b795f06cdf1f67c29680",
+    "truth.ssa": "1e4aa118c50ef389132591bbf0c15b9fe284a7d716264291a4bd931278d3be7f",
+    "truth_probe": "635afd302760063ee20355639239965bb6f24811d6eaf58aae30ae770c066df6",
+    "truth_probe.c": "3084bd2bf0c0e06646f79e860117c8cdddc1fecbe1f43c694e67350c4ee2202a"
+  }
+}
