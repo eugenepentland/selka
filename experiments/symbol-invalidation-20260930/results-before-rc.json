@@ -1,0 +1,167 @@
+{
+ "compiler": "/home/epentland/ai/canopy/mylang-worktrees/claude-tool-gaps/.tmp/rf-before/bin/mylang",
+ "gc_runtime": false,
+ "rows": [
+  {
+   "edit": "cold",
+   "kind": "first build",
+   "matched": true,
+   "compiled": 18,
+   "modules": 18,
+   "seconds": 2.655
+  },
+  {
+   "edit": "private-add",
+   "kind": "add a private function to the leaf",
+   "matched": true,
+   "compiled": 16,
+   "modules": 18,
+   "seconds": 0.176
+  },
+  {
+   "edit": "private-body",
+   "kind": "body of a private function nobody reaches",
+   "matched": true,
+   "compiled": 16,
+   "modules": 18,
+   "seconds": 0.172
+  },
+  {
+   "edit": "private-mid-add",
+   "kind": "add a private function mid-file",
+   "matched": true,
+   "compiled": 16,
+   "modules": 18,
+   "seconds": 0.169
+  },
+  {
+   "edit": "private-mid-body",
+   "kind": "mid-file private body, same line count",
+   "matched": true,
+   "compiled": 16,
+   "modules": 18,
+   "seconds": 0.196
+  },
+  {
+   "edit": "private-mid-lines",
+   "kind": "mid-file private body, one line longer",
+   "matched": true,
+   "compiled": 16,
+   "modules": 18,
+   "seconds": 0.174
+  },
+  {
+   "edit": "private-helper-add-def",
+   "kind": "(the helper itself)",
+   "matched": true,
+   "compiled": 16,
+   "modules": 18,
+   "seconds": 0.187
+  },
+  {
+   "edit": "private-helper-body",
+   "kind": "body of a private helper a public function reaches",
+   "matched": true,
+   "compiled": 16,
+   "modules": 18,
+   "seconds": 0.176
+  },
+  {
+   "edit": "public-body",
+   "kind": "public non-inlined body (format_number)",
+   "matched": true,
+   "compiled": 16,
+   "modules": 18,
+   "seconds": 0.195
+  },
+  {
+   "edit": "public-inlined",
+   "kind": "small public function inlined into callers (values_equal)",
+   "matched": true,
+   "compiled": 16,
+   "modules": 18,
+   "seconds": 0.298
+  },
+  {
+   "edit": "signature",
+   "kind": "signature change (table.capacity gains a defaulted parameter)",
+   "matched": true,
+   "compiled": 13,
+   "modules": 18,
+   "seconds": 0.178
+  },
+  {
+   "edit": "public-add",
+   "kind": "add a public function",
+   "matched": true,
+   "compiled": 16,
+   "modules": 18,
+   "seconds": 0.187
+  },
+  {
+   "edit": "public-remove",
+   "kind": "remove that public function",
+   "matched": true,
+   "compiled": 16,
+   "modules": 18,
+   "seconds": 0.171
+  },
+  {
+   "edit": "record-field",
+   "kind": "record field added (chunk.Chunk)",
+   "matched": true,
+   "compiled": 13,
+   "modules": 18,
+   "seconds": 2.309
+  },
+  {
+   "edit": "constant",
+   "kind": "public constant changed (chunk.OP_METHOD)",
+   "matched": true,
+   "compiled": 13,
+   "modules": 18,
+   "seconds": 0.323
+  },
+  {
+   "edit": "rc-facts",
+   "kind": "function starts allocating (table.capacity)",
+   "matched": true,
+   "compiled": 13,
+   "modules": 18,
+   "seconds": 0.173
+  },
+  {
+   "edit": "value-add",
+   "kind": "add a public function taken as a value",
+   "matched": true,
+   "compiled": 16,
+   "modules": 18,
+   "seconds": 0.177
+  },
+  {
+   "edit": "value-use-import",
+   "kind": "(the entry imports value)",
+   "matched": true,
+   "compiled": 1,
+   "modules": 18,
+   "seconds": 1.606
+  },
+  {
+   "edit": "value-body",
+   "kind": "body of the function taken as a value",
+   "matched": true,
+   "compiled": 16,
+   "modules": 18,
+   "seconds": 0.193
+  },
+  {
+   "edit": "noop",
+   "kind": "no edit at all",
+   "matched": true,
+   "compiled": 0,
+   "modules": 18,
+   "seconds": 0.017
+  }
+ ],
+ "ok": true
+}
