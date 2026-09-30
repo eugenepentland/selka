@@ -215,7 +215,19 @@ identical
   arena switch changed, when one of its objects left the cache, or when an
   interface its last compile read changed its interface or emission hash. The
   positions hash counts only when that compile emitted an instruction whose
-  span fell in the interface's text. A body edit compiles one module. An
+  span fell in the interface's text. Each compile also records what it
+  consumed of every import, symbol by symbol: its *reach* (every function its
+  emitted units reach through the physical bodies they restore) with a digest
+  of each import's rows for those functions, and the stretches of an
+  import's text its positions came through. When only an import's emission
+  or positions hash changed, the scheduler recomputes those digests from the
+  import's new interface and keeps the module when they held
+  (MODULE-SYMBOL-CUTOFF-1..5). So a body edit compiles its own module and
+  only the dependents whose units reach the edited body (under the RC
+  runtime, a callee's body is part of what a caller's code reads), and an
+  edit that keeps its line count moves no dependent's positions. A body that
+  invokes a function value may reach any function value, so its module keeps
+  the whole-module rule. An
   interface edit compiles the modules that read the changed interface, and
   stops at any of them whose own interface and emission facts held (early
   cutoff).
