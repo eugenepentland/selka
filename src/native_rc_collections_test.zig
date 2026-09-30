@@ -1,6 +1,7 @@
 //! Production RC allocator and collection ownership invariants.
 const std = @import("std");
 extern fn myl_rc_collections_verify() c_int;
+extern fn myl_rc_registered_release_verify() c_int;
 
 // spec: RC-STORAGE-1
 // spec: RC-COLLECTION-1
@@ -15,4 +16,9 @@ extern fn myl_rc_collections_verify() c_int;
 // spec: RC-DICTIONARY-WORD-1
 test "RC production storage and collection ownership" {
     try std.testing.expectEqual(@as(c_int, 47), myl_rc_collections_verify());
+}
+
+// spec: RC-REGISTERED-RELEASE-1
+test "RC registered collection release preserves source admission" {
+    try std.testing.expectEqual(@as(c_int, 13), myl_rc_registered_release_verify());
 }

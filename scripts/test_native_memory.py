@@ -125,6 +125,7 @@ SUITES = (
     ("native_rc_stats", ["native_heap.c"]),
     ("native_rc_contract", ["native_heap.c", "native_rc.c", "native_rc_stats.c", "native_rc_shapes.c", "native_rc_walk.c", "native_rc_scope.c", "native_rc_transfer.c"]),
     ("native_rc_collections", ["native_heap.c", "native_text_methods.c", "native_print.c"]),
+    ("native_rc_registered_release", ["native_heap.c"]),
     ("native_rc_codecs", ["native_heap.c", "qbe_runtime.c"]),
     ("native_rc_host", ["native_heap.c", "qbe_runtime.c"]),
     ("native_heap", ["native_heap.c", "native_collections.c", "native_text.c", "native_dictionary.c", "native_equal.c", "native_bytes.c"]),
