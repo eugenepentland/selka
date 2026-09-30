@@ -14,6 +14,8 @@ const Instruction = il.Instruction;
 const Operand = il.Operand;
 const Emitter = emit.Emitter;
 const Lines = emit.Lines;
+/// An ordinary wrapped arithmetic result.
+const arithmetic_line = "  %{s} = {s} {s} {s}, {s}";
 /// `ret void`: the end of a function with no register result.
 const ret_void = "  ret void";
 /// `!N = !{...}`: one metadata list.
@@ -530,9 +532,11 @@ fn onArithmetic(e: *Emitter, lines: *Lines, instruction: *const Instruction) Err
         try e.line(lines, emit.address_line, .{ result, gep });
     } else if (e.facts.overflow.producers.get(instruction)) |stems| {
         if (kind.kind == .int and std.mem.eql(u8, llvm, "i64")) {
-            try checkedArithmetic(e, lines, instruction, stems.items, .{ left, right, result });
-        } else try e.line(lines, "  %{s} = {s} {s} {s}, {s}", .{ result, operation, llvm, left, right });
-    } else try e.line(lines, "  %{s} = {s} {s} {s}, {s}", .{ result, operation, llvm, left, right });
+            const ordinary = e.facts.overflow.ordinary_results.contains(instruction);
+            if (ordinary) try e.line(lines, arithmetic_line, .{ result, operation, llvm, left, right });
+            try checkedArithmetic(e, lines, instruction, stems.items, .{ left, right, result }, ordinary);
+        } else try e.line(lines, arithmetic_line, .{ result, operation, llvm, left, right });
+    } else try e.line(lines, arithmetic_line, .{ result, operation, llvm, left, right });
     try define(e, lines, instruction, try e.print("%{s}", .{result}));
 }
 
@@ -558,15 +562,16 @@ fn pointerIndex(e: *const Emitter, instruction: *const Instruction, llvm: []cons
 }
 
 /// Compute a checked `add`/`sub`/`mul` with its overflow intrinsics: the
-/// first intrinsic's wrapped value is the result, bit for bit.
-fn checkedArithmetic(e: *Emitter, lines: *Lines, instruction: *const Instruction, stems: []const classes.Stem, values: [3][]const u8) Error!void {
+/// first intrinsic's wrapped value is the result, bit for bit. An affine
+/// literal-bound hint retains the equivalent ordinary add/sub result.
+fn checkedArithmetic(e: *Emitter, lines: *Lines, instruction: *const Instruction, stems: []const classes.Stem, values: [3][]const u8, ordinary: bool) Error!void {
     for (stems, 0..) |stem, index| {
         const intrinsic = try e.print("llvm.{s}.with.overflow.i64", .{@tagName(stem)});
         try e.declareIntrinsic(intrinsic, &.{ "i64", "i64" }, "{ i64, i1 }");
         const pair = try e.fresh("ovpair");
         const bit = try e.fresh("ov");
         try e.line(lines, "  %{s} = call {{ i64, i1 }} @{s}(i64 {s}, i64 {s})", .{ pair, intrinsic, values[0], values[1] });
-        if (index == 0) try e.line(lines, "  %{s} = extractvalue {{ i64, i1 }} %{s}, 0", .{ values[2], pair });
+        if (index == 0 and !ordinary) try e.line(lines, "  %{s} = extractvalue {{ i64, i1 }} %{s}, 0", .{ values[2], pair });
         try e.line(lines, "  %{s} = extractvalue {{ i64, i1 }} %{s}, 1", .{ bit, pair });
         try e.names.overflow_bits.put(e.arena, .{ .producer = instruction, .stem = stem }, try e.print("%{s}", .{bit}));
     }
