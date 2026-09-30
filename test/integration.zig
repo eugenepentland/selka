@@ -1189,6 +1189,82 @@ test "a project build compiles a module again only when its source or an interfa
     try testing.expectEqual(std.process.Child.Term{ .exited = 18 }, ran.term);
 }
 
+const cutoff_leaf =
+    \\module leaf
+    \\def tweak(n: int) -> int:
+    \\    values: list[int] = []
+    \\    for k in range(n):
+    \\        values.append(k + 1)
+    \\    return len(values)
+    \\public def spare(n: int) -> int:
+    \\    values: list[int] = []
+    \\    for k in range(n):
+    \\        values.append(tweak(k))
+    \\    return len(values)
+    \\public def api(n: int) -> int:
+    \\    values: list[int] = []
+    \\    for k in range(n):
+    \\        values.append(k * 2)
+    \\    total = 0
+    \\    for value in values:
+    \\        total += value
+    \\    return total
+    \\
+;
+
+/// Build the cutoff project module by module and whole-program, both with
+/// `extra`; whether the module build reports `counts` and both built one
+/// executable, byte for byte.
+fn cutoffBuild(allocator: std.mem.Allocator, directory: []const u8, extra: []const u8, counts: []const u8) !bool {
+    const suffix = if (extra.len == 0) "rc" else "gc";
+    const flags: []const []const u8 = if (extra.len == 0) &.{} else &.{extra};
+    const modules_name = try std.fmt.allocPrint(allocator, "modules-{s}", .{suffix});
+    const whole_name = try std.fmt.allocPrint(allocator, "whole-{s}", .{suffix});
+    const built = builtModules(try projectBuild(allocator, directory, modules_name, try std.fmt.allocPrint(allocator, "cache-{s}", .{suffix}), flags), counts);
+    var whole_flags: std.ArrayList([]const u8) = .empty;
+    try whole_flags.appendSlice(allocator, flags);
+    try whole_flags.append(allocator, "--whole-program");
+    const cache = try std.fmt.allocPrint(allocator, "whole-cache-{s}", .{suffix});
+    const whole = try projectBuild(allocator, directory, whole_name, cache, whole_flags.items);
+    const read = std.Io.Dir.cwd();
+    const one = try read.readFileAlloc(testing.io, try std.fs.path.join(allocator, &.{ directory, modules_name }), allocator, .limited(1 << 30));
+    const two = try read.readFileAlloc(testing.io, try std.fs.path.join(allocator, &.{ directory, whole_name }), allocator, .limited(1 << 30));
+    return built and whole.term == .exited and whole.term.exited == 0 and std.mem.eql(u8, one, two);
+}
+
+// spec: MODULE-SYMBOL-CUTOFF-3
+// spec: MODULE-SYMBOL-CUTOFF-4
+// spec-case: MODULE-SYMBOL-CUTOFF-2
+test "a body edit no dependent reaches compiles its own module alone and links the whole-program executable" {
+    var arena_state = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena_state.deinit();
+    const a = arena_state.allocator();
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const directory = try temporary.dir.realPathFileAlloc(testing.io, ".", a);
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "leaf.my", .data = cutoff_leaf });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "mid.my", .data = "module mid\nimport leaf\npublic def twice(n: int) -> int:\n    return leaf.api(n) + leaf.api(n + 1)\n" });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = "module main\nimport leaf\nimport mid\ndef main() -> int:\n    return mid.twice(3) + leaf.api(2)\n" });
+    try testing.expect(try cutoffBuild(a, directory, "", "\"module_build\":{\"modules\":3,\"compiled\":3,\"reused\":0"));
+    try testing.expect(try cutoffBuild(a, directory, "--gc-runtime", "\"module_build\":{\"modules\":3,\"compiled\":3,\"reused\":0"));
+    // A private helper only an uncalled public function reaches.
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "leaf.my", .data = try std.mem.replaceOwned(u8, a, cutoff_leaf, "k + 1", "k + 2") });
+    try testing.expect(try cutoffBuild(a, directory, "", "\"module_build\":{\"modules\":3,\"compiled\":1,\"reused\":2"));
+    try testing.expect(try cutoffBuild(a, directory, "--gc-runtime", "\"module_build\":{\"modules\":3,\"compiled\":1,\"reused\":2"));
+    // The public function no dependent calls, edited to another length: the
+    // declarations after it move in the source, but `mid`, whose compile
+    // reported only its synthetic root's unused import, read none of them.
+    const private_edit = try std.mem.replaceOwned(u8, a, cutoff_leaf, "k + 1", "k + 2");
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "leaf.my", .data = try std.mem.replaceOwned(u8, a, private_edit, "tweak(k)", "tweak(k + 1)") });
+    try testing.expect(try cutoffBuild(a, directory, "", "\"module_build\":{\"modules\":3,\"compiled\":1,\"reused\":2"));
+    try testing.expect(try cutoffBuild(a, directory, "--gc-runtime", "\"module_build\":{\"modules\":3,\"compiled\":1,\"reused\":2"));
+    // An unchanged build compiles nothing and still links the same program:
+    // api(3) + api(4) + api(2) = 6 + 12 + 2.
+    try testing.expect(try cutoffBuild(a, directory, "", "\"module_build\":{\"modules\":3,\"compiled\":0,\"reused\":3"));
+    const ran = try std.process.run(a, testing.io, .{ .argv = &.{try std.fs.path.join(a, &.{ directory, "modules-rc" })} });
+    try testing.expectEqual(std.process.Child.Term{ .exited = 20 }, ran.term);
+}
+
 const schedule_generic =
     \\module util
     \\public def largest[T: integer](values: list[T]) -> T:
