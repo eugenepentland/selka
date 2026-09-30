@@ -148,15 +148,21 @@ pub const Prepared = struct { cache: cache_api.Cache, zig_version: []const u8, r
 pub fn prepare(context: fs.Context, parsed: options.Options) Error!Prepared {
     const a = context.allocator;
     const zig = try context.executable(parsed.zig);
-    const selected = try backend.resolve(context, parsed, zig);
+    const directory = try cacheRoot(context, parsed);
+    try context.mkdir(directory);
+    const temporary = try context.temporary(directory);
+    errdefer context.remove(temporary);
+    // Tools, even the backend's driver probe, keep Zig's own cache inside this
+    // build's scratch, which the build removes: its keys name scratch paths, so
+    // no later build could reuse it.
+    var tooling = context;
+    tooling.zig_cache = try std.fs.path.join(a, &.{ temporary, "zig-local" });
+    const selected = try backend.resolve(tooling, parsed, zig);
     const version = try context.capture(&.{ zig, "version" });
     if (fs.exitCode(version.term) != 0) return error.NativeToolFailed;
     const zig_version = std.mem.trim(u8, version.stdout, "\r\n ");
     try checkVersion(zig_version);
-    const directory = try cacheRoot(context, parsed);
-    try context.mkdir(directory);
     const assets = try materializeRuntime(context, parsed, directory);
-    const temporary = try context.temporary(directory);
     const environment = try environmentJson(a, .{
         .zig = try context.stamp(zig),
         .backend = selected.name,
@@ -174,7 +180,7 @@ pub fn prepare(context: fs.Context, parsed: options.Options) Error!Prepared {
     const objects = try generation(context, directory, "objects", generation_identity);
     return .{
         .cache = .{
-            .context = context,
+            .context = tooling,
             .directory = objects,
             .temporary = temporary,
             .assets = assets,
@@ -316,7 +322,7 @@ fn build(context: fs.Context, parsed: options.Options, controls: []const []const
     if (unchanged(receipt, phases, frontend)) return 0;
     const manifest = (try std.json.parseFromSlice(std.json.Value, a, manifest_bytes, .{ .allocate = .alloc_always })).value;
     try validate(a, manifest, try contract.parse(context.environ.get(contract.variable)));
-    var state = State{ .context = context, .cache = cache, .manifest = manifest };
+    var state = State{ .context = cache.context, .cache = cache, .manifest = manifest };
     const codegen_start = std.Io.Timestamp.now(context.io, .awake);
     try state.compile(parsed);
     const codegen = seconds(context, codegen_start);

@@ -66,7 +66,7 @@ pub fn run(context: fs.Context, place: Place, link: Link) fs.Error!Route {
     try shown.appendSlice(a, link.argv[0..2]);
     try shown.append(a, "-###");
     try shown.appendSlice(a, link.argv[2..]);
-    const result = try spawn.run(a, .{ .argv = try responseArgv(context, try responsePath(context, link), shown.items, 3) });
+    const result = try spawn.run(a, .{ .argv = try responseArgv(context, try responsePath(context, link), shown.items, 3), .zig_cache = context.zig_cache });
     const line = linkerLine(result.stderr);
     if (fs.exitCode(result.term) != 0) {
         // BUILD-LINK-RSP-1: `zig cc` starts the `ld.lld` it printed with every

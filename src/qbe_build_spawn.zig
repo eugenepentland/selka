@@ -37,11 +37,14 @@ pub const Finished = struct { term: std.process.Child.Term, stderr: []const u8 }
 /// How one tool is started: its argument vector (`argv[0]` is a path, or a
 /// name looked up on `PATH`), its complete environment — null inherits this
 /// process's own, as `std.process` does — and whether its standard error is
-/// captured for the caller or shared with this process.
+/// captured for the caller or shared with this process. A `zig_cache` names
+/// the directory the tool's `ZIG_LOCAL_CACHE_DIR` is set to, replacing any the
+/// environment gave (NATIVE-ZIG-CACHE-1).
 pub const Request = struct {
     argv: []const []const u8,
     environment: ?*const std.process.Environ.Map = null,
     capture: bool = true,
+    zig_cache: ?[]const u8 = null,
 };
 
 /// The stack the child runs on until `execve`: its frames are a handful of
@@ -69,10 +72,11 @@ pub fn start(allocator: std.mem.Allocator, request: Request) Error!Started {
     for (request.argv, 0..) |argument, index| argv[index] = (try allocator.dupeSentinel(u8, argument, 0)).ptr;
     // `ZIG_PROGRESS` names a descriptor of this process's own parent; a tool
     // must never write progress frames into it, exactly as `std.process` drops it.
-    const envp: [*:null]const ?[*:0]const u8 = if (request.environment) |map|
+    const given: [*:null]const ?[*:0]const u8 = if (request.environment) |map|
         (try map.createPosixBlock(allocator, .{ .zig_progress_fd = -1 })).slice.ptr
     else
         try inherited(allocator);
+    const envp = if (request.zig_cache) |directory| try withZigCache(allocator, given, directory) else given;
     const candidates = try candidatePaths(allocator, request.argv[0], variable(envp, "PATH"));
     const stack = try allocator.alignedAlloc(u8, .fromByteUnits(16), child_stack_bytes);
     defer allocator.free(stack);
@@ -239,6 +243,22 @@ fn inherited(allocator: std.mem.Allocator) Error![*:null]const ?[*:0]const u8 {
         if (entry.len == 0 or std.mem.startsWith(u8, entry, "ZIG_PROGRESS=")) continue;
         try entries.append(allocator, entry.ptr);
     }
+    return (try entries.toOwnedSliceSentinel(allocator, null)).ptr;
+}
+
+/// `envp` with `ZIG_LOCAL_CACHE_DIR` naming `directory` in place of any entry it
+/// had. `zig cc` and `zig build-obj` otherwise keep their compilation cache in
+/// the nearest enclosing `build.zig` project's `.zig-cache`, or in the global
+/// cache, keyed by the build's scratch paths, so every guest build added
+/// objects there that no later build could reuse.
+fn withZigCache(allocator: std.mem.Allocator, envp: [*:null]const ?[*:0]const u8, directory: []const u8) Error![*:null]const ?[*:0]const u8 {
+    const name = "ZIG_LOCAL_CACHE_DIR=";
+    var entries: std.ArrayList(?[*:0]const u8) = .empty;
+    var index: usize = 0;
+    while (envp[index]) |entry| : (index += 1) {
+        if (!std.mem.startsWith(u8, std.mem.span(entry), name)) try entries.append(allocator, entry);
+    }
+    try entries.append(allocator, (try std.fmt.allocPrintSentinel(allocator, "{s}{s}", .{ name, directory }, 0)).ptr);
     return (try entries.toOwnedSliceSentinel(allocator, null)).ptr;
 }
 
@@ -426,6 +446,23 @@ test "a request that names no environment inherits this process's own" {
     const block = try inherited(a);
     try std.testing.expectEqualStrings(std.testing.environ.getPosix("PATH") orelse "", variable(block, "PATH") orelse "");
     try std.testing.expectEqual(@as(?[]const u8, null), variable(block, "ZIG_PROGRESS"));
+}
+
+// spec: NATIVE-ZIG-CACHE-1
+test "a request with a zig cache hands the tool that directory as its only local cache" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var environment: std.process.Environ.Map = .init(a);
+    try environment.put("PATH", "/usr/bin:/bin");
+    try environment.put("ZIG_LOCAL_CACHE_DIR", "/elsewhere");
+    const script = "printf '%s|%s' \"$ZIG_LOCAL_CACHE_DIR\" \"$(env | grep -c '^ZIG_LOCAL_CACHE_DIR=')\" >&2";
+    const given = try run(a, .{ .argv = &.{ "/bin/sh", "-c", script }, .environment = &environment, .zig_cache = "/scratch/zig-local" });
+    try std.testing.expectEqualStrings("/scratch/zig-local|1", given.stderr);
+    const inherits = try run(a, .{ .argv = &.{ "/bin/sh", "-c", script }, .zig_cache = "/scratch/zig-local" });
+    try std.testing.expectEqualStrings("/scratch/zig-local|1", inherits.stderr);
+    const untouched = try run(a, .{ .argv = &.{ "/bin/sh", "-c", script }, .environment = &environment });
+    try std.testing.expectEqualStrings("/elsewhere|1", untouched.stderr);
 }
 
 /// Wait for the first of `started` to close its standard error, collecting

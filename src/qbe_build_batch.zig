@@ -284,7 +284,7 @@ fn startJob(cache: cache_api.Cache, miss: Miss, index: usize) cache_api.Error!Ru
     if (miss.input == .staged) {
         const job = miss.input.staged;
         errdefer cache.discard(job);
-        const started = try spawn.start(a, .{ .argv = job.argv, .environment = job.environment });
+        const started = try spawn.start(a, .{ .argv = job.argv, .environment = job.environment, .zig_cache = cache.context.zig_cache });
         return .{ .miss = index, .work = job.work, .stage = .compile, .started = started };
     }
     if (miss.input == .files) {

@@ -111,6 +111,11 @@ pub const Context = struct {
     arena: *std.heap.ArenaAllocator,
     parent: std.mem.Allocator,
     self_directory: []const u8,
+    /// The directory every tool this context starts keeps Zig's local
+    /// compilation cache in: a build's own scratch, set by `prepare`, so guest
+    /// builds leave nothing in a project's `.zig-cache` or the global cache
+    /// (NATIVE-ZIG-CACHE-1). Null leaves each tool's environment as given.
+    zig_cache: ?[]const u8 = null,
     /// Own a stable child arena for every allocation made during this build.
     pub fn init(parent: std.mem.Allocator, io: std.Io, environ: *const std.process.Environ.Map) Error!Context {
         const arena = try parent.create(std.heap.ArenaAllocator);
@@ -485,15 +490,17 @@ pub const Context = struct {
         return result;
     }
     /// Capture a tool query whose stderr is machine-readable rather than a user
-    /// diagnostic. Callers must check the returned termination status.
-    pub fn captureQuiet(self: Context, argv: []const []const u8) Error!std.process.RunResult {
-        return std.process.run(self.allocator, self.io, .{ .argv = argv });
+    /// diagnostic, started like `command` so a `zig cc -###` probe also keeps
+    /// Zig's cache in this build's scratch. Callers must check the returned
+    /// termination status.
+    pub fn captureQuiet(self: Context, argv: []const []const u8) Error!spawn.Finished {
+        return spawn.run(self.allocator, .{ .argv = argv, .zig_cache = self.zig_cache });
     }
     /// Invoke tools directly, preserving inherited environment and stderr. The
     /// tool starts without copying this process (`qbe_build_spawn.zig`), so a
     /// build holding a large program pays the same per tool as a small one.
     pub fn command(self: Context, argv: []const []const u8, environment: ?*const std.process.Environ.Map) Error!void {
-        const result = try spawn.run(self.allocator, .{ .argv = argv, .environment = environment });
+        const result = try spawn.run(self.allocator, .{ .argv = argv, .environment = environment, .zig_cache = self.zig_cache });
         try std.Io.File.stderr().writeStreamingAll(self.io, result.stderr);
         if (exitCode(result.term) != 0) return error.NativeToolFailed;
     }

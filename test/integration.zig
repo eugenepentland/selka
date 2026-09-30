@@ -4113,6 +4113,43 @@ fn scratchEntries(directory: []const u8) ![]u8 {
     return std.mem.join(testing.allocator, ",", names.items);
 }
 
+// spec: NATIVE-ZIG-CACHE-2
+test "a guest build inside a build.zig project leaves no Zig cache in that project" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    // A `build.zig` makes this directory the project `zig cc` would cache under.
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "build.zig", .data = "" });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "hello.my", .data = "def main(out: Stream) -> int:\n    out.print(\"hello\")\n    return 0\n" });
+    const compiler = try std.Io.Dir.cwd().realPathFileAlloc(testing.io, compiler_path, testing.allocator);
+    defer testing.allocator.free(compiler);
+    var environment = try std.process.Environ.createMap(testing.environ, testing.allocator);
+    defer environment.deinit();
+    // An inherited local cache would hide where the tools put their cache.
+    _ = environment.swapRemove("ZIG_LOCAL_CACHE_DIR");
+    // The child runs somewhere else, so the native tools must name themselves.
+    const tool = try std.Io.Dir.cwd().realPathFileAlloc(testing.io, @import("test_options").qbe_path, testing.allocator);
+    defer testing.allocator.free(tool);
+    const qbe = try std.fmt.allocPrint(testing.allocator, "--qbe={s}", .{tool});
+    defer testing.allocator.free(qbe);
+    const built = try std.process.run(testing.allocator, testing.io, .{
+        .argv = &.{ compiler, "build", "hello.my", "-o", "hello", "--cache-dir", "cache", qbe, tools[1] },
+        .cwd = .{ .dir = temporary.dir },
+        .environ_map = &environment,
+    });
+    defer testing.allocator.free(built.stdout);
+    defer testing.allocator.free(built.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, built.term);
+    const root = try temporary.dir.realPathFileAlloc(testing.io, ".", testing.allocator);
+    defer testing.allocator.free(root);
+    const program = try std.fs.path.join(testing.allocator, &.{ root, "hello" });
+    defer testing.allocator.free(program);
+    const ran = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{program} });
+    defer testing.allocator.free(ran.stdout);
+    defer testing.allocator.free(ran.stderr);
+    try testing.expectEqualStrings("hello\n", ran.stdout);
+    try testing.expectError(error.FileNotFound, temporary.dir.access(testing.io, ".zig-cache", .{}));
+}
+
 // spec: NATIVE-SCRATCH-ROOT-2
 test "mylang test stages under TMPDIR, never under /tmp, and removes its staging after a passing run" {
     var temporary = testing.tmpDir(.{});
