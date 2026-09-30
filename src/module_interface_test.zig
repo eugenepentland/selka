@@ -8,6 +8,41 @@ const iface = language.module_interface;
 const oracle = language.module_interface_oracle;
 const effect_set = language.effect_set;
 
+// spec-case: MODULE-INTERFACE-3
+test "interface oracle hashes records introduced by recursive lowering from the lowered catalog" {
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    const bytes =
+        \\module main
+        \\record Node:
+        \\    value: int
+        \\    next: Option[Node]
+        \\public def test_value() -> bool:
+        \\    leaf = Node(value=3, next=None)
+        \\    node = Node(value=7, next=Some(leaf))
+        \\    match node.next:
+        \\        case Some(child):
+        \\            return child.value == 3
+        \\        case None:
+        \\            return False
+        \\def main() -> int:
+        \\    return 0 if test_value() else 1
+    ;
+    var whole: *oracle.Whole = undefined;
+    try oracle.Whole.open(t.allocator, t.io, .{ .root = "", .name = "main", .bytes = bytes }, &whole);
+    defer whole.deinit();
+    const first = try whole.result(arena.allocator());
+    try t.expect(first.lowered.len > 0);
+    const built = try whole.buildInterfaces();
+    var library = try oracle.Library.of(arena.allocator(), built.interfaces);
+    var single: *oracle.Single = undefined;
+    try oracle.Single.open(t.allocator, .{ .module = "main", .bytes = bytes, .is_entry = true, .library = &library }, &single);
+    defer single.deinit();
+    const second = try single.result(arena.allocator(), &library, "main");
+    const comparison = try oracle.compare(arena.allocator(), first, second, "main");
+    try t.expectEqual(@as(usize, 0), comparison.lowered.mismatches.len);
+}
+
 const shapes_source =
     \\module shapes
     \\

@@ -1171,14 +1171,19 @@ test "a project build compiles a module again only when its source or an interfa
     try temporary.dir.writeFile(testing.io, .{ .sub_path = "util.my", .data = schedule_util });
     try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = "module main\nimport util\ndef main() -> int:\n    return util.score(4)\n" });
     try testing.expect(builtModules(try projectBuild(a, directory, "prog", "cache", &.{}), "\"module_build\":{\"modules\":3,\"compiled\":3,\"reused\":0"));
+    try testing.expect(builtModules(try projectBuild(a, directory, "prog-gc", "cache-gc", &.{"--gc-runtime"}), "\"module_build\":{\"modules\":3,\"compiled\":3,\"reused\":0"));
     try testing.expect(builtModules(try projectBuild(a, directory, "prog", "cache", &.{}), "\"module_build\":{\"modules\":3,\"compiled\":0,\"reused\":3"));
-    // A body edit: `util`'s interface holds, so `main` is not compiled again.
+    // RC reads the callee's actual readonly body; GC needs only its unchanged
+    // semantic interface. Both preserve the edited code and their own cutoff.
     try temporary.dir.writeFile(testing.io, .{ .sub_path = "util.my", .data = try std.mem.replaceOwned(u8, a, schedule_util, "right=2", "right=3") });
-    try testing.expect(builtModules(try projectBuild(a, directory, "prog", "cache", &.{}), "\"module_build\":{\"modules\":3,\"compiled\":1,\"reused\":2"));
-    // An interface edit: `util` read `shapes`'s interface and is compiled
-    // again; its own interface holds, so `main` is not (early cutoff).
-    try temporary.dir.writeFile(testing.io, .{ .sub_path = "shapes.my", .data = schedule_shapes ++ "public def unused() -> int:\n    return 1\n" });
     try testing.expect(builtModules(try projectBuild(a, directory, "prog", "cache", &.{}), "\"module_build\":{\"modules\":3,\"compiled\":2,\"reused\":1"));
+    try testing.expect(builtModules(try projectBuild(a, directory, "prog-gc", "cache-gc", &.{"--gc-runtime"}), "\"module_build\":{\"modules\":3,\"compiled\":1,\"reused\":2"));
+    // An interface edit: `util` read `shapes`'s interface and is compiled
+    // again. RC also refreshes the transitive physical archive; GC stops at
+    // the unchanged `util` interface.
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "shapes.my", .data = schedule_shapes ++ "public def unused() -> int:\n    return 1\n" });
+    try testing.expect(builtModules(try projectBuild(a, directory, "prog", "cache", &.{}), "\"module_build\":{\"modules\":3,\"compiled\":3,\"reused\":0"));
+    try testing.expect(builtModules(try projectBuild(a, directory, "prog-gc", "cache-gc", &.{"--gc-runtime"}), "\"module_build\":{\"modules\":3,\"compiled\":2,\"reused\":1"));
     // The program runs the edited code: (0+3) + (1+3) + (2+3) + (3+3).
     const ran = try std.process.run(a, testing.io, .{ .argv = &.{try std.fs.path.join(a, &.{ directory, "prog" })} });
     try testing.expectEqual(std.process.Child.Term{ .exited = 18 }, ran.term);

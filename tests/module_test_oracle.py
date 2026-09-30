@@ -23,7 +23,7 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
-RUNTIMES = {"rc": ["--rc-runtime"], "gc": ["--gc-runtime"], "stats": ["--rc-runtime", "--rc-stats"], "sites": ["--rc-runtime", "--rc-sites"]}
+RUNTIMES = {"rc": ["--rc-runtime"], "gc": ["--gc-runtime"], "stats": ["--rc-runtime=stats"], "sites": ["--rc-runtime=sites"]}
 
 
 def entries(paths):
@@ -67,7 +67,8 @@ def compare(args, number, entry, root):
     if module is None or whole is None:
         out["problems"].append("a test run timed out")
     else:
-        out["reference_failed"] = whole[0] != 0
+        out["no_tests"] = whole == (3, b"0 passed, 0 cached, 0 failed, 0 skipped\n", b"")
+        out["reference_failed"] = whole[0] != 0 and not out["no_tests"]
         out["tests"] = sum(line.startswith((b"passed ", b"failed ", b"reused ")) for line in whole[1].splitlines())
         if module != whole:
             out["problems"].append(f"reports differ: module rc={module[0]} whole rc={whole[0]}\n{module[1][-600:]!r}\n{whole[1][-600:]!r}")
@@ -79,7 +80,9 @@ def compare(args, number, entry, root):
         trace.unlink(missing_ok=True)
         module_again = run([mylang, "test", target, "--cache-dir", str(work / "cm")] + extra, entry.parent, trace)
         whole_again = run([mylang, "test", target, "--cache-dir", str(work / "cw"), "--whole-program"] + extra, entry.parent)
-        if module_again != whole_again:
+        if module_again is None or whole_again is None:
+            out["problems"].append("an unchanged test run timed out")
+        elif module_again != whole_again:
             out["problems"].append("unchanged reruns report differently")
             out["warm_reports"] = {"module": None if module_again is None else [module_again[0], module_again[1].decode(errors="replace"), module_again[2].decode(errors="replace")], "whole": None if whole_again is None else [whole_again[0], whole_again[1].decode(errors="replace"), whole_again[2].decode(errors="replace")]}
         warm = lines(trace)
@@ -115,7 +118,7 @@ def main():
         parser.error("no programs selected")
     with concurrent.futures.ThreadPoolExecutor(max_workers=args.jobs) as pool:
         results = list(pool.map(lambda item: compare(args, item[0], item[1], root), enumerate(todo)))
-    totals = {"programs": len(results), "equal": 0, "reference_failed": sum(r.get("reference_failed", False) for r in results), "tests": sum(r.get("tests", 0) for r in results), "modules": 0, "different": []}
+    totals = {"programs": len(results), "equal": 0, "reference_failed": sum(r.get("reference_failed", False) for r in results), "tests": sum(r.get("tests", 0) for r in results), "no_tests": sum(r.get("no_tests", False) for r in results), "modules": 0, "different": []}
     for result in results:
         if result["status"] == "equal":
             totals["equal"] += 1

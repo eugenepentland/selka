@@ -30,7 +30,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-RUNTIMES = {"rc": ["--rc-runtime"], "gc": ["--gc-runtime"], "stats": ["--rc-runtime", "--rc-stats"], "sites": ["--rc-runtime", "--rc-sites"]}
+RUNTIMES = {"rc": ["--rc-runtime"], "gc": ["--gc-runtime"], "stats": ["--rc-runtime=stats"], "sites": ["--rc-runtime=sites"]}
 
 
 def run(cmd, cwd=None, timeout=900):

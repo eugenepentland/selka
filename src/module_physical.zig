@@ -27,7 +27,14 @@ pub const Ids = struct {
 pub fn write(a: std.mem.Allocator, names: Names, value: anytype) std.mem.Allocator.Error!Data {
     var writer: codec.Writer = .init(a);
     defer writer.deinit();
-    try writer.writeMapped(@TypeOf(value), value, References, .{ .names = names });
+    var plain = value;
+    if (@TypeOf(value) == typed.Record) {
+        const fields = try a.dupe(typed.Field, value.fields);
+        defer a.free(fields);
+        for (fields) |*field| field.default_value = null;
+        plain.fields = fields;
+        try writer.writeMapped(@TypeOf(value), plain, References, .{ .names = names });
+    } else try writer.writeMapped(@TypeOf(value), value, References, .{ .names = names });
     return .{ .name = try a.dupe(u8, value.name), .bytes = try writer.bytes.toOwnedSlice(a) };
 }
 
@@ -40,6 +47,9 @@ pub fn read(a: std.mem.Allocator, ids: *const Ids, comptime T: type, data: Data)
         const id = ids.functions.get(data.name) orelse return error.InvalidEncoding;
         if (value.id != id) return error.InvalidEncoding;
     }
+    if (T == typed.Record) for (@constCast(value.fields)) |*field| {
+        field.default_value = null;
+    };
     return value;
 }
 

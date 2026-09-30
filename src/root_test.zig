@@ -170,6 +170,7 @@ test {
     _ = @import("module_interface_test.zig");
     _ = @import("module_compile_test.zig");
     _ = @import("module_physical_test.zig");
+    _ = @import("qbe_embeds.zig");
     _ = @import("semantic_key.zig");
     _ = @import("sema_builtins.zig");
     _ = @import("sema_places.zig");
