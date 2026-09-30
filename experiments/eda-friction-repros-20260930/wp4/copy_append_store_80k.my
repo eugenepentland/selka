@@ -1,0 +1,7 @@
+def main() -> int:
+    buckets: list[list[int]] = [[], []]
+    for i in range(80000):
+        bucket = buckets[1]
+        bucket.append(i)
+        buckets[1] = bucket
+    return len(buckets[1]) % 7

@@ -1,0 +1,8 @@
+def push(xs: mut list[int], v: int) -> None:
+    xs.append(v)
+
+def main() -> int:
+    rows: list[list[int]] = [[], []]
+    for i in range(80000):
+        push(mut rows[1], i)
+    return len(rows[1]) % 7

@@ -1,0 +1,6 @@
+record R:
+    items: list[int] = []
+
+def main() -> int:
+    r = R()
+    return len(r.items)

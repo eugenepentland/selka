@@ -1,0 +1,6 @@
+record R:
+    name: bytes = b"x"
+
+def main() -> int:
+    r = R()
+    return len(r.name)

@@ -1,0 +1,7 @@
+def str(w: mut list[int], b: bytes) -> None:
+    w.append(len(b))
+
+def main() -> int:
+    w: list[int] = []
+    str(mut w, b"abc")
+    return w[0]

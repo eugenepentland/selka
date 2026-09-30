@@ -1,0 +1,24 @@
+record Comp:
+    seen: set[bytes]
+    used: list[bytes]
+
+record Builder:
+    labels: dict[bytes, bytes]
+    comps: list[Comp]
+
+def collapse(labels: mut dict[bytes, bytes]) -> int:
+    labels[b"k"] = b"v"
+    return len(labels)
+
+def index(self: mut Builder) -> int:
+    n = collapse(mut self.labels)
+    self.comps[0].seen.add(b"p1")
+    self.comps[0].used.append(b"p1")
+    return n + len(self.comps[0].seen) + len(self.comps[0].used)
+
+def main() -> int:
+    b = Builder(labels={}, comps=[Comp(seen=set(), used=[])])
+    buckets: list[list[int]] = [[], []]
+    for i in range(5):
+        buckets[i % 2].append(i)
+    return index(mut b) * 10 + len(buckets[0])

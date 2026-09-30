@@ -1,0 +1,5 @@
+def main(out: Stream) -> int:
+    x: i64 = -1
+    u = u64(x)
+    out.print(u, i64(u))
+    return 0

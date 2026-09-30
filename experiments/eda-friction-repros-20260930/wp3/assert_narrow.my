@@ -1,0 +1,12 @@
+def find(k: int) -> Option[int]:
+    if k > 0:
+        return Some(k)
+    return None
+
+def use(v: int) -> int:
+    return v + 1
+
+def main() -> int:
+    m = find(3)
+    assert m is not None
+    return use(m)

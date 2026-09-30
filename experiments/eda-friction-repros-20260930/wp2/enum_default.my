@@ -1,0 +1,11 @@
+enum Side:
+    LEFT, RIGHT
+
+record R:
+    side: Side = Side.LEFT
+
+def main() -> int:
+    r = R()
+    if r.side == Side.LEFT:
+        return 1
+    return 0

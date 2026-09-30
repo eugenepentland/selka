@@ -1,0 +1,5 @@
+module svg_probe
+public record Holder:
+    names: set[bytes]
+public def make() -> Holder:
+    return Holder(names=set[bytes]())

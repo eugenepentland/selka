@@ -1,0 +1,7 @@
+record P:
+    banked: Option[int]
+
+def main() -> int:
+    p = P(banked=Some(4))
+    v = p.banked if p.banked is not None else 0
+    return v

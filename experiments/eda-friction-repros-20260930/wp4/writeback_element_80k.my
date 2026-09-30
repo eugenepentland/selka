@@ -1,0 +1,15 @@
+record Cur:
+    pos: int
+    out: list[int]
+
+def bump(c: mut Cur) -> None:
+    c.pos = c.pos + 1
+    c.out.append(c.pos)
+
+def main() -> int:
+    rows = [Cur(pos=0, out=[]), Cur(pos=0, out=[])]
+    for i in range(80000):
+        row = rows[1]
+        bump(mut row)
+        rows[1] = row
+    return rows[1].pos % 7

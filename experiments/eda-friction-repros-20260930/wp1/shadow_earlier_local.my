@@ -1,0 +1,6 @@
+def main() -> int:
+    c = 5
+    n = c
+    for c in [1, 2]:
+        n = n + c
+    return n

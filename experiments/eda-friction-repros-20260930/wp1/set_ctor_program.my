@@ -1,0 +1,6 @@
+record Holder:
+    names: set[bytes]
+
+def main() -> int:
+    h = Holder(names=set[bytes]())
+    return len(h.names)

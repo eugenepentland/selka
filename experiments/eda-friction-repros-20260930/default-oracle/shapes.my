@@ -1,0 +1,9 @@
+module shapes
+
+public record Cfg:
+    n: int
+    retries: int = 3
+    label: str = "a"
+
+public def scaled(x: int, factor: int = 2) -> int:
+    return x * factor

@@ -1,0 +1,4 @@
+def main(out: Stream) -> int:
+    x = 2.675
+    out.print(f"{x:.2f} {x:.3e} {255:x}")
+    return 0

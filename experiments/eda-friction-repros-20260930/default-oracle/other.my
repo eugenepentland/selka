@@ -1,0 +1,4 @@
+module other
+
+public def unrelated() -> int:
+    return 7

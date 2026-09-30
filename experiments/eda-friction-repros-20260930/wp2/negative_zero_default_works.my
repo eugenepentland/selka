@@ -1,0 +1,7 @@
+record R:
+    z: float = -0.0
+
+def main(out: Stream) -> int:
+    r = R()
+    out.print(1.0 / r.z)
+    return 0

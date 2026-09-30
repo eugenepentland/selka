@@ -1,0 +1,19 @@
+record Cur:
+    pos: int
+    out: list[int]
+
+record T:
+    cur: Cur
+    name: bytes
+
+def bump(c: mut Cur) -> None:
+    c.pos = c.pos + 1
+    c.out.append(c.pos)
+
+def main() -> int:
+    t = T(cur=Cur(pos=0, out=[]), name=b"x")
+    for i in range(80000):
+        cur = t.cur
+        bump(mut cur)
+        t.cur = cur
+    return t.cur.pos % 7

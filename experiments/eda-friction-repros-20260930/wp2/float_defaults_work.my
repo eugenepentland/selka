@@ -1,0 +1,7 @@
+record R:
+    a: float = -1.5
+    z: float = -0.0
+
+def main() -> int:
+    r = R()
+    return int(r.a * -2.0)

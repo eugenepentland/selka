@@ -1,0 +1,5 @@
+def f(name: bytes = b"") -> int:
+    return len(name)
+
+def main() -> int:
+    return f()

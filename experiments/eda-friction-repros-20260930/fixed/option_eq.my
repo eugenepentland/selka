@@ -1,0 +1,9 @@
+def find(k: int) -> Option[int]:
+    if k > 0:
+        return Some(k)
+    return None
+
+def main() -> int:
+    if find(3) == Some(3):
+        return 1
+    return 0

@@ -1,0 +1,7 @@
+def main() -> int:
+    n = 0
+    for c in [1, 2]:
+        n = n + c
+    for c in [3, 4]:
+        n = n + c
+    return n

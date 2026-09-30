@@ -1,0 +1,9 @@
+module user
+
+import shapes
+
+public def make() -> shapes.Cfg:
+    return shapes.Cfg(n=1)
+
+public def use_scaled() -> int:
+    return shapes.scaled(5)

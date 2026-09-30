@@ -1,0 +1,9 @@
+module main
+
+import user
+import other
+
+def main(out: Stream) -> int:
+    c = user.make()
+    out.print(c.retries, c.label, user.use_scaled(), other.unrelated())
+    return 0

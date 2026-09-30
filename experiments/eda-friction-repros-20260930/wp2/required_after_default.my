@@ -1,0 +1,7 @@
+record R:
+    a: int = 0
+    b: int
+
+def main() -> int:
+    r = R(b=2)
+    return r.a + r.b
