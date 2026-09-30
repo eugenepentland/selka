@@ -1,0 +1,12 @@
+--- a/parser.my
++++ b/parser.my
+@@ -500,3 +500,9 @@
+     if p.had_error:
+         return None
+     return Some(p.program)
++
++
++def fz_fn_2(n: int) -> int:
++    if n > 27:
++        return n - 27
++    return n

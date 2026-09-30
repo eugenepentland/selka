@@ -1,0 +1,11 @@
+--- a/vm.my
++++ b/vm.my
+@@ -384,7 +384,7 @@
+ # GREATER, LESS, SUBTRACT, MULTIPLY and DIVIDE: two numbers in, one out.
+ 
+ 
+-def numeric(rt: mut heap.Runtime, o: mut output.Output, instruction: int) -> bytes:
++def numeric(rt: mut heap.Runtime, o: mut output.Output, instruction: int) -> bool:
+     if not is_number(heap.peek(rt, 0)) or not is_number(heap.peek(rt, 1)):
+         return runtime_error(mut rt, mut o, b"Operands must be numbers.")
+     b = as_number(heap.pop(mut rt))

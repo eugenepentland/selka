@@ -1,0 +1,19 @@
+--- a/value.my
++++ b/value.my
+@@ -28,6 +28,10 @@
+             return not flag
+         case _:
+             return False
++
++
++def fz_help_3(x: bytes) -> bytes:
++    return x
+ 
+ 
+ # Lox equality: tags must agree, numbers compare with IEEE `==` and objects
+@@ -66,4 +70,4 @@
+     text = str(x).encode()
+     if text.endswith(b".0"):
+         return text[0:len(text) - 2]
+-    return text
++    return fz_help_3(text)

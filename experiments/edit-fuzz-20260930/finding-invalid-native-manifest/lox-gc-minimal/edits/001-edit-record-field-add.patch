@@ -1,0 +1,10 @@
+--- a/ast.my
++++ b/ast.my
+@@ -82,6 +82,7 @@
+     keyword: scanner.Token
+     hops: int
+     slot: int
++    fz_f4: bool = False
+ 
+ 
+ public record UnaryExpr:

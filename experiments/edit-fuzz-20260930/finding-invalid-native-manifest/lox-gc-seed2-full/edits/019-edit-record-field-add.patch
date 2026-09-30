@@ -1,0 +1,10 @@
+--- a/ast.my
++++ b/ast.my
+@@ -32,6 +32,7 @@
+     left: int
+     operator: scanner.Token
+     right: int
++    fz_f8: str = "x"
+ 
+ 
+ public record CallExpr:

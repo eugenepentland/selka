@@ -1,0 +1,22 @@
+--- a/value.my
++++ b/value.my
+@@ -1,6 +1,10 @@
+ module value
+ # Lox values: the tagged union both engines compute with, plus the rules for
+ # truthiness, equality and number formatting (SPEC §4.1 and §5).
++
++
++def fz_help_6(x: bool) -> bool:
++    return x
+ 
+ 
+ # An index into the Runtime's object table (SPEC §7.1).
+@@ -23,7 +27,7 @@
+ public def is_falsey(value: Value) -> bool:
+     match value:
+         case Value.nil:
+-            return True
++            return fz_help_6(True)
+         case Value.boolean(flag):
+             return not flag
+         case _:

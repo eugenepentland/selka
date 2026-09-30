@@ -1,0 +1,10 @@
+--- a/vm.my
++++ b/vm.my
+@@ -26,6 +26,7 @@
+     upvalues: list[value.ObjRef]
+     ip: int
+     base: int
++
+ 
+ 
+ def load_frame(rt: heap.Runtime, stored: heap.CallFrame) -> ExecFrame:

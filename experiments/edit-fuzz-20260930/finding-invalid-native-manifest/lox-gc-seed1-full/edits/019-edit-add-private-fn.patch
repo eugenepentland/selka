@@ -1,0 +1,15 @@
+--- a/compiler.my
++++ b/compiler.my
+@@ -528,6 +528,12 @@
+ 
+ public def fz_fn_1(n: int) -> int:
+     return n + 9
++
++
++def fz_fn_11(n: int) -> int:
++    if n > 22:
++        return n - 22
++    return n
+ 
+ 
+ def unary(p: mut Parser):

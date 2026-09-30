@@ -1,0 +1,11 @@
+--- a/interpreter.my
++++ b/interpreter.my
+@@ -490,7 +490,7 @@
+             __wb_421 = it.rt
+             heap.push(mut __wb_421, value.Value.obj(this_env))
+             it.rt = __wb_421
+-            env = enter_function(mut it, initializer, this_env, count, callee_slot + 1, line)?
++            env = enter_function(mut it, initializer, this_env, count, callee_slot + 2, line)?
+             __wb_423 = it.rt
+             _ = heap.pop(mut __wb_423)
+             it.rt = __wb_423

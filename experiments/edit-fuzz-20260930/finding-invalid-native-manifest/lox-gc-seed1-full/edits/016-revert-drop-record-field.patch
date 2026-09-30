@@ -1,0 +1,10 @@
+--- a/chunk.my
++++ b/chunk.my
+@@ -46,6 +46,7 @@
+ # A function's bytecode. `code` holds bytes (0..255); `lines[i]` is the
+ # source line of `code[i]`.
+ public record Chunk:
++    code: list[int]
+     lines: list[int]
+     constants: list[value.Value]
+ 

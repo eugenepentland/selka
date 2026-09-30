@@ -1,0 +1,13 @@
+--- a/driver.my
++++ b/driver.my
+@@ -10,6 +10,10 @@
+ public enum Engine:
+     VM,
+     TREE
++
++
++public def fz_fn_2(n: int) -> int:
++    return n + 22
+ 
+ 
+ public record RunResult:

@@ -1,0 +1,16 @@
+--- a/heap.my
++++ b/heap.my
+@@ -180,6 +180,13 @@
+             return object.new_closure(value.NO_OBJ, 0)
+ 
+ 
++public def upvalue_obj(rt: Runtime, ref: value.ObjRef) -> object.UpvalueObj:
++    match rt.objects[ref]:
++        case object.Obj.upvalue(payload):
++            return payload
++        case _:
++            assert False, "object is not an upvalue"
++            return object.UpvalueObj(slot=object.NO_SLOT, closed=value.Value.nil, next_open=value.NO_OBJ)
+ 
+ 
+ public def class_obj(rt: Runtime, ref: value.ObjRef) -> object.ClassObj:

@@ -451,10 +451,6 @@ def pick_fn(rng, p, pred, prefer_added=False):
     return pick(rng, cands)
 
 
-def has_body(f_fn):
-    return f_fn[1].end > f_fn[1].line + 1
-
-
 def simple_return(lines, fn):
     """(index, indent, expr) for each `return EXPR` that fits on one line (no trailing comment)."""
     found = []
@@ -1218,7 +1214,7 @@ REPLAY_SH = r"""#!/bin/sh
 set -u
 COMPILER=$1; WORK=$2; EXTRA=${3:-}
 HERE=$(cd "$(dirname "$0")" && pwd)
-rm -rf "$WORK"; mkdir -p "$WORK/out"; cp -r "$HERE/original" "$WORK/project"; cd "$WORK/project"
+rm -rf "$WORK"; mkdir -p "$WORK/out"; cp -rL "$HERE/original" "$WORK/project"; cd "$WORK/project"
 check() {
   rm -f "$WORK/out/inc" "$WORK/out/whole"
   "$COMPILER" build main.my --project -o "$WORK/out/inc" --cache-dir="$WORK/cache-inc" --report $EXTRA >"$WORK/inc.log" 2>&1; ri=$?
@@ -1445,7 +1441,8 @@ def fuzz(options):
     rng = random.Random(options.seed)
     proj = load_project(project_dir)
     header = {"seed": options.seed, "project_kind": options.project_kind, "gc_runtime": options.gc_runtime,
-              "compiler": compiler, "excluded_kinds": sorted(EXCLUDED), **meta}
+              "compiler": compiler, "excluded_kinds": sorted(EXCLUDED),
+              "edits_per_step": options.edits_per_step, **meta}
     rows, timeline, findings = [], [], []
     by_kind = {}
     started = time.monotonic()
@@ -1477,7 +1474,11 @@ def fuzz(options):
         return stop(False)
 
     for step in range(1, options.steps + 1):
-        kind, trial, fname, desc = choose_edit(rng, proj)
+        drawn, trial = [], proj
+        for _ in range(options.edits_per_step):
+            kind, trial, fname, desc = choose_edit(rng, trial)
+            drawn.append((kind, fname, desc))
+        kind, fname, desc = "+".join(d[0] for d in drawn), ",".join(dict.fromkeys(d[1] for d in drawn)), "; ".join(d[2] for d in drawn)
         changed = sorted(n for n in trial.files if trial.files[n] != proj.files[n])
         patch = patch_of(proj, trial)
         write_files(project_dir, trial.files, changed)
@@ -1486,12 +1487,13 @@ def fuzz(options):
         counts = inc.counts
         built = verdict in ("match", "binary-differs")
         engaged = built and counts is not None
-        stats = by_kind.setdefault(kind, {"applied": 0, "built": 0, "failed": 0, "off_module_path": 0, "compiled": []})
-        stats["applied"] += 1
-        stats["built" if built else "failed"] += 1
-        stats["off_module_path"] += 1 if built and not engaged else 0
-        if engaged:
-            stats["compiled"].append(counts["compiled"])
+        for one, _, _ in drawn:      # with several edits per step each kind shares the step's outcome
+            stats = by_kind.setdefault(one, {"applied": 0, "built": 0, "failed": 0, "off_module_path": 0, "compiled": []})
+            stats["applied"] += 1
+            stats["built" if built else "failed"] += 1
+            stats["off_module_path"] += 1 if built and not engaged else 0
+            if engaged:
+                stats["compiled"].append(counts["compiled"])
         good = verdict in ("match", "both-failed")
         row = {"seed": options.seed, "step": step, "kind": kind, "file": fname, "desc": desc,
                "compiled": counts and counts["compiled"], "modules": counts and counts["modules"],
@@ -1577,6 +1579,8 @@ def main():
     parser.add_argument("--gc-runtime", action="store_true")
     parser.add_argument("--json")
     parser.add_argument("--keep-going", action="store_true")
+    parser.add_argument("--edits-per-step", type=int, default=1,
+                        help="apply this many edits (drawn one after another) before each comparison")
     parser.add_argument("--exclude-kinds", default="", help="comma-separated edit kinds to leave out")
     parser.add_argument("--replay", metavar="REPRO_DIR")
     parser.add_argument("--minimize", metavar="REPRO_DIR")

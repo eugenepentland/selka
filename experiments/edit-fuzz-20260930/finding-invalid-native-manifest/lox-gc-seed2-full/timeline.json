@@ -1,0 +1,124 @@
+{
+ "header": {
+  "seed": 2,
+  "project_kind": "lox",
+  "gc_runtime": true,
+  "compiler": "/home/epentland/ai/canopy/mylang-worktrees/claude-py-text/.tmp/rf-symbol/bin/mylang"
+ },
+ "timeline": [
+  {
+   "label": "edit",
+   "kind": "wrap-return",
+   "desc": "precedence_of: wrap return",
+   "step": 1
+  },
+  {
+   "label": "edit",
+   "kind": "add-private-fn",
+   "desc": "add private fz_fn_2",
+   "step": 2
+  },
+  {
+   "label": "edit",
+   "kind": "toggle-visibility",
+   "desc": "fz_fn_2: now public",
+   "step": 3
+  },
+  {
+   "label": "edit",
+   "kind": "noop",
+   "desc": "no edit",
+   "step": 4
+  },
+  {
+   "label": "edit",
+   "kind": "noop",
+   "desc": "no edit",
+   "step": 5
+  },
+  {
+   "label": "edit",
+   "kind": "move-function",
+   "desc": "move restore_env",
+   "step": 6
+  },
+  {
+   "label": "edit",
+   "kind": "helper-call",
+   "desc": "format_number: return now goes through fz_help_3",
+   "step": 7
+  },
+  {
+   "label": "edit",
+   "kind": "whitespace",
+   "desc": "extra blank line at top level",
+   "step": 8
+  },
+  {
+   "label": "edit",
+   "kind": "use-added",
+   "desc": "read_byte: use parser.fz_fn_2",
+   "step": 9
+  },
+  {
+   "label": "edit",
+   "kind": "int-literal",
+   "desc": "for_statement: 1 -> 2",
+   "step": 10
+  },
+  {
+   "label": "edit",
+   "kind": "add-public-fn",
+   "desc": "add public fz_fn_4",
+   "step": 11
+  },
+  {
+   "label": "edit",
+   "kind": "int-literal",
+   "desc": "add_stmt: 1 -> 2",
+   "step": 12
+  },
+  {
+   "label": "edit",
+   "kind": "insert-statement",
+   "desc": "parse_precedence: insert 2 statement(s)",
+   "step": 13
+  },
+  {
+   "label": "edit",
+   "kind": "helper-call",
+   "desc": "is_falsey: return now goes through fz_help_6",
+   "step": 14
+  },
+  {
+   "label": "edit",
+   "kind": "change-return-type",
+   "desc": "numeric: return type bool -> bytes",
+   "step": 15
+  },
+  {
+   "label": "revert",
+   "kind": "change-return-type",
+   "desc": "revert numeric: return type bool -> bytes",
+   "step": 15
+  },
+  {
+   "label": "edit",
+   "kind": "add-const",
+   "desc": "add const FZ_C_7: int = 11",
+   "step": 16
+  },
+  {
+   "label": "edit",
+   "kind": "int-literal",
+   "desc": "new_runtime: 0 -> 1",
+   "step": 17
+  },
+  {
+   "label": "edit",
+   "kind": "record-field-add",
+   "desc": "record BinaryExpr: add fz_f8: str = \"x\"",
+   "step": 18
+  }
+ ]
+}

@@ -1,0 +1,148 @@
+{
+ "header": {
+  "seed": 1,
+  "project_kind": "lox",
+  "gc_runtime": true,
+  "compiler": "/home/epentland/ai/canopy/mylang-worktrees/claude-py-text/.tmp/rf-symbol/bin/mylang"
+ },
+ "timeline": [
+  {
+   "label": "edit",
+   "kind": "add-public-fn",
+   "desc": "add public fz_fn_1",
+   "step": 1
+  },
+  {
+   "label": "edit",
+   "kind": "rename-public-def",
+   "desc": "rename definition set -> set_r2",
+   "step": 2
+  },
+  {
+   "label": "revert",
+   "kind": "rename-public-def",
+   "desc": "revert rename definition set -> set_r2",
+   "step": 2
+  },
+  {
+   "label": "edit",
+   "kind": "start-alloc",
+   "desc": "print_expr: start allocating (fz_a2)",
+   "step": 3
+  },
+  {
+   "label": "edit",
+   "kind": "insert-statement",
+   "desc": "fail: insert 2 statement(s)",
+   "step": 4
+  },
+  {
+   "label": "edit",
+   "kind": "add-const",
+   "desc": "add const FZ_C_4: int = 48",
+   "step": 5
+  },
+  {
+   "label": "edit",
+   "kind": "rename-public-def",
+   "desc": "rename definition is_falsey -> is_falsey_r5",
+   "step": 6
+  },
+  {
+   "label": "revert",
+   "kind": "rename-public-def",
+   "desc": "revert rename definition is_falsey -> is_falsey_r5",
+   "step": 6
+  },
+  {
+   "label": "edit",
+   "kind": "int-literal",
+   "desc": "make_closure: 0 -> 1",
+   "step": 7
+  },
+  {
+   "label": "edit",
+   "kind": "start-alloc",
+   "desc": "read_short: start allocating (fz_a5)",
+   "step": 8
+  },
+  {
+   "label": "edit",
+   "kind": "wrap-return",
+   "desc": "identifier: wrap return",
+   "step": 9
+  },
+  {
+   "label": "edit",
+   "kind": "add-private-fn",
+   "desc": "add private fz_fn_7",
+   "step": 10
+  },
+  {
+   "label": "edit",
+   "kind": "float-literal",
+   "desc": "set: 0.75 -> 4.3",
+   "step": 11
+  },
+  {
+   "label": "edit",
+   "kind": "rename-public-def",
+   "desc": "rename definition print_expr -> print_expr_r8",
+   "step": 12
+  },
+  {
+   "label": "edit",
+   "kind": "drop-record-field",
+   "desc": "record Chunk: drop `code: list[int]`",
+   "step": 13
+  },
+  {
+   "label": "revert",
+   "kind": "drop-record-field",
+   "desc": "revert record Chunk: drop `code: list[int]`",
+   "step": 13
+  },
+  {
+   "label": "edit",
+   "kind": "start-alloc",
+   "desc": "adjust_capacity: start allocating (fz_a9)",
+   "step": 14
+  },
+  {
+   "label": "edit",
+   "kind": "add-default-param",
+   "desc": "new_scanner: add fz_p10: int = 0",
+   "step": 15
+  },
+  {
+   "label": "edit",
+   "kind": "add-private-fn",
+   "desc": "add private fz_fn_11",
+   "step": 16
+  },
+  {
+   "label": "edit",
+   "kind": "remove-public-fn",
+   "desc": "remove public upvalue_obj",
+   "step": 17
+  },
+  {
+   "label": "revert",
+   "kind": "remove-public-fn",
+   "desc": "revert remove public upvalue_obj",
+   "step": 17
+  },
+  {
+   "label": "edit",
+   "kind": "remove-added",
+   "desc": "remove fz_fn_7 and 0 use(s)",
+   "step": 18
+  },
+  {
+   "label": "edit",
+   "kind": "record-field-add",
+   "desc": "record ReturnStmt: add fz_f12: bool = False",
+   "step": 19
+  }
+ ]
+}

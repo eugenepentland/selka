@@ -1,0 +1,11 @@
+--- a/compiler.my
++++ b/compiler.my
+@@ -214,7 +214,7 @@
+     if jump > UINT16_MAX:
+         error(mut p, b"Too much code to jump over.")
+     code.code[offset] = bit_and(shift_right(jump, 8), 255)
+-    code.code[offset + 1] = bit_and(jump, 255)
++    code.code[offset + 2] = bit_and(jump, 255)
+     current_index = len(p.compilers) - 1
+     current = p.compilers[current_index]
+     current.function.code = code

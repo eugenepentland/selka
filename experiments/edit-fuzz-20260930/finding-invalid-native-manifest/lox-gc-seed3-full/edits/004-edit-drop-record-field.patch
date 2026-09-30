@@ -1,0 +1,10 @@
+--- a/ast.my
++++ b/ast.my
+@@ -79,7 +79,6 @@
+ 
+ 
+ public record ThisExpr:
+-    keyword: scanner.Token
+     hops: int
+     slot: int
+ 

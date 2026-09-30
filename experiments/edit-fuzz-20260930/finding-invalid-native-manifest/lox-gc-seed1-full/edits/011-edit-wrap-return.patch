@@ -1,0 +1,12 @@
+--- a/scanner.my
++++ b/scanner.my
+@@ -206,7 +206,8 @@
+ def identifier(s: mut Scanner) -> Token:
+     while is_alpha(peek(s)) or is_digit(peek(s)):
+         s.current = s.current + 1
+-    return make_token(s, identifier_kind(s))
++    fz_r6 = make_token(s, identifier_kind(s))
++    return fz_r6
+ 
+ 
+ def number(s: mut Scanner) -> Token:

@@ -1,0 +1,414 @@
+module heap
+# The Runtime (SPEC §7): the object table with its free list and mark bits,
+# the intern and globals tables, every GC root both engines keep, the value
+# stack, and the collector and its statistics.
+import object
+import table
+import value
+
+
+# 64 frames of 256 slots each.
+public const STACK_MAX: int = 16384
+public const FRAMES_MAX: int = 64
+const FIRST_GC: int = 1048576
+
+
+# An active VM call: the closure is a GC root, and the instruction and stack
+# offsets survive calls. The dispatch loop caches code and upvalues locally.
+# Keeping only scalars here avoids sharing those collections on every opcode.
+public record CallFrame:
+    closure: value.ObjRef
+    ip: int
+    base: int
+
+
+# The collector's mark state: one mark bit per object-table slot and the gray
+# stack of marked objects whose references are not yet traced.
+public record Marker:
+    marks: list[bool]
+    gray: list[value.ObjRef]
+
+
+public record Runtime:
+    objects: list[object.Obj]
+    marker: Marker
+    free_slots: list[int]
+    strings: table.Table
+    globals: table.Table
+    init_string: value.ObjRef
+    gc_stress: bool
+    bytes_allocated: int
+    next_gc: int
+    allocations: int
+    collections: int
+    freed: int
+    stack: list[value.Value]
+    stack_top: int
+    frames: list[CallFrame]
+    frame_count: int
+    open_upvalues: value.ObjRef
+    compiling: list[value.ObjRef]
+    current_env: value.ObjRef
+    saved_envs: list[value.ObjRef]
+    permanent_roots: list[value.ObjRef]
+    clock: Option[Clock]
+
+
+# An empty runtime; `clock` is None when the host granted no clock.
+public def new_runtime(gc_stress: bool, clock: Option[Clock]) -> Runtime:
+    stack: list[value.Value] = []
+    i = 0
+    while i < STACK_MAX:
+        stack.append(value.Value.nil)
+        i += 1
+    frames: list[CallFrame] = []
+    i = 0
+    while i < FRAMES_MAX:
+        frames.append(CallFrame(closure=value.NO_OBJ, ip=0, base=0))
+        i += 1
+    return Runtime(
+        objects=[],
+        marker=Marker(marks=[], gray=[]),
+        free_slots=[],
+        strings=table.new_table(),
+        globals=table.new_table(),
+        init_string=value.NO_OBJ,
+        gc_stress=gc_stress,
+        bytes_allocated=0,
+        next_gc=FIRST_GC,
+        allocations=0,
+        collections=0,
+        freed=0,
+        stack=stack,
+        stack_top=0,
+        frames=frames,
+        frame_count=0,
+        open_upvalues=value.NO_OBJ,
+        compiling=[],
+        current_env=value.NO_OBJ,
+        saved_envs=[],
+        permanent_roots=[],
+        clock=clock
+    )
+
+
+public def push(rt: mut Runtime, item: value.Value):
+    rt.stack[rt.stack_top] = item
+    rt.stack_top = rt.stack_top + 1
+
+
+public def pop(rt: mut Runtime) -> value.Value:
+    rt.stack_top = rt.stack_top - 1
+    return rt.stack[rt.stack_top]
+
+
+public def peek(rt: Runtime, distance: int) -> value.Value:
+    return rt.stack[rt.stack_top - 1 - distance]
+
+
+# Charges the object's cost, collects if stress mode or the threshold says
+# so, then stores it in a free slot (most recently freed first) or a new one.
+# Whatever the caller still needs must already be rooted.
+public def allocate(rt: mut Runtime, obj: object.Obj) -> value.ObjRef:
+    rt.bytes_allocated = rt.bytes_allocated + object.cost(obj)
+    if rt.gc_stress or rt.bytes_allocated > rt.next_gc:
+        collect(mut rt)
+    slot = len(rt.objects)
+    if len(rt.free_slots) > 0:
+        slot = rt.free_slots.pop()
+        rt.objects[slot] = obj
+    else:
+        rt.objects.append(obj)
+        rt.marker.marks.append(False)
+    rt.allocations = rt.allocations + 1
+    return slot
+
+
+# The payload accessors below check the kind; a mismatch is an internal bug.
+
+public def string_obj(rt: Runtime, ref: value.ObjRef) -> object.StringObj:
+    match rt.objects[ref]:
+        case object.Obj.string(payload):
+            return payload
+        case _:
+            assert False, "object is not a string"
+            return object.StringObj(chars=b"", hash=0u32)
+
+
+public def function_obj(rt: Runtime, ref: value.ObjRef) -> object.FunctionObj:
+    match rt.objects[ref]:
+        case object.Obj.function(payload):
+            return payload
+        case _:
+            assert False, "object is not a function"
+            return object.new_function()
+
+
+# Scalar reads avoid materializing a snapshot of unused collection fields.
+public def function_arity(rt: Runtime, ref: value.ObjRef) -> int:
+    match rt.objects[ref]:
+        case object.Obj.function(payload):
+            return payload.arity
+        case _:
+            assert False, "object is not a function"
+            return 0
+
+public def function_upvalue_count(rt: Runtime, ref: value.ObjRef) -> int:
+    match rt.objects[ref]:
+        case object.Obj.function(payload):
+            return payload.upvalue_count
+        case _:
+            assert False, "object is not a function"
+            return 0
+
+
+public def closure_function(rt: Runtime, ref: value.ObjRef) -> value.ObjRef:
+    match rt.objects[ref]:
+        case object.Obj.closure(payload):
+            return payload.function
+        case _:
+            assert False, "object is not a closure"
+            return value.NO_OBJ
+
+
+public def closure_obj(rt: Runtime, ref: value.ObjRef) -> object.ClosureObj:
+    match rt.objects[ref]:
+        case object.Obj.closure(payload):
+            return payload
+        case _:
+            assert False, "object is not a closure"
+            return object.new_closure(value.NO_OBJ, 0)
+
+
+public def upvalue_obj(rt: Runtime, ref: value.ObjRef) -> object.UpvalueObj:
+    match rt.objects[ref]:
+        case object.Obj.upvalue(payload):
+            return payload
+        case _:
+            assert False, "object is not an upvalue"
+            return object.UpvalueObj(slot=object.NO_SLOT, closed=value.Value.nil, next_open=value.NO_OBJ)
+
+
+public def class_obj(rt: Runtime, ref: value.ObjRef) -> object.ClassObj:
+    match rt.objects[ref]:
+        case object.Obj.klass(payload):
+            return payload
+        case _:
+            assert False, "object is not a class"
+            return object.ClassObj(name=value.NO_OBJ, methods=table.new_table())
+
+
+# Looks up one method while the class table remains a read-only heap projection.
+public def class_method(rt: Runtime, ref: value.ObjRef, name: value.ObjRef) -> Option[value.Value]:
+    match rt.objects[ref]:
+        case object.Obj.klass(payload):
+            return table.get(payload.methods, name, string_hash(rt, name))
+        case _:
+            assert False, "object is not a class"
+            return None
+
+
+# ObjRef, rather than a shared class payload, carries object identity. Every
+# changed payload is written back into its object-table slot.
+public def set_class_methods(rt: mut Runtime, ref: value.ObjRef, methods: table.Table):
+    klass = class_obj(rt, ref)
+    klass.methods = methods
+    rt.objects[ref] = object.Obj.klass(klass)
+
+
+def set_object_field(objects: mut list[object.Obj], ref: value.ObjRef, name: value.ObjRef, hash: u32, assigned: value.Value):
+    match objects[ref]:
+        case object.Obj.instance(instance):
+            klass = instance.klass
+            fields = instance.fields
+            _ = table.set(mut fields, name, hash, assigned)
+            objects[ref] = object.Obj.instance(object.InstanceObj(klass=klass, fields=fields))
+        case _:
+            assert False, "object is not an instance"
+
+
+# Moves the object table through the update while its owning runtime stays unique.
+public def set_instance_field(rt: mut Runtime, ref: value.ObjRef, name: value.ObjRef, hash: u32, assigned: value.Value):
+    objects = rt.objects
+    set_object_field(mut objects, ref, name, hash, assigned)
+    rt.objects = objects
+
+
+public def set_instance_fields(rt: mut Runtime, ref: value.ObjRef, fields: table.Table):
+    match rt.objects[ref]:
+        case object.Obj.instance(instance):
+            updated = instance
+            updated.fields = fields
+            rt.objects[ref] = object.Obj.instance(updated)
+        case _:
+            assert False, "object is not an instance"
+
+
+public def env_obj(rt: Runtime, ref: value.ObjRef) -> object.EnvObj:
+    match rt.objects[ref]:
+        case object.Obj.env(payload):
+            return payload
+        case _:
+            assert False, "object is not an env"
+            return object.new_env(value.NO_OBJ, 0)
+
+
+# Read one scalar or value without returning the environment's mutable slots.
+public def env_enclosing(rt: Runtime, ref: value.ObjRef) -> value.ObjRef:
+    match rt.objects[ref]:
+        case object.Obj.env(payload):
+            return payload.enclosing
+        case _:
+            assert False, "object is not an env"
+            return value.NO_OBJ
+
+
+public def env_slot(rt: Runtime, ref: value.ObjRef, slot: int) -> value.Value:
+    match rt.objects[ref]:
+        case object.Obj.env(payload):
+            return payload.slots[slot]
+        case _:
+            assert False, "object is not an env"
+            return value.Value.nil
+
+
+# P3 adaptation: write one environment slot and store the environment back,
+# so the write lands in the heap under value semantics as well.
+public def set_env_slot(rt: mut Runtime, ref: value.ObjRef, slot: int, item: value.Value):
+    env = env_obj(rt, ref)
+    env.slots[slot] = item
+    rt.objects[ref] = object.Obj.env(env)
+
+
+public def string_hash(rt: Runtime, ref: value.ObjRef) -> u32:
+    return string_obj(rt, ref).hash
+
+
+# Binds a global; answers whether the name was new.
+public def set_global(rt: mut Runtime, name: value.ObjRef, item: value.Value) -> bool:
+    hash = string_hash(rt, name)
+    __wb_202 = rt.globals
+    __result_202 = table.set(mut __wb_202, name, hash, item)
+    rt.globals = __wb_202
+    return __result_202
+
+
+def mark_object(marker: mut Marker, ref: value.ObjRef):
+    if ref == value.NO_OBJ or marker.marks[ref]:
+        return
+    marker.marks[ref] = True
+    marker.gray.append(ref)
+
+
+def mark_value(marker: mut Marker, item: value.Value):
+    match item:
+        case value.Value.obj(ref):
+            mark_object(mut marker, ref)
+        case _:
+            pass
+
+
+def mark_table(marker: mut Marker, source: table.Table):
+    for entry in source.entries:
+        mark_object(mut marker, entry.key)
+        mark_value(mut marker, entry.value)
+
+
+def mark_roots(rt: mut Runtime):
+    marker = rt.marker
+    mark_table(mut marker, rt.globals)
+    mark_object(mut marker, rt.init_string)
+    i = 0
+    while i < rt.stack_top:
+        mark_value(mut marker, rt.stack[i])
+        i += 1
+    i = 0
+    while i < rt.frame_count:
+        mark_object(mut marker, rt.frames[i].closure)
+        i += 1
+    upvalue = rt.open_upvalues
+    while upvalue != value.NO_OBJ:
+        mark_object(mut marker, upvalue)
+        upvalue = upvalue_obj(rt, upvalue).next_open
+    for function in rt.compiling:
+        mark_object(mut marker, function)
+    mark_object(mut marker, rt.current_env)
+    for env in rt.saved_envs:
+        mark_object(mut marker, env)
+    for ref in rt.permanent_roots:
+        mark_object(mut marker, ref)
+    rt.marker = marker
+
+
+# Marks everything one object references directly (SPEC §7.4 step 2).
+def blacken(rt: mut Runtime, ref: value.ObjRef):
+    marker = rt.marker
+    match rt.objects[ref]:
+        case object.Obj.klass(payload):
+            mark_object(mut marker, payload.name)
+            mark_table(mut marker, payload.methods)
+        case object.Obj.instance(payload):
+            mark_object(mut marker, payload.klass)
+            mark_table(mut marker, payload.fields)
+        case object.Obj.closure(payload):
+            mark_object(mut marker, payload.function)
+            for upvalue in payload.upvalues:
+                mark_object(mut marker, upvalue)
+        case object.Obj.function(payload):
+            mark_object(mut marker, payload.name)
+            for constant in payload.code.constants:
+                mark_value(mut marker, constant)
+        case object.Obj.upvalue(payload):
+            mark_value(mut marker, payload.closed)
+        case object.Obj.bound_method(payload):
+            mark_value(mut marker, payload.receiver)
+            mark_object(mut marker, payload.method)
+        case object.Obj.env(payload):
+            mark_object(mut marker, payload.enclosing)
+            for slot in payload.slots:
+                mark_value(mut marker, slot)
+        case object.Obj.tree_function(payload):
+            mark_object(mut marker, payload.closure)
+        case _:
+            pass
+    rt.marker = marker
+
+
+def is_free(obj: object.Obj) -> bool:
+    match obj:
+        case object.Obj.free:
+            return True
+        case _:
+            return False
+
+
+def sweep(rt: mut Runtime):
+    i = 0
+    while i < len(rt.objects):
+        if rt.marker.marks[i]:
+            rt.marker.marks[i] = False
+        elif not is_free(rt.objects[i]):
+            rt.bytes_allocated = rt.bytes_allocated - object.cost(rt.objects[i])
+            rt.objects[i] = object.Obj.free
+            rt.free_slots.append(i)
+            rt.freed = rt.freed + 1
+        i += 1
+
+
+# Mark from the roots with an explicit gray stack, drop unmarked keys from
+# the weak intern table, then sweep in ascending slot order (SPEC §7.4).
+public def collect(rt: mut Runtime):
+    mark_roots(mut rt)
+    while len(rt.marker.gray) > 0:
+        blacken(mut rt, rt.marker.gray.pop())
+    i = 0
+    while i < len(rt.strings.entries):
+        entry = rt.strings.entries[i]
+        if entry.key != value.NO_OBJ and not rt.marker.marks[entry.key]:
+            __wb_313 = rt.strings
+            _ = table.delete(mut __wb_313, entry.key, entry.hash)
+            rt.strings = __wb_313
+        i += 1
+    sweep(mut rt)
+    rt.collections = rt.collections + 1
+    rt.next_gc = max(rt.bytes_allocated * 2, FIRST_GC)

@@ -1,0 +1,10 @@
+--- a/ast.my
++++ b/ast.my
+@@ -154,6 +154,7 @@
+ public record ReturnStmt:
+     keyword: scanner.Token
+     result: Option[int]
++    fz_f12: bool = False
+ 
+ 
+ public record VarStmt:

@@ -1,0 +1,16 @@
+{
+ "header": {
+  "seed": 3,
+  "project_kind": "lox",
+  "gc_runtime": true,
+  "compiler": "/home/epentland/ai/canopy/mylang-worktrees/claude-py-text/.tmp/rf-symbol/bin/mylang"
+ },
+ "timeline": [
+  {
+   "label": "edit",
+   "kind": "record-field-add",
+   "desc": "record ThisExpr: add fz_f4: bool = False",
+   "step": 15
+  }
+ ]
+}

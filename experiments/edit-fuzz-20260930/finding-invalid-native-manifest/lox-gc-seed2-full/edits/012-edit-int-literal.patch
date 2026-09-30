@@ -1,0 +1,11 @@
+--- a/parser.my
++++ b/parser.my
+@@ -136,7 +136,7 @@
+ 
+ def add_stmt(p: mut Parser, node: ast.Stmt) -> int:
+     p.program.stmts.append(node)
+-    return len(p.program.stmts) - 1
++    return len(p.program.stmts) - 2
+ 
+ 
+ def literal(p: mut Parser, constant: value.Value, token: scanner.Token) -> int:

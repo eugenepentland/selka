@@ -1,0 +1,10 @@
+--- a/lox_strings.my
++++ b/lox_strings.my
+@@ -67,3 +67,7 @@
+     if existing != value.NO_OBJ:
+         return existing
+     return intern(mut rt, chars, hash)
++
++
++def fz_fn_7(n: int) -> int:
++    return n * 26 + 1

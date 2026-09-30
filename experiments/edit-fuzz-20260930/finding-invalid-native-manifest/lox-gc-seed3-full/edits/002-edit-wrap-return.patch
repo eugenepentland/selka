@@ -1,0 +1,9 @@
+--- a/compiler.my
++++ b/compiler.my
+@@ -899,4 +899,5 @@
+     out = p.out
+     if p.had_error:
+         return value.NO_OBJ
+-    return script.function_ref
++    fz_r1 = script.function_ref
++    return fz_r1

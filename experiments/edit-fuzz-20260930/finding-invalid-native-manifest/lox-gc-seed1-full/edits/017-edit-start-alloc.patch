@@ -1,0 +1,12 @@
+--- a/table.my
++++ b/table.my
+@@ -73,6 +73,9 @@
+         i += 1
+     t.count = 0
+     for entry in t.entries:
++        fz_a9: list[int] = []
++        fz_a9.append(7)
++        _ = len(fz_a9)
+         if entry.key != value.NO_OBJ:
+             entries[find_entry(entries, entry.key, entry.hash)] = entry
+             t.count = t.count + 1

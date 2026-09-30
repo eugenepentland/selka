@@ -1,0 +1,12 @@
+--- a/ast.my
++++ b/ast.my
+@@ -111,6 +111,9 @@
+     variable: VariableExpr
+ 
+ 
++const FZ_C_4: int = 48
++
++
+ public record BlockStmt:
+     statements: list[int]
+     slot_count: int

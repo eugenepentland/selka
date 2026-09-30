@@ -1,0 +1,11 @@
+--- a/ast.my
++++ b/ast.my
+@@ -288,7 +288,7 @@
+ 
+ 
+ # The parenthesized prefix form of expression `id` (SPEC §9.1).
+-public def print_expr(program: Program, source: bytes, id: int) -> bytes:
++public def print_expr_r8(program: Program, source: bytes, id: int) -> bytes:
+     fz_a2: list[int] = []
+     fz_a2.append(0)
+     _ = len(fz_a2)

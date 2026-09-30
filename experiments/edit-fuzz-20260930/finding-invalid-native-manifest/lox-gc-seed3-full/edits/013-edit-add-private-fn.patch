@@ -1,0 +1,13 @@
+--- a/output.my
++++ b/output.my
+@@ -86,6 +86,10 @@
+     return function_text(rt, heap.function_obj(rt, heap.closure_obj(rt, closure).function))
+ 
+ 
++def fz_fn_3(n: int) -> int:
++    return n + 16
++
++
+ def object_text(rt: heap.Runtime, ref: value.ObjRef) -> bytes:
+     match rt.objects[ref]:
+         case object.Obj.string(payload):

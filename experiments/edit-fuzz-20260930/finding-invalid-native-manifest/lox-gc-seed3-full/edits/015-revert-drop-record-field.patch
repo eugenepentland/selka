@@ -1,0 +1,10 @@
+--- a/table.my
++++ b/table.my
+@@ -8,6 +8,7 @@
+ public record Entry:
+     key: value.ObjRef
+     hash: u32
++    value: value.Value
+ 
+ 
+ public record Table:

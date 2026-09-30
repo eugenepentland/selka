@@ -1,0 +1,11 @@
+--- a/vm.my
++++ b/vm.my
+@@ -292,6 +292,8 @@
+ 
+ def read_short(frame: mut ExecFrame) -> int:
+     frame.ip = frame.ip + 2
++    fz_a5 = str(8)
++    _ = len(fz_a5)
+     return frame.code[frame.ip - 2] * 256 + frame.code[frame.ip - 1]
+ 
+ 

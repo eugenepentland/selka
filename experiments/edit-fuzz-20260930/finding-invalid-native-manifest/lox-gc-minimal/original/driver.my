@@ -1,0 +1,80 @@
+module driver
+# Runs a script on one engine (SPEC §11.1), either against the process
+# streams or with its output captured for tests, and reports `--stats`.
+import heap
+import interpreter
+import output
+import vm
+
+
+public enum Engine:
+    VM,
+    TREE
+
+
+public record RunResult:
+    status: int
+    stdout: bytes
+    stderr: bytes
+    allocations: int
+    collections: int
+    freed: int
+
+
+# The exit status: 0, 65 for a compile error, 70 for a runtime error.
+def execute(rt: mut heap.Runtime, o: mut output.Output, source: bytes, engine: Engine) -> int:
+    match engine:
+        case Engine.VM:
+            match vm.interpret(mut rt, mut o, source):
+                case vm.InterpretResult.OK:
+                    return 0
+                case vm.InterpretResult.COMPILE_ERROR:
+                    return 65
+                case vm.InterpretResult.RUNTIME_ERROR:
+                    return 70
+        case Engine.TREE:
+            return interpreter.interpret(mut rt, mut o, source)
+
+
+def engine_name(engine: Engine) -> str:
+    match engine:
+        case Engine.VM:
+            return "vm"
+        case Engine.TREE:
+            return "tree"
+
+
+# The `--stats` line (SPEC §10).
+public def stats_line(rt: heap.Runtime, engine: Engine) -> bytes:
+    live = rt.allocations - rt.freed
+    return f"[stats] engine={engine_name(engine)} allocations={rt.allocations} collections={rt.collections} freed={rt.freed} live={live}".encode()
+
+
+# Runs `source` with stdout and stderr captured in memory. `out` is the
+# stream capture stands in for (nothing is written to it) and `clock`, when
+# present, serves the `clock` native: mylang code must hold the authority
+# for every effect it could reach, even on paths a test never takes.
+public def run_source(source: bytes, engine: Engine, gc_stress: bool, out: Stream, clock: Option[Clock]) -> RunResult:
+    rt = heap.new_runtime(gc_stress, clock)
+    o = output.capture(out)
+    status = execute(mut rt, mut o, source, engine)
+    return RunResult(
+        status=status,
+        stdout=bytes(o.stdout),
+        stderr=bytes(o.stderr),
+        allocations=rt.allocations,
+        collections=rt.collections,
+        freed=rt.freed
+    )
+
+
+# Runs `source` against the process streams, flushes stdout, writes the
+# `--stats` line when asked, and answers the exit status.
+public def run_file(source: bytes, engine: Engine, gc_stress: bool, stats: bool, out: Stream, err: Stream, clock: Clock) -> int:
+    rt = heap.new_runtime(gc_stress, Some(clock))
+    o = output.to_streams(out, err)
+    status = execute(mut rt, mut o, source, engine)
+    output.flush(mut o)
+    if stats:
+        output.error_line(mut o, stats_line(rt, engine))
+    return status

@@ -1,0 +1,292 @@
+module ast
+# The tree engine's syntax tree (SPEC §9.1): jlox's Expr and Stmt nodes as
+# unions of records held in the Program's node arrays, children named by
+# index, with the resolver's slot annotations written back into the nodes.
+# Also the expression printer the parser tests use.
+#
+# Why indices rather than a graph of classes: a function that takes the
+# interpreter's state as `mut` next to a read-only node makes mylang prove
+# the two type graphs disjoint, and that proof grows exponentially with two
+# recursive graphs (see repros/overlap_proof_blowup.my). Node indices keep
+# every such call down to integers.
+import scanner
+import value
+export scanner.TokenKind
+export scanner.Token
+
+
+# `hops` for a name the resolver left to the globals table, and `slot` for a
+# declaration made at the top level.
+public const GLOBAL: int = -1
+
+
+public record AssignExpr:
+    name: scanner.Token
+    name_ref: value.ObjRef
+    assigned: int
+    hops: int
+    slot: int
+
+
+public record BinaryExpr:
+    left: int
+    operator: scanner.Token
+    right: int
+
+
+public record CallExpr:
+    callee: int
+    paren: scanner.Token
+    arguments: list[int]
+
+
+public record GetExpr:
+    target: int
+    name: scanner.Token
+    name_ref: value.ObjRef
+
+
+public record GroupingExpr:
+    inner: int
+
+
+# A number, string, boolean or nil. A string literal's value is the parser's
+# interned ref; `token` is kept so the printer can show the string's bytes.
+public record LiteralExpr:
+    constant: value.Value
+    token: scanner.Token
+
+
+public record LogicalExpr:
+    left: int
+    operator: scanner.Token
+    right: int
+
+
+public record SetExpr:
+    target: int
+    name: scanner.Token
+    name_ref: value.ObjRef
+    assigned: int
+
+
+public record SuperExpr:
+    keyword: scanner.Token
+    method: scanner.Token
+    method_ref: value.ObjRef
+    hops: int
+    slot: int
+
+
+public record ThisExpr:
+    keyword: scanner.Token
+    hops: int
+    slot: int
+
+
+public record UnaryExpr:
+    operator: scanner.Token
+    right: int
+
+
+public record VariableExpr:
+    name: scanner.Token
+    name_ref: value.ObjRef
+    hops: int
+    slot: int
+
+
+public union Expr:
+    assign: AssignExpr,
+    binary: BinaryExpr,
+    call: CallExpr,
+    get: GetExpr,
+    grouping: GroupingExpr,
+    literal: LiteralExpr,
+    logical: LogicalExpr,
+    set: SetExpr,
+    super_access: SuperExpr,
+    this: ThisExpr,
+    unary: UnaryExpr,
+    variable: VariableExpr
+
+
+public record BlockStmt:
+    statements: list[int]
+    slot_count: int
+
+
+# `superclass` is a Variable expression; `methods` are function indices.
+public record ClassStmt:
+    name: scanner.Token
+    name_ref: value.ObjRef
+    slot: int
+    superclass: Option[int]
+    methods: list[int]
+
+
+# A parameter: its token and its interned name.
+public record Param:
+    name: scanner.Token
+    name_ref: value.ObjRef
+
+
+# A function or method declaration. `slot_count` covers the parameters plus
+# the locals declared directly in the body, which shares their scope.
+public record FunctionDecl:
+    name: scanner.Token
+    name_ref: value.ObjRef
+    params: list[Param]
+    body: list[int]
+    slot: int
+    slot_count: int
+
+
+public record IfStmt:
+    condition: int
+    then_branch: int
+    else_branch: Option[int]
+
+
+public record ReturnStmt:
+    keyword: scanner.Token
+    result: Option[int]
+
+
+public record VarStmt:
+    name: scanner.Token
+    name_ref: value.ObjRef
+    initializer: Option[int]
+    slot: int
+
+
+public record WhileStmt:
+    condition: int
+    body: int
+
+
+# `expression` and `print` hold an expression index, `function` a function
+# index.
+public union Stmt:
+    block: BlockStmt,
+    class_decl: ClassStmt,
+    expression: int,
+    function: int,
+    if_stmt: IfStmt,
+    print: int,
+    return_stmt: ReturnStmt,
+    var_decl: VarStmt,
+    while_stmt: WhileStmt
+
+
+# A parsed script: the node arrays and the top-level statements. A runtime
+# TreeFunction names its declaration by its index in `functions`.
+public record Program:
+    exprs: list[Expr]
+    stmts: list[Stmt]
+    functions: list[FunctionDecl]
+    statements: list[int]
+
+
+public def new_program() -> Program:
+    return Program(exprs=[], stmts=[], functions=[], statements=[])
+
+
+def append_text(buffer: mut byte_buffer, text: bytes):
+    _ = buffer.append_range(text, 0, len(text))
+
+
+def append_token(buffer: mut byte_buffer, source: bytes, token: scanner.Token):
+    _ = buffer.append_range(source, token.start, token.start + token.length)
+
+
+# `(HEAD ` for a node whose head is a fixed word or an operator's lexeme.
+def open_form(buffer: mut byte_buffer, head: bytes):
+    append_text(mut buffer, b"(")
+    append_text(mut buffer, head)
+    append_text(mut buffer, b" ")
+
+
+def write_literal(buffer: mut byte_buffer, source: bytes, literal: LiteralExpr):
+    match literal.constant:
+        case value.Value.nil:
+            append_text(mut buffer, b"nil")
+        case value.Value.boolean(flag):
+            if flag:
+                append_text(mut buffer, b"true")
+            else:
+                append_text(mut buffer, b"false")
+        case value.Value.number(number):
+            append_text(mut buffer, value.format_number(number))
+        case value.Value.obj(_):
+            token = literal.token
+            _ = buffer.append_range(source, token.start + 1, token.start + token.length - 1)
+
+
+def write_operation(buffer: mut byte_buffer, program: Program, source: bytes, operator: scanner.Token, left: int, right: int):
+    open_form(mut buffer, scanner.lexeme(source, operator))
+    write_expr(mut buffer, program, source, left)
+    append_text(mut buffer, b" ")
+    write_expr(mut buffer, program, source, right)
+    append_text(mut buffer, b")")
+
+
+def write_expr(buffer: mut byte_buffer, program: Program, source: bytes, id: int):
+    match program.exprs[id]:
+        case Expr.assign(node):
+            open_form(mut buffer, b"=")
+            append_token(mut buffer, source, node.name)
+            append_text(mut buffer, b" ")
+            write_expr(mut buffer, program, source, node.assigned)
+            append_text(mut buffer, b")")
+        case Expr.binary(node):
+            write_operation(mut buffer, program, source, node.operator, node.left, node.right)
+        case Expr.call(node):
+            open_form(mut buffer, b"call")
+            write_expr(mut buffer, program, source, node.callee)
+            for argument in node.arguments:
+                append_text(mut buffer, b" ")
+                write_expr(mut buffer, program, source, argument)
+            append_text(mut buffer, b")")
+        case Expr.get(node):
+            open_form(mut buffer, b".")
+            write_expr(mut buffer, program, source, node.target)
+            append_text(mut buffer, b" ")
+            append_token(mut buffer, source, node.name)
+            append_text(mut buffer, b")")
+        case Expr.grouping(node):
+            open_form(mut buffer, b"group")
+            write_expr(mut buffer, program, source, node.inner)
+            append_text(mut buffer, b")")
+        case Expr.literal(node):
+            write_literal(mut buffer, source, node)
+        case Expr.logical(node):
+            write_operation(mut buffer, program, source, node.operator, node.left, node.right)
+        case Expr.set(node):
+            open_form(mut buffer, b".=")
+            write_expr(mut buffer, program, source, node.target)
+            append_text(mut buffer, b" ")
+            append_token(mut buffer, source, node.name)
+            append_text(mut buffer, b" ")
+            write_expr(mut buffer, program, source, node.assigned)
+            append_text(mut buffer, b")")
+        case Expr.super_access(node):
+            open_form(mut buffer, b"super")
+            append_token(mut buffer, source, node.method)
+            append_text(mut buffer, b")")
+        case Expr.this(_):
+            append_text(mut buffer, b"this")
+        case Expr.unary(node):
+            open_form(mut buffer, scanner.lexeme(source, node.operator))
+            write_expr(mut buffer, program, source, node.right)
+            append_text(mut buffer, b")")
+        case Expr.variable(node):
+            append_token(mut buffer, source, node.name)
+
+
+# The parenthesized prefix form of expression `id` (SPEC §9.1).
+public def print_expr(program: Program, source: bytes, id: int) -> bytes:
+    empty: list[int] = []
+    buffer = byte_buffer(empty)
+    write_expr(mut buffer, program, source, id)
+    return bytes(buffer)
