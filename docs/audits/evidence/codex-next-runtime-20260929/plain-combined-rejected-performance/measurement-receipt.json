@@ -1,0 +1,27 @@
+{
+  "identity": {
+    "source": "255cf730604cb6023ad5701165a100358d9c0cfe",
+    "compiler_sha256": "774d870b08babccb1bbac5ab5a8a932ae134dd7f05768d2026c9949390504c6b",
+    "qbe_sha256": "6ccecf27cda0378f59d7dc60cee74a6558a7d25a0c88fb877b5755136f0500de"
+  },
+  "acceptance": "rejected",
+  "coverage": {
+    "dev": 86,
+    "smoke": 86,
+    "full": 86
+  },
+  "measurement_cpus": "2,3,10,11",
+  "observations_per_row": 1,
+  "sha256": {
+    ".tmp/phase-b-plain-combined/identity.json": "bf0a70278dd65c76091539443fbab15c64dfe3dd91fc00b1586936a803020dd1",
+    ".tmp/phase-b-plain-combined/install.log": "daa2be74d96050c7b0540df00a6d519ae63cd25236508ae708b72d76987ebedd",
+    ".tmp/phase-b-plain-combined/corpus-build.log": "b5323457299d686d8cc1bf95c4fb70d49cd16fc7d6c5076ed213929c00f42d0a",
+    ".tmp/phase-b-plain-combined/measure-dev.log": "aeb3eea239aa04a1afb5012435ab08c0b3e679e4f4f795786210381db70caa92",
+    ".tmp-rc-quick/results-phase-b-plain-combined-dev.json": "a0b656b930afb1d712fea996d1a0d02bd81fbb1ee853f3201fd3e76a633dc61e",
+    ".tmp/phase-b-plain-combined/measure-smoke.log": "9292a669302dab29376052a0f104a087ac4d4ef9977f6f0a3bfad54b65ea2c4f",
+    ".tmp-rc-quick/results-phase-b-plain-combined-smoke.json": "cdd5b4b4f6232c2d69863c2329a0803210cb306dbb1d21c18d4031ceefd76916",
+    ".tmp/phase-b-plain-combined/measure-full.log": "a40fc69314a4d793da80c6a3c276e780f05ada20029449fcaacfb61f9c943ef0",
+    ".tmp-rc-quick/results-phase-b-plain-combined-full.json": "4db1dc28c1be45609ba356d328e4063dbbbc28341409d4084e398630b3d24c20",
+    ".tmp/phase-b-plain-combined/comparison.json": "2ff5c4308786a2d10c9421df5edd2c07ba9a76d7a4861c6a32c4f4b10005719c"
+  }
+}

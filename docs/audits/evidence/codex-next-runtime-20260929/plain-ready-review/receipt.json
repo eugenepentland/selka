@@ -1,0 +1,143 @@
+{
+  "source": "79fd7e25635a21813f41d8038832f41a0154d56c",
+  "base": "3226f1d66b08734824e5c799c25a9c7ed4a69438",
+  "source_files_verified_unchanged": 895,
+  "body_proof": {
+    "base": "3226f1d66b08734824e5c799c25a9c7ed4a69438",
+    "source": "79fd7e25635a21813f41d8038832f41a0154d56c",
+    "helper_body_sha256": "9da969169410d458b6778308f3a274c355c7f54b736a498a8b8b0689e10368b2",
+    "header_sha256": "f81e5ab541e6db5e26c7722be27444b2e6cc02196ca6bdaf1068c69284d8f323",
+    "body_equal": true,
+    "header_equal": true,
+    "prior_external_declaration": true
+  },
+  "independent_two_TU_callable_query": [
+    {
+      "mode": "none-o0",
+      "cases": 15,
+      "status": 0,
+      "stdout": "independent callable plain query: 15 cases passed\n",
+      "callable_symbol_defined": true,
+      "external_T_symbol": true,
+      "binary_sha256": "580bcb24b54a0ef26bc279914a467d39391d507532b50665aa6d3832e141d846"
+    },
+    {
+      "mode": "none-o3",
+      "cases": 15,
+      "status": 0,
+      "stdout": "independent callable plain query: 15 cases passed\n",
+      "callable_symbol_defined": true,
+      "external_T_symbol": true,
+      "binary_sha256": "1d51b19f6084a3950432ae5e3778fd2419d9332cc1ef970900a22a9f31459e63"
+    },
+    {
+      "mode": "full",
+      "cases": 15,
+      "status": 0,
+      "stdout": "independent callable plain query: 15 cases passed\n",
+      "callable_symbol_defined": true,
+      "external_T_symbol": false,
+      "binary_sha256": "f3bfd5c2dbae0171bbd45b881942d421b40d4bc377c6eecd553d6313f2c30b6f"
+    },
+    {
+      "mode": "thin",
+      "cases": 15,
+      "status": 0,
+      "stdout": "independent callable plain query: 15 cases passed\n",
+      "callable_symbol_defined": true,
+      "external_T_symbol": true,
+      "binary_sha256": "73eeac6881119887c27ffb90db489a1bb5b47bbc07c93b72a603b99123066e81"
+    }
+  ],
+  "reviewed_tooling_evidence": {
+    "experiments/wp-b3-layout-20260929/plain-ready-inline/receipt.json": "c3f0449e08c14c4831b30c1a1d5828543c0054aa19bc03170e609f1dc68ffd39",
+    "experiments/wp-b3-layout-20260929/plain-ready-inline/plain-native/receipt.json": "3dec1a04a0ebe242c13777f15689f1172ef81d9202d933f1a1f404835e2d1717",
+    "experiments/wp-b3-layout-20260929/plain-ready-inline/plain-guest/receipt.json": "761087af28692bbc1df3539505da70896fabc6e74fd5a531ed0b107e3ea8046d",
+    "experiments/wp-b3-layout-20260929/plain-ready-inline/plain-native.log.gz": "5cef5f9ce6018138217caffbf7071ea94e2c219c4d034af565b6ce382992b5f7",
+    "experiments/wp-b3-layout-20260929/plain-ready-inline/plain-guest.log.gz": "cd39c4e87a0f916d6f7b9a53f979cbf1e47d4b16e7729751e9d0e489d01745b8"
+  },
+  "verified_existing_guest_artifacts": [
+    {
+      "mode": "qbe",
+      "binary_sha256": "3eac7d2899c85b121ba36af234818b6b47656eb6936a62c0d1ab07db32ad661f",
+      "assembly_sha256": "4eda04485a13dedc541b22cd515f1388184049ffe95b24ff87b979cd191d4453",
+      "query_calls": 2,
+      "output": "999739\n",
+      "verified": true
+    },
+    {
+      "mode": "llvm-none",
+      "binary_sha256": "c9826bf0fbdccd9232e28605e4a4a3eff4d8eb06090a7c050817f21cbca5c1dd",
+      "assembly_sha256": "b4d1df9579fed3d4720f9e6134f000289a7d4833f659d66703e8158ae85cd626",
+      "query_calls": 2,
+      "output": "999739\n",
+      "verified": true
+    },
+    {
+      "mode": "llvm-full",
+      "binary_sha256": "5c12aa6c19198d5f0e7c05f0fd0c9b840dfec422c687f27b6cf79c66e1bed268",
+      "assembly_sha256": "81ca25d675079fe838dbe417695e6545c68a708b6da20d8150ec9e50a29d3fec",
+      "query_calls": 0,
+      "output": "999739\n",
+      "verified": true
+    },
+    {
+      "mode": "llvm-thin",
+      "binary_sha256": "b5ac4321499c567c635f94658dc81a51226f150d8f79abed85af867473520931",
+      "assembly_sha256": "b7aafa6c53f996efa1ddaac8b3efbb051ed2cd688dcd9282e9ebad59916967dd",
+      "query_calls": 0,
+      "output": "999739\n",
+      "verified": true
+    }
+  ],
+  "original_installed_tools_verified": {
+    "compiler": "c6507a494499a5326977b4a08c3e78b6aac36ac125f2a560b168fd907955405a",
+    "qbe": "2e9cec252957714060d311b061b43d72bbd76f698a21bb55e6ecc28091273602"
+  },
+  "findings": [
+    {
+      "severity": "documentation",
+      "description": "Audit says one retained query call site, authoritative actual guest receipt/assembly show two for QBE and LLVM no-LTO. Tooling acknowledged separate prose correction."
+    }
+  ],
+  "excluded_pre_execution": ".tmp/plain-review/initial-c99/explanation.md",
+  "scope": "Independent source/C99-inline-linkage/callable-address review. Actual whole production TU compiled in productionC11; cold descriptor lookup stub only. Existing actual native47x3 and guest4 receipts inspected, not independently rerun. No source changes, Guardian, broad gate or timing.",
+  "manifest": {
+    ".tmp/plain-review/body-proof.json": "932f239a0183ff9a9a857e5ab9c0888447e387ac0718e2b9b9675c162c28ee3e",
+    ".tmp/plain-review/frozen-after.json": "e7a6c3d1333a539dddf8165090b0441358422d5bfccc44bc21bc700c1245576c",
+    ".tmp/plain-review/frozen-before.json": "e7a6c3d1333a539dddf8165090b0441358422d5bfccc44bc21bc700c1245576c",
+    ".tmp/plain-review/full/caller-build.log": "1be1273034b9441e06d87bc62d9963d9814ceb620de174a180ce09cad04d7bc5",
+    ".tmp/plain-review/full/link.log": "1eb7595b13d8179a7295cfce4f80808dfbc5f22334e0186b5b4c8b0ba58909e9",
+    ".tmp/plain-review/full/nm.log": "a5789f016a346e6b7c2046c8259697389a2d92eaad6c01ddc438f21c8b56b0e6",
+    ".tmp/plain-review/full/oracle-build.log": "68d81ee0ae10a4270a58b5f05fa1f8ff4b90daf86564380565048e57a0eef609",
+    ".tmp/plain-review/full/production-build.log": "e6f75f237737d38f691c36ae06323b7b1bd9bb74feb8a10ca92d0aad9c008702",
+    ".tmp/plain-review/full/run.log": "1c5305ad35dbf538da3055624728123380e771b3904e1cf1ddd9e5cf9c458c00",
+    ".tmp/plain-review/initial-c99/explanation.md": "f6284cb31ad31a28c5ec40f623cd90944bd28edda4c967289cbd6e607cf35326",
+    ".tmp/plain-review/initial-c99/production-build.log": "f773014a270d1c5d37f3f77bb47c32fdc07478979043d2564ef14f3338f6c1bf",
+    ".tmp/plain-review/initial-c99/run.py": "5f64d457a968667cd29c39d495806cf490de66cb1ebf314b1f007e0537d7ea9e",
+    ".tmp/plain-review/inspected-guest-evidence.json": "2fb2dbbdcd4688365fddba10150674702562c4f938b18871b3f2fd16c5ccad15",
+    ".tmp/plain-review/none-o0/caller-build.log": "4eb286daa6f71b4124700e8c3a897fd7dc856cea32761ba96b34d470b3e4a004",
+    ".tmp/plain-review/none-o0/link.log": "cd7df97eef0ab828465f2dd071fb2fa996320bb7ad29058b5db4a8f66a116c74",
+    ".tmp/plain-review/none-o0/nm.log": "55b565b1c772a8e239ca8ffd9a02726e13c94ccc5dc88c1bb06fc0b79b117b93",
+    ".tmp/plain-review/none-o0/oracle-build.log": "77b3bed6e6e2d6bc09ee5f4ceef6df27b557886f39f2f6f2304f1388bd18666b",
+    ".tmp/plain-review/none-o0/production-build.log": "47936263f8dfb768dc8a21b0185f18f21b69682fb702beedee7403ea1a923d41",
+    ".tmp/plain-review/none-o0/run.log": "5d6c8fd7b191d6fa009ef229e601fc64a37dddb151b79a9fdbc68267633fb12c",
+    ".tmp/plain-review/none-o3/caller-build.log": "f6b73ded02906cf033c10d7118e26eaff39cdc3a461e827fc2fb180f566ebd2a",
+    ".tmp/plain-review/none-o3/link.log": "7ed1782b1c86106ebc9529914e735e0d1a13c3d5d9710244aaafe47f1a0c022d",
+    ".tmp/plain-review/none-o3/nm.log": "a26b1812a2c3b86febbb8dd3bfb81c5a2c8a5f4d4fe5d43a1d057fe3442c5d19",
+    ".tmp/plain-review/none-o3/oracle-build.log": "92f68fbf25f02c656a320bfddfa11f48492efc23b3290cd74abcd1c8dfaa30d9",
+    ".tmp/plain-review/none-o3/production-build.log": "3857c89773db4c8b28138687fc3a838875270a39de549a2d4f5c42665de209c0",
+    ".tmp/plain-review/none-o3/run.log": "b01c7f4f8db6c2cbb48ef165312041a333899073684adf17bb8f6c252b01766f",
+    ".tmp/plain-review/probe-results.json": "aadfd89b8dbca01a56f2600748aa621950b5c9a5b6a4226c0c5b8bc2f36ab0cb",
+    ".tmp/plain-review/probes/caller.c": "5ec11acd569a301e7169e7b10e7d4d2f3a8577a1a8d84719a4f71f2e753e0294",
+    ".tmp/plain-review/probes/oracle.c": "be73c6a6f266030fc7cf89f1c456e9607a43ecdf999b12f0acbb67f97db23a3e",
+    ".tmp/plain-review/report.md": "46432e55ec7437d6ca425ed59a2eacb1d339fb7fc4b1081f47781c9a30431be1",
+    ".tmp/plain-review/run.py": "c3b83a27ef5ecc524ec37b1b4cc46c5f6636338f8ce8e164af22f966e9526e96",
+    ".tmp/plain-review/thin/caller-build.log": "71aea45f444dacf8c16464e65ab3770f69d620b8d4e3c76cc4fe8ea6f8da2948",
+    ".tmp/plain-review/thin/link.log": "903af4dc88dd783ddecf12ed9030e0bc82b5ab2fd147fc736e0b4920d3dcfdda",
+    ".tmp/plain-review/thin/nm.log": "3d60964836c4cdb61a16dcbfd9e9431c90a81383a8b0ac73222f61f2fb71f064",
+    ".tmp/plain-review/thin/oracle-build.log": "2c6f041dd23fe2cf312c7394afe0def7ea2000004495b199309cc069c7dd4bd6",
+    ".tmp/plain-review/thin/production-build.log": "a5183dfee5fec85c3016721e2d8923bd3f52613df1d8d1a6b0b69ab80b1e9f7f",
+    ".tmp/plain-review/thin/run.log": "8b4c263b06484f39fc8b0c10f3b1d4de7851b5d5591499f5591e912ad05b196c"
+  }
+}

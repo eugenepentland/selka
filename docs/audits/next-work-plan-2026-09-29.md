@@ -47,7 +47,10 @@ Composed source `3226f1d6` matches all 258 dev/smoke/full outputs but remains
 rejected: 13 dev, 14 full and 19 smoke rows exceed 1%, with three new smoke
 cap misses. Profiling identifies three million out-of-line readiness calls as
 the principal allocation-churn cost. Its attribute-only inlining continuation
-passes focused native checks and is undergoing combined measurement. The
+passes focused checks and independent callable ABI review. Composed `255cf730`
+reduces LLVM allocation churn to +0.415%, but introduces a +3.726% LLVM
+fannkuch regression; twelve dev, thirteen full and eighteen smoke rows remain
+above 1%, with two new smoke cap misses. The checkpoint remains rejected. The
 preliminary ABI5 module matrix passes all 29 corpus programs and four runtime
 fixture modes; its raw evidence is archived. B3 performance corrections and
 the final combined ABI5 corpus/oracle/gate remain open. All

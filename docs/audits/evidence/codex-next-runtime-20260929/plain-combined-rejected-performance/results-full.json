@@ -1,0 +1,630 @@
+{
+ "compiler": {
+  "compiler": "/home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929/.tmp/phase-b-plain-combined/compiler/bin/mylang",
+  "runtime": "--rc-runtime",
+  "sha256": "774d870b08babccb1bbac5ab5a8a932ae134dd7f05768d2026c9949390504c6b"
+ },
+ "failures": [],
+ "rows": [
+  {
+   "arm": "qbe",
+   "gc": 2633115907,
+   "id": "parity/suite/binary_trees",
+   "ratio": 1.1112570518529779,
+   "rc": 2926068620
+  },
+  {
+   "arm": "llvm",
+   "gc": 1404609626,
+   "id": "parity/suite/binary_trees",
+   "ratio": 1.1720457118667076,
+   "rc": 1646266689
+  },
+  {
+   "arm": "qbe",
+   "gc": 5755840186,
+   "id": "parity/suite/fannkuch_redux",
+   "ratio": 1.0445728390138453,
+   "rc": 6012394324
+  },
+  {
+   "arm": "llvm",
+   "gc": 1985384623,
+   "id": "parity/suite/fannkuch_redux",
+   "ratio": 1.0337241782898607,
+   "rc": 2052340088
+  },
+  {
+   "arm": "qbe",
+   "gc": 2984432086,
+   "id": "parity/suite/knucleotide",
+   "ratio": 1.0694061345780612,
+   "rc": 3191569981
+  },
+  {
+   "arm": "llvm",
+   "gc": 1931472109,
+   "id": "parity/suite/knucleotide",
+   "ratio": 1.0663296474243833,
+   "rc": 2059585973
+  },
+  {
+   "arm": "qbe",
+   "gc": 3978702171,
+   "id": "parity/suite/mandelbrot",
+   "ratio": 1.0000054666067137,
+   "rc": 3978723921
+  },
+  {
+   "arm": "llvm",
+   "gc": 794663552,
+   "id": "parity/suite/mandelbrot",
+   "ratio": 1.0000233822225182,
+   "rc": 794682133
+  },
+  {
+   "arm": "qbe",
+   "gc": 3206533854,
+   "id": "parity/suite/matmul",
+   "ratio": 1.0101398405507058,
+   "rc": 3239047596
+  },
+  {
+   "arm": "llvm",
+   "gc": 148591390,
+   "id": "parity/suite/matmul",
+   "ratio": 1.0640671508625097,
+   "rc": 158111217
+  },
+  {
+   "arm": "qbe",
+   "gc": 32990211666,
+   "id": "parity/suite/nbody",
+   "ratio": 1.0153082323967166,
+   "rc": 33495233493
+  },
+  {
+   "arm": "llvm",
+   "gc": 3595208279,
+   "id": "parity/suite/nbody",
+   "ratio": 0.9805349624919464,
+   "rc": 3525227415
+  },
+  {
+   "arm": "qbe",
+   "gc": 6231732385,
+   "id": "parity/suite/raytrace",
+   "ratio": 1.058861994119473,
+   "rc": 6598544580
+  },
+  {
+   "arm": "llvm",
+   "gc": 1197340559,
+   "id": "parity/suite/raytrace",
+   "ratio": 1.0646008225634658,
+   "rc": 1274689744
+  },
+  {
+   "arm": "qbe",
+   "gc": 822297605,
+   "id": "parity/suite/sieve",
+   "ratio": 1.0243487514474763,
+   "rc": 842319525
+  },
+  {
+   "arm": "llvm",
+   "gc": 222098146,
+   "id": "parity/suite/sieve",
+   "ratio": 1.000083823302154,
+   "rc": 222116763
+  },
+  {
+   "arm": "qbe",
+   "gc": 919565515,
+   "id": "parity/suite/sort_builtin",
+   "ratio": 1.1239604347276986,
+   "rc": 1033555256
+  },
+  {
+   "arm": "llvm",
+   "gc": 734453232,
+   "id": "parity/suite/sort_builtin",
+   "ratio": 1.051517394643312,
+   "rc": 772290349
+  },
+  {
+   "arm": "qbe",
+   "gc": 2804351234,
+   "id": "parity/suite/sort_quick",
+   "ratio": 0.8638349007890358,
+   "rc": 2422496470
+  },
+  {
+   "arm": "llvm",
+   "gc": 1181716495,
+   "id": "parity/suite/sort_quick",
+   "ratio": 0.9855495086408183,
+   "rc": 1164640111
+  },
+  {
+   "arm": "qbe",
+   "gc": 312648348,
+   "id": "parity/suite/sort_records",
+   "ratio": 1.2814143799665942,
+   "rc": 400632089
+  },
+  {
+   "arm": "llvm",
+   "gc": 152628206,
+   "id": "parity/suite/sort_records",
+   "ratio": 1.2030832492390038,
+   "rc": 183624438
+  },
+  {
+   "arm": "qbe",
+   "gc": 11523632562,
+   "id": "parity/suite/spectral_norm",
+   "ratio": 1.013896517190948,
+   "rc": 11683770920
+  },
+  {
+   "arm": "llvm",
+   "gc": 1841811367,
+   "id": "parity/suite/spectral_norm",
+   "ratio": 1.000026111794542,
+   "rc": 1841859460
+  },
+  {
+   "arm": "qbe",
+   "gc": 1601705280,
+   "id": "parity/suite/text_ops",
+   "ratio": 1.108763650326482,
+   "rc": 1775912593
+  },
+  {
+   "arm": "llvm",
+   "gc": 1401477959,
+   "id": "parity/suite/text_ops",
+   "ratio": 0.96902389529481,
+   "rc": 1358065631
+  },
+  {
+   "arm": "qbe",
+   "gc": 1091191521,
+   "id": "parity/lib/scan_count",
+   "ratio": 1.0010913840302833,
+   "rc": 1092382430
+  },
+  {
+   "arm": "llvm",
+   "gc": 1083296144,
+   "id": "parity/lib/scan_count",
+   "ratio": 1.0005858767277214,
+   "rc": 1083930822
+  },
+  {
+   "arm": "qbe",
+   "gc": 721560990,
+   "id": "parity/lib/scan_replace",
+   "ratio": 1.00149793851799,
+   "rc": 722641844
+  },
+  {
+   "arm": "llvm",
+   "gc": 698697442,
+   "id": "parity/lib/scan_replace",
+   "ratio": 0.9963689304590297,
+   "rc": 696160423
+  },
+  {
+   "arm": "qbe",
+   "gc": 1521427529,
+   "id": "parity/lib/scan_split",
+   "ratio": 0.6909295664519293,
+   "rc": 1051199263
+  },
+  {
+   "arm": "llvm",
+   "gc": 1441434126,
+   "id": "parity/lib/scan_split",
+   "ratio": 0.6332150644531084,
+   "rc": 912737803
+  },
+  {
+   "arm": "qbe",
+   "gc": 3060156384,
+   "id": "parity/micro/alloc_churn",
+   "ratio": 1.0908670960261617,
+   "rc": 3338223908
+  },
+  {
+   "arm": "llvm",
+   "gc": 1950411938,
+   "id": "parity/micro/alloc_churn",
+   "ratio": 1.1157765831927553,
+   "rc": 2176223968
+  },
+  {
+   "arm": "qbe",
+   "gc": 1503650239,
+   "id": "parity/micro/bytes_scan",
+   "ratio": 0.9999111415696719,
+   "rc": 1503516627
+  },
+  {
+   "arm": "llvm",
+   "gc": 195529555,
+   "id": "parity/micro/bytes_scan",
+   "ratio": 1.0013771831066665,
+   "rc": 195798835
+  },
+  {
+   "arm": "qbe",
+   "gc": 1710201099,
+   "id": "parity/micro/calls",
+   "ratio": 1.0000102683830634,
+   "rc": 1710218660
+  },
+  {
+   "arm": "llvm",
+   "gc": 540202392,
+   "id": "parity/micro/calls",
+   "ratio": 1.0000251054053089,
+   "rc": 540215954
+  },
+  {
+   "arm": "qbe",
+   "gc": 661306476,
+   "id": "parity/micro/dict_count",
+   "ratio": 1.1269748657353236,
+   "rc": 745275777
+  },
+  {
+   "arm": "llvm",
+   "gc": 441036162,
+   "id": "parity/micro/dict_count",
+   "ratio": 1.15837036963876,
+   "rc": 510883222
+  },
+  {
+   "arm": "qbe",
+   "gc": 1594616693,
+   "id": "parity/micro/fib",
+   "ratio": 1.000011069117787,
+   "rc": 1594634344
+  },
+  {
+   "arm": "llvm",
+   "gc": 942357466,
+   "id": "parity/micro/fib",
+   "ratio": 1.0000141761491599,
+   "rc": 942370825
+  },
+  {
+   "arm": "qbe",
+   "gc": 1260200402,
+   "id": "parity/micro/float_loop",
+   "ratio": 1.079366822801569,
+   "rc": 1360218504
+  },
+  {
+   "arm": "llvm",
+   "gc": 164203507,
+   "id": "parity/micro/float_loop",
+   "ratio": 1.000092427989373,
+   "rc": 164218684
+  },
+  {
+   "arm": "qbe",
+   "gc": 1260200774,
+   "id": "parity/micro/intloop",
+   "ratio": 1.0000142596325687,
+   "rc": 1260218744
+  },
+  {
+   "arm": "llvm",
+   "gc": 650202540,
+   "id": "parity/micro/intloop",
+   "ratio": 1.0000206966278538,
+   "rc": 650215997
+  },
+  {
+   "arm": "qbe",
+   "gc": 592295536,
+   "id": "parity/micro/list_append_sum",
+   "ratio": 1.1350287147867344,
+   "rc": 672272441
+  },
+  {
+   "arm": "llvm",
+   "gc": 246275014,
+   "id": "parity/micro/list_append_sum",
+   "ratio": 1.194866865381642,
+   "rc": 294265854
+  },
+  {
+   "arm": "qbe",
+   "gc": 508272579,
+   "id": "parity/micro/list_records",
+   "ratio": 1.0589888442516195,
+   "rc": 538254991
+  },
+  {
+   "arm": "llvm",
+   "gc": 103753385,
+   "id": "parity/micro/list_records",
+   "ratio": 1.0963399603781603,
+   "rc": 113748982
+  },
+  {
+   "arm": "qbe",
+   "gc": 1960199849,
+   "id": "parity/micro/records",
+   "ratio": 1.0000097658409728,
+   "rc": 1960218992
+  },
+  {
+   "arm": "llvm",
+   "gc": 620202125,
+   "id": "parity/micro/records",
+   "ratio": 1.000022760321887,
+   "rc": 620216241
+  },
+  {
+   "arm": "qbe",
+   "gc": 983069136,
+   "id": "parity/micro/str_build",
+   "ratio": 0.9881691789782728,
+   "rc": 971438621
+  },
+  {
+   "arm": "llvm",
+   "gc": 259410376,
+   "id": "parity/micro/str_build",
+   "ratio": 1.1242921100426608,
+   "rc": 291653039
+  },
+  {
+   "arm": "qbe",
+   "gc": 18595275,
+   "id": "schematic/fixture",
+   "ratio": 1.2191713217470568,
+   "rc": 22670826
+  },
+  {
+   "arm": "llvm",
+   "gc": 9058444,
+   "id": "schematic/fixture",
+   "ratio": 1.1736347876081146,
+   "rc": 10631305
+  },
+  {
+   "arm": "qbe",
+   "gc": 18605271,
+   "id": "schematic/changed-net",
+   "ratio": 1.219195678471977,
+   "rc": 22683466
+  },
+  {
+   "arm": "llvm",
+   "gc": 9064254,
+   "id": "schematic/changed-net",
+   "ratio": 1.17355636768343,
+   "rc": 10637413
+  },
+  {
+   "arm": "qbe",
+   "gc": 18595676,
+   "id": "schematic/changed-value",
+   "ratio": 1.2191690691965165,
+   "rc": 22671273
+  },
+  {
+   "arm": "llvm",
+   "gc": 9058879,
+   "id": "schematic/changed-value",
+   "ratio": 1.1736263394179347,
+   "rc": 10631739
+  },
+  {
+   "arm": "qbe",
+   "gc": 7243226770,
+   "id": "lox/vm/binary_trees",
+   "ratio": 1.1430006894565308,
+   "rc": 8279013192
+  },
+  {
+   "arm": "llvm",
+   "gc": 3433160280,
+   "id": "lox/vm/binary_trees",
+   "ratio": 1.1306673479864446,
+   "rc": 3881762229
+  },
+  {
+   "arm": "qbe",
+   "gc": 10454323760,
+   "id": "lox/vm/closures",
+   "ratio": 1.159587575657787,
+   "rc": 12122703944
+  },
+  {
+   "arm": "llvm",
+   "gc": 4510022272,
+   "id": "lox/vm/closures",
+   "ratio": 1.1642600039027036,
+   "rc": 5250838548
+  },
+  {
+   "arm": "qbe",
+   "gc": 10454346696,
+   "id": "lox/vm/equality",
+   "ratio": 0.8745326767762668,
+   "rc": 9142667800
+  },
+  {
+   "arm": "llvm",
+   "gc": 3772990009,
+   "id": "lox/vm/equality",
+   "ratio": 0.9930272558535153,
+   "rc": 3746681915
+  },
+  {
+   "arm": "qbe",
+   "gc": 5467272140,
+   "id": "lox/vm/fib",
+   "ratio": 1.0935969982646592,
+   "rc": 5978992401
+  },
+  {
+   "arm": "llvm",
+   "gc": 2132732531,
+   "id": "lox/vm/fib",
+   "ratio": 1.087581035729979,
+   "rc": 2319519455
+  },
+  {
+   "arm": "qbe",
+   "gc": 7382964702,
+   "id": "lox/vm/instantiation",
+   "ratio": 1.2758688391735453,
+   "rc": 9419694604
+  },
+  {
+   "arm": "llvm",
+   "gc": 3821949472,
+   "id": "lox/vm/instantiation",
+   "ratio": 1.2335397802977548,
+   "rc": 4714526712
+  },
+  {
+   "arm": "qbe",
+   "gc": 15061923719,
+   "id": "lox/vm/invocation",
+   "ratio": 1.1938443499296811,
+   "rc": 17981592531
+  },
+  {
+   "arm": "llvm",
+   "gc": 6350201966,
+   "id": "lox/vm/invocation",
+   "ratio": 1.1930782067349446,
+   "rc": 7576287574
+  },
+  {
+   "arm": "qbe",
+   "gc": 14621656334,
+   "id": "lox/vm/method_call",
+   "ratio": 1.1839927053096062,
+   "rc": 17311934439
+  },
+  {
+   "arm": "llvm",
+   "gc": 5976654908,
+   "id": "lox/vm/method_call",
+   "ratio": 1.25314076273249,
+   "rc": 7489589890
+  },
+  {
+   "arm": "qbe",
+   "gc": 13125488354,
+   "id": "lox/vm/properties",
+   "ratio": 1.1893581658805532,
+   "rc": 15610906755
+  },
+  {
+   "arm": "llvm",
+   "gc": 5643020315,
+   "id": "lox/vm/properties",
+   "ratio": 1.206410260637171,
+   "rc": 6807797609
+  },
+  {
+   "arm": "qbe",
+   "gc": 9661789116,
+   "id": "lox/vm/string_equality",
+   "ratio": 0.9378521335136953,
+   "rc": 9061329536
+  },
+  {
+   "arm": "llvm",
+   "gc": 3053207817,
+   "id": "lox/vm/string_equality",
+   "ratio": 1.0920374228820469,
+   "rc": 3334217196
+  },
+  {
+   "arm": "qbe",
+   "gc": 8153489377,
+   "id": "lox/vm/strings",
+   "ratio": 0.8346559565278993,
+   "rc": 6805358475
+  },
+  {
+   "arm": "llvm",
+   "gc": 4050791532,
+   "id": "lox/vm/strings",
+   "ratio": 0.7104095397817672,
+   "rc": 2877720948
+  },
+  {
+   "arm": "qbe",
+   "gc": 4963976688,
+   "id": "lox/vm/trees",
+   "ratio": 1.1225816181753994,
+   "rc": 5572468983
+  },
+  {
+   "arm": "llvm",
+   "gc": 2252289292,
+   "id": "lox/vm/trees",
+   "ratio": 1.0959615067068391,
+   "rc": 2468422366
+  },
+  {
+   "arm": "qbe",
+   "gc": 16579969704,
+   "id": "lox/vm/zoo",
+   "ratio": 1.1393185233892633,
+   "rc": 18889866601
+  },
+  {
+   "arm": "llvm",
+   "gc": 7085839415,
+   "id": "lox/vm/zoo",
+   "ratio": 1.1394184221715107,
+   "rc": 8073735966
+  },
+  {
+   "arm": "qbe",
+   "gc": 13769782561,
+   "id": "lox/vm/zoo_batch",
+   "ratio": 1.1407737781197924,
+   "rc": 15708206876
+  },
+  {
+   "arm": "llvm",
+   "gc": 5789286491,
+   "id": "lox/vm/zoo_batch",
+   "ratio": 1.1495370583828999,
+   "rc": 6654999363
+  }
+ ],
+ "size": "full",
+ "summary": {
+  "llvm": {
+   "geomean": 1.0592508847272222,
+   "geomean_nonlox": 1.0413640580525405,
+   "rows": 43,
+   "within_1_3": 43,
+   "worst": 1.25314076273249
+  },
+  "qbe": {
+   "geomean": 1.059213886283364,
+   "geomean_nonlox": 1.0456984816313484,
+   "rows": 43,
+   "within_1_3": 43,
+   "worst": 1.2814143799665942
+  }
+ },
+ "tag": "phase-b-plain-combined"
+}
