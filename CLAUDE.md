@@ -170,7 +170,10 @@ gate's concurrency. See `docs/tooling/runtime-budgets.md`.
   caches, `zig-out` and scratch binaries of worktrees idle for 3 days, and any
   `.zig-cache` over 15 GiB. Keep evidence as text, not in caches.
 - Guest builds keep `zig cc`'s own cache in their scratch (NATIVE-ZIG-CACHE-1), so
-  `mylang build`/`test` no longer add objects to `.zig-cache`.
+  `mylang build`/`test` no longer add objects to `.zig-cache`. The gate adds none either:
+  in-process test builds do the same (NATIVE-ZIG-CACHE-3), and every step `zig build`
+  runs gets a private `ZIG_LOCAL_CACHE_DIR` under `$TMPDIR`, removed when it exits
+  (NATIVE-ZIG-CACHE-4).
 
 ## Guardian rules that actually bite
 
