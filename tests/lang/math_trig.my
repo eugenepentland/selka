@@ -1,0 +1,43 @@
+module math_trig
+import math
+
+def close(a: float, b: float) -> bool:
+    return math.fabs(a - b) < 1.0e-15
+
+
+# spec: STANDARD-MATH-TRIG-1
+public def test_principal_angles_and_finite_range_reduction() -> bool:
+    assert math.sin(0.0) == 0.0 and math.cos(0.0) == 1.0
+    assert math.sin(math.pi() / 2.0) == 1.0
+    assert math.cos(math.pi()) == -1.0
+    assert close(math.sin(math.pi() / 6.0), 0.5)
+    assert close(math.cos(math.pi() / 3.0), 0.5)
+    assert close(math.sin(1.0e300), -0.8178819121159085)
+    assert close(math.cos(1.0e300), -0.5753861119575491)
+    assert math.sin(-1.0) == -math.sin(1.0)
+    assert math.cos(-1.0) == math.cos(1.0)
+    return True
+
+
+# spec-case: STANDARD-MATH-TRIG-1
+public def test_zero_sign_subnormal_and_nonfinite_arguments() -> bool:
+    assert str(math.sin(-0.0)) == "-0.0"
+    assert str(math.cos(-0.0)) == "1.0"
+    assert math.sin(5.0e-324) == 5.0e-324
+    assert math.sin(-5.0e-324) == -5.0e-324
+    assert math.cos(5.0e-324) == 1.0
+    assert math.is_nan(math.sin(math.infinity()))
+    assert math.is_nan(math.cos(-math.infinity()))
+    assert math.is_nan(math.sin(math.nan()))
+    assert math.is_nan(math.cos(math.nan()))
+    return True
+
+
+# spec-case: STANDARD-MATH-TRIG-1
+public def test_rotated_paste_window_preserves_native_geometry() -> bool:
+    angle = 45.0 * math.pi() / 180.0
+    x = 3.0 + 2.0 * math.cos(angle) - 1.0 * math.sin(angle)
+    y = 4.0 + 2.0 * math.sin(angle) + 1.0 * math.cos(angle)
+    assert close(x, 3.7071067811865475)
+    assert close(y, 6.121320343559643)
+    return True

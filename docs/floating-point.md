@@ -3,7 +3,8 @@
 `float` is the language's binary64 type. It is an ordinary numeric type with
 decimal literals, the usual operators and comparisons, and `float(integer)` /
 `int(float)` conversion. The [standard `math` module](standard-library.md#math)
-supplies the classification, rounding and root operations that are not operators.
+supplies classification, rounding, roots and the native `sin`/`cos` operations
+for angles in radians.
 
 ```mylang
 # doc: expect 42

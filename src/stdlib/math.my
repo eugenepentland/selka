@@ -110,6 +110,16 @@ public def sqrt(value: float) -> float effects():
     return __float_sqrt(value)
 
 
+# Sine of an angle in radians, evaluated by the native binary64 operation.
+public def sin(value: float) -> float effects():
+    return __float_sin(value)
+
+
+# Cosine of an angle in radians, evaluated by the native binary64 operation.
+public def cos(value: float) -> float effects():
+    return __float_cos(value)
+
+
 # Repeated squaring for a nonnegative exponent that already fits the budget.
 def positive_power(base: float, exponent: int) -> float:
     total = 1.0

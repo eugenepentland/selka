@@ -121,6 +121,7 @@ nan() -> float                       infinity() -> float
 is_nan(value: float) -> bool         is_inf(value: float) -> bool
 is_finite(value: float) -> bool      fabs(value: float) -> float
 sign(value: float) -> int            sqrt(value: float) -> float
+sin(value: float) -> float           cos(value: float) -> float
 trunc(value: float) -> float         floor(value: float) -> float
 ceil(value: float) -> float          round(value: float) -> float
 pow(base: float, exponent: int) -> float
@@ -160,6 +161,21 @@ def main() -> int:
 so it is the correctly rounded square root. `pow` takes an integer exponent and
 squares repeatedly; magnitudes above 4096 saturate to a same-parity magnitude,
 which preserves the sign and the overflow or underflow outcome.
+
+`sin` and `cos` take angles in radians and use the native binary64 operations,
+including range reduction for large finite angles. Sine preserves negative zero;
+cosine of either zero is one. Infinite angles and not-a-number produce
+not-a-number. These are pure operations and require no `Host` capability.
+
+```mylang
+# doc: expect 0.0 1.0
+module main
+import math
+
+def main(out: Stream) -> int:
+    out.print(math.sin(0.0), math.cos(0.0))
+    return 0
+```
 
 ## strings
 

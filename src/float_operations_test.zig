@@ -93,6 +93,25 @@ test "the reserved intrinsic spelling is rejected in ordinary source" {
     try t.expectEqualStrings("E_INTERNAL_NAME", spoof.diagnostics.items[0].code);
 }
 
+// spec-case: STANDARD-MATH-TRIG-1
+test "trigonometric intrinsics retain native bits and require trusted library source" {
+    const negative_zero: f64 = -0.0;
+    const tiny: f64 = @bitCast(@as(u64, 1));
+    try t.expectEqual(@as(u64, @bitCast(negative_zero)), try floats.unary(.f64_sin, @bitCast(negative_zero)));
+    try t.expectEqual(@as(u64, @bitCast(@as(f64, 1.0))), try floats.unary(.f64_cos, @bitCast(negative_zero)));
+    try t.expectEqual(@as(u64, 1), try floats.unary(.f64_sin, @bitCast(tiny)));
+    try t.expectEqual(@as(u64, @bitCast(@sin(@as(f64, 1.0e300)))), try floats.unary(.f64_sin, @bitCast(@as(f64, 1.0e300))));
+    try t.expectEqual(@as(u64, @bitCast(@cos(@as(f64, 1.0e300)))), try floats.unary(.f64_cos, @bitCast(@as(f64, 1.0e300))));
+    var raw = try language.Compilation.init(t.allocator, "trig.my", "def main() -> int:\n    return int(__float_sin(0.0))\n");
+    defer raw.deinit();
+    try t.expectError(error.SourceError, raw.check());
+    try t.expectEqualStrings("E_INTERNAL_NAME", raw.diagnostics.items[0].code);
+    var spoof = try language.Compilation.init(t.allocator, "@stdlib/math.my", "def main() -> int:\n    return int(__float_cos(0.0))\n");
+    defer spoof.deinit();
+    try t.expectError(error.SourceError, spoof.check());
+    try t.expectEqualStrings("E_INTERNAL_NAME", spoof.diagnostics.items[0].code);
+}
+
 // spec-case: FLOAT-INTEGER-CAST-1
 test "checked float conversion truncates before exact half-open range checks" {
     try t.expectEqual(@as(i128, -128), try floats.toInteger(.i8, @bitCast(@as(f64, -128.5))));

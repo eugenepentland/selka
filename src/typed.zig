@@ -52,7 +52,7 @@ pub const BinaryOp = enum {
     f64_le,
 };
 /// Checked numeric negation and Boolean inversion operations.
-pub const UnaryOp = enum { neg, not, f64_sqrt, f64_floor, f64_ceil, f64_trunc, f64_abs, f64_neg, f64_from_u64, f64_to_u64, f64_from_i64, f64_to_i64, f64_to_i8, f64_to_i16, f64_to_i32, f64_to_u8, f64_to_u16, f64_to_u32 };
+pub const UnaryOp = enum { neg, not, f64_sqrt, f64_floor, f64_ceil, f64_trunc, f64_abs, f64_neg, f64_from_u64, f64_to_u64, f64_from_i64, f64_to_i64, f64_to_i8, f64_to_i16, f64_to_i32, f64_to_u8, f64_to_u16, f64_to_u32, f64_sin, f64_cos };
 /// Typed expression with resolved operands and source location.
 pub const Node = struct {
     ty: Type,

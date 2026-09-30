@@ -17,7 +17,7 @@ pub fn operation(name: []const u8) ?typed.UnaryOp {
 /// helper, so this is how such a module still reaches the intrinsic.
 pub fn floatwise(op: ast.UnaryOp) bool {
     return switch (op) {
-        .f64_sqrt, .f64_floor, .f64_ceil, .f64_trunc, .f64_abs, .f64_neg => true,
+        .f64_sqrt, .f64_floor, .f64_ceil, .f64_trunc, .f64_abs, .f64_neg, .f64_sin, .f64_cos => true,
         else => false,
     };
 }

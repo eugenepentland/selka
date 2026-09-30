@@ -73,6 +73,8 @@ pub fn unary(op: typed.UnaryOp, input: u64) Error!u64 {
         .f64_neg => -value,
         .f64_from_u64 => @floatFromInt(input),
         .f64_from_i64 => @floatFromInt(@as(i64, @bitCast(input))),
+        .f64_sin => @sin(value),
+        .f64_cos => @cos(value),
         else => return error.InternalError,
     };
     return bits(result);
