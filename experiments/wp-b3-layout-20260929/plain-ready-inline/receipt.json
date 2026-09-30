@@ -1,0 +1,37 @@
+{
+  "source_base": "3226f1d66b08734824e5c799c25a9c7ed4a69438",
+  "source_sha256": {
+    "src/native_collections.c": "810ca3be5740f267df16555eb6827014e088b2ebb943a1dd879b825eec7e07ee",
+    "src/native_rc_collections.h": "f81e5ab541e6db5e26c7722be27444b2e6cc02196ca6bdaf1068c69284d8f323",
+    "src/native_rc_collections_test.zig": "523d1e9754e65c792ac05cf1b7c4b1002802cbd105d5ef35db54f4a531586e55"
+  },
+  "definition_change": "inline __attribute__((always_inline)); original header prototype and body unchanged",
+  "helper_body_sha256": "11688e4761ec1f22f3080e4af9626ccc2cfcb91f60277d30c20b8ac8b7ef04f5",
+  "compiler_sha256": "c6507a494499a5326977b4a08c3e78b6aac36ac125f2a560b168fd907955405a",
+  "qbe_sha256": "2e9cec252957714060d311b061b43d72bbd76f698a21bb55e6ecc28091273602",
+  "native_collections_cases_per_mode": 47,
+  "native_modes": [
+    "none",
+    "full",
+    "thin"
+  ],
+  "actual_alloc_churn_build_run_modes": [
+    "qbe",
+    "llvm-none",
+    "llvm-full",
+    "llvm-thin"
+  ],
+  "actual_alloc_churn_stdout": "999739\n",
+  "plain_ready_machine_calls": {
+    "qbe": 2,
+    "llvm-none": 2,
+    "llvm-full": 0,
+    "llvm-thin": 0
+  },
+  "unit_selected_tests": 13,
+  "whole_guardian_checks": 88,
+  "no_measurements": true,
+  "status": "focused functional/code-shape checkpoint; root quantitative/full86 acceptance pending",
+  "attribution": "Before evidence is exact7f versusA5, source and emitter call sites unchanged; observed lost inlining dominates LLVM allocation churn, heuristic cause not proven. Secondary5M retired-link reloads remain read-only evidence, unmodified.",
+  "input_coverage_fmt_steps": 27
+}

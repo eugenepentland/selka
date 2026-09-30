@@ -1,0 +1,104 @@
+[
+  {
+    "mode": "qbe",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-next-runtime-plain-ready-20260930/.tmp/plain/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-next-runtime-plain-ready-20260930/bench/parity/micro/alloc_churn.my",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-next-runtime-plain-ready-20260930/.tmp/plain-guest/qbe/alloc_churn",
+      "--rc-runtime",
+      "--keep-symbols",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-next-runtime-plain-ready-20260930/.tmp/plain-guest/cache",
+      "--backend",
+      "qbe"
+    ],
+    "status": 0,
+    "stdout": "999739\n",
+    "plain_ready_machine_call_sites": [
+      " 1007d05:\te8 d6 79 00 00       \tcall   100f6e0 <myl_rc_list_plain_ready>",
+      " 1007dc6:\te8 15 79 00 00       \tcall   100f6e0 <myl_rc_list_plain_ready>"
+    ],
+    "query_inlined": false,
+    "binary_sha256": "3eac7d2899c85b121ba36af234818b6b47656eb6936a62c0d1ab07db32ad661f",
+    "assembly_sha256": "4eda04485a13dedc541b22cd515f1388184049ffe95b24ff87b979cd191d4453"
+  },
+  {
+    "mode": "llvm-none",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-next-runtime-plain-ready-20260930/.tmp/plain/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-next-runtime-plain-ready-20260930/bench/parity/micro/alloc_churn.my",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-next-runtime-plain-ready-20260930/.tmp/plain-guest/llvm-none/alloc_churn",
+      "--rc-runtime",
+      "--keep-symbols",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-next-runtime-plain-ready-20260930/.tmp/plain-guest/cache",
+      "--backend",
+      "llvm",
+      "--llvm-opt",
+      "3"
+    ],
+    "status": 0,
+    "stdout": "999739\n",
+    "plain_ready_machine_call_sites": [
+      " 1008d86:\te8 e5 79 00 00       \tcall   1010770 <myl_rc_list_plain_ready>",
+      " 1008f5f:\te8 0c 78 00 00       \tcall   1010770 <myl_rc_list_plain_ready>"
+    ],
+    "query_inlined": false,
+    "binary_sha256": "c9826bf0fbdccd9232e28605e4a4a3eff4d8eb06090a7c050817f21cbca5c1dd",
+    "assembly_sha256": "b4d1df9579fed3d4720f9e6134f000289a7d4833f659d66703e8158ae85cd626"
+  },
+  {
+    "mode": "llvm-full",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-next-runtime-plain-ready-20260930/.tmp/plain/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-next-runtime-plain-ready-20260930/bench/parity/micro/alloc_churn.my",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-next-runtime-plain-ready-20260930/.tmp/plain-guest/llvm-full/alloc_churn",
+      "--rc-runtime",
+      "--keep-symbols",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-next-runtime-plain-ready-20260930/.tmp/plain-guest/cache",
+      "--backend",
+      "llvm",
+      "--llvm-opt",
+      "3",
+      "--lto=full"
+    ],
+    "status": 0,
+    "stdout": "999739\n",
+    "plain_ready_machine_call_sites": [],
+    "query_inlined": true,
+    "binary_sha256": "5c12aa6c19198d5f0e7c05f0fd0c9b840dfec422c687f27b6cf79c66e1bed268",
+    "assembly_sha256": "81ca25d675079fe838dbe417695e6545c68a708b6da20d8150ec9e50a29d3fec"
+  },
+  {
+    "mode": "llvm-thin",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-next-runtime-plain-ready-20260930/.tmp/plain/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-next-runtime-plain-ready-20260930/bench/parity/micro/alloc_churn.my",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-next-runtime-plain-ready-20260930/.tmp/plain-guest/llvm-thin/alloc_churn",
+      "--rc-runtime",
+      "--keep-symbols",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-next-runtime-plain-ready-20260930/.tmp/plain-guest/cache",
+      "--backend",
+      "llvm",
+      "--llvm-opt",
+      "3",
+      "--lto=thin"
+    ],
+    "status": 0,
+    "stdout": "999739\n",
+    "plain_ready_machine_call_sites": [],
+    "query_inlined": true,
+    "binary_sha256": "b5ac4321499c567c635f94658dc81a51226f150d8f79abed85af867473520931",
+    "assembly_sha256": "b7aafa6c53f996efa1ddaac8b3efbb051ed2cd688dcd9282e9ebad59916967dd"
+  }
+]
