@@ -1106,6 +1106,7 @@ def choose_edit(rng, proj):
 # --------------------------------------------------------------------------
 
 ERROR_RE = re.compile(r"^(\S+?:\d+:\d+): error\[(\w+)\]", re.M)
+PANIC_RE = re.compile(r"(^|thread \d+ )panic: ", re.MULTILINE)
 
 
 @dataclass
@@ -1131,8 +1132,11 @@ class Built:
 
     @property
     def crashed(self):
+        # A Zig panic prints "panic: ..." (after "thread N " when threaded). A bare
+        # substring test would flag ordinary diagnostics that quote a name such as
+        # the Lox port's `panic_mode` field.
         text = self.stderr + self.stdout
-        return self.timed_out or self.rc not in (0, 1) or "host failure" in text or "panic" in text.lower()
+        return self.timed_out or self.rc not in (0, 1) or "host failure" in text or PANIC_RE.search(text) is not None
 
     def excerpt(self, limit=500):
         if self.ok:
