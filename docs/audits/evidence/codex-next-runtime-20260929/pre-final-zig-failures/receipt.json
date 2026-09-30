@@ -2,7 +2,8 @@
   "source": "5535e5a3f0b67e23d0fc9f92f594d7b3feb12a3f",
   "acceptance": "rejected14actualtestfailures; no nonzero step accepted",
   "failures": {
-    "pin_negative_cases": 11,
+    "pin_negative_cases": 10,
+    "outgoing_nested_scope_order": 1,
     "glue_branch_width": 1,
     "ABI5_saturation_emission": 1,
     "CLI_installed_host_receipt_runtime": 1
@@ -26,5 +27,6 @@
       "sha256": "3de415a6fa205ce61b76f89e21b7a6a153cc38e88e6cd01645c0275d50da2709",
       "bytes": 402310
     }
-  }
+  },
+  "inventory_note": "The original eleven scope-family failures comprise ten negative pin cases and one outgoing receiver scope-order case; raw source/log/status remain unchanged."
 }
