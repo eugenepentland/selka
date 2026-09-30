@@ -397,9 +397,9 @@ fn increment(comptime E: type, self: *E, step: Increment) Error!usize {
     const limit = self.temp();
     const status = self.temp();
     // RC-COUNT-CARRY-1: the wrapped result stays private until admission.
-    // The LLVM translator recognizes this formula as unsigned-add overflow.
+    // Incrementing by one wraps only at MAX, so zero is the refusal flag.
     try self.print(count_result ++ " add %v{d}, 1\n", .{ new, old });
-    try self.print(" %v{d} =w cult" ++ prefix.count_type ++ " %v{d}, %v{d}\n", .{ limit, new, old });
+    try self.print(count_equal ++ "0\n", .{ limit, new });
     try self.print(" jnz %v{d}, @rcglimit{d}, @rcgcapacity{d}\n@rcglimit{d}\n", .{ limit, step.label, step.label, step.label });
     try self.print(" %v{d} =w call $myl_qbe_rc_status(l %ctx, w 2)\n jmp @failure\n@rcgcapacity{d}\n", .{ status, step.label });
     try self.print(" " ++ prefix.count_store ++ " %v{d}, %v{d}\n", .{ new, counter });

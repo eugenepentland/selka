@@ -592,12 +592,48 @@ selsel(Fn *fn, Blk *b, Ins *i, Num *tn)
 	return isel0;
 }
 
+/* A zero comparison immediately after an integer add/sub can use its ZF.
+ * Cross no selected instruction: even an IR load/copy can materialize an
+ * external/TLS address with an add.  Nops/debug locations emit no code.
+ * Matching the comparison operand width is essential for high-only bits.
+ */
+static Ins *
+zeroarith(Blk *b, Ins *cmp, int k, int c, Fn *fn)
+{
+	Ins *producer;
+	Ref value, zero;
+
+	if (c != Cieq && c != Cine)
+		return 0;
+	value = cmp->arg[0];
+	zero = cmp->arg[1];
+	if (rtype(value) == RCon) {
+		value = cmp->arg[1];
+		zero = cmp->arg[0];
+	}
+	if (rtype(value) != RTmp || rtype(zero) != RCon)
+		return 0;
+	if (fn->con[zero.val].type != CBits || fn->con[zero.val].bits.i)
+		return 0;
+	producer = cmp;
+	while (producer > b->ins) {
+		producer--;
+		if (producer->op == Onop || producer->op == Odbgloc)
+			continue;
+		if ((producer->op == Oadd || producer->op == Osub)
+		&& producer->cls == k && req(producer->to, value))
+			return producer;
+		return 0;
+	}
+	return 0;
+}
+
 static void
 seljmp(Blk *b, Fn *fn)
 {
 	Ref r;
 	int c, k, swap;
-	Ins *fi;
+	Ins *fi, *producer;
 	Tmp *t;
 
 	if (b->jmp.type == Jret0
@@ -623,12 +659,23 @@ seljmp(Blk *b, Fn *fn)
 	else if (iscmp(fi->op, &k, &c)
 	     && c != NCmpI+Cfeq /* see sel(), selsel() */
 	     && c != NCmpI+Cfne) {
-		swap = cmpswap(fi->arg, c);
-		if (swap)
-			c = cmpop(c);
-		if (t->nuse == 1) {
-			selcmp(fi->arg, k, swap, fn);
+		producer = t->nuse == 1 ? zeroarith(b, fi, k, c, fn) : 0;
+		if (producer) {
+			/* Flags are not live values.  Keep the producer's full-width
+			 * result live even if removing cmp would leave no data use.
+			 * Selection emits add/sub, not lea; allocator spill moves and
+			 * copies do not change flags, and edge moves get new blocks.
+			 */
+			emit(Ocopy, k, R, producer->to, R);
 			*fi = (Ins){.op = Onop};
+		} else {
+			swap = cmpswap(fi->arg, c);
+			if (swap)
+				c = cmpop(c);
+			if (t->nuse == 1) {
+				selcmp(fi->arg, k, swap, fn);
+				*fi = (Ins){.op = Onop};
+			}
 		}
 		b->jmp.type = Jjf + c;
 	}
