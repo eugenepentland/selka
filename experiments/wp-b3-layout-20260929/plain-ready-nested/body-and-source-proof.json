@@ -1,0 +1,22 @@
+{
+  "base": "40bd74a0c52939c5f92d56f3a447269592077bd3",
+  "source_checkpoint": "c28530b0a3f0f5e4e9f12a6f2cbed73702a0351d",
+  "query_body_exact": true,
+  "query_body_sha256": "e394eaac83f22df6af58c6f6baff3eaaf3e16878a5e96e02be7b679c8f225d00",
+  "ordinary_wrapper": "\n    return plain_ready_query(heap,list);\n",
+  "hot_wrapper": "\n    return plain_ready_query(heap,list);\n",
+  "source_hashes": {
+    "src/native_collections.c": "00fc0e2a03ac02071bc5771a53dd78e7b35fbf6ada946ffa58a4557d7c7572ba",
+    "src/native_rc_collections.h": "a1b9a873cb9ecf546b2fffab373002f9078746fe7a83d2c430ba4df61385d530",
+    "src/qbe_rc_append.zig": "a86b1c0e9ab39e76dc4c4491ce2a1fd58d7e83bda7ea7e020ef7d5c683ae841d",
+    "src/qbe_rc_append_loop.zig": "682615370287d7231dc6464e6c4a5fa2383e64c2505cddd0233f8e491b53ca21",
+    "src/qbe_rc_append_test.zig": "356a3bb88a28fd35b926a74b993fcc6e61acfba41fb050e2abefa69f3ca8b0ea",
+    "tests/native_rc_collections_test.c": "17748afcb9a53c1b80c499296ad7d8a372957db1e7572aa9d44c5fb7d594b42b",
+    "SPEC.md": "a2cdbfd705b72c1cb2e31a2b44120bc91ebbbec82884e846671e355adc2f906a"
+  },
+  "runtime_cache_source_hashes": {
+    ".tmp/plain-query/guest-final/cache/runtime/29895b5c6085c644925ab3a71c4961f7cc385e2368c5c0d499ac32d7ac1493df/native_collections.c": "00fc0e2a03ac02071bc5771a53dd78e7b35fbf6ada946ffa58a4557d7c7572ba"
+  },
+  "compiler_sha256": "8cbef1e83b229c74f21924065edce57e5c50f07eb26598f0189b12eb13a76905",
+  "qbe_sha256": "dedfe18608c0617d290779b1ed657f9e6429975cdfa4c90ee1204c857522ce3e"
+}

@@ -1,0 +1,266 @@
+{
+  "source_checkpoint": "c28530b0a3f0f5e4e9f12a6f2cbed73702a0351d",
+  "base": "40bd74a0c52939c5f92d56f3a447269592077bd3",
+  "guardian_feedback": "7dc405f907c4d42e775559641e35ac7259b69501",
+  "scope": "nested query hint; focused source/native/ABI/actual executable verification; no timing/corpus/broad acceptance",
+  "before_after_frozen_sources": true,
+  "compiler_sha256": "8cbef1e83b229c74f21924065edce57e5c50f07eb26598f0189b12eb13a76905",
+  "qbe_sha256": "dedfe18608c0617d290779b1ed657f9e6429975cdfa4c90ee1204c857522ce3e",
+  "counts": {
+    "distinct_named_compiler_tests": 7,
+    "native_cases_per_lto_mode": 47,
+    "native_lto_modes": 3,
+    "abi_cases_per_alias_per_mode": 15,
+    "abi_aliases": 2,
+    "abi_modes": 4,
+    "actual_guest_outputs": 6,
+    "guardian_checks": 88,
+    "inputs_fmt_build_steps": 27,
+    "identical_fannkuch_allocated_elf_sections": 26
+  },
+  "artifacts": [
+    {
+      "path": "experiments/wp-b3-layout-20260929/plain-ready-nested/README.md",
+      "sha256": "53d90f2ae9cf6d870ecf5ac0e9d316208030fc29a5734b389cc4dd55c5ab6610",
+      "bytes": 6072
+    },
+    {
+      "path": "experiments/wp-b3-layout-20260929/plain-ready-nested/abi-receipt.json",
+      "sha256": "b41468fbe8826934d58b6250e8a9b9d4537d1d890f8e860a500cde61884f7b92",
+      "bytes": 1494
+    },
+    {
+      "path": "experiments/wp-b3-layout-20260929/plain-ready-nested/alloc-emitted.ssa.gz",
+      "sha256": "8eef2ca23313bd27b643f3457168a933faac56025d85cd7abdfbaad0e8d62720",
+      "bytes": 12450
+    },
+    {
+      "path": "experiments/wp-b3-layout-20260929/plain-ready-nested/alloc-llvm-full-assembly.txt.gz",
+      "sha256": "43fd820841a778f2f36fd71b6e37343af802c655db483b58a09930657c85faa5",
+      "bytes": 241495
+    },
+    {
+      "path": "experiments/wp-b3-layout-20260929/plain-ready-nested/alloc-llvm-full-run.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "experiments/wp-b3-layout-20260929/plain-ready-nested/alloc-llvm-full-run.stdout",
+      "sha256": "52b8ac479aedeaea1e9da11e3d85b1828bc0ca8b06c48875723325d749fb9f70",
+      "bytes": 7
+    },
+    {
+      "path": "experiments/wp-b3-layout-20260929/plain-ready-nested/alloc-llvm-none-assembly.txt.gz",
+      "sha256": "8c9c69871c330afbb712ae211022123369b8848bfe8e6e5a24b36c71f87cd59b",
+      "bytes": 273301
+    },
+    {
+      "path": "experiments/wp-b3-layout-20260929/plain-ready-nested/alloc-llvm-none-run.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "experiments/wp-b3-layout-20260929/plain-ready-nested/alloc-llvm-none-run.stdout",
+      "sha256": "52b8ac479aedeaea1e9da11e3d85b1828bc0ca8b06c48875723325d749fb9f70",
+      "bytes": 7
+    },
+    {
+      "path": "experiments/wp-b3-layout-20260929/plain-ready-nested/alloc-llvm-thin-assembly.txt.gz",
+      "sha256": "2c96aa8a5b4051675f66fe4748f7ec7d45cb15567719cea4ac2d5fa3f2ad833f",
+      "bytes": 274850
+    },
+    {
+      "path": "experiments/wp-b3-layout-20260929/plain-ready-nested/alloc-llvm-thin-run.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "experiments/wp-b3-layout-20260929/plain-ready-nested/alloc-llvm-thin-run.stdout",
+      "sha256": "52b8ac479aedeaea1e9da11e3d85b1828bc0ca8b06c48875723325d749fb9f70",
+      "bytes": 7
+    },
+    {
+      "path": "experiments/wp-b3-layout-20260929/plain-ready-nested/alloc-qbe-assembly.txt.gz",
+      "sha256": "8afe48c8c3b0f2f61bc4a7fb66c024d16ce2ae7232d59f2fcee4b8c77274f392",
+      "bytes": 235000
+    },
+    {
+      "path": "experiments/wp-b3-layout-20260929/plain-ready-nested/alloc-qbe-run.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "experiments/wp-b3-layout-20260929/plain-ready-nested/alloc-qbe-run.stdout",
+      "sha256": "52b8ac479aedeaea1e9da11e3d85b1828bc0ca8b06c48875723325d749fb9f70",
+      "bytes": 7
+    },
+    {
+      "path": "experiments/wp-b3-layout-20260929/plain-ready-nested/body-and-source-proof.json",
+      "sha256": "fb6c18bccf73fb97b75bdd28aef75795c4f44157952b29de04f4203a8e8db871",
+      "bytes": 1516
+    },
+    {
+      "path": "experiments/wp-b3-layout-20260929/plain-ready-nested/fannkuch-emitted.ssa.gz",
+      "sha256": "bd3576adcbf7c77c0e813d50cb4d00fdad3260041e40e698cfe72e09de02b053",
+      "bytes": 64565
+    },
+    {
+      "path": "experiments/wp-b3-layout-20260929/plain-ready-nested/fannkuch-llvm-full-assembly.txt.gz",
+      "sha256": "69ce413805431a54812cb62d5e021936113f123f9841ecaa6bfda4db600455a0",
+      "bytes": 380636
+    },
+    {
+      "path": "experiments/wp-b3-layout-20260929/plain-ready-nested/fannkuch-llvm-full-run.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "experiments/wp-b3-layout-20260929/plain-ready-nested/fannkuch-llvm-full-run.stdout",
+      "sha256": "26f4debed9b9f8db7609e17f35756a3f72c1d85d40977a4377a1ef34ffc4d4c8",
+      "bytes": 27
+    },
+    {
+      "path": "experiments/wp-b3-layout-20260929/plain-ready-nested/fannkuch-qbe-assembly.txt.gz",
+      "sha256": "a56bd7130530c291ded3a0e890881baf395e21e76f21ca689608f90bbfbd8412",
+      "bytes": 387910
+    },
+    {
+      "path": "experiments/wp-b3-layout-20260929/plain-ready-nested/fannkuch-qbe-run.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "experiments/wp-b3-layout-20260929/plain-ready-nested/fannkuch-qbe-run.stdout",
+      "sha256": "26f4debed9b9f8db7609e17f35756a3f72c1d85d40977a4377a1ef34ffc4d4c8",
+      "bytes": 27
+    },
+    {
+      "path": "experiments/wp-b3-layout-20260929/plain-ready-nested/fannkuch-section-comparison.json",
+      "sha256": "c0cee596b7661acc86bf8c6f1c1cb282e16970efaa206655c0735d181237c8c5",
+      "bytes": 6695
+    },
+    {
+      "path": "experiments/wp-b3-layout-20260929/plain-ready-nested/guest-receipt.json",
+      "sha256": "5ffd7549a218d8b3cb26aece785fae364a40cce717a650d422040cfb2cebad39",
+      "bytes": 8057
+    },
+    {
+      "path": "experiments/wp-b3-layout-20260929/plain-ready-nested/logs/abi.log.gz",
+      "sha256": "976ea8ba9176f7c909d76afb9df82cee07347cdc163ace0221a15ae19a1ccc2c",
+      "bytes": 7244
+    },
+    {
+      "path": "experiments/wp-b3-layout-20260929/plain-ready-nested/logs/append-units.log.gz",
+      "sha256": "0abef339da6787e3bc85d43c31f79ee914ea67aaaa2721af10ce1fcf0c99bbd1",
+      "bytes": 886
+    },
+    {
+      "path": "experiments/wp-b3-layout-20260929/plain-ready-nested/logs/guardian-full-final.log.gz",
+      "sha256": "5d55c2044718a3914a12d13fe96baff4dbad274759ca22e90cded2842a22afc7",
+      "bytes": 181
+    },
+    {
+      "path": "experiments/wp-b3-layout-20260929/plain-ready-nested/logs/guest-final.log.gz",
+      "sha256": "52a72a6c9ec16be5a69228a3415576213890fda9587204426cefc921f3abc36d",
+      "bytes": 139
+    },
+    {
+      "path": "experiments/wp-b3-layout-20260929/plain-ready-nested/logs/initial-filter-failure.log.gz",
+      "sha256": "f9aece7282d3d0087ce2e29196438825bc1296eb535ebdf6f5f1fc992ab1749f",
+      "bytes": 1158
+    },
+    {
+      "path": "experiments/wp-b3-layout-20260929/plain-ready-nested/logs/initial-qbe-site-assumption.log.gz",
+      "sha256": "a1f24792fc9e9a0543ed0ec45ec98d42e6a8ceaab60d812960be747cea4395fc",
+      "bytes": 382
+    },
+    {
+      "path": "experiments/wp-b3-layout-20260929/plain-ready-nested/logs/initial-spec-failure.log.gz",
+      "sha256": "a651cac87a7ff3e39c0951337865c4551f2dd974ff93d93a0c33669e6857cd0d",
+      "bytes": 837
+    },
+    {
+      "path": "experiments/wp-b3-layout-20260929/plain-ready-nested/logs/inputs-fmt.log.gz",
+      "sha256": "fdbac30244b029ee318b988b75b278e4a421ab3d38216b5c99fe74bdd75d8843",
+      "bytes": 1073
+    },
+    {
+      "path": "experiments/wp-b3-layout-20260929/plain-ready-nested/logs/install.log.gz",
+      "sha256": "08906b28db45c8f6bae0f70b2c2d0cb35bf41e9199edd15bb2528ac200c982c2",
+      "bytes": 622
+    },
+    {
+      "path": "experiments/wp-b3-layout-20260929/plain-ready-nested/logs/native.log.gz",
+      "sha256": "dbdf576eaa19acad06a447a7ca668b84870c7ff1b0cb6360d6025cc8308e29a3",
+      "bytes": 89
+    },
+    {
+      "path": "experiments/wp-b3-layout-20260929/plain-ready-nested/logs/nested-units-final.log.gz",
+      "sha256": "2f8c3b0033f2964453f3420e88a5b2d593a658d3370db6c9c943ac97634efed8",
+      "bytes": 890
+    },
+    {
+      "path": "experiments/wp-b3-layout-20260929/plain-ready-nested/logs/presized-units.log.gz",
+      "sha256": "576c18a35ad4fdc1d8820899971e90db83a2cecad1f4835458b273878137dcf9",
+      "bytes": 899
+    },
+    {
+      "path": "experiments/wp-b3-layout-20260929/plain-ready-nested/logs/room-units.log.gz",
+      "sha256": "516af22efbf5b7253baac9ef180453716386857fbdc3d9626cde43bc7a884208",
+      "bytes": 816
+    },
+    {
+      "path": "experiments/wp-b3-layout-20260929/plain-ready-nested/native-receipt.json",
+      "sha256": "0420de53a4b49371284390508447f3b0c0dac7a1b666be79cf8a04caccf35a62",
+      "bytes": 397
+    },
+    {
+      "path": "experiments/wp-b3-layout-20260929/plain-ready-nested/probe/abi-matrix.py",
+      "sha256": "304081617be023081491201c054d75c6b5101e804af12988b112552b980e3be6",
+      "bytes": 1859
+    },
+    {
+      "path": "experiments/wp-b3-layout-20260929/plain-ready-nested/probe/caller.c",
+      "sha256": "4dc5b3079461f04667e9a6e2bbf73c52d1f481101654471c16540a3918cf5819",
+      "bytes": 436
+    },
+    {
+      "path": "experiments/wp-b3-layout-20260929/plain-ready-nested/probe/guest-matrix.py",
+      "sha256": "1d0a33fb3ea65bddf342940cd7f0f26ee40da889dbeef5d24503fea6bfbb25c6",
+      "bytes": 2826
+    },
+    {
+      "path": "experiments/wp-b3-layout-20260929/plain-ready-nested/probe/native-matrix.py",
+      "sha256": "65ec0eddc0160b495a0f9305f82978c1377fd3898da7f2b15e35c76d4abeae33",
+      "bytes": 1316
+    },
+    {
+      "path": "experiments/wp-b3-layout-20260929/plain-ready-nested/probe/oracle.c",
+      "sha256": "cd14209b604da7def34f01e122aee8a5c67b79c90b394a677ee2b3a2500cd554",
+      "bytes": 3102
+    },
+    {
+      "path": "docs/audits/wp-b3-nested-readiness-2026-09-30.md",
+      "sha256": "d41800ecaea720292c35738bd1560a8a184a135eb66611a95d903e460ddc6a1b",
+      "bytes": 2522
+    }
+  ],
+  "binaries": {
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-next-runtime-plain-query-20260930/.tmp/plain-query/compiler/bin/mylang": "8cbef1e83b229c74f21924065edce57e5c50f07eb26598f0189b12eb13a76905",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-next-runtime-plain-query-20260930/.tmp/plain-query/compiler/bin/qbe": "dedfe18608c0617d290779b1ed657f9e6429975cdfa4c90ee1204c857522ce3e",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-next-runtime-plain-query-20260930/.tmp/plain-query/abi/thin/probe": "12d630facef534b49de6fe57812ca56645e9d32be60b7f6b8555f4fa453276ce",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-next-runtime-plain-query-20260930/.tmp/plain-query/abi/none-o0/probe": "03295d61758b7e0edcb8534b4b9bc839e4e6e797fa05e9c5a68130625e0e9dea",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-next-runtime-plain-query-20260930/.tmp/plain-query/abi/none-o3/probe": "6faeaf68f5b3c1cb1ede5922acef0570efdd3b5ccb90ba38c0e9b758aa8807f9",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-next-runtime-plain-query-20260930/.tmp/plain-query/abi/full/probe": "cc8b5619ca458a7721ea2b4cb4aed7e4af8ecb110610285544d78ad7c5b37749",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-next-runtime-plain-query-20260930/.tmp/plain-query/native/thin/native_rc_collections": "4882b3f3325001c4f99a0f7b0184ad0d407c3c64b86ef901a0a84d2d66c43d38",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-next-runtime-plain-query-20260930/.tmp/plain-query/native/none/native_rc_collections": "8003bdfd70e4ab7b211bfe2907313cc74686827ec76f4059b6c96017e4d35246",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-next-runtime-plain-query-20260930/.tmp/plain-query/native/full/native_rc_collections": "bd1efaade3fa76a98c283d0f7fa53d9160e5be7b388ac042102e10b93927551c",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-next-runtime-plain-query-20260930/.tmp/plain-query/guest-final/fannkuch-qbe/fannkuch": "81fad6e99f705f1c6bbf9cf77cc7c2a8ef92c6609aa8f637d8f492f1a5785b46",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-next-runtime-plain-query-20260930/.tmp/plain-query/guest-final/alloc-llvm-full/alloc": "c2b19b9eefc0c6f0b8361d6adaa3218fcaf058018b566ad5694846bb87a129ae",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-next-runtime-plain-query-20260930/.tmp/plain-query/guest-final/alloc-llvm-none/alloc": "aa39f394b3262625dccec5ada58e747da6646e3915db253449307dd031117271",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-next-runtime-plain-query-20260930/.tmp/plain-query/guest-final/fannkuch-llvm-full/fannkuch": "87ba3414b680875da8b77c78782d45a8a0bfc4c76a4bea90087aac0c8cd5764b",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-next-runtime-plain-query-20260930/.tmp/plain-query/guest-final/alloc-qbe/alloc": "9bf088fa30b25b9668821d379a4d8359c0fb54b0af1c5ac58deb2993ec94150b",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-next-runtime-plain-query-20260930/.tmp/plain-query/guest-final/alloc-llvm-thin/alloc": "aaeb9ea82e2d3cae9db6b18b99b72fedfc66caec780d8c5fb8db7d8e22479c6d",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-next-fannkuch-review-20260930/.tmp/fannkuch-profile/publish/fannkuch.symbols": "524eadeabebb3785e0f3f5b6d981122b0cc148f1f07025dd295022c210e2bc7b"
+  }
+}
