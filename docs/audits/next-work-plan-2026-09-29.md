@@ -4,7 +4,7 @@ This plan is written to be handed to AI agents that did not see the conversation
 Each work package (WP) says where it starts, what to do, what "done" means and what has
 already gone wrong in this area. Read sections 1 to 5 before any WP.
 
-## Closeout status, 2026-09-29
+## Closeout status, 2026-09-30
 
 A1–A4 are implemented, integrated and verified on the isolated
 `codex/next-closeout-20260929` branch. A5 gate `m17-codex` is green at compiler
@@ -20,12 +20,24 @@ archiving their logs and Guardian ROI receipts; their branches remain.
 Details, exact counts, performance rows and Guardian feedback are in
 [codex-next-integration-closeout-2026-09-29.md](codex-next-integration-closeout-2026-09-29.md).
 
-Phase B and Phase C remain open. B1 text support and B2 per-module builds are
-under implementation in fresh worktrees from the approved main. B3 starts with
-allocation-free equality and has a current-source large-list reproduction.
-B4 is frozen at `b5c04602` for its final gate; its changes remain outside main. EDA preparation has a
-verified test inventory and guide/checker reconciliation, without starting the
-port. Sections below retain the original handoff state and requirements.
+Phase B and Phase C remain open. B1 and B4 pass their lane gates and are integrated
+on the isolated closeout branch. B2 has whole/module equivalence and large-project
+timing evidence, but its final gate exposed positive-path CLI/interface failures
+that are being corrected. B3 implements equality, scope, list-image, exclusivity,
+dictionary, startup-image and text follow-ups. Its narrowed-count layout remains
+rejected for performance: the combined preliminary Lox measurements still have
+rows above the 1% change limit and one dev row above 1.3x GC. Imported-artifact
+review fixes and final combined correctness/performance acceptance remain open.
+All Phase B changes remain outside main; its approved tip is still `80dd5190`.
+
+Lane receipts are in [python-text-closeout-2026-09-29.md](python-text-closeout-2026-09-29.md),
+[wp-b4-tooling-2026-09-29.md](wp-b4-tooling-2026-09-29.md),
+[codex-next-runtime-checkpoint-2026-09-29.md](codex-next-runtime-checkpoint-2026-09-29.md)
+and [text-runtime-closeout-2026-09-29.md](text-runtime-closeout-2026-09-29.md).
+EDA preparation has a verified test inventory and guide/checker reconciliation.
+The port has not started: it waits for completed compiler work and the required
+explicit approval to land Phase B. Sections below retain the original handoff
+state and requirements.
 
 ## 1. Read first
 
