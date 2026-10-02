@@ -1,0 +1,161 @@
+--- a/vm.my
++++ b/vm.my
+@@ -382,40 +382,62 @@
+ 
+ 
+ def numeric(rt: mut heap.Runtime, o: mut output.Output, instruction: int) -> bool:
+-    if not is_number(heap.peek(rt, 0)) or not is_number(heap.peek(rt, 1)):
+-        return runtime_error(mut rt, mut o, b"Operands must be numbers.")
+-    b = as_number(heap.pop(mut rt))
+-    a = as_number(heap.pop(mut rt))
+-    if instruction == chunk.OP_GREATER:
+-        heap.push(mut rt, value.Value.boolean(a > b))
+-    elif instruction == chunk.OP_LESS:
+-        heap.push(mut rt, value.Value.boolean(a < b))
+-    elif instruction == chunk.OP_SUBTRACT:
+-        heap.push(mut rt, value.Value.number(a - b))
+-    elif instruction == chunk.OP_MULTIPLY:
+-        heap.push(mut rt, value.Value.number(a * b))
+-    else:
+-        heap.push(mut rt, value.Value.number(a / b))
+-    return True
++    # Read each scalar tagged value once. No operation below allocates, so the
++    # live root interval may shrink only after both numeric tags are accepted.
++    top = rt.stack_top - 1
++    match rt.stack[top]:
++        case value.Value.number(b):
++            match rt.stack[top - 1]:
++                case value.Value.number(a):
++                    result = value.Value.nil
++                    if instruction == chunk.OP_GREATER:
++                        result = value.Value.boolean(a > b)
++                    elif instruction == chunk.OP_LESS:
++                        result = value.Value.boolean(a < b)
++                    elif instruction == chunk.OP_SUBTRACT:
++                        result = value.Value.number(a - b)
++                    elif instruction == chunk.OP_MULTIPLY:
++                        result = value.Value.number(a * b)
++                    else:
++                        result = value.Value.number(a / b)
++                    rt.stack_top = top
++                    rt.stack[top - 1] = result
++                    return True
++                case _:
++                    return runtime_error(mut rt, mut o, b"Operands must be numbers.")
++        case _:
++            return runtime_error(mut rt, mut o, b"Operands must be numbers.")
+ 
+ 
+ def add(rt: mut heap.Runtime, o: mut output.Output) -> bool:
+     if is_string(rt, heap.peek(rt, 0)) and is_string(rt, heap.peek(rt, 1)):
+         concatenate(mut rt)
+-    elif is_number(heap.peek(rt, 0)) and is_number(heap.peek(rt, 1)):
+-        b = as_number(heap.pop(mut rt))
+-        a = as_number(heap.pop(mut rt))
+-        heap.push(mut rt, value.Value.number(a + b))
+-    else:
+-        return runtime_error(mut rt, mut o, b"Operands must be two numbers or two strings.")
+-    return True
++        return True
++    top = rt.stack_top - 1
++    match rt.stack[top]:
++        case value.Value.number(b):
++            match rt.stack[top - 1]:
++                case value.Value.number(a):
++                    # Both values are scalars; retain the result in the left
++                    # slot and retire only the right slot from the root range.
++                    result = value.Value.number(a + b)
++                    rt.stack_top = top
++                    rt.stack[top - 1] = result
++                    return True
++                case _:
++                    return runtime_error(mut rt, mut o, b"Operands must be two numbers or two strings.")
++        case _:
++            return runtime_error(mut rt, mut o, b"Operands must be two numbers or two strings.")
+ 
+ 
+ def negate(rt: mut heap.Runtime, o: mut output.Output) -> bool:
+-    if not is_number(heap.peek(rt, 0)):
+-        return runtime_error(mut rt, mut o, b"Operand must be a number.")
+-    heap.push(mut rt, value.Value.number(-as_number(heap.pop(mut rt))))
+-    return True
++    top = rt.stack_top - 1
++    match rt.stack[top]:
++        case value.Value.number(number):
++            rt.stack[top] = value.Value.number(-number)
++            return True
++        case _:
++            return runtime_error(mut rt, mut o, b"Operand must be a number.")
+ 
+ 
+ # Captured upvalues stay rooted in the open list or the executing closure.
+--- a/heap_test.my
++++ b/heap_test.my
+@@ -77,3 +77,26 @@
+         root(mut rt, ref)
+         count += 1
+     return rt.allocations == 25 and rt.collections == 25
++
++
++# Stack reads and writes retain normal list value semantics even after helper
++# fusion in VM arithmetic; publishing a snapshot must still detach on write.
++public def test_stack_snapshot_survives_write() -> bool:
++    rt = heap.new_runtime(False, None)
++    heap.push(mut rt, value.Value.number(11.0))
++    snapshot = rt.stack
++    heap.push(mut rt, value.Value.number(22.0))
++    popped = heap.pop(mut rt)
++    rt.stack[0] = value.Value.number(33.0)
++    return len(snapshot) == heap.STACK_MAX and snapshot[0] == value.Value.number(11.0) and snapshot[1] == value.Value.nil and popped == value.Value.number(22.0) and heap.peek(rt, 0) == value.Value.number(33.0) and rt.stack_top == 1
++
++
++public def test_stack_full_capacity_and_negative_index_reads() -> bool:
++    rt = heap.new_runtime(False, None)
++    i = 0
++    while i < heap.STACK_MAX:
++        heap.push(mut rt, value.Value.number(float(i)))
++        i += 1
++    full = heap.peek(rt, 0) == value.Value.number(float(heap.STACK_MAX - 1)) and heap.peek(rt, heap.STACK_MAX - 1) == value.Value.number(0.0)
++    last = heap.pop(mut rt)
++    return full and last == value.Value.number(float(heap.STACK_MAX - 1)) and rt.stack_top == heap.STACK_MAX - 1 and rt.stack[-1] == last
+--- a/driver_tests.my
++++ b/driver_tests.my
+@@ -107,3 +107,20 @@
+ public def test_run_set_rhs_keeps_original_receiver(out: Stream) -> bool:
+     source = b"class Box {} var box = Box(); var saved = box; saved.keep = 1; fun rhs() { box = Box(); box.value = 42; saved.keep = 9; return 7; } box.value = rhs(); print saved.keep; print saved.value; print box.value;"
+     return prints(source, b"9\n7\n42\n", out)
++
++
++# Fused scalar stack handlers preserve IEEE values and the allocating string
++# path, including live roots when the Lox collector runs on every allocation.
++public def test_run_scalar_stack_edges(out: Stream) -> bool:
++    source = b"var nan = 0 / 0; print nan == nan; print 1 / 0 > 100; print -1 / 0 < -100; print 0 == -0; fun calc(x) { return -(x * 2 - 3) / 2; } print calc(9); print 7 < 8; print 8 > 7; print \"ab\" + \"cd\";"
++    expected = b"false\ntrue\ntrue\ntrue\n-7.5\ntrue\ntrue\nabcd\n"
++    vm = driver.run_source(source, driver.Engine.VM, True, out, None)
++    tree = driver.run_source(source, driver.Engine.TREE, True, out, None)
++    return vm.status == 0 and vm.stdout == expected and vm.stderr == b"" and tree.status == 0 and tree.stdout == expected and tree.stderr == b""
++
++
++public def test_run_scalar_stack_error_trace(out: Stream) -> bool:
++    source = b"fun leaf() { print 9; return \"a\" - 2; }\nfun outer() { return leaf(); }\nouter();"
++    expected = b"Operands must be numbers.\n[line 1] in leaf()\n[line 2] in outer()\n[line 3] in script\n"
++    observed = driver.run_source(source, driver.Engine.VM, True, out, None)
++    return observed.status == 70 and observed.stdout == b"9\n" and observed.stderr == expected
+--- a/driver_cases.json
++++ b/driver_cases.json
+@@ -63,5 +63,15 @@
+     "providers": {
+       "natives.my": "module natives\n# Test fixture for driver_tests.my (see driver_cases.json): natives.my with\n# a `clock` that returns 0 instead of reading the Clock capability.\nimport heap\nimport lox_strings\nimport object\nimport value\n\n\npublic const CLOCK: int = 0\n\n\npublic def call_native(rt: heap.Runtime, id: int) -> value.Value:\n    assert id == CLOCK, \"unknown native\"\n    _ = rt\n    return value.Value.number(0.0)\n\n\npublic def start(rt: mut heap.Runtime):\n    rt.init_string = lox_strings.copy_string(mut rt, b\"init\")\n    define_natives(mut rt)\n\n\ndef define_natives(rt: mut heap.Runtime):\n    name = lox_strings.copy_string(mut rt, b\"clock\")\n    heap.push(mut rt, value.Value.obj(name))\n    native = heap.allocate(mut rt, object.Obj.native(object.NativeObj(id=CLOCK, arity=0)))\n    heap.push(mut rt, value.Value.obj(native))\n    _ = heap.set_global(mut rt, name, value.Value.obj(native))\n    _ = heap.pop(mut rt)\n    _ = heap.pop(mut rt)\n"
+     }
++  },
++  "driver_tests::test_run_scalar_stack_edges": {
++    "providers": {
++      "natives.my": "module natives\n# Test fixture for driver_tests.my (see driver_cases.json): natives.my with\n# a `clock` that returns 0 instead of reading the Clock capability.\nimport heap\nimport lox_strings\nimport object\nimport value\n\n\npublic const CLOCK: int = 0\n\n\npublic def call_native(rt: heap.Runtime, id: int) -> value.Value:\n    assert id == CLOCK, \"unknown native\"\n    _ = rt\n    return value.Value.number(0.0)\n\n\npublic def start(rt: mut heap.Runtime):\n    rt.init_string = lox_strings.copy_string(mut rt, b\"init\")\n    define_natives(mut rt)\n\n\ndef define_natives(rt: mut heap.Runtime):\n    name = lox_strings.copy_string(mut rt, b\"clock\")\n    heap.push(mut rt, value.Value.obj(name))\n    native = heap.allocate(mut rt, object.Obj.native(object.NativeObj(id=CLOCK, arity=0)))\n    heap.push(mut rt, value.Value.obj(native))\n    _ = heap.set_global(mut rt, name, value.Value.obj(native))\n    _ = heap.pop(mut rt)\n    _ = heap.pop(mut rt)\n"
++    }
++  },
++  "driver_tests::test_run_scalar_stack_error_trace": {
++    "providers": {
++      "natives.my": "module natives\n# Test fixture for driver_tests.my (see driver_cases.json): natives.my with\n# a `clock` that returns 0 instead of reading the Clock capability.\nimport heap\nimport lox_strings\nimport object\nimport value\n\n\npublic const CLOCK: int = 0\n\n\npublic def call_native(rt: heap.Runtime, id: int) -> value.Value:\n    assert id == CLOCK, \"unknown native\"\n    _ = rt\n    return value.Value.number(0.0)\n\n\npublic def start(rt: mut heap.Runtime):\n    rt.init_string = lox_strings.copy_string(mut rt, b\"init\")\n    define_natives(mut rt)\n\n\ndef define_natives(rt: mut heap.Runtime):\n    name = lox_strings.copy_string(mut rt, b\"clock\")\n    heap.push(mut rt, value.Value.obj(name))\n    native = heap.allocate(mut rt, object.Obj.native(object.NativeObj(id=CLOCK, arity=0)))\n    heap.push(mut rt, value.Value.obj(native))\n    _ = heap.set_global(mut rt, name, value.Value.obj(native))\n    _ = heap.pop(mut rt)\n    _ = heap.pop(mut rt)\n"
++    }
+   }
+ }
