@@ -1,0 +1,319 @@
+--- a/driver_cases.json
++++ b/driver_cases.json
+@@ -63,5 +63,15 @@
+     "providers": {
+       "natives.my": "module natives\n# Test fixture for driver_tests.my (see driver_cases.json): natives.my with\n# a `clock` that returns 0 instead of reading the Clock capability.\nimport heap\nimport lox_strings\nimport object\nimport value\n\n\npublic const CLOCK: int = 0\n\n\npublic def call_native(rt: heap.Runtime, id: int) -> value.Value:\n    assert id == CLOCK, \"unknown native\"\n    _ = rt\n    return value.Value.number(0.0)\n\n\npublic def start(rt: mut heap.Runtime):\n    rt.init_string = lox_strings.copy_string(mut rt, b\"init\")\n    define_natives(mut rt)\n\n\ndef define_natives(rt: mut heap.Runtime):\n    name = lox_strings.copy_string(mut rt, b\"clock\")\n    heap.push(mut rt, value.Value.obj(name))\n    native = heap.allocate(mut rt, object.Obj.native(object.NativeObj(id=CLOCK, arity=0)))\n    heap.push(mut rt, value.Value.obj(native))\n    _ = heap.set_global(mut rt, name, value.Value.obj(native))\n    _ = heap.pop(mut rt)\n    _ = heap.pop(mut rt)\n"
+     }
++  },
++  "driver_tests::test_run_property_field_shadows_inherited_method": {
++    "providers": {
++      "natives.my": "module natives\n# Test fixture for driver_tests.my (see driver_cases.json): natives.my with\n# a `clock` that returns 0 instead of reading the Clock capability.\nimport heap\nimport lox_strings\nimport object\nimport value\n\n\npublic const CLOCK: int = 0\n\n\npublic def call_native(rt: heap.Runtime, id: int) -> value.Value:\n    assert id == CLOCK, \"unknown native\"\n    _ = rt\n    return value.Value.number(0.0)\n\n\npublic def start(rt: mut heap.Runtime):\n    rt.init_string = lox_strings.copy_string(mut rt, b\"init\")\n    define_natives(mut rt)\n\n\ndef define_natives(rt: mut heap.Runtime):\n    name = lox_strings.copy_string(mut rt, b\"clock\")\n    heap.push(mut rt, value.Value.obj(name))\n    native = heap.allocate(mut rt, object.Obj.native(object.NativeObj(id=CLOCK, arity=0)))\n    heap.push(mut rt, value.Value.obj(native))\n    _ = heap.set_global(mut rt, name, value.Value.obj(native))\n    _ = heap.pop(mut rt)\n    _ = heap.pop(mut rt)\n"
++    }
++  },
++  "driver_tests::test_run_property_lookup_survives_allocation_and_mutation": {
++    "providers": {
++      "natives.my": "module natives\n# Test fixture for driver_tests.my (see driver_cases.json): natives.my with\n# a `clock` that returns 0 instead of reading the Clock capability.\nimport heap\nimport lox_strings\nimport object\nimport value\n\n\npublic const CLOCK: int = 0\n\n\npublic def call_native(rt: heap.Runtime, id: int) -> value.Value:\n    assert id == CLOCK, \"unknown native\"\n    _ = rt\n    return value.Value.number(0.0)\n\n\npublic def start(rt: mut heap.Runtime):\n    rt.init_string = lox_strings.copy_string(mut rt, b\"init\")\n    define_natives(mut rt)\n\n\ndef define_natives(rt: mut heap.Runtime):\n    name = lox_strings.copy_string(mut rt, b\"clock\")\n    heap.push(mut rt, value.Value.obj(name))\n    native = heap.allocate(mut rt, object.Obj.native(object.NativeObj(id=CLOCK, arity=0)))\n    heap.push(mut rt, value.Value.obj(native))\n    _ = heap.set_global(mut rt, name, value.Value.obj(native))\n    _ = heap.pop(mut rt)\n    _ = heap.pop(mut rt)\n"
++    }
+   }
+ }
+--- a/driver_tests.my
++++ b/driver_tests.my
+@@ -107,3 +107,15 @@
+ public def test_run_set_rhs_keeps_original_receiver(out: Stream) -> bool:
+     source = b"class Box {} var box = Box(); var saved = box; saved.keep = 1; fun rhs() { box = Box(); box.value = 42; saved.keep = 9; return 7; } box.value = rhs(); print saved.keep; print saved.value; print box.value;"
+     return prints(source, b"9\n7\n42\n", out)
++
++
++public def test_run_property_field_shadows_inherited_method(out: Stream) -> bool:
++    source = b"class Base { method() { return this.label; } } class Child < Base {} var c = Child(); c.label = \"receiver\"; var saved = c.method; fun replacement() { return \"field\"; } c.method = replacement; print c.method(); print saved(); c.method = nil; print c.method; c.method = false; print c.method;"
++    return prints(source, b"field\nreceiver\nnil\nfalse\n", out)
++
++
++public def test_run_property_lookup_survives_allocation_and_mutation(out: Stream) -> bool:
++    source = b"class Base { init(x) { this.x = x; } read() { return this.x; } } class Child < Base { read() { return super.read(); } } var a = Child(1); var b = Child(2); var f = a.read; a.x = 9; for (var i = 0; i < 20; i = i + 1) { var tmp = Child(i); } print f(); print b.read(); print a.read();"
++    vm = driver.run_source(source, driver.Engine.VM, True, out, None)
++    tree = driver.run_source(source, driver.Engine.TREE, True, out, None)
++    return vm.status == 0 and tree.status == 0 and vm.stdout == b"9\n2\n9\n" and tree.stdout == vm.stdout and vm.collections == vm.allocations and tree.collections == tree.allocations
+--- a/heap.my
++++ b/heap.my
+@@ -208,6 +208,46 @@
+             return None
+ 
+ 
++public def class_method_hash(rt: Runtime, ref: value.ObjRef, name: value.ObjRef, hash: u32) -> Option[value.Value]:
++    match rt.objects[ref]:
++        case object.Obj.klass(payload):
++            return table.get(payload.methods, name, hash)
++        case _:
++            assert False, "object is not a class"
++            return None
++
++
++# Only scalar values escape this read. In particular no instance or mutable
++# table snapshot is kept alive while its caller invokes or binds the result.
++public union InstanceMember:
++    field: value.Value,
++    method: value.Value,
++    missing,
++    not_instance
++
++
++public def instance_member(rt: Runtime, receiver: value.Value, name: value.ObjRef) -> InstanceMember:
++    match receiver:
++        case value.Value.obj(ref):
++            match rt.objects[ref]:
++                case object.Obj.instance(instance):
++                    hash = string_hash(rt, name)
++                    match table.get(instance.fields, name, hash):
++                        case Some(field):
++                            return InstanceMember.field(field)
++                        case None:
++                            match class_method_hash(rt, instance.klass, name, hash):
++                                case Some(method):
++                                    return InstanceMember.method(method)
++                                case None:
++                                    return InstanceMember.missing
++                case _:
++                    pass
++        case _:
++            pass
++    return InstanceMember.not_instance
++
++
+ # ObjRef, rather than a shared class payload, carries object identity. Every
+ # changed payload is written back into its object-table slot.
+ public def set_class_methods(rt: mut Runtime, ref: value.ObjRef, methods: table.Table):
+--- a/interpreter.my
++++ b/interpreter.my
+@@ -82,12 +82,12 @@
+             return False
+ 
+ 
+-def instance_of(rt: heap.Runtime, item: value.Value) -> Option[object.InstanceObj]:
++def instance_of(rt: heap.Runtime, item: value.Value) -> Option[value.ObjRef]:
+     match item:
+         case value.Value.obj(ref):
+             match rt.objects[ref]:
+-                case object.Obj.instance(payload):
+-                    return Some(payload)
++                case object.Obj.instance(_):
++                    return Some(ref)
+                 case _:
+                     return None
+         case _:
+@@ -273,29 +273,23 @@
+ # bound while the instance is still there.
+ def get(it: mut Interpreter, node: ast.GetExpr) -> Result[None, RuntimeError]:
+     evaluate(mut it, node.target)?
+-    match instance_of(it.rt, heap.peek(it.rt, 0)):
+-        case Some(instance):
+-            hash = heap.string_hash(it.rt, node.name_ref)
+-            match table.get(instance.fields, node.name_ref, hash):
+-                case Some(field):
+-                    __wb_262 = it.rt
+-                    replace_top(mut __wb_262, field)
+-                    it.rt = __wb_262
+-                    return Ok(None)
+-                case None:
+-                    pass
+-            match table.get(heap.class_obj(it.rt, instance.klass).methods, node.name_ref, hash):
+-                case Some(method):
+-                    __wb_268 = it.rt
+-                    bound = bind(mut __wb_268, heap.peek(__wb_268, 0), as_obj(method))
+-                    it.rt = __wb_268
+-                    __wb_269 = it.rt
+-                    replace_top(mut __wb_269, value.Value.obj(bound))
+-                    it.rt = __wb_269
+-                    return Ok(None)
+-                case None:
+-                    return Err(fail(b"Undefined property '" + name_text(it.rt, node.name_ref) + b"'.", node.name.line))
+-        case None:
++    match heap.instance_member(it.rt, heap.peek(it.rt, 0), node.name_ref):
++        case heap.InstanceMember.field(field):
++            __wb_262 = it.rt
++            replace_top(mut __wb_262, field)
++            it.rt = __wb_262
++            return Ok(None)
++        case heap.InstanceMember.method(method):
++            __wb_268 = it.rt
++            bound = bind(mut __wb_268, heap.peek(__wb_268, 0), as_obj(method))
++            it.rt = __wb_268
++            __wb_269 = it.rt
++            replace_top(mut __wb_269, value.Value.obj(bound))
++            it.rt = __wb_269
++            return Ok(None)
++        case heap.InstanceMember.missing:
++            return Err(fail(b"Undefined property '" + name_text(it.rt, node.name_ref) + b"'.", node.name.line))
++        case heap.InstanceMember.not_instance:
+             return Err(fail(b"Only instances have properties.", node.name.line))
+ 
+ 
+@@ -308,13 +302,10 @@
+     evaluate(mut it, node.assigned)?
+     # The RHS may change this same object. Read its current fields afterward.
+     match instance_of(it.rt, heap.peek(it.rt, 1)):
+-        case Some(instance):
+-            fields = instance.fields
+-            _ = table.set(mut fields, node.name_ref, heap.string_hash(it.rt, node.name_ref), heap.peek(it.rt, 0))
+-            instance_ref = as_obj(heap.peek(it.rt, 1))
+-            updated_instance = instance
+-            updated_instance.fields = fields
+-            it.rt.objects[instance_ref] = object.Obj.instance(updated_instance)
++        case Some(instance_ref):
++            __wb_field = it.rt
++            heap.set_instance_field(mut __wb_field, instance_ref, node.name_ref, heap.string_hash(__wb_field, node.name_ref), heap.peek(__wb_field, 0))
++            it.rt = __wb_field
+             __wb_285 = it.rt
+             assigned = heap.pop(mut __wb_285)
+             it.rt = __wb_285
+@@ -329,8 +320,7 @@
+ def super_access(it: mut Interpreter, node: ast.SuperExpr) -> Result[None, RuntimeError]:
+     superclass = heap.env_slot(it.rt, env_at(it.rt, node.hops), 0)
+     receiver = heap.env_slot(it.rt, env_at(it.rt, node.hops - 1), 0)
+-    methods = heap.class_obj(it.rt, as_obj(superclass)).methods
+-    match table.get(methods, node.method_ref, heap.string_hash(it.rt, node.method_ref)):
++    match heap.class_method(it.rt, as_obj(superclass), node.method_ref):
+         case Some(method):
+             __wb_298 = it.rt
+             heap.push(mut __wb_298, value.Value.obj(bind(mut __wb_298, receiver, as_obj(method))))
+@@ -477,8 +467,7 @@
+     instance = heap.allocate(mut __wb_413, object.Obj.instance(object.InstanceObj(klass=class_ref, fields=table.new_table())))
+     it.rt = __wb_413
+     it.rt.stack[callee_slot] = value.Value.obj(instance)
+-    methods = heap.class_obj(it.rt, class_ref).methods
+-    match table.get(methods, it.rt.init_string, heap.string_hash(it.rt, it.rt.init_string)):
++    match heap.class_method(it.rt, class_ref, it.rt.init_string):
+         case Some(init_value):
+             initializer = tree_function_obj(it.rt, as_obj(init_value))
+             __wb_419 = it.rt
+--- a/table.my
++++ b/table.my
+@@ -59,10 +59,18 @@
+ public def get(t: Table, key: value.ObjRef, hash: u32) -> Option[value.Value]:
+     if t.count == 0:
+         return None
+-    entry = t.entries[find_entry(t.entries, key, hash)]
+-    if entry.key == value.NO_OBJ:
+-        return None
+-    return Some(entry.value)
++    # Read probes need neither the first tombstone nor a second slot read.
++    # Tombstones continue the chain; an empty entry is its only terminator.
++    mask = len(t.entries) - 1
++    index = int(bit_and(hash, u32(mask)))
++    while True:
++        entry = t.entries[index]
++        if entry.key == value.NO_OBJ:
++            if not is_tombstone(entry):
++                return None
++        elif entry.key == key:
++            return Some(entry.value)
++        index = bit_and(index + 1, mask)
+ 
+ 
+ def adjust_capacity(t: mut Table, new_capacity: int):
+--- a/table_test.my
++++ b/table_test.my
+@@ -86,3 +86,21 @@
+             found += 1
+         key += 1
+     return found == 10
++
++
++# The chain starts in the last slot and wraps through deleted entries.
++# A read must cross tombstones, stop at an empty slot, and see replacements.
++public def test_table_read_probe_wraparound_tombstones() -> bool:
++    t = table.new_table()
++    _ = table.set(mut t, 100, 7u32, value.Value.number(1.0))
++    _ = table.set(mut t, 200, 7u32, value.Value.nil)
++    _ = table.set(mut t, 300, 7u32, value.Value.boolean(False))
++    _ = table.set(mut t, 400, 7u32, value.Value.number(4.0))
++    _ = table.delete(mut t, 100, 7u32)
++    _ = table.delete(mut t, 300, 7u32)
++    nil_present = table.get(t, 200, 7u32) == Some(value.Value.nil)
++    tail_present = table.get(t, 400, 7u32) == Some(value.Value.number(4.0))
++    missing = table.get(t, 500, 7u32).is_none() and table.get(t, value.NO_OBJ, 7u32).is_none()
++    _ = table.set(mut t, 400, 7u32, value.Value.number(9.0))
++    _ = table.set(mut t, 500, 7u32, value.Value.boolean(True))
++    return nil_present and tail_present and missing and table.get(t, 400, 7u32) == Some(value.Value.number(9.0)) and table.get(t, 500, 7u32) == Some(value.Value.boolean(True))
+--- a/vm.my
++++ b/vm.my
+@@ -213,20 +213,15 @@
+ 
+ 
+ def invoke(rt: mut heap.Runtime, o: mut output.Output, name: value.ObjRef, count: int) -> bool:
+-    match instance_of(rt, heap.peek(rt, count)):
+-        case Some(instance_ref):
+-            match rt.objects[instance_ref]:
+-                case object.Obj.instance(instance):
+-                    match table.get(instance.fields, name, heap.string_hash(rt, name)):
+-                        case Some(field):
+-                            rt.stack[rt.stack_top - count - 1] = field
+-                            return call_value(mut rt, mut o, field, count)
+-                        case None:
+-                            return invoke_from_class(mut rt, mut o, instance.klass, name, count)
+-                case _:
+-                    assert False, "object is not an instance"
+-                    return False
+-        case None:
++    match heap.instance_member(rt, heap.peek(rt, count), name):
++        case heap.InstanceMember.field(field):
++            rt.stack[rt.stack_top - count - 1] = field
++            return call_value(mut rt, mut o, field, count)
++        case heap.InstanceMember.method(method):
++            return call(mut rt, mut o, as_obj(method), count)
++        case heap.InstanceMember.missing:
++            return undefined_property(mut rt, mut o, name)
++        case heap.InstanceMember.not_instance:
+             return runtime_error(mut rt, mut o, b"Only instances have methods.")
+ 
+ 
+@@ -237,14 +232,18 @@
+ def bind_method(rt: mut heap.Runtime, o: mut output.Output, klass: value.ObjRef, name: value.ObjRef) -> bool:
+     match heap.class_method(rt, klass, name):
+         case Some(method):
+-            bound = heap.allocate(mut rt, object.Obj.bound_method(object.BoundMethodObj(receiver=heap.peek(rt, 0), method=as_obj(method))))
+-            _ = heap.pop(mut rt)
+-            heap.push(mut rt, value.Value.obj(bound))
++            bind_resolved_method(mut rt, method)
+             return True
+         case None:
+             return undefined_property(mut rt, mut o, name)
+ 
+ 
++def bind_resolved_method(rt: mut heap.Runtime, method: value.Value):
++    bound = heap.allocate(mut rt, object.Obj.bound_method(object.BoundMethodObj(receiver=heap.peek(rt, 0), method=as_obj(method))))
++    _ = heap.pop(mut rt)
++    heap.push(mut rt, value.Value.obj(bound))
++
++
+ # The open upvalue for stack slot `slot`, created and linked into the list
+ # (sorted by descending slot) when none exists.
+ def capture_upvalue(rt: mut heap.Runtime, slot: int) -> value.ObjRef:
+@@ -347,16 +346,17 @@
+     match instance_of(rt, heap.peek(rt, 0)):
+         case Some(instance_ref):
+             name = read_string(mut frame)
+-            match rt.objects[instance_ref]:
+-                case object.Obj.instance(instance):
+-                    match table.get(instance.fields, name, heap.string_hash(rt, name)):
+-                        case Some(field):
+-                            _ = heap.pop(mut rt)
+-                            heap.push(mut rt, field)
+-                            return True
+-                        case None:
+-                            return bind_method(mut rt, mut o, instance.klass, name)
+-                case _:
++            match heap.instance_member(rt, value.Value.obj(instance_ref), name):
++                case heap.InstanceMember.field(field):
++                    _ = heap.pop(mut rt)
++                    heap.push(mut rt, field)
++                    return True
++                case heap.InstanceMember.method(method):
++                    bind_resolved_method(mut rt, method)
++                    return True
++                case heap.InstanceMember.missing:
++                    return undefined_property(mut rt, mut o, name)
++                case heap.InstanceMember.not_instance:
+                     assert False, "object is not an instance"
+                     return False
+         case None:
