@@ -33,7 +33,9 @@ Existing RHS mutation/rebinding regressions continue to cover the setter.
 
 The final overlay replays byte for byte onto a freshly copied unchanged
 optimized port. All **68/68 port tests pass on each backend** with native GC
-stress, LLVM O3/full LTO or QBE ReleaseFast. This includes the baseline's 65
+stress. The exact commands select `mylang test --release` for LLVM and
+`mylang test --mode ReleaseFast` for QBE. The separate LLVM performance guest
+builds explicitly use O3/full LTO. This includes the baseline's 65
 tests and three additions. The preexisting Lox stress test and the new stressed
 receiver test exceed the test runner's default step budget; the successful
 runs use `--max-steps 1000000000 --timeout-ms 120000`. No semantic/check limit
@@ -65,11 +67,26 @@ the parent task qualifies the combined final overlay on its reserved CPUs.
 An additional final-only counter sweep was stopped because the central
 qualification supersedes it; its partial receipt is not acceptance evidence.
 
-The complete final RC/Lox-GC-stress and native-GC-stress replay of all 13 smoke
-scripts and all 23 historical diagnostics per engine is running separately.
-Its receipt records full stdout/stderr/status and checks executable hashes.
-Guardian was not invoked by these frozen-compiler source-only builds; the
-parent task records its compiler/gate runs in consolidated Guardian feedback.
+The final bounded replay passes **1,104 exact output/diagnostic observations**:
+all 13 smoke scripts under RC/Lox stress and all 23 historical diagnostics
+per engine under both runtime families and both backends. Native-GC-stressed
+tree smoke work is bounded to representative property/closure/allocation
+cases plus earlier completed cases. **48 remaining native-GC-stressed tree
+observations are explicitly unrun**, so this is a partial stress matrix,
+not a full-matrix pass. The receipt records complete stdout/stderr/status,
+executable hashes, immutable partial serial/resume records, and corrected
+metadata at resume. The parent's combined acceptance covers all 13 VM/tree
+cases and all 72 combined tests under RC/GC on both backends.
+The lookup commit's automatic Guardian pre-commit whole-tree gate passed all
+88 checks. No baselines or waivers changed. The parent task records that gate
+in consolidated Guardian feedback.
+
+Raw lookup evidence is outside Git at
+`/home/epentland/ai/canopy/evidence/lox-performance-improvements-20261002/lookup`.
+It preserves initial/final executable and source archives, every completed
+sample, explicit partial receipts and their provenance, exact build/test
+commands, hashes and logs. `MANIFEST.sha256` seals every payload; its SHA-256
+is recorded alongside the parent task's consolidated evidence.
 
 ## Reproduction
 
@@ -77,9 +94,11 @@ Use a new private work directory; neither script replaces existing binaries:
 
 ```bash
 repo=/absolute/path/to/worktree
+baseline=/absolute/path/to/baseline-at-bbefb77f
 work=/absolute/path/to/fresh-scratch
 compiler=/absolute/path/to/frozen/mylang
-"$repo/docs/audits/d9-stage3d-migrations/apply-lox.sh" "$work/control" --optimized
+git -C "$repo" worktree add --detach "$baseline" bbefb77f711076b036bb581b0986ac91eec05ca9
+"$baseline/docs/audits/d9-stage3d-migrations/apply-lox.sh" "$work/control" --optimized
 cp -a "$work/control" "$work/candidate"
 patch --batch -d "$work/candidate/lox/benchmarks/lox/ports/mylang" -p1 \
   < "$repo/experiments/lox-perf-improvements-20261002/lookup.patch"
@@ -91,7 +110,8 @@ python3 "$repo/experiments/lox-perf-improvements-20261002/lookup-build.py" \
   --work "$work" --compiler "$compiler" --runtime gc
 TMPDIR="$work/tmp" "$repo/scripts/build-slot.sh" build python3 \
   "$repo/experiments/lox-perf-improvements-20261002/lookup-validate.py" \
-  --work "$work" --out "$work/validation.json"
+  --work "$work" --out "$work/validation.json" --jobs 4 \
+  --native-tree-cases binary_trees,closures,instantiation,properties
 ```
 
 Native GC stress is selected through `MYLANG_OPTIONS=--gc-stress` on artifacts
@@ -102,3 +122,7 @@ source hashes, separate caches/logs, and slot admission. Measurements use the
 existing `experiments/lox-performance-audit-20261002/audit.py` harness with
 explicit control/candidate arms, uninstrumented RC artifacts and exact-output
 checks.
+
+The baseline worktree is essential after integration: current
+`apply-lox.sh --optimized` includes the joined changes, so replaying this
+standalone overlay on current optimized source would apply the work twice.
