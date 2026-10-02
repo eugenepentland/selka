@@ -1,0 +1,60 @@
+--- a/vm.my
++++ b/vm.my
+@@ -465,10 +465,14 @@
+     _ = heap.pop(mut rt)
+ 
+ 
+-# The dispatch loop, one opcode per iteration of `frame`, the innermost
+-# call frame. Handlers answer False after reporting a runtime error.
++# Each invocation executes one activation. A callee gets its own ExecFrame;
++# the caller keeps its read-only code/constants/upvalues while suspended.
++# Runtime.frames remains the root and trace authority. The existing 64-frame
++# call limit also bounds this native recursion. Handlers answer False after
++# reporting a runtime error.
+ def run(rt: mut heap.Runtime, o: mut output.Output) -> InterpretResult:
+-    frame = load_frame(rt, rt.frames[rt.frame_count - 1])
++    activation_count = rt.frame_count
++    frame = load_frame(rt, rt.frames[activation_count - 1])
+     while True:
+         instruction = frame.code[frame.ip]
+         frame.ip = frame.ip + 1
+@@ -555,15 +559,15 @@
+             count = read_byte(mut frame)
+             rt.frames[rt.frame_count - 1].ip = frame.ip
+             ok = call_value(mut rt, mut o, heap.peek(rt, count), count)
+-            if ok:
+-                frame = load_frame(rt, rt.frames[rt.frame_count - 1])
++            if ok and rt.frame_count > activation_count:
++                ok = run(mut rt, mut o) == InterpretResult.OK
+         elif instruction == chunk.OP_INVOKE:
+             method = read_string(mut frame)
+             count = read_byte(mut frame)
+             rt.frames[rt.frame_count - 1].ip = frame.ip
+             ok = invoke(mut rt, mut o, method, count)
+-            if ok:
+-                frame = load_frame(rt, rt.frames[rt.frame_count - 1])
++            if ok and rt.frame_count > activation_count:
++                ok = run(mut rt, mut o) == InterpretResult.OK
+         elif instruction == chunk.OP_SUPER_INVOKE:
+             method = read_string(mut frame)
+             count = read_byte(mut frame)
+@@ -571,8 +575,8 @@
+             rt.stack_top = rt.stack_top - 1
+             superclass = as_obj(rt.stack[rt.stack_top])
+             ok = invoke_from_class(mut rt, mut o, superclass, method, count)
+-            if ok:
+-                frame = load_frame(rt, rt.frames[rt.frame_count - 1])
++            if ok and rt.frame_count > activation_count:
++                ok = run(mut rt, mut o) == InterpretResult.OK
+         elif instruction == chunk.OP_CLOSURE:
+             make_closure(mut rt, mut frame)
+         elif instruction == chunk.OP_CLOSE_UPVALUE:
+@@ -589,7 +593,7 @@
+             rt.stack_top = frame.base
+             rt.stack[rt.stack_top] = result
+             rt.stack_top = rt.stack_top + 1
+-            frame = load_frame(rt, rt.frames[rt.frame_count - 1])
++            return InterpretResult.OK
+         elif instruction == chunk.OP_CLASS:
+             name = read_string(mut frame)
+             klass = heap.allocate(mut rt, object.Obj.klass(object.ClassObj(name=name, methods=table.new_table())))
