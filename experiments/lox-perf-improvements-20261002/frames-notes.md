@@ -86,12 +86,18 @@ measurement. Both discarded attempts are recorded in the receipt.
 
 ## Reproduction and receipts
 
-From a current source worktree:
+The standalone overlay expects the optimized port at audit commit `bbefb77f`.
+Use that revision's migration script and this branch's overlay. The integrated
+`apply-lox.sh --optimized` already includes this change and the other accepted
+lanes; do not apply this overlay a second time there.
 
 ```bash
-docs/audits/d9-stage3d-migrations/apply-lox.sh PRIVATE_WORK --optimized
-patch -p1 -d PRIVATE_WORK/lox/benchmarks/lox/ports/mylang \
-  < experiments/lox-perf-improvements-20261002/frames.patch
+baseline=/absolute/path/to/baseline-worktree-at-bbefb77f
+repo=/absolute/path/to/improvements-worktree
+work=/absolute/path/to/fresh-private-work
+"$baseline/docs/audits/d9-stage3d-migrations/apply-lox.sh" "$work" --optimized
+patch -p1 -d "$work/lox/benchmarks/lox/ports/mylang" \
+  < "$repo/experiments/lox-perf-improvements-20261002/frames.patch"
 ```
 
 `frames-receipts.json` records exact compiler/build/test commands, all 26

@@ -75,8 +75,9 @@ cases plus earlier completed cases. **48 remaining native-GC-stressed tree
 observations are explicitly unrun**, so this is a partial stress matrix,
 not a full-matrix pass. The receipt records complete stdout/stderr/status,
 executable hashes, immutable partial serial/resume records, and corrected
-metadata at resume. The parent's combined acceptance covers all 13 VM/tree
-cases and all 72 combined tests under RC/GC on both backends.
+metadata at resume. The parent's combined acceptance covers all 13 VM/tree smoke cases under
+RC, all 72 combined tests under RC and native GC stress, and separate joined
+activation, error and regression probes under both runtimes and backends.
 The lookup commit's automatic Guardian pre-commit whole-tree gate passed all
 88 checks. No baselines or waivers changed. The parent task records that gate
 in consolidated Guardian feedback.

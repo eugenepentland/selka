@@ -22,4 +22,5 @@ mkdir -p "$work"
 (cd "$port" && patch --batch -p1 < "$script_dir/lox-value-port.patch")
 if [[ "$optimization" == --optimized ]]; then
     (cd "$port" && patch --batch -p1 < "$script_dir/lox-source-perf.patch")
+    (cd "$port" && patch --batch -p1 < "$script_dir/lox-runtime-perf-20261002.patch")
 fi
