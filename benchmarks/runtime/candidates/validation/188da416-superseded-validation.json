@@ -1,0 +1,39 @@
+{
+  "source_revision": "188da41681162db93c6783bd3bbc7a63ca87bfd6",
+  "host_mode": "Debug",
+  "started_utc": "2026-10-03T22:41:52.227280+00:00",
+  "worktree": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-final-validation-20261003",
+  "binary_sha256": {
+    "zig-out/bin/mylang": "b367f9a5dec899af0bbaaccb6ad9312b45bd9f97f8dd0c8777c7585af950efb2",
+    "zig-out/bin/qbe": "e07f2050198a17fd9de859d987702ec2e89edf090837232e2f0bf2437e06f1e4"
+  },
+  "source_dirty": "",
+  "full_gate": "zig build test -Doptimize=Debug -Dcompiler-only=true -Dtest-shards=4 -j2 --summary all",
+  "llvm_corpus": {
+    "version": "native-tests-v1",
+    "passed": 1579,
+    "failed": 0,
+    "skipped": 0,
+    "cached": 0,
+    "executed": 1579,
+    "programs": 239,
+    "dropped": 0,
+    "unloaded": 0
+  },
+  "schema": "runtime-parity-validation-v1",
+  "status": "gate_passed_candidate_rejected",
+  "rejection": "Frozen branch_predictable qualification exposed P2 short-circuit join miscompilation; this passing pre-existing suite does not qualify source188da416. Corrected source requires fresh validation.",
+  "full_gate_exit": 0,
+  "full_gate_summary": "Build Summary: 97/97 steps succeeded; 2902/10838 tests passed (7936 skipped)",
+  "rc_guest_cases": 1579,
+  "gc_stress_guest_cases": 1579,
+  "native_boundary_cases_agree": 68,
+  "doctest": {
+    "run": 228,
+    "checked": 57,
+    "skipped": 11,
+    "failed": 0
+  },
+  "log_sha256": "6743f01fba537cd1001c3a8719d3499eb6ea4ec1793004062f6249f437b606c1",
+  "llvm_json_sha256": "2bec71ff165480ec16571ea18066aa8750282dcd5aef4b7b6e778a38a85a2275"
+}

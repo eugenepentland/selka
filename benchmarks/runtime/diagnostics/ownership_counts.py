@@ -14,6 +14,7 @@ ROOT = HERE.parents[1]
 sys.path.insert(0, str(HERE))
 from build_compiler import digest, validate_receipt
 from runner import runtime_environment
+from backend_receipts import capture as backend_receipts
 sys.path.insert(0, str(HERE / 'expanded'))
 from registry import GROUPS, checksum, inventory, plans_for
 
@@ -70,6 +71,7 @@ def main():
     sources = {group: HERE / 'ports/main.my' if group == 'legacy'
                else HERE / 'expanded' / group / 'main.my' for group in GROUPS}
     paths = [*sources.values(), HERE / 'ports/native_clock.c', Path(__file__),
+             Path(__file__).with_name('backend_receipts.py'),
              HERE / 'expanded/registry.py', HERE / 'oracle.py',
              *(HERE / 'expanded' / group / 'oracle.py' for group in GROUPS if group != 'legacy')]
     identity = {'source_revision': receipt['source_revision'], 'compiler_receipt': receipt,
@@ -104,6 +106,10 @@ def main():
             raise ValueError('changed counting build identity')
         if saved['binary_hashes'] != {key: digest(path) for key, path in binaries.items()}:
             raise ValueError('changed counting guest bytes')
+        if saved['native_clock_sha256'] != digest(clock):
+            raise ValueError('changed counting clock object')
+        if saved['effective_backends'] != backend_receipts(binaries):
+            raise ValueError('changed counting backend artifacts')
         logs = saved['build_logs']
     else:
         for name, command in commands.items():
@@ -116,13 +122,17 @@ def main():
             if done.returncode:
                 raise RuntimeError('counting build failed: ' + name + ': ' + done.stderr)
         atomic(manifest_path, {'identity': identity, 'build_logs': logs,
-                              'binary_hashes': {key: digest(path) for key, path in binaries.items()}})
+                              'binary_hashes': {key: digest(path) for key, path in binaries.items()},
+                              'native_clock_sha256': digest(clock),
+                              'effective_backends': backend_receipts(binaries)})
     cpus = sorted(os.sched_getaffinity(0) - {2, 3, 10, 11})
     if not cpus:
         raise ValueError('no CPU remains after reserving timing CPUs')
     affinity = ','.join(map(str, cpus))
     started = datetime.now(timezone.utc).isoformat()
     hashes = {key: digest(path) for key, path in binaries.items()}
+    clock_hash = digest(clock)
+    backends = backend_receipts(binaries)
     rows = []
     for plan in plans_for(list(inventory())):
         case, size = plan['case'], plan['size']
@@ -138,11 +148,14 @@ def main():
     validate_receipt(receipt, compiler, artifacts=True)
     if hashes != {key: digest(path) for key, path in binaries.items()}:
         raise ValueError('counting binary changed during collection')
+    if clock_hash != digest(clock) or backends != backend_receipts(binaries):
+        raise ValueError('counting clock or backend artifacts changed during collection')
     if identity['inputs'] != {str(path): digest(path) for path in paths}:
         raise ValueError('diagnostic inputs changed during collection')
     atomic(args.output, {'schema': 'runtime-ownership-diagnostic-v1', 'status': 'complete',
                         'started_utc': started, 'finished_utc': datetime.now(timezone.utc).isoformat(),
                         'identity': identity, 'binary_hashes': hashes, 'build_logs': logs, 'rows': rows,
+                        'native_clock_sha256': clock_hash, 'effective_backends': backends,
                         'limits': ['Whole-process counts include setup and teardown, not only the timed kernel.',
                                    'Counting instrumentation can disable ordinary optimization paths.',
                                    'Counts are evidence about these counting artifacts, not production timing.',
