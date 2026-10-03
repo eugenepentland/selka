@@ -1,0 +1,352 @@
+{
+  "observations": [
+    {
+      "arm": "control",
+      "backend": "llvm",
+      "engine": "vm",
+      "lox_gc_stress": false,
+      "native_gc_stress": true,
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-ownership-inline-20261003/.tmp-lox-sweep/bin/final-sweep-llvm",
+        "--engine=vm",
+        "--stats",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/validation-inputs/closures.vm.smoke.lox"
+      ],
+      "environment": {
+        "MYLANG_OPTIONS": "--gc-stress"
+      },
+      "binary_sha256": "29a48f65df32df53d80a51a70e4d072d8c85eb77953606a2bbbc71b4ba892764",
+      "status": 2,
+      "stdout": "",
+      "stderr": "mylang: --gc-stress needs a program built with --gc-runtime; this one uses reference counting\n"
+    },
+    {
+      "arm": "candidate",
+      "backend": "llvm",
+      "engine": "vm",
+      "lox_gc_stress": false,
+      "native_gc_stress": true,
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/bin-fixed/final-llvm-rc",
+        "--engine=vm",
+        "--stats",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/validation-inputs/closures.vm.smoke.lox"
+      ],
+      "environment": {
+        "MYLANG_OPTIONS": "--gc-stress"
+      },
+      "binary_sha256": "fa5b427479ad37dcb0fb0c03fb24cff484e96e492ee575b9712b9f195b5c04da",
+      "status": 2,
+      "stdout": "",
+      "stderr": "mylang: --gc-stress needs a program built with --gc-runtime; this one uses reference counting\n"
+    },
+    {
+      "arm": "control",
+      "backend": "llvm",
+      "engine": "vm",
+      "lox_gc_stress": true,
+      "native_gc_stress": true,
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-ownership-inline-20261003/.tmp-lox-sweep/bin/final-sweep-llvm",
+        "--engine=vm",
+        "--stats",
+        "--gc-stress",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/validation-inputs/closures.vm.smoke.lox"
+      ],
+      "environment": {
+        "MYLANG_OPTIONS": "--gc-stress"
+      },
+      "binary_sha256": "29a48f65df32df53d80a51a70e4d072d8c85eb77953606a2bbbc71b4ba892764",
+      "status": 2,
+      "stdout": "",
+      "stderr": "mylang: --gc-stress needs a program built with --gc-runtime; this one uses reference counting\n"
+    },
+    {
+      "arm": "candidate",
+      "backend": "llvm",
+      "engine": "vm",
+      "lox_gc_stress": true,
+      "native_gc_stress": true,
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/bin-fixed/final-llvm-rc",
+        "--engine=vm",
+        "--stats",
+        "--gc-stress",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/validation-inputs/closures.vm.smoke.lox"
+      ],
+      "environment": {
+        "MYLANG_OPTIONS": "--gc-stress"
+      },
+      "binary_sha256": "fa5b427479ad37dcb0fb0c03fb24cff484e96e492ee575b9712b9f195b5c04da",
+      "status": 2,
+      "stdout": "",
+      "stderr": "mylang: --gc-stress needs a program built with --gc-runtime; this one uses reference counting\n"
+    },
+    {
+      "arm": "control",
+      "backend": "llvm",
+      "engine": "tree",
+      "lox_gc_stress": false,
+      "native_gc_stress": true,
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-ownership-inline-20261003/.tmp-lox-sweep/bin/final-sweep-llvm",
+        "--engine=tree",
+        "--stats",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/validation-inputs/closures.vm.smoke.lox"
+      ],
+      "environment": {
+        "MYLANG_OPTIONS": "--gc-stress"
+      },
+      "binary_sha256": "29a48f65df32df53d80a51a70e4d072d8c85eb77953606a2bbbc71b4ba892764",
+      "status": 2,
+      "stdout": "",
+      "stderr": "mylang: --gc-stress needs a program built with --gc-runtime; this one uses reference counting\n"
+    },
+    {
+      "arm": "candidate",
+      "backend": "llvm",
+      "engine": "tree",
+      "lox_gc_stress": false,
+      "native_gc_stress": true,
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/bin-fixed/final-llvm-rc",
+        "--engine=tree",
+        "--stats",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/validation-inputs/closures.vm.smoke.lox"
+      ],
+      "environment": {
+        "MYLANG_OPTIONS": "--gc-stress"
+      },
+      "binary_sha256": "fa5b427479ad37dcb0fb0c03fb24cff484e96e492ee575b9712b9f195b5c04da",
+      "status": 2,
+      "stdout": "",
+      "stderr": "mylang: --gc-stress needs a program built with --gc-runtime; this one uses reference counting\n"
+    },
+    {
+      "arm": "control",
+      "backend": "llvm",
+      "engine": "tree",
+      "lox_gc_stress": true,
+      "native_gc_stress": true,
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-ownership-inline-20261003/.tmp-lox-sweep/bin/final-sweep-llvm",
+        "--engine=tree",
+        "--stats",
+        "--gc-stress",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/validation-inputs/closures.vm.smoke.lox"
+      ],
+      "environment": {
+        "MYLANG_OPTIONS": "--gc-stress"
+      },
+      "binary_sha256": "29a48f65df32df53d80a51a70e4d072d8c85eb77953606a2bbbc71b4ba892764",
+      "status": 2,
+      "stdout": "",
+      "stderr": "mylang: --gc-stress needs a program built with --gc-runtime; this one uses reference counting\n"
+    },
+    {
+      "arm": "candidate",
+      "backend": "llvm",
+      "engine": "tree",
+      "lox_gc_stress": true,
+      "native_gc_stress": true,
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/bin-fixed/final-llvm-rc",
+        "--engine=tree",
+        "--stats",
+        "--gc-stress",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/validation-inputs/closures.vm.smoke.lox"
+      ],
+      "environment": {
+        "MYLANG_OPTIONS": "--gc-stress"
+      },
+      "binary_sha256": "fa5b427479ad37dcb0fb0c03fb24cff484e96e492ee575b9712b9f195b5c04da",
+      "status": 2,
+      "stdout": "",
+      "stderr": "mylang: --gc-stress needs a program built with --gc-runtime; this one uses reference counting\n"
+    },
+    {
+      "arm": "control",
+      "backend": "qbe",
+      "engine": "vm",
+      "lox_gc_stress": false,
+      "native_gc_stress": true,
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-ownership-inline-20261003/.tmp-lox-sweep/bin/final-sweep-qbe",
+        "--engine=vm",
+        "--stats",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/validation-inputs/closures.vm.smoke.lox"
+      ],
+      "environment": {
+        "MYLANG_OPTIONS": "--gc-stress"
+      },
+      "binary_sha256": "6217e8fb5308702efcbdfdf2128ffd98cda8bafafc75e183d9130c0b1b402300",
+      "status": 2,
+      "stdout": "",
+      "stderr": "mylang: --gc-stress needs a program built with --gc-runtime; this one uses reference counting\n"
+    },
+    {
+      "arm": "candidate",
+      "backend": "qbe",
+      "engine": "vm",
+      "lox_gc_stress": false,
+      "native_gc_stress": true,
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/bin-fixed/final-qbe-rc",
+        "--engine=vm",
+        "--stats",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/validation-inputs/closures.vm.smoke.lox"
+      ],
+      "environment": {
+        "MYLANG_OPTIONS": "--gc-stress"
+      },
+      "binary_sha256": "e3f1864151dca1edd2d605ee80bfed6aa3cd2c15d22e718d66931eab17262e9d",
+      "status": 2,
+      "stdout": "",
+      "stderr": "mylang: --gc-stress needs a program built with --gc-runtime; this one uses reference counting\n"
+    },
+    {
+      "arm": "control",
+      "backend": "qbe",
+      "engine": "vm",
+      "lox_gc_stress": true,
+      "native_gc_stress": true,
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-ownership-inline-20261003/.tmp-lox-sweep/bin/final-sweep-qbe",
+        "--engine=vm",
+        "--stats",
+        "--gc-stress",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/validation-inputs/closures.vm.smoke.lox"
+      ],
+      "environment": {
+        "MYLANG_OPTIONS": "--gc-stress"
+      },
+      "binary_sha256": "6217e8fb5308702efcbdfdf2128ffd98cda8bafafc75e183d9130c0b1b402300",
+      "status": 2,
+      "stdout": "",
+      "stderr": "mylang: --gc-stress needs a program built with --gc-runtime; this one uses reference counting\n"
+    },
+    {
+      "arm": "candidate",
+      "backend": "qbe",
+      "engine": "vm",
+      "lox_gc_stress": true,
+      "native_gc_stress": true,
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/bin-fixed/final-qbe-rc",
+        "--engine=vm",
+        "--stats",
+        "--gc-stress",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/validation-inputs/closures.vm.smoke.lox"
+      ],
+      "environment": {
+        "MYLANG_OPTIONS": "--gc-stress"
+      },
+      "binary_sha256": "e3f1864151dca1edd2d605ee80bfed6aa3cd2c15d22e718d66931eab17262e9d",
+      "status": 2,
+      "stdout": "",
+      "stderr": "mylang: --gc-stress needs a program built with --gc-runtime; this one uses reference counting\n"
+    },
+    {
+      "arm": "control",
+      "backend": "qbe",
+      "engine": "tree",
+      "lox_gc_stress": false,
+      "native_gc_stress": true,
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-ownership-inline-20261003/.tmp-lox-sweep/bin/final-sweep-qbe",
+        "--engine=tree",
+        "--stats",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/validation-inputs/closures.vm.smoke.lox"
+      ],
+      "environment": {
+        "MYLANG_OPTIONS": "--gc-stress"
+      },
+      "binary_sha256": "6217e8fb5308702efcbdfdf2128ffd98cda8bafafc75e183d9130c0b1b402300",
+      "status": 2,
+      "stdout": "",
+      "stderr": "mylang: --gc-stress needs a program built with --gc-runtime; this one uses reference counting\n"
+    },
+    {
+      "arm": "candidate",
+      "backend": "qbe",
+      "engine": "tree",
+      "lox_gc_stress": false,
+      "native_gc_stress": true,
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/bin-fixed/final-qbe-rc",
+        "--engine=tree",
+        "--stats",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/validation-inputs/closures.vm.smoke.lox"
+      ],
+      "environment": {
+        "MYLANG_OPTIONS": "--gc-stress"
+      },
+      "binary_sha256": "e3f1864151dca1edd2d605ee80bfed6aa3cd2c15d22e718d66931eab17262e9d",
+      "status": 2,
+      "stdout": "",
+      "stderr": "mylang: --gc-stress needs a program built with --gc-runtime; this one uses reference counting\n"
+    },
+    {
+      "arm": "control",
+      "backend": "qbe",
+      "engine": "tree",
+      "lox_gc_stress": true,
+      "native_gc_stress": true,
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-ownership-inline-20261003/.tmp-lox-sweep/bin/final-sweep-qbe",
+        "--engine=tree",
+        "--stats",
+        "--gc-stress",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/validation-inputs/closures.vm.smoke.lox"
+      ],
+      "environment": {
+        "MYLANG_OPTIONS": "--gc-stress"
+      },
+      "binary_sha256": "6217e8fb5308702efcbdfdf2128ffd98cda8bafafc75e183d9130c0b1b402300",
+      "status": 2,
+      "stdout": "",
+      "stderr": "mylang: --gc-stress needs a program built with --gc-runtime; this one uses reference counting\n"
+    },
+    {
+      "arm": "candidate",
+      "backend": "qbe",
+      "engine": "tree",
+      "lox_gc_stress": true,
+      "native_gc_stress": true,
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/bin-fixed/final-qbe-rc",
+        "--engine=tree",
+        "--stats",
+        "--gc-stress",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/validation-inputs/closures.vm.smoke.lox"
+      ],
+      "environment": {
+        "MYLANG_OPTIONS": "--gc-stress"
+      },
+      "binary_sha256": "e3f1864151dca1edd2d605ee80bfed6aa3cd2c15d22e718d66931eab17262e9d",
+      "status": 2,
+      "stdout": "",
+      "stderr": "mylang: --gc-stress needs a program built with --gc-runtime; this one uses reference counting\n"
+    }
+  ],
+  "candidate_comparisons": 8,
+  "interpretation": "RC executable native-stress combinations are refused identically, not program passes",
+  "runner_affinity": [
+    0,
+    1,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ]
+}

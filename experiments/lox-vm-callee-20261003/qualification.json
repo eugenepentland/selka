@@ -1,0 +1,2957 @@
+{
+  "finished_utc": "2026-10-03T02:34:39.461344+00:00",
+  "source_unchanged": true,
+  "compiler_unchanged": true,
+  "fresh_passes": 332,
+  "results": [
+    {
+      "flavor": "qbe-stress",
+      "runtime": "tracing GC stress",
+      "totals": {
+        "passed": 83,
+        "failed": 0,
+        "skipped": 0,
+        "cached": 0,
+        "executed": 83
+      },
+      "expected_count": 83,
+      "actual_count": 83,
+      "missing": [],
+      "unexpected": [],
+      "all_status_passed": true,
+      "all_exit_zero": true
+    },
+    {
+      "flavor": "qbe-normal",
+      "runtime": "default checked RC",
+      "totals": {
+        "passed": 83,
+        "failed": 0,
+        "skipped": 0,
+        "cached": 0,
+        "executed": 83
+      },
+      "expected_count": 83,
+      "actual_count": 83,
+      "missing": [],
+      "unexpected": [],
+      "all_status_passed": true,
+      "all_exit_zero": true
+    },
+    {
+      "flavor": "llvm-normal",
+      "runtime": "default checked RC",
+      "totals": {
+        "passed": 83,
+        "failed": 0,
+        "skipped": 0,
+        "cached": 0,
+        "executed": 83
+      },
+      "expected_count": 83,
+      "actual_count": 83,
+      "missing": [],
+      "unexpected": [],
+      "all_status_passed": true,
+      "all_exit_zero": true
+    },
+    {
+      "flavor": "llvm-stress",
+      "runtime": "tracing GC stress",
+      "totals": {
+        "passed": 83,
+        "failed": 0,
+        "skipped": 0,
+        "cached": 0,
+        "executed": 83
+      },
+      "expected_count": 83,
+      "actual_count": 83,
+      "missing": [],
+      "unexpected": [],
+      "all_status_passed": true,
+      "all_exit_zero": true
+    }
+  ],
+  "start": {
+    "started_utc": "2026-10-03T02:30:34.342509+00:00",
+    "source": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final",
+    "compiler": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/compiler-fixed/bin/mylang",
+    "compiler_sha256": "d14a704083bcc5f5174932a751f7d9dda73100dbd62403626b42b52436cad040",
+    "source_hashes": {
+      "NOTES.md": "85541175c32b6745ce2b9be34da5004bf16d7c8d0e83a5e46b46db41b5bf490c",
+      "ast.my": "e210fb35bf3125ba06ebb978bcb3592162020a77576542f2d049879a51479bf9",
+      "bench.json": "dbcc26195c024bc86d9e184284306f4849450f1042d1fe53092e7b52a3deea92",
+      "chunk.my": "b4f6e7ae6531b224f99e026f53fee3692c90d8f2b15d3c76ca5962f1803e4b66",
+      "compiler.my": "c550603195401ff6d9436b42d6fbf0c35051521da57e7b85281fc8fcf6ebe048",
+      "compiler_test.my": "582fe817dbeffa709961b5124370ce200510adb3ac0d246572ca1c0dc19ec08a",
+      "driver.my": "fe831d2ec08833d11139e790ab741903b27a8e0fb43582cac11ca664b4595836",
+      "driver_cases.json": "8507f12ef156a1e859a1cc90b712f3ae8ea19c9db98388992a83a70c16e1ff72",
+      "driver_tests.my": "5ef7cbd666cef3c543eba0d8798d7fd7515f5f45184a664cec3f1678f6126d5c",
+      "heap.my": "a66466889a8da4f66252b7e0d28a0973d724c52eef74e3abec2efcf0a5957166",
+      "heap_test.my": "81667d68bf957b347c983479f0e3843182a7f86ef170e32781190f992a75e1bd",
+      "interpreter.my": "5dbe0b23190407cfd97692b1b84a22c6ffd96f9fe8b1621236059f368d8898e7",
+      "lox.sh": "9f82abeb4e1c21ce78a9f28d61281917927517f610403917aaf314f1294385fc",
+      "lox_strings.my": "383900dda10b9218caf2087e12a2e20089e4d48b0ec5fc3e17e960a3d70d83df",
+      "lox_strings_test.my": "a44545c64e9f75cc5af761d6c703feec83c4fc0a14d2678a1b2fce28067bd0c0",
+      "main.my": "18c1f669b1683123e635256c9f66c6db2766383391371c3822e61df7d9732274",
+      "natives.my": "2ff45343fded6d303e6233e0f787e63c319e860903e2c0c81ccbb71c2749d665",
+      "object.my": "08c0d5c6ae304ef4d0e1f5929f52b5d1dd47cd46e6c409392c0b5b1df9567ad7",
+      "output.my": "cdc79c8a9a5eca0106fb139bca5492da201f027b0499e5e00a492368317d194c",
+      "parser.my": "e9bd5d9c37e307d060ce165dc4fa0f276c2ff9dbe7cb21bd27cbdd94644b4edd",
+      "parser_test.my": "ffe2658f030c75b40a7c54d8f0c64e848e6679e13fc69cbef9a131ed7b120e4b",
+      "repros/overlap_proof_blowup.my.txt": "5c510f5d5e2d441cb5397a7d6097e3689a040751373d2c9594db6754812b4dfb",
+      "repros/print_long_float.my.txt": "0767918284593321e9589f14e3b90d9dc41239321d355be89aed055eef5cb132",
+      "repros/print_union_class_payload.my.txt": "c03c987b6bf03db950bb8e98c238a76c0e7ea9c4c98c29c3e5748cd2c3a4ce8d",
+      "repros/qbe_pm_slots.my.txt": "3560079c67785824971ae6f10c3f04e49e87e5e5dbd20afdd7f1c0a1b258dbe9",
+      "repros/read_fifo.my.txt": "2a3b1658eb6e4c9a0f40cfed13c0db92989e9c78de69150197df247a18e5becd",
+      "repros/runtime_flags.my.txt": "2d314b6501ea5be517e904e0791461f5900745a77e386c8403f6d15fefdd67eb",
+      "repros/stream_field_method.my.txt": "b551e742a030b770cc3861bebacbbc76beab0fc38aef78a54be7a3af4ee9eb97",
+      "resolver.my": "41d41b2a1ddb3f6ab3fb73ad9eff69415b0450d890554766bfee37eac8d0903d",
+      "resolver_test.my": "72c5176ff15db240d8ec8ff8073fcdb7736e8c60ab47410bb60fce934c179d31",
+      "scanner.my": "af4bc6a57859318051dc47d6e1f6344ee98fbfff037e9be93c0a103765cd3e83",
+      "scanner_test.my": "1d7fbb34b0de402657786641217e81c9ae286cab14baf2716de2db875ae39ad0",
+      "table.my": "c40086659df221f47deb6c1916b821f470b67ad5e844e24db3ba026b35f54f7e",
+      "table_test.my": "d5892b2f08c4f6b43db8295795f5292fbc7b8d004aceef01fc456df71997aca1",
+      "value.my": "3b2a444e77c6a703b1aedad3c89ef38cad70aa3bb6cba1716b623980ff9a76b0",
+      "value_test.my": "b766d22b25a8a8a090b4a059030cfc7462022fdacb66a0a91bf8a9e09a53fed4",
+      "vm.my": "b7121e50e2a56fde4c70e5b9628316394c754058a23b56d1ba7e2183ebe89b41"
+    },
+    "fixture_sha256": "8507f12ef156a1e859a1cc90b712f3ae8ea19c9db98388992a83a70c16e1ff72",
+    "expected": [
+      "compiler_test::test_compile_print_addition",
+      "compiler_test::test_compile_global_definition",
+      "compiler_test::test_compile_local_slots",
+      "compiler_test::test_compile_if_jumps",
+      "compiler_test::test_compile_error_message",
+      "compiler_test::test_compile_too_many_constants",
+      "heap_test::test_gc_frees_unreachable",
+      "heap_test::test_gc_traces_instance_fields",
+      "heap_test::test_gc_intern_table_is_weak",
+      "heap_test::test_gc_reuses_free_slot",
+      "heap_test::test_gc_threshold_accounting",
+      "heap_test::test_gc_stress_collects_each_allocation",
+      "heap_test::test_env_indexed_set_preserves_runtime_and_payload_snapshots",
+      "heap_test::test_stack_snapshot_survives_write",
+      "heap_test::test_stack_full_capacity_and_negative_index_reads",
+      "heap_test::test_closure_arity_respects_runtime_snapshot",
+      "heap_test::test_sweep_scalar_cost_preserves_snapshots_and_reuse_order",
+      "heap_test::test_sweep_scalar_cost_at_allocation_threshold",
+      "lox_strings_test::test_fnv1a_empty",
+      "lox_strings_test::test_fnv1a_a",
+      "lox_strings_test::test_fnv1a_foobar",
+      "lox_strings_test::test_intern_same_bytes_same_ref",
+      "lox_strings_test::test_table_find_string",
+      "parser_test::test_parse_precedence",
+      "parser_test::test_parse_unary_grouping",
+      "parser_test::test_parse_logical",
+      "parser_test::test_parse_call_get_set",
+      "parser_test::test_parse_error_recovery",
+      "resolver_test::test_resolve_own_initializer",
+      "resolver_test::test_resolve_duplicate_local",
+      "resolver_test::test_resolve_top_level_return",
+      "resolver_test::test_resolve_this_outside_class",
+      "resolver_test::test_resolve_slot_counts",
+      "scanner_test::test_scan_empty_source",
+      "scanner_test::test_scan_single_char_tokens",
+      "scanner_test::test_scan_two_char_tokens",
+      "scanner_test::test_scan_keywords",
+      "scanner_test::test_scan_identifiers",
+      "scanner_test::test_scan_numbers",
+      "scanner_test::test_scan_string",
+      "scanner_test::test_scan_multiline_string_line",
+      "scanner_test::test_scan_unterminated_string",
+      "scanner_test::test_scan_unexpected_character",
+      "scanner_test::test_scan_comments_and_lines",
+      "table_test::test_table_set_get",
+      "table_test::test_table_set_reports_new_key",
+      "table_test::test_table_grows_at_load_factor",
+      "table_test::test_table_delete_leaves_tombstone",
+      "table_test::test_table_tombstone_reuse",
+      "table_test::test_table_add_all",
+      "table_test::test_table_read_probe_wraparound_tombstones",
+      "value_test::test_format_integer",
+      "value_test::test_format_zeros",
+      "value_test::test_format_fraction",
+      "value_test::test_format_large",
+      "value_test::test_format_small",
+      "value_test::test_format_special",
+      "value_test::test_values_equal_rules",
+      "value_test::test_is_falsey_rules",
+      "driver_tests::test_run_arithmetic",
+      "driver_tests::test_run_string_concat",
+      "driver_tests::test_run_closure_counter",
+      "driver_tests::test_run_shared_upvalue",
+      "driver_tests::test_run_class_init_method",
+      "driver_tests::test_run_inheritance_super",
+      "driver_tests::test_run_runtime_error_trace",
+      "driver_tests::test_run_compile_error_status",
+      "driver_tests::test_run_stack_overflow",
+      "driver_tests::test_run_print_value_kinds",
+      "driver_tests::test_run_gc_stress_same_output",
+      "driver_tests::test_run_set_rhs_keeps_receiver_mutations",
+      "driver_tests::test_run_set_rhs_keeps_original_receiver",
+      "driver_tests::test_run_scalar_stack_edges",
+      "driver_tests::test_run_scalar_stack_error_trace",
+      "driver_tests::test_run_property_field_shadows_inherited_method",
+      "driver_tests::test_run_property_lookup_survives_allocation_and_mutation",
+      "driver_tests::test_run_call_arguments_and_captured_parameter_roots",
+      "driver_tests::test_run_recursive_state_and_output_restore",
+      "driver_tests::test_run_upvalues_across_block_and_return",
+      "driver_tests::test_run_error_after_child_returns",
+      "driver_tests::test_run_scalar_callee_runtime_snapshot",
+      "driver_tests::test_run_scalar_callee_class_error_order",
+      "driver_tests::test_run_scalar_callee_invalid_argument_order"
+    ]
+  },
+  "commands": {
+    "qbe-stress": [
+      {
+        "module": "compiler_test.my",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/scripts/build-slot.sh",
+          "build",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/compiler-fixed/bin/mylang",
+          "test",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final/compiler_test.my",
+          "--force",
+          "--max-steps",
+          "1000000000",
+          "--timeout-ms",
+          "180000",
+          "--jobs",
+          "1",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final-qualification/qbe-stress/cache",
+          "--json",
+          "--mode",
+          "Debug",
+          "--gc-stress"
+        ],
+        "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003",
+        "env": {
+          "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final-qualification/tmp"
+        },
+        "started_utc": "2026-10-03T02:30:34.405838+00:00",
+        "status": 0,
+        "finished_utc": "2026-10-03T02:30:35.822977+00:00",
+        "stdout_sha256": "efd359acbdc5c80837ef210b2f471e33fe36e8903b8fd5624bdd7e26e7a35e4c",
+        "summary": {
+          "passed": 6,
+          "failed": 0,
+          "skipped": 0,
+          "cached": 0,
+          "executed": 6
+        },
+        "tests": [
+          {
+            "name": "compiler_test::test_compile_error_message",
+            "status": "passed"
+          },
+          {
+            "name": "compiler_test::test_compile_global_definition",
+            "status": "passed"
+          },
+          {
+            "name": "compiler_test::test_compile_if_jumps",
+            "status": "passed"
+          },
+          {
+            "name": "compiler_test::test_compile_local_slots",
+            "status": "passed"
+          },
+          {
+            "name": "compiler_test::test_compile_print_addition",
+            "status": "passed"
+          },
+          {
+            "name": "compiler_test::test_compile_too_many_constants",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "module": "heap_test.my",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/scripts/build-slot.sh",
+          "build",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/compiler-fixed/bin/mylang",
+          "test",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final/heap_test.my",
+          "--force",
+          "--max-steps",
+          "1000000000",
+          "--timeout-ms",
+          "180000",
+          "--jobs",
+          "1",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final-qualification/qbe-stress/cache",
+          "--json",
+          "--mode",
+          "Debug",
+          "--gc-stress"
+        ],
+        "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003",
+        "env": {
+          "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final-qualification/tmp"
+        },
+        "started_utc": "2026-10-03T02:30:35.823551+00:00",
+        "status": 0,
+        "finished_utc": "2026-10-03T02:30:49.843126+00:00",
+        "stdout_sha256": "bd19d8b8f01f69c62f460c6ec4c7ba5e0533725a94564fdf278cbfbe1938b2bc",
+        "summary": {
+          "passed": 12,
+          "failed": 0,
+          "skipped": 0,
+          "cached": 0,
+          "executed": 12
+        },
+        "tests": [
+          {
+            "name": "heap_test::test_closure_arity_respects_runtime_snapshot",
+            "status": "passed"
+          },
+          {
+            "name": "heap_test::test_env_indexed_set_preserves_runtime_and_payload_snapshots",
+            "status": "passed"
+          },
+          {
+            "name": "heap_test::test_gc_frees_unreachable",
+            "status": "passed"
+          },
+          {
+            "name": "heap_test::test_gc_intern_table_is_weak",
+            "status": "passed"
+          },
+          {
+            "name": "heap_test::test_gc_reuses_free_slot",
+            "status": "passed"
+          },
+          {
+            "name": "heap_test::test_gc_stress_collects_each_allocation",
+            "status": "passed"
+          },
+          {
+            "name": "heap_test::test_gc_threshold_accounting",
+            "status": "passed"
+          },
+          {
+            "name": "heap_test::test_gc_traces_instance_fields",
+            "status": "passed"
+          },
+          {
+            "name": "heap_test::test_stack_full_capacity_and_negative_index_reads",
+            "status": "passed"
+          },
+          {
+            "name": "heap_test::test_stack_snapshot_survives_write",
+            "status": "passed"
+          },
+          {
+            "name": "heap_test::test_sweep_scalar_cost_at_allocation_threshold",
+            "status": "passed"
+          },
+          {
+            "name": "heap_test::test_sweep_scalar_cost_preserves_snapshots_and_reuse_order",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "module": "lox_strings_test.my",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/scripts/build-slot.sh",
+          "build",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/compiler-fixed/bin/mylang",
+          "test",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final/lox_strings_test.my",
+          "--force",
+          "--max-steps",
+          "1000000000",
+          "--timeout-ms",
+          "180000",
+          "--jobs",
+          "1",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final-qualification/qbe-stress/cache",
+          "--json",
+          "--mode",
+          "Debug",
+          "--gc-stress"
+        ],
+        "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003",
+        "env": {
+          "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final-qualification/tmp"
+        },
+        "started_utc": "2026-10-03T02:30:49.843497+00:00",
+        "status": 0,
+        "finished_utc": "2026-10-03T02:31:04.769879+00:00",
+        "stdout_sha256": "4790a2b6d261a889738ca8c9d05e7a596a5f8e7db4b17fe1a87821e04bb1046b",
+        "summary": {
+          "passed": 5,
+          "failed": 0,
+          "skipped": 0,
+          "cached": 0,
+          "executed": 5
+        },
+        "tests": [
+          {
+            "name": "lox_strings_test::test_fnv1a_a",
+            "status": "passed"
+          },
+          {
+            "name": "lox_strings_test::test_fnv1a_empty",
+            "status": "passed"
+          },
+          {
+            "name": "lox_strings_test::test_fnv1a_foobar",
+            "status": "passed"
+          },
+          {
+            "name": "lox_strings_test::test_intern_same_bytes_same_ref",
+            "status": "passed"
+          },
+          {
+            "name": "lox_strings_test::test_table_find_string",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "module": "parser_test.my",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/scripts/build-slot.sh",
+          "build",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/compiler-fixed/bin/mylang",
+          "test",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final/parser_test.my",
+          "--force",
+          "--max-steps",
+          "1000000000",
+          "--timeout-ms",
+          "180000",
+          "--jobs",
+          "1",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final-qualification/qbe-stress/cache",
+          "--json",
+          "--mode",
+          "Debug",
+          "--gc-stress"
+        ],
+        "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003",
+        "env": {
+          "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final-qualification/tmp"
+        },
+        "started_utc": "2026-10-03T02:31:04.770226+00:00",
+        "status": 0,
+        "finished_utc": "2026-10-03T02:31:14.916181+00:00",
+        "stdout_sha256": "987cc7fa93333c965f17d4c98f358f38f30322a284897f59736b3435d1f3c90f",
+        "summary": {
+          "passed": 5,
+          "failed": 0,
+          "skipped": 0,
+          "cached": 0,
+          "executed": 5
+        },
+        "tests": [
+          {
+            "name": "parser_test::test_parse_call_get_set",
+            "status": "passed"
+          },
+          {
+            "name": "parser_test::test_parse_error_recovery",
+            "status": "passed"
+          },
+          {
+            "name": "parser_test::test_parse_logical",
+            "status": "passed"
+          },
+          {
+            "name": "parser_test::test_parse_precedence",
+            "status": "passed"
+          },
+          {
+            "name": "parser_test::test_parse_unary_grouping",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "module": "resolver_test.my",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/scripts/build-slot.sh",
+          "build",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/compiler-fixed/bin/mylang",
+          "test",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final/resolver_test.my",
+          "--force",
+          "--max-steps",
+          "1000000000",
+          "--timeout-ms",
+          "180000",
+          "--jobs",
+          "1",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final-qualification/qbe-stress/cache",
+          "--json",
+          "--mode",
+          "Debug",
+          "--gc-stress"
+        ],
+        "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003",
+        "env": {
+          "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final-qualification/tmp"
+        },
+        "started_utc": "2026-10-03T02:31:14.916546+00:00",
+        "status": 0,
+        "finished_utc": "2026-10-03T02:31:30.092179+00:00",
+        "stdout_sha256": "7ed84080fb513044deaef9ae58f6fe1139c3100031fe7345f2ff9e4674f89d28",
+        "summary": {
+          "passed": 5,
+          "failed": 0,
+          "skipped": 0,
+          "cached": 0,
+          "executed": 5
+        },
+        "tests": [
+          {
+            "name": "resolver_test::test_resolve_duplicate_local",
+            "status": "passed"
+          },
+          {
+            "name": "resolver_test::test_resolve_own_initializer",
+            "status": "passed"
+          },
+          {
+            "name": "resolver_test::test_resolve_slot_counts",
+            "status": "passed"
+          },
+          {
+            "name": "resolver_test::test_resolve_this_outside_class",
+            "status": "passed"
+          },
+          {
+            "name": "resolver_test::test_resolve_top_level_return",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "module": "scanner_test.my",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/scripts/build-slot.sh",
+          "build",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/compiler-fixed/bin/mylang",
+          "test",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final/scanner_test.my",
+          "--force",
+          "--max-steps",
+          "1000000000",
+          "--timeout-ms",
+          "180000",
+          "--jobs",
+          "1",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final-qualification/qbe-stress/cache",
+          "--json",
+          "--mode",
+          "Debug",
+          "--gc-stress"
+        ],
+        "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003",
+        "env": {
+          "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final-qualification/tmp"
+        },
+        "started_utc": "2026-10-03T02:31:30.092773+00:00",
+        "status": 0,
+        "finished_utc": "2026-10-03T02:31:39.884907+00:00",
+        "stdout_sha256": "04a75225adff24fb1ad1985bae91ffa2218c26a05bc1180eca802f0f0201adcf",
+        "summary": {
+          "passed": 11,
+          "failed": 0,
+          "skipped": 0,
+          "cached": 0,
+          "executed": 11
+        },
+        "tests": [
+          {
+            "name": "scanner_test::test_scan_comments_and_lines",
+            "status": "passed"
+          },
+          {
+            "name": "scanner_test::test_scan_empty_source",
+            "status": "passed"
+          },
+          {
+            "name": "scanner_test::test_scan_identifiers",
+            "status": "passed"
+          },
+          {
+            "name": "scanner_test::test_scan_keywords",
+            "status": "passed"
+          },
+          {
+            "name": "scanner_test::test_scan_multiline_string_line",
+            "status": "passed"
+          },
+          {
+            "name": "scanner_test::test_scan_numbers",
+            "status": "passed"
+          },
+          {
+            "name": "scanner_test::test_scan_single_char_tokens",
+            "status": "passed"
+          },
+          {
+            "name": "scanner_test::test_scan_string",
+            "status": "passed"
+          },
+          {
+            "name": "scanner_test::test_scan_two_char_tokens",
+            "status": "passed"
+          },
+          {
+            "name": "scanner_test::test_scan_unexpected_character",
+            "status": "passed"
+          },
+          {
+            "name": "scanner_test::test_scan_unterminated_string",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "module": "table_test.my",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/scripts/build-slot.sh",
+          "build",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/compiler-fixed/bin/mylang",
+          "test",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final/table_test.my",
+          "--force",
+          "--max-steps",
+          "1000000000",
+          "--timeout-ms",
+          "180000",
+          "--jobs",
+          "1",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final-qualification/qbe-stress/cache",
+          "--json",
+          "--mode",
+          "Debug",
+          "--gc-stress"
+        ],
+        "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003",
+        "env": {
+          "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final-qualification/tmp"
+        },
+        "started_utc": "2026-10-03T02:31:39.885437+00:00",
+        "status": 0,
+        "finished_utc": "2026-10-03T02:31:54.845103+00:00",
+        "stdout_sha256": "95e3f2c31d914f045116b41c2187d8c4f6709004b68acd12c3c4101ef01b48d3",
+        "summary": {
+          "passed": 7,
+          "failed": 0,
+          "skipped": 0,
+          "cached": 0,
+          "executed": 7
+        },
+        "tests": [
+          {
+            "name": "table_test::test_table_add_all",
+            "status": "passed"
+          },
+          {
+            "name": "table_test::test_table_delete_leaves_tombstone",
+            "status": "passed"
+          },
+          {
+            "name": "table_test::test_table_grows_at_load_factor",
+            "status": "passed"
+          },
+          {
+            "name": "table_test::test_table_read_probe_wraparound_tombstones",
+            "status": "passed"
+          },
+          {
+            "name": "table_test::test_table_set_get",
+            "status": "passed"
+          },
+          {
+            "name": "table_test::test_table_set_reports_new_key",
+            "status": "passed"
+          },
+          {
+            "name": "table_test::test_table_tombstone_reuse",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "module": "value_test.my",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/scripts/build-slot.sh",
+          "build",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/compiler-fixed/bin/mylang",
+          "test",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final/value_test.my",
+          "--force",
+          "--max-steps",
+          "1000000000",
+          "--timeout-ms",
+          "180000",
+          "--jobs",
+          "1",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final-qualification/qbe-stress/cache",
+          "--json",
+          "--mode",
+          "Debug",
+          "--gc-stress"
+        ],
+        "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003",
+        "env": {
+          "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final-qualification/tmp"
+        },
+        "started_utc": "2026-10-03T02:31:54.845520+00:00",
+        "status": 0,
+        "finished_utc": "2026-10-03T02:32:04.837713+00:00",
+        "stdout_sha256": "6b52b0a04914163248df9ca449101a3a64ff50c012645ab3776dc8c3c18d30be",
+        "summary": {
+          "passed": 8,
+          "failed": 0,
+          "skipped": 0,
+          "cached": 0,
+          "executed": 8
+        },
+        "tests": [
+          {
+            "name": "value_test::test_format_fraction",
+            "status": "passed"
+          },
+          {
+            "name": "value_test::test_format_integer",
+            "status": "passed"
+          },
+          {
+            "name": "value_test::test_format_large",
+            "status": "passed"
+          },
+          {
+            "name": "value_test::test_format_small",
+            "status": "passed"
+          },
+          {
+            "name": "value_test::test_format_special",
+            "status": "passed"
+          },
+          {
+            "name": "value_test::test_format_zeros",
+            "status": "passed"
+          },
+          {
+            "name": "value_test::test_is_falsey_rules",
+            "status": "passed"
+          },
+          {
+            "name": "value_test::test_values_equal_rules",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "module": "driver_tests.my",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/scripts/build-slot.sh",
+          "build",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/compiler-fixed/bin/mylang",
+          "test",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final/driver_tests.my",
+          "--force",
+          "--max-steps",
+          "1000000000",
+          "--timeout-ms",
+          "180000",
+          "--jobs",
+          "1",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final-qualification/qbe-stress/cache",
+          "--json",
+          "--mode",
+          "Debug",
+          "--gc-stress",
+          "--cases",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final/driver_cases.json"
+        ],
+        "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003",
+        "env": {
+          "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final-qualification/tmp"
+        },
+        "started_utc": "2026-10-03T02:32:04.838135+00:00",
+        "status": 0,
+        "finished_utc": "2026-10-03T02:32:16.452970+00:00",
+        "stdout_sha256": "a192fbc3b845a19f1f1bdad1e8e11c390b47f76d1524dea856d01a0a6c4ce28b",
+        "summary": {
+          "passed": 24,
+          "failed": 0,
+          "skipped": 0,
+          "cached": 0,
+          "executed": 24
+        },
+        "tests": [
+          {
+            "name": "driver_tests::test_run_arithmetic",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_call_arguments_and_captured_parameter_roots",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_class_init_method",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_closure_counter",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_compile_error_status",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_error_after_child_returns",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_gc_stress_same_output",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_inheritance_super",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_print_value_kinds",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_property_field_shadows_inherited_method",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_property_lookup_survives_allocation_and_mutation",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_recursive_state_and_output_restore",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_runtime_error_trace",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_scalar_callee_class_error_order",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_scalar_callee_invalid_argument_order",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_scalar_callee_runtime_snapshot",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_scalar_stack_edges",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_scalar_stack_error_trace",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_set_rhs_keeps_original_receiver",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_set_rhs_keeps_receiver_mutations",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_shared_upvalue",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_stack_overflow",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_string_concat",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_upvalues_across_block_and_return",
+            "status": "passed"
+          }
+        ]
+      }
+    ],
+    "llvm-normal": [
+      {
+        "module": "compiler_test.my",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/scripts/build-slot.sh",
+          "build",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/compiler-fixed/bin/mylang",
+          "test",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final/compiler_test.my",
+          "--force",
+          "--max-steps",
+          "1000000000",
+          "--timeout-ms",
+          "180000",
+          "--jobs",
+          "1",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final-qualification/llvm-normal/cache",
+          "--json",
+          "--release"
+        ],
+        "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003",
+        "env": {
+          "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final-qualification/tmp"
+        },
+        "started_utc": "2026-10-03T02:32:16.455287+00:00",
+        "status": 0,
+        "finished_utc": "2026-10-03T02:32:43.150849+00:00",
+        "stdout_sha256": "2971011b97421ca9488071c318051d14bee50fd4a7b2ce4076e731ffd63095ab",
+        "summary": {
+          "passed": 6,
+          "failed": 0,
+          "skipped": 0,
+          "cached": 0,
+          "executed": 6
+        },
+        "tests": [
+          {
+            "name": "compiler_test::test_compile_error_message",
+            "status": "passed"
+          },
+          {
+            "name": "compiler_test::test_compile_global_definition",
+            "status": "passed"
+          },
+          {
+            "name": "compiler_test::test_compile_if_jumps",
+            "status": "passed"
+          },
+          {
+            "name": "compiler_test::test_compile_local_slots",
+            "status": "passed"
+          },
+          {
+            "name": "compiler_test::test_compile_print_addition",
+            "status": "passed"
+          },
+          {
+            "name": "compiler_test::test_compile_too_many_constants",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "module": "heap_test.my",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/scripts/build-slot.sh",
+          "build",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/compiler-fixed/bin/mylang",
+          "test",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final/heap_test.my",
+          "--force",
+          "--max-steps",
+          "1000000000",
+          "--timeout-ms",
+          "180000",
+          "--jobs",
+          "1",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final-qualification/llvm-normal/cache",
+          "--json",
+          "--release"
+        ],
+        "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003",
+        "env": {
+          "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final-qualification/tmp"
+        },
+        "started_utc": "2026-10-03T02:32:43.151293+00:00",
+        "status": 0,
+        "finished_utc": "2026-10-03T02:32:48.481972+00:00",
+        "stdout_sha256": "8b4e01eb89d70f3fc37c7d6f41d0a7da332f9527777a2aa9af1e39884e1e3da2",
+        "summary": {
+          "passed": 12,
+          "failed": 0,
+          "skipped": 0,
+          "cached": 0,
+          "executed": 12
+        },
+        "tests": [
+          {
+            "name": "heap_test::test_closure_arity_respects_runtime_snapshot",
+            "status": "passed"
+          },
+          {
+            "name": "heap_test::test_env_indexed_set_preserves_runtime_and_payload_snapshots",
+            "status": "passed"
+          },
+          {
+            "name": "heap_test::test_gc_frees_unreachable",
+            "status": "passed"
+          },
+          {
+            "name": "heap_test::test_gc_intern_table_is_weak",
+            "status": "passed"
+          },
+          {
+            "name": "heap_test::test_gc_reuses_free_slot",
+            "status": "passed"
+          },
+          {
+            "name": "heap_test::test_gc_stress_collects_each_allocation",
+            "status": "passed"
+          },
+          {
+            "name": "heap_test::test_gc_threshold_accounting",
+            "status": "passed"
+          },
+          {
+            "name": "heap_test::test_gc_traces_instance_fields",
+            "status": "passed"
+          },
+          {
+            "name": "heap_test::test_stack_full_capacity_and_negative_index_reads",
+            "status": "passed"
+          },
+          {
+            "name": "heap_test::test_stack_snapshot_survives_write",
+            "status": "passed"
+          },
+          {
+            "name": "heap_test::test_sweep_scalar_cost_at_allocation_threshold",
+            "status": "passed"
+          },
+          {
+            "name": "heap_test::test_sweep_scalar_cost_preserves_snapshots_and_reuse_order",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "module": "lox_strings_test.my",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/scripts/build-slot.sh",
+          "build",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/compiler-fixed/bin/mylang",
+          "test",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final/lox_strings_test.my",
+          "--force",
+          "--max-steps",
+          "1000000000",
+          "--timeout-ms",
+          "180000",
+          "--jobs",
+          "1",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final-qualification/llvm-normal/cache",
+          "--json",
+          "--release"
+        ],
+        "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003",
+        "env": {
+          "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final-qualification/tmp"
+        },
+        "started_utc": "2026-10-03T02:32:48.482354+00:00",
+        "status": 0,
+        "finished_utc": "2026-10-03T02:32:56.825325+00:00",
+        "stdout_sha256": "054f7837fb5fc41123a7cdff2d0343ef5525f6b0df4af50c2aec076784c0d7f9",
+        "summary": {
+          "passed": 5,
+          "failed": 0,
+          "skipped": 0,
+          "cached": 0,
+          "executed": 5
+        },
+        "tests": [
+          {
+            "name": "lox_strings_test::test_fnv1a_a",
+            "status": "passed"
+          },
+          {
+            "name": "lox_strings_test::test_fnv1a_empty",
+            "status": "passed"
+          },
+          {
+            "name": "lox_strings_test::test_fnv1a_foobar",
+            "status": "passed"
+          },
+          {
+            "name": "lox_strings_test::test_intern_same_bytes_same_ref",
+            "status": "passed"
+          },
+          {
+            "name": "lox_strings_test::test_table_find_string",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "module": "parser_test.my",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/scripts/build-slot.sh",
+          "build",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/compiler-fixed/bin/mylang",
+          "test",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final/parser_test.my",
+          "--force",
+          "--max-steps",
+          "1000000000",
+          "--timeout-ms",
+          "180000",
+          "--jobs",
+          "1",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final-qualification/llvm-normal/cache",
+          "--json",
+          "--release"
+        ],
+        "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003",
+        "env": {
+          "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final-qualification/tmp"
+        },
+        "started_utc": "2026-10-03T02:32:56.825624+00:00",
+        "status": 0,
+        "finished_utc": "2026-10-03T02:33:16.502817+00:00",
+        "stdout_sha256": "58baf882554c0170e9edb271df8411c1fb636ecfff654d63ea165d419bf20f2a",
+        "summary": {
+          "passed": 5,
+          "failed": 0,
+          "skipped": 0,
+          "cached": 0,
+          "executed": 5
+        },
+        "tests": [
+          {
+            "name": "parser_test::test_parse_call_get_set",
+            "status": "passed"
+          },
+          {
+            "name": "parser_test::test_parse_error_recovery",
+            "status": "passed"
+          },
+          {
+            "name": "parser_test::test_parse_logical",
+            "status": "passed"
+          },
+          {
+            "name": "parser_test::test_parse_precedence",
+            "status": "passed"
+          },
+          {
+            "name": "parser_test::test_parse_unary_grouping",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "module": "resolver_test.my",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/scripts/build-slot.sh",
+          "build",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/compiler-fixed/bin/mylang",
+          "test",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final/resolver_test.my",
+          "--force",
+          "--max-steps",
+          "1000000000",
+          "--timeout-ms",
+          "180000",
+          "--jobs",
+          "1",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final-qualification/llvm-normal/cache",
+          "--json",
+          "--release"
+        ],
+        "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003",
+        "env": {
+          "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final-qualification/tmp"
+        },
+        "started_utc": "2026-10-03T02:33:16.503491+00:00",
+        "status": 0,
+        "finished_utc": "2026-10-03T02:33:30.857775+00:00",
+        "stdout_sha256": "b2bbed360c221d48d60bbd8bca224f9458c2d53e93cc64ee1d1124ef4b47991b",
+        "summary": {
+          "passed": 5,
+          "failed": 0,
+          "skipped": 0,
+          "cached": 0,
+          "executed": 5
+        },
+        "tests": [
+          {
+            "name": "resolver_test::test_resolve_duplicate_local",
+            "status": "passed"
+          },
+          {
+            "name": "resolver_test::test_resolve_own_initializer",
+            "status": "passed"
+          },
+          {
+            "name": "resolver_test::test_resolve_slot_counts",
+            "status": "passed"
+          },
+          {
+            "name": "resolver_test::test_resolve_this_outside_class",
+            "status": "passed"
+          },
+          {
+            "name": "resolver_test::test_resolve_top_level_return",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "module": "scanner_test.my",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/scripts/build-slot.sh",
+          "build",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/compiler-fixed/bin/mylang",
+          "test",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final/scanner_test.my",
+          "--force",
+          "--max-steps",
+          "1000000000",
+          "--timeout-ms",
+          "180000",
+          "--jobs",
+          "1",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final-qualification/llvm-normal/cache",
+          "--json",
+          "--release"
+        ],
+        "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003",
+        "env": {
+          "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final-qualification/tmp"
+        },
+        "started_utc": "2026-10-03T02:33:30.858239+00:00",
+        "status": 0,
+        "finished_utc": "2026-10-03T02:33:46.876288+00:00",
+        "stdout_sha256": "dd0047e536559dce690a581083cbeb89f287754224d4a7ee215be7856f28e13a",
+        "summary": {
+          "passed": 11,
+          "failed": 0,
+          "skipped": 0,
+          "cached": 0,
+          "executed": 11
+        },
+        "tests": [
+          {
+            "name": "scanner_test::test_scan_comments_and_lines",
+            "status": "passed"
+          },
+          {
+            "name": "scanner_test::test_scan_empty_source",
+            "status": "passed"
+          },
+          {
+            "name": "scanner_test::test_scan_identifiers",
+            "status": "passed"
+          },
+          {
+            "name": "scanner_test::test_scan_keywords",
+            "status": "passed"
+          },
+          {
+            "name": "scanner_test::test_scan_multiline_string_line",
+            "status": "passed"
+          },
+          {
+            "name": "scanner_test::test_scan_numbers",
+            "status": "passed"
+          },
+          {
+            "name": "scanner_test::test_scan_single_char_tokens",
+            "status": "passed"
+          },
+          {
+            "name": "scanner_test::test_scan_string",
+            "status": "passed"
+          },
+          {
+            "name": "scanner_test::test_scan_two_char_tokens",
+            "status": "passed"
+          },
+          {
+            "name": "scanner_test::test_scan_unexpected_character",
+            "status": "passed"
+          },
+          {
+            "name": "scanner_test::test_scan_unterminated_string",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "module": "table_test.my",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/scripts/build-slot.sh",
+          "build",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/compiler-fixed/bin/mylang",
+          "test",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final/table_test.my",
+          "--force",
+          "--max-steps",
+          "1000000000",
+          "--timeout-ms",
+          "180000",
+          "--jobs",
+          "1",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final-qualification/llvm-normal/cache",
+          "--json",
+          "--release"
+        ],
+        "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003",
+        "env": {
+          "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final-qualification/tmp"
+        },
+        "started_utc": "2026-10-03T02:33:46.877623+00:00",
+        "status": 0,
+        "finished_utc": "2026-10-03T02:34:01.245118+00:00",
+        "stdout_sha256": "8d7b721a5b8179cf9cf3c8c3e0a33c9d876e6474c1259a81570754ffac3ca1f6",
+        "summary": {
+          "passed": 7,
+          "failed": 0,
+          "skipped": 0,
+          "cached": 0,
+          "executed": 7
+        },
+        "tests": [
+          {
+            "name": "table_test::test_table_add_all",
+            "status": "passed"
+          },
+          {
+            "name": "table_test::test_table_delete_leaves_tombstone",
+            "status": "passed"
+          },
+          {
+            "name": "table_test::test_table_grows_at_load_factor",
+            "status": "passed"
+          },
+          {
+            "name": "table_test::test_table_read_probe_wraparound_tombstones",
+            "status": "passed"
+          },
+          {
+            "name": "table_test::test_table_set_get",
+            "status": "passed"
+          },
+          {
+            "name": "table_test::test_table_set_reports_new_key",
+            "status": "passed"
+          },
+          {
+            "name": "table_test::test_table_tombstone_reuse",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "module": "value_test.my",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/scripts/build-slot.sh",
+          "build",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/compiler-fixed/bin/mylang",
+          "test",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final/value_test.my",
+          "--force",
+          "--max-steps",
+          "1000000000",
+          "--timeout-ms",
+          "180000",
+          "--jobs",
+          "1",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final-qualification/llvm-normal/cache",
+          "--json",
+          "--release"
+        ],
+        "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003",
+        "env": {
+          "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final-qualification/tmp"
+        },
+        "started_utc": "2026-10-03T02:34:01.245469+00:00",
+        "status": 0,
+        "finished_utc": "2026-10-03T02:34:10.995609+00:00",
+        "stdout_sha256": "d1dee9d00a5a611854cff23583b7c9e159bd1697cdc0e1c57c64f9b99b8c4f72",
+        "summary": {
+          "passed": 8,
+          "failed": 0,
+          "skipped": 0,
+          "cached": 0,
+          "executed": 8
+        },
+        "tests": [
+          {
+            "name": "value_test::test_format_fraction",
+            "status": "passed"
+          },
+          {
+            "name": "value_test::test_format_integer",
+            "status": "passed"
+          },
+          {
+            "name": "value_test::test_format_large",
+            "status": "passed"
+          },
+          {
+            "name": "value_test::test_format_small",
+            "status": "passed"
+          },
+          {
+            "name": "value_test::test_format_special",
+            "status": "passed"
+          },
+          {
+            "name": "value_test::test_format_zeros",
+            "status": "passed"
+          },
+          {
+            "name": "value_test::test_is_falsey_rules",
+            "status": "passed"
+          },
+          {
+            "name": "value_test::test_values_equal_rules",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "module": "driver_tests.my",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/scripts/build-slot.sh",
+          "build",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/compiler-fixed/bin/mylang",
+          "test",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final/driver_tests.my",
+          "--force",
+          "--max-steps",
+          "1000000000",
+          "--timeout-ms",
+          "180000",
+          "--jobs",
+          "1",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final-qualification/llvm-normal/cache",
+          "--json",
+          "--release",
+          "--cases",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final/driver_cases.json"
+        ],
+        "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003",
+        "env": {
+          "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final-qualification/tmp"
+        },
+        "started_utc": "2026-10-03T02:34:10.997328+00:00",
+        "status": 0,
+        "finished_utc": "2026-10-03T02:34:38.695898+00:00",
+        "stdout_sha256": "4e4796f7c465378cdecff6d78bb5307a932c995aac1d1c6ee2d1b0ce88ebb683",
+        "summary": {
+          "passed": 24,
+          "failed": 0,
+          "skipped": 0,
+          "cached": 0,
+          "executed": 24
+        },
+        "tests": [
+          {
+            "name": "driver_tests::test_run_arithmetic",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_call_arguments_and_captured_parameter_roots",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_class_init_method",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_closure_counter",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_compile_error_status",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_error_after_child_returns",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_gc_stress_same_output",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_inheritance_super",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_print_value_kinds",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_property_field_shadows_inherited_method",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_property_lookup_survives_allocation_and_mutation",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_recursive_state_and_output_restore",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_runtime_error_trace",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_scalar_callee_class_error_order",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_scalar_callee_invalid_argument_order",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_scalar_callee_runtime_snapshot",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_scalar_stack_edges",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_scalar_stack_error_trace",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_set_rhs_keeps_original_receiver",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_set_rhs_keeps_receiver_mutations",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_shared_upvalue",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_stack_overflow",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_string_concat",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_upvalues_across_block_and_return",
+            "status": "passed"
+          }
+        ]
+      }
+    ],
+    "llvm-stress": [
+      {
+        "module": "compiler_test.my",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/scripts/build-slot.sh",
+          "build",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/compiler-fixed/bin/mylang",
+          "test",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final/compiler_test.my",
+          "--force",
+          "--max-steps",
+          "1000000000",
+          "--timeout-ms",
+          "180000",
+          "--jobs",
+          "1",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final-qualification/llvm-stress/cache",
+          "--json",
+          "--release",
+          "--gc-stress"
+        ],
+        "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003",
+        "env": {
+          "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final-qualification/tmp"
+        },
+        "started_utc": "2026-10-03T02:32:26.793367+00:00",
+        "status": 0,
+        "finished_utc": "2026-10-03T02:32:46.209804+00:00",
+        "stdout_sha256": "4cdfb31980deb42301859e831a4f2835c2a428e5e90acb0dc2c80022966426cc",
+        "summary": {
+          "passed": 6,
+          "failed": 0,
+          "skipped": 0,
+          "cached": 0,
+          "executed": 6
+        },
+        "tests": [
+          {
+            "name": "compiler_test::test_compile_error_message",
+            "status": "passed"
+          },
+          {
+            "name": "compiler_test::test_compile_global_definition",
+            "status": "passed"
+          },
+          {
+            "name": "compiler_test::test_compile_if_jumps",
+            "status": "passed"
+          },
+          {
+            "name": "compiler_test::test_compile_local_slots",
+            "status": "passed"
+          },
+          {
+            "name": "compiler_test::test_compile_print_addition",
+            "status": "passed"
+          },
+          {
+            "name": "compiler_test::test_compile_too_many_constants",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "module": "heap_test.my",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/scripts/build-slot.sh",
+          "build",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/compiler-fixed/bin/mylang",
+          "test",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final/heap_test.my",
+          "--force",
+          "--max-steps",
+          "1000000000",
+          "--timeout-ms",
+          "180000",
+          "--jobs",
+          "1",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final-qualification/llvm-stress/cache",
+          "--json",
+          "--release",
+          "--gc-stress"
+        ],
+        "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003",
+        "env": {
+          "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final-qualification/tmp"
+        },
+        "started_utc": "2026-10-03T02:32:46.210328+00:00",
+        "status": 0,
+        "finished_utc": "2026-10-03T02:32:52.242020+00:00",
+        "stdout_sha256": "d3200b530a8f642a0122914c46a09a3ec0c90377d4304787eedbfcbccb31bf64",
+        "summary": {
+          "passed": 12,
+          "failed": 0,
+          "skipped": 0,
+          "cached": 0,
+          "executed": 12
+        },
+        "tests": [
+          {
+            "name": "heap_test::test_closure_arity_respects_runtime_snapshot",
+            "status": "passed"
+          },
+          {
+            "name": "heap_test::test_env_indexed_set_preserves_runtime_and_payload_snapshots",
+            "status": "passed"
+          },
+          {
+            "name": "heap_test::test_gc_frees_unreachable",
+            "status": "passed"
+          },
+          {
+            "name": "heap_test::test_gc_intern_table_is_weak",
+            "status": "passed"
+          },
+          {
+            "name": "heap_test::test_gc_reuses_free_slot",
+            "status": "passed"
+          },
+          {
+            "name": "heap_test::test_gc_stress_collects_each_allocation",
+            "status": "passed"
+          },
+          {
+            "name": "heap_test::test_gc_threshold_accounting",
+            "status": "passed"
+          },
+          {
+            "name": "heap_test::test_gc_traces_instance_fields",
+            "status": "passed"
+          },
+          {
+            "name": "heap_test::test_stack_full_capacity_and_negative_index_reads",
+            "status": "passed"
+          },
+          {
+            "name": "heap_test::test_stack_snapshot_survives_write",
+            "status": "passed"
+          },
+          {
+            "name": "heap_test::test_sweep_scalar_cost_at_allocation_threshold",
+            "status": "passed"
+          },
+          {
+            "name": "heap_test::test_sweep_scalar_cost_preserves_snapshots_and_reuse_order",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "module": "lox_strings_test.my",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/scripts/build-slot.sh",
+          "build",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/compiler-fixed/bin/mylang",
+          "test",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final/lox_strings_test.my",
+          "--force",
+          "--max-steps",
+          "1000000000",
+          "--timeout-ms",
+          "180000",
+          "--jobs",
+          "1",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final-qualification/llvm-stress/cache",
+          "--json",
+          "--release",
+          "--gc-stress"
+        ],
+        "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003",
+        "env": {
+          "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final-qualification/tmp"
+        },
+        "started_utc": "2026-10-03T02:32:52.242562+00:00",
+        "status": 0,
+        "finished_utc": "2026-10-03T02:33:01.143175+00:00",
+        "stdout_sha256": "2e5738c126f0487ef7b4b6a67313b64201036a6c358d5bb81d7a48749e9897ad",
+        "summary": {
+          "passed": 5,
+          "failed": 0,
+          "skipped": 0,
+          "cached": 0,
+          "executed": 5
+        },
+        "tests": [
+          {
+            "name": "lox_strings_test::test_fnv1a_a",
+            "status": "passed"
+          },
+          {
+            "name": "lox_strings_test::test_fnv1a_empty",
+            "status": "passed"
+          },
+          {
+            "name": "lox_strings_test::test_fnv1a_foobar",
+            "status": "passed"
+          },
+          {
+            "name": "lox_strings_test::test_intern_same_bytes_same_ref",
+            "status": "passed"
+          },
+          {
+            "name": "lox_strings_test::test_table_find_string",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "module": "parser_test.my",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/scripts/build-slot.sh",
+          "build",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/compiler-fixed/bin/mylang",
+          "test",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final/parser_test.my",
+          "--force",
+          "--max-steps",
+          "1000000000",
+          "--timeout-ms",
+          "180000",
+          "--jobs",
+          "1",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final-qualification/llvm-stress/cache",
+          "--json",
+          "--release",
+          "--gc-stress"
+        ],
+        "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003",
+        "env": {
+          "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final-qualification/tmp"
+        },
+        "started_utc": "2026-10-03T02:33:01.144147+00:00",
+        "status": 0,
+        "finished_utc": "2026-10-03T02:33:17.806158+00:00",
+        "stdout_sha256": "a1427177180ac62e4bbaafcfd302c99de41f3b21eb2e2cb5391b6c9f4343d9b0",
+        "summary": {
+          "passed": 5,
+          "failed": 0,
+          "skipped": 0,
+          "cached": 0,
+          "executed": 5
+        },
+        "tests": [
+          {
+            "name": "parser_test::test_parse_call_get_set",
+            "status": "passed"
+          },
+          {
+            "name": "parser_test::test_parse_error_recovery",
+            "status": "passed"
+          },
+          {
+            "name": "parser_test::test_parse_logical",
+            "status": "passed"
+          },
+          {
+            "name": "parser_test::test_parse_precedence",
+            "status": "passed"
+          },
+          {
+            "name": "parser_test::test_parse_unary_grouping",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "module": "resolver_test.my",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/scripts/build-slot.sh",
+          "build",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/compiler-fixed/bin/mylang",
+          "test",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final/resolver_test.my",
+          "--force",
+          "--max-steps",
+          "1000000000",
+          "--timeout-ms",
+          "180000",
+          "--jobs",
+          "1",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final-qualification/llvm-stress/cache",
+          "--json",
+          "--release",
+          "--gc-stress"
+        ],
+        "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003",
+        "env": {
+          "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final-qualification/tmp"
+        },
+        "started_utc": "2026-10-03T02:33:17.806700+00:00",
+        "status": 0,
+        "finished_utc": "2026-10-03T02:33:33.065734+00:00",
+        "stdout_sha256": "ba7d9612deccd8b7e560438456b19e909c60d08a6939eb315ea027e70a414bdf",
+        "summary": {
+          "passed": 5,
+          "failed": 0,
+          "skipped": 0,
+          "cached": 0,
+          "executed": 5
+        },
+        "tests": [
+          {
+            "name": "resolver_test::test_resolve_duplicate_local",
+            "status": "passed"
+          },
+          {
+            "name": "resolver_test::test_resolve_own_initializer",
+            "status": "passed"
+          },
+          {
+            "name": "resolver_test::test_resolve_slot_counts",
+            "status": "passed"
+          },
+          {
+            "name": "resolver_test::test_resolve_this_outside_class",
+            "status": "passed"
+          },
+          {
+            "name": "resolver_test::test_resolve_top_level_return",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "module": "scanner_test.my",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/scripts/build-slot.sh",
+          "build",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/compiler-fixed/bin/mylang",
+          "test",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final/scanner_test.my",
+          "--force",
+          "--max-steps",
+          "1000000000",
+          "--timeout-ms",
+          "180000",
+          "--jobs",
+          "1",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final-qualification/llvm-stress/cache",
+          "--json",
+          "--release",
+          "--gc-stress"
+        ],
+        "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003",
+        "env": {
+          "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final-qualification/tmp"
+        },
+        "started_utc": "2026-10-03T02:33:33.067678+00:00",
+        "status": 0,
+        "finished_utc": "2026-10-03T02:33:51.397227+00:00",
+        "stdout_sha256": "87b2cc5a1921ef79c5b8e2ff2d6b91437e29eaad88523cb12d01ff6f94b553dd",
+        "summary": {
+          "passed": 11,
+          "failed": 0,
+          "skipped": 0,
+          "cached": 0,
+          "executed": 11
+        },
+        "tests": [
+          {
+            "name": "scanner_test::test_scan_comments_and_lines",
+            "status": "passed"
+          },
+          {
+            "name": "scanner_test::test_scan_empty_source",
+            "status": "passed"
+          },
+          {
+            "name": "scanner_test::test_scan_identifiers",
+            "status": "passed"
+          },
+          {
+            "name": "scanner_test::test_scan_keywords",
+            "status": "passed"
+          },
+          {
+            "name": "scanner_test::test_scan_multiline_string_line",
+            "status": "passed"
+          },
+          {
+            "name": "scanner_test::test_scan_numbers",
+            "status": "passed"
+          },
+          {
+            "name": "scanner_test::test_scan_single_char_tokens",
+            "status": "passed"
+          },
+          {
+            "name": "scanner_test::test_scan_string",
+            "status": "passed"
+          },
+          {
+            "name": "scanner_test::test_scan_two_char_tokens",
+            "status": "passed"
+          },
+          {
+            "name": "scanner_test::test_scan_unexpected_character",
+            "status": "passed"
+          },
+          {
+            "name": "scanner_test::test_scan_unterminated_string",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "module": "table_test.my",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/scripts/build-slot.sh",
+          "build",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/compiler-fixed/bin/mylang",
+          "test",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final/table_test.my",
+          "--force",
+          "--max-steps",
+          "1000000000",
+          "--timeout-ms",
+          "180000",
+          "--jobs",
+          "1",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final-qualification/llvm-stress/cache",
+          "--json",
+          "--release",
+          "--gc-stress"
+        ],
+        "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003",
+        "env": {
+          "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final-qualification/tmp"
+        },
+        "started_utc": "2026-10-03T02:33:51.397647+00:00",
+        "status": 0,
+        "finished_utc": "2026-10-03T02:34:06.013786+00:00",
+        "stdout_sha256": "515136376a51f7b63ad213b0eea3f5ef928a2dd3b81c4d24716df415507bcf95",
+        "summary": {
+          "passed": 7,
+          "failed": 0,
+          "skipped": 0,
+          "cached": 0,
+          "executed": 7
+        },
+        "tests": [
+          {
+            "name": "table_test::test_table_add_all",
+            "status": "passed"
+          },
+          {
+            "name": "table_test::test_table_delete_leaves_tombstone",
+            "status": "passed"
+          },
+          {
+            "name": "table_test::test_table_grows_at_load_factor",
+            "status": "passed"
+          },
+          {
+            "name": "table_test::test_table_read_probe_wraparound_tombstones",
+            "status": "passed"
+          },
+          {
+            "name": "table_test::test_table_set_get",
+            "status": "passed"
+          },
+          {
+            "name": "table_test::test_table_set_reports_new_key",
+            "status": "passed"
+          },
+          {
+            "name": "table_test::test_table_tombstone_reuse",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "module": "value_test.my",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/scripts/build-slot.sh",
+          "build",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/compiler-fixed/bin/mylang",
+          "test",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final/value_test.my",
+          "--force",
+          "--max-steps",
+          "1000000000",
+          "--timeout-ms",
+          "180000",
+          "--jobs",
+          "1",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final-qualification/llvm-stress/cache",
+          "--json",
+          "--release",
+          "--gc-stress"
+        ],
+        "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003",
+        "env": {
+          "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final-qualification/tmp"
+        },
+        "started_utc": "2026-10-03T02:34:06.014507+00:00",
+        "status": 0,
+        "finished_utc": "2026-10-03T02:34:21.132559+00:00",
+        "stdout_sha256": "e76796e60a904f3ed085b9488d9da8df2ac8a382e74145137bc259cc77c61e1c",
+        "summary": {
+          "passed": 8,
+          "failed": 0,
+          "skipped": 0,
+          "cached": 0,
+          "executed": 8
+        },
+        "tests": [
+          {
+            "name": "value_test::test_format_fraction",
+            "status": "passed"
+          },
+          {
+            "name": "value_test::test_format_integer",
+            "status": "passed"
+          },
+          {
+            "name": "value_test::test_format_large",
+            "status": "passed"
+          },
+          {
+            "name": "value_test::test_format_small",
+            "status": "passed"
+          },
+          {
+            "name": "value_test::test_format_special",
+            "status": "passed"
+          },
+          {
+            "name": "value_test::test_format_zeros",
+            "status": "passed"
+          },
+          {
+            "name": "value_test::test_is_falsey_rules",
+            "status": "passed"
+          },
+          {
+            "name": "value_test::test_values_equal_rules",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "module": "driver_tests.my",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/scripts/build-slot.sh",
+          "build",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/compiler-fixed/bin/mylang",
+          "test",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final/driver_tests.my",
+          "--force",
+          "--max-steps",
+          "1000000000",
+          "--timeout-ms",
+          "180000",
+          "--jobs",
+          "1",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final-qualification/llvm-stress/cache",
+          "--json",
+          "--release",
+          "--gc-stress",
+          "--cases",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final/driver_cases.json"
+        ],
+        "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003",
+        "env": {
+          "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final-qualification/tmp"
+        },
+        "started_utc": "2026-10-03T02:34:21.132925+00:00",
+        "status": 0,
+        "finished_utc": "2026-10-03T02:34:39.397938+00:00",
+        "stdout_sha256": "82a20b22d90d226610641a025cac192bb18c7132c3190b0a82a693428c272d74",
+        "summary": {
+          "passed": 24,
+          "failed": 0,
+          "skipped": 0,
+          "cached": 0,
+          "executed": 24
+        },
+        "tests": [
+          {
+            "name": "driver_tests::test_run_arithmetic",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_call_arguments_and_captured_parameter_roots",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_class_init_method",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_closure_counter",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_compile_error_status",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_error_after_child_returns",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_gc_stress_same_output",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_inheritance_super",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_print_value_kinds",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_property_field_shadows_inherited_method",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_property_lookup_survives_allocation_and_mutation",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_recursive_state_and_output_restore",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_runtime_error_trace",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_scalar_callee_class_error_order",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_scalar_callee_invalid_argument_order",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_scalar_callee_runtime_snapshot",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_scalar_stack_edges",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_scalar_stack_error_trace",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_set_rhs_keeps_original_receiver",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_set_rhs_keeps_receiver_mutations",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_shared_upvalue",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_stack_overflow",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_string_concat",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_upvalues_across_block_and_return",
+            "status": "passed"
+          }
+        ]
+      }
+    ],
+    "qbe-normal": [
+      {
+        "module": "compiler_test.my",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/scripts/build-slot.sh",
+          "build",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/compiler-fixed/bin/mylang",
+          "test",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final/compiler_test.my",
+          "--force",
+          "--max-steps",
+          "1000000000",
+          "--timeout-ms",
+          "180000",
+          "--jobs",
+          "1",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final-qualification/qbe-normal/cache",
+          "--json",
+          "--mode",
+          "Debug"
+        ],
+        "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003",
+        "env": {
+          "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final-qualification/tmp"
+        },
+        "started_utc": "2026-10-03T02:30:34.405326+00:00",
+        "status": 0,
+        "finished_utc": "2026-10-03T02:30:41.146775+00:00",
+        "stdout_sha256": "0304cf4aa2851f35f6938391a12a043aa157a5c6af92708740f77783a0f111b3",
+        "summary": {
+          "passed": 6,
+          "failed": 0,
+          "skipped": 0,
+          "cached": 0,
+          "executed": 6
+        },
+        "tests": [
+          {
+            "name": "compiler_test::test_compile_error_message",
+            "status": "passed"
+          },
+          {
+            "name": "compiler_test::test_compile_global_definition",
+            "status": "passed"
+          },
+          {
+            "name": "compiler_test::test_compile_if_jumps",
+            "status": "passed"
+          },
+          {
+            "name": "compiler_test::test_compile_local_slots",
+            "status": "passed"
+          },
+          {
+            "name": "compiler_test::test_compile_print_addition",
+            "status": "passed"
+          },
+          {
+            "name": "compiler_test::test_compile_too_many_constants",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "module": "heap_test.my",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/scripts/build-slot.sh",
+          "build",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/compiler-fixed/bin/mylang",
+          "test",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final/heap_test.my",
+          "--force",
+          "--max-steps",
+          "1000000000",
+          "--timeout-ms",
+          "180000",
+          "--jobs",
+          "1",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final-qualification/qbe-normal/cache",
+          "--json",
+          "--mode",
+          "Debug"
+        ],
+        "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003",
+        "env": {
+          "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final-qualification/tmp"
+        },
+        "started_utc": "2026-10-03T02:30:41.147884+00:00",
+        "status": 0,
+        "finished_utc": "2026-10-03T02:30:55.118067+00:00",
+        "stdout_sha256": "a2984b6f1f76d739705be4a7590bb5834e3763d0d31039b31f9ac99ee2d96a61",
+        "summary": {
+          "passed": 12,
+          "failed": 0,
+          "skipped": 0,
+          "cached": 0,
+          "executed": 12
+        },
+        "tests": [
+          {
+            "name": "heap_test::test_closure_arity_respects_runtime_snapshot",
+            "status": "passed"
+          },
+          {
+            "name": "heap_test::test_env_indexed_set_preserves_runtime_and_payload_snapshots",
+            "status": "passed"
+          },
+          {
+            "name": "heap_test::test_gc_frees_unreachable",
+            "status": "passed"
+          },
+          {
+            "name": "heap_test::test_gc_intern_table_is_weak",
+            "status": "passed"
+          },
+          {
+            "name": "heap_test::test_gc_reuses_free_slot",
+            "status": "passed"
+          },
+          {
+            "name": "heap_test::test_gc_stress_collects_each_allocation",
+            "status": "passed"
+          },
+          {
+            "name": "heap_test::test_gc_threshold_accounting",
+            "status": "passed"
+          },
+          {
+            "name": "heap_test::test_gc_traces_instance_fields",
+            "status": "passed"
+          },
+          {
+            "name": "heap_test::test_stack_full_capacity_and_negative_index_reads",
+            "status": "passed"
+          },
+          {
+            "name": "heap_test::test_stack_snapshot_survives_write",
+            "status": "passed"
+          },
+          {
+            "name": "heap_test::test_sweep_scalar_cost_at_allocation_threshold",
+            "status": "passed"
+          },
+          {
+            "name": "heap_test::test_sweep_scalar_cost_preserves_snapshots_and_reuse_order",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "module": "lox_strings_test.my",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/scripts/build-slot.sh",
+          "build",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/compiler-fixed/bin/mylang",
+          "test",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final/lox_strings_test.my",
+          "--force",
+          "--max-steps",
+          "1000000000",
+          "--timeout-ms",
+          "180000",
+          "--jobs",
+          "1",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final-qualification/qbe-normal/cache",
+          "--json",
+          "--mode",
+          "Debug"
+        ],
+        "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003",
+        "env": {
+          "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final-qualification/tmp"
+        },
+        "started_utc": "2026-10-03T02:30:55.118548+00:00",
+        "status": 0,
+        "finished_utc": "2026-10-03T02:31:10.035110+00:00",
+        "stdout_sha256": "0a167c7e2c789af620199f5a0ad1218d58f7029a78fa48d7e9a958c9a9bf61dc",
+        "summary": {
+          "passed": 5,
+          "failed": 0,
+          "skipped": 0,
+          "cached": 0,
+          "executed": 5
+        },
+        "tests": [
+          {
+            "name": "lox_strings_test::test_fnv1a_a",
+            "status": "passed"
+          },
+          {
+            "name": "lox_strings_test::test_fnv1a_empty",
+            "status": "passed"
+          },
+          {
+            "name": "lox_strings_test::test_fnv1a_foobar",
+            "status": "passed"
+          },
+          {
+            "name": "lox_strings_test::test_intern_same_bytes_same_ref",
+            "status": "passed"
+          },
+          {
+            "name": "lox_strings_test::test_table_find_string",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "module": "parser_test.my",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/scripts/build-slot.sh",
+          "build",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/compiler-fixed/bin/mylang",
+          "test",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final/parser_test.my",
+          "--force",
+          "--max-steps",
+          "1000000000",
+          "--timeout-ms",
+          "180000",
+          "--jobs",
+          "1",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final-qualification/qbe-normal/cache",
+          "--json",
+          "--mode",
+          "Debug"
+        ],
+        "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003",
+        "env": {
+          "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final-qualification/tmp"
+        },
+        "started_utc": "2026-10-03T02:31:10.035466+00:00",
+        "status": 0,
+        "finished_utc": "2026-10-03T02:31:20.543147+00:00",
+        "stdout_sha256": "53bc559a8b553e7f84848413d053b91dbe8faba57450bb131ecc66f08e33ec29",
+        "summary": {
+          "passed": 5,
+          "failed": 0,
+          "skipped": 0,
+          "cached": 0,
+          "executed": 5
+        },
+        "tests": [
+          {
+            "name": "parser_test::test_parse_call_get_set",
+            "status": "passed"
+          },
+          {
+            "name": "parser_test::test_parse_error_recovery",
+            "status": "passed"
+          },
+          {
+            "name": "parser_test::test_parse_logical",
+            "status": "passed"
+          },
+          {
+            "name": "parser_test::test_parse_precedence",
+            "status": "passed"
+          },
+          {
+            "name": "parser_test::test_parse_unary_grouping",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "module": "resolver_test.my",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/scripts/build-slot.sh",
+          "build",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/compiler-fixed/bin/mylang",
+          "test",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final/resolver_test.my",
+          "--force",
+          "--max-steps",
+          "1000000000",
+          "--timeout-ms",
+          "180000",
+          "--jobs",
+          "1",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final-qualification/qbe-normal/cache",
+          "--json",
+          "--mode",
+          "Debug"
+        ],
+        "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003",
+        "env": {
+          "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final-qualification/tmp"
+        },
+        "started_utc": "2026-10-03T02:31:20.544262+00:00",
+        "status": 0,
+        "finished_utc": "2026-10-03T02:31:35.910112+00:00",
+        "stdout_sha256": "c1c08bafcd19e18370a9b9cb6f5809836ed56c53ec0251b1499c9ce4cde3c29b",
+        "summary": {
+          "passed": 5,
+          "failed": 0,
+          "skipped": 0,
+          "cached": 0,
+          "executed": 5
+        },
+        "tests": [
+          {
+            "name": "resolver_test::test_resolve_duplicate_local",
+            "status": "passed"
+          },
+          {
+            "name": "resolver_test::test_resolve_own_initializer",
+            "status": "passed"
+          },
+          {
+            "name": "resolver_test::test_resolve_slot_counts",
+            "status": "passed"
+          },
+          {
+            "name": "resolver_test::test_resolve_this_outside_class",
+            "status": "passed"
+          },
+          {
+            "name": "resolver_test::test_resolve_top_level_return",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "module": "scanner_test.my",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/scripts/build-slot.sh",
+          "build",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/compiler-fixed/bin/mylang",
+          "test",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final/scanner_test.my",
+          "--force",
+          "--max-steps",
+          "1000000000",
+          "--timeout-ms",
+          "180000",
+          "--jobs",
+          "1",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final-qualification/qbe-normal/cache",
+          "--json",
+          "--mode",
+          "Debug"
+        ],
+        "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003",
+        "env": {
+          "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final-qualification/tmp"
+        },
+        "started_utc": "2026-10-03T02:31:35.910682+00:00",
+        "status": 0,
+        "finished_utc": "2026-10-03T02:31:45.054784+00:00",
+        "stdout_sha256": "61c0d7c5a6ba227a10acc6f28b34be273417309f60b26c903ebd115b966f5e3d",
+        "summary": {
+          "passed": 11,
+          "failed": 0,
+          "skipped": 0,
+          "cached": 0,
+          "executed": 11
+        },
+        "tests": [
+          {
+            "name": "scanner_test::test_scan_comments_and_lines",
+            "status": "passed"
+          },
+          {
+            "name": "scanner_test::test_scan_empty_source",
+            "status": "passed"
+          },
+          {
+            "name": "scanner_test::test_scan_identifiers",
+            "status": "passed"
+          },
+          {
+            "name": "scanner_test::test_scan_keywords",
+            "status": "passed"
+          },
+          {
+            "name": "scanner_test::test_scan_multiline_string_line",
+            "status": "passed"
+          },
+          {
+            "name": "scanner_test::test_scan_numbers",
+            "status": "passed"
+          },
+          {
+            "name": "scanner_test::test_scan_single_char_tokens",
+            "status": "passed"
+          },
+          {
+            "name": "scanner_test::test_scan_string",
+            "status": "passed"
+          },
+          {
+            "name": "scanner_test::test_scan_two_char_tokens",
+            "status": "passed"
+          },
+          {
+            "name": "scanner_test::test_scan_unexpected_character",
+            "status": "passed"
+          },
+          {
+            "name": "scanner_test::test_scan_unterminated_string",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "module": "table_test.my",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/scripts/build-slot.sh",
+          "build",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/compiler-fixed/bin/mylang",
+          "test",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final/table_test.my",
+          "--force",
+          "--max-steps",
+          "1000000000",
+          "--timeout-ms",
+          "180000",
+          "--jobs",
+          "1",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final-qualification/qbe-normal/cache",
+          "--json",
+          "--mode",
+          "Debug"
+        ],
+        "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003",
+        "env": {
+          "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final-qualification/tmp"
+        },
+        "started_utc": "2026-10-03T02:31:45.055209+00:00",
+        "status": 0,
+        "finished_utc": "2026-10-03T02:31:59.862106+00:00",
+        "stdout_sha256": "1d8908c6c3a39965343c29994642dfc05571c5c5c8c067c0bd5173d7874142c3",
+        "summary": {
+          "passed": 7,
+          "failed": 0,
+          "skipped": 0,
+          "cached": 0,
+          "executed": 7
+        },
+        "tests": [
+          {
+            "name": "table_test::test_table_add_all",
+            "status": "passed"
+          },
+          {
+            "name": "table_test::test_table_delete_leaves_tombstone",
+            "status": "passed"
+          },
+          {
+            "name": "table_test::test_table_grows_at_load_factor",
+            "status": "passed"
+          },
+          {
+            "name": "table_test::test_table_read_probe_wraparound_tombstones",
+            "status": "passed"
+          },
+          {
+            "name": "table_test::test_table_set_get",
+            "status": "passed"
+          },
+          {
+            "name": "table_test::test_table_set_reports_new_key",
+            "status": "passed"
+          },
+          {
+            "name": "table_test::test_table_tombstone_reuse",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "module": "value_test.my",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/scripts/build-slot.sh",
+          "build",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/compiler-fixed/bin/mylang",
+          "test",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final/value_test.my",
+          "--force",
+          "--max-steps",
+          "1000000000",
+          "--timeout-ms",
+          "180000",
+          "--jobs",
+          "1",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final-qualification/qbe-normal/cache",
+          "--json",
+          "--mode",
+          "Debug"
+        ],
+        "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003",
+        "env": {
+          "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final-qualification/tmp"
+        },
+        "started_utc": "2026-10-03T02:31:59.862477+00:00",
+        "status": 0,
+        "finished_utc": "2026-10-03T02:32:09.862934+00:00",
+        "stdout_sha256": "8d5e8002b99221cb106e988262d42b6760fb2c6dd3c4ab1054ea3900c41bbdee",
+        "summary": {
+          "passed": 8,
+          "failed": 0,
+          "skipped": 0,
+          "cached": 0,
+          "executed": 8
+        },
+        "tests": [
+          {
+            "name": "value_test::test_format_fraction",
+            "status": "passed"
+          },
+          {
+            "name": "value_test::test_format_integer",
+            "status": "passed"
+          },
+          {
+            "name": "value_test::test_format_large",
+            "status": "passed"
+          },
+          {
+            "name": "value_test::test_format_small",
+            "status": "passed"
+          },
+          {
+            "name": "value_test::test_format_special",
+            "status": "passed"
+          },
+          {
+            "name": "value_test::test_format_zeros",
+            "status": "passed"
+          },
+          {
+            "name": "value_test::test_is_falsey_rules",
+            "status": "passed"
+          },
+          {
+            "name": "value_test::test_values_equal_rules",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "module": "driver_tests.my",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/scripts/build-slot.sh",
+          "build",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/compiler-fixed/bin/mylang",
+          "test",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final/driver_tests.my",
+          "--force",
+          "--max-steps",
+          "1000000000",
+          "--timeout-ms",
+          "180000",
+          "--jobs",
+          "1",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final-qualification/qbe-normal/cache",
+          "--json",
+          "--mode",
+          "Debug",
+          "--cases",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final/driver_cases.json"
+        ],
+        "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003",
+        "env": {
+          "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final-qualification/tmp"
+        },
+        "started_utc": "2026-10-03T02:32:09.863866+00:00",
+        "status": 0,
+        "finished_utc": "2026-10-03T02:32:26.791372+00:00",
+        "stdout_sha256": "56df349e4900a64dce072e37f115d788c48d58e4f83641127ce2f8e1936a2f01",
+        "summary": {
+          "passed": 24,
+          "failed": 0,
+          "skipped": 0,
+          "cached": 0,
+          "executed": 24
+        },
+        "tests": [
+          {
+            "name": "driver_tests::test_run_arithmetic",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_call_arguments_and_captured_parameter_roots",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_class_init_method",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_closure_counter",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_compile_error_status",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_error_after_child_returns",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_gc_stress_same_output",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_inheritance_super",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_print_value_kinds",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_property_field_shadows_inherited_method",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_property_lookup_survives_allocation_and_mutation",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_recursive_state_and_output_restore",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_runtime_error_trace",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_scalar_callee_class_error_order",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_scalar_callee_invalid_argument_order",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_scalar_callee_runtime_snapshot",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_scalar_stack_edges",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_scalar_stack_error_trace",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_set_rhs_keeps_original_receiver",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_set_rhs_keeps_receiver_mutations",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_shared_upvalue",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_stack_overflow",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_string_concat",
+            "status": "passed"
+          },
+          {
+            "name": "driver_tests::test_run_upvalues_across_block_and_return",
+            "status": "passed"
+          }
+        ]
+      }
+    ]
+  }
+}

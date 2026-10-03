@@ -1,0 +1,839 @@
+{
+  "candidate_comparisons": 1168,
+  "configs": [
+    "checked RC",
+    "ordinary tracing GC",
+    "native tracing GC stress"
+  ],
+  "engines": [
+    "vm",
+    "tree"
+  ],
+  "backends": [
+    "LLVM O3/full LTO",
+    "QBE default"
+  ],
+  "lox_gc_stress": [
+    false,
+    true
+  ],
+  "intentionally_unrun": [
+    {
+      "name": "binary_trees",
+      "tier": "smoke",
+      "engine": "tree",
+      "arm": "scalar-gc-llvm",
+      "lox_gc_stress": false,
+      "native_gc_stress": true,
+      "source_sha256": "823309b0e6545297fb391efc08fc4ef1cd134d18e270f3b7b0058a12ea0c8aaf",
+      "unrun_reason": "bounded native stress; selected allocation/property/closure cases cover collector roots"
+    },
+    {
+      "name": "binary_trees",
+      "tier": "smoke",
+      "engine": "tree",
+      "arm": "scalar-gc-llvm",
+      "lox_gc_stress": true,
+      "native_gc_stress": true,
+      "source_sha256": "823309b0e6545297fb391efc08fc4ef1cd134d18e270f3b7b0058a12ea0c8aaf",
+      "unrun_reason": "bounded native stress; selected allocation/property/closure cases cover collector roots"
+    },
+    {
+      "name": "binary_trees",
+      "tier": "smoke",
+      "engine": "tree",
+      "arm": "scalar-gc-qbe",
+      "lox_gc_stress": false,
+      "native_gc_stress": true,
+      "source_sha256": "823309b0e6545297fb391efc08fc4ef1cd134d18e270f3b7b0058a12ea0c8aaf",
+      "unrun_reason": "bounded native stress; selected allocation/property/closure cases cover collector roots"
+    },
+    {
+      "name": "binary_trees",
+      "tier": "smoke",
+      "engine": "tree",
+      "arm": "scalar-gc-qbe",
+      "lox_gc_stress": true,
+      "native_gc_stress": true,
+      "source_sha256": "823309b0e6545297fb391efc08fc4ef1cd134d18e270f3b7b0058a12ea0c8aaf",
+      "unrun_reason": "bounded native stress; selected allocation/property/closure cases cover collector roots"
+    },
+    {
+      "name": "binary_trees",
+      "tier": "smoke",
+      "engine": "vm",
+      "arm": "scalar-gc-llvm",
+      "lox_gc_stress": false,
+      "native_gc_stress": true,
+      "source_sha256": "823309b0e6545297fb391efc08fc4ef1cd134d18e270f3b7b0058a12ea0c8aaf",
+      "unrun_reason": "bounded native stress; selected allocation/property/closure cases cover collector roots"
+    },
+    {
+      "name": "binary_trees",
+      "tier": "smoke",
+      "engine": "vm",
+      "arm": "scalar-gc-llvm",
+      "lox_gc_stress": true,
+      "native_gc_stress": true,
+      "source_sha256": "823309b0e6545297fb391efc08fc4ef1cd134d18e270f3b7b0058a12ea0c8aaf",
+      "unrun_reason": "bounded native stress; selected allocation/property/closure cases cover collector roots"
+    },
+    {
+      "name": "binary_trees",
+      "tier": "smoke",
+      "engine": "vm",
+      "arm": "scalar-gc-qbe",
+      "lox_gc_stress": false,
+      "native_gc_stress": true,
+      "source_sha256": "823309b0e6545297fb391efc08fc4ef1cd134d18e270f3b7b0058a12ea0c8aaf",
+      "unrun_reason": "bounded native stress; selected allocation/property/closure cases cover collector roots"
+    },
+    {
+      "name": "binary_trees",
+      "tier": "smoke",
+      "engine": "vm",
+      "arm": "scalar-gc-qbe",
+      "lox_gc_stress": true,
+      "native_gc_stress": true,
+      "source_sha256": "823309b0e6545297fb391efc08fc4ef1cd134d18e270f3b7b0058a12ea0c8aaf",
+      "unrun_reason": "bounded native stress; selected allocation/property/closure cases cover collector roots"
+    },
+    {
+      "name": "equality",
+      "tier": "smoke",
+      "engine": "tree",
+      "arm": "scalar-gc-llvm",
+      "lox_gc_stress": false,
+      "native_gc_stress": true,
+      "source_sha256": "53bc66293aabe6b1a83ebf51224d2d7e78a1dfa4c2524812b8b7602a74ad66d1",
+      "unrun_reason": "bounded native stress; selected allocation/property/closure cases cover collector roots"
+    },
+    {
+      "name": "equality",
+      "tier": "smoke",
+      "engine": "tree",
+      "arm": "scalar-gc-llvm",
+      "lox_gc_stress": true,
+      "native_gc_stress": true,
+      "source_sha256": "53bc66293aabe6b1a83ebf51224d2d7e78a1dfa4c2524812b8b7602a74ad66d1",
+      "unrun_reason": "bounded native stress; selected allocation/property/closure cases cover collector roots"
+    },
+    {
+      "name": "equality",
+      "tier": "smoke",
+      "engine": "tree",
+      "arm": "scalar-gc-qbe",
+      "lox_gc_stress": false,
+      "native_gc_stress": true,
+      "source_sha256": "53bc66293aabe6b1a83ebf51224d2d7e78a1dfa4c2524812b8b7602a74ad66d1",
+      "unrun_reason": "bounded native stress; selected allocation/property/closure cases cover collector roots"
+    },
+    {
+      "name": "equality",
+      "tier": "smoke",
+      "engine": "tree",
+      "arm": "scalar-gc-qbe",
+      "lox_gc_stress": true,
+      "native_gc_stress": true,
+      "source_sha256": "53bc66293aabe6b1a83ebf51224d2d7e78a1dfa4c2524812b8b7602a74ad66d1",
+      "unrun_reason": "bounded native stress; selected allocation/property/closure cases cover collector roots"
+    },
+    {
+      "name": "equality",
+      "tier": "smoke",
+      "engine": "vm",
+      "arm": "scalar-gc-llvm",
+      "lox_gc_stress": false,
+      "native_gc_stress": true,
+      "source_sha256": "53bc66293aabe6b1a83ebf51224d2d7e78a1dfa4c2524812b8b7602a74ad66d1",
+      "unrun_reason": "bounded native stress; selected allocation/property/closure cases cover collector roots"
+    },
+    {
+      "name": "equality",
+      "tier": "smoke",
+      "engine": "vm",
+      "arm": "scalar-gc-llvm",
+      "lox_gc_stress": true,
+      "native_gc_stress": true,
+      "source_sha256": "53bc66293aabe6b1a83ebf51224d2d7e78a1dfa4c2524812b8b7602a74ad66d1",
+      "unrun_reason": "bounded native stress; selected allocation/property/closure cases cover collector roots"
+    },
+    {
+      "name": "equality",
+      "tier": "smoke",
+      "engine": "vm",
+      "arm": "scalar-gc-qbe",
+      "lox_gc_stress": false,
+      "native_gc_stress": true,
+      "source_sha256": "53bc66293aabe6b1a83ebf51224d2d7e78a1dfa4c2524812b8b7602a74ad66d1",
+      "unrun_reason": "bounded native stress; selected allocation/property/closure cases cover collector roots"
+    },
+    {
+      "name": "equality",
+      "tier": "smoke",
+      "engine": "vm",
+      "arm": "scalar-gc-qbe",
+      "lox_gc_stress": true,
+      "native_gc_stress": true,
+      "source_sha256": "53bc66293aabe6b1a83ebf51224d2d7e78a1dfa4c2524812b8b7602a74ad66d1",
+      "unrun_reason": "bounded native stress; selected allocation/property/closure cases cover collector roots"
+    },
+    {
+      "name": "fib",
+      "tier": "smoke",
+      "engine": "tree",
+      "arm": "scalar-gc-llvm",
+      "lox_gc_stress": false,
+      "native_gc_stress": true,
+      "source_sha256": "d25a79476da3b93949c797313ca5967d03094e1b7833235c32e8443c92530dc6",
+      "unrun_reason": "bounded native stress; selected allocation/property/closure cases cover collector roots"
+    },
+    {
+      "name": "fib",
+      "tier": "smoke",
+      "engine": "tree",
+      "arm": "scalar-gc-llvm",
+      "lox_gc_stress": true,
+      "native_gc_stress": true,
+      "source_sha256": "d25a79476da3b93949c797313ca5967d03094e1b7833235c32e8443c92530dc6",
+      "unrun_reason": "bounded native stress; selected allocation/property/closure cases cover collector roots"
+    },
+    {
+      "name": "fib",
+      "tier": "smoke",
+      "engine": "tree",
+      "arm": "scalar-gc-qbe",
+      "lox_gc_stress": false,
+      "native_gc_stress": true,
+      "source_sha256": "d25a79476da3b93949c797313ca5967d03094e1b7833235c32e8443c92530dc6",
+      "unrun_reason": "bounded native stress; selected allocation/property/closure cases cover collector roots"
+    },
+    {
+      "name": "fib",
+      "tier": "smoke",
+      "engine": "tree",
+      "arm": "scalar-gc-qbe",
+      "lox_gc_stress": true,
+      "native_gc_stress": true,
+      "source_sha256": "d25a79476da3b93949c797313ca5967d03094e1b7833235c32e8443c92530dc6",
+      "unrun_reason": "bounded native stress; selected allocation/property/closure cases cover collector roots"
+    },
+    {
+      "name": "fib",
+      "tier": "smoke",
+      "engine": "vm",
+      "arm": "scalar-gc-llvm",
+      "lox_gc_stress": false,
+      "native_gc_stress": true,
+      "source_sha256": "d25a79476da3b93949c797313ca5967d03094e1b7833235c32e8443c92530dc6",
+      "unrun_reason": "bounded native stress; selected allocation/property/closure cases cover collector roots"
+    },
+    {
+      "name": "fib",
+      "tier": "smoke",
+      "engine": "vm",
+      "arm": "scalar-gc-llvm",
+      "lox_gc_stress": true,
+      "native_gc_stress": true,
+      "source_sha256": "d25a79476da3b93949c797313ca5967d03094e1b7833235c32e8443c92530dc6",
+      "unrun_reason": "bounded native stress; selected allocation/property/closure cases cover collector roots"
+    },
+    {
+      "name": "fib",
+      "tier": "smoke",
+      "engine": "vm",
+      "arm": "scalar-gc-qbe",
+      "lox_gc_stress": false,
+      "native_gc_stress": true,
+      "source_sha256": "d25a79476da3b93949c797313ca5967d03094e1b7833235c32e8443c92530dc6",
+      "unrun_reason": "bounded native stress; selected allocation/property/closure cases cover collector roots"
+    },
+    {
+      "name": "fib",
+      "tier": "smoke",
+      "engine": "vm",
+      "arm": "scalar-gc-qbe",
+      "lox_gc_stress": true,
+      "native_gc_stress": true,
+      "source_sha256": "d25a79476da3b93949c797313ca5967d03094e1b7833235c32e8443c92530dc6",
+      "unrun_reason": "bounded native stress; selected allocation/property/closure cases cover collector roots"
+    },
+    {
+      "name": "invocation",
+      "tier": "smoke",
+      "engine": "tree",
+      "arm": "scalar-gc-llvm",
+      "lox_gc_stress": false,
+      "native_gc_stress": true,
+      "source_sha256": "8a26db7b2a000698539b9502289f450c7d414419a65ab7fb297d37ce47ee7600",
+      "unrun_reason": "bounded native stress; selected allocation/property/closure cases cover collector roots"
+    },
+    {
+      "name": "invocation",
+      "tier": "smoke",
+      "engine": "tree",
+      "arm": "scalar-gc-llvm",
+      "lox_gc_stress": true,
+      "native_gc_stress": true,
+      "source_sha256": "8a26db7b2a000698539b9502289f450c7d414419a65ab7fb297d37ce47ee7600",
+      "unrun_reason": "bounded native stress; selected allocation/property/closure cases cover collector roots"
+    },
+    {
+      "name": "invocation",
+      "tier": "smoke",
+      "engine": "tree",
+      "arm": "scalar-gc-qbe",
+      "lox_gc_stress": false,
+      "native_gc_stress": true,
+      "source_sha256": "8a26db7b2a000698539b9502289f450c7d414419a65ab7fb297d37ce47ee7600",
+      "unrun_reason": "bounded native stress; selected allocation/property/closure cases cover collector roots"
+    },
+    {
+      "name": "invocation",
+      "tier": "smoke",
+      "engine": "tree",
+      "arm": "scalar-gc-qbe",
+      "lox_gc_stress": true,
+      "native_gc_stress": true,
+      "source_sha256": "8a26db7b2a000698539b9502289f450c7d414419a65ab7fb297d37ce47ee7600",
+      "unrun_reason": "bounded native stress; selected allocation/property/closure cases cover collector roots"
+    },
+    {
+      "name": "invocation",
+      "tier": "smoke",
+      "engine": "vm",
+      "arm": "scalar-gc-llvm",
+      "lox_gc_stress": false,
+      "native_gc_stress": true,
+      "source_sha256": "8a26db7b2a000698539b9502289f450c7d414419a65ab7fb297d37ce47ee7600",
+      "unrun_reason": "bounded native stress; selected allocation/property/closure cases cover collector roots"
+    },
+    {
+      "name": "invocation",
+      "tier": "smoke",
+      "engine": "vm",
+      "arm": "scalar-gc-llvm",
+      "lox_gc_stress": true,
+      "native_gc_stress": true,
+      "source_sha256": "8a26db7b2a000698539b9502289f450c7d414419a65ab7fb297d37ce47ee7600",
+      "unrun_reason": "bounded native stress; selected allocation/property/closure cases cover collector roots"
+    },
+    {
+      "name": "invocation",
+      "tier": "smoke",
+      "engine": "vm",
+      "arm": "scalar-gc-qbe",
+      "lox_gc_stress": false,
+      "native_gc_stress": true,
+      "source_sha256": "8a26db7b2a000698539b9502289f450c7d414419a65ab7fb297d37ce47ee7600",
+      "unrun_reason": "bounded native stress; selected allocation/property/closure cases cover collector roots"
+    },
+    {
+      "name": "invocation",
+      "tier": "smoke",
+      "engine": "vm",
+      "arm": "scalar-gc-qbe",
+      "lox_gc_stress": true,
+      "native_gc_stress": true,
+      "source_sha256": "8a26db7b2a000698539b9502289f450c7d414419a65ab7fb297d37ce47ee7600",
+      "unrun_reason": "bounded native stress; selected allocation/property/closure cases cover collector roots"
+    },
+    {
+      "name": "method_call",
+      "tier": "smoke",
+      "engine": "tree",
+      "arm": "scalar-gc-llvm",
+      "lox_gc_stress": false,
+      "native_gc_stress": true,
+      "source_sha256": "49629943ef09092d8a8bb8e36776ec307f01e51abbbf049f8a60059c117aa904",
+      "unrun_reason": "bounded native stress; selected allocation/property/closure cases cover collector roots"
+    },
+    {
+      "name": "method_call",
+      "tier": "smoke",
+      "engine": "tree",
+      "arm": "scalar-gc-llvm",
+      "lox_gc_stress": true,
+      "native_gc_stress": true,
+      "source_sha256": "49629943ef09092d8a8bb8e36776ec307f01e51abbbf049f8a60059c117aa904",
+      "unrun_reason": "bounded native stress; selected allocation/property/closure cases cover collector roots"
+    },
+    {
+      "name": "method_call",
+      "tier": "smoke",
+      "engine": "tree",
+      "arm": "scalar-gc-qbe",
+      "lox_gc_stress": false,
+      "native_gc_stress": true,
+      "source_sha256": "49629943ef09092d8a8bb8e36776ec307f01e51abbbf049f8a60059c117aa904",
+      "unrun_reason": "bounded native stress; selected allocation/property/closure cases cover collector roots"
+    },
+    {
+      "name": "method_call",
+      "tier": "smoke",
+      "engine": "tree",
+      "arm": "scalar-gc-qbe",
+      "lox_gc_stress": true,
+      "native_gc_stress": true,
+      "source_sha256": "49629943ef09092d8a8bb8e36776ec307f01e51abbbf049f8a60059c117aa904",
+      "unrun_reason": "bounded native stress; selected allocation/property/closure cases cover collector roots"
+    },
+    {
+      "name": "method_call",
+      "tier": "smoke",
+      "engine": "vm",
+      "arm": "scalar-gc-llvm",
+      "lox_gc_stress": false,
+      "native_gc_stress": true,
+      "source_sha256": "49629943ef09092d8a8bb8e36776ec307f01e51abbbf049f8a60059c117aa904",
+      "unrun_reason": "bounded native stress; selected allocation/property/closure cases cover collector roots"
+    },
+    {
+      "name": "method_call",
+      "tier": "smoke",
+      "engine": "vm",
+      "arm": "scalar-gc-llvm",
+      "lox_gc_stress": true,
+      "native_gc_stress": true,
+      "source_sha256": "49629943ef09092d8a8bb8e36776ec307f01e51abbbf049f8a60059c117aa904",
+      "unrun_reason": "bounded native stress; selected allocation/property/closure cases cover collector roots"
+    },
+    {
+      "name": "method_call",
+      "tier": "smoke",
+      "engine": "vm",
+      "arm": "scalar-gc-qbe",
+      "lox_gc_stress": false,
+      "native_gc_stress": true,
+      "source_sha256": "49629943ef09092d8a8bb8e36776ec307f01e51abbbf049f8a60059c117aa904",
+      "unrun_reason": "bounded native stress; selected allocation/property/closure cases cover collector roots"
+    },
+    {
+      "name": "method_call",
+      "tier": "smoke",
+      "engine": "vm",
+      "arm": "scalar-gc-qbe",
+      "lox_gc_stress": true,
+      "native_gc_stress": true,
+      "source_sha256": "49629943ef09092d8a8bb8e36776ec307f01e51abbbf049f8a60059c117aa904",
+      "unrun_reason": "bounded native stress; selected allocation/property/closure cases cover collector roots"
+    },
+    {
+      "name": "string_equality",
+      "tier": "smoke",
+      "engine": "tree",
+      "arm": "scalar-gc-llvm",
+      "lox_gc_stress": false,
+      "native_gc_stress": true,
+      "source_sha256": "311efc5bcfc199435637a25d4d96ef452254c19ad1825302d0a23e5ef4fc3c5f",
+      "unrun_reason": "bounded native stress; selected allocation/property/closure cases cover collector roots"
+    },
+    {
+      "name": "string_equality",
+      "tier": "smoke",
+      "engine": "tree",
+      "arm": "scalar-gc-llvm",
+      "lox_gc_stress": true,
+      "native_gc_stress": true,
+      "source_sha256": "311efc5bcfc199435637a25d4d96ef452254c19ad1825302d0a23e5ef4fc3c5f",
+      "unrun_reason": "bounded native stress; selected allocation/property/closure cases cover collector roots"
+    },
+    {
+      "name": "string_equality",
+      "tier": "smoke",
+      "engine": "tree",
+      "arm": "scalar-gc-qbe",
+      "lox_gc_stress": false,
+      "native_gc_stress": true,
+      "source_sha256": "311efc5bcfc199435637a25d4d96ef452254c19ad1825302d0a23e5ef4fc3c5f",
+      "unrun_reason": "bounded native stress; selected allocation/property/closure cases cover collector roots"
+    },
+    {
+      "name": "string_equality",
+      "tier": "smoke",
+      "engine": "tree",
+      "arm": "scalar-gc-qbe",
+      "lox_gc_stress": true,
+      "native_gc_stress": true,
+      "source_sha256": "311efc5bcfc199435637a25d4d96ef452254c19ad1825302d0a23e5ef4fc3c5f",
+      "unrun_reason": "bounded native stress; selected allocation/property/closure cases cover collector roots"
+    },
+    {
+      "name": "string_equality",
+      "tier": "smoke",
+      "engine": "vm",
+      "arm": "scalar-gc-llvm",
+      "lox_gc_stress": false,
+      "native_gc_stress": true,
+      "source_sha256": "311efc5bcfc199435637a25d4d96ef452254c19ad1825302d0a23e5ef4fc3c5f",
+      "unrun_reason": "bounded native stress; selected allocation/property/closure cases cover collector roots"
+    },
+    {
+      "name": "string_equality",
+      "tier": "smoke",
+      "engine": "vm",
+      "arm": "scalar-gc-llvm",
+      "lox_gc_stress": true,
+      "native_gc_stress": true,
+      "source_sha256": "311efc5bcfc199435637a25d4d96ef452254c19ad1825302d0a23e5ef4fc3c5f",
+      "unrun_reason": "bounded native stress; selected allocation/property/closure cases cover collector roots"
+    },
+    {
+      "name": "string_equality",
+      "tier": "smoke",
+      "engine": "vm",
+      "arm": "scalar-gc-qbe",
+      "lox_gc_stress": false,
+      "native_gc_stress": true,
+      "source_sha256": "311efc5bcfc199435637a25d4d96ef452254c19ad1825302d0a23e5ef4fc3c5f",
+      "unrun_reason": "bounded native stress; selected allocation/property/closure cases cover collector roots"
+    },
+    {
+      "name": "string_equality",
+      "tier": "smoke",
+      "engine": "vm",
+      "arm": "scalar-gc-qbe",
+      "lox_gc_stress": true,
+      "native_gc_stress": true,
+      "source_sha256": "311efc5bcfc199435637a25d4d96ef452254c19ad1825302d0a23e5ef4fc3c5f",
+      "unrun_reason": "bounded native stress; selected allocation/property/closure cases cover collector roots"
+    },
+    {
+      "name": "strings",
+      "tier": "smoke",
+      "engine": "tree",
+      "arm": "scalar-gc-llvm",
+      "lox_gc_stress": false,
+      "native_gc_stress": true,
+      "source_sha256": "1d66b87b0fb3313ed20a4c2755dcc3dbb6c5455b002cd4c8ae91573b700a7c07",
+      "unrun_reason": "bounded native stress; selected allocation/property/closure cases cover collector roots"
+    },
+    {
+      "name": "strings",
+      "tier": "smoke",
+      "engine": "tree",
+      "arm": "scalar-gc-llvm",
+      "lox_gc_stress": true,
+      "native_gc_stress": true,
+      "source_sha256": "1d66b87b0fb3313ed20a4c2755dcc3dbb6c5455b002cd4c8ae91573b700a7c07",
+      "unrun_reason": "bounded native stress; selected allocation/property/closure cases cover collector roots"
+    },
+    {
+      "name": "strings",
+      "tier": "smoke",
+      "engine": "tree",
+      "arm": "scalar-gc-qbe",
+      "lox_gc_stress": false,
+      "native_gc_stress": true,
+      "source_sha256": "1d66b87b0fb3313ed20a4c2755dcc3dbb6c5455b002cd4c8ae91573b700a7c07",
+      "unrun_reason": "bounded native stress; selected allocation/property/closure cases cover collector roots"
+    },
+    {
+      "name": "strings",
+      "tier": "smoke",
+      "engine": "tree",
+      "arm": "scalar-gc-qbe",
+      "lox_gc_stress": true,
+      "native_gc_stress": true,
+      "source_sha256": "1d66b87b0fb3313ed20a4c2755dcc3dbb6c5455b002cd4c8ae91573b700a7c07",
+      "unrun_reason": "bounded native stress; selected allocation/property/closure cases cover collector roots"
+    },
+    {
+      "name": "strings",
+      "tier": "smoke",
+      "engine": "vm",
+      "arm": "scalar-gc-llvm",
+      "lox_gc_stress": false,
+      "native_gc_stress": true,
+      "source_sha256": "1d66b87b0fb3313ed20a4c2755dcc3dbb6c5455b002cd4c8ae91573b700a7c07",
+      "unrun_reason": "bounded native stress; selected allocation/property/closure cases cover collector roots"
+    },
+    {
+      "name": "strings",
+      "tier": "smoke",
+      "engine": "vm",
+      "arm": "scalar-gc-llvm",
+      "lox_gc_stress": true,
+      "native_gc_stress": true,
+      "source_sha256": "1d66b87b0fb3313ed20a4c2755dcc3dbb6c5455b002cd4c8ae91573b700a7c07",
+      "unrun_reason": "bounded native stress; selected allocation/property/closure cases cover collector roots"
+    },
+    {
+      "name": "strings",
+      "tier": "smoke",
+      "engine": "vm",
+      "arm": "scalar-gc-qbe",
+      "lox_gc_stress": false,
+      "native_gc_stress": true,
+      "source_sha256": "1d66b87b0fb3313ed20a4c2755dcc3dbb6c5455b002cd4c8ae91573b700a7c07",
+      "unrun_reason": "bounded native stress; selected allocation/property/closure cases cover collector roots"
+    },
+    {
+      "name": "strings",
+      "tier": "smoke",
+      "engine": "vm",
+      "arm": "scalar-gc-qbe",
+      "lox_gc_stress": true,
+      "native_gc_stress": true,
+      "source_sha256": "1d66b87b0fb3313ed20a4c2755dcc3dbb6c5455b002cd4c8ae91573b700a7c07",
+      "unrun_reason": "bounded native stress; selected allocation/property/closure cases cover collector roots"
+    },
+    {
+      "name": "trees",
+      "tier": "smoke",
+      "engine": "tree",
+      "arm": "scalar-gc-llvm",
+      "lox_gc_stress": false,
+      "native_gc_stress": true,
+      "source_sha256": "dbeb7996c5744c08a22091d76787e45c71b9101137087c5b4e5349d1516c399e",
+      "unrun_reason": "bounded native stress; selected allocation/property/closure cases cover collector roots"
+    },
+    {
+      "name": "trees",
+      "tier": "smoke",
+      "engine": "tree",
+      "arm": "scalar-gc-llvm",
+      "lox_gc_stress": true,
+      "native_gc_stress": true,
+      "source_sha256": "dbeb7996c5744c08a22091d76787e45c71b9101137087c5b4e5349d1516c399e",
+      "unrun_reason": "bounded native stress; selected allocation/property/closure cases cover collector roots"
+    },
+    {
+      "name": "trees",
+      "tier": "smoke",
+      "engine": "tree",
+      "arm": "scalar-gc-qbe",
+      "lox_gc_stress": false,
+      "native_gc_stress": true,
+      "source_sha256": "dbeb7996c5744c08a22091d76787e45c71b9101137087c5b4e5349d1516c399e",
+      "unrun_reason": "bounded native stress; selected allocation/property/closure cases cover collector roots"
+    },
+    {
+      "name": "trees",
+      "tier": "smoke",
+      "engine": "tree",
+      "arm": "scalar-gc-qbe",
+      "lox_gc_stress": true,
+      "native_gc_stress": true,
+      "source_sha256": "dbeb7996c5744c08a22091d76787e45c71b9101137087c5b4e5349d1516c399e",
+      "unrun_reason": "bounded native stress; selected allocation/property/closure cases cover collector roots"
+    },
+    {
+      "name": "trees",
+      "tier": "smoke",
+      "engine": "vm",
+      "arm": "scalar-gc-llvm",
+      "lox_gc_stress": false,
+      "native_gc_stress": true,
+      "source_sha256": "dbeb7996c5744c08a22091d76787e45c71b9101137087c5b4e5349d1516c399e",
+      "unrun_reason": "bounded native stress; selected allocation/property/closure cases cover collector roots"
+    },
+    {
+      "name": "trees",
+      "tier": "smoke",
+      "engine": "vm",
+      "arm": "scalar-gc-llvm",
+      "lox_gc_stress": true,
+      "native_gc_stress": true,
+      "source_sha256": "dbeb7996c5744c08a22091d76787e45c71b9101137087c5b4e5349d1516c399e",
+      "unrun_reason": "bounded native stress; selected allocation/property/closure cases cover collector roots"
+    },
+    {
+      "name": "trees",
+      "tier": "smoke",
+      "engine": "vm",
+      "arm": "scalar-gc-qbe",
+      "lox_gc_stress": false,
+      "native_gc_stress": true,
+      "source_sha256": "dbeb7996c5744c08a22091d76787e45c71b9101137087c5b4e5349d1516c399e",
+      "unrun_reason": "bounded native stress; selected allocation/property/closure cases cover collector roots"
+    },
+    {
+      "name": "trees",
+      "tier": "smoke",
+      "engine": "vm",
+      "arm": "scalar-gc-qbe",
+      "lox_gc_stress": true,
+      "native_gc_stress": true,
+      "source_sha256": "dbeb7996c5744c08a22091d76787e45c71b9101137087c5b4e5349d1516c399e",
+      "unrun_reason": "bounded native stress; selected allocation/property/closure cases cover collector roots"
+    },
+    {
+      "name": "zoo",
+      "tier": "smoke",
+      "engine": "tree",
+      "arm": "scalar-gc-llvm",
+      "lox_gc_stress": false,
+      "native_gc_stress": true,
+      "source_sha256": "de7dfe23c1bf21599ff3dafbca37568c7b5a8ec0a058c67059999c1a23a74559",
+      "unrun_reason": "bounded native stress; selected allocation/property/closure cases cover collector roots"
+    },
+    {
+      "name": "zoo",
+      "tier": "smoke",
+      "engine": "tree",
+      "arm": "scalar-gc-llvm",
+      "lox_gc_stress": true,
+      "native_gc_stress": true,
+      "source_sha256": "de7dfe23c1bf21599ff3dafbca37568c7b5a8ec0a058c67059999c1a23a74559",
+      "unrun_reason": "bounded native stress; selected allocation/property/closure cases cover collector roots"
+    },
+    {
+      "name": "zoo",
+      "tier": "smoke",
+      "engine": "tree",
+      "arm": "scalar-gc-qbe",
+      "lox_gc_stress": false,
+      "native_gc_stress": true,
+      "source_sha256": "de7dfe23c1bf21599ff3dafbca37568c7b5a8ec0a058c67059999c1a23a74559",
+      "unrun_reason": "bounded native stress; selected allocation/property/closure cases cover collector roots"
+    },
+    {
+      "name": "zoo",
+      "tier": "smoke",
+      "engine": "tree",
+      "arm": "scalar-gc-qbe",
+      "lox_gc_stress": true,
+      "native_gc_stress": true,
+      "source_sha256": "de7dfe23c1bf21599ff3dafbca37568c7b5a8ec0a058c67059999c1a23a74559",
+      "unrun_reason": "bounded native stress; selected allocation/property/closure cases cover collector roots"
+    },
+    {
+      "name": "zoo",
+      "tier": "smoke",
+      "engine": "vm",
+      "arm": "scalar-gc-llvm",
+      "lox_gc_stress": false,
+      "native_gc_stress": true,
+      "source_sha256": "de7dfe23c1bf21599ff3dafbca37568c7b5a8ec0a058c67059999c1a23a74559",
+      "unrun_reason": "bounded native stress; selected allocation/property/closure cases cover collector roots"
+    },
+    {
+      "name": "zoo",
+      "tier": "smoke",
+      "engine": "vm",
+      "arm": "scalar-gc-llvm",
+      "lox_gc_stress": true,
+      "native_gc_stress": true,
+      "source_sha256": "de7dfe23c1bf21599ff3dafbca37568c7b5a8ec0a058c67059999c1a23a74559",
+      "unrun_reason": "bounded native stress; selected allocation/property/closure cases cover collector roots"
+    },
+    {
+      "name": "zoo",
+      "tier": "smoke",
+      "engine": "vm",
+      "arm": "scalar-gc-qbe",
+      "lox_gc_stress": false,
+      "native_gc_stress": true,
+      "source_sha256": "de7dfe23c1bf21599ff3dafbca37568c7b5a8ec0a058c67059999c1a23a74559",
+      "unrun_reason": "bounded native stress; selected allocation/property/closure cases cover collector roots"
+    },
+    {
+      "name": "zoo",
+      "tier": "smoke",
+      "engine": "vm",
+      "arm": "scalar-gc-qbe",
+      "lox_gc_stress": true,
+      "native_gc_stress": true,
+      "source_sha256": "de7dfe23c1bf21599ff3dafbca37568c7b5a8ec0a058c67059999c1a23a74559",
+      "unrun_reason": "bounded native stress; selected allocation/property/closure cases cover collector roots"
+    },
+    {
+      "name": "zoo_batch",
+      "tier": "smoke",
+      "engine": "tree",
+      "arm": "scalar-gc-llvm",
+      "lox_gc_stress": false,
+      "native_gc_stress": true,
+      "source_sha256": "a6eb70193498750dffd23eeefd74d5dd808724322b97301803e47dcaafdece66",
+      "unrun_reason": "bounded native stress; selected allocation/property/closure cases cover collector roots"
+    },
+    {
+      "name": "zoo_batch",
+      "tier": "smoke",
+      "engine": "tree",
+      "arm": "scalar-gc-llvm",
+      "lox_gc_stress": true,
+      "native_gc_stress": true,
+      "source_sha256": "a6eb70193498750dffd23eeefd74d5dd808724322b97301803e47dcaafdece66",
+      "unrun_reason": "bounded native stress; selected allocation/property/closure cases cover collector roots"
+    },
+    {
+      "name": "zoo_batch",
+      "tier": "smoke",
+      "engine": "tree",
+      "arm": "scalar-gc-qbe",
+      "lox_gc_stress": false,
+      "native_gc_stress": true,
+      "source_sha256": "a6eb70193498750dffd23eeefd74d5dd808724322b97301803e47dcaafdece66",
+      "unrun_reason": "bounded native stress; selected allocation/property/closure cases cover collector roots"
+    },
+    {
+      "name": "zoo_batch",
+      "tier": "smoke",
+      "engine": "tree",
+      "arm": "scalar-gc-qbe",
+      "lox_gc_stress": true,
+      "native_gc_stress": true,
+      "source_sha256": "a6eb70193498750dffd23eeefd74d5dd808724322b97301803e47dcaafdece66",
+      "unrun_reason": "bounded native stress; selected allocation/property/closure cases cover collector roots"
+    },
+    {
+      "name": "zoo_batch",
+      "tier": "smoke",
+      "engine": "vm",
+      "arm": "scalar-gc-llvm",
+      "lox_gc_stress": false,
+      "native_gc_stress": true,
+      "source_sha256": "a6eb70193498750dffd23eeefd74d5dd808724322b97301803e47dcaafdece66",
+      "unrun_reason": "bounded native stress; selected allocation/property/closure cases cover collector roots"
+    },
+    {
+      "name": "zoo_batch",
+      "tier": "smoke",
+      "engine": "vm",
+      "arm": "scalar-gc-llvm",
+      "lox_gc_stress": true,
+      "native_gc_stress": true,
+      "source_sha256": "a6eb70193498750dffd23eeefd74d5dd808724322b97301803e47dcaafdece66",
+      "unrun_reason": "bounded native stress; selected allocation/property/closure cases cover collector roots"
+    },
+    {
+      "name": "zoo_batch",
+      "tier": "smoke",
+      "engine": "vm",
+      "arm": "scalar-gc-qbe",
+      "lox_gc_stress": false,
+      "native_gc_stress": true,
+      "source_sha256": "a6eb70193498750dffd23eeefd74d5dd808724322b97301803e47dcaafdece66",
+      "unrun_reason": "bounded native stress; selected allocation/property/closure cases cover collector roots"
+    },
+    {
+      "name": "zoo_batch",
+      "tier": "smoke",
+      "engine": "vm",
+      "arm": "scalar-gc-qbe",
+      "lox_gc_stress": true,
+      "native_gc_stress": true,
+      "source_sha256": "a6eb70193498750dffd23eeefd74d5dd808724322b97301803e47dcaafdece66",
+      "unrun_reason": "bounded native stress; selected allocation/property/closure cases cover collector roots"
+    }
+  ],
+  "all_status_stdout_full_stderr_collector_stats_equal": true,
+  "source_files_verified": 37,
+  "matrix_guest_identity": "qualifiedfinal matrix guests and final qualified source guests have identical SHA256 under historical9007 and fixedd14 compilers",
+  "native_stress_environment": {
+    "MYLANG_OPTIONS": "--gc-stress"
+  },
+  "rc_native_stress_refusals": {
+    "comparisons": 8,
+    "observations": 16,
+    "status": 2
+  },
+  "negative_fixture_receipts": [
+    "qualification",
+    "qualification-final"
+  ],
+  "negative_fixture_cause": "Compiler status1 E_SHADOWING from imported canonical vm module colliding with existing vm result locals; empty stdout caused secondary JSONDecodeError. Final tests rename locals to vm_run and all24 driver tests pass in every flavor.",
+  "evidence_workspace": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003"
+}

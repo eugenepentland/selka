@@ -1,0 +1,108 @@
+{
+  "baseline-call_value.ssa": {
+    "lines": 2052,
+    "bytes": 52371,
+    "operations": {
+      "_rcg_loan": 1,
+      "_rcg_unloan": 38,
+      "_rcg_drop": 38,
+      "_rcg_take": 2,
+      "_rcg_copy": 0
+    },
+    "normalized_index_bounds": 3,
+    "all_calls": {
+      "myl_qbe_fail_frame": 1,
+      "myl_qbe_heap": 1,
+      "myl_qbe_region_mark": 1,
+      "myl_t_4e6c1584b61f68a69271c693e65be720323e6bcb8d28e2f694592eed5c4c3f28_rcg_unloan": 17,
+      "myl_t_4e6c1584b61f68a69271c693e65be720323e6bcb8d28e2f694592eed5c4c3f28_rcg_drop": 17,
+      "myl_qbe_fail_cast": 3,
+      "myl_qbe_fail_overflow_op": 9,
+      "myl_qbe_fail_normalized_index_bounds": 3,
+      "myl_t_a83873657e77deb1bf51281383ae925ccb1b4b6510284b93a36500031c0efc14_rcg_loan": 1,
+      "myl_rc_take_failure": 3,
+      "myl_qbe_rc_status": 3,
+      "myl_t_a83873657e77deb1bf51281383ae925ccb1b4b6510284b93a36500031c0efc14_rcg_unloan": 12,
+      "myl_t_a83873657e77deb1bf51281383ae925ccb1b4b6510284b93a36500031c0efc14_rcg_drop": 12,
+      "myl_t_a1fa53db408c85388cfd14badb361c2a89e74ce2a863fa83774cb6942b74317a_rcg_unloan": 2,
+      "myl_t_a1fa53db408c85388cfd14badb361c2a89e74ce2a863fa83774cb6942b74317a_rcg_drop": 2,
+      "myl_qbe_rc_unique_field": 2,
+      "myl_f_e6dd1a9167d6b59c9752b8305d109d76520bac8300dd423db9728be656322e7c": 3,
+      "myl_t_3ece1c6f770ecd2a506fa806688c97e383087567b3626d4a9ce4529758a6df1f_rcg_unloan": 6,
+      "myl_t_3ece1c6f770ecd2a506fa806688c97e383087567b3626d4a9ce4529758a6df1f_rcg_drop": 6,
+      "myl_f_a1ee89ef02f5de3a0549ceef8b403f960b5d820e5be22eacf42a3abf03f1c216": 1,
+      "myl_t_81d71c98b196ce876b8748e8f5e1c439a764a7854aeb5e4ef7865d0716f2ecef_rcg_take": 1,
+      "myl_t_f90b2531fe2edebbb3538bc221997b8a6ecd53794bf2c8b61b30685c25382939_rcg_take": 1,
+      "myl_f_6993cfd5bc46d9d696adcc139c626f2b677f81bea8031cc740fa79e8da2d676e": 1,
+      "myl_f_548c7924fb70947e5821a6480ca42591925741aed8a343767696180a416dee48": 1,
+      "myl_f_a9f74430ee4e948451728b3abe4d648b4eecdee44abb338e15267f988b669b40": 1,
+      "myl_f_09a1ee193e9d9f1530906298fd9acc278ce79721e1d4545c3c0962b7198c2ff1": 2,
+      "myl_f_e57cc4bfa29a47edaf8fafe0f664bfacf1316c7705c32574aa82bd91cd9e2559": 1,
+      "myl_f_9cfccc291a0516b23c50da008b59b8f2c8a2e23f61575966d1d2f1cfb2a4be4b": 1,
+      "myl_f_8855e2338a0239644fa6d8638afc594de302f594debc25ce542a382b2a6572a1": 1,
+      "myl_t_277089d91c0bdf4f2e6862ba7e4a07605119431f5d13f726dd352b06f1b206a9_rcg_unloan": 1,
+      "myl_t_277089d91c0bdf4f2e6862ba7e4a07605119431f5d13f726dd352b06f1b206a9_rcg_drop": 1
+    }
+  },
+  "candidate-call_value.ssa": {
+    "lines": 1148,
+    "bytes": 28307,
+    "operations": {
+      "_rcg_loan": 0,
+      "_rcg_unloan": 9,
+      "_rcg_drop": 9,
+      "_rcg_take": 2,
+      "_rcg_copy": 0
+    },
+    "normalized_index_bounds": 2,
+    "all_calls": {
+      "myl_qbe_fail_frame": 1,
+      "myl_qbe_heap": 1,
+      "myl_qbe_region_mark": 1,
+      "myl_f_28ec3630eec8e994e9c5a68583d526514757101154db14a45b530bba39dfca50": 1,
+      "myl_qbe_rc_unique_field": 2,
+      "myl_qbe_fail_overflow_op": 8,
+      "myl_qbe_fail_cast": 2,
+      "myl_qbe_fail_normalized_index_bounds": 2,
+      "myl_f_e6dd1a9167d6b59c9752b8305d109d76520bac8300dd423db9728be656322e7c": 3,
+      "myl_t_3ece1c6f770ecd2a506fa806688c97e383087567b3626d4a9ce4529758a6df1f_rcg_unloan": 6,
+      "myl_t_3ece1c6f770ecd2a506fa806688c97e383087567b3626d4a9ce4529758a6df1f_rcg_drop": 6,
+      "myl_f_a1ee89ef02f5de3a0549ceef8b403f960b5d820e5be22eacf42a3abf03f1c216": 1,
+      "myl_t_81d71c98b196ce876b8748e8f5e1c439a764a7854aeb5e4ef7865d0716f2ecef_rcg_take": 1,
+      "myl_rc_take_failure": 2,
+      "myl_qbe_rc_status": 2,
+      "myl_t_f90b2531fe2edebbb3538bc221997b8a6ecd53794bf2c8b61b30685c25382939_rcg_take": 1,
+      "myl_f_6993cfd5bc46d9d696adcc139c626f2b677f81bea8031cc740fa79e8da2d676e": 1,
+      "myl_t_a83873657e77deb1bf51281383ae925ccb1b4b6510284b93a36500031c0efc14_rcg_unloan": 1,
+      "myl_t_a83873657e77deb1bf51281383ae925ccb1b4b6510284b93a36500031c0efc14_rcg_drop": 1,
+      "myl_t_4e6c1584b61f68a69271c693e65be720323e6bcb8d28e2f694592eed5c4c3f28_rcg_unloan": 1,
+      "myl_t_4e6c1584b61f68a69271c693e65be720323e6bcb8d28e2f694592eed5c4c3f28_rcg_drop": 1,
+      "myl_f_548c7924fb70947e5821a6480ca42591925741aed8a343767696180a416dee48": 1,
+      "myl_f_a9f74430ee4e948451728b3abe4d648b4eecdee44abb338e15267f988b669b40": 1,
+      "myl_f_09a1ee193e9d9f1530906298fd9acc278ce79721e1d4545c3c0962b7198c2ff1": 2,
+      "myl_f_e57cc4bfa29a47edaf8fafe0f664bfacf1316c7705c32574aa82bd91cd9e2559": 1,
+      "myl_f_9cfccc291a0516b23c50da008b59b8f2c8a2e23f61575966d1d2f1cfb2a4be4b": 1,
+      "myl_f_8855e2338a0239644fa6d8638afc594de302f594debc25ce542a382b2a6572a1": 1,
+      "myl_t_277089d91c0bdf4f2e6862ba7e4a07605119431f5d13f726dd352b06f1b206a9_rcg_unloan": 1,
+      "myl_t_277089d91c0bdf4f2e6862ba7e4a07605119431f5d13f726dd352b06f1b206a9_rcg_drop": 1
+    }
+  },
+  "candidate-vm_callee.ssa": {
+    "lines": 281,
+    "bytes": 5369,
+    "operations": {
+      "_rcg_loan": 0,
+      "_rcg_unloan": 0,
+      "_rcg_drop": 0,
+      "_rcg_take": 0,
+      "_rcg_copy": 0
+    },
+    "normalized_index_bounds": 1,
+    "all_calls": {
+      "myl_qbe_fail_cast": 1,
+      "myl_qbe_fail_overflow_op": 1,
+      "myl_qbe_fail_normalized_index_bounds": 1,
+      "memset": 2
+    }
+  }
+}
