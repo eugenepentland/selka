@@ -2113,6 +2113,7 @@ const Emitter = struct {
         try self.print(" ret {s}\n}}\n", .{if (return_bytes == 0) "0" else "%empty"});
         var text = try self.output.toOwnedSlice();
         text = try @import("qbe_loop_operands.zig").finish(Emitter, self, text);
+        text = try @import("qbe_loop_unswitch.zig").finish(Emitter, self, text);
         // RC-SITES-1: name every runtime call's site while each instruction
         // still opens with its position store; the markers go last.
         const sited = try rc_sites.instrumentSelected(self.allocator, text, .{ .unit = name, .layouts = self.layouts });

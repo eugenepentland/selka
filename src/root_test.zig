@@ -316,6 +316,7 @@ test {
     _ = @import("qbe_rc_byte_version_test.zig");
     _ = @import("qbe_rc_byte_iteration_test.zig");
     _ = @import("qbe_byte_reduction_test.zig");
+    _ = @import("qbe_loop_unswitch_test.zig");
     _ = @import("qbe_rc_record_read_test.zig");
     _ = @import("qbe_rc_record_read_anchor.zig");
     _ = @import("qbe_rc_plain_write_test.zig");

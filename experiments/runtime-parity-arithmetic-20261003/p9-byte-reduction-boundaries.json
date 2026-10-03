@@ -1,6 +1,6 @@
 {
   "kind": "untimed-fast-native-boundary-diagnostic",
-  "compiler_sha256": "06edb34674150b7a07d73b637d95b4c59eb52aa90fd75771d3d1f72989c4765a",
+  "compiler_sha256": "6a3cab133a514a6596bc2ddbf326aebb5890c3ee56c2099f0bfa2fa096aff465",
   "qbe_sha256": "05030fa66864f44f28754425d644e46155c95bc5442fc2de705a85eee1443945",
   "zig_version": "0.17.0-dev.1683+5ceec001b",
   "cases": [
@@ -11,7 +11,7 @@
       "observed": {
         "qbe": {
           "command": [
-            "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-arithmetic-20261003/zig-out/focus/mylang",
+            "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-arithmetic-20261003/zig-out/bin/mylang",
             "build",
             "/home/epentland/.cache/mylang-tmp/runtime-parity-arithmetic-20261003/byte-reduction-trap-0.my",
             "--qbe",
@@ -26,7 +26,7 @@
         },
         "llvm": {
           "command": [
-            "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-arithmetic-20261003/zig-out/focus/mylang",
+            "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-arithmetic-20261003/zig-out/bin/mylang",
             "build",
             "/home/epentland/.cache/mylang-tmp/runtime-parity-arithmetic-20261003/byte-reduction-trap-0.my",
             "--release",
@@ -47,7 +47,7 @@
       "observed": {
         "qbe": {
           "command": [
-            "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-arithmetic-20261003/zig-out/focus/mylang",
+            "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-arithmetic-20261003/zig-out/bin/mylang",
             "build",
             "/home/epentland/.cache/mylang-tmp/runtime-parity-arithmetic-20261003/byte-reduction-trap-1.my",
             "--qbe",
@@ -62,7 +62,7 @@
         },
         "llvm": {
           "command": [
-            "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-arithmetic-20261003/zig-out/focus/mylang",
+            "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-arithmetic-20261003/zig-out/bin/mylang",
             "build",
             "/home/epentland/.cache/mylang-tmp/runtime-parity-arithmetic-20261003/byte-reduction-trap-1.my",
             "--release",
@@ -83,7 +83,7 @@
       "observed": {
         "qbe": {
           "command": [
-            "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-arithmetic-20261003/zig-out/focus/mylang",
+            "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-arithmetic-20261003/zig-out/bin/mylang",
             "build",
             "/home/epentland/.cache/mylang-tmp/runtime-parity-arithmetic-20261003/byte-reduction-trap-2.my",
             "--qbe",
@@ -98,7 +98,7 @@
         },
         "llvm": {
           "command": [
-            "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-arithmetic-20261003/zig-out/focus/mylang",
+            "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-arithmetic-20261003/zig-out/bin/mylang",
             "build",
             "/home/epentland/.cache/mylang-tmp/runtime-parity-arithmetic-20261003/byte-reduction-trap-2.my",
             "--release",
@@ -119,7 +119,7 @@
       "observed": {
         "qbe": {
           "command": [
-            "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-arithmetic-20261003/zig-out/focus/mylang",
+            "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-arithmetic-20261003/zig-out/bin/mylang",
             "build",
             "/home/epentland/.cache/mylang-tmp/runtime-parity-arithmetic-20261003/byte-reduction-trap-3.my",
             "--qbe",
@@ -134,7 +134,7 @@
         },
         "llvm": {
           "command": [
-            "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-arithmetic-20261003/zig-out/focus/mylang",
+            "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-arithmetic-20261003/zig-out/bin/mylang",
             "build",
             "/home/epentland/.cache/mylang-tmp/runtime-parity-arithmetic-20261003/byte-reduction-trap-3.my",
             "--release",
@@ -155,7 +155,7 @@
       "observed": {
         "qbe": {
           "command": [
-            "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-arithmetic-20261003/zig-out/focus/mylang",
+            "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-arithmetic-20261003/zig-out/bin/mylang",
             "build",
             "/home/epentland/.cache/mylang-tmp/runtime-parity-arithmetic-20261003/byte-reduction-trap-4.my",
             "--qbe",
@@ -170,7 +170,7 @@
         },
         "llvm": {
           "command": [
-            "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-arithmetic-20261003/zig-out/focus/mylang",
+            "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-arithmetic-20261003/zig-out/bin/mylang",
             "build",
             "/home/epentland/.cache/mylang-tmp/runtime-parity-arithmetic-20261003/byte-reduction-trap-4.my",
             "--release",
