@@ -8,6 +8,7 @@
 //! which finds each module's objects in the cache. Nothing else reads these
 //! outputs yet: the default build is still the whole-program one.
 const std = @import("std");
+const contract = @import("runtime_contract");
 const language = @import("mylang");
 const interface_command = @import("module_interface_command.zig");
 const iface = language.module_interface;
@@ -51,6 +52,7 @@ const Options = struct {
     config: iface.EmissionConfig = .{ .drop_debug = false, .step_checks = true, .frame_checks = true, .arenas = false },
     arenas: bool = false,
     saw_native_variants: bool = false,
+    saw_native_scalars: bool = false,
     objects: bool = false,
     /// `--qbe=PATH` and `--zig=PATH`, handed to the build of the objects.
     tools: [2]?[]const u8 = .{ null, null },
@@ -97,7 +99,11 @@ fn parse(args: []const []const u8) ?Options {
         } else if (std.mem.startsWith(u8, arg, "--native-variants=")) {
             if (options.saw_native_variants) return null;
             options.saw_native_variants = true;
-            options.config.native_variants = @import("runtime_contract").native_variants.Policy.parse(arg["--native-variants=".len..]) orelse return null;
+            options.config.native_variants = contract.native_variants.Policy.parse(arg["--native-variants=".len..]) orelse return null;
+        } else if (std.mem.startsWith(u8, arg, "--native-scalars=")) {
+            if (options.saw_native_scalars) return null;
+            options.saw_native_scalars = true;
+            options.config.scalar_policy = contract.scalars.Policy.parse(arg["--native-scalars=".len..]) orelse return null;
         } else if (std.mem.eql(u8, arg, "--drop-debug")) {
             options.config.drop_debug = true;
         } else if (std.mem.eql(u8, arg, "--drop-step-checks")) {

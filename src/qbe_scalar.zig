@@ -296,7 +296,9 @@ fn checkedMul(comptime E: type, self: *E, op: typed.BinaryOp, info: typed.Type.I
 }
 /// Lower truncating or flooring division and remainder with exact traps.
 fn checkedDivRem(comptime E: type, self: *E, op: typed.BinaryOp, info: typed.Type.Integer, values: Operands) Error!void {
-    if (try @import("qbe_constant_divisor.zig").lower(E, self, op, info, .{ .left = values.left, .right = values.right, .result = values.result })) return;
+    if (self.scalar_policy == .qbe) {
+        if (try @import("qbe_constant_divisor.zig").lower(E, self, op, info, .{ .left = values.left, .right = values.right, .result = values.result })) return;
+    }
     const zero = self.temp();
     try self.print(" %v{d} =l ceql %v{d}, 0\n", .{ zero, values.right });
     try self.print(" jnz %v{d}, @division{d}, @nonzero{d}\n@division{d}\n", .{ zero, values.result, values.result, values.result });

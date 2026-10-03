@@ -22,6 +22,7 @@ const loop_version = @import("qbe_loop_version.zig");
 const managed_lower = @import("qbe_managed.zig");
 const error_trace = @import("qbe_error_trace.zig");
 const std = @import("std");
+const contract = @import("runtime_contract");
 const bytecode = @import("bytecode.zig");
 const typed = @import("typed.zig");
 const native_types = @import("native_types.zig");
@@ -281,6 +282,7 @@ fn generateImpl(allocator: std.mem.Allocator, program_in: bytecode.Program, src:
         .arenas = arenas,
         .selected = selected,
         .native_variants = interface.policy.native_variants,
+        .scalar_policy = interface.policy.scalar_policy,
         .step_checks = interface.policy.step_checks,
         .frame_checks = interface.policy.frame_checks,
         .pure = &.{},
@@ -813,7 +815,8 @@ const EmitPass = struct {
     sink: *diagnostic.Sink,
     arenas: bool,
     selected: ?[]const bool,
-    native_variants: @import("runtime_contract").native_variants.Policy = .original,
+    native_variants: contract.native_variants.Policy = .original,
+    scalar_policy: contract.scalars.Policy = .qbe,
     step_checks: bool,
     /// Whether generated code enforces the `--max-frames` ceiling itself.
     frame_checks: bool,
@@ -862,6 +865,7 @@ fn emitEntry(pass: EmitPass, index: usize, scratch: std.mem.Allocator, certifica
         .scratch = .init(scratch),
         .arenas = pass.arenas,
         .native_variants = pass.native_variants,
+        .scalar_policy = pass.scalar_policy,
         .step_checks = pass.step_checks,
         .frame_checks = pass.frame_checks,
         .entry = index == @backingInt(pass.program.main),
@@ -1389,7 +1393,7 @@ fn flagsOf(pass: EmitPass, index: usize) fragments.Flags {
         .entry = index == @backingInt(pass.program.main),
         .exit_skip = runtime_mode.enabled() and exit_skip.last(pass.program, index),
         .cow = pass.cow,
-        .ownership = .{ .runtime = runtime_mode.lowered(), .native_variants = pass.native_variants },
+        .emission = .{ .runtime = runtime_mode.lowered(), .native_variants = pass.native_variants, .scalar_policy = pass.scalar_policy },
     };
 }
 
@@ -1724,7 +1728,8 @@ const Emitter = struct {
     serial: usize = 0,
     /// Emit the per-instruction position marker and step-budget check. A build
     /// that cannot be given a runtime ceiling drops both (see `QBE-STEP-ACCOUNTING-1`).
-    native_variants: @import("runtime_contract").native_variants.Policy = .original,
+    native_variants: contract.native_variants.Policy = .original,
+    scalar_policy: contract.scalars.Policy = .qbe,
     step_checks: bool = true,
     /// Emit the per-call depth ceiling and its counter. A build that was not given
     /// a frame ceiling omits both and refuses one at run time instead, exactly as

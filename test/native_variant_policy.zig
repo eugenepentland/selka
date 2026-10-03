@@ -17,6 +17,8 @@ const source =
     \\    saved = value
     \\    value.append(n + 1)
     \\    return saved[0] + len(value)
+    \\public def divide(x: int) -> int:
+    \\    return x // 7
     \\def main() -> int:
     \\    value = Choice.values([1, 2])
     \\    value = change(value)
@@ -141,4 +143,44 @@ test "RC-NATIVE-VARIANT-BACKEND-1 selective emission retains original counting a
     const dropped = try fixture.emitRuntimeEnvironment(&.{ fixture.select, "--drop-step-checks", "--drop-frame-checks", "--drop-debug" }, &environment, "--gc-runtime");
     try passed(dropped);
     try t.expectEqualStrings(original.stdout, dropped.stdout);
+}
+
+// spec-case: NATIVE-SCALAR-BACKEND-1
+test "NATIVE-SCALAR-BACKEND-1 alternating emission partitions lean replay and selective units" {
+    var fixture = try Fixture.init();
+    defer fixture.deinit();
+    try fixture.directory.dir.writeFile(t.io, .{ .sub_path = "select.txt", .data = "policy_program::divide\n" });
+    const original = try fixture.emit(&.{fixture.select});
+    try passed(original);
+    const selected = try fixture.emit(&.{ fixture.select, "--native-scalars=llvm-v1" });
+    try passed(selected);
+    try t.expect(std.mem.indexOf(u8, original.stdout, " =l umulh ") != null);
+    try t.expect(std.mem.indexOf(u8, selected.stdout, " =l div ") != null);
+    try t.expect(std.mem.indexOf(u8, selected.stdout, " =l umulh ") == null);
+    const original_again = try fixture.emit(&.{ fixture.select, "--native-scalars=qbe" });
+    try passed(original_again);
+    try t.expectEqualStrings(original.stdout, original_again.stdout);
+    const lean_qbe = try fixture.emit(&.{"--lean-manifest"});
+    try passed(lean_qbe);
+    const lean_llvm = try fixture.emit(&.{ "--lean-manifest", "--native-scalars=llvm-v1" });
+    try passed(lean_llvm);
+    try t.expect(!std.mem.eql(u8, lean_qbe.stdout, lean_llvm.stdout));
+    const replay_qbe = try fixture.emit(&.{"--lean-manifest"});
+    try passed(replay_qbe);
+    try t.expectEqualStrings(lean_qbe.stdout, replay_qbe.stdout);
+    const replay_llvm = try fixture.emit(&.{ "--lean-manifest", "--native-scalars=llvm-v1" });
+    try passed(replay_llvm);
+    try t.expectEqualStrings(lean_llvm.stdout, replay_llvm.stdout);
+}
+
+// spec-case: NATIVE-SCALAR-BACKEND-1
+test "NATIVE-SCALAR-BACKEND-1 rejects unknown duplicate and public-command flags" {
+    var fixture = try Fixture.init();
+    defer fixture.deinit();
+    const invalid = try fixture.emit(&.{"--native-scalars=unchecked"});
+    try t.expectEqual(std.process.Child.Term{ .exited = 2 }, invalid.term);
+    const duplicate = try fixture.emit(&.{ "--native-scalars=qbe", "--native-scalars=llvm-v1" });
+    try t.expectEqual(std.process.Child.Term{ .exited = 2 }, duplicate.term);
+    const public = try std.process.run(fixture.arena.allocator(), t.io, .{ .argv = &.{ compiler_path, "check", fixture.entry, "--native-scalars=llvm-v1" } });
+    try t.expectEqual(std.process.Child.Term{ .exited = 2 }, public.term);
 }

@@ -17,6 +17,7 @@
 //! QBE nor the text itself: the native build reads the text only when its own
 //! object cache misses.
 const std = @import("std");
+const contract = @import("runtime_contract");
 const bytecode = @import("bytecode_model.zig");
 const typed = @import("typed.zig");
 const Span = @import("source.zig").Span;
@@ -50,8 +51,8 @@ pub const Flags = struct {
     /// The copy-on-write code the unit carries (`COW-UNIQUE-1`). Folded into
     /// a key only when it is on, so every other key is unchanged.
     cow: @import("cow_plan.zig").Mode = .off,
-    /// Ownership ABI and instrumentation policy carried by emitted calls.
-    ownership: struct { runtime: @import("runtime_contract").Selection = .gc, native_variants: @import("runtime_contract").native_variants.Policy = .original } = .{},
+    /// Runtime ABI, ownership and checked scalar implementation policies.
+    emission: struct { runtime: contract.Selection = .gc, native_variants: contract.native_variants.Policy = .original, scalar_policy: contract.scalars.Policy = .qbe } = .{},
 };
 
 /// One memoized canonical digest and the ordinals it named, in first-mention order.
@@ -254,10 +255,11 @@ pub const Keys = struct {
         defer self.recycle(&canon);
         try canon.text(format_version);
         try canon.put(.{ .step_checks = flags.step_checks, .frame_checks = flags.frame_checks, .arenas = flags.arenas, .entry = flags.entry });
-        if (flags.ownership.native_variants != .original) try canon.text(flags.ownership.native_variants.identity());
+        if (flags.emission.native_variants != .original) try canon.text(flags.emission.native_variants.identity());
+        if (flags.emission.scalar_policy != .qbe) try canon.text(flags.emission.scalar_policy.identity());
         if (flags.cow != .off) try canon.text(@tagName(flags.cow));
         if (flags.exit_skip) try canon.text("exit-skip");
-        try canon.text(flags.ownership.runtime.identity());
+        try canon.text(flags.emission.runtime.identity());
         try canon.raw(&own.digest);
         var reached: std.ArrayList(u32) = .empty;
         defer reached.deinit(self.allocator);

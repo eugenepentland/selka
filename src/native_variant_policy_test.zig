@@ -145,7 +145,7 @@ test "RC-NATIVE-VARIANT-BACKEND-1 first-pass unit key includes enabled policy" {
     var keys = try fragments.Keys.init(t.allocator, compilation.code.?);
     defer keys.deinit();
     const original = try keys.local(0, .{ .step_checks = true, .frame_checks = true, .arenas = false, .entry = false });
-    const selected = try keys.local(0, .{ .step_checks = true, .frame_checks = true, .arenas = false, .entry = false, .ownership = .{ .native_variants = .qbe_v2 } });
+    const selected = try keys.local(0, .{ .step_checks = true, .frame_checks = true, .arenas = false, .entry = false, .emission = .{ .native_variants = .qbe_v2 } });
     try t.expect(!std.mem.eql(u8, &original, &selected));
 }
 

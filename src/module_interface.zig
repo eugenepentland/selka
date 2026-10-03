@@ -154,7 +154,7 @@ pub const Marks = struct { arena: bool = false, text: bool = false };
 
 /// The spelling of one emission configuration an interface's facts hold for.
 pub fn configName(allocator: std.mem.Allocator, config: EmissionConfig) std.mem.Allocator.Error![]u8 {
-    return std.fmt.allocPrint(allocator, "debug={s} steps={s} frames={s} arenas={s} runtime={s} values={s} cow={s}{s}", .{
+    return std.fmt.allocPrint(allocator, "debug={s} steps={s} frames={s} arenas={s} runtime={s} values={s} cow={s}{s}{s}", .{
         if (config.drop_debug) "dropped" else "kept",
         onOff(config.step_checks),
         onOff(config.frame_checks),
@@ -163,12 +163,20 @@ pub fn configName(allocator: std.mem.Allocator, config: EmissionConfig) std.mem.
         onOff(@import("value_semantics.zig").enabled()),
         if (@import("value_semantics.zig").counting()) "counting" else "checked",
         config.native_variants.suffix(),
+        config.scalar_policy.suffix(),
     });
 }
 
 /// The switches a module's emission facts depend on: the lowering's `debug`
 /// policy, the emission policy and the program-wide arena switch.
-pub const EmissionConfig = struct { drop_debug: bool, step_checks: bool, frame_checks: bool, arenas: bool, native_variants: @import("runtime_contract").native_variants.Policy = .original };
+pub const EmissionConfig = struct {
+    drop_debug: bool,
+    step_checks: bool,
+    frame_checks: bool,
+    arenas: bool,
+    native_variants: @import("runtime_contract").native_variants.Policy = .original,
+    scalar_policy: @import("runtime_contract").scalars.Policy = .qbe,
+};
 
 fn onOff(flag: bool) []const u8 {
     return if (flag) "on" else "off";

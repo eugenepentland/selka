@@ -90,3 +90,6 @@ pub fn resolve(selected: Selection, values: bool, explicit: bool) error{Incompat
     if (explicit) return error.IncompatibleRuntime;
     return .gc;
 }
+
+/// Backend-specific checked scalar instruction selection.
+pub const scalars = @import("scalar_lowering_policy.zig");

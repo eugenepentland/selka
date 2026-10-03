@@ -536,7 +536,11 @@ const Session = struct {
             .environment = if (settings.mode == .tests) try std.mem.concat(a, u8, &.{ ready.cache.environment, "\x00tests" }) else ready.cache.environment,
         } else .{ .root = try native_build.cacheRoot(context, parsed), .environment = "\x00check" };
         var switches = settings.switches;
-        if (prepared) |ready| switches.native_variants = native_build.nativeVariantPolicy(ready.cache, settings.foreign_producer or context.environ.get("MYLANG_HOST_COMPILER") != null);
+        if (prepared) |ready| {
+            const foreign = settings.foreign_producer or context.environ.get("MYLANG_HOST_COMPILER") != null;
+            switches.native_variants = native_build.nativeVariantPolicy(ready.cache, foreign);
+            switches.scalar_policy = native_build.scalarPolicy(ready.cache, foreign);
+        }
         const key: VariantKey = .{ .switches = switches, .place = place, .identity = settings.identity, .source = source };
         self.* = .{
             .prepared = prepared,
@@ -673,6 +677,7 @@ fn variantDirectory(context: fs.Context, key: VariantKey) ![]const u8 {
     const switches = key.switches;
     hash.update(&.{ @intFromBool(switches.drop_debug), @intFromBool(switches.step_checks), @intFromBool(switches.frame_checks) });
     if (switches.native_variants != .original) frame(&hash, switches.native_variants.identity());
+    if (switches.scalar_policy != .qbe) frame(&hash, switches.scalar_policy.identity());
     frame(&hash, key.place.environment);
     var digest: [32]u8 = undefined;
     hash.final(&digest);

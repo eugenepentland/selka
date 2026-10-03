@@ -9,6 +9,7 @@ test {
     _ = @import("qbe_scalar_conversion_test.zig");
     _ = @import("qbe_loop_bounded_write_test.zig");
     _ = @import("qbe_constant_divisor_test.zig");
+    _ = @import("scalar_lowering_policy_test.zig");
     _ = @import("qbe_rc_plain_aggregate_test.zig");
     _ = @import("qbe_rc_fresh_constructor_test.zig");
     _ = @import("qbe_mut_argument_places_test.zig");
