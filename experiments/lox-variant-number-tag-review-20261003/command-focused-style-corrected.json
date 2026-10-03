@@ -1,0 +1,20 @@
+{
+  "argv": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-variant-number-tag-20261003/scripts/build-slot.sh",
+    "build",
+    "zig",
+    "build",
+    "test-units",
+    "-Dtest-filter=RC-ZEROED-NUMBER-TAG-1",
+    "--cache-dir",
+    ".tmp-lox-variant-number-tag-20261003/cache"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-variant-number-tag-20261003",
+  "environment": {
+    "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-variant-number-tag-20261003/.tmp-lox-variant-number-tag-20261003/tmp",
+    "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-variant-number-tag-20261003/.tmp-lox-variant-number-tag-20261003/global-cache"
+  },
+  "status": 0,
+  "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stderr_sha256": "0b3ba6416fcd977f3fedcfd7b97aadb1e0a7e0259a55a699202c85ccb28d52f8"
+}

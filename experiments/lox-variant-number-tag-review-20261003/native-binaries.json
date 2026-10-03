@@ -1,0 +1,12 @@
+{
+  "binaries": {
+    "control-llvm": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-borrow-assert-20261003/.tmp-lox-borrow-assert-20261003/fixed-llvm-ast",
+    "control-qbe": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-borrow-assert-20261003/.tmp-lox-borrow-assert-20261003/fixed-qbe-ast",
+    "number-tag-rc-qbe": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-variant-number-tag-20261003/.tmp-lox-variant-number-tag-20261003/number-tag-stable-rc-qbe",
+    "number-tag-rc-llvm": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-variant-number-tag-20261003/.tmp-lox-variant-number-tag-20261003/number-tag-stable-rc-llvm",
+    "number-tag-ordinary-qbe": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-variant-number-tag-20261003/.tmp-lox-variant-number-tag-20261003/number-tag-stable-gc-qbe",
+    "number-tag-gc-qbe": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-variant-number-tag-20261003/.tmp-lox-variant-number-tag-20261003/number-tag-stable-gc-qbe",
+    "number-tag-ordinary-llvm": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-variant-number-tag-20261003/.tmp-lox-variant-number-tag-20261003/number-tag-stable-gc-llvm",
+    "number-tag-gc-llvm": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-variant-number-tag-20261003/.tmp-lox-variant-number-tag-20261003/number-tag-stable-gc-llvm"
+  }
+}

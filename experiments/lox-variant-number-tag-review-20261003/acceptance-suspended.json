@@ -1,0 +1,29 @@
+{
+  "reason": "Root identified frozen-prefix symlink targets before installing steps; gate suspended for owned tool layout repair.",
+  "processes": {},
+  "immutable_prefixes": {
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-variant-number-tag-20261003/.tmp-lox-variant-number-tag-20261003/compiler-final": {
+      "bin/qbe": "93aa6defa68d15e58f5a09d32f9721b51f765fe9c60ce88436e2dd715203a3e4",
+      "bin/mylang": "6f021b7cb95fda2ead4eeac9136576f38e098df8890b290bc8d83c20af722535",
+      "lib/mylang-runtime/7ad6693f6fea9bfe43fbc120a5be802d51d8b643c18accff34f74c325b7951ef.a.digest": "b8c5064cb04ccae2cd23b554b9875df5478443a30e9e1cc50b1acb9ad3b9aa9d",
+      "lib/mylang-runtime/5e32add4b19598a83e3a23166b7bc7a8a7b23fa2055dbc471fc35d7b6f30e6b0.a": "d5586bd0c73f964b5ca937217bdddfefa46b958eed0f5b7414f7dd4092f8591e",
+      "lib/mylang-runtime/aa7da790932ce8ef9fc1cfa5bc746f6e8421b99060b6d8fcfc086a075b93b93a.o.digest": "b88f35f70d6d5d0c5a31d4872f3354a10f12dc7eb69569501e2de4f0c2ff7d71",
+      "lib/mylang-runtime/aa7da790932ce8ef9fc1cfa5bc746f6e8421b99060b6d8fcfc086a075b93b93a.o": "885c1dbb092f4195503bff7a226d0e7a521dd29ae7587b7fd45141e1596472e5",
+      "lib/mylang-runtime/ff1a859a1e0dd6f3232b5766611e55937ac47fa52451c9cbdb55b3250a67b147.a.digest": "af2ee4bba7be8c708df0528db03cf52d2d9d34a2e9fc210cce388553f44195ed",
+      "lib/mylang-runtime/7ad6693f6fea9bfe43fbc120a5be802d51d8b643c18accff34f74c325b7951ef.a": "031909ccd36454ed835753db8a41e094a06bb468fa00c29cebea9f8b5911de06",
+      "lib/mylang-runtime/153db56129b1eda9ff74552a056faedcd3066fc945896cc54d7886aa5d214b3a.a": "d991009e601716f4eab07e203f1f10dda3644216fe70aa3ff026c9493dc850f9",
+      "lib/mylang-runtime/5e32add4b19598a83e3a23166b7bc7a8a7b23fa2055dbc471fc35d7b6f30e6b0.a.digest": "a088eecf3d596458b010ace42f87d417d43df20cec53eb6dc7923fa48258f6c8",
+      "lib/mylang-runtime/4a8b2145726b0271290fdd2aaee3d5e37e7e429f7edc3a8304d2eeb878220cbe.o": "f6acf7576e0eeb085cbf5fef404599edc5c61128feb2a68175d6644f0b69142a",
+      "lib/mylang-runtime/ff1a859a1e0dd6f3232b5766611e55937ac47fa52451c9cbdb55b3250a67b147.a": "9dd72408f333d8e76c66d583da10edf5fa96b13ff2fd91c9cfba49daa2422f1c",
+      "lib/mylang-runtime/db5f80af2d5ffaaceda2ecf1aadade4efebfabfbf325d8c73c2148e0b023b656.a": "331cfb8cc9b67653a77db6387e1db1fd567960efa52fae747af7d61c0e7c7506",
+      "lib/mylang-runtime/153db56129b1eda9ff74552a056faedcd3066fc945896cc54d7886aa5d214b3a.a.digest": "347433c0e6894e37cbc629d6a6ffe7687db96c191555fcebf225bcf82c713d19",
+      "lib/mylang-runtime/4a8b2145726b0271290fdd2aaee3d5e37e7e429f7edc3a8304d2eeb878220cbe.o.digest": "e06779c31fe94c5be330340860e1607116695aee09bfa0b2a7f2c448dda68663",
+      "lib/mylang-runtime/db5f80af2d5ffaaceda2ecf1aadade4efebfabfbf325d8c73c2148e0b023b656.a.digest": "7d488f899360c23e018da756dc9e764abfb0acb2ea62e0e4167107e2aedb5a83"
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-lowering-20261003/.tmp-lox-lowering/cfg-fix-release": {
+      "bin/qbe": "99ad919d70ad582dee6202b045bd53e1ab18fec356de98849610f49983756d63",
+      "bin/mylang": "d14a704083bcc5f5174932a751f7d9dda73100dbd62403626b42b52436cad040"
+    }
+  },
+  "guest_build_tool_window": "Confirm tool hashes and output receipts before inclusion; no performance/selection claim."
+}

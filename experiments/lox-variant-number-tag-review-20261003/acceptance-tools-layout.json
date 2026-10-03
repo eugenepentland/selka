@@ -1,0 +1,13 @@
+{
+  "reason": "QBE acceptance with-tools resolves mylang beside its hardcoded zig-out/bin/qbe; private --prefix moved both outside that expected path. Original failure retained, source unchanged.",
+  "links": {
+    "zig-out/bin/mylang": {
+      "target": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-variant-number-tag-20261003/.tmp-lox-variant-number-tag-20261003/compiler-final/bin/mylang",
+      "sha256": "6f021b7cb95fda2ead4eeac9136576f38e098df8890b290bc8d83c20af722535"
+    },
+    "zig-out/bin/qbe": {
+      "target": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-lowering-20261003/.tmp-lox-lowering/cfg-fix-release/bin/qbe",
+      "sha256": "99ad919d70ad582dee6202b045bd53e1ab18fec356de98849610f49983756d63"
+    }
+  }
+}

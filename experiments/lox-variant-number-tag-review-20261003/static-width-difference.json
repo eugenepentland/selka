@@ -1,0 +1,119 @@
+{
+  "meaning": "Exact six-function SSA comparison. No dynamic trace or speed claim.",
+  "functions": {
+    "interpreter::binary": {
+      "tag_store_pairs": [
+        [
+          " storew 2, %v571",
+          " storel 2, %v571"
+        ],
+        [
+          " storew 3, %v626",
+          " storel 3, %v626"
+        ]
+      ],
+      "ssa_only_changes_are_tag_widths": true,
+      "qbe_control_instructions_calls": [
+        1165,
+        83
+      ],
+      "qbe_candidate_instructions_calls": [
+        1165,
+        83
+      ]
+    },
+    "interpreter::unary": {
+      "tag_store_pairs": [
+        [
+          " storew 2, %v379",
+          " storel 2, %v379"
+        ]
+      ],
+      "ssa_only_changes_are_tag_widths": true,
+      "qbe_control_instructions_calls": [
+        816,
+        69
+      ],
+      "qbe_candidate_instructions_calls": [
+        816,
+        69
+      ]
+    },
+    "vm::numeric": {
+      "tag_store_pairs": [
+        [
+          " storew 2, %v242",
+          " storel 2, %v242"
+        ],
+        [
+          " storew 2, %v268",
+          " storel 2, %v268"
+        ],
+        [
+          " storew 2, %v289",
+          " storel 2, %v289"
+        ]
+      ],
+      "ssa_only_changes_are_tag_widths": true,
+      "qbe_control_instructions_calls": [
+        512,
+        27
+      ],
+      "qbe_candidate_instructions_calls": [
+        512,
+        27
+      ]
+    },
+    "vm::add": {
+      "tag_store_pairs": [
+        [
+          " storew 2, %v355",
+          " storel 2, %v355"
+        ]
+      ],
+      "ssa_only_changes_are_tag_widths": true,
+      "qbe_control_instructions_calls": [
+        493,
+        32
+      ],
+      "qbe_candidate_instructions_calls": [
+        493,
+        32
+      ]
+    },
+    "vm::negate": {
+      "tag_store_pairs": [
+        [
+          " storew 2, %v100",
+          " storel 2, %v100"
+        ]
+      ],
+      "ssa_only_changes_are_tag_widths": true,
+      "qbe_control_instructions_calls": [
+        281,
+        18
+      ],
+      "qbe_candidate_instructions_calls": [
+        281,
+        18
+      ]
+    },
+    "vm::run": {
+      "tag_store_pairs": [
+        [
+          " storew 3, %v6602",
+          " storel 3, %v6602"
+        ]
+      ],
+      "ssa_only_changes_are_tag_widths": true,
+      "qbe_control_instructions_calls": [
+        8606,
+        440
+      ],
+      "qbe_candidate_instructions_calls": [
+        8606,
+        440
+      ]
+    }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "argv": [
+    "taskset",
+    "-c",
+    "0,1,4,5,6,7,8,9,12,13,14,15,16,17,18,19",
+    "python3",
+    "experiments/lox-variant-number-tag-20261003/build-stable.py"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-variant-number-tag-20261003",
+  "environment": {
+    "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-variant-number-tag-20261003/.tmp-lox-variant-number-tag-20261003/tmp",
+    "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-variant-number-tag-20261003/.tmp-lox-variant-number-tag-20261003/global-cache"
+  },
+  "status": 0,
+  "stdout_sha256": "fcd32feb07604a28afca270abb1acb9c6396ab5774518f61436d297683d91648",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

@@ -1,0 +1,17 @@
+{
+  "argv": [
+    "taskset",
+    "-c",
+    "16",
+    "python3",
+    "-B",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-vm-stack-read-20261003/experiments/lox-variant-number-tag-review-20261003/verify.py"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-vm-stack-read-20261003",
+  "guest_or_compiler_execution": false,
+  "log_sha256": "bcba30fe4f749c84206872e7f2e6838e4755625e172ff031c5bc7f4b9b2b3a3c",
+  "performance_execution": false,
+  "review_sha256": "56b802eadf3931c3e11e6602d6365d2cdb950d46057e110635f5f31b8652a7de",
+  "status": 0,
+  "verifier_sha256": "9ea68eb33506c9b4ada6e59b50a862439b9024d3e5a91c088abea0637fd1a2d7"
+}
