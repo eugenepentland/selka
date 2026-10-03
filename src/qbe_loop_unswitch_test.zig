@@ -127,6 +127,60 @@ fn outcomes() !void {
     try sameOutcome(0, 3, std.math.maxInt(i64) - 1);
     try sameOutcome(3, 3, std.math.minInt(i64));
 }
+
+fn booleanJoins() !void {
+    const start = std.mem.indexOf(u8, main_source, "def main(") orelse return error.TestUnexpectedResult;
+    const body =
+        \\def main(args: list[str], out: Stream) -> int:
+        \\    kind = parsed(args, 0)
+        \\    count = parsed(args, 1)
+        \\    seed = parsed(args, 2)
+        \\    total = 0
+        \\    for i in range(count):
+        \\        if kind == 2:
+        \\            total += 1
+        \\        out.print(i)
+        \\        if CONDITION:
+        \\            total += 3
+        \\        else:
+        \\            total += 7
+        \\    out.print(total)
+        \\    return total
+    ;
+    for ([_][]const u8{
+        "kind == 2 or kind == 3",
+        "kind == 2 and kind != 3",
+        "(kind == 2 or kind == 3) and i < seed",
+        "i < seed and (kind == 2 or kind == 3)",
+        "(kind == 2 if i < seed else kind == 3)",
+        "kind == 2 or 1 // (seed - i) > 0",
+        "i < seed or kind == 2",
+        "(seed if i < 1 else kind) == 2",
+    }) |condition| {
+        const replaced = try std.mem.replaceOwned(u8, t.allocator, body, "CONDITION", condition);
+        defer t.allocator.free(replaced);
+        const input = try std.mem.concat(t.allocator, u8, &.{ main_source[0..start], replaced });
+        defer t.allocator.free(input);
+        var emitted_join = try emittedInput(input, false, false);
+        defer emitted_join.deinit();
+        const admitted = std.mem.indexOf(u8, try named(emitted_join.value, "main"), "QBE-LOOP-UNSWITCH-1") != null;
+        try t.expect(admitted);
+        for ([_]i64{ 2, 3, 99 }) |kind| {
+            try sameInputOutcome(input, kind, 3, 1);
+        }
+        try sameInputOutcome(input, 2, 0, 0);
+        try sameInputOutcome(input, 2, 3, 0);
+    }
+}
+
+// spec-case: QBE-LOOP-UNSWITCH-1
+test "invariant loop comparison joins preserve short circuit and conditional values" {
+    const saved = runtime.get();
+    defer runtime.set(saved);
+    runtime.set(.rc);
+    try booleanJoins();
+}
+
 fn literalLimit() !void {
     var input: std.Io.Writer.Allocating = .init(t.allocator);
     defer input.deinit();

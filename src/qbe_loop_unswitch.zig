@@ -43,15 +43,12 @@ pub fn finish(comptime E: type, self: *E, input: []u8) text.Error![]u8 {
 pub fn certify(comptime E: type, self: *E, head: usize, back: usize, budget: *usize) ?Certificate {
     const code = self.function.scope.instructions;
     const locals = self.function.scope.locals;
-    if (back >= code.len or head + 4 >= back or back - head > max_loop) return null;
-    if (locals.len > max_locals or !charge(budget, code.len + (back - head) * 4)) return null;
+    if (code.len > max_code or back >= code.len or head + 4 >= back or back - head > max_loop) return null;
+    if (locals.len > max_locals or !charge(budget, code.len * 2 + (back - head) * 4)) return null;
     if (!counted(code, head, back) or !empty(self.states, head)) return null;
     const bounds: Bounds = .{ .head = head, .back = back };
-    for (code, 0..) |instruction, pc| {
-        if (pc >= head and pc <= back) continue;
-        if (instruction.op == .switch_variant and !charge(budget, instruction.op.switch_variant.arms.len)) return null;
-        if (!targets.targetsSatisfy(instruction.op, pc, bounds, entered)) return null;
-    }
+    var incoming: [max_code]bool = @splat(false);
+    if (!findEntries(code, bounds, incoming[0..code.len], budget)) return null;
     var written: [max_locals]bool = @splat(false);
     for (code[head .. back + 1]) |instruction| switch (instruction.op) {
         .store_local, .move_local, .ref_local, .drop_local => |id| written[@backingInt(id)] = true,
@@ -64,7 +61,7 @@ pub fn certify(comptime E: type, self: *E, head: usize, back: usize, budget: *us
     var counts: [max_locals]u16 = @splat(0);
     var chosen: ?usize = null;
     for (head + 4..back - 2) |pc| {
-        const match = comparison(code, pc) orelse continue;
+        const match = comparison(code, incoming[0..code.len], pc) orelse continue;
         if (match.condition.predicate != .eq or written[match.slot]) continue;
         if (!empty(self.states, pc) or locals[match.slot].ty != .i64) continue;
         if (self.byReference(match.slot) or self.callerStorage(match.slot) or self.moves.aliased(match.slot)) continue;
@@ -76,7 +73,7 @@ pub fn certify(comptime E: type, self: *E, head: usize, back: usize, budget: *us
     if (referenced(code, slot)) return null;
     var result: Certificate = .{ .head = head, .back = back, .slot = slot, .conditions = .{}, .values = .{} };
     for (head + 4..back - 2) |pc| {
-        const match = comparison(code, pc) orelse continue;
+        const match = comparison(code, incoming[0..code.len], pc) orelse continue;
         if (match.slot != slot or !empty(self.states, pc)) continue;
         if (result.conditions.len == max_conditions) return null;
         result.conditions.items[result.conditions.len] = match.condition;
@@ -91,13 +88,31 @@ pub fn certify(comptime E: type, self: *E, head: usize, back: usize, budget: *us
 }
 
 const Match = struct { slot: usize, condition: Condition };
+fn findEntries(code: []const bytecode.Instruction, bounds: Bounds, incoming: []bool, budget: *usize) bool {
+    for (code, 0..) |instruction, pc| {
+        if (instruction.op == .switch_variant and !charge(budget, instruction.op.switch_variant.arms.len)) return false;
+        if (!targets.targetsSatisfy(instruction.op, pc, incoming, markEntry)) return false;
+        if (pc >= bounds.head and pc <= bounds.back) continue;
+        if (instruction.op == .switch_variant and !charge(budget, instruction.op.switch_variant.arms.len)) return false;
+        if (!targets.targetsSatisfy(instruction.op, pc, bounds, entered)) return false;
+    }
+    return true;
+}
 fn referenced(code: []const bytecode.Instruction, slot: usize) bool {
     for (code) |instruction| if (instruction.op == .ref_local and @backingInt(instruction.op.ref_local) == slot) return true;
     return false;
 }
-fn comparison(code: []const bytecode.Instruction, pc: usize) ?Match {
+fn markEntry(_: usize, to: usize, incoming: []bool) bool {
+    if (to >= incoming.len) return false;
+    incoming[to] = true;
+    return true;
+}
+fn comparison(code: []const bytecode.Instruction, incoming: []const bool, pc: usize) ?Match {
     if (pc + 3 >= code.len or code[pc].op != .load_local or code[pc + 1].op != .push_i64) return null;
     if (code[pc + 2].op != .cmp_i64 or code[pc + 3].op != .jump_if_false) return null;
+    // A short-circuit expression can jump directly to this final branch with
+    // another condition on the stack. Adjacency does not prove its producer.
+    if (incoming[pc + 1] or incoming[pc + 2] or incoming[pc + 3]) return null;
     return .{ .slot = @backingInt(code[pc].op.load_local), .condition = .{
         .pc = pc + 3,
         .value = code[pc + 1].op.push_i64,
