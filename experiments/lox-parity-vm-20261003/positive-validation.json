@@ -1,0 +1,277 @@
+{
+  "finished_utc": "2026-10-03T01:11:59.046424+00:00",
+  "source": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-parity/joined-flat",
+  "source_files": 37,
+  "source_hashes": {
+    "NOTES.md": "85541175c32b6745ce2b9be34da5004bf16d7c8d0e83a5e46b46db41b5bf490c",
+    "ast.my": "e210fb35bf3125ba06ebb978bcb3592162020a77576542f2d049879a51479bf9",
+    "bench.json": "dbcc26195c024bc86d9e184284306f4849450f1042d1fe53092e7b52a3deea92",
+    "chunk.my": "b4f6e7ae6531b224f99e026f53fee3692c90d8f2b15d3c76ca5962f1803e4b66",
+    "compiler.my": "c550603195401ff6d9436b42d6fbf0c35051521da57e7b85281fc8fcf6ebe048",
+    "compiler_test.my": "582fe817dbeffa709961b5124370ce200510adb3ac0d246572ca1c0dc19ec08a",
+    "driver.my": "fe831d2ec08833d11139e790ab741903b27a8e0fb43582cac11ca664b4595836",
+    "driver_cases.json": "d3d962467dadf4233746f2d5bf83c4801613d5b0f78deb8dbc47ff36d2a9fd82",
+    "driver_tests.my": "22d8af2ab688eed47b8cc9853eb7575e8baf5d288816838f420053b99a6fdadf",
+    "heap.my": "7c51426039c000c3bdb48db99abfefd488a68e622644b80b9fd3a1e88e200581",
+    "heap_test.my": "7989c141858f06fd18e9892df0eeeb57c88f5cab1005a18e28c2fe0aec0b1544",
+    "interpreter.my": "5dbe0b23190407cfd97692b1b84a22c6ffd96f9fe8b1621236059f368d8898e7",
+    "lox.sh": "9f82abeb4e1c21ce78a9f28d61281917927517f610403917aaf314f1294385fc",
+    "lox_strings.my": "383900dda10b9218caf2087e12a2e20089e4d48b0ec5fc3e17e960a3d70d83df",
+    "lox_strings_test.my": "a44545c64e9f75cc5af761d6c703feec83c4fc0a14d2678a1b2fce28067bd0c0",
+    "main.my": "18c1f669b1683123e635256c9f66c6db2766383391371c3822e61df7d9732274",
+    "natives.my": "2ff45343fded6d303e6233e0f787e63c319e860903e2c0c81ccbb71c2749d665",
+    "object.my": "08c0d5c6ae304ef4d0e1f5929f52b5d1dd47cd46e6c409392c0b5b1df9567ad7",
+    "output.my": "cdc79c8a9a5eca0106fb139bca5492da201f027b0499e5e00a492368317d194c",
+    "parser.my": "e9bd5d9c37e307d060ce165dc4fa0f276c2ff9dbe7cb21bd27cbdd94644b4edd",
+    "parser_test.my": "ffe2658f030c75b40a7c54d8f0c64e848e6679e13fc69cbef9a131ed7b120e4b",
+    "repros/overlap_proof_blowup.my.txt": "5c510f5d5e2d441cb5397a7d6097e3689a040751373d2c9594db6754812b4dfb",
+    "repros/print_long_float.my.txt": "0767918284593321e9589f14e3b90d9dc41239321d355be89aed055eef5cb132",
+    "repros/print_union_class_payload.my.txt": "c03c987b6bf03db950bb8e98c238a76c0e7ea9c4c98c29c3e5748cd2c3a4ce8d",
+    "repros/qbe_pm_slots.my.txt": "3560079c67785824971ae6f10c3f04e49e87e5e5dbd20afdd7f1c0a1b258dbe9",
+    "repros/read_fifo.my.txt": "2a3b1658eb6e4c9a0f40cfed13c0db92989e9c78de69150197df247a18e5becd",
+    "repros/runtime_flags.my.txt": "2d314b6501ea5be517e904e0791461f5900745a77e386c8403f6d15fefdd67eb",
+    "repros/stream_field_method.my.txt": "b551e742a030b770cc3861bebacbbc76beab0fc38aef78a54be7a3af4ee9eb97",
+    "resolver.my": "41d41b2a1ddb3f6ab3fb73ad9eff69415b0450d890554766bfee37eac8d0903d",
+    "resolver_test.my": "72c5176ff15db240d8ec8ff8073fcdb7736e8c60ab47410bb60fce934c179d31",
+    "scanner.my": "af4bc6a57859318051dc47d6e1f6344ee98fbfff037e9be93c0a103765cd3e83",
+    "scanner_test.my": "1d7fbb34b0de402657786641217e81c9ae286cab14baf2716de2db875ae39ad0",
+    "table.my": "c40086659df221f47deb6c1916b821f470b67ad5e844e24db3ba026b35f54f7e",
+    "table_test.my": "d5892b2f08c4f6b43db8295795f5292fbc7b8d004aceef01fc456df71997aca1",
+    "value.my": "3b2a444e77c6a703b1aedad3c89ef38cad70aa3bb6cba1716b623980ff9a76b0",
+    "value_test.my": "b766d22b25a8a8a090b4a059030cfc7462022fdacb66a0a91bf8a9e09a53fed4",
+    "vm.my": "a0ed4d08c6e172cbe2d8c6b349b251feb28d2bdab18950f8efcba7d1704a98c9"
+  },
+  "source_hashes_before_after_identical": true,
+  "root_manifest_before_after_identical": true,
+  "root_patch_before_after_identical": true,
+  "compiler_before_after_identical": true,
+  "binary_and_linked_runtime_hashes_before_after_identical": true,
+  "compiler": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-lowering-20261003/.tmp-lox-lowering/positive-release/bin/mylang",
+  "compiler_sha256": "da94c579e03ffaab2e9d43a6d9119b529bbb01dab5085e7a3986a6ecd98912c6",
+  "frozen_control_compiler_sha256": "45d05b554849bf3c12553549d9138556ba0204f9d59ba3aaa2ecb2327eb39ac4",
+  "root_manifest_sha256": "0016681dcec94379cff1dcac6c4308a6c93e1bac79d65d41e1783b4f7a482d7f",
+  "root_patch_sha256": "836ece359305c0e025fe253a629fbf80edaef202cadb8bbcb581a4260fa789ea",
+  "matrix": {
+    "candidate_observations": 1144,
+    "counts_by_runtime": {
+      "ordinary gc": 408,
+      "ordinary rc": 408,
+      "native GC stress": 328
+    },
+    "smoke_cases": 13,
+    "focused_regression_programs": 15,
+    "historical_error_cases_per_engine": 23,
+    "backends": [
+      "llvm",
+      "qbe"
+    ],
+    "engines": [
+      "vm",
+      "tree"
+    ],
+    "lox_gc_stress": [
+      false,
+      true
+    ],
+    "native_gc_stress_smoke_cases": [
+      "closures",
+      "instantiation",
+      "properties"
+    ],
+    "all_status_stdout_full_stderr_and_Lox_stats_equal_controls": true,
+    "intentionally_unrun_native_smoke_cells": 80,
+    "intentionally_unrun_native_smoke_names": [
+      "binary_trees",
+      "equality",
+      "fib",
+      "invocation",
+      "method_call",
+      "string_equality",
+      "strings",
+      "trees",
+      "zoo",
+      "zoo_batch"
+    ],
+    "unrun_cell_axes": "each listed name x LLVM/QBE x VM/tree x Lox stress off/on; native GC stress only"
+  },
+  "return_after_child_error": {
+    "candidate_comparisons": 24,
+    "total_observations_including_controls": 32,
+    "all_exact_equal": true
+  },
+  "rc_native_stress": {
+    "program_cells": "not applicable: native GC stress requires tracing GC; RC refuses before main",
+    "candidate_refusal_comparisons": 8,
+    "total_observations_including_controls": 16,
+    "status": 2,
+    "diagnostic_names": "--gc-runtime",
+    "all_exact_equal_controls": true
+  },
+  "validation_command": {
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/scripts/build-slot.sh",
+      "build",
+      "python3",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/experiments/lox-parity-tree-20261003/validate.py",
+      "--work",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/positive-joined-validation",
+      "--bench",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-perf-audit-20261002/.tmp-lox-audit/reference/benchmarks/lox/bench",
+      "--manifest",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/positive-joined-validation/binaries.json",
+      "--out",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/positive-joined-validation/validation.json",
+      "--cases",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/positive-joined-validation/regressions.json",
+      "--native-cases",
+      "closures,instantiation,properties",
+      "--jobs",
+      "2"
+    ],
+    "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003",
+    "environment": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/positive-joined-validation/tmp"
+    }
+  },
+  "gc_builds": [
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-lowering-20261003/.tmp-lox-lowering/positive-release/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-parity/joined-flat/main.my",
+        "--project",
+        "--backend",
+        "llvm",
+        "--llvm-opt",
+        "3",
+        "--lto",
+        "--gc-runtime",
+        "--keep-symbols",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/positive-joined-validation/cache-gc-llvm",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/positive-joined-validation/bin/positive-joined-flat-gc-llvm"
+      ],
+      "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003",
+      "environment": {
+        "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/positive-joined-validation/tmp"
+      },
+      "status": 0,
+      "binary_sha256": "1bab7eee5b0d8d6a26bcfe12e54432eaabbf68900b8ebd1e3491e886dc83282a"
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-lowering-20261003/.tmp-lox-lowering/positive-release/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-parity/joined-flat/main.my",
+        "--project",
+        "--backend",
+        "qbe",
+        "--gc-runtime",
+        "--keep-symbols",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/positive-joined-validation/cache-gc-qbe",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/positive-joined-validation/bin/positive-joined-flat-gc-qbe"
+      ],
+      "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003",
+      "environment": {
+        "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/positive-joined-validation/tmp"
+      },
+      "status": 0,
+      "binary_sha256": "3f6d30a1deecc8d359b4b20c3ccf5b4a12616a91d988e01c47852809874f9213"
+    }
+  ],
+  "artifact_contracts": {
+    "control-llvm": {
+      "runtime": "rc",
+      "native_stress": false,
+      "binary_sha256": "9b4f3c1b2f6701edcd060fae8a8a5556c4812114836eb55016fd78e2bfccacbf",
+      "link_manifest_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-perf-improvements-20261002/.tmp-lox-improvements/bin/joined-llvm.qbe-manifest.json",
+      "link_manifest_sha256": "b159aefbc53f37e2b04e46186e1ed0ca99c25127f415079c1d9cd0d70794f20a",
+      "runtime_object_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-perf-audit-20261002/zig-out/lib/mylang-runtime/ff1a859a1e0dd6f3232b5766611e55937ac47fa52451c9cbdb55b3250a67b147.a",
+      "runtime_object_sha256": "29443e2e3c4d4e6ef037e16b54ff532d01f7c6bd22b38035cf4ac3da48c9e3ab",
+      "link_identity": "05eaba01e10f2ff006c92f8d193eccee9b25453e779f311cd1a1a35289c1bd6e"
+    },
+    "positive-rc-llvm": {
+      "runtime": "rc",
+      "native_stress": false,
+      "binary_sha256": "d5d02bcc5c232d3dd325dfda2510787759cbba8d3e149aeb0d2e71b9b89ae12d",
+      "link_manifest_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-parity/bin/positive-joined-flat-llvm.qbe-manifest.json",
+      "link_manifest_sha256": "92ddbaf502a557aaeeb5179d9c178db1f18a834576c409494a7ced04fcc62256",
+      "runtime_object_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-parity/cache-positive-joined-flat-llvm/objects/f78adfeb5588c1d7d48b3af6bc4f01d9bbcecdd38138cbd52536d1efd37c2da7/dcd3fd9f611ad28bedf2077600ecbf7a121d0d912e392cd0e719083340ef8d22.a",
+      "runtime_object_sha256": "bac2d394bc0c47a7c8050ee51df9a704a23a3afdd94b94bd261d9213f022e090",
+      "link_identity": "4d0a7ee8fd021821ce1ec984b1bb8eb05c15935663779640f04bdab61622142d"
+    },
+    "positive-gcordinary-llvm": {
+      "runtime": "gc",
+      "native_stress": false,
+      "binary_sha256": "1bab7eee5b0d8d6a26bcfe12e54432eaabbf68900b8ebd1e3491e886dc83282a",
+      "link_manifest_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/positive-joined-validation/bin/positive-joined-flat-gc-llvm.qbe-manifest.json",
+      "link_manifest_sha256": "fd1ca3a60e0e043d9f9d27d5cfa5f825ef024da1a174f305ae2231685a7e13a2",
+      "runtime_object_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/positive-joined-validation/cache-gc-llvm/objects/f78adfeb5588c1d7d48b3af6bc4f01d9bbcecdd38138cbd52536d1efd37c2da7/94197ec709ea522d837e15a134dc5628f23be890ea445b5b512a074685adf551.a",
+      "runtime_object_sha256": "9c8a9ee5e313d03d10d57d2011751867d2584cb613004a46fff5fff61a1cf950",
+      "link_identity": "a95125a67f521eed4a63b07e1b7b4a0155e4e1243bde72f3a2fc8a7516eac2c3"
+    },
+    "positive-gc-llvm": {
+      "runtime": "gc",
+      "native_stress": true,
+      "binary_sha256": "1bab7eee5b0d8d6a26bcfe12e54432eaabbf68900b8ebd1e3491e886dc83282a",
+      "link_manifest_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/positive-joined-validation/bin/positive-joined-flat-gc-llvm.qbe-manifest.json",
+      "link_manifest_sha256": "fd1ca3a60e0e043d9f9d27d5cfa5f825ef024da1a174f305ae2231685a7e13a2",
+      "runtime_object_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/positive-joined-validation/cache-gc-llvm/objects/f78adfeb5588c1d7d48b3af6bc4f01d9bbcecdd38138cbd52536d1efd37c2da7/94197ec709ea522d837e15a134dc5628f23be890ea445b5b512a074685adf551.a",
+      "runtime_object_sha256": "9c8a9ee5e313d03d10d57d2011751867d2584cb613004a46fff5fff61a1cf950",
+      "link_identity": "a95125a67f521eed4a63b07e1b7b4a0155e4e1243bde72f3a2fc8a7516eac2c3"
+    },
+    "control-qbe": {
+      "runtime": "rc",
+      "native_stress": false,
+      "binary_sha256": "07dec25e2d797ba80681bd4304783378d55502e8a9e66482125ed27d0fae112b",
+      "link_manifest_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-perf-improvements-20261002/.tmp-lox-improvements/bin/joined-qbe.qbe-manifest.json",
+      "link_manifest_sha256": "d72e7a2733516fb98d03adbe242714ddd4caac477a50d783d508c692e5b2c817",
+      "runtime_object_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-perf-audit-20261002/zig-out/lib/mylang-runtime/153db56129b1eda9ff74552a056faedcd3066fc945896cc54d7886aa5d214b3a.a",
+      "runtime_object_sha256": "d991009e601716f4eab07e203f1f10dda3644216fe70aa3ff026c9493dc850f9",
+      "link_identity": "3413f580f6ece818c522fdd9716374362ecc30f864786234d8f02d310919a7da"
+    },
+    "positive-rc-qbe": {
+      "runtime": "rc",
+      "native_stress": false,
+      "binary_sha256": "6c775b52cdc7183058a4b8b4c933d4a06576a13f15d0c005457c9405ba1a1039",
+      "link_manifest_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-parity/bin/positive-joined-flat-qbe.qbe-manifest.json",
+      "link_manifest_sha256": "61890e387cf045c73f6c093efae8e4f94b6588c7ab2dfbaec0243fb5a39841fd",
+      "runtime_object_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-parity/cache-positive-joined-flat-qbe/objects/f78adfeb5588c1d7d48b3af6bc4f01d9bbcecdd38138cbd52536d1efd37c2da7/53f8e4c118fe774e6a81cb222bbe4d8fabf348ee210ca53acc3ddc073e49a23a.a",
+      "runtime_object_sha256": "d991009e601716f4eab07e203f1f10dda3644216fe70aa3ff026c9493dc850f9",
+      "link_identity": "081d0360ca1faa89fa20ce0dc45fbd7e7e81a358d0d4651fb507e5d429e3e242"
+    },
+    "positive-gcordinary-qbe": {
+      "runtime": "gc",
+      "native_stress": false,
+      "binary_sha256": "3f6d30a1deecc8d359b4b20c3ccf5b4a12616a91d988e01c47852809874f9213",
+      "link_manifest_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/positive-joined-validation/bin/positive-joined-flat-gc-qbe.qbe-manifest.json",
+      "link_manifest_sha256": "4c52de8d944610da1c64c9dd0537c826d00c6d125c8d9d4f3ad299e891c1d53f",
+      "runtime_object_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/positive-joined-validation/cache-gc-qbe/objects/f78adfeb5588c1d7d48b3af6bc4f01d9bbcecdd38138cbd52536d1efd37c2da7/1c0feb192081b306c1b01a3f3e0d5b824aec314bd501883a2239108aaa40fe1e.a",
+      "runtime_object_sha256": "8ee8c9de2842bc191466c932873d68031a2c68d513f1cc3d873653ddc96933c8",
+      "link_identity": "b6f40ee1157f0404b2f5f662c6ec6f85f8e31f4a041d241f1acaaefac0b66994"
+    },
+    "positive-gc-qbe": {
+      "runtime": "gc",
+      "native_stress": true,
+      "binary_sha256": "3f6d30a1deecc8d359b4b20c3ccf5b4a12616a91d988e01c47852809874f9213",
+      "link_manifest_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/positive-joined-validation/bin/positive-joined-flat-gc-qbe.qbe-manifest.json",
+      "link_manifest_sha256": "4c52de8d944610da1c64c9dd0537c826d00c6d125c8d9d4f3ad299e891c1d53f",
+      "runtime_object_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/positive-joined-validation/cache-gc-qbe/objects/f78adfeb5588c1d7d48b3af6bc4f01d9bbcecdd38138cbd52536d1efd37c2da7/1c0feb192081b306c1b01a3f3e0d5b824aec314bd501883a2239108aaa40fe1e.a",
+      "runtime_object_sha256": "8ee8c9de2842bc191466c932873d68031a2c68d513f1cc3d873653ddc96933c8",
+      "link_identity": "b6f40ee1157f0404b2f5f662c6ec6f85f8e31f4a041d241f1acaaefac0b66994"
+    }
+  },
+  "raw_receipt_sha256": "729342562fdba024ae4ae6d66e09319f1595c0cf7b51105e66126d11c0b275b5",
+  "compressed_observation_receipt": "positive-validation-observations.json.gz",
+  "compressed_observation_receipt_sha256": "af84b8aca347c06550a2c2a76250e2459eece30200fe1628d5b1fc3f07465c3c",
+  "validator_sha256": "b55e3400cf228b75757a5564f395f8af89a43db01aa8ead9e9d8afe67b946285",
+  "regressions_sha256": "341a810e5093ab6a7208d4dcc309d5e781b75b823dfcbb96390493b0fa49bc73",
+  "public_78_test_qualification": "Earlier312 passes used frozen compiler; this positive compiler matrix is end-to-end, not a rerun of all public unit tests."
+}

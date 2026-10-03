@@ -556,7 +556,7 @@
     }
   ],
   "overlay_replay_receipt": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/overlay-replay.json",
-  "gc_probe_receipt": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/gc-probes.json",
+  "gc_probe_receipt": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/gc-probes-corrected.json",
   "gc_guest_validation": {
     "runs": 64,
     "pairs": 32,
@@ -581,6 +581,17 @@
       "exact trace after child returns"
     ],
     "all_status_stdout_stderr_collector_stats_identical": true,
-    "receipt_sha256": "826b7945f0a36d4d0e9a329fb118a7c1916b1c01ead6e2f4c73620288dbb2581"
+    "receipt_sha256": "49a27d57889736302e77f2132474a478aa17b5ce7b9528b9f6871ae3756a3c79",
+    "native_stress_environment": {
+      "MYLANG_OPTIONS": "--gc-stress"
+    },
+    "receipt_file": "corrected-gc-probes.json",
+    "supersedes_ignored_environment_probe": true
+  },
+  "superseded_gc_probe_receipt": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/gc-probes.json",
+    "receipt_sha256": "826b7945f0a36d4d0e9a329fb118a7c1916b1c01ead6e2f4c73620288dbb2581",
+    "native_gc_stress_claim_valid": false,
+    "reason": "MYLANG_GC_STRESS is ignored; original nominal native-stress cells did not enable native stress. Receipt remains immutable and is excluded from native-stress claims."
   }
 }

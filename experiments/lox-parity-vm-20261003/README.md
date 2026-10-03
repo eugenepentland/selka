@@ -118,7 +118,13 @@ also built; their paths/hashes and exact commands are in `validation.json`.
 Those guests passed 64 baseline/candidate probe runs covering both backends,
 VM/tree, native GC stress on/off and Lox GC stress on/off. Status, stdout,
 stderr and Lox collector statistics matched exactly for open/closed upvalues
-and the error after child returns.
+and the error after child returns. The corrected rerun explicitly supplies
+`MYLANG_OPTIONS=--gc-stress` for native stress and is preserved in
+`corrected-gc-probes.json`. The initial `gc-probes.json` mistakenly set
+`MYLANG_GC_STRESS`, which the runtime ignores; that receipt remains immutable
+but is excluded from native-stress claims. The 300/312 unit-suite CLI stress
+claims are unaffected: their `--gc-stress` option propagates through the
+native test launcher.
 
 For the original counter recipe, the private measurement work contains
 `binaries.json`, `tmp/`, and `reference` pointing to the pinned audited Lox
@@ -141,3 +147,41 @@ unchanged. `validation.json` records final-source/fixture hashes, all build
 argv and artifacts, and complete suite summaries. The original
 `overlay-replay.json` checks all 30 final port files against a clean canonical
 port with this patch applied with zero fuzz.
+
+## Positive compiler end-to-end validation
+
+The immutable root `joined-flat` source combines this VM patch with the flat
+tree source lane. Its 37 source/metadata files and root JSON/patch hashes
+remained equal before and after validation. This run uses the positive-only
+ReleaseFast compiler with SHA256
+`da94c579e03ffaab2e9d43a6d9119b529bbb01dab5085e7a3986a6ecd98912c6`,
+compared against the original frozen checked RC controls. Root built the RC
+guests; this lane separately built LLVM O3/full LTO and QBE GC guests.
+
+The existing tree-lane `validate.py` passed **1,144 candidate observations**
+with exact status, stdout, full stderr and all four Lox collector statistics.
+Both backends and both engines run with Lox stress off/on. RC and ordinary GC
+run all 13 smoke cases, 15 focused regression programs and 23 historical
+errors per engine. Native GC stress runs all focused programs/errors and
+the bounded smoke cases `closures`, `instantiation` and `properties`.
+Another 24 candidate/control comparisons verify the exact error after child
+returns, across all applicable runtime settings. Eight representative RC
+native-stress requests refuse with the same exit 2 and `--gc-runtime`
+diagnostic as the controls; these are refusal checks, not GC program passes.
+
+Exactly 80 native-stress smoke cells remain intentionally unrun:
+`binary_trees`, `equality`, `fib`, `invocation`, `method_call`,
+`string_equality`, `strings`, `trees`, `zoo`, `zoo_batch`, each under
+LLVM/QBE, VM/tree and Lox stress off/on. Native stress with RC is unsupported;
+the runtime refuses it before `main`. The earlier 312 fresh public-test
+passes used the frozen compiler; this positive-compiler matrix is a separate
+end-to-end validation and does not claim a positive-compiler public-suite run.
+
+`positive-validation.json` records exact build/validation argv, all source
+hashes, executable and linked runtime archive hashes, matrix counts and the
+unrun cells. `positive-validation-observations.json.gz` retains every observed
+output/diagnostic/statistic and candidate/control argv/environment. Separate
+return-error and RC-refusal receipts are retained alongside it. Native stress
+uses `MYLANG_OPTIONS=--gc-stress`; Lox stress is the executable's independent
+`--gc-stress` argument. The private workspace is
+`.tmp-lox-parity-vm/positive-joined-validation`.

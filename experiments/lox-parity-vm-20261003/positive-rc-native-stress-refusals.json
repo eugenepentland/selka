@@ -1,0 +1,346 @@
+[
+  {
+    "backend": "llvm",
+    "engine": "vm",
+    "lox_gc_stress": false,
+    "arm": "control-llvm",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-perf-improvements-20261002/.tmp-lox-improvements/bin/joined-llvm",
+      "--engine=vm",
+      "--stats",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/positive-joined-validation/return-error.lox"
+    ],
+    "environment": {
+      "MYLANG_OPTIONS": "--gc-stress",
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/positive-joined-validation/tmp"
+    },
+    "actual": {
+      "status": 2,
+      "stdout": "",
+      "stderr": "mylang: --gc-stress needs a program built with --gc-runtime; this one uses reference counting\n"
+    }
+  },
+  {
+    "backend": "llvm",
+    "engine": "vm",
+    "lox_gc_stress": false,
+    "arm": "positive-rc-llvm",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-parity/bin/positive-joined-flat-llvm",
+      "--engine=vm",
+      "--stats",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/positive-joined-validation/return-error.lox"
+    ],
+    "environment": {
+      "MYLANG_OPTIONS": "--gc-stress",
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/positive-joined-validation/tmp"
+    },
+    "actual": {
+      "status": 2,
+      "stdout": "",
+      "stderr": "mylang: --gc-stress needs a program built with --gc-runtime; this one uses reference counting\n"
+    }
+  },
+  {
+    "backend": "llvm",
+    "engine": "vm",
+    "lox_gc_stress": true,
+    "arm": "control-llvm",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-perf-improvements-20261002/.tmp-lox-improvements/bin/joined-llvm",
+      "--engine=vm",
+      "--stats",
+      "--gc-stress",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/positive-joined-validation/return-error.lox"
+    ],
+    "environment": {
+      "MYLANG_OPTIONS": "--gc-stress",
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/positive-joined-validation/tmp"
+    },
+    "actual": {
+      "status": 2,
+      "stdout": "",
+      "stderr": "mylang: --gc-stress needs a program built with --gc-runtime; this one uses reference counting\n"
+    }
+  },
+  {
+    "backend": "llvm",
+    "engine": "vm",
+    "lox_gc_stress": true,
+    "arm": "positive-rc-llvm",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-parity/bin/positive-joined-flat-llvm",
+      "--engine=vm",
+      "--stats",
+      "--gc-stress",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/positive-joined-validation/return-error.lox"
+    ],
+    "environment": {
+      "MYLANG_OPTIONS": "--gc-stress",
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/positive-joined-validation/tmp"
+    },
+    "actual": {
+      "status": 2,
+      "stdout": "",
+      "stderr": "mylang: --gc-stress needs a program built with --gc-runtime; this one uses reference counting\n"
+    }
+  },
+  {
+    "backend": "llvm",
+    "engine": "tree",
+    "lox_gc_stress": false,
+    "arm": "control-llvm",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-perf-improvements-20261002/.tmp-lox-improvements/bin/joined-llvm",
+      "--engine=tree",
+      "--stats",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/positive-joined-validation/return-error.lox"
+    ],
+    "environment": {
+      "MYLANG_OPTIONS": "--gc-stress",
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/positive-joined-validation/tmp"
+    },
+    "actual": {
+      "status": 2,
+      "stdout": "",
+      "stderr": "mylang: --gc-stress needs a program built with --gc-runtime; this one uses reference counting\n"
+    }
+  },
+  {
+    "backend": "llvm",
+    "engine": "tree",
+    "lox_gc_stress": false,
+    "arm": "positive-rc-llvm",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-parity/bin/positive-joined-flat-llvm",
+      "--engine=tree",
+      "--stats",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/positive-joined-validation/return-error.lox"
+    ],
+    "environment": {
+      "MYLANG_OPTIONS": "--gc-stress",
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/positive-joined-validation/tmp"
+    },
+    "actual": {
+      "status": 2,
+      "stdout": "",
+      "stderr": "mylang: --gc-stress needs a program built with --gc-runtime; this one uses reference counting\n"
+    }
+  },
+  {
+    "backend": "llvm",
+    "engine": "tree",
+    "lox_gc_stress": true,
+    "arm": "control-llvm",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-perf-improvements-20261002/.tmp-lox-improvements/bin/joined-llvm",
+      "--engine=tree",
+      "--stats",
+      "--gc-stress",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/positive-joined-validation/return-error.lox"
+    ],
+    "environment": {
+      "MYLANG_OPTIONS": "--gc-stress",
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/positive-joined-validation/tmp"
+    },
+    "actual": {
+      "status": 2,
+      "stdout": "",
+      "stderr": "mylang: --gc-stress needs a program built with --gc-runtime; this one uses reference counting\n"
+    }
+  },
+  {
+    "backend": "llvm",
+    "engine": "tree",
+    "lox_gc_stress": true,
+    "arm": "positive-rc-llvm",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-parity/bin/positive-joined-flat-llvm",
+      "--engine=tree",
+      "--stats",
+      "--gc-stress",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/positive-joined-validation/return-error.lox"
+    ],
+    "environment": {
+      "MYLANG_OPTIONS": "--gc-stress",
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/positive-joined-validation/tmp"
+    },
+    "actual": {
+      "status": 2,
+      "stdout": "",
+      "stderr": "mylang: --gc-stress needs a program built with --gc-runtime; this one uses reference counting\n"
+    }
+  },
+  {
+    "backend": "qbe",
+    "engine": "vm",
+    "lox_gc_stress": false,
+    "arm": "control-qbe",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-perf-improvements-20261002/.tmp-lox-improvements/bin/joined-qbe",
+      "--engine=vm",
+      "--stats",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/positive-joined-validation/return-error.lox"
+    ],
+    "environment": {
+      "MYLANG_OPTIONS": "--gc-stress",
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/positive-joined-validation/tmp"
+    },
+    "actual": {
+      "status": 2,
+      "stdout": "",
+      "stderr": "mylang: --gc-stress needs a program built with --gc-runtime; this one uses reference counting\n"
+    }
+  },
+  {
+    "backend": "qbe",
+    "engine": "vm",
+    "lox_gc_stress": false,
+    "arm": "positive-rc-qbe",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-parity/bin/positive-joined-flat-qbe",
+      "--engine=vm",
+      "--stats",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/positive-joined-validation/return-error.lox"
+    ],
+    "environment": {
+      "MYLANG_OPTIONS": "--gc-stress",
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/positive-joined-validation/tmp"
+    },
+    "actual": {
+      "status": 2,
+      "stdout": "",
+      "stderr": "mylang: --gc-stress needs a program built with --gc-runtime; this one uses reference counting\n"
+    }
+  },
+  {
+    "backend": "qbe",
+    "engine": "vm",
+    "lox_gc_stress": true,
+    "arm": "control-qbe",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-perf-improvements-20261002/.tmp-lox-improvements/bin/joined-qbe",
+      "--engine=vm",
+      "--stats",
+      "--gc-stress",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/positive-joined-validation/return-error.lox"
+    ],
+    "environment": {
+      "MYLANG_OPTIONS": "--gc-stress",
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/positive-joined-validation/tmp"
+    },
+    "actual": {
+      "status": 2,
+      "stdout": "",
+      "stderr": "mylang: --gc-stress needs a program built with --gc-runtime; this one uses reference counting\n"
+    }
+  },
+  {
+    "backend": "qbe",
+    "engine": "vm",
+    "lox_gc_stress": true,
+    "arm": "positive-rc-qbe",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-parity/bin/positive-joined-flat-qbe",
+      "--engine=vm",
+      "--stats",
+      "--gc-stress",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/positive-joined-validation/return-error.lox"
+    ],
+    "environment": {
+      "MYLANG_OPTIONS": "--gc-stress",
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/positive-joined-validation/tmp"
+    },
+    "actual": {
+      "status": 2,
+      "stdout": "",
+      "stderr": "mylang: --gc-stress needs a program built with --gc-runtime; this one uses reference counting\n"
+    }
+  },
+  {
+    "backend": "qbe",
+    "engine": "tree",
+    "lox_gc_stress": false,
+    "arm": "control-qbe",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-perf-improvements-20261002/.tmp-lox-improvements/bin/joined-qbe",
+      "--engine=tree",
+      "--stats",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/positive-joined-validation/return-error.lox"
+    ],
+    "environment": {
+      "MYLANG_OPTIONS": "--gc-stress",
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/positive-joined-validation/tmp"
+    },
+    "actual": {
+      "status": 2,
+      "stdout": "",
+      "stderr": "mylang: --gc-stress needs a program built with --gc-runtime; this one uses reference counting\n"
+    }
+  },
+  {
+    "backend": "qbe",
+    "engine": "tree",
+    "lox_gc_stress": false,
+    "arm": "positive-rc-qbe",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-parity/bin/positive-joined-flat-qbe",
+      "--engine=tree",
+      "--stats",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/positive-joined-validation/return-error.lox"
+    ],
+    "environment": {
+      "MYLANG_OPTIONS": "--gc-stress",
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/positive-joined-validation/tmp"
+    },
+    "actual": {
+      "status": 2,
+      "stdout": "",
+      "stderr": "mylang: --gc-stress needs a program built with --gc-runtime; this one uses reference counting\n"
+    }
+  },
+  {
+    "backend": "qbe",
+    "engine": "tree",
+    "lox_gc_stress": true,
+    "arm": "control-qbe",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-perf-improvements-20261002/.tmp-lox-improvements/bin/joined-qbe",
+      "--engine=tree",
+      "--stats",
+      "--gc-stress",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/positive-joined-validation/return-error.lox"
+    ],
+    "environment": {
+      "MYLANG_OPTIONS": "--gc-stress",
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/positive-joined-validation/tmp"
+    },
+    "actual": {
+      "status": 2,
+      "stdout": "",
+      "stderr": "mylang: --gc-stress needs a program built with --gc-runtime; this one uses reference counting\n"
+    }
+  },
+  {
+    "backend": "qbe",
+    "engine": "tree",
+    "lox_gc_stress": true,
+    "arm": "positive-rc-qbe",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-parity/bin/positive-joined-flat-qbe",
+      "--engine=tree",
+      "--stats",
+      "--gc-stress",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/positive-joined-validation/return-error.lox"
+    ],
+    "environment": {
+      "MYLANG_OPTIONS": "--gc-stress",
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/positive-joined-validation/tmp"
+    },
+    "actual": {
+      "status": 2,
+      "stdout": "",
+      "stderr": "mylang: --gc-stress needs a program built with --gc-runtime; this one uses reference counting\n"
+    }
+  }
+]

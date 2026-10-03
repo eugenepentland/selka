@@ -1,0 +1,1634 @@
+[
+  {
+    "backend": "llvm",
+    "engine": "vm",
+    "native_gc_stress": false,
+    "lox_gc_stress": false,
+    "probe": "probe-upvalues",
+    "arm": "baseline",
+    "argv": [
+      "taskset",
+      "-c",
+      "14",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-perf-stack-20261002/.tmp-lox-stack/joined-qualification/bin/joined-gc-llvm",
+      "--engine=vm",
+      "--stats",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/probe-upvalues.lox"
+    ],
+    "env": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/tmp",
+      "MYLANG_OPTIONS": null
+    },
+    "binary_sha256": "0d43b19df9d53478365b51af3f5b83f056a1d4bd89f76095eea1b83e03b4cb37",
+    "status": 0,
+    "stdout": "12\n15\n",
+    "stderr": "[stats] engine=vm allocations=16 collections=0 freed=0 live=16\n"
+  },
+  {
+    "backend": "llvm",
+    "engine": "vm",
+    "native_gc_stress": false,
+    "lox_gc_stress": false,
+    "probe": "probe-upvalues",
+    "arm": "candidate",
+    "argv": [
+      "taskset",
+      "-c",
+      "14",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/bin/final-gc-llvm",
+      "--engine=vm",
+      "--stats",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/probe-upvalues.lox"
+    ],
+    "env": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/tmp",
+      "MYLANG_OPTIONS": null
+    },
+    "binary_sha256": "1765a4eb90a8590480aee624a199633de4f953a4c1c57594e96533b677bfab5a",
+    "status": 0,
+    "stdout": "12\n15\n",
+    "stderr": "[stats] engine=vm allocations=16 collections=0 freed=0 live=16\n"
+  },
+  {
+    "backend": "llvm",
+    "engine": "vm",
+    "native_gc_stress": false,
+    "lox_gc_stress": false,
+    "probe": "probe-return-error",
+    "arm": "baseline",
+    "argv": [
+      "taskset",
+      "-c",
+      "14",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-perf-stack-20261002/.tmp-lox-stack/joined-qualification/bin/joined-gc-llvm",
+      "--engine=vm",
+      "--stats",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/probe-return-error.lox"
+    ],
+    "env": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/tmp",
+      "MYLANG_OPTIONS": null
+    },
+    "binary_sha256": "0d43b19df9d53478365b51af3f5b83f056a1d4bd89f76095eea1b83e03b4cb37",
+    "status": 70,
+    "stdout": "",
+    "stderr": "Undefined variable 'absent'.\n[line 4] in dive()\n[line 3] in dive()\n[line 3] in dive()\n[line 9] in script\n[stats] engine=vm allocations=9 collections=0 freed=0 live=9\n"
+  },
+  {
+    "backend": "llvm",
+    "engine": "vm",
+    "native_gc_stress": false,
+    "lox_gc_stress": false,
+    "probe": "probe-return-error",
+    "arm": "candidate",
+    "argv": [
+      "taskset",
+      "-c",
+      "14",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/bin/final-gc-llvm",
+      "--engine=vm",
+      "--stats",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/probe-return-error.lox"
+    ],
+    "env": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/tmp",
+      "MYLANG_OPTIONS": null
+    },
+    "binary_sha256": "1765a4eb90a8590480aee624a199633de4f953a4c1c57594e96533b677bfab5a",
+    "status": 70,
+    "stdout": "",
+    "stderr": "Undefined variable 'absent'.\n[line 4] in dive()\n[line 3] in dive()\n[line 3] in dive()\n[line 9] in script\n[stats] engine=vm allocations=9 collections=0 freed=0 live=9\n"
+  },
+  {
+    "backend": "llvm",
+    "engine": "vm",
+    "native_gc_stress": false,
+    "lox_gc_stress": true,
+    "probe": "probe-upvalues",
+    "arm": "baseline",
+    "argv": [
+      "taskset",
+      "-c",
+      "14",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-perf-stack-20261002/.tmp-lox-stack/joined-qualification/bin/joined-gc-llvm",
+      "--engine=vm",
+      "--stats",
+      "--gc-stress",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/probe-upvalues.lox"
+    ],
+    "env": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/tmp",
+      "MYLANG_OPTIONS": null
+    },
+    "binary_sha256": "0d43b19df9d53478365b51af3f5b83f056a1d4bd89f76095eea1b83e03b4cb37",
+    "status": 0,
+    "stdout": "12\n15\n",
+    "stderr": "[stats] engine=vm allocations=16 collections=16 freed=0 live=16\n"
+  },
+  {
+    "backend": "llvm",
+    "engine": "vm",
+    "native_gc_stress": false,
+    "lox_gc_stress": true,
+    "probe": "probe-upvalues",
+    "arm": "candidate",
+    "argv": [
+      "taskset",
+      "-c",
+      "14",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/bin/final-gc-llvm",
+      "--engine=vm",
+      "--stats",
+      "--gc-stress",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/probe-upvalues.lox"
+    ],
+    "env": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/tmp",
+      "MYLANG_OPTIONS": null
+    },
+    "binary_sha256": "1765a4eb90a8590480aee624a199633de4f953a4c1c57594e96533b677bfab5a",
+    "status": 0,
+    "stdout": "12\n15\n",
+    "stderr": "[stats] engine=vm allocations=16 collections=16 freed=0 live=16\n"
+  },
+  {
+    "backend": "llvm",
+    "engine": "vm",
+    "native_gc_stress": false,
+    "lox_gc_stress": true,
+    "probe": "probe-return-error",
+    "arm": "baseline",
+    "argv": [
+      "taskset",
+      "-c",
+      "14",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-perf-stack-20261002/.tmp-lox-stack/joined-qualification/bin/joined-gc-llvm",
+      "--engine=vm",
+      "--stats",
+      "--gc-stress",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/probe-return-error.lox"
+    ],
+    "env": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/tmp",
+      "MYLANG_OPTIONS": null
+    },
+    "binary_sha256": "0d43b19df9d53478365b51af3f5b83f056a1d4bd89f76095eea1b83e03b4cb37",
+    "status": 70,
+    "stdout": "",
+    "stderr": "Undefined variable 'absent'.\n[line 4] in dive()\n[line 3] in dive()\n[line 3] in dive()\n[line 9] in script\n[stats] engine=vm allocations=9 collections=9 freed=0 live=9\n"
+  },
+  {
+    "backend": "llvm",
+    "engine": "vm",
+    "native_gc_stress": false,
+    "lox_gc_stress": true,
+    "probe": "probe-return-error",
+    "arm": "candidate",
+    "argv": [
+      "taskset",
+      "-c",
+      "14",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/bin/final-gc-llvm",
+      "--engine=vm",
+      "--stats",
+      "--gc-stress",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/probe-return-error.lox"
+    ],
+    "env": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/tmp",
+      "MYLANG_OPTIONS": null
+    },
+    "binary_sha256": "1765a4eb90a8590480aee624a199633de4f953a4c1c57594e96533b677bfab5a",
+    "status": 70,
+    "stdout": "",
+    "stderr": "Undefined variable 'absent'.\n[line 4] in dive()\n[line 3] in dive()\n[line 3] in dive()\n[line 9] in script\n[stats] engine=vm allocations=9 collections=9 freed=0 live=9\n"
+  },
+  {
+    "backend": "llvm",
+    "engine": "vm",
+    "native_gc_stress": true,
+    "lox_gc_stress": false,
+    "probe": "probe-upvalues",
+    "arm": "baseline",
+    "argv": [
+      "taskset",
+      "-c",
+      "14",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-perf-stack-20261002/.tmp-lox-stack/joined-qualification/bin/joined-gc-llvm",
+      "--engine=vm",
+      "--stats",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/probe-upvalues.lox"
+    ],
+    "env": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/tmp",
+      "MYLANG_OPTIONS": "--gc-stress"
+    },
+    "binary_sha256": "0d43b19df9d53478365b51af3f5b83f056a1d4bd89f76095eea1b83e03b4cb37",
+    "status": 0,
+    "stdout": "12\n15\n",
+    "stderr": "[stats] engine=vm allocations=16 collections=0 freed=0 live=16\n"
+  },
+  {
+    "backend": "llvm",
+    "engine": "vm",
+    "native_gc_stress": true,
+    "lox_gc_stress": false,
+    "probe": "probe-upvalues",
+    "arm": "candidate",
+    "argv": [
+      "taskset",
+      "-c",
+      "14",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/bin/final-gc-llvm",
+      "--engine=vm",
+      "--stats",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/probe-upvalues.lox"
+    ],
+    "env": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/tmp",
+      "MYLANG_OPTIONS": "--gc-stress"
+    },
+    "binary_sha256": "1765a4eb90a8590480aee624a199633de4f953a4c1c57594e96533b677bfab5a",
+    "status": 0,
+    "stdout": "12\n15\n",
+    "stderr": "[stats] engine=vm allocations=16 collections=0 freed=0 live=16\n"
+  },
+  {
+    "backend": "llvm",
+    "engine": "vm",
+    "native_gc_stress": true,
+    "lox_gc_stress": false,
+    "probe": "probe-return-error",
+    "arm": "baseline",
+    "argv": [
+      "taskset",
+      "-c",
+      "14",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-perf-stack-20261002/.tmp-lox-stack/joined-qualification/bin/joined-gc-llvm",
+      "--engine=vm",
+      "--stats",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/probe-return-error.lox"
+    ],
+    "env": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/tmp",
+      "MYLANG_OPTIONS": "--gc-stress"
+    },
+    "binary_sha256": "0d43b19df9d53478365b51af3f5b83f056a1d4bd89f76095eea1b83e03b4cb37",
+    "status": 70,
+    "stdout": "",
+    "stderr": "Undefined variable 'absent'.\n[line 4] in dive()\n[line 3] in dive()\n[line 3] in dive()\n[line 9] in script\n[stats] engine=vm allocations=9 collections=0 freed=0 live=9\n"
+  },
+  {
+    "backend": "llvm",
+    "engine": "vm",
+    "native_gc_stress": true,
+    "lox_gc_stress": false,
+    "probe": "probe-return-error",
+    "arm": "candidate",
+    "argv": [
+      "taskset",
+      "-c",
+      "14",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/bin/final-gc-llvm",
+      "--engine=vm",
+      "--stats",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/probe-return-error.lox"
+    ],
+    "env": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/tmp",
+      "MYLANG_OPTIONS": "--gc-stress"
+    },
+    "binary_sha256": "1765a4eb90a8590480aee624a199633de4f953a4c1c57594e96533b677bfab5a",
+    "status": 70,
+    "stdout": "",
+    "stderr": "Undefined variable 'absent'.\n[line 4] in dive()\n[line 3] in dive()\n[line 3] in dive()\n[line 9] in script\n[stats] engine=vm allocations=9 collections=0 freed=0 live=9\n"
+  },
+  {
+    "backend": "llvm",
+    "engine": "vm",
+    "native_gc_stress": true,
+    "lox_gc_stress": true,
+    "probe": "probe-upvalues",
+    "arm": "baseline",
+    "argv": [
+      "taskset",
+      "-c",
+      "14",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-perf-stack-20261002/.tmp-lox-stack/joined-qualification/bin/joined-gc-llvm",
+      "--engine=vm",
+      "--stats",
+      "--gc-stress",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/probe-upvalues.lox"
+    ],
+    "env": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/tmp",
+      "MYLANG_OPTIONS": "--gc-stress"
+    },
+    "binary_sha256": "0d43b19df9d53478365b51af3f5b83f056a1d4bd89f76095eea1b83e03b4cb37",
+    "status": 0,
+    "stdout": "12\n15\n",
+    "stderr": "[stats] engine=vm allocations=16 collections=16 freed=0 live=16\n"
+  },
+  {
+    "backend": "llvm",
+    "engine": "vm",
+    "native_gc_stress": true,
+    "lox_gc_stress": true,
+    "probe": "probe-upvalues",
+    "arm": "candidate",
+    "argv": [
+      "taskset",
+      "-c",
+      "14",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/bin/final-gc-llvm",
+      "--engine=vm",
+      "--stats",
+      "--gc-stress",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/probe-upvalues.lox"
+    ],
+    "env": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/tmp",
+      "MYLANG_OPTIONS": "--gc-stress"
+    },
+    "binary_sha256": "1765a4eb90a8590480aee624a199633de4f953a4c1c57594e96533b677bfab5a",
+    "status": 0,
+    "stdout": "12\n15\n",
+    "stderr": "[stats] engine=vm allocations=16 collections=16 freed=0 live=16\n"
+  },
+  {
+    "backend": "llvm",
+    "engine": "vm",
+    "native_gc_stress": true,
+    "lox_gc_stress": true,
+    "probe": "probe-return-error",
+    "arm": "baseline",
+    "argv": [
+      "taskset",
+      "-c",
+      "14",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-perf-stack-20261002/.tmp-lox-stack/joined-qualification/bin/joined-gc-llvm",
+      "--engine=vm",
+      "--stats",
+      "--gc-stress",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/probe-return-error.lox"
+    ],
+    "env": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/tmp",
+      "MYLANG_OPTIONS": "--gc-stress"
+    },
+    "binary_sha256": "0d43b19df9d53478365b51af3f5b83f056a1d4bd89f76095eea1b83e03b4cb37",
+    "status": 70,
+    "stdout": "",
+    "stderr": "Undefined variable 'absent'.\n[line 4] in dive()\n[line 3] in dive()\n[line 3] in dive()\n[line 9] in script\n[stats] engine=vm allocations=9 collections=9 freed=0 live=9\n"
+  },
+  {
+    "backend": "llvm",
+    "engine": "vm",
+    "native_gc_stress": true,
+    "lox_gc_stress": true,
+    "probe": "probe-return-error",
+    "arm": "candidate",
+    "argv": [
+      "taskset",
+      "-c",
+      "14",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/bin/final-gc-llvm",
+      "--engine=vm",
+      "--stats",
+      "--gc-stress",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/probe-return-error.lox"
+    ],
+    "env": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/tmp",
+      "MYLANG_OPTIONS": "--gc-stress"
+    },
+    "binary_sha256": "1765a4eb90a8590480aee624a199633de4f953a4c1c57594e96533b677bfab5a",
+    "status": 70,
+    "stdout": "",
+    "stderr": "Undefined variable 'absent'.\n[line 4] in dive()\n[line 3] in dive()\n[line 3] in dive()\n[line 9] in script\n[stats] engine=vm allocations=9 collections=9 freed=0 live=9\n"
+  },
+  {
+    "backend": "llvm",
+    "engine": "tree",
+    "native_gc_stress": false,
+    "lox_gc_stress": false,
+    "probe": "probe-upvalues",
+    "arm": "baseline",
+    "argv": [
+      "taskset",
+      "-c",
+      "14",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-perf-stack-20261002/.tmp-lox-stack/joined-qualification/bin/joined-gc-llvm",
+      "--engine=tree",
+      "--stats",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/probe-upvalues.lox"
+    ],
+    "env": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/tmp",
+      "MYLANG_OPTIONS": null
+    },
+    "binary_sha256": "0d43b19df9d53478365b51af3f5b83f056a1d4bd89f76095eea1b83e03b4cb37",
+    "status": 0,
+    "stdout": "12\n15\n",
+    "stderr": "[stats] engine=tree allocations=18 collections=0 freed=0 live=18\n"
+  },
+  {
+    "backend": "llvm",
+    "engine": "tree",
+    "native_gc_stress": false,
+    "lox_gc_stress": false,
+    "probe": "probe-upvalues",
+    "arm": "candidate",
+    "argv": [
+      "taskset",
+      "-c",
+      "14",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/bin/final-gc-llvm",
+      "--engine=tree",
+      "--stats",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/probe-upvalues.lox"
+    ],
+    "env": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/tmp",
+      "MYLANG_OPTIONS": null
+    },
+    "binary_sha256": "1765a4eb90a8590480aee624a199633de4f953a4c1c57594e96533b677bfab5a",
+    "status": 0,
+    "stdout": "12\n15\n",
+    "stderr": "[stats] engine=tree allocations=18 collections=0 freed=0 live=18\n"
+  },
+  {
+    "backend": "llvm",
+    "engine": "tree",
+    "native_gc_stress": false,
+    "lox_gc_stress": false,
+    "probe": "probe-return-error",
+    "arm": "baseline",
+    "argv": [
+      "taskset",
+      "-c",
+      "14",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-perf-stack-20261002/.tmp-lox-stack/joined-qualification/bin/joined-gc-llvm",
+      "--engine=tree",
+      "--stats",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/probe-return-error.lox"
+    ],
+    "env": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/tmp",
+      "MYLANG_OPTIONS": null
+    },
+    "binary_sha256": "0d43b19df9d53478365b51af3f5b83f056a1d4bd89f76095eea1b83e03b4cb37",
+    "status": 70,
+    "stdout": "",
+    "stderr": "Undefined variable 'absent'.\n[line 4]\n[stats] engine=tree allocations=17 collections=0 freed=0 live=17\n"
+  },
+  {
+    "backend": "llvm",
+    "engine": "tree",
+    "native_gc_stress": false,
+    "lox_gc_stress": false,
+    "probe": "probe-return-error",
+    "arm": "candidate",
+    "argv": [
+      "taskset",
+      "-c",
+      "14",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/bin/final-gc-llvm",
+      "--engine=tree",
+      "--stats",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/probe-return-error.lox"
+    ],
+    "env": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/tmp",
+      "MYLANG_OPTIONS": null
+    },
+    "binary_sha256": "1765a4eb90a8590480aee624a199633de4f953a4c1c57594e96533b677bfab5a",
+    "status": 70,
+    "stdout": "",
+    "stderr": "Undefined variable 'absent'.\n[line 4]\n[stats] engine=tree allocations=17 collections=0 freed=0 live=17\n"
+  },
+  {
+    "backend": "llvm",
+    "engine": "tree",
+    "native_gc_stress": false,
+    "lox_gc_stress": true,
+    "probe": "probe-upvalues",
+    "arm": "baseline",
+    "argv": [
+      "taskset",
+      "-c",
+      "14",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-perf-stack-20261002/.tmp-lox-stack/joined-qualification/bin/joined-gc-llvm",
+      "--engine=tree",
+      "--stats",
+      "--gc-stress",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/probe-upvalues.lox"
+    ],
+    "env": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/tmp",
+      "MYLANG_OPTIONS": null
+    },
+    "binary_sha256": "0d43b19df9d53478365b51af3f5b83f056a1d4bd89f76095eea1b83e03b4cb37",
+    "status": 0,
+    "stdout": "12\n15\n",
+    "stderr": "[stats] engine=tree allocations=18 collections=18 freed=2 live=16\n"
+  },
+  {
+    "backend": "llvm",
+    "engine": "tree",
+    "native_gc_stress": false,
+    "lox_gc_stress": true,
+    "probe": "probe-upvalues",
+    "arm": "candidate",
+    "argv": [
+      "taskset",
+      "-c",
+      "14",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/bin/final-gc-llvm",
+      "--engine=tree",
+      "--stats",
+      "--gc-stress",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/probe-upvalues.lox"
+    ],
+    "env": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/tmp",
+      "MYLANG_OPTIONS": null
+    },
+    "binary_sha256": "1765a4eb90a8590480aee624a199633de4f953a4c1c57594e96533b677bfab5a",
+    "status": 0,
+    "stdout": "12\n15\n",
+    "stderr": "[stats] engine=tree allocations=18 collections=18 freed=2 live=16\n"
+  },
+  {
+    "backend": "llvm",
+    "engine": "tree",
+    "native_gc_stress": false,
+    "lox_gc_stress": true,
+    "probe": "probe-return-error",
+    "arm": "baseline",
+    "argv": [
+      "taskset",
+      "-c",
+      "14",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-perf-stack-20261002/.tmp-lox-stack/joined-qualification/bin/joined-gc-llvm",
+      "--engine=tree",
+      "--stats",
+      "--gc-stress",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/probe-return-error.lox"
+    ],
+    "env": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/tmp",
+      "MYLANG_OPTIONS": null
+    },
+    "binary_sha256": "0d43b19df9d53478365b51af3f5b83f056a1d4bd89f76095eea1b83e03b4cb37",
+    "status": 70,
+    "stdout": "",
+    "stderr": "Undefined variable 'absent'.\n[line 4]\n[stats] engine=tree allocations=17 collections=17 freed=0 live=17\n"
+  },
+  {
+    "backend": "llvm",
+    "engine": "tree",
+    "native_gc_stress": false,
+    "lox_gc_stress": true,
+    "probe": "probe-return-error",
+    "arm": "candidate",
+    "argv": [
+      "taskset",
+      "-c",
+      "14",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/bin/final-gc-llvm",
+      "--engine=tree",
+      "--stats",
+      "--gc-stress",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/probe-return-error.lox"
+    ],
+    "env": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/tmp",
+      "MYLANG_OPTIONS": null
+    },
+    "binary_sha256": "1765a4eb90a8590480aee624a199633de4f953a4c1c57594e96533b677bfab5a",
+    "status": 70,
+    "stdout": "",
+    "stderr": "Undefined variable 'absent'.\n[line 4]\n[stats] engine=tree allocations=17 collections=17 freed=0 live=17\n"
+  },
+  {
+    "backend": "llvm",
+    "engine": "tree",
+    "native_gc_stress": true,
+    "lox_gc_stress": false,
+    "probe": "probe-upvalues",
+    "arm": "baseline",
+    "argv": [
+      "taskset",
+      "-c",
+      "14",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-perf-stack-20261002/.tmp-lox-stack/joined-qualification/bin/joined-gc-llvm",
+      "--engine=tree",
+      "--stats",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/probe-upvalues.lox"
+    ],
+    "env": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/tmp",
+      "MYLANG_OPTIONS": "--gc-stress"
+    },
+    "binary_sha256": "0d43b19df9d53478365b51af3f5b83f056a1d4bd89f76095eea1b83e03b4cb37",
+    "status": 0,
+    "stdout": "12\n15\n",
+    "stderr": "[stats] engine=tree allocations=18 collections=0 freed=0 live=18\n"
+  },
+  {
+    "backend": "llvm",
+    "engine": "tree",
+    "native_gc_stress": true,
+    "lox_gc_stress": false,
+    "probe": "probe-upvalues",
+    "arm": "candidate",
+    "argv": [
+      "taskset",
+      "-c",
+      "14",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/bin/final-gc-llvm",
+      "--engine=tree",
+      "--stats",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/probe-upvalues.lox"
+    ],
+    "env": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/tmp",
+      "MYLANG_OPTIONS": "--gc-stress"
+    },
+    "binary_sha256": "1765a4eb90a8590480aee624a199633de4f953a4c1c57594e96533b677bfab5a",
+    "status": 0,
+    "stdout": "12\n15\n",
+    "stderr": "[stats] engine=tree allocations=18 collections=0 freed=0 live=18\n"
+  },
+  {
+    "backend": "llvm",
+    "engine": "tree",
+    "native_gc_stress": true,
+    "lox_gc_stress": false,
+    "probe": "probe-return-error",
+    "arm": "baseline",
+    "argv": [
+      "taskset",
+      "-c",
+      "14",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-perf-stack-20261002/.tmp-lox-stack/joined-qualification/bin/joined-gc-llvm",
+      "--engine=tree",
+      "--stats",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/probe-return-error.lox"
+    ],
+    "env": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/tmp",
+      "MYLANG_OPTIONS": "--gc-stress"
+    },
+    "binary_sha256": "0d43b19df9d53478365b51af3f5b83f056a1d4bd89f76095eea1b83e03b4cb37",
+    "status": 70,
+    "stdout": "",
+    "stderr": "Undefined variable 'absent'.\n[line 4]\n[stats] engine=tree allocations=17 collections=0 freed=0 live=17\n"
+  },
+  {
+    "backend": "llvm",
+    "engine": "tree",
+    "native_gc_stress": true,
+    "lox_gc_stress": false,
+    "probe": "probe-return-error",
+    "arm": "candidate",
+    "argv": [
+      "taskset",
+      "-c",
+      "14",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/bin/final-gc-llvm",
+      "--engine=tree",
+      "--stats",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/probe-return-error.lox"
+    ],
+    "env": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/tmp",
+      "MYLANG_OPTIONS": "--gc-stress"
+    },
+    "binary_sha256": "1765a4eb90a8590480aee624a199633de4f953a4c1c57594e96533b677bfab5a",
+    "status": 70,
+    "stdout": "",
+    "stderr": "Undefined variable 'absent'.\n[line 4]\n[stats] engine=tree allocations=17 collections=0 freed=0 live=17\n"
+  },
+  {
+    "backend": "llvm",
+    "engine": "tree",
+    "native_gc_stress": true,
+    "lox_gc_stress": true,
+    "probe": "probe-upvalues",
+    "arm": "baseline",
+    "argv": [
+      "taskset",
+      "-c",
+      "14",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-perf-stack-20261002/.tmp-lox-stack/joined-qualification/bin/joined-gc-llvm",
+      "--engine=tree",
+      "--stats",
+      "--gc-stress",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/probe-upvalues.lox"
+    ],
+    "env": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/tmp",
+      "MYLANG_OPTIONS": "--gc-stress"
+    },
+    "binary_sha256": "0d43b19df9d53478365b51af3f5b83f056a1d4bd89f76095eea1b83e03b4cb37",
+    "status": 0,
+    "stdout": "12\n15\n",
+    "stderr": "[stats] engine=tree allocations=18 collections=18 freed=2 live=16\n"
+  },
+  {
+    "backend": "llvm",
+    "engine": "tree",
+    "native_gc_stress": true,
+    "lox_gc_stress": true,
+    "probe": "probe-upvalues",
+    "arm": "candidate",
+    "argv": [
+      "taskset",
+      "-c",
+      "14",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/bin/final-gc-llvm",
+      "--engine=tree",
+      "--stats",
+      "--gc-stress",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/probe-upvalues.lox"
+    ],
+    "env": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/tmp",
+      "MYLANG_OPTIONS": "--gc-stress"
+    },
+    "binary_sha256": "1765a4eb90a8590480aee624a199633de4f953a4c1c57594e96533b677bfab5a",
+    "status": 0,
+    "stdout": "12\n15\n",
+    "stderr": "[stats] engine=tree allocations=18 collections=18 freed=2 live=16\n"
+  },
+  {
+    "backend": "llvm",
+    "engine": "tree",
+    "native_gc_stress": true,
+    "lox_gc_stress": true,
+    "probe": "probe-return-error",
+    "arm": "baseline",
+    "argv": [
+      "taskset",
+      "-c",
+      "14",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-perf-stack-20261002/.tmp-lox-stack/joined-qualification/bin/joined-gc-llvm",
+      "--engine=tree",
+      "--stats",
+      "--gc-stress",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/probe-return-error.lox"
+    ],
+    "env": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/tmp",
+      "MYLANG_OPTIONS": "--gc-stress"
+    },
+    "binary_sha256": "0d43b19df9d53478365b51af3f5b83f056a1d4bd89f76095eea1b83e03b4cb37",
+    "status": 70,
+    "stdout": "",
+    "stderr": "Undefined variable 'absent'.\n[line 4]\n[stats] engine=tree allocations=17 collections=17 freed=0 live=17\n"
+  },
+  {
+    "backend": "llvm",
+    "engine": "tree",
+    "native_gc_stress": true,
+    "lox_gc_stress": true,
+    "probe": "probe-return-error",
+    "arm": "candidate",
+    "argv": [
+      "taskset",
+      "-c",
+      "14",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/bin/final-gc-llvm",
+      "--engine=tree",
+      "--stats",
+      "--gc-stress",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/probe-return-error.lox"
+    ],
+    "env": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/tmp",
+      "MYLANG_OPTIONS": "--gc-stress"
+    },
+    "binary_sha256": "1765a4eb90a8590480aee624a199633de4f953a4c1c57594e96533b677bfab5a",
+    "status": 70,
+    "stdout": "",
+    "stderr": "Undefined variable 'absent'.\n[line 4]\n[stats] engine=tree allocations=17 collections=17 freed=0 live=17\n"
+  },
+  {
+    "backend": "qbe",
+    "engine": "vm",
+    "native_gc_stress": false,
+    "lox_gc_stress": false,
+    "probe": "probe-upvalues",
+    "arm": "baseline",
+    "argv": [
+      "taskset",
+      "-c",
+      "14",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-perf-stack-20261002/.tmp-lox-stack/joined-qualification/bin/joined-gc-qbe",
+      "--engine=vm",
+      "--stats",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/probe-upvalues.lox"
+    ],
+    "env": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/tmp",
+      "MYLANG_OPTIONS": null
+    },
+    "binary_sha256": "bd98f4d3cf6eff9bc2f81280533e88507eb1495919477e992fbd609c19b21d1b",
+    "status": 0,
+    "stdout": "12\n15\n",
+    "stderr": "[stats] engine=vm allocations=16 collections=0 freed=0 live=16\n"
+  },
+  {
+    "backend": "qbe",
+    "engine": "vm",
+    "native_gc_stress": false,
+    "lox_gc_stress": false,
+    "probe": "probe-upvalues",
+    "arm": "candidate",
+    "argv": [
+      "taskset",
+      "-c",
+      "14",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/bin/final-gc-qbe",
+      "--engine=vm",
+      "--stats",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/probe-upvalues.lox"
+    ],
+    "env": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/tmp",
+      "MYLANG_OPTIONS": null
+    },
+    "binary_sha256": "bd69836555a7b48c3c2eb54cd12cdc451a0cfb3dd183524f1557e96836a3deda",
+    "status": 0,
+    "stdout": "12\n15\n",
+    "stderr": "[stats] engine=vm allocations=16 collections=0 freed=0 live=16\n"
+  },
+  {
+    "backend": "qbe",
+    "engine": "vm",
+    "native_gc_stress": false,
+    "lox_gc_stress": false,
+    "probe": "probe-return-error",
+    "arm": "baseline",
+    "argv": [
+      "taskset",
+      "-c",
+      "14",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-perf-stack-20261002/.tmp-lox-stack/joined-qualification/bin/joined-gc-qbe",
+      "--engine=vm",
+      "--stats",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/probe-return-error.lox"
+    ],
+    "env": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/tmp",
+      "MYLANG_OPTIONS": null
+    },
+    "binary_sha256": "bd98f4d3cf6eff9bc2f81280533e88507eb1495919477e992fbd609c19b21d1b",
+    "status": 70,
+    "stdout": "",
+    "stderr": "Undefined variable 'absent'.\n[line 4] in dive()\n[line 3] in dive()\n[line 3] in dive()\n[line 9] in script\n[stats] engine=vm allocations=9 collections=0 freed=0 live=9\n"
+  },
+  {
+    "backend": "qbe",
+    "engine": "vm",
+    "native_gc_stress": false,
+    "lox_gc_stress": false,
+    "probe": "probe-return-error",
+    "arm": "candidate",
+    "argv": [
+      "taskset",
+      "-c",
+      "14",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/bin/final-gc-qbe",
+      "--engine=vm",
+      "--stats",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/probe-return-error.lox"
+    ],
+    "env": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/tmp",
+      "MYLANG_OPTIONS": null
+    },
+    "binary_sha256": "bd69836555a7b48c3c2eb54cd12cdc451a0cfb3dd183524f1557e96836a3deda",
+    "status": 70,
+    "stdout": "",
+    "stderr": "Undefined variable 'absent'.\n[line 4] in dive()\n[line 3] in dive()\n[line 3] in dive()\n[line 9] in script\n[stats] engine=vm allocations=9 collections=0 freed=0 live=9\n"
+  },
+  {
+    "backend": "qbe",
+    "engine": "vm",
+    "native_gc_stress": false,
+    "lox_gc_stress": true,
+    "probe": "probe-upvalues",
+    "arm": "baseline",
+    "argv": [
+      "taskset",
+      "-c",
+      "14",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-perf-stack-20261002/.tmp-lox-stack/joined-qualification/bin/joined-gc-qbe",
+      "--engine=vm",
+      "--stats",
+      "--gc-stress",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/probe-upvalues.lox"
+    ],
+    "env": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/tmp",
+      "MYLANG_OPTIONS": null
+    },
+    "binary_sha256": "bd98f4d3cf6eff9bc2f81280533e88507eb1495919477e992fbd609c19b21d1b",
+    "status": 0,
+    "stdout": "12\n15\n",
+    "stderr": "[stats] engine=vm allocations=16 collections=16 freed=0 live=16\n"
+  },
+  {
+    "backend": "qbe",
+    "engine": "vm",
+    "native_gc_stress": false,
+    "lox_gc_stress": true,
+    "probe": "probe-upvalues",
+    "arm": "candidate",
+    "argv": [
+      "taskset",
+      "-c",
+      "14",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/bin/final-gc-qbe",
+      "--engine=vm",
+      "--stats",
+      "--gc-stress",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/probe-upvalues.lox"
+    ],
+    "env": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/tmp",
+      "MYLANG_OPTIONS": null
+    },
+    "binary_sha256": "bd69836555a7b48c3c2eb54cd12cdc451a0cfb3dd183524f1557e96836a3deda",
+    "status": 0,
+    "stdout": "12\n15\n",
+    "stderr": "[stats] engine=vm allocations=16 collections=16 freed=0 live=16\n"
+  },
+  {
+    "backend": "qbe",
+    "engine": "vm",
+    "native_gc_stress": false,
+    "lox_gc_stress": true,
+    "probe": "probe-return-error",
+    "arm": "baseline",
+    "argv": [
+      "taskset",
+      "-c",
+      "14",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-perf-stack-20261002/.tmp-lox-stack/joined-qualification/bin/joined-gc-qbe",
+      "--engine=vm",
+      "--stats",
+      "--gc-stress",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/probe-return-error.lox"
+    ],
+    "env": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/tmp",
+      "MYLANG_OPTIONS": null
+    },
+    "binary_sha256": "bd98f4d3cf6eff9bc2f81280533e88507eb1495919477e992fbd609c19b21d1b",
+    "status": 70,
+    "stdout": "",
+    "stderr": "Undefined variable 'absent'.\n[line 4] in dive()\n[line 3] in dive()\n[line 3] in dive()\n[line 9] in script\n[stats] engine=vm allocations=9 collections=9 freed=0 live=9\n"
+  },
+  {
+    "backend": "qbe",
+    "engine": "vm",
+    "native_gc_stress": false,
+    "lox_gc_stress": true,
+    "probe": "probe-return-error",
+    "arm": "candidate",
+    "argv": [
+      "taskset",
+      "-c",
+      "14",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/bin/final-gc-qbe",
+      "--engine=vm",
+      "--stats",
+      "--gc-stress",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/probe-return-error.lox"
+    ],
+    "env": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/tmp",
+      "MYLANG_OPTIONS": null
+    },
+    "binary_sha256": "bd69836555a7b48c3c2eb54cd12cdc451a0cfb3dd183524f1557e96836a3deda",
+    "status": 70,
+    "stdout": "",
+    "stderr": "Undefined variable 'absent'.\n[line 4] in dive()\n[line 3] in dive()\n[line 3] in dive()\n[line 9] in script\n[stats] engine=vm allocations=9 collections=9 freed=0 live=9\n"
+  },
+  {
+    "backend": "qbe",
+    "engine": "vm",
+    "native_gc_stress": true,
+    "lox_gc_stress": false,
+    "probe": "probe-upvalues",
+    "arm": "baseline",
+    "argv": [
+      "taskset",
+      "-c",
+      "14",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-perf-stack-20261002/.tmp-lox-stack/joined-qualification/bin/joined-gc-qbe",
+      "--engine=vm",
+      "--stats",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/probe-upvalues.lox"
+    ],
+    "env": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/tmp",
+      "MYLANG_OPTIONS": "--gc-stress"
+    },
+    "binary_sha256": "bd98f4d3cf6eff9bc2f81280533e88507eb1495919477e992fbd609c19b21d1b",
+    "status": 0,
+    "stdout": "12\n15\n",
+    "stderr": "[stats] engine=vm allocations=16 collections=0 freed=0 live=16\n"
+  },
+  {
+    "backend": "qbe",
+    "engine": "vm",
+    "native_gc_stress": true,
+    "lox_gc_stress": false,
+    "probe": "probe-upvalues",
+    "arm": "candidate",
+    "argv": [
+      "taskset",
+      "-c",
+      "14",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/bin/final-gc-qbe",
+      "--engine=vm",
+      "--stats",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/probe-upvalues.lox"
+    ],
+    "env": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/tmp",
+      "MYLANG_OPTIONS": "--gc-stress"
+    },
+    "binary_sha256": "bd69836555a7b48c3c2eb54cd12cdc451a0cfb3dd183524f1557e96836a3deda",
+    "status": 0,
+    "stdout": "12\n15\n",
+    "stderr": "[stats] engine=vm allocations=16 collections=0 freed=0 live=16\n"
+  },
+  {
+    "backend": "qbe",
+    "engine": "vm",
+    "native_gc_stress": true,
+    "lox_gc_stress": false,
+    "probe": "probe-return-error",
+    "arm": "baseline",
+    "argv": [
+      "taskset",
+      "-c",
+      "14",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-perf-stack-20261002/.tmp-lox-stack/joined-qualification/bin/joined-gc-qbe",
+      "--engine=vm",
+      "--stats",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/probe-return-error.lox"
+    ],
+    "env": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/tmp",
+      "MYLANG_OPTIONS": "--gc-stress"
+    },
+    "binary_sha256": "bd98f4d3cf6eff9bc2f81280533e88507eb1495919477e992fbd609c19b21d1b",
+    "status": 70,
+    "stdout": "",
+    "stderr": "Undefined variable 'absent'.\n[line 4] in dive()\n[line 3] in dive()\n[line 3] in dive()\n[line 9] in script\n[stats] engine=vm allocations=9 collections=0 freed=0 live=9\n"
+  },
+  {
+    "backend": "qbe",
+    "engine": "vm",
+    "native_gc_stress": true,
+    "lox_gc_stress": false,
+    "probe": "probe-return-error",
+    "arm": "candidate",
+    "argv": [
+      "taskset",
+      "-c",
+      "14",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/bin/final-gc-qbe",
+      "--engine=vm",
+      "--stats",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/probe-return-error.lox"
+    ],
+    "env": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/tmp",
+      "MYLANG_OPTIONS": "--gc-stress"
+    },
+    "binary_sha256": "bd69836555a7b48c3c2eb54cd12cdc451a0cfb3dd183524f1557e96836a3deda",
+    "status": 70,
+    "stdout": "",
+    "stderr": "Undefined variable 'absent'.\n[line 4] in dive()\n[line 3] in dive()\n[line 3] in dive()\n[line 9] in script\n[stats] engine=vm allocations=9 collections=0 freed=0 live=9\n"
+  },
+  {
+    "backend": "qbe",
+    "engine": "vm",
+    "native_gc_stress": true,
+    "lox_gc_stress": true,
+    "probe": "probe-upvalues",
+    "arm": "baseline",
+    "argv": [
+      "taskset",
+      "-c",
+      "14",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-perf-stack-20261002/.tmp-lox-stack/joined-qualification/bin/joined-gc-qbe",
+      "--engine=vm",
+      "--stats",
+      "--gc-stress",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/probe-upvalues.lox"
+    ],
+    "env": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/tmp",
+      "MYLANG_OPTIONS": "--gc-stress"
+    },
+    "binary_sha256": "bd98f4d3cf6eff9bc2f81280533e88507eb1495919477e992fbd609c19b21d1b",
+    "status": 0,
+    "stdout": "12\n15\n",
+    "stderr": "[stats] engine=vm allocations=16 collections=16 freed=0 live=16\n"
+  },
+  {
+    "backend": "qbe",
+    "engine": "vm",
+    "native_gc_stress": true,
+    "lox_gc_stress": true,
+    "probe": "probe-upvalues",
+    "arm": "candidate",
+    "argv": [
+      "taskset",
+      "-c",
+      "14",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/bin/final-gc-qbe",
+      "--engine=vm",
+      "--stats",
+      "--gc-stress",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/probe-upvalues.lox"
+    ],
+    "env": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/tmp",
+      "MYLANG_OPTIONS": "--gc-stress"
+    },
+    "binary_sha256": "bd69836555a7b48c3c2eb54cd12cdc451a0cfb3dd183524f1557e96836a3deda",
+    "status": 0,
+    "stdout": "12\n15\n",
+    "stderr": "[stats] engine=vm allocations=16 collections=16 freed=0 live=16\n"
+  },
+  {
+    "backend": "qbe",
+    "engine": "vm",
+    "native_gc_stress": true,
+    "lox_gc_stress": true,
+    "probe": "probe-return-error",
+    "arm": "baseline",
+    "argv": [
+      "taskset",
+      "-c",
+      "14",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-perf-stack-20261002/.tmp-lox-stack/joined-qualification/bin/joined-gc-qbe",
+      "--engine=vm",
+      "--stats",
+      "--gc-stress",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/probe-return-error.lox"
+    ],
+    "env": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/tmp",
+      "MYLANG_OPTIONS": "--gc-stress"
+    },
+    "binary_sha256": "bd98f4d3cf6eff9bc2f81280533e88507eb1495919477e992fbd609c19b21d1b",
+    "status": 70,
+    "stdout": "",
+    "stderr": "Undefined variable 'absent'.\n[line 4] in dive()\n[line 3] in dive()\n[line 3] in dive()\n[line 9] in script\n[stats] engine=vm allocations=9 collections=9 freed=0 live=9\n"
+  },
+  {
+    "backend": "qbe",
+    "engine": "vm",
+    "native_gc_stress": true,
+    "lox_gc_stress": true,
+    "probe": "probe-return-error",
+    "arm": "candidate",
+    "argv": [
+      "taskset",
+      "-c",
+      "14",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/bin/final-gc-qbe",
+      "--engine=vm",
+      "--stats",
+      "--gc-stress",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/probe-return-error.lox"
+    ],
+    "env": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/tmp",
+      "MYLANG_OPTIONS": "--gc-stress"
+    },
+    "binary_sha256": "bd69836555a7b48c3c2eb54cd12cdc451a0cfb3dd183524f1557e96836a3deda",
+    "status": 70,
+    "stdout": "",
+    "stderr": "Undefined variable 'absent'.\n[line 4] in dive()\n[line 3] in dive()\n[line 3] in dive()\n[line 9] in script\n[stats] engine=vm allocations=9 collections=9 freed=0 live=9\n"
+  },
+  {
+    "backend": "qbe",
+    "engine": "tree",
+    "native_gc_stress": false,
+    "lox_gc_stress": false,
+    "probe": "probe-upvalues",
+    "arm": "baseline",
+    "argv": [
+      "taskset",
+      "-c",
+      "14",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-perf-stack-20261002/.tmp-lox-stack/joined-qualification/bin/joined-gc-qbe",
+      "--engine=tree",
+      "--stats",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/probe-upvalues.lox"
+    ],
+    "env": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/tmp",
+      "MYLANG_OPTIONS": null
+    },
+    "binary_sha256": "bd98f4d3cf6eff9bc2f81280533e88507eb1495919477e992fbd609c19b21d1b",
+    "status": 0,
+    "stdout": "12\n15\n",
+    "stderr": "[stats] engine=tree allocations=18 collections=0 freed=0 live=18\n"
+  },
+  {
+    "backend": "qbe",
+    "engine": "tree",
+    "native_gc_stress": false,
+    "lox_gc_stress": false,
+    "probe": "probe-upvalues",
+    "arm": "candidate",
+    "argv": [
+      "taskset",
+      "-c",
+      "14",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/bin/final-gc-qbe",
+      "--engine=tree",
+      "--stats",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/probe-upvalues.lox"
+    ],
+    "env": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/tmp",
+      "MYLANG_OPTIONS": null
+    },
+    "binary_sha256": "bd69836555a7b48c3c2eb54cd12cdc451a0cfb3dd183524f1557e96836a3deda",
+    "status": 0,
+    "stdout": "12\n15\n",
+    "stderr": "[stats] engine=tree allocations=18 collections=0 freed=0 live=18\n"
+  },
+  {
+    "backend": "qbe",
+    "engine": "tree",
+    "native_gc_stress": false,
+    "lox_gc_stress": false,
+    "probe": "probe-return-error",
+    "arm": "baseline",
+    "argv": [
+      "taskset",
+      "-c",
+      "14",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-perf-stack-20261002/.tmp-lox-stack/joined-qualification/bin/joined-gc-qbe",
+      "--engine=tree",
+      "--stats",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/probe-return-error.lox"
+    ],
+    "env": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/tmp",
+      "MYLANG_OPTIONS": null
+    },
+    "binary_sha256": "bd98f4d3cf6eff9bc2f81280533e88507eb1495919477e992fbd609c19b21d1b",
+    "status": 70,
+    "stdout": "",
+    "stderr": "Undefined variable 'absent'.\n[line 4]\n[stats] engine=tree allocations=17 collections=0 freed=0 live=17\n"
+  },
+  {
+    "backend": "qbe",
+    "engine": "tree",
+    "native_gc_stress": false,
+    "lox_gc_stress": false,
+    "probe": "probe-return-error",
+    "arm": "candidate",
+    "argv": [
+      "taskset",
+      "-c",
+      "14",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/bin/final-gc-qbe",
+      "--engine=tree",
+      "--stats",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/probe-return-error.lox"
+    ],
+    "env": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/tmp",
+      "MYLANG_OPTIONS": null
+    },
+    "binary_sha256": "bd69836555a7b48c3c2eb54cd12cdc451a0cfb3dd183524f1557e96836a3deda",
+    "status": 70,
+    "stdout": "",
+    "stderr": "Undefined variable 'absent'.\n[line 4]\n[stats] engine=tree allocations=17 collections=0 freed=0 live=17\n"
+  },
+  {
+    "backend": "qbe",
+    "engine": "tree",
+    "native_gc_stress": false,
+    "lox_gc_stress": true,
+    "probe": "probe-upvalues",
+    "arm": "baseline",
+    "argv": [
+      "taskset",
+      "-c",
+      "14",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-perf-stack-20261002/.tmp-lox-stack/joined-qualification/bin/joined-gc-qbe",
+      "--engine=tree",
+      "--stats",
+      "--gc-stress",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/probe-upvalues.lox"
+    ],
+    "env": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/tmp",
+      "MYLANG_OPTIONS": null
+    },
+    "binary_sha256": "bd98f4d3cf6eff9bc2f81280533e88507eb1495919477e992fbd609c19b21d1b",
+    "status": 0,
+    "stdout": "12\n15\n",
+    "stderr": "[stats] engine=tree allocations=18 collections=18 freed=2 live=16\n"
+  },
+  {
+    "backend": "qbe",
+    "engine": "tree",
+    "native_gc_stress": false,
+    "lox_gc_stress": true,
+    "probe": "probe-upvalues",
+    "arm": "candidate",
+    "argv": [
+      "taskset",
+      "-c",
+      "14",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/bin/final-gc-qbe",
+      "--engine=tree",
+      "--stats",
+      "--gc-stress",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/probe-upvalues.lox"
+    ],
+    "env": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/tmp",
+      "MYLANG_OPTIONS": null
+    },
+    "binary_sha256": "bd69836555a7b48c3c2eb54cd12cdc451a0cfb3dd183524f1557e96836a3deda",
+    "status": 0,
+    "stdout": "12\n15\n",
+    "stderr": "[stats] engine=tree allocations=18 collections=18 freed=2 live=16\n"
+  },
+  {
+    "backend": "qbe",
+    "engine": "tree",
+    "native_gc_stress": false,
+    "lox_gc_stress": true,
+    "probe": "probe-return-error",
+    "arm": "baseline",
+    "argv": [
+      "taskset",
+      "-c",
+      "14",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-perf-stack-20261002/.tmp-lox-stack/joined-qualification/bin/joined-gc-qbe",
+      "--engine=tree",
+      "--stats",
+      "--gc-stress",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/probe-return-error.lox"
+    ],
+    "env": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/tmp",
+      "MYLANG_OPTIONS": null
+    },
+    "binary_sha256": "bd98f4d3cf6eff9bc2f81280533e88507eb1495919477e992fbd609c19b21d1b",
+    "status": 70,
+    "stdout": "",
+    "stderr": "Undefined variable 'absent'.\n[line 4]\n[stats] engine=tree allocations=17 collections=17 freed=0 live=17\n"
+  },
+  {
+    "backend": "qbe",
+    "engine": "tree",
+    "native_gc_stress": false,
+    "lox_gc_stress": true,
+    "probe": "probe-return-error",
+    "arm": "candidate",
+    "argv": [
+      "taskset",
+      "-c",
+      "14",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/bin/final-gc-qbe",
+      "--engine=tree",
+      "--stats",
+      "--gc-stress",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/probe-return-error.lox"
+    ],
+    "env": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/tmp",
+      "MYLANG_OPTIONS": null
+    },
+    "binary_sha256": "bd69836555a7b48c3c2eb54cd12cdc451a0cfb3dd183524f1557e96836a3deda",
+    "status": 70,
+    "stdout": "",
+    "stderr": "Undefined variable 'absent'.\n[line 4]\n[stats] engine=tree allocations=17 collections=17 freed=0 live=17\n"
+  },
+  {
+    "backend": "qbe",
+    "engine": "tree",
+    "native_gc_stress": true,
+    "lox_gc_stress": false,
+    "probe": "probe-upvalues",
+    "arm": "baseline",
+    "argv": [
+      "taskset",
+      "-c",
+      "14",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-perf-stack-20261002/.tmp-lox-stack/joined-qualification/bin/joined-gc-qbe",
+      "--engine=tree",
+      "--stats",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/probe-upvalues.lox"
+    ],
+    "env": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/tmp",
+      "MYLANG_OPTIONS": "--gc-stress"
+    },
+    "binary_sha256": "bd98f4d3cf6eff9bc2f81280533e88507eb1495919477e992fbd609c19b21d1b",
+    "status": 0,
+    "stdout": "12\n15\n",
+    "stderr": "[stats] engine=tree allocations=18 collections=0 freed=0 live=18\n"
+  },
+  {
+    "backend": "qbe",
+    "engine": "tree",
+    "native_gc_stress": true,
+    "lox_gc_stress": false,
+    "probe": "probe-upvalues",
+    "arm": "candidate",
+    "argv": [
+      "taskset",
+      "-c",
+      "14",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/bin/final-gc-qbe",
+      "--engine=tree",
+      "--stats",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/probe-upvalues.lox"
+    ],
+    "env": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/tmp",
+      "MYLANG_OPTIONS": "--gc-stress"
+    },
+    "binary_sha256": "bd69836555a7b48c3c2eb54cd12cdc451a0cfb3dd183524f1557e96836a3deda",
+    "status": 0,
+    "stdout": "12\n15\n",
+    "stderr": "[stats] engine=tree allocations=18 collections=0 freed=0 live=18\n"
+  },
+  {
+    "backend": "qbe",
+    "engine": "tree",
+    "native_gc_stress": true,
+    "lox_gc_stress": false,
+    "probe": "probe-return-error",
+    "arm": "baseline",
+    "argv": [
+      "taskset",
+      "-c",
+      "14",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-perf-stack-20261002/.tmp-lox-stack/joined-qualification/bin/joined-gc-qbe",
+      "--engine=tree",
+      "--stats",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/probe-return-error.lox"
+    ],
+    "env": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/tmp",
+      "MYLANG_OPTIONS": "--gc-stress"
+    },
+    "binary_sha256": "bd98f4d3cf6eff9bc2f81280533e88507eb1495919477e992fbd609c19b21d1b",
+    "status": 70,
+    "stdout": "",
+    "stderr": "Undefined variable 'absent'.\n[line 4]\n[stats] engine=tree allocations=17 collections=0 freed=0 live=17\n"
+  },
+  {
+    "backend": "qbe",
+    "engine": "tree",
+    "native_gc_stress": true,
+    "lox_gc_stress": false,
+    "probe": "probe-return-error",
+    "arm": "candidate",
+    "argv": [
+      "taskset",
+      "-c",
+      "14",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/bin/final-gc-qbe",
+      "--engine=tree",
+      "--stats",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/probe-return-error.lox"
+    ],
+    "env": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/tmp",
+      "MYLANG_OPTIONS": "--gc-stress"
+    },
+    "binary_sha256": "bd69836555a7b48c3c2eb54cd12cdc451a0cfb3dd183524f1557e96836a3deda",
+    "status": 70,
+    "stdout": "",
+    "stderr": "Undefined variable 'absent'.\n[line 4]\n[stats] engine=tree allocations=17 collections=0 freed=0 live=17\n"
+  },
+  {
+    "backend": "qbe",
+    "engine": "tree",
+    "native_gc_stress": true,
+    "lox_gc_stress": true,
+    "probe": "probe-upvalues",
+    "arm": "baseline",
+    "argv": [
+      "taskset",
+      "-c",
+      "14",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-perf-stack-20261002/.tmp-lox-stack/joined-qualification/bin/joined-gc-qbe",
+      "--engine=tree",
+      "--stats",
+      "--gc-stress",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/probe-upvalues.lox"
+    ],
+    "env": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/tmp",
+      "MYLANG_OPTIONS": "--gc-stress"
+    },
+    "binary_sha256": "bd98f4d3cf6eff9bc2f81280533e88507eb1495919477e992fbd609c19b21d1b",
+    "status": 0,
+    "stdout": "12\n15\n",
+    "stderr": "[stats] engine=tree allocations=18 collections=18 freed=2 live=16\n"
+  },
+  {
+    "backend": "qbe",
+    "engine": "tree",
+    "native_gc_stress": true,
+    "lox_gc_stress": true,
+    "probe": "probe-upvalues",
+    "arm": "candidate",
+    "argv": [
+      "taskset",
+      "-c",
+      "14",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/bin/final-gc-qbe",
+      "--engine=tree",
+      "--stats",
+      "--gc-stress",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/probe-upvalues.lox"
+    ],
+    "env": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/tmp",
+      "MYLANG_OPTIONS": "--gc-stress"
+    },
+    "binary_sha256": "bd69836555a7b48c3c2eb54cd12cdc451a0cfb3dd183524f1557e96836a3deda",
+    "status": 0,
+    "stdout": "12\n15\n",
+    "stderr": "[stats] engine=tree allocations=18 collections=18 freed=2 live=16\n"
+  },
+  {
+    "backend": "qbe",
+    "engine": "tree",
+    "native_gc_stress": true,
+    "lox_gc_stress": true,
+    "probe": "probe-return-error",
+    "arm": "baseline",
+    "argv": [
+      "taskset",
+      "-c",
+      "14",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-perf-stack-20261002/.tmp-lox-stack/joined-qualification/bin/joined-gc-qbe",
+      "--engine=tree",
+      "--stats",
+      "--gc-stress",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/probe-return-error.lox"
+    ],
+    "env": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/tmp",
+      "MYLANG_OPTIONS": "--gc-stress"
+    },
+    "binary_sha256": "bd98f4d3cf6eff9bc2f81280533e88507eb1495919477e992fbd609c19b21d1b",
+    "status": 70,
+    "stdout": "",
+    "stderr": "Undefined variable 'absent'.\n[line 4]\n[stats] engine=tree allocations=17 collections=17 freed=0 live=17\n"
+  },
+  {
+    "backend": "qbe",
+    "engine": "tree",
+    "native_gc_stress": true,
+    "lox_gc_stress": true,
+    "probe": "probe-return-error",
+    "arm": "candidate",
+    "argv": [
+      "taskset",
+      "-c",
+      "14",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/bin/final-gc-qbe",
+      "--engine=tree",
+      "--stats",
+      "--gc-stress",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/probe-return-error.lox"
+    ],
+    "env": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-parity-vm/tmp",
+      "MYLANG_OPTIONS": "--gc-stress"
+    },
+    "binary_sha256": "bd69836555a7b48c3c2eb54cd12cdc451a0cfb3dd183524f1557e96836a3deda",
+    "status": 70,
+    "stdout": "",
+    "stderr": "Undefined variable 'absent'.\n[line 4]\n[stats] engine=tree allocations=17 collections=17 freed=0 live=17\n"
+  }
+]
