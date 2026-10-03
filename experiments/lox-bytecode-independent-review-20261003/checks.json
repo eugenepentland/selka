@@ -1,0 +1,21 @@
+{
+  "review_status": 0,
+  "author_commit": "beaaf97c7397beafb0988f5ed73dde0bf4813ebb",
+  "review_json_sha256": "42fb258a6ac15c1ead44cc90b4a716780c6b61fc6e8a0c4907659ca7bd25d2f2",
+  "review_py_sha256": "72ed2a5fa20daf54c6c81c9317ecdecc59d6dce728bf5dd405feb1cee694aa0a",
+  "review_md_sha256": "6342eecc7a035f0cb2355fe9b163f73fec9f0ac9561ef52b9ef5e7fc2ce21e1d",
+  "guardian": {
+    "status": 0,
+    "passed_checks": 88,
+    "command": [
+      "scripts/build-slot.sh",
+      "gate",
+      "/home/epentland/ai/canopy/guardian-zig/zig-out/bin/guardian-check",
+      "all",
+      ".",
+      "--gate"
+    ],
+    "log_sha256": "2f2418df757d0dc44d18ea28b4691618d43001b1caa9680b8de5e5b77ecc50d7"
+  },
+  "guardian_feedback": "Smooth explicit whole-tree gate; root consolidates feedback. No feedback repository edits in this lane."
+}
