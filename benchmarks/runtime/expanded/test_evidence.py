@@ -14,7 +14,7 @@ from registry import HERE, GROUPS, EDGE_PROBES, inventory, plans_for, checksum
 
 def fixture():
     cases = inventory()
-    report = {'schema': run.SCHEMA, 'status': 'complete', 'profile': 'baseline',
+    report = {'schema': 'mylang-runtime-expanded-v1', 'status': 'complete', 'profile': 'baseline',
               'inventory': cases, 'coverage': list(cases), 'rounds': 1, 'warmup_rounds': 1,
               'plans': [], 'qualification': [], 'pilots': [], 'samples': [], 'warmups': [], 'memory': []}
     def outcome(case, size, n, seed):
@@ -142,6 +142,63 @@ class EvidenceTests(unittest.TestCase):
         self.assertEqual(env['RUSTC'], '/audited/rustc')
         for name in ('CARGO_PROFILE_RELEASE_OPT_LEVEL', 'CARGO_BUILD_TARGET', 'CARGO_ENCODED_RUSTFLAGS', 'RUSTC_WRAPPER'):
             self.assertNotIn(name, env)
+
+    def candidate(self):
+        report = copy.deepcopy(self.original)
+        original = json.loads((HERE / 'results/baseline_main_20261003.json').read_text())
+        report['schema'] = 'mylang-runtime-expanded-v2'
+        report['measurement_session_id'] = 'synthetic-session'
+        identity = report['identity']
+        identity.pop('pinned_revision')
+        identity.update(candidate_id='test-candidate', source_revision='b' * 40,
+                        tools={'mylang': {'sha256': 'a' * 64}},
+                        compiler_build_receipt={'receipt': {
+                            'schema': 'mylang-runtime-compiler-build-v1', 'status': 'complete', 'exit_status': 0,
+                            'source_revision': 'b' * 40, 'sources_before': {'src/test.zig': 'a' * 64},
+                            'sources_after': {'src/test.zig': 'a' * 64}, 'compiler_sha256': 'a' * 64}})
+        report['identity_after'] = copy.deepcopy(identity)
+        references = []
+        report['frozen_reference_samples'], report['frozen_reference_warmups'] = [], []
+        for plan in report['plans']:
+            rows = [row for row in original['summary'] if (row['case'], row['size']) == (plan['case'], plan['size'])]
+            fastest = min(rows, key=lambda row: (row['median_ns_per_op'], run.ARMS.index(row['arm'])))
+            name = plan['group'] + '/' + fastest['arm']
+            references.append({'case': plan['case'], 'size': plan['size'], 'arm': fastest['arm'], 'name': name,
+                               'binary_path': original['identity']['binary_paths'][name],
+                               'binary_sha256': original['binary_hashes'][name],
+                               'target_ns_per_iteration': fastest['median_ns_per_op']})
+            for source, dest in (('samples', 'frozen_reference_samples'), ('warmups', 'frozen_reference_warmups')):
+                report[dest].extend(copy.deepcopy(row) for row in report[source]
+                                    if (row['case'], row['size'], row['arm']) == (plan['case'], plan['size'], fastest['arm']))
+        report['frozen_reference'] = {'baseline_sha256': run.FROZEN_BASELINE_SHA256,
+                                      'original_identity': original['identity'], 'plans': references}
+        return report
+
+    def test_candidate_source_receipt_and_original_winner_are_required(self):
+        report = self.candidate()
+        self.assertEqual(verify.verify(report), 480)
+        report['frozen_reference_samples'].pop()
+        with self.assertRaisesRegex(ValueError, 'missing supplemental'):
+            verify.verify(report)
+        report = self.candidate()
+        report['identity']['compiler_build_receipt']['receipt']['compiler_sha256'] = 'c' * 64
+        with self.assertRaisesRegex(ValueError, 'receipt hash mismatch'):
+            verify.verify(report)
+
+    def test_focused_candidate_keeps_full_qualification_and_both_sizes(self):
+        report = self.candidate()
+        case = report['coverage'][0]
+        report.update(status='subset', coverage=[case])
+        for field in ('plans', 'pilots', 'samples', 'warmups', 'memory', 'summary',
+                      'frozen_reference_samples', 'frozen_reference_warmups'):
+            report[field] = [row for row in report[field] if row['case'] == case]
+        report['frozen_reference']['plans'] = [row for row in report['frozen_reference']['plans'] if row['case'] == case]
+        self.assertEqual(verify.verify(report, focused=True), 12)
+        with self.assertRaises(ValueError):
+            verify.verify(report)
+        report['plans'].pop()
+        with self.assertRaisesRegex(ValueError, 'missing plans'):
+            verify.verify(report, focused=True)
 
 
 if __name__ == '__main__':

@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Correctness-gated, common-iteration runtime measurements. See README.md."""
 import argparse
+from contextlib import contextmanager
+import fcntl
 import hashlib
 import json
 import os
@@ -14,9 +16,18 @@ import subprocess
 import sys
 import time
 from oracle import CASES, checksum
+from build_compiler import validate_receipt
 HERE = Path(__file__).resolve().parent
-REVISION = '6df58b02554401f9d37564cceffd14277a835ae1'
 ARMS = ('my-llvm','my-qbe','rust','go','zig-safe','zig-fast')
+TIMING_LOCK = Path('/home/epentland/.cache/mylang/runtime-parity-timing.lock')
+
+
+@contextmanager
+def timing_lock():
+    TIMING_LOCK.parent.mkdir(parents=True, exist_ok=True)
+    with TIMING_LOCK.open('a') as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        yield
 
 def digest(path):
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
@@ -60,9 +71,10 @@ def invoke(binary, case, size, iterations, seed, cpu, expected, rss=False):
     cmd = ['taskset','-c',str(cpu),str(binary),case,str(size),str(iterations),str(seed)]
     if rss:
         cmd = ['/usr/bin/time','-f','RUNTIME_RSS_KIB=%M',*cmd]
-    start = time.perf_counter_ns()
-    done = subprocess.run(cmd, capture_output=True, text=True, timeout=120, env=runtime_environment())
-    wall = time.perf_counter_ns()-start
+    with timing_lock():
+        start = time.perf_counter_ns()
+        done = subprocess.run(cmd, capture_output=True, text=True, timeout=120, env=runtime_environment())
+        wall = time.perf_counter_ns()-start
     result = validate(done, expected, rss=rss)
     result['process_wall_ns'] = wall
     if rss:
@@ -73,6 +85,9 @@ def invoke(binary, case, size, iterations, seed, cpu, expected, rss=False):
     return result
 
 def configuration(args):
+    receipt_path = args.compiler_receipt.resolve()
+    receipt = json.loads(receipt_path.read_text())
+    validate_receipt(receipt, args.mylang, artifacts=True)
     tools = {'cc':args.cc,'mylang':args.mylang,'rust':args.rustc,'go':args.go,'zig':args.zig}
     tools = {key:str(Path(shutil.which(value) or value).absolute()) for key,value in tools.items()}
     rust_probe = subprocess.run([tools['rust'],'--print','sysroot'],capture_output=True,text=True,timeout=30,env=runtime_environment())
@@ -81,7 +96,7 @@ def configuration(args):
     versions = {}
     for key,path in tools.items():
         if key == 'mylang':
-            versions[key] = {'path':path,'sha256':digest(path),'pinned_source_revision':REVISION,'version':'unsupported; compiler SHA and audited source revision used'}
+            versions[key] = {'path':path,'sha256':digest(path),'source_revision':receipt['source_revision'],'version':'unsupported; recorded compiler build receipt used'}
             continue
         command = [path, 'version' if key in ('go','zig') else '--version']
         done = subprocess.run(command,capture_output=True,text=True,timeout=30,env=runtime_environment())
@@ -107,7 +122,9 @@ def configuration(args):
         elif arm == 'go': commands[arm] = [tools['go'],'build','-o',out,str(p/'main.go')]
         else: commands[arm] = [tools['zig'],'build-exe',str(p/'main.zig'),'-lc','-O','ReleaseSafe' if arm == 'zig-safe' else 'ReleaseFast',f'-femit-bin={out}']
     sources = {str(path.relative_to(HERE)):digest(path) for path in [HERE/'CONTRACT.md', HERE/'oracle.py', HERE/'runner.py', *sorted(p.iterdir())] if path.is_file()}
-    identity = {'pinned_revision':REVISION,'tools':versions,'sources':sources,'commands':commands,'installed_assets':asset_hashes,'build_environment':{key:runtime_environment().get(key) for key in ('GOMAXPROCS','GOGC','GOMEMLIMIT','GOAMD64','GOFLAGS','GOEXPERIMENT','GOTOOLCHAIN','RUSTFLAGS','CFLAGS','CXXFLAGS','CGO_CFLAGS','CGO_LDFLAGS','MYLANG_OPTIONS')},'build_wrapper':str(HERE.parents[1]/'scripts/build-slot.sh'),'clock_build':[tools['cc'],'-O2','-c',str(p/'native_clock.c'),'-o',str(args.work/'native_clock.o')]}
+    identity = {'candidate_id':args.candidate_id,'source_revision':receipt['source_revision'],
+                'compiler_build_receipt':{'path':str(receipt_path),'sha256':digest(receipt_path),'receipt':receipt},
+                'tools':versions,'sources':sources,'commands':commands,'installed_assets':asset_hashes,'build_environment':{key:runtime_environment().get(key) for key in ('GOMAXPROCS','GOGC','GOMEMLIMIT','GOAMD64','GOFLAGS','GOEXPERIMENT','GOTOOLCHAIN','RUSTFLAGS','CFLAGS','CXXFLAGS','CGO_CFLAGS','CGO_LDFLAGS','MYLANG_OPTIONS')},'build_wrapper':str(HERE.parents[1]/'scripts/build-slot.sh'),'clock_build':[tools['cc'],'-O2','-c',str(p/'native_clock.c'),'-o',str(args.work/'native_clock.o')]}
     probe_command = [tools['zig'],'cc','-###','-c','-x','c','/dev/null']
     probe = subprocess.run(probe_command,capture_output=True,text=True,timeout=30,env=runtime_environment())
     if probe.returncode: raise RuntimeError('Zig/Clang target policy probe failed')
@@ -260,6 +277,8 @@ def markdown_report(report):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--mylang',default=str(HERE.parents[1]/'zig-out/bin/mylang'))
+    parser.add_argument('--candidate-id',required=True)
+    parser.add_argument('--compiler-receipt',type=Path,required=True)
     parser.add_argument('--cc',default='cc')
     parser.add_argument('--rustc',default='/home/epentland/.cargo/bin/rustc')
     parser.add_argument('--go',default='go'); parser.add_argument('--zig',default='zig')

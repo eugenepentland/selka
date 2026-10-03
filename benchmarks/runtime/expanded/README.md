@@ -1,14 +1,15 @@
 This suite expands the original four cases to **40 cases: 35 microbenchmarks and
 five application workloads**, across MyLang main LLVM/QBE, Rust, Go, and Zig
 ReleaseSafe/ReleaseFast. It preserves the original suite and its saved baseline.
-The compiler/runtime source remains pinned to main
-`6df58b02554401f9d37564cceffd14277a835ae1`.
+The saved historical compiler/runtime source is pinned to main
+`6df58b02554401f9d37564cceffd14277a835ae1`. New runs require an explicit candidate
+ID and a recorded compiler build receipt; see [candidate evidence](../CANDIDATES.md).
 
 Run from the repository root:
 
 ```sh
-python3 benchmarks/runtime/expanded/run.py --quick --rounds 1 --warmups 0 --output .mylang-cache/runtime-expanded/smoke.json
-python3 benchmarks/runtime/expanded/run.py --skip-build --output benchmarks/runtime/expanded/results/main.json
+python3 benchmarks/runtime/expanded/run.py --candidate-id NAME --compiler-receipt RECEIPT.json --quick --rounds 1 --warmups 0 --output .mylang-cache/runtime-expanded/smoke.json
+python3 benchmarks/runtime/expanded/run.py --candidate-id NAME --compiler-receipt RECEIPT.json --skip-build --output benchmarks/runtime/candidates/NAME.json
 python3 benchmarks/runtime/expanded/verify.py benchmarks/runtime/expanded/results/main.json --check-artifacts
 python3 -m unittest discover -s benchmarks/runtime/expanded -p 'test_*.py'
 python3 benchmarks/runtime/assessment/assess.py --help

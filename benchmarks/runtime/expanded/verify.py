@@ -38,15 +38,19 @@ def hash_matches(path, expected):
     require(hashlib.sha256(Path(path).read_bytes()).hexdigest() == expected, 'changed artifact: ' + str(path))
 
 
-def verify(report, artifacts=False):
-    require(report.get('schema') == 'mylang-runtime-expanded-v1', 'wrong schema')
-    require(report.get('status') == 'complete' and report.get('profile') == 'baseline', 'not a complete baseline')
+def verify(report, artifacts=False, focused=False):
+    require(report.get('schema') in ('mylang-runtime-expanded-v1', 'mylang-runtime-expanded-v2'), 'wrong schema')
+    require(report.get('status') in (('complete', 'subset') if focused else ('complete',))
+            and report.get('profile') == 'baseline', 'not a complete baseline or permitted focused candidate')
     cases = inventory()
     require(report.get('inventory') == cases, 'case inventory mismatch')
-    require(len(report['coverage']) == len(cases) and set(report['coverage']) == set(cases), 'incomplete coverage')
+    selected = report['coverage']
+    require(bool(selected) and len(selected) == len(set(selected)) and set(selected) <= set(cases), 'invalid coverage')
+    require(focused or set(selected) == set(cases), 'incomplete coverage')
+    require((report['status'] == 'complete') == (set(selected) == set(cases)), 'incorrect full/subset status')
     rounds, warmups = report['rounds'], report['warmup_rounds']
     require(type(rounds) is int and rounds >= 1 and type(warmups) is int and warmups >= 0, 'invalid rounds')
-    wanted = {(p['case'], p['size']): p for p in plans_for(cases)}
+    wanted = {(p['case'], p['size']): p for p in plans_for(selected)}
     plans = {}
     for row in report['plans']:
         key = (row['case'], row['size'])
@@ -129,7 +133,19 @@ def verify(report, artifacts=False):
                 'summary interval mismatch')
     require(seen == set(groups), 'missing summary')
     identity = report['identity']
-    require(identity['pinned_revision'] == REVISION, 'wrong compiler revision')
+    if report['schema'] == 'mylang-runtime-expanded-v1':
+        require(identity['pinned_revision'] == REVISION, 'wrong compiler revision')
+    else:
+        import re
+        require(isinstance(identity.get('candidate_id'), str) and bool(identity['candidate_id']), 'missing candidate ID')
+        require(re.fullmatch(r'[0-9a-f]{40}', identity.get('source_revision', '')) is not None, 'invalid compiler revision')
+        receipt = identity['compiler_build_receipt']['receipt']
+        require(receipt.get('schema') == 'mylang-runtime-compiler-build-v1' and receipt.get('status') == 'complete'
+                and receipt.get('exit_status') == 0, 'missing successful compiler build receipt')
+        require(receipt['source_revision'] == identity['source_revision']
+                and receipt['sources_before'] == receipt['sources_after'] and bool(receipt['sources_after']), 'invalid compiler source receipt')
+        require(receipt['compiler_sha256'] == identity['tools']['mylang']['sha256'], 'compiler receipt hash mismatch')
+        require(bool(report.get('measurement_session_id')), 'missing measurement session ID')
     require(identity['inventory'] == cases, 'identity inventory mismatch')
     require(report['identity_after'] == identity, 'identity changed during measurement')
     require(report['binary_hashes_after'] == report['binary_hashes'], 'binaries changed during measurement')
@@ -142,7 +158,52 @@ def verify(report, artifacts=False):
         require(log['exit_status'] == 0, 'failed build receipt')
         command = identity['actual_clock_build'] if log['name'] == 'clock' else identity['actual_build_commands'][log['name']]
         require(log['command'] == command, 'build command mismatch')
+    if report['schema'] == 'mylang-runtime-expanded-v2':
+        frozen_path = HERE / 'results/baseline_main_20261003.json'
+        frozen_hash = 'b595d9638e243e18692b5cef491c2b5273949c93ebf22a0ae604a08704c1d3f7'
+        hash_matches(frozen_path, frozen_hash)
+        original = json.loads(frozen_path.read_text())
+        frozen = report['frozen_reference']
+        require(frozen['baseline_sha256'] == frozen_hash and frozen['original_identity'] == original['identity'],
+                'frozen reference identity differs from immutable baseline')
+        references = {}
+        supplemental = set()
+        for reference in frozen['plans']:
+            key = (reference['case'], reference['size'])
+            require(key in plans and key not in references, 'unknown/duplicate frozen reference plan')
+            references[key] = reference
+            rows = [row for row in original['summary'] if (row['case'], row['size']) == key]
+            fastest = min(rows, key=lambda row: (row['median_ns_per_op'], ARMS.index(row['arm'])))
+            name = plans[key]['group'] + '/' + fastest['arm']
+            require(reference['arm'] == fastest['arm'] and reference['name'] == name
+                    and reference['target_ns_per_iteration'] == fastest['median_ns_per_op']
+                    and reference['binary_path'] == original['identity']['binary_paths'][name]
+                    and reference['binary_sha256'] == original['binary_hashes'][name], 'incorrect frozen reference receipt')
+            if report['binary_hashes'][name] != reference['binary_sha256']:
+                supplemental.add((*key, reference['arm']))
+            if artifacts:
+                hash_matches(reference['binary_path'], reference['binary_sha256'])
+        require(set(references) == set(plans), 'missing frozen reference plans')
+        for field, rnds in (('frozen_reference_samples', range(rounds)), ('frozen_reference_warmups', range(-warmups, 0))):
+            wanted_references = {(*key, rnd) for key in supplemental for rnd in rnds}
+            seen_references = set()
+            for row in report[field]:
+                key = (row['case'], row['size'], row['arm'], row['round'])
+                require(key in wanted_references and key not in seen_references, 'unknown/duplicate supplemental reference round')
+                seen_references.add(key)
+                plan = plans[key[:2]]
+                for name in ('iterations', 'seed', 'profile', 'group', 'family', 'level', 'unit', 'expected'):
+                    require(row[name] == plan[name], 'supplemental reference plan drift')
+                result(row, plan['expected'])
+            require(seen_references == wanted_references, 'missing supplemental reference rounds')
     if artifacts:
+        if report['schema'] == 'mylang-runtime-expanded-v2':
+            sys.path.insert(0, str(HERE.parent))
+            from build_compiler import validate_receipt
+            entry = identity['compiler_build_receipt']
+            hash_matches(entry['path'], entry['sha256'])
+            require(json.loads(Path(entry['path']).read_text()) == entry['receipt'], 'compiler receipt content mismatch')
+            validate_receipt(entry['receipt'], identity['tools']['mylang']['path'], artifacts=True)
         for name, digest in identity['sources'].items():
             hash_matches(HERE.parent / name, digest)
         for tool in identity['tools'].values():
@@ -162,10 +223,11 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('report', type=Path)
     parser.add_argument('--check-artifacts', action='store_true')
+    parser.add_argument('--focused', action='store_true', help='verify an explicitly labeled subset candidate')
     args = parser.parse_args()
     try:
         report = json.loads(args.report.read_text())
-        groups = verify(report, args.check_artifacts)
+        groups = verify(report, args.check_artifacts, args.focused)
         print(f"PASS complete expanded baseline: {groups} groups, {len(report['samples'])} samples, {len(report['qualification'])} qualifications")
     except (ValueError, KeyError, TypeError, OSError, StopIteration) as error:
         print('FAIL: ' + str(error), file=sys.stderr)
