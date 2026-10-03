@@ -132,7 +132,7 @@ its manifest SHA-256 is
 All archived bytes and original identities were rechecked after copying.
 The native archive also retains the first failed byte-exact rebuild and the
 superseded 213-guard smoke work; those extras do not contribute current rows.
-The separate closeout reports count 1,296 native and 284 bool-trial rows.
+The separate closeout reports count 1,196 native and 284 bool-trial rows.
 `number-tag-archive.json` binds 392 paths to 307 objects under the adjacent
 `variant-number-tag` archive, with manifest
 `5490939f712f06e4c85250fa0251b3473c534d15c5825b0dfd78bd701d07babd`.

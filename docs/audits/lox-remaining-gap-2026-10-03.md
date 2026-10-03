@@ -66,7 +66,7 @@ counts effectively unchanged. Its 24-cell focused follow-up shows 4.733%
 lower QBE VM equality wall time but no consistent string-equality gain. This
 partial diagnostic does not establish a broad win and does not select the
 candidate. The [variant compiler screens](../../experiments/lox-variant-compiler-screens-20261003/README.md)
-retain both candidates' exact qualification/build reviews, all 1,580 current
+retain both candidates' exact qualification/build reviews, all 1,480 current
 observations, 223 stable guards per preparation, independent paired-arithmetic
 checks and immutable archive receipts. Earlier failed/superseded preparations
 are retained separately. Selected source/compiler and main remain unchanged.
@@ -78,7 +78,7 @@ QBE cycle aggregate rises 1.4513% for VM and 0.1247% for tree; no QBE workload
 improves by more than 1%. The screen supplies no broad benefit, so this trial
 is also closed unselected without a wall matrix. The same compiler-screen
 package retains its 260 rows, independent proof/build qualification and sealed
-archive. These three variant trials now contain 1,840 validated observations.
+archive. These three variant trials now contain 1,740 validated observations.
 
 A subsequent QBE-only dispatch classifier preserves LLVM allocated code and
 all original comparison leaves, but trades added early-opcode work for shorter
@@ -87,3 +87,18 @@ instructions fall 0.6961% while cycles rise 2.1280% in the one-round aggregate.
 The candidate remains unselected without a wall matrix. The
 [dispatch screen](../../experiments/lox-qbe-dispatch-screen-20261003/README.md)
 retains the 260 observations, separate full qualification and sealed archive.
+
+
+A subsequent private scratch-address canonicalization preserves LLVM code and
+passes full compiler/public/native qualification. QBE VM screen instructions
+fall 2.2347%, but the three-round 468-cell wall matrix yields no broad win:
+VM time rises 0.1246% and tree time rises 0.7434%. These small changes do not
+establish a significant regression; the candidate remains unselected. The
+[scratch-alias report](../../experiments/lox-qbe-scratch-alias-screen-20261003/README.md)
+retains 728 completed observations and an immutable evidence snapshot. Its
+legacy strict closeout found two missing guard paths for unmeasured fresh
+reproduction runtime archives; that limitation remains explicit, and a separate
+prospective protocol is being prepared. Measured qualified guest bytes were
+fully guarded. Static ablation isolates one pointer copy that prevented QBE
+promotion of 236 stores/237 reads and increased the VM frame by 768 bytes;
+removing it saves instructions without establishing a runtime improvement.

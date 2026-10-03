@@ -1,0 +1,163 @@
+{
+  "candidate_commit": "9c5f283c",
+  "guarded_inputs": 223,
+  "guards_unchanged": true,
+  "limits": [
+    "The archive is an immutable evidence copy, not a successful legacy strict measurement closeout.",
+    "Small negative wall reductions do not establish a statistically meaningful regression.",
+    "No full counters or additional runtime selection follow this negative wall result.",
+    "Initial invalid timing CLI phase was rejected before any benchmark process; its status2 log and wrapper remain preserved."
+  ],
+  "metrics": {
+    "cycles": {
+      "candidate-llvm-over-baseline-llvm": {
+        "tree": {
+          "candidate_over_baseline": 0.9989952640693694,
+          "cases": 13,
+          "reduction_pct": 0.10047359306305514
+        },
+        "vm": {
+          "candidate_over_baseline": 0.9958650132330585,
+          "cases": 13,
+          "reduction_pct": 0.4134986766941462
+        }
+      },
+      "candidate-qbe-over-baseline-qbe": {
+        "tree": {
+          "candidate_over_baseline": 1.009278560904992,
+          "cases": 13,
+          "reduction_pct": -0.9278560904991906
+        },
+        "vm": {
+          "candidate_over_baseline": 1.0082871680736054,
+          "cases": 13,
+          "reduction_pct": -0.8287168073605411
+        }
+      }
+    },
+    "instructions": {
+      "candidate-llvm-over-baseline-llvm": {
+        "tree": {
+          "candidate_over_baseline": 1.0000000032317022,
+          "cases": 13,
+          "reduction_pct": -3.2317022391481487e-07
+        },
+        "vm": {
+          "candidate_over_baseline": 0.9999999978357813,
+          "cases": 13,
+          "reduction_pct": 2.1642186931458696e-07
+        }
+      },
+      "candidate-qbe-over-baseline-qbe": {
+        "tree": {
+          "candidate_over_baseline": 1.0000990729597916,
+          "cases": 13,
+          "reduction_pct": -0.00990729597916129
+        },
+        "vm": {
+          "candidate_over_baseline": 0.9776532539430456,
+          "cases": 13,
+          "reduction_pct": 2.2346746056954414
+        }
+      }
+    },
+    "wall": {
+      "candidate-llvm-over-baseline-llvm": {
+        "tree": {
+          "candidate_over_baseline": 0.9881701262981075,
+          "cases": 13,
+          "reduction_pct": 1.182987370189248
+        },
+        "vm": {
+          "candidate_over_baseline": 0.9976046136090866,
+          "cases": 13,
+          "reduction_pct": 0.2395386390913412
+        }
+      },
+      "candidate-llvm-over-go": {
+        "tree": {
+          "candidate_over_baseline": 4.038387376272561,
+          "cases": 13,
+          "reduction_pct": -303.8387376272561
+        },
+        "vm": {
+          "candidate_over_baseline": 2.671948892033585,
+          "cases": 13,
+          "reduction_pct": -167.1948892033585
+        }
+      },
+      "candidate-llvm-over-rust": {
+        "tree": {
+          "candidate_over_baseline": 4.153896593988277,
+          "cases": 13,
+          "reduction_pct": -315.3896593988277
+        },
+        "vm": {
+          "candidate_over_baseline": 2.6883740119433064,
+          "cases": 13,
+          "reduction_pct": -168.83740119433065
+        }
+      },
+      "candidate-qbe-over-baseline-qbe": {
+        "tree": {
+          "candidate_over_baseline": 1.0074343287186982,
+          "cases": 13,
+          "reduction_pct": -0.7434328718698202
+        },
+        "vm": {
+          "candidate_over_baseline": 1.0012461540932256,
+          "cases": 13,
+          "reduction_pct": -0.12461540932255932
+        }
+      },
+      "candidate-qbe-over-go": {
+        "tree": {
+          "candidate_over_baseline": 7.350344059729938,
+          "cases": 13,
+          "reduction_pct": -635.0344059729938
+        },
+        "vm": {
+          "candidate_over_baseline": 5.273218972369529,
+          "cases": 13,
+          "reduction_pct": -427.3218972369529
+        }
+      },
+      "candidate-qbe-over-rust": {
+        "tree": {
+          "candidate_over_baseline": 7.5919431366247165,
+          "cases": 13,
+          "reduction_pct": -659.1943136624717
+        },
+        "vm": {
+          "candidate_over_baseline": 5.319838815764971,
+          "cases": 13,
+          "reduction_pct": -431.9838815764971
+        }
+      }
+    }
+  },
+  "missing_unmeasured_reproduction_runtime_guards": [
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-scratch-alias-screen-reviewed/cache-rebuilt-llvm/objects/5b632f46bf0637a5255a5ca5f6939ccffcc69b59ff9db5152d70938862415932/2263f44444e7e02d97791ceba6a674e0c26c1794e424926b5174c04c136eedd6.a",
+      "scope": "Unmeasured fresh reproduction archive; digest matches the guarded premeasurement build receipt, but path absent from legacy223 guard set.",
+      "sha256": "bdd7bfa6d07cd9fd1e84b7a814c7729f51a5ffad631e553d4dc8fd6367e3d278"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-scratch-alias-screen-reviewed/cache-rebuilt-qbe/objects/5b632f46bf0637a5255a5ca5f6939ccffcc69b59ff9db5152d70938862415932/c282dcbb8819de42103af7ed9ee8d67acda97b9fd8070ea1f1d2711f5b72cb9b.a",
+      "scope": "Unmeasured fresh reproduction archive; digest matches the guarded premeasurement build receipt, but path absent from legacy223 guard set.",
+      "sha256": "d991009e601716f4eab07e203f1f10dda3644216fe70aa3ff026c9493dc850f9"
+    }
+  ],
+  "observations": {
+    "full_counters": 0,
+    "full_wall": 468,
+    "screen": 104,
+    "smoke": 156,
+    "total": 728
+  },
+  "scope": "Unselected legacy-protocol trial evidence snapshot; full strict closeout did not pass. Actual measured qualified ELF bytes, sidecars and original runtime archives were guarded. No retroactive guards or performance selection.",
+  "selected": false,
+  "selected_core": "3b33df52044a10cb84b908f8b1641af439e8c729",
+  "strict_closeout_error": "RC rebuild runtime is not guarded",
+  "strict_closeout_passed": false
+}

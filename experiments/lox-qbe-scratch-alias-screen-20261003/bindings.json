@@ -1,0 +1,24 @@
+{
+  "archive_manifest_sha256": "616917a8c63f4360cf798f53ff2913232a0681da1a5f618a125c0d1fd5468196",
+  "archive_scope": "Immutable evidence snapshot; legacy full strict closeout failed for two unmeasured reproduction archive paths absent from guard inventory.",
+  "author_qualification_sha256": "def469852a130bbc54f0143ce369d686d128560308aefb330a53057df236f865",
+  "candidate_commit": "9c5f283c",
+  "decision": "Unselected: full paired wall matrix provides no broad elapsed-time benefit despite 2.2347% fewer QBE VM instructions. No full counter matrix or additional benchmark reruns.",
+  "independent_proof_commit": "6e12818aecae147fabc6ac9f2b08540f1f09c6ec",
+  "independent_qualification_commit": "884243401d218599f6962a80980a8008f6183963",
+  "prepared": {
+    "candidate_rebuilt_byte_exact": false,
+    "guards": 223,
+    "guards_sha256": "e0baeaacc4df37a72ef6debeb3ad9ec24bbedfecb85ea8c912cc3a912a19a54b",
+    "inherited_control_sidecars_keep_original_paths": true,
+    "manifest_sha256": "09e7c617b396bf1a938eb17b5dbc6f35597c18a7580ef9e9d2e1ed9bd9b054a3",
+    "measured_guests_copied_byte_exact": true,
+    "prepared_utc": "2026-10-03T12:13:00.480540+00:00",
+    "qualification_review_is_separate_from_preparer": true,
+    "rebuild_allocated_sections_exact": true,
+    "reference_guests_copied_not_rebuilt": true
+  },
+  "selected": false,
+  "selected_core": "3b33df52044a10cb84b908f8b1641af439e8c729",
+  "source_freeze_sha256": "69e21a1133e1230285565df05d748242e0d7de5adb34775a51ce463be2363637"
+}
