@@ -1,0 +1,227 @@
+module main
+
+extern def runtime_bench_now(host: Host) -> i64 effects(host)
+
+union Value:
+    integer: int,
+    boolean: bool
+
+record Row:
+    key: int
+    ordinal: int
+    value: int
+
+record Instruction:
+    op: int
+    arg: int
+
+def integer(value: Value) -> int:
+    match value:
+        case Value.integer(n):
+            return n
+        case Value.boolean(_):
+            return 0
+
+def boolean(value: Value) -> bool:
+    match value:
+        case Value.boolean(b):
+            return b
+        case Value.integer(_):
+            return False
+
+def execute(program: list[Instruction], size: int, seed: int) -> int:
+    stack: list[Value] = []
+    returns: list[int] = []
+    variables = [0, 0]
+    pc = 0
+    while True:
+        ins = program[pc]
+        pc += 1
+        if ins.op == 0:
+            stack.append(Value.integer(seed))
+        elif ins.op == 1:
+            stack.append(Value.integer(size))
+        elif ins.op == 2:
+            stack.append(Value.integer(ins.arg))
+        elif ins.op == 3:
+            stack.append(Value.integer(variables[ins.arg]))
+        elif ins.op == 4:
+            variables[ins.arg] = integer(stack.pop())
+        elif ins.op >= 5 and ins.op <= 9:
+            b = integer(stack.pop())
+            a = integer(stack.pop())
+            if ins.op == 5:
+                stack.append(Value.integer(a + b))
+            elif ins.op == 6:
+                stack.append(Value.integer(a * b))
+            elif ins.op == 7:
+                stack.append(Value.integer(a % b))
+            elif ins.op == 8:
+                stack.append(Value.boolean(a < b))
+            else:
+                stack.append(Value.boolean(a == b))
+        elif ins.op == 10:
+            if not boolean(stack.pop()):
+                pc = ins.arg
+        elif ins.op == 11:
+            pc = ins.arg
+        elif ins.op == 12:
+            returns.append(pc)
+            pc = ins.arg
+        elif ins.op == 13:
+            pc = returns.pop()
+        else:
+            return integer(stack.pop())
+    return 0
+
+def row_key(row: Row) -> int:
+    return row.key
+
+def fold(values: list[int]) -> int:
+    total = 0
+    for j in range(len(values)):
+        total += (j + 1) * values[j]
+    return total
+
+def batch_result(kind: int, size: int, batch: int, seed: int, values: list[int], keys: list[str], lookup: dict[int, int], lookup_str: dict[str, int], nested: mut list[list[int]], program: list[Instruction]) -> int:
+    total = 0
+    if kind == 0:
+        for value in values:
+            total += (value + batch) % 1009
+        return total
+    elif kind == 1:
+        appended: list[int] = []
+        for j in range(size):
+            appended.append((seed + batch + j * 13) % 1009)
+        return fold(appended)
+    elif kind == 2:
+        input_values = [(seed + batch + j * 13) % 1009 for j in range(size)]
+        filtered = [value for value in input_values if value % 3 == 0]
+        return fold(filtered)
+    elif kind == 3:
+        for j in range(size):
+            key = (seed + j * 17 + batch) % (size * 2)
+            total += lookup.get(key, 17)
+        return total
+    elif kind == 4:
+        for j in range(size):
+            key = (seed + j * 17 + batch) % (size * 2)
+            total += lookup_str.get(keys[key], 17)
+        return total
+    elif kind == 5:
+        mapping: dict[int, int] = {}
+        for j in range(size):
+            mapping[j] = values[j]
+        for j in range(size * 2):
+            key = (seed + j * 17 + batch) % (size * 2)
+            mapping[key] = (mapping.get(key, 17) + j + batch + 1) % 1000003
+        for stored_key, value in mapping.items():
+            total += stored_key + value
+        return total
+    elif kind == 6:
+        text_mapping: dict[str, int] = {}
+        for j in range(size):
+            text_mapping[keys[j]] = values[j]
+        for j in range(size * 2):
+            key = (seed + j * 17 + batch) % (size * 2)
+            text_mapping[keys[key]] = (text_mapping.get(keys[key], 17) + j + batch + 1) % 1000003
+        for j in range(size * 2):
+            if keys[j] in text_mapping:
+                total += j + text_mapping[keys[j]]
+        return total
+    elif kind == 7:
+        dedup: set[int] = set()
+        limit = max(2, size // 4)
+        for j in range(size):
+            dedup.add((seed + batch + j * 13) % limit)
+        for value in dedup:
+            total += value
+        return total
+    elif kind == 8:
+        for j in range(size):
+            short = [seed + batch + j + k for k in range(4)]
+            for value in short:
+                total += value
+            short = []
+        return total
+    elif kind == 9:
+        retained: list[list[int]] = []
+        for j in range(size):
+            retained.append([seed + batch + j + k for k in range(4)])
+        for inner in retained:
+            for value in inner:
+                total += value
+        return total
+    elif kind == 10:
+        snapshot = nested
+        index = (seed + batch * 17) % size
+        nested[index][1] = (nested[index][1] + batch + 1) % 1000003
+        return snapshot[index][1] + nested[index][1]
+    elif kind == 11:
+        ordered = [(seed + batch + j * 13) % 1009 for j in range(size)]
+        ordered.sort()
+        return fold(ordered)
+    elif kind == 12:
+        rows: list[Row] = []
+        for j in range(size):
+            value = (seed + batch + j * 13) % 1009
+            rows.append(Row(key=value % 17, ordinal=j, value=value))
+        rows.sort(key=row_key)
+        for j in range(size):
+            total += (j + 1) * (rows[j].value * 17 + rows[j].ordinal)
+        return total
+    elif kind == 13:
+        return execute(program, size, seed + batch)
+    return -1
+
+def parse_number(text: str) -> int:
+    match int(text):
+        case Some(n):
+            return n
+        case None:
+            return 0
+
+def main(args: list[str], host: Host, out: Stream) -> int:
+    if len(args) != 4:
+        return 2
+    case_id = -1
+    names = ["list_scan", "list_append", "list_filter", "dict_lookup", "dict_lookup_str", "dict_update", "dict_update_str", "set_dedup", "alloc_short", "alloc_retained", "mutate_nested", "sort_int", "sort_records", "lox_eval"]
+    for j in range(len(names)):
+        if args[0] == names[j]:
+            case_id = j
+    if case_id < 0:
+        return 2
+    size = parse_number(args[1])
+    iterations = parse_number(args[2])
+    seed = parse_number(args[3])
+    if size < 2 or iterations < 1 or seed < 1 or seed > 1000000:
+        return 2
+    values = [(seed + j * 13) % 1009 for j in range(size)]
+    keys: list[str] = []
+    if args[0] == "dict_lookup_str" or args[0] == "dict_update_str":
+        keys = [str(j) for j in range(size * 2)]
+    lookup: dict[int, int] = {}
+    lookup_str: dict[str, int] = {}
+    for j in range(size):
+        if args[0] == "dict_lookup":
+            lookup[j] = values[j]
+        if args[0] == "dict_lookup_str":
+            lookup_str[keys[j]] = values[j]
+    nested: list[list[int]] = []
+    if args[0] == "mutate_nested":
+        nested = [[(seed + j * 13 + k) % 1009 for k in range(4)] for j in range(size)]
+    program = [Instruction(op=0, arg=0), Instruction(op=4, arg=0), Instruction(op=2, arg=0), Instruction(op=4, arg=1), Instruction(op=3, arg=1), Instruction(op=1, arg=0), Instruction(op=8, arg=0), Instruction(op=10, arg=29), Instruction(op=3, arg=1), Instruction(op=2, arg=2), Instruction(op=7, arg=0), Instruction(op=2, arg=0), Instruction(op=9, arg=0), Instruction(op=10, arg=18), Instruction(op=3, arg=0), Instruction(op=12, arg=31), Instruction(op=4, arg=0), Instruction(op=11, arg=24), Instruction(op=3, arg=0), Instruction(op=3, arg=1), Instruction(op=5, arg=0), Instruction(op=2, arg=1000003), Instruction(op=7, arg=0), Instruction(op=4, arg=0), Instruction(op=3, arg=1), Instruction(op=2, arg=1), Instruction(op=5, arg=0), Instruction(op=4, arg=1), Instruction(op=11, arg=4), Instruction(op=3, arg=0), Instruction(op=14, arg=0), Instruction(op=2, arg=3), Instruction(op=6, arg=0), Instruction(op=2, arg=7), Instruction(op=5, arg=0), Instruction(op=2, arg=1000003), Instruction(op=7, arg=0), Instruction(op=13, arg=0)]
+    checksum = 0
+    start = runtime_bench_now(host)
+    for batch in range(iterations):
+        part = batch_result(case_id, size, batch, seed, values, keys, lookup, lookup_str, mut nested, program)
+        if part < 0:
+            return 2
+        checksum = (checksum + part) % 1000000007
+    elapsed = runtime_bench_now(host) - start
+    if args[0] == "mutate_nested":
+        for inner in nested:
+            for value in inner:
+                checksum = (checksum + value) % 1000000007
+    out.print(checksum, elapsed)
+    return 0

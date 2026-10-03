@@ -1,0 +1,308 @@
+module main
+import strings
+import json
+
+extern def runtime_bench_now(host: Host) -> i64 effects(host)
+
+record Inputs:
+    raw: bytes
+    texts: list[str]
+    other: list[str]
+    numbers: list[int]
+    fragments: list[str]
+
+
+def number(text: str) -> int:
+    match int(text):
+        case Some(value):
+            return value
+        case None:
+            return 0
+
+
+def repeated(text: str, count: int) -> str:
+    match strings.repeat(text, count):
+        case Ok(value):
+            return value
+        case Err(_):
+            return ""
+
+
+def score(text: str) -> int:
+    raw = text.encode()
+    result = len(raw)
+    for value in raw:
+        result += value
+    return result
+
+
+def row_name(j: int) -> str:
+    return ("café,\"item\"" if j % 2 == 0 else "naïve,item") + str(j)
+
+
+def inputs(kind: str, size: int, seed: int) -> Inputs:
+    raw = b""
+    texts: list[str] = []
+    other: list[str] = []
+    numbers: list[int] = []
+    fragments: list[str] = []
+    if kind == "bytes_scan":
+        raw = bytes([(seed + j * 37) % 256 for j in range(size)])
+    elif kind == "string_equal":
+        texts = [repeated("a", size), repeated("é", size), repeated("a", size), "café" + str(seed)]
+        other = [repeated("a", size), repeated("é", size - 1) + "ê", "b" + repeated("a", size - 1), "café" + str(seed)]
+    elif kind == "string_search":
+        texts = [repeated("a", size) + ";café;needle;" + str(seed)]
+        other = ["a", "needle", "absentΩ", "é"]
+    elif kind == "string_split" or kind == "string_join":
+        options = ["", "alpha", "café", "x", "naïve"]
+        fragments = [options[(seed + j) % 5] for j in range(size)]
+        texts = ["|".join(fragments), "::".join(fragments)]
+    elif kind == "int_parse":
+        for j in range(size):
+            n = (seed + j * 137) % 1000003
+            mode = j % 6
+            text = str(n)
+            if mode == 1:
+                text = "-" + text
+            elif mode == 2:
+                text = "00" + text
+            elif mode == 3:
+                text += "x"
+            elif mode == 4:
+                text = "oops"
+            elif mode == 5:
+                text = ""
+            texts.append(text)
+    elif kind == "int_format":
+        for j in range(size):
+            n = (seed + j * 137) % 1000003
+            numbers.append(0 - n if j % 3 == 0 else n)
+    elif kind == "word_count":
+        vocabulary = ["red", "blue", "café", "red", "green", "blue", "naïve", "red"]
+        separators = [" ", "\t", "\n", "  "]
+        chunks = [vocabulary[(seed + j) % 8] + separators[j % 4] for j in range(size)]
+        document = "".join(chunks)
+        texts = [document + "red", document + "blue"]
+    elif kind == "csv_aggregate":
+        regions = ["east", "west", "north"]
+        csv_chunks: list[str] = []
+        for j in range(size):
+            amount = "oops" if j % 11 == 0 else str((seed + j * 19) % 100003)
+            quoted = "\"" + row_name(j).replace("\"", "\"\"") + "\""
+            csv_chunks.append(str(seed + j) + "," + quoted + "," + regions[(seed + j) % 3] + "," + amount + "," + ("1" if (seed + j) % 3 != 0 else "0") + "\n")
+        texts = ["".join(csv_chunks)]
+    elif kind == "json_transform":
+        rows: list[json.Json] = []
+        for j in range(size):
+            fields: dict[str, json.Json] = {"id": json.integer(seed + j), "name": json.text(row_name(j)), "amount": json.integer((seed + j * 19) % 100003), "active": json.boolean((seed + j) % 3 != 0)}
+            rows.append(json.object(fields))
+        texts = [json.dumps(json.array(rows))]
+    return Inputs(raw=raw, texts=texts, other=other, numbers=numbers, fragments=fragments)
+
+
+def word_job(text: str) -> int:
+    counts: dict[str, int] = {}
+    for word in text.split():
+        counts[word] = counts[word] + 1 if word in counts else 1
+    result = 0
+    for word in counts:
+        result += score(word) * counts[word] * counts[word]
+    return result
+
+
+# Fixture CSV subset: quoted commas/doubled quotes; LF records; no embedded LF.
+def csv_rows(text: str) -> list[list[str]]:
+    rows: list[list[str]] = []
+    fields: list[str] = []
+    field = ""
+    quoted = False
+    pending_quote = False
+    for ch in text:
+        if quoted:
+            if ch == "\"":
+                if pending_quote:
+                    field += "\""
+                    pending_quote = False
+                else:
+                    pending_quote = True
+            elif pending_quote:
+                quoted = False
+                pending_quote = False
+                if ch == ",":
+                    fields.append(field)
+                    field = ""
+                elif ch == "\n":
+                    fields.append(field)
+                    rows.append(fields)
+                    fields = []
+                    field = ""
+            else:
+                field += ch
+        elif ch == "\"":
+            quoted = True
+        elif ch == ",":
+            fields.append(field)
+            field = ""
+        elif ch == "\n":
+            fields.append(field)
+            rows.append(fields)
+            fields = []
+            field = ""
+        else:
+            field += ch
+    return rows
+
+
+def csv_job(text: str) -> int:
+    groups: dict[str, int] = {"east": 0, "west": 0, "north": 0}
+    accepted = 0
+    rejected = 0
+    names = 0
+    for row in csv_rows(text):
+        match int(row[3]):
+            case Some(amount):
+                if row[4] == "1":
+                    groups[row[2]] += amount
+                    accepted += 1
+                    names += score(row[1])
+            case None:
+                rejected += 1
+    return groups["east"] + groups["west"] * 2 + groups["north"] * 3 + accepted * 17 + rejected * 101 + names
+
+
+def json_integer(value: json.Json) -> int:
+    match json.as_int(value):
+        case Some(n):
+            return n
+        case None:
+            return 0
+
+
+def json_active(value: json.Json) -> bool:
+    match json.as_bool(value):
+        case Some(flag):
+            return flag
+        case None:
+            return False
+
+
+def json_job(text: str, bump: int) -> int:
+    output: list[json.Json] = []
+    match json.loads(text):
+        case Ok(value):
+            match value:
+                case json.Json.array(rows):
+                    for row in rows:
+                        match row:
+                            case json.Json.object(fields):
+                                if json_active(fields["active"]):
+                                    result: dict[str, json.Json] = {"id": fields["id"], "name": fields["name"], "amount": json.integer(json_integer(fields["amount"]) + bump)}
+                                    output.append(json.object(result))
+                            case _:
+                                return 0
+                case _:
+                    return 0
+        case Err(_):
+            return 0
+    return score(json.dumps(json.array(output)))
+
+
+
+def bytes_job(raw: bytes, mask: int) -> int:
+    total = 0
+    for value in raw:
+        total += value ^ mask
+    return total
+
+
+def split_job(text: str, separator: str) -> int:
+    parts = text.split(separator)
+    result = len(parts) * 7
+    for part in parts:
+        result += score(part)
+    return result
+
+
+def parse_job(text: str) -> int:
+    match int(text):
+        case Some(value):
+            return value
+        case None:
+            return 97
+
+
+def kernel(kind: str, data: Inputs, iterations: int, seed: int) -> int:
+    checksum = 0
+    if kind == "bytes_scan":
+        for step in range(iterations):
+            cursor = seed + step
+            value = bytes_job(data.raw, cursor % 256)
+            checksum = (checksum + value) % 1000000007
+    elif kind == "string_equal":
+        for step in range(iterations):
+            cursor = seed + step
+            value = 1 if data.texts[cursor % 4] == data.other[cursor % 4] else 0
+            checksum = (checksum + value) % 1000000007
+    elif kind == "string_search":
+        for step in range(iterations):
+            cursor = seed + step
+            value = data.texts[0].find(data.other[cursor % 4]) + 1
+            checksum = (checksum + value) % 1000000007
+    elif kind == "string_split":
+        for step in range(iterations):
+            cursor = seed + step
+            value = split_job(data.texts[cursor % 2], "|" if cursor % 2 == 0 else "::")
+            checksum = (checksum + value) % 1000000007
+    elif kind == "string_join":
+        for step in range(iterations):
+            cursor = seed + step
+            value = score(("|" if cursor % 2 == 0 else "::").join(data.fragments))
+            checksum = (checksum + value) % 1000000007
+    elif kind == "int_parse":
+        for step in range(iterations):
+            cursor = seed + step
+            value = parse_job(data.texts[cursor % len(data.texts)])
+            checksum = (checksum + value) % 1000000007
+    elif kind == "int_format":
+        for step in range(iterations):
+            cursor = seed + step
+            value = score(str(data.numbers[cursor % len(data.numbers)]))
+            checksum = (checksum + value) % 1000000007
+    elif kind == "word_count":
+        for step in range(iterations):
+            cursor = seed + step
+            value = word_job(data.texts[cursor % 2])
+            checksum = (checksum + value) % 1000000007
+    elif kind == "csv_aggregate":
+        for step in range(iterations):
+            cursor = seed + step
+            value = csv_job(data.texts[0])
+            checksum = (checksum + value) % 1000000007
+    elif kind == "json_transform":
+        for step in range(iterations):
+            cursor = seed + step
+            value = json_job(data.texts[0], cursor % 17)
+            checksum = (checksum + value) % 1000000007
+    return checksum
+
+
+def main(args: list[str], host: Host, out: Stream) -> int:
+    if len(args) != 4:
+        return 2
+    kind = args[0]
+    cases = ["bytes_scan", "string_equal", "string_search", "string_split", "string_join", "int_parse", "int_format", "word_count", "csv_aggregate", "json_transform"]
+    if kind not in cases:
+        return 2
+    size = number(args[1])
+    iterations = number(args[2])
+    seed = number(args[3])
+    if size < 2 or iterations < 1 or seed < 1 or seed > 1000000:
+        return 2
+    data = inputs(kind, size, seed)
+    checksum = 0
+    start = runtime_bench_now(host)
+    checksum = kernel(kind, data, iterations, seed)
+    elapsed = runtime_bench_now(host) - start
+    out.print(checksum, elapsed)
+    return 0

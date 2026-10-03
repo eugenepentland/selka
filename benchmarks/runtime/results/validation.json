@@ -1,0 +1,205 @@
+{
+  "schema": "mylang-runtime-validation-v1",
+  "recorded_utc": "2026-10-03T11:39:31.173756+00:00",
+  "pinned_main_revision": "6df58b02554401f9d37564cceffd14277a835ae1",
+  "pinned_main_tree": "c031e9db97ea3554c067c326388f2e022550d9d4",
+  "suite_revision_at_measurement": "1d053a1422d455a38bf18ebdbcfc32dcfa02aae7",
+  "suite_tree_at_measurement": "a99f94ac7b6c973fcab764dc79ec5f71303721ea",
+  "branch": "bench/runtime-baseline-20261003",
+  "worktree": "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003",
+  "source_audit": {
+    "command": [
+      "git",
+      "diff",
+      "6df58b02554401f9d37564cceffd14277a835ae1",
+      "--name-only"
+    ],
+    "changed_tracked_files": [
+      "benchmarks/runtime/CONTRACT.md",
+      "benchmarks/runtime/README.md",
+      "benchmarks/runtime/oracle.py",
+      "benchmarks/runtime/ports/main.go",
+      "benchmarks/runtime/ports/main.my",
+      "benchmarks/runtime/ports/main.rs",
+      "benchmarks/runtime/ports/main.zig",
+      "benchmarks/runtime/ports/native_clock.c",
+      "benchmarks/runtime/runner.py",
+      "benchmarks/runtime/test_runner.py",
+      "benchmarks/runtime/test_verify_report.py",
+      "benchmarks/runtime/verify_report.py"
+    ],
+    "all_changes_within_benchmarks_runtime": true,
+    "compiler_runtime_and_build_source_unchanged": true
+  },
+  "compiler_identity": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/zig-out/bin/mylang",
+    "sha256": "6515355e8141b5f782b5847d113e4c455fac4d4ecf0679e6249aaff638b64e0d",
+    "pinned_source_revision": "6df58b02554401f9d37564cceffd14277a835ae1",
+    "version": "unsupported; compiler SHA and audited source revision used"
+  },
+  "qbe_sha256": "c37b8a847d8b54a870258bbf4197343a8ec7332188f525fdc2da469473371bab",
+  "build_environment": {
+    "TMPDIR": "/home/epentland/.cache/mylang-tmp/runtime-baseline-20261003",
+    "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.zig-cache",
+    "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/.zig-global-cache"
+  },
+  "commands": [
+    {
+      "argv": [
+        "scripts/build-slot.sh",
+        "build",
+        "zig",
+        "build",
+        "-Dcompiler-only=true",
+        "-j2",
+        "--summary",
+        "all"
+      ],
+      "exit_status": 0,
+      "summary": "12/12 steps succeeded",
+      "log": "validation/compiler-build.txt.gz"
+    },
+    {
+      "argv": [
+        "scripts/build-slot.sh",
+        "gate",
+        "zig",
+        "build",
+        "test",
+        "--summary",
+        "all",
+        "-j2"
+      ],
+      "exit_status": 0,
+      "summary": "115/115 steps succeeded; 2826/31552 tests passed (28726 skipped)",
+      "note": "Sharded unit/integration selections account for skipped copies of tests. All shards completed successfully.",
+      "log": "validation/test-main.txt.gz"
+    },
+    {
+      "argv": [
+        "scripts/build-slot.sh",
+        "gate",
+        "sh",
+        "-c",
+        "zig build test-qbe --summary all -j2 && zig build test-qbe-build --summary all -j2 && zig build fmt-check"
+      ],
+      "exit_status": 0,
+      "summary": [
+        "test-qbe: 51/51 steps succeeded; 514/514 tests passed",
+        "test-qbe-build: 29/29 steps succeeded",
+        "fmt-check: exit 0 (compound command succeeded)"
+      ],
+      "log": "validation/test-qbe-and-fmt.txt.gz"
+    },
+    {
+      "argv": [
+        "python3",
+        "benchmarks/runtime/runner.py",
+        "--skip-build",
+        "--rounds",
+        "15",
+        "--warmups",
+        "3",
+        "--output",
+        "benchmarks/runtime/results/baseline_main_20261003.json"
+      ],
+      "exit_status": 0,
+      "executor": "Sol 6.1 harness agent",
+      "log": "validation/benchmark-baseline.txt.gz"
+    },
+    {
+      "argv": [
+        "python3",
+        "benchmarks/runtime/verify_report.py",
+        "benchmarks/runtime/results/baseline_main_20261003.json",
+        "--check-artifacts"
+      ],
+      "exit_status": 0,
+      "executor": "Sol 6.1 harness agent, independent verifier implementation by Sol 6.1 MyLang port agent",
+      "reported_stdout": "PASS complete baseline: 48 groups, 720 samples, 144 warmups"
+    },
+    {
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "benchmarks/runtime",
+        "-p",
+        "test_*.py"
+      ],
+      "exit_status": 0,
+      "summary": "10 tests passed",
+      "evidence": "Final frozen runner unit-test result reported by Sol 6.1 harness agent before acceptance run."
+    }
+  ],
+  "code_gate": {
+    "whole_tree_checks_passed": 88,
+    "commits": [
+      "2e68eb43",
+      "1d053a14"
+    ],
+    "logs": [
+      "validation/code-commit.txt.gz",
+      "validation/target-policy-commit.txt.gz"
+    ]
+  },
+  "measurement_counts": {
+    "plans": 8,
+    "qualification": 72,
+    "pilots": 47,
+    "warmups": 144,
+    "samples": 720,
+    "memory": 48,
+    "summary": 48
+  },
+  "identities_stable": true,
+  "interpretation": "Optimized default policies, with different instruction sets and native allocation/ownership behavior. Four case-size plans hit iteration cap. No outliers removed. See README and raw report for limits.",
+  "payloads": {
+    "validation/compiler-build.txt.gz": {
+      "sha256": "9e1bde35a5715b3ebbdc86305efc77bca5de1e9391fc2533fc2960462ba3f8de",
+      "uncompressed_sha256": "4729c353a0fd56ab5e736f778874a836c6018c9aa13129b30e5dc16134e38cbf",
+      "source_path": "/home/epentland/.cache/mylang-tmp/runtime-baseline-20261003/compiler-build.log"
+    },
+    "validation/test-main.txt.gz": {
+      "sha256": "68e7cc0c596b054c024f7ef57b73553bfaff3b90959ec3add415ac9fa7191b34",
+      "uncompressed_sha256": "22a4064099c069237a4b8823da5b7d58577c40a15303dca71db0524c027751c5",
+      "source_path": "/home/epentland/.cache/mylang-tmp/runtime-baseline-20261003/test-main.log"
+    },
+    "validation/test-qbe-and-fmt.txt.gz": {
+      "sha256": "3256b63cae781e74b462840cb698356b463b115cf2e5be6eedd0eaedfae82e4b",
+      "uncompressed_sha256": "6738ce6dc9ce560aefc48383037b9c4be1faf16feec0a3e7c48a74661b45c880",
+      "source_path": "/home/epentland/.cache/mylang-tmp/runtime-baseline-20261003/test-qbe-and-fmt.log"
+    },
+    "validation/code-commit.txt.gz": {
+      "sha256": "64d7dc9bcaf2d85fbaad0aa1cf6ce14291a98b98c581229277106a44b20dcdb5",
+      "uncompressed_sha256": "96cfbca35871be5e9d688fb1d14ac808eb81a0574399a8bef24aefc60ecb6231",
+      "source_path": "/home/epentland/.cache/mylang-tmp/runtime-baseline-20261003/code-commit.log"
+    },
+    "validation/target-policy-commit.txt.gz": {
+      "sha256": "d3d24f1015636e4e53178d9e274299e3a58fb845278bd925316180d5aec79dd8",
+      "uncompressed_sha256": "9b84674615e58683410e4df5a222e7e42ef8f0191d1fe0d7ab03fe3c7323fa8a",
+      "source_path": "/home/epentland/.cache/mylang-tmp/runtime-baseline-20261003/target-policy-commit.log"
+    },
+    "validation/benchmark-baseline.txt.gz": {
+      "sha256": "8ea9d67994b9084770565554b07c6fdea4e2458488e3ec69eef1f55983a6372b",
+      "uncompressed_sha256": "f9c1cb46f12a2a728f438efd4116c234bb8db0e2eef22605facdea62d48b9836",
+      "source_path": "/home/epentland/.cache/mylang-tmp/runtime-baseline-20261003/benchmark-baseline.log"
+    },
+    "validation/my-llvm.qbe-manifest.json": {
+      "sha256": "0506aea44570a44eee802686900739d60238369187e362162e18a3a7825e15ab",
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-baseline/my-llvm.qbe-manifest.json"
+    },
+    "validation/my-qbe.qbe-manifest.json": {
+      "sha256": "3a6f691eb10bbd7d0f52639399b8185bf4088bfda750b21fedabc31f4e49ed32",
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-baseline/my-qbe.qbe-manifest.json"
+    },
+    "baseline_main_20261003.json": {
+      "sha256": "3db7beff17d9602fb2a08036d5fd980fafba648f7184c5924bb3a8c0aeb03421"
+    },
+    "baseline_main_20261003.md": {
+      "sha256": "c82ccc5d821218b3c9d74970be1f4bb3fa4d515c8545f1ec173dcd250441907c"
+    }
+  }
+}
