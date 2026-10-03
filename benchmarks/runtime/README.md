@@ -76,3 +76,14 @@ ns/op, observed min/max, median ratios paired to Go in the same round, and
 means one CONTRACT iteration, including snapshot preservation for shared mutation.
 No overall score pools these different workloads. Small smoke round counts do
 not provide useful uncertainty estimates. No builds occur during measurement.
+
+The [2026-10-03 main baseline](results/README.md) includes the first complete
+six-configuration run, its raw samples, interpretation, and validation receipts.
+Validate its coverage, checksums, statistics, and current local artifacts with:
+
+```sh
+python3 benchmarks/runtime/verify_report.py benchmarks/runtime/results/baseline_main_20261003.json --check-artifacts
+```
+
+Omit `--check-artifacts` to validate the stored measurements after the original
+local compiler and scratch binaries are no longer available.
