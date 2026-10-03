@@ -3175,6 +3175,7 @@ const Emitter = struct {
                 return scalar_lower.Lower(Emitter).neg(self, info, h);
             },
             .unary_float => |unary| {
+                if (try scalar_lower.Lower(Emitter).floatUnary(self, unary, h)) return;
                 const operand = try self.load("s", h - 1);
                 const v = self.temp();
                 const conversion = @backingInt(unary) >= @backingInt(typed.UnaryOp.f64_to_i8) and @backingInt(unary) <= @backingInt(typed.UnaryOp.f64_to_u32);

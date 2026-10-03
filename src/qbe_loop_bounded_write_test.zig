@@ -76,7 +76,7 @@ test "bounded write loop composes inline provenance and float domains without dr
     defer manifest.deinit();
     try t.expect(std.mem.indexOf(u8, try copied(try named(manifest.value, "inlined")), "myl_qbe_fail_") == null);
     const domain = try copied(try named(manifest.value, "domains"));
-    try t.expect(std.mem.indexOf(u8, domain, "myl_qbe_float_unary") != null);
+    try t.expect(std.mem.indexOf(u8, domain, " =d sltof ") != null);
     try t.expect(std.mem.indexOf(u8, domain, "myl_qbe_fail_overflow_op") == null);
     try t.expect(std.mem.indexOf(u8, try copied(try named(manifest.value, "convert_loop")), "myl_qbe_float_integer") != null);
     var counted = try emitted(true);
