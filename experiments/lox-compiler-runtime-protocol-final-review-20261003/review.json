@@ -1,0 +1,49 @@
+{
+  "scope": "Supplement final37 package/current identities; historical35 input package unchanged",
+  "author_commit": "4eed9673d43115fe93ed5c96f425e3476a1e82e1",
+  "author_worktree": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-qbe-dispatch-20261003",
+  "source_descriptor_sha256": "be431e07a0c66c8f91e431a196ee6ea1bf00a98d2213d548d89883fbf624b4be",
+  "inputs": {
+    "receipts.json.gz": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-qbe-dispatch-20261003/experiments/lox-compiler-runtime-protocol-20261003/receipts.json.gz",
+      "sha256": "b7b7bab9cd97630a9040f33e17aedda9ae5a2e4556e72abb1fccccb9352b92b6"
+    },
+    "archive-manifest.json": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-qbe-dispatch-20261003/experiments/lox-compiler-runtime-protocol-20261003/archive-manifest.json",
+      "sha256": "1843152a8c913776cb071fbf72e9cc59fac5de3180123f5f78e5695809c0117f"
+    },
+    "qualification.json": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-qbe-dispatch-20261003/experiments/lox-compiler-runtime-protocol-20261003/qualification.json",
+      "sha256": "aefa03848e88c2a454d373be2ffb1fe860f8a56a851a43289697facb63b8a304"
+    },
+    "historical-root-verification-failure.log": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-runtime-protocol-review-verify.log",
+      "sha256": "d11c633f2bdf26c961b25240f8c83b7278743384017e4679a8c0003d60eb2f27"
+    },
+    "legacy-guards.json": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-scratch-alias-screen-reviewed/guards.json",
+      "sha256": "e0baeaacc4df37a72ef6debeb3ad9ec24bbedfecb85ea8c912cc3a912a19a54b"
+    },
+    "legacy-binaries.json": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-scratch-alias-screen-reviewed/binaries.json",
+      "sha256": "09e7c617b396bf1a938eb17b5dbc6f35597c18a7580ef9e9d2e1ed9bd9b054a3"
+    },
+    "legacy-rebuilt-build.json": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-scratch-alias-screen-reviewed/rebuilt-build.json",
+      "sha256": "96f04d2cb8e293b6422b28c4e6c6c9bee3b7d9322bb47e1b3ed23d19b2878fe3"
+    }
+  },
+  "prior_review_commit": "9ebe28bb771625cbefbdbe5c95fb018c83ddf62e",
+  "original35_payloads_unchanged": true,
+  "new_payloads": [
+    "raw/independent-review.json",
+    "raw/legacy-alias-runtime-scope.json"
+  ],
+  "assessment": "Final package37 is an additive payload superset; source25/helper originals12 and host30/Guardian88 scope unchanged. Historical strict live-package verification refused replaced outer archive/qualification and remains preserved; new supplement binds final outer identities.",
+  "limits": [
+    "No payload/host-test/guest/compiler/perf execution; host tests remain author synthetic evidence.",
+    "Original35 archive/qualification/verification not rewritten. Its current-path verification cannot pass after legitimate final outer-package changes; this is not a source or host failure.",
+    "Alias reconciliation is read-only current identity evidence; absent historical reproduction archive guards remain absent and no measurement-window or retroactive full closeout success claimed.",
+    "First prospective actual preparation/closeout remains required. Root owns measurements, selection and feedback."
+  ]
+}

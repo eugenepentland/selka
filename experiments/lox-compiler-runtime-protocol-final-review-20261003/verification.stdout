@@ -1,0 +1,18 @@
+{
+  "verified": true,
+  "author_commit": "4eed9673d43115fe93ed5c96f425e3476a1e82e1",
+  "prior35_payloads_unchanged": true,
+  "final_package_payloads": 37,
+  "added_payloads": 2,
+  "source_files_unchanged": 25,
+  "originals_unchanged": 12,
+  "legacy_guards_unchanged": 223,
+  "current_reconciliation_measured_guests": 6,
+  "unguarded_historical_reproduction_archives": 2,
+  "historical_live_package_refusal_preserved": true,
+  "author_host_tests_remain_synthetic": 30,
+  "author_guardian_checks": 88,
+  "no_payload_or_perf_execution": true,
+  "no_retrospective_trial_pass": true,
+  "performance_or_selection_claim": false
+}

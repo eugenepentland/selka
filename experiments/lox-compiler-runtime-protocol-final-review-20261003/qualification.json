@@ -1,0 +1,43 @@
+{
+  "protocol": "lox-compiler-runtime-guards-v2",
+  "scope": "prospective tooling source and synthetic host fixtures only; no native trial preparation, compiler/guest build or performance execution",
+  "source_descriptor_sha256": "be431e07a0c66c8f91e431a196ee6ea1bf00a98d2213d548d89883fbf624b4be",
+  "source_files": 25,
+  "legacy_helper_sources_unchanged": 12,
+  "unchanged_active_helpers": [
+    "build.py",
+    "elf.py",
+    "closeout.py",
+    "archive.py",
+    "test_closeout.py"
+  ],
+  "host_tests": 30,
+  "host_status": 0,
+  "host_verified_after": true,
+  "host_receipt_sha256": "7216e6c47a10e8dcb60586ccd94d76e4fc888bf892d20c6e44be60bbfb42fa47",
+  "host_log_sha256": "e8bcd61d4c14ba37f8a34cf795ec0dbf9c6b71363fe52784bd3b180b644bfe7b",
+  "guardian_checks": 88,
+  "guardian_status": 0,
+  "guardian_receipt_sha256": "82beee162ab88fc3ac6f877359e4f756d94d21d6c88dae6d4fd1abf409fe51c9",
+  "guardian_log_sha256": "1afc3be8850162888de80616d16df2a6639311047c61de94aeb567112b157e86",
+  "independent_review": {
+    "commit": "9ebe28bb771625cbefbdbe5c95fb018c83ddf62e",
+    "review_sha256": "09c82b24e36ec5bee40fd67338262ae4a61bd10ced042d665f3fa5d45714d423",
+    "source_scope": "frozen25/be431e07; exact3-file delta and12 unchanged legacy/reused sources; source clear for prospective use",
+    "package_scope": "initial35-original package reviewed; final package additionally retains read-only legacy alias scope reconciliation and this review receipt; implementation25 unchanged",
+    "limit": "host30 are synthetic protocol tests; first actual prospective preparation/closeout remains required"
+  },
+  "historical_attempts": {
+    "host-v1.log": "27 tests;14 legacy passed;13 new fixture setup errors because dispatch WT lacked root runner; separate unittest process status was not captured; outer shell exited0 after printing failed log. Excluded from successful scope.",
+    "host-v2": "27/status0; fixed fixture dependency source paths",
+    "host-v3": "30/status0; added analysis/strict-closeout hooks; before source freeze",
+    "host-frozen-v1": "30/status0 with prospective whole25+12original before/after binding; authoritative"
+  },
+  "legacy_alias_scope": "Fully guarded measured qualified ELF/runtimes; unmeasured fresh reproduction runtime archives absent from original223 guards; strict closeout refusal retained; no old observation/guard/helper/receipt mutation or retrospective coverage claim",
+  "limits": [
+    "fixtures are synthetic and do not establish any new actual guest or measurement result",
+    "only new trials prepared through this family can satisfy explicit runtime_guard_protocol marker",
+    "root consolidates Guardian feedback"
+  ],
+  "legacy_alias_current_identity_receipt_sha256": "17e5f5159bdc297780f0ec49696b305b14fc4e5eb2002bb0f97aebe7597ce8cc"
+}
