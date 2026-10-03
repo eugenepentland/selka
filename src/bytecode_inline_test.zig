@@ -49,18 +49,14 @@ const fallible_program =
     \\    return use(41)
 ;
 
-/// A caller whose helper constructs a record, which admits allocation.
+/// A caller whose helper constructs a list, which admits allocation.
 const allocating_program =
-    \\record Cell:
-    \\    value: i64
-    \\
-    \\
-    \\def make(x: i64) -> Cell:
-    \\    return Cell(value=x)
+    \\def make(x: i64) -> list[int]:
+    \\    return [x]
     \\
     \\
     \\def use(x: i64) -> i64:
-    \\    return make(x).value
+    \\    return make(x)[0]
     \\
     \\
     \\def main() -> i64:
@@ -335,4 +331,159 @@ test "inlined call evaluates a trapping argument before refusing frame admission
     try testing.expectEqual(@as(usize, 1), outcome.trap.frames.len);
     try testing.expectEqualStrings("main", outcome.trap.frames[0].function);
     try testing.expectEqual(@as(u64, 7), outcome.trap.frames[0].line);
+}
+
+const plain_record_program =
+    \\record Pair:
+    \\    left: int
+    \\    right: int
+    \\
+    \\def make(value: int) -> Pair:
+    \\    return Pair(left=value, right=value + 1)
+    \\
+    \\def score(pair: Pair) -> int:
+    \\    return pair.left + pair.right
+    \\
+    \\def changed(pair: Pair) -> int:
+    \\    pair.left += 1
+    \\    return score(pair)
+    \\
+    \\def main() -> int:
+    \\    pair = make(7)
+    \\    alias = pair
+    \\    return changed(pair) + score(alias)
+;
+
+// spec: BYTECODE-INLINE-5
+test "inlining plain constructors preserves returned record snapshots" {
+    try testing.expect(!try keepsCall(plain_record_program, "make"));
+    try testing.expect(!try keepsCall(plain_record_program, "score"));
+    try testing.expectEqual(@as(i64, 31), try loweredValue(plain_record_program));
+}
+
+const result_program =
+    \\def checked(value: int) -> Result[int, int]:
+    \\    if value < 0:
+    \\        return Err(3)
+    \\    return Ok(value)
+    \\
+    \\def forwarded(value: int) -> Result[int, int]:
+    \\    result = checked(value)?
+    \\    return Ok(result + 1)
+    \\
+    \\def main() -> int:
+    \\    match forwarded(-1):
+    \\        case Ok(value):
+    \\            return value
+    \\        case Err(code):
+    \\            return code
+;
+
+// spec-case: BYTECODE-INLINE-5
+test "inlining plain results preserves propagation into a caller with another return type" {
+    try testing.expect(!try keepsCall(result_program, "checked"));
+    try testing.expect(!try keepsCall(result_program, "forwarded"));
+    try testing.expectEqual(@as(i64, 3), try loweredValue(result_program));
+}
+
+// spec-case: BYTECODE-INLINE-5
+test "inlining declines propagation when unfinished caller operands need preservation" {
+    const source =
+        \\def through(value: Result[int, int]) -> Result[int, int]:
+        \\    return Ok(value?)
+        \\
+        \\def main() -> int:
+        \\    first, result = 7, through(Err(3))
+        \\    match result:
+        \\        case Ok(value):
+        \\            return first + value
+        \\        case Err(code):
+        \\            return first + code
+    ;
+    try testing.expect(try keepsCall(source, "through"));
+    try testing.expectEqual(@as(i64, 10), try loweredValue(source));
+}
+
+// spec-case: BYTECODE-INLINE-5
+test "inlining retains construction calls with managed payload ownership" {
+    const source =
+        \\record Owner:
+        \\    values: list[int]
+        \\
+        \\def make(values: list[int]) -> Owner:
+        \\    return Owner(values=values)
+        \\
+        \\def main() -> int:
+        \\    values = [7]
+        \\    owner = make(values)
+        \\    values[0] = 9
+        \\    return owner.values[0]
+    ;
+    try testing.expect(try keepsCall(source, "make"));
+    try testing.expectEqual(@as(i64, 7), try loweredValue(source));
+}
+
+// spec-case: BYTECODE-INLINE-5
+test "inlining plain options keeps both some and none branches" {
+    const source =
+        \\def optional(value: int) -> Option[int]:
+        \\    if value < 0:
+        \\        return None
+        \\    return Some(value)
+        \\
+        \\def main() -> int:
+        \\    match optional(-1):
+        \\        case Some(value):
+        \\            return value
+        \\        case None:
+        \\            match optional(7):
+        \\                case Some(value):
+        \\                    return value
+        \\                case None:
+        \\                    return 0
+    ;
+    try testing.expect(!try keepsCall(source, "optional"));
+    try testing.expectEqual(@as(i64, 7), try loweredValue(source));
+}
+
+// spec-case: BYTECODE-INLINE-5
+test "inlined plain result traces retain exact origin conversion and return locations" {
+    const source =
+        \\union Fault:
+        \\    Code: int
+        \\
+        \\def checked(x: int) -> Result[int, int]:
+        \\    if x < 0:
+        \\        return Err(3)
+        \\    return Ok(x)
+        \\
+        \\def forwarded(x: int) -> Result[int, Fault]:
+        \\    value = checked(x)?
+        \\    return Ok(value + 1)
+        \\
+        \\def main() -> Result[int, Fault]:
+        \\    return forwarded(-1)
+    ;
+    try testing.expect(!try keepsCall(source, "checked"));
+    try testing.expect(!try keepsCall(source, "forwarded"));
+    var compilation = try language.Compilation.init(testing.allocator, test_path, source);
+    defer compilation.deinit();
+    const outcome = try native.run(&compilation);
+    try testing.expect(!outcome.trapped());
+    var actual = std.mem.tokenizeAny(u8, outcome.stderr, " \t\n");
+    var expected = std.mem.tokenizeAny(u8, "error: Fault.Code(3) inline.my:6:16 checked Err(...) created " ++
+        "inline.my:10:13 forwarded ? converted to Fault.Code inline.my:14:5 main returned", " ");
+    while (expected.next()) |word| try testing.expectEqualStrings(word, actual.next() orelse "");
+    try testing.expect(actual.next() == null);
+}
+
+// spec-case: BYTECODE-INLINE-5
+test "stackHeights rejects an invalid failure edge without leaking its analysis storage" {
+    const bytecode = @import("bytecode.zig");
+    const function: bytecode.Function = .{
+        .id = @fromBackingInt(0),
+        .name = "invalid",
+        .scope = .{ .instructions = &.{.{ .span = .{ .start = 0, .end = 0 }, .op = .{ .jump = 1 } }} },
+    };
+    try testing.expectError(error.InternalError, bytecode.stackHeights(testing.allocator, .{ .functions = &.{function} }, function));
 }

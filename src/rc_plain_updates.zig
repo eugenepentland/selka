@@ -10,6 +10,7 @@
 const bytecode = @import("bytecode.zig");
 const typed = @import("typed.zig");
 const shapes = @import("rc_shape.zig");
+const branchTarget = bytecode.branchTarget;
 const Op = @FieldType(bytecode.Instruction, "op");
 
 /// How deep one query follows the parameter through further calls.
@@ -168,18 +169,6 @@ fn projectionRoot(code: []const bytecode.Instruction, pc: usize) Root {
         .get_index => return .unknown,
         else => return .fresh,
     }
-}
-
-fn branchTarget(code: []const bytecode.Instruction, pc: usize) bool {
-    for (code) |instruction| switch (instruction.op) {
-        .jump, .jump_if_false => |target| if (target == pc) return true,
-        .try_result => |propagate| if (propagate.error_target == pc) return true,
-        .switch_variant => |dispatch| for (dispatch.arms) |arm| {
-            if (arm.target == pc) return true;
-        },
-        else => {},
-    };
-    return false;
 }
 
 // Whether any direct call or callback in `function` may write an argument.

@@ -13,6 +13,7 @@ const std = @import("std");
 const bytecode = @import("bytecode.zig");
 const typed = @import("typed.zig");
 const Span = @import("source.zig").Span;
+const shape = @import("bytecode_inline_shape.zig");
 
 /// Failures returned by the inliner.
 pub const Error = error{ OutOfMemory, InternalError };
@@ -103,9 +104,10 @@ fn eligible(program: bytecode.Program, index: usize, code: []const bytecode.Inst
     // `constant` is an AST-only policy: constant declarations are evaluated at
     // check time, so no lowered bytecode function carries it.
     if (policy.host != null or policy.c_abi or policy.conversion) return false;
-    // ERROR-TRACE-1: a `return` of a result records its `Err` in the error
-    // return trace from the callee's own frame, which a splice would not have.
-    if (typed.resultShape(function.signature.return_type, program.records) != null) return false;
+    // Plain results retain construction/return provenance through the splice.
+    // Managed result ownership is outside this constructor certificate.
+    if (typed.resultShape(function.signature.return_type, program.records) != null and
+        !shape.plain(program.records, function.signature.return_type)) return false;
     if (code.len == 0 or code.len > max_loop_instructions) return false;
     if (locals.len > max_locals) return false;
     if (function.signature.parameter_count > locals.len) return false;
@@ -178,6 +180,9 @@ fn allowed(program: bytecode.Program, op: @FieldType(bytecode.Instruction, "op")
         .cast_integer => |ty| ty.isInteger(),
         .neg_integer => |ty| ty.isInteger(),
         .get_index => |access| indexIsAllocationFree(program, access.ty),
+        .make_record => |record| shape.plain(program.records, record.ty),
+        .make_variant => |variant| shape.plain(program.records, variant.ty),
+        .try_result => |propagate| shape.plain(program.records, propagate.input) and shape.plain(program.records, propagate.output),
         else => false,
     };
 }
@@ -277,24 +282,51 @@ fn loopBody(allocator: std.mem.Allocator, code: []const bytecode.Instruction) Er
     return loops;
 }
 
+/// A propagated failure discards this callee's unfinished operand stack.
+fn propagates(code: []const bytecode.Instruction) bool {
+    for (code) |instruction| if (instruction.op == .try_result) return true;
+    return false;
+}
+
 /// Rewrite one caller, or return null when it has no inlinable call site.
 fn rewrite(allocator: std.mem.Allocator, program: bytecode.Program, states: []const State, caller: usize) Error!?State {
     const code = states[caller].instructions;
     const loops = try loopBody(allocator, code);
     defer allocator.free(loops);
+    const targets = try allocator.alloc(?usize, code.len);
+    defer allocator.free(targets);
     var any = false;
-    for (code, 0..) |_, pc| if (inlineTarget(program, states, caller, loops, pc) != null) {
-        any = true;
-        break;
-    };
+    var needs_heights = false;
+    for (code, 0..) |_, pc| {
+        targets[pc] = inlineTarget(program, states, caller, loops, pc);
+        if (targets[pc]) |target| {
+            any = true;
+            needs_heights = needs_heights or propagates(states[target].instructions);
+        }
+    }
     if (!any) return null;
+    if (needs_heights) {
+        var function = program.functions[caller];
+        function.scope = .{ .instructions = code, .locals = states[caller].locals };
+        const heights = try bytecode.stackHeights(allocator, program, function);
+        defer allocator.free(heights);
+        any = false;
+        for (targets, 0..) |*target, pc| if (target.*) |callee| {
+            if (propagates(states[callee].instructions) and heights[pc] != program.functions[callee].signature.parameter_count) {
+                // `?` retires unfinished operands on failure. A nonempty caller
+                // prefix would belong to the caller, so retain the real call.
+                target.* = null;
+            } else any = true;
+        };
+        if (!any) return null;
+    }
     // Phase one: the new pc of every old pc, sized by the splice each inlined
     // call expands to. Phase two emits the same decision, so the two must agree.
     const base = try allocator.alloc(usize, code.len);
     var cursor: usize = 0;
     for (code, 0..) |_, index| {
         base[index] = cursor;
-        if (inlineTarget(program, states, caller, loops, index)) |callee| {
+        if (targets[index]) |callee| {
             cursor += 1 + program.functions[callee].signature.parameter_count + states[callee].instructions.len;
         } else cursor += 1;
     }
@@ -302,7 +334,7 @@ fn rewrite(allocator: std.mem.Allocator, program: bytecode.Program, states: []co
     var locals: std.ArrayList(typed.Local) = .empty;
     try locals.appendSlice(allocator, states[caller].locals);
     for (code, 0..) |instruction, index| {
-        if (inlineTarget(program, states, caller, loops, index)) |callee| {
+        if (targets[index]) |callee| {
             const view: Callee = .{
                 .id = program.functions[callee].id,
                 .body = states[callee].instructions,
@@ -372,6 +404,7 @@ fn shift(slot: typed.LocalId, base: usize) typed.LocalId {
 fn remapCallee(allocator: std.mem.Allocator, op: @FieldType(bytecode.Instruction, "op"), fresh: usize, body_base: usize, continuation: usize) Error!@FieldType(bytecode.Instruction, "op") {
     return switch (op) {
         .ret => .{ .jump = continuation },
+        .try_result => |propagate| .{ .try_result = .{ .input = propagate.input, .output = propagate.output, .error_target = body_base + propagate.error_target } },
         .jump => |target| .{ .jump = body_base + target },
         .jump_if_false => |target| .{ .jump_if_false = body_base + target },
         .load_local => |slot| .{ .load_local = shift(slot, fresh) },

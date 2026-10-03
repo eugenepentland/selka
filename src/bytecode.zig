@@ -26,6 +26,19 @@ pub const valueParameterCount = model.valueParameterCount;
 pub const standInOutput = model.standInOutput;
 const Error = std.mem.Allocator.Error || error{InternalError};
 
+/// Whether any explicit control-flow edge can enter instruction `pc`.
+pub fn branchTarget(code: []const Instruction, pc: usize) bool {
+    for (code) |instruction| switch (instruction.op) {
+        .jump, .jump_if_false => |target| if (target == pc) return true,
+        .try_result => |propagate| if (propagate.error_target == pc) return true,
+        .switch_variant => |dispatch| for (dispatch.arms) |arm| {
+            if (arm.target == pc) return true;
+        },
+        else => {},
+    };
+    return false;
+}
+
 /// Validate generated IDs, instruction operands, and stack heights at control-flow joins.
 /// Runtime operand values and initialization are checked by the VM.
 pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
@@ -41,7 +54,7 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
             try validateHost(allocator, program, function);
             continue;
         }
-        for (function.scope.instructions) |instruction| try validateInstruction(allocator, program, function, instruction);
+        for (function.scope.instructions, 0..) |instruction, pc| try validateInstruction(allocator, program, function, instruction, pc);
         try validateFlow(allocator, program, function);
     }
 }
@@ -64,7 +77,7 @@ pub fn validateSelected(allocator: std.mem.Allocator, program: Program, selected
             try validateHost(allocator, program, function);
             continue;
         }
-        for (function.scope.instructions) |instruction| try validateInstruction(allocator, program, function, instruction);
+        for (function.scope.instructions, 0..) |instruction, pc| try validateInstruction(allocator, program, function, instruction, pc);
         try validateFlow(allocator, program, function);
     }
 }
@@ -186,7 +199,7 @@ fn validateFunctionValue(program: Program, ty: typed.Type, target: typed.Functio
 fn validateInvocation(program: Program, ty: typed.Type) Error!void {
     _ = callables.signature(ty, program.records) orelse return error.InternalError;
 }
-fn validateInstruction(allocator: std.mem.Allocator, program: Program, function: Function, instruction: Instruction) Error!void {
+fn validateInstruction(allocator: std.mem.Allocator, program: Program, function: Function, instruction: Instruction, pc: usize) Error!void {
     switch (instruction.op) {
         .invoke => |ty| try validateInvocation(program, ty),
         .function_value => |value| try validateFunctionValue(program, value.ty, value.function),
@@ -272,7 +285,10 @@ fn validateInstruction(allocator: std.mem.Allocator, program: Program, function:
             if (schema.shape.array == null and !collection) return error.InternalError;
         },
         .update_record => |update| try validateOpUpdateRecord(allocator, program, update),
-        .try_result => |propagate| try validateOpTryResult(program, function, propagate),
+        .try_result => |propagate| {
+            const site = try @import("bytecode_inline_site.zig").resolve(program, function, pc);
+            try validateOpTryResult(program, function, site.function.signature.return_type, propagate);
+        },
         .acknowledge => |ty| {
             if (!validType(ty, program) or !typed.requiresHandling(ty, program.records)) return error.InternalError;
         },
@@ -591,8 +607,8 @@ fn validateOpUpdateRecord(allocator: std.mem.Allocator, program: Program, update
     try validateIndices(allocator, update.indices, program.records[update.ty.recordIndex()].fields.len);
 }
 
-fn validateOpTryResult(program: Program, function: Function, propagate: @FieldType(@FieldType(Instruction, "op"), "try_result")) Error!void {
-    if (propagate.output != function.signature.return_type or propagate.error_target >= function.scope.instructions.len) return error.InternalError;
+fn validateOpTryResult(program: Program, function: Function, return_type: typed.Type, propagate: @FieldType(@FieldType(Instruction, "op"), "try_result")) Error!void {
+    if (propagate.output != return_type or propagate.error_target >= function.scope.instructions.len) return error.InternalError;
     if (typed.resultShape(propagate.input, program.records)) |input| {
         const output = typed.resultShape(propagate.output, program.records) orelse return error.InternalError;
         if (input.error_type != output.error_type and typed.wrappingCase(program.records, output.error_type, input.error_type) == null) return error.InternalError;
@@ -615,8 +631,15 @@ fn validateOpCall(program: Program, function: Function, id: @FieldType(@FieldTyp
 }
 
 fn validateFlow(allocator: std.mem.Allocator, program: Program, function: Function) Error!void {
+    allocator.free(try stackHeights(allocator, program, function));
+}
+
+/// Validate control flow and return each reachable instruction's input height.
+/// The inliner uses these facts to keep a propagating callee's failure unwind
+/// inside its own operand stack. The caller owns the returned slice.
+pub fn stackHeights(allocator: std.mem.Allocator, program: Program, function: Function) Error![]?usize {
     const heights = try allocator.alloc(?usize, function.scope.instructions.len);
-    defer allocator.free(heights);
+    errdefer allocator.free(heights);
     @memset(heights, null);
     const pending = try allocator.alloc(usize, function.scope.instructions.len);
     defer allocator.free(pending);
@@ -739,6 +762,7 @@ fn validateFlow(allocator: std.mem.Allocator, program: Program, function: Functi
             try enqueue(heights, pending, &len, pc + 1, height);
         }
     }
+    return heights;
 }
 
 fn enqueue(heights: []?usize, pending: []usize, len: *usize, target: usize, height: usize) Error!void {

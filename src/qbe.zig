@@ -2578,6 +2578,7 @@ const Emitter = struct {
             self.pc = pc;
             try @import("qbe_inline_depth.zig").enter(Emitter, self, pc);
             try cow_lower.Lower(Emitter).before(self, pc, stack);
+            try error_trace.Lower(Emitter).inlinedReturn(self, stack);
             self.expireFusedDecode(pc);
             // QBE-LOOP-VERSION-1: an instruction whose guards the loop's own
             // guard proved is lowered without them.

@@ -15,6 +15,7 @@
 const std = @import("std");
 const typed = @import("typed.zig");
 const bytecode = @import("bytecode.zig");
+const inline_site = @import("bytecode_inline_site.zig");
 /// Failures reported while emitting the trace recorder calls.
 pub const Error = error{ InternalError, OutOfMemory, SourceError, WriteFailed };
 /// What one recorded site did; the ordinals are the runtime's
@@ -63,9 +64,10 @@ pub fn Lower(comptime E: type) type {
         /// restart the trace at it, every other kind appends to the ring. Each
         /// is one call to a cold runtime recorder that allocates nothing.
         pub fn record(self: *E, kind: Kind) Error!void {
-            const meta = self.units[@backingInt(self.function.id)].symbol;
+            const site = try inline_site.resolve(self.program, self.function, self.pc);
+            const meta = self.units[@backingInt(site.function.id)].symbol;
             const recorder = if (kind == .created or kind == .produced) origin_symbol else append_symbol;
-            try self.print(" call ${s}(l extern ${s}_meta, l {d})\n", .{ recorder, meta, siteWord(kind, self.pc) });
+            try self.print(" call ${s}(l extern ${s}_meta, l {d})\n", .{ recorder, meta, siteWord(kind, site.pc) });
         }
         /// A new value of variant type `ty` with case `tag`: an `Err` restarts
         /// the trace at this construction, any other value records nothing.
@@ -83,6 +85,17 @@ pub fn Lower(comptime E: type) type {
         pub fn returning(self: *E, pointer: usize, branch_target: bool) Error!void {
             if (!returnNeedsCheck(self.program.records, self.function, self.pc, branch_target)) return;
             try recordIfError(self, self.function.signature.return_type, pointer, .returned);
+        }
+        /// A spliced `ret` is a jump in its caller, but still records an error
+        /// returned through a variable, call or conditional in its own function.
+        pub fn inlinedReturn(self: *E, stack: []const typed.Type) Error!void {
+            const instruction = self.function.scope.instructions[self.pc];
+            if (instruction.op != .jump or instruction.inline_origin == null) return;
+            const site = try inline_site.resolve(self.program, self.function, self.pc);
+            if (site.function.scope.instructions[site.pc].op != .ret) return;
+            if (!returnNeedsCheck(self.program.records, site.function, site.pc, bytecode.branchTarget(site.function.scope.instructions, site.pc))) return;
+            if (stack.len == 0) return error.InternalError;
+            try recordIfError(self, site.function.signature.return_type, try self.load("s", stack.len - 1), .returned);
         }
         /// Record `kind` only when the result of type `ty` at `pointer` is an
         /// `Err`: the branch a `return` of a value that may be either case takes.
