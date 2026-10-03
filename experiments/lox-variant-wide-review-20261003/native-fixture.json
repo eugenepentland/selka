@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-variant-wide-20261003/scripts/build-slot.sh",
+    "build",
+    "python3",
+    "experiments/lox-variant-wide-20261003/fixture.py"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-variant-wide-20261003",
+  "environment": {
+    "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-variant-wide-20261003/.tmp-lox-variant-wide-20261003/tmp",
+    "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-variant-wide-20261003/.tmp-lox-variant-wide-20261003/global-cache"
+  },
+  "status": 1,
+  "stdout_sha256": "1e4dd503c294b0bb0103e0402c22fdaa59ffe8c9e6de7f09c162641aa415339f",
+  "stderr_sha256": "67e99fcdcc2bc6d62466c56b87e21810f820332850b031e5c8de17277b4075c6"
+}

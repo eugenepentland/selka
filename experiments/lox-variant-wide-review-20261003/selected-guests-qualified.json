@@ -1,0 +1,17 @@
+{
+  "argv": [
+    "taskset",
+    "-c",
+    "16",
+    "python3",
+    "experiments/lox-variant-wide-20261003/build.py"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-variant-wide-20261003",
+  "environment": {
+    "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-variant-wide-20261003/.tmp-lox-variant-wide-20261003/tmp",
+    "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-variant-wide-20261003/.tmp-lox-variant-wide-20261003/global-cache"
+  },
+  "status": 0,
+  "stdout_sha256": "b8f220a3be53c97b6a992e344ff1f32b800d9a6f6b34962bb1300d4a07dc0b0d",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

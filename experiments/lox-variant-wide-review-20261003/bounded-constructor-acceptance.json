@@ -1,0 +1,28 @@
+{
+  "argv": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-variant-wide-20261003/scripts/build-slot.sh",
+    "build",
+    "zig",
+    "build",
+    "test-units",
+    "-Dtest-filter=RC-ZEROED-VARIANT-WORD-1",
+    "-Dtest-filter=RC-AGGREGATE-1",
+    "-Dtest-filter=RC-INLINE-ZERO-1",
+    "-Dtest-filter=RC-RUNTIME-CONTRACT-1",
+    "-Dtest-filter=RC-FRESH-CONSTRUCTOR-1",
+    "-Dtest-filter=RC-MATCH-SCALAR-1",
+    "-Dtest-filter=RC-PLAIN-CONSTRUCT-1",
+    "-Dtest-filter=QBE-NICHE-1",
+    "-Dtest-filter=RC-STATISTICS-1",
+    "--cache-dir",
+    ".tmp-lox-variant-wide-20261003/cache"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-variant-wide-20261003",
+  "environment": {
+    "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-variant-wide-20261003/.tmp-lox-variant-wide-20261003/tmp",
+    "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-variant-wide-20261003/.tmp-lox-variant-wide-20261003/global-cache"
+  },
+  "status": 0,
+  "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stderr_sha256": "1aa380d69280eec3461a05410a1e3f83155e8f9cf7f0e5cae398ae46a2c0e0cb"
+}
