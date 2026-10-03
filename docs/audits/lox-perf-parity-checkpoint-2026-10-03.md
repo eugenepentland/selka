@@ -1,5 +1,10 @@
 # Lox performance checkpoint, 2026-10-03
 
+This report describes the 80-test checkpoint at `6e516f65`. The current
+optimized migration also includes the subsequent
+[callee/table checkpoint](lox-callee-table-checkpoint-2026-10-03.md).
+Reproduce this report from its pinned checkout or sealed archive.
+
 The parallel improvements reduce checked LLVM VM wall time **5.77%** and tree
 wall time **48.24%** relative to the already optimized October 2 evaluator.
 QBE improves **7.25% / 39.57%**. Every individual engine/backend/script median

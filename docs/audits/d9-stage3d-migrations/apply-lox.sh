@@ -24,4 +24,5 @@ if [[ "$optimization" == --optimized ]]; then
     (cd "$port" && patch --batch -p1 < "$script_dir/lox-source-perf.patch")
     (cd "$port" && patch --batch -p1 < "$script_dir/lox-runtime-perf-20261002.patch")
     (cd "$port" && patch --batch --fuzz=0 -p1 < "$script_dir/lox-runtime-perf-20261003.patch")
+    (cd "$port" && patch --batch --fuzz=0 -p1 < "$script_dir/lox-runtime-perf-20261003-callee-table.patch")
 fi

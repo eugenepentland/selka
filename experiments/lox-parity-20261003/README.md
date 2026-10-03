@@ -1,5 +1,11 @@
 # Lox performance checkpoint, 2026-10-03
 
+This directory records the 80-test checkpoint at `6e516f65`. The current
+optimized migration includes the subsequent 84-test callee/table checkpoint;
+use [its fresh-build recipe](../lox-callee-table-checkpoint-20261003/README.md)
+for the current source. Reproduce this directory's measurements from its
+pinned checkout or sealed archive.
+
 This experiment continues the evaluator improvements at `fd86729e`. It keeps
 both engines and all thirteen scripts in scope, with the Rust/Go source and
 inputs pinned to `4e48a092`. LLVM O3/full LTO with checked RC is the primary
@@ -7,7 +13,7 @@ target; checked QBE is also measured. Native tracing GC artifacts qualify
 correctness separately. The complete Lox architecture/algorithm restrictions
 remain in the pinned benchmark SPEC.
 
-The current optimized migration applies
+This checkpoint's optimized migration applies
 `docs/audits/d9-stage3d-migrations/lox-runtime-perf-20261003.patch` after the
 October 2 patch. Its SHA256 is
 `233332c7b4fd1325f3ec1251406b0b433e87520f5abc4db9cfcc70e79813445b`.

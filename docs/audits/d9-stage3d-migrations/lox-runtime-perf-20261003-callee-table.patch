@@ -1,0 +1,421 @@
+--- a/driver_cases.json
++++ b/driver_cases.json
+@@ -103,5 +103,20 @@
+     "providers": {
+       "natives.my": "module natives\n# Test fixture for driver_tests.my (see driver_cases.json): natives.my with\n# a `clock` that returns 0 instead of reading the Clock capability.\nimport heap\nimport lox_strings\nimport object\nimport value\n\n\npublic const CLOCK: int = 0\n\n\npublic def call_native(rt: heap.Runtime, id: int) -> value.Value:\n    assert id == CLOCK, \"unknown native\"\n    _ = rt\n    return value.Value.number(0.0)\n\n\npublic def start(rt: mut heap.Runtime):\n    rt.init_string = lox_strings.copy_string(mut rt, b\"init\")\n    define_natives(mut rt)\n\n\ndef define_natives(rt: mut heap.Runtime):\n    name = lox_strings.copy_string(mut rt, b\"clock\")\n    heap.push(mut rt, value.Value.obj(name))\n    native = heap.allocate(mut rt, object.Obj.native(object.NativeObj(id=CLOCK, arity=0)))\n    heap.push(mut rt, value.Value.obj(native))\n    _ = heap.set_global(mut rt, name, value.Value.obj(native))\n    _ = heap.pop(mut rt)\n    _ = heap.pop(mut rt)\n"
+     }
++  },
++  "driver_tests::test_run_scalar_callee_runtime_snapshot": {
++    "providers": {
++      "natives.my": "module natives\n# Test fixture for driver_tests.my (see driver_cases.json): natives.my with\n# a `clock` that returns 0 instead of reading the Clock capability.\nimport heap\nimport lox_strings\nimport object\nimport value\n\n\npublic const CLOCK: int = 0\n\n\npublic def call_native(rt: heap.Runtime, id: int) -> value.Value:\n    assert id == CLOCK, \"unknown native\"\n    _ = rt\n    return value.Value.number(0.0)\n\n\npublic def start(rt: mut heap.Runtime):\n    rt.init_string = lox_strings.copy_string(mut rt, b\"init\")\n    define_natives(mut rt)\n\n\ndef define_natives(rt: mut heap.Runtime):\n    name = lox_strings.copy_string(mut rt, b\"clock\")\n    heap.push(mut rt, value.Value.obj(name))\n    native = heap.allocate(mut rt, object.Obj.native(object.NativeObj(id=CLOCK, arity=0)))\n    heap.push(mut rt, value.Value.obj(native))\n    _ = heap.set_global(mut rt, name, value.Value.obj(native))\n    _ = heap.pop(mut rt)\n    _ = heap.pop(mut rt)\n"
++    }
++  },
++  "driver_tests::test_run_scalar_callee_class_error_order": {
++    "providers": {
++      "natives.my": "module natives\n# Test fixture for driver_tests.my (see driver_cases.json): natives.my with\n# a `clock` that returns 0 instead of reading the Clock capability.\nimport heap\nimport lox_strings\nimport object\nimport value\n\n\npublic const CLOCK: int = 0\n\n\npublic def call_native(rt: heap.Runtime, id: int) -> value.Value:\n    assert id == CLOCK, \"unknown native\"\n    _ = rt\n    return value.Value.number(0.0)\n\n\npublic def start(rt: mut heap.Runtime):\n    rt.init_string = lox_strings.copy_string(mut rt, b\"init\")\n    define_natives(mut rt)\n\n\ndef define_natives(rt: mut heap.Runtime):\n    name = lox_strings.copy_string(mut rt, b\"clock\")\n    heap.push(mut rt, value.Value.obj(name))\n    native = heap.allocate(mut rt, object.Obj.native(object.NativeObj(id=CLOCK, arity=0)))\n    heap.push(mut rt, value.Value.obj(native))\n    _ = heap.set_global(mut rt, name, value.Value.obj(native))\n    _ = heap.pop(mut rt)\n    _ = heap.pop(mut rt)\n"
++    }
++  },
++  "driver_tests::test_run_scalar_callee_invalid_argument_order": {
++    "providers": {
++      "natives.my": "module natives\n# Test fixture for driver_tests.my (see driver_cases.json): natives.my with\n# a `clock` that returns 0 instead of reading the Clock capability.\nimport heap\nimport lox_strings\nimport object\nimport value\n\n\npublic const CLOCK: int = 0\n\n\npublic def call_native(rt: heap.Runtime, id: int) -> value.Value:\n    assert id == CLOCK, \"unknown native\"\n    _ = rt\n    return value.Value.number(0.0)\n\n\npublic def start(rt: mut heap.Runtime):\n    rt.init_string = lox_strings.copy_string(mut rt, b\"init\")\n    define_natives(mut rt)\n\n\ndef define_natives(rt: mut heap.Runtime):\n    name = lox_strings.copy_string(mut rt, b\"clock\")\n    heap.push(mut rt, value.Value.obj(name))\n    native = heap.allocate(mut rt, object.Obj.native(object.NativeObj(id=CLOCK, arity=0)))\n    heap.push(mut rt, value.Value.obj(native))\n    _ = heap.set_global(mut rt, name, value.Value.obj(native))\n    _ = heap.pop(mut rt)\n    _ = heap.pop(mut rt)\n"
++    }
+   }
+ }
+--- a/driver_tests.my
++++ b/driver_tests.my
+@@ -9,6 +9,12 @@
+ # which cannot take a cases file, leaves it out. `out` is the authority the
+ # captured Output stands in for; nothing is written to it.
+ import driver
++import heap
++import lox_strings
++import output
++import table
++import value
++import vm as stack_vm
+ 
+ 
+ def run(source: bytes, engine: driver.Engine, out: Stream) -> driver.RunResult:
+@@ -17,9 +23,9 @@
+ 
+ # Both engines print `expected` and exit 0.
+ def prints(source: bytes, expected: bytes, out: Stream) -> bool:
+-    vm = run(source, driver.Engine.VM, out)
+-    tree = run(source, driver.Engine.TREE, out)
+-    return vm.status == 0 and vm.stdout == expected and tree.status == 0 and tree.stdout == expected
++    vm_run = run(source, driver.Engine.VM, out)
++    tree = run(source, driver.Engine.TREE, out)
++    return vm_run.status == 0 and vm_run.stdout == expected and tree.status == 0 and tree.stdout == expected
+ 
+ 
+ def first_line(text: bytes) -> bytes:
+@@ -59,9 +65,9 @@
+ 
+ public def test_run_runtime_error_trace(out: Stream) -> bool:
+     source = b"print 1;\nprint -\"x\";"
+-    vm = run(source, driver.Engine.VM, out)
+-    tree = run(source, driver.Engine.TREE, out)
+-    vm_ok = vm.status == 70 and vm.stdout == b"1\n" and vm.stderr == b"Operand must be a number.\n[line 2] in script\n"
++    vm_run = run(source, driver.Engine.VM, out)
++    tree = run(source, driver.Engine.TREE, out)
++    vm_ok = vm_run.status == 70 and vm_run.stdout == b"1\n" and vm_run.stderr == b"Operand must be a number.\n[line 2] in script\n"
+     tree_ok = tree.status == 70 and tree.stdout == b"1\n" and tree.stderr == b"Operand must be a number.\n[line 2]\n"
+     return vm_ok and tree_ok
+ 
+@@ -69,16 +75,16 @@
+ public def test_run_compile_error_status(out: Stream) -> bool:
+     source = b"print 1 +;"
+     expected = b"[line 1] Error at ';': Expect expression.\n"
+-    vm = run(source, driver.Engine.VM, out)
+-    tree = run(source, driver.Engine.TREE, out)
+-    return vm.status == 65 and vm.stdout == b"" and vm.stderr == expected and tree.status == 65 and tree.stdout == b"" and tree.stderr == expected
++    vm_run = run(source, driver.Engine.VM, out)
++    tree = run(source, driver.Engine.TREE, out)
++    return vm_run.status == 65 and vm_run.stdout == b"" and vm_run.stderr == expected and tree.status == 65 and tree.stdout == b"" and tree.stderr == expected
+ 
+ 
+ public def test_run_stack_overflow(out: Stream) -> bool:
+     source = b"fun f() { f(); } f();"
+-    vm = run(source, driver.Engine.VM, out)
+-    tree = run(source, driver.Engine.TREE, out)
+-    return vm.status == 70 and first_line(vm.stderr) == b"Stack overflow." and tree.status == 70 and first_line(tree.stderr) == b"Stack overflow."
++    vm_run = run(source, driver.Engine.VM, out)
++    tree = run(source, driver.Engine.TREE, out)
++    return vm_run.status == 70 and first_line(vm_run.stderr) == b"Stack overflow." and tree.status == 70 and first_line(tree.stderr) == b"Stack overflow."
+ 
+ 
+ public def test_run_print_value_kinds(out: Stream) -> bool:
+@@ -88,11 +94,11 @@
+ 
+ public def test_run_gc_stress_same_output(out: Stream) -> bool:
+     source = b"class Node { init(value, next) { this.value = value; this.next = next; } }\nfun adder(n) { fun add(x) { return x + n; } return add; }\nvar list = nil;\nfor (var i = 0; i < 5; i = i + 1) { list = Node(adder(i)(i), list); }\nvar total = 0;\nwhile (list != nil) { total = total + list.value; list = list.next; }\nprint total;\nprint \"done\" + \"!\";"
+-    vm = run(source, driver.Engine.VM, out)
++    vm_run = run(source, driver.Engine.VM, out)
+     vm_stress = driver.run_source(source, driver.Engine.VM, True, out, None)
+     tree = run(source, driver.Engine.TREE, out)
+     tree_stress = driver.run_source(source, driver.Engine.TREE, True, out, None)
+-    same_output = vm.stdout == b"20\ndone!\n" and vm_stress.stdout == vm.stdout and tree.stdout == vm.stdout and tree_stress.stdout == vm.stdout
++    same_output = vm_run.stdout == b"20\ndone!\n" and vm_stress.stdout == vm_run.stdout and tree.stdout == vm_run.stdout and tree_stress.stdout == vm_run.stdout
+     stressed = vm_stress.collections == vm_stress.allocations and tree_stress.collections == tree_stress.allocations
+     return same_output and stressed and vm_stress.status == 0 and tree_stress.status == 0
+ 
+@@ -114,9 +120,9 @@
+ public def test_run_scalar_stack_edges(out: Stream) -> bool:
+     source = b"var nan = 0 / 0; print nan == nan; print 1 / 0 > 100; print -1 / 0 < -100; print 0 == -0; fun calc(x) { return -(x * 2 - 3) / 2; } print calc(9); print 7 < 8; print 8 > 7; print \"ab\" + \"cd\";"
+     expected = b"false\ntrue\ntrue\ntrue\n-7.5\ntrue\ntrue\nabcd\n"
+-    vm = driver.run_source(source, driver.Engine.VM, True, out, None)
+-    tree = driver.run_source(source, driver.Engine.TREE, True, out, None)
+-    return vm.status == 0 and vm.stdout == expected and vm.stderr == b"" and tree.status == 0 and tree.stdout == expected and tree.stderr == b""
++    vm_run = driver.run_source(source, driver.Engine.VM, True, out, None)
++    tree = driver.run_source(source, driver.Engine.TREE, True, out, None)
++    return vm_run.status == 0 and vm_run.stdout == expected and vm_run.stderr == b"" and tree.status == 0 and tree.stdout == expected and tree.stderr == b""
+ 
+ 
+ public def test_run_scalar_stack_error_trace(out: Stream) -> bool:
+@@ -133,9 +139,9 @@
+ 
+ public def test_run_property_lookup_survives_allocation_and_mutation(out: Stream) -> bool:
+     source = b"class Base { init(x) { this.x = x; } read() { return this.x; } } class Child < Base { read() { return super.read(); } } var a = Child(1); var b = Child(2); var f = a.read; a.x = 9; for (var i = 0; i < 20; i = i + 1) { var tmp = Child(i); } print f(); print b.read(); print a.read();"
+-    vm = driver.run_source(source, driver.Engine.VM, True, out, None)
+-    tree = driver.run_source(source, driver.Engine.TREE, True, out, None)
+-    return vm.status == 0 and tree.status == 0 and vm.stdout == b"9\n2\n9\n" and tree.stdout == vm.stdout and vm.collections == vm.allocations and tree.collections == tree.allocations
++    vm_run = driver.run_source(source, driver.Engine.VM, True, out, None)
++    tree = driver.run_source(source, driver.Engine.TREE, True, out, None)
++    return vm_run.status == 0 and tree.status == 0 and vm_run.stdout == b"9\n2\n9\n" and tree.stdout == vm_run.stdout and vm_run.collections == vm_run.allocations and tree.collections == tree.allocations
+ 
+ 
+ # The original callee and every evaluated argument remain roots while later
+@@ -144,9 +150,9 @@
+ public def test_run_call_arguments_and_captured_parameter_roots(out: Stream) -> bool:
+     source = b"var saved; var update; fun first(a, b) { fun read() { return a + b; } fun write() { a = a + \"!\"; } saved = read; update = write; return \"first\"; } fun second(a, b) { return \"second\"; } var selected = first; fun arg(x) { selected = second; print x; return x + \"+\"; } print selected(arg(\"A\"), arg(\"B\")); update(); print saved(); print selected(1, 2);"
+     expected = b"A\nB\nfirst\nA+!B+\nsecond\n"
+-    vm = driver.run_source(source, driver.Engine.VM, True, out, None)
+-    tree = driver.run_source(source, driver.Engine.TREE, True, out, None)
+-    return vm.status == 0 and tree.status == 0 and vm.stdout == expected and tree.stdout == expected and vm.stderr == b"" and tree.stderr == b"" and vm.collections == vm.allocations and tree.collections == tree.allocations
++    vm_run = driver.run_source(source, driver.Engine.VM, True, out, None)
++    tree = driver.run_source(source, driver.Engine.TREE, True, out, None)
++    return vm_run.status == 0 and tree.status == 0 and vm_run.stdout == expected and tree.stdout == expected and vm_run.stderr == b"" and tree.stderr == b"" and vm_run.collections == vm_run.allocations and tree.collections == tree.allocations
+ 
+ 
+ # Nested calls, early returns, block scopes, constructors, and bound methods
+@@ -154,18 +160,18 @@
+ public def test_run_recursive_state_and_output_restore(out: Stream) -> bool:
+     source = b"fun outer(x) { fun inner(y) { { var local = x + y; print local; return local; } } print inner(2); return inner(3); } print outer(5); class Box { init(x) { this.x = x; print x; } read() { return this.x; } } var box = Box(9); var read = box.read; print read(); print clock();"
+     expected = b"7\n7\n8\n8\n9\n9\n0\n"
+-    vm = driver.run_source(source, driver.Engine.VM, True, out, None)
+-    tree = driver.run_source(source, driver.Engine.TREE, True, out, None)
+-    return vm.status == 0 and tree.status == 0 and vm.stdout == expected and tree.stdout == expected and vm.stderr == b"" and tree.stderr == b"" and vm.collections == vm.allocations and tree.collections == tree.allocations
++    vm_run = driver.run_source(source, driver.Engine.VM, True, out, None)
++    tree = driver.run_source(source, driver.Engine.TREE, True, out, None)
++    return vm_run.status == 0 and tree.status == 0 and vm_run.stdout == expected and tree.stdout == expected and vm_run.stderr == b"" and tree.stderr == b"" and vm_run.collections == vm_run.allocations and tree.collections == tree.allocations
+ 
+ 
+ # Capturing two locals plus a parameter walks the sorted open-upvalue chain;
+ # one local closes at a block boundary and the rest close on function return.
+ public def test_run_upvalues_across_block_and_return(out: Stream) -> bool:
+     source = b"var captured;\nfun outer(n) {\n  var first = 1;\n  { var second = 2;\n    fun pair() { first = first + 1; second = second + 2; return first + second + n; }\n    captured = pair;\n  }\n  var x = captured();\n  return captured;\n}\nvar f = outer(3); print f(); print f();\n"
+-    vm = driver.run_source(source, driver.Engine.VM, True, out, None)
+-    tree = driver.run_source(source, driver.Engine.TREE, True, out, None)
+-    return vm.status == 0 and tree.status == 0 and vm.stdout == b"12\n15\n" and tree.stdout == vm.stdout and vm.stderr == b"" and tree.stderr == b"" and vm.collections == vm.allocations and tree.collections == tree.allocations
++    vm_run = driver.run_source(source, driver.Engine.VM, True, out, None)
++    tree = driver.run_source(source, driver.Engine.TREE, True, out, None)
++    return vm_run.status == 0 and tree.status == 0 and vm_run.stdout == b"12\n15\n" and tree.stdout == vm_run.stdout and vm_run.stderr == b"" and tree.stderr == b"" and vm_run.collections == vm_run.allocations and tree.collections == tree.allocations
+ 
+ 
+ # Two child activations return before the parent fails, so the retained
+@@ -175,3 +181,54 @@
+     expected = b"Undefined variable 'absent'.\n[line 4] in dive()\n[line 3] in dive()\n[line 3] in dive()\n[line 9] in script\n"
+     observed = driver.run_source(source, driver.Engine.VM, True, out, None)
+     return observed.status == 70 and observed.stdout == b"" and observed.stderr == expected
++
++
++# A live Runtime detaches its heap and stack from a saved value snapshot.
++# The call paths must keep the saved bound receiver and current callee roots.
++def callee_test_global(rt: heap.Runtime, name: bytes) -> value.ObjRef:
++    key = lox_strings.find_string(rt, name, lox_strings.fnv1a(name))
++    match table.get(rt.globals, key, heap.string_hash(rt, key)):
++        case Some(item):
++            match item:
++                case value.Value.obj(ref):
++                    return ref
++                case _:
++                    pass
++        case None:
++            pass
++    return value.NO_OBJ
++
++
++public def test_run_scalar_callee_runtime_snapshot(out: Stream) -> bool:
++    rt = heap.new_runtime(True, None)
++    captured = output.capture(out)
++    setup = b"class Base { init(x) { this.x = x; } read() { return this.x; } } class Child < Base {} var box = Child(1); var saved = box.read; fun identity(x) { return x; } var native = clock;"
++    if stack_vm.interpret(mut rt, mut captured, setup) != stack_vm.InterpretResult.OK:
++        return False
++    box = callee_test_global(rt, b"box")
++    field = lox_strings.find_string(rt, b"x", lox_strings.fnv1a(b"x"))
++    snapshot = rt
++    allocations = rt.allocations
++    calls = b"box.x = 9; var fresh = Child(3); print saved(); print identity(\"cl\" + \"osure\"); print native(); print fresh.read();"
++    status = stack_vm.interpret(mut rt, mut captured, calls)
++    saved = heap.instance_member(snapshot, value.Value.obj(box), field)
++    live = heap.instance_member(rt, value.Value.obj(box), field)
++    return status == stack_vm.InterpretResult.OK and bytes(captured.stdout) == b"9\nclosure\n0\n3\n" and bytes(captured.stderr) == b"" and saved == heap.InstanceMember.field(value.Value.number(1.0)) and live == heap.InstanceMember.field(value.Value.number(9.0)) and snapshot.allocations == allocations and rt.allocations > allocations and rt.collections == rt.allocations
++
++
++# Arguments finish before class allocation and inherited initializer arity
++# checking; the failing resumed activation retains its exact error line.
++public def test_run_scalar_callee_class_error_order(out: Stream) -> bool:
++    source = b"class Base { init(x) { this.x = x; } }\nclass Child < Base {}\nfun arg() { print \"argument\"; return 7; }\nfun entry() { return Child(arg(), arg()); }\nentry();"
++    expected = b"Expected 1 arguments but got 2.\n[line 4] in entry()\n[line 5] in script\n"
++    observed = driver.run_source(source, driver.Engine.VM, True, out, None)
++    return observed.status == 70 and observed.stdout == b"argument\nargument\n" and observed.stderr == expected and observed.collections == observed.allocations
++
++
++# An object of an invalid callee kind still evaluates every argument before
++# producing the ordinary non-callable error instead of an internal assertion.
++public def test_run_scalar_callee_invalid_argument_order(out: Stream) -> bool:
++    source = b"var callee = \"string\"; fun arg() { print \"argument\"; return 1; } callee(arg());"
++    vm_run = driver.run_source(source, driver.Engine.VM, True, out, None)
++    tree = driver.run_source(source, driver.Engine.TREE, True, out, None)
++    return vm_run.status == 70 and tree.status == 70 and vm_run.stdout == b"argument\n" and tree.stdout == vm_run.stdout and vm_run.stderr == b"Can only call functions and classes.\n[line 1] in script\n" and tree.stderr == b"Can only call functions and classes.\n[line 1]\n"
+--- a/heap.my
++++ b/heap.my
+@@ -218,7 +218,7 @@
+ public def class_method(rt: Runtime, ref: value.ObjRef, name: value.ObjRef) -> Option[value.Value]:
+     match rt.objects[ref]:
+         case object.Obj.klass(payload):
+-            return table.get(payload.methods, name, string_hash(rt, name))
++            return table.get_entries(payload.methods.entries, payload.methods.count, name, string_hash(rt, name))
+         case _:
+             assert False, "object is not a class"
+             return None
+@@ -227,7 +227,7 @@
+ public def class_method_hash(rt: Runtime, ref: value.ObjRef, name: value.ObjRef, hash: u32) -> Option[value.Value]:
+     match rt.objects[ref]:
+         case object.Obj.klass(payload):
+-            return table.get(payload.methods, name, hash)
++            return table.get_entries(payload.methods.entries, payload.methods.count, name, hash)
+         case _:
+             assert False, "object is not a class"
+             return None
+@@ -248,7 +248,7 @@
+             match rt.objects[ref]:
+                 case object.Obj.instance(instance):
+                     hash = string_hash(rt, name)
+-                    match table.get(instance.fields, name, hash):
++                    match table.get_entries(instance.fields.entries, instance.fields.count, name, hash):
+                         case Some(field):
+                             return InstanceMember.field(field)
+                         case None:
+--- a/interpreter.my
++++ b/interpreter.my
+@@ -141,7 +141,7 @@
+ 
+ def get_variable(rt: mut heap.Runtime, name: value.ObjRef, hops: int, slot: int, line: int) -> Result[None, RuntimeError]:
+     if hops == ast.GLOBAL:
+-        match table.get(rt.globals, name, heap.string_hash(rt, name)):
++        match table.get_entries(rt.globals.entries, rt.globals.count, name, heap.string_hash(rt, name)):
+             case Some(found):
+                 heap.push(mut rt, found)
+                 return Ok(None)
+@@ -155,7 +155,7 @@
+ def assign(program: ast.Program, rt: mut heap.Runtime, o: mut output.Output, it: mut Interpreter, node: ast.AssignExpr) -> Result[None, RuntimeError]:
+     evaluate(program, mut rt, mut o, mut it, node.assigned)?
+     if node.hops == ast.GLOBAL:
+-        match table.get(rt.globals, node.name_ref, heap.string_hash(rt, node.name_ref)):
++        match table.get_entries(rt.globals.entries, rt.globals.count, node.name_ref, heap.string_hash(rt, node.name_ref)):
+             case Some(_):
+                 _ = heap.set_global(mut rt, node.name_ref, heap.peek(rt, 0))
+             case None:
+--- a/table.my
++++ b/table.my
+@@ -73,6 +73,24 @@
+         index = bit_and(index + 1, mask)
+ 
+ 
++
++public def get_entries(entries: list[Entry], count: int, key: value.ObjRef, hash: u32) -> Option[value.Value]:
++    if count == 0:
++        return None
++    # Read probes need neither the first tombstone nor a second slot read.
++    # Tombstones continue the chain; an empty entry is its only terminator.
++    mask = len(entries) - 1
++    index = int(bit_and(hash, u32(mask)))
++    while True:
++        entry = entries[index]
++        if entry.key == value.NO_OBJ:
++            if not is_tombstone(entry):
++                return None
++        elif entry.key == key:
++            return Some(entry.value)
++        index = bit_and(index + 1, mask)
++
++
+ def adjust_capacity(t: mut Table, new_capacity: int):
+     entries: list[Entry] = []
+     i = 0
+--- a/table_test.my
++++ b/table_test.my
+@@ -104,3 +104,30 @@
+     _ = table.set(mut t, 400, 7u32, value.Value.number(9.0))
+     _ = table.set(mut t, 500, 7u32, value.Value.boolean(True))
+     return nil_present and tail_present and missing and table.get(t, 400, 7u32) == Some(value.Value.number(9.0)) and table.get(t, 500, 7u32) == Some(value.Value.boolean(True))
++
++
++# Keep both the record and projected entries alive while writes replace,
++# delete, reuse a tombstone, and grow a chain that wraps through slot zero.
++public def test_table_entries_read_preserves_snapshot() -> bool:
++    t = table.new_table()
++    empty = table.get_entries(t.entries, t.count, 100, 7u32).is_none()
++    _ = table.set(mut t, 100, 7u32, value.Value.number(1.0))
++    _ = table.set(mut t, 200, 7u32, value.Value.nil)
++    _ = table.set(mut t, 300, 7u32, value.Value.boolean(False))
++    _ = table.set(mut t, 400, 7u32, value.Value.number(4.0))
++    _ = table.delete(mut t, 100, 7u32)
++    snapshot = t
++    entries = t.entries
++    count = t.count
++    _ = table.set(mut t, 400, 7u32, value.Value.number(9.0))
++    _ = table.delete(mut t, 200, 7u32)
++    _ = table.set(mut t, 500, 7u32, value.Value.boolean(True))
++    _ = table.set(mut t, 600, 7u32, value.Value.number(6.0))
++    _ = table.set(mut t, 700, 7u32, value.Value.number(7.0))
++    _ = table.set(mut t, 800, 7u32, value.Value.number(8.0))
++    _ = table.set(mut t, 900, 7u32, value.Value.number(9.0))
++    record_unchanged = table.get(snapshot, 200, 7u32) == Some(value.Value.nil) and table.get(snapshot, 400, 7u32) == Some(value.Value.number(4.0))
++    entries_unchanged = table.get_entries(entries, count, 200, 7u32) == Some(value.Value.nil) and table.get_entries(entries, count, 400, 7u32) == Some(value.Value.number(4.0))
++    missing_unchanged = table.get_entries(entries, count, 100, 7u32).is_none() and table.get_entries(entries, count, 500, 7u32).is_none() and table.get_entries(entries, count, value.NO_OBJ, 7u32).is_none()
++    live_changed = table.get_entries(t.entries, t.count, 200, 7u32).is_none() and table.get_entries(t.entries, t.count, 400, 7u32) == Some(value.Value.number(9.0)) and table.get_entries(t.entries, t.count, 500, 7u32) == Some(value.Value.boolean(True))
++    return empty and record_unchanged and entries_unchanged and missing_unchanged and live_changed and table.capacity(snapshot) == 8 and table.capacity(t) == 16
+--- a/vm.my
++++ b/vm.my
+@@ -171,35 +171,60 @@
+     return True
+ 
+ 
+-def call_value(rt: mut heap.Runtime, o: mut output.Output, callee: value.Value, count: int) -> bool:
+-    match callee:
++# Only plain callee data escapes the read of the rooted object table.
++# The object projection ends before handlers mutate the stack or heap.
++union VmCallee:
++    bound_method: object.BoundMethodObj,
++    klass: value.ObjRef,
++    closure: value.ObjRef,
++    native: object.NativeObj,
++    invalid
++
++
++def vm_callee(rt: heap.Runtime, item: value.Value) -> VmCallee:
++    match item:
+         case value.Value.obj(ref):
+             match rt.objects[ref]:
+                 case object.Obj.bound_method(bound):
+-                    rt.stack[rt.stack_top - count - 1] = bound.receiver
+-                    return call(mut rt, mut o, bound.method, count)
++                    return VmCallee.bound_method(bound)
+                 case object.Obj.klass(_):
+-                    instance = heap.allocate(mut rt, object.Obj.instance(object.InstanceObj(klass=ref, fields=table.new_table())))
+-                    rt.stack[rt.stack_top - count - 1] = value.Value.obj(instance)
+-                    match heap.class_method(rt, ref, rt.init_string):
+-                        case Some(initializer):
+-                            return call(mut rt, mut o, as_obj(initializer), count)
+-                        case None:
+-                            if count != 0:
+-                                return arity_error(mut rt, mut o, 0, count)
+-                            return True
++                    return VmCallee.klass(ref)
+                 case object.Obj.closure(_):
+-                    return call(mut rt, mut o, ref, count)
++                    return VmCallee.closure(ref)
+                 case object.Obj.native(native):
+-                    if count != native.arity:
+-                        return arity_error(mut rt, mut o, native.arity, count)
+-                    result = natives.call_native(rt, native.id)
+-                    rt.stack_top = rt.stack_top - count - 1
+-                    heap.push(mut rt, result)
+-                    return True
++                    return VmCallee.native(native)
+                 case _:
+                     pass
+         case _:
++            pass
++    return VmCallee.invalid
++
++
++def call_value(rt: mut heap.Runtime, o: mut output.Output, callee: value.Value, count: int) -> bool:
++    match vm_callee(rt, callee):
++        case VmCallee.bound_method(bound):
++            rt.stack[rt.stack_top - count - 1] = bound.receiver
++            return call(mut rt, mut o, bound.method, count)
++        case VmCallee.klass(ref):
++            instance = heap.allocate(mut rt, object.Obj.instance(object.InstanceObj(klass=ref, fields=table.new_table())))
++            rt.stack[rt.stack_top - count - 1] = value.Value.obj(instance)
++            match heap.class_method(rt, ref, rt.init_string):
++                case Some(initializer):
++                    return call(mut rt, mut o, as_obj(initializer), count)
++                case None:
++                    if count != 0:
++                        return arity_error(mut rt, mut o, 0, count)
++                    return True
++        case VmCallee.closure(ref):
++            return call(mut rt, mut o, ref, count)
++        case VmCallee.native(native):
++            if count != native.arity:
++                return arity_error(mut rt, mut o, native.arity, count)
++            result = natives.call_native(rt, native.id)
++            rt.stack_top = rt.stack_top - count - 1
++            heap.push(mut rt, result)
++            return True
++        case VmCallee.invalid:
+             pass
+     return runtime_error(mut rt, mut o, b"Can only call functions and classes.")
+ 
+@@ -311,7 +336,7 @@
+ 
+ def get_global(rt: mut heap.Runtime, o: mut output.Output, frame: mut ExecFrame) -> bool:
+     name = read_string(mut frame)
+-    match table.get(rt.globals, name, heap.string_hash(rt, name)):
++    match table.get_entries(rt.globals.entries, rt.globals.count, name, heap.string_hash(rt, name)):
+         case Some(found):
+             heap.push(mut rt, found)
+             return True
