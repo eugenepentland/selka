@@ -205,7 +205,7 @@ def capture(perf, binary, plan, arm, baseline_rows, directory, args, rules):
     if lost:
         warnings.append(f'raw trace contains {lost} lost-event records; captured samples cannot represent missing events')
     if throttled:
-        warnings.append(f'raw trace contains {throttled} throttle records; requested sampling frequency was not maintained')
+        warnings.append(f'raw trace contains {throttled} throttle records; inspect sampling interruptions before interpreting the distribution')
     if calibration['iteration_cap_limited']:
         warnings.append('iteration cap prevented requested kernel duration')
     calibration['observed_kernel_seconds'] = result['kernel_ns'] / 1e9
@@ -227,6 +227,7 @@ def capture(perf, binary, plan, arm, baseline_rows, directory, args, rules):
             'seed': plan['seed'], 'iterations': count, 'status': 'complete', **result, 'process_wall_ns': wall,
             'calibration': calibration, 'record_command': command, 'script_command': script_command, 'dump_command': dump_command,
             'binary_sha256': digest(binary), 'manifest': manifest, 'raw_script': raw_script,
+            'lost_record_count': lost, 'throttle_record_count': throttled,
             'raw_records': raw_records, 'raw_perf': raw_perf, 'perf_diagnostics': diagnostics,
             'hardware_counters': hardware, 'warnings': warnings, **grouped}
 
