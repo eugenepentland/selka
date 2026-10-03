@@ -1,0 +1,19 @@
+{
+  "selected": false,
+  "trial_commit": "9ab993c1b9e2088c471ea1b57c98361b8554d0ae",
+  "work": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-variant-screen-reviewed",
+  "guards_sha256": "9cb141b5fc1fc588a7a5a807b43131a8ee1e56980b6979d60dad5c5791627f9e",
+  "guards": 223,
+  "prepared": {
+    "candidate_rebuilt_byte_exact": false,
+    "guards": 223,
+    "guards_sha256": "9cb141b5fc1fc588a7a5a807b43131a8ee1e56980b6979d60dad5c5791627f9e",
+    "inherited_control_sidecars_keep_original_paths": true,
+    "manifest_sha256": "d1189df7e2ea1478851776d5c982fb33ece525cbfad5277e5c193d27b18fcf64",
+    "measured_guests_copied_byte_exact": true,
+    "prepared_utc": "2026-10-03T09:19:31.200912+00:00",
+    "qualification_review_is_separate_from_preparer": true,
+    "rebuild_allocated_sections_exact": true,
+    "reference_guests_copied_not_rebuilt": true
+  }
+}

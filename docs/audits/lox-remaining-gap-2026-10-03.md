@@ -51,3 +51,22 @@ show ownership helper, allocation and collector costs. The
 retain all raw data and same-build symbol mappings. These within-process
 percentages guide investigation; they do not partition the measured absolute
 gap or select a new optimization.
+
+The subsequent bounded native-variant ownership trial completed 468 paired
+wall cells and 468 counter cells, following 156 smoke/stat checks and a
+104-cell diagnostic screen. QBE tree wall time falls 8.1563% with 2.6607%
+fewer instructions, while LLVM tree wall time rises 1.6608% despite 0.9942%
+fewer instructions. VM aggregate timing remains roughly flat. It remains
+unselected: LLVM tree string equality regresses 8.88%. Static review finds
+extra native tag/region branches and larger evaluator code; the region
+argument is dynamic, so a literal-zero shortcut has no existing proof.
+
+A separate fresh-zeroed bool variant-store trial leaves aggregate instruction
+counts effectively unchanged. Its 24-cell focused follow-up shows 4.733%
+lower QBE VM equality wall time but no consistent string-equality gain. This
+partial diagnostic does not establish a broad win and does not select the
+candidate. The [variant compiler screens](../../experiments/lox-variant-compiler-screens-20261003/README.md)
+retain both candidates' exact qualification/build reviews, all 1,580 current
+observations, 223 stable guards per preparation, independent paired-arithmetic
+checks and immutable archive receipts. Earlier failed/superseded preparations
+are retained separately. Selected source/compiler and main remain unchanged.
