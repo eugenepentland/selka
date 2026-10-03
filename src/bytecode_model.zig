@@ -108,6 +108,9 @@ pub const Instruction = struct {
     /// Set exactly on an instruction spliced from an inlined callee, so the
     /// native emitter can rebuild the callee's frames for a trap trace.
     inline_origin: ?InlineOrigin = null,
+    /// A synthetic call-site jump preceding an inlined body. Depth-accounted
+    /// execution checks the removed call here, before entering its trace range.
+    inline_entry: bool = false,
 };
 /// Which transfer a value-semantics copy stands for. `assign` stores into a
 /// named local, `store` into a field, element, dictionary value or payload,

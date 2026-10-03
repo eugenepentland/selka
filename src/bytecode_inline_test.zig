@@ -9,7 +9,7 @@ const testing = std.testing;
 const test_path = "inline.my";
 
 /// A caller whose helper is a leaf of comparison and local operations. The call
-/// sits in `use`, not the entry function, which keeps every entry frame.
+/// reaches `main` through `use`, so both removed calls retain logical frames.
 const pure_program =
     \\def helper(x: i64) -> bool:
     \\    return x > 0
@@ -195,7 +195,7 @@ fn loweredValue(source: []const u8) !i64 {
 
 // spec: BYTECODE-INLINE-1
 test "inlining removes an eligible helper call and preserves its result" {
-    try testing.expectEqual(@as(usize, 1), try loweredCallSites(pure_program));
+    try testing.expectEqual(@as(usize, 0), try loweredCallSites(pure_program));
     try testing.expectEqual(@as(i64, 7), try loweredValue(pure_program));
 }
 
@@ -269,4 +269,70 @@ test "a callee over the flat budget inlines only inside a loop" {
     try testing.expectEqual(@as(usize, 1), try callsTo(bulky_program, "cold", "big"));
     try testing.expectEqual(@as(usize, 0), try callsTo(bulky_program, "hot", "big"));
     try testing.expectEqual(@as(i64, 70), try loweredValue(bulky_program));
+}
+
+/// Zero-argument calls need a separate call-site marker: otherwise a refused
+/// entry would already be inside the callee's inline trace range.
+const zero_argument_program =
+    \\def leaf() -> i64:
+    \\    return 7
+    \\
+    \\
+    \\def middle() -> i64:
+    \\    return leaf()
+    \\
+    \\
+    \\def main() -> i64:
+    \\    first = middle()
+    \\    return first + middle()
+;
+
+// spec: BYTECODE-INLINE-4
+test "inlined zero argument calls enforce logical depth and report only entered frames" {
+    try testing.expectEqual(@as(usize, 0), try loweredCallSites(zero_argument_program));
+    var compilation = try language.Compilation.init(testing.allocator, test_path, zero_argument_program);
+    defer compilation.deinit();
+    const one = try native.runWithOptions(&compilation, .{ .max_frames = 1 });
+    try testing.expectEqualStrings("R_FRAME_LIMIT", one.trap.code);
+    try testing.expectEqual(@as(usize, 1), one.trap.frames.len);
+    try testing.expectEqualStrings("main", one.trap.frames[0].function);
+    try testing.expectEqual(@as(u64, 10), one.trap.frames[0].line);
+    const two = try native.runWithOptions(&compilation, .{ .max_frames = 2 });
+    try testing.expectEqualStrings("R_FRAME_LIMIT", two.trap.code);
+    try testing.expectEqual(@as(usize, 2), two.trap.frames.len);
+    try testing.expectEqualStrings("middle", two.trap.frames[0].function);
+    try testing.expectEqual(@as(u64, 6), two.trap.frames[0].line);
+    try testing.expectEqualStrings("main", two.trap.frames[1].function);
+    try testing.expectEqual(@as(i64, 14), (try native.runWithOptions(&compilation, .{ .max_frames = 3 })).value);
+}
+
+// spec-case: BYTECODE-INLINE-4
+test "inlined argument calls preserve frame admission through a conditional body" {
+    var compilation = try language.Compilation.init(testing.allocator, test_path, pure_program);
+    defer compilation.deinit();
+    const limited = try native.runWithOptions(&compilation, .{ .max_frames = 2 });
+    try testing.expectEqualStrings("R_FRAME_LIMIT", limited.trap.code);
+    try testing.expectEqual(@as(usize, 2), limited.trap.frames.len);
+    try testing.expectEqualStrings("use", limited.trap.frames[0].function);
+    try testing.expectEqualStrings("main", limited.trap.frames[1].function);
+    try testing.expectEqual(@as(i64, 7), (try native.runWithOptions(&compilation, .{ .max_frames = 3 })).value);
+}
+
+// spec-case: BYTECODE-INLINE-4
+test "inlined call evaluates a trapping argument before refusing frame admission" {
+    var compilation = try language.Compilation.init(testing.allocator, test_path,
+        \\def leaf(x: i64) -> i64:
+        \\    return x
+        \\
+        \\
+        \\def main() -> i64:
+        \\    value = 9223372036854775807
+        \\    return leaf(value + 1)
+    );
+    defer compilation.deinit();
+    const outcome = try native.runWithOptions(&compilation, .{ .max_frames = 1 });
+    try testing.expectEqualStrings("R_OVERFLOW", outcome.trap.code);
+    try testing.expectEqual(@as(usize, 1), outcome.trap.frames.len);
+    try testing.expectEqualStrings("main", outcome.trap.frames[0].function);
+    try testing.expectEqual(@as(u64, 7), outcome.trap.frames[0].line);
 }

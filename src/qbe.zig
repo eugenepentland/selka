@@ -2576,6 +2576,7 @@ const Emitter = struct {
             try self.headerLabel(pc, own);
             if (self.step_checks) try self.step();
             self.pc = pc;
+            try @import("qbe_inline_depth.zig").enter(Emitter, self, pc);
             try cow_lower.Lower(Emitter).before(self, pc, stack);
             self.expireFusedDecode(pc);
             // QBE-LOOP-VERSION-1: an instruction whose guards the loop's own

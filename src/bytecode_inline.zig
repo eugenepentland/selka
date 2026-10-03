@@ -235,11 +235,9 @@ fn inlineTarget(program: bytecode.Program, states: []const State, caller: usize,
     };
     const index = @backingInt(id);
     if (index >= states.len or index == @backingInt(program.main)) return null;
-    // A splice carries no logical-depth accounting yet: an inlined callee would
-    // not consume the frame the entry's call would have pushed, so `--max-frames`
-    // would stop trapping where it used to. The entry function keeps every call
-    // until inlined ranges can charge a frame.
-    if (caller == @backingInt(program.main)) return null;
+    // Each splice keeps an entry marker outside the callee's trace range.
+    // Native depth accounting checks its logical frame before entering it,
+    // including calls made by the program's entry function.
     if (program.functions[index].policy.owner != null and program.functions[index].policy.owner != program.functions[caller].policy.owner) return null;
     if (!states[index].eligible) return null;
     if (states[index].instructions.len == 0) return null;
@@ -297,7 +295,7 @@ fn rewrite(allocator: std.mem.Allocator, program: bytecode.Program, states: []co
     for (code, 0..) |_, index| {
         base[index] = cursor;
         if (inlineTarget(program, states, caller, loops, index)) |callee| {
-            cursor += program.functions[callee].signature.parameter_count + states[callee].instructions.len;
+            cursor += 1 + program.functions[callee].signature.parameter_count + states[callee].instructions.len;
         } else cursor += 1;
     }
     var instructions: std.ArrayList(bytecode.Instruction) = .empty;
@@ -315,6 +313,7 @@ fn rewrite(allocator: std.mem.Allocator, program: bytecode.Program, states: []co
         } else try instructions.append(allocator, .{
             .span = instruction.span,
             .op = try remapCaller(allocator, instruction.op, base),
+            .inline_entry = instruction.inline_entry,
             // A splice from an earlier sweep keeps its callee and callee-local
             // pc, but its call-site pc moves with every instruction before it.
             .inline_origin = if (instruction.inline_origin) |origin| .{
@@ -342,21 +341,21 @@ fn splice(
 ) Error!void {
     const fresh = locals.items.len;
     try locals.appendSlice(allocator, callee.locals);
+    // The call site is outside the new inline range even for a zero-argument
+    // callee, so a refused frame reports only the callers already entered.
+    try instructions.append(allocator, .{ .span = span, .op = .{ .jump = base + 1 }, .inline_entry = true });
     var remaining = callee.params;
     while (remaining > 0) {
         remaining -= 1;
         try instructions.append(allocator, .{ .span = span, .op = .{ .store_local = @fromBackingInt(fresh + remaining) } });
     }
-    const body_base = base + callee.params;
+    const body_base = base + 1 + callee.params;
     const continuation = body_base + callee.body.len;
     for (callee.body, 0..) |instruction, offset| {
-        // A zero-argument splice has no argument store to carry the call site, so
-        // the first body instruction keeps the call's span in the caller's own
-        // location table; the callee frame reads the callee's table instead.
-        const body_span = if (callee.params == 0 and offset == 0) span else instruction.span;
         try instructions.append(allocator, .{
-            .span = body_span,
+            .span = instruction.span,
             .op = try remapCallee(allocator, instruction.op, fresh, body_base, continuation),
+            .inline_entry = instruction.inline_entry,
             .inline_origin = .{ .callee = callee.id, .callee_pc = offset, .call_position = base },
         });
     }
