@@ -14,11 +14,18 @@ the choice of integration candidate belong to the parent lane.
 | `flat.patch` | Pass named mutable Runtime and Output parameters through recursion; Interpreter owns only depth and return scalars. |
 | `final-flat.patch` | The frozen flat implementation with explanatory comments and all three new regression tests/providers. |
 | `scalar.patch` | The final flat implementation plus scalar AST execution projections and indexed reads of child expressions/statements/methods. |
+| `flat-direct.patch` | The final flat implementation with original nested Obj call dispatch, omitting the TreeCallee projection. |
 
 Each overlay includes every earlier change and applies independently to the same
 baseline. Apply exactly one. Initial binaries named `env`, `split-clean`, `calls`,
 and `flat` remain immutable for mechanism comparisons. `final-flat` and `scalar`
 are the two fully qualified source snapshots.
+
+The later `flat-direct` arm changes one runtime code factor from `final-flat`:
+it restores the original nested object match in `call_value`. The immutable
+Program, named Runtime/Output mutation paths, environment work, tests, and
+providers remain identical. Its separate receipt preserves the initial
+qualification history rather than rewriting it.
 
 ## Why these carriers matter
 
@@ -81,6 +88,15 @@ Lox objects equal the unchanged control exactly.
 test commands, exact patch replay checks, and compressed receipt hashes. Replay
 of either final overlay matches all 26 modules and the provider file exactly.
 No local timing or performance counters were collected in this lane.
+
+`flat-direct-receipts.json` and `validation-flat-direct.json.gz` qualify the
+follow-up arm independently: 75/75 tests in each of the same four configurations
+(300 total), all four release artifacts from the identical frozen source, and
+696 exact output/diagnostic/collector-stat comparisons. Its RC artifacts cover
+all 13 smoke scripts, all 14 regressions, and all 23 historical errors per engine.
+Native-stressed GC artifacts cover all focused regressions and errors; 104
+native-stressed smoke observations are explicitly unrun. Patch replay again
+matches all 26 modules and the provider file exactly.
 
 ## Reproduce
 
