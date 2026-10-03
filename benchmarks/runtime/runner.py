@@ -105,9 +105,14 @@ def configuration(args):
             commands[arm] = [tools['mylang'],'build',str(p/'main.my'),'-o',out,'--cache-dir',str(args.work/'mycache'),'--link',str(args.work/'native_clock.o'),'--zig',tools['zig'],'--qbe',str(qbe),*flags]
         elif arm == 'rust': commands[arm] = [tools['rust'],'-O','--edition','2021',str(p/'main.rs'),'-o',out]
         elif arm == 'go': commands[arm] = [tools['go'],'build','-o',out,str(p/'main.go')]
-        else: commands[arm] = [tools['zig'],'build-exe',str(p/'main.zig'),'-lc','-mcpu=baseline','-O','ReleaseSafe' if arm == 'zig-safe' else 'ReleaseFast',f'-femit-bin={out}']
+        else: commands[arm] = [tools['zig'],'build-exe',str(p/'main.zig'),'-lc','-O','ReleaseSafe' if arm == 'zig-safe' else 'ReleaseFast',f'-femit-bin={out}']
     sources = {str(path.relative_to(HERE)):digest(path) for path in [HERE/'CONTRACT.md', HERE/'oracle.py', HERE/'runner.py', *sorted(p.iterdir())] if path.is_file()}
     identity = {'pinned_revision':REVISION,'tools':versions,'sources':sources,'commands':commands,'installed_assets':asset_hashes,'build_environment':{key:runtime_environment().get(key) for key in ('GOMAXPROCS','GOGC','GOMEMLIMIT','GOAMD64','GOFLAGS','GOEXPERIMENT','GOTOOLCHAIN','RUSTFLAGS','CFLAGS','CXXFLAGS','CGO_CFLAGS','CGO_LDFLAGS','MYLANG_OPTIONS')},'build_wrapper':str(HERE.parents[1]/'scripts/build-slot.sh'),'clock_build':[tools['cc'],'-O2','-c',str(p/'native_clock.c'),'-o',str(args.work/'native_clock.o')]}
+    probe_command = [tools['zig'],'cc','-###','-c','-x','c','/dev/null']
+    probe = subprocess.run(probe_command,capture_output=True,text=True,timeout=30,env=runtime_environment())
+    if probe.returncode: raise RuntimeError('Zig/Clang target policy probe failed')
+    probe_text = probe.stdout+probe.stderr
+    identity['target_policy'] = {'my-llvm':'default Zig/Clang-derived CPU/features; first target CPU and merged target features','my-qbe':'amd64_sysv','rust':'rustc -O default x86_64','go':'GOAMD64=v1','zig-safe':'default host','zig-fast':'default host','policy_note':'Optimized default build policies; instruction sets are not matched across arms. No forced target tuning or disabled MyLang checks.','llvm_target_probe':{'command':probe_command,'target_cpu_entries':re.findall(r"\"-target-cpu\" \"([^\"]+)\"",probe_text),'enabled_features':re.findall(r"\"-target-feature\" \"(\+[^\"]+)\"",probe_text),'feature_entries':re.findall(r"\"-target-feature\" \"([^\"]+)\"",probe_text),'exit_status':probe.returncode}}
     identity['wrapper_sha256'] = digest(identity['build_wrapper'])
     identity['actual_clock_build'] = [identity['build_wrapper'],'build',*identity['clock_build']]
     identity['private_cache_environment'] = {'TMPDIR':str(args.work/'tmp'),'GOCACHE':str(args.work/'gocache'),'ZIG_LOCAL_CACHE_DIR':str(args.work/'zigcache'),'ZIG_GLOBAL_CACHE_DIR':str(args.work/'zig-global-cache')}
@@ -239,6 +244,7 @@ def summarize(report):
 def markdown_report(report):
     lines = [f"Runtime microbenchmark result: **{report['status']}**.", '',
              f"CPU {report['environment']['cpu']}; {report['rounds']} sample rounds; {report['warmup_rounds']} warmup rounds. Kernel time excludes initialization and final formatting. ns/op means one contract iteration (including snapshot copy for mutate_shared).", '',
+             report['identity']['target_policy']['policy_note'], '',
              'Ratios pair each arm with Go in the same round. Intervals are deterministic 2,000-resample percentile bootstrap intervals for the median paired ratio. Small round counts cannot provide useful uncertainty estimates. Min/max show the raw observed spread; no overall score pools different workloads.', '',
              '| Case / size | Arm | Iterations | Median ns/op | Min–max ns/op | Ratio to Go | 95% paired interval |',
              '|---|---|---:|---:|---:|---:|---:|']

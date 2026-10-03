@@ -40,8 +40,13 @@ qualification and timing. Build commands go through `scripts/build-slot.sh`
 with private disk temporary directories and caches; their commands and logs
 are recorded. MyLang links the small native clock helper compiled by the
 system C compiler. MyLang LLVM uses ReleaseFast/O3/LTO; QBE uses ReleaseFast;
-Rust uses portable `-O`; Go uses normal `go build`; Zig uses explicit baseline
-CPU and ReleaseSafe/ReleaseFast.
+Rust uses portable `-O`; Go uses normal `go build`; Zig uses its default host target with ReleaseSafe/ReleaseFast. These are
+optimized default build policies, with different instruction sets across arms.
+MyLang LLVM derives its first target CPU and merged features from Zig/Clang
+(including host features); MyLang QBE uses amd64_sysv, Rust uses its default
+x86_64 target, and Go uses GOAMD64=v1. The identity records each policy and the
+Zig/Clang probe CPU entries and feature list. No forced target tuning or disabled
+MyLang checks are introduced.
 
 Go runs with `GOMAXPROCS=1`, `GOGC=100`, `GOMEMLIMIT=off`, `GOAMD64=v1`, and
 empty `GOFLAGS`/`GOEXPERIMENT`; `GOTOOLCHAIN=local` prevents implicit toolchain
