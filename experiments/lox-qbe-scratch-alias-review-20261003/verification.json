@@ -1,0 +1,9 @@
+{
+  "verified": true,
+  "proof_versions": 2,
+  "frozen_files_each": 6,
+  "production_and_test_bytes_identical_between_versions": true,
+  "focused_passed": 17,
+  "native_oracle_inputs": 13,
+  "guest_or_performance_commands_run": false
+}

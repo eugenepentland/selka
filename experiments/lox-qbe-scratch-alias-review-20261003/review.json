@@ -1,0 +1,143 @@
+{
+  "date": "2026-10-03",
+  "reviewer": "/root/lookup",
+  "author": "/root",
+  "author_worktree": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-qbe-scratch-alias-20261003",
+  "result": "No actionable defect in frozen valid-emitted-QBE address canonicalization proof; qualification and performance not selected",
+  "proof_v1_sha256": "48707aa4610b937183601c001571da5bf638ef2263c547203df77e35e154c092",
+  "proof_v2_sha256": "ed63338ed01d3fcea25f826548277345c63080e276f836765a1cf0adcb410895",
+  "prior_Facts_review_commit": "36ba38d1e17e7c6dc71ea14839298bf57fcc0ba4",
+  "actionable_findings": [],
+  "coverage": {
+    "frozen_source_files_each": 6,
+    "focused_named": 5,
+    "focused_mandatory": 12,
+    "focused_passed": 17,
+    "native_oracle_inputs": 13,
+    "independent_native_output_words_each_arm": 4,
+    "independent_return_checks_each_arm": 1
+  },
+  "proof": [
+    "Root uniquely defines an entry alloc8 of exactly8bytes, with whole-function nonescaping address closure and at most8readonly single-use aliases; constant entry allocation maps to fixed frame storage",
+    "Only direct l copy of root with one definition and one sole load use is removed; chained copy closure may qualify root but chained consumer itself is not admitted",
+    "Copy becomes a comment; sole load address token changes from alias to exact root while opcode/type/position/comment and all stores/calls/CFG/debugloc/accounting remain",
+    "No synthesized names/temps/labels; unsupported parse/limits decline and allocation errors propagate; 2MiB,32768instructions,8aliases and256patch caps",
+    "Existing full-function Facts tracks parameters/defs/args/phi/indirect callees and refuses alias writes/address value escape/arithmetic/callback/phi/multiple defs/uses",
+    "Resolved cache.codegen.llvm bypasses pass and original LLVM fragment reads remain; production qbe_build_* pass+Facts source joins bundled.driver_identity/object cache environment"
+  ],
+  "limits": [
+    "Read-only source/receipt inspection only; no QBE/compiler/native/performance command executed by reviewer",
+    "Native focused17/status0 bound to v1 source; v2 only SPEC heading/location changes, no added test execution inferred",
+    "First native-tool-prefix mismatch16/17 outer1 retained/excluded; log failed-command footer is not actual corrected process status",
+    "Parent broader compiler/public/native Lox/LLVM allocated equivalence/actual guest qualification pending at this proof freeze",
+    "Proof applies to valid emitted QBE; parser is a conservative subset parser, not a complete malformed-input semantic validator",
+    "No performance or promotion claim; static scratch alias opportunity belongs to root central selection"
+  ],
+  "inputs": {
+    "proof-v1.json": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-qbe-scratch-alias-20261003/.tmp-lox-scratch-alias-20261003/proof-v1.json",
+      "sha256": "48707aa4610b937183601c001571da5bf638ef2263c547203df77e35e154c092",
+      "copy_sha256": "67fc6c2fc4c87b61d68a45c5822f6ffacb75d8d0f8d9c252f25324e53676ca2b"
+    },
+    "proof-v2.json": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-qbe-scratch-alias-20261003/.tmp-lox-scratch-alias-20261003/proof-v2.json",
+      "sha256": "ed63338ed01d3fcea25f826548277345c63080e276f836765a1cf0adcb410895",
+      "copy_sha256": "a94113e2df0483b3610053d31e57a93f5fba9fa335a9be7d64c5fb34a10cb7c1"
+    },
+    "focused-v1-owned-tool.json": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-qbe-scratch-alias-20261003/.tmp-lox-scratch-alias-20261003/focused-v1-owned-tool.json",
+      "sha256": "12d4944795fe60afed6a708226a3ea5dab8c1e8ac6fe16f43d359a41321b66fe",
+      "copy_sha256": "c3f20d9dd90debd6fa28b46e07315311e0d16882450d1524c6d22a841458cd0d"
+    },
+    "focused-v1-owned-tool.log": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-qbe-scratch-alias-20261003/.tmp-lox-scratch-alias-20261003/focused-v1-owned-tool.log",
+      "sha256": "04bee93d66120507ea966a621be6b1805b45b20929276819560952296e409086",
+      "copy_sha256": "04eb51038730105d6f0191668ac68883f02bc2f8077d571b21a1bafd999cfa4c"
+    },
+    "focused-v1.log": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-qbe-scratch-alias-20261003/.tmp-lox-scratch-alias-20261003/focused-v1.log",
+      "sha256": "38eab0659a0cfdd417fa52a22546737832422289715fe42f0e32335f6ee2fe80",
+      "copy_sha256": "a36b129ee615b446993300742ddb844acf2aa876e420fd3dc3005446dab07295"
+    },
+    "proof-v1/SPEC.md": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-qbe-scratch-alias-20261003/.tmp-lox-scratch-alias-20261003/proof-v1/SPEC.md",
+      "sha256": "5be6ca8fe05e0bab1a6c7fe14694cf5a52cc2a3b3eef74224df63b408ffdf9ea",
+      "copy_sha256": "a668faa20966d68f7b5e38cf0ce6e46a4d1442e07d2379861d4ce9cb5650df26"
+    },
+    "proof-v1/src/qbe_build.zig": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-qbe-scratch-alias-20261003/.tmp-lox-scratch-alias-20261003/proof-v1/src/qbe_build.zig",
+      "sha256": "c6d75a387d1ae7270bef0b5fb65d328f6142936735d2470e409db3eb681f8080",
+      "copy_sha256": "3374e24d39b615e83c9c843f0fc82b976e9576f0311425e4b8c7eccaeb854eb0"
+    },
+    "proof-v1/src/qbe_build_test.zig": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-qbe-scratch-alias-20261003/.tmp-lox-scratch-alias-20261003/proof-v1/src/qbe_build_test.zig",
+      "sha256": "1a90f05f2e1c63076ec89af203c9830ccfc9c2d981b3c4b1040c1255de05cdf5",
+      "copy_sha256": "0b5df4a5063cac55588770a9705024a68a4d5a8ffad016d2b173edb1b9e25e52"
+    },
+    "proof-v1/src/qbe_build_scratch_alias.zig": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-qbe-scratch-alias-20261003/.tmp-lox-scratch-alias-20261003/proof-v1/src/qbe_build_scratch_alias.zig",
+      "sha256": "86c30a5fac8faec4f8d3844b07bb14b6453161527ca895e118657c35cf0db552",
+      "copy_sha256": "a5ce4b806c75e6ac315ad45957c3dcd712e4807b23b6a41cf82b370c010ba914"
+    },
+    "proof-v1/src/qbe_build_scratch_alias_test.zig": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-qbe-scratch-alias-20261003/.tmp-lox-scratch-alias-20261003/proof-v1/src/qbe_build_scratch_alias_test.zig",
+      "sha256": "d7538f735d4c38bb4663f448044c995ec10ee37a2ec02d34c5963b945bd0511e",
+      "copy_sha256": "7f7d43d08325824e970c7ba385dec746842db521c27b188978ee121c16963f3e"
+    },
+    "proof-v1/src/qbe_build_scratch_cells.zig": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-qbe-scratch-alias-20261003/.tmp-lox-scratch-alias-20261003/proof-v1/src/qbe_build_scratch_cells.zig",
+      "sha256": "5773ba0ddd4740163c755e37a8f47bcb8ebfe253b8982f9ab7e8f6b05a2656fe",
+      "copy_sha256": "7c31aec8d6273f2a7a8ebacae8b999b3cd1106155619a05d006053148e916b1b"
+    },
+    "proof-v2/SPEC.md": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-qbe-scratch-alias-20261003/.tmp-lox-scratch-alias-20261003/proof-v2/SPEC.md",
+      "sha256": "1d5dfd9977576c23af7cc41d80432f9c3ba12672988f6e75f47ca74057ae32a6",
+      "copy_sha256": "dd03c9288b64412f37af90e2610afdfb10c211fb15fd81ff80d481d2e984beb7"
+    },
+    "proof-v2/src/qbe_build.zig": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-qbe-scratch-alias-20261003/.tmp-lox-scratch-alias-20261003/proof-v2/src/qbe_build.zig",
+      "sha256": "c6d75a387d1ae7270bef0b5fb65d328f6142936735d2470e409db3eb681f8080",
+      "copy_sha256": "3374e24d39b615e83c9c843f0fc82b976e9576f0311425e4b8c7eccaeb854eb0"
+    },
+    "proof-v2/src/qbe_build_test.zig": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-qbe-scratch-alias-20261003/.tmp-lox-scratch-alias-20261003/proof-v2/src/qbe_build_test.zig",
+      "sha256": "1a90f05f2e1c63076ec89af203c9830ccfc9c2d981b3c4b1040c1255de05cdf5",
+      "copy_sha256": "0b5df4a5063cac55588770a9705024a68a4d5a8ffad016d2b173edb1b9e25e52"
+    },
+    "proof-v2/src/qbe_build_scratch_alias.zig": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-qbe-scratch-alias-20261003/.tmp-lox-scratch-alias-20261003/proof-v2/src/qbe_build_scratch_alias.zig",
+      "sha256": "86c30a5fac8faec4f8d3844b07bb14b6453161527ca895e118657c35cf0db552",
+      "copy_sha256": "a5ce4b806c75e6ac315ad45957c3dcd712e4807b23b6a41cf82b370c010ba914"
+    },
+    "proof-v2/src/qbe_build_scratch_alias_test.zig": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-qbe-scratch-alias-20261003/.tmp-lox-scratch-alias-20261003/proof-v2/src/qbe_build_scratch_alias_test.zig",
+      "sha256": "d7538f735d4c38bb4663f448044c995ec10ee37a2ec02d34c5963b945bd0511e",
+      "copy_sha256": "7f7d43d08325824e970c7ba385dec746842db521c27b188978ee121c16963f3e"
+    },
+    "proof-v2/src/qbe_build_scratch_cells.zig": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-qbe-scratch-alias-20261003/.tmp-lox-scratch-alias-20261003/proof-v2/src/qbe_build_scratch_cells.zig",
+      "sha256": "5773ba0ddd4740163c755e37a8f47bcb8ebfe253b8982f9ab7e8f6b05a2656fe",
+      "copy_sha256": "7c31aec8d6273f2a7a8ebacae8b999b3cd1106155619a05d006053148e916b1b"
+    },
+    "context/build_qbe_assets.zig": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-qbe-scratch-alias-20261003/build_qbe_assets.zig",
+      "sha256": "5c8bd5ea199ac62fc95529c591bebd8033bb3a6897e9230147d52c6859389f17",
+      "copy_sha256": "316e3418974abab0f5172976f856a9e6f547d23d84bd80f63af64d4d162871f5"
+    },
+    "context/src/qbe_build_llvm_il.zig": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-qbe-scratch-alias-20261003/src/qbe_build_llvm_il.zig",
+      "sha256": "f63742dd8a2531d88b568b0931ab0f841190dedc4813ff9913927ea563f71016",
+      "copy_sha256": "c58cac70136345cfd88b244e64bfad3f1b20373359e61f5cc2aabb751fc3208d"
+    },
+    "context/vendor/qbe/amd64/isel.c": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-qbe-scratch-alias-20261003/vendor/qbe/amd64/isel.c",
+      "sha256": "d92a352e4cec41648d965c59142117387b880e63c55135d8ea573fb3b5a76885",
+      "copy_sha256": "8136363abad6c773d93d6b09a1ef47d73620d2cda4002f324c91c2500bfbafd4"
+    },
+    "context/vendor/qbe/ssa.c": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-qbe-scratch-alias-20261003/vendor/qbe/ssa.c",
+      "sha256": "a06727f6e5f6786e6fb1f30912631896007b9867dfd64e3e27a754ee9a9332c8",
+      "copy_sha256": "dc4f0f0bbb071e50e5e5b714ea861be0ed443359e72d05740650e123b645d9fc"
+    }
+  }
+}
