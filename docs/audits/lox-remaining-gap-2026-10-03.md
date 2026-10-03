@@ -42,3 +42,12 @@ qualification and the sealed evidence.
 [dispatch diagnostics](../../experiments/lox-byte-dispatch-static-20261003/README.md)
 and [guard diagnostics](../../experiments/lox-byte-refusal-diag-20261003/README.md)
 retain their separate evidence and limits. `main` remains unchanged.
+
+Twelve subsequent sampled profiles of the selected LLVM/QBE/Rust guests
+locate work for the next experiments. VM dispatch dominates simple workloads;
+QBE `fib` also samples heavily in `numeric` and frame loading. Tree profiles
+show ownership helper, allocation and collector costs. The
+[profile receipts](../../experiments/lox-gap-profile-20261003/README.md)
+retain all raw data and same-build symbol mappings. These within-process
+percentages guide investigation; they do not partition the measured absolute
+gap or select a new optimization.

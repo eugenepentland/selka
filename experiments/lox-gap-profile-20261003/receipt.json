@@ -1,0 +1,573 @@
+{
+  "all_rehashed_after_copy": true,
+  "archive": "/home/epentland/ai/canopy/evidence/lox-parity-20261003/gap-profile",
+  "arms": [
+    "ast-llvm",
+    "ast-qbe",
+    "rust"
+  ],
+  "binary_sha256": {
+    "ast-llvm": "180575c3fc2e46a16ed8dd290e289963a87603b5a7c0cf8bb0e03ba7cf794361",
+    "ast-qbe": "246f21781fd58c7141dbe0992101c842e62d732d9ce47e209d55821d02b11b25",
+    "go": "dda2184ecbe1398769096fb284ccf451054e1ce6ff9d92797cdcd153135ca7e3",
+    "rust": "4d869a184a5f1a666113d30ad93a27ac703f39bb56c28e69e0bf739375d03dab"
+  },
+  "completed_profile_jobs": 12,
+  "copied_but_not_profiled": [
+    "go"
+  ],
+  "jobs": [
+    {
+      "arm": "ast-llvm",
+      "case": "vm/fib",
+      "top_self_samples": [
+        {
+          "name": "vm::run",
+          "self_pct": 72.16,
+          "symbol": "myl_f_a0e96f299197f34d601c1a9da1cbd514090305d2a21036d06ba179b733ea6e29"
+        },
+        {
+          "name": "table::get_entries",
+          "self_pct": 7.21,
+          "symbol": "myl_f_4192a2bf8c79d6c1482077147b62da5992111b1e9c0842eb498b5ef650f2e38f"
+        },
+        {
+          "name": "vm::call_value",
+          "self_pct": 4.0,
+          "symbol": "myl_f_38b1eb8969d1be311bbb44d1b412311bcad6afc3cbe33e5e0c18ebf16300ae5f"
+        },
+        {
+          "name": "heap::peek",
+          "self_pct": 3.95,
+          "symbol": "myl_f_851eb64c403b25f3166dffdb17dfc9e3c924451c20caa5851a74e0f4081ba50f"
+        },
+        {
+          "name": "heap::push",
+          "self_pct": 3.3,
+          "symbol": "myl_f_9cfccc291a0516b23c50da008b59b8f2c8a2e23f61575966d1d2f1cfb2a4be4b"
+        },
+        {
+          "name": "vm::read_constant",
+          "self_pct": 2.82,
+          "symbol": "myl_f_cb51e0dd7840af78b8d3f65cd883ca525c8c73ff445227a508c4c557b220dad4"
+        },
+        {
+          "name": "vm::call",
+          "self_pct": 2.51,
+          "symbol": "myl_f_e6dd1a9167d6b59c9752b8305d109d76520bac8300dd423db9728be656322e7c"
+        },
+        {
+          "name": "myl_t_c000f22f7ee44dea31e81b0a933c1dec3a560f42212434ae24333c6a58c466f9_rcg_drop",
+          "self_pct": 1.27,
+          "symbol": "myl_t_c000f22f7ee44dea31e81b0a933c1dec3a560f42212434ae24333c6a58c466f9_rcg_drop"
+        },
+        {
+          "name": "heap::string_obj",
+          "self_pct": 1.13,
+          "symbol": "myl_f_b54eeed03870b797a96d1738a2f42781bb5db72dae7d2f57e436551c3d0172dd_rc_borrow"
+        }
+      ]
+    },
+    {
+      "arm": "ast-llvm",
+      "case": "vm/string_equality",
+      "top_self_samples": [
+        {
+          "name": "vm::run",
+          "self_pct": 98.24,
+          "symbol": "myl_f_a0e96f299197f34d601c1a9da1cbd514090305d2a21036d06ba179b733ea6e29"
+        },
+        {
+          "name": "0x0000000000197d07",
+          "self_pct": 0.61,
+          "symbol": "0x0000000000197d07"
+        },
+        {
+          "name": "0x00000000001984d3",
+          "self_pct": 0.15,
+          "symbol": "0x00000000001984d3"
+        },
+        {
+          "name": "vm::read_short",
+          "self_pct": 0.13,
+          "symbol": "myl_f_22849c51a4fd631aa66144da38552fb710206c5e57b8268459a8dc3a6dbcd390"
+        },
+        {
+          "name": "large_block",
+          "self_pct": 0.13,
+          "symbol": "large_block"
+        },
+        {
+          "name": "rc_list_next",
+          "self_pct": 0.13,
+          "symbol": "rc_list_next"
+        },
+        {
+          "name": "compiler::advance",
+          "self_pct": 0.12,
+          "symbol": "myl_f_6817be4bfc3d7710cd67fd764ec13d1eb7a19d691e453a6438bf533c5691fddf"
+        },
+        {
+          "name": "myl_rc_value_seed",
+          "self_pct": 0.12,
+          "symbol": "myl_rc_value_seed"
+        },
+        {
+          "name": "0x0000000000198400",
+          "self_pct": 0.12,
+          "symbol": "0x0000000000198400"
+        }
+      ]
+    },
+    {
+      "arm": "ast-llvm",
+      "case": "tree/binary_trees",
+      "top_self_samples": [
+        {
+          "name": "interpreter::evaluate",
+          "self_pct": 9.71,
+          "symbol": "myl_f_d32d9d609bd2d498a6b2d4f34d6d36851c296533eaafa0e3b7c4c9b1eec65fca"
+        },
+        {
+          "name": "heap::push",
+          "self_pct": 6.33,
+          "symbol": "myl_f_9cfccc291a0516b23c50da008b59b8f2c8a2e23f61575966d1d2f1cfb2a4be4b"
+        },
+        {
+          "name": "heap::collect",
+          "self_pct": 5.77,
+          "symbol": "myl_f_5c0ab3495518250d4b949d468c6e0ff997b84b55ab6474e737273fcd3c0b26bd"
+        },
+        {
+          "name": "myl_t_a83873657e77deb1bf51281383ae925ccb1b4b6510284b93a36500031c0efc14_rcg_take",
+          "self_pct": 5.43,
+          "symbol": "myl_t_a83873657e77deb1bf51281383ae925ccb1b4b6510284b93a36500031c0efc14_rcg_take"
+        },
+        {
+          "name": "heap::allocate",
+          "self_pct": 4.65,
+          "symbol": "myl_f_6993cfd5bc46d9d696adcc139c626f2b677f81bea8031cc740fa79e8da2d676e"
+        },
+        {
+          "name": "heap::set_instance_field",
+          "self_pct": 4.19,
+          "symbol": "myl_f_1c0bd1b7bb117cc78f49bded6cea445b0f0085cd72c106cf259efd77a43b555f"
+        },
+        {
+          "name": "interpreter::call_value",
+          "self_pct": 3.82,
+          "symbol": "myl_f_212e271fe05de3e6f3ffd32ac47b6f61a493b89d19f38db2b86ba3d72c8c702d"
+        },
+        {
+          "name": "interpreter::execute",
+          "self_pct": 3.78,
+          "symbol": "myl_f_866b323a26c1f255ec52657168306d80f60f75f1d366d57675001af4151be806"
+        },
+        {
+          "name": "heap::set_env_slot",
+          "self_pct": 3.54,
+          "symbol": "myl_f_a146740a06e5fa23640f1f72b70e36e5a89eb686546e75b2a5fa1ac552d2f888"
+        }
+      ]
+    },
+    {
+      "arm": "ast-llvm",
+      "case": "tree/closures",
+      "top_self_samples": [
+        {
+          "name": "interpreter::evaluate",
+          "self_pct": 12.01,
+          "symbol": "myl_f_d32d9d609bd2d498a6b2d4f34d6d36851c296533eaafa0e3b7c4c9b1eec65fca"
+        },
+        {
+          "name": "interpreter::call_value",
+          "self_pct": 11.09,
+          "symbol": "myl_f_212e271fe05de3e6f3ffd32ac47b6f61a493b89d19f38db2b86ba3d72c8c702d"
+        },
+        {
+          "name": "heap::push",
+          "self_pct": 7.65,
+          "symbol": "myl_f_9cfccc291a0516b23c50da008b59b8f2c8a2e23f61575966d1d2f1cfb2a4be4b"
+        },
+        {
+          "name": "heap::collect",
+          "self_pct": 6.22,
+          "symbol": "myl_f_5c0ab3495518250d4b949d468c6e0ff997b84b55ab6474e737273fcd3c0b26bd"
+        },
+        {
+          "name": "heap::set_env_slot",
+          "self_pct": 5.69,
+          "symbol": "myl_f_a146740a06e5fa23640f1f72b70e36e5a89eb686546e75b2a5fa1ac552d2f888"
+        },
+        {
+          "name": "heap::allocate",
+          "self_pct": 5.59,
+          "symbol": "myl_f_6993cfd5bc46d9d696adcc139c626f2b677f81bea8031cc740fa79e8da2d676e"
+        },
+        {
+          "name": "interpreter::enter_function",
+          "self_pct": 5.55,
+          "symbol": "myl_f_3ea6e9e7e7e3f3c99e8bd3ee87e61bb9473edc3368079bda3cc736a65b3decbc"
+        },
+        {
+          "name": "myl_t_a83873657e77deb1bf51281383ae925ccb1b4b6510284b93a36500031c0efc14_rcg_retain",
+          "self_pct": 4.21,
+          "symbol": "myl_t_a83873657e77deb1bf51281383ae925ccb1b4b6510284b93a36500031c0efc14_rcg_retain"
+        },
+        {
+          "name": "interpreter::execute",
+          "self_pct": 3.76,
+          "symbol": "myl_f_866b323a26c1f255ec52657168306d80f60f75f1d366d57675001af4151be806"
+        }
+      ]
+    },
+    {
+      "arm": "ast-qbe",
+      "case": "vm/fib",
+      "top_self_samples": [
+        {
+          "name": "myl_f_a0e96f299197f34d601c1a9da1cbd514090305d2a21036d06ba179b733ea6e29",
+          "self_pct": 49.42,
+          "symbol": "myl_f_a0e96f299197f34d601c1a9da1cbd514090305d2a21036d06ba179b733ea6e29"
+        },
+        {
+          "name": "myl_f_aae7e3f63f242f091f741298468821884e7473697b1d7153432e9386d8e0579c",
+          "self_pct": 14.34,
+          "symbol": "myl_f_aae7e3f63f242f091f741298468821884e7473697b1d7153432e9386d8e0579c"
+        },
+        {
+          "name": "myl_f_bf0431d3d9e553eacefcb10ebb00251bb8b43354cc87fd12c99ceb5644f705d6",
+          "self_pct": 6.22,
+          "symbol": "myl_f_bf0431d3d9e553eacefcb10ebb00251bb8b43354cc87fd12c99ceb5644f705d6"
+        },
+        {
+          "name": "myl_f_cb51e0dd7840af78b8d3f65cd883ca525c8c73ff445227a508c4c557b220dad4",
+          "self_pct": 2.59,
+          "symbol": "myl_f_cb51e0dd7840af78b8d3f65cd883ca525c8c73ff445227a508c4c557b220dad4"
+        },
+        {
+          "name": "myl_f_2ebfe2cc969f1c1a5ba88011b86a1472451e4fef31738ad491da1fd5ef2c2cc0",
+          "self_pct": 2.48,
+          "symbol": "myl_f_2ebfe2cc969f1c1a5ba88011b86a1472451e4fef31738ad491da1fd5ef2c2cc0"
+        },
+        {
+          "name": "myl_f_fa0a495025828a635f8203a4c546663c235c2574b972f1294569bb6fadb2fcc2",
+          "self_pct": 2.45,
+          "symbol": "myl_f_fa0a495025828a635f8203a4c546663c235c2574b972f1294569bb6fadb2fcc2"
+        },
+        {
+          "name": "myl_f_22849c51a4fd631aa66144da38552fb710206c5e57b8268459a8dc3a6dbcd390",
+          "self_pct": 2.25,
+          "symbol": "myl_f_22849c51a4fd631aa66144da38552fb710206c5e57b8268459a8dc3a6dbcd390"
+        },
+        {
+          "name": "myl_f_e6dd1a9167d6b59c9752b8305d109d76520bac8300dd423db9728be656322e7c",
+          "self_pct": 1.99,
+          "symbol": "myl_f_e6dd1a9167d6b59c9752b8305d109d76520bac8300dd423db9728be656322e7c"
+        },
+        {
+          "name": "myl_f_4192a2bf8c79d6c1482077147b62da5992111b1e9c0842eb498b5ef650f2e38f",
+          "self_pct": 1.99,
+          "symbol": "myl_f_4192a2bf8c79d6c1482077147b62da5992111b1e9c0842eb498b5ef650f2e38f"
+        }
+      ]
+    },
+    {
+      "arm": "ast-qbe",
+      "case": "vm/string_equality",
+      "top_self_samples": [
+        {
+          "name": "myl_f_a0e96f299197f34d601c1a9da1cbd514090305d2a21036d06ba179b733ea6e29",
+          "self_pct": 92.74,
+          "symbol": "myl_f_a0e96f299197f34d601c1a9da1cbd514090305d2a21036d06ba179b733ea6e29"
+        },
+        {
+          "name": "myl_f_fa0a495025828a635f8203a4c546663c235c2574b972f1294569bb6fadb2fcc2",
+          "self_pct": 6.33,
+          "symbol": "myl_f_fa0a495025828a635f8203a4c546663c235c2574b972f1294569bb6fadb2fcc2"
+        },
+        {
+          "name": "compiler_rt.memcpy.memcpyFast",
+          "self_pct": 0.16,
+          "symbol": "compiler_rt.memcpy.memcpyFast"
+        },
+        {
+          "name": "0x00000000001984d3",
+          "self_pct": 0.14,
+          "symbol": "0x00000000001984d3"
+        },
+        {
+          "name": "myl_f_aae7e3f63f242f091f741298468821884e7473697b1d7153432e9386d8e0579c",
+          "self_pct": 0.11,
+          "symbol": "myl_f_aae7e3f63f242f091f741298468821884e7473697b1d7153432e9386d8e0579c"
+        }
+      ]
+    },
+    {
+      "arm": "ast-qbe",
+      "case": "tree/binary_trees",
+      "top_self_samples": [
+        {
+          "name": "myl_t_785498c443d0a980df3d0827c91989bab92d5672b68aaea1281c9af29aa300f6_rcg_take",
+          "self_pct": 6.6,
+          "symbol": "myl_t_785498c443d0a980df3d0827c91989bab92d5672b68aaea1281c9af29aa300f6_rcg_take"
+        },
+        {
+          "name": "myl_f_d32d9d609bd2d498a6b2d4f34d6d36851c296533eaafa0e3b7c4c9b1eec65fca",
+          "self_pct": 5.06,
+          "symbol": "myl_f_d32d9d609bd2d498a6b2d4f34d6d36851c296533eaafa0e3b7c4c9b1eec65fca"
+        },
+        {
+          "name": "myl_t_a83873657e77deb1bf51281383ae925ccb1b4b6510284b93a36500031c0efc14_rcg_list_set",
+          "self_pct": 3.56,
+          "symbol": "myl_t_a83873657e77deb1bf51281383ae925ccb1b4b6510284b93a36500031c0efc14_rcg_list_set"
+        },
+        {
+          "name": "myl_f_3dd24b2b8167f92811eb1aa75d06c05872b9880d7f900833ae7f6f032a592152",
+          "self_pct": 3.54,
+          "symbol": "myl_f_3dd24b2b8167f92811eb1aa75d06c05872b9880d7f900833ae7f6f032a592152"
+        },
+        {
+          "name": "myl_t_1da8f946ba246f799cfc56f183bef69d4262f662fcee79b8b62bd1d3f8d7855b_rcg_take",
+          "self_pct": 2.94,
+          "symbol": "myl_t_1da8f946ba246f799cfc56f183bef69d4262f662fcee79b8b62bd1d3f8d7855b_rcg_take"
+        },
+        {
+          "name": "myl_f_866b323a26c1f255ec52657168306d80f60f75f1d366d57675001af4151be806",
+          "self_pct": 2.43,
+          "symbol": "myl_f_866b323a26c1f255ec52657168306d80f60f75f1d366d57675001af4151be806"
+        },
+        {
+          "name": "myl_f_72cff91e1ca43adf6e3bd650d1fe503b405034486590fc282e877edc70061b44",
+          "self_pct": 2.39,
+          "symbol": "myl_f_72cff91e1ca43adf6e3bd650d1fe503b405034486590fc282e877edc70061b44"
+        },
+        {
+          "name": "myl_f_aebdc485d7756373248446bbe449e831b1afbb727357d693268ecc8fb629cd5b",
+          "self_pct": 2.36,
+          "symbol": "myl_f_aebdc485d7756373248446bbe449e831b1afbb727357d693268ecc8fb629cd5b"
+        },
+        {
+          "name": "myl_t_a83873657e77deb1bf51281383ae925ccb1b4b6510284b93a36500031c0efc14_rcg_drop",
+          "self_pct": 2.29,
+          "symbol": "myl_t_a83873657e77deb1bf51281383ae925ccb1b4b6510284b93a36500031c0efc14_rcg_drop"
+        }
+      ]
+    },
+    {
+      "arm": "ast-qbe",
+      "case": "tree/closures",
+      "top_self_samples": [
+        {
+          "name": "myl_f_d32d9d609bd2d498a6b2d4f34d6d36851c296533eaafa0e3b7c4c9b1eec65fca",
+          "self_pct": 8.85,
+          "symbol": "myl_f_d32d9d609bd2d498a6b2d4f34d6d36851c296533eaafa0e3b7c4c9b1eec65fca"
+        },
+        {
+          "name": "myl_t_785498c443d0a980df3d0827c91989bab92d5672b68aaea1281c9af29aa300f6_rcg_take",
+          "self_pct": 8.35,
+          "symbol": "myl_t_785498c443d0a980df3d0827c91989bab92d5672b68aaea1281c9af29aa300f6_rcg_take"
+        },
+        {
+          "name": "myl_f_8fcbbbde32315b60b2a6da8b239f110b994a3e18d8c0042d9b7f76bb4a7f2ee0",
+          "self_pct": 5.0,
+          "symbol": "myl_f_8fcbbbde32315b60b2a6da8b239f110b994a3e18d8c0042d9b7f76bb4a7f2ee0"
+        },
+        {
+          "name": "myl_t_1da8f946ba246f799cfc56f183bef69d4262f662fcee79b8b62bd1d3f8d7855b_rcg_take",
+          "self_pct": 4.14,
+          "symbol": "myl_t_1da8f946ba246f799cfc56f183bef69d4262f662fcee79b8b62bd1d3f8d7855b_rcg_take"
+        },
+        {
+          "name": "myl_f_72cff91e1ca43adf6e3bd650d1fe503b405034486590fc282e877edc70061b44",
+          "self_pct": 3.93,
+          "symbol": "myl_f_72cff91e1ca43adf6e3bd650d1fe503b405034486590fc282e877edc70061b44"
+        },
+        {
+          "name": "myl_f_866b323a26c1f255ec52657168306d80f60f75f1d366d57675001af4151be806",
+          "self_pct": 3.08,
+          "symbol": "myl_f_866b323a26c1f255ec52657168306d80f60f75f1d366d57675001af4151be806"
+        },
+        {
+          "name": "myl_f_ace3269ad0fae9d1e7ed4173f8a72271ee6ee16c02f3b79ac71b6c929cdf9394",
+          "self_pct": 3.03,
+          "symbol": "myl_f_ace3269ad0fae9d1e7ed4173f8a72271ee6ee16c02f3b79ac71b6c929cdf9394"
+        },
+        {
+          "name": "myl_t_a83873657e77deb1bf51281383ae925ccb1b4b6510284b93a36500031c0efc14_rcg_retain",
+          "self_pct": 2.97,
+          "symbol": "myl_t_a83873657e77deb1bf51281383ae925ccb1b4b6510284b93a36500031c0efc14_rcg_retain"
+        },
+        {
+          "name": "myl_t_a83873657e77deb1bf51281383ae925ccb1b4b6510284b93a36500031c0efc14_rcg_list_set",
+          "self_pct": 2.97,
+          "symbol": "myl_t_a83873657e77deb1bf51281383ae925ccb1b4b6510284b93a36500031c0efc14_rcg_list_set"
+        }
+      ]
+    },
+    {
+      "arm": "rust",
+      "case": "vm/fib",
+      "top_self_samples": [
+        {
+          "name": "lox::vm::interpret",
+          "self_pct": 94.52,
+          "symbol": "lox::vm::interpret"
+        },
+        {
+          "name": "<lox::vm::Vm>::call_value",
+          "self_pct": 3.27,
+          "symbol": "<lox::vm::Vm>::call_value"
+        },
+        {
+          "name": "<lox::vm::Vm>::call",
+          "self_pct": 2.2,
+          "symbol": "<lox::vm::Vm>::call"
+        }
+      ]
+    },
+    {
+      "arm": "rust",
+      "case": "vm/string_equality",
+      "top_self_samples": [
+        {
+          "name": "lox::vm::interpret",
+          "self_pct": 99.97,
+          "symbol": "lox::vm::interpret"
+        }
+      ]
+    },
+    {
+      "arm": "rust",
+      "case": "tree/binary_trees",
+      "top_self_samples": [
+        {
+          "name": "<lox::interpreter::Interpreter>::evaluate",
+          "self_pct": 40.74,
+          "symbol": "<lox::interpreter::Interpreter>::evaluate"
+        },
+        {
+          "name": "<lox::heap::Runtime>::allocate",
+          "self_pct": 8.29,
+          "symbol": "<lox::heap::Runtime>::allocate"
+        },
+        {
+          "name": "cfree",
+          "self_pct": 5.71,
+          "symbol": "cfree"
+        },
+        {
+          "name": "<lox::heap::Runtime>::pop",
+          "self_pct": 5.61,
+          "symbol": "<lox::heap::Runtime>::pop"
+        },
+        {
+          "name": "<lox::interpreter::Interpreter>::execute",
+          "self_pct": 5.4,
+          "symbol": "<lox::interpreter::Interpreter>::execute"
+        },
+        {
+          "name": "<lox::interpreter::Interpreter>::call_function",
+          "self_pct": 4.65,
+          "symbol": "<lox::interpreter::Interpreter>::call_function"
+        },
+        {
+          "name": "<lox::interpreter::Interpreter>::binary",
+          "self_pct": 3.4,
+          "symbol": "<lox::interpreter::Interpreter>::binary"
+        },
+        {
+          "name": "<alloc::vec::Vec<lox::value::Value>>::into_boxed_slice",
+          "self_pct": 2.97,
+          "symbol": "<alloc::vec::Vec<lox::value::Value>>::into_boxed_slice"
+        },
+        {
+          "name": "<lox::heap::Marker>::mark_table",
+          "self_pct": 2.91,
+          "symbol": "<lox::heap::Marker>::mark_table"
+        }
+      ]
+    },
+    {
+      "arm": "rust",
+      "case": "tree/closures",
+      "top_self_samples": [
+        {
+          "name": "<lox::interpreter::Interpreter>::evaluate",
+          "self_pct": 56.38,
+          "symbol": "<lox::interpreter::Interpreter>::evaluate"
+        },
+        {
+          "name": "<lox::heap::Runtime>::allocate",
+          "self_pct": 11.86,
+          "symbol": "<lox::heap::Runtime>::allocate"
+        },
+        {
+          "name": "<lox::interpreter::Interpreter>::call_function",
+          "self_pct": 9.07,
+          "symbol": "<lox::interpreter::Interpreter>::call_function"
+        },
+        {
+          "name": "<lox::interpreter::Interpreter>::execute",
+          "self_pct": 8.34,
+          "symbol": "<lox::interpreter::Interpreter>::execute"
+        },
+        {
+          "name": "<lox::interpreter::Interpreter>::execute_in",
+          "self_pct": 4.74,
+          "symbol": "<lox::interpreter::Interpreter>::execute_in"
+        },
+        {
+          "name": "<lox::table::Table>::set",
+          "self_pct": 1.07,
+          "symbol": "<lox::table::Table>::set"
+        },
+        {
+          "name": "core::ptr::drop_glue::<lox::ast::Stmt>",
+          "self_pct": 1.0,
+          "symbol": "core::ptr::drop_glue::<lox::ast::Stmt>"
+        },
+        {
+          "name": "0x00000000000b2322",
+          "self_pct": 0.97,
+          "symbol": "0x00000000000b2322"
+        },
+        {
+          "name": "0x00000000000b2280",
+          "self_pct": 0.97,
+          "symbol": "0x00000000000b2280"
+        }
+      ]
+    }
+  ],
+  "limits": [
+    "One sampled profile per arm/case; no timing or counter selection matrix.",
+    "Self percentages are within each process and affected by inlining.",
+    "No absolute cross-language overhead is inferred from percentages.",
+    "QBE final sidecar has no functions; names decoded from same-build module manifests.",
+    "Raw perf.data, reports, original summaries and all decode inputs are retained.",
+    "Expected stdout files retained; successful helper comparisons recorded hashes, not duplicate streams.",
+    "No new Guardian, public-test, native-GC or compiler qualification from profiling."
+  ],
+  "manifest_sha256": "1bfd5d1e918ce402237c7a99f5181f45755f745ba33b67a117d715fe0201f421",
+  "mapped_symbols": 402,
+  "payload_bytes": 98420113,
+  "payloads": 161,
+  "perf_version_at_capture": "perf version 7.0.14",
+  "qbe_same_build_module_manifests": 17,
+  "sampling": {
+    "callgraph": "dwarf,8192",
+    "cases": [
+      "tree/binary_trees",
+      "tree/closures",
+      "vm/fib",
+      "vm/string_equality"
+    ],
+    "cpu": 10,
+    "event": "cycles:u",
+    "frequency_hz": 499,
+    "report": "self overhead, no children, percent limit 0.1"
+  },
+  "selected_source_files": 37,
+  "stable_guarded_inputs": 102
+}

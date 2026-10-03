@@ -1,0 +1,20 @@
+# Selected Lox gap profiles
+
+Twelve fresh sampled profiles identify candidate work without changing the selected compiler, source or guests. Each of LLVM, QBE and Rust ran VM `fib`/`string_equality` and tree `binary_trees`/`closures` once. The profile commands pin CPU10, wait for CPU10 and sibling11 to be quiet, sample user cycles at499Hz and collect DWARF call graphs. Every run returned0, matched its complete expected stdout and emitted no stderr; the original helper recorded the comparison and stdout hash. These are diagnostics, not a new timing or counter selection matrix.
+
+| Workload | LLVM self-cycle samples | QBE self-cycle samples |
+| --- | --- | --- |
+| VM fib | run72.16%; table lookup7.21%; peek3.95% | run49.42%; numeric14.34%; load_frame6.22% |
+| VM string equality | run98.24% | run92.74%; read_byte6.33% |
+| Tree binary trees | evaluate9.71%; push6.33%; collect5.77%; Obj take5.43% | result-type take6.60%; evaluate5.06%; second result-type take2.94% |
+| Tree closures | evaluate12.01%; call_value11.09%; push7.65%; collect6.22% | evaluate8.85%; result-type take8.35%; second result-type take4.14% |
+
+These percentages describe each process separately. Inlining moves work into callers, sampling has uncertainty, and percentages do not measure absolute cross-language overhead. The Rust VM interpreter receives94.52%/99.97% self samples in these two VM jobs; that does not by itself quantify which MyLang checks or copies explain the previously measured instruction gap. Results below the report's0.1% threshold and unknown address/library symbols remain in the raw evidence rather than being assigned speculative names.
+
+The QBE final guest sidecar has no function entries. A separate decoded summary uses402 exact symbol/name mappings from17 module manifests of this same selected QBE build. It preserves each raw symbol, raw name and percentage in place and adds `decoded_name_from_qbe_module_manifests`. The exact ownership symbols targeted here are `myl_t_785498c443d0a980df3d0827c91989bab92d5672b68aaea1281c9af29aa300f6_rcg_take` and `myl_t_1da8f946ba246f799cfc56f183bef69d4262f662fcee79b8b62bd1d3f8d7855b_rcg_take`; their manifest layouts have two tags with only the error-shaped payload counted. The LLVM object helper is `myl_t_a83873657e77deb1bf51281383ae925ccb1b4b6510284b93a36500031c0efc14_rcg_take`. Runtime helper names are retained verbatim; a name alone is not proof that its work may be omitted.
+
+The selected37 source files, d14 compiler, QBE99ad and four copied guest ELFs retain their existing hashes. Go was copied and guarded but was not profiled. Existing AST qualification and performance selection remain the acceptance evidence; these profiles add no public-test, native-GC or full compiler qualification claim. Parallel experiments are examining equality/arithmetic Value carriers and sound plain-tag ownership paths. None is selected by this report.
+
+`receipt.json` binds the immutable archive at `/home/epentland/ai/canopy/evidence/lox-parity-20261003/gap-profile`. Its manifest retains all12 perf.data files/reports, original and decoded summaries, completion markers, profile logs, four guest ELFs/sidecars,37 source files, all reference inputs/expected outputs, original102 guards, same-build QBE module manifests and exact helpers. Every payload and guarded input was rehashed after copying. This archive is separate from the prior sealed AST selection and does not modify it. Recorded perf version is capture-time context; historical commands are preserved in each original summary.
+
+`capture.py` verifies completed evidence and freezes it without running guests. It refuses to reuse an archive directory. The first capture preflight expected the decoded name in the raw `name` field and failed before archive creation; the corrected preflight checks the separate decoded field. Both capture logs are retained beside this report. Replay profiles into a new private work directory with the archived `profile.py`, the named immutable ELFs and original cases; a replay produces new sampling evidence and is not a replacement for these receipts.
