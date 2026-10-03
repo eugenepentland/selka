@@ -1,0 +1,16 @@
+{
+  "guardian_command": [
+    "scripts/build-slot.sh",
+    "gate",
+    "/home/epentland/ai/canopy/guardian-zig/zig-out/bin/guardian-check",
+    "all",
+    ".",
+    "--gate"
+  ],
+  "guardian_status": 0,
+  "guardian_log_sha256": "2f2418df757d0dc44d18ea28b4691618d43001b1caa9680b8de5e5b77ecc50d7",
+  "guardian_result": "88 checks passed; no blocking findings",
+  "validation_sha256": "855a34be0c5a8bc9e52c0a441403b3e9b764805b90d83eaf713b680e111bf764",
+  "runner_log_sha256": "5a676de2831373b647eba9435511a7efa32c0c500a12dc522698fd3a001199e3",
+  "verified_after": true
+}
