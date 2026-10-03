@@ -236,13 +236,44 @@ def parse_counters(text):
     result = {}
     for line in text.splitlines():
         fields = line.split('\t')
-        if len(fields) < 3 or fields[2] not in COUNTERS:
+        if len(fields) < 3:
+            continue
+        event = fields[2]
+        hybrid = re.fullmatch(r'([^/]+)/([^/]+)/u', event)
+        canonical = hybrid[2] + ':u' if hybrid else event
+        if canonical not in COUNTERS:
             continue
         count = fields[0].strip()
         available = re.fullmatch(r'[0-9]+(?:\.[0-9]+)?', count) is not None
-        result[fields[2]] = {'available': available, 'count': float(count) if available else None,
-                            'raw_count': count, 'raw_fields': fields}
+        result[event] = {'available': available, 'count': float(count) if available else None,
+                         'canonical_event': canonical, 'pmu': hybrid[1] if hybrid else None,
+                         'raw_count': count, 'raw_fields': fields}
     return result
+
+
+def select_counters(counters, cpu, pmu_cpus=None):
+    """Select one PMU by pinned CPU membership; retain every raw PMU row separately."""
+    if set(COUNTERS).issubset(counters):
+        return {name: counters[name] for name in COUNTERS}, {'pmu': None, 'method': 'generic event names'}
+    pmus = {row['pmu'] for row in counters.values() if row['pmu'] is not None}
+    if pmu_cpus is None:
+        pmu_cpus = {}
+        for pmu in pmus:
+            path = Path('/sys/bus/event_source/devices') / pmu / 'cpus'
+            members = set()
+            if path.is_file():
+                for item in path.read_text().strip().split(','):
+                    bounds = item.split('-')
+                    if bounds and all(value.isdecimal() for value in bounds):
+                        members.update(range(int(bounds[0]), int(bounds[-1]) + 1))
+            pmu_cpus[pmu] = members
+    eligible = [pmu for pmu in pmus if cpu in pmu_cpus.get(pmu, set())]
+    selection = {'pmu': eligible[0] if len(eligible) == 1 else None, 'pinned_cpu': cpu,
+                 'method': 'PMU sysfs cpus membership; unknown or ambiguous membership stays unavailable',
+                 'pmu_cpus': {pmu: sorted(pmu_cpus.get(pmu, set())) for pmu in sorted(pmus)}}
+    if len(eligible) != 1:
+        return {}, selection
+    return {row['canonical_event']: row for row in counters.values() if row['pmu'] == eligible[0]}, selection
 
 
 def capture_counters(perf, binary, plan, count, expected, directory, args, environment):
@@ -258,11 +289,13 @@ def capture_counters(perf, binary, plan, count, expected, directory, args, envir
         done = run_command(command, args.timeout_seconds, counter_env)
     raw = output.read_text() if output.exists() else ''
     counters = parse_counters(raw)
-    available = done.returncode == 0 and set(counters) == set(COUNTERS) and all(row['available'] for row in counters.values())
+    selected, selection = select_counters(counters, args.cpu)
     guest = validate_guest(stdout_path.read_text(), stderr_path.read_text(), done.returncode, expected) if stdout_path.exists() else None
+    available = done.returncode == 0 and guest is not None and set(selected) == set(COUNTERS) and all(row['available'] for row in selected.values())
     return {'status': 'available' if available else 'unavailable_or_partial', 'command': command,
             'exit_status': done.returncode, 'stderr': done.stderr, 'stdout': done.stdout,
-            'counts': counters, 'raw': compressed(directory / 'counters.tsv.gz', raw), 'guest': guest,
+            'counts': counters, 'selected_counts': selected, 'selection': selection,
+            'raw': compressed(directory / 'counters.tsv.gz', raw), 'guest': guest,
             'scope': 'Separate instrumented whole-process user-mode counters, including setup/teardown; not benchmark timing or kernel-only counts.'}
 
 

@@ -2,7 +2,7 @@
 import unittest
 import os
 from unittest.mock import patch
-from profile import classify, load_rules, parse_script, parse_counters, scale_iterations, validate_guest, guest_environment, RULES_PATH
+from profile import classify, load_rules, parse_script, parse_counters, select_counters, scale_iterations, validate_guest, guest_environment, RULES_PATH
 
 
 class ProfileTests(unittest.TestCase):
@@ -55,6 +55,18 @@ class ProfileTests(unittest.TestCase):
         self.assertEqual(rows['cycles:u']['count'], 123)
         self.assertTrue(rows['cycles:u']['available'])
         self.assertIsNone(rows['instructions:u']['count'])
+
+    def test_hybrid_counters_keep_inactive_pmu_and_select_only_pinned_cpu(self):
+        rows = parse_counters('<not counted>\t\tcpu_atom/cycles/u\t0\t0.00\n'
+                              '123\t\tcpu_core/cycles/u\t100\t100.00\n')
+        self.assertFalse(rows['cpu_atom/cycles/u']['available'])
+        self.assertEqual(rows['cpu_core/cycles/u']['canonical_event'], 'cycles:u')
+        selected, selection = select_counters(rows, 2, {'cpu_core': {0, 1, 2}, 'cpu_atom': {12, 13}})
+        self.assertEqual(selection['pmu'], 'cpu_core')
+        self.assertEqual(selected['cycles:u']['count'], 123)
+        selected, selection = select_counters(rows, 2, {'cpu_core': set(), 'cpu_atom': set()})
+        self.assertEqual(selected, {})
+        self.assertIsNone(selection['pmu'])
         self.assertFalse(rows['instructions:u']['available'])
         self.assertFalse(any('coverage' in key for key in rows))
 
