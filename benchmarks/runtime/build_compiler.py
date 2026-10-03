@@ -41,6 +41,10 @@ def validate_receipt(receipt, compiler, artifacts=False):
         raise ValueError('compiler sources changed during build')
     if receipt.get('exit_status') != 0 or receipt.get('compiler_sha256') != digest(compiler):
         raise ValueError('compiler differs from recorded successful build')
+    if 'compiler_optimize' in receipt:
+        mode = receipt['compiler_optimize']
+        if mode not in ('Debug', 'ReleaseFast') or '-Doptimize=' + mode not in receipt.get('command', []):
+            raise ValueError('compiler optimization mode differs from recorded command')
     if artifacts:
         if snapshot(Path(receipt['source_root']), receipt['source_revision']) != receipt['sources_after']:
             raise ValueError('compiler sources differ from receipt')
@@ -54,6 +58,8 @@ def main():
     parser.add_argument('--source-root', type=Path, default=Path(__file__).resolve().parents[2])
     parser.add_argument('--source-revision', required=True)
     parser.add_argument('--zig', default='zig')
+    parser.add_argument('--optimize', choices=('Debug', 'ReleaseFast'), default='ReleaseFast',
+                        help='compiler build mode; guest build modes remain separately recorded')
     parser.add_argument('--work', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
     args = parser.parse_args()
@@ -61,7 +67,7 @@ def main():
     work.mkdir(parents=True, exist_ok=True)
     (work / 'tmp').mkdir(exist_ok=True)
     before = snapshot(root, args.source_revision)
-    command = [str(root / 'scripts/build-slot.sh'), 'build', args.zig, 'build', '-Doptimize=ReleaseFast',
+    command = [str(root / 'scripts/build-slot.sh'), 'build', args.zig, 'build', '-Doptimize=' + args.optimize,
                '-Dcompiler-only=true', '-j2', '--summary', 'all']
     environment = {**os.environ, 'TMPDIR': str(work / 'tmp'), 'ZIG_LOCAL_CACHE_DIR': str(work / 'compiler-zig-local'),
                    'ZIG_GLOBAL_CACHE_DIR': str(work / 'compiler-zig-global')}
@@ -78,7 +84,8 @@ def main():
     assets = [root / 'zig-out/bin/qbe', *sorted((root / 'zig-out/lib/mylang-runtime').rglob('*'))]
     receipt = {'schema': SCHEMA, 'status': 'complete', 'source_root': str(root), 'source_revision': args.source_revision,
                'sources_before': before, 'sources_after': after, 'compiler_path': str(compiler), 'compiler_sha256': digest(compiler),
-               'command': command, 'exit_status': done.returncode, 'build_environment': {key: environment[key] for key in
+               'command': command, 'compiler_optimize': args.optimize,
+               'exit_status': done.returncode, 'build_environment': {key: environment[key] for key in
                    ('TMPDIR', 'ZIG_LOCAL_CACHE_DIR', 'ZIG_GLOBAL_CACHE_DIR')},
                'installed_assets': {str(path): digest(path) for path in assets if path.is_file()},
                'build_log': {'path': str(log), 'sha256': digest(log)},

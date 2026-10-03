@@ -20,6 +20,13 @@ revision before/after the build and records compiler/assets, Zig, command,
 environment, and log hashes. This is local provenance, not an independent build
 attestation. A receipt for changed compiler bytes or source files is rejected.
 
+`--optimize Debug` explicitly builds a Debug compiler for faster exploratory
+iterations and records that mode in the receipt. ReleaseFast remains the default
+and the final compiler build policy. Guest build modes are recorded separately
+and remain ReleaseFast (LLVM O3/LTO or QBE). A Debug compiler does not establish
+equivalent guest bytes by itself; check relevant guest hashes or emitted code
+before drawing that conclusion.
+
 ```sh
 python3 benchmarks/runtime/expanded/run.py \
   --candidate-id current-main-20261003 \

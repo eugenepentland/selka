@@ -109,6 +109,19 @@ class CandidateTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'compiler differs'):
                 validate_receipt(receipt, binary)
 
+    def test_receipt_mode_must_match_actual_compiler_command(self):
+        with tempfile.TemporaryDirectory() as directory:
+            binary = Path(directory) / 'mylang'
+            binary.write_bytes(b'compiler')
+            receipt = {'schema': 'mylang-runtime-compiler-build-v1', 'status': 'complete', 'exit_status': 0,
+                       'source_revision': 'a' * 40, 'sources_before': {'src/a.zig': 'hash'},
+                       'sources_after': {'src/a.zig': 'hash'}, 'compiler_sha256': digest(binary),
+                       'compiler_optimize': 'Debug', 'command': ['zig', 'build', '-Doptimize=Debug']}
+            validate_receipt(receipt, binary)
+            receipt['compiler_optimize'] = 'ReleaseFast'
+            with self.assertRaisesRegex(ValueError, 'optimization mode'):
+                validate_receipt(receipt, binary)
+
 
 if __name__ == '__main__':
     unittest.main()
