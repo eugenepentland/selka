@@ -1,0 +1,18 @@
+{
+  "source37_exact_each": true,
+  "compiler_sha256": "d14a704083bcc5f5174932a751f7d9dda73100dbd62403626b42b52436cad040",
+  "guest_byte_matches": {
+    "baseline-llvm": true,
+    "baseline-qbe": true,
+    "ast-llvm": true,
+    "ast-qbe": true,
+    "constant-llvm": true,
+    "constant-qbe": true,
+    "combined-llvm": true,
+    "combined-qbe": true,
+    "rust": true,
+    "go": false
+  },
+  "fresh_manifest_sha256": "00ec53962dc576e3567a0f83f4df6711c3e428d22d16c82ca4d64a24501d36aa",
+  "go_note": "Fresh Go disables VCS metadata; its measured arm remains the original frozen ELF."
+}

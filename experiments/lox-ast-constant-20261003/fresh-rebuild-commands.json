@@ -1,0 +1,250 @@
+[
+  {
+    "argv": [
+      "patch",
+      "--batch",
+      "--fuzz=0",
+      "-p1",
+      "-i",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/experiments/lox-tree-ast-carrier-20261003/ast-carrier.patch"
+    ],
+    "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/fresh-rebuild/ast",
+    "environment": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/fresh-rebuild/tmp",
+      "GOTMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/fresh-rebuild/tmp",
+      "PATH": "/home/epentland/.cargo/bin:/home/epentland/.local/bin:/home/epentland/.codex/packages/standalone/releases/0.159.0-x86_64-unknown-linux-musl/codex-path:/home/epentland/.codex/tmp/arg0/codex-arg0TY4NiM:/home/epentland/.local/bin:/home/epentland/.local/bin:/home/epentland/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin",
+      "RUSTC": "/home/epentland/.cargo/bin/rustc"
+    },
+    "log": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/fresh-rebuild/prepare-00.log",
+    "started_utc": "2026-10-03T04:23:10.718933+00:00",
+    "status": 0,
+    "log_sha256": "a0aee8147eb99cd52a0b143df6ddeaea383f492d01b4561aac8bfd374868042a",
+    "finished_utc": "2026-10-03T04:23:10.724454+00:00"
+  },
+  {
+    "argv": [
+      "patch",
+      "--batch",
+      "--fuzz=0",
+      "-p1",
+      "-i",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/experiments/lox-vm-constant-20261003/constant-readonly.patch"
+    ],
+    "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/fresh-rebuild/constant",
+    "environment": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/fresh-rebuild/tmp",
+      "GOTMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/fresh-rebuild/tmp",
+      "PATH": "/home/epentland/.cargo/bin:/home/epentland/.local/bin:/home/epentland/.codex/packages/standalone/releases/0.159.0-x86_64-unknown-linux-musl/codex-path:/home/epentland/.codex/tmp/arg0/codex-arg0TY4NiM:/home/epentland/.local/bin:/home/epentland/.local/bin:/home/epentland/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin",
+      "RUSTC": "/home/epentland/.cargo/bin/rustc"
+    },
+    "log": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/fresh-rebuild/prepare-01.log",
+    "started_utc": "2026-10-03T04:23:10.725792+00:00",
+    "status": 0,
+    "log_sha256": "95133385a54c8c14fdbd17d053cb75d04c6e69f49834e96233269dcf84ef28a3",
+    "finished_utc": "2026-10-03T04:23:10.726944+00:00"
+  },
+  {
+    "argv": [
+      "/usr/bin/python3",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/experiments/lox-parity-20261003/compose.py",
+      "--base",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/fresh-rebuild/baseline",
+      "--tree",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/fresh-rebuild/ast",
+      "--vm",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/fresh-rebuild/constant",
+      "--out",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/fresh-rebuild/combined"
+    ],
+    "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003",
+    "environment": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/fresh-rebuild/tmp",
+      "GOTMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/fresh-rebuild/tmp",
+      "PATH": "/home/epentland/.cargo/bin:/home/epentland/.local/bin:/home/epentland/.codex/packages/standalone/releases/0.159.0-x86_64-unknown-linux-musl/codex-path:/home/epentland/.codex/tmp/arg0/codex-arg0TY4NiM:/home/epentland/.local/bin:/home/epentland/.local/bin:/home/epentland/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin",
+      "RUSTC": "/home/epentland/.cargo/bin/rustc"
+    },
+    "log": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/fresh-rebuild/prepare-02.log",
+    "started_utc": "2026-10-03T04:23:10.727110+00:00",
+    "status": 0,
+    "log_sha256": "5a40068135808ba6f9c42cecbe2ebcf048b99a0cf83285c766725ecf95a4f295",
+    "finished_utc": "2026-10-03T04:23:10.781694+00:00"
+  },
+  {
+    "argv": [
+      "/usr/bin/python3",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/experiments/lox-parity-20261003/build.py",
+      "--work",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/fresh-rebuild",
+      "--source",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/fresh-rebuild/baseline",
+      "--compiler",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-lowering-20261003/.tmp-lox-lowering/cfg-fix-release/bin/mylang",
+      "--name",
+      "baseline"
+    ],
+    "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003",
+    "environment": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/fresh-rebuild/tmp",
+      "GOTMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/fresh-rebuild/tmp",
+      "PATH": "/home/epentland/.cargo/bin:/home/epentland/.local/bin:/home/epentland/.codex/packages/standalone/releases/0.159.0-x86_64-unknown-linux-musl/codex-path:/home/epentland/.codex/tmp/arg0/codex-arg0TY4NiM:/home/epentland/.local/bin:/home/epentland/.local/bin:/home/epentland/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin",
+      "RUSTC": "/home/epentland/.cargo/bin/rustc"
+    },
+    "log": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/fresh-rebuild/prepare-03.log",
+    "started_utc": "2026-10-03T04:23:10.782958+00:00",
+    "status": 0,
+    "log_sha256": "0d6fc7c95fc9b6c3f13a7a587982e275b631fc3ed38eba27f6e491a7cb02b454",
+    "finished_utc": "2026-10-03T04:23:38.427525+00:00"
+  },
+  {
+    "argv": [
+      "/usr/bin/python3",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/experiments/lox-parity-20261003/build.py",
+      "--work",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/fresh-rebuild",
+      "--source",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/fresh-rebuild/ast",
+      "--compiler",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-lowering-20261003/.tmp-lox-lowering/cfg-fix-release/bin/mylang",
+      "--name",
+      "ast"
+    ],
+    "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003",
+    "environment": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/fresh-rebuild/tmp",
+      "GOTMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/fresh-rebuild/tmp",
+      "PATH": "/home/epentland/.cargo/bin:/home/epentland/.local/bin:/home/epentland/.codex/packages/standalone/releases/0.159.0-x86_64-unknown-linux-musl/codex-path:/home/epentland/.codex/tmp/arg0/codex-arg0TY4NiM:/home/epentland/.local/bin:/home/epentland/.local/bin:/home/epentland/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin",
+      "RUSTC": "/home/epentland/.cargo/bin/rustc"
+    },
+    "log": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/fresh-rebuild/prepare-04.log",
+    "started_utc": "2026-10-03T04:23:38.428821+00:00",
+    "status": 0,
+    "log_sha256": "b6276728cf20cddd5bbb0c904559354335856b7d68f07fbe5b8cbd5a18e7b31e",
+    "finished_utc": "2026-10-03T04:24:02.271113+00:00"
+  },
+  {
+    "argv": [
+      "/usr/bin/python3",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/experiments/lox-parity-20261003/build.py",
+      "--work",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/fresh-rebuild",
+      "--source",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/fresh-rebuild/constant",
+      "--compiler",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-lowering-20261003/.tmp-lox-lowering/cfg-fix-release/bin/mylang",
+      "--name",
+      "constant"
+    ],
+    "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003",
+    "environment": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/fresh-rebuild/tmp",
+      "GOTMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/fresh-rebuild/tmp",
+      "PATH": "/home/epentland/.cargo/bin:/home/epentland/.local/bin:/home/epentland/.codex/packages/standalone/releases/0.159.0-x86_64-unknown-linux-musl/codex-path:/home/epentland/.codex/tmp/arg0/codex-arg0TY4NiM:/home/epentland/.local/bin:/home/epentland/.local/bin:/home/epentland/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin",
+      "RUSTC": "/home/epentland/.cargo/bin/rustc"
+    },
+    "log": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/fresh-rebuild/prepare-05.log",
+    "started_utc": "2026-10-03T04:24:02.272355+00:00",
+    "status": 0,
+    "log_sha256": "15d6a4f8fda4a928978683e1b206e849bb86cbdc71447555196a267e4c0b2956",
+    "finished_utc": "2026-10-03T04:24:30.288528+00:00"
+  },
+  {
+    "argv": [
+      "/usr/bin/python3",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/experiments/lox-parity-20261003/build.py",
+      "--work",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/fresh-rebuild",
+      "--source",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/fresh-rebuild/combined",
+      "--compiler",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-lowering-20261003/.tmp-lox-lowering/cfg-fix-release/bin/mylang",
+      "--name",
+      "combined"
+    ],
+    "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003",
+    "environment": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/fresh-rebuild/tmp",
+      "GOTMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/fresh-rebuild/tmp",
+      "PATH": "/home/epentland/.cargo/bin:/home/epentland/.local/bin:/home/epentland/.codex/packages/standalone/releases/0.159.0-x86_64-unknown-linux-musl/codex-path:/home/epentland/.codex/tmp/arg0/codex-arg0TY4NiM:/home/epentland/.local/bin:/home/epentland/.local/bin:/home/epentland/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin",
+      "RUSTC": "/home/epentland/.cargo/bin/rustc"
+    },
+    "log": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/fresh-rebuild/prepare-06.log",
+    "started_utc": "2026-10-03T04:24:30.289718+00:00",
+    "status": 0,
+    "log_sha256": "157466142a5d49436092bb9e14579cfd0afbcfa639d2a673ba9cc260393416f8",
+    "finished_utc": "2026-10-03T04:24:51.140407+00:00"
+  },
+  {
+    "argv": [
+      "git",
+      "archive",
+      "--format=tar",
+      "--output=/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/fresh-rebuild/reference.tar",
+      "4e48a09220c2e018eba8c4b1eb3fe1137a3dae73",
+      "benchmarks/lox/bench",
+      "benchmarks/lox/ports/rust",
+      "benchmarks/lox/ports/go"
+    ],
+    "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003",
+    "environment": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/fresh-rebuild/tmp",
+      "GOTMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/fresh-rebuild/tmp",
+      "PATH": "/home/epentland/.cargo/bin:/home/epentland/.local/bin:/home/epentland/.codex/packages/standalone/releases/0.159.0-x86_64-unknown-linux-musl/codex-path:/home/epentland/.codex/tmp/arg0/codex-arg0TY4NiM:/home/epentland/.local/bin:/home/epentland/.local/bin:/home/epentland/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin",
+      "RUSTC": "/home/epentland/.cargo/bin/rustc"
+    },
+    "log": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/fresh-rebuild/prepare-07.log",
+    "started_utc": "2026-10-03T04:24:51.140644+00:00",
+    "status": 0,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "finished_utc": "2026-10-03T04:24:51.156062+00:00"
+  },
+  {
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/scripts/build-slot.sh",
+      "build",
+      "/home/epentland/.cargo/bin/cargo",
+      "build",
+      "--release",
+      "--locked"
+    ],
+    "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/fresh-rebuild/reference/benchmarks/lox/ports/rust",
+    "environment": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/fresh-rebuild/tmp",
+      "GOTMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/fresh-rebuild/tmp",
+      "PATH": "/home/epentland/.cargo/bin:/home/epentland/.local/bin:/home/epentland/.codex/packages/standalone/releases/0.159.0-x86_64-unknown-linux-musl/codex-path:/home/epentland/.codex/tmp/arg0/codex-arg0TY4NiM:/home/epentland/.local/bin:/home/epentland/.local/bin:/home/epentland/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin",
+      "RUSTC": "/home/epentland/.cargo/bin/rustc",
+      "CARGO_TARGET_DIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/fresh-rebuild/rust-target"
+    },
+    "log": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/fresh-rebuild/prepare-08.log",
+    "started_utc": "2026-10-03T04:24:51.171988+00:00",
+    "status": 0,
+    "log_sha256": "f0cca1be2618f808f2cc047b3f54464bf8be3e99c4c11e1311eb7c084b57f6eb",
+    "finished_utc": "2026-10-03T04:24:52.515499+00:00"
+  },
+  {
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/scripts/build-slot.sh",
+      "build",
+      "/home/epentland/.local/bin/go",
+      "build",
+      "-buildvcs=false",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/fresh-rebuild/bin/go",
+      "./cmd/lox"
+    ],
+    "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/fresh-rebuild/reference/benchmarks/lox/ports/go",
+    "environment": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/fresh-rebuild/tmp",
+      "GOTMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/fresh-rebuild/tmp",
+      "PATH": "/home/epentland/.cargo/bin:/home/epentland/.local/bin:/home/epentland/.codex/packages/standalone/releases/0.159.0-x86_64-unknown-linux-musl/codex-path:/home/epentland/.codex/tmp/arg0/codex-arg0TY4NiM:/home/epentland/.local/bin:/home/epentland/.local/bin:/home/epentland/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin",
+      "RUSTC": "/home/epentland/.cargo/bin/rustc",
+      "GOCACHE": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/fresh-rebuild/go-build",
+      "GOMODCACHE": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/fresh-rebuild/go-mod",
+      "GOTOOLCHAIN": "local"
+    },
+    "log": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/fresh-rebuild/prepare-09.log",
+    "started_utc": "2026-10-03T04:24:52.516072+00:00",
+    "status": 0,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "finished_utc": "2026-10-03T04:24:58.932831+00:00"
+  }
+]

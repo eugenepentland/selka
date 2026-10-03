@@ -1,0 +1,69 @@
+{
+  "stage": "qualified source candidates, complete instruction diagnostic and fresh reproduction; full wall/counter matrices pending",
+  "canonical_source_commit": "44cd43078c51fc33ba1b52b86ffa48ce4f35b28c",
+  "canonical_public_tests": 84,
+  "manifest_sha256": "d1b04d2b3084aad01b32898fced996a072f9181f746afef839ac7012ef596d3b",
+  "complete_measurement_rows": {
+    "source_smoke": 208,
+    "instruction_screen_one_round": 208,
+    "fresh_reproduction_smoke": 260
+  },
+  "component_native_rebuilds_byte_match": true,
+  "full_wall_expected_rows": 780,
+  "full_counter_expected_rows": 780,
+  "full_matrices_completed": false,
+  "payload_sha256": {
+    "README.md": "9fa3d6b1eaace3dc4f1a68582f0c84f787753fad0196d2f1bafb7cf4bbf9bddf",
+    "analyze.py": "00b7c29acf8bf68e4650b6b0edb95c21688e6e0525c44eb590a01fa8e4eaf00c",
+    "ast-build.json": "2ace5e665a9957d4158a32783ca557c2e623c95c505757bd707d2f0ebc84bf10",
+    "baseline-source.tar.gz": "ecb25e84109b7f8ee451b44eb25275a9b7f82a37dd8f0a46fa7438d3c1391486",
+    "binaries.json": "d1b04d2b3084aad01b32898fced996a072f9181f746afef839ac7012ef596d3b",
+    "combined-build.json": "26610371e09d81e7944618ad7d69334e4e4de983f72a388b4108a492d06210b9",
+    "composition.json": "7cb2e2c3e2e6368ca1c148b74c093dea502f95dd27acbd2dae45cda7cc65b549",
+    "constant-build.json": "478ab8bddddeeebb1a452034ee4b8bd8673baaffdf476ae548db6f49b6c374df",
+    "fresh-rebuild-commands.json": "075fcc59b8b94755a0189d26498e37b78dc7f0397b63c630f180984832aa2a5e",
+    "fresh-rebuild-comparison.json": "56eb4f6b47d3599cecdcacb0ea4b6ccf6d2ce1468de23eb0857c508140da6ab2",
+    "fresh-rebuild-manifest.json": "00ec53962dc576e3567a0f83f4df6711c3e428d22d16c82ca4d64a24501d36aa",
+    "fresh-rebuild-smoke.command.json": "a20451b541c8e202a397a09fdcc71d6cf85817e4a0d504fcc06db62b356de974",
+    "fresh-rebuild-smoke.json.gz": "1fc43f798b0d69f0573cfe701a5bd0bd7820de494b25394dbfc0765b5e819de4",
+    "fresh-rebuild-smoke.log": "82ead9a119296af7577143c6ef884193f911f4de8a896cff0dbc9585a672e9e6",
+    "guardian-full.log": "385b31159bebe492e9e17268167b169b9a48d33c8bb75d255c23a375fd1d4b88",
+    "prepare.py": "7f4626e86764b0670419cfc36292354a7e33b0f3e3df0a7585dfad2e25253548",
+    "prepared.json": "9a0bc501369a3d54f1b7a8b31975db1ad25b6e7e8fad5da166ae3cb9c605978e",
+    "source-screen-analysis.json": "9e8774fa2c4894b6f24fa15b22930b26403b3a056fdc888b72af65fac8043812",
+    "source-screen-instructions.command.json": "0b16d441ec0b3118abc32fbabb1f64402120829e8ae21e4d8b7fb8a06058eb48",
+    "source-screen-instructions.json.gz": "9e690b68fa5794cad106ed4622e96a1c830eda4378e64263b94f483cb4be5416",
+    "source-screen-instructions.log": "ed6bb83f26f90425e8c221049c61259c745727125549b00b4bb2e67310ccb3cb",
+    "source-smoke.command.json": "3f111d5497be927f39f3762596aaa8db35de2b29fae9f6628e92abb6a689655b",
+    "source-smoke.json.gz": "b8676259ce1dc215006fabda8473779fa8e4f67b80160a5ae9013d3bb94a74eb",
+    "source-smoke.log": "6087a1c66851c3334efae1669eb1a0edb8133cb8a2fd8eb8893367fbc68dafac",
+    "sources.json": "249f2f75f3f33aee86ef770ac80137ee0ab25ba610d4d710eb9d1c0160ce5350"
+  },
+  "composed_source_qualification": {
+    "record": "../lox-composed-20261003/qualification.json",
+    "sha256": "4460321c4329bbf2b2ee76e4e7f22be501919f8a408171e260ab3c35632edf65",
+    "fresh_public_tests": 340,
+    "fresh_explicit_provider_tests": 4,
+    "native_program_pairs": 1276,
+    "rc_checked_refusal_pairs": 8,
+    "explicit_unrun_native_smoke_cells": 80
+  },
+  "independent_completed_review": {
+    "record": "../lox-round3-independent-review-20261003/partial-review.json",
+    "sha256": "1828e9df32b09c6c5c1b5c50b8c152565228af1faa61c6ce265c848213811481",
+    "full_matrices_claimed_complete": false
+  },
+  "guardian": {
+    "command": [
+      "scripts/build-slot.sh",
+      "gate",
+      "/home/epentland/ai/canopy/guardian-zig/zig-out/bin/guardian-check",
+      "all",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003",
+      "--full"
+    ],
+    "status": 0,
+    "passed": 88,
+    "log_sha256": "385b31159bebe492e9e17268167b169b9a48d33c8bb75d255c23a375fd1d4b88"
+  }
+}
