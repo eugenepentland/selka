@@ -1,0 +1,27 @@
+{
+  "recorded_utc": "2026-10-03T06:04:41.332633+00:00",
+  "outcome": "saved width/common-path arithmetic and all106 independently enumerated bounded case inputs pass",
+  "prior_review_sha256": "d246268f8e48bbe1f40159eb9782565932f11bbb345cc49e688e0e61a82a94b2",
+  "width_only_ssa_edit": "=w culel to =l culel, once",
+  "standalone_width_instructions": {
+    "v1": 70,
+    "l": 70
+  },
+  "saved_common_path_connected_instruction_counts": {
+    "fixed": 21,
+    "guarded": 26
+  },
+  "bounded_case_identities": {
+    "smoke": 26,
+    "error": 46,
+    "regression": 34
+  },
+  "bounded_samples_input_bytes_verified": 1192,
+  "new_guest_test_or_perf_executions": 0,
+  "stable_read_input_count": 132,
+  "limits": [
+    "Static paths follow the declared nonnegative/in-bounds assumptions and recorded branch choices; they are not executed traces.",
+    "The second width object uses the same frozen QBE tool; no second compiler exists or is qualified.",
+    "Case enumeration verifies the completed bounded fixture set; omitted80 native-stress smoke cells remain unrun."
+  ]
+}
