@@ -54,7 +54,7 @@ def atomic(path, document):
 
 def inputs(args):
     return {str(path.resolve()): common.digest(path) for path in
-            (args.manifest, Path(__file__), HERE / 'prepare.py', RUNTIME / 'runner.py',
+            (args.manifest, args.manifest.parent / 'native_clock.o', Path(__file__), HERE / 'prepare.py', RUNTIME / 'runner.py',
              RUNTIME / 'build_compiler.py', RUNTIME / 'expanded/registry.py',
              RUNTIME / 'compare_candidate.py')}
 
