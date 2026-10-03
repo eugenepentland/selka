@@ -70,3 +70,12 @@ retain both candidates' exact qualification/build reviews, all 1,580 current
 observations, 223 stable guards per preparation, independent paired-arithmetic
 checks and immutable archive receipts. Earlier failed/superseded preparations
 are retained separately. Selected source/compiler and main remain unchanged.
+
+A subsequent numeric-tag trial widens nine fresh-zeroed tag writes without
+changing payload operations or control flow. All 156 smoke cells and 104
+counter cells passed, with unchanged aggregate instructions. Its one-round
+QBE cycle aggregate rises 1.4513% for VM and 0.1247% for tree; no QBE workload
+improves by more than 1%. The screen supplies no broad benefit, so this trial
+is also closed unselected without a wall matrix. The same compiler-screen
+package retains its 260 rows, independent proof/build qualification and sealed
+archive. These three variant trials now contain 1,840 validated observations.

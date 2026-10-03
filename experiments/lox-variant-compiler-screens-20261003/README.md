@@ -1,8 +1,9 @@
 # Qualified variant compiler trials
 
-Both compiler trials remain unselected. The ownership trial improves QBE's
+All three compiler trials remain unselected. The ownership trial improves QBE's
 tree interpreter but regresses LLVM; the fresh bool-store trial has only a
-narrow QBE equality timing result. Neither is merged into the selected core or
+narrow QBE equality timing result; the numeric-tag screen gives no aggregate
+instruction or QBE cycle gain. None is merged into the selected core or
 main. The selected core remains `3b33df52` and the complete selected 37-file
 Lox source remains unchanged.
 
@@ -68,10 +69,40 @@ remain explicit. The 2,490-test unfiltered unit run passed but retained a
 memory-budget warning; clean bounded coverage is narrower and no completed
 full bounded/compiler gate is claimed for this trial.
 
+## Fresh numeric-tag trial
+
+Candidate `57a67c37` widens only nine tag writes in six QBE functions, inside
+bounded fully cleared native RC variants with an exact integer or builtin
+float payload. Payload writes, branches and calls remain unchanged. Its
+156 smoke/stat checks and 104 counter cells passed with 223 stable guards;
+all four PMU events ran at 100%. Aggregate instructions are effectively
+unchanged on both backends and interpreters.
+
+| One-round cycle reduction | LLVM | QBE |
+| --- | ---: | ---: |
+| VM | 0.3916% | -1.4513% |
+| Tree | -0.0527% | -0.1247% |
+
+QBE VM fib uses 4.8242% more cycles in this screen. No QBE workload shows a
+cycle reduction exceeding 1%. These single-round diagnostics do not establish
+a runtime regression or benefit; they give no reason to run a full wall
+matrix for this candidate. The trial is closed unselected. A partial-store
+stall explanation remains unconfirmed.
+
+Qualification checked 336 fresh public tests plus 28 constructor tests,
+1,264 native pairs and eight refusal pairs, with the same 80 explicit native
+stress-smoke omissions. All 2,493 unit tests passed fresh bounded shards.
+The QBE gate covers 398 freshly executed checks plus 117 successful cached
+checks. An earlier prefix-layout repair lacks complete before/after prefix
+evidence and remains historical; final guest builds and qualification phases
+bind owned, stable compiler/tool/runtime prefixes. Independent proof and
+package reviews are in the adjacent numeric-tag review directory.
+
 ## Evidence and limits
 
 `native-behavior-review.json`, `native-build-review.json` and
-`wide-behavior-review.json` bind the author qualification streams, exact
+`wide-behavior-review.json` and `number-tag-behavior-review.json` bind the
+author qualification streams, exact
 sources, separate RC/GC guests, optimization flags and runtime archives.
 Native runtime stress uses `MYLANG_OPTIONS=--gc-stress`; the Lox collector's
 independent stress switch is the guest argument `--gc-stress`.
@@ -102,3 +133,9 @@ All archived bytes and original identities were rechecked after copying.
 The native archive also retains the first failed byte-exact rebuild and the
 superseded 213-guard smoke work; those extras do not contribute current rows.
 The separate closeout reports count 1,296 native and 284 bool-trial rows.
+`number-tag-archive.json` binds 392 paths to 307 objects under the adjacent
+`variant-number-tag` archive, with manifest
+`5490939f712f06e4c85250fa0251b3473c534d15c5825b0dfd78bd701d07babd`.
+Its closeout contains 260 rows, explicitly omits all wall/full-counter phases,
+and retains corrected host-reader assumptions separately from guest outcomes.
+After-copy original checks and portable verification both passed.

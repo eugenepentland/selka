@@ -1,0 +1,20 @@
+{
+  "decision": "No aggregate instruction or QBE cycle gain in the screen; no wall matrix run.",
+  "guards": 223,
+  "guards_sha256": "952a10ad285735badb0ecc44724345cca3a95b6232939766d1dbd91d8eb39c66",
+  "prepared": {
+    "candidate_rebuilt_byte_exact": false,
+    "guards": 223,
+    "guards_sha256": "952a10ad285735badb0ecc44724345cca3a95b6232939766d1dbd91d8eb39c66",
+    "inherited_control_sidecars_keep_original_paths": true,
+    "manifest_sha256": "5ce1ae43ebdb3b86033a32047604c851598fd11054f152ce268915b4ff73a29b",
+    "measured_guests_copied_byte_exact": true,
+    "prepared_utc": "2026-10-03T10:35:48.879140+00:00",
+    "qualification_review_is_separate_from_preparer": true,
+    "rebuild_allocated_sections_exact": true,
+    "reference_guests_copied_not_rebuilt": true
+  },
+  "selected": false,
+  "trial_commit": "57a67c37c2c42a2ee23d6d004fe22917bbdf7368",
+  "work": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed"
+}

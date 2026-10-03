@@ -1,0 +1,3098 @@
+{
+  "analyses": [
+    {
+      "comparisons": {
+        "candidate-llvm-over-baseline-llvm": {
+          "baseline": "baseline-llvm",
+          "candidate": "candidate-llvm",
+          "engines": {
+            "tree": {
+              "candidate_over_baseline": 1.000527278819775,
+              "cases": 13,
+              "reduction_pct": -0.052727881977499
+            },
+            "vm": {
+              "candidate_over_baseline": 0.9960836318505396,
+              "cases": 13,
+              "reduction_pct": 0.3916368149460392
+            }
+          },
+          "metric": "cycles",
+          "rows": {
+            "tree/binary_trees": {
+              "candidate_over_baseline": 1.0047931532772842,
+              "paired_ratios": [
+                1.0047931532772842
+              ],
+              "reduction_pct": -0.47931532772842456,
+              "spread_pct": 0.0
+            },
+            "tree/closures": {
+              "candidate_over_baseline": 1.00123474821221,
+              "paired_ratios": [
+                1.00123474821221
+              ],
+              "reduction_pct": -0.1234748212209924,
+              "spread_pct": 0.0
+            },
+            "tree/equality": {
+              "candidate_over_baseline": 1.0171916178550013,
+              "paired_ratios": [
+                1.0171916178550013
+              ],
+              "reduction_pct": -1.719161785500134,
+              "spread_pct": 0.0
+            },
+            "tree/fib": {
+              "candidate_over_baseline": 1.0052197890996506,
+              "paired_ratios": [
+                1.0052197890996506
+              ],
+              "reduction_pct": -0.5219789099650596,
+              "spread_pct": 0.0
+            },
+            "tree/instantiation": {
+              "candidate_over_baseline": 0.9976872476136435,
+              "paired_ratios": [
+                0.9976872476136435
+              ],
+              "reduction_pct": 0.23127523863565314,
+              "spread_pct": 0.0
+            },
+            "tree/invocation": {
+              "candidate_over_baseline": 0.9875177800452147,
+              "paired_ratios": [
+                0.9875177800452147
+              ],
+              "reduction_pct": 1.2482219954785267,
+              "spread_pct": 0.0
+            },
+            "tree/method_call": {
+              "candidate_over_baseline": 1.0020695352553384,
+              "paired_ratios": [
+                1.0020695352553384
+              ],
+              "reduction_pct": -0.20695352553383728,
+              "spread_pct": 0.0
+            },
+            "tree/properties": {
+              "candidate_over_baseline": 0.9929903625527184,
+              "paired_ratios": [
+                0.9929903625527184
+              ],
+              "reduction_pct": 0.7009637447281558,
+              "spread_pct": 0.0
+            },
+            "tree/string_equality": {
+              "candidate_over_baseline": 1.0096822772099117,
+              "paired_ratios": [
+                1.0096822772099117
+              ],
+              "reduction_pct": -0.968227720991166,
+              "spread_pct": 0.0
+            },
+            "tree/strings": {
+              "candidate_over_baseline": 1.0003698997228705,
+              "paired_ratios": [
+                1.0003698997228705
+              ],
+              "reduction_pct": -0.036989972287049255,
+              "spread_pct": 0.0
+            },
+            "tree/trees": {
+              "candidate_over_baseline": 0.9960130413098711,
+              "paired_ratios": [
+                0.9960130413098711
+              ],
+              "reduction_pct": 0.39869586901288834,
+              "spread_pct": 0.0
+            },
+            "tree/zoo": {
+              "candidate_over_baseline": 0.9952649563328553,
+              "paired_ratios": [
+                0.9952649563328553
+              ],
+              "reduction_pct": 0.47350436671447227,
+              "spread_pct": 0.0
+            },
+            "tree/zoo_batch": {
+              "candidate_over_baseline": 0.997168232077061,
+              "paired_ratios": [
+                0.997168232077061
+              ],
+              "reduction_pct": 0.28317679229390436,
+              "spread_pct": 0.0
+            },
+            "vm/binary_trees": {
+              "candidate_over_baseline": 0.9975574941407047,
+              "paired_ratios": [
+                0.9975574941407047
+              ],
+              "reduction_pct": 0.24425058592952853,
+              "spread_pct": 0.0
+            },
+            "vm/closures": {
+              "candidate_over_baseline": 1.0036537593362767,
+              "paired_ratios": [
+                1.0036537593362767
+              ],
+              "reduction_pct": -0.3653759336276652,
+              "spread_pct": 0.0
+            },
+            "vm/equality": {
+              "candidate_over_baseline": 0.9939712443117201,
+              "paired_ratios": [
+                0.9939712443117201
+              ],
+              "reduction_pct": 0.6028755688279874,
+              "spread_pct": 0.0
+            },
+            "vm/fib": {
+              "candidate_over_baseline": 0.9731945899549999,
+              "paired_ratios": [
+                0.9731945899549999
+              ],
+              "reduction_pct": 2.6805410045000144,
+              "spread_pct": 0.0
+            },
+            "vm/instantiation": {
+              "candidate_over_baseline": 0.9999596147694119,
+              "paired_ratios": [
+                0.9999596147694119
+              ],
+              "reduction_pct": 0.004038523058813581,
+              "spread_pct": 0.0
+            },
+            "vm/invocation": {
+              "candidate_over_baseline": 1.005693658909876,
+              "paired_ratios": [
+                1.005693658909876
+              ],
+              "reduction_pct": -0.5693658909875943,
+              "spread_pct": 0.0
+            },
+            "vm/method_call": {
+              "candidate_over_baseline": 0.9869735489926768,
+              "paired_ratios": [
+                0.9869735489926768
+              ],
+              "reduction_pct": 1.3026451007323248,
+              "spread_pct": 0.0
+            },
+            "vm/properties": {
+              "candidate_over_baseline": 1.0010037663020714,
+              "paired_ratios": [
+                1.0010037663020714
+              ],
+              "reduction_pct": -0.10037663020714405,
+              "spread_pct": 0.0
+            },
+            "vm/string_equality": {
+              "candidate_over_baseline": 1.0031019610377485,
+              "paired_ratios": [
+                1.0031019610377485
+              ],
+              "reduction_pct": -0.3101961037748513,
+              "spread_pct": 0.0
+            },
+            "vm/strings": {
+              "candidate_over_baseline": 1.0054371451294652,
+              "paired_ratios": [
+                1.0054371451294652
+              ],
+              "reduction_pct": -0.5437145129465248,
+              "spread_pct": 0.0
+            },
+            "vm/trees": {
+              "candidate_over_baseline": 1.0055371251507728,
+              "paired_ratios": [
+                1.0055371251507728
+              ],
+              "reduction_pct": -0.5537125150772759,
+              "spread_pct": 0.0
+            },
+            "vm/zoo": {
+              "candidate_over_baseline": 0.982366850096104,
+              "paired_ratios": [
+                0.982366850096104
+              ],
+              "reduction_pct": 1.7633149903895973,
+              "spread_pct": 0.0
+            },
+            "vm/zoo_batch": {
+              "candidate_over_baseline": 0.9912629587221008,
+              "paired_ratios": [
+                0.9912629587221008
+              ],
+              "reduction_pct": 0.8737041277899205,
+              "spread_pct": 0.0
+            }
+          }
+        },
+        "candidate-qbe-over-baseline-qbe": {
+          "baseline": "baseline-qbe",
+          "candidate": "candidate-qbe",
+          "engines": {
+            "tree": {
+              "candidate_over_baseline": 1.0012474280776034,
+              "cases": 13,
+              "reduction_pct": -0.1247428077603363
+            },
+            "vm": {
+              "candidate_over_baseline": 1.0145129042761234,
+              "cases": 13,
+              "reduction_pct": -1.4512904276123395
+            }
+          },
+          "metric": "cycles",
+          "rows": {
+            "tree/binary_trees": {
+              "candidate_over_baseline": 1.0008565021276281,
+              "paired_ratios": [
+                1.0008565021276281
+              ],
+              "reduction_pct": -0.08565021276281115,
+              "spread_pct": 0.0
+            },
+            "tree/closures": {
+              "candidate_over_baseline": 1.0103027049070603,
+              "paired_ratios": [
+                1.0103027049070603
+              ],
+              "reduction_pct": -1.0302704907060312,
+              "spread_pct": 0.0
+            },
+            "tree/equality": {
+              "candidate_over_baseline": 1.0014397019100787,
+              "paired_ratios": [
+                1.0014397019100787
+              ],
+              "reduction_pct": -0.14397019100786945,
+              "spread_pct": 0.0
+            },
+            "tree/fib": {
+              "candidate_over_baseline": 1.000309919413489,
+              "paired_ratios": [
+                1.000309919413489
+              ],
+              "reduction_pct": -0.030991941348901264,
+              "spread_pct": 0.0
+            },
+            "tree/instantiation": {
+              "candidate_over_baseline": 1.0100346439755945,
+              "paired_ratios": [
+                1.0100346439755945
+              ],
+              "reduction_pct": -1.0034643975594504,
+              "spread_pct": 0.0
+            },
+            "tree/invocation": {
+              "candidate_over_baseline": 1.0022098104686077,
+              "paired_ratios": [
+                1.0022098104686077
+              ],
+              "reduction_pct": -0.2209810468607687,
+              "spread_pct": 0.0
+            },
+            "tree/method_call": {
+              "candidate_over_baseline": 0.994186588797214,
+              "paired_ratios": [
+                0.994186588797214
+              ],
+              "reduction_pct": 0.5813411202786001,
+              "spread_pct": 0.0
+            },
+            "tree/properties": {
+              "candidate_over_baseline": 1.0023586058948715,
+              "paired_ratios": [
+                1.0023586058948715
+              ],
+              "reduction_pct": -0.23586058948714683,
+              "spread_pct": 0.0
+            },
+            "tree/string_equality": {
+              "candidate_over_baseline": 1.0055983927095655,
+              "paired_ratios": [
+                1.0055983927095655
+              ],
+              "reduction_pct": -0.5598392709565525,
+              "spread_pct": 0.0
+            },
+            "tree/strings": {
+              "candidate_over_baseline": 0.9973826125614257,
+              "paired_ratios": [
+                0.9973826125614257
+              ],
+              "reduction_pct": 0.26173874385743146,
+              "spread_pct": 0.0
+            },
+            "tree/trees": {
+              "candidate_over_baseline": 1.000917428972517,
+              "paired_ratios": [
+                1.000917428972517
+              ],
+              "reduction_pct": -0.09174289725168983,
+              "spread_pct": 0.0
+            },
+            "tree/zoo": {
+              "candidate_over_baseline": 0.992757393846413,
+              "paired_ratios": [
+                0.992757393846413
+              ],
+              "reduction_pct": 0.7242606153586961,
+              "spread_pct": 0.0
+            },
+            "tree/zoo_batch": {
+              "candidate_over_baseline": 0.9980262760653333,
+              "paired_ratios": [
+                0.9980262760653333
+              ],
+              "reduction_pct": 0.19737239346666602,
+              "spread_pct": 0.0
+            },
+            "vm/binary_trees": {
+              "candidate_over_baseline": 0.9954869649420737,
+              "paired_ratios": [
+                0.9954869649420737
+              ],
+              "reduction_pct": 0.4513035057926329,
+              "spread_pct": 0.0
+            },
+            "vm/closures": {
+              "candidate_over_baseline": 1.0120640598466533,
+              "paired_ratios": [
+                1.0120640598466533
+              ],
+              "reduction_pct": -1.2064059846653263,
+              "spread_pct": 0.0
+            },
+            "vm/equality": {
+              "candidate_over_baseline": 1.0079937556017025,
+              "paired_ratios": [
+                1.0079937556017025
+              ],
+              "reduction_pct": -0.7993755601702457,
+              "spread_pct": 0.0
+            },
+            "vm/fib": {
+              "candidate_over_baseline": 1.0482420516401054,
+              "paired_ratios": [
+                1.0482420516401054
+              ],
+              "reduction_pct": -4.824205164010542,
+              "spread_pct": 0.0
+            },
+            "vm/instantiation": {
+              "candidate_over_baseline": 0.994736039259683,
+              "paired_ratios": [
+                0.994736039259683
+              ],
+              "reduction_pct": 0.5263960740316986,
+              "spread_pct": 0.0
+            },
+            "vm/invocation": {
+              "candidate_over_baseline": 0.9941187623109994,
+              "paired_ratios": [
+                0.9941187623109994
+              ],
+              "reduction_pct": 0.5881237689000618,
+              "spread_pct": 0.0
+            },
+            "vm/method_call": {
+              "candidate_over_baseline": 1.0087333520505117,
+              "paired_ratios": [
+                1.0087333520505117
+              ],
+              "reduction_pct": -0.8733352050511733,
+              "spread_pct": 0.0
+            },
+            "vm/properties": {
+              "candidate_over_baseline": 1.04456288904433,
+              "paired_ratios": [
+                1.04456288904433
+              ],
+              "reduction_pct": -4.456288904432992,
+              "spread_pct": 0.0
+            },
+            "vm/string_equality": {
+              "candidate_over_baseline": 1.0020761103349323,
+              "paired_ratios": [
+                1.0020761103349323
+              ],
+              "reduction_pct": -0.20761103349322685,
+              "spread_pct": 0.0
+            },
+            "vm/strings": {
+              "candidate_over_baseline": 1.014424870978767,
+              "paired_ratios": [
+                1.014424870978767
+              ],
+              "reduction_pct": -1.4424870978767101,
+              "spread_pct": 0.0
+            },
+            "vm/trees": {
+              "candidate_over_baseline": 1.0103906346303482,
+              "paired_ratios": [
+                1.0103906346303482
+              ],
+              "reduction_pct": -1.0390634630348172,
+              "spread_pct": 0.0
+            },
+            "vm/zoo": {
+              "candidate_over_baseline": 1.0302337460716111,
+              "paired_ratios": [
+                1.0302337460716111
+              ],
+              "reduction_pct": -3.023374607161111,
+              "spread_pct": 0.0
+            },
+            "vm/zoo_batch": {
+              "candidate_over_baseline": 1.0275020692959713,
+              "paired_ratios": [
+                1.0275020692959713
+              ],
+              "reduction_pct": -2.750206929597132,
+              "spread_pct": 0.0
+            }
+          }
+        }
+      },
+      "math_verified": true,
+      "metric": "cycles",
+      "partial_matrix_not_selection": false,
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/cycles-analysis.json",
+      "receipt": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/instruction-screen.json",
+      "sha256": "8773e07e5c37526a91ff2156bf5735e709e74b9d6ee8f533ee29b6b8118adfb1"
+    },
+    {
+      "comparisons": {
+        "candidate-llvm-over-baseline-llvm": {
+          "baseline": "baseline-llvm",
+          "candidate": "candidate-llvm",
+          "engines": {
+            "tree": {
+              "candidate_over_baseline": 0.9999999988742769,
+              "cases": 13,
+              "reduction_pct": 1.1257230703165533e-07
+            },
+            "vm": {
+              "candidate_over_baseline": 1.0000000067867771,
+              "cases": 13,
+              "reduction_pct": -6.786777140277422e-07
+            }
+          },
+          "metric": "instructions",
+          "rows": {
+            "tree/binary_trees": {
+              "candidate_over_baseline": 1.00000004476357,
+              "paired_ratios": [
+                1.00000004476357
+              ],
+              "reduction_pct": -4.476356996185871e-06,
+              "spread_pct": 0.0
+            },
+            "tree/closures": {
+              "candidate_over_baseline": 1.000000002388819,
+              "paired_ratios": [
+                1.000000002388819
+              ],
+              "reduction_pct": -2.3888189204512855e-07,
+              "spread_pct": 0.0
+            },
+            "tree/equality": {
+              "candidate_over_baseline": 1.000000009163672,
+              "paired_ratios": [
+                1.000000009163672
+              ],
+              "reduction_pct": -9.163672043399629e-07,
+              "spread_pct": 0.0
+            },
+            "tree/fib": {
+              "candidate_over_baseline": 0.9999999923202704,
+              "paired_ratios": [
+                0.9999999923202704
+              ],
+              "reduction_pct": 7.679729630005738e-07,
+              "spread_pct": 0.0
+            },
+            "tree/instantiation": {
+              "candidate_over_baseline": 1.0000000029805567,
+              "paired_ratios": [
+                1.0000000029805567
+              ],
+              "reduction_pct": -2.9805566903462477e-07,
+              "spread_pct": 0.0
+            },
+            "tree/invocation": {
+              "candidate_over_baseline": 1.0000000107832805,
+              "paired_ratios": [
+                1.0000000107832805
+              ],
+              "reduction_pct": -1.0783280490755942e-06,
+              "spread_pct": 0.0
+            },
+            "tree/method_call": {
+              "candidate_over_baseline": 0.9999999984284349,
+              "paired_ratios": [
+                0.9999999984284349
+              ],
+              "reduction_pct": 1.571565100277894e-07,
+              "spread_pct": 0.0
+            },
+            "tree/properties": {
+              "candidate_over_baseline": 0.9999999982326292,
+              "paired_ratios": [
+                0.9999999982326292
+              ],
+              "reduction_pct": 1.767370805261237e-07,
+              "spread_pct": 0.0
+            },
+            "tree/string_equality": {
+              "candidate_over_baseline": 0.9999999963360361,
+              "paired_ratios": [
+                0.9999999963360361
+              ],
+              "reduction_pct": 3.663963910049972e-07,
+              "spread_pct": 0.0
+            },
+            "tree/strings": {
+              "candidate_over_baseline": 0.9999999901922274,
+              "paired_ratios": [
+                0.9999999901922274
+              ],
+              "reduction_pct": 9.807772594072617e-07,
+              "spread_pct": 0.0
+            },
+            "tree/trees": {
+              "candidate_over_baseline": 0.9999999505172948,
+              "paired_ratios": [
+                0.9999999505172948
+              ],
+              "reduction_pct": 4.948270515559017e-06,
+              "spread_pct": 0.0
+            },
+            "tree/zoo": {
+              "candidate_over_baseline": 1.0000000050666376,
+              "paired_ratios": [
+                1.0000000050666376
+              ],
+              "reduction_pct": -5.066637553952091e-07,
+              "spread_pct": 0.0
+            },
+            "tree/zoo_batch": {
+              "candidate_over_baseline": 0.9999999841921741,
+              "paired_ratios": [
+                0.9999999841921741
+              ],
+              "reduction_pct": 1.5807825937130815e-06,
+              "spread_pct": 0.0
+            },
+            "vm/binary_trees": {
+              "candidate_over_baseline": 0.99999999786897,
+              "paired_ratios": [
+                0.99999999786897
+              ],
+              "reduction_pct": 2.1310300191146325e-07,
+              "spread_pct": 0.0
+            },
+            "vm/closures": {
+              "candidate_over_baseline": 1.0000001096112883,
+              "paired_ratios": [
+                1.0000001096112883
+              ],
+              "reduction_pct": -1.0961128826814104e-05,
+              "spread_pct": 0.0
+            },
+            "vm/equality": {
+              "candidate_over_baseline": 1.0000000109136002,
+              "paired_ratios": [
+                1.0000000109136002
+              ],
+              "reduction_pct": -1.0913600245743282e-06,
+              "spread_pct": 0.0
+            },
+            "vm/fib": {
+              "candidate_over_baseline": 1.0000000018187356,
+              "paired_ratios": [
+                1.0000000018187356
+              ],
+              "reduction_pct": -1.8187356065624272e-07,
+              "spread_pct": 0.0
+            },
+            "vm/instantiation": {
+              "candidate_over_baseline": 0.9999999742029526,
+              "paired_ratios": [
+                0.9999999742029526
+              ],
+              "reduction_pct": 2.5797047387143834e-06,
+              "spread_pct": 0.0
+            },
+            "vm/invocation": {
+              "candidate_over_baseline": 1.0000000039100931,
+              "paired_ratios": [
+                1.0000000039100931
+              ],
+              "reduction_pct": -3.9100931381597093e-07,
+              "spread_pct": 0.0
+            },
+            "vm/method_call": {
+              "candidate_over_baseline": 0.9999999984361118,
+              "paired_ratios": [
+                0.9999999984361118
+              ],
+              "reduction_pct": 1.5638882411295185e-07,
+              "spread_pct": 0.0
+            },
+            "vm/properties": {
+              "candidate_over_baseline": 0.9999999979086662,
+              "paired_ratios": [
+                0.9999999979086662
+              ],
+              "reduction_pct": 2.091333772824555e-07,
+              "spread_pct": 0.0
+            },
+            "vm/string_equality": {
+              "candidate_over_baseline": 0.9999999901237243,
+              "paired_ratios": [
+                0.9999999901237243
+              ],
+              "reduction_pct": 9.87627568616034e-07,
+              "spread_pct": 0.0
+            },
+            "vm/strings": {
+              "candidate_over_baseline": 1.000000002842169,
+              "paired_ratios": [
+                1.000000002842169
+              ],
+              "reduction_pct": -2.8421689446389564e-07,
+              "spread_pct": 0.0
+            },
+            "vm/trees": {
+              "candidate_over_baseline": 0.9999999964017409,
+              "paired_ratios": [
+                0.9999999964017409
+              ],
+              "reduction_pct": 3.598259135095816e-07,
+              "spread_pct": 0.0
+            },
+            "vm/zoo": {
+              "candidate_over_baseline": 0.9999999978551345,
+              "paired_ratios": [
+                0.9999999978551345
+              ],
+              "reduction_pct": 2.1448655074252088e-07,
+              "spread_pct": 0.0
+            },
+            "vm/zoo_batch": {
+              "candidate_over_baseline": 1.0000000063349237,
+              "paired_ratios": [
+                1.0000000063349237
+              ],
+              "reduction_pct": -6.334923696726946e-07,
+              "spread_pct": 0.0
+            }
+          }
+        },
+        "candidate-qbe-over-baseline-qbe": {
+          "baseline": "baseline-qbe",
+          "candidate": "candidate-qbe",
+          "engines": {
+            "tree": {
+              "candidate_over_baseline": 1.000000003148824,
+              "cases": 13,
+              "reduction_pct": -3.148824090359881e-07
+            },
+            "vm": {
+              "candidate_over_baseline": 1.0000000164858638,
+              "cases": 13,
+              "reduction_pct": -1.6485863785220545e-06
+            }
+          },
+          "metric": "instructions",
+          "rows": {
+            "tree/binary_trees": {
+              "candidate_over_baseline": 1.0000000030550962,
+              "paired_ratios": [
+                1.0000000030550962
+              ],
+              "reduction_pct": -3.055096176041161e-07,
+              "spread_pct": 0.0
+            },
+            "tree/closures": {
+              "candidate_over_baseline": 1.000000005610975,
+              "paired_ratios": [
+                1.000000005610975
+              ],
+              "reduction_pct": -5.610975017944497e-07,
+              "spread_pct": 0.0
+            },
+            "tree/equality": {
+              "candidate_over_baseline": 1.0000000059092407,
+              "paired_ratios": [
+                1.0000000059092407
+              ],
+              "reduction_pct": -5.909240652357539e-07,
+              "spread_pct": 0.0
+            },
+            "tree/fib": {
+              "candidate_over_baseline": 0.9999999950920422,
+              "paired_ratios": [
+                0.9999999950920422
+              ],
+              "reduction_pct": 4.907957817934516e-07,
+              "spread_pct": 0.0
+            },
+            "tree/instantiation": {
+              "candidate_over_baseline": 1.0000000015684223,
+              "paired_ratios": [
+                1.0000000015684223
+              ],
+              "reduction_pct": -1.5684222809397852e-07,
+              "spread_pct": 0.0
+            },
+            "tree/invocation": {
+              "candidate_over_baseline": 1.0000000012309744,
+              "paired_ratios": [
+                1.0000000012309744
+              ],
+              "reduction_pct": -1.2309744334970674e-07,
+              "spread_pct": 0.0
+            },
+            "tree/method_call": {
+              "candidate_over_baseline": 1.0000000010080614,
+              "paired_ratios": [
+                1.0000000010080614
+              ],
+              "reduction_pct": -1.0080614121221743e-07,
+              "spread_pct": 0.0
+            },
+            "tree/properties": {
+              "candidate_over_baseline": 1.000000002238364,
+              "paired_ratios": [
+                1.000000002238364
+              ],
+              "reduction_pct": -2.2383639386447385e-07,
+              "spread_pct": 0.0
+            },
+            "tree/string_equality": {
+              "candidate_over_baseline": 1.0000000032990182,
+              "paired_ratios": [
+                1.0000000032990182
+              ],
+              "reduction_pct": -3.299018169755641e-07,
+              "spread_pct": 0.0
+            },
+            "tree/strings": {
+              "candidate_over_baseline": 1.0000000080387954,
+              "paired_ratios": [
+                1.0000000080387954
+              ],
+              "reduction_pct": -8.03879540711705e-07,
+              "spread_pct": 0.0
+            },
+            "tree/trees": {
+              "candidate_over_baseline": 1.0000000073102875,
+              "paired_ratios": [
+                1.0000000073102875
+              ],
+              "reduction_pct": -7.310287486461675e-07,
+              "spread_pct": 0.0
+            },
+            "tree/zoo": {
+              "candidate_over_baseline": 1.0000000052591131,
+              "paired_ratios": [
+                1.0000000052591131
+              ],
+              "reduction_pct": -5.259113144973071e-07,
+              "spread_pct": 0.0
+            },
+            "tree/zoo_batch": {
+              "candidate_over_baseline": 1.0000000013143224,
+              "paired_ratios": [
+                1.0000000013143224
+              ],
+              "reduction_pct": -1.3143224286693567e-07,
+              "spread_pct": 0.0
+            },
+            "vm/binary_trees": {
+              "candidate_over_baseline": 1.0000000269121043,
+              "paired_ratios": [
+                1.0000000269121043
+              ],
+              "reduction_pct": -2.691210432281821e-06,
+              "spread_pct": 0.0
+            },
+            "vm/closures": {
+              "candidate_over_baseline": 1.0000000099654587,
+              "paired_ratios": [
+                1.0000000099654587
+              ],
+              "reduction_pct": -9.965458680483152e-07,
+              "spread_pct": 0.0
+            },
+            "vm/equality": {
+              "candidate_over_baseline": 1.0000000172503556,
+              "paired_ratios": [
+                1.0000000172503556
+              ],
+              "reduction_pct": -1.7250355588416255e-06,
+              "spread_pct": 0.0
+            },
+            "vm/fib": {
+              "candidate_over_baseline": 1.0000000260765387,
+              "paired_ratios": [
+                1.0000000260765387
+              ],
+              "reduction_pct": -2.6076538706121255e-06,
+              "spread_pct": 0.0
+            },
+            "vm/instantiation": {
+              "candidate_over_baseline": 1.000000013866785,
+              "paired_ratios": [
+                1.000000013866785
+              ],
+              "reduction_pct": -1.3866785053551212e-06,
+              "spread_pct": 0.0
+            },
+            "vm/invocation": {
+              "candidate_over_baseline": 1.0000000088188636,
+              "paired_ratios": [
+                1.0000000088188636
+              ],
+              "reduction_pct": -8.818863639348251e-07,
+              "spread_pct": 0.0
+            },
+            "vm/method_call": {
+              "candidate_over_baseline": 1.000000013632368,
+              "paired_ratios": [
+                1.000000013632368
+              ],
+              "reduction_pct": -1.3632367901195153e-06,
+              "spread_pct": 0.0
+            },
+            "vm/properties": {
+              "candidate_over_baseline": 1.000000014084647,
+              "paired_ratios": [
+                1.000000014084647
+              ],
+              "reduction_pct": -1.408464700425327e-06,
+              "spread_pct": 0.0
+            },
+            "vm/string_equality": {
+              "candidate_over_baseline": 1.0000000165790026,
+              "paired_ratios": [
+                1.0000000165790026
+              ],
+              "reduction_pct": -1.6579002615202398e-06,
+              "spread_pct": 0.0
+            },
+            "vm/strings": {
+              "candidate_over_baseline": 1.0000000146475805,
+              "paired_ratios": [
+                1.0000000146475805
+              ],
+              "reduction_pct": -1.4647580481863542e-06,
+              "spread_pct": 0.0
+            },
+            "vm/trees": {
+              "candidate_over_baseline": 1.0000000207712643,
+              "paired_ratios": [
+                1.0000000207712643
+              ],
+              "reduction_pct": -2.077126426414111e-06,
+              "spread_pct": 0.0
+            },
+            "vm/zoo": {
+              "candidate_over_baseline": 1.000000013467024,
+              "paired_ratios": [
+                1.000000013467024
+              ],
+              "reduction_pct": -1.3467023940449963e-06,
+              "spread_pct": 0.0
+            },
+            "vm/zoo_batch": {
+              "candidate_over_baseline": 1.0000000182442372,
+              "paired_ratios": [
+                1.0000000182442372
+              ],
+              "reduction_pct": -1.8244237232067917e-06,
+              "spread_pct": 0.0
+            }
+          }
+        }
+      },
+      "math_verified": true,
+      "metric": "instructions",
+      "partial_matrix_not_selection": false,
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/instructions-analysis.json",
+      "receipt": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/instruction-screen.json",
+      "sha256": "58c1081f43da181a15c2176677d24dfd37586e562e9a82c88adb80872731dc02"
+    }
+  ],
+  "arithmetic_tolerance": {
+    "absolute": 1e-12,
+    "relative": 1e-12
+  },
+  "computed_metrics": [
+    {
+      "comparisons": {
+        "candidate-llvm-over-baseline-llvm": {
+          "baseline": "baseline-llvm",
+          "candidate": "candidate-llvm",
+          "engines": {
+            "tree": {
+              "candidate_over_baseline": 0.9999999988742769,
+              "cases": 13,
+              "reduction_pct": 1.1257230703165533e-07
+            },
+            "vm": {
+              "candidate_over_baseline": 1.0000000067867771,
+              "cases": 13,
+              "reduction_pct": -6.786777140277422e-07
+            }
+          },
+          "metric": "instructions",
+          "rows": {
+            "tree/binary_trees": {
+              "candidate_over_baseline": 1.00000004476357,
+              "paired_ratios": [
+                1.00000004476357
+              ],
+              "reduction_pct": -4.476356996185871e-06,
+              "spread_pct": 0.0
+            },
+            "tree/closures": {
+              "candidate_over_baseline": 1.000000002388819,
+              "paired_ratios": [
+                1.000000002388819
+              ],
+              "reduction_pct": -2.3888189204512855e-07,
+              "spread_pct": 0.0
+            },
+            "tree/equality": {
+              "candidate_over_baseline": 1.000000009163672,
+              "paired_ratios": [
+                1.000000009163672
+              ],
+              "reduction_pct": -9.163672043399629e-07,
+              "spread_pct": 0.0
+            },
+            "tree/fib": {
+              "candidate_over_baseline": 0.9999999923202704,
+              "paired_ratios": [
+                0.9999999923202704
+              ],
+              "reduction_pct": 7.679729630005738e-07,
+              "spread_pct": 0.0
+            },
+            "tree/instantiation": {
+              "candidate_over_baseline": 1.0000000029805567,
+              "paired_ratios": [
+                1.0000000029805567
+              ],
+              "reduction_pct": -2.9805566903462477e-07,
+              "spread_pct": 0.0
+            },
+            "tree/invocation": {
+              "candidate_over_baseline": 1.0000000107832805,
+              "paired_ratios": [
+                1.0000000107832805
+              ],
+              "reduction_pct": -1.0783280490755942e-06,
+              "spread_pct": 0.0
+            },
+            "tree/method_call": {
+              "candidate_over_baseline": 0.9999999984284349,
+              "paired_ratios": [
+                0.9999999984284349
+              ],
+              "reduction_pct": 1.571565100277894e-07,
+              "spread_pct": 0.0
+            },
+            "tree/properties": {
+              "candidate_over_baseline": 0.9999999982326292,
+              "paired_ratios": [
+                0.9999999982326292
+              ],
+              "reduction_pct": 1.767370805261237e-07,
+              "spread_pct": 0.0
+            },
+            "tree/string_equality": {
+              "candidate_over_baseline": 0.9999999963360361,
+              "paired_ratios": [
+                0.9999999963360361
+              ],
+              "reduction_pct": 3.663963910049972e-07,
+              "spread_pct": 0.0
+            },
+            "tree/strings": {
+              "candidate_over_baseline": 0.9999999901922274,
+              "paired_ratios": [
+                0.9999999901922274
+              ],
+              "reduction_pct": 9.807772594072617e-07,
+              "spread_pct": 0.0
+            },
+            "tree/trees": {
+              "candidate_over_baseline": 0.9999999505172948,
+              "paired_ratios": [
+                0.9999999505172948
+              ],
+              "reduction_pct": 4.948270515559017e-06,
+              "spread_pct": 0.0
+            },
+            "tree/zoo": {
+              "candidate_over_baseline": 1.0000000050666376,
+              "paired_ratios": [
+                1.0000000050666376
+              ],
+              "reduction_pct": -5.066637553952091e-07,
+              "spread_pct": 0.0
+            },
+            "tree/zoo_batch": {
+              "candidate_over_baseline": 0.9999999841921741,
+              "paired_ratios": [
+                0.9999999841921741
+              ],
+              "reduction_pct": 1.5807825937130815e-06,
+              "spread_pct": 0.0
+            },
+            "vm/binary_trees": {
+              "candidate_over_baseline": 0.99999999786897,
+              "paired_ratios": [
+                0.99999999786897
+              ],
+              "reduction_pct": 2.1310300191146325e-07,
+              "spread_pct": 0.0
+            },
+            "vm/closures": {
+              "candidate_over_baseline": 1.0000001096112883,
+              "paired_ratios": [
+                1.0000001096112883
+              ],
+              "reduction_pct": -1.0961128826814104e-05,
+              "spread_pct": 0.0
+            },
+            "vm/equality": {
+              "candidate_over_baseline": 1.0000000109136002,
+              "paired_ratios": [
+                1.0000000109136002
+              ],
+              "reduction_pct": -1.0913600245743282e-06,
+              "spread_pct": 0.0
+            },
+            "vm/fib": {
+              "candidate_over_baseline": 1.0000000018187356,
+              "paired_ratios": [
+                1.0000000018187356
+              ],
+              "reduction_pct": -1.8187356065624272e-07,
+              "spread_pct": 0.0
+            },
+            "vm/instantiation": {
+              "candidate_over_baseline": 0.9999999742029526,
+              "paired_ratios": [
+                0.9999999742029526
+              ],
+              "reduction_pct": 2.5797047387143834e-06,
+              "spread_pct": 0.0
+            },
+            "vm/invocation": {
+              "candidate_over_baseline": 1.0000000039100931,
+              "paired_ratios": [
+                1.0000000039100931
+              ],
+              "reduction_pct": -3.9100931381597093e-07,
+              "spread_pct": 0.0
+            },
+            "vm/method_call": {
+              "candidate_over_baseline": 0.9999999984361118,
+              "paired_ratios": [
+                0.9999999984361118
+              ],
+              "reduction_pct": 1.5638882411295185e-07,
+              "spread_pct": 0.0
+            },
+            "vm/properties": {
+              "candidate_over_baseline": 0.9999999979086662,
+              "paired_ratios": [
+                0.9999999979086662
+              ],
+              "reduction_pct": 2.091333772824555e-07,
+              "spread_pct": 0.0
+            },
+            "vm/string_equality": {
+              "candidate_over_baseline": 0.9999999901237243,
+              "paired_ratios": [
+                0.9999999901237243
+              ],
+              "reduction_pct": 9.87627568616034e-07,
+              "spread_pct": 0.0
+            },
+            "vm/strings": {
+              "candidate_over_baseline": 1.000000002842169,
+              "paired_ratios": [
+                1.000000002842169
+              ],
+              "reduction_pct": -2.8421689446389564e-07,
+              "spread_pct": 0.0
+            },
+            "vm/trees": {
+              "candidate_over_baseline": 0.9999999964017409,
+              "paired_ratios": [
+                0.9999999964017409
+              ],
+              "reduction_pct": 3.598259135095816e-07,
+              "spread_pct": 0.0
+            },
+            "vm/zoo": {
+              "candidate_over_baseline": 0.9999999978551345,
+              "paired_ratios": [
+                0.9999999978551345
+              ],
+              "reduction_pct": 2.1448655074252088e-07,
+              "spread_pct": 0.0
+            },
+            "vm/zoo_batch": {
+              "candidate_over_baseline": 1.0000000063349237,
+              "paired_ratios": [
+                1.0000000063349237
+              ],
+              "reduction_pct": -6.334923696726946e-07,
+              "spread_pct": 0.0
+            }
+          }
+        },
+        "candidate-qbe-over-baseline-qbe": {
+          "baseline": "baseline-qbe",
+          "candidate": "candidate-qbe",
+          "engines": {
+            "tree": {
+              "candidate_over_baseline": 1.000000003148824,
+              "cases": 13,
+              "reduction_pct": -3.148824090359881e-07
+            },
+            "vm": {
+              "candidate_over_baseline": 1.0000000164858638,
+              "cases": 13,
+              "reduction_pct": -1.6485863785220545e-06
+            }
+          },
+          "metric": "instructions",
+          "rows": {
+            "tree/binary_trees": {
+              "candidate_over_baseline": 1.0000000030550962,
+              "paired_ratios": [
+                1.0000000030550962
+              ],
+              "reduction_pct": -3.055096176041161e-07,
+              "spread_pct": 0.0
+            },
+            "tree/closures": {
+              "candidate_over_baseline": 1.000000005610975,
+              "paired_ratios": [
+                1.000000005610975
+              ],
+              "reduction_pct": -5.610975017944497e-07,
+              "spread_pct": 0.0
+            },
+            "tree/equality": {
+              "candidate_over_baseline": 1.0000000059092407,
+              "paired_ratios": [
+                1.0000000059092407
+              ],
+              "reduction_pct": -5.909240652357539e-07,
+              "spread_pct": 0.0
+            },
+            "tree/fib": {
+              "candidate_over_baseline": 0.9999999950920422,
+              "paired_ratios": [
+                0.9999999950920422
+              ],
+              "reduction_pct": 4.907957817934516e-07,
+              "spread_pct": 0.0
+            },
+            "tree/instantiation": {
+              "candidate_over_baseline": 1.0000000015684223,
+              "paired_ratios": [
+                1.0000000015684223
+              ],
+              "reduction_pct": -1.5684222809397852e-07,
+              "spread_pct": 0.0
+            },
+            "tree/invocation": {
+              "candidate_over_baseline": 1.0000000012309744,
+              "paired_ratios": [
+                1.0000000012309744
+              ],
+              "reduction_pct": -1.2309744334970674e-07,
+              "spread_pct": 0.0
+            },
+            "tree/method_call": {
+              "candidate_over_baseline": 1.0000000010080614,
+              "paired_ratios": [
+                1.0000000010080614
+              ],
+              "reduction_pct": -1.0080614121221743e-07,
+              "spread_pct": 0.0
+            },
+            "tree/properties": {
+              "candidate_over_baseline": 1.000000002238364,
+              "paired_ratios": [
+                1.000000002238364
+              ],
+              "reduction_pct": -2.2383639386447385e-07,
+              "spread_pct": 0.0
+            },
+            "tree/string_equality": {
+              "candidate_over_baseline": 1.0000000032990182,
+              "paired_ratios": [
+                1.0000000032990182
+              ],
+              "reduction_pct": -3.299018169755641e-07,
+              "spread_pct": 0.0
+            },
+            "tree/strings": {
+              "candidate_over_baseline": 1.0000000080387954,
+              "paired_ratios": [
+                1.0000000080387954
+              ],
+              "reduction_pct": -8.03879540711705e-07,
+              "spread_pct": 0.0
+            },
+            "tree/trees": {
+              "candidate_over_baseline": 1.0000000073102875,
+              "paired_ratios": [
+                1.0000000073102875
+              ],
+              "reduction_pct": -7.310287486461675e-07,
+              "spread_pct": 0.0
+            },
+            "tree/zoo": {
+              "candidate_over_baseline": 1.0000000052591131,
+              "paired_ratios": [
+                1.0000000052591131
+              ],
+              "reduction_pct": -5.259113144973071e-07,
+              "spread_pct": 0.0
+            },
+            "tree/zoo_batch": {
+              "candidate_over_baseline": 1.0000000013143224,
+              "paired_ratios": [
+                1.0000000013143224
+              ],
+              "reduction_pct": -1.3143224286693567e-07,
+              "spread_pct": 0.0
+            },
+            "vm/binary_trees": {
+              "candidate_over_baseline": 1.0000000269121043,
+              "paired_ratios": [
+                1.0000000269121043
+              ],
+              "reduction_pct": -2.691210432281821e-06,
+              "spread_pct": 0.0
+            },
+            "vm/closures": {
+              "candidate_over_baseline": 1.0000000099654587,
+              "paired_ratios": [
+                1.0000000099654587
+              ],
+              "reduction_pct": -9.965458680483152e-07,
+              "spread_pct": 0.0
+            },
+            "vm/equality": {
+              "candidate_over_baseline": 1.0000000172503556,
+              "paired_ratios": [
+                1.0000000172503556
+              ],
+              "reduction_pct": -1.7250355588416255e-06,
+              "spread_pct": 0.0
+            },
+            "vm/fib": {
+              "candidate_over_baseline": 1.0000000260765387,
+              "paired_ratios": [
+                1.0000000260765387
+              ],
+              "reduction_pct": -2.6076538706121255e-06,
+              "spread_pct": 0.0
+            },
+            "vm/instantiation": {
+              "candidate_over_baseline": 1.000000013866785,
+              "paired_ratios": [
+                1.000000013866785
+              ],
+              "reduction_pct": -1.3866785053551212e-06,
+              "spread_pct": 0.0
+            },
+            "vm/invocation": {
+              "candidate_over_baseline": 1.0000000088188636,
+              "paired_ratios": [
+                1.0000000088188636
+              ],
+              "reduction_pct": -8.818863639348251e-07,
+              "spread_pct": 0.0
+            },
+            "vm/method_call": {
+              "candidate_over_baseline": 1.000000013632368,
+              "paired_ratios": [
+                1.000000013632368
+              ],
+              "reduction_pct": -1.3632367901195153e-06,
+              "spread_pct": 0.0
+            },
+            "vm/properties": {
+              "candidate_over_baseline": 1.000000014084647,
+              "paired_ratios": [
+                1.000000014084647
+              ],
+              "reduction_pct": -1.408464700425327e-06,
+              "spread_pct": 0.0
+            },
+            "vm/string_equality": {
+              "candidate_over_baseline": 1.0000000165790026,
+              "paired_ratios": [
+                1.0000000165790026
+              ],
+              "reduction_pct": -1.6579002615202398e-06,
+              "spread_pct": 0.0
+            },
+            "vm/strings": {
+              "candidate_over_baseline": 1.0000000146475805,
+              "paired_ratios": [
+                1.0000000146475805
+              ],
+              "reduction_pct": -1.4647580481863542e-06,
+              "spread_pct": 0.0
+            },
+            "vm/trees": {
+              "candidate_over_baseline": 1.0000000207712643,
+              "paired_ratios": [
+                1.0000000207712643
+              ],
+              "reduction_pct": -2.077126426414111e-06,
+              "spread_pct": 0.0
+            },
+            "vm/zoo": {
+              "candidate_over_baseline": 1.000000013467024,
+              "paired_ratios": [
+                1.000000013467024
+              ],
+              "reduction_pct": -1.3467023940449963e-06,
+              "spread_pct": 0.0
+            },
+            "vm/zoo_batch": {
+              "candidate_over_baseline": 1.0000000182442372,
+              "paired_ratios": [
+                1.0000000182442372
+              ],
+              "reduction_pct": -1.8244237232067917e-06,
+              "spread_pct": 0.0
+            }
+          }
+        }
+      },
+      "metric": "instructions",
+      "partial_matrix_not_selection": false,
+      "receipt": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/instruction-screen.json",
+      "receipt_sha256": "398b754f66375072cb2bf07c54ac2bb9cd12f3f5d034021538c4dc71ab04386d"
+    },
+    {
+      "comparisons": {
+        "candidate-llvm-over-baseline-llvm": {
+          "baseline": "baseline-llvm",
+          "candidate": "candidate-llvm",
+          "engines": {
+            "tree": {
+              "candidate_over_baseline": 1.000527278819775,
+              "cases": 13,
+              "reduction_pct": -0.052727881977499
+            },
+            "vm": {
+              "candidate_over_baseline": 0.9960836318505396,
+              "cases": 13,
+              "reduction_pct": 0.3916368149460392
+            }
+          },
+          "metric": "cycles",
+          "rows": {
+            "tree/binary_trees": {
+              "candidate_over_baseline": 1.0047931532772842,
+              "paired_ratios": [
+                1.0047931532772842
+              ],
+              "reduction_pct": -0.47931532772842456,
+              "spread_pct": 0.0
+            },
+            "tree/closures": {
+              "candidate_over_baseline": 1.00123474821221,
+              "paired_ratios": [
+                1.00123474821221
+              ],
+              "reduction_pct": -0.1234748212209924,
+              "spread_pct": 0.0
+            },
+            "tree/equality": {
+              "candidate_over_baseline": 1.0171916178550013,
+              "paired_ratios": [
+                1.0171916178550013
+              ],
+              "reduction_pct": -1.719161785500134,
+              "spread_pct": 0.0
+            },
+            "tree/fib": {
+              "candidate_over_baseline": 1.0052197890996506,
+              "paired_ratios": [
+                1.0052197890996506
+              ],
+              "reduction_pct": -0.5219789099650596,
+              "spread_pct": 0.0
+            },
+            "tree/instantiation": {
+              "candidate_over_baseline": 0.9976872476136435,
+              "paired_ratios": [
+                0.9976872476136435
+              ],
+              "reduction_pct": 0.23127523863565314,
+              "spread_pct": 0.0
+            },
+            "tree/invocation": {
+              "candidate_over_baseline": 0.9875177800452147,
+              "paired_ratios": [
+                0.9875177800452147
+              ],
+              "reduction_pct": 1.2482219954785267,
+              "spread_pct": 0.0
+            },
+            "tree/method_call": {
+              "candidate_over_baseline": 1.0020695352553384,
+              "paired_ratios": [
+                1.0020695352553384
+              ],
+              "reduction_pct": -0.20695352553383728,
+              "spread_pct": 0.0
+            },
+            "tree/properties": {
+              "candidate_over_baseline": 0.9929903625527184,
+              "paired_ratios": [
+                0.9929903625527184
+              ],
+              "reduction_pct": 0.7009637447281558,
+              "spread_pct": 0.0
+            },
+            "tree/string_equality": {
+              "candidate_over_baseline": 1.0096822772099117,
+              "paired_ratios": [
+                1.0096822772099117
+              ],
+              "reduction_pct": -0.968227720991166,
+              "spread_pct": 0.0
+            },
+            "tree/strings": {
+              "candidate_over_baseline": 1.0003698997228705,
+              "paired_ratios": [
+                1.0003698997228705
+              ],
+              "reduction_pct": -0.036989972287049255,
+              "spread_pct": 0.0
+            },
+            "tree/trees": {
+              "candidate_over_baseline": 0.9960130413098711,
+              "paired_ratios": [
+                0.9960130413098711
+              ],
+              "reduction_pct": 0.39869586901288834,
+              "spread_pct": 0.0
+            },
+            "tree/zoo": {
+              "candidate_over_baseline": 0.9952649563328553,
+              "paired_ratios": [
+                0.9952649563328553
+              ],
+              "reduction_pct": 0.47350436671447227,
+              "spread_pct": 0.0
+            },
+            "tree/zoo_batch": {
+              "candidate_over_baseline": 0.997168232077061,
+              "paired_ratios": [
+                0.997168232077061
+              ],
+              "reduction_pct": 0.28317679229390436,
+              "spread_pct": 0.0
+            },
+            "vm/binary_trees": {
+              "candidate_over_baseline": 0.9975574941407047,
+              "paired_ratios": [
+                0.9975574941407047
+              ],
+              "reduction_pct": 0.24425058592952853,
+              "spread_pct": 0.0
+            },
+            "vm/closures": {
+              "candidate_over_baseline": 1.0036537593362767,
+              "paired_ratios": [
+                1.0036537593362767
+              ],
+              "reduction_pct": -0.3653759336276652,
+              "spread_pct": 0.0
+            },
+            "vm/equality": {
+              "candidate_over_baseline": 0.9939712443117201,
+              "paired_ratios": [
+                0.9939712443117201
+              ],
+              "reduction_pct": 0.6028755688279874,
+              "spread_pct": 0.0
+            },
+            "vm/fib": {
+              "candidate_over_baseline": 0.9731945899549999,
+              "paired_ratios": [
+                0.9731945899549999
+              ],
+              "reduction_pct": 2.6805410045000144,
+              "spread_pct": 0.0
+            },
+            "vm/instantiation": {
+              "candidate_over_baseline": 0.9999596147694119,
+              "paired_ratios": [
+                0.9999596147694119
+              ],
+              "reduction_pct": 0.004038523058813581,
+              "spread_pct": 0.0
+            },
+            "vm/invocation": {
+              "candidate_over_baseline": 1.005693658909876,
+              "paired_ratios": [
+                1.005693658909876
+              ],
+              "reduction_pct": -0.5693658909875943,
+              "spread_pct": 0.0
+            },
+            "vm/method_call": {
+              "candidate_over_baseline": 0.9869735489926768,
+              "paired_ratios": [
+                0.9869735489926768
+              ],
+              "reduction_pct": 1.3026451007323248,
+              "spread_pct": 0.0
+            },
+            "vm/properties": {
+              "candidate_over_baseline": 1.0010037663020714,
+              "paired_ratios": [
+                1.0010037663020714
+              ],
+              "reduction_pct": -0.10037663020714405,
+              "spread_pct": 0.0
+            },
+            "vm/string_equality": {
+              "candidate_over_baseline": 1.0031019610377485,
+              "paired_ratios": [
+                1.0031019610377485
+              ],
+              "reduction_pct": -0.3101961037748513,
+              "spread_pct": 0.0
+            },
+            "vm/strings": {
+              "candidate_over_baseline": 1.0054371451294652,
+              "paired_ratios": [
+                1.0054371451294652
+              ],
+              "reduction_pct": -0.5437145129465248,
+              "spread_pct": 0.0
+            },
+            "vm/trees": {
+              "candidate_over_baseline": 1.0055371251507728,
+              "paired_ratios": [
+                1.0055371251507728
+              ],
+              "reduction_pct": -0.5537125150772759,
+              "spread_pct": 0.0
+            },
+            "vm/zoo": {
+              "candidate_over_baseline": 0.982366850096104,
+              "paired_ratios": [
+                0.982366850096104
+              ],
+              "reduction_pct": 1.7633149903895973,
+              "spread_pct": 0.0
+            },
+            "vm/zoo_batch": {
+              "candidate_over_baseline": 0.9912629587221008,
+              "paired_ratios": [
+                0.9912629587221008
+              ],
+              "reduction_pct": 0.8737041277899205,
+              "spread_pct": 0.0
+            }
+          }
+        },
+        "candidate-qbe-over-baseline-qbe": {
+          "baseline": "baseline-qbe",
+          "candidate": "candidate-qbe",
+          "engines": {
+            "tree": {
+              "candidate_over_baseline": 1.0012474280776034,
+              "cases": 13,
+              "reduction_pct": -0.1247428077603363
+            },
+            "vm": {
+              "candidate_over_baseline": 1.0145129042761234,
+              "cases": 13,
+              "reduction_pct": -1.4512904276123395
+            }
+          },
+          "metric": "cycles",
+          "rows": {
+            "tree/binary_trees": {
+              "candidate_over_baseline": 1.0008565021276281,
+              "paired_ratios": [
+                1.0008565021276281
+              ],
+              "reduction_pct": -0.08565021276281115,
+              "spread_pct": 0.0
+            },
+            "tree/closures": {
+              "candidate_over_baseline": 1.0103027049070603,
+              "paired_ratios": [
+                1.0103027049070603
+              ],
+              "reduction_pct": -1.0302704907060312,
+              "spread_pct": 0.0
+            },
+            "tree/equality": {
+              "candidate_over_baseline": 1.0014397019100787,
+              "paired_ratios": [
+                1.0014397019100787
+              ],
+              "reduction_pct": -0.14397019100786945,
+              "spread_pct": 0.0
+            },
+            "tree/fib": {
+              "candidate_over_baseline": 1.000309919413489,
+              "paired_ratios": [
+                1.000309919413489
+              ],
+              "reduction_pct": -0.030991941348901264,
+              "spread_pct": 0.0
+            },
+            "tree/instantiation": {
+              "candidate_over_baseline": 1.0100346439755945,
+              "paired_ratios": [
+                1.0100346439755945
+              ],
+              "reduction_pct": -1.0034643975594504,
+              "spread_pct": 0.0
+            },
+            "tree/invocation": {
+              "candidate_over_baseline": 1.0022098104686077,
+              "paired_ratios": [
+                1.0022098104686077
+              ],
+              "reduction_pct": -0.2209810468607687,
+              "spread_pct": 0.0
+            },
+            "tree/method_call": {
+              "candidate_over_baseline": 0.994186588797214,
+              "paired_ratios": [
+                0.994186588797214
+              ],
+              "reduction_pct": 0.5813411202786001,
+              "spread_pct": 0.0
+            },
+            "tree/properties": {
+              "candidate_over_baseline": 1.0023586058948715,
+              "paired_ratios": [
+                1.0023586058948715
+              ],
+              "reduction_pct": -0.23586058948714683,
+              "spread_pct": 0.0
+            },
+            "tree/string_equality": {
+              "candidate_over_baseline": 1.0055983927095655,
+              "paired_ratios": [
+                1.0055983927095655
+              ],
+              "reduction_pct": -0.5598392709565525,
+              "spread_pct": 0.0
+            },
+            "tree/strings": {
+              "candidate_over_baseline": 0.9973826125614257,
+              "paired_ratios": [
+                0.9973826125614257
+              ],
+              "reduction_pct": 0.26173874385743146,
+              "spread_pct": 0.0
+            },
+            "tree/trees": {
+              "candidate_over_baseline": 1.000917428972517,
+              "paired_ratios": [
+                1.000917428972517
+              ],
+              "reduction_pct": -0.09174289725168983,
+              "spread_pct": 0.0
+            },
+            "tree/zoo": {
+              "candidate_over_baseline": 0.992757393846413,
+              "paired_ratios": [
+                0.992757393846413
+              ],
+              "reduction_pct": 0.7242606153586961,
+              "spread_pct": 0.0
+            },
+            "tree/zoo_batch": {
+              "candidate_over_baseline": 0.9980262760653333,
+              "paired_ratios": [
+                0.9980262760653333
+              ],
+              "reduction_pct": 0.19737239346666602,
+              "spread_pct": 0.0
+            },
+            "vm/binary_trees": {
+              "candidate_over_baseline": 0.9954869649420737,
+              "paired_ratios": [
+                0.9954869649420737
+              ],
+              "reduction_pct": 0.4513035057926329,
+              "spread_pct": 0.0
+            },
+            "vm/closures": {
+              "candidate_over_baseline": 1.0120640598466533,
+              "paired_ratios": [
+                1.0120640598466533
+              ],
+              "reduction_pct": -1.2064059846653263,
+              "spread_pct": 0.0
+            },
+            "vm/equality": {
+              "candidate_over_baseline": 1.0079937556017025,
+              "paired_ratios": [
+                1.0079937556017025
+              ],
+              "reduction_pct": -0.7993755601702457,
+              "spread_pct": 0.0
+            },
+            "vm/fib": {
+              "candidate_over_baseline": 1.0482420516401054,
+              "paired_ratios": [
+                1.0482420516401054
+              ],
+              "reduction_pct": -4.824205164010542,
+              "spread_pct": 0.0
+            },
+            "vm/instantiation": {
+              "candidate_over_baseline": 0.994736039259683,
+              "paired_ratios": [
+                0.994736039259683
+              ],
+              "reduction_pct": 0.5263960740316986,
+              "spread_pct": 0.0
+            },
+            "vm/invocation": {
+              "candidate_over_baseline": 0.9941187623109994,
+              "paired_ratios": [
+                0.9941187623109994
+              ],
+              "reduction_pct": 0.5881237689000618,
+              "spread_pct": 0.0
+            },
+            "vm/method_call": {
+              "candidate_over_baseline": 1.0087333520505117,
+              "paired_ratios": [
+                1.0087333520505117
+              ],
+              "reduction_pct": -0.8733352050511733,
+              "spread_pct": 0.0
+            },
+            "vm/properties": {
+              "candidate_over_baseline": 1.04456288904433,
+              "paired_ratios": [
+                1.04456288904433
+              ],
+              "reduction_pct": -4.456288904432992,
+              "spread_pct": 0.0
+            },
+            "vm/string_equality": {
+              "candidate_over_baseline": 1.0020761103349323,
+              "paired_ratios": [
+                1.0020761103349323
+              ],
+              "reduction_pct": -0.20761103349322685,
+              "spread_pct": 0.0
+            },
+            "vm/strings": {
+              "candidate_over_baseline": 1.014424870978767,
+              "paired_ratios": [
+                1.014424870978767
+              ],
+              "reduction_pct": -1.4424870978767101,
+              "spread_pct": 0.0
+            },
+            "vm/trees": {
+              "candidate_over_baseline": 1.0103906346303482,
+              "paired_ratios": [
+                1.0103906346303482
+              ],
+              "reduction_pct": -1.0390634630348172,
+              "spread_pct": 0.0
+            },
+            "vm/zoo": {
+              "candidate_over_baseline": 1.0302337460716111,
+              "paired_ratios": [
+                1.0302337460716111
+              ],
+              "reduction_pct": -3.023374607161111,
+              "spread_pct": 0.0
+            },
+            "vm/zoo_batch": {
+              "candidate_over_baseline": 1.0275020692959713,
+              "paired_ratios": [
+                1.0275020692959713
+              ],
+              "reduction_pct": -2.750206929597132,
+              "spread_pct": 0.0
+            }
+          }
+        }
+      },
+      "metric": "cycles",
+      "partial_matrix_not_selection": false,
+      "receipt": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/instruction-screen.json",
+      "receipt_sha256": "398b754f66375072cb2bf07c54ac2bb9cd12f3f5d034021538c4dc71ab04386d"
+    }
+  ],
+  "coverage": {
+    "focused_wall": {
+      "completed_rows": 0,
+      "present": false
+    },
+    "full_counters": {
+      "completed_rows": 0,
+      "present": false
+    },
+    "full_wall": {
+      "completed_rows": 0,
+      "present": false
+    },
+    "screen": {
+      "command_sha256": "aaf63f748547d65ae67fed9cd9c3411145e4025db3aabbf8cd46774bf3f45b70",
+      "completed_rows": 104,
+      "partial_matrix_not_selection": false,
+      "phase": "counters",
+      "present": true,
+      "receipt": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/instruction-screen.json",
+      "rounds": 1,
+      "sha256": "398b754f66375072cb2bf07c54ac2bb9cd12f3f5d034021538c4dc71ab04386d",
+      "tier": "tree"
+    },
+    "smoke": {
+      "command_sha256": "dd2e2fb283beb8795ac001f897817878c7bf645a7e170a0b77d72b246a15f15b",
+      "completed_rows": 156,
+      "partial_matrix_not_selection": false,
+      "phase": "check",
+      "present": true,
+      "receipt": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/smoke.json",
+      "rounds": 1,
+      "sha256": "667410140e1c31bb57e8b2b01ae4bd624e27cccfbd8f70dbd8a0a990abc178df",
+      "tier": "smoke"
+    }
+  },
+  "guards_verified": 223,
+  "limits": [
+    "Raw stdout was checked by the guarded runner; receipts retain its SHA, not full stdout.",
+    "Measurement receipts retain stderr tails up to1500 characters; smoke tails must be exactly one equal stats line.",
+    "ELF rebuilds are reproduction evidence; measurements use whole-file-exact qualified RC guests.",
+    "Historical failed preparations/extras are preserved evidence, not successful coverage."
+  ],
+  "manifest_sha256": "5ce1ae43ebdb3b86033a32047604c851598fd11054f152ce268915b4ff73a29b",
+  "performance_selection_inferred": false,
+  "qualified_RC_ELF_sidecars_exact": true,
+  "read_only_ELF_comparer": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/experiments/lox-compiler-screen-20261003/elf.py",
+    "sha256": "fae1359cc987d4e8010bbaa3a2c9340c2c80433042665cea04c5e2ec49716d47"
+  },
+  "rebuild_ELF_sections_rechecked": true,
+  "source37_exact": true,
+  "validated_inventory": {
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/author-qualification.json": {
+      "bytes": 256699,
+      "sha256": "6218ce7affbb7bbee45b517b075e0b4565e9012e2c8f66cd5003f6b30bbc4b1f",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/baseline/NOTES.md": {
+      "bytes": 16216,
+      "sha256": "85541175c32b6745ce2b9be34da5004bf16d7c8d0e83a5e46b46db41b5bf490c",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/baseline/ast.my": {
+      "bytes": 8383,
+      "sha256": "e210fb35bf3125ba06ebb978bcb3592162020a77576542f2d049879a51479bf9",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/baseline/bench.json": {
+      "bytes": 3920,
+      "sha256": "dbcc26195c024bc86d9e184284306f4849450f1042d1fe53092e7b52a3deea92",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/baseline/chunk.my": {
+      "bytes": 2039,
+      "sha256": "b4f6e7ae6531b224f99e026f53fee3692c90d8f2b15d3c76ca5962f1803e4b66",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/baseline/compiler.my": {
+      "bytes": 30163,
+      "sha256": "c550603195401ff6d9436b42d6fbf0c35051521da57e7b85281fc8fcf6ebe048",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/baseline/compiler_test.my": {
+      "bytes": 3063,
+      "sha256": "582fe817dbeffa709961b5124370ce200510adb3ac0d246572ca1c0dc19ec08a",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/baseline/driver.my": {
+      "bytes": 2689,
+      "sha256": "fe831d2ec08833d11139e790ab741903b27a8e0fb43582cac11ca664b4595836",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/baseline/driver_cases.json": {
+      "bytes": 25731,
+      "sha256": "8507f12ef156a1e859a1cc90b712f3ae8ea19c9db98388992a83a70c16e1ff72",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/baseline/driver_tests.my": {
+      "bytes": 15405,
+      "sha256": "5ef7cbd666cef3c543eba0d8798d7fd7515f5f45184a664cec3f1678f6126d5c",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/baseline/heap.my": {
+      "bytes": 17426,
+      "sha256": "d6bdc0b4945ca0e2a14c6b75aadf7cf077c4ba263f7b9ec49a77adce44b9a780",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/baseline/heap_test.my": {
+      "bytes": 9051,
+      "sha256": "81667d68bf957b347c983479f0e3843182a7f86ef170e32781190f992a75e1bd",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/baseline/interpreter.my": {
+      "bytes": 29560,
+      "sha256": "6c4655266242ca4696a02f754ef5eac6646ceb8ba93b0869072c6d6161a87378",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/baseline/lox.sh": {
+      "bytes": 406,
+      "sha256": "9f82abeb4e1c21ce78a9f28d61281917927517f610403917aaf314f1294385fc",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/baseline/lox_strings.my": {
+      "bytes": 2490,
+      "sha256": "383900dda10b9218caf2087e12a2e20089e4d48b0ec5fc3e17e960a3d70d83df",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/baseline/lox_strings_test.my": {
+      "bytes": 985,
+      "sha256": "a44545c64e9f75cc5af761d6c703feec83c4fc0a14d2678a1b2fce28067bd0c0",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/baseline/main.my": {
+      "bytes": 1191,
+      "sha256": "18c1f669b1683123e635256c9f66c6db2766383391371c3822e61df7d9732274",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/baseline/natives.my": {
+      "bytes": 1668,
+      "sha256": "2ff45343fded6d303e6233e0f787e63c319e860903e2c0c81ccbb71c2749d665",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/baseline/object.my": {
+      "bytes": 3448,
+      "sha256": "08c0d5c6ae304ef4d0e1f5929f52b5d1dd47cd46e6c409392c0b5b1df9567ad7",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/baseline/output.my": {
+      "bytes": 4413,
+      "sha256": "cdc79c8a9a5eca0106fb139bca5492da201f027b0499e5e00a492368317d194c",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/baseline/parser.my": {
+      "bytes": 20330,
+      "sha256": "e9bd5d9c37e307d060ce165dc4fa0f276c2ff9dbe7cb21bd27cbdd94644b4edd",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/baseline/parser_test.my": {
+      "bytes": 1587,
+      "sha256": "ffe2658f030c75b40a7c54d8f0c64e848e6679e13fc69cbef9a131ed7b120e4b",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/baseline/repros/overlap_proof_blowup.my.txt": {
+      "bytes": 1605,
+      "sha256": "5c510f5d5e2d441cb5397a7d6097e3689a040751373d2c9594db6754812b4dfb",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/baseline/repros/print_long_float.my.txt": {
+      "bytes": 536,
+      "sha256": "0767918284593321e9589f14e3b90d9dc41239321d355be89aed055eef5cb132",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/baseline/repros/print_union_class_payload.my.txt": {
+      "bytes": 453,
+      "sha256": "c03c987b6bf03db950bb8e98c238a76c0e7ea9c4c98c29c3e5748cd2c3a4ce8d",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/baseline/repros/qbe_pm_slots.my.txt": {
+      "bytes": 5971,
+      "sha256": "3560079c67785824971ae6f10c3f04e49e87e5e5dbd20afdd7f1c0a1b258dbe9",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/baseline/repros/read_fifo.my.txt": {
+      "bytes": 629,
+      "sha256": "2a3b1658eb6e4c9a0f40cfed13c0db92989e9c78de69150197df247a18e5becd",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/baseline/repros/runtime_flags.my.txt": {
+      "bytes": 895,
+      "sha256": "2d314b6501ea5be517e904e0791461f5900745a77e386c8403f6d15fefdd67eb",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/baseline/repros/stream_field_method.my.txt": {
+      "bytes": 408,
+      "sha256": "b551e742a030b770cc3861bebacbbc76beab0fc38aef78a54be7a3af4ee9eb97",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/baseline/resolver.my": {
+      "bytes": 11576,
+      "sha256": "41d41b2a1ddb3f6ab3fb73ad9eff69415b0450d890554766bfee37eac8d0903d",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/baseline/resolver_test.my": {
+      "bytes": 2248,
+      "sha256": "72c5176ff15db240d8ec8ff8073fcdb7736e8c60ab47410bb60fce934c179d31",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/baseline/scanner.my": {
+      "bytes": 8089,
+      "sha256": "af4bc6a57859318051dc47d6e1f6344ee98fbfff037e9be93c0a103765cd3e83",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/baseline/scanner_test.my": {
+      "bytes": 4518,
+      "sha256": "1d7fbb34b0de402657786641217e81c9ae286cab14baf2716de2db875ae39ad0",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/baseline/table.my": {
+      "bytes": 4396,
+      "sha256": "0e11a8ac7ded8fa85a74518b25e3acf9fed17418192cd0c8bbd3beddc38b106d",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/baseline/table_test.my": {
+      "bytes": 5608,
+      "sha256": "0d5bd048a64a8e51892f61d2b826437fae61cf5c88e5f1771851a83363499f51",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/baseline/value.my": {
+      "bytes": 2006,
+      "sha256": "3b2a444e77c6a703b1aedad3c89ef38cad70aa3bb6cba1716b623980ff9a76b0",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/baseline/value_test.my": {
+      "bytes": 2151,
+      "sha256": "b766d22b25a8a8a090b4a059030cfc7462022fdacb66a0a91bf8a9e09a53fed4",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/baseline/vm.my": {
+      "bytes": 27426,
+      "sha256": "afceb2553b6a5933c2326064bd2c9e8de804787c45082c4f60495946ce0da06d",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/bin/baseline-llvm": {
+      "bytes": 2235288,
+      "sha256": "180575c3fc2e46a16ed8dd290e289963a87603b5a7c0cf8bb0e03ba7cf794361",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/bin/baseline-llvm.qbe-manifest.json": {
+      "bytes": 190235,
+      "sha256": "6bb5f323746e5a16c7c66e7f8d86941d990204c6dd4afe6c2d32940f44487d63",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/bin/baseline-llvm.qbe-receipt": {
+      "bytes": 102,
+      "sha256": "851418ede08017a4495c8270aa5ea1cde4bd2e54a739f78ae036454733a31d36",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/bin/baseline-qbe": {
+      "bytes": 3505384,
+      "sha256": "246f21781fd58c7141dbe0992101c842e62d732d9ce47e209d55821d02b11b25",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/bin/baseline-qbe.qbe-manifest.json": {
+      "bytes": 565,
+      "sha256": "dcf71a1426eaa9f08e3c43a4dd4bcc4cd064450c13ad4cd8907a4efb1a5da48b",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/bin/baseline-qbe.qbe-receipt": {
+      "bytes": 102,
+      "sha256": "4281c6cfdcca2741ba1a6b897ea7a091ffc2939eec4261329d16648e08ebe382",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/bin/candidate-llvm": {
+      "bytes": 2235344,
+      "sha256": "ad1f174388d6124883cfcbc131b9b8f86f31ca9fb64c8f09e79c9aceefac584c",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/bin/candidate-llvm.qbe-manifest.json": {
+      "bytes": 211214,
+      "sha256": "b334a4279a6c490ca11138ae0ed8ce4d509b92491ecf77166927f7f063df71fe",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/bin/candidate-llvm.qbe-receipt": {
+      "bytes": 102,
+      "sha256": "fcd9bc13409ee32d1185254166afae65bc74154de5727df425879566424da7f0",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/bin/candidate-qbe": {
+      "bytes": 3505440,
+      "sha256": "2be47ad173babd97a69330c0de3aa26e6feb38c73bbc046dc1cafed855784f7e",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/bin/candidate-qbe.qbe-manifest.json": {
+      "bytes": 545,
+      "sha256": "6c1a6439641e5e8b5dcb88ba97cf558061eb0c956715562bb0f6e50bec0d66f2",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/bin/candidate-qbe.qbe-receipt": {
+      "bytes": 102,
+      "sha256": "8137c406daa5877e0ae37b26189b579a9671b3205dc2ef5cd9aeed598ce93cba",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/bin/go": {
+      "bytes": 2946005,
+      "sha256": "dda2184ecbe1398769096fb284ccf451054e1ce6ff9d92797cdcd153135ca7e3",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/bin/rebuilt-llvm": {
+      "bytes": 2235352,
+      "sha256": "fc5e1a969d0172fcd34bc63b670686f70689dbfc3a872f0d0247804adf9fe2bd",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/bin/rebuilt-llvm.qbe-manifest.json": {
+      "bytes": 200294,
+      "sha256": "8b7d365b739cd285d53646b257838a958026fe5d1338cb6f3cd6de5494adba39",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/bin/rebuilt-llvm.qbe-receipt": {
+      "bytes": 102,
+      "sha256": "8044750377f6a7d1f1515c4e7a417839b807eaad2e7200cb3d21968c0361cd43",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/bin/rebuilt-qbe": {
+      "bytes": 3505416,
+      "sha256": "94d14083b4666066db37f8673cc222d853391e588a10fd413a8a020bc8e3c790",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/bin/rebuilt-qbe.qbe-manifest.json": {
+      "bytes": 545,
+      "sha256": "8a7efe2937d480ee0897990308921fec3cbde1e7bc28e35f9b1c20c345986970",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/bin/rebuilt-qbe.qbe-receipt": {
+      "bytes": 102,
+      "sha256": "e0e3bfc678920628a49494db653277ab520347e7a63586986b88471637c6c1a0",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/bin/rust": {
+      "bytes": 694176,
+      "sha256": "4d869a184a5f1a666113d30ad93a27ac703f39bb56c28e69e0bf739375d03dab",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/binaries.json": {
+      "bytes": 14290,
+      "sha256": "5ce1ae43ebdb3b86033a32047604c851598fd11054f152ce268915b4ff73a29b",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/build-rebuilt-llvm.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/build-rebuilt-qbe.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/candidate-source37.json": {
+      "bytes": 3282,
+      "sha256": "6c40c98809e786d934dc466d8eebd2841ea9e483726987550750a19b27ef8202",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/candidate/NOTES.md": {
+      "bytes": 16216,
+      "sha256": "85541175c32b6745ce2b9be34da5004bf16d7c8d0e83a5e46b46db41b5bf490c",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/candidate/ast.my": {
+      "bytes": 8383,
+      "sha256": "e210fb35bf3125ba06ebb978bcb3592162020a77576542f2d049879a51479bf9",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/candidate/bench.json": {
+      "bytes": 3920,
+      "sha256": "dbcc26195c024bc86d9e184284306f4849450f1042d1fe53092e7b52a3deea92",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/candidate/chunk.my": {
+      "bytes": 2039,
+      "sha256": "b4f6e7ae6531b224f99e026f53fee3692c90d8f2b15d3c76ca5962f1803e4b66",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/candidate/compiler.my": {
+      "bytes": 30163,
+      "sha256": "c550603195401ff6d9436b42d6fbf0c35051521da57e7b85281fc8fcf6ebe048",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/candidate/compiler_test.my": {
+      "bytes": 3063,
+      "sha256": "582fe817dbeffa709961b5124370ce200510adb3ac0d246572ca1c0dc19ec08a",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/candidate/driver.my": {
+      "bytes": 2689,
+      "sha256": "fe831d2ec08833d11139e790ab741903b27a8e0fb43582cac11ca664b4595836",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/candidate/driver_cases.json": {
+      "bytes": 25731,
+      "sha256": "8507f12ef156a1e859a1cc90b712f3ae8ea19c9db98388992a83a70c16e1ff72",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/candidate/driver_tests.my": {
+      "bytes": 15405,
+      "sha256": "5ef7cbd666cef3c543eba0d8798d7fd7515f5f45184a664cec3f1678f6126d5c",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/candidate/heap.my": {
+      "bytes": 17426,
+      "sha256": "d6bdc0b4945ca0e2a14c6b75aadf7cf077c4ba263f7b9ec49a77adce44b9a780",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/candidate/heap_test.my": {
+      "bytes": 9051,
+      "sha256": "81667d68bf957b347c983479f0e3843182a7f86ef170e32781190f992a75e1bd",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/candidate/interpreter.my": {
+      "bytes": 29560,
+      "sha256": "6c4655266242ca4696a02f754ef5eac6646ceb8ba93b0869072c6d6161a87378",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/candidate/lox.sh": {
+      "bytes": 406,
+      "sha256": "9f82abeb4e1c21ce78a9f28d61281917927517f610403917aaf314f1294385fc",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/candidate/lox_strings.my": {
+      "bytes": 2490,
+      "sha256": "383900dda10b9218caf2087e12a2e20089e4d48b0ec5fc3e17e960a3d70d83df",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/candidate/lox_strings_test.my": {
+      "bytes": 985,
+      "sha256": "a44545c64e9f75cc5af761d6c703feec83c4fc0a14d2678a1b2fce28067bd0c0",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/candidate/main.my": {
+      "bytes": 1191,
+      "sha256": "18c1f669b1683123e635256c9f66c6db2766383391371c3822e61df7d9732274",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/candidate/natives.my": {
+      "bytes": 1668,
+      "sha256": "2ff45343fded6d303e6233e0f787e63c319e860903e2c0c81ccbb71c2749d665",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/candidate/object.my": {
+      "bytes": 3448,
+      "sha256": "08c0d5c6ae304ef4d0e1f5929f52b5d1dd47cd46e6c409392c0b5b1df9567ad7",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/candidate/output.my": {
+      "bytes": 4413,
+      "sha256": "cdc79c8a9a5eca0106fb139bca5492da201f027b0499e5e00a492368317d194c",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/candidate/parser.my": {
+      "bytes": 20330,
+      "sha256": "e9bd5d9c37e307d060ce165dc4fa0f276c2ff9dbe7cb21bd27cbdd94644b4edd",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/candidate/parser_test.my": {
+      "bytes": 1587,
+      "sha256": "ffe2658f030c75b40a7c54d8f0c64e848e6679e13fc69cbef9a131ed7b120e4b",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/candidate/repros/overlap_proof_blowup.my.txt": {
+      "bytes": 1605,
+      "sha256": "5c510f5d5e2d441cb5397a7d6097e3689a040751373d2c9594db6754812b4dfb",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/candidate/repros/print_long_float.my.txt": {
+      "bytes": 536,
+      "sha256": "0767918284593321e9589f14e3b90d9dc41239321d355be89aed055eef5cb132",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/candidate/repros/print_union_class_payload.my.txt": {
+      "bytes": 453,
+      "sha256": "c03c987b6bf03db950bb8e98c238a76c0e7ea9c4c98c29c3e5748cd2c3a4ce8d",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/candidate/repros/qbe_pm_slots.my.txt": {
+      "bytes": 5971,
+      "sha256": "3560079c67785824971ae6f10c3f04e49e87e5e5dbd20afdd7f1c0a1b258dbe9",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/candidate/repros/read_fifo.my.txt": {
+      "bytes": 629,
+      "sha256": "2a3b1658eb6e4c9a0f40cfed13c0db92989e9c78de69150197df247a18e5becd",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/candidate/repros/runtime_flags.my.txt": {
+      "bytes": 895,
+      "sha256": "2d314b6501ea5be517e904e0791461f5900745a77e386c8403f6d15fefdd67eb",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/candidate/repros/stream_field_method.my.txt": {
+      "bytes": 408,
+      "sha256": "b551e742a030b770cc3861bebacbbc76beab0fc38aef78a54be7a3af4ee9eb97",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/candidate/resolver.my": {
+      "bytes": 11576,
+      "sha256": "41d41b2a1ddb3f6ab3fb73ad9eff69415b0450d890554766bfee37eac8d0903d",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/candidate/resolver_test.my": {
+      "bytes": 2248,
+      "sha256": "72c5176ff15db240d8ec8ff8073fcdb7736e8c60ab47410bb60fce934c179d31",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/candidate/scanner.my": {
+      "bytes": 8089,
+      "sha256": "af4bc6a57859318051dc47d6e1f6344ee98fbfff037e9be93c0a103765cd3e83",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/candidate/scanner_test.my": {
+      "bytes": 4518,
+      "sha256": "1d7fbb34b0de402657786641217e81c9ae286cab14baf2716de2db875ae39ad0",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/candidate/table.my": {
+      "bytes": 4396,
+      "sha256": "0e11a8ac7ded8fa85a74518b25e3acf9fed17418192cd0c8bbd3beddc38b106d",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/candidate/table_test.my": {
+      "bytes": 5608,
+      "sha256": "0d5bd048a64a8e51892f61d2b826437fae61cf5c88e5f1771851a83363499f51",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/candidate/value.my": {
+      "bytes": 2006,
+      "sha256": "3b2a444e77c6a703b1aedad3c89ef38cad70aa3bb6cba1716b623980ff9a76b0",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/candidate/value_test.my": {
+      "bytes": 2151,
+      "sha256": "b766d22b25a8a8a090b4a059030cfc7462022fdacb66a0a91bf8a9e09a53fed4",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/candidate/vm.my": {
+      "bytes": 27426,
+      "sha256": "afceb2553b6a5933c2326064bd2c9e8de804787c45082c4f60495946ce0da06d",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/cycles-analysis.json": {
+      "bytes": 14035,
+      "sha256": "8773e07e5c37526a91ff2156bf5735e709e74b9d6ee8f533ee29b6b8118adfb1",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/guards.json": {
+      "bytes": 47160,
+      "sha256": "952a10ad285735badb0ecc44724345cca3a95b6232939766d1dbd91d8eb39c66",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/inputs/binary_trees.smoke.lox": {
+      "bytes": 1274,
+      "sha256": "823309b0e6545297fb391efc08fc4ef1cd134d18e270f3b7b0058a12ea0c8aaf",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/inputs/binary_trees.tree.lox": {
+      "bytes": 1275,
+      "sha256": "fa3e536c73bc273bc8cd5ca4f4c81a6edd0c224e18aa764b34043b794f4850e4",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/inputs/binary_trees.vm.lox": {
+      "bytes": 1275,
+      "sha256": "67be3fc3dbd48a9117dc166f0da2d101b55559a2b68f736d8a738de5de1d5c02",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/inputs/closures.smoke.lox": {
+      "bytes": 751,
+      "sha256": "086bdd10b09ed1dd0b1e6916301e12c19a6ddaf1a7bda79485d90f915d1f98da",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/inputs/closures.tree.lox": {
+      "bytes": 753,
+      "sha256": "039b3c8a51a0614e2ad75dcdd85b7f8b26320e11086cbe9b5b5fffdc363e04aa",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/inputs/closures.vm.lox": {
+      "bytes": 754,
+      "sha256": "cf29bbd883baa67b28d3e0240c695608801f46067fe93a478a277286a88e33f8",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/inputs/equality.smoke.lox": {
+      "bytes": 566,
+      "sha256": "53bc66293aabe6b1a83ebf51224d2d7e78a1dfa4c2524812b8b7602a74ad66d1",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/inputs/equality.tree.lox": {
+      "bytes": 568,
+      "sha256": "eef5c48b7874cc83c2170a5bd3cb92e346457fef0ebecd7ac01aa18c6ae2d5c1",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/inputs/equality.vm.lox": {
+      "bytes": 569,
+      "sha256": "6044b6363a3777c65e20060c867fb669a0a28eb7a06cb1708265ee6e7b24e93d",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/inputs/fib.smoke.lox": {
+      "bytes": 99,
+      "sha256": "d25a79476da3b93949c797313ca5967d03094e1b7833235c32e8443c92530dc6",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/inputs/fib.tree.lox": {
+      "bytes": 99,
+      "sha256": "be2e695e8e83fb548c1280b86975bfac88a1121fd1f292edc1566a14e5426f0a",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/inputs/fib.vm.lox": {
+      "bytes": 99,
+      "sha256": "e5c412ecb35cb4bcda97ac05f47f7cd8267f23deb0403bc5dd31126980216f45",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/inputs/instantiation.smoke.lox": {
+      "bytes": 434,
+      "sha256": "b825d3f0609e559e11e071a0f7215f41fcc1843107a023fea2f4e94104bb932e",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/inputs/instantiation.tree.lox": {
+      "bytes": 435,
+      "sha256": "30066fcb9c72bccd083f57819fa0f4d04785e4c2e36e8c44ddda9db8c1764b6c",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/inputs/instantiation.vm.lox": {
+      "bytes": 436,
+      "sha256": "b7b5518b58c9ad13c4aa38414dfad64f7c50b26115c95bfc01c9f219d2a2fa5e",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/inputs/invocation.smoke.lox": {
+      "bytes": 1150,
+      "sha256": "8a26db7b2a000698539b9502289f450c7d414419a65ab7fb297d37ce47ee7600",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/inputs/invocation.tree.lox": {
+      "bytes": 1152,
+      "sha256": "cf8844b4a8a54ec2cb5c289886270feea87a00b142bd883f0e20b0d36860aeae",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/inputs/invocation.vm.lox": {
+      "bytes": 1153,
+      "sha256": "8c24d8e0b271c1635580ce8e992c0926f67da931ebc0ea71f454559c78c6c2d3",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/inputs/method_call.smoke.lox": {
+      "bytes": 1430,
+      "sha256": "49629943ef09092d8a8bb8e36776ec307f01e51abbbf049f8a60059c117aa904",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/inputs/method_call.tree.lox": {
+      "bytes": 1431,
+      "sha256": "2fa5eb6aa749d981ff203181a194cc5fb6e85b1cd853639844075dc7b6d82ba7",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/inputs/method_call.vm.lox": {
+      "bytes": 1432,
+      "sha256": "27c2698abd80f6071a8d5b716f76601e243b8a5e747f54dcad2c4fa26aa1e944",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/inputs/properties.smoke.lox": {
+      "bytes": 2472,
+      "sha256": "6973c8a9882943266dfdef5db2596e3aa3dc829135994a9cbc791c2fd79819c2",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/inputs/properties.tree.lox": {
+      "bytes": 2474,
+      "sha256": "d60e0a6dc356f3b9bc51e2f25fdc3a9b5b7cd26daf9a045adcd511b295438199",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/inputs/properties.vm.lox": {
+      "bytes": 2475,
+      "sha256": "6534fd2fc26e39526e9b949a60b8eceff001b8c748be609e471b14ab0d94eceb",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/inputs/string_equality.smoke.lox": {
+      "bytes": 13327,
+      "sha256": "311efc5bcfc199435637a25d4d96ef452254c19ad1825302d0a23e5ef4fc3c5f",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/inputs/string_equality.tree.lox": {
+      "bytes": 13329,
+      "sha256": "b48a8677baa2e673c0d164b722ebd71461242ac5e9f53e962a483b172055d1c7",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/inputs/string_equality.vm.lox": {
+      "bytes": 13330,
+      "sha256": "f02eaa1982294f880a80075bc2d0eb7d5a06011d1e8e1aeb3f6b9a8dca5cfc25",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/inputs/strings.smoke.lox": {
+      "bytes": 448,
+      "sha256": "1d66b87b0fb3313ed20a4c2755dcc3dbb6c5455b002cd4c8ae91573b700a7c07",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/inputs/strings.tree.lox": {
+      "bytes": 450,
+      "sha256": "2435eb29b0ed4fd5e0512eaebc7ee55f65a0337109b10100d383342edea2adab",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/inputs/strings.vm.lox": {
+      "bytes": 451,
+      "sha256": "7ac76dc84b36539873ed3c07f56202903a0a3138d5b228cada048753afc05110",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/inputs/trees.smoke.lox": {
+      "bytes": 844,
+      "sha256": "dbeb7996c5744c08a22091d76787e45c71b9101137087c5b4e5349d1516c399e",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/inputs/trees.tree.lox": {
+      "bytes": 844,
+      "sha256": "23667ffaea75fed6a2fea42bc900cd0aecb66089af9a18cac13816a6b6f3a176",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/inputs/trees.vm.lox": {
+      "bytes": 845,
+      "sha256": "155ef19eeb8f6db8f2b4d3979c06b40507fe6720ab521655b28cbbb43d299e53",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/inputs/zoo.smoke.lox": {
+      "bytes": 604,
+      "sha256": "de7dfe23c1bf21599ff3dafbca37568c7b5a8ec0a058c67059999c1a23a74559",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/inputs/zoo.tree.lox": {
+      "bytes": 607,
+      "sha256": "a23818e098b14c6243a549e8560e4977e2e8bffb60e69af63ee88c7b7e33ddb8",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/inputs/zoo.vm.lox": {
+      "bytes": 608,
+      "sha256": "8a52568b2d92141b5a05e6d1cff98a50a0ee6ac8f3b763ecdd63b01ff3a2413a",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/inputs/zoo_batch.smoke.lox": {
+      "bytes": 710,
+      "sha256": "a6eb70193498750dffd23eeefd74d5dd808724322b97301803e47dcaafdece66",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/inputs/zoo_batch.tree.lox": {
+      "bytes": 711,
+      "sha256": "d1c9ec6b50a59d014b6fe1d6d761404070b19d8a94dea1878435a0db34540d0f",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/inputs/zoo_batch.vm.lox": {
+      "bytes": 712,
+      "sha256": "4e64528710bf2f8056308d7ca2d0a69a50f255ceaaaa21d224b73dcd1ab19676",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/instruction-screen.command.json": {
+      "bytes": 10310,
+      "sha256": "aaf63f748547d65ae67fed9cd9c3411145e4025db3aabbf8cd46774bf3f45b70",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/instruction-screen.json": {
+      "bytes": 118788,
+      "sha256": "398b754f66375072cb2bf07c54ac2bb9cd12f3f5d034021538c4dc71ab04386d",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/instruction-screen.log": {
+      "bytes": 3284,
+      "sha256": "078c2baad55d813bfc0d78c36287eeb68ab414cf4e10e9be325774bd3ba44e56",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/instructions-analysis.json": {
+      "bytes": 14238,
+      "sha256": "58c1081f43da181a15c2176677d24dfd37586e562e9a82c88adb80872731dc02",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/prepare-build.log": {
+      "bytes": 155,
+      "sha256": "583f43b09c1a2c51e69e4f513c6bccae5bd7cfbeb3982798f66d1669d01687a0",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/prepare-command.json": {
+      "bytes": 894,
+      "sha256": "5ddf6648c2793856a0e84638658f4f54fe090bb9b3a0c1db5cfeb1aa59520c45",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/prepared.json": {
+      "bytes": 543,
+      "sha256": "36b2e8f4353e54821698bc25ed810a3b28a89bc2756a516bcc30bcf1a164ed9b",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/rebuild-equivalence.json": {
+      "bytes": 13016,
+      "sha256": "d198bd3088afb3222de9bd02ce4840232da17913c176d7740fc97d5c7e73e6f5",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/rebuilt-build.json": {
+      "bytes": 6980,
+      "sha256": "ca9b4c0d75e00237738062e31bd0f64d0e7cf1e0b10a51055bb060dcc8f5e1cd",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/reference/benchmarks/lox/bench/expected/binary_trees.smoke.out": {
+      "bytes": 143,
+      "sha256": "23aacebeedeb0e5923a1b045e22061bf9b663bed57c43bb1b256f3fce1ff6e82",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/reference/benchmarks/lox/bench/expected/binary_trees.tree.out": {
+      "bytes": 220,
+      "sha256": "e650f48ff7ae14c0fcef891bc854d8c3b3778ffd7d8278b6b7aa52e2050f7056",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/reference/benchmarks/lox/bench/expected/binary_trees.vm.out": {
+      "bytes": 263,
+      "sha256": "ac96b16fc414cbbcc2b2c0782cb9bc3f5b8d2a6d9560ed76948953643e981f76",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/reference/benchmarks/lox/bench/expected/closures.smoke.out": {
+      "bytes": 12,
+      "sha256": "8fb5561b1d8d4b8a3db7ce921f656c5306e17a35b16e92fe9d8f6a05808debac",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/reference/benchmarks/lox/bench/expected/closures.tree.out": {
+      "bytes": 22,
+      "sha256": "8dacb3b0327cbd368e9c06434c1dd66b88f2a69dba30a2f64fc0dd78570cf7f0",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/reference/benchmarks/lox/bench/expected/closures.vm.out": {
+      "bytes": 26,
+      "sha256": "5c1bc928b1aa3275718aed95eabf1c87b836a3122be2ab4b376856b2e44029db",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/reference/benchmarks/lox/bench/expected/equality.smoke.out": {
+      "bytes": 5,
+      "sha256": "83c02ac2d48c863dab2ccf6870455aadfc2cec073b8db269b517c879d76aa6d9",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/reference/benchmarks/lox/bench/expected/equality.tree.out": {
+      "bytes": 7,
+      "sha256": "2d5c043a952d70ef9564858b25a01a30613abfb3d1562f67ef8d089646bbf786",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/reference/benchmarks/lox/bench/expected/equality.vm.out": {
+      "bytes": 8,
+      "sha256": "86462511f5bae5ed2d407ecc8d2699a032b2ee003e4d10c3e38511780dd6d016",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/reference/benchmarks/lox/bench/expected/fib.smoke.out": {
+      "bytes": 4,
+      "sha256": "f914a3811284ffbf907a3ecc99897e430c8f401b200c67643561f3cff73e50ea",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/reference/benchmarks/lox/bench/expected/fib.tree.out": {
+      "bytes": 7,
+      "sha256": "a2926b4c752026e4c4fb427a6c468ba4cd1a584ecc8f6ff23fa80c09fdfcb655",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/reference/benchmarks/lox/bench/expected/fib.vm.out": {
+      "bytes": 8,
+      "sha256": "3e01be60139c8e55182a9388e0133537d417649b097c820c766aaf403dcdfc11",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/reference/benchmarks/lox/bench/expected/instantiation.smoke.out": {
+      "bytes": 5,
+      "sha256": "83c02ac2d48c863dab2ccf6870455aadfc2cec073b8db269b517c879d76aa6d9",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/reference/benchmarks/lox/bench/expected/instantiation.tree.out": {
+      "bytes": 6,
+      "sha256": "1833dec4f1106eb4e293cc1cdf906c6c3c576d000a51b001d8da50a853dd22ec",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/reference/benchmarks/lox/bench/expected/instantiation.vm.out": {
+      "bytes": 7,
+      "sha256": "eea5daac8b1d1b7b82edaaa7fadadf6b48a439a874efd036fb0666e68c17462e",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/reference/benchmarks/lox/bench/expected/invocation.smoke.out": {
+      "bytes": 5,
+      "sha256": "83c02ac2d48c863dab2ccf6870455aadfc2cec073b8db269b517c879d76aa6d9",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/reference/benchmarks/lox/bench/expected/invocation.tree.out": {
+      "bytes": 7,
+      "sha256": "aceaf168c6709487a120d0059d87a99ab4aad4ee7f8a4d05a91c8ee20161ef75",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/reference/benchmarks/lox/bench/expected/invocation.vm.out": {
+      "bytes": 8,
+      "sha256": "1acf1e94660bf03b23b1265ac476eeb5c504e8b4a0e7ba3e2667bf1a59ea9895",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/reference/benchmarks/lox/bench/expected/method_call.smoke.out": {
+      "bytes": 11,
+      "sha256": "acb2b288b9f028830645d94e3a4417e5ffc574a024576d6f69b53d989e9d93ea",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/reference/benchmarks/lox/bench/expected/method_call.tree.out": {
+      "bytes": 10,
+      "sha256": "21d91041c5d1a59661f8936571ee5c87e96f6f0c7a532b52ec17c5b9bea8220b",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/reference/benchmarks/lox/bench/expected/method_call.vm.out": {
+      "bytes": 10,
+      "sha256": "21d91041c5d1a59661f8936571ee5c87e96f6f0c7a532b52ec17c5b9bea8220b",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/reference/benchmarks/lox/bench/expected/properties.smoke.out": {
+      "bytes": 5,
+      "sha256": "83c02ac2d48c863dab2ccf6870455aadfc2cec073b8db269b517c879d76aa6d9",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/reference/benchmarks/lox/bench/expected/properties.tree.out": {
+      "bytes": 7,
+      "sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/reference/benchmarks/lox/bench/expected/properties.vm.out": {
+      "bytes": 8,
+      "sha256": "085c348f64a3b543e973a33749e90ba20847b99016a87e5228847597d61ce582",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/reference/benchmarks/lox/bench/expected/string_equality.smoke.out": {
+      "bytes": 4,
+      "sha256": "eea8254c7500ba3de996aa8ad6af399183f04e17d4a8102fde539dbc93a90012",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/reference/benchmarks/lox/bench/expected/string_equality.tree.out": {
+      "bytes": 6,
+      "sha256": "876e13f4e07bb39705302c01f445ffd2d2c3b180a207e4d959d6b671c67da09b",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/reference/benchmarks/lox/bench/expected/string_equality.vm.out": {
+      "bytes": 7,
+      "sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/reference/benchmarks/lox/bench/expected/strings.smoke.out": {
+      "bytes": 8,
+      "sha256": "79d81aeefa9b9e3fe2bfbc991f21d23dab93e9400047568797ec11915f76e42e",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/reference/benchmarks/lox/bench/expected/strings.tree.out": {
+      "bytes": 12,
+      "sha256": "e4d563316c0e9f5ccddf477f14ca54e9e5a7a58bee5f2e7a60382f48fd5bf988",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/reference/benchmarks/lox/bench/expected/strings.vm.out": {
+      "bytes": 14,
+      "sha256": "0f7e292d6d3f127e610758bf15d4de8e77fc8d8893a2bf115f177c511ebc06f9",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/reference/benchmarks/lox/bench/expected/trees.smoke.out": {
+      "bytes": 6,
+      "sha256": "be5d8685247a32a5044d2c6f0f7cf553f7853e041dc0a02f227d3196e8ad80cb",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/reference/benchmarks/lox/bench/expected/trees.tree.out": {
+      "bytes": 8,
+      "sha256": "17ab3b16ce7c5de5f4592400fb2b7e34eedbc57f86b65d948015ebfe1bd33ff5",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/reference/benchmarks/lox/bench/expected/trees.vm.out": {
+      "bytes": 9,
+      "sha256": "dc00383fb2d24fef0a8ace503018e64f1689080590e548654660115226860676",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/reference/benchmarks/lox/bench/expected/zoo.smoke.out": {
+      "bytes": 5,
+      "sha256": "46251acfc71ec25370b9130041437638dd8bb98c6ce57a89d869f39d826358d5",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/reference/benchmarks/lox/bench/expected/zoo.tree.out": {
+      "bytes": 8,
+      "sha256": "86462511f5bae5ed2d407ecc8d2699a032b2ee003e4d10c3e38511780dd6d016",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/reference/benchmarks/lox/bench/expected/zoo.vm.out": {
+      "bytes": 9,
+      "sha256": "8c217ae070c7680521435fddb8edd68c135921797f283c90d4397e50423ca834",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/reference/benchmarks/lox/bench/expected/zoo_batch.smoke.out": {
+      "bytes": 9,
+      "sha256": "fc4e77b5a037c91d136e74fc247030c51348fdfa13718173f84e97048d43a756",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/reference/benchmarks/lox/bench/expected/zoo_batch.tree.out": {
+      "bytes": 11,
+      "sha256": "96c7f4674ee2ab05724af164ad07904320aa13dd5cd3ca8b72b29c07c662b8bf",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/reference/benchmarks/lox/bench/expected/zoo_batch.vm.out": {
+      "bytes": 13,
+      "sha256": "aa4aa5edcd6410f05e8a1009af4d4e18b980d686b752d7e1127fb624f985997b",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/reference/benchmarks/lox/bench/scripts/binary_trees.lox": {
+      "bytes": 1275,
+      "sha256": "8a6e958569ff1fc3d7b5e1bad5bc7d1175f2d3bf3c8c56d93f6ea7e5fc900d56",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/reference/benchmarks/lox/bench/scripts/closures.lox": {
+      "bytes": 753,
+      "sha256": "039b3c8a51a0614e2ad75dcdd85b7f8b26320e11086cbe9b5b5fffdc363e04aa",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/reference/benchmarks/lox/bench/scripts/equality.lox": {
+      "bytes": 570,
+      "sha256": "5af03ebb00153aa0a2edb7754bcd045fac8c887a4e6f657ff0ca5b00004087f9",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/reference/benchmarks/lox/bench/scripts/fib.lox": {
+      "bytes": 99,
+      "sha256": "6a2e252a6ec82627380b24031d1ecd424a8e3f19ee0fd686e902b18293ed9968",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/reference/benchmarks/lox/bench/scripts/instantiation.lox": {
+      "bytes": 436,
+      "sha256": "b7b5518b58c9ad13c4aa38414dfad64f7c50b26115c95bfc01c9f219d2a2fa5e",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/reference/benchmarks/lox/bench/scripts/invocation.lox": {
+      "bytes": 1152,
+      "sha256": "8d3538042f9e49eac43754c0c1a9e3ca08c4c013c2f3d0a6984b99cd3a417c3b",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/reference/benchmarks/lox/bench/scripts/method_call.lox": {
+      "bytes": 1432,
+      "sha256": "2e782b4e82987c4938a593eb5de835bb15bda3a126e84f8993fcf7ea317363ac",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/reference/benchmarks/lox/bench/scripts/properties.lox": {
+      "bytes": 2474,
+      "sha256": "7694587d5150c898180e394147f635026c48be8872183edfb6754691a21b9d1d",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/reference/benchmarks/lox/bench/scripts/string_equality.lox": {
+      "bytes": 13330,
+      "sha256": "f02eaa1982294f880a80075bc2d0eb7d5a06011d1e8e1aeb3f6b9a8dca5cfc25",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/reference/benchmarks/lox/bench/scripts/strings.lox": {
+      "bytes": 450,
+      "sha256": "2435eb29b0ed4fd5e0512eaebc7ee55f65a0337109b10100d383342edea2adab",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/reference/benchmarks/lox/bench/scripts/trees.lox": {
+      "bytes": 846,
+      "sha256": "fe48f37e0b13f4b3be178638e10e9d2a8e5553706bdbcf243f69aab6d46ed532",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/reference/benchmarks/lox/bench/scripts/zoo.lox": {
+      "bytes": 608,
+      "sha256": "5a4d81b519a9a8466c5a479391f9c7467964f3aadc502297589fc819a67764e4",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/reference/benchmarks/lox/bench/scripts/zoo_batch.lox": {
+      "bytes": 713,
+      "sha256": "1f4d2aa251c73db4cd0ea984dd12bef78b8fe0123e45dbe34d663315be70e2c7",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/reference/benchmarks/lox/bench/sizes.json": {
+      "bytes": 1230,
+      "sha256": "f7394fd856f1feed25bb2720245f9d88889290225859d0b5c1ee15623df30f82",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/smoke.command.json": {
+      "bytes": 10318,
+      "sha256": "dd2e2fb283beb8795ac001f897817878c7bf645a7e170a0b77d72b246a15f15b",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/smoke.json": {
+      "bytes": 123527,
+      "sha256": "667410140e1c31bb57e8b2b01ae4bd624e27cccfbd8f70dbd8a0a990abc178df",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/smoke.log": {
+      "bytes": 3792,
+      "sha256": "25a3e861be22e2a96cf7fa2beaf1a66cab35ee8800b631d4e804b5beb2078afc",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed/tmp/measurement.txt": {
+      "bytes": 435,
+      "sha256": "39abecf75e23685f53fc5768db57df690ba8af89d1f4a21bb15c3bf71abd67cb",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-source37.json": {
+      "bytes": 3282,
+      "sha256": "6c40c98809e786d934dc466d8eebd2841ea9e483726987550750a19b27ef8202",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/bin/ast-llvm": {
+      "bytes": 2235288,
+      "sha256": "180575c3fc2e46a16ed8dd290e289963a87603b5a7c0cf8bb0e03ba7cf794361",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/bin/ast-llvm.qbe-manifest.json": {
+      "bytes": 190235,
+      "sha256": "6bb5f323746e5a16c7c66e7f8d86941d990204c6dd4afe6c2d32940f44487d63",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/bin/ast-llvm.qbe-receipt": {
+      "bytes": 102,
+      "sha256": "851418ede08017a4495c8270aa5ea1cde4bd2e54a739f78ae036454733a31d36",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/bin/ast-qbe": {
+      "bytes": 3505384,
+      "sha256": "246f21781fd58c7141dbe0992101c842e62d732d9ce47e209d55821d02b11b25",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/bin/ast-qbe.qbe-manifest.json": {
+      "bytes": 565,
+      "sha256": "dcf71a1426eaa9f08e3c43a4dd4bcc4cd064450c13ad4cd8907a4efb1a5da48b",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/bin/ast-qbe.qbe-receipt": {
+      "bytes": 102,
+      "sha256": "4281c6cfdcca2741ba1a6b897ea7a091ffc2939eec4261329d16648e08ebe382",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/bin/go": {
+      "bytes": 2946005,
+      "sha256": "dda2184ecbe1398769096fb284ccf451054e1ce6ff9d92797cdcd153135ca7e3",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/bin/rust": {
+      "bytes": 694176,
+      "sha256": "4d869a184a5f1a666113d30ad93a27ac703f39bb56c28e69e0bf739375d03dab",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/cache-ast-llvm/objects/f78adfeb5588c1d7d48b3af6bc4f01d9bbcecdd38138cbd52536d1efd37c2da7/dcd3fd9f611ad28bedf2077600ecbf7a121d0d912e392cd0e719083340ef8d22.a": {
+      "bytes": 1903654,
+      "sha256": "8cfafe923c4edf396aae9e5aa3af612350fcbeac8757b53b2b11a6cf7d301fb9",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/cache-ast-qbe/objects/f78adfeb5588c1d7d48b3af6bc4f01d9bbcecdd38138cbd52536d1efd37c2da7/0fcd05ec0260ec268de1c0b6d33809900f03ec95046d6750a43b01f9718240a2.a": {
+      "bytes": 695412,
+      "sha256": "d991009e601716f4eab07e203f1f10dda3644216fe70aa3ff026c9493dc850f9",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/experiments/lox-compiler-screen-20261003/analyze.py": {
+      "bytes": 3550,
+      "sha256": "017b2e267ee4f5066902aa81a9066326fbd0a8d7ced183e86c9935ed1d598ded",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/experiments/lox-compiler-screen-20261003/build.py": {
+      "bytes": 3815,
+      "sha256": "d2e08c9a0a2f2774e185dd402185e7d361af3d954c0ac95e5adbfb51658ddf41",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/experiments/lox-compiler-screen-20261003/elf.py": {
+      "bytes": 2713,
+      "sha256": "fae1359cc987d4e8010bbaa3a2c9340c2c80433042665cea04c5e2ec49716d47",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/experiments/lox-compiler-screen-20261003/prepare.py": {
+      "bytes": 9885,
+      "sha256": "dd32313ae7d97d190ae00e6b9911f987381cce37d4d496ed05447a49577f9087",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/experiments/lox-parity-20261003/run.py": {
+      "bytes": 2807,
+      "sha256": "dfacf759b940b94d019254ccdc45e8e01817cfc3acb78cdc090dd46061a22c7c",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/experiments/lox-perf-improvements-20261002/analyze.py": {
+      "bytes": 2925,
+      "sha256": "9ba4a07faf373997ab3785436781ba3efd19db781244a72d7599cc465ec230c9",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/experiments/lox-performance-audit-20261002/audit.py": {
+      "bytes": 11260,
+      "sha256": "0ee538279303731db25abe208a784ace71bc539a454dc7e11dc9edfd1346de7d",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/scripts/build-slot.sh": {
+      "bytes": 6307,
+      "sha256": "352e0718bea105164ed444d61b6c4552e78dbb3062c1d1178c93c27e1be3cffa",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-lowering-20261003/.tmp-lox-lowering/cfg-fix-release/bin/qbe": {
+      "bytes": 856264,
+      "sha256": "99ad919d70ad582dee6202b045bd53e1ab18fec356de98849610f49983756d63",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-variant-number-tag-20261003/.tmp-lox-variant-number-tag-20261003/compiler-final/bin/mylang": {
+      "bytes": 73919816,
+      "sha256": "6f021b7cb95fda2ead4eeac9136576f38e098df8890b290bc8d83c20af722535",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-variant-number-tag-20261003/.tmp-lox-variant-number-tag-20261003/compiler-final/lib/mylang-runtime/153db56129b1eda9ff74552a056faedcd3066fc945896cc54d7886aa5d214b3a.a": {
+      "bytes": 695412,
+      "sha256": "d991009e601716f4eab07e203f1f10dda3644216fe70aa3ff026c9493dc850f9",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-variant-number-tag-20261003/.tmp-lox-variant-number-tag-20261003/compiler-final/lib/mylang-runtime/ff1a859a1e0dd6f3232b5766611e55937ac47fa52451c9cbdb55b3250a67b147.a": {
+      "bytes": 1909394,
+      "sha256": "9dd72408f333d8e76c66d583da10edf5fa96b13ff2fd91c9cfba49daa2422f1c",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-variant-number-tag-20261003/.tmp-lox-variant-number-tag-20261003/native/completed.json": {
+      "bytes": 256699,
+      "sha256": "6218ce7affbb7bbee45b517b075e0b4565e9012e2c8f66cd5003f6b30bbc4b1f",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-variant-number-tag-20261003/.tmp-lox-variant-number-tag-20261003/number-tag-stable-rc-llvm": {
+      "bytes": 2235344,
+      "sha256": "ad1f174388d6124883cfcbc131b9b8f86f31ca9fb64c8f09e79c9aceefac584c",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-variant-number-tag-20261003/.tmp-lox-variant-number-tag-20261003/number-tag-stable-rc-llvm.qbe-manifest.json": {
+      "bytes": 211214,
+      "sha256": "b334a4279a6c490ca11138ae0ed8ce4d509b92491ecf77166927f7f063df71fe",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-variant-number-tag-20261003/.tmp-lox-variant-number-tag-20261003/number-tag-stable-rc-llvm.qbe-receipt": {
+      "bytes": 102,
+      "sha256": "fcd9bc13409ee32d1185254166afae65bc74154de5727df425879566424da7f0",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-variant-number-tag-20261003/.tmp-lox-variant-number-tag-20261003/number-tag-stable-rc-qbe": {
+      "bytes": 3505440,
+      "sha256": "2be47ad173babd97a69330c0de3aa26e6feb38c73bbc046dc1cafed855784f7e",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-variant-number-tag-20261003/.tmp-lox-variant-number-tag-20261003/number-tag-stable-rc-qbe.qbe-manifest.json": {
+      "bytes": 545,
+      "sha256": "6c1a6439641e5e8b5dcb88ba97cf558061eb0c956715562bb0f6e50bec0d66f2",
+      "symlink_target": null
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-variant-number-tag-20261003/.tmp-lox-variant-number-tag-20261003/number-tag-stable-rc-qbe.qbe-receipt": {
+      "bytes": 102,
+      "sha256": "8137c406daa5877e0ae37b26189b579a9671b3205dc2ef5cd9aeed598ce93cba",
+      "symlink_target": null
+    }
+  },
+  "version": "lox-compiler-closeout-v1",
+  "work": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-number-tag-screen-reviewed"
+}
