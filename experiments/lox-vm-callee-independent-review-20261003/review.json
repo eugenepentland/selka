@@ -1,0 +1,125 @@
+{
+  "outcome": "pass with stated limits; no actionable source defect found",
+  "scope": "VM callee descriptor and composed84 source integration; own table helper/parameter author paths excluded from independent semantic approval",
+  "reviewer_branch": "codex/lox-ownership-inline-20261003",
+  "inputs": {
+    "composition": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-next/combined.json",
+      "sha256": "77ec454239c437e0b8f6a43180df19614b4a2234a62ba36e5087daac34fb8f41"
+    },
+    "vm_final_descriptor": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final-source.json",
+      "sha256": "c1d23cd59bf9ef1cf3e93042b4c53976510cb4e4d02ee50ccf925cf51ec44339"
+    },
+    "author_qualification": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final-qualification/completed.json",
+      "sha256": "c9e181271205952e33f8a4483308c0294992403fe0f48aec8b507f708e3e9211"
+    }
+  },
+  "combined_source": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-next/combined",
+    "files": {
+      "NOTES.md": "85541175c32b6745ce2b9be34da5004bf16d7c8d0e83a5e46b46db41b5bf490c",
+      "ast.my": "e210fb35bf3125ba06ebb978bcb3592162020a77576542f2d049879a51479bf9",
+      "bench.json": "dbcc26195c024bc86d9e184284306f4849450f1042d1fe53092e7b52a3deea92",
+      "chunk.my": "b4f6e7ae6531b224f99e026f53fee3692c90d8f2b15d3c76ca5962f1803e4b66",
+      "compiler.my": "c550603195401ff6d9436b42d6fbf0c35051521da57e7b85281fc8fcf6ebe048",
+      "compiler_test.my": "582fe817dbeffa709961b5124370ce200510adb3ac0d246572ca1c0dc19ec08a",
+      "driver.my": "fe831d2ec08833d11139e790ab741903b27a8e0fb43582cac11ca664b4595836",
+      "driver_cases.json": "8507f12ef156a1e859a1cc90b712f3ae8ea19c9db98388992a83a70c16e1ff72",
+      "driver_tests.my": "5ef7cbd666cef3c543eba0d8798d7fd7515f5f45184a664cec3f1678f6126d5c",
+      "heap.my": "d6bdc0b4945ca0e2a14c6b75aadf7cf077c4ba263f7b9ec49a77adce44b9a780",
+      "heap_test.my": "81667d68bf957b347c983479f0e3843182a7f86ef170e32781190f992a75e1bd",
+      "interpreter.my": "60009d57779858c501cbd0f1a94a1a1177afeeff0f62822f9a12acb1cf074c7e",
+      "lox.sh": "9f82abeb4e1c21ce78a9f28d61281917927517f610403917aaf314f1294385fc",
+      "lox_strings.my": "383900dda10b9218caf2087e12a2e20089e4d48b0ec5fc3e17e960a3d70d83df",
+      "lox_strings_test.my": "a44545c64e9f75cc5af761d6c703feec83c4fc0a14d2678a1b2fce28067bd0c0",
+      "main.my": "18c1f669b1683123e635256c9f66c6db2766383391371c3822e61df7d9732274",
+      "natives.my": "2ff45343fded6d303e6233e0f787e63c319e860903e2c0c81ccbb71c2749d665",
+      "object.my": "08c0d5c6ae304ef4d0e1f5929f52b5d1dd47cd46e6c409392c0b5b1df9567ad7",
+      "output.my": "cdc79c8a9a5eca0106fb139bca5492da201f027b0499e5e00a492368317d194c",
+      "parser.my": "e9bd5d9c37e307d060ce165dc4fa0f276c2ff9dbe7cb21bd27cbdd94644b4edd",
+      "parser_test.my": "ffe2658f030c75b40a7c54d8f0c64e848e6679e13fc69cbef9a131ed7b120e4b",
+      "repros/overlap_proof_blowup.my.txt": "5c510f5d5e2d441cb5397a7d6097e3689a040751373d2c9594db6754812b4dfb",
+      "repros/print_long_float.my.txt": "0767918284593321e9589f14e3b90d9dc41239321d355be89aed055eef5cb132",
+      "repros/print_union_class_payload.my.txt": "c03c987b6bf03db950bb8e98c238a76c0e7ea9c4c98c29c3e5748cd2c3a4ce8d",
+      "repros/qbe_pm_slots.my.txt": "3560079c67785824971ae6f10c3f04e49e87e5e5dbd20afdd7f1c0a1b258dbe9",
+      "repros/read_fifo.my.txt": "2a3b1658eb6e4c9a0f40cfed13c0db92989e9c78de69150197df247a18e5becd",
+      "repros/runtime_flags.my.txt": "2d314b6501ea5be517e904e0791461f5900745a77e386c8403f6d15fefdd67eb",
+      "repros/stream_field_method.my.txt": "b551e742a030b770cc3861bebacbbc76beab0fc38aef78a54be7a3af4ee9eb97",
+      "resolver.my": "41d41b2a1ddb3f6ab3fb73ad9eff69415b0450d890554766bfee37eac8d0903d",
+      "resolver_test.my": "72c5176ff15db240d8ec8ff8073fcdb7736e8c60ab47410bb60fce934c179d31",
+      "scanner.my": "af4bc6a57859318051dc47d6e1f6344ee98fbfff037e9be93c0a103765cd3e83",
+      "scanner_test.my": "1d7fbb34b0de402657786641217e81c9ae286cab14baf2716de2db875ae39ad0",
+      "table.my": "0e11a8ac7ded8fa85a74518b25e3acf9fed17418192cd0c8bbd3beddc38b106d",
+      "table_test.my": "0d5bd048a64a8e51892f61d2b826437fae61cf5c88e5f1771851a83363499f51",
+      "value.my": "3b2a444e77c6a703b1aedad3c89ef38cad70aa3bb6cba1716b623980ff9a76b0",
+      "value_test.my": "b766d22b25a8a8a090b4a059030cfc7462022fdacb66a0a91bf8a9e09a53fed4",
+      "vm.my": "afceb2553b6a5933c2326064bd2c9e8de804787c45082c4f60495946ce0da06d"
+    },
+    "public_tests": 84
+  },
+  "vm_source": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/.tmp-lox-vm-callee-20261003/final",
+    "files": {
+      "NOTES.md": "85541175c32b6745ce2b9be34da5004bf16d7c8d0e83a5e46b46db41b5bf490c",
+      "ast.my": "e210fb35bf3125ba06ebb978bcb3592162020a77576542f2d049879a51479bf9",
+      "bench.json": "dbcc26195c024bc86d9e184284306f4849450f1042d1fe53092e7b52a3deea92",
+      "chunk.my": "b4f6e7ae6531b224f99e026f53fee3692c90d8f2b15d3c76ca5962f1803e4b66",
+      "compiler.my": "c550603195401ff6d9436b42d6fbf0c35051521da57e7b85281fc8fcf6ebe048",
+      "compiler_test.my": "582fe817dbeffa709961b5124370ce200510adb3ac0d246572ca1c0dc19ec08a",
+      "driver.my": "fe831d2ec08833d11139e790ab741903b27a8e0fb43582cac11ca664b4595836",
+      "driver_cases.json": "8507f12ef156a1e859a1cc90b712f3ae8ea19c9db98388992a83a70c16e1ff72",
+      "driver_tests.my": "5ef7cbd666cef3c543eba0d8798d7fd7515f5f45184a664cec3f1678f6126d5c",
+      "heap.my": "a66466889a8da4f66252b7e0d28a0973d724c52eef74e3abec2efcf0a5957166",
+      "heap_test.my": "81667d68bf957b347c983479f0e3843182a7f86ef170e32781190f992a75e1bd",
+      "interpreter.my": "5dbe0b23190407cfd97692b1b84a22c6ffd96f9fe8b1621236059f368d8898e7",
+      "lox.sh": "9f82abeb4e1c21ce78a9f28d61281917927517f610403917aaf314f1294385fc",
+      "lox_strings.my": "383900dda10b9218caf2087e12a2e20089e4d48b0ec5fc3e17e960a3d70d83df",
+      "lox_strings_test.my": "a44545c64e9f75cc5af761d6c703feec83c4fc0a14d2678a1b2fce28067bd0c0",
+      "main.my": "18c1f669b1683123e635256c9f66c6db2766383391371c3822e61df7d9732274",
+      "natives.my": "2ff45343fded6d303e6233e0f787e63c319e860903e2c0c81ccbb71c2749d665",
+      "object.my": "08c0d5c6ae304ef4d0e1f5929f52b5d1dd47cd46e6c409392c0b5b1df9567ad7",
+      "output.my": "cdc79c8a9a5eca0106fb139bca5492da201f027b0499e5e00a492368317d194c",
+      "parser.my": "e9bd5d9c37e307d060ce165dc4fa0f276c2ff9dbe7cb21bd27cbdd94644b4edd",
+      "parser_test.my": "ffe2658f030c75b40a7c54d8f0c64e848e6679e13fc69cbef9a131ed7b120e4b",
+      "repros/overlap_proof_blowup.my.txt": "5c510f5d5e2d441cb5397a7d6097e3689a040751373d2c9594db6754812b4dfb",
+      "repros/print_long_float.my.txt": "0767918284593321e9589f14e3b90d9dc41239321d355be89aed055eef5cb132",
+      "repros/print_union_class_payload.my.txt": "c03c987b6bf03db950bb8e98c238a76c0e7ea9c4c98c29c3e5748cd2c3a4ce8d",
+      "repros/qbe_pm_slots.my.txt": "3560079c67785824971ae6f10c3f04e49e87e5e5dbd20afdd7f1c0a1b258dbe9",
+      "repros/read_fifo.my.txt": "2a3b1658eb6e4c9a0f40cfed13c0db92989e9c78de69150197df247a18e5becd",
+      "repros/runtime_flags.my.txt": "2d314b6501ea5be517e904e0791461f5900745a77e386c8403f6d15fefdd67eb",
+      "repros/stream_field_method.my.txt": "b551e742a030b770cc3861bebacbbc76beab0fc38aef78a54be7a3af4ee9eb97",
+      "resolver.my": "41d41b2a1ddb3f6ab3fb73ad9eff69415b0450d890554766bfee37eac8d0903d",
+      "resolver_test.my": "72c5176ff15db240d8ec8ff8073fcdb7736e8c60ab47410bb60fce934c179d31",
+      "scanner.my": "af4bc6a57859318051dc47d6e1f6344ee98fbfff037e9be93c0a103765cd3e83",
+      "scanner_test.my": "1d7fbb34b0de402657786641217e81c9ae286cab14baf2716de2db875ae39ad0",
+      "table.my": "c40086659df221f47deb6c1916b821f470b67ad5e844e24db3ba026b35f54f7e",
+      "table_test.my": "d5892b2f08c4f6b43db8295795f5292fbc7b8d004aceef01fc456df71997aca1",
+      "value.my": "3b2a444e77c6a703b1aedad3c89ef38cad70aa3bb6cba1716b623980ff9a76b0",
+      "value_test.my": "b766d22b25a8a8a090b4a059030cfc7462022fdacb66a0a91bf8a9e09a53fed4",
+      "vm.my": "b7121e50e2a56fde4c70e5b9628316394c754058a23b56d1ba7e2183ebe89b41"
+    },
+    "public_tests": 83
+  },
+  "integrity_checks": {
+    "all37_composed_hashes_match": true,
+    "all37_author_vm_hashes_match": true,
+    "vm_composition_only_global_lookup_call_projection": true,
+    "handlers_before_and_after_callee_region_unchanged_in_vm_arm": true,
+    "driver_tests_and_providers_identical_to_vm_arm": true,
+    "all_existing_provider_entries_unchanged": true,
+    "new_provider_entries": [
+      "driver_tests::test_run_scalar_callee_class_error_order",
+      "driver_tests::test_run_scalar_callee_invalid_argument_order",
+      "driver_tests::test_run_scalar_callee_runtime_snapshot"
+    ]
+  },
+  "source_findings": [],
+  "limitations": [
+    "Read-only source review; reviewer ran no guest tests, compiler gates or timings. Author qualification receipt is hashed evidence, not a reviewer rerun.",
+    "Own authored get_entries implementation and table parameter paths are excluded from independent semantic certification. Composition verifies their expected bytes only.",
+    "VmCallee is a new source helper: normal compiler frame/root admission remains, so identical native opt-in frame or step quota cutoffs are not claimed. Exact Lox errors and order are preserved by the unchanged handlers.",
+    "Plain ObjRef/Value descriptors do not create Lox roots; their safety relies on unchanged Runtime stack/frame/class roots and absence of Lox allocation during read-only classification and frame publication. Adding new allocating callbacks there would require review."
+  ]
+}

@@ -1,0 +1,83 @@
+--- baseline/vm.my
++++ vm-final/vm.my
+@@ -171,35 +171,60 @@
+     return True
+ 
+ 
+-def call_value(rt: mut heap.Runtime, o: mut output.Output, callee: value.Value, count: int) -> bool:
+-    match callee:
++# Only plain callee data escapes the read of the rooted object table.
++# The object projection ends before handlers mutate the stack or heap.
++union VmCallee:
++    bound_method: object.BoundMethodObj,
++    klass: value.ObjRef,
++    closure: value.ObjRef,
++    native: object.NativeObj,
++    invalid
++
++
++def vm_callee(rt: heap.Runtime, item: value.Value) -> VmCallee:
++    match item:
+         case value.Value.obj(ref):
+             match rt.objects[ref]:
+                 case object.Obj.bound_method(bound):
+-                    rt.stack[rt.stack_top - count - 1] = bound.receiver
+-                    return call(mut rt, mut o, bound.method, count)
++                    return VmCallee.bound_method(bound)
+                 case object.Obj.klass(_):
+-                    instance = heap.allocate(mut rt, object.Obj.instance(object.InstanceObj(klass=ref, fields=table.new_table())))
+-                    rt.stack[rt.stack_top - count - 1] = value.Value.obj(instance)
+-                    match heap.class_method(rt, ref, rt.init_string):
+-                        case Some(initializer):
+-                            return call(mut rt, mut o, as_obj(initializer), count)
+-                        case None:
+-                            if count != 0:
+-                                return arity_error(mut rt, mut o, 0, count)
+-                            return True
++                    return VmCallee.klass(ref)
+                 case object.Obj.closure(_):
+-                    return call(mut rt, mut o, ref, count)
++                    return VmCallee.closure(ref)
+                 case object.Obj.native(native):
+-                    if count != native.arity:
+-                        return arity_error(mut rt, mut o, native.arity, count)
+-                    result = natives.call_native(rt, native.id)
+-                    rt.stack_top = rt.stack_top - count - 1
+-                    heap.push(mut rt, result)
+-                    return True
++                    return VmCallee.native(native)
+                 case _:
+                     pass
+         case _:
++            pass
++    return VmCallee.invalid
++
++
++def call_value(rt: mut heap.Runtime, o: mut output.Output, callee: value.Value, count: int) -> bool:
++    match vm_callee(rt, callee):
++        case VmCallee.bound_method(bound):
++            rt.stack[rt.stack_top - count - 1] = bound.receiver
++            return call(mut rt, mut o, bound.method, count)
++        case VmCallee.klass(ref):
++            instance = heap.allocate(mut rt, object.Obj.instance(object.InstanceObj(klass=ref, fields=table.new_table())))
++            rt.stack[rt.stack_top - count - 1] = value.Value.obj(instance)
++            match heap.class_method(rt, ref, rt.init_string):
++                case Some(initializer):
++                    return call(mut rt, mut o, as_obj(initializer), count)
++                case None:
++                    if count != 0:
++                        return arity_error(mut rt, mut o, 0, count)
++                    return True
++        case VmCallee.closure(ref):
++            return call(mut rt, mut o, ref, count)
++        case VmCallee.native(native):
++            if count != native.arity:
++                return arity_error(mut rt, mut o, native.arity, count)
++            result = natives.call_native(rt, native.id)
++            rt.stack_top = rt.stack_top - count - 1
++            heap.push(mut rt, result)
++            return True
++        case VmCallee.invalid:
+             pass
+     return runtime_error(mut rt, mut o, b"Can only call functions and classes.")
+ 
