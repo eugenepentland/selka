@@ -20,7 +20,6 @@ pub fn proven(comptime E: type, self: *E, head: usize, back: usize) bool {
     }
     var remaining: usize = 262144;
     for (head..back + 1) |pc| {
-        if (code[pc].inline_origin != null) return false;
         const site = state.plan.at(pc);
         if (site.unique.len != 0 or site.unique_field != null) return false;
         if (site.fill or site.capture or site.shares.len != 0 or site.read_captures.len != 0) return false;
@@ -30,14 +29,17 @@ pub fn proven(comptime E: type, self: *E, head: usize, back: usize) bool {
         const stack = self.states[pc] orelse continue;
         if (stack.len > remaining) return false;
         remaining -= stack.len;
-        for (stack) |ty| if (!scalar(ty)) return false;
+        for (stack) |ty| if (!scalar(E, self, ty)) return false;
         if (!operation(E, self, code[pc].op)) return false;
     }
     return true;
 }
 
-fn scalar(ty: typed.Type) bool {
-    return ty.isInteger() or ty == .bool or ty == .unit;
+fn scalar(comptime E: type, self: *E, ty: typed.Type) bool {
+    if (ty.isInteger() or ty == .bool or ty == .unit) return true;
+    if (!self.isScalar(ty)) return false;
+    const shape = self.cow.?.rc.?.catalog.get(ty) catch return false;
+    return !shape.counted and !shape.unique_drop;
 }
 
 fn operation(comptime E: type, self: *E, op: Op) bool {
@@ -45,11 +47,12 @@ fn operation(comptime E: type, self: *E, op: Op) bool {
         .load_local, .store_local => |id| blk: {
             const local = @backingInt(id);
             if (self.byReference(local) or self.callerStorage(local)) break :blk false;
-            break :blk scalar(self.function.scope.locals[local].ty);
+            break :blk scalar(E, self, self.function.scope.locals[local].ty);
         },
-        .push_integer => |value| scalar(value.ty),
-        .cast_integer, .neg_integer, .acknowledge => |ty| scalar(ty),
-        .binary_integer => |binary| scalar(binary.ty),
+        .push_integer => |value| scalar(E, self, value.ty),
+        .cast_integer, .neg_integer, .acknowledge, .wrap_domain, .unwrap_domain => |ty| scalar(E, self, ty),
+        .binary_integer => |binary| scalar(E, self, binary.ty),
+        .cmp_domain => |comparison| scalar(E, self, comparison.ty),
         .push_i64,
         .push_bool,
         .push_unit,
@@ -66,6 +69,7 @@ fn operation(comptime E: type, self: *E, op: Op) bool {
         .rem_i64_checked,
         .neg_i64_checked,
         .assert_true,
+        .unary_float,
         => true,
         else => false,
     };

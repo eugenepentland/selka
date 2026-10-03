@@ -1,0 +1,27 @@
+{
+  "purpose": "Untimed before/after generated-code proof; no performance/parity claim.",
+  "before_commit": "860d1e9d",
+  "scope": "constant remainder carried-local bounds; same source and checked value guards, no step/frame ceiling",
+  "records": [
+    {
+      "label": "before",
+      "compiler_sha256": "e34580ebedebb8ee86d590fdec03b374cbb1defcf7283f5ccf8974f88501982f",
+      "copy_instructions": 66,
+      "copy_failure_helpers": 1,
+      "copy_divide_instructions": 0,
+      "full_il_bytes": 5183,
+      "full_instruction_count": 213,
+      "machine_assembly": "experiments/runtime-parity-arithmetic-20261003/loop-before.s"
+    },
+    {
+      "label": "after",
+      "compiler_sha256": "21b14279cef8809aaf68ff15ae2d9859a602b7391f15b7b349bd44632265e6be",
+      "copy_instructions": 58,
+      "copy_failure_helpers": 0,
+      "copy_divide_instructions": 0,
+      "full_il_bytes": 5074,
+      "full_instruction_count": 209,
+      "machine_assembly": "experiments/runtime-parity-arithmetic-20261003/loop-after.s"
+    }
+  ]
+}

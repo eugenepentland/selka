@@ -335,14 +335,17 @@ const State = struct {
 /// A checked `+ - *` the copy may lower unchecked when its bound fits.
 const Arithmetic = struct { pc: usize, value: NodeId };
 
+/// One local write either adds a bounded increment or replaces it with a bounded value.
+const Update = union(enum) { increment: NodeId, bounded: u64 };
+
 /// Per-local write facts of one loop body.
 const Writes = struct {
     /// Whether the body stores the local.
     written: []bool = &.{},
     /// How many store instructions the body has for the local.
     stores: []u32 = &.{},
-    /// The bounded increment of an accumulator's one write.
-    increments: []?NodeId = &.{},
+    /// The value or increment bound of a local's one write.
+    updates: []?Update = &.{},
     /// Collection types whose element slots the body writes.
     elements: std.ArrayList(typed.Type) = .empty,
     /// The list type the body appends to, and how many appends it has.
@@ -619,8 +622,8 @@ const Analyzer = struct {
         self.actions = try self.allocator.alloc(Action, count);
         @memset(self.actions, .{});
         const locals = self.input.function.scope.locals.len;
-        self.writes.increments = try self.allocator.alloc(?NodeId, locals);
-        @memset(self.writes.increments, null);
+        self.writes.updates = try self.allocator.alloc(?Update, locals);
+        @memset(self.writes.updates, null);
         const first = try self.allocator.alloc(NodeId, locals);
         for (first, 0..) |*value, index| {
             const slot: u32 = @intCast(index);
@@ -696,10 +699,18 @@ const Analyzer = struct {
         return true;
     }
 
-    /// Record the increment of a local's one write, when that write adds a
-    /// bounded amount to the local's own value at the top of the iteration.
+    /// Record a local's single bounded replacement or additive update.
     fn noteIncrement(self: *Analyzer, slot: u32, value: NodeId) Error!void {
         if (self.writes.stores[slot] != 1 or slot == self.counter.slot) return;
+        const bound: ?u64 = switch (self.get(value)) {
+            .constant => |number| @abs(number),
+            .leaf => |leaf_value| if (leaf_value.kind == .narrow) @as(u64, 1) << @intCast(leaf_value.slot) else null,
+            else => null,
+        };
+        if (bound) |maximum| {
+            self.writes.updates[slot] = .{ .bounded = maximum };
+            return;
+        }
         const operation = switch (self.get(value)) {
             .operation => |operation| operation,
             else => return,
@@ -715,7 +726,7 @@ const Analyzer = struct {
         // An increment that reads a carried local, the accumulator's own value
         // included, has no bound of its own.
         if (self.carries(increment, 0)) return;
-        self.writes.increments[slot] = increment;
+        self.writes.updates[slot] = .{ .increment = increment };
     }
     fn carries(self: *const Analyzer, id: NodeId, depth: u8) bool {
         if (depth > 24) return true;
@@ -909,8 +920,19 @@ const Analyzer = struct {
             },
             // An accumulator: |a| <= |a0| + trips * |e|, trips <= 2X + 1 <= 3X.
             .carried => {
-                const increment = self.writes.increments[value.slot] orelse return null;
+                const update = self.writes.updates[value.slot] orelse return null;
                 if (self.localType(value.slot) != .i64) return null;
+                if (update == .bounded) {
+                    // Entry can precede the first bounded write, and a branch
+                    // can skip it. Guard the entry too; every later write is
+                    // bounded independently of its previous value. Since
+                    // X >= 2^narrowest_bits, this coefficient bounds both.
+                    try addLeaf(self.allocator, leaves, try self.leaf(.entry, value.slot));
+                    const unit = @as(u64, 1) << narrowest_bits;
+                    const coefficient = update.bounded / unit + @intFromBool(update.bounded % unit != 0);
+                    return .{ .coefficient = @max(1, coefficient), .degree = 1 };
+                }
+                const increment = update.increment;
                 const each = try self.magnitude(increment, leaves, depth + 1) orelse return null;
                 try self.counterLeaves(leaves);
                 try addLeaf(self.allocator, leaves, try self.leaf(.entry, value.slot));
@@ -1034,7 +1056,8 @@ const Machine = struct {
                 const left = self.pop() orelse return null;
                 try self.push(if (predicate == .lt and a.constantOf(right) == 0) try a.node(.{ .negative = left }) else try a.node(.unknown));
             },
-            .cmp_bool, .cmp_enum, .cmp_domain, .rem_i64_checked => return self.consume(2),
+            .cmp_bool, .cmp_enum, .cmp_domain => return self.consume(2),
+            .rem_i64_checked => return self.remainder(),
             .div_i64_checked => return self.quotient(),
             .not_bool, .unary_float, .get_field, .neg_i64_checked, .neg_integer => return self.consume(1),
             .wrap_domain, .unwrap_domain => {},
@@ -1048,6 +1071,7 @@ const Machine = struct {
                     .sub => try self.arith(.sub),
                     .mul => try self.arith(.mul),
                     .div, .floor_div => return self.quotient(),
+                    .rem, .floor_rem => return self.remainder(),
                     else => return self.consume(2),
                 }
             },
@@ -1092,6 +1116,22 @@ const Machine = struct {
         _ = self.pop() orelse return null;
         const dividend = self.pop() orelse return null;
         try self.push(try a.node(.{ .operation = .{ .operator = .quotient, .left = dividend, .right = divisor } }));
+        return true;
+    }
+
+    /// A constant remainder has magnitude below the divisor, independently
+    /// of its dividend. The original operation still runs before this bound
+    /// is used; no guard evaluates its operands or moves its failure earlier.
+    fn remainder(self: *Machine) Error!?bool {
+        const a = self.analyzer;
+        if (self.stack.items.len < 2) return null;
+        const divisor = a.constantOf(self.stack.items[self.stack.items.len - 1]) orelse return self.consume(2);
+        if (divisor == 0) return self.consume(2);
+        _ = self.pop() orelse return null;
+        _ = self.pop() orelse return null;
+        const maximum = @abs(divisor) - 1;
+        const value = if (maximum == 0) try a.constant(0) else try a.leaf(.narrow, @intCast(64 - @clz(maximum)));
+        try self.push(value);
         return true;
     }
 

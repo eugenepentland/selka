@@ -1,0 +1,235 @@
+dbgfile "myl_f_edca249d8d1f9a5b7d1a0f3ef54e3969bf3acb65499aaea1316cc43a98315502"
+type :myl_slice = { l, l }
+export function l $myl_f_edca249d8d1f9a5b7d1a0f3ef54e3969bf3acb65499aaea1316cc43a98315502(l %ctx, l %a0, l %a1) {
+@entry
+ %trap =l add %ctx, 32
+ %l0 =l alloc8 8
+ %l1 =l alloc8 8
+ %l2 =l alloc8 8
+ %l3 =l alloc8 8
+ %l4 =l alloc8 8
+ %s0 =l alloc8 8
+ %s1 =l alloc8 8
+ %s2 =l alloc8 8
+ storel %a0, %l0
+ storel %a1, %l1
+ jmp @i0
+@i0
+ %v0 =l loadl %l1
+ storel %v0, %s0
+ %v1 =l loadl %s0
+ %v2 =l copy %l2
+ storel %v1, %v2
+ storel 0, %s0
+ %v3 =l loadl %s0
+ %v4 =l copy %l3
+ storel %v3, %v4
+ %v5 =l loadl %l0
+ storel %v5, %s0
+ %v6 =l loadl %s0
+ %v7 =l copy %l4
+ storel %v6, %v7
+ %v9 =l loadl %l3
+ %v10 =l loadl %l4
+ %v11 =l csgtl %v10, %v9
+ %v12 =l sub %v10, %v9
+ %v13 =l cugel %v12, 16
+ %v8 =l and %v11, %v13
+ jnz %v8, @guard8, @oi6
+@guard8
+ %v15 =l add %v9, 576460752303423488
+ %v14 =l culel %v15, 1152921504606846976
+ jnz %v14, @guard14, @oi6
+@guard14
+ %v17 =l add %v10, 576460752303423488
+ %v16 =l culel %v17, 1152921504606846976
+ jnz %v16, @guard16, @oi6
+@guard16
+ %v20 =l loadl %l2
+ %v19 =l add %v20, 576460752303423488
+ %v18 =l culel %v19, 1152921504606846976
+ jnz %v18, @guard18, @oi6
+@guard18
+ jmp @fi6
+ # RC-LOOP-OPERANDS-BEGIN 6 22
+@fi6
+ %v21 =l loadl %l3
+ storel %v21, %s0
+ %v22 =l loadl %l4
+ storel %v22, %s1
+ %v23 =l loadl %s1
+ %v24 =l loadl %s0
+ %v25 =l csltl %v24, %v23
+ storel %v25, %s0
+ %v26 =l loadl %s0
+ jnz %v26, @next27, @i23
+@next27
+ %v27 =l loadl %l2
+ storel %v27, %s0
+ %v28 =l loadl %l3
+ storel %v28, %s1
+ storel 7, %s2
+ %v29 =l loadl %s2
+ %v30 =l loadl %s1
+ %v31 =l mul %v30, %v29
+ storel %v31, %s1
+ %v32 =l loadl %s1
+ %v33 =l loadl %s0
+ %v34 =l add %v33, %v32
+ storel %v34, %s0
+ storel 1000003, %s1
+ %v35 =l loadl %s1
+ %v36 =l loadl %s0
+ %v38 =l sar %v36, 63
+ %v39 =l xor %v36, %v38
+ %v40 =l sub %v39, %v38
+ %v41 =l umulh %v40, 896011011859258473
+ %v42 =l sub %v40, %v41
+ %v43 =l shr %v42, 1
+ %v44 =l add %v43, %v41
+ %v45 =l shr %v44, 19
+ %v46 =l xor %v45, %v38
+ %v47 =l sub %v46, %v38
+ %v48 =l mul %v47, %v35
+ %v49 =l sub %v36, %v48
+ %v50 =l cnel %v49, 0
+ %v51 =l and %v50, %v38
+ %v52 =l neg %v51
+ %v53 =l and %v35, %v52
+ %v37 =l add %v49, %v53
+ storel %v37, %s0
+ %v54 =l loadl %s0
+ %v55 =l copy %l2
+ storel %v54, %v55
+ %v56 =l loadl %l3
+ storel %v56, %s0
+ storel 1, %s1
+ %v57 =l loadl %s1
+ %v58 =l loadl %s0
+ %v59 =l add %v58, %v57
+ storel %v59, %s0
+ %v60 =l loadl %s0
+ %v61 =l copy %l3
+ storel %v60, %v61
+ jmp @fi6
+ # RC-LOOP-OPERANDS-END 6 22
+@oi6
+ %v62 =l loadl %l3
+ storel %v62, %s0
+ %v63 =l loadl %l4
+ storel %v63, %s1
+ %v64 =l loadl %s1
+ %v65 =l loadl %s0
+ %v66 =l csltl %v65, %v64
+ storel %v66, %s0
+ %v67 =l loadl %s0
+ jnz %v67, @next68, @i23
+@next68
+ %v68 =l loadl %l2
+ storel %v68, %s0
+ %v69 =l loadl %l3
+ storel %v69, %s1
+ storel 7, %s2
+ %v70 =l loadl %s2
+ %v71 =l loadl %s1
+ %v72 =l mul %v71, %v70
+ %v73 =l and %v71, 4294967295
+ %v74 =l shr %v71, 32
+ %v75 =l and %v70, 4294967295
+ %v76 =l shr %v70, 32
+ %v77 =l mul %v73, %v75
+ %v78 =l shr %v77, 32
+ %v79 =l mul %v74, %v75
+ %v80 =l add %v79, %v78
+ %v81 =l and %v80, 4294967295
+ %v82 =l shr %v80, 32
+ %v83 =l mul %v73, %v76
+ %v84 =l add %v83, %v81
+ %v85 =l shr %v84, 32
+ %v86 =l mul %v74, %v76
+ %v87 =l add %v86, %v82
+ %v88 =l add %v87, %v85
+ %v89 =l csltl %v71, 0
+ %v90 =l csltl %v70, 0
+ %v91 =l neg %v89
+ %v92 =l neg %v90
+ %v93 =l and %v70, %v91
+ %v94 =l and %v71, %v92
+ %v95 =l sub %v88, %v93
+ %v95 =l sub %v95, %v94
+ %v96 =l sar %v72, 63
+ %v97 =l cnel %v95, %v96
+ jnz %v97, @overflow72, @checked72
+@overflow72
+ dbgloc 14
+ call $myl_qbe_fail_overflow_op(l %ctx, l 2, l %v71, l %v70, l 64)
+ hlt
+@checked72
+ storel %v72, %s1
+ %v98 =l loadl %s1
+ %v99 =l loadl %s0
+ %v100 =l add %v99, %v98
+ %v102 =l xor %v99, %v100
+ %v103 =l xor %v98, %v100
+ %v104 =l and %v102, %v103
+ %v101 =l csltl %v104, 0
+ jnz %v101, @overflow100, @checked100
+@overflow100
+ dbgloc 15
+ call $myl_qbe_fail_overflow_op(l %ctx, l 0, l %v99, l %v98, l 64)
+ hlt
+@checked100
+ storel %v100, %s0
+ storel 1000003, %s1
+ %v105 =l loadl %s1
+ %v106 =l loadl %s0
+ %v108 =l sar %v106, 63
+ %v109 =l xor %v106, %v108
+ %v110 =l sub %v109, %v108
+ %v111 =l umulh %v110, 896011011859258473
+ %v112 =l sub %v110, %v111
+ %v113 =l shr %v112, 1
+ %v114 =l add %v113, %v111
+ %v115 =l shr %v114, 19
+ %v116 =l xor %v115, %v108
+ %v117 =l sub %v116, %v108
+ %v118 =l mul %v117, %v105
+ %v119 =l sub %v106, %v118
+ %v120 =l cnel %v119, 0
+ %v121 =l and %v120, %v108
+ %v122 =l neg %v121
+ %v123 =l and %v105, %v122
+ %v107 =l add %v119, %v123
+ storel %v107, %s0
+ %v124 =l loadl %s0
+ %v125 =l copy %l2
+ storel %v124, %v125
+ %v126 =l loadl %l3
+ storel %v126, %s0
+ storel 1, %s1
+ %v127 =l loadl %s1
+ %v128 =l loadl %s0
+ %v129 =l add %v128, %v127
+ # myl-affine %v129
+ %v130 =l csgtl %v128, 9223372036854775806
+ jnz %v130, @overflow129, @checked129
+@overflow129
+ dbgloc 21
+ call $myl_qbe_fail_overflow_op(l %ctx, l 0, l %v128, l %v127, l 64)
+ hlt
+@checked129
+ storel %v129, %s0
+ %v131 =l loadl %s0
+ %v132 =l copy %l3
+ storel %v131, %v132
+ jmp @oi6
+@i23
+ %v133 =l loadl %l2
+ storel %v133, %s0
+ %v134 =l loadl %s0
+ ret %v134
+@failure
+ ret 0
+@entry_failure
+ ret 0
+}
