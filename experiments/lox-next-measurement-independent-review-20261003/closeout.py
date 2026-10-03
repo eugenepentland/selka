@@ -88,9 +88,16 @@ def main():
                                 'observed_utc': datetime.datetime.now(datetime.timezone.utc).isoformat()})
     assert 'combined-counters' in docs
     analyses = [audit.analysis(nextwork / 'measurements/combined-counter-analysis.json', docs['combined-counters'])]
-    attribution = writework / 'measurements/write-attribution-analysis.json'
+    attribution = writework / 'measurements/write-attribution-wall-analysis.json'
     if attribution.exists() and 'write-attribution-timing' in docs:
         analyses.append(audit.analysis(attribution, docs['write-attribution-timing']))
+        recorded = audit.load(attribution)
+        assert recorded['sha256'] == audit.sha(writework / 'measurements/write-attribution-timing.json')
+        assert recorded['coverage_verified'] and recorded['compiler_only_attribution']
+        copied = root / 'experiments/lox-callee-table-checkpoint-20261003/write-attribution.json'
+        assert audit.read(copied) == audit.read(attribution)
+        analyses[-1]['tracked_copy'] = str(copied)
+        analyses[-1]['tracked_copy_sha256'] = audit.sha(copied)
     elif 'write-attribution-timing' in docs:
         # Recompute pairs even if the root's final analysis file is not ready.
         doc = docs['write-attribution-timing']

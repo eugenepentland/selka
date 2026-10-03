@@ -1,0 +1,172 @@
+{
+  "recorded_utc": "2026-10-03T03:47:46.386692+00:00",
+  "outcome": "final helper and observed reconstruction/qualification pass with stated provenance limits",
+  "helper": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/experiments/lox-callee-table-checkpoint-20261003/prepare.py",
+    "sha256": "16c6698691054b6122cf82fae8e6d45cdfb78d9bb0d34d186cf6395b9b57ccc1",
+    "preparer_identity_checked_before_after": true
+  },
+  "expected_sources": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/experiments/lox-callee-table-checkpoint-20261003/sources.json",
+    "sha256": "73ab4346c583f5f5c14171ddd57363fb686056bcae001d74b29fb855654cc265",
+    "files_per_source": 37
+  },
+  "in_memory_patch_replay": {
+    "sha256": "1e75f5164ab1385832145f50aee1c5e11d07dc8a6902747f386e88770445a7db",
+    "changed_files": [
+      "driver_cases.json",
+      "driver_tests.my",
+      "heap.my",
+      "interpreter.my",
+      "table.my",
+      "table_test.my",
+      "vm.my"
+    ],
+    "matches_source84_exactly": true
+  },
+  "canonical_replay": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-next/canonical-replay.json",
+    "sha256": "957d1d0e2bb6bf12caac781261a6fe80fd8f238b8a0526eb5bd66c57d5cccc36",
+    "all37_verified": true
+  },
+  "final_manifest": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-next/fresh-rebuild-reviewed/binaries.json",
+    "sha256": "4f0cd141b980d5af55515110fcf9cf56340ec3547d26e05aa3b159460df4c0bc",
+    "binaries": {
+      "baseline-llvm": "29a48f65df32df53d80a51a70e4d072d8c85eb77953606a2bbbc71b4ba892764",
+      "baseline-qbe": "6217e8fb5308702efcbdfdf2128ffd98cda8bafafc75e183d9130c0b1b402300",
+      "combined-llvm": "a0ec4ffd470b309d70d35cbab69215b778fbdbc2d71d3d8761703da18feca594",
+      "combined-qbe": "2c00b0b84d173010036608940e06a61206f535662284eac02eb289d9dee470d6",
+      "rust": "4d869a184a5f1a666113d30ad93a27ac703f39bb56c28e69e0bf739375d03dab",
+      "go": "c58e82571c3262bef42144c140ea0534b41decb066726075f1a25eeb2bda9197"
+    },
+    "sources": {
+      "baseline": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-next/fresh-rebuild-reviewed/baseline",
+        "files_checked": 37,
+        "modules_checked": 26,
+        "all_files_identity_sha256": "ab9212b98d73f4eea9e5f8429b60905bad30b68e4f5d333f0ebbd95561d58e3e"
+      },
+      "combined": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-next/fresh-rebuild-reviewed/combined",
+        "files_checked": 37,
+        "modules_checked": 26,
+        "all_files_identity_sha256": "09c5f4ffea4cc2161b4a9e23a5fc986c63c4d51660187638bc83218216422569"
+      }
+    },
+    "reference_files": 106,
+    "qbe_sha256": "99ad919d70ad582dee6202b045bd53e1ab18fec356de98849610f49983756d63"
+  },
+  "reference_archive_scope": "All106 benchmark/Rust/Go files match measured references; the21 unused Zig files are intentionally excluded.",
+  "reference_toolchains": {
+    "cargo": {
+      "path": "/home/epentland/.cargo/bin/cargo",
+      "sha256": "dda7234360b7f578ca8b0ddcb80145646fa61a67c1720a5abc7051b35c9fcb71",
+      "version": "cargo 1.98.1 (797e8a9bc 2026-08-05)",
+      "sysroot_executable": "/home/epentland/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+      "sysroot_executable_sha256": "da77c8b33849312255ccde3179198ada4c8deb370488d050286146b1d1b27e14"
+    },
+    "rustc": {
+      "path": "/home/epentland/.cargo/bin/rustc",
+      "sha256": "dda7234360b7f578ca8b0ddcb80145646fa61a67c1720a5abc7051b35c9fcb71",
+      "version": "rustc 1.98.1 (48a229cea 2026-09-01)",
+      "sysroot_executable": "/home/epentland/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/rustc",
+      "sysroot_executable_sha256": "859254978c0a0402c32f949f6de0d99aee73be8d15f45aac00ae1448aac51e74"
+    },
+    "go": {
+      "path": "/home/epentland/.local/bin/go",
+      "sha256": "1db869c560a193573a71be466a34e0d4abb7792d78165c6102cdda069276a3a8",
+      "version": "go version go1.27.0 linux/amd64"
+    }
+  },
+  "prepare_commands": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-next/fresh-rebuild-reviewed/prepare-commands.json",
+    "sha256": "e33e5a502162e74987f63e24f8fa7bff200573284c3b9d5790d4d7163b529a2f",
+    "successful_commands": 7
+  },
+  "native_rc_builds": [
+    {
+      "receipt": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-next/fresh-rebuild-reviewed/baseline-build.json",
+      "receipt_sha256": "f44db5566e8b164a3880295655489fa7aad4d1cb87dc5fb633f873650be5cbe1",
+      "builds": [
+        {
+          "binary": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-next/fresh-rebuild-reviewed/bin/baseline-llvm",
+          "sha256": "29a48f65df32df53d80a51a70e4d072d8c85eb77953606a2bbbc71b4ba892764",
+          "backend": "llvm",
+          "compiler_sha256": "d14a704083bcc5f5174932a751f7d9dda73100dbd62403626b42b52436cad040",
+          "manifest_sha256": "b6cb782a92e2c18eb6e7501edcdecd042acacd3e01f50ec34741f57cb599cd11",
+          "runtime_object_sha256": "057dce6c166bd34860d1b2515875da7ee4e09b256b844a770d7e828482a7ab5b"
+        },
+        {
+          "binary": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-next/fresh-rebuild-reviewed/bin/baseline-qbe",
+          "sha256": "6217e8fb5308702efcbdfdf2128ffd98cda8bafafc75e183d9130c0b1b402300",
+          "backend": "qbe",
+          "compiler_sha256": "d14a704083bcc5f5174932a751f7d9dda73100dbd62403626b42b52436cad040",
+          "manifest_sha256": "34b9f93e7e06ea3c44932389099eb7c74e636b8df167b94842aa38f7bcdedbcf",
+          "runtime_object_sha256": "d991009e601716f4eab07e203f1f10dda3644216fe70aa3ff026c9493dc850f9"
+        }
+      ]
+    },
+    {
+      "receipt": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-next/fresh-rebuild-reviewed/combined-build.json",
+      "receipt_sha256": "1f9f0a9bc75577bbf9d177206e3948109fedf6b0ba263aaa8152150e1325d0ce",
+      "builds": [
+        {
+          "binary": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-next/fresh-rebuild-reviewed/bin/combined-llvm",
+          "sha256": "a0ec4ffd470b309d70d35cbab69215b778fbdbc2d71d3d8761703da18feca594",
+          "backend": "llvm",
+          "compiler_sha256": "d14a704083bcc5f5174932a751f7d9dda73100dbd62403626b42b52436cad040",
+          "manifest_sha256": "95155558e6235e992a06e7fde224381813971f2b1fc005f04d0ee0c4438a755d",
+          "runtime_object_sha256": "760b30051d04283e7ada6f6814a5b619080898be8d7924f97f91049ae0703ed9"
+        },
+        {
+          "binary": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-next/fresh-rebuild-reviewed/bin/combined-qbe",
+          "sha256": "2c00b0b84d173010036608940e06a61206f535662284eac02eb289d9dee470d6",
+          "backend": "qbe",
+          "compiler_sha256": "d14a704083bcc5f5174932a751f7d9dda73100dbd62403626b42b52436cad040",
+          "manifest_sha256": "ed85600c5836978b1e7b74d9680751b04d931663dff94c3779d85a3d1ba9099f",
+          "runtime_object_sha256": "d991009e601716f4eab07e203f1f10dda3644216fe70aa3ff026c9493dc850f9"
+        }
+      ]
+    }
+  ],
+  "byte_identity_to_measured_guests": {
+    "baseline-llvm": true,
+    "baseline-qbe": true,
+    "combined-llvm": true,
+    "combined-qbe": true,
+    "rust": true,
+    "go": false
+  },
+  "fresh_smoke": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-next/fresh-rebuild-reviewed/recheck-smoke.json",
+    "sha256": "c4012d0ed0f7aa1e25041cd52f65151e083a8cff11bd8cb1f8d1517aff663725",
+    "command_sha256": "0d4d904a42468b0efdf81282285bc1b0009ad7e3f620ee0209f3c8da28628bde",
+    "log_sha256": "ab11af1b22404515629d249708ed0c2d64c41340d1304eeb0cfd9da32c580a71",
+    "samples": 156,
+    "unique_complete_coverage": true,
+    "output_status_diagnostics_statistics_verified": true
+  },
+  "original_failed_prepare": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-next/fresh-rebuild/prepare-commands.json",
+    "sha256": "8728328eebb5e82d5e8757c7123c52f25affccd1ad7ef20cdf736d9f74e80a7c",
+    "successful_commands_before_failure": 5,
+    "cargo_process_status": 127,
+    "complete_manifest_absent": true,
+    "never_accepted_as_full_pass": true
+  },
+  "resolved_provenance_concern": "Final helper sets absolute RUSTC for Cargo and records the effective relevant environment; relative override/tool-record mismatch is fixed.",
+  "reviewer_guest_executions": 0,
+  "reviewer_perf_executions": 0,
+  "root_mutations": 0,
+  "stable_read_input_count": 314,
+  "stable_read_inputs_identity_sha256": "cba45d2d4895301542396db27b120c54e0e347042d72a02116aba90a785c916d",
+  "limits": [
+    "No new timing or reference replacement: five fresh guests match measured bytes; fresh Go has a distinct identity and only fresh smoke behavior is certified.",
+    "Cargo/rustc shim hashes and actual sysroot executable hashes are recorded separately with observed versions; complete toolchain/stdlib archives are not claimed.",
+    "Some ambient toolchain flags remain inherited rather than exhaustively recorded; observed guest/source identities and command evidence define this qualification.",
+    "Compiler/QBE/source/helper checks are before/after, while recorded reference toolchain versions/hashes are post-build observations.",
+    "Fresh smoke producer checks raw stdout then stores hashes and decoded stderr; all retained stats lines are exact ASCII and all expected-output hashes match.",
+    "Independent audit checks preserved evidence and in-memory patch application; it does not rerun builds, source tests, reference tools or benchmark guests."
+  ]
+}
