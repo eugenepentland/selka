@@ -51,3 +51,11 @@ Run `taskset -c 16 python3 -B verify.py` here to recheck source, artifact, prefi
 coverage, full output/error/stats, counting and static-width bindings. It uses
 read-only file operations and `git archive`; no compiler, guest, suite or
 performance command is executed. Guardian feedback is consolidated by root.
+
+The separate `final-package-review.json` binds author commit `57a67c37` and its
+corrected final package after the proof-review commit. All 378 embedded original
+byte payloads and 14 qualification receipt bindings were independently checked.
+The first packaging verification failure is retained as history: it captured an
+incomplete seal command stream and cannot claim that stream's current identity.
+No source, guest or qualification run changed. Native PC/frame/step quota
+exhaustion and additional native borrowed suites are explicitly unclaimed.

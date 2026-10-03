@@ -1,0 +1,53 @@
+{
+  "all_blob_sizes_hashes_and_current_originals_match": true,
+  "author_archive_final": {
+    "files": 378,
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-variant-number-tag-20261003/experiments/lox-variant-number-tag-20261003/receipts-final.json.gz",
+    "sha256": "ab0c7f2dc4ede5ea0b863170cb80c9425024a99932997d7c0994049ea252454a"
+  },
+  "author_commit": "57a67c37c2c42a2ee23d6d004fe22917bbdf7368",
+  "author_qualification_final": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-variant-number-tag-20261003/experiments/lox-variant-number-tag-20261003/qualification-final.json",
+    "sha256": "a97da4d9831d7f16cdb4f4e2eaef68176c92ff8fb9bf9f7c6d8cd3dea93ec53f"
+  },
+  "blob_count": 378,
+  "guest_bindings": {
+    "gc-llvm": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-variant-number-tag-20261003/.tmp-lox-variant-number-tag-20261003/number-tag-stable-gc-llvm",
+      "sha256": "1d31003dfea8ddaae2012b67c9c600c8deca2c970c0e9d2fc90a591a513fbcc5"
+    },
+    "gc-qbe": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-variant-number-tag-20261003/.tmp-lox-variant-number-tag-20261003/number-tag-stable-gc-qbe",
+      "sha256": "7f8a78d877de0bd39af1222ad22a8d76a9975974fc98bcf52ed9013c7480e53e"
+    },
+    "rc-llvm": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-variant-number-tag-20261003/.tmp-lox-variant-number-tag-20261003/number-tag-stable-rc-llvm",
+      "sha256": "ad1f174388d6124883cfcbc131b9b8f86f31ca9fb64c8f09e79c9aceefac584c"
+    },
+    "rc-qbe": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-variant-number-tag-20261003/.tmp-lox-variant-number-tag-20261003/number-tag-stable-rc-qbe",
+      "sha256": "2be47ad173babd97a69330c0de3aa26e6feb38c73bbc046dc1cafed855784f7e"
+    }
+  },
+  "historical_failed_verification_receipts": {
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-variant-number-tag-20261003/.tmp-lox-variant-number-tag-20261003/commands/verify-sealed.json": {
+      "sha256": "d1129c75e5d48523dd35857b7f597a6f59eaa7f607508c2b68cc2cf9a930c469",
+      "status": 1
+    }
+  },
+  "historical_package_limit": "First receipts.json.gz/qualification.json captured a pending seal-raw stdout stream; stored old bytes are historical and do not claim current stream identity. Corrected receipts-final excludes incomplete command streams and all378 stored original-byte bindings match current files.",
+  "limits": [
+    "Directory public tests omit --cases; providers only structurally preserved.",
+    "80 expensive native-GC-stress smoke cells explicitly omitted.",
+    "Native PC/frame/step quota exhaustion and new native borrowed suites not claimed.",
+    "Host byte model is not native malformed float payload execution.",
+    "Initial symlink-layout qualification lacks before/after full-prefix evidence; fresh owned-layout builds used.",
+    "Final QBE acceptance roots cached;398 affected roots fresh in preceding corrected attempt."
+  ],
+  "no_new_guest_execution": true,
+  "no_performance_execution": true,
+  "proof_review_commit": "4c620266abe51d59ab175c29ddffced8a865e7ab",
+  "qualification_receipts_verified": 14,
+  "selection_inferred": false,
+  "version": "numeric-package-closeout-v1"
+}
