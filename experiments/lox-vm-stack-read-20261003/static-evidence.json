@@ -1,0 +1,58 @@
+{
+  "baseline_manifest_sha256": "d1b04d2b3084aad01b32898fced996a072f9181f746afef839ac7012ef596d3b",
+  "counts": {
+    "control-llvm": {
+      "run_instructions": 5586,
+      "run_call_sites": 486,
+      "raw_assembly": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-ownership-inline-20261003/.tmp-lox-gap-static-20261003/llvm-vm-run.asm",
+      "raw_assembly_sha256": "d4e5a652c11bdd1cd6ad882a9f6b2de8181e791a643f70183ec4d9d1e65a903d"
+    },
+    "equal-llvm": {
+      "run_instructions": 5555,
+      "run_call_sites": 488,
+      "raw_assembly": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-vm-stack-read-20261003/.tmp-lox-vm-stack-read-20261003/llvm-vm-run.asm",
+      "raw_assembly_sha256": "482fd23550fce87df391b646e12df9deacf4759072462b724f9ab64b1bcad22f",
+      "helper_instructions": 0,
+      "helper_call_sites": 0,
+      "helper_assembly_sha256": "a1b57571dbb918c489f3bacac1c7385d2ed5c74eb080c8c51fa2ef8578d6a001"
+    },
+    "control-qbe": {
+      "run_instructions": 8606,
+      "run_call_sites": 440,
+      "raw_assembly": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-ownership-inline-20261003/.tmp-lox-gap-static-20261003/qbe-vm-run.asm",
+      "raw_assembly_sha256": "635fda824c21cef7601d989a40e4384038f23c00067cd7beabd50a653e5dc590"
+    },
+    "equal-qbe": {
+      "run_instructions": 8373,
+      "run_call_sites": 433,
+      "raw_assembly": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-vm-stack-read-20261003/.tmp-lox-vm-stack-read-20261003/qbe-vm-run.asm",
+      "raw_assembly_sha256": "56e4738e64db102695c2ec2624b1ccb86c631e39d3d461d9aaed563b5080d459",
+      "helper_instructions": 126,
+      "helper_call_sites": 10,
+      "helper_assembly_sha256": "81c68fc54e3d3e5df7e3ebc29aaf36796047062b68c4a468bf84386a52df96e4"
+    },
+    "control-il": {
+      "run_blits": 110,
+      "run_lines": 12299,
+      "run_calls": 599,
+      "emission_sha256": "8c258045fc62533bb92e83fe6b7a76996e228de715eb4b9df7327fee1dd97d3a",
+      "emission_status": 0,
+      "diagnostic_only": true
+    },
+    "equal-il": {
+      "run_blits": 106,
+      "run_lines": 11847,
+      "run_calls": 590,
+      "emission_sha256": "d250b36e2bd6aa6926baba41aee09cb481d2826124088f037545d41e37d7ddbd",
+      "emission_status": 0,
+      "diagnostic_only": true,
+      "helper_blits": 1
+    }
+  },
+  "limits": [
+    "Static whole-function counts include cold failure paths; no dynamic instruction, wall or parity claim.",
+    "Diagnostic IL omits step/frame accounting; production RC/GC artifacts keep native checks.",
+    "Initial84-test and final86-test source share vm.my and production RC ELF bytes exactly.",
+    "QBE helper has126 instructions and an extra values_equal call; LLVM helper is inlined."
+  ]
+}
