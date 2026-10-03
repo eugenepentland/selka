@@ -1,0 +1,180 @@
+{
+  "scope": "exact static diagnostic originals; compiler/QBE ELF bytes excluded, exact pinned QBE hash bound in raw receipts",
+  "archive_sha256": "970dad759be9cf2ef2b64a2b768e913346e41ab3ef2579235263971a831152d2",
+  "files": {
+    "scratch/all-six.s": {
+      "sha256": "be899355f2b592775b11ad7ae6b08a156893c7ec930fb50ab2604a9215d93cd1",
+      "bytes": 190879
+    },
+    "scratch/all-six.ssa": {
+      "sha256": "bcfcaed78c574d891f1ac551425293950a560d493643c9689e46562d3bdacb35",
+      "bytes": 314548
+    },
+    "scratch/all-six.stderr": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "scratch/all-six.stdout": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "scratch/analysis.json": {
+      "sha256": "0f63e105e02df227a19e5211e3355416b8fe0728cd5dbd05e2529f68119b3761",
+      "bytes": 240397
+    },
+    "scratch/control.debug.stderr": {
+      "sha256": "0f937e320c740d9c8fa461417fc6568232a909556dc39b1c8b10bd9223f55e51",
+      "bytes": 1761496
+    },
+    "scratch/control.debug.stdout": {
+      "sha256": "d9e7ec80139d20391d3ff6a576df4079b859fa997082a7300d360192b9054c57",
+      "bytes": 81
+    },
+    "scratch/control.s": {
+      "sha256": "6d1057ea3beb88c23053f8f462b2d231d402ab3239364319da52cdcf233c7413",
+      "bytes": 200432
+    },
+    "scratch/control.ssa": {
+      "sha256": "33055cc51ba3cd8b6a5c17130a0594c4421677eeffe49c021877c5d3f9eff113",
+      "bytes": 314682
+    },
+    "scratch/control.stderr": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "scratch/control.stdout": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "scratch/debug-receipt.json": {
+      "sha256": "ef4e66d3ec67e39e90971bf471a54da202f188dc391ec334ec662588e1c0b474",
+      "bytes": 5175
+    },
+    "scratch/guardian.json": {
+      "sha256": "27d626ef57a53238ff2bce3037ba76c43b0659d47e85dc181bf196ffa3bd86d4",
+      "bytes": 898
+    },
+    "scratch/guardian.log": {
+      "sha256": "1afc3be8850162888de80616d16df2a6639311047c61de94aeb567112b157e86",
+      "bytes": 446
+    },
+    "scratch/loadl-two.s": {
+      "sha256": "be899355f2b592775b11ad7ae6b08a156893c7ec930fb50ab2604a9215d93cd1",
+      "bytes": 190879
+    },
+    "scratch/loadl-two.ssa": {
+      "sha256": "1e0cefb24b99e6d23d0316e8d913810b6808857db31163501869d6ddfcbb2b73",
+      "bytes": 314636
+    },
+    "scratch/loadl-two.stderr": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "scratch/loadl-two.stdout": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "scratch/loadub-four.s": {
+      "sha256": "6d1057ea3beb88c23053f8f462b2d231d402ab3239364319da52cdcf233c7413",
+      "bytes": 200432
+    },
+    "scratch/loadub-four.ssa": {
+      "sha256": "c9a0b4ae226c00280e5cd4d239dc55b8e0f3b3354632040f12dc30cf75a2b485",
+      "bytes": 314594
+    },
+    "scratch/loadub-four.stderr": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "scratch/loadub-four.stdout": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "scratch/receipt.json": {
+      "sha256": "5901e2981105281b5543c05cb6b5af45589c54d07a5e4c00a694d293d00b70f6",
+      "bytes": 2167480
+    },
+    "scratch/s0-five.s": {
+      "sha256": "6d1057ea3beb88c23053f8f462b2d231d402ab3239364319da52cdcf233c7413",
+      "bytes": 200432
+    },
+    "scratch/s0-five.ssa": {
+      "sha256": "38bc5a00252b5a913a35071faa82ce505fec87b8feba225ca23101e56d4f64a3",
+      "bytes": 314571
+    },
+    "scratch/s0-five.stderr": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "scratch/s0-five.stdout": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "scratch/s1-one.debug.stderr": {
+      "sha256": "8f01c03afe4519545a755f85f562886582cffc2475ee6d251a588f68a2860b3b",
+      "bytes": 1750822
+    },
+    "scratch/s1-one.debug.stdout": {
+      "sha256": "d9e7ec80139d20391d3ff6a576df4079b859fa997082a7300d360192b9054c57",
+      "bytes": 81
+    },
+    "scratch/s1-one.s": {
+      "sha256": "be899355f2b592775b11ad7ae6b08a156893c7ec930fb50ab2604a9215d93cd1",
+      "bytes": 190879
+    },
+    "scratch/s1-one.ssa": {
+      "sha256": "a732f3948ffe570a273153c70b0c1e6a569bc87722d91e18fc1af515bfb1764d",
+      "bytes": 314659
+    },
+    "scratch/s1-one.stderr": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "scratch/s1-one.stdout": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "helper/probe.py": {
+      "sha256": "13939794457f215320fe1709425ec285a3fe2b98287f9fe5487fad6420fd447a",
+      "bytes": 7699
+    },
+    "helper/diagnose.py": {
+      "sha256": "0b5e0dfa9853abb07f2efe21396d19962a77f98a06217ac2c10941259710cf35",
+      "bytes": 1929
+    },
+    "helper/analyze.py": {
+      "sha256": "1231f5c7de36d076dbd2d9c1a616d3d42992c4f7e12a2de9bfb9a6b0fa9826f6",
+      "bytes": 6172
+    },
+    "helper/verify.py": {
+      "sha256": "f2ed15e9a8486ff5bcfd2239a31bfca5a6a411c6e707ff5d165ff5cdfa221333",
+      "bytes": 4004
+    },
+    "helper/README.md": {
+      "sha256": "d5e0b14ff7f6e59b399afba719645cfca6f5ae6d21fb13cfff9942e5895853dd",
+      "bytes": 6033
+    },
+    "helper/receipt.json": {
+      "sha256": "d5fc824dfe44c33ef257b73e2543f5c47f3c0693a1414e530c95fbca56b03b7e",
+      "bytes": 12731
+    },
+    "helper/static-paths.py": {
+      "sha256": "602089add9807b62c7024adf6c5fa12e9bc19c609003a2a3dc9ccbcd397d58d6",
+      "bytes": 3720
+    },
+    "source/vendor/qbe/main.c": {
+      "sha256": "868016acd52bacf84dc3c02633ecb4514d06b5057673b13bb5f3f40be26c98d5",
+      "bytes": 4132
+    },
+    "source/vendor/qbe/mem.c": {
+      "sha256": "4229d499db4186086b2d02ac78c983a6f31012d350bd281128ea61c037af4b65",
+      "bytes": 9412
+    },
+    "source/vendor/qbe/alias.c": {
+      "sha256": "c210400e482f4ad2576d238d8cc411e0b1984ca57fb5d5ec849ed83fb6fd404f",
+      "bytes": 4416
+    }
+  },
+  "originals": 43,
+  "original_bytes": 9048747
+}

@@ -1,0 +1,88 @@
+{
+  "scope": "static selected vm.run alias ablation only; no compiler implementation, guest validation, performance or selection",
+  "arms": 6,
+  "static_emission_commands_passed": 6,
+  "pinned_QBE_debug_commands_passed": 2,
+  "successful_dispatch_walks": 222,
+  "guardian_checks": 88,
+  "guardian_status": 0,
+  "guardian_receipt": {
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-qbe-dispatch-20261003/scripts/build-slot.sh",
+      "gate",
+      "/home/epentland/ai/canopy/guardian-zig/zig-out/bin/guardian-check",
+      "all",
+      ".",
+      "--gate"
+    ],
+    "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-qbe-dispatch-20261003",
+    "environment": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-qbe-dispatch-20261003/.tmp-lox-private-alias-ablation-20261003/tmp",
+      "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-qbe-dispatch-20261003/.tmp-lox-private-alias-ablation-20261003/zig-global"
+    },
+    "tool_sha256": "d052f36983f7c352adc9ae2b88791859a25c5f9e6d4591c10e3402a140ea977d",
+    "started": 1791032015.2017198,
+    "finished": 1791032017.2017431,
+    "status": 0,
+    "log_sha256": "1afc3be8850162888de80616d16df2a6639311047c61de94aeb567112b157e86"
+  },
+  "package_verification": {
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-qbe-dispatch-20261003/scripts/build-slot.sh",
+      "build",
+      "python3",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-qbe-dispatch-20261003/experiments/lox-qbe-private-alias-ablation-20261003/verify.py",
+      "--current"
+    ],
+    "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-qbe-dispatch-20261003",
+    "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-qbe-dispatch-20261003/.tmp-lox-private-alias-ablation-20261003/tmp",
+    "started": 1791032104.3889854,
+    "finished": 1791032111.463522,
+    "status": 0,
+    "stdout_sha256": "39fed8f06b8ba706874477e13d1eafa958dc43b8db694579279a037a04d72999",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "before": {
+      "archive-manifest.json": "80f34c62631907ebd46044e2afded1c2056feabdfa8e09391c5fee02806e64f6",
+      "diagnose.py": "0b5e0dfa9853abb07f2efe21396d19962a77f98a06217ac2c10941259710cf35",
+      "probe.py": "13939794457f215320fe1709425ec285a3fe2b98287f9fe5487fad6420fd447a",
+      "README.md": "d5e0b14ff7f6e59b399afba719645cfca6f5ae6d21fb13cfff9942e5895853dd",
+      "originals.json.gz": "970dad759be9cf2ef2b64a2b768e913346e41ab3ef2579235263971a831152d2",
+      "verify.py": "f2ed15e9a8486ff5bcfd2239a31bfca5a6a411c6e707ff5d165ff5cdfa221333",
+      "receipt.json": "d5fc824dfe44c33ef257b73e2543f5c47f3c0693a1414e530c95fbca56b03b7e",
+      "analyze.py": "1231f5c7de36d076dbd2d9c1a616d3d42992c4f7e12a2de9bfb9a6b0fa9826f6"
+    },
+    "after": {
+      "archive-manifest.json": "80f34c62631907ebd46044e2afded1c2056feabdfa8e09391c5fee02806e64f6",
+      "diagnose.py": "0b5e0dfa9853abb07f2efe21396d19962a77f98a06217ac2c10941259710cf35",
+      "probe.py": "13939794457f215320fe1709425ec285a3fe2b98287f9fe5487fad6420fd447a",
+      "README.md": "d5e0b14ff7f6e59b399afba719645cfca6f5ae6d21fb13cfff9942e5895853dd",
+      "originals.json.gz": "970dad759be9cf2ef2b64a2b768e913346e41ab3ef2579235263971a831152d2",
+      "verify.py": "f2ed15e9a8486ff5bcfd2239a31bfca5a6a411c6e707ff5d165ff5cdfa221333",
+      "receipt.json": "d5fc824dfe44c33ef257b73e2543f5c47f3c0693a1414e530c95fbca56b03b7e",
+      "analyze.py": "1231f5c7de36d076dbd2d9c1a616d3d42992c4f7e12a2de9bfb9a6b0fa9826f6"
+    },
+    "verified_after": true,
+    "result": {
+      "verified": true,
+      "archived_originals": 43,
+      "arms": 6,
+      "emission_statuses": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "actual_pass_dump_statuses": [
+        0,
+        0
+      ],
+      "raw_byte_identity_groups": 2,
+      "successful_dispatch_walks": 222,
+      "current_inputs": true,
+      "guest_execution": false,
+      "performance_execution": false
+    }
+  }
+}
