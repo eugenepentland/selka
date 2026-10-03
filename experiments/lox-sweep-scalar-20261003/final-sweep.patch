@@ -1,0 +1,105 @@
+--- a/heap.my
++++ b/heap.my
+@@ -441,12 +441,42 @@
+     rt.marker = marker
+ 
+ 
+-def is_free(obj: object.Obj) -> bool:
+-    match obj:
++def is_free(rt: Runtime, ref: value.ObjRef) -> bool:
++    match rt.objects[ref]:
+         case object.Obj.free:
+             return True
+         case _:
+             return False
++
++
++# Read only the scalar abstract allocation cost from the current object table.
++# Keep object.cost arithmetic/checks exact without carrying an owning Obj
++# through a mutable Runtime expression.
++def object_cost_at(rt: Runtime, ref: value.ObjRef) -> int:
++    match rt.objects[ref]:
++        case object.Obj.free:
++            return 0
++        case object.Obj.string(payload):
++            return 32 + len(payload.chars)
++        case object.Obj.function(_):
++            return 64
++        case object.Obj.native(_):
++            return 32
++        case object.Obj.closure(payload):
++            return 32 + 8 * len(payload.upvalues)
++        case object.Obj.upvalue(_):
++            return 32
++        case object.Obj.klass(_):
++            return 48
++        case object.Obj.instance(_):
++            return 48
++        case object.Obj.bound_method(_):
++            return 32
++        case object.Obj.env(payload):
++            return 32 + 16 * len(payload.slots)
++        case object.Obj.tree_function(_):
++            return 48
++
+ 
+ 
+ def sweep(rt: mut Runtime):
+@@ -454,8 +484,8 @@
+     while i < len(rt.objects):
+         if rt.marker.marks[i]:
+             rt.marker.marks[i] = False
+-        elif not is_free(rt.objects[i]):
+-            rt.bytes_allocated = rt.bytes_allocated - object.cost(rt.objects[i])
++        elif not is_free(rt, i):
++            rt.bytes_allocated = rt.bytes_allocated - object_cost_at(rt, i)
+             rt.objects[i] = object.Obj.free
+             rt.free_slots.append(i)
+             rt.freed = rt.freed + 1
+--- a/heap_test.my
++++ b/heap_test.my
+@@ -132,3 +132,44 @@
+     rt.objects[function_ref] = object.Obj.function(function)
+     heap.collect(mut rt)
+     return heap.closure_arity(rt, closure) == 5 and heap.closure_arity(snapshot, closure) == 2 and heap.closure_obj(snapshot, closure).upvalues[0] == value.NO_OBJ and rt.freed == 0 and snapshot.allocations == 2
++
++
++# Sweep projects scalar costs from every object case. Its indexed free writes
++# must retain value snapshots and the ascending sweep/reverse reuse order.
++public def test_sweep_scalar_cost_preserves_snapshots_and_reuse_order() -> bool:
++    rt = heap.new_runtime(False, None)
++    kept = lox_strings.copy_string(mut rt, b"live")
++    root(mut rt, kept)
++    dead_string = lox_strings.copy_string(mut rt, b"old")
++    _ = heap.allocate(mut rt, object.Obj.function(object.new_function()))
++    _ = heap.allocate(mut rt, object.Obj.native(object.NativeObj(id=0, arity=0)))
++    _ = heap.allocate(mut rt, object.Obj.closure(object.new_closure(value.NO_OBJ, 2)))
++    _ = heap.allocate(mut rt, object.Obj.upvalue(object.UpvalueObj(slot=object.NO_SLOT, closed=value.Value.nil, next_open=value.NO_OBJ)))
++    _ = heap.allocate(mut rt, object.Obj.klass(object.ClassObj(name=value.NO_OBJ, methods=table.new_table())))
++    _ = heap.allocate(mut rt, object.Obj.instance(object.InstanceObj(klass=value.NO_OBJ, fields=table.new_table())))
++    _ = heap.allocate(mut rt, object.Obj.bound_method(object.BoundMethodObj(receiver=value.Value.nil, method=value.NO_OBJ)))
++    env = heap.allocate(mut rt, object.Obj.env(object.new_env(value.NO_OBJ, 3)))
++    last = heap.allocate(mut rt, object.Obj.tree_function(object.TreeFunctionObj(decl=0, name=value.NO_OBJ, closure=value.NO_OBJ, is_initializer=False)))
++    before = rt
++    payload = heap.env_obj(rt, env)
++    heap.collect(mut rt)
++    accounting = rt.allocations == 11 and rt.freed == 10 and rt.collections == 1 and rt.bytes_allocated == 36 and rt.next_gc == 1048576
++    order = len(rt.free_slots) == 10 and rt.free_slots[0] == dead_string and rt.free_slots[-1] == last
++    snapshots = before.allocations == 11 and before.freed == 0 and before.bytes_allocated == 503 and len(heap.env_obj(before, env).slots) == 3 and len(payload.slots) == 3 and heap.string_obj(before, dead_string).chars == b"old"
++    reused = lox_strings.copy_string(mut rt, b"new")
++    return accounting and order and snapshots and reused == last and len(rt.objects) == 11 and len(rt.free_slots) == 9 and rt.bytes_allocated == 71
++
++
++# allocate charges the incoming object before collection and publishes it after
++# sweep. A variable-sized dead env must be subtracted before its slot is reused.
++public def test_sweep_scalar_cost_at_allocation_threshold() -> bool:
++    rt = heap.new_runtime(False, None)
++    env = heap.allocate(mut rt, object.Obj.env(object.new_env(value.NO_OBJ, 3)))
++    kept = lox_strings.copy_string(mut rt, b"live")
++    root(mut rt, kept)
++    rt.next_gc = rt.bytes_allocated
++    before = rt
++    reused = heap.allocate(mut rt, object.Obj.native(object.NativeObj(id=0, arity=0)))
++    accounting = rt.allocations == 3 and rt.freed == 1 and rt.collections == 1 and rt.bytes_allocated == 68 and rt.next_gc == 1048576
++    snapshots = before.bytes_allocated == 116 and before.next_gc == 116 and before.freed == 0 and len(heap.env_obj(before, env).slots) == 3
++    return accounting and snapshots and reused == env and len(rt.objects) == 2 and len(rt.free_slots) == 0

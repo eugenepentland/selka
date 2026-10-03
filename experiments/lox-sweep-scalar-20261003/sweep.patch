@@ -1,0 +1,58 @@
+--- a/heap.my
++++ b/heap.my
+@@ -441,12 +441,42 @@
+     rt.marker = marker
+ 
+ 
+-def is_free(obj: object.Obj) -> bool:
+-    match obj:
++def is_free(rt: Runtime, ref: value.ObjRef) -> bool:
++    match rt.objects[ref]:
+         case object.Obj.free:
+             return True
+         case _:
+             return False
++
++
++# Read only the scalar abstract allocation cost from the current object table.
++# Keep object.cost arithmetic/checks exact without carrying an owning Obj
++# through a mutable Runtime expression.
++def object_cost_at(rt: Runtime, ref: value.ObjRef) -> int:
++    match rt.objects[ref]:
++        case object.Obj.free:
++            return 0
++        case object.Obj.string(payload):
++            return 32 + len(payload.chars)
++        case object.Obj.function(_):
++            return 64
++        case object.Obj.native(_):
++            return 32
++        case object.Obj.closure(payload):
++            return 32 + 8 * len(payload.upvalues)
++        case object.Obj.upvalue(_):
++            return 32
++        case object.Obj.klass(_):
++            return 48
++        case object.Obj.instance(_):
++            return 48
++        case object.Obj.bound_method(_):
++            return 32
++        case object.Obj.env(payload):
++            return 32 + 16 * len(payload.slots)
++        case object.Obj.tree_function(_):
++            return 48
++
+ 
+ 
+ def sweep(rt: mut Runtime):
+@@ -454,8 +484,8 @@
+     while i < len(rt.objects):
+         if rt.marker.marks[i]:
+             rt.marker.marks[i] = False
+-        elif not is_free(rt.objects[i]):
+-            rt.bytes_allocated = rt.bytes_allocated - object.cost(rt.objects[i])
++        elif not is_free(rt, i):
++            rt.bytes_allocated = rt.bytes_allocated - object_cost_at(rt, i)
+             rt.objects[i] = object.Obj.free
+             rt.free_slots.append(i)
+             rt.freed = rt.freed + 1

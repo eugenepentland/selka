@@ -1,0 +1,42 @@
+[
+  {
+    "log": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-ownership-inline-20261003/.tmp-lox-sweep/unit-qbe-rc.log",
+    "log_sha256": "054def080d02a049309f6c0ea3c1a0223d2f9e99aab8d159687a8e952fc18e0e",
+    "explanation": "The test subcommand does not accept --backend; status 2 usage failure before tests.",
+    "command_template": [
+      "scripts/build-slot.sh",
+      "build",
+      "COMPILER",
+      "test",
+      "QUALIFIED",
+      "--backend",
+      "qbe",
+      "--mode",
+      "ReleaseFast",
+      "--rc-runtime",
+      "--cache-dir",
+      "CACHE"
+    ],
+    "stdout": "usage: mylang test <entry.my|directory> [--filter SUBSTRING|GLOB] [--cases FILE]\n  --affected --against REF  run only tests reaching a declaration changed since REF\n  --link FILE --link-library NAME --library-path DIR (repeatable)\n  --cache-dir DIR --force --no-cache --report --json --pure-skip --qbe PATH --zig PATH\n  --diagnostics=text|json  how a source that does not compile is reported\n  a test build uses QBE in either mode; --release builds the LLVM release path\n    (ReleaseFast, --llvm-opt 3 --lto) and refuses --mode and --qbe\n  --gc-stress  run every collected test under the runtime's stress collector\n  --whole-program  check and build with one whole-program session, not module by module\n  --mode Debug|ReleaseFast\n  --max-steps N --max-frames N --max-calls N --timeout-ms N\n  --max-memory BYTES  per-test byte ceiling (K/M/G suffixes; default 512M)\n  --seed N  seed every test's Entropy stand-in and generated inputs\n    (default: from the test's name)\n  --property-runs N  generated inputs each property test must pass (default 100)\n  --jobs N  test processes run at once, and a directory's fan-out width\n    (default: cores, capped by free memory)\n  bench: --bench PATTERN [--bench-only] [--bench-output FILE]\n         [--bench-baseline FILE] [--bench-policy FILE] [--bench-profile ID]\n         [--bench-warmup N] [--bench-batches N] [--bench-batch-ms N]\n         [--bench-timeout-ms N]\n"
+  },
+  {
+    "log": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-ownership-inline-20261003/.tmp-lox-sweep/unit-qbe-rc-corrected.log",
+    "log_sha256": "c329c2b22069c8d7321efa1c7c32ce5698357c62d262274c8e846976d891a73c",
+    "explanation": "Default step ceiling reached in three existing tests; 77 passed, 3 failed. Both new sweep tests passed. Final qualification consistently uses prior 1e9/120s settings.",
+    "command_template": [
+      "scripts/build-slot.sh",
+      "build",
+      "COMPILER",
+      "test",
+      "QUALIFIED",
+      "--mode",
+      "ReleaseFast",
+      "--rc-runtime",
+      "--cache-dir",
+      "CACHE",
+      "--jobs",
+      "2"
+    ],
+    "stdout": "passed compiler_test::test_compile_error_message\npassed compiler_test::test_compile_global_definition\npassed compiler_test::test_compile_if_jumps\npassed compiler_test::test_compile_local_slots\npassed compiler_test::test_compile_print_addition\npassed compiler_test::test_compile_too_many_constants\npassed driver_tests::test_run_arithmetic\npassed driver_tests::test_run_call_arguments_and_captured_parameter_roots\npassed driver_tests::test_run_class_init_method\npassed driver_tests::test_run_closure_counter\npassed driver_tests::test_run_compile_error_status\npassed driver_tests::test_run_error_after_child_returns\nfailed driver_tests::test_run_gc_stress_same_output: R_STEP_LIMIT\n  in heap::new_runtime at heap.my:63:9\n  in driver::run_source at driver.my:58:10\n  in driver_tests::run at driver_tests.my:15:12\n  in driver_tests::test_run_gc_stress_same_output at driver_tests.my:93:12\n\npassed driver_tests::test_run_inheritance_super\npassed driver_tests::test_run_print_value_kinds\npassed driver_tests::test_run_property_field_shadows_inherited_method\nfailed driver_tests::test_run_property_lookup_survives_allocation_and_mutation: R_STEP_LIMIT\n  in table::find_entry at table.my:47:12\n  in table::set at table.my:98:13\n  in heap::set_global at heap.my:358:20\n  in interpreter::define at interpreter.my:466:13\n  in interpreter::class_declaration at interpreter.my:532:5\n  in interpreter::execute at interpreter.my:620:13\n  in interpreter::interpret at interpreter.my:671:23\n  in driver::execute at driver.my:36:20\n  in driver::run_source at driver.my:60:14\n  in driver_tests::test_run_property_lookup_survives_allocation_and_mutation at driver_tests.my:137:12\n\npassed driver_tests::test_run_recursive_state_and_output_restore\npassed driver_tests::test_run_runtime_error_trace\npassed driver_tests::test_run_scalar_stack_edges\npassed driver_tests::test_run_scalar_stack_error_trace\npassed driver_tests::test_run_set_rhs_keeps_original_receiver\npassed driver_tests::test_run_set_rhs_keeps_receiver_mutations\npassed driver_tests::test_run_shared_upvalue\npassed driver_tests::test_run_stack_overflow\npassed driver_tests::test_run_string_concat\npassed driver_tests::test_run_upvalues_across_block_and_return\npassed heap_test::test_closure_arity_respects_runtime_snapshot\npassed heap_test::test_env_indexed_set_preserves_runtime_and_payload_snapshots\npassed heap_test::test_gc_frees_unreachable\npassed heap_test::test_gc_intern_table_is_weak\npassed heap_test::test_gc_reuses_free_slot\npassed heap_test::test_gc_stress_collects_each_allocation\npassed heap_test::test_gc_threshold_accounting\npassed heap_test::test_gc_traces_instance_fields\nfailed heap_test::test_stack_full_capacity_and_negative_index_reads: R_STEP_LIMIT\n  in heap_test::test_stack_full_capacity_and_negative_index_reads at heap_test.my:113:19\n\npassed heap_test::test_stack_snapshot_survives_write\npassed heap_test::test_sweep_scalar_cost_at_allocation_threshold\npassed heap_test::test_sweep_scalar_cost_preserves_snapshots_and_reuse_order\npassed lox_strings_test::test_fnv1a_a\npassed lox_strings_test::test_fnv1a_empty\npassed lox_strings_test::test_fnv1a_foobar\npassed lox_strings_test::test_intern_same_bytes_same_ref\npassed lox_strings_test::test_table_find_string\npassed parser_test::test_parse_call_get_set\npassed parser_test::test_parse_error_recovery\npassed parser_test::test_parse_logical\npassed parser_test::test_parse_precedence\npassed parser_test::test_parse_unary_grouping\npassed resolver_test::test_resolve_duplicate_local\npassed resolver_test::test_resolve_own_initializer\npassed resolver_test::test_resolve_slot_counts\npassed resolver_test::test_resolve_this_outside_class\npassed resolver_test::test_resolve_top_level_return\npassed scanner_test::test_scan_comments_and_lines\npassed scanner_test::test_scan_empty_source\npassed scanner_test::test_scan_identifiers\npassed scanner_test::test_scan_keywords\npassed scanner_test::test_scan_multiline_string_line\npassed scanner_test::test_scan_numbers\npassed scanner_test::test_scan_single_char_tokens\npassed scanner_test::test_scan_string\npassed scanner_test::test_scan_two_char_tokens\npassed scanner_test::test_scan_unexpected_character\npassed scanner_test::test_scan_unterminated_string\npassed table_test::test_table_add_all\npassed table_test::test_table_delete_leaves_tombstone\npassed table_test::test_table_grows_at_load_factor\npassed table_test::test_table_read_probe_wraparound_tombstones\npassed table_test::test_table_set_get\npassed table_test::test_table_set_reports_new_key\npassed table_test::test_table_tombstone_reuse\npassed value_test::test_format_fraction\npassed value_test::test_format_integer\npassed value_test::test_format_large\npassed value_test::test_format_small\npassed value_test::test_format_special\npassed value_test::test_format_zeros\npassed value_test::test_is_falsey_rules\npassed value_test::test_values_equal_rules\n77 passed, 0 cached, 3 failed, 0 skipped, 0 dropped across 10 programs\n"
+  }
+]
