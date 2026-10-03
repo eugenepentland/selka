@@ -1,0 +1,17 @@
+{
+  "candidate": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-qbe-scratch-alias-20261003/.tmp-lox-scratch-alias-20261003/cache-static-v2-llvm/frontend/fragments/8c4f21cd976a778b67d3f639e1e198740b8008c94deecbab9fcaba6dce639a60/replay/8a1257da9c6c8fa4d3344112c26259d3f937f962e81f6a31c18e26dbc17b53cc",
+    "sha256": "0bda4f84373c8fbbc80b39f9c715466c1cdab4d6ffe3921791ad1c2d8b93dc34",
+    "copy_sha256": "726b12866cf559e8f36362788f66f4d39e913519c4c32a58e5ca8e40f3941811"
+  },
+  "control": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/cache-ast-llvm/frontend/fragments/7bd96f9c2181da4b1c69c215e024dd73ef2f54814a3f64bd5069a72e6d008eb0/replay/5f1042b3fce87d72c7f9a35f20340cdff28aa26a01f68bd30a366870f34f18f4",
+    "sha256": "578c7b0a4dd5cdac6fe7a6aa2ef773236fb4561a5c8383092978d8c85de95db4",
+    "copy_sha256": "86bd72522e880833be730c79491e2bb0c8b4eaadc151b4635e03ee051b8267f3"
+  },
+  "units": {
+    "sha256": "5fc7682e8854968e0c255223daab0acf968c7521fae3643c1409b63150b85847",
+    "copy_sha256": "95383e2758098f6d0062ce01f208c230b79d8b6576d7f76926af468f50644151",
+    "unit_count": 420
+  }
+}
