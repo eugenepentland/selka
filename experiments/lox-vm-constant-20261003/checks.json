@@ -1,0 +1,21 @@
+{
+  "guardian_command": [
+    "scripts/build-slot.sh",
+    "gate",
+    "/home/epentland/ai/canopy/guardian-zig/zig-out/bin/guardian-check",
+    "all",
+    ".",
+    "--gate"
+  ],
+  "guardian_status": 0,
+  "guardian_log_sha256": "a28a56a72872cf425876e818eeb4d463d9831627a0d5211f2b1ad3a5b8d883f9",
+  "guardian_result": "88 checks passed, whole-tree cold gate",
+  "patch_replay_status": 0,
+  "patch_replay_files": 37,
+  "patch_sha256": "88d0939b045e2983894c31c986918a289ff8e4bee1b92764d706bd40150ac66c",
+  "qualification_sha256": "12a4092398ca2da764ff4fdd40e48d8ae9d6aff6388293a93b5412f1a1cf1761",
+  "build_sha256": "454ed82a51b76cbc5ce5f6bbec3e631c2961934f08f0f37750acc1debe73a50e",
+  "static_review_sha256": "f9ba2911df4bb7a9303d65dd539b6b672a086fbef6db756bf5e4e9a48489dc07",
+  "reviewer_status": "lookup review pending final commit receipt",
+  "verified_after": true
+}

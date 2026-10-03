@@ -1,0 +1,129 @@
+dbgfile "myl_f_44be59d2b48267e1e78aeacebbfa77a9a164c060262880d5f869baa70dceba2a"
+type :myl_slice = { l, l }
+type :t079b5c89080dbc4f48f6d2e13851818de8c0ad4456862a6e576a25a09b972a10 = align 8 { b 40 }
+type :te758ef64fa5399816d2e36870457817f6d0c1707702a005752c112705a835446 = align 8 { b 16 }
+export function :te758ef64fa5399816d2e36870457817f6d0c1707702a005752c112705a835446 $myl_f_44be59d2b48267e1e78aeacebbfa77a9a164c060262880d5f869baa70dceba2a(l %ctx, l %a0, l %a1) {
+@entry
+ %trap =l add %ctx, 32
+ %empty =l alloc8 16
+ %l0 =l alloc8 8
+ %l1 =l alloc8 8
+ %l2 =l alloc8 8
+ %l3 =l alloc8 8
+ %s0 =l alloc8 8
+ %s1 =l alloc8 8
+ storel 0, %l2
+ storel %a0, %l0
+ storel %a1, %l1
+ dbgloc 1
+ jmp @i0
+@i0
+ %v0 =l loadl %l0
+ storel %v0, %s0
+ %v1 =l loadl %s0
+ %v2 =l add %v1, 0
+ %v3 =l loadl %v2
+ storel %v3, %s0
+ %v4 =l loadl %s0
+ %v5 =l copy %l2
+ storel %v4, %v5
+ %v6 =l loadl %l1
+ storel %v6, %s0
+ %v7 =l loadl %s0
+ %v8 =l copy %l3
+ storel %v7, %v8
+ # QBE-POSITIVE-INDEX-1 start 5 read 15
+ %v9 =l loadl %l2
+ # myl-obj %v9
+ %v10 =l loadl %l3
+ # myl-obj %v9
+ %v11 =l loadl %v9
+ %v12 =l cultl %v10, %v11
+ jnz %v12, @positive5, @i5
+@positive5
+ # myl-obj %v9
+ %v15 =l add %v9, 32
+ %v16 =l loadl %v15
+ # myl-elem %v16 16v
+ %v13 =l mul %v10, 16
+ %v14 =l add %v16, %v13
+ storel %v14, %s0
+ jmp @i16
+@i5
+ %v17 =l loadl %l3
+ storel %v17, %s0
+ storel 0, %s1
+ %v18 =l loadl %s1
+ %v19 =l loadl %s0
+ %v20 =l csltl %v19, %v18
+ storel %v20, %s0
+ %v21 =l loadl %s0
+ jnz %v21, @next22, @i14
+@next22
+ %v22 =l loadl %l2
+ # myl-obj %v22
+ %v24 =l add %v22, 0
+ %v23 =l loadl %v24
+ storel %v23, %s0
+ %v25 =l loadl %s0
+ %v26 =l cugtl %v25, 9223372036854775807
+ jnz %v26, @cast_overflow27, @cast_ok27
+@cast_overflow27
+ dbgloc 11
+ call $myl_qbe_fail_cast(l %ctx, l %v25, l 320)
+ hlt
+@cast_ok27
+ storel %v25, %s0
+ %v28 =l loadl %l3
+ storel %v28, %s1
+ %v29 =l loadl %s1
+ %v30 =l loadl %s0
+ %v31 =l add %v30, %v29
+ %v33 =l xor %v30, %v31
+ %v34 =l xor %v29, %v31
+ %v35 =l and %v33, %v34
+ %v32 =l csltl %v35, 0
+ jnz %v32, @overflow31, @checked31
+@overflow31
+ dbgloc 13
+ call $myl_qbe_fail_overflow_op(l %ctx, l 0, l %v30, l %v29, l 64)
+ hlt
+@checked31
+ storel %v31, %s0
+ %v36 =l loadl %s0
+ %v37 =l copy %l3
+ storel %v36, %v37
+@i14
+ %v38 =l loadl %l3
+ storel %v38, %s0
+ %v39 =l loadl %l2
+ # myl-obj %v39
+ %v41 =l loadl %s0
+ # myl-obj %v39
+ %v42 =l loadl %v39
+ %v43 =l cultl %v41, %v42
+ jnz %v43, @success44, @failed44
+@failed44
+ dbgloc 16
+ call $myl_qbe_fail_normalized_index_bounds(l %ctx, l %v41, l %v42)
+ hlt
+@success44
+ # myl-obj %v39
+ %v47 =l add %v39, 32
+ %v48 =l loadl %v47
+ # myl-elem %v48 16v
+ %v45 =l mul %v41, 16
+ %v46 =l add %v48, %v45
+ storel %v46, %s0
+@i16
+ %v49 =l loadl %s0
+ ret %v49
+@failure
+ dbgloc 17
+ call $memset(l %empty, w 0, l 16)
+ ret %empty
+@entry_failure
+ dbgloc 17
+ call $memset(l %empty, w 0, l 16)
+ ret %empty
+}

@@ -1,0 +1,10 @@
+{
+  "archive": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-next/cache-combined-llvm/objects/f78adfeb5588c1d7d48b3af6bc4f01d9bbcecdd38138cbd52536d1efd37c2da7/dcd3fd9f611ad28bedf2077600ecbf7a121d0d912e392cd0e719083340ef8d22.a",
+  "archive_sha256": "baba841803843ca14b0ac0df133ce41a0cce3514e8ab23799af393499496fda6",
+  "member": "qbe_runtime_rc.c.o",
+  "member_sha256": "5d8e26766e5fd87981858392376b66b4e95f34c4462f19f580d0b23e3698d637",
+  "member_magic_hex": "4243c0de",
+  "member_bytes": 42284,
+  "members": 36,
+  "bitcode_magic": true
+}

@@ -1,0 +1,58 @@
+--- a/driver_cases.json
++++ b/driver_cases.json
+@@ -118,5 +118,10 @@
+     "providers": {
+       "natives.my": "module natives\n# Test fixture for driver_tests.my (see driver_cases.json): natives.my with\n# a `clock` that returns 0 instead of reading the Clock capability.\nimport heap\nimport lox_strings\nimport object\nimport value\n\n\npublic const CLOCK: int = 0\n\n\npublic def call_native(rt: heap.Runtime, id: int) -> value.Value:\n    assert id == CLOCK, \"unknown native\"\n    _ = rt\n    return value.Value.number(0.0)\n\n\npublic def start(rt: mut heap.Runtime):\n    rt.init_string = lox_strings.copy_string(mut rt, b\"init\")\n    define_natives(mut rt)\n\n\ndef define_natives(rt: mut heap.Runtime):\n    name = lox_strings.copy_string(mut rt, b\"clock\")\n    heap.push(mut rt, value.Value.obj(name))\n    native = heap.allocate(mut rt, object.Obj.native(object.NativeObj(id=CLOCK, arity=0)))\n    heap.push(mut rt, value.Value.obj(native))\n    _ = heap.set_global(mut rt, name, value.Value.obj(native))\n    _ = heap.pop(mut rt)\n    _ = heap.pop(mut rt)\n"
+     }
++  },
++  "driver_tests::test_run_constant_operand_last_byte": {
++    "providers": {
++      "natives.my": "module natives\n# Test fixture for driver_tests.my (see driver_cases.json): natives.my with\n# a `clock` that returns 0 instead of reading the Clock capability.\nimport heap\nimport lox_strings\nimport object\nimport value\n\n\npublic const CLOCK: int = 0\n\n\npublic def call_native(rt: heap.Runtime, id: int) -> value.Value:\n    assert id == CLOCK, \"unknown native\"\n    _ = rt\n    return value.Value.number(0.0)\n\n\npublic def start(rt: mut heap.Runtime):\n    rt.init_string = lox_strings.copy_string(mut rt, b\"init\")\n    define_natives(mut rt)\n\n\ndef define_natives(rt: mut heap.Runtime):\n    name = lox_strings.copy_string(mut rt, b\"clock\")\n    heap.push(mut rt, value.Value.obj(name))\n    native = heap.allocate(mut rt, object.Obj.native(object.NativeObj(id=CLOCK, arity=0)))\n    heap.push(mut rt, value.Value.obj(native))\n    _ = heap.set_global(mut rt, name, value.Value.obj(native))\n    _ = heap.pop(mut rt)\n    _ = heap.pop(mut rt)\n"
++    }
+   }
+ }
+--- a/driver_tests.my
++++ b/driver_tests.my
+@@ -232,3 +232,18 @@
+     vm_run = driver.run_source(source, driver.Engine.VM, True, out, None)
+     tree = driver.run_source(source, driver.Engine.TREE, True, out, None)
+     return vm_run.status == 70 and tree.status == 70 and vm_run.stdout == b"argument\n" and tree.stdout == vm_run.stdout and vm_run.stderr == b"Can only call functions and classes.\n[line 1] in script\n" and tree.stderr == b"Can only call functions and classes.\n[line 1]\n"
++
++
++# Every constant operand byte, including 255, must advance IP before the
++# checked pool read; consecutive prints then keep the following opcode aligned.
++public def test_run_constant_operand_last_byte(out: Stream) -> bool:
++    source = b""
++    expected = b""
++    i = 0
++    while i < 256:
++        text = str(i).encode()
++        source = source + b"print " + text + b";"
++        expected = expected + text + b"\n"
++        i = i + 1
++    observed = driver.run_source(source, driver.Engine.VM, True, out, None)
++    return observed.status == 0 and observed.stdout == expected and observed.stderr == b"" and observed.collections == observed.allocations
+--- a/vm.my
++++ b/vm.my
+@@ -330,6 +330,11 @@
+     return frame.constants[index]
+ 
+ 
++# The operand was read before this readonly pool lookup.
++def constant_at(frame: ExecFrame, index: int) -> value.Value:
++    return frame.constants[index]
++
++
+ def read_string(frame: mut ExecFrame) -> value.ObjRef:
+     return as_obj(read_constant(mut frame))
+ 
+@@ -537,7 +542,8 @@
+         # Publish IP only before a handler can report a Lox error or call away.
+         ok = True
+         if instruction == chunk.OP_CONSTANT:
+-            constant = read_constant(mut frame)
++            constant_index = read_byte(mut frame)
++            constant = constant_at(frame, constant_index)
+             rt.stack[rt.stack_top] = constant
+             rt.stack_top = rt.stack_top + 1
+         elif instruction == chunk.OP_NIL:
