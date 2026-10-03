@@ -1,0 +1,1180 @@
+{
+  "after": {
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-policy-20261003/.tmp-lox-native-policy-20261003/builds-complete.json": {
+      "bytes": 21232,
+      "sha256": "c3c4620b9bf3169856fdcc757b710fe399fbe0c16ce4ba957550a1957485d6c3"
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-policy-20261003/.tmp-lox-native-policy-20261003/compiler-final-v2.json": {
+      "bytes": 5749,
+      "sha256": "4664e1e29bd3b4bb041d43b655f33db5695909dc93db149a397231409d72b422"
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-policy-20261003/.tmp-lox-native-policy-20261003/compiler-final-v2/bin/mylang": {
+      "bytes": 74028544,
+      "sha256": "81fe478471d256e9c6023d786b61dd6183f3b51363c4abe9d1d015c1268600cc"
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-policy-20261003/.tmp-lox-native-policy-20261003/compiler-final-v2/lib/mylang-runtime/ff1a859a1e0dd6f3232b5766611e55937ac47fa52451c9cbdb55b3250a67b147.a": {
+      "bytes": 1909462,
+      "sha256": "ce4f3646a0b1da55855c21fe3bc45fa3cb70cc62dc0e1033c90fbb748d80243e"
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-policy-20261003/.tmp-lox-native-policy-20261003/compiler-final-v2/lib/mylang-runtime/ff1a859a1e0dd6f3232b5766611e55937ac47fa52451c9cbdb55b3250a67b147.a.digest": {
+      "bytes": 41,
+      "sha256": "4097ad17d36b24ab198bb6b35efc323fd4ec80c7deac2106a488991324bb24a8"
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-policy-20261003/build.zig": {
+      "bytes": 82057,
+      "sha256": "1e3702b0f3d803a95e29f00834b0e3ac36237e32e13dbee720abb862253e79a9"
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-policy-20261003/build_qbe_assets.zig": {
+      "bytes": 15367,
+      "sha256": "5c8bd5ea199ac62fc95529c591bebd8033bb3a6897e9230147d52c6859389f17"
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-policy-20261003/experiments/llvm-backend/qbe_llvm.py": {
+      "bytes": 41094,
+      "sha256": "2853de61992c4b771e05a58efc283b6c04ee2230506dc675a3448335d71a1de2"
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-policy-20261003/src/qbe_build.zig": {
+      "bytes": 113074,
+      "sha256": "bb60a5484b509d234f1197f0c71e51d85f895d64e50531e8dc6f6694b918724a"
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-policy-20261003/src/qbe_build_backend.zig": {
+      "bytes": 12971,
+      "sha256": "0143550a6bb55bb6300526e2ad99707fc061b88cf97d2530ac6ccd33ef781d79"
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-policy-20261003/src/qbe_build_cache.zig": {
+      "bytes": 43330,
+      "sha256": "88442a36c7cf91b94f40e154d9aa8d91fddb99637868116a93c907a7dca90fee"
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-policy-20261003/src/qbe_build_llvm_compile.zig": {
+      "bytes": 21682,
+      "sha256": "6232af23794ab8edfc2b6e2f76aaf000c468bc69d868d80130c3dcfb74c698bd"
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-policy-20261003/src/qbe_build_options.zig": {
+      "bytes": 30546,
+      "sha256": "0f057cf867d272da91a5ad6b95850bc365e9ef47e97568fb300f94540e8c4727"
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-screen-reviewed/bin/baseline-llvm.qbe-manifest.json": {
+      "bytes": 190235,
+      "sha256": "6bb5f323746e5a16c7c66e7f8d86941d990204c6dd4afe6c2d32940f44487d63"
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-screen-reviewed/bin/baseline-qbe.qbe-manifest.json": {
+      "bytes": 565,
+      "sha256": "dcf71a1426eaa9f08e3c43a4dd4bcc4cd064450c13ad4cd8907a4efb1a5da48b"
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-screen-reviewed/bin/candidate-llvm.qbe-manifest.json": {
+      "bytes": 206587,
+      "sha256": "1388d64b3d369ca373fca24196d120d4c40a719ce743a8f6ecd624302aabe83d"
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-screen-reviewed/bin/rebuilt-llvm.qbe-manifest.json": {
+      "bytes": 201547,
+      "sha256": "af7386692a2176796a1187bd0168d134b1d7b4de35db9fce986e29caf569fe20"
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-screen-reviewed/rebuilt-build.json": {
+      "bytes": 7000,
+      "sha256": "c62b0eac3062b453c7437aa11ad4e07b862c3374014be244475d970ac016440a"
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-screen-reviewed/runtime-bindings.json": {
+      "bytes": 5283,
+      "sha256": "af2e26d3f0e741933d1ef7d36165bd0c239cfd875feae3e9825e79482afaf036"
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/cache-ast-llvm/objects/f78adfeb5588c1d7d48b3af6bc4f01d9bbcecdd38138cbd52536d1efd37c2da7/dcd3fd9f611ad28bedf2077600ecbf7a121d0d912e392cd0e719083340ef8d22.a": {
+      "bytes": 1903654,
+      "sha256": "8cfafe923c4edf396aae9e5aa3af612350fcbeac8757b53b2b11a6cf7d301fb9"
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/cache-ast-qbe/objects/f78adfeb5588c1d7d48b3af6bc4f01d9bbcecdd38138cbd52536d1efd37c2da7/0fcd05ec0260ec268de1c0b6d33809900f03ec95046d6750a43b01f9718240a2.a": {
+      "bytes": 695412,
+      "sha256": "d991009e601716f4eab07e203f1f10dda3644216fe70aa3ff026c9493dc850f9"
+    }
+  },
+  "archives": {
+    "baseline-llvm": {
+      "binding": {
+        "binary": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-screen-reviewed/bin/baseline-llvm",
+        "binary_sha256": "180575c3fc2e46a16ed8dd290e289963a87603b5a7c0cf8bb0e03ba7cf794361",
+        "manifest": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-screen-reviewed/bin/baseline-llvm.qbe-manifest.json",
+        "manifest_sha256": "6bb5f323746e5a16c7c66e7f8d86941d990204c6dd4afe6c2d32940f44487d63",
+        "runtime_object": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/cache-ast-llvm/objects/f78adfeb5588c1d7d48b3af6bc4f01d9bbcecdd38138cbd52536d1efd37c2da7/dcd3fd9f611ad28bedf2077600ecbf7a121d0d912e392cd0e719083340ef8d22.a",
+        "runtime_object_sha256": "8cfafe923c4edf396aae9e5aa3af612350fcbeac8757b53b2b11a6cf7d301fb9"
+      },
+      "manifest_codegen": {
+        "backend": "llvm",
+        "lto": true,
+        "optimization": "3",
+        "thin_lto": false
+      },
+      "member_kinds": {
+        "LLVM-bitcode": 36
+      },
+      "members": [
+        {
+          "bytes": 42284,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "qbe_runtime_rc.c.o",
+          "sha256": "176cab9c19043d31315059a04452a9f4b2f4413e3bc2c76bfbb76533f979b2ed"
+        },
+        {
+          "bytes": 164100,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "qbe_runtime.c.o",
+          "sha256": "b6e39bb10e39a8d8e740953b59a2e531fcb003f1255fa6b03d011c9e60ed9c47"
+        },
+        {
+          "bytes": 85656,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "native_heap.c.o",
+          "sha256": "f3a37a37ccb5f6288f2abb823cad24a68b6c9c87d1b6cc3b7b4724a5abd1349f"
+        },
+        {
+          "bytes": 47060,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "native_arena.c.o",
+          "sha256": "4cb1849ac7f4c215446d4783e464ed33ffd0fd97b5824640dc401fac972cdc89"
+        },
+        {
+          "bytes": 119176,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "native_collections.c.o",
+          "sha256": "1b0ae3b508c38866573e4b52cba412e736e5e2c2bc2b4189c777721262a0fb21"
+        },
+        {
+          "bytes": 116276,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "native_text.c.o",
+          "sha256": "8e704c8eea3850b0fe5f58011880f8afab7483cc70d8315b238305166fa88521"
+        },
+        {
+          "bytes": 159100,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "native_dictionary.c.o",
+          "sha256": "1792103e8955f33a2ce3a06233bf425841a590424a40089c9376fba781a9252a"
+        },
+        {
+          "bytes": 26856,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "qbe_stack.c.o",
+          "sha256": "e616408c9acdf4715cfdff4dafd2b6841b0947455f67c13c8fd738255eb2e883"
+        },
+        {
+          "bytes": 24900,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "qbe_providers.c.o",
+          "sha256": "b5f1f2daa431f30ea310881f6f78f0b4e5f678ef3f9e92916933cef5ce640965"
+        },
+        {
+          "bytes": 48652,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "qbe_resources.c.o",
+          "sha256": "8488b942d33e496a0f3ea8be7c219df015f1f9cc853345566b3fef9983d49cbd"
+        },
+        {
+          "bytes": 31148,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "native_equal.c.o",
+          "sha256": "98162378a8e560e44ed696ae303800fdcaf3d38af4f4bf0dc0cd77f4dd16cec9"
+        },
+        {
+          "bytes": 72876,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "native_bytes.c.o",
+          "sha256": "13d4763cfe512650d2f304784fb3cc7222dce9c19de8ea52dc4b447be4f0ac44"
+        },
+        {
+          "bytes": 13412,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "qbe_bytes.c.o",
+          "sha256": "ef56a649c22f2ae1103483ce5578a178c718ac0ae9129c337d7df5a394030545"
+        },
+        {
+          "bytes": 55196,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "native_rc.c.o",
+          "sha256": "7e4e02030e2a9f621819d6f9c4cbf4d4a7bf31a3b9f6485fc5fc24880657aef1"
+        },
+        {
+          "bytes": 14020,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "native_rc_stats.c.o",
+          "sha256": "0cee1a50f2efa7eb8a506869894b7f26af2c192764b5ccd9ffc2bcac5627a65d"
+        },
+        {
+          "bytes": 65292,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "native_rc_shapes.c.o",
+          "sha256": "988f219d8f5a95cc9cc84f89b7e6035350d56249d5faf9dbceaaaad6a1cd90b0"
+        },
+        {
+          "bytes": 41016,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "native_rc_walk.c.o",
+          "sha256": "c6545f52e689e910c370a995fead69d799924c2519909ef683879a5e13abdabf"
+        },
+        {
+          "bytes": 44696,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "native_regions.c.o",
+          "sha256": "3404ed9775143d0bc9b58ba816f00787ebe1ba7f7cceac4c7f3a62f4348bdea2"
+        },
+        {
+          "bytes": 12724,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "qbe_arena.c.o",
+          "sha256": "46d03a8ab08c02c84df0088a92be92f2915a6531111ad3f4252d08f3dbc5e36b"
+        },
+        {
+          "bytes": 50692,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "native_print.c.o",
+          "sha256": "2fcf7b1a9bb38288a94cda8ccdbe3a65e6d1fecab51b8dce3a49fd9378c4885e"
+        },
+        {
+          "bytes": 25708,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "qbe_io.c.o",
+          "sha256": "bdc5ef1b5bf91730b83e734f68861c5402d339f615ef1b84f9375ea79d2fb5fe"
+        },
+        {
+          "bytes": 66496,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "native_scoped.c.o",
+          "sha256": "560d85a435d6bff18d012564e77542afad2f637c7c46d252d53fabc1ea304c30"
+        },
+        {
+          "bytes": 61132,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "qbe_grants.c.o",
+          "sha256": "c8557b6a19dc849d54f9fb7fab681667d0efea031e387c85789c817eff740797"
+        },
+        {
+          "bytes": 40352,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "qbe_files.c.o",
+          "sha256": "f84896dc6c8a90550e193695125ba29f2e3b64a249404484698755ec25979be0"
+        },
+        {
+          "bytes": 27644,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "native_text_methods.c.o",
+          "sha256": "e4000cc91028abf3ed4645bd5eabd4b6efb3a7eec86235e3b1c08a8a650c7a86"
+        },
+        {
+          "bytes": 13504,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "native_search.c.o",
+          "sha256": "46a212c862bf864648c792fc8cf0ad7dd2590e058ef1003ffdd19a41d8f2a721"
+        },
+        {
+          "bytes": 26736,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "native_trim.c.o",
+          "sha256": "137d20cd18eeaea31b048446c96297f515ead48d13273019875d3cb61eada291"
+        },
+        {
+          "bytes": 29200,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "native_repr.c.o",
+          "sha256": "2a2e8d4ceaa776a8a9ef272cf767e8510fe59cdcfc332efde36dc6ba2b68aad9"
+        },
+        {
+          "bytes": 78376,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "qbe_stand_ins.c.o",
+          "sha256": "8c768546759cc9132720ae3615fd7b5a465ddad298e034f5b5756d1efb00241a"
+        },
+        {
+          "bytes": 46980,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "native_cow.c.o",
+          "sha256": "d9bac86abf8bd072007025f293e63c8eaeb22c141d1bdba78e1ac96b1b66d567"
+        },
+        {
+          "bytes": 11560,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "qbe_cow_runtime.c.o",
+          "sha256": "9942429e4199c6f976d70857866d215f46d8d2e837debf63ace8e96378539934"
+        },
+        {
+          "bytes": 13652,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "native_value_copy.c.o",
+          "sha256": "b4915284abbc610cdef026264d17a6051b8cde84348d0541f0c90e20467fb3b1"
+        },
+        {
+          "bytes": 57604,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "native_rc_scope.c.o",
+          "sha256": "716eda9602cd448479109718a74d97d55af2fdb78d7ab0ac0780a4982b8ee0be"
+        },
+        {
+          "bytes": 49400,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "native_rc_transfer.c.o",
+          "sha256": "deb6a6cb97541d1f487b40d8faa82bd205dc902003d1f3c5ba5351b30d3ad5d4"
+        },
+        {
+          "bytes": 61632,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "native_rc_alloc.c.o",
+          "sha256": "c3b84f390c4a502f960f2725480e730223740eb724635e3e95076f8cb2c182d6"
+        },
+        {
+          "bytes": 41660,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "native_rc_values.c.o",
+          "sha256": "737e598c0b232ecc00411c6cb088530ec02ed24a5cc17f392fe9bf02b0aca6df"
+        }
+      ]
+    },
+    "baseline-qbe": {
+      "binding": {
+        "binary": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-screen-reviewed/bin/baseline-qbe",
+        "binary_sha256": "246f21781fd58c7141dbe0992101c842e62d732d9ce47e209d55821d02b11b25",
+        "manifest": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-screen-reviewed/bin/baseline-qbe.qbe-manifest.json",
+        "manifest_sha256": "dcf71a1426eaa9f08e3c43a4dd4bcc4cd064450c13ad4cd8907a4efb1a5da48b",
+        "runtime_object": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/cache-ast-qbe/objects/f78adfeb5588c1d7d48b3af6bc4f01d9bbcecdd38138cbd52536d1efd37c2da7/0fcd05ec0260ec268de1c0b6d33809900f03ec95046d6750a43b01f9718240a2.a",
+        "runtime_object_sha256": "d991009e601716f4eab07e203f1f10dda3644216fe70aa3ff026c9493dc850f9"
+      },
+      "manifest_codegen": {
+        "backend": "qbe",
+        "lto": false,
+        "optimization": "default",
+        "thin_lto": false
+      },
+      "member_kinds": {
+        "native-ELF": 1
+      },
+      "members": [
+        {
+          "bytes": 681160,
+          "kind": "native-ELF",
+          "magic": "7f454c46",
+          "name": "runtime.o",
+          "sha256": "3bc9c53ed3776e3a47e22f8c1a1abeaa5c4954ec4bbf195515a02bc26707e9f7"
+        }
+      ]
+    },
+    "candidate-llvm": {
+      "binding": {
+        "binary": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-screen-reviewed/bin/candidate-llvm",
+        "binary_sha256": "b4bebf2c708fc41e11ac0d179b8cd9769177d58672b9f1bcff780cbd2ac2b371",
+        "manifest": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-screen-reviewed/bin/candidate-llvm.qbe-manifest.json",
+        "manifest_sha256": "1388d64b3d369ca373fca24196d120d4c40a719ce743a8f6ecd624302aabe83d",
+        "runtime_object": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-policy-20261003/.tmp-lox-native-policy-20261003/compiler-final-v2/lib/mylang-runtime/ff1a859a1e0dd6f3232b5766611e55937ac47fa52451c9cbdb55b3250a67b147.a",
+        "runtime_object_sha256": "ce4f3646a0b1da55855c21fe3bc45fa3cb70cc62dc0e1033c90fbb748d80243e"
+      },
+      "manifest_codegen": {
+        "backend": "llvm",
+        "lto": true,
+        "optimization": "3",
+        "thin_lto": false
+      },
+      "member_kinds": {
+        "LLVM-bitcode": 36
+      },
+      "members": [
+        {
+          "bytes": 42444,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "qbe_runtime_rc.c.o",
+          "sha256": "0873a46527ec0007c30dbce84f27ef1c45de8a75c046fb30687cdfd7064e46bc"
+        },
+        {
+          "bytes": 164264,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "qbe_runtime.c.o",
+          "sha256": "4136540fc51cae228cd039564ceb4e1985be8c7a4f1ecf601417d70bf7afa7a5"
+        },
+        {
+          "bytes": 85820,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "native_heap.c.o",
+          "sha256": "85bacfb603e50ba4d156b31e91be7e4e7197af7be46e0f41457c5a9d7e4200e5"
+        },
+        {
+          "bytes": 47220,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "native_arena.c.o",
+          "sha256": "59edda206c09a07b0b70121533263aa54aeb17477a21da42a3806d46657d8f7b"
+        },
+        {
+          "bytes": 119340,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "native_collections.c.o",
+          "sha256": "6557048398915eabacb0bfaa87abc92d866b71e99978aab3f6cb8de686e1140e"
+        },
+        {
+          "bytes": 116436,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "native_text.c.o",
+          "sha256": "be418fec412edbe32f9bfb21c8a495f621e2ba799d42ae9b0c877a9586e58eac"
+        },
+        {
+          "bytes": 159264,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "native_dictionary.c.o",
+          "sha256": "5428056ca25b65e86a29290cba9354324be0951be53280b205afd94eb5d89b34"
+        },
+        {
+          "bytes": 27016,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "qbe_stack.c.o",
+          "sha256": "9190263ea2397f95e3f112ee37a86e14a85ba6bc6e8f07fd83fa3e488520bf48"
+        },
+        {
+          "bytes": 25060,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "qbe_providers.c.o",
+          "sha256": "b0d70b1672e3ef52ba8c2b9bcd0a131c7381df409c12410036d86458a112030e"
+        },
+        {
+          "bytes": 48812,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "qbe_resources.c.o",
+          "sha256": "ea20c4b532e1b76f76fed6201f8ad5fc92e1cefb7a19eec4bbca27b1b5f7eb66"
+        },
+        {
+          "bytes": 31304,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "native_equal.c.o",
+          "sha256": "559637169e7ffffc078b278932b47eccdf440ae628885bcdde26612164484d2e"
+        },
+        {
+          "bytes": 73040,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "native_bytes.c.o",
+          "sha256": "2ed5fb9901b1b893142cd6ae6326c16d148cebdfdcaae1ca86574d84cc458caf"
+        },
+        {
+          "bytes": 13576,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "qbe_bytes.c.o",
+          "sha256": "fada1fef59b8d5a921f0eacd4774e8f56b87d8d21a228f0e813f1fed47d1749a"
+        },
+        {
+          "bytes": 55356,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "native_rc.c.o",
+          "sha256": "8bd1d6d34507145db8f50ea2bdbdfc8168172dc1dd556a0761779db5c153a099"
+        },
+        {
+          "bytes": 14184,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "native_rc_stats.c.o",
+          "sha256": "bb45d3179de1d5aa6f83dbf8fdec6394eac75eae219f5c2c257d3e0fbb264106"
+        },
+        {
+          "bytes": 65456,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "native_rc_shapes.c.o",
+          "sha256": "bc60a1f392aea5095496bf18129993fb4a7d65039c234c40b9aa4169ac7cb9de"
+        },
+        {
+          "bytes": 41172,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "native_rc_walk.c.o",
+          "sha256": "a2e2b9ec45936dc3701a56869bc408ea81e37b5f6e8b45d30a86a3dae0a27006"
+        },
+        {
+          "bytes": 44860,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "native_regions.c.o",
+          "sha256": "efd702658183ef4cc05066853b886d2a6e53c52e9ab6d3976e2aa1ef39d80fbf"
+        },
+        {
+          "bytes": 12884,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "qbe_arena.c.o",
+          "sha256": "1994a68057ab4d25daa2e99f2f076c33f85b544cb8c3d3c5210393437d4d710f"
+        },
+        {
+          "bytes": 50856,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "native_print.c.o",
+          "sha256": "7ad68ce3e4aac16edd9a3850926bb9f3e5ed9b954f22b7aee9c05e1ca5b741a6"
+        },
+        {
+          "bytes": 25872,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "qbe_io.c.o",
+          "sha256": "2ca25b34795e4d2ca91ec98bf3990d04f817224388f13de2f87e12e829285675"
+        },
+        {
+          "bytes": 66652,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "native_scoped.c.o",
+          "sha256": "208fbdff797693155c351a1899cd9838d5060e7b234305e7a756ab818e44f8c2"
+        },
+        {
+          "bytes": 61292,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "qbe_grants.c.o",
+          "sha256": "60b72a7ba66cf81ec0d0721e8316078c34e8caa669044308b0864630a7e27f6c"
+        },
+        {
+          "bytes": 40512,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "qbe_files.c.o",
+          "sha256": "b66b1f63a7d4519aa40ade1d6bdae5a168f9fbafb748ef80c41836e640692ecf"
+        },
+        {
+          "bytes": 27808,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "native_text_methods.c.o",
+          "sha256": "2e5beead5d1c242fa3631013ed9fb4d1b85cf32e4111bf9bd730c39dc1fc2839"
+        },
+        {
+          "bytes": 13668,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "native_search.c.o",
+          "sha256": "9870b91295ae8b008d05b631d8a5cf5821e35ec473e03e36e872f1dca1607377"
+        },
+        {
+          "bytes": 26900,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "native_trim.c.o",
+          "sha256": "7633a8c70d615631c5433f787b64555bbe059681384cacc4a26142da387a2e8d"
+        },
+        {
+          "bytes": 29360,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "native_repr.c.o",
+          "sha256": "1e028f70443e7e119c7f1f94f07c0f09140efbe21aca8b9a2e7288fb74ef6400"
+        },
+        {
+          "bytes": 78540,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "qbe_stand_ins.c.o",
+          "sha256": "4eb46ed0f0d85ada8e3521e29052c686e0cf2f7143e47a66d6ff30c53d306341"
+        },
+        {
+          "bytes": 47140,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "native_cow.c.o",
+          "sha256": "1a23f81a0ec16b66a93b98c198b327505239a4daee0b40c143c7a69b4228253e"
+        },
+        {
+          "bytes": 11720,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "qbe_cow_runtime.c.o",
+          "sha256": "8f3671d761fbeeb10c5a204c16282c6413a09c31aee53c4eab45147d183cf9b3"
+        },
+        {
+          "bytes": 13812,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "native_value_copy.c.o",
+          "sha256": "c8739808465cd8fa1a323a278ef244c6f13236fca942a7140fc67afda73ddc1c"
+        },
+        {
+          "bytes": 57760,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "native_rc_scope.c.o",
+          "sha256": "1f3670ae020c5266e6ce45fc2a71a80c7aed8a79c80bff2bf856a0f017c108b3"
+        },
+        {
+          "bytes": 49564,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "native_rc_transfer.c.o",
+          "sha256": "55e64cc0f96f9f20ee52a0ed1f9bf3fa36d5a497276a918abca1d4ad447105a6"
+        },
+        {
+          "bytes": 61792,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "native_rc_alloc.c.o",
+          "sha256": "8d1d3d645601098bd482a18346fe5a7891f42ca1cf0ffb78174976a1251a7dbc"
+        },
+        {
+          "bytes": 41820,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "native_rc_values.c.o",
+          "sha256": "3b55a34d3ae186d27939a3438eb61faab7387f4cc5dea5d84b692d5c4e21f97d"
+        }
+      ]
+    },
+    "rebuilt-llvm": {
+      "binding": {
+        "binary": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-screen-reviewed/bin/rebuilt-llvm",
+        "binary_sha256": "180575c3fc2e46a16ed8dd290e289963a87603b5a7c0cf8bb0e03ba7cf794361",
+        "manifest": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-screen-reviewed/bin/rebuilt-llvm.qbe-manifest.json",
+        "manifest_sha256": "af7386692a2176796a1187bd0168d134b1d7b4de35db9fce986e29caf569fe20",
+        "runtime_object": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-policy-20261003/.tmp-lox-native-policy-20261003/compiler-final-v2/lib/mylang-runtime/ff1a859a1e0dd6f3232b5766611e55937ac47fa52451c9cbdb55b3250a67b147.a",
+        "runtime_object_sha256": "ce4f3646a0b1da55855c21fe3bc45fa3cb70cc62dc0e1033c90fbb748d80243e"
+      },
+      "manifest_codegen": {
+        "backend": "llvm",
+        "lto": true,
+        "optimization": "3",
+        "thin_lto": false
+      },
+      "member_kinds": {
+        "LLVM-bitcode": 36
+      },
+      "members": [
+        {
+          "bytes": 42444,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "qbe_runtime_rc.c.o",
+          "sha256": "0873a46527ec0007c30dbce84f27ef1c45de8a75c046fb30687cdfd7064e46bc"
+        },
+        {
+          "bytes": 164264,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "qbe_runtime.c.o",
+          "sha256": "4136540fc51cae228cd039564ceb4e1985be8c7a4f1ecf601417d70bf7afa7a5"
+        },
+        {
+          "bytes": 85820,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "native_heap.c.o",
+          "sha256": "85bacfb603e50ba4d156b31e91be7e4e7197af7be46e0f41457c5a9d7e4200e5"
+        },
+        {
+          "bytes": 47220,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "native_arena.c.o",
+          "sha256": "59edda206c09a07b0b70121533263aa54aeb17477a21da42a3806d46657d8f7b"
+        },
+        {
+          "bytes": 119340,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "native_collections.c.o",
+          "sha256": "6557048398915eabacb0bfaa87abc92d866b71e99978aab3f6cb8de686e1140e"
+        },
+        {
+          "bytes": 116436,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "native_text.c.o",
+          "sha256": "be418fec412edbe32f9bfb21c8a495f621e2ba799d42ae9b0c877a9586e58eac"
+        },
+        {
+          "bytes": 159264,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "native_dictionary.c.o",
+          "sha256": "5428056ca25b65e86a29290cba9354324be0951be53280b205afd94eb5d89b34"
+        },
+        {
+          "bytes": 27016,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "qbe_stack.c.o",
+          "sha256": "9190263ea2397f95e3f112ee37a86e14a85ba6bc6e8f07fd83fa3e488520bf48"
+        },
+        {
+          "bytes": 25060,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "qbe_providers.c.o",
+          "sha256": "b0d70b1672e3ef52ba8c2b9bcd0a131c7381df409c12410036d86458a112030e"
+        },
+        {
+          "bytes": 48812,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "qbe_resources.c.o",
+          "sha256": "ea20c4b532e1b76f76fed6201f8ad5fc92e1cefb7a19eec4bbca27b1b5f7eb66"
+        },
+        {
+          "bytes": 31304,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "native_equal.c.o",
+          "sha256": "559637169e7ffffc078b278932b47eccdf440ae628885bcdde26612164484d2e"
+        },
+        {
+          "bytes": 73040,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "native_bytes.c.o",
+          "sha256": "2ed5fb9901b1b893142cd6ae6326c16d148cebdfdcaae1ca86574d84cc458caf"
+        },
+        {
+          "bytes": 13576,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "qbe_bytes.c.o",
+          "sha256": "fada1fef59b8d5a921f0eacd4774e8f56b87d8d21a228f0e813f1fed47d1749a"
+        },
+        {
+          "bytes": 55356,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "native_rc.c.o",
+          "sha256": "8bd1d6d34507145db8f50ea2bdbdfc8168172dc1dd556a0761779db5c153a099"
+        },
+        {
+          "bytes": 14184,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "native_rc_stats.c.o",
+          "sha256": "bb45d3179de1d5aa6f83dbf8fdec6394eac75eae219f5c2c257d3e0fbb264106"
+        },
+        {
+          "bytes": 65456,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "native_rc_shapes.c.o",
+          "sha256": "bc60a1f392aea5095496bf18129993fb4a7d65039c234c40b9aa4169ac7cb9de"
+        },
+        {
+          "bytes": 41172,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "native_rc_walk.c.o",
+          "sha256": "a2e2b9ec45936dc3701a56869bc408ea81e37b5f6e8b45d30a86a3dae0a27006"
+        },
+        {
+          "bytes": 44860,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "native_regions.c.o",
+          "sha256": "efd702658183ef4cc05066853b886d2a6e53c52e9ab6d3976e2aa1ef39d80fbf"
+        },
+        {
+          "bytes": 12884,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "qbe_arena.c.o",
+          "sha256": "1994a68057ab4d25daa2e99f2f076c33f85b544cb8c3d3c5210393437d4d710f"
+        },
+        {
+          "bytes": 50856,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "native_print.c.o",
+          "sha256": "7ad68ce3e4aac16edd9a3850926bb9f3e5ed9b954f22b7aee9c05e1ca5b741a6"
+        },
+        {
+          "bytes": 25872,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "qbe_io.c.o",
+          "sha256": "2ca25b34795e4d2ca91ec98bf3990d04f817224388f13de2f87e12e829285675"
+        },
+        {
+          "bytes": 66652,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "native_scoped.c.o",
+          "sha256": "208fbdff797693155c351a1899cd9838d5060e7b234305e7a756ab818e44f8c2"
+        },
+        {
+          "bytes": 61292,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "qbe_grants.c.o",
+          "sha256": "60b72a7ba66cf81ec0d0721e8316078c34e8caa669044308b0864630a7e27f6c"
+        },
+        {
+          "bytes": 40512,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "qbe_files.c.o",
+          "sha256": "b66b1f63a7d4519aa40ade1d6bdae5a168f9fbafb748ef80c41836e640692ecf"
+        },
+        {
+          "bytes": 27808,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "native_text_methods.c.o",
+          "sha256": "2e5beead5d1c242fa3631013ed9fb4d1b85cf32e4111bf9bd730c39dc1fc2839"
+        },
+        {
+          "bytes": 13668,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "native_search.c.o",
+          "sha256": "9870b91295ae8b008d05b631d8a5cf5821e35ec473e03e36e872f1dca1607377"
+        },
+        {
+          "bytes": 26900,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "native_trim.c.o",
+          "sha256": "7633a8c70d615631c5433f787b64555bbe059681384cacc4a26142da387a2e8d"
+        },
+        {
+          "bytes": 29360,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "native_repr.c.o",
+          "sha256": "1e028f70443e7e119c7f1f94f07c0f09140efbe21aca8b9a2e7288fb74ef6400"
+        },
+        {
+          "bytes": 78540,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "qbe_stand_ins.c.o",
+          "sha256": "4eb46ed0f0d85ada8e3521e29052c686e0cf2f7143e47a66d6ff30c53d306341"
+        },
+        {
+          "bytes": 47140,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "native_cow.c.o",
+          "sha256": "1a23f81a0ec16b66a93b98c198b327505239a4daee0b40c143c7a69b4228253e"
+        },
+        {
+          "bytes": 11720,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "qbe_cow_runtime.c.o",
+          "sha256": "8f3671d761fbeeb10c5a204c16282c6413a09c31aee53c4eab45147d183cf9b3"
+        },
+        {
+          "bytes": 13812,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "native_value_copy.c.o",
+          "sha256": "c8739808465cd8fa1a323a278ef244c6f13236fca942a7140fc67afda73ddc1c"
+        },
+        {
+          "bytes": 57760,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "native_rc_scope.c.o",
+          "sha256": "1f3670ae020c5266e6ce45fc2a71a80c7aed8a79c80bff2bf856a0f017c108b3"
+        },
+        {
+          "bytes": 49564,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "native_rc_transfer.c.o",
+          "sha256": "55e64cc0f96f9f20ee52a0ed1f9bf3fa36d5a497276a918abca1d4ad447105a6"
+        },
+        {
+          "bytes": 61792,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "native_rc_alloc.c.o",
+          "sha256": "8d1d3d645601098bd482a18346fe5a7891f42ca1cf0ffb78174976a1251a7dbc"
+        },
+        {
+          "bytes": 41820,
+          "kind": "LLVM-bitcode",
+          "magic": "4243c0de",
+          "name": "native_rc_values.c.o",
+          "sha256": "3b55a34d3ae186d27939a3438eb61faab7387f4cc5dea5d84b692d5c4e21f97d"
+        }
+      ]
+    }
+  },
+  "base": "3b33df52044a10cb84b908f8b1641af439e8c729",
+  "before": {
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-policy-20261003/.tmp-lox-native-policy-20261003/builds-complete.json": {
+      "bytes": 21232,
+      "sha256": "c3c4620b9bf3169856fdcc757b710fe399fbe0c16ce4ba957550a1957485d6c3"
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-policy-20261003/.tmp-lox-native-policy-20261003/compiler-final-v2.json": {
+      "bytes": 5749,
+      "sha256": "4664e1e29bd3b4bb041d43b655f33db5695909dc93db149a397231409d72b422"
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-policy-20261003/.tmp-lox-native-policy-20261003/compiler-final-v2/bin/mylang": {
+      "bytes": 74028544,
+      "sha256": "81fe478471d256e9c6023d786b61dd6183f3b51363c4abe9d1d015c1268600cc"
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-policy-20261003/.tmp-lox-native-policy-20261003/compiler-final-v2/lib/mylang-runtime/ff1a859a1e0dd6f3232b5766611e55937ac47fa52451c9cbdb55b3250a67b147.a": {
+      "bytes": 1909462,
+      "sha256": "ce4f3646a0b1da55855c21fe3bc45fa3cb70cc62dc0e1033c90fbb748d80243e"
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-policy-20261003/.tmp-lox-native-policy-20261003/compiler-final-v2/lib/mylang-runtime/ff1a859a1e0dd6f3232b5766611e55937ac47fa52451c9cbdb55b3250a67b147.a.digest": {
+      "bytes": 41,
+      "sha256": "4097ad17d36b24ab198bb6b35efc323fd4ec80c7deac2106a488991324bb24a8"
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-policy-20261003/build.zig": {
+      "bytes": 82057,
+      "sha256": "1e3702b0f3d803a95e29f00834b0e3ac36237e32e13dbee720abb862253e79a9"
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-policy-20261003/build_qbe_assets.zig": {
+      "bytes": 15367,
+      "sha256": "5c8bd5ea199ac62fc95529c591bebd8033bb3a6897e9230147d52c6859389f17"
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-policy-20261003/experiments/llvm-backend/qbe_llvm.py": {
+      "bytes": 41094,
+      "sha256": "2853de61992c4b771e05a58efc283b6c04ee2230506dc675a3448335d71a1de2"
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-policy-20261003/src/qbe_build.zig": {
+      "bytes": 113074,
+      "sha256": "bb60a5484b509d234f1197f0c71e51d85f895d64e50531e8dc6f6694b918724a"
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-policy-20261003/src/qbe_build_backend.zig": {
+      "bytes": 12971,
+      "sha256": "0143550a6bb55bb6300526e2ad99707fc061b88cf97d2530ac6ccd33ef781d79"
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-policy-20261003/src/qbe_build_cache.zig": {
+      "bytes": 43330,
+      "sha256": "88442a36c7cf91b94f40e154d9aa8d91fddb99637868116a93c907a7dca90fee"
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-policy-20261003/src/qbe_build_llvm_compile.zig": {
+      "bytes": 21682,
+      "sha256": "6232af23794ab8edfc2b6e2f76aaf000c468bc69d868d80130c3dcfb74c698bd"
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-policy-20261003/src/qbe_build_options.zig": {
+      "bytes": 30546,
+      "sha256": "0f057cf867d272da91a5ad6b95850bc365e9ef47e97568fb300f94540e8c4727"
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-screen-reviewed/bin/baseline-llvm.qbe-manifest.json": {
+      "bytes": 190235,
+      "sha256": "6bb5f323746e5a16c7c66e7f8d86941d990204c6dd4afe6c2d32940f44487d63"
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-screen-reviewed/bin/baseline-qbe.qbe-manifest.json": {
+      "bytes": 565,
+      "sha256": "dcf71a1426eaa9f08e3c43a4dd4bcc4cd064450c13ad4cd8907a4efb1a5da48b"
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-screen-reviewed/bin/candidate-llvm.qbe-manifest.json": {
+      "bytes": 206587,
+      "sha256": "1388d64b3d369ca373fca24196d120d4c40a719ce743a8f6ecd624302aabe83d"
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-screen-reviewed/bin/rebuilt-llvm.qbe-manifest.json": {
+      "bytes": 201547,
+      "sha256": "af7386692a2176796a1187bd0168d134b1d7b4de35db9fce986e29caf569fe20"
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-screen-reviewed/rebuilt-build.json": {
+      "bytes": 7000,
+      "sha256": "c62b0eac3062b453c7437aa11ad4e07b862c3374014be244475d970ac016440a"
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-screen-reviewed/runtime-bindings.json": {
+      "bytes": 5283,
+      "sha256": "af2e26d3f0e741933d1ef7d36165bd0c239cfd875feae3e9825e79482afaf036"
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/cache-ast-llvm/objects/f78adfeb5588c1d7d48b3af6bc4f01d9bbcecdd38138cbd52536d1efd37c2da7/dcd3fd9f611ad28bedf2077600ecbf7a121d0d912e392cd0e719083340ef8d22.a": {
+      "bytes": 1903654,
+      "sha256": "8cfafe923c4edf396aae9e5aa3af612350fcbeac8757b53b2b11a6cf7d301fb9"
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/cache-ast-qbe/objects/f78adfeb5588c1d7d48b3af6bc4f01d9bbcecdd38138cbd52536d1efd37c2da7/0fcd05ec0260ec268de1c0b6d33809900f03ec95046d6750a43b01f9718240a2.a": {
+      "bytes": 695412,
+      "sha256": "d991009e601716f4eab07e203f1f10dda3644216fe70aa3ff026c9493dc850f9"
+    }
+  },
+  "conclusion": "LLVM RC runtime C archive already consists entirely of LTO bitcode; enabling runtime LTO supplies no new optimization",
+  "existing_rebuild_commands": [
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-policy-20261003/.tmp-lox-native-policy-20261003/compiler-final-v2/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-screen-reviewed/candidate/main.my",
+        "--project",
+        "--backend",
+        "llvm",
+        "--llvm-opt",
+        "3",
+        "--lto",
+        "--rc-runtime",
+        "--keep-symbols",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-screen-reviewed/cache-rebuilt-llvm",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-screen-reviewed/bin/rebuilt-llvm"
+      ],
+      "codegen": {
+        "abi": "mylang-qbe-native-v9",
+        "backend": "llvm",
+        "lto": true,
+        "optimization": "3"
+      },
+      "runtime_object": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-policy-20261003/.tmp-lox-native-policy-20261003/compiler-final-v2/lib/mylang-runtime/ff1a859a1e0dd6f3232b5766611e55937ac47fa52451c9cbdb55b3250a67b147.a",
+      "runtime_object_sha256": "ce4f3646a0b1da55855c21fe3bc45fa3cb70cc62dc0e1033c90fbb748d80243e",
+      "status": 0
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-policy-20261003/.tmp-lox-native-policy-20261003/compiler-final-v2/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-screen-reviewed/candidate/main.my",
+        "--project",
+        "--backend",
+        "qbe",
+        "--qbe",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-policy-20261003/.tmp-lox-native-policy-20261003/compiler-final-v2/bin/qbe",
+        "--rc-runtime",
+        "--keep-symbols",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-screen-reviewed/cache-rebuilt-qbe",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-screen-reviewed/bin/rebuilt-qbe"
+      ],
+      "codegen": {
+        "abi": "mylang-qbe-native-v9",
+        "backend": "qbe",
+        "lto": false,
+        "optimization": "default"
+      },
+      "runtime_object": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-policy-20261003/.tmp-lox-native-policy-20261003/compiler-final-v2/lib/mylang-runtime/153db56129b1eda9ff74552a056faedcd3066fc945896cc54d7886aa5d214b3a.a",
+      "runtime_object_sha256": "d991009e601716f4eab07e203f1f10dda3644216fe70aa3ff026c9493dc850f9",
+      "status": 0
+    }
+  ],
+  "identity_boundaries": {
+    "cache": "mylang-object-key-v4 plus driver/runtime/tool/optimization/LTO/mode/target environment and contract/kind/input; runtime archive is bound by the actual guest manifest",
+    "full_lto": "guest bitcode + actual runtime archive passed together to LLD --lto-emit-asm --lto-O3; annotated assembly links natively afterward",
+    "installed": "mylang-runtime-installed-v2, native ABI, runtime contract, kind, backend/LTO flavor, bundled runtime content, pinned Zig version, mode, amd64_sysv; adjacent .digest verified",
+    "legacy_adapter": "experimental qbe_llvm.py only translates guest IR; current backend never reads or executes it (LLVM-ZIG-1, BUILD-BACKEND-5)"
+  },
+  "limits": [
+    "Member magic proves object format, not that every helper was inlined or every code region was profitable.",
+    "The audit reads retained guest build receipts and source; it does not reconstruct deleted internal compiler subprocess logs.",
+    "The separately compiled Zig text formatter and external system libraries are not claimed to be C runtime bitcode.",
+    "No new optimization or safety relaxation is proposed."
+  ],
+  "policy_compiler": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-policy-20261003/.tmp-lox-native-policy-20261003/compiler-final-v2/bin/mylang",
+    "sha256": "81fe478471d256e9c6023d786b61dd6183f3b51363c4abe9d1d015c1268600cc"
+  },
+  "scope": "bounded read-only feasibility; no compiler/build/emission/guest/performance execution",
+  "sources": {
+    "build.zig": {
+      "policy_sha256": "1e3702b0f3d803a95e29f00834b0e3ac36237e32e13dbee720abb862253e79a9",
+      "selected_sha256": "1e3702b0f3d803a95e29f00834b0e3ac36237e32e13dbee720abb862253e79a9",
+      "whole_file_equal": true
+    },
+    "build_qbe_assets.zig": {
+      "policy_sha256": "5c8bd5ea199ac62fc95529c591bebd8033bb3a6897e9230147d52c6859389f17",
+      "selected_sha256": "5c8bd5ea199ac62fc95529c591bebd8033bb3a6897e9230147d52c6859389f17",
+      "whole_file_equal": true
+    },
+    "experiments/llvm-backend/qbe_llvm.py": {
+      "policy_sha256": "2853de61992c4b771e05a58efc283b6c04ee2230506dc675a3448335d71a1de2",
+      "selected_sha256": "2853de61992c4b771e05a58efc283b6c04ee2230506dc675a3448335d71a1de2",
+      "whole_file_equal": true
+    },
+    "src/qbe_build.zig": {
+      "policy_sha256": "bb60a5484b509d234f1197f0c71e51d85f895d64e50531e8dc6f6694b918724a",
+      "selected_sha256": "87d12062ea791ddc570e1442322e66c47cd499251080a2d628f579cb37ae83cb",
+      "whole_file_equal": false
+    },
+    "src/qbe_build_backend.zig": {
+      "policy_sha256": "0143550a6bb55bb6300526e2ad99707fc061b88cf97d2530ac6ccd33ef781d79",
+      "selected_sha256": "0143550a6bb55bb6300526e2ad99707fc061b88cf97d2530ac6ccd33ef781d79",
+      "whole_file_equal": true
+    },
+    "src/qbe_build_cache.zig": {
+      "policy_sha256": "88442a36c7cf91b94f40e154d9aa8d91fddb99637868116a93c907a7dca90fee",
+      "selected_sha256": "88442a36c7cf91b94f40e154d9aa8d91fddb99637868116a93c907a7dca90fee",
+      "whole_file_equal": true
+    },
+    "src/qbe_build_llvm_compile.zig": {
+      "policy_sha256": "6232af23794ab8edfc2b6e2f76aaf000c468bc69d868d80130c3dcfb74c698bd",
+      "selected_sha256": "6232af23794ab8edfc2b6e2f76aaf000c468bc69d868d80130c3dcfb74c698bd",
+      "whole_file_equal": true
+    },
+    "src/qbe_build_options.zig": {
+      "policy_sha256": "0f057cf867d272da91a5ad6b95850bc365e9ef47e97568fb300f94540e8c4727",
+      "selected_sha256": "0f057cf867d272da91a5ad6b95850bc365e9ef47e97568fb300f94540e8c4727",
+      "whole_file_equal": true
+    }
+  },
+  "unchanged_runtime_compile_and_link_functions": {
+    "emitRuntime": {
+      "selected_policy_equal": true,
+      "sha256": "2872beda2208a35a7749ce4cddca01c1e30f573856f11d2b843f189ea7086fe3"
+    },
+    "fullLto": {
+      "selected_policy_equal": true,
+      "sha256": "3383c12d7c568262969b432721de264b37c8c10ceb65212da40ee23856e583b1"
+    },
+    "installedRuntime": {
+      "selected_policy_equal": true,
+      "sha256": "128cf9e381c365e4c037cab9428c3a893c8657539dd832627c31d8eb4b9cdcb5"
+    },
+    "linkAssembled": {
+      "selected_policy_equal": true,
+      "sha256": "941edc524662dff95cc18aed8a1bf5d5ef4db6855bf061245b1857b538ef2b3e"
+    },
+    "resolveRuntime": {
+      "selected_policy_equal": true,
+      "sha256": "4f06981fff0c1947b2adfea0646d5e4b03551307a7d6848de9f1e5f22899ac5d"
+    },
+    "runtimeFlavor": {
+      "selected_policy_equal": true,
+      "sha256": "c8a5521d8dc56228bc80d943fe391a6fc109ce3b046c17d78f1aa47671a9b37d"
+    },
+    "runtimeInstalledHash": {
+      "selected_policy_equal": true,
+      "sha256": "f2250d31add521f89f1ec2050add6f12cfbb4ddcd28a319fb10309529d8ab071"
+    },
+    "validInstalled": {
+      "selected_policy_equal": true,
+      "sha256": "b38d3723337976d3b86bd8b43808418f1e27748371640bc19cb582a24577ca2b"
+    }
+  },
+  "verified_after": true
+}

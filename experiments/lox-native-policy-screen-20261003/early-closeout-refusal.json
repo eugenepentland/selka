@@ -1,0 +1,18 @@
+{
+  "argv": [
+    "taskset",
+    "-c",
+    "16",
+    "python3",
+    "-B",
+    "experiments/lox-compiler-runtime-protocol-20261003/closeout.py",
+    "--check",
+    ".tmp-lox-native-policy-screen-reviewed"
+  ],
+  "expected_reason": "measurement command has no completed receipt: wall.command.json",
+  "final_completed_checker_log": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-screen-check-final.log",
+  "log": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-screen-check-initial.log",
+  "log_sha256": "00a5c8b36560844f7652dcbbe08828a485c694a8b31bd2449135bbdc964ed0b1",
+  "scope": "Retrospective preservation of an early checker invocation while wall measurement was active. This is an incomplete-state refusal, excluded from final completed closeout acceptance.",
+  "status": 1
+}

@@ -1,0 +1,60 @@
+{
+  "comparison_sha256": "ec23b218782d0b4f7b82bca1e89284e99ddfd82e7e06449b62b4a18d5a88c80d",
+  "host_tools": {
+    "python3": {
+      "path": "/usr/bin/python3.14",
+      "sha256": "52e0a13e60a981d8c4b6478be2ba5176f69da07948a056bf49cf6f077e30cb41",
+      "version": "Python 3.14.4"
+    },
+    "objdump": {
+      "path": "/usr/bin/x86_64-linux-gnu-objdump",
+      "sha256": "44f07f8da860b15bd4dec909f229dec536595fb170a616fe3ab29c7b21c9736f",
+      "version": "GNU objdump (GNU Binutils for Ubuntu) 2.46"
+    }
+  },
+  "static_disassembly_instruction_counts": {
+    "vm::load_frame": {
+      "control": {
+        "instructions": 664,
+        "call_instructions": 50
+      },
+      "candidate": {
+        "instructions": 664,
+        "call_instructions": 50
+      }
+    },
+    "vm::call_value": {
+      "control": {
+        "instructions": 656,
+        "call_instructions": 40
+      },
+      "candidate": {
+        "instructions": 656,
+        "call_instructions": 40
+      }
+    },
+    "vm::numeric": {
+      "control": {
+        "instructions": 512,
+        "call_instructions": 27
+      },
+      "candidate": {
+        "instructions": 512,
+        "call_instructions": 27
+      }
+    },
+    "vm::run": {
+      "control": {
+        "instructions": 8606,
+        "call_instructions": 440
+      },
+      "candidate": {
+        "instructions": 8606,
+        "call_instructions": 440
+      }
+    }
+  },
+  "qualification_sha256": "0e70ff3063c7829cf0fbc60146a31a706d11aba7c1dda8f5275d9eb44508ee17",
+  "qualified_complete_prefix_unchanged_files": 16,
+  "scope": "Counts are full static linked function disassembly, not a dynamic opcode/path trace. Tool/prefix binding is retrospective to completed host comparison."
+}

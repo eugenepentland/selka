@@ -1,12 +1,12 @@
 # Remaining checked Lox performance gap
 
-The selected AST source still executes substantially more instructions than
-Rust. These ratios come from the completed 780-cell counter factorial, using
+The preceding AST/d14 checkpoint executes substantially more instructions than
+Rust. These historical ratios come from the completed 780-cell counter factorial, using
 matched per-case medians and then geometric means across 13 workloads. Both
 engines use the calibrated tree tier for counters. This is a derivative of
 existing measurements, not a new performance run.
 
-| Selected AST / Rust | LLVM VM | LLVM tree | QBE VM | QBE tree |
+| AST/d14 checkpoint / Rust | LLVM VM | LLVM tree | QBE VM | QBE tree |
 | --- | ---: | ---: | ---: | ---: |
 | Instructions | 2.458× | 4.089× | 5.746× | 7.817× |
 | Cycles | 2.774× | 4.098× | 5.153× | 7.379× |
@@ -98,7 +98,27 @@ establish a significant regression; the candidate remains unselected. The
 retains 728 completed observations and an immutable evidence snapshot. Its
 legacy strict closeout found two missing guard paths for unmeasured fresh
 reproduction runtime archives; that limitation remains explicit, and a separate
-prospective protocol is being prepared. Measured qualified guest bytes were
+prospective protocol has now passed a fresh trial below. Measured qualified guest bytes were
 fully guarded. Static ablation isolates one pointer copy that prevented QBE
 promotion of 236 stores/237 reads and increased the VM frame by 768 bytes;
 removing it saves instructions without establishing a runtime improvement.
+
+The corrected native variant policy is now selected on the performance branch.
+It enables the bounded native path for known QBE producers while preserving
+LLVM and foreign/default producer behavior. Full three-round measurements
+reduce QBE tree time by 7.7089%, instructions by 2.6607% and cycles by 8.5299%.
+All 13 tree wall medians improve. QBE VM time rises 0.4868% and cycles 0.3779%,
+with unchanged instructions; this tradeoff remains explicit. The equal-weight
+26-case QBE geometric mean time falls 3.6982%. LLVM allocated code matches the
+preceding selection, with roughly 0.1% or smaller aggregate timing variation.
+
+The [selected backend-policy report](../../experiments/lox-native-policy-screen-20261003/README.md)
+retains the full 1,196 observations, exact 252-guard/six-runtime-role prospective
+closeout, separate qualification/reviews and a verified immutable archive.
+The fresh QBE tree wall ratios remain 6.833× Rust /6.649× Go, so substantial
+work remains. Its fresh instruction ratios are 5.746× Rust for VM and 7.609×
+for tree; LLVM remains 2.458×/4.089×. Host-only comparison finds VM bodies unchanged apart from linked
+relocations and a 19,984-byte address shift; it does not establish the slowdown's
+cause. The separate runtime audit confirms LLVM RC helper LTO is already active.
+Main is not merged by this selection; the historical negative trials and their
+frozen receipts remain unselected.

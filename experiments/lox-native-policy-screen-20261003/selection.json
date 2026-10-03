@@ -1,0 +1,42 @@
+{
+  "archive_manifest_sha256": "431b64aca839ef7514c0f388815cc8d0bf29b0b69dcc4f9b6710af155250b18b",
+  "artifacts": {
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-policy-20261003/.tmp-lox-native-policy-20261003/frozen-source-v2.json": "d2962dbc3edc07a9e505e702eb6cf547e198dbc42eb67e94c5e38b10e696cb43",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-policy-20261003/.tmp-lox-native-policy-vm-review-20261003/final/comparison.json": "ec23b218782d0b4f7b82bca1e89284e99ddfd82e7e06449b62b4a18d5a88c80d",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-policy-20261003/experiments/lox-native-policy-20261003/qualification.json": "0e70ff3063c7829cf0fbc60146a31a706d11aba7c1dda8f5275d9eb44508ee17",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-prepare-command.json": "43fb7f5d6f6e88f7c810a66cb658cf82e9beca64c8382e50f7788fec91d4982b",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-prepare.py": "2f5aedd653e4ed9c0e434abf846a22f57bcd8a2e2708fb914003d67886ef8a6b",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-screen-reviewed/guards.json": "f88cf89ff59c290c9f36d119721525894635b80890a07778ccb9f001910601d2",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-screen-reviewed/prepared.json": "106f978f62f3dce7a25230303d3a144f67eeaa9546a17cbe40844eaf0e7a4fb9",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-screen-reviewed/runtime-bindings.json": "af2e26d3f0e741933d1ef7d36165bd0c239cfd875feae3e9825e79482afaf036",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-qbe-dispatch-20261003/.tmp-lox-runtime-lto-feasibility-20261003/report.json": "2072e8aa8d05b9a57c140c4cb6da0e32c76b89d50268034408ad94f77ec67e38"
+  },
+  "author_core_commit": "a07fee5e878a4ad4c5610c07928b0fe9f45f0269",
+  "branch": "codex/lox-parity-20261003",
+  "compiler_sha256": "81fe478471d256e9c6023d786b61dd6183f3b51363c4abe9d1d015c1268600cc",
+  "completed_samples": {
+    "counters": 468,
+    "screen": 104,
+    "smoke": 156,
+    "wall": 468
+  },
+  "core878_exact_after_integration": true,
+  "core_descriptor": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-policy-20261003/.tmp-lox-native-policy-20261003/frozen-source-v2.json",
+  "core_descriptor_sha256": "d2962dbc3edc07a9e505e702eb6cf547e198dbc42eb67e94c5e38b10e696cb43",
+  "exact_guards": 252,
+  "followup_static_inspections_are_separate_from_sealed_measurement_archive": true,
+  "integrated_core_commit": "d22f7fa7cfedc0523f1d106f27cb6d9eb48bc82b",
+  "main_at_selection": "6df58b02554401f9d37564cceffd14277a835ae1",
+  "pmu_event_checks_100_pct": 2288,
+  "previous_selected_core": "3b33df52044a10cb84b908f8b1641af439e8c729",
+  "qbe_sha256": "99ad919d70ad582dee6202b045bd53e1ab18fec356de98849610f49983756d63",
+  "qualified_compiler": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-policy-20261003/.tmp-lox-native-policy-20261003/compiler-final-v2/bin/mylang",
+  "reason": "Select the robust gain across all13 tree workloads and equal-weight26-case gain, with the measured VM wall/cycle cost explicit. No Rust/Go parity or no-regression claim. LLVM/default/foreign producer behavior remains original. Main was not merged in this selection.",
+  "runtime_guard_protocol": "lox-compiler-runtime-guards-v2",
+  "runtime_roles": 6,
+  "selected_utc": "2026-10-03T14:39:57.969614+00:00",
+  "total_completed_samples": 1196,
+  "wall_qbe_equal_weight_26_case_reduction_pct": 3.6981698901097593,
+  "wall_qbe_tree_reduction_pct": 7.708880418624108,
+  "wall_qbe_vm_reduction_pct": -0.486834752686649
+}

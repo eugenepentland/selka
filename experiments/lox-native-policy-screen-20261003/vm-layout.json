@@ -1,0 +1,97 @@
+{
+  "sections": {
+    "control": {
+      ".rodata": {
+        "address": "0x10267c0",
+        "size": 54872,
+        "alignment": 32
+      },
+      ".text": {
+        "address": "0x103ccd0",
+        "size": 1297165,
+        "alignment": 16
+      },
+      ".data": {
+        "address": "0x1243250",
+        "size": 16312,
+        "alignment": 8
+      },
+      ".bss": {
+        "address": "0x1247208",
+        "size": 580,
+        "alignment": 8
+      }
+    },
+    "candidate": {
+      ".rodata": {
+        "address": "0x10267c0",
+        "size": 54872,
+        "alignment": 32
+      },
+      ".text": {
+        "address": "0x103ccd0",
+        "size": 1317149,
+        "alignment": 16
+      },
+      ".data": {
+        "address": "0x1248060",
+        "size": 16312,
+        "alignment": 8
+      },
+      ".bss": {
+        "address": "0x124c018",
+        "size": 580,
+        "alignment": 8
+      }
+    }
+  },
+  "module_function_address_delta_counts": {
+    "vm": {
+      "19984": 40
+    },
+    "heap": {
+      "0": 38
+    },
+    "value": {
+      "19984": 2
+    },
+    "table": {
+      "18896": 10
+    },
+    "interpreter": {
+      "9856": 3,
+      "80": 5,
+      "16224": 3,
+      "7008": 4,
+      "15072": 2,
+      "3008": 2,
+      "2544": 2,
+      "4992": 4,
+      "5520": 1,
+      "1296": 1,
+      "10432": 1,
+      "10256": 2,
+      "11216": 1,
+      "11936": 1,
+      "18112": 1,
+      "0": 1,
+      "3664": 1,
+      "13712": 3,
+      "3744": 1,
+      "4048": 3,
+      "8368": 1,
+      "4592": 1,
+      "17680": 1,
+      "10160": 1,
+      "12848": 1,
+      "2112": 1,
+      "13264": 1,
+      "16848": 1,
+      "6464": 1,
+      "9312": 1
+    }
+  },
+  "text_size_difference": 19984,
+  "comparison_sha256": "ec23b218782d0b4f7b82bca1e89284e99ddfd82e7e06449b62b4a18d5a88c80d",
+  "scope": "Existing ELF sections and symbols only; static layout observation, no causal performance claim."
+}
