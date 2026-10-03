@@ -1,0 +1,50 @@
+{
+  "outcome": "pass with stated limits; no actionable certificate defect found",
+  "scope": "frozen positive-write guard and shared normalizer refactor, including insertion/branch labels, operand stack, receiver ownership/scope and trap preservation",
+  "author_worktree": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-positive-write-20261003",
+  "author_base_commit": "f924e2ee38aaff89fcb7caa35a4939548a744288",
+  "author_freeze": "author declared these exact source hashes stable; final candidate commit and broad qualification pending at review freeze",
+  "reviewed_files_sha256": {
+    "src/qbe_positive_write.zig": "43f3d633e6c859824e932a58590be4cc8ecef3cce8641d7537a16835a8616170",
+    "src/qbe_positive_index.zig": "0cd0a82165a0b0f7430583d2e3f8656f2124e7e271d98404c435735dfbb4f7f3",
+    "src/qbe_positive_write_test.zig": "8de7953e79b7e8577f6bbf4f3332066d757c0967b61ae65990adb239299b53a3",
+    "src/qbe_positive_index_test.zig": "4ce69216cf688d8f018da76b56bcdd5d7cd9935c5c6d3c0035cc98ec41bb8492",
+    "src/qbe_rc_inert_receiver.zig": "e80ef8294af0614ac275ce93ff7d3272d7c19af054903d22c8bfd19562f751e7",
+    "src/qbe.zig": "6afc8fa32cb1ab58eb718a33ade09c7e79c41f92e2ac8f0a83468a2951296d7b",
+    "src/qbe_cow.zig": "f28ea622c10ff85006cf197e5a8e819ef7a12ea8ec002af4fb627ba42f0738f1",
+    "src/qbe_rc_ops.zig": "26fc6b9e69ebf48e5a50850c28529e55783fa4d45e6c648118a9eb77f36f6308",
+    "src/qbe_rc_edges.zig": "016af464e566898c7b3fa1519bb97d7ff04290e07bc5f64a5391612dcaf70346",
+    "src/ownership_sources.zig": "19b840c08d980ae5a51f541720bb11470e7a1fc428a0f4f89385965afbdbc951",
+    "SPEC.md": "616f4adafdbb5769e2d9b4ab41413334acfb88b5831f359d6496df02ef199ee1",
+    "src/root_test.zig": "881236403ded8bc70896bcb1243611ecd8162971a22912f677ea6264d5d222a9",
+    "tests/lang/rc_positive_writes.my": "9ab840a107428f86550b31835ec1f75948fc2ebba8d0d12e0de710cbfbc21d63",
+    "src/qbe_moves.zig": "f2560085ea4f47649c1e2f7f9e415c77acafcfadc4d0e92dd08c7b835ccc1f20"
+  },
+  "findings": [],
+  "checks": {
+    "guard": "signed i64 >=0; equivalent to the false edge of canonical index<0 comparison",
+    "join": "original start+9 index reload; original start+10 RHS reload/start+11 checked write and all protocols remain",
+    "stack": "before and join same height/types, all layouts non-dropping/non-tracing; skipped canonical positive edge has no persistent index write",
+    "receiver": "native RC only; temporary list receiver with no by-reference/caller storage/direct alias; whole inertReceiver.proven from its unique capture through unique write",
+    "inert_limits": "existing region limits4096 function instructions/256 interval instructions/8 path locals; callbacks, owner replacement, backward/outside entries and unmanaged root gaps refuse",
+    "quiet": "every skipped PC refuses capture/fill/read-capture/share/uniqueness/loop-entry work, active/begin pending scope and actual local RC releases",
+    "cfg": "all noncanonical join edges refused by shared branchTargets jump/conditional/try_result plus explicit switch arms; other prefix interiors require no branch targets",
+    "labels": "prepend guard falls to original start on failure and original join on success; quiet skips no COW entry block; version/original loop copies refuse",
+    "write": "no early payload access, COW detach, publish, alias mutation, allocation or trap introduced by guard; old write code/result/cleanup/root handling stays at old PCs",
+    "shared_read_refactor": "retains old length/read owner identity and old read bounds pattern; no read-path acceptance widening",
+    "guard_local_storage": "i64 scalar cannot enter qbe_moves plainAggregate alias planner; ordinary load reads the same %l slot"
+  },
+  "test_review": {
+    "new_compiler_tests": 5,
+    "new_language_cases": 3,
+    "reviewer_test_executions": 0,
+    "author_focused_claim": "28 passed, process exit0 (author message); broad/compiler build outcomes pending in author receipts"
+  },
+  "limitations": [
+    "This is source review, not an independent compiler/native test rerun or performance approval.",
+    "Relies on validated typed bytecode, finalized states/COW/RC/liveness plans, and the existing inert-receiver proof; malformed unvalidated emitter input is outside that contract.",
+    "GC/counting/versioned paths must remain refused. Shared read tests retain extraEntry synthetic coverage including forward/back try_result; write tests exercise refusal and full native fallback/trap comparisons rather than every synthetic plan state.",
+    "No ABI, unwind/frame-map/root descriptors, allocator, source algorithm or native payload write implementation changes were reviewed because this patch does not change them."
+  ],
+  "source_hashes_verified_after_review": true
+}

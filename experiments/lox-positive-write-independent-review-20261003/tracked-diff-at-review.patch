@@ -1,0 +1,82 @@
+diff --git a/SPEC.md b/SPEC.md
+index 8a246ebd..68921055 100644
+--- a/SPEC.md
++++ b/SPEC.md
+@@ -1618,6 +1618,7 @@ host failure in one worker leaves the units the other workers hold running.
+ 
+ - [RC-EMPTY-FRAME-1] A bounded physical certificate may omit only ownership-frame linkage for a stable caller-pinned plain-element list body with no local publication, scope, callback, arena transition or hidden owner; private storage, native/logical/step admission and caller scopes remain. Unexpected publication or scope creation is an internal compiler error.
+ - [QBE-POSITIVE-INDEX-1] Without step accounting, an exact canonical negative-index normalizer followed by a plain list read may receive a bounds-tested positive fast path. The captured receiver and index have already been evaluated; a successful unsigned index-below-length check reaches the same payload read, while failure executes the unchanged normalization, casts, overflow checks and original bounds trap. The certificate refuses interior control-flow entries from jumps, conditional jumps, Result error propagation and variant switches; only the normalizer's own conditional edge may enter its final index-load join. It also refuses receiver scopes, COW work, hidden releases, managed or live-view elements and element strides below two bytes. Native list capacity times stride must fit size_t, so admitted lengths are below 2^63 and the unsigned guard proves a nonnegative signed index. Step-counted builds preserve every original instruction.
++- [QBE-POSITIVE-WRITE-1] In native RC builds without step accounting, a quiet canonical negative-index normalizer preceding a plain list write may branch directly to its original final index-load join when the signed source index is nonnegative. The captured receiver must already satisfy the whole stable-owner inert-receiver proof through the write. Every negative index executes the complete original checked length cast and addition. The original RHS reload, receiver/COW/arena protocol, bounds test, write, trap position and cleanup remain at their original instructions. Interior entries, references, caller storage, callbacks, receiver aliases or pending scopes, COW work, local releases, managed/live-view elements, strides below two and versioned loops refuse this shortcut; counted and non-RC builds preserve every original instruction.
+ 
+ - [RC-FRESH-SPAN-1] A bounded closed fresh constructor may preflight all ordinary source roles before allocation, keep those source guards live across refusal, and then perform only infallible byte moves and exact guard handoffs until complete result publication. Every failed proof or role check keeps the original partial-construction journal path; unique, held, loaned, aliased, callback and unusual-ABI cases retain their existing cleanup and transfer behavior.
+ 
+diff --git a/src/qbe.zig b/src/qbe.zig
+index e67c7d22..8f43c25b 100644
+--- a/src/qbe.zig
++++ b/src/qbe.zig
+@@ -2494,6 +2494,7 @@ const Emitter = struct {
+                 continue;
+             }
+             try @import("qbe_positive_index.zig").emit(Emitter, self, pc);
++            try @import("qbe_positive_write.zig").emit(Emitter, self, pc);
+             try self.emitAt(pc);
+             if (self.original) |loop| if (pc == loop.back) {
+                 self.original = null;
+diff --git a/src/qbe_positive_index.zig b/src/qbe_positive_index.zig
+index 77f7f2d7..e4e63093 100644
+--- a/src/qbe_positive_index.zig
++++ b/src/qbe_positive_index.zig
+@@ -52,7 +52,18 @@ fn certify(comptime E: type, self: *E, start: usize) Error!?Certificate {
+ }
+ 
+ fn normalizer(code: []const bytecode.Instruction, start: usize) ?Certificate {
+-    if (start + 11 >= code.len or code[start].op != .load_local) return null;
++    if (start + 11 >= code.len) return null;
++    const proof = normalizerPrefix(code, start) orelse return null;
++    if (code[start + 10].op != .buffer_operation) return null;
++    const read = code[start + 10].op.buffer_operation;
++    if (read.kind != .read or @backingInt(read.owner) != proof.owner) return null;
++    return proof;
++}
++
++/// The canonical sign test and checked negative adjustment, ending at the
++/// original index-load join. Its consuming operation is checked by the caller.
++pub fn normalizerPrefix(code: []const bytecode.Instruction, start: usize) ?Certificate {
++    if (start + 9 >= code.len or code[start].op != .load_local) return null;
+     const index = @backingInt(code[start].op.load_local);
+     if (code[start + 1].op != .push_i64 or code[start + 1].op.push_i64 != 0) return null;
+     if (code[start + 2].op != .cmp_i64 or code[start + 2].op.cmp_i64 != .lt) return null;
+@@ -63,10 +74,8 @@ fn normalizer(code: []const bytecode.Instruction, start: usize) ?Certificate {
+     if (code[start + 5].op != .cast_integer or code[start + 5].op.cast_integer != .i64) return null;
+     if (!loads(code[start + 6].op, index) or code[start + 7].op != .add_i64_checked) return null;
+     if (code[start + 8].op != .store_local or @backingInt(code[start + 8].op.store_local) != index) return null;
+-    if (!loads(code[start + 9].op, index) or code[start + 10].op != .buffer_operation) return null;
+-    const read = code[start + 10].op.buffer_operation;
+-    if (read.kind != .read or read.owner != length.owner) return null;
+-    return .{ .start = start, .read = start + 10, .owner = @backingInt(read.owner), .index = index };
++    if (!loads(code[start + 9].op, index)) return null;
++    return .{ .start = start, .read = start + 10, .owner = @backingInt(length.owner), .index = index };
+ }
+ 
+ fn plainRead(comptime E: type, self: *E, proof: Certificate) Error!bool {
+@@ -104,7 +113,7 @@ fn loads(op: Op, index: usize) bool {
+ }
+ 
+ /// Skipped instructions may have no pending place, COW work or local release.
+-fn quiet(comptime E: type, self: *E, pc: usize) Error!bool {
++pub fn quiet(comptime E: type, self: *E, pc: usize) Error!bool {
+     const cow = self.cow orelse return true;
+     const site = cow.plan.at(pc);
+     if (site.capture or site.fill or site.shares.len != 0) return false;
+diff --git a/src/root_test.zig b/src/root_test.zig
+index 1b6b9a43..875a67e9 100644
+--- a/src/root_test.zig
++++ b/src/root_test.zig
+@@ -223,6 +223,7 @@ test {
+     _ = @import("array_places_test.zig");
+     _ = @import("qbe_loop_facts_test.zig");
+     _ = @import("qbe_positive_index_test.zig");
++    _ = @import("qbe_positive_write_test.zig");
+     _ = @import("qbe_rc_field_inout_test.zig");
+     _ = @import("qbe_loop_version.zig");
+     _ = @import("qbe_loop_operands_test.zig");
