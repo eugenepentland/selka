@@ -1,3 +1,8 @@
+The [revised everyday-code assessment](../../assessment/README.md) is the current
+interpretation of these measurements. It evaluates representative operation
+families and application workloads; the earlier CPU-attribution target is not a
+coverage requirement.
+
 The expanded baseline is complete: **40 cases (35 microbenchmarks and five application workloads), six configurations, 7,200 timed samples**. All exact checksum checks and the independent evidence verifier passed. The suite was implemented with Sol 6.1 agents.
 
 Compiler/runtime source is pinned to main `6df58b02554401f9d37564cceffd14277a835ae1`; benchmark code was frozen at `b725360f5f86ac67bc405db9407ae51c332a9931`. This change adds benchmark code and evidence only.
@@ -52,19 +57,15 @@ Measurement and validation limits:
 - These are optimized default target policies, with different instruction sets: MyLang LLVM and Zig use host-derived features, Rust uses its portable default, Go uses GOAMD64=v1, and QBE uses amd64_sysv. MyLang checks and reference counting, Go GC, and Zig ReleaseSafe behavior remain enabled as appropriate.
 - Main, QBE, native-build, and formatting gates passed using cached test verdicts. The 14 harness/profile tests passed. The source commit passed all 88 Guardian checks; detailed receipts and hashes are in validation.json.
 
-The eight requested operation areas are all represented. A percentage of everyday software execution cannot be inferred from this inventory; the separate profiles below assess only these five application fixtures.
-Separate CPU profiles completed for all 30 application/configuration pairs with valid guest outputs and unchanged artifacts. **None establishes the 80% target.** Captures contained 242–359 samples each; every raw trace reported throttling. Conservative symbol rules linked 0–25% of the captured samples to named primitives. That is incomplete attribution, not evidence that the suite covers only 0–25% of these programs.
+The eight requested operation areas are all represented. This provides broad
+coverage of single-threaded application logic, with confidence limited by fixture
+variety, working-set size and object lifetimes. See the
+[revised assessment](../../assessment/README.md) for per-family comparisons,
+covered scenarios, and remaining gaps. The goal is competitive performance across
+common kinds of code; no percentage of CPU samples is required.
 
-[Raw profile summary](profiles/profiles.json) retains symbol groups, primitive rules, diagnostics, hashes, and compressed perf data/sample/event traces for each execution. Percentages below describe the captured samples only; throttling prevents the intended coverage claim.
-
-| Application | LLVM mapped | QBE mapped | Rust mapped | Go mapped | Zig Safe mapped | Zig Fast mapped |
-|---|---:|---:|---:|---:|---:|---:|
-| packet_decode | 0.0% | 0.0% | 0.0% | 0.0% | 0.0% | 0.0% |
-| word_count | 14.5% | 17.0% | 0.0% | 8.3% | 0.0% | 0.0% |
-| csv_aggregate | 8.1% | 8.6% | 8.5% | 25.0% | 4.3% | 3.4% |
-| json_transform | 3.7% | 7.3% | 3.3% | 4.7% | 0.4% | 0.0% |
-| lox_eval | 5.5% | 6.1% | 0.0% | 0.0% | 0.0% | 0.0% |
-
-The unresolved samples still provide investigation leads: MyLang CSV/JSON spend many captured samples in `myl_native_equal` and `leaf`; word counting exposes dictionary probing/capture helpers; the Lox subset concentrates in the evaluator and ownership/list helpers. These are sampled associations, not causal diagnoses. Inlined application functions stay uncredited rather than being automatically assigned to broad operation families.
-
-To substantiate an 80% claim, the next coverage study needs reliable sampling without throttling, source/inline-aware attribution, and representative real application inputs. This baseline supplies the operation inventory and reproducible comparisons; it does not establish a universal distribution of everyday work.
+The earlier [CPU profiles](profiles/profiles.json) remain available as diagnostic
+evidence. All 30 captures completed, and all had throttling warnings. Their
+legacy “80% target” and primitive-attribution fractions reflect the earlier
+misinterpretation of the task. They do not measure representativeness and are
+not acceptance criteria. The separate uninstrumented timing baseline is unchanged.

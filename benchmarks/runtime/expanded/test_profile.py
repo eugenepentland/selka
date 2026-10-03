@@ -17,19 +17,23 @@ class ProfileTests(unittest.TestCase):
         binary='/tmp/text-my-llvm'
         samples=[(1,'myl_native_dictionary_read',binary),(2,'myl_f_1234',binary),(3,'main',binary),(4,'malloc','/usr/lib/libc.so.6'),(5,'malloc','/tmp/unrelated.so')]
         result=classify(samples,binary,rules,{'myl_f_1234':'main::word_count'},min_samples=1)
-        self.assertEqual(result['mapped_covered_samples'],2)
-        self.assertEqual(result['unresolved_samples'],3)
-        self.assertEqual(result['observed_coverage_lower_bound'],0.4)
-        self.assertFalse(result['target_reached'])
+        self.assertEqual(result['primitive_samples'],2)
+        self.assertEqual(result['unclassified_samples'],3)
+        self.assertEqual(result['primitive_sample_fraction'],0.4)
+        self.assertNotIn('target_reached',result)
+        self.assertNotIn('target_fraction',result)
+        self.assertFalse(any('coverage' in key or 'covered' in key for key in result))
         named=next(row for row in result['symbol_groups'] if row['symbol']=='myl_f_1234')
         self.assertEqual(named['source_name'],'main::word_count')
-        self.assertEqual(named['classification'],'unresolved')
+        self.assertEqual(named['classification'],'unclassified')
 
     def test_low_samples(self):
         result=classify([(1,'malloc','libc.so.6')],'/tmp/guest',load_rules(RULES_PATH),{})
-        self.assertEqual(result['observed_coverage_lower_bound'],1)
+        self.assertEqual(result['primitive_sample_fraction'],1)
         self.assertTrue(result['low_sample_count'])
-        self.assertFalse(result['target_reached'])
+        self.assertNotIn('target_reached',result)
+        self.assertNotIn('target_fraction',result)
+        self.assertFalse(any('coverage' in key or 'covered' in key for key in result))
 
     def test_scaling_cap(self):
         count,meta=scale_iterations({'iterations':100},[{'kernel_ns':100000000}],1,500)

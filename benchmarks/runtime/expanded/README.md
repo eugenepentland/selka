@@ -11,7 +11,7 @@ python3 benchmarks/runtime/expanded/run.py --quick --rounds 1 --warmups 0 --outp
 python3 benchmarks/runtime/expanded/run.py --skip-build --output benchmarks/runtime/expanded/results/main.json
 python3 benchmarks/runtime/expanded/verify.py benchmarks/runtime/expanded/results/main.json --check-artifacts
 python3 -m unittest discover -s benchmarks/runtime/expanded -p 'test_*.py'
-python3 benchmarks/runtime/expanded/profile.py benchmarks/runtime/expanded/results/main.json --output-dir benchmarks/runtime/expanded/results/profiles
+python3 benchmarks/runtime/assessment/assess.py --help
 ```
 
 The first command builds all 24 executables (four program groups × six compiler
@@ -82,18 +82,38 @@ allocation measurement. Incomplete recovery samples are stored in scratch
 `progress.json` and never reused in a successful baseline. A failed invocation
 does not replace an older successful output file.
 
-**Operation breadth is not an 80% CPU-time claim.** `coverage.json` lists all
-requested areas, while `profile.py` collects separate user-CPU samples for the
-five applications and links conservatively recognized primitive symbols to
-microbenchmarks. Unmapped symbols and whole inlined application bodies receive
-no credit. Profile percentages apply only to these input fixtures and builds;
-they cannot establish the most common operations across arbitrary software.
-Raw samples, attribution rules, low-sample/lost-event warnings, and whether each
-application reaches the 80% target stay visible in the profiling results.
-Profiling runs after measurement and requires `perf` access. By default it samples
-all five large application profiles on all six configurations, aiming for one
-second per process. It includes process setup/teardown, uses separate instrumented
-executions, and does not replace baseline timings. Partial selections are labeled
-as subsets; failed captures, sample loss, throttling, and low sample counts cannot
-establish the target. The observed mapped sample fraction is not a statistical
-confidence bound on population CPU time.
+**The coverage goal is representative everyday code.** The requested “80%” is a
+practical breadth target: competitive results across common operations should
+support confidence in applications built from those operations. It is not a
+CPU-time attribution threshold or a measured percentage of all software.
+
+The [coverage inventory](coverage.json) records covered scenarios and limits for
+each operation family and application. The [current assessment](../assessment/README.md)
+compares every family across all six configurations, keeps individual weaknesses
+visible, and separates the five composed application workloads. Case counts are
+counts within this suite; there is no overall language score, population
+weighting, or automatic pass threshold. An interval overlapping Go does not
+establish equivalent performance.
+
+The current suite provides a broad starting point for single-threaded application
+logic. Large working sets, recursion/graphs, map deletion and diverse keys,
+long-lived heap churn, varied document shapes, concurrency and I/O remain
+confidence gaps. Native sorting/JSON APIs and ownership policies are part of
+those specific comparisons and must not be generalized to all algorithms.
+
+The CPU profiler, `profile.py`, is for optional hotspot diagnostics. New reports
+record primitive-symbol attribution and sampling-quality warnings without an
+80% coverage target. The saved version-1 `results/profiles/` captures retain legacy
+target fields from the earlier misinterpretation; they are historical diagnostic
+evidence, not an acceptance criterion. CPU sampling can help investigate a slow
+case; it is not a test of whether this suite represents everyday programming.
+Sampling throttling in those captures does not invalidate the separate
+uninstrumented baseline timings.
+
+The saved 2026-10-03 baseline predates these documentation/coverage and diagnostic-reporter corrections.
+Use the verifier without `--check-artifacts` to check that saved evidence against
+its oracle/statistics; current documentation and diagnostic-helper hashes intentionally differ. The
+assessment also checks recorded source hashes against the original Git revision
+`b725360f5f86ac67bc405db9407ae51c332a9931`. Full current-artifact verification of
+that historical run requires its original source checkout and local tools/binaries.
+For a new baseline, rebuild before using `--skip-build`.

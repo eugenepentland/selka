@@ -210,8 +210,8 @@
   ],
   "payloads": {
     "README.md": {
-      "sha256": "b480a3df41b593c42c14d74d805d047ceb7244a9a74fff91b6450b4d670ab7da",
-      "bytes": 7156
+      "sha256": "47b73eb04947572d7c5ad17e338821f0b789b2457a7e3f345a4d35f65299edf4",
+      "bytes": 6144
     },
     "baseline_main_20261003.json": {
       "sha256": "b595d9638e243e18692b5cef491c2b5273949c93ebf22a0ae604a08704c1d3f7",
@@ -1102,5 +1102,11 @@
       "sha256": "b1d9d45a314c449ea74706538e65b7a86be5fe52cf1c41aa2703f41980f8300e",
       "bytes": 489
     }
+  },
+  "interpretation_revision": {
+    "recorded_utc": "2026-10-03T14:28:33.733435+00:00",
+    "reason": "User clarified everyday-code representativeness, not CPU-time attribution. README interpretation and its payload hash updated; raw baseline, timing table, CPU captures and original execution receipts unchanged.",
+    "current_assessment": "../../assessment/README.md",
+    "legacy_profile_targets_are_acceptance_criteria": false
   }
 }

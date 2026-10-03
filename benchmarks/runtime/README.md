@@ -1,3 +1,8 @@
+The [representative performance assessment](assessment/README.md) is the current
+entry point for judging coverage of everyday code and performance by operation
+family. It uses the saved 40-case baseline; CPU-sample attribution is not a
+coverage acceptance criterion.
+
 The [expanded suite](expanded/README.md) covers 40 cases across the eight everyday
 operation areas and five application workloads, using all four languages. The
 commands below retain the original four-case baseline for reproducibility.

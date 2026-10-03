@@ -1,25 +1,259 @@
 {
-  "schema": "runtime-operation-coverage-v1",
-  "target_cpu_fraction_per_application": 0.8,
-  "target_scope": "The five documented single-threaded, in-memory application fixtures, per compiler configuration; not a percentage of all software.",
+  "schema": "runtime-operation-coverage-v2",
+  "target_scope": "Representative breadth of common single-threaded application code. The user's 80% goal is a practical design aspiration, not a measured population percentage or CPU-sample attribution target.",
   "areas": {
-    "numbers_and_branches": ["integer_math", "float_math", "branch_predictable", "branch_mixed"],
-    "lists_and_iteration": ["list_scan", "list_append", "list_filter", "mutate_unique"],
-    "strings_and_bytes": ["bytes_scan", "string_equal", "string_search", "string_split", "string_join", "int_parse", "int_format"],
-    "dictionaries_and_sets": ["dict_lookup", "dict_lookup_str", "dict_update", "dict_update_str", "set_dedup"],
-    "records_and_calls": ["record_reads", "record_construct", "record_update", "call_direct", "call_indirect"],
-    "optional_values_and_errors": ["tagged_stack", "option_handle", "result_propagate"],
-    "allocation_and_ownership": ["alloc_short", "alloc_retained", "mutate_shared", "mutate_nested"],
-    "sorting_and_searching": ["sort_int", "sort_records", "binary_search"]
+    "numbers_and_branches": [
+      "integer_math",
+      "float_math",
+      "branch_predictable",
+      "branch_mixed"
+    ],
+    "lists_and_iteration": [
+      "list_scan",
+      "list_append",
+      "list_filter",
+      "mutate_unique"
+    ],
+    "strings_and_bytes": [
+      "bytes_scan",
+      "string_equal",
+      "string_search",
+      "string_split",
+      "string_join",
+      "int_parse",
+      "int_format"
+    ],
+    "dictionaries_and_sets": [
+      "dict_lookup",
+      "dict_lookup_str",
+      "dict_update",
+      "dict_update_str",
+      "set_dedup"
+    ],
+    "records_and_calls": [
+      "record_reads",
+      "record_construct",
+      "record_update",
+      "call_direct",
+      "call_indirect"
+    ],
+    "optional_values_and_errors": [
+      "tagged_stack",
+      "option_handle",
+      "result_propagate"
+    ],
+    "allocation_and_ownership": [
+      "alloc_short",
+      "alloc_retained",
+      "mutate_shared",
+      "mutate_nested"
+    ],
+    "sorting_and_searching": [
+      "sort_int",
+      "sort_records",
+      "binary_search"
+    ]
   },
   "applications": {
-    "word_count": ["strings_and_bytes", "dictionaries_and_sets", "allocation_and_ownership"],
-    "csv_aggregate": ["strings_and_bytes", "dictionaries_and_sets", "numbers_and_branches", "allocation_and_ownership"],
-    "json_transform": ["strings_and_bytes", "lists_and_iteration", "records_and_calls", "allocation_and_ownership"],
-    "packet_decode": ["strings_and_bytes", "numbers_and_branches", "records_and_calls", "optional_values_and_errors"],
-    "lox_eval": ["numbers_and_branches", "lists_and_iteration", "records_and_calls", "optional_values_and_errors", "allocation_and_ownership"]
+    "word_count": [
+      "strings_and_bytes",
+      "dictionaries_and_sets",
+      "allocation_and_ownership"
+    ],
+    "csv_aggregate": [
+      "strings_and_bytes",
+      "dictionaries_and_sets",
+      "numbers_and_branches",
+      "allocation_and_ownership"
+    ],
+    "json_transform": [
+      "strings_and_bytes",
+      "lists_and_iteration",
+      "records_and_calls",
+      "allocation_and_ownership"
+    ],
+    "packet_decode": [
+      "strings_and_bytes",
+      "numbers_and_branches",
+      "records_and_calls",
+      "optional_values_and_errors"
+    ],
+    "lox_eval": [
+      "numbers_and_branches",
+      "lists_and_iteration",
+      "records_and_calls",
+      "optional_values_and_errors",
+      "allocation_and_ownership"
+    ]
   },
-  "library_comparisons": ["sort_int", "sort_records", "json_transform"],
-  "interpretation": "These lists are a reviewed inventory, not measured time percentages. Only separately retained CPU samples with conservative symbol-to-primitive attribution contribute to profile coverage. Unknown, inlined application-body, startup, or unmatched samples remain uncredited.",
-  "excluded_workloads": ["filesystem and network waits", "multithreading and scheduling", "external database operations", "compiler throughput", "full Lox parser/classes/closures", "production workload distributions"]
+  "library_comparisons": [
+    "sort_int",
+    "sort_records",
+    "json_transform"
+  ],
+  "interpretation": "Assess each operation family and composed application separately. Matching performance across these workloads supports confidence for applications with similar operations, input shapes, working sets and lifetimes. Do not infer a percentage of real codebases from case counts or CPU samples, and do not let one library win offset unrelated weaknesses.",
+  "excluded_workloads": [
+    "filesystem and network waits",
+    "multithreading and scheduling",
+    "external database operations",
+    "compiler throughput",
+    "full Lox parser/classes/closures",
+    "production workload distributions"
+  ],
+  "family_review": {
+    "numbers_and_branches": {
+      "covers": [
+        "integer and exact floating-point arithmetic",
+        "predictable and mixed conditions",
+        "runtime-dependent loop work"
+      ],
+      "limits": [
+        "bounded integer ranges and exact dyadic floats",
+        "repeated warm fixtures",
+        "no broader numerical kernels or varied branch histories"
+      ]
+    },
+    "lists_and_iteration": {
+      "covers": [
+        "list scans",
+        "dynamic growth",
+        "filtering",
+        "unique mutation"
+      ],
+      "limits": [
+        "small warm working sets",
+        "limited record/list shape variety",
+        "no large cache-miss-heavy traversal"
+      ]
+    },
+    "strings_and_bytes": {
+      "covers": [
+        "bytes and UTF-8 text",
+        "equality and search",
+        "split and join",
+        "valid and malformed decimal conversion"
+      ],
+      "limits": [
+        "repetitive text and limited Unicode shapes",
+        "no large documents, normalization or regular expressions"
+      ]
+    },
+    "dictionaries_and_sets": {
+      "covers": [
+        "integer and string keys",
+        "lookup hits and misses",
+        "updates and growth",
+        "deduplication"
+      ],
+      "limits": [
+        "compact keys and repeated insertion patterns",
+        "no deletion/tombstones or large diverse-key workloads"
+      ]
+    },
+    "records_and_calls": {
+      "covers": [
+        "record reads, construction and updates",
+        "direct and runtime-selected calls"
+      ],
+      "limits": [
+        "small scalar records and helpers",
+        "no recursion, captured closures, FFI or managed-field record workloads"
+      ]
+    },
+    "optional_values_and_errors": {
+      "covers": [
+        "optional values",
+        "success and error propagation",
+        "tagged operand-stack values"
+      ],
+      "limits": [
+        "fixed variant shapes and error mixes",
+        "no large recursive variants or complex unwinding"
+      ]
+    },
+    "allocation_and_ownership": {
+      "covers": [
+        "short and retained dynamic lists",
+        "shared snapshots",
+        "nested mutation preserving prior values"
+      ],
+      "limits": [
+        "short-allocation work may be optimized away",
+        "no long-lived mixed-lifetime heap churn or tail-latency evidence",
+        "snapshot costs include native COW versus explicit cloning"
+      ]
+    },
+    "sorting_and_searching": {
+      "covers": [
+        "native integer sorting",
+        "native stable record sorting",
+        "binary search"
+      ],
+      "limits": [
+        "specific library APIs and input patterns",
+        "Go sort.Slice/sort.SliceStable, not generic slices APIs",
+        "limited key distributions"
+      ]
+    }
+  },
+  "application_review": {
+    "word_count": {
+      "represents": "text tokenization and dictionary counting",
+      "limits": [
+        "five distinct words in an eight-token pattern",
+        "no high-cardinality corpus or streaming"
+      ]
+    },
+    "csv_aggregate": {
+      "represents": "quote-aware text parsing, numeric validation and grouped aggregation",
+      "limits": [
+        "declared CSV subset and repeated row shapes",
+        "no embedded newlines or large varied documents"
+      ]
+    },
+    "json_transform": {
+      "represents": "native JSON parse, filter/rebuild and serialization",
+      "limits": [
+        "one schema and native library differences",
+        "no deep nesting, varied schemas or streaming"
+      ]
+    },
+    "packet_decode": {
+      "represents": "byte decoding, validation and success/error handling",
+      "limits": [
+        "fixed ten-byte format and validity mix",
+        "no networking or general protocol-throughput claim"
+      ]
+    },
+    "lox_eval": {
+      "represents": "tagged values, operand stack, variables, control flow and function calls",
+      "limits": [
+        "execution-only fixed bytecode subset",
+        "no complete frontend, classes, closures or dynamic name lookup"
+      ]
+    }
+  },
+  "interpretation_classes": {
+    "native_library_comparison": [
+      "sort_int",
+      "sort_records",
+      "json_transform"
+    ],
+    "optimizer_and_allocation_probe": [
+      "alloc_short"
+    ],
+    "native_ownership_comparison": [
+      "mutate_shared",
+      "mutate_nested"
+    ]
+  },
+  "confidence_gaps": [
+    "recursion and graph traversal",
+    "large working sets and cache-miss-heavy access",
+    "map deletion, high-cardinality and varied-length keys",
+    "long-lived mixed-lifetime allocation and reclamation",
+    "varied text, numeric and structured-data shapes",
+    "concurrency, synchronization, asynchronous scheduling and I/O"
+  ],
+  "assessment_entrypoint": "../assessment/assess.py"
 }

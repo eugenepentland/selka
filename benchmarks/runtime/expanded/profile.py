@@ -2,10 +2,12 @@
 """Secondary whole-process CPU sampling against a frozen expanded baseline.
 
 Samples include launch/fixture initialization, kernel, formatting, and teardown.
-Only explicit runtime/libc primitive rules receive coverage credit. Inlined or
-unmapped application bodies remain unresolved even when their source uses those
-primitives. Counts are unweighted observed fixed-rate cpu-clock samples; perf's
-frequency mode can adjust periods, so this is sampling evidence, not cycle time.
+Explicit runtime/libc rules label known primitive implementation symbols.
+Application bodies and unmatched symbols remain unclassified even when their
+source uses those primitives. Classification describes sampled hotspots; it
+does not measure how well the benchmark inventory represents everyday code.
+Counts are unweighted observed fixed-rate cpu-clock samples; perf's frequency mode
+can adjust periods, so this is sampling evidence, not cycle time.
 """
 import argparse
 from collections import Counter
@@ -99,7 +101,7 @@ def manifest_symbols(binary):
 
 def classify(samples, binary, rules, names, min_samples=200):
     grouped = Counter((symbol, dso) for _, symbol, dso in samples)
-    rows, covered = [], 0
+    rows, primitive_samples = [], 0
     for (symbol, dso), count in grouped.most_common():
         base = symbol_base(symbol)
         scope = 'guest' if dso in (str(binary), Path(binary).name) else 'libc' if LIBC_DSO.search(dso) else None
@@ -107,16 +109,15 @@ def classify(samples, binary, rules, names, min_samples=200):
         rule_ids = [rule['id'] for rule in matched]
         cases = sorted({case for rule in matched for case in rule['microcases']})
         if matched:
-            covered += count
+            primitive_samples += count
         rows.append({'dso': dso, 'symbol': symbol, 'source_name': names.get(base),
-                     'samples': count, 'classification': 'primitive' if matched else 'unresolved',
+                     'samples': count, 'classification': 'primitive' if matched else 'unclassified',
                      'primitive_rules': rule_ids, 'microcases': cases})
     total = len(samples)
-    fraction = covered / total if total else 0.0
-    return {'total_samples': total, 'mapped_covered_samples': covered,
-            'unresolved_samples': total - covered, 'observed_coverage_lower_bound': fraction,
-            'coverage_denominator': 'all captured user CPU-clock samples, including whole-process startup/teardown',
-            'target_fraction': 0.8, 'target_reached': fraction >= 0.8 and total >= min_samples,
+    fraction = primitive_samples / total if total else 0.0
+    return {'total_samples': total, 'primitive_samples': primitive_samples,
+            'unclassified_samples': total - primitive_samples, 'primitive_sample_fraction': fraction,
+            'sample_denominator': 'all captured user CPU-clock samples, including whole-process startup/teardown',
             'symbol_groups': rows, 'low_sample_count': total < min_samples}
 
 
@@ -205,12 +206,12 @@ def capture(perf, binary, plan, arm, baseline_rows, directory, args, rules):
         warnings.append('iteration cap prevented requested kernel duration')
     if diagnostics['record_stderr'].strip() or script.stderr.strip() or dump.stderr.strip():
         # Normal perf informational output remains in diagnostics; specific loss
-        # or throttle notices also prevent an unqualified coverage claim.
+        # or throttle notices also flag compromised sampling quality.
         combined = '\n'.join((done.stderr, script.stderr, dump.stderr))
         if re.search(r'\b(?:lost|throttl\w*)\b', combined, re.I):
             warnings.append('perf diagnostics mention loss/throttling; inspect diagnostics')
     quality_problem = grouped['low_sample_count'] or lost or throttled or any('loss/throttling' in warning for warning in warnings)
-    grouped['target_reached'] = grouped['target_reached'] and not quality_problem
+    grouped['sampling_quality_ok'] = not bool(quality_problem)
     raw_perf = compressed(directory / 'perf.data.gz', perf_path.read_bytes())
     perf_path.unlink()
     return {'case': plan['case'], 'arm': arm, 'group': plan['group'], 'profile': 'large', 'size': plan['size'],
@@ -266,7 +267,7 @@ def main():
         preflight = run_command(preflight_command, 10)
         if preflight.returncode:
             raise ValueError('perf CPU-clock preflight failed: ' + preflight.stderr)
-        report = {'schema': 'mylang-runtime-profile-v1', 'status': 'incomplete',
+        report = {'schema': 'mylang-runtime-profile-v2', 'purpose': 'hotspot diagnostics', 'status': 'incomplete',
                   'scope': 'full' if set(args.arms) == set(ARMS) and set(args.cases) == set(APPLICATIONS) else 'subset',
                   'baseline': str(args.baseline), 'baseline_sha256': hashlib.sha256(baseline_bytes).hexdigest(),
                   'baseline_identity': baseline['identity'], 'baseline_binary_hashes': baseline['binary_hashes'],
@@ -294,7 +295,7 @@ def main():
                 try:
                     result = capture(perf, binary, plan, arm, rows, args.output_dir / (case + '-' + arm), args, rules)
                 except (ValueError, OSError, subprocess.TimeoutExpired) as error:
-                    result = {'case': case, 'arm': arm, 'profile': 'large', 'status': 'failed', 'error': str(error), 'target_reached': False}
+                    result = {'case': case, 'arm': arm, 'profile': 'large', 'status': 'failed', 'error': str(error)}
                 report['profiles'].append(result)
                 atomic_json(output, report)
         after = artifact_snapshot(baseline, args.rules, perf)
@@ -305,9 +306,8 @@ def main():
         report['baseline_binary_hashes_after'] = baseline['binary_hashes']
         report['finished_utc'] = datetime.now(timezone.utc).isoformat()
         report['status'] = 'complete' if all(row['status'] == 'complete' for row in report['profiles']) else 'failed'
-        report['all_targets_reached'] = all(row['target_reached'] for row in report['profiles'])
         atomic_json(output, report)
-        print(f'{report["status"]}: {len(report["profiles"])} profiles; 80% targets met in {sum(row["target_reached"] for row in report["profiles"])}')
+        print(f'{report["status"]}: {len(report["profiles"])} hotspot diagnostic profiles')
         return 0 if report['status'] == 'complete' else 1
     except (ValueError, OSError, KeyError, TypeError, subprocess.TimeoutExpired) as error:
         print('FAIL: ' + str(error), file=sys.stderr)
