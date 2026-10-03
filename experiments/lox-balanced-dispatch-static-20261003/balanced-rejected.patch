@@ -1,0 +1,329 @@
+diff --git a/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/ast/vm.my b/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-balanced-dispatch-20261003/candidate/vm.my
+index fe3f5f43..6a147c2b 100644
+--- a/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/ast/vm.my
++++ b/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-balanced-dispatch-20261003/candidate/vm.my
+@@ -536,134 +536,196 @@ def run(rt: mut heap.Runtime, o: mut output.Output) -> InterpretResult:
+         # The closure/base root stays in rt.frames throughout this activation.
+         # Publish IP only before a handler can report a Lox error or call away.
+         ok = True
+-        if instruction == chunk.OP_CONSTANT:
+-            constant = read_constant(mut frame)
+-            rt.stack[rt.stack_top] = constant
+-            rt.stack_top = rt.stack_top + 1
+-        elif instruction == chunk.OP_NIL:
+-            rt.stack[rt.stack_top] = value.Value.nil
+-            rt.stack_top = rt.stack_top + 1
+-        elif instruction == chunk.OP_TRUE:
+-            rt.stack[rt.stack_top] = value.Value.boolean(True)
+-            rt.stack_top = rt.stack_top + 1
+-        elif instruction == chunk.OP_FALSE:
+-            rt.stack[rt.stack_top] = value.Value.boolean(False)
+-            rt.stack_top = rt.stack_top + 1
+-        elif instruction == chunk.OP_POP:
+-            rt.stack_top = rt.stack_top - 1
+-        elif instruction == chunk.OP_GET_LOCAL:
+-            slot = read_byte(mut frame)
+-            local = rt.stack[frame.base + slot]
+-            rt.stack[rt.stack_top] = local
+-            rt.stack_top = rt.stack_top + 1
+-        elif instruction == chunk.OP_SET_LOCAL:
+-            slot = read_byte(mut frame)
+-            assigned = heap.peek(rt, 0)
+-            rt.stack[frame.base + slot] = assigned
+-        elif instruction == chunk.OP_GET_GLOBAL:
+-            rt.frames[frame_index].ip = frame.ip
+-            ok = get_global(mut rt, mut o, mut frame)
+-        elif instruction == chunk.OP_DEFINE_GLOBAL:
+-            _ = heap.set_global(mut rt, read_string(mut frame), heap.peek(rt, 0))
+-            rt.stack_top = rt.stack_top - 1
+-        elif instruction == chunk.OP_SET_GLOBAL:
+-            rt.frames[frame_index].ip = frame.ip
+-            ok = set_global(mut rt, mut o, mut frame)
+-        elif instruction == chunk.OP_GET_UPVALUE:
+-            get_upvalue(mut rt, mut frame)
+-        elif instruction == chunk.OP_SET_UPVALUE:
+-            set_upvalue(mut rt, mut frame)
+-        elif instruction == chunk.OP_GET_PROPERTY:
+-            rt.frames[frame_index].ip = frame.ip
+-            ok = get_property(mut rt, mut o, mut frame)
+-        elif instruction == chunk.OP_SET_PROPERTY:
+-            rt.frames[frame_index].ip = frame.ip
+-            ok = set_property(mut rt, mut o, mut frame)
+-        elif instruction == chunk.OP_GET_SUPER:
+-            rt.frames[frame_index].ip = frame.ip
+-            name = read_string(mut frame)
+-            rt.stack_top = rt.stack_top - 1
+-            superclass = as_obj(rt.stack[rt.stack_top])
+-            ok = bind_method(mut rt, mut o, superclass, name)
+-        elif instruction == chunk.OP_EQUAL:
+-            right = rt.stack[rt.stack_top - 1]
+-            left = rt.stack[rt.stack_top - 2]
+-            rt.stack_top = rt.stack_top - 1
+-            rt.stack[rt.stack_top - 1] = value.Value.boolean(value.values_equal(left, right))
+-        elif instruction == chunk.OP_GREATER or instruction == chunk.OP_LESS or instruction == chunk.OP_SUBTRACT or instruction == chunk.OP_MULTIPLY or instruction == chunk.OP_DIVIDE:
+-            rt.frames[frame_index].ip = frame.ip
+-            ok = numeric(mut rt, mut o, instruction)
+-        elif instruction == chunk.OP_ADD:
+-            rt.frames[frame_index].ip = frame.ip
+-            ok = add(mut rt, mut o)
+-        elif instruction == chunk.OP_NOT:
+-            top = rt.stack_top - 1
+-            rt.stack[top] = value.Value.boolean(value.is_falsey(rt.stack[top]))
+-        elif instruction == chunk.OP_NEGATE:
+-            rt.frames[frame_index].ip = frame.ip
+-            ok = negate(mut rt, mut o)
+-        elif instruction == chunk.OP_PRINT:
+-            rt.stack_top = rt.stack_top - 1
+-            output.print_value(rt, mut o, rt.stack[rt.stack_top])
+-        elif instruction == chunk.OP_JUMP:
+-            offset = read_short(mut frame)
+-            frame.ip = frame.ip + offset
+-        elif instruction == chunk.OP_JUMP_IF_FALSE:
+-            offset = read_short(mut frame)
+-            if value.is_falsey(heap.peek(rt, 0)):
+-                frame.ip = frame.ip + offset
+-        elif instruction == chunk.OP_LOOP:
+-            offset = read_short(mut frame)
+-            frame.ip = frame.ip - offset
+-        elif instruction == chunk.OP_CALL:
+-            count = read_byte(mut frame)
+-            rt.frames[frame_index].ip = frame.ip
+-            ok = call_value(mut rt, mut o, heap.peek(rt, count), count)
+-            if ok and rt.frame_count > activation_count:
+-                ok = run(mut rt, mut o) == InterpretResult.OK
+-        elif instruction == chunk.OP_INVOKE:
+-            method = read_string(mut frame)
+-            count = read_byte(mut frame)
+-            rt.frames[frame_index].ip = frame.ip
+-            ok = invoke(mut rt, mut o, method, count)
+-            if ok and rt.frame_count > activation_count:
+-                ok = run(mut rt, mut o) == InterpretResult.OK
+-        elif instruction == chunk.OP_SUPER_INVOKE:
+-            method = read_string(mut frame)
+-            count = read_byte(mut frame)
+-            rt.frames[frame_index].ip = frame.ip
+-            rt.stack_top = rt.stack_top - 1
+-            superclass = as_obj(rt.stack[rt.stack_top])
+-            ok = invoke_from_class(mut rt, mut o, superclass, method, count)
+-            if ok and rt.frame_count > activation_count:
+-                ok = run(mut rt, mut o) == InterpretResult.OK
+-        elif instruction == chunk.OP_CLOSURE:
+-            make_closure(mut rt, mut frame)
+-        elif instruction == chunk.OP_CLOSE_UPVALUE:
+-            close_upvalues(mut rt, rt.stack_top - 1)
+-            rt.stack_top = rt.stack_top - 1
+-        elif instruction == chunk.OP_RETURN:
+-            rt.stack_top = rt.stack_top - 1
+-            result = rt.stack[rt.stack_top]
+-            close_upvalues(mut rt, frame.base)
+-            rt.frame_count = rt.frame_count - 1
+-            if rt.frame_count == 0:
+-                rt.stack_top = rt.stack_top - 1
+-                return InterpretResult.OK
+-            rt.stack_top = frame.base
+-            rt.stack[rt.stack_top] = result
+-            rt.stack_top = rt.stack_top + 1
+-            return InterpretResult.OK
+-        elif instruction == chunk.OP_CLASS:
+-            name = read_string(mut frame)
+-            klass = heap.allocate(mut rt, object.Obj.klass(object.ClassObj(name=name, methods=table.new_table())))
+-            rt.stack[rt.stack_top] = value.Value.obj(klass)
+-            rt.stack_top = rt.stack_top + 1
+-        elif instruction == chunk.OP_INHERIT:
+-            rt.frames[frame_index].ip = frame.ip
+-            ok = inherit(mut rt, mut o)
+-        elif instruction == chunk.OP_METHOD:
+-            define_method(mut rt, mut frame)
++        if instruction < chunk.OP_GREATER:
++            if instruction < chunk.OP_DEFINE_GLOBAL:
++                if instruction < chunk.OP_POP:
++                    if instruction < chunk.OP_TRUE:
++                        if instruction < chunk.OP_NIL:
++                            if instruction == chunk.OP_CONSTANT:
++                                constant = read_constant(mut frame)
++                                rt.stack[rt.stack_top] = constant
++                                rt.stack_top = rt.stack_top + 1
++                        else:
++                            if instruction == chunk.OP_NIL:
++                                rt.stack[rt.stack_top] = value.Value.nil
++                                rt.stack_top = rt.stack_top + 1
++                    else:
++                        if instruction < chunk.OP_FALSE:
++                            if instruction == chunk.OP_TRUE:
++                                rt.stack[rt.stack_top] = value.Value.boolean(True)
++                                rt.stack_top = rt.stack_top + 1
++                        else:
++                            if instruction == chunk.OP_FALSE:
++                                rt.stack[rt.stack_top] = value.Value.boolean(False)
++                                rt.stack_top = rt.stack_top + 1
++                else:
++                    if instruction < chunk.OP_SET_LOCAL:
++                        if instruction < chunk.OP_GET_LOCAL:
++                            if instruction == chunk.OP_POP:
++                                rt.stack_top = rt.stack_top - 1
++                        else:
++                            if instruction == chunk.OP_GET_LOCAL:
++                                slot = read_byte(mut frame)
++                                local = rt.stack[frame.base + slot]
++                                rt.stack[rt.stack_top] = local
++                                rt.stack_top = rt.stack_top + 1
++                    else:
++                        if instruction < chunk.OP_GET_GLOBAL:
++                            if instruction == chunk.OP_SET_LOCAL:
++                                slot = read_byte(mut frame)
++                                assigned = heap.peek(rt, 0)
++                                rt.stack[frame.base + slot] = assigned
++                        else:
++                            if instruction == chunk.OP_GET_GLOBAL:
++                                rt.frames[frame_index].ip = frame.ip
++                                ok = get_global(mut rt, mut o, mut frame)
++            else:
++                if instruction < chunk.OP_GET_PROPERTY:
++                    if instruction < chunk.OP_GET_UPVALUE:
++                        if instruction < chunk.OP_SET_GLOBAL:
++                            if instruction == chunk.OP_DEFINE_GLOBAL:
++                                _ = heap.set_global(mut rt, read_string(mut frame), heap.peek(rt, 0))
++                                rt.stack_top = rt.stack_top - 1
++                        else:
++                            if instruction == chunk.OP_SET_GLOBAL:
++                                rt.frames[frame_index].ip = frame.ip
++                                ok = set_global(mut rt, mut o, mut frame)
++                    else:
++                        if instruction < chunk.OP_SET_UPVALUE:
++                            if instruction == chunk.OP_GET_UPVALUE:
++                                get_upvalue(mut rt, mut frame)
++                        else:
++                            if instruction == chunk.OP_SET_UPVALUE:
++                                set_upvalue(mut rt, mut frame)
++                else:
++                    if instruction < chunk.OP_GET_SUPER:
++                        if instruction < chunk.OP_SET_PROPERTY:
++                            if instruction == chunk.OP_GET_PROPERTY:
++                                rt.frames[frame_index].ip = frame.ip
++                                ok = get_property(mut rt, mut o, mut frame)
++                        else:
++                            if instruction == chunk.OP_SET_PROPERTY:
++                                rt.frames[frame_index].ip = frame.ip
++                                ok = set_property(mut rt, mut o, mut frame)
++                    else:
++                        if instruction < chunk.OP_EQUAL:
++                            if instruction == chunk.OP_GET_SUPER:
++                                rt.frames[frame_index].ip = frame.ip
++                                name = read_string(mut frame)
++                                rt.stack_top = rt.stack_top - 1
++                                superclass = as_obj(rt.stack[rt.stack_top])
++                                ok = bind_method(mut rt, mut o, superclass, name)
++                        else:
++                            if instruction == chunk.OP_EQUAL:
++                                right = rt.stack[rt.stack_top - 1]
++                                left = rt.stack[rt.stack_top - 2]
++                                rt.stack_top = rt.stack_top - 1
++                                rt.stack[rt.stack_top - 1] = value.Value.boolean(value.values_equal(left, right))
++        else:
++            if instruction < chunk.OP_INVOKE:
++                if instruction < chunk.OP_JUMP:
++                    if instruction < chunk.OP_NEGATE:
++                        if instruction < chunk.OP_NOT:
++                            if instruction == chunk.OP_GREATER or instruction == chunk.OP_LESS or instruction == chunk.OP_SUBTRACT or instruction == chunk.OP_MULTIPLY or instruction == chunk.OP_DIVIDE:
++                                rt.frames[frame_index].ip = frame.ip
++                                ok = numeric(mut rt, mut o, instruction)
++                            elif instruction == chunk.OP_ADD:
++                                rt.frames[frame_index].ip = frame.ip
++                                ok = add(mut rt, mut o)
++                        else:
++                            if instruction == chunk.OP_NOT:
++                                top = rt.stack_top - 1
++                                rt.stack[top] = value.Value.boolean(value.is_falsey(rt.stack[top]))
++                    else:
++                        if instruction < chunk.OP_PRINT:
++                            if instruction == chunk.OP_NEGATE:
++                                rt.frames[frame_index].ip = frame.ip
++                                ok = negate(mut rt, mut o)
++                        else:
++                            if instruction == chunk.OP_PRINT:
++                                rt.stack_top = rt.stack_top - 1
++                                output.print_value(rt, mut o, rt.stack[rt.stack_top])
++                else:
++                    if instruction < chunk.OP_LOOP:
++                        if instruction < chunk.OP_JUMP_IF_FALSE:
++                            if instruction == chunk.OP_JUMP:
++                                offset = read_short(mut frame)
++                                frame.ip = frame.ip + offset
++                        else:
++                            if instruction == chunk.OP_JUMP_IF_FALSE:
++                                offset = read_short(mut frame)
++                                if value.is_falsey(heap.peek(rt, 0)):
++                                    frame.ip = frame.ip + offset
++                    else:
++                        if instruction < chunk.OP_CALL:
++                            if instruction == chunk.OP_LOOP:
++                                offset = read_short(mut frame)
++                                frame.ip = frame.ip - offset
++                        else:
++                            if instruction == chunk.OP_CALL:
++                                count = read_byte(mut frame)
++                                rt.frames[frame_index].ip = frame.ip
++                                ok = call_value(mut rt, mut o, heap.peek(rt, count), count)
++                                if ok and rt.frame_count > activation_count:
++                                    ok = run(mut rt, mut o) == InterpretResult.OK
++            else:
++                if instruction < chunk.OP_RETURN:
++                    if instruction < chunk.OP_CLOSURE:
++                        if instruction < chunk.OP_SUPER_INVOKE:
++                            if instruction == chunk.OP_INVOKE:
++                                method = read_string(mut frame)
++                                count = read_byte(mut frame)
++                                rt.frames[frame_index].ip = frame.ip
++                                ok = invoke(mut rt, mut o, method, count)
++                                if ok and rt.frame_count > activation_count:
++                                    ok = run(mut rt, mut o) == InterpretResult.OK
++                        else:
++                            if instruction == chunk.OP_SUPER_INVOKE:
++                                method = read_string(mut frame)
++                                count = read_byte(mut frame)
++                                rt.frames[frame_index].ip = frame.ip
++                                rt.stack_top = rt.stack_top - 1
++                                superclass = as_obj(rt.stack[rt.stack_top])
++                                ok = invoke_from_class(mut rt, mut o, superclass, method, count)
++                                if ok and rt.frame_count > activation_count:
++                                    ok = run(mut rt, mut o) == InterpretResult.OK
++                    else:
++                        if instruction < chunk.OP_CLOSE_UPVALUE:
++                            if instruction == chunk.OP_CLOSURE:
++                                make_closure(mut rt, mut frame)
++                        else:
++                            if instruction == chunk.OP_CLOSE_UPVALUE:
++                                close_upvalues(mut rt, rt.stack_top - 1)
++                                rt.stack_top = rt.stack_top - 1
++                else:
++                    if instruction < chunk.OP_INHERIT:
++                        if instruction < chunk.OP_CLASS:
++                            if instruction == chunk.OP_RETURN:
++                                rt.stack_top = rt.stack_top - 1
++                                result = rt.stack[rt.stack_top]
++                                close_upvalues(mut rt, frame.base)
++                                rt.frame_count = rt.frame_count - 1
++                                if rt.frame_count == 0:
++                                    rt.stack_top = rt.stack_top - 1
++                                    return InterpretResult.OK
++                                rt.stack_top = frame.base
++                                rt.stack[rt.stack_top] = result
++                                rt.stack_top = rt.stack_top + 1
++                                return InterpretResult.OK
++                        else:
++                            if instruction == chunk.OP_CLASS:
++                                name = read_string(mut frame)
++                                klass = heap.allocate(mut rt, object.Obj.klass(object.ClassObj(name=name, methods=table.new_table())))
++                                rt.stack[rt.stack_top] = value.Value.obj(klass)
++                                rt.stack_top = rt.stack_top + 1
++                    else:
++                        if instruction < chunk.OP_METHOD:
++                            if instruction == chunk.OP_INHERIT:
++                                rt.frames[frame_index].ip = frame.ip
++                                ok = inherit(mut rt, mut o)
++                        else:
++                            if instruction == chunk.OP_METHOD:
++                                define_method(mut rt, mut frame)
+         if not ok:
+             return InterpretResult.RUNTIME_ERROR
+ 
