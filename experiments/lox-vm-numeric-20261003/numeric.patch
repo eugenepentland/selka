@@ -1,0 +1,102 @@
+--- a/driver_cases.json
++++ b/driver_cases.json
+@@ -118,5 +118,20 @@
+     "providers": {
+       "natives.my": "module natives\n# Test fixture for driver_tests.my (see driver_cases.json): natives.my with\n# a `clock` that returns 0 instead of reading the Clock capability.\nimport heap\nimport lox_strings\nimport object\nimport value\n\n\npublic const CLOCK: int = 0\n\n\npublic def call_native(rt: heap.Runtime, id: int) -> value.Value:\n    assert id == CLOCK, \"unknown native\"\n    _ = rt\n    return value.Value.number(0.0)\n\n\npublic def start(rt: mut heap.Runtime):\n    rt.init_string = lox_strings.copy_string(mut rt, b\"init\")\n    define_natives(mut rt)\n\n\ndef define_natives(rt: mut heap.Runtime):\n    name = lox_strings.copy_string(mut rt, b\"clock\")\n    heap.push(mut rt, value.Value.obj(name))\n    native = heap.allocate(mut rt, object.Obj.native(object.NativeObj(id=CLOCK, arity=0)))\n    heap.push(mut rt, value.Value.obj(native))\n    _ = heap.set_global(mut rt, name, value.Value.obj(native))\n    _ = heap.pop(mut rt)\n    _ = heap.pop(mut rt)\n"
+     }
++  },
++  "driver_tests::test_run_numeric_carrier_ieee": {
++    "providers": {
++      "natives.my": "module natives\n# Test fixture for driver_tests.my (see driver_cases.json): natives.my with\n# a `clock` that returns 0 instead of reading the Clock capability.\nimport heap\nimport lox_strings\nimport object\nimport value\n\n\npublic const CLOCK: int = 0\n\n\npublic def call_native(rt: heap.Runtime, id: int) -> value.Value:\n    assert id == CLOCK, \"unknown native\"\n    _ = rt\n    return value.Value.number(0.0)\n\n\npublic def start(rt: mut heap.Runtime):\n    rt.init_string = lox_strings.copy_string(mut rt, b\"init\")\n    define_natives(mut rt)\n\n\ndef define_natives(rt: mut heap.Runtime):\n    name = lox_strings.copy_string(mut rt, b\"clock\")\n    heap.push(mut rt, value.Value.obj(name))\n    native = heap.allocate(mut rt, object.Obj.native(object.NativeObj(id=CLOCK, arity=0)))\n    heap.push(mut rt, value.Value.obj(native))\n    _ = heap.set_global(mut rt, name, value.Value.obj(native))\n    _ = heap.pop(mut rt)\n    _ = heap.pop(mut rt)\n"
++    }
++  },
++  "driver_tests::test_run_numeric_carrier_error_order": {
++    "providers": {
++      "natives.my": "module natives\n# Test fixture for driver_tests.my (see driver_cases.json): natives.my with\n# a `clock` that returns 0 instead of reading the Clock capability.\nimport heap\nimport lox_strings\nimport object\nimport value\n\n\npublic const CLOCK: int = 0\n\n\npublic def call_native(rt: heap.Runtime, id: int) -> value.Value:\n    assert id == CLOCK, \"unknown native\"\n    _ = rt\n    return value.Value.number(0.0)\n\n\npublic def start(rt: mut heap.Runtime):\n    rt.init_string = lox_strings.copy_string(mut rt, b\"init\")\n    define_natives(mut rt)\n\n\ndef define_natives(rt: mut heap.Runtime):\n    name = lox_strings.copy_string(mut rt, b\"clock\")\n    heap.push(mut rt, value.Value.obj(name))\n    native = heap.allocate(mut rt, object.Obj.native(object.NativeObj(id=CLOCK, arity=0)))\n    heap.push(mut rt, value.Value.obj(native))\n    _ = heap.set_global(mut rt, name, value.Value.obj(native))\n    _ = heap.pop(mut rt)\n    _ = heap.pop(mut rt)\n"
++    }
++  },
++  "driver_tests::test_run_numeric_carrier_runtime_snapshot": {
++    "providers": {
++      "natives.my": "module natives\n# Test fixture for driver_tests.my (see driver_cases.json): natives.my with\n# a `clock` that returns 0 instead of reading the Clock capability.\nimport heap\nimport lox_strings\nimport object\nimport value\n\n\npublic const CLOCK: int = 0\n\n\npublic def call_native(rt: heap.Runtime, id: int) -> value.Value:\n    assert id == CLOCK, \"unknown native\"\n    _ = rt\n    return value.Value.number(0.0)\n\n\npublic def start(rt: mut heap.Runtime):\n    rt.init_string = lox_strings.copy_string(mut rt, b\"init\")\n    define_natives(mut rt)\n\n\ndef define_natives(rt: mut heap.Runtime):\n    name = lox_strings.copy_string(mut rt, b\"clock\")\n    heap.push(mut rt, value.Value.obj(name))\n    native = heap.allocate(mut rt, object.Obj.native(object.NativeObj(id=CLOCK, arity=0)))\n    heap.push(mut rt, value.Value.obj(native))\n    _ = heap.set_global(mut rt, name, value.Value.obj(native))\n    _ = heap.pop(mut rt)\n    _ = heap.pop(mut rt)\n"
++    }
+   }
+ }
+--- a/driver_tests.my
++++ b/driver_tests.my
+@@ -232,3 +232,40 @@
+     vm_run = driver.run_source(source, driver.Engine.VM, True, out, None)
+     tree = driver.run_source(source, driver.Engine.TREE, True, out, None)
+     return vm_run.status == 70 and tree.status == 70 and vm_run.stdout == b"argument\n" and tree.stdout == vm_run.stdout and vm_run.stderr == b"Can only call functions and classes.\n[line 1] in script\n" and tree.stderr == b"Can only call functions and classes.\n[line 1]\n"
++
++
++# Scalar result carriers preserve floating edge cases across each numeric opcode.
++public def test_run_numeric_carrier_ieee(out: Stream) -> bool:
++    source = b"print 8 > 3; print 3 < 8; print 8 - 3; print 8 * 3; print 8 / 3; print -0 / 2; print 1 / -0; var n = 0 / 0; print n > 0; print n < 0; print n - 0; print n * 0; print n / 0; var h = 100000000000000000000; h = h * h; h = h * h; h = h * h; h = h * h; print h; print h - h; print h * 0; print 1 / h; print -1 / h;"
++    expected = b"true\ntrue\n5\n24\n2.6666666666666665\n-0\n-inf\nfalse\nfalse\nnan\nnan\nnan\ninf\nnan\nnan\n0\n-0\n"
++    vm_run = driver.run_source(source, driver.Engine.VM, True, out, None)
++    tree = driver.run_source(source, driver.Engine.TREE, True, out, None)
++    return vm_run.status == 0 and vm_run.stdout == expected and vm_run.stderr == b"" and tree.status == 0 and tree.stdout == expected and tree.stderr == b""
++
++
++# Both operands evaluate before either numeric tag error; the published VM IP
++# still names the failing leaf and all callers under Lox collection stress.
++public def test_run_numeric_carrier_error_order(out: Stream) -> bool:
++    for op in [b">", b"<", b"-", b"*", b"/"]:
++        for reversed in [False, True]:
++            left = b"2" if reversed else b"\"bad\""
++            right = b"\"bad\"" if reversed else b"2"
++            source = b"fun left() { print \"L\"; return " + left + b"; }\nfun right() { print \"R\"; return " + right + b"; }\nfun leaf() { return left() " + op + b" right(); }\nfun outer() { return leaf(); }\nouter();"
++            vm_run = driver.run_source(source, driver.Engine.VM, True, out, None)
++            tree = driver.run_source(source, driver.Engine.TREE, True, out, None)
++            expected_vm = b"Operands must be numbers.\n[line 3] in leaf()\n[line 4] in outer()\n[line 5] in script\n"
++            if vm_run.status != 70 or vm_run.stdout != b"L\nR\n" or vm_run.stderr != expected_vm or tree.status != 70 or tree.stdout != b"L\nR\n" or tree.stderr != b"Operands must be numbers.\n[line 3]\n":
++                return False
++    return True
++
++
++# A retained Runtime/stack snapshot remains unchanged while checked arithmetic
++# writes and error cleanup run on the active Runtime during every-allocation GC.
++public def test_run_numeric_carrier_runtime_snapshot(out: Stream) -> bool:
++    rt = heap.new_runtime(True, None)
++    saved = rt
++    stack = rt.stack
++    o = output.capture(out)
++    source = b"fun f(a, b) { print a > b; print a < b; print a - b; print a * b; print a / b; } f(6, 2); class C {} print C() * C();"
++    status = stack_vm.interpret(mut rt, mut o, source)
++    return status == stack_vm.InterpretResult.RUNTIME_ERROR and bytes(o.stdout) == b"true\nfalse\n4\n12\n3\n" and bytes(o.stderr) == b"Operands must be numbers.\n[line 1] in script\n" and rt.stack_top == 0 and rt.frame_count == 0 and saved.stack_top == 0 and saved.frame_count == 0 and saved.allocations == 0 and stack[0] == value.Value.nil and saved.stack[1] == value.Value.nil and rt.collections == rt.allocations
+--- a/vm.my
++++ b/vm.my
+@@ -423,19 +423,25 @@
+         case value.Value.number(b):
+             match rt.stack[top - 1]:
+                 case value.Value.number(a):
+-                    result = value.Value.nil
+                     if instruction == chunk.OP_GREATER:
+-                        result = value.Value.boolean(a > b)
++                        result = a > b
++                        rt.stack_top = top
++                        rt.stack[top - 1] = value.Value.boolean(result)
++                        return True
+                     elif instruction == chunk.OP_LESS:
+-                        result = value.Value.boolean(a < b)
+-                    elif instruction == chunk.OP_SUBTRACT:
+-                        result = value.Value.number(a - b)
++                        result = a < b
++                        rt.stack_top = top
++                        rt.stack[top - 1] = value.Value.boolean(result)
++                        return True
++                    number = 0.0
++                    if instruction == chunk.OP_SUBTRACT:
++                        number = a - b
+                     elif instruction == chunk.OP_MULTIPLY:
+-                        result = value.Value.number(a * b)
++                        number = a * b
+                     else:
+-                        result = value.Value.number(a / b)
++                        number = a / b
+                     rt.stack_top = top
+-                    rt.stack[top - 1] = result
++                    rt.stack[top - 1] = value.Value.number(number)
+                     return True
+                 case _:
+                     return runtime_error(mut rt, mut o, b"Operands must be numbers.")

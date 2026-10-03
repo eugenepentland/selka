@@ -1,0 +1,36 @@
+--- a/vm.my
++++ b/vm.my
+@@ -423,19 +423,25 @@
+         case value.Value.number(b):
+             match rt.stack[top - 1]:
+                 case value.Value.number(a):
+-                    result = value.Value.nil
+                     if instruction == chunk.OP_GREATER:
+-                        result = value.Value.boolean(a > b)
++                        result = a > b
++                        rt.stack_top = top
++                        rt.stack[top - 1] = value.Value.boolean(result)
++                        return True
+                     elif instruction == chunk.OP_LESS:
+-                        result = value.Value.boolean(a < b)
+-                    elif instruction == chunk.OP_SUBTRACT:
+-                        result = value.Value.number(a - b)
++                        result = a < b
++                        rt.stack_top = top
++                        rt.stack[top - 1] = value.Value.boolean(result)
++                        return True
++                    number = 0.0
++                    if instruction == chunk.OP_SUBTRACT:
++                        number = a - b
+                     elif instruction == chunk.OP_MULTIPLY:
+-                        result = value.Value.number(a * b)
++                        number = a * b
+                     else:
+-                        result = value.Value.number(a / b)
++                        number = a / b
+                     rt.stack_top = top
+-                    rt.stack[top - 1] = result
++                    rt.stack[top - 1] = value.Value.number(number)
+                     return True
+                 case _:
+                     return runtime_error(mut rt, mut o, b"Operands must be numbers.")
