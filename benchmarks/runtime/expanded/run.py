@@ -38,7 +38,8 @@ def atomic_json(path, value):
 def configuration(args):
     _, templates, identity = common.configuration(args)
     source_root = HERE.parent
-    paths = [source_root / name for name in ('runner.py', 'oracle.py', 'CONTRACT.md')]
+    paths = [source_root / name for name in ('runner.py', 'oracle.py', 'CONTRACT.md', 'build_compiler.py',
+                                            'compare_candidate.py', 'CANDIDATES.md')]
     paths += list((source_root / 'ports').glob('*'))
     paths += [p for p in HERE.rglob('*') if p.is_file()
               and 'results' not in p.relative_to(HERE).parts

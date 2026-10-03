@@ -81,3 +81,20 @@ part of identity, so pass them again with `--skip-build`.
 Original winner executables must remain available at the historical paths saved
 in the immutable baseline. Missing or changed originals fail rather than
 substituting fresh compiler bytes under old identities.
+
+Optional micro/application diagnostics accept both original sizes:
+
+```sh
+python3 benchmarks/runtime/expanded/profile.py CANDIDATE.json \
+  --cases integer_math call_direct string_equal alloc_short \
+  --profiles small large --arms my-llvm my-qbe \
+  --output-dir .mylang-cache/runtime-candidate/profiles
+```
+
+The default CPU-clock rate is 99 Hz with a four-second per-case duration target.
+The profile records actual duration, iteration caps, sample counts, raw loss and
+throttle records. Separate cycles/instructions/branch/cache counter captures
+either save their counts and scaling fields or explicitly report unavailable/
+partial hardware access. These instrumented whole-process runs include setup,
+launcher and teardown; they are neither kernel-only attribution nor performance
+evidence, and no captured-symbol fraction is called CPU coverage.

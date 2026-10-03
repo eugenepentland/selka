@@ -2,7 +2,7 @@
 import unittest
 import os
 from unittest.mock import patch
-from profile import classify, load_rules, parse_script, scale_iterations, validate_guest, guest_environment, RULES_PATH
+from profile import classify, load_rules, parse_script, parse_counters, scale_iterations, validate_guest, guest_environment, RULES_PATH
 
 
 class ProfileTests(unittest.TestCase):
@@ -49,6 +49,14 @@ class ProfileTests(unittest.TestCase):
         self.assertNotIn('CGO_CFLAGS',environment)
         self.assertEqual(environment['GOTOOLCHAIN'],'local')
         self.assertEqual(environment['GOEXPERIMENT'],'')
+
+    def test_hardware_counter_counts_and_unavailability_are_explicit(self):
+        rows = parse_counters('123\t\tcycles:u\t100\t100.00\n<not supported>\t\tinstructions:u\t0\t0.00\n')
+        self.assertEqual(rows['cycles:u']['count'], 123)
+        self.assertTrue(rows['cycles:u']['available'])
+        self.assertIsNone(rows['instructions:u']['count'])
+        self.assertFalse(rows['instructions:u']['available'])
+        self.assertFalse(any('coverage' in key for key in rows))
 
     def test_strict_guest(self):
         self.assertEqual(validate_guest('42 12\n','',0,42)['kernel_ns'],12)

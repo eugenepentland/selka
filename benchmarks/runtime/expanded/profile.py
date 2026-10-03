@@ -28,12 +28,15 @@ import time
 
 from registry import HERE, checksum, inventory
 from verify import ARMS, verify
+sys.path.insert(0, str(HERE.parent))
+from runner import timing_lock
 
 APPLICATIONS = ('word_count', 'csv_aggregate', 'json_transform', 'packet_decode', 'lox_eval')
 RULES_PATH = HERE / 'profile_rules.json'
 SCRIPT_LINE = re.compile(r'^\s*(?:0x)?([0-9a-fA-F]+)\s+(.+?)\s+\((.*)\)\s*$')
 LIBC_DSO = re.compile(r'(?:^|/)libc(?:\.so(?:\.[0-9]+)*|-[0-9.]+\.so)$')
 GUEST_LAUNCH = 'exec "$@" >"$PROFILE_GUEST_STDOUT" 2>"$PROFILE_GUEST_STDERR"'
+COUNTERS = ('cycles:u', 'instructions:u', 'branches:u', 'branch-misses:u', 'cache-references:u', 'cache-misses:u')
 
 
 def digest(path):
@@ -168,14 +171,15 @@ def capture(perf, binary, plan, arm, baseline_rows, directory, args, rules):
     expected = checksum(plan['case'], plan['size'], count, plan['seed'])
     directory.mkdir(parents=True, exist_ok=True)
     stdout_path, stderr_path, perf_path = (directory / name for name in ('guest.stdout', 'guest.stderr', 'perf.data'))
-    command = [perf, 'record', '-e', 'cpu-clock:u', '-F', '499', '-o', str(perf_path), '--',
+    command = [perf, 'record', '-e', 'cpu-clock:u', '-F', str(args.frequency_hz), '-o', str(perf_path), '--',
                'taskset', '-c', str(args.cpu), '/bin/sh', '-c', GUEST_LAUNCH, 'profile-guest',
                str(binary), plan['case'], str(plan['size']), str(count), str(plan['seed'])]
     environment = guest_environment()
     environment.update(PROFILE_GUEST_STDOUT=str(stdout_path), PROFILE_GUEST_STDERR=str(stderr_path))
-    started = time.perf_counter_ns()
-    done = run_command(command, args.timeout_seconds, environment)
-    wall = time.perf_counter_ns() - started
+    with timing_lock():
+        started = time.perf_counter_ns()
+        done = run_command(command, args.timeout_seconds, environment)
+        wall = time.perf_counter_ns() - started
     diagnostics = {'record_stdout': done.stdout, 'record_stderr': done.stderr, 'record_exit_status': done.returncode}
     atomic_json(directory / 'perf-diagnostics.json', diagnostics)
     result = validate_guest(stdout_path.read_text(), stderr_path.read_text(), done.returncode, expected)
@@ -204,6 +208,10 @@ def capture(perf, binary, plan, arm, baseline_rows, directory, args, rules):
         warnings.append(f'raw trace contains {throttled} throttle records; requested sampling frequency was not maintained')
     if calibration['iteration_cap_limited']:
         warnings.append('iteration cap prevented requested kernel duration')
+    calibration['observed_kernel_seconds'] = result['kernel_ns'] / 1e9
+    calibration['observed_target_reached'] = result['kernel_ns'] >= args.seconds * 1e9
+    if not calibration['observed_target_reached']:
+        warnings.append('observed instrumented kernel duration did not reach requested target')
     if diagnostics['record_stderr'].strip() or script.stderr.strip() or dump.stderr.strip():
         # Normal perf informational output remains in diagnostics; specific loss
         # or throttle notices also flag compromised sampling quality.
@@ -214,16 +222,52 @@ def capture(perf, binary, plan, arm, baseline_rows, directory, args, rules):
     grouped['sampling_quality_ok'] = not bool(quality_problem)
     raw_perf = compressed(directory / 'perf.data.gz', perf_path.read_bytes())
     perf_path.unlink()
-    return {'case': plan['case'], 'arm': arm, 'group': plan['group'], 'profile': 'large', 'size': plan['size'],
+    hardware = capture_counters(perf, binary, plan, count, expected, directory, args, environment)
+    return {'case': plan['case'], 'arm': arm, 'group': plan['group'], 'profile': plan['profile'], 'size': plan['size'],
             'seed': plan['seed'], 'iterations': count, 'status': 'complete', **result, 'process_wall_ns': wall,
             'calibration': calibration, 'record_command': command, 'script_command': script_command, 'dump_command': dump_command,
             'binary_sha256': digest(binary), 'manifest': manifest, 'raw_script': raw_script,
             'raw_records': raw_records, 'raw_perf': raw_perf, 'perf_diagnostics': diagnostics,
-            'warnings': warnings, **grouped}
+            'hardware_counters': hardware, 'warnings': warnings, **grouped}
+
+
+def parse_counters(text):
+    """Perf stat CSV counts are whole-process user-mode evidence, never kernel-only."""
+    result = {}
+    for line in text.splitlines():
+        fields = line.split('\t')
+        if len(fields) < 3 or fields[2] not in COUNTERS:
+            continue
+        count = fields[0].strip()
+        available = re.fullmatch(r'[0-9]+(?:\.[0-9]+)?', count) is not None
+        result[fields[2]] = {'available': available, 'count': float(count) if available else None,
+                            'raw_count': count, 'raw_fields': fields}
+    return result
+
+
+def capture_counters(perf, binary, plan, count, expected, directory, args, environment):
+    output = directory / 'counters.tsv'
+    stdout_path, stderr_path = directory / 'counters-guest.stdout', directory / 'counters-guest.stderr'
+    stdout_path.unlink(missing_ok=True)
+    stderr_path.unlink(missing_ok=True)
+    counter_env = {**environment, 'PROFILE_GUEST_STDOUT': str(stdout_path), 'PROFILE_GUEST_STDERR': str(stderr_path)}
+    command = [perf, 'stat', '-x', '\t', '-o', str(output), '-e', ','.join(COUNTERS), '--',
+               'taskset', '-c', str(args.cpu), '/bin/sh', '-c', GUEST_LAUNCH, 'profile-counters',
+               str(binary), plan['case'], str(plan['size']), str(count), str(plan['seed'])]
+    with timing_lock():
+        done = run_command(command, args.timeout_seconds, counter_env)
+    raw = output.read_text() if output.exists() else ''
+    counters = parse_counters(raw)
+    available = done.returncode == 0 and set(counters) == set(COUNTERS) and all(row['available'] for row in counters.values())
+    guest = validate_guest(stdout_path.read_text(), stderr_path.read_text(), done.returncode, expected) if stdout_path.exists() else None
+    return {'status': 'available' if available else 'unavailable_or_partial', 'command': command,
+            'exit_status': done.returncode, 'stderr': done.stderr, 'stdout': done.stdout,
+            'counts': counters, 'raw': compressed(directory / 'counters.tsv.gz', raw), 'guest': guest,
+            'scope': 'Separate instrumented whole-process user-mode counters, including setup/teardown; not benchmark timing or kernel-only counts.'}
 
 
 def artifact_snapshot(baseline, rules_path, perf):
-    verify(baseline, artifacts=True)
+    verify(baseline, artifacts=True, focused=True)
     paths = {str(Path(__file__).resolve()), str(Path(rules_path).resolve()), str(Path(perf).resolve())}
     for binary in baseline['identity']['binary_paths'].values():
         manifest = Path(binary + '.qbe-manifest.json')
@@ -237,9 +281,11 @@ def main():
     parser.add_argument('baseline', type=Path)
     parser.add_argument('--output-dir', type=Path, required=True)
     parser.add_argument('--arms', nargs='+', choices=ARMS, default=list(ARMS))
-    parser.add_argument('--cases', nargs='+', choices=APPLICATIONS, default=list(APPLICATIONS))
+    parser.add_argument('--cases', nargs='+', choices=inventory(), default=list(APPLICATIONS))
+    parser.add_argument('--profiles', nargs='+', choices=('small', 'large'), default=['large'])
     parser.add_argument('--cpu', type=int, default=2)
-    parser.add_argument('--seconds', type=float, default=1.0)
+    parser.add_argument('--seconds', type=float, default=4.0)
+    parser.add_argument('--frequency-hz', type=int, default=99)
     parser.add_argument('--timeout-seconds', type=float, default=10.0)
     parser.add_argument('--max-iterations', type=int, default=10000000)
     parser.add_argument('--min-samples', type=int, default=200)
@@ -247,9 +293,10 @@ def main():
     parser.add_argument('--perf', default='perf')
     args = parser.parse_args()
     if (not math.isfinite(args.seconds) or not math.isfinite(args.timeout_seconds) or
-            args.seconds <= 0 or args.timeout_seconds <= args.seconds or not 1 <= args.max_iterations <= 10000000 or args.min_samples < 1):
+            args.seconds <= 0 or args.timeout_seconds <= args.seconds or not 1 <= args.max_iterations <= 10000000
+            or args.min_samples < 1 or not 1 <= args.frequency_hz <= 999):
         parser.error('invalid profiling duration/count limits')
-    if len(set(args.arms)) != len(args.arms) or len(set(args.cases)) != len(args.cases):
+    if any(len(set(values)) != len(values) for values in (args.arms, args.cases, args.profiles)):
         parser.error('duplicate arms/cases')
     try:
         if args.cpu not in os.sched_getaffinity(0):
@@ -264,15 +311,16 @@ def main():
         rules = load_rules(args.rules)
         before = artifact_snapshot(baseline, args.rules, perf)
         preflight_command = [perf, 'stat', '-e', 'cpu-clock:u', '--', 'taskset', '-c', str(args.cpu), '/bin/true']
-        preflight = run_command(preflight_command, 10)
+        with timing_lock():
+            preflight = run_command(preflight_command, 10)
         if preflight.returncode:
             raise ValueError('perf CPU-clock preflight failed: ' + preflight.stderr)
-        report = {'schema': 'mylang-runtime-profile-v2', 'purpose': 'hotspot diagnostics', 'status': 'incomplete',
-                  'scope': 'full' if set(args.arms) == set(ARMS) and set(args.cases) == set(APPLICATIONS) else 'subset',
+        report = {'schema': 'mylang-runtime-profile-v3', 'purpose': 'hotspot diagnostics', 'status': 'incomplete',
+                  'scope': 'selected_diagnostics',
                   'baseline': str(args.baseline), 'baseline_sha256': hashlib.sha256(baseline_bytes).hexdigest(),
                   'baseline_identity': baseline['identity'], 'baseline_binary_hashes': baseline['binary_hashes'],
-                  'artifacts_before': before, 'arms': args.arms, 'cases': args.cases,
-                  'sampling': {'event': 'cpu-clock:u', 'frequency_hz': 499, 'cpu': args.cpu, 'count_weight': 1,
+                  'artifacts_before': before, 'arms': args.arms, 'cases': args.cases, 'profiles_requested': args.profiles,
+                  'sampling': {'event': 'cpu-clock:u', 'frequency_hz': args.frequency_hz, 'cpu': args.cpu, 'count_weight': 1,
                                'min_samples': args.min_samples, 'target_seconds': args.seconds, 'timeout_seconds': args.timeout_seconds,
                                'scope': 'whole process including taskset/exec launcher, fixtures, formatting, teardown, and runtime threads',
                                'caveat': 'Unweighted captured CPU-clock samples are fixed-rate sampling evidence; frequency mode can adjust periods. They are not cycles or kernel-only timings.'},
@@ -284,20 +332,21 @@ def main():
         output = args.output_dir / 'profiles.json'
         atomic_json(output, report)
         for case in args.cases:
-            selected_plans = [plan for plan in baseline['plans'] if plan['case'] == case and plan['profile'] == 'large']
-            if len(selected_plans) != 1:
-                raise ValueError('missing/duplicate application large plan: ' + case)
-            plan = selected_plans[0]
-            for arm in args.arms:
-                print(f'Profiling {case}/{arm}', flush=True)
-                binary = Path(baseline['identity']['binary_paths'][plan['group'] + '/' + arm])
-                rows = [row for row in baseline['samples'] if row['case'] == case and row['size'] == plan['size'] and row['arm'] == arm]
-                try:
-                    result = capture(perf, binary, plan, arm, rows, args.output_dir / (case + '-' + arm), args, rules)
-                except (ValueError, OSError, subprocess.TimeoutExpired) as error:
-                    result = {'case': case, 'arm': arm, 'profile': 'large', 'status': 'failed', 'error': str(error)}
-                report['profiles'].append(result)
-                atomic_json(output, report)
+            for profile in args.profiles:
+                selected_plans = [plan for plan in baseline['plans'] if plan['case'] == case and plan['profile'] == profile]
+                if len(selected_plans) != 1:
+                    raise ValueError('missing/duplicate diagnostic plan: ' + case + '/' + profile)
+                plan = selected_plans[0]
+                for arm in args.arms:
+                    print(f'Profiling {case}/{profile}/{arm}', flush=True)
+                    binary = Path(baseline['identity']['binary_paths'][plan['group'] + '/' + arm])
+                    rows = [row for row in baseline['samples'] if row['case'] == case and row['size'] == plan['size'] and row['arm'] == arm]
+                    try:
+                        result = capture(perf, binary, plan, arm, rows, args.output_dir / (case + '-' + profile + '-' + arm), args, rules)
+                    except (ValueError, OSError, subprocess.TimeoutExpired) as error:
+                        result = {'case': case, 'arm': arm, 'profile': profile, 'status': 'failed', 'error': str(error)}
+                    report['profiles'].append(result)
+                    atomic_json(output, report)
         after = artifact_snapshot(baseline, args.rules, perf)
         if before != after or args.baseline.read_bytes() != baseline_bytes:
             raise ValueError('profiling artifacts/baseline changed during sampling')
