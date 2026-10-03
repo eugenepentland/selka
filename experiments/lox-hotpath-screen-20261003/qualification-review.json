@@ -1,0 +1,17 @@
+{
+  "native_pairs": 348,
+  "exact_outputs_status_stderr": true,
+  "actual_runtime_flags_verified": true,
+  "build_receipt_sha256": "ecdc68a9f9914125adccde1f874dccdf3277cadf2f4317ca3faebb770b5f7690",
+  "native_receipt_sha256": "750df483848aa3c6707ef0aeb619371df888bc7094a39b61f778bdf97af20fc6",
+  "binary_sha256": {
+    "control-llvm": "180575c3fc2e46a16ed8dd290e289963a87603b5a7c0cf8bb0e03ba7cf794361",
+    "control-qbe": "246f21781fd58c7141dbe0992101c842e62d732d9ce47e209d55821d02b11b25",
+    "rc-llvm": "2ab3ee3a3d6e7e7a857ca1f279a62b7443392da22d87f64bb617df195e3e40a7",
+    "gc-llvm": "4971f8eb8bf54f15d8b32f37da66f0240666dc0e788a2def7b09117facaa4024",
+    "rc-qbe": "0bedbcb6a92955eeb6e54dd6154a89f63e2b20406d0c2b1a07b067c3db1ed0d4",
+    "gc-qbe": "2b8d187a023b34d62d1268b459afdec85cfe2690c51c82697426556081f417de"
+  },
+  "source_files": 37,
+  "all_stimuli_hashes_match": true
+}
