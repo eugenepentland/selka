@@ -5,6 +5,7 @@ import hashlib
 import json
 import math
 import random
+import re
 from pathlib import Path
 import statistics
 import sys
@@ -53,7 +54,7 @@ def check_hash(path, expected):
 
 
 def verify(report, check_artifacts=False):
-    require(report.get('schema') == 'mylang-runtime-v1', 'unsupported report schema')
+    require(report.get('schema') in ('mylang-runtime-v1', 'mylang-runtime-v2'), 'unsupported report schema')
     require(report.get('status') == 'complete' and report.get('profile') == 'baseline',
             'smoke/subset/incomplete report cannot qualify as baseline')
     coverage = report.get('coverage', [])
@@ -131,12 +132,29 @@ def verify(report, check_artifacts=False):
             require(all(type(value) in (int, float) and math.isfinite(value) and math.isclose(value, expected, rel_tol=1e-12, abs_tol=1e-12) for value, expected in zip(interval, (bootstrap[49], bootstrap[1949]))), f'summary interval mismatch {key}')
         require(seen_summary == set(groups), 'missing summary rows')
     identity = report['identity']
-    require(identity.get('pinned_revision') == REVISION, 'wrong compiler revision')
+    if report['schema'] == 'mylang-runtime-v1':
+        require(identity.get('pinned_revision') == REVISION, 'wrong compiler revision')
+    else:
+        require(isinstance(identity.get('candidate_id'), str) and bool(identity['candidate_id']), 'missing candidate ID')
+        require(re.fullmatch(r'[0-9a-f]{40}', identity.get('source_revision', '')) is not None, 'invalid compiler revision')
+        receipt = identity.get('compiler_build_receipt', {}).get('receipt', {})
+        require(receipt.get('schema') == 'mylang-runtime-compiler-build-v1' and receipt.get('status') == 'complete'
+                and receipt.get('exit_status') == 0, 'missing successful compiler build receipt')
+        require(receipt['source_revision'] == identity['source_revision'] and bool(receipt['sources_after'])
+                and receipt['sources_before'] == receipt['sources_after'], 'invalid compiler source receipt')
+        require(receipt['compiler_sha256'] == identity['tools']['mylang']['sha256'], 'compiler receipt hash mismatch')
+        require(bool(report.get('measurement_session_id')), 'missing measurement session ID')
     hashes = report.get('binary_hashes', {})
     require(set(hashes) in (set(ARMS), set(ARMS) | {'native_clock.o'}), 'missing/unknown binary identities')
     require(report.get('identity_after') == identity, 'missing/changed identities after measurements')
     require(report.get('binary_hashes_after') == hashes, 'missing/changed binaries after measurements')
     if check_artifacts:
+        if report['schema'] == 'mylang-runtime-v2':
+            from build_compiler import validate_receipt
+            entry = identity['compiler_build_receipt']
+            check_hash(entry['path'], entry['sha256'])
+            require(json.loads(Path(entry['path']).read_text()) == entry['receipt'], 'compiler receipt content mismatch')
+            validate_receipt(entry['receipt'], identity['tools']['mylang']['path'], artifacts=True)
         for path, expected in identity['sources'].items():
             check_hash(HERE / path, expected)
         for tool in identity['tools'].values():

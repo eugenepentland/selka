@@ -220,7 +220,8 @@ def build_assessment(report, taxonomy, baseline_path, expected_hash, audit, veri
                                       'independent_verifier_sha256': sha((EXPANDED / 'verify.py').read_bytes()),
                                       'result': 'passed', 'groups': verifier_groups, 'artifacts': False,
                                       'historical_measurement_sources': audit,
-                                      'compiler_source_revision_recorded': report['identity']['pinned_revision'],
+                                      'compiler_source_revision_recorded': report['identity'].get('source_revision')
+                                          or report['identity']['pinned_revision'],
                                       'compiler_source_equivalence_established_by_this_tool': False,
                                       'generator_sha256': sha(Path(__file__).read_bytes())},
             'interpretation': {'breadth_goal': '80% is a qualitative design aspiration for representative everyday-codebase breadth; no population percentage or CPU-time coverage is measured.',

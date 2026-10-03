@@ -5,13 +5,15 @@ coverage acceptance criterion.
 
 The [expanded suite](expanded/README.md) covers 40 cases across the eight everyday
 operation areas and five application workloads, using all four languages. The
-commands below retain the original four-case baseline for reproducibility.
+commands below run the original four-case contract with a recorded candidate
+compiler. Follow [candidate build and identity instructions](CANDIDATES.md) to
+create `compiler-receipt.json` first.
 
 Run from the repository with Python 3:
 
 ```sh
-python3 benchmarks/runtime/runner.py --quick --rounds 1 --warmups 0
-python3 benchmarks/runtime/runner.py
+python3 benchmarks/runtime/runner.py --candidate-id candidate-smoke --compiler-receipt compiler-receipt.json --quick --rounds 1 --warmups 0
+python3 benchmarks/runtime/runner.py --candidate-id candidate-full --compiler-receipt compiler-receipt.json
 python3 -m unittest discover -s benchmarks/runtime -p 'test_*.py'
 ```
 
@@ -61,10 +63,12 @@ Go runs with `GOMAXPROCS=1`, `GOGC=100`, `GOMEMLIMIT=off`, `GOAMD64=v1`, and
 empty `GOFLAGS`/`GOEXPERIMENT`; `GOTOOLCHAIN=local` prevents implicit toolchain
 replacement. Inherited MYLANG_* settings, compiler tuning flags and Go debug
 settings are removed. Selected environment settings are recorded. The compiler
-source revision is pinned by CONTRACT; supply an audited compiler built from
-that revision. Compiler binary hashes, supported version output, source hashes
-and exact commands provide identity. MyLang has no supported version query, so
-its recorded identity uses the audited source revision and binary SHA. The Rust
+source revision for new runs comes from the checked compiler build receipt.
+Historical `runtime-v1` evidence retains its original CONTRACT compiler pin;
+new `runtime-v2` evidence cannot silently reuse that identity. Compiler binary
+hashes, supported version output, source hashes and exact commands provide
+identity. MyLang has no supported version query, so its recorded identity uses
+the compiler receipt's source revision and binary SHA. The Rust
 invocation path is preserved even when it is a rustup shim; its actual toolchain
 compiler is located via `--print sysroot` and hashed separately.
 

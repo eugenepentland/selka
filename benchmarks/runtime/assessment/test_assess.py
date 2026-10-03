@@ -42,6 +42,16 @@ def replace_samples(report,case,profile,arm,values):
     row.update(median_ns_per_op=statistics.median(values)/row['iterations'],min_ns_per_op=min(values)/row['iterations'],max_ns_per_op=max(values)/row['iterations'])
 
 class AssessmentEvidenceTests(unittest.TestCase):
+    def test_candidate_assessment_records_new_source_revision(self):
+        baseline, taxonomy = fixture()
+        baseline['identity'].pop('pinned_revision')
+        baseline['identity']['source_revision'] = 'a' * 40
+        with patch.object(a, 'bootstrap_ratio_interval', side_effect=lambda values, ref, seed:
+                          [statistics.median(values) / statistics.median(ref)] * 2):
+            result = a.build_assessment(baseline, taxonomy, Path('fixture.json'), 'abc',
+                                        {'status': 'fixture', 'revision': 'fixture'}, 480)
+        self.assertEqual(result['evidence_verification']['compiler_source_revision_recorded'], 'a' * 40)
+
     def test_refuses_wrong_or_duplicate_micro_case_and_application_coverage(self):
         baseline,taxonomy = fixture()
         bad = copy.deepcopy(taxonomy); first = next(iter(bad['areas']));bad['areas'][first].pop()

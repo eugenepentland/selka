@@ -15,6 +15,7 @@ import statistics
 import subprocess
 import sys
 import time
+import uuid
 from oracle import CASES, checksum
 from build_compiler import validate_receipt
 HERE = Path(__file__).resolve().parent
@@ -121,7 +122,7 @@ def configuration(args):
         elif arm == 'rust': commands[arm] = [tools['rust'],'-O','--edition','2021',str(p/'main.rs'),'-o',out]
         elif arm == 'go': commands[arm] = [tools['go'],'build','-o',out,str(p/'main.go')]
         else: commands[arm] = [tools['zig'],'build-exe',str(p/'main.zig'),'-lc','-O','ReleaseSafe' if arm == 'zig-safe' else 'ReleaseFast',f'-femit-bin={out}']
-    sources = {str(path.relative_to(HERE)):digest(path) for path in [HERE/'CONTRACT.md', HERE/'oracle.py', HERE/'runner.py', *sorted(p.iterdir())] if path.is_file()}
+    sources = {str(path.relative_to(HERE)):digest(path) for path in [HERE/'CONTRACT.md', HERE/'oracle.py', HERE/'runner.py', HERE/'build_compiler.py', *sorted(p.iterdir())] if path.is_file()}
     identity = {'candidate_id':args.candidate_id,'source_revision':receipt['source_revision'],
                 'compiler_build_receipt':{'path':str(receipt_path),'sha256':digest(receipt_path),'receipt':receipt},
                 'tools':versions,'sources':sources,'commands':commands,'installed_assets':asset_hashes,'build_environment':{key:runtime_environment().get(key) for key in ('GOMAXPROCS','GOGC','GOMEMLIMIT','GOAMD64','GOFLAGS','GOEXPERIMENT','GOTOOLCHAIN','RUSTFLAGS','CFLAGS','CXXFLAGS','CGO_CFLAGS','CGO_LDFLAGS','MYLANG_OPTIONS')},'build_wrapper':str(HERE.parents[1]/'scripts/build-slot.sh'),'clock_build':[tools['cc'],'-O2','-c',str(p/'native_clock.c'),'-o',str(args.work/'native_clock.o')]}
@@ -229,7 +230,7 @@ def execute(args):
     verify_identity(before_hashes,after_hashes)
     verify_identity(identity,configuration(args)[2])
     environment = {'platform':platform.platform(),'cpu':args.cpu,**cpu_environment(args.cpu,cpu_before,cpu_after),'loadavg_before':load_before,'loadavg_after':os.getloadavg(),'GOMAXPROCS':'1','GOGC':'100','GOMEMLIMIT':'off','GOAMD64':'v1','GOFLAGS':'','GOEXPERIMENT':'','GOTOOLCHAIN':'local','removed_environment':['GODEBUG','MYLANG_*','RUSTFLAGS','CFLAGS','CXXFLAGS','RUSTC_BOOTSTRAP','CGO_CFLAGS','CGO_CPPFLAGS','CGO_CXXFLAGS','CGO_LDFLAGS','LDFLAGS'],'cpuinfo':Path('/proc/cpuinfo').read_text()}
-    report = {'schema':'mylang-runtime-v1','status':'smoke' if args.quick else ('complete' if set(selected)==set(CASES) else 'subset'),'profile':'smoke' if args.quick else 'baseline','coverage':selected,'rounds':args.rounds,'warmup_rounds':args.warmups,'identity':identity,'binary_hashes':before_hashes,'binary_hashes_after':after_hashes,'identity_after':identity,'environment':environment,'build_logs':build_logs,'qualification':probes,'pilots':pilots,'plans':plans,'warmups':warmups,'samples':samples,'memory':memory}
+    report = {'schema':'mylang-runtime-v2','measurement_session_id':str(uuid.uuid4()),'status':'smoke' if args.quick else ('complete' if set(selected)==set(CASES) else 'subset'),'profile':'smoke' if args.quick else 'baseline','coverage':selected,'rounds':args.rounds,'warmup_rounds':args.warmups,'identity':identity,'binary_hashes':before_hashes,'binary_hashes_after':after_hashes,'identity_after':identity,'environment':environment,'build_logs':build_logs,'qualification':probes,'pilots':pilots,'plans':plans,'warmups':warmups,'samples':samples,'memory':memory}
     args.output.parent.mkdir(parents=True,exist_ok=True)
     report['summary'] = summarize(report)
     for warning in environment['warnings']: print('WARNING: '+warning,file=sys.stderr)

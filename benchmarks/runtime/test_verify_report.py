@@ -29,6 +29,31 @@ class VerifierTests(unittest.TestCase):
     def test_complete_report(self):
         self.assertEqual(len(verify(fixture())),48)
 
+    def test_candidate_identity_does_not_reuse_historical_pin(self):
+        report = fixture()
+        report.update(schema='mylang-runtime-v2', measurement_session_id='fixture-session')
+        receipt = {'schema': 'mylang-runtime-compiler-build-v1', 'status': 'complete', 'exit_status': 0,
+                   'source_revision': 'a' * 40, 'sources_before': {'src/main.zig': 'hash'},
+                   'sources_after': {'src/main.zig': 'hash'}, 'compiler_sha256': 'b' * 64}
+        report['identity'] = {'candidate_id': 'fixture-candidate', 'source_revision': 'a' * 40,
+                              'compiler_build_receipt': {'receipt': receipt},
+                              'tools': {'mylang': {'sha256': 'b' * 64}}}
+        report['identity_after'] = copy.deepcopy(report['identity'])
+        self.assertEqual(len(verify(report)), 48)
+        report['schema'] = 'mylang-runtime-v1'
+        with self.assertRaisesRegex(ValueError, 'wrong compiler revision'):
+            verify(report)
+        report['schema'] = 'mylang-runtime-v2'
+        report['identity']['compiler_build_receipt']['receipt']['compiler_sha256'] = 'c' * 64
+        with self.assertRaisesRegex(ValueError, 'receipt hash mismatch'):
+            verify(report)
+
+    def test_candidate_cannot_qualify_with_only_old_pin(self):
+        report = fixture()
+        report.update(schema='mylang-runtime-v2', measurement_session_id='fixture-session')
+        with self.assertRaisesRegex(ValueError, 'missing candidate ID'):
+            verify(report)
+
     def test_summary(self):
         report = fixture()
         report['summary'] = [dict(arm=arm, case=plan['case'], size=plan['size'], profile=plan['profile'], iterations=3, median_ns_per_op=10/3, min_ns_per_op=10/3, max_ns_per_op=10/3, median_paired_ratio_to_go=1, paired_bootstrap_95_interval=[1,1]) for plan in report['plans'] for arm in ARMS]
