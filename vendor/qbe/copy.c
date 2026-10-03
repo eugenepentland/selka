@@ -306,6 +306,17 @@ copyref(Fn *fn, Blk *b, Ins *i)
 	if (i->op == Ocopy)
 		return i->arg[0];
 
+	/* Integer annihilators are exact for every input bit pattern. Operand
+	 * evaluation (including calls and loads) remains in the graph. Never
+	 * apply multiplication by zero to floating point: NaN and -0 survive. */
+	if (KBASE(i->cls) == 0)
+	if (isconbits(fn, i->arg[1], &v)) {
+		if (v == 0 && (i->op == Omul || i->op == Oand || i->op == Oumulh))
+			return CON_Z;
+		if (v == 1 && i->op == Oumulh)
+			return CON_Z;
+	}
+
 	/* op identity value */
 	if (optab[i->op].hasid
 	&& KBASE(i->cls) == 0 /* integer only - fp NaN! */

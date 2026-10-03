@@ -14186,3 +14186,7 @@ test "CLI native build forwards diagnostic presentation to its source frontend" 
 comptime {
     _ = @import("native_variant_policy.zig");
 }
+
+test {
+    _ = @import("qbe_algebra_test.zig");
+}

@@ -1772,3 +1772,5 @@ performs no new proof admission or instruction transformation. The policy change
 no source semantics, runtime contract, guard, ownership permission or opcode.
 
 - [QBE-CHECKED-PRODUCT-HIGH-1] Checked 64-bit multiplication emits an exact unsigned multiply-high operation instead of four 32-bit limbs. Unsigned overflow remains a nonzero high half; signed overflow still adjusts that high half for both operand signs and compares it with the low half sign extension. The LLVM translator recognizes both compact and historical forms as the same overflow intrinsic. Operands, widths, trap order, detail and source provenance are unchanged. Narrow products retain their existing range tests.
+
+- [QBE-INTEGER-ANNIHILATOR-1] QBE folds integer multiplication, bitwise AND and unsigned multiply-high by zero to zero, and unsigned multiply-high by one to zero, after operands have been evaluated. Integer width is preserved, calls producing discarded values still execute, and floating multiplication remains unchanged for NaN and signed zero.
