@@ -36,6 +36,11 @@ myl_native_bytes *myl_native_bytes_new(myl_native_heap *heap, const unsigned cha
 myl_native_bytes *myl_native_bytes_copy(myl_native_heap *heap, myl_native_bytes *input) {
     return copy_range(heap,input,0,input->length);
 }
+int myl_native_bytes_equal(const myl_native_bytes *a, const myl_native_bytes *b) {
+    if (a==b) return 1;
+    if (!a || !b) return 0;
+    return a->length==b->length && (!a->length || !memcmp(a->storage,b->storage,a->length));
+}
 /* A view is a byte string that reads another byte string's octets: `storage`
    points into the source's backing at the range start and `length` is the range
    length, so every read path — indexing, iteration, equality, search, slicing,

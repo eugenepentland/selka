@@ -994,10 +994,23 @@ fn emitBinary(comptime E: type, self: *E, op: @FieldType(@FieldType(bytecode.Ins
         try self.print(" %v{d} =w call ${s}(l %v{d}, l %v{d})\n %v{d} =w {s} %v{d}, 0\n", .{ comparison, compare, left, right, result, test_instruction, comparison });
         try boolean(E, self, result, base);
     } else if (op.op == .eq or op.op == .ne) {
-        const left_pointer = try operandPointer(E, self, op.ty, base);
-        const right_pointer = try operandPointer(E, self, op.ty, base + 1);
-        try self.print(" %v{d} =w call $myl_native_equal(l ${s}, l %v{d}, l %v{d})\n", .{ result, try self.descriptor(op.ty), left_pointer, right_pointer });
-        try equalResult(E, self, result);
+        // Immutable leaves compare their payloads without structural scratch or
+        // a fallible result. Resolve the canonical collection descriptor here;
+        // lists, boxes and records still visit all fields, including same-object
+        // NaNs, through the generic equality engine.
+        const leaf = switch (self.program.records[op.ty.recordIndex()].collection.kind) {
+            .string => "myl_native_text_equal",
+            .bytes => "myl_native_bytes_equal",
+            else => null,
+        };
+        if (leaf) |callee| {
+            try self.print(" %v{d} =w call ${s}(l %v{d}, l %v{d})\n", .{ result, callee, left, right });
+        } else {
+            const left_pointer = try operandPointer(E, self, op.ty, base);
+            const right_pointer = try operandPointer(E, self, op.ty, base + 1);
+            try self.print(" %v{d} =w call $myl_native_equal(l ${s}, l %v{d}, l %v{d})\n", .{ result, try self.descriptor(op.ty), left_pointer, right_pointer });
+            try equalResult(E, self, result);
+        }
         if (op.op == .ne) {
             const inverse = self.temp();
             try self.print(" %v{d} =w ceqw %v{d}, 0\n", .{ inverse, result });

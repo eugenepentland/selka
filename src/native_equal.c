@@ -1,4 +1,5 @@
 #include "native_equal.h"
+#include "native_bytes.h"
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
@@ -25,10 +26,7 @@ static int leaf(Pair pair) {
     if (!left || !right) return left==right;
     if (!type->collection_kind) return left==right;
     if (type->collection_kind==2) return myl_native_text_equal(left,right);
-    if (type->collection_kind==4) {
-        const myl_native_list *a=left,*b=right;
-        return a->length==b->length && (!a->length || !memcmp(a->storage,b->storage,a->length));
-    }
+    if (type->collection_kind==4) return myl_native_bytes_equal(left,right);
     return STRUCTURAL;
 }
 static int push(Work *work, const myl_native_type *type, const void *left, const void *right) {

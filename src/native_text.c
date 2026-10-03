@@ -793,6 +793,8 @@ myl_native_text *myl_native_text_piece_at(myl_native_heap *heap, myl_native_text
     return text;
 }
 int myl_native_text_equal(const myl_native_text *a, const myl_native_text *b) {
+    if (a==b) return 1;
+    if (!a || !b) return 0;
     return a->bytes==b->bytes && (!a->bytes || !memcmp(myl_native_text_storage(a),myl_native_text_storage(b),a->bytes));
 }
 int myl_native_text_compare(const myl_native_text *a, const myl_native_text *b) {

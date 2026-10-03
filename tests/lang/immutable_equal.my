@@ -1,0 +1,46 @@
+module immutable_equal
+
+
+def retained_text() -> str:
+    source = "prefix-λ-日本語-😀-abcdefghijklmnop-suffix" + "!"
+    return source[7:33]
+
+
+def retained_bytes() -> bytes:
+    source = b"prefix-\x00\xff-abcdefghijklmnop-suffix" + b"!"
+    return source.view(7, 26)
+
+
+# spec-case: UTF8-TEXT-1
+# spec-case: TEXT-VIEW-2
+public def test_text_equality_reads_distinct_owned_values_and_retained_unicode_views() -> bool:
+    kept = retained_text()
+    same = "λ-日本語-😀-abcdefghijklmnop-s"
+    if kept != same or kept == same + "!":
+        return False
+    if "" != "" or "é" == "e\u0301":
+        return False
+    if "abc" == "xbc" or "abc" == "abx" or "abc" == "abcd":
+        return False
+    copies = [str(42), str(42)]
+    return copies[0] == copies[1] and kept == kept
+
+
+# spec-case: PY-BYTES-1
+# spec-case: PY-BYTES-7
+public def test_bytes_equality_reads_retained_views_and_snapshot_contents() -> bool:
+    kept = retained_bytes()
+    if kept != b"\x00\xff-abcdefghijklmnop" or kept == b"\x00\xfe-abcdefghijklmnop":
+        return False
+    empty: list[int] = []
+    buffer = byte_buffer(empty)
+    _ = buffer.append_range(kept, 0, len(kept))
+    snapshot = bytes(buffer)
+    _ = buffer.append_byte(33)
+    return snapshot == kept and snapshot != buffer and b"" == b"" and kept == kept
+
+
+# spec-case: EQUALITY-SCRATCH-1
+public def test_structural_equality_still_visits_same_object_nan_leaves() -> bool:
+    values: list[float] = [0.0 / 0.0]
+    return values != values

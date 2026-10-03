@@ -77,6 +77,40 @@ test "number parsing selects the shared text runtime unit and answers an option"
     try std.testing.expect(std.mem.indexOf(u8, plain, "\"text_format\":false") != null);
 }
 
+// spec-case: UTF8-TEXT-1
+// spec-case: PY-BYTES-1
+// spec-case: EQUALITY-SCRATCH-1
+test "immutable equality resolves text and bytes leaves without structural failure branches" {
+    const a = std.testing.allocator;
+    const emitted = try manifest(a,
+        \\def same_text(left: str, right: str) -> bool:
+        \\    return left == right
+        \\def different_bytes(left: bytes, right: bytes) -> bool:
+        \\    return left != right
+        \\def main() -> int:
+        \\    if same_text("a", "b") or different_bytes(b"a", b"a"):
+        \\        return 0
+        \\    return 42
+    );
+    defer a.free(emitted);
+    for ([_][]const u8{ "call $myl_native_text_equal", "call $myl_native_bytes_equal" }) |symbol|
+        try std.testing.expect(std.mem.indexOf(u8, emitted, symbol) != null);
+    try std.testing.expect(std.mem.indexOf(u8, emitted, "call $myl_native_equal(") == null);
+    try std.testing.expect(std.mem.indexOf(u8, emitted, "call $myl_qbe_fail_equality(") == null);
+    const structural = try manifest(a,
+        \\def same(left: list[float], right: list[float]) -> bool:
+        \\    return left == right
+        \\def main() -> int:
+        \\    values: list[float] = [0.0 / 0.0]
+        \\    if same(values, values):
+        \\        return 0
+        \\    return 42
+    );
+    defer a.free(structural);
+    try std.testing.expect(std.mem.indexOf(u8, structural, "call $myl_native_equal(") != null);
+    try std.testing.expect(std.mem.indexOf(u8, structural, "call $myl_qbe_fail_equality(") != null);
+}
+
 /// Run one guest program under GC stress and return its exit value. A trap is
 /// reported and turned into an assertion failure so a runtime refusal cannot
 /// look like an ordinary nonzero result a test forgot to check.

@@ -37,6 +37,9 @@ int64_t myl_native_bytes_find_any(const myl_native_bytes *, const myl_native_byt
 int myl_native_bytes_starts_with(const myl_native_bytes *, const myl_native_bytes *);
 /* Lexicographic octet order of two byte strings: -1, 0 or 1. */
 int myl_native_bytes_compare(const myl_native_bytes *, const myl_native_bytes *);
+/* Payload equality without allocation or structural scratch; views read their
+ * retained storage exactly as owned byte strings do. Null equals only null. */
+int myl_native_bytes_equal(const myl_native_bytes *, const myl_native_bytes *);
 int myl_native_bytes_ends_with(const myl_native_bytes *, const myl_native_bytes *);
 /* Membership of one octet; values outside 0..255 are never present. */
 int myl_native_bytes_has_byte(const myl_native_bytes *, int64_t);
