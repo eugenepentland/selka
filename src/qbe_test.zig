@@ -345,6 +345,7 @@ test "generated code tests traps directly and omits root machinery it never uses
         \\    return size(data) + size(b"!")
     );
     defer c.deinit();
+    try lowerCallFixture(&c);
     const manifest = try c.emitQbe(a);
     defer a.free(manifest);
     var parsed = try std.json.parseFromSlice(Manifest, a, manifest, .{ .allocate = .alloc_always, .ignore_unknown_fields = true });
@@ -1213,7 +1214,7 @@ test "fixed aggregate scratch is inside the physical stack-floor check" {
 
 // spec-case: QBE-FRAMES-1
 test "loop scratch has one fixed slot while managed allocation stays in the loop" {
-    var parsed = try emitted(std.testing.allocator,
+    var parsed = try emittedUninlined(std.testing.allocator,
         \\record Pair:
         \\    left: i64
         \\    right: i64
