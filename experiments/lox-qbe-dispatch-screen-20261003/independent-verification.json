@@ -1,0 +1,14 @@
+{
+  "actual_guest_flavors": 4,
+  "ast_focused_exact": 96,
+  "checked_refusals": 8,
+  "core_source_files": 871,
+  "llvm_rc_allocated_sections": 26,
+  "llvm_rc_headers_and_program_layout_equal": true,
+  "native_exact": 1168,
+  "native_stress_omissions": 80,
+  "performance_or_selection_claim": false,
+  "public_fresh": 336,
+  "source_files": 37,
+  "verified": true
+}

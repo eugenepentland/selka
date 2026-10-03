@@ -1,0 +1,18 @@
+{
+  "selected": false,
+  "trial_commit": "74bceceaa51c225f5a3271f2ccd710e19e2362c9",
+  "selected_core": "3b33df52044a10cb84b908f8b1641af439e8c729",
+  "prepared": {
+    "candidate_rebuilt_byte_exact": false,
+    "guards": 223,
+    "guards_sha256": "d59a7328f11cbc05bc30d21a44ea6efe7af51ef0c0d238d842e600a6670756db",
+    "inherited_control_sidecars_keep_original_paths": true,
+    "manifest_sha256": "658ed0288da93a1c35d06fbd28225aaaff91da3304211daff0baae4e47873cfd",
+    "measured_guests_copied_byte_exact": true,
+    "prepared_utc": "2026-10-03T11:23:30.719212+00:00",
+    "qualification_review_is_separate_from_preparer": true,
+    "rebuild_allocated_sections_exact": true,
+    "reference_guests_copied_not_rebuilt": true
+  },
+  "decision": "One-round QBE VM screen reduces instructions0.6961% but increases cycles2.1280%; early-path regressions and no broad cycle gain; no wall matrix run."
+}

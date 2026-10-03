@@ -79,3 +79,11 @@ improves by more than 1%. The screen supplies no broad benefit, so this trial
 is also closed unselected without a wall matrix. The same compiler-screen
 package retains its 260 rows, independent proof/build qualification and sealed
 archive. These three variant trials now contain 1,840 validated observations.
+
+A subsequent QBE-only dispatch classifier preserves LLVM allocated code and
+all original comparison leaves, but trades added early-opcode work for shorter
+late-opcode paths. Its 156 smoke cells and 104 counter cells passed; QBE VM
+instructions fall 0.6961% while cycles rise 2.1280% in the one-round aggregate.
+The candidate remains unselected without a wall matrix. The
+[dispatch screen](../../experiments/lox-qbe-dispatch-screen-20261003/README.md)
+retains the 260 observations, separate full qualification and sealed archive.
