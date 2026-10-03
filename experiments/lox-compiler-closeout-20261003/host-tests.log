@@ -1,0 +1,19 @@
+test_corruption_missing_extra_objects_and_symlinks_refused (test_closeout.ArchiveTests.test_corruption_missing_extra_objects_and_symlinks_refused) ... ok
+test_create_deduplicate_relocate_and_original_identity (test_closeout.ArchiveTests.test_create_deduplicate_relocate_and_original_identity) ... ok
+test_evidence_growth_fails_and_preserves_failed_staging (test_closeout.ArchiveTests.test_evidence_growth_fails_and_preserves_failed_staging) ... ok
+test_new_receipt_between_validation_and_archive_refused (test_closeout.ArchiveTests.test_new_receipt_between_validation_and_archive_refused) ... ok
+test_overwrite_nested_destination_and_changed_symlink_refused (test_closeout.ArchiveTests.test_overwrite_nested_destination_and_changed_symlink_refused) ... ok
+test_only_build_caches_excluded_and_guards_override (test_closeout.InventoryTests.test_only_build_caches_excluded_and_guards_override) ... ok
+test_diagnostics_and_inconsistent_smoke_stats_refused (test_closeout.ReceiptTests.test_diagnostics_and_inconsistent_smoke_stats_refused) ... ok
+test_duplicate_cell_cannot_replace_missing_cell (test_closeout.ReceiptTests.test_duplicate_cell_cannot_replace_missing_cell) ... ok
+test_each_PMU_must_run_fully (test_closeout.ReceiptTests.test_each_PMU_must_run_fully) ... ok
+test_focused24_scope_is_distinct_and_exact (test_closeout.ReceiptTests.test_focused24_scope_is_distinct_and_exact) ... ok
+test_independent_paired_median_and_geomean (test_closeout.ReceiptTests.test_independent_paired_median_and_geomean) ... ok
+test_partial_and_wrong_ELF_refused (test_closeout.ReceiptTests.test_partial_and_wrong_ELF_refused) ... ok
+test_unknown_completed_phase_and_scope_refused (test_closeout.ReceiptTests.test_unknown_completed_phase_and_scope_refused) ... ok
+test_valid_protocol_cardinalities (test_closeout.ReceiptTests.test_valid_protocol_cardinalities) ... ok
+
+----------------------------------------------------------------------
+Ran 14 tests in 0.129s
+
+OK

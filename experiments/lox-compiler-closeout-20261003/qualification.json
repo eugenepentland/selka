@@ -1,0 +1,152 @@
+{
+  "checked_utc": "2026-10-03T10:16:12.399970+00:00",
+  "guest_or_compiler_execution": false,
+  "helper_files": {
+    "README.md": "5f9ead2300988eabf7472d39356ef0b4eb317dc04810548f1e0160985da43390",
+    "archive.py": "d8b3ce7268120cc45edcf081c01000071bba217f6365d2dd8b46ca535ed2794d",
+    "closeout.py": "1213ada982524144051b8be89241b385fa1fbaa2012f869a3eaa1ec1cfb37353",
+    "test_closeout.py": "c7e1100665afab7b8e017d809f27c82013c1fe237349a598b1f33ce806eaa8e3",
+    "validation.py": "3a69975598ba52ff54591ab2b8c3348c248a1d625a1625810e2956d59afa636a"
+  },
+  "host_tests": {
+    "argv": [
+      "taskset",
+      "-c",
+      "16",
+      "/usr/bin/python3",
+      "-B",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-vm-stack-read-20261003/experiments/lox-compiler-closeout-20261003",
+      "-p",
+      "test_*.py",
+      "-v"
+    ],
+    "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-vm-stack-read-20261003",
+    "log": "host-tests.log",
+    "log_sha256": "c11fc1e528b52d8d3f5b517f0b48fc0d570b00f17a09e8dcedd1237320345d89",
+    "passed": 14,
+    "status": 0,
+    "synthetic_archive_mutations_only": true,
+    "synthetic_archive_tests_authorized_by_root": true
+  },
+  "performance_execution": false,
+  "performance_selection_inferred": false,
+  "read_only_reports": [
+    {
+      "coverage": {
+        "focused_wall": {
+          "completed_rows": 0,
+          "present": false
+        },
+        "full_counters": {
+          "command_sha256": "819bc8b2daad8eb1fdd434b31dda24585c05fafd2b0f70dcca61a8a72fd14a0b",
+          "completed_rows": 468,
+          "partial_matrix_not_selection": false,
+          "phase": "counters",
+          "present": true,
+          "receipt": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-variant-screen-reviewed/counters.json",
+          "rounds": 3,
+          "sha256": "20d7443a0205d6b525a82eb88492d21b2defee754929f4c73b1ad669f66b18e8",
+          "tier": "tree"
+        },
+        "full_wall": {
+          "command_sha256": "9fa199eba641d651d63a747980521c6bf29a5418cbc7a5983b1ee0f926596315",
+          "completed_rows": 468,
+          "partial_matrix_not_selection": false,
+          "phase": "time",
+          "present": true,
+          "receipt": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-variant-screen-reviewed/wall.json",
+          "rounds": 3,
+          "sha256": "854db94be4c854f67dfdbaaf88f60f5f2214898c0afcf4b2f2a68c626f445b6a",
+          "tier": "timed"
+        },
+        "screen": {
+          "command_sha256": "8d630e833965077c43cf7d75da04f55329958f376abcc714bef8abcf445f5191",
+          "completed_rows": 104,
+          "partial_matrix_not_selection": false,
+          "phase": "counters",
+          "present": true,
+          "receipt": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-variant-screen-reviewed/instruction-screen.json",
+          "rounds": 1,
+          "sha256": "aef98c7090c32e0f8421a026f505d1d613652f918298d52d5cfccb6d1094ff4f",
+          "tier": "tree"
+        },
+        "smoke": {
+          "command_sha256": "d86ba3c0c91200dd731cacf4d7ec94cca1bb5a5b0322892546e32d774637d151",
+          "completed_rows": 156,
+          "partial_matrix_not_selection": false,
+          "phase": "check",
+          "present": true,
+          "receipt": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-variant-screen-reviewed/smoke.json",
+          "rounds": 1,
+          "sha256": "c47da2d9cab222836298232596f0918d5a5d008a4c4666036edd919c784c1bf9",
+          "tier": "smoke"
+        }
+      },
+      "full_ELF_section_recheck": true,
+      "guards": 223,
+      "report": "native-read-only-report.json.gz",
+      "report_sha256": "b727f75bf90f04ab664a3288fe10d57cab1ce534f67891866642b327526611b1",
+      "saved_analyses": 5,
+      "unarchived": true,
+      "work": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-variant-screen-reviewed"
+    },
+    {
+      "coverage": {
+        "focused_wall": {
+          "command_sha256": "a4861a9a55789e28aeea830b67555ef1f6a1e76105149eea27f19b9d7a4c699d",
+          "completed_rows": 24,
+          "partial_matrix_not_selection": true,
+          "phase": "time",
+          "present": true,
+          "receipt": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-variant-wide-screen-reviewed/focused-wall.json",
+          "rounds": 3,
+          "sha256": "553e399e5a0fc09f9906263f6a50f0d807fd97e05a92b051cdeaa934c8249608",
+          "tier": "timed"
+        },
+        "full_counters": {
+          "completed_rows": 0,
+          "present": false
+        },
+        "full_wall": {
+          "completed_rows": 0,
+          "present": false
+        },
+        "screen": {
+          "command_sha256": "2f6c5629b754f331cb55eca8593ae05b26268aa4a7c9ad02f78d9dc0d9df5a2b",
+          "completed_rows": 104,
+          "partial_matrix_not_selection": false,
+          "phase": "counters",
+          "present": true,
+          "receipt": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-variant-wide-screen-reviewed/instruction-screen.json",
+          "rounds": 1,
+          "sha256": "b32001a5c1ab1432a3064f50e416585a3b18ef104b2a48b540717c2cf43ee439",
+          "tier": "tree"
+        },
+        "smoke": {
+          "command_sha256": "85a23268945120d9f1b68304228a886fd52510beb58b0b3659feb43b84be5d0a",
+          "completed_rows": 156,
+          "partial_matrix_not_selection": false,
+          "phase": "check",
+          "present": true,
+          "receipt": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-variant-wide-screen-reviewed/smoke.json",
+          "rounds": 1,
+          "sha256": "2eb24552a1a0fe6e82f825691a2918960cce2359d40a8d02a91e49787876da1e",
+          "tier": "smoke"
+        }
+      },
+      "full_ELF_section_recheck": true,
+      "guards": 223,
+      "report": "wide-read-only-report.json.gz",
+      "report_sha256": "6198205a8ff39d0a67215833b0ac64ae9c68cacf5e51a91af7efa8df7badfdab",
+      "saved_analyses": 2,
+      "unarchived": true,
+      "work": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-variant-wide-screen-reviewed"
+    }
+  ],
+  "root_work_archive_created": false,
+  "version": "lox-compiler-closeout-qualification-v1"
+}
