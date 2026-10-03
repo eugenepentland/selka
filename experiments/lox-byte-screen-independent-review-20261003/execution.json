@@ -1,0 +1,28 @@
+{
+  "argv": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-ast-bytecode-20261003/scripts/build-slot.sh",
+    "build",
+    "python3",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-ast-bytecode-20261003/experiments/lox-byte-screen-independent-review-20261003/review.py",
+    "--root",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003",
+    "--author",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-vm-bytecode-20261003",
+    "--out",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-ast-bytecode-20261003/experiments/lox-byte-screen-independent-review-20261003/review.json"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-ast-bytecode-20261003",
+  "tmpdir": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-ast-bytecode-20261003/.tmp-lox-byte-review-20261003/tmp",
+  "started_utc": "2026-10-03T06:18:51.551243+00:00",
+  "finished_utc": "2026-10-03T06:18:51.875313+00:00",
+  "status": 0,
+  "review_script_sha256": "ca02b3c27772e0278f700a6ef7f5e461482ddd79a9e3c2b23155abc78448703d",
+  "review_sha256": "ed5410daa4e6f07d212835b697c2df822a80c19864cb5a25d1983085d017910d",
+  "log": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-ast-bytecode-20261003/.tmp-lox-byte-review-20261003/review.log",
+  "log_sha256": "78580200551822c1e87d83afac2e3716dfaa8f9ef6864dd95a866311d9ff6581",
+  "guest_or_perf_runs": 0,
+  "checker_preparation_corrections": [
+    "Reviewer initial constant expected 28 .my files; actual fully verified 37-file maps contain 26 .my files.",
+    "Reviewer initial raw binary map comparison expected all six manifest arms in counter receipt; corrected to exact four-counter-arm subset. Neither failure ran guests or modified root data."
+  ]
+}

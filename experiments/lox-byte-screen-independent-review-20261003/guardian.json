@@ -1,0 +1,17 @@
+{
+  "argv": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-ast-bytecode-20261003/scripts/build-slot.sh",
+    "gate",
+    "/home/epentland/ai/canopy/guardian-zig/zig-out/bin/guardian-check",
+    "all",
+    ".",
+    "--gate"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-ast-bytecode-20261003",
+  "tmpdir": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-ast-bytecode-20261003/.tmp-lox-byte-review-20261003/tmp",
+  "started_utc": "2026-10-03T06:18:07.285653+00:00",
+  "finished_utc": "2026-10-03T06:18:08.645175+00:00",
+  "status": 0,
+  "log": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-ast-bytecode-20261003/.tmp-lox-byte-review-20261003/guardian.log",
+  "log_sha256": "39212f26787595d5a8d5f322dde17b3095ce557eab377dbcb96c9acb97298771"
+}
