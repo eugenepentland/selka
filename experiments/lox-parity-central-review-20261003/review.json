@@ -1,0 +1,760 @@
+{
+  "reviewed_utc": "2026-10-03T02:12:33.214458+00:00",
+  "mode": "independent read-only provenance and math review; no measurements or root writes",
+  "reference_commit": "4e48a09220c2e018eba8c4b1eb3fe1137a3dae73",
+  "reference_source_hashes_verified_against_git": 127,
+  "completed_receipts": {
+    "baseline-check": {
+      "phase": "check",
+      "tier": "smoke",
+      "cpu": 10,
+      "cases": 26,
+      "arms": [
+        "baseline-llvm",
+        "baseline-qbe",
+        "go",
+        "rust"
+      ],
+      "rounds": 1,
+      "samples": 104,
+      "exact_coverage": true,
+      "all_outputs_status_diagnostics_and_check_stats_pass": true,
+      "binary_input_current_source_and_reference_hashes_pass": true,
+      "run_py_before_after_source_log_record": false,
+      "receipt_sha256": "b9dca73a2bbd8e7c37c991ceb7a210005a3635e9e9a262ff09ccaf27c54e2b98"
+    },
+    "baseline-counters": {
+      "phase": "counters",
+      "tier": "tree",
+      "cpu": 10,
+      "cases": 26,
+      "arms": [
+        "baseline-llvm",
+        "baseline-qbe",
+        "go",
+        "rust"
+      ],
+      "rounds": 3,
+      "samples": 312,
+      "exact_coverage": true,
+      "all_outputs_status_diagnostics_and_check_stats_pass": true,
+      "binary_input_current_source_and_reference_hashes_pass": true,
+      "run_py_before_after_source_log_record": false,
+      "receipt_sha256": "d2f37a48fe2f06fb3bf219c4578a8a08384ed88cac6b4c6ff4cdf17e0782be98"
+    },
+    "baseline-timing": {
+      "phase": "time",
+      "tier": "timed",
+      "cpu": 2,
+      "cases": 26,
+      "arms": [
+        "baseline-llvm",
+        "baseline-qbe",
+        "go",
+        "rust"
+      ],
+      "rounds": 3,
+      "samples": 312,
+      "exact_coverage": true,
+      "all_outputs_status_diagnostics_and_check_stats_pass": true,
+      "binary_input_current_source_and_reference_hashes_pass": true,
+      "run_py_before_after_source_log_record": false,
+      "receipt_sha256": "a0afcbf2a8e0b46501bcb9915bc26d98d269bea18d86d94ff86b8768e91d5c01"
+    },
+    "source-screen-check": {
+      "phase": "check",
+      "tier": "smoke",
+      "cpu": 10,
+      "cases": 26,
+      "arms": [
+        "baseline-llvm",
+        "baseline-qbe",
+        "table-scalar-llvm",
+        "table-scalar-qbe",
+        "tree-calls-llvm",
+        "tree-calls-qbe",
+        "tree-env-llvm",
+        "tree-env-qbe",
+        "tree-flat-llvm",
+        "tree-flat-qbe",
+        "tree-scalar-llvm",
+        "tree-scalar-qbe",
+        "tree-split-clean-llvm",
+        "tree-split-clean-qbe"
+      ],
+      "rounds": 1,
+      "samples": 364,
+      "exact_coverage": true,
+      "all_outputs_status_diagnostics_and_check_stats_pass": true,
+      "binary_input_current_source_and_reference_hashes_pass": true,
+      "run_py_before_after_source_log_record": false,
+      "receipt_sha256": "c769e6797f623294e84f9c366c939c72482cb235f0ddf1c956b3b9876f8f8347"
+    },
+    "source-screen-counters": {
+      "phase": "counters",
+      "tier": "tree",
+      "cpu": 10,
+      "cases": 5,
+      "arms": [
+        "baseline-llvm",
+        "table-scalar-llvm",
+        "tree-calls-llvm",
+        "tree-env-llvm",
+        "tree-flat-llvm",
+        "tree-scalar-llvm",
+        "tree-split-clean-llvm"
+      ],
+      "rounds": 2,
+      "samples": 70,
+      "exact_coverage": true,
+      "all_outputs_status_diagnostics_and_check_stats_pass": true,
+      "binary_input_current_source_and_reference_hashes_pass": true,
+      "run_py_before_after_source_log_record": false,
+      "receipt_sha256": "f30d38b5122097f4409a06addec5623ecebc3769b440b3af0ed3b6ece2431cc0"
+    },
+    "tree-screen-timing": {
+      "phase": "time",
+      "tier": "timed",
+      "cpu": 2,
+      "cases": 13,
+      "arms": [
+        "baseline-llvm",
+        "baseline-qbe",
+        "tree-final-flat-llvm",
+        "tree-final-flat-qbe",
+        "tree-scalar-llvm",
+        "tree-scalar-qbe"
+      ],
+      "rounds": 2,
+      "samples": 156,
+      "exact_coverage": true,
+      "all_outputs_status_diagnostics_and_check_stats_pass": true,
+      "binary_input_current_source_and_reference_hashes_pass": true,
+      "run_py_before_after_source_log_record": true,
+      "receipt_sha256": "c9aa8fd04b31c188fdcd4b1aa6953077556e061c4c22aafe81f5471d3d293bb7"
+    },
+    "tree-direct-screen-timing": {
+      "phase": "time",
+      "tier": "timed",
+      "cpu": 2,
+      "cases": 13,
+      "arms": [
+        "tree-final-flat-llvm",
+        "tree-final-flat-qbe",
+        "tree-flat-direct-llvm",
+        "tree-flat-direct-qbe"
+      ],
+      "rounds": 2,
+      "samples": 104,
+      "exact_coverage": true,
+      "all_outputs_status_diagnostics_and_check_stats_pass": true,
+      "binary_input_current_source_and_reference_hashes_pass": true,
+      "run_py_before_after_source_log_record": true,
+      "receipt_sha256": "0447cf38bb2d0d061d72bb7fd3ee308154cd21dc5c422c1929a4927ca6c313a4"
+    },
+    "positive-screen-check": {
+      "phase": "check",
+      "tier": "smoke",
+      "cpu": 10,
+      "cases": 26,
+      "arms": [
+        "baseline-llvm",
+        "baseline-qbe",
+        "positive-baseline-llvm",
+        "positive-baseline-qbe",
+        "positive-joined-flat-llvm",
+        "positive-joined-flat-qbe",
+        "source-joined-flat-llvm",
+        "source-joined-flat-qbe"
+      ],
+      "rounds": 1,
+      "samples": 208,
+      "exact_coverage": true,
+      "all_outputs_status_diagnostics_and_check_stats_pass": true,
+      "binary_input_current_source_and_reference_hashes_pass": true,
+      "run_py_before_after_source_log_record": true,
+      "receipt_sha256": "3064fa50abd233d3db6282a488741d28ed1638dade08230d14ba8f1c400267da"
+    },
+    "positive-screen-counters": {
+      "phase": "counters",
+      "tier": "tree",
+      "cpu": 10,
+      "cases": 26,
+      "arms": [
+        "baseline-llvm",
+        "baseline-qbe",
+        "positive-baseline-llvm",
+        "positive-baseline-qbe",
+        "positive-joined-flat-llvm",
+        "positive-joined-flat-qbe",
+        "source-joined-flat-llvm",
+        "source-joined-flat-qbe"
+      ],
+      "rounds": 1,
+      "samples": 208,
+      "exact_coverage": true,
+      "all_outputs_status_diagnostics_and_check_stats_pass": true,
+      "binary_input_current_source_and_reference_hashes_pass": true,
+      "run_py_before_after_source_log_record": true,
+      "receipt_sha256": "d8f452b9f0238beceb42ceb19f72d1bfbed78d6c8a133689410a78f39207e6d9"
+    },
+    "carrier-baseline-screen-counters": {
+      "phase": "counters",
+      "tier": "tree",
+      "cpu": 10,
+      "cases": 13,
+      "arms": [
+        "carrier-baseline-llvm",
+        "carrier-baseline-qbe",
+        "positive-baseline-llvm",
+        "positive-baseline-qbe"
+      ],
+      "rounds": 1,
+      "samples": 52,
+      "exact_coverage": true,
+      "all_outputs_status_diagnostics_and_check_stats_pass": true,
+      "binary_input_current_source_and_reference_hashes_pass": true,
+      "run_py_before_after_source_log_record": true,
+      "receipt_sha256": "323a878aec2f815888b5e7b314b3a558e9cd27ab3a52efa4f4cb0d09addfe98b"
+    },
+    "sweep-screen-check": {
+      "phase": "check",
+      "tier": "smoke",
+      "cpu": 10,
+      "cases": 26,
+      "arms": [
+        "final-sweep-llvm",
+        "final-sweep-qbe",
+        "positive-joined-flat-llvm",
+        "positive-joined-flat-qbe"
+      ],
+      "rounds": 1,
+      "samples": 104,
+      "exact_coverage": true,
+      "all_outputs_status_diagnostics_and_check_stats_pass": true,
+      "binary_input_current_source_and_reference_hashes_pass": true,
+      "run_py_before_after_source_log_record": true,
+      "receipt_sha256": "3487d06ec1173e097811395b626b422635a1ec053ec9882d6235172f1a7b9813"
+    },
+    "sweep-screen-counters": {
+      "phase": "counters",
+      "tier": "tree",
+      "cpu": 10,
+      "cases": 26,
+      "arms": [
+        "final-sweep-llvm",
+        "final-sweep-qbe",
+        "positive-joined-flat-llvm",
+        "positive-joined-flat-qbe"
+      ],
+      "rounds": 2,
+      "samples": 208,
+      "exact_coverage": true,
+      "all_outputs_status_diagnostics_and_check_stats_pass": true,
+      "binary_input_current_source_and_reference_hashes_pass": true,
+      "run_py_before_after_source_log_record": true,
+      "receipt_sha256": "88017da0f57fc55b20519fa68b595ef7038f3aba7038572ca300b4a31bef4d69"
+    },
+    "checkpoint-counters": {
+      "phase": "counters",
+      "tier": "tree",
+      "cpu": 10,
+      "cases": 26,
+      "arms": [
+        "baseline-llvm",
+        "baseline-qbe",
+        "final-sweep-llvm",
+        "final-sweep-qbe",
+        "go",
+        "rust"
+      ],
+      "rounds": 3,
+      "samples": 468,
+      "exact_coverage": true,
+      "all_outputs_status_diagnostics_and_check_stats_pass": true,
+      "binary_input_current_source_and_reference_hashes_pass": true,
+      "run_py_before_after_source_log_record": true,
+      "receipt_sha256": "059d4f69414ec539ddfe0c07ec7510f0b99ef2d1b17d6996fc843be281f17608"
+    },
+    "checkpoint-timing": {
+      "phase": "time",
+      "tier": "timed",
+      "cpu": 2,
+      "cases": 26,
+      "arms": [
+        "baseline-llvm",
+        "baseline-qbe",
+        "final-sweep-llvm",
+        "final-sweep-qbe",
+        "go",
+        "rust"
+      ],
+      "rounds": 3,
+      "samples": 468,
+      "exact_coverage": true,
+      "all_outputs_status_diagnostics_and_check_stats_pass": true,
+      "binary_input_current_source_and_reference_hashes_pass": true,
+      "run_py_before_after_source_log_record": true,
+      "receipt_sha256": "fe02c82a2ced8a89654fd78d4bfbfee190777e48f2064b558ecfb65e44831a4f"
+    }
+  },
+  "completed_observations": 2670,
+  "PMU": {
+    "counter_observations": 1318,
+    "percentage_fields": 5272,
+    "all_recorded_percentages": [
+      100.0
+    ],
+    "all_four_metrics_present": true
+  },
+  "analyses_independently_recomputed": [
+    {
+      "analysis": "baseline-instruction-ratios",
+      "comparison": "/baseline-llvm/rust",
+      "case_count": 26,
+      "engine_ratios": {
+        "vm": 2.5963767667510766,
+        "tree": 6.486344829530971
+      }
+    },
+    {
+      "analysis": "baseline-instruction-ratios",
+      "comparison": "/baseline-llvm/go",
+      "case_count": 26,
+      "engine_ratios": {
+        "vm": 2.1229989083863305,
+        "tree": 4.956160549527935
+      }
+    },
+    {
+      "analysis": "baseline-instruction-ratios",
+      "comparison": "/baseline-qbe/rust",
+      "case_count": 26,
+      "engine_ratios": {
+        "vm": 6.293922478194198,
+        "tree": 13.210269860733442
+      }
+    },
+    {
+      "analysis": "baseline-instruction-ratios",
+      "comparison": "/baseline-qbe/go",
+      "case_count": 26,
+      "engine_ratios": {
+        "vm": 5.146398818324609,
+        "tree": 10.093854125286931
+      }
+    },
+    {
+      "analysis": "baseline-wall-ratios",
+      "comparison": "/baseline-llvm/rust",
+      "case_count": 26,
+      "engine_ratios": {
+        "vm": 2.9737416538588786,
+        "tree": 8.233484783762542
+      }
+    },
+    {
+      "analysis": "baseline-wall-ratios",
+      "comparison": "/baseline-llvm/go",
+      "case_count": 26,
+      "engine_ratios": {
+        "vm": 3.0200343908230898,
+        "tree": 8.156662075800433
+      }
+    },
+    {
+      "analysis": "baseline-wall-ratios",
+      "comparison": "/baseline-qbe/rust",
+      "case_count": 26,
+      "engine_ratios": {
+        "vm": 5.873222621531466,
+        "tree": 12.765177968190057
+      }
+    },
+    {
+      "analysis": "baseline-wall-ratios",
+      "comparison": "/baseline-qbe/go",
+      "case_count": 26,
+      "engine_ratios": {
+        "vm": 5.958791075799346,
+        "tree": 12.553570726846502
+      }
+    },
+    {
+      "analysis": "source-screen-analysis",
+      "comparison": "/tree-env",
+      "case_count": 5,
+      "engine_ratios": {
+        "tree": 0.9309796810857522
+      }
+    },
+    {
+      "analysis": "source-screen-analysis",
+      "comparison": "/tree-split-clean",
+      "case_count": 5,
+      "engine_ratios": {
+        "tree": 0.7985176167478393
+      }
+    },
+    {
+      "analysis": "source-screen-analysis",
+      "comparison": "/tree-calls",
+      "case_count": 5,
+      "engine_ratios": {
+        "tree": 0.8222758185378475
+      }
+    },
+    {
+      "analysis": "source-screen-analysis",
+      "comparison": "/tree-flat",
+      "case_count": 5,
+      "engine_ratios": {
+        "tree": 0.6091555866957018
+      }
+    },
+    {
+      "analysis": "source-screen-analysis",
+      "comparison": "/tree-scalar",
+      "case_count": 5,
+      "engine_ratios": {
+        "tree": 0.6050089976542874
+      }
+    },
+    {
+      "analysis": "source-screen-analysis",
+      "comparison": "/table-scalar",
+      "case_count": 5,
+      "engine_ratios": {
+        "tree": 1.0006896573449209
+      }
+    },
+    {
+      "analysis": "tree-screen-timing-analysis",
+      "comparison": "/tree-final-flat-llvm",
+      "case_count": 13,
+      "engine_ratios": {
+        "tree": 0.5665682704447675
+      }
+    },
+    {
+      "analysis": "tree-screen-timing-analysis",
+      "comparison": "/tree-scalar-llvm",
+      "case_count": 13,
+      "engine_ratios": {
+        "tree": 0.6132117813061945
+      }
+    },
+    {
+      "analysis": "tree-screen-timing-analysis",
+      "comparison": "/tree-final-flat-qbe",
+      "case_count": 13,
+      "engine_ratios": {
+        "tree": 0.6173236012697785
+      }
+    },
+    {
+      "analysis": "tree-screen-timing-analysis",
+      "comparison": "/tree-scalar-qbe",
+      "case_count": 13,
+      "engine_ratios": {
+        "tree": 0.6732556308803331
+      }
+    },
+    {
+      "analysis": "tree-direct-screen-analysis",
+      "comparison": "/llvm",
+      "case_count": 13,
+      "engine_ratios": {
+        "tree": 0.9889008419410382
+      }
+    },
+    {
+      "analysis": "tree-direct-screen-analysis",
+      "comparison": "/qbe",
+      "case_count": 13,
+      "engine_ratios": {
+        "tree": 1.0064168981016268
+      }
+    },
+    {
+      "analysis": "positive-screen-analysis",
+      "comparison": "/source-joined-flat-over-baseline-llvm",
+      "case_count": 26,
+      "engine_ratios": {
+        "vm": 0.9934857129750067,
+        "tree": 0.6828328046732344
+      }
+    },
+    {
+      "analysis": "positive-screen-analysis",
+      "comparison": "/positive-baseline-over-baseline-llvm",
+      "case_count": 26,
+      "engine_ratios": {
+        "vm": 0.9827085610418254,
+        "tree": 0.9985510027692908
+      }
+    },
+    {
+      "analysis": "positive-screen-analysis",
+      "comparison": "/positive-joined-flat-over-source-joined-flat-llvm",
+      "case_count": 26,
+      "engine_ratios": {
+        "vm": 0.9836526715190808,
+        "tree": 0.9974482242068039
+      }
+    },
+    {
+      "analysis": "positive-screen-analysis",
+      "comparison": "/positive-joined-flat-over-baseline-llvm",
+      "case_count": 26,
+      "engine_ratios": {
+        "vm": 0.977244875683904,
+        "tree": 0.681090368451469
+      }
+    },
+    {
+      "analysis": "positive-screen-analysis",
+      "comparison": "/source-joined-flat-over-baseline-qbe",
+      "case_count": 26,
+      "engine_ratios": {
+        "vm": 0.9374531811177196,
+        "tree": 0.6334431217193516
+      }
+    },
+    {
+      "analysis": "positive-screen-analysis",
+      "comparison": "/positive-baseline-over-baseline-qbe",
+      "case_count": 26,
+      "engine_ratios": {
+        "vm": 1.0009488860791413,
+        "tree": 0.9987494455009516
+      }
+    },
+    {
+      "analysis": "positive-screen-analysis",
+      "comparison": "/positive-joined-flat-over-source-joined-flat-qbe",
+      "case_count": 26,
+      "engine_ratios": {
+        "vm": 1.0002645947738127,
+        "tree": 0.9979613168661707
+      }
+    },
+    {
+      "analysis": "positive-screen-analysis",
+      "comparison": "/positive-joined-flat-over-baseline-qbe",
+      "case_count": 26,
+      "engine_ratios": {
+        "vm": 0.9377012263301372,
+        "tree": 0.6321517319108622
+      }
+    },
+    {
+      "analysis": "carrier-screen-analysis",
+      "comparison": "/llvm",
+      "case_count": 13,
+      "engine_ratios": {
+        "tree": 0.9634168804289066
+      }
+    },
+    {
+      "analysis": "carrier-screen-analysis",
+      "comparison": "/qbe",
+      "case_count": 13,
+      "engine_ratios": {
+        "tree": 0.8889337574682704
+      }
+    },
+    {
+      "analysis": "sweep-screen-analysis",
+      "comparison": "/llvm",
+      "case_count": 26,
+      "engine_ratios": {
+        "vm": 0.987650392345498,
+        "tree": 0.944345173760253
+      }
+    },
+    {
+      "analysis": "sweep-screen-analysis",
+      "comparison": "/qbe",
+      "case_count": 26,
+      "engine_ratios": {
+        "vm": 0.9920054820682693,
+        "tree": 0.9600334775715832
+      }
+    },
+    {
+      "analysis": "checkpoint-counter-analysis",
+      "comparison": "/comparisons/final-sweep-llvm-over-baseline-llvm",
+      "case_count": 26,
+      "engine_ratios": {
+        "vm": 0.96517628757328,
+        "tree": 0.64318440028913
+      }
+    },
+    {
+      "analysis": "checkpoint-counter-analysis",
+      "comparison": "/comparisons/final-sweep-llvm-over-rust",
+      "case_count": 26,
+      "engine_ratios": {
+        "vm": 2.505961170767707,
+        "tree": 4.171915758474846
+      }
+    },
+    {
+      "analysis": "checkpoint-counter-analysis",
+      "comparison": "/comparisons/final-sweep-llvm-over-go",
+      "case_count": 26,
+      "engine_ratios": {
+        "vm": 2.046613006557106,
+        "tree": 3.184609368371658
+      }
+    },
+    {
+      "analysis": "checkpoint-counter-analysis",
+      "comparison": "/comparisons/final-sweep-qbe-over-baseline-qbe",
+      "case_count": 26,
+      "engine_ratios": {
+        "vm": 0.9302047573979751,
+        "tree": 0.6068868270161618
+      }
+    },
+    {
+      "analysis": "checkpoint-counter-analysis",
+      "comparison": "/comparisons/final-sweep-qbe-over-rust",
+      "case_count": 26,
+      "engine_ratios": {
+        "vm": 5.854636235267107,
+        "tree": 8.017138744361873
+      }
+    },
+    {
+      "analysis": "checkpoint-counter-analysis",
+      "comparison": "/comparisons/final-sweep-qbe-over-go",
+      "case_count": 26,
+      "engine_ratios": {
+        "vm": 4.7814686163149425,
+        "tree": 6.119839597828946
+      }
+    }
+  ],
+  "canonical_overlay_sha256": "233332c7b4fd1325f3ec1251406b0b433e87520f5abc4db9cfcc70e79813445b",
+  "canonical_replay_files": 37,
+  "positive_combined_guest_identity": "byte-identical for joined-flat and final-sweep, LLVM and QBE",
+  "checkpoint": {
+    "status": "complete_and_independently_verified",
+    "observed_samples": 468,
+    "planned_samples": 468,
+    "verified_after": true,
+    "aggregate_ratios_computed": true,
+    "comparisons": [
+      {
+        "baseline": "baseline-llvm",
+        "candidate": "final-sweep-llvm",
+        "engine_ratios": {
+          "vm": 0.9423359382393701,
+          "tree": 0.5176054871484589
+        }
+      },
+      {
+        "baseline": "rust",
+        "candidate": "final-sweep-llvm",
+        "engine_ratios": {
+          "vm": 2.7790567102399026,
+          "tree": 4.237093976208134
+        }
+      },
+      {
+        "baseline": "go",
+        "candidate": "final-sweep-llvm",
+        "engine_ratios": {
+          "vm": 2.811138663754498,
+          "tree": 4.131575585918608
+        }
+      },
+      {
+        "baseline": "baseline-qbe",
+        "candidate": "final-sweep-qbe",
+        "engine_ratios": {
+          "vm": 0.927489935044137,
+          "tree": 0.6042778168537833
+        }
+      },
+      {
+        "baseline": "rust",
+        "candidate": "final-sweep-qbe",
+        "engine_ratios": {
+          "vm": 5.50487408797016,
+          "tree": 7.6554209036924235
+        }
+      },
+      {
+        "baseline": "go",
+        "candidate": "final-sweep-qbe",
+        "engine_ratios": {
+          "vm": 5.560612015110737,
+          "tree": 7.472999564923115
+        }
+      }
+    ]
+  },
+  "raw_summary_rows_independently_verified": 1829,
+  "historical_initial_review_sha256": "14a59b774faea6cc230458b0593b9fe49c529b1622587e42bad3fb580110e24d",
+  "compiler_review_pending": "Root identified a try_result interior-edge omission in the positive-index certificate; the field-inout transfer proof has no finding. This read-only evidence review does not approve broad compiler integration or assume identity of a future rebuilt compiler.",
+  "implementation_review": {
+    "pairing": "Generic compare pairs same case/round and takes median of paired ratios; independent full coverage checks passed. Checkpoint analyze.py separately rejects incomplete/duplicate coverage, unexpected diagnostics, missing3rounds and non100 instruction PMU.",
+    "run_py": "Refuses output overwrite, checks all .my source hashes before/after and immutable manifest/log hash; strips MYLANG_/LD_PRELOAD. audit.py checks executable/input hashes after the run, exact pinned stdout/status, and collector work for smoke.",
+    "limitations": [
+      "Initial baseline and source-screen receipts do not all have run.py source-before/after command records; their audit-runner binary/input verification and present source hashes pass.",
+      "run.py source checks cover .my modules, not every metadata file; final37 file identity is separately checked here.",
+      "Generic compare alone does not reject missing whole rounds or duplicate sample identities; strict checkpoint wrapper and this independent review do.",
+      "Checkpoint instruction validation code checks instructions percentage only; this review checks all four PMU percentages for every completed counter observation.",
+      "One/two-round or five-case screening is diagnostic and cannot substitute for the completed matched3round reference checkpoint.",
+      "No claim of Rust/Go parity follows from screening gains or a pending checkpoint."
+    ]
+  },
+  "reviewed_implementation_sha256": {
+    "experiments/lox-parity-20261003/run.py": "dfacf759b940b94d019254ccdc45e8e01817cfc3acb78cdc090dd46061a22c7c",
+    "experiments/lox-parity-20261003/analyze.py": "f4e555cbe2814070c2542acb1a95bd0c58a69ce1fd7cc631ae1c93aa05e55397",
+    "experiments/lox-perf-improvements-20261002/analyze.py": "9ba4a07faf373997ab3785436781ba3efd19db781244a72d7599cc465ec230c9",
+    "experiments/lox-performance-audit-20261002/audit.py": "0ee538279303731db25abe208a784ace71bc539a454dc7e11dc9edfd1346de7d"
+  },
+  "reviewed_file_sha256": {
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-parity/binaries.json": "ca2229c2318b1fa395db0104edcbac3f2fe372c3107d4eee304f5d6b735382fd",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-parity/measurements/baseline-check.json": "b9dca73a2bbd8e7c37c991ceb7a210005a3635e9e9a262ff09ccaf27c54e2b98",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-parity/measurements/baseline-counters.json": "d2f37a48fe2f06fb3bf219c4578a8a08384ed88cac6b4c6ff4cdf17e0782be98",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-parity/measurements/baseline-timing.json": "a0afcbf2a8e0b46501bcb9915bc26d98d269bea18d86d94ff86b8768e91d5c01",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-parity/measurements/source-screen-check.json": "c769e6797f623294e84f9c366c939c72482cb235f0ddf1c956b3b9876f8f8347",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-parity/measurements/source-screen-counters.json": "f30d38b5122097f4409a06addec5623ecebc3769b440b3af0ed3b6ece2431cc0",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-parity/measurements/tree-screen-timing.json": "c9aa8fd04b31c188fdcd4b1aa6953077556e061c4c22aafe81f5471d3d293bb7",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-parity/measurements/tree-screen-timing.command.json": "5a9695529f2ad746e938c913a44c387401ba1915bb2d1edcccb2f6d47fe93afc",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-parity/measurements/tree-direct-screen-timing.json": "0447cf38bb2d0d061d72bb7fd3ee308154cd21dc5c422c1929a4927ca6c313a4",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-parity/measurements/tree-direct-screen-timing.command.json": "9916b74c509a3be56cc062cb784941b5f84435cba550611fa8aa4a27ab05ee63",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-parity/measurements/positive-screen-check.json": "3064fa50abd233d3db6282a488741d28ed1638dade08230d14ba8f1c400267da",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-parity/measurements/positive-screen-check.command.json": "e688b0547ca77162073543f6cd09e889262434e94e6c48acef18fafb71b58e9b",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-parity/measurements/positive-screen-counters.json": "d8f452b9f0238beceb42ceb19f72d1bfbed78d6c8a133689410a78f39207e6d9",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-parity/measurements/positive-screen-counters.command.json": "0045b4b8a8e804bd4be3eda48a99f104847cd5692d9f499968faf239db27b469",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-parity/measurements/carrier-baseline-screen-counters.json": "323a878aec2f815888b5e7b314b3a558e9cd27ab3a52efa4f4cb0d09addfe98b",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-parity/measurements/carrier-baseline-screen-counters.command.json": "a9c199a8b62517ed1205f0ac8010746aee6294bd8b7a12a68ecf849f26c2487d",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-parity/measurements/sweep-screen-check.json": "3487d06ec1173e097811395b626b422635a1ec053ec9882d6235172f1a7b9813",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-parity/measurements/sweep-screen-check.command.json": "f62873d7785410da398a198f46531793f6e91af4cd1a799c9fdbcd2d48374cf1",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-parity/measurements/sweep-screen-counters.json": "88017da0f57fc55b20519fa68b595ef7038f3aba7038572ca300b4a31bef4d69",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-parity/measurements/sweep-screen-counters.command.json": "1fb44ddda2fe8955308b85d3cb017ddffb9a96d5d9c0e7c08b70e177f55e5a33",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-parity/measurements/checkpoint-counters.json": "059d4f69414ec539ddfe0c07ec7510f0b99ef2d1b17d6996fc843be281f17608",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-parity/measurements/checkpoint-counters.command.json": "c30f16bf45d3e28dbf522b02e862f636f4369cbdaab5b0bd21b1e19b87617fed",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-parity/measurements/baseline-instruction-ratios.json": "63a8138d982ebbe06576f2414af6e147a99201ae705cddae003cd20050d4ac03",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-parity/measurements/baseline-wall-ratios.json": "90867ebc1aa4de154fb817aa365a11eed4a086a8a61891dec4cc8f0e3c74e224",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-parity/measurements/source-screen-analysis.json": "fad5ae43c201201e6a01d49d0c78ed18d56f8969656250d7a2baf126608d60d8",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-parity/measurements/tree-screen-timing-analysis.json": "ddb6e10fd00973d16e075f04e082c58252d12704038d6bbe944612751d116973",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-parity/measurements/tree-direct-screen-analysis.json": "c23e3ca20a60cd9d29f05795891bd581181fec8b1aadf14e504546cdcd1529bd",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-parity/measurements/positive-screen-analysis.json": "92b18bd68fcc274232c6fa3445e7458ddff2c5615f301a94c5ee30908138c5a7",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-parity/measurements/carrier-screen-analysis.json": "d19a25c2687f3f781e950f9d5ecef7983312a3db47509623f52a23dc291629fd",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-parity/measurements/sweep-screen-analysis.json": "5c53b0b0236940643ab47dc27392c509cb227391341b09d102bf1a0d2cdf3d18",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-parity/measurements/checkpoint-counter-analysis.json": "895f4edf762b8e57367705bef05c20e252293fc9fec3ac8f674a971f2204b946",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-parity/final-source.json": "5e3a83044800f0ec64111687e1fa6685fdd4b04cab98ee1a982692e2d984f3bb",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-parity/canonical-replay.json": "8be8eff2b79def6e4775497bf251a9895b1581963d2aa8942f63ceb1633e3806",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-parity/carrier-final-sweep-build.json": "5d31e0d863d79343b1683236e0c6a4f5bdfe8474e3b8b309e1fbba0e6b419353",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-parity/carrier-joined-flat-build.json": "f7dc88ce175a4610c934795ad4b152b53166ac6de542483d8222ea5385fbd9fd",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-parity/measurements/checkpoint-timing.json": "fe02c82a2ced8a89654fd78d4bfbfee190777e48f2064b558ecfb65e44831a4f",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-parity/measurements/checkpoint-timing.command.json": "ffe30cf63b1afff38f9e51027a97383f85388c546e9987f7cdfd022197fb2006"
+  }
+}

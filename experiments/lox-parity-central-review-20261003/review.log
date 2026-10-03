@@ -1,0 +1,9 @@
+{
+  "completed_observations": 2670,
+  "PMU_fields": 5272,
+  "analysis_comparisons": 38,
+  "checkpoint": "complete_and_independently_verified",
+  "checkpoint_samples": 468,
+  "sources": 11,
+  "reference_files": 127
+}
