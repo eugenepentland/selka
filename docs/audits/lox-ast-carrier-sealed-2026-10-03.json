@@ -1,0 +1,28 @@
+{
+  "archive": "/home/epentland/ai/canopy/evidence/lox-parity-20261003/ast-carrier",
+  "payloads": 2571,
+  "manifest_sha256": "c5b1b628b6a0c41b277a8944d5b007a051de638d1b866f58def483eec5c35139",
+  "runtime_objects": 22,
+  "unavailable_runtime_paths": 0,
+  "verified_after": true,
+  "source_archives": [
+    {
+      "repository": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003",
+      "revision": "30fc39973ede7446cde190a0c1e85185a08578d2",
+      "payload": "source/selected-tree.tar.gz",
+      "sha256": "7bf3196e1139fb94f4edfc04888cab148a0fda8c664537852e64726d579a0a33"
+    },
+    {
+      "repository": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003",
+      "revision": "44cd43078c51fc33ba1b52b86ffa48ce4f35b28c",
+      "payload": "source/control-tree.tar.gz",
+      "sha256": "e408fef6be530203280852cc720b4c8e977090efa8ea1a5a504648ba6b0379fc"
+    },
+    {
+      "repository": "/home/epentland/ai/canopy/guardian-zig",
+      "revision": "be0e9d90e0157b584d1c4d2543febe7a6f6d0635",
+      "payload": "source/guardian-tree.tar.gz",
+      "sha256": "5220c82869c9171820af22754cd7f13a4eb9dda25d1822761032089530ae6482"
+    }
+  ]
+}

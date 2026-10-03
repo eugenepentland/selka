@@ -71,3 +71,10 @@ receipts. The source84 constant trial and composed source85 passed qualification
 but are not selected. Checked byte-sized opcode storage is a separately
 qualified follow-on candidate awaiting measurement; its compiler guard remains
 isolated. `main` and the original dirty checkout remain unchanged.
+
+The completed checkpoint is sealed at
+`/home/epentland/ai/canopy/evidence/lox-parity-20261003/ast-carrier`:
+2,571 verified payloads, 22 referenced runtime objects, zero unavailable paths.
+`MANIFEST.sha256` is `c5b1b628b6a0c41b277a8944d5b007a051de638d1b866f58def483eec5c35139`.
+The archived selection/review tree is `30fc3997`; prior sealed archives remain
+unchanged. Later byte-source timing is outside this archive.
