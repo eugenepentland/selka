@@ -1,0 +1,55 @@
+{
+  "scope": "immutable current root protocol copied before prospective changes; no old helpers or receipts modified",
+  "files": {
+    "prepare.py": {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/experiments/lox-compiler-screen-20261003/prepare.py",
+      "sha256": "dd32313ae7d97d190ae00e6b9911f987381cce37d4d496ed05447a49577f9087"
+    },
+    "analyze.py": {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/experiments/lox-compiler-screen-20261003/analyze.py",
+      "sha256": "017b2e267ee4f5066902aa81a9066326fbd0a8d7ced183e86c9935ed1d598ded"
+    },
+    "build.py": {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/experiments/lox-compiler-screen-20261003/build.py",
+      "sha256": "d2e08c9a0a2f2774e185dd402185e7d361af3d954c0ac95e5adbfb51658ddf41"
+    },
+    "elf.py": {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/experiments/lox-compiler-screen-20261003/elf.py",
+      "sha256": "fae1359cc987d4e8010bbaa3a2c9340c2c80433042665cea04c5e2ec49716d47"
+    },
+    "closeout.py": {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/experiments/lox-compiler-closeout-20261003/closeout.py",
+      "sha256": "1213ada982524144051b8be89241b385fa1fbaa2012f869a3eaa1ec1cfb37353"
+    },
+    "validation.py": {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/experiments/lox-compiler-closeout-20261003/validation.py",
+      "sha256": "3a69975598ba52ff54591ab2b8c3348c248a1d625a1625810e2956d59afa636a"
+    },
+    "archive.py": {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/experiments/lox-compiler-closeout-20261003/archive.py",
+      "sha256": "d8b3ce7268120cc45edcf081c01000071bba217f6365d2dd8b46ca535ed2794d"
+    },
+    "test_closeout.py": {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/experiments/lox-compiler-closeout-20261003/test_closeout.py",
+      "sha256": "c7e1100665afab7b8e017d809f27c82013c1fe237349a598b1f33ce806eaa8e3"
+    }
+  },
+  "reused": {
+    "experiments/lox-parity-20261003/run.py": {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/experiments/lox-parity-20261003/run.py",
+      "sha256": "dfacf759b940b94d019254ccdc45e8e01817cfc3acb78cdc090dd46061a22c7c"
+    },
+    "experiments/lox-performance-audit-20261002/audit.py": {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/experiments/lox-performance-audit-20261002/audit.py",
+      "sha256": "0ee538279303731db25abe208a784ace71bc539a454dc7e11dc9edfd1346de7d"
+    },
+    "experiments/lox-perf-improvements-20261002/analyze.py": {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/experiments/lox-perf-improvements-20261002/analyze.py",
+      "sha256": "9ba4a07faf373997ab3785436781ba3efd19db781244a72d7599cc465ec230c9"
+    },
+    "scripts/build-slot.sh": {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/scripts/build-slot.sh",
+      "sha256": "352e0718bea105164ed444d61b6c4552e78dbb3062c1d1178c93c27e1be3cffa"
+    }
+  }
+}

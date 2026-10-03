@@ -1,0 +1,170 @@
+--- base/prepare.py
++++ v2/prepare.py
+@@ -10,6 +10,9 @@
+ import shutil
+ import subprocess
+ import sys
++sys.dont_write_bytecode = True
++
++from runtime_bindings import VERSION, derive, guard_inventory, helpers, verify_preparation
+ 
+ 
+ def sha(path):
+@@ -49,17 +52,20 @@
+     qbe = args.qbe.resolve()
+     assert sha(qbe) == controls['qbe_sha256']
+     qualified = {'llvm': args.qualified_llvm.resolve(), 'qbe': args.qualified_qbe.resolve()}
+-    helper_names = ('experiments/lox-compiler-screen-20261003/prepare.py',
+-                    'experiments/lox-compiler-screen-20261003/analyze.py',
+-                    'experiments/lox-compiler-screen-20261003/build.py',
++    helper_names = ('experiments/lox-compiler-runtime-protocol-20261003/prepare.py',
++                    'experiments/lox-compiler-runtime-protocol-20261003/analyze.py',
++                    'experiments/lox-compiler-runtime-protocol-20261003/build.py',
+                     'experiments/lox-parity-20261003/run.py',
+                     'experiments/lox-performance-audit-20261002/audit.py',
+                     'experiments/lox-perf-improvements-20261002/analyze.py',
+-                    'scripts/build-slot.sh', 'experiments/lox-compiler-screen-20261003/elf.py')
++                    'scripts/build-slot.sh', 'experiments/lox-compiler-runtime-protocol-20261003/elf.py')
+     originals = {str(p): sha(p) for p in (compiler, qbe, args.candidate_map.resolve(),
+                                          args.qualification.resolve(), *qualified.values())}
+     for name in helper_names:
+         originals[str(repo / name)] = sha(repo / name)
++    for path in helpers(repo):
++        originals[str(path)] = sha(path)
++    originals[str(control / 'binaries.json')] = sha(control / 'binaries.json')
+     for arm in ('ast-llvm', 'ast-qbe', 'rust', 'go'):
+         path = Path(controls['binaries'][arm])
+         assert sha(path) == controls['binary_sha256'][arm]
+@@ -96,7 +102,7 @@
+                 copied = Path(str(work / 'bin' / arm) + suffix)
+                 shutil.copy2(sidecar, copied)
+                 assert sha(copied) == sidecars[str(sidecar)]
+-    command = [sys.executable, str(repo / 'experiments/lox-compiler-screen-20261003/build.py'),
++    command = [sys.executable, str(repo / 'experiments/lox-compiler-runtime-protocol-20261003/build.py'),
+                '--work', str(work), '--source', str(work / 'candidate'),
+                '--compiler', str(compiler), '--qbe', str(qbe), '--name', 'rebuilt', '--runtime', 'rc']
+     env = {k: v for k, v in os.environ.items()
+@@ -106,7 +112,7 @@
+     save(work / 'prepare-command.json', {'argv': command, 'cwd': str(repo), 'status': result.returncode})
+     if result.returncode:
+         raise SystemExit(result.returncode)
+-    elf_spec = importlib.util.spec_from_file_location('elf', repo / 'experiments/lox-compiler-screen-20261003/elf.py')
++    elf_spec = importlib.util.spec_from_file_location('elf', repo / 'experiments/lox-compiler-runtime-protocol-20261003/elf.py')
+     elf = importlib.util.module_from_spec(elf_spec)
+     elf_spec.loader.exec_module(elf)
+     reproduction = {}
+@@ -145,18 +151,16 @@
+                 'source37': source_maps}
+     manifest['binary_sha256'] = {arm: sha(Path(path)) for arm, path in manifest['binaries'].items()}
+     save(work / 'binaries.json', manifest)
+-    guards = dict(originals)
+-    for root in ('baseline', 'candidate', 'reference', 'inputs', 'bin'):
+-        for p in sorted((work / root).rglob('*')):
+-            if p.is_file():
+-                guards[str(p)] = sha(p)
+-    for name in ('candidate-source37.json', 'author-qualification.json', 'binaries.json',
+-                 'rebuilt-build.json', 'rebuild-equivalence.json', 'prepare-command.json', 'prepare-build.log'):
+-        guards[str(work / name)] = sha(work / name)
+-    for backend in qualified:
+-        meta = json.loads((work / 'bin' / ('candidate-' + backend + '.qbe-manifest.json')).read_text())
+-        runtime = Path(meta['runtime_object'])
+-        guards[str(runtime)] = sha(runtime)
++    save(work / 'preparation-inputs.json', {
++        'protocol': VERSION, 'compiler': str(compiler), 'qbe': str(qbe),
++        'candidate_map': str(args.candidate_map.resolve()),
++        'qualification': str(args.qualification.resolve()),
++        'qualified': {backend: str(path) for backend, path in qualified.items()},
++        'control_binaries': str(control / 'binaries.json')})
++    save(work / 'runtime-bindings.json', derive(work))
++    guards = guard_inventory(work, repo)
++    for path, digest in originals.items():
++        assert sha(Path(path)) == digest, path
+     for path, digest in guards.items():
+         assert sha(Path(path)) == digest, path
+     for arm, values in source_maps.items():
+@@ -170,7 +174,10 @@
+                                  'qualification_review_is_separate_from_preparer': True,
+                                  'reference_guests_copied_not_rebuilt': True,
+                                  'manifest_sha256': sha(work / 'binaries.json'),
+-                                 'guards_sha256': sha(work / 'guards.json')})
++                                 'guards_sha256': sha(work / 'guards.json'),
++                                 'runtime_guard_protocol': VERSION,
++                                 'runtime_bindings_sha256': sha(work / 'runtime-bindings.json')})
++    verify_preparation(work, repo)
+     print(json.dumps({'work': str(work), 'guards': len(guards), 'rebuild_allocated_sections_exact': True, 'measured_guests_copied_byte_exact': True}))
+ 
+ 
+--- base/analyze.py
++++ v2/analyze.py
+@@ -5,6 +5,10 @@
+ import importlib.util
+ import json
+ from pathlib import Path
++import sys
++sys.dont_write_bytecode = True
++
++from runtime_bindings import VERSION, verify_preparation
+ 
+ 
+ def sha(path):
+@@ -42,7 +46,8 @@
+         if doc['phase'] == 'counters':
+             for name in ('instructions', 'cycles', 'branches', 'branch-misses'):
+                 assert sample[name + '_running_pct'] == 100
+-    guards = json.loads((work / 'guards.json').read_text())
++    repo = Path(__file__).resolve().parents[2]
++    guards = verify_preparation(work, repo)
+     for path, digest in guards.items():
+         assert sha(Path(path)) == digest, path
+     repo = Path(__file__).resolve().parents[2]
+@@ -57,6 +62,7 @@
+             comparisons[candidate + '-over-' + control] = paired.compare(doc, control, candidate, args.metric)
+     result = {'receipt': str(args.receipt.resolve()), 'receipt_sha256': sha(args.receipt),
+               'coverage_verified': True, 'stable_guards_after': len(guards),
++              'runtime_guard_protocol': VERSION,
+               'samples': len(actual), 'metric': args.metric, 'screen_only': args.screen,
+               'comparisons': comparisons}
+     args.out.write_text(json.dumps(result, indent=2) + '\n')
+--- base/validation.py
++++ v2/validation.py
+@@ -6,6 +6,8 @@
+ import re
+ import runpy
+ import statistics
++
++from runtime_bindings import VERSION, verify_preparation
+ 
+ FOUR = {name + "-" + backend for name in ("baseline", "candidate") for backend in ("llvm", "qbe")}
+ SIX = FOUR | {"rust", "go"}
+@@ -174,7 +176,10 @@
+     focused = {case["id"] for case in source["cases"]} == FOCUSED
+     require(metric in ("wall_s", "instructions", "cycles"), "unsupported analysis metric")
+     require((metric == "wall_s") == (source["phase"] == "time"), "analysis phase differs")
+-    require(doc.get("coverage_verified") is True and doc["stable_guards_after"] == 223, "analysis guard/coverage declaration differs")
++    prepared = load(work / "prepared.json")
++    require(doc.get("runtime_guard_protocol") == VERSION, "analysis runtime guard protocol differs")
++    require(doc.get("coverage_verified") is True and type(doc["stable_guards_after"]) is int and
++            doc["stable_guards_after"] == prepared["guards"], "analysis guard/coverage declaration differs")
+     require(doc["samples"] == len(source["samples"]) and doc["screen_only"] is screen, "analysis sample declaration differs")
+     require(not focused or doc.get("partial_matrix_not_selection") is True, "focused analysis must declare its partial scope")
+     expected = {}
+@@ -207,7 +212,7 @@
+     work = work.resolve()
+     manifest, prepared, guards = load(work / "binaries.json"), load(work / "prepared.json"), load(work / "guards.json")
+     validated_inventory = inventory(work, guards, [], [])
+-    require(len(guards) == prepared["guards"] == 223, "requires reviewed 223-guard protocol")
++    require(guards == verify_preparation(work, Path(__file__).resolve().parents[2]), "requires reviewed runtime-guards-v2 inventory")
+     require(sha(work / "guards.json") == prepared["guards_sha256"] and sha(work / "binaries.json") == prepared["manifest_sha256"], "preparation identity differs")
+     for path, digest in guards.items():
+         require(sha(path) == digest, "guard changed: " + path)
+@@ -337,7 +342,9 @@
+             metrics.append({"receipt": str(path), "receipt_sha256": sha(path), "metric": metric,
+                             "partial_matrix_not_selection": focused, "comparisons": comparisons})
+     require(inventory(work, guards, [], []) == validated_inventory, "work/guards changed or grew during validation")
+-    return {"version": "lox-compiler-closeout-v1", "work": str(work), "guards_verified": 223,
++    return {"version": "lox-compiler-closeout-v2", "runtime_guard_protocol": VERSION,
++            "work": str(work), "guards_verified": len(guards),
++            "runtime_bindings_sha256": sha(work / "runtime-bindings.json"),
+             "source37_exact": True, "qualified_RC_ELF_sidecars_exact": True,
+             "manifest_sha256": sha(work / "binaries.json"), "coverage": coverage, "analyses": analyses, "computed_metrics": metrics,
+             "validated_inventory": validated_inventory,
