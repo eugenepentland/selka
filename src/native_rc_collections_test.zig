@@ -2,6 +2,7 @@
 const std = @import("std");
 extern fn myl_rc_collections_verify() c_int;
 extern fn myl_rc_registered_release_verify() c_int;
+extern fn myl_rc_dictionary_scalar_verify() c_int;
 
 // spec: RC-STORAGE-1
 // spec: RC-COLLECTION-1
@@ -22,4 +23,9 @@ test "RC production storage and collection ownership" {
 // spec: RC-REGISTERED-RELEASE-1
 test "RC registered collection release preserves source admission" {
     try std.testing.expectEqual(@as(c_int, 13), myl_rc_registered_release_verify());
+}
+
+// spec: RC-DICT-SCALAR-INSERT-1
+test "RC scalar dictionary publication preserves probes and transactional boundaries" {
+    try std.testing.expectEqual(@as(c_int, 6), myl_rc_dictionary_scalar_verify());
 }

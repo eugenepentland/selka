@@ -1733,6 +1733,202 @@ static void dictionary_word_registration(void) {
     finish(&heap);
 }
 
+/* spec-case: RC-DICT-SCALAR-INSERT-1. Churn grows and compacts the table;
+ * misses, cached hits and collision chains must keep every value reachable. */
+static void scalar_dictionary_histories(void) {
+    myl_native_heap heap;
+    init(&heap);
+    myl_native_dictionary *dict=myl_native_dictionary_new(&heap,&number,&number,0);
+    assert(dict);
+    for (uint64_t i=0;i<400;i++) {
+        uint64_t key=(i*0x9e3779b97f4a7c15)^0x8000000000000000, value=i+11, output=0;
+        assert(!myl_native_dictionary_contains(dict,&key));
+        assert(myl_native_dictionary_write(&heap,dict,&key,&value));
+        assert(myl_native_dictionary_read(dict,&key,&output) && output==value);
+    }
+    for (uint64_t i=0;i<400;i+=2) {
+        uint64_t key=(i*0x9e3779b97f4a7c15)^0x8000000000000000, output=0;
+        assert(myl_rc_dictionary_pop(&heap,dict,&key,&output)==1 && output==i+11);
+    }
+    for (uint64_t i=400;i<800;i++) {
+        uint64_t key=(i*0x9e3779b97f4a7c15)^0x8000000000000000, value=i+11;
+        assert(myl_native_dictionary_write(&heap,dict,&key,&value));
+    }
+    for (uint64_t i=0;i<800;i++) {
+        uint64_t key=(i*0x9e3779b97f4a7c15)^0x8000000000000000, output=0;
+        int present=i>=400 || i%2;
+        assert(myl_native_dictionary_read(dict,&key,&output)==present);
+        if (present) assert(output==i+11);
+    }
+    myl_native_dictionary_reindex(&heap,dict);
+    uint64_t key=0x8000000000000000, value=99;
+    assert(!myl_native_dictionary_contains(dict,&key));
+    assert(myl_native_dictionary_write(&heap,dict,&key,&value));
+    myl_rc_dictionary_clear(&heap,dict);
+    assert(!myl_native_dictionary_contains(dict,&key));
+    assert(myl_native_dictionary_write(&heap,dict,&key,&value));
+    myl_rc_owner_release(&heap,dict);
+    finish(&heap);
+}
+/* spec-case: RC-DICT-SCALAR-INSERT-1. Key bytes borrowed from live backing
+ * survive repeated relocation; setdefault stages a value before its output. */
+static void scalar_dictionary_aliases(void) {
+    myl_native_heap heap;
+    init(&heap);
+    myl_native_dictionary *dict=myl_native_dictionary_new(&heap,&number,&number,0);
+    uint64_t key=0, value=1, output=0;
+    assert(dict && myl_native_dictionary_write(&heap,dict,&key,&value));
+    for (uint64_t i=1;i<130;i++) {
+        key=i-1; value=i+1;
+        const void *borrowed=myl_native_dictionary_find(dict,&key);
+        assert(borrowed && myl_native_dictionary_write(&heap,dict,borrowed,&value));
+        key=i;
+        assert(myl_native_dictionary_read(dict,&key,&output) && output==value);
+    }
+    assert(myl_rc_list_storage_reserve(&heap,dict->entries,256));
+    key=129;
+    void *borrowed=(void *)myl_native_dictionary_find(dict,&key);
+    key=2000;
+    assert(borrowed && myl_native_dictionary_setdefault(&heap,dict,&key,borrowed,borrowed));
+    assert(myl_native_dictionary_read(dict,&key,&output) && output==130);
+    myl_rc_owner_release(&heap,dict);
+    finish(&heap);
+}
+/* spec-case: RC-DICT-SCALAR-INSERT-1. Payload-free set duplicates allocate
+ * nothing, change no generation and retain destination-region admission. */
+static void scalar_dictionary_unit(void) {
+    static const myl_native_type unit={.size=0,.alignment=1,.kind=MYL_NATIVE_PLAIN};
+    static const myl_native_type byte={.size=1,.alignment=1,.kind=MYL_NATIVE_PLAIN};
+    myl_native_heap heap;
+    init(&heap);
+    myl_native_dictionary *set=myl_native_dictionary_new(&heap,&byte,&unit,0);
+    uint8_t key=255, value=0;
+    assert(set && myl_native_dictionary_write(&heap,set,&key,&value));
+    size_t bytes=heap.bytes, allocations=heap.allocations;
+    uint64_t generation=set->entries->generation;
+    heap.limit=bytes;
+    for (unsigned i=0;i<1000;i++) assert(myl_native_dictionary_write(&heap,set,&key,&value));
+    assert(myl_native_dictionary_contains(set,&key) && myl_native_dictionary_length(set)==1);
+    assert(heap.bytes==bytes && heap.allocations==allocations && set->entries->generation==generation);
+    heap.limit=0;
+    assert(myl_native_region_begin(&heap));
+    myl_native_dictionary *inner=myl_native_dictionary_new(&heap,&number,&unit,0);
+    uint64_t wide=1;
+    assert(inner && myl_native_dictionary_write(&heap,inner,&wide,&value));
+    heap.region_depth=0;
+    assert(!myl_native_dictionary_write(&heap,inner,&wide,&value));
+    assert(myl_rc_take_failure(&heap)==MYL_RC_REGION_ERROR);
+    heap.region_depth=1;
+    myl_native_region_end(&heap);
+    myl_rc_owner_release(&heap,set);
+    finish(&heap);
+}
+/* spec-case: RC-DICT-SCALAR-INSERT-1. Optional index allocation may fail
+ * without failing publication; mandatory backing failure commits nothing. */
+static void scalar_dictionary_refusals(void) {
+    myl_native_heap heap;
+    init(&heap);
+    myl_native_dictionary *dict=myl_native_dictionary_new(&heap,&number,&number,0);
+    assert(dict && myl_rc_list_storage_reserve(&heap,dict->entries,1024));
+    for (uint64_t key=0;key<5;key++) assert(myl_native_dictionary_write(&heap,dict,&key,&key));
+    heap.limit=heap.bytes;
+    uint64_t key=5, output=0;
+    myl_rc_record_failure(&heap,MYL_RC_COUNT_LIMIT);
+    assert(myl_native_dictionary_write(&heap,dict,&key,&key));
+    assert(!dict->index.capacity && myl_rc_take_failure(&heap)==MYL_RC_COUNT_LIMIT);
+    assert(myl_native_dictionary_read(dict,&key,&output) && output==5);
+    while (dict->entries->length<dict->entries->capacity) {
+        key=dict->entries->length;
+        assert(myl_native_dictionary_write(&heap,dict,&key,&key));
+    }
+    size_t length=dict->entries->length;
+    uint64_t generation=dict->entries->generation;
+    key=length;
+    heap.limit=1;
+    assert(!myl_native_dictionary_write(&heap,dict,&key,&key));
+    assert(dict->entries->length==length && dict->entries->generation==generation);
+    assert(myl_rc_take_failure(&heap)==MYL_RC_ALLOCATION_REFUSED);
+    assert(!myl_native_dictionary_contains(dict,&key));
+    heap.limit=0; heap.exhausted=0;
+    dict->entries->generation=UINT64_MAX;
+    assert(!myl_native_dictionary_write(&heap,dict,&key,&key));
+    assert(dict->entries->length==length);
+    dict->entries->generation=generation;
+    myl_rc_owner_release(&heap,dict);
+    finish(&heap);
+}
+static myl_native_dictionary *scalar_observed;
+static uint64_t scalar_source;
+static unsigned scalar_deaths;
+static void scalar_dictionary_observer(myl_native_heap *heap, void *payload) {
+    (void)heap; (void)payload;
+    uint64_t changed=99;
+    assert(myl_native_dictionary_length(scalar_observed)==1);
+    assert(!myl_native_dictionary_contains(scalar_observed,&changed));
+    scalar_source=changed;
+    scalar_deaths++;
+}
+/* spec-case: RC-DICT-SCALAR-INSERT-1. A queued callback sees the old map and
+ * may change the borrowed source and the last probe before insertion commits. */
+static void scalar_dictionary_queue(void) {
+    static const myl_native_type finalized={.size=8,.alignment=8,.kind=MYL_NATIVE_PLAIN};
+    static const myl_rc_descriptor descriptor={.type=&finalized,.shape=&flat_scalar,.finalize=scalar_dictionary_observer};
+    myl_native_heap heap;
+    init(&heap);
+    assert(myl_rc_descriptor_import(&heap,&descriptor)==MYL_RC_OK);
+    scalar_observed=myl_native_dictionary_new(&heap,&number,&number,0);
+    uint64_t key=1, value=3, output=0;
+    assert(scalar_observed && myl_native_dictionary_write(&heap,scalar_observed,&key,&value));
+    assert(myl_rc_list_storage_reserve(&heap,scalar_observed->entries,8));
+    void *doomed=myl_native_heap_alloc(&heap,&finalized,1);
+    assert(doomed);
+    scalar_source=7; scalar_deaths=0;
+    heap.rc->dead.active=1;
+    myl_rc_owner_release(&heap,doomed);
+    heap.rc->dead.active=0;
+    assert(heap.rc->dead.head && myl_native_dictionary_write(&heap,scalar_observed,&scalar_source,&scalar_source));
+    assert(scalar_deaths==1 && scalar_source==99 && !heap.rc->dead.head);
+    key=7;
+    assert(myl_native_dictionary_read(scalar_observed,&key,&output) && output==7);
+    assert(!myl_native_dictionary_contains(scalar_observed,&scalar_source));
+    myl_rc_owner_release(&heap,scalar_observed);
+    scalar_observed=NULL;
+    finish(&heap);
+}
+/* spec-case: RC-DICT-SCALAR-INSERT-1. A native plain kind may have a custom
+ * owning shape: new-key publication still refuses saturated pointer counts. */
+static void scalar_dictionary_custom(void) {
+    static const myl_native_type opaque={.size=8,.alignment=8,.kind=MYL_NATIVE_PLAIN};
+    static const myl_rc_descriptor descriptor={.type=&opaque,.shape=&flat_pointer};
+    myl_native_heap heap;
+    init(&heap);
+    assert(myl_rc_descriptor_import(&heap,&descriptor)==MYL_RC_OK);
+    myl_native_dictionary *dict=myl_native_dictionary_new(&heap,&number,&opaque,0);
+    void *value=myl_rc_storage_bytes(&heap,8,0);
+    uint64_t key=7;
+    assert(dict && value);
+    ((myl_rc_object *)value-1)->owners=MYL_RC_COUNT_MAX;
+    assert(!myl_native_dictionary_write(&heap,dict,&key,&value));
+    assert(myl_rc_take_failure(&heap)==MYL_RC_COUNT_LIMIT);
+    assert(!myl_native_dictionary_length(dict) && !myl_native_dictionary_contains(dict,&key));
+    ((myl_rc_object *)value-1)->owners=1;
+    assert(myl_native_dictionary_write(&heap,dict,&key,&value));
+    assert(owners(value)==2);
+    myl_rc_owner_release(&heap,dict);
+    myl_rc_owner_release(&heap,value);
+    finish(&heap);
+}
+
+int myl_rc_dictionary_scalar_verify(void) {
+    scalar_dictionary_histories();
+    scalar_dictionary_aliases();
+    scalar_dictionary_unit();
+    scalar_dictionary_refusals();
+    scalar_dictionary_queue();
+    scalar_dictionary_custom();
+    return 6;
+}
+
 int myl_rc_collections_verify(void) {
     storage_reuse_and_holds();
     storage_boundaries();
@@ -1786,7 +1982,8 @@ int myl_rc_collections_verify(void) {
 #ifndef MYL_RC_COLLECTIONS_LIBRARY
 int main(void) {
     assert(myl_rc_collections_verify()==47);
-    puts("native RC collections: 47 passed");
+    assert(myl_rc_dictionary_scalar_verify()==6);
+    puts("native RC collections: 53 passed");
     return 0;
 }
 #endif

@@ -723,17 +723,19 @@ static __attribute__((noinline)) int write_walk(myl_native_heap *heap, myl_nativ
     copy_value(dict,entry_at(dict,at.entry)+dict->value_offset,value);
     return 1;
 }
-/* A registered plain word has no old or new ownership obligation. Keep the
+/* A registered plain word or unit has no ownership obligation. Keep the
  * generic staged-source path whenever a callback, cold binding or invalid
  * region can affect publication. The word temporary also permits overlap. */
 static inline int rc_replace(myl_native_heap *heap, const myl_native_type *type,
                              void *target, const void *source, unsigned region) {
     if (target==source) return 1;
-    if (type->kind==MYL_NATIVE_PLAIN && type->size==8) {
+    if (type->kind==MYL_NATIVE_PLAIN && (type->size==8 || !type->size)) {
         if (!heap->rc->dead.head && region<=heap->region_depth && myl_rc_plain_type(heap,type)) {
-            uint64_t word;
-            memcpy(&word,source,8);
-            memcpy(target,&word,8);
+            if (type->size) {
+                uint64_t word;
+                memcpy(&word,source,8);
+                memcpy(target,&word,8);
+            }
             return 1;
         }
     }
@@ -1217,9 +1219,11 @@ static int rc_insert_result(myl_native_heap *heap, myl_native_dictionary *dict, 
         if (!owned) goto done;
         memcpy(scratch,&owned,sizeof owned);
     }
-    const myl_rc_descriptor *key_shape=myl_rc_descriptor_of(heap,dict->key);
-    const myl_rc_descriptor *value_shape=myl_rc_descriptor_of(heap,dict->value);
-    if (!key_shape || !value_shape) abort();
+    const myl_rc_binding *key_binding=myl_rc_binding_find(heap,dict->key);
+    const myl_rc_binding *value_binding=myl_rc_binding_find(heap,dict->value);
+    if (!key_binding || !value_binding) abort();
+    const myl_rc_descriptor *key_shape=&key_binding->descriptor;
+    const myl_rc_descriptor *value_shape=&value_binding->descriptor;
     myl_rc_slot targets[]={
         {.shape=key_shape->shape,.address=entry,.region=region},
         {.shape=value_shape->shape,.address=entry+dict->value_offset,.region=region},
@@ -1232,7 +1236,15 @@ static int rc_insert_result(myl_native_heap *heap, myl_native_dictionary *dict, 
     };
     void *key_payload;
     memcpy(&key_payload,scratch,sizeof key_payload);
-    if (key_shape->shape->kind==MYL_RC_SHAPE_POINTER && myl_rc_plain_type(heap,dict->value) &&
+    if (!heap->rc->dead.head && region<=heap->region_depth &&
+        !key_binding->flat.count && !key_binding->flat.native_unique &&
+        !value_binding->flat.count && !value_binding->flat.native_unique) {
+        /* RC-DICT-SCALAR-INSERT-1: registered edge-free entries publish only
+         * staged bytes. Keep queued callbacks, hooks and region refusal on the
+         * original transaction, including zero-width set values. */
+        memcpy(entry,scratch,width);
+        if (output) memcpy(result,scratch+dict->value_offset,dict->value->size);
+    } else if (key_shape->shape->kind==MYL_RC_SHAPE_POINTER && myl_rc_plain_type(heap,dict->value) &&
         (!key_payload || !(((myl_native_object *)key_payload-1)->mark&MYL_NATIVE_OBJECT_ARENA)) && region<=heap->region_depth) {
         /* RC-DICT-FAST-1: an ordinary pointer key and a plain value retain
          * without the generic walker: one owner for the key, bytes for the value. */
@@ -1244,15 +1256,25 @@ static int rc_insert_result(myl_native_heap *heap, myl_native_dictionary *dict, 
         myl_rc_status status=myl_rc_value_retain_many(heap,targets,sources,output?3:2);
         if (status!=MYL_RC_OK) { myl_rc_record_failure(heap,status); goto done; }
     }
-    uint32_t hash=hash_key(dict,entry);
+    /* An absence recorded by the walk survives only while the table is
+     * unchanged: reserve, compaction and every publisher invalidate it. Check
+     * the staged key after callbacks before reusing its hash and empty slot. */
+    uint64_t bits=0;
+    int recorded=record_key(dict,entry,&bits);
+    int absent=recorded && dict->last.state==PROBE_ABSENT && dict->last.key==bits;
+    uint32_t hash=absent?dict->last.hash:hash_key(dict,entry);
     uint64_t marker=((uint64_t)hash<<32)|1;
     memcpy(entry+width-8,&marker,8);
     size_t added=dict->entries->length;
     memcpy(entry_at(dict,added),entry,width);
     dict->entries->length++;
     dict->entries->generation++;
-    if (dict->index.capacity) index_place(&dict->index,pack_slot(hash,added));
-    dict->last.state=PROBE_NONE;
+    if (dict->index.capacity) {
+        if (absent) dict->index.slots[dict->last.slot]=pack_slot(hash,added);
+        else index_place(&dict->index,pack_slot(hash,added));
+    }
+    dict->last=recorded?(myl_native_dictionary_probe){.key=bits,.entry=added,.state=PROBE_FOUND}:
+        (myl_native_dictionary_probe){.state=PROBE_NONE};
     if (output) memcpy(output,result,dict->value->size);
     ok=1;
 done:
