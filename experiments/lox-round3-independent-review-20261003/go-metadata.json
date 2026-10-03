@@ -1,0 +1,29 @@
+{
+  "scope": "read-only host Go metadata inspection; no guest or perf execution",
+  "argv": [
+    "/home/epentland/.local/bin/go",
+    "version",
+    "-m",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/bin/go",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/fresh-rebuild/bin/go"
+  ],
+  "status": 0,
+  "stdout": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/bin/go: go1.27.0\n\tpath\tlox/cmd/lox\n\tmod\tlox\t(devel)\t\n\tbuild\t-buildmode=exe\n\tbuild\t-compiler=gc\n\tbuild\tCGO_ENABLED=1\n\tbuild\tCGO_CFLAGS=\n\tbuild\tCGO_CPPFLAGS=\n\tbuild\tCGO_CXXFLAGS=\n\tbuild\tCGO_LDFLAGS=\n\tbuild\tGOARCH=amd64\n\tbuild\tGOOS=linux\n\tbuild\tGOAMD64=v1\n/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/fresh-rebuild/bin/go: go1.27.0\n\tpath\tlox/cmd/lox\n\tmod\tlox\t(devel)\t\n\tbuild\t-buildmode=exe\n\tbuild\t-compiler=gc\n\tbuild\tCGO_ENABLED=1\n\tbuild\tCGO_CFLAGS=\n\tbuild\tCGO_CPPFLAGS=\n\tbuild\tCGO_CXXFLAGS=\n\tbuild\tCGO_LDFLAGS=\n\tbuild\tGOARCH=amd64\n\tbuild\tGOOS=linux\n\tbuild\tGOAMD64=v1\n",
+  "stderr": "",
+  "tool_sha256": "1db869c560a193573a71be466a34e0d4abb7792d78165c6102cdda069276a3a8",
+  "binary_sha256": {
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/bin/go": "dda2184ecbe1398769096fb284ccf451054e1ce6ff9d92797cdcd153135ca7e3",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/fresh-rebuild/bin/go": "e33197ce09372ba487671ca1bb7be027f4e36cd273418875d021281bcc7f0f09"
+  },
+  "matching_reported_build_metadata": true,
+  "vcs_entries_absent": true,
+  "observed_distinct_absolute_source_paths": {
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/bin/go": [
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-perf-audit-20261002/.tmp-lox-audit/reference/benchmarks/lox/ports/go/internal/scanner/scanner.go"
+    ],
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/fresh-rebuild/bin/go": [
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/fresh-rebuild/reference/benchmarks/lox/ports/go/internal/scanner/scanner.go"
+    ]
+  },
+  "limit": "Path bytes differ; this does not prove the sole cause of all ELF byte differences."
+}
