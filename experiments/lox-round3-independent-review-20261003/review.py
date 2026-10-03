@@ -20,6 +20,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--root', type=Path, required=True)
     parser.add_argument('--out', type=Path, required=True)
+    parser.add_argument('--require-full', action='store_true', help='refuse a final receipt until all four original phases and analyses are complete')
     args = parser.parse_args()
     assert not args.out.exists(), 'choose a fresh receipt; historical reviews remain unchanged'
     root = args.root.resolve()
@@ -197,7 +198,7 @@ def main():
             expected_arms = {name + '-' + backend for name in ['baseline', 'ast', 'constant', 'combined'] for backend in ['llvm', 'qbe']}
             if path.stem not in ['source-smoke', 'source-screen-instructions']:
                 expected_arms |= {'rust', 'go'}
-                assert doc['rounds'] == 3 and doc['tier'] == 'timed' and len(doc['samples']) == 780
+                assert doc['rounds'] == 3 and doc['tier'] == ('timed' if doc['phase'] == 'time' else 'tree') and len(doc['samples']) == 780
             else:
                 assert doc['rounds'] == 1 and len(doc['samples']) == 208
             assert set(doc['binary_sha256']) == expected_arms
@@ -215,6 +216,7 @@ def main():
             continue
         input_path = Path(observed['receipt'])
         assert input_path.stem in docs
+        assert input_path.resolve() == (work / 'measurements' / (input_path.stem + '.json')).resolve()
         assert observed['coverage_verified'] and observed['receipt_sha256'] == audit.sha(input_path)
         assert observed['screen_only'] == (len(docs[input_path.stem]['binary_sha256']) == 8)
         controls = lambda backend: ['baseline-' + backend] + ([] if observed['screen_only'] else ['rust', 'go'])
@@ -224,16 +226,39 @@ def main():
         assert set(observed['comparisons']) == expected_comparisons
         assert observed['metric'] == ('instructions' if docs[input_path.stem]['phase'] == 'counters' else 'wall_s')
         analyses.append(audit.analysis(path, docs[input_path.stem]))
+    robustness_report = None
+    if args.require_full:
+        assert not pending
+        assert set(docs) == {'source-smoke', 'source-screen-instructions', 'source-timing', 'source-counters'}
+        assert len(analyses) == 3 and sum(len(a['comparisons']) for a in analyses) == 42
+        assert sum(len(d['samples']) for d in docs.values()) == 1976
+        assert docs['source-timing']['phase'] == 'time' and docs['source-counters']['phase'] == 'counters'
+        assert sum(r['all_pmu_rates_100_count'] for r in completed) == 3952
+        assert fresh_report and fresh_report['behavior_only_smoke']['actual_samples'] == 260
+        robustness_path = Path(__file__).with_name('wall-robustness.json')
+        assert audit.sha(robustness_path) == '23b7b7ac4661cafc3c5439a1949aee48c56180d2b3d7f061776afb009a0b86ea'
+        robustness = audit.load(robustness_path)
+        assert robustness['wall_sha256'] == audit.sha(work / 'measurements/source-timing.json')
+        assert robustness['analysis_sha256'] == audit.sha(work / 'measurements/source-wall-analysis.json')
+        assert robustness['all18_comparisons_arithmetic_verified']
+        robustness_report = {'path': str(robustness_path), 'sha256': audit.sha(robustness_path),
+                             'scope': 'descriptive per-round and omission sensitivity, not confidence intervals'}
     metadata_path = Path(__file__).with_name('go-metadata.json')
     go_metadata = audit.load(metadata_path)
     assert go_metadata['status'] == 0 and go_metadata['matching_reported_build_metadata'] and go_metadata['vcs_entries_absent']
     assert audit.sha(go_metadata['argv'][0]) == go_metadata['tool_sha256']
     for path, digest in go_metadata['binary_sha256'].items():
         assert audit.sha(path) == digest
+    historical_reviews = {}
+    for name, digest in [('initial-review.json', '2e860149cb23ac7245bc9f47a3f38b3b6b8626efa6b8e751d20a2437b9f1f9f3'),
+                         ('partial-review.json', '1828e9df32b09c6c5c1b5c50b8c152565228af1faa61c6ce265c848213811481')]:
+        assert audit.sha(Path(__file__).with_name(name)) == digest
+        historical_reviews[name] = {'sha256': digest, 'preserved_unchanged': True, 'added_to_current_row_count': False}
     for path, digest in list(audit.READS.items()):
         assert hashlib.sha256(Path(path).read_bytes()).hexdigest() == digest, ('changed during review', path)
     result = {'recorded_utc': datetime.datetime.now(datetime.timezone.utc).isoformat(),
-              'outcome': 'identities and completed phases pass; partial observations remain excluded',
+              'outcome': ('all completed factorial phases, reproduction and paired analyses pass'
+                          if args.require_full else 'identities and completed phases pass; partial observations remain excluded'),
               'manifest_sha256': expected_manifest, 'accepted_checkpoint_commit': manifest['checkpoint_commit'],
               'checkpoint_archive_manifest_sha256': manifest['checkpoint_archive_manifest'], 'source37_reports': source_reports,
               'combined_changed_files': changed, 'combined_patch_sha256': composition['patch_sha256'],
@@ -245,6 +270,8 @@ def main():
               'completed_observations_including_reproduction': sum(len(d['samples']) for d in docs.values()) +
                   (fresh_report['behavior_only_smoke']['actual_samples'] if fresh_report and 'behavior_only_smoke' in fresh_report else 0),
               'go_metadata_review_sha256': audit.sha(metadata_path),
+              'historical_partial_observations': historical_reviews,
+              'wall_robustness': robustness_report,
               'analyses': analyses, 'pending': pending, 'stable_read_input_count': len(audit.READS),
               'stable_read_identity_sha256': hashlib.sha256(json.dumps(audit.READS, sort_keys=True).encode()).hexdigest(),
               'guest_test_or_perf_executions': 0, 'source_root_or_archive_mutations': 0,
@@ -256,7 +283,7 @@ def main():
                          'The later prepare.py reconstructs source37 factorial maps from an accepted baseline archive; fresh Go is a distinct identity used only for behavior qualification, never measured timing replacement.',
                          'Reference toolchain versions, shim and actual sysroot executable hashes are post-build observations; full toolchains and exhaustive ambient flags are not archived.',
                          'Static source/test qualification is inherited from independent author reviews; this measurement audit runs no tests or guests.',
-                         'Rust/Go parity and adoption require full measurements; partial cells are never reported as passed.']}
+                         'Observed reductions do not establish Rust/Go parity or source adoption; historical partial snapshots are preserved without duplicate row counts.']}
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps(result, indent=2) + '\n')
     print(json.dumps({'out': str(args.out), 'sha256': hashlib.sha256(args.out.read_bytes()).hexdigest(),

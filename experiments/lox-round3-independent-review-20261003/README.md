@@ -1,5 +1,8 @@
 # Round3 independent evidence review
 
+The later [final closeout](final-closeout.md) records both complete780-row
+matrices and preserves the historical partial observations below.
+
 `initial-review.json` is a preserved **partial phase observation**, not a
 completed review of the full timing/counter matrices. Its 416 completed rows
 are the 208-row smoke and 208-row instruction screen. At that observation,

@@ -1,0 +1,597 @@
+{
+  "recorded_utc": "2026-10-03T05:02:30.921080+00:00",
+  "scope": "independent arithmetic and descriptive sensitivity of complete780 walls; no new runs or statistical significance claim",
+  "wall_sha256": "76aa55350abcc26fd7dc1f285641d1a352a0de30135b543990522b154a9c1964",
+  "analysis_sha256": "aefcc3964659c1837e458458655e5b5cdb5944e821810150d084e8c4f666edd4",
+  "all18_comparisons_arithmetic_verified": true,
+  "baseline_comparison_diagnostics": {
+    "ast-llvm-over-baseline-llvm": {
+      "vm": {
+        "reported_case_median_gm_reduction_pct": 0.2215834043131637,
+        "cases_faster": 6,
+        "cases_equal": 0,
+        "cases_slower": 7,
+        "median_per_case_paired_spread_pct": 3.028308261245259,
+        "maximum_per_case_paired_spread_pct": 28.017073637223255,
+        "per_round_all13_gm_reduction_pct": [
+          2.6113879725199296,
+          -0.9504094767158744,
+          0.06015251494975171
+        ],
+        "per_round_cases_faster": [
+          7,
+          6,
+          9
+        ],
+        "leave_one_round_out_case_median_gm_reduction_pct": [
+          -0.5001605518835994,
+          1.2396743334271765,
+          0.752781338178532
+        ],
+        "leave_one_case_out_case_median_gm_reduction_pct_range": [
+          -0.08085980990455433,
+          0.4493382262940604
+        ],
+        "slower_case_exceptions": {
+          "vm/binary_trees": {
+            "reduction_pct": -1.3898223964899703,
+            "paired_spread_pct": 15.065209351243482
+          },
+          "vm/closures": {
+            "reduction_pct": -0.5594477092974781,
+            "paired_spread_pct": 1.0120196110319872
+          },
+          "vm/equality": {
+            "reduction_pct": -1.2396327792448147,
+            "paired_spread_pct": 2.3388801948735356
+          },
+          "vm/method_call": {
+            "reduction_pct": -0.18205730479483595,
+            "paired_spread_pct": 9.985232495916089
+          },
+          "vm/strings": {
+            "reduction_pct": -1.7543137742429105,
+            "paired_spread_pct": 1.9537350415853678
+          },
+          "vm/trees": {
+            "reduction_pct": -2.5524603459728956,
+            "paired_spread_pct": 15.535522535434799
+          },
+          "vm/zoo_batch": {
+            "reduction_pct": -0.8616138165252085,
+            "paired_spread_pct": 3.028308261245259
+          }
+        }
+      },
+      "tree": {
+        "reported_case_median_gm_reduction_pct": 3.0540582327918897,
+        "cases_faster": 11,
+        "cases_equal": 0,
+        "cases_slower": 2,
+        "median_per_case_paired_spread_pct": 1.8162660914574535,
+        "maximum_per_case_paired_spread_pct": 36.17707307779821,
+        "per_round_all13_gm_reduction_pct": [
+          4.624321714485102,
+          -0.40340816820692016,
+          3.409792528088562
+        ],
+        "per_round_cases_faster": [
+          12,
+          10,
+          12
+        ],
+        "leave_one_round_out_case_median_gm_reduction_pct": [
+          1.4097945840478077,
+          3.9897346341983053,
+          2.0084471221863742
+        ],
+        "leave_one_case_out_case_median_gm_reduction_pct_range": [
+          2.687076845406211,
+          3.371694487856114
+        ],
+        "slower_case_exceptions": {
+          "tree/string_equality": {
+            "reduction_pct": -0.48946300078387406,
+            "paired_spread_pct": 1.8162660914574535
+          },
+          "tree/strings": {
+            "reduction_pct": -0.8400089365516283,
+            "paired_spread_pct": 15.501458302839985
+          }
+        }
+      }
+    },
+    "ast-qbe-over-baseline-qbe": {
+      "vm": {
+        "reported_case_median_gm_reduction_pct": 1.3970840316046784,
+        "cases_faster": 11,
+        "cases_equal": 0,
+        "cases_slower": 2,
+        "median_per_case_paired_spread_pct": 6.793914406180367,
+        "maximum_per_case_paired_spread_pct": 17.097106682890416,
+        "per_round_all13_gm_reduction_pct": [
+          0.27104826256402204,
+          1.9525112519441001,
+          1.7723700263041486
+        ],
+        "per_round_cases_faster": [
+          8,
+          11,
+          10
+        ],
+        "leave_one_round_out_case_median_gm_reduction_pct": [
+          1.828810904809619,
+          0.9367601811892778,
+          1.0736591913450777
+        ],
+        "leave_one_case_out_case_median_gm_reduction_pct_range": [
+          1.1734228461801388,
+          1.6840578743642753
+        ],
+        "slower_case_exceptions": {
+          "vm/binary_trees": {
+            "reduction_pct": -1.6598561758592867,
+            "paired_spread_pct": 15.776770867860268
+          },
+          "vm/trees": {
+            "reduction_pct": -2.1126428938762487,
+            "paired_spread_pct": 5.5863535085782905
+          }
+        }
+      },
+      "tree": {
+        "reported_case_median_gm_reduction_pct": 2.4807034292017582,
+        "cases_faster": 13,
+        "cases_equal": 0,
+        "cases_slower": 0,
+        "median_per_case_paired_spread_pct": 3.1310544555444624,
+        "maximum_per_case_paired_spread_pct": 10.846369429431052,
+        "per_round_all13_gm_reduction_pct": [
+          2.107742133220314,
+          3.400773399008361,
+          2.6732446296191648
+        ],
+        "per_round_cases_faster": [
+          10,
+          13,
+          13
+        ],
+        "leave_one_round_out_case_median_gm_reduction_pct": [
+          3.0245778113897392,
+          2.3770135794534575,
+          2.7306020252466645
+        ],
+        "leave_one_case_out_case_median_gm_reduction_pct_range": [
+          2.2643067791614513,
+          2.684211954665161
+        ],
+        "slower_case_exceptions": {}
+      }
+    },
+    "constant-llvm-over-baseline-llvm": {
+      "vm": {
+        "reported_case_median_gm_reduction_pct": 1.680174519704114,
+        "cases_faster": 6,
+        "cases_equal": 0,
+        "cases_slower": 7,
+        "median_per_case_paired_spread_pct": 10.07091551827332,
+        "maximum_per_case_paired_spread_pct": 25.757338161391576,
+        "per_round_all13_gm_reduction_pct": [
+          0.3735237760258081,
+          -1.7398399629545036,
+          5.084600194194855
+        ],
+        "per_round_cases_faster": [
+          3,
+          5,
+          10
+        ],
+        "leave_one_round_out_case_median_gm_reduction_pct": [
+          1.5286365077232356,
+          2.645361970113358,
+          -0.7993445262053589
+        ],
+        "leave_one_case_out_case_median_gm_reduction_pct_range": [
+          0.15182276919305515,
+          2.1986708282175638
+        ],
+        "slower_case_exceptions": {
+          "vm/binary_trees": {
+            "reduction_pct": -1.9805581751092927,
+            "paired_spread_pct": 10.07091551827332
+          },
+          "vm/invocation": {
+            "reduction_pct": -0.46434830469346267,
+            "paired_spread_pct": 25.757338161391576
+          },
+          "vm/method_call": {
+            "reduction_pct": -0.08164181484202615,
+            "paired_spread_pct": 6.1594543721531885
+          },
+          "vm/string_equality": {
+            "reduction_pct": -2.817970867889219,
+            "paired_spread_pct": 0.9021063268470376
+          },
+          "vm/strings": {
+            "reduction_pct": -4.760412914714429,
+            "paired_spread_pct": 2.600303115604482
+          },
+          "vm/zoo": {
+            "reduction_pct": -0.4022666238218786,
+            "paired_spread_pct": 10.255031661118082
+          },
+          "vm/zoo_batch": {
+            "reduction_pct": -2.088441207035352,
+            "paired_spread_pct": 18.2247514937664
+          }
+        }
+      },
+      "tree": {
+        "reported_case_median_gm_reduction_pct": 0.5875561033016119,
+        "cases_faster": 11,
+        "cases_equal": 0,
+        "cases_slower": 2,
+        "median_per_case_paired_spread_pct": 2.124806985387906,
+        "maximum_per_case_paired_spread_pct": 4.347049280690002,
+        "per_round_all13_gm_reduction_pct": [
+          0.6070108860792289,
+          0.4069199438851534,
+          0.5549081363803388
+        ],
+        "per_round_cases_faster": [
+          10,
+          7,
+          10
+        ],
+        "leave_one_round_out_case_median_gm_reduction_pct": [
+          0.4785434072094863,
+          0.5758941102808723,
+          0.49962446672334737
+        ],
+        "leave_one_case_out_case_median_gm_reduction_pct_range": [
+          0.505321003999537,
+          0.7263342537536355
+        ],
+        "slower_case_exceptions": {
+          "tree/binary_trees": {
+            "reduction_pct": -1.0929917611122608,
+            "paired_spread_pct": 3.9440559858615645
+          },
+          "tree/string_equality": {
+            "reduction_pct": -0.18876786260551004,
+            "paired_spread_pct": 1.1394001718054632
+          }
+        }
+      }
+    },
+    "constant-qbe-over-baseline-qbe": {
+      "vm": {
+        "reported_case_median_gm_reduction_pct": -1.2031400066884856,
+        "cases_faster": 1,
+        "cases_equal": 0,
+        "cases_slower": 12,
+        "median_per_case_paired_spread_pct": 5.641573613999581,
+        "maximum_per_case_paired_spread_pct": 16.865240070595508,
+        "per_round_all13_gm_reduction_pct": [
+          -1.4018354577221892,
+          -1.8748126851160896,
+          -2.071399585327094
+        ],
+        "per_round_cases_faster": [
+          3,
+          2,
+          3
+        ],
+        "leave_one_round_out_case_median_gm_reduction_pct": [
+          -2.0186061580664605,
+          -1.8035371876350181,
+          -1.6828092227423763
+        ],
+        "leave_one_case_out_case_median_gm_reduction_pct_range": [
+          -2.0853313111584226,
+          -0.8932024728938837
+        ],
+        "slower_case_exceptions": {
+          "vm/binary_trees": {
+            "reduction_pct": -1.9543551571032491,
+            "paired_spread_pct": 8.820211961147546
+          },
+          "vm/closures": {
+            "reduction_pct": -0.2501766033871533,
+            "paired_spread_pct": 8.36691904051754
+          },
+          "vm/equality": {
+            "reduction_pct": -3.8872352117450992,
+            "paired_spread_pct": 5.641573613999581
+          },
+          "vm/fib": {
+            "reduction_pct": -4.409695782006473,
+            "paired_spread_pct": 1.7620408898371325
+          },
+          "vm/invocation": {
+            "reduction_pct": -4.997497832107878,
+            "paired_spread_pct": 16.865240070595508
+          },
+          "vm/method_call": {
+            "reduction_pct": -0.3639348957205746,
+            "paired_spread_pct": 5.4444803094972976
+          },
+          "vm/properties": {
+            "reduction_pct": -1.9279892632890538,
+            "paired_spread_pct": 4.0200637853445045
+          },
+          "vm/string_equality": {
+            "reduction_pct": -2.3118447460988234,
+            "paired_spread_pct": 3.5559822883693544
+          },
+          "vm/strings": {
+            "reduction_pct": -1.209395677646663,
+            "paired_spread_pct": 1.7394078868408671
+          },
+          "vm/trees": {
+            "reduction_pct": -1.2997523703062397,
+            "paired_spread_pct": 16.17089677907245
+          },
+          "vm/zoo": {
+            "reduction_pct": -0.7466924297220734,
+            "paired_spread_pct": 7.128527243728003
+          },
+          "vm/zoo_batch": {
+            "reduction_pct": -1.7958679229923113,
+            "paired_spread_pct": 0.7197548819565349
+          }
+        }
+      },
+      "tree": {
+        "reported_case_median_gm_reduction_pct": -0.695516482831593,
+        "cases_faster": 1,
+        "cases_equal": 0,
+        "cases_slower": 12,
+        "median_per_case_paired_spread_pct": 3.2392575167153845,
+        "maximum_per_case_paired_spread_pct": 14.64209649527462,
+        "per_round_all13_gm_reduction_pct": [
+          -1.504461409286706,
+          0.7833220439130151,
+          -0.7252830330244153
+        ],
+        "per_round_cases_faster": [
+          4,
+          3,
+          4
+        ],
+        "leave_one_round_out_case_median_gm_reduction_pct": [
+          0.0024036524410964155,
+          -1.137226219037779,
+          -0.3994797581249765
+        ],
+        "leave_one_case_out_case_median_gm_reduction_pct_range": [
+          -0.7669434028444444,
+          -0.5945978296257426
+        ],
+        "slower_case_exceptions": {
+          "tree/binary_trees": {
+            "reduction_pct": -1.0374396647829132,
+            "paired_spread_pct": 1.8551143065403053
+          },
+          "tree/closures": {
+            "reduction_pct": -0.19445105467492674,
+            "paired_spread_pct": 6.616395769503379
+          },
+          "tree/equality": {
+            "reduction_pct": -0.2535547780929015,
+            "paired_spread_pct": 6.468858420850201
+          },
+          "tree/fib": {
+            "reduction_pct": -0.34334325600648974,
+            "paired_spread_pct": 0.7101983053735774
+          },
+          "tree/instantiation": {
+            "reduction_pct": -1.168422560289173,
+            "paired_spread_pct": 4.693456027452678
+          },
+          "tree/invocation": {
+            "reduction_pct": -0.0896567918609481,
+            "paired_spread_pct": 2.7438670424404923
+          },
+          "tree/method_call": {
+            "reduction_pct": -1.9144664559757718,
+            "paired_spread_pct": 10.95646734528086
+          },
+          "tree/properties": {
+            "reduction_pct": -1.7081365134915094,
+            "paired_spread_pct": 1.9676669494512775
+          },
+          "tree/string_equality": {
+            "reduction_pct": -0.07604691592164592,
+            "paired_spread_pct": 3.2392575167153845
+          },
+          "tree/strings": {
+            "reduction_pct": -0.4734167754571583,
+            "paired_spread_pct": 14.64209649527462
+          },
+          "tree/zoo": {
+            "reduction_pct": -0.9699640076631377,
+            "paired_spread_pct": 8.670301533038264
+          },
+          "tree/zoo_batch": {
+            "reduction_pct": -0.9958307369835939,
+            "paired_spread_pct": 2.169186117245024
+          }
+        }
+      }
+    },
+    "combined-llvm-over-baseline-llvm": {
+      "vm": {
+        "reported_case_median_gm_reduction_pct": 2.018139763755389,
+        "cases_faster": 10,
+        "cases_equal": 0,
+        "cases_slower": 3,
+        "median_per_case_paired_spread_pct": 9.346336329836,
+        "maximum_per_case_paired_spread_pct": 22.134524528749733,
+        "per_round_all13_gm_reduction_pct": [
+          3.0967014772144585,
+          -0.6415291851149973,
+          4.183205483450491
+        ],
+        "per_round_cases_faster": [
+          9,
+          6,
+          11
+        ],
+        "leave_one_round_out_case_median_gm_reduction_pct": [
+          1.6816244182049633,
+          3.5582430618932515,
+          1.1264903729677256
+        ],
+        "leave_one_case_out_case_median_gm_reduction_pct_range": [
+          1.420884224916763,
+          2.2097841108916327
+        ],
+        "slower_case_exceptions": {
+          "vm/closures": {
+            "reduction_pct": -0.18878961242501102,
+            "paired_spread_pct": 1.747260084934975
+          },
+          "vm/method_call": {
+            "reduction_pct": -0.31109878865922536,
+            "paired_spread_pct": 6.866123437922053
+          },
+          "vm/zoo_batch": {
+            "reduction_pct": -0.2391780158497836,
+            "paired_spread_pct": 2.9885717624030605
+          }
+        }
+      },
+      "tree": {
+        "reported_case_median_gm_reduction_pct": 2.224257985972422,
+        "cases_faster": 12,
+        "cases_equal": 0,
+        "cases_slower": 1,
+        "median_per_case_paired_spread_pct": 3.106916193347739,
+        "maximum_per_case_paired_spread_pct": 19.8929302211307,
+        "per_round_all13_gm_reduction_pct": [
+          4.223373123828489,
+          3.177070169896301,
+          1.9419633548300008
+        ],
+        "per_round_cases_faster": [
+          12,
+          10,
+          13
+        ],
+        "leave_one_round_out_case_median_gm_reduction_pct": [
+          2.5115382278832254,
+          3.0402353299650797,
+          3.613946703091442
+        ],
+        "leave_one_case_out_case_median_gm_reduction_pct_range": [
+          1.8701880977518015,
+          2.477671316279062
+        ],
+        "slower_case_exceptions": {
+          "tree/strings": {
+            "reduction_pct": -0.8685574419070141,
+            "paired_spread_pct": 11.800414251732258
+          }
+        }
+      }
+    },
+    "combined-qbe-over-baseline-qbe": {
+      "vm": {
+        "reported_case_median_gm_reduction_pct": 0.5156339003567378,
+        "cases_faster": 7,
+        "cases_equal": 0,
+        "cases_slower": 6,
+        "median_per_case_paired_spread_pct": 5.198868083767881,
+        "maximum_per_case_paired_spread_pct": 13.883682019557515,
+        "per_round_all13_gm_reduction_pct": [
+          0.7964042925222459,
+          1.5712939003983073,
+          0.21039425453279748
+        ],
+        "per_round_cases_faster": [
+          8,
+          8,
+          7
+        ],
+        "leave_one_round_out_case_median_gm_reduction_pct": [
+          0.8594999461602582,
+          0.470870025510306,
+          1.14032174129588
+        ],
+        "leave_one_case_out_case_median_gm_reduction_pct_range": [
+          0.07264936400451782,
+          0.94101630562895
+        ],
+        "slower_case_exceptions": {
+          "vm/binary_trees": {
+            "reduction_pct": -2.358231471890626,
+            "paired_spread_pct": 3.1474673724986153
+          },
+          "vm/equality": {
+            "reduction_pct": -2.5294619533806184,
+            "paired_spread_pct": 9.83544876836836
+          },
+          "vm/fib": {
+            "reduction_pct": -1.205037551489463,
+            "paired_spread_pct": 3.510657517833802
+          },
+          "vm/method_call": {
+            "reduction_pct": -0.2579015629582848,
+            "paired_spread_pct": 10.192397109753779
+          },
+          "vm/strings": {
+            "reduction_pct": -1.1538908331899744,
+            "paired_spread_pct": 8.285221505259553
+          },
+          "vm/trees": {
+            "reduction_pct": -4.733704614269074,
+            "paired_spread_pct": 13.883682019557515
+          }
+        }
+      },
+      "tree": {
+        "reported_case_median_gm_reduction_pct": 2.6681037015512277,
+        "cases_faster": 12,
+        "cases_equal": 0,
+        "cases_slower": 1,
+        "median_per_case_paired_spread_pct": 2.2823372215937443,
+        "maximum_per_case_paired_spread_pct": 13.377899875017459,
+        "per_round_all13_gm_reduction_pct": [
+          3.388682541139443,
+          3.3526479764468986,
+          2.7358058183301504
+        ],
+        "per_round_cases_faster": [
+          11,
+          12,
+          12
+        ],
+        "leave_one_round_out_case_median_gm_reduction_pct": [
+          3.021174538493676,
+          3.0385061322927176,
+          3.323745671226075
+        ],
+        "leave_one_case_out_case_median_gm_reduction_pct_range": [
+          2.48495682028409,
+          2.994149509158861
+        ],
+        "slower_case_exceptions": {
+          "tree/strings": {
+            "reduction_pct": -1.330986240198473,
+            "paired_spread_pct": 13.377899875017459
+          }
+        }
+      }
+    }
+  },
+  "limits": [
+    "Reported values are GM of case medians of paired ratios, not medians of round GMs.",
+    "A two-round median uses the arithmetic mean of its two paired ratios; omission diagnostics therefore have a different estimator from three-round medians.",
+    "Omission ranges are descriptive robustness checks, not confidence intervals, p-values or independent replication.",
+    "Instruction-flat AST VM wall movement and broad VM spreads warn against attributing every wall delta to a source mechanism.",
+    "Full counter results and semantic reviews remain separate acceptance evidence."
+  ],
+  "guest_test_or_perf_executions": 0,
+  "root_mutations": 0
+}
