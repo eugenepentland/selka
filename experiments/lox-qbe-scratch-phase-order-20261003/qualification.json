@@ -1,0 +1,66 @@
+{
+  "guardian": {
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-qbe-dispatch-20261003/scripts/build-slot.sh",
+      "gate",
+      "/home/epentland/ai/canopy/guardian-zig/zig-out/bin/guardian-check",
+      "all",
+      ".",
+      "--gate"
+    ],
+    "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-qbe-dispatch-20261003",
+    "environment": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-qbe-dispatch-20261003/.tmp-lox-scratch-phase-order-20261003/tmp",
+      "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-qbe-dispatch-20261003/.tmp-lox-scratch-phase-order-20261003/zig-global"
+    },
+    "finished": 1791035826.0385523,
+    "log_sha256": "1afc3be8850162888de80616d16df2a6639311047c61de94aeb567112b157e86",
+    "started": 1791035820.9922056,
+    "status": 0,
+    "tool_sha256": "d052f36983f7c352adc9ae2b88791859a25c5f9e6d4591c10e3402a140ea977d"
+  },
+  "inspection": {
+    "after": {
+      "experiments/lox-qbe-private-alias-ablation-20261003/archive-manifest.json": "80f34c62631907ebd46044e2afded1c2056feabdfa8e09391c5fee02806e64f6",
+      "experiments/lox-qbe-private-alias-ablation-20261003/originals.json.gz": "970dad759be9cf2ef2b64a2b768e913346e41ab3ef2579235263971a831152d2",
+      "experiments/lox-qbe-scratch-phase-order-20261003/README.md": "5001530d9f30cc44e9612955b28865da2a082fd7e037ab84a73b7d0094ccb6d7",
+      "experiments/lox-qbe-scratch-phase-order-20261003/inspect.py": "58bba2a7994aac8ca02dcb7577026d54572bb086cf1c0599cdc0b5b0e3f23935",
+      "scripts/build-slot.sh": "352e0718bea105164ed444d61b6c4552e78dbb3062c1d1178c93c27e1be3cffa",
+      "vendor/qbe/alias.c": "c210400e482f4ad2576d238d8cc411e0b1984ca57fb5d5ec849ed83fb6fd404f",
+      "vendor/qbe/fold.c": "3544071a30cc049320838f3bf44c1f83171117735fd2bb67959b2bc0a4431be8",
+      "vendor/qbe/load.c": "1b35c950499fa6c8d8a562ced54a531cd39adc384fc637922e69498e6bbb8b71",
+      "vendor/qbe/main.c": "868016acd52bacf84dc3c02633ecb4514d06b5057673b13bb5f3f40be26c98d5",
+      "vendor/qbe/mem.c": "4229d499db4186086b2d02ac78c983a6f31012d350bd281128ea61c037af4b65"
+    },
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-qbe-dispatch-20261003/scripts/build-slot.sh",
+      "build",
+      "python3",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-qbe-dispatch-20261003/experiments/lox-qbe-scratch-phase-order-20261003/inspect.py"
+    ],
+    "before": {
+      "experiments/lox-qbe-private-alias-ablation-20261003/archive-manifest.json": "80f34c62631907ebd46044e2afded1c2056feabdfa8e09391c5fee02806e64f6",
+      "experiments/lox-qbe-private-alias-ablation-20261003/originals.json.gz": "970dad759be9cf2ef2b64a2b768e913346e41ab3ef2579235263971a831152d2",
+      "experiments/lox-qbe-scratch-phase-order-20261003/README.md": "5001530d9f30cc44e9612955b28865da2a082fd7e037ab84a73b7d0094ccb6d7",
+      "experiments/lox-qbe-scratch-phase-order-20261003/inspect.py": "58bba2a7994aac8ca02dcb7577026d54572bb086cf1c0599cdc0b5b0e3f23935",
+      "scripts/build-slot.sh": "352e0718bea105164ed444d61b6c4552e78dbb3062c1d1178c93c27e1be3cffa",
+      "vendor/qbe/alias.c": "c210400e482f4ad2576d238d8cc411e0b1984ca57fb5d5ec849ed83fb6fd404f",
+      "vendor/qbe/fold.c": "3544071a30cc049320838f3bf44c1f83171117735fd2bb67959b2bc0a4431be8",
+      "vendor/qbe/load.c": "1b35c950499fa6c8d8a562ced54a531cd39adc384fc637922e69498e6bbb8b71",
+      "vendor/qbe/main.c": "868016acd52bacf84dc3c02633ecb4514d06b5057673b13bb5f3f40be26c98d5",
+      "vendor/qbe/mem.c": "4229d499db4186086b2d02ac78c983a6f31012d350bd281128ea61c037af4b65"
+    },
+    "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-qbe-dispatch-20261003",
+    "environment": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-qbe-dispatch-20261003/.tmp-lox-scratch-phase-order-20261003/tmp",
+      "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-qbe-dispatch-20261003/.tmp-lox-scratch-phase-order-20261003/zig-global"
+    },
+    "finished": 1791035787.5469193,
+    "scope": "read-only archived IL/dump report, no compiler/QBE/guest/performance execution",
+    "started": 1791035782.5099003,
+    "status": 0,
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stdout_sha256": "d677c5825cb19c1a9218881059e81159a806c515a1ceed6d799dd713efeb4703",
+    "verified_after": true
+  }
+}

@@ -1,0 +1,504 @@
+{
+  "byte_sites": [
+    {
+      "alias": "v624",
+      "block": "@next620",
+      "incoming_blocks": [
+        {
+          "block": "@i146",
+          "last_s0_store": "storel %v618, %s0"
+        }
+      ],
+      "load": "v627",
+      "load_instruction": "%v627 =l loadub %v624",
+      "same_block_prior_store": "storel 1, %s0"
+    },
+    {
+      "alias": "v779",
+      "block": "@next775",
+      "incoming_blocks": [
+        {
+          "block": "@i188",
+          "last_s0_store": "storel %v773, %s0"
+        }
+      ],
+      "load": "v782",
+      "load_instruction": "%v782 =l loadub %v779",
+      "same_block_prior_store": "storel 0, %s0"
+    },
+    {
+      "alias": "v2791",
+      "block": "@i765",
+      "incoming_blocks": [
+        {
+          "block": "@i715",
+          "last_s0_store": "storel 1, %s0"
+        },
+        {
+          "block": "@i717",
+          "last_s0_store": "storel 0, %s0"
+        },
+        {
+          "block": "@i719",
+          "last_s0_store": "storel 0, %s0"
+        },
+        {
+          "block": "@i721",
+          "last_s0_store": "storel 0, %s0"
+        },
+        {
+          "block": "@i725",
+          "last_s0_store": "storel %v2742, %s0"
+        },
+        {
+          "block": "@i729",
+          "last_s0_store": "storel 0, %s0"
+        },
+        {
+          "block": "@i731",
+          "last_s0_store": "storel 0, %s0"
+        },
+        {
+          "block": "@i733",
+          "last_s0_store": "storel 0, %s0"
+        },
+        {
+          "block": "@i737",
+          "last_s0_store": "storel %v2765, %s0"
+        },
+        {
+          "block": "@i747",
+          "last_s0_store": "storel 0, %s0"
+        },
+        {
+          "block": "@i749",
+          "last_s0_store": "storel 0, %s0"
+        },
+        {
+          "block": "@i751",
+          "last_s0_store": "storel 0, %s0"
+        },
+        {
+          "block": "@i755",
+          "last_s0_store": "storel %v2786, %s0"
+        },
+        {
+          "block": "@i759",
+          "last_s0_store": "storel 0, %s0"
+        },
+        {
+          "block": "@i761",
+          "last_s0_store": "storel 0, %s0"
+        },
+        {
+          "block": "@i763",
+          "last_s0_store": "storel 0, %s0"
+        }
+      ],
+      "load": "v2794",
+      "load_instruction": "%v2794 =l loadub %v2791",
+      "same_block_prior_store": null
+    },
+    {
+      "alias": "v3393",
+      "block": "@i935",
+      "incoming_blocks": [
+        {
+          "block": "@i926",
+          "last_s0_store": "storel 1, %s0"
+        },
+        {
+          "block": "@i928",
+          "last_s0_store": "storel %v3388, %s0"
+        },
+        {
+          "block": "@i931",
+          "last_s0_store": "storel 0, %s0"
+        },
+        {
+          "block": "@i933",
+          "last_s0_store": "storel 0, %s0"
+        }
+      ],
+      "load": "v3396",
+      "load_instruction": "%v3396 =l loadub %v3393",
+      "same_block_prior_store": null
+    }
+  ],
+  "conclusion": "no demonstrated bounded same-width forwarding candidate",
+  "inputs": {
+    "scratch/control.debug.stderr": {
+      "bytes": 1761496,
+      "sha256": "0f937e320c740d9c8fa461417fc6568232a909556dc39b1c8b10bd9223f55e51"
+    },
+    "scratch/control.s": {
+      "bytes": 200432,
+      "sha256": "6d1057ea3beb88c23053f8f462b2d231d402ab3239364319da52cdcf233c7413"
+    },
+    "scratch/control.ssa": {
+      "bytes": 314682,
+      "sha256": "33055cc51ba3cd8b6a5c17130a0594c4421677eeffe49c021877c5d3f9eff113"
+    },
+    "scratch/loadub-four.s": {
+      "bytes": 200432,
+      "sha256": "6d1057ea3beb88c23053f8f462b2d231d402ab3239364319da52cdcf233c7413"
+    },
+    "scratch/s0-five.s": {
+      "bytes": 200432,
+      "sha256": "6d1057ea3beb88c23053f8f462b2d231d402ab3239364319da52cdcf233c7413"
+    },
+    "scratch/s1-one.debug.stderr": {
+      "bytes": 1750822,
+      "sha256": "8f01c03afe4519545a755f85f562886582cffc2475ee6d251a588f68a2860b3b"
+    },
+    "scratch/s1-one.s": {
+      "bytes": 190879,
+      "sha256": "be899355f2b592775b11ad7ae6b08a156893c7ec930fb50ab2604a9215d93cd1"
+    }
+  },
+  "join_phis_from_actual_first_loadopt": [
+    "%ld.1880 =l phi @i715 1, @i717 0, @i719 0, @i721 0, @i725 %v2742, @i729 0, @i731 0, @i733 0, @i737 %v2765, @i747 0, @i749 0, @i751 0, @i755 %v2786, @i759 0, @i761 0, @i763 0",
+    "%ld.1972 =l phi @i926 1, @i928 %v3388, @i931 0, @i933 0"
+  ],
+  "limits": [
+    "No reaching-definition or all-path initialization certificate is proposed.",
+    "No load width, masking, byte conversion or native ABI is changed.",
+    "Alias reanalysis/recoalescing is a future investigation, not a soundness or ROI claim.",
+    "Pass source matches selected base; prior actual executable dumps establish observed behavior.",
+    "No dynamic frequency or hardware cause is inferred from static counts."
+  ],
+  "pass_order": [
+    "promote",
+    "ssa",
+    "fillalias",
+    "loadopt",
+    "fillalias",
+    "loadopt",
+    "fillalias",
+    "coalesce",
+    "gvn",
+    "gcm"
+  ],
+  "pinned_qbe_sha256": "99ad919d70ad582dee6202b045bd53e1ab18fec356de98849610f49983756d63",
+  "prior_archive_sha256": "970dad759be9cf2ef2b64a2b768e913346e41ab3ef2579235263971a831152d2",
+  "scope": "read-only existing IL, pass dumps and selected source; no new emission/guest/perf",
+  "selected_base": "3b33df52044a10cb84b908f8b1641af439e8c729",
+  "source_excerpts": {
+    "dead_store_removal": {
+      "first_line": 307,
+      "last_line": 317,
+      "text": "\t/* kill dead stores */\n\tfor (s=sl; s<&sl[nsl]; s++)\n\t\tfor (n=0; n<s->nst; n++)\n\t\t\tif (!rin(s->r, s->st[n].ip)) {\n\t\t\t\ti = s->st[n].i;\n\t\t\t\tif (i->op == Oblit0)\n\t\t\t\t\t*(i+1) = (Ins){.op = Onop};\n\t\t\t\t*i = (Ins){.op = Onop};\n\t\t\t}\n\n\t/* kill slots with an empty live range */"
+    },
+    "stores_mark_values_escaped": {
+      "first_line": 197,
+      "last_line": 205,
+      "text": "\t\t\tif (req(i->to, R) || a->type == AUnk)\n\t\t\tif (i->op != Oblit0) {\n\t\t\t\tif (!isload(i->op))\n\t\t\t\t\tesc(i->arg[0], fn);\n\t\t\t\tif (!isstore(i->op))\n\t\t\t\tif (i->op != Oargc)\n\t\t\t\t\tesc(i->arg[1], fn);\n\t\t\t}\n\t\t\tif (i->op == Oblit0) {"
+    },
+    "uniform_width_admission": {
+      "first_line": 28,
+      "last_line": 48,
+      "text": "\t\ts = -1;\n\t\tfor (u=t->use; u<&t->use[t->nuse]; u++) {\n\t\t\tif (u->type != UIns)\n\t\t\t\tgoto Skip;\n\t\t\tl = u->u.ins;\n\t\t\tif (isload(l->op))\n\t\t\tif (s == -1 || s == loadsz(l)) {\n\t\t\t\ts = loadsz(l);\n\t\t\t\tcontinue;\n\t\t\t}\n\t\t\tif (isstore(l->op))\n\t\t\tif (req(i->to, l->arg[1]) && !req(i->to, l->arg[0]))\n\t\t\tif (s == -1 || s == storesz(l))\n\t\t\tif (k == -1 || k == optab[l->op].argcls[0][0]) {\n\t\t\t\ts = storesz(l);\n\t\t\t\tk = optab[l->op].argcls[0][0];\n\t\t\t\tcontinue;\n\t\t\t}\n\t\t\tgoto Skip;\n\t\t}\n\t\t/* get rid of the alloc and replace uses */"
+    }
+  },
+  "sources": {
+    "vendor/qbe/alias.c": {
+      "bytes": 4416,
+      "selected_base_equal": true,
+      "sha256": "c210400e482f4ad2576d238d8cc411e0b1984ca57fb5d5ec849ed83fb6fd404f"
+    },
+    "vendor/qbe/fold.c": {
+      "bytes": 6288,
+      "selected_base_equal": true,
+      "sha256": "3544071a30cc049320838f3bf44c1f83171117735fd2bb67959b2bc0a4431be8"
+    },
+    "vendor/qbe/load.c": {
+      "bytes": 9910,
+      "selected_base_equal": true,
+      "sha256": "1b35c950499fa6c8d8a562ced54a531cd39adc384fc637922e69498e6bbb8b71"
+    },
+    "vendor/qbe/main.c": {
+      "bytes": 4132,
+      "selected_base_equal": true,
+      "sha256": "868016acd52bacf84dc3c02633ecb4514d06b5057673b13bb5f3f40be26c98d5"
+    },
+    "vendor/qbe/mem.c": {
+      "bytes": 9412,
+      "selected_base_equal": true,
+      "sha256": "4229d499db4186086b2d02ac78c983a6f31012d350bd281128ea61c037af4b65"
+    }
+  },
+  "stages": {
+    "control": [
+      {
+        "byte_definitions": {
+          "v2794": "%v2794 =l loadub %v2791",
+          "v3396": "%v3396 =l loadub %v3393",
+          "v627": "%v627 =l loadub %v624",
+          "v782": "%v782 =l loadub %v779"
+        },
+        "killed": [],
+        "s0": {
+          "allocations": 1,
+          "direct_loadl": 676,
+          "references": 1550,
+          "storel": 868
+        },
+        "s1": {
+          "allocations": 1,
+          "direct_loadl": 236,
+          "references": 474,
+          "storel": 236
+        },
+        "stage": "After slot promotion:"
+      },
+      {
+        "byte_definitions": {
+          "v2794": "%v2794 =l extub %ld.1880",
+          "v3396": "%v3396 =l extub %ld.1972",
+          "v627": "%v627 =l extub 1",
+          "v782": "%v782 =l extub 0"
+        },
+        "killed": [],
+        "s0": {
+          "allocations": 1,
+          "direct_loadl": 0,
+          "references": 874,
+          "storel": 868
+        },
+        "s1": {
+          "allocations": 1,
+          "direct_loadl": 0,
+          "references": 238,
+          "storel": 236
+        },
+        "stage": "After load elimination:"
+      },
+      {
+        "byte_definitions": {
+          "v2794": "%v2794 =l extub %ld.1880",
+          "v3396": "%v3396 =l extub %ld.1972",
+          "v627": "%v627 =l extub 1",
+          "v782": "%v782 =l extub 0"
+        },
+        "killed": [],
+        "s0": {
+          "allocations": 1,
+          "direct_loadl": 0,
+          "references": 874,
+          "storel": 868
+        },
+        "s1": {
+          "allocations": 1,
+          "direct_loadl": 0,
+          "references": 238,
+          "storel": 236
+        },
+        "stage": "After load elimination:"
+      },
+      {
+        "byte_definitions": {
+          "v2794": "%v2794 =l extub %ld.1880",
+          "v3396": "%v3396 =l extub %ld.1972",
+          "v627": "%v627 =l extub 1",
+          "v782": "%v782 =l extub 0"
+        },
+        "killed": [
+          "\tkill [ %s0 %s1 %s2 ]"
+        ],
+        "s0": {
+          "allocations": 0,
+          "direct_loadl": 0,
+          "references": 0,
+          "storel": 0
+        },
+        "s1": {
+          "allocations": 0,
+          "direct_loadl": 0,
+          "references": 0,
+          "storel": 0
+        },
+        "stage": "Slot coalescing:"
+      },
+      {
+        "byte_definitions": {
+          "v2794": "%v2794 =l extub %ld.1880",
+          "v3396": "%v3396 =l extub %ld.1972",
+          "v627": null,
+          "v782": null
+        },
+        "killed": [],
+        "s0": {
+          "allocations": 0,
+          "direct_loadl": 0,
+          "references": 0,
+          "storel": 0
+        },
+        "s1": {
+          "allocations": 0,
+          "direct_loadl": 0,
+          "references": 0,
+          "storel": 0
+        },
+        "stage": "After GVN:"
+      },
+      {
+        "byte_definitions": {
+          "v2794": "%v2794 =l extub %ld.1880",
+          "v3396": "%v3396 =l extub %ld.1972",
+          "v627": null,
+          "v782": null
+        },
+        "killed": [],
+        "s0": {
+          "allocations": 0,
+          "direct_loadl": 0,
+          "references": 0,
+          "storel": 0
+        },
+        "s1": {
+          "allocations": 0,
+          "direct_loadl": 0,
+          "references": 0,
+          "storel": 0
+        },
+        "stage": "After GCM:"
+      }
+    ],
+    "s1-one": [
+      {
+        "byte_definitions": {
+          "v2794": "%v2794 =l loadub %v2791",
+          "v3396": "%v3396 =l loadub %v3393",
+          "v627": "%v627 =l loadub %v624",
+          "v782": "%v782 =l loadub %v779"
+        },
+        "killed": [],
+        "s0": {
+          "allocations": 1,
+          "direct_loadl": 676,
+          "references": 1550,
+          "storel": 868
+        },
+        "s1": {
+          "allocations": 0,
+          "direct_loadl": 0,
+          "references": 473,
+          "storel": 0
+        },
+        "stage": "After slot promotion:"
+      },
+      {
+        "byte_definitions": {
+          "v2794": "%v2794 =l extub %ld.2141",
+          "v3396": "%v3396 =l extub %ld.2237",
+          "v627": "%v627 =l extub 1",
+          "v782": "%v782 =l extub 0"
+        },
+        "killed": [],
+        "s0": {
+          "allocations": 1,
+          "direct_loadl": 0,
+          "references": 874,
+          "storel": 868
+        },
+        "s1": {
+          "allocations": 0,
+          "direct_loadl": 0,
+          "references": 473,
+          "storel": 0
+        },
+        "stage": "After load elimination:"
+      },
+      {
+        "byte_definitions": {
+          "v2794": "%v2794 =l extub %ld.2141",
+          "v3396": "%v3396 =l extub %ld.2237",
+          "v627": "%v627 =l extub 1",
+          "v782": "%v782 =l extub 0"
+        },
+        "killed": [],
+        "s0": {
+          "allocations": 1,
+          "direct_loadl": 0,
+          "references": 874,
+          "storel": 868
+        },
+        "s1": {
+          "allocations": 0,
+          "direct_loadl": 0,
+          "references": 473,
+          "storel": 0
+        },
+        "stage": "After load elimination:"
+      },
+      {
+        "byte_definitions": {
+          "v2794": "%v2794 =l extub %ld.2141",
+          "v3396": "%v3396 =l extub %ld.2237",
+          "v627": "%v627 =l extub 1",
+          "v782": "%v782 =l extub 0"
+        },
+        "killed": [
+          "\tkill [ %s0 %s2 %agg1184 %agg1249 %agg1349 ]"
+        ],
+        "s0": {
+          "allocations": 0,
+          "direct_loadl": 0,
+          "references": 0,
+          "storel": 0
+        },
+        "s1": {
+          "allocations": 0,
+          "direct_loadl": 0,
+          "references": 467,
+          "storel": 0
+        },
+        "stage": "Slot coalescing:"
+      },
+      {
+        "byte_definitions": {
+          "v2794": "%v2794 =l extub %ld.2141",
+          "v3396": "%v3396 =l extub %ld.2237",
+          "v627": null,
+          "v782": null
+        },
+        "killed": [],
+        "s0": {
+          "allocations": 0,
+          "direct_loadl": 0,
+          "references": 0,
+          "storel": 0
+        },
+        "s1": {
+          "allocations": 0,
+          "direct_loadl": 0,
+          "references": 0,
+          "storel": 0
+        },
+        "stage": "After GVN:"
+      },
+      {
+        "byte_definitions": {
+          "v2794": "%v2794 =l extub %ld.2141",
+          "v3396": "%v3396 =l extub %ld.2237",
+          "v627": null,
+          "v782": null
+        },
+        "killed": [],
+        "s0": {
+          "allocations": 0,
+          "direct_loadl": 0,
+          "references": 0,
+          "storel": 0
+        },
+        "s1": {
+          "allocations": 0,
+          "direct_loadl": 0,
+          "references": 0,
+          "storel": 0
+        },
+        "stage": "After GCM:"
+      }
+    ]
+  }
+}
