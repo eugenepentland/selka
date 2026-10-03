@@ -1,0 +1,11 @@
+{
+  "scope": "read-only frozen proof and author command evidence; no compiler, guest, or performance execution",
+  "input_count": 29,
+  "all_original_and_saved_bytes_match": true,
+  "production_v2_v3_identical": true,
+  "author_focused_passed": 20,
+  "author_guardian_passed": 88,
+  "standalone_qbe_status": 0,
+  "original_vm_run_restored_exactly_after_two_edge_rewrites_and_classifier_removal": true,
+  "performance_or_selection_claim": false
+}
