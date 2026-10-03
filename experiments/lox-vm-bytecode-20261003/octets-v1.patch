@@ -1,0 +1,98 @@
+--- a/chunk.my
++++ b/chunk.my
+@@ -46,7 +46,7 @@
+ # A function's bytecode. `code` holds bytes (0..255); `lines[i]` is the
+ # source line of `code[i]`.
+ public record Chunk:
+-    code: list[int]
++    code: list[u8]
+     lines: list[int]
+     constants: list[value.Value]
+ 
+@@ -56,7 +56,7 @@
+ 
+ 
+ public def write_byte(target: mut Chunk, byte: int, line: int):
+-    target.code.append(byte)
++    target.code.append(u8(byte))
+     target.lines.append(line)
+ 
+ 
+--- a/compiler.my
++++ b/compiler.my
+@@ -213,8 +213,8 @@
+     jump = len(code.code) - offset - 2
+     if jump > UINT16_MAX:
+         error(mut p, b"Too much code to jump over.")
+-    code.code[offset] = bit_and(shift_right(jump, 8), 255)
+-    code.code[offset + 1] = bit_and(jump, 255)
++    code.code[offset] = u8(bit_and(shift_right(jump, 8), 255))
++    code.code[offset + 1] = u8(bit_and(jump, 255))
+     current_index = len(p.compilers) - 1
+     current = p.compilers[current_index]
+     current.function.code = code
+--- a/compiler_test.my
++++ b/compiler_test.my
+@@ -22,7 +22,15 @@
+     if function == value.NO_OBJ:
+         return Compiled(function=function, code=[], constants=[], errors=bytes(o.stderr))
+     code = heap.function_obj(rt, function).code
+-    return Compiled(function=function, code=code.code, constants=code.constants, errors=bytes(o.stderr))
++    return Compiled(function=function, code=code_words(code.code), constants=code.constants, errors=bytes(o.stderr))
++
++
++# Preserve the existing integer opcode assertions across the byte storage change.
++def code_words(code: list[u8]) -> list[int]:
++    words: list[int] = []
++    for byte in code:
++        words.append(int(byte))
++    return words
+ 
+ 
+ def number(n: float) -> value.Value:
+@@ -47,7 +55,7 @@
+             name_is_a = heap.string_obj(rt, ref).chars == b"a"
+         case _:
+             pass
+-    return code.code == expected and len(code.constants) == 2 and name_is_a and code.constants[1] == number(1.0)
++    return code_words(code.code) == expected and len(code.constants) == 2 and name_is_a and code.constants[1] == number(1.0)
+ 
+ 
+ public def test_compile_local_slots(out: Stream) -> bool:
+--- a/vm.my
++++ b/vm.my
+@@ -22,7 +22,7 @@
+ # scalar CallFrame so each instruction does not share code and upvalue lists.
+ record ExecFrame:
+     constants: list[value.Value]
+-    code: list[int]
++    code: list[u8]
+     upvalues: list[value.ObjRef]
+     ip: int
+     base: int
+@@ -315,14 +315,14 @@
+ 
+ 
+ def read_byte(frame: mut ExecFrame) -> int:
+-    byte = frame.code[frame.ip]
++    byte = int(frame.code[frame.ip])
+     frame.ip = frame.ip + 1
+     return byte
+ 
+ 
+ def read_short(frame: mut ExecFrame) -> int:
+     frame.ip = frame.ip + 2
+-    return frame.code[frame.ip - 2] * 256 + frame.code[frame.ip - 1]
++    return int(frame.code[frame.ip - 2]) * 256 + int(frame.code[frame.ip - 1])
+ 
+ 
+ def read_constant(frame: mut ExecFrame) -> value.Value:
+@@ -531,7 +531,7 @@
+     frame_index = activation_count - 1
+     frame = load_frame(rt, rt.frames[frame_index])
+     while True:
+-        instruction = frame.code[frame.ip]
++        instruction = int(frame.code[frame.ip])
+         frame.ip = frame.ip + 1
+         # The closure/base root stays in rt.frames throughout this activation.
+         # Publish IP only before a handler can report a Lox error or call away.

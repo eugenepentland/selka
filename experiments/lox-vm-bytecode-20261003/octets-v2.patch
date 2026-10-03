@@ -1,0 +1,215 @@
+--- a/chunk.my
++++ b/chunk.my
+@@ -46,7 +46,7 @@
+ # A function's bytecode. `code` holds bytes (0..255); `lines[i]` is the
+ # source line of `code[i]`.
+ public record Chunk:
+-    code: list[int]
++    code: list[u8]
+     lines: list[int]
+     constants: list[value.Value]
+ 
+@@ -56,7 +56,7 @@
+ 
+ 
+ public def write_byte(target: mut Chunk, byte: int, line: int):
+-    target.code.append(byte)
++    target.code.append(u8(byte))
+     target.lines.append(line)
+ 
+ 
+--- a/compiler.my
++++ b/compiler.my
+@@ -213,8 +213,8 @@
+     jump = len(code.code) - offset - 2
+     if jump > UINT16_MAX:
+         error(mut p, b"Too much code to jump over.")
+-    code.code[offset] = bit_and(shift_right(jump, 8), 255)
+-    code.code[offset + 1] = bit_and(jump, 255)
++    code.code[offset] = u8(bit_and(shift_right(jump, 8), 255))
++    code.code[offset + 1] = u8(bit_and(jump, 255))
+     current_index = len(p.compilers) - 1
+     current = p.compilers[current_index]
+     current.function.code = code
+@@ -428,7 +428,7 @@
+ 
+ def call(p: mut Parser):
+     count = argument_list(mut p)
+-    emit_bytes(mut p, chunk.OP_CALL, count)
++    emit_bytes(mut p, chunk.OP_CALL, bit_and(count, 255))
+ 
+ 
+ def dot(p: mut Parser, can_assign: bool):
+@@ -440,7 +440,7 @@
+     elif match_token(mut p, scanner.TokenKind.LEFT_PAREN):
+         count = argument_list(mut p)
+         emit_bytes(mut p, chunk.OP_INVOKE, name)
+-        emit_byte(mut p, count)
++        emit_byte(mut p, bit_and(count, 255))
+     else:
+         emit_bytes(mut p, chunk.OP_GET_PROPERTY, name)
+ 
+@@ -513,7 +513,7 @@
+         count = argument_list(mut p)
+         named_variable(mut p, b"super", False)
+         emit_bytes(mut p, chunk.OP_SUPER_INVOKE, name)
+-        emit_byte(mut p, count)
++        emit_byte(mut p, bit_and(count, 255))
+     else:
+         named_variable(mut p, b"super", False)
+         emit_bytes(mut p, chunk.OP_GET_SUPER, name)
+--- a/compiler_test.my
++++ b/compiler_test.my
+@@ -22,7 +22,15 @@
+     if function == value.NO_OBJ:
+         return Compiled(function=function, code=[], constants=[], errors=bytes(o.stderr))
+     code = heap.function_obj(rt, function).code
+-    return Compiled(function=function, code=code.code, constants=code.constants, errors=bytes(o.stderr))
++    return Compiled(function=function, code=code_words(code.code), constants=code.constants, errors=bytes(o.stderr))
++
++
++# Preserve the existing integer opcode assertions across the byte storage change.
++def code_words(code: list[u8]) -> list[int]:
++    words: list[int] = []
++    for byte in code:
++        words.append(int(byte))
++    return words
+ 
+ 
+ def number(n: float) -> value.Value:
+@@ -47,7 +55,7 @@
+             name_is_a = heap.string_obj(rt, ref).chars == b"a"
+         case _:
+             pass
+-    return code.code == expected and len(code.constants) == 2 and name_is_a and code.constants[1] == number(1.0)
++    return code_words(code.code) == expected and len(code.constants) == 2 and name_is_a and code.constants[1] == number(1.0)
+ 
+ 
+ public def test_compile_local_slots(out: Stream) -> bool:
+@@ -85,3 +93,16 @@
+         i += 1
+     compiled = compile(source, out)
+     return compiled.function == value.NO_OBJ and b"Too many constants in one chunk." in compiled.errors
++
++
++# Appending/patching byte code must keep earlier Chunk snapshots and line maps.
++public def test_compile_bytecode_octet_snapshot(out: Stream) -> bool:
++    _ = out
++    code = chunk.new_chunk()
++    chunk.write_byte(mut code, 0, 3)
++    chunk.write_byte(mut code, 128, 4)
++    chunk.write_byte(mut code, 255, 5)
++    snapshot = code
++    code.code[1] = u8(1)
++    chunk.write_byte(mut code, 254, 6)
++    return code_words(snapshot.code) == [0, 128, 255] and snapshot.lines == [3, 4, 5] and code_words(code.code) == [0, 1, 255, 254] and code.lines == [3, 4, 5, 6]
+--- a/driver_cases.json
++++ b/driver_cases.json
+@@ -118,5 +118,20 @@
+     "providers": {
+       "natives.my": "module natives\n# Test fixture for driver_tests.my (see driver_cases.json): natives.my with\n# a `clock` that returns 0 instead of reading the Clock capability.\nimport heap\nimport lox_strings\nimport object\nimport value\n\n\npublic const CLOCK: int = 0\n\n\npublic def call_native(rt: heap.Runtime, id: int) -> value.Value:\n    assert id == CLOCK, \"unknown native\"\n    _ = rt\n    return value.Value.number(0.0)\n\n\npublic def start(rt: mut heap.Runtime):\n    rt.init_string = lox_strings.copy_string(mut rt, b\"init\")\n    define_natives(mut rt)\n\n\ndef define_natives(rt: mut heap.Runtime):\n    name = lox_strings.copy_string(mut rt, b\"clock\")\n    heap.push(mut rt, value.Value.obj(name))\n    native = heap.allocate(mut rt, object.Obj.native(object.NativeObj(id=CLOCK, arity=0)))\n    heap.push(mut rt, value.Value.obj(native))\n    _ = heap.set_global(mut rt, name, value.Value.obj(native))\n    _ = heap.pop(mut rt)\n    _ = heap.pop(mut rt)\n"
+     }
++  },
++  "driver_tests::test_run_constant_operand_last_byte": {
++    "providers": {
++      "natives.my": "module natives\n# Test fixture for driver_tests.my (see driver_cases.json): natives.my with\n# a `clock` that returns 0 instead of reading the Clock capability.\nimport heap\nimport lox_strings\nimport object\nimport value\n\n\npublic const CLOCK: int = 0\n\n\npublic def call_native(rt: heap.Runtime, id: int) -> value.Value:\n    assert id == CLOCK, \"unknown native\"\n    _ = rt\n    return value.Value.number(0.0)\n\n\npublic def start(rt: mut heap.Runtime):\n    rt.init_string = lox_strings.copy_string(mut rt, b\"init\")\n    define_natives(mut rt)\n\n\ndef define_natives(rt: mut heap.Runtime):\n    name = lox_strings.copy_string(mut rt, b\"clock\")\n    heap.push(mut rt, value.Value.obj(name))\n    native = heap.allocate(mut rt, object.Obj.native(object.NativeObj(id=CLOCK, arity=0)))\n    heap.push(mut rt, value.Value.obj(native))\n    _ = heap.set_global(mut rt, name, value.Value.obj(native))\n    _ = heap.pop(mut rt)\n    _ = heap.pop(mut rt)\n"
++    }
++  },
++  "driver_tests::test_run_bytecode_big_endian_jumps": {
++    "providers": {
++      "natives.my": "module natives\n# Test fixture for driver_tests.my (see driver_cases.json): natives.my with\n# a `clock` that returns 0 instead of reading the Clock capability.\nimport heap\nimport lox_strings\nimport object\nimport value\n\n\npublic const CLOCK: int = 0\n\n\npublic def call_native(rt: heap.Runtime, id: int) -> value.Value:\n    assert id == CLOCK, \"unknown native\"\n    _ = rt\n    return value.Value.number(0.0)\n\n\npublic def start(rt: mut heap.Runtime):\n    rt.init_string = lox_strings.copy_string(mut rt, b\"init\")\n    define_natives(mut rt)\n\n\ndef define_natives(rt: mut heap.Runtime):\n    name = lox_strings.copy_string(mut rt, b\"clock\")\n    heap.push(mut rt, value.Value.obj(name))\n    native = heap.allocate(mut rt, object.Obj.native(object.NativeObj(id=CLOCK, arity=0)))\n    heap.push(mut rt, value.Value.obj(native))\n    _ = heap.set_global(mut rt, name, value.Value.obj(native))\n    _ = heap.pop(mut rt)\n    _ = heap.pop(mut rt)\n"
++    }
++  },
++  "driver_tests::test_run_bytecode_argument_overflow": {
++    "providers": {
++      "natives.my": "module natives\n# Test fixture for driver_tests.my (see driver_cases.json): natives.my with\n# a `clock` that returns 0 instead of reading the Clock capability.\nimport heap\nimport lox_strings\nimport object\nimport value\n\n\npublic const CLOCK: int = 0\n\n\npublic def call_native(rt: heap.Runtime, id: int) -> value.Value:\n    assert id == CLOCK, \"unknown native\"\n    _ = rt\n    return value.Value.number(0.0)\n\n\npublic def start(rt: mut heap.Runtime):\n    rt.init_string = lox_strings.copy_string(mut rt, b\"init\")\n    define_natives(mut rt)\n\n\ndef define_natives(rt: mut heap.Runtime):\n    name = lox_strings.copy_string(mut rt, b\"clock\")\n    heap.push(mut rt, value.Value.obj(name))\n    native = heap.allocate(mut rt, object.Obj.native(object.NativeObj(id=CLOCK, arity=0)))\n    heap.push(mut rt, value.Value.obj(native))\n    _ = heap.set_global(mut rt, name, value.Value.obj(native))\n    _ = heap.pop(mut rt)\n    _ = heap.pop(mut rt)\n"
++    }
+   }
+ }
+--- a/driver_tests.my
++++ b/driver_tests.my
+@@ -232,3 +232,47 @@
+     vm_run = driver.run_source(source, driver.Engine.VM, True, out, None)
+     tree = driver.run_source(source, driver.Engine.TREE, True, out, None)
+     return vm_run.status == 70 and tree.status == 70 and vm_run.stdout == b"argument\n" and tree.stdout == vm_run.stdout and vm_run.stderr == b"Can only call functions and classes.\n[line 1] in script\n" and tree.stderr == b"Can only call functions and classes.\n[line 1]\n"
++
++
++# Every constant operand byte, including 255, must advance IP before the
++# checked pool read; consecutive prints then keep the following opcode aligned.
++public def test_run_constant_operand_last_byte(out: Stream) -> bool:
++    source = b""
++    expected = b""
++    i = 0
++    while i < 256:
++        text = str(i).encode()
++        source = source + b"print " + text + b";"
++        expected = expected + text + b"\n"
++        i = i + 1
++    observed = driver.run_source(source, driver.Engine.VM, True, out, None)
++    return observed.status == 0 and observed.stdout == expected and observed.stderr == b"" and observed.collections == observed.allocations
++
++
++# A false branch must decode a big-endian jump spanning byte 255 without
++# evaluating the skipped body; backward loop offsets cross the same boundary.
++public def test_run_bytecode_big_endian_jumps(out: Stream) -> bool:
++    padding = b""
++    i = 0
++    while i < 140:
++        padding = padding + b"nil;"
++        i += 1
++    source = b"if (false) {" + padding + b"print 99;} var n=0; while (n<2) {" + padding + b"n=n+1;} print n;"
++    observed = driver.run_source(source, driver.Engine.VM, True, out, None)
++    return observed.status == 0 and observed.stdout == b"2\n" and observed.stderr == b"" and observed.collections == observed.allocations
++
++
++# Rejected argument lists still finish byte emission and Lox error recovery;
++# a narrowed code buffer must not replace the compiler error with a cast trap.
++public def test_run_bytecode_argument_overflow(out: Stream) -> bool:
++    arguments = b"nil"
++    i = 1
++    while i < 256:
++        arguments = arguments + b",nil"
++        i += 1
++    sources = [b"fun f(){} f(" + arguments + b");", b"class C { m(){} } C().m(" + arguments + b");", b"class A { m(){} } class B < A { m(){ super.m(" + arguments + b"); } } B().m();"]
++    for source in sources:
++        observed = driver.run_source(source, driver.Engine.VM, True, out, None)
++        if observed.status != 65 or observed.stdout != b"" or observed.stderr != b"[line 1] Error at 'nil': Can't have more than 255 arguments.\n" or observed.collections != observed.allocations:
++            return False
++    return True
+--- a/vm.my
++++ b/vm.my
+@@ -22,7 +22,7 @@
+ # scalar CallFrame so each instruction does not share code and upvalue lists.
+ record ExecFrame:
+     constants: list[value.Value]
+-    code: list[int]
++    code: list[u8]
+     upvalues: list[value.ObjRef]
+     ip: int
+     base: int
+@@ -315,14 +315,14 @@
+ 
+ 
+ def read_byte(frame: mut ExecFrame) -> int:
+-    byte = frame.code[frame.ip]
++    byte = int(frame.code[frame.ip])
+     frame.ip = frame.ip + 1
+     return byte
+ 
+ 
+ def read_short(frame: mut ExecFrame) -> int:
+     frame.ip = frame.ip + 2
+-    return frame.code[frame.ip - 2] * 256 + frame.code[frame.ip - 1]
++    return int(frame.code[frame.ip - 2]) * 256 + int(frame.code[frame.ip - 1])
+ 
+ 
+ def read_constant(frame: mut ExecFrame) -> value.Value:
+@@ -531,7 +531,7 @@
+     frame_index = activation_count - 1
+     frame = load_frame(rt, rt.frames[frame_index])
+     while True:
+-        instruction = frame.code[frame.ip]
++        instruction = int(frame.code[frame.ip])
+         frame.ip = frame.ip + 1
+         # The closure/base root stays in rt.frames throughout this activation.
+         # Publish IP only before a handler can report a Lox error or call away.
