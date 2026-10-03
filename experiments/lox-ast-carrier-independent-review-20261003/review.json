@@ -1,0 +1,126 @@
+{
+  "outcome": "pass with stated coverage and native-diagnostic limits; no actionable source defect found",
+  "recorded_utc": "2026-10-03T04:12:48.506945+00:00",
+  "candidate_commit": "941b030cfa2ec49b0c6c4bdb88501d9785462a46",
+  "patch_sha256": "b1fc1359603b549f7a06ed00a958d0d5dcf6f91515b78e2d4bad8719942d6f9b",
+  "candidate_interpreter_sha256": "6c4655266242ca4696a02f754ef5eac6646ceb8ba93b0869072c6d6161a87378",
+  "source37_and_overlay_replay_verified": true,
+  "expected_arm_operation_order_textually_preserved": true,
+  "selected_native_compiler": "d14a704083bcc5f5174932a751f7d9dda73100dbd62403626b42b52436cad040",
+  "selected_native_builds": {
+    "llvm-rc": {
+      "binary_sha256": "180575c3fc2e46a16ed8dd290e289963a87603b5a7c0cf8bb0e03ba7cf794361",
+      "manifest_sha256": "c0ee679a254be4ff5aba8b135b140a0e575ccf99ff197ccd7c3cd99cd9129e2e",
+      "runtime_object_sha256": "1a88a820334e334088220959ff99667c5fce13d406aa134ba8d047746e739d6d",
+      "historical_byte_identical": false
+    },
+    "llvm-gc": {
+      "binary_sha256": "2ede598ca50ea31105771ebc87addc6e53864c2fa340d6a6fb500b28b12ac6bf",
+      "manifest_sha256": "43ad3341aed426b84cef8a0a4e5d477c1adab2435c2de7e7d36226bb27e34fe1",
+      "runtime_object_sha256": "cde60444bc4f94b42020b0321692d66774c00b114f9faf4a4cd8ff1fe037b3e2",
+      "historical_byte_identical": true
+    },
+    "qbe-rc": {
+      "binary_sha256": "246f21781fd58c7141dbe0992101c842e62d732d9ce47e209d55821d02b11b25",
+      "manifest_sha256": "6e717a9a2f0d20916ac60a58bbe3a028cc9788e9ed5d3646ef0fb4471360795b",
+      "runtime_object_sha256": "d991009e601716f4eab07e203f1f10dda3644216fe70aa3ff026c9493dc850f9",
+      "historical_byte_identical": false
+    },
+    "qbe-gc": {
+      "binary_sha256": "d5d27260dcabd076e8241a9fa428afe249fd8e5066111c0b1bc423c9bcebe035",
+      "manifest_sha256": "1727454468becd2e73571edf3fa9b94e0187358aa45a0c9c5346c69ee310d1b1",
+      "runtime_object_sha256": "8ee8c9de2842bc191466c932873d68031a2c68d513f1cc3d873653ddc96933c8",
+      "historical_byte_identical": true
+    }
+  },
+  "bounded_exact_comparisons": 1168,
+  "bounded_mode_counts": {
+    "ordinary_gc": 416,
+    "rc": 416,
+    "native_gc_stress": 336
+  },
+  "native_smoke_cells_explicitly_unrun": 80,
+  "bounded_resume_prior_sha256": "cda69151c6a0cffe80b40cde4af5f106ae0c0362be0024c96713a9965669b22e",
+  "bounded_rows_reused_without_double_counting": true,
+  "new_focused_exact_comparisons": 96,
+  "rc_native_stress_refusal_pairs": 8,
+  "accounted_historical_compiler": "4cbaeafad871b4527e6e550b4412629341335340590f8a0b8b3ec97a7f8c91d0",
+  "fresh_accounted_public_tests": 336,
+  "accounted_modes": [
+    {
+      "flavor": "qbe-normal",
+      "fresh_tests": 84,
+      "mode": "Debug"
+    },
+    {
+      "flavor": "qbe-stress",
+      "fresh_tests": 84,
+      "mode": "Debug"
+    },
+    {
+      "flavor": "llvm-normal",
+      "fresh_tests": 84,
+      "mode": "release"
+    },
+    {
+      "flavor": "llvm-stress",
+      "fresh_tests": 84,
+      "mode": "release"
+    }
+  ],
+  "static_bounds_and_ssa_assembly_hashes_verified": true,
+  "owning_getter_calls_removed": {
+    "baseline/call_expr": {
+      "ssa_getter_calls": 1,
+      "saved_qbe_assembly_getter_calls": 1
+    },
+    "baseline/class_declaration": {
+      "ssa_getter_calls": 1,
+      "saved_qbe_assembly_getter_calls": 1
+    },
+    "candidate/call_expr": {
+      "ssa_getter_calls": 0,
+      "saved_qbe_assembly_getter_calls": 0
+    },
+    "candidate/class_declaration": {
+      "ssa_getter_calls": 0,
+      "saved_qbe_assembly_getter_calls": 0
+    }
+  },
+  "historical_fixture_failure_preserved": {
+    "status": 1,
+    "bounded_passes": 1168,
+    "partial_focused_passes": 60,
+    "failed_vm_fixture_candidate_rows": 0,
+    "corrected_focused_passes": 96
+  },
+  "author_experiment_file_hashes": {
+    "experiments/lox-tree-ast-carrier-20261003/README.md": "96aeaa6a401003154d475be3cf2aa63c46eaa299f39398e84caef5aac76f168b",
+    "experiments/lox-tree-ast-carrier-20261003/accounted-public-observations.json.gz": "fe35d117dd42343e6e5c5c63de89e371dc6fb04ec8acc97810b08f2b59384db1",
+    "experiments/lox-tree-ast-carrier-20261003/accounted-public-qualification.json": "954cee28ce85aa3e2f2aaa531372db496739e778e449acd12bcd2ef4bff47383",
+    "experiments/lox-tree-ast-carrier-20261003/ast-carrier.patch": "b1fc1359603b549f7a06ed00a958d0d5dcf6f91515b78e2d4bad8719942d6f9b",
+    "experiments/lox-tree-ast-carrier-20261003/bounded-observations.json.gz": "73894be39b23a1e10c9a62a6613eaa59781954bd94a9b07a53924e6059379c04",
+    "experiments/lox-tree-ast-carrier-20261003/extract_emission.py": "23fc81ec6360ffeab36d8fe1015dfe020adaf059c99e240ac1c06599a15cde0a",
+    "experiments/lox-tree-ast-carrier-20261003/focused-observations.json.gz": "0c005a23854579e4f578638ca5cca538f48c605fff6614619ef8f80671b54fd3",
+    "experiments/lox-tree-ast-carrier-20261003/historical4cbae-baseline-emission.json": "452857dca23f4f6516d52ffae8c7d75f76c4f87ca019e13d46ea86eb8dd0ef6e",
+    "experiments/lox-tree-ast-carrier-20261003/historical4cbae-builds.json": "94643453cc9269ac459d4a4fd401692ffc97a95e5e1cde915df10126cd2e761a",
+    "experiments/lox-tree-ast-carrier-20261003/historical4cbae-candidate-emission.json": "90e69c7a9c5137a2899a127c3ed6cd2bbbea198bf0b71b24e9bb5a62c5ca5377",
+    "experiments/lox-tree-ast-carrier-20261003/regressions.json": "dc53ec95dd34e622520d9ece1261bfe7d8d03c5f1068afef6a93ce7a7d6a8f5c",
+    "experiments/lox-tree-ast-carrier-20261003/selected-emission.json": "3e49075fa8b71e0da456fa304864681d2793c551e3ceae1bec8b2441f7676aad",
+    "experiments/lox-tree-ast-carrier-20261003/selectedd14-builds.json": "b5ed1eb6d66d1333e5df19375b14814261d96030816dd66eeb70b4de2e0a7634",
+    "experiments/lox-tree-ast-carrier-20261003/source.json": "2aa63ea25298640823f7a46f94c03caf193f3a1fe68ecdb3b44e58f7a133502c",
+    "experiments/lox-tree-ast-carrier-20261003/validation.json": "97c3e1d9302c475a71d66fa3ffb41043835ea9ffeb8d496249ce31626f0f33d6"
+  },
+  "stable_read_input_count": 395,
+  "stable_read_identity_sha256": "79293687d84ebc2225061be408a26aac4a7e3c94ead7f4f4cb966fa807c07709",
+  "guest_or_perf_executions": 0,
+  "source_or_root_mutations": 0,
+  "limits": [
+    "Internal wrong-node assertions retain their messages but now originate in handlers; exact native source PCs, frames and step cutoffs are not unchanged.",
+    "All 80 unrun native-GC smoke cells remain unrun, never passed; selected closures/instantiation/properties, focused programs and errors supply bounded native-stress coverage.",
+    "The accounted suite uses historical4cbae; native d14 builds are independently checked and tested, without claiming d14 accounted336 execution.",
+    "Resumed1168 and corrected96 counts exclude duplicated historical1168/partial60 observations.",
+    "Saved static SSA and assembly identities are checked without new disassembly or timing; absent standalone LLVM symbols do not prove absent work.",
+    "Read-only evidence review does not rerun tests or prove performance, parity, or whole-program correctness."
+  ]
+}
