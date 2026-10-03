@@ -23,9 +23,9 @@ def changed(value: int) -> int:
     return before[0] + values[0]
 
 
-def unsigned(value: u8) -> u8:
+def unsigned(value: u8, index: int) -> u8:
     values = [value, value]
-    return values[1]
+    return values[index]
 
 
 def same_class(value: int) -> int:
@@ -38,9 +38,9 @@ def narrow(value: i16) -> i16:
     return values[-1]
 
 
-def flags(value: bool) -> bool:
+def flags(value: bool, index: int) -> bool:
     values = [value, not value]
-    return values[0] and not values[1]
+    return values[index]
 
 
 def units(value: None) -> int:
@@ -57,13 +57,14 @@ public def test_local_lists_keep_values_aliases_and_cold_then_warm_results() -> 
     assert overlapping(12) == 29
     assert escaped(12) == [12, 13, 14]
     assert changed(12) == 34
-    assert unsigned(u8(255)) == u8(255)
+    assert unsigned(u8(255), 1) == u8(255)
+    assert unsigned(u8(254), -2) == u8(254)
     assert same_class(12) == 22
     assert same_class(13) == 23
     assert narrow(i16(-32768)) == i16(-32768)
     assert narrow(i16(32767)) == i16(32767)
-    assert flags(True)
-    assert not flags(False)
+    assert flags(True, 0)
+    assert flags(False, -1)
     assert units(None) == 2
     for i in range(40):
         assert closed(i, 0) == i * 3 + 6

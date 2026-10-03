@@ -1,4 +1,5 @@
 //! RC-LOCAL-LIST-1: one bounded scalar builder can live in frame scratch.
+const std = @import("std");
 const typed = @import("typed.zig");
 const bytecode = @import("bytecode.zig");
 const runtime = @import("runtime_mode.zig");
@@ -124,6 +125,36 @@ fn proofFor(comptime E: type, self: *E) ?Proof {
 /// pointers may claim the LLVM heap/stack disjointness of ordinary lists.
 pub fn usesStack(comptime E: type, self: *E) bool {
     return proofFor(E, self) != null;
+}
+
+/// Inline ownership glue can load the admitted stack prefix. Remove only
+/// this activation's heap-prefix hints; state hints and callee domains remain.
+pub fn finish(comptime E: type, self: *E, input: []u8) Error![]u8 {
+    if (!usesStack(E, self)) return input;
+    return stackHints(self.allocator, input);
+}
+
+/// A stack/cold pointer merge defeats both explicit heap hints and coarse
+/// foreign inference from scalar offsets. Disable alias metadata in this unit.
+pub fn stackHints(a: std.mem.Allocator, input: []const u8) Error![]u8 {
+    const stripped = try withoutPrefixHints(a, input);
+    defer a.free(stripped);
+    const entry = "\n@entry\n";
+    const at = (std.mem.indexOf(u8, stripped, entry) orelse return error.InternalError) + entry.len;
+    return std.mem.concat(a, u8, &.{ stripped[0..at], " # myl-no-alias\n", stripped[at..] });
+}
+
+/// Preserve every instruction and all other annotations byte for byte.
+pub fn withoutPrefixHints(a: std.mem.Allocator, input: []const u8) Error![]u8 {
+    var out: std.Io.Writer.Allocating = .init(a);
+    errdefer out.deinit();
+    var lines = std.mem.splitScalar(u8, input, '\n');
+    while (lines.next()) |line| {
+        if (std.mem.startsWith(u8, std.mem.trimStart(u8, line, " \t"), "# myl-rc ")) continue;
+        try out.writer.writeAll(line);
+        if (lines.index != null) try out.writer.writeByte('\n');
+    }
+    return out.toOwnedSlice();
 }
 
 /// Count the immortal prefix, complete native header and fixed scalar payload

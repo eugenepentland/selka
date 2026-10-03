@@ -329,6 +329,8 @@ pub const Parameter = struct { letter: []const u8, name: []const u8 };
 /// `# myl-elem` storage words with their element kind, and `# myl-rc`
 /// addresses of a counted prefix word (LLVM-RC-PREFIX-1).
 pub const Hints = struct {
+    /// A mixed stack/heap activation must carry no scoped alias metadata.
+    no_alias_metadata: bool = false,
     objects: std.array_hash_map.String(void) = .empty,
     elements: std.StringHashMapUnmanaged([]const u8) = .empty,
     prefixes: std.array_hash_map.String(void) = .empty,
@@ -700,6 +702,10 @@ const Reader = struct {
             const raw = self.lines[self.index];
             self.index += 1;
             const stripped = strip(raw);
+            if (std.mem.eql(u8, stripped, "# myl-no-alias")) {
+                function.hints.no_alias_metadata = true;
+                continue;
+            }
             if (std.mem.startsWith(u8, stripped, object_marker)) {
                 const marked = strip(stripped[object_marker.len..]);
                 if (marked.len != 0 and marked[0] == '%') try function.hints.objects.put(self.arena, marked[1..], {});

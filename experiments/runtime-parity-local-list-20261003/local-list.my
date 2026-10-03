@@ -9,9 +9,9 @@ def same_class(value: int) -> int:
     return values[-1] + len(values)
 
 
-def octets(value: u8) -> u8:
+def octets(value: u8, index: int) -> u8:
     values = [value, value]
-    return values[-1]
+    return values[index]
 
 
 def narrow(value: i16) -> i16:
@@ -19,9 +19,9 @@ def narrow(value: i16) -> i16:
     return values[-1]
 
 
-def flags(value: bool) -> bool:
+def flags(value: bool, index: int) -> bool:
     values = [value, not value]
-    return values[0] and not values[1]
+    return values[index]
 
 
 def units(value: None) -> int:
@@ -36,12 +36,12 @@ def main() -> int:
         assert closed(i, 0) == i * 3 + 6
     assert same_class(12) == 22
     assert same_class(13) == 23
-    assert octets(u8(255)) == u8(255)
-    assert octets(u8(254)) == u8(254)
+    assert octets(u8(255), 1) == u8(255)
+    assert octets(u8(254), -2) == u8(254)
     assert narrow(i16(-32768)) == i16(-32768)
     assert narrow(i16(32767)) == i16(32767)
-    assert flags(True)
-    assert not flags(False)
+    assert flags(True, 0)
+    assert flags(False, -1)
     assert units(None) == 2
     assert units(None) == 2
     return 0

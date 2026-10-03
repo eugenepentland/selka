@@ -42,8 +42,12 @@ The private value occupies the existing counted frame scratch: a 16-byte immorta
 prefix, the complete 72-byte native header and the fixed scalar backing. Appends
 write the original scalar width, length and generation. Ordinary aliases and
 reads retain their existing bounds, overflow, instruction and frame checks. Heap
-alias annotations are suppressed for the certified frame because its header and
-backing may be on the native stack.
+object/element/prefix hint annotations are suppressed for the certified frame
+because its header and backing may be on the native stack. A per-function
+`# myl-no-alias` policy also disables inferred LLVM alias metadata: unknown
+stack/cold pointer merges combined with scalar index offsets cannot safely be
+seeded as foreign. Heap-state hint text and every actual instruction remain;
+other functions retain their ordinary alias policy.
 
 Early ticket retirement is safe only for this closed region. An executable
 counterexample holds a first list alive under an exact allocation ceiling: a
@@ -62,10 +66,12 @@ and wrap all builds in `scripts/build-slot.sh build`:
 ```sh
 python3 experiments/runtime-parity-local-list-20261003/run_checks.py --output PRIVATE/checks
 python3 experiments/runtime-parity-local-list-20261003/run_native.py \
-  --compiler ABS/zig-out/bin/mylang --qbe ABS/zig-out/bin/qbe --output PRIVATE/native
+  --compiler ABS/zig-out/bin/mylang --qbe ABS/zig-out/bin/qbe \
+  --host-mode Debug --output PRIVATE/native
 python3 experiments/runtime-parity-local-list-20261003/run_failures.py \
   --compiler ABS/zig-out/bin/mylang --baseline BASE/zig-out/bin/mylang \
-  --qbe ABS/zig-out/bin/qbe --baseline-qbe BASE/zig-out/bin/qbe --output PRIVATE/failures
+  --qbe ABS/zig-out/bin/qbe --baseline-qbe BASE/zig-out/bin/qbe \
+  --host-mode Debug --output PRIVATE/failures
 ```
 
 `run_checks.py` compiles the exact runtime C unit list with `-O3 -UNDEBUG
@@ -78,22 +84,47 @@ production RC and GC.
 
 The native witness relinks recorded objects with an admission counter, runs
 ordinary public helpers in QBE and LLVM, and checks that each call settles exactly
-two allocation/retirement tickets. Both backends execute 28 hot and two cold
-calls across the five admitted type/capacity groups (30 calls total). It covers shared header/backing class, u8
+two allocation/retirement tickets. Both verified ReleaseFast lanes finish with
+28 admitted and two original constructors. The corrected script asserts the
+effective backend in each generated manifest and checks ReleaseFast accounting
+refusal behavior before relinking. It covers shared header/backing class, u8
 maximum, i16 endpoints, booleans and unchanged unit results. The language contract
 also covers aliases, negative indices, escaped/overlapping lists and COW snapshots.
 
-`run_failures.py` has 128 byte-exact baseline/candidate comparisons across QBE and
-LLVM: success, overflow, upper/lower invalid indices, instruction/depth ceilings
-and seven memory ceilings. The baseline compiler is the parent's read-only
+`run_failures.py` passes 136 byte-exact baseline/candidate comparisons across
+verified QBE and LLVM backends: success, overflow, upper/lower invalid indices,
+instruction/depth ceilings and seven memory ceilings. Both backends show actual
+`R_STEP_LIMIT`, `R_FRAME_LIMIT` and `R_MEMORY_BUDGET` refusals; larger ceilings
+also cover success. Eight comparisons additionally execute actual
+ReleaseFast success/overflow/upper/lower-bounds cases; accounted comparisons use
+Debug guests. Requested mode is independently checked through step-accounting
+behavior, rather than treating the manifest LLVM optimization field as a guest
+mode. All 32 baseline/candidate mode probes pass. The baseline compiler is the parent's read-only
 pre-P7 validation build at `6111ce9e`; every comparison uses identical guest paths
 and independent caches.
 
-All 15 compiler certificate/selected tests pass using `zig build test-units install
--Dtest-filter='local list stack' -Dcompiler-only=true -Doptimize=ReleaseFast -j2`.
+All 17 compiler certificate/selected tests pass using `zig build test-units install
+-Dtest-filter='local list stack' -Dcompiler-only=true -Doptimize=Debug -j2`
+for the narrow alias correction. Earlier host builds were ReleaseFast; these
+updated focused checks use a Debug host compiler and ReleaseFast native guests.
+Two regressions translate actual dynamic-index int/u8/bool admitted units and
+prove they carry no LLVM alias/noalias metadata, while ordinary independent
+prefix translation remains intact.
 The public guest is `tests/lang/local_stack_list.my`: one public contract passes
 in each of ordinary RC/QBE, GC stress/QBE and LLVM release. Full Guardian checks
 pass all 88 checks over the entire tree.
+
+The earlier commit 58c5d826 labeled its two `run_native.py` lanes and 128
+`run_failures.py` trials as QBE/LLVM. Those labels were incorrect: its later
+`--qbe PATH` option reset the selected backend, so both alleged native lanes
+were QBE. Those original artifacts are preserved and do not establish LLVM
+coverage. Its argv ceilings were also guest data: built guests read controls
+from `MYLANG_OPTIONS` and memory ceilings from `MYLANG_MEMORY_LIMIT`. The old
+128 comparisons establish repeated unbounded outcomes, not ceiling coverage.
+The corrected scripts use those environment channels, require a real refusal
+in each ceiling category on each backend, put the QBE path before explicit
+backend selection and assert the artifact backend. The separate `--release` public guest
+tests used LLVM correctly and remain valid.
 
 ## P6 encode consumer feasibility
 
@@ -141,10 +172,10 @@ the same guest with both the pre-P7 compiler and candidate:
 ```sh
 cc -O2 -c experiments/runtime-parity-local-list-20261003/eligible-bench.c -o PRIVATE/clock.o
 mylang build experiments/runtime-parity-local-list-20261003/eligible-bench.my \
-  --mode ReleaseFast --backend qbe --qbe ABS/qbe --link PRIVATE/clock.o \
+  --mode ReleaseFast --qbe ABS/qbe --backend qbe --link PRIVATE/clock.o \
   --cache-dir PRIVATE/qbe-cache -o PRIVATE/qbe-guest
 mylang build experiments/runtime-parity-local-list-20261003/eligible-bench.my \
-  --mode ReleaseFast --backend llvm --llvm-opt 3 --lto --qbe ABS/qbe \
+  --mode ReleaseFast --qbe ABS/qbe --backend llvm --llvm-opt 3 --lto \
   --link PRIVATE/clock.o --cache-dir PRIVATE/llvm-cache -o PRIVATE/llvm-guest
 env LOCAL_LIST_ITERATIONS=1000000 LOCAL_LIST_SEED=17 PRIVATE/qbe-guest
 env LOCAL_LIST_ITERATIONS=1000000 LOCAL_LIST_SEED=17 PRIVATE/llvm-guest

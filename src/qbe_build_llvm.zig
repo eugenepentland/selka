@@ -73,7 +73,9 @@ pub const Toggles = struct {
 pub fn translate(arena: std.mem.Allocator, text: []const u8, options: Options, diagnostic: *Diagnostic) Error![]const u8 {
     const unit = try il.parse(arena, text, diagnostic);
     if (options.sticky) try sticky.versionLoops(arena, unit, diagnostic);
-    var emitter = try emit.Emitter.prepare(arena, unit, options, diagnostic);
+    var selected = options;
+    if (unit.function.hints.no_alias_metadata) selected.alias = false;
+    var emitter = try emit.Emitter.prepare(arena, unit, selected, diagnostic);
     return lower.module(&emitter);
 }
 

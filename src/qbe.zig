@@ -2116,6 +2116,7 @@ const Emitter = struct {
         if (return_bytes != 0 and self.cow != null) try self.print(zero_failure_result, .{@max(8, return_bytes)});
         try self.print(" ret {s}\n}}\n", .{if (return_bytes == 0) "0" else "%empty"});
         var text = try self.output.toOwnedSlice();
+        text = try rc_local_list.finish(Emitter, self, text);
         text = try @import("qbe_loop_operands.zig").finish(Emitter, self, text);
         text = try @import("qbe_loop_unswitch.zig").finish(Emitter, self, text);
         // RC-SITES-1: name every runtime call's site while each instruction
