@@ -325,3 +325,100 @@ test "an archive keeps only the dependency and record rows its kept rows name" {
     try t.expectEqual(@as(usize, 2), restored.code.functions.len);
     try t.expectEqual(@as(usize, 1), restored.code.records.len);
 }
+
+/// A root spliced from two nested callees, with an ordinary callable dependency
+/// in the leaf and a record referenced only by the leaf's result signature.
+fn inlineArchiveCode() bytecode.Program {
+    const at: @import("source.zig").Span = .{ .start = 0, .end = 0 };
+    const ty: typed.Type = @fromBackingInt(typed.Type.record_base);
+    return .{ .functions = &.{
+        .{ .name = "lib.root", .id = @fromBackingInt(0), .scope = .{ .instructions = &.{
+            .{ .span = at, .op = .{ .jump = 0 }, .inline_origin = .{ .callee = @fromBackingInt(1), .callee_pc = 0, .call_position = 0 } },
+        } } },
+        .{ .name = "lib.middle", .id = @fromBackingInt(1), .scope = .{ .instructions = &.{
+            .{ .span = at, .op = .{ .jump = 0 }, .inline_origin = .{ .callee = @fromBackingInt(2), .callee_pc = 1, .call_position = 0 } },
+        } } },
+        .{ .name = "lib.leaf", .id = @fromBackingInt(2), .signature = .{ .return_type = ty }, .scope = .{ .instructions = &.{
+            .{ .span = at, .op = .{ .call = @fromBackingInt(3) } },
+            .{ .span = at, .op = .ret },
+        } } },
+        .{ .name = "lib.helper", .id = @fromBackingInt(3), .scope = .{ .instructions = &.{.{ .span = at, .op = .ret }} } },
+        .{ .name = "lib.unused", .id = @fromBackingInt(4), .scope = .{ .instructions = &.{} } },
+    }, .records = &.{.{ .id = ty, .name = "lib.Returned", .declaration = at, .fields = &.{} }} };
+}
+
+// spec-case: MODULE-ARCHIVE-TRIM-1
+test "physical archives retain remapped nested inline provenance without emitting closure bodies" {
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const code = inlineArchiveCode();
+    const archive = try physical.archive(a, code, &.{true});
+    try t.expectEqual(@as(usize, 3), archive.functions.len);
+    try t.expectEqual(@as(usize, 1), archive.dependencies.len);
+    try t.expectEqualStrings("lib.helper", archive.dependencies[0].name);
+    try t.expectEqual(@as(usize, 1), archive.records.len);
+    const own: bytecode.Function = .{ .name = "app.own", .id = @fromBackingInt(0), .scope = .{ .instructions = &.{} } };
+    const restored = try @import("module_physical_inputs.zig").restore(a, .{ .functions = &.{own} }, &.{true}, &.{null}, &.{.{ .module = "lib", .text = "", .emission = .{ .physical = archive } }});
+    const site = try @import("bytecode_inline_site.zig").resolve(restored.code, restored.code.functions[1], 0);
+    try t.expectEqualStrings("lib.leaf", site.function.name);
+    try t.expectEqual(@as(usize, 2), site.depth);
+    try t.expectEqual(@as(usize, 1), site.pc);
+    try t.expect(site.function.scope.instructions[site.pc].op == .ret);
+    try t.expectEqual(@as(usize, 5), restored.code.functions.len);
+    try t.expectEqualSlices(bool, &.{ true, false, false, false, false }, restored.emit);
+    try t.expect(restored.code.functions[4].physical.?.unknown);
+}
+
+// spec-case: MODULE-ARCHIVE-TRIM-1
+test "physical archives reject missing cyclic and out of range inline provenance" {
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var code = inlineArchiveCode();
+    const functions = try a.dupe(bytecode.Function, code.functions);
+    code.functions = functions;
+    functions[2].scope.instructions = &.{};
+    try t.expectError(error.InternalError, physical.archive(a, code, &.{true}));
+    functions[2] = inlineArchiveCode().functions[2];
+    const middle = try a.dupe(bytecode.Instruction, functions[1].scope.instructions);
+    functions[1].scope.instructions = middle;
+    middle[0].inline_origin.?.callee_pc = 999;
+    try t.expectError(error.InternalError, physical.archive(a, code, &.{true}));
+    middle[0].inline_origin.?.callee = functions[0].id;
+    middle[0].inline_origin.?.callee_pc = 0;
+    try t.expectError(error.InternalError, physical.archive(a, code, &.{true}));
+}
+
+// spec-case: MODULE-ARCHIVE-TRIM-1
+test "physical import refuses a legacy inline archive missing original body authority" {
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const code = inlineArchiveCode();
+    var archive = try signatureArchive(a, code);
+    const root = try physical.write(a, .{ .functions = code.functions, .records = code.records }, code.functions[0]);
+    archive.functions = &.{root};
+    const restore = @import("module_physical_inputs.zig").restore;
+    try t.expectError(error.InternalError, restore(a, .{ .functions = &.{} }, &.{}, &.{}, &.{.{ .module = "lib", .text = "", .emission = .{ .physical = archive } }}));
+}
+
+// spec-case: MODULE-ARCHIVE-TRIM-1
+test "physical import refuses conflicting bodies retained only for inline provenance" {
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var code = inlineArchiveCode();
+    const archive = try physical.archive(a, code, &.{true});
+    const functions = try a.dupe(bytecode.Function, code.functions);
+    code.functions = functions;
+    const leaf = try a.dupe(bytecode.Instruction, functions[2].scope.instructions);
+    functions[2].scope.instructions = leaf;
+    leaf[0].op = .{ .push_i64 = 7 };
+    const conflicting = try physical.archive(a, code, &.{true});
+    const first: language.module_interface.Interface = .{ .module = "first", .text = "", .emission = .{ .physical = archive } };
+    const second: language.module_interface.Interface = .{ .module = "second", .text = "", .emission = .{ .physical = conflicting } };
+    const restore = @import("module_physical_inputs.zig").restore;
+    try t.expectError(error.InternalError, restore(a, .{ .functions = &.{} }, &.{}, &.{}, &.{ first, second }));
+    try t.expectError(error.InternalError, restore(a, .{ .functions = &.{} }, &.{}, &.{}, &.{ second, first }));
+}

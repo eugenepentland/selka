@@ -9,7 +9,7 @@ const bytecode = @import("bytecode.zig");
 
 /// One immutable symbol's physical data. Payload integrity belongs to the interface envelope.
 pub const Data = struct { name: []const u8, bytes: []const u8 };
-/// A module's complete physical bodies and the signature-only dependencies they name.
+/// Complete emitted/inline-provenance bodies and their signature-only dependencies.
 pub const Archive = struct {
     records: []const Data = &.{},
     functions: []const Data = &.{},
@@ -89,20 +89,22 @@ pub fn referenced(a: std.mem.Allocator, comptime T: type, value: T) std.mem.Allo
     return .{ .functions = functions.items, .records = records.items };
 }
 
-/// MODULE-ARCHIVE-TRIM-1: store every selected real body, a signature-only
+/// MODULE-ARCHIVE-TRIM-1: store every selected real body and its inline-origin
+/// body closure, a signature-only
 /// dependency row for every function those bodies (and the kept records'
 /// codecs) refer to, and every record the kept rows refer to, transitively.
 /// A function or record nothing kept refers to is left out: a dependent's
 /// restore reserves only the names the rows it reads spell.
-pub fn archive(a: std.mem.Allocator, code: bytecode.Program, selected: []const bool) std.mem.Allocator.Error!Archive {
+pub fn archive(a: std.mem.Allocator, code: bytecode.Program, selected: []const bool) error{ OutOfMemory, InternalError }!Archive {
     const names: Names = .{ .functions = code.functions, .records = code.records };
+    const bodies = try inlineBodies(a, code, selected);
     const keep_functions = try a.alloc(bool, code.functions.len);
     @memset(keep_functions, false);
     const keep_records = try a.alloc(bool, code.records.len);
     @memset(keep_records, false);
     var pending_functions: std.ArrayList(usize) = .empty;
     var pending_records: std.ArrayList(usize) = .empty;
-    for (selected, 0..) |chosen, index| if (chosen and index < code.functions.len) {
+    for (bodies, 0..) |chosen, index| if (chosen) {
         keep_functions[index] = true;
         try pending_functions.append(a, index);
     };
@@ -110,7 +112,7 @@ pub fn archive(a: std.mem.Allocator, code: bytecode.Program, selected: []const b
     while (!whole and (pending_functions.items.len != 0 or pending_records.items.len != 0)) {
         var found: Referenced = .{ .functions = &.{}, .records = &.{} };
         if (pending_functions.pop()) |index| {
-            found = try referenced(a, bytecode.Function, row(code.functions[index], index < selected.len and selected[index]));
+            found = try referenced(a, bytecode.Function, row(code.functions[index], bodies[index]));
         } else if (pending_records.pop()) |index| {
             var plain = code.records[index];
             const fields = try a.dupe(typed.Field, plain.fields);
@@ -138,15 +140,41 @@ pub fn archive(a: std.mem.Allocator, code: bytecode.Program, selected: []const b
     }
     var records: std.ArrayList(Data) = .empty;
     for (code.records, keep_records) |record, kept| if (kept) try records.append(a, try write(a, names, record));
-    var bodies: std.ArrayList(Data) = .empty;
+    var functions: std.ArrayList(Data) = .empty;
     var dependencies: std.ArrayList(Data) = .empty;
     for (code.functions, keep_functions, 0..) |function, kept, index| {
         if (!kept) continue;
-        const chosen = index < selected.len and selected[index];
+        const chosen = bodies[index];
         const data = try write(a, names, row(function, chosen));
-        if (chosen) try bodies.append(a, data) else try dependencies.append(a, data);
+        if (chosen) try functions.append(a, data) else try dependencies.append(a, data);
     }
-    return .{ .records = records.items, .functions = bodies.items, .dependencies = dependencies.items };
+    return .{ .records = records.items, .functions = functions.items, .dependencies = dependencies.items };
+}
+
+// An inline origin names an actual instruction, not just a callable signature.
+// Its callee body supplies return provenance and logical frame depth even when
+// no physical call remains. Ordinary call/function-value dependencies stay
+// signature-only. Every body is visited once and cycles/out-of-range PCs refuse.
+fn inlineBodies(a: std.mem.Allocator, code: bytecode.Program, selected: []const bool) error{ OutOfMemory, InternalError }![]bool {
+    const bodies = try a.alloc(bool, code.functions.len);
+    @memset(bodies, false);
+    var pending: std.ArrayList(usize) = .empty;
+    for (selected, 0..) |chosen, index| if (chosen and index < bodies.len) {
+        bodies[index] = true;
+        try pending.append(a, index);
+    };
+    while (pending.pop()) |index| {
+        const function = code.functions[index];
+        for (function.scope.instructions, 0..) |instruction, pc| {
+            const origin = instruction.inline_origin orelse continue;
+            _ = try @import("bytecode_inline_site.zig").resolve(code, function, pc);
+            const callee = @backingInt(origin.callee);
+            if (bodies[callee]) continue;
+            bodies[callee] = true;
+            try pending.append(a, callee);
+        }
+    }
+    return bodies;
 }
 
 /// The value one archive row stores for `function`: its body when it is

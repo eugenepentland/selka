@@ -24,6 +24,7 @@ pub fn restore(a: std.mem.Allocator, code: bytecode.Program, emit: []const bool,
     for (interfaces) |interface| try state.recordsFrom(interface.emission.physical);
     for (interfaces) |interface| try state.dependenciesFrom(interface.emission.physical);
     for (interfaces) |interface| try state.functionsFrom(interface, emit);
+    try state.inlineOrigins();
     try state.markStandins(emit);
     const chosen = try a.alloc(bool, state.functions.items.len);
     @memset(chosen, false);
@@ -72,6 +73,17 @@ const State = struct {
             unknown.* = .{ .unknown = true };
             function.physical = unknown;
         }
+    }
+
+    // Imported inline PCs require complete original bodies, never signature
+    // authority. Old or corrupt archives must request fresh physical inputs
+    // before any ownership facts or native instruction emission are granted.
+    fn inlineOrigins(self: *State) Error!void {
+        const code: bytecode.Program = .{ .functions = self.functions.items, .records = self.records.items };
+        for (code.functions) |function| for (function.scope.instructions, 0..) |instruction, pc| {
+            if (instruction.inline_origin == null) continue;
+            _ = try @import("bytecode_inline_site.zig").resolve(code, function, pc);
+        };
     }
 
     fn reserve(self: *State, archive: physical.Archive) Error!void {
