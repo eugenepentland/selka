@@ -25,6 +25,10 @@ Preserve MyLang's overflow, bounds, conversion, error trace, frame-limit, owners
 
 The measured compiler source is `6df58b02554401f9d37564cceffd14277a835ae1`; the benchmark-source snapshot is `b725360f5f86ac67bc405db9407ae51c332a9931`. At audit time, `src/` and `vendor/qbe/` match the compiler pin. All 24 saved guest executable hashes match the baseline. The audit reviewed all four MyLang ports and relevant reference implementations, extracted 14 functions from cached IL/manifests and inspected the corresponding executable disassembly. No fresh per-microbenchmark CPU profile has yet been collected. The first implementation milestone closes that attribution gap.
 
+**Current-main reconciliation:** the local `main` branch has advanced to `1fd1d566793dcae92449d937aca595c55ee318c8`. The source-matching statement above refers to this audit worktree, not that newer branch. Its 33 changed source files include guarded positive list-index reads (`qbe_positive_index.zig`, commits `406c7eeb`/`f924e2ee`), direct closed-record field-inout calls (`rc_field_inout.zig`, `ac54b90b`), and checked QBE variant transfer/release policy (`native_variant_policy.zig`/`qbe_rc_native_variant.zig`, `d22f7fa7`). The new variant path covers edge-free active cases of eligible small **counted** variants, not every plain Int/Bool stack operation; LLVM retains the original policy. The relevant Git blobs and changed-file list are recorded in `evidence.json`.
+
+P0 must first build and measure that newer main under a new identity against the original frozen targets. Start implementation worktrees from the reconciled main and extend its existing paths. Do not credit its gains to new work, reimplement these three mechanisms, or apply the old ratios to its binaries. The per-case tables below describe the measured old revision; current-main effects on this suite remain unmeasured. Refresh the package priority after that initial run. Constant-division lowering, entry/Result inlining exclusions, generic equality, text/JSON runtime bodies and the other audited unchanged mechanisms remain relevant candidates.
+
 These observations are confirmed; their share of each benchmark's runtime still needs controlled experiments:
 
 | Evidence | Implication |
@@ -137,7 +141,7 @@ P0 is a prerequisite for accepting an optimization. Each other package starts wi
 
 ### P0 — Reproducible targets and attribution
 
-Extend the benchmark tooling to accept a candidate compiler/source identity alongside the immutable reference. The current runner records a hard-coded main revision and the verifier requires that revision; this metadata is not an independent proof that a supplied compiler was built from it. A changed compiler must receive a new explicit source/build identity and output location; do not relax checks or substitute its binary under the old revision. Store fixed-target and concurrent-reference ratios separately. The existing assessment assumes a complete inventory; focused runs need a focused comparison path instead of masquerading as full assessments.
+Extend the benchmark tooling to accept a candidate compiler/source identity alongside the immutable reference. The current runner records a hard-coded main revision and the verifier requires that revision; this metadata is not an independent proof that a supplied compiler was built from it. A changed compiler must receive a new explicit source/build identity and output location; do not relax checks or substitute its binary under the old revision. First measure reconciled current main, including its selected QBE native-variant policy, before evaluating new changes. Store fixed-target and concurrent-reference ratios separately. The existing assessment assumes a complete inventory; focused runs need a focused comparison path instead of masquerading as full assessments.
 
 Add optional microbenchmark profiling: the current `expanded/profile.py` CLI accepts only the five applications. Use task-pinned, checksum-verified guest runs with per-case duration calibration, not full-program instruction counts. Collect cycles/instructions/branch/cache counters when permitted; otherwise record that hardware counters are unavailable and use lower-frequency sampling plus disassembly and allocation/RC instrumentation. Keep instrumented timings separate from performance measurements. Lower sampling frequency to avoid the old throttling and report loss/throttling honestly.
 
@@ -157,7 +161,7 @@ Carry bounds through constants, casts, induction variables and expressions so re
 
 ### P2 — Loop facts, invariant dispatch and vectorization readiness
 
-**Primary files:** `src/qbe_loop_facts.zig`, `src/qbe_loop_operands.zig`, `src/qbe_loop_version.zig`, `src/qbe_rc_scalar_version.zig`, `src/qbe_rc_read_version.zig`, `src/qbe_rc_byte_version.zig`, LLVM emission metadata where justified.
+**Primary files:** `src/qbe_loop_facts.zig`, `src/qbe_loop_operands.zig`, `src/qbe_loop_version.zig`, `src/qbe_rc_scalar_version.zig`, `src/qbe_rc_read_version.zig`, `src/qbe_rc_byte_version.zig`, current main's `qbe_positive_index.zig`, LLVM emission metadata where justified.
 
 Canonicalize induction variables; prove stable storage/length, index ranges and loop invariants. Move invariant dispatch outside a loop when legal and bounded for code size. Compose scalar/read/byte certificates with inline provenance, floats and plain records where sound. Remove ownership operations only after their lifetime conditions are proved. For guarded fast loops, guards must themselves be safe and the original fallback must preserve the first observable failure and partial mutations.
 
@@ -177,7 +181,7 @@ Result-returning functions require origin and propagation trace metadata through
 
 ### P4 — Borrowed reads, unique mutation and collection primitives
 
-**Primary files:** `src/rc_readonly_calls.zig`, `src/rc_borrow_flow.zig`, `src/qbe_rc_read_loans.zig`, `src/qbe_rc_unique.zig`, `src/qbe_rc_append.zig`, `src/qbe_rc_append_loop.zig`, `src/qbe_rc_element_take.zig`, `src/native_collections.c`, `src/native_cow.c` and generated RC glue.
+**Primary files:** `src/rc_readonly_calls.zig`, `src/rc_borrow_flow.zig`, `src/qbe_rc_read_loans.zig`, `src/qbe_rc_unique.zig`, `src/qbe_rc_append.zig`, `src/qbe_rc_append_loop.zig`, `src/qbe_rc_element_take.zig`, `src/native_collections.c`, `src/native_cow.c` and generated RC glue. On reconciled main, also account for `rc_field_inout.zig` and `qbe_rc_native_variant.zig` rather than rebuilding their existing certificates.
 
 For read-only traversals, keep one proven live owner and borrowed element access instead of repeated captures/transfers. For fresh unique lists, put capacity-sufficient append/pop/index updates on a direct path with typed stores and no per-element managed work for pointer-free payloads. Extend existing paths; do not replace generic append/ownership semantics. Verify length, generation and relocation rules and retain growth, alias and held-reference fallbacks.
 

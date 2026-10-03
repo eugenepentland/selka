@@ -3963,5 +3963,59 @@
     "Old CPU captures were throttled, contain only hundreds of samples and are exploratory hotspot hints, not coverage measurements or a fresh profile.",
     "Disassembly was inspected from binaries whose hashes match the baseline. Cache IL was matched by manifest digest/name but is supporting evidence, not an independent proof of compiler-source equivalence."
   ],
-  "reproduce_static_inspection": "Read functions in .mylang-cache/runtime-expanded/runner/mycache/modules/*/out/main.manifest.json; find il_digest in frontend/fragments/*/il/*; run objdump -d --no-show-raw-insn --disassemble=<symbol> on runner/bin/<group>-<arm> after checking its baseline SHA256."
+  "reproduce_static_inspection": "Read functions in .mylang-cache/runtime-expanded/runner/mycache/modules/*/out/main.manifest.json; find il_digest in frontend/fragments/*/il/*; run objdump -d --no-show-raw-insn --disassemble=<symbol> on runner/bin/<group>-<arm> after checking its baseline SHA256.",
+  "current_main_reconciliation": {
+    "revision": "1fd1d566793dcae92449d937aca595c55ee318c8",
+    "measured_in_this_suite": false,
+    "changed_source_files": [
+      "src/main.zig",
+      "src/module_build.zig",
+      "src/module_compile.zig",
+      "src/module_compile_command.zig",
+      "src/module_interface.zig",
+      "src/native_interface.zig",
+      "src/native_test_command.zig",
+      "src/native_test_session.zig",
+      "src/native_variant_policy.zig",
+      "src/native_variant_policy_test.zig",
+      "src/project_compile.zig",
+      "src/qbe.zig",
+      "src/qbe_build.zig",
+      "src/qbe_build_test.zig",
+      "src/qbe_fragments.zig",
+      "src/qbe_managed.zig",
+      "src/qbe_positive_index.zig",
+      "src/qbe_positive_index_test.zig",
+      "src/qbe_rc_field_inout_test.zig",
+      "src/qbe_rc_field_transfer.zig",
+      "src/qbe_rc_glue.zig",
+      "src/qbe_rc_inline_take.zig",
+      "src/qbe_rc_native_variant.zig",
+      "src/qbe_rc_native_variant_runtime_test.zig",
+      "src/qbe_rc_native_variant_test.zig",
+      "src/qbe_rc_native_variant_witness_test.zig",
+      "src/qbe_rc_overlap.zig",
+      "src/qbe_rc_slots.zig",
+      "src/qbe_rc_values.zig",
+      "src/rc_field_inout.zig",
+      "src/rc_field_transfer.zig",
+      "src/root_test.zig",
+      "src/runtime_contract.zig"
+    ],
+    "reviewed_git_blobs_sha256": {
+      "src/native_variant_policy.zig": "f4c26f7458ddbc0e7ea0dedec58522189e33b226a75ffd6da49e91ee3ba2a379",
+      "src/qbe_rc_native_variant.zig": "3ad492fb4febb13e6216a09713bc8a927212f0dabf1a484a9b35533cbeae2dec",
+      "src/qbe_positive_index.zig": "285901efc0397c66c5a860103d4525842dc900b1a2bdbf0ff645462ba759e0f8",
+      "src/rc_field_inout.zig": "3dde260847f251b059a6a451ff4a2c345cdd7dd86b865023739e536fa081bf6b",
+      "src/qbe_rc_field_transfer.zig": "3fa42e814d856ec215c0a6030697202f15629a35a59ad79f570a0c9c42d07395",
+      "src/qbe_managed.zig": "afcc18b4f453699a114d63e91fe6c4fbc47fe8d5e36efbcd04395474ec222627",
+      "src/qbe_rc_glue.zig": "d48fe13d42ad6e7e6389c4cd3d43169bbe6e4bde9f93a2241fe92b301f2132ad"
+    },
+    "required_first_step": "Build and measure this reconciled main as a distinct candidate before implementing more optimizations; keep original fixed targets.",
+    "existing_optimizations": [
+      "Checked positive list-read guard before negative-index normalization, preserving fallback.",
+      "Closed record field-inout direct call certificate.",
+      "QBE-only native-variant-qbe-v2 policy for edge-free active cases of eligible counted variants; LLVM keeps original policy."
+    ]
+  }
 }
