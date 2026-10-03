@@ -1,0 +1,71 @@
+{
+  "pid": 1591267,
+  "started_utc": "2026-10-03T04:42:29.647792+00:00",
+  "manifest_sha256": "d1b04d2b3084aad01b32898fced996a072f9181f746afef839ac7012ef596d3b",
+  "helpers_sha256": {
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/finish-measurements.py": "a8f8776af0f0fd665dda4bf260b799dbec22bed1478866c88a4013fb10995798",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/experiments/lox-parity-20261003/run.py": "dfacf759b940b94d019254ccdc45e8e01817cfc3acb78cdc090dd46061a22c7c",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/experiments/lox-performance-audit-20261002/audit.py": "0ee538279303731db25abe208a784ace71bc539a454dc7e11dc9edfd1346de7d",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/experiments/lox-ast-constant-20261003/analyze.py": "00b7c29acf8bf68e4650b6b0edb95c21688e6e0525c44eb590a01fa8e4eaf00c",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/experiments/lox-perf-improvements-20261002/analyze.py": "9ba4a07faf373997ab3785436781ba3efd19db781244a72d7599cc465ec230c9"
+  },
+  "stage": "complete",
+  "commands": [
+    {
+      "argv": [
+        "python3",
+        "experiments/lox-ast-constant-20261003/analyze.py",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/measurements/source-timing.json",
+        "--metric",
+        "wall_s",
+        "--out",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/measurements/source-wall-analysis.json"
+      ],
+      "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003",
+      "log": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/sequence-wall-analysis.log",
+      "status": 0,
+      "log_sha256": "025db627808f29070b8a16c56684b52b9b89a416aa22f944f233be10fbfde06d"
+    },
+    {
+      "argv": [
+        "python3",
+        "experiments/lox-parity-20261003/run.py",
+        "counters",
+        "--work",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3",
+        "--out",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/measurements/source-counters.json",
+        "--arms",
+        "baseline-llvm,baseline-qbe,ast-llvm,ast-qbe,constant-llvm,constant-qbe,combined-llvm,combined-qbe,rust,go",
+        "--tier",
+        "tree",
+        "--rounds",
+        "3",
+        "--cpu",
+        "10"
+      ],
+      "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003",
+      "log": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/sequence-counters.log",
+      "status": 0,
+      "log_sha256": "fbf31063b9cf4cb5f28639e6a764d9619c689568476a4970f75af14dcd76a56b"
+    },
+    {
+      "argv": [
+        "python3",
+        "experiments/lox-ast-constant-20261003/analyze.py",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/measurements/source-counters.json",
+        "--metric",
+        "instructions",
+        "--out",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/measurements/source-counter-analysis.json"
+      ],
+      "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003",
+      "log": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/sequence-counter-analysis.log",
+      "status": 0,
+      "log_sha256": "c97487300cccc65b4d8899ff08a4dcd16b6e2eae7d25db41c80b870f0e519c3e"
+    }
+  ],
+  "status": 0,
+  "frozen_inputs_verified_after": true,
+  "finished_utc": "2026-10-03T05:08:47.653174+00:00"
+}

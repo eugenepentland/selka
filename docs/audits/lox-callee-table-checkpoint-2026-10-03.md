@@ -1,5 +1,8 @@
 # Lox callee/table checkpoint, 2026-10-03
 
+This is a historical checkpoint. The selected AST source and completed repeated
+results are in [the newer report](lox-ast-carrier-checkpoint-2026-10-03.md).
+
 The next parallel source changes reduce VM wall time **3.41% on LLVM and
 3.03% on QBE** relative to the accepted 80-test checkpoint at `6e516f65`.
 Tree changes are small: **0.33% / 0.85%**. LLVM still takes approximately

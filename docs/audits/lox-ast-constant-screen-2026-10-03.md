@@ -1,5 +1,8 @@
 # Lox AST/constant instruction screen — 2026-10-03
 
+This is a historical checkpoint. The selected AST source and completed repeated
+results are in [the newer report](lox-ast-carrier-checkpoint-2026-10-03.md).
+
 The two next source candidates compose cleanly and pass qualification. A
 complete one-round instruction screen shows less dynamic work in both tree
 backends and in the LLVM VM. The canonical source remains the accepted

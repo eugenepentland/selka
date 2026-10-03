@@ -1,0 +1,12 @@
+{
+  "guest_byte_matches": {
+    "baseline-llvm": true,
+    "baseline-qbe": true,
+    "combined-llvm": true,
+    "combined-qbe": true,
+    "rust": true,
+    "go": false
+  },
+  "all37_sources_exact": true,
+  "go_is_separate_behavior_identity": true
+}

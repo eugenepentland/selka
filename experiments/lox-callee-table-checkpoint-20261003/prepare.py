@@ -76,8 +76,12 @@ def main():
             raise SystemExit(result.returncode)
 
     migration = repo / 'docs/audits/d9-stage3d-migrations'
-    run(['bash', migration / 'apply-lox.sh', work / 'migration', '--optimized'])
+    source_archive = repo / 'experiments/lox-ast-constant-20261003/baseline-source.tar.gz'
+    if sha(source_archive) != 'ecb25e84109b7f8ee451b44eb25275a9b7f82a37dd8f0a46fa7438d3c1391486':
+        raise ValueError('historical source84 archive identity changed')
     source = work / 'migration/lox/benchmarks/lox/ports/mylang'
+    with tarfile.open(source_archive) as data:
+        data.extractall(source, filter='data')
     shutil.copytree(source, work / 'combined')
     shutil.copytree(source, work / 'baseline')
     patch = migration / 'lox-runtime-perf-20261003-callee-table.patch'
@@ -128,7 +132,10 @@ def main():
             toolchains[tool]['sysroot_executable'] = str(executable)
             toolchains[tool]['sysroot_executable_sha256'] = sha(executable)
     assert sha(preparer) == preparer_hash
-    manifest = {'compiler': str(compiler), 'compiler_sha256': compiler_hash,
+    assert sha(source_archive) == 'ecb25e84109b7f8ee451b44eb25275a9b7f82a37dd8f0a46fa7438d3c1391486'
+    manifest = {'historical_source84_archive': str(source_archive),
+                'historical_source84_archive_sha256': sha(source_archive),
+                'compiler': str(compiler), 'compiler_sha256': compiler_hash,
                 'adjacent_qbe_sha256': qbe_hash, 'reference_toolchains': toolchains,
                 'reference_commit': REFERENCE, 'candidate_sources': sources,
                 'reference_source_hashes': reference_hashes,

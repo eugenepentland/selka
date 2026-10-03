@@ -1,5 +1,9 @@
 # Checked Lox callee/table checkpoint
 
+This is the historical source80/source84 pair, pinned before the selected AST
+refactor. The newer checkpoint is described in
+`../../docs/audits/lox-ast-carrier-checkpoint-2026-10-03.md`.
+
 The selected source adds plain VM callee descriptors and readonly table-entry
 arguments to the accepted 80-test checkpoint. It contains 84 public tests.
 The [report](../../docs/audits/lox-callee-table-checkpoint-2026-10-03.md)
@@ -15,8 +19,9 @@ python3 experiments/lox-callee-table-checkpoint-20261003/prepare.py \
   --work "$LOX_WORK" --compiler "$LOX_COMPILER"
 ```
 
-`prepare.py` reconstructs the current optimized migration and reverses only
-the new callee/table patch to obtain the exact 80-test control. It refuses an
+`prepare.py` reconstructs the fixed historical 84-test source from its checked
+37-file archive and reverses only the callee/table patch for the exact 80-test
+control. It refuses an
 existing workspace and checks all 37 source files before/after builds. It
 builds both sources with checked RC, LLVM O3/full LTO and checked QBE, then
 builds Rust/Go from `4e48a09220c2e018eba8c4b1eb3fe1137a3dae73`. The compiler,

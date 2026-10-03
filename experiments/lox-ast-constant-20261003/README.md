@@ -7,8 +7,8 @@ the constant operand read from its readonly pool read and adds an operand-255
 regression. Their composition has 85 public tests and changes exactly
 `interpreter.my`, `vm.my`, `driver_tests.my` and `driver_cases.json`.
 
-The canonical migration remains the accepted 84-test version. Full repeated
-wall-time and counter measurements are pending. The complete one-round
+The canonical migration now selects the AST-only 84-test variant. Both full
+three-round matrices are complete (780 rows each). The complete one-round
 instruction screen gives the following reductions, using the geometric mean of
 13 paired workload ratios per engine:
 
@@ -17,6 +17,14 @@ instruction screen gives the following reductions, using the geometric mean of
 | AST | 0.0000% | approximately 0% | 1.7871% | 2.0784% |
 | Constant | 1.0547% | 0.0473% | approximately 0% | approximately 0% |
 | Combined | 1.0547% | 0.0473% | 1.7871% | 2.0784% |
+
+The full counter matrix confirms those instruction reductions. The AST-only
+tree wall-time reductions are 3.0541% LLVM and 2.4807% QBE, with median paired
+ratio spreads 1.816% and 3.131%. LLVM improves 11/13 cases and QBE 13/13.
+The constant and combined VM wall gains remain uncertain: combined gains are
+2.0181% /0.5156% with median spreads 9.346% /5.199%; constant-only QBE VM is
+1.2031% slower. Those source variants remain experiments. The selected report
+is `../../docs/audits/lox-ast-carrier-checkpoint-2026-10-03.md`.
 
 `source-screen-instructions.json.gz` contains all 208 diagnostic cells, with
 all 832 PMU running percentages equal to 100. `source-smoke.json.gz` contains
@@ -80,5 +88,7 @@ It reports medians of within-case paired ratios and then their geometric mean.
 The `--screen` mode requires the eight source arms and labels its result as a
 diagnostic. CPU 2/sibling 3 and CPU 10/sibling 11 are reserved; build-slot admission
 excludes all four. The tested fresh smoke uses CPU 0 and provides behavior
-evidence during the original wall run. Partial wall rows are outside this
-completed diagnostic checkpoint.
+evidence during the original wall run. Both full matrices are now complete;
+historical partial observations remain separate in the independent review.
+`finish-measurements.py` is the archived private worker, not the reproduction
+entry point. Use the commands above for a new workspace.

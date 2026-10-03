@@ -1,0 +1,96 @@
+--- a/interpreter.my
++++ b/interpreter.my
+@@ -243,11 +243,15 @@
+ 
+ 
+ def call_expr(program: ast.Program, rt: mut heap.Runtime, o: mut output.Output, it: mut Interpreter, id: int) -> Result[None, RuntimeError]:
+-    node = call_node(program, id)
+-    evaluate(program, mut rt, mut o, mut it, node.callee)?
+-    for argument in node.arguments:
+-        evaluate(program, mut rt, mut o, mut it, argument)?
+-    return call_value(program, mut rt, mut o, mut it, len(node.arguments), node.paren.line)
++    match program.exprs[id]:
++        case ast.Expr.call(node):
++            evaluate(program, mut rt, mut o, mut it, node.callee)?
++            for argument in node.arguments:
++                evaluate(program, mut rt, mut o, mut it, argument)?
++            return call_value(program, mut rt, mut o, mut it, len(node.arguments), node.paren.line)
++        case _:
++            assert False, "expression is not a call"
++            return call_expr(program, mut rt, mut o, mut it, id)
+ 
+ 
+ def call_node(program: ast.Program, id: int) -> ast.CallExpr:
+@@ -503,37 +507,41 @@
+ # the new class, copy the inherited methods down and open the `super` env,
+ # add a TreeFunction per method, then store the class and pop.
+ def class_declaration(program: ast.Program, rt: mut heap.Runtime, o: mut output.Output, it: mut Interpreter, id: int) -> Result[None, RuntimeError]:
+-    node = class_node(program, id)
+-    if node.slot == ast.GLOBAL:
+-        _ = heap.set_global(mut rt, node.name_ref, value.Value.nil)
+-    superclass = value.NO_OBJ
+-    match node.superclass:
+-        case Some(expr):
+-            superclass = push_superclass(program, mut rt, mut o, mut it, expr)?
+-        case None:
+-            pass
+-    klass = object.ClassObj(name=node.name_ref, methods=table.new_table())
+-    heap.push(mut rt, value.Value.obj(heap.allocate(mut rt, object.Obj.klass(klass))))
+-    methods = klass.methods
+-    klass_ref = as_obj(heap.peek(rt, 0))
+-    if superclass != value.NO_OBJ:
+-        table.add_all(heap.class_obj(rt, superclass).methods, mut methods)
+-        heap.set_class_methods(mut rt, klass_ref, methods)
+-        env = new_env(mut rt, rt.current_env, 1)
+-        heap.set_env_slot(mut rt, env, 0, value.Value.obj(superclass))
+-        switch_env(mut rt, env)
+-    for method in node.methods:
+-        decl = program.functions[method]
+-        function = heap.allocate(mut rt, object.Obj.tree_function(object.TreeFunctionObj(decl=method, name=decl.name_ref, closure=rt.current_env, is_initializer=decl.name_ref == rt.init_string)))
+-        _ = table.set(mut methods, decl.name_ref, heap.string_hash(rt, decl.name_ref), value.Value.obj(function))
+-        heap.set_class_methods(mut rt, klass_ref, methods)
+-    if superclass != value.NO_OBJ:
+-        restore_env(mut rt)
+-    define(mut rt, node.name_ref, node.slot)
+-    _ = heap.pop(mut rt)
+-    if superclass != value.NO_OBJ:
+-        _ = heap.pop(mut rt)
+-    return Ok(None)
++    match program.stmts[id]:
++        case ast.Stmt.class_decl(node):
++            if node.slot == ast.GLOBAL:
++                _ = heap.set_global(mut rt, node.name_ref, value.Value.nil)
++            superclass = value.NO_OBJ
++            match node.superclass:
++                case Some(expr):
++                    superclass = push_superclass(program, mut rt, mut o, mut it, expr)?
++                case None:
++                    pass
++            klass = object.ClassObj(name=node.name_ref, methods=table.new_table())
++            heap.push(mut rt, value.Value.obj(heap.allocate(mut rt, object.Obj.klass(klass))))
++            methods = klass.methods
++            klass_ref = as_obj(heap.peek(rt, 0))
++            if superclass != value.NO_OBJ:
++                table.add_all(heap.class_obj(rt, superclass).methods, mut methods)
++                heap.set_class_methods(mut rt, klass_ref, methods)
++                env = new_env(mut rt, rt.current_env, 1)
++                heap.set_env_slot(mut rt, env, 0, value.Value.obj(superclass))
++                switch_env(mut rt, env)
++            for method in node.methods:
++                decl = program.functions[method]
++                function = heap.allocate(mut rt, object.Obj.tree_function(object.TreeFunctionObj(decl=method, name=decl.name_ref, closure=rt.current_env, is_initializer=decl.name_ref == rt.init_string)))
++                _ = table.set(mut methods, decl.name_ref, heap.string_hash(rt, decl.name_ref), value.Value.obj(function))
++                heap.set_class_methods(mut rt, klass_ref, methods)
++            if superclass != value.NO_OBJ:
++                restore_env(mut rt)
++            define(mut rt, node.name_ref, node.slot)
++            _ = heap.pop(mut rt)
++            if superclass != value.NO_OBJ:
++                _ = heap.pop(mut rt)
++            return Ok(None)
++        case _:
++            assert False, "statement is not a class"
++            return class_declaration(program, mut rt, mut o, mut it, id)
+ 
+ 
+ def execute_block(program: ast.Program, rt: mut heap.Runtime, o: mut output.Output, it: mut Interpreter, id: int, slot_count: int) -> Result[Flow, RuntimeError]:
