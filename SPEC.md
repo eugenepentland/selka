@@ -1770,3 +1770,5 @@ Selective accounted native-test compilation carries the policy before producing
 a manifest; native test result identities include it. External manifest input
 performs no new proof admission or instruction transformation. The policy changes
 no source semantics, runtime contract, guard, ownership permission or opcode.
+
+- [QBE-CHECKED-PRODUCT-HIGH-1] Checked 64-bit multiplication emits an exact unsigned multiply-high operation instead of four 32-bit limbs. Unsigned overflow remains a nonzero high half; signed overflow still adjusts that high half for both operand signs and compares it with the low half sign extension. The LLVM translator recognizes both compact and historical forms as the same overflow intrinsic. Operands, widths, trap order, detail and source provenance are unchanged. Narrow products retain their existing range tests.

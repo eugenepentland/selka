@@ -415,7 +415,7 @@ pub fn successorLabels(arena: Allocator, block: *const il.Block, following: ?[]c
 /// The pure 64-bit opcodes the symbolic evaluation models.
 fn pure(opcode: il.Opcode) bool {
     return switch (opcode) {
-        .add, .sub, .mul, .@"and", .xor, .shr, .sar, .neg, .csltl, .csgtl, .cultl, .cnel => true,
+        .add, .sub, .mul, .umulh, .@"and", .xor, .shr, .sar, .neg, .csltl, .csgtl, .cultl, .cnel => true,
         else => false,
     };
 }
@@ -581,6 +581,9 @@ fn evaluate(nodes: *Nodes, values: *const std.StringHashMapUnmanaged(NodeId), in
     const left = try operandValue(nodes, values, &instruction.args[0]);
     if (instruction.args.len == 1) return .{ .value = try nodes.op(instruction.opcode, left, null), .left = left };
     const right = try operandValue(nodes, values, &instruction.args[1]);
+    // Both the compact frontend opcode and historical limb expansion denote
+    // the same high product; preserve exact intrinsic recognition for either.
+    if (instruction.opcode == .umulh) return .{ .value = try unsignedHigh(nodes, left, right), .left = left, .right = right };
     return .{ .value = try nodes.op(instruction.opcode, left, right), .left = left, .right = right };
 }
 
@@ -651,7 +654,7 @@ fn overflowFormulas(nodes: *Nodes, opcode: il.Opcode, evaluated: Evaluated) Erro
     }
 }
 
-/// `qbe_scalar.unsignedHigh`: the high 64 bits of `a * b` over four 32-bit limbs.
+/// The high 64 bits of `a * b`, normalizing compact and historical IL forms.
 fn unsignedHigh(nodes: *Nodes, a: NodeId, b: NodeId) Error!NodeId {
     const mask = try nodes.constant(0xFFFFFFFF);
     const shift = try nodes.constant(32);

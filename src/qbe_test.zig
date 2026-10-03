@@ -858,10 +858,8 @@ fn fastCheck(a: std.mem.Allocator, source: []const u8, name: []const u8, op: []c
 }
 // spec-case: LLVM-OVERFLOW-INTRINSIC-1
 test "a checked 64-bit add, subtract and multiply emit the exact flag formulas the LLVM adapter lowers to overflow intrinsics" {
-    // `experiments/llvm-backend/llvm_emit.overflow_formulas` rewrites exactly
-    // these values (and `test_adapter.CHECK_BODIES` spells them), so a change
-    // here must change the adapter too, or the checks silently go back to the
-    // xor/and sign test and the four-limb product.
+    // The native LLVM adapter normalizes both compact multiply-high and the
+    // historical limb form before recognizing these exact overflow formulas.
     const a = std.testing.allocator;
     const source =
         \\def sadd(x: int, y: int) -> int:
@@ -919,43 +917,24 @@ test "a checked 64-bit add, subtract and multiply emit the exact flag formulas t
     const unsigned_sub = try fastCheck(a, source, "usub", "sub");
     defer a.free(unsigned_sub);
     try std.testing.expectEqualStrings(" %t0 =l sub %t1, %t2\n %t3 =l cultl %t1, %t2\n jnz %t3\n", unsigned_sub);
-    const high =
-        \\ %t0 =l mul %t1, %t2
-        \\ %t3 =l and %t1, 4294967295
-        \\ %t4 =l shr %t1, 32
-        \\ %t5 =l and %t2, 4294967295
-        \\ %t6 =l shr %t2, 32
-        \\ %t7 =l mul %t3, %t5
-        \\ %t8 =l shr %t7, 32
-        \\ %t9 =l mul %t4, %t5
-        \\ %t10 =l add %t9, %t8
-        \\ %t11 =l and %t10, 4294967295
-        \\ %t12 =l shr %t10, 32
-        \\ %t13 =l mul %t3, %t6
-        \\ %t14 =l add %t13, %t11
-        \\ %t15 =l shr %t14, 32
-        \\ %t16 =l mul %t4, %t6
-        \\ %t17 =l add %t16, %t12
-        \\ %t18 =l add %t17, %t15
-        \\
-    ;
+    const high = " %t0 =l mul %t1, %t2\n %t3 =l umulh %t1, %t2\n";
     const unsigned_mul = try fastCheck(a, source, "umul", "mul");
     defer a.free(unsigned_mul);
-    try std.testing.expectEqualStrings(high ++ " %t19 =l cnel %t18, 0\n jnz %t19\n", unsigned_mul);
+    try std.testing.expectEqualStrings(high ++ " %t4 =l cnel %t3, 0\n jnz %t4\n", unsigned_mul);
     const signed_mul = try fastCheck(a, source, "smul", "mul");
     defer a.free(signed_mul);
     try std.testing.expectEqualStrings(high ++
-        \\ %t19 =l csltl %t1, 0
-        \\ %t20 =l csltl %t2, 0
-        \\ %t21 =l neg %t19
-        \\ %t22 =l neg %t20
-        \\ %t23 =l and %t2, %t21
-        \\ %t24 =l and %t1, %t22
-        \\ %t25 =l sub %t18, %t23
-        \\ %t25 =l sub %t25, %t24
-        \\ %t26 =l sar %t0, 63
-        \\ %t27 =l cnel %t25, %t26
-        \\ jnz %t27
+        \\ %t4 =l csltl %t1, 0
+        \\ %t5 =l csltl %t2, 0
+        \\ %t6 =l neg %t4
+        \\ %t7 =l neg %t5
+        \\ %t8 =l and %t2, %t6
+        \\ %t9 =l and %t1, %t7
+        \\ %t10 =l sub %t3, %t8
+        \\ %t10 =l sub %t10, %t9
+        \\ %t11 =l sar %t0, 63
+        \\ %t12 =l cnel %t10, %t11
+        \\ jnz %t12
         \\
     , signed_mul);
 }

@@ -533,3 +533,22 @@ test "induction result hints grant no literal width pointer or range authority" 
     defer arena.deinit();
     try std.testing.expectEqual(@as(usize, 5), try affineRefusals(arena.allocator()));
 }
+
+// spec: QBE-CHECKED-PRODUCT-HIGH-1
+test "compact multiply high preserves exact signed and unsigned LLVM overflow intrinsics" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const prefix = " %result =l mul %a, %other\n %high =l umulh %a, %other\n";
+    const unsigned = try constantOverflowIr(a, prefix ++ " %flag =l cnel %high, 0");
+    try std.testing.expect(std.mem.indexOf(u8, unsigned, "call { i64, i1 } @llvm.umul.with.overflow.i64") != null);
+    const signed = try constantOverflowIr(a, prefix ++
+        " %an =l csltl %a, 0\n %bn =l csltl %other, 0\n %am =l neg %an\n %bm =l neg %bn\n" ++
+        " %at =l and %other, %am\n %bt =l and %a, %bm\n %s1 =l sub %high, %at\n %s2 =l sub %s1, %bt\n" ++
+        " %sign =l sar %result, 63\n %flag =l cnel %s2, %sign");
+    try std.testing.expect(std.mem.indexOf(u8, signed, "call { i64, i1 } @llvm.smul.with.overflow.i64") != null);
+    const mismatched = try constantOverflowIr(a, " %result =l mul %a, %other\n %high =l umulh %a, 7\n %flag =l cnel %high, 0");
+    try std.testing.expect(std.mem.indexOf(u8, mismatched, ".with.overflow") == null);
+    const truncated = try constantOverflowIr(a, " %result =l mul %a, %other\n %high =w umulh %a, %other\n %flag =l cnel %high, 0");
+    try std.testing.expect(std.mem.indexOf(u8, truncated, ".with.overflow") == null);
+}

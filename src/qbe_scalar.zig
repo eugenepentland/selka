@@ -6,8 +6,6 @@ const or_instruction = " %v{d} =l or %v{d}, %v{d}\n";
 const xor_instruction = " %v{d} =l xor %v{d}, %v{d}\n";
 const neg_instruction = " %v{d} =l neg %v{d}\n";
 const signed_negative = " %v{d} =l csltl %v{d}, 0\n";
-const low_word_mask = " %v{d} =l and %v{d}, 4294967295\n";
-const high_word_shift = " %v{d} =l shr %v{d}, 32\n";
 /// TRAP-UNSIGNED-1: the bit `MYL_QBE_UNSIGNED_OPERANDS` in src/qbe_runtime.h.
 /// A cold trap call ORs it into its width (overflow, cast) or operation
 /// (division) argument when the captured operands are unsigned, so the
@@ -254,40 +252,11 @@ fn rangeCheck(comptime E: type, self: *E, op: typed.BinaryOp, info: typed.Type.I
     }
     try overflowTrap(E, self, op, values, trapWidth(info.bits, info.signed), flag);
 }
-/// The unsigned high 64 bits of a 64x64 product, from four 32-bit limbs.
+/// The exact unsigned high 64 bits of a 64x64 product. The backend operation
+/// avoids expanding every checked multiplication into four 32-bit limbs.
 fn unsignedHigh(comptime E: type, self: *E, left: usize, right: usize) Error!usize {
-    const low_left = self.temp();
-    const high_left = self.temp();
-    const low_right = self.temp();
-    const high_right = self.temp();
-    try self.print(low_word_mask, .{ low_left, left });
-    try self.print(high_word_shift, .{ high_left, left });
-    try self.print(low_word_mask, .{ low_right, right });
-    try self.print(high_word_shift, .{ high_right, right });
-    const base = self.temp();
-    try self.print(binary_instruction, .{ base, "mul", low_left, low_right });
-    const carry = self.temp();
-    try self.print(high_word_shift, .{ carry, base });
-    const cross = self.temp();
-    try self.print(binary_instruction, .{ cross, "mul", high_left, low_right });
-    const middle = self.temp();
-    try self.print(binary_instruction, .{ middle, "add", cross, carry });
-    const low_middle = self.temp();
-    try self.print(low_word_mask, .{ low_middle, middle });
-    const high_middle = self.temp();
-    try self.print(high_word_shift, .{ high_middle, middle });
-    const other = self.temp();
-    try self.print(binary_instruction, .{ other, "mul", low_left, high_right });
-    const sum = self.temp();
-    try self.print(binary_instruction, .{ sum, "add", other, low_middle });
-    const second_carry = self.temp();
-    try self.print(high_word_shift, .{ second_carry, sum });
-    const top = self.temp();
-    try self.print(binary_instruction, .{ top, "mul", high_left, high_right });
-    const partial = self.temp();
-    try self.print(binary_instruction, .{ partial, "add", top, high_middle });
     const high = self.temp();
-    try self.print(binary_instruction, .{ high, "add", partial, second_carry });
+    try self.print(binary_instruction, .{ high, "umulh", left, right });
     return high;
 }
 /// Lower checked multiplication; only 64-bit needs a true 128-bit test.
@@ -295,7 +264,7 @@ fn checkedMul(comptime E: type, self: *E, op: typed.BinaryOp, info: typed.Type.I
     try self.print(binary_instruction, .{ values.result, "mul", values.left, values.right });
     // QBE-LOOP-VERSION-1: in a loop copy whose guard proved the product fits,
     // the product is the whole operation; the width test and, at 64 bits, the
-    // four-limb high half that feeds it are both dropped.
+    // high half that feeds it are both dropped.
     if (!self.checks) return;
     if (info.bits < 64) return rangeCheck(E, self, op, info, values);
     const high = try unsignedHigh(E, self, values.left, values.right);
