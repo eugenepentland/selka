@@ -1,0 +1,30 @@
+[
+  {
+    "name": "ast_call_arguments_survive_nested_allocating_handlers",
+    "source": "fun churn(n) { var s = \"x\"; while (n > 0) { s = s + \"y\"; n = n - 1; } return s; }\nfun middle() { class Local { init(v) { this.v = v; } value() { return this.v; } } return Local(churn(6)).value(); }\nfun show(a, b, c) { print a; print b; print c; }\nshow(churn(3), middle(), churn(2));\n",
+    "status": 0,
+    "stdout": "xyyy\nxyyyyyy\nxyy\n"
+  },
+  {
+    "name": "ast_class_methods_survive_recursive_subclass_creation",
+    "source": "class Base { init(v) { this.v = v; } read() { return this.v; } }\nfun factory(n) { class Leaf < Base { read() { return super.read() + 1; } extra() { return \"held\"; } } if (n == 0) return Leaf(5); return factory(n - 1); }\nvar result = factory(12); print result.read(); print result.extra();\n",
+    "status": 0,
+    "stdout": "6\nheld\n"
+  },
+  {
+    "name": "ast_call_argument_error_after_two_side_effects",
+    "source": "class C { init(a, b, c) { this.a = a; } }\nfun mark(n) { print n; class Temp {} Temp(); return n; }\nC(mark(1), mark(2), missing);\n",
+    "status": 70,
+    "stdout": "1\n2\n",
+    "stderr_prefix_by_engine": {
+      "tree": "Undefined variable 'missing'.\n[line 3]\n",
+      "vm": "Undefined variable 'missing'.\n[line 3] in script\n"
+    }
+  },
+  {
+    "name": "ast_bound_callee_stays_rooted_across_argument_reassignment",
+    "source": "class C { init(v) { this.v = v; } join(a, b) { return this.v + a + b; } }\nvar first = C(\"old\"); var second = C(\"new\");\nfun swap() { first = second; class Temp {} Temp(); return \"r\"; }\nprint first.join(\"l\", swap()); print first.v;\n",
+    "status": 0,
+    "stdout": "oldlr\nnew\n"
+  }
+]

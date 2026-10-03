@@ -1,0 +1,830 @@
+{
+  "compiler_sha256": "4cbaeafad871b4527e6e550b4412629341335340590f8a0b8b3ec97a7f8c91d0",
+  "manifest": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-write-screen/cache-write-combined-qbe/modules/cdc3ab44e4ccc0471f7e71bf7e345f92ac44b078724f71b2ad39751338ddd907/out/interpreter.manifest.json",
+  "manifest_sha256": "08a13c0a6ddbfdaff95816f1516a52f029ee7d45a65ba1d2886c96291481f23d",
+  "functions": {
+    "evaluate": {
+      "name": "interpreter::evaluate",
+      "symbol": "myl_f_d32d9d609bd2d498a6b2d4f34d6d36851c296533eaafa0e3b7c4c9b1eec65fca",
+      "ssa_source": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-write-screen/cache-write-combined-qbe/frontend/fragments/0455afa1beb638eb1bb868d65ae5700fec28693b19c9e417ec973a7d1479d848/il/2e1844324ac802c0c0be5f903cf530adea5bae9969eca093d6e524ca4c922084",
+      "ssa_sha256": "a8b86300e8954466f95356a01bf13f4a1360dc58a18be29969d689f7bb1afa52",
+      "ssa_lines": 1746,
+      "managed_ops": {
+        "take": 12,
+        "drop": 37,
+        "loan": 0,
+        "unloan": 37,
+        "copy": 0
+      },
+      "normalized_index_bounds": 1,
+      "assembly": {
+        "llvm": {
+          "binary": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-write-screen/bin/write-combined-llvm",
+          "binary_sha256": "42509ac27d993e3925caff5d1fe4a4566a24f00819e1ac08e8cce358eb1d2852",
+          "command": [
+            "objdump",
+            "-d",
+            "--disassemble=myl_f_d32d9d609bd2d498a6b2d4f34d6d36851c296533eaafa0e3b7c4c9b1eec65fca",
+            "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-write-screen/bin/write-combined-llvm"
+          ],
+          "sha256": "59e50e680bb447d142d6599d1939212bdb37b239d7b03912f2b4dd44539d0df7",
+          "calls": {
+            "abort@plt": 1,
+            "fail": 9,
+            "myl_f_0c155c0779b8bdd25c5e93399d26b7ce8537f2f7388c677f2661e05c296c2007": 2,
+            "myl_f_1e67eb8ef4c3a3acc3a97242d455a6d9c8a2bcb48d8912e38331c2e291a74a0e": 3,
+            "myl_f_212e271fe05de3e6f3ffd32ac47b6f61a493b89d19f38db2b86ba3d72c8c702d": 1,
+            "myl_f_47614935f4c1a8cf04cb9956ad991281881c4a7abd3bc9a4a6c225cb77d4b069": 1,
+            "myl_f_548c7924fb70947e5821a6480ca42591925741aed8a343767696180a416dee48": 1,
+            "myl_f_549c194dd59052d6a584a91a45f8e27a465f53a107227cc684c6aadde33da3a0": 1,
+            "myl_f_706a365e4bc67d4dbe31048a4b9bb57e9686317829d7947d70f33e26eb76ce88": 1,
+            "myl_f_851eb64c403b25f3166dffdb17dfc9e3c924451c20caa5851a74e0f4081ba50f": 4,
+            "myl_f_8fcbbbde32315b60b2a6da8b239f110b994a3e18d8c0042d9b7f76bb4a7f2ee0": 1,
+            "myl_f_9cfccc291a0516b23c50da008b59b8f2c8a2e23f61575966d1d2f1cfb2a4be4b": 3,
+            "myl_f_ad307cc2867f7ae8645edfb1559c37ecdae6ef88fa193238135e91f033295342": 1,
+            "myl_f_aebdc485d7756373248446bbe449e831b1afbb727357d693268ecc8fb629cd5b": 1,
+            "myl_f_b54eeed03870b797a96d1738a2f42781bb5db72dae7d2f57e436551c3d0172dd_rc_borrow": 1,
+            "myl_f_bef718364832da2350b7af6609e1fbb47c868e0b051a6562c056e76ae3623412": 3,
+            "myl_f_d32d9d609bd2d498a6b2d4f34d6d36851c296533eaafa0e3b7c4c9b1eec65fca": 8,
+            "myl_f_ea97dd36e4e0ea42e46ce6a891c9a00cafb686a8c9a27c77fe327a84d70301d7": 2,
+            "myl_f_ed0279e2fa3cbd41257c59aa86e577373533d86b28d37b01468f504f3e141d51": 1,
+            "myl_f_fdb523ec01e35cd778f4be0e6c347a068eabe5bde5c603156e498b663acc6468": 3,
+            "myl_native_bytes_concat": 2,
+            "myl_qbe_error_trace_append_preserve_most": 12,
+            "myl_qbe_error_trace_origin_preserve_most": 6,
+            "myl_qbe_fail_allocation": 2,
+            "myl_qbe_fail_assert": 17,
+            "myl_qbe_fail_cast": 6,
+            "myl_qbe_fail_frame": 13,
+            "myl_qbe_fail_iteration": 1,
+            "myl_qbe_fail_normalized_index_bounds": 4,
+            "myl_qbe_fail_overflow_op": 3,
+            "myl_qbe_rc_status": 35,
+            "myl_rc_drain": 1,
+            "myl_rc_edge_release": 2,
+            "myl_rc_invariant_failed": 1,
+            "myl_rc_native_loan": 1,
+            "myl_rc_native_retain": 1,
+            "myl_rc_native_take": 13,
+            "myl_t_1535267fc5a418ed8053a9a6290354ebfcee0a92538bece7aa6b84967f8fb527_rcg_unloan": 3,
+            "myl_t_277089d91c0bdf4f2e6862ba7e4a07605119431f5d13f726dd352b06f1b206a9_rcg_drop": 9,
+            "myl_t_277089d91c0bdf4f2e6862ba7e4a07605119431f5d13f726dd352b06f1b206a9_rcg_unloan": 1,
+            "myl_t_2cedd6eeca93c3ea92d86b2593a2be12b6045916b4fe03348350f9d6124d48cc_rcg_drop": 2,
+            "myl_t_2cedd6eeca93c3ea92d86b2593a2be12b6045916b4fe03348350f9d6124d48cc_rcg_publish": 1,
+            "myl_t_785498c443d0a980df3d0827c91989bab92d5672b68aaea1281c9af29aa300f6_rcg_drop": 6,
+            "myl_t_785498c443d0a980df3d0827c91989bab92d5672b68aaea1281c9af29aa300f6_rcg_take": 14,
+            "myl_t_d2b6ba0786a9e08aacf8d0a6addb6e83692a65ffe726a74bc3ded41db969c0ff_rcg_loan": 5,
+            "myl_t_d2b6ba0786a9e08aacf8d0a6addb6e83692a65ffe726a74bc3ded41db969c0ff_rcg_retain": 11,
+            "myl_t_d2b6ba0786a9e08aacf8d0a6addb6e83692a65ffe726a74bc3ded41db969c0ff_rcg_unloan": 6
+          },
+          "lines": 3710
+        },
+        "qbe": {
+          "binary": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-write-screen/bin/write-combined-qbe",
+          "binary_sha256": "6df8d43b08667909561ba00962b415eeed5e0b347cc006a572e6db2cc78c9fe3",
+          "command": [
+            "objdump",
+            "-d",
+            "--disassemble=myl_f_d32d9d609bd2d498a6b2d4f34d6d36851c296533eaafa0e3b7c4c9b1eec65fca",
+            "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-write-screen/bin/write-combined-qbe"
+          ],
+          "sha256": "5c9a9f5fd9eefbf630b7f80957761130df709649c0b2599f97b23f8c26aa2090",
+          "calls": {
+            "compiler_rt.fastMemset": 1,
+            "myl_f_00df54ab2bd506d79f963e712b9a3f7789de5e5322e1a9bddad68090e51670b0": 1,
+            "myl_f_24022340835b630bed429507b0babcf6a1938c3f290f9ce31271e951c2af0b8e": 1,
+            "myl_f_3dd24b2b8167f92811eb1aa75d06c05872b9880d7f900833ae7f6f032a592152": 1,
+            "myl_f_706a365e4bc67d4dbe31048a4b9bb57e9686317829d7947d70f33e26eb76ce88": 1,
+            "myl_f_72cff91e1ca43adf6e3bd650d1fe503b405034486590fc282e877edc70061b44": 1,
+            "myl_f_8fcbbbde32315b60b2a6da8b239f110b994a3e18d8c0042d9b7f76bb4a7f2ee0": 1,
+            "myl_f_ace3269ad0fae9d1e7ed4173f8a72271ee6ee16c02f3b79ac71b6c929cdf9394": 1,
+            "myl_f_ad307cc2867f7ae8645edfb1559c37ecdae6ef88fa193238135e91f033295342": 1,
+            "myl_f_aebdc485d7756373248446bbe449e831b1afbb727357d693268ecc8fb629cd5b": 1,
+            "myl_f_d32d9d609bd2d498a6b2d4f34d6d36851c296533eaafa0e3b7c4c9b1eec65fca": 1,
+            "myl_f_efefaf187dbda74c0fc83883b6acb4fd651afe0399c3994d07d1373d88b055ca": 1,
+            "myl_f_fe7a9b911e5976d536198547c07832bc757732c7fb0f639f1c35b8e4259d7e1e": 1,
+            "myl_qbe_error_trace_append": 12,
+            "myl_qbe_fail_cast": 1,
+            "myl_qbe_fail_frame": 1,
+            "myl_qbe_fail_normalized_index_bounds": 1,
+            "myl_qbe_fail_overflow_op": 1,
+            "myl_qbe_heap": 1,
+            "myl_qbe_rc_status": 12,
+            "myl_qbe_region_mark": 1,
+            "myl_rc_take_failure": 12,
+            "myl_t_785498c443d0a980df3d0827c91989bab92d5672b68aaea1281c9af29aa300f6_rcg_take": 12
+          },
+          "lines": 1075
+        }
+      }
+    },
+    "execute": {
+      "name": "interpreter::execute",
+      "symbol": "myl_f_866b323a26c1f255ec52657168306d80f60f75f1d366d57675001af4151be806",
+      "ssa_source": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-write-screen/cache-write-combined-qbe/frontend/fragments/0455afa1beb638eb1bb868d65ae5700fec28693b19c9e417ec973a7d1479d848/il/92264c8a499f12840a12683230dd026048ca016dd7fb1066de5cf194260a8fde",
+      "ssa_sha256": "2eca647a75c630e35c5417c8e8af7ed683ffd9ab478e133b6c33e6df3c6ada55",
+      "ssa_lines": 1592,
+      "managed_ops": {
+        "take": 10,
+        "drop": 32,
+        "loan": 0,
+        "unloan": 32,
+        "copy": 0
+      },
+      "normalized_index_bounds": 1,
+      "assembly": {
+        "llvm": {
+          "binary": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-write-screen/bin/write-combined-llvm",
+          "binary_sha256": "42509ac27d993e3925caff5d1fe4a4566a24f00819e1ac08e8cce358eb1d2852",
+          "command": [
+            "objdump",
+            "-d",
+            "--disassemble=myl_f_866b323a26c1f255ec52657168306d80f60f75f1d366d57675001af4151be806",
+            "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-write-screen/bin/write-combined-llvm"
+          ],
+          "sha256": "a0b8cc2159d6f741ca76b86e428ad2e375fcadffe1b081fb288d7263130e5b53",
+          "calls": {
+            "abort@plt": 1,
+            "fail": 10,
+            "myl_f_33e96fe9cb0dad36eb060c89cc0eac8c30f67b59cc2b5a47425887e8980d401c": 1,
+            "myl_f_448f060fb6f29ea6a9164d3fd28db134abf5c67c6d4955b6c7d5a3d5aa27f16e": 1,
+            "myl_f_462f27e74799004fdcfa9633adb7a2d010fc9ea32e01e7826712c1dd2033d244": 1,
+            "myl_f_6993cfd5bc46d9d696adcc139c626f2b677f81bea8031cc740fa79e8da2d676e": 1,
+            "myl_f_6fe10fdc09b87fb76dc6a5a2a43c5948fb938a942549e3f0f2e42c18a951ae5b": 1,
+            "myl_f_851eb64c403b25f3166dffdb17dfc9e3c924451c20caa5851a74e0f4081ba50f": 1,
+            "myl_f_866b323a26c1f255ec52657168306d80f60f75f1d366d57675001af4151be806": 4,
+            "myl_f_9cfccc291a0516b23c50da008b59b8f2c8a2e23f61575966d1d2f1cfb2a4be4b": 3,
+            "myl_f_a931877b11ea3aa7de37854bbbc13e6f0160c87ee24000d47530697609fa185a": 1,
+            "myl_f_bd9e3a524ab3cf6b1d10f9f010a9809523e9baa589e1d9e95734ec89624acb99": 2,
+            "myl_f_d32d9d609bd2d498a6b2d4f34d6d36851c296533eaafa0e3b7c4c9b1eec65fca": 6,
+            "myl_qbe_error_trace_append_preserve_most": 18,
+            "myl_qbe_fail_cast": 11,
+            "myl_qbe_fail_frame": 10,
+            "myl_qbe_fail_iteration": 1,
+            "myl_qbe_fail_normalized_index_bounds": 10,
+            "myl_qbe_fail_overflow_op": 7,
+            "myl_qbe_rc_status": 25,
+            "myl_rc_invariant_failed": 1,
+            "myl_rc_native_take": 18,
+            "myl_t_1535267fc5a418ed8053a9a6290354ebfcee0a92538bece7aa6b84967f8fb527_rcg_unloan": 3,
+            "myl_t_1da8f946ba246f799cfc56f183bef69d4262f662fcee79b8b62bd1d3f8d7855b_rcg_drop": 2,
+            "myl_t_1da8f946ba246f799cfc56f183bef69d4262f662fcee79b8b62bd1d3f8d7855b_rcg_take": 11,
+            "myl_t_785498c443d0a980df3d0827c91989bab92d5672b68aaea1281c9af29aa300f6_rcg_drop": 7,
+            "myl_t_a83873657e77deb1bf51281383ae925ccb1b4b6510284b93a36500031c0efc14_rcg_drop": 1,
+            "myl_t_d2b6ba0786a9e08aacf8d0a6addb6e83692a65ffe726a74bc3ded41db969c0ff_rcg_retain": 9
+          },
+          "lines": 3227
+        },
+        "qbe": {
+          "binary": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-write-screen/bin/write-combined-qbe",
+          "binary_sha256": "6df8d43b08667909561ba00962b415eeed5e0b347cc006a572e6db2cc78c9fe3",
+          "command": [
+            "objdump",
+            "-d",
+            "--disassemble=myl_f_866b323a26c1f255ec52657168306d80f60f75f1d366d57675001af4151be806",
+            "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-write-screen/bin/write-combined-qbe"
+          ],
+          "sha256": "e6730a40ad8f8905dd1b4700804a0e0981bbbdaf3636770aea74961df9849b08",
+          "calls": {
+            "compiler_rt.fastMemset": 1,
+            "myl_f_2d562dc4c016cbd8cb476a4b8378eb1edcfd162441edb240b836cfd50e70ba01": 1,
+            "myl_f_32b97d4c2a5e41881000ab8c08009cc61c7735c8d3e3df9f813961d074c2b763": 1,
+            "myl_f_3d29329083174bf818b439bb3217314531a8b31362370e550c87b36cf78b4004": 1,
+            "myl_f_462f27e74799004fdcfa9633adb7a2d010fc9ea32e01e7826712c1dd2033d244": 1,
+            "myl_f_9071aa69d62fb1d23e062dda66ed7f74ea3cd6b716225aca159e2b66890e85fc": 1,
+            "myl_f_b52d32a86fcce1fabbd48bba793e10d64e0a86b7fe706d7a156a78000f9bddb2": 1,
+            "myl_f_bd1b315e4bdfcb2555dc201fbffc9f3f3da9e1085b3c479b7a8afa8f3cd7d810": 1,
+            "myl_f_f34622ee99c4a79b053a9c68a8d926d3ee03a5d2a8e144813f93a413c8e2cea5": 1,
+            "myl_f_f98310dc433a6ffc4936ce128753c578f0bd1637e181fedcb5c9b547efaf94b4": 1,
+            "myl_qbe_error_trace_append": 9,
+            "myl_qbe_fail_cast": 1,
+            "myl_qbe_fail_frame": 1,
+            "myl_qbe_fail_normalized_index_bounds": 1,
+            "myl_qbe_fail_overflow_op": 1,
+            "myl_qbe_heap": 1,
+            "myl_qbe_rc_status": 11,
+            "myl_qbe_region_mark": 1,
+            "myl_rc_take_failure": 11,
+            "myl_t_1da8f946ba246f799cfc56f183bef69d4262f662fcee79b8b62bd1d3f8d7855b_rcg_drop": 1,
+            "myl_t_1da8f946ba246f799cfc56f183bef69d4262f662fcee79b8b62bd1d3f8d7855b_rcg_take": 10,
+            "myl_t_785498c443d0a980df3d0827c91989bab92d5672b68aaea1281c9af29aa300f6_rcg_drop": 2,
+            "myl_t_d2b6ba0786a9e08aacf8d0a6addb6e83692a65ffe726a74bc3ded41db969c0ff_rcg_retain": 1
+          },
+          "lines": 900
+        }
+      }
+    },
+    "binary": {
+      "name": "interpreter::binary",
+      "symbol": "myl_f_72cff91e1ca43adf6e3bd650d1fe503b405034486590fc282e877edc70061b44",
+      "ssa_source": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-write-screen/cache-write-combined-qbe/frontend/fragments/0455afa1beb638eb1bb868d65ae5700fec28693b19c9e417ec973a7d1479d848/il/c44b222956512db0fc418275cdb211ce58da248ff5ffd275fea9a43840389ab9",
+      "ssa_sha256": "5c497b51b2774ed0d1dd45ea9e89c765d8f5a26eafc263ad40bf938f92607258",
+      "ssa_lines": 1958,
+      "managed_ops": {
+        "take": 7,
+        "drop": 26,
+        "loan": 2,
+        "unloan": 26,
+        "copy": 0
+      },
+      "normalized_index_bounds": 0,
+      "assembly": {
+        "llvm": {
+          "binary": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-write-screen/bin/write-combined-llvm",
+          "binary_sha256": "42509ac27d993e3925caff5d1fe4a4566a24f00819e1ac08e8cce358eb1d2852",
+          "command": [
+            "objdump",
+            "-d",
+            "--disassemble=myl_f_72cff91e1ca43adf6e3bd650d1fe503b405034486590fc282e877edc70061b44",
+            "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-write-screen/bin/write-combined-llvm"
+          ],
+          "sha256": "788027f5725f416cf8d51ce05691be0eb094ca13e34e0272f7ad54e0bbbaba7e",
+          "calls": {},
+          "lines": 11
+        },
+        "qbe": {
+          "binary": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-write-screen/bin/write-combined-qbe",
+          "binary_sha256": "6df8d43b08667909561ba00962b415eeed5e0b347cc006a572e6db2cc78c9fe3",
+          "command": [
+            "objdump",
+            "-d",
+            "--disassemble=myl_f_72cff91e1ca43adf6e3bd650d1fe503b405034486590fc282e877edc70061b44",
+            "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-write-screen/bin/write-combined-qbe"
+          ],
+          "sha256": "21b14dd8d8c15088028b84b1a4bb35caa340c599181eef911419239737953c76",
+          "calls": {
+            "compiler_rt.fastMemset": 1,
+            "myl_f_06f8e1aea800c9b41a5410887391e466d9a10e9d6e39101d9d6988189e351735": 2,
+            "myl_f_0c155c0779b8bdd25c5e93399d26b7ce8537f2f7388c677f2661e05c296c2007": 2,
+            "myl_f_1e67eb8ef4c3a3acc3a97242d455a6d9c8a2bcb48d8912e38331c2e291a74a0e": 1,
+            "myl_f_339494ddd89a48d13094d9f5c6b4b55320c4f6128bc80d7aba97a84a17838cc1": 1,
+            "myl_f_393b03e6e8000a2be3bf0bb432f9197ce3fbfd4c525e561e0f9e9b1b3cc38f9b": 2,
+            "myl_f_47614935f4c1a8cf04cb9956ad991281881c4a7abd3bc9a4a6c225cb77d4b069": 1,
+            "myl_f_549c194dd59052d6a584a91a45f8e27a465f53a107227cc684c6aadde33da3a0": 1,
+            "myl_f_851eb64c403b25f3166dffdb17dfc9e3c924451c20caa5851a74e0f4081ba50f": 2,
+            "myl_f_8c062ec4784d4b0491e6d5d24da0bf886cc822f390794d94cd35c159749aceeb_rc_borrow": 2,
+            "myl_f_d32d9d609bd2d498a6b2d4f34d6d36851c296533eaafa0e3b7c4c9b1eec65fca": 2,
+            "myl_f_ea97dd36e4e0ea42e46ce6a891c9a00cafb686a8c9a27c77fe327a84d70301d7": 2,
+            "myl_qbe_error_trace_append": 2,
+            "myl_qbe_error_trace_origin": 2,
+            "myl_qbe_fail_assert": 4,
+            "myl_qbe_fail_frame": 1,
+            "myl_qbe_heap": 1,
+            "myl_qbe_rc_status": 11,
+            "myl_qbe_region_mark": 1,
+            "myl_rc_take_failure": 11,
+            "myl_t_277089d91c0bdf4f2e6862ba7e4a07605119431f5d13f726dd352b06f1b206a9_rcg_drop": 2,
+            "myl_t_2f2e02ad41a02f945c6bab09db3fd878f9568ab08155ec990187fbebdc2903d4_rcg_drop": 1,
+            "myl_t_4e6c1584b61f68a69271c693e65be720323e6bcb8d28e2f694592eed5c4c3f28_rcg_drop": 7,
+            "myl_t_785498c443d0a980df3d0827c91989bab92d5672b68aaea1281c9af29aa300f6_rcg_drop": 6,
+            "myl_t_785498c443d0a980df3d0827c91989bab92d5672b68aaea1281c9af29aa300f6_rcg_take": 5,
+            "myl_t_87b3a699846cba24453cba0c476cfc282ad163c22e08be1c713a98bd1480fb29_rcg_drop": 1,
+            "myl_t_9db29878bb870aedd7beb381f7773c3f7385b7f4bb65a46f8c7260f8d4ec45b9_rcg_drop": 1,
+            "myl_t_d2b6ba0786a9e08aacf8d0a6addb6e83692a65ffe726a74bc3ded41db969c0ff_rcg_loan": 2,
+            "myl_t_d2b6ba0786a9e08aacf8d0a6addb6e83692a65ffe726a74bc3ded41db969c0ff_rcg_retain": 4,
+            "myl_t_d2b6ba0786a9e08aacf8d0a6addb6e83692a65ffe726a74bc3ded41db969c0ff_rcg_unloan": 2
+          },
+          "lines": 1219
+        }
+      }
+    },
+    "call_expr": {
+      "name": "interpreter::call_expr",
+      "symbol": "myl_f_ace3269ad0fae9d1e7ed4173f8a72271ee6ee16c02f3b79ac71b6c929cdf9394",
+      "ssa_source": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-write-screen/cache-write-combined-qbe/frontend/fragments/0455afa1beb638eb1bb868d65ae5700fec28693b19c9e417ec973a7d1479d848/il/9c9e34d8c9d3fcfd07911767a47c8b83f77170d29fab734812f6f3bfa32c39c4",
+      "ssa_sha256": "929fb46091d1b7c98860cbb0b90ce2b3b903cfdee86b5b341a1c4ec6712f180f",
+      "ssa_lines": 2167,
+      "managed_ops": {
+        "take": 5,
+        "drop": 31,
+        "loan": 0,
+        "unloan": 31,
+        "copy": 0
+      },
+      "normalized_index_bounds": 1,
+      "assembly": {
+        "llvm": {
+          "binary": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-write-screen/bin/write-combined-llvm",
+          "binary_sha256": "42509ac27d993e3925caff5d1fe4a4566a24f00819e1ac08e8cce358eb1d2852",
+          "command": [
+            "objdump",
+            "-d",
+            "--disassemble=myl_f_ace3269ad0fae9d1e7ed4173f8a72271ee6ee16c02f3b79ac71b6c929cdf9394",
+            "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-write-screen/bin/write-combined-llvm"
+          ],
+          "sha256": "788027f5725f416cf8d51ce05691be0eb094ca13e34e0272f7ad54e0bbbaba7e",
+          "calls": {},
+          "lines": 11
+        },
+        "qbe": {
+          "binary": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-write-screen/bin/write-combined-qbe",
+          "binary_sha256": "6df8d43b08667909561ba00962b415eeed5e0b347cc006a572e6db2cc78c9fe3",
+          "command": [
+            "objdump",
+            "-d",
+            "--disassemble=myl_f_ace3269ad0fae9d1e7ed4173f8a72271ee6ee16c02f3b79ac71b6c929cdf9394",
+            "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-write-screen/bin/write-combined-qbe"
+          ],
+          "sha256": "da1df8fcf4e11fe2cc059441fbf3f98fcf7e5fd2d8036c1bf66d461aaa0247bb",
+          "calls": {
+            "compiler_rt.fastMemset": 1,
+            "myl_f_212e271fe05de3e6f3ffd32ac47b6f61a493b89d19f38db2b86ba3d72c8c702d": 1,
+            "myl_f_9c2dd72546f546c3c615d24451fc30da0d50c0f0983ecd9e6d4f32b6cdf5f351": 1,
+            "myl_f_d32d9d609bd2d498a6b2d4f34d6d36851c296533eaafa0e3b7c4c9b1eec65fca": 2,
+            "myl_qbe_error_trace_append": 3,
+            "myl_qbe_fail_cast": 2,
+            "myl_qbe_fail_frame": 1,
+            "myl_qbe_fail_iteration": 2,
+            "myl_qbe_fail_normalized_index_bounds": 1,
+            "myl_qbe_fail_overflow_op": 1,
+            "myl_qbe_heap": 1,
+            "myl_qbe_rc_status": 9,
+            "myl_qbe_region_mark": 1,
+            "myl_rc_take_failure": 6,
+            "myl_t_1535267fc5a418ed8053a9a6290354ebfcee0a92538bece7aa6b84967f8fb527_rcg_drop": 1,
+            "myl_t_1535267fc5a418ed8053a9a6290354ebfcee0a92538bece7aa6b84967f8fb527_rcg_unloan": 4,
+            "myl_t_2cedd6eeca93c3ea92d86b2593a2be12b6045916b4fe03348350f9d6124d48cc_rcg_drop": 4,
+            "myl_t_2cedd6eeca93c3ea92d86b2593a2be12b6045916b4fe03348350f9d6124d48cc_rcg_take": 1,
+            "myl_t_785498c443d0a980df3d0827c91989bab92d5672b68aaea1281c9af29aa300f6_rcg_drop": 6,
+            "myl_t_785498c443d0a980df3d0827c91989bab92d5672b68aaea1281c9af29aa300f6_rcg_take": 3,
+            "myl_t_87b3a699846cba24453cba0c476cfc282ad163c22e08be1c713a98bd1480fb29_rcg_drop": 2,
+            "myl_t_87b3a699846cba24453cba0c476cfc282ad163c22e08be1c713a98bd1480fb29_rcg_unloan": 2,
+            "myl_t_d2b6ba0786a9e08aacf8d0a6addb6e83692a65ffe726a74bc3ded41db969c0ff_rcg_retain": 2
+          },
+          "lines": 876
+        }
+      }
+    },
+    "call_node": {
+      "name": "interpreter::call_node",
+      "symbol": "myl_f_9c2dd72546f546c3c615d24451fc30da0d50c0f0983ecd9e6d4f32b6cdf5f351",
+      "ssa_source": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-write-screen/cache-write-combined-qbe/frontend/fragments/0455afa1beb638eb1bb868d65ae5700fec28693b19c9e417ec973a7d1479d848/il/cb3ccd812a003cb64fae05d141a0e3ecba8ac9b87dc03f0249724b478f4bae7d",
+      "ssa_sha256": "8d7f98fe0bb195c7431b2a27e11665bfe87bb42810d5a3cd28ad48273e7d6fcb",
+      "ssa_lines": 1596,
+      "managed_ops": {
+        "take": 12,
+        "drop": 37,
+        "loan": 0,
+        "unloan": 37,
+        "copy": 0
+      },
+      "normalized_index_bounds": 1,
+      "assembly": {
+        "llvm": {
+          "binary": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-write-screen/bin/write-combined-llvm",
+          "binary_sha256": "42509ac27d993e3925caff5d1fe4a4566a24f00819e1ac08e8cce358eb1d2852",
+          "command": [
+            "objdump",
+            "-d",
+            "--disassemble=myl_f_9c2dd72546f546c3c615d24451fc30da0d50c0f0983ecd9e6d4f32b6cdf5f351",
+            "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-write-screen/bin/write-combined-llvm"
+          ],
+          "sha256": "788027f5725f416cf8d51ce05691be0eb094ca13e34e0272f7ad54e0bbbaba7e",
+          "calls": {},
+          "lines": 11
+        },
+        "qbe": {
+          "binary": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-write-screen/bin/write-combined-qbe",
+          "binary_sha256": "6df8d43b08667909561ba00962b415eeed5e0b347cc006a572e6db2cc78c9fe3",
+          "command": [
+            "objdump",
+            "-d",
+            "--disassemble=myl_f_9c2dd72546f546c3c615d24451fc30da0d50c0f0983ecd9e6d4f32b6cdf5f351",
+            "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-write-screen/bin/write-combined-qbe"
+          ],
+          "sha256": "7d063241e8ff9a7efd07766c0053ced6029580f396d4fbd26c764ea10ef6717e",
+          "calls": {
+            "compiler_rt.fastMemset": 1,
+            "myl_qbe_fail_assert": 11,
+            "myl_qbe_fail_cast": 1,
+            "myl_qbe_fail_frame": 1,
+            "myl_qbe_fail_normalized_index_bounds": 1,
+            "myl_qbe_fail_overflow_op": 1,
+            "myl_qbe_heap": 1,
+            "myl_qbe_rc_status": 2,
+            "myl_qbe_region_mark": 1,
+            "myl_rc_take_failure": 2,
+            "myl_t_2cedd6eeca93c3ea92d86b2593a2be12b6045916b4fe03348350f9d6124d48cc_rcg_publish": 1,
+            "myl_t_2cedd6eeca93c3ea92d86b2593a2be12b6045916b4fe03348350f9d6124d48cc_rcg_take": 1
+          },
+          "lines": 235
+        }
+      }
+    },
+    "run_block": {
+      "name": "interpreter::run_block",
+      "symbol": "myl_f_82db81cbf039d56a0d5a834fd6bf7f684d61381ad6e90659c4e405c77abb1788",
+      "ssa_source": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-write-screen/cache-write-combined-qbe/frontend/fragments/0455afa1beb638eb1bb868d65ae5700fec28693b19c9e417ec973a7d1479d848/il/302836b0853a89a2453516ca1d208a6ad76e6293a8412c8c6574cb9389b3d2ee",
+      "ssa_sha256": "0a170d9f9b2e4130a19699c9caaeeabb91d1898816fdffb93ac7ac34d1ce7ce3",
+      "ssa_lines": 1395,
+      "managed_ops": {
+        "take": 3,
+        "drop": 23,
+        "loan": 0,
+        "unloan": 23,
+        "copy": 0
+      },
+      "normalized_index_bounds": 2,
+      "assembly": {
+        "llvm": {
+          "binary": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-write-screen/bin/write-combined-llvm",
+          "binary_sha256": "42509ac27d993e3925caff5d1fe4a4566a24f00819e1ac08e8cce358eb1d2852",
+          "command": [
+            "objdump",
+            "-d",
+            "--disassemble=myl_f_82db81cbf039d56a0d5a834fd6bf7f684d61381ad6e90659c4e405c77abb1788",
+            "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-write-screen/bin/write-combined-llvm"
+          ],
+          "sha256": "788027f5725f416cf8d51ce05691be0eb094ca13e34e0272f7ad54e0bbbaba7e",
+          "calls": {},
+          "lines": 11
+        },
+        "qbe": {
+          "binary": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-write-screen/bin/write-combined-qbe",
+          "binary_sha256": "6df8d43b08667909561ba00962b415eeed5e0b347cc006a572e6db2cc78c9fe3",
+          "command": [
+            "objdump",
+            "-d",
+            "--disassemble=myl_f_82db81cbf039d56a0d5a834fd6bf7f684d61381ad6e90659c4e405c77abb1788",
+            "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-write-screen/bin/write-combined-qbe"
+          ],
+          "sha256": "c6cb432b81751d3a81403ec82e3a77a1d3a3894d1fca4ba04aa582a14c75c345",
+          "calls": {
+            "compiler_rt.fastMemset": 1,
+            "myl_f_866b323a26c1f255ec52657168306d80f60f75f1d366d57675001af4151be806": 1,
+            "myl_qbe_error_trace_append": 1,
+            "myl_qbe_fail_cast": 2,
+            "myl_qbe_fail_frame": 1,
+            "myl_qbe_fail_iteration": 2,
+            "myl_qbe_fail_normalized_index_bounds": 2,
+            "myl_qbe_fail_overflow_op": 2,
+            "myl_qbe_heap": 1,
+            "myl_qbe_rc_status": 5,
+            "myl_qbe_region_mark": 1,
+            "myl_rc_take_failure": 4,
+            "myl_t_1535267fc5a418ed8053a9a6290354ebfcee0a92538bece7aa6b84967f8fb527_rcg_drop": 1,
+            "myl_t_1535267fc5a418ed8053a9a6290354ebfcee0a92538bece7aa6b84967f8fb527_rcg_unloan": 3,
+            "myl_t_1da8f946ba246f799cfc56f183bef69d4262f662fcee79b8b62bd1d3f8d7855b_rcg_drop": 3,
+            "myl_t_1da8f946ba246f799cfc56f183bef69d4262f662fcee79b8b62bd1d3f8d7855b_rcg_take": 3,
+            "myl_t_87b3a699846cba24453cba0c476cfc282ad163c22e08be1c713a98bd1480fb29_rcg_drop": 1,
+            "myl_t_87b3a699846cba24453cba0c476cfc282ad163c22e08be1c713a98bd1480fb29_rcg_unloan": 1,
+            "myl_t_d2b6ba0786a9e08aacf8d0a6addb6e83692a65ffe726a74bc3ded41db969c0ff_rcg_retain": 1
+          },
+          "lines": 636
+        }
+      }
+    },
+    "run_body": {
+      "name": "interpreter::run_body",
+      "symbol": "myl_f_8a9892bcaf1d54845365507fdbe66f11290e39bbcea0301e2767f370744c950d",
+      "ssa_source": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-write-screen/cache-write-combined-qbe/frontend/fragments/0455afa1beb638eb1bb868d65ae5700fec28693b19c9e417ec973a7d1479d848/il/53eb0e20d74f388293b4773b768f3dfe0fd1c12283a72aeb023d646cd673fb10",
+      "ssa_sha256": "c238146266f550a4f87211647a770089bbe65032eb41adbbebd0abbea69acabb",
+      "ssa_lines": 1141,
+      "managed_ops": {
+        "take": 3,
+        "drop": 14,
+        "loan": 0,
+        "unloan": 14,
+        "copy": 0
+      },
+      "normalized_index_bounds": 2,
+      "assembly": {
+        "llvm": {
+          "binary": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-write-screen/bin/write-combined-llvm",
+          "binary_sha256": "42509ac27d993e3925caff5d1fe4a4566a24f00819e1ac08e8cce358eb1d2852",
+          "command": [
+            "objdump",
+            "-d",
+            "--disassemble=myl_f_8a9892bcaf1d54845365507fdbe66f11290e39bbcea0301e2767f370744c950d",
+            "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-write-screen/bin/write-combined-llvm"
+          ],
+          "sha256": "788027f5725f416cf8d51ce05691be0eb094ca13e34e0272f7ad54e0bbbaba7e",
+          "calls": {},
+          "lines": 11
+        },
+        "qbe": {
+          "binary": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-write-screen/bin/write-combined-qbe",
+          "binary_sha256": "6df8d43b08667909561ba00962b415eeed5e0b347cc006a572e6db2cc78c9fe3",
+          "command": [
+            "objdump",
+            "-d",
+            "--disassemble=myl_f_8a9892bcaf1d54845365507fdbe66f11290e39bbcea0301e2767f370744c950d",
+            "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-write-screen/bin/write-combined-qbe"
+          ],
+          "sha256": "bc8750424d4a5f57da075f92087881788ce82bc38d440b18399d24a235d4ce97",
+          "calls": {
+            "compiler_rt.fastMemset": 1,
+            "myl_f_866b323a26c1f255ec52657168306d80f60f75f1d366d57675001af4151be806": 1,
+            "myl_qbe_error_trace_append": 1,
+            "myl_qbe_fail_cast": 2,
+            "myl_qbe_fail_frame": 1,
+            "myl_qbe_fail_iteration": 2,
+            "myl_qbe_fail_normalized_index_bounds": 2,
+            "myl_qbe_fail_overflow_op": 2,
+            "myl_qbe_heap": 1,
+            "myl_qbe_rc_status": 5,
+            "myl_qbe_region_mark": 1,
+            "myl_rc_take_failure": 4,
+            "myl_t_1535267fc5a418ed8053a9a6290354ebfcee0a92538bece7aa6b84967f8fb527_rcg_unloan": 3,
+            "myl_t_1da8f946ba246f799cfc56f183bef69d4262f662fcee79b8b62bd1d3f8d7855b_rcg_drop": 3,
+            "myl_t_1da8f946ba246f799cfc56f183bef69d4262f662fcee79b8b62bd1d3f8d7855b_rcg_take": 3,
+            "myl_t_87b3a699846cba24453cba0c476cfc282ad163c22e08be1c713a98bd1480fb29_rcg_drop": 1,
+            "myl_t_87b3a699846cba24453cba0c476cfc282ad163c22e08be1c713a98bd1480fb29_rcg_unloan": 1,
+            "myl_t_d2b6ba0786a9e08aacf8d0a6addb6e83692a65ffe726a74bc3ded41db969c0ff_rcg_retain": 1
+          },
+          "lines": 537
+        }
+      }
+    },
+    "class_node": {
+      "name": "interpreter::class_node",
+      "symbol": "myl_f_ce13b56e3ce2bdbd179a040936f25b6855280660f417294c608a4338bd301b74",
+      "ssa_source": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-write-screen/cache-write-combined-qbe/frontend/fragments/0455afa1beb638eb1bb868d65ae5700fec28693b19c9e417ec973a7d1479d848/il/f1660122f3986d641a7aafbb5bcf7eff2e985564585416697055ea10b648e1cd",
+      "ssa_sha256": "3d38f7c4d4ffe8d9de84d4e42e8327d4426c9054570f514fdb9f43a793156290",
+      "ssa_lines": 1239,
+      "managed_ops": {
+        "take": 9,
+        "drop": 28,
+        "loan": 0,
+        "unloan": 28,
+        "copy": 0
+      },
+      "normalized_index_bounds": 1,
+      "assembly": {
+        "llvm": {
+          "binary": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-write-screen/bin/write-combined-llvm",
+          "binary_sha256": "42509ac27d993e3925caff5d1fe4a4566a24f00819e1ac08e8cce358eb1d2852",
+          "command": [
+            "objdump",
+            "-d",
+            "--disassemble=myl_f_ce13b56e3ce2bdbd179a040936f25b6855280660f417294c608a4338bd301b74",
+            "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-write-screen/bin/write-combined-llvm"
+          ],
+          "sha256": "788027f5725f416cf8d51ce05691be0eb094ca13e34e0272f7ad54e0bbbaba7e",
+          "calls": {},
+          "lines": 11
+        },
+        "qbe": {
+          "binary": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-write-screen/bin/write-combined-qbe",
+          "binary_sha256": "6df8d43b08667909561ba00962b415eeed5e0b347cc006a572e6db2cc78c9fe3",
+          "command": [
+            "objdump",
+            "-d",
+            "--disassemble=myl_f_ce13b56e3ce2bdbd179a040936f25b6855280660f417294c608a4338bd301b74",
+            "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-write-screen/bin/write-combined-qbe"
+          ],
+          "sha256": "e2cc427413bb9be2fe2efbf76b911add944e02c44af7cd91eba41f19766c8f5f",
+          "calls": {
+            "compiler_rt.fastMemset": 1,
+            "myl_qbe_fail_assert": 8,
+            "myl_qbe_fail_cast": 1,
+            "myl_qbe_fail_frame": 1,
+            "myl_qbe_fail_normalized_index_bounds": 1,
+            "myl_qbe_fail_overflow_op": 1,
+            "myl_qbe_heap": 1,
+            "myl_qbe_rc_status": 2,
+            "myl_qbe_region_mark": 1,
+            "myl_rc_take_failure": 2,
+            "myl_t_936ef1df8ee9b22aeeca81bdacc17d611f5ed2ee4d8f92454f4592a600eb217d_rcg_publish": 1,
+            "myl_t_936ef1df8ee9b22aeeca81bdacc17d611f5ed2ee4d8f92454f4592a600eb217d_rcg_take": 1
+          },
+          "lines": 247
+        }
+      }
+    },
+    "class_declaration": {
+      "name": "interpreter::class_declaration",
+      "symbol": "myl_f_462f27e74799004fdcfa9633adb7a2d010fc9ea32e01e7826712c1dd2033d244",
+      "ssa_source": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-write-screen/cache-write-combined-qbe/frontend/fragments/0455afa1beb638eb1bb868d65ae5700fec28693b19c9e417ec973a7d1479d848/il/15d8b4b6b0f83a0bf9a50af95ab1d006bafebeb048fcafd61b43f640aa08e9ce",
+      "ssa_sha256": "09161497772f6b3ebdbc5fd61f3a83385dedb666ccd7f1dc0c2d3a3c9b9af17e",
+      "ssa_lines": 2947,
+      "managed_ops": {
+        "take": 7,
+        "drop": 62,
+        "loan": 1,
+        "unloan": 62,
+        "copy": 0
+      },
+      "normalized_index_bounds": 2,
+      "assembly": {
+        "llvm": {
+          "binary": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-write-screen/bin/write-combined-llvm",
+          "binary_sha256": "42509ac27d993e3925caff5d1fe4a4566a24f00819e1ac08e8cce358eb1d2852",
+          "command": [
+            "objdump",
+            "-d",
+            "--disassemble=myl_f_462f27e74799004fdcfa9633adb7a2d010fc9ea32e01e7826712c1dd2033d244",
+            "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-write-screen/bin/write-combined-llvm"
+          ],
+          "sha256": "fb7114c7935385d9fa8f5a908edf809ae29381a483da98e221d914a05e1c58d3",
+          "calls": {
+            "abort@plt": 1,
+            "fail": 3,
+            "myl_f_1d7419ba0d9bd7e7ee6870cf43902b87519d25b5577326ecd50ac6944acafca6": 3,
+            "myl_f_33e96fe9cb0dad36eb060c89cc0eac8c30f67b59cc2b5a47425887e8980d401c": 1,
+            "myl_f_448f060fb6f29ea6a9164d3fd28db134abf5c67c6d4955b6c7d5a3d5aa27f16e": 1,
+            "myl_f_55118dea72715056d11e62240a4d5f7be4aeebfddc319f59a70a489a3a8b0e54": 1,
+            "myl_f_6993cfd5bc46d9d696adcc139c626f2b677f81bea8031cc740fa79e8da2d676e": 3,
+            "myl_f_6fe10fdc09b87fb76dc6a5a2a43c5948fb938a942549e3f0f2e42c18a951ae5b": 1,
+            "myl_f_72cbd8b3ebb02b19d0384fb691061873bba08de6d559f9babec1767adabac444": 3,
+            "myl_f_851eb64c403b25f3166dffdb17dfc9e3c924451c20caa5851a74e0f4081ba50f": 2,
+            "myl_f_9cfccc291a0516b23c50da008b59b8f2c8a2e23f61575966d1d2f1cfb2a4be4b": 1,
+            "myl_f_a146740a06e5fa23640f1f72b70e36e5a89eb686546e75b2a5fa1ac552d2f888": 1,
+            "myl_f_a1ee89ef02f5de3a0549ceef8b403f960b5d820e5be22eacf42a3abf03f1c216": 1,
+            "myl_f_b54eeed03870b797a96d1738a2f42781bb5db72dae7d2f57e436551c3d0172dd_rc_borrow": 3,
+            "myl_f_bd9e3a524ab3cf6b1d10f9f010a9809523e9baa589e1d9e95734ec89624acb99": 2,
+            "myl_f_d32d9d609bd2d498a6b2d4f34d6d36851c296533eaafa0e3b7c4c9b1eec65fca": 1,
+            "myl_f_f8e1b03fbc79fa9be7d2e95e72decf0bafbd87b704304c17055facf7380d1b01": 1,
+            "myl_qbe_error_trace_append_preserve_most": 2,
+            "myl_qbe_error_trace_origin_preserve_most": 1,
+            "myl_qbe_fail_assert": 11,
+            "myl_qbe_fail_cast": 8,
+            "myl_qbe_fail_frame": 6,
+            "myl_qbe_fail_iteration": 1,
+            "myl_qbe_fail_normalized_index_bounds": 7,
+            "myl_qbe_fail_overflow_op": 3,
+            "myl_qbe_rc_status": 7,
+            "myl_rc_drain": 5,
+            "myl_rc_edge_release": 5,
+            "myl_rc_hold_edge_release": 1,
+            "myl_rc_invariant_failed": 1,
+            "myl_rc_native_loan": 2,
+            "myl_rc_native_retain": 1,
+            "myl_rc_native_take": 8,
+            "myl_t_1535267fc5a418ed8053a9a6290354ebfcee0a92538bece7aa6b84967f8fb527_rcg_unloan": 1,
+            "myl_t_1ca39ac918178cb6d21e4d894cf1bad7f4b058d5b48f5646eb1c4f427db8f3b6_rcg_publish": 1,
+            "myl_t_277089d91c0bdf4f2e6862ba7e4a07605119431f5d13f726dd352b06f1b206a9_rcg_drop": 1,
+            "myl_t_4f61ce03124355c2e5bf745e18f8973b529736e48b81b0bb984582fb742cc20c_rcg_drop": 2,
+            "myl_t_4f61ce03124355c2e5bf745e18f8973b529736e48b81b0bb984582fb742cc20c_rcg_publish": 2,
+            "myl_t_785498c443d0a980df3d0827c91989bab92d5672b68aaea1281c9af29aa300f6_rcg_drop": 1,
+            "myl_t_785498c443d0a980df3d0827c91989bab92d5672b68aaea1281c9af29aa300f6_rcg_take": 1,
+            "myl_t_87bce22450ba1dd346902c88e84ed91c3923adff6d5e35cea4c79f65e06a12b6_rcg_drop": 1,
+            "myl_t_87bce22450ba1dd346902c88e84ed91c3923adff6d5e35cea4c79f65e06a12b6_rcg_take": 3,
+            "myl_t_936ef1df8ee9b22aeeca81bdacc17d611f5ed2ee4d8f92454f4592a600eb217d_rcg_drop": 1,
+            "myl_t_936ef1df8ee9b22aeeca81bdacc17d611f5ed2ee4d8f92454f4592a600eb217d_rcg_publish": 1,
+            "myl_t_a83873657e77deb1bf51281383ae925ccb1b4b6510284b93a36500031c0efc14_rcg_drop": 3,
+            "myl_t_a83873657e77deb1bf51281383ae925ccb1b4b6510284b93a36500031c0efc14_rcg_loan": 1,
+            "myl_t_a83873657e77deb1bf51281383ae925ccb1b4b6510284b93a36500031c0efc14_rcg_unloan": 11,
+            "myl_t_d2b6ba0786a9e08aacf8d0a6addb6e83692a65ffe726a74bc3ded41db969c0ff_rcg_retain": 2,
+            "myl_t_d2b6ba0786a9e08aacf8d0a6addb6e83692a65ffe726a74bc3ded41db969c0ff_rcg_unloan": 1
+          },
+          "lines": 1978
+        },
+        "qbe": {
+          "binary": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-write-screen/bin/write-combined-qbe",
+          "binary_sha256": "6df8d43b08667909561ba00962b415eeed5e0b347cc006a572e6db2cc78c9fe3",
+          "command": [
+            "objdump",
+            "-d",
+            "--disassemble=myl_f_462f27e74799004fdcfa9633adb7a2d010fc9ea32e01e7826712c1dd2033d244",
+            "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-write-screen/bin/write-combined-qbe"
+          ],
+          "sha256": "06731c62333b25efb859525ed327dbe91739a65c395e74efabff09e454f8f13e",
+          "calls": {
+            "compiler_rt.fastMemset": 1,
+            "myl_f_1d7419ba0d9bd7e7ee6870cf43902b87519d25b5577326ecd50ac6944acafca6": 2,
+            "myl_f_339494ddd89a48d13094d9f5c6b4b55320c4f6128bc80d7aba97a84a17838cc1": 2,
+            "myl_f_33e96fe9cb0dad36eb060c89cc0eac8c30f67b59cc2b5a47425887e8980d401c": 1,
+            "myl_f_448f060fb6f29ea6a9164d3fd28db134abf5c67c6d4955b6c7d5a3d5aa27f16e": 1,
+            "myl_f_456f52086262ab4527f9c37879b8830717fbe4903882a41068dd575e023b862b": 1,
+            "myl_f_55118dea72715056d11e62240a4d5f7be4aeebfddc319f59a70a489a3a8b0e54": 1,
+            "myl_f_6993cfd5bc46d9d696adcc139c626f2b677f81bea8031cc740fa79e8da2d676e": 2,
+            "myl_f_6fe10fdc09b87fb76dc6a5a2a43c5948fb938a942549e3f0f2e42c18a951ae5b": 1,
+            "myl_f_72cbd8b3ebb02b19d0384fb691061873bba08de6d559f9babec1767adabac444": 1,
+            "myl_f_851eb64c403b25f3166dffdb17dfc9e3c924451c20caa5851a74e0f4081ba50f": 1,
+            "myl_f_9cfccc291a0516b23c50da008b59b8f2c8a2e23f61575966d1d2f1cfb2a4be4b": 1,
+            "myl_f_a0ff172e9e450785632a25c55eafac31e4cfca2cc56a9728097332089f64b651": 1,
+            "myl_f_a146740a06e5fa23640f1f72b70e36e5a89eb686546e75b2a5fa1ac552d2f888": 1,
+            "myl_f_a1ee89ef02f5de3a0549ceef8b403f960b5d820e5be22eacf42a3abf03f1c216": 1,
+            "myl_f_bd9e3a524ab3cf6b1d10f9f010a9809523e9baa589e1d9e95734ec89624acb99": 1,
+            "myl_f_ce13b56e3ce2bdbd179a040936f25b6855280660f417294c608a4338bd301b74": 1,
+            "myl_f_df854e8ed9ee42930d3ed44ab0cd662c7c2c4c4b0b98e3a3a182e1a6f7dcca63": 1,
+            "myl_f_ea97dd36e4e0ea42e46ce6a891c9a00cafb686a8c9a27c77fe327a84d70301d7": 1,
+            "myl_f_f8e1b03fbc79fa9be7d2e95e72decf0bafbd87b704304c17055facf7380d1b01": 1,
+            "myl_qbe_error_trace_append": 1,
+            "myl_qbe_fail_cast": 2,
+            "myl_qbe_fail_frame": 1,
+            "myl_qbe_fail_iteration": 2,
+            "myl_qbe_fail_normalized_index_bounds": 2,
+            "myl_qbe_fail_overflow_op": 2,
+            "myl_qbe_heap": 1,
+            "myl_qbe_rc_status": 13,
+            "myl_qbe_region_mark": 1,
+            "myl_rc_take_failure": 11,
+            "myl_t_1535267fc5a418ed8053a9a6290354ebfcee0a92538bece7aa6b84967f8fb527_rcg_unloan": 2,
+            "myl_t_1ca39ac918178cb6d21e4d894cf1bad7f4b058d5b48f5646eb1c4f427db8f3b6_rcg_drop": 2,
+            "myl_t_1ca39ac918178cb6d21e4d894cf1bad7f4b058d5b48f5646eb1c4f427db8f3b6_rcg_publish": 1,
+            "myl_t_1ca39ac918178cb6d21e4d894cf1bad7f4b058d5b48f5646eb1c4f427db8f3b6_rcg_take": 2,
+            "myl_t_4e6c1584b61f68a69271c693e65be720323e6bcb8d28e2f694592eed5c4c3f28_rcg_drop": 5,
+            "myl_t_4e6c1584b61f68a69271c693e65be720323e6bcb8d28e2f694592eed5c4c3f28_rcg_unloan": 8,
+            "myl_t_4f61ce03124355c2e5bf745e18f8973b529736e48b81b0bb984582fb742cc20c_rcg_drop": 5,
+            "myl_t_4f61ce03124355c2e5bf745e18f8973b529736e48b81b0bb984582fb742cc20c_rcg_publish": 1,
+            "myl_t_4f61ce03124355c2e5bf745e18f8973b529736e48b81b0bb984582fb742cc20c_rcg_take": 1,
+            "myl_t_4f61ce03124355c2e5bf745e18f8973b529736e48b81b0bb984582fb742cc20c_rcg_unloan": 3,
+            "myl_t_785498c443d0a980df3d0827c91989bab92d5672b68aaea1281c9af29aa300f6_rcg_drop": 1,
+            "myl_t_785498c443d0a980df3d0827c91989bab92d5672b68aaea1281c9af29aa300f6_rcg_take": 2,
+            "myl_t_81d71c98b196ce876b8748e8f5e1c439a764a7854aeb5e4ef7865d0716f2ecef_rcg_drop": 3,
+            "myl_t_81d71c98b196ce876b8748e8f5e1c439a764a7854aeb5e4ef7865d0716f2ecef_rcg_loan": 1,
+            "myl_t_81d71c98b196ce876b8748e8f5e1c439a764a7854aeb5e4ef7865d0716f2ecef_rcg_take": 1,
+            "myl_t_81d71c98b196ce876b8748e8f5e1c439a764a7854aeb5e4ef7865d0716f2ecef_rcg_unloan": 1,
+            "myl_t_87b3a699846cba24453cba0c476cfc282ad163c22e08be1c713a98bd1480fb29_rcg_drop": 1,
+            "myl_t_87b3a699846cba24453cba0c476cfc282ad163c22e08be1c713a98bd1480fb29_rcg_unloan": 1,
+            "myl_t_87bce22450ba1dd346902c88e84ed91c3923adff6d5e35cea4c79f65e06a12b6_rcg_drop": 2,
+            "myl_t_936ef1df8ee9b22aeeca81bdacc17d611f5ed2ee4d8f92454f4592a600eb217d_rcg_drop": 6,
+            "myl_t_936ef1df8ee9b22aeeca81bdacc17d611f5ed2ee4d8f92454f4592a600eb217d_rcg_take": 1,
+            "myl_t_936ef1df8ee9b22aeeca81bdacc17d611f5ed2ee4d8f92454f4592a600eb217d_rcg_unloan": 2,
+            "myl_t_a83873657e77deb1bf51281383ae925ccb1b4b6510284b93a36500031c0efc14_rcg_drop": 2,
+            "myl_t_d2b6ba0786a9e08aacf8d0a6addb6e83692a65ffe726a74bc3ded41db969c0ff_rcg_retain": 1
+          },
+          "lines": 1916
+        }
+      }
+    },
+    "interpret": {
+      "name": "interpreter::interpret",
+      "symbol": "myl_f_a3a07817b4570aed0219b1e0108b393ee1295d86ebf71dfd28b5c060c65b8e29",
+      "ssa_source": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-write-screen/cache-write-combined-qbe/frontend/fragments/0455afa1beb638eb1bb868d65ae5700fec28693b19c9e417ec973a7d1479d848/il/8cb0ce4aa0cda37198817d366522cbd7635535c8eafd51b3098e5a87fc0f6bba",
+      "ssa_sha256": "a64bef62494cb05585cd8cae8779b0cf316f1f7b31c5adfd1a0c347ea02c2289",
+      "ssa_lines": 5011,
+      "managed_ops": {
+        "take": 4,
+        "drop": 68,
+        "loan": 0,
+        "unloan": 65,
+        "copy": 0
+      },
+      "normalized_index_bounds": 1,
+      "assembly": {
+        "llvm": {
+          "binary": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-write-screen/bin/write-combined-llvm",
+          "binary_sha256": "42509ac27d993e3925caff5d1fe4a4566a24f00819e1ac08e8cce358eb1d2852",
+          "command": [
+            "objdump",
+            "-d",
+            "--disassemble=myl_f_a3a07817b4570aed0219b1e0108b393ee1295d86ebf71dfd28b5c060c65b8e29",
+            "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-write-screen/bin/write-combined-llvm"
+          ],
+          "sha256": "788027f5725f416cf8d51ce05691be0eb094ca13e34e0272f7ad54e0bbbaba7e",
+          "calls": {},
+          "lines": 11
+        },
+        "qbe": {
+          "binary": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-write-screen/bin/write-combined-qbe",
+          "binary_sha256": "6df8d43b08667909561ba00962b415eeed5e0b347cc006a572e6db2cc78c9fe3",
+          "command": [
+            "objdump",
+            "-d",
+            "--disassemble=myl_f_a3a07817b4570aed0219b1e0108b393ee1295d86ebf71dfd28b5c060c65b8e29",
+            "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-write-screen/bin/write-combined-qbe"
+          ],
+          "sha256": "77c7f7953cad9add350419419c4075cff3e42a3b1a9ae086fb4b78560f65b96a",
+          "calls": {
+            "myl_f_079424de52d5f48cd51b17cd049217cb3528df1db52f5fe4c6f03a85ac2d8020": 1,
+            "myl_f_2939debd275151b39f5eff8d155285c9bce2a4c03f27899659f13a1077ddb3f3": 1,
+            "myl_f_3f354089d660f4f153892cc6f2e06745b475cc4eec898367a6e41272f23dcd56": 1,
+            "myl_f_866b323a26c1f255ec52657168306d80f60f75f1d366d57675001af4151be806": 1,
+            "myl_f_ce937c0a67fd59c0f261e0a4ab35ebce3e2c051d9627ea0c05a57eafb505b71f": 2,
+            "myl_native_bytes_encode": 1,
+            "myl_native_list_new": 1,
+            "myl_native_text_join": 1,
+            "myl_native_text_scalar": 1,
+            "myl_qbe_fail_allocation": 7,
+            "myl_qbe_fail_cast": 1,
+            "myl_qbe_fail_frame": 1,
+            "myl_qbe_fail_iteration": 2,
+            "myl_qbe_fail_normalized_index_bounds": 1,
+            "myl_qbe_fail_overflow_op": 1,
+            "myl_qbe_heap": 1,
+            "myl_qbe_rc_status": 16,
+            "myl_qbe_rc_unique_local": 3,
+            "myl_qbe_region_mark": 1,
+            "myl_rc_take_failure": 10,
+            "myl_t_1535267fc5a418ed8053a9a6290354ebfcee0a92538bece7aa6b84967f8fb527_rcg_unloan": 3,
+            "myl_t_1da8f946ba246f799cfc56f183bef69d4262f662fcee79b8b62bd1d3f8d7855b_rcg_drop": 2,
+            "myl_t_1fa64ff08badc7715febe33a527d577ee990f92c692f5fb9ca94bc8ae8b2241b_rcg_drop": 9,
+            "myl_t_1fa64ff08badc7715febe33a527d577ee990f92c692f5fb9ca94bc8ae8b2241b_rcg_retain": 3,
+            "myl_t_1fa64ff08badc7715febe33a527d577ee990f92c692f5fb9ca94bc8ae8b2241b_rcg_take": 1,
+            "myl_t_1fa64ff08badc7715febe33a527d577ee990f92c692f5fb9ca94bc8ae8b2241b_rcg_unloan": 1,
+            "myl_t_277089d91c0bdf4f2e6862ba7e4a07605119431f5d13f726dd352b06f1b206a9_rcg_drop": 1,
+            "myl_t_277089d91c0bdf4f2e6862ba7e4a07605119431f5d13f726dd352b06f1b206a9_rcg_unloan": 1,
+            "myl_t_3ece1c6f770ecd2a506fa806688c97e383087567b3626d4a9ce4529758a6df1f_rcg_drop": 2,
+            "myl_t_4e6c1584b61f68a69271c693e65be720323e6bcb8d28e2f694592eed5c4c3f28_rcg_drop": 1,
+            "myl_t_50e3220d3c7cc8dc987e1f72744478b3112c8e1ff0b259c96b110425289e0fd1_rcg_drop": 2,
+            "myl_t_87b3a699846cba24453cba0c476cfc282ad163c22e08be1c713a98bd1480fb29_rcg_drop": 7,
+            "myl_t_87b3a699846cba24453cba0c476cfc282ad163c22e08be1c713a98bd1480fb29_rcg_publish": 1,
+            "myl_t_87b3a699846cba24453cba0c476cfc282ad163c22e08be1c713a98bd1480fb29_rcg_retain": 1,
+            "myl_t_87b3a699846cba24453cba0c476cfc282ad163c22e08be1c713a98bd1480fb29_rcg_take": 1,
+            "myl_t_87b3a699846cba24453cba0c476cfc282ad163c22e08be1c713a98bd1480fb29_rcg_unloan": 1,
+            "myl_t_8c25cb3686462e9a86d2883c5688a22fe738b0bbc85f458d2d2b5f3f667c6d5a_rcg_drop": 5,
+            "myl_t_8c25cb3686462e9a86d2883c5688a22fe738b0bbc85f458d2d2b5f3f667c6d5a_rcg_list_append": 3,
+            "myl_t_8c25cb3686462e9a86d2883c5688a22fe738b0bbc85f458d2d2b5f3f667c6d5a_rcg_take": 2,
+            "myl_t_8c25cb3686462e9a86d2883c5688a22fe738b0bbc85f458d2d2b5f3f667c6d5a_rcg_unloan": 2,
+            "myl_t_d2b6ba0786a9e08aacf8d0a6addb6e83692a65ffe726a74bc3ded41db969c0ff_rcg_drop": 3,
+            "myl_t_d2b6ba0786a9e08aacf8d0a6addb6e83692a65ffe726a74bc3ded41db969c0ff_rcg_retain": 1
+          },
+          "lines": 1742
+        }
+      }
+    }
+  }
+}
