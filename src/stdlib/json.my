@@ -1,7 +1,6 @@
 module json
 import strings
 
-
 # An RFC 8259 value. Objects keep the key order in which they were parsed.
 public union Json:
     null,
@@ -25,10 +24,10 @@ public def message(error: Error) -> str:
             return detail
 
 
-# One position inside the UTF-8 form of a document; the cell is shared by copies.
+# One byte offset inside the UTF-8 form of a document, updated through mut Scanner.
 record Scanner:
     data: bytes
-    position: list[int]
+    position: int
 
 
 # Deepest container nesting that loads accepts.
@@ -247,26 +246,24 @@ public def at(value: Json, index: int) -> Option[Json] effects():
 
 # A scanner positioned at the start of a UTF-8 document.
 def scanner_of(data: bytes) -> Scanner:
-    cursor: list[int] = []
-    cursor.append(0)
-    return Scanner(data=data, position=cursor)
+    return Scanner(data=data, position=0)
 
 
 # Whether the scanner has consumed every byte.
 def at_end(scanner: Scanner) -> bool:
-    return scanner.position[0] >= len(scanner.data)
+    return scanner.position >= len(scanner.data)
 
 
 # The byte under the cursor, or -1 at the end of the document.
 def peek(scanner: Scanner) -> int:
     if at_end(scanner):
         return 0 - 1
-    return scanner.data[scanner.position[0]]
+    return scanner.data[scanner.position]
 
 
 # Move the cursor one byte forward.
 def advance(scanner: mut Scanner):
-    scanner.position[0] = scanner.position[0] + 1
+    scanner.position = scanner.position + 1
     return
 
 
@@ -282,7 +279,7 @@ def skip_whitespace(scanner: mut Scanner):
 
 # A reason naming the byte offset the scanner stopped at.
 def fail(scanner: Scanner, reason: str) -> str:
-    match strings.format_int(scanner.position[0], 10):
+    match strings.format_int(scanner.position, 10):
         case Ok(rendered):
             return reason + " at byte " + rendered
         case Err(_):
@@ -306,31 +303,31 @@ def hex_value(byte: int) -> int:
 
 
 # Append the UTF-8 encoding of one code point to a byte accumulator.
-def append_code_point(out: mut list[int], code: int):
+def append_code_point(out: mut byte_buffer, code: int):
     if code < 128:
-        out.append(code)
+        _ = out.append_byte(code)
         return
     if code < 2048:
-        out.append(192 + code // 64)
-        out.append(128 + code % 64)
+        _ = out.append_byte(192 + code // 64)
+        _ = out.append_byte(128 + code % 64)
         return
     if code < 65536:
         trailing = code // 64 % 64
-        out.append(224 + code // 4096)
-        out.append(128 + trailing)
-        out.append(128 + code % 64)
+        _ = out.append_byte(224 + code // 4096)
+        _ = out.append_byte(128 + trailing)
+        _ = out.append_byte(128 + code % 64)
         return
     second = code // 4096 % 64
     third = code // 64 % 64
-    out.append(240 + code // 262144)
-    out.append(128 + second)
-    out.append(128 + third)
-    out.append(128 + code % 64)
+    _ = out.append_byte(240 + code // 262144)
+    _ = out.append_byte(128 + second)
+    _ = out.append_byte(128 + third)
+    _ = out.append_byte(128 + code % 64)
     return
 
 
 # Text for accumulated UTF-8 bytes, rejecting sequences the source made invalid.
-def decoded(values: list[int]) -> Result[str, str]:
+def decoded(values: byte_buffer) -> Result[str, str]:
     match bytes(values).decode():
         case Ok(rendered):
             return Ok(rendered)
@@ -355,7 +352,7 @@ def read_hex4(scanner: mut Scanner) -> Result[int, str]:
 
 
 # One escaped code point, including a complete surrogate pair.
-def read_unicode_escape(scanner: mut Scanner, out: mut list[int]) -> Result[bool, str]:
+def read_unicode_escape(scanner: mut Scanner, out: mut byte_buffer) -> Result[bool, str]:
     first = read_hex4(mut scanner)?
     if first >= 56320 and first <= 57343:
         return Err(fail(scanner, "JSON low surrogate has no high surrogate"))
@@ -376,28 +373,28 @@ def read_unicode_escape(scanner: mut Scanner, out: mut list[int]) -> Result[bool
 
 
 # One backslash escape from an RFC 8259 string body.
-def read_escape(scanner: mut Scanner, out: mut list[int]) -> Result[bool, str]:
+def read_escape(scanner: mut Scanner, out: mut byte_buffer) -> Result[bool, str]:
     if at_end(scanner):
         return Err(fail(scanner, "unterminated JSON escape"))
     byte = peek(scanner)
     advance(mut scanner)
     if byte == 34 or byte == 92 or byte == 47:
-        out.append(byte)
+        _ = out.append_byte(byte)
         return Ok(True)
     if byte == 98:
-        out.append(8)
+        _ = out.append_byte(8)
         return Ok(True)
     if byte == 102:
-        out.append(12)
+        _ = out.append_byte(12)
         return Ok(True)
     if byte == 110:
-        out.append(10)
+        _ = out.append_byte(10)
         return Ok(True)
     if byte == 114:
-        out.append(13)
+        _ = out.append_byte(13)
         return Ok(True)
     if byte == 116:
-        out.append(9)
+        _ = out.append_byte(9)
         return Ok(True)
     if byte != 117:
         return Err(fail(scanner, "unknown JSON string escape"))
@@ -407,18 +404,27 @@ def read_escape(scanner: mut Scanner, out: mut list[int]) -> Result[bool, str]:
 # One string body, with the opening quote under the cursor.
 def read_string(scanner: mut Scanner) -> Result[str, str]:
     advance(mut scanner)
-    out: list[int] = []
-    while not at_end(scanner):
-        byte = peek(scanner)
-        advance(mut scanner)
+    empty: list[int] = []
+    out = byte_buffer(empty)
+    span = scanner.position
+    offset = span
+    while offset < len(scanner.data):
+        byte = scanner.data[offset]
+        offset += 1
         if byte == 34:
+            scanner.position = offset
+            _ = out.append_range(scanner.data, span, offset - 1)
             return decoded(out)
         if byte < 32:
+            scanner.position = offset
             return Err(fail(scanner, "unescaped control character in JSON string"))
-        if byte != 92:
-            out.append(byte)
-        else:
+        if byte == 92:
+            scanner.position = offset
+            _ = out.append_range(scanner.data, span, offset - 1)
             _ = read_escape(mut scanner, mut out)?
+            offset = scanner.position
+            span = offset
+    scanner.position = offset
     return Err(fail(scanner, "unterminated JSON string"))
 
 
@@ -472,24 +478,18 @@ def read_integer_part(scanner: mut Scanner) -> Result[bool, str]:
 
 # One number literal, exact when it has no fraction, exponent or overflow.
 def read_number(scanner: mut Scanner) -> Result[Json, str]:
-    start = scanner.position[0]
+    start = scanner.position
     _ = read_integer_part(mut scanner)?
     floating = read_fraction(mut scanner)?
     if read_exponent(mut scanner)?:
         floating = True
-    literal = ""
-    match scanner.data[start:scanner.position[0]].decode():
-        case Ok(rendered):
-            literal = rendered
-        case Err(_):
-            return Err(fail(scanner, "JSON number is not valid text"))
     if not floating:
-        match strings.to_int(literal):
+        match scanner.data.parse_int_range(start, scanner.position):
             case Some(value):
                 return Ok(integer(value))
             case None:
-                floating = True
-    match strings.to_float(literal):
+                _ = 0
+    match scanner.data.parse_float_range(start, scanner.position):
         case Some(value):
             return Ok(number(value))
         case None:
@@ -498,12 +498,12 @@ def read_number(scanner: mut Scanner) -> Result[Json, str]:
 
 # One of the three bare literals, matched exactly.
 def read_literal(scanner: mut Scanner, word: bytes, value: Json) -> Result[Json, str]:
-    start = scanner.position[0]
+    start = scanner.position
     if start + len(word) > len(scanner.data):
         return Err(fail(scanner, "truncated JSON literal"))
     if scanner.data[start:start + len(word)] != word:
         return Err(fail(scanner, "unknown JSON literal"))
-    scanner.position[0] = start + len(word)
+    scanner.position = start + len(word)
     return Ok(value)
 
 
@@ -600,112 +600,116 @@ public def loads(source: str) -> Result[Json, Error]:
     return Ok(value)
 
 
-# The thirty-two ASCII control characters, in code point order.
-def controls() -> str:
-    return "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f"
-
-
-# The control code of a character, or -1 when it needs no escape.
-def control_code(character: str) -> int:
-    for code, entry in enumerate(controls()):
-        if entry == character:
-            return code
-    return 0 - 1
-
-
-# The shortest escape RFC 8259 allows for one control code.
-def escape_unit(code: int) -> str:
+# Write the shortest escape RFC 8259 allows for one ASCII control byte.
+def write_control(out: mut byte_buffer, code: int):
     if code == 8:
-        return "\\b"
-    if code == 9:
-        return "\\t"
-    if code == 10:
-        return "\\n"
-    if code == 12:
-        return "\\f"
-    if code == 13:
-        return "\\r"
-    table = "0123456789abcdef"
-    return "\\u00" + table[code // 16] + table[code % 16]
+        _ = out.append_range(b"\\b", 0, 2)
+    elif code == 9:
+        _ = out.append_range(b"\\t", 0, 2)
+    elif code == 10:
+        _ = out.append_range(b"\\n", 0, 2)
+    elif code == 12:
+        _ = out.append_range(b"\\f", 0, 2)
+    elif code == 13:
+        _ = out.append_range(b"\\r", 0, 2)
+    else:
+        table = b"0123456789abcdef"
+        _ = out.append_range(b"\\u00", 0, 4)
+        _ = out.append_byte(table[code // 16])
+        _ = out.append_byte(table[code % 16])
+    return
 
 
-# A string rendered with its quotes and the escapes RFC 8259 requires.
-def quoted(body: str) -> str:
-    out = "\""
-    for character in body:
-        if character == "\"":
-            out = out + "\\\""
-        elif character == "\\":
-            out = out + "\\\\"
-        else:
-            code = control_code(character)
-            if code < 0:
-                out = out + character
+# Copy ordinary UTF-8 spans together; only ASCII quotes, slashes and controls
+# need inspection as escapes, because no multibyte encoding contains those bytes.
+def write_quoted(out: mut byte_buffer, body: str):
+    data = body.encode()
+    _ = out.append_byte(34)
+    span = 0
+    offset = 0
+    while offset < len(data):
+        code = data[offset]
+        if code == 34 or code == 92 or code < 32:
+            _ = out.append_range(data, span, offset)
+            if code < 32:
+                write_control(mut out, code)
             else:
-                out = out + escape_unit(code)
-    return out + "\""
+                _ = out.append_byte(92)
+                _ = out.append_byte(code)
+            span = offset + 1
+        offset += 1
+    _ = out.append_range(data, span, len(data))
+    _ = out.append_byte(34)
+    return
 
 
-# A binary64 number rendered as JSON; infinities and not-a-number become null.
-def rendered_number(value: float) -> str:
-    if value != value:
-        return "null"
-    if value > 1.7976931348623157e308 or value < 0.0 - 1.7976931348623157e308:
-        return "null"
-    return str(value)
+# Preserve str(float)'s spelling; RFC 8259 has no nonfinite numbers.
+def write_number(out: mut byte_buffer, value: float):
+    if value != value or value > 1.7976931348623157e308 or value < 0.0 - 1.7976931348623157e308:
+        _ = out.append_range(b"null", 0, 4)
+    else:
+        _ = out.append_float(value)
+    return
 
 
-# Append the compact rendering of one value to the accumulated pieces.
-def write_value(pieces: mut list[str], value: Json):
+# Append a compact rendering directly into the shared output buffer.
+def write_value(out: mut byte_buffer, value: Json):
     match value:
         case Json.null:
-            pieces.append("null")
+            _ = out.append_range(b"null", 0, 4)
         case Json.boolean(flag):
             if flag:
-                pieces.append("true")
+                _ = out.append_range(b"true", 0, 4)
             else:
-                pieces.append("false")
+                _ = out.append_range(b"false", 0, 5)
         case Json.integer(count):
-            pieces.append(str(count))
+            _ = out.append_int(count)
         case Json.number(amount):
-            pieces.append(rendered_number(amount))
+            write_number(mut out, amount)
         case Json.text(body):
-            pieces.append(quoted(body))
+            write_quoted(mut out, body)
         case Json.array(items):
-            write_array(mut pieces, items)
+            write_array(mut out, items)
         case Json.object(fields):
-            write_object(mut pieces, fields)
+            write_object(mut out, fields)
     return
 
 
 # Append a rendered array, keeping element order.
-def write_array(pieces: mut list[str], items: list[Json]):
-    pieces.append("[")
+def write_array(out: mut byte_buffer, items: list[Json]):
+    _ = out.append_byte(91)
     for index, item in enumerate(items):
         if index > 0:
-            pieces.append(",")
-        write_value(mut pieces, item)
-    pieces.append("]")
+            _ = out.append_byte(44)
+        write_value(mut out, item)
+    _ = out.append_byte(93)
     return
 
 
 # Append a rendered object, keeping insertion order.
-def write_object(pieces: mut list[str], fields: dict[str, Json]):
-    pieces.append("{")
+def write_object(out: mut byte_buffer, fields: dict[str, Json]):
+    _ = out.append_byte(123)
     first = True
     for key in fields:
         if not first:
-            pieces.append(",")
+            _ = out.append_byte(44)
         first = False
-        pieces.append(quoted(key))
-        pieces.append(":")
-        write_value(mut pieces, fields[key])
-    pieces.append("}")
+        write_quoted(mut out, key)
+        _ = out.append_byte(58)
+        write_value(mut out, fields[key])
+    _ = out.append_byte(125)
     return
 
 
 # A value rendered as compact RFC 8259 text without added whitespace.
 public def dumps(value: Json) -> str:
-    pieces: list[str] = []
-    write_value(mut pieces, value)
-    return "".join(pieces)
+    empty: list[int] = []
+    out = byte_buffer(empty)
+    write_value(mut out, value)
+    match bytes(out).decode():
+        case Ok(rendered):
+            return rendered
+        case Err(_):
+            # Every fragment above is ASCII or the encoding of a valid str.
+            assert False
+            return ""

@@ -9,6 +9,60 @@ test "standard json parses renders navigates and rejects noncompliant documents"
 }
 
 // spec-case: STANDARD-JSON-1
+test "standard json scanner and writer lower scalar positions and buffered spans" {
+    const language = @import("compiler.zig");
+    var entry: fixture.Entry = .{ .text =
+        \\module main
+        \\import json
+        \\def main() -> int:
+        \\    match json.loads("[1,\"x\"]"):
+        \\        case Ok(value):
+        \\            return len(json.dumps(value))
+        \\        case Err(_):
+        \\            return 0
+    };
+    var program: language.embedded_project.Program = undefined;
+    try program.init(t.allocator, .{ .context = &entry, .read = fixture.Entry.read });
+    defer program.deinit();
+    try expectScalarPosition(program.compilation.program.?.records);
+    var integer_range = false;
+    var float_range = false;
+    var quoted = false;
+    for (program.compilation.code.?.functions) |function| {
+        const number = std.mem.endsWith(u8, function.name, "::read_number");
+        const quote = std.mem.endsWith(u8, function.name, "::write_quoted");
+        for (function.scope.instructions) |instruction| switch (instruction.op) {
+            .buffer_operation => |operation| {
+                if (number) {
+                    integer_range = integer_range or operation.kind == .parse_int_range;
+                    float_range = float_range or operation.kind == .parse_float_range;
+                    try t.expect(operation.kind != .slice and operation.kind != .decode);
+                }
+                if (quote and operation.kind == .buffer_append_range) quoted = true;
+            },
+            else => {},
+        };
+    }
+    try t.expect(integer_range and float_range and quoted);
+    const emitted = try program.compilation.emitQbe(t.allocator);
+    defer t.allocator.free(emitted);
+    try t.expect(std.mem.indexOf(u8, emitted, "myl_native_bytes_buffer_append_range") != null);
+}
+
+/// The private scanner's position is a scalar; passing it to an inout callee
+/// updates the caller's byte offset without allocating or copying a list cell.
+fn expectScalarPosition(records: []const @import("typed.zig").Record) !void {
+    for (records) |record| {
+        if (!std.mem.endsWith(u8, record.name, "::Scanner")) continue;
+        for (record.fields) |field| {
+            if (!std.mem.eql(u8, field.name, "position")) continue;
+            return t.expectEqual(@import("typed.zig").Type.i64, field.ty);
+        }
+    }
+    return error.TestUnexpectedResult;
+}
+
+// spec-case: STANDARD-JSON-1
 test "standard json keeps parsed values rooted under collection stress" {
     try fixture.stress(t.allocator, "module main\nimport json\n" ++
         "def main() -> int:\n" ++
