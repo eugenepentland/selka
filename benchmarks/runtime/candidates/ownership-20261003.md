@@ -1,4 +1,19 @@
-# Ownership diagnostics: current main and b3ff3bfb
+# Ownership diagnostics: current main and integrated candidates
+
+The final production revision `730a86e62b47c922dc1411d24b5868c3bd2132f3`
+was measured again with its **ReleaseFast host compiler and ReleaseFast guests**.
+All 160 oracle checks passed; every event count matches the earlier `b3ff3bfb`
+measurement exactly. Thus the four JSON differences in the table below also
+describe the final revision, while the other 156 records still match current
+main. The final collector additionally binds the clock object, effective
+backend manifests and runtime archive hashes before and after collection;
+all four LLVM groups used O3/full LTO and all four QBE groups used QBE.
+
+The [final raw record](ownership-730a86e6-20261003.json.gz) has uncompressed SHA256
+`83a3cec2941e74ac4c680e95b50c647ca9614b820f31d755c02c27fdf6d46cad`.
+It retains compiler receipts, commands and build logs. These instrumented
+observations do not test P7's ordinary-runtime stack path, which intentionally
+refuses counting mode, and they do not measure peak live memory.
 
 These are checksum-verified **whole-process instrumented counts**, using the original 40 fixtures, both sizes, both MyLang backends, seed 42 and eight iterations. They include setup and teardown. The counting runtime can disable production optimization paths; these records do not establish production performance or kernel-only attribution. Instrumented clock values were validated but deliberately discarded.
 
