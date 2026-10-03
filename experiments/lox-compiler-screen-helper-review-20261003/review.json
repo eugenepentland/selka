@@ -1,0 +1,43 @@
+{
+  "review_kind": "independent static read-only helper review",
+  "verdict": "pass_with_limits; identified sidecar provenance gap fixed in reviewed revision",
+  "helpers": {
+    "prepare.py": {
+      "original": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/experiments/lox-compiler-screen-20261003/prepare.py",
+      "sha256": "dd32313ae7d97d190ae00e6b9911f987381cce37d4d496ed05447a49577f9087"
+    },
+    "build.py": {
+      "original": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/experiments/lox-compiler-screen-20261003/build.py",
+      "sha256": "d2e08c9a0a2f2774e185dd402185e7d361af3d954c0ac95e5adbfb51658ddf41"
+    },
+    "elf.py": {
+      "original": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/experiments/lox-compiler-screen-20261003/elf.py",
+      "sha256": "fae1359cc987d4e8010bbaa3a2c9340c2c80433042665cea04c5e2ec49716d47"
+    },
+    "analyze.py": {
+      "original": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/experiments/lox-compiler-screen-20261003/analyze.py",
+      "sha256": "017b2e267ee4f5066902aa81a9066326fbd0a8d7ced183e86c9935ed1d598ded"
+    }
+  },
+  "resolved_finding": {
+    "before": "Only original qualified ELFs were hashed before rebuilding; original sidecars and runtime objects were not bound upfront.",
+    "after": "Original qualified/control manifests, receipts and runtime objects enter originals before rebuild; each sidecar copy matches its initial SHA; finalguards reverify all originals."
+  },
+  "properties_checked": [
+    "Exactly37 selected AST files required for baseline and candidate.",
+    "Fresh rebuilt ELF retained separately; ELF entry/header/program layout and SHF_ALLOC sections exact; allowable nonallocated section differences restricted to debug/symbol metadata.",
+    "Actual measured candidate paths contain whole-file-exact previously qualified RC ELFs and sidecars.",
+    "Control and Rust/Go ELFs copied, not rebuilt; their original whole-file identities preserved.",
+    "QBE flag only applies QBE backend so it cannot reset selected LLVM codegen.",
+    "Analyzer full Cartesian coverage, statuses/stdout hashes/stderr and all4 PMU running percentages100; cycles shares counter dataset and paired utility."
+  ],
+  "limits": [
+    "For these valid native ELF artifacts; not a general validator or executable-equivalence proof.",
+    "Qualified ELF/source/compiler/receipt binding is the separate independent compiler qualification review, not inferred by prep helper from arbitrary qualification JSON.",
+    "No new preparation, build, guest, smoke, counter, timing or analysis execution by reviewer.",
+    "Historical initial213-guard prep/smoke must remain separate from this revision; no new experiment measurements certified here."
+  ],
+  "wide_proof_review_commit": "c456fd7a599f5998a9d492058a313a2cb27974bb",
+  "reviewer_compiler_builds_guest_tests_perf_runs": 0,
+  "performance_claim": false
+}
