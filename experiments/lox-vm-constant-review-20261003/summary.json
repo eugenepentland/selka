@@ -1,0 +1,135 @@
+{
+  "reviewed_commit": "58fe1925533ad46e3a8e60af6a9b9632510ee979",
+  "pinned_reference": "4e48a09220c2e018eba8c4b1eb3fe1137a3dae73",
+  "source": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-vm-dispatch-20261003/.tmp-lox-vm-dispatch-20261003/constant-readonly-qualified",
+  "control_source": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-next/combined",
+  "changed_files": [
+    "driver_cases.json",
+    "driver_tests.my",
+    "vm.my"
+  ],
+  "compiler_sha256": "d14a704083bcc5f5174932a751f7d9dda73100dbd62403626b42b52436cad040",
+  "qbe_sha256": "99ad919d70ad582dee6202b045bd53e1ab18fec356de98849610f49983756d63",
+  "qualification_passes": 340,
+  "retained_test_names": {
+    "legacy80": 80,
+    "control84": 84,
+    "selected85": 85
+  },
+  "static_vm_run": {
+    "selected-llvm": {
+      "decoded_instructions": 5449,
+      "calls": 454,
+      "read_constant_calls": 0,
+      "objdump_argv": [
+        "objdump",
+        "-d",
+        "--no-show-raw-insn",
+        "--disassemble=myl_f_a0e96f299197f34d601c1a9da1cbd514090305d2a21036d06ba179b733ea6e29",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-vm-dispatch-20261003/.tmp-lox-vm-dispatch-20261003/constant-readonly-llvm"
+      ],
+      "binary_sha256": "37b2707e0f5c009ed22e6f399376698d6183c5037d8a4cc4882259e9f604bcf0",
+      "asm_sha256": "d7cbdf62d29fc9dcdad2b0f0716a88b63ccbf845639108576576eba8cd2a07ff"
+    },
+    "selected-qbe": {
+      "decoded_instructions": 8628,
+      "calls": 442,
+      "read_constant_calls": 0,
+      "objdump_argv": [
+        "objdump",
+        "-d",
+        "--no-show-raw-insn",
+        "--disassemble=myl_f_a0e96f299197f34d601c1a9da1cbd514090305d2a21036d06ba179b733ea6e29",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-vm-dispatch-20261003/.tmp-lox-vm-dispatch-20261003/constant-readonly-qbe"
+      ],
+      "binary_sha256": "b7499343f65444f710c93fcb91c525b5a03ecfc272bea9687562321477804ec5",
+      "asm_sha256": "a3748556db634185887c2d95a742c9d7ec5d0f768624d8b9fdde3902fbd9177d"
+    },
+    "control-llvm": {
+      "decoded_instructions": 5586,
+      "calls": 486,
+      "read_constant_calls": 10,
+      "unique_field_calls": 29,
+      "objdump_argv": [
+        "objdump",
+        "-d",
+        "--no-show-raw-insn",
+        "--disassemble=myl_f_a0e96f299197f34d601c1a9da1cbd514090305d2a21036d06ba179b733ea6e29",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-next/bin/combined-llvm"
+      ],
+      "binary_sha256": "a0ec4ffd470b309d70d35cbab69215b778fbdbc2d71d3d8761703da18feca594",
+      "asm_sha256": "1fdb09df276aef0ee2dc74ee115c0ede79b2e110dedc278e55027ae71b2104de"
+    },
+    "control-qbe": {
+      "decoded_instructions": 8606,
+      "calls": 440,
+      "read_constant_calls": 1,
+      "unique_field_calls": 22,
+      "objdump_argv": [
+        "objdump",
+        "-d",
+        "--no-show-raw-insn",
+        "--disassemble=myl_f_a0e96f299197f34d601c1a9da1cbd514090305d2a21036d06ba179b733ea6e29",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-next/bin/combined-qbe"
+      ],
+      "binary_sha256": "2c00b0b84d173010036608940e06a61206f535662284eac02eb289d9dee470d6",
+      "asm_sha256": "700c2badaa6f704f37847c266be81d9dd7c3c866beee49ee1def861b4723de01"
+    }
+  },
+  "helper": {
+    "il_lines": 129,
+    "calls": {
+      "myl_qbe_fail_cast": 1,
+      "myl_qbe_fail_overflow_op": 1,
+      "myl_qbe_fail_normalized_index_bounds": 1,
+      "memset": 2
+    },
+    "sha256": "78d3637f6fbf02e2007b3614fe057754c07894644c966767c40f306184593e80",
+    "diagnostic_accounting": "emit-project-qbe --drop-step-checks --drop-frame-checks"
+  },
+  "native_followup": {
+    "reviewed_commit": "0fd93cf35db135872ea2dcc1a248d43e71229429",
+    "comparison_count": 1168,
+    "mode_counts": {
+      "ordinary_gc": 416,
+      "rc": 416,
+      "native_gc_stress": 336
+    },
+    "operand_boundary_comparisons": 12,
+    "checked_refusal_pairs": 8,
+    "explicit_omissions": 80,
+    "actual_binary_sha256": {
+      "control-llvm": "a0ec4ffd470b309d70d35cbab69215b778fbdbc2d71d3d8761703da18feca594",
+      "control-qbe": "2c00b0b84d173010036608940e06a61206f535662284eac02eb289d9dee470d6",
+      "constant-rc-llvm": "37b2707e0f5c009ed22e6f399376698d6183c5037d8a4cc4882259e9f604bcf0",
+      "constant-ordinary-llvm": "56b13fd6b7023a6e1806beeadef27926897e4e97580f3662b6c12f806fdb7c29",
+      "constant-gc-llvm": "56b13fd6b7023a6e1806beeadef27926897e4e97580f3662b6c12f806fdb7c29",
+      "constant-rc-qbe": "b7499343f65444f710c93fcb91c525b5a03ecfc272bea9687562321477804ec5",
+      "constant-ordinary-qbe": "352b1d4ac89905a48e2f97e27a72158dccf86e78fbd82b3bb85e0b4c03685350",
+      "constant-gc-qbe": "352b1d4ac89905a48e2f97e27a72158dccf86e78fbd82b3bb85e0b4c03685350"
+    },
+    "all104_cases_and1248_identities_verified": true,
+    "all_status_stdout_full_stderr_stats_pairs_equal": true,
+    "all_recorded_source_artifact_input_hashes_verified": true,
+    "pinned_bench_and_SPEC_verified_against_git": "4e48a09220c2e018eba8c4b1eb3fe1137a3dae73",
+    "source_metadata_scope": "Native ELFs use the production-equivalent pre-fixture37 source; public85 source differs only in driver tests/provider metadata.",
+    "verified_after": true
+  },
+  "source_findings": [],
+  "limits": [
+    "Fresh 340 public passes are accounted test-library configurations. The distinct native followup qualifies actual RC/GC ELFs with 1168 comparisons plus12 operand-boundary pairs and8 checked refusals; its80 omitted native-stress smoke cells are not passes.",
+    "Malformed-bytecode native helper PC attribution and tight source step/native-frame quota thresholds can differ. Same checked read/IP increment/pool read/stack write order, published Lox IP, and Lox 64-frame guard remain.",
+    "Only numeric constants are generated by the added index255 case; retained root/closure/string regressions provide object-constant coverage.",
+    "The driver_cases.json Clock fixture is structurally retained/appended, but these directory commands do not load it: all four added-case results have provider=\"\". No provider-backed execution is claimed.",
+    "Static whole-function instruction/call counts include cold code and duplicated inlining. No performance acceptance or speed claim."
+  ],
+  "verified_after": true,
+  "guest_executions_by_reviewer": 0,
+  "measurements_by_reviewer": 0,
+  "full_review": {
+    "path": "review.json.gz",
+    "compressed_sha256": "ed6507b36bf15155f5ed3dd1423918be7dbb3791628c565d8efea7ef5fb604c3",
+    "raw_sha256": "953c94bd016f8b37b40c9ef947aa6cd9fc91bd453671e5620deb0cc7ddea40cc",
+    "reviewed_input_files": 520
+  }
+}
