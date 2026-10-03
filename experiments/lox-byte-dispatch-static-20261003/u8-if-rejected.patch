@@ -1,0 +1,172 @@
+--- a/vm.my
++++ b/vm.my
+@@ -532,104 +532,103 @@
+     frame = load_frame(rt, rt.frames[frame_index])
+     while True:
+         opcode: u8 = frame.code[frame.ip]
+-        instruction = int(opcode)
+         frame.ip = frame.ip + 1
+         # The closure/base root stays in rt.frames throughout this activation.
+         # Publish IP only before a handler can report a Lox error or call away.
+         ok = True
+-        if instruction == chunk.OP_CONSTANT:
++        if opcode == u8(chunk.OP_CONSTANT):
+             constant = read_constant(mut frame)
+             rt.stack[rt.stack_top] = constant
+             rt.stack_top = rt.stack_top + 1
+-        elif instruction == chunk.OP_NIL:
++        elif opcode == u8(chunk.OP_NIL):
+             rt.stack[rt.stack_top] = value.Value.nil
+             rt.stack_top = rt.stack_top + 1
+-        elif instruction == chunk.OP_TRUE:
++        elif opcode == u8(chunk.OP_TRUE):
+             rt.stack[rt.stack_top] = value.Value.boolean(True)
+             rt.stack_top = rt.stack_top + 1
+-        elif instruction == chunk.OP_FALSE:
++        elif opcode == u8(chunk.OP_FALSE):
+             rt.stack[rt.stack_top] = value.Value.boolean(False)
+             rt.stack_top = rt.stack_top + 1
+-        elif instruction == chunk.OP_POP:
+-            rt.stack_top = rt.stack_top - 1
+-        elif instruction == chunk.OP_GET_LOCAL:
++        elif opcode == u8(chunk.OP_POP):
++            rt.stack_top = rt.stack_top - 1
++        elif opcode == u8(chunk.OP_GET_LOCAL):
+             slot = read_byte(mut frame)
+             local = rt.stack[frame.base + slot]
+             rt.stack[rt.stack_top] = local
+             rt.stack_top = rt.stack_top + 1
+-        elif instruction == chunk.OP_SET_LOCAL:
++        elif opcode == u8(chunk.OP_SET_LOCAL):
+             slot = read_byte(mut frame)
+             assigned = heap.peek(rt, 0)
+             rt.stack[frame.base + slot] = assigned
+-        elif instruction == chunk.OP_GET_GLOBAL:
++        elif opcode == u8(chunk.OP_GET_GLOBAL):
+             rt.frames[frame_index].ip = frame.ip
+             ok = get_global(mut rt, mut o, mut frame)
+-        elif instruction == chunk.OP_DEFINE_GLOBAL:
++        elif opcode == u8(chunk.OP_DEFINE_GLOBAL):
+             _ = heap.set_global(mut rt, read_string(mut frame), heap.peek(rt, 0))
+             rt.stack_top = rt.stack_top - 1
+-        elif instruction == chunk.OP_SET_GLOBAL:
++        elif opcode == u8(chunk.OP_SET_GLOBAL):
+             rt.frames[frame_index].ip = frame.ip
+             ok = set_global(mut rt, mut o, mut frame)
+-        elif instruction == chunk.OP_GET_UPVALUE:
++        elif opcode == u8(chunk.OP_GET_UPVALUE):
+             get_upvalue(mut rt, mut frame)
+-        elif instruction == chunk.OP_SET_UPVALUE:
++        elif opcode == u8(chunk.OP_SET_UPVALUE):
+             set_upvalue(mut rt, mut frame)
+-        elif instruction == chunk.OP_GET_PROPERTY:
++        elif opcode == u8(chunk.OP_GET_PROPERTY):
+             rt.frames[frame_index].ip = frame.ip
+             ok = get_property(mut rt, mut o, mut frame)
+-        elif instruction == chunk.OP_SET_PROPERTY:
++        elif opcode == u8(chunk.OP_SET_PROPERTY):
+             rt.frames[frame_index].ip = frame.ip
+             ok = set_property(mut rt, mut o, mut frame)
+-        elif instruction == chunk.OP_GET_SUPER:
++        elif opcode == u8(chunk.OP_GET_SUPER):
+             rt.frames[frame_index].ip = frame.ip
+             name = read_string(mut frame)
+             rt.stack_top = rt.stack_top - 1
+             superclass = as_obj(rt.stack[rt.stack_top])
+             ok = bind_method(mut rt, mut o, superclass, name)
+-        elif instruction == chunk.OP_EQUAL:
++        elif opcode == u8(chunk.OP_EQUAL):
+             right = rt.stack[rt.stack_top - 1]
+             left = rt.stack[rt.stack_top - 2]
+             rt.stack_top = rt.stack_top - 1
+             rt.stack[rt.stack_top - 1] = value.Value.boolean(value.values_equal(left, right))
+-        elif instruction == chunk.OP_GREATER or instruction == chunk.OP_LESS or instruction == chunk.OP_SUBTRACT or instruction == chunk.OP_MULTIPLY or instruction == chunk.OP_DIVIDE:
+-            rt.frames[frame_index].ip = frame.ip
+-            ok = numeric(mut rt, mut o, instruction)
+-        elif instruction == chunk.OP_ADD:
++        elif opcode == u8(chunk.OP_GREATER) or opcode == u8(chunk.OP_LESS) or opcode == u8(chunk.OP_SUBTRACT) or opcode == u8(chunk.OP_MULTIPLY) or opcode == u8(chunk.OP_DIVIDE):
++            rt.frames[frame_index].ip = frame.ip
++            ok = numeric(mut rt, mut o, int(opcode))
++        elif opcode == u8(chunk.OP_ADD):
+             rt.frames[frame_index].ip = frame.ip
+             ok = add(mut rt, mut o)
+-        elif instruction == chunk.OP_NOT:
++        elif opcode == u8(chunk.OP_NOT):
+             top = rt.stack_top - 1
+             rt.stack[top] = value.Value.boolean(value.is_falsey(rt.stack[top]))
+-        elif instruction == chunk.OP_NEGATE:
++        elif opcode == u8(chunk.OP_NEGATE):
+             rt.frames[frame_index].ip = frame.ip
+             ok = negate(mut rt, mut o)
+-        elif instruction == chunk.OP_PRINT:
++        elif opcode == u8(chunk.OP_PRINT):
+             rt.stack_top = rt.stack_top - 1
+             output.print_value(rt, mut o, rt.stack[rt.stack_top])
+-        elif instruction == chunk.OP_JUMP:
++        elif opcode == u8(chunk.OP_JUMP):
+             offset = read_short(mut frame)
+             frame.ip = frame.ip + offset
+-        elif instruction == chunk.OP_JUMP_IF_FALSE:
++        elif opcode == u8(chunk.OP_JUMP_IF_FALSE):
+             offset = read_short(mut frame)
+             if value.is_falsey(heap.peek(rt, 0)):
+                 frame.ip = frame.ip + offset
+-        elif instruction == chunk.OP_LOOP:
++        elif opcode == u8(chunk.OP_LOOP):
+             offset = read_short(mut frame)
+             frame.ip = frame.ip - offset
+-        elif instruction == chunk.OP_CALL:
++        elif opcode == u8(chunk.OP_CALL):
+             count = read_byte(mut frame)
+             rt.frames[frame_index].ip = frame.ip
+             ok = call_value(mut rt, mut o, heap.peek(rt, count), count)
+             if ok and rt.frame_count > activation_count:
+                 ok = run(mut rt, mut o) == InterpretResult.OK
+-        elif instruction == chunk.OP_INVOKE:
++        elif opcode == u8(chunk.OP_INVOKE):
+             method = read_string(mut frame)
+             count = read_byte(mut frame)
+             rt.frames[frame_index].ip = frame.ip
+             ok = invoke(mut rt, mut o, method, count)
+             if ok and rt.frame_count > activation_count:
+                 ok = run(mut rt, mut o) == InterpretResult.OK
+-        elif instruction == chunk.OP_SUPER_INVOKE:
++        elif opcode == u8(chunk.OP_SUPER_INVOKE):
+             method = read_string(mut frame)
+             count = read_byte(mut frame)
+             rt.frames[frame_index].ip = frame.ip
+@@ -638,12 +637,12 @@
+             ok = invoke_from_class(mut rt, mut o, superclass, method, count)
+             if ok and rt.frame_count > activation_count:
+                 ok = run(mut rt, mut o) == InterpretResult.OK
+-        elif instruction == chunk.OP_CLOSURE:
++        elif opcode == u8(chunk.OP_CLOSURE):
+             make_closure(mut rt, mut frame)
+-        elif instruction == chunk.OP_CLOSE_UPVALUE:
++        elif opcode == u8(chunk.OP_CLOSE_UPVALUE):
+             close_upvalues(mut rt, rt.stack_top - 1)
+             rt.stack_top = rt.stack_top - 1
+-        elif instruction == chunk.OP_RETURN:
++        elif opcode == u8(chunk.OP_RETURN):
+             rt.stack_top = rt.stack_top - 1
+             result = rt.stack[rt.stack_top]
+             close_upvalues(mut rt, frame.base)
+@@ -655,15 +654,15 @@
+             rt.stack[rt.stack_top] = result
+             rt.stack_top = rt.stack_top + 1
+             return InterpretResult.OK
+-        elif instruction == chunk.OP_CLASS:
++        elif opcode == u8(chunk.OP_CLASS):
+             name = read_string(mut frame)
+             klass = heap.allocate(mut rt, object.Obj.klass(object.ClassObj(name=name, methods=table.new_table())))
+             rt.stack[rt.stack_top] = value.Value.obj(klass)
+             rt.stack_top = rt.stack_top + 1
+-        elif instruction == chunk.OP_INHERIT:
++        elif opcode == u8(chunk.OP_INHERIT):
+             rt.frames[frame_index].ip = frame.ip
+             ok = inherit(mut rt, mut o)
+-        elif instruction == chunk.OP_METHOD:
++        elif opcode == u8(chunk.OP_METHOD):
+             define_method(mut rt, mut frame)
+         if not ok:
+             return InterpretResult.RUNTIME_ERROR
