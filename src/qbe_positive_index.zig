@@ -85,14 +85,17 @@ fn plainRead(comptime E: type, self: *E, proof: Certificate) Error!bool {
     return !@import("value_semantics.zig").containsLiveView(self.program.records, element);
 }
 
-fn extraEntry(code: []const bytecode.Instruction, start: usize) bool {
-    for (code, 0..) |instruction, pc| switch (instruction.op) {
-        .jump, .jump_if_false => |target| if (target == start + 9 and pc != start + 3) return true,
-        .switch_variant => |dispatch| for (dispatch.arms) |arm| {
+/// The canonical join permits only its normalizer's own conditional edge.
+pub fn extraEntry(code: []const bytecode.Instruction, start: usize) bool {
+    for (code, 0..) |instruction, pc| {
+        var buffer: [2]usize = undefined;
+        for (@import("ownership_sources.zig").branchTargets(instruction.op, &buffer)) |target| {
+            if (target == start + 9 and pc != start + 3) return true;
+        }
+        if (instruction.op == .switch_variant) for (instruction.op.switch_variant.arms) |arm| {
             if (arm.target == start + 9) return true;
-        },
-        else => {},
-    };
+        };
+    }
     return false;
 }
 

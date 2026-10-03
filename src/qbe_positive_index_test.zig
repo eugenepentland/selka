@@ -41,6 +41,35 @@ fn contains(text: []const u8, needle: []const u8) bool {
     return std.mem.indexOf(u8, text, needle) != null;
 }
 
+// spec-case: QBE-POSITIVE-INDEX-1
+test "positive index refuses try result and every explicit extra join edge" {
+    const bytecode = @import("bytecode.zig");
+    const proof = @import("qbe_positive_index.zig");
+    const span: @import("source.zig").Span = .{ .start = 0, .end = 0 };
+    const start = 2;
+    const join = start + 9;
+    var code: [15]bytecode.Instruction = @splat(.{ .span = span, .op = .push_unit });
+    code[start + 3].op = .{ .jump_if_false = join };
+    try t.expect(!proof.extraEntry(&code, start));
+    // Both forward propagation and a later/back edge could enter the join
+    // without executing this normalizer. It is exempt from isBranchTarget.
+    for ([_]usize{ 0, 14 }) |pc| {
+        code[pc].op = .{ .try_result = .{ .input = .i64, .output = .i64, .error_target = join } };
+        try t.expect(proof.extraEntry(&code, start));
+        code[pc].op = .{ .try_result = .{ .input = .i64, .output = .i64, .error_target = start } };
+        try t.expect(!proof.extraEntry(&code, start));
+        code[pc].op = .push_unit;
+    }
+    code[14].op = .{ .jump = join };
+    try t.expect(proof.extraEntry(&code, start));
+    code[14].op = .{ .jump_if_false = join };
+    try t.expect(proof.extraEntry(&code, start));
+    code[14].op = .{ .switch_variant = .{ .ty = .i64, .arms = &.{ .{ .target = 14, .slot = null }, .{ .target = join, .slot = null } } } };
+    try t.expect(proof.extraEntry(&code, start));
+    code[14].op = .{ .switch_variant = .{ .ty = .i64, .arms = &.{ .{ .target = start, .slot = null }, .{ .target = start + 11, .slot = null } } } };
+    try t.expect(!proof.extraEntry(&code, start));
+}
+
 // spec: QBE-POSITIVE-INDEX-1
 test "positive index guards keep negative normalization exact traps and record mutation" {
     const saved = runtime.get();
