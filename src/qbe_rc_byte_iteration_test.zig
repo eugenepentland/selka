@@ -9,6 +9,7 @@ const source =
     \\    total = seed
     \\    for value in raw:
     \\        total += value ^ mask
+    \\        _ = value ^ 1
     \\    return total
     \\def mutable(raw: mut byte_buffer) -> int:
     \\    total = 0

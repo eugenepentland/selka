@@ -99,4 +99,9 @@ int myl_native_bytes_buffer_append_raw(myl_native_heap *, myl_native_bytes *, co
  * neither observes nor changes collector state, and the caller reaches it
  * without the root protocol. */
 void myl_native_bytes_copy_octets(void *destination, const void *source, size_t count);
+/* Heap-free unsigned reduction of `count` readable octets XORed with the low
+ * eight bits of `mask`. Unsigned overflow wraps; checked signed callers must
+ * first prove count*255 and their seed addition fit. Reads exactly the range,
+ * including an unaligned beginning and a final short tail. */
+uint64_t myl_native_bytes_sum_xor(const unsigned char *storage, size_t count, uint64_t mask);
 #endif

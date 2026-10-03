@@ -90,6 +90,7 @@ const pure_callees = [_][]const u8{
     "myl_native_bytes_ends_with",
     "myl_native_bytes_has_byte",
     "myl_native_bytes_copy_octets",
+    "myl_native_bytes_sum_xor",
     // ERROR-TRACE-1: the error return trace recorders write two words of a
     // static ring and a count, and touch nothing else.
     "myl_qbe_error_trace_append",

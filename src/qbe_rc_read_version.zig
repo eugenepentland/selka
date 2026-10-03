@@ -163,7 +163,8 @@ fn plainValue(comptime E: type, self: *E, ty: typed.Type) bool {
     return !shape.counted and !shape.unique_drop;
 }
 
-/// A non-box list or immutable byte string whose elements are plain values.
+/// A non-box list or byte collection whose elements are plain values. The
+/// separate quietness proof refuses mutations throughout the loop.
 fn plainList(comptime E: type, self: *E, ty: typed.Type) bool {
     if (!ty.isAggregate()) return false;
     const record = self.program.records[ty.recordIndex()];
@@ -201,7 +202,7 @@ pub fn guard(comptime E: type, self: *E, proof: Certificate, head: usize) Error!
 }
 
 /// A copied body may call only cold trap helpers and the heap-free scalar
-/// float and integer helpers; even old pure drop calls refuse. Bound
+/// float, integer and byte reduction helpers; even old pure drop calls refuse. Bound
 /// generated-text scanning independently of the source-instruction budget.
 pub fn quietCopy(text: []const u8) bool {
     if (text.len > 1024 * 1024) return false;
@@ -214,6 +215,7 @@ pub fn quietCopy(text: []const u8) bool {
         if (std.mem.startsWith(u8, callee, "myl_qbe_float_unary(") or std.mem.startsWith(u8, callee, "myl_qbe_float_check(")) continue;
         if (std.mem.startsWith(u8, callee, "myl_qbe_float_integer(")) continue;
         if (std.mem.startsWith(u8, callee, "myl_qbe_int_")) continue;
+        if (std.mem.startsWith(u8, callee, "myl_native_bytes_sum_xor(")) continue;
         return false;
     }
     return true;

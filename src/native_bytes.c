@@ -4,6 +4,27 @@
 #include "native_rc_collections.h"
 #include <stdlib.h>
 #include <string.h>
+#if defined(__SSE2__)
+#include <emmintrin.h>
+#endif
+uint64_t myl_native_bytes_sum_xor(const unsigned char *storage, size_t count, uint64_t mask) {
+    uint64_t total=0;
+    unsigned char byte=(unsigned char)mask;
+#if defined(__SSE2__)
+    __m128i sum=_mm_setzero_si128(), flip=_mm_set1_epi8((char)byte);
+    while (count>=16) {
+        __m128i values=_mm_loadu_si128((const __m128i *)storage);
+        sum=_mm_add_epi64(sum,_mm_sad_epu8(_mm_xor_si128(values,flip),_mm_setzero_si128()));
+        storage+=16;
+        count-=16;
+    }
+    uint64_t lanes[2];
+    _mm_storeu_si128((__m128i *)lanes,sum);
+    total=lanes[0]+lanes[1];
+#endif
+    while (count--) total+=(unsigned char)(*storage++ ^ byte);
+    return total;
+}
 /* Splits on maximal runs of ASCII whitespace, dropping every empty piece. It is
    declared here rather than in the companion header so this file stays the only
    one the whitespace-split addition touches on the byte runtime side; the QBE

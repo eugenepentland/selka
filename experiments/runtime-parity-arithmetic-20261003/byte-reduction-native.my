@@ -1,0 +1,26 @@
+def reduce(raw: bytes, mask: int, seed: int) -> int:
+    total = seed
+    for value in raw:
+        total += value ^ mask
+    return total
+
+
+def indexed(raw: bytes, mask: int, seed: int) -> int:
+    total = seed
+    for i in range(len(raw)):
+        total += raw[i] ^ mask
+    return total
+
+
+def main() -> int:
+    for size in [0, 1, 15, 16, 17, 31, 32, 1024, 1041]:
+        backing = bytes([(i * 37 + 11) % 256 for i in range(size + 17)])
+        raw = backing[7:7 + size]
+        for mask in [0, 1, 127, 255, -1, 256, 1000003]:
+            if reduce(raw, mask, 13) != indexed(raw, mask, 13):
+                return 1
+        if reduce(raw, 255, -9223372036854775808) != indexed(raw, 255, -9223372036854775808):
+            return 2
+        if reduce(raw, 255, 9223372036854510000) != indexed(raw, 255, 9223372036854510000):
+            return 3
+    return 0

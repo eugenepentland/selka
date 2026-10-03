@@ -21,6 +21,7 @@ const facts = @import("qbe_loop_facts.zig");
 const read_version = @import("qbe_rc_read_version.zig");
 const operands = @import("qbe_loop_operands.zig");
 const rc_append_loop = @import("qbe_rc_append_loop.zig");
+const byte_reduction = @import("qbe_byte_reduction.zig");
 
 /// Errors reported while emitting native operations.
 pub const Error = error{ InternalError, OutOfMemory, SourceError, WriteFailed };
@@ -96,9 +97,15 @@ pub fn Lower(comptime E: type) type {
             const guard_end = self.output.writer.end;
             self.version = &active;
             defer self.version = null;
-            var pc = loop.head;
-            while (pc <= loop.back) : (pc += 1) {
-                if (!loop.actions[pc - loop.head].dead) try self.emitAt(pc);
+            if (byte_reduction.certify(E, self, loop, read_proof)) |proof| {
+                try self.headerLabel(loop.head, "fi");
+                const receiver = loop.actions[proof.read - loop.head].receiver.?;
+                try byte_reduction.emit(E, self, loop, proof, active.storages[receiver].?);
+            } else {
+                var pc = loop.head;
+                while (pc <= loop.back) : (pc += 1) {
+                    if (!loop.actions[pc - loop.head].dead) try self.emitAt(pc);
+                }
             }
             const text = self.output.writer.buffer[0..self.output.writer.end];
             if (self.copyAllocates(text[guard_end..])) return false;

@@ -1,0 +1,188 @@
+{
+  "kind": "untimed-fast-native-boundary-diagnostic",
+  "compiler_sha256": "06edb34674150b7a07d73b637d95b4c59eb52aa90fd75771d3d1f72989c4765a",
+  "qbe_sha256": "05030fa66864f44f28754425d644e46155c95bc5442fc2de705a85eee1443945",
+  "zig_version": "0.17.0-dev.1683+5ceec001b",
+  "cases": [
+    {
+      "mask": -1,
+      "seed": -9223372036854775808,
+      "source_sha256": "11a28aea4007efb8272821719d353f9ffb0305cc041290e7426885e6e5c288fc",
+      "observed": {
+        "qbe": {
+          "command": [
+            "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-arithmetic-20261003/zig-out/focus/mylang",
+            "build",
+            "/home/epentland/.cache/mylang-tmp/runtime-parity-arithmetic-20261003/byte-reduction-trap-0.my",
+            "--qbe",
+            "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-arithmetic-20261003/zig-out/focus/qbe",
+            "-o",
+            "/home/epentland/.cache/mylang-tmp/runtime-parity-arithmetic-20261003/byte-reduction-trap-0-qbe"
+          ],
+          "executable_sha256": "987336c683e34647cc9a7e3d4557b8a4357438cfb0138a30989c88ab5f4f83b2",
+          "returncode": 1,
+          "stdout": "before\n",
+          "stderr": "/home/epentland/.cache/mylang-tmp/runtime-parity-arithmetic-20261003/byte-reduction-trap-0.my:4:15: error[R_OVERFLOW]: native execution failed (add: left -9223372036854775808, right -1, width 64)\n  in reduce at /home/epentland/.cache/mylang-tmp/runtime-parity-arithmetic-20261003/byte-reduction-trap-0.my:4:15\n  in main at /home/epentland/.cache/mylang-tmp/runtime-parity-arithmetic-20261003/byte-reduction-trap-0.my:10:14\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"add\",\"left\":-9223372036854775808,\"right\":-1,\"width\":64}\n"
+        },
+        "llvm": {
+          "command": [
+            "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-arithmetic-20261003/zig-out/focus/mylang",
+            "build",
+            "/home/epentland/.cache/mylang-tmp/runtime-parity-arithmetic-20261003/byte-reduction-trap-0.my",
+            "--release",
+            "-o",
+            "/home/epentland/.cache/mylang-tmp/runtime-parity-arithmetic-20261003/byte-reduction-trap-0-llvm"
+          ],
+          "executable_sha256": "44e17d957bfb488b7ec4db80acf51e50efac6db6329cd7c463eaae3977f973d0",
+          "returncode": 1,
+          "stdout": "before\n",
+          "stderr": "/home/epentland/.cache/mylang-tmp/runtime-parity-arithmetic-20261003/byte-reduction-trap-0.my:4:15: error[R_OVERFLOW]: native execution failed (add: left -9223372036854775808, right -1, width 64)\n  in reduce at /home/epentland/.cache/mylang-tmp/runtime-parity-arithmetic-20261003/byte-reduction-trap-0.my:4:15\n  in main at /home/epentland/.cache/mylang-tmp/runtime-parity-arithmetic-20261003/byte-reduction-trap-0.my:10:14\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"add\",\"left\":-9223372036854775808,\"right\":-1,\"width\":64}\n"
+        }
+      }
+    },
+    {
+      "mask": 256,
+      "seed": 9223372036854775806,
+      "source_sha256": "739995b68969ae4ad3e5cab71a581b68639816d3b1832110ce2367b1ad3d822e",
+      "observed": {
+        "qbe": {
+          "command": [
+            "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-arithmetic-20261003/zig-out/focus/mylang",
+            "build",
+            "/home/epentland/.cache/mylang-tmp/runtime-parity-arithmetic-20261003/byte-reduction-trap-1.my",
+            "--qbe",
+            "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-arithmetic-20261003/zig-out/focus/qbe",
+            "-o",
+            "/home/epentland/.cache/mylang-tmp/runtime-parity-arithmetic-20261003/byte-reduction-trap-1-qbe"
+          ],
+          "executable_sha256": "fe61c9c959f64dfea75f60f2630d0e625a37d1fc30d6801163259f805daea2d4",
+          "returncode": 1,
+          "stdout": "before\n",
+          "stderr": "/home/epentland/.cache/mylang-tmp/runtime-parity-arithmetic-20261003/byte-reduction-trap-1.my:4:15: error[R_OVERFLOW]: native execution failed (add: left 9223372036854775806, right 256, width 64)\n  in reduce at /home/epentland/.cache/mylang-tmp/runtime-parity-arithmetic-20261003/byte-reduction-trap-1.my:4:15\n  in main at /home/epentland/.cache/mylang-tmp/runtime-parity-arithmetic-20261003/byte-reduction-trap-1.my:10:14\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"add\",\"left\":9223372036854775806,\"right\":256,\"width\":64}\n"
+        },
+        "llvm": {
+          "command": [
+            "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-arithmetic-20261003/zig-out/focus/mylang",
+            "build",
+            "/home/epentland/.cache/mylang-tmp/runtime-parity-arithmetic-20261003/byte-reduction-trap-1.my",
+            "--release",
+            "-o",
+            "/home/epentland/.cache/mylang-tmp/runtime-parity-arithmetic-20261003/byte-reduction-trap-1-llvm"
+          ],
+          "executable_sha256": "fa591b34a8c4843341ef0f01726c38bd0af32ce0fd437e896896b3c25739c9c6",
+          "returncode": 1,
+          "stdout": "before\n",
+          "stderr": "/home/epentland/.cache/mylang-tmp/runtime-parity-arithmetic-20261003/byte-reduction-trap-1.my:4:15: error[R_OVERFLOW]: native execution failed (add: left 9223372036854775806, right 256, width 64)\n  in reduce at /home/epentland/.cache/mylang-tmp/runtime-parity-arithmetic-20261003/byte-reduction-trap-1.my:4:15\n  in main at /home/epentland/.cache/mylang-tmp/runtime-parity-arithmetic-20261003/byte-reduction-trap-1.my:10:14\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"add\",\"left\":9223372036854775806,\"right\":256,\"width\":64}\n"
+        }
+      }
+    },
+    {
+      "mask": 9223372036854775807,
+      "seed": 0,
+      "source_sha256": "7851c05b7e7022a8dd22f10ac291608a11cdaa8b1c8415d929975981ba576caa",
+      "observed": {
+        "qbe": {
+          "command": [
+            "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-arithmetic-20261003/zig-out/focus/mylang",
+            "build",
+            "/home/epentland/.cache/mylang-tmp/runtime-parity-arithmetic-20261003/byte-reduction-trap-2.my",
+            "--qbe",
+            "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-arithmetic-20261003/zig-out/focus/qbe",
+            "-o",
+            "/home/epentland/.cache/mylang-tmp/runtime-parity-arithmetic-20261003/byte-reduction-trap-2-qbe"
+          ],
+          "executable_sha256": "55d79e8c13e62203c6a7fe366b66da1b07afe2d1573befe6f357c97dd3302ad7",
+          "returncode": 1,
+          "stdout": "before\n",
+          "stderr": "/home/epentland/.cache/mylang-tmp/runtime-parity-arithmetic-20261003/byte-reduction-trap-2.my:4:15: error[R_OVERFLOW]: native execution failed (add: left 9223372036854775807, right 9223372036854775770, width 64)\n  in reduce at /home/epentland/.cache/mylang-tmp/runtime-parity-arithmetic-20261003/byte-reduction-trap-2.my:4:15\n  in main at /home/epentland/.cache/mylang-tmp/runtime-parity-arithmetic-20261003/byte-reduction-trap-2.my:10:14\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"add\",\"left\":9223372036854775807,\"right\":9223372036854775770,\"width\":64}\n"
+        },
+        "llvm": {
+          "command": [
+            "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-arithmetic-20261003/zig-out/focus/mylang",
+            "build",
+            "/home/epentland/.cache/mylang-tmp/runtime-parity-arithmetic-20261003/byte-reduction-trap-2.my",
+            "--release",
+            "-o",
+            "/home/epentland/.cache/mylang-tmp/runtime-parity-arithmetic-20261003/byte-reduction-trap-2-llvm"
+          ],
+          "executable_sha256": "bbded250e37843c8e9e2f69321c15cc3ecb0c06be8e4c695cca684e2c0d387f4",
+          "returncode": 1,
+          "stdout": "before\n",
+          "stderr": "/home/epentland/.cache/mylang-tmp/runtime-parity-arithmetic-20261003/byte-reduction-trap-2.my:4:15: error[R_OVERFLOW]: native execution failed (add: left 9223372036854775807, right 9223372036854775770, width 64)\n  in reduce at /home/epentland/.cache/mylang-tmp/runtime-parity-arithmetic-20261003/byte-reduction-trap-2.my:4:15\n  in main at /home/epentland/.cache/mylang-tmp/runtime-parity-arithmetic-20261003/byte-reduction-trap-2.my:10:14\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"add\",\"left\":9223372036854775807,\"right\":9223372036854775770,\"width\":64}\n"
+        }
+      }
+    },
+    {
+      "mask": -9223372036854775808,
+      "seed": 0,
+      "source_sha256": "3855967d968dfecc538bc59514375fee9fbc218cd24473195947df24a6639e30",
+      "observed": {
+        "qbe": {
+          "command": [
+            "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-arithmetic-20261003/zig-out/focus/mylang",
+            "build",
+            "/home/epentland/.cache/mylang-tmp/runtime-parity-arithmetic-20261003/byte-reduction-trap-3.my",
+            "--qbe",
+            "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-arithmetic-20261003/zig-out/focus/qbe",
+            "-o",
+            "/home/epentland/.cache/mylang-tmp/runtime-parity-arithmetic-20261003/byte-reduction-trap-3-qbe"
+          ],
+          "executable_sha256": "103e876ca6d61aa61ff23f6cf9eb7d2d2e1eb933c9d965a4350f4890774bab4d",
+          "returncode": 1,
+          "stdout": "before\n",
+          "stderr": "/home/epentland/.cache/mylang-tmp/runtime-parity-arithmetic-20261003/byte-reduction-trap-3.my:4:15: error[R_OVERFLOW]: native execution failed (add: left -9223372036854775808, right -9223372036854775771, width 64)\n  in reduce at /home/epentland/.cache/mylang-tmp/runtime-parity-arithmetic-20261003/byte-reduction-trap-3.my:4:15\n  in main at /home/epentland/.cache/mylang-tmp/runtime-parity-arithmetic-20261003/byte-reduction-trap-3.my:10:14\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"add\",\"left\":-9223372036854775808,\"right\":-9223372036854775771,\"width\":64}\n"
+        },
+        "llvm": {
+          "command": [
+            "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-arithmetic-20261003/zig-out/focus/mylang",
+            "build",
+            "/home/epentland/.cache/mylang-tmp/runtime-parity-arithmetic-20261003/byte-reduction-trap-3.my",
+            "--release",
+            "-o",
+            "/home/epentland/.cache/mylang-tmp/runtime-parity-arithmetic-20261003/byte-reduction-trap-3-llvm"
+          ],
+          "executable_sha256": "39d5b277b704e6f65326bd8c163cc20fb1285cea731a2127e176e22921a8ac98",
+          "returncode": 1,
+          "stdout": "before\n",
+          "stderr": "/home/epentland/.cache/mylang-tmp/runtime-parity-arithmetic-20261003/byte-reduction-trap-3.my:4:15: error[R_OVERFLOW]: native execution failed (add: left -9223372036854775808, right -9223372036854775771, width 64)\n  in reduce at /home/epentland/.cache/mylang-tmp/runtime-parity-arithmetic-20261003/byte-reduction-trap-3.my:4:15\n  in main at /home/epentland/.cache/mylang-tmp/runtime-parity-arithmetic-20261003/byte-reduction-trap-3.my:10:14\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"add\",\"left\":-9223372036854775808,\"right\":-9223372036854775771,\"width\":64}\n"
+        }
+      }
+    },
+    {
+      "mask": 0,
+      "seed": 9223372036854775806,
+      "source_sha256": "547b7d780e147d7fe6fae89c27d6568c6179bf9eabd179705db39fd4b1043a70",
+      "observed": {
+        "qbe": {
+          "command": [
+            "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-arithmetic-20261003/zig-out/focus/mylang",
+            "build",
+            "/home/epentland/.cache/mylang-tmp/runtime-parity-arithmetic-20261003/byte-reduction-trap-4.my",
+            "--qbe",
+            "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-arithmetic-20261003/zig-out/focus/qbe",
+            "-o",
+            "/home/epentland/.cache/mylang-tmp/runtime-parity-arithmetic-20261003/byte-reduction-trap-4-qbe"
+          ],
+          "executable_sha256": "7cc5df30f8f046cdc20dd8c0ca9864ba41dd523298feb5b0e9af81b0a770300f",
+          "returncode": 1,
+          "stdout": "before\n",
+          "stderr": "/home/epentland/.cache/mylang-tmp/runtime-parity-arithmetic-20261003/byte-reduction-trap-4.my:4:15: error[R_OVERFLOW]: native execution failed (add: left 9223372036854775806, right 37, width 64)\n  in reduce at /home/epentland/.cache/mylang-tmp/runtime-parity-arithmetic-20261003/byte-reduction-trap-4.my:4:15\n  in main at /home/epentland/.cache/mylang-tmp/runtime-parity-arithmetic-20261003/byte-reduction-trap-4.my:10:14\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"add\",\"left\":9223372036854775806,\"right\":37,\"width\":64}\n"
+        },
+        "llvm": {
+          "command": [
+            "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-arithmetic-20261003/zig-out/focus/mylang",
+            "build",
+            "/home/epentland/.cache/mylang-tmp/runtime-parity-arithmetic-20261003/byte-reduction-trap-4.my",
+            "--release",
+            "-o",
+            "/home/epentland/.cache/mylang-tmp/runtime-parity-arithmetic-20261003/byte-reduction-trap-4-llvm"
+          ],
+          "executable_sha256": "ed0dd5fdadce11af447e14300ffcc3c508cf51673f4242798ea7da0dcf9fab56",
+          "returncode": 1,
+          "stdout": "before\n",
+          "stderr": "/home/epentland/.cache/mylang-tmp/runtime-parity-arithmetic-20261003/byte-reduction-trap-4.my:4:15: error[R_OVERFLOW]: native execution failed (add: left 9223372036854775806, right 37, width 64)\n  in reduce at /home/epentland/.cache/mylang-tmp/runtime-parity-arithmetic-20261003/byte-reduction-trap-4.my:4:15\n  in main at /home/epentland/.cache/mylang-tmp/runtime-parity-arithmetic-20261003/byte-reduction-trap-4.my:10:14\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"add\",\"left\":9223372036854775806,\"right\":37,\"width\":64}\n"
+        }
+      }
+    }
+  ]
+}
