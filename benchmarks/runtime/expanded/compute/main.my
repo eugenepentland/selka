@@ -1,0 +1,187 @@
+module main
+
+extern def runtime_bench_now(host: Host) -> i64 effects(host)
+
+
+record Triple:
+    a: int
+    b: int
+    c: int
+
+
+record Packet:
+    identifier: int
+    payload_sum: int
+    length: int
+
+
+def parse_number(text: str) -> int:
+    match int(text):
+        case Some(value):
+            return value
+        case None:
+            return 0
+
+
+def affine_a(x: int) -> int:
+    return x * 3 + 7
+
+
+def affine_b(x: int) -> int:
+    return x * 5 + 11
+
+
+def score(record: Triple) -> int:
+    return record.a + record.b * 3 + record.c * 5
+
+
+def optional(x: int, phase: int) -> Option[int]:
+    if x % 4 == 0:
+        return None
+    return Some(x + phase)
+
+
+def checked(x: int, phase: int) -> Result[int, int]:
+    if x % 5 == 0:
+        return Err(1)
+    return Ok(x + phase)
+
+
+def forwarded(x: int, phase: int) -> Result[int, int]:
+    value = checked(x, phase)?
+    return Ok(value * 3 + 1)
+
+
+def search(values: list[int], key: int) -> int:
+    low = 0
+    high = len(values)
+    while low < high:
+        middle = (low + high) // 2
+        if values[middle] < key:
+            low = middle + 1
+        else:
+            high = middle
+    if low < len(values) and values[low] == key:
+        return low + 1
+    return 0
+
+
+def make_frame(j: int, seed: int) -> bytes:
+    identifier = (seed + j * 17) % 65536
+    raw = [165, 1, identifier // 256, identifier % 256, 4]
+    for k in range(4):
+        raw.append((seed + j * 13 + k * 7) % 256)
+    check = 0
+    for byte in raw:
+        check += byte
+    raw.append(check % 256)
+    if j % 4 == 1:
+        raw[0] = 164
+    elif j % 4 == 2:
+        raw[9] = (raw[9] + 1) % 256
+    elif j % 4 == 3:
+        raw[4] = 5
+    return bytes(raw)
+
+
+def decode(raw: bytes) -> Result[Packet, int]:
+    if len(raw) < 6:
+        return Err(3)
+    if raw[0] != 165:
+        return Err(1)
+    if raw[1] != 1:
+        return Err(2)
+    length = raw[4]
+    if len(raw) != length + 6:
+        return Err(3)
+    check = 0
+    for i in range(len(raw) - 1):
+        check += raw[i]
+    if check % 256 != raw[len(raw) - 1]:
+        return Err(4)
+    total = 0
+    for i in range(5, len(raw) - 1):
+        total += raw[i]
+    return Ok(Packet(identifier=raw[2] * 256 + raw[3], payload_sum=total, length=length))
+
+
+def main(args: list[str], host: Host, out: Stream) -> int:
+    if len(args) != 4:
+        return 2
+    names = ["integer_math", "float_math", "branch_predictable", "branch_mixed", "record_construct", "record_update", "call_direct", "call_indirect", "option_handle", "result_propagate", "binary_search", "packet_decode"]
+    kind = -1
+    for i in range(len(names)):
+        if names[i] == args[0]:
+            kind = i
+    if kind < 0:
+        return 2
+    size = parse_number(args[1])
+    iterations = parse_number(args[2])
+    seed = parse_number(args[3])
+    if size < 2 or iterations < 1 or seed < 1 or seed > 1000000:
+        return 2
+    values = [(seed + j * 37) % 1009 for j in range(size)]
+    ordered = [j * 3 + seed % 11 for j in range(size)]
+    flags = [(j % 16 != 0 if kind == 2 else(values[j] * 73 + j * 19 + seed) % 101 < 50) for j in range(size)]
+    records = [Triple(a=x, b=x % 17, c=x * 3 % 101) for x in values]
+    frames = [make_frame(j, seed) for j in range(size)]
+    function = affine_a if seed % 2 == 0 else affine_b
+    checksum = 0
+    start = runtime_bench_now(host)
+    for batch in range(iterations):
+        phase = batch % 17
+        pass_total = 0
+        for j in range(size):
+            x = values[j]
+            value = 0
+            if kind == 0:
+                value = ((x + phase) * 17 + 23) // 7 % 1009
+            elif kind == 1:
+                a = float(x) / 8.0 + float(phase) / 4.0
+                b = float(x) / 16.0 + 1.0
+                value = int((a * b + 0.5) * 128.0)
+            elif kind == 2 or kind == 3:
+                if flags[j]:
+                    value = (x + phase) * 3 + 1
+                else:
+                    value = (x + phase) * 5 + 7
+            elif kind == 4:
+                record = Triple(a=x + phase, b=x % 17, c=(x * 3 + phase) % 101)
+                value = score(record)
+            elif kind == 5:
+                record = records[j]
+                record.a = x + phase
+                record.b = x % 17
+                record.c = (x * 3 + phase) % 101
+                value = score(record)
+            elif kind == 6:
+                value = affine_a(x + phase)
+            elif kind == 7:
+                value = function(x + phase)
+            elif kind == 8:
+                match optional(x, phase):
+                    case Some(number):
+                        value = number * 3 + 1
+                    case None:
+                        value = 19
+            elif kind == 9:
+                match forwarded(x, phase):
+                    case Ok(number):
+                        value = number
+                    case Err(error):
+                        value = error * 7
+            elif kind == 10:
+                value = search(ordered, (x + phase) % (size * 3 + 3) + seed % 11)
+            elif kind == 11:
+                match decode(frames[j]):
+                    case Ok(packet):
+                        value = packet.identifier + packet.payload_sum * 3 + packet.length
+                    case Err(error):
+                        value = error * 101
+            else:
+                return 2
+            pass_total += value
+        checksum = (checksum + pass_total) % 1000000007
+    elapsed = runtime_bench_now(host) - start
+    out.print(checksum, elapsed)
+    return 0

@@ -1,0 +1,25 @@
+{
+  "schema": "runtime-operation-coverage-v1",
+  "target_cpu_fraction_per_application": 0.8,
+  "target_scope": "The five documented single-threaded, in-memory application fixtures, per compiler configuration; not a percentage of all software.",
+  "areas": {
+    "numbers_and_branches": ["integer_math", "float_math", "branch_predictable", "branch_mixed"],
+    "lists_and_iteration": ["list_scan", "list_append", "list_filter", "mutate_unique"],
+    "strings_and_bytes": ["bytes_scan", "string_equal", "string_search", "string_split", "string_join", "int_parse", "int_format"],
+    "dictionaries_and_sets": ["dict_lookup", "dict_lookup_str", "dict_update", "dict_update_str", "set_dedup"],
+    "records_and_calls": ["record_reads", "record_construct", "record_update", "call_direct", "call_indirect"],
+    "optional_values_and_errors": ["tagged_stack", "option_handle", "result_propagate"],
+    "allocation_and_ownership": ["alloc_short", "alloc_retained", "mutate_shared", "mutate_nested"],
+    "sorting_and_searching": ["sort_int", "sort_records", "binary_search"]
+  },
+  "applications": {
+    "word_count": ["strings_and_bytes", "dictionaries_and_sets", "allocation_and_ownership"],
+    "csv_aggregate": ["strings_and_bytes", "dictionaries_and_sets", "numbers_and_branches", "allocation_and_ownership"],
+    "json_transform": ["strings_and_bytes", "lists_and_iteration", "records_and_calls", "allocation_and_ownership"],
+    "packet_decode": ["strings_and_bytes", "numbers_and_branches", "records_and_calls", "optional_values_and_errors"],
+    "lox_eval": ["numbers_and_branches", "lists_and_iteration", "records_and_calls", "optional_values_and_errors", "allocation_and_ownership"]
+  },
+  "library_comparisons": ["sort_int", "sort_records", "json_transform"],
+  "interpretation": "These lists are a reviewed inventory, not measured time percentages. Only separately retained CPU samples with conservative symbol-to-primitive attribution contribute to profile coverage. Unknown, inlined application-body, startup, or unmatched samples remain uncredited.",
+  "excluded_workloads": ["filesystem and network waits", "multithreading and scheduling", "external database operations", "compiler throughput", "full Lox parser/classes/closures", "production workload distributions"]
+}

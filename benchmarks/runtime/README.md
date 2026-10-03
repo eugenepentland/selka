@@ -1,3 +1,7 @@
+The [expanded suite](expanded/README.md) covers 40 cases across the eight everyday
+operation areas and five application workloads, using all four languages. The
+commands below retain the original four-case baseline for reproducibility.
+
 Run from the repository with Python 3:
 
 ```sh
