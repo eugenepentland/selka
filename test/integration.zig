@@ -1173,21 +1173,23 @@ test "a project build compiles a module again only when its source or an interfa
     try testing.expect(builtModules(try projectBuild(a, directory, "prog", "cache", &.{}), "\"module_build\":{\"modules\":3,\"compiled\":3,\"reused\":0"));
     try testing.expect(builtModules(try projectBuild(a, directory, "prog-gc", "cache-gc", &.{"--gc-runtime"}), "\"module_build\":{\"modules\":3,\"compiled\":3,\"reused\":0"));
     try testing.expect(builtModules(try projectBuild(a, directory, "prog", "cache", &.{}), "\"module_build\":{\"modules\":3,\"compiled\":0,\"reused\":3"));
-    // RC reads the callee's actual readonly body; GC needs only its unchanged
-    // semantic interface. Both preserve the edited code and their own cutoff.
+    try testing.expect(builtModules(try projectBuild(a, directory, "prog-gc", "cache-gc", &.{"--gc-runtime"}), "\"module_build\":{\"modules\":3,\"compiled\":0,\"reused\":3"));
+    // Plain record construction makes score inlinable into main. Both runtimes
+    // therefore read its body and must invalidate that dependency after an edit.
     try temporary.dir.writeFile(testing.io, .{ .sub_path = "util.my", .data = try std.mem.replaceOwned(u8, a, schedule_util, "right=2", "right=3") });
     try testing.expect(builtModules(try projectBuild(a, directory, "prog", "cache", &.{}), "\"module_build\":{\"modules\":3,\"compiled\":2,\"reused\":1"));
-    try testing.expect(builtModules(try projectBuild(a, directory, "prog-gc", "cache-gc", &.{"--gc-runtime"}), "\"module_build\":{\"modules\":3,\"compiled\":1,\"reused\":2"));
-    // An interface edit: `util` read `shapes`'s interface and is compiled
-    // again. `main` read only `shapes`'s physical rows for the bodies it
-    // reaches, which held (MODULE-INTERFACE-CUTOFF-2), and stops at the
-    // unchanged `util` interface under both runtimes.
-    try temporary.dir.writeFile(testing.io, .{ .sub_path = "shapes.my", .data = schedule_shapes ++ "public def unused() -> int:\n    return 1\n" });
-    try testing.expect(builtModules(try projectBuild(a, directory, "prog", "cache", &.{}), "\"module_build\":{\"modules\":3,\"compiled\":2,\"reused\":1"));
     try testing.expect(builtModules(try projectBuild(a, directory, "prog-gc", "cache-gc", &.{"--gc-runtime"}), "\"module_build\":{\"modules\":3,\"compiled\":2,\"reused\":1"));
+    // The inlined body also brings Pair locals into main, so main reads the
+    // shapes interface as well as util. An interface edit now invalidates all
+    // three modules; the native object cache can still reuse unchanged code.
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "shapes.my", .data = schedule_shapes ++ "public def unused() -> int:\n    return 1\n" });
+    try testing.expect(builtModules(try projectBuild(a, directory, "prog", "cache", &.{}), "\"module_build\":{\"modules\":3,\"compiled\":3,\"reused\":0"));
+    try testing.expect(builtModules(try projectBuild(a, directory, "prog-gc", "cache-gc", &.{"--gc-runtime"}), "\"module_build\":{\"modules\":3,\"compiled\":3,\"reused\":0"));
     // The program runs the edited code: (0+3) + (1+3) + (2+3) + (3+3).
-    const ran = try std.process.run(a, testing.io, .{ .argv = &.{try std.fs.path.join(a, &.{ directory, "prog" })} });
-    try testing.expectEqual(std.process.Child.Term{ .exited = 18 }, ran.term);
+    for ([_][]const u8{ "prog", "prog-gc" }) |output| {
+        const ran = try std.process.run(a, testing.io, .{ .argv = &.{try std.fs.path.join(a, &.{ directory, output })} });
+        try testing.expectEqual(std.process.Child.Term{ .exited = 18 }, ran.term);
+    }
 }
 
 const cutoff_leaf =
