@@ -1,0 +1,14 @@
+{
+  "reviewer": "independent /root/lookup",
+  "reviewed_commit": "ac54b90b226517751962dbab1c969465d490f788",
+  "positive_index_commit": "406c7eebdb36b306b0f4ceb9fac78ef7adeb469d",
+  "result": {
+    "positive_index": "one incomplete CFG-entry refusal; no demonstrated runtime miscompile",
+    "field_inout": "pass with stated source-review limits"
+  },
+  "review_sha256": "3f5c7e167cbbeef6a6dc5d1044e73db26dea7b7c64cd4fd5ff6d4f97d882e139",
+  "source_record_sha256": "ee915ae5de1e3911a2b20715118ae31429ee70931e536a2932ba8c2beb445b8f",
+  "independent_tests_run": false,
+  "timing_run": false,
+  "source_edits": false
+}
