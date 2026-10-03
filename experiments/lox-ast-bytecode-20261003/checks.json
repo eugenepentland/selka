@@ -1,0 +1,36 @@
+{
+  "source37_expected_rule_verified": true,
+  "actual_incremental_patch_replay_status": 0,
+  "public_runner_status": 0,
+  "native_runner_status": 0,
+  "pack_status": 0,
+  "guardian": {
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-ast-bytecode-20261003/scripts/build-slot.sh",
+      "gate",
+      "/home/epentland/ai/canopy/guardian-zig/zig-out/bin/guardian-check",
+      "all",
+      ".",
+      "--gate"
+    ],
+    "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-ast-bytecode-20261003",
+    "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-ast-bytecode-20261003/.tmp-lox-ast-bytecode-20261003/tmp",
+    "status": 0,
+    "checks_passed": 88,
+    "log_sha256": "99f9b5b3783351fac37f3be93c1066723c642ea056fdad8b74ead2879d9f29ef",
+    "feedback_owner": "root consolidates task feedback; this lane does not edit FEEDBACK.md"
+  },
+  "qualification_sha256": "a9736c699b6cf8842bb60c3192bb5240747896a1307401eeb97964a42e1efd2d",
+  "receipts_sha256": "fe4fe8a6ae7ae6099c2e44f3e3233676c23f0bac0e7e021d9b0486d104ff1cb2",
+  "patch_sha256": "abedc2ac23beed4d1f2d340f2e2f0f58ce2ed05f9b5dff6c6d9ee4b600e2b29a",
+  "source_manifest_sha256": "d275a023cb1d4bb3fbadd1bc463cfc202bb51422eddc70e9aecff43864306c5f",
+  "replay_receipt_sha256": "972a5896b5f1d3f5146541cb8ab9f6b0c1f5603c8a6a10d0fdbd56846df03e49",
+  "runner_sha256": {
+    "build.py": "229e88dcdca3ed58f6132e3d69991fe441c933af8a8f1d9f53b07363e8a2e2a0",
+    "public.py": "fb6d3adc5e17c3f06ad17cc96491219f53f58ba9a0b97214054176b654357542",
+    "validate.py": "8a6dc886aa320946b5e4ce3bc89ef623465a5199cc604ee4ac909a5e9547d178",
+    "pack.py": "b1bdc3d43bcb0cec75d7196c7c34be10f179ed3d89e651ddd4ebb1ee0baf67ea"
+  },
+  "no_performance_workloads": true,
+  "no_core_or_compiler_edits": true
+}
