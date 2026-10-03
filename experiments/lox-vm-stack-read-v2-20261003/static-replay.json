@@ -1,0 +1,1051 @@
+{
+  "method": "Manual branch-choice walk of emitted static assembly; no execution or performance measurement. Choices select nonnegative/in-range top-1/top-2 and same valid tags. Counts exclude unchanged caller; include old nested call and comparison entry/return. Payload outcomes use set instructions and do not branch.",
+  "files": {
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-vm-stack-read-20261003/.tmp-lox-vm-stack-read-20261003/qbe-vm-equal_stack.asm": "81c68fc54e3d3e5df7e3ebc29aaf36796047062b68c4a468bf84386a52df96e4",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-vm-stack-read-20261003/.tmp-lox-vm-stack-read-v2-20261003/qbe-v1-values_equal.asm": "092e67e62c01e969ab863207b2f6a121b73f8a398f04bea6ff0312029b5a0156",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-vm-stack-read-20261003/.tmp-lox-vm-stack-read-v2-20261003/qbe-equal_stack.asm": "26bf04c3de8110cce98304caf1babb8123a0bb661e7e92294047729dd3dfa293"
+  },
+  "rows": [
+    {
+      "same_tag": "nil",
+      "v1_helper": {
+        "count": 42,
+        "instruction_addresses": [
+          "0x1125ae0",
+          "0x1125ae4",
+          "0x1125ae5",
+          "0x1125ae8",
+          "0x1125aec",
+          "0x1125af0",
+          "0x1125af4",
+          "0x1125af7",
+          "0x1125afd",
+          "0x1125b07",
+          "0x1125b0a",
+          "0x1125b10",
+          "0x1125b13",
+          "0x1125b16",
+          "0x1125b1a",
+          "0x1125b1d",
+          "0x1125b21",
+          "0x1125b25",
+          "0x1125b29",
+          "0x1125ba7",
+          "0x1125bab",
+          "0x1125baf",
+          "0x1125bb2",
+          "0x1125bb5",
+          "0x1125bb9",
+          "0x1125bbd",
+          "0x1125bc1",
+          "0x1125bcb",
+          "0x1125bce",
+          "0x1125bd4",
+          "0x1125bd7",
+          "0x1125bda",
+          "0x1125bde",
+          "0x1125be1",
+          "0x1125c5f",
+          "0x1125c63",
+          "0x1125c67",
+          "0x1125c6a",
+          "0x1125c6d",
+          "0x1125c71",
+          "0x1125c76",
+          "0x1125c77"
+        ],
+        "branches": [
+          {
+            "address": "0x1125af7",
+            "branch": "jb",
+            "taken": false
+          },
+          {
+            "address": "0x1125b0a",
+            "branch": "jl",
+            "taken": false
+          },
+          {
+            "address": "0x1125b29",
+            "branch": "jne",
+            "taken": true
+          },
+          {
+            "address": "0x1125bce",
+            "branch": "jl",
+            "taken": false
+          },
+          {
+            "address": "0x1125be1",
+            "branch": "jb",
+            "taken": true
+          }
+        ],
+        "calls": [
+          "1121cb0 <myl_f_393b03e6e8000a2be3bf0bb432f9197ce3fbfd4c525e561e0f9e9b1b3cc38f9b>"
+        ]
+      },
+      "v1_comparison": {
+        "count": 9,
+        "instruction_addresses": [
+          "0x1121cb0",
+          "0x1121cb4",
+          "0x1121cb6",
+          "0x1121cba",
+          "0x1121de3",
+          "0x1121de5",
+          "0x1121de9",
+          "0x1121e19",
+          "0x1121e1e"
+        ],
+        "branches": [
+          {
+            "address": "0x1121cba",
+            "branch": "je",
+            "taken": true
+          },
+          {
+            "address": "0x1121de9",
+            "branch": "je",
+            "taken": true
+          }
+        ],
+        "calls": []
+      },
+      "v2_helper": {
+        "count": 47,
+        "instruction_addresses": [
+          "0x1125ac0",
+          "0x1125ac4",
+          "0x1125ac5",
+          "0x1125ac8",
+          "0x1125acc",
+          "0x1125ad6",
+          "0x1125ad9",
+          "0x1125adf",
+          "0x1125ae2",
+          "0x1125ae5",
+          "0x1125ae8",
+          "0x1125aec",
+          "0x1125aef",
+          "0x1125af2",
+          "0x1125af6",
+          "0x1125af9",
+          "0x1125b74",
+          "0x1125b78",
+          "0x1125b7c",
+          "0x1125b7f",
+          "0x1125b82",
+          "0x1125b86",
+          "0x1125b8a",
+          "0x1125b8e",
+          "0x1125b98",
+          "0x1125b9b",
+          "0x1125ba1",
+          "0x1125ba4",
+          "0x1125ba8",
+          "0x1125bab",
+          "0x1125c28",
+          "0x1125c2b",
+          "0x1125c2f",
+          "0x1125c33",
+          "0x1125c36",
+          "0x1125c39",
+          "0x1125c3d",
+          "0x1125c41",
+          "0x1125c45",
+          "0x1125c48",
+          "0x1125c4c",
+          "0x1125d78",
+          "0x1125d7b",
+          "0x1125d7f",
+          "0x1125daf",
+          "0x1125db4",
+          "0x1125db5"
+        ],
+        "branches": [
+          {
+            "address": "0x1125ad9",
+            "branch": "jl",
+            "taken": false
+          },
+          {
+            "address": "0x1125af9",
+            "branch": "jne",
+            "taken": true
+          },
+          {
+            "address": "0x1125b9b",
+            "branch": "jl",
+            "taken": false
+          },
+          {
+            "address": "0x1125bab",
+            "branch": "jb",
+            "taken": true
+          },
+          {
+            "address": "0x1125c4c",
+            "branch": "je",
+            "taken": true
+          },
+          {
+            "address": "0x1125d7f",
+            "branch": "je",
+            "taken": true
+          }
+        ],
+        "calls": []
+      },
+      "v1_count": 51,
+      "v2_count": 47,
+      "delta": -4
+    },
+    {
+      "same_tag": "boolean",
+      "v1_helper": {
+        "count": 42,
+        "instruction_addresses": [
+          "0x1125ae0",
+          "0x1125ae4",
+          "0x1125ae5",
+          "0x1125ae8",
+          "0x1125aec",
+          "0x1125af0",
+          "0x1125af4",
+          "0x1125af7",
+          "0x1125afd",
+          "0x1125b07",
+          "0x1125b0a",
+          "0x1125b10",
+          "0x1125b13",
+          "0x1125b16",
+          "0x1125b1a",
+          "0x1125b1d",
+          "0x1125b21",
+          "0x1125b25",
+          "0x1125b29",
+          "0x1125ba7",
+          "0x1125bab",
+          "0x1125baf",
+          "0x1125bb2",
+          "0x1125bb5",
+          "0x1125bb9",
+          "0x1125bbd",
+          "0x1125bc1",
+          "0x1125bcb",
+          "0x1125bce",
+          "0x1125bd4",
+          "0x1125bd7",
+          "0x1125bda",
+          "0x1125bde",
+          "0x1125be1",
+          "0x1125c5f",
+          "0x1125c63",
+          "0x1125c67",
+          "0x1125c6a",
+          "0x1125c6d",
+          "0x1125c71",
+          "0x1125c76",
+          "0x1125c77"
+        ],
+        "branches": [
+          {
+            "address": "0x1125af7",
+            "branch": "jb",
+            "taken": false
+          },
+          {
+            "address": "0x1125b0a",
+            "branch": "jl",
+            "taken": false
+          },
+          {
+            "address": "0x1125b29",
+            "branch": "jne",
+            "taken": true
+          },
+          {
+            "address": "0x1125bce",
+            "branch": "jl",
+            "taken": false
+          },
+          {
+            "address": "0x1125be1",
+            "branch": "jb",
+            "taken": true
+          }
+        ],
+        "calls": [
+          "1121cb0 <myl_f_393b03e6e8000a2be3bf0bb432f9197ce3fbfd4c525e561e0f9e9b1b3cc38f9b>"
+        ]
+      },
+      "v1_comparison": {
+        "count": 21,
+        "instruction_addresses": [
+          "0x1121cb0",
+          "0x1121cb4",
+          "0x1121cb6",
+          "0x1121cba",
+          "0x1121cc0",
+          "0x1121cc4",
+          "0x1121cc7",
+          "0x1121ccb",
+          "0x1121cce",
+          "0x1121d9e",
+          "0x1121da3",
+          "0x1121da5",
+          "0x1121da9",
+          "0x1121dab",
+          "0x1121daf",
+          "0x1121dcb",
+          "0x1121dd0",
+          "0x1121dd3",
+          "0x1121dd6",
+          "0x1121dda",
+          "0x1121e1e"
+        ],
+        "branches": [
+          {
+            "address": "0x1121cba",
+            "branch": "je",
+            "taken": false
+          },
+          {
+            "address": "0x1121cce",
+            "branch": "jne",
+            "taken": true
+          },
+          {
+            "address": "0x1121da9",
+            "branch": "je",
+            "taken": false
+          },
+          {
+            "address": "0x1121daf",
+            "branch": "je",
+            "taken": true
+          },
+          {
+            "address": "0x1121dda",
+            "branch": "jmp",
+            "taken": true
+          }
+        ],
+        "calls": []
+      },
+      "v2_helper": {
+        "count": 59,
+        "instruction_addresses": [
+          "0x1125ac0",
+          "0x1125ac4",
+          "0x1125ac5",
+          "0x1125ac8",
+          "0x1125acc",
+          "0x1125ad6",
+          "0x1125ad9",
+          "0x1125adf",
+          "0x1125ae2",
+          "0x1125ae5",
+          "0x1125ae8",
+          "0x1125aec",
+          "0x1125aef",
+          "0x1125af2",
+          "0x1125af6",
+          "0x1125af9",
+          "0x1125b74",
+          "0x1125b78",
+          "0x1125b7c",
+          "0x1125b7f",
+          "0x1125b82",
+          "0x1125b86",
+          "0x1125b8a",
+          "0x1125b8e",
+          "0x1125b98",
+          "0x1125b9b",
+          "0x1125ba1",
+          "0x1125ba4",
+          "0x1125ba8",
+          "0x1125bab",
+          "0x1125c28",
+          "0x1125c2b",
+          "0x1125c2f",
+          "0x1125c33",
+          "0x1125c36",
+          "0x1125c39",
+          "0x1125c3d",
+          "0x1125c41",
+          "0x1125c45",
+          "0x1125c48",
+          "0x1125c4c",
+          "0x1125c52",
+          "0x1125c56",
+          "0x1125c59",
+          "0x1125c5d",
+          "0x1125c60",
+          "0x1125d32",
+          "0x1125d37",
+          "0x1125d3a",
+          "0x1125d3e",
+          "0x1125d40",
+          "0x1125d44",
+          "0x1125d60",
+          "0x1125d65",
+          "0x1125d68",
+          "0x1125d6b",
+          "0x1125d6f",
+          "0x1125db4",
+          "0x1125db5"
+        ],
+        "branches": [
+          {
+            "address": "0x1125ad9",
+            "branch": "jl",
+            "taken": false
+          },
+          {
+            "address": "0x1125af9",
+            "branch": "jne",
+            "taken": true
+          },
+          {
+            "address": "0x1125b9b",
+            "branch": "jl",
+            "taken": false
+          },
+          {
+            "address": "0x1125bab",
+            "branch": "jb",
+            "taken": true
+          },
+          {
+            "address": "0x1125c4c",
+            "branch": "je",
+            "taken": false
+          },
+          {
+            "address": "0x1125c60",
+            "branch": "jne",
+            "taken": true
+          },
+          {
+            "address": "0x1125d3e",
+            "branch": "je",
+            "taken": false
+          },
+          {
+            "address": "0x1125d44",
+            "branch": "je",
+            "taken": true
+          },
+          {
+            "address": "0x1125d6f",
+            "branch": "jmp",
+            "taken": true
+          }
+        ],
+        "calls": []
+      },
+      "v1_count": 63,
+      "v2_count": 59,
+      "delta": -4
+    },
+    {
+      "same_tag": "number",
+      "v1_helper": {
+        "count": 42,
+        "instruction_addresses": [
+          "0x1125ae0",
+          "0x1125ae4",
+          "0x1125ae5",
+          "0x1125ae8",
+          "0x1125aec",
+          "0x1125af0",
+          "0x1125af4",
+          "0x1125af7",
+          "0x1125afd",
+          "0x1125b07",
+          "0x1125b0a",
+          "0x1125b10",
+          "0x1125b13",
+          "0x1125b16",
+          "0x1125b1a",
+          "0x1125b1d",
+          "0x1125b21",
+          "0x1125b25",
+          "0x1125b29",
+          "0x1125ba7",
+          "0x1125bab",
+          "0x1125baf",
+          "0x1125bb2",
+          "0x1125bb5",
+          "0x1125bb9",
+          "0x1125bbd",
+          "0x1125bc1",
+          "0x1125bcb",
+          "0x1125bce",
+          "0x1125bd4",
+          "0x1125bd7",
+          "0x1125bda",
+          "0x1125bde",
+          "0x1125be1",
+          "0x1125c5f",
+          "0x1125c63",
+          "0x1125c67",
+          "0x1125c6a",
+          "0x1125c6d",
+          "0x1125c71",
+          "0x1125c76",
+          "0x1125c77"
+        ],
+        "branches": [
+          {
+            "address": "0x1125af7",
+            "branch": "jb",
+            "taken": false
+          },
+          {
+            "address": "0x1125b0a",
+            "branch": "jl",
+            "taken": false
+          },
+          {
+            "address": "0x1125b29",
+            "branch": "jne",
+            "taken": true
+          },
+          {
+            "address": "0x1125bce",
+            "branch": "jl",
+            "taken": false
+          },
+          {
+            "address": "0x1125be1",
+            "branch": "jb",
+            "taken": true
+          }
+        ],
+        "calls": [
+          "1121cb0 <myl_f_393b03e6e8000a2be3bf0bb432f9197ce3fbfd4c525e561e0f9e9b1b3cc38f9b>"
+        ]
+      },
+      "v1_comparison": {
+        "count": 30,
+        "instruction_addresses": [
+          "0x1121cb0",
+          "0x1121cb4",
+          "0x1121cb6",
+          "0x1121cba",
+          "0x1121cc0",
+          "0x1121cc4",
+          "0x1121cc7",
+          "0x1121ccb",
+          "0x1121cce",
+          "0x1121cd4",
+          "0x1121cd8",
+          "0x1121d37",
+          "0x1121d3b",
+          "0x1121d3d",
+          "0x1121d41",
+          "0x1121d43",
+          "0x1121d47",
+          "0x1121d49",
+          "0x1121d4d",
+          "0x1121d63",
+          "0x1121d67",
+          "0x1121d6c",
+          "0x1121d71",
+          "0x1121d75",
+          "0x1121d78",
+          "0x1121d7c",
+          "0x1121d7f",
+          "0x1121d83",
+          "0x1121d85",
+          "0x1121e1e"
+        ],
+        "branches": [
+          {
+            "address": "0x1121cba",
+            "branch": "je",
+            "taken": false
+          },
+          {
+            "address": "0x1121cce",
+            "branch": "jne",
+            "taken": false
+          },
+          {
+            "address": "0x1121cd8",
+            "branch": "je",
+            "taken": true
+          },
+          {
+            "address": "0x1121d41",
+            "branch": "je",
+            "taken": false
+          },
+          {
+            "address": "0x1121d47",
+            "branch": "je",
+            "taken": false
+          },
+          {
+            "address": "0x1121d4d",
+            "branch": "je",
+            "taken": true
+          },
+          {
+            "address": "0x1121d85",
+            "branch": "jmp",
+            "taken": true
+          }
+        ],
+        "calls": []
+      },
+      "v2_helper": {
+        "count": 68,
+        "instruction_addresses": [
+          "0x1125ac0",
+          "0x1125ac4",
+          "0x1125ac5",
+          "0x1125ac8",
+          "0x1125acc",
+          "0x1125ad6",
+          "0x1125ad9",
+          "0x1125adf",
+          "0x1125ae2",
+          "0x1125ae5",
+          "0x1125ae8",
+          "0x1125aec",
+          "0x1125aef",
+          "0x1125af2",
+          "0x1125af6",
+          "0x1125af9",
+          "0x1125b74",
+          "0x1125b78",
+          "0x1125b7c",
+          "0x1125b7f",
+          "0x1125b82",
+          "0x1125b86",
+          "0x1125b8a",
+          "0x1125b8e",
+          "0x1125b98",
+          "0x1125b9b",
+          "0x1125ba1",
+          "0x1125ba4",
+          "0x1125ba8",
+          "0x1125bab",
+          "0x1125c28",
+          "0x1125c2b",
+          "0x1125c2f",
+          "0x1125c33",
+          "0x1125c36",
+          "0x1125c39",
+          "0x1125c3d",
+          "0x1125c41",
+          "0x1125c45",
+          "0x1125c48",
+          "0x1125c4c",
+          "0x1125c52",
+          "0x1125c56",
+          "0x1125c59",
+          "0x1125c5d",
+          "0x1125c60",
+          "0x1125c66",
+          "0x1125c6a",
+          "0x1125cca",
+          "0x1125cce",
+          "0x1125cd1",
+          "0x1125cd5",
+          "0x1125cd7",
+          "0x1125cdb",
+          "0x1125cdd",
+          "0x1125ce1",
+          "0x1125cf7",
+          "0x1125cfb",
+          "0x1125d00",
+          "0x1125d05",
+          "0x1125d09",
+          "0x1125d0c",
+          "0x1125d10",
+          "0x1125d13",
+          "0x1125d17",
+          "0x1125d19",
+          "0x1125db4",
+          "0x1125db5"
+        ],
+        "branches": [
+          {
+            "address": "0x1125ad9",
+            "branch": "jl",
+            "taken": false
+          },
+          {
+            "address": "0x1125af9",
+            "branch": "jne",
+            "taken": true
+          },
+          {
+            "address": "0x1125b9b",
+            "branch": "jl",
+            "taken": false
+          },
+          {
+            "address": "0x1125bab",
+            "branch": "jb",
+            "taken": true
+          },
+          {
+            "address": "0x1125c4c",
+            "branch": "je",
+            "taken": false
+          },
+          {
+            "address": "0x1125c60",
+            "branch": "jne",
+            "taken": false
+          },
+          {
+            "address": "0x1125c6a",
+            "branch": "je",
+            "taken": true
+          },
+          {
+            "address": "0x1125cd5",
+            "branch": "je",
+            "taken": false
+          },
+          {
+            "address": "0x1125cdb",
+            "branch": "je",
+            "taken": false
+          },
+          {
+            "address": "0x1125ce1",
+            "branch": "je",
+            "taken": true
+          },
+          {
+            "address": "0x1125d19",
+            "branch": "jmp",
+            "taken": true
+          }
+        ],
+        "calls": []
+      },
+      "v1_count": 72,
+      "v2_count": 68,
+      "delta": -4
+    },
+    {
+      "same_tag": "obj",
+      "v1_helper": {
+        "count": 42,
+        "instruction_addresses": [
+          "0x1125ae0",
+          "0x1125ae4",
+          "0x1125ae5",
+          "0x1125ae8",
+          "0x1125aec",
+          "0x1125af0",
+          "0x1125af4",
+          "0x1125af7",
+          "0x1125afd",
+          "0x1125b07",
+          "0x1125b0a",
+          "0x1125b10",
+          "0x1125b13",
+          "0x1125b16",
+          "0x1125b1a",
+          "0x1125b1d",
+          "0x1125b21",
+          "0x1125b25",
+          "0x1125b29",
+          "0x1125ba7",
+          "0x1125bab",
+          "0x1125baf",
+          "0x1125bb2",
+          "0x1125bb5",
+          "0x1125bb9",
+          "0x1125bbd",
+          "0x1125bc1",
+          "0x1125bcb",
+          "0x1125bce",
+          "0x1125bd4",
+          "0x1125bd7",
+          "0x1125bda",
+          "0x1125bde",
+          "0x1125be1",
+          "0x1125c5f",
+          "0x1125c63",
+          "0x1125c67",
+          "0x1125c6a",
+          "0x1125c6d",
+          "0x1125c71",
+          "0x1125c76",
+          "0x1125c77"
+        ],
+        "branches": [
+          {
+            "address": "0x1125af7",
+            "branch": "jb",
+            "taken": false
+          },
+          {
+            "address": "0x1125b0a",
+            "branch": "jl",
+            "taken": false
+          },
+          {
+            "address": "0x1125b29",
+            "branch": "jne",
+            "taken": true
+          },
+          {
+            "address": "0x1125bce",
+            "branch": "jl",
+            "taken": false
+          },
+          {
+            "address": "0x1125be1",
+            "branch": "jb",
+            "taken": true
+          }
+        ],
+        "calls": [
+          "1121cb0 <myl_f_393b03e6e8000a2be3bf0bb432f9197ce3fbfd4c525e561e0f9e9b1b3cc38f9b>"
+        ]
+      },
+      "v1_comparison": {
+        "count": 29,
+        "instruction_addresses": [
+          "0x1121cb0",
+          "0x1121cb4",
+          "0x1121cb6",
+          "0x1121cba",
+          "0x1121cc0",
+          "0x1121cc4",
+          "0x1121cc7",
+          "0x1121ccb",
+          "0x1121cce",
+          "0x1121cd4",
+          "0x1121cd8",
+          "0x1121cda",
+          "0x1121cde",
+          "0x1121ce4",
+          "0x1121ce8",
+          "0x1121cea",
+          "0x1121cee",
+          "0x1121cf0",
+          "0x1121cf4",
+          "0x1121cf6",
+          "0x1121cfa",
+          "0x1121cfc",
+          "0x1121d00",
+          "0x1121d06",
+          "0x1121d0a",
+          "0x1121d0d",
+          "0x1121d10",
+          "0x1121d14",
+          "0x1121e1e"
+        ],
+        "branches": [
+          {
+            "address": "0x1121cba",
+            "branch": "je",
+            "taken": false
+          },
+          {
+            "address": "0x1121cce",
+            "branch": "jne",
+            "taken": false
+          },
+          {
+            "address": "0x1121cd8",
+            "branch": "je",
+            "taken": false
+          },
+          {
+            "address": "0x1121cde",
+            "branch": "jne",
+            "taken": false
+          },
+          {
+            "address": "0x1121cee",
+            "branch": "je",
+            "taken": false
+          },
+          {
+            "address": "0x1121cf4",
+            "branch": "je",
+            "taken": false
+          },
+          {
+            "address": "0x1121cfa",
+            "branch": "je",
+            "taken": false
+          },
+          {
+            "address": "0x1121d00",
+            "branch": "jne",
+            "taken": false
+          },
+          {
+            "address": "0x1121d14",
+            "branch": "jmp",
+            "taken": true
+          }
+        ],
+        "calls": []
+      },
+      "v2_helper": {
+        "count": 67,
+        "instruction_addresses": [
+          "0x1125ac0",
+          "0x1125ac4",
+          "0x1125ac5",
+          "0x1125ac8",
+          "0x1125acc",
+          "0x1125ad6",
+          "0x1125ad9",
+          "0x1125adf",
+          "0x1125ae2",
+          "0x1125ae5",
+          "0x1125ae8",
+          "0x1125aec",
+          "0x1125aef",
+          "0x1125af2",
+          "0x1125af6",
+          "0x1125af9",
+          "0x1125b74",
+          "0x1125b78",
+          "0x1125b7c",
+          "0x1125b7f",
+          "0x1125b82",
+          "0x1125b86",
+          "0x1125b8a",
+          "0x1125b8e",
+          "0x1125b98",
+          "0x1125b9b",
+          "0x1125ba1",
+          "0x1125ba4",
+          "0x1125ba8",
+          "0x1125bab",
+          "0x1125c28",
+          "0x1125c2b",
+          "0x1125c2f",
+          "0x1125c33",
+          "0x1125c36",
+          "0x1125c39",
+          "0x1125c3d",
+          "0x1125c41",
+          "0x1125c45",
+          "0x1125c48",
+          "0x1125c4c",
+          "0x1125c52",
+          "0x1125c56",
+          "0x1125c59",
+          "0x1125c5d",
+          "0x1125c60",
+          "0x1125c66",
+          "0x1125c6a",
+          "0x1125c6c",
+          "0x1125c70",
+          "0x1125c76",
+          "0x1125c7a",
+          "0x1125c7d",
+          "0x1125c81",
+          "0x1125c83",
+          "0x1125c87",
+          "0x1125c89",
+          "0x1125c8d",
+          "0x1125c8f",
+          "0x1125c93",
+          "0x1125c99",
+          "0x1125c9d",
+          "0x1125ca0",
+          "0x1125ca3",
+          "0x1125ca7",
+          "0x1125db4",
+          "0x1125db5"
+        ],
+        "branches": [
+          {
+            "address": "0x1125ad9",
+            "branch": "jl",
+            "taken": false
+          },
+          {
+            "address": "0x1125af9",
+            "branch": "jne",
+            "taken": true
+          },
+          {
+            "address": "0x1125b9b",
+            "branch": "jl",
+            "taken": false
+          },
+          {
+            "address": "0x1125bab",
+            "branch": "jb",
+            "taken": true
+          },
+          {
+            "address": "0x1125c4c",
+            "branch": "je",
+            "taken": false
+          },
+          {
+            "address": "0x1125c60",
+            "branch": "jne",
+            "taken": false
+          },
+          {
+            "address": "0x1125c6a",
+            "branch": "je",
+            "taken": false
+          },
+          {
+            "address": "0x1125c70",
+            "branch": "jne",
+            "taken": false
+          },
+          {
+            "address": "0x1125c81",
+            "branch": "je",
+            "taken": false
+          },
+          {
+            "address": "0x1125c87",
+            "branch": "je",
+            "taken": false
+          },
+          {
+            "address": "0x1125c8d",
+            "branch": "je",
+            "taken": false
+          },
+          {
+            "address": "0x1125c93",
+            "branch": "jne",
+            "taken": false
+          },
+          {
+            "address": "0x1125ca7",
+            "branch": "jmp",
+            "taken": true
+          }
+        ],
+        "calls": []
+      },
+      "v1_count": 71,
+      "v2_count": 67,
+      "delta": -4
+    }
+  ],
+  "limits": [
+    "Static path counts are not dynamic PMU or wall measurements.",
+    "Both V2 operand copies are included.",
+    "No exact exhausted native frame/step budget or forged-tag equivalence claim."
+  ]
+}

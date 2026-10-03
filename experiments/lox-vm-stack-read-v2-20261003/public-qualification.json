@@ -1,0 +1,166 @@
+{
+  "compiler": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-lowering-20261003/.tmp-lox-lowering/cfg-fix-release/bin/mylang",
+  "compiler_sha256": "d14a704083bcc5f5174932a751f7d9dda73100dbd62403626b42b52436cad040",
+  "qbe_sha256": "99ad919d70ad582dee6202b045bd53e1ab18fec356de98849610f49983756d63",
+  "source": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-vm-stack-read-20261003/.tmp-lox-vm-stack-read-v2-20261003/inline-qualified",
+  "source_sha256": {
+    "NOTES.md": "85541175c32b6745ce2b9be34da5004bf16d7c8d0e83a5e46b46db41b5bf490c",
+    "ast.my": "e210fb35bf3125ba06ebb978bcb3592162020a77576542f2d049879a51479bf9",
+    "bench.json": "dbcc26195c024bc86d9e184284306f4849450f1042d1fe53092e7b52a3deea92",
+    "chunk.my": "b4f6e7ae6531b224f99e026f53fee3692c90d8f2b15d3c76ca5962f1803e4b66",
+    "compiler.my": "c550603195401ff6d9436b42d6fbf0c35051521da57e7b85281fc8fcf6ebe048",
+    "compiler_test.my": "582fe817dbeffa709961b5124370ce200510adb3ac0d246572ca1c0dc19ec08a",
+    "driver.my": "fe831d2ec08833d11139e790ab741903b27a8e0fb43582cac11ca664b4595836",
+    "driver_cases.json": "c86b5db43e3e9c4e29abb4f38bf47822759cbf2d5c314c5679a83878d2a9bfe6",
+    "driver_tests.my": "9f81f91a7f752bd2ebeb0edfa5541cc3d090f5d3d28bb740c96c08d91aafa7ec",
+    "heap.my": "d6bdc0b4945ca0e2a14c6b75aadf7cf077c4ba263f7b9ec49a77adce44b9a780",
+    "heap_test.my": "81667d68bf957b347c983479f0e3843182a7f86ef170e32781190f992a75e1bd",
+    "interpreter.my": "6c4655266242ca4696a02f754ef5eac6646ceb8ba93b0869072c6d6161a87378",
+    "lox.sh": "9f82abeb4e1c21ce78a9f28d61281917927517f610403917aaf314f1294385fc",
+    "lox_strings.my": "383900dda10b9218caf2087e12a2e20089e4d48b0ec5fc3e17e960a3d70d83df",
+    "lox_strings_test.my": "a44545c64e9f75cc5af761d6c703feec83c4fc0a14d2678a1b2fce28067bd0c0",
+    "main.my": "18c1f669b1683123e635256c9f66c6db2766383391371c3822e61df7d9732274",
+    "natives.my": "2ff45343fded6d303e6233e0f787e63c319e860903e2c0c81ccbb71c2749d665",
+    "object.my": "08c0d5c6ae304ef4d0e1f5929f52b5d1dd47cd46e6c409392c0b5b1df9567ad7",
+    "output.my": "cdc79c8a9a5eca0106fb139bca5492da201f027b0499e5e00a492368317d194c",
+    "parser.my": "e9bd5d9c37e307d060ce165dc4fa0f276c2ff9dbe7cb21bd27cbdd94644b4edd",
+    "parser_test.my": "ffe2658f030c75b40a7c54d8f0c64e848e6679e13fc69cbef9a131ed7b120e4b",
+    "repros/overlap_proof_blowup.my.txt": "5c510f5d5e2d441cb5397a7d6097e3689a040751373d2c9594db6754812b4dfb",
+    "repros/print_long_float.my.txt": "0767918284593321e9589f14e3b90d9dc41239321d355be89aed055eef5cb132",
+    "repros/print_union_class_payload.my.txt": "c03c987b6bf03db950bb8e98c238a76c0e7ea9c4c98c29c3e5748cd2c3a4ce8d",
+    "repros/qbe_pm_slots.my.txt": "3560079c67785824971ae6f10c3f04e49e87e5e5dbd20afdd7f1c0a1b258dbe9",
+    "repros/read_fifo.my.txt": "2a3b1658eb6e4c9a0f40cfed13c0db92989e9c78de69150197df247a18e5becd",
+    "repros/runtime_flags.my.txt": "2d314b6501ea5be517e904e0791461f5900745a77e386c8403f6d15fefdd67eb",
+    "repros/stream_field_method.my.txt": "b551e742a030b770cc3861bebacbbc76beab0fc38aef78a54be7a3af4ee9eb97",
+    "resolver.my": "41d41b2a1ddb3f6ab3fb73ad9eff69415b0450d890554766bfee37eac8d0903d",
+    "resolver_test.my": "72c5176ff15db240d8ec8ff8073fcdb7736e8c60ab47410bb60fce934c179d31",
+    "scanner.my": "af4bc6a57859318051dc47d6e1f6344ee98fbfff037e9be93c0a103765cd3e83",
+    "scanner_test.my": "1d7fbb34b0de402657786641217e81c9ae286cab14baf2716de2db875ae39ad0",
+    "table.my": "0e11a8ac7ded8fa85a74518b25e3acf9fed17418192cd0c8bbd3beddc38b106d",
+    "table_test.my": "0d5bd048a64a8e51892f61d2b826437fae61cf5c88e5f1771851a83363499f51",
+    "value.my": "3b2a444e77c6a703b1aedad3c89ef38cad70aa3bb6cba1716b623980ff9a76b0",
+    "value_test.my": "b766d22b25a8a8a090b4a059030cfc7462022fdacb66a0a91bf8a9e09a53fed4",
+    "vm.my": "65bc4d76decd9447366fdbea1b7722276d9369b6a6d544ca632cbf9b12a0f776"
+  },
+  "runs": [
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-vm-stack-read-20261003/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-lowering-20261003/.tmp-lox-lowering/cfg-fix-release/bin/mylang",
+        "test",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-vm-stack-read-20261003/.tmp-lox-vm-stack-read-v2-20261003/inline-qualified",
+        "--jobs",
+        "2",
+        "--max-steps",
+        "1000000000",
+        "--timeout-ms",
+        "120000",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-vm-stack-read-20261003/.tmp-lox-vm-stack-read-v2-20261003/cache-public-llvm-rc",
+        "--release",
+        "--rc-runtime"
+      ],
+      "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-vm-stack-read-20261003",
+      "environment": {
+        "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-vm-stack-read-20261003/.tmp-lox-vm-stack-read-v2-20261003/tmp"
+      },
+      "status": 0,
+      "log": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-vm-stack-read-20261003/.tmp-lox-vm-stack-read-v2-20261003/public-llvm-rc.log",
+      "log_sha256": "4eb026c1c25711df5c0046f72ba87b90c0853b4938239e745a5a4e9ef79ea04e",
+      "summaries": [
+        "86 passed, 0 cached, 0 failed, 0 skipped, 0 dropped across 10 programs"
+      ]
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-vm-stack-read-20261003/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-lowering-20261003/.tmp-lox-lowering/cfg-fix-release/bin/mylang",
+        "test",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-vm-stack-read-20261003/.tmp-lox-vm-stack-read-v2-20261003/inline-qualified",
+        "--jobs",
+        "2",
+        "--max-steps",
+        "1000000000",
+        "--timeout-ms",
+        "120000",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-vm-stack-read-20261003/.tmp-lox-vm-stack-read-v2-20261003/cache-public-llvm-gc-stress",
+        "--release",
+        "--gc-stress"
+      ],
+      "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-vm-stack-read-20261003",
+      "environment": {
+        "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-vm-stack-read-20261003/.tmp-lox-vm-stack-read-v2-20261003/tmp"
+      },
+      "status": 0,
+      "log": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-vm-stack-read-20261003/.tmp-lox-vm-stack-read-v2-20261003/public-llvm-gc-stress.log",
+      "log_sha256": "4eb026c1c25711df5c0046f72ba87b90c0853b4938239e745a5a4e9ef79ea04e",
+      "summaries": [
+        "86 passed, 0 cached, 0 failed, 0 skipped, 0 dropped across 10 programs"
+      ]
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-vm-stack-read-20261003/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-lowering-20261003/.tmp-lox-lowering/cfg-fix-release/bin/mylang",
+        "test",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-vm-stack-read-20261003/.tmp-lox-vm-stack-read-v2-20261003/inline-qualified",
+        "--jobs",
+        "2",
+        "--max-steps",
+        "1000000000",
+        "--timeout-ms",
+        "120000",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-vm-stack-read-20261003/.tmp-lox-vm-stack-read-v2-20261003/cache-public-qbe-rc",
+        "--mode",
+        "ReleaseFast",
+        "--rc-runtime"
+      ],
+      "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-vm-stack-read-20261003",
+      "environment": {
+        "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-vm-stack-read-20261003/.tmp-lox-vm-stack-read-v2-20261003/tmp"
+      },
+      "status": 0,
+      "log": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-vm-stack-read-20261003/.tmp-lox-vm-stack-read-v2-20261003/public-qbe-rc.log",
+      "log_sha256": "4eb026c1c25711df5c0046f72ba87b90c0853b4938239e745a5a4e9ef79ea04e",
+      "summaries": [
+        "86 passed, 0 cached, 0 failed, 0 skipped, 0 dropped across 10 programs"
+      ]
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-vm-stack-read-20261003/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-lowering-20261003/.tmp-lox-lowering/cfg-fix-release/bin/mylang",
+        "test",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-vm-stack-read-20261003/.tmp-lox-vm-stack-read-v2-20261003/inline-qualified",
+        "--jobs",
+        "2",
+        "--max-steps",
+        "1000000000",
+        "--timeout-ms",
+        "120000",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-vm-stack-read-20261003/.tmp-lox-vm-stack-read-v2-20261003/cache-public-qbe-gc-stress",
+        "--mode",
+        "ReleaseFast",
+        "--gc-stress"
+      ],
+      "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-vm-stack-read-20261003",
+      "environment": {
+        "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-vm-stack-read-20261003/.tmp-lox-vm-stack-read-v2-20261003/tmp"
+      },
+      "status": 0,
+      "log": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-vm-stack-read-20261003/.tmp-lox-vm-stack-read-v2-20261003/public-qbe-gc-stress.log",
+      "log_sha256": "4eb026c1c25711df5c0046f72ba87b90c0853b4938239e745a5a4e9ef79ea04e",
+      "summaries": [
+        "86 passed, 0 cached, 0 failed, 0 skipped, 0 dropped across 10 programs"
+      ]
+    }
+  ],
+  "verified_after": true
+}

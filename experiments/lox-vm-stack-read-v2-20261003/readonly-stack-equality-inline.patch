@@ -1,0 +1,108 @@
+--- a/driver_cases.json
++++ b/driver_cases.json
+@@ -118,5 +118,15 @@
+     "providers": {
+       "natives.my": "module natives\n# Test fixture for driver_tests.my (see driver_cases.json): natives.my with\n# a `clock` that returns 0 instead of reading the Clock capability.\nimport heap\nimport lox_strings\nimport object\nimport value\n\n\npublic const CLOCK: int = 0\n\n\npublic def call_native(rt: heap.Runtime, id: int) -> value.Value:\n    assert id == CLOCK, \"unknown native\"\n    _ = rt\n    return value.Value.number(0.0)\n\n\npublic def start(rt: mut heap.Runtime):\n    rt.init_string = lox_strings.copy_string(mut rt, b\"init\")\n    define_natives(mut rt)\n\n\ndef define_natives(rt: mut heap.Runtime):\n    name = lox_strings.copy_string(mut rt, b\"clock\")\n    heap.push(mut rt, value.Value.obj(name))\n    native = heap.allocate(mut rt, object.Obj.native(object.NativeObj(id=CLOCK, arity=0)))\n    heap.push(mut rt, value.Value.obj(native))\n    _ = heap.set_global(mut rt, name, value.Value.obj(native))\n    _ = heap.pop(mut rt)\n    _ = heap.pop(mut rt)\n"
+     }
++  },
++  "driver_tests::test_run_readonly_stack_equality_tags_and_order": {
++    "providers": {
++      "natives.my": "module natives\n# Test fixture for driver_tests.my (see driver_cases.json): natives.my with\n# a `clock` that returns 0 instead of reading the Clock capability.\nimport heap\nimport lox_strings\nimport object\nimport value\n\n\npublic const CLOCK: int = 0\n\n\npublic def call_native(rt: heap.Runtime, id: int) -> value.Value:\n    assert id == CLOCK, \"unknown native\"\n    _ = rt\n    return value.Value.number(0.0)\n\n\npublic def start(rt: mut heap.Runtime):\n    rt.init_string = lox_strings.copy_string(mut rt, b\"init\")\n    define_natives(mut rt)\n\n\ndef define_natives(rt: mut heap.Runtime):\n    name = lox_strings.copy_string(mut rt, b\"clock\")\n    heap.push(mut rt, value.Value.obj(name))\n    native = heap.allocate(mut rt, object.Obj.native(object.NativeObj(id=CLOCK, arity=0)))\n    heap.push(mut rt, value.Value.obj(native))\n    _ = heap.set_global(mut rt, name, value.Value.obj(native))\n    _ = heap.pop(mut rt)\n    _ = heap.pop(mut rt)\n"
++    }
++  },
++  "driver_tests::test_run_readonly_stack_equality_preserves_snapshots": {
++    "providers": {
++      "natives.my": "module natives\n# Test fixture for driver_tests.my (see driver_cases.json): natives.my with\n# a `clock` that returns 0 instead of reading the Clock capability.\nimport heap\nimport lox_strings\nimport object\nimport value\n\n\npublic const CLOCK: int = 0\n\n\npublic def call_native(rt: heap.Runtime, id: int) -> value.Value:\n    assert id == CLOCK, \"unknown native\"\n    _ = rt\n    return value.Value.number(0.0)\n\n\npublic def start(rt: mut heap.Runtime):\n    rt.init_string = lox_strings.copy_string(mut rt, b\"init\")\n    define_natives(mut rt)\n\n\ndef define_natives(rt: mut heap.Runtime):\n    name = lox_strings.copy_string(mut rt, b\"clock\")\n    heap.push(mut rt, value.Value.obj(name))\n    native = heap.allocate(mut rt, object.Obj.native(object.NativeObj(id=CLOCK, arity=0)))\n    heap.push(mut rt, value.Value.obj(native))\n    _ = heap.set_global(mut rt, name, value.Value.obj(native))\n    _ = heap.pop(mut rt)\n    _ = heap.pop(mut rt)\n"
++    }
+   }
+ }
+--- a/driver_tests.my
++++ b/driver_tests.my
+@@ -232,3 +232,32 @@
+     vm_run = driver.run_source(source, driver.Engine.VM, True, out, None)
+     tree = driver.run_source(source, driver.Engine.TREE, True, out, None)
+     return vm_run.status == 70 and tree.status == 70 and vm_run.stdout == b"argument\n" and tree.stdout == vm_run.stdout and vm_run.stderr == b"Can only call functions and classes.\n[line 1] in script\n" and tree.stderr == b"Can only call functions and classes.\n[line 1]\n"
++
++
++# OP_EQUAL keeps IEEE equality, tag distinctions, interning and object identity
++# while calls on both operands evaluate in order and may collect before compare.
++public def test_run_readonly_stack_equality_tags_and_order(out: Stream) -> bool:
++    source = b"print nil == nil; print nil == false; print false == false; print true == false; print true == 1; print 0 == -0; var nan = 0 / 0; print nan == nan; print nan != nan; print \"a\" + \"b\" == \"ab\"; class Box {} var a = Box(); var b = Box(); print a == a; print a == b; fun operand(x) { print x; return \"ke\" + \"pt\"; } print operand(1) == operand(2);"
++    expected = b"true\nfalse\ntrue\nfalse\nfalse\ntrue\nfalse\ntrue\ntrue\ntrue\nfalse\n1\n2\ntrue\n"
++    vm_run = driver.run_source(source, driver.Engine.VM, True, out, None)
++    tree = driver.run_source(source, driver.Engine.TREE, True, out, None)
++    return vm_run.status == 0 and tree.status == 0 and vm_run.stdout == expected and tree.stdout == expected and vm_run.stderr == b"" and tree.stderr == b"" and vm_run.collections == vm_run.allocations and tree.collections == tree.allocations
++
++
++# A saved Runtime and stack list stay snapshots while the live VM repeatedly
++# replaces compared operands with bools and allocates after the comparison.
++public def test_run_readonly_stack_equality_preserves_snapshots(out: Stream) -> bool:
++    rt = heap.new_runtime(True, None)
++    captured = output.capture(out)
++    setup = b"class Box {} var a = Box(); var b = a; var text = \"same\";"
++    if stack_vm.interpret(mut rt, mut captured, setup) != stack_vm.InterpretResult.OK:
++        return False
++    rt.stack[0] = value.Value.number(41.0)
++    rt.stack[1] = value.Value.number(42.0)
++    snapshot = rt
++    saved_stack = rt.stack
++    before = rt.allocations
++    source = b"for (var i = 0; i < 8; i = i + 1) { print a == b; print text == \"sa\" + \"me\"; var fresh = Box(); }"
++    status = stack_vm.interpret(mut rt, mut captured, source)
++    expected = b"true\ntrue\ntrue\ntrue\ntrue\ntrue\ntrue\ntrue\ntrue\ntrue\ntrue\ntrue\ntrue\ntrue\ntrue\ntrue\n"
++    return status == stack_vm.InterpretResult.OK and bytes(captured.stdout) == expected and bytes(captured.stderr) == b"" and rt.stack_top == 0 and saved_stack[0] == value.Value.number(41.0) and saved_stack[1] == value.Value.number(42.0) and snapshot.stack[0] == value.Value.number(41.0) and snapshot.stack[1] == value.Value.number(42.0) and snapshot.allocations == before and rt.allocations > before and rt.collections == rt.allocations
+--- a/vm.my
++++ b/vm.my
+@@ -519,6 +519,39 @@
+     klass.methods = methods
+     rt.objects[class_ref] = object.Obj.klass(klass)
+     _ = heap.pop(mut rt)
++
++
++# Compare plain tagged values while the caller keeps the stack rooted. The
++# readonly list parameter anchors both element projections through comparison.
++# Reads remain right-before-left; the caller retires the right root afterward.
++def equal_stack(stack: list[value.Value], top: int) -> bool:
++    right_value = stack[top - 1]
++    left_value = stack[top - 2]
++    match left_value:
++        case value.Value.nil:
++            match right_value:
++                case value.Value.nil:
++                    return True
++                case _:
++                    return False
++        case value.Value.boolean(left):
++            match right_value:
++                case value.Value.boolean(right):
++                    return left == right
++                case _:
++                    return False
++        case value.Value.number(left):
++            match right_value:
++                case value.Value.number(right):
++                    return left == right
++                case _:
++                    return False
++        case value.Value.obj(left):
++            match right_value:
++                case value.Value.obj(right):
++                    return left == right
++                case _:
++                    return False
+ 
+ 
+ # Each invocation executes one activation. A callee gets its own ExecFrame;
+@@ -586,10 +619,9 @@
+             superclass = as_obj(rt.stack[rt.stack_top])
+             ok = bind_method(mut rt, mut o, superclass, name)
+         elif instruction == chunk.OP_EQUAL:
+-            right = rt.stack[rt.stack_top - 1]
+-            left = rt.stack[rt.stack_top - 2]
++            same = equal_stack(rt.stack, rt.stack_top)
+             rt.stack_top = rt.stack_top - 1
+-            rt.stack[rt.stack_top - 1] = value.Value.boolean(value.values_equal(left, right))
++            rt.stack[rt.stack_top - 1] = value.Value.boolean(same)
+         elif instruction == chunk.OP_GREATER or instruction == chunk.OP_LESS or instruction == chunk.OP_SUBTRACT or instruction == chunk.OP_MULTIPLY or instruction == chunk.OP_DIVIDE:
+             rt.frames[frame_index].ip = frame.ip
+             ok = numeric(mut rt, mut o, instruction)
