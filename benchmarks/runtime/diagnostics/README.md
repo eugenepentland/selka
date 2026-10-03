@@ -77,3 +77,20 @@ python3 benchmarks/runtime/diagnostics/holdouts.py \
 python3 benchmarks/runtime/diagnostics/holdouts.py \
   --verify benchmarks/runtime/candidates/final-holdouts-20261003.json
 ```
+
+`eligible.py` isolates P7 using the exact d348 before compiler and an explicitly
+pinned reviewed P7 descendant, with matching host compiler modes. It compiles
+the committed Host-only entry and C shim once, then builds LLVM O3/LTO and QBE
+with identical source/object/options. Environment integers are read before the
+kernel timer; retained argv/list inputs are absent. The source hashes are fixed
+to the actually built witness. Six iteration boundaries and three seeds give
+72 oracle checks; four guests use 15 randomized rounds and three warmups at
+one million iterations/seed17 by default. The closed-form oracle and paired
+statistics have independent replay in `verify.py`. This eligibility measurement
+does not replace original alloc_short or another acceptance row.
+
+`backend_receipts.py` reads each emitted MyLang guest manifest and hashes its
+native runtime archive. It rejects effective backend or LLVM O3/LTO mismatches.
+This matters because this compiler's `--qbe` option sets QBE selection: it must
+precede `--backend llvm`, or a later `--llvm-opt` is invalid. Successful P7 builds
+and the final ordinary guest set retain explicit effective-backend receipts.

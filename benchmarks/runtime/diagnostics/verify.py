@@ -185,12 +185,65 @@ def verify_sources(report):
     return len(groups)
 
 
+def eligible_checksum(count, seed):
+    require(type(count) is int and 1 <= count <= 10000000 and type(seed) is int and 1 <= seed <= 1000000,
+            'eligible witness input outside declared domain')
+    full, tail = divmod(count, 31)
+    return 3 * seed * count + 6 * count + 3 * (full * sum(range(31)) + sum(range(tail)))
+
+
+def verify_eligible(report):
+    require(report['schema'] == 'mylang-runtime-eligible-v1' and report['status'] == 'eligibility_complete', 'incomplete eligible witness')
+    require(report['rounds'] == 15 and report['warmup_rounds'] == 3, 'eligible witness needs milestone rounds')
+    arms = {source + '/' + arm for source in ('before', 'after') for arm in ('my-llvm', 'my-qbe')}
+    expected = eligible_checksum(report['iterations'], report['seed'])
+    groups = {}
+    for field, rounds in (('samples', range(15)), ('warmups', range(-3, 0))):
+        wanted = {(arm, rnd) for arm in arms for rnd in rounds}
+        seen = set()
+        for row in report[field]:
+            key = (row['arm'], row['round'])
+            require(key in wanted and key not in seen, 'unknown or duplicate eligible cell')
+            seen.add(key)
+            require(row['iterations'] == report['iterations'] and row['seed'] == report['seed'], 'eligible input drift')
+            require(len(row['order']) == 4 and set(row['order']) == arms, 'eligible round order drift')
+            result(row, expected)
+            if field == 'samples':
+                groups.setdefault(key[0], {})[key[1]] = row['kernel_ns']
+        require(seen == wanted, 'missing eligible cells')
+    wanted = {(arm, count, seed) for arm in arms for count in (1, 2, 31, 32, 65, 127) for seed in (1, 17, 999983)}
+    seen = set()
+    for row in report['qualification']:
+        key = (row['arm'], row['iterations'], row['seed'])
+        require(key in wanted and key not in seen, 'unknown or duplicate eligible qualification')
+        seen.add(key)
+        result(row, eligible_checksum(key[1], key[2]))
+    require(seen == wanted, 'missing eligible qualification')
+    seen = set()
+    for row in report['comparisons']:
+        arm = row['arm']
+        require(arm in ('my-llvm', 'my-qbe') and arm not in seen, 'unknown or duplicate eligible comparison')
+        seen.add(arm)
+        values = {source: [groups[source + '/' + arm][rnd] for rnd in range(15)] for source in ('before', 'after')}
+        close(row['after_to_before'], statistics.median(values['after']) / statistics.median(values['before']), 'eligible ratio math mismatch')
+        bounds = interval(values['after'], values['before'], 'eligible-v1/' + arm)
+        require(len(row['paired_bootstrap_95_interval']) == 2, 'invalid eligible interval')
+        for actual, value in zip(row['paired_bootstrap_95_interval'], bounds):
+            close(actual, value, 'eligible interval math mismatch')
+    require(seen == {'my-llvm', 'my-qbe'}, 'missing eligible comparisons')
+    return len(groups)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('report', type=Path)
     args = parser.parse_args()
     report = json.loads(args.report.read_text())
-    count = verify_components(report) if report['schema'] == 'mylang-runtime-components-v1' else verify_sources(report)
+    verifiers = {'mylang-runtime-components-v1': verify_components,
+                 'mylang-runtime-same-session-sources-v1': verify_sources,
+                 'mylang-runtime-eligible-v1': verify_eligible}
+    require(report['schema'] in verifiers, 'unknown diagnostic schema')
+    count = verifiers[report['schema']](report)
     print('PASS diagnostic replay: ' + str(count) + ' groups')
 
 
