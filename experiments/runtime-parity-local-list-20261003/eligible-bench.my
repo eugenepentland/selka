@@ -1,0 +1,30 @@
+extern def runtime_bench_now(host: Host) -> i64 effects(host)
+
+
+extern def local_list_report(host: Host, checksum: int, elapsed: int) -> None effects(host)
+
+
+extern def local_list_iterations(host: Host) -> int effects(host)
+
+
+extern def local_list_seed(host: Host) -> int effects(host)
+
+
+def closed(value: int, index: int) -> int:
+    values = [value, value + 1, value + 2]
+    alias = values
+    return alias[index] + values[1] + alias[-1] + len(values)
+
+
+def main(host: Host) -> int:
+    iterations = local_list_iterations(host)
+    seed = local_list_seed(host)
+    if iterations < 1 or iterations > 10000000 or seed < 1 or seed > 1000000:
+        return 2
+    checksum = 0
+    start = runtime_bench_now(host)
+    for i in range(iterations):
+        checksum += closed(seed + i % 31, 0)
+    elapsed = runtime_bench_now(host) - start
+    local_list_report(host, checksum, elapsed)
+    return 0

@@ -294,6 +294,8 @@ void myl_qbe_fail_overflow_op(void *context, uint64_t binary_op, int64_t left, i
 /* Cold path of an inlined checked integer cast: the value's raw bits and the
  * target width, producing the same detail `myl_qbe_int_cast` reports. */
 void myl_qbe_fail_cast(void *context, int64_t value, uint64_t width);
+/* Conservative execution-context admission for a certified private list. */
+int myl_qbe_local_list(void *, const myl_native_type *, size_t capacity);
 myl_native_heap *myl_qbe_heap(void *context);
 uint64_t myl_qbe_failed(void *context);
 void myl_qbe_float_check(void *context);

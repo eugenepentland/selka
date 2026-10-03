@@ -18,6 +18,11 @@ void *myl_rc_storage_extend(myl_native_heap *, void *, size_t count);
 void *myl_rc_storage_extend_opaque(myl_native_heap *, void *, size_t count);
 /* Reserved storage, including allocator metadata; excludes RC core metadata. */
 size_t myl_rc_storage_reserved(const myl_native_heap *);
+/* RC-LOCAL-LIST-1: admit a certified closed scalar list region only from
+ * already charged production cache slots. Failure changes no state. Success
+ * settles the original header/backing allocation and retirement tickets; the
+ * caller keeps the unexposed value in its counted stack scratch instead. */
+int myl_rc_storage_local_list(myl_native_heap *, const myl_native_type *, size_t capacity, size_t peak);
 /* Heap-wide teardown support for the production allocator. */
 typedef void (*myl_rc_extent_visitor)(myl_native_heap *, void *payload, void *context);
 /* Visit every allocated heap payload that has not been retired (live, or

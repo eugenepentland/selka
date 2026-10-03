@@ -4,6 +4,8 @@
 #include "native_collections.h"
 #include "native_cow.h"
 #include "native_text.h"
+#include "native_rc_alloc.h"
+#include "native_rc_internal.h"
 #if defined(MYL_NATIVE_RC_COUNTING) && MYL_NATIVE_RC_COUNTING
 #include "native_rc_stats.h"
 #endif
@@ -48,6 +50,21 @@ int myl_qbe_exit_skip(void *context) {
 #else
 int myl_qbe_exit_skip(void *context) { (void)context; return 0; }
 #endif
+/* RC-LOCAL-LIST-1: a fatal trap invokes registered cleanup before heap
+ * teardown. Admit a private stack value only when no callback or unrelated
+ * managed value can observe its tickets' early retirement on that path. */
+int myl_qbe_local_list(void *context, const myl_native_type *element, size_t capacity) {
+#if defined(MYL_NATIVE_RC) && MYL_NATIVE_RC && !(defined(MYL_NATIVE_RC_COUNTING) && MYL_NATIVE_RC_COUNTING)
+    Context *ctx=context;
+    if (!ctx || ctx->trap || ctx->cleanup || ctx->adapter_cleanup || ctx->stand_in_cleanup ||
+        ctx->resource_live[0] || ctx->resource_live[1] || ctx->heap.objects_live || ctx->heap.stress ||
+        !ctx->heap.rc || ctx->heap.rc->scopes) return 0;
+    return myl_rc_storage_local_list(&ctx->heap,element,capacity,1);
+#else
+    (void)context; (void)element; (void)capacity;
+    return 0;
+#endif
+}
 static int execute_config_args(uint64_t (*entry)(void *), uint64_t steps, uint64_t frames, int stress, const struct MylangNativeProvidersTag *providers, void (*initialize)(void *), int guest_argc, char **guest_argv, MylQbeResult *result);
 _Static_assert(offsetof(Context, steps) == 0, "QBE context steps ABI");
 _Static_assert(offsetof(Context, frames) == 8, "QBE context frame count ABI");

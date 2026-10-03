@@ -6,6 +6,7 @@ pub const snapshot_embed = @import("embed.zig");
 /// The compiler's language module, for the per-module build `mylang test` runs through.
 pub const compiler_language = @import("compiler.zig");
 test {
+    _ = @import("qbe_rc_local_list_test.zig");
     _ = @import("qbe_scalar_conversion_test.zig");
     _ = @import("qbe_loop_bounded_write_test.zig");
     _ = @import("qbe_constant_divisor_test.zig");

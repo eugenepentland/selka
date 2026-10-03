@@ -13,6 +13,7 @@ const ownership = @import("ownership.zig");
 const cow_lower = @import("qbe_cow.zig");
 const value_semantics = @import("value_semantics.zig");
 const runtime_mode = @import("runtime_mode.zig");
+const rc_local_list = @import("qbe_rc_local_list.zig");
 const rc_sites = @import("qbe_rc_sites.zig");
 const rc_frame = @import("qbe_rc_frame.zig");
 const moves_module = @import("qbe_moves.zig");
@@ -1718,6 +1719,9 @@ const Emitter = struct {
     /// push. Cleared before every detached lowering.
     inline_roots: bool = false,
     heap_frame: bool = false,
+    /// RC-LOCAL-LIST-1: final plans are certified once per emitter.
+    local_list_checked: bool = false,
+    local_list_proof: ?rc_local_list.Proof = null,
     arenas: bool = false,
     frame_offset: u64 = 0,
     output: std.Io.Writer.Allocating,
@@ -2583,6 +2587,7 @@ const Emitter = struct {
             if (self.step_checks) try self.step();
             self.pc = pc;
             try @import("qbe_inline_depth.zig").enter(Emitter, self, pc);
+            const local_append = try rc_local_list.beginAppend(Emitter, self, pc, stack);
             try cow_lower.Lower(Emitter).before(self, pc, stack);
             try error_trace.Lower(Emitter).inlinedReturn(self, stack);
             self.expireFusedDecode(pc);
@@ -2620,6 +2625,7 @@ const Emitter = struct {
                 sticky_text = try self.lowerDetached(instruction.op, stack);
                 try self.print("{s}", .{sticky_text.?});
             } else try self.emitOp(instruction.op, stack);
+            if (local_append) |label| try self.print("@rclocalappenddone{d}\n", .{label});
             switch (instruction.op) {
                 .binary_integer => |operation| {
                     if (operation.ty.integer()) |integer| {
@@ -2826,6 +2832,7 @@ const Emitter = struct {
     /// lexer drops `#` to end of line, so its assembly is byte-identical with
     /// or without the marker. See `docs/tooling/native-build.md`.
     pub fn markObject(self: *Emitter, value: usize) GenerateError!void {
+        if (rc_local_list.usesStack(Emitter, self)) return;
         try self.print(" # myl-obj %v{d}\n", .{value});
     }
     /// Record that `%v{value}` is the storage word of a managed container, the
@@ -2837,6 +2844,7 @@ const Emitter = struct {
     /// adapter gives such accesses their own alias scope per kind. A comment
     /// line, so QBE's assembly is byte-identical with or without it.
     pub fn markElements(self: *Emitter, value: usize, element: typed.Type) GenerateError!void {
+        if (rc_local_list.usesStack(Emitter, self)) return;
         const shape = try self.layout(element);
         try self.print(" # myl-elem %v{d} {d}{s}\n", .{ value, shape.size, if (shape.copy == .reference) "r" else "v" });
     }
@@ -2965,10 +2973,12 @@ const Emitter = struct {
             try self.print(" %v{d} =l csgel %v{d}, 0\n", .{ valid, capacity });
             try self.require(valid, "myl_qbe_fail_list_capacity");
         }
+        const local_list = try rc_local_list.begin(Emitter, self, h - 1);
         const value = self.temp();
         try self.print(" %v{d} =l call $myl_native_list_new(l %heap, l extern ${s}, l %v{d})\n", .{ value, try self.descriptor(schema.shape.buffer.?), capacity });
         try self.require(value, "myl_qbe_fail_allocation");
         try self.store(h - 1, value);
+        if (local_list) |label| try self.print("@rclocaldone{d}\n", .{label});
     }
     fn emitCall(self: *Emitter, op: @FieldType(bytecode.Instruction, "op"), stack: []const typed.Type) GenerateError!void {
         const h = stack.len;

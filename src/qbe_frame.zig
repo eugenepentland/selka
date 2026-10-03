@@ -590,7 +590,7 @@ fn usesTemporary(comptime Emitter: type, self: *Emitter, pc: usize) bool {
     };
 }
 fn temporarySize(comptime Emitter: type, self: *Emitter, pc: usize) GenerateError!u64 {
-    var size: u64 = 8;
+    var size: u64 = @max(8, try @import("qbe_rc_local_list.zig").scratchBytes(Emitter, self, pc));
     const op = self.function.scope.instructions[pc].op;
     if (op == .try_result) size = @max(size, (try self.layout(op.try_result.output)).size);
     if (self.states[pc]) |stack| for (stack) |ty| {

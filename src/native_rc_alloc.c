@@ -4,6 +4,7 @@
 #include "native_rc_alloc.h"
 #include "native_rc_internal.h"
 #include "native_rc_values.h"
+#include "native_collections.h"
 #include "native_arena.h"
 #include <assert.h>
 #include <stdlib.h>
@@ -528,6 +529,53 @@ static void destroy(myl_native_heap *heap) {
 }
 static void teardown(myl_native_heap *);
 static const myl_rc_allocator allocator={allocate,myl_rc_storage_retire,destroy,teardown};
+/* Every needed class must already hold the entire certified simultaneous
+ * peak. A reused slot cannot ask the host or budget for a fresh reservation.
+ * Registration, arena, finalizer/drain and instrumented paths stay original. */
+#if !defined(MYL_NATIVE_RC_COUNTING) || !MYL_NATIVE_RC_COUNTING
+static int cached_peak(const myl_native_heap *heap, size_t index, size_t count) {
+    const myl_rc_object *slot=heap->rc_cache.free[index];
+    while (slot && count) { slot=(const myl_rc_object *)slot->retired_link; --count; }
+    return !count;
+}
+#endif
+int myl_rc_storage_local_list(myl_native_heap *heap, const myl_native_type *element, size_t capacity, size_t peak) {
+#if defined(MYL_NATIVE_RC_COUNTING) && MYL_NATIVE_RC_COUNTING
+    (void)heap; (void)element; (void)capacity; (void)peak;
+    return 0;
+#else
+    if (!heap || !heap->rc || heap->region_depth || heap->scratch_failed || heap->exhausted || !element ||
+        !capacity || capacity>16 || !peak || peak>64 || !element->size || element->size>8 || element->alignment>8 ||
+        heap->rc->allocator.hooks.allocate!=allocate || heap->rc->allocator.hooks.retire!=myl_rc_storage_retire ||
+        heap->rc->allocator.hooks.destroy!=destroy || heap->rc->allocator.hooks.teardown!=teardown || heap->rc->walk.depth ||
+        heap->rc->dead.head || heap->rc->dead.active || heap->rc->failure!=MYL_RC_OK || !heap->rc->lists) return 0;
+    /* A pending dense-id slot has no built plan. Refuse without activating
+     * it; the unchanged constructor owns that first metadata observation. */
+    const myl_rc_id_table *ids=&heap->rc->metadata.ids;
+    const myl_rc_binding *binding=element->rc_id<ids->capacity && ids->entries[element->rc_id].key==element?
+        ids->entries[element->rc_id].value:myl_rc_map_get(&heap->rc->metadata.bindings,element);
+    if (!binding || binding->flat.count || binding->flat.native_unique || binding->descriptor.edges || binding->descriptor.finalize) return 0;
+    _Static_assert(sizeof(myl_native_list)==72, "RC-LOCAL-LIST-1 stack header extent");
+    _Static_assert(sizeof(myl_native_object)==16 && MYL_NATIVE_OBJECT_IMMORTAL==2, "RC-LOCAL-LIST-1 immortal prefix");
+    rc_storage *storage=storage_of(heap);
+    const size_t header=class_for(storage,MYL_RC_PREFIX_BYTES+sizeof(myl_native_list));
+    const size_t backing=class_for(storage,MYL_RC_PREFIX_BYTES+capacity*element->size);
+    if (!cached_peak(heap,header,peak*(header==backing?2:1)) || (header!=backing && !cached_peak(heap,backing,peak))) return 0;
+    /* Pop and return actual tickets in the same order as plain list
+     * death. No refill, registration, hook, charge or fallible step is reachable.
+     * Reuse epoch, trim accumulation, allocation totals and cache order survive. */
+    myl_rc_object *a=slab_take(heap,header), *b=slab_take(heap,backing);
+    initialize(heap,a,&myl_native_list_header_descriptor,1,0);
+    initialize(heap,b,&raw_type,capacity*element->size,0);
+    a->common.mark|=MYL_RC_OBJECT_DYING;
+    myl_rc_cache_push(heap,a);
+    b->common.mark|=MYL_RC_OBJECT_DYING;
+    myl_rc_cache_push(heap,b);
+    storage->single.type=&myl_native_list_header_descriptor;
+    storage->single.index=header;
+    return 1;
+#endif
+}
 /* The storage walks behind the public teardown API. The allocator's own
  * teardown hook calls them directly: reaching it proves the storage is this
  * allocator's even while a fault-injection probe wraps the allocate hook. */
