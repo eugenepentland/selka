@@ -1,0 +1,1348 @@
+--- a/driver_cases.json
++++ b/driver_cases.json
+@@ -83,5 +83,25 @@
+     "providers": {
+       "natives.my": "module natives\n# Test fixture for driver_tests.my (see driver_cases.json): natives.my with\n# a `clock` that returns 0 instead of reading the Clock capability.\nimport heap\nimport lox_strings\nimport object\nimport value\n\n\npublic const CLOCK: int = 0\n\n\npublic def call_native(rt: heap.Runtime, id: int) -> value.Value:\n    assert id == CLOCK, \"unknown native\"\n    _ = rt\n    return value.Value.number(0.0)\n\n\npublic def start(rt: mut heap.Runtime):\n    rt.init_string = lox_strings.copy_string(mut rt, b\"init\")\n    define_natives(mut rt)\n\n\ndef define_natives(rt: mut heap.Runtime):\n    name = lox_strings.copy_string(mut rt, b\"clock\")\n    heap.push(mut rt, value.Value.obj(name))\n    native = heap.allocate(mut rt, object.Obj.native(object.NativeObj(id=CLOCK, arity=0)))\n    heap.push(mut rt, value.Value.obj(native))\n    _ = heap.set_global(mut rt, name, value.Value.obj(native))\n    _ = heap.pop(mut rt)\n    _ = heap.pop(mut rt)\n"
+     }
++  },
++  "driver_tests::test_run_call_arguments_and_captured_parameter_roots": {
++    "providers": {
++      "natives.my": "module natives\n# Test fixture for driver_tests.my (see driver_cases.json): natives.my with\n# a `clock` that returns 0 instead of reading the Clock capability.\nimport heap\nimport lox_strings\nimport object\nimport value\n\n\npublic const CLOCK: int = 0\n\n\npublic def call_native(rt: heap.Runtime, id: int) -> value.Value:\n    assert id == CLOCK, \"unknown native\"\n    _ = rt\n    return value.Value.number(0.0)\n\n\npublic def start(rt: mut heap.Runtime):\n    rt.init_string = lox_strings.copy_string(mut rt, b\"init\")\n    define_natives(mut rt)\n\n\ndef define_natives(rt: mut heap.Runtime):\n    name = lox_strings.copy_string(mut rt, b\"clock\")\n    heap.push(mut rt, value.Value.obj(name))\n    native = heap.allocate(mut rt, object.Obj.native(object.NativeObj(id=CLOCK, arity=0)))\n    heap.push(mut rt, value.Value.obj(native))\n    _ = heap.set_global(mut rt, name, value.Value.obj(native))\n    _ = heap.pop(mut rt)\n    _ = heap.pop(mut rt)\n"
++    }
++  },
++  "driver_tests::test_run_recursive_state_and_output_restore": {
++    "providers": {
++      "natives.my": "module natives\n# Test fixture for driver_tests.my (see driver_cases.json): natives.my with\n# a `clock` that returns 0 instead of reading the Clock capability.\nimport heap\nimport lox_strings\nimport object\nimport value\n\n\npublic const CLOCK: int = 0\n\n\npublic def call_native(rt: heap.Runtime, id: int) -> value.Value:\n    assert id == CLOCK, \"unknown native\"\n    _ = rt\n    return value.Value.number(0.0)\n\n\npublic def start(rt: mut heap.Runtime):\n    rt.init_string = lox_strings.copy_string(mut rt, b\"init\")\n    define_natives(mut rt)\n\n\ndef define_natives(rt: mut heap.Runtime):\n    name = lox_strings.copy_string(mut rt, b\"clock\")\n    heap.push(mut rt, value.Value.obj(name))\n    native = heap.allocate(mut rt, object.Obj.native(object.NativeObj(id=CLOCK, arity=0)))\n    heap.push(mut rt, value.Value.obj(native))\n    _ = heap.set_global(mut rt, name, value.Value.obj(native))\n    _ = heap.pop(mut rt)\n    _ = heap.pop(mut rt)\n"
++    }
++  },
++  "driver_tests::test_run_upvalues_across_block_and_return": {
++    "providers": {
++      "natives.my": "module natives\n# Test fixture for driver_tests.my (see driver_cases.json): natives.my with\n# a `clock` that returns 0 instead of reading the Clock capability.\nimport heap\nimport lox_strings\nimport object\nimport value\n\n\npublic const CLOCK: int = 0\n\n\npublic def call_native(rt: heap.Runtime, id: int) -> value.Value:\n    assert id == CLOCK, \"unknown native\"\n    _ = rt\n    return value.Value.number(0.0)\n\n\npublic def start(rt: mut heap.Runtime):\n    rt.init_string = lox_strings.copy_string(mut rt, b\"init\")\n    define_natives(mut rt)\n\n\ndef define_natives(rt: mut heap.Runtime):\n    name = lox_strings.copy_string(mut rt, b\"clock\")\n    heap.push(mut rt, value.Value.obj(name))\n    native = heap.allocate(mut rt, object.Obj.native(object.NativeObj(id=CLOCK, arity=0)))\n    heap.push(mut rt, value.Value.obj(native))\n    _ = heap.set_global(mut rt, name, value.Value.obj(native))\n    _ = heap.pop(mut rt)\n    _ = heap.pop(mut rt)\n"
++    }
++  },
++  "driver_tests::test_run_error_after_child_returns": {
++    "providers": {
++      "natives.my": "module natives\n# Test fixture for driver_tests.my (see driver_cases.json): natives.my with\n# a `clock` that returns 0 instead of reading the Clock capability.\nimport heap\nimport lox_strings\nimport object\nimport value\n\n\npublic const CLOCK: int = 0\n\n\npublic def call_native(rt: heap.Runtime, id: int) -> value.Value:\n    assert id == CLOCK, \"unknown native\"\n    _ = rt\n    return value.Value.number(0.0)\n\n\npublic def start(rt: mut heap.Runtime):\n    rt.init_string = lox_strings.copy_string(mut rt, b\"init\")\n    define_natives(mut rt)\n\n\ndef define_natives(rt: mut heap.Runtime):\n    name = lox_strings.copy_string(mut rt, b\"clock\")\n    heap.push(mut rt, value.Value.obj(name))\n    native = heap.allocate(mut rt, object.Obj.native(object.NativeObj(id=CLOCK, arity=0)))\n    heap.push(mut rt, value.Value.obj(native))\n    _ = heap.set_global(mut rt, name, value.Value.obj(native))\n    _ = heap.pop(mut rt)\n    _ = heap.pop(mut rt)\n"
++    }
+   }
+ }
+--- a/driver_tests.my
++++ b/driver_tests.my
+@@ -136,3 +136,42 @@
+     vm = driver.run_source(source, driver.Engine.VM, True, out, None)
+     tree = driver.run_source(source, driver.Engine.TREE, True, out, None)
+     return vm.status == 0 and tree.status == 0 and vm.stdout == b"9\n2\n9\n" and tree.stdout == vm.stdout and vm.collections == vm.allocations and tree.collections == tree.allocations
++
++
++# The original callee and every evaluated argument remain roots while later
++# arguments allocate and replace the global callee. Captured parameter writes
++# remain shared across closures after their creating frame has returned.
++public def test_run_call_arguments_and_captured_parameter_roots(out: Stream) -> bool:
++    source = b"var saved; var update; fun first(a, b) { fun read() { return a + b; } fun write() { a = a + \"!\"; } saved = read; update = write; return \"first\"; } fun second(a, b) { return \"second\"; } var selected = first; fun arg(x) { selected = second; print x; return x + \"+\"; } print selected(arg(\"A\"), arg(\"B\")); update(); print saved(); print selected(1, 2);"
++    expected = b"A\nB\nfirst\nA+!B+\nsecond\n"
++    vm = driver.run_source(source, driver.Engine.VM, True, out, None)
++    tree = driver.run_source(source, driver.Engine.TREE, True, out, None)
++    return vm.status == 0 and tree.status == 0 and vm.stdout == expected and tree.stdout == expected and vm.stderr == b"" and tree.stderr == b"" and vm.collections == vm.allocations and tree.collections == tree.allocations
++
++
++# Nested calls, early returns, block scopes, constructors, and bound methods
++# share the same output and restore the caller's environment after returning.
++public def test_run_recursive_state_and_output_restore(out: Stream) -> bool:
++    source = b"fun outer(x) { fun inner(y) { { var local = x + y; print local; return local; } } print inner(2); return inner(3); } print outer(5); class Box { init(x) { this.x = x; print x; } read() { return this.x; } } var box = Box(9); var read = box.read; print read(); print clock();"
++    expected = b"7\n7\n8\n8\n9\n9\n0\n"
++    vm = driver.run_source(source, driver.Engine.VM, True, out, None)
++    tree = driver.run_source(source, driver.Engine.TREE, True, out, None)
++    return vm.status == 0 and tree.status == 0 and vm.stdout == expected and tree.stdout == expected and vm.stderr == b"" and tree.stderr == b"" and vm.collections == vm.allocations and tree.collections == tree.allocations
++
++
++# Capturing two locals plus a parameter walks the sorted open-upvalue chain;
++# one local closes at a block boundary and the rest close on function return.
++public def test_run_upvalues_across_block_and_return(out: Stream) -> bool:
++    source = b"var captured;\nfun outer(n) {\n  var first = 1;\n  { var second = 2;\n    fun pair() { first = first + 1; second = second + 2; return first + second + n; }\n    captured = pair;\n  }\n  var x = captured();\n  return captured;\n}\nvar f = outer(3); print f(); print f();\n"
++    vm = driver.run_source(source, driver.Engine.VM, True, out, None)
++    tree = driver.run_source(source, driver.Engine.TREE, True, out, None)
++    return vm.status == 0 and tree.status == 0 and vm.stdout == b"12\n15\n" and tree.stdout == vm.stdout and vm.stderr == b"" and tree.stderr == b"" and vm.collections == vm.allocations and tree.collections == tree.allocations
++
++
++# Two child activations return before the parent fails, so the retained
++# activation index must publish the resumed parent's exact error position.
++public def test_run_error_after_child_returns(out: Stream) -> bool:
++    source = b"fun dive(n) {\n  if (n > 0) {\n    var child = dive(n - 1);\n    if (n == 2) return absent;\n    return child + 1;\n  }\n  return 0;\n}\nprint dive(4);\n"
++    expected = b"Undefined variable 'absent'.\n[line 4] in dive()\n[line 3] in dive()\n[line 3] in dive()\n[line 9] in script\n"
++    observed = driver.run_source(source, driver.Engine.VM, True, out, None)
++    return observed.status == 70 and observed.stdout == b"" and observed.stderr == expected
+--- a/heap.my
++++ b/heap.my
+@@ -171,6 +171,22 @@
+             return value.NO_OBJ
+ 
+ 
++# Read both object tags while they remain projections of the same rooted
++# object table; callers need only the scalar arity, never either carrier.
++public def closure_arity(rt: Runtime, ref: value.ObjRef) -> int:
++    match rt.objects[ref]:
++        case object.Obj.closure(closure):
++            match rt.objects[closure.function]:
++                case object.Obj.function(function):
++                    return function.arity
++                case _:
++                    assert False, "object is not a function"
++                    return 0
++        case _:
++            assert False, "object is not a closure"
++            return 0
++
++
+ public def closure_obj(rt: Runtime, ref: value.ObjRef) -> object.ClosureObj:
+     match rt.objects[ref]:
+         case object.Obj.closure(payload):
+@@ -312,12 +328,23 @@
+             return value.Value.nil
+ 
+ 
+-# P3 adaptation: write one environment slot and store the environment back,
+-# so the write lands in the heap under value semantics as well.
++def set_object_env_slot(objects: mut list[object.Obj], ref: value.ObjRef, slot: int, item: value.Value):
++    match objects[ref]:
++        case object.Obj.env(env):
++            enclosing = env.enclosing
++            slots = env.slots
++            slots[slot] = item
++            objects[ref] = object.Obj.env(object.EnvObj(enclosing=enclosing, slots=slots))
++        case _:
++            assert False, "object is not an env"
++
++
++# Keep the owning object table in one indexed write-back, as for instance
++# fields. Shared Runtime snapshots still require the normal COW slow path.
+ public def set_env_slot(rt: mut Runtime, ref: value.ObjRef, slot: int, item: value.Value):
+-    env = env_obj(rt, ref)
+-    env.slots[slot] = item
+-    rt.objects[ref] = object.Obj.env(env)
++    objects = rt.objects
++    set_object_env_slot(mut objects, ref, slot, item)
++    rt.objects = objects
+ 
+ 
+ public def string_hash(rt: Runtime, ref: value.ObjRef) -> u32:
+@@ -414,12 +441,42 @@
+     rt.marker = marker
+ 
+ 
+-def is_free(obj: object.Obj) -> bool:
+-    match obj:
++def is_free(rt: Runtime, ref: value.ObjRef) -> bool:
++    match rt.objects[ref]:
+         case object.Obj.free:
+             return True
+         case _:
+             return False
++
++
++# Read only the scalar abstract allocation cost from the current object table.
++# Keep object.cost arithmetic/checks exact without carrying an owning Obj
++# through a mutable Runtime expression.
++def object_cost_at(rt: Runtime, ref: value.ObjRef) -> int:
++    match rt.objects[ref]:
++        case object.Obj.free:
++            return 0
++        case object.Obj.string(payload):
++            return 32 + len(payload.chars)
++        case object.Obj.function(_):
++            return 64
++        case object.Obj.native(_):
++            return 32
++        case object.Obj.closure(payload):
++            return 32 + 8 * len(payload.upvalues)
++        case object.Obj.upvalue(_):
++            return 32
++        case object.Obj.klass(_):
++            return 48
++        case object.Obj.instance(_):
++            return 48
++        case object.Obj.bound_method(_):
++            return 32
++        case object.Obj.env(payload):
++            return 32 + 16 * len(payload.slots)
++        case object.Obj.tree_function(_):
++            return 48
++
+ 
+ 
+ def sweep(rt: mut Runtime):
+@@ -427,8 +484,8 @@
+     while i < len(rt.objects):
+         if rt.marker.marks[i]:
+             rt.marker.marks[i] = False
+-        elif not is_free(rt.objects[i]):
+-            rt.bytes_allocated = rt.bytes_allocated - object.cost(rt.objects[i])
++        elif not is_free(rt, i):
++            rt.bytes_allocated = rt.bytes_allocated - object_cost_at(rt, i)
+             rt.objects[i] = object.Obj.free
+             rt.free_slots.append(i)
+             rt.freed = rt.freed + 1
+--- a/heap_test.my
++++ b/heap_test.my
+@@ -79,6 +79,21 @@
+     return rt.allocations == 25 and rt.collections == 25
+ 
+ 
++# A copied Runtime and a separately saved env payload are value snapshots.
++# Updating the live heap must preserve each, including untouched slots.
++public def test_env_indexed_set_preserves_runtime_and_payload_snapshots() -> bool:
++    rt = heap.new_runtime(False, None)
++    ref = heap.allocate(mut rt, object.Obj.env(object.new_env(value.NO_OBJ, 2)))
++    heap.set_env_slot(mut rt, ref, 0, value.Value.number(1.0))
++    heap.set_env_slot(mut rt, ref, 1, value.Value.number(2.0))
++    before = rt
++    payload = heap.env_obj(rt, ref)
++    heap.set_env_slot(mut rt, ref, 0, value.Value.number(9.0))
++    live = heap.env_slot(rt, ref, 0) == value.Value.number(9.0) and heap.env_slot(rt, ref, 1) == value.Value.number(2.0)
++    saved = heap.env_slot(before, ref, 0) == value.Value.number(1.0) and heap.env_slot(before, ref, 1) == value.Value.number(2.0)
++    return live and saved and payload.slots[0] == value.Value.number(1.0) and payload.slots[1] == value.Value.number(2.0)
++
++
+ # Stack reads and writes retain normal list value semantics even after helper
+ # fusion in VM arithmetic; publishing a snapshot must still detach on write.
+ public def test_stack_snapshot_survives_write() -> bool:
+@@ -100,3 +115,61 @@
+     full = heap.peek(rt, 0) == value.Value.number(float(heap.STACK_MAX - 1)) and heap.peek(rt, heap.STACK_MAX - 1) == value.Value.number(0.0)
+     last = heap.pop(mut rt)
+     return full and last == value.Value.number(float(heap.STACK_MAX - 1)) and rt.stack_top == heap.STACK_MAX - 1 and rt.stack[-1] == last
++
++
++# A scalar projection must follow the current object table while a retained
++# Runtime snapshot keeps the original function and closure payloads.
++public def test_closure_arity_respects_runtime_snapshot() -> bool:
++    rt = heap.new_runtime(True, None)
++    function = object.new_function()
++    function.arity = 2
++    function_ref = heap.allocate(mut rt, object.Obj.function(function))
++    root(mut rt, function_ref)
++    closure = heap.allocate(mut rt, object.Obj.closure(object.new_closure(function_ref, 1)))
++    root(mut rt, closure)
++    snapshot = rt
++    function.arity = 5
++    rt.objects[function_ref] = object.Obj.function(function)
++    heap.collect(mut rt)
++    return heap.closure_arity(rt, closure) == 5 and heap.closure_arity(snapshot, closure) == 2 and heap.closure_obj(snapshot, closure).upvalues[0] == value.NO_OBJ and rt.freed == 0 and snapshot.allocations == 2
++
++
++# Sweep projects scalar costs from every object case. Its indexed free writes
++# must retain value snapshots and the ascending sweep/reverse reuse order.
++public def test_sweep_scalar_cost_preserves_snapshots_and_reuse_order() -> bool:
++    rt = heap.new_runtime(False, None)
++    kept = lox_strings.copy_string(mut rt, b"live")
++    root(mut rt, kept)
++    dead_string = lox_strings.copy_string(mut rt, b"old")
++    _ = heap.allocate(mut rt, object.Obj.function(object.new_function()))
++    _ = heap.allocate(mut rt, object.Obj.native(object.NativeObj(id=0, arity=0)))
++    _ = heap.allocate(mut rt, object.Obj.closure(object.new_closure(value.NO_OBJ, 2)))
++    _ = heap.allocate(mut rt, object.Obj.upvalue(object.UpvalueObj(slot=object.NO_SLOT, closed=value.Value.nil, next_open=value.NO_OBJ)))
++    _ = heap.allocate(mut rt, object.Obj.klass(object.ClassObj(name=value.NO_OBJ, methods=table.new_table())))
++    _ = heap.allocate(mut rt, object.Obj.instance(object.InstanceObj(klass=value.NO_OBJ, fields=table.new_table())))
++    _ = heap.allocate(mut rt, object.Obj.bound_method(object.BoundMethodObj(receiver=value.Value.nil, method=value.NO_OBJ)))
++    env = heap.allocate(mut rt, object.Obj.env(object.new_env(value.NO_OBJ, 3)))
++    last = heap.allocate(mut rt, object.Obj.tree_function(object.TreeFunctionObj(decl=0, name=value.NO_OBJ, closure=value.NO_OBJ, is_initializer=False)))
++    before = rt
++    payload = heap.env_obj(rt, env)
++    heap.collect(mut rt)
++    accounting = rt.allocations == 11 and rt.freed == 10 and rt.collections == 1 and rt.bytes_allocated == 36 and rt.next_gc == 1048576
++    order = len(rt.free_slots) == 10 and rt.free_slots[0] == dead_string and rt.free_slots[-1] == last
++    snapshots = before.allocations == 11 and before.freed == 0 and before.bytes_allocated == 503 and len(heap.env_obj(before, env).slots) == 3 and len(payload.slots) == 3 and heap.string_obj(before, dead_string).chars == b"old"
++    reused = lox_strings.copy_string(mut rt, b"new")
++    return accounting and order and snapshots and reused == last and len(rt.objects) == 11 and len(rt.free_slots) == 9 and rt.bytes_allocated == 71
++
++
++# allocate charges the incoming object before collection and publishes it after
++# sweep. A variable-sized dead env must be subtracted before its slot is reused.
++public def test_sweep_scalar_cost_at_allocation_threshold() -> bool:
++    rt = heap.new_runtime(False, None)
++    env = heap.allocate(mut rt, object.Obj.env(object.new_env(value.NO_OBJ, 3)))
++    kept = lox_strings.copy_string(mut rt, b"live")
++    root(mut rt, kept)
++    rt.next_gc = rt.bytes_allocated
++    before = rt
++    reused = heap.allocate(mut rt, object.Obj.native(object.NativeObj(id=0, arity=0)))
++    accounting = rt.allocations == 3 and rt.freed == 1 and rt.collections == 1 and rt.bytes_allocated == 68 and rt.next_gc == 1048576
++    snapshots = before.bytes_allocated == 116 and before.next_gc == 116 and before.freed == 0 and len(heap.env_obj(before, env).slots) == 3
++    return accounting and snapshots and reused == env and len(rt.objects) == 2 and len(rt.free_slots) == 0
+--- a/interpreter.my
++++ b/interpreter.my
+@@ -29,13 +29,10 @@
+ const MAX_DEPTH: int = 63
+ 
+ 
+-# The evaluator's state: the program being run (nodes are addressed by
+-# index), the runtime and output, the active call count, and the return
+-# register a `return` unwinds with.
++# The active call count and return register are the only mutable evaluator
++# state. Program is immutable during execution; Runtime and Output remain
++# named mut parameters so recursion does not materialize record carriers.
+ record Interpreter:
+-    program: ast.Program
+-    rt: heap.Runtime
+-    out: output.Output
+     depth: int
+     returned: value.Value
+ 
+@@ -114,6 +111,19 @@
+ 
+ def new_env(rt: mut heap.Runtime, enclosing: value.ObjRef, slot_count: int) -> value.ObjRef:
+     return heap.allocate(mut rt, object.Obj.env(object.new_env(enclosing, slot_count)))
++
++
++# The callee and arguments remain on the value stack throughout construction.
++# Prepare the value-only slots before publishing the environment once; native
++# managed allocation does not collect Lox objects. heap.allocate retains the
++# same Lox allocation/collection point and cost as the all-nil environment.
++def new_call_env(rt: mut heap.Runtime, enclosing: value.ObjRef, slot_count: int, count: int, args: int) -> value.ObjRef:
++    env = object.new_env(enclosing, slot_count)
++    i = 0
++    while i < count:
++        env.slots[i] = rt.stack[args + i]
++        i += 1
++    return heap.allocate(mut rt, object.Obj.env(env))
+ 
+ 
+ # A method bound to a receiver: an Env holding the receiver, then a
+@@ -129,48 +139,40 @@
+     return bound
+ 
+ 
+-def get_variable(it: mut Interpreter, name: value.ObjRef, hops: int, slot: int, line: int) -> Result[None, RuntimeError]:
++def get_variable(rt: mut heap.Runtime, name: value.ObjRef, hops: int, slot: int, line: int) -> Result[None, RuntimeError]:
+     if hops == ast.GLOBAL:
+-        match table.get(it.rt.globals, name, heap.string_hash(it.rt, name)):
++        match table.get(rt.globals, name, heap.string_hash(rt, name)):
+             case Some(found):
+-                __wb_137 = it.rt
+-                heap.push(mut __wb_137, found)
+-                it.rt = __wb_137
++                heap.push(mut rt, found)
+                 return Ok(None)
+             case None:
+-                return Err(fail(b"Undefined variable '" + name_text(it.rt, name) + b"'.", line))
+-    __wb_141 = it.rt
+-    heap.push(mut __wb_141, heap.env_slot(__wb_141, env_at(__wb_141, hops), slot))
+-    it.rt = __wb_141
++                return Err(fail(b"Undefined variable '" + name_text(rt, name) + b"'.", line))
++    heap.push(mut rt, heap.env_slot(rt, env_at(rt, hops), slot))
+     return Ok(None)
+ 
+ 
+ # Evaluates the value, then stores the top of the stack, which stays pushed.
+-def assign(it: mut Interpreter, node: ast.AssignExpr) -> Result[None, RuntimeError]:
+-    evaluate(mut it, node.assigned)?
++def assign(program: ast.Program, rt: mut heap.Runtime, o: mut output.Output, it: mut Interpreter, node: ast.AssignExpr) -> Result[None, RuntimeError]:
++    evaluate(program, mut rt, mut o, mut it, node.assigned)?
+     if node.hops == ast.GLOBAL:
+-        match table.get(it.rt.globals, node.name_ref, heap.string_hash(it.rt, node.name_ref)):
++        match table.get(rt.globals, node.name_ref, heap.string_hash(rt, node.name_ref)):
+             case Some(_):
+-                __wb_151 = it.rt
+-                _ = heap.set_global(mut __wb_151, node.name_ref, heap.peek(__wb_151, 0))
+-                it.rt = __wb_151
++                _ = heap.set_global(mut rt, node.name_ref, heap.peek(rt, 0))
+             case None:
+-                return Err(fail(b"Undefined variable '" + name_text(it.rt, node.name_ref) + b"'.", node.name.line))
++                return Err(fail(b"Undefined variable '" + name_text(rt, node.name_ref) + b"'.", node.name.line))
+     else:
+-        __wb_155 = it.rt
+-        heap.set_env_slot(mut __wb_155, env_at(__wb_155, node.hops), node.slot, heap.peek(__wb_155, 0))
+-        it.rt = __wb_155
++        heap.set_env_slot(mut rt, env_at(rt, node.hops), node.slot, heap.peek(rt, 0))
+     return Ok(None)
+ 
+ 
+ # Computes a binary operator with both operands still on the stack, then
+ # pops them and pushes the result. `+` on strings concatenates before the
+ # operands are popped.
+-def binary(it: mut Interpreter, node: ast.BinaryExpr) -> Result[None, RuntimeError]:
+-    evaluate(mut it, node.left)?
+-    evaluate(mut it, node.right)?
+-    left = heap.peek(it.rt, 1)
+-    right = heap.peek(it.rt, 0)
++def binary(program: ast.Program, rt: mut heap.Runtime, o: mut output.Output, it: mut Interpreter, node: ast.BinaryExpr) -> Result[None, RuntimeError]:
++    evaluate(program, mut rt, mut o, mut it, node.left)?
++    evaluate(program, mut rt, mut o, mut it, node.right)?
++    left = heap.peek(rt, 1)
++    right = heap.peek(rt, 0)
+     kind = node.operator.kind
+     result = value.Value.nil
+     if kind == ast.TokenKind.EQUAL_EQUAL:
+@@ -183,22 +185,16 @@
+         if kind == ast.TokenKind.PLUS:
+             if a is not None and b is not None:
+                 result = value.Value.number(a + b)
+-            elif is_string(it.rt, left) and is_string(it.rt, right):
+-                __wb_180 = it.rt
+-                result = value.Value.obj(lox_strings.concat(mut __wb_180, as_obj(left), as_obj(right)))
+-                it.rt = __wb_180
++            elif is_string(rt, left) and is_string(rt, right):
++                result = value.Value.obj(lox_strings.concat(mut rt, as_obj(left), as_obj(right)))
+             else:
+                 return Err(fail(b"Operands must be two numbers or two strings.", node.operator.line))
+         elif a is None or b is None:
+             return Err(fail(b"Operands must be numbers.", node.operator.line))
+         else:
+             result = arithmetic(kind, a, b)
+-    __wb_187 = it.rt
+-    _ = heap.pop(mut __wb_187)
+-    it.rt = __wb_187
+-    __wb_188 = it.rt
+-    replace_top(mut __wb_188, result)
+-    it.rt = __wb_188
++    _ = heap.pop(mut rt)
++    replace_top(mut rt, result)
+     return Ok(None)
+ 
+ 
+@@ -220,177 +216,145 @@
+             return value.Value.number(a * b)
+ 
+ 
+-def unary(it: mut Interpreter, node: ast.UnaryExpr) -> Result[None, RuntimeError]:
+-    evaluate(mut it, node.right)?
+-    operand = heap.peek(it.rt, 0)
++def unary(program: ast.Program, rt: mut heap.Runtime, o: mut output.Output, it: mut Interpreter, node: ast.UnaryExpr) -> Result[None, RuntimeError]:
++    evaluate(program, mut rt, mut o, mut it, node.right)?
++    operand = heap.peek(rt, 0)
+     if node.operator.kind == ast.TokenKind.BANG:
+-        __wb_214 = it.rt
+-        replace_top(mut __wb_214, value.Value.boolean(value.is_falsey(operand)))
+-        it.rt = __wb_214
++        replace_top(mut rt, value.Value.boolean(value.is_falsey(operand)))
+         return Ok(None)
+     match operand:
+         case value.Value.number(number):
+-            __wb_218 = it.rt
+-            replace_top(mut __wb_218, value.Value.number(-number))
+-            it.rt = __wb_218
++            replace_top(mut rt, value.Value.number(-number))
+             return Ok(None)
+         case _:
+             return Err(fail(b"Operand must be a number.", node.operator.line))
+ 
+ 
+-def logical(it: mut Interpreter, node: ast.LogicalExpr) -> Result[None, RuntimeError]:
+-    evaluate(mut it, node.left)?
+-    falsey = value.is_falsey(heap.peek(it.rt, 0))
++def logical(program: ast.Program, rt: mut heap.Runtime, o: mut output.Output, it: mut Interpreter, node: ast.LogicalExpr) -> Result[None, RuntimeError]:
++    evaluate(program, mut rt, mut o, mut it, node.left)?
++    falsey = value.is_falsey(heap.peek(rt, 0))
+     if node.operator.kind == ast.TokenKind.OR:
+         if not falsey:
+             return Ok(None)
+     elif falsey:
+         return Ok(None)
+-    __wb_232 = it.rt
+-    _ = heap.pop(mut __wb_232)
+-    it.rt = __wb_232
+-    return evaluate(mut it, node.right)
+-
+-
+-def call_expr(it: mut Interpreter, id: int) -> Result[None, RuntimeError]:
+-    node = call_node(it, id)
+-    evaluate(mut it, node.callee)?
++    _ = heap.pop(mut rt)
++    return evaluate(program, mut rt, mut o, mut it, node.right)
++
++
++def call_expr(program: ast.Program, rt: mut heap.Runtime, o: mut output.Output, it: mut Interpreter, id: int) -> Result[None, RuntimeError]:
++    node = call_node(program, id)
++    evaluate(program, mut rt, mut o, mut it, node.callee)?
+     for argument in node.arguments:
+-        evaluate(mut it, argument)?
+-    return call_value(mut it, len(node.arguments), node.paren.line)
+-
+-
+-def call_node(it: Interpreter, id: int) -> ast.CallExpr:
+-    match it.program.exprs[id]:
++        evaluate(program, mut rt, mut o, mut it, argument)?
++    return call_value(program, mut rt, mut o, mut it, len(node.arguments), node.paren.line)
++
++
++def call_node(program: ast.Program, id: int) -> ast.CallExpr:
++    match program.exprs[id]:
+         case ast.Expr.call(node):
+             return node
+         case _:
+             assert False, "expression is not a call"
+-            return call_node(it, id)
++            return call_node(program, id)
+ 
+ 
+ # A field replaces the instance on top of the stack; otherwise a method is
+ # bound while the instance is still there.
+-def get(it: mut Interpreter, node: ast.GetExpr) -> Result[None, RuntimeError]:
+-    evaluate(mut it, node.target)?
+-    match heap.instance_member(it.rt, heap.peek(it.rt, 0), node.name_ref):
++def get(program: ast.Program, rt: mut heap.Runtime, o: mut output.Output, it: mut Interpreter, node: ast.GetExpr) -> Result[None, RuntimeError]:
++    evaluate(program, mut rt, mut o, mut it, node.target)?
++    match heap.instance_member(rt, heap.peek(rt, 0), node.name_ref):
+         case heap.InstanceMember.field(field):
+-            __wb_262 = it.rt
+-            replace_top(mut __wb_262, field)
+-            it.rt = __wb_262
++            replace_top(mut rt, field)
+             return Ok(None)
+         case heap.InstanceMember.method(method):
+-            __wb_268 = it.rt
+-            bound = bind(mut __wb_268, heap.peek(__wb_268, 0), as_obj(method))
+-            it.rt = __wb_268
+-            __wb_269 = it.rt
+-            replace_top(mut __wb_269, value.Value.obj(bound))
+-            it.rt = __wb_269
++            bound = bind(mut rt, heap.peek(rt, 0), as_obj(method))
++            replace_top(mut rt, value.Value.obj(bound))
+             return Ok(None)
+         case heap.InstanceMember.missing:
+-            return Err(fail(b"Undefined property '" + name_text(it.rt, node.name_ref) + b"'.", node.name.line))
++            return Err(fail(b"Undefined property '" + name_text(rt, node.name_ref) + b"'.", node.name.line))
+         case heap.InstanceMember.not_instance:
+             return Err(fail(b"Only instances have properties.", node.name.line))
+ 
+ 
+ # The target must be an instance before the value is evaluated.
+-def set(it: mut Interpreter, node: ast.SetExpr) -> Result[None, RuntimeError]:
+-    evaluate(mut it, node.target)?
+-    receiver = instance_of(it.rt, heap.peek(it.rt, 0))
++def set(program: ast.Program, rt: mut heap.Runtime, o: mut output.Output, it: mut Interpreter, node: ast.SetExpr) -> Result[None, RuntimeError]:
++    evaluate(program, mut rt, mut o, mut it, node.target)?
++    receiver = instance_of(rt, heap.peek(rt, 0))
+     if receiver is None:
+         return Err(fail(b"Only instances have fields.", node.name.line))
+-    evaluate(mut it, node.assigned)?
++    evaluate(program, mut rt, mut o, mut it, node.assigned)?
+     # The RHS may change this same object. Read its current fields afterward.
+-    match instance_of(it.rt, heap.peek(it.rt, 1)):
++    match instance_of(rt, heap.peek(rt, 1)):
+         case Some(instance_ref):
+-            __wb_field = it.rt
+-            heap.set_instance_field(mut __wb_field, instance_ref, node.name_ref, heap.string_hash(__wb_field, node.name_ref), heap.peek(__wb_field, 0))
+-            it.rt = __wb_field
+-            __wb_285 = it.rt
+-            assigned = heap.pop(mut __wb_285)
+-            it.rt = __wb_285
+-            __wb_286 = it.rt
+-            replace_top(mut __wb_286, assigned)
+-            it.rt = __wb_286
++            heap.set_instance_field(mut rt, instance_ref, node.name_ref, heap.string_hash(rt, node.name_ref), heap.peek(rt, 0))
++            assigned = heap.pop(mut rt)
++            replace_top(mut rt, assigned)
+             return Ok(None)
+         case None:
+             return Err(fail(b"Only instances have fields.", node.name.line))
+ 
+ 
+-def super_access(it: mut Interpreter, node: ast.SuperExpr) -> Result[None, RuntimeError]:
+-    superclass = heap.env_slot(it.rt, env_at(it.rt, node.hops), 0)
+-    receiver = heap.env_slot(it.rt, env_at(it.rt, node.hops - 1), 0)
+-    match heap.class_method(it.rt, as_obj(superclass), node.method_ref):
++def super_access(rt: mut heap.Runtime, node: ast.SuperExpr) -> Result[None, RuntimeError]:
++    superclass = heap.env_slot(rt, env_at(rt, node.hops), 0)
++    receiver = heap.env_slot(rt, env_at(rt, node.hops - 1), 0)
++    match heap.class_method(rt, as_obj(superclass), node.method_ref):
+         case Some(method):
+-            __wb_298 = it.rt
+-            heap.push(mut __wb_298, value.Value.obj(bind(mut __wb_298, receiver, as_obj(method))))
+-            it.rt = __wb_298
+-            return Ok(None)
+-        case None:
+-            return Err(fail(b"Undefined property '" + name_text(it.rt, node.method_ref) + b"'.", node.method.line))
++            heap.push(mut rt, value.Value.obj(bind(mut rt, receiver, as_obj(method))))
++            return Ok(None)
++        case None:
++            return Err(fail(b"Undefined property '" + name_text(rt, node.method_ref) + b"'.", node.method.line))
+ 
+ 
+ # Evaluates expression `id`, pushing exactly one value.
+-def evaluate_literal(it: mut Interpreter, node: ast.LiteralExpr) -> Result[None, RuntimeError]:
+-    __wb_318 = it.rt
+-    heap.push(mut __wb_318, node.constant)
+-    it.rt = __wb_318
++def evaluate_literal(rt: mut heap.Runtime, node: ast.LiteralExpr) -> Result[None, RuntimeError]:
++    heap.push(mut rt, node.constant)
+     return Ok(None)
+ 
+ 
+-def evaluate_this(it: mut Interpreter, node: ast.ThisExpr) -> Result[None, RuntimeError]:
+-    __wb_327 = it.rt
+-    heap.push(mut __wb_327, heap.env_slot(__wb_327, env_at(__wb_327, node.hops), node.slot))
+-    it.rt = __wb_327
++def evaluate_this(rt: mut heap.Runtime, node: ast.ThisExpr) -> Result[None, RuntimeError]:
++    heap.push(mut rt, heap.env_slot(rt, env_at(rt, node.hops), node.slot))
+     return Ok(None)
+ 
+ 
+-def evaluate(it: mut Interpreter, id: int) -> Result[None, RuntimeError]:
+-    match it.program.exprs[id]:
++def evaluate(program: ast.Program, rt: mut heap.Runtime, o: mut output.Output, it: mut Interpreter, id: int) -> Result[None, RuntimeError]:
++    match program.exprs[id]:
+         case ast.Expr.assign(node):
+-            return assign(mut it, node)
++            return assign(program, mut rt, mut o, mut it, node)
+         case ast.Expr.binary(node):
+-            return binary(mut it, node)
++            return binary(program, mut rt, mut o, mut it, node)
+         case ast.Expr.call(_):
+-            return call_expr(mut it, id)
++            return call_expr(program, mut rt, mut o, mut it, id)
+         case ast.Expr.get(node):
+-            return get(mut it, node)
++            return get(program, mut rt, mut o, mut it, node)
+         case ast.Expr.grouping(node):
+-            return evaluate(mut it, node.inner)
++            return evaluate(program, mut rt, mut o, mut it, node.inner)
+         case ast.Expr.literal(node):
+-            return evaluate_literal(mut it, node)
++            return evaluate_literal(mut rt, node)
+         case ast.Expr.logical(node):
+-            return logical(mut it, node)
++            return logical(program, mut rt, mut o, mut it, node)
+         case ast.Expr.set(node):
+-            return set(mut it, node)
++            return set(program, mut rt, mut o, mut it, node)
+         case ast.Expr.super_access(node):
+-            return super_access(mut it, node)
++            return super_access(mut rt, node)
+         case ast.Expr.this(node):
+-            return evaluate_this(mut it, node)
++            return evaluate_this(mut rt, node)
+         case ast.Expr.unary(node):
+-            return unary(mut it, node)
++            return unary(program, mut rt, mut o, mut it, node)
+         case ast.Expr.variable(node):
+-            return get_variable(mut it, node.name_ref, node.hops, node.slot, node.name.line)
++            return get_variable(mut rt, node.name_ref, node.hops, node.slot, node.name.line)
+ 
+ 
+ # Checks arity and depth, then allocates the call's env with the callee and
+ # arguments still on the stack and copies the arguments from `args` into
+ # slots 0..count.
+-def enter_function(it: mut Interpreter, function: object.TreeFunctionObj, enclosing: value.ObjRef, count: int, args: int, line: int) -> Result[value.ObjRef, RuntimeError]:
+-    arity = len(it.program.functions[function.decl].params)
++def enter_function(program: ast.Program, rt: mut heap.Runtime, it: Interpreter, function: object.TreeFunctionObj, enclosing: value.ObjRef, count: int, args: int, line: int) -> Result[value.ObjRef, RuntimeError]:
++    arity = len(program.functions[function.decl].params)
+     if count != arity:
+         return Err(fail(f"Expected {arity} arguments but got {count}.".encode(), line))
+     if it.depth + 1 > MAX_DEPTH:
+         return Err(fail(b"Stack overflow.", line))
+-    __wb_344 = it.rt
+-    env = new_env(mut __wb_344, enclosing, it.program.functions[function.decl].slot_count)
+-    it.rt = __wb_344
+-    i = 0
+-    while i < count:
+-        __wb_347 = it.rt
+-        heap.set_env_slot(mut __wb_347, env, i, __wb_347.stack[args + i])
+-        it.rt = __wb_347
+-        i += 1
++    env = new_call_env(mut rt, enclosing, program.functions[function.decl].slot_count, count, args)
+     return Ok(env)
+ 
+ 
+@@ -405,19 +369,15 @@
+ 
+ # Runs a function body in its env and answers the call's value: the
+ # returned value or nil, or `this` for an initializer.
+-def run_function(it: mut Interpreter, function: object.TreeFunctionObj, env: value.ObjRef) -> Result[value.Value, RuntimeError]:
++def run_function(program: ast.Program, rt: mut heap.Runtime, o: mut output.Output, it: mut Interpreter, function: object.TreeFunctionObj, env: value.ObjRef) -> Result[value.Value, RuntimeError]:
+     it.depth = it.depth + 1
+-    __wb_365 = it.rt
+-    switch_env(mut __wb_365, env)
+-    it.rt = __wb_365
+-    outcome = run_body(mut it, function.decl)
+-    __wb_367 = it.rt
+-    restore_env(mut __wb_367)
+-    it.rt = __wb_367
++    switch_env(mut rt, env)
++    outcome = run_body(program, mut rt, mut o, mut it, function.decl)
++    restore_env(mut rt)
+     it.depth = it.depth - 1
+     flow = outcome?
+     if function.is_initializer:
+-        return Ok(heap.env_slot(it.rt, heap.env_enclosing(it.rt, env), 0))
++        return Ok(heap.env_slot(rt, heap.env_enclosing(rt, env), 0))
+     if flow == Flow.RETURN:
+         return Ok(it.returned)
+     return Ok(value.Value.nil)
+@@ -428,32 +388,50 @@
+     replace_top(mut rt, result)
+ 
+ 
++# Every descriptor field is scalar. The read-only object projection ends
++# before function execution or instance allocation can mutate the heap.
++union TreeCallee:
++    function: object.TreeFunctionObj,
++    klass: value.ObjRef,
++    native: object.NativeObj,
++    invalid
++
++
++def tree_callee(rt: heap.Runtime, item: value.Value) -> TreeCallee:
++    match item:
++        case value.Value.obj(ref):
++            match rt.objects[ref]:
++                case object.Obj.tree_function(function):
++                    return TreeCallee.function(function)
++                case object.Obj.klass(_):
++                    return TreeCallee.klass(ref)
++                case object.Obj.native(native):
++                    return TreeCallee.native(native)
++                case _:
++                    pass
++        case _:
++            pass
++    return TreeCallee.invalid
++
++
+ # Calls the callee below `count` arguments on the stack, leaving the result
+ # in place of the callee and arguments (SPEC §9.5).
+-def call_value(it: mut Interpreter, count: int, line: int) -> Result[None, RuntimeError]:
+-    callee_slot = it.rt.stack_top - count - 1
+-    match it.rt.stack[callee_slot]:
+-        case value.Value.obj(ref):
+-            match it.rt.objects[ref]:
+-                case object.Obj.tree_function(function):
+-                    env = enter_function(mut it, function, function.closure, count, callee_slot + 1, line)?
+-                    result = run_function(mut it, function, env)?
+-                    __wb_392 = it.rt
+-                    finish_call(mut __wb_392, count, result)
+-                    it.rt = __wb_392
+-                    return Ok(None)
+-                case object.Obj.klass(_):
+-                    return instantiate(mut it, ref, count, line)
+-                case object.Obj.native(native):
+-                    if count != native.arity:
+-                        return Err(fail(f"Expected {native.arity} arguments but got {count}.".encode(), line))
+-                    __wb_399 = it.rt
+-                    finish_call(mut __wb_399, count, natives.call_native(__wb_399, native.id))
+-                    it.rt = __wb_399
+-                    return Ok(None)
+-                case _:
+-                    pass
+-        case _:
++def call_value(program: ast.Program, rt: mut heap.Runtime, o: mut output.Output, it: mut Interpreter, count: int, line: int) -> Result[None, RuntimeError]:
++    callee_slot = rt.stack_top - count - 1
++    match tree_callee(rt, rt.stack[callee_slot]):
++        case TreeCallee.function(function):
++            env = enter_function(program, mut rt, it, function, function.closure, count, callee_slot + 1, line)?
++            result = run_function(program, mut rt, mut o, mut it, function, env)?
++            finish_call(mut rt, count, result)
++            return Ok(None)
++        case TreeCallee.klass(ref):
++            return instantiate(program, mut rt, mut o, mut it, ref, count, line)
++        case TreeCallee.native(native):
++            if count != native.arity:
++                return Err(fail(f"Expected {native.arity} arguments but got {count}.".encode(), line))
++            finish_call(mut rt, count, natives.call_native(rt, native.id))
++            return Ok(None)
++        case TreeCallee.invalid:
+             pass
+     return Err(fail(b"Can only call functions and classes.", line))
+ 
+@@ -461,73 +439,57 @@
+ # A class call: the Instance replaces the callee. `init`, if any, runs
+ # unbound in an Env holding the instance, which stays on the stack until
+ # the call's own env exists.
+-def instantiate(it: mut Interpreter, class_ref: value.ObjRef, count: int, line: int) -> Result[None, RuntimeError]:
+-    callee_slot = it.rt.stack_top - count - 1
+-    __wb_413 = it.rt
+-    instance = heap.allocate(mut __wb_413, object.Obj.instance(object.InstanceObj(klass=class_ref, fields=table.new_table())))
+-    it.rt = __wb_413
+-    it.rt.stack[callee_slot] = value.Value.obj(instance)
+-    match heap.class_method(it.rt, class_ref, it.rt.init_string):
++def instantiate(program: ast.Program, rt: mut heap.Runtime, o: mut output.Output, it: mut Interpreter, class_ref: value.ObjRef, count: int, line: int) -> Result[None, RuntimeError]:
++    callee_slot = rt.stack_top - count - 1
++    instance = heap.allocate(mut rt, object.Obj.instance(object.InstanceObj(klass=class_ref, fields=table.new_table())))
++    rt.stack[callee_slot] = value.Value.obj(instance)
++    match heap.class_method(rt, class_ref, rt.init_string):
+         case Some(init_value):
+-            initializer = tree_function_obj(it.rt, as_obj(init_value))
+-            __wb_419 = it.rt
+-            this_env = new_env(mut __wb_419, initializer.closure, 1)
+-            it.rt = __wb_419
+-            __wb_420 = it.rt
+-            heap.set_env_slot(mut __wb_420, this_env, 0, value.Value.obj(instance))
+-            it.rt = __wb_420
+-            __wb_421 = it.rt
+-            heap.push(mut __wb_421, value.Value.obj(this_env))
+-            it.rt = __wb_421
+-            env = enter_function(mut it, initializer, this_env, count, callee_slot + 1, line)?
+-            __wb_423 = it.rt
+-            _ = heap.pop(mut __wb_423)
+-            it.rt = __wb_423
+-            _ = run_function(mut it, initializer, env)?
++            initializer = tree_function_obj(rt, as_obj(init_value))
++            this_env = new_env(mut rt, initializer.closure, 1)
++            heap.set_env_slot(mut rt, this_env, 0, value.Value.obj(instance))
++            heap.push(mut rt, value.Value.obj(this_env))
++            env = enter_function(program, mut rt, it, initializer, this_env, count, callee_slot + 1, line)?
++            _ = heap.pop(mut rt)
++            _ = run_function(program, mut rt, mut o, mut it, initializer, env)?
+         case None:
+             if count != 0:
+                 return Err(fail(f"Expected 0 arguments but got {count}.".encode(), line))
+-    __wb_428 = it.rt
+-    finish_call(mut __wb_428, count, value.Value.obj(instance))
+-    it.rt = __wb_428
++    finish_call(mut rt, count, value.Value.obj(instance))
+     return Ok(None)
+ 
+ 
+ # Stores the value on top of the stack into a declaration's slot in the
+ # current env, or into globals.
+-def define(it: mut Interpreter, name: value.ObjRef, slot: int):
++def define(rt: mut heap.Runtime, name: value.ObjRef, slot: int):
+     if slot == ast.GLOBAL:
+-        __wb_436 = it.rt
+-        _ = heap.set_global(mut __wb_436, name, heap.peek(__wb_436, 0))
+-        it.rt = __wb_436
++        _ = heap.set_global(mut rt, name, heap.peek(rt, 0))
+     else:
+-        __wb_438 = it.rt
+-        heap.set_env_slot(mut __wb_438, __wb_438.current_env, slot, heap.peek(__wb_438, 0))
+-        it.rt = __wb_438
+-
+-
+-def class_node(it: Interpreter, id: int) -> ast.ClassStmt:
+-    match it.program.stmts[id]:
++        heap.set_env_slot(mut rt, rt.current_env, slot, heap.peek(rt, 0))
++
++
++def class_node(program: ast.Program, id: int) -> ast.ClassStmt:
++    match program.stmts[id]:
+         case ast.Stmt.class_decl(node):
+             return node
+         case _:
+             assert False, "statement is not a class"
+-            return class_node(it, id)
++            return class_node(program, id)
+ 
+ 
+ # The superclass expression's value, which stays pushed, or an error when
+ # it is not a class.
+-def push_superclass(it: mut Interpreter, id: int) -> Result[value.ObjRef, RuntimeError]:
+-    evaluate(mut it, id)?
++def push_superclass(program: ast.Program, rt: mut heap.Runtime, o: mut output.Output, it: mut Interpreter, id: int) -> Result[value.ObjRef, RuntimeError]:
++    evaluate(program, mut rt, mut o, mut it, id)?
+     line = 0
+-    match it.program.exprs[id]:
++    match program.exprs[id]:
+         case ast.Expr.variable(node):
+             line = node.name.line
+         case _:
+             pass
+-    match heap.peek(it.rt, 0):
++    match heap.peek(rt, 0):
+         case value.Value.obj(ref):
+-            match it.rt.objects[ref]:
++            match rt.objects[ref]:
+                 case object.Obj.klass(_):
+                     return Ok(ref)
+                 case _:
+@@ -540,195 +502,145 @@
+ # SPEC §9.4's Class steps: bind the name to nil, push the superclass, push
+ # the new class, copy the inherited methods down and open the `super` env,
+ # add a TreeFunction per method, then store the class and pop.
+-def class_declaration(it: mut Interpreter, id: int) -> Result[None, RuntimeError]:
+-    node = class_node(it, id)
++def class_declaration(program: ast.Program, rt: mut heap.Runtime, o: mut output.Output, it: mut Interpreter, id: int) -> Result[None, RuntimeError]:
++    node = class_node(program, id)
+     if node.slot == ast.GLOBAL:
+-        __wb_478 = it.rt
+-        _ = heap.set_global(mut __wb_478, node.name_ref, value.Value.nil)
+-        it.rt = __wb_478
++        _ = heap.set_global(mut rt, node.name_ref, value.Value.nil)
+     superclass = value.NO_OBJ
+     match node.superclass:
+         case Some(expr):
+-            superclass = push_superclass(mut it, expr)?
++            superclass = push_superclass(program, mut rt, mut o, mut it, expr)?
+         case None:
+             pass
+     klass = object.ClassObj(name=node.name_ref, methods=table.new_table())
+-    __wb_486 = it.rt
+-    heap.push(mut __wb_486, value.Value.obj(heap.allocate(mut __wb_486, object.Obj.klass(klass))))
+-    it.rt = __wb_486
++    heap.push(mut rt, value.Value.obj(heap.allocate(mut rt, object.Obj.klass(klass))))
+     methods = klass.methods
+-    klass_ref = as_obj(heap.peek(it.rt, 0))
++    klass_ref = as_obj(heap.peek(rt, 0))
+     if superclass != value.NO_OBJ:
+-        table.add_all(heap.class_obj(it.rt, superclass).methods, mut methods)
+-        __wb_methods = it.rt
+-        heap.set_class_methods(mut __wb_methods, klass_ref, methods)
+-        it.rt = __wb_methods
+-        __wb_490 = it.rt
+-        env = new_env(mut __wb_490, __wb_490.current_env, 1)
+-        it.rt = __wb_490
+-        __wb_491 = it.rt
+-        heap.set_env_slot(mut __wb_491, env, 0, value.Value.obj(superclass))
+-        it.rt = __wb_491
+-        __wb_492 = it.rt
+-        switch_env(mut __wb_492, env)
+-        it.rt = __wb_492
++        table.add_all(heap.class_obj(rt, superclass).methods, mut methods)
++        heap.set_class_methods(mut rt, klass_ref, methods)
++        env = new_env(mut rt, rt.current_env, 1)
++        heap.set_env_slot(mut rt, env, 0, value.Value.obj(superclass))
++        switch_env(mut rt, env)
+     for method in node.methods:
+-        decl = it.program.functions[method]
+-        __wb_495 = it.rt
+-        function = heap.allocate(mut __wb_495, object.Obj.tree_function(object.TreeFunctionObj(decl=method, name=decl.name_ref, closure=__wb_495.current_env, is_initializer=decl.name_ref == __wb_495.init_string)))
+-        it.rt = __wb_495
+-        _ = table.set(mut methods, decl.name_ref, heap.string_hash(it.rt, decl.name_ref), value.Value.obj(function))
+-        __wb_methods = it.rt
+-        heap.set_class_methods(mut __wb_methods, klass_ref, methods)
+-        it.rt = __wb_methods
++        decl = program.functions[method]
++        function = heap.allocate(mut rt, object.Obj.tree_function(object.TreeFunctionObj(decl=method, name=decl.name_ref, closure=rt.current_env, is_initializer=decl.name_ref == rt.init_string)))
++        _ = table.set(mut methods, decl.name_ref, heap.string_hash(rt, decl.name_ref), value.Value.obj(function))
++        heap.set_class_methods(mut rt, klass_ref, methods)
+     if superclass != value.NO_OBJ:
+-        __wb_498 = it.rt
+-        restore_env(mut __wb_498)
+-        it.rt = __wb_498
+-    define(mut it, node.name_ref, node.slot)
+-    __wb_500 = it.rt
+-    _ = heap.pop(mut __wb_500)
+-    it.rt = __wb_500
++        restore_env(mut rt)
++    define(mut rt, node.name_ref, node.slot)
++    _ = heap.pop(mut rt)
+     if superclass != value.NO_OBJ:
+-        __wb_502 = it.rt
+-        _ = heap.pop(mut __wb_502)
+-        it.rt = __wb_502
++        _ = heap.pop(mut rt)
+     return Ok(None)
+ 
+ 
+-def execute_block(it: mut Interpreter, id: int, slot_count: int) -> Result[Flow, RuntimeError]:
+-    __wb_507 = it.rt
+-    switch_env(mut __wb_507, new_env(mut __wb_507, __wb_507.current_env, slot_count))
+-    it.rt = __wb_507
+-    outcome = run_block(mut it, id)
+-    __wb_509 = it.rt
+-    restore_env(mut __wb_509)
+-    it.rt = __wb_509
++def execute_block(program: ast.Program, rt: mut heap.Runtime, o: mut output.Output, it: mut Interpreter, id: int, slot_count: int) -> Result[Flow, RuntimeError]:
++    switch_env(mut rt, new_env(mut rt, rt.current_env, slot_count))
++    outcome = run_block(program, mut rt, mut o, mut it, id)
++    restore_env(mut rt)
+     return outcome
+ 
+ 
+-def execute_expression(it: mut Interpreter, expr: int) -> Result[Flow, RuntimeError]:
+-    evaluate(mut it, expr)?
+-    __wb_521 = it.rt
+-    _ = heap.pop(mut __wb_521)
+-    it.rt = __wb_521
+-    return Ok(Flow.NORMAL)
+-
+-
+-def execute_function(it: mut Interpreter, index: int) -> Result[Flow, RuntimeError]:
+-    decl = it.program.functions[index]
+-    __wb_524 = it.rt
+-    function = heap.allocate(mut __wb_524, object.Obj.tree_function(object.TreeFunctionObj(decl=index, name=decl.name_ref, closure=__wb_524.current_env, is_initializer=False)))
+-    it.rt = __wb_524
+-    __wb_525 = it.rt
+-    heap.push(mut __wb_525, value.Value.obj(function))
+-    it.rt = __wb_525
+-    define(mut it, decl.name_ref, decl.slot)
+-    __wb_527 = it.rt
+-    _ = heap.pop(mut __wb_527)
+-    it.rt = __wb_527
+-    return Ok(Flow.NORMAL)
+-
+-
+-def execute_if_stmt(it: mut Interpreter, node: ast.IfStmt) -> Result[Flow, RuntimeError]:
+-    evaluate(mut it, node.condition)?
+-    __wb_530 = it.rt
+-    __condition_530 = not value.is_falsey(heap.pop(mut __wb_530))
+-    it.rt = __wb_530
++def execute_expression(program: ast.Program, rt: mut heap.Runtime, o: mut output.Output, it: mut Interpreter, expr: int) -> Result[Flow, RuntimeError]:
++    evaluate(program, mut rt, mut o, mut it, expr)?
++    _ = heap.pop(mut rt)
++    return Ok(Flow.NORMAL)
++
++
++def execute_function(program: ast.Program, rt: mut heap.Runtime, index: int) -> Result[Flow, RuntimeError]:
++    decl = program.functions[index]
++    function = heap.allocate(mut rt, object.Obj.tree_function(object.TreeFunctionObj(decl=index, name=decl.name_ref, closure=rt.current_env, is_initializer=False)))
++    heap.push(mut rt, value.Value.obj(function))
++    define(mut rt, decl.name_ref, decl.slot)
++    _ = heap.pop(mut rt)
++    return Ok(Flow.NORMAL)
++
++
++def execute_if_stmt(program: ast.Program, rt: mut heap.Runtime, o: mut output.Output, it: mut Interpreter, node: ast.IfStmt) -> Result[Flow, RuntimeError]:
++    evaluate(program, mut rt, mut o, mut it, node.condition)?
++    __condition_530 = not value.is_falsey(heap.pop(mut rt))
+     if __condition_530:
+-        return execute(mut it, node.then_branch)
++        return execute(program, mut rt, mut o, mut it, node.then_branch)
+     match node.else_branch:
+         case Some(branch):
+-            return execute(mut it, branch)
++            return execute(program, mut rt, mut o, mut it, branch)
+         case None:
+             pass
+     return Ok(Flow.NORMAL)
+ 
+ 
+-def execute_print(it: mut Interpreter, expr: int) -> Result[Flow, RuntimeError]:
+-    evaluate(mut it, expr)?
+-    __wb_539 = it.out
+-    output.print_value(it.rt, mut __wb_539, heap.peek(it.rt, 0))
+-    it.out = __wb_539
+-    __wb_540 = it.rt
+-    _ = heap.pop(mut __wb_540)
+-    it.rt = __wb_540
+-    return Ok(Flow.NORMAL)
+-
+-
+-def execute_return_stmt(it: mut Interpreter, node: ast.ReturnStmt) -> Result[Flow, RuntimeError]:
++def execute_print(program: ast.Program, rt: mut heap.Runtime, o: mut output.Output, it: mut Interpreter, expr: int) -> Result[Flow, RuntimeError]:
++    evaluate(program, mut rt, mut o, mut it, expr)?
++    output.print_value(rt, mut o, heap.peek(rt, 0))
++    _ = heap.pop(mut rt)
++    return Ok(Flow.NORMAL)
++
++
++def execute_return_stmt(program: ast.Program, rt: mut heap.Runtime, o: mut output.Output, it: mut Interpreter, node: ast.ReturnStmt) -> Result[Flow, RuntimeError]:
+     match node.result:
+         case Some(result):
+-            evaluate(mut it, result)?
+-        case None:
+-            __wb_546 = it.rt
+-            heap.push(mut __wb_546, value.Value.nil)
+-            it.rt = __wb_546
+-    __wb_547 = it.rt
+-    returned = heap.pop(mut __wb_547)
+-    it.rt = __wb_547
++            evaluate(program, mut rt, mut o, mut it, result)?
++        case None:
++            heap.push(mut rt, value.Value.nil)
++    returned = heap.pop(mut rt)
+     it.returned = returned
+     return Ok(Flow.RETURN)
+ 
+ 
+-def execute_var_decl(it: mut Interpreter, node: ast.VarStmt) -> Result[Flow, RuntimeError]:
++def execute_var_decl(program: ast.Program, rt: mut heap.Runtime, o: mut output.Output, it: mut Interpreter, node: ast.VarStmt) -> Result[Flow, RuntimeError]:
+     match node.initializer:
+         case Some(initializer):
+-            evaluate(mut it, initializer)?
+-        case None:
+-            __wb_554 = it.rt
+-            heap.push(mut __wb_554, value.Value.nil)
+-            it.rt = __wb_554
+-    define(mut it, node.name_ref, node.slot)
+-    __wb_556 = it.rt
+-    _ = heap.pop(mut __wb_556)
+-    it.rt = __wb_556
+-    return Ok(Flow.NORMAL)
+-
+-
+-def execute_while_stmt(it: mut Interpreter, node: ast.WhileStmt) -> Result[Flow, RuntimeError]:
++            evaluate(program, mut rt, mut o, mut it, initializer)?
++        case None:
++            heap.push(mut rt, value.Value.nil)
++    define(mut rt, node.name_ref, node.slot)
++    _ = heap.pop(mut rt)
++    return Ok(Flow.NORMAL)
++
++
++def execute_while_stmt(program: ast.Program, rt: mut heap.Runtime, o: mut output.Output, it: mut Interpreter, node: ast.WhileStmt) -> Result[Flow, RuntimeError]:
+     while True:
+-        evaluate(mut it, node.condition)?
+-        __wb_560 = it.rt
+-        __condition_560 = value.is_falsey(heap.pop(mut __wb_560))
+-        it.rt = __wb_560
++        evaluate(program, mut rt, mut o, mut it, node.condition)?
++        __condition_560 = value.is_falsey(heap.pop(mut rt))
+         if __condition_560:
+             return Ok(Flow.NORMAL)
+-        flow = execute(mut it, node.body)?
++        flow = execute(program, mut rt, mut o, mut it, node.body)?
+         if flow == Flow.RETURN:
+             return Ok(flow)
+     return Ok(Flow.NORMAL)
+ 
+ 
+-def execute(it: mut Interpreter, id: int) -> Result[Flow, RuntimeError]:
+-    match it.program.stmts[id]:
++def execute(program: ast.Program, rt: mut heap.Runtime, o: mut output.Output, it: mut Interpreter, id: int) -> Result[Flow, RuntimeError]:
++    match program.stmts[id]:
+         case ast.Stmt.block(node):
+-            return execute_block(mut it, id, node.slot_count)
++            return execute_block(program, mut rt, mut o, mut it, id, node.slot_count)
+         case ast.Stmt.class_decl(_):
+-            class_declaration(mut it, id)?
++            class_declaration(program, mut rt, mut o, mut it, id)?
+         case ast.Stmt.expression(expr):
+-            return execute_expression(mut it, expr)
++            return execute_expression(program, mut rt, mut o, mut it, expr)
+         case ast.Stmt.function(index):
+-            return execute_function(mut it, index)
++            return execute_function(program, mut rt, index)
+         case ast.Stmt.if_stmt(node):
+-            return execute_if_stmt(mut it, node)
++            return execute_if_stmt(program, mut rt, mut o, mut it, node)
+         case ast.Stmt.print(expr):
+-            return execute_print(mut it, expr)
++            return execute_print(program, mut rt, mut o, mut it, expr)
+         case ast.Stmt.return_stmt(node):
+-            return execute_return_stmt(mut it, node)
++            return execute_return_stmt(program, mut rt, mut o, mut it, node)
+         case ast.Stmt.var_decl(node):
+-            return execute_var_decl(mut it, node)
++            return execute_var_decl(program, mut rt, mut o, mut it, node)
+         case ast.Stmt.while_stmt(node):
+-            return execute_while_stmt(mut it, node)
++            return execute_while_stmt(program, mut rt, mut o, mut it, node)
+     return Ok(Flow.NORMAL)
+ 
+ 
+ # Executes a block's statements in order until one returns.
+-def run_block(it: mut Interpreter, id: int) -> Result[Flow, RuntimeError]:
+-    match it.program.stmts[id]:
++def run_block(program: ast.Program, rt: mut heap.Runtime, o: mut output.Output, it: mut Interpreter, id: int) -> Result[Flow, RuntimeError]:
++    match program.stmts[id]:
+         case ast.Stmt.block(node):
+             for statement in node.statements:
+-                flow = execute(mut it, statement)?
++                flow = execute(program, mut rt, mut o, mut it, statement)?
+                 if flow == Flow.RETURN:
+                     return Ok(flow)
+         case _:
+@@ -737,9 +649,9 @@
+ 
+ 
+ # Executes function `index`'s body in order until a statement returns.
+-def run_body(it: mut Interpreter, index: int) -> Result[Flow, RuntimeError]:
+-    for statement in it.program.functions[index].body:
+-        flow = execute(mut it, statement)?
++def run_body(program: ast.Program, rt: mut heap.Runtime, o: mut output.Output, it: mut Interpreter, index: int) -> Result[Flow, RuntimeError]:
++    for statement in program.functions[index].body:
++        flow = execute(program, mut rt, mut o, mut it, statement)?
+         if flow == Flow.RETURN:
+             return Ok(flow)
+     return Ok(Flow.NORMAL)
+@@ -754,23 +666,15 @@
+             program = parsed
+             if not resolver.resolve(mut program, source, mut o):
+                 return 65
+-            it = Interpreter(program=program, rt=rt, out=o, depth=0, returned=value.Value.nil)
++            it = Interpreter(depth=0, returned=value.Value.nil)
+             for statement in program.statements:
+-                match execute(mut it, statement):
++                match execute(program, mut rt, mut o, mut it, statement):
+                     case Ok(_):
+                         pass
+                     case Err(error):
+-                        __wb_604 = it.out
+-                        output.error_line(mut __wb_604, error.message)
+-                        it.out = __wb_604
+-                        __wb_605 = it.out
+-                        output.error_line(mut __wb_605, f"[line {error.line}]".encode())
+-                        it.out = __wb_605
+-                        rt = it.rt
+-                        o = it.out
++                        output.error_line(mut o, error.message)
++                        output.error_line(mut o, f"[line {error.line}]".encode())
+                         return 70
+-            rt = it.rt
+-            o = it.out
+             return 0
+         case None:
+             return 65
+--- a/vm.my
++++ b/vm.my
+@@ -156,7 +156,7 @@
+ 
+ # Pushes a frame for the closure whose callee and arguments are on the stack.
+ def call(rt: mut heap.Runtime, o: mut output.Output, closure: value.ObjRef, count: int) -> bool:
+-    arity = heap.function_arity(rt, heap.closure_function(rt, closure))
++    arity = heap.closure_arity(rt, closure)
+     if count != arity:
+         return arity_error(mut rt, mut o, arity, count)
+     if rt.frame_count == heap.FRAMES_MAX:
+@@ -249,11 +249,14 @@
+ def capture_upvalue(rt: mut heap.Runtime, slot: int) -> value.ObjRef:
+     previous = value.NO_OBJ
+     upvalue = rt.open_upvalues
+-    while upvalue != value.NO_OBJ and heap.upvalue_obj(rt, upvalue).slot > slot:
++    while upvalue != value.NO_OBJ:
++        node = heap.upvalue_obj(rt, upvalue)
++        if node.slot <= slot:
++            if node.slot == slot:
++                return upvalue
++            break
+         previous = upvalue
+-        upvalue = heap.upvalue_obj(rt, upvalue).next_open
+-    if upvalue != value.NO_OBJ and heap.upvalue_obj(rt, upvalue).slot == slot:
+-        return upvalue
++        upvalue = node.next_open
+     created = heap.allocate(mut rt, object.Obj.upvalue(object.UpvalueObj(slot=slot, closed=value.Value.nil, next_open=upvalue)))
+     if previous == value.NO_OBJ:
+         rt.open_upvalues = created
+@@ -266,11 +269,14 @@
+ 
+ # Closes every open upvalue at or above stack slot `last`.
+ def close_upvalues(rt: mut heap.Runtime, last: int):
+-    while rt.open_upvalues != value.NO_OBJ and heap.upvalue_obj(rt, rt.open_upvalues).slot >= last:
+-        upvalue = heap.upvalue_obj(rt, rt.open_upvalues)
++    while rt.open_upvalues != value.NO_OBJ:
++        ref = rt.open_upvalues
++        upvalue = heap.upvalue_obj(rt, ref)
++        if upvalue.slot < last:
++            break
+         upvalue.closed = rt.stack[upvalue.slot]
+         upvalue.slot = object.NO_SLOT
+-        rt.objects[rt.open_upvalues] = object.Obj.upvalue(upvalue)
++        rt.objects[ref] = object.Obj.upvalue(upvalue)
+         rt.open_upvalues = upvalue.next_open
+ 
+ 
+@@ -295,7 +301,8 @@
+ 
+ 
+ def read_constant(frame: mut ExecFrame) -> value.Value:
+-    return frame.constants[read_byte(mut frame)]
++    index = read_byte(mut frame)
++    return frame.constants[index]
+ 
+ 
+ def read_string(frame: mut ExecFrame) -> value.ObjRef:
+@@ -325,7 +332,8 @@
+ 
+ 
+ def get_upvalue(rt: mut heap.Runtime, frame: mut ExecFrame):
+-    upvalue = heap.upvalue_obj(rt, frame.upvalues[read_byte(mut frame)])
++    index = read_byte(mut frame)
++    upvalue = heap.upvalue_obj(rt, frame.upvalues[index])
+     if upvalue.slot != object.NO_SLOT:
+         heap.push(mut rt, rt.stack[upvalue.slot])
+     else:
+@@ -333,7 +341,8 @@
+ 
+ 
+ def set_upvalue(rt: mut heap.Runtime, frame: mut ExecFrame):
+-    ref = frame.upvalues[read_byte(mut frame)]
++    index = read_byte(mut frame)
++    ref = frame.upvalues[index]
+     upvalue = heap.upvalue_obj(rt, ref)
+     if upvalue.slot != object.NO_SLOT:
+         rt.stack[upvalue.slot] = heap.peek(rt, 0)
+@@ -494,7 +503,8 @@
+ # reporting a runtime error.
+ def run(rt: mut heap.Runtime, o: mut output.Output) -> InterpretResult:
+     activation_count = rt.frame_count
+-    frame = load_frame(rt, rt.frames[activation_count - 1])
++    frame_index = activation_count - 1
++    frame = load_frame(rt, rt.frames[frame_index])
+     while True:
+         instruction = frame.code[frame.ip]
+         frame.ip = frame.ip + 1
+@@ -517,32 +527,35 @@
+         elif instruction == chunk.OP_POP:
+             rt.stack_top = rt.stack_top - 1
+         elif instruction == chunk.OP_GET_LOCAL:
+-            local = rt.stack[frame.base + read_byte(mut frame)]
++            slot = read_byte(mut frame)
++            local = rt.stack[frame.base + slot]
+             rt.stack[rt.stack_top] = local
+             rt.stack_top = rt.stack_top + 1
+         elif instruction == chunk.OP_SET_LOCAL:
+-            rt.stack[frame.base + read_byte(mut frame)] = heap.peek(rt, 0)
++            slot = read_byte(mut frame)
++            assigned = heap.peek(rt, 0)
++            rt.stack[frame.base + slot] = assigned
+         elif instruction == chunk.OP_GET_GLOBAL:
+-            rt.frames[rt.frame_count - 1].ip = frame.ip
++            rt.frames[frame_index].ip = frame.ip
+             ok = get_global(mut rt, mut o, mut frame)
+         elif instruction == chunk.OP_DEFINE_GLOBAL:
+             _ = heap.set_global(mut rt, read_string(mut frame), heap.peek(rt, 0))
+             rt.stack_top = rt.stack_top - 1
+         elif instruction == chunk.OP_SET_GLOBAL:
+-            rt.frames[rt.frame_count - 1].ip = frame.ip
++            rt.frames[frame_index].ip = frame.ip
+             ok = set_global(mut rt, mut o, mut frame)
+         elif instruction == chunk.OP_GET_UPVALUE:
+             get_upvalue(mut rt, mut frame)
+         elif instruction == chunk.OP_SET_UPVALUE:
+             set_upvalue(mut rt, mut frame)
+         elif instruction == chunk.OP_GET_PROPERTY:
+-            rt.frames[rt.frame_count - 1].ip = frame.ip
++            rt.frames[frame_index].ip = frame.ip
+             ok = get_property(mut rt, mut o, mut frame)
+         elif instruction == chunk.OP_SET_PROPERTY:
+-            rt.frames[rt.frame_count - 1].ip = frame.ip
++            rt.frames[frame_index].ip = frame.ip
+             ok = set_property(mut rt, mut o, mut frame)
+         elif instruction == chunk.OP_GET_SUPER:
+-            rt.frames[rt.frame_count - 1].ip = frame.ip
++            rt.frames[frame_index].ip = frame.ip
+             name = read_string(mut frame)
+             rt.stack_top = rt.stack_top - 1
+             superclass = as_obj(rt.stack[rt.stack_top])
+@@ -553,16 +566,16 @@
+             rt.stack_top = rt.stack_top - 1
+             rt.stack[rt.stack_top - 1] = value.Value.boolean(value.values_equal(left, right))
+         elif instruction == chunk.OP_GREATER or instruction == chunk.OP_LESS or instruction == chunk.OP_SUBTRACT or instruction == chunk.OP_MULTIPLY or instruction == chunk.OP_DIVIDE:
+-            rt.frames[rt.frame_count - 1].ip = frame.ip
++            rt.frames[frame_index].ip = frame.ip
+             ok = numeric(mut rt, mut o, instruction)
+         elif instruction == chunk.OP_ADD:
+-            rt.frames[rt.frame_count - 1].ip = frame.ip
++            rt.frames[frame_index].ip = frame.ip
+             ok = add(mut rt, mut o)
+         elif instruction == chunk.OP_NOT:
+             top = rt.stack_top - 1
+             rt.stack[top] = value.Value.boolean(value.is_falsey(rt.stack[top]))
+         elif instruction == chunk.OP_NEGATE:
+-            rt.frames[rt.frame_count - 1].ip = frame.ip
++            rt.frames[frame_index].ip = frame.ip
+             ok = negate(mut rt, mut o)
+         elif instruction == chunk.OP_PRINT:
+             rt.stack_top = rt.stack_top - 1
+@@ -579,21 +592,21 @@
+             frame.ip = frame.ip - offset
+         elif instruction == chunk.OP_CALL:
+             count = read_byte(mut frame)
+-            rt.frames[rt.frame_count - 1].ip = frame.ip
++            rt.frames[frame_index].ip = frame.ip
+             ok = call_value(mut rt, mut o, heap.peek(rt, count), count)
+             if ok and rt.frame_count > activation_count:
+                 ok = run(mut rt, mut o) == InterpretResult.OK
+         elif instruction == chunk.OP_INVOKE:
+             method = read_string(mut frame)
+             count = read_byte(mut frame)
+-            rt.frames[rt.frame_count - 1].ip = frame.ip
++            rt.frames[frame_index].ip = frame.ip
+             ok = invoke(mut rt, mut o, method, count)
+             if ok and rt.frame_count > activation_count:
+                 ok = run(mut rt, mut o) == InterpretResult.OK
+         elif instruction == chunk.OP_SUPER_INVOKE:
+             method = read_string(mut frame)
+             count = read_byte(mut frame)
+-            rt.frames[rt.frame_count - 1].ip = frame.ip
++            rt.frames[frame_index].ip = frame.ip
+             rt.stack_top = rt.stack_top - 1
+             superclass = as_obj(rt.stack[rt.stack_top])
+             ok = invoke_from_class(mut rt, mut o, superclass, method, count)
+@@ -622,7 +635,7 @@
+             rt.stack[rt.stack_top] = value.Value.obj(klass)
+             rt.stack_top = rt.stack_top + 1
+         elif instruction == chunk.OP_INHERIT:
+-            rt.frames[rt.frame_count - 1].ip = frame.ip
++            rt.frames[frame_index].ip = frame.ip
+             ok = inherit(mut rt, mut o)
+         elif instruction == chunk.OP_METHOD:
+             define_method(mut rt, mut frame)

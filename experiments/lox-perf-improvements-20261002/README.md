@@ -1,5 +1,10 @@
 # Lox evaluator improvements, 2026-10-02
 
+This historical recipe describes `fd86729e`. Run its build commands in a
+checkout at that revision to reproduce the 72-test source exactly. The latest
+optimized migration also includes the subsequent
+[October 3 checkpoint](../lox-parity-20261003/README.md).
+
 Three parallel source lanes improve the checked Lox evaluator built by the
 unchanged audited main compiler. The integrated source is reconstructed by
 `docs/audits/d9-stage3d-migrations/apply-lox.sh WORK --optimized`; that entry

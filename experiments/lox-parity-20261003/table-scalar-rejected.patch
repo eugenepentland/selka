@@ -1,0 +1,24 @@
+--- a/table.my
++++ b/table.my
+@@ -64,12 +64,15 @@
+     mask = len(t.entries) - 1
+     index = int(bit_and(hash, u32(mask)))
+     while True:
+-        entry = t.entries[index]
+-        if entry.key == value.NO_OBJ:
+-            if not is_tombstone(entry):
+-                return None
+-        elif entry.key == key:
+-            return Some(entry.value)
++        entry_key = t.entries[index].key
++        if entry_key == value.NO_OBJ:
++            match t.entries[index].value:
++                case value.Value.nil:
++                    return None
++                case _:
++                    pass
++        elif entry_key == key:
++            return Some(t.entries[index].value)
+         index = bit_and(index + 1, mask)
+ 
+ 

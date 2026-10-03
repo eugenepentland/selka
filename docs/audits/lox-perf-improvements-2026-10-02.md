@@ -1,5 +1,9 @@
 # Lox evaluator improvements, 2026-10-02
 
+This report describes source revision `fd86729e`; the current optimized
+migration also includes the subsequent October 3 checkpoint. Reproduce this
+report's source from its pinned revision or sealed archive.
+
 Three parallel source changes reduce the checked Lox evaluator's VM runtime
 by **18.73% with LLVM** and
 **13.93% with QBE**, as geometric means over all 13
