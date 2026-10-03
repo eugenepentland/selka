@@ -1,0 +1,624 @@
+{
+  "PMU_events_at100": 2288,
+  "archive": "/home/epentland/ai/canopy/evidence/mylang-lox-compiler-screens-20261003/native-backend-policy",
+  "archive_manifest_sha256": "431b64aca839ef7514c0f388815cc8d0bf29b0b69dcc4f9b6710af155250b18b",
+  "author_commit": "a07fee5e878a4ad4c5610c07928b0fe9f45f0269",
+  "author_qualification_sha256": "0e70ff3063c7829cf0fbc60146a31a706d11aba7c1dda8f5275d9eb44508ee17",
+  "compiler_sha256": "81fe478471d256e9c6023d786b61dd6183f3b51363c4abe9d1d015c1268600cc",
+  "completed_coverage": {
+    "counters": 468,
+    "screen": 104,
+    "smoke": 156,
+    "wall": 468
+  },
+  "completed_total": 1196,
+  "counter_metrics": {
+    "cycles": {
+      "candidate-llvm-over-baseline-llvm": {
+        "tree": {
+          "candidate_over_baseline": 1.0001059420240115,
+          "cases": 13,
+          "reduction_pct": -0.0105942024011485
+        },
+        "vm": {
+          "candidate_over_baseline": 0.9983773041860302,
+          "cases": 13,
+          "reduction_pct": 0.16226958139697878
+        }
+      },
+      "candidate-llvm-over-go": {
+        "tree": {
+          "candidate_over_baseline": 4.1372222319835705,
+          "cases": 13,
+          "reduction_pct": -313.722223198357
+        },
+        "vm": {
+          "candidate_over_baseline": 2.866880566432009,
+          "cases": 13,
+          "reduction_pct": -186.6880566432009
+        }
+      },
+      "candidate-llvm-over-rust": {
+        "tree": {
+          "candidate_over_baseline": 4.090453904224844,
+          "cases": 13,
+          "reduction_pct": -309.04539042248433
+        },
+        "vm": {
+          "candidate_over_baseline": 2.7729834091276815,
+          "cases": 13,
+          "reduction_pct": -177.29834091276814
+        }
+      },
+      "candidate-qbe-over-baseline-qbe": {
+        "tree": {
+          "candidate_over_baseline": 0.9147005159755104,
+          "cases": 13,
+          "reduction_pct": 8.529948402448962
+        },
+        "vm": {
+          "candidate_over_baseline": 1.0037788272479524,
+          "cases": 13,
+          "reduction_pct": -0.3778827247952421
+        }
+      },
+      "candidate-qbe-over-go": {
+        "tree": {
+          "candidate_over_baseline": 6.820768052219378,
+          "cases": 13,
+          "reduction_pct": -582.0768052219378
+        },
+        "vm": {
+          "candidate_over_baseline": 5.3355707872341664,
+          "cases": 13,
+          "reduction_pct": -433.5570787234166
+        }
+      },
+      "candidate-qbe-over-rust": {
+        "tree": {
+          "candidate_over_baseline": 6.744451553125612,
+          "cases": 13,
+          "reduction_pct": -574.4451553125612
+        },
+        "vm": {
+          "candidate_over_baseline": 5.161583487981322,
+          "cases": 13,
+          "reduction_pct": -416.15834879813224
+        }
+      }
+    },
+    "instructions": {
+      "candidate-llvm-over-baseline-llvm": {
+        "tree": {
+          "candidate_over_baseline": 0.9999999995057616,
+          "cases": 13,
+          "reduction_pct": 4.942384279615908e-08
+        },
+        "vm": {
+          "candidate_over_baseline": 0.9999999989315551,
+          "cases": 13,
+          "reduction_pct": 1.068444888119302e-07
+        }
+      },
+      "candidate-llvm-over-go": {
+        "tree": {
+          "candidate_over_baseline": 3.1222128466776913,
+          "cases": 13,
+          "reduction_pct": -212.22128466776914
+        },
+        "vm": {
+          "candidate_over_baseline": 2.00789626026913,
+          "cases": 13,
+          "reduction_pct": -100.789626026913
+        }
+      },
+      "candidate-llvm-over-rust": {
+        "tree": {
+          "candidate_over_baseline": 4.0888551773021815,
+          "cases": 13,
+          "reduction_pct": -308.88551773021817
+        },
+        "vm": {
+          "candidate_over_baseline": 2.4580254466113822,
+          "cases": 13,
+          "reduction_pct": -145.80254466113823
+        }
+      },
+      "candidate-qbe-over-baseline-qbe": {
+        "tree": {
+          "candidate_over_baseline": 0.9733932313618241,
+          "cases": 13,
+          "reduction_pct": 2.6606768638175904
+        },
+        "vm": {
+          "candidate_over_baseline": 1.0000000379485137,
+          "cases": 13,
+          "reduction_pct": -3.7948513664787242e-06
+        }
+      },
+      "candidate-qbe-over-go": {
+        "tree": {
+          "candidate_over_baseline": 5.810425817471956,
+          "cases": 13,
+          "reduction_pct": -481.04258174719564
+        },
+        "vm": {
+          "candidate_over_baseline": 4.6937914850260505,
+          "cases": 13,
+          "reduction_pct": -369.37914850260506
+        }
+      },
+      "candidate-qbe-over-rust": {
+        "tree": {
+          "candidate_over_baseline": 7.609343378785426,
+          "cases": 13,
+          "reduction_pct": -660.9343378785426
+        },
+        "vm": {
+          "candidate_over_baseline": 5.7460433411594165,
+          "cases": 13,
+          "reduction_pct": -474.60433411594164
+        }
+      }
+    }
+  },
+  "input_paths_sha256": {
+    "/home/epentland/ai/canopy/evidence/mylang-lox-compiler-screens-20261003/native-backend-policy/MANIFEST.json": "431b64aca839ef7514c0f388815cc8d0bf29b0b69dcc4f9b6710af155250b18b",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-policy-20261003/.tmp-lox-native-policy-20261003/frozen-source-v2.json": "d2962dbc3edc07a9e505e702eb6cf547e198dbc42eb67e94c5e38b10e696cb43",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-policy-20261003/.tmp-lox-native-policy-20261003/native-policy-v2-gc-llvm.qbe-manifest.json": "d4d7d48dadff1421f191f21602cfd9d4628e32d2cc9617de2e785c42f7838e43",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-policy-20261003/.tmp-lox-native-policy-20261003/native-policy-v2-gc-qbe.qbe-manifest.json": "00e9fb74ab0face56dbe63059a86201a396373ed4a2be8a42cc8dc587dfec72c",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-evidence-original-verify.json": "0434345b6b4bfccb2994371be1672e5d7d54784d2a8c75b091739d6b0862c72a",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-evidence-portable-verify.json": "4e17a538031f4600d244dcad2e82e753886c35e1dbb62f7d0f79d83cd602c8f3",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-final-review-verify.log": "ebdc9efc5e832b978f1b43d5924262b598644d4c45c59e56cdd639c6921f553f",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-initial-closeout-limit.json": "57127af1c5813056137fb368a47f359857ebb20371ab5515f56f920496403dbf",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-prepare-command.json": "43fb7f5d6f6e88f7c810a66cb658cf82e9beca64c8382e50f7788fec91d4982b",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-prepare.log": "30ddba346b53e6bc2c87d416263d3aa9a2fd2230b83674046a582a2fbe341f01",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-prepare.py": "2f5aedd653e4ed9c0e434abf846a22f57bcd8a2e2708fb914003d67886ef8a6b",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-review-verify.log": "e5ed4f2afa27bf0a9705c3ee608edb79d1885c149a8d33411e5c4527e4fe818d",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-screen-check-final.log": "0d6d361e423015b9cb57377e288e8ca86e87e9db5e7eb463bf5862541801f1ad",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-screen-check-initial.log": "00a5c8b36560844f7652dcbbe08828a485c694a8b31bd2449135bbdc964ed0b1",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-screen-reviewed/author-qualification.json": "cbe4cd3c21d4e11e39e96e836150432b76af6f19a43c051c6250492f1e8d22b0",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-screen-reviewed/binaries.json": "1127472f509d26c648240e1ddd125438e16545098243fd97c3a9fcf39185ebf9",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-screen-reviewed/build-rebuilt-llvm.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-screen-reviewed/build-rebuilt-qbe.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-screen-reviewed/candidate-source37.json": "6c40c98809e786d934dc466d8eebd2841ea9e483726987550750a19b27ef8202",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-screen-reviewed/counters.command.json": "96c8e89134d88f5d9603ed5800b0d9c268b943850b359ced35ef786159b09a2a",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-screen-reviewed/counters.json": "f6a6aeec2eb2d8450102cdae3341d2dcf159c4d9ecc3145a9f0ba869712e9732",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-screen-reviewed/counters.log": "829d6af57416fa29e18e0cbadf8c8cb889bcf29c53b7cdc4e2be287bd3e99cc7",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-screen-reviewed/cycles-analysis.json": "4d2856feb01aa02491b24ceda83a71a84fcdf1d6b966a81ccc1641576e3fc947",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-screen-reviewed/guards.json": "f88cf89ff59c290c9f36d119721525894635b80890a07778ccb9f001910601d2",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-screen-reviewed/instructions-analysis.json": "ee4ca783eff087adbc02dfe848b23df0ae79dc5121fc17e5e050991985f514ae",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-screen-reviewed/preparation-inputs.json": "a242cafbc901b49d47553e40fdefb3e85f93cd6fb0323f4d0570f2a3210bdcb1",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-screen-reviewed/prepare-build.log": "e92ed6d3add9f106407e7eb2c7e10185169f5fd0d49df51172651f0246771068",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-screen-reviewed/prepare-command.json": "f9a5d9842d04adc098b77bc4261013da0e7527d3eca21138ca619d8e56c4dbed",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-screen-reviewed/prepared.json": "106f978f62f3dce7a25230303d3a144f67eeaa9546a17cbe40844eaf0e7a4fb9",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-screen-reviewed/rebuild-equivalence.json": "c460152d7482754cf5ff084fb49617728959fedb11c27f557953a653c8189007",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-screen-reviewed/rebuilt-build.json": "c62b0eac3062b453c7437aa11ad4e07b862c3374014be244475d970ac016440a",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-screen-reviewed/runtime-bindings.json": "af2e26d3f0e741933d1ef7d36165bd0c239cfd875feae3e9825e79482afaf036",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-screen-reviewed/screen-cycles.json": "16daaef4f5f078b46779923a5a6c720fb0dc2c39fe4b9056a25d6f57ff62644d",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-screen-reviewed/screen-instructions.json": "208bac6cf2f61990d5856284f10c8657adddd3abe6091a323a421a16800cce0d",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-screen-reviewed/screen.command.json": "857196ffc0e4e11974d96d05be9d3fc082c2c81243059245047fd43080355269",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-screen-reviewed/screen.json": "4f30491ce93246ae5a20c7e9c7f2ebd0cb5b734928dd40d7e698be66902dc5d3",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-screen-reviewed/screen.log": "405c45ac8c817678c8b74d1c2a7b877f9771562f80b915348cb80354828171d6",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-screen-reviewed/smoke.command.json": "da44a5e51e67e477caeecffd0374f20fae92966b70c627dab878c0be26c1c1a4",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-screen-reviewed/smoke.json": "36431d56c6914feff521471b000f07d86c303aae09baf41cf2aca2f5ebeddef5",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-screen-reviewed/smoke.log": "ef79d541f4309ce3d11aeea0618c46730f216eb990081257f09d4bf931f4636f",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-screen-reviewed/wall-analysis.json": "c7bfa748045f6762a45dc214a7234f7d95d68e183adc06ca0cb86eaa2b1ac714",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-screen-reviewed/wall.command.json": "af9744b27a31f5f81811e4870b7f7204f1846f3ab102443f85943e40f6c7773d",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-screen-reviewed/wall.json": "9ccc34592a92feafcad2ae7d9cd2ceb8b31215132d68cf9d08599926c2acbc2e",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-screen-reviewed/wall.log": "1e00b7560601615f666e319e79f38a2b9e33f1af891d97548a20d4272c99d549",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-source37.json": "6c40c98809e786d934dc466d8eebd2841ea9e483726987550750a19b27ef8202",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-runtime-protocol-final-review-verify.log": "f69d5bd1947e05d3e91afa36d4b85d0a7b713b37f7c4c0288428800e77dea7c0",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-runtime-protocol-review-verify.log": "d11c633f2bdf26c961b25240f8c83b7278743384017e4679a8c0003d60eb2f27"
+  },
+  "inputs_archive_sha256": "5625808ec84275949a92ac0afcc955646965e29d09b82d0e6a362737d2be4e80",
+  "limits": [
+    "Raw performance stdout is represented by hashes; stderr is a retained tail.",
+    "Smoke collector stats were checked equal across all six arms; no guest or native stress perf claim.",
+    "Rebuilt ELFs are reproduction evidence; measured whole files are the exact authored qualified RC guests.",
+    "Compilation core878/prefix16 wrapper guards cover preparation; native qualification has its separately reviewed prospective/retrospective limits.",
+    "Three paired wall/counter rounds and spreads do not establish statistical confidence or absence of regressions.",
+    "QBE tree gain accompanies slower QBE VM observations; no selection/main-merge/parity inference.",
+    "Extras and failed historical attempts do not add successful measurement coverage."
+  ],
+  "no_compiler_guest_native_or_performance_execution": true,
+  "performance_selection_main_merge_or_parity_inferred": false,
+  "prepared_provenance": {
+    "actual_native_runtime_roles": 6,
+    "compiler_core878": true,
+    "current_core_wrapper_inputs": 1038,
+    "current_owned_prefix_files": 16,
+    "prospective_performance_guards": 252,
+    "source37": 37
+  },
+  "preserved_historical_reads": {
+    "completed_wall_check_sha256": "1832b96a7931bea221424c2b39afe0645b6870c93baf33efa1caf9aa5436f238",
+    "historical_failed_extras_do_not_add_rows": true,
+    "original35_final37_package_checker_refusal": true,
+    "partial_check_sha256": "a065c2d2ffe2e3acba71aea0f2e55eb803b71193c5920d4c23f46d0d5f4e4e1c",
+    "unfinished_wall_checker_refusal": true
+  },
+  "qbe_sha256": "99ad919d70ad582dee6202b045bd53e1ab18fec356de98849610f49983756d63",
+  "reviewed_results_sha256": {
+    "full-check.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "full-check.stdout": "db5c238c972233347120ed06f5cb77c7edea5211ebc2269d4cbbaa5f5a3be431",
+    "precheck-final.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "precheck-final.stdout": "c88da51a43ee7036acb3c7d7dde9c324599ec69f4c1f3148ae3b83fda0968103",
+    "wall-check.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "wall-check.stdout": "f28f057d2b3262b336fe07ccfce70e46c0055e4347c4393052fedde766e1cce8"
+  },
+  "reviewed_script_sha256": {
+    "full-check.py": "31bc73ff49e57aaf7f72ae32e3106a47fa792a1c1d4e7b32d0560d44b6fdd26a",
+    "precheck.py": "3a0dc456814c7895f13227ec22d19d4eec0ae496b03bd9da39e4f2b4f96bb0ad",
+    "wall-check.py": "334b6c33cf30f613b2a61c2047183c9fac278eade53d8d6e3770b0a652812340"
+  },
+  "saved_input_copies": 47,
+  "source_descriptor_sha256": "d2962dbc3edc07a9e505e702eb6cf547e198dbc42eb67e94c5e38b10e696cb43",
+  "status": "Independent host-only measurement/strict-closeout/archive review passes with explicit limits",
+  "strict_closeout_and_archive": {
+    "exact_inventory_and_objects_checked": true,
+    "objects": 276,
+    "originals": 375,
+    "root_original_and_portable_receipts_checked": true
+  },
+  "wall_robustness": {
+    "llvm": {
+      "tree": {
+        "aggregate": {
+          "candidate_over_baseline": 1.0010512171823471,
+          "cases": 13,
+          "reduction_pct": -0.10512171823471306
+        },
+        "faster_median_cases": 7,
+        "least_reduction": {
+          "tree/strings": {
+            "candidate_over_baseline": 1.009635932418056,
+            "paired_ratios": [
+              0.9984106063878524,
+              1.0099510029895142,
+              1.009635932418056
+            ],
+            "reduction_pct": -0.9635932418055937,
+            "spread_pct": 1.1430255432790355
+          }
+        },
+        "median_case_spread_pct": 0.5582005168726859,
+        "most_reduction": {
+          "tree/zoo": {
+            "candidate_over_baseline": 0.996258053108184,
+            "paired_ratios": [
+              0.996258053108184,
+              1.0006758746919882,
+              0.9951147570901525
+            ],
+            "reduction_pct": 0.37419468918159504,
+            "spread_pct": 0.5582005168726859
+          }
+        },
+        "observed_slower_cases": {
+          "tree/binary_trees": {
+            "candidate_over_baseline": 1.0040513506836581,
+            "paired_ratios": [
+              1.005850719797393,
+              1.0040513506836581,
+              1.0007512466779303
+            ],
+            "reduction_pct": -0.4051350683658139,
+            "spread_pct": 0.5078896727732555
+          },
+          "tree/closures": {
+            "candidate_over_baseline": 1.0024769460849265,
+            "paired_ratios": [
+              1.004332470425326,
+              1.0024769460849265,
+              0.9993508798695919
+            ],
+            "reduction_pct": -0.24769460849265457,
+            "spread_pct": 0.4969281912356398
+          },
+          "tree/invocation": {
+            "candidate_over_baseline": 1.001232816523721,
+            "paired_ratios": [
+              1.001232816523721,
+              1.0010382512523777,
+              1.0046970025912747
+            ],
+            "reduction_pct": -0.1232816523720981,
+            "spread_pct": 0.3654246323647498
+          },
+          "tree/properties": {
+            "candidate_over_baseline": 1.0005546111611805,
+            "paired_ratios": [
+              0.9972893875788458,
+              1.0029008127834342,
+              1.0005546111611805
+            ],
+            "reduction_pct": -0.0554611161180496,
+            "spread_pct": 0.5608314770621261
+          },
+          "tree/strings": {
+            "candidate_over_baseline": 1.009635932418056,
+            "paired_ratios": [
+              0.9984106063878524,
+              1.0099510029895142,
+              1.009635932418056
+            ],
+            "reduction_pct": -0.9635932418055937,
+            "spread_pct": 1.1430255432790355
+          },
+          "tree/trees": {
+            "candidate_over_baseline": 1.0075245116738143,
+            "paired_ratios": [
+              1.0075245116738143,
+              0.9958518875880757,
+              1.0107198458027344
+            ],
+            "reduction_pct": -0.7524511673814294,
+            "spread_pct": 1.475691960085254
+          }
+        },
+        "per_round_geometric_reduction_pct": [
+          -0.06780324996658038,
+          -0.12310554291332654,
+          -0.07052856663987139
+        ],
+        "slower_median_cases": 6
+      },
+      "vm": {
+        "aggregate": {
+          "candidate_over_baseline": 1.0002835177092415,
+          "cases": 13,
+          "reduction_pct": -0.028351770924150976
+        },
+        "faster_median_cases": 9,
+        "least_reduction": {
+          "vm/instantiation": {
+            "candidate_over_baseline": 1.0162198236053592,
+            "paired_ratios": [
+              0.8901952462531946,
+              1.016253780002126,
+              1.0162198236053592
+            ],
+            "reduction_pct": -1.621982360535923,
+            "spread_pct": 12.40465210585041
+          }
+        },
+        "median_case_spread_pct": 1.7787382888488166,
+        "most_reduction": {
+          "vm/zoo": {
+            "candidate_over_baseline": 0.9967738501974887,
+            "paired_ratios": [
+              0.9994796017422619,
+              0.9967738501974887,
+              0.986868482555032
+            ],
+            "reduction_pct": 0.32261498025113466,
+            "spread_pct": 1.2651936228795817
+          }
+        },
+        "observed_slower_cases": {
+          "vm/closures": {
+            "candidate_over_baseline": 1.002238377915961,
+            "paired_ratios": [
+              1.002238377915961,
+              0.9769672589767863,
+              1.0022469168088177
+            ],
+            "reduction_pct": -0.22383779159609318,
+            "spread_pct": 2.522319878091037
+          },
+          "vm/fib": {
+            "candidate_over_baseline": 1.0002143526257294,
+            "paired_ratios": [
+              0.9898912653288383,
+              1.0273980863456422,
+              1.0002143526257294
+            ],
+            "reduction_pct": -0.021435262572944147,
+            "spread_pct": 3.749878305419459
+          },
+          "vm/instantiation": {
+            "candidate_over_baseline": 1.0162198236053592,
+            "paired_ratios": [
+              0.8901952462531946,
+              1.016253780002126,
+              1.0162198236053592
+            ],
+            "reduction_pct": -1.621982360535923,
+            "spread_pct": 12.40465210585041
+          },
+          "vm/strings": {
+            "candidate_over_baseline": 1.0006356804614587,
+            "paired_ratios": [
+              1.0219611886717315,
+              1.0006356804614587,
+              0.9957795090127812
+            ],
+            "reduction_pct": -0.06356804614586764,
+            "spread_pct": 2.6165047049767556
+          }
+        },
+        "per_round_geometric_reduction_pct": [
+          0.5132294391934744,
+          0.5071132610560025,
+          0.09304653082558012
+        ],
+        "slower_median_cases": 4
+      }
+    },
+    "qbe": {
+      "tree": {
+        "aggregate": {
+          "candidate_over_baseline": 0.9229111958137589,
+          "cases": 13,
+          "reduction_pct": 7.708880418624108
+        },
+        "faster_median_cases": 13,
+        "least_reduction": {
+          "tree/instantiation": {
+            "candidate_over_baseline": 0.9847450848459136,
+            "paired_ratios": [
+              0.9847450848459136,
+              0.9828431745851793,
+              0.985139355518531
+            ],
+            "reduction_pct": 1.525491515408639,
+            "spread_pct": 0.23317516062656982
+          }
+        },
+        "median_case_spread_pct": 0.5762299025092041,
+        "most_reduction": {
+          "tree/equality": {
+            "candidate_over_baseline": 0.728661293351593,
+            "paired_ratios": [
+              0.7250127533997269,
+              0.7292115176600291,
+              0.728661293351593
+            ],
+            "reduction_pct": 27.1338706648407,
+            "spread_pct": 0.5762299025092041
+          }
+        },
+        "observed_slower_cases": {},
+        "per_round_geometric_reduction_pct": [
+          7.821625817722322,
+          7.644059486668564,
+          7.666918361221519
+        ],
+        "slower_median_cases": 0
+      },
+      "vm": {
+        "aggregate": {
+          "candidate_over_baseline": 1.0048683475268665,
+          "cases": 13,
+          "reduction_pct": -0.486834752686649
+        },
+        "faster_median_cases": 4,
+        "least_reduction": {
+          "vm/fib": {
+            "candidate_over_baseline": 1.0228021570287655,
+            "paired_ratios": [
+              1.0269942550715903,
+              1.0207734154454358,
+              1.0228021570287655
+            ],
+            "reduction_pct": -2.2802157028765535,
+            "spread_pct": 0.6082153409048333
+          }
+        },
+        "median_case_spread_pct": 0.7609482869031424,
+        "most_reduction": {
+          "vm/invocation": {
+            "candidate_over_baseline": 0.9826081946279953,
+            "paired_ratios": [
+              0.980288222684924,
+              0.9826081946279953,
+              0.988804749883116
+            ],
+            "reduction_pct": 1.7391805372004687,
+            "spread_pct": 0.8667266612218945
+          }
+        },
+        "observed_slower_cases": {
+          "vm/equality": {
+            "candidate_over_baseline": 1.003774228415246,
+            "paired_ratios": [
+              1.0033689965098032,
+              1.003774228415246,
+              1.0116413449427824
+            ],
+            "reduction_pct": -0.3774228415245995,
+            "spread_pct": 0.8241244095337592
+          },
+          "vm/fib": {
+            "candidate_over_baseline": 1.0228021570287655,
+            "paired_ratios": [
+              1.0269942550715903,
+              1.0207734154454358,
+              1.0228021570287655
+            ],
+            "reduction_pct": -2.2802157028765535,
+            "spread_pct": 0.6082153409048333
+          },
+          "vm/method_call": {
+            "candidate_over_baseline": 1.0024515416210804,
+            "paired_ratios": [
+              1.0024515416210804,
+              0.9962677843848287,
+              1.0035603796832373
+            ],
+            "reduction_pct": -0.24515416210804108,
+            "spread_pct": 0.7274760919231739
+          },
+          "vm/properties": {
+            "candidate_over_baseline": 1.003343755947309,
+            "paired_ratios": [
+              1.0430677126365056,
+              0.9955120060521008,
+              1.003343755947309
+            ],
+            "reduction_pct": -0.33437559473090683,
+            "spread_pct": 4.739722184198471
+          },
+          "vm/string_equality": {
+            "candidate_over_baseline": 1.0134466528068105,
+            "paired_ratios": [
+              1.013738340957738,
+              1.0134466528068105,
+              1.011318577617947
+            ],
+            "reduction_pct": -1.3446652806810455,
+            "spread_pct": 0.23876573405116114
+          },
+          "vm/strings": {
+            "candidate_over_baseline": 1.0148936774309585,
+            "paired_ratios": [
+              1.0253857065530207,
+              1.0148936774309585,
+              1.0067935576015494
+            ],
+            "reduction_pct": -1.4893677430958485,
+            "spread_pct": 1.8319307100754023
+          },
+          "vm/trees": {
+            "candidate_over_baseline": 1.0153209029867982,
+            "paired_ratios": [
+              1.0160117645360447,
+              1.0153209029867982,
+              1.0102876965085081
+            ],
+            "reduction_pct": -1.5320902986798224,
+            "spread_pct": 0.5637693472770926
+          },
+          "vm/zoo": {
+            "candidate_over_baseline": 1.0127844707416356,
+            "paired_ratios": [
+              1.0164009439729729,
+              0.9693096105039635,
+              1.0127844707416356
+            ],
+            "reduction_pct": -1.2784470741635579,
+            "spread_pct": 4.6496895271829795
+          },
+          "vm/zoo_batch": {
+            "candidate_over_baseline": 1.0174784573532216,
+            "paired_ratios": [
+              1.0174784573532216,
+              1.0161241612479277,
+              1.0220308347172462
+            ],
+            "reduction_pct": -1.7478457353221621,
+            "spread_pct": 0.5805207399362144
+          }
+        },
+        "per_round_geometric_reduction_pct": [
+          -0.9014356152875713,
+          -0.005463888190448962,
+          -0.626931944501008
+        ],
+        "slower_median_cases": 9
+      }
+    }
+  },
+  "work": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-screen-reviewed"
+}

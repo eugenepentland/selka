@@ -1,0 +1,28 @@
+{
+  "argv": [
+    "taskset",
+    "-c",
+    "16",
+    "python3",
+    "-B",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-vm-stack-read-20261003/.tmp-lox-native-policy-measurement-review-20261003/wall-check.py"
+  ],
+  "status": 0,
+  "completed_only": true,
+  "wall_rows": 468,
+  "total_completed_behavior_and_measurement_rows": 728,
+  "no_guest_compiler_or_perf": true,
+  "wall_inputs_sha256": {
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-screen-reviewed/wall.json": "9ccc34592a92feafcad2ae7d9cd2ceb8b31215132d68cf9d08599926c2acbc2e",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-screen-reviewed/wall.command.json": "af9744b27a31f5f81811e4870b7f7204f1846f3ab102443f85943e40f6c7773d",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-screen-reviewed/wall.log": "1e00b7560601615f666e319e79f38a2b9e33f1af891d97548a20d4272c99d549",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-screen-reviewed/wall-analysis.json": "c7bfa748045f6762a45dc214a7234f7d95d68e183adc06ca0cb86eaa2b1ac714"
+  },
+  "review_sha256": {
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-vm-stack-read-20261003/.tmp-lox-native-policy-measurement-review-20261003/wall-check.py": "334b6c33cf30f613b2a61c2047183c9fac278eade53d8d6e3770b0a652812340",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-vm-stack-read-20261003/.tmp-lox-native-policy-measurement-review-20261003/wall-check.stdout": "f28f057d2b3262b336fe07ccfce70e46c0055e4347c4393052fedde766e1cce8",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-vm-stack-read-20261003/.tmp-lox-native-policy-measurement-review-20261003/wall-check.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-vm-stack-read-20261003/.tmp-lox-native-policy-measurement-review-20261003/precheck.py": "3a0dc456814c7895f13227ec22d19d4eec0ae496b03bd9da39e4f2b4f96bb0ad",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-vm-stack-read-20261003/.tmp-lox-native-policy-measurement-review-20261003/partial-check.json": "a065c2d2ffe2e3acba71aea0f2e55eb803b71193c5920d4c23f46d0d5f4e4e1c"
+  }
+}

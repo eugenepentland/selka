@@ -1,0 +1,70 @@
+{
+  "scope": "Completed preparation/smoke/screen only; active wall excluded",
+  "wrapper_inputs": 1038,
+  "exact_protocol_guards": 252,
+  "exact_runtime_roles": 6,
+  "measured_qualified_ELFs_sidecars_exact": true,
+  "allocated_rebuilds_exact": true,
+  "completed_coverage": {
+    "smoke": 156,
+    "screen": 104
+  },
+  "PMU_four_events100": true,
+  "screen_math_verified": true,
+  "metrics": {
+    "instructions": {
+      "candidate-llvm-over-baseline-llvm": {
+        "vm": {
+          "cases": 13,
+          "candidate_over_baseline": 1.000000009883573,
+          "reduction_pct": -9.8835730710789e-07
+        },
+        "tree": {
+          "cases": 13,
+          "candidate_over_baseline": 1.000082884439889,
+          "reduction_pct": -0.008288443988901939
+        }
+      },
+      "candidate-qbe-over-baseline-qbe": {
+        "vm": {
+          "cases": 13,
+          "candidate_over_baseline": 1.000000039122247,
+          "reduction_pct": -3.912224699753608e-06
+        },
+        "tree": {
+          "cases": 13,
+          "candidate_over_baseline": 0.9733932321958442,
+          "reduction_pct": 2.660676780415583
+        }
+      }
+    },
+    "cycles": {
+      "candidate-llvm-over-baseline-llvm": {
+        "vm": {
+          "cases": 13,
+          "candidate_over_baseline": 0.9990804448274252,
+          "reduction_pct": 0.09195551725748041
+        },
+        "tree": {
+          "cases": 13,
+          "candidate_over_baseline": 1.0008509262489838,
+          "reduction_pct": -0.08509262489837521
+        }
+      },
+      "candidate-qbe-over-baseline-qbe": {
+        "vm": {
+          "cases": 13,
+          "candidate_over_baseline": 1.0036766445196048,
+          "reduction_pct": -0.36766445196048103
+        },
+        "tree": {
+          "cases": 13,
+          "candidate_over_baseline": 0.9166784257356831,
+          "reduction_pct": 8.332157426431685
+        }
+      }
+    }
+  },
+  "fullwall_or_counter_or_closeout_or_archive_claim": false,
+  "no_guest_compiler_or_perf_execution": true
+}

@@ -1,0 +1,23 @@
+{
+  "verified": true,
+  "saved_input_copies": 47,
+  "actual_source37_guests_sidecars_runtime_ELFs_checked": true,
+  "prospective_preparation_inputs": 1038,
+  "exact_guard_inventory": 252,
+  "actual_native_runtime_roles": 6,
+  "completed_coverage": {
+    "counters": 468,
+    "screen": 104,
+    "smoke": 156,
+    "wall": 468
+  },
+  "completed_total": 1196,
+  "PMU_four_event_rates100": 2288,
+  "all_paired_arithmetic_verified": true,
+  "archive_manifest_sha256": "431b64aca839ef7514c0f388815cc8d0bf29b0b69dcc4f9b6710af155250b18b",
+  "archive_original_paths": 375,
+  "archive_objects": 276,
+  "historical_partial_reads_and_refusals_preserved": true,
+  "no_compiler_guest_native_or_performance_execution": true,
+  "selection_main_merge_or_parity_inferred": false
+}

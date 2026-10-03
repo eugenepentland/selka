@@ -1,0 +1,188 @@
+{
+  "verified": true,
+  "completed_coverage": {
+    "smoke": 156,
+    "screen": 104,
+    "wall": 468,
+    "counters": 468
+  },
+  "completed_total": 1196,
+  "full_counter_PMU_events_at100": 1872,
+  "screen_plus_full_PMU_events_at100": 2288,
+  "full_counter_analyses_verified": 12,
+  "full_counter_analysis_case_rows_verified": 312,
+  "exact_source37": true,
+  "prospective_prepare_inputs": 1038,
+  "exact_guard_inventory": 252,
+  "actual_runtime_roles": 6,
+  "whole_measured_qualified_RC_ELFs_sidecars_exact": true,
+  "rebuilt_allocated_sections_exact": true,
+  "computed_counter_metrics": {
+    "instructions": {
+      "candidate-llvm-over-baseline-llvm": {
+        "vm": {
+          "cases": 13,
+          "candidate_over_baseline": 0.9999999989315551,
+          "reduction_pct": 1.068444888119302e-07
+        },
+        "tree": {
+          "cases": 13,
+          "candidate_over_baseline": 0.9999999995057616,
+          "reduction_pct": 4.942384279615908e-08
+        }
+      },
+      "candidate-llvm-over-rust": {
+        "vm": {
+          "cases": 13,
+          "candidate_over_baseline": 2.4580254466113822,
+          "reduction_pct": -145.80254466113823
+        },
+        "tree": {
+          "cases": 13,
+          "candidate_over_baseline": 4.0888551773021815,
+          "reduction_pct": -308.88551773021817
+        }
+      },
+      "candidate-llvm-over-go": {
+        "vm": {
+          "cases": 13,
+          "candidate_over_baseline": 2.00789626026913,
+          "reduction_pct": -100.789626026913
+        },
+        "tree": {
+          "cases": 13,
+          "candidate_over_baseline": 3.1222128466776913,
+          "reduction_pct": -212.22128466776914
+        }
+      },
+      "candidate-qbe-over-baseline-qbe": {
+        "vm": {
+          "cases": 13,
+          "candidate_over_baseline": 1.0000000379485137,
+          "reduction_pct": -3.7948513664787242e-06
+        },
+        "tree": {
+          "cases": 13,
+          "candidate_over_baseline": 0.9733932313618241,
+          "reduction_pct": 2.6606768638175904
+        }
+      },
+      "candidate-qbe-over-rust": {
+        "vm": {
+          "cases": 13,
+          "candidate_over_baseline": 5.7460433411594165,
+          "reduction_pct": -474.60433411594164
+        },
+        "tree": {
+          "cases": 13,
+          "candidate_over_baseline": 7.609343378785426,
+          "reduction_pct": -660.9343378785426
+        }
+      },
+      "candidate-qbe-over-go": {
+        "vm": {
+          "cases": 13,
+          "candidate_over_baseline": 4.6937914850260505,
+          "reduction_pct": -369.37914850260506
+        },
+        "tree": {
+          "cases": 13,
+          "candidate_over_baseline": 5.810425817471956,
+          "reduction_pct": -481.04258174719564
+        }
+      }
+    },
+    "cycles": {
+      "candidate-llvm-over-baseline-llvm": {
+        "vm": {
+          "cases": 13,
+          "candidate_over_baseline": 0.9983773041860302,
+          "reduction_pct": 0.16226958139697878
+        },
+        "tree": {
+          "cases": 13,
+          "candidate_over_baseline": 1.0001059420240115,
+          "reduction_pct": -0.0105942024011485
+        }
+      },
+      "candidate-llvm-over-rust": {
+        "vm": {
+          "cases": 13,
+          "candidate_over_baseline": 2.7729834091276815,
+          "reduction_pct": -177.29834091276814
+        },
+        "tree": {
+          "cases": 13,
+          "candidate_over_baseline": 4.090453904224844,
+          "reduction_pct": -309.04539042248433
+        }
+      },
+      "candidate-llvm-over-go": {
+        "vm": {
+          "cases": 13,
+          "candidate_over_baseline": 2.866880566432009,
+          "reduction_pct": -186.6880566432009
+        },
+        "tree": {
+          "cases": 13,
+          "candidate_over_baseline": 4.1372222319835705,
+          "reduction_pct": -313.722223198357
+        }
+      },
+      "candidate-qbe-over-baseline-qbe": {
+        "vm": {
+          "cases": 13,
+          "candidate_over_baseline": 1.0037788272479524,
+          "reduction_pct": -0.3778827247952421
+        },
+        "tree": {
+          "cases": 13,
+          "candidate_over_baseline": 0.9147005159755104,
+          "reduction_pct": 8.529948402448962
+        }
+      },
+      "candidate-qbe-over-rust": {
+        "vm": {
+          "cases": 13,
+          "candidate_over_baseline": 5.161583487981322,
+          "reduction_pct": -416.15834879813224
+        },
+        "tree": {
+          "cases": 13,
+          "candidate_over_baseline": 6.744451553125612,
+          "reduction_pct": -574.4451553125612
+        }
+      },
+      "candidate-qbe-over-go": {
+        "vm": {
+          "cases": 13,
+          "candidate_over_baseline": 5.3355707872341664,
+          "reduction_pct": -433.5570787234166
+        },
+        "tree": {
+          "cases": 13,
+          "candidate_over_baseline": 6.820768052219378,
+          "reduction_pct": -582.0768052219378
+        }
+      }
+    }
+  },
+  "strict_closeout_matches_archive": true,
+  "independent_archive_inventory_originals_objects_verified": true,
+  "archive": "/home/epentland/ai/canopy/evidence/mylang-lox-compiler-screens-20261003/native-backend-policy",
+  "archive_manifest_sha256": "431b64aca839ef7514c0f388815cc8d0bf29b0b69dcc4f9b6710af155250b18b",
+  "archive_originals": 375,
+  "archive_objects": 276,
+  "initial_unfinished_wall_refusal_retained": true,
+  "historical_original35_final37_package_refusal_retained": true,
+  "limits": [
+    "Raw performance stdout is represented by hashes; stderr is a retained tail.",
+    "Smoke collector stats were checked equal across all six arms; no guest or native stress perf claim.",
+    "Rebuilt ELFs are reproduction evidence; measured whole files are the exact authored qualified RC guests.",
+    "Compilation core878/prefix16 wrapper guards cover preparation; native qualification has its separately reviewed prospective/retrospective limits.",
+    "Three paired wall/counter rounds and spreads do not establish statistical confidence or absence of regressions.",
+    "QBE tree gain accompanies slower QBE VM observations; no selection/main-merge/parity inference.",
+    "Extras and failed historical attempts do not add successful measurement coverage."
+  ],
+  "no_compiler_guest_or_performance_execution": true
+}

@@ -1,0 +1,381 @@
+{
+  "scope": "Completed wall468, plus repeated completed-only preparation/smoke/screen precheck",
+  "completed_rows": 728,
+  "wall_rows": 468,
+  "analysis_comparisons": 6,
+  "analysis_case_rows": 156,
+  "tuple_output_status_diagnostics_workloads_sources_identities_summary_math_verified": true,
+  "strict_protocol_guards_rehashed": 252,
+  "inputs_sha256": {
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-screen-reviewed/wall.json": "9ccc34592a92feafcad2ae7d9cd2ceb8b31215132d68cf9d08599926c2acbc2e",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-screen-reviewed/wall.command.json": "af9744b27a31f5f81811e4870b7f7204f1846f3ab102443f85943e40f6c7773d",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-screen-reviewed/wall.log": "1e00b7560601615f666e319e79f38a2b9e33f1af891d97548a20d4272c99d549",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-native-policy-screen-reviewed/wall-analysis.json": "c7bfa748045f6762a45dc214a7234f7d95d68e183adc06ca0cb86eaa2b1ac714"
+  },
+  "robustness": {
+    "llvm": {
+      "vm": {
+        "aggregate": {
+          "cases": 13,
+          "candidate_over_baseline": 1.0002835177092415,
+          "reduction_pct": -0.028351770924150976
+        },
+        "faster_median_cases": 9,
+        "slower_median_cases": 4,
+        "per_round_geometric_reduction_pct": [
+          0.5132294391934744,
+          0.5071132610560025,
+          0.09304653082558012
+        ],
+        "median_case_spread_pct": 1.7787382888488166,
+        "least_reduction": {
+          "vm/instantiation": {
+            "candidate_over_baseline": 1.0162198236053592,
+            "reduction_pct": -1.621982360535923,
+            "paired_ratios": [
+              0.8901952462531946,
+              1.016253780002126,
+              1.0162198236053592
+            ],
+            "spread_pct": 12.40465210585041
+          }
+        },
+        "most_reduction": {
+          "vm/zoo": {
+            "candidate_over_baseline": 0.9967738501974887,
+            "reduction_pct": 0.32261498025113466,
+            "paired_ratios": [
+              0.9994796017422619,
+              0.9967738501974887,
+              0.986868482555032
+            ],
+            "spread_pct": 1.2651936228795817
+          }
+        },
+        "observed_slower_cases": {
+          "vm/closures": {
+            "candidate_over_baseline": 1.002238377915961,
+            "reduction_pct": -0.22383779159609318,
+            "paired_ratios": [
+              1.002238377915961,
+              0.9769672589767863,
+              1.0022469168088177
+            ],
+            "spread_pct": 2.522319878091037
+          },
+          "vm/fib": {
+            "candidate_over_baseline": 1.0002143526257294,
+            "reduction_pct": -0.021435262572944147,
+            "paired_ratios": [
+              0.9898912653288383,
+              1.0273980863456422,
+              1.0002143526257294
+            ],
+            "spread_pct": 3.749878305419459
+          },
+          "vm/instantiation": {
+            "candidate_over_baseline": 1.0162198236053592,
+            "reduction_pct": -1.621982360535923,
+            "paired_ratios": [
+              0.8901952462531946,
+              1.016253780002126,
+              1.0162198236053592
+            ],
+            "spread_pct": 12.40465210585041
+          },
+          "vm/strings": {
+            "candidate_over_baseline": 1.0006356804614587,
+            "reduction_pct": -0.06356804614586764,
+            "paired_ratios": [
+              1.0219611886717315,
+              1.0006356804614587,
+              0.9957795090127812
+            ],
+            "spread_pct": 2.6165047049767556
+          }
+        }
+      },
+      "tree": {
+        "aggregate": {
+          "cases": 13,
+          "candidate_over_baseline": 1.0010512171823471,
+          "reduction_pct": -0.10512171823471306
+        },
+        "faster_median_cases": 7,
+        "slower_median_cases": 6,
+        "per_round_geometric_reduction_pct": [
+          -0.06780324996658038,
+          -0.12310554291332654,
+          -0.07052856663987139
+        ],
+        "median_case_spread_pct": 0.5582005168726859,
+        "least_reduction": {
+          "tree/strings": {
+            "candidate_over_baseline": 1.009635932418056,
+            "reduction_pct": -0.9635932418055937,
+            "paired_ratios": [
+              0.9984106063878524,
+              1.0099510029895142,
+              1.009635932418056
+            ],
+            "spread_pct": 1.1430255432790355
+          }
+        },
+        "most_reduction": {
+          "tree/zoo": {
+            "candidate_over_baseline": 0.996258053108184,
+            "reduction_pct": 0.37419468918159504,
+            "paired_ratios": [
+              0.996258053108184,
+              1.0006758746919882,
+              0.9951147570901525
+            ],
+            "spread_pct": 0.5582005168726859
+          }
+        },
+        "observed_slower_cases": {
+          "tree/binary_trees": {
+            "candidate_over_baseline": 1.0040513506836581,
+            "reduction_pct": -0.4051350683658139,
+            "paired_ratios": [
+              1.005850719797393,
+              1.0040513506836581,
+              1.0007512466779303
+            ],
+            "spread_pct": 0.5078896727732555
+          },
+          "tree/closures": {
+            "candidate_over_baseline": 1.0024769460849265,
+            "reduction_pct": -0.24769460849265457,
+            "paired_ratios": [
+              1.004332470425326,
+              1.0024769460849265,
+              0.9993508798695919
+            ],
+            "spread_pct": 0.4969281912356398
+          },
+          "tree/invocation": {
+            "candidate_over_baseline": 1.001232816523721,
+            "reduction_pct": -0.1232816523720981,
+            "paired_ratios": [
+              1.001232816523721,
+              1.0010382512523777,
+              1.0046970025912747
+            ],
+            "spread_pct": 0.3654246323647498
+          },
+          "tree/properties": {
+            "candidate_over_baseline": 1.0005546111611805,
+            "reduction_pct": -0.0554611161180496,
+            "paired_ratios": [
+              0.9972893875788458,
+              1.0029008127834342,
+              1.0005546111611805
+            ],
+            "spread_pct": 0.5608314770621261
+          },
+          "tree/strings": {
+            "candidate_over_baseline": 1.009635932418056,
+            "reduction_pct": -0.9635932418055937,
+            "paired_ratios": [
+              0.9984106063878524,
+              1.0099510029895142,
+              1.009635932418056
+            ],
+            "spread_pct": 1.1430255432790355
+          },
+          "tree/trees": {
+            "candidate_over_baseline": 1.0075245116738143,
+            "reduction_pct": -0.7524511673814294,
+            "paired_ratios": [
+              1.0075245116738143,
+              0.9958518875880757,
+              1.0107198458027344
+            ],
+            "spread_pct": 1.475691960085254
+          }
+        }
+      }
+    },
+    "qbe": {
+      "vm": {
+        "aggregate": {
+          "cases": 13,
+          "candidate_over_baseline": 1.0048683475268665,
+          "reduction_pct": -0.486834752686649
+        },
+        "faster_median_cases": 4,
+        "slower_median_cases": 9,
+        "per_round_geometric_reduction_pct": [
+          -0.9014356152875713,
+          -0.005463888190448962,
+          -0.626931944501008
+        ],
+        "median_case_spread_pct": 0.7609482869031424,
+        "least_reduction": {
+          "vm/fib": {
+            "candidate_over_baseline": 1.0228021570287655,
+            "reduction_pct": -2.2802157028765535,
+            "paired_ratios": [
+              1.0269942550715903,
+              1.0207734154454358,
+              1.0228021570287655
+            ],
+            "spread_pct": 0.6082153409048333
+          }
+        },
+        "most_reduction": {
+          "vm/invocation": {
+            "candidate_over_baseline": 0.9826081946279953,
+            "reduction_pct": 1.7391805372004687,
+            "paired_ratios": [
+              0.980288222684924,
+              0.9826081946279953,
+              0.988804749883116
+            ],
+            "spread_pct": 0.8667266612218945
+          }
+        },
+        "observed_slower_cases": {
+          "vm/equality": {
+            "candidate_over_baseline": 1.003774228415246,
+            "reduction_pct": -0.3774228415245995,
+            "paired_ratios": [
+              1.0033689965098032,
+              1.003774228415246,
+              1.0116413449427824
+            ],
+            "spread_pct": 0.8241244095337592
+          },
+          "vm/fib": {
+            "candidate_over_baseline": 1.0228021570287655,
+            "reduction_pct": -2.2802157028765535,
+            "paired_ratios": [
+              1.0269942550715903,
+              1.0207734154454358,
+              1.0228021570287655
+            ],
+            "spread_pct": 0.6082153409048333
+          },
+          "vm/method_call": {
+            "candidate_over_baseline": 1.0024515416210804,
+            "reduction_pct": -0.24515416210804108,
+            "paired_ratios": [
+              1.0024515416210804,
+              0.9962677843848287,
+              1.0035603796832373
+            ],
+            "spread_pct": 0.7274760919231739
+          },
+          "vm/properties": {
+            "candidate_over_baseline": 1.003343755947309,
+            "reduction_pct": -0.33437559473090683,
+            "paired_ratios": [
+              1.0430677126365056,
+              0.9955120060521008,
+              1.003343755947309
+            ],
+            "spread_pct": 4.739722184198471
+          },
+          "vm/string_equality": {
+            "candidate_over_baseline": 1.0134466528068105,
+            "reduction_pct": -1.3446652806810455,
+            "paired_ratios": [
+              1.013738340957738,
+              1.0134466528068105,
+              1.011318577617947
+            ],
+            "spread_pct": 0.23876573405116114
+          },
+          "vm/strings": {
+            "candidate_over_baseline": 1.0148936774309585,
+            "reduction_pct": -1.4893677430958485,
+            "paired_ratios": [
+              1.0253857065530207,
+              1.0148936774309585,
+              1.0067935576015494
+            ],
+            "spread_pct": 1.8319307100754023
+          },
+          "vm/trees": {
+            "candidate_over_baseline": 1.0153209029867982,
+            "reduction_pct": -1.5320902986798224,
+            "paired_ratios": [
+              1.0160117645360447,
+              1.0153209029867982,
+              1.0102876965085081
+            ],
+            "spread_pct": 0.5637693472770926
+          },
+          "vm/zoo": {
+            "candidate_over_baseline": 1.0127844707416356,
+            "reduction_pct": -1.2784470741635579,
+            "paired_ratios": [
+              1.0164009439729729,
+              0.9693096105039635,
+              1.0127844707416356
+            ],
+            "spread_pct": 4.6496895271829795
+          },
+          "vm/zoo_batch": {
+            "candidate_over_baseline": 1.0174784573532216,
+            "reduction_pct": -1.7478457353221621,
+            "paired_ratios": [
+              1.0174784573532216,
+              1.0161241612479277,
+              1.0220308347172462
+            ],
+            "spread_pct": 0.5805207399362144
+          }
+        }
+      },
+      "tree": {
+        "aggregate": {
+          "cases": 13,
+          "candidate_over_baseline": 0.9229111958137589,
+          "reduction_pct": 7.708880418624108
+        },
+        "faster_median_cases": 13,
+        "slower_median_cases": 0,
+        "per_round_geometric_reduction_pct": [
+          7.821625817722322,
+          7.644059486668564,
+          7.666918361221519
+        ],
+        "median_case_spread_pct": 0.5762299025092041,
+        "least_reduction": {
+          "tree/instantiation": {
+            "candidate_over_baseline": 0.9847450848459136,
+            "reduction_pct": 1.525491515408639,
+            "paired_ratios": [
+              0.9847450848459136,
+              0.9828431745851793,
+              0.985139355518531
+            ],
+            "spread_pct": 0.23317516062656982
+          }
+        },
+        "most_reduction": {
+          "tree/equality": {
+            "candidate_over_baseline": 0.728661293351593,
+            "reduction_pct": 27.1338706648407,
+            "paired_ratios": [
+              0.7250127533997269,
+              0.7292115176600291,
+              0.728661293351593
+            ],
+            "spread_pct": 0.5762299025092041
+          }
+        },
+        "observed_slower_cases": {}
+      }
+    }
+  },
+  "limits": [
+    "Three observational paired rounds; spreads are not confidence intervals.",
+    "QBE VM aggregate slowdown and individual regressions retained.",
+    "Active full counters are excluded; no final closeout/archive/selection claim.",
+    "Raw stdout was checked by guarded launcher; measurement receipts retain hashes and stderr tails.",
+    "No guest, compiler, or performance execution by reviewer."
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "taskset",
+    "-c",
+    "16",
+    "python3",
+    "-B",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-vm-stack-read-20261003/experiments/lox-native-policy-measurement-review-20261003/verify.py"
+  ],
+  "status": 0,
+  "no_compiler_guest_native_or_performance_execution": true,
+  "verifier_sha256": "8798ae65b3246f6b37b2313baf37e1c672689fb629ef526340589d46afab6995",
+  "review_sha256": "0af1a973dee21a79edb1baa1b2c2215bb5214a90398004b3a5570198a0549d46",
+  "stdout_sha256": "0caef6dab8d6acbdb40d4279de16a3fa64a3022073f522bba5b754f649fb3104",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}
