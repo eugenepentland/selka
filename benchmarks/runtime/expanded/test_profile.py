@@ -55,6 +55,8 @@ class ProfileTests(unittest.TestCase):
         self.assertEqual(rows['cycles:u']['count'], 123)
         self.assertTrue(rows['cycles:u']['available'])
         self.assertIsNone(rows['instructions:u']['count'])
+        self.assertFalse(rows['instructions:u']['available'])
+        self.assertFalse(any('coverage' in key for key in rows))
 
     def test_hybrid_counters_keep_inactive_pmu_and_select_only_pinned_cpu(self):
         rows = parse_counters('<not counted>\t\tcpu_atom/cycles/u\t0\t0.00\n'
@@ -67,7 +69,6 @@ class ProfileTests(unittest.TestCase):
         selected, selection = select_counters(rows, 2, {'cpu_core': set(), 'cpu_atom': set()})
         self.assertEqual(selected, {})
         self.assertIsNone(selection['pmu'])
-        self.assertFalse(rows['instructions:u']['available'])
         self.assertFalse(any('coverage' in key for key in rows))
 
     def test_strict_guest(self):
