@@ -1329,6 +1329,13 @@ int myl_rc_list_plain_ready(myl_native_heap *heap, const myl_native_list *list) 
 inline __attribute__((always_inline)) int myl_rc_list_plain_ready_hot(myl_native_heap *heap, const myl_native_list *list) {
     return plain_ready_query(heap,list);
 }
+/* RC-PLAIN-POP-1: a registered edge-free value can be taken and cleared as
+ * bytes. Refuse cold metadata and pending finalizers without changing either. */
+int myl_rc_list_plain_pop_ready(myl_native_heap *heap, const myl_native_list *list) {
+    if (!heap || !heap->rc || heap->rc->dead.head || !list || !list->element) return 0;
+    size_t size=list->element->size;
+    return size && size<=64 && myl_rc_plain_type(heap,list->element);
+}
 int myl_rc_list_append(myl_native_heap *heap, myl_native_list *list, const void *value) {
     return rc_list_insert_at(heap,list,list->length,value);
 }

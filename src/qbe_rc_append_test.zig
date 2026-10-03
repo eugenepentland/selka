@@ -214,3 +214,42 @@ test "RC append loop external backwards entry selects reset and internal backedg
     try t.expect(lower.enters(&emitter, 10));
     try t.expect(!lower.enters(&emitter, 11));
 }
+
+// spec: RC-PLAIN-POP-1
+test "plain tail removal keeps runtime admission and managed fallback" {
+    const saved = runtime.get();
+    defer runtime.set(saved);
+    runtime.set(.rc);
+    const pop_source =
+        \\def scalar(items: mut list[int]) -> int:
+        \\    return items.pop()
+        \\def aggregate(items: mut list[tuple[int, int]]) -> tuple[int, int]:
+        \\    return items.pop()
+        \\def managed(items: mut list[list[int]]) -> list[int]:
+        \\    return items.pop()
+        \\def indexed(items: mut list[int]) -> int:
+        \\    return items.pop(0)
+        \\def main() -> int:
+        \\    return 0
+    ;
+    var compilation = try compiler.Compilation.init(t.allocator, "rc_pop.my", pop_source);
+    defer compilation.deinit();
+    const text = try compilation.emitQbe(t.allocator);
+    defer t.allocator.free(text);
+    var manifest = try std.json.parseFromSlice(Manifest, t.allocator, text, .{ .allocate = .alloc_always, .ignore_unknown_fields = true });
+    defer manifest.deinit();
+    for ([_][]const u8{ "scalar", "aggregate" }) |name| {
+        const il = try named(manifest.value, name);
+        try t.expect(std.mem.indexOf(u8, il, "myl_rc_list_plain_pop_ready") != null);
+        try t.expect(std.mem.indexOf(u8, il, "call $myl_rc_list_pop(") != null);
+        try t.expect(std.mem.indexOf(u8, il, " blit ") != null);
+        try t.expect(std.mem.indexOf(u8, il, ", -1\n") != null);
+        try t.expect(std.mem.indexOf(u8, il, "myl_qbe_fail_pop_bounds") != null);
+    }
+    try refusedPops(manifest.value);
+}
+
+fn refusedPops(manifest: Manifest) !void {
+    for ([_][]const u8{ "managed", "indexed" }) |name|
+        try t.expect(std.mem.indexOf(u8, try named(manifest, name), "myl_rc_list_plain_pop_ready") == null);
+}

@@ -5,6 +5,7 @@ const embeds = @import("qbe_embeds.zig");
 const typed = @import("typed.zig");
 const rc_mode = @import("runtime_mode.zig");
 const rc_append = @import("qbe_rc_append.zig");
+const rc_pop = @import("qbe_rc_plain_pop.zig");
 const rc_collections = @import("qbe_rc_collections.zig");
 const rc_values = @import("qbe_rc_values.zig");
 /// Failures producing native managed collection instructions.
@@ -301,7 +302,8 @@ fn emitListPop(comptime E: type, self: *E, op: BufferOperation, stack: []const t
         try requireIndexBounds(E, self, output, index_value, length, "myl_qbe_fail_pop_at_bounds");
     } else {
         if (rc_mode.enabled()) {
-            try self.print(" %v{d} =w call $myl_rc_list_pop(l %heap, l %v{d}, l %agg{d})\n", .{ output, list, self.pc });
+            if (!try rc_pop.emit(E, self, op.output, list, pointer, output))
+                try self.print(" %v{d} =w call $myl_rc_list_pop(l %heap, l %v{d}, l %agg{d})\n", .{ output, list, self.pc });
         } else {
             try self.print(" %v{d} =w call $myl_native_list_pop(l %v{d}, l %agg{d})\n", .{ output, list, self.pc });
         }

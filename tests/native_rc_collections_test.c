@@ -1427,7 +1427,8 @@ static int same_plain_ready(myl_native_heap *heap, const myl_native_list *list) 
     assert(ordinary==myl_rc_list_plain_ready_hot(heap,list));
     return ordinary;
 }
-/* spec-case: RC-PLAIN-APPEND-1. Admission neither registers cold metadata nor
+/* spec-case: RC-PLAIN-POP-1.
+ * spec-case: RC-PLAIN-APPEND-1. Admission neither registers cold metadata nor
  * allocates, and excludes empty/aggregate/managed/held/unique/finalized types. */
 static void plain_append_admission(void) {
     static const myl_native_type scalar[]={
@@ -1446,14 +1447,17 @@ static void plain_append_admission(void) {
     init(&heap);
     myl_native_list probe={0};
     assert(!same_plain_ready(NULL,&probe) && !same_plain_ready(&heap,NULL));
+    assert(!myl_rc_list_plain_pop_ready(NULL,&probe) && !myl_rc_list_plain_pop_ready(&heap,NULL));
     for (size_t i=0;i<4;i++) {
         probe.element=&scalar[i];
         size_t bytes=heap.bytes, allocations=heap.allocations;
         assert(!same_plain_ready(&heap,&probe));
+        assert(!myl_rc_list_plain_pop_ready(&heap,&probe));
         assert(!myl_rc_descriptor_find(&heap,probe.element));
         assert(heap.bytes==bytes && heap.allocations==allocations);
         myl_native_list *list=myl_native_list_new(&heap,probe.element,4);
         assert(list && same_plain_ready(&heap,list));
+        assert(myl_rc_list_plain_pop_ready(&heap,list));
         myl_rc_owner_release(&heap,list);
     }
     assert(flat_count(&heap,&plain_pair,&plain_pair_shape)==0);
@@ -1463,6 +1467,7 @@ static void plain_append_admission(void) {
     for (size_t i=0;i<sizeof refused/sizeof refused[0];i++) {
         probe.element=refused[i];
         assert(!same_plain_ready(&heap,&probe));
+        assert(myl_rc_list_plain_pop_ready(&heap,&probe)==(refused[i]==&plain_pair));
     }
     finish(&heap);
 }
@@ -1486,11 +1491,13 @@ static void plain_append_pending_death(void) {
     void *queued=myl_native_heap_alloc(&heap,&finalized,1);
     assert(queued);
     assert(same_plain_ready(&heap,list)); /* Warm identity before queueing. */
+    assert(myl_rc_list_plain_pop_ready(&heap,list));
     append_observed=list;
     heap.rc->dead.active=1;
     myl_rc_owner_release(&heap,queued);
     heap.rc->dead.active=0;
     assert(heap.rc->dead.head && !same_plain_ready(&heap,list));
+    assert(!myl_rc_list_plain_pop_ready(&heap,list));
     assert(list->length==1 && *(uint64_t *)list->storage==7 && heap.rc->dead.head);
     assert(myl_rc_list_append(&heap,list,list->storage));
     assert(list->length==2 && list->generation==2 && !heap.rc->dead.head);
