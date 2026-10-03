@@ -75,6 +75,8 @@ const text_leaf = embeds.text_leaf;
 /// List element access normalizes a negative index in the checked frontend; the
 /// runtime helper subtracts the length back to recover the original index.
 const normalized_index_failure = "myl_qbe_fail_normalized_index_bounds";
+/// Exact normalizer/read locations and the captured list and signed index.
+pub const PositiveIndex = struct { start: usize, read: usize, owner: usize, index: usize };
 /// Bind managed lowering to the concrete emitter without dependency cycles.
 pub fn Lower(comptime E: type) type {
     return struct {
@@ -85,6 +87,19 @@ pub fn Lower(comptime E: type) type {
         /// Emit a managed collection method invocation.
         pub fn operation(self: *E, op: BufferOperation, stack: []const typed.Type) Error!void {
             return emitOperation(E, self, op, stack);
+        }
+        /// QBE-POSITIVE-INDEX-1: a failed unsigned guard keeps the canonical
+        /// normalizer; success proves a positive index against this same list.
+        pub fn positiveRead(self: *E, proof: PositiveIndex, stack: []const typed.Type) Error!void {
+            const read = self.function.scope.instructions[proof.read].op.buffer_operation;
+            const input = try self.load("l", proof.owner);
+            try self.markObject(input);
+            const index_value = try self.load("l", proof.index);
+            const count = try receiverLength(E, self, input);
+            const valid = self.temp();
+            try self.print(unsigned_below, .{ valid, index_value, count });
+            try self.print(" jnz %v{d}, @positive{d}, @{s}{d}\n@positive{d}\n", .{ valid, proof.start, self.labelPrefix(proof.start), proof.start, proof.start });
+            try indexPayload(E, self, .{ .input = input, .at = index_value, .raw_index = index_value, .length = count, .element = read.output, .slot = stack.len - 1 });
         }
         /// Construct a managed string, list, or dictionary.
         pub fn construct(self: *E, op: MakeRecord, stack: []const typed.Type) Error!void {
@@ -851,6 +866,10 @@ fn inlineIndexRead(comptime E: type, self: *E, read: IndexRead, failure: []const
         try self.print(unsigned_below, .{ valid, read.at, read.length });
         try requireIndexBounds(E, self, valid, read.raw_index, read.length, failure);
     }
+    try indexPayload(E, self, read);
+}
+/// The payload of an index read, reached only after its bounds guard succeeds.
+fn indexPayload(comptime E: type, self: *E, read: IndexRead) Error!void {
     const address = try elementAddress(E, self, read.input, read.at, read.element);
     if (self.isScalar(read.element)) {
         try self.store(read.slot, try self.readValue(address, read.element));

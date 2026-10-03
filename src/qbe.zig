@@ -2493,6 +2493,7 @@ const Emitter = struct {
                 pc = end;
                 continue;
             }
+            try @import("qbe_positive_index.zig").emit(Emitter, self, pc);
             try self.emitAt(pc);
             if (self.original) |loop| if (pc == loop.back) {
                 self.original = null;

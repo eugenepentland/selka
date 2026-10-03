@@ -1,0 +1,60 @@
+record Frame:
+    code: list[int]
+    ip: int
+
+
+def read(frame: mut Frame) -> int:
+    value = frame.code[frame.ip]
+    frame.ip += 1
+    return value
+
+
+# spec-case: QBE-POSITIVE-INDEX-1
+public def test_positive_and_negative_reads_keep_scalar_updates_and_snapshots() -> bool:
+    frame = Frame([7, 11, 13], 0)
+    before = frame
+    assert read(mut frame) == 7
+    frame.ip = -1
+    assert read(mut frame) == 13
+    frame.code[0] = 17
+    return frame.ip == 0 and before.ip == 0 and before.code == [7, 11, 13]
+
+
+def replace(frame: mut Frame) -> int:
+    frame.code = [17, 19]
+    return 0
+
+
+def selected(frame: mut Frame) -> int:
+    return frame.code[replace(mut frame)]
+
+
+# spec-case: QBE-POSITIVE-INDEX-1
+public def test_index_callback_keeps_the_receiver_selected_before_replacement() -> bool:
+    frame = Frame([7, 11], 0)
+    result = selected(mut frame)
+    return result == 7 and frame.code == [17, 19]
+
+
+union Cell:
+    empty,
+    number: int
+
+
+# spec-case: QBE-POSITIVE-INDEX-1
+public def test_plain_variant_read_and_arena_owned_receiver() -> bool:
+    with arena():
+        cells = [Cell.empty, Cell.number(23)]
+        cell = cells[-1]
+        match cell:
+            case Cell.number(value):
+                return value == 23
+            case Cell.empty:
+                return False
+
+
+def main() -> int:
+    assert test_positive_and_negative_reads_keep_scalar_updates_and_snapshots()
+    assert test_index_callback_keeps_the_receiver_selected_before_replacement()
+    assert test_plain_variant_read_and_arena_owned_receiver()
+    return 0
