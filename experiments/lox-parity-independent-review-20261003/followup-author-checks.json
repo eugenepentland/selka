@@ -1,0 +1,59 @@
+{
+  "base_commit": "da2bec38ea0bd9e7f5f4f523a81083a796fd6565",
+  "source_sha256": {
+    "src/qbe_positive_index.zig": "285901efc0397c66c5a860103d4525842dc900b1a2bdbf0ff645462ba759e0f8",
+    "src/qbe_positive_index_test.zig": "4ce69216cf688d8f018da76b56bcdd5d7cd9935c5c6d3c0035cc98ec41bb8492",
+    "SPEC.md": "d41845fcd334c27e2095e4faa51277298a65ef60611c9965e32f6bd7db55fdc8"
+  },
+  "focused": {
+    "command": [
+      "scripts/build-slot.sh",
+      "build",
+      "zig",
+      "build",
+      "test-units",
+      "-Dtest-filter=positive index",
+      "-Dtest-filter=RC field inout",
+      "-Dtest-filter=RC closed field",
+      "-Dtest-filter=GC closed field",
+      "-Dtest-filter=GC lowering of generalized closed",
+      "-Dtest-filter=native RC record field transfers",
+      "--cache-dir",
+      ".tmp-lox-lowering/zig-cache",
+      "-p",
+      ".tmp-lox-lowering/compiler",
+      "-j2"
+    ],
+    "process_exit_code": 0,
+    "process_exit_source": "exec session 98132 completion returned exit_code 0",
+    "reported_tests": 27,
+    "named_tests": 15,
+    "mandatory_tests": 12,
+    "reported_failures": 0,
+    "log": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-lowering-20261003/.tmp-lox-lowering/positive-cfg-fix-focused.log",
+    "log_sha256": "df4970d549520a3db4a8845de22517db204525dd9ff91c7ac53e996ae3683f80",
+    "reporter_footer_limit": "Reporter prints failed command footer even with PASS and process exit 0; not counted as a failure."
+  },
+  "guardian": {
+    "command": [
+      "scripts/build-slot.sh",
+      "gate",
+      "/home/epentland/ai/canopy/guardian-zig/zig-out/bin/guardian-check",
+      "all",
+      ".",
+      "--full",
+      "--gate"
+    ],
+    "process_exit_code": 0,
+    "checks": 88,
+    "scope": "whole tree; --full explicit",
+    "log": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-lowering-20261003/.tmp-lox-lowering/positive-cfg-fix-guardian.log",
+    "log_sha256": "385b31159bebe492e9e17268167b169b9a48d33c8bb75d255c23a375fd1d4b88"
+  },
+  "frozen_preserved": {
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-lowering-20261003/.tmp-lox-lowering/positive-release/bin/mylang": "da94c579e03ffaab2e9d43a6d9119b529bbb01dab5085e7a3986a6ecd98912c6",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-lowering-20261003/.tmp-lox-lowering/positive-release/bin/qbe": "99ad919d70ad582dee6202b045bd53e1ab18fec356de98849610f49983756d63",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-lowering-20261003/.tmp-lox-lowering/carrier-release/bin/mylang": "9007d0532fe0ed8e0a17568c2e7e796023ddd59e76137efa0181fefca3685288",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-lowering-20261003/.tmp-lox-lowering/carrier-release/bin/qbe": "99ad919d70ad582dee6202b045bd53e1ab18fec356de98849610f49983756d63"
+  }
+}

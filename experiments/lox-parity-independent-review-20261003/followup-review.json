@@ -1,0 +1,19 @@
+{
+  "source_sha256": {
+    "src/qbe_positive_index.zig": "285901efc0397c66c5a860103d4525842dc900b1a2bdbf0ff645462ba759e0f8",
+    "src/qbe_positive_index_test.zig": "4ce69216cf688d8f018da76b56bcdd5d7cd9935c5c6d3c0035cc98ec41bb8492",
+    "SPEC.md": "d41845fcd334c27e2095e4faa51277298a65ef60611c9965e32f6bd7db55fdc8"
+  },
+  "fix_commit": "author commit pending; exact reviewed candidate hashes are recorded",
+  "status": "pass with the prior validated-bytecode/native-layout proof limits; original try_result omission resolved",
+  "additional_cfg_edge_findings": [],
+  "author_checks_snapshot_sha256": "e2f259fe50a78a5c690449ff8e2cbd43f5969ddf0fd0d46b3bdefd75a487a7bc",
+  "author_focused_process_exit_code": 0,
+  "author_focused_reported_tests": 27,
+  "reporter_footer": "Author-verified process exit 0 resolves the initial status uncertainty; historical candidate observation and unmodified log hash are retained.",
+  "independently_run_tests": false,
+  "timing": false,
+  "source_edits": false,
+  "source_identity_rechecked_before_commit": true,
+  "followup_review_sha256": "6ced3388190a6e302087b243fe842be2e27ea3b784e33c43777edad05a49b325"
+}
