@@ -1,0 +1,139 @@
+--- a/vm.my
++++ b/vm.my
+@@ -295,7 +295,8 @@
+ 
+ 
+ def read_constant(frame: mut ExecFrame) -> value.Value:
+-    return frame.constants[read_byte(mut frame)]
++    index = read_byte(mut frame)
++    return frame.constants[index]
+ 
+ 
+ def read_string(frame: mut ExecFrame) -> value.ObjRef:
+@@ -325,7 +326,8 @@
+ 
+ 
+ def get_upvalue(rt: mut heap.Runtime, frame: mut ExecFrame):
+-    upvalue = heap.upvalue_obj(rt, frame.upvalues[read_byte(mut frame)])
++    index = read_byte(mut frame)
++    upvalue = heap.upvalue_obj(rt, frame.upvalues[index])
+     if upvalue.slot != object.NO_SLOT:
+         heap.push(mut rt, rt.stack[upvalue.slot])
+     else:
+@@ -333,7 +335,8 @@
+ 
+ 
+ def set_upvalue(rt: mut heap.Runtime, frame: mut ExecFrame):
+-    ref = frame.upvalues[read_byte(mut frame)]
++    index = read_byte(mut frame)
++    ref = frame.upvalues[index]
+     upvalue = heap.upvalue_obj(rt, ref)
+     if upvalue.slot != object.NO_SLOT:
+         rt.stack[upvalue.slot] = heap.peek(rt, 0)
+@@ -494,7 +497,8 @@
+ # reporting a runtime error.
+ def run(rt: mut heap.Runtime, o: mut output.Output) -> InterpretResult:
+     activation_count = rt.frame_count
+-    frame = load_frame(rt, rt.frames[activation_count - 1])
++    frame_index = activation_count - 1
++    frame = load_frame(rt, rt.frames[frame_index])
+     while True:
+         instruction = frame.code[frame.ip]
+         frame.ip = frame.ip + 1
+@@ -517,32 +521,35 @@
+         elif instruction == chunk.OP_POP:
+             rt.stack_top = rt.stack_top - 1
+         elif instruction == chunk.OP_GET_LOCAL:
+-            local = rt.stack[frame.base + read_byte(mut frame)]
++            slot = read_byte(mut frame)
++            local = rt.stack[frame.base + slot]
+             rt.stack[rt.stack_top] = local
+             rt.stack_top = rt.stack_top + 1
+         elif instruction == chunk.OP_SET_LOCAL:
+-            rt.stack[frame.base + read_byte(mut frame)] = heap.peek(rt, 0)
++            slot = read_byte(mut frame)
++            assigned = heap.peek(rt, 0)
++            rt.stack[frame.base + slot] = assigned
+         elif instruction == chunk.OP_GET_GLOBAL:
+-            rt.frames[rt.frame_count - 1].ip = frame.ip
++            rt.frames[frame_index].ip = frame.ip
+             ok = get_global(mut rt, mut o, mut frame)
+         elif instruction == chunk.OP_DEFINE_GLOBAL:
+             _ = heap.set_global(mut rt, read_string(mut frame), heap.peek(rt, 0))
+             rt.stack_top = rt.stack_top - 1
+         elif instruction == chunk.OP_SET_GLOBAL:
+-            rt.frames[rt.frame_count - 1].ip = frame.ip
++            rt.frames[frame_index].ip = frame.ip
+             ok = set_global(mut rt, mut o, mut frame)
+         elif instruction == chunk.OP_GET_UPVALUE:
+             get_upvalue(mut rt, mut frame)
+         elif instruction == chunk.OP_SET_UPVALUE:
+             set_upvalue(mut rt, mut frame)
+         elif instruction == chunk.OP_GET_PROPERTY:
+-            rt.frames[rt.frame_count - 1].ip = frame.ip
++            rt.frames[frame_index].ip = frame.ip
+             ok = get_property(mut rt, mut o, mut frame)
+         elif instruction == chunk.OP_SET_PROPERTY:
+-            rt.frames[rt.frame_count - 1].ip = frame.ip
++            rt.frames[frame_index].ip = frame.ip
+             ok = set_property(mut rt, mut o, mut frame)
+         elif instruction == chunk.OP_GET_SUPER:
+-            rt.frames[rt.frame_count - 1].ip = frame.ip
++            rt.frames[frame_index].ip = frame.ip
+             name = read_string(mut frame)
+             rt.stack_top = rt.stack_top - 1
+             superclass = as_obj(rt.stack[rt.stack_top])
+@@ -553,16 +560,16 @@
+             rt.stack_top = rt.stack_top - 1
+             rt.stack[rt.stack_top - 1] = value.Value.boolean(value.values_equal(left, right))
+         elif instruction == chunk.OP_GREATER or instruction == chunk.OP_LESS or instruction == chunk.OP_SUBTRACT or instruction == chunk.OP_MULTIPLY or instruction == chunk.OP_DIVIDE:
+-            rt.frames[rt.frame_count - 1].ip = frame.ip
++            rt.frames[frame_index].ip = frame.ip
+             ok = numeric(mut rt, mut o, instruction)
+         elif instruction == chunk.OP_ADD:
+-            rt.frames[rt.frame_count - 1].ip = frame.ip
++            rt.frames[frame_index].ip = frame.ip
+             ok = add(mut rt, mut o)
+         elif instruction == chunk.OP_NOT:
+             top = rt.stack_top - 1
+             rt.stack[top] = value.Value.boolean(value.is_falsey(rt.stack[top]))
+         elif instruction == chunk.OP_NEGATE:
+-            rt.frames[rt.frame_count - 1].ip = frame.ip
++            rt.frames[frame_index].ip = frame.ip
+             ok = negate(mut rt, mut o)
+         elif instruction == chunk.OP_PRINT:
+             rt.stack_top = rt.stack_top - 1
+@@ -579,21 +586,21 @@
+             frame.ip = frame.ip - offset
+         elif instruction == chunk.OP_CALL:
+             count = read_byte(mut frame)
+-            rt.frames[rt.frame_count - 1].ip = frame.ip
++            rt.frames[frame_index].ip = frame.ip
+             ok = call_value(mut rt, mut o, heap.peek(rt, count), count)
+             if ok and rt.frame_count > activation_count:
+                 ok = run(mut rt, mut o) == InterpretResult.OK
+         elif instruction == chunk.OP_INVOKE:
+             method = read_string(mut frame)
+             count = read_byte(mut frame)
+-            rt.frames[rt.frame_count - 1].ip = frame.ip
++            rt.frames[frame_index].ip = frame.ip
+             ok = invoke(mut rt, mut o, method, count)
+             if ok and rt.frame_count > activation_count:
+                 ok = run(mut rt, mut o) == InterpretResult.OK
+         elif instruction == chunk.OP_SUPER_INVOKE:
+             method = read_string(mut frame)
+             count = read_byte(mut frame)
+-            rt.frames[rt.frame_count - 1].ip = frame.ip
++            rt.frames[frame_index].ip = frame.ip
+             rt.stack_top = rt.stack_top - 1
+             superclass = as_obj(rt.stack[rt.stack_top])
+             ok = invoke_from_class(mut rt, mut o, superclass, method, count)
+@@ -622,7 +629,7 @@
+             rt.stack[rt.stack_top] = value.Value.obj(klass)
+             rt.stack_top = rt.stack_top + 1
+         elif instruction == chunk.OP_INHERIT:
+-            rt.frames[rt.frame_count - 1].ip = frame.ip
++            rt.frames[frame_index].ip = frame.ip
+             ok = inherit(mut rt, mut o)
+         elif instruction == chunk.OP_METHOD:
+             define_method(mut rt, mut frame)
