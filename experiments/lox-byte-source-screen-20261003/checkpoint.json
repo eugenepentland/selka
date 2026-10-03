@@ -1,24 +1,26 @@
 {
-  "stage": "complete diagnostic; wall timing running",
+  "stage": "complete wall and diagnostic instruction screen; byte candidate unselected",
   "selected": false,
   "original_manifest_sha256": "60661e055a9141960a2fb3cd1f4559839c51b9825bc1a4416d66a190358b8d3d",
   "complete_smoke_rows": 156,
   "complete_diagnostic_counter_rows": 104,
   "all_pmu_rates_equal_100": 416,
   "wall_expected_unique_cells": 468,
-  "full_wall_complete": false,
+  "full_wall_complete": true,
   "counter_screen_only": true,
   "wall_session": 23902,
   "main_merged": false,
   "payload_sha256": {
-    "README.md": "402d575bc93b85f7e92b54289975eb6243a26cdae0e1c3f326cd7f1ce9cd07cd",
+    "README.md": "ce0151e42bb548dc40cd452a0b67661c532f695a918a8572382993efa43585c8",
     "analyze.py": "c579753866b4cd16690fa91197b94ddcb0699dddbd31becfe330d9b0b23e0af6",
     "binaries.json": "60661e055a9141960a2fb3cd1f4559839c51b9825bc1a4416d66a190358b8d3d",
     "build.log": "236f6f67be25b1e3c89bd8b61ed5b2297b571bdc9da67b158c1598a23de3796b",
     "counter-runner.log": "068a34f6a6c7291897b780bac8babb0e4caa0858b38aabbe15ebbd28bcdd1688",
+    "finish-wall-worker.py": "32345d1656ad310ad9b680e7a687dd2bb224828d89eb29b4e0766419b15fbd6d",
     "guard-after-screen.json": "6fcdf8344cdd077adbbeaae310805b7011b0bfab1a4322457a7b3f07c22ea007",
     "guardian-screen.log": "385b31159bebe492e9e17268167b169b9a48d33c8bb75d255c23a375fd1d4b88",
     "guards.json": "743b696edacc1f02397c72aa4bbd54b49f636ab5cdcda39fb918bc5be570797d",
+    "historical-diagnostic-checkpoint.json": "e10e06753e480f8e4dcdf308c4c9621f37479f28574b6c2af941f65a7e5aeba2",
     "instruction-analysis.json": "61a99d9625c82ca148190067fbc8a3cef84463350dbcc4c5b1b84ccbc8b211a8",
     "instruction-screen.command.json": "a8fd207c8ef66c06572dcf87a45e9d0434e155509e4f302319d7de16d6a2863e",
     "instruction-screen.json.gz": "640baa8bab993a86d802d28d409f616a585a0ef5f1f6cda18843739d3b3d0ae1",
@@ -28,7 +30,13 @@
     "smoke-runner.log": "ef36e1e74d3e747b4051d84608e19378e5db22caa4027bad078ad34d16b65f15",
     "smoke.command.json": "60e53292a3dee03119a877ebf2dbd72433c75af0b6b42f01b29cdcfb11f8c8d6",
     "smoke.json.gz": "9ba5804511b0d368ef7f4175c483428138d5fad4c81a7170380af1b6978da308",
-    "smoke.log": "e0f8a56806e36fb60f20ca197b263c6e86677867b7d12df1f1042973817487ec"
+    "smoke.log": "e0f8a56806e36fb60f20ca197b263c6e86677867b7d12df1f1042973817487ec",
+    "wall-analysis.json": "310add59f5da04ee4a0f49649ec49a476120adb5f740f233f101e2dbe93dab8f",
+    "wall-closeout.json": "a5443200a71eec495aa5a9cdd4885f44be36becef3df96be399a6db91bfd0b53",
+    "wall-summary.json": "47a8cb4b7dfc97a0278a985f1697fb2b4f0e3df04361a406d40f53f1fe300961",
+    "wall.command.json": "b9d2b61643cc5eed13b564e9fe764e9a540f36de40f5879f390747e0611460b9",
+    "wall.json.gz": "aa5493675164c44081a46fad1ed27cec5ca8a4aa30e8b003571d95703dca9623",
+    "wall.log": "e12abdbe0d124dcb874c675e0eb04bac950d22cd82944d2bac399f124cb46165"
   },
   "guardian": {
     "passed": 88,
@@ -36,5 +44,8 @@
     "log_sha256": "385b31159bebe492e9e17268167b169b9a48d33c8bb75d255c23a375fd1d4b88"
   },
   "wall_closeout_worker": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-byte-screen-ready/finish-wall.py",
-  "wall_closeout_worker_sha256": "32345d1656ad310ad9b680e7a687dd2bb224828d89eb29b4e0766419b15fbd6d"
+  "wall_closeout_worker_sha256": "32345d1656ad310ad9b680e7a687dd2bb224828d89eb29b4e0766419b15fbd6d",
+  "complete_wall_rows": 468,
+  "wall_closeout_sha256": "a5443200a71eec495aa5a9cdd4885f44be36becef3df96be399a6db91bfd0b53",
+  "selection_reason": "LLVM VM +0.6211% wall time; QBE VM -0.2345% is small relative to paired spreads; no convincing overall benefit"
 }

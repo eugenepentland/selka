@@ -23,9 +23,11 @@ checks equal 100. Matched instruction changes are:
 | VM instruction reduction | -1.2402% | 0.2574% |
 | Tree instruction reduction | approximately 0% | -0.0391% |
 
-Negative reductions mean more instructions. Smaller byte storage has not yet
-demonstrated a runtime improvement. Three-round matched wall timing is running
-and is not claimed complete. The candidate remains isolated. The existing
+Negative reductions mean more instructions. All 468 matched wall cells are
+now complete. LLVM VM is 0.6211% slower and QBE VM is 0.2345% faster, with
+median paired spreads 1.402% and 1.098%. LLVM tree moves 0.4788% faster and
+QBE tree 0.5773% slower. This does not establish a useful performance gain, so
+the byte source and its qualified AST composition remain isolated. The existing
 source qualification's fresh 352 accounted public executions, 1396 native pairs,
 eight RC refusals and 80 explicit omissions are distinct from this screen.
 
@@ -60,9 +62,17 @@ python3 experiments/lox-parity-20261003/run.py time --work "$LOX_BYTE_WORK" \
   --out "$LOX_BYTE_WORK/wall.json" \
   --arms baseline-llvm,baseline-qbe,octets-llvm,octets-qbe,rust,go \
   --tier timed --rounds 3 --cpu 2
+python3 experiments/lox-byte-source-screen-20261003/analyze.py \
+  "$LOX_BYTE_WORK/wall.json" --metric wall_s \
+  --out "$LOX_BYTE_WORK/wall-analysis.json"
 ```
 
 The analyzer checks exact case/arm/round coverage, outputs, statuses and all
 counter running rates, then takes within-case paired medians before combining
 the 13 ratios geometrically. This screen is separate from the complete AST
 factorial and supplies no full compiler performance-gate or Rust/Go parity claim.
+
+`wall-closeout.json` verifies all 152 guarded inputs after the full run.
+`finish-wall-worker.py` is the archived private monitor; use the commands above
+for a new workspace. The historical diagnostic checkpoint remains a snapshot
+from before wall completion and does not count as an additional run.

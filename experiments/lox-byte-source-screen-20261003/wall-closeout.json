@@ -1,0 +1,23 @@
+{
+  "started_utc": "2026-10-03T05:49:48.257959+00:00",
+  "worker_sha256": "32345d1656ad310ad9b680e7a687dd2bb224828d89eb29b4e0766419b15fbd6d",
+  "guards_sha256": "743b696edacc1f02397c72aa4bbd54b49f636ab5cdcda39fb918bc5be570797d",
+  "guarded_inputs": 152,
+  "complete": true,
+  "analysis_command": [
+    "/usr/bin/python3",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/experiments/lox-byte-source-screen-20261003/analyze.py",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-byte-screen-ready/measurements/wall.json",
+    "--metric",
+    "wall_s",
+    "--out",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-byte-screen-ready/wall-analysis.json"
+  ],
+  "analysis_status": 0,
+  "wall_rows": 468,
+  "all_inputs_unchanged": true,
+  "command_sha256": "b9d2b61643cc5eed13b564e9fe764e9a540f36de40f5879f390747e0611460b9",
+  "raw_sha256": "b2f8ec5e44d819b074bd3019eed5d06e304f1eec861639c23a4072f29acdeadc",
+  "analysis_sha256": "310add59f5da04ee4a0f49649ec49a476120adb5f740f233f101e2dbe93dab8f",
+  "finished_utc": "2026-10-03T05:57:38.384528+00:00"
+}

@@ -1,0 +1,86 @@
+{
+  "octets-llvm-over-baseline-llvm": {
+    "vm": {
+      "ratio": 1.0062111927104713,
+      "reduction_pct": -0.6211192710471325,
+      "median_spread_pct": 1.4020448859660999,
+      "cases_faster": 5
+    },
+    "tree": {
+      "ratio": 0.995211519196119,
+      "reduction_pct": 0.47884808038809457,
+      "median_spread_pct": 1.4011973239136213,
+      "cases_faster": 11
+    }
+  },
+  "octets-llvm-over-rust": {
+    "vm": {
+      "ratio": 2.716216035846412,
+      "reduction_pct": -171.62160358464118,
+      "median_spread_pct": 1.3087277904944612,
+      "cases_faster": 0
+    },
+    "tree": {
+      "ratio": 4.242938190317476,
+      "reduction_pct": -324.2938190317476,
+      "median_spread_pct": 2.683111111683025,
+      "cases_faster": 0
+    }
+  },
+  "octets-llvm-over-go": {
+    "vm": {
+      "ratio": 2.71571500648935,
+      "reduction_pct": -171.57150064893497,
+      "median_spread_pct": 1.699468271221175,
+      "cases_faster": 0
+    },
+    "tree": {
+      "ratio": 4.105161753157967,
+      "reduction_pct": -310.5161753157967,
+      "median_spread_pct": 1.5961453101468133,
+      "cases_faster": 0
+    }
+  },
+  "octets-qbe-over-baseline-qbe": {
+    "vm": {
+      "ratio": 0.9976553563552378,
+      "reduction_pct": 0.23446436447621677,
+      "median_spread_pct": 1.0983465115758573,
+      "cases_faster": 9
+    },
+    "tree": {
+      "ratio": 1.005772883451879,
+      "reduction_pct": -0.5772883451879096,
+      "median_spread_pct": 0.696923581395764,
+      "cases_faster": 2
+    }
+  },
+  "octets-qbe-over-rust": {
+    "vm": {
+      "ratio": 5.354569400834513,
+      "reduction_pct": -435.4569400834513,
+      "median_spread_pct": 1.367903620658698,
+      "cases_faster": 0
+    },
+    "tree": {
+      "ratio": 7.714470770086882,
+      "reduction_pct": -671.4470770086882,
+      "median_spread_pct": 1.7960268481047443,
+      "cases_faster": 0
+    }
+  },
+  "octets-qbe-over-go": {
+    "vm": {
+      "ratio": 5.364924275890021,
+      "reduction_pct": -436.49242758900215,
+      "median_spread_pct": 1.6266254494007937,
+      "cases_faster": 0
+    },
+    "tree": {
+      "ratio": 7.472257615616748,
+      "reduction_pct": -647.2257615616747,
+      "median_spread_pct": 1.4414492451835852,
+      "cases_faster": 0
+    }
+  }
+}
