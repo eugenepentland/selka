@@ -1,0 +1,117 @@
+{
+  "reviewed_utc": "2026-10-03T03:10:10.318237+00:00",
+  "reviewer": "frames",
+  "author_source_commit": "b862e559011f7e92e8491826b90e590290473a79",
+  "assessment": "pass; no actionable semantic finding",
+  "spec": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-parity/inputs/pinned-SPEC.md",
+  "spec_sha256": "c818e2c812b6b7d9a3c3d4838c0526d54767369775298db23fb33f4055681f36",
+  "inputs": [
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-ownership-inline-20261003/.tmp-lox-table-read-20261003/control",
+      "file_count": 37,
+      "sorted_compact_hash_map_sha256": "fa1e179674be111509b3bfe12a0a370ac3d4d9673b130fd8dd287b8385958ae1"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-ownership-inline-20261003/.tmp-lox-table-read-20261003/final-direct",
+      "file_count": 37,
+      "sorted_compact_hash_map_sha256": "0eadd88549ef6a2ff3e243afd5b2fbbee69191e405e0348dda6a46a6f3ecdcaf"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-next/combined",
+      "file_count": 37,
+      "sorted_compact_hash_map_sha256": "af1bed90e2b97ee5d707e1b728fdfd583384729e48d05571c406982526617562"
+    }
+  ],
+  "overlay": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-ownership-inline-20261003/experiments/lox-table-read-20261003/final-table-entries.patch",
+  "overlay_sha256": "fdeaeae12c7317710d3713ba20d48ba3cf77e50a9125b06f61aef181fcd4e6f5",
+  "in_memory_replay_all_37_exact": true,
+  "changed_files": [
+    "heap.my",
+    "interpreter.my",
+    "table.my",
+    "table_test.my",
+    "vm.my"
+  ],
+  "public_get_body_retained": true,
+  "probe_body_equal_after_parameter_substitution": true,
+  "mutators_unchanged": [
+    "find_entry",
+    "adjust_capacity",
+    "set",
+    "delete",
+    "add_all",
+    "is_tombstone"
+  ],
+  "table_and_table_test_composed_bytes_identical": true,
+  "six_composed_caller_bodies_identical": [
+    {
+      "module": "heap.my",
+      "function": "class_method",
+      "final_line": 218,
+      "combined_line": 218,
+      "body_sha256": "10173f73e8514aead0d4c669d9651097733372452ee9605c3b60ef54d2737316"
+    },
+    {
+      "module": "heap.my",
+      "function": "class_method_hash",
+      "final_line": 227,
+      "combined_line": 227,
+      "body_sha256": "c46d83d2ac84f1ef82fb1925687577b3324a173eabdc502a22528fece7ad5c4b"
+    },
+    {
+      "module": "heap.my",
+      "function": "instance_member",
+      "final_line": 245,
+      "combined_line": 245,
+      "body_sha256": "c5241978432ed30ff4a6655072701cd520e3bc39f0d1bf73344ec6bb5fecd5c9"
+    },
+    {
+      "module": "interpreter.my",
+      "function": "get_variable",
+      "final_line": 142,
+      "combined_line": 142,
+      "body_sha256": "8120b8e6d374491e0194f94b79663b7b2941c6812da2c60f83e11b0cf6389443"
+    },
+    {
+      "module": "interpreter.my",
+      "function": "assign",
+      "final_line": 155,
+      "combined_line": 155,
+      "body_sha256": "664c379cf33885bc4ac02b71681b024edf76ffff87f1529dd29b444f7d90f073"
+    },
+    {
+      "module": "vm.my",
+      "function": "get_global",
+      "final_line": 312,
+      "combined_line": 337,
+      "body_sha256": "78a027ac892a45c28b48597a0c73c28ceea839cc79836fc44e5ffcb54aa62b3a"
+    }
+  ],
+  "readonly_hash_helpers_unchanged": true,
+  "test_counts": [
+    80,
+    81,
+    84
+  ],
+  "all_baseline_and_table_tests_preserved": true,
+  "existing_evidence_verified": {
+    "unit_flavors": 4,
+    "fresh_unit_passes": 324,
+    "exact_pairs": 712,
+    "unrun_native_corpus_smoke": 104,
+    "binary_hashes": 6
+  },
+  "artifact_sha256": {
+    "control-source.json": "7061fc75ad242453319d3a0494f7ba0a12095787491f11d6e84e4c2b97d65930",
+    "final-source.json": "70a1752bb2eddfa38b9fcae2fe63dd23311fcdb181308fb4fea53c529e3d3907",
+    "qualification.json": "56d3616aad2b1262c45b5f3dc0214a916ddf91941d77576c784b6817d385b1ec",
+    "unit-final.json": "736b8c6d3d5bd0f94e3fcc3a4e721f82364cb51ddc91c0b759a66ded69855948",
+    "validation-manifest.json": "dcec60413901243ca32da8925e34714cb5d299c82242544c98282b1a88f40e0b",
+    "validation-final.json.gz": "46e179b8fb131ce862881e3b1e39ad4c4e260045e40b8e9c33a6b5ea024624ae"
+  },
+  "composition_receipt_sha256": "77ec454239c437e0b8f6a43180df19614b4a2234a62ba36e5087daac34fb8f41",
+  "review_script": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-positive-write-20261003/.tmp-lox-positive-write-20261003/table-source-review.py",
+  "review_script_sha256": "de8f317e7c9557ef87a02000b667dc20ce9a52ceddf408ec2ff1a24ea0fae1ed",
+  "no_source_edits_or_new_tests_or_perf": true,
+  "limits": "Static source review and saved receipt verification only. Does not independently qualify VM callee changes outside six table caller bodies, does not claim source84 runtime qualification or a speedup;104 native stressed corpus smoke observations are explicitly unrun."
+}
