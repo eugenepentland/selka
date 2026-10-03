@@ -1,0 +1,17 @@
+{
+  "model_script_sha256": "66657fe95b3e5309b30de45751f0f2f151f6aac378a6cfe0c9828dec51b4e3ef",
+  "model_packed_sha256": "3e6453152b0989248e6e3f905600d0c00ccaab5a5b1db4901ead9fd625db1da8",
+  "model_raw_sha256": "b299e135b549e0a61f20a8fdbed3fe8edcf86cb1f5a90c6b18bad91ee2343b40",
+  "receipt_archive_sha256": "145464ba0a1189f8b893adbe5af26f4defadf6616f9f1c63f20a000751014dfd",
+  "raw_files": 18,
+  "host_command": [
+    "taskset",
+    "-c",
+    "16",
+    "python3",
+    "experiments/lox-equality-attribution-20261003/model.py"
+  ],
+  "last_complete_log": "model05.log",
+  "reader_failures_and_intermediate_models_preserved": true,
+  "guest_execution_or_performance_run": false
+}
