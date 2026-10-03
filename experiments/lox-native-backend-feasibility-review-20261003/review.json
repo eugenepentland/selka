@@ -1,0 +1,66 @@
+{
+  "date": "2026-10-03",
+  "reviewer": "/root/lookup",
+  "author": "/root/stack",
+  "author_worktree": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-variant-number-tag-20261003",
+  "author_commit": "29883d8ae831505ac750c5e5e4b39565064791c0",
+  "result": "Written explicit original-default policy proposal is feasible with producer compatibility addendum; implementation not assessed",
+  "actionable_findings": [],
+  "resolved_findings": [
+    {
+      "issue": "Passing a new internal policy flag to an older/foreign frontend can break a previously successful override",
+      "resolution": "Frozen ADDENDUM.md preserves original policy and exact old argv for actual overrides/foreign test producers, chosen before cache/module/session identities. Conservative whole-invocation original when self/override producer consistency is unproved."
+    }
+  ],
+  "requirements": [
+    "Policy derives from resolved backend and actual producer, including legacy qbe_llvm.py as LLVM; public raw emission defaults original",
+    "Early refusal before temp/layout/shape/printing preserves LLVM IL and metadata, not merely LLVM machine optimizations",
+    "Frontend fragment/replay/module config and selected native test session identities must partition enabled versus original before lookup",
+    "External manifest/module-objects/assemble/link consume their supplied IL without new proof admission; hashes/producer comments confer no authority",
+    "V2 certificate body, region/overlap and RC/noncounting refusals stay intact; actual call producers returning completed owners may contain internal callbacks under existing admission",
+    "Prove selected LLVM IL/IR/allocated ELF equivalence and full fresh accounted/native protocol separately before performance"
+  ],
+  "limits": [
+    "Proposal and lexical models only; no compiler/native/performance execution or speed claim",
+    "No assertion that policy propagation, cache partition or equivalence is implemented/qualified",
+    "Implementation authorization and performance selection belong to root; selected source/tools unchanged",
+    "Original README host-producer paragraph is superseded by preserved addendum, rather than silently rewritten"
+  ],
+  "inputs": {
+    "ADDENDUM.md": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-variant-number-tag-20261003/experiments/lox-native-backend-feasibility-20261003/ADDENDUM.md",
+      "sha256": "e4cbe9343fabe960ce97b7e944328a074ea7eaf8b0b5694ec922cad782ae6819",
+      "copy_sha256": "4bc0a85a9d9416d4b283310d5ea97b0f11710bab50b7461ab31cec308ef64d45"
+    },
+    "README.md": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-variant-number-tag-20261003/experiments/lox-native-backend-feasibility-20261003/README.md",
+      "sha256": "55c4d1d2f8dbda6d18ff943772c568df06e8aa956646c726423c7697254b9f21",
+      "copy_sha256": "4e17f709bd50a38c6bc5f913f1b2b4d846e6872e97b7e83f37ab8a70a0f31916"
+    },
+    "analysis.json": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-variant-number-tag-20261003/experiments/lox-native-backend-feasibility-20261003/analysis.json",
+      "sha256": "12dea200c3a8cfd9d5cc7aa33501b9f8e9c3de85ab326e76ba3c4e3ec850b680",
+      "copy_sha256": "32f37b2115a2ee786c98d126bb549a302689e0660d351327c2b6eb495ae6b4d5"
+    },
+    "files-final.json": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-variant-number-tag-20261003/experiments/lox-native-backend-feasibility-20261003/files-final.json",
+      "sha256": "1da7d0f9a2f087da562e07c04e29fb018bdfb95503daf15849c331e5ecad6fb0",
+      "copy_sha256": "f3d84b15daf1c400151ad834e852afa8d8ad6759022581d84bd744de2eb5db83"
+    },
+    "files.json": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-variant-number-tag-20261003/experiments/lox-native-backend-feasibility-20261003/files.json",
+      "sha256": "ff0a4615d9d0d8e68b412119f332c5e9d24786c939e795af51303bedf799a4e7",
+      "copy_sha256": "cf3c5d162cbf3002b10b5caa48745f88dac72d6ecf299c97f99b63e9cd5441cd"
+    },
+    "inspect.py": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-variant-number-tag-20261003/experiments/lox-native-backend-feasibility-20261003/inspect.py",
+      "sha256": "527fcfce8f5f39d76e209ed0a3040f3e2b553d5408ad9d395d1922da5624f204",
+      "copy_sha256": "d8be9e9ac0e0e596f9fbb9327018f7facede0376f69f5cb733d8fba8097cc1a6"
+    },
+    "raw.json.gz": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-variant-number-tag-20261003/experiments/lox-native-backend-feasibility-20261003/raw.json.gz",
+      "sha256": "238ca96541ee6b6640889d389abb5d5d3d4f0049da1c3fddae59e3621cb27f42",
+      "copy_sha256": "4e3f7360b346134d82a5e4bb0d7db4a8486f18c1a5b274590630f6babf2870b4"
+    }
+  }
+}
