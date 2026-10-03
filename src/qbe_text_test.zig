@@ -111,6 +111,23 @@ test "immutable equality resolves text and bytes leaves without structural failu
     try std.testing.expect(std.mem.indexOf(u8, structural, "call $myl_qbe_fail_equality(") != null);
 }
 
+// spec-case: PY-NUM-3
+test "integer text conversions resolve bounded signed and unsigned helpers" {
+    const a = std.testing.allocator;
+    const emitted = try manifest(a,
+        \\def signed(value: int) -> str:
+        \\    return str(value)
+        \\def unsigned(value: u64) -> str:
+        \\    return str(value)
+        \\def main() -> int:
+        \\    return len(signed(42)) + len(unsigned(42))
+    );
+    defer a.free(emitted);
+    for ([_][]const u8{ "call $myl_native_text_integer", "call $myl_native_text_unsigned" }) |symbol|
+        try std.testing.expect(std.mem.indexOf(u8, emitted, symbol) != null);
+    try std.testing.expect(std.mem.indexOf(u8, emitted, "call $myl_native_text_scalar(") == null);
+}
+
 /// Run one guest program under GC stress and return its exit value. A trap is
 /// reported and turned into an assertion failure so a runtime refusal cannot
 /// look like an ordinary nonzero result a test forgot to check.

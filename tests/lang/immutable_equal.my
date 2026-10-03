@@ -1,6 +1,5 @@
 module immutable_equal
 
-
 def retained_text() -> str:
     source = "prefix-λ-日本語-😀-abcdefghijklmnop-suffix" + "!"
     return source[7:33]

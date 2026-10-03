@@ -1320,7 +1320,10 @@ fn emitCast(comptime E: type, self: *E, ty: typed.Type, stack: []const typed.Typ
     };
     const input = try self.load("s", base);
     const result = self.temp();
-    try self.print(" %v{d} =l call $myl_native_text_scalar(l %heap, l %v{d}, w {d})\n", .{ result, input, kind });
+    if (kind < 2) {
+        const callee = if (kind == 0) "myl_native_text_integer" else "myl_native_text_unsigned";
+        try self.print(" %v{d} =l call ${s}(l %heap, l %v{d})\n", .{ result, callee, input });
+    } else try self.print(" %v{d} =l call $myl_native_text_scalar(l %heap, l %v{d}, w {d})\n", .{ result, input, kind });
     try checkedPointer(E, self, result, base);
 }
 

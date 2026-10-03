@@ -9,6 +9,8 @@ const Kind = enum { signed, unsigned, boolean, unit, floating };
 const FormatError = error{NoSpaceLeft};
 comptime {
     if (!builtin.is_test) @export(&scalarC, .{ .name = "myl_native_text_scalar" });
+    if (!builtin.is_test) @export(&signedC, .{ .name = "myl_native_text_integer" });
+    if (!builtin.is_test) @export(&unsignedC, .{ .name = "myl_native_text_unsigned" });
     if (!builtin.is_test) @export(&numberC, .{ .name = "myl_native_number_parse" });
     if (!builtin.is_test) @export(&numberBytesC, .{ .name = "myl_native_bytes_number_parse" });
     if (!builtin.is_test) @export(&bufferFloatC, .{ .name = "myl_native_bytes_buffer_append_float" });
@@ -19,6 +21,7 @@ comptime {
 /// The header of a native text (`native_text.h`): scalar count, then octet count.
 const Text = extern struct { length: usize, bytes: usize, flags: u32, hash: u32 };
 extern fn myl_native_text_payload(text: *const Text) [*]const u8;
+extern fn myl_native_text_build(heap: *anyopaque, bytes: usize) ?*Text;
 /// A fresh unpublished text of `bytes` octets, with `*keep` rooted across the
 /// allocation so a formatted text's source survives it.
 extern fn myl_native_text_build_keeping(heap: *anyopaque, bytes: usize, keep: *?*const Text) ?*Text;
@@ -112,6 +115,31 @@ fn numberBytesC(bytes: ?[*]const u8, length: usize, floating: c_uint, output: *u
     return 1;
 }
 extern fn myl_native_text_from_utf8(heap: *anyopaque, bytes: [*]const u8, length: usize) ?*anyopaque;
+/// A signed or unsigned 64-bit integer needs at most twenty ASCII octets. The
+/// formatter proves the metadata, so construction keeps the ordinary allocation
+/// size and refusal point without rescanning the decimal spelling as UTF-8.
+fn integerText(heap: *anyopaque, bits: u64, comptime kind: Kind) ?*anyopaque {
+    var buffer: [20]u8 = undefined;
+    const bytes = formatInteger(&buffer, bits, kind) catch return null;
+    const built = myl_native_text_build(heap, bytes.len) orelse return null;
+    const payload = @as([*]u8, @ptrCast(built)) + @sizeOf(Text);
+    @memcpy(payload[0..bytes.len], bytes);
+    myl_native_text_publish(built, bytes.len, 1);
+    return built;
+}
+fn signedC(heap: *anyopaque, value: i64) callconv(.c) ?*anyopaque {
+    return integerText(heap, @bitCast(value), .signed);
+}
+fn unsignedC(heap: *anyopaque, value: u64) callconv(.c) ?*anyopaque {
+    return integerText(heap, value, .unsigned);
+}
+fn formatInteger(buffer: []u8, bits: u64, comptime kind: Kind) FormatError![]const u8 {
+    return switch (kind) {
+        .signed => std.fmt.bufPrint(buffer, "{d}", .{@as(i64, @bitCast(bits))}),
+        .unsigned => std.fmt.bufPrint(buffer, "{d}", .{bits}),
+        else => unreachable,
+    };
+}
 fn scalarC(heap: *anyopaque, bits: u64, kind: c_uint) callconv(.c) ?*anyopaque {
     const selected: Kind = switch (kind) {
         0 => .signed,
@@ -129,8 +157,8 @@ fn format(buffer: []u8, bits: u64, kind: Kind) FormatError![]const u8 {
     switch (kind) {
         .unit => return "None",
         .boolean => return if (bits == 0) "False" else "True",
-        .signed => return std.fmt.bufPrint(buffer, "{d}", .{@as(i64, @bitCast(bits))}),
-        .unsigned => return std.fmt.bufPrint(buffer, "{d}", .{bits}),
+        .signed => return formatInteger(buffer, bits, .signed),
+        .unsigned => return formatInteger(buffer, bits, .unsigned),
         .floating => {},
     }
     const number: f64 = @bitCast(bits);
@@ -155,6 +183,19 @@ test "native scalar text uses canonical integer and floating spellings" {
     try std.testing.expectEqualStrings("inf", try format(&buffer, @bitCast(std.math.inf(f64)), .floating));
     try std.testing.expectEqualStrings("-inf", try format(&buffer, @bitCast(-std.math.inf(f64)), .floating));
     _ = try format(&buffer, 1, .floating);
+}
+
+// spec-case: PY-NUM-3
+test "native integer formatting fits its twenty ASCII octet bound" {
+    var buffer: [20]u8 = undefined;
+    const signed = [_]i64{ 0, 1, -1, 10, -10, std.math.minInt(i64), std.math.maxInt(i64) };
+    for (signed) |value| {
+        var expected: [40]u8 = undefined;
+        const actual = try formatInteger(&buffer, @bitCast(value), .signed);
+        try std.testing.expectEqualStrings(try std.fmt.bufPrint(&expected, "{d}", .{value}), actual);
+        for (actual) |octet| try std.testing.expect(octet < 0x80);
+    }
+    try std.testing.expectEqualStrings("18446744073709551615", try formatInteger(&buffer, std.math.maxInt(u64), .unsigned));
 }
 
 test "native scalar formatting rejects insufficient caller storage" {
