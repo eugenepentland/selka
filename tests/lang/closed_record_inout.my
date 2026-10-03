@@ -1,0 +1,60 @@
+record Runtime:
+    data: list[int]
+    top: int
+
+
+record Interpreter:
+    rt: Runtime
+    tag: int
+
+
+def update(rt: mut Runtime, index: int, value: int):
+    rt.data[index] = value
+    rt.top += 1
+
+
+def carrier(it: mut Interpreter, index: int, value: int):
+    rt = it.rt
+    update(mut rt, index, value)
+    it.rt = rt
+
+
+def replace(rt: mut Runtime, value: int):
+    if value < 0:
+        return
+    rt = Runtime([value], 2)
+
+
+def replacement(it: mut Interpreter, value: int):
+    rt = it.rt
+    replace(mut rt, value)
+    it.rt = rt
+
+
+# spec-case: RC-FIELD-INOUT-1
+public def test_closed_carrier_preserves_snapshots_detached_aliases_and_record_rebinding() -> bool:
+    it = Interpreter(Runtime([1, 2], 0), 9)
+    saved = it
+    alias = it.rt.data
+    carrier(mut it, -1, 7)
+    assert it.rt.data == [1, 7] and it.rt.top == 1
+    assert saved.rt.data == [1, 2] and saved.rt.top == 0
+    replacement(mut it, -1)
+    assert it.rt.data == [1, 7]
+    replacement(mut it, 11)
+    return it.rt.data == [11] and it.rt.top == 2 and alias == [1, 2]
+
+
+# spec-case: RC-FIELD-INOUT-1
+public def test_closed_carrier_works_in_owned_arena_storage() -> bool:
+    with arena():
+        it = Interpreter(Runtime([3, 5], 0), 9)
+        saved = it
+        carrier(mut it, 0, 7)
+        return it.rt.data == [7, 5] and saved.rt.data == [3, 5]
+
+
+def main() -> int:
+    assert test_closed_carrier_preserves_snapshots_detached_aliases_and_record_rebinding()
+    assert test_closed_carrier_works_in_owned_arena_storage()
+    return 0

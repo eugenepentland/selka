@@ -17,9 +17,13 @@ pub fn project(comptime E: type, self: *E) Error!bool {
     const state = frame.get(E, self) orelse return false;
     for (state.plan.records.transfers) |proof| {
         if (proof.projection != self.pc) continue;
-        if (!proof.returns) return dead(E, self, proof);
+        if (!proof.returns()) return dead(E, self, proof);
         const member = try self.field(self.function.scope.locals[proof.source.local].ty, proof.source.field);
         if (try direct(E, self, proof)) {
+            if (proof.mode == .inout) {
+                try self.print(" # RC-FIELD-INOUT-1 source {d} field {d} target {d}\n", .{ proof.source.local, proof.source.field, proof.target });
+                return true;
+            }
             try frame.drop(E, self, proof.target);
             const field = try self.address(try home(E, self, proof.source.local), member.offset);
             const slot = try home(E, self, proof.target);
@@ -60,9 +64,12 @@ pub fn project(comptime E: type, self: *E) Error!bool {
 pub fn local(comptime E: type, self: *E) Error!bool {
     const state = frame.get(E, self) orelse return false;
     for (state.plan.records.transfers) |proof| {
+        if (proof.mode == .inout and try direct(E, self, proof)) {
+            if (try inoutLocal(E, self, proof)) return true;
+        }
         if (!proof.intercepts(self.pc) or self.pc == proof.projection) continue;
         if (!try direct(E, self, proof)) return false;
-        if (!proof.returns or self.pc != proof.commit) return true;
+        if (!proof.returns() or self.pc != proof.commit) return true;
         const member = try self.field(self.function.scope.locals[proof.source.local].ty, proof.source.field);
         const field = try self.address(try home(E, self, proof.source.local), member.offset);
         const slot = try home(E, self, proof.target);
@@ -74,12 +81,31 @@ pub fn local(comptime E: type, self: *E) Error!bool {
     return false;
 }
 
+// The source stays owning and rooted; the ghost target never owns. Ordinary
+// call lowering preserves leaf COW, allocation, rebind and trap obligations.
+fn inoutLocal(comptime E: type, self: *E, proof: Certificate) Error!bool {
+    if (self.pc == proof.projection - 1) {
+        try self.store(0, try home(E, self, proof.source.local));
+        return true;
+    }
+    if (self.pc > proof.store and self.pc < proof.writeback) {
+        const op = self.function.scope.instructions[self.pc].op;
+        if (op != .ref_local or @backingInt(op.ref_local) != proof.target) return false;
+        const member = try self.field(self.function.scope.locals[proof.source.local].ty, proof.source.field);
+        const field = try self.address(try home(E, self, proof.source.local), member.offset);
+        try self.store((self.states[self.pc] orelse return error.InternalError).len, field);
+        return true;
+    }
+    if (self.pc == proof.projection) return false;
+    return proof.intercepts(self.pc);
+}
+
 /// Successful ordinary storeback owns the replacement before releasing the dead
 /// target. A direct store-back already cleared the target's guard.
 pub fn committed(comptime E: type, self: *E) Error!void {
     const state = frame.get(E, self) orelse return;
     for (state.plan.records.transfers) |proof| {
-        if (proof.returns and proof.commit == self.pc and !try direct(E, self, proof)) try frame.drop(E, self, proof.target);
+        if (proof.returns() and proof.commit == self.pc and !try direct(E, self, proof)) try frame.drop(E, self, proof.target);
     }
 }
 
@@ -90,7 +116,7 @@ fn direct(comptime E: type, self: *E, proof: Certificate) Error!bool {
     const state = frame.get(E, self) orelse return false;
     if (@import("qbe_rc_borrow.zig").active(E, self)) return false;
     // A dead move tests its source's guard and role word, so it needs both.
-    if (!proof.returns and (frame.emptyLocal(E, self, proof.source.local) or try state.plan.journal.slot(proof.source.local) == null)) return false;
+    if (!proof.returns() and (frame.emptyLocal(E, self, proof.source.local) or try state.plan.journal.slot(proof.source.local) == null)) return false;
     const slot = try state.plan.journal.slot(proof.target);
     return slot != null;
 }

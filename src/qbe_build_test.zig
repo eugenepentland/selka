@@ -852,7 +852,7 @@ const record_transfer_program =
     \\    return 0
 ;
 
-fn recordTransferLifecycle(allocator: std.mem.Allocator) !usize {
+fn recordTransferLifecycle(allocator: std.mem.Allocator, fast: bool) !usize {
     var environment = try std.process.Environ.createMap(std.testing.environ, allocator);
     defer environment.deinit();
     try environment.put(counting_contract.variable, counting_contract.Selection.rc_counting.identity());
@@ -867,7 +867,11 @@ fn recordTransferLifecycle(allocator: std.mem.Allocator) !usize {
     const source = try join(a, &.{ root, "record.my" });
     const binary = try join(a, &.{ root, "record" });
     try context.write(source, record_transfer_program);
-    try buildOnly(context, .{ .tools = try tools(a), .source = source, .output = binary, .cache = try join(a, &.{ root, "cache" }), .environment = &environment });
+    const spec: Spec = .{ .tools = try tools(a), .source = source, .output = binary, .cache = try join(a, &.{ root, "cache" }), .environment = &environment };
+    if (fast) {
+        const command = try std.mem.concat(a, []const u8, &.{ try buildArgv(context, spec, false), &.{ "--mode", "ReleaseFast" } });
+        _ = try spawnOk(context, command, cwdOf(spec), &environment);
+    } else try buildOnly(context, spec);
     try argvRun(context, &.{binary}, &environment, 0, "4\n2\n");
     try argvRun(context, &.{ binary, "trap-owned" }, &environment, 1, "");
     try argvRun(context, &.{ binary, "trap-caller" }, &environment, 1, "");
@@ -879,7 +883,12 @@ fn recordTransferLifecycle(allocator: std.mem.Allocator) !usize {
 
 // spec-case: RC-CLOSED-FIELD-TRANSFER-2
 test "native RC record field transfers balance owned and caller traps, arenas and budgets" {
-    try std.testing.expectEqual(@as(usize, 5), try recordTransferLifecycle(std.testing.allocator));
+    try std.testing.expectEqual(@as(usize, 5), try recordTransferLifecycle(std.testing.allocator, false));
+}
+
+// spec-case: RC-FIELD-INOUT-1
+test "RC field inout unaccounted native owner and hold balances survive traps arenas and budgets" {
+    try std.testing.expectEqual(@as(usize, 5), try recordTransferLifecycle(std.testing.allocator, true));
 }
 
 const sites_program =

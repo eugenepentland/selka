@@ -21,9 +21,13 @@ pub const Certificate = struct {
     store: usize,
     writeback: usize,
     commit: usize,
-    /// False for RC-DEAD-FIELD-MOVE-1: the source is never read again, so the
-    /// field is not stored back; `writeback` and `commit` then equal `store`.
-    returns: bool = true,
+    /// Dead moves have no store-back. Inout keeps the source owning and rooted.
+    mode: enum { transfer, dead, inout } = .transfer,
+
+    /// Whether this field has an unconditional store-back.
+    pub fn returns(self: Certificate) bool {
+        return self.mode != .dead;
+    }
 
     /// Whether the lowering of the instruction at `pc` belongs to this
     /// certificate: the extraction's projection, copy and target store, or
@@ -59,6 +63,7 @@ fn closed(comptime E: type, self: *E, pc: usize, catalog: *shapes.Catalog) Error
     var complete = proof;
     complete.writeback = end;
     complete.commit = end + 10;
+    if (try @import("rc_field_inout.zig").qualifies(E, Certificate, self, complete, catalog)) complete.mode = .inout;
     return complete;
 }
 
@@ -103,7 +108,7 @@ fn deadExtraction(comptime E: type, self: *E, pc: usize, catalog: *shapes.Catalo
     const field = code[pc].op.get_field;
     if (field >= owner.fields.len or owner.fields[field].ty != ty or copy.ty != ty) return null;
     if (!try movable(E, self, ty, catalog)) return null;
-    return .{ .source = .{ .local = source, .field = field, .ty = ty }, .target = target, .projection = pc, .store = pc + 2, .writeback = pc + 2, .commit = pc + 2, .returns = false };
+    return .{ .source = .{ .local = source, .field = field, .ty = ty }, .target = target, .projection = pc, .store = pc + 2, .writeback = pc + 2, .commit = pc + 2, .mode = .dead };
 }
 
 // No later instruction reads the source before overwriting it, nothing can

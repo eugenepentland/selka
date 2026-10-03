@@ -223,6 +223,7 @@ test {
     _ = @import("array_places_test.zig");
     _ = @import("qbe_loop_facts_test.zig");
     _ = @import("qbe_positive_index_test.zig");
+    _ = @import("qbe_rc_field_inout_test.zig");
     _ = @import("qbe_loop_version.zig");
     _ = @import("qbe_loop_operands_test.zig");
     _ = @import("domains_test.zig");
