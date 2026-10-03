@@ -1,0 +1,57 @@
+{
+  "review_kind": "independent read-only compiler proof review",
+  "verdict": "pass_with_limits; no actionable runtime defect found in this exact bounded snapshot; no candidate promotion or performance claim",
+  "candidate_worktree": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-case-glue-20261003",
+  "frozen_source": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-case-glue-20261003/.tmp-lox-native-case-20261003/proof-bounded",
+  "proof_receipt_sha256": "e16bb7f208b013950a436691c1e7ec7b0617f9ce2d3ac24eb40c097a5b731df0",
+  "base": "3b33df52044a10cb84b908f8b1641af439e8c729",
+  "final_files": {
+    "SPEC.md": "f9fe9c9260ae2f2122bf5f92f599c62e1f3650b392348d5f67a3d2bbc3d69d15",
+    "src/qbe_rc_glue.zig": "411884bd92f3839e0ae69deb2650f769a6285b26045569fac4a963259de37faa",
+    "src/qbe_rc_native_variant.zig": "0e99f25ab4ee76d0233fd9336db284ba01f549ec7ed600a9880d54784de471b8",
+    "src/qbe_rc_native_variant_test.zig": "19faaf64fb12ef84dc99f8da932d3e9f3ac947f193a95403634dba4c847c7ff4",
+    "src/qbe_rc_native_variant_runtime_test.zig": "25e196de524bc36e14fbd85ef203236c3cd4dc07ed9012fda7fde9294de79df6",
+    "test/fixtures/native-rc/variant-native.c": "967e2743b6fbf91662049ca01c44d0ac21a968314f84da79dff58dfcca4ed264",
+    "src/root_test.zig": "38ea8cccdfd1b7f6ddacbcbd0e3ebf3c5bfceeb72878fce2c96949038135eda2"
+  },
+  "baseline_files_checked_unchanged": {
+    "src/rc_glue.zig": "b1ec022d8d280a1b7ae488913758e03ff2afe17296c6a0a631770a11321b9a4a",
+    "src/rc_shape.zig": "787561bfa4b3702d964393258e6a6ca63654ca793e174d3cb8805557683541e7",
+    "src/native_types.zig": "58199557c0c1c79a1009549893aa5ec95eaf0776acb520ad5187912b33171eeb",
+    "src/qbe_rc_slots.zig": "a4b07276553c09ca749e69c063f9b0a4be58f03eb1d2ed9cf97a394d12c2f3c6",
+    "src/qbe_rc_frame.zig": "adf424aadb5d4042336bc83219c3d94afe5ce16cdcb0baffd69014cb6e01f505",
+    "src/qbe_rc_admission.zig": "cf9783fc5656222ed046e5b1455e6c41e477396bad341552cfa119e1a93e8d86",
+    "src/qbe_zero.zig": "5a33d25488dde81f8690820087b074c1adeba118eee870c59b9552b752249519",
+    "src/qbe_alloc.zig": "b4aa41579f906fd37161b1774eb5be5b5dad4a022d5550dc48018fdf48bf1199",
+    "src/runtime_mode.zig": "893d54b00dc51ffeaef8810c2e62869384c4e5f892fa8e8716818dad6f3463ed",
+    "src/native_heap.h": "f7e359748b97f38eb43698018418348957a89725793bc2ea4747985ca70dc8f4",
+    "src/native_heap.c": "fe479f040ce625621457e6a8a3a74a58a6dd225e958cb7e6898ffbb06ae6fd0e",
+    "src/value_semantics.zig": "96ab42d5db6a288781a979120bfc08fbd4af58459741448dcf821dbe2ebfd98e"
+  },
+  "qualifications_read_not_rerun": {
+    "focused": {
+      "outer_status": 0,
+      "log_sha256": "fcf56b0e5ab09b50f7300d155e3ba628eecf8cc65c65344915a53c4f8cee140b",
+      "checks": 17,
+      "scope": "Author-run bounded snapshot focused tests; misleading failed-command footer is retained."
+    },
+    "guardian": {
+      "outer_status": 0,
+      "log_sha256": "4bd11917cd4acf41fdaed89ce0a956303e237f40b8d336432f7defcca120292d",
+      "checks": 88,
+      "scope": "Author-run whole-tree Guardian gate; not a broad compiler/native Lox suite."
+    }
+  },
+  "reviewer_tests_builds_perf_runs": 0,
+  "guarded_static_is_historical_not_final_bounded": {
+    "receipt": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-case-glue-20261003/.tmp-lox-native-case-20261003/static-guarded-analysis.json",
+    "sha256": "84c2bb38f01b85b922cb45c1053f5cec3bfd24882a416df7452e0ef0ff7998f3",
+    "note": "Whole-function code grows in LLVM/QBE; some successful ownership calls are skipped, but overlap arithmetic hoisting can offset gain. Not bounded candidate performance evidence."
+  },
+  "limitations": [
+    "Linux AMD64 published native ABI and valid compiler-produced initialized physical value buffers/heap required.",
+    "No new byte-identity, broad compiler, full native Lox, runtime counter, wall, or parity qualification performed by reviewer.",
+    "Potential producedOwner disjoint witness refinement is separate and not covered.",
+    "Exact four-selected-tag/32-byte/eight-total-case/eight-field limit and original slow helper kept; existing cached shape/layout resolution is outside the64 direct field-comparison bound."
+  ]
+}

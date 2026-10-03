@@ -1,0 +1,44 @@
+{
+  "base": "3b33df52044a10cb84b908f8b1641af439e8c729",
+  "files": {
+    "SPEC.md": "eb10084bc503fce1f15f09e8f332e1b958f0eec55b43f0b437c1caa036f7ad95",
+    "src/qbe_rc_glue.zig": "411884bd92f3839e0ae69deb2650f769a6285b26045569fac4a963259de37faa",
+    "src/qbe_rc_native_variant.zig": "3be0e537a1e1ae492a47cb4ccf85561ce16e7052a578f522297a753c4b965882",
+    "src/qbe_rc_native_variant_test.zig": "0686eece7d60517c328611fc4d9844a3cd19fecc9ba0b6c9d68df1d0c56f0c87",
+    "src/qbe_rc_native_variant_runtime_test.zig": "e4ded1cc2af797ebac678c6c7e80aa73d9daf924ee1c8da7ab3abfb05223a0c7",
+    "test/fixtures/native-rc/variant-native.c": "967e2743b6fbf91662049ca01c44d0ac21a968314f84da79dff58dfcca4ed264",
+    "src/root_test.zig": "38ea8cccdfd1b7f6ddacbcbd0e3ebf3c5bfceeb72878fce2c96949038135eda2"
+  },
+  "guardian": {
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-case-glue-20261003/scripts/build-slot.sh",
+      "gate",
+      "/home/epentland/ai/canopy/guardian-zig/zig-out/bin/guardian-check",
+      "all",
+      ".",
+      "--gate"
+    ],
+    "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-case-glue-20261003",
+    "started_utc": "2026-10-03T07:07:07.695047+00:00",
+    "status": 0,
+    "finished_utc": "2026-10-03T07:07:09.076695+00:00",
+    "log_sha256": "4bd11917cd4acf41fdaed89ce0a956303e237f40b8d336432f7defcca120292d"
+  },
+  "focused": {
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-case-glue-20261003/scripts/build-slot.sh",
+      "build",
+      "zig",
+      "build",
+      "test-units",
+      "-Dtest-filter=RC-NATIVE-VARIANT-1",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-case-glue-20261003/.tmp-lox-native-case-20261003/zig-units"
+    ],
+    "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-case-glue-20261003",
+    "started_utc": "2026-10-03T07:07:09.076872+00:00",
+    "status": 0,
+    "finished_utc": "2026-10-03T07:07:31.490517+00:00",
+    "log_sha256": "cef6d7d4e0fece2a67926afc74301aea2add2d2e97dee7316df5f2396dde7f94"
+  }
+}

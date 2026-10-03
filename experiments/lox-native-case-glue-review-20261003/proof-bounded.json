@@ -1,0 +1,52 @@
+{
+  "base": "3b33df52044a10cb84b908f8b1641af439e8c729",
+  "files": {
+    "SPEC.md": "f9fe9c9260ae2f2122bf5f92f599c62e1f3650b392348d5f67a3d2bbc3d69d15",
+    "src/qbe_rc_glue.zig": "411884bd92f3839e0ae69deb2650f769a6285b26045569fac4a963259de37faa",
+    "src/qbe_rc_native_variant.zig": "0e99f25ab4ee76d0233fd9336db284ba01f549ec7ed600a9880d54784de471b8",
+    "src/qbe_rc_native_variant_test.zig": "19faaf64fb12ef84dc99f8da932d3e9f3ac947f193a95403634dba4c847c7ff4",
+    "src/qbe_rc_native_variant_runtime_test.zig": "25e196de524bc36e14fbd85ef203236c3cd4dc07ed9012fda7fde9294de79df6",
+    "test/fixtures/native-rc/variant-native.c": "967e2743b6fbf91662049ca01c44d0ac21a968314f84da79dff58dfcca4ed264",
+    "src/root_test.zig": "38ea8cccdfd1b7f6ddacbcbd0e3ebf3c5bfceeb72878fce2c96949038135eda2"
+  },
+  "guardian": {
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-case-glue-20261003/scripts/build-slot.sh",
+      "gate",
+      "/home/epentland/ai/canopy/guardian-zig/zig-out/bin/guardian-check",
+      "all",
+      ".",
+      "--gate"
+    ],
+    "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-case-glue-20261003",
+    "started_utc": "2026-10-03T07:16:11.368127+00:00",
+    "environment": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-case-glue-20261003/.tmp-lox-native-case-20261003/tmp",
+      "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-case-glue-20261003/.tmp-lox-native-case-20261003/zig-global"
+    },
+    "status": 0,
+    "finished_utc": "2026-10-03T07:16:12.779135+00:00",
+    "log_sha256": "4bd11917cd4acf41fdaed89ce0a956303e237f40b8d336432f7defcca120292d"
+  },
+  "focused": {
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-case-glue-20261003/scripts/build-slot.sh",
+      "build",
+      "zig",
+      "build",
+      "test-units",
+      "-Dtest-filter=RC-NATIVE-VARIANT-1",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-case-glue-20261003/.tmp-lox-native-case-20261003/zig-units"
+    ],
+    "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-case-glue-20261003",
+    "started_utc": "2026-10-03T07:16:12.779337+00:00",
+    "environment": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-case-glue-20261003/.tmp-lox-native-case-20261003/tmp",
+      "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-case-glue-20261003/.tmp-lox-native-case-20261003/zig-global"
+    },
+    "status": 0,
+    "finished_utc": "2026-10-03T07:16:29.345272+00:00",
+    "log_sha256": "fcf56b0e5ab09b50f7300d155e3ba628eecf8cc65c65344915a53c4f8cee140b"
+  }
+}
