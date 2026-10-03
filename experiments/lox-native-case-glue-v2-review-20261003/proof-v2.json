@@ -1,0 +1,52 @@
+{
+  "base": "3b33df52044a10cb84b908f8b1641af439e8c729",
+  "stage": "V2 existing producedOwner disjoint certificate only",
+  "files": {
+    "SPEC.md": "8f1cd80a57454e3c649fda0af1406738d4238ddccc971f93f00fe27b0c3ed616",
+    "src/qbe_rc_glue.zig": "d48fe13d42ad6e7e6389c4cd3d43169bbe6e4bde9f93a2241fe92b301f2132ad",
+    "src/qbe_rc_slots.zig": "3e58d6027afe726a9060f3b5315f4f402b8769f87948b9489ec1f4a18bd2267a",
+    "src/qbe_rc_values.zig": "db7fed457aaf5f13de5c58ce26114896c868c4b8a10743ca22a03338b6dfcd5a",
+    "src/qbe_rc_inline_take.zig": "cf48eee2a8eab0cbbe43c159f804dbd8fa7be9c13a3810bb264a684f97e95333",
+    "src/root_test.zig": "9f199b1e2af3082b7c36b8c11e7d108cca1d7aec69f263449491d963f199eb19",
+    "src/qbe_rc_native_variant.zig": "ca2d7ee5e68ca690dac8ddb1a7467cf0c7594cf242d0188d3ece854b9169fad0",
+    "src/qbe_rc_native_variant_test.zig": "36cb611f7ae3fba367cd13b0a84f121e41cae18fd676dbad7e0455f4ebd1d061",
+    "src/qbe_rc_native_variant_runtime_test.zig": "32716f92b4df120a886e29ecc75e3f006ca09de3c3b9a34aea8a62c188b36750",
+    "src/qbe_rc_native_variant_witness_test.zig": "5c1d3b926745abd273fc01ffa6767ea1b0bdf6cfe088f9ef3804014e787e2dd4",
+    "src/qbe_rc_overlap.zig": "e35f4e25dd98f862197f43affafe33c1d14a97895be5a915e4ef50e4bbc469d5",
+    "test/fixtures/native-rc/variant-native.c": "0e5015ffbaebdda6a48c713d5fc62d19cc2d336d746b0d3c31e4af6a1cc16f1d"
+  },
+  "checks": {
+    "focused-v2-final": {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-case-glue-20261003/scripts/build-slot.sh",
+        "build",
+        "zig",
+        "build",
+        "test-units",
+        "-Dtest-filter=RC-NATIVE-VARIANT-1",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-case-glue-20261003/.tmp-lox-native-case-20261003/zig-units"
+      ],
+      "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-case-glue-20261003",
+      "started_utc": "2026-10-03T07:52:56.484879+00:00",
+      "status": 0,
+      "finished_utc": "2026-10-03T07:53:11.516397+00:00",
+      "log_sha256": "d94934a48d26c620c270b6340b55e040adb52eea385ba283fa9121acb0c96f76"
+    },
+    "guardian-v2-final": {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-case-glue-20261003/scripts/build-slot.sh",
+        "gate",
+        "/home/epentland/ai/canopy/guardian-zig/zig-out/bin/guardian-check",
+        "all",
+        ".",
+        "--gate"
+      ],
+      "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-case-glue-20261003",
+      "started_utc": "2026-10-03T07:52:55.131205+00:00",
+      "status": 0,
+      "finished_utc": "2026-10-03T07:52:56.484666+00:00",
+      "log_sha256": "9b4f7fe42b5e3c9c08e91f361bbd14a5cef2512b785bd89f8c8276ccda0c0345"
+    }
+  }
+}

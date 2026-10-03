@@ -1,0 +1,17 @@
+{
+  "argv": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-case-glue-20261003/scripts/build-slot.sh",
+    "build",
+    "zig",
+    "build",
+    "test-units",
+    "-Dtest-filter=RC-NATIVE-VARIANT-1",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-case-glue-20261003/.tmp-lox-native-case-20261003/zig-units"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-case-glue-20261003",
+  "started_utc": "2026-10-03T07:42:07.498398+00:00",
+  "status": 1,
+  "finished_utc": "2026-10-03T07:42:23.734852+00:00",
+  "log_sha256": "9422d6af239a790065678c4f7dc51ae8d767a4a40e7681f7ff12261b5aa901cb"
+}
