@@ -1,0 +1,8 @@
+build-slot: waiting for memory: 3.7 GiB available, gate needs 6.0 GiB; waiting (0s so far)
+build-slot: gate slot 1 after 30s (waiting for memory: 3.6 GiB available, gate needs 6.0 GiB)
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: file-size: 20 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 25 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 8459 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 9 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed

@@ -1,0 +1,24 @@
+{
+  "fresh_public_test_runner_status": 0,
+  "receipt_recheck_status": 0,
+  "qualification_sha256": "2d102ccca29157fd4d3bc2306d55d8644b316f3992f95ef53c820db39656c6c5",
+  "runner_sha256": {
+    "pack.py": "fb5f18e9ef79a4600f9ec451237f3a0362ca3459839db0d05f71412868ee5d48",
+    "run.py": "5d205634b54aac8090ff125dac9f3f6875a5e3c437335941f30e7f1c73f33ade"
+  },
+  "guardian": {
+    "status": 0,
+    "passed_checks": 88,
+    "log_sha256": "6e81539a872095fadb5c7b58f6f94e6c28e663ad2b929523d82cc6f3d65eb7db",
+    "command": [
+      "scripts/build-slot.sh",
+      "gate",
+      "/home/epentland/ai/canopy/guardian-zig/zig-out/bin/guardian-check",
+      "all",
+      ".",
+      "--gate"
+    ]
+  },
+  "build_slot": "Explicit gate waited30s for memory admission, then passed without overrides.",
+  "guardian_feedback": "Root consolidates feedback; Guardian whole-tree gate smooth88/88; no feedback repo edits in this lane."
+}
