@@ -142,4 +142,12 @@ Exact source maps, all ratios and receipt hashes are in
 
 The whole-tree integration Guardian gate passes 88 checks with no waivers or
 accepted snapshots. Python/shell syntax and ordinary/added-source whitespace
-checks pass. Guardian usage feedback is consolidated after the checkpoint.
+checks pass. Guardian feedback is committed separately in the gate's repo.
+Feedback commits are `3549ecd` and `511b078` in `guardian-zig`.
+
+The sealed evidence is
+`/home/epentland/ai/canopy/evidence/lox-parity-20261003/callee-table`:
+3,471 verified payloads, 33 runtime objects, no missing runtime paths.
+`MANIFEST.sha256` is `94d85a11474d68c281d6b0e9010046ed5ebc8dd7ded019d43761b5d7c63b7272`.
+It records the selected tree at `44cd4307`; subsequent closeout documentation
+does not mutate this archive. Later AST/constant experiments are excluded.

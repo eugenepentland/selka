@@ -62,3 +62,11 @@ with adjacent QBE
 Raw root evidence is under `.tmp-lox-next`; compiler-only experiments use the
 separate `.tmp-lox-write-screen` manifest. Their one-round instruction screen
 is diagnostic and does not replace the final source matrix.
+
+The completed evidence archive is
+`/home/epentland/ai/canopy/evidence/lox-parity-20261003/callee-table`, with
+`MANIFEST.sha256` equal to
+`94d85a11474d68c281d6b0e9010046ed5ebc8dd7ded019d43761b5d7c63b7272`.
+It contains the committed source checkpoint `44cd4307`, exact raw receipts,
+control/candidate compilers, runtime objects, complete source archives, reviews
+and preserved failed prototypes. Later experiments are outside its scope.
