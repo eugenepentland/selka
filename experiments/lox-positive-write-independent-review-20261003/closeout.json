@@ -1,0 +1,272 @@
+{
+  "recorded_utc": "2026-10-03T03:09:00.173565+00:00",
+  "outcome": "prior source proof remains pass with limits; no actionable defect found",
+  "primary_review_commit": "dbd3492a652bfd79b7b7d1aa72c1fd6b89dc1d1e",
+  "primary_review_sha256": "12679465f487b3b99af50fe8ab886edead5782ec53dba62a9c6f73cbc3534369",
+  "history_policy": "Primary review and its pending-at-freeze metadata retained unchanged; this receipt records later author qualification and terminology correction.",
+  "author_candidate_commit": "3315917990155adcb243ca8241bfd747fcf30793",
+  "author_receipts": {
+    "checks.json": {
+      "author_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-positive-write-20261003/experiments/lox-positive-write-20261003/checks.json",
+      "copied_path": "experiments/lox-positive-write-independent-review-20261003/author-closeout/checks.json",
+      "sha256": "3291736809700020fe2f652cc97e321134c102525a0bce6eef10f9b362aebae6"
+    },
+    "qualification.json": {
+      "author_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-positive-write-20261003/experiments/lox-positive-write-20261003/qualification.json",
+      "copied_path": "experiments/lox-positive-write-independent-review-20261003/author-closeout/qualification.json",
+      "sha256": "6141841063ffcb54664a3b7e467adda59287fe805bb47da8ed72dd8ea9312a3f"
+    },
+    "source84-emission.json": {
+      "author_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-positive-write-20261003/experiments/lox-positive-write-20261003/source84-emission.json",
+      "copied_path": "experiments/lox-positive-write-independent-review-20261003/author-closeout/source84-emission.json",
+      "sha256": "a7d7189a88d4db193ffc6a2c35c665150bc93c70e3671e276b34f48cb581ae84"
+    }
+  },
+  "source_identity_verification": [
+    {
+      "path": "src/qbe_positive_write.zig",
+      "sha256": "43f3d633e6c859824e932a58590be4cc8ecef3cce8641d7537a16835a8616170",
+      "candidate_commit_matches": true,
+      "worktree_matches": true
+    },
+    {
+      "path": "src/qbe_positive_index.zig",
+      "sha256": "0cd0a82165a0b0f7430583d2e3f8656f2124e7e271d98404c435735dfbb4f7f3",
+      "candidate_commit_matches": true,
+      "worktree_matches": true
+    },
+    {
+      "path": "src/qbe_positive_write_test.zig",
+      "sha256": "8de7953e79b7e8577f6bbf4f3332066d757c0967b61ae65990adb239299b53a3",
+      "candidate_commit_matches": true,
+      "worktree_matches": true
+    },
+    {
+      "path": "src/qbe_positive_index_test.zig",
+      "sha256": "4ce69216cf688d8f018da76b56bcdd5d7cd9935c5c6d3c0035cc98ec41bb8492",
+      "candidate_commit_matches": true,
+      "worktree_matches": true
+    },
+    {
+      "path": "src/qbe_rc_inert_receiver.zig",
+      "sha256": "e80ef8294af0614ac275ce93ff7d3272d7c19af054903d22c8bfd19562f751e7",
+      "candidate_commit_matches": true,
+      "worktree_matches": true
+    },
+    {
+      "path": "src/qbe.zig",
+      "sha256": "6afc8fa32cb1ab58eb718a33ade09c7e79c41f92e2ac8f0a83468a2951296d7b",
+      "candidate_commit_matches": true,
+      "worktree_matches": true
+    },
+    {
+      "path": "src/qbe_cow.zig",
+      "sha256": "f28ea622c10ff85006cf197e5a8e819ef7a12ea8ec002af4fb627ba42f0738f1",
+      "candidate_commit_matches": true,
+      "worktree_matches": true
+    },
+    {
+      "path": "src/qbe_rc_ops.zig",
+      "sha256": "26fc6b9e69ebf48e5a50850c28529e55783fa4d45e6c648118a9eb77f36f6308",
+      "candidate_commit_matches": true,
+      "worktree_matches": true
+    },
+    {
+      "path": "src/qbe_rc_edges.zig",
+      "sha256": "016af464e566898c7b3fa1519bb97d7ff04290e07bc5f64a5391612dcaf70346",
+      "candidate_commit_matches": true,
+      "worktree_matches": true
+    },
+    {
+      "path": "src/ownership_sources.zig",
+      "sha256": "19b840c08d980ae5a51f541720bb11470e7a1fc428a0f4f89385965afbdbc951",
+      "candidate_commit_matches": true,
+      "worktree_matches": true
+    },
+    {
+      "path": "SPEC.md",
+      "sha256": "616f4adafdbb5769e2d9b4ab41413334acfb88b5831f359d6496df02ef199ee1",
+      "candidate_commit_matches": true,
+      "worktree_matches": true
+    },
+    {
+      "path": "src/root_test.zig",
+      "sha256": "881236403ded8bc70896bcb1243611ecd8162971a22912f677ea6264d5d222a9",
+      "candidate_commit_matches": true,
+      "worktree_matches": true
+    },
+    {
+      "path": "tests/lang/rc_positive_writes.my",
+      "sha256": "9ab840a107428f86550b31835ec1f75948fc2ebba8d0d12e0de710cbfbc21d63",
+      "candidate_commit_matches": true,
+      "worktree_matches": true
+    },
+    {
+      "path": "src/qbe_moves.zig",
+      "sha256": "f2560085ea4f47649c1e2f7f9e415c77acafcfadc4d0e92dd08c7b835ccc1f20",
+      "candidate_commit_matches": true,
+      "worktree_matches": true
+    }
+  ],
+  "terminology_correction": {
+    "primary_ambiguous_phrase": "GC/counting/versioned paths must remain refused.",
+    "meaning": "Counting in that primary limitation meant instruction step accounting (self.step_checks), not native RC runtime site/count statistics.",
+    "instruction_accounting": "Guard returns when self.step_checks is true; original instruction path remains.",
+    "native_rc_statistics": "cow.rc != null is required; cow.counting does not itself refuse admission. The skipped prefix is quiet and the original checked write, COW/RC/statistics and cleanup protocol runs at the original PCs.",
+    "scope": "This clarification narrows terminology only. No compiler source changed, and no separate reviewer runtime-statistics execution is claimed."
+  },
+  "author_qualification": {
+    "source": "Author-run checks with retained identities/logs independently inspected and hashed; not reviewer-executed tests.",
+    "fresh_root_passed": 2485,
+    "qbe_driver_host_passed": 515,
+    "full_root_and_qbe_process_status": 0,
+    "focused_final_passed": 28,
+    "focused_final_process_status": 0,
+    "guardian_full_passed": 88,
+    "successful_snapshot_modes": [
+      "snapshots-qbe-rc",
+      "snapshots-qbe-gc-stress",
+      "snapshots-llvm-rc",
+      "snapshots-llvm-gc-stress"
+    ],
+    "exact_llvm_release_error_pairs": [
+      {
+        "name": "minimum",
+        "process_status": 1,
+        "stdout_equal": true,
+        "stderr_equal": true
+      },
+      {
+        "name": "maximum",
+        "process_status": 1,
+        "stdout_equal": true,
+        "stderr_equal": true
+      },
+      {
+        "name": "empty",
+        "process_status": 1,
+        "stdout_equal": true,
+        "stderr_equal": true
+      }
+    ],
+    "all_final_native_streams_verified": 20,
+    "retained_log_hashes_verified": [
+      {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-positive-write-20261003/.tmp-lox-positive-write-20261003/focused-initial.log",
+        "sha256": "21f7eca54bcde60361c223a509c9aef30521e4cb6f511cd20958ff9d00e93b8a"
+      },
+      {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-positive-write-20261003/.tmp-lox-positive-write-20261003/focused-prototype.log",
+        "sha256": "404772bfb0241bc6df7bceb61c1ef8673f059286cf20c4fb50ccafd0529df8b2"
+      },
+      {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-positive-write-20261003/.tmp-lox-positive-write-20261003/focused-final.log",
+        "sha256": "358a5e4440b25cfd85d9e1c42b3825253b13ed0f98077c05565f43ad8eaa2824"
+      },
+      {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-positive-write-20261003/.tmp-lox-positive-write-20261003/focused-inert-proof.log",
+        "sha256": "92faf25e5c192c30123c973dd72a38d1fcf7fbad9ef5f9740607d4a30858499a"
+      },
+      {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-positive-write-20261003/.tmp-lox-positive-write-20261003/guardian-initial.log",
+        "sha256": "395e193484a5b044fefdfe7abf9aa4437539c93bd04764acf845f853c4f174d2"
+      },
+      {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-positive-write-20261003/.tmp-lox-positive-write-20261003/guardian-final.log",
+        "sha256": "8d291409fbf3629c86d5400ec91617edfce7e40a96b46c3600d2577cb9e71d68"
+      },
+      {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-positive-write-20261003/.tmp-lox-positive-write-20261003/guardian-inert-proof.log",
+        "sha256": "0e15634aee3a808b0b6934deccbaef3011da6c7a8c3472381410a4e30723c39c"
+      },
+      {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-positive-write-20261003/.tmp-lox-positive-write-20261003/guardian-final-qualification.log",
+        "sha256": "b0acb4bb274c49b1b67c4935b2a9005417aa3f552e7255f8c5403bbbb5f198d1"
+      },
+      {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-positive-write-20261003/.tmp-lox-positive-write-20261003/compiler-release-build.log",
+        "sha256": "8f0baff7efd08c154abb2a01ee54322f8e153550c52c066ea85db47264001dbf"
+      },
+      {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-positive-write-20261003/.tmp-lox-positive-write-20261003/broad-gate.log",
+        "sha256": "81a5aa06820ae235b7d274aa91cc23d7945fcfd7c1a09201ee7cb51a346a5e32"
+      },
+      {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-positive-write-20261003/.tmp-lox-positive-write-20261003/qualification.log",
+        "sha256": "6395aaa7f4d55937aa40763ce89ed8d07f438d800bb38ba967df80e50f06d075"
+      },
+      {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-positive-write-20261003/.tmp-lox-positive-write-20261003/qualification-corrected.log",
+        "sha256": "26c664e12bdd5dbd17a2b586a8d00ab86c2e30311e445a6a7cafabd27a09fc81"
+      },
+      {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-positive-write-20261003/.tmp-lox-positive-write-20261003/frozen-qbe-fixture.stdout",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-positive-write-20261003/.tmp-lox-positive-write-20261003/frozen-qbe-fixture.stderr",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-positive-write-20261003/.tmp-lox-positive-write-20261003/lox-frozen-qbe-emitted.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-positive-write-20261003/.tmp-lox-positive-write-20261003/lox-control-emitted.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-positive-write-20261003/.tmp-lox-positive-write-20261003/guardian-before-commit.log",
+        "sha256": "0e15634aee3a808b0b6934deccbaef3011da6c7a8c3472381410a4e30723c39c"
+      }
+    ],
+    "binary_and_input_identities_verified": {
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-positive-write-20261003/.tmp-lox-positive-write-20261003/release/bin/mylang": "4cbaeafad871b4527e6e550b4412629341335340590f8a0b8b3ec97a7f8c91d0",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-positive-write-20261003/.tmp-lox-positive-write-20261003/release/bin/qbe": "32021878fa23e65cf750b7a75a2d42a3d7e34791f24166ab0864ecbb01b0900a",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-lowering-20261003/.tmp-lox-lowering/cfg-fix-release/bin/mylang": "d14a704083bcc5f5174932a751f7d9dda73100dbd62403626b42b52436cad040",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-positive-write-20261003/tests/lang/rc_positive_writes.my": "9ab840a107428f86550b31835ec1f75948fc2ebba8d0d12e0de710cbfbc21d63",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-positive-write-20261003/.tmp-lox-positive-write-20261003/minimum.my": "c6e2b7345d8ee79c03383abc084dced518d0469b76499fefe8e3c7ae0da91b8b",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-positive-write-20261003/.tmp-lox-positive-write-20261003/maximum.my": "2d30256c96718e859ea793530f701a73a88e5a74a7c5e2756108c5b9cdd6648e",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-positive-write-20261003/.tmp-lox-positive-write-20261003/empty.my": "2839515edc33927158c62e96708ef469d0744df4e12dd7011fdec430eaba5f58",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-positive-write-20261003/.tmp-lox-positive-write-20261003/release-frozen-qbe/bin/mylang": "4cbaeafad871b4527e6e550b4412629341335340590f8a0b8b3ec97a7f8c91d0",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-positive-write-20261003/.tmp-lox-positive-write-20261003/release-frozen-qbe/bin/qbe": "99ad919d70ad582dee6202b045bd53e1ab18fec356de98849610f49983756d63"
+    },
+    "reported_process_statuses": {
+      "focused_initial": 1,
+      "focused_prototype": 0,
+      "focused_callback_expanded": 1,
+      "focused_inert_proof_28": 0,
+      "guardian_initial_line_length": 1,
+      "guardian_inert_proof": 0,
+      "guardian_final_qualification": 0,
+      "release_compiler_build": 0,
+      "full_root_and_qbe": 0,
+      "qualification_initial_cli_spelling": 1,
+      "qualification_corrected": 0,
+      "frozen_qbe_fixture": 0,
+      "frozen_qbe_emission": 0,
+      "control_emission": 0,
+      "guardian_before_commit": 0
+    },
+    "receipt_limit": "The first native CLI runner failed before qualification due to split --cache-dir spelling. Its exception log is retained; the corrected runner reused its stdout/stderr filenames, so those initial stream hashes are historical rather than retained stream artifacts. Final post-verified receipts use corrected-run hashes."
+  },
+  "static_emission": {
+    "source_files": 37,
+    "matches_independently_reviewed_composed84_source": true,
+    "source_hashes_postverified": true,
+    "main_receipt_function_count": 410,
+    "main_receipt_unmodified_function_count": 395,
+    "main_receipt_changed_function_count": 15,
+    "main_receipt_total_sites": 26,
+    "frozen_qbe_function_count": 408,
+    "frozen_qbe_il_equal_to_rebuilt_qbe": true,
+    "limits": "410-function emitted receipt and the separate 408-function frozen-QBE comparison retain distinct commands/manifests; neither is a performance measurement."
+  },
+  "reviewer_test_executions": 0,
+  "reviewer_performance_measurements": 0,
+  "limitations": [
+    "Source proof still depends on validated bytecode and finalized COW/RC/liveness plans plus the existing inert-receiver certificate.",
+    "Author initial failed experiments and initial CLI failure remain explicit. Historical overwritten first-run streams are not represented as currently retained artifacts.",
+    "No claim of exhaustive synthetic-plan coverage or performance acceptance; root owns central selection."
+  ]
+}
