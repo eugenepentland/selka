@@ -1,0 +1,23 @@
+def add_octets(raw: bytes, seed: int) -> int:
+    total = seed
+    for value in raw:
+        total += value
+    return total
+
+
+def xor_octets(raw: bytes, mask: int, seed: int) -> int:
+    total = seed
+    for value in raw:
+        total += value ^ mask
+    return total
+
+
+def indexed_octets(raw: bytes, first: int, end: int, seed: int) -> int:
+    total = seed
+    for index in range(first, end):
+        total += raw[index]
+    return total
+
+
+def main() -> int:
+    return xor_octets(b"hello", 7, 13)

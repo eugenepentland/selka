@@ -178,7 +178,8 @@ fn inlineBodies(a: std.mem.Allocator, code: bytecode.Program, selected: []const 
 }
 
 /// The value one archive row stores for `function`: its body when it is
-/// emitted, its signature otherwise, never its imported facts.
+/// emitted or retained for inline provenance, its signature otherwise, never
+/// its imported facts.
 fn row(function: bytecode.Function, chosen: bool) bytecode.Function {
     var plain = function;
     plain.physical = null;

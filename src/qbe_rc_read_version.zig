@@ -163,11 +163,12 @@ fn plainValue(comptime E: type, self: *E, ty: typed.Type) bool {
     return !shape.counted and !shape.unique_drop;
 }
 
-/// A non-box list whose elements are plain values.
+/// A non-box list or immutable byte string whose elements are plain values.
 fn plainList(comptime E: type, self: *E, ty: typed.Type) bool {
     if (!ty.isAggregate()) return false;
     const record = self.program.records[ty.recordIndex()];
-    if (!record.isCollection() or record.collection.kind != .list or record.collection.box) return false;
+    if (!record.isCollection() or record.collection.box) return false;
+    if (record.collection.kind != .list and record.collection.kind != .bytes) return false;
     const element = record.shape.buffer orelse return false;
     return element != .unit and plainValue(E, self, element);
 }
@@ -227,12 +228,7 @@ fn concrete(comptime E: type, self: *E, owner: usize) bool {
     if (state.plan.aliases[owner] != cow.none and !cow.iterationOwner(self.function, owner)) return false;
     const rc = state.rc.?;
     if ((rc.plan.journal.slot(owner) catch return false) == null) return false;
-    const ty = self.function.scope.locals[owner].ty;
-    if (!ty.isAggregate()) return false;
-    const record = self.program.records[ty.recordIndex()];
-    if (!record.isCollection() or record.collection.kind != .list or record.collection.box) return false;
-    const element = record.shape.buffer orelse return false;
-    return element != .unit and plainValue(E, self, element);
+    return plainList(E, self, self.function.scope.locals[owner].ty);
 }
 
 fn quiet(comptime E: type, self: *E, pc: usize, budget: *usize) bool {
