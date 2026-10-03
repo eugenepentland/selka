@@ -1,0 +1,12 @@
+{
+  "binaries": {
+    "control-llvm": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/bin/baseline-llvm",
+    "control-qbe": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/bin/baseline-qbe",
+    "constant-rc-llvm": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/bin/combined-llvm",
+    "constant-ordinary-llvm": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-vm-dispatch-20261003/.tmp-lox-composed-20261003/combined-gc-llvm",
+    "constant-gc-llvm": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-vm-dispatch-20261003/.tmp-lox-composed-20261003/combined-gc-llvm",
+    "constant-rc-qbe": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-round3/bin/combined-qbe",
+    "constant-ordinary-qbe": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-vm-dispatch-20261003/.tmp-lox-composed-20261003/combined-gc-qbe",
+    "constant-gc-qbe": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-vm-dispatch-20261003/.tmp-lox-composed-20261003/combined-gc-qbe"
+  }
+}

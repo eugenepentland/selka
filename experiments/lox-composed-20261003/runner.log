@@ -1,0 +1,5 @@
+PASS composed AST focused program ast_call_arguments_survive_nested_allocating_handlers
+PASS composed AST focused program ast_class_methods_survive_recursive_subclass_creation
+PASS composed AST focused program ast_call_argument_error_after_two_side_effects
+PASS composed AST focused program ast_bound_callee_stays_rooted_across_argument_reassignment
+1168 bounded +12 boundary +96 AST-focused pairs and8 refusals pass; all37/source/artifact hashes unchanged

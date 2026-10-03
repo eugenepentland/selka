@@ -1,0 +1,37 @@
+{
+  "guardian": {
+    "command": [
+      "scripts/build-slot.sh",
+      "gate",
+      "/home/epentland/ai/canopy/guardian-zig/zig-out/bin/guardian-check",
+      "all",
+      ".",
+      "--gate"
+    ],
+    "status": 0,
+    "passed_checks": 88,
+    "log_sha256": "2f2418df757d0dc44d18ea28b4691618d43001b1caa9680b8de5e5b77ecc50d7",
+    "report_only_findings": {
+      "file-size": 20,
+      "function-length": 25,
+      "line-length": 8459,
+      "abi-layout": 9
+    }
+  },
+  "stage_exit_statuses": {
+    "build_gc": 0,
+    "public_tests": 0,
+    "provider_tests": 0,
+    "native_validation": 0,
+    "receipt_recheck": 0
+  },
+  "qualification_sha256": "4460321c4329bbf2b2ee76e4e7f22be501919f8a408171e260ab3c35632edf65",
+  "runner_sha256": {
+    "build-gc.py": "f483ac76b340df90a2d6c1fcc4331e57588cd280c2ac028b7b0d434b780579b9",
+    "pack.py": "9bf3242450a8553128544564f34ff0b07566585bd60ed08ad301f926b206b07a",
+    "provider.py": "81af6a4e54f332c013d15743560e509ec2cef9bfacb7a1840689123414fc48c7",
+    "public.py": "7644e4c4c29539ec6a67127f152bb1c95f11cb2d2d3cf2a3de31f22e03b032b3",
+    "validate.py": "504987375e2095c08377df4436583a64ba8a392f1c4a36a39f04d14682a5e815"
+  },
+  "guardian_feedback": "Root lane consolidates feedback; this lane did not edit the Guardian repository."
+}

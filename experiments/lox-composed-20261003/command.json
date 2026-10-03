@@ -1,0 +1,48 @@
+{
+  "argv": [
+    "python3",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/experiments/lox-parity-tree-20261003/validate.py",
+    "--work",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-vm-dispatch-20261003/.tmp-lox-composed-20261003",
+    "--bench",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003/.tmp-lox-parity/reference/benchmarks/lox/bench",
+    "--manifest",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-vm-dispatch-20261003/.tmp-lox-composed-20261003/binaries.json",
+    "--out",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-vm-dispatch-20261003/.tmp-lox-composed-20261003/observations.json",
+    "--jobs",
+    "2",
+    "--cases",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003/experiments/lox-vm-callee-20261003/regressions.json",
+    "--native-cases",
+    "closures,instantiation,properties"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-vm-dispatch-20261003",
+  "environment": {
+    "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-vm-dispatch-20261003/.tmp-lox-composed-20261003/tmp"
+  },
+  "affinity": [
+    0,
+    1,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "launcher": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-vm-dispatch-20261003/scripts/build-slot.sh",
+    "build",
+    "python3",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-vm-dispatch-20261003/experiments/lox-composed-20261003/validate.py"
+  ]
+}
