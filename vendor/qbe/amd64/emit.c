@@ -117,6 +117,7 @@ static struct {
 	{ Osign,    Kl, "cqto" },
 	{ Osign,    Kw, "cltd" },
 	{ Oxdiv,    Ki, "div%k %0" },
+	{ Oxmul,    Ki, "mul%k %0" },
 	{ Oxidiv,   Ki, "idiv%k %0" },
 	{ Oxcmp,    Ks, "ucomiss %S0, %S1" },
 	{ Oxcmp,    Kd, "ucomisd %D0, %D1" },

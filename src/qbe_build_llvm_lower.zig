@@ -514,6 +514,7 @@ fn follow(e: *const Emitter, definition: *const Instruction) ?struct { name: []c
 /// `add` of an object address is a `getelementptr`, and a checked operation
 /// computes its overflow intrinsics (LLVM-OVERFLOW-INTRINSIC-1).
 fn onArithmetic(e: *Emitter, lines: *Lines, instruction: *const Instruction) Error!void {
+    if (instruction.opcode == .umulh) return multiplyHigh(e, lines, instruction);
     const name = instruction.dest.?;
     const kind = e.typeOf(name);
     const llvm = kind.llvm();
@@ -537,6 +538,26 @@ fn onArithmetic(e: *Emitter, lines: *Lines, instruction: *const Instruction) Err
             try checkedArithmetic(e, lines, instruction, stems.items, .{ left, right, result }, ordinary);
         } else try e.line(lines, arithmetic_line, .{ result, operation, llvm, left, right });
     } else try e.line(lines, arithmetic_line, .{ result, operation, llvm, left, right });
+    try define(e, lines, instruction, try e.print("%{s}", .{result}));
+}
+
+/// Exact unsigned high-half multiplication, widened before taking the high bits.
+fn multiplyHigh(e: *Emitter, lines: *Lines, instruction: *const Instruction) Error!void {
+    const kind = e.typeOf(instruction.dest.?);
+    if (kind.kind != .int) return e.fail("`umulh` requires integer operands");
+    const llvm = kind.llvm();
+    const wide: []const u8 = if (std.mem.eql(u8, llvm, "i64")) "i128" else "i64";
+    const shift: u8 = if (std.mem.eql(u8, llvm, "i64")) 64 else 32;
+    const left = try e.fresh("wide");
+    const right = try e.fresh("wide");
+    const product = try e.fresh("product");
+    const high = try e.fresh("high");
+    const result = try e.fresh("op");
+    try e.line(lines, "  %{s} = zext {s} {s} to {s}", .{ left, llvm, try e.render(lines, instruction.args[0], llvm), wide });
+    try e.line(lines, "  %{s} = zext {s} {s} to {s}", .{ right, llvm, try e.render(lines, instruction.args[1], llvm), wide });
+    try e.line(lines, "  %{s} = mul {s} %{s}, %{s}", .{ product, wide, left, right });
+    try e.line(lines, "  %{s} = lshr {s} %{s}, {d}", .{ high, wide, product, shift });
+    try e.line(lines, "  %{s} = trunc {s} %{s} to {s}", .{ result, wide, high, llvm });
     try define(e, lines, instruction, try e.print("%{s}", .{result}));
 }
 

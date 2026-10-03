@@ -1,0 +1,17 @@
+def seven(x: int) -> int:
+    return x // 7
+
+def power(x: int) -> int:
+    return x // 8
+
+def negative(x: int) -> int:
+    return remtrunc(x, -7)
+
+def wide(x: u64) -> u64:
+    return x // 18446744073709551615u64
+
+def variable(x: int, d: int) -> int:
+    return x // d
+
+def main() -> int:
+    return seven(-100) + power(100) + negative(-100) + int(wide(18446744073709551615u64)) + variable(0, 7)

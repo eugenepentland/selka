@@ -33,6 +33,7 @@ pub const Opcode = enum {
     add,
     sub,
     mul,
+    umulh,
     @"and",
     @"or",
     xor,

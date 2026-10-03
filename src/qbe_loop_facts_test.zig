@@ -131,10 +131,11 @@ test "a product of counters is proven under a narrower leaf bound" {
     const loop = try parts(il);
     // `(i + j) * (i + j + 1) // 2 + i + 1` is at most 8 * X^2 for leaves
     // bounded by X, which fits 64 bits for X = 2^29 and no wider. No add (0)
-    // or multiply (2) keeps its check; the division by 2 keeps its own (5).
+    // or multiply (2) keeps its check. Constant positive division by 2 is a
+    // signed shift and cannot trap (QBE-CONSTANT-DIVISOR-1).
     try t.expectEqual(@as(usize, 0), std.mem.count(u8, loop.copy, "myl_qbe_fail_overflow_op(l %ctx, l 0,"));
     try t.expectEqual(@as(usize, 0), std.mem.count(u8, loop.copy, "myl_qbe_fail_overflow_op(l %ctx, l 2,"));
-    try t.expectEqual(@as(usize, 1), std.mem.count(u8, loop.copy, "myl_qbe_fail_overflow_op(l %ctx, l 5,"));
+    try t.expectEqual(@as(usize, 0), std.mem.count(u8, loop.copy, "myl_qbe_fail_overflow_op(l %ctx, l 5,"));
     // Each leaf is tested as `v + 2^29 <=u 2^30`; a 2^30 bound would test
     // against 2^31.
     try t.expect(std.mem.indexOf(u8, loop.before, ", 536870912\n") != null);

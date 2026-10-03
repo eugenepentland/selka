@@ -269,6 +269,17 @@ sel(Ins i, Num *tn, Fn *fn)
 	i0 = curi;
 	k = i.cls;
 	switch (i.op) {
+	case Oumulh:
+		/* Unsigned product in RDX:RAX; only the high half is live. */
+		emit(Ocopy, k, i.to, TMP(RDX), R);
+		emit(Ocopy, k, R, TMP(RAX), R);
+		r0 = newtmp("isel", k, fn);
+		emit(Oxmul, k, R, r0, R);
+		emit(Ocopy, k, TMP(RAX), i.arg[0], R);
+		fixarg(&curi->arg[0], k, curi, fn);
+		emit(Ocopy, k, r0, i.arg[1], R);
+		fixarg(&curi->arg[0], k, curi, fn);
+		break;
 	case Odiv:
 	case Orem:
 	case Oudiv:
