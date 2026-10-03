@@ -1573,13 +1573,14 @@ test "check of a project re-checks only the modules whose source or read interfa
     try testing.expectEqualStrings((try projectCheck(a, directory, null)).stderr, first.stderr);
     const out = try checkVariant(a, temporary.dir);
     const all = [_][]const u8{ "shapes", "util", "main" };
-    // A body edit: `util` alone is checked again, and its warning replayed.
+    // The inlineable score body is part of the interface main reads. A body
+    // edit checks util and main again, and replays the same warning.
     try forgetResults(a, temporary.dir, out, &all);
     try temporary.dir.writeFile(testing.io, .{ .sub_path = "util.my", .data = try std.mem.replaceOwned(u8, a, warned, "right=2", "right=3") });
     const edited = try projectCheck(a, directory, "cache");
     try testing.expectEqualStrings(first.stderr, edited.stderr);
     try temporary.dir.access(testing.io, try std.fmt.allocPrint(a, "{s}/util.result.json", .{out}), .{});
-    try testing.expectError(error.FileNotFound, temporary.dir.access(testing.io, try std.fmt.allocPrint(a, "{s}/main.result.json", .{out}), .{}));
+    try temporary.dir.access(testing.io, try std.fmt.allocPrint(a, "{s}/main.result.json", .{out}), .{});
     try testing.expectError(error.FileNotFound, temporary.dir.access(testing.io, try std.fmt.allocPrint(a, "{s}/shapes.result.json", .{out}), .{}));
     // A module that does not check: the whole-program check reports it.
     try temporary.dir.writeFile(testing.io, .{ .sub_path = "util.my", .data = try std.mem.replaceOwned(u8, a, warned, "return total", "return missing") });
@@ -1588,12 +1589,12 @@ test "check of a project re-checks only the modules whose source or read interfa
     try testing.expect(std.mem.indexOf(u8, rejected.stderr, "E_UNKNOWN_NAME") != null);
     try testing.expectEqualStrings((try projectCheck(a, directory, null)).stderr, rejected.stderr);
     // Fixed again: the modules that checked before the failure keep their
-    // records, so only `util` is checked again.
+    // records; restoring util's original inline body also rechecks main.
     try forgetResults(a, temporary.dir, out, &all);
     try temporary.dir.writeFile(testing.io, .{ .sub_path = "util.my", .data = warned });
     try testing.expectEqualStrings(first.stderr, (try projectCheck(a, directory, "cache")).stderr);
     try temporary.dir.access(testing.io, try std.fmt.allocPrint(a, "{s}/util.result.json", .{out}), .{});
-    try testing.expectError(error.FileNotFound, temporary.dir.access(testing.io, try std.fmt.allocPrint(a, "{s}/main.result.json", .{out}), .{}));
+    try temporary.dir.access(testing.io, try std.fmt.allocPrint(a, "{s}/main.result.json", .{out}), .{});
 }
 
 /// `mylang check main.my --cache-dir=cache` in `directory` with the
@@ -1687,13 +1688,14 @@ test "a large project's first check is the whole-program check, and module recor
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, busy.term);
     try testing.expectEqualStrings(whole.stderr, busy.stderr);
     try testing.expectError(error.FileNotFound, temporary.dir.access(testing.io, try std.fmt.allocPrint(a, "{s}/util.result.json", .{out}), .{}));
-    // The next check reads them: a body edit checks `util` alone.
+    // The next check reads them: changing the inlineable score body checks
+    // util and its dependent main.
     try forgetResults(a, temporary.dir, out, &.{ "shapes", "util", "main" });
     try temporary.dir.writeFile(testing.io, .{ .sub_path = "util.my", .data = try std.mem.replaceOwned(u8, a, warned, "right=2", "right=3") });
     const edited = try checkWithEnvironment(a, directory, &.{.{ "MYLANG_CHECK_SEED_MODULES", "1" }});
     try testing.expectEqualStrings(whole.stderr, edited.stderr);
     try temporary.dir.access(testing.io, try std.fmt.allocPrint(a, "{s}/util.result.json", .{out}), .{});
-    try testing.expectError(error.FileNotFound, temporary.dir.access(testing.io, try std.fmt.allocPrint(a, "{s}/main.result.json", .{out}), .{}));
+    try temporary.dir.access(testing.io, try std.fmt.allocPrint(a, "{s}/main.result.json", .{out}), .{});
 }
 
 // spec: MODULE-SCHEDULE-6
@@ -12429,11 +12431,12 @@ fn expectIncrementalEqualsClean(allocator: std.mem.Allocator, directory: std.Io.
     const incremental = try buildObjects(allocator, entry, incremental_program, try std.fs.path.join(allocator, &.{ root, "cache" }));
     const clean = try buildObjects(allocator, entry, clean_program, try std.fmt.allocPrint(allocator, "{s}/clean-{d}", .{ root, round }));
     try testing.expectEqualStrings(clean.lines, incremental.lines);
-    // A clean build compiles every function. An edit that stays inside one
-    // module rebuilds only that module's batch (round 0); the signature and
-    // interface edits change both modules, so they may rebuild everything.
+    // The entry now inlines total, so even a body-only edit can invalidate
+    // both batches. A warm build must still reuse all unchanged objects.
     try testing.expect(incremental.compiled <= clean.compiled);
-    try testing.expect(round != 0 or incremental.compiled < clean.compiled);
+    const warm = try buildObjects(allocator, entry, incremental_program, try std.fs.path.join(allocator, &.{ root, "cache" }));
+    try testing.expectEqual(@as(i64, 0), warm.compiled);
+    try testing.expectEqualStrings(incremental.lines, warm.lines);
     try testing.expectEqualStrings(try programOutput(allocator, clean_program), try programOutput(allocator, incremental_program));
 }
 

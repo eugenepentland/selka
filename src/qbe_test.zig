@@ -6,11 +6,24 @@ const value_semantics = @import("value_semantics.zig");
 const Unit = struct { name: []const u8, symbol: []const u8, il: []const u8 };
 const Manifest = struct { version: []const u8, abi: []const u8, functions: []Unit, entry: []const u8 };
 fn emitted(a: std.mem.Allocator, input: []const u8) !std.json.Parsed(Manifest) {
+    return emittedWithInlining(a, input, true);
+}
+fn emittedUninlined(a: std.mem.Allocator, input: []const u8) !std.json.Parsed(Manifest) {
+    return emittedWithInlining(a, input, false);
+}
+fn emittedWithInlining(a: std.mem.Allocator, input: []const u8, inline_calls: bool) !std.json.Parsed(Manifest) {
     var c = try language.Compilation.init(a, "qbe.my", input);
     defer c.deinit();
+    if (!inline_calls) try lowerCallFixture(&c);
     const manifest = try c.emitQbe(a);
     defer a.free(manifest);
     return std.json.parseFromSlice(Manifest, a, manifest, .{ .allocate = .alloc_always, .ignore_unknown_fields = true });
+}
+/// Keep actual calls in native ABI/protocol tests; inliner tests exercise the
+/// optimized path separately. This is test setup, not a language build option.
+fn lowerCallFixture(c: *language.Compilation) !void {
+    try c.check();
+    c.code = try @import("lower.zig").lowerWith(.{ .output = c.arena.allocator(), .scratch = c.arena.child_allocator }, c.program.?, false);
 }
 fn named(manifest: Manifest, name: []const u8) ?Unit {
     for (manifest.functions) |unit| if (std.mem.eql(u8, unit.name, name)) return unit;
@@ -42,7 +55,7 @@ fn allDigits(text: []const u8) bool {
     return true;
 }
 // spec: QBE-1
-test "scalar units remain stable across body edits and declaration reorder" {
+test "scalar symbols stay stable while inline bodies track edits and declaration reorder" {
     var before = try emitted(std.testing.allocator,
         \\def square(x: i64) -> i64:
         \\    return x * x
@@ -66,7 +79,7 @@ test "scalar units remain stable across body edits and declaration reorder" {
     const callee_before = named(before.value, "square").?;
     const callee_after = named(after.value, "square").?;
     try std.testing.expectEqualStrings(before.value.entry, after.value.entry);
-    try std.testing.expectEqualStrings(caller_before.il, caller_after.il);
+    try std.testing.expect(!std.mem.eql(u8, caller_before.il, caller_after.il));
     try std.testing.expectEqualStrings(callee_before.symbol, callee_after.symbol);
     try std.testing.expect(!std.mem.eql(u8, callee_before.il, callee_after.il));
 }
@@ -702,6 +715,7 @@ test "the fast protocol drops the per-call sticky test and keeps the trace posit
     ;
     var fast = try language.Compilation.init(a, "qbe.my", source);
     defer fast.deinit();
+    try lowerCallFixture(&fast);
     const bare = try fast.emitQbeWithOptions(a, .{ .step_checks = false, .frame_checks = false });
     defer a.free(bare);
     var parsed = try std.json.parseFromSlice(Manifest, a, bare, .{ .allocate = .alloc_always, .ignore_unknown_fields = true });
@@ -724,6 +738,7 @@ test "the fast protocol drops the per-call sticky test and keeps the trace posit
     // An accounting build keeps the flag test, so its trap delivery is unchanged.
     var accounted = try language.Compilation.init(a, "qbe.my", source);
     defer accounted.deinit();
+    try lowerCallFixture(&accounted);
     const full = try accounted.emitQbeWithOptions(a, .{ .step_checks = false });
     defer a.free(full);
     var full_parsed = try std.json.parseFromSlice(Manifest, a, full, .{ .allocate = .alloc_always, .ignore_unknown_fields = true });
@@ -955,6 +970,7 @@ test "a trap position stores on the cold path and a call site keeps its own" {
         \\    return pick(b"abc", 1)
     );
     defer program.deinit();
+    try lowerCallFixture(&program);
     const manifest = try program.emitQbeWithOptions(a, .{ .step_checks = false });
     defer a.free(manifest);
     var parsed = try std.json.parseFromSlice(Manifest, a, manifest, .{ .allocate = .alloc_always, .ignore_unknown_fields = true });
@@ -1166,7 +1182,7 @@ test "scalar slots are declared in the entry block so QBE can promote them" {
 }
 // spec-case: QBE-FRAMES-1
 test "fixed aggregate scratch is inside the physical stack-floor check" {
-    var parsed = try emitted(std.testing.allocator,
+    var parsed = try emittedUninlined(std.testing.allocator,
         \\record Pair:
         \\    left: i64
         \\    right: i64
@@ -1610,7 +1626,7 @@ test "an aggregate parameter that owns a resource keeps its private copy" {
 
 // spec-case: QBE-AGGREF-1
 test "a call passes an aggregate argument as an address" {
-    var parsed = try emitted(std.testing.allocator,
+    var parsed = try emittedUninlined(std.testing.allocator,
         \\record Pair:
         \\    left: i64
         \\    right: i64
@@ -1847,7 +1863,7 @@ test "an iteration local keeps its copy when a call sits before its last read" {
 
 // spec: QBE-AGGREF-2
 test "QBE-AGGREF-2 a local passed beside another argument is named by its own slot" {
-    var parsed = try emitted(std.testing.allocator,
+    var parsed = try emittedUninlined(std.testing.allocator,
         \\record Point:
         \\    x: i64
         \\    y: i64
@@ -3078,7 +3094,7 @@ test "QBE-MOVE-ELIDE-1 an update keeps its copy while an argument still names th
     const collector_runtime = language.runtime_mode.pinCollector();
     defer language.runtime_mode.set(collector_runtime);
     const a = std.testing.allocator;
-    var parsed = try emitted(a,
+    var parsed = try emittedUninlined(a,
         \\record P:
         \\    x: int
         \\    y: int

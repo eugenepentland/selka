@@ -262,12 +262,12 @@ test "an edit computes metadata only for units of the sources it changed" {
     try t.expectEqual(@as(usize, 0), warm.statistics.meta.misses);
     try t.expectEqual(@as(usize, 0), std.mem.count(u8, warm.manifest, "\"meta\":{"));
     try t.expectEqualStrings(try metaDigest(a, cold.manifest, "helper::total"), try metaDigest(a, warm.manifest, "helper::total"));
-    // A body edit in `helper` recomputes the metadata of helper's units only,
-    // and a unit whose positions did not move keeps its digest.
+    // A helper body edit also changes the entry's inline metadata. Units
+    // whose positions and inline bodies did not move keep their digest.
     const body = try emitLean(a, root, &body_edit);
     try t.expect(body.statistics.meta.misses >= 1 and body.statistics.meta.misses <= 5);
     try t.expectEqual(body.statistics.meta.hits + body.statistics.meta.misses, cold.statistics.meta.misses);
-    try t.expectEqualStrings(try metaDigest(a, cold.manifest, "main::main"), try metaDigest(a, body.manifest, "main::main"));
+    try t.expect(!std.mem.eql(u8, try metaDigest(a, cold.manifest, "main::main"), try metaDigest(a, body.manifest, "main::main")));
     try t.expectEqualStrings(try metaDigest(a, cold.manifest, "helper::first"), try metaDigest(a, body.manifest, "helper::first"));
     // An executable's lean manifest carries no library-only facts.
     try t.expect(std.mem.indexOf(u8, body.manifest, "\"test_dependencies\"") == null);
