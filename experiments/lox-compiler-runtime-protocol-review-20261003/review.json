@@ -1,0 +1,43 @@
+{
+  "scope": "Independent frozen prospective compiler runtime-guards-v2 source and synthetic host evidence review only",
+  "source_descriptor_sha256": "be431e07a0c66c8f91e431a196ee6ea1bf00a98d2213d548d89883fbf624b4be",
+  "author_worktree": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-qbe-dispatch-20261003",
+  "source_root": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-qbe-dispatch-20261003/experiments/lox-compiler-runtime-protocol-20261003",
+  "scratch": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-qbe-dispatch-20261003/.tmp-lox-runtime-protocol-20261003",
+  "inputs": {
+    "receipts.json.gz": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-qbe-dispatch-20261003/experiments/lox-compiler-runtime-protocol-20261003/receipts.json.gz",
+      "sha256": "547616c8f4afee0d612ae3f567973e04013d0fb4bacb9fc7188d9cf029c22cc5"
+    },
+    "archive-manifest.json": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-qbe-dispatch-20261003/experiments/lox-compiler-runtime-protocol-20261003/archive-manifest.json",
+      "sha256": "baed64bf4bbe1755d6a9ded9818efbfb14d9c186eacc8550409b1d3a32630ace"
+    },
+    "qualification.json": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-qbe-dispatch-20261003/experiments/lox-compiler-runtime-protocol-20261003/qualification.json",
+      "sha256": "ae094106953e93ef6981a07cb63bdcbfd02e67ffeef0fa73e85772f3f635d8eb"
+    }
+  },
+  "source_files": 25,
+  "unchanged_originals": 12,
+  "narrow_modified_base_files": [
+    "prepare.py",
+    "analyze.py",
+    "validation.py"
+  ],
+  "unchanged_active_helpers": [
+    "build.py",
+    "elf.py",
+    "closeout.py",
+    "archive.py",
+    "test_closeout.py"
+  ],
+  "assessment": "Pass for prospective use: exactly six runtime roles and entire reconstructed guard inventory bind actual manifests/rebuild records; existing strict ELF/source/output/stat/PMU/commands/arithmetic/archive checks retained. No actionable defect found.",
+  "limits": [
+    "Source/evidence review and30 author synthetic host tests only. No actual trial preparation/compiler/guest/performance execution or actual end-to-end success claim. First actual trial must independently pass new preparation and strict closeout.",
+    "Old223 guards/helper/receipt identities remain unchanged. No retrospective measured-window binding for previously unguarded reproduction archives; original alias closeout refusal remains failure evidence.",
+    "Guard inventory is based on trusted prospectively prepared inputs, not a provenance authority for arbitrary external JSON or manually forged historical receipts.",
+    "Prepared.json count alone is not accepted; map/marker/metadata/runtime receipt equality is required. Measurement raw stdout remains hash-retained and stderr tails limited as declared in unchanged validation.",
+    "Parent alone selects performance candidates, runs measurements and consolidates Guardian feedback."
+  ]
+}

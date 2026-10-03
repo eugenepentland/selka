@@ -1,0 +1,16 @@
+{
+  "verified": true,
+  "source_files": 25,
+  "originals_unchanged": 12,
+  "changed_base_files": 3,
+  "active_helpers_byte_exact": 5,
+  "frozen_raw_package_files": 35,
+  "actual_runtime_roles_required": 6,
+  "author_synthetic_host_tests": 30,
+  "author_guardian_checks": 88,
+  "preservation_checked_by_exact_delta_and_function_AST": true,
+  "author_compiler_guest_native_or_perf_execution": false,
+  "reviewer_read_only_no_payload_execution": true,
+  "no_retrospective_alias_pass": true,
+  "performance_or_selection_claim": false
+}

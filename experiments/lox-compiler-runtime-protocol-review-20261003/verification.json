@@ -1,0 +1,32 @@
+{
+  "command": [
+    "taskset",
+    "-c",
+    "16",
+    "python3",
+    "-B",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-vm-stack-read-20261003/experiments/lox-compiler-runtime-protocol-review-20261003/verify.py"
+  ],
+  "status": 0,
+  "verifier_sha256": "35ba99e260eefbac0ce3f95d72a89cee35d1ae9c9281bbf510f69df81335e024",
+  "review_sha256": "09c82b24e36ec5bee40fd67338262ae4a61bd10ced042d665f3fa5d45714d423",
+  "stdout_sha256": "3178ac3a4f9b02f2ae5716fa6e17dc1a4f6bb24a9bc36070d9f43707ff386cbd",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "result": {
+    "verified": true,
+    "source_files": 25,
+    "originals_unchanged": 12,
+    "changed_base_files": 3,
+    "active_helpers_byte_exact": 5,
+    "frozen_raw_package_files": 35,
+    "actual_runtime_roles_required": 6,
+    "author_synthetic_host_tests": 30,
+    "author_guardian_checks": 88,
+    "preservation_checked_by_exact_delta_and_function_AST": true,
+    "author_compiler_guest_native_or_perf_execution": false,
+    "reviewer_read_only_no_payload_execution": true,
+    "no_retrospective_alias_pass": true,
+    "performance_or_selection_claim": false
+  },
+  "no_payload_test_build_guest_or_perf_execution": true
+}
