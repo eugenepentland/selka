@@ -1,0 +1,15 @@
+{
+  "argv": [
+    "python3",
+    "experiments/lox-native-policy-20261003/seal.py"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-policy-20261003",
+  "environment": {
+    "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-policy-20261003/.tmp-lox-native-policy-20261003/tmp",
+    "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-policy-20261003/.tmp-lox-native-policy-20261003/global-cache",
+    "MYLANG_TIMING_CPUS": "2,3,10,11"
+  },
+  "started": 1791034805.5742598,
+  "status": 0,
+  "finished": 1791034833.4780703
+}

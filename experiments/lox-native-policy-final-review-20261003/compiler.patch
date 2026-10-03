@@ -1,0 +1,1636 @@
+diff --git a/SPEC.md b/SPEC.md
+index 8a246ebd..4be01085 100644
+--- a/SPEC.md
++++ b/SPEC.md
+@@ -1511,0 +1512,2 @@ host failure in one worker leaves the units the other workers hold running.
++- [RC-NATIVE-VARIANT-1] Outside RC counting/site builds, take and drop/unloan of a counted, copyable tagged variant of at most 32 bytes with at most eight declared cases/physical fields may inline at most four declared active cases whose physical payload has no counted edge or unique-drop obligation. Take admits only disjoint complete source/destination ranges, established by its dynamic overlap guard or the unchanged RC-DISJOINT-TAKE-1 completed-publication certificate, copies every value byte (including inactive payload and padding), then clears the complete source; drop/unloan clears the complete value without acquiring/releasing tokens or draining, exactly as that active case of generated glue. Managed, unknown or malformed tags and overlapping takes retain the complete generated helper and its existing status/failure mapping before caller ownership guards change. Niche/outer-domain/unique-resource/unsupported layouts and GC remain unchanged; publications and their history protocol are not changed. Before any take store, the requested unsigned-word region is compared with the current unsigned-word region depth through the published native-heap ABI; an inadmissible region reaches the original generated helper, including its checked invariant failure. The guard uses the helper argument width, and no inactive managed payload is inspected.
++
+@@ -1739,0 +1742,18 @@ host failure in one worker leaves the units the other workers hold running.
++
++
++### RC-NATIVE-VARIANT-BACKEND-1 — checked native variant implementation policy
++
++- [RC-NATIVE-VARIANT-BACKEND-1] Standalone frontend emission APIs default to the original helper protocol. Native
++builds may select RC-NATIVE-VARIANT-1 V2 only for a resolved QBE backend and the
++current compatible compiler producer. LLVM, including the retired qbe_llvm.py
++adapter spelling, and override or foreign producers retain original emission;
++foreign producer argv receives no new policy flag by default. Original admission
++returns before layout/catalog/temporary queries. GC and RC-counting retain their
++existing original helper fallbacks.
++
++The policy is a versioned emission input, included before fragment, whole-manifest
++replay, project/standard module variant and imported emission-config lookup.
++Selective accounted native-test compilation carries the policy before producing
++a manifest; native test result identities include it. External manifest input
++performs no new proof admission or instruction transformation. The policy changes
++no source semantics, runtime contract, guard, ownership permission or opcode.
+diff --git a/src/main.zig b/src/main.zig
+index 2d6ff206..0dec80a7 100644
+--- a/src/main.zig
++++ b/src/main.zig
+@@ -43,0 +44 @@ const language = @import("mylang");
++const NativeVariants = @import("runtime_contract").native_variants.Policy;
+@@ -1157,0 +1159 @@ const Parsed = struct {
++    native_variants: NativeVariants = .original,
+@@ -1199,0 +1202 @@ const Parsed = struct {
++            .native_variants = self.native_variants,
+@@ -1327,0 +1331,2 @@ const ArgumentParser = struct {
++    native_variants: NativeVariants = .original,
++    saw_native_variants: bool = false,
+@@ -1483,0 +1489,2 @@ const ArgumentParser = struct {
++        } else if (try self.nativeVariantsOption(arg)) {
++            return true;
+@@ -1496,0 +1504,11 @@ const ArgumentParser = struct {
++    /// Select a checked implementation only for explicit frontend emissions.
++    fn nativeVariantsOption(self: *ArgumentParser, arg: []const u8) error{Usage}!bool {
++        const prefix = "--native-variants=";
++        if (!std.mem.startsWith(u8, arg, prefix)) return false;
++        if (self.command != .@"emit-qbe" and self.command != .@"emit-project-qbe" and self.command != .@"native-test-compile") return error.Usage;
++        if (self.saw_native_variants) return error.Usage;
++        self.native_variants = NativeVariants.parse(arg[prefix.len..]) orelse return error.Usage;
++        self.saw_native_variants = true;
++        return true;
++    }
++
+@@ -1787,0 +1806 @@ const ArgumentParser = struct {
++            .native_variants = self.native_variants,
+@@ -2605 +2624 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
+-                return nativeTestCompileSession(init, &compilation);
++                return nativeTestCompileSession(init, &compilation, parsed.native_variants);
+@@ -2837 +2856 @@ fn emitProjectNative(init: Context, compilation: *language.project_compile.Compi
+-    const generated = (if (select_file) |path| emitMeasuredSelectedNative(init, compilation, path) else emitMeasuredNative(init, compilation, policy)) catch |err| switch (err) {
++    const generated = (if (select_file) |path| emitMeasuredSelectedNative(init, compilation, path, policy.native_variants) else emitMeasuredNative(init, compilation, policy)) catch |err| switch (err) {
+@@ -2869 +2888 @@ fn emitNativeTestFacts(init: Context, compilation: *language.project_compile.Com
+-fn nativeTestCompileSession(init: Context, compilation: *language.project_compile.Compilation) !u8 {
++fn nativeTestCompileSession(init: Context, compilation: *language.project_compile.Compilation, native_variants: NativeVariants) !u8 {
+@@ -2910 +2929 @@ fn nativeTestCompileSession(init: Context, compilation: *language.project_compil
+-            const manifest = compilation.emitQbeSelected(init.gpa, names, &stats) catch |err| switch (err) {
++            const manifest = compilation.emitQbeSelectedWithOptions(init.gpa, names, &stats, .{ .native_variants = native_variants }) catch |err| switch (err) {
+@@ -3666,0 +3686 @@ fn manifestReplayTicket(parsed: Parsed, diagnostics: diagnostic_output.Format, p
++    if (parsed.native_variants != .original) replayFrame(&slot, parsed.native_variants.identity());
+@@ -4237 +4257 @@ fn recordEmission(init: Context, reuse: ?language.qbe_fragments.Reuse, before: ?
+-fn emitMeasuredSelectedNative(init: Context, compilation: *language.project_compile.Compilation, select_file: []const u8) ![]u8 {
++fn emitMeasuredSelectedNative(init: Context, compilation: *language.project_compile.Compilation, select_file: []const u8, native_variants: NativeVariants) ![]u8 {
+@@ -4246 +4266 @@ fn emitMeasuredSelectedNative(init: Context, compilation: *language.project_comp
+-    const generated = try compilation.emitQbeSelected(init.gpa, names, &stats);
++    const generated = try compilation.emitQbeSelectedWithOptions(init.gpa, names, &stats, .{ .native_variants = native_variants });
+diff --git a/src/module_build.zig b/src/module_build.zig
+index 911de693..ec5de6c2 100644
+--- a/src/module_build.zig
++++ b/src/module_build.zig
+@@ -303,0 +304,2 @@ pub const TestRequest = struct {
++    /// A foreign test compiler keeps the established emission and argv.
++    foreign_producer: bool = false,
+@@ -388 +390 @@ pub fn openTests(context: fs.Context, request: TestRequest) Error!TestsOutcome {
+-    const settings: Settings = .{ .parsed = request.settings, .switches = request.switches, .identity = request.identity, .mode = .tests, .wait = request.cold == null };
++    const settings: Settings = .{ .parsed = request.settings, .switches = request.switches, .identity = request.identity, .mode = .tests, .wait = request.cold == null, .foreign_producer = request.foreign_producer };
+@@ -497 +499 @@ const Mode = enum { build, check, tests };
+-const Settings = struct { parsed: options.Options, switches: native_build.Switches, identity: []const u8, mode: Mode = .build, wait: bool = true };
++const Settings = struct { parsed: options.Options, switches: native_build.Switches, identity: []const u8, mode: Mode = .build, wait: bool = true, foreign_producer: bool = false };
+@@ -536 +538,3 @@ const Session = struct {
+-        const key: VariantKey = .{ .switches = settings.switches, .place = place, .identity = settings.identity, .source = source };
++        var switches = settings.switches;
++        if (prepared) |ready| switches.native_variants = native_build.nativeVariantPolicy(ready.cache, settings.foreign_producer or context.environ.get("MYLANG_HOST_COMPILER") != null);
++        const key: VariantKey = .{ .switches = switches, .place = place, .identity = settings.identity, .source = source };
+@@ -547 +551 @@ const Session = struct {
+-                .switches = settings.switches,
++                .switches = switches,
+@@ -670,0 +675 @@ fn variantDirectory(context: fs.Context, key: VariantKey) ![]const u8 {
++    if (switches.native_variants != .original) frame(&hash, switches.native_variants.identity());
+diff --git a/src/module_compile.zig b/src/module_compile.zig
+index 8aaa5601..5cc756e7 100644
+--- a/src/module_compile.zig
++++ b/src/module_compile.zig
+@@ -227,0 +228 @@ pub fn compile(gpa: std.mem.Allocator, arena: std.mem.Allocator, request: Reques
++        .native_variants = request.config.native_variants,
+diff --git a/src/module_compile_command.zig b/src/module_compile_command.zig
+index 850262e5..bcdda3f8 100644
+--- a/src/module_compile_command.zig
++++ b/src/module_compile_command.zig
+@@ -52,0 +53 @@ const Options = struct {
++    saw_native_variants: bool = false,
+@@ -95,0 +97,4 @@ fn parse(args: []const []const u8) ?Options {
++        } else if (std.mem.startsWith(u8, arg, "--native-variants=")) {
++            if (options.saw_native_variants) return null;
++            options.saw_native_variants = true;
++            options.config.native_variants = @import("runtime_contract").native_variants.Policy.parse(arg["--native-variants=".len..]) orelse return null;
+diff --git a/src/module_interface.zig b/src/module_interface.zig
+index 644c275c..b212b764 100644
+--- a/src/module_interface.zig
++++ b/src/module_interface.zig
+@@ -157 +157 @@ pub fn configName(allocator: std.mem.Allocator, config: EmissionConfig) std.mem.
+-    return std.fmt.allocPrint(allocator, "debug={s} steps={s} frames={s} arenas={s} runtime={s} values={s} cow={s}", .{
++    return std.fmt.allocPrint(allocator, "debug={s} steps={s} frames={s} arenas={s} runtime={s} values={s} cow={s}{s}", .{
+@@ -164,0 +165 @@ pub fn configName(allocator: std.mem.Allocator, config: EmissionConfig) std.mem.
++        config.native_variants.suffix(),
+@@ -170 +171 @@ pub fn configName(allocator: std.mem.Allocator, config: EmissionConfig) std.mem.
+-pub const EmissionConfig = struct { drop_debug: bool, step_checks: bool, frame_checks: bool, arenas: bool };
++pub const EmissionConfig = struct { drop_debug: bool, step_checks: bool, frame_checks: bool, arenas: bool, native_variants: @import("runtime_contract").native_variants.Policy = .original };
+diff --git a/src/native_interface.zig b/src/native_interface.zig
+index 2ca51ed1..e0e489b6 100644
+--- a/src/native_interface.zig
++++ b/src/native_interface.zig
+@@ -8,0 +9,2 @@ pub const Policy = struct {
++    /// Original by default; native builds select the resolved QBE policy.
++    native_variants: @import("runtime_contract").native_variants.Policy = .original,
+diff --git a/src/native_test_command.zig b/src/native_test_command.zig
+index a130e0e2..9fef2f4c 100644
+--- a/src/native_test_command.zig
++++ b/src/native_test_command.zig
+@@ -278 +278,7 @@ fn openModuleTests(session: sessions.Session, captured: snapshot.Snapshot, place
+-    const outcome = module_build.openTests(session.context, .{ .settings = settings, .switches = native_build.emissionSwitches(library), .identity = bundled_identity, .cold = place.cold }) catch |err| switch (err) {
++    const outcome = module_build.openTests(session.context, .{
++        .settings = settings,
++        .switches = native_build.emissionSwitches(library),
++        .identity = bundled_identity,
++        .cold = place.cold,
++        .foreign_producer = session.options.toolchain.compiler != null,
++    }) catch |err| switch (err) {
+diff --git a/src/native_test_session.zig b/src/native_test_session.zig
+index c162ae4b..3a7f5219 100644
+--- a/src/native_test_session.zig
++++ b/src/native_test_session.zig
+@@ -57 +57 @@ pub const Session = struct {
+-    tools: struct { zig: []const u8, qbe: []const u8 },
++    tools: struct { zig: []const u8, qbe: []const u8, native_variants: @import("runtime_contract").native_variants.Policy = .original },
+@@ -78,0 +79 @@ pub const Session = struct {
++        session.tools.native_variants = try emissionPolicy(session);
+@@ -80,0 +82,13 @@ pub const Session = struct {
++    /// Resolve policy with the same backend resolver the library build uses.
++    fn emissionPolicy(session: Session) Error!@import("runtime_contract").native_variants.Policy {
++        if (session.options.toolchain.compiler != null or session.context.environ.get("MYLANG_HOST_COMPILER") != null) return .original;
++        const parsed: build_options.Options = .{
++            .source = session.options.source,
++            .library = true,
++            .mode = session.options.mode,
++            .codegen = if (build_options.release(session.options.link_arguments)) build_options.release_codegen else .{ .qbe = session.tools.qbe },
++        };
++        const resolved = try @import("qbe_build_backend.zig").resolve(session.context, parsed, session.tools.zig);
++        return .forBackend(std.mem.eql(u8, resolved.name, "llvm"), false);
++    }
++
+@@ -245,0 +260 @@ pub const Session = struct {
++        if (self.tools.native_variants.flag()) |flag| try argv.append(self.context.allocator, flag);
+@@ -447,0 +463 @@ pub const Session = struct {
++            .native_variants = self.tools.native_variants,
+@@ -520,0 +537 @@ pub const Compile = struct {
++        if (session.tools.native_variants.flag()) |flag| try argv.append(a, flag);
+diff --git a/src/native_variant_policy.zig b/src/native_variant_policy.zig
+new file mode 100644
+index 00000000..5fc74d6c
+--- /dev/null
++++ b/src/native_variant_policy.zig
+@@ -0,0 +1,35 @@
++//! Backend selection for the checked native variant implementation.
++const std = @import("std");
++
++/// A lowering choice; original is every standalone emission API's default.
++pub const Policy = enum {
++    original,
++    qbe_v2,
++
++    /// Only a resolved QBE backend with the current producer enables V2.
++    pub fn forBackend(llvm: bool, foreign: bool) Policy {
++        return if (llvm or foreign) .original else .qbe_v2;
++    }
++
++    /// Versioned emission/cache identity; original keeps the old encoding.
++    pub fn identity(self: Policy) []const u8 {
++        return if (self == .original) "" else "native-variant-qbe-v2";
++    }
++
++    /// The module-interface configuration suffix of an enabled policy.
++    pub fn suffix(self: Policy) []const u8 {
++        return if (self == .original) "" else " native-variant=qbe-v2";
++    }
++
++    /// A checked-emission flag, never handed to a foreign producer by default.
++    pub fn flag(self: Policy) ?[]const u8 {
++        return if (self == .original) null else "--native-variants=qbe-v2";
++    }
++
++    /// Internal emission spelling; unknown values are a usage error.
++    pub fn parse(text: []const u8) ?Policy {
++        if (std.mem.eql(u8, text, "original")) return .original;
++        if (std.mem.eql(u8, text, "qbe-v2")) return .qbe_v2;
++        return null;
++    }
++};
+diff --git a/src/native_variant_policy_test.zig b/src/native_variant_policy_test.zig
+new file mode 100644
+index 00000000..c49a95a0
+--- /dev/null
++++ b/src/native_variant_policy_test.zig
+@@ -0,0 +1,179 @@
++//! Original emission, backend selection and cache boundaries of native V2.
++const std = @import("std");
++const policy = @import("runtime_contract").native_variants.Policy;
++const compiler = @import("compiler.zig");
++const runtime = @import("runtime_mode.zig");
++const native = @import("native_types.zig");
++const shapes = @import("rc_shape.zig");
++const proof = @import("qbe_rc_native_variant.zig");
++const t = std.testing;
++const source =
++    \\union Choice:
++    \\    empty,
++    \\    number: int,
++    \\    values: list[int]
++    \\def change(value: Choice) -> Choice:
++    \\    result = value
++    \\    result = Choice.number(3)
++    \\    return result
++    \\def main() -> int:
++    \\    value = Choice.values([1, 2])
++    \\    value = change(value)
++    \\    return 0
++;
++
++// spec: RC-NATIVE-VARIANT-BACKEND-1
++test "RC-NATIVE-VARIANT-BACKEND-1 selects only resolved QBE current producers" {
++    const cases = [_]struct { llvm: bool, foreign: bool, expected: policy }{
++        .{ .llvm = false, .foreign = false, .expected = .qbe_v2 },
++        .{ .llvm = true, .foreign = false, .expected = .original },
++        .{ .llvm = false, .foreign = true, .expected = .original },
++        .{ .llvm = true, .foreign = true, .expected = .original },
++    };
++    for (cases) |case| try t.expectEqual(case.expected, policy.forBackend(case.llvm, case.foreign));
++    try t.expect(@import("qbe_build_backend.zig").legacyLlvm("/arbitrary/qbe_llvm.py"));
++    try t.expect(!@import("qbe_build_backend.zig").legacyLlvm("/arbitrary/qbe"));
++}
++
++// spec-case: RC-NATIVE-VARIANT-BACKEND-1
++test "RC-NATIVE-VARIANT-BACKEND-1 original policy keeps foreign argv unchanged" {
++    const build = @import("qbe_build.zig");
++    var arena = std.heap.ArenaAllocator.init(t.allocator);
++    defer arena.deinit();
++    const old = try build.frontendSwitches(arena.allocator(), .{ .drop_debug = false, .step_checks = true, .frame_checks = true });
++    try t.expectEqual(@as(usize, 0), old.len);
++    const selected = try build.frontendSwitches(arena.allocator(), .{ .drop_debug = false, .step_checks = true, .frame_checks = true, .native_variants = .qbe_v2 });
++    try t.expectEqual(@as(usize, 1), selected.len);
++    try t.expectEqualStrings("--native-variants=qbe-v2", selected[0]);
++    try t.expect(policy.original.flag() == null);
++    try t.expectEqualStrings("", policy.original.identity());
++    try t.expectEqual(policy.original, policy.parse("original").?);
++    try t.expectEqual(policy.qbe_v2, policy.parse("qbe-v2").?);
++    try t.expect(policy.parse("unchecked") == null);
++}
++
++fn emit(selected: policy) ![]u8 {
++    var compilation = try compiler.Compilation.init(t.allocator, "native_policy.my", source);
++    defer compilation.deinit();
++    return compilation.emitQbeWithOptions(t.allocator, .{ .native_variants = selected });
++}
++
++// spec-case: RC-NATIVE-VARIANT-BACKEND-1
++test "RC-NATIVE-VARIANT-BACKEND-1 original and default APIs preserve exact IL and metadata" {
++    const saved = runtime.get();
++    defer runtime.set(saved);
++    runtime.set(.rc);
++    var compilation = try compiler.Compilation.init(t.allocator, "native_policy.my", source);
++    defer compilation.deinit();
++    const default = try compilation.emitQbe(t.allocator);
++    defer t.allocator.free(default);
++    const original = try emit(.original);
++    defer t.allocator.free(original);
++    try t.expectEqualStrings(default, original);
++    try t.expect(std.mem.indexOf(u8, original, "# RC-NATIVE-VARIANT-1") == null);
++    const selected = try emit(.qbe_v2);
++    defer t.allocator.free(selected);
++    try t.expect(std.mem.indexOf(u8, selected, "# RC-NATIVE-VARIANT-1") != null);
++}
++
++// spec-case: RC-NATIVE-VARIANT-BACKEND-1
++test "RC-NATIVE-VARIANT-BACKEND-1 GC and counting keep exact original helper streams" {
++    const saved = runtime.get();
++    defer runtime.set(saved);
++    for ([_]runtime.Selection{ .gc, .rc_counting }) |mode| {
++        runtime.set(mode);
++        const original = try emit(.original);
++        defer t.allocator.free(original);
++        const selected = try emit(.qbe_v2);
++        defer t.allocator.free(selected);
++        try t.expectEqualStrings(original, selected);
++        try t.expect(std.mem.indexOf(u8, selected, "# RC-NATIVE-VARIANT-1") == null);
++    }
++}
++
++const State = struct { catalog: shapes.Catalog };
++const Cow = struct { rc: ?*State };
++const Refusal = struct {
++    native_variants: policy = .original,
++    layouts: *native.Catalog = undefined,
++    cow: ?*Cow = undefined,
++    touched: bool = false,
++
++    /// A deliberately observable temporary allocation for the refusal test.
++    pub fn temp(self: *Refusal) usize {
++        self.touched = true;
++        return 0;
++    }
++
++    /// A deliberately observable instruction write for the refusal test.
++    pub fn print(self: *Refusal, comptime _: []const u8, _: anytype) proof.Error!void {
++        self.touched = true;
++    }
++};
++
++// spec-case: RC-NATIVE-VARIANT-BACKEND-1
++test "RC-NATIVE-VARIANT-BACKEND-1 original refuses before undefined catalogs or emission" {
++    const saved = runtime.get();
++    defer runtime.set(saved);
++    runtime.set(.rc);
++    var emitter: Refusal = .{};
++    const take = .{ .ty = @as(@import("typed.zig").Type, .i64), .source = @as(usize, 0), .destination = @as(usize, 1), .region = @as(usize, 2), .disjoint = false };
++    try t.expect(try proof.take(Refusal, &emitter, take) == null);
++    try t.expect(try proof.release(Refusal, &emitter, .{ .ty = @as(@import("typed.zig").Type, .i64), .address = @as(usize, 0) }) == null);
++    try t.expect(!emitter.touched);
++}
++
++// spec-case: RC-NATIVE-VARIANT-BACKEND-1
++test "RC-NATIVE-VARIANT-BACKEND-1 module emission config preserves original and partitions enabled" {
++    const iface = @import("module_interface.zig");
++    const original = try iface.configName(t.allocator, .{ .drop_debug = false, .step_checks = true, .frame_checks = true, .arenas = false });
++    defer t.allocator.free(original);
++    const selected = try iface.configName(t.allocator, .{ .drop_debug = false, .step_checks = true, .frame_checks = true, .arenas = false, .native_variants = .qbe_v2 });
++    defer t.allocator.free(selected);
++    try t.expect(!std.mem.eql(u8, original, selected));
++    const combined = try std.mem.concat(t.allocator, u8, &.{ original, " native-variant=qbe-v2" });
++    defer t.allocator.free(combined);
++    try t.expectEqualStrings(combined, selected);
++}
++
++// spec-case: RC-NATIVE-VARIANT-BACKEND-1
++test "RC-NATIVE-VARIANT-BACKEND-1 first-pass unit key includes enabled policy" {
++    const fragments = @import("qbe_fragments.zig");
++    var compilation = try compiler.Compilation.init(t.allocator, "native_policy.my", source);
++    defer compilation.deinit();
++    try compilation.emit();
++    var keys = try fragments.Keys.init(t.allocator, compilation.code.?);
++    defer keys.deinit();
++    const original = try keys.local(0, .{ .step_checks = true, .frame_checks = true, .arenas = false, .entry = false });
++    const selected = try keys.local(0, .{ .step_checks = true, .frame_checks = true, .arenas = false, .entry = false, .ownership = .{ .native_variants = .qbe_v2 } });
++    try t.expect(!std.mem.eql(u8, &original, &selected));
++}
++
++const ProjectSource = struct {
++    fn read(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _: usize) @import("project.zig").ReadError![]u8 {
++        if (!std.mem.eql(u8, path, "native_policy.my")) return error.NotFound;
++        return allocator.dupe(u8, "module native_policy\n" ++ source);
++    }
++};
++
++// spec-case: RC-NATIVE-VARIANT-BACKEND-1
++test "RC-NATIVE-VARIANT-BACKEND-1 default selective API retains original lowering" {
++    const saved = runtime.get();
++    defer runtime.set(saved);
++    runtime.set(.rc);
++    var project = @import("project.zig").Project.init(t.allocator);
++    defer project.deinit();
++    try project.load(.{ .context = null, .read = ProjectSource.read }, "native_policy", .{});
++    var index = try @import("interfaces.zig").build(&project);
++    const Compilation = @import("project_compile.zig").Compilation;
++    var compilation = try Compilation.init(&index);
++    var default_stats: Compilation.SelectedStats = .{};
++    const default = try compilation.emitQbeSelected(t.allocator, &.{"native_policy::change"}, &default_stats);
++    defer t.allocator.free(default);
++    var original_stats: Compilation.SelectedStats = .{};
++    const original = try compilation.emitQbeSelectedWithOptions(t.allocator, &.{"native_policy::change"}, &original_stats, .{});
++    defer t.allocator.free(original);
++    try t.expectEqualStrings(default, original);
++    try t.expectEqualDeep(default_stats, original_stats);
++    try t.expect(std.mem.indexOf(u8, default, "# RC-NATIVE-VARIANT-1") == null);
++}
+diff --git a/src/project_compile.zig b/src/project_compile.zig
+index 71738c91..06779108 100644
+--- a/src/project_compile.zig
++++ b/src/project_compile.zig
+@@ -251,0 +252,5 @@ pub const Compilation = struct {
++        return self.emitQbeSelectedWithOptions(allocator, names, stats, .{});
++    }
++
++    /// Selective checked native-test lowering carries its requested implementation.
++    pub fn emitQbeSelectedWithOptions(self: *Compilation, allocator: @import("std").mem.Allocator, names: []const []const u8, stats: *SelectedStats, policy: @import("native_interface.zig").Policy) EmitNativeError![]u8 {
+@@ -277 +282 @@ pub const Compilation = struct {
+-        return @import("qbe.zig").generateSelectedWithInterface(allocator, inlined, self.src, &self.diagnostics, .{ .roots = roots, .schema = schema, .reuse = self.reuse }, selected) catch |err| switch (err) {
++        return @import("qbe.zig").generateSelectedWithInterface(allocator, inlined, self.src, &self.diagnostics, .{ .roots = roots, .schema = schema, .reuse = self.reuse, .policy = policy }, selected) catch |err| switch (err) {
+diff --git a/src/qbe.zig b/src/qbe.zig
+index e67c7d22..0b62e3e2 100644
+--- a/src/qbe.zig
++++ b/src/qbe.zig
+@@ -282,0 +283 @@ fn generateImpl(allocator: std.mem.Allocator, program_in: bytecode.Program, src:
++        .native_variants = interface.policy.native_variants,
+@@ -814,0 +816 @@ const EmitPass = struct {
++    native_variants: @import("runtime_contract").native_variants.Policy = .original,
+@@ -861,0 +864 @@ fn emitEntry(pass: EmitPass, index: usize, scratch: std.mem.Allocator, certifica
++        .native_variants = pass.native_variants,
+@@ -1389 +1392 @@ fn flagsOf(pass: EmitPass, index: usize) fragments.Flags {
+-        .runtime = runtime_mode.lowered(),
++        .ownership = .{ .runtime = runtime_mode.lowered(), .native_variants = pass.native_variants },
+@@ -1723,0 +1727 @@ const Emitter = struct {
++    native_variants: @import("runtime_contract").native_variants.Policy = .original,
+diff --git a/src/qbe_build.zig b/src/qbe_build.zig
+index dad2ad9c..57d08cd7 100644
+--- a/src/qbe_build.zig
++++ b/src/qbe_build.zig
+@@ -323 +323,3 @@ fn build(context: fs.Context, parsed: options.Options, controls: []const []const
+-        try arguments.appendSlice(a, try frontendSwitches(a, emissionSwitches(parsed)));
++        var switches = emissionSwitches(parsed);
++        switches.native_variants = nativeVariantPolicy(cache, context.environ.get("MYLANG_HOST_COMPILER") != null);
++        try arguments.appendSlice(a, try frontendSwitches(a, switches));
+@@ -575 +577 @@ fn manifestFile(args: []const []const u8) ?[]const u8 {
+-pub const Switches = struct { drop_debug: bool, step_checks: bool, frame_checks: bool };
++pub const Switches = struct { drop_debug: bool, step_checks: bool, frame_checks: bool, native_variants: contract.native_variants.Policy = .original };
+@@ -592,0 +595,5 @@ pub fn emissionSwitches(parsed: options.Options) Switches {
++/// Select from the actual resolved backend, including the legacy LLVM adapter.
++pub fn nativeVariantPolicy(cache: cache_api.Cache, foreign: bool) contract.native_variants.Policy {
++    return .forBackend(cache.codegen.llvm, foreign);
++}
++
+@@ -595,0 +603 @@ pub fn frontendSwitches(allocator: std.mem.Allocator, switches: Switches) error{
++    if (switches.native_variants.flag()) |flag| try out.append(allocator, flag);
+diff --git a/src/qbe_fragments.zig b/src/qbe_fragments.zig
+index eb1d1872..c806a995 100644
+--- a/src/qbe_fragments.zig
++++ b/src/qbe_fragments.zig
+@@ -54 +54 @@ pub const Flags = struct {
+-    runtime: @import("runtime_contract").Selection = .gc,
++    ownership: struct { runtime: @import("runtime_contract").Selection = .gc, native_variants: @import("runtime_contract").native_variants.Policy = .original } = .{},
+@@ -256,0 +257 @@ pub const Keys = struct {
++        if (flags.ownership.native_variants != .original) try canon.text(flags.ownership.native_variants.identity());
+@@ -259 +260 @@ pub const Keys = struct {
+-        try canon.text(flags.runtime.identity());
++        try canon.text(flags.ownership.runtime.identity());
+diff --git a/src/qbe_rc_glue.zig b/src/qbe_rc_glue.zig
+index 6ac843fd..0a4a5e7e 100644
+--- a/src/qbe_rc_glue.zig
++++ b/src/qbe_rc_glue.zig
+@@ -6,2 +6,3 @@
+-//! rare cases call that type's generated glue (`rc_glue.zig`); every other
+-//! value calls its glue directly. Counting builds always call the glue, which
++//! rare cases call that type's generated glue (`rc_glue.zig`). A small tagged
++//! value's edge-free active case may copy/clear inline; other cases call glue.
++//! Counting builds always call the glue, which
+@@ -12,0 +14 @@ const semantics = @import("value_semantics.zig");
++const native_variant = @import("qbe_rc_native_variant.zig");
+@@ -17 +19,8 @@ pub const Error = error{ InternalError, OutOfMemory, SourceError, WriteFailed };
+-pub const Transfer = struct { ty: typed.Type, destination: usize, source: usize, region: usize = 0 };
++pub const Transfer = struct {
++    ty: typed.Type,
++    destination: usize,
++    source: usize,
++    region: usize = 0,
++    /// Existing RC-DISJOINT-TAKE-1 proof over complete private value buffers.
++    disjoint: bool = false,
++};
+@@ -225,0 +235 @@ pub fn take(comptime E: type, self: *E, operation: Transfer) Error!void {
++    const plain = try native_variant.take(E, self, operation);
+@@ -228,0 +239 @@ pub fn take(comptime E: type, self: *E, operation: Transfer) Error!void {
++    try native_variant.join(E, self, plain);
+@@ -407,0 +419 @@ fn release(comptime E: type, self: *E, operation: Release, operation_kind: glue.
++    const plain = try native_variant.release(E, self, operation);
+@@ -413,0 +426 @@ fn release(comptime E: type, self: *E, operation: Release, operation_kind: glue.
++        try native_variant.join(E, self, plain);
+diff --git a/src/qbe_rc_inline_take.zig b/src/qbe_rc_inline_take.zig
+index b19ff586..7f8c13fd 100644
+--- a/src/qbe_rc_inline_take.zig
++++ b/src/qbe_rc_inline_take.zig
+@@ -63,8 +63,2 @@ fn overlap(comptime E: type, self: *E, operation: anytype, size: u64, label: usi
+-    const left = self.temp();
+-    const right = self.temp();
+-    const near_left = self.temp();
+-    const near_right = self.temp();
+-    const overlapping = self.temp();
+-    try self.print(" %v{d} =l sub %v{d}, %v{d}\n %v{d} =l sub %v{d}, %v{d}\n", .{ left, operation.source, operation.destination, right, operation.destination, operation.source });
+-    try self.print(" %v{d} =w cultl %v{d}, {d}\n %v{d} =w cultl %v{d}, {d}\n", .{ near_left, left, size, near_right, right, size });
+-    try self.print(" %v{d} =w or %v{d}, %v{d}\n jnz %v{d}, @rcmoveslow{d}, @rcmovecheck{d}\n@rcmovecheck{d}\n", .{ overlapping, near_left, near_right, overlapping, label, label, label });
++    try @import("qbe_rc_overlap.zig").branch(E, self, .{ .source = operation.source, .destination = operation.destination, .size = size }, .{ .slow = "rcmoveslow", .fast = "rcmovecheck", .number = label });
++    try self.print("@rcmovecheck{d}\n", .{label});
+diff --git a/src/qbe_rc_native_variant.zig b/src/qbe_rc_native_variant.zig
+new file mode 100644
+index 00000000..d4358b9b
+--- /dev/null
++++ b/src/qbe_rc_native_variant.zig
+@@ -0,0 +1,115 @@
++//! RC-NATIVE-VARIANT-1: the edge-free active case of a counted tagged value.
++//! Unknown tags and counted cases keep the complete generated glue operation.
++const typed = @import("typed.zig");
++const native = @import("native_types.zig");
++const shapes = @import("rc_shape.zig");
++const runtime = @import("runtime_mode.zig");
++const zero = @import("qbe_zero.zig");
++const heap_region_depth_offset = @import("qbe_alloc.zig").heap_region_depth_offset;
++
++/// Native emission failures shared with the ownership glue emitter.
++pub const Error = error{ InternalError, OutOfMemory, SourceError, WriteFailed };
++/// Bound the repeated physical-case proof to at most 64 field visits per site.
++pub const max_cases: usize = 8;
++/// A small tagged layout and its declared cases with no physical obligations.
++pub const Plan = struct { tags: [4]u32 = undefined, len: usize = 0, size: u64, alignment: u8 };
++
++/// Prove exact declared active tags against the physical field table, including
++/// payloadless cases. No niche, outer domain, unique resource or large layout.
++pub fn plan(catalog: *native.Catalog, facts: *shapes.Catalog, ty: typed.Type) native.Error!?Plan {
++    if (!ty.isAggregate()) return null;
++    const layout = try catalog.layout(ty);
++    const shape = try facts.get(ty);
++    if (layout.kind != .variant or layout.alignment < 4) return null;
++    if (layout.size < 4 or layout.size > 32) return null;
++    if (!shape.counted or shape.unique_drop) return null;
++    if (!shape.copyable) return null;
++    const variants = catalog.records[ty.recordIndex()].shape.variants orelse return null;
++    if (variants.cases.len > max_cases or layout.fields.len > max_cases) return null;
++    var result: Plan = .{ .size = layout.size, .alignment = layout.alignment };
++    for (variants.cases, 0..) |_, active| {
++        var plain = true;
++        for (layout.fields) |field| if (field.tag == active) {
++            const child = try facts.get(field.ty);
++            if (child.counted or child.unique_drop or !child.copyable) plain = false;
++        };
++        if (!plain) continue;
++        if (result.len == result.tags.len) return null;
++        result.tags[result.len] = @intCast(active);
++        result.len += 1;
++    }
++    return if (result.len == 0) null else result;
++}
++
++fn admitted(comptime E: type, self: *E, ty: typed.Type) Error!?Plan {
++    // Original policy refuses before any layout/catalog/temporary query.
++    if (comptime !@hasField(E, "native_variants")) return null;
++    if (self.native_variants != .qbe_v2) return null;
++    if (comptime !(@hasField(E, "cow") and @hasField(E, "layouts"))) return null;
++    if (!runtime.enabled() or runtime.counting()) return null;
++    const cow = self.cow orelse return null;
++    const state = cow.rc orelse return null;
++    return plan(self.layouts, &state.catalog, ty) catch |err| translate(err);
++}
++
++/// Branch around the helper only for a declared edge-free tag; all other tags
++/// reach slow before any value byte changes, including malformed tags.
++fn tag(comptime E: type, self: *E, address: usize, layout: Plan, label: usize) Error!void {
++    const active = self.temp();
++    try self.print(" %v{d} =w loaduw %v{d}\n", .{ active, address });
++    for (layout.tags[0..layout.len], 0..) |value, index| {
++        const selected = self.temp();
++        const next = self.temp();
++        try self.print(" %v{d} =w ceqw %v{d}, {d}\n", .{ selected, active, value });
++        if (index + 1 == layout.len) {
++            try self.print(" jnz %v{d}, @rcnativeplain{d}, @rcnativeslow{d}\n", .{ selected, label, label });
++        } else try self.print(" jnz %v{d}, @rcnativeplain{d}, @rcnativenext{d}\n@rcnativenext{d}\n", .{ selected, label, next, next });
++    }
++    try self.print("@rcnativeplain{d}\n", .{label});
++}
++
++/// Copy every value byte, including inactive payload/padding, then clear every
++/// source byte. Keep the generated helper's overlapping transaction unchanged.
++pub fn take(comptime E: type, self: *E, operation: anytype) Error!?usize {
++    const layout = try admitted(E, self, operation.ty) orelse return null;
++    const label = self.temp();
++    try self.print(" # RC-NATIVE-VARIANT-1 take\n", .{});
++    try tag(E, self, operation.source, layout, label);
++    // Generated take checks this even when the active tag has no edge. Use
++    // its unsigned-word argument width and the runtime's published heap ABI.
++    const depth_slot = self.temp();
++    const depth = self.temp();
++    const valid_region = self.temp();
++    try self.print(" %v{d} =l add %heap, {d}\n %v{d} =w loaduw %v{d}\n", .{ depth_slot, heap_region_depth_offset, depth, depth_slot });
++    try self.print(" %v{d} =w culew %v{d}, %v{d}\n jnz %v{d}, @rcnativeregion{d}, @rcnativeslow{d}\n@rcnativeregion{d}\n", .{ valid_region, operation.region, depth, valid_region, label, label, label });
++    if (operation.disjoint) {
++        // Only propagate the existing completed-publication storage proof.
++        // Caller ownership/borrow/capture admission remains unchanged.
++        try self.print(" # RC-DISJOINT-TAKE-1 native variant\n", .{});
++    } else try @import("qbe_rc_overlap.zig").branch(E, self, .{ .source = operation.source, .destination = operation.destination, .size = layout.size }, .{ .slow = "rcnativeslow", .fast = "rcnativecopy", .number = label });
++    try self.print("@rcnativecopy{d}\n blit %v{d}, %v{d}, {d}\n", .{ label, operation.source, operation.destination, layout.size });
++    try zero.clear(*E, self, operation.source, layout.size, layout.alignment);
++    try self.print(" jmp @rcnativedone{d}\n@rcnativeslow{d}\n", .{ label, label });
++    return label;
++}
++
++/// The generated drop/unloan visits no edge for this tag: no count, history,
++/// death, callback or drain occurs, and its only effect is whole-value clearing.
++pub fn release(comptime E: type, self: *E, operation: anytype) Error!?usize {
++    const layout = try admitted(E, self, operation.ty) orelse return null;
++    const label = self.temp();
++    try self.print(" # RC-NATIVE-VARIANT-1 release\n", .{});
++    try tag(E, self, operation.address, layout, label);
++    try zero.clear(*E, self, operation.address, layout.size, layout.alignment);
++    try self.print(" jmp @rcnativedone{d}\n@rcnativeslow{d}\n", .{ label, label });
++    return label;
++}
++
++/// Rejoin after the caller's unchanged helper, status mapping and failure edge.
++pub fn join(comptime E: type, self: *E, label: ?usize) Error!void {
++    if (label) |value| try self.print("@rcnativedone{d}\n", .{value});
++}
++
++fn translate(err: anyerror) Error {
++    return if (err == error.OutOfMemory) error.OutOfMemory else error.InternalError;
++}
+diff --git a/src/qbe_rc_native_variant_runtime_test.zig b/src/qbe_rc_native_variant_runtime_test.zig
+new file mode 100644
+index 00000000..22ef885d
+--- /dev/null
++++ b/src/qbe_rc_native_variant_runtime_test.zig
+@@ -0,0 +1,147 @@
++//! Execute the emitted tagged-case branches against real checked generated glue.
++const std = @import("std");
++const compiler = @import("compiler.zig");
++const native = @import("native_types.zig");
++const descriptors = @import("native_descriptors.zig");
++const shapes = @import("rc_shape.zig");
++const runtime = @import("runtime_mode.zig");
++const glue = @import("qbe_rc_glue.zig");
++const t = std.testing;
++const fixture_path = "test/fixtures/native-rc/variant-native.c";
++/// Probe emission needs native layouts and a schema with its declared Choice.
++pub const ProbeError = glue.Error || error{TestUnexpectedResult};
++const schema =
++    \\record Pair:
++    \\    left: list[int]
++    \\    right: list[int]
++    \\union Choice:
++    \\    empty,
++    \\    pair: Pair,
++    \\    number: int,
++    \\    held: DictValues[int, int]
++    \\def main() -> int:
++    \\    return 0
++;
++
++const State = struct { catalog: shapes.Catalog };
++const Cow = struct { rc: ?*State };
++const Emitter = struct {
++    native_variants: @import("runtime_contract").native_variants.Policy = .qbe_v2,
++    layouts: *native.Catalog,
++    cow: ?*Cow,
++    output: std.Io.Writer.Allocating,
++    next: usize = 3,
++
++    /// Reserve a fresh temporary after the function's three input names.
++    pub fn temp(self: *Emitter) usize {
++        defer self.next += 1;
++        return self.next;
++    }
++
++    /// Append actual ownership-emitter instructions to the probe module.
++    pub fn print(self: *Emitter, comptime format: []const u8, args: anytype) glue.Error!void {
++        self.output.writer.print(format, args) catch return error.OutOfMemory;
++    }
++
++    /// Route slow calls through counters that delegate to real generated glue.
++    pub fn descriptor(_: *Emitter, _: @import("typed.zig").Type) glue.Error![]const u8 {
++        return "probe";
++    }
++};
++
++fn choice(catalog: *native.Catalog) !@import("typed.zig").Type {
++    for (catalog.records) |item| if (std.mem.eql(u8, item.name, "Choice")) return item.id;
++    return error.TestUnexpectedResult;
++}
++
++/// Emit both uncertified and certified take probes against the same real layout.
++pub fn wrappers(catalog: *native.Catalog) ProbeError![]const u8 {
++    var state: State = .{ .catalog = try shapes.Catalog.init(t.allocator, catalog) };
++    defer state.catalog.deinit();
++    var cow: Cow = .{ .rc = &state };
++    var emitter: Emitter = .{ .layouts = catalog, .cow = &cow, .output = .init(t.allocator) };
++    defer emitter.output.deinit();
++    const ty = try choice(catalog);
++    try emitter.print("export function w $fast_take(l %heap, l %ctx, l %v0, l %v1, w %v2) {{\n@start\n", .{});
++    try glue.take(Emitter, &emitter, .{ .ty = ty, .destination = 0, .source = 1, .region = 2 });
++    try emitter.print(" ret 1\n@failure\n ret 0\n}}\n", .{});
++    try emitter.print("export function w $fast_take_private(l %heap, l %ctx, l %v0, l %v1, w %v2) {{\n@start\n", .{});
++    try glue.take(Emitter, &emitter, .{ .ty = ty, .destination = 0, .source = 1, .region = 2, .disjoint = true });
++    try emitter.print(" ret 1\n@failure\n ret 0\n}}\n", .{});
++    try emitter.print("export function $fast_drop(l %heap, l %v0) {{\n@start\n", .{});
++    try glue.drop(Emitter, &emitter, .{ .ty = ty, .address = 0 });
++    try emitter.print(" ret\n}}\nexport function $fast_unloan(l %heap, l %v0) {{\n@start\n", .{});
++    try glue.unloan(Emitter, &emitter, .{ .ty = ty, .address = 0 });
++    try emitter.print(" ret\n}}\n", .{});
++    return t.allocator.dupe(u8, emitter.output.written());
++}
++
++fn assets(directory: std.Io.Dir) !void {
++    for (@import("qbe_build_assets").files) |asset| {
++        if (std.mem.indexOfScalar(u8, asset.path, '/') != null) continue;
++        try directory.writeFile(t.io, .{ .sub_path = asset.path, .data = asset.bytes });
++    }
++}
++
++fn command(directory: std.Io.Dir, argv: []const []const u8) !void {
++    const outcome = try std.process.run(t.allocator, t.io, .{ .argv = argv, .cwd = .{ .dir = directory } });
++    defer t.allocator.free(outcome.stdout);
++    defer t.allocator.free(outcome.stderr);
++    if (outcome.term != .exited or outcome.term.exited != 0)
++        try std.Io.File.stderr().writeStreamingAll(t.io, outcome.stderr);
++    try t.expectEqual(std.process.Child.Term{ .exited = 0 }, outcome.term);
++}
++
++fn compileRun(directory: std.Io.Dir) !void {
++    const qbe = t.environ.getPosix("MYLANG_QBE") orelse return error.ToolNotFound;
++    try command(directory, &.{ qbe, "-o", "probe.s", "probe.ssa" });
++    const zig = @import("native_test_options").zig_path;
++    try command(directory, &.{ zig, "cc", "-c", "probe.s", "-o", "probe.o" });
++    const sources = &.{
++        "native_heap.c",        "native_arena.c",     "native_collections.c", "native_text.c",
++        "native_dictionary.c",  "native_equal.c",     "native_bytes.c",       "native_rc.c",
++        "native_rc_stats.c",    "native_rc_shapes.c", "native_rc_walk.c",     "native_rc_scope.c",
++        "native_rc_transfer.c", "native_rc_alloc.c",  "native_rc_values.c",   "native_regions.c",
++    };
++    var argv: std.ArrayList([]const u8) = .empty;
++    defer argv.deinit(t.allocator);
++    try argv.appendSlice(t.allocator, &.{
++        zig,                   "cc",              "-std=c11",          "-Werror",           "-O1",                "-fsanitize=undefined",
++        "-ffunction-sections", "-fdata-sections", "-Wl,--gc-sections", "-DMYL_NATIVE_RC=1", "-DMYL_RC_CHECKED=1", "-DMYL_RC_GLUE_CHECKED=1",
++        "-UNDEBUG",
++    });
++    try argv.appendSlice(t.allocator, sources);
++    try argv.appendSlice(t.allocator, &.{ "harness.c", "probe.o", "-o", "harness" });
++    try command(directory, argv.items);
++    try command(directory, &.{"./harness"});
++}
++
++// spec-case: RC-NATIVE-VARIANT-1
++test "RC-NATIVE-VARIANT-1 emitted native tags region overlap and pending-death protocol match checked glue" {
++    const saved = runtime.get();
++    defer runtime.set(saved);
++    runtime.set(.rc);
++    var compilation = try compiler.Compilation.init(t.allocator, "variant_native.my", schema);
++    defer compilation.deinit();
++    const manifest_text = try compilation.emitQbeWithOptions(t.allocator, .{ .native_variants = .qbe_v2 });
++    defer t.allocator.free(manifest_text);
++    const manifest = try std.json.parseFromSlice(struct { runtime_data: []const u8 }, t.allocator, manifest_text, .{ .ignore_unknown_fields = true });
++    defer manifest.deinit();
++    var catalog = try native.Catalog.initRecords(t.allocator, compilation.program.?.records);
++    defer catalog.deinit();
++    const il = try wrappers(&catalog);
++    defer t.allocator.free(il);
++    const symbol = try descriptors.symbol(t.allocator, &catalog, try choice(&catalog));
++    defer t.allocator.free(symbol);
++    const fixture = try std.Io.Dir.cwd().readFileAlloc(t.io, fixture_path, t.allocator, .unlimited);
++    defer t.allocator.free(fixture);
++    const harness = try std.mem.replaceOwned(u8, t.allocator, fixture, "CHOICE_SYMBOL", symbol);
++    defer t.allocator.free(harness);
++    var directory = t.tmpDir(.{});
++    defer directory.cleanup();
++    try assets(directory.dir);
++    try directory.dir.writeFile(t.io, .{ .sub_path = "glue.c", .data = manifest.value.runtime_data });
++    try directory.dir.writeFile(t.io, .{ .sub_path = "harness.c", .data = harness });
++    try directory.dir.writeFile(t.io, .{ .sub_path = "probe.ssa", .data = il });
++    try compileRun(directory.dir);
++}
+diff --git a/src/qbe_rc_native_variant_test.zig b/src/qbe_rc_native_variant_test.zig
+new file mode 100644
+index 00000000..2a519d2c
+--- /dev/null
++++ b/src/qbe_rc_native_variant_test.zig
+@@ -0,0 +1,247 @@
++//! Active plain tags preserve complete value storage and all helper refusals.
++const std = @import("std");
++const compiler = @import("compiler.zig");
++const runtime = @import("runtime_mode.zig");
++const native = @import("native_types.zig");
++const shapes = @import("rc_shape.zig");
++const proof = @import("qbe_rc_native_variant.zig");
++const execute = @import("native_execute.zig");
++const t = std.testing;
++const Manifest = struct { functions: []const struct { name: []const u8, il: []const u8 } };
++const schemas =
++    \\union Choice:
++    \\    empty,
++    \\    number: int,
++    \\    items: list[int]
++    \\union Managed:
++    \\    items: list[int],
++    \\    message: bytes
++    \\union Large:
++    \\    empty,
++    \\    items: list[int],
++    \\    wide: [8]int
++    \\union Many:
++    \\    a,
++    \\    b,
++    \\    c,
++    \\    d,
++    \\    e,
++    \\    items: list[int]
++    \\union Crowded:
++    \\    empty,
++    \\    a: list[int],
++    \\    b: list[int],
++    \\    c: list[int],
++    \\    d: list[int],
++    \\    e: list[int],
++    \\    f: list[int],
++    \\    g: list[int],
++    \\    h: list[int]
++    \\union Unique:
++    \\    empty,
++    \\    items: list[int],
++    \\    file: File
++    \\record Wrapped:
++    \\    choice: Choice
++    \\def forward(value: Choice) -> Choice:
++    \\    return value
++    \\def made(value: int) -> Choice:
++    \\    return Choice.number(value)
++    \\def roundtrip(value: int) -> Choice:
++    \\    current = made(value)
++    \\    saved = current
++    \\    current = Choice.items([value + 1])
++    \\    return forward(saved)
++    \\def main() -> int:
++    \\    match roundtrip(17):
++    \\        case Choice.number(value):
++    \\            return value
++    \\        case _:
++    \\            return 0
++;
++
++fn emitted() !std.json.Parsed(Manifest) {
++    var compilation = try compiler.Compilation.init(t.allocator, "native_variant.my", schemas);
++    defer compilation.deinit();
++    const text = try compilation.emitQbeWithOptions(t.allocator, .{ .native_variants = .qbe_v2 });
++    defer t.allocator.free(text);
++    return std.json.parseFromSlice(Manifest, t.allocator, text, .{ .allocate = .alloc_always, .ignore_unknown_fields = true });
++}
++
++fn named(manifest: Manifest, name: []const u8) ![]const u8 {
++    for (manifest.functions) |function| if (std.mem.eql(u8, function.name, name)) return function.il;
++    return error.TestUnexpectedResult;
++}
++
++fn contains(text: []const u8, needle: []const u8) bool {
++    return std.mem.indexOf(u8, text, needle) != null;
++}
++
++fn record(catalog: *native.Catalog, name: []const u8) !@import("typed.zig").Type {
++    for (catalog.records) |item| if (std.mem.eql(u8, item.name, name)) return item.id;
++    return error.TestUnexpectedResult;
++}
++
++fn uncertified() ![]const u8 {
++    var compilation = try compiler.Compilation.init(t.allocator, "native_variant.my", schemas);
++    defer compilation.deinit();
++    const text = try compilation.emitQbeWithOptions(t.allocator, .{ .native_variants = .qbe_v2 });
++    defer t.allocator.free(text);
++    var catalog = try native.Catalog.initRecords(t.allocator, compilation.program.?.records);
++    defer catalog.deinit();
++    return @import("qbe_rc_native_variant_runtime_test.zig").wrappers(&catalog);
++}
++
++// spec: RC-NATIVE-VARIANT-1
++test "RC-NATIVE-VARIANT-1 proves declared edge-free tags and refuses unsupported layouts" {
++    const saved = runtime.get();
++    defer runtime.set(saved);
++    runtime.set(.rc);
++    var compilation = try compiler.Compilation.init(t.allocator, "native_variant.my", schemas);
++    defer compilation.deinit();
++    const text = try compilation.emitQbeWithOptions(t.allocator, .{ .native_variants = .qbe_v2 });
++    defer t.allocator.free(text);
++    var catalog = try native.Catalog.initRecords(t.allocator, compilation.program.?.records);
++    defer catalog.deinit();
++    var facts = try shapes.Catalog.init(t.allocator, &catalog);
++    defer facts.deinit();
++    const selected = (try proof.plan(&catalog, &facts, try record(&catalog, "Choice"))).?;
++    try t.expectEqualSlices(u32, &.{ 0, 1 }, selected.tags[0..selected.len]);
++    try t.expectEqual(@as(u64, 16), selected.size);
++    for ([_][]const u8{ "Managed", "Large", "Many", "Crowded", "Unique", "Wrapped" }) |name|
++        try t.expect(try proof.plan(&catalog, &facts, try record(&catalog, name)) == null);
++    try t.expect(try proof.plan(&catalog, &facts, .i64) == null);
++}
++
++// spec-case: RC-NATIVE-VARIANT-1
++test "RC-NATIVE-VARIANT-1 tagged moves guard overlap before stores and retain helper status mapping" {
++    const saved = runtime.get();
++    defer runtime.set(saved);
++    runtime.set(.rc);
++    const text = try uncertified();
++    defer t.allocator.free(text);
++    const begin = std.mem.indexOf(u8, text, "# RC-NATIVE-VARIANT-1 take") orelse return error.TestUnexpectedResult;
++    const fast = begin + (std.mem.indexOf(u8, text[begin..], "\n@rcnativecopy") orelse return error.TestUnexpectedResult);
++    const slow = fast + (std.mem.indexOf(u8, text[fast..], "\n@rcnativeslow") orelse return error.TestUnexpectedResult);
++    const done = slow + (std.mem.indexOf(u8, text[slow..], "\n@rcnativedone") orelse return error.TestUnexpectedResult);
++    try t.expect(contains(text[begin..fast], "=w loaduw") and contains(text[begin..fast], "=w cultl"));
++    try t.expect(contains(text[begin..fast], ", 112\n") and contains(text[begin..fast], "=w culew"));
++    try t.expect(!contains(text[begin..fast], " blit ") and !contains(text[begin..fast], " store"));
++    try t.expect(contains(text[fast..slow], " blit ") and contains(text[fast..slow], " storel 0"));
++    try t.expect(!contains(text[fast..slow], "call $"));
++    try t.expect(contains(text[slow..done], "_rcg_take("));
++    try t.expect(contains(text[slow..done], "call $myl_rc_take_failure") and contains(text[slow..done], "jmp @failure"));
++    try t.expect(contains(text, "# RC-NATIVE-VARIANT-1 release"));
++}
++
++// spec-case: RC-NATIVE-VARIANT-1
++// spec-case: RC-DISJOINT-TAKE-1
++test "RC-NATIVE-VARIANT-1 completed constructors and real snapshot copies reuse disjoint proof" {
++    const saved = runtime.get();
++    defer runtime.set(saved);
++    runtime.set(.rc);
++    var manifest = try emitted();
++    defer manifest.deinit();
++    const owned = try named(manifest.value, "made");
++    const copied = try named(manifest.value, "forward");
++    try t.expect(contains(owned, "# RC-DISJOINT-TAKE-1 native variant"));
++    try t.expect(!contains(owned, "=w cultl"));
++    try t.expect(contains(owned, "=w culew"));
++    try t.expect(contains(copied, "# RC-DISJOINT-TAKE-1 native variant"));
++    try t.expect(!contains(copied, "=w cultl"));
++    try t.expect(contains(copied, "=w culew"));
++}
++
++// spec-case: RC-NATIVE-VARIANT-1
++test "RC-NATIVE-VARIANT-1 accounting and tracing keep their existing lowering" {
++    const saved = runtime.get();
++    defer runtime.set(saved);
++    for ([_]runtime.Selection{ .rc_counting, .rc_sites, .gc }) |mode| {
++        runtime.set(mode);
++        var manifest = try emitted();
++        defer manifest.deinit();
++        const text = try named(manifest.value, "roundtrip");
++        try t.expect(!contains(text, "# RC-NATIVE-VARIANT-1"));
++    }
++}
++
++const snapshots =
++    \\record Fault:
++    \\    message: bytes
++    \\union Choice:
++    \\    empty,
++    \\    number: int,
++    \\    items: list[int]
++    \\def forwarded(value: Choice) -> Choice:
++    \\    return value
++    \\def result(flag: bool) -> Result[int, Fault]:
++    \\    if flag:
++    \\        return Ok(17)
++    \\    return Err(Fault(bytes([65, 66])))
++    \\def retained(items: list[Choice]) -> Choice:
++    \\    return items[0]
++    \\def main() -> int:
++    \\    items = [Choice.items([4]), Choice.empty]
++    \\    prior = retained(items)
++    \\    copied = forwarded(prior)
++    \\    items[0] = Choice.number(99)
++    \\    total = 0
++    \\    match copied:
++    \\        case Choice.items(values):
++    \\            changed = values
++    \\            changed.append(5)
++    \\            total += changed[0] + changed[1]
++    \\        case _:
++    \\            return -1
++    \\    match prior:
++    \\        case Choice.items(values):
++    \\            total += len(values)
++    \\        case _:
++    \\            return -2
++    \\    match result(True):
++    \\        case Ok(value):
++    \\            total += value
++    \\        case _:
++    \\            return -3
++    \\    match result(False):
++    \\        case Err(fault):
++    \\            total += len(fault.message)
++    \\        case _:
++    \\            return -4
++    \\    return total
++;
++
++fn exercise(mode: runtime.Selection, stress: bool) !void {
++    runtime.set(mode);
++    var compilation = try compiler.Compilation.init(t.allocator, "native_variant_snapshots.my", snapshots);
++    defer compilation.deinit();
++    const outcome = try execute.runUnaccounted(&compilation, .{ .gc_stress = stress });
++    try t.expectEqualStrings("", outcome.trap.code);
++    try t.expectEqual(@as(i64, 29), outcome.value);
++}
++
++// The native test runner currently treats RC count reports as diagnostics.
++// Inspect this successful process's complete result and parse its count line.
++fn exerciseCounting() !void {
++    runtime.set(.rc_counting);
++    var compilation = try compiler.Compilation.init(t.allocator, "native_variant_counted.my", snapshots);
++    defer compilation.deinit();
++    const outcome = try execute.runUnaccounted(&compilation, .{});
++    try t.expectEqual(@as(u8, 29), outcome.status);
++    try t.expectEqualStrings("29\n", outcome.stdout);
++    const prefix = "MYLANG_RC_COUNTS ";
++    try t.expect(std.mem.startsWith(u8, outcome.stderr, prefix));
++    const line = std.mem.trim(u8, outcome.stderr[prefix.len..], "\n");
++    const report = try std.json.parseFromSlice(std.json.Value, t.allocator, line, .{});
++    defer report.deinit();
++    try t.expectEqual(@as(i64, 1), report.value.object.get("version").?.integer);
++}
++
++// spec-case: RC-NATIVE-VARIANT-1
++test "RC-NATIVE-VARIANT-1 actual native snapshots retained loans mutations and error tags survive" {
++    const saved = runtime.get();
++    defer runtime.set(saved);
++    try exercise(.rc, false);
++    try exerciseCounting();
++    try exercise(.gc, true);
++}
+diff --git a/src/qbe_rc_native_variant_witness_test.zig b/src/qbe_rc_native_variant_witness_test.zig
+new file mode 100644
+index 00000000..0bf35567
+--- /dev/null
++++ b/src/qbe_rc_native_variant_witness_test.zig
+@@ -0,0 +1,115 @@
++//! Exercise the existing completed-publication predicate without widening it.
++const std = @import("std");
++const compiler = @import("compiler.zig");
++const bytecode = @import("bytecode.zig");
++const typed = @import("typed.zig");
++const native = @import("native_types.zig");
++const shapes = @import("rc_shape.zig");
++const state_model = @import("qbe_rc_state.zig");
++const runtime = @import("runtime_mode.zig");
++const none = @import("cow_plan.zig").none;
++const t = std.testing;
++const Capture = struct { begin: u32 = none, active: u32 = none };
++const Cow = struct { rc: ?*state_model.State, captures: []Capture };
++const Emitter = struct {
++    native_variants: @import("runtime_contract").native_variants.Policy = .qbe_v2,
++    allocator: std.mem.Allocator,
++    program: bytecode.Program,
++    function: bytecode.Function,
++    pc: usize,
++    branch_targets: []bool,
++    states: []?[]const typed.Type,
++    ownership: ?struct { copies: []bool } = null,
++    cow: ?*Cow,
++};
++const schema =
++    \\union Choice:
++    \\    empty,
++    \\    number: int,
++    \\    items: list[int]
++    \\def make() -> Choice:
++    \\    return Choice.number(7)
++    \\def borrowed(value: Choice) -> Choice:
++    \\    return value
++    \\def main() -> int:
++    \\    return 0
++;
++
++fn function(program: bytecode.Program, name: []const u8) !bytecode.Function {
++    for (program.functions) |item| if (std.mem.eql(u8, item.name, name)) return item;
++    return error.TestUnexpectedResult;
++}
++
++/// Pass the private production predicate from its own test block. Use the
++/// actual compiled schema/types and alter only its explicit refusal inputs.
++pub fn exercise(comptime check: anytype) !void {
++    const saved = runtime.get();
++    defer runtime.set(saved);
++    runtime.set(.rc);
++    var compilation = try compiler.Compilation.init(t.allocator, "variant_witness.my", schema);
++    defer compilation.deinit();
++    const il = try compilation.emitQbeWithOptions(t.allocator, .{ .native_variants = .qbe_v2 });
++    defer t.allocator.free(il);
++    const program = compilation.code.?;
++    const made = try function(program, "make");
++    const borrowed = try function(program, "borrowed");
++    const ty = made.signature.return_type;
++    var catalog = try native.Catalog.initRecords(t.allocator, program.records);
++    defer catalog.deinit();
++    var state: state_model.State = .{
++        .catalog = try shapes.Catalog.init(t.allocator, &catalog),
++        .plan = undefined,
++        .contract = .{ .parameters = &.{.read}, .result = .owned, .abi = runtime.identity() },
++        .operands = &.{},
++        .pending = 32,
++        .active = true,
++    };
++    defer state.catalog.deinit();
++    const count: usize = 4;
++    var branches: [count]bool = @splat(false);
++    const stack = [_]typed.Type{ty};
++    var states: [count]?[]const typed.Type = @splat(&stack);
++    var captures: [count]Capture = @splat(.{});
++    var cow: Cow = .{ .rc = &state, .captures = &captures };
++    var code: [count]bytecode.Instruction = @splat(made.scope.instructions[0]);
++    code[2].op = .{ .make_variant = .{ .ty = ty, .tag = 1 } };
++    code[3].op = .ret;
++    var current = made;
++    current.scope.instructions = &code;
++    current.scope.locals = borrowed.scope.locals;
++    var emitter: Emitter = .{ .allocator = t.allocator, .program = program, .function = current, .pc = 3, .branch_targets = &branches, .states = &states, .cow = &cow };
++    try t.expect(try check(Emitter, &emitter, ty, 0));
++    branches[3] = true;
++    try t.expect(!try check(Emitter, &emitter, ty, 0));
++    branches[3] = false;
++    state.readonly = true;
++    try t.expect(!try check(Emitter, &emitter, ty, 0));
++    state.readonly = false;
++    state.contract.result = .{ .borrowed = .{ .parameter = 0, .shape_identity = @splat(0), .dependency_identity = @splat(0) } };
++    try t.expect(!try check(Emitter, &emitter, ty, 0));
++    state.contract.result = .owned;
++    captures[2].active = 0;
++    try t.expect(!try check(Emitter, &emitter, ty, 0));
++    captures[2] = .{ .begin = 0 };
++    try t.expect(!try check(Emitter, &emitter, ty, 0));
++    captures[2] = .{};
++    try t.expect(!try check(Emitter, &emitter, ty, 1));
++    states[3] = null;
++    try t.expect(!try check(Emitter, &emitter, ty, 0));
++    states[3] = &stack;
++    code[2].op = .{ .invoke = ty };
++    try t.expect(!try check(Emitter, &emitter, ty, 0));
++    code[2].op = .{ .value_copy = .{ .ty = ty, .site = .ret } };
++    code[1].op = .{ .load_local = @fromBackingInt(0) };
++    var copies: [count]bool = @splat(false);
++    emitter.ownership = .{ .copies = &copies };
++    try t.expect(!try check(Emitter, &emitter, ty, 0));
++    copies[2] = true;
++    try t.expect(try check(Emitter, &emitter, ty, 0));
++}
++
++// spec-case: RC-NATIVE-VARIANT-1
++// spec-case: RC-DISJOINT-TAKE-1
++test "RC-NATIVE-VARIANT-1 disjoint witness refuses branch borrowed callback capture and elided snapshot inputs" {
++    try exercise(@import("qbe_rc_values.zig").producedOwner);
++}
+diff --git a/src/qbe_rc_overlap.zig b/src/qbe_rc_overlap.zig
+new file mode 100644
+index 00000000..6b463cb4
+--- /dev/null
++++ b/src/qbe_rc_overlap.zig
+@@ -0,0 +1,20 @@
++//! Shared conservative overlap gate for complete native ownership moves.
++/// Output failures shared with native ownership emission.
++pub const Error = error{ InternalError, OutOfMemory, SourceError, WriteFailed };
++/// A complete range whose source and destination have the same fixed width.
++pub const Range = struct { source: usize, destination: usize, size: u64 };
++/// The caller supplies its own slow/fast block names and unique label suffix.
++pub const Labels = struct { slow: []const u8, fast: []const u8, number: usize };
++
++/// Admit only ranges whose two unsigned address distances are at least size.
++/// The caller defines both target labels; no store precedes this branch.
++pub fn branch(comptime E: type, self: *E, range: Range, labels: Labels) Error!void {
++    const left = self.temp();
++    const right = self.temp();
++    const near_left = self.temp();
++    const near_right = self.temp();
++    const overlapping = self.temp();
++    try self.print(" %v{d} =l sub %v{d}, %v{d}\n %v{d} =l sub %v{d}, %v{d}\n", .{ left, range.source, range.destination, right, range.destination, range.source });
++    try self.print(" %v{d} =w cultl %v{d}, {d}\n %v{d} =w cultl %v{d}, {d}\n", .{ near_left, left, range.size, near_right, right, range.size });
++    try self.print(" %v{d} =w or %v{d}, %v{d}\n jnz %v{d}, @{s}{d}, @{s}{d}\n", .{ overlapping, near_left, near_right, overlapping, labels.slow, labels.number, labels.fast, labels.number });
++}
+diff --git a/src/qbe_rc_slots.zig b/src/qbe_rc_slots.zig
+index b2c09d87..5ae8bbae 100644
+--- a/src/qbe_rc_slots.zig
++++ b/src/qbe_rc_slots.zig
+@@ -42 +42 @@ pub fn Lower(comptime E: type) type {
+-            const move: glue.Transfer = .{ .ty = operation.ty, .destination = operation.destination, .source = operation.source, .region = operation.region };
++            const move: glue.Transfer = .{ .ty = operation.ty, .destination = operation.destination, .source = operation.source, .region = operation.region, .disjoint = operation.disjoint };
+diff --git a/src/qbe_rc_values.zig b/src/qbe_rc_values.zig
+index d3f30438..4aee9b49 100644
+--- a/src/qbe_rc_values.zig
++++ b/src/qbe_rc_values.zig
+@@ -178 +178,3 @@ pub fn prepareOperand(comptime E: type, self: *E, ty: typed.Type, index: usize)
+-fn producedOwner(comptime E: type, self: *E, ty: typed.Type, index: usize) Error!bool {
++/// Prove an already completed ordinary-owner operand publication. The same
++/// predicate supplies the established disjoint private-buffer certificate.
++pub fn producedOwner(comptime E: type, self: *E, ty: typed.Type, index: usize) Error!bool {
+diff --git a/src/root_test.zig b/src/root_test.zig
+index 1b6b9a43..f13004fa 100644
+--- a/src/root_test.zig
++++ b/src/root_test.zig
+@@ -298,0 +299,4 @@ test {
++    _ = @import("qbe_rc_native_variant_test.zig");
++    _ = @import("native_variant_policy_test.zig");
++    _ = @import("qbe_rc_native_variant_runtime_test.zig");
++    _ = @import("qbe_rc_native_variant_witness_test.zig");
+diff --git a/src/runtime_contract.zig b/src/runtime_contract.zig
+index 6d8c0a36..ad3a9cde 100644
+--- a/src/runtime_contract.zig
++++ b/src/runtime_contract.zig
+@@ -4,0 +5,3 @@ const std = @import("std");
++/// Backend emission policy shared across compiler and native-driver modules.
++pub const native_variants = @import("native_variant_policy.zig");
++
+diff --git a/test/fixtures/native-rc/variant-native.c b/test/fixtures/native-rc/variant-native.c
+new file mode 100644
+index 00000000..d29cdb8e
+--- /dev/null
++++ b/test/fixtures/native-rc/variant-native.c
+@@ -0,0 +1,256 @@
++// spec-case: RC-NATIVE-VARIANT-1
++#define _GNU_SOURCE
++#include "glue.c"
++#include <assert.h>
++#include <signal.h>
++#include <stdint.h>
++#include <stdio.h>
++#include <sys/mman.h>
++#include <sys/resource.h>
++#include <sys/wait.h>
++#include <unistd.h>
++
++typedef struct { uint32_t tag, pad; void *left, *right; } Choice;
++extern int fast_take(myl_native_heap *, void *, void *, void *, unsigned);
++extern int fast_take_private(myl_native_heap *, void *, void *, void *, unsigned);
++extern void fast_drop(myl_native_heap *, void *);
++extern void fast_unloan(myl_native_heap *, void *);
++static unsigned takes, drops, unloans, fail_next;
++int probe_rcg_take(myl_native_heap *heap, void *dst, void *src, unsigned region) {
++    takes++;
++    if (fail_next) {
++        fail_next = 0;
++        myl_rc_record_failure(heap, MYL_RC_REGION_ERROR);
++        return 0;
++    }
++    return CHOICE_SYMBOL_rcg_take(heap, dst, src, region);
++}
++void probe_rcg_drop(myl_native_heap *heap, void *value) {
++    drops++;
++    CHOICE_SYMBOL_rcg_drop(heap, value);
++}
++void probe_rcg_unloan(myl_native_heap *heap, void *value) {
++    unloans++;
++    CHOICE_SYMBOL_rcg_unloan(heap, value);
++}
++int myl_qbe_rc_status(void *ctx, unsigned status) {
++    assert(status == MYL_RC_REGION_ERROR);
++    (*(unsigned *)ctx)++;
++    return 0;
++}
++static Choice raw(unsigned tag) {
++    Choice value;
++    memset(&value, 0xa5, sizeof value);
++    value.tag = tag;
++    return value;
++}
++static void zeroed(const void *value) {
++    unsigned char empty[sizeof(Choice)] = {0};
++    assert(!memcmp(value, empty, sizeof empty));
++}
++static myl_rc_object *header(void *value) { return (myl_rc_object *)value - 1; }
++
++/* Even malformed and inactive bytes are copied exactly, never interpreted as
++ * pointers. Unknown tags must reach the original helper, not its fast case. */
++static void tags(myl_native_heap *heap) {
++    unsigned mapped = 0;
++    const unsigned admitted[] = {0, 2};
++    for (unsigned i = 0; i < 2; i++) {
++        Choice source = raw(admitted[i]), expected = source, destination = {0};
++        unsigned before = takes;
++        assert(fast_take(heap, &mapped, &destination, &source, 0));
++        assert(takes == before && !memcmp(&destination, &expected, sizeof source));
++        zeroed(&source);
++        source = expected;
++        assert(fast_take_private(heap, &mapped, &destination, &source, 0));
++        assert(takes == before && !memcmp(&destination, &expected, sizeof source));
++        zeroed(&source);
++        fast_drop(heap, &destination);
++        zeroed(&destination);
++        destination = expected;
++        fast_unloan(heap, &destination);
++        zeroed(&destination);
++    }
++    const unsigned refused[] = {4, UINT32_MAX};
++    for (unsigned i = 0; i < 2; i++) {
++        Choice source = raw(refused[i]), expected = source, destination = {0};
++        unsigned before = takes;
++        assert(fast_take(heap, &mapped, &destination, &source, 0));
++        assert(takes == before + 1 && !memcmp(&destination, &expected, sizeof source));
++        zeroed(&source);
++        source = expected;
++        assert(fast_take_private(heap, &mapped, &destination, &source, 0));
++        assert(takes == before + 2 && !memcmp(&destination, &expected, sizeof source));
++        zeroed(&source);
++        before = drops;
++        fast_drop(heap, &destination);
++        assert(drops == before + 1);
++        zeroed(&destination);
++        destination = expected;
++        before = unloans;
++        fast_unloan(heap, &destination);
++        assert(unloans == before + 1);
++        zeroed(&destination);
++    }
++    assert(!mapped);
++}
++
++/* Compare the original helper's same-address and partial-overlap transaction,
++ * in both directions, including source bytes outside the destination range. */
++static void overlaps(myl_native_heap *heap) {
++    const unsigned offsets[] = {0, 8, 16, 24};
++    for (unsigned i = 0; i < 4; i++) for (unsigned reverse = 0; reverse < 2; reverse++) {
++        _Alignas(8) unsigned char control[64], candidate[64];
++        memset(control, 0xa5, sizeof control);
++        unsigned src = reverse ? offsets[i] : 0, dst = reverse ? 0 : offsets[i];
++        uint32_t tag = 2;
++        memcpy(control + src, &tag, sizeof tag);
++        memcpy(candidate, control, sizeof control);
++        assert(CHOICE_SYMBOL_rcg_take(heap, control + dst, control + src, 0));
++        unsigned mapped = 0, before = takes;
++        assert(fast_take(heap, &mapped, candidate + dst, candidate + src, 0));
++        assert(takes == before + (offsets[i] < sizeof(Choice)));
++        assert(!mapped && !memcmp(control, candidate, sizeof control));
++    }
++}
++
++/* Shared memory proves the checked abort occurs before either value changes.
++ * This also rejects UINT32_MAX and confirms the helper's unsigned width. */
++static void bad_region(myl_native_heap *heap, unsigned region, int fast) {
++    Choice *values = mmap(NULL, 2 * sizeof(Choice), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
++    assert(values != MAP_FAILED);
++    values[0] = raw(2);
++    memset(&values[1], 0, sizeof values[1]);
++    Choice original[2];
++    memcpy(original, values, sizeof original);
++    pid_t child = fork();
++    assert(child >= 0);
++    if (!child) {
++        struct rlimit core = {0, 0};
++        assert(!setrlimit(RLIMIT_CORE, &core));
++        assert(freopen("/dev/null", "w", stderr));
++        unsigned mapped = 0;
++        if (fast == 1) fast_take(heap, &mapped, &values[1], &values[0], region);
++        else if (fast == 2) fast_take_private(heap, &mapped, &values[1], &values[0], region);
++        else CHOICE_SYMBOL_rcg_take(heap, &values[1], &values[0], region);
++        _exit(0);
++    }
++    int status;
++    assert(waitpid(child, &status, 0) == child);
++    assert(WIFSIGNALED(status) && WTERMSIG(status) == SIGABRT);
++    assert(!memcmp(original, values, sizeof original));
++    assert(!munmap(values, sizeof original));
++}
++static void regions(myl_native_heap *heap) {
++    bad_region(heap, 1, 0);
++    bad_region(heap, 1, 1);
++    bad_region(heap, 1, 2);
++    bad_region(heap, UINT32_MAX, 0);
++    bad_region(heap, UINT32_MAX, 1);
++    bad_region(heap, UINT32_MAX, 2);
++    assert(myl_native_region_begin(heap));
++    Choice value = raw(0), output = {0};
++    unsigned mapped = 0, before = takes;
++    assert(fast_take(heap, &mapped, &output, &value, 1));
++    assert(takes == before && !mapped);
++    zeroed(&value);
++    value = raw(2);
++    assert(fast_take_private(heap, &mapped, &output, &value, 1));
++    assert(takes == before && !mapped);
++    zeroed(&value);
++    fast_drop(heap, &output);
++    myl_native_region_end(heap);
++}
++
++static void fallback_failure(myl_native_heap *heap) {
++    Choice value = raw(UINT32_MAX), original = value, output = {0};
++    unsigned mapped = 0, before = takes;
++    fail_next = 1;
++    assert(!fast_take(heap, &mapped, &output, &value, 0));
++    assert(takes == before + 1 && mapped == 1 && !memcmp(&value, &original, sizeof value));
++    zeroed(&output);
++    assert(myl_rc_take_failure(heap) == MYL_RC_OK);
++}
++
++/* Queue a real death through the runtime's active-drain path, then return to
++ * an idle boundary. Generated edge-free operations leave it pending; generic
++ * native take drains it. No invalid pointer or fabricated queue is involved. */
++static void pending(myl_native_heap *heap) {
++    void *payload = myl_rc_storage_bytes(heap, 8, 0);
++    assert(payload && !heap->rc->dead.head);
++    heap->rc->dead.active = 1;
++    myl_rc_edge_release(heap, payload);
++    heap->rc->dead.active = 0;
++    myl_rc_object *death = heap->rc->dead.head;
++    assert(death == header(payload));
++    Choice value = raw(2), output = {0};
++    CHOICE_SYMBOL_rcg_drop(heap, &value);
++    assert(heap->rc->dead.head == death);
++    value = raw(0);
++    fast_drop(heap, &value);
++    assert(heap->rc->dead.head == death);
++    value = raw(0);
++    CHOICE_SYMBOL_rcg_unloan(heap, &value);
++    assert(heap->rc->dead.head == death);
++    value = raw(2);
++    fast_unloan(heap, &value);
++    assert(heap->rc->dead.head == death);
++    value = raw(0);
++    assert(CHOICE_SYMBOL_rcg_take(heap, &output, &value, 0));
++    assert(heap->rc->dead.head == death);
++    value = raw(2);
++    unsigned mapped = 0;
++    assert(fast_take(heap, &mapped, &output, &value, 0));
++    assert(heap->rc->dead.head == death && !mapped);
++    value = raw(2);
++    assert(fast_take_private(heap, &mapped, &output, &value, 0));
++    assert(heap->rc->dead.head == death && !mapped);
++    value = raw(0);
++    assert(myl_rc_native_take(heap, &CHOICE_SYMBOL, &output, &value, 0));
++    assert(!heap->rc->dead.head);
++}
++
++static void managed(myl_native_heap *heap) {
++    void *leaf = myl_rc_storage_bytes(heap, 8, 0);
++    assert(leaf);
++    assert(myl_rc_owner_acquire(heap, leaf) == MYL_RC_OK);
++    Choice value = {.tag = 1, .left = leaf, .right = leaf}, output = {0};
++    unsigned mapped = 0, before = takes;
++    assert(fast_take_private(heap, &mapped, &output, &value, 0));
++    assert(takes == before + 1 && header(leaf)->owners == 2 && !header(leaf)->holds);
++    zeroed(&value);
++    assert(CHOICE_SYMBOL_rcg_loan(heap, &value, &output));
++    assert(header(leaf)->holds == 2);
++    before = unloans;
++    fast_unloan(heap, &value);
++    assert(unloans == before + 1 && !header(leaf)->holds && header(leaf)->owners == 2);
++    before = drops;
++    fast_drop(heap, &output);
++    assert(drops == before + 1);
++    zeroed(&output);
++    leaf = myl_rc_storage_bytes(heap, 8, 0);
++    myl_rc_hold hold = {0};
++    assert(leaf && myl_rc_hold_acquire(heap, leaf, &hold) == MYL_RC_OK);
++    value = (Choice){.tag = 3, .left = leaf};
++    before = drops;
++    fast_drop(heap, &value);
++    assert(drops == before + 1 && !header(leaf)->holds && header(leaf)->owners == 1);
++    hold.payload = NULL; /* The tagged live-view value owned the sole H token. */
++    myl_rc_owner_release(heap, leaf);
++}
++
++int main(void) {
++    myl_native_heap heap = {.limit = 64u << 20};
++    assert(myl_rc_storage_init(&heap) == MYL_RC_OK);
++    assert(myl_rc_module_register_image(&heap, &myl_rc_generated_module, &myl_rc_generated_image) == MYL_RC_OK);
++    assert(sizeof(Choice) == CHOICE_SYMBOL.size);
++    tags(&heap);
++    overlaps(&heap);
++    regions(&heap);
++    fallback_failure(&heap);
++    pending(&heap);
++    managed(&heap);
++    myl_native_heap_destroy(&heap);
++    puts("variant native probes passed");
++    return 0;
++}
+diff --git a/test/integration.zig b/test/integration.zig
+index 069b43d2..119a79bd 100644
+--- a/test/integration.zig
++++ b/test/integration.zig
+@@ -14179,0 +14180,4 @@ test "CLI native build forwards diagnostic presentation to its source frontend"
++
++comptime {
++    _ = @import("native_variant_policy.zig");
++}
+diff --git a/test/native_variant_policy.zig b/test/native_variant_policy.zig
+new file mode 100644
+index 00000000..8ea4818c
+--- /dev/null
++++ b/test/native_variant_policy.zig
+@@ -0,0 +1,144 @@
++//! Native policy CLI emission, replay and selective-cache boundaries.
++const std = @import("std");
++const t = std.testing;
++const compiler_path = @import("test_options").compiler_path;
++const source =
++    \\module policy_program
++    \\public union Choice:
++    \\    empty,
++    \\    number: int,
++    \\    values: list[int]
++    \\public def change(value: Choice) -> Choice:
++    \\    result = value
++    \\    result = Choice.number(3)
++    \\    return result
++    \\public def snapshot(n: int) -> int:
++    \\    value = [n]
++    \\    saved = value
++    \\    value.append(n + 1)
++    \\    return saved[0] + len(value)
++    \\def main() -> int:
++    \\    value = Choice.values([1, 2])
++    \\    value = change(value)
++    \\    return snapshot(1)
++;
++const marker = "# RC-NATIVE-VARIANT-1";
++
++const Fixture = struct {
++    arena: std.heap.ArenaAllocator,
++    directory: t.TmpDir,
++    entry: []const u8,
++    cache: []const u8,
++    select: []const u8,
++
++    fn init() !Fixture {
++        var arena = std.heap.ArenaAllocator.init(t.allocator);
++        errdefer arena.deinit();
++        var directory = t.tmpDir(.{});
++        errdefer directory.cleanup();
++        try directory.dir.writeFile(t.io, .{ .sub_path = "policy_program.my", .data = source });
++        try directory.dir.writeFile(t.io, .{ .sub_path = "select.txt", .data = "policy_program::change\n" });
++        const a = arena.allocator();
++        const root = try directory.dir.realPathFileAlloc(t.io, ".", a);
++        return .{
++            .arena = arena,
++            .directory = directory,
++            .entry = try std.fs.path.join(a, &.{ root, "policy_program.my" }),
++            .cache = try std.fmt.allocPrint(a, "--cache-dir={s}/cache", .{root}),
++            .select = try std.fmt.allocPrint(a, "--select-file={s}/select.txt", .{root}),
++        };
++    }
++
++    fn deinit(self: *Fixture) void {
++        self.directory.cleanup();
++        self.arena.deinit();
++    }
++
++    fn emit(self: *Fixture, flags: []const []const u8) !std.process.RunResult {
++        return self.emitEnvironment(flags, null);
++    }
++
++    fn emitEnvironment(self: *Fixture, flags: []const []const u8, environment: ?*const std.process.Environ.Map) !std.process.RunResult {
++        return self.emitRuntimeEnvironment(flags, environment, "--rc-runtime");
++    }
++
++    fn emitRuntimeEnvironment(self: *Fixture, flags: []const []const u8, environment: ?*const std.process.Environ.Map, runtime: []const u8) !std.process.RunResult {
++        const a = self.arena.allocator();
++        var argv: std.ArrayList([]const u8) = .empty;
++        try argv.appendSlice(a, &.{ compiler_path, "emit-project-qbe", self.entry, runtime, self.cache });
++        try argv.appendSlice(a, flags);
++        return std.process.run(a, t.io, .{ .argv = argv.items, .environ_map = environment });
++    }
++};
++
++fn passed(result: std.process.RunResult) !void {
++    try t.expectEqual(std.process.Child.Term{ .exited = 0 }, result.term);
++    try t.expectEqualStrings("", result.stderr);
++}
++
++// spec-case: RC-NATIVE-VARIANT-BACKEND-1
++test "RC-NATIVE-VARIANT-BACKEND-1 alternating emission policies cannot reuse another policy's units" {
++    var fixture = try Fixture.init();
++    defer fixture.deinit();
++    const original = try fixture.emit(&.{});
++    try passed(original);
++    try t.expect(std.mem.indexOf(u8, original.stdout, marker) == null);
++    const selected = try fixture.emit(&.{"--native-variants=qbe-v2"});
++    try passed(selected);
++    try t.expect(std.mem.indexOf(u8, selected.stdout, marker) != null);
++    const original_again = try fixture.emit(&.{"--native-variants=original"});
++    try passed(original_again);
++    try t.expectEqualStrings(original.stdout, original_again.stdout);
++    const selected_again = try fixture.emit(&.{"--native-variants=qbe-v2"});
++    try passed(selected_again);
++    try t.expectEqualStrings(selected.stdout, selected_again.stdout);
++    const lean_original = try fixture.emit(&.{"--lean-manifest"});
++    try passed(lean_original);
++    const lean_selected = try fixture.emit(&.{ "--lean-manifest", "--native-variants=qbe-v2" });
++    try passed(lean_selected);
++    try t.expect(!std.mem.eql(u8, lean_original.stdout, lean_selected.stdout));
++    const replay_original = try fixture.emit(&.{"--lean-manifest"});
++    try passed(replay_original);
++    try t.expectEqualStrings(lean_original.stdout, replay_original.stdout);
++    const replay_selected = try fixture.emit(&.{ "--lean-manifest", "--native-variants=qbe-v2" });
++    try passed(replay_selected);
++    try t.expectEqualStrings(lean_selected.stdout, replay_selected.stdout);
++}
++
++// spec-case: RC-NATIVE-VARIANT-BACKEND-1
++test "RC-NATIVE-VARIANT-BACKEND-1 selective emission carries policy and rejects malformed internal flags" {
++    var fixture = try Fixture.init();
++    defer fixture.deinit();
++    const original = try fixture.emit(&.{fixture.select});
++    try passed(original);
++    try t.expect(std.mem.indexOf(u8, original.stdout, marker) == null);
++    const selected = try fixture.emit(&.{ fixture.select, "--native-variants=qbe-v2" });
++    try passed(selected);
++    try t.expect(std.mem.indexOf(u8, selected.stdout, marker) != null);
++    const invalid = try fixture.emit(&.{"--native-variants=unchecked"});
++    try t.expectEqual(std.process.Child.Term{ .exited = 2 }, invalid.term);
++    const duplicate = try fixture.emit(&.{ "--native-variants=original", "--native-variants=qbe-v2" });
++    try t.expectEqual(std.process.Child.Term{ .exited = 2 }, duplicate.term);
++}
++
++// spec-case: RC-NATIVE-VARIANT-BACKEND-1
++test "RC-NATIVE-VARIANT-BACKEND-1 selective emission retains original counting and check defaults" {
++    var fixture = try Fixture.init();
++    defer fixture.deinit();
++    try fixture.directory.dir.writeFile(t.io, .{ .sub_path = "select.txt", .data = "policy_program::snapshot\n" });
++    var environment = try std.process.Environ.createMap(t.environ, t.allocator);
++    defer environment.deinit();
++    try environment.put("MYLANG_COW_COUNTING", "0");
++    const original = try fixture.emitRuntimeEnvironment(&.{fixture.select}, &environment, "--gc-runtime");
++    try passed(original);
++    try environment.put("MYLANG_COW_COUNTING", "1");
++    const full = try fixture.emitRuntimeEnvironment(&.{}, &environment, "--gc-runtime");
++    try passed(full);
++    try t.expect(std.mem.indexOf(u8, full.stdout, "call $myl_native_cow_tally") != null);
++    const selected = try fixture.emitRuntimeEnvironment(&.{fixture.select}, &environment, "--gc-runtime");
++    try passed(selected);
++    try t.expectEqualStrings(original.stdout, selected.stdout);
++    const dropped = try fixture.emitRuntimeEnvironment(&.{ fixture.select, "--drop-step-checks", "--drop-frame-checks", "--drop-debug" }, &environment, "--gc-runtime");
++    try passed(dropped);
++    try t.expectEqualStrings(original.stdout, dropped.stdout);
++}

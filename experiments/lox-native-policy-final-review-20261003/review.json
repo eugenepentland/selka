@@ -1,0 +1,78 @@
+{
+  "scope": "Independent final policy V2 package and acceptance supplement; primary506 review inputs remain unchanged",
+  "author_worktree": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-policy-20261003",
+  "scratch": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-policy-20261003/.tmp-lox-native-policy-20261003",
+  "author_commit": "a07fee5e878a4ad4c5610c07928b0fe9f45f0269",
+  "package_commit": "a07fee5e878a4ad4c5610c07928b0fe9f45f0269",
+  "inputs": {
+    "author-README.md": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-policy-20261003/experiments/lox-native-policy-20261003/README.md",
+      "sha256": "e108c999a31761602b0fbfc92f5db583069fd6759428fdd2b418a01f2bb7a8a0"
+    },
+    "archive.json": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-policy-20261003/experiments/lox-native-policy-20261003/archive.json",
+      "sha256": "ebcd067202c43f231756408ca0da561e91b1c789fc769dfe878142574d511498"
+    },
+    "evidence.tar.xz": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-policy-20261003/experiments/lox-native-policy-20261003/evidence.tar.xz",
+      "sha256": "123730f2bc2817937048803786efe24d081ae282e9657acab0829b0ffd85afd8"
+    },
+    "qualification.json": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-policy-20261003/experiments/lox-native-policy-20261003/qualification.json",
+      "sha256": "0e70ff3063c7829cf0fbc60146a31a706d11aba7c1dda8f5275d9eb44508ee17"
+    },
+    "compiler.patch": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-policy-20261003/experiments/lox-native-policy-20261003/compiler.patch",
+      "sha256": "a051cf06d3e1f0448cd75d3445fbf7286eb9c801bf316b19a91e647f48054404"
+    },
+    "archive-command.command.json": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-policy-20261003/experiments/lox-native-policy-20261003/archive-command.command.json",
+      "sha256": "2432e83e888bbfa1403a2cc9336652b20971e5e5fab9e955182f6ce202ef0f82"
+    },
+    "archive-command.stdout": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-policy-20261003/experiments/lox-native-policy-20261003/archive-command.stdout",
+      "sha256": "4acb7bda5948f3b88e2f92ebd6abb4ca22ec7a2c03a034dcc614840249d05bc9"
+    },
+    "archive-command.stderr": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-policy-20261003/experiments/lox-native-policy-20261003/archive-command.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "archive_files": 2501,
+  "selected_receipts": [
+    "frozen-source-v2.json",
+    "compiler-final-v2.json",
+    "builds-v2.json",
+    "equivalence-v2.json",
+    "public-v2.json",
+    "native-v2/completed.json",
+    "native-v2-ceiling.json",
+    "selected-boundaries-verified-v2/qualification.json",
+    "producer-check-final-v2/qualification.json",
+    "postflight-v2.json",
+    "gate-postflight-v2.json",
+    "policy-v2-frozen-focus.command.json",
+    "policy-v2-frozen-focus.stderr",
+    "inherited-v2-focus.command.json",
+    "inherited-v2-focus.stderr",
+    "qbe-gate-v2.command.json",
+    "qbe-gate-v2.stderr",
+    "guardian-v2.command.json",
+    "guardian-v2.stderr",
+    "guardian-final-v2.command.json",
+    "guardian-final-v2.stderr"
+  ],
+  "source_descriptor_sha256": "d2962dbc3edc07a9e505e702eb6cf547e198dbc42eb67e94c5e38b10e696cb43",
+  "compiler_sha256": "81fe478471d256e9c6023d786b61dd6183f3b51363c4abe9d1d015c1268600cc",
+  "qbe_sha256": "99ad919d70ad582dee6202b045bd53e1ab18fec356de98849610f49983756d63",
+  "prior_review_commit": "0be1e8eae5808b9f96accc0bb2dfbe1b891d9799",
+  "assessment": "Final artifact/package binding clear; inherited19/policy20+CLI5/QBE515 and golden231 checked/373 explicit skips correctly scoped. No source/guest identity change or additional implementation defect found.",
+  "limits": [
+    "19 inherited and20 policy results share12 mandatory blocks; no combined distinct-test total inferred. QBE515 are reported executed results over5 roots, golden231 subcases are distinct from root pass counts and373 corpus omissions remain explicit.",
+    "Five Guardian cached zero-blocking messages in QBE gate are not five new88-check gates. Prior explicit fresh88 remains separate.",
+    "Gate installed tools64bc/e388 and current postflight owned-map binding remain separate from actual final guests81fe/99ad. Full gate prefix before-map was not saved; postflight retrospective.",
+    "Primary native full-prefix/import-helper limitations and V1 partial/failure receipts remain unchanged. Historical2495 unit shards are not freshV2 broad acceptance.",
+    "Archive stores2501 exact raw/source/fragment files; ELF/prefix binaries and mutable caches excluded. Actual identities are checked against qualification maps, not assumed archived.",
+    "No compiler, guest, native test, benchmark/performance run, source edit, promotion/main merge or feedback write by reviewer. Parent owns selection and feedback."
+  ]
+}

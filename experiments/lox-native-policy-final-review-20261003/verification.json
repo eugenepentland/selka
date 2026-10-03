@@ -1,0 +1,42 @@
+{
+  "command": [
+    "taskset",
+    "-c",
+    "16",
+    "python3",
+    "-B",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-vm-stack-read-20261003/experiments/lox-native-policy-final-review-20261003/verify.py"
+  ],
+  "status": 0,
+  "verifier_sha256": "950b9c0100a39038ec74b37dbfb9e7c73de31c155496b89f7bda97e507b9500b",
+  "review_sha256": "d1e9d0ae638a7e09b0d414908e6ade06464382f8298579dd3ee2d41c3d8e95dc",
+  "stdout_sha256": "ebdc9efc5e832b978f1b43d5924262b598644d4c45c59e56cdd639c6921f553f",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "result": {
+    "verified": true,
+    "original_review_inputs_unchanged": 506,
+    "final_archive_files": 2501,
+    "source_files": 878,
+    "selected_source_files": 37,
+    "actual_compiler_and_tool_unchanged": true,
+    "author_commit": "a07fee5e878a4ad4c5610c07928b0fe9f45f0269",
+    "package_commit": "a07fee5e878a4ad4c5610c07928b0fe9f45f0269",
+    "inherited_focused_results": 19,
+    "policy_focused_results": 20,
+    "cli_focused_results": 5,
+    "common_mandatory_unit_overlap": 12,
+    "distinct_total_not_inferred": true,
+    "qbe_gate_reported_executed_results": 515,
+    "qbe_gate_roots": 5,
+    "golden_cases_checked": 231,
+    "golden_corpus_explicit_skips": 373,
+    "golden_mismatches": 0,
+    "qbe_guardian_cached_zero_blocking_messages": 5,
+    "prior_author_fresh_guardian_checks": 88,
+    "gate_prefix_postflight_retrospective": true,
+    "no_fresh_full_V2_broad_unit_claim": true,
+    "no_payload_compiler_guest_test_or_perf_execution": true,
+    "performance_or_selection_claim": false
+  },
+  "read_only_no_payload_execution": true
+}
