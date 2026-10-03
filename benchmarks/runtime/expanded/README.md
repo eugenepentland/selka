@@ -92,8 +92,8 @@ each operation family and application. The [current assessment](../assessment/RE
 compares every family across all six configurations, keeps individual weaknesses
 visible, and separates the five composed application workloads. Case counts are
 counts within this suite; there is no overall language score, population
-weighting, or automatic pass threshold. An interval overlapping Go does not
-establish equivalent performance.
+weighting, or automatic pass threshold. Each case/size uses its fastest median configuration as 1.00×. An interval
+overlapping that reference does not establish equivalent performance.
 
 The current suite provides a broad starting point for single-threaded application
 logic. Large working sets, recursion/graphs, map deletion and diverse keys,

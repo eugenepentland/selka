@@ -2,34 +2,36 @@
 
 The suite represents a broad range of common single-threaded application code: **35 microbenchmarks across eight operation families and five composed applications**, in Rust, Go, Zig Safe/Fast, and MyLang LLVM/QBE. It is a useful general-application baseline, with the fixture limits below. No literal percentage of codebases is claimed.
 
-The current results do **not** yet support broad performance parity with Go. LLVM has modest gaps in several routine families and larger gaps in strings, tagged values and composed jobs; QBE has substantial additional gaps in calls, records and numeric code.
+Each benchmark and input size uses its **lowest median runtime across all six configurations as 1.00×**. Every other value is its median runtime divided by that fastest median: 2.00× means twice the runtime. The reference can change between benchmarks and between small and large inputs. Exact median ties share 1.00×.
 
 [Full family assessment and 480 comparisons](results/assessment_main_20261003.md) · [Machine-readable assessment](results/assessment_main_20261003.json) · [Validation](results/validation.json)
 
-Large-profile runtime ranges versus Go for individual microbenchmarks are below. These are ranges across different cases, not averages or a workload prediction; lower than 1× means faster than Go. The full report includes Rust and both Zig modes, both input sizes, confidence intervals, and each individual case.
+The following ranges describe individual large microbenchmarks relative to each benchmark's fastest configuration. They are ranges across cases, not pooled workload scores. The full report includes all six configurations, both sizes, raw times, and uncertainty intervals.
 
-| Operation family | MyLang LLVM / Go | MyLang QBE / Go |
+| Operation family | MyLang LLVM / fastest | MyLang QBE / fastest |
 |---|---:|---:|
-| numbers and branches | 1.30–1.70× | 5.79–10.00× |
-| lists and iteration | 1.20–1.48× | 2.63–8.25× |
-| strings and bytes | 0.16–3.98× | 0.15–19.09× |
-| dictionaries and sets | 1.67–3.21× | 2.04–4.25× |
-| records and calls | 1.23–2.40× | 2.61–14.53× |
-| optional values and errors | 1.89–4.15× | 5.25–10.76× |
-| allocation and ownership | retained: 1.77×; shared snapshots: 0.39–0.41× | retained: 2.58×; shared snapshots: 0.48–0.49× |
-| sorting and searching | native sorting: 0.05–0.19×; binary search: 1.23× | native sorting: 0.08–0.24×; binary search: 10.61× |
+| numbers and branches | 2.21–3.21× | 9.93–15.17× |
+| lists and iteration | 1.55–2.35× | 4.59–9.47× |
+| strings and bytes | 1.00–7.81× | 1.00–23.26× |
+| dictionaries and sets | 1.67–3.98× | 2.04–5.27× |
+| records and calls | 1.49–4.02× | 3.17–24.34× |
+| optional values and errors | 4.37–5.21× | 5.52–29.09× |
+| allocation and ownership (excluding alloc_short) | 1.00–3.41× | 1.18–4.23× |
+| sorting and searching | 1.00–2.02× | 1.28–17.40× |
 
-Short allocations are omitted from this compact range table because some compilers eliminate them; all their measurements remain in the full assessment. Snapshot wins include the documented copy-on-write versus explicit-clone behavior. Sorting uses different native APIs/algorithms, including Go `sort.Slice`/`sort.SliceStable`, so these wins do not establish general sorting superiority.
+Short allocations are omitted from this compact range table because some compilers eliminate them; all their measurements remain in the full assessment. Snapshot results include copy-on-write versus explicit-clone behavior. Sorting uses different native APIs/algorithms, including Go `sort.Slice`/`sort.SliceStable`, so these results do not establish general sorting superiority.
 
-Composed application medians for the large fixtures, in **microseconds per job**:
+Composed applications on the large fixtures, **runtime relative to the fastest median**:
 
-| Application | LLVM | QBE | Rust | Go | Zig Safe | Zig Fast |
-|---|---:|---:|---:|---:|---:|---:|
-| word_count | 21.14 | 28.54 | 3.89 | 9.96 | 3.13 | 2.47 |
-| csv_aggregate | 396.75 | 577.14 | 68.71 | 82.81 | 66.52 | 53.31 |
-| json_transform | 3091.02 | 4157.30 | 124.23 | 543.44 | 230.41 | 187.25 |
-| packet_decode | 1.64 | 8.29 | 0.79 | 1.95 | 1.34 | 0.66 |
-| lox_eval | 75.79 | 82.98 | 10.66 | 12.64 | 30.53 | 29.79 |
+| Application | Fastest | LLVM | QBE | Rust | Go | Zig Safe | Zig Fast |
+|---|---|---:|---:|---:|---:|---:|---:|
+| word_count | zig-fast | 8.56× | 11.56× | 1.58× | 4.03× | 1.27× | 1.00× |
+| csv_aggregate | zig-fast | 7.44× | 10.83× | 1.29× | 1.55× | 1.25× | 1.00× |
+| json_transform | rust | 24.88× | 33.46× | 1.00× | 4.37× | 1.85× | 1.51× |
+| packet_decode | zig-fast | 2.50× | 12.60× | 1.20× | 2.96× | 2.04× | 1.00× |
+| lox_eval | rust | 7.11× | 7.78× | 1.00× | 1.18× | 2.86× | 2.79× |
+
+Current MyLang results show substantial gaps to the fastest implementations across many common operations. The winner is Rust or Zig Fast in these five application fixtures; other microbenchmarks can have a different winner.
 
 These fixtures point to calls/records/options in QBE, dictionaries/sets, string splitting/formatting, and tagged values as useful optimization targets. The microbenchmarks help isolate an operation; the composed jobs check whether improvements carry through to application-shaped work. A fast result in one family does not cancel a slow result elsewhere.
 
@@ -48,25 +50,35 @@ python3 -m unittest discover -s benchmarks/runtime/assessment -p 'test_*.py'
 Default outputs are `results/assessment_main_20261003.json` and its Markdown
 companion. The tool pins the selected baseline's SHA256, calls the independent
 expanded verifier with `artifacts=False`, and checks all 40 cases, both profiles,
-all six configurations and every documented per-iteration unit. It copies the
-independently checked paired medians/95% intervals; it does not rerun samples,
-discard outliers, tune builds or modify the baseline and historical profiles.
+all six configurations and every documented per-iteration unit.
 
-Eight operation-family panels show every micro comparison against Go, descriptive
-faster/overlapping/slower counts, the range of individual median ratios and an
-explicit worst observed comparison. Counts include small and large test profiles
-separately. JSON also separates counts by profile. Go is labeled reference,
-rather than counted as a performance win. A five-application table shows large
-whole-job median microseconds and paired ratios/intervals for all six arms; the
-480-row appendix preserves both sizes, units, time spread and classification.
+For each case/size it selects the smallest observed median runtime and divides
+all six medians by that value. The selected reference is fixed for that case/size;
+it does not switch to each round's winner. Exact median ties are all marked
+fastest; a stable configuration order selects one of them for uncertainty
+calculations. Ratios are of medians, not medians of paired ratios.
+
+Intervals use 2,000 paired bootstrap resamples from the raw rounds. Each resample
+uses the same round indices for a configuration and its fixed reference, then
+computes the ratio of their medians. The original Go-relative intervals are not
+reused or divided. The reference compared with itself has interval [1, 1];
+another exactly tied configuration can have a nonzero-width interval. These
+exploratory intervals do not account for selecting the winner from the observed
+data, and are not adjusted for multiple comparisons.
+
+Family panels show every micro comparison, fastest/overlapping/slower counts,
+ranges of individual ratios, and worst observed cases. An unusual nonwinner
+interval entirely below 1 is labeled explicitly rather than changing the
+observed fastest median. Counts include small and large profiles separately;
+JSON also separates counts by profile. The five-application table and 480-row
+appendix preserve reference names, ratios, times, units, spread and both sizes.
 
 The user's 80% goal is a qualitative design aspiration for representative breadth
 of everyday application codebases. There is no quantified population percentage,
 CPU-time attribution target, frequency weighting, acceptance threshold or global
 language score. Counts describe only the selected test/profile comparisons.
 An interval containing 1 means overlapping evidence, not proof of equivalence.
-These exploratory intervals have no multiple-comparison adjustment. Family and
-application reviews, confidence gaps and excluded workloads come from the reviewed
+Family and application reviews, confidence gaps and excluded workloads come from the reviewed
 `expanded/coverage.json` taxonomy and are retained in the report.
 
 The report explicitly flags short-allocation elimination/tiny samples, native

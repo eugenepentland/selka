@@ -8,6 +8,8 @@ import json
 import math
 from pathlib import Path, PurePosixPath
 import re
+import random
+import statistics
 import subprocess
 import sys
 
@@ -19,7 +21,7 @@ DEFAULT_BASELINE_SHA256 = 'b595d9638e243e18692b5cef491c2b5273949c93ebf22a0ae604a
 HISTORICAL_REVISION = 'b725360f5f86ac67bc405db9407ae51c332a9931'
 ARMS = ('my-llvm', 'my-qbe', 'rust', 'go', 'zig-safe', 'zig-fast')
 APPLICATIONS = ('word_count', 'csv_aggregate', 'json_transform', 'packet_decode', 'lox_eval')
-SCHEMA = 'mylang-runtime-family-assessment-v1'
+SCHEMA = 'mylang-runtime-family-assessment-v2'
 
 sys.path.insert(0, str(EXPANDED))
 spec = importlib.util.spec_from_file_location('assessment_expanded_verifier', EXPANDED / 'verify.py')
@@ -72,15 +74,28 @@ def historical_source_audit(identity, revision, repo):
             'current_artifacts_checked': False, 'sources': rows}
 
 
-def classify(interval, arm):
+def classify(interval, fastest):
     require(isinstance(interval, list) and len(interval) == 2, 'invalid paired confidence interval')
     low, high = interval
     require(all(type(value) in (float, int) and math.isfinite(value) and value > 0 for value in interval)
             and low <= high, 'invalid paired confidence interval')
-    if arm == 'go':
-        require(low == high == 1, 'Go reference interval must equal one')
-        return 'reference'
-    return 'faster' if high < 1 else 'slower' if low > 1 else 'overlapping'
+    if fastest:
+        return 'fastest'
+    return 'slower' if low > 1 else 'interval_below_reference' if high < 1 else 'overlapping'
+
+
+def bootstrap_ratio_interval(values, reference_values, seed, resamples=2000):
+    """Resample paired round indexes and divide the two resampled medians."""
+    require(len(values) == len(reference_values) and bool(values), 'missing paired raw rounds')
+    rng = random.Random(seed)
+    estimates = []
+    for _ in range(resamples):
+        indexes = [rng.randrange(len(values)) for _ in values]
+        numerator = statistics.median([values[index] for index in indexes])
+        denominator = statistics.median([reference_values[index] for index in indexes])
+        estimates.append(numerator / denominator)
+    estimates.sort()
+    return [estimates[int(resamples*.025)-1], estimates[int(resamples*.975)-1]]
 
 
 def validate_coverage(report, taxonomy):
@@ -116,16 +131,49 @@ def validate_coverage(report, taxonomy):
 
 
 def comparison_rows(report, plans):
+    raw = {}
+    for sample in report['samples']:
+        key = (sample['case'], sample['size'], sample['profile'], sample['arm'])
+        by_round = raw.setdefault(key, {})
+        require(sample['round'] not in by_round, 'duplicate raw round')
+        value = sample['kernel_ns']
+        require(type(value) in (int, float) and math.isfinite(value) and value > 0, 'invalid raw kernel time')
+        by_round[sample['round']] = value
+    summary_times = {(r['case'], r['size'], r['profile'], r['arm']): r['median_ns_per_op'] for r in report['summary']}
+    references = {}
+    for key, plan in plans.items():
+        medians = {}
+        for arm in ARMS:
+            rounds = raw.get((*key, arm), {})
+            require(set(rounds) == set(range(report['rounds'])), 'missing paired raw rounds')
+            value = summary_times[(*key, arm)]
+            require(type(value) in (float, int) and math.isfinite(value) and value > 0, 'invalid median time')
+            require(math.isclose(value, statistics.median(rounds.values()) / plan['iterations'], rel_tol=1e-12), 'summary median differs from raw samples')
+            medians[arm] = value
+        minimum = min(medians.values())
+        fastest = [arm for arm in ARMS if medians[arm] == minimum]
+        references[key] = (fastest[0], fastest, minimum, medians)
     result = []
     for row in report['summary']:
-        plan = plans[(row['case'], row['size'], row['profile'])]
+        key = (row['case'], row['size'], row['profile'])
+        plan = plans[key]
+        reference, fastest, minimum, medians = references[key]
         ns = row['median_ns_per_op']
         require(type(ns) in (float, int) and math.isfinite(ns) and ns > 0, 'invalid median time')
-        ratio = row['median_paired_ratio_to_go']
-        require(type(ratio) in (float, int) and math.isfinite(ratio) and ratio > 0, 'invalid paired ratio')
-        result.append({**row, 'unit': plan['unit'], 'level': plan['level'],
-                       'median_us_per_iteration': ns / 1000,
-                       'classification_vs_go': classify(row['paired_bootstrap_95_interval'], row['arm']),
+        require(math.isclose(ns, medians[row['arm']], rel_tol=1e-12), 'summary median differs from raw samples')
+        ratio = medians[row['arm']] / minimum
+        values = [raw[(*key, row['arm'])][rnd] for rnd in range(report['rounds'])]
+        reference_values = [raw[(*key, reference)][rnd] for rnd in range(report['rounds'])]
+        interval = [1.0, 1.0] if row['arm'] == reference else bootstrap_ratio_interval(
+            values, reference_values, f"{row['case']}/{row['size']}/{row['arm']}/fastest/{reference}/ratio-of-medians/bootstrap")
+        retained = {name: value for name, value in row.items()
+                    if name not in ('median_paired_ratio_to_go', 'paired_bootstrap_95_interval', 'classification_vs_go')}
+        result.append({**retained, 'unit': plan['unit'], 'level': plan['level'],
+                       'median_us_per_iteration': ns / 1000, 'ratio_to_fastest': ratio,
+                       'reference_arm': reference, 'fastest_arms': fastest,
+                       'reference_median_ns_per_iteration': minimum,
+                       'bootstrap_95_interval_to_fastest': interval,
+                       'classification_vs_fastest': classify(interval, row['arm'] in fastest),
                        'calibration': plan['calibration']})
     return result
 
@@ -135,15 +183,15 @@ def family_statistics(rows):
     for arm in ARMS:
         chosen = [row for row in rows if row['arm'] == arm]
         require(chosen, 'family has no comparisons for ' + arm)
-        counts = Counter(row['classification_vs_go'] for row in chosen)
-        worst = max(chosen, key=lambda r: r['median_paired_ratio_to_go'])
+        counts = Counter(row['classification_vs_fastest'] for row in chosen)
+        worst = max(chosen, key=lambda r: r['ratio_to_fastest'])
         stats[arm] = {'test_profile_comparisons': len(chosen),
-                      'counts': {name: counts[name] for name in ('faster', 'overlapping', 'slower', 'reference')},
-                      'paired_median_ratio_range': [min(r['median_paired_ratio_to_go'] for r in chosen),
-                                                   max(r['median_paired_ratio_to_go'] for r in chosen)],
-                      'worst_observed_comparison': None if arm == 'go' else
-                      {key: worst[key] for key in ('case', 'profile', 'size', 'unit', 'median_paired_ratio_to_go',
-                                                   'paired_bootstrap_95_interval', 'classification_vs_go')}}
+                      'counts': {name: counts[name] for name in ('fastest', 'overlapping', 'slower', 'interval_below_reference')},
+                      'ratio_to_fastest_range': [min(r['ratio_to_fastest'] for r in chosen),
+                                                   max(r['ratio_to_fastest'] for r in chosen)],
+                      'worst_observed_comparison':
+                      {key: worst[key] for key in ('case', 'profile', 'size', 'unit', 'reference_arm', 'fastest_arms', 'ratio_to_fastest',
+                                                   'bootstrap_95_interval_to_fastest', 'classification_vs_fastest')}}
     return stats
 
 
@@ -176,7 +224,9 @@ def build_assessment(report, taxonomy, baseline_path, expected_hash, audit, veri
                                       'compiler_source_equivalence_established_by_this_tool': False,
                                       'generator_sha256': sha(Path(__file__).read_bytes())},
             'interpretation': {'breadth_goal': '80% is a qualitative design aspiration for representative everyday-codebase breadth; no population percentage or CPU-time coverage is measured.',
-                               'classification': 'A paired 95% bootstrap interval wholly below 1 is faster than Go, wholly above 1 is slower, and containing 1 is overlapping. This is descriptive evidence, not an equivalence proof or acceptance threshold; multiple comparisons are not adjusted.',
+                               'reference_selection': 'For each case and size, select the lowest observed median kernel time per iteration among all six configurations. All exact median ties are fastest; the first tied arm in ARMS order is the fixed bootstrap reference. Never select a different winner for each round.',
+                               'bootstrap': '2,000 paired-round index resamples; each replicate divides the arm median by the fixed-reference median. Percentile endpoints use sorted indexes 49 and 1949. Deterministic seeds include case/size/arm/reference. Exploratory intervals condition on the observed winner and do not account for winner selection.',
+                               'classification': 'Exact observed median winners are fastest. For other arms, intervals wholly above 1 are slower, intervals containing 1 are overlapping, and intervals wholly below 1 are explicitly interval_below_reference despite the observed point ratio being at least 1. This is descriptive evidence, not an equivalence proof or acceptance threshold; multiple comparisons are not adjusted.',
                                'counts_scope': 'Counts describe these selected test/profile comparisons only, not percentages of real codebases or operation frequencies.',
                                'weights': None, 'overall_language_score': None, 'new_acceptance_thresholds': None,
                                'taxonomy_review': taxonomy.get('interpretation'),
@@ -186,7 +236,7 @@ def build_assessment(report, taxonomy, baseline_path, expected_hash, audit, veri
                                          'sort_int/sort_records use each language native sorting API and compare language/library policies, rather than one identical algorithm.',
                                          'Ownership, snapshot, copy-on-write, reference-counting, GC and allocator semantics differ as documented; equivalent observable behavior does not imply equivalent physical copying.',
                                          'Optimized default build policies use different instruction sets across arms. Rust default x86_64 and Go v1 differ from default Zig/Clang-derived host features.',
-                                         'Paired intervals and raw spread describe the saved run. They do not guarantee performance on another machine, input, lifetime or workload.']},
+                                         'Intervals use paired raw resampling of ratio-of-medians against a fixed observed winner, not transformed Go-relative intervals. Winner-selection uncertainty is not included. Paired intervals and raw spread describe the saved run. They do not guarantee performance on another machine, input, lifetime or workload.']},
             'inventory': report['inventory'], 'rounds': report['rounds'], 'warmup_rounds': report['warmup_rounds'],
             'target_policy': report['identity']['target_policy'],
             'environment': {key: value for key, value in report['environment'].items() if key != 'cpuinfo'},
@@ -201,11 +251,12 @@ def cell(value):
 
 
 def comparison_cell(row, time=False):
-    lo, hi = row['paired_bootstrap_95_interval']
-    label = row['classification_vs_go']
-    ratio = row['median_paired_ratio_to_go']
+    lo, hi = row['bootstrap_95_interval_to_fastest']
+    label = row['classification_vs_fastest']
+    ratio = row['ratio_to_fastest']
     prefix = f"{row['median_us_per_iteration']:.3f} µs; " if time else ''
-    return prefix + f'{ratio:.3f}× [{lo:.3f}–{hi:.3f}] {label}'
+    display = '1.00' if ratio == 1 else f'{ratio:.3f}'
+    return prefix + f'{display}× [{lo:.3f}–{hi:.3f}] {label}'
 
 
 def narrative(value):
@@ -224,6 +275,7 @@ def markdown(report):
              'The saved baseline was independently verified: 40 cases, two sizes, all six configurations, '
              f"{report['rounds']} sample rounds and {report['warmup_rounds']} warmups. No benchmark was rerun. "
              'This assessment adds no acceptance gate, population weighting or overall language score.', '',
+             report['interpretation']['reference_selection'], '', report['interpretation']['bootstrap'], '',
              report['interpretation']['classification'], '', report['interpretation']['counts_scope'], '',
              f"Baseline SHA256: `{report['input']['baseline_sha256']}`. Historical measurement sources: "
              f"**{verification['historical_measurement_sources']['status']}** at "
@@ -233,9 +285,9 @@ def markdown(report):
     for note in report['interpretation']['notes']:
         lines.append('- ' + note)
     lines += ['', '## Eight operation families', '',
-              'Family counts include small and large profiles separately. Go is the reference, rather than a comparative win. '
-              'Ranges and worst cases refer to individual median paired ratios, not a pooled average. '
-              'Every cell below is ratio to Go [95% paired interval] and classification; exact per-iteration times and units follow in the appendix.', '']
+              'Family counts include small and large profiles separately. Each case/profile uses its own fixed observed fastest reference. '
+              'Ranges and worst cases refer to individual ratios of observed medians, not a pooled average. '
+              'Every cell below is ratio to fastest [95% paired bootstrap interval] and classification; exact per-iteration times and units follow in the appendix.', '']
     for family in report['families']:
         lines += ['### ' + family['family'].replace('_', ' '), '']
         review = family['qualitative_review']
@@ -243,26 +295,28 @@ def markdown(report):
             values = review.get(name)
             if values:
                 lines += [name.capitalize() + ': ' + narrative(values) + '.', '']
-        lines += ['| Arm | Faster | Overlapping | Slower | Reference | Median ratio range | Worst observed case / profile |',
+        lines += ['| Arm | Fastest | Overlapping | Slower | Interval below reference | Ratio-to-fastest range | Worst observed case / profile |',
                   '|---|---:|---:|---:|---:|---:|---|']
         for arm, stat in family['statistics_by_arm'].items():
-            counts = stat['counts']; low, high = stat['paired_median_ratio_range']; worst = stat['worst_observed_comparison']
-            name = 'Go reference' if worst is None else f"{worst['case']} / {worst['profile']} ({worst['median_paired_ratio_to_go']:.3f}×)"
-            lines.append(f"| {arm} | {counts['faster']} | {counts['overlapping']} | {counts['slower']} | {counts['reference']} | {low:.3f}–{high:.3f}× | {name} |")
-        lines += ['', '| Case / profile | ' + ' | '.join(ARMS) + ' |', '|---|' + '---|' * len(ARMS)]
+            counts = stat['counts']; low, high = stat['ratio_to_fastest_range']; worst = stat['worst_observed_comparison']
+            name = f"{worst['case']} / {worst['profile']} ({worst['ratio_to_fastest']:.3f}×)"
+            lines.append(f"| {arm} | {counts['fastest']} | {counts['overlapping']} | {counts['slower']} | {counts['interval_below_reference']} | {low:.3f}–{high:.3f}× | {name} |")
+        lines += ['', '| Case / profile | Fastest arm(s); interval reference | ' + ' | '.join(ARMS) + ' |', '|---|---|' + '---|' * len(ARMS)]
         rows = family['individual_comparisons']
         for case in family['cases']:
             for profile in ('small', 'large'):
                 selected = {r['arm']: r for r in rows if r['case'] == case and r['profile'] == profile}
-                lines.append('| ' + case + ' / ' + profile + ' | ' + ' | '.join(comparison_cell(selected[a]) for a in ARMS) + ' |')
+                winner = selected[ARMS[0]]
+                lines.append('| ' + case + ' / ' + profile + ' | ' + ', '.join(winner['fastest_arms']) + '; ' + winner['reference_arm'] + ' | ' + ' | '.join(comparison_cell(selected[a]) for a in ARMS) + ' |')
         lines.append('')
     lines += ['## Five composed applications', '',
-              'Large-profile whole-job median time in microseconds; paired ratio to Go and 95% interval. '
+              'Large-profile whole-job median time in microseconds; ratio to fastest and 95% paired bootstrap interval. '
               'Each application keeps its own unit and interpretation. Both sizes appear in the full appendix.', '',
-              '| Application / large size | Unit | ' + ' | '.join(ARMS) + ' |', '|---|---|' + '---|' * len(ARMS)]
+              '| Application / large size | Unit | Fastest arm(s); interval reference | ' + ' | '.join(ARMS) + ' |', '|---|---|---|' + '---|' * len(ARMS)]
     for app in report['applications']:
         selected = {r['arm']: r for r in app['large_profile']}
-        lines.append(f"| {app['case']} / {selected['go']['size']} | {cell(app['unit'])} | " + ' | '.join(comparison_cell(selected[a], time=True) for a in ARMS) + ' |')
+        winner = selected[ARMS[0]]
+        lines.append(f"| {app['case']} / {winner['size']} | {cell(app['unit'])} | " + ', '.join(winner['fastest_arms']) + '; ' + winner['reference_arm'] + ' | ' + ' | '.join(comparison_cell(selected[a], time=True) for a in ARMS) + ' |')
     lines.append('')
     for app in report['applications']:
         review = app['qualitative_review']
@@ -285,11 +339,11 @@ def markdown(report):
     lines += ['', '## Full small/large appendix', '',
               'Times are per documented CLI iteration, which may be a complete dataset/job rather than one scalar primitive. '
               'Raw observed min/max remain attached to each comparison. Lower ratios are faster; no units are pooled.', '',
-              '| Case / profile / size | Level | Unit | Arm | Median µs/iteration | Min–max µs | Paired ratio [95% interval] | Classification |',
-              '|---|---|---|---|---:|---:|---:|---|']
+              '| Case / profile / size | Level | Unit | Arm | Median µs/iteration | Min–max µs | Fastest arm(s); interval reference | Ratio to fastest [95% interval] | Classification |',
+              '|---|---|---|---|---:|---:|---|---:|---|']
     for row in report['appendix_all_comparisons']:
-        low, high = row['paired_bootstrap_95_interval']
-        lines.append(f"| {row['case']} / {row['profile']} / {row['size']} | {row['level']} | {cell(row['unit'])} | {row['arm']} | {row['median_us_per_iteration']:.6f} | {row['min_ns_per_op']/1000:.6f}–{row['max_ns_per_op']/1000:.6f} | {row['median_paired_ratio_to_go']:.3f}× [{low:.3f}–{high:.3f}] | {row['classification_vs_go']} |")
+        low, high = row['bootstrap_95_interval_to_fastest']
+        lines.append(f"| {row['case']} / {row['profile']} / {row['size']} | {row['level']} | {cell(row['unit'])} | {row['arm']} | {row['median_us_per_iteration']:.6f} | {row['min_ns_per_op']/1000:.6f}–{row['max_ns_per_op']/1000:.6f} | {', '.join(row['fastest_arms'])}; {row['reference_arm']} | {row['ratio_to_fastest']:.2f}× [{low:.3f}–{high:.3f}] | {row['classification_vs_fastest']} |")
     return '\n'.join(lines) + '\n'
 
 
