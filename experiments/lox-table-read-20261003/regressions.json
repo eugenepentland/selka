@@ -1,0 +1,77 @@
+[
+  {
+    "name": "caller_locals",
+    "source": "fun sum(n) { if (n == 0) return 0; var before = n * 2; var inner = sum(n - 1); return before + inner + n; } print sum(10);\n",
+    "stdout": "165\n"
+  },
+  {
+    "name": "frame_limit",
+    "source": "fun depth(n) { if (n == 0) return 0; return depth(n - 1) + 1; } print depth(60);\n",
+    "stdout": "60\n"
+  },
+  {
+    "name": "no_frame_calls",
+    "source": "class Empty {} fun run(n) { if (n == 0) return 0; var a = Empty(); var now = clock(); return run(n - 1) + 1; } print run(12);\n",
+    "stdout": "12\n"
+  },
+  {
+    "name": "captured_updates",
+    "source": "fun create() { var x = 0; fun step() { x = x + 1; return x; } return step; } var step = create(); fun caller() { print step(); print step(); } caller(); print step();\n",
+    "stdout": "1\n2\n3\n"
+  },
+  {
+    "name": "sibling_closures",
+    "source": "fun outer() { var x = 1; fun write() { x = x + 10; return x; } fun read() { return x; } fun caller() { print write(); print read(); return read; } return caller(); } var read = outer(); print read();\n",
+    "stdout": "11\n11\n11\n"
+  },
+  {
+    "name": "field_shadowing",
+    "source": "class A { value() { return 1; } } fun two() { return 2; } var a = A(); a.value = two; print a.value(); a.value = 3; print a.value;\n",
+    "stdout": "2\n3\n"
+  },
+  {
+    "name": "bound_receiver",
+    "source": "class A { init() { this.x = 1; } bump() { this.x = this.x + 1; return this.x; } } var a = A(); var bound = a.bump; print bound(); print a.x; print bound();\n",
+    "stdout": "2\n2\n3\n"
+  },
+  {
+    "name": "setter_rhs",
+    "source": "class A {} var a = A(); fun rhs() { a.first = 41; return a.first + 1; } print a.second = rhs(); print a.first; print a.second;\n",
+    "stdout": "42\n41\n42\n"
+  },
+  {
+    "name": "inherited_dispatch",
+    "source": "class A { init(x) { this.x = x; } value() { return this.x; } } class B < A { value() { return super.value() + 1; } parent() { return super.value; } } var b = B(9); print b.value(); var parent = b.parent(); b.x = 20; print parent(); print b.value();\n",
+    "stdout": "10\n20\n21\n"
+  },
+  {
+    "name": "table_growth",
+    "source": "class A { method() { return this.z; } } var a = A(); a.a=1; a.b=2; a.c=3; a.d=4; a.e=5; a.f=6; a.g=7; a.h=8; a.i=9; a.j=10; a.k=11; a.z=12; print a.a+a.f+a.k; print a.method(); a.method=a.method; a.z=30; print a.method();\n",
+    "stdout": "18\n12\n30\n"
+  },
+  {
+    "name": "arithmetic_stack",
+    "source": "fun calculate(a, b) { return -a + b * 3 - b / 2; } print calculate(4, 6); print 1 < 2; print 3 > 2; print 2 == 2; print !(3 < 2); print \"left\" + \"right\";\n",
+    "stdout": "11\ntrue\ntrue\ntrue\ntrue\nleftright\n"
+  },
+  {
+    "name": "gc_roots",
+    "source": "class Box { init(x) { this.x = x; } get() { return this.x; } } fun make(n) { var b = Box(n); fun read() { return b.get(); } return read; } fun sum(n) { if (n == 0) return 0; var read = make(n); var rest = sum(n - 1); return read() + rest; } print sum(20);\n",
+    "stdout": "210\n"
+  },
+  {
+    "name": "call_arguments_and_captured_parameter_roots",
+    "source": "var saved; var update; fun first(a, b) { fun read() { return a + b; } fun write() { a = a + \"!\"; } saved = read; update = write; return \"first\"; } fun second(a, b) { return \"second\"; } var selected = first; fun arg(x) { selected = second; print x; return x + \"+\"; } print selected(arg(\"A\"), arg(\"B\")); update(); print saved(); print selected(1, 2);",
+    "stdout": "A\nB\nfirst\nA+!B+\nsecond\n"
+  },
+  {
+    "name": "recursive_state_and_output_restore",
+    "source": "fun outer(x) { fun inner(y) { { var local = x + y; print local; return local; } } print inner(2); return inner(3); } print outer(5); class Box { init(x) { this.x = x; print x; } read() { return this.x; } } var box = Box(9); var read = box.read; print read(); clock();",
+    "stdout": "7\n7\n8\n8\n9\n9\n"
+  },
+  {
+    "name": "global_updates_and_nil_field_shadowing",
+    "source": "class Base { read() { return this.field; } } class Derived < Base {} var a = Derived(); a.field = nil; print a.field == nil; a.read = false; print a.read; a.read = nil; print a.read; var b = Derived(); b.field = \"root\"; var bound = b.read; b.read = \"shadow\"; print bound(); print b.read; var g1 = 1; var g2 = 2; var g3 = 3; var g4 = 4; var g5 = 5; var g6 = 6; var g7 = 7; var g8 = 8; var g9 = 9; fun fetch() { return g9; } print fetch(); g9 = 21; print fetch();\n",
+    "stdout": "true\nfalse\nnil\nroot\nshadow\n9\n21\n"
+  }
+]

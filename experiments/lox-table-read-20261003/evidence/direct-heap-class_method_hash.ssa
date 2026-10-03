@@ -1,0 +1,508 @@
+type :myl_slice = { l, l }
+type :t3997f02d8540e0dc2d2085280f1056fdd662e51c9a5375d637a04dfd496549fa = align 8 { b 56 }
+type :t521bf24a967e14727eaaec581081f48418bd372e2f25b737a26c39858cc8275b = align 8 { b 16 }
+type :t666eb6110e78040742bc487757711767c321cddacbcdea245ecd694d248b9b6b = align 8 { b 24 }
+type :t6a1d8ee86e02e1cd0e838f29c02a4dfb0139420677ae32f87781933a6f0fe536 = align 8 { b 208 }
+type :te8e1dc9641a938196152987c521c8509806c8bec9608af981631a3cd544f6243 = align 8 { b 24 }
+export function :t666eb6110e78040742bc487757711767c321cddacbcdea245ecd694d248b9b6b $myl_f_a082c953b15a709042f87a7ed12ce58d92e4ab8a1bb1eedfbe4b6601fde3933a(l %ctx, l %a0, l %a1, l %a2, l %a3) {
+@entry
+ %trap =l add %ctx, 32
+ %empty =l alloc8 24
+ %l0 =l alloc8 8
+ %l1 =l alloc8 8
+ %l2 =l alloc8 8
+ %l3 =l alloc8 8
+ %l4 =l alloc8 8
+ %l5 =l alloc8 8
+ %l6 =l alloc8 24
+ %s0 =l alloc8 8
+ %s1 =l alloc8 8
+ %s2 =l alloc8 8
+ %s3 =l alloc8 8
+ %agg32 =l alloc8 24
+ %agg36 =l alloc8 24
+ %agg40 =l alloc8 24
+ %agg44 =l alloc8 24
+ %agg48 =l alloc8 24
+ %agg52 =l alloc8 24
+ %agg56 =l alloc8 24
+ %agg60 =l alloc8 24
+ %agg64 =l alloc8 24
+ %agg68 =l alloc8 24
+ %v4 =l add %ctx, 8
+ %v7 =l loadl %v4
+ %v8 =l add %ctx, 56
+ %v9 =l loadl %v8
+ %v10 =l ceql %v7, %v9
+ jnz %v10, @limitfail2, @frameadmit0
+@limitfail2
+ call $myl_qbe_fail_frame(l %ctx)
+ jmp @entry_failure
+@frameadmit0
+ %v6 =l alloc8 32
+ %v11 =l add %ctx, 64
+ %v12 =l loadl %v11
+ %v13 =l cultl %v6, %v12
+ jnz %v13, @floorfail3, @stackadmit1
+@floorfail3
+ call $myl_qbe_fail_frame(l %ctx)
+ jmp @entry_failure
+@stackadmit1
+ %v5 =l add %ctx, 48
+ %v14 =l loadl %v5
+ storel %v14, %v6
+ %v15 =l add %v6, 8
+ storel extern $myl_f_a082c953b15a709042f87a7ed12ce58d92e4ab8a1bb1eedfbe4b6601fde3933a_meta, %v15
+ %v16 =l add %v6, 16
+ storel 0, %v16
+ storel %v6, %v5
+ %v17 =l add %v7, 1
+ storel %v17, %v4
+ %position =l add %v6, 16
+ storel 0, %l4
+ storel %a0, %l0
+ storel %a1, %l1
+ storel %a2, %l2
+ storel %a3, %l3
+ # rc-frame 7
+ jmp @i0
+@i0
+ %v21 =l loadl %l0
+ storel %v21, %s0
+ %v22 =l loadl %s0
+ %v23 =l add %v22, 0
+ %v24 =l loadl %v23
+ storel %v24, %s0
+ %v34 =l loadl %s0
+ storel %v34, %l4
+ %v35 =l loadl %l1
+ storel %v35, %s0
+ %v36 =l loadl %s0
+ storel %v36, %l5
+ %v37 =l loadl %l5
+ storel %v37, %s0
+ storel 0, %s1
+ %v38 =l loadl %s1
+ %v39 =l loadl %s0
+ %v40 =l csltl %v39, %v38
+ storel %v40, %s0
+ %v41 =l loadl %s0
+ jnz %v41, @next42, @i14
+@next42
+ %v42 =l loadl %l4
+ # myl-obj %v42
+ %v44 =l add %v42, 0
+ %v43 =l loadl %v44
+ storel %v43, %s0
+ %v45 =l loadl %s0
+ %v46 =l cugtl %v45, 9223372036854775807
+ jnz %v46, @cast_overflow47, @cast_ok47
+@cast_overflow47
+ storel 10, %position
+ call $myl_qbe_fail_cast(l %ctx, l %v45, l 320)
+ jmp @failure
+@cast_ok47
+ storel %v45, %s0
+ %v48 =l loadl %l5
+ storel %v48, %s1
+ %v49 =l loadl %s1
+ %v50 =l loadl %s0
+ %v51 =l add %v50, %v49
+ %v53 =l xor %v50, %v51
+ %v54 =l xor %v49, %v51
+ %v55 =l and %v53, %v54
+ %v52 =l csltl %v55, 0
+ jnz %v52, @overflow51, @checked51
+@overflow51
+ storel 12, %position
+ call $myl_qbe_fail_overflow_op(l %ctx, l 0, l %v50, l %v49, l 64)
+ jmp @failure
+@checked51
+ storel %v51, %s0
+ %v56 =l loadl %s0
+ storel %v56, %l5
+@i14
+ %v57 =l loadl %l5
+ storel %v57, %s0
+ %v58 =l loadl %l4
+ # myl-obj %v58
+ %v60 =l loadl %s0
+ # myl-obj %v58
+ %v61 =l loadl %v58
+ %v62 =l cultl %v60, %v61
+ jnz %v62, @success63, @failed63
+@failed63
+ storel 15, %position
+ call $myl_qbe_fail_normalized_index_bounds(l %ctx, l %v60, l %v61)
+ jmp @failure
+@success63
+ # myl-obj %v58
+ %v66 =l add %v58, 32
+ %v67 =l loadl %v66
+ # myl-elem %v67 56v
+ %v64 =l mul %v60, 56
+ %v65 =l add %v67, %v64
+ storel %v65, %s0
+ storel 16, %position
+ %v68 =l loadl %s0
+ %v69 =l loaduw %v68
+ %v70 =l ceql %v69, 0
+ jnz %v70, @rcarm70, @rcarmnext70
+@rcarm70
+ jmp @i30
+@rcarmnext70
+ %v80 =l ceql %v69, 1
+ jnz %v80, @rcarm80, @rcarmnext80
+@rcarm80
+ jmp @i34
+@rcarmnext80
+ %v90 =l ceql %v69, 2
+ jnz %v90, @rcarm90, @rcarmnext90
+@rcarm90
+ jmp @i38
+@rcarmnext90
+ %v100 =l ceql %v69, 3
+ jnz %v100, @rcarm100, @rcarmnext100
+@rcarm100
+ jmp @i42
+@rcarmnext100
+ %v110 =l ceql %v69, 4
+ jnz %v110, @rcarm110, @rcarmnext110
+@rcarm110
+ jmp @i46
+@rcarmnext110
+ %v120 =l ceql %v69, 5
+ jnz %v120, @rcarm120, @rcarmnext120
+@rcarm120
+ jmp @i50
+@rcarmnext120
+ %v130 =l ceql %v69, 6
+ jnz %v130, @rcarm130, @rcarmnext130
+@rcarm130
+ %v131 =l add %v68, 8
+ blit %v131, %l6, 24
+ jmp @i17
+@rcarmnext130
+ %v151 =l ceql %v69, 7
+ jnz %v151, @rcarm151, @rcarmnext151
+@rcarm151
+ jmp @i54
+@rcarmnext151
+ %v161 =l ceql %v69, 8
+ jnz %v161, @rcarm161, @rcarmnext161
+@rcarm161
+ jmp @i58
+@rcarmnext161
+ %v171 =l ceql %v69, 9
+ jnz %v171, @rcarm171, @rcarmnext171
+@rcarm171
+ jmp @i62
+@rcarmnext171
+ %v181 =l ceql %v69, 10
+ jnz %v181, @rcarm181, @rcarmnext181
+@rcarm181
+ jmp @i66
+@rcarmnext181
+ jmp @failure
+@i17
+ storel %l6, %s0
+ storel %l6, %s0
+ %v191 =l loadl %s0
+ %v192 =l add %v191, 8
+ storel %v192, %s0
+ %v202 =l loadl %s0
+ %v203 =l add %v202, 0
+ %v204 =l loadl %v203
+ storel %v204, %s0
+ storel %l6, %s1
+ %v214 =l loadl %s1
+ %v215 =l add %v214, 8
+ storel %v215, %s1
+ %v225 =l loadl %s1
+ %v226 =l add %v225, 8
+ %v227 =l loadl %v226
+ storel %v227, %s1
+ %v237 =l loadl %l2
+ storel %v237, %s2
+ %v238 =l loadl %l3
+ storel %v238, %s3
+ storel 28, %position
+ %v239 =l loadl %s0
+ %v240 =l loadl %s1
+ %v241 =l loadl %s2
+ %v242 =l loadl %s3
+ %v243 =:t666eb6110e78040742bc487757711767c321cddacbcdea245ecd694d248b9b6b call $myl_f_4192a2bf8c79d6c1482077147b62da5992111b1e9c0842eb498b5ef650f2e38f(l %ctx, l %v239, l %v240, l %v241, l %v242)
+ storel %v243, %s0
+ %v244 =l loadl %trap
+ jnz %v244, @failure, @ok244
+@ok244
+ %v282 =l loadl %s0
+ # rc-exit
+ %v341 =l loadl %v6
+ storel %v341, %v5
+ %v342 =l loadl %v4
+ %v343 =l sub %v342, 1
+ storel %v343, %v4
+ ret %v282
+@i30
+ storel 0, %s0
+ storel 31, %position
+ %v344 =l loadl %s0
+ jnz %v344, @success345, @failed345
+@failed345
+ call $myl_qbe_fail_assert(l %ctx)
+ jmp @failure
+@success345
+ %v346 =l copy %agg32
+ storel 0, %v346
+ %v347 =l add %v346, 8
+ storel 0, %v347
+ %v348 =l add %v346, 16
+ storel 0, %v348
+ storew 0, %v346
+ storel %v346, %s0
+ %v349 =l loadl %s0
+ # rc-exit
+ %v408 =l loadl %v6
+ storel %v408, %v5
+ %v409 =l loadl %v4
+ %v410 =l sub %v409, 1
+ storel %v410, %v4
+ ret %v349
+@i34
+ storel 0, %s0
+ storel 35, %position
+ %v411 =l loadl %s0
+ jnz %v411, @success412, @failed412
+@failed412
+ call $myl_qbe_fail_assert(l %ctx)
+ jmp @failure
+@success412
+ %v413 =l copy %agg36
+ storel 0, %v413
+ %v414 =l add %v413, 8
+ storel 0, %v414
+ %v415 =l add %v413, 16
+ storel 0, %v415
+ storew 0, %v413
+ storel %v413, %s0
+ %v416 =l loadl %s0
+ # rc-exit
+ %v475 =l loadl %v6
+ storel %v475, %v5
+ %v476 =l loadl %v4
+ %v477 =l sub %v476, 1
+ storel %v477, %v4
+ ret %v416
+@i38
+ storel 0, %s0
+ storel 39, %position
+ %v478 =l loadl %s0
+ jnz %v478, @success479, @failed479
+@failed479
+ call $myl_qbe_fail_assert(l %ctx)
+ jmp @failure
+@success479
+ %v480 =l copy %agg40
+ storel 0, %v480
+ %v481 =l add %v480, 8
+ storel 0, %v481
+ %v482 =l add %v480, 16
+ storel 0, %v482
+ storew 0, %v480
+ storel %v480, %s0
+ %v483 =l loadl %s0
+ # rc-exit
+ %v542 =l loadl %v6
+ storel %v542, %v5
+ %v543 =l loadl %v4
+ %v544 =l sub %v543, 1
+ storel %v544, %v4
+ ret %v483
+@i42
+ storel 0, %s0
+ storel 43, %position
+ %v545 =l loadl %s0
+ jnz %v545, @success546, @failed546
+@failed546
+ call $myl_qbe_fail_assert(l %ctx)
+ jmp @failure
+@success546
+ %v547 =l copy %agg44
+ storel 0, %v547
+ %v548 =l add %v547, 8
+ storel 0, %v548
+ %v549 =l add %v547, 16
+ storel 0, %v549
+ storew 0, %v547
+ storel %v547, %s0
+ %v550 =l loadl %s0
+ # rc-exit
+ %v609 =l loadl %v6
+ storel %v609, %v5
+ %v610 =l loadl %v4
+ %v611 =l sub %v610, 1
+ storel %v611, %v4
+ ret %v550
+@i46
+ storel 0, %s0
+ storel 47, %position
+ %v612 =l loadl %s0
+ jnz %v612, @success613, @failed613
+@failed613
+ call $myl_qbe_fail_assert(l %ctx)
+ jmp @failure
+@success613
+ %v614 =l copy %agg48
+ storel 0, %v614
+ %v615 =l add %v614, 8
+ storel 0, %v615
+ %v616 =l add %v614, 16
+ storel 0, %v616
+ storew 0, %v614
+ storel %v614, %s0
+ %v617 =l loadl %s0
+ # rc-exit
+ %v676 =l loadl %v6
+ storel %v676, %v5
+ %v677 =l loadl %v4
+ %v678 =l sub %v677, 1
+ storel %v678, %v4
+ ret %v617
+@i50
+ storel 0, %s0
+ storel 51, %position
+ %v679 =l loadl %s0
+ jnz %v679, @success680, @failed680
+@failed680
+ call $myl_qbe_fail_assert(l %ctx)
+ jmp @failure
+@success680
+ %v681 =l copy %agg52
+ storel 0, %v681
+ %v682 =l add %v681, 8
+ storel 0, %v682
+ %v683 =l add %v681, 16
+ storel 0, %v683
+ storew 0, %v681
+ storel %v681, %s0
+ %v684 =l loadl %s0
+ # rc-exit
+ %v743 =l loadl %v6
+ storel %v743, %v5
+ %v744 =l loadl %v4
+ %v745 =l sub %v744, 1
+ storel %v745, %v4
+ ret %v684
+@i54
+ storel 0, %s0
+ storel 55, %position
+ %v746 =l loadl %s0
+ jnz %v746, @success747, @failed747
+@failed747
+ call $myl_qbe_fail_assert(l %ctx)
+ jmp @failure
+@success747
+ %v748 =l copy %agg56
+ storel 0, %v748
+ %v749 =l add %v748, 8
+ storel 0, %v749
+ %v750 =l add %v748, 16
+ storel 0, %v750
+ storew 0, %v748
+ storel %v748, %s0
+ %v751 =l loadl %s0
+ # rc-exit
+ %v810 =l loadl %v6
+ storel %v810, %v5
+ %v811 =l loadl %v4
+ %v812 =l sub %v811, 1
+ storel %v812, %v4
+ ret %v751
+@i58
+ storel 0, %s0
+ storel 59, %position
+ %v813 =l loadl %s0
+ jnz %v813, @success814, @failed814
+@failed814
+ call $myl_qbe_fail_assert(l %ctx)
+ jmp @failure
+@success814
+ %v815 =l copy %agg60
+ storel 0, %v815
+ %v816 =l add %v815, 8
+ storel 0, %v816
+ %v817 =l add %v815, 16
+ storel 0, %v817
+ storew 0, %v815
+ storel %v815, %s0
+ %v818 =l loadl %s0
+ # rc-exit
+ %v877 =l loadl %v6
+ storel %v877, %v5
+ %v878 =l loadl %v4
+ %v879 =l sub %v878, 1
+ storel %v879, %v4
+ ret %v818
+@i62
+ storel 0, %s0
+ storel 63, %position
+ %v880 =l loadl %s0
+ jnz %v880, @success881, @failed881
+@failed881
+ call $myl_qbe_fail_assert(l %ctx)
+ jmp @failure
+@success881
+ %v882 =l copy %agg64
+ storel 0, %v882
+ %v883 =l add %v882, 8
+ storel 0, %v883
+ %v884 =l add %v882, 16
+ storel 0, %v884
+ storew 0, %v882
+ storel %v882, %s0
+ %v885 =l loadl %s0
+ # rc-exit
+ %v944 =l loadl %v6
+ storel %v944, %v5
+ %v945 =l loadl %v4
+ %v946 =l sub %v945, 1
+ storel %v946, %v4
+ ret %v885
+@i66
+ storel 0, %s0
+ storel 67, %position
+ %v947 =l loadl %s0
+ jnz %v947, @success948, @failed948
+@failed948
+ call $myl_qbe_fail_assert(l %ctx)
+ jmp @failure
+@success948
+ %v949 =l copy %agg68
+ storel 0, %v949
+ %v950 =l add %v949, 8
+ storel 0, %v950
+ %v951 =l add %v949, 16
+ storel 0, %v951
+ storew 0, %v949
+ storel %v949, %s0
+ %v952 =l loadl %s0
+ # rc-exit
+ %v1011 =l loadl %v6
+ storel %v1011, %v5
+ %v1012 =l loadl %v4
+ %v1013 =l sub %v1012, 1
+ storel %v1013, %v4
+ ret %v952
+@failure
+ %v1014 =l loadl %v6
+ storel %v1014, %v5
+ %v1015 =l loadl %v4
+ %v1016 =l sub %v1015, 1
+ storel %v1016, %v4
+ call $memset(l %empty, w 0, l 24)
+ ret %empty
+@entry_failure
+ call $memset(l %empty, w 0, l 24)
+ ret %empty
+}

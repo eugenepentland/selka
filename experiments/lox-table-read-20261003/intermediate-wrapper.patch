@@ -1,0 +1,24 @@
+--- a/table.my
++++ b/table.my
+@@ -57,14 +57,18 @@
+ 
+ 
+ public def get(t: Table, key: value.ObjRef, hash: u32) -> Option[value.Value]:
+-    if t.count == 0:
++    return get_entries(t.entries, t.count, key, hash)
++
++
++public def get_entries(entries: list[Entry], count: int, key: value.ObjRef, hash: u32) -> Option[value.Value]:
++    if count == 0:
+         return None
+     # Read probes need neither the first tombstone nor a second slot read.
+     # Tombstones continue the chain; an empty entry is its only terminator.
+-    mask = len(t.entries) - 1
++    mask = len(entries) - 1
+     index = int(bit_and(hash, u32(mask)))
+     while True:
+-        entry = t.entries[index]
++        entry = entries[index]
+         if entry.key == value.NO_OBJ:
+             if not is_tombstone(entry):
+                 return None

@@ -1,0 +1,463 @@
+type :myl_slice = { l, l }
+type :t1547b9cfacc855fb9bb58f9ad8b2ac25929365948e8aa710d1adf52d25373b69 = align 8 { b 24 }
+type :t3997f02d8540e0dc2d2085280f1056fdd662e51c9a5375d637a04dfd496549fa = align 8 { b 56 }
+type :t521bf24a967e14727eaaec581081f48418bd372e2f25b737a26c39858cc8275b = align 8 { b 16 }
+type :t666eb6110e78040742bc487757711767c321cddacbcdea245ecd694d248b9b6b = align 8 { b 24 }
+type :t6a1d8ee86e02e1cd0e838f29c02a4dfb0139420677ae32f87781933a6f0fe536 = align 8 { b 208 }
+type :tb0496970e7987ff1234b34a45ee526983c9cbb4a143ebe0a2a2cfe7a4b4a18ee = align 8 { b 24 }
+type :te758ef64fa5399816d2e36870457817f6d0c1707702a005752c112705a835446 = align 8 { b 16 }
+export function :tb0496970e7987ff1234b34a45ee526983c9cbb4a143ebe0a2a2cfe7a4b4a18ee $myl_f_e43bc7d08fe0a2ef61b02092f4aebf37ca2645e4353980df3cf449ba767625c7(l %ctx, l %a0, l %a1, l %a2) {
+@entry
+ %trap =l add %ctx, 32
+ %empty =l alloc8 24
+ %rcg5 =l alloc8 8
+ %rcg6 =l alloc8 8
+ %rcwork =l alloc8 208
+ %l0 =l alloc8 8
+ %l1 =l alloc8 8
+ %l2 =l alloc8 8
+ %l3 =l alloc8 8
+ %l4 =l alloc8 8
+ %l5 =l alloc8 8
+ %l6 =l alloc8 24
+ %l7 =l alloc8 8
+ %l8 =l alloc8 16
+ %l9 =l alloc8 16
+ %s0 =l alloc8 8
+ %s1 =l alloc8 8
+ %s2 =l alloc8 8
+ %s3 =l alloc8 8
+ %agg33 =l alloc8 24
+ %agg43 =l alloc8 24
+ %agg45 =l alloc8 24
+ %agg61 =l alloc8 24
+ %v4 =l add %ctx, 8
+ %v7 =l loadl %v4
+ %v8 =l add %ctx, 56
+ %v9 =l loadl %v8
+ %v10 =l ceql %v7, %v9
+ jnz %v10, @limitfail2, @frameadmit0
+@limitfail2
+ call $myl_qbe_fail_frame(l %ctx)
+ jmp @entry_failure
+@frameadmit0
+ %v6 =l alloc8 32
+ %v11 =l add %ctx, 64
+ %v12 =l loadl %v11
+ %v13 =l cultl %v6, %v12
+ jnz %v13, @floorfail3, @stackadmit1
+@floorfail3
+ call $myl_qbe_fail_frame(l %ctx)
+ jmp @entry_failure
+@stackadmit1
+ %v5 =l add %ctx, 48
+ %v14 =l loadl %v5
+ storel %v14, %v6
+ %v15 =l add %v6, 8
+ storel extern $myl_f_e43bc7d08fe0a2ef61b02092f4aebf37ca2645e4353980df3cf449ba767625c7_meta, %v15
+ %v16 =l add %v6, 16
+ storel 0, %v16
+ storel %v6, %v5
+ %v17 =l add %v7, 1
+ storel %v17, %v4
+ %position =l add %v6, 16
+ storel 0, %l4
+ storel %a0, %l0
+ storel %a1, %l1
+ storel %a2, %l2
+ # rc-frame 7
+ %rcregion =l call $myl_qbe_region_mark(l %ctx)
+ storew 0, %rcg5
+ storew 0, %rcg6
+ jmp @i0
+@i0
+ %v21 =l loadl %l1
+ storel %v21, %s0
+ storel 1, %position
+ %v22 =l loadl %s0
+ %v23 =l loaduw %v22
+ %v24 =l ceql %v23, 0
+ jnz %v24, @rcarm24, @rcarmnext24
+@rcarm24
+ jmp @i58
+@rcarmnext24
+ %v25 =l ceql %v23, 1
+ jnz %v25, @rcarm25, @rcarmnext25
+@rcarm25
+ jmp @i59
+@rcarmnext25
+ %v26 =l ceql %v23, 2
+ jnz %v26, @rcarm26, @rcarmnext26
+@rcarm26
+ jmp @i60
+@rcarmnext26
+ %v27 =l ceql %v23, 3
+ jnz %v27, @rcarm27, @rcarmnext27
+@rcarm27
+ %v28 =l copy %rcwork
+ %v29 =l add %v22, 8
+ %v30 =l copy %rcregion
+ %v31 =l loadl %v29
+ storel %v31, %v28
+ storew 1, %rcg5
+ %v34 =l loadl %v28
+ storel %v34, %l3
+ storew 0, %rcg5
+ jmp @i2
+@rcarmnext27
+ jmp @failure
+@i2
+ %v36 =l loadl %l0
+ storel %v36, %s0
+ %v37 =l loadl %s0
+ %v38 =l add %v37, 0
+ %v39 =l loadl %v38
+ storel %v39, %s0
+ %v49 =l loadl %s0
+ storel %v49, %l4
+ %v50 =l loadl %l3
+ storel %v50, %s0
+ %v51 =l loadl %s0
+ storel %v51, %l5
+ %v52 =l loadl %l5
+ storel %v52, %s0
+ storel 0, %s1
+ %v53 =l loadl %s1
+ %v54 =l loadl %s0
+ %v55 =l csltl %v54, %v53
+ storel %v55, %s0
+ %v56 =l loadl %s0
+ jnz %v56, @next57, @i16
+@next57
+ %v57 =l loadl %l4
+ # myl-obj %v57
+ %v59 =l add %v57, 0
+ %v58 =l loadl %v59
+ storel %v58, %s0
+ %v60 =l loadl %s0
+ %v61 =l cugtl %v60, 9223372036854775807
+ jnz %v61, @cast_overflow62, @cast_ok62
+@cast_overflow62
+ storel 12, %position
+ call $myl_qbe_fail_cast(l %ctx, l %v60, l 320)
+ jmp @failure
+@cast_ok62
+ storel %v60, %s0
+ %v63 =l loadl %l5
+ storel %v63, %s1
+ %v64 =l loadl %s1
+ %v65 =l loadl %s0
+ %v66 =l add %v65, %v64
+ %v68 =l xor %v65, %v66
+ %v69 =l xor %v64, %v66
+ %v70 =l and %v68, %v69
+ %v67 =l csltl %v70, 0
+ jnz %v67, @overflow66, @checked66
+@overflow66
+ storel 14, %position
+ call $myl_qbe_fail_overflow_op(l %ctx, l 0, l %v65, l %v64, l 64)
+ jmp @failure
+@checked66
+ storel %v66, %s0
+ %v71 =l loadl %s0
+ storel %v71, %l5
+@i16
+ %v72 =l loadl %l5
+ storel %v72, %s0
+ %v73 =l loadl %l4
+ # myl-obj %v73
+ %v75 =l loadl %s0
+ # myl-obj %v73
+ %v76 =l loadl %v73
+ %v77 =l cultl %v75, %v76
+ jnz %v77, @success78, @failed78
+@failed78
+ storel 17, %position
+ call $myl_qbe_fail_normalized_index_bounds(l %ctx, l %v75, l %v76)
+ jmp @failure
+@success78
+ # myl-obj %v73
+ %v81 =l add %v73, 32
+ %v82 =l loadl %v81
+ # myl-elem %v82 56v
+ %v79 =l mul %v75, 56
+ %v80 =l add %v82, %v79
+ storel %v80, %s0
+ storel 18, %position
+ %v83 =l loadl %s0
+ %v84 =l loaduw %v83
+ %v85 =l ceql %v84, 0
+ jnz %v85, @rcarm85, @rcarmnext85
+@rcarm85
+ jmp @i47
+@rcarmnext85
+ %v95 =l ceql %v84, 1
+ jnz %v95, @rcarm95, @rcarmnext95
+@rcarm95
+ jmp @i48
+@rcarmnext95
+ %v105 =l ceql %v84, 2
+ jnz %v105, @rcarm105, @rcarmnext105
+@rcarm105
+ jmp @i49
+@rcarmnext105
+ %v115 =l ceql %v84, 3
+ jnz %v115, @rcarm115, @rcarmnext115
+@rcarm115
+ jmp @i50
+@rcarmnext115
+ %v125 =l ceql %v84, 4
+ jnz %v125, @rcarm125, @rcarmnext125
+@rcarm125
+ jmp @i51
+@rcarmnext125
+ %v135 =l ceql %v84, 5
+ jnz %v135, @rcarm135, @rcarmnext135
+@rcarm135
+ jmp @i52
+@rcarmnext135
+ %v145 =l ceql %v84, 6
+ jnz %v145, @rcarm145, @rcarmnext145
+@rcarm145
+ jmp @i53
+@rcarmnext145
+ %v155 =l ceql %v84, 7
+ jnz %v155, @rcarm155, @rcarmnext155
+@rcarm155
+ %v156 =l add %v83, 8
+ blit %v156, %l6, 24
+ jmp @i19
+@rcarmnext155
+ %v176 =l ceql %v84, 8
+ jnz %v176, @rcarm176, @rcarmnext176
+@rcarm176
+ jmp @i54
+@rcarmnext176
+ %v186 =l ceql %v84, 9
+ jnz %v186, @rcarm186, @rcarmnext186
+@rcarm186
+ jmp @i55
+@rcarmnext186
+ %v196 =l ceql %v84, 10
+ jnz %v196, @rcarm196, @rcarmnext196
+@rcarm196
+ jmp @i56
+@rcarmnext196
+ jmp @failure
+@i19
+ storel %l6, %s0
+ %v206 =l loadl %l0
+ storel %v206, %s0
+ %v207 =l loadl %l2
+ storel %v207, %s1
+ storel 24, %position
+ %v208 =l loadl %s0
+ %v209 =l loadl %s1
+ %v210 =l call $myl_f_a0ff172e9e450785632a25c55eafac31e4cfca2cc56a9728097332089f64b651(l %ctx, l %v208, l %v209)
+ storel %v210, %s0
+ %v211 =l loadl %trap
+ jnz %v211, @failure, @ok211
+@ok211
+ %v221 =l loadl %s0
+ storel %v221, %l7
+ storel %l6, %s0
+ %v222 =l loadl %s0
+ %v223 =l add %v222, 8
+ storel %v223, %s0
+ %v233 =l loadl %l2
+ storel %v233, %s1
+ %v234 =l loadl %l7
+ storel %v234, %s2
+ storel 30, %position
+ %v235 =l loadl %s0
+ %v236 =l loadl %s1
+ %v237 =l loadl %s2
+ %v238 =:t666eb6110e78040742bc487757711767c321cddacbcdea245ecd694d248b9b6b call $myl_f_05c0395f99e3d95f11848a23036537b613947380b701bcd66a0fa57cf17796f3(l %ctx, l %v235, l %v236, l %v237)
+ storel %v238, %s0
+ %v239 =l loadl %trap
+ jnz %v239, @failure, @ok239
+@ok239
+ storel 31, %position
+ %v249 =l loadl %s0
+ %v250 =l loaduw %v249
+ %v251 =l ceql %v250, 0
+ jnz %v251, @rcarm251, @rcarmnext251
+@rcarm251
+ jmp @i35
+@rcarmnext251
+ %v252 =l ceql %v250, 1
+ jnz %v252, @rcarm252, @rcarmnext252
+@rcarm252
+ %v253 =l copy %rcwork
+ %v254 =l add %v249, 8
+ %v255 =l copy %rcregion
+ blit %v254, %v253, 16
+ storew 1, %rcg5
+ blit %v253, %l8, 16
+ storew 0, %rcg5
+ jmp @i32
+@rcarmnext252
+ jmp @failure
+@i32
+ storel %l8, %s0
+ %v259 =l copy %agg33
+ storel 0, %v259
+ %v260 =l add %v259, 8
+ storel 0, %v260
+ %v261 =l add %v259, 16
+ storel 0, %v261
+ storew 0, %v259
+ storew 1, %rcg6
+ %v264 =l loadl %s0
+ %v265 =l add %v259, 8
+ %v266 =l copy %rcregion
+ blit %v264, %v265, 16
+ storel %v259, %s0
+ %v267 =l loadl %s0
+ # rc-exit
+ %v326 =l loadl %v6
+ storel %v326, %v5
+ %v327 =l loadl %v4
+ %v328 =l sub %v327, 1
+ storel %v328, %v4
+ ret %v267
+@i35
+ %v329 =l loadl %l0
+ storel %v329, %s0
+ storel %l6, %s1
+ %v330 =l loadl %s1
+ %v331 =l add %v330, 0
+ %v332 =l loadl %v331
+ storel %v332, %s1
+ %v342 =l loadl %l2
+ storel %v342, %s2
+ %v343 =l loadl %l7
+ storel %v343, %s3
+ storel 40, %position
+ %v344 =l loadl %s0
+ %v345 =l loadl %s1
+ %v346 =l loadl %s2
+ %v347 =l loadl %s3
+ %v348 =:t666eb6110e78040742bc487757711767c321cddacbcdea245ecd694d248b9b6b call $myl_f_a082c953b15a709042f87a7ed12ce58d92e4ab8a1bb1eedfbe4b6601fde3933a(l %ctx, l %v344, l %v345, l %v346, l %v347)
+ storel %v348, %s0
+ %v349 =l loadl %trap
+ jnz %v349, @failure, @ok349
+@ok349
+ storel 41, %position
+ %v359 =l loadl %s0
+ %v360 =l loaduw %v359
+ %v361 =l ceql %v360, 0
+ jnz %v361, @rcarm361, @rcarmnext361
+@rcarm361
+ jmp @i45
+@rcarmnext361
+ %v362 =l ceql %v360, 1
+ jnz %v362, @rcarm362, @rcarmnext362
+@rcarm362
+ %v363 =l copy %rcwork
+ %v364 =l add %v359, 8
+ %v365 =l copy %rcregion
+ blit %v364, %v363, 16
+ storew 1, %rcg5
+ blit %v363, %l9, 16
+ storew 0, %rcg5
+ jmp @i42
+@rcarmnext362
+ jmp @failure
+@i42
+ storel %l9, %s0
+ %v369 =l copy %agg43
+ storel 0, %v369
+ %v370 =l add %v369, 8
+ storel 0, %v370
+ %v371 =l add %v369, 16
+ storel 0, %v371
+ storew 1, %v369
+ storew 1, %rcg6
+ %v374 =l loadl %s0
+ %v375 =l add %v369, 8
+ %v376 =l copy %rcregion
+ blit %v374, %v375, 16
+ storel %v369, %s0
+ %v377 =l loadl %s0
+ # rc-exit
+ %v436 =l loadl %v6
+ storel %v436, %v5
+ %v437 =l loadl %v4
+ %v438 =l sub %v437, 1
+ storel %v438, %v4
+ ret %v377
+@i45
+ %v439 =l copy %agg45
+ storel 0, %v439
+ %v440 =l add %v439, 8
+ storel 0, %v440
+ %v441 =l add %v439, 16
+ storel 0, %v441
+ storew 2, %v439
+ storel %v439, %s0
+ %v442 =l loadl %s0
+ # rc-exit
+ %v501 =l loadl %v6
+ storel %v501, %v5
+ %v502 =l loadl %v4
+ %v503 =l sub %v502, 1
+ storel %v503, %v4
+ ret %v442
+@i47
+ jmp @i57
+@i48
+ jmp @i57
+@i49
+ jmp @i57
+@i50
+ jmp @i57
+@i51
+ jmp @i57
+@i52
+ jmp @i57
+@i53
+ jmp @i57
+@i54
+ jmp @i57
+@i55
+ jmp @i57
+@i56
+ jmp @i57
+@i57
+ jmp @i61
+@i58
+ jmp @i61
+@i59
+ jmp @i61
+@i60
+ jmp @i61
+@i61
+ %v504 =l copy %agg61
+ storel 0, %v504
+ %v505 =l add %v504, 8
+ storel 0, %v505
+ %v506 =l add %v504, 16
+ storel 0, %v506
+ storew 3, %v504
+ storel %v504, %s0
+ %v507 =l loadl %s0
+ # rc-exit
+ %v566 =l loadl %v6
+ storel %v566, %v5
+ %v567 =l loadl %v4
+ %v568 =l sub %v567, 1
+ storel %v568, %v4
+ ret %v507
+@failure
+ %v569 =l loadl %v6
+ storel %v569, %v5
+ %v570 =l loadl %v4
+ %v571 =l sub %v570, 1
+ storel %v571, %v4
+ call $memset(l %empty, w 0, l 24)
+ ret %empty
+@entry_failure
+ call $memset(l %empty, w 0, l 24)
+ ret %empty
+}

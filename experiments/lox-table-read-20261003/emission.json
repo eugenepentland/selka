@@ -1,0 +1,329 @@
+{
+  "compiler_sha256": "d14a704083bcc5f5174932a751f7d9dda73100dbd62403626b42b52436cad040",
+  "variants": {
+    "control": {
+      "emitted_json_sha256": "7445c19afbcdb93201acd6eaf7aa9a0f3cf1dd5ad519bcae275fce453a26f9ad",
+      "functions": {
+        "heap::class_method_hash": {
+          "symbol": "myl_f_a082c953b15a709042f87a7ed12ce58d92e4ab8a1bb1eedfbe4b6601fde3933a",
+          "lines": 494,
+          "call_sites": 18,
+          "ownership_call_sites": 0,
+          "ownership_calls": [],
+          "blits": [
+            "blit %v131, %l6, 24"
+          ]
+        },
+        "heap::instance_member": {
+          "symbol": "myl_f_e43bc7d08fe0a2ef61b02092f4aebf37ca2645e4353980df3cf449ba767625c7",
+          "lines": 463,
+          "call_sites": 11,
+          "ownership_call_sites": 0,
+          "ownership_calls": [],
+          "blits": [
+            "blit %v156, %l6, 24",
+            "blit %v254, %v253, 16",
+            "blit %v253, %l8, 16",
+            "blit %v264, %v265, 16",
+            "blit %v364, %v363, 16",
+            "blit %v363, %l9, 16",
+            "blit %v374, %v375, 16"
+          ]
+        },
+        "table::get": {
+          "symbol": "myl_f_05c0395f99e3d95f11848a23036537b613947380b701bcd66a0fa57cf17796f3",
+          "lines": 388,
+          "call_sites": 10,
+          "ownership_call_sites": 0,
+          "ownership_calls": [],
+          "blits": [
+            "blit %v113, %v114, 32",
+            "blit %v122, %v123, 32",
+            "blit %v152, %v151, 16"
+          ]
+        }
+      }
+    },
+    "wrapper": {
+      "emitted_json_sha256": "63739e6dbf0e2245beab90ca4c16c1547a4ec6555f03985052e401ae0c42937a",
+      "functions": {
+        "heap::class_method_hash": {
+          "symbol": "myl_f_a082c953b15a709042f87a7ed12ce58d92e4ab8a1bb1eedfbe4b6601fde3933a",
+          "lines": 494,
+          "call_sites": 18,
+          "ownership_call_sites": 0,
+          "ownership_calls": [],
+          "blits": [
+            "blit %v131, %l6, 24"
+          ]
+        },
+        "heap::instance_member": {
+          "symbol": "myl_f_e43bc7d08fe0a2ef61b02092f4aebf37ca2645e4353980df3cf449ba767625c7",
+          "lines": 463,
+          "call_sites": 11,
+          "ownership_call_sites": 0,
+          "ownership_calls": [],
+          "blits": [
+            "blit %v156, %l6, 24",
+            "blit %v254, %v253, 16",
+            "blit %v253, %l8, 16",
+            "blit %v264, %v265, 16",
+            "blit %v364, %v363, 16",
+            "blit %v363, %l9, 16",
+            "blit %v374, %v375, 16"
+          ]
+        },
+        "table::get": {
+          "symbol": "myl_f_05c0395f99e3d95f11848a23036537b613947380b701bcd66a0fa57cf17796f3",
+          "lines": 94,
+          "call_sites": 5,
+          "ownership_call_sites": 0,
+          "ownership_calls": [],
+          "blits": []
+        },
+        "table::get_entries": {
+          "symbol": "myl_f_4192a2bf8c79d6c1482077147b62da5992111b1e9c0842eb498b5ef650f2e38f",
+          "lines": 380,
+          "call_sites": 10,
+          "ownership_call_sites": 0,
+          "ownership_calls": [],
+          "blits": [
+            "blit %v114, %v115, 32",
+            "blit %v146, %v145, 16"
+          ]
+        }
+      }
+    },
+    "direct": {
+      "emitted_json_sha256": "34a14d85f9c5f86648b1bbc8be840a437e2aabf82e7fcf0e5d1692d60f6d7e34",
+      "functions": {
+        "heap::class_method_hash": {
+          "symbol": "myl_f_a082c953b15a709042f87a7ed12ce58d92e4ab8a1bb1eedfbe4b6601fde3933a",
+          "lines": 508,
+          "call_sites": 18,
+          "ownership_call_sites": 0,
+          "ownership_calls": [],
+          "blits": [
+            "blit %v131, %l6, 24"
+          ]
+        },
+        "heap::instance_member": {
+          "symbol": "myl_f_e43bc7d08fe0a2ef61b02092f4aebf37ca2645e4353980df3cf449ba767625c7",
+          "lines": 476,
+          "call_sites": 11,
+          "ownership_call_sites": 0,
+          "ownership_calls": [],
+          "blits": [
+            "blit %v156, %l6, 24",
+            "blit %v318, %v317, 16",
+            "blit %v317, %l8, 16",
+            "blit %v328, %v329, 16",
+            "blit %v428, %v427, 16",
+            "blit %v427, %l9, 16",
+            "blit %v438, %v439, 16"
+          ]
+        },
+        "table::get": {
+          "symbol": "myl_f_05c0395f99e3d95f11848a23036537b613947380b701bcd66a0fa57cf17796f3",
+          "lines": 94,
+          "call_sites": 5,
+          "ownership_call_sites": 0,
+          "ownership_calls": [],
+          "blits": []
+        },
+        "table::get_entries": {
+          "symbol": "myl_f_4192a2bf8c79d6c1482077147b62da5992111b1e9c0842eb498b5ef650f2e38f",
+          "lines": 380,
+          "call_sites": 10,
+          "ownership_call_sites": 0,
+          "ownership_calls": [],
+          "blits": [
+            "blit %v114, %v115, 32",
+            "blit %v146, %v145, 16"
+          ]
+        }
+      }
+    },
+    "local": {
+      "emitted_json_sha256": "2ce84aeab3ab5c78ad7d5517cf5f97dce581766ead6996117ecff10bdc981f95",
+      "functions": {
+        "heap::class_method_hash": {
+          "symbol": "myl_f_a082c953b15a709042f87a7ed12ce58d92e4ab8a1bb1eedfbe4b6601fde3933a",
+          "lines": 494,
+          "call_sites": 18,
+          "ownership_call_sites": 0,
+          "ownership_calls": [],
+          "blits": [
+            "blit %v131, %l6, 24"
+          ]
+        },
+        "heap::instance_member": {
+          "symbol": "myl_f_e43bc7d08fe0a2ef61b02092f4aebf37ca2645e4353980df3cf449ba767625c7",
+          "lines": 463,
+          "call_sites": 11,
+          "ownership_call_sites": 0,
+          "ownership_calls": [],
+          "blits": [
+            "blit %v156, %l6, 24",
+            "blit %v254, %v253, 16",
+            "blit %v253, %l8, 16",
+            "blit %v264, %v265, 16",
+            "blit %v364, %v363, 16",
+            "blit %v363, %l9, 16",
+            "blit %v374, %v375, 16"
+          ]
+        },
+        "table::get": {
+          "symbol": "myl_f_05c0395f99e3d95f11848a23036537b613947380b701bcd66a0fa57cf17796f3",
+          "lines": 832,
+          "call_sites": 27,
+          "ownership_call_sites": 10,
+          "ownership_calls": [
+            "call $myl_t_6b6297bad5aab74518ce0d5425e1487ea3b0af713c21ba4b6f4440e5c98b2a9c_rcg_unloan(l %v51, l %v47)",
+            "call $myl_t_6b6297bad5aab74518ce0d5425e1487ea3b0af713c21ba4b6f4440e5c98b2a9c_rcg_drop(l %v66, l %v47)",
+            "%v131 =w call $myl_t_6b6297bad5aab74518ce0d5425e1487ea3b0af713c21ba4b6f4440e5c98b2a9c_rcg_take(l %heap, l %v115, l %v106, w %v116)",
+            "%v154 =w call $myl_t_6b6297bad5aab74518ce0d5425e1487ea3b0af713c21ba4b6f4440e5c98b2a9c_rcg_retain(l %heap, l %v138, l %v106, w %v139)",
+            "call $myl_t_6b6297bad5aab74518ce0d5425e1487ea3b0af713c21ba4b6f4440e5c98b2a9c_rcg_unloan(l %v205, l %v201)",
+            "call $myl_t_6b6297bad5aab74518ce0d5425e1487ea3b0af713c21ba4b6f4440e5c98b2a9c_rcg_drop(l %v220, l %v201)",
+            "call $myl_t_6b6297bad5aab74518ce0d5425e1487ea3b0af713c21ba4b6f4440e5c98b2a9c_rcg_unloan(l %v346, l %v342)",
+            "call $myl_t_6b6297bad5aab74518ce0d5425e1487ea3b0af713c21ba4b6f4440e5c98b2a9c_rcg_drop(l %v361, l %v342)",
+            "call $myl_t_6b6297bad5aab74518ce0d5425e1487ea3b0af713c21ba4b6f4440e5c98b2a9c_rcg_unloan(l %v417, l %v413)",
+            "call $myl_t_6b6297bad5aab74518ce0d5425e1487ea3b0af713c21ba4b6f4440e5c98b2a9c_rcg_drop(l %v432, l %v413)"
+          ],
+          "blits": [
+            "blit %v106, %v115, 8",
+            "blit %v235, %v197, 8",
+            "blit %v312, %l9, 32",
+            "blit %v320, %l10, 32",
+            "blit %v403, %v404, 16"
+          ]
+        }
+      }
+    }
+  },
+  "notes": [
+    "Counts are static, not executed instruction or timing observations.",
+    "Current table.get emits zero RC retain/loan/drop/unloan calls.",
+    "Full copied Entry is unowned; materialization and invariant analysis change, not the probe algorithm."
+  ],
+  "machine_code": {
+    "control-table-get-llvm.asm": {
+      "sha256": "ccc319a04856bc9e1dc2a35ab2ad0374c20155da57193da3b215974822547eea",
+      "decoded_instruction_lines": 104,
+      "calls": [
+        "10d9853:\te8 f8 6d 0a 00       \tcall   1180650 <myl_qbe_fail_overflow_op>",
+        "10d9864:\te8 27 6d 0a 00       \tcall   1180590 <myl_qbe_fail_normalized_index_bounds>",
+        "10d9877:\te8 34 6e 0a 00       \tcall   11806b0 <myl_qbe_fail_cast>",
+        "10d9887:\te8 24 6e 0a 00       \tcall   11806b0 <myl_qbe_fail_cast>",
+        "10d9897:\te8 14 6e 0a 00       \tcall   11806b0 <myl_qbe_fail_cast>"
+      ]
+    },
+    "control-table-get-qbe.asm": {
+      "sha256": "531f19691d37124a75a21f83997b041930dba4f04d7b8e4a756c065a981f7ace",
+      "decoded_instruction_lines": 196,
+      "calls": [
+        "111b74e:\te8 4d f8 03 00       \tcall   115afa0 <myl_qbe_fail_normalized_index_bounds>",
+        "111b76f:\te8 3c fa 03 00       \tcall   115b1b0 <myl_qbe_fail_overflow_op>",
+        "111b781:\te8 6a fb 03 00       \tcall   115b2f0 <myl_qbe_fail_cast>",
+        "111b832:\te8 19 bf 05 00       \tcall   1177750 <compiler_rt.fastMemset>",
+        "111b8a3:\te8 08 f9 03 00       \tcall   115b1b0 <myl_qbe_fail_overflow_op>",
+        "111b8d2:\te8 19 fa 03 00       \tcall   115b2f0 <myl_qbe_fail_cast>",
+        "111b8ec:\te8 bf f8 03 00       \tcall   115b1b0 <myl_qbe_fail_overflow_op>",
+        "111b8f8:\te8 f3 f9 03 00       \tcall   115b2f0 <myl_qbe_fail_cast>"
+      ]
+    },
+    "direct-table-get-llvm.asm": {
+      "sha256": "e99cbd310984fde7052cf8a9996563e91b03e0c17facc574c0116f5764467c42",
+      "decoded_instruction_lines": 0,
+      "calls": []
+    },
+    "direct-table-get-qbe.asm": {
+      "sha256": "dc3646a9bed5ee350bbdde97b1e345500f22a0414c8e22dfc42a42fbc8e8e278",
+      "decoded_instruction_lines": 32,
+      "calls": [
+        "111b737:\te8 64 02 00 00       \tcall   111b9a0 <myl_f_4192a2bf8c79d6c1482077147b62da5992111b1e9c0842eb498b5ef650f2e38f>",
+        "111b75b:\te8 30 fd 03 00       \tcall   115b490 <myl_qbe_fail_frame>"
+      ]
+    },
+    "direct-table-get_entries-llvm.asm": {
+      "sha256": "925229c21ea3cab82e42e560f2837aa9560a960d68062a8e017c9e6183733b37",
+      "decoded_instruction_lines": 72,
+      "calls": [
+        "10f392a:\te8 71 cf 08 00       \tcall   11808a0 <myl_qbe_fail_overflow_op>",
+        "10f393a:\te8 c1 cf 08 00       \tcall   1180900 <myl_qbe_fail_cast>",
+        "10f394a:\te8 b1 cf 08 00       \tcall   1180900 <myl_qbe_fail_cast>"
+      ]
+    },
+    "direct-table-get_entries-qbe.asm": {
+      "sha256": "da6e6b69b48b6f5aee1428be6abf8dbca340637f5ff9624360a4e47ef086adf4",
+      "decoded_instruction_lines": 186,
+      "calls": [
+        "111ba8f:\te8 2c f6 03 00       \tcall   115b0c0 <myl_qbe_fail_normalized_index_bounds>",
+        "111bab0:\te8 1b f8 03 00       \tcall   115b2d0 <myl_qbe_fail_overflow_op>",
+        "111bac5:\te8 46 f9 03 00       \tcall   115b410 <myl_qbe_fail_cast>",
+        "111bb76:\te8 f5 bc 05 00       \tcall   1177870 <compiler_rt.fastMemset>",
+        "111bbe7:\te8 e4 f6 03 00       \tcall   115b2d0 <myl_qbe_fail_overflow_op>",
+        "111bc19:\te8 f2 f7 03 00       \tcall   115b410 <myl_qbe_fail_cast>",
+        "111bc33:\te8 98 f6 03 00       \tcall   115b2d0 <myl_qbe_fail_overflow_op>",
+        "111bc3f:\te8 cc f7 03 00       \tcall   115b410 <myl_qbe_fail_cast>"
+      ]
+    }
+  },
+  "textual_probe_checks": {
+    "public_get_original_body_identical": true,
+    "new_probe_body_identical_after_parameter_projection": true
+  },
+  "final_machine_code": {
+    "llvm": {
+      "command": [
+        "objdump",
+        "-d",
+        "--disassemble=myl_f_4192a2bf8c79d6c1482077147b62da5992111b1e9c0842eb498b5ef650f2e38f",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-ownership-inline-20261003/.tmp-lox-table-read-20261003/bin/final-table-entries-llvm"
+      ],
+      "binary_sha256": "8ce63fd407b1f175c650cf3640aad28589f4f1188432e67c3ce8b0d9fd31402d",
+      "assembly_sha256": "a2253508dd2cc7ba7152a567648f3be751332ea46a769433b9c9b9948b75a50c",
+      "decoded_instruction_lines": 72,
+      "calls": [
+        "10f392a:\te8 71 cf 08 00       \tcall   11808a0 <myl_qbe_fail_overflow_op>",
+        "10f393a:\te8 c1 cf 08 00       \tcall   1180900 <myl_qbe_fail_cast>",
+        "10f394a:\te8 b1 cf 08 00       \tcall   1180900 <myl_qbe_fail_cast>"
+      ]
+    },
+    "qbe": {
+      "command": [
+        "objdump",
+        "-d",
+        "--disassemble=myl_f_4192a2bf8c79d6c1482077147b62da5992111b1e9c0842eb498b5ef650f2e38f",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-ownership-inline-20261003/.tmp-lox-table-read-20261003/bin/final-table-entries-qbe"
+      ],
+      "binary_sha256": "03647887c47eb14a40aafbdebbb47931208d3af81e899595a55d13ec7eb88f54",
+      "assembly_sha256": "ae47ddd0e2f801172be9e32b1009efc965ab89dc02e71533652601d4435b5190",
+      "decoded_instruction_lines": 186,
+      "calls": [
+        "111bd4f:\te8 2c f6 03 00       \tcall   115b380 <myl_qbe_fail_normalized_index_bounds>",
+        "111bd70:\te8 1b f8 03 00       \tcall   115b590 <myl_qbe_fail_overflow_op>",
+        "111bd85:\te8 46 f9 03 00       \tcall   115b6d0 <myl_qbe_fail_cast>",
+        "111be36:\te8 f5 bc 05 00       \tcall   1177b30 <compiler_rt.fastMemset>",
+        "111bea7:\te8 e4 f6 03 00       \tcall   115b590 <myl_qbe_fail_overflow_op>",
+        "111bed9:\te8 f2 f7 03 00       \tcall   115b6d0 <myl_qbe_fail_cast>",
+        "111bef3:\te8 98 f6 03 00       \tcall   115b590 <myl_qbe_fail_overflow_op>",
+        "111beff:\te8 cc f7 03 00       \tcall   115b6d0 <myl_qbe_fail_cast>"
+      ]
+    }
+  },
+  "emission_recipe": {
+    "command": [
+      "scripts/build-slot.sh",
+      "build",
+      "FROZEN_COMPILER",
+      "emit-project-qbe",
+      "ARM/main.my",
+      "--drop-step-checks",
+      "--rc-runtime",
+      "--cache-dir=PRIVATE_CACHE"
+    ],
+    "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-ownership-inline-20261003/.tmp-lox-table-read-20261003/tmp",
+    "initial_usage_error": "--cache-dir PRIVATE_CACHE was rejected, status2; archived separate *-emitted-usage.log; accepted command uses ="
+  }
+}

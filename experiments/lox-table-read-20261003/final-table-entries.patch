@@ -1,0 +1,120 @@
+--- a/heap.my
++++ b/heap.my
+@@ -218,7 +218,7 @@
+ public def class_method(rt: Runtime, ref: value.ObjRef, name: value.ObjRef) -> Option[value.Value]:
+     match rt.objects[ref]:
+         case object.Obj.klass(payload):
+-            return table.get(payload.methods, name, string_hash(rt, name))
++            return table.get_entries(payload.methods.entries, payload.methods.count, name, string_hash(rt, name))
+         case _:
+             assert False, "object is not a class"
+             return None
+@@ -227,7 +227,7 @@
+ public def class_method_hash(rt: Runtime, ref: value.ObjRef, name: value.ObjRef, hash: u32) -> Option[value.Value]:
+     match rt.objects[ref]:
+         case object.Obj.klass(payload):
+-            return table.get(payload.methods, name, hash)
++            return table.get_entries(payload.methods.entries, payload.methods.count, name, hash)
+         case _:
+             assert False, "object is not a class"
+             return None
+@@ -248,7 +248,7 @@
+             match rt.objects[ref]:
+                 case object.Obj.instance(instance):
+                     hash = string_hash(rt, name)
+-                    match table.get(instance.fields, name, hash):
++                    match table.get_entries(instance.fields.entries, instance.fields.count, name, hash):
+                         case Some(field):
+                             return InstanceMember.field(field)
+                         case None:
+--- a/interpreter.my
++++ b/interpreter.my
+@@ -141,7 +141,7 @@
+ 
+ def get_variable(rt: mut heap.Runtime, name: value.ObjRef, hops: int, slot: int, line: int) -> Result[None, RuntimeError]:
+     if hops == ast.GLOBAL:
+-        match table.get(rt.globals, name, heap.string_hash(rt, name)):
++        match table.get_entries(rt.globals.entries, rt.globals.count, name, heap.string_hash(rt, name)):
+             case Some(found):
+                 heap.push(mut rt, found)
+                 return Ok(None)
+@@ -155,7 +155,7 @@
+ def assign(program: ast.Program, rt: mut heap.Runtime, o: mut output.Output, it: mut Interpreter, node: ast.AssignExpr) -> Result[None, RuntimeError]:
+     evaluate(program, mut rt, mut o, mut it, node.assigned)?
+     if node.hops == ast.GLOBAL:
+-        match table.get(rt.globals, node.name_ref, heap.string_hash(rt, node.name_ref)):
++        match table.get_entries(rt.globals.entries, rt.globals.count, node.name_ref, heap.string_hash(rt, node.name_ref)):
+             case Some(_):
+                 _ = heap.set_global(mut rt, node.name_ref, heap.peek(rt, 0))
+             case None:
+--- a/table.my
++++ b/table.my
+@@ -73,6 +73,24 @@
+         index = bit_and(index + 1, mask)
+ 
+ 
++
++public def get_entries(entries: list[Entry], count: int, key: value.ObjRef, hash: u32) -> Option[value.Value]:
++    if count == 0:
++        return None
++    # Read probes need neither the first tombstone nor a second slot read.
++    # Tombstones continue the chain; an empty entry is its only terminator.
++    mask = len(entries) - 1
++    index = int(bit_and(hash, u32(mask)))
++    while True:
++        entry = entries[index]
++        if entry.key == value.NO_OBJ:
++            if not is_tombstone(entry):
++                return None
++        elif entry.key == key:
++            return Some(entry.value)
++        index = bit_and(index + 1, mask)
++
++
+ def adjust_capacity(t: mut Table, new_capacity: int):
+     entries: list[Entry] = []
+     i = 0
+--- a/table_test.my
++++ b/table_test.my
+@@ -104,3 +104,30 @@
+     _ = table.set(mut t, 400, 7u32, value.Value.number(9.0))
+     _ = table.set(mut t, 500, 7u32, value.Value.boolean(True))
+     return nil_present and tail_present and missing and table.get(t, 400, 7u32) == Some(value.Value.number(9.0)) and table.get(t, 500, 7u32) == Some(value.Value.boolean(True))
++
++
++# Keep both the record and projected entries alive while writes replace,
++# delete, reuse a tombstone, and grow a chain that wraps through slot zero.
++public def test_table_entries_read_preserves_snapshot() -> bool:
++    t = table.new_table()
++    empty = table.get_entries(t.entries, t.count, 100, 7u32).is_none()
++    _ = table.set(mut t, 100, 7u32, value.Value.number(1.0))
++    _ = table.set(mut t, 200, 7u32, value.Value.nil)
++    _ = table.set(mut t, 300, 7u32, value.Value.boolean(False))
++    _ = table.set(mut t, 400, 7u32, value.Value.number(4.0))
++    _ = table.delete(mut t, 100, 7u32)
++    snapshot = t
++    entries = t.entries
++    count = t.count
++    _ = table.set(mut t, 400, 7u32, value.Value.number(9.0))
++    _ = table.delete(mut t, 200, 7u32)
++    _ = table.set(mut t, 500, 7u32, value.Value.boolean(True))
++    _ = table.set(mut t, 600, 7u32, value.Value.number(6.0))
++    _ = table.set(mut t, 700, 7u32, value.Value.number(7.0))
++    _ = table.set(mut t, 800, 7u32, value.Value.number(8.0))
++    _ = table.set(mut t, 900, 7u32, value.Value.number(9.0))
++    record_unchanged = table.get(snapshot, 200, 7u32) == Some(value.Value.nil) and table.get(snapshot, 400, 7u32) == Some(value.Value.number(4.0))
++    entries_unchanged = table.get_entries(entries, count, 200, 7u32) == Some(value.Value.nil) and table.get_entries(entries, count, 400, 7u32) == Some(value.Value.number(4.0))
++    missing_unchanged = table.get_entries(entries, count, 100, 7u32).is_none() and table.get_entries(entries, count, 500, 7u32).is_none() and table.get_entries(entries, count, value.NO_OBJ, 7u32).is_none()
++    live_changed = table.get_entries(t.entries, t.count, 200, 7u32).is_none() and table.get_entries(t.entries, t.count, 400, 7u32) == Some(value.Value.number(9.0)) and table.get_entries(t.entries, t.count, 500, 7u32) == Some(value.Value.boolean(True))
++    return empty and record_unchanged and entries_unchanged and missing_unchanged and live_changed and table.capacity(snapshot) == 8 and table.capacity(t) == 16
+--- a/vm.my
++++ b/vm.my
+@@ -311,7 +311,7 @@
+ 
+ def get_global(rt: mut heap.Runtime, o: mut output.Output, frame: mut ExecFrame) -> bool:
+     name = read_string(mut frame)
+-    match table.get(rt.globals, name, heap.string_hash(rt, name)):
++    match table.get_entries(rt.globals.entries, rt.globals.count, name, heap.string_hash(rt, name)):
+         case Some(found):
+             heap.push(mut rt, found)
+             return True

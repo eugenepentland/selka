@@ -1,0 +1,10 @@
+{
+  "binaries": {
+    "control-llvm": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-ownership-inline-20261003/.tmp-lox-sweep/bin/final-sweep-llvm",
+    "control-qbe": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-ownership-inline-20261003/.tmp-lox-sweep/bin/final-sweep-qbe",
+    "final-table-entries-llvm": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-ownership-inline-20261003/.tmp-lox-table-read-20261003/bin/final-table-entries-llvm",
+    "final-table-entries-qbe": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-ownership-inline-20261003/.tmp-lox-table-read-20261003/bin/final-table-entries-qbe",
+    "final-table-entries-gc-llvm": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-ownership-inline-20261003/.tmp-lox-table-read-20261003/bin/final-table-entries-gc-llvm",
+    "final-table-entries-gc-qbe": "/home/epentland/ai/canopy/mylang-worktrees/codex-lox-ownership-inline-20261003/.tmp-lox-table-read-20261003/bin/final-table-entries-gc-qbe"
+  }
+}

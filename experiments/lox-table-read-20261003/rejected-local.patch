@@ -1,0 +1,16 @@
+--- a/table.my
++++ b/table.my
+@@ -61,10 +61,11 @@
+         return None
+     # Read probes need neither the first tombstone nor a second slot read.
+     # Tombstones continue the chain; an empty entry is its only terminator.
+-    mask = len(t.entries) - 1
++    entries = t.entries
++    mask = len(entries) - 1
+     index = int(bit_and(hash, u32(mask)))
+     while True:
+-        entry = t.entries[index]
++        entry = entries[index]
+         if entry.key == value.NO_OBJ:
+             if not is_tombstone(entry):
+                 return None
