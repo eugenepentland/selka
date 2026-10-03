@@ -35,6 +35,16 @@ class ProfileTests(unittest.TestCase):
         self.assertNotIn('target_fraction',result)
         self.assertFalse(any('coverage' in key or 'covered' in key for key in result))
 
+    def test_sort_and_transfer_label_only_named_implementations(self):
+        binary = '/tmp/collections-my-qbe'
+        samples = [(1, 'sort_i64', binary), (2, 'keyed_sort_words', binary),
+                   (3, 'transfer_pointer', binary), (4, 'finish_clones', binary),
+                   (5, 'main::batch_result', binary), (6, 'sort_i64', '/tmp/unrelated.so')]
+        result = classify(samples, binary, load_rules(RULES_PATH), {}, min_samples=1)
+        self.assertEqual(result['primitive_samples'], 4)
+        self.assertEqual(result['unclassified_samples'], 2)
+        self.assertFalse(any('coverage' in key or 'covered' in key for key in result))
+
     def test_scaling_cap(self):
         count,meta=scale_iterations({'iterations':100},[{'kernel_ns':100000000}],1,500)
         self.assertEqual(count,500)

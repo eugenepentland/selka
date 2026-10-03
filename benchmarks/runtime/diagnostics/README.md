@@ -59,3 +59,21 @@ unknown arms, incorrect checksums and altered statistics. It does not attest
 that receipts were produced by an independent authority or replace live hash
 checks in the capture tools. Exact gzip evidence can be decompressed before
 replay; raw perf archives preserve their original reports and source paths.
+
+`holdouts.py` checks all six frozen arms on 86 additional input plans: two
+unseen seeds and nearby non-power-of-two sizes for every case, plus four-times
+larger scan, map and retained/nested allocation sets. All 516 checks retain
+oracle results, commands and executable/source hashes. The ordinary clock
+protocol is validated and every elapsed value discarded. These runs support
+correctness and robustness only; they do not alter acceptance calibrations.
+The fixed generators keep their original Unicode/error/alias topology. Empty
+inputs and changed semantic shapes must cite separately identified tests in
+the final evidence notes.
+
+```bash
+python3 benchmarks/runtime/diagnostics/holdouts.py \
+  --manifest .mylang-cache/runtime-final/runner/manifest.json \
+  --output benchmarks/runtime/candidates/final-holdouts-20261003.json
+python3 benchmarks/runtime/diagnostics/holdouts.py \
+  --verify benchmarks/runtime/candidates/final-holdouts-20261003.json
+```
