@@ -301,6 +301,8 @@ pub fn buildForRun(gpa: std.mem.Allocator, request: RunRequest) Error!RunOutcome
 /// of its test library (entry, object cache, mode, tools), the emission
 /// switches a library in that mode is built with, and the compiler identity.
 pub const TestRequest = struct {
+    /// A foreign test compiler keeps the established emission and argv.
+    foreign_producer: bool = false,
     settings: options.Options,
     switches: native_build.Switches,
     identity: []const u8,
@@ -385,7 +387,7 @@ pub fn openTests(context: fs.Context, request: TestRequest) Error!TestsOutcome {
     // MODULE-TEST-6: a run waits for nobody: while a seeder or another run
     // holds its program's variant or the standard modules' shared one, the
     // whole-program run answers (`Fallback.busy`). Only the seeder waits.
-    const settings: Settings = .{ .parsed = request.settings, .switches = request.switches, .identity = request.identity, .mode = .tests, .wait = request.cold == null };
+    const settings: Settings = .{ .parsed = request.settings, .switches = request.switches, .identity = request.identity, .mode = .tests, .wait = request.cold == null, .foreign_producer = request.foreign_producer };
     switch (try Session.open(&tests.session, context, settings)) {
         .ready => {},
         .status => |status| return .{ .status = status },
@@ -494,7 +496,7 @@ const Mode = enum { build, check, tests };
 
 /// What a session is opened with; `wait` false leaves a held variant to the
 /// whole-program path (`Fallback.busy`) instead of waiting for it.
-const Settings = struct { parsed: options.Options, switches: native_build.Switches, identity: []const u8, mode: Mode = .build, wait: bool = true };
+const Settings = struct { parsed: options.Options, switches: native_build.Switches, identity: []const u8, mode: Mode = .build, wait: bool = true, foreign_producer: bool = false };
 
 /// How a check session runs: as the detached seeder, and from how many
 /// modules a first check leaves the answer to the whole-program check.
@@ -533,7 +535,9 @@ const Session = struct {
             // A test run's compiles write test documents too.
             .environment = if (settings.mode == .tests) try std.mem.concat(a, u8, &.{ ready.cache.environment, "\x00tests" }) else ready.cache.environment,
         } else .{ .root = try native_build.cacheRoot(context, parsed), .environment = "\x00check" };
-        const key: VariantKey = .{ .switches = settings.switches, .place = place, .identity = settings.identity, .source = source };
+        var switches = settings.switches;
+        if (prepared) |ready| switches.native_variants = native_build.nativeVariantPolicy(ready.cache, settings.foreign_producer or context.environ.get("MYLANG_HOST_COMPILER") != null);
+        const key: VariantKey = .{ .switches = switches, .place = place, .identity = settings.identity, .source = source };
         self.* = .{
             .prepared = prepared,
             .start = std.Io.Timestamp.now(context.io, .awake),
@@ -544,7 +548,7 @@ const Session = struct {
                 .entry = .{ .root = entry.root, .name = entry.name, .bytes = entry.bytes, .path = source },
                 .variant = try variantDirectory(context, key),
                 .standard = try variantDirectory(context, .{ .switches = key.switches, .place = place, .identity = key.identity, .source = null }),
-                .switches = settings.switches,
+                .switches = switches,
                 .configured = configured,
                 .mode = settings.mode,
             },
@@ -668,6 +672,7 @@ fn variantDirectory(context: fs.Context, key: VariantKey) ![]const u8 {
     hash.update(&.{ @intFromBool(language.value_semantics.enabled()), @intFromBool(language.value_semantics.counting()) });
     const switches = key.switches;
     hash.update(&.{ @intFromBool(switches.drop_debug), @intFromBool(switches.step_checks), @intFromBool(switches.frame_checks) });
+    if (switches.native_variants != .original) frame(&hash, switches.native_variants.identity());
     frame(&hash, key.place.environment);
     var digest: [32]u8 = undefined;
     hash.final(&digest);

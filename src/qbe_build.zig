@@ -320,7 +320,9 @@ fn build(context: fs.Context, parsed: options.Options, controls: []const []const
         } else if (!std.mem.eql(u8, parsed.cache, options.default_cache)) {
             try arguments.append(a, try std.fmt.allocPrint(a, "--cache-dir={s}", .{parsed.cache}));
         }
-        try arguments.appendSlice(a, try frontendSwitches(a, emissionSwitches(parsed)));
+        var switches = emissionSwitches(parsed);
+        switches.native_variants = nativeVariantPolicy(cache, context.environ.get("MYLANG_HOST_COMPILER") != null);
+        try arguments.appendSlice(a, try frontendSwitches(a, switches));
         if (selectFile(parsed.link_arguments)) |path| {
             try arguments.append(a, try std.fmt.allocPrint(a, "--select-file={s}", .{path}));
             // Forward the work-report request for selective test builds so native-test
@@ -572,7 +574,7 @@ fn manifestFile(args: []const []const u8) ?[]const u8 {
 
 /// What a build's frontend lowers and emits under: whether `debug` lines are
 /// dropped and which accounting and value guards the units carry.
-pub const Switches = struct { drop_debug: bool, step_checks: bool, frame_checks: bool };
+pub const Switches = struct { drop_debug: bool, step_checks: bool, frame_checks: bool, native_variants: contract.native_variants.Policy = .original };
 
 /// The switches `build` emits a program under. A ReleaseFast `build` drops
 /// `debug` lines in lowering; `run` keeps them. A ReleaseFast executable that
@@ -590,9 +592,15 @@ pub fn emissionSwitches(parsed: options.Options) Switches {
     };
 }
 
+/// Select from the actual resolved backend, including the legacy LLVM adapter.
+pub fn nativeVariantPolicy(cache: cache_api.Cache, foreign: bool) contract.native_variants.Policy {
+    return .forBackend(cache.codegen.llvm, foreign);
+}
+
 /// The frontend flags that spell `switches`.
 pub fn frontendSwitches(allocator: std.mem.Allocator, switches: Switches) error{OutOfMemory}![]const []const u8 {
     var out: std.ArrayList([]const u8) = .empty;
+    if (switches.native_variants.flag()) |flag| try out.append(allocator, flag);
     if (switches.drop_debug) try out.append(allocator, "--drop-debug");
     if (!switches.step_checks) try out.append(allocator, "--drop-step-checks");
     if (!switches.frame_checks) try out.append(allocator, "--drop-frame-checks");

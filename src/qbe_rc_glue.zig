@@ -3,18 +3,27 @@
 //! Every loan, unloan, retain, take and drop the RC lowering emits for a
 //! counted inline type goes through here. A value that is one pointer edge
 //! gets an inline fast path (null test, mark test, one count update) whose
-//! rare cases call that type's generated glue (`rc_glue.zig`); every other
-//! value calls its glue directly. Counting builds always call the glue, which
+//! rare cases call that type's generated glue (`rc_glue.zig`). A small tagged
+//! value's edge-free active case may copy/clear inline; other cases call glue.
+//! Counting builds always call the glue, which
 //! records the same events as the runtime and checks its invariants.
 const typed = @import("typed.zig");
 const runtime = @import("runtime_mode.zig");
 const glue = @import("rc_glue.zig");
 const semantics = @import("value_semantics.zig");
+const native_variant = @import("qbe_rc_native_variant.zig");
 
 /// Native emission failures shared with the RC slot operations.
 pub const Error = error{ InternalError, OutOfMemory, SourceError, WriteFailed };
 /// A value copy or move between two addresses; region is an SSA depth value.
-pub const Transfer = struct { ty: typed.Type, destination: usize, source: usize, region: usize = 0 };
+pub const Transfer = struct {
+    ty: typed.Type,
+    destination: usize,
+    source: usize,
+    region: usize = 0,
+    /// Existing RC-DISJOINT-TAKE-1 proof over complete private value buffers.
+    disjoint: bool = false,
+};
 /// A release of the value at address; heap names a temporary when `%heap` is absent.
 pub const Release = struct { ty: typed.Type, address: usize, heap: ?usize = null };
 
@@ -223,9 +232,11 @@ pub fn listWrite(comptime E: type, self: *E, write: ListWrite) Error!void {
 /// arena source takes the runtime transaction inside the glue.
 pub fn take(comptime E: type, self: *E, operation: Transfer) Error!void {
     try marker(E, self, .take);
+    const plain = try native_variant.take(E, self, operation);
     const result = self.temp();
     try self.print(status_call, .{ result, try self.descriptor(operation.ty), glue.Operation.take.suffix(), operation.destination, operation.source, operation.region });
     try requireSuccess(E, self, result);
+    try native_variant.join(E, self, plain);
 }
 
 /// Clear the value and release each edge's own token.
@@ -405,12 +416,14 @@ fn release(comptime E: type, self: *E, operation: Release, operation_kind: glue.
     try marker(E, self, operation_kind);
     const symbol = try self.descriptor(operation.ty);
     const suffix = operation_kind.suffix();
+    const plain = try native_variant.release(E, self, operation);
     const heap = self.temp();
     if (operation.heap) |value| {
         try self.print(" %v{d} =l copy %v{d}\n", .{ heap, value });
     } else try self.print(" %v{d} =l copy %heap\n", .{heap});
     const count = edge orelse {
         try self.print(" call ${s}{s}(l %v{d}, l %v{d})\n", .{ symbol, suffix, heap, operation.address });
+        try native_variant.join(E, self, plain);
         return;
     };
     const other: Count = if (count == .owners) .holds else .owners;

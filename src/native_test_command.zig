@@ -275,7 +275,13 @@ fn openModuleTests(session: sessions.Session, captured: snapshot.Snapshot, place
     library.library = true;
     // Whatever the per-module path cannot do, the whole-program session does
     // and reports.
-    const outcome = module_build.openTests(session.context, .{ .settings = settings, .switches = native_build.emissionSwitches(library), .identity = bundled_identity, .cold = place.cold }) catch |err| switch (err) {
+    const outcome = module_build.openTests(session.context, .{
+        .settings = settings,
+        .switches = native_build.emissionSwitches(library),
+        .identity = bundled_identity,
+        .cold = place.cold,
+        .foreign_producer = session.options.toolchain.compiler != null,
+    }) catch |err| switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
         else => return null,
     };

@@ -175,7 +175,9 @@ pub fn prepareOperand(comptime E: type, self: *E, ty: typed.Type, index: usize) 
     try prepareGuarded(E, self, ty, address, journalIndex(E, self, index));
 }
 
-fn producedOwner(comptime E: type, self: *E, ty: typed.Type, index: usize) Error!bool {
+/// Prove an already completed ordinary-owner operand publication. The same
+/// predicate supplies the established disjoint private-buffer certificate.
+pub fn producedOwner(comptime E: type, self: *E, ty: typed.Type, index: usize) Error!bool {
     if (self.pc == 0 or self.branch_targets[self.pc]) return false;
     if (@import("qbe_rc_borrow.zig").active(E, self)) return false;
     if (holds.mayHold(E, self, ty)) return false;

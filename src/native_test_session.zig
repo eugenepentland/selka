@@ -54,7 +54,7 @@ pub const Session = struct {
     options: options.Options,
     compiler: []const u8,
     /// Resolved native tool paths, grouped to keep the session surface bounded.
-    tools: struct { zig: []const u8, qbe: []const u8 },
+    tools: struct { zig: []const u8, qbe: []const u8, native_variants: @import("runtime_contract").native_variants.Policy = .original },
     hashes: [3][]const u8,
     environment: environment.Fingerprint,
     directory: []const u8,
@@ -76,8 +76,22 @@ pub const Session = struct {
         session.tools = .{ .zig = zig, .qbe = qbe };
         session.hashes[1] = try context.stamp(zig);
         session.hashes[2] = try context.stamp(qbe);
+        session.tools.native_variants = try emissionPolicy(session);
         return session;
     }
+    /// Resolve policy with the same backend resolver the library build uses.
+    fn emissionPolicy(session: Session) Error!@import("runtime_contract").native_variants.Policy {
+        if (session.options.toolchain.compiler != null or session.context.environ.get("MYLANG_HOST_COMPILER") != null) return .original;
+        const parsed: build_options.Options = .{
+            .source = session.options.source,
+            .library = true,
+            .mode = session.options.mode,
+            .codegen = if (build_options.release(session.options.link_arguments)) build_options.release_codegen else .{ .qbe = session.tools.qbe },
+        };
+        const resolved = try @import("qbe_build_backend.zig").resolve(session.context, parsed, session.tools.zig);
+        return .forBackend(std.mem.eql(u8, resolved.name, "llvm"), false);
+    }
+
     /// Resolve the frontend paths, snapshot and temporary directory without
     /// resolving zig or qbe. A caller that only needs checked facts — as
     /// `mylang invoke --describe` does — must not require the native toolchain.
@@ -243,6 +257,7 @@ pub const Session = struct {
         var argv: std.ArrayList([]const u8) = .empty;
         defer argv.deinit(self.context.allocator);
         try argv.appendSlice(self.context.allocator, &.{ self.compiler, "emit-project-qbe", source });
+        if (self.tools.native_variants.flag()) |flag| try argv.append(self.context.allocator, flag);
         try self.appendCacheDirectory(&argv);
         try self.appendPolicyFlags(&argv);
         self.trace(argv.items);
@@ -445,6 +460,7 @@ pub const Session = struct {
     pub fn key(self: Session, settings: std.json.Value, function: std.json.Value) Error![]const u8 {
         const bytes = try std.json.Stringify.valueAlloc(self.context.allocator, .{
             .version = "native-test-context-v1",
+            .native_variants = self.tools.native_variants,
             .environment = self.environment.hash,
             .tools = self.hashes,
             .entry = self.source.entry_path,
@@ -518,6 +534,7 @@ pub const Compile = struct {
         var argv: std.ArrayList([]const u8) = .empty;
         defer argv.deinit(a);
         try argv.appendSlice(a, &.{ session.compiler, "native-test-compile", entry_path });
+        if (session.tools.native_variants.flag()) |flag| try argv.append(a, flag);
         try session.appendCacheDirectory(&argv);
         try session.appendPolicyFlags(&argv);
         session.trace(argv.items);

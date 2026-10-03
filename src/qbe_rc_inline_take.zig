@@ -60,14 +60,8 @@ fn flatten(catalog: *native.Catalog, ty: typed.Type, base: u64, flat: *Flat) Err
 }
 
 fn overlap(comptime E: type, self: *E, operation: anytype, size: u64, label: usize) Error!void {
-    const left = self.temp();
-    const right = self.temp();
-    const near_left = self.temp();
-    const near_right = self.temp();
-    const overlapping = self.temp();
-    try self.print(" %v{d} =l sub %v{d}, %v{d}\n %v{d} =l sub %v{d}, %v{d}\n", .{ left, operation.source, operation.destination, right, operation.destination, operation.source });
-    try self.print(" %v{d} =w cultl %v{d}, {d}\n %v{d} =w cultl %v{d}, {d}\n", .{ near_left, left, size, near_right, right, size });
-    try self.print(" %v{d} =w or %v{d}, %v{d}\n jnz %v{d}, @rcmoveslow{d}, @rcmovecheck{d}\n@rcmovecheck{d}\n", .{ overlapping, near_left, near_right, overlapping, label, label, label });
+    try @import("qbe_rc_overlap.zig").branch(E, self, .{ .source = operation.source, .destination = operation.destination, .size = size }, .{ .slow = "rcmoveslow", .fast = "rcmovecheck", .number = label });
+    try self.print("@rcmovecheck{d}\n", .{label});
 }
 
 fn pointer(comptime E: type, self: *E, source: usize, offset: u64, slow: usize) Error!void {

@@ -2,6 +2,9 @@
 //! frontend and native build driver. Runtime selection is an artifact property.
 const std = @import("std");
 
+/// Backend emission policy shared across compiler and native-driver modules.
+pub const native_variants = @import("native_variant_policy.zig");
+
 /// Carrier inherited by compiler children after command-line normalization.
 pub const variable = "MYLANG_RUNTIME";
 

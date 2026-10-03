@@ -50,6 +50,7 @@ const Options = struct {
     cache: []const u8 = ".mylang-cache",
     config: iface.EmissionConfig = .{ .drop_debug = false, .step_checks = true, .frame_checks = true, .arenas = false },
     arenas: bool = false,
+    saw_native_variants: bool = false,
     objects: bool = false,
     /// `--qbe=PATH` and `--zig=PATH`, handed to the build of the objects.
     tools: [2]?[]const u8 = .{ null, null },
@@ -93,6 +94,10 @@ fn parse(args: []const []const u8) ?Options {
         } else if (std.mem.eql(u8, arg, "--arenas=on") or std.mem.eql(u8, arg, "--arenas=off")) {
             options.config.arenas = std.mem.eql(u8, arg, "--arenas=on");
             options.arenas = true;
+        } else if (std.mem.startsWith(u8, arg, "--native-variants=")) {
+            if (options.saw_native_variants) return null;
+            options.saw_native_variants = true;
+            options.config.native_variants = @import("runtime_contract").native_variants.Policy.parse(arg["--native-variants=".len..]) orelse return null;
         } else if (std.mem.eql(u8, arg, "--drop-debug")) {
             options.config.drop_debug = true;
         } else if (std.mem.eql(u8, arg, "--drop-step-checks")) {

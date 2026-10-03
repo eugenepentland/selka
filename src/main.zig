@@ -41,6 +41,7 @@ const frontend_label = "frontend";
 const config_error_format = "{s}:{d}:{d}: error[E_PROJECT_CONFIG]: {s}\n";
 const std = @import("std");
 const language = @import("mylang");
+const NativeVariants = @import("runtime_contract").native_variants.Policy;
 /// Canonical project loader exposed to native-test snapshot identity.
 pub const snapshot_project = language.project;
 /// Compile-time file embedding exposed to native-test snapshot capture.
@@ -1155,6 +1156,7 @@ const Parsed = struct {
     drop_step_checks: bool,
     /// Internal `--drop-frame-checks`: this build carries no call-depth ceiling.
     drop_frame_checks: bool,
+    native_variants: NativeVariants = .original,
     /// Internal `--lean-manifest`: name each unit's stored text by digest and
     /// path instead of inlining it, and replay an unchanged project's manifest.
     lean_manifest: bool = false,
@@ -1197,6 +1199,7 @@ const Parsed = struct {
             .step_checks = !self.drop_step_checks,
             .frame_checks = !self.drop_frame_checks,
             .cow = if (language.value_semantics.counting()) .counting else .off,
+            .native_variants = self.native_variants,
         };
     }
 
@@ -1325,6 +1328,8 @@ const ArgumentParser = struct {
     drop_debug: bool = false,
     drop_step_checks: bool = false,
     drop_frame_checks: bool = false,
+    native_variants: NativeVariants = .original,
+    saw_native_variants: bool = false,
     lean_manifest: bool = false,
     executable_manifest: bool = false,
     saw_min: bool = false,
@@ -1481,6 +1486,8 @@ const ArgumentParser = struct {
         } else if (std.mem.startsWith(u8, arg, select_file_prefix)) {
             if (self.command != .@"emit-project-qbe" or self.select_file != null or arg.len == select_file_prefix.len) return error.Usage;
             self.select_file = arg[select_file_prefix.len..];
+        } else if (try self.nativeVariantsOption(arg)) {
+            return true;
         } else if (std.mem.eql(u8, arg, "--drop-debug")) {
             if ((self.command != .@"emit-qbe" and self.command != .@"emit-project-qbe") or self.drop_debug) return error.Usage;
             self.drop_debug = true;
@@ -1491,6 +1498,17 @@ const ArgumentParser = struct {
             if ((self.command != .@"emit-qbe" and self.command != .@"emit-project-qbe") or self.drop_frame_checks) return error.Usage;
             self.drop_frame_checks = true;
         } else return false;
+        return true;
+    }
+
+    /// Select a checked implementation only for explicit frontend emissions.
+    fn nativeVariantsOption(self: *ArgumentParser, arg: []const u8) error{Usage}!bool {
+        const prefix = "--native-variants=";
+        if (!std.mem.startsWith(u8, arg, prefix)) return false;
+        if (self.command != .@"emit-qbe" and self.command != .@"emit-project-qbe" and self.command != .@"native-test-compile") return error.Usage;
+        if (self.saw_native_variants) return error.Usage;
+        self.native_variants = NativeVariants.parse(arg[prefix.len..]) orelse return error.Usage;
+        self.saw_native_variants = true;
         return true;
     }
 
@@ -1785,6 +1803,7 @@ const ArgumentParser = struct {
             .drop_debug = self.drop_debug,
             .drop_step_checks = self.drop_step_checks,
             .drop_frame_checks = self.drop_frame_checks,
+            .native_variants = self.native_variants,
             .lean_manifest = self.lean_manifest,
             .executable_manifest = self.executable_manifest,
             .saw_steps = self.saw_steps,
@@ -2602,7 +2621,7 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
             .@"api-diff" => return apiDiff(init, parsed, &compilation),
             .@"native-test-compile" => {
                 try rememberSessionVerdict(init, &project, &compilation, .{ .verdict = verdict, .frontend = frontend, .policy = configured.identity }, &configured);
-                return nativeTestCompileSession(init, &compilation);
+                return nativeTestCompileSession(init, &compilation, parsed.native_variants);
             },
             else => {},
         }
@@ -2834,7 +2853,7 @@ fn runProjectProgram(init: Context, compilation: *language.project_compile.Compi
 }
 
 fn emitProjectNative(init: Context, compilation: *language.project_compile.Compilation, select_file: ?[]const u8, policy: language.native_interface.Policy) !?[]u8 {
-    const generated = (if (select_file) |path| emitMeasuredSelectedNative(init, compilation, path) else emitMeasuredNative(init, compilation, policy)) catch |err| switch (err) {
+    const generated = (if (select_file) |path| emitMeasuredSelectedNative(init, compilation, path, policy.native_variants) else emitMeasuredNative(init, compilation, policy)) catch |err| switch (err) {
         error.SourceError => {
             try reportProject(init, compilation);
             return null;
@@ -2866,7 +2885,7 @@ fn emitNativeTestFacts(init: Context, compilation: *language.project_compile.Com
 /// checked by `listModulesWithCache` and serves facts plus selective lowering
 /// requests from it, so a native-test provider graph is checked exactly once.
 /// Requests are one line each: `facts <out>`, `lower <select> <out>`, `quit`.
-fn nativeTestCompileSession(init: Context, compilation: *language.project_compile.Compilation) !u8 {
+fn nativeTestCompileSession(init: Context, compilation: *language.project_compile.Compilation, native_variants: NativeVariants) !u8 {
     var buffer: [8192]u8 = undefined;
     var input = std.Io.File.stdin().readerStreaming(init.io, &buffer);
     while (true) {
@@ -2907,7 +2926,7 @@ fn nativeTestCompileSession(init: Context, compilation: *language.project_compil
             init.timings.begin(lowering_phase, false);
             var stats: language.project_compile.Compilation.SelectedStats = .{};
             const before = emissionCounts(compilation.reuse);
-            const manifest = compilation.emitQbeSelected(init.gpa, names, &stats) catch |err| switch (err) {
+            const manifest = compilation.emitQbeSelectedWithOptions(init.gpa, names, &stats, .{ .native_variants = native_variants }) catch |err| switch (err) {
                 error.SourceError => return nativeTestCompileReply(init, "lower", 1, "SourceError", 0, 0),
                 else => return err,
             };
@@ -3664,6 +3683,7 @@ fn manifestReplayTicket(parsed: Parsed, diagnostics: diagnostic_output.Format, p
     if (language.value_semantics.enabled()) slot.update("value-semantics");
     if (language.value_semantics.counting()) slot.update("cow-counting");
     replayFrame(&slot, language.runtime_mode.identity());
+    if (parsed.native_variants != .original) replayFrame(&slot, parsed.native_variants.identity());
     slot.update(&.{@backingInt(diagnostics)});
     var key = slot;
     if (policy) |identity| {
@@ -4234,7 +4254,7 @@ fn recordEmission(init: Context, reuse: ?language.qbe_fragments.Reuse, before: ?
 /// qualified function name per line and is produced by the native-test planner's
 /// closure, so the whole-project emission path is never entered for an affected
 /// selection.
-fn emitMeasuredSelectedNative(init: Context, compilation: *language.project_compile.Compilation, select_file: []const u8) ![]u8 {
+fn emitMeasuredSelectedNative(init: Context, compilation: *language.project_compile.Compilation, select_file: []const u8, native_variants: NativeVariants) ![]u8 {
     const names = try selectionNames(init, select_file);
     defer {
         for (names) |name| init.gpa.free(name);
@@ -4243,7 +4263,7 @@ fn emitMeasuredSelectedNative(init: Context, compilation: *language.project_comp
     init.timings.begin(lowering_phase, false);
     var stats: language.project_compile.Compilation.SelectedStats = .{};
     const before = emissionCounts(compilation.reuse);
-    const generated = try compilation.emitQbeSelected(init.gpa, names, &stats);
+    const generated = try compilation.emitQbeSelectedWithOptions(init.gpa, names, &stats, .{ .native_variants = native_variants });
     recordLoweredCount(init, stats.lowered_functions);
     recordEmission(init, compilation.reuse, before, stats.emitted_fragments);
     init.timings.end();

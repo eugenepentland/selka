@@ -249,6 +249,11 @@ pub const Compilation = struct {
     /// support). `names` are checked qualified function names borrowed by the
     /// caller. `stats` receives the closure width actually lowered and emitted.
     pub fn emitQbeSelected(self: *Compilation, allocator: @import("std").mem.Allocator, names: []const []const u8, stats: *SelectedStats) EmitNativeError![]u8 {
+        return self.emitQbeSelectedWithOptions(allocator, names, stats, .{});
+    }
+
+    /// Selective checked native-test lowering carries its requested implementation.
+    pub fn emitQbeSelectedWithOptions(self: *Compilation, allocator: @import("std").mem.Allocator, names: []const []const u8, stats: *SelectedStats, policy: @import("native_interface.zig").Policy) EmitNativeError![]u8 {
         try self.check();
         const selected = try self.selectFunctions(allocator, names);
         defer allocator.free(selected);
@@ -274,7 +279,7 @@ pub const Compilation = struct {
             else => return error.InternalError,
         };
         stats.* = .{ .lowered_functions = count, .emitted_fragments = count };
-        return @import("qbe.zig").generateSelectedWithInterface(allocator, inlined, self.src, &self.diagnostics, .{ .roots = roots, .schema = schema, .reuse = self.reuse }, selected) catch |err| switch (err) {
+        return @import("qbe.zig").generateSelectedWithInterface(allocator, inlined, self.src, &self.diagnostics, .{ .roots = roots, .schema = schema, .reuse = self.reuse, .policy = policy }, selected) catch |err| switch (err) {
             error.OutOfMemory => return error.OutOfMemory,
             error.SourceError => return error.SourceError,
             error.WriteFailed => return error.WriteFailed,

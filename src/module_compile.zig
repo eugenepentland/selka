@@ -225,6 +225,7 @@ pub fn compile(gpa: std.mem.Allocator, arena: std.mem.Allocator, request: Reques
     module.analyzed = .{ .arena = arena, .context = &step, .run = InterfaceStep.announced };
     var report: fragments.Report = .{ .arena = arena };
     const policy: native_interface.Policy = .{
+        .native_variants = request.config.native_variants,
         .drop_debug = request.config.drop_debug,
         .step_checks = request.config.step_checks,
         .frame_checks = request.config.frame_checks,

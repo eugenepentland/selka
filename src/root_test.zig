@@ -296,6 +296,10 @@ test {
     _ = @import("qbe_rc_inert_receiver_test.zig");
     _ = @import("qbe_rc_inert_counted_test.zig");
     _ = @import("qbe_rc_glue_inline_test.zig");
+    _ = @import("qbe_rc_native_variant_test.zig");
+    _ = @import("native_variant_policy_test.zig");
+    _ = @import("qbe_rc_native_variant_runtime_test.zig");
+    _ = @import("qbe_rc_native_variant_witness_test.zig");
     _ = @import("qbe_rc_inert_field_test.zig");
     _ = @import("qbe_rc_unique_test.zig");
     _ = @import("qbe_rc_hoist_test.zig");

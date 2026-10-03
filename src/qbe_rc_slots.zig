@@ -39,7 +39,7 @@ pub fn Lower(comptime E: type) type {
         /// Emit the fallible runtime operation and branch before publishing guards.
         pub fn runtimeTransfer(self: *E, operation: Transfer) Error!void {
             const routed = try glue.routed(E, self, operation.ty);
-            const move: glue.Transfer = .{ .ty = operation.ty, .destination = operation.destination, .source = operation.source, .region = operation.region };
+            const move: glue.Transfer = .{ .ty = operation.ty, .destination = operation.destination, .source = operation.source, .region = operation.region, .disjoint = operation.disjoint };
             if (routed and operation.mode == .retain_empty) return glue.retain(E, self, move);
             if (routed and operation.mode == .take_empty) return glue.take(E, self, move);
             const helper = switch (operation.mode) {

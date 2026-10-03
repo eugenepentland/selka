@@ -6,6 +6,8 @@ const typed = @import("typed.zig");
 /// field defaults to the fully checked, fully accounted program, so a caller
 /// that names nothing gets the language's normal guarantees.
 pub const Policy = struct {
+    /// Original by default; native builds select the resolved QBE policy.
+    native_variants: @import("runtime_contract").native_variants.Policy = .original,
     /// Drop `debug` statement lowering. Consumed before QBE emission, by the
     /// lowering step, so the backend never reads it.
     drop_debug: bool = false,

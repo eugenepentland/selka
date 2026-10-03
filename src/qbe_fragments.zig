@@ -51,7 +51,7 @@ pub const Flags = struct {
     /// a key only when it is on, so every other key is unchanged.
     cow: @import("cow_plan.zig").Mode = .off,
     /// Ownership ABI and instrumentation policy carried by emitted calls.
-    runtime: @import("runtime_contract").Selection = .gc,
+    ownership: struct { runtime: @import("runtime_contract").Selection = .gc, native_variants: @import("runtime_contract").native_variants.Policy = .original } = .{},
 };
 
 /// One memoized canonical digest and the ordinals it named, in first-mention order.
@@ -254,9 +254,10 @@ pub const Keys = struct {
         defer self.recycle(&canon);
         try canon.text(format_version);
         try canon.put(.{ .step_checks = flags.step_checks, .frame_checks = flags.frame_checks, .arenas = flags.arenas, .entry = flags.entry });
+        if (flags.ownership.native_variants != .original) try canon.text(flags.ownership.native_variants.identity());
         if (flags.cow != .off) try canon.text(@tagName(flags.cow));
         if (flags.exit_skip) try canon.text("exit-skip");
-        try canon.text(flags.runtime.identity());
+        try canon.text(flags.ownership.runtime.identity());
         try canon.raw(&own.digest);
         var reached: std.ArrayList(u32) = .empty;
         defer reached.deinit(self.allocator);

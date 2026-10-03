@@ -14177,3 +14177,7 @@ test "CLI provider replacements recapture embedded fixture edits with a warm tes
 test "CLI native build forwards diagnostic presentation to its source frontend" {
     try invokeOptions("build", "def main() -> int:\n    return False\n", &.{ "--run", "--diagnostics=json" }, 1, "", "\"code\":\"E_TYPE\"");
 }
+
+comptime {
+    _ = @import("native_variant_policy.zig");
+}
