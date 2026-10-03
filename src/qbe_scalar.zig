@@ -55,6 +55,21 @@ pub const Error = error{ InternalError, OutOfMemory, SourceError, WriteFailed };
 /// Bind operation lowering to the concrete backend emitter.
 pub fn Lower(comptime E: type) type {
     return struct {
+        /// Convert a canonical signed or unsigned integer word to binary64
+        /// directly, preserving the same IEEE rounding and float bit storage.
+        pub fn floatUnary(self: *E, op: typed.UnaryOp, height: usize) Error!bool {
+            const instruction: []const u8 = switch (op) {
+                .f64_from_i64 => "sltof",
+                .f64_from_u64 => "ultof",
+                else => return false,
+            };
+            const operand = try self.load("s", height - 1);
+            const converted = self.temp();
+            const result = self.temp();
+            try self.print(" %v{d} =d {s} %v{d}\n %v{d} =l cast %v{d}\n", .{ converted, instruction, operand, result, converted });
+            try self.store(height - 1, result);
+            return true;
+        }
         /// Lower one checked integer cast. A conversion whose source range fits
         /// the target is a copy; every other pair is one or two range compares
         /// whose cold path raises the trap `myl_qbe_int_cast` used to.

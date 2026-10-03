@@ -1,0 +1,15 @@
+{
+  "purpose": "Untimed primitive correctness evidence. The emitter hook must be integrated in qbe.zig before normal guest builds use this path.",
+  "raw_binary64_boundary_cases": 1152,
+  "qbe_sha256": "05030fa66864f44f28754425d644e46155c95bc5442fc2de705a85eee1443945",
+  "commands": [
+    "zig-out/focus/qbe -o experiments/runtime-parity-arithmetic-20261003/float-direct.s experiments/runtime-parity-arithmetic-20261003/float-direct.ssa",
+    "zig cc -O0 experiments/runtime-parity-arithmetic-20261003/float-direct-proof.c experiments/runtime-parity-arithmetic-20261003/float-direct.s -o .mylang-cache/float-direct-proof",
+    ".mylang-cache/float-direct-proof"
+  ],
+  "sha256": {
+    "float-direct.ssa": "d73d890e7228f489663353ae4a7a51e607a7b9569c04548f35f4cd6630a4a2d0",
+    "float-direct.s": "acee8e30901013317179560c502d5d3d4867a885540ec762045d9a0d20093491",
+    "float-direct-proof.c": "2f31be255afb2b021d5ce5ac5d3ec1ebf4bd0dcf3ea61836624d0bb2dcc15ce0"
+  }
+}

@@ -44,6 +44,8 @@ The roadmap in `docs/experiments/roadmap.md` tracks unsupported and planned feat
 - [OWN-11] Rejects direct and transitive allocation that violates declared effect bounds and reports a call witness.
 ## Projects and native output
 
+- [QBE-INTEGER-FLOAT-DIRECT-1] A canonical signed or unsigned integer word converts directly to binary64 through the target's signed or unsigned conversion, then stores the same float bits as before. Narrow inputs retain their canonical extension, full u64 values and halfway cases preserve IEEE rounding, and float-to-integer operations retain their checked conversion path.
+
 - [QBE-LOOP-BOUNDED-WRITE-1] Guarded loop facts retain the magnitude bound of a remainder by a nonzero constant and of a local's single bounded replacement. A carried local includes its guarded entry value until the first replacement, including skipped conditional writes; preceding checked arithmetic is omitted only when that combined bound proves it safe. Zero or unknown divisors, multiple writes and unbounded replacements keep their original checks and fallback.
 - [RC-SCALAR-LOOP-COMPOSE-1] Scalar loop admission accepts plain one-word domains such as float and inline provenance when every opcode, operand and local independently passes the existing range and ownership proofs. Managed values, caller storage, token effects and allocating copied bodies remain excluded; step-accounted loops retain the original path, and float conversions preserve their traps and IEEE arithmetic.
 
