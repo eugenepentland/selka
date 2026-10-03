@@ -23,6 +23,7 @@ fn named(manifest: Manifest, name: []const u8) ![]const u8 {
     return error.TestUnexpectedResult;
 }
 // spec: RC-PLAIN-APPEND-1
+// spec: RC-PLAIN-APPEND-2
 test "RC-PLAIN-APPEND-1 room stores retain queue capacity generation and fallback guards" {
     const saved = runtime.get();
     defer runtime.set(saved);
@@ -42,10 +43,15 @@ test "RC-PLAIN-APPEND-1 room stores retain queue capacity generation and fallbac
         try t.expect(std.mem.indexOf(u8, il, "myl_rc_list_append") != null);
         try t.expect(std.mem.indexOf(u8, il, "myl_qbe_fail_allocation") != null);
     }
+    const aggregate = try named(manifest.value, "aggregate");
+    try t.expect(std.mem.indexOf(u8, aggregate, "# RC-PLAIN-APPEND-2") != null);
+    try t.expect(std.mem.indexOf(u8, aggregate, " =w cugel ") != null);
+    try t.expect(std.mem.indexOf(u8, aggregate, " blit ") != null);
+    try t.expect(std.mem.indexOf(u8, aggregate, "# RC-GLUE-1 list_append") != null);
     try refused(manifest.value);
 }
 fn refused(manifest: Manifest) !void {
-    for ([_][]const u8{ "managed", "aggregate" }) |name| {
+    for ([_][]const u8{"managed"}) |name| {
         const il = try named(manifest, name);
         try t.expect(std.mem.indexOf(u8, il, "myl_rc_list_plain_ready") == null);
         // Counted and plain aggregate elements append through their

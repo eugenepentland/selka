@@ -13,7 +13,7 @@ pub const Append = struct { list: usize, element: typed.Type, value: usize, outp
 /// generation overflow retain precisely the original runtime append operation.
 pub fn emit(comptime E: type, self: *E, append: Append) Error!bool {
     const width = (try self.layout(append.element)).size;
-    if (!self.isScalar(append.element)) return false;
+    if (!self.isScalar(append.element)) return @import("qbe_rc_plain_append.zig").emit(E, self, append);
     if (width != 1 and width != 2 and width != 4 and width != 8) return false;
     const state = self.cow.?.rc orelse return error.InternalError;
     const shape = state.catalog.get(append.element) catch |err| return if (err == error.OutOfMemory) error.OutOfMemory else error.InternalError;
