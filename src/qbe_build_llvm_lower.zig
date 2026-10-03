@@ -669,6 +669,15 @@ fn onConversion(e: *Emitter, lines: *Lines, instruction: *const Instruction) Err
     }
     const source_llvm = try e.letterType(il.conversionLetters(opcode).source);
     const value = try e.render(lines, instruction.args[0], source_llvm);
+    if (switch (opcode) {
+        .sltof, .ultof, .swtof, .uwtof => true,
+        else => false,
+    }) {
+        const result = try e.fresh("cv");
+        const signed = opcode == .sltof or opcode == .swtof;
+        try e.line(lines, "  %{s} = {s} {s} {s} to {s}", .{ result, if (signed) "sitofp" else "uitofp", source_llvm, value, llvm });
+        return define(e, lines, instruction, try e.print("%{s}", .{result}));
+    }
     try define(e, lines, instruction, try e.widen(lines, value, source_llvm, llvm));
 }
 

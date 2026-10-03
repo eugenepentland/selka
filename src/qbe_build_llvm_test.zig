@@ -14,6 +14,33 @@ const compile = @import("qbe_build_llvm_compile.zig");
 /// real `--release` builds.
 const corpus_path = "test/fixtures/llvm-translate/adapter-corpus.json";
 
+// spec-case: QBE-INTEGER-FLOAT-DIRECT-1
+test "LLVM integer float opcodes convert numerically and cast preserves bits" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const source =
+        \\export function l $integer_float(l %signed, l %unsigned, w %word) {
+        \\@start
+        \\ %a =d sltof %signed
+        \\ %b =d ultof %unsigned
+        \\ %c =s swtof %word
+        \\ %d =s uwtof %word
+        \\ %bits =l cast %a
+        \\ ret %bits
+        \\}
+    ;
+    const signatures: llvm.Signatures = .empty;
+    const table: llvm.RuntimeTable = .{};
+    var diagnostic: llvm.Diagnostic = .{ .unit = "integer_float" };
+    const ir = try llvm.translate(arena.allocator(), source, .{ .signatures = &signatures, .runtime = &table }, &diagnostic);
+    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, ir, " = sitofp i64 "));
+    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, ir, " = uitofp i64 "));
+    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, ir, " = sitofp i32 "));
+    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, ir, " = uitofp i32 "));
+    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, ir, " = bitcast double "));
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, ir, " = bitcast i64 "));
+}
+
 /// The runtime registry every build reads: the bundled runtime tree's top level.
 fn bundledTable(arena: std.mem.Allocator) !llvm.RuntimeTable {
     var sources: std.ArrayList(llvm.RuntimeSource) = .empty;
