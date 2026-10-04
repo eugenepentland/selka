@@ -1,6 +1,7 @@
 #include "native_text_methods.h"
 #include <assert.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 static const myl_native_type pointer={.size=sizeof(void *),.alignment=_Alignof(void *),.kind=MYL_NATIVE_POINTER};
 void myl_qbe_fail(void *context,const char *code) {
@@ -102,7 +103,116 @@ static void separator_split(myl_native_heap *heap) {
     equals(items[1],"\xf0\x9f\x99\x82\xc3\xa9");
     myl_native_root_pop(heap,&root);
 }
+/* Exact-size, unaligned payloads exercise every short-copy boundary. These
+   synthetic immutable headers are used only with collection disabled; the
+   managed-input check below separately stresses roots across allocation. */
+static myl_native_text *join_operand(size_t bytes,size_t offset,int wide) {
+    myl_native_text *owner=malloc(sizeof(*owner)+offset+bytes);
+    assert(owner);
+    *owner=(myl_native_text){.length=offset+bytes,.bytes=offset+bytes,.flags=MYL_TEXT_ASCII};
+    unsigned char *raw=(unsigned char *)(owner+1);
+    memset(raw,'p',offset);
+    for (size_t i=0;i<bytes;++i) raw[offset+i]=(unsigned char)(i%127);
+    size_t scalars=bytes;
+    if (wide) {
+        for (size_t i=0;i+1<bytes;i+=2) { raw[offset+i]=0xc3; raw[offset+i+1]=0xa9; }
+        if (bytes&1) raw[offset+bytes-1]='x';
+        scalars=(bytes+1)/2;
+    }
+    if (!offset) {
+        owner->length=scalars;
+        owner->flags=scalars==bytes ? MYL_TEXT_ASCII : 0;
+        return owner;
+    }
+    myl_native_text_view *view=malloc(sizeof(*view));
+    assert(view);
+    *view=(myl_native_text_view){.text={.length=scalars,.bytes=bytes,
+        .flags=MYL_TEXT_VIEW|(scalars==bytes ? MYL_TEXT_ASCII : 0),.hash=(uint32_t)offset},.owner=owner};
+    return &view->text;
+}
+static void free_join_operand(myl_native_text *text) {
+    if (text->flags&MYL_TEXT_VIEW) free((void *)((myl_native_text_view *)text)->owner);
+    free(text);
+}
+static void join_payload_boundaries(void) {
+    static const size_t lengths[]={0,1,2,3,4,5,7,8,9,15,16,17,23,31,32,33,63,64,65,257};
+    static const size_t widths[]={0,1,2,3,4,7,8,9,15,16,17,33,65};
+    myl_native_heap heap;
+    myl_native_heap_init(&heap,1<<27);
+    heap.next_collection=SIZE_MAX;
+    for (size_t k=0;k<sizeof(lengths)/sizeof(*lengths);++k)
+    for (size_t j=0;j<sizeof(widths)/sizeof(*widths);++j)
+    for (size_t offset=0;offset<=7;++offset)
+    for (int wide=0;wide<=1;++wide) {
+        myl_native_text *part=join_operand(lengths[k],offset,wide);
+        myl_native_text *separator=join_operand(widths[j],offset,!wide);
+        myl_native_text *empty=join_operand(0,offset,0);
+        myl_native_text *parts[]={part,empty,part};
+        for (size_t n=0;n<=3;n+=(n ? 2 : 1)) {
+            myl_native_list list={.length=n,.storage=parts};
+            const size_t allocations=heap.allocations;
+            myl_native_text *result=myl_native_text_join(&heap,separator,&list);
+            assert(result && heap.allocations==allocations+1 && !heap.collections);
+            const size_t expected=(n==0 ? 0 : n==1 ? part->bytes : 2*part->bytes+2*separator->bytes);
+            const size_t scalars=(n==0 ? 0 : n==1 ? part->length : 2*part->length+2*separator->length);
+            assert(result->bytes==expected && result->length==scalars);
+            assert(!!(result->flags&MYL_TEXT_ASCII)==(scalars==expected));
+            const unsigned char *out=myl_native_text_storage(result);
+            size_t cursor=0;
+            for (size_t i=0;i<n;++i) {
+                if (i) { assert(!memcmp(out+cursor,myl_native_text_storage(separator),separator->bytes)); cursor+=separator->bytes; }
+                assert(!memcmp(out+cursor,myl_native_text_storage(parts[i]),parts[i]->bytes));
+                cursor+=parts[i]->bytes;
+            }
+            assert(cursor==expected && !heap.roots);
+        }
+        free_join_operand(empty); free_join_operand(separator); free_join_operand(part);
+    }
+    myl_native_heap_destroy(&heap);
+}
+/* Rooted operands survive a join safepoint, and a refused output allocation
+   leaves every input available. Overflow refuses before touching the heap. */
+static void join_collection_and_limits(void) {
+    myl_native_heap heap;
+    myl_native_heap_init(&heap,1<<20); heap.stress=1;
+    myl_native_list *parts=myl_native_list_new(&heap,&pointer,3);
+    assert(parts);
+    myl_native_root list_root,separator_root;
+    myl_native_root_push(&heap,&list_root,&parts,&pointer);
+    parts->length=3;
+    myl_native_text *separator=myl_native_text_from_utf8(&heap,(const unsigned char *)"|",1);
+    assert(separator);
+    myl_native_root_push(&heap,&separator_root,&separator,&pointer);
+    for (size_t i=0;i<3;++i) {
+        myl_native_text *part=myl_native_text_from_utf8(&heap,(const unsigned char *)"caf\xc3\xa9",5);
+        assert(part);
+        ((myl_native_text **)parts->storage)[i]=part;
+    }
+    myl_native_text *result=myl_native_text_join(&heap,separator,parts);
+    equals(result,"caf\xc3\xa9|caf\xc3\xa9|caf\xc3\xa9");
+    assert(result->length==14 && result->bytes==17 && !((result->flags)&MYL_TEXT_ASCII));
+    myl_native_root result_root;
+    myl_native_root_push(&heap,&result_root,&result,&pointer);
+    heap.limit=heap.bytes;
+    assert(!myl_native_text_join(&heap,separator,parts) && heap.exhausted);
+    for (size_t i=0;i<3;++i) equals(((myl_native_text **)parts->storage)[i],"caf\xc3\xa9");
+    assert(myl_native_root_pop(&heap,&result_root));
+    assert(myl_native_root_pop(&heap,&separator_root));
+    assert(myl_native_root_pop(&heap,&list_root));
+    myl_native_heap_destroy(&heap);
+    myl_native_heap_init(&heap,1<<20);
+    myl_native_text enormous={.length=SIZE_MAX,.bytes=SIZE_MAX,.flags=MYL_TEXT_ASCII};
+    myl_native_text comma={.length=1,.bytes=1,.flags=MYL_TEXT_ASCII};
+    myl_native_text *items[]={&enormous,&enormous};
+    myl_native_list list={.length=2,.storage=items};
+    assert(!myl_native_text_join(&heap,&comma,&list) && !heap.allocations && !heap.roots);
+    list.length=SIZE_MAX; comma.bytes=2; comma.length=2;
+    assert(!myl_native_text_join(&heap,&comma,&list) && !heap.allocations && !heap.roots);
+    myl_native_heap_destroy(&heap);
+}
 int main(void) {
+    join_payload_boundaries();
+    join_collection_and_limits();
     myl_native_heap heap;
     myl_native_heap_init(&heap,1<<20); heap.stress=1;
     myl_native_root roots[2];

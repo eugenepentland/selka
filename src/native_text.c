@@ -902,27 +902,56 @@ myl_native_list *myl_native_text_split(myl_native_heap *heap, myl_native_text *i
     myl_native_root_pop(heap,&c); myl_native_root_pop(heap,&b); myl_native_root_pop(heap,&a);
     return result;
 }
+/* Copies into a fresh text. Up to 16 octets need only two bounded loads and
+ * stores; overlapping endpoints cover the middle without reading padding from
+ * a view. Larger pieces retain the bulk memcpy path. */
+static inline void copy_octets(unsigned char *output, const unsigned char *input, size_t count) {
+    if (count>16) { memcpy(output,input,count); return; }
+    if (count>=8) {
+        uint64_t first,last;
+        memcpy(&first,input,8); memcpy(&last,input+count-8,8);
+        memcpy(output,&first,8); memcpy(output+count-8,&last,8);
+    } else if (count>=4) {
+        uint32_t first,last;
+        memcpy(&first,input,4); memcpy(&last,input+count-4,4);
+        memcpy(output,&first,4); memcpy(output+count-4,&last,4);
+    } else if (count>=2) {
+        uint16_t first,last;
+        memcpy(&first,input,2); memcpy(&last,input+count-2,2);
+        memcpy(output,&first,2); memcpy(output+count-2,&last,2);
+    } else if (count) output[0]=input[0];
+}
 myl_native_text *myl_native_text_join(myl_native_heap *heap, myl_native_text *separator, myl_native_list *list) {
+    const size_t length=list->length, width=separator->bytes;
     size_t count=0, scalars=0;
     int plain=separator->flags&MYL_TEXT_ASCII;
     myl_native_text **items=list->storage;
-    for (size_t i=0;i<list->length;i++) {
+    /* All inputs are immutable during this operation. Size the separators once
+     * and retain the checked byte total; scalar counts never exceed octets. */
+    if (length>1) {
+        if (width && length-1>SIZE_MAX/width) return NULL;
+        count=(length-1)*width;
+        scalars=(length-1)*separator->length;
+    }
+    for (size_t i=0;i<length;i++) {
         if (items[i]->bytes>SIZE_MAX-count) return NULL;
         count+=items[i]->bytes;
         scalars+=items[i]->length;
         plain&=items[i]->flags&MYL_TEXT_ASCII;
-        if (i) { if (separator->bytes>SIZE_MAX-count) return NULL; count+=separator->bytes; scalars+=separator->length; }
     }
     myl_native_root a,b;
     myl_native_root_push(heap,&a,&separator,&myl_rc_pointer_leaf); myl_native_root_push(heap,&b,&list,&myl_rc_pointer_leaf);
     myl_native_text *result=myl_native_text_build_scalars(heap,count,scalars);
     if (result) {
-        unsigned char *output=(unsigned char *)myl_native_text_storage(result);
+        unsigned char *output=(unsigned char *)(result+1);
+        const unsigned char *between=myl_native_text_storage(separator);
         size_t at=0;
-        for (size_t i=0;i<list->length;i++) {
-            if (i && separator->bytes) { memcpy(output+at,myl_native_text_storage(separator),separator->bytes); at+=separator->bytes; }
-            if (items[i]->bytes) memcpy(output+at,myl_native_text_storage(items[i]),items[i]->bytes);
-            at+=items[i]->bytes;
+        for (size_t i=0;i<length;i++) {
+            if (i && width) { copy_octets(output+at,between,width); at+=width; }
+            const myl_native_text *part=items[i];
+            const size_t bytes=part->bytes;
+            if (bytes) copy_octets(output+at,myl_native_text_storage(part),bytes);
+            at+=bytes;
         }
         myl_native_text_publish(result,scalars,plain);
     }

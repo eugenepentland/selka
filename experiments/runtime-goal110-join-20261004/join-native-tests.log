@@ -1,0 +1,29 @@
+native text and dictionary tests passed
+native RC collections: 53 passed
+native_text_methods: /home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/tests/native_text_methods_test.c:28: equals: Assertion `written==strlen(text)' failed.
+native text index tests passed
+streaming tails: owner=4096 views=1016 copied=36
+streaming tails: owner=32768 views=8184 copied=36
+native text view tests passed
+Traceback (most recent call last):
+  File "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/experiments/runtime-goal110-join-20261004/native-checks.py", line 23, in <module>
+    task.result()
+    ~~~~~~~~~~~^^
+  File "/usr/lib/python3.14/concurrent/futures/_base.py", line 450, in result
+    return self.__get_result()
+           ~~~~~~~~~~~~~~~~~^^
+  File "/usr/lib/python3.14/concurrent/futures/_base.py", line 395, in __get_result
+    raise self._exception
+  File "/usr/lib/python3.14/concurrent/futures/thread.py", line 86, in run
+    result = ctx.run(self.task)
+  File "/usr/lib/python3.14/concurrent/futures/thread.py", line 73, in run
+    return fn(*args, **kwargs)
+  File "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/scripts/test_native_memory.py", line 69, in run_suite
+    subprocess.run([str(executable)], check=True)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/subprocess.py", line 578, in run
+    raise CalledProcessError(retcode, process.args,
+                             output=stdout, stderr=stderr)
+subprocess.CalledProcessError: Command '['/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/.mylang-cache/goal110-join/tmp/tmpghp8evqq/native_text_methods']' died with <Signals.SIGABRT: 6>.
+Focused methods recheck after correcting test list length
+native text method tests passed
