@@ -24,6 +24,7 @@ test {
     _ = @import("qbe_rc_aggregate_test.zig");
     _ = @import("qbe_rc_inline_take_test.zig");
     _ = @import("qbe_rc_loop_codegen_test.zig");
+    _ = @import("qbe_rc_append_version_test.zig");
     _ = @import("rc_glue_test.zig");
     _ = @import("qbe_rc_inert_return_test.zig");
     _ = @import("native_rc_stats_test.zig");

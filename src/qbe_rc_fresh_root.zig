@@ -51,6 +51,63 @@ pub fn proven(comptime E: type, self: *E, root: usize, head: usize) frame.Error!
     return uses(E, self, family, back);
 }
 
+/// An extra restriction on an already certified fresh append root. Trace the
+/// same bounded handoffs to an empty constructor, then refuse any earlier
+/// receiver use: the list still has zero capacity when this loop is entered.
+/// This does not admit a root or change the existing ownership certificate.
+pub fn emptyBefore(comptime E: type, self: *E, root: usize, head: usize) bool {
+    const code = self.function.scope.instructions;
+    if (code.len > 4096 or head >= code.len) return false;
+    var family: Family = .{};
+    var local = root;
+    var before = head;
+    while (family.len < family.locals.len) {
+        const at = definition(E, self, local) orelse return false;
+        if (at >= before or at == 0 or self.isBranchTarget(at)) return false;
+        family.locals[family.len] = local;
+        family.stores[family.len] = at;
+        family.reads[family.len] = cow.none;
+        family.len += 1;
+        const producer = code[at - 1].op;
+        if (fresh(E, self, local, producer)) {
+            const empty = switch (producer) {
+                .make_record => |made| made.fields == 0 and made.payload.len == 0,
+                .acquire_buffer => at >= 2 and !self.isBranchTarget(at - 1) and
+                    code[at - 2].op == .push_i64 and code[at - 2].op.push_i64 == 0,
+                else => false,
+            };
+            if (!empty) return false;
+            return untouched(code, family, head);
+        }
+        var read = at - 1;
+        if (producer == .value_copy) {
+            if (read == 0 or self.isBranchTarget(read)) return false;
+            read -= 1;
+        }
+        if (code[read].op != .load_local) return false;
+        const source = @backingInt(code[read].op.load_local);
+        if (contains(family, source)) return false;
+        family.reads[family.len - 1] = read;
+        before = read;
+        local = source;
+    }
+    return false;
+}
+
+fn untouched(code: []const bytecode.Instruction, family: Family, head: usize) bool {
+    const start = family.stores[family.len - 1] - 1;
+    for (code[start..head], start..) |instruction, pc| switch (instruction.op) {
+        .load_local => |slot| if (contains(family, @backingInt(slot))) {
+            for (family.reads[0..family.len]) |read| {
+                if (read == pc) break;
+            } else return false;
+        },
+        .buffer_operation => |operation| if (contains(family, @backingInt(operation.owner))) return false,
+        else => {},
+    };
+    return true;
+}
+
 fn contains(family: Family, local: usize) bool {
     for (family.locals[0..family.len]) |item| if (item == local) return true;
     return false;

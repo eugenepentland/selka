@@ -21,6 +21,7 @@ const facts = @import("qbe_loop_facts.zig");
 const read_version = @import("qbe_rc_read_version.zig");
 const operands = @import("qbe_loop_operands.zig");
 const rc_append_loop = @import("qbe_rc_append_loop.zig");
+const append_version = @import("qbe_rc_append_version.zig");
 const byte_reduction = @import("qbe_byte_reduction.zig");
 
 /// Errors reported while emitting native operations.
@@ -53,15 +54,17 @@ pub fn Lower(comptime E: type) type {
     return struct {
         /// Emit the guard and the check-free copy of `loop` in front of its
         /// header. Returns false, having emitted nothing, when the copy turned
-        /// out to allocate after all, so the caller lowers the loop once, as
-        /// before.
+        /// out to allocate outside the separately certified ordinary growing
+        /// append path, so the caller lowers the loop once, as before.
         pub fn emit(self: *E, loop: *const facts.Loop) Error!bool {
             return atHead(E, self, loop, emitHere);
         }
 
         fn emitHere(self: *E, loop: *const facts.Loop) Error!bool {
-            // Existing hoist/scalar admissions keep their original protocol.
-            const previous = !@import("runtime_mode.zig").enabled() or
+            // Growing appends retain their ordinary per-operation runtime
+            // protocol; only the existing plan's scalar facts are used.
+            const growing = append_version.certify(E, self, loop);
+            const previous = growing or !@import("runtime_mode.zig").enabled() or
                 @import("qbe_rc_readonly_calls.zig").body(E, self) or
                 @import("qbe_rc_hoist.zig").permitsVersion(E, self, loop.head, loop.back) or
                 @import("qbe_rc_scalar_version.zig").proven(E, self, loop.head, loop.back);
@@ -82,17 +85,7 @@ pub fn Lower(comptime E: type) type {
                 self.output.deinit();
                 self.output = main;
             };
-            try self.headerLabel(loop.head, "i");
-            if (read_proof) |proof| try read_version.guard(E, self, proof, loop.head);
-            for (loop.guard) |step| try guardStep(self, &active, step);
-            // Everything the copy reads from the guard is computed once the
-            // whole guard has held, so an element is read only after the step
-            // that bounds its index.
-            for (loop.actions) |action| {
-                if (action.value) |node| _ = try value(self, &active, node);
-                if (action.receiver) |node| _ = try storage(self, &active, node);
-                if (action.effect == .presized) try appendState(self, &active, action.receiver.?);
-            }
+            try emitGuard(E, self, &active, growing);
             try self.print(" jmp @fi{d}\n", .{loop.head});
             const guard_end = self.output.writer.end;
             self.version = &active;
@@ -108,9 +101,11 @@ pub fn Lower(comptime E: type) type {
                 }
             }
             const text = self.output.writer.buffer[0..self.output.writer.end];
-            if (self.copyAllocates(text[guard_end..])) return false;
+            if (growing) {
+                if (!append_version.ordinaryCopy(text[guard_end..])) return false;
+            } else if (self.copyAllocates(text[guard_end..])) return false;
             if (read_proof != null and !read_version.quietCopy(text[guard_end..])) return false;
-            const isolated = operands.certify(E, self, loop, read_proof, text[guard_end..]);
+            const isolated = !growing and operands.certify(E, self, loop, read_proof, text[guard_end..]);
             keep = true;
             var copy = self.output;
             self.output = main;
@@ -260,6 +255,26 @@ pub fn Lower(comptime E: type) type {
             return self.program.records[collection.recordIndex()].shape.buffer orelse error.InternalError;
         }
     };
+}
+
+fn emitGuard(comptime E: type, self: *E, active: *Active, growing: bool) Error!void {
+    const loop = active.loop;
+    try self.headerLabel(loop.head, "i");
+    if (growing) try self.print(" # mylang-rc-append-range {d}\n", .{loop.head});
+    if (active.read) |proof| try read_version.guard(E, self, proof, loop.head);
+    for (loop.guard) |step| {
+        if (growing and step == .room) continue;
+        try Lower(E).guardStep(self, active, step);
+    }
+    // A growing copy caches no receiver, storage, length or admission across
+    // allocation; loopAppend therefore keeps ordinary per-append lowering.
+    if (growing) return;
+    // Hoisted elements are read only after the step that bounds their index.
+    for (loop.actions) |action| {
+        if (action.value) |node| _ = try Lower(E).value(self, active, node);
+        if (action.receiver) |node| _ = try Lower(E).storage(self, active, node);
+        if (action.effect == .presized) try Lower(E).appendState(self, active, action.receiver.?);
+    }
 }
 
 // Guard queries use the header's physical proof context, never the preceding
