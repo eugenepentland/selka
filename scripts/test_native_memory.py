@@ -40,6 +40,8 @@ def run_suite(root, command, directory, suite, sources):
         command = command + ["-DMYL_NATIVE_RC=1"]
     if suite == "native_rc_image":
         command = command + ["-DMYL_RC_IMAGE_FAIL_TEST=1", "-Wl,--wrap=calloc"]
+    if suite == "native_sort_rotation":
+        command = command + ["-Wl,--wrap=malloc", "-Wl,--wrap=free", "-Wl,--wrap=memmove", "-fno-builtin-memmove"]
     if "native_heap.c" in sources:
         required = ("native_arena.c", "native_collections.c", "native_text.c",
                     "native_dictionary.c", "native_equal.c", "native_bytes.c",
@@ -130,6 +132,7 @@ SUITES = (
     ("native_rc_host", ["native_heap.c", "qbe_runtime.c"]),
     ("native_heap", ["native_heap.c", "native_collections.c", "native_text.c", "native_dictionary.c", "native_equal.c", "native_bytes.c"]),
     ("native_collections", ["native_heap.c", "native_collections.c"]),
+    ("native_sort_rotation", ["native_heap.c", "native_collections.c"]),
     ("native_text_dictionary", ["native_heap.c", "native_collections.c", "native_text.c", "native_dictionary.c"]),
     ("native_equal", ["native_heap.c", "native_collections.c", "native_text.c", "native_dictionary.c", "native_equal.c"]),
     ("native_equal_allocations", ["native_heap.c", "native_collections.c", "native_text.c", "native_dictionary.c", "native_equal.c"]),

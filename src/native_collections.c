@@ -442,6 +442,25 @@ SORT_INLINE void sort_merge(unsigned char *base, size_t first, size_t middle, si
     if (first == middle) return;
     last = middle + sort_lower_bound(base + middle * size, last - middle, base + (middle - 1) * size, kind);
     size_t left = middle - first, right = last - middle;
+    /* The first remaining left value exceeds the first right value. The
+       last left value is at least as large, so the lower trim retains that
+       first right value; both runs are nonempty here. */
+    /* Strictly separated runs need only exchange their positions. Keep each
+       run's order, and buffer the shorter side in the same reserved scratch.
+       Equality must retain the ordinary stable merge: rotating equal boundary
+       values would put right-run ties before their earlier left-run peers. */
+    if (sort_less(base + (last - 1) * size, base + first * size, kind)) {
+        if (left <= right) {
+            memcpy(scratch, base + first * size, left * size);
+            memmove(base + first * size, base + middle * size, right * size);
+            memcpy(base + (first + right) * size, scratch, left * size);
+        } else {
+            memcpy(scratch, base + middle * size, right * size);
+            memmove(base + (first + right) * size, base + first * size, left * size);
+            memcpy(base + first * size, scratch, right * size);
+        }
+        return;
+    }
     if (left <= right) {
         /* Forward: the left run waits in scratch, the output never overtakes
            the unread right elements, and whatever of the right run is left
