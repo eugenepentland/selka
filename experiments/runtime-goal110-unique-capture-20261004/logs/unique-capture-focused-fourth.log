@@ -1,0 +1,33 @@
+test-units
++- run test 14 pass, 2 fail (16 total)
+guardian/test: test wall 1.90s; slowest over 50ms:
+guardian/test:   0.94s  qbe_rc_unique_capture_test.test.RC duplicate capture removes only the second checked named-root guard
+guardian/test:   0.60s  qbe_rc_unique_capture_test.test.RC duplicate capture preserves counting site and collector emission
+guardian/test:   0.35s  qbe_rc_unique_capture_test.test.RC duplicate capture refuses an alternate entry into the adjacent store
+guardian/test: FAIL — 2 failed of 16
+guardian/test: RESULT {"passed":14,"failed":2,"skipped":0}
+error: 'qbe_rc_unique_capture_test.test.RC duplicate capture removes only the second checked named-root guard' failed:
+       guardian/test: 16 test(s) selected by filter: "RC duplicate capture" — 4 match by name, 12 unnamed test block(s) run regardless
+       expected 1, found 0
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:111:17: 0x266e039 in expectEqualInner__anon_231883 (std.zig)
+                       return error.TestExpectedEqual;
+                       ^
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:75:5: 0x266e2e5 in expectEqual (root_test.zig)
+           return expectEqualInner(T, expected, actual);
+           ^
+       /home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/src/qbe_rc_unique_capture_test.zig:70:9: 0x266e396 in test.RC duplicate capture removes only the second checked named-root guard (root_test.zig)
+               try t.expectEqual(@as(usize, 1), std.mem.count(u8, il, marker));
+               ^
+error: 'qbe_rc_unique_capture_test.test.RC duplicate capture refuses an alternate entry into the adjacent store' failed:
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:614:14: 0x1409139 in expect (std.zig)
+           if (!ok) return error.TestUnexpectedResult;
+                    ^
+       /home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/src/qbe_rc_unique_capture_test.zig:123:5: 0x140a1c2 in test.RC duplicate capture refuses an alternate entry into the adjacent store (root_test.zig)
+           try t.expect(std.mem.indexOf(u8, try body(result.value, "plain"), marker) == null);
+           ^
+failed command: sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_QBE=/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/zig-out/focus/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./.task-tmp/unique-capture-zig-local/o/3b80b36996f027c25662c58a034a76aa/test "--guardian-filter=RC duplicate capture" --cache-dir=./.task-tmp/unique-capture-zig-local --seed=0x18f3f6fd --listen=-
+
+Build Summary: 8/10 steps succeeded (1 failed); 14/16 tests passed (2 failed)
+test-units transitive failure
++- run test 14 pass, 2 fail (16 total)
+

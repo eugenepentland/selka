@@ -1,0 +1,26 @@
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: cold gate — no prior green stamp on this tree; a re-run after a green will skip via the cache and confirm
+guardian: file-size: 20 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 25 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 8632 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 9 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 5/88 failed (doc-comments, cognitive-complexity, debug-print-ban, bool-ops-per-condition, repeated-string-literal)
+guardian: failures grouped by check (5):
+  doc-comments (2 findings)
+    - src/qbe_rc_append_version.zig: pub fn byReference: has no /// doc comment
+      fix: add a real /// doc comment above each public declaration (>= 12 non-whitespace chars, no TODO/FIXME).
+    - src/qbe_rc_append_version.zig: pub fn callerStorage: has no /// doc comment
+  cognitive-complexity (1 finding)
+    - src/qbe_loop_version.zig: fn Lower cognitive complexity 30 (limit: 25)
+      fix: extract helpers; reduce nested control flow.
+  debug-print-ban (2 findings)
+    - src/qbe_rc_append_version_test.zig:30: std.debug.print reference outside allowed paths
+      fix: route through reporter.print/detail, or alias once at file scope and use the alias.
+    - src/qbe_rc_append_version_test.zig:215: std.debug.print reference outside allowed paths
+  bool-ops-per-condition (1 finding)
+    - src/qbe_rc_append_version.zig:115: condition has 5 boolean ops (cap 3)
+      fix: split into nested/sequential ifs, or extract into a named bool.
+  repeated-string-literal (1 finding)
+    - src/qbe_rc_append_version_test.zig: string literal append_range.my appears 3 times (lines 27, 208, 258) — extract a const
+      fix: extract the literal/const into a shared file-scope const and import it.
+  caution: zig-out binaries predate this failed run (installs are gated on green) — rebuild green before running them

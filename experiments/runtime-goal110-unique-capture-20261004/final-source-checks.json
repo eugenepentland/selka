@@ -1,0 +1,30 @@
+{
+  "schema": "mylang-unique-capture-final-source-check-v1",
+  "revision": "d4c28bdace208ee284fe22cc63f074b183990967",
+  "files": {
+    "src/qbe_rc_unique_capture.zig": "425f8e8848d4d4358a5e09f9f77fdf78c359257ea81048bf7f5dbeada03797b8",
+    "src/qbe_rc_locals.zig": "aef8ac527866daa190a5c8ee769960c2184bee88f7293ae0b4128ec4872ea67e",
+    "src/qbe_rc_unique_capture_test.zig": "bfa1f55cf8155951f2f41413b3dc4889ee1f3b148ba7fb5f3048b3b4bf844742",
+    "src/qbe_loop_unswitch_test.zig": "cc17b6c42afb0178fa67227888b2efac0a298aeeebe7ea31200d752ecfb0da33",
+    "src/qbe_rc_append_loop.zig": "60e469bd60317748941e1649b92d0d7f33e4ce66ac58af9b744b65f2bc669aa4",
+    "src/qbe_rc_loop_codegen_test.zig": "4118a4e995bca83d658571b47b37a47085568c011a0f29f929c52ce9c0d751b3",
+    "SPEC.md": "8a6b211dd757a134b4ad533e5de4362876cda496b43c223014f8b3c673fce620"
+  },
+  "checks": [
+    {
+      "log": ".task-tmp/unique-capture-final-source-focused.log",
+      "sha256": "68eae00020208048a0ae07b4d13d5bcc6053d2f808bfb8733c51e7648c674081",
+      "exit_status": 0
+    },
+    {
+      "log": ".task-tmp/unique-capture-final-source-readiness.log",
+      "sha256": "c3fcaee3c41ad7574c08b059fb7ab5d950676768f0d58d5663696e1ad85f7e49",
+      "exit_status": 0
+    }
+  ],
+  "guardian_roi_source": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.guardian/cache/check-roi.jsonl",
+    "sha256": "4efe044dbac9e70d5cd2231ccb95decfe7438d52b5214f060559ee2dd9b0107c"
+  },
+  "limit": "Correctness/static evidence only; no runtime timing has run."
+}

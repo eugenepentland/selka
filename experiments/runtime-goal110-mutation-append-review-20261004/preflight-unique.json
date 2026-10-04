@@ -1,0 +1,16 @@
+{
+  "reviewed_utc": "2026-10-04T05:36:51.735107+00:00",
+  "status": "passed",
+  "kind": "independent saved-oracle/direct-argv/status/stream replay and live identity check; no new executions",
+  "source_revision": "d4c28bdace208ee284fe22cc63f074b183990967",
+  "native_receipt": "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/native-differential/native-differential.json",
+  "native_receipt_sha256": "e32c8143d6d4fc345dfa934ede6f884c2ad3c76932cd0ca315bcaa5dfab8feea",
+  "paired_outcomes": 872,
+  "recorded_native_executions": 1744,
+  "successful_pairs": 644,
+  "failure_pairs": 224,
+  "budget_refusal_pairs": 4,
+  "live_native_guests": 14,
+  "compilers": 2,
+  "script_sha256": "aba38669ced525266496133a06cb1ab714c76318323552c0edc4bdf77cbe1f49"
+}

@@ -1,0 +1,747 @@
+{
+  "reviewed_utc": "2026-10-04T05:51:59.119546+00:00",
+  "status": "passed",
+  "kind": "independent paired oracle, median, ratio, current live binary and screen-plan replay; exploratory evidence only",
+  "paired_outcomes": 816,
+  "reports": [
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-collections-hot-20261004/.mylang-cache/goal110-append-range-review/paired-screen.json",
+      "sha256": "b0eba6e04bf884722d6a0e3c2455cea2c86a6dc034f728a40367e2faa4357086",
+      "measurement_session_id": "4d1c67cf-48ef-445f-ada7-66062f1a191b",
+      "paired_outcomes": 192,
+      "live_binary_bindings": 4,
+      "rows": [
+        {
+          "case": "list_append",
+          "profile": "small",
+          "ratios": {
+            "llvm": {
+              "after_before": 0.8888694464213069,
+              "before_ns": 301.78355305329313,
+              "after_ns": 268.2461797415358
+            },
+            "qbe": {
+              "after_before": 0.928852672888404,
+              "before_ns": 492.24583906726974,
+              "after_ns": 457.22386333582864
+            }
+          },
+          "calibration": {
+            "fastest_ns": 50611122,
+            "slowest_ns": 200856645,
+            "target_ns": 50000000,
+            "slowest_cap_ns": 1000000000,
+            "iteration_cap": 10000000,
+            "reason": "target",
+            "limited": false,
+            "target_reached": true,
+            "slowest_budget_exceeded": false
+          }
+        },
+        {
+          "case": "list_append",
+          "profile": "large",
+          "ratios": {
+            "llvm": {
+              "after_before": 0.7768287404736575,
+              "before_ns": 12780.356125356126,
+              "after_ns": 9928.147951665193
+            },
+            "qbe": {
+              "after_before": 0.9687969010647712,
+              "before_ns": 20746.167894685135,
+              "after_ns": 20098.823165340407
+            }
+          },
+          "calibration": {
+            "fastest_ns": 52540312,
+            "slowest_ns": 204166229,
+            "target_ns": 50000000,
+            "slowest_cap_ns": 1000000000,
+            "iteration_cap": 10000000,
+            "reason": "target",
+            "limited": false,
+            "target_reached": true,
+            "slowest_budget_exceeded": false
+          }
+        },
+        {
+          "case": "list_filter",
+          "profile": "small",
+          "ratios": {
+            "llvm": {
+              "after_before": 1.0395637032445026,
+              "before_ns": 345.49867632829233,
+              "after_ns": 359.16788342991333
+            },
+            "qbe": {
+              "after_before": 0.9774599394669785,
+              "before_ns": 651.542197131954,
+              "after_ns": 636.856396568782
+            }
+          },
+          "calibration": {
+            "fastest_ns": 50328065,
+            "slowest_ns": 231153574,
+            "target_ns": 50000000,
+            "slowest_cap_ns": 1000000000,
+            "iteration_cap": 10000000,
+            "reason": "target",
+            "limited": false,
+            "target_reached": true,
+            "slowest_budget_exceeded": false
+          }
+        },
+        {
+          "case": "list_filter",
+          "profile": "large",
+          "ratios": {
+            "llvm": {
+              "after_before": 0.9965321347805691,
+              "before_ns": 12873.19903269898,
+              "after_ns": 12828.556513510672
+            },
+            "qbe": {
+              "after_before": 1.0005319475697732,
+              "before_ns": 28057.142992324676,
+              "after_ns": 28072.06792135422
+            }
+          },
+          "calibration": {
+            "fastest_ns": 50543400,
+            "slowest_ns": 259890871,
+            "target_ns": 50000000,
+            "slowest_cap_ns": 1000000000,
+            "iteration_cap": 10000000,
+            "reason": "target",
+            "limited": false,
+            "target_reached": true,
+            "slowest_budget_exceeded": false
+          }
+        },
+        {
+          "case": "sort_int",
+          "profile": "small",
+          "ratios": {
+            "llvm": {
+              "after_before": 1.0075000465691593,
+              "before_ns": 217.2429843257762,
+              "after_ns": 218.87231682504265
+            },
+            "qbe": {
+              "after_before": 1.0321204403706055,
+              "before_ns": 413.2513970083224,
+              "after_ns": 426.52521386399764
+            }
+          },
+          "calibration": {
+            "fastest_ns": 50005052,
+            "slowest_ns": 312985857,
+            "target_ns": 50000000,
+            "slowest_cap_ns": 1000000000,
+            "iteration_cap": 10000000,
+            "reason": "target",
+            "limited": false,
+            "target_reached": true,
+            "slowest_budget_exceeded": false
+          }
+        },
+        {
+          "case": "sort_int",
+          "profile": "large",
+          "ratios": {
+            "llvm": {
+              "after_before": 1.008101815737809,
+              "before_ns": 43977.60548885077,
+              "after_ns": 44333.903945111495
+            },
+            "qbe": {
+              "after_before": 0.9929810645670502,
+              "before_ns": 53596.86963979417,
+              "after_ns": 53220.67667238422
+            }
+          },
+          "calibration": {
+            "fastest_ns": 50065060,
+            "slowest_ns": 262264184,
+            "target_ns": 50000000,
+            "slowest_cap_ns": 1000000000,
+            "iteration_cap": 10000000,
+            "reason": "target",
+            "limited": false,
+            "target_reached": true,
+            "slowest_budget_exceeded": false
+          }
+        },
+        {
+          "case": "mutate_nested",
+          "profile": "small",
+          "ratios": {
+            "llvm": {
+              "after_before": 0.987199854379986,
+              "before_ns": 726.9715016916804,
+              "after_ns": 717.6661606084266
+            },
+            "qbe": {
+              "after_before": 1.0167661273644404,
+              "before_ns": 829.8055435065498,
+              "after_ns": 843.7181689366994
+            }
+          },
+          "calibration": {
+            "fastest_ns": 47650875,
+            "slowest_ns": 77551597,
+            "target_ns": 50000000,
+            "slowest_cap_ns": 1000000000,
+            "iteration_cap": 10000000,
+            "reason": "slowest_arm_budget",
+            "limited": true,
+            "target_reached": false,
+            "slowest_budget_exceeded": false
+          }
+        },
+        {
+          "case": "mutate_nested",
+          "profile": "large",
+          "ratios": {
+            "llvm": {
+              "after_before": 0.989713946091804,
+              "before_ns": 7024.572819418511,
+              "after_ns": 6952.317684715924
+            },
+            "qbe": {
+              "after_before": 0.9386720454689689,
+              "before_ns": 8708.6967191251,
+              "after_ns": 8174.610162710056
+            }
+          },
+          "calibration": {
+            "fastest_ns": 50538427,
+            "slowest_ns": 137893350,
+            "target_ns": 50000000,
+            "slowest_cap_ns": 1000000000,
+            "iteration_cap": 10000000,
+            "reason": "target",
+            "limited": false,
+            "target_reached": true,
+            "slowest_budget_exceeded": false
+          }
+        }
+      ],
+      "rounds": 5,
+      "warmups": 1
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-collections-hot-20261004/.mylang-cache/goal110-append-range-review/paired-repeat.json",
+      "sha256": "9043c1790d4995448c03c28ecfcfdce7e8350fe69252076e964f7271276bb3e8",
+      "measurement_session_id": "009005dd-aec6-47dc-b5d9-04169c3e6ddc",
+      "paired_outcomes": 216,
+      "live_binary_bindings": 4,
+      "rows": [
+        {
+          "case": "list_append",
+          "profile": "small",
+          "ratios": {
+            "llvm": {
+              "after_before": 0.888327547270954,
+              "before_ns": 301.40397468252297,
+              "after_ns": 267.7454535674423,
+              "independent_paired_95": [
+                0.8863987993164774,
+                0.89232987873455
+              ]
+            },
+            "qbe": {
+              "after_before": 0.9254933558161501,
+              "before_ns": 490.2653359451694,
+              "after_ns": 453.737311004227,
+              "independent_paired_95": [
+                0.922719742105295,
+                0.9279522340959792
+              ]
+            }
+          },
+          "calibration": {
+            "fastest_ns": 50611122,
+            "slowest_ns": 200856645,
+            "target_ns": 50000000,
+            "slowest_cap_ns": 1000000000,
+            "iteration_cap": 10000000,
+            "reason": "target",
+            "limited": false,
+            "target_reached": true,
+            "slowest_budget_exceeded": false
+          }
+        },
+        {
+          "case": "list_append",
+          "profile": "large",
+          "ratios": {
+            "llvm": {
+              "after_before": 0.7698623234536234,
+              "before_ns": 12899.633657530208,
+              "after_ns": 9930.941939286768,
+              "independent_paired_95": [
+                0.7642940702326237,
+                0.7730965317154507
+              ]
+            },
+            "qbe": {
+              "after_before": 0.9675678262082019,
+              "before_ns": 20755.566755083997,
+              "after_ns": 20082.418606935847,
+              "independent_paired_95": [
+                0.9646077931013544,
+                0.971550842435737
+              ]
+            }
+          },
+          "calibration": {
+            "fastest_ns": 52540312,
+            "slowest_ns": 204166229,
+            "target_ns": 50000000,
+            "slowest_cap_ns": 1000000000,
+            "iteration_cap": 10000000,
+            "reason": "target",
+            "limited": false,
+            "target_reached": true,
+            "slowest_budget_exceeded": false
+          }
+        },
+        {
+          "case": "list_filter",
+          "profile": "small",
+          "ratios": {
+            "llvm": {
+              "after_before": 1.0390518571273777,
+              "before_ns": 346.00843127235566,
+              "after_ns": 359.52070309527176,
+              "independent_paired_95": [
+                1.0270035476005108,
+                1.0421697613707241
+              ]
+            },
+            "qbe": {
+              "after_before": 0.9755558860751466,
+              "before_ns": 652.3572445884387,
+              "after_ns": 636.4109497820155,
+              "independent_paired_95": [
+                0.9740512824617024,
+                0.9761903682056214
+              ]
+            }
+          },
+          "calibration": {
+            "fastest_ns": 50328065,
+            "slowest_ns": 231153574,
+            "target_ns": 50000000,
+            "slowest_cap_ns": 1000000000,
+            "iteration_cap": 10000000,
+            "reason": "target",
+            "limited": false,
+            "target_reached": true,
+            "slowest_budget_exceeded": false
+          }
+        }
+      ],
+      "rounds": 15,
+      "warmups": 3
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/experiments/runtime-goal110-unique-capture-20261004/paired.json",
+      "sha256": "b7a07dd57583f48fb66abf53a5fdb0970d067de7086207ce8b40a2d2b68b3000",
+      "measurement_session_id": "bea550af-52b8-4699-830b-bac16cecfe77",
+      "paired_outcomes": 192,
+      "live_binary_bindings": 4,
+      "rows": [
+        {
+          "case": "mutate_unique",
+          "profile": "small",
+          "ratios": {
+            "llvm": {
+              "after_before": 0.954076013971789,
+              "before_ns": 4.419477,
+              "after_ns": 4.216517
+            },
+            "qbe": {
+              "after_before": 0.9956985206973158,
+              "before_ns": 21.0548729,
+              "after_ns": 20.9643058
+            }
+          },
+          "calibration": {
+            "fastest_ns": 29095657,
+            "slowest_ns": 202371515,
+            "target_ns": 50000000,
+            "slowest_cap_ns": 1000000000,
+            "iteration_cap": 10000000,
+            "reason": "iteration_cap",
+            "limited": true,
+            "target_reached": false,
+            "slowest_budget_exceeded": false
+          }
+        },
+        {
+          "case": "mutate_unique",
+          "profile": "large",
+          "ratios": {
+            "llvm": {
+              "after_before": 0.9752324865221157,
+              "before_ns": 4.4134709,
+              "after_ns": 4.3041602
+            },
+            "qbe": {
+              "after_before": 0.9950352197579322,
+              "before_ns": 21.1541488,
+              "after_ns": 21.0491231
+            }
+          },
+          "calibration": {
+            "fastest_ns": 29119332,
+            "slowest_ns": 205353917,
+            "target_ns": 50000000,
+            "slowest_cap_ns": 1000000000,
+            "iteration_cap": 10000000,
+            "reason": "iteration_cap",
+            "limited": true,
+            "target_reached": false,
+            "slowest_budget_exceeded": false
+          }
+        },
+        {
+          "case": "mutate_shared",
+          "profile": "small",
+          "ratios": {
+            "llvm": {
+              "after_before": 0.98794122888387,
+              "before_ns": 111.06150947580645,
+              "after_ns": 109.7222441532258
+            },
+            "qbe": {
+              "after_before": 0.9949799893920276,
+              "before_ns": 153.59111612903226,
+              "after_ns": 152.8200870967742
+            }
+          },
+          "calibration": {
+            "fastest_ns": 47897371,
+            "slowest_ns": 748757942,
+            "target_ns": 50000000,
+            "slowest_cap_ns": 1000000000,
+            "iteration_cap": 10000000,
+            "reason": "slowest_arm_budget",
+            "limited": true,
+            "target_reached": false,
+            "slowest_budget_exceeded": false
+          }
+        },
+        {
+          "case": "mutate_shared",
+          "profile": "large",
+          "ratios": {
+            "llvm": {
+              "after_before": 0.9946608478955161,
+              "before_ns": 227.2909277049476,
+              "after_ns": 226.07738686996163
+            },
+            "qbe": {
+              "after_before": 1.001170860187005,
+              "before_ns": 268.5445347309862,
+              "after_ns": 268.8589628351405
+            }
+          },
+          "calibration": {
+            "fastest_ns": 50137352,
+            "slowest_ns": 444169726,
+            "target_ns": 50000000,
+            "slowest_cap_ns": 1000000000,
+            "iteration_cap": 10000000,
+            "reason": "target",
+            "limited": false,
+            "target_reached": true,
+            "slowest_budget_exceeded": false
+          }
+        },
+        {
+          "case": "record_reads",
+          "profile": "small",
+          "ratios": {
+            "llvm": {
+              "after_before": 1.0017642877185127,
+              "before_ns": 5.3568927,
+              "after_ns": 5.3663438
+            },
+            "qbe": {
+              "after_before": 0.9990891048947076,
+              "before_ns": 11.6124238,
+              "after_ns": 11.6018461
+            }
+          },
+          "calibration": {
+            "fastest_ns": 38413123,
+            "slowest_ns": 113519591,
+            "target_ns": 50000000,
+            "slowest_cap_ns": 1000000000,
+            "iteration_cap": 10000000,
+            "reason": "iteration_cap",
+            "limited": true,
+            "target_reached": false,
+            "slowest_budget_exceeded": false
+          }
+        },
+        {
+          "case": "record_reads",
+          "profile": "large",
+          "ratios": {
+            "llvm": {
+              "after_before": 0.9956391567260318,
+              "before_ns": 5.5855252,
+              "after_ns": 5.5611676
+            },
+            "qbe": {
+              "after_before": 1.0935316548268472,
+              "before_ns": 14.1416711,
+              "after_ns": 15.464365
+            }
+          },
+          "calibration": {
+            "fastest_ns": 38857165,
+            "slowest_ns": 153125363,
+            "target_ns": 50000000,
+            "slowest_cap_ns": 1000000000,
+            "iteration_cap": 10000000,
+            "reason": "iteration_cap",
+            "limited": true,
+            "target_reached": false,
+            "slowest_budget_exceeded": false
+          }
+        },
+        {
+          "case": "tagged_stack",
+          "profile": "small",
+          "ratios": {
+            "llvm": {
+              "after_before": 1.001405236655744,
+              "before_ns": 16.710900378830118,
+              "after_ns": 16.734383148592936
+            },
+            "qbe": {
+              "after_before": 0.9980457909895681,
+              "before_ns": 21.40555858458506,
+              "after_ns": 21.363727649125735
+            }
+          },
+          "calibration": {
+            "fastest_ns": 49864439,
+            "slowest_ns": 186309287,
+            "target_ns": 50000000,
+            "slowest_cap_ns": 1000000000,
+            "iteration_cap": 10000000,
+            "reason": "slowest_arm_budget",
+            "limited": true,
+            "target_reached": false,
+            "slowest_budget_exceeded": false
+          }
+        },
+        {
+          "case": "tagged_stack",
+          "profile": "large",
+          "ratios": {
+            "llvm": {
+              "after_before": 0.9989567966993569,
+              "before_ns": 16.77697037100908,
+              "after_ns": 16.759468580143253
+            },
+            "qbe": {
+              "after_before": 0.9997410272937555,
+              "before_ns": 21.393019558680997,
+              "after_ns": 21.387479350511143
+            }
+          },
+          "calibration": {
+            "fastest_ns": 49894110,
+            "slowest_ns": 186941916,
+            "target_ns": 50000000,
+            "slowest_cap_ns": 1000000000,
+            "iteration_cap": 10000000,
+            "reason": "slowest_arm_budget",
+            "limited": true,
+            "target_reached": false,
+            "slowest_budget_exceeded": false
+          }
+        }
+      ],
+      "rounds": 5,
+      "warmups": 1
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/experiments/runtime-goal110-unique-capture-20261004/paired-repeat.json",
+      "sha256": "0a6312310d1282c05f9c51d4068f1ff8b2b6aaee18c557ef7bdb4e50829b72b1",
+      "measurement_session_id": "1d0a24f3-7fd0-4028-998b-9f949ae053b9",
+      "paired_outcomes": 216,
+      "live_binary_bindings": 4,
+      "rows": [
+        {
+          "case": "mutate_unique",
+          "profile": "small",
+          "ratios": {
+            "llvm": {
+              "after_before": 0.9563648634711895,
+              "before_ns": 4.3943692,
+              "after_ns": 4.2026203,
+              "independent_paired_95": [
+                0.9542320072197044,
+                0.9608301664915915
+              ]
+            },
+            "qbe": {
+              "after_before": 0.9947065770058131,
+              "before_ns": 20.9806018,
+              "after_ns": 20.8695426,
+              "independent_paired_95": [
+                0.9880097567093141,
+                0.9995105828458138
+              ]
+            }
+          },
+          "calibration": {
+            "fastest_ns": 29095657,
+            "slowest_ns": 202371515,
+            "target_ns": 50000000,
+            "slowest_cap_ns": 1000000000,
+            "iteration_cap": 10000000,
+            "reason": "iteration_cap",
+            "limited": true,
+            "target_reached": false,
+            "slowest_budget_exceeded": false
+          }
+        },
+        {
+          "case": "mutate_unique",
+          "profile": "large",
+          "ratios": {
+            "llvm": {
+              "after_before": 0.9539742905643568,
+              "before_ns": 4.4349865,
+              "after_ns": 4.2308631,
+              "independent_paired_95": [
+                0.9458952329563155,
+                0.9605724449634355
+              ]
+            },
+            "qbe": {
+              "after_before": 0.9956858729224218,
+              "before_ns": 21.1713745,
+              "after_ns": 21.0800385,
+              "independent_paired_95": [
+                0.9941010516992571,
+                0.9989317468247443
+              ]
+            }
+          },
+          "calibration": {
+            "fastest_ns": 29119332,
+            "slowest_ns": 205353917,
+            "target_ns": 50000000,
+            "slowest_cap_ns": 1000000000,
+            "iteration_cap": 10000000,
+            "reason": "iteration_cap",
+            "limited": true,
+            "target_reached": false,
+            "slowest_budget_exceeded": false
+          }
+        },
+        {
+          "case": "record_reads",
+          "profile": "large",
+          "ratios": {
+            "llvm": {
+              "after_before": 0.9953446646832844,
+              "before_ns": 5.6572724,
+              "after_ns": 5.6309359,
+              "independent_paired_95": [
+                0.9738767065632385,
+                1.0211697713601844
+              ]
+            },
+            "qbe": {
+              "after_before": 1.0250191047071395,
+              "before_ns": 13.9983826,
+              "after_ns": 14.3486096,
+              "independent_paired_95": [
+                0.9575189907189992,
+                1.0990632668780949
+              ]
+            }
+          },
+          "calibration": {
+            "fastest_ns": 38857165,
+            "slowest_ns": 153125363,
+            "target_ns": 50000000,
+            "slowest_cap_ns": 1000000000,
+            "iteration_cap": 10000000,
+            "reason": "iteration_cap",
+            "limited": true,
+            "target_reached": false,
+            "slowest_budget_exceeded": false
+          }
+        }
+      ],
+      "rounds": 15,
+      "warmups": 3
+    }
+  ],
+  "script_sha256": "068bce4b947b7528224dcc691d40252533d7e81f6c09ff73e13ff793670b03a6",
+  "append_archive": [
+    {
+      "receipt": "validation-receipt.json",
+      "sha256": "53d51d51d65f7dab50138576ff0d6d73acc1a1140194649fd33d351f37b62b7d",
+      "raw_archive_bindings": 29,
+      "helper_bindings": 3
+    },
+    {
+      "receipt": "timing-evidence.json",
+      "sha256": "8d2de9797de85e6e76e6fa299645b1764a99364eb312256142c04f3d5af0029e",
+      "raw_archive_bindings": 6,
+      "helper_bindings": 3
+    }
+  ],
+  "append_preflight": {
+    "reviewed_utc": "2026-10-04T05:34:38.145555+00:00",
+    "status": "passed",
+    "kind": "independent saved-outcome and live-identity replay; no new executions or timing",
+    "manifest": "/home/epentland/ai/canopy/mylang-worktrees/goal110-collections-hot-20261004/.mylang-cache/goal110-append-range-debug/runner/manifest.json",
+    "manifest_sha256": "9726b7b3dbd48a5b3c4399f6a1990276f3615b56b2c18787213fa175ccb49f63",
+    "source_revision": "6910e08351a50ce8524a5e37d3f6c23feb4d3383",
+    "source_bindings": 2617,
+    "asset_bindings": 15,
+    "guest_bindings": 24,
+    "frozen_reference_bindings": 16,
+    "qualification_cells": 720,
+    "native_exact_pairs": 11,
+    "qualification_sha256": "0f9a8584a14fe88af129c4e3eace7429b9984e00fa781af9cbd4761c013a81a0",
+    "native_outcomes_sha256": "f2ef9c1848763bde22fa944f9b7a9b48cbd9a9e1f86479334bea3e6ee981120f",
+    "script_sha256": "08d2aac66662c41b640ac8f6c10c15e3433e1ba50060fada212581468c66c3f0"
+  },
+  "mutation_native_preflight": {
+    "reviewed_utc": "2026-10-04T05:36:51.735107+00:00",
+    "status": "passed",
+    "kind": "independent saved-oracle/direct-argv/status/stream replay and live identity check; no new executions",
+    "source_revision": "d4c28bdace208ee284fe22cc63f074b183990967",
+    "native_receipt": "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/native-differential/native-differential.json",
+    "native_receipt_sha256": "e32c8143d6d4fc345dfa934ede6f884c2ad3c76932cd0ca315bcaa5dfab8feea",
+    "paired_outcomes": 872,
+    "recorded_native_executions": 1744,
+    "successful_pairs": 644,
+    "failure_pairs": 224,
+    "budget_refusal_pairs": 4,
+    "live_native_guests": 14,
+    "compilers": 2,
+    "script_sha256": "aba38669ced525266496133a06cb1ab714c76318323552c0edc4bdf77cbe1f49"
+  },
+  "mutation_archive": {
+    "index_sha256": "cfb80552e9676491d57b07430474961de1b7f9c8058c3c4bdf741925fd1ba22a",
+    "file_bindings": 110,
+    "compressed_raw_bindings": 4
+  }
+}

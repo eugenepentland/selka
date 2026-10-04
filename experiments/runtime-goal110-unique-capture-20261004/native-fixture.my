@@ -1,0 +1,82 @@
+def plain(times: int, index: int) -> int:
+    values = [7, 11]
+    for at in range(times):
+        next_value = values[index] + at + 1
+        values[index] = next_value
+    return values[0] + values[1]
+def once(delta: int, index: int) -> int:
+    values = [7, 11]
+    flags = [True, False]
+    values[index] = delta
+    return values[0] + values[1] + (1 if flags[0] else 0)
+def snapshot(index: int) -> int:
+    values = [7, 11]
+    saved = values
+    values[index] = 13
+    return saved[index] * 100 + values[index]
+def repeat(times: int, index: int, shared: bool) -> int:
+    values = [7, 11]
+    total = 0
+    for at in range(times):
+        if shared:
+            saved = values
+            values[index] = (values[index] + at + 1) % 1000003
+            total += saved[index] + values[index]
+            saved = []
+        else:
+            values[index] = (values[index] + at + 1) % 1000003
+            total += values[index]
+    return total + values[0] + values[1]
+def change(values: mut list[int]) -> int:
+    values.clear()
+    values.append(17)
+    return 0
+def callback() -> int:
+    values = [7, 11]
+    values[change(mut values)] = 13
+    return values[0]
+def rebound() -> int:
+    values = [7, 11]
+    values = [19, 23]
+    values[0] = 13
+    return values[0] + values[1]
+def held(groups: list[list[int]]) -> int:
+    total = 0
+    for element in groups:
+        values = element
+        values[0] = 13
+        total += values[0]
+    return total + groups[0][0]
+def managed() -> int:
+    values = [[7], [11]]
+    values[0] = [13]
+    return values[0][0]
+def parsed(text: str) -> int:
+    match int(text):
+        case Some(value):
+            return value
+        case None:
+            return 0
+
+def main(args: list[str], out: Stream) -> int:
+    kind = parsed(args[0])
+    index = parsed(args[1])
+    count = parsed(args[2])
+    out.print(41)
+    if kind == 0:
+        return once(count, index)
+    if kind == 1:
+        return snapshot(index)
+    if kind == 2:
+        return repeat(count, index, False)
+    if kind == 3:
+        return repeat(count, index, True)
+    if kind == 4:
+        return callback()
+    if kind == 5:
+        return held([[7, 11], [19, 23]])
+    if kind == 6:
+        return managed()
+    if kind == 7:
+        return rebound()
+    return plain(count, index)

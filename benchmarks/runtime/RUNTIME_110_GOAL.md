@@ -8,24 +8,28 @@ the raw evidence for every reported result.
 ## Status
 
 <!-- STATUS-START -->
-- **Campaign:** active; combined text improvement integrated; small join reopened.
-- **Last document update:** 2026-10-04 05:31:00 UTC.
-- **Active batch:** duplicate ownership-check elimination in compute and
-  scalar arithmetic specialization for growing append loops.
+- **Campaign:** active; append and mutation improvements integrated; small join reopened.
+- **Last document update:** 2026-10-04 05:59:32 UTC.
+- **Active batch:** short-string join specialization, then integrated ReleaseFast validation.
 - **Current implementation:** `perf/runtime-parity-20261003`, production source
-  `f994742ddb734fd1bf2f4c0a995e1dd438036f01`, equivalent to text `d9d6362f`.
+  `38af69d307c00629c572866032804bef28904d13`, combining text, append and mutation changes.
 - **Latest complete integrated measurement:** B0, before join and sorting changes.
 - **Acceptance scope:** LLVM required; QBE tracked separately.
 - **Current confirmations:** **0/80** after the production change. The eight
   earlier G2 confirmations remain in history and require fresh integrated checks.
 - **LLVM states:** 70 open above target, nine observations awaiting confirmation,
   one reopened regression (small join). Evidence spans revisions; this is not a full-suite pass.
-- **Dashboard artifact:** [After text integration](candidates/goal110-dashboard-20261004-text.json).
-- **Active operations:** mutation candidate `d4c28bda` passed24 focused and14
-  readiness tests; its pinned Debug host is built and native differential checks
-  are running. Append candidate `6910e083` passed27 focused tests and its pinned
-  Debug host; fresh guests are building. The separate argv correction is integrated
-  as `dfcb900b`. The normal integrated RF build waits for this batch.
+- **Dashboard artifact:** [After append and mutation integration](candidates/goal110-dashboard-20261004-mutation-append.json).
+- **Active operations:** timing ended at 05:48:18 UTC. Both append and mutation
+  changes are integrated after independent replay of 816 paired outcomes.
+  Both evidence archives are complete. Short-join `448ee20c` passed five native
+  sanitizer suites, its pinned Debug host, 24 guest builds and 400 text records;
+  its short-copy helper has no calls. The candidate is awaiting a quiet screen.
+- **Append tradeoff:** repeated LLVM append gains of 11.2%/23.0% are accepted
+  with the repeated 3.9% small-filter cost. Both append targets still miss 1.10.
+- **Mutation result:** repeated LLVM unique-mutation gains are 4.4%/4.6%.
+  The QBE large-record-read repeat is +2.5%, with a wide interval spanning no
+  change; the initial slowdown above 5% did not repeat. No parity pass is claimed.
 - **Text tradeoff:** large equality improves 64.4%, while small join slows 5.5%
   and is observed at 1.1183× current fastest. Its target is reopened. Join/score
   helper instructions are unchanged; caller code and placement differ, with no
@@ -34,9 +38,9 @@ the raw evidence for every reported result.
   is accepted alongside an 11.0% large QBE nested-mutation regression. The QBE
   nested instruction stream is unchanged; code/data layout is a hypothesis,
   not an established cause. Latest small LLVM integer sorting still misses at1.3402× after readiness.
-- **Next action:** finish mutation/append correctness and source-bound builds,
-  screen each in a quiet window, then run normal confirmation on the integrated
-  accepted source. Keep the small-join regression visible and unresolved.
+- **Next action:** finish short-join qualification and its matched screen, then
+  build the settled integrated source with a ReleaseFast compiler and run normal
+  confirmations. Keep the small-join regression visible and unresolved.
 
 | Backend | Required targets | Latest observed ≤1.10 | Latest observed >1.10 | Current goal confirmations |
 |---|---:|---:|---:|---:|
@@ -46,9 +50,9 @@ the raw evidence for every reported result.
 
 The counts above use the **fastest current configuration in each measured row**.
 They differ from the earlier campaign's frozen historical 1.00 targets. G2
-confirmed eight LLVM cells on the join source. Text T11 updates twelve observed
-rows and reopens small join; it provides no normal confirmation; every target still needs acceptance
-on the current integrated source. QBE being above 1.10 does not prevent completion.
+confirmed eight LLVM cells on the join source. Text T11 reopens small join; append T12 and mutation T13 update sixteen more
+observed rows. These are exploratory results, with no normal confirmation; every
+target still needs acceptance on the current integrated source. QBE being above 1.10 does not prevent completion.
 
 - [Live speed table](#live-speed-table)
 - [Work queue](#work-queue)
@@ -334,14 +338,14 @@ does not supply the new goal's confirmation protocol.
 <!-- DASHBOARD-START -->
 | Case / profile (size) | Best ns/iteration | Rust | Go | Zig Safe | Zig Fast | MyLang LLVM | MyLang QBE | State LLVM / QBE | Evidence |
 |---|---:|---:|---:|---:|---:|---:|---:|---|---|
-| record_reads / small (64) | 4.0033 | **1.0000** | 1.2072 | 1.3713 | 1.2724 | 1.4598 | 3.3636 | O / O | B0 |
-| record_reads / large (4096) | 4.5650 | **1.0000** | 1.1234 | 1.3275 | 1.2162 | 1.4129 | 3.6264 | O / O | B0 |
-| tagged_stack / small (64) | 6.4408 | **1.0000** | 1.0269 | 1.8674 | 1.9016 | 3.0195 | 4.0123 | O / O | B0 |
-| tagged_stack / large (4096) | 7.6010 | **1.0000** | 1.0901 | 1.8459 | 1.8480 | 3.0251 | 3.6091 | O / O | B0 |
-| mutate_unique / small (64) | 3.2762 | **1.0000** | 1.1804 | 1.2290 | 1.2094 | 1.5747 | 7.6379 | O / O | B0 |
-| mutate_unique / large (1024) | 3.4398 | **1.0000** | 1.1486 | 1.3022 | 1.2176 | 1.4749 | 6.9678 | O / O | B0 |
-| mutate_shared / small (64) | 11.8443 | 1.0509 | 5.1436 | 1.6182 | **1.0000** | 11.9037 | 15.1546 | O / O | B0 |
-| mutate_shared / large (1024) | 96.3787 | **1.0000** | 8.6954 | 2.2145 | 1.7497 | 3.2446 | 3.9678 | O / O | B0 |
+| record_reads / small (64) | 3.8008 | **1.0000** | 1.2025 | 1.3853 | 1.2846 | 1.4097 | 3.0617 | O / O | T13 |
+| record_reads / large (4096) | 3.8753 | **1.0000** | 1.2089 | 1.4026 | 1.2431 | 1.4464 | 3.6482 | O / O | T13 |
+| tagged_stack / small (64) | 5.6965 | **1.0000** | 1.0531 | 1.8438 | 1.8624 | 2.9293 | 3.7731 | O / O | T13 |
+| tagged_stack / large (4096) | 5.7073 | **1.0000** | 1.0523 | 1.8383 | 1.8592 | 2.9234 | 3.7499 | O / O | T13 |
+| mutate_unique / small (64) | 2.9211 | **1.0000** | 1.1442 | 1.2812 | 1.2289 | 1.4440 | 7.2121 | O / O | T13 |
+| mutate_unique / large (1024) | 2.9232 | **1.0000** | 1.1449 | 1.2823 | 1.2286 | 1.4551 | 7.2059 | O / O | T13 |
+| mutate_shared / small (64) | 9.9771 | 1.0340 | 5.3741 | 1.5700 | **1.0000** | 11.0875 | 15.4259 | O / O | T13 |
+| mutate_shared / large (1024) | 65.4858 | **1.0000** | 8.8544 | 2.2447 | 1.7325 | 3.4656 | 4.1223 | O / O | T13 |
 | integer_math / small (64) | 105.7685 | **1.0000** | 1.3640 | 1.3398 | 1.1877 | 1.8197 | 5.0610 | O / O | B0 |
 | integer_math / large (4096) | 6392.6711 | **1.0000** | 1.3269 | 1.3768 | 1.2743 | 1.8377 | 5.2206 | O / O | B0 |
 | float_math / small (64) | 91.4178 | 1.5745 | 1.5169 | 1.5610 | **1.0000** | 2.5058 | 6.5162 | O / O | B0 |
@@ -368,10 +372,10 @@ does not supply the new goal's confirmation protocol.
 | packet_decode / large (256) | 660.8722 | 1.2066 | 3.0576 | 1.9560 | **1.0000** | 2.2540 | 11.4511 | O / O | B0 |
 | list_scan / small (64) | 49.0371 | **1.0000** | 1.2722 | 1.8459 | 1.3498 | 2.0643 | 5.0333 | O / O | B0 |
 | list_scan / large (4096) | 3380.0797 | **1.0000** | 1.2127 | 1.6581 | 1.3890 | 1.5361 | 3.6315 | O / O | B0 |
-| list_append / small (64) | 115.1849 | 1.3508 | 1.9135 | 2.1715 | **1.0000** | 2.6792 | 4.3123 | O / O | T9 |
-| list_append / large (4096) | 5414.5766 | 1.0894 | 1.9588 | 2.1366 | **1.0000** | 2.4072 | 3.9112 | O / O | T9 |
-| list_filter / small (64) | 177.9840 | 1.0990 | 1.9368 | 1.5068 | **1.0000** | 2.6375 | 4.7879 | O / O | B0 |
-| list_filter / large (4096) | 6892.5245 | **1.0000** | 1.9650 | 1.8369 | 1.2613 | 2.4967 | 5.3200 | O / O | B0 |
+| list_append / small (64) | 112.7540 | 1.3635 | 1.9205 | 2.1700 | **1.0000** | 2.3878 | 4.0291 | O / O | T12 |
+| list_append / large (4096) | 5316.1692 | 1.0883 | 1.9989 | 2.1341 | **1.0000** | 1.8502 | 3.7854 | O / O | T12 |
+| list_filter / small (64) | 139.3599 | 1.0775 | 1.9520 | 1.4605 | **1.0000** | 2.5734 | 4.5527 | O / O | T12 |
+| list_filter / large (4096) | 5380.9056 | **1.0000** | 1.9535 | 1.8042 | 1.3147 | 2.3925 | 5.2128 | O / O | T12 |
 | dict_lookup / small (64) | 300.9516 | 2.4699 | 1.7785 | 2.0004 | **1.0000** | 1.9397 | 3.2588 | O / O | B0 |
 | dict_lookup / large (4096) | 33803.0743 | 1.3746 | **1.0000** | 1.7895 | 1.3927 | 1.7863 | 2.6548 | O / O | B0 |
 | dict_lookup_str / small (64) | 467.1945 | 2.2418 | 1.4048 | 1.2997 | **1.0000** | 1.4698 | 2.2298 | O / O | B0 |
@@ -386,10 +390,10 @@ does not supply the new goal's confirmation protocol.
 | alloc_short / large (1024) | 3.9012 | 327.5994 | 536.1037 | 1374.7989 | **1.0000** | 19711.5691 | 26589.1038 | O / O | B0 |
 | alloc_retained / small (64) | 1292.6997 | 1.0697 | 1.4853 | 1.0303 | **1.0000** | 2.3540 | 3.5644 | O / O | B0 |
 | alloc_retained / large (1024) | 20710.2684 | 1.0504 | 1.2628 | 1.0366 | **1.0000** | 2.2667 | 3.3646 | O / O | B0 |
-| mutate_nested / small (64) | 725.6244 | 1.5319 | 1.5667 | 1.6185 | 1.4389 | **1.0000** | 1.1389 | P / O | T9 |
-| mutate_nested / large (1024) | 6984.3321 | 2.7290 | 2.4279 | 2.7002 | 2.5072 | **1.0000** | 1.2342 | P / O | T9 |
-| sort_int / small (64) | 161.2429 | 1.3579 | 6.3145 | 1.6313 | **1.0000** | 1.3402 | 2.5690 | O / O | T9 |
-| sort_int / large (4096) | 43559.5301 | 1.4501 | 5.2613 | 1.4596 | **1.0000** | 1.0125 | 1.2332 | P / O | T9 |
+| mutate_nested / small (64) | 719.5282 | 1.5519 | 1.5747 | 1.5739 | 1.4659 | **1.0000** | 1.1730 | P / O | T12 |
+| mutate_nested / large (1024) | 6938.5819 | 2.7463 | 2.4531 | 2.7418 | 2.5262 | **1.0000** | 1.1791 | P / O | T12 |
+| sort_int / small (64) | 162.8525 | 1.3413 | 6.2696 | 1.6145 | **1.0000** | 1.3460 | 2.6245 | O / O | T12 |
+| sort_int / large (4096) | 43807.5292 | 1.4408 | 5.2225 | 1.4501 | **1.0000** | 1.0108 | 1.2168 | P / O | T12 |
 | sort_records / small (64) | 534.9452 | 1.1915 | 12.9614 | 1.4126 | **1.0000** | 2.2464 | 2.9003 | O / O | T9 |
 | sort_records / large (4096) | 51470.2384 | **1.0000** | 23.3619 | 2.1788 | 1.7380 | 1.2257 | 1.4972 | O / O | T9 |
 | lox_eval / small (16) | 738.1632 | **1.0000** | 1.1383 | 2.6921 | 2.6291 | 3.6607 | 4.0643 | O / O | B0 |
@@ -443,6 +447,11 @@ does not supply the new goal's confirmation protocol.
 | T10 | Unintegrated scanner alignment `57034382`; six-arm5r/1w and three-artifact matched comparison | [Archive](../../experiments/runtime-goal110-search-align-20261004/README.md), [coordinator review](candidates/goal110-screens-20261004-0438-review.json) | Large search570/5a0.99935 versus52/5a1.16262. General placement restores search in this run; individual-address causality unproven. |
 
 | T11 | Text `d9d6362f`, integrated as `f994742d`; six-arm5r/1w, matched15r/3w repeat,80 medium helper rows | [Archive](../../experiments/runtime-goal110-text-combined-20261004/README.md), [observed analysis](candidates/goal110-combined-d9d6362f-20261004-observed.json), [coordinator review](candidates/goal110-combined-d9d6362f-20261004-review.json) | Large equality0.35592 after/before; small join1.05524 is an explicit cost and reopens its target. Search stable. No normal confirmation. |
+
+| T12 | Append `6910e083`, integrated as `db11bf30`; six-arm 5r/1w and independent matched 15r/3w repeat | [Archive](../../experiments/runtime-goal110-append-range-20261004/README.md), [observed analysis](candidates/goal110-append-6910e083-20261004-observed.json), [coordinator review](candidates/goal110-mutation-append-20261004-review.json) | Repeated LLVM append 0.88833/0.76986 after/before; small filter 1.03905 is an explicit cost. Both append targets remain open. No normal confirmation. |
+
+| T13 | Mutation `d4c28bda`, production delta integrated as `38af69d3`; six-arm 5r/1w and independent matched 15r/3w repeat | [Archive](../../experiments/runtime-goal110-unique-capture-20261004/README.md), [observed analysis](candidates/goal110-mutation-d4c28bda-20261004-observed.json), [coordinator review](candidates/goal110-mutation-append-20261004-review.json) | Repeated LLVM unique mutation 0.95636/0.95397 after/before; QBE large-record-read repeat 1.02502 has a wide interval. No target closed or normal confirmation. |
+
 | D3 | Deferred scalar-pointer sources `a29aa6a9` and `1fdae8e1`; no timing | [Strict proof and incident archive](../../experiments/runtime-goal110-scalar-slots-20261004/README.md), [hybrid archive](../../experiments/runtime-goal110-scalar-addresses-20261004/README.md), [coordinator review](candidates/goal110-screens-20261004-0438-review.json) | Actual optimized code unchanged. Root checked96 raw/archive bindings and identical live hybrid/control ELFs; neither source is integrated. |
 
 B0 comparison JSON (uncompressed) SHA256:
@@ -536,6 +545,14 @@ Append entries; do not remove failed experiments or historical outcomes.
 | 2026-10-04 05:17:36 UTC | Integrated `f994742d` / T11 | Accepted the general bounded equality, separated floating-parser frame and aligned scanner combination. Repeat LLVM large equality0.35592 accompanies small join1.05524; search1.00471. Root verified source equivalence to d9,504 paired outcomes,360 samples/720 qualifications,80 medium-helper rows,43 raw/archive plus13 static bindings, and independently replayed identical native join/score bodies. The caller changes code/placement without frame or stack-reference count growth. | Explicit tradeoff: retain64.4% large-equality gain and reopen small join at1.118284× current fastest. Dashboard nowO70/P9/R1 for LLVM, with0 current confirmations. No goal completion, RF acceptance or causal placement explanation claimed. Root production Guardian88 passed; mutation/append work continues. |
 
 | 2026-10-04 05:31:00 UTC | Mutation/append source pins and argv fix | Mutation `d4c28bda` combines the uniqueness proof with accepted readiness, passing24 focused and14 affected readiness tests. Append `6910e083` passes27 focused tests, including exact native growth/overflow/refusal outcomes and frozen-project emission. Both official source-bound Debug hosts are built; native differentials and fresh guests continue against unchanged638 controls. The separate guest-argv test correction `61e9bd6f` is integrated as `dfcb900b`; its23-test differential batch and explicit successful fold oracle pass. | No new timing or target confirmations. Production optimizations remain isolated pending actual-code and paired screens. Limited review of the two other argument-forwarding environment helpers confirms their callers intentionally pass runtime options, so they do not need the guest delimiter. |
+
+| 2026-10-04 05:38:53 UTC | Append/mutation quiet timing begins | Root independently replays append720 qualification checks,11 exact native pairs,24 guest hashes/16 frozen references/15 assets and2617 source bindings; holdout verifier passes516. Mutation replay checks872 native pairs (644 successful,224 semantic errors,4 budget refusals),1744 recorded executions and14 live guests. Actual mutation legacy LLVM unique calls18→16 and entry16041→15796bytes; QBE18→16 and50516→50148bytes. Append LLVM removes repeated scalar overflow work and retains ordinary growth. | Append owns the quiet lane, mutation follows; both use four cases at both sizes, six arms5r/1w and matched638 pairs. No timing result at launch. Source-only short-join specialization hoists separator classification under the existing16-byte policy; its tests/build wait until timing ends. Required Guardian feedback is committed as `fc0c6e9`. |
+
+| 2026-10-04 05:41:52 UTC | Append `6910e083` first exploratory result | Six-arm05:38:56–05:39:45 passes240 samples/720 qualifications. Matched638→6910 session `4d1c67cf-48ef-445f-ada7-66062f1a191b` passes192 outcomes: LLVM append0.88887/0.77683 after/before, filter1.03956/0.99653, sort1.00750/1.00810, nested0.98720/0.98971. QBE append0.92885/0.96880; other controls0.93867–1.03212. Six-arm LLVM append remains2.38780/1.85022× current fastest; sort large1.01076, nested1/1. | Not adopted or confirmed. Mutation now owns the quiet lane. Repeat both append sizes and small-filter control15r/3w after mutation. Raw evidence is in the isolated collections-hot worktree under `.mylang-cache/goal110-append-range-review/`; archive and independent timing replay wait until the quiet window ends. |
+
+| 2026-10-04 05:46:26 UTC | Mutation `d4c28bda` exploratory result | Six-arm screen 05:41:45–05:42:47 passes 240 samples/720 qualifications. Matched 638→d4 comparison passes 192 outcomes: LLVM unique 0.95408/0.97523 after/before, shared 0.98794/0.99466, record reads 1.00176/0.99564 and tagged stack 1.00141/0.99896. QBE unique 0.99570/0.99504; large record reads 1.09353 with wide interval [0.98550,1.23690]. LLVM/current-fastest unique remains 1.444/1.455. | No adoption or confirmation. Append owns its three-row 15r/3w repeat; mutation then repeats unique small/large and large record reads. Source and artifacts remain unchanged. Raw screen/pair SHA d1fd0995…/b7a07dd5… are retained under `experiments/runtime-goal110-unique-capture-20261004/`; archive and independent timing replay follow the quiet window. |
+
+| 2026-10-04 05:54:27 UTC | Integrated append `db11bf30` and mutation `38af69d3` | Independent 15r/3w append repeat: LLVM small 301.404→267.745ns (0.88833, CI0.88640–0.89233), large 12899.634→9930.942ns (0.76986, CI0.76429–0.77310); small filter 346.008→359.521ns (1.03905, CI1.02700–1.04217). Mutation repeat: LLVM unique 0.95636/0.95397 after/before; QBE large record reads 1.02502, CI0.95752–1.09906. Root verifies 816 timing outcomes, exact oracles/medians/ratios/plans/live binaries and independent repeat intervals; both six-arm analyses pass artifact validation. | Adopt both changes, explicitly retaining the 3.9% small-filter cost and QBE uncertainty. No new target is closed and no normal confirmation is claimed. All timing ended 05:48:18; archives and short-join checks are released. Short-join source `448ee20c` passes five optimized native sanitizer suites including 684 mixed-width joins; its Debug host is building. |
 
 For future entries, include the affected cases/sizes/backends and before → after
 ratios, or say explicitly that the step produced no timing result. Link long

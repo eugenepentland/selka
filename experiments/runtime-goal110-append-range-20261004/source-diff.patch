@@ -1,0 +1,659 @@
+diff --git a/SPEC.md b/SPEC.md
+index 5be33f60..9541a58b 100644
+--- a/SPEC.md
++++ b/SPEC.md
+@@ -211,7 +211,7 @@ The roadmap in `docs/experiments/roadmap.md` tracks unsupported and planned feat
+ - [QBE-FRAMEMAP-1] In the fast protocol — a ReleaseFast executable or `mylang run` with no `--max-steps`/`--max-frames` ceiling — a guest function links no frame record: no `ctx->active_frame` load or store, no metadata store and no position store runs on any call path. Each unit opens with `dbgfile "SYMBOL"`, every call is preceded by `dbgloc PC+1` naming the bytecode instruction it belongs to (pc 0 for the prologue's own calls), and the prologue keeps only the execution-stack floor test, whose `myl_qbe_fail_frame` call carries column 1 to mark it as an entry guard. The build turns those positions into a table of return addresses, and when a trap fires the runtime walks the guest stack — by call-frame information in an LLVM program, whose guest functions carry unwind tables and no frame pointer and which links libunwind, and by the frame-pointer chain in a QBE program — and reports every return address found in the table — skipping an entry guard's frame, which was never entered — expanding bytecode-inliner splices exactly as before. A trap's code, message, `in f at file:line` trace, `MYLANG-TRAP` record, `assert` message and exit status are byte-identical to the linked-record protocol, including a callee LLVM inlined, a trap inside an inlined runtime helper, recursion and a stack-floor failure. A build with step or frame accounting, a library, the guest-test runner and a Debug executable are unchanged. For the QBE walk, the generated C and every runtime unit that can reach `fail` (the `qbe_*` units, text methods and value-copy unit) keep a frame pointer in every function that calls; the heap, collector and container units, which only return a status, keep every register.
+ - [LLVM-OVERFLOW-INTRINSIC-1] The LLVM translator lowers a checked 64-bit `+`, `-` or `*` to `llvm.{s,u}{add,sub,mul}.with.overflow.i64`, so it reaches the machine as the operation and one flag branch (`add; jo`, `sub; jb`, `imul; jo`) instead of the frontend's xor/and sign test or four-limb high product. It evaluates each block symbolically — a pure 64-bit operation is its opcode over its operands' values, a literal is its bit pattern, anything else is a value equal only to itself — and rewrites a flag only when its value is exactly one of the frontend's formulas over an `add`, `sub` or `mul` earlier in the same block: `((a ^ r) & (b ^ r)) < 0` for a signed add, `((a ^ b) & (a ^ r)) < 0` for a signed subtract, `r <u a` and `a <u b` for the unsigned ones, the four-limb high product `!= 0` for an unsigned multiply, and the signed high product against `r >> 63` for a signed one. Each formula is the intrinsic's overflow bit for every pair of 64-bit inputs, so the rewrite assumes nothing about the operands; the intrinsic's value replaces the wrapped result bit for bit. The branch, the cold block and its `myl_qbe_fail_overflow_op` call with the same operands, width and position are untouched, so a trap's code, message, trace, `MYLANG-TRAP` record and exit status are byte-identical. A narrower width's range test and literal bounds outside LLVM-CONSTANT-OVERFLOW-1 are left as they are, the QBE backend's IL and assembly do not change, and `wrapping_*`/`saturating_*` are unaffected.
+ - [QBE-LOOP-FACTS-1] With no step accounting, the native emitter plans each innermost loop of the shape `for i in range(...)`, `for x in xs`, `enumerate(...)` and `while i < n` / `while i <= n` with one `i = i + step` as the loop's last statement (a positive literal step, or a step held in a local the loop never writes), whose every instruction is a local load or store, a literal, a comparison, a jump, integer or float arithmetic, a cast, a field or fixed-array operation, `float`/`int`/`sqrt`-style float conversions, or a list or `bytes` length, element read, element write or iteration check — no call, no allocation, no pop, insert, slice or other resizing operation, no `str` or dictionary access, and at most one append — to a list of integers, `bool` or floats held in a local, in a straight-line body with a literal step, which is then the loop's only access to lists of that type — and whose header is its only entry. Such a loop cannot change the length of any collection it reads or move any element storage. The plan names the value of every operand and local symbolically (literals, locals the loop never writes, the counter between its entry value and its bound, an accumulator whose one write adds a bounded amount, sums, differences and products of those, lengths, a division of a bounded value by a nonzero literal, and elements read at an invariant position from a list whose element slots the loop never writes) and proves: an index `alpha * i + beta` with `alpha` in -1, 0, 1 and an invariant `beta` is in bounds on every iteration when its smallest value is at least zero and its largest is below the length, which also makes the frontend's `< 0` normalization branch for that index dead; a checked 64-bit `+`, `-` or `*` whose operands are bounded cannot overflow once every leaf it is computed from lies in `[-2^b, 2^b]`, where `b` (at most 60, at least 20) is the widest bound at which every such expression, counted as coefficient times leaf-bound to its degree, fits 64 bits — an operation that fits only below 2^20 keeps its check; an accumulator is bounded by its entry value plus three times the leaf bound times its increment's bound; a `for x in xs` length check holds on every iteration when it holds on entry; an invariant row `c[i]` and a stable list's element storage address are the same on every iteration; and an append runs once per counter value, so the list's spare capacity holds every iteration's element when it is at least the number of counter values. A loop the plan proves nothing about, and every loop of a step-accounted build, is lowered once, exactly as before.
+-- [QBE-LOOP-VERSION-1] A planned loop (`QBE-LOOP-FACTS-1`) is lowered twice behind a guard that every entry to the loop reaches first: it checks that the counter has at least 16 values to run through before its bound (a shorter loop saves fewer checks than the guard costs, and runs the original), each leaf's magnitude bound, a non-negative (or, for an accumulator, positive) step held in a local, each proven index's extremes against its length, each iteration check's length against its expected value, and reads each hoisted row and element storage address once, in an order in which no element is read before its position was checked. When every condition holds, control runs a check-free copy of the loop: the proven index, overflow and iteration checks and the dead normalization branches are omitted, an append whose room the guard checked (`capacity - length` at least the number of counter values) is an element store with the length and generation written back exactly as the inline append's fast path writes them, without its capacity test or growth call,, a hoisted row is the guard's value, and an element address is computed from the guard's storage address; every check the plan did not prove is still emitted, at the same instruction, with the same trap, operands and position. When any condition fails, control runs the original loop, lowered exactly as an unversioned build lowers it, so a trap the guard could not rule out is raised by the original at the same iteration with the same code, message, trace and `MYLANG-TRAP` record. The copy is discarded if its lowering would name an allocating callee. Results, traps and trace text are byte-identical to the unversioned lowering; only the instructions executed differ.
++- [QBE-LOOP-VERSION-1] A planned loop (`QBE-LOOP-FACTS-1`) is lowered twice behind a guard that every entry to the loop reaches first: it checks that the counter has at least 16 values to run through before its bound (a shorter loop saves fewer checks than the guard costs, and runs the original), each leaf's magnitude bound, a non-negative (or, for an accumulator, positive) step held in a local, each proven index's extremes against its length, each iteration check's length against its expected value, and reads each hoisted row and element storage address once, in an order in which no element is read before its position was checked. When every condition holds, control runs a check-free copy of the loop: the proven index, overflow and iteration checks and the dead normalization branches are omitted, an append whose room the guard checked (`capacity - length` at least the number of counter values) is an element store with the length and generation written back exactly as the inline append's fast path writes them, without its capacity test or growth call,, a hoisted row is the guard's value, and an element address is computed from the guard's storage address; every check the plan did not prove is still emitted, at the same instruction, with the same trap, operands and position. When any condition fails, control runs the original loop, lowered exactly as an unversioned build lowers it, so a trap the guard could not rule out is raised by the original at the same iteration with the same code, message, trace and `MYLANG-TRAP` record. Except for the separately certified ordinary growing append path of `RC-APPEND-RANGE-1`, the copy is discarded if its lowering would name an allocating callee. Results, traps and trace text are byte-identical to the unversioned lowering; only the instructions executed differ.
+ - [LLVM-ELEMENT-CLASS-1] Emitted QBE IL marks the storage word of a managed container — the start of its element storage block — with `# myl-elem %temp KIND` instead of `# myl-obj %temp`, where KIND is the element's byte size followed by `r` when elements are GC references and `v` otherwise: the storage word an element read or write loads, the backing pointer of the inline list append, and the destination and source storage of the inline byte-buffer appends. It is a comment line, so QBE's assembly is byte-identical. The LLVM translator reads it as everything `# myl-obj` says and more: an access derived by `copy` and offsetting `add` from an element storage word is placed in an element scope of its kind, one derived from any other marked object (a header, an allocation's payload) in an object scope, and the scoped alias metadata says objects and element storage never alias, and neither do element blocks of different kinds — each storage block is an allocation of its own and only ever holds elements of its one kind. A plain foreign access (a parameter, a global, the context) still aliases all of them, an access that combines two refined classes drops the refinement for the whole unit, and a unit with more than 29 element kinds leaves the rest plainly foreign. It is what lets LLVM keep a list's length, storage pointer and row pointers in registers across a loop that stores into element storage.
+ - [LLVM-ELEMENT-GEP-1] The LLVM translator gives a load or store whose address is an element address — a singly-defined `add` computed earlier in the same block from a marked storage word or object plus at least one non-constant term, every temporary on the way singly defined and none redefined in between — the address as a plain (not `inbounds`) `getelementptr i8` from the marked base instead of an `inttoptr` of the integer sum. The bits are the same; LLVM's scalar evolution can now see the variable part, so a loop over `data[i]` loads whole vectors instead of gathering one element at a time, and dependence distances can be computed. The integer `add` is still emitted for every other reader, a constant-offset header field and every `blit` keep the integer form, and `MYLANG_QBE_LLVM_ELEMENT_GEP=0` turns it off.
+ - [LLVM-RC-PREFIX-1] RC lowering marks the address of every word of the counted prefix below a managed payload that its inline fast paths read or write — the owner and hold counts and the common-header mark, `sub PAYLOAD, 32|24|16` of a payload it has already tested non-null — with `# myl-rc %temp`, a comment line, so QBE's assembly is byte-identical. The LLVM translator places such an access in an RC prefix scope that the scoped alias metadata keeps apart from the frame, from every object and from every element storage block: in an RC build no object or element access reaches below a payload, the frame never holds a managed object, and the runtime's own (inlined) count updates carry no metadata and so still alias everything. When the marked address is a singly-defined constant offset from a singly-defined payload, the access addresses it as a plain `getelementptr i8` from that payload instead of an `inttoptr` of the integer difference, so LLVM tells the owner, hold and mark words of one payload apart, forwards a count it just stored, and folds a loan and unloan of one payload into nothing. An unmarked header access keeps the integer form and no metadata; `MYLANG_QBE_LLVM_ALIAS=0` drops the scope and `MYLANG_QBE_LLVM_ELEMENT_GEP=0` the `getelementptr`.
+@@ -1654,6 +1654,7 @@ host failure in one worker leaves the units the other workers hold running.
+ - [RC-PLAIN-POP-1] RC tail removal of a plain value of 1 through 64 bytes may copy and clear the last slot directly only when the list is nonempty, its generation can increment, its native binding is already registered and owns no edge or unique obligation, and no finalizer is pending. Cold metadata, pending callbacks, managed values, empty lists and frozen generations keep the original runtime path. Receiver uniqueness, arena lifetimes, failure reporting and iterator invalidation remain unchanged.
+ - [RC-OPAQUE-EXTEND-1] Growing a large RC storage block in place leaves the new capacity unwritten when the element's registered binding has no owning leaf and no unique drop (its flat plan is empty), exactly as the collector's opaque extension: no release or drop ever walks those bytes and every element is written before it can be read. Any other element, or one without a registered binding, still receives zero bytes, the empty form its cleanup walk expects.
+ - [RC-PRESIZED-APPEND-1] Inside a versioned loop whose facts presize its one plain scalar append (`QBE-LOOP-VERSION-1`), an RC build uses the same check-free room write as the collector when the loop also carries the quiet scalar append-loop certificate of `RC-PLAIN-APPEND-1`. The guard, after its capacity step, asks the runtime once whether the list may take direct room writes and requires the list generation below 2^62, so no append in the loop can reach the frozen generation; either refusal runs the original loop with its per-append admission. This already-certified guard selects the identical hot readiness alias to force LLVM inlining, without changing the predicate or proof. The copy then stores each element and bumps the length and generation with no call, flag or per-append check. An uncertified loop keeps its ordinary RC append and so its single original copy.
++- [RC-APPEND-RANGE-1] An already certified quiet scalar append loop whose root traces through at most eight exact handoffs to an untouched empty constructor may use its two planned copies for scalar-range specialization instead of a presized copy whose room guard cannot hold. Its guard retains the existing ordered scalar range conditions and refuses uncertain, reference, caller-storage, collection-dependent or effectful values; uncertainty selects the complete original checked loop without trapping or allocating. Both copies retain ordinary per-append capacity checks, readiness admission and invalidation, growth, allocation refusal, cleanup, accounting and publication in the original order, with no receiver or backing pointer cached across allocation. Only scalar checks proved by the existing facts are omitted. Existing instruction/node/work limits still apply, and a bounded lowered-call audit allows only the original scalar append, its readiness query and cold trap helpers; the general allocating-copy and operand-isolation vetoes remain unchanged for all other loops. Nonempty, used, aliased, incoming and presized roots retain their existing policy.
+ - [RC-FRESH-APPEND-GENERATION-1] Inside a certified quiet scalar append loop (`RC-PLAIN-APPEND-1`) the per-append room test omits the frozen-generation comparison: the certificate's root is a freshly allocated list, which never carries the frozen generation and cannot count up to it. Capacity, admission and every other append keep their checks.
+ 
+ - [RC-NONHELD-CAPTURE-1] A bounded exact named-source load/store proof may refine the function-wide possibility of terminal held list tokens only when canonical publication, all writers and the independent whole-local empty-token lifetime are established. Parameters, repeated source definitions, pattern/ref writers, borrowed entries and uncertain inputs retain normal handling. Actual iterator/view holds, source owners, clone checks, semantic history, callback/trap behavior and physical counters remain unchanged.
+diff --git a/src/qbe_loop_version.zig b/src/qbe_loop_version.zig
+index 8b458436..dd588247 100644
+--- a/src/qbe_loop_version.zig
++++ b/src/qbe_loop_version.zig
+@@ -21,6 +21,7 @@ const facts = @import("qbe_loop_facts.zig");
+ const read_version = @import("qbe_rc_read_version.zig");
+ const operands = @import("qbe_loop_operands.zig");
+ const rc_append_loop = @import("qbe_rc_append_loop.zig");
++const append_version = @import("qbe_rc_append_version.zig");
+ const byte_reduction = @import("qbe_byte_reduction.zig");
+ 
+ /// Errors reported while emitting native operations.
+@@ -53,15 +54,17 @@ pub fn Lower(comptime E: type) type {
+     return struct {
+         /// Emit the guard and the check-free copy of `loop` in front of its
+         /// header. Returns false, having emitted nothing, when the copy turned
+-        /// out to allocate after all, so the caller lowers the loop once, as
+-        /// before.
++        /// out to allocate outside the separately certified ordinary growing
++        /// append path, so the caller lowers the loop once, as before.
+         pub fn emit(self: *E, loop: *const facts.Loop) Error!bool {
+             return atHead(E, self, loop, emitHere);
+         }
+ 
+         fn emitHere(self: *E, loop: *const facts.Loop) Error!bool {
+-            // Existing hoist/scalar admissions keep their original protocol.
+-            const previous = !@import("runtime_mode.zig").enabled() or
++            // Growing appends retain their ordinary per-operation runtime
++            // protocol; only the existing plan's scalar facts are used.
++            const growing = append_version.certify(E, self, loop);
++            const previous = growing or !@import("runtime_mode.zig").enabled() or
+                 @import("qbe_rc_readonly_calls.zig").body(E, self) or
+                 @import("qbe_rc_hoist.zig").permitsVersion(E, self, loop.head, loop.back) or
+                 @import("qbe_rc_scalar_version.zig").proven(E, self, loop.head, loop.back);
+@@ -82,17 +85,7 @@ pub fn Lower(comptime E: type) type {
+                 self.output.deinit();
+                 self.output = main;
+             };
+-            try self.headerLabel(loop.head, "i");
+-            if (read_proof) |proof| try read_version.guard(E, self, proof, loop.head);
+-            for (loop.guard) |step| try guardStep(self, &active, step);
+-            // Everything the copy reads from the guard is computed once the
+-            // whole guard has held, so an element is read only after the step
+-            // that bounds its index.
+-            for (loop.actions) |action| {
+-                if (action.value) |node| _ = try value(self, &active, node);
+-                if (action.receiver) |node| _ = try storage(self, &active, node);
+-                if (action.effect == .presized) try appendState(self, &active, action.receiver.?);
+-            }
++            try emitGuard(E, self, &active, growing);
+             try self.print(" jmp @fi{d}\n", .{loop.head});
+             const guard_end = self.output.writer.end;
+             self.version = &active;
+@@ -108,9 +101,11 @@ pub fn Lower(comptime E: type) type {
+                 }
+             }
+             const text = self.output.writer.buffer[0..self.output.writer.end];
+-            if (self.copyAllocates(text[guard_end..])) return false;
++            if (growing) {
++                if (!append_version.ordinaryCopy(text[guard_end..])) return false;
++            } else if (self.copyAllocates(text[guard_end..])) return false;
+             if (read_proof != null and !read_version.quietCopy(text[guard_end..])) return false;
+-            const isolated = operands.certify(E, self, loop, read_proof, text[guard_end..]);
++            const isolated = !growing and operands.certify(E, self, loop, read_proof, text[guard_end..]);
+             keep = true;
+             var copy = self.output;
+             self.output = main;
+@@ -262,6 +257,26 @@ pub fn Lower(comptime E: type) type {
+     };
+ }
+ 
++fn emitGuard(comptime E: type, self: *E, active: *Active, growing: bool) Error!void {
++    const loop = active.loop;
++    try self.headerLabel(loop.head, "i");
++    if (growing) try self.print(" # mylang-rc-append-range {d}\n", .{loop.head});
++    if (active.read) |proof| try read_version.guard(E, self, proof, loop.head);
++    for (loop.guard) |step| {
++        if (growing and step == .room) continue;
++        try Lower(E).guardStep(self, active, step);
++    }
++    // A growing copy caches no receiver, storage, length or admission across
++    // allocation; loopAppend therefore keeps ordinary per-append lowering.
++    if (growing) return;
++    // Hoisted elements are read only after the step that bounds their index.
++    for (loop.actions) |action| {
++        if (action.value) |node| _ = try Lower(E).value(self, active, node);
++        if (action.receiver) |node| _ = try Lower(E).storage(self, active, node);
++        if (action.effect == .presized) try Lower(E).appendState(self, active, action.receiver.?);
++    }
++}
++
+ // Guard queries use the header's physical proof context, never the preceding
+ // instruction's PC. Trial emission may advance it; restore on every outcome.
+ fn atHead(comptime E: type, self: *E, loop: *const facts.Loop, comptime body: fn (*E, *const facts.Loop) Error!bool) Error!bool {
+diff --git a/src/qbe_rc_append_version.zig b/src/qbe_rc_append_version.zig
+new file mode 100644
+index 00000000..080c6b35
+--- /dev/null
++++ b/src/qbe_rc_append_version.zig
+@@ -0,0 +1,182 @@
++//! Scalar-range specialization of a certified growing append loop. Runtime
++//! capacity, readiness, allocation and publication keep their ordinary order.
++const std = @import("std");
++const facts = @import("qbe_loop_facts.zig");
++const frame = @import("qbe_rc_frame.zig");
++const fresh = @import("qbe_rc_fresh_root.zig");
++
++/// Only the existing quiet scalar append certificate can admit this exception.
++/// An empty, untouched root cannot satisfy the old whole-loop room guard, so
++/// its two copies instead differ only in proven scalar checks. Every guard
++/// dependency is a private integer word; no speculative read can call or trap.
++pub fn certify(comptime E: type, self: *E, loop: *const facts.Loop) bool {
++    const state = frame.get(E, self) orelse return false;
++    const code = self.function.scope.instructions;
++    if (code.len > 4096 or loop.back < loop.head or loop.back >= code.len) return false;
++    if (loop.back - loop.head > facts.max_body or loop.actions.len != loop.back - loop.head + 1) return false;
++    const nodes = self.loop_plan.nodes;
++    if (nodes.len > 4096) return false;
++    const receiver = appendReceiver(loop) orelse return false;
++    if (receiver >= nodes.len or nodes[receiver] != .leaf or nodes[receiver].leaf.kind != .local) return false;
++    const root = nodes[receiver].leaf.slot;
++    const certified = for (state.plan.append_loops) |proof| {
++        if (proof.head == loop.head and proof.back == loop.back and proof.root == root) break true;
++    } else false;
++    if (!certified or !fresh.emptyBefore(E, self, root, loop.head)) return false;
++    // The older append certificate admits scalar loads through references.
++    // Allocation can drain callbacks, so this specialization additionally
++    // refuses those words even when they occur only in a retained check.
++    for (code[loop.head .. loop.back + 1]) |instruction| switch (instruction.op) {
++        .load_local, .store_local => |slot| if (self.byReference(@backingInt(slot)) or self.callerStorage(@backingInt(slot))) return false,
++        .buffer_operation => |operation| if (operation.kind != .append or @backingInt(operation.owner) != root) return false,
++        else => {},
++    };
++    return safeGuards(E, self, loop, receiver);
++}
++
++fn appendReceiver(loop: *const facts.Loop) ?facts.NodeId {
++    var result: ?facts.NodeId = null;
++    for (loop.actions) |action| {
++        if (action.value != null) return null;
++        if (action.effect == .presized) {
++            if (result != null) return null;
++            result = action.receiver orelse return null;
++        } else if (action.receiver != null) return null;
++    }
++    return result;
++}
++
++fn safeGuards(comptime E: type, self: *E, loop: *const facts.Loop, receiver: facts.NodeId) bool {
++    var room = false;
++    var budget: usize = 262144;
++    for (loop.guard) |step| {
++        const values: [2]?facts.NodeId = switch (step) {
++            .bounded => |id| .{ id, null },
++            .at_least => |bound| .{ bound.value, null },
++            .order => |order| .{ order.value, order.limit },
++            .spans => |span| .{ span.entry, span.bound },
++            .room => |spare| blk: {
++                if (room or spare.list != receiver) return false;
++                room = true;
++                break :blk .{ spare.entry, spare.bound };
++            },
++        };
++        for (values) |id| if (id) |node| {
++            if (!safeNode(E, self, node, 0, &budget)) return false;
++        };
++    }
++    return room;
++}
++
++fn safeNode(comptime E: type, self: *E, id: facts.NodeId, depth: usize, budget: *usize) bool {
++    const nodes = self.loop_plan.nodes;
++    if (id >= nodes.len or depth > 32 or budget.* == 0) return false;
++    budget.* -= 1;
++    return switch (nodes[id]) {
++        .constant => true,
++        .leaf => |leaf| blk: {
++            if (leaf.kind != .local and leaf.kind != .entry) break :blk false;
++            break :blk privateInteger(E, self, leaf.slot, budget);
++        },
++        .operation => |operation| operation.operator != .quotient and operation.left < id and operation.right < id and
++            safeNode(E, self, operation.left, depth + 1, budget) and safeNode(E, self, operation.right, depth + 1, budget),
++        else => false,
++    };
++}
++
++fn privateInteger(comptime E: type, self: *E, slot: usize, budget: *usize) bool {
++    if (slot >= self.function.scope.locals.len or self.function.scope.locals[slot].ty != .i64) return false;
++    if (self.byReference(slot) or self.callerStorage(slot)) return false;
++    const code = self.function.scope.instructions;
++    if (code.len > budget.*) return false;
++    budget.* -= code.len;
++    for (code) |instruction| switch (instruction.op) {
++        // A scalar's ordinary slot can also escape through an explicit ref,
++        // even when the ABI did not classify it as caller-backed storage.
++        .ref_local, .move_local, .drop_local => |local| if (@backingInt(local) == slot) return false,
++        else => {},
++    };
++    return true;
++}
++
++/// This certificate permits exactly the original append's allocating callee,
++/// its nonmutating query and cold traps. The general copy-allocation veto and
++/// operand-isolation veto stay unchanged for every other loop and call.
++pub fn ordinaryCopy(text: []const u8) bool {
++    if (text.len > 1024 * 1024 or std.mem.indexOf(u8, text, "call %") != null) return false;
++    var appends: usize = 0;
++    var rest = text;
++    while (std.mem.indexOf(u8, rest, "call $")) |at| {
++        rest = rest[at + "call $".len ..];
++        const end = std.mem.indexOfAny(u8, rest, "( \t\n") orelse return false;
++        const name = rest[0..end];
++        if (std.mem.eql(u8, name, "myl_rc_list_append")) {
++            appends += 1;
++        } else if (!readyCall(name) and !std.mem.startsWith(u8, name, "myl_qbe_fail_")) return false;
++        rest = rest[end..];
++    }
++    return appends == 1;
++}
++
++fn readyCall(name: []const u8) bool {
++    return std.mem.eql(u8, name, "myl_rc_list_plain_ready") or std.mem.eql(u8, name, "myl_rc_list_plain_ready_hot");
++}
++
++const GuardFixture = struct {
++    loop_plan: struct { nodes: []const facts.Node },
++    function: struct { scope: struct {
++        locals: []const struct { ty: @import("typed.zig").Type },
++        instructions: []const @import("bytecode.zig").Instruction = &.{},
++    } },
++    reference: bool = false,
++    caller: bool = false,
++
++    /// Model an ABI reference in the speculative dependency refusal test.
++    pub fn byReference(self: *GuardFixture, _: usize) bool {
++        return self.reference;
++    }
++    /// Model caller-backed mutable storage in the dependency refusal test.
++    pub fn callerStorage(self: *GuardFixture, _: usize) bool {
++        return self.caller;
++    }
++};
++
++// spec-case: RC-APPEND-RANGE-1
++test "append range guard dependencies refuse aliases collection reads unsafe division cycles and exhausted work" {
++    const t = std.testing;
++    var nodes = [_]facts.Node{
++        .{ .constant = 13 },
++        .{ .leaf = .{ .kind = .local, .slot = 0 } },
++        .{ .operation = .{ .operator = .mul, .left = 0, .right = 1 } },
++    };
++    var emitter: GuardFixture = .{ .loop_plan = .{ .nodes = &nodes }, .function = .{ .scope = .{ .locals = &.{.{ .ty = .i64 }} } } };
++    var budget: usize = 262144;
++    try t.expect(safeNode(GuardFixture, &emitter, 2, 0, &budget));
++    emitter.reference = true;
++    try t.expect(!safeNode(GuardFixture, &emitter, 2, 0, &budget));
++    emitter.reference = false;
++    emitter.caller = true;
++    try t.expect(!safeNode(GuardFixture, &emitter, 2, 0, &budget));
++    emitter.caller = false;
++    emitter.function.scope.instructions = &.{.{ .span = .{ .start = 0, .end = 0 }, .op = .{ .ref_local = @fromBackingInt(@intCast(0)) } }};
++    try t.expect(!safeNode(GuardFixture, &emitter, 2, 0, &budget));
++    emitter.function.scope.instructions = &.{};
++    for ([_]facts.Node{
++        .unknown,
++        .{ .length = 0 },
++        .{ .element = .{ .receiver = 0, .index = 0, .collection = .i64 } },
++        .{ .negative = 0 },
++        .{ .leaf = .{ .kind = .carried, .slot = 0 } },
++        .{ .leaf = .{ .kind = .local, .slot = 1 } },
++        .{ .operation = .{ .operator = .quotient, .left = 0, .right = 1 } },
++        .{ .operation = .{ .operator = .mul, .left = 2, .right = 1 } },
++    }) |unsafe| {
++        nodes[2] = unsafe;
++        try t.expect(!safeNode(GuardFixture, &emitter, 2, 0, &budget));
++    }
++    nodes[2] = .{ .constant = 0 };
++    try t.expect(!safeNode(GuardFixture, &emitter, 3, 0, &budget));
++    try t.expect(!safeNode(GuardFixture, &emitter, 2, 33, &budget));
++    budget = 0;
++    try t.expect(!safeNode(GuardFixture, &emitter, 2, 0, &budget));
++}
+diff --git a/src/qbe_rc_append_version_test.zig b/src/qbe_rc_append_version_test.zig
+new file mode 100644
+index 00000000..b41e06a3
+--- /dev/null
++++ b/src/qbe_rc_append_version_test.zig
+@@ -0,0 +1,270 @@
++//! Growing scalar append copies preserve runtime operations and trap order.
++const std = @import("std");
++const t = std.testing;
++const compiler = @import("compiler.zig");
++const native = @import("native_execute.zig");
++const runtime = @import("runtime_mode.zig");
++const copy_proof = @import("qbe_rc_append_version.zig");
++const Manifest = struct { functions: []const struct { name: []const u8, il: []const u8 } };
++const project = @import("project.zig");
++const fixture_path = "append_range.my";
++const test_log = std.debug.print;
++
++const growing =
++    \\def grown(n: int, seed: int) -> int:
++    \\    values: list[int] = []
++    \\    for i in range(n):
++    \\        values.append((seed + i * 13) % 1009)
++    \\    if n <= 0:
++    \\        return len(values)
++    \\    return len(values) + values[0] + values[-1]
++    \\def main() -> int:
++    \\    return grown(32, 17)
++;
++
++fn emitted(source: []const u8, mode: runtime.Selection, steps: bool) !std.json.Parsed(Manifest) {
++    const saved = runtime.get();
++    defer runtime.set(saved);
++    runtime.set(mode);
++    var compilation = try compiler.Compilation.init(t.allocator, fixture_path, source);
++    defer compilation.deinit();
++    const text = compilation.emitQbeWithOptions(t.allocator, .{ .step_checks = steps, .frame_checks = false }) catch |err| {
++        for (compilation.diagnostics.items) |diagnostic| test_log("{s}: {s}\n", .{ diagnostic.code, diagnostic.message });
++        return err;
++    };
++    defer t.allocator.free(text);
++    return std.json.parseFromSlice(Manifest, t.allocator, text, .{ .allocate = .alloc_always, .ignore_unknown_fields = true });
++}
++
++fn named(manifest: Manifest, name: []const u8) ![]const u8 {
++    for (manifest.functions) |function| if (std.mem.eql(u8, function.name, name)) return function.il;
++    return error.TestUnexpectedResult;
++}
++
++const Parts = struct { guard: []const u8, fast: []const u8, original: []const u8 };
++fn parts(body: []const u8) !Parts {
++    const begin = std.mem.indexOf(u8, body, "\n@fi") orelse return error.TestUnexpectedResult;
++    const original = std.mem.indexOf(u8, body, "\n@oi") orelse return error.TestUnexpectedResult;
++    return .{ .guard = body[0..begin], .fast = body[begin..original], .original = body[original..] };
++}
++
++// spec: RC-APPEND-RANGE-1
++test "append range copy removes scalar checks and retains ordinary growing append in both copies" {
++    var manifest = try emitted(growing, .rc, false);
++    defer manifest.deinit();
++    const body = try named(manifest.value, "grown");
++    const loop = try parts(body);
++    try t.expectEqual(@as(usize, 1), std.mem.count(u8, body, "# mylang-rc-append-range "));
++    try t.expect(std.mem.indexOf(u8, loop.guard, "myl_rc_list_plain_ready") == null);
++    try t.expect(std.mem.indexOf(u8, loop.guard, "@rcpresized") == null);
++    try t.expectEqual(@as(usize, 0), std.mem.count(u8, loop.fast, "myl_qbe_fail_overflow_op"));
++    try t.expect(std.mem.count(u8, loop.original, "myl_qbe_fail_overflow_op") >= 3);
++    for ([_][]const u8{ loop.fast, loop.original }) |copy| {
++        try t.expectEqual(@as(usize, 1), std.mem.count(u8, copy, "call $myl_rc_list_append("));
++        try t.expectEqual(@as(usize, 1), std.mem.count(u8, copy, "call $myl_rc_list_plain_ready("));
++        try t.expect(std.mem.indexOf(u8, copy, "%rcappend0") != null);
++        try t.expect(std.mem.indexOf(u8, copy, "@rcappend_slow") != null);
++        try t.expect(std.mem.indexOf(u8, copy, " cultl ") != null);
++    }
++    try t.expectEqual(@as(usize, 2), std.mem.count(u8, body, "call $myl_rc_list_append("));
++    try t.expect(std.mem.indexOf(u8, loop.fast, "RC-LOOP-OPERANDS-BEGIN") == null);
++}
++
++// spec-case: RC-APPEND-RANGE-1
++test "append range exact frozen collection project has an admitted growing arithmetic copy" {
++    const saved = runtime.get();
++    defer runtime.set(saved);
++    runtime.set(.rc);
++    const source = try std.Io.Dir.cwd().readFileAlloc(t.io, "benchmarks/runtime/expanded/collections/main.my", t.allocator, .limited(65536));
++    defer t.allocator.free(source);
++    var tree = project.Project.init(t.allocator);
++    defer tree.deinit();
++    try tree.load(.{ .context = @ptrCast(@constCast(&source)), .read = benchmarkRead }, "main", .{});
++    var index = try compiler.interfaces.build(&tree);
++    var compilation = try @import("project_compile.zig").Compilation.init(&index);
++    const text = try compilation.emitQbeWithOptions(t.allocator, .{ .step_checks = false, .frame_checks = false });
++    defer t.allocator.free(text);
++    var manifest = try std.json.parseFromSlice(Manifest, t.allocator, text, .{ .allocate = .alloc_always, .ignore_unknown_fields = true });
++    defer manifest.deinit();
++    const body = try named(manifest.value, "main::batch_result");
++    const marker = std.mem.indexOf(u8, body, "# mylang-rc-append-range ") orelse return error.TestUnexpectedResult;
++    const loop = try parts(body[marker..]);
++    try t.expect(copy_proof.ordinaryCopy(loop.fast));
++    try t.expect(std.mem.indexOf(u8, loop.fast, "myl_qbe_fail_overflow_op") == null);
++    try t.expectEqual(@as(usize, 1), std.mem.count(u8, loop.fast, "call $myl_rc_list_append("));
++    try t.expect(std.mem.count(u8, loop.original, "myl_qbe_fail_overflow_op") >= 4);
++}
++
++fn benchmarkRead(context: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, limit: usize) project.ReadError![]u8 {
++    if (!std.mem.eql(u8, path, "main.my")) return error.NotFound;
++    const source: *const []const u8 = @ptrCast(@alignCast(context.?));
++    if (source.*.len > limit) return error.TooLarge;
++    return allocator.dupe(u8, source.*);
++}
++
++const refused =
++    \\def parameter(values: mut list[int], n: int, seed: int) -> int:
++    \\    for i in range(n):
++    \\        values.append(seed + i * 13)
++    \\    return len(values)
++    \\def used(n: int, seed: int) -> int:
++    \\    values: list[int] = []
++    \\    values.append(9)
++    \\    for i in range(n):
++    \\        values.append(seed + i * 13)
++    \\    return len(values)
++    \\def aliased(n: int, seed: int) -> int:
++    \\    values: list[int] = []
++    \\    saved = values
++    \\    for i in range(n):
++    \\        values.append(seed + i * 13)
++    \\    return len(saved) + len(values)
++    \\def squares(n: int) -> int:
++    \\    values = [i * i for i in range(n)]
++    \\    return len(values)
++    \\def read_other(n: int, other: list[int]) -> int:
++    \\    values: list[int] = []
++    \\    for i in range(n):
++    \\        values.append(other[i])
++    \\    return len(values)
++    \\def callback(i: int, out: Stream) -> int:
++    \\    out.print(i)
++    \\    return i
++    \\def effectful(n: int, out: Stream) -> int:
++    \\    values: list[int] = []
++    \\    for i in range(n):
++    \\        values.append(callback(i, out))
++    \\    return len(values)
++    \\def main() -> int:
++    \\    return used(32, 17)
++;
++
++// spec-case: RC-APPEND-RANGE-1
++test "append range refuses incoming used aliased dependent and effectful roots and retains presized comprehension" {
++    var manifest = try emitted(refused, .rc, false);
++    defer manifest.deinit();
++    for ([_][]const u8{ "parameter", "used", "aliased", "read_other", "effectful" }) |name| {
++        const body = try named(manifest.value, name);
++        try t.expect(std.mem.indexOf(u8, body, "# mylang-rc-append-range") == null);
++        try t.expect(std.mem.indexOf(u8, body, "call $myl_rc_list_append(") != null);
++    }
++    const squares = try named(manifest.value, "squares");
++    try t.expect(std.mem.indexOf(u8, squares, "# mylang-rc-append-range") == null);
++    try t.expect(std.mem.indexOf(u8, squares, "@rcpresized") != null);
++}
++
++// spec-case: RC-APPEND-RANGE-1
++test "append range retains checked and collector protocols and counting append publication" {
++    var checked = try emitted(growing, .rc, true);
++    defer checked.deinit();
++    try t.expect(std.mem.indexOf(u8, try named(checked.value, "grown"), "# mylang-rc-append-range") == null);
++    var collector = try emitted(growing, .gc, false);
++    defer collector.deinit();
++    try t.expect(std.mem.indexOf(u8, try named(collector.value, "grown"), "# mylang-rc-append-range") == null);
++    var counting = try emitted(growing, .rc_counting, false);
++    defer counting.deinit();
++    const loop = try parts(try named(counting.value, "grown"));
++    try t.expect(copy_proof.ordinaryCopy(loop.fast));
++    try t.expect(std.mem.indexOf(u8, loop.fast, "call $myl_rc_list_append(") != null);
++}
++
++// spec-case: RC-APPEND-RANGE-1
++test "append range allocating copy exception rejects unrelated indirect duplicate and renamed calls" {
++    const ordinary = " %v1 =w call $myl_rc_list_plain_ready(l %heap, l %v0)\n %v2 =w call $myl_rc_list_append(l %heap, l %v0, l %s0)\n";
++    try t.expect(copy_proof.ordinaryCopy(ordinary));
++    for ([_][]const u8{
++        ordinary ++ " call %callback(l %heap)\n",
++        ordinary ++ " call $myl_native_heap_alloc(l %heap, l 8)\n",
++        ordinary ++ " call $guest(l %heap)\n",
++        " call $myl_rc_list_append(l %heap, l %v0, l %s0) call $guest(l %heap)\n",
++        ordinary ++ " call $myl_rc_list_append(l %heap, l %v0, l %s0)\n",
++        " call $myl_rc_list_append_extra(l %heap, l %v0, l %s0)\n",
++        " call $myl_rc_list_plain_ready(l %heap, l %v0)\n",
++    }) |text| try t.expect(!copy_proof.ordinaryCopy(text));
++}
++
++fn same(a: native.Run, b: native.Run) !void {
++    try t.expectEqual(a.status, b.status);
++    try t.expectEqual(a.failed, b.failed);
++    try t.expectEqual(a.value, b.value);
++    try t.expectEqualStrings(a.stdout, b.stdout);
++    try t.expectEqualStrings(a.stderr, b.stderr);
++    try t.expectEqualStrings(a.trap.code, b.trap.code);
++    try t.expectEqualStrings(a.trap.path, b.trap.path);
++    try t.expectEqual(a.trap.line, b.trap.line);
++    try t.expectEqual(a.trap.column, b.trap.column);
++    try t.expectEqual(a.trap.frames.len, b.trap.frames.len);
++    for (a.trap.frames, b.trap.frames) |left, right| {
++        try t.expectEqualStrings(left.function, right.function);
++        try t.expectEqualStrings(left.path, right.path);
++        try t.expectEqual(left.line, right.line);
++        try t.expectEqual(left.column, right.column);
++    }
++    try t.expect(std.meta.eql(a.trap.detail, b.trap.detail));
++}
++
++fn outcome(seed: i64, count: i64, options: native.Options) !native.Run {
++    const body = growing[0..std.mem.indexOf(u8, growing, "def main()").?];
++    const source = try std.fmt.allocPrint(t.allocator, "{s}def main() -> int:\n    return grown({d}, {d})\n", .{ body, count, seed });
++    defer t.allocator.free(source);
++    var compilation = try compiler.Compilation.init(t.allocator, fixture_path, source);
++    defer compilation.deinit();
++    const ordinary = try native.runWithOptions(&compilation, options);
++    const fast = try native.runUnaccounted(&compilation, options);
++    try same(ordinary, fast);
++    const evidence = try std.json.Stringify.valueAlloc(t.allocator, .{ .seed = seed, .count = count, .max_memory = options.max_memory, .ordinary = ordinary, .fast = fast }, .{});
++    defer t.allocator.free(evidence);
++    test_log("APPEND-RANGE-OUTCOME {s}\n", .{evidence});
++    return fast;
++}
++
++fn success(seed: i64, count: i64) !void {
++    const result = try outcome(seed, count, .{});
++    const expected: i64 = if (count <= 0) 0 else count + @as(i64, @intCast(@mod(@as(i128, seed), 1009))) +
++        @as(i64, @intCast(@mod(@as(i128, seed) + (count - 1) * 13, 1009)));
++    try t.expect(!result.failed);
++    try t.expectEqual(expected, result.value);
++    try t.expectEqual(@as(u8, @truncate(@as(u64, @bitCast(expected)))), result.status);
++    try t.expectEqualStrings("", result.trap.code);
++    try t.expectEqualStrings("", result.stdout);
++}
++
++// spec-case: RC-APPEND-RANGE-1
++test "append range exact outcomes include growth short zero negative and overflow fallback" {
++    const saved = runtime.get();
++    defer runtime.set(saved);
++    runtime.set(.rc);
++    for ([_]i64{ -1, 0, 3, 16, 32, 65 }) |count| try success(17, count);
++    try success(-31, 32);
++    try success(std.math.minInt(i64), 32);
++    try success(std.math.maxInt(i64), 0);
++    const overflow = try outcome(std.math.maxInt(i64), 32, .{});
++    try t.expectEqualStrings("R_OVERFLOW", overflow.trap.code);
++    try t.expect(overflow.failed);
++}
++
++// spec-case: RC-APPEND-RANGE-1
++test "append range keeps the first growing heap-budget refusal exact" {
++    const saved = runtime.get();
++    defer runtime.set(saved);
++    runtime.set(.rc);
++    const refused_heap = try outcome(17, 400000, .{ .max_memory = 1 << 20 });
++    try t.expect(refused_heap.failed);
++    try t.expectEqualStrings("R_MEMORY_BUDGET", refused_heap.trap.code);
++}
++
++fn allocationScenario(allocator: std.mem.Allocator) !void {
++    const saved = runtime.get();
++    defer runtime.set(saved);
++    runtime.set(.rc);
++    var compilation = try compiler.Compilation.init(allocator, fixture_path, growing);
++    defer compilation.deinit();
++    const text = try compilation.emitQbeWithOptions(allocator, .{ .step_checks = false, .frame_checks = false });
++    defer allocator.free(text);
++    try t.expect(std.mem.indexOf(u8, text, "# mylang-rc-append-range") != null);
++}
++
++// spec-case: RC-APPEND-RANGE-1
++test "append range emission releases partial allocations on every allocator refusal" {
++    try t.checkAllAllocationFailures(t.allocator, allocationScenario, .{});
++}
+diff --git a/src/qbe_rc_fresh_root.zig b/src/qbe_rc_fresh_root.zig
+index d36427bc..14a75f3d 100644
+--- a/src/qbe_rc_fresh_root.zig
++++ b/src/qbe_rc_fresh_root.zig
+@@ -51,6 +51,63 @@ pub fn proven(comptime E: type, self: *E, root: usize, head: usize) frame.Error!
+     return uses(E, self, family, back);
+ }
+ 
++/// An extra restriction on an already certified fresh append root. Trace the
++/// same bounded handoffs to an empty constructor, then refuse any earlier
++/// receiver use: the list still has zero capacity when this loop is entered.
++/// This does not admit a root or change the existing ownership certificate.
++pub fn emptyBefore(comptime E: type, self: *E, root: usize, head: usize) bool {
++    const code = self.function.scope.instructions;
++    if (code.len > 4096 or head >= code.len) return false;
++    var family: Family = .{};
++    var local = root;
++    var before = head;
++    while (family.len < family.locals.len) {
++        const at = definition(E, self, local) orelse return false;
++        if (at >= before or at == 0 or self.isBranchTarget(at)) return false;
++        family.locals[family.len] = local;
++        family.stores[family.len] = at;
++        family.reads[family.len] = cow.none;
++        family.len += 1;
++        const producer = code[at - 1].op;
++        if (fresh(E, self, local, producer)) {
++            const empty = switch (producer) {
++                .make_record => |made| made.fields == 0 and made.payload.len == 0,
++                .acquire_buffer => at >= 2 and !self.isBranchTarget(at - 1) and
++                    code[at - 2].op == .push_i64 and code[at - 2].op.push_i64 == 0,
++                else => false,
++            };
++            if (!empty) return false;
++            return untouched(code, family, head);
++        }
++        var read = at - 1;
++        if (producer == .value_copy) {
++            if (read == 0 or self.isBranchTarget(read)) return false;
++            read -= 1;
++        }
++        if (code[read].op != .load_local) return false;
++        const source = @backingInt(code[read].op.load_local);
++        if (contains(family, source)) return false;
++        family.reads[family.len - 1] = read;
++        before = read;
++        local = source;
++    }
++    return false;
++}
++
++fn untouched(code: []const bytecode.Instruction, family: Family, head: usize) bool {
++    const start = family.stores[family.len - 1] - 1;
++    for (code[start..head], start..) |instruction, pc| switch (instruction.op) {
++        .load_local => |slot| if (contains(family, @backingInt(slot))) {
++            for (family.reads[0..family.len]) |read| {
++                if (read == pc) break;
++            } else return false;
++        },
++        .buffer_operation => |operation| if (contains(family, @backingInt(operation.owner))) return false,
++        else => {},
++    };
++    return true;
++}
++
+ fn contains(family: Family, local: usize) bool {
+     for (family.locals[0..family.len]) |item| if (item == local) return true;
+     return false;
+diff --git a/src/root_test.zig b/src/root_test.zig
+index 4de5de3b..86797eef 100644
+--- a/src/root_test.zig
++++ b/src/root_test.zig
+@@ -24,6 +24,7 @@ test {
+     _ = @import("qbe_rc_aggregate_test.zig");
+     _ = @import("qbe_rc_inline_take_test.zig");
+     _ = @import("qbe_rc_loop_codegen_test.zig");
++    _ = @import("qbe_rc_append_version_test.zig");
+     _ = @import("rc_glue_test.zig");
+     _ = @import("qbe_rc_inert_return_test.zig");
+     _ = @import("native_rc_stats_test.zig");

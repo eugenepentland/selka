@@ -1,0 +1,10 @@
+list_append small {'llvm': 0.8888694464213069, 'qbe': 0.928852672888404}
+list_append large {'llvm': 0.7768287404736575, 'qbe': 0.9687969010647712}
+list_filter small {'llvm': 1.0395637032445026, 'qbe': 0.9774599394669785}
+list_filter large {'llvm': 0.9965321347805691, 'qbe': 1.0005319475697732}
+sort_int small {'llvm': 1.0075000465691593, 'qbe': 1.0321204403706055}
+sort_int large {'llvm': 1.008101815737809, 'qbe': 0.9929810645670502}
+mutate_nested small {'llvm': 0.987199854379986, 'qbe': 1.0167661273644404}
+mutate_nested large {'llvm': 0.989713946091804, 'qbe': 0.9386720454689689}
+Guest timing complete; computing exploratory paired intervals
+PASS paired Debug-host append arithmetic screen: 160 measured samples, 32 warmups

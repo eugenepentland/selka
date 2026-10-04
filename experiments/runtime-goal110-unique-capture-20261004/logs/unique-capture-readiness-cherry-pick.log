@@ -1,0 +1,4 @@
+Auto-merging SPEC.md
+[perf/goal110-unique-capture-20261004 d4c28bda] perf: inline readiness at certified presized append guards
+ Date: Sun Oct 4 04:08:17 2026 +0000
+ 3 files changed, 43 insertions(+), 6 deletions(-)

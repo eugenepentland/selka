@@ -1,0 +1,130 @@
+[
+  {
+    "run_id": "r1_862be6e26d8dc3640e313e383003dd4ea3970e72d28c501c135d24d716723bb8",
+    "commit": "63df6b6c481b12fd711755ec40cdcb5d1c984ccc",
+    "timestamp_ms": 1791090455467,
+    "guardian_digest": "1b6c13222675120bbbeb4b5fd37fd20ccfb810defaecab3882ef2ebadacc07bb",
+    "duration_ms": 1249,
+    "failed_checks": [
+      {
+        "check": "test-no-conditional",
+        "policy": "block",
+        "outcome": "failed",
+        "duration_ms": 67,
+        "findings": 3,
+        "warnings": 0,
+        "observations": [
+          {
+            "observation_id": "o1_d84f8c6cf474908ebbe466fecf5807e9076e085016aec4f1305ca647223b8c76",
+            "finding_key": "test-no-conditional|src/qbe_rc_unique_capture_test.zig|RC duplicate capture removes only the second checked named-root guard|loop",
+            "file": "src/qbe_rc_unique_capture_test.zig",
+            "line": 94
+          },
+          {
+            "observation_id": "o1_9dbfb813b9beb3ac9fb31bb88b05399c770801c99d316b1a78e6163c56a343a6",
+            "finding_key": "test-no-conditional|src/qbe_rc_unique_capture_test.zig|RC duplicate capture refuses a mismatched physical descriptor|if",
+            "file": "src/qbe_rc_unique_capture_test.zig",
+            "line": 164
+          },
+          {
+            "observation_id": "o1_1e93fbc3aa59947b9428e4fa42e84a5b2e6e4e318b7b037221a6f7af8168b63d",
+            "finding_key": "test-no-conditional|src/qbe_rc_unique_capture_test.zig|RC duplicate capture refuses a mismatched physical descriptor|loop",
+            "file": "src/qbe_rc_unique_capture_test.zig",
+            "line": 167
+          }
+        ],
+        "deferred": 0
+      }
+    ]
+  },
+  {
+    "run_id": "r1_b5bc1ed36176b7e3f354d510ba382bcbb968163d1122f7f07a6f783e0ceac945",
+    "commit": "63df6b6c481b12fd711755ec40cdcb5d1c984ccc",
+    "timestamp_ms": 1791090747463,
+    "guardian_digest": "1b6c13222675120bbbeb4b5fd37fd20ccfb810defaecab3882ef2ebadacc07bb",
+    "duration_ms": 1182,
+    "failed_checks": [
+      {
+        "check": "repeated-string-literal",
+        "policy": "block",
+        "outcome": "failed",
+        "duration_ms": 246,
+        "findings": 1,
+        "warnings": 0,
+        "observations": [
+          {
+            "observation_id": "o1_248187990c5e01cac38c9136324c105a595e8058227ad8a1f0b0fd956eb945c9",
+            "finding_key": "repeated-string-literal|src/qbe_rc_unique_capture_test.zig|bytecode.zig",
+            "file": "src/qbe_rc_unique_capture_test.zig",
+            "line": null
+          }
+        ],
+        "deferred": 0
+      }
+    ]
+  },
+  {
+    "run_id": "r1_c08ef4dbea4c7e89f9c5cb4893bacf9dc8f1b3061402a999b8889ecdbb362e36",
+    "commit": "97f6686ea44455c36cbd374f72ea98a9174f9a70",
+    "timestamp_ms": 1791091065534,
+    "guardian_digest": "1b6c13222675120bbbeb4b5fd37fd20ccfb810defaecab3882ef2ebadacc07bb",
+    "duration_ms": 1204,
+    "failed_checks": [
+      {
+        "check": "change-classification",
+        "policy": "block",
+        "outcome": "failed",
+        "duration_ms": 90,
+        "findings": 1,
+        "warnings": 0,
+        "observations": [
+          {
+            "observation_id": "o1_035291075f5f3b9951b49279f7e97d60dfb62b2ae4b43c8f3911e517df86df20",
+            "finding_key": "change-classification|src/qbe_loop_unswitch_test.zig|# behavioral line(s) added",
+            "file": "src/qbe_loop_unswitch_test.zig",
+            "line": null
+          }
+        ],
+        "deferred": 0
+      }
+    ]
+  },
+  {
+    "run_id": "r1_e6fed7b12b6b4a623c4eda92f909e54eae0ecb89cd1a443bda598952fe137479",
+    "commit": "97f6686ea44455c36cbd374f72ea98a9174f9a70",
+    "timestamp_ms": 1791091171664,
+    "guardian_digest": "1b6c13222675120bbbeb4b5fd37fd20ccfb810defaecab3882ef2ebadacc07bb",
+    "duration_ms": 1499,
+    "failed_checks": [
+      {
+        "check": "spec",
+        "policy": "block",
+        "outcome": "failed",
+        "duration_ms": 430,
+        "findings": 3,
+        "warnings": 0,
+        "observations": [
+          {
+            "observation_id": "o1_45447c27c93b04d4cce9d54a19b50408e852df3a9a858e42faaefee38070a2f3",
+            "finding_key": "spec|duplicate tag: id:qbe-loop-unswitch-#",
+            "file": null,
+            "line": null
+          },
+          {
+            "observation_id": "o1_5b08e90c29dd2c22cbe69790e95781a4f72d720ee8917f215d3c66d7a13524dd",
+            "finding_key": "spec|in: src/qbe_loop_unswitch_test.zig",
+            "file": null,
+            "line": null
+          },
+          {
+            "observation_id": "o1_5b08e90c29dd2c22cbe69790e95781a4f72d720ee8917f215d3c66d7a13524dd",
+            "finding_key": "spec|in: src/qbe_loop_unswitch_test.zig",
+            "file": null,
+            "line": null
+          }
+        ],
+        "deferred": 0
+      }
+    ]
+  }
+]
