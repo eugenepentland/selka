@@ -121,8 +121,8 @@ rung. Everything here is exploratory, on a busy shared host, and not campaign ev
 per pass. Unit: element. Sizes 64 / 4096.
 
 **The fastest arm** is Zig ReleaseFast (4.3 cycles/element); Rust and Zig-safe sit at 6.5–7.0 cycles and Go is within 5% of Rust in time. The Zig-fast
-disassembly keeps the `kind` switch inside the element loop as a jump table and does scalar f64 with `vcvttsd2si`:
-none of the competitors vectorize this kernel. **Today's mylang** (11.7 cycles) has a `call myl_qbe_float_unary` for
+disassembly (the only competitor binary I disassembled) keeps the `kind` switch inside the element loop as a jump table and
+does scalar f64 with `vcvttsd2si`; the other arms' 20–26 instructions per element say the same. **Today's mylang** (11.7 cycles) has a `call myl_qbe_float_unary` for
 every `int(float)` (`src/qbe_runtime.c:764`: an out-of-line op switch, `trunc`, `isfinite`, two range compares).
 
 | step | x Rust (small / large) | x fastest arm (small / large) | ns/unit (large) | cycles/unit | instr/unit |
@@ -387,7 +387,7 @@ pairs removes the stall by construction.
 joined by `|` or `::`) is split, and the job is `7·len(parts) + Σ score(part)` with `score(text) = utf8 length + Σ utf8 bytes`
 (`text.encode()` copies). Unit: fragment. Sizes 64 / 4096 (about 20 KB at the large size).
 
-**Fastest arm:** Rust, 27.7 cycles/fragment (`str::split` is a lazy iterator; nothing is allocated). Zig 62–66, mylang 203.
+**Fastest arm:** Rust, 27.7 cycles/fragment (`text.split(sep).collect::<Vec<&str>>()`: slices into the document, one `Vec`, no per-piece allocation). Zig 62–66, mylang 203.
 **What B0 does:** `split` builds a `list[str]` of freshly allocated owned pieces (pieces under 9 octets are copied),
 `score` makes a `bytes` copy of each, and everything is released through the RC drain queue; the profile is
 `drain_fast`, `rc_storage_alloc`, `octets_find`, `raw_bytes`, `rc_list_new`, `edge_release`. The model reaches 69% of B0
