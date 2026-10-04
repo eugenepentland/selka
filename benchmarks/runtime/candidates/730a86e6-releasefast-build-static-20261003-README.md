@@ -21,8 +21,8 @@ The actual published final QBE compute IL is 510,140 bytes with SHA256
 Its bound cache manifest has no loop-unswitch marker and no specialized-entry
 label. The corrected fixture admits no P2 specialization; the safe capability
 and compute performance gap remain. The prior 12-copy prototype is superseded.
-Whole-function QBE entry: 43,823 bytes, 9,429 static instructions, 2,366 stack
-references, 2,968-byte frame. LLVM entry: 20,050 bytes, 4,148 instructions,
+Whole-function QBE entry: 43,823 bytes, 9,429 static instructions, 2,369 stack
+references (instructions referencing rsp or rbp), 2,968-byte frame. LLVM entry: 20,050 bytes, 4,148 instructions,
 728-byte frame. These include untaken paths and runtime glue and are not
 executed kernel costs or causal shares. Assembly/IL, commands, symbol sizes,
 binary/manifest hashes and explicit scope limitations are preserved.
