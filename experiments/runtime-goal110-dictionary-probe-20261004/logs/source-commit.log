@@ -1,0 +1,4 @@
+guardian: run-all: cached — 0 blocking (inputs unchanged since last green run)
+[perf/goal110-dict-read-20261004 64fb7e62] perf(runtime): retain irrelevant ordinary probe cache fields
+ 5 files changed, 199 insertions(+), 2 deletions(-)
+ create mode 100644 tests/native_dictionary_probe_test.c

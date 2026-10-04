@@ -9,33 +9,36 @@ the raw evidence for every reported result.
 
 <!-- STATUS-START -->
 - **Campaign:** active. LLVM must reach ≤1.10×; QBE is tracked separately.
-- **Last document update:** 2026-10-04 10:50:52 UTC.
-- **Integrated source:** `eaf4cda8f5c758cadafaadfa5e328c0fba252ac6` on
-  `perf/runtime-parity-20261003`. Checked-index/value reuse is integrated.
+- **Last document update:** 2026-10-04 11:02:22 UTC.
+- **Integrated source:** `1a3980631e79bc65f048acd063d7250800f01901` on
+  `perf/runtime-parity-20261003`. Checked-index/value reuse, LLVM-only bounded
+  remainder and reduced dictionary probe writes are integrated. All 88 Guardian
+  checks pass; the combined compiler/guest validation is underway.
 - **LLVM status:** **70 open, ten stale, zero current confirmations**.
   The ten previously confirmed G4 cells need reconfirmation after integration;
   their last measured ratio remains 1.0000×. No new target is closed.
 - **Latest full-suite measurement:** B0, before this campaign's changes.
   The [live speed table](#live-speed-table) retains each row's evidence and date;
-  the [dashboard artifact](candidates/goal110-dashboard-20261004-index.json)
+  the [dashboard artifact](candidates/goal110-dashboard-20261004-remainder-dictionary.json)
   contains the current integrated state.
 - **Latest integrated gain:** repeated LLVM unique-mutation improvements of
   5.2%/5.4% and shared-mutation improvements of 5.1%/1.1% (small/large).
   Unique mutation still measures 1.3576×/1.4381× the fastest runtime;
   shared mutation measures 10.7449×/3.3703×. Other allocated control code is
   unchanged from G4. These results do not close targets.
-- **Bounded remainder:** candidate `5e97db47` repeats LLVM filtering gains of
-  6.0%/7.4% and a small-sort gain of 5.2%. Its negative-input supplement also
-  improves. QBE large nested mutation slows 12%, so this candidate remains
-  unintegrated. LLVM-only successor `df09fb4b` passes 58 focused tests and 88 Guardian
-  checks. Its pinned Debug host and 24 optimized guests are built. All four LLVM
-  runtime images exactly match the measured candidate; all four QBE images
-  exactly match G4. Fresh 720 qualification and 516 holdout outcomes pass.
-  Independent source/image/outcome review passes. Integration is pending.
+- **Bounded remainder:** the LLVM-only successor `df09fb4b` is integrated.
+  Its LLVM runtime images exactly match candidate `5e97db47`, which repeats
+  filtering gains of 6.0%/7.4% and a small-sort gain of 5.2%. Its QBE images
+  match G4, removing the earlier candidate’s 12% nested-mutation cost.
+  The source passes 58 focused tests; independent source/image/outcome reviews
+  and fresh 720 qualification/516 holdout outcomes pass. The combined revision
+  still needs its own checks and measurements.
 - **Text range facts:** candidate `0311796e` repeats a 10% small-equality gain,
   but equality remains about 1.25× the fastest runtime and large search slows
-  15.5%. It remains unintegrated. The search loop's instructions are unchanged
-  but its placement shifts; the cause is still being investigated.
+  15.5%. It remains unintegrated. A diagnostic changing placement while
+  preserving instructions recovers search to about 1.008× G4 and retains the
+  equality gain. This supports placement sensitivity; a general compiler
+  policy is being investigated before adoption.
 - **Dictionary lookup:** candidate `64fb7e62` reduces probe-cache writes.
   Four native sanitizer suites, independent source/outcome replay and all
   88 Guardian checks pass. Its pinned Debug compiler and all 24 optimized
@@ -46,12 +49,12 @@ the raw evidence for every reported result.
   about 1%; LLVM search/nested controls stay stable. The eight-row 15r/3w
   repeat confirms a 3.5% small integer lookup gain and 1.8%/1.4% string lookup
   gains, with 1.4%/0.9% string update costs. These costs are accepted for the
-  lookup improvement; integration remains pending.
-- **Current activity:** dictionary timing has finished and workers are released.
-  Root independently verifies 576 repeat outcomes, the LLVM-only remainder
-  source and eight runtime images, and the text placement diagnostic. Archives
-  are being committed before the short text diagnostic and source integration.
-  No new target is closed.
+  lookup improvement. This change is now integrated; combined checks are pending.
+- **Current activity:** build and validate the combined revision in a fresh
+  worktree; compare its runtime images with the accepted controls before
+  selecting a small timing batch. Archive the text placement diagnostic and
+  investigate general loop alignment. Audit typed dictionary lookups and
+  remaining compute range/dispatch costs. No new target is closed.
 - **Deferred experiments:** bounded equality `3dcbe723` leaves equality above
   target and costs large search; nonnegative remainder `27de73d3` slows signed
   inputs. Their evidence is retained. Neither is integrated.
@@ -272,15 +275,15 @@ measure QBE alongside it without treating its existing gaps as acceptance work.
 
 | Batch | Cases | Initial purpose | State |
 |---|---|---|---|
-| B1 | `mutate_nested`, `bytes_scan`, `string_search` | Confirm existing LLVM wins and establish regression checks | G4 confirmed6/6; stale after index-reuse integrationeaf4cda8 |
-| B2 | `string_equal`, `string_join` | Equality/ownership overhead and nearby large-input targets | G4 join/large-equality confirmations now stale; small remains1.3898×. Bounded equality3dc deferred; LLVM result-range0311796e deferred after repeated15.5% large-search cost despite10% small-equality gain |
+| B1 | `mutate_nested`, `bytes_scan`, `string_search` | Confirm existing LLVM wins and establish regression checks | G4 confirmed6/6; stale after integration; current source1a398063 awaits fresh confirmation |
+| B2 | `string_equal`, `string_join` | Equality/ownership overhead and nearby large-input targets | G4 join/large-equality confirmations now stale; small remains1.3898×. Bounded equality3dc deferred; LLVM result-range0311796e deferred after repeated15.5% large-search cost despite10% small-equality gain. Diagnostic placement restores search to1.008×G4; general alignment policy under investigation |
 | B3 | `record_reads`, `record_construct`, `record_update` | Record representation, scalar replacement and transfers | Strict/hybrid scalar-pointer lowering deferred: actual code unchanged; record targets remain open |
 | B4 | `call_direct`, `call_indirect`, `option_handle`, `result_propagate` | Calls, inlining, dispatch and return paths | `d14e26f4` speeds direct calls but retains fallback/record regressions; unintegrated |
-| B5 | `integer_math`, `float_math`, `branch_predictable`, `branch_mixed` | Scalar lowering and loop invariants | Queued |
-| B6 | `list_scan`, `list_append`, `list_filter`, `mutate_unique` | Iteration, capacity and uniqueness | Append/unique gains integrated; remainder27de deferred for negative-input cost, bounded-bias successor repeats LLVM filter/sort gains but a12% QBE nested cost remains under investigation. Index/value reuse14ffa2c0 adopted aseaf4cda8 after repeated LLVM unique gains5.2%/5.4% and unchanged allocated-code controls |
+| B5 | `integer_math`, `float_math`, `branch_predictable`, `branch_mixed` | Scalar lowering and loop invariants | Source audit identifies body-size refusal, unsupported dispatch operations and missing element ranges; general proof prerequisites being examined |
+| B6 | `list_scan`, `list_append`, `list_filter`, `mutate_unique` | Iteration, capacity and uniqueness | Append/unique gains integrated; remainder27de deferred for negative-input cost, LLVM-only bounded bias integrated in1a398063 after repeated filter/sort gains; QBE old runtime images restored to avoid12% nested cost. Index/value reuse14ffa2c0 adopted aseaf4cda8 after repeated LLVM unique gains5.2%/5.4% and unchanged allocated-code controls |
 | B7 | `tagged_stack`, `mutate_shared`, `alloc_short`, `alloc_retained` | Ownership, allocation elimination and retained data | Queued |
-| B8 | `dict_lookup`, `dict_lookup_str` | Lookup/probe and key costs | [G4 static triage](../../experiments/runtime-goal110-map-audit-20261004/README.md) identifies dynamic layout/cache writes. Probe-cache publication64fb7e62 passes native sanitizer suites/88 Guardian checks; pinned Debug host builds. Typed lookup remains the next hypothesis |
-| B9 | `dict_update`, `dict_update_str`, `set_dedup` | Publication, replacement and deduplication | Queued |
+| B8 | `dict_lookup`, `dict_lookup_str` | Lookup/probe and key costs | [G4 static triage](../../experiments/runtime-goal110-map-audit-20261004/README.md) identifies dynamic layout/cache writes. Probe publication64fb integrated in1a398063 after repeated lookup gains. Typed integer lookup implementation begins in isolation with shape guards and generic fallback |
+| B9 | `dict_update`, `dict_update_str`, `set_dedup` | Publication, replacement and deduplication | Probe publication repeats LLVM string-update costs1.4%/0.9% and QBE small-set cost1.6%; accepted alongside lookup gains. Other substantial gaps remain open |
 | B10 | `binary_search`, `packet_decode` | Bounds, branches and scalar reads | Queued |
 | B11 | `sort_int`, `sort_records` | Comparator dispatch and scratch work | G4 large-integer-sort confirmation now stale; small remains1.3925×; record sorting remains open |
 | B12 | `string_split`, `int_parse`, `int_format` | Text ownership, parsing and formatting | Parser outline/alignment integrated in textd9; parsing/formatting still above target |
@@ -477,9 +480,10 @@ does not supply the new goal's confirmation protocol.
 | T16 | Index reuse `14ffa2c0`, integrated as `eaf4cda8`; six-arm5r/1w and matched15r/3w repeat | [Complete archive](../../experiments/runtime-goal110-index-update-20261004/README.md), [observed speeds](candidates/goal110-index-14ffa2c0-20261004-observed.json), [official correctness/repeat review](candidates/goal110-index-14ffa2c0-20261004-releasefast-review.json), [unchanged control code](candidates/goal110-index-14ffa2c0-20261004-controls-review.json) | LLVM unique after/before0.94814/0.94565; shared0.94881/0.98872. No material measured regression; allocated code for compute/collections/text is identical. Six targets remain open; no normal confirmation. |
 
 | T17 | Unintegrated range annotation `0311796e`; six-arm 5r/1w and independent two-row matched 15r/3w repeat | [Archive](../../experiments/runtime-goal110-floor-result-range-20261004/README.md), [observations](candidates/goal110-floor-result-0311796e-20261004-observed.json), [timing replay](candidates/goal110-arithmetic-candidates-20261004-timing-review.json), [archive review](candidates/goal110-floor-result-0311796e-20261004-archive-review.json) | Small LLVM equality improves 10% but remains 1.2506×; large search slows 15.5%. Caller/helpers retain normalized instructions with changed placement; no causal attribution or target confirmation. |
-| T18 | Unintegrated bounded bias `5e97db47`; six-arm 5r/1w, matched four-row 15r/3w repeat and signed supplement | [Archive](../../experiments/runtime-goal110-bounded-rem-20261004/README.md), [observations](candidates/goal110-bounded-rem-5e97db47-20261004-observed.json), [timing replay](candidates/goal110-arithmetic-candidates-20261004-timing-review.json), [archive review](candidates/goal110-bounded-rem-5e97db47-20261004-archive-review.json) | Repeated LLVM filter gains 6.0%/7.4% and small-sort gain 5.2%; QBE nested cost repeats 12%. LLVM-only successor planned. No goal confirmation. |
-| T19 | Unintegrated dictionary probe publication `64fb7e62`; seven cases at both sizes, six-arm 5r/1w and matched screen | [Observations](candidates/goal110-dict-probe-64fb7e62-20261004-observed.json), [timing replay](candidates/goal110-dict-probe-64fb7e62-20261004-timing-review.json), [static review](candidates/goal110-dict-probe-64fb7e62-20261004-static-review.json) | LLVM lookup small/large remains 1.7813×/1.7146×; string lookup 1.3993×/1.6338×. Initial relative gains 3.6% small integer lookup and 2.7%/1.2% string lookup; approximately 1% string update cost. Repeat confirms lookup gains and approximately 1% string update cost; no goal confirmation. |
-| T20 | LLVM-only bounded remainder successor `df09fb4b`; no new timing | [Archive](../../experiments/runtime-goal110-bounded-rem-llvm-20261004/README.md), [source review](candidates/goal110-bounded-rem-df09fb4b-20261004-source-review.json), [image review](candidates/goal110-bounded-rem-df09fb4b-20261004-image-review.json), [archive review](candidates/goal110-bounded-rem-df09fb4b-20261004-archive-review.json) | Eight runtime images independently match: LLVM equals T18; QBE equals G4. Fresh 720 qualifications and 516 holdouts pass. Supports adoption without repeated timing of unchanged code; no integrated goal confirmation. |
+| T18 | Unintegrated bounded bias `5e97db47`; six-arm 5r/1w, matched four-row 15r/3w repeat and signed supplement | [Archive](../../experiments/runtime-goal110-bounded-rem-20261004/README.md), [observations](candidates/goal110-bounded-rem-5e97db47-20261004-observed.json), [timing replay](candidates/goal110-arithmetic-candidates-20261004-timing-review.json), [archive review](candidates/goal110-bounded-rem-5e97db47-20261004-archive-review.json) | Repeated LLVM filter gains 6.0%/7.4% and small-sort gain 5.2%; QBE nested cost repeats 12%. LLVM-only successor T20 integrated; original all-backend candidate remains deferred. No goal confirmation. |
+| T19 | Dictionary probe publication adopted in1a398063 `64fb7e62`; seven cases at both sizes, six-arm 5r/1w and matched screen | [Archive](../../experiments/runtime-goal110-dictionary-probe-20261004/README.md), [observations](candidates/goal110-dict-probe-64fb7e62-20261004-observed.json), [timing replay](candidates/goal110-dict-probe-64fb7e62-20261004-timing-review.json), [static review](candidates/goal110-dict-probe-64fb7e62-20261004-static-review.json) | LLVM lookup small/large remains 1.7813×/1.7146×; string lookup 1.3993×/1.6338×. Initial relative gains 3.6% small integer lookup and 2.7%/1.2% string lookup; approximately 1% string update cost. Repeat confirms lookup gains and approximately 1% string update cost; no goal confirmation. |
+| T20 | LLVM-only bounded remainder successor `df09fb4b`; no new timing | [Archive](../../experiments/runtime-goal110-bounded-rem-llvm-20261004/README.md), [source review](candidates/goal110-bounded-rem-df09fb4b-20261004-source-review.json), [image review](candidates/goal110-bounded-rem-df09fb4b-20261004-image-review.json), [archive review](candidates/goal110-bounded-rem-df09fb4b-20261004-archive-review.json) | Eight runtime images independently match: LLVM equals T18; QBE equals G4. Fresh 720 qualifications and 516 holdouts pass. Adopted in1a398063 without repeated timing of unchanged code; combined validation pending, no integrated goal confirmation. |
+| T21 | Diagnostic search placement counterfactual; three LLVM executables, two rows, 15r/3w | [Archive](../../experiments/runtime-goal110-search-placement-20261004/README.md), [code/oracle review](candidates/goal110-search-placement-20261004-review.json), [timing replay](candidates/goal110-search-placement-20261004-timing-review.json), [archive review](candidates/goal110-search-placement-20261004-archive-review.json) | Sole 32-byte padding change recovers search from1.1491× to1.0080×G4; equality stays0.9120×G4. Later symbols move too. Diagnostic only; no production padding, adoption or target confirmation. |
 
 | D3 | Deferred scalar-pointer sources `a29aa6a9` and `1fdae8e1`; no timing | [Strict proof and incident archive](../../experiments/runtime-goal110-scalar-slots-20261004/README.md), [hybrid archive](../../experiments/runtime-goal110-scalar-addresses-20261004/README.md), [coordinator review](candidates/goal110-screens-20261004-0438-review.json) | Actual optimized code unchanged. Root checked96 raw/archive bindings and identical live hybrid/control ELFs; neither source is integrated. |
 
@@ -702,3 +706,7 @@ diagnostic notes and raw evidence rather than pasting build logs here.
 | 2026-10-04 10:45:15 UTC | Dictionary observations and LLVM-only successor ready | T19 artifact analysis verifies 14 six-arm rows; independent matched replay verifies 336 outcomes and the original plans. LLVM-only df09 host/24 guests and fresh 720/516 correctness outcomes complete. Agent runtime-image comparison passes eight groups: LLVM equals 5e, QBE equals G4. | Prepare quiet eight-row dictionary repeat. Independently replay df09 sources/images before adoption. Text 32-byte diagnostic passes instruction/constant equality and 200 oracle checks; timing pending. No new target closure. |
 
 | 2026-10-04 10:50:52 UTC | Dictionary repeat, successor and placement reviewed | [Dictionary repeat replay](candidates/goal110-dict-probe-64fb7e62-20261004-repeat-review.json) verifies 576 outcomes; small lookup improves3.47%, string lookup1.78%/1.38%, with string update costs1.40%/0.92%. T20 source replay verifies49 native pairs and all11 sources/3logs; eight runtime-image comparisons and1236 qualification/holdout outcomes pass independently. [Placement replay](candidates/goal110-search-placement-20261004-review.json) verifies the sole32NOP assembly delta,8freshdisassemblies and200independentoracles. | Commit evidence, run separately labeled short placement diagnostic, then integrate accepted dictionary and LLVM-only remainder changes. Retain all costs; no parity closure or fresh integrated confirmation. |
+
+| 2026-10-04 10:56:23 UTC | Combined source integrated; placement sensitivity observed | Source1a398063 combines exact reviewed LLVM-only remainder and dictionary publication with accepted index reuse;88Guardianchecks pass. All non-shared candidate source files match their reviewed bytes; SPEC/import merges retain both mechanisms. Text diagnostic5157a204 runs108outcomes10:52:52.553–10:52:57.797UTC: annotation/G4search1.1491, adjustedplacement/G4search1.0080; equality remains0.9120 ofG4. | Fresh integrated Debughost/24optimizedguests, focusedtests and720/516checks assigned. No inferred combined performance. Text padding is diagnostic only; investigate general alignment. Dictionary archive README full-stream claim corrected in review because timing retains parsed status/checksum, not raw streams. |
+
+| 2026-10-04 11:02:22 UTC | Complete dictionary and placement evidence archived | Root verifies107dictionary files/173bindings (170exact live payloads plus2known comment-only reconstructions) and896placement files/884compressed/raw/live payloads plus11helpers. Independent placement timing replay verifies108full outcomes and frozenplans; search/G4CI[1.00018,1.01104], equality/G4CI[.90473,.91671]. [Dictionary archive review](candidates/goal110-dict-probe-64fb7e62-20261004-archive-review.json) records the corrected parsed-output retention claim. | Integrated1a398063 remainder58 and separately bounded index test batches run before its host/guest build. Typedlookup isolated design approved with runtime fallback; general loop-alignment design pending. Dashboard retains70open/10stale; no new confirmed target. |

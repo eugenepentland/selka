@@ -1,0 +1,47 @@
+{
+  "schema": "mylang-dictionary-probe-timing-driver-v1",
+  "driver_session_id": "5d872173-217f-46f2-a753-c67ebc44ba3e",
+  "phase": "analysis",
+  "started_utc": "2026-10-04T10:36:33.685423+00:00",
+  "commands": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe-debug/timing-commands.json",
+    "sha256": "ec09a8d2ba0abcf6e5aa67ee3032828df250e953d8a4993e13cef7cae442f005"
+  },
+  "script": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe-debug/execute-commands.py",
+    "sha256": "d6350583f6bb7128d53e288ed99298c94bac994f631a9315543a3bfc78e656c1"
+  },
+  "runs": [
+    {
+      "command": [
+        "python3",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe-debug/finalize-screen.py",
+        "--raw",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe-debug/screen-raw.json",
+        "--output",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe-debug/screen.json"
+      ],
+      "started_utc": "2026-10-04T10:36:33.685492+00:00",
+      "log": ".mylang-cache/goal110-dict-probe-debug/command-2.log",
+      "status": 0,
+      "finished_utc": "2026-10-04T10:36:37.880162+00:00",
+      "log_sha256": "ce601a66aad38ddc633131cc6b44c850087f632390039c50d32b647aec28201e"
+    },
+    {
+      "command": [
+        "python3",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/benchmarks/runtime/compare_candidate.py",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe-debug/screen.json",
+        "--output",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe-debug/screen-comparison.json",
+        "--check-artifacts"
+      ],
+      "started_utc": "2026-10-04T10:36:37.880356+00:00",
+      "log": ".mylang-cache/goal110-dict-probe-debug/command-3.log",
+      "status": 0,
+      "finished_utc": "2026-10-04T10:36:42.018324+00:00",
+      "log_sha256": "0097f4e79292567ecc7d2a0d53b959513243e47994a09d58991fc0695b435e28"
+    }
+  ],
+  "finished_utc": "2026-10-04T10:36:42.018385+00:00"
+}

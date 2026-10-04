@@ -1,0 +1,19 @@
+{
+  "schema": "mylang-dictionary-probe-before-guest-v1",
+  "created_utc": "2026-10-04T10:11:29.264298+00:00",
+  "source_revision": "64fb7e62732db9cea46414248fd59ba362e31b56",
+  "compiler": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/zig-out/bin/mylang",
+    "sha256": "28b7ba851c6db905287711d63a3b4e09ad7558afefb016f005b3d3c9c12da941"
+  },
+  "compiler_receipt": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe-debug/compiler-receipt.json",
+    "sha256": "48bd5a7bf4e76995b7a5e4a2126f6c8b069bd54929dc1f700212fc3fadf414ab"
+  },
+  "control_manifest": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-index-forward-rf-20261004/.mylang-cache/goal110-index-forward-rf/runner/manifest.json",
+    "sha256": "e02fd8476ee7b36d04e74a46287dcdbcc0fade79156f40b4e0de2d9e6674a171"
+  },
+  "guest_policy": "ordinary unaccounted rc-v5, ReleaseFast/O3 LLVM full LTO; exact expanded build-only policy",
+  "all_24_control_artifacts_verified": true
+}

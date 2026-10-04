@@ -1,0 +1,6 @@
+{"compiler": {"path": "/usr/bin/x86_64-linux-gnu-gcc-15", "sha256": "b5f1b773a7c733738352000c92a077dc5852a1a2fc6d836b1e411be1e9ec5f88"}, "driver": {"path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe/native-proof.py", "sha256": "5024a37b66d814bb3ae33b240ea7e3a976e31ea4951e475a625f1c95ff02629d"}}
+MYLANG_RC_COUNTS {"version":1,"runtime":"rc-v5-counting","saturated":false,"owner_acquire":1,"owner_release":2,"hold_acquire":1,"hold_release":1,"owner_limit":0,"hold_limit":0,"heap_allocate":1,"arena_allocate":0,"retire":1,"clone_shell":0,"unique_check":2}
+native RC collections: 53 passed
+native text and dictionary tests passed
+native dictionary probe state tests passed
+four native suites passed; new suite executes eight GC/RC state cases

@@ -1,0 +1,17 @@
+{
+  "status": "pass",
+  "reviewed_utc": "2026-10-04T10:58:37.723490+00:00",
+  "archive_commit": "c36df19d9d0e206f558197ff39144986500c5f90",
+  "committed_files": 107,
+  "archive_bindings": 173,
+  "raw_live_bindings": 170,
+  "comment_only_reconstructions": [
+    "src/native_dictionary.c",
+    "tests/native_dictionary_probe_test.c"
+  ],
+  "index_sha256": "14a858674acb04e5d49a6079214c1ae8224f30f00608dec7785e4e1169f05ceb",
+  "limitations": [
+    "Initial strict live-byte replay refused two known comment-only source differences; exact documented spec-tag reconstruction resolves them without changing tested code.",
+    "Timing samples retain parsed validated checksums/status/times, not full raw stdout/stderr. README corrected in c36df19d; native proof full streams retained."
+  ]
+}

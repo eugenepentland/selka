@@ -1,0 +1,13 @@
+{
+  "status": "pass",
+  "reviewed_utc": "2026-10-04T11:01:22.026743+00:00",
+  "archive_commit": "eaad2f761c92a4815aa97e78d2a23200ca20618d",
+  "committed_files": 896,
+  "raw_live_bindings": 884,
+  "helper_bindings": 11,
+  "evidence_sha256": "7b23fc9ee8d75f24a9f4121ce2df554bd64bb095206989c0c288710801b8f529",
+  "limitations": [
+    "Diagnostic-only placement experiment; no production padding or target confirmation. All copied files match the committed archive exactly.",
+    "Initial review helper assumed script_bindings was a list; corrected its schema handling without changing archived evidence."
+  ]
+}
