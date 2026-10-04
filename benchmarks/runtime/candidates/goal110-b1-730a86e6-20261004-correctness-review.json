@@ -1,0 +1,42 @@
+{
+  "schema": "goal110-b1-correctness-review-v1",
+  "status": "pass",
+  "reviewed_utc": "2026-10-04T01:21:21.461488+00:00",
+  "source_revision": "730a86e62b47c922dc1411d24b5868c3bd2132f3",
+  "scope": [
+    "mutate_nested",
+    "bytes_scan",
+    "string_search"
+  ],
+  "fresh_qualification_rows": [
+    720,
+    720
+  ],
+  "unchanged_rf_holdout_rows_verified": 516,
+  "holdout_identity_matches_both_timing_sessions": true,
+  "holdout_live_manifest_checked": true,
+  "production_diff_from_starting_source": "empty",
+  "validation_receipt": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-20261003/benchmarks/runtime/candidates/validation/730a86e6-validation.json",
+  "gate_logs_verified": [
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-20261003/benchmarks/runtime/candidates/validation/730a86e6-full-gate-shards4.log.gz",
+      "sha256": "9503bfe21e754698eb0a3d845cc1b3fc0200b548507a99080da25bae92fb330a",
+      "summary": "Build Summary: 97/97 steps succeeded; 2903/10842 tests passed (7939 skipped)",
+      "memory_diagnostics": [
+        "error: memory usage peaked at 2.34GB (2337439744 bytes), exceeding the declared upper bound of 2.15GB (2147483648 bytes)"
+      ]
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-20261003/benchmarks/runtime/candidates/validation/730a86e6-full-gate-shards12.log.gz",
+      "sha256": "f24db77fc8527baf3d5eb92ec081c78f79a0b95872ffb941c941fb63d4fc864c",
+      "summary": "Build Summary: 109/109 steps succeeded; 2857/32388 tests passed (29531 skipped)",
+      "memory_diagnostics": []
+    }
+  ],
+  "limitations": [
+    "This is a replay and identity/coverage review of prior unchanged-source correctness evidence, not a newly executed full correctness gate or holdout run.",
+    "Prior whole-repository semantic checks used a Debug compiler host at the same production source; both current timing runs and the exact-artifact holdouts use the ReleaseFast host.",
+    "Prior holdouts preserve generator shapes and do not establish complete input-domain coverage.",
+    "The first four-shard gate reported a memory bound overrun despite exit0; the final default12-shard gate had no memory overrun."
+  ]
+}

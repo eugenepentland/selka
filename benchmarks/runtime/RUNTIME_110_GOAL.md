@@ -8,30 +8,39 @@ the raw evidence for every reported result.
 ## Status
 
 <!-- STATUS-START -->
-- **Campaign:** active; preflight and first batch preparation.
-- **Last document update:** 2026-10-04 01:07:09 UTC.
-- **Active batch:** B1 (`mutate_nested`, `bytes_scan`, `string_search`); B2 text
-  inspection can proceed while B1 is measured.
+- **Campaign:** active; B1 confirmed; equality candidate held after regression, loop screen next.
+- **Last document update:** 2026-10-04 01:53:10 UTC.
+- **Active batch:** B3/B4 loop subset candidate `5dc31c3a`, focused screen
+  queued after correctness and independent review. B2 equality candidate
+  `965d416c` remains unintegrated after a repeatable search regression; an
+  isolated join optimization and B11 sorting optimization are in progress.
 - **Current implementation:** `perf/runtime-parity-20261003`; production source
   `730a86e62b47c922dc1411d24b5868c3bd2132f3`.
 - **Latest complete integrated measurement:** B0, the prior campaign's final run.
 - **Acceptance scope:** LLVM required; QBE tracked separately.
-- **New goal confirmations:** 0/80 required LLVM targets. No running builds or measurements.
-- **Next action:** verify saved binaries and receipts, implement current-fastest
-  acceptance/reporting, and run two focused B1 sessions. Inspect B2 text and
-  B3/B4 code independently; only one timing job may run at a time.
+- **New goal confirmations:** **6/80 required LLVM targets** at production `730a86e6`.
+- **LLVM states:** 6 confirmed, 1 observed within 1.10 awaiting confirmation,
+  73 above 1.10; 0 stale confirmations and 0 reopened confirmed targets.
+- **Dashboard artifact:** [B1 accepted status](candidates/goal110-dashboard-20261004-b1.json).
+- **Active operations:** B1 measurements and the quiet B2 repeat finished.
+  The next timing lane belongs to `goal110_calls`. Join and sorting work will
+  hold builds during measurements. No experimental production changes have
+  been integrated into the accepted branch yet.
+- **Next action:** measure the four selected loop cases and the excluded-path
+  regression sentinel. Investigate equality with matched-host control artifacts
+  while keeping the measured regression visible.
 
-| Backend | Required targets | Observed ≤1.10 in B0 | Observed >1.10 in B0 | Goal confirmations |
+| Backend | Required targets | Latest observed ≤1.10 | Latest observed >1.10 | Goal confirmations |
 |---|---:|---:|---:|---:|
-| MyLang LLVM | 80 | 7 | 73 | 0 |
+| MyLang LLVM | 80 | 7 | 73 | 6 |
 | MyLang QBE | 0 (80 tracked) | 2 | 78 | Not required |
 <!-- STATUS-END -->
 
 The counts above use the **fastest current configuration in each measured row**.
 They differ from the earlier campaign's counts against its frozen historical
 1.00 targets. An observed result below 1.10 is not yet a confirmed pass for this
-new goal. All 80 LLVM targets still need campaign acceptance. QBE being above
-1.10 does not prevent completion.
+new goal. Six LLVM targets are confirmed at the linked production revision;
+74 remain unresolved. QBE being above 1.10 does not prevent completion.
 
 - [Live speed table](#live-speed-table)
 - [Work queue](#work-queue)
@@ -234,10 +243,10 @@ measure QBE alongside it without treating its existing gaps as acceptance work.
 
 | Batch | Cases | Initial purpose | State |
 |---|---|---|---|
-| B1 | `mutate_nested`, `bytes_scan`, `string_search` | Confirm existing LLVM wins and establish regression checks | Preparing |
-| B2 | `string_equal`, `string_join` | Equality/ownership overhead and nearby large-input targets | Queued |
+| B1 | `mutate_nested`, `bytes_scan`, `string_search` | Confirm existing LLVM wins and establish regression checks | Confirmed 6/6 at `730a86e6` (G1) |
+| B2 | `string_equal`, `string_join` | Equality/ownership overhead and nearby large-input targets | Quiet repeat of `965d416c`; first screen has regressions/noise |
 | B3 | `record_reads`, `record_construct`, `record_update` | Record representation, scalar replacement and transfers | Queued |
-| B4 | `call_direct`, `call_indirect`, `option_handle`, `result_propagate` | Calls, inlining, dispatch and return paths | Queued |
+| B4 | `call_direct`, `call_indirect`, `option_handle`, `result_propagate` | Calls, inlining, dispatch and return paths | `5dc31c3a` checked/reviewed; focused timing queued |
 | B5 | `integer_math`, `float_math`, `branch_predictable`, `branch_mixed` | Scalar lowering and loop invariants | Queued |
 | B6 | `list_scan`, `list_append`, `list_filter`, `mutate_unique` | Iteration, capacity and uniqueness | Queued |
 | B7 | `tagged_stack`, `mutate_shared`, `alloc_short`, `alloc_retained` | Ownership, allocation elimination and retained data | Queued |
@@ -369,20 +378,20 @@ does not supply the new goal's confirmation protocol.
 | alloc_short / large (1024) | 3.9012 | 327.5994 | 536.1037 | 1374.7989 | **1.0000** | 19711.5691 | 26589.1038 | O / O | B0 |
 | alloc_retained / small (64) | 1292.6997 | 1.0697 | 1.4853 | 1.0303 | **1.0000** | 2.3540 | 3.5644 | O / O | B0 |
 | alloc_retained / large (1024) | 20710.2684 | 1.0504 | 1.2628 | 1.0366 | **1.0000** | 2.2667 | 3.3646 | O / O | B0 |
-| mutate_nested / small (64) | 753.0107 | 1.6227 | 1.5912 | 1.6485 | 1.5024 | **1.0000** | 1.1419 | P / O | B0 |
-| mutate_nested / large (1024) | 7343.1183 | 2.8315 | 2.4498 | 2.8206 | 2.5882 | **1.0000** | 1.1208 | P / O | B0 |
+| mutate_nested / small (64) | 909.7296 | 1.4770 | 1.5487 | 1.5239 | 1.3798 | **1.0000** | 1.1346 | C / O | G1 |
+| mutate_nested / large (1024) | 8702.5518 | 2.5893 | 2.3812 | 2.5576 | 2.3413 | **1.0000** | 1.1070 | C / O | G1 |
 | sort_int / small (64) | 171.4333 | 1.3346 | 6.3726 | 1.6065 | **1.0000** | 1.6126 | 2.8249 | O / O | B0 |
 | sort_int / large (4096) | 44258.7276 | 1.4306 | 5.3712 | 1.4788 | 1.0267 | **1.0000** | 1.2139 | P / O | B0 |
 | sort_records / small (64) | 571.1779 | 1.1716 | 12.9634 | 1.4071 | **1.0000** | 2.1426 | 2.8365 | O / O | B0 |
 | sort_records / large (4096) | 52264.4234 | **1.0000** | 24.5636 | 2.2368 | 1.7803 | 1.1932 | 1.5272 | O / O | B0 |
 | lox_eval / small (16) | 738.1632 | **1.0000** | 1.1383 | 2.6921 | 2.6291 | 3.6607 | 4.0643 | O / O | B0 |
 | lox_eval / large (256) | 10981.4215 | **1.0000** | 1.1776 | 2.7947 | 2.7405 | 3.6183 | 3.9186 | O / O | B0 |
-| bytes_scan / small (64) | 3.5642 | 5.0098 | 6.8107 | 7.6556 | 3.4122 | **1.0000** | 2.3430 | P / O | B0 |
-| bytes_scan / large (4096) | 76.1218 | 14.1145 | 13.5447 | 18.3293 | 9.2395 | **1.0000** | 1.0580 | P / P | B0 |
+| bytes_scan / small (64) | 3.6132 | 4.9535 | 6.6721 | 7.6987 | 3.3981 | **1.0000** | 2.3594 | C / O | G1 |
+| bytes_scan / large (4096) | 88.9207 | 13.5780 | 13.9344 | 18.5810 | 8.9383 | **1.0000** | 1.0693 | C / I | G1 |
 | string_equal / small (64) | 3.0562 | **1.0000** | 1.5325 | 1.3735 | 1.2617 | 1.3640 | 7.2900 | O / O | B0 |
 | string_equal / large (4096) | 30.9760 | **1.0000** | 1.2294 | 2.1009 | 1.6346 | 1.1642 | 23.0765 | O / O | B0 |
-| string_search / small (64) | 19.7735 | 2.1846 | 1.2638 | 4.5548 | 3.7854 | **1.0000** | 1.2706 | P / O | B0 |
-| string_search / large (4096) | 88.2193 | 14.7454 | 7.3380 | 33.9578 | 29.9490 | **1.0000** | 1.0647 | P / P | B0 |
+| string_search / small (64) | 22.2408 | 2.1525 | 1.2343 | 4.5417 | 3.7611 | **1.0000** | 1.2519 | C / O | G1 |
+| string_search / large (4096) | 101.0547 | 14.4075 | 7.1893 | 33.8407 | 29.9761 | **1.0000** | 1.0212 | C / I | G1 |
 | string_split / small (64) | 557.5921 | **1.0000** | 1.8763 | 1.8560 | 1.7269 | 6.2247 | 8.1218 | O / O | B0 |
 | string_split / large (4096) | 28435.3492 | **1.0000** | 2.3570 | 2.1980 | 2.0666 | 7.6152 | 9.7548 | O / O | B0 |
 | string_join / small (64) | 220.9090 | **1.0000** | 1.8606 | 1.4400 | 1.2367 | 1.8723 | 1.5513 | O / O | B0 |
@@ -404,6 +413,8 @@ does not supply the new goal's confirmation protocol.
 | ID | Source and measurement | Reports | Interpretation |
 |---|---|---|---|
 | B0 | Production `730a86e62b47c922dc1411d24b5868c3bd2132f3`; session `d4378789-427a-4862-8718-52189af6bc96`; 2026-10-03 23:40:22 through 2026-10-04 00:04:48 UTC; 15 rounds, 3 warmups | [Raw run](candidates/final-730a86e6-releasefast-20261003.json.gz), [comparison JSON](candidates/final-730a86e6-releasefast-20261003-comparison.json.gz), [measurement receipt](candidates/final-730a86e6-releasefast-20261003-README.md), [all-arm absolute times](candidates/final-730a86e6-releasefast-20261003-six-arm.md) | Starting observations from the completed prior campaign; not new goal confirmations |
+| G1A | Production `730a86e6`; session `f58b516a-fc86-49b6-b5fc-49bda2057537`; 2026-10-04 01:10:28–01:13:38 UTC; 15 rounds, 3 warmups | [Raw](candidates/goal110-b1-730a86e6-20261004-a.json.gz), [comparison](candidates/goal110-b1-730a86e6-20261004-a-comparison.json.gz), [command](candidates/goal110-b1-730a86e6-20261004-a-command.json) | Six B1 rows; LLVM fastest in all six; verification passed; independent confirmation pending |
+| G1 | Production `730a86e6`; independent A/B sessions on 2026-10-04; 15 rounds/3 warmups each; latest medians from B | [Accepted analysis](candidates/goal110-b1-730a86e6-20261004-accepted.json), [receipt](candidates/goal110-b1-730a86e6-20261004-README.md), [B raw](candidates/goal110-b1-730a86e6-20261004-b.json.gz), [correctness review](candidates/goal110-b1-730a86e6-20261004-correctness-review.json), [checks attestation](candidates/goal110-b1-730a86e6-20261004-checks.json) | Six LLVM cells confirmed; 74 untouched rows retain B0; no new production optimization claimed |
 
 B0 comparison JSON (uncompressed) SHA256:
 `dbb1906bcac50cb015171cce52ff68a0297f728db81e9ec4927f4f158117d473`.
@@ -423,6 +434,21 @@ Append entries; do not remove failed experiments or historical outcomes.
 | 2026-10-04 | Scope decision | User selected LLVM required, QBE tracked separately. The goal has 80 required targets. QBE remains in all-arm comparisons and regression checks. | Prioritize LLVM parity; QBE's existing gaps do not block completion. |
 
 | 2026-10-04 01:07:09 UTC | `b1b0500e` / production `730a86e6` | Started the user-authorized goal. Verified worktree state and read the complete acceptance plan; no production edits or new timing yet. | Prepare isolated Sol 6.1/xhigh tasks for reporting and next-batch optimizations; coordinator owns B1 timing and the dashboard. |
+
+| 2026-10-04 01:11:10 UTC | `a0892204` / production `730a86e6` | Replayed B0 with live source/artifact checks: 480 groups valid; production diff from pin is empty. Goal-plan commit passed Guardian 88/88. Started fresh B1 session A, 15 rounds/3 warmups, all six arms and both sizes, reusing verified binaries. | Await session A; reporting and independent text/call investigations run in isolated worktrees. No new performance claim yet. |
+
+| 2026-10-04 01:15:56 UTC | `730a86e6` / G1A | Fresh B1 A: LLVM ratio 1.0000 in all six rows, 540 timing samples and 720 checksum qualifications; live artifact replay passed. CPU sibling average busy 0.36%, no frequency warning. Unchanged production. | Started independent B1 B (exec `63831`). No C states yet. Agents found a loop branch-attribution mismatch and prepared a general bounded string-equality candidate; neither has timing evidence yet. |
+
+| 2026-10-04 01:17:23 UTC | B3/B4 diagnostic correction | Repeated per-element dispatch is confirmed, but missing branch labels in final IL do not establish the cause: specialization runs before label elision. Agent withdrew the mapping diagnosis before production edits and is capturing pre-rewrite refusal evidence. | Retain the dispatch hypothesis; do not add speculative marker changes. B2 equality candidate has bounded loads and sanitizer coverage in progress; timing still pending. |
+
+| 2026-10-04 01:22:39 UTC | `730a86e6` / B1 A+B | Session B finished at 01:17:08 UTC, 540 samples/720 qualifications; live artifact verification passed. Independent pairwise interval replay puts the worst LLVM upper95 bound at 1.0551 across both sessions. Replayed 516 prior RF holdouts with exact A/B artifact identity and live manifest checks; reviewed unchanged-source gate receipts. | Finalize machine-readable acceptance receipt; no new full gate was claimed. Text agent owns the next timing window; loop agent is using gate-compliant diagnostics to establish the actual refusal. |
+
+| 2026-10-04 01:32:38 UTC | `ffc2412f` / G1 | Integrated the reporting tool; independently reran 15 goal tests and 8 historical candidate tests. Both fresh sessions and the reviewed correctness receipt confirm all six B1 LLVM cells. The generated dashboard retains 74 B0 rows and correctly reports goal incomplete. | B1 complete at unchanged production `730a86e6`. B2 equality screens are active; a 64-byte equal-string helper slowdown is being investigated before adoption. Loop candidate selects fitting copies without raising code budgets. |
+
+| 2026-10-04 01:41:43 UTC | Isolated `965d416c` / T1 exploratory | Five-round six-arm equality screen: LLVM small1.2951 and large1.0000; large search1.1017. Paired before/after versus730a86e6 suggests equality0.904/0.350, but search samples contain simultaneous roughly2× spikes in both binaries. Native equal64 helpers also slowed about14–21%. Root verified screen structure/oracles and confirmed paired guest hashes match the six-arm report. | Not adopted; integrated dashboard stays at B0/G1. Repeat quiet15-round controls before attributing search regression to code. Raw [screen](/home/epentland/ai/canopy/mylang-worktrees/goal110-text-20261004/.mylang-cache/goal110-text/equality-screen.json) and [paired data](/home/epentland/ai/canopy/mylang-worktrees/goal110-text-20261004/.mylang-cache/goal110-text/equality-before-after.json) remain separate exploratory evidence. |
+| 2026-10-04 01:41:43 UTC | Isolated `5dc31c3a` / independent review `5ccbed8e` | Actual specialization selects10/11 certified values within unchanged byte budgets. Selected/excluded/unknown native outcome checks pass;216 compute checksum cells and432 join executions passed across LLVM and QBE. Independent allocation-failure review passed2 scenarios. LLVM whole-guest text grows3.26% (entry27.56%). | Await focused runtime screen after text quiet interval. No parity claim or accepted production change yet. |
+
+| 2026-10-04 01:53:10 UTC | Isolated `965d416c` / quiet T1 repeat, archive `5777c59a` | Fifteen paired rounds confirm LLVM equality after/before0.9105 (small) and0.3545 (large), but large search1.1589; QBE search0.9930. Checksums pass. No cgroup throttling was recorded; thermal counters still advanced. A search-helper alignment change is observed but not established as the cause. | Keep equality unintegrated. Preserve raw results and investigate against the existing Debug730 control; move timing lane to the loop screen. Join and numeric-sort permutation optimizations remain isolated. |
 
 For future entries, include the affected cases/sizes/backends and before → after
 ratios, or say explicitly that the step produced no timing result. Link long
