@@ -22,7 +22,7 @@ Independent report replay with artifact checks passed all 480 sample groups
 and 160 comparisons. [All 160 statuses](final-730a86e6-releasefast-20261003-comparison.md)
 retain frozen ratios and same-session original-reference ratios/paired intervals.
 [All six arms](final-730a86e6-releasefast-20261003-six-arm.md) shows absolute
-medians and frozen normalization for every row. The JSON dashboard also retains
+medians and frozen normalization for every row. The comparison JSON also retains
 the distinct current-fastest dashboard; a current winner does not change the
 original 1.00 target. [Resources](final-730a86e6-releasefast-20261003-resources.md)
 records all 24 guest file/.text sizes and 480 individual peak-RSS probes.
@@ -34,8 +34,8 @@ Numerical frozen status: LLVM 4 at/below, 3 near (within 5%), 73 open;
 QBE 3 at/below, 77 open. Therefore 7 of 160 rows are numerically at/below and
 153 still exceed 1.00. Near is an unresolved target. Concurrent evidence in
 this session: LLVM 5 faster, 74 slower, 1 inconclusive; QBE 3 faster, 77 slower.
-The eight provisional faster rows require independent RF confirmation before
-a demonstrated-faster claim. The nested-mutation small row is faster than its
+All eight provisional faster rows passed the separate independent RF
+confirmation; seven also meet the frozen numerical target. The nested-mutation small row is faster than its
 concurrent original yet remains above the frozen target. QBE byte/search wins
 compare to the original winner; they do not imply QBE beats current LLVM.
 
@@ -55,7 +55,8 @@ compare to the original winner; they do not imply QBE beats current LLVM.
 A separate fresh RF confirmation session covers every provisional-win family,
 the six preselected regression families, and JSON/Lox at both sizes. Current-main
 and final guests both use RF host builds; scalar-policy1ec guests are explicitly
-Debug-host controls. That session's result is a separate artifact. Archived
+Debug-host controls. That session's [result](final-730a86e6-releasefast-confirmation-20261003-README.md)
+is a separate artifact. Archived
 current-main/final medians are not paired here; any arithmetic comparison of
 archived sessions would be cross-session. No demonstrated-faster conclusion is
 made by this full-session artifact alone. Bootstrap intervals are exploratory,
