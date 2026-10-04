@@ -132,3 +132,26 @@ CASES['string_split'] = dict(
           ('v9 baseline x86-64', 'string_split_base', 9),
           ('v6 baseline x86-64', 'string_split_base', 6)],
 )
+
+CASES['branch_mixed'] = dict(
+    group='compute', bench='branch_mixed', gen_exe='branch_mixed', sizes=(64, 4096), iters=(300000, 8000),
+    unit_div='size',
+    verify=[(2, 1, 1), (3, 7, 42), (17, 31, 999983), (64, 100, 42), (4096, 20, 42), (4100, 5, 7), (1000, 3, 13),
+            (33, 40, 5), (5000, 6, 999999)],
+    versions=V('branch_mixed', [
+        (1, "today: bounds checks, branch on flags, checked arms"),
+        (2, "+ immutable lists, hoisted bounds, sticky checks (L2)"),
+        (3, "+ range facts: no arm checks (branch written as if)"),
+        (4, "+ if-conversion written as select"),
+        (5, "+ narrow arithmetic (i32), plain C"),
+        (6, "+ u16 storage, plain C"),
+        (8, "+ chunked u32 accumulation, plain C"),
+        (7, "hand AVX2 u16 blend"),
+    ]) + [('v2 holdout: file data, L2 form, branchy (no range facts)', 'branch_mixed', 2, 'file'),
+          ('v30 holdout: file data, no range facts, branch-free sticky', 'branch_mixed', 30, 'file'),
+          ('v31 holdout: file data, runtime guard + AVX2 i32', 'branch_mixed', 31, 'file'),
+          ('v20 holdout reference: today, file', 'branch_mixed', 20, 'file'),
+          ('v4 baseline x86-64', 'branch_mixed_base', 4),
+          ('v6 baseline x86-64', 'branch_mixed_base', 6),
+          ('v8 baseline x86-64', 'branch_mixed_base', 8)],
+)

@@ -1,0 +1,116 @@
+{
+ "v1: today: bounds checks, branch on flags, checked arms": {
+  "cycles_per_iter": 21622.079884985622,
+  "instr_per_iter": 90142.02612826604,
+  "branch_miss_per_iter": 23.046255781972746,
+  "store_forward_blocks_per_iter": 0.00025003125390673836
+ },
+ "v2: + immutable lists, hoisted bounds, sticky checks (L2)": {
+  "cycles_per_iter": 17152.293161645204,
+  "instr_per_iter": 83983.02312789099,
+  "branch_miss_per_iter": 11.654456807100887,
+  "store_forward_blocks_per_iter": 0.00025003125390673836
+ },
+ "v3: + range facts: no arm checks (branch written as if)": {
+  "cycles_per_iter": 12351.13951743968,
+  "instr_per_iter": 77857.02025253157,
+  "branch_miss_per_iter": 0.9961245155644456,
+  "store_forward_blocks_per_iter": 0.0
+ },
+ "v4: + if-conversion written as select": {
+  "cycles_per_iter": 12351.744218027254,
+  "instr_per_iter": 61472.01987748469,
+  "branch_miss_per_iter": 0.9983747968496062,
+  "store_forward_blocks_per_iter": 0.0
+ },
+ "v5: + narrow arithmetic (i32), plain C": {
+  "cycles_per_iter": 5311.964495561945,
+  "instr_per_iter": 15154.017752219028,
+  "branch_miss_per_iter": 1.007125890736342,
+  "store_forward_blocks_per_iter": 0.0
+ },
+ "v6: + u16 storage, plain C": {
+  "cycles_per_iter": 5270.091011376422,
+  "instr_per_iter": 14129.017752219028,
+  "branch_miss_per_iter": 1.0026253281660207,
+  "store_forward_blocks_per_iter": 0.00037504688086010754
+ },
+ "v8: + chunked u32 accumulation, plain C": {
+  "cycles_per_iter": 2556.9359919989997,
+  "instr_per_iter": 6637.014876859607,
+  "branch_miss_per_iter": 0.5309413676709589,
+  "store_forward_blocks_per_iter": -0.00012501562695336918
+ },
+ "v7: hand AVX2 u16 blend": {
+  "cycles_per_iter": 1238.0422552819102,
+  "instr_per_iter": 3294.0143767970994,
+  "branch_miss_per_iter": 1.0586323290411301,
+  "store_forward_blocks_per_iter": 0.00025003125390673836
+ },
+ "v2 holdout: file data, L2 form, branchy (no range facts)": {
+  "cycles_per_iter": 17177.539442430305,
+  "instr_per_iter": 83983.02362795349,
+  "branch_miss_per_iter": 11.416052006500813,
+  "store_forward_blocks_per_iter": 0.00012501562695336918
+ },
+ "v30 holdout: file data, no range facts, branch-free sticky": {
+  "cycles_per_iter": 33835.34054256782,
+  "instr_per_iter": 110628.02562820353,
+  "branch_miss_per_iter": 1.0078759844980623,
+  "store_forward_blocks_per_iter": 0.00037504688086010754
+ },
+ "v31 holdout: file data, runtime guard + AVX2 i32": {
+  "cycles_per_iter": 2933.7918489811227,
+  "instr_per_iter": 10281.014876859608,
+  "branch_miss_per_iter": 0.9946243280410051,
+  "store_forward_blocks_per_iter": 0.0
+ },
+ "v20 holdout reference: today, file": {
+  "cycles_per_iter": 21356.47643455432,
+  "instr_per_iter": 90142.02550318789,
+  "branch_miss_per_iter": 23.492311538942367,
+  "store_forward_blocks_per_iter": 0.00025003125390673836
+ },
+ "v4 baseline x86-64": {
+  "cycles_per_iter": 12341.00412551569,
+  "instr_per_iter": 61473.0203775472,
+  "branch_miss_per_iter": 1.0016252031503938,
+  "store_forward_blocks_per_iter": 0.0
+ },
+ "v6 baseline x86-64": {
+  "cycles_per_iter": 6204.86910863858,
+  "instr_per_iter": 34851.01800225028,
+  "branch_miss_per_iter": 1.0127515939492437,
+  "store_forward_blocks_per_iter": 0.00012501562695336918
+ },
+ "v8 baseline x86-64": {
+  "cycles_per_iter": 5240.962620327541,
+  "instr_per_iter": 21087.017877234655,
+  "branch_miss_per_iter": 1.0038754844355544,
+  "store_forward_blocks_per_iter": 0.00025003125390673836
+ },
+ "B0 rust": {
+  "cycles_per_iter": 19598.004750593824,
+  "instr_per_iter": 73762.0092511564,
+  "branch_miss_per_iter": 39.50168771096387,
+  "store_forward_blocks_per_iter": 0.00037504688086010754
+ },
+ "B0 zig-safe": {
+  "cycles_per_iter": 38005.58619827478,
+  "instr_per_iter": 90157.02837854731,
+  "branch_miss_per_iter": 122.59282410301287,
+  "store_forward_blocks_per_iter": -0.00012501562695336918
+ },
+ "B0 zig-fast": {
+  "cycles_per_iter": 19980.075259407426,
+  "instr_per_iter": 69667.02300287536,
+  "branch_miss_per_iter": 44.86210776347043,
+  "store_forward_blocks_per_iter": -0.00012501562695336918
+ },
+ "B0 my-llvm": {
+  "cycles_per_iter": 28258.19077384673,
+  "instr_per_iter": 139382.0246280785,
+  "branch_miss_per_iter": 40.15339417427178,
+  "store_forward_blocks_per_iter": -0.006750843855481936
+ }
+}
