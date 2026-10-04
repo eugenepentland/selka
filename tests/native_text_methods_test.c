@@ -40,6 +40,54 @@ static size_t find(const char *haystack,const char *needle) {
 static size_t tally(const char *haystack,const char *needle) {
     return myl_native_octets_count((const unsigned char *)haystack,strlen(haystack),(const unsigned char *)needle,strlen(needle));
 }
+static size_t first_octets(const unsigned char *haystack,size_t length,const unsigned char *needle,size_t count) {
+    if (!count) return 0;
+    if (count>length) return SIZE_MAX;
+    for (size_t at=0;at<=length-count;at++) {
+        size_t matched=0;
+        while (matched<count && haystack[at+matched]==needle[matched]) matched++;
+        if (matched==count) return at;
+    }
+    return SIZE_MAX;
+}
+/* spec-case: TEXT-SCAN-1. Exact-sized, unaligned slices agree with an independent
+   first-match oracle across nearby fetch/block boundaries, repeated candidates,
+   zero octets and UTF-8 octets. An allocator red zone follows each payload. */
+static void search_boundaries(void) {
+    static const size_t lengths[]={0,1,2,7,8,9,15,16,17,31,32,33,63,64,65,127,128,129,255,256,257,1023,1024,1025,4095,4096,4097};
+    static const size_t widths[]={0,1,2,3,8,9,16,17,32};
+    static const unsigned char utf8[]={0xc3,0xa9,'a',0xce,0xa9,';'};
+    size_t checked=0;
+    for (size_t row=0;row<sizeof lengths/sizeof *lengths;row++) {
+        size_t length=lengths[row];
+        for (size_t offset=0;offset<8;offset++) {
+            unsigned char *allocation=malloc(offset+length+(!length && !offset));
+            assert(allocation);
+            unsigned char *haystack=allocation+offset;
+            for (size_t distribution=0;distribution<4;distribution++) {
+                for (size_t at=0;at<length;at++)
+                    haystack[at]=distribution==0?'a':distribution==1?(unsigned char)(at*37):distribution==2?utf8[at%sizeof utf8]:'a';
+                if (distribution==3 && length) haystack[length-1]='b';
+                for (size_t column=0;column<sizeof widths/sizeof *widths;column++) {
+                    size_t count=widths[column];
+                    unsigned char *needle_allocation=malloc(7+count);
+                    assert(needle_allocation);
+                    unsigned char *needle=needle_allocation+7;
+                    for (size_t mode=0;mode<4;mode++) {
+                        size_t begin=mode==0?0:mode==1?length/2:count<=length?length-count:0;
+                        for (size_t at=0;at<count;at++) needle[at]=mode<3 && begin+at<length?haystack[begin+at]:'a';
+                        if (mode==3 && count) needle[count-1]='b';
+                        assert(myl_native_octets_find(haystack,length,needle,count)==first_octets(haystack,length,needle,count));
+                        checked++;
+                    }
+                    free(needle_allocation);
+                }
+            }
+            free(allocation);
+        }
+    }
+    printf("exact search slices: %zu oracle outcomes\n",checked);
+}
 /* spec-case: TEXT-SCAN-1. The bulk search answers exactly what a comparison at
    every offset answered: the first match, at either end, past any number of
    first-octet candidates that fail (more than the in-place budget hands the rest
@@ -64,6 +112,7 @@ static void octet_search(void) {
     assert(myl_native_octets_count(large,sizeof large,(const unsigned char *)",x",2)==200001/7+1);
     assert(myl_native_octets_count(large,sizeof large,(const unsigned char *)"x,",2)==200001/7);
     assert(myl_native_octets_find(large+1,sizeof large-1,(const unsigned char *)",",1)==6);
+    search_boundaries();
 }
 static myl_native_list *pieces(myl_native_heap *heap,myl_native_root *root,const char *text,const char *separator) {
     myl_native_list *parts=myl_native_text_split(heap,raw(heap,text),raw(heap,separator));

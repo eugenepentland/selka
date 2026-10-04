@@ -1,6 +1,7 @@
 #include "native_dictionary.h"
 #include <assert.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 static const myl_native_type pointer={.size=sizeof(void *),.alignment=_Alignof(void *),.kind=MYL_NATIVE_POINTER};
 static const myl_native_type number={.size=8,.alignment=8,.kind=MYL_NATIVE_PLAIN};
@@ -9,6 +10,50 @@ static void equals(myl_native_text *value,const char *bytes) {
     unsigned char buffer[128];
     size_t length=myl_native_text_utf8(value,buffer,sizeof(buffer));
     assert(length==strlen(bytes) && !memcmp(buffer,bytes,length));
+}
+/* spec-case: UTF8-TEXT-1 -- exact content equality with no payload padding,
+   through owned values and unaligned views. Every octet can be the only
+   difference, including interior NULs and all bounded-load transitions. */
+static void equality_payload_boundaries(void) {
+    const size_t lengths[]={0,1,2,3,4,5,7,8,9,15,16,17,23,31,32,33,63,64,65,127,128,129,255,256,257,4096};
+    int (*volatile exported_equal)(const myl_native_text *, const myl_native_text *)=myl_native_text_equal;
+    assert(myl_native_text_equal(NULL,NULL));
+    assert(exported_equal(NULL,NULL));
+    for (size_t at=0;at<sizeof lengths/sizeof lengths[0];at++) {
+        const size_t count=lengths[at];
+        myl_native_text *a=malloc(sizeof(*a)+count), *b=malloc(sizeof(*b)+count);
+        assert(a && b);
+        *a=(myl_native_text){.length=count,.bytes=count,.flags=MYL_TEXT_ASCII};
+        *b=*a;
+        unsigned char *left=(unsigned char *)(a+1), *right=(unsigned char *)(b+1);
+        for (size_t i=0;i<count;i++) left[i]=right[i]=(unsigned char)(i%128);
+        assert(myl_native_text_equal(a,a) && myl_native_text_equal(a,b));
+        assert(exported_equal(a,b));
+        assert(!myl_native_text_equal(a,NULL) && !myl_native_text_equal(NULL,b));
+        for (size_t i=0;i<count;i++) {
+            right[i]^=1;
+            assert(!myl_native_text_equal(a,b));
+            assert(!exported_equal(a,b));
+            right[i]^=1;
+        }
+        for (uint32_t offset=1;offset<=7;offset++) {
+            myl_native_text *owner=malloc(sizeof(*owner)+offset+count);
+            assert(owner);
+            *owner=(myl_native_text){.length=offset+count,.bytes=offset+count,.flags=MYL_TEXT_ASCII};
+            memcpy((unsigned char *)(owner+1)+offset,left,count);
+            myl_native_text_view view={.text={.length=count,.bytes=count,.flags=MYL_TEXT_VIEW|MYL_TEXT_ASCII,.hash=offset},.owner=owner};
+            assert(myl_native_text_equal(&view.text,b) && myl_native_text_equal(a,&view.text));
+            for (size_t i=0;i<count;i++) {
+                right[i]^=1;
+                assert(!myl_native_text_equal(&view.text,b));
+                right[i]^=1;
+            }
+            free(owner);
+        }
+        b->bytes=count+1;
+        assert(!myl_native_text_equal(a,b));
+        free(b); free(a);
+    }
 }
 /* A 16-byte key with interior padding, the shape a record key would have. */
 typedef struct { int32_t tag; int64_t serial; } Wide;
@@ -427,6 +472,7 @@ static void span_absences_are_dated_and_kept_apart(void) {
     myl_native_heap_destroy(&heap);
 }
 int main(void) {
+    equality_payload_boundaries();
     span_keys_answer_as_built_slices();
     span_absences_are_dated_and_kept_apart();
     repeated_probes_survive_a_shift();

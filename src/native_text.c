@@ -792,10 +792,51 @@ myl_native_text *myl_native_text_piece_at(myl_native_heap *heap, myl_native_text
     myl_native_text_publish(text,scalars,plain || scalars==span->bytes);
     return text;
 }
-int myl_native_text_equal(const myl_native_text *a, const myl_native_text *b) {
+/* Endpoint rejection is reserved for larger payloads. Keep it separate from
+ * the common wrapper; medium equal values retain the original libc path. */
+static __attribute__((noinline)) int equal_large_octets(const unsigned char *a, const unsigned char *b, size_t count) {
+    uint64_t first_a,first_b,last_a,last_b;
+    memcpy(&first_a,a,8); memcpy(&first_b,b,8);
+    memcpy(&last_a,a+count-8,8); memcpy(&last_b,b+count-8,8);
+    return !((first_a^first_b)|(last_a^last_b)) && !memcmp(a+8,b+8,count-16);
+}
+/* Short payloads fit two bounded loads, including unaligned views ending at an
+ * allocation boundary. Overlap covers every octet without reading padding. */
+static inline int equal_short_octets(const unsigned char *a, const unsigned char *b, size_t count) {
+    if (count>=8) {
+        uint64_t first_a,first_b,last_a,last_b;
+        memcpy(&first_a,a,8); memcpy(&first_b,b,8);
+        memcpy(&last_a,a+count-8,8); memcpy(&last_b,b+count-8,8);
+        return !((first_a^first_b)|(last_a^last_b));
+    }
+    if (count>=4) {
+        uint32_t first_a,first_b,last_a,last_b;
+        memcpy(&first_a,a,4); memcpy(&first_b,b,4);
+        memcpy(&last_a,a+count-4,4); memcpy(&last_b,b+count-4,4);
+        return !((first_a^first_b)|(last_a^last_b));
+    }
+    if (count>=2) {
+        uint16_t first_a,first_b,last_a,last_b;
+        memcpy(&first_a,a,2); memcpy(&first_b,b,2);
+        memcpy(&last_a,a+count-2,2); memcpy(&last_b,b+count-2,2);
+        return !((first_a^first_b)|(last_a^last_b));
+    }
+    return a[0]==b[0];
+}
+/* Keep the bounded common paths in their caller, as the original small wrapper
+ * was. The non-inline declaration in native_text.h retains the exported body
+ * for QBE, separate C translation units and function-pointer users. */
+inline __attribute__((always_inline)) int myl_native_text_equal(const myl_native_text *a, const myl_native_text *b) {
     if (a==b) return 1;
-    if (!a || !b) return 0;
-    return a->bytes==b->bytes && (!a->bytes || !memcmp(myl_native_text_storage(a),myl_native_text_storage(b),a->bytes));
+    if (!a || !b || a->bytes!=b->bytes) return 0;
+    const size_t count=a->bytes;
+    if (!count) return 1;
+    const unsigned char *left=myl_native_text_storage(a), *right=myl_native_text_storage(b);
+    if (count<=16) return equal_short_octets(left,right,count);
+    /* Endpoint prechecks can outweigh a bulk comparison for medium equal or
+     * prefix-sharing values. Retain the original path through 256 octets. */
+    if (count<=256) return !memcmp(left,right,count);
+    return equal_large_octets(left,right,count);
 }
 int myl_native_text_compare(const myl_native_text *a, const myl_native_text *b) {
     size_t count=a->bytes<b->bytes?a->bytes:b->bytes;
@@ -816,6 +857,10 @@ static int same_octets(const unsigned char *left, const unsigned char *right, si
  * `memmem`'s own scan stays linear however the octets repeat, and a search that
  * finds its match within this many candidates never pays `memmem`'s setup. */
 enum { SCAN_CANDIDATES = 8 };
+/* Keep this shared scanner on a cache-line boundary: its unrolled short-needle
+ * comparisons otherwise move between fetch boundaries when unrelated runtime
+ * code changes size. The search algorithm and each bounded load are unchanged. */
+__attribute__((aligned(64)))
 size_t myl_native_octets_find(const unsigned char *haystack, size_t length, const unsigned char *needle, size_t count) {
     if (!count) return 0;
     if (count>length) return SIZE_MAX;

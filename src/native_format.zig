@@ -92,11 +92,7 @@ fn bufferFloatC(heap: ?*anyopaque, buffer: ?*anyopaque, bits: u64) callconv(.c) 
 /// and answering 1 for a number or 0 for text that is not exactly one.
 fn numberC(points: ?[*]const u32, count: usize, floating: c_uint, output: *u64) callconv(.c) c_uint {
     const scalars: []const u32 = if (points) |found| found[0..count] else &.{};
-    if (floating != 0) {
-        const value = number_text.floating(scalars) orelse return 0;
-        output.* = @bitCast(value);
-        return 1;
-    }
+    if (floating != 0) return floatingPoints(scalars, output);
     const value = number_text.integer(scalars) orelse return 0;
     output.* = @bitCast(value);
     return 1;
@@ -105,12 +101,20 @@ fn numberC(points: ?[*]const u32, count: usize, floating: c_uint, output: *u64) 
 /// byte string or a view of one parses without decoding a temporary `str`.
 fn numberBytesC(bytes: ?[*]const u8, length: usize, floating: c_uint, output: *u64) callconv(.c) c_uint {
     const text: []const u8 = if (bytes) |found| found[0..length] else &.{};
-    if (floating != 0) {
-        const value = number_text.floatingBytes(text) orelse return 0;
-        output.* = @bitCast(value);
-        return 1;
-    }
+    if (floating != 0) return floatingOctets(text, output);
     const value = number_text.integerBytes(text) orelse return 0;
+    output.* = @bitCast(value);
+    return 1;
+}
+/// Keep the floating grammar's canonical scratch buffer in floating calls;
+/// an integer parse must not reserve its large frame before testing the mode.
+noinline fn floatingPoints(points: []const u32, output: *u64) c_uint {
+    const value = number_text.floating(points) orelse return 0;
+    output.* = @bitCast(value);
+    return 1;
+}
+noinline fn floatingOctets(bytes: []const u8, output: *u64) c_uint {
+    const value = number_text.floatingBytes(bytes) orelse return 0;
     output.* = @bitCast(value);
     return 1;
 }
@@ -202,4 +206,31 @@ test "native scalar formatting rejects insufficient caller storage" {
     var small: [1]u8 = undefined;
     try std.testing.expectError(error.NoSpaceLeft, format(&small, 42, .unsigned));
     try std.testing.expectError(error.NoSpaceLeft, format(&small, @bitCast(@as(f64, 1.0)), .floating));
+}
+
+// spec-case: PY-NUM-1
+test "native numeric exports publish only successful grammar answers" {
+    const marker: u64 = 0x123456789abcdef0;
+    var bits = marker;
+    const integer = " \t-9_223_372_036_854_775_808\r ";
+    try std.testing.expectEqual(@as(c_uint, 1), numberBytesC(integer.ptr, integer.len, 0, &bits));
+    try std.testing.expectEqual(@as(u64, @bitCast(@as(i64, std.math.minInt(i64)))), bits);
+    bits = marker;
+    const overflow = "9223372036854775808";
+    try std.testing.expectEqual(@as(c_uint, 0), numberBytesC(overflow.ptr, overflow.len, 0, &bits));
+    try std.testing.expectEqual(marker, bits);
+    const points = [_]u32{ ' ', '+', '4', '_', '2', '\t' };
+    try std.testing.expectEqual(@as(c_uint, 1), numberC(&points, points.len, 0, &bits));
+    try std.testing.expectEqual(@as(u64, 42), bits);
+    const decimal = " -1.25e+2 ";
+    try std.testing.expectEqual(@as(c_uint, 1), numberBytesC(decimal.ptr, decimal.len, 9, &bits));
+    try std.testing.expectEqual(@as(u64, @bitCast(@as(f64, -125))), bits);
+    const named = [_]u32{ '+', 'i', 'n', 'f' };
+    try std.testing.expectEqual(@as(c_uint, 1), numberC(&named, named.len, 1, &bits));
+    try std.testing.expectEqual(@as(u64, @bitCast(std.math.inf(f64))), bits);
+    bits = marker;
+    const bad = "1e+";
+    try std.testing.expectEqual(@as(c_uint, 0), numberBytesC(bad.ptr, bad.len, 1, &bits));
+    try std.testing.expectEqual(@as(c_uint, 0), numberC(null, 0, 0, &bits));
+    try std.testing.expectEqual(marker, bits);
 }
