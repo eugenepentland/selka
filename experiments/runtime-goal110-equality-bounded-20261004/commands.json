@@ -1,0 +1,76 @@
+{
+  "source_base": "6cf7bdce11bc205862bf75b9d9ce72e46caad0a2",
+  "native_checks": [
+    "scripts/build-slot.sh",
+    "build",
+    "python3",
+    "experiments/runtime-goal110-equality-bounded-20261004/native-checks.py"
+  ],
+  "native_environment": {
+    "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-equality-bounded/tmp"
+  },
+  "scope": "Native prototype/code inspection only; official host and performance timing not started.",
+  "native_LLVM_fullLTO_builds": {
+    "before": {
+      "argv": [
+        "scripts/build-slot.sh",
+        "build",
+        "zig",
+        "cc",
+        "-std=c11",
+        "-O3",
+        "-flto",
+        "-g0",
+        "-ffunction-sections",
+        "-fdata-sections",
+        "-Wl,--gc-sections",
+        "-I",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-g4-rf-20261004/src",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-g4-rf-20261004/src/native_text.c",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/experiments/runtime-goal110-equality-bounded-20261004/equality-distributions.c",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-equality-bounded/helper-before-llvm"
+      ],
+      "environment": {
+        "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-equality-bounded/tmp",
+        "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-equality-bounded/before-llvm-cache/local",
+        "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-equality-bounded/before-llvm-cache/global"
+      }
+    },
+    "after": {
+      "argv": [
+        "scripts/build-slot.sh",
+        "build",
+        "zig",
+        "cc",
+        "-std=c11",
+        "-O3",
+        "-flto",
+        "-g0",
+        "-ffunction-sections",
+        "-fdata-sections",
+        "-Wl,--gc-sections",
+        "-I",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/src",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/src/native_text.c",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/experiments/runtime-goal110-equality-bounded-20261004/equality-distributions.c",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-equality-bounded/helper-after-llvm"
+      ],
+      "environment": {
+        "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-equality-bounded/tmp",
+        "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-equality-bounded/after-llvm-cache/local",
+        "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-equality-bounded/after-llvm-cache/global"
+      }
+    }
+  },
+  "native_screen": [
+    "python3",
+    "experiments/runtime-goal110-equality-bounded-20261004/time-distributions.py",
+    "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-equality-bounded/helper-before-llvm",
+    "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-equality-bounded/helper-after-llvm",
+    "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-equality-bounded/native-distributions.json"
+  ],
+  "working_directory": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004",
+  "status": "native_correctness_code_ready_before_official_host"
+}

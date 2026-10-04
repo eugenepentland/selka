@@ -1,0 +1,2081 @@
+{
+  "schema": "mylang-goal110-nonnegative-rem-native-outcomes-v1",
+  "source_revision": "073e450bf4ceaf1295d930434d19c2ea0f21ef21",
+  "coverage": 32,
+  "outcomes": [
+    {
+      "input": {
+        "kind": "detached_scalar_after_reference"
+      },
+      "ordinary": {
+        "value": 7010,
+        "trap": {
+          "code": "",
+          "path": "",
+          "line": 0,
+          "column": 0,
+          "frames": [],
+          "detail": {
+            "version": 0,
+            "present": 0,
+            "operation": "operation",
+            "values": {
+              "index": 0,
+              "length": 0,
+              "left": 0,
+              "right": 0,
+              "width": 0
+            }
+          }
+        },
+        "stdout": "",
+        "stderr": "",
+        "status": 98,
+        "failed": false
+      },
+      "fast": {
+        "value": 7010,
+        "trap": {
+          "code": "",
+          "path": "",
+          "line": 0,
+          "column": 0,
+          "frames": [],
+          "detail": {
+            "version": 0,
+            "present": 0,
+            "operation": "operation",
+            "values": {
+              "index": 0,
+              "length": 0,
+              "left": 0,
+              "right": 0,
+              "width": 0
+            }
+          }
+        },
+        "stdout": "",
+        "stderr": "",
+        "status": 98,
+        "failed": false
+      }
+    },
+    {
+      "input": {
+        "kind": "counter_entry",
+        "start": -2,
+        "seed": 26,
+        "count": 32
+      },
+      "ordinary": {
+        "value": 435,
+        "trap": {
+          "code": "",
+          "path": "",
+          "line": 0,
+          "column": 0,
+          "frames": [],
+          "detail": {
+            "version": 0,
+            "present": 0,
+            "operation": "operation",
+            "values": {
+              "index": 0,
+              "length": 0,
+              "left": 0,
+              "right": 0,
+              "width": 0
+            }
+          }
+        },
+        "stdout": "",
+        "stderr": "",
+        "status": 179,
+        "failed": false
+      },
+      "fast": {
+        "value": 435,
+        "trap": {
+          "code": "",
+          "path": "",
+          "line": 0,
+          "column": 0,
+          "frames": [],
+          "detail": {
+            "version": 0,
+            "present": 0,
+            "operation": "operation",
+            "values": {
+              "index": 0,
+              "length": 0,
+              "left": 0,
+              "right": 0,
+              "width": 0
+            }
+          }
+        },
+        "stdout": "",
+        "stderr": "",
+        "status": 179,
+        "failed": false
+      }
+    },
+    {
+      "input": {
+        "kind": "counter_entry",
+        "start": -2,
+        "seed": 25,
+        "count": 32
+      },
+      "ordinary": {
+        "value": 1442,
+        "trap": {
+          "code": "",
+          "path": "",
+          "line": 0,
+          "column": 0,
+          "frames": [],
+          "detail": {
+            "version": 0,
+            "present": 0,
+            "operation": "operation",
+            "values": {
+              "index": 0,
+              "length": 0,
+              "left": 0,
+              "right": 0,
+              "width": 0
+            }
+          }
+        },
+        "stdout": "",
+        "stderr": "",
+        "status": 162,
+        "failed": false
+      },
+      "fast": {
+        "value": 1442,
+        "trap": {
+          "code": "",
+          "path": "",
+          "line": 0,
+          "column": 0,
+          "frames": [],
+          "detail": {
+            "version": 0,
+            "present": 0,
+            "operation": "operation",
+            "values": {
+              "index": 0,
+              "length": 0,
+              "left": 0,
+              "right": 0,
+              "width": 0
+            }
+          }
+        },
+        "stdout": "",
+        "stderr": "",
+        "status": 162,
+        "failed": false
+      }
+    },
+    {
+      "input": {
+        "kind": "counter_entry",
+        "start": 2,
+        "seed": -26,
+        "count": 32
+      },
+      "ordinary": {
+        "value": 435,
+        "trap": {
+          "code": "",
+          "path": "",
+          "line": 0,
+          "column": 0,
+          "frames": [],
+          "detail": {
+            "version": 0,
+            "present": 0,
+            "operation": "operation",
+            "values": {
+              "index": 0,
+              "length": 0,
+              "left": 0,
+              "right": 0,
+              "width": 0
+            }
+          }
+        },
+        "stdout": "",
+        "stderr": "",
+        "status": 179,
+        "failed": false
+      },
+      "fast": {
+        "value": 435,
+        "trap": {
+          "code": "",
+          "path": "",
+          "line": 0,
+          "column": 0,
+          "frames": [],
+          "detail": {
+            "version": 0,
+            "present": 0,
+            "operation": "operation",
+            "values": {
+              "index": 0,
+              "length": 0,
+              "left": 0,
+              "right": 0,
+              "width": 0
+            }
+          }
+        },
+        "stdout": "",
+        "stderr": "",
+        "status": 179,
+        "failed": false
+      }
+    },
+    {
+      "input": {
+        "kind": "counter_entry",
+        "start": 5,
+        "seed": -64,
+        "count": 32
+      },
+      "ordinary": {
+        "value": 437,
+        "trap": {
+          "code": "",
+          "path": "",
+          "line": 0,
+          "column": 0,
+          "frames": [],
+          "detail": {
+            "version": 0,
+            "present": 0,
+            "operation": "operation",
+            "values": {
+              "index": 0,
+              "length": 0,
+              "left": 0,
+              "right": 0,
+              "width": 0
+            }
+          }
+        },
+        "stdout": "",
+        "stderr": "",
+        "status": 181,
+        "failed": false
+      },
+      "fast": {
+        "value": 437,
+        "trap": {
+          "code": "",
+          "path": "",
+          "line": 0,
+          "column": 0,
+          "frames": [],
+          "detail": {
+            "version": 0,
+            "present": 0,
+            "operation": "operation",
+            "values": {
+              "index": 0,
+              "length": 0,
+              "left": 0,
+              "right": 0,
+              "width": 0
+            }
+          }
+        },
+        "stdout": "",
+        "stderr": "",
+        "status": 181,
+        "failed": false
+      }
+    },
+    {
+      "input": {
+        "kind": "divisor",
+        "divisor": 1009,
+        "seed": -31,
+        "truncating": false,
+        "count": 32
+      },
+      "ordinary": {
+        "value": 1382,
+        "trap": {
+          "code": "",
+          "path": "",
+          "line": 0,
+          "column": 0,
+          "frames": [],
+          "detail": {
+            "version": 0,
+            "present": 0,
+            "operation": "operation",
+            "values": {
+              "index": 0,
+              "length": 0,
+              "left": 0,
+              "right": 0,
+              "width": 0
+            }
+          }
+        },
+        "stdout": "17\n23\n",
+        "stderr": "",
+        "status": 102,
+        "failed": false
+      },
+      "fast": {
+        "value": 1382,
+        "trap": {
+          "code": "",
+          "path": "",
+          "line": 0,
+          "column": 0,
+          "frames": [],
+          "detail": {
+            "version": 0,
+            "present": 0,
+            "operation": "operation",
+            "values": {
+              "index": 0,
+              "length": 0,
+              "left": 0,
+              "right": 0,
+              "width": 0
+            }
+          }
+        },
+        "stdout": "17\n23\n",
+        "stderr": "",
+        "status": 102,
+        "failed": false
+      }
+    },
+    {
+      "input": {
+        "kind": "divisor",
+        "divisor": 1009,
+        "seed": -31,
+        "truncating": true,
+        "count": 32
+      },
+      "ordinary": {
+        "value": 373,
+        "trap": {
+          "code": "",
+          "path": "",
+          "line": 0,
+          "column": 0,
+          "frames": [],
+          "detail": {
+            "version": 0,
+            "present": 0,
+            "operation": "operation",
+            "values": {
+              "index": 0,
+              "length": 0,
+              "left": 0,
+              "right": 0,
+              "width": 0
+            }
+          }
+        },
+        "stdout": "17\n23\n",
+        "stderr": "",
+        "status": 117,
+        "failed": false
+      },
+      "fast": {
+        "value": 373,
+        "trap": {
+          "code": "",
+          "path": "",
+          "line": 0,
+          "column": 0,
+          "frames": [],
+          "detail": {
+            "version": 0,
+            "present": 0,
+            "operation": "operation",
+            "values": {
+              "index": 0,
+              "length": 0,
+              "left": 0,
+              "right": 0,
+              "width": 0
+            }
+          }
+        },
+        "stdout": "17\n23\n",
+        "stderr": "",
+        "status": 117,
+        "failed": false
+      }
+    },
+    {
+      "input": {
+        "kind": "divisor",
+        "divisor": -1009,
+        "seed": -31,
+        "truncating": false,
+        "count": 32
+      },
+      "ordinary": {
+        "value": -636,
+        "trap": {
+          "code": "",
+          "path": "",
+          "line": 0,
+          "column": 0,
+          "frames": [],
+          "detail": {
+            "version": 0,
+            "present": 0,
+            "operation": "operation",
+            "values": {
+              "index": 0,
+              "length": 0,
+              "left": 0,
+              "right": 0,
+              "width": 0
+            }
+          }
+        },
+        "stdout": "17\n23\n",
+        "stderr": "",
+        "status": 132,
+        "failed": false
+      },
+      "fast": {
+        "value": -636,
+        "trap": {
+          "code": "",
+          "path": "",
+          "line": 0,
+          "column": 0,
+          "frames": [],
+          "detail": {
+            "version": 0,
+            "present": 0,
+            "operation": "operation",
+            "values": {
+              "index": 0,
+              "length": 0,
+              "left": 0,
+              "right": 0,
+              "width": 0
+            }
+          }
+        },
+        "stdout": "17\n23\n",
+        "stderr": "",
+        "status": 132,
+        "failed": false
+      }
+    },
+    {
+      "input": {
+        "kind": "divisor",
+        "divisor": -1009,
+        "seed": -31,
+        "truncating": true,
+        "count": 32
+      },
+      "ordinary": {
+        "value": 373,
+        "trap": {
+          "code": "",
+          "path": "",
+          "line": 0,
+          "column": 0,
+          "frames": [],
+          "detail": {
+            "version": 0,
+            "present": 0,
+            "operation": "operation",
+            "values": {
+              "index": 0,
+              "length": 0,
+              "left": 0,
+              "right": 0,
+              "width": 0
+            }
+          }
+        },
+        "stdout": "17\n23\n",
+        "stderr": "",
+        "status": 117,
+        "failed": false
+      },
+      "fast": {
+        "value": 373,
+        "trap": {
+          "code": "",
+          "path": "",
+          "line": 0,
+          "column": 0,
+          "frames": [],
+          "detail": {
+            "version": 0,
+            "present": 0,
+            "operation": "operation",
+            "values": {
+              "index": 0,
+              "length": 0,
+              "left": 0,
+              "right": 0,
+              "width": 0
+            }
+          }
+        },
+        "stdout": "17\n23\n",
+        "stderr": "",
+        "status": 117,
+        "failed": false
+      }
+    },
+    {
+      "input": {
+        "kind": "divisor",
+        "divisor": 1009,
+        "seed": 17,
+        "truncating": false,
+        "count": 32
+      },
+      "ordinary": {
+        "value": 469,
+        "trap": {
+          "code": "",
+          "path": "",
+          "line": 0,
+          "column": 0,
+          "frames": [],
+          "detail": {
+            "version": 0,
+            "present": 0,
+            "operation": "operation",
+            "values": {
+              "index": 0,
+              "length": 0,
+              "left": 0,
+              "right": 0,
+              "width": 0
+            }
+          }
+        },
+        "stdout": "17\n23\n",
+        "stderr": "",
+        "status": 213,
+        "failed": false
+      },
+      "fast": {
+        "value": 469,
+        "trap": {
+          "code": "",
+          "path": "",
+          "line": 0,
+          "column": 0,
+          "frames": [],
+          "detail": {
+            "version": 0,
+            "present": 0,
+            "operation": "operation",
+            "values": {
+              "index": 0,
+              "length": 0,
+              "left": 0,
+              "right": 0,
+              "width": 0
+            }
+          }
+        },
+        "stdout": "17\n23\n",
+        "stderr": "",
+        "status": 213,
+        "failed": false
+      }
+    },
+    {
+      "input": {
+        "kind": "divisor",
+        "divisor": 1009,
+        "seed": 17,
+        "truncating": true,
+        "count": 32
+      },
+      "ordinary": {
+        "value": 469,
+        "trap": {
+          "code": "",
+          "path": "",
+          "line": 0,
+          "column": 0,
+          "frames": [],
+          "detail": {
+            "version": 0,
+            "present": 0,
+            "operation": "operation",
+            "values": {
+              "index": 0,
+              "length": 0,
+              "left": 0,
+              "right": 0,
+              "width": 0
+            }
+          }
+        },
+        "stdout": "17\n23\n",
+        "stderr": "",
+        "status": 213,
+        "failed": false
+      },
+      "fast": {
+        "value": 469,
+        "trap": {
+          "code": "",
+          "path": "",
+          "line": 0,
+          "column": 0,
+          "frames": [],
+          "detail": {
+            "version": 0,
+            "present": 0,
+            "operation": "operation",
+            "values": {
+              "index": 0,
+              "length": 0,
+              "left": 0,
+              "right": 0,
+              "width": 0
+            }
+          }
+        },
+        "stdout": "17\n23\n",
+        "stderr": "",
+        "status": 213,
+        "failed": false
+      }
+    },
+    {
+      "input": {
+        "kind": "divisor",
+        "divisor": -1009,
+        "seed": 17,
+        "truncating": false,
+        "count": 32
+      },
+      "ordinary": {
+        "value": -1549,
+        "trap": {
+          "code": "",
+          "path": "",
+          "line": 0,
+          "column": 0,
+          "frames": [],
+          "detail": {
+            "version": 0,
+            "present": 0,
+            "operation": "operation",
+            "values": {
+              "index": 0,
+              "length": 0,
+              "left": 0,
+              "right": 0,
+              "width": 0
+            }
+          }
+        },
+        "stdout": "17\n23\n",
+        "stderr": "",
+        "status": 243,
+        "failed": false
+      },
+      "fast": {
+        "value": -1549,
+        "trap": {
+          "code": "",
+          "path": "",
+          "line": 0,
+          "column": 0,
+          "frames": [],
+          "detail": {
+            "version": 0,
+            "present": 0,
+            "operation": "operation",
+            "values": {
+              "index": 0,
+              "length": 0,
+              "left": 0,
+              "right": 0,
+              "width": 0
+            }
+          }
+        },
+        "stdout": "17\n23\n",
+        "stderr": "",
+        "status": 243,
+        "failed": false
+      }
+    },
+    {
+      "input": {
+        "kind": "divisor",
+        "divisor": -1009,
+        "seed": 17,
+        "truncating": true,
+        "count": 32
+      },
+      "ordinary": {
+        "value": 469,
+        "trap": {
+          "code": "",
+          "path": "",
+          "line": 0,
+          "column": 0,
+          "frames": [],
+          "detail": {
+            "version": 0,
+            "present": 0,
+            "operation": "operation",
+            "values": {
+              "index": 0,
+              "length": 0,
+              "left": 0,
+              "right": 0,
+              "width": 0
+            }
+          }
+        },
+        "stdout": "17\n23\n",
+        "stderr": "",
+        "status": 213,
+        "failed": false
+      },
+      "fast": {
+        "value": 469,
+        "trap": {
+          "code": "",
+          "path": "",
+          "line": 0,
+          "column": 0,
+          "frames": [],
+          "detail": {
+            "version": 0,
+            "present": 0,
+            "operation": "operation",
+            "values": {
+              "index": 0,
+              "length": 0,
+              "left": 0,
+              "right": 0,
+              "width": 0
+            }
+          }
+        },
+        "stdout": "17\n23\n",
+        "stderr": "",
+        "status": 213,
+        "failed": false
+      }
+    },
+    {
+      "input": {
+        "kind": "divisor",
+        "divisor": 0,
+        "seed": 17,
+        "truncating": false,
+        "count": 32
+      },
+      "ordinary": {
+        "value": 0,
+        "trap": {
+          "code": "R_DIVISION_BY_ZERO",
+          "path": "loop_remainder.my",
+          "line": 4,
+          "column": 39,
+          "frames": [
+            {
+              "function": "calculate",
+              "path": "loop_remainder.my",
+              "line": 4,
+              "column": 39
+            },
+            {
+              "function": "main",
+              "path": "loop_remainder.my",
+              "line": 8,
+              "column": 13
+            }
+          ],
+          "detail": {
+            "version": 1,
+            "present": 12,
+            "operation": "floor_rem",
+            "values": {
+              "index": 0,
+              "length": 0,
+              "left": 17,
+              "right": 0,
+              "width": 0
+            }
+          }
+        },
+        "stdout": "17\n",
+        "stderr": "loop_remainder.my:4:39: error[R_DIVISION_BY_ZERO]: native execution failed (floor_rem: left 17, right 0)\n  in calculate at loop_remainder.my:4:39\n  in main at loop_remainder.my:8:13\n",
+        "status": 1,
+        "failed": true
+      },
+      "fast": {
+        "value": 0,
+        "trap": {
+          "code": "R_DIVISION_BY_ZERO",
+          "path": "loop_remainder.my",
+          "line": 4,
+          "column": 39,
+          "frames": [
+            {
+              "function": "calculate",
+              "path": "loop_remainder.my",
+              "line": 4,
+              "column": 39
+            },
+            {
+              "function": "main",
+              "path": "loop_remainder.my",
+              "line": 8,
+              "column": 13
+            }
+          ],
+          "detail": {
+            "version": 1,
+            "present": 12,
+            "operation": "floor_rem",
+            "values": {
+              "index": 0,
+              "length": 0,
+              "left": 17,
+              "right": 0,
+              "width": 0
+            }
+          }
+        },
+        "stdout": "17\n",
+        "stderr": "loop_remainder.my:4:39: error[R_DIVISION_BY_ZERO]: native execution failed (floor_rem: left 17, right 0)\n  in calculate at loop_remainder.my:4:39\n  in main at loop_remainder.my:8:13\n",
+        "status": 1,
+        "failed": true
+      }
+    },
+    {
+      "input": {
+        "kind": "divisor",
+        "divisor": 0,
+        "seed": -31,
+        "truncating": true,
+        "count": 32
+      },
+      "ordinary": {
+        "value": 0,
+        "trap": {
+          "code": "R_DIVISION_BY_ZERO",
+          "path": "loop_remainder.my",
+          "line": 4,
+          "column": 23,
+          "frames": [
+            {
+              "function": "calculate",
+              "path": "loop_remainder.my",
+              "line": 4,
+              "column": 23
+            },
+            {
+              "function": "main",
+              "path": "loop_remainder.my",
+              "line": 8,
+              "column": 13
+            }
+          ],
+          "detail": {
+            "version": 1,
+            "present": 12,
+            "operation": "rem",
+            "values": {
+              "index": 0,
+              "length": 0,
+              "left": -31,
+              "right": 0,
+              "width": 0
+            }
+          }
+        },
+        "stdout": "17\n",
+        "stderr": "loop_remainder.my:4:23: error[R_DIVISION_BY_ZERO]: native execution failed (rem: left -31, right 0)\n  in calculate at loop_remainder.my:4:23\n  in main at loop_remainder.my:8:13\n",
+        "status": 1,
+        "failed": true
+      },
+      "fast": {
+        "value": 0,
+        "trap": {
+          "code": "R_DIVISION_BY_ZERO",
+          "path": "loop_remainder.my",
+          "line": 4,
+          "column": 23,
+          "frames": [
+            {
+              "function": "calculate",
+              "path": "loop_remainder.my",
+              "line": 4,
+              "column": 23
+            },
+            {
+              "function": "main",
+              "path": "loop_remainder.my",
+              "line": 8,
+              "column": 13
+            }
+          ],
+          "detail": {
+            "version": 1,
+            "present": 12,
+            "operation": "rem",
+            "values": {
+              "index": 0,
+              "length": 0,
+              "left": -31,
+              "right": 0,
+              "width": 0
+            }
+          }
+        },
+        "stdout": "17\n",
+        "stderr": "loop_remainder.my:4:23: error[R_DIVISION_BY_ZERO]: native execution failed (rem: left -31, right 0)\n  in calculate at loop_remainder.my:4:23\n  in main at loop_remainder.my:8:13\n",
+        "status": 1,
+        "failed": true
+      }
+    },
+    {
+      "input": {
+        "kind": "endpoint",
+        "seed": 17,
+        "offset": 0,
+        "count": -1,
+        "max_memory": null
+      },
+      "ordinary": {
+        "value": 0,
+        "trap": {
+          "code": "",
+          "path": "",
+          "line": 0,
+          "column": 0,
+          "frames": [],
+          "detail": {
+            "version": 0,
+            "present": 0,
+            "operation": "operation",
+            "values": {
+              "index": 0,
+              "length": 0,
+              "left": 0,
+              "right": 0,
+              "width": 0
+            }
+          }
+        },
+        "stdout": "",
+        "stderr": "",
+        "status": 0,
+        "failed": false
+      },
+      "fast": {
+        "value": 0,
+        "trap": {
+          "code": "",
+          "path": "",
+          "line": 0,
+          "column": 0,
+          "frames": [],
+          "detail": {
+            "version": 0,
+            "present": 0,
+            "operation": "operation",
+            "values": {
+              "index": 0,
+              "length": 0,
+              "left": 0,
+              "right": 0,
+              "width": 0
+            }
+          }
+        },
+        "stdout": "",
+        "stderr": "",
+        "status": 0,
+        "failed": false
+      }
+    },
+    {
+      "input": {
+        "kind": "endpoint",
+        "seed": 17,
+        "offset": 0,
+        "count": 0,
+        "max_memory": null
+      },
+      "ordinary": {
+        "value": 0,
+        "trap": {
+          "code": "",
+          "path": "",
+          "line": 0,
+          "column": 0,
+          "frames": [],
+          "detail": {
+            "version": 0,
+            "present": 0,
+            "operation": "operation",
+            "values": {
+              "index": 0,
+              "length": 0,
+              "left": 0,
+              "right": 0,
+              "width": 0
+            }
+          }
+        },
+        "stdout": "",
+        "stderr": "",
+        "status": 0,
+        "failed": false
+      },
+      "fast": {
+        "value": 0,
+        "trap": {
+          "code": "",
+          "path": "",
+          "line": 0,
+          "column": 0,
+          "frames": [],
+          "detail": {
+            "version": 0,
+            "present": 0,
+            "operation": "operation",
+            "values": {
+              "index": 0,
+              "length": 0,
+              "left": 0,
+              "right": 0,
+              "width": 0
+            }
+          }
+        },
+        "stdout": "",
+        "stderr": "",
+        "status": 0,
+        "failed": false
+      }
+    },
+    {
+      "input": {
+        "kind": "endpoint",
+        "seed": 17,
+        "offset": 0,
+        "count": 3,
+        "max_memory": null
+      },
+      "ordinary": {
+        "value": 63,
+        "trap": {
+          "code": "",
+          "path": "",
+          "line": 0,
+          "column": 0,
+          "frames": [],
+          "detail": {
+            "version": 0,
+            "present": 0,
+            "operation": "operation",
+            "values": {
+              "index": 0,
+              "length": 0,
+              "left": 0,
+              "right": 0,
+              "width": 0
+            }
+          }
+        },
+        "stdout": "",
+        "stderr": "",
+        "status": 63,
+        "failed": false
+      },
+      "fast": {
+        "value": 63,
+        "trap": {
+          "code": "",
+          "path": "",
+          "line": 0,
+          "column": 0,
+          "frames": [],
+          "detail": {
+            "version": 0,
+            "present": 0,
+            "operation": "operation",
+            "values": {
+              "index": 0,
+              "length": 0,
+              "left": 0,
+              "right": 0,
+              "width": 0
+            }
+          }
+        },
+        "stdout": "",
+        "stderr": "",
+        "status": 63,
+        "failed": false
+      }
+    },
+    {
+      "input": {
+        "kind": "endpoint",
+        "seed": 17,
+        "offset": 0,
+        "count": 16,
+        "max_memory": null
+      },
+      "ordinary": {
+        "value": 245,
+        "trap": {
+          "code": "",
+          "path": "",
+          "line": 0,
+          "column": 0,
+          "frames": [],
+          "detail": {
+            "version": 0,
+            "present": 0,
+            "operation": "operation",
+            "values": {
+              "index": 0,
+              "length": 0,
+              "left": 0,
+              "right": 0,
+              "width": 0
+            }
+          }
+        },
+        "stdout": "",
+        "stderr": "",
+        "status": 245,
+        "failed": false
+      },
+      "fast": {
+        "value": 245,
+        "trap": {
+          "code": "",
+          "path": "",
+          "line": 0,
+          "column": 0,
+          "frames": [],
+          "detail": {
+            "version": 0,
+            "present": 0,
+            "operation": "operation",
+            "values": {
+              "index": 0,
+              "length": 0,
+              "left": 0,
+              "right": 0,
+              "width": 0
+            }
+          }
+        },
+        "stdout": "",
+        "stderr": "",
+        "status": 245,
+        "failed": false
+      }
+    },
+    {
+      "input": {
+        "kind": "endpoint",
+        "seed": 17,
+        "offset": 0,
+        "count": 32,
+        "max_memory": null
+      },
+      "ordinary": {
+        "value": 469,
+        "trap": {
+          "code": "",
+          "path": "",
+          "line": 0,
+          "column": 0,
+          "frames": [],
+          "detail": {
+            "version": 0,
+            "present": 0,
+            "operation": "operation",
+            "values": {
+              "index": 0,
+              "length": 0,
+              "left": 0,
+              "right": 0,
+              "width": 0
+            }
+          }
+        },
+        "stdout": "",
+        "stderr": "",
+        "status": 213,
+        "failed": false
+      },
+      "fast": {
+        "value": 469,
+        "trap": {
+          "code": "",
+          "path": "",
+          "line": 0,
+          "column": 0,
+          "frames": [],
+          "detail": {
+            "version": 0,
+            "present": 0,
+            "operation": "operation",
+            "values": {
+              "index": 0,
+              "length": 0,
+              "left": 0,
+              "right": 0,
+              "width": 0
+            }
+          }
+        },
+        "stdout": "",
+        "stderr": "",
+        "status": 213,
+        "failed": false
+      }
+    },
+    {
+      "input": {
+        "kind": "endpoint",
+        "seed": -1,
+        "offset": 0,
+        "count": 32,
+        "max_memory": null
+      },
+      "ordinary": {
+        "value": 1442,
+        "trap": {
+          "code": "",
+          "path": "",
+          "line": 0,
+          "column": 0,
+          "frames": [],
+          "detail": {
+            "version": 0,
+            "present": 0,
+            "operation": "operation",
+            "values": {
+              "index": 0,
+              "length": 0,
+              "left": 0,
+              "right": 0,
+              "width": 0
+            }
+          }
+        },
+        "stdout": "",
+        "stderr": "",
+        "status": 162,
+        "failed": false
+      },
+      "fast": {
+        "value": 1442,
+        "trap": {
+          "code": "",
+          "path": "",
+          "line": 0,
+          "column": 0,
+          "frames": [],
+          "detail": {
+            "version": 0,
+            "present": 0,
+            "operation": "operation",
+            "values": {
+              "index": 0,
+              "length": 0,
+              "left": 0,
+              "right": 0,
+              "width": 0
+            }
+          }
+        },
+        "stdout": "",
+        "stderr": "",
+        "status": 162,
+        "failed": false
+      }
+    },
+    {
+      "input": {
+        "kind": "endpoint",
+        "seed": 0,
+        "offset": 0,
+        "count": 32,
+        "max_memory": null
+      },
+      "ordinary": {
+        "value": 435,
+        "trap": {
+          "code": "",
+          "path": "",
+          "line": 0,
+          "column": 0,
+          "frames": [],
+          "detail": {
+            "version": 0,
+            "present": 0,
+            "operation": "operation",
+            "values": {
+              "index": 0,
+              "length": 0,
+              "left": 0,
+              "right": 0,
+              "width": 0
+            }
+          }
+        },
+        "stdout": "",
+        "stderr": "",
+        "status": 179,
+        "failed": false
+      },
+      "fast": {
+        "value": 435,
+        "trap": {
+          "code": "",
+          "path": "",
+          "line": 0,
+          "column": 0,
+          "frames": [],
+          "detail": {
+            "version": 0,
+            "present": 0,
+            "operation": "operation",
+            "values": {
+              "index": 0,
+              "length": 0,
+              "left": 0,
+              "right": 0,
+              "width": 0
+            }
+          }
+        },
+        "stdout": "",
+        "stderr": "",
+        "status": 179,
+        "failed": false
+      }
+    },
+    {
+      "input": {
+        "kind": "endpoint",
+        "seed": 1,
+        "offset": 0,
+        "count": 32,
+        "max_memory": null
+      },
+      "ordinary": {
+        "value": 437,
+        "trap": {
+          "code": "",
+          "path": "",
+          "line": 0,
+          "column": 0,
+          "frames": [],
+          "detail": {
+            "version": 0,
+            "present": 0,
+            "operation": "operation",
+            "values": {
+              "index": 0,
+              "length": 0,
+              "left": 0,
+              "right": 0,
+              "width": 0
+            }
+          }
+        },
+        "stdout": "",
+        "stderr": "",
+        "status": 181,
+        "failed": false
+      },
+      "fast": {
+        "value": 437,
+        "trap": {
+          "code": "",
+          "path": "",
+          "line": 0,
+          "column": 0,
+          "frames": [],
+          "detail": {
+            "version": 0,
+            "present": 0,
+            "operation": "operation",
+            "values": {
+              "index": 0,
+              "length": 0,
+              "left": 0,
+              "right": 0,
+              "width": 0
+            }
+          }
+        },
+        "stdout": "",
+        "stderr": "",
+        "status": 181,
+        "failed": false
+      }
+    },
+    {
+      "input": {
+        "kind": "endpoint",
+        "seed": -17,
+        "offset": 17,
+        "count": 32,
+        "max_memory": null
+      },
+      "ordinary": {
+        "value": 435,
+        "trap": {
+          "code": "",
+          "path": "",
+          "line": 0,
+          "column": 0,
+          "frames": [],
+          "detail": {
+            "version": 0,
+            "present": 0,
+            "operation": "operation",
+            "values": {
+              "index": 0,
+              "length": 0,
+              "left": 0,
+              "right": 0,
+              "width": 0
+            }
+          }
+        },
+        "stdout": "",
+        "stderr": "",
+        "status": 179,
+        "failed": false
+      },
+      "fast": {
+        "value": 435,
+        "trap": {
+          "code": "",
+          "path": "",
+          "line": 0,
+          "column": 0,
+          "frames": [],
+          "detail": {
+            "version": 0,
+            "present": 0,
+            "operation": "operation",
+            "values": {
+              "index": 0,
+              "length": 0,
+              "left": 0,
+              "right": 0,
+              "width": 0
+            }
+          }
+        },
+        "stdout": "",
+        "stderr": "",
+        "status": 179,
+        "failed": false
+      }
+    },
+    {
+      "input": {
+        "kind": "endpoint",
+        "seed": -9223372036854775808,
+        "offset": 0,
+        "count": 32,
+        "max_memory": null
+      },
+      "ordinary": {
+        "value": 1060,
+        "trap": {
+          "code": "",
+          "path": "",
+          "line": 0,
+          "column": 0,
+          "frames": [],
+          "detail": {
+            "version": 0,
+            "present": 0,
+            "operation": "operation",
+            "values": {
+              "index": 0,
+              "length": 0,
+              "left": 0,
+              "right": 0,
+              "width": 0
+            }
+          }
+        },
+        "stdout": "",
+        "stderr": "",
+        "status": 36,
+        "failed": false
+      },
+      "fast": {
+        "value": 1060,
+        "trap": {
+          "code": "",
+          "path": "",
+          "line": 0,
+          "column": 0,
+          "frames": [],
+          "detail": {
+            "version": 0,
+            "present": 0,
+            "operation": "operation",
+            "values": {
+              "index": 0,
+              "length": 0,
+              "left": 0,
+              "right": 0,
+              "width": 0
+            }
+          }
+        },
+        "stdout": "",
+        "stderr": "",
+        "status": 36,
+        "failed": false
+      }
+    },
+    {
+      "input": {
+        "kind": "endpoint",
+        "seed": 9223372036854775807,
+        "offset": 0,
+        "count": 0,
+        "max_memory": null
+      },
+      "ordinary": {
+        "value": 0,
+        "trap": {
+          "code": "",
+          "path": "",
+          "line": 0,
+          "column": 0,
+          "frames": [],
+          "detail": {
+            "version": 0,
+            "present": 0,
+            "operation": "operation",
+            "values": {
+              "index": 0,
+              "length": 0,
+              "left": 0,
+              "right": 0,
+              "width": 0
+            }
+          }
+        },
+        "stdout": "",
+        "stderr": "",
+        "status": 0,
+        "failed": false
+      },
+      "fast": {
+        "value": 0,
+        "trap": {
+          "code": "",
+          "path": "",
+          "line": 0,
+          "column": 0,
+          "frames": [],
+          "detail": {
+            "version": 0,
+            "present": 0,
+            "operation": "operation",
+            "values": {
+              "index": 0,
+              "length": 0,
+              "left": 0,
+              "right": 0,
+              "width": 0
+            }
+          }
+        },
+        "stdout": "",
+        "stderr": "",
+        "status": 0,
+        "failed": false
+      }
+    },
+    {
+      "input": {
+        "kind": "endpoint",
+        "seed": 9223372036854775807,
+        "offset": 1,
+        "count": 0,
+        "max_memory": null
+      },
+      "ordinary": {
+        "value": 0,
+        "trap": {
+          "code": "",
+          "path": "",
+          "line": 0,
+          "column": 0,
+          "frames": [],
+          "detail": {
+            "version": 0,
+            "present": 0,
+            "operation": "operation",
+            "values": {
+              "index": 0,
+              "length": 0,
+              "left": 0,
+              "right": 0,
+              "width": 0
+            }
+          }
+        },
+        "stdout": "",
+        "stderr": "",
+        "status": 0,
+        "failed": false
+      },
+      "fast": {
+        "value": 0,
+        "trap": {
+          "code": "",
+          "path": "",
+          "line": 0,
+          "column": 0,
+          "frames": [],
+          "detail": {
+            "version": 0,
+            "present": 0,
+            "operation": "operation",
+            "values": {
+              "index": 0,
+              "length": 0,
+              "left": 0,
+              "right": 0,
+              "width": 0
+            }
+          }
+        },
+        "stdout": "",
+        "stderr": "",
+        "status": 0,
+        "failed": false
+      }
+    },
+    {
+      "input": {
+        "kind": "endpoint",
+        "seed": -9223372036854775808,
+        "offset": -9223372036854775808,
+        "count": 0,
+        "max_memory": null
+      },
+      "ordinary": {
+        "value": 0,
+        "trap": {
+          "code": "",
+          "path": "",
+          "line": 0,
+          "column": 0,
+          "frames": [],
+          "detail": {
+            "version": 0,
+            "present": 0,
+            "operation": "operation",
+            "values": {
+              "index": 0,
+              "length": 0,
+              "left": 0,
+              "right": 0,
+              "width": 0
+            }
+          }
+        },
+        "stdout": "",
+        "stderr": "",
+        "status": 0,
+        "failed": false
+      },
+      "fast": {
+        "value": 0,
+        "trap": {
+          "code": "",
+          "path": "",
+          "line": 0,
+          "column": 0,
+          "frames": [],
+          "detail": {
+            "version": 0,
+            "present": 0,
+            "operation": "operation",
+            "values": {
+              "index": 0,
+              "length": 0,
+              "left": 0,
+              "right": 0,
+              "width": 0
+            }
+          }
+        },
+        "stdout": "",
+        "stderr": "",
+        "status": 0,
+        "failed": false
+      }
+    },
+    {
+      "input": {
+        "kind": "endpoint",
+        "seed": -9223372036854775808,
+        "offset": 9223372036854775807,
+        "count": 32,
+        "max_memory": null
+      },
+      "ordinary": {
+        "value": 1442,
+        "trap": {
+          "code": "",
+          "path": "",
+          "line": 0,
+          "column": 0,
+          "frames": [],
+          "detail": {
+            "version": 0,
+            "present": 0,
+            "operation": "operation",
+            "values": {
+              "index": 0,
+              "length": 0,
+              "left": 0,
+              "right": 0,
+              "width": 0
+            }
+          }
+        },
+        "stdout": "",
+        "stderr": "",
+        "status": 162,
+        "failed": false
+      },
+      "fast": {
+        "value": 1442,
+        "trap": {
+          "code": "",
+          "path": "",
+          "line": 0,
+          "column": 0,
+          "frames": [],
+          "detail": {
+            "version": 0,
+            "present": 0,
+            "operation": "operation",
+            "values": {
+              "index": 0,
+              "length": 0,
+              "left": 0,
+              "right": 0,
+              "width": 0
+            }
+          }
+        },
+        "stdout": "",
+        "stderr": "",
+        "status": 162,
+        "failed": false
+      }
+    },
+    {
+      "input": {
+        "kind": "endpoint",
+        "seed": 9223372036854775807,
+        "offset": 1,
+        "count": 32,
+        "max_memory": null
+      },
+      "ordinary": {
+        "value": 0,
+        "trap": {
+          "code": "R_OVERFLOW",
+          "path": "loop_remainder.my",
+          "line": 4,
+          "column": 29,
+          "frames": [
+            {
+              "function": "calculate",
+              "path": "loop_remainder.my",
+              "line": 4,
+              "column": 29
+            },
+            {
+              "function": "main",
+              "path": "loop_remainder.my",
+              "line": 9,
+              "column": 12
+            }
+          ],
+          "detail": {
+            "version": 1,
+            "present": 28,
+            "operation": "add",
+            "values": {
+              "index": 0,
+              "length": 0,
+              "left": 9223372036854775807,
+              "right": 1,
+              "width": 64
+            }
+          }
+        },
+        "stdout": "",
+        "stderr": "loop_remainder.my:4:29: error[R_OVERFLOW]: native execution failed (add: left 9223372036854775807, right 1, width 64)\n  in calculate at loop_remainder.my:4:29\n  in main at loop_remainder.my:9:12\n",
+        "status": 1,
+        "failed": true
+      },
+      "fast": {
+        "value": 0,
+        "trap": {
+          "code": "R_OVERFLOW",
+          "path": "loop_remainder.my",
+          "line": 4,
+          "column": 29,
+          "frames": [
+            {
+              "function": "calculate",
+              "path": "loop_remainder.my",
+              "line": 4,
+              "column": 29
+            },
+            {
+              "function": "main",
+              "path": "loop_remainder.my",
+              "line": 9,
+              "column": 12
+            }
+          ],
+          "detail": {
+            "version": 1,
+            "present": 28,
+            "operation": "add",
+            "values": {
+              "index": 0,
+              "length": 0,
+              "left": 9223372036854775807,
+              "right": 1,
+              "width": 64
+            }
+          }
+        },
+        "stdout": "",
+        "stderr": "loop_remainder.my:4:29: error[R_OVERFLOW]: native execution failed (add: left 9223372036854775807, right 1, width 64)\n  in calculate at loop_remainder.my:4:29\n  in main at loop_remainder.my:9:12\n",
+        "status": 1,
+        "failed": true
+      }
+    },
+    {
+      "input": {
+        "kind": "endpoint",
+        "seed": 9223372036854775807,
+        "offset": 0,
+        "count": 32,
+        "max_memory": null
+      },
+      "ordinary": {
+        "value": 0,
+        "trap": {
+          "code": "R_OVERFLOW",
+          "path": "loop_remainder.my",
+          "line": 4,
+          "column": 38,
+          "frames": [
+            {
+              "function": "calculate",
+              "path": "loop_remainder.my",
+              "line": 4,
+              "column": 38
+            },
+            {
+              "function": "main",
+              "path": "loop_remainder.my",
+              "line": 9,
+              "column": 12
+            }
+          ],
+          "detail": {
+            "version": 1,
+            "present": 28,
+            "operation": "add",
+            "values": {
+              "index": 0,
+              "length": 0,
+              "left": 9223372036854775807,
+              "right": 13,
+              "width": 64
+            }
+          }
+        },
+        "stdout": "",
+        "stderr": "loop_remainder.my:4:38: error[R_OVERFLOW]: native execution failed (add: left 9223372036854775807, right 13, width 64)\n  in calculate at loop_remainder.my:4:38\n  in main at loop_remainder.my:9:12\n",
+        "status": 1,
+        "failed": true
+      },
+      "fast": {
+        "value": 0,
+        "trap": {
+          "code": "R_OVERFLOW",
+          "path": "loop_remainder.my",
+          "line": 4,
+          "column": 38,
+          "frames": [
+            {
+              "function": "calculate",
+              "path": "loop_remainder.my",
+              "line": 4,
+              "column": 38
+            },
+            {
+              "function": "main",
+              "path": "loop_remainder.my",
+              "line": 9,
+              "column": 12
+            }
+          ],
+          "detail": {
+            "version": 1,
+            "present": 28,
+            "operation": "add",
+            "values": {
+              "index": 0,
+              "length": 0,
+              "left": 9223372036854775807,
+              "right": 13,
+              "width": 64
+            }
+          }
+        },
+        "stdout": "",
+        "stderr": "loop_remainder.my:4:38: error[R_OVERFLOW]: native execution failed (add: left 9223372036854775807, right 13, width 64)\n  in calculate at loop_remainder.my:4:38\n  in main at loop_remainder.my:9:12\n",
+        "status": 1,
+        "failed": true
+      }
+    },
+    {
+      "input": {
+        "kind": "endpoint",
+        "seed": 17,
+        "offset": 0,
+        "count": 400000,
+        "max_memory": 1048576
+      },
+      "ordinary": {
+        "value": 0,
+        "trap": {
+          "code": "R_MEMORY_BUDGET",
+          "path": "loop_remainder.my",
+          "line": 4,
+          "column": 9,
+          "frames": [
+            {
+              "function": "calculate",
+              "path": "loop_remainder.my",
+              "line": 4,
+              "column": 9
+            },
+            {
+              "function": "main",
+              "path": "loop_remainder.my",
+              "line": 9,
+              "column": 12
+            }
+          ],
+          "detail": {
+            "version": 0,
+            "present": 0,
+            "operation": "operation",
+            "values": {
+              "index": 0,
+              "length": 0,
+              "left": 0,
+              "right": 0,
+              "width": 0
+            }
+          }
+        },
+        "stdout": "",
+        "stderr": "loop_remainder.my:4:9: error[R_MEMORY_BUDGET]: memory budget exhausted\n  in calculate at loop_remainder.my:4:9\n  in main at loop_remainder.my:9:12\n",
+        "status": 1,
+        "failed": true
+      },
+      "fast": {
+        "value": 0,
+        "trap": {
+          "code": "R_MEMORY_BUDGET",
+          "path": "loop_remainder.my",
+          "line": 4,
+          "column": 9,
+          "frames": [
+            {
+              "function": "calculate",
+              "path": "loop_remainder.my",
+              "line": 4,
+              "column": 9
+            },
+            {
+              "function": "main",
+              "path": "loop_remainder.my",
+              "line": 9,
+              "column": 12
+            }
+          ],
+          "detail": {
+            "version": 0,
+            "present": 0,
+            "operation": "operation",
+            "values": {
+              "index": 0,
+              "length": 0,
+              "left": 0,
+              "right": 0,
+              "width": 0
+            }
+          }
+        },
+        "stdout": "",
+        "stderr": "loop_remainder.my:4:9: error[R_MEMORY_BUDGET]: memory budget exhausted\n  in calculate at loop_remainder.my:4:9\n  in main at loop_remainder.my:9:12\n",
+        "status": 1,
+        "failed": true
+      }
+    }
+  ]
+}

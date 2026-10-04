@@ -1,0 +1,33 @@
+{
+  "status": "inspected_not_timed",
+  "binaries": [
+    {
+      "arm": "before",
+      "binary_sha256": "474ec9189b4e246c0e8096c3690ea9081613aca70650ae9510db46fb964e0b81",
+      "main_symbol": [
+        "00000000010017e0",
+        "00000000000005e1",
+        "T",
+        "main"
+      ],
+      "assembly_sha256": "2c5d4ba34f23ccf8169a965d108999a9190d53773c9b69d2be9d034ec2de0e8a",
+      "bcmp_direct_static_calls": 1,
+      "exported_comparator_inlined": true
+    },
+    {
+      "arm": "after",
+      "binary_sha256": "0049f2168c3bef24abe7e91df8e8c2c436444664bc5a557c71d98a0d5ece4331",
+      "main_symbol": [
+        "00000000010017e0",
+        "0000000000000631",
+        "T",
+        "main"
+      ],
+      "assembly_sha256": "f63d3f80af8d1f8516a14c563f868263f65d8682e074fef7936a617bee98a99a",
+      "bcmp_direct_static_calls": 1,
+      "exported_comparator_inlined": true
+    }
+  ],
+  "policy": "ZigLLVM -O3 fullLTO defaultnative target/ISA, unchanged botharms",
+  "limit": "Actual native-helper LTO assembly; MyLang guest layout and controls must follow a source-pinned official host."
+}

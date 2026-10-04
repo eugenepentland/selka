@@ -9,8 +9,8 @@ the raw evidence for every reported result.
 
 <!-- STATUS-START -->
 - **Campaign:** active; G4 confirms ten LLVM cells on the integrated ReleaseFast build.
-- **Last document update:** 2026-10-04 07:48:35 UTC.
-- **Active batch:** guarded nonnegative remainder and checked list-index/value reuse.
+- **Last document update:** 2026-10-04 08:35:00 UTC.
+- **Active batch:** bounded signed remainder, LLVM result-range facts and checked list-index/value reuse.
 - **Current implementation:** `perf/runtime-parity-20261003`, production source
   `6cf7bdce11bc205862bf75b9d9ce72e46caad0a2`, combining text, append, mutation and short-join changes.
 - **Latest complete integrated measurement:** B0, before this campaign's changes.
@@ -20,19 +20,19 @@ the raw evidence for every reported result.
 - **LLVM states:** 70 open, ten confirmed, none pending or reopened in the latest table.
   Unmeasured rows retain older evidence; this is not a full-suite pass.
 - **Dashboard artifact:** [G4 confirmed speeds](candidates/goal110-dashboard-20261004-g4.json).
-- **Active operations:** bounded equality `3dcbe723` completed its exploratory
-  80-row native screen: all 64 affected 17–64-byte rows improved by 12.9–39.1%.
-  All invocation checksums/statuses pass. One unchanged 128-byte control is 5.3%
-  slower and needs an independent repeat. Its official ReleaseFast compiler
-  build passes; fresh guests are building. These helper results do not establish
-  goal acceptance.
-  Corrected remainder `27de73d3` passes 59 focused tests and its source gate;
-  root independently replays 41 native pairs. Its fresh RF host is authorized.
-  The index-update candidate passes 24 focused tests after narrow i64 floor-op
-  support. The corrected diagnostic reaches both frozen mutation writes. A narrow
-  scalar-stack-prefix extension for the following read is approved after exact
-  clean-host attribution; ownership protocols remain intact. Earlier wrong-host
-  no-hit claims are withdrawn in the progress log.
+- **Active operations:** both measured candidates remain unintegrated while
+  their tradeoffs are reviewed. Bounded equality repeats a 3.2% LLVM small-case
+  gain and 28.0% QBE gain, alongside a 3.5% LLVM large-search cost and a 4.7%
+  native 128-byte control cost. Small equality still exceeds 1.10×.
+  Corrected remainder improves matched LLVM small sorting by 13.1% and filter
+  by 6.2%/8.1%, with append essentially unchanged. Its separate negative-input
+  probe slows LLVM by 6.9%/12.0% and QBE by 16.1%/26.8%. A fresh experiment
+  will add a proved multiple of the divisor before unsigned remainder, retaining
+  the old signed-input admission without an extra loop copy or sign guard.
+  The mutation prefix extension emits four exact frozen-port hits, including
+  unique-value forwarding. Split test groups now pass all thirty unique tests
+  within their declared memory bounds, and Guardian passes all 88 checks.
+  Actual LLVM code and instrumented process comparisons are still being checked.
 - **Remaining nearby targets:** small equality **1.3898×** and small integer
   sorting **1.3925×** in G4 B. The bounded equality candidate is under evaluation.
 - **Append tradeoff:** repeated LLVM append gains of 11.2%/23.0% are accepted
@@ -45,9 +45,11 @@ the raw evidence for every reported result.
 - **Sorting tradeoff:** small integer sorting's earlier17.6% LLVM gain was
   accepted alongside the repeated11.0% QBE large nested-mutation cost. Large
   LLVM sorting and both nested-mutation sizes now confirm at1.00 in G4.
-- **Next action:** complete candidate builds and check the generated LLVM code
-  before frozen-suite timing. Repeat the 128-byte equality control and measure
-  the remainder candidate's negative-input fallback cost before adoption.
+- **Next action:** preserve the measured candidate archives, finish the mutation
+  checks, and review the bounded-bias proof. The isolated LLVM IR experiment
+  removes redundant signed checksum correction when given the final remainder's
+  proved range; its compiler integration is under review. No new production
+  change or goal confirmation is claimed.
 
 | Backend | Required targets | Latest observed ≤1.10 | Latest observed >1.10 | Current goal confirmations |
 |---|---:|---:|---:|---:|
@@ -603,3 +605,17 @@ diagnostic notes and raw evidence rather than pasting build logs here.
 
 
 | 2026-10-04 07:48:35 UTC | Corrected mutation diagnostic and native equality replay | The correctly resolved diagnostic compiler emits two checked-index rewrite sites in frozen ports (shared/unique writes); the following unique read is refused because checksum already occupies a plain scalar stack slot. Root approves a separately proved following-read scalar prefix without weakening existing token-deletion admission. Root independently replays all1,282 equality helper processes and3 raw archive bindings,10 helper bindings and native source bindings. [Equality replay](candidates/goal110-bounded-3dcbe723-20261004-native-review.json). | Finish exact clean-host attribution, then test the narrow prefix change. Equality and corrected-remainder official guests/qualification remain pending. No new source integration, timing or goal confirmation. |
+
+
+| 2026-10-04 07:54:46 UTC | Official candidate builds complete | Bounded equality RF host/24 guests pass, with fresh200 text checks and516 holdouts. ActualLLVM uses XMM/YMM bounded comparisons; shared text function grows1533bytes and frame16bytes. Corrected remainderRF host/24 guests also pass;720 qualification/516 holdouts are finishing, with actualLLVM boundary and supplementary builds deferred. | Text and mutation agents are idle; root awaits the remaining qualification idle boundary before serial native-repeat/six-arm/paired text timing. No new candidate adopted or target confirmed. |
+
+
+| 2026-10-04 08:01:56 UTC | Bounded equality RF screen remains open | Native8-row15r/3w repeat816622cb passes;64 equal ratios0.74216/0.82313 and middle0.70946/0.74409 (ownedASCII/viewUTF), with128 middle costs1.04684/1.02434. Six-arm sessiona8ccda6c passes360samples/720qualifications: LLVM small equality4.02140ns,1.35326× fastest2.97164; large12.71250ns is fastest. | MatchedG4 comparison is running in the quiet lane. Native helper gains do not directly establish guest gains. No adoption or new confirmation; normal integrated dashboard remainsG4 C10/O70. Next audit will separate actual comparison from checksum/loop overhead. |
+
+
+| 2026-10-04 08:11:46 UTC | Text tradeoff and remainder timing readiness | MatchedG4→3dc session0ac7f30e passes288outcomes: LLVM small equality0.963449 and large equality1.005119, but large search1.056424. Root replays all288statuses/checksums/livehashes and the six-arm artifact analysis passes. Remainder27de passes nine actualLLVM boundary pairs/18executions; root independently verifies5success/4failure, full outcomes and LLVM-O3/fullLTO guest identities. [LLVM boundary replay](candidates/goal110-remainder-27de73d3-20261004-actual-llvm-review.json). | Keep textcandidateunintegrated pending repeat. Remainder actualELF15→7instruction change and supplementaryguestbuilds are ready for timing. Mutation emits exacthook PCs759/841/859/866;30semanticresults pass, but resource-bound splitreruns/finalgate are pending. Current integrated source remains6cf andC10/O70. |
+
+
+| 2026-10-04 08:24:02 UTC | Remainder negative-input blocker and text repeat | Remainder six-armcdad3663 passes240samples/720qualifications; matched214afcd5 passes192outcomes. LLVM ratios small/large: append0.9905/0.9948, filter0.9376/0.9194, sort0.8688/0.9760, nested0.9829/0.9935. Supplementfc3b2e26 passes96outcomes; negative LLVM1.0686/1.1201 and QBE1.1606/1.2680, while positive LLVM0.9617/0.8585. Text15r/3w repeat9583c652 passes144outcomes: small equalityLLVM0.96831/QBE0.71952, large searchLLVM1.03520/QBE1.00467. | Both candidates stay unintegrated pending review. Retain all initial costs and calibration caps. Plan to preserve the old optimized signed path rather than accept the negative slowdown. Text range-fact work is an isolated IR experiment; no new production behavior or goal confirmation. Source remains6cf and dashboardC10/O70. |
+
+| 2026-10-04 08:35:00 UTC | Candidate archives reviewed; signed-range follow-up | Root checks 140 compressed/raw/live-file bindings and 22 metadata bindings, then independently replays 720 paired outcomes and medians across the initial text comparison, repeat, frozen remainder rows and signed supplement. The supplement uses an independent residue-sum oracle. [Archive review](candidates/goal110-candidate-archives-20261004-0835-review.json). Text archives32b/7e2d and remainder945f retain the measured costs and refusal history. Mutation split groups pass30 unique tests within unchanged bounds; Guardian88 passes. | Keep3dc/27de unintegrated. Fresh bounded-bias work preserves the old signed fast-loop admission; isolated LLVM range assumptions remove checksum correction in a synthetic experiment, with production interface review pending. No new measured result or goal confirmation; integrated source6cf/C10 remains current. |

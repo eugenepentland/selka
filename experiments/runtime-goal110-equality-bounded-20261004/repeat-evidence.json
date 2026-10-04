@@ -1,0 +1,91 @@
+{
+  "status": "complete_unintegrated_deferred",
+  "source_revision": "3dcbe723da4036fb7d69046e77e9f8cd16d7512f",
+  "baseline_revision": "6cf7bdce11bc205862bf75b9d9ce72e46caad0a2",
+  "created_utc": "2026-10-04T08:28:25.229424+00:00",
+  "prior_archive_commit": "32b747beb4093cb9ff7784ebbc3f78f7f485715e",
+  "prior_evidence_sha256": "cc0252521346e8172bf22ff698e6450212fe6f13ab9fa389555e03b5b8f2602b",
+  "session_id": "9583c652-49d0-4387-8367-8545c80946aa",
+  "outcomes": 144,
+  "raw_bindings": [
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-equality-bounded-rf/bounded-g4-repeat.json",
+      "raw_sha256": "632d751c676c09fa69cfcf9343e118e44f525423d517ceaa539f69f7a61108dd",
+      "raw_bytes": 499249,
+      "archive": "bounded-g4-repeat.json.gz",
+      "gzip_sha256": "f0ac63400a7c8db4fd9b1a6627de0c836a98d6df7017261a21cae68a494ee40a",
+      "gzip_bytes": 17823
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-equality-bounded-rf/bounded-g4-repeat.log",
+      "raw_sha256": "0d72b90040b0a41f14e36e4895bae1fc3e7394570a83af0227ae26d9ec004c1f",
+      "raw_bytes": 150,
+      "archive": "bounded-g4-repeat.log.gz",
+      "gzip_sha256": "8ccdcbed99e80da97009ebbc80c749295532c4a505e9b3916bff626c1182e5a5",
+      "gzip_bytes": 135
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-equality-bounded-rf/repeat-analysis-replayed.json",
+      "raw_sha256": "bca435a013b22347949368b2a36637d2e21718ce1c2a41849e805435a066f653",
+      "raw_bytes": 2359,
+      "archive": "repeat-analysis-replayed.json.gz",
+      "gzip_sha256": "03df9cb2387a761b1366b277047178210505645aab6c27f8b2b9e2f1d4d6c04a",
+      "gzip_bytes": 979
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-equality-bounded-rf/artifacts-pre-repeat.json",
+      "raw_sha256": "2e6a44f3e5d725f8075707f08b77382f79aab5741ca322eebc15b426bad49c3b",
+      "raw_bytes": 5674,
+      "archive": "artifacts-pre-repeat.json.gz",
+      "gzip_sha256": "82d35cd5565e2b55f67cec7e0e0efd02edf52f8d138d0f7e4a19372baa47e1ad",
+      "gzip_bytes": 2120
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-equality-bounded-rf/artifacts-after-repeat.json",
+      "raw_sha256": "280467f529d3172d479b9c6f485201f0b61bd56a11139458997860ef1335cd4b",
+      "raw_bytes": 5674,
+      "archive": "artifacts-after-repeat.json.gz",
+      "gzip_sha256": "db0204f9b31a5a4de7fb6381965be1eb4d42238ccb69a21eee027b24c94fe1a1",
+      "gzip_bytes": 2120
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-equality-bounded-rf/pre-repeat-validation.log",
+      "raw_sha256": "971044dcb0146b92bacdf1f88b33e476865a7b806bb3d80aacef86261d660839",
+      "raw_bytes": 87,
+      "archive": "pre-repeat-validation.log.gz",
+      "gzip_sha256": "fa04fd96148f98cd727abcd8c8eaacbceefe352238b6b15ca74d9c54069cb750",
+      "gzip_bytes": 100
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-equality-bounded-rf/guardian-repeat-archive.log",
+      "raw_sha256": "d81fa351d43b731ca56c58fed5b766428ed4fed23b2d4451911322154316d26a",
+      "raw_bytes": 672,
+      "archive": "guardian-repeat-archive.log.gz",
+      "gzip_sha256": "fe24f51288e7e0050356ce5dd17bec2030e1a7316c1ccbc993d7e24767d249ac",
+      "gzip_bytes": 313
+    }
+  ],
+  "metadata_bindings": [
+    {
+      "path": "analyze-repeat.py",
+      "sha256": "e0b6c5a19d5ad7049253c26a5f3f4bf9eeaae0657f944a718e7eced260e5d471"
+    },
+    {
+      "path": "REPEAT.md",
+      "sha256": "9d2120699ef7a58bd42026e01cf81e98f5bb7ae64d42f73d1de7d96ef85d49eb"
+    },
+    {
+      "path": "analyze-batch.py",
+      "sha256": "77b86e89f87b9968aa1e4b6a0ef9ee59a65efbf3e21d0fdb6a1138421d46bae9"
+    },
+    {
+      "path": "time-repeat.py",
+      "sha256": "954d53ceb05716c81a37667a6d2bbf148ea3b46ebec3c1685f9fcc8ae27feb39"
+    },
+    {
+      "path": "rf-commands.json",
+      "sha256": "4e7ff7c83328535d8c0ceb349627204fd988852cd6e52dcc148ce297bca538f3"
+    }
+  ],
+  "assessment": "Native17..64 gains; LLVMsmall3.2% andQBE28.0% gain; repeatedLLVMlarge-search3.52%cost CIupper1.056329; defer integration, target stillopen."
+}

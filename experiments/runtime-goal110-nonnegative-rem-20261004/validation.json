@@ -1,0 +1,182 @@
+{
+  "schema": "mylang-goal110-nonnegative-rem-validation-v1",
+  "source_revision": "27de73d302d23a9efaf811d541f1cb723323c434",
+  "base_revision": "6cf7bdce11bc205862bf75b9d9ce72e46caad0a2",
+  "status": "unintegrated_negative_input_cost_blocker",
+  "checks": {
+    "focused_unit_tests": {
+      "passed": 59,
+      "exit_status": 0,
+      "log": {
+        "path": "raw/unit-llvm-repaired-final.log.gz",
+        "origin": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-20261004/.mylang-cache/goal110-nonnegative-rem-review/unit-llvm-repaired-final.log",
+        "uncompressed_bytes": 317734,
+        "uncompressed_sha256": "44ffefc93608f715c218a9d6bb759340e6c3174d3373d463a0f2b80490cec412",
+        "archive_sha256": "5558af41f7c12d0426aeb5ba48f75881297518b509cea76d16089573a2a65a6b"
+      }
+    },
+    "guardian_source_gate": {
+      "passed": 88,
+      "exit_status": 0,
+      "log": {
+        "path": "raw/source-gate-llvm-repaired.log.gz",
+        "origin": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-20261004/.mylang-cache/goal110-nonnegative-rem-review/source-gate-llvm-repaired.log",
+        "uncompressed_bytes": 446,
+        "uncompressed_sha256": "a62bf6d1b538b9bf92bddaab157375d2b51aa48b146128e4db58165711ba96af",
+        "archive_sha256": "7c75de1ed51b181fbcd88f6bc7062c286b97b7c93bf7567ac00b04f5485038da"
+      }
+    },
+    "guardian_production_commit": {
+      "passed": 88,
+      "exit_status": 0,
+      "log": {
+        "path": "raw/llvm-production-commit.log.gz",
+        "origin": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-20261004/.mylang-cache/goal110-nonnegative-rem-review/llvm-production-commit.log",
+        "uncompressed_bytes": 606,
+        "uncompressed_sha256": "6d0ee0a8a4c67d4ca9164c59ea313174e40dc50c2aaf5815408f52eeba9ae060",
+        "archive_sha256": "6c0d40bb2e7fb1463f588a88c301d00ce4906bf20693484fb4cc2d85dc3483e3"
+      }
+    },
+    "qualification": {
+      "cells": 720,
+      "report": {
+        "path": "raw/qualification.json.gz",
+        "origin": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-llvm-rf-20261004/.mylang-cache/goal110-nonnegative-rem-llvm-rf/qualification.json",
+        "uncompressed_bytes": 969125,
+        "uncompressed_sha256": "a4bca519eea9f412e8f32ffad2b17fa743c9e34388cf59684085c4809f08a560",
+        "archive_sha256": "16669cfe21b802ae725dacdba10c1caffcfec7e0323babc51e5d3476c0377531"
+      }
+    },
+    "holdouts": {
+      "cells": 516,
+      "report": {
+        "path": "raw/holdouts.json.gz",
+        "origin": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-llvm-rf-20261004/.mylang-cache/goal110-nonnegative-rem-llvm-rf/holdouts.json",
+        "uncompressed_bytes": 1111093,
+        "uncompressed_sha256": "2237fce79b8ff15570f8a940ebfeca11e4adb999c6e75e470229b6559378c470",
+        "archive_sha256": "7c2c44daff0709220b89830f0427ccae298465a14d06391c653dbfa790113fde"
+      }
+    },
+    "native_policy_pairs": {
+      "pairs": 41,
+      "scope": "32QBE-policy/QBEexecution +9LLVM-policy/QBEexecution; separately labeled actualLLVM executions below",
+      "report": {
+        "path": "raw/llvm-final-native-outcomes.json.gz",
+        "origin": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-20261004/.mylang-cache/goal110-nonnegative-rem-review/llvm-final-native-outcomes.json",
+        "uncompressed_bytes": 63664,
+        "uncompressed_sha256": "a594f66e81c5a93ea5c812c9d46780d37b35d897d8f924b1f1bd8df5c8d11746",
+        "archive_sha256": "ddb593a14a206a27fe48009dcf8fcd76cc457ef6ef995ca5f393af0e816ce538"
+      }
+    },
+    "actual_llvm_boundaries": {
+      "pairs": 9,
+      "executions": 18,
+      "successes": 5,
+      "failures": 4,
+      "report": {
+        "path": "raw/actual-llvm-semantics.json.gz",
+        "origin": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-llvm-rf-20261004/.mylang-cache/goal110-nonnegative-rem-llvm-rf/actual-llvm-semantics.json",
+        "uncompressed_bytes": 820845,
+        "uncompressed_sha256": "4b4abd7aa40002ae0cf58446252ba1777c262ae91471309f19e54d409a965cc3",
+        "archive_sha256": "153d9ade5ea723b596ab488d0dfd6df06d8fb3593f2b7909484689b42f26a17f"
+      }
+    },
+    "frozen_screen": {
+      "groups": 48,
+      "measured_samples": 240,
+      "qualifications": 720,
+      "normal_confirmation": false,
+      "report": {
+        "path": "raw/screen.json.gz",
+        "origin": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-llvm-rf-20261004/.mylang-cache/goal110-nonnegative-rem-llvm-rf/screen.json",
+        "uncompressed_bytes": 2266446,
+        "uncompressed_sha256": "7909e474b879234ed82e6d62c936c8207e6057c954cec7f953d5db001a8098da",
+        "archive_sha256": "7156a098b89fdd226ef01c0f223209bb3988abce363205260fddff3b9a783112"
+      },
+      "independent_live_verifier_log": {
+        "path": "raw/screen-verify.log.gz",
+        "origin": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-llvm-rf-20261004/.mylang-cache/goal110-nonnegative-rem-review/screen-verify.log",
+        "uncompressed_bytes": 76,
+        "uncompressed_sha256": "6629fac8203d9ee5388405fa9fd80f2056623edbb1821c73121e45333cf76ee7",
+        "archive_sha256": "1e748bfb3ace009815fe3c8b9b3538db53b2bcde83898f0c0ab0caead22c0360"
+      }
+    },
+    "matched_frozen_screen": {
+      "outcomes": 192,
+      "report": {
+        "path": "raw/paired.json.gz",
+        "origin": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-llvm-rf-20261004/.mylang-cache/goal110-nonnegative-rem-llvm-rf/paired.json",
+        "uncompressed_bytes": 1683328,
+        "uncompressed_sha256": "db06ca7db3ae628de1571a1a33b78b25946de3b9e1b37fa6fa27ca9439bcf223",
+        "archive_sha256": "6f3522426fd496367f81d9f62fe02897eeb004314e4adcebb76c4ecfbb93b847"
+      }
+    },
+    "signed_supplement": {
+      "outcomes": 96,
+      "report": {
+        "path": "raw/supplement-timing.json.gz",
+        "origin": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-llvm-rf-20261004/.mylang-cache/goal110-nonnegative-rem-llvm-rf/supplement-timing.json",
+        "uncompressed_bytes": 39352,
+        "uncompressed_sha256": "157dadaba4bf81d08ac22204a4e1afdbaa7b07ce8074d93a9cb0f51e11a39f03",
+        "archive_sha256": "f297041de7df8bf4e1ca2d250bd12714d395d24be8138d389256a605626535ea"
+      },
+      "outside_frozen80": true
+    },
+    "static": {
+      "llvm_remainder_instructions": [
+        15,
+        7
+      ],
+      "qbe_remainder_instructions": [
+        21,
+        7
+      ],
+      "report": {
+        "path": "raw/corrected-static.json.gz",
+        "origin": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-llvm-rf-20261004/.mylang-cache/goal110-nonnegative-rem-review/corrected-static.json",
+        "uncompressed_bytes": 9786,
+        "uncompressed_sha256": "dbdf50baf80286cef6cabb620ac6228bd8d141967ad135ee537c0eae01411ed9",
+        "archive_sha256": "034817eeb3391b2a5ebce6902502be640522246db1bc549423d32d402ebfd9f5"
+      }
+    }
+  },
+  "manifest": {
+    "path": "raw/manifest.json.gz",
+    "origin": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-llvm-rf-20261004/.mylang-cache/goal110-nonnegative-rem-llvm-rf/runner/manifest.json",
+    "uncompressed_bytes": 838449,
+    "uncompressed_sha256": "23830b933cee9a4adce540ca784942956da9a8008682a6db929a9347a27f31b8",
+    "archive_sha256": "ff584d0ed472b0c402e933d38ec43cc3a62290aee41b8490dfd296da34ae0fc7"
+  },
+  "compiler_receipt": {
+    "path": "raw/compiler-receipt.json.gz",
+    "origin": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-llvm-rf-20261004/.mylang-cache/goal110-nonnegative-rem-llvm-rf/compiler-receipt.json",
+    "uncompressed_bytes": 658214,
+    "uncompressed_sha256": "325925fbcb0b08bcb7ed61050da3ecf6eb30be34e1772128052204e4717b652f",
+    "archive_sha256": "907f91171e7bbc7c787ec47d0de0a7dbc17dd38f4dee4faf0f1fe575cb0bdadc"
+  },
+  "supplement_build": {
+    "path": "raw/supplement-build.json.gz",
+    "origin": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-llvm-rf-20261004/.mylang-cache/goal110-nonnegative-rem-llvm-rf/supplement-build.json",
+    "uncompressed_bytes": 1641537,
+    "uncompressed_sha256": "6dbcaa1fdf40b45433947ac4c28f8bde71cba92537354c14be02405d44f2d740",
+    "archive_sha256": "03e7799a007d677836ec20481207d8d8d4df01d4c7b153faadc589831e8675e8"
+  },
+  "helper_sha256": {
+    "actual-llvm-semantics.py": "4fc366ca7593f26b566f6b0b512f91b29ddb294df85d79fd5e2e87fe795c209a",
+    "append_endpoint.my": "134942c3688ebf94669122580d3f851e784d6bff33bb6d5e164972dcd8e6a2e4",
+    "build-supplement.py": "218b3c8501e3172922f46baf3f4d6bd0cf84f7c87edd538825c69bd64d5331ae",
+    "qualify.py": "938d6f2e543717359f8ec3ea4f1a85f13db4ce6aae0c21ea40edcfd5b522af9b",
+    "remainder_semantics.my": "aa3ce265763e0243d970eb5a45904f6f0cea15fab97efc3d231d009940b1436b",
+    "static-remainder.py": "e0fbaf2a09adc1db5a1c400f263e60362ac945e62a131bc2030ee0c62b331ebf",
+    "time-paired.py": "e71b3cf6fb9ad2272917293cd12a433ee7e35e9ed518df8e1ae34f976a40f1bf",
+    "time-supplement.py": "3a3ec70aedb6bc3f48e95beb557dff387e42c318ca673dfa81abfbd3de0731b0",
+    "verify-archive.py": "ce0c643ded871cabb2bee1757e931f1519e6162da63234315dc03a83d45b78e4"
+  },
+  "limitations": [
+    "No normal goal confirmation or adoption.",
+    "Negative supplementary LLVM6.9%small/12.0%large slowdown is a blocker; QBE16.1%/26.8%.",
+    "Five-round confidence intervals are exploratory and unadjusted for multiple comparisons.",
+    "Small supplementary samples hit the explicit100000iteration cap.",
+    "Absolute original paths are retained as evidence provenance, not portable build instructions."
+  ]
+}
