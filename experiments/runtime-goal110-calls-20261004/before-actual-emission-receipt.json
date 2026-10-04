@@ -1,0 +1,24 @@
+{
+  "kind": "actual-production-compute-frontend-fragment",
+  "source_revision": "730a86e6",
+  "manifest_path": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-harness-20261003/.mylang-cache/runtime-candidate-730a86e6-releasefast/runner/mycache/modules/5072726eaea20665da77ad211fa131581bf71e3aa31636fb7f6ec97fc67aa98e/out/main.manifest.json",
+  "manifest_sha256": "7865bd1f8bf1cc24e61e172218bfe9bcdc8d6edd0501e538994371703f82dc28",
+  "function_names": [
+    "main::runtime_bench_now",
+    "main::parse_number",
+    "main::affine_a",
+    "main::affine_b",
+    "main::score",
+    "main::optional",
+    "main::checked",
+    "main::forwarded",
+    "main::search",
+    "main::make_frame",
+    "main::decode",
+    "main::main"
+  ],
+  "main_il_digest": "52c947af9d7e0a0f94253d807daae7a36d07c9deff2d4946e5ea145953b6dd59",
+  "main_il_sha256": "1e3b75fa69d1d46395a1cdb4cff088ba9cfd282adcad967e10dc804f6076f51d",
+  "main_il_bytes": 510140,
+  "markers": []
+}

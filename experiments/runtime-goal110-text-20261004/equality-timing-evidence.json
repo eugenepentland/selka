@@ -1,0 +1,79 @@
+{
+  "candidate_source": "965d416cf5b6c30232f3a14d0685f896d74b23f3",
+  "before_source": "730a86e62b47c922dc1411d24b5868c3bd2132f3",
+  "status": "rejected for integration pending ordinary distribution and LLVM search regression fixes",
+  "evidence": [
+    {
+      "raw": "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-20261004/.mylang-cache/goal110-text/equality-screen.json",
+      "raw_sha256": "87737492b962f526bae4fbb84b976e0653351400ced9ba4a6f03dfe7f83d36ad",
+      "retained": "experiments/runtime-goal110-text-20261004/equality-screen.json.gz",
+      "retained_sha256": "b7cb03dedaa4c904cdb9b7ff2617df241709e4e48f413e97191eaf755b868118"
+    },
+    {
+      "raw": "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-20261004/.mylang-cache/goal110-text/equality-before-after.json",
+      "raw_sha256": "0966fe08f8b100e9831c5c64f3369b626bddfbfe1579cde54609a0b93721a3d6",
+      "retained": "experiments/runtime-goal110-text-20261004/equality-before-after.json.gz",
+      "retained_sha256": "4ca56ee57e398497e507de59fe175d5559b904cc0453f7e1488158704a8d27af"
+    },
+    {
+      "raw": "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-20261004/.mylang-cache/goal110-text/equality-quiet15-before-after.json",
+      "raw_sha256": "cc9bd3e13dc2850b6f5fcd5f9de1b1329b5d6ac4c969ec6fa3a4082c2ee0c4af",
+      "retained": "experiments/runtime-goal110-text-20261004/equality-quiet15-before-after.json.gz",
+      "retained_sha256": "b499998561797d2b7e65d5b9733b6288506a93fcf75bf55a5c71b5020efb1325"
+    },
+    {
+      "raw": "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-20261004/.mylang-cache/goal110-text/equality-distributions.json",
+      "raw_sha256": "7aad427a7153088f4b479b9d0423c6a2d44d04a4f1463b8a61c8b84f5e65d795",
+      "retained": "experiments/runtime-goal110-text-20261004/equality-distributions.json.gz",
+      "retained_sha256": "89ccf3636d3dc729c55792bc48b93dc82d029412dc552f089f8cea9bd22e6bf7"
+    },
+    {
+      "raw": "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-20261004/.mylang-cache/goal110-text/equality-medium-distributions.json",
+      "raw_sha256": "f594155eb5bb22c778ac498ccc8cc68c71ca0d541e953432cc0a44bc1f71cf8d",
+      "retained": "experiments/runtime-goal110-text-20261004/equality-medium-distributions.json.gz",
+      "retained_sha256": "0a508667f47efd4bcbaba2e6be662d7d023b1d0407c867622301441f932994af"
+    },
+    {
+      "raw": "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-20261004/.mylang-cache/goal110-text/equality-qbe-instruction-diff.json",
+      "raw_sha256": "c4777167624726e51c54405fd5542f2086927941e763437975fd5c0853f20f10",
+      "retained": "experiments/runtime-goal110-text-20261004/equality-qbe-instruction-diff.json.gz",
+      "retained_sha256": "6e34fc4b9dc6d1b992a04c0ae7d5be5655e0250d4c722b28c4531c61807f3cda"
+    },
+    {
+      "raw": "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-20261004/.mylang-cache/goal110-text/llvm-before-kernel.asm",
+      "raw_sha256": "a39873bbc29decc69d2cef4ed7709dff0c2b660279434a979550caf4d1b90ce1",
+      "retained": "experiments/runtime-goal110-text-20261004/llvm-before-kernel.asm.gz",
+      "retained_sha256": "ef90809311f1c8588317daa2c1dac615a111096343e91c58dcd3a0ce08212702"
+    },
+    {
+      "raw": "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-20261004/.mylang-cache/goal110-text/llvm-after-kernel.asm",
+      "raw_sha256": "7d1b24ba69f1ade7556cd1b8b0ec1028ce3515f57d4ed576249d8374650d9160",
+      "retained": "experiments/runtime-goal110-text-20261004/llvm-after-kernel.asm.gz",
+      "retained_sha256": "b2e95c383d0148482d7ee88f0f3af1a4c35a7d2363c26e4ea63ecd8892d874bc"
+    },
+    {
+      "raw": "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-20261004/.mylang-cache/goal110-text/llvm-before-find.asm",
+      "raw_sha256": "764f85ed47a624ddd029a99b4ba238a82bcf13396c4d0e0cf567bf469682702c",
+      "retained": "experiments/runtime-goal110-text-20261004/llvm-before-find.asm.gz",
+      "retained_sha256": "de9850ba25533098d9d6a5aa4c1f252a3dc711ce62b60a7011f282d80c7115eb"
+    },
+    {
+      "raw": "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-20261004/.mylang-cache/goal110-text/llvm-after-find.asm",
+      "raw_sha256": "c739ce2b1386cd200661554c3c7fa9d7911e7f76255f4974e8fc441801a8e78b",
+      "retained": "experiments/runtime-goal110-text-20261004/llvm-after-find.asm.gz",
+      "retained_sha256": "242dd54962790665db8efceb69f5a00b667b2e4c20e91ac7c04f6cd939d3ca56"
+    },
+    {
+      "raw": "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-20261004/.mylang-cache/goal110-text/equality-llvm-host-static.json",
+      "raw_sha256": "9683a2df89be3783c7f1f15504b9e79da6aab5cdc5d7a69d2cd34e1e811c5105",
+      "retained": "experiments/runtime-goal110-text-20261004/equality-llvm-host-static.json.gz",
+      "retained_sha256": "f80c8777fe4a74228b7332cbf32fd4f77d001b532d37d5688b623e3ffb952671"
+    }
+  ],
+  "medium_variant": {
+    "base_source": "965d416cf5b6c30232f3a14d0685f896d74b23f3",
+    "private_native_text_c_sha256": "0d25fcc9ac9e62a2eac828ad7285b5f4cb3553cbba40a1d715b835f6d81fc7ec",
+    "patch": "equality-medium-rejected.patch",
+    "status": "rejected helper diagnostic, never a source/guest candidate"
+  }
+}

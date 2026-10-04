@@ -1,0 +1,2886 @@
+{
+  "kind": "untimed-admitted-short-circuit-join-matrix",
+  "compiler_revision": "5dc31c3af5114938fe1c92fc72941efd0b3074c3",
+  "host_mode": "Debug",
+  "compiler": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/zig-out/bin/mylang",
+    "bytes": 217362442,
+    "sha256": "0994aff6dab29a2dd57c2f5a51117531751afd0483ee299ed7758d20c2eec95d"
+  },
+  "qbe": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/zig-out/bin/qbe",
+    "bytes": 857440,
+    "sha256": "cb4bca9d5b8405225b5da8b0e9964ef1807f894e7db781da47d500ee078c0b8e"
+  },
+  "template": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/experiments/runtime-parity-arithmetic-20261003/unswitch-joins.my",
+    "bytes": 1052,
+    "sha256": "4b4c57ddf834a7cfb4008f69a4f0d0e97d2d82a97ee595b54904751b82460827"
+  },
+  "runner": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/experiments/runtime-parity-arithmetic-20261003/unswitch-joins.py",
+    "bytes": 6775,
+    "sha256": "6dea462cab4432c7c0ab1c3d8918a5fece57d6707c376d7a93b4d1ed09caee0f"
+  },
+  "guest_mode": "ReleaseFast",
+  "cases": 144,
+  "guest_executions": 432,
+  "records": [
+    {
+      "form": 0,
+      "condition": "kind == 2 or kind == 3",
+      "source": {
+        "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-0.my",
+        "bytes": 1052,
+        "sha256": "4b4c57ddf834a7cfb4008f69a4f0d0e97d2d82a97ee595b54904751b82460827"
+      },
+      "admitted": true,
+      "emission": {
+        "command": [
+          "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/zig-out/bin/mylang",
+          "emit-qbe",
+          ".mylang-cache/goal110-calls-5dc31c3a-joins/form-0.my",
+          "--drop-step-checks",
+          "--drop-frame-checks"
+        ],
+        "exit": 0,
+        "stdout": {
+          "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-0-emission.stdout.log",
+          "bytes": 118032,
+          "sha256": "ca30d7c78fbd02436d09831fff28bac9cb2d52e135086f7f0eb9fd6cc98d0e60"
+        },
+        "stderr": {
+          "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-0-emission.stderr.log",
+          "bytes": 221,
+          "sha256": "a12aa76b005e2dc3306f70162aadac6a982e2cf26221e8ed0f751483dd431294"
+        }
+      },
+      "variants": {
+        "accounted-qbe": {
+          "backend": "qbe",
+          "guest_mode": "ReleaseFast",
+          "build": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/zig-out/bin/mylang",
+              "build",
+              ".mylang-cache/goal110-calls-5dc31c3a-joins/form-0.my",
+              "--qbe",
+              "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/zig-out/bin/qbe",
+              "--backend",
+              "qbe",
+              "--mode",
+              "ReleaseFast",
+              "--step-accounting",
+              "--keep-symbols",
+              "--cache-dir=.mylang-cache/goal110-calls-5dc31c3a-joins/cache-accounted-qbe",
+              "-o",
+              ".mylang-cache/goal110-calls-5dc31c3a-joins/form-0-accounted-qbe"
+            ],
+            "exit": 0,
+            "stdout": {
+              "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-0-accounted-qbe-build.stdout.log",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "stderr": {
+              "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-0-accounted-qbe-build.stderr.log",
+              "bytes": 287,
+              "sha256": "e3a4a9782db8bb472b261b29c29a7014e43514e0198d0bc7fd1a61c2c2ec9d83"
+            }
+          },
+          "executable": {
+            "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-0-accounted-qbe",
+            "bytes": 1109376,
+            "sha256": "1c4dd10419f0113973c2190c8ade014a0a87ef4968f573f47cc8daf7fafafba3"
+          },
+          "manifest": {
+            "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-0-accounted-qbe.qbe-manifest.json",
+            "bytes": 1419,
+            "sha256": "43f6e10c7625d4c729a51cb84c0aac59105c288469eaa72105e2b9808274c744"
+          },
+          "mode_probe": "R_STEP_LIMIT"
+        },
+        "fast-qbe": {
+          "backend": "qbe",
+          "guest_mode": "ReleaseFast",
+          "build": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/zig-out/bin/mylang",
+              "build",
+              ".mylang-cache/goal110-calls-5dc31c3a-joins/form-0.my",
+              "--qbe",
+              "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/zig-out/bin/qbe",
+              "--backend",
+              "qbe",
+              "--mode",
+              "ReleaseFast",
+              "--keep-symbols",
+              "--cache-dir=.mylang-cache/goal110-calls-5dc31c3a-joins/cache-fast-qbe",
+              "-o",
+              ".mylang-cache/goal110-calls-5dc31c3a-joins/form-0-fast-qbe"
+            ],
+            "exit": 0,
+            "stdout": {
+              "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-0-fast-qbe-build.stdout.log",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "stderr": {
+              "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-0-fast-qbe-build.stderr.log",
+              "bytes": 287,
+              "sha256": "e3a4a9782db8bb472b261b29c29a7014e43514e0198d0bc7fd1a61c2c2ec9d83"
+            }
+          },
+          "executable": {
+            "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-0-fast-qbe",
+            "bytes": 1107496,
+            "sha256": "db899466418a46d3b784f35eb0b553d3bf5999e84781271a2a0f98358a3b78bd"
+          },
+          "manifest": {
+            "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-0-fast-qbe.qbe-manifest.json",
+            "bytes": 1409,
+            "sha256": "13efa54893e80c09fcdcce9c3a784e4c277d3785547a964e67aec16a686e2b9f"
+          },
+          "mode_probe": "R_NO_STEP_ACCOUNTING"
+        },
+        "fast-llvm": {
+          "backend": "llvm",
+          "guest_mode": "ReleaseFast",
+          "build": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/zig-out/bin/mylang",
+              "build",
+              ".mylang-cache/goal110-calls-5dc31c3a-joins/form-0.my",
+              "--release",
+              "--keep-symbols",
+              "--cache-dir=.mylang-cache/goal110-calls-5dc31c3a-joins/cache-fast-llvm",
+              "-o",
+              ".mylang-cache/goal110-calls-5dc31c3a-joins/form-0-fast-llvm"
+            ],
+            "exit": 0,
+            "stdout": {
+              "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-0-fast-llvm-build.stdout.log",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "stderr": {
+              "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-0-fast-llvm-build.stderr.log",
+              "bytes": 287,
+              "sha256": "e3a4a9782db8bb472b261b29c29a7014e43514e0198d0bc7fd1a61c2c2ec9d83"
+            }
+          },
+          "executable": {
+            "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-0-fast-llvm",
+            "bytes": 362448,
+            "sha256": "efb279c0ead5f167d33ac14134a2e7a4e281b7496a195cccad982ca40fe1897c"
+          },
+          "manifest": {
+            "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-0-fast-llvm.qbe-manifest.json",
+            "bytes": 1405,
+            "sha256": "6d683382ec4aecd7129f3283e4653de7159c0df1053b98708db669b69c368ce8"
+          },
+          "mode_probe": "R_NO_STEP_ACCOUNTING"
+        }
+      },
+      "cases": [
+        {
+          "arguments": [
+            "2",
+            "0",
+            "0"
+          ],
+          "returncode": 0,
+          "stdout": "0\n0\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "2",
+            "0",
+            "1"
+          ],
+          "returncode": 0,
+          "stdout": "0\n0\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "2",
+            "0",
+            "2"
+          ],
+          "returncode": 0,
+          "stdout": "0\n0\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "2",
+            "3",
+            "0"
+          ],
+          "returncode": 12,
+          "stdout": "0\n1\n2\n12\n12\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "2",
+            "3",
+            "1"
+          ],
+          "returncode": 12,
+          "stdout": "0\n1\n2\n12\n12\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "2",
+            "3",
+            "2"
+          ],
+          "returncode": 12,
+          "stdout": "0\n1\n2\n12\n12\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "3",
+            "0",
+            "0"
+          ],
+          "returncode": 0,
+          "stdout": "0\n0\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "3",
+            "0",
+            "1"
+          ],
+          "returncode": 0,
+          "stdout": "0\n0\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "3",
+            "0",
+            "2"
+          ],
+          "returncode": 0,
+          "stdout": "0\n0\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "3",
+            "3",
+            "0"
+          ],
+          "returncode": 9,
+          "stdout": "0\n1\n2\n9\n9\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "3",
+            "3",
+            "1"
+          ],
+          "returncode": 9,
+          "stdout": "0\n1\n2\n9\n9\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "3",
+            "3",
+            "2"
+          ],
+          "returncode": 9,
+          "stdout": "0\n1\n2\n9\n9\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "99",
+            "0",
+            "0"
+          ],
+          "returncode": 0,
+          "stdout": "0\n0\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "99",
+            "0",
+            "1"
+          ],
+          "returncode": 0,
+          "stdout": "0\n0\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "99",
+            "0",
+            "2"
+          ],
+          "returncode": 0,
+          "stdout": "0\n0\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "99",
+            "3",
+            "0"
+          ],
+          "returncode": 21,
+          "stdout": "0\n1\n2\n21\n21\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "99",
+            "3",
+            "1"
+          ],
+          "returncode": 21,
+          "stdout": "0\n1\n2\n21\n21\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "99",
+            "3",
+            "2"
+          ],
+          "returncode": 21,
+          "stdout": "0\n1\n2\n21\n21\n",
+          "stderr": "",
+          "oracle_trap": ""
+        }
+      ]
+    },
+    {
+      "form": 1,
+      "condition": "kind == 2 and kind != 3",
+      "source": {
+        "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-1.my",
+        "bytes": 1053,
+        "sha256": "352894bf63186271cc4f28cd0569a0235157b8777ce15f46d5a13159e4381e4d"
+      },
+      "admitted": true,
+      "emission": {
+        "command": [
+          "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/zig-out/bin/mylang",
+          "emit-qbe",
+          ".mylang-cache/goal110-calls-5dc31c3a-joins/form-1.my",
+          "--drop-step-checks",
+          "--drop-frame-checks"
+        ],
+        "exit": 0,
+        "stdout": {
+          "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-1-emission.stdout.log",
+          "bytes": 118190,
+          "sha256": "65215589507d61fb11c2773212a9f424887eb26498ecc97856b9fd308656609b"
+        },
+        "stderr": {
+          "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-1-emission.stderr.log",
+          "bytes": 221,
+          "sha256": "2af2fa181124c308174568c28dea013a3f1fe960efa2e0fd504debcf7258448b"
+        }
+      },
+      "variants": {
+        "accounted-qbe": {
+          "backend": "qbe",
+          "guest_mode": "ReleaseFast",
+          "build": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/zig-out/bin/mylang",
+              "build",
+              ".mylang-cache/goal110-calls-5dc31c3a-joins/form-1.my",
+              "--qbe",
+              "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/zig-out/bin/qbe",
+              "--backend",
+              "qbe",
+              "--mode",
+              "ReleaseFast",
+              "--step-accounting",
+              "--keep-symbols",
+              "--cache-dir=.mylang-cache/goal110-calls-5dc31c3a-joins/cache-accounted-qbe",
+              "-o",
+              ".mylang-cache/goal110-calls-5dc31c3a-joins/form-1-accounted-qbe"
+            ],
+            "exit": 0,
+            "stdout": {
+              "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-1-accounted-qbe-build.stdout.log",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "stderr": {
+              "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-1-accounted-qbe-build.stderr.log",
+              "bytes": 287,
+              "sha256": "809381528a7555dcc97ff041c2164ab7687cf23a5f875dc6e208f67ccc9e7b09"
+            }
+          },
+          "executable": {
+            "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-1-accounted-qbe",
+            "bytes": 1109376,
+            "sha256": "80e763b8d9b6476776230f3f5ccbb7bab3353afbd91d06a2c0b491bad86139de"
+          },
+          "manifest": {
+            "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-1-accounted-qbe.qbe-manifest.json",
+            "bytes": 1419,
+            "sha256": "3ae04f7fda8bbd57901ad500c07361f4c74efb14a4bfeed859b470dadaaa1045"
+          },
+          "mode_probe": "R_STEP_LIMIT"
+        },
+        "fast-qbe": {
+          "backend": "qbe",
+          "guest_mode": "ReleaseFast",
+          "build": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/zig-out/bin/mylang",
+              "build",
+              ".mylang-cache/goal110-calls-5dc31c3a-joins/form-1.my",
+              "--qbe",
+              "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/zig-out/bin/qbe",
+              "--backend",
+              "qbe",
+              "--mode",
+              "ReleaseFast",
+              "--keep-symbols",
+              "--cache-dir=.mylang-cache/goal110-calls-5dc31c3a-joins/cache-fast-qbe",
+              "-o",
+              ".mylang-cache/goal110-calls-5dc31c3a-joins/form-1-fast-qbe"
+            ],
+            "exit": 0,
+            "stdout": {
+              "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-1-fast-qbe-build.stdout.log",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "stderr": {
+              "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-1-fast-qbe-build.stderr.log",
+              "bytes": 287,
+              "sha256": "809381528a7555dcc97ff041c2164ab7687cf23a5f875dc6e208f67ccc9e7b09"
+            }
+          },
+          "executable": {
+            "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-1-fast-qbe",
+            "bytes": 1107560,
+            "sha256": "4c3e3ac235b022e59bcb2173b516b1b44b5f5a99724f09f1cfce8f87dc8ac03d"
+          },
+          "manifest": {
+            "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-1-fast-qbe.qbe-manifest.json",
+            "bytes": 1409,
+            "sha256": "8e9fe38bec8ecda29afb026b7fcb72d421dfd699d5a7db1845eb695aa29f399b"
+          },
+          "mode_probe": "R_NO_STEP_ACCOUNTING"
+        },
+        "fast-llvm": {
+          "backend": "llvm",
+          "guest_mode": "ReleaseFast",
+          "build": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/zig-out/bin/mylang",
+              "build",
+              ".mylang-cache/goal110-calls-5dc31c3a-joins/form-1.my",
+              "--release",
+              "--keep-symbols",
+              "--cache-dir=.mylang-cache/goal110-calls-5dc31c3a-joins/cache-fast-llvm",
+              "-o",
+              ".mylang-cache/goal110-calls-5dc31c3a-joins/form-1-fast-llvm"
+            ],
+            "exit": 0,
+            "stdout": {
+              "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-1-fast-llvm-build.stdout.log",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "stderr": {
+              "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-1-fast-llvm-build.stderr.log",
+              "bytes": 287,
+              "sha256": "809381528a7555dcc97ff041c2164ab7687cf23a5f875dc6e208f67ccc9e7b09"
+            }
+          },
+          "executable": {
+            "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-1-fast-llvm",
+            "bytes": 362384,
+            "sha256": "6644793372eab38552cba75aa033c32ad55090df0be392cb4701ad5cbede7469"
+          },
+          "manifest": {
+            "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-1-fast-llvm.qbe-manifest.json",
+            "bytes": 1404,
+            "sha256": "a20611381ca87d9ee1b5b9437c3d733017056b51df2beec7d1ff2b20133b1de7"
+          },
+          "mode_probe": "R_NO_STEP_ACCOUNTING"
+        }
+      },
+      "cases": [
+        {
+          "arguments": [
+            "2",
+            "0",
+            "0"
+          ],
+          "returncode": 0,
+          "stdout": "0\n0\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "2",
+            "0",
+            "1"
+          ],
+          "returncode": 0,
+          "stdout": "0\n0\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "2",
+            "0",
+            "2"
+          ],
+          "returncode": 0,
+          "stdout": "0\n0\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "2",
+            "3",
+            "0"
+          ],
+          "returncode": 12,
+          "stdout": "0\n1\n2\n12\n12\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "2",
+            "3",
+            "1"
+          ],
+          "returncode": 12,
+          "stdout": "0\n1\n2\n12\n12\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "2",
+            "3",
+            "2"
+          ],
+          "returncode": 12,
+          "stdout": "0\n1\n2\n12\n12\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "3",
+            "0",
+            "0"
+          ],
+          "returncode": 0,
+          "stdout": "0\n0\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "3",
+            "0",
+            "1"
+          ],
+          "returncode": 0,
+          "stdout": "0\n0\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "3",
+            "0",
+            "2"
+          ],
+          "returncode": 0,
+          "stdout": "0\n0\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "3",
+            "3",
+            "0"
+          ],
+          "returncode": 21,
+          "stdout": "0\n1\n2\n21\n21\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "3",
+            "3",
+            "1"
+          ],
+          "returncode": 21,
+          "stdout": "0\n1\n2\n21\n21\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "3",
+            "3",
+            "2"
+          ],
+          "returncode": 21,
+          "stdout": "0\n1\n2\n21\n21\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "99",
+            "0",
+            "0"
+          ],
+          "returncode": 0,
+          "stdout": "0\n0\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "99",
+            "0",
+            "1"
+          ],
+          "returncode": 0,
+          "stdout": "0\n0\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "99",
+            "0",
+            "2"
+          ],
+          "returncode": 0,
+          "stdout": "0\n0\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "99",
+            "3",
+            "0"
+          ],
+          "returncode": 21,
+          "stdout": "0\n1\n2\n21\n21\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "99",
+            "3",
+            "1"
+          ],
+          "returncode": 21,
+          "stdout": "0\n1\n2\n21\n21\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "99",
+            "3",
+            "2"
+          ],
+          "returncode": 21,
+          "stdout": "0\n1\n2\n21\n21\n",
+          "stderr": "",
+          "oracle_trap": ""
+        }
+      ]
+    },
+    {
+      "form": 2,
+      "condition": "(kind == 2 or kind == 3) and i < seed",
+      "source": {
+        "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-2.my",
+        "bytes": 1067,
+        "sha256": "d8b07d83df1f79e1061996f5b44f038395531aed948b9d7e006e8e61d907a784"
+      },
+      "admitted": true,
+      "emission": {
+        "command": [
+          "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/zig-out/bin/mylang",
+          "emit-qbe",
+          ".mylang-cache/goal110-calls-5dc31c3a-joins/form-2.my",
+          "--drop-step-checks",
+          "--drop-frame-checks"
+        ],
+        "exit": 0,
+        "stdout": {
+          "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-2-emission.stdout.log",
+          "bytes": 119368,
+          "sha256": "2364e8a6d6f89b17c8632fa5562a9a764cae765f7286742e17edc8fbcb710272"
+        },
+        "stderr": {
+          "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-2-emission.stderr.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "variants": {
+        "accounted-qbe": {
+          "backend": "qbe",
+          "guest_mode": "ReleaseFast",
+          "build": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/zig-out/bin/mylang",
+              "build",
+              ".mylang-cache/goal110-calls-5dc31c3a-joins/form-2.my",
+              "--qbe",
+              "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/zig-out/bin/qbe",
+              "--backend",
+              "qbe",
+              "--mode",
+              "ReleaseFast",
+              "--step-accounting",
+              "--keep-symbols",
+              "--cache-dir=.mylang-cache/goal110-calls-5dc31c3a-joins/cache-accounted-qbe",
+              "-o",
+              ".mylang-cache/goal110-calls-5dc31c3a-joins/form-2-accounted-qbe"
+            ],
+            "exit": 0,
+            "stdout": {
+              "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-2-accounted-qbe-build.stdout.log",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "stderr": {
+              "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-2-accounted-qbe-build.stderr.log",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            }
+          },
+          "executable": {
+            "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-2-accounted-qbe",
+            "bytes": 1109776,
+            "sha256": "3d43a06965cfb04563af14425911bfea85b3490f72fa05b5206275f7d177c081"
+          },
+          "manifest": {
+            "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-2-accounted-qbe.qbe-manifest.json",
+            "bytes": 1419,
+            "sha256": "4b84d7c3a5db59abb63194e807ff0ed5f2301af64157abc4d942bd88b09bd98d"
+          },
+          "mode_probe": "R_STEP_LIMIT"
+        },
+        "fast-qbe": {
+          "backend": "qbe",
+          "guest_mode": "ReleaseFast",
+          "build": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/zig-out/bin/mylang",
+              "build",
+              ".mylang-cache/goal110-calls-5dc31c3a-joins/form-2.my",
+              "--qbe",
+              "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/zig-out/bin/qbe",
+              "--backend",
+              "qbe",
+              "--mode",
+              "ReleaseFast",
+              "--keep-symbols",
+              "--cache-dir=.mylang-cache/goal110-calls-5dc31c3a-joins/cache-fast-qbe",
+              "-o",
+              ".mylang-cache/goal110-calls-5dc31c3a-joins/form-2-fast-qbe"
+            ],
+            "exit": 0,
+            "stdout": {
+              "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-2-fast-qbe-build.stdout.log",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "stderr": {
+              "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-2-fast-qbe-build.stderr.log",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            }
+          },
+          "executable": {
+            "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-2-fast-qbe",
+            "bytes": 1107816,
+            "sha256": "fe9699e5a236d5892db41797668154aeca61ca7a6fca8b03188bf3fefbf113b9"
+          },
+          "manifest": {
+            "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-2-fast-qbe.qbe-manifest.json",
+            "bytes": 1409,
+            "sha256": "4a80f4c03205ff92673ca05087a56320d217ddf3517d94e76cf797bc95a861e3"
+          },
+          "mode_probe": "R_NO_STEP_ACCOUNTING"
+        },
+        "fast-llvm": {
+          "backend": "llvm",
+          "guest_mode": "ReleaseFast",
+          "build": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/zig-out/bin/mylang",
+              "build",
+              ".mylang-cache/goal110-calls-5dc31c3a-joins/form-2.my",
+              "--release",
+              "--keep-symbols",
+              "--cache-dir=.mylang-cache/goal110-calls-5dc31c3a-joins/cache-fast-llvm",
+              "-o",
+              ".mylang-cache/goal110-calls-5dc31c3a-joins/form-2-fast-llvm"
+            ],
+            "exit": 0,
+            "stdout": {
+              "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-2-fast-llvm-build.stdout.log",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "stderr": {
+              "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-2-fast-llvm-build.stderr.log",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            }
+          },
+          "executable": {
+            "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-2-fast-llvm",
+            "bytes": 362672,
+            "sha256": "2e68073e0bda219e5d8d8183b8b191c4448e0301bc1789f5ebf8bc2fdb295686"
+          },
+          "manifest": {
+            "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-2-fast-llvm.qbe-manifest.json",
+            "bytes": 1404,
+            "sha256": "a52b6d9589062be1d50e49ebd8660f21a106b4f460707aa09457b0379a94e301"
+          },
+          "mode_probe": "R_NO_STEP_ACCOUNTING"
+        }
+      },
+      "cases": [
+        {
+          "arguments": [
+            "2",
+            "0",
+            "0"
+          ],
+          "returncode": 0,
+          "stdout": "0\n0\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "2",
+            "0",
+            "1"
+          ],
+          "returncode": 0,
+          "stdout": "0\n0\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "2",
+            "0",
+            "2"
+          ],
+          "returncode": 0,
+          "stdout": "0\n0\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "2",
+            "3",
+            "0"
+          ],
+          "returncode": 24,
+          "stdout": "0\n1\n2\n24\n24\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "2",
+            "3",
+            "1"
+          ],
+          "returncode": 20,
+          "stdout": "0\n1\n2\n20\n20\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "2",
+            "3",
+            "2"
+          ],
+          "returncode": 16,
+          "stdout": "0\n1\n2\n16\n16\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "3",
+            "0",
+            "0"
+          ],
+          "returncode": 0,
+          "stdout": "0\n0\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "3",
+            "0",
+            "1"
+          ],
+          "returncode": 0,
+          "stdout": "0\n0\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "3",
+            "0",
+            "2"
+          ],
+          "returncode": 0,
+          "stdout": "0\n0\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "3",
+            "3",
+            "0"
+          ],
+          "returncode": 21,
+          "stdout": "0\n1\n2\n21\n21\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "3",
+            "3",
+            "1"
+          ],
+          "returncode": 17,
+          "stdout": "0\n1\n2\n17\n17\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "3",
+            "3",
+            "2"
+          ],
+          "returncode": 13,
+          "stdout": "0\n1\n2\n13\n13\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "99",
+            "0",
+            "0"
+          ],
+          "returncode": 0,
+          "stdout": "0\n0\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "99",
+            "0",
+            "1"
+          ],
+          "returncode": 0,
+          "stdout": "0\n0\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "99",
+            "0",
+            "2"
+          ],
+          "returncode": 0,
+          "stdout": "0\n0\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "99",
+            "3",
+            "0"
+          ],
+          "returncode": 21,
+          "stdout": "0\n1\n2\n21\n21\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "99",
+            "3",
+            "1"
+          ],
+          "returncode": 21,
+          "stdout": "0\n1\n2\n21\n21\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "99",
+            "3",
+            "2"
+          ],
+          "returncode": 21,
+          "stdout": "0\n1\n2\n21\n21\n",
+          "stderr": "",
+          "oracle_trap": ""
+        }
+      ]
+    },
+    {
+      "form": 3,
+      "condition": "i < seed and (kind == 2 or kind == 3)",
+      "source": {
+        "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-3.my",
+        "bytes": 1067,
+        "sha256": "81cde95308034e33ad331429693fa0304aeda93067213e5246777daff62a100d"
+      },
+      "admitted": true,
+      "emission": {
+        "command": [
+          "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/zig-out/bin/mylang",
+          "emit-qbe",
+          ".mylang-cache/goal110-calls-5dc31c3a-joins/form-3.my",
+          "--drop-step-checks",
+          "--drop-frame-checks"
+        ],
+        "exit": 0,
+        "stdout": {
+          "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-3-emission.stdout.log",
+          "bytes": 119368,
+          "sha256": "e282ca868e669debe382b205adc7f677c425b900595c31769e95fcb8b7238bdb"
+        },
+        "stderr": {
+          "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-3-emission.stderr.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "variants": {
+        "accounted-qbe": {
+          "backend": "qbe",
+          "guest_mode": "ReleaseFast",
+          "build": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/zig-out/bin/mylang",
+              "build",
+              ".mylang-cache/goal110-calls-5dc31c3a-joins/form-3.my",
+              "--qbe",
+              "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/zig-out/bin/qbe",
+              "--backend",
+              "qbe",
+              "--mode",
+              "ReleaseFast",
+              "--step-accounting",
+              "--keep-symbols",
+              "--cache-dir=.mylang-cache/goal110-calls-5dc31c3a-joins/cache-accounted-qbe",
+              "-o",
+              ".mylang-cache/goal110-calls-5dc31c3a-joins/form-3-accounted-qbe"
+            ],
+            "exit": 0,
+            "stdout": {
+              "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-3-accounted-qbe-build.stdout.log",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "stderr": {
+              "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-3-accounted-qbe-build.stderr.log",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            }
+          },
+          "executable": {
+            "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-3-accounted-qbe",
+            "bytes": 1109776,
+            "sha256": "8c15cf50cf022daae60f0f9c46bc52dd15271a9d5dae13a4d0c2be8e9e7aa618"
+          },
+          "manifest": {
+            "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-3-accounted-qbe.qbe-manifest.json",
+            "bytes": 1419,
+            "sha256": "acf91b56626f16ebf330d97eae9bf70a4d7198097579cb3bb4350d3c9dfbc02f"
+          },
+          "mode_probe": "R_STEP_LIMIT"
+        },
+        "fast-qbe": {
+          "backend": "qbe",
+          "guest_mode": "ReleaseFast",
+          "build": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/zig-out/bin/mylang",
+              "build",
+              ".mylang-cache/goal110-calls-5dc31c3a-joins/form-3.my",
+              "--qbe",
+              "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/zig-out/bin/qbe",
+              "--backend",
+              "qbe",
+              "--mode",
+              "ReleaseFast",
+              "--keep-symbols",
+              "--cache-dir=.mylang-cache/goal110-calls-5dc31c3a-joins/cache-fast-qbe",
+              "-o",
+              ".mylang-cache/goal110-calls-5dc31c3a-joins/form-3-fast-qbe"
+            ],
+            "exit": 0,
+            "stdout": {
+              "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-3-fast-qbe-build.stdout.log",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "stderr": {
+              "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-3-fast-qbe-build.stderr.log",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            }
+          },
+          "executable": {
+            "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-3-fast-qbe",
+            "bytes": 1107816,
+            "sha256": "bcec0b54a10e71cbefdbc37739623d5b55565e9ee9d6874f318c204c59a11e8c"
+          },
+          "manifest": {
+            "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-3-fast-qbe.qbe-manifest.json",
+            "bytes": 1409,
+            "sha256": "70e474511690ade729a399a81d9fcaf34d841087110f2efa70194f6b38727d1f"
+          },
+          "mode_probe": "R_NO_STEP_ACCOUNTING"
+        },
+        "fast-llvm": {
+          "backend": "llvm",
+          "guest_mode": "ReleaseFast",
+          "build": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/zig-out/bin/mylang",
+              "build",
+              ".mylang-cache/goal110-calls-5dc31c3a-joins/form-3.my",
+              "--release",
+              "--keep-symbols",
+              "--cache-dir=.mylang-cache/goal110-calls-5dc31c3a-joins/cache-fast-llvm",
+              "-o",
+              ".mylang-cache/goal110-calls-5dc31c3a-joins/form-3-fast-llvm"
+            ],
+            "exit": 0,
+            "stdout": {
+              "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-3-fast-llvm-build.stdout.log",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "stderr": {
+              "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-3-fast-llvm-build.stderr.log",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            }
+          },
+          "executable": {
+            "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-3-fast-llvm",
+            "bytes": 362672,
+            "sha256": "0d59578c98160053fbdb540b994c20900c2b3eded0958651172da2135717f6f8"
+          },
+          "manifest": {
+            "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-3-fast-llvm.qbe-manifest.json",
+            "bytes": 1404,
+            "sha256": "38a64f7b00588723cb062b739ac27a91f1f22cb3b7a048c52af43dc80032394b"
+          },
+          "mode_probe": "R_NO_STEP_ACCOUNTING"
+        }
+      },
+      "cases": [
+        {
+          "arguments": [
+            "2",
+            "0",
+            "0"
+          ],
+          "returncode": 0,
+          "stdout": "0\n0\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "2",
+            "0",
+            "1"
+          ],
+          "returncode": 0,
+          "stdout": "0\n0\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "2",
+            "0",
+            "2"
+          ],
+          "returncode": 0,
+          "stdout": "0\n0\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "2",
+            "3",
+            "0"
+          ],
+          "returncode": 24,
+          "stdout": "0\n1\n2\n24\n24\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "2",
+            "3",
+            "1"
+          ],
+          "returncode": 20,
+          "stdout": "0\n1\n2\n20\n20\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "2",
+            "3",
+            "2"
+          ],
+          "returncode": 16,
+          "stdout": "0\n1\n2\n16\n16\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "3",
+            "0",
+            "0"
+          ],
+          "returncode": 0,
+          "stdout": "0\n0\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "3",
+            "0",
+            "1"
+          ],
+          "returncode": 0,
+          "stdout": "0\n0\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "3",
+            "0",
+            "2"
+          ],
+          "returncode": 0,
+          "stdout": "0\n0\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "3",
+            "3",
+            "0"
+          ],
+          "returncode": 21,
+          "stdout": "0\n1\n2\n21\n21\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "3",
+            "3",
+            "1"
+          ],
+          "returncode": 17,
+          "stdout": "0\n1\n2\n17\n17\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "3",
+            "3",
+            "2"
+          ],
+          "returncode": 13,
+          "stdout": "0\n1\n2\n13\n13\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "99",
+            "0",
+            "0"
+          ],
+          "returncode": 0,
+          "stdout": "0\n0\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "99",
+            "0",
+            "1"
+          ],
+          "returncode": 0,
+          "stdout": "0\n0\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "99",
+            "0",
+            "2"
+          ],
+          "returncode": 0,
+          "stdout": "0\n0\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "99",
+            "3",
+            "0"
+          ],
+          "returncode": 21,
+          "stdout": "0\n1\n2\n21\n21\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "99",
+            "3",
+            "1"
+          ],
+          "returncode": 21,
+          "stdout": "0\n1\n2\n21\n21\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "99",
+            "3",
+            "2"
+          ],
+          "returncode": 21,
+          "stdout": "0\n1\n2\n21\n21\n",
+          "stderr": "",
+          "oracle_trap": ""
+        }
+      ]
+    },
+    {
+      "form": 4,
+      "condition": "(kind == 2 if i < seed else kind == 3)",
+      "source": {
+        "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-4.my",
+        "bytes": 1068,
+        "sha256": "26264034cd3d5ebbd56bc3e109c881aeb410e8c809d5462d944a874bc2d3526d"
+      },
+      "admitted": true,
+      "emission": {
+        "command": [
+          "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/zig-out/bin/mylang",
+          "emit-qbe",
+          ".mylang-cache/goal110-calls-5dc31c3a-joins/form-4.my",
+          "--drop-step-checks",
+          "--drop-frame-checks"
+        ],
+        "exit": 0,
+        "stdout": {
+          "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-4-emission.stdout.log",
+          "bytes": 119429,
+          "sha256": "ae75689a75278dd64639cb0e76910c27a60851e02ef8ac48fc90c6ad4cc13040"
+        },
+        "stderr": {
+          "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-4-emission.stderr.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "variants": {
+        "accounted-qbe": {
+          "backend": "qbe",
+          "guest_mode": "ReleaseFast",
+          "build": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/zig-out/bin/mylang",
+              "build",
+              ".mylang-cache/goal110-calls-5dc31c3a-joins/form-4.my",
+              "--qbe",
+              "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/zig-out/bin/qbe",
+              "--backend",
+              "qbe",
+              "--mode",
+              "ReleaseFast",
+              "--step-accounting",
+              "--keep-symbols",
+              "--cache-dir=.mylang-cache/goal110-calls-5dc31c3a-joins/cache-accounted-qbe",
+              "-o",
+              ".mylang-cache/goal110-calls-5dc31c3a-joins/form-4-accounted-qbe"
+            ],
+            "exit": 0,
+            "stdout": {
+              "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-4-accounted-qbe-build.stdout.log",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "stderr": {
+              "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-4-accounted-qbe-build.stderr.log",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            }
+          },
+          "executable": {
+            "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-4-accounted-qbe",
+            "bytes": 1109712,
+            "sha256": "2c69799aee55d8891960d4d093492d6351997057cfd9ed34f0ce14a71fde3616"
+          },
+          "manifest": {
+            "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-4-accounted-qbe.qbe-manifest.json",
+            "bytes": 1419,
+            "sha256": "586bf100eadda2b4d912f814c606672e26c2f04de1426d37e6297528da387567"
+          },
+          "mode_probe": "R_STEP_LIMIT"
+        },
+        "fast-qbe": {
+          "backend": "qbe",
+          "guest_mode": "ReleaseFast",
+          "build": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/zig-out/bin/mylang",
+              "build",
+              ".mylang-cache/goal110-calls-5dc31c3a-joins/form-4.my",
+              "--qbe",
+              "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/zig-out/bin/qbe",
+              "--backend",
+              "qbe",
+              "--mode",
+              "ReleaseFast",
+              "--keep-symbols",
+              "--cache-dir=.mylang-cache/goal110-calls-5dc31c3a-joins/cache-fast-qbe",
+              "-o",
+              ".mylang-cache/goal110-calls-5dc31c3a-joins/form-4-fast-qbe"
+            ],
+            "exit": 0,
+            "stdout": {
+              "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-4-fast-qbe-build.stdout.log",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "stderr": {
+              "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-4-fast-qbe-build.stderr.log",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            }
+          },
+          "executable": {
+            "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-4-fast-qbe",
+            "bytes": 1107816,
+            "sha256": "5ed297ea9855532227aeb6b5c7bed3bcd3b7c204b701528b17a54b139c9e5353"
+          },
+          "manifest": {
+            "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-4-fast-qbe.qbe-manifest.json",
+            "bytes": 1409,
+            "sha256": "0143ab4b8b51c84c1c05661ffbce95ec772aaca79641149840a2d40ce2bae1c9"
+          },
+          "mode_probe": "R_NO_STEP_ACCOUNTING"
+        },
+        "fast-llvm": {
+          "backend": "llvm",
+          "guest_mode": "ReleaseFast",
+          "build": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/zig-out/bin/mylang",
+              "build",
+              ".mylang-cache/goal110-calls-5dc31c3a-joins/form-4.my",
+              "--release",
+              "--keep-symbols",
+              "--cache-dir=.mylang-cache/goal110-calls-5dc31c3a-joins/cache-fast-llvm",
+              "-o",
+              ".mylang-cache/goal110-calls-5dc31c3a-joins/form-4-fast-llvm"
+            ],
+            "exit": 0,
+            "stdout": {
+              "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-4-fast-llvm-build.stdout.log",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "stderr": {
+              "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-4-fast-llvm-build.stderr.log",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            }
+          },
+          "executable": {
+            "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-4-fast-llvm",
+            "bytes": 362664,
+            "sha256": "f0416c6fc9b3a428cc82c12d8b69106470bcc23287244fe17111566bacee3fe5"
+          },
+          "manifest": {
+            "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-4-fast-llvm.qbe-manifest.json",
+            "bytes": 1404,
+            "sha256": "f912fce920de35d43b57fade5216a7dee378975ee45137476af6f3df9175a5b1"
+          },
+          "mode_probe": "R_NO_STEP_ACCOUNTING"
+        }
+      },
+      "cases": [
+        {
+          "arguments": [
+            "2",
+            "0",
+            "0"
+          ],
+          "returncode": 0,
+          "stdout": "0\n0\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "2",
+            "0",
+            "1"
+          ],
+          "returncode": 0,
+          "stdout": "0\n0\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "2",
+            "0",
+            "2"
+          ],
+          "returncode": 0,
+          "stdout": "0\n0\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "2",
+            "3",
+            "0"
+          ],
+          "returncode": 24,
+          "stdout": "0\n1\n2\n24\n24\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "2",
+            "3",
+            "1"
+          ],
+          "returncode": 20,
+          "stdout": "0\n1\n2\n20\n20\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "2",
+            "3",
+            "2"
+          ],
+          "returncode": 16,
+          "stdout": "0\n1\n2\n16\n16\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "3",
+            "0",
+            "0"
+          ],
+          "returncode": 0,
+          "stdout": "0\n0\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "3",
+            "0",
+            "1"
+          ],
+          "returncode": 0,
+          "stdout": "0\n0\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "3",
+            "0",
+            "2"
+          ],
+          "returncode": 0,
+          "stdout": "0\n0\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "3",
+            "3",
+            "0"
+          ],
+          "returncode": 9,
+          "stdout": "0\n1\n2\n9\n9\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "3",
+            "3",
+            "1"
+          ],
+          "returncode": 13,
+          "stdout": "0\n1\n2\n13\n13\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "3",
+            "3",
+            "2"
+          ],
+          "returncode": 17,
+          "stdout": "0\n1\n2\n17\n17\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "99",
+            "0",
+            "0"
+          ],
+          "returncode": 0,
+          "stdout": "0\n0\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "99",
+            "0",
+            "1"
+          ],
+          "returncode": 0,
+          "stdout": "0\n0\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "99",
+            "0",
+            "2"
+          ],
+          "returncode": 0,
+          "stdout": "0\n0\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "99",
+            "3",
+            "0"
+          ],
+          "returncode": 21,
+          "stdout": "0\n1\n2\n21\n21\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "99",
+            "3",
+            "1"
+          ],
+          "returncode": 21,
+          "stdout": "0\n1\n2\n21\n21\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "99",
+            "3",
+            "2"
+          ],
+          "returncode": 21,
+          "stdout": "0\n1\n2\n21\n21\n",
+          "stderr": "",
+          "oracle_trap": ""
+        }
+      ]
+    },
+    {
+      "form": 5,
+      "condition": "kind == 2 or 1 // (seed - i) > 0",
+      "source": {
+        "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-5.my",
+        "bytes": 1062,
+        "sha256": "deb18af7f3b6858e98b0e05adb2caa5735e2a54762bf1ebb69fb9624d16a4f39"
+      },
+      "admitted": true,
+      "emission": {
+        "command": [
+          "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/zig-out/bin/mylang",
+          "emit-qbe",
+          ".mylang-cache/goal110-calls-5dc31c3a-joins/form-5.my",
+          "--drop-step-checks",
+          "--drop-frame-checks"
+        ],
+        "exit": 0,
+        "stdout": {
+          "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-5-emission.stdout.log",
+          "bytes": 119762,
+          "sha256": "704331bb47d4a6c351ae586ad5a42396b4de5a6526b520b78588fcebf6a64bac"
+        },
+        "stderr": {
+          "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-5-emission.stderr.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "variants": {
+        "accounted-qbe": {
+          "backend": "qbe",
+          "guest_mode": "ReleaseFast",
+          "build": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/zig-out/bin/mylang",
+              "build",
+              ".mylang-cache/goal110-calls-5dc31c3a-joins/form-5.my",
+              "--qbe",
+              "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/zig-out/bin/qbe",
+              "--backend",
+              "qbe",
+              "--mode",
+              "ReleaseFast",
+              "--step-accounting",
+              "--keep-symbols",
+              "--cache-dir=.mylang-cache/goal110-calls-5dc31c3a-joins/cache-accounted-qbe",
+              "-o",
+              ".mylang-cache/goal110-calls-5dc31c3a-joins/form-5-accounted-qbe"
+            ],
+            "exit": 0,
+            "stdout": {
+              "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-5-accounted-qbe-build.stdout.log",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "stderr": {
+              "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-5-accounted-qbe-build.stderr.log",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            }
+          },
+          "executable": {
+            "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-5-accounted-qbe",
+            "bytes": 1110320,
+            "sha256": "06cd905926f9aee9ba7d5e10bdd1b9fc29d4fe26a99c974ac33c3bdd3f299d1e"
+          },
+          "manifest": {
+            "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-5-accounted-qbe.qbe-manifest.json",
+            "bytes": 1419,
+            "sha256": "d1f653beb0d9ce5ffeca92d68d6c9c7dc48c4bea7b73f4b6e66327c3fda4f62a"
+          },
+          "mode_probe": "R_STEP_LIMIT"
+        },
+        "fast-qbe": {
+          "backend": "qbe",
+          "guest_mode": "ReleaseFast",
+          "build": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/zig-out/bin/mylang",
+              "build",
+              ".mylang-cache/goal110-calls-5dc31c3a-joins/form-5.my",
+              "--qbe",
+              "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/zig-out/bin/qbe",
+              "--backend",
+              "qbe",
+              "--mode",
+              "ReleaseFast",
+              "--keep-symbols",
+              "--cache-dir=.mylang-cache/goal110-calls-5dc31c3a-joins/cache-fast-qbe",
+              "-o",
+              ".mylang-cache/goal110-calls-5dc31c3a-joins/form-5-fast-qbe"
+            ],
+            "exit": 0,
+            "stdout": {
+              "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-5-fast-qbe-build.stdout.log",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "stderr": {
+              "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-5-fast-qbe-build.stderr.log",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            }
+          },
+          "executable": {
+            "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-5-fast-qbe",
+            "bytes": 1108296,
+            "sha256": "a83dd97ed147a5a9f6bde735a578c59f69cac15f78b6c6e6eaf6f75bf2ce4a1a"
+          },
+          "manifest": {
+            "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-5-fast-qbe.qbe-manifest.json",
+            "bytes": 1409,
+            "sha256": "dd864c583ca49e08c537b7bd10b4abd7e52bb6cab3e0eec963152fd2d4b30a22"
+          },
+          "mode_probe": "R_NO_STEP_ACCOUNTING"
+        },
+        "fast-llvm": {
+          "backend": "llvm",
+          "guest_mode": "ReleaseFast",
+          "build": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/zig-out/bin/mylang",
+              "build",
+              ".mylang-cache/goal110-calls-5dc31c3a-joins/form-5.my",
+              "--release",
+              "--keep-symbols",
+              "--cache-dir=.mylang-cache/goal110-calls-5dc31c3a-joins/cache-fast-llvm",
+              "-o",
+              ".mylang-cache/goal110-calls-5dc31c3a-joins/form-5-fast-llvm"
+            ],
+            "exit": 0,
+            "stdout": {
+              "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-5-fast-llvm-build.stdout.log",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "stderr": {
+              "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-5-fast-llvm-build.stderr.log",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            }
+          },
+          "executable": {
+            "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-5-fast-llvm",
+            "bytes": 362912,
+            "sha256": "e233a66fb8e4af5ed15e9c3d4d3681b8e7c9664ae94b9d92de54d100b52d24c4"
+          },
+          "manifest": {
+            "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-5-fast-llvm.qbe-manifest.json",
+            "bytes": 1404,
+            "sha256": "f59a93640b68efa34aa78d4269f018f5d9c8fa877e9bf73a0416f4b381de6cd3"
+          },
+          "mode_probe": "R_NO_STEP_ACCOUNTING"
+        }
+      },
+      "cases": [
+        {
+          "arguments": [
+            "2",
+            "0",
+            "0"
+          ],
+          "returncode": 0,
+          "stdout": "0\n0\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "2",
+            "0",
+            "1"
+          ],
+          "returncode": 0,
+          "stdout": "0\n0\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "2",
+            "0",
+            "2"
+          ],
+          "returncode": 0,
+          "stdout": "0\n0\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "2",
+            "3",
+            "0"
+          ],
+          "returncode": 12,
+          "stdout": "0\n1\n2\n12\n12\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "2",
+            "3",
+            "1"
+          ],
+          "returncode": 12,
+          "stdout": "0\n1\n2\n12\n12\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "2",
+            "3",
+            "2"
+          ],
+          "returncode": 12,
+          "stdout": "0\n1\n2\n12\n12\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "3",
+            "0",
+            "0"
+          ],
+          "returncode": 0,
+          "stdout": "0\n0\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "3",
+            "0",
+            "1"
+          ],
+          "returncode": 0,
+          "stdout": "0\n0\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "3",
+            "0",
+            "2"
+          ],
+          "returncode": 0,
+          "stdout": "0\n0\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "3",
+            "3",
+            "0"
+          ],
+          "returncode": 1,
+          "stdout": "0\n",
+          "stderr": "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/.mylang-cache/goal110-calls-5dc31c3a-joins/form-5.my:31:27: error[R_DIVISION_BY_ZERO]: native execution failed (floor_div: left 1, right 0)\n  in main at /home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/.mylang-cache/goal110-calls-5dc31c3a-joins/form-5.my:31:27\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"floor_div\",\"left\":1,\"right\":0}\n",
+          "oracle_trap": "R_DIVISION_BY_ZERO"
+        },
+        {
+          "arguments": [
+            "3",
+            "3",
+            "1"
+          ],
+          "returncode": 1,
+          "stdout": "0\n1\n",
+          "stderr": "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/.mylang-cache/goal110-calls-5dc31c3a-joins/form-5.my:31:27: error[R_DIVISION_BY_ZERO]: native execution failed (floor_div: left 1, right 0)\n  in main at /home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/.mylang-cache/goal110-calls-5dc31c3a-joins/form-5.my:31:27\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"floor_div\",\"left\":1,\"right\":0}\n",
+          "oracle_trap": "R_DIVISION_BY_ZERO"
+        },
+        {
+          "arguments": [
+            "3",
+            "3",
+            "2"
+          ],
+          "returncode": 1,
+          "stdout": "0\n1\n2\n",
+          "stderr": "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/.mylang-cache/goal110-calls-5dc31c3a-joins/form-5.my:31:27: error[R_DIVISION_BY_ZERO]: native execution failed (floor_div: left 1, right 0)\n  in main at /home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/.mylang-cache/goal110-calls-5dc31c3a-joins/form-5.my:31:27\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"floor_div\",\"left\":1,\"right\":0}\n",
+          "oracle_trap": "R_DIVISION_BY_ZERO"
+        },
+        {
+          "arguments": [
+            "99",
+            "0",
+            "0"
+          ],
+          "returncode": 0,
+          "stdout": "0\n0\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "99",
+            "0",
+            "1"
+          ],
+          "returncode": 0,
+          "stdout": "0\n0\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "99",
+            "0",
+            "2"
+          ],
+          "returncode": 0,
+          "stdout": "0\n0\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "99",
+            "3",
+            "0"
+          ],
+          "returncode": 1,
+          "stdout": "0\n",
+          "stderr": "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/.mylang-cache/goal110-calls-5dc31c3a-joins/form-5.my:31:27: error[R_DIVISION_BY_ZERO]: native execution failed (floor_div: left 1, right 0)\n  in main at /home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/.mylang-cache/goal110-calls-5dc31c3a-joins/form-5.my:31:27\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"floor_div\",\"left\":1,\"right\":0}\n",
+          "oracle_trap": "R_DIVISION_BY_ZERO"
+        },
+        {
+          "arguments": [
+            "99",
+            "3",
+            "1"
+          ],
+          "returncode": 1,
+          "stdout": "0\n1\n",
+          "stderr": "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/.mylang-cache/goal110-calls-5dc31c3a-joins/form-5.my:31:27: error[R_DIVISION_BY_ZERO]: native execution failed (floor_div: left 1, right 0)\n  in main at /home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/.mylang-cache/goal110-calls-5dc31c3a-joins/form-5.my:31:27\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"floor_div\",\"left\":1,\"right\":0}\n",
+          "oracle_trap": "R_DIVISION_BY_ZERO"
+        },
+        {
+          "arguments": [
+            "99",
+            "3",
+            "2"
+          ],
+          "returncode": 1,
+          "stdout": "0\n1\n2\n",
+          "stderr": "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/.mylang-cache/goal110-calls-5dc31c3a-joins/form-5.my:31:27: error[R_DIVISION_BY_ZERO]: native execution failed (floor_div: left 1, right 0)\n  in main at /home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/.mylang-cache/goal110-calls-5dc31c3a-joins/form-5.my:31:27\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"floor_div\",\"left\":1,\"right\":0}\n",
+          "oracle_trap": "R_DIVISION_BY_ZERO"
+        }
+      ]
+    },
+    {
+      "form": 6,
+      "condition": "(seed if i < 1 else kind) == 2",
+      "source": {
+        "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-6.my",
+        "bytes": 1060,
+        "sha256": "e4b8b5a450df887b07cf60d7899a826f7d78f1f6f801ed91b6fd6afab7117513"
+      },
+      "admitted": true,
+      "emission": {
+        "command": [
+          "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/zig-out/bin/mylang",
+          "emit-qbe",
+          ".mylang-cache/goal110-calls-5dc31c3a-joins/form-6.my",
+          "--drop-step-checks",
+          "--drop-frame-checks"
+        ],
+        "exit": 0,
+        "stdout": {
+          "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-6-emission.stdout.log",
+          "bytes": 118921,
+          "sha256": "319f61823d3f5d0c6e68d293318988e9de9594ef47c3c060acb66d1b2f9ea9d1"
+        },
+        "stderr": {
+          "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-6-emission.stderr.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "variants": {
+        "accounted-qbe": {
+          "backend": "qbe",
+          "guest_mode": "ReleaseFast",
+          "build": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/zig-out/bin/mylang",
+              "build",
+              ".mylang-cache/goal110-calls-5dc31c3a-joins/form-6.my",
+              "--qbe",
+              "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/zig-out/bin/qbe",
+              "--backend",
+              "qbe",
+              "--mode",
+              "ReleaseFast",
+              "--step-accounting",
+              "--keep-symbols",
+              "--cache-dir=.mylang-cache/goal110-calls-5dc31c3a-joins/cache-accounted-qbe",
+              "-o",
+              ".mylang-cache/goal110-calls-5dc31c3a-joins/form-6-accounted-qbe"
+            ],
+            "exit": 0,
+            "stdout": {
+              "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-6-accounted-qbe-build.stdout.log",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "stderr": {
+              "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-6-accounted-qbe-build.stderr.log",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            }
+          },
+          "executable": {
+            "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-6-accounted-qbe",
+            "bytes": 1109552,
+            "sha256": "6141d0f26ff0ef7c4ca8caef2a716701d910de3fcb97d59cc97f23ae374544e5"
+          },
+          "manifest": {
+            "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-6-accounted-qbe.qbe-manifest.json",
+            "bytes": 1419,
+            "sha256": "20ab8dfade65a9c7a1bf215429a00fbc5409957bcbf7d3a648ea42ec0eddf290"
+          },
+          "mode_probe": "R_STEP_LIMIT"
+        },
+        "fast-qbe": {
+          "backend": "qbe",
+          "guest_mode": "ReleaseFast",
+          "build": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/zig-out/bin/mylang",
+              "build",
+              ".mylang-cache/goal110-calls-5dc31c3a-joins/form-6.my",
+              "--qbe",
+              "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/zig-out/bin/qbe",
+              "--backend",
+              "qbe",
+              "--mode",
+              "ReleaseFast",
+              "--keep-symbols",
+              "--cache-dir=.mylang-cache/goal110-calls-5dc31c3a-joins/cache-fast-qbe",
+              "-o",
+              ".mylang-cache/goal110-calls-5dc31c3a-joins/form-6-fast-qbe"
+            ],
+            "exit": 0,
+            "stdout": {
+              "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-6-fast-qbe-build.stdout.log",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "stderr": {
+              "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-6-fast-qbe-build.stderr.log",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            }
+          },
+          "executable": {
+            "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-6-fast-qbe",
+            "bytes": 1107720,
+            "sha256": "9946bcb6c7cf74f411ece1bbe45a1bcc319976c44daa6963e1867e93ff7eba61"
+          },
+          "manifest": {
+            "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-6-fast-qbe.qbe-manifest.json",
+            "bytes": 1409,
+            "sha256": "d8cc1d5d5c85e46e32fbd971069dc4b6aedede28acc17935b695647e070752e4"
+          },
+          "mode_probe": "R_NO_STEP_ACCOUNTING"
+        },
+        "fast-llvm": {
+          "backend": "llvm",
+          "guest_mode": "ReleaseFast",
+          "build": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/zig-out/bin/mylang",
+              "build",
+              ".mylang-cache/goal110-calls-5dc31c3a-joins/form-6.my",
+              "--release",
+              "--keep-symbols",
+              "--cache-dir=.mylang-cache/goal110-calls-5dc31c3a-joins/cache-fast-llvm",
+              "-o",
+              ".mylang-cache/goal110-calls-5dc31c3a-joins/form-6-fast-llvm"
+            ],
+            "exit": 0,
+            "stdout": {
+              "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-6-fast-llvm-build.stdout.log",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "stderr": {
+              "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-6-fast-llvm-build.stderr.log",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            }
+          },
+          "executable": {
+            "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-6-fast-llvm",
+            "bytes": 363976,
+            "sha256": "cd5d602bf47f851f7b73a218695e3eb17c8322d06d832b4d7dd6f4ee6533ec0e"
+          },
+          "manifest": {
+            "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-6-fast-llvm.qbe-manifest.json",
+            "bytes": 1404,
+            "sha256": "ea1445fd3596fb054f488956b45ccf98165cd54da89ad28044810e8972576c1b"
+          },
+          "mode_probe": "R_NO_STEP_ACCOUNTING"
+        }
+      },
+      "cases": [
+        {
+          "arguments": [
+            "2",
+            "0",
+            "0"
+          ],
+          "returncode": 0,
+          "stdout": "0\n0\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "2",
+            "0",
+            "1"
+          ],
+          "returncode": 0,
+          "stdout": "0\n0\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "2",
+            "0",
+            "2"
+          ],
+          "returncode": 0,
+          "stdout": "0\n0\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "2",
+            "3",
+            "0"
+          ],
+          "returncode": 16,
+          "stdout": "0\n1\n2\n16\n16\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "2",
+            "3",
+            "1"
+          ],
+          "returncode": 16,
+          "stdout": "0\n1\n2\n16\n16\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "2",
+            "3",
+            "2"
+          ],
+          "returncode": 12,
+          "stdout": "0\n1\n2\n12\n12\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "3",
+            "0",
+            "0"
+          ],
+          "returncode": 0,
+          "stdout": "0\n0\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "3",
+            "0",
+            "1"
+          ],
+          "returncode": 0,
+          "stdout": "0\n0\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "3",
+            "0",
+            "2"
+          ],
+          "returncode": 0,
+          "stdout": "0\n0\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "3",
+            "3",
+            "0"
+          ],
+          "returncode": 21,
+          "stdout": "0\n1\n2\n21\n21\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "3",
+            "3",
+            "1"
+          ],
+          "returncode": 21,
+          "stdout": "0\n1\n2\n21\n21\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "3",
+            "3",
+            "2"
+          ],
+          "returncode": 17,
+          "stdout": "0\n1\n2\n17\n17\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "99",
+            "0",
+            "0"
+          ],
+          "returncode": 0,
+          "stdout": "0\n0\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "99",
+            "0",
+            "1"
+          ],
+          "returncode": 0,
+          "stdout": "0\n0\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "99",
+            "0",
+            "2"
+          ],
+          "returncode": 0,
+          "stdout": "0\n0\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "99",
+            "3",
+            "0"
+          ],
+          "returncode": 21,
+          "stdout": "0\n1\n2\n21\n21\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "99",
+            "3",
+            "1"
+          ],
+          "returncode": 21,
+          "stdout": "0\n1\n2\n21\n21\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "99",
+            "3",
+            "2"
+          ],
+          "returncode": 17,
+          "stdout": "0\n1\n2\n17\n17\n",
+          "stderr": "",
+          "oracle_trap": ""
+        }
+      ]
+    },
+    {
+      "form": 7,
+      "condition": "i < seed or kind == 2",
+      "source": {
+        "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-7.my",
+        "bytes": 1051,
+        "sha256": "a9e7425ea55d2db4bb23492544df72619dbcaa619cefeaba8c07f452eb79fd97"
+      },
+      "admitted": true,
+      "emission": {
+        "command": [
+          "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/zig-out/bin/mylang",
+          "emit-qbe",
+          ".mylang-cache/goal110-calls-5dc31c3a-joins/form-7.my",
+          "--drop-step-checks",
+          "--drop-frame-checks"
+        ],
+        "exit": 0,
+        "stdout": {
+          "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-7-emission.stdout.log",
+          "bytes": 118291,
+          "sha256": "a6b2ac8d3c0349d7eeb8f0d664ba51bb9c2d6567a39f0c45fe54c83f175f061c"
+        },
+        "stderr": {
+          "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-7-emission.stderr.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "variants": {
+        "accounted-qbe": {
+          "backend": "qbe",
+          "guest_mode": "ReleaseFast",
+          "build": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/zig-out/bin/mylang",
+              "build",
+              ".mylang-cache/goal110-calls-5dc31c3a-joins/form-7.my",
+              "--qbe",
+              "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/zig-out/bin/qbe",
+              "--backend",
+              "qbe",
+              "--mode",
+              "ReleaseFast",
+              "--step-accounting",
+              "--keep-symbols",
+              "--cache-dir=.mylang-cache/goal110-calls-5dc31c3a-joins/cache-accounted-qbe",
+              "-o",
+              ".mylang-cache/goal110-calls-5dc31c3a-joins/form-7-accounted-qbe"
+            ],
+            "exit": 0,
+            "stdout": {
+              "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-7-accounted-qbe-build.stdout.log",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "stderr": {
+              "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-7-accounted-qbe-build.stderr.log",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            }
+          },
+          "executable": {
+            "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-7-accounted-qbe",
+            "bytes": 1109376,
+            "sha256": "a144d123a3050bad48827fad1c34430ab197ad7e0db37333b09011f6551b111b"
+          },
+          "manifest": {
+            "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-7-accounted-qbe.qbe-manifest.json",
+            "bytes": 1419,
+            "sha256": "be79d789936dbce50da9cba6313964d26eed863e8d626dcd748aa8bb5f3812dc"
+          },
+          "mode_probe": "R_STEP_LIMIT"
+        },
+        "fast-qbe": {
+          "backend": "qbe",
+          "guest_mode": "ReleaseFast",
+          "build": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/zig-out/bin/mylang",
+              "build",
+              ".mylang-cache/goal110-calls-5dc31c3a-joins/form-7.my",
+              "--qbe",
+              "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/zig-out/bin/qbe",
+              "--backend",
+              "qbe",
+              "--mode",
+              "ReleaseFast",
+              "--keep-symbols",
+              "--cache-dir=.mylang-cache/goal110-calls-5dc31c3a-joins/cache-fast-qbe",
+              "-o",
+              ".mylang-cache/goal110-calls-5dc31c3a-joins/form-7-fast-qbe"
+            ],
+            "exit": 0,
+            "stdout": {
+              "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-7-fast-qbe-build.stdout.log",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "stderr": {
+              "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-7-fast-qbe-build.stderr.log",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            }
+          },
+          "executable": {
+            "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-7-fast-qbe",
+            "bytes": 1107608,
+            "sha256": "de8bf578165d22b39a0d4f5952a8fd96066e6b63cafaad2c46905b7a9a5a85e0"
+          },
+          "manifest": {
+            "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-7-fast-qbe.qbe-manifest.json",
+            "bytes": 1409,
+            "sha256": "851784437c00181ac1d3a8cc9ff606f9638bd9cb9d24344a0a0107c42afd2c9a"
+          },
+          "mode_probe": "R_NO_STEP_ACCOUNTING"
+        },
+        "fast-llvm": {
+          "backend": "llvm",
+          "guest_mode": "ReleaseFast",
+          "build": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/zig-out/bin/mylang",
+              "build",
+              ".mylang-cache/goal110-calls-5dc31c3a-joins/form-7.my",
+              "--release",
+              "--keep-symbols",
+              "--cache-dir=.mylang-cache/goal110-calls-5dc31c3a-joins/cache-fast-llvm",
+              "-o",
+              ".mylang-cache/goal110-calls-5dc31c3a-joins/form-7-fast-llvm"
+            ],
+            "exit": 0,
+            "stdout": {
+              "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-7-fast-llvm-build.stdout.log",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "stderr": {
+              "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-7-fast-llvm-build.stderr.log",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            }
+          },
+          "executable": {
+            "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-7-fast-llvm",
+            "bytes": 362448,
+            "sha256": "6737f1b209d2c617f709bfc9e72ff8c1b774c9f9022d931f82e361e65ccfdf39"
+          },
+          "manifest": {
+            "path": ".mylang-cache/goal110-calls-5dc31c3a-joins/form-7-fast-llvm.qbe-manifest.json",
+            "bytes": 1404,
+            "sha256": "cecc920bfe07e54c58ceb2a7d953de2cb56131d7f3e07602ee7726e3c21be502"
+          },
+          "mode_probe": "R_NO_STEP_ACCOUNTING"
+        }
+      },
+      "cases": [
+        {
+          "arguments": [
+            "2",
+            "0",
+            "0"
+          ],
+          "returncode": 0,
+          "stdout": "0\n0\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "2",
+            "0",
+            "1"
+          ],
+          "returncode": 0,
+          "stdout": "0\n0\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "2",
+            "0",
+            "2"
+          ],
+          "returncode": 0,
+          "stdout": "0\n0\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "2",
+            "3",
+            "0"
+          ],
+          "returncode": 12,
+          "stdout": "0\n1\n2\n12\n12\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "2",
+            "3",
+            "1"
+          ],
+          "returncode": 12,
+          "stdout": "0\n1\n2\n12\n12\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "2",
+            "3",
+            "2"
+          ],
+          "returncode": 12,
+          "stdout": "0\n1\n2\n12\n12\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "3",
+            "0",
+            "0"
+          ],
+          "returncode": 0,
+          "stdout": "0\n0\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "3",
+            "0",
+            "1"
+          ],
+          "returncode": 0,
+          "stdout": "0\n0\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "3",
+            "0",
+            "2"
+          ],
+          "returncode": 0,
+          "stdout": "0\n0\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "3",
+            "3",
+            "0"
+          ],
+          "returncode": 21,
+          "stdout": "0\n1\n2\n21\n21\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "3",
+            "3",
+            "1"
+          ],
+          "returncode": 17,
+          "stdout": "0\n1\n2\n17\n17\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "3",
+            "3",
+            "2"
+          ],
+          "returncode": 13,
+          "stdout": "0\n1\n2\n13\n13\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "99",
+            "0",
+            "0"
+          ],
+          "returncode": 0,
+          "stdout": "0\n0\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "99",
+            "0",
+            "1"
+          ],
+          "returncode": 0,
+          "stdout": "0\n0\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "99",
+            "0",
+            "2"
+          ],
+          "returncode": 0,
+          "stdout": "0\n0\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "99",
+            "3",
+            "0"
+          ],
+          "returncode": 21,
+          "stdout": "0\n1\n2\n21\n21\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "99",
+            "3",
+            "1"
+          ],
+          "returncode": 17,
+          "stdout": "0\n1\n2\n17\n17\n",
+          "stderr": "",
+          "oracle_trap": ""
+        },
+        {
+          "arguments": [
+            "99",
+            "3",
+            "2"
+          ],
+          "returncode": 13,
+          "stdout": "0\n1\n2\n13\n13\n",
+          "stderr": "",
+          "oracle_trap": ""
+        }
+      ]
+    }
+  ]
+}

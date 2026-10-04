@@ -1,0 +1,30 @@
+{
+  "compiler_sha256": "0994aff6dab29a2dd57c2f5a51117531751afd0483ee299ed7758d20c2eec95d",
+  "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/.task-tmp/install/bin/mylang",
+    "emit-qbe",
+    "experiments/runtime-goal110-calls-20261004/compute-inspection.my",
+    "--drop-step-checks",
+    "--drop-frame-checks"
+  ],
+  "returncode": 0,
+  "compiler_host_mode": "Debug",
+  "source_patch_sha256": "c495c653026f1cb7e71217c77f7654bad9e579988b1f033b9b8c711448f15dc6",
+  "main_il_bytes": 693099,
+  "main_il_sha256": "70f9681e3218814cfdab356c2ee7af5642ce5eb711045e589568bc82dcaf6c6f",
+  "marker": [
+    " # QBE-LOOP-UNSWITCH-1 553 literals=10 source-literals=11 copied-bytes=182385"
+  ],
+  "guards": [
+    " %usflag553_0 =l ceql %usk553, 0",
+    " %usflag553_1 =l ceql %usk553, 1",
+    " %usflag553_6 =l ceql %usk553, 7",
+    " %usflag553_5 =l ceql %usk553, 6",
+    " %usflag553_7 =l ceql %usk553, 8",
+    " %usflag553_3 =l ceql %usk553, 4",
+    " %usflag553_9 =l ceql %usk553, 10",
+    " %usflag553_8 =l ceql %usk553, 9",
+    " %usflag553_10 =l ceql %usk553, 11",
+    " %usflag553_4 =l ceql %usk553, 5"
+  ]
+}

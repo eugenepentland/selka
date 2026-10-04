@@ -1,0 +1,2 @@
+branch_predictable small {'llvm': {'candidate_to_before': 1.366106848500041, 'paired_bootstrap_95_interval': [1.3427479089941543, 1.4024775310791735]}, 'qbe': {'candidate_to_before': 0.6463477985447885, 'paired_bootstrap_95_interval': [0.6358597082879283, 0.6479902668707934]}}
+branch_predictable large {'llvm': {'candidate_to_before': 1.6405164978562248, 'paired_bootstrap_95_interval': [1.2852366479986803, 1.6668916512657836]}, 'qbe': {'candidate_to_before': 0.6302872262266149, 'paired_bootstrap_95_interval': [0.6291311638989568, 0.6341483750939544]}}

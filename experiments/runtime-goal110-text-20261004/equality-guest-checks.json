@@ -1,0 +1,1167 @@
+{
+  "status": "passed",
+  "checks": [
+    {
+      "backend": "llvm",
+      "input": [
+        "bytes_scan",
+        "2",
+        "7",
+        "19"
+      ],
+      "checksum": 333
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "bytes_scan",
+        "17",
+        "7",
+        "19"
+      ],
+      "checksum": 14099
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "bytes_scan",
+        "64",
+        "7",
+        "19"
+      ],
+      "checksum": 55776
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "string_equal",
+        "2",
+        "7",
+        "19"
+      ],
+      "checksum": 4
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "string_equal",
+        "17",
+        "7",
+        "19"
+      ],
+      "checksum": 4
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "string_equal",
+        "64",
+        "7",
+        "19"
+      ],
+      "checksum": 4
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "string_search",
+        "2",
+        "7",
+        "19"
+      ],
+      "checksum": 34
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "string_search",
+        "17",
+        "7",
+        "19"
+      ],
+      "checksum": 94
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "string_search",
+        "64",
+        "7",
+        "19"
+      ],
+      "checksum": 282
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "string_split",
+        "2",
+        "7",
+        "19"
+      ],
+      "checksum": 5712
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "string_split",
+        "17",
+        "7",
+        "19"
+      ],
+      "checksum": 50820
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "string_split",
+        "64",
+        "7",
+        "19"
+      ],
+      "checksum": 194572
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "string_join",
+        "2",
+        "7",
+        "19"
+      ],
+      "checksum": 6461
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "string_join",
+        "17",
+        "7",
+        "19"
+      ],
+      "checksum": 63539
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "string_join",
+        "64",
+        "7",
+        "19"
+      ],
+      "checksum": 244797
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "int_parse",
+        "2",
+        "7",
+        "19"
+      ],
+      "checksum": 999999440
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "int_parse",
+        "17",
+        "7",
+        "19"
+      ],
+      "checksum": 1562
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "int_parse",
+        "64",
+        "7",
+        "19"
+      ],
+      "checksum": 291
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "int_format",
+        "2",
+        "7",
+        "19"
+      ],
+      "checksum": 1098
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "int_format",
+        "17",
+        "7",
+        "19"
+      ],
+      "checksum": 1265
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "int_format",
+        "64",
+        "7",
+        "19"
+      ],
+      "checksum": 1572
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "word_count",
+        "2",
+        "7",
+        "19"
+      ],
+      "checksum": 10538
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "word_count",
+        "17",
+        "7",
+        "19"
+      ],
+      "checksum": 242812
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "word_count",
+        "64",
+        "7",
+        "19"
+      ],
+      "checksum": 3049738
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "csv_aggregate",
+        "2",
+        "7",
+        "19"
+      ],
+      "checksum": 10948
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "csv_aggregate",
+        "17",
+        "7",
+        "19"
+      ],
+      "checksum": 141050
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "csv_aggregate",
+        "64",
+        "7",
+        "19"
+      ],
+      "checksum": 794367
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "json_transform",
+        "2",
+        "7",
+        "19"
+      ],
+      "checksum": 53298
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "json_transform",
+        "17",
+        "7",
+        "19"
+      ],
+      "checksum": 320165
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "json_transform",
+        "64",
+        "7",
+        "19"
+      ],
+      "checksum": 1158724
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "string_equal",
+        "3",
+        "1",
+        "1"
+      ],
+      "checksum": 0
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "string_equal",
+        "3",
+        "11",
+        "37"
+      ],
+      "checksum": 5
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "string_equal",
+        "7",
+        "1",
+        "1"
+      ],
+      "checksum": 0
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "string_equal",
+        "7",
+        "11",
+        "37"
+      ],
+      "checksum": 5
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "string_equal",
+        "8",
+        "1",
+        "1"
+      ],
+      "checksum": 0
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "string_equal",
+        "8",
+        "11",
+        "37"
+      ],
+      "checksum": 5
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "string_equal",
+        "9",
+        "1",
+        "1"
+      ],
+      "checksum": 0
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "string_equal",
+        "9",
+        "11",
+        "37"
+      ],
+      "checksum": 5
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "string_equal",
+        "15",
+        "1",
+        "1"
+      ],
+      "checksum": 0
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "string_equal",
+        "15",
+        "11",
+        "37"
+      ],
+      "checksum": 5
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "string_equal",
+        "16",
+        "1",
+        "1"
+      ],
+      "checksum": 0
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "string_equal",
+        "16",
+        "11",
+        "37"
+      ],
+      "checksum": 5
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "string_equal",
+        "31",
+        "1",
+        "1"
+      ],
+      "checksum": 0
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "string_equal",
+        "31",
+        "11",
+        "37"
+      ],
+      "checksum": 5
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "string_equal",
+        "32",
+        "1",
+        "1"
+      ],
+      "checksum": 0
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "string_equal",
+        "32",
+        "11",
+        "37"
+      ],
+      "checksum": 5
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "string_equal",
+        "33",
+        "1",
+        "1"
+      ],
+      "checksum": 0
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "string_equal",
+        "33",
+        "11",
+        "37"
+      ],
+      "checksum": 5
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "string_equal",
+        "63",
+        "1",
+        "1"
+      ],
+      "checksum": 0
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "string_equal",
+        "63",
+        "11",
+        "37"
+      ],
+      "checksum": 5
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "string_equal",
+        "65",
+        "1",
+        "1"
+      ],
+      "checksum": 0
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "string_equal",
+        "65",
+        "11",
+        "37"
+      ],
+      "checksum": 5
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "string_equal",
+        "257",
+        "1",
+        "1"
+      ],
+      "checksum": 0
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "string_equal",
+        "257",
+        "11",
+        "37"
+      ],
+      "checksum": 5
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "string_equal",
+        "4096",
+        "1",
+        "1"
+      ],
+      "checksum": 0
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "string_equal",
+        "4096",
+        "11",
+        "37"
+      ],
+      "checksum": 5
+    },
+    {
+      "backend": "llvm",
+      "control": "--max-steps=1",
+      "error": "R_NO_STEP_ACCOUNTING"
+    },
+    {
+      "backend": "llvm",
+      "control": "--max-frames=1",
+      "error": "R_NO_FRAME_ACCOUNTING"
+    },
+    {
+      "backend": "llvm",
+      "control": "MYLANG_MEMORY_LIMIT=1",
+      "error": "R_MEMORY_BUDGET"
+    },
+    {
+      "backend": "llvm",
+      "binary": "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-20261004/.mylang-cache/goal110-text/equality-text-llvm",
+      "sha256": "6d3be9fd536d4fa460190ba7ed6dc0a506048ce8f7215959120b6f4369406e42",
+      "manifest_sha256": "4dd8f7c521e63a67c2de513ed6c7b4952343e1aa6a0a47f7c4f7901805faa04a"
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "bytes_scan",
+        "2",
+        "7",
+        "19"
+      ],
+      "checksum": 333
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "bytes_scan",
+        "17",
+        "7",
+        "19"
+      ],
+      "checksum": 14099
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "bytes_scan",
+        "64",
+        "7",
+        "19"
+      ],
+      "checksum": 55776
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "string_equal",
+        "2",
+        "7",
+        "19"
+      ],
+      "checksum": 4
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "string_equal",
+        "17",
+        "7",
+        "19"
+      ],
+      "checksum": 4
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "string_equal",
+        "64",
+        "7",
+        "19"
+      ],
+      "checksum": 4
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "string_search",
+        "2",
+        "7",
+        "19"
+      ],
+      "checksum": 34
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "string_search",
+        "17",
+        "7",
+        "19"
+      ],
+      "checksum": 94
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "string_search",
+        "64",
+        "7",
+        "19"
+      ],
+      "checksum": 282
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "string_split",
+        "2",
+        "7",
+        "19"
+      ],
+      "checksum": 5712
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "string_split",
+        "17",
+        "7",
+        "19"
+      ],
+      "checksum": 50820
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "string_split",
+        "64",
+        "7",
+        "19"
+      ],
+      "checksum": 194572
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "string_join",
+        "2",
+        "7",
+        "19"
+      ],
+      "checksum": 6461
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "string_join",
+        "17",
+        "7",
+        "19"
+      ],
+      "checksum": 63539
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "string_join",
+        "64",
+        "7",
+        "19"
+      ],
+      "checksum": 244797
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "int_parse",
+        "2",
+        "7",
+        "19"
+      ],
+      "checksum": 999999440
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "int_parse",
+        "17",
+        "7",
+        "19"
+      ],
+      "checksum": 1562
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "int_parse",
+        "64",
+        "7",
+        "19"
+      ],
+      "checksum": 291
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "int_format",
+        "2",
+        "7",
+        "19"
+      ],
+      "checksum": 1098
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "int_format",
+        "17",
+        "7",
+        "19"
+      ],
+      "checksum": 1265
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "int_format",
+        "64",
+        "7",
+        "19"
+      ],
+      "checksum": 1572
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "word_count",
+        "2",
+        "7",
+        "19"
+      ],
+      "checksum": 10538
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "word_count",
+        "17",
+        "7",
+        "19"
+      ],
+      "checksum": 242812
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "word_count",
+        "64",
+        "7",
+        "19"
+      ],
+      "checksum": 3049738
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "csv_aggregate",
+        "2",
+        "7",
+        "19"
+      ],
+      "checksum": 10948
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "csv_aggregate",
+        "17",
+        "7",
+        "19"
+      ],
+      "checksum": 141050
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "csv_aggregate",
+        "64",
+        "7",
+        "19"
+      ],
+      "checksum": 794367
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "json_transform",
+        "2",
+        "7",
+        "19"
+      ],
+      "checksum": 53298
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "json_transform",
+        "17",
+        "7",
+        "19"
+      ],
+      "checksum": 320165
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "json_transform",
+        "64",
+        "7",
+        "19"
+      ],
+      "checksum": 1158724
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "string_equal",
+        "3",
+        "1",
+        "1"
+      ],
+      "checksum": 0
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "string_equal",
+        "3",
+        "11",
+        "37"
+      ],
+      "checksum": 5
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "string_equal",
+        "7",
+        "1",
+        "1"
+      ],
+      "checksum": 0
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "string_equal",
+        "7",
+        "11",
+        "37"
+      ],
+      "checksum": 5
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "string_equal",
+        "8",
+        "1",
+        "1"
+      ],
+      "checksum": 0
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "string_equal",
+        "8",
+        "11",
+        "37"
+      ],
+      "checksum": 5
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "string_equal",
+        "9",
+        "1",
+        "1"
+      ],
+      "checksum": 0
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "string_equal",
+        "9",
+        "11",
+        "37"
+      ],
+      "checksum": 5
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "string_equal",
+        "15",
+        "1",
+        "1"
+      ],
+      "checksum": 0
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "string_equal",
+        "15",
+        "11",
+        "37"
+      ],
+      "checksum": 5
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "string_equal",
+        "16",
+        "1",
+        "1"
+      ],
+      "checksum": 0
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "string_equal",
+        "16",
+        "11",
+        "37"
+      ],
+      "checksum": 5
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "string_equal",
+        "31",
+        "1",
+        "1"
+      ],
+      "checksum": 0
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "string_equal",
+        "31",
+        "11",
+        "37"
+      ],
+      "checksum": 5
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "string_equal",
+        "32",
+        "1",
+        "1"
+      ],
+      "checksum": 0
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "string_equal",
+        "32",
+        "11",
+        "37"
+      ],
+      "checksum": 5
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "string_equal",
+        "33",
+        "1",
+        "1"
+      ],
+      "checksum": 0
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "string_equal",
+        "33",
+        "11",
+        "37"
+      ],
+      "checksum": 5
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "string_equal",
+        "63",
+        "1",
+        "1"
+      ],
+      "checksum": 0
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "string_equal",
+        "63",
+        "11",
+        "37"
+      ],
+      "checksum": 5
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "string_equal",
+        "65",
+        "1",
+        "1"
+      ],
+      "checksum": 0
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "string_equal",
+        "65",
+        "11",
+        "37"
+      ],
+      "checksum": 5
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "string_equal",
+        "257",
+        "1",
+        "1"
+      ],
+      "checksum": 0
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "string_equal",
+        "257",
+        "11",
+        "37"
+      ],
+      "checksum": 5
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "string_equal",
+        "4096",
+        "1",
+        "1"
+      ],
+      "checksum": 0
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "string_equal",
+        "4096",
+        "11",
+        "37"
+      ],
+      "checksum": 5
+    },
+    {
+      "backend": "qbe",
+      "control": "--max-steps=1",
+      "error": "R_NO_STEP_ACCOUNTING"
+    },
+    {
+      "backend": "qbe",
+      "control": "--max-frames=1",
+      "error": "R_NO_FRAME_ACCOUNTING"
+    },
+    {
+      "backend": "qbe",
+      "control": "MYLANG_MEMORY_LIMIT=1",
+      "error": "R_MEMORY_BUDGET"
+    },
+    {
+      "backend": "qbe",
+      "binary": "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-20261004/.mylang-cache/goal110-text/equality-text-qbe",
+      "sha256": "bfc2903368d84b5b28cc4291cc80014a349aba5c980c649c234c90cc3bad6bae",
+      "manifest_sha256": "a40b8e69987a5d29d195e05b66df4c67a8f6b7908a0c8073454cc151b9d5d03b"
+    }
+  ]
+}

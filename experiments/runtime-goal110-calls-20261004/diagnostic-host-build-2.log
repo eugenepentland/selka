@@ -1,0 +1,30 @@
+guardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source 1b6c13222675)
+guardian: diff-scoped vs 1fd1d566793dcae92449d937aca595c55ee318c8: 65/753 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 20 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 7 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 1298 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 1 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 1/88 failed (debug-print-ban) — diff-scoped vs 1fd1d566793dcae92449d937aca595c55ee318c8, 65 file(s) in scope
+guardian: failures grouped by check (1):
+  debug-print-ban (3 findings)
+    - src/qbe_loop_unswitch_text.zig:20: std.log.warn reference outside allowed paths
+      fix: route through reporter.print/detail, or alias once at file scope and use the alias.
+    - src/qbe_loop_unswitch_text.zig:42: std.log.warn reference outside allowed paths
+    - src/qbe_loop_unswitch.zig:39: std.log.warn reference outside allowed paths
+  caution: zig-out binaries predate this failed run (installs are gated on green) — rebuild green before running them
+install
++- run ../guardian-zig/zig-out/bin/guardian-check failure
+error: process exited with code 1
+failed command: ../guardian-zig/zig-out/bin/guardian-check all . --quiet
+
+Build Summary: 6/12 steps succeeded (1 failed)
+install transitive failure
++- install mylang transitive failure
+|  +- run ../guardian-zig/zig-out/bin/guardian-check failure
++- install qbe transitive failure
+|  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
++- install generated/ transitive failure
+|  +- run exe mylang (mylang-runtime) transitive failure
+|     +- install mylang (+2 more reused dependencies)
++- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+

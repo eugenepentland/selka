@@ -1,0 +1,57 @@
+{
+  "schema": "mylang-goal110-loop-subset-independent-review-v1",
+  "reviewed_utc": "2026-10-04T01:37:51.027589+00:00",
+  "candidate_revision": "5dc31c3af5114938fe1c92fc72941efd0b3074c3",
+  "candidate_file_sha256": {
+    "SPEC.md": "153452799ba15c88bf89c52ac6d858d3a3423e3c30fceb0f9c8ef27cd4847f36",
+    "src/qbe_loop_unswitch.zig": "dd4808d28e70895dd26a37078b72996d35743e3031b6b282559d60973e9aa9c0",
+    "src/qbe_loop_unswitch_model.zig": "e38ac99441f37b160c17bb0072ff83c4be83b79d63349e383c46536a3dd416a6",
+    "src/qbe_loop_unswitch_text.zig": "06875a7232fa485935373601ab2eb5056da050d0ebef2d0a1d3ed1a4f0a14fa6",
+    "src/qbe_loop_unswitch_test.zig": "caeed0788f143a2720b88b551b195eb67b0444722cc8ac73c05c4104f9e1c804"
+  },
+  "static_findings": "No blocking semantic or ownership defect found; two test gaps identified and resolved before stable review.",
+  "independent_tests": {
+    "kind": "standalone failure injection of exact committed native text pass/model, existing fixture/certificate, and actual Predicate enum only",
+    "command": [
+      "scripts/build-slot.sh",
+      "build",
+      "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "test",
+      ".mylang-cache/goal110-independent-review/allocation_review.zig"
+    ],
+    "cwd": "/home/epentland/ai/canopy/mylang-worktrees/goal110-reporting-20261004",
+    "exit_status": 0,
+    "passed": 2,
+    "environment": {
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/goal110-reporting-20261004/.mylang-cache/goal110-independent-review",
+      "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-worktrees/goal110-reporting-20261004/.mylang-cache/goal110-independent-review/zig-local",
+      "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-worktrees/goal110-reporting-20261004/.mylang-cache/goal110-independent-review/zig-global"
+    },
+    "artifacts": {
+      "allocation_review.zig": "677441cb5b5af1def3ba02692de9858c2cfcea2cfd8ea666b23423a01b0f8eb9",
+      "qbe_loop_unswitch_text.zig": "06875a7232fa485935373601ab2eb5056da050d0ebef2d0a1d3ed1a4f0a14fa6",
+      "qbe_loop_unswitch_model.zig": "e38ac99441f37b160c17bb0072ff83c4be83b79d63349e383c46536a3dd416a6",
+      "bytecode.zig": "44baa67ea44990b9932619f7fab467972ad9b32b71dc2a5b5edd93b836b6fb9e",
+      "allocation-tests.log": "afd89d570498b4b9cedfce66f7607a25b77c79889da9ff10d03fef2476e35812"
+    },
+    "archive_sha256": "8a644557980a609f7781ace9c851a7efe4beef3d124c58a175261a161bbfb5c6",
+    "zig_sha256": "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f"
+  },
+  "implementation_agent_native_tests": {
+    "log_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/experiments/runtime-goal110-calls-20261004/subset-tests-final.log",
+    "log_sha256": "205624c0e148ec0f7feed62a22ba494bd2e228a2d4feab3e9876a512c3bb4b90",
+    "guardian_test_result": {
+      "passed": 17,
+      "failed": 0,
+      "skipped": 0
+    },
+    "reported_command_exit_status": 0,
+    "independently_executed": false,
+    "limitation": "The inspected log ends in a misleading failed-command diagnostic despite Guardian PASS; command exit0 is reported by the implementation agent."
+  },
+  "limitations": [
+    "Static review and component allocator tests do not replace candidate LLVM guest holdouts and repository correctness gates.",
+    "No benchmark timings, new campaign confirmations, or performance improvement claims are supplied by this review.",
+    "All bounded copies are materialized before admission, so compiler memory/work can increase relative to early all-or-nothing refusal; compile cost is not measured here."
+  ]
+}

@@ -1,0 +1,1851 @@
+{
+  "kind": "untimed-loop-copy-build-static-qualification",
+  "started_utc": "2026-10-04T01:36:59.635303+00:00",
+  "source_revision": "5dc31c3af5114938fe1c92fc72941efd0b3074c3",
+  "compiler": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/zig-out/bin/mylang",
+    "bytes": 217362442,
+    "sha256": "0994aff6dab29a2dd57c2f5a51117531751afd0483ee299ed7758d20c2eec95d"
+  },
+  "source": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/benchmarks/runtime/expanded/compute/main.my",
+    "bytes": 5525,
+    "sha256": "d0abe8dea7693c5c0c17f871d631264721f47b8c4cd35f76f865ef68499a02e9"
+  },
+  "clock": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-harness-20261003/.mylang-cache/runtime-candidate-730a86e6-releasefast/runner/native_clock.o",
+    "bytes": 1840,
+    "sha256": "d4f78b33801beaed2d1f789b184785731ed69a1f88f777f84c25796303f4658f"
+  },
+  "runner": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/experiments/runtime-goal110-calls-20261004/build-and-check.py",
+    "bytes": 4704,
+    "sha256": "31e0d071c3ceda8f6c1e2fde9cbb15a7203cda6be4c6736a1bd26022456099a4"
+  },
+  "host_mode": "Debug",
+  "guest_mode": "ReleaseFast",
+  "builds": [
+    {
+      "backend": "llvm",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/zig-out/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/benchmarks/runtime/expanded/compute/main.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/.mylang-cache/goal110-calls-5dc31c3a-guests/compute-my-llvm",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/.mylang-cache/goal110-calls-5dc31c3a-guests/mycache",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-harness-20261003/.mylang-cache/runtime-candidate-730a86e6-releasefast/runner/native_clock.o",
+        "--qbe",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/zig-out/bin/qbe",
+        "--mode",
+        "ReleaseFast",
+        "--backend",
+        "llvm",
+        "--keep-symbols",
+        "--llvm-opt",
+        "3",
+        "--lto"
+      ],
+      "status": 0,
+      "binary": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/.mylang-cache/goal110-calls-5dc31c3a-guests/compute-my-llvm",
+        "bytes": 473784,
+        "sha256": "5a009d03802013ca9df044e60f895da6400f71d54b76dd8cc4c6a1c546390d61"
+      },
+      "manifest": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/.mylang-cache/goal110-calls-5dc31c3a-guests/compute-my-llvm.qbe-manifest.json",
+        "bytes": 6063,
+        "sha256": "a519bb09a49f83be103fe14aa88af7e0fc175ffb8e38b50f5734380a043b289c"
+      },
+      "build_log": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/experiments/runtime-goal110-calls-20261004/llvm-guest-build.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "entry_disassembly": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/experiments/runtime-goal110-calls-20261004/llvm-candidate-entry.s",
+        "bytes": 385459,
+        "sha256": "4ac9aeda81e1e3151d02887f63cfabd17f7ace2093148ae592b1cb7fb9937104"
+      }
+    },
+    {
+      "backend": "qbe",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/zig-out/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/benchmarks/runtime/expanded/compute/main.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/.mylang-cache/goal110-calls-5dc31c3a-guests/compute-my-qbe",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/.mylang-cache/goal110-calls-5dc31c3a-guests/mycache",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-harness-20261003/.mylang-cache/runtime-candidate-730a86e6-releasefast/runner/native_clock.o",
+        "--qbe",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/zig-out/bin/qbe",
+        "--mode",
+        "ReleaseFast",
+        "--backend",
+        "qbe",
+        "--keep-symbols"
+      ],
+      "status": 0,
+      "binary": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/.mylang-cache/goal110-calls-5dc31c3a-guests/compute-my-qbe",
+        "bytes": 1279168,
+        "sha256": "551b08d670b40c8d75215a31dbb0500ed2322b5ddc83248374f11389c0508ab2"
+      },
+      "manifest": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/.mylang-cache/goal110-calls-5dc31c3a-guests/compute-my-qbe.qbe-manifest.json",
+        "bytes": 486,
+        "sha256": "5fdebf8189a1d4871c3081bac3612ae4336bdbd27e4a862a774aa3aa6f825a70"
+      },
+      "build_log": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/experiments/runtime-goal110-calls-20261004/qbe-guest-build.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "entry_disassembly": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/experiments/runtime-goal110-calls-20261004/qbe-candidate-entry.s",
+        "bytes": 770306,
+        "sha256": "a93098f089988f1c15f53de2d74cb5d773b9fa5cde3f53fd80c10269bab08c1f"
+      }
+    }
+  ],
+  "qualification": [
+    {
+      "backend": "llvm",
+      "case": "integer_math",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 86995
+    },
+    {
+      "backend": "llvm",
+      "case": "integer_math",
+      "size": 64,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 87901
+    },
+    {
+      "backend": "llvm",
+      "case": "integer_math",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 92875
+    },
+    {
+      "backend": "llvm",
+      "case": "integer_math",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 5579890
+    },
+    {
+      "backend": "llvm",
+      "case": "integer_math",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 5579470
+    },
+    {
+      "backend": "llvm",
+      "case": "integer_math",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 5583438
+    },
+    {
+      "backend": "llvm",
+      "case": "integer_math",
+      "size": 2,
+      "iterations": 1,
+      "seed": 2,
+      "checksum": 106
+    },
+    {
+      "backend": "llvm",
+      "case": "integer_math",
+      "size": 7,
+      "iterations": 17,
+      "seed": 17,
+      "checksum": 39644
+    },
+    {
+      "backend": "llvm",
+      "case": "integer_math",
+      "size": 67,
+      "iterations": 19,
+      "seed": 999983,
+      "checksum": 577224
+    },
+    {
+      "backend": "llvm",
+      "case": "float_math",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 58846755
+    },
+    {
+      "backend": "llvm",
+      "case": "float_math",
+      "size": 64,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 69006036
+    },
+    {
+      "backend": "llvm",
+      "case": "float_math",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 60807339
+    },
+    {
+      "backend": "llvm",
+      "case": "float_math",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 271841929
+    },
+    {
+      "backend": "llvm",
+      "case": "float_math",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 276491338
+    },
+    {
+      "backend": "llvm",
+      "case": "float_math",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 273212113
+    },
+    {
+      "backend": "llvm",
+      "case": "float_math",
+      "size": 2,
+      "iterations": 1,
+      "seed": 2,
+      "checksum": 2309
+    },
+    {
+      "backend": "llvm",
+      "case": "float_math",
+      "size": 7,
+      "iterations": 17,
+      "seed": 17,
+      "checksum": 3126844
+    },
+    {
+      "backend": "llvm",
+      "case": "float_math",
+      "size": 67,
+      "iterations": 19,
+      "seed": 999983,
+      "checksum": 385084734
+    },
+    {
+      "backend": "llvm",
+      "case": "branch_predictable",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 273351
+    },
+    {
+      "backend": "llvm",
+      "case": "branch_predictable",
+      "size": 64,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 310818
+    },
+    {
+      "backend": "llvm",
+      "case": "branch_predictable",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 285027
+    },
+    {
+      "backend": "llvm",
+      "case": "branch_predictable",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 19390119
+    },
+    {
+      "backend": "llvm",
+      "case": "branch_predictable",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 19411812
+    },
+    {
+      "backend": "llvm",
+      "case": "branch_predictable",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 19392741
+    },
+    {
+      "backend": "llvm",
+      "case": "branch_predictable",
+      "size": 2,
+      "iterations": 1,
+      "seed": 2,
+      "checksum": 135
+    },
+    {
+      "backend": "llvm",
+      "case": "branch_predictable",
+      "size": 7,
+      "iterations": 17,
+      "seed": 17,
+      "checksum": 49623
+    },
+    {
+      "backend": "llvm",
+      "case": "branch_predictable",
+      "size": 67,
+      "iterations": 19,
+      "seed": 999983,
+      "checksum": 1858702
+    },
+    {
+      "backend": "llvm",
+      "case": "branch_mixed",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 350559
+    },
+    {
+      "backend": "llvm",
+      "case": "branch_mixed",
+      "size": 64,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 408492
+    },
+    {
+      "backend": "llvm",
+      "case": "branch_mixed",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 372225
+    },
+    {
+      "backend": "llvm",
+      "case": "branch_mixed",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 24902937
+    },
+    {
+      "backend": "llvm",
+      "case": "branch_mixed",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 24937896
+    },
+    {
+      "backend": "llvm",
+      "case": "branch_mixed",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 24919905
+    },
+    {
+      "backend": "llvm",
+      "case": "branch_mixed",
+      "size": 2,
+      "iterations": 1,
+      "seed": 2,
+      "checksum": 125
+    },
+    {
+      "backend": "llvm",
+      "case": "branch_mixed",
+      "size": 7,
+      "iterations": 17,
+      "seed": 17,
+      "checksum": 48671
+    },
+    {
+      "backend": "llvm",
+      "case": "branch_mixed",
+      "size": 67,
+      "iterations": 19,
+      "seed": 999983,
+      "checksum": 2323644
+    },
+    {
+      "backend": "llvm",
+      "case": "record_construct",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 137136
+    },
+    {
+      "backend": "llvm",
+      "case": "record_construct",
+      "size": 64,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 153108
+    },
+    {
+      "backend": "llvm",
+      "case": "record_construct",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 141662
+    },
+    {
+      "backend": "llvm",
+      "case": "record_construct",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 9560607
+    },
+    {
+      "backend": "llvm",
+      "case": "record_construct",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 9568443
+    },
+    {
+      "backend": "llvm",
+      "case": "record_construct",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 9561920
+    },
+    {
+      "backend": "llvm",
+      "case": "record_construct",
+      "size": 2,
+      "iterations": 1,
+      "seed": 2,
+      "checksum": 172
+    },
+    {
+      "backend": "llvm",
+      "case": "record_construct",
+      "size": 7,
+      "iterations": 17,
+      "seed": 17,
+      "checksum": 50780
+    },
+    {
+      "backend": "llvm",
+      "case": "record_construct",
+      "size": 67,
+      "iterations": 19,
+      "seed": 999983,
+      "checksum": 928258
+    },
+    {
+      "backend": "llvm",
+      "case": "record_update",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 137136
+    },
+    {
+      "backend": "llvm",
+      "case": "record_update",
+      "size": 64,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 153108
+    },
+    {
+      "backend": "llvm",
+      "case": "record_update",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 141662
+    },
+    {
+      "backend": "llvm",
+      "case": "record_update",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 9560607
+    },
+    {
+      "backend": "llvm",
+      "case": "record_update",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 9568443
+    },
+    {
+      "backend": "llvm",
+      "case": "record_update",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 9561920
+    },
+    {
+      "backend": "llvm",
+      "case": "record_update",
+      "size": 2,
+      "iterations": 1,
+      "seed": 2,
+      "checksum": 172
+    },
+    {
+      "backend": "llvm",
+      "case": "record_update",
+      "size": 7,
+      "iterations": 17,
+      "seed": 17,
+      "checksum": 50780
+    },
+    {
+      "backend": "llvm",
+      "case": "record_update",
+      "size": 67,
+      "iterations": 19,
+      "seed": 999983,
+      "checksum": 928258
+    },
+    {
+      "backend": "llvm",
+      "case": "call_direct",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 265179
+    },
+    {
+      "backend": "llvm",
+      "case": "call_direct",
+      "size": 64,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 303690
+    },
+    {
+      "backend": "llvm",
+      "case": "call_direct",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 274935
+    },
+    {
+      "backend": "llvm",
+      "case": "call_direct",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 18684129
+    },
+    {
+      "backend": "llvm",
+      "case": "call_direct",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 18706044
+    },
+    {
+      "backend": "llvm",
+      "case": "call_direct",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 18691005
+    },
+    {
+      "backend": "llvm",
+      "case": "call_direct",
+      "size": 2,
+      "iterations": 1,
+      "seed": 2,
+      "checksum": 137
+    },
+    {
+      "backend": "llvm",
+      "case": "call_direct",
+      "size": 7,
+      "iterations": 17,
+      "seed": 17,
+      "checksum": 49385
+    },
+    {
+      "backend": "llvm",
+      "case": "call_direct",
+      "size": 67,
+      "iterations": 19,
+      "seed": 999983,
+      "checksum": 1780648
+    },
+    {
+      "backend": "llvm",
+      "case": "call_indirect",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 441837
+    },
+    {
+      "backend": "llvm",
+      "case": "call_indirect",
+      "size": 64,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 303690
+    },
+    {
+      "backend": "llvm",
+      "case": "call_indirect",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 274935
+    },
+    {
+      "backend": "llvm",
+      "case": "call_indirect",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 31132023
+    },
+    {
+      "backend": "llvm",
+      "case": "call_indirect",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 18706044
+    },
+    {
+      "backend": "llvm",
+      "case": "call_indirect",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 18691005
+    },
+    {
+      "backend": "llvm",
+      "case": "call_indirect",
+      "size": 2,
+      "iterations": 1,
+      "seed": 2,
+      "checksum": 137
+    },
+    {
+      "backend": "llvm",
+      "case": "call_indirect",
+      "size": 7,
+      "iterations": 17,
+      "seed": 17,
+      "checksum": 82229
+    },
+    {
+      "backend": "llvm",
+      "case": "call_indirect",
+      "size": 67,
+      "iterations": 19,
+      "seed": 999983,
+      "checksum": 2966898
+    },
+    {
+      "backend": "llvm",
+      "case": "option_handle",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 196995
+    },
+    {
+      "backend": "llvm",
+      "case": "option_handle",
+      "size": 64,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 230934
+    },
+    {
+      "backend": "llvm",
+      "case": "option_handle",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 204735
+    },
+    {
+      "backend": "llvm",
+      "case": "option_handle",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 14000592
+    },
+    {
+      "backend": "llvm",
+      "case": "option_handle",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 14021751
+    },
+    {
+      "backend": "llvm",
+      "case": "option_handle",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 14006172
+    },
+    {
+      "backend": "llvm",
+      "case": "option_handle",
+      "size": 2,
+      "iterations": 1,
+      "seed": 2,
+      "checksum": 125
+    },
+    {
+      "backend": "llvm",
+      "case": "option_handle",
+      "size": 7,
+      "iterations": 17,
+      "seed": 17,
+      "checksum": 42041
+    },
+    {
+      "backend": "llvm",
+      "case": "option_handle",
+      "size": 67,
+      "iterations": 19,
+      "seed": 999983,
+      "checksum": 1338181
+    },
+    {
+      "backend": "llvm",
+      "case": "result_propagate",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 203988
+    },
+    {
+      "backend": "llvm",
+      "case": "result_propagate",
+      "size": 64,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 235569
+    },
+    {
+      "backend": "llvm",
+      "case": "result_propagate",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 222996
+    },
+    {
+      "backend": "llvm",
+      "case": "result_propagate",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 14905605
+    },
+    {
+      "backend": "llvm",
+      "case": "result_propagate",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 14925405
+    },
+    {
+      "backend": "llvm",
+      "case": "result_propagate",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 14922453
+    },
+    {
+      "backend": "llvm",
+      "case": "result_propagate",
+      "size": 2,
+      "iterations": 1,
+      "seed": 2,
+      "checksum": 125
+    },
+    {
+      "backend": "llvm",
+      "case": "result_propagate",
+      "size": 7,
+      "iterations": 17,
+      "seed": 17,
+      "checksum": 39950
+    },
+    {
+      "backend": "llvm",
+      "case": "result_propagate",
+      "size": 67,
+      "iterations": 19,
+      "seed": 999983,
+      "checksum": 1433431
+    },
+    {
+      "backend": "llvm",
+      "case": "binary_search",
+      "size": 16,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 113
+    },
+    {
+      "backend": "llvm",
+      "case": "binary_search",
+      "size": 16,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 127
+    },
+    {
+      "backend": "llvm",
+      "case": "binary_search",
+      "size": 16,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 131
+    },
+    {
+      "backend": "llvm",
+      "case": "binary_search",
+      "size": 256,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 27018
+    },
+    {
+      "backend": "llvm",
+      "case": "binary_search",
+      "size": 256,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 28350
+    },
+    {
+      "backend": "llvm",
+      "case": "binary_search",
+      "size": 256,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 27375
+    },
+    {
+      "backend": "llvm",
+      "case": "binary_search",
+      "size": 2,
+      "iterations": 1,
+      "seed": 2,
+      "checksum": 2
+    },
+    {
+      "backend": "llvm",
+      "case": "binary_search",
+      "size": 7,
+      "iterations": 17,
+      "seed": 17,
+      "checksum": 130
+    },
+    {
+      "backend": "llvm",
+      "case": "binary_search",
+      "size": 67,
+      "iterations": 19,
+      "seed": 999983,
+      "checksum": 14278
+    },
+    {
+      "backend": "llvm",
+      "case": "packet_decode",
+      "size": 16,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 23868
+    },
+    {
+      "backend": "llvm",
+      "case": "packet_decode",
+      "size": 16,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 403224
+    },
+    {
+      "backend": "llvm",
+      "case": "packet_decode",
+      "size": 16,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 236448
+    },
+    {
+      "backend": "llvm",
+      "case": "packet_decode",
+      "size": 256,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 861120
+    },
+    {
+      "backend": "llvm",
+      "case": "packet_decode",
+      "size": 256,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 6817920
+    },
+    {
+      "backend": "llvm",
+      "case": "packet_decode",
+      "size": 256,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 4117248
+    },
+    {
+      "backend": "llvm",
+      "case": "packet_decode",
+      "size": 2,
+      "iterations": 1,
+      "seed": 2,
+      "checksum": 257
+    },
+    {
+      "backend": "llvm",
+      "case": "packet_decode",
+      "size": 7,
+      "iterations": 17,
+      "seed": 17,
+      "checksum": 46019
+    },
+    {
+      "backend": "llvm",
+      "case": "packet_decode",
+      "size": 67,
+      "iterations": 19,
+      "seed": 999983,
+      "checksum": 6353866
+    },
+    {
+      "backend": "qbe",
+      "case": "integer_math",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 86995
+    },
+    {
+      "backend": "qbe",
+      "case": "integer_math",
+      "size": 64,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 87901
+    },
+    {
+      "backend": "qbe",
+      "case": "integer_math",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 92875
+    },
+    {
+      "backend": "qbe",
+      "case": "integer_math",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 5579890
+    },
+    {
+      "backend": "qbe",
+      "case": "integer_math",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 5579470
+    },
+    {
+      "backend": "qbe",
+      "case": "integer_math",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 5583438
+    },
+    {
+      "backend": "qbe",
+      "case": "integer_math",
+      "size": 2,
+      "iterations": 1,
+      "seed": 2,
+      "checksum": 106
+    },
+    {
+      "backend": "qbe",
+      "case": "integer_math",
+      "size": 7,
+      "iterations": 17,
+      "seed": 17,
+      "checksum": 39644
+    },
+    {
+      "backend": "qbe",
+      "case": "integer_math",
+      "size": 67,
+      "iterations": 19,
+      "seed": 999983,
+      "checksum": 577224
+    },
+    {
+      "backend": "qbe",
+      "case": "float_math",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 58846755
+    },
+    {
+      "backend": "qbe",
+      "case": "float_math",
+      "size": 64,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 69006036
+    },
+    {
+      "backend": "qbe",
+      "case": "float_math",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 60807339
+    },
+    {
+      "backend": "qbe",
+      "case": "float_math",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 271841929
+    },
+    {
+      "backend": "qbe",
+      "case": "float_math",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 276491338
+    },
+    {
+      "backend": "qbe",
+      "case": "float_math",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 273212113
+    },
+    {
+      "backend": "qbe",
+      "case": "float_math",
+      "size": 2,
+      "iterations": 1,
+      "seed": 2,
+      "checksum": 2309
+    },
+    {
+      "backend": "qbe",
+      "case": "float_math",
+      "size": 7,
+      "iterations": 17,
+      "seed": 17,
+      "checksum": 3126844
+    },
+    {
+      "backend": "qbe",
+      "case": "float_math",
+      "size": 67,
+      "iterations": 19,
+      "seed": 999983,
+      "checksum": 385084734
+    },
+    {
+      "backend": "qbe",
+      "case": "branch_predictable",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 273351
+    },
+    {
+      "backend": "qbe",
+      "case": "branch_predictable",
+      "size": 64,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 310818
+    },
+    {
+      "backend": "qbe",
+      "case": "branch_predictable",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 285027
+    },
+    {
+      "backend": "qbe",
+      "case": "branch_predictable",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 19390119
+    },
+    {
+      "backend": "qbe",
+      "case": "branch_predictable",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 19411812
+    },
+    {
+      "backend": "qbe",
+      "case": "branch_predictable",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 19392741
+    },
+    {
+      "backend": "qbe",
+      "case": "branch_predictable",
+      "size": 2,
+      "iterations": 1,
+      "seed": 2,
+      "checksum": 135
+    },
+    {
+      "backend": "qbe",
+      "case": "branch_predictable",
+      "size": 7,
+      "iterations": 17,
+      "seed": 17,
+      "checksum": 49623
+    },
+    {
+      "backend": "qbe",
+      "case": "branch_predictable",
+      "size": 67,
+      "iterations": 19,
+      "seed": 999983,
+      "checksum": 1858702
+    },
+    {
+      "backend": "qbe",
+      "case": "branch_mixed",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 350559
+    },
+    {
+      "backend": "qbe",
+      "case": "branch_mixed",
+      "size": 64,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 408492
+    },
+    {
+      "backend": "qbe",
+      "case": "branch_mixed",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 372225
+    },
+    {
+      "backend": "qbe",
+      "case": "branch_mixed",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 24902937
+    },
+    {
+      "backend": "qbe",
+      "case": "branch_mixed",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 24937896
+    },
+    {
+      "backend": "qbe",
+      "case": "branch_mixed",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 24919905
+    },
+    {
+      "backend": "qbe",
+      "case": "branch_mixed",
+      "size": 2,
+      "iterations": 1,
+      "seed": 2,
+      "checksum": 125
+    },
+    {
+      "backend": "qbe",
+      "case": "branch_mixed",
+      "size": 7,
+      "iterations": 17,
+      "seed": 17,
+      "checksum": 48671
+    },
+    {
+      "backend": "qbe",
+      "case": "branch_mixed",
+      "size": 67,
+      "iterations": 19,
+      "seed": 999983,
+      "checksum": 2323644
+    },
+    {
+      "backend": "qbe",
+      "case": "record_construct",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 137136
+    },
+    {
+      "backend": "qbe",
+      "case": "record_construct",
+      "size": 64,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 153108
+    },
+    {
+      "backend": "qbe",
+      "case": "record_construct",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 141662
+    },
+    {
+      "backend": "qbe",
+      "case": "record_construct",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 9560607
+    },
+    {
+      "backend": "qbe",
+      "case": "record_construct",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 9568443
+    },
+    {
+      "backend": "qbe",
+      "case": "record_construct",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 9561920
+    },
+    {
+      "backend": "qbe",
+      "case": "record_construct",
+      "size": 2,
+      "iterations": 1,
+      "seed": 2,
+      "checksum": 172
+    },
+    {
+      "backend": "qbe",
+      "case": "record_construct",
+      "size": 7,
+      "iterations": 17,
+      "seed": 17,
+      "checksum": 50780
+    },
+    {
+      "backend": "qbe",
+      "case": "record_construct",
+      "size": 67,
+      "iterations": 19,
+      "seed": 999983,
+      "checksum": 928258
+    },
+    {
+      "backend": "qbe",
+      "case": "record_update",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 137136
+    },
+    {
+      "backend": "qbe",
+      "case": "record_update",
+      "size": 64,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 153108
+    },
+    {
+      "backend": "qbe",
+      "case": "record_update",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 141662
+    },
+    {
+      "backend": "qbe",
+      "case": "record_update",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 9560607
+    },
+    {
+      "backend": "qbe",
+      "case": "record_update",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 9568443
+    },
+    {
+      "backend": "qbe",
+      "case": "record_update",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 9561920
+    },
+    {
+      "backend": "qbe",
+      "case": "record_update",
+      "size": 2,
+      "iterations": 1,
+      "seed": 2,
+      "checksum": 172
+    },
+    {
+      "backend": "qbe",
+      "case": "record_update",
+      "size": 7,
+      "iterations": 17,
+      "seed": 17,
+      "checksum": 50780
+    },
+    {
+      "backend": "qbe",
+      "case": "record_update",
+      "size": 67,
+      "iterations": 19,
+      "seed": 999983,
+      "checksum": 928258
+    },
+    {
+      "backend": "qbe",
+      "case": "call_direct",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 265179
+    },
+    {
+      "backend": "qbe",
+      "case": "call_direct",
+      "size": 64,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 303690
+    },
+    {
+      "backend": "qbe",
+      "case": "call_direct",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 274935
+    },
+    {
+      "backend": "qbe",
+      "case": "call_direct",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 18684129
+    },
+    {
+      "backend": "qbe",
+      "case": "call_direct",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 18706044
+    },
+    {
+      "backend": "qbe",
+      "case": "call_direct",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 18691005
+    },
+    {
+      "backend": "qbe",
+      "case": "call_direct",
+      "size": 2,
+      "iterations": 1,
+      "seed": 2,
+      "checksum": 137
+    },
+    {
+      "backend": "qbe",
+      "case": "call_direct",
+      "size": 7,
+      "iterations": 17,
+      "seed": 17,
+      "checksum": 49385
+    },
+    {
+      "backend": "qbe",
+      "case": "call_direct",
+      "size": 67,
+      "iterations": 19,
+      "seed": 999983,
+      "checksum": 1780648
+    },
+    {
+      "backend": "qbe",
+      "case": "call_indirect",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 441837
+    },
+    {
+      "backend": "qbe",
+      "case": "call_indirect",
+      "size": 64,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 303690
+    },
+    {
+      "backend": "qbe",
+      "case": "call_indirect",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 274935
+    },
+    {
+      "backend": "qbe",
+      "case": "call_indirect",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 31132023
+    },
+    {
+      "backend": "qbe",
+      "case": "call_indirect",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 18706044
+    },
+    {
+      "backend": "qbe",
+      "case": "call_indirect",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 18691005
+    },
+    {
+      "backend": "qbe",
+      "case": "call_indirect",
+      "size": 2,
+      "iterations": 1,
+      "seed": 2,
+      "checksum": 137
+    },
+    {
+      "backend": "qbe",
+      "case": "call_indirect",
+      "size": 7,
+      "iterations": 17,
+      "seed": 17,
+      "checksum": 82229
+    },
+    {
+      "backend": "qbe",
+      "case": "call_indirect",
+      "size": 67,
+      "iterations": 19,
+      "seed": 999983,
+      "checksum": 2966898
+    },
+    {
+      "backend": "qbe",
+      "case": "option_handle",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 196995
+    },
+    {
+      "backend": "qbe",
+      "case": "option_handle",
+      "size": 64,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 230934
+    },
+    {
+      "backend": "qbe",
+      "case": "option_handle",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 204735
+    },
+    {
+      "backend": "qbe",
+      "case": "option_handle",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 14000592
+    },
+    {
+      "backend": "qbe",
+      "case": "option_handle",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 14021751
+    },
+    {
+      "backend": "qbe",
+      "case": "option_handle",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 14006172
+    },
+    {
+      "backend": "qbe",
+      "case": "option_handle",
+      "size": 2,
+      "iterations": 1,
+      "seed": 2,
+      "checksum": 125
+    },
+    {
+      "backend": "qbe",
+      "case": "option_handle",
+      "size": 7,
+      "iterations": 17,
+      "seed": 17,
+      "checksum": 42041
+    },
+    {
+      "backend": "qbe",
+      "case": "option_handle",
+      "size": 67,
+      "iterations": 19,
+      "seed": 999983,
+      "checksum": 1338181
+    },
+    {
+      "backend": "qbe",
+      "case": "result_propagate",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 203988
+    },
+    {
+      "backend": "qbe",
+      "case": "result_propagate",
+      "size": 64,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 235569
+    },
+    {
+      "backend": "qbe",
+      "case": "result_propagate",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 222996
+    },
+    {
+      "backend": "qbe",
+      "case": "result_propagate",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 14905605
+    },
+    {
+      "backend": "qbe",
+      "case": "result_propagate",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 14925405
+    },
+    {
+      "backend": "qbe",
+      "case": "result_propagate",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 14922453
+    },
+    {
+      "backend": "qbe",
+      "case": "result_propagate",
+      "size": 2,
+      "iterations": 1,
+      "seed": 2,
+      "checksum": 125
+    },
+    {
+      "backend": "qbe",
+      "case": "result_propagate",
+      "size": 7,
+      "iterations": 17,
+      "seed": 17,
+      "checksum": 39950
+    },
+    {
+      "backend": "qbe",
+      "case": "result_propagate",
+      "size": 67,
+      "iterations": 19,
+      "seed": 999983,
+      "checksum": 1433431
+    },
+    {
+      "backend": "qbe",
+      "case": "binary_search",
+      "size": 16,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 113
+    },
+    {
+      "backend": "qbe",
+      "case": "binary_search",
+      "size": 16,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 127
+    },
+    {
+      "backend": "qbe",
+      "case": "binary_search",
+      "size": 16,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 131
+    },
+    {
+      "backend": "qbe",
+      "case": "binary_search",
+      "size": 256,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 27018
+    },
+    {
+      "backend": "qbe",
+      "case": "binary_search",
+      "size": 256,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 28350
+    },
+    {
+      "backend": "qbe",
+      "case": "binary_search",
+      "size": 256,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 27375
+    },
+    {
+      "backend": "qbe",
+      "case": "binary_search",
+      "size": 2,
+      "iterations": 1,
+      "seed": 2,
+      "checksum": 2
+    },
+    {
+      "backend": "qbe",
+      "case": "binary_search",
+      "size": 7,
+      "iterations": 17,
+      "seed": 17,
+      "checksum": 130
+    },
+    {
+      "backend": "qbe",
+      "case": "binary_search",
+      "size": 67,
+      "iterations": 19,
+      "seed": 999983,
+      "checksum": 14278
+    },
+    {
+      "backend": "qbe",
+      "case": "packet_decode",
+      "size": 16,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 23868
+    },
+    {
+      "backend": "qbe",
+      "case": "packet_decode",
+      "size": 16,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 403224
+    },
+    {
+      "backend": "qbe",
+      "case": "packet_decode",
+      "size": 16,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 236448
+    },
+    {
+      "backend": "qbe",
+      "case": "packet_decode",
+      "size": 256,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 861120
+    },
+    {
+      "backend": "qbe",
+      "case": "packet_decode",
+      "size": 256,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 6817920
+    },
+    {
+      "backend": "qbe",
+      "case": "packet_decode",
+      "size": 256,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 4117248
+    },
+    {
+      "backend": "qbe",
+      "case": "packet_decode",
+      "size": 2,
+      "iterations": 1,
+      "seed": 2,
+      "checksum": 257
+    },
+    {
+      "backend": "qbe",
+      "case": "packet_decode",
+      "size": 7,
+      "iterations": 17,
+      "seed": 17,
+      "checksum": 46019
+    },
+    {
+      "backend": "qbe",
+      "case": "packet_decode",
+      "size": 67,
+      "iterations": 19,
+      "seed": 999983,
+      "checksum": 6353866
+    }
+  ],
+  "finished_utc": "2026-10-04T01:37:06.985066+00:00"
+}

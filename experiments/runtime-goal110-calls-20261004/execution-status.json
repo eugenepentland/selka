@@ -1,0 +1,69 @@
+{
+  "kind": "observed-parent-shell-exit-receipt",
+  "source_revision": "5dc31c3af5114938fe1c92fc72941efd0b3074c3",
+  "records": [
+    {
+      "command": [
+        "scripts/build-slot.sh",
+        "build",
+        "env",
+        "TMPDIR=/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/.task-tmp/zig-tmp",
+        "ZIG_GLOBAL_CACHE_DIR=/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/.task-tmp/zig-global",
+        "zig",
+        "build",
+        "test-units",
+        "-Dtest-filter=invariant loop",
+        "-j2",
+        "--cache-dir",
+        ".task-tmp/zig-local"
+      ],
+      "observed_exit": 0,
+      "log": "subset-tests-final.log",
+      "guardian_result": {
+        "passed": 17,
+        "failed": 0,
+        "skipped": 0
+      },
+      "log_limit": "The log includes a misleading failed-command listener diagnostic after PASS. The enclosing exec exit was 0."
+    },
+    {
+      "script": "build-and-check.py",
+      "observed_exit": 0,
+      "log": "build-and-check.log",
+      "llvm_checks": 108,
+      "qbe_checks": 108
+    },
+    {
+      "script": "experiments/runtime-parity-arithmetic-20261003/unswitch-joins.py",
+      "observed_exit": 0,
+      "log": "joins-matrix.log",
+      "receipt": "joins-matrix-receipt.json",
+      "guest_executions": 432
+    },
+    {
+      "script": "time-guests.py",
+      "cases": [
+        "call_direct",
+        "option_handle",
+        "result_propagate",
+        "record_update"
+      ],
+      "rounds": 5,
+      "warmups": 1,
+      "observed_exit": 0,
+      "log": "selected-screen.log",
+      "report": "selected-screen.json"
+    },
+    {
+      "script": "time-guests.py",
+      "cases": [
+        "branch_predictable"
+      ],
+      "rounds": 5,
+      "warmups": 1,
+      "observed_exit": 0,
+      "log": "fallback-sentinel.log",
+      "report": "fallback-sentinel.json"
+    }
+  ]
+}

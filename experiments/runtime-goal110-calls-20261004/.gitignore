@@ -1,0 +1,17 @@
+__pycache__/
+/before-actual-main.ssa
+/before-entry.ssa
+/before-llvm-entry.s
+/before-qbe.json
+/before-rewrite.ssa
+/candidate-actual-main.ssa
+/candidate-emission.json
+/candidate-entry.ssa
+/compiler-build-receipt.json
+/diagnostic-emission.json
+/fallback-sentinel.json
+/llvm-before-entry.s
+/llvm-candidate-entry.s
+/qbe-before-entry.s
+/qbe-candidate-entry.s
+/selected-screen.json

@@ -1,0 +1,16 @@
+{
+  "compiler_sha256": "18ea39e0c7915444bdf219ba66dde0795a4ead248936a61fb47ce37801491c3e",
+  "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/.task-tmp/install/bin/mylang",
+    "emit-qbe",
+    "experiments/runtime-goal110-calls-20261004/compute-inspection.my",
+    "--drop-step-checks",
+    "--drop-frame-checks"
+  ],
+  "returncode": 0,
+  "source_patch": "diff --git a/src/qbe_loop_unswitch_test.zig b/src/qbe_loop_unswitch_test.zig\nindex 257354a7..770f51b6 100644\n--- a/src/qbe_loop_unswitch_test.zig\n+++ b/src/qbe_loop_unswitch_test.zig\n@@ -206,6 +206,7 @@ test \"invariant loop dispatch specializes every literal and preserves checked ca\n     const il = try named(fast.value, \"main\");\n     try t.expect(std.mem.indexOf(u8, il, \"QBE-LOOP-UNSWITCH-1\") != null);\n     try t.expect(std.mem.indexOf(u8, il, \"literals=3\") != null);\n+    try t.expectEqual(@as(usize, 3), std.mem.count(u8, il, \" =l ceql %usk\"));\n     try t.expect(std.mem.indexOf(u8, il, \"_original_\") != null);\n     try t.expect(std.mem.indexOf(u8, il, \"myl_qbe_fail_normalized_index_bounds\") != null);\n     try t.expect(std.mem.indexOf(u8, il, \"myl_qbe_fail_division\") != null);\ndiff --git a/src/qbe_loop_unswitch_text.zig b/src/qbe_loop_unswitch_text.zig\nindex 3a515ad3..4bd8357a 100644\n--- a/src/qbe_loop_unswitch_text.zig\n+++ b/src/qbe_loop_unswitch_text.zig\n@@ -38,7 +38,16 @@ pub fn rewrite(a: std.mem.Allocator, input: []const u8, certificate: proof.Certi\n         }\n         const function_room = @max(4096, input.len / 2);\n         const allowed = @min(max_added, @min(function_room, body.len * 2));\n-        if (copies.writer.end > allowed) return a.dupe(u8, input);\n+        if (copies.writer.end > allowed) {\n+            const commented = try std.mem.replaceOwned(u8, a, input, \"\\n\", \"\\n# \");\n+            defer a.free(commented);\n+            return std.fmt.allocPrint(a, \"# unswitch-budget head={d} back={d} slot={d} conditions={d} values={d} value={d} copied={d} allowed={d} region={d} input={d}\\n\" ++\n+                \"# UNSWITCH-INPUT-BEGIN\\n# {s}\\n# UNSWITCH-INPUT-END\\n{s}\", .{\n+                certificate.head, certificate.back,  certificate.slot, certificate.conditions.len, certificate.values.len,\n+                value,            copies.writer.end, allowed,          body.len,                   input.len,\n+                commented,        input,\n+            });\n+        }\n     }\n     var out: std.Io.Writer.Allocating = .init(a);\n     errdefer out.deinit();\n",
+  "source_pin": "b1b0500e1ef37b2dd53bbae87aa2122c21f954a7",
+  "metrics": [
+    "# unswitch-budget head=553 back=1035 slot=6 conditions=11 values=11 value=10 copied=209406 allowed=201356 region=100678 input=572172"
+  ]
+}
