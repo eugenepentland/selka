@@ -1,0 +1,361 @@
+{
+ "case": "lox_eval",
+ "rounds": 7,
+ "cpu": "10",
+ "profiles": {
+  "small": {
+   "size": 16,
+   "iterations": 100000,
+   "rows": [
+    {
+     "label": "v1: today: RC lists, ready calls, vector-copy stalls, if/elif chain",
+     "median_ns_per_iter": 4002.55702,
+     "ns_per_unit": 250.15981375,
+     "min_ns_per_iter": 3878.07988,
+     "max_ns_per_iter": 5146.05628,
+     "ratio_rust": 3.72557698708369,
+     "ratio_fastest_b0": 3.72557698708369
+    },
+    {
+     "label": "v2: + value semantics: local lists, headers in regs (stalls remain)",
+     "median_ns_per_iter": 3318.63677,
+     "ns_per_unit": 207.414798125,
+     "min_ns_per_iter": 3237.32345,
+     "max_ns_per_iter": 3619.45573,
+     "ratio_rust": 3.088984545884558,
+     "ratio_fastest_b0": 3.088984545884558
+    },
+    {
+     "label": "v3: + tagged values in place (no store-forward stall)",
+     "median_ns_per_iter": 1141.18952,
+     "ns_per_unit": 71.324345,
+     "min_ns_per_iter": 1113.19109,
+     "max_ns_per_iter": 1217.68085,
+     "ratio_rust": 1.0622183250279047,
+     "ratio_fastest_b0": 1.0622183250279047
+    },
+    {
+     "label": "v4: + list storage hoisted out of the batch loop",
+     "median_ns_per_iter": 1124.21922,
+     "ns_per_unit": 70.26370125,
+     "min_ns_per_iter": 1079.23827,
+     "max_ns_per_iter": 1216.03702,
+     "ratio_rust": 1.046422382876928,
+     "ratio_fastest_b0": 1.046422382876928
+    },
+    {
+     "label": "v5: + threaded dispatch (computed goto), pointer pc",
+     "median_ns_per_iter": 799.42843,
+     "ns_per_unit": 49.964276875,
+     "min_ns_per_iter": 781.45158,
+     "max_ns_per_iter": 951.51084,
+     "ratio_rust": 0.7441073660528251,
+     "ratio_fastest_b0": 0.7441073660528251
+    },
+    {
+     "label": "v6: + stack top cached in registers",
+     "median_ns_per_iter": 825.9724,
+     "ns_per_unit": 51.623275,
+     "min_ns_per_iter": 794.91049,
+     "max_ns_per_iter": 850.52555,
+     "ratio_rust": 0.7688144728557257,
+     "ratio_fastest_b0": 0.7688144728557257
+    },
+    {
+     "label": "v8: BOUND: assumes a load-time verifier (no tags/checks)",
+     "median_ns_per_iter": 635.59555,
+     "ns_per_unit": 39.724721875,
+     "min_ns_per_iter": 561.86449,
+     "max_ns_per_iter": 725.87707,
+     "ratio_rust": 0.5916118477114914,
+     "ratio_fastest_b0": 0.5916118477114914
+    },
+    {
+     "label": "v9: BOUND + 32-bit division bypass for %",
+     "median_ns_per_iter": 589.96084,
+     "ns_per_unit": 36.8725525,
+     "min_ns_per_iter": 574.58155,
+     "max_ns_per_iter": 745.06995,
+     "ratio_rust": 0.549135094841088,
+     "ratio_fastest_b0": 0.549135094841088
+    },
+    {
+     "label": "v7: WORK ELIM: partial evaluation of the fixed program",
+     "median_ns_per_iter": 52.6612,
+     "ns_per_unit": 3.291325,
+     "min_ns_per_iter": 43.16099,
+     "max_ns_per_iter": 57.63584,
+     "ratio_rust": 0.04901700434294166,
+     "ratio_fastest_b0": 0.04901700434294166
+    },
+    {
+     "label": "v30 holdout: program from file, threaded",
+     "median_ns_per_iter": 816.66488,
+     "ns_per_unit": 51.041555,
+     "min_ns_per_iter": 770.88706,
+     "max_ns_per_iter": 940.49125,
+     "ratio_rust": 0.7601510404185231,
+     "ratio_fastest_b0": 0.7601510404185231
+    },
+    {
+     "label": "v31 holdout: program from file, + stack cache",
+     "median_ns_per_iter": 863.04927,
+     "ns_per_unit": 53.940579375,
+     "min_ns_per_iter": 792.67377,
+     "max_ns_per_iter": 949.24026,
+     "ratio_rust": 0.8033255948547057,
+     "ratio_fastest_b0": 0.8033255948547057
+    },
+    {
+     "label": "v20 holdout reference: today, program from file",
+     "median_ns_per_iter": 4023.05469,
+     "ns_per_unit": 251.440918125,
+     "min_ns_per_iter": 3816.77826,
+     "max_ns_per_iter": 4391.12789,
+     "ratio_rust": 3.7446562025100416,
+     "ratio_fastest_b0": 3.7446562025100416
+    },
+    {
+     "label": "v3 baseline x86-64",
+     "median_ns_per_iter": 1151.8577,
+     "ns_per_unit": 71.99110625,
+     "min_ns_per_iter": 1080.54978,
+     "max_ns_per_iter": 1184.32257,
+     "ratio_rust": 1.072148258743644,
+     "ratio_fastest_b0": 1.072148258743644
+    },
+    {
+     "label": "v6 baseline x86-64",
+     "median_ns_per_iter": 776.08659,
+     "ns_per_unit": 48.505411875,
+     "min_ns_per_iter": 748.95523,
+     "max_ns_per_iter": 787.07101,
+     "ratio_rust": 0.7223807993841534,
+     "ratio_fastest_b0": 0.7223807993841534
+    },
+    {
+     "label": "B0 rust",
+     "median_ns_per_iter": 1074.34554,
+     "ns_per_unit": 67.14659625,
+     "min_ns_per_iter": 1046.50321,
+     "max_ns_per_iter": 1390.38606,
+     "ratio_rust": 1.0,
+     "ratio_fastest_b0": 1.0
+    },
+    {
+     "label": "B0 go",
+     "median_ns_per_iter": 1222.96428,
+     "ns_per_unit": 76.4352675,
+     "min_ns_per_iter": 1185.1204,
+     "max_ns_per_iter": 1355.70187,
+     "ratio_rust": 1.138334208563848,
+     "ratio_fastest_b0": 1.138334208563848
+    },
+    {
+     "label": "B0 zig-safe",
+     "median_ns_per_iter": 3141.5664,
+     "ns_per_unit": 196.3479,
+     "min_ns_per_iter": 3034.54592,
+     "max_ns_per_iter": 3323.76803,
+     "ratio_rust": 2.9241675820611683,
+     "ratio_fastest_b0": 2.9241675820611683
+    },
+    {
+     "label": "B0 zig-fast",
+     "median_ns_per_iter": 3069.22814,
+     "ns_per_unit": 191.82675875,
+     "min_ns_per_iter": 2987.96004,
+     "max_ns_per_iter": 3198.02735,
+     "ratio_rust": 2.8568351854469465,
+     "ratio_fastest_b0": 2.8568351854469465
+    },
+    {
+     "label": "B0 my-llvm",
+     "median_ns_per_iter": 4341.17815,
+     "ns_per_unit": 271.323634375,
+     "min_ns_per_iter": 4081.58274,
+     "max_ns_per_iter": 4687.04443,
+     "ratio_rust": 4.040765273712589,
+     "ratio_fastest_b0": 4.040765273712589
+    }
+   ]
+  },
+  "large": {
+   "size": 256,
+   "iterations": 3000,
+   "rows": [
+    {
+     "label": "v1: today: RC lists, ready calls, vector-copy stalls, if/elif chain",
+     "median_ns_per_iter": 62401.768,
+     "ns_per_unit": 243.75690625,
+     "min_ns_per_iter": 60157.81133333333,
+     "max_ns_per_iter": 97567.50166666666,
+     "ratio_rust": 3.824423564155543,
+     "ratio_fastest_b0": 3.824423564155543
+    },
+    {
+     "label": "v2: + value semantics: local lists, headers in regs (stalls remain)",
+     "median_ns_per_iter": 53751.80066666667,
+     "ns_per_unit": 209.96797135416668,
+     "min_ns_per_iter": 46835.89833333333,
+     "max_ns_per_iter": 66426.238,
+     "ratio_rust": 3.2942921278350905,
+     "ratio_fastest_b0": 3.2942921278350905
+    },
+    {
+     "label": "v3: + tagged values in place (no store-forward stall)",
+     "median_ns_per_iter": 17734.160333333333,
+     "ns_per_unit": 69.27406380208333,
+     "min_ns_per_iter": 17246.253,
+     "max_ns_per_iter": 18736.74133333333,
+     "ratio_rust": 1.0868753056694247,
+     "ratio_fastest_b0": 1.0868753056694247
+    },
+    {
+     "label": "v4: + list storage hoisted out of the batch loop",
+     "median_ns_per_iter": 17688.427666666666,
+     "ns_per_unit": 69.09542057291667,
+     "min_ns_per_iter": 17178.681333333334,
+     "max_ns_per_iter": 19311.608,
+     "ratio_rust": 1.0840724830306228,
+     "ratio_fastest_b0": 1.0840724830306228
+    },
+    {
+     "label": "v5: + threaded dispatch (computed goto), pointer pc",
+     "median_ns_per_iter": 12259.591,
+     "ns_per_unit": 47.88902734375,
+     "min_ns_per_iter": 12015.281666666666,
+     "max_ns_per_iter": 24070.544,
+     "ratio_rust": 0.7513548126923139,
+     "ratio_fastest_b0": 0.7513548126923139
+    },
+    {
+     "label": "v6: + stack top cached in registers",
+     "median_ns_per_iter": 13255.565333333334,
+     "ns_per_unit": 51.779552083333336,
+     "min_ns_per_iter": 12534.771,
+     "max_ns_per_iter": 13508.273333333333,
+     "ratio_rust": 0.8123951939471223,
+     "ratio_fastest_b0": 0.8123951939471223
+    },
+    {
+     "label": "v8: BOUND: assumes a load-time verifier (no tags/checks)",
+     "median_ns_per_iter": 9475.451666666666,
+     "ns_per_unit": 37.013483072916664,
+     "min_ns_per_iter": 8579.081333333334,
+     "max_ns_per_iter": 10759.783,
+     "ratio_rust": 0.5807229794357255,
+     "ratio_fastest_b0": 0.5807229794357255
+    },
+    {
+     "label": "v9: BOUND + 32-bit division bypass for %",
+     "median_ns_per_iter": 9421.304,
+     "ns_per_unit": 36.80196875,
+     "min_ns_per_iter": 8520.778333333334,
+     "max_ns_per_iter": 10092.720666666666,
+     "ratio_rust": 0.5774044258276925,
+     "ratio_fastest_b0": 0.5774044258276925
+    },
+    {
+     "label": "v7: WORK ELIM: partial evaluation of the fixed program",
+     "median_ns_per_iter": 1443.8516666666667,
+     "ns_per_unit": 5.640045572916667,
+     "min_ns_per_iter": 1308.5763333333334,
+     "max_ns_per_iter": 1583.1183333333333,
+     "ratio_rust": 0.08848948538037023,
+     "ratio_fastest_b0": 0.08848948538037023
+    },
+    {
+     "label": "v30 holdout: program from file, threaded",
+     "median_ns_per_iter": 12158.071666666667,
+     "ns_per_unit": 47.49246744791667,
+     "min_ns_per_iter": 11812.726666666667,
+     "max_ns_per_iter": 24899.418,
+     "ratio_rust": 0.7451329868841514,
+     "ratio_fastest_b0": 0.7451329868841514
+    },
+    {
+     "label": "v31 holdout: program from file, + stack cache",
+     "median_ns_per_iter": 13433.422333333334,
+     "ns_per_unit": 52.474305989583335,
+     "min_ns_per_iter": 12419.562,
+     "max_ns_per_iter": 24688.86,
+     "ratio_rust": 0.8232955341722584,
+     "ratio_fastest_b0": 0.8232955341722584
+    },
+    {
+     "label": "v20 holdout reference: today, program from file",
+     "median_ns_per_iter": 64827.363333333335,
+     "ns_per_unit": 253.23188802083334,
+     "min_ns_per_iter": 58674.657666666666,
+     "max_ns_per_iter": 70035.54866666667,
+     "ratio_rust": 3.9730812744612147,
+     "ratio_fastest_b0": 3.9730812744612147
+    },
+    {
+     "label": "v3 baseline x86-64",
+     "median_ns_per_iter": 17522.273333333334,
+     "ns_per_unit": 68.44638020833334,
+     "min_ns_per_iter": 17317.003666666667,
+     "max_ns_per_iter": 34709.538,
+     "ratio_rust": 1.073889365339365,
+     "ratio_fastest_b0": 1.073889365339365
+    },
+    {
+     "label": "v6 baseline x86-64",
+     "median_ns_per_iter": 11822.314666666667,
+     "ns_per_unit": 46.18091666666667,
+     "min_ns_per_iter": 11420.342333333334,
+     "max_ns_per_iter": 16567.847,
+     "ratio_rust": 0.7245554131424881,
+     "ratio_fastest_b0": 0.7245554131424881
+    },
+    {
+     "label": "B0 rust",
+     "median_ns_per_iter": 16316.646666666667,
+     "ns_per_unit": 63.73690104166667,
+     "min_ns_per_iter": 15901.548333333334,
+     "max_ns_per_iter": 27342.528333333332,
+     "ratio_rust": 1.0,
+     "ratio_fastest_b0": 1.0
+    },
+    {
+     "label": "B0 go",
+     "median_ns_per_iter": 20150.737666666668,
+     "ns_per_unit": 78.71381901041667,
+     "min_ns_per_iter": 19274.527666666665,
+     "max_ns_per_iter": 24982.085333333333,
+     "ratio_rust": 1.2349803288829364,
+     "ratio_fastest_b0": 1.2349803288829364
+    },
+    {
+     "label": "B0 zig-safe",
+     "median_ns_per_iter": 49452.83866666667,
+     "ns_per_unit": 193.17515104166668,
+     "min_ns_per_iter": 45069.995,
+     "max_ns_per_iter": 96698.43833333334,
+     "ratio_rust": 3.0308212022323215,
+     "ratio_fastest_b0": 3.0308212022323215
+    },
+    {
+     "label": "B0 zig-fast",
+     "median_ns_per_iter": 48300.170666666665,
+     "ns_per_unit": 188.67254166666666,
+     "min_ns_per_iter": 45448.217,
+     "max_ns_per_iter": 53522.452333333335,
+     "ratio_rust": 2.9601775201358773,
+     "ratio_fastest_b0": 2.9601775201358773
+    },
+    {
+     "label": "B0 my-llvm",
+     "median_ns_per_iter": 62305.343,
+     "ns_per_unit": 243.38024609375,
+     "min_ns_per_iter": 58177.697,
+     "max_ns_per_iter": 73232.812,
+     "ratio_rust": 3.818513955277575,
+     "ratio_fastest_b0": 3.818513955277575
+    }
+   ]
+  }
+ }
+}

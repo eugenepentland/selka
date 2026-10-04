@@ -155,3 +155,50 @@ CASES['branch_mixed'] = dict(
           ('v6 baseline x86-64', 'branch_mixed_base', 6),
           ('v8 baseline x86-64', 'branch_mixed_base', 8)],
 )
+
+# json_transform: the ladder varies only the PARSE component (json.loads plus releasing its tree); the
+# transform/serialize/score back end is shared. ns/iter of the ladder rows is the parse component only;
+# rows labelled "(whole job)" use version+1000 and time the complete job and compare with the B0 arms.
+CASES['json_parse'] = dict(
+    group='text', bench='json_transform', gen_exe='json_parse', sizes=(16, 256), iters=(4000, 400),
+    unit_div='size',
+    verify=[(2, 1, 1), (3, 7, 42), (17, 31, 999983), (16, 50, 42), (256, 20, 42), (260, 5, 7), (100, 3, 13)],
+    versions=V('json_parse', [
+        (1, "today model: memory scanner, Results in memory, RC tree, per-string buffers"),
+        (2, "+ register scanner, unboxed Results (same tree, same allocations)"),
+        (3, "+ bump region, no RC/drain"),
+        (4, "+ borrowed document, string views, in-place literals"),
+        (5, "+ single-pass integers"),
+        (6, "+ flat objects (no hash dictionaries)"),
+        (7, "+ schema-directed: rows straight from the bytes"),
+        (8, "+ demand-driven string decoding"),
+        (9, "+ AVX2 string scan, SWAR integers"),
+    ]) + [('v1 (whole job)', 'json_parse', 1001),
+          ('v7 (whole job)', 'json_parse', 1007),
+          ('v9 (whole job)', 'json_parse', 1009),
+          ('v30 holdout: pretty/reordered/escaped doc, typed parser', 'json_parse', 30, 'file'),
+          ('v31 holdout: pretty/reordered/escaped doc, AVX2 parser', 'json_parse', 31, 'file'),
+          ('v20 holdout reference: today model on that doc', 'json_parse', 20, 'file'),
+          ('v8 baseline x86-64', 'json_parse_base', 8)],
+)
+
+CASES['lox_eval'] = dict(
+    group='collections', bench='lox_eval', gen_exe='lox_eval', sizes=(16, 256), iters=(100000, 3000),
+    unit_div='size',
+    verify=[(2, 1, 1), (3, 7, 42), (17, 31, 999983), (16, 100, 42), (256, 20, 42), (260, 5, 7), (100, 3, 13), (2, 9, 1000000)],
+    versions=V('lox_eval', [
+        (1, "today: RC lists, ready calls, vector-copy stalls, if/elif chain"),
+        (2, "+ value semantics: local lists, headers in regs (stalls remain)"),
+        (3, "+ tagged values in place (no store-forward stall)"),
+        (4, "+ list storage hoisted out of the batch loop"),
+        (5, "+ threaded dispatch (computed goto), pointer pc"),
+        (6, "+ stack top cached in registers"),
+        (8, "BOUND: assumes a load-time verifier (no tags/checks)"),
+        (9, "BOUND + 32-bit division bypass for %"),
+        (7, "WORK ELIM: partial evaluation of the fixed program"),
+    ]) + [('v30 holdout: program from file, threaded', 'lox_eval', 30, 'file'),
+          ('v31 holdout: program from file, + stack cache', 'lox_eval', 31, 'file'),
+          ('v20 holdout reference: today, program from file', 'lox_eval', 20, 'file'),
+          ('v3 baseline x86-64', 'lox_eval_base', 3),
+          ('v6 baseline x86-64', 'lox_eval_base', 6)],
+)

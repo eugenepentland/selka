@@ -1,0 +1,20 @@
+== lox_eval perf: size=256 iterations=3000; per unit = element
+version                                          cyc/iter   instr/iter  cyc/unit instr/unit brmiss/u   sfwd/u
+v1: today: RC lists, ready calls, vector-copy stalls, if/elif chain     170648.8     575761.1   666.597   2249.067   0.0056  17.0323
+v2: + value semantics: local lists, headers in regs (stalls remain)     145745.8     218149.1   569.320    852.145   0.0049   9.5524
+v3: + tagged values in place (no store-forward stall)      47959.2     194045.1   187.340    757.989   0.0043   0.0000
+v4: + list storage hoisted out of the batch loop      48893.5     181940.1   190.990    710.703   0.0043  -0.0000
+v5: + threaded dispatch (computed goto), pointer pc      33307.8     167990.1   130.109    656.211   0.0041   0.0000
+v6: + stack top cached in registers               35206.5     173627.1   137.526    678.231   0.0042   0.0000
+v8: BOUND: assumes a load-time verifier (no tags/checks)      26593.8      53357.1   103.882    208.426   0.0042  -0.0000
+v9: BOUND + 32-bit division bypass for %          25027.3      50285.1    97.763    196.426   0.0041   0.0000
+v7: WORK ELIM: partial evaluation of the fixed program       3836.2       3739.0    14.985     14.606   0.0002  -0.0000
+v30 holdout: program from file, threaded          33316.4     167990.1   130.142    656.211   0.0041  -0.0000
+v31 holdout: program from file, + stack cache      35051.7     173627.1   136.921    678.231   0.0042  -0.0000
+v20 holdout reference: today, program from file     170536.9     575761.1   666.160   2249.067   0.0056  17.0327
+v3 baseline x86-64                                47826.1     194045.1   186.821    757.989   0.0044   0.0000
+v6 baseline x86-64                                32045.8     173627.1   125.179    678.231   0.0042  -0.0000
+B0 rust                                           42992.8     202077.1   167.941    789.364   0.0049   0.0018
+B0 zig-safe                                      132727.4     373251.1   518.466   1458.012   0.0051  17.2533
+B0 zig-fast                                      130451.0     346059.1   509.574   1351.793   0.0053  17.2512
+B0 my-llvm                                       170316.7     528070.1   665.299   2062.774   0.0059  15.3103

@@ -1,0 +1,110 @@
+{
+ "v1: today: RC lists, ready calls, vector-copy stalls, if/elif chain": {
+  "cycles_per_iter": 170648.82227409136,
+  "instr_per_iter": 575761.1330443481,
+  "branch_miss_per_iter": 1.420806935645215,
+  "store_forward_blocks_per_iter": 4360.268089363121
+ },
+ "v2: + value semantics: local lists, headers in regs (stalls remain)": {
+  "cycles_per_iter": 145745.82194064689,
+  "instr_per_iter": 218149.1063687896,
+  "branch_miss_per_iter": 1.2597532510836946,
+  "store_forward_blocks_per_iter": 2445.4074691563856
+ },
+ "v3: + tagged values in place (no store-forward stall)": {
+  "cycles_per_iter": 47959.16438812938,
+  "instr_per_iter": 194045.06168722908,
+  "branch_miss_per_iter": 1.0963654551517172,
+  "store_forward_blocks_per_iter": 0.00033344448149383126
+ },
+ "v4: + list storage hoisted out of the batch loop": {
+  "cycles_per_iter": 48893.47282427476,
+  "instr_per_iter": 181940.0613537846,
+  "branch_miss_per_iter": 1.1000333444481494,
+  "store_forward_blocks_per_iter": -0.0006668889629876625
+ },
+ "v5: + threaded dispatch (computed goto), pointer pc": {
+  "cycles_per_iter": 33307.80326775592,
+  "instr_per_iter": 167990.05735245082,
+  "branch_miss_per_iter": 1.059353117705902,
+  "store_forward_blocks_per_iter": 0.00033344448149383126
+ },
+ "v6: + stack top cached in registers": {
+  "cycles_per_iter": 35206.53251083694,
+  "instr_per_iter": 173627.0556852284,
+  "branch_miss_per_iter": 1.063354451483828,
+  "store_forward_blocks_per_iter": 0.00033344448149383126
+ },
+ "v8: BOUND: assumes a load-time verifier (no tags/checks)": {
+  "cycles_per_iter": 26593.796598866287,
+  "instr_per_iter": 53357.055685228406,
+  "branch_miss_per_iter": 1.0696898966322108,
+  "store_forward_blocks_per_iter": -0.00033344448149383126
+ },
+ "v9: BOUND + 32-bit division bypass for %": {
+  "cycles_per_iter": 25027.28609536512,
+  "instr_per_iter": 50285.05701900634,
+  "branch_miss_per_iter": 1.0446815605201734,
+  "store_forward_blocks_per_iter": 0.0
+ },
+ "v7: WORK ELIM: partial evaluation of the fixed program": {
+  "cycles_per_iter": 3836.1730576858954,
+  "instr_per_iter": 3739.0440146715573,
+  "branch_miss_per_iter": 0.057685895298432814,
+  "store_forward_blocks_per_iter": -0.00033344448149383126
+ },
+ "v30 holdout: program from file, threaded": {
+  "cycles_per_iter": 33316.39513171057,
+  "instr_per_iter": 167990.05601867288,
+  "branch_miss_per_iter": 1.0436812270756919,
+  "store_forward_blocks_per_iter": -0.0006668889629876625
+ },
+ "v31 holdout: program from file, + stack cache": {
+  "cycles_per_iter": 35051.723907969325,
+  "instr_per_iter": 173627.05501833945,
+  "branch_miss_per_iter": 1.0793597865955318,
+  "store_forward_blocks_per_iter": -0.0006668889629876625
+ },
+ "v20 holdout reference: today, program from file": {
+  "cycles_per_iter": 170536.89396465488,
+  "instr_per_iter": 575761.1297099033,
+  "branch_miss_per_iter": 1.4334778259419807,
+  "store_forward_blocks_per_iter": 4360.367789263088
+ },
+ "v3 baseline x86-64": {
+  "cycles_per_iter": 47826.13471157052,
+  "instr_per_iter": 194045.06202067356,
+  "branch_miss_per_iter": 1.12270756918973,
+  "store_forward_blocks_per_iter": 0.00033344448149383126
+ },
+ "v6 baseline x86-64": {
+  "cycles_per_iter": 32045.84594864955,
+  "instr_per_iter": 173627.05468489497,
+  "branch_miss_per_iter": 1.0826942314104702,
+  "store_forward_blocks_per_iter": -0.00033344448149383126
+ },
+ "B0 rust": {
+  "cycles_per_iter": 42992.78759586529,
+  "instr_per_iter": 202077.1207069023,
+  "branch_miss_per_iter": 1.243081027009003,
+  "store_forward_blocks_per_iter": 0.4534844948316105
+ },
+ "B0 zig-safe": {
+  "cycles_per_iter": 132727.36345448482,
+  "instr_per_iter": 373251.0936978993,
+  "branch_miss_per_iter": 1.3077692564188064,
+  "store_forward_blocks_per_iter": 4416.849949983328
+ },
+ "B0 zig-fast": {
+  "cycles_per_iter": 130450.9983327776,
+  "instr_per_iter": 346059.09236412134,
+  "branch_miss_per_iter": 1.3691230410136712,
+  "store_forward_blocks_per_iter": 4416.308769589863
+ },
+ "B0 my-llvm": {
+  "cycles_per_iter": 170316.67089029675,
+  "instr_per_iter": 528070.1033677893,
+  "branch_miss_per_iter": 1.5055018339446482,
+  "store_forward_blocks_per_iter": 3919.4468156052017
+ }
+}
