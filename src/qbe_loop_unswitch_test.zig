@@ -107,15 +107,25 @@ fn sameInputOutcome(input: []const u8, kind: i64, count: i64, seed: i64) !void {
         try std.fmt.allocPrint(t.allocator, "{d}", .{seed}),
     };
     defer for (args) |arg| t.allocator.free(arg);
+    const argv = [_][]const u8{ "--", args[0], args[1], args[2] };
     var compilation = try compiler.Compilation.init(t.allocator, "unswitch_boundary.my", input);
     defer compilation.deinit();
-    const ordinary = try native.runWithOptions(&compilation, .{ .arguments = &args });
-    const fast = try native.runUnaccounted(&compilation, .{ .arguments = &args });
+    const ordinary = try native.runWithOptions(&compilation, .{ .arguments = &argv });
+    const fast = try native.runUnaccounted(&compilation, .{ .arguments = &argv });
     try t.expectEqual(ordinary.failed, fast.failed);
     try t.expectEqual(ordinary.value, fast.value);
+    try t.expectEqual(ordinary.status, fast.status);
     try t.expectEqualDeep(ordinary.trap, fast.trap);
     try t.expectEqualStrings(ordinary.stdout, fast.stdout);
     try t.expectEqualStrings(ordinary.stderr, fast.stderr);
+    // All zero-trip fixtures return the seed (Boolean fixtures use seed zero).
+    // An equal pair of usage failures must never count as a successful replay.
+    if (count == 0) {
+        try t.expect(!fast.failed);
+        try t.expectEqual(seed, fast.value);
+        try t.expectEqual(@as(u8, @truncate(@as(u64, @bitCast(seed)))), fast.status);
+        try t.expect(fast.stdout.len != 0);
+    }
 }
 fn outcomes() !void {
     for ([_]i64{ -1, 0, 1, 2, 3, 99 }) |kind| {
@@ -126,6 +136,20 @@ fn outcomes() !void {
     try sameOutcome(1, 3, std.math.maxInt(i64) - 1);
     try sameOutcome(0, 3, std.math.maxInt(i64) - 1);
     try sameOutcome(3, 3, std.math.minInt(i64));
+}
+
+// spec-case: QBE-LOOP-UNSWITCH-1
+test "invariant loop guest argv reaches a successful three-element fold" {
+    const saved = runtime.get();
+    defer runtime.set(saved);
+    runtime.set(.rc);
+    var compilation = try compiler.Compilation.init(t.allocator, "unswitch_boundary.my", source ++ "\n" ++ main_source);
+    defer compilation.deinit();
+    const run = try native.runWithOptions(&compilation, .{ .arguments = &.{ "--", "0", "3", "0" } });
+    try t.expect(!run.failed);
+    try t.expectEqual(@as(i64, 6), run.value);
+    try t.expectEqual(@as(u8, 6), run.status);
+    try t.expectEqualStrings("0\n1\n2\n3\n", run.stdout);
 }
 
 fn booleanJoins() !void {
