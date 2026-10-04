@@ -1,0 +1,26 @@
+== float_math perf: size=4096 iterations=6000; per unit = element
+version                                          cyc/iter   instr/iter  cyc/unit instr/unit
+v0: today incl. in-loop kind dispatch             53602.4     208934.0    13.087     51.009
+v1: dispatch unswitched: bounds check, runtime-call int(float), checked add      49108.4     172068.0    11.989     42.009
+v2: + inline checked int(float)                   26248.0      90145.0     6.408     22.008
+v3: + immutable list, one bounds check, sticky checks (L2)      30428.8      90147.0     7.429     22.009
+v4: + element range: no checks (f64, i64)         14024.6      33595.0     3.424      8.202
+v13: v4 + result range assume (types stay i64)      14028.1      33595.0     3.425      8.202
+v5: + i32 conversions (plain C)                    5672.4      14144.0     1.385      3.453
+v6: + u16 storage (plain C)                        5721.3      13114.0     1.397      3.202
+v7: hand AVX2 f64, i64 storage                     5151.3      14895.0     1.258      3.636
+v8: hand AVX2 f64, u16 storage                     5248.1      13870.0     1.281      3.386
+v9: + FMA contraction                              3856.1      11822.0     0.941      2.886
+v10: f32 lanes (precision narrowing)               1568.4       5442.0     0.383      1.329
+v11: WORK ELIM: integer identity                   1249.6       3638.0     0.305      0.888
+v12: WORK ELIM: closed form                          18.2         35.0     0.004      0.009
+v30 holdout: data from file, v3 (no range)        29921.1      90147.0     7.305     22.009
+v31 holdout: data from file, runtime range guard + AVX2       5095.7      14399.0     1.244      3.515
+v3 baseline x86-64 (no AVX2)                      31787.9     102437.0     7.761     25.009
+v4 baseline x86-64                                16703.2      44078.0     4.078     10.761
+v5 baseline x86-64                                11212.5      31791.0     2.737      7.761
+v6 baseline x86-64                                11101.3      31791.0     2.710      7.761
+B0 rust                                           28659.1     106530.1     6.997     26.008
+B0 zig-safe                                       26823.6      98349.0     6.549     24.011
+B0 zig-fast                                       17674.8      81955.0     4.315     20.009
+B0 my-llvm                                        47905.3     188458.0    11.696     46.010

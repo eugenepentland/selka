@@ -1,0 +1,98 @@
+{
+ "v0: today incl. in-loop kind dispatch": {
+  "cycles_per_iter": 53602.37539589932,
+  "instr_per_iter": 208934.03733955658
+ },
+ "v1: dispatch unswitched: bounds check, runtime-call int(float), checked add": {
+  "cycles_per_iter": 49108.35872645441,
+  "instr_per_iter": 172068.03383897315
+ },
+ "v2: + inline checked int(float)": {
+  "cycles_per_iter": 26247.986331055177,
+  "instr_per_iter": 90145.02250375063
+ },
+ "v3: + immutable list, one bounds check, sticky checks (L2)": {
+  "cycles_per_iter": 30428.779129854975,
+  "instr_per_iter": 90147.02633772296
+ },
+ "v4: + element range: no checks (f64, i64)": {
+  "cycles_per_iter": 14024.643773962327,
+  "instr_per_iter": 33595.022003667276
+ },
+ "v13: v4 + result range assume (types stay i64)": {
+  "cycles_per_iter": 14028.066011001834,
+  "instr_per_iter": 33595.01850308385
+ },
+ "v5: + i32 conversions (plain C)": {
+  "cycles_per_iter": 5672.432738789798,
+  "instr_per_iter": 14144.015335889315
+ },
+ "v6: + u16 storage (plain C)": {
+  "cycles_per_iter": 5721.276712785464,
+  "instr_per_iter": 13114.016002667111
+ },
+ "v7: hand AVX2 f64, i64 storage": {
+  "cycles_per_iter": 5151.3375562593765,
+  "instr_per_iter": 14895.016502750459
+ },
+ "v8: hand AVX2 f64, u16 storage": {
+  "cycles_per_iter": 5248.119186531088,
+  "instr_per_iter": 13870.014669111519
+ },
+ "v9: + FMA contraction": {
+  "cycles_per_iter": 3856.1013502250375,
+  "instr_per_iter": 11822.012335389232
+ },
+ "v10: f32 lanes (precision narrowing)": {
+  "cycles_per_iter": 1568.4152358726456,
+  "instr_per_iter": 5442.011001833639
+ },
+ "v11: WORK ELIM: integer identity": {
+  "cycles_per_iter": 1249.645774295716,
+  "instr_per_iter": 3638.01083513919
+ },
+ "v12: WORK ELIM: closed form": {
+  "cycles_per_iter": 18.23803967327888,
+  "instr_per_iter": 35.01016836139357
+ },
+ "v30 holdout: data from file, v3 (no range)": {
+  "cycles_per_iter": 29921.12418736456,
+  "instr_per_iter": 90147.0271711952
+ },
+ "v31 holdout: data from file, runtime range guard + AVX2": {
+  "cycles_per_iter": 5095.739123187198,
+  "instr_per_iter": 14399.014835805967
+ },
+ "v3 baseline x86-64 (no AVX2)": {
+  "cycles_per_iter": 31787.909318219703,
+  "instr_per_iter": 102437.03033838973
+ },
+ "v4 baseline x86-64": {
+  "cycles_per_iter": 16703.17502917153,
+  "instr_per_iter": 44078.02000333389
+ },
+ "v5 baseline x86-64": {
+  "cycles_per_iter": 11212.531088514752,
+  "instr_per_iter": 31791.017336222703
+ },
+ "v6 baseline x86-64": {
+  "cycles_per_iter": 11101.310551758626,
+  "instr_per_iter": 31791.017336222703
+ },
+ "B0 rust": {
+  "cycles_per_iter": 28659.086014335724,
+  "instr_per_iter": 106530.08468078013
+ },
+ "B0 zig-safe": {
+  "cycles_per_iter": 26823.567094515754,
+  "instr_per_iter": 98349.0193365561
+ },
+ "B0 zig-fast": {
+  "cycles_per_iter": 17674.845640940155,
+  "instr_per_iter": 81955.01666944491
+ },
+ "B0 my-llvm": {
+  "cycles_per_iter": 47905.31771961994,
+  "instr_per_iter": 188458.03217202867
+ }
+}

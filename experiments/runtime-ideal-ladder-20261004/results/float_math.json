@@ -1,0 +1,469 @@
+{
+ "case": "float_math",
+ "rounds": 7,
+ "cpu": "10",
+ "profiles": {
+  "small": {
+   "size": 64,
+   "iterations": 400000,
+   "rows": [
+    {
+     "label": "v0: today incl. in-loop kind dispatch",
+     "median_ns_per_iter": 232.0298225,
+     "ns_per_unit": 3.6254659765625,
+     "min_ns_per_iter": 205.4547775,
+     "max_ns_per_iter": 256.588805,
+     "ratio_rust": 1.8118172774279686,
+     "ratio_fastest_b0": 2.712853640276653
+    },
+    {
+     "label": "v1: dispatch unswitched: bounds check, runtime-call int(float), checked add",
+     "median_ns_per_iter": 215.960825,
+     "ns_per_unit": 3.374387890625,
+     "min_ns_per_iter": 185.9604525,
+     "max_ns_per_iter": 268.502445,
+     "ratio_rust": 1.686341651115119,
+     "ratio_fastest_b0": 2.524977625487772
+    },
+    {
+     "label": "v2: + inline checked int(float)",
+     "median_ns_per_iter": 112.3691625,
+     "ns_per_unit": 1.7557681640625,
+     "min_ns_per_iter": 103.17651,
+     "max_ns_per_iter": 122.95281,
+     "ratio_rust": 0.8774406146331082,
+     "ratio_fastest_b0": 1.3138013392350192
+    },
+    {
+     "label": "v3: + immutable list, one bounds check, sticky checks (L2)",
+     "median_ns_per_iter": 124.847495,
+     "ns_per_unit": 1.950742109375,
+     "min_ns_per_iter": 109.85144,
+     "max_ns_per_iter": 138.1624925,
+     "ratio_rust": 0.9748783412727126,
+     "ratio_fastest_b0": 1.4596959030564756
+    },
+    {
+     "label": "v4: + element range: no checks (f64, i64)",
+     "median_ns_per_iter": 56.6212675,
+     "ns_per_unit": 0.8847073046875,
+     "min_ns_per_iter": 51.0062525,
+     "max_ns_per_iter": 77.9715275,
+     "ratio_rust": 0.4421301952526845,
+     "ratio_fastest_b0": 0.6620063317699308
+    },
+    {
+     "label": "v13: v4 + result range assume (types stay i64)",
+     "median_ns_per_iter": 57.2859025,
+     "ns_per_unit": 0.8950922265625,
+     "min_ns_per_iter": 51.425905,
+     "max_ns_per_iter": 71.9622675,
+     "ratio_rust": 0.44732003319337993,
+     "ratio_fastest_b0": 0.6697771323496937
+    },
+    {
+     "label": "v5: + i32 conversions (plain C)",
+     "median_ns_per_iter": 27.877045,
+     "ns_per_unit": 0.435578828125,
+     "min_ns_per_iter": 23.5576,
+     "max_ns_per_iter": 29.36049,
+     "ratio_rust": 0.2176793966846092,
+     "ratio_fastest_b0": 0.325933719181318
+    },
+    {
+     "label": "v6: + u16 storage (plain C)",
+     "median_ns_per_iter": 25.1379375,
+     "ns_per_unit": 0.3927802734375,
+     "min_ns_per_iter": 22.7458725,
+     "max_ns_per_iter": 28.9712425,
+     "ratio_rust": 0.1962909292895073,
+     "ratio_fastest_b0": 0.2939085352096151
+    },
+    {
+     "label": "v7: hand AVX2 f64, i64 storage",
+     "median_ns_per_iter": 23.5645275,
+     "ns_per_unit": 0.3681957421875,
+     "min_ns_per_iter": 21.1355975,
+     "max_ns_per_iter": 27.4671825,
+     "ratio_rust": 0.1840048731620544,
+     "ratio_fastest_b0": 0.2755124902523007
+    },
+    {
+     "label": "v8: hand AVX2 f64, u16 storage",
+     "median_ns_per_iter": 25.474395,
+     "ns_per_unit": 0.398037421875,
+     "min_ns_per_iter": 21.6756875,
+     "max_ns_per_iter": 33.7684925,
+     "ratio_rust": 0.19891817567125303,
+     "ratio_fastest_b0": 0.2978423396828456
+    },
+    {
+     "label": "v9: + FMA contraction",
+     "median_ns_per_iter": 19.6521675,
+     "ns_per_unit": 0.3070651171875,
+     "min_ns_per_iter": 17.1731575,
+     "max_ns_per_iter": 24.488595,
+     "ratio_rust": 0.15345500087777902,
+     "ratio_fastest_b0": 0.22976983547751298
+    },
+    {
+     "label": "v10: f32 lanes (precision narrowing)",
+     "median_ns_per_iter": 9.5832075,
+     "ns_per_unit": 0.1497376171875,
+     "min_ns_per_iter": 8.1522575,
+     "max_ns_per_iter": 10.7393275,
+     "ratio_rust": 0.07483098825228507,
+     "ratio_fastest_b0": 0.11204524949331256
+    },
+    {
+     "label": "v11: WORK ELIM: integer identity",
+     "median_ns_per_iter": 7.9578825,
+     "ns_per_unit": 0.1243419140625,
+     "min_ns_per_iter": 6.4579975,
+     "max_ns_per_iter": 9.87353,
+     "ratio_rust": 0.06213955107103388,
+     "ratio_fastest_b0": 0.09304222309189963
+    },
+    {
+     "label": "v12: WORK ELIM: closed form",
+     "median_ns_per_iter": 4.8397025,
+     "ns_per_unit": 0.0756203515625,
+     "min_ns_per_iter": 4.335955,
+     "max_ns_per_iter": 6.4728875,
+     "ratio_rust": 0.03779107578773126,
+     "ratio_fastest_b0": 0.05658498723792722
+    },
+    {
+     "label": "v30 holdout: data from file, v3 (no range)",
+     "median_ns_per_iter": 128.3467875,
+     "ns_per_unit": 2.0054185546875,
+     "min_ns_per_iter": 110.85032,
+     "max_ns_per_iter": 140.78726,
+     "ratio_rust": 1.0022027538933105,
+     "ratio_fastest_b0": 1.5006090421294405
+    },
+    {
+     "label": "v31 holdout: data from file, runtime range guard + AVX2",
+     "median_ns_per_iter": 25.1527525,
+     "ns_per_unit": 0.3930117578125,
+     "min_ns_per_iter": 21.56512,
+     "max_ns_per_iter": 26.2338925,
+     "ratio_rust": 0.19640661300928042,
+     "ratio_fastest_b0": 0.2940817496966481
+    },
+    {
+     "label": "v3 baseline x86-64 (no AVX2)",
+     "median_ns_per_iter": 127.3803575,
+     "ns_per_unit": 1.9903180859375,
+     "min_ns_per_iter": 117.2595675,
+     "max_ns_per_iter": 164.0516325,
+     "ratio_rust": 0.9946563335557925,
+     "ratio_fastest_b0": 1.4893097051936783
+    },
+    {
+     "label": "v4 baseline x86-64",
+     "median_ns_per_iter": 67.8370025,
+     "ns_per_unit": 1.0599531640625,
+     "min_ns_per_iter": 59.2651675,
+     "max_ns_per_iter": 80.5313475,
+     "ratio_rust": 0.5297088617926443,
+     "ratio_fastest_b0": 0.7931388180826687
+    },
+    {
+     "label": "v5 baseline x86-64",
+     "median_ns_per_iter": 47.5871925,
+     "ns_per_unit": 0.7435498828125,
+     "min_ns_per_iter": 40.8484425,
+     "max_ns_per_iter": 60.86749,
+     "ratio_rust": 0.37158713749302913,
+     "ratio_fastest_b0": 0.5563814470623527
+    },
+    {
+     "label": "v6 baseline x86-64",
+     "median_ns_per_iter": 44.4900675,
+     "ns_per_unit": 0.6951573046875,
+     "min_ns_per_iter": 42.54114,
+     "max_ns_per_iter": 61.59055,
+     "ratio_rust": 0.3474030713032009,
+     "ratio_fastest_b0": 0.5201703827253888
+    },
+    {
+     "label": "B0 rust",
+     "median_ns_per_iter": 128.0646925,
+     "ns_per_unit": 2.0010108203125,
+     "min_ns_per_iter": 111.40772,
+     "max_ns_per_iter": 150.76265,
+     "ratio_rust": 1.0,
+     "ratio_fastest_b0": 1.4973108348584598
+    },
+    {
+     "label": "B0 go",
+     "median_ns_per_iter": 130.9133,
+     "ns_per_unit": 2.0455203125,
+     "min_ns_per_iter": 112.7081675,
+     "max_ns_per_iter": 136.10602,
+     "ratio_rust": 1.0222435040009172,
+     "ratio_fastest_b0": 1.5306162744042506
+    },
+    {
+     "label": "B0 zig-safe",
+     "median_ns_per_iter": 122.6855575,
+     "ns_per_unit": 1.9169618359375,
+     "min_ns_per_iter": 106.3110375,
+     "max_ns_per_iter": 134.7042575,
+     "ratio_rust": 0.9579967366883733,
+     "ratio_fastest_b0": 1.4344188936025484
+    },
+    {
+     "label": "B0 zig-fast",
+     "median_ns_per_iter": 85.5297975,
+     "ns_per_unit": 1.3364030859375,
+     "min_ns_per_iter": 76.265575,
+     "max_ns_per_iter": 94.6230875,
+     "ratio_rust": 0.6678639977213079,
+     "ratio_fastest_b0": 1.0
+    },
+    {
+     "label": "B0 my-llvm",
+     "median_ns_per_iter": 213.562845,
+     "ns_per_unit": 3.336919453125,
+     "min_ns_per_iter": 184.6237975,
+     "max_ns_per_iter": 237.3941525,
+     "ratio_rust": 1.667616896046504,
+     "ratio_fastest_b0": 2.496940846843464
+    }
+   ]
+  },
+  "large": {
+   "size": 4096,
+   "iterations": 6000,
+   "rows": [
+    {
+     "label": "v0: today incl. in-loop kind dispatch",
+     "median_ns_per_iter": 16125.697,
+     "ns_per_unit": 3.936937744140625,
+     "min_ns_per_iter": 15415.507,
+     "max_ns_per_iter": 19103.816666666666,
+     "ratio_rust": 1.848903298988851,
+     "ratio_fastest_b0": 2.8289426775728046
+    },
+    {
+     "label": "v1: dispatch unswitched: bounds check, runtime-call int(float), checked add",
+     "median_ns_per_iter": 14893.9605,
+     "ns_per_unit": 3.6362208251953123,
+     "min_ns_per_iter": 13013.5925,
+     "max_ns_per_iter": 18102.852,
+     "ratio_rust": 1.7076776714494657,
+     "ratio_fastest_b0": 2.6128582532918476
+    },
+    {
+     "label": "v2: + inline checked int(float)",
+     "median_ns_per_iter": 8432.5075,
+     "ns_per_unit": 2.0587176513671874,
+     "min_ns_per_iter": 7834.382333333333,
+     "max_ns_per_iter": 9854.154166666667,
+     "ratio_rust": 0.966835165977522,
+     "ratio_fastest_b0": 1.479320884281948
+    },
+    {
+     "label": "v3: + immutable list, one bounds check, sticky checks (L2)",
+     "median_ns_per_iter": 9304.442333333332,
+     "ns_per_unit": 2.271592366536458,
+     "min_ns_per_iter": 8517.097166666666,
+     "max_ns_per_iter": 10807.0705,
+     "ratio_rust": 1.0668074766226552,
+     "ratio_fastest_b0": 1.6322850421772004
+    },
+    {
+     "label": "v4: + element range: no checks (f64, i64)",
+     "median_ns_per_iter": 4320.758666666667,
+     "ns_per_unit": 1.0548727213541667,
+     "min_ns_per_iter": 3724.1206666666667,
+     "max_ns_per_iter": 5002.694,
+     "ratio_rust": 0.4953996687978615,
+     "ratio_fastest_b0": 0.7579938151898737
+    },
+    {
+     "label": "v13: v4 + result range assume (types stay i64)",
+     "median_ns_per_iter": 4522.17,
+     "ns_per_unit": 1.10404541015625,
+     "min_ns_per_iter": 3744.2655,
+     "max_ns_per_iter": 5186.757666666666,
+     "ratio_rust": 0.5184926289752568,
+     "ratio_fastest_b0": 0.7933275509417925
+    },
+    {
+     "label": "v5: + i32 conversions (plain C)",
+     "median_ns_per_iter": 1737.3591666666666,
+     "ns_per_unit": 0.42415995279947916,
+     "min_ns_per_iter": 1580.9433333333334,
+     "max_ns_per_iter": 2046.5075,
+     "ratio_rust": 0.19919815526600315,
+     "ratio_fastest_b0": 0.30478617407084213
+    },
+    {
+     "label": "v6: + u16 storage (plain C)",
+     "median_ns_per_iter": 1787.5386666666666,
+     "ns_per_unit": 0.43641080729166665,
+     "min_ns_per_iter": 1550.8123333333333,
+     "max_ns_per_iter": 1991.084,
+     "ratio_rust": 0.2049515216533048,
+     "ratio_fastest_b0": 0.31358920001689977
+    },
+    {
+     "label": "v7: hand AVX2 f64, i64 storage",
+     "median_ns_per_iter": 1538.9333333333334,
+     "ns_per_unit": 0.37571614583333335,
+     "min_ns_per_iter": 1474.8351666666667,
+     "max_ns_per_iter": 1815.3913333333333,
+     "ratio_rust": 0.1764474997219599,
+     "ratio_fastest_b0": 0.26997618674132606
+    },
+    {
+     "label": "v8: hand AVX2 f64, u16 storage",
+     "median_ns_per_iter": 1676.8548333333333,
+     "ns_per_unit": 0.40938838704427083,
+     "min_ns_per_iter": 1485.5823333333333,
+     "max_ns_per_iter": 1907.6258333333333,
+     "ratio_rust": 0.19226098774368636,
+     "ratio_fastest_b0": 0.29417185515211525
+    },
+    {
+     "label": "v9: + FMA contraction",
+     "median_ns_per_iter": 1322.5588333333333,
+     "ns_per_unit": 0.3228903401692708,
+     "min_ns_per_iter": 976.4893333333333,
+     "max_ns_per_iter": 1407.1163333333334,
+     "ratio_rust": 0.15163892699068116,
+     "ratio_fastest_b0": 0.2320174518482869
+    },
+    {
+     "label": "v10: f32 lanes (precision narrowing)",
+     "median_ns_per_iter": 479.61383333333333,
+     "ns_per_unit": 0.11709322102864583,
+     "min_ns_per_iter": 448.1526666666667,
+     "max_ns_per_iter": 588.5325,
+     "ratio_rust": 0.054990466377403034,
+     "ratio_fastest_b0": 0.08413900136353529
+    },
+    {
+     "label": "v11: WORK ELIM: integer identity",
+     "median_ns_per_iter": 390.31666666666666,
+     "ns_per_unit": 0.09529215494791667,
+     "min_ns_per_iter": 340.46166666666664,
+     "max_ns_per_iter": 458.9215,
+     "ratio_rust": 0.04475203599883662,
+     "ratio_fastest_b0": 0.06847353488666517
+    },
+    {
+     "label": "v12: WORK ELIM: closed form",
+     "median_ns_per_iter": 6.729666666666667,
+     "ns_per_unit": 0.0016429850260416667,
+     "min_ns_per_iter": 6.233666666666666,
+     "max_ns_per_iter": 7.677,
+     "ratio_rust": 0.000771594734856751,
+     "ratio_fastest_b0": 0.0011805902863716497
+    },
+    {
+     "label": "v30 holdout: data from file, v3 (no range)",
+     "median_ns_per_iter": 9145.700666666668,
+     "ns_per_unit": 2.232837076822917,
+     "min_ns_per_iter": 7989.154666666666,
+     "max_ns_per_iter": 10845.569833333333,
+     "ratio_rust": 1.048606837531707,
+     "ratio_fastest_b0": 1.6044368768828652
+    },
+    {
+     "label": "v31 holdout: data from file, runtime range guard + AVX2",
+     "median_ns_per_iter": 1742.7003333333334,
+     "ns_per_unit": 0.42546394856770836,
+     "min_ns_per_iter": 1308.1161666666667,
+     "max_ns_per_iter": 1865.6583333333333,
+     "ratio_rust": 0.19981055054234062,
+     "ratio_fastest_b0": 0.3057231787988463
+    },
+    {
+     "label": "v3 baseline x86-64 (no AVX2)",
+     "median_ns_per_iter": 9356.849333333334,
+     "ns_per_unit": 2.2843870442708334,
+     "min_ns_per_iter": 7643.524333333334,
+     "max_ns_per_iter": 11448.754833333332,
+     "ratio_rust": 1.0728162386122988,
+     "ratio_fastest_b0": 1.6414788400579097
+    },
+    {
+     "label": "v4 baseline x86-64",
+     "median_ns_per_iter": 4826.6255,
+     "ns_per_unit": 1.1783753662109375,
+     "min_ns_per_iter": 4134.496,
+     "max_ns_per_iter": 5792.3665,
+     "ratio_rust": 0.5534001916279162,
+     "ratio_fastest_b0": 0.8467383993145337
+    },
+    {
+     "label": "v5 baseline x86-64",
+     "median_ns_per_iter": 3313.8681666666666,
+     "ns_per_unit": 0.8090498453776042,
+     "min_ns_per_iter": 3119.202,
+     "max_ns_per_iter": 3700.3226666666665,
+     "ratio_rust": 0.37995391986865035,
+     "ratio_fastest_b0": 0.5813542871686899
+    },
+    {
+     "label": "v6 baseline x86-64",
+     "median_ns_per_iter": 3418.5606666666667,
+     "ns_per_unit": 0.8346095377604167,
+     "min_ns_per_iter": 3292.732666666667,
+     "max_ns_per_iter": 3851.7056666666667,
+     "ratio_rust": 0.3919575131787188,
+     "ratio_fastest_b0": 0.5997205680973091
+    },
+    {
+     "label": "B0 rust",
+     "median_ns_per_iter": 8721.763333333334,
+     "ns_per_unit": 2.1293367513020836,
+     "min_ns_per_iter": 8303.487,
+     "max_ns_per_iter": 10166.356666666667,
+     "ratio_rust": 1.0,
+     "ratio_fastest_b0": 1.5300652441476676
+    },
+    {
+     "label": "B0 go",
+     "median_ns_per_iter": 8374.25,
+     "ns_per_unit": 2.04449462890625,
+     "min_ns_per_iter": 7845.043166666666,
+     "max_ns_per_iter": 8737.606833333333,
+     "ratio_rust": 0.9601556107346794,
+     "ratio_fastest_b0": 1.46910072895851
+    },
+    {
+     "label": "B0 zig-safe",
+     "median_ns_per_iter": 8247.744166666667,
+     "ns_per_unit": 2.0136094156901043,
+     "min_ns_per_iter": 7464.4955,
+     "max_ns_per_iter": 9593.961333333333,
+     "ratio_rust": 0.9456509941223659,
+     "ratio_fastest_b0": 1.4469077192003226
+    },
+    {
+     "label": "B0 zig-fast",
+     "median_ns_per_iter": 5700.255833333334,
+     "ns_per_unit": 1.391664021809896,
+     "min_ns_per_iter": 5188.8755,
+     "max_ns_per_iter": 6455.462166666666,
+     "ratio_rust": 0.653566901035685,
+     "ratio_fastest_b0": 1.0
+    },
+    {
+     "label": "B0 my-llvm",
+     "median_ns_per_iter": 15159.918,
+     "ns_per_unit": 3.70115185546875,
+     "min_ns_per_iter": 13757.995666666666,
+     "max_ns_per_iter": 16845.499833333335,
+     "ratio_rust": 1.7381712184348042,
+     "ratio_fastest_b0": 2.6595153697048977
+    }
+   ]
+  }
+ }
+}
