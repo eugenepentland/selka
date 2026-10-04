@@ -1,0 +1,962 @@
+{
+  "source_before": "63842d3c32ab3079d878cff89224478543f9b7f3",
+  "source_after": "d9d6362f0914df21078070288959fea3b73603e7",
+  "comparison": {
+    "identical": true,
+    "before": {
+      "entry": "0x1092750",
+      "size": 1229,
+      "entry_mod16": 0,
+      "entry_mod32": 16,
+      "entry_mod64": 16,
+      "instructions": 328,
+      "literal_relocations": [],
+      "normalized_sha256": "5d93225bad6462c576ee5587824452556c326e9dd928b439f524a3176b4e34cd",
+      "backedges": [
+        {
+          "from_offset": 155,
+          "target_offset": 128,
+          "target": "0x10927d0",
+          "target_mod16": 0,
+          "target_mod32": 16,
+          "target_mod64": 16
+        },
+        {
+          "from_offset": 281,
+          "target_offset": 252,
+          "target": "0x109284c",
+          "target_mod16": 12,
+          "target_mod32": 12,
+          "target_mod64": 12
+        },
+        {
+          "from_offset": 815,
+          "target_offset": 783,
+          "target": "0x1092a5f",
+          "target_mod16": 15,
+          "target_mod32": 31,
+          "target_mod64": 31
+        },
+        {
+          "from_offset": 828,
+          "target_offset": 783,
+          "target": "0x1092a5f",
+          "target_mod16": 15,
+          "target_mod32": 31,
+          "target_mod64": 31
+        },
+        {
+          "from_offset": 887,
+          "target_offset": 736,
+          "target": "0x1092a30",
+          "target_mod16": 0,
+          "target_mod32": 16,
+          "target_mod64": 48
+        },
+        {
+          "from_offset": 1058,
+          "target_offset": 878,
+          "target": "0x1092abe",
+          "target_mod16": 14,
+          "target_mod32": 30,
+          "target_mod64": 62
+        },
+        {
+          "from_offset": 1106,
+          "target_offset": 846,
+          "target": "0x1092a9e",
+          "target_mod16": 14,
+          "target_mod32": 30,
+          "target_mod64": 30
+        },
+        {
+          "from_offset": 1134,
+          "target_offset": 874,
+          "target": "0x1092aba",
+          "target_mod16": 10,
+          "target_mod32": 26,
+          "target_mod64": 58
+        },
+        {
+          "from_offset": 1159,
+          "target_offset": 874,
+          "target": "0x1092aba",
+          "target_mod16": 10,
+          "target_mod32": 26,
+          "target_mod64": 58
+        },
+        {
+          "from_offset": 1175,
+          "target_offset": 874,
+          "target": "0x1092aba",
+          "target_mod16": 10,
+          "target_mod32": 26,
+          "target_mod64": 58
+        },
+        {
+          "from_offset": 1198,
+          "target_offset": 874,
+          "target": "0x1092aba",
+          "target_mod16": 10,
+          "target_mod32": 26,
+          "target_mod64": 58
+        },
+        {
+          "from_offset": 1224,
+          "target_offset": 755,
+          "target": "0x1092a43",
+          "target_mod16": 3,
+          "target_mod32": 3,
+          "target_mod64": 3
+        }
+      ]
+    },
+    "after": {
+      "entry": "0x10937d0",
+      "size": 1229,
+      "entry_mod16": 0,
+      "entry_mod32": 16,
+      "entry_mod64": 16,
+      "instructions": 328,
+      "literal_relocations": [],
+      "normalized_sha256": "5d93225bad6462c576ee5587824452556c326e9dd928b439f524a3176b4e34cd",
+      "backedges": [
+        {
+          "from_offset": 155,
+          "target_offset": 128,
+          "target": "0x1093850",
+          "target_mod16": 0,
+          "target_mod32": 16,
+          "target_mod64": 16
+        },
+        {
+          "from_offset": 281,
+          "target_offset": 252,
+          "target": "0x10938cc",
+          "target_mod16": 12,
+          "target_mod32": 12,
+          "target_mod64": 12
+        },
+        {
+          "from_offset": 815,
+          "target_offset": 783,
+          "target": "0x1093adf",
+          "target_mod16": 15,
+          "target_mod32": 31,
+          "target_mod64": 31
+        },
+        {
+          "from_offset": 828,
+          "target_offset": 783,
+          "target": "0x1093adf",
+          "target_mod16": 15,
+          "target_mod32": 31,
+          "target_mod64": 31
+        },
+        {
+          "from_offset": 887,
+          "target_offset": 736,
+          "target": "0x1093ab0",
+          "target_mod16": 0,
+          "target_mod32": 16,
+          "target_mod64": 48
+        },
+        {
+          "from_offset": 1058,
+          "target_offset": 878,
+          "target": "0x1093b3e",
+          "target_mod16": 14,
+          "target_mod32": 30,
+          "target_mod64": 62
+        },
+        {
+          "from_offset": 1106,
+          "target_offset": 846,
+          "target": "0x1093b1e",
+          "target_mod16": 14,
+          "target_mod32": 30,
+          "target_mod64": 30
+        },
+        {
+          "from_offset": 1134,
+          "target_offset": 874,
+          "target": "0x1093b3a",
+          "target_mod16": 10,
+          "target_mod32": 26,
+          "target_mod64": 58
+        },
+        {
+          "from_offset": 1159,
+          "target_offset": 874,
+          "target": "0x1093b3a",
+          "target_mod16": 10,
+          "target_mod32": 26,
+          "target_mod64": 58
+        },
+        {
+          "from_offset": 1175,
+          "target_offset": 874,
+          "target": "0x1093b3a",
+          "target_mod16": 10,
+          "target_mod32": 26,
+          "target_mod64": 58
+        },
+        {
+          "from_offset": 1198,
+          "target_offset": 874,
+          "target": "0x1093b3a",
+          "target_mod16": 10,
+          "target_mod32": 26,
+          "target_mod64": 58
+        },
+        {
+          "from_offset": 1224,
+          "target_offset": 755,
+          "target": "0x1093ac3",
+          "target_mod16": 3,
+          "target_mod32": 3,
+          "target_mod64": 3
+        }
+      ]
+    },
+    "binary_hashes": {
+      "before": "ce4ac345939a3d7ab85b496fff0128ce5c582b800aa674667585f820d16b384e",
+      "after": "37960e8602d8727cd6d738df4a7dc53d61d578db2d29dcf57adfaca809026a07"
+    },
+    "normalization": "same strict symbolic relocation normalization as search-layout.py; no NOPs/instruction offsets omitted",
+    "score": {
+      "identical": true,
+      "before": {
+        "entry": "0x1073fd0",
+        "size": 1668,
+        "entry_mod16": 0,
+        "entry_mod32": 16,
+        "entry_mod64": 16,
+        "instructions": 408,
+        "literal_relocations": [],
+        "normalized_sha256": "07ac0c6001e05c535bc3b92bd46aa2dffe3b589d0eee3e57091230f381568e87",
+        "backedges": [
+          {
+            "from_offset": 331,
+            "target_offset": 251,
+            "target": "0x10740cb",
+            "target_mod16": 11,
+            "target_mod32": 11,
+            "target_mod64": 11
+          },
+          {
+            "from_offset": 528,
+            "target_offset": 512,
+            "target": "0x10741d0",
+            "target_mod16": 0,
+            "target_mod32": 16,
+            "target_mod64": 16
+          },
+          {
+            "from_offset": 607,
+            "target_offset": 560,
+            "target": "0x1074200",
+            "target_mod16": 0,
+            "target_mod32": 0,
+            "target_mod64": 0
+          },
+          {
+            "from_offset": 669,
+            "target_offset": 656,
+            "target": "0x1074260",
+            "target_mod16": 0,
+            "target_mod32": 0,
+            "target_mod64": 32
+          },
+          {
+            "from_offset": 898,
+            "target_offset": 832,
+            "target": "0x1074310",
+            "target_mod16": 0,
+            "target_mod32": 16,
+            "target_mod64": 16
+          },
+          {
+            "from_offset": 1254,
+            "target_offset": 1120,
+            "target": "0x1074430",
+            "target_mod16": 0,
+            "target_mod32": 16,
+            "target_mod64": 48
+          },
+          {
+            "from_offset": 1336,
+            "target_offset": 1312,
+            "target": "0x10744f0",
+            "target_mod16": 0,
+            "target_mod32": 16,
+            "target_mod64": 48
+          },
+          {
+            "from_offset": 1393,
+            "target_offset": 1376,
+            "target": "0x1074530",
+            "target_mod16": 0,
+            "target_mod32": 16,
+            "target_mod64": 48
+          },
+          {
+            "from_offset": 1463,
+            "target_offset": 1440,
+            "target": "0x1074570",
+            "target_mod16": 0,
+            "target_mod32": 16,
+            "target_mod64": 48
+          },
+          {
+            "from_offset": 1575,
+            "target_offset": 1522,
+            "target": "0x10745c2",
+            "target_mod16": 2,
+            "target_mod32": 2,
+            "target_mod64": 2
+          },
+          {
+            "from_offset": 1577,
+            "target_offset": 1502,
+            "target": "0x10745ae",
+            "target_mod16": 14,
+            "target_mod32": 14,
+            "target_mod64": 46
+          },
+          {
+            "from_offset": 1601,
+            "target_offset": 1522,
+            "target": "0x10745c2",
+            "target_mod16": 2,
+            "target_mod32": 2,
+            "target_mod64": 2
+          },
+          {
+            "from_offset": 1635,
+            "target_offset": 1522,
+            "target": "0x10745c2",
+            "target_mod16": 2,
+            "target_mod32": 2,
+            "target_mod64": 2
+          }
+        ]
+      },
+      "after": {
+        "entry": "0x1074df0",
+        "size": 1668,
+        "entry_mod16": 0,
+        "entry_mod32": 16,
+        "entry_mod64": 48,
+        "instructions": 408,
+        "literal_relocations": [],
+        "normalized_sha256": "07ac0c6001e05c535bc3b92bd46aa2dffe3b589d0eee3e57091230f381568e87",
+        "backedges": [
+          {
+            "from_offset": 331,
+            "target_offset": 251,
+            "target": "0x1074eeb",
+            "target_mod16": 11,
+            "target_mod32": 11,
+            "target_mod64": 43
+          },
+          {
+            "from_offset": 528,
+            "target_offset": 512,
+            "target": "0x1074ff0",
+            "target_mod16": 0,
+            "target_mod32": 16,
+            "target_mod64": 48
+          },
+          {
+            "from_offset": 607,
+            "target_offset": 560,
+            "target": "0x1075020",
+            "target_mod16": 0,
+            "target_mod32": 0,
+            "target_mod64": 32
+          },
+          {
+            "from_offset": 669,
+            "target_offset": 656,
+            "target": "0x1075080",
+            "target_mod16": 0,
+            "target_mod32": 0,
+            "target_mod64": 0
+          },
+          {
+            "from_offset": 898,
+            "target_offset": 832,
+            "target": "0x1075130",
+            "target_mod16": 0,
+            "target_mod32": 16,
+            "target_mod64": 48
+          },
+          {
+            "from_offset": 1254,
+            "target_offset": 1120,
+            "target": "0x1075250",
+            "target_mod16": 0,
+            "target_mod32": 16,
+            "target_mod64": 16
+          },
+          {
+            "from_offset": 1336,
+            "target_offset": 1312,
+            "target": "0x1075310",
+            "target_mod16": 0,
+            "target_mod32": 16,
+            "target_mod64": 16
+          },
+          {
+            "from_offset": 1393,
+            "target_offset": 1376,
+            "target": "0x1075350",
+            "target_mod16": 0,
+            "target_mod32": 16,
+            "target_mod64": 16
+          },
+          {
+            "from_offset": 1463,
+            "target_offset": 1440,
+            "target": "0x1075390",
+            "target_mod16": 0,
+            "target_mod32": 16,
+            "target_mod64": 16
+          },
+          {
+            "from_offset": 1575,
+            "target_offset": 1522,
+            "target": "0x10753e2",
+            "target_mod16": 2,
+            "target_mod32": 2,
+            "target_mod64": 34
+          },
+          {
+            "from_offset": 1577,
+            "target_offset": 1502,
+            "target": "0x10753ce",
+            "target_mod16": 14,
+            "target_mod32": 14,
+            "target_mod64": 14
+          },
+          {
+            "from_offset": 1601,
+            "target_offset": 1522,
+            "target": "0x10753e2",
+            "target_mod16": 2,
+            "target_mod32": 2,
+            "target_mod64": 34
+          },
+          {
+            "from_offset": 1635,
+            "target_offset": 1522,
+            "target": "0x10753e2",
+            "target_mod16": 2,
+            "target_mod32": 2,
+            "target_mod64": 34
+          }
+        ]
+      }
+    },
+    "caller": {
+      "before": {
+        "frame_stack": "0x258",
+        "saved_registers": [
+          "rbp",
+          "r15",
+          "r14",
+          "r13",
+          "r12",
+          "rbx"
+        ],
+        "loop_entry": "0x104f3b0",
+        "loop_relative": "0xe30",
+        "loop_entry_mod16": 0,
+        "loop_entry_mod32": 16,
+        "loop_entry_mod64": 48,
+        "loop_span_bytes": 793,
+        "instruction_count": 156,
+        "stack_reference_count": 41,
+        "stack_references": [
+          {
+            "offset": "0x0",
+            "instruction": "mov    0x10(%rsp),%rax"
+          },
+          {
+            "offset": "0x20",
+            "instruction": "movq   $0x10ba120,0x70(%rsp)"
+          },
+          {
+            "offset": "0x29",
+            "instruction": "movq   $0x10ba120,0x1c8(%rsp)"
+          },
+          {
+            "offset": "0x35",
+            "instruction": "movq   $0x10ba120,0x48(%rsp)"
+          },
+          {
+            "offset": "0x45",
+            "instruction": "test   %rax,0x50(%rsp)"
+          },
+          {
+            "offset": "0x7a",
+            "instruction": "lea    0x70(%rsp),%rdx"
+          },
+          {
+            "offset": "0x7f",
+            "instruction": "lea    0x48(%rsp),%rcx"
+          },
+          {
+            "offset": "0x84",
+            "instruction": "mov    0x44(%rsp),%r8d"
+          },
+          {
+            "offset": "0xa0",
+            "instruction": "movq   $0x10b9490,0x70(%rsp)"
+          },
+          {
+            "offset": "0xa9",
+            "instruction": "movq   $0x10b9490,0x1c8(%rsp)"
+          },
+          {
+            "offset": "0xb5",
+            "instruction": "movq   $0x10b9490,0x48(%rsp)"
+          },
+          {
+            "offset": "0xc5",
+            "instruction": "test   %rax,0x50(%rsp)"
+          },
+          {
+            "offset": "0xfa",
+            "instruction": "lea    0x70(%rsp),%rdx"
+          },
+          {
+            "offset": "0xff",
+            "instruction": "lea    0x48(%rsp),%rcx"
+          },
+          {
+            "offset": "0x104",
+            "instruction": "mov    0x44(%rsp),%r8d"
+          },
+          {
+            "offset": "0x116",
+            "instruction": "mov    0x70(%rsp),%r12"
+          },
+          {
+            "offset": "0x11b",
+            "instruction": "mov    %r12,0xa8(%rsp)"
+          },
+          {
+            "offset": "0x123",
+            "instruction": "mov    %r12,0x48(%rsp)"
+          },
+          {
+            "offset": "0x138",
+            "instruction": "mov    %r12,0x70(%rsp)"
+          },
+          {
+            "offset": "0x13d",
+            "instruction": "mov    %r12,0xa0(%rsp)"
+          },
+          {
+            "offset": "0x150",
+            "instruction": "mov    %r12,0xa8(%rsp)"
+          },
+          {
+            "offset": "0x158",
+            "instruction": "mov    %r12,0x48(%rsp)"
+          },
+          {
+            "offset": "0x166",
+            "instruction": "movq   $0x10ba120,0x70(%rsp)"
+          },
+          {
+            "offset": "0x175",
+            "instruction": "mov    %r12,0xa8(%rsp)"
+          },
+          {
+            "offset": "0x17d",
+            "instruction": "mov    %r12,0x48(%rsp)"
+          },
+          {
+            "offset": "0x18b",
+            "instruction": "movq   $0x10b9490,0x70(%rsp)"
+          },
+          {
+            "offset": "0x19a",
+            "instruction": "mov    %r12,0xa8(%rsp)"
+          },
+          {
+            "offset": "0x1a2",
+            "instruction": "mov    %r12,0x48(%rsp)"
+          },
+          {
+            "offset": "0x1c1",
+            "instruction": "mov    %r12,0x70(%rsp)"
+          },
+          {
+            "offset": "0x1c6",
+            "instruction": "mov    %r12,0xa0(%rsp)"
+          },
+          {
+            "offset": "0x1e9",
+            "instruction": "movq   $0x0,0xa8(%rsp)"
+          },
+          {
+            "offset": "0x1f5",
+            "instruction": "mov    0x30(%rsp),%rax"
+          },
+          {
+            "offset": "0x219",
+            "instruction": "mov    %rax,0x48(%rsp)"
+          },
+          {
+            "offset": "0x21e",
+            "instruction": "mov    %rax,0x70(%rsp)"
+          },
+          {
+            "offset": "0x223",
+            "instruction": "mov    %rax,0x1c8(%rsp)"
+          },
+          {
+            "offset": "0x249",
+            "instruction": "movq   $0x0,0x1c8(%rsp)"
+          },
+          {
+            "offset": "0x278",
+            "instruction": "movq   $0x0,0x1c8(%rsp)"
+          },
+          {
+            "offset": "0x2b5",
+            "instruction": "movq   $0x0,0xa0(%rsp)"
+          },
+          {
+            "offset": "0x2c1",
+            "instruction": "mov    0x8(%rsp),%rdx"
+          },
+          {
+            "offset": "0x30c",
+            "instruction": "mov    %rax,0x8(%rsp)"
+          },
+          {
+            "offset": "0x314",
+            "instruction": "cmp    %r15,0x28(%rsp)"
+          }
+        ],
+        "calls": [
+          {
+            "offset": "0x89",
+            "instruction": "call   <myl_rc_native_take>"
+          },
+          {
+            "offset": "0x109",
+            "instruction": "call   <myl_rc_native_take>"
+          },
+          {
+            "offset": "0x208",
+            "instruction": "call   <myl_native_text_join>"
+          },
+          {
+            "offset": "0x231",
+            "instruction": "call   <myl_f_c022a6ad651d6537a30c1e2f178a185a896cdb5bde02baa31c70d91d735e3e85>"
+          }
+        ]
+      },
+      "after": {
+        "frame_stack": "0x258",
+        "saved_registers": [
+          "rbp",
+          "r15",
+          "r14",
+          "r13",
+          "r12",
+          "rbx"
+        ],
+        "loop_entry": "0x1050bd0",
+        "loop_relative": "0x2440",
+        "loop_entry_mod16": 0,
+        "loop_entry_mod32": 16,
+        "loop_entry_mod64": 16,
+        "loop_span_bytes": 815,
+        "instruction_count": 156,
+        "stack_reference_count": 41,
+        "stack_references": [
+          {
+            "offset": "0x3",
+            "instruction": "mov    0x8(%rsp),%rax"
+          },
+          {
+            "offset": "0x19",
+            "instruction": "movq   $0x10bb2b0,0x70(%rsp)"
+          },
+          {
+            "offset": "0x22",
+            "instruction": "movq   $0x10bb2b0,0x1c8(%rsp)"
+          },
+          {
+            "offset": "0x2e",
+            "instruction": "movq   $0x10bb2b0,0x48(%rsp)"
+          },
+          {
+            "offset": "0x3e",
+            "instruction": "test   %rax,0x50(%rsp)"
+          },
+          {
+            "offset": "0x53",
+            "instruction": "cmpq   $0x0,0xf0(%rsp)"
+          },
+          {
+            "offset": "0x83",
+            "instruction": "lea    0x70(%rsp),%rdx"
+          },
+          {
+            "offset": "0x88",
+            "instruction": "lea    0x48(%rsp),%rcx"
+          },
+          {
+            "offset": "0x8d",
+            "instruction": "mov    0x44(%rsp),%r8d"
+          },
+          {
+            "offset": "0xb0",
+            "instruction": "movq   $0x10ba620,0x70(%rsp)"
+          },
+          {
+            "offset": "0xb9",
+            "instruction": "movq   $0x10ba620,0x1c8(%rsp)"
+          },
+          {
+            "offset": "0xc5",
+            "instruction": "movq   $0x10ba620,0x48(%rsp)"
+          },
+          {
+            "offset": "0xd5",
+            "instruction": "test   %rax,0x50(%rsp)"
+          },
+          {
+            "offset": "0xea",
+            "instruction": "cmpq   $0x0,0xf0(%rsp)"
+          },
+          {
+            "offset": "0x11a",
+            "instruction": "lea    0x70(%rsp),%rdx"
+          },
+          {
+            "offset": "0x11f",
+            "instruction": "lea    0x48(%rsp),%rcx"
+          },
+          {
+            "offset": "0x124",
+            "instruction": "mov    0x44(%rsp),%r8d"
+          },
+          {
+            "offset": "0x136",
+            "instruction": "mov    0x70(%rsp),%r12"
+          },
+          {
+            "offset": "0x13b",
+            "instruction": "mov    %r12,0xa8(%rsp)"
+          },
+          {
+            "offset": "0x143",
+            "instruction": "mov    %r12,0x48(%rsp)"
+          },
+          {
+            "offset": "0x158",
+            "instruction": "mov    %r12,0x70(%rsp)"
+          },
+          {
+            "offset": "0x15d",
+            "instruction": "mov    %r12,0xa0(%rsp)"
+          },
+          {
+            "offset": "0x170",
+            "instruction": "mov    %r12,0xa8(%rsp)"
+          },
+          {
+            "offset": "0x178",
+            "instruction": "mov    %r12,0x48(%rsp)"
+          },
+          {
+            "offset": "0x186",
+            "instruction": "movq   $0x10bb2b0,0x70(%rsp)"
+          },
+          {
+            "offset": "0x195",
+            "instruction": "mov    %r12,0xa8(%rsp)"
+          },
+          {
+            "offset": "0x19d",
+            "instruction": "mov    %r12,0x48(%rsp)"
+          },
+          {
+            "offset": "0x1ab",
+            "instruction": "movq   $0x10ba620,0x70(%rsp)"
+          },
+          {
+            "offset": "0x1ba",
+            "instruction": "mov    %r12,0xa8(%rsp)"
+          },
+          {
+            "offset": "0x1c2",
+            "instruction": "mov    %r12,0x48(%rsp)"
+          },
+          {
+            "offset": "0x1e1",
+            "instruction": "mov    %r12,0x70(%rsp)"
+          },
+          {
+            "offset": "0x1e6",
+            "instruction": "mov    %r12,0xa0(%rsp)"
+          },
+          {
+            "offset": "0x209",
+            "instruction": "movq   $0x0,0xa8(%rsp)"
+          },
+          {
+            "offset": "0x215",
+            "instruction": "mov    0x30(%rsp),%rax"
+          },
+          {
+            "offset": "0x239",
+            "instruction": "mov    %rax,0x48(%rsp)"
+          },
+          {
+            "offset": "0x23e",
+            "instruction": "mov    %rax,0x70(%rsp)"
+          },
+          {
+            "offset": "0x243",
+            "instruction": "mov    %rax,0x1c8(%rsp)"
+          },
+          {
+            "offset": "0x269",
+            "instruction": "movq   $0x0,0x1c8(%rsp)"
+          },
+          {
+            "offset": "0x298",
+            "instruction": "movq   $0x0,0x1c8(%rsp)"
+          },
+          {
+            "offset": "0x2d5",
+            "instruction": "movq   $0x0,0xa0(%rsp)"
+          },
+          {
+            "offset": "0x32a",
+            "instruction": "cmp    %r15,0x28(%rsp)"
+          }
+        ],
+        "calls": [
+          {
+            "offset": "0x92",
+            "instruction": "call   <myl_rc_native_take>"
+          },
+          {
+            "offset": "0x129",
+            "instruction": "call   <myl_rc_native_take>"
+          },
+          {
+            "offset": "0x228",
+            "instruction": "call   <myl_native_text_join>"
+          },
+          {
+            "offset": "0x251",
+            "instruction": "call   <myl_f_c022a6ad651d6537a30c1e2f178a185a896cdb5bde02baa31c70d91d735e3e85>"
+          }
+        ]
+      }
+    },
+    "limits": [
+      "Join helper identity includes instruction offsets/NOPs/registers and named target offsets; no new runtime join work or helper frame/spill growth found.",
+      "Caller register allocation differs: checksum stack accesses become register operations, but overall stack-reference instruction count stays41. Caller identity is not claimed.",
+      "Helper/caller/score addresses changed; changed code placement elsewhere and allocation chain remain possible causes, not proven. No new source/timing performed."
+    ],
+    "caller_allocation_change": "Before checksum loads/stores stack0x8 each iteration; after checksum is carried inrax/r14, while counter staysr15. Same saved-register set and0x258 frame; no added spill burden found.",
+    "semantic_review": "Runtime join helper and score bodies retain identical normalized instructions and all relative offsets/NOPs. No join algorithm,allocation/root sequence,check or refusal change. Caller outer loop has different register allocation/code placement; no proven causal attribution of5.5%cost."
+  },
+  "archives": [
+    {
+      "raw": "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-combined-20261004/.mylang-cache/goal110-text-combined/join-layout/after-join-loop.asm",
+      "raw_sha256": "b20bdb7c82167dda2769795c8dba1d101f0fe33af3909ce77cdca66f57004ef5",
+      "archive": "join-layout-after-join-loop.asm.gz",
+      "archive_sha256": "8be51a8fd293e635288a8265949d251411555e14bdb1df49ec13d976137b50c1"
+    },
+    {
+      "raw": "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-combined-20261004/.mylang-cache/goal110-text-combined/join-layout/after-myl_f_c022a6ad651d6537a30c1e2f178a185a896cdb5bde02baa31c70d91d735e3e85.asm",
+      "raw_sha256": "0ec6d32390963017ee92a93e5d70a5cba84a9a3e2c6c99731816754a47a353a1",
+      "archive": "join-layout-after-myl_f_c022a6ad651d6537a30c1e2f178a185a896cdb5bde02baa31c70d91d735e3e85.asm.gz",
+      "archive_sha256": "9ac18fd138d3cf9cc1a26db9e7c398bdb280f945f9ee9236a175285ceddad7cb"
+    },
+    {
+      "raw": "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-combined-20261004/.mylang-cache/goal110-text-combined/join-layout/after-myl_f_c022a6ad651d6537a30c1e2f178a185a896cdb5bde02baa31c70d91d735e3e85.normalized",
+      "raw_sha256": "07ac0c6001e05c535bc3b92bd46aa2dffe3b589d0eee3e57091230f381568e87",
+      "archive": "join-layout-after-myl_f_c022a6ad651d6537a30c1e2f178a185a896cdb5bde02baa31c70d91d735e3e85.normalized.gz",
+      "archive_sha256": "e4a19846478f5d5720fe5e7f7a432a58f601970a9c27b4a3e5c4844af2b96c47"
+    },
+    {
+      "raw": "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-combined-20261004/.mylang-cache/goal110-text-combined/join-layout/after-myl_native_text_join.asm",
+      "raw_sha256": "3e9775e92d7011c25cd8ff442b09e37e80204ea434a55a12c56a771afbb1ad2b",
+      "archive": "join-layout-after-myl_native_text_join.asm.gz",
+      "archive_sha256": "295aa297bbaa650109bd280160ba603e56f74b7f98e61f08badd05853ced43db"
+    },
+    {
+      "raw": "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-combined-20261004/.mylang-cache/goal110-text-combined/join-layout/after-myl_native_text_join.normalized",
+      "raw_sha256": "5d93225bad6462c576ee5587824452556c326e9dd928b439f524a3176b4e34cd",
+      "archive": "join-layout-after-myl_native_text_join.normalized.gz",
+      "archive_sha256": "4c7fa18e5b42367ba9e6f85924a0e0ced326067d3b287977fe18841e847c46ab"
+    },
+    {
+      "raw": "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-combined-20261004/.mylang-cache/goal110-text-combined/join-layout/after-symbols.txt",
+      "raw_sha256": "414551ce0c3150268c986940d7af572536ed79889403dd5af6e689b9a1f9c4d7",
+      "archive": "join-layout-after-symbols.txt.gz",
+      "archive_sha256": "83696ef3ba8047021cf6172b775383e3675b122fe8ccb3d49128ed090579549b"
+    },
+    {
+      "raw": "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-combined-20261004/.mylang-cache/goal110-text-combined/join-layout/before-join-loop.asm",
+      "raw_sha256": "5578ee39789256d38d0f29743c1371d4fa5c99b481ca12e44cfa60bc5be7bcde",
+      "archive": "join-layout-before-join-loop.asm.gz",
+      "archive_sha256": "5dcda7abfd6ecbd417caa14e1984178aa919df2f62ad79da727eac5a2caf8595"
+    },
+    {
+      "raw": "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-combined-20261004/.mylang-cache/goal110-text-combined/join-layout/before-myl_f_c022a6ad651d6537a30c1e2f178a185a896cdb5bde02baa31c70d91d735e3e85.asm",
+      "raw_sha256": "45f14ee2306b5995837c03c4b5f5a24b6a67dba41ff5b650bd82349228ef338e",
+      "archive": "join-layout-before-myl_f_c022a6ad651d6537a30c1e2f178a185a896cdb5bde02baa31c70d91d735e3e85.asm.gz",
+      "archive_sha256": "a2f8bdbd15abf6177ae639667950a6f811be1666c45bf16c4d8c80de52d1fe2f"
+    },
+    {
+      "raw": "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-combined-20261004/.mylang-cache/goal110-text-combined/join-layout/before-myl_f_c022a6ad651d6537a30c1e2f178a185a896cdb5bde02baa31c70d91d735e3e85.normalized",
+      "raw_sha256": "07ac0c6001e05c535bc3b92bd46aa2dffe3b589d0eee3e57091230f381568e87",
+      "archive": "join-layout-before-myl_f_c022a6ad651d6537a30c1e2f178a185a896cdb5bde02baa31c70d91d735e3e85.normalized.gz",
+      "archive_sha256": "e4a19846478f5d5720fe5e7f7a432a58f601970a9c27b4a3e5c4844af2b96c47"
+    },
+    {
+      "raw": "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-combined-20261004/.mylang-cache/goal110-text-combined/join-layout/before-myl_native_text_join.asm",
+      "raw_sha256": "bd642b7f53da0ddf279a08281fec1b6eeeb782e1ff266e6eb4fa333bfc45daf6",
+      "archive": "join-layout-before-myl_native_text_join.asm.gz",
+      "archive_sha256": "a628a1664ecdf0a5db3a4f7907ae6e5cccab9bc6e41be828a53d6212aa1a54c2"
+    },
+    {
+      "raw": "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-combined-20261004/.mylang-cache/goal110-text-combined/join-layout/before-myl_native_text_join.normalized",
+      "raw_sha256": "5d93225bad6462c576ee5587824452556c326e9dd928b439f524a3176b4e34cd",
+      "archive": "join-layout-before-myl_native_text_join.normalized.gz",
+      "archive_sha256": "4c7fa18e5b42367ba9e6f85924a0e0ced326067d3b287977fe18841e847c46ab"
+    },
+    {
+      "raw": "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-combined-20261004/.mylang-cache/goal110-text-combined/join-layout/before-symbols.txt",
+      "raw_sha256": "2e79035b59e3f15079097652afe035888e6f5e87c98d2accc0b2306224214298",
+      "archive": "join-layout-before-symbols.txt.gz",
+      "archive_sha256": "fe4fe4ebac2ce7aacb1796f26bdc0c8a47c04a79c98efa35b60b4df56fba072f"
+    },
+    {
+      "raw": "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-combined-20261004/.mylang-cache/goal110-text-combined/join-layout/summary.json",
+      "raw_sha256": "341d466505c02051a810de67efed98e773152c4322e15cb696f285b10d76f081",
+      "archive": "join-layout-summary.json.gz",
+      "archive_sha256": "599643ea0bda9bfd3442fec91d5b4e4c079eac358bf93c954cc5fa52185e1f33"
+    }
+  ],
+  "normalizer_script_sha256": "fe0f0ca8423d842e223a4a269b0999e535d1f4c99ebf9cdfa1268e5dfe3177fe",
+  "body_command": "objdump -d --no-show-raw-insn --disassemble=<symbol> <unchanged binary>; nm -n -S <unchanged binary>",
+  "loop_selection": "Actual timed join for-loop manually verified in kernel. Extract the first enclosing backward jne after the native join call; keep all instruction addresses/operands in the excerpts.",
+  "limit": "No new measurement/build/source change. Same helper code and no frame/stack-reference growth do not establish a causal placement explanation for5.5%cost."
+}

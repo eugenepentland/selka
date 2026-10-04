@@ -69,3 +69,22 @@ exact snapshots and successful two-test log. To reproduce, extract into a privat
 directory, set disk TMPDIR/private Zig caches, and run through
 `scripts/build-slot.sh build zig test allocation_review.zig` using the recorded
 Zig toolchain. No canonical dashboard or candidate-owned file was edited.
+
+## Coverage correction — 2026-10-04
+
+A later review found that `qbe_loop_unswitch_test.sameInputOutcome` supplied
+numeric guest arguments without the `--` delimiter required by
+`native_execute.Options.arguments`. Those values become runtime options, so its
+accounted/unaccounted equality can compare matching option failures. The earlier
+paragraphs describing those unit comparisons do not establish their claimed
+dynamic input/trap coverage, despite the reported passing test count. The isolated
+allocation-failure checks remain separate and unaffected. A test-only correction
+and explicit successful-result assertions are being prepared.
+
+The separate `unswitch-joins.py` matrix uses direct subprocess argv and a Python
+oracle; it does not use this helper. Coordinator replay still validates its144
+saved cases covering432 recorded guest executions, including real successful
+outputs and division failures. Direct benchmark qualification/timing also passes
+argv directly and checks explicit checksums. Original logs/receipts are retained;
+no new execution is claimed by this correction. See the
+[argv coverage review](../../benchmarks/runtime/candidates/goal110-argv-coverage-20261004-review.json).

@@ -1,0 +1,17 @@
+{
+  "reviewed_utc": "2026-10-04T05:09:03.655780+00:00",
+  "finding": "qbe_loop_unswitch_test.sameInputOutcome omits the runtime-options delimiter and does not establish the claimed dynamic argv coverage; its differential can compare matching option failures.",
+  "source_scope": "Existing unit helper and earlier partial-admission review claims; no benchmark production source or measured outcome changed.",
+  "independent_432_matrix": {
+    "status": "unaffected; separate direct subprocess argv path with independent oracle",
+    "runner_sha256": "6dea462cab4432c7c0ab1c3d8918a5fece57d6707c376d7a93b4d1ed09caee0f",
+    "receipt_sha256": "e1429690b639ae799a47e0940dcbaace028a08493e315610faa85f8ab44343e5",
+    "replayed_cases": 144,
+    "successful_cases": 138,
+    "division_failure_cases": 6,
+    "recorded_guest_executions": 432,
+    "new_executions": 0
+  },
+  "direct_benchmark_qualification": "build-and-check.py and timing runner directly pass argv and require exact checksums, not native_execute.Options.arguments.",
+  "action": "Prepare separate test-only delimiter correction with explicit success assertions; preserve old receipts and append clarification."
+}

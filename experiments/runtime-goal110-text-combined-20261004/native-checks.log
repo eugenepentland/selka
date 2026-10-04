@@ -1,0 +1,9 @@
+native text and dictionary tests passed
+native RC collections: 53 passed
+exact search slices: 31104 oracle outcomes
+native text method tests passed
+native text index tests passed
+streaming tails: owner=4096 views=1016 copied=36
+streaming tails: owner=32768 views=8184 copied=36
+native text view tests passed
+Five native join/text suites passed under ASan + UBSan at -O3.

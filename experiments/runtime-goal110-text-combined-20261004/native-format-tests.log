@@ -1,0 +1,5 @@
+1/4 native_format.test.native scalar text uses canonical integer and floating spellings...OK
+2/4 native_format.test.native integer formatting fits its twenty ASCII octet bound...OK
+3/4 native_format.test.native scalar formatting rejects insufficient caller storage...OK
+4/4 native_format.test.native numeric exports publish only successful grammar answers...OK
+All 4 tests passed.
