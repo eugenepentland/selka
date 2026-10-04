@@ -1,0 +1,38 @@
+{
+  "kind": "staged-index-source-snapshot-for-pre-grouping-native-differential",
+  "base_revision": "957f97c6",
+  "native_receipt": "native-differential.json",
+  "records": [
+    {
+      "source": "SPEC.md",
+      "snapshot": "experiments/runtime-goal110-scalar-slots-20261004/pre-grouping-source/SPEC.md",
+      "sha256": "29e824b756b2dd03add81f0ec0f58bda2b8efdf48db046ec9f7e955fb95136eb",
+      "bytes": 765227
+    },
+    {
+      "source": "src/qbe_build_llvm_emit.zig",
+      "snapshot": "experiments/runtime-goal110-scalar-slots-20261004/pre-grouping-source/src/qbe_build_llvm_emit.zig",
+      "sha256": "da148991e29756e74b24cbd96805c39e9fc9113b26538f65aa998b61de0b119f",
+      "bytes": 50097
+    },
+    {
+      "source": "src/qbe_build_llvm_lower.zig",
+      "snapshot": "experiments/runtime-goal110-scalar-slots-20261004/pre-grouping-source/src/qbe_build_llvm_lower.zig",
+      "sha256": "769d77c7d311bb980c305bf2f01e60b2b3df24d32dc5d55c261210d5f8ef7869",
+      "bytes": 39944
+    },
+    {
+      "source": "src/qbe_build_llvm_test.zig",
+      "snapshot": "experiments/runtime-goal110-scalar-slots-20261004/pre-grouping-source/src/qbe_build_llvm_test.zig",
+      "sha256": "b2e2d1de7b3d6c612ef59419dc04b5a749add50173fc226f98712decc49f04d9",
+      "bytes": 39356
+    },
+    {
+      "source": "src/qbe_build_llvm_slots.zig",
+      "snapshot": "experiments/runtime-goal110-scalar-slots-20261004/pre-grouping-source/src/qbe_build_llvm_slots.zig",
+      "sha256": "647be5ff62d050c1bdff015840eafa07c58ba58e2259403f9809f634b300287d",
+      "bytes": 3499
+    }
+  ],
+  "helper_reconstruction": "native-proof-pre-grouping.zig restores the sole option-field grouping edit to the executed helper; the helper itself did not print a hash in that first execution receipt."
+}

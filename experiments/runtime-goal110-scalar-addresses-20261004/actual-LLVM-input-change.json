@@ -1,0 +1,41 @@
+{
+  "kind": "uncommitted-hybrid-address-actual-LLVM-input-change",
+  "a29_input": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-slots-guests/llvm-dump/myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5.ll",
+  "a29_sha256": "dc11c2b701464224ce110ae509e4955efc1e65da1ff2cd827d08cca8b839f5b9",
+  "hybrid_input": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-addresses-diagnostic/llvm-dump/myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5.ll",
+  "hybrid_sha256": "9aa8b822e56741743fc5d1d5abeb954083304d29637479415573d61c61bdda41",
+  "LLVM_inputs_differ": true,
+  "counts": [
+    {
+      "pattern": " = alloca i8, i64 8, align 8",
+      "a29_count": 148,
+      "hybrid_count": 148
+    },
+    {
+      "pattern": " = ptrtoint ptr ",
+      "a29_count": 145,
+      "hybrid_count": 145
+    },
+    {
+      "pattern": " = inttoptr i64 ",
+      "a29_count": 5601,
+      "hybrid_count": 2970
+    },
+    {
+      "pattern": "load i64, ptr %mem",
+      "a29_count": 280,
+      "hybrid_count": 1017
+    },
+    {
+      "pattern": "store i64",
+      "a29_count": 8054,
+      "hybrid_count": 8054
+    },
+    {
+      "pattern": "ptr %mem",
+      "a29_count": 523,
+      "hybrid_count": 3154
+    }
+  ],
+  "limits": "Unoptimized translated LLVM counters, not hot-loop dynamic counts; final optimized ELF proved identical separately."
+}

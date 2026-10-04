@@ -1,0 +1,58 @@
+[
+  {
+    "backend": "llvm",
+    "arm": "control",
+    "binary": "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/.mylang-cache/goal110-join/join-runner/bin/compute-my-llvm",
+    "binary_sha256": "42da273ff03514d65eff3404ec681578377022d9c71d135acef37835dcece4ae",
+    "entry": "myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5",
+    "entry_bytes": 20050,
+    "text_bytes": 169554,
+    "instruction_lines": 4823,
+    "frame_prologue": [
+      "1029c4a:\t48 81 ec d8 02 00 00 \tsub    $0x2d8,%rsp"
+    ],
+    "disassembly_sha256": "d70f6aaa15c832af78752578fe8037f08608040f35ed06423a1074e620499dc1"
+  },
+  {
+    "backend": "llvm",
+    "arm": "candidate",
+    "binary": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-slots-guests/compute-my-llvm",
+    "binary_sha256": "4dd2666d4377d494db144e43b03fa8e92e2f8452797690f0ec40fe7aac193e67",
+    "entry": "myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5",
+    "entry_bytes": 20050,
+    "text_bytes": 169554,
+    "instruction_lines": 4823,
+    "frame_prologue": [
+      "1029c4a:\t48 81 ec d8 02 00 00 \tsub    $0x2d8,%rsp"
+    ],
+    "disassembly_sha256": "6bf1908d8ea7267ce7e654a74e6b6515fb021df88098f6892732f8380c0ee2b1"
+  },
+  {
+    "backend": "qbe",
+    "arm": "control",
+    "binary": "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/.mylang-cache/goal110-join/join-runner/bin/compute-my-qbe",
+    "binary_sha256": "fbdba297a0c87620c89512bc4262be356405a4d5dead81a2d020218aa46090cb",
+    "entry": "myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5",
+    "entry_bytes": 43823,
+    "text_bytes": 204125,
+    "instruction_lines": 10062,
+    "frame_prologue": [
+      "10164c8:\t48 81 ec 98 0b 00 00 \tsub    $0xb98,%rsp"
+    ],
+    "disassembly_sha256": "5e920364afd6dee29ee1130cabd2618a90e84e321555433a627ffea49cd6f4b5"
+  },
+  {
+    "backend": "qbe",
+    "arm": "candidate",
+    "binary": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-slots-guests/compute-my-qbe",
+    "binary_sha256": "e98077fe7c1f54d787c1e1886a1183348691040561f5fc005b67cfd708cf118a",
+    "entry": "myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5",
+    "entry_bytes": 43823,
+    "text_bytes": 204125,
+    "instruction_lines": 10062,
+    "frame_prologue": [
+      "10164c8:\t48 81 ec 98 0b 00 00 \tsub    $0xb98,%rsp"
+    ],
+    "disassembly_sha256": "91c998da8a29a0a587f7ae2a639be1b99e3cfee7a1d1112c249b036c18584b51"
+  }
+]

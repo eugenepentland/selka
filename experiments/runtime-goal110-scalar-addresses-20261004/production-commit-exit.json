@@ -1,0 +1,10 @@
+{
+  "command": [
+    "git",
+    "commit",
+    "-m",
+    "experiment(llvm): retain integer values with direct scalar addresses"
+  ],
+  "exit_status": 0,
+  "revision_after": "1fdae8e1444743786650acef2ddb17eefa4411cc"
+}

@@ -1,0 +1,22 @@
+test-units
++- run test 18 pass, 1 fail (19 total)
+guardian/test: test wall 1.14s; slowest over 50ms:
+guardian/test:   0.77s  qbe_rc_append_test.test.RC-PLAIN-READY-NESTED-1 per-append hot hint retains refused proofs and presized guard exception
+guardian/test:   0.23s  qbe_rc_append_test.test.RC append loop lazily queries after entry reset and invalidates before slow allocation
+guardian/test:   0.11s  qbe_rc_loop_codegen_test.test.RC-PRESIZED-APPEND-1 a certified comprehension appends into guarded room without calls
+guardian/test: FAIL — 1 failed of 19
+guardian/test: RESULT {"passed":18,"failed":1,"skipped":0}
+error: 'qbe_rc_append_test.test.RC-PLAIN-READY-NESTED-1 per-append hot hint retains refused proofs and presized guard exception' failed:
+       guardian/test: 19 test(s) selected by filter: "RC-PRESIZED-APPEND-1", "RC-PLAIN-READY-NESTED-1", "RC append loop" (+1 more) — 7 match by name, 12 unnamed test block(s) run regardless
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:614:14: 0x1409ec9 in expect (std.zig)
+           if (!ok) return error.TestUnexpectedResult;
+                    ^
+       /home/epentland/ai/canopy/mylang-worktrees/goal110-presize-ready-20261004/src/qbe_rc_append_test.zig:165:5: 0x140c719 in test.RC-PLAIN-READY-NESTED-1 per-append hot hint retains refused proofs and presized guard exception (root_test.zig)
+           try t.expect(std.mem.indexOf(u8, comprehension_il, "call $myl_rc_list_plain_ready_hot(") != null);
+           ^
+failed command: sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_QBE=/home/epentland/ai/canopy/mylang-worktrees/goal110-presize-ready-20261004/zig-out/focus/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./.mylang-cache/goal110-presize-ready-review/zig-local/o/12c8d19a867e849b03f36c7daa0e3047/test --guardian-filter=RC-PRESIZED-APPEND-1 --guardian-filter=RC-PLAIN-READY-NESTED-1 "--guardian-filter=RC append loop" --guardian-filter=RC-PLAIN-APPEND-1 --cache-dir=./.mylang-cache/goal110-presize-ready-review/zig-local --seed=0x91a9592b --listen=-
+
+Build Summary: 8/10 steps succeeded (1 failed); 18/19 tests passed (1 failed)
+test-units transitive failure
++- run test 18 pass, 1 fail (19 total)
+

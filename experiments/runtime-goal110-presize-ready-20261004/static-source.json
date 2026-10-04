@@ -1,0 +1,29 @@
+{
+  "schema": "mylang-goal110-presize-ready-source-v1",
+  "status": "pass",
+  "baseline_revision": "63df6b6c481b12fd711755ec40cdcb5d1c984ccc",
+  "candidate_revision": "63842d3c32ab3079d878cff89224478543f9b7f3",
+  "changed_source_files": [
+    "src/qbe_rc_append_loop.zig",
+    "src/qbe_rc_loop_codegen_test.zig"
+  ],
+  "only_codegen_module_changed": "src/qbe_rc_append_loop.zig",
+  "module_before_sha256": "682615370287d7231dc6464e6c4a5fa2383e64c2505cddd0233f8e491b53ca21",
+  "module_after_sha256": "60e469bd60317748941e1649b92d0d7f33e4ce66ac58af9b744b65f2bc669aa4",
+  "native_collections_unchanged_sha256": "624a66d23998c4a399a4caedd04b96acf77961e2e1e2628c862ab5fba2dd9b26",
+  "removing_only_comment_and_one_presized_callee_substitution_recovers_entire_module": true,
+  "unchanged": [
+    "All admission certificates and compile-work/refusal limits",
+    "Capacity/trip guard, generation<2^62, fallback edges and complete original loop",
+    "Per-append cached admission/invalidation and nested-only hot hint",
+    "Runtime metadata, pending-finalizer, widths and registration predicate",
+    "Accounting, COW, allocation order and failures; collector emission"
+  ],
+  "scope": "Every already-certified presized guard, without PC/case/fixture selection",
+  "reachable_target": "Presized scalar comprehensions such as sort_int setup",
+  "append_control": "Frozen list_append starts with zero spare capacity, so positive trip counts refuse before readiness; original fallback is unchanged.",
+  "limitations": [
+    "A forced inline predicate may alter register allocation/layout and code size; performance requires coordinated timing.",
+    "Debug host/ReleaseFast guest diagnostics are not normal goal confirmations."
+  ]
+}

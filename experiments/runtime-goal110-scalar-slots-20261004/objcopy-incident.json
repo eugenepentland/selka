@@ -1,0 +1,86 @@
+{
+  "kind": "objcopy-dump-without-output-in-place-mutation-incident",
+  "affected": [
+    {
+      "arm": "control-llvm",
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/.mylang-cache/goal110-join/join-runner/bin/compute-my-llvm",
+      "exists": true,
+      "recorded_pre_objcopy_sha256": "42da273ff03514d65eff3404ec681578377022d9c71d135acef37835dcece4ae",
+      "live_sha256": "fa609878afefc2a5cf73af24a1a3bb55748761150b39f6882ec0ad8f317d326b",
+      "mtime_ns": 1791085479123241643,
+      "ctime_ns": 1791085479123241643,
+      "inode": 50247523,
+      "nlink": 1,
+      "symlink": false,
+      "bytes": 467136,
+      "preserved_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.task-tmp/objcopy-incident/control-llvm.elf"
+    },
+    {
+      "arm": "control-qbe",
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/.mylang-cache/goal110-join/join-runner/bin/compute-my-qbe",
+      "exists": true,
+      "recorded_pre_objcopy_sha256": "fbdba297a0c87620c89512bc4262be356405a4d5dead81a2d020218aa46090cb",
+      "live_sha256": "aa3cae5ab71c1ea98af1fe122241c0ef6aa7d11d3989ad881695e34a739d6625",
+      "mtime_ns": 1791085479161699729,
+      "ctime_ns": 1791085479161699729,
+      "inode": 50247527,
+      "nlink": 1,
+      "symlink": false,
+      "bytes": 1267968,
+      "preserved_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.task-tmp/objcopy-incident/control-qbe.elf"
+    },
+    {
+      "arm": "a29-llvm",
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-slots-guests/compute-my-llvm",
+      "exists": true,
+      "recorded_pre_objcopy_sha256": "4dd2666d4377d494db144e43b03fa8e92e2f8452797690f0ec40fe7aac193e67",
+      "live_sha256": "a360c8ec6a611a8bb82f9ceb7266d9ad7d887b555832e8693edf4947adf46d34",
+      "mtime_ns": 1791085479135000077,
+      "ctime_ns": 1791085479135000077,
+      "inode": 50607550,
+      "nlink": 1,
+      "symlink": false,
+      "bytes": 467112,
+      "preserved_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.task-tmp/objcopy-incident/a29-llvm.elf"
+    },
+    {
+      "arm": "a29-qbe",
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-slots-guests/compute-my-qbe",
+      "exists": true,
+      "recorded_pre_objcopy_sha256": "e98077fe7c1f54d787c1e1886a1183348691040561f5fc005b67cfd708cf118a",
+      "live_sha256": "9779710d7c1861720937dbe8785a1b4d80cdb34478a3695d113f9106f28e026e",
+      "mtime_ns": 1791085479183887327,
+      "ctime_ns": 1791085479183887327,
+      "inode": 50607576,
+      "nlink": 1,
+      "symlink": false,
+      "bytes": 1267936,
+      "preserved_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.task-tmp/objcopy-incident/a29-qbe.elf"
+    },
+    {
+      "arm": "diagnostic-llvm",
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-addresses-diagnostic/compute-my-llvm",
+      "exists": false
+    },
+    {
+      "arm": "diagnostic-qbe",
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-addresses-diagnostic/compute-my-qbe",
+      "exists": false
+    }
+  ],
+  "disposable_command": [
+    "objcopy",
+    "--dump-section",
+    ".text=/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.task-tmp/objcopy-incident/disposable-text.bin",
+    "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.task-tmp/objcopy-incident/pristine-legacy-llvm-after.elf"
+  ],
+  "disposable_input_pristine_source": "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/.mylang-cache/goal110-join/join-runner/bin/legacy-my-llvm",
+  "disposable_before": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.task-tmp/objcopy-incident/pristine-legacy-llvm-before.elf",
+  "disposable_after": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.task-tmp/objcopy-incident/pristine-legacy-llvm-after.elf",
+  "disposable_before_sha256": "b168b53488e5bc455d3b46f39032ded0292ddf9df14d620af7399e5ba40185cd",
+  "disposable_after_sha256": "305919c50ff4f82cb799c8c4849edafadcdfd4a4af0ea4f03eb02e98cb5ee8cd",
+  "exit": 0,
+  "version": "GNU objcopy (GNU Binutils for Ubuntu) 2.46",
+  "no_compute_timing_with_mutated_controls": true,
+  "source_evidence_status": "a29 qualification and pre-dump .text capture preceded mutation; current whole ELF hashes no longer match original manifest."
+}

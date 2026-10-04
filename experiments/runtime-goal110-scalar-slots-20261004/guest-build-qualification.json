@@ -1,0 +1,2227 @@
+{
+  "kind": "untimed-scalar-slot-pointer-build-static-qualification",
+  "started_utc": "2026-10-04T03:35:39.323497+00:00",
+  "source_revision": "a29aa6a9ade06c09b949f42de50bbd14d9cbaf02",
+  "compiler": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/zig-out/bin/mylang",
+    "bytes": 216788474,
+    "sha256": "a92222fa3b5153609c2095d9d08dbe70226980ca01855bcecb56efce5f3332b1"
+  },
+  "compiler_build_receipt": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/experiments/runtime-goal110-scalar-slots-20261004/compiler-build-receipt.json",
+    "bytes": 656622,
+    "sha256": "d44e9acbd9b53869bffec90d5baaf218e32ded1d8555520ea7edfbf71e81bef9"
+  },
+  "source": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/benchmarks/runtime/expanded/compute/main.my",
+    "bytes": 5525,
+    "sha256": "d0abe8dea7693c5c0c17f871d631264721f47b8c4cd35f76f865ef68499a02e9"
+  },
+  "clock": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/.mylang-cache/goal110-join/join-runner/native_clock.o",
+    "bytes": 1840,
+    "sha256": "d4f78b33801beaed2d1f789b184785731ed69a1f88f777f84c25796303f4658f"
+  },
+  "control": {
+    "manifest": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/.mylang-cache/goal110-join/join-runner/manifest.json",
+      "bytes": 831306,
+      "sha256": "ce91e4fa047ca147560dd073e07d92afeecc60e336dd1dfccc6aa913e639a410"
+    },
+    "compiler_build_receipt": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/.mylang-cache/goal110-join/join-compiler-receipt.json",
+      "bytes": 656394,
+      "sha256": "6c0285cfcca85ade2fb6ef22aa4c1f1a25257b81e6230bb7c9fb7a19f11b7115"
+    },
+    "source_revision": "5a60ef1039aca32657ef5877a464eb8a81d6c115",
+    "guest_policy": {
+      "my-llvm": "default Zig/Clang-derived CPU/features; first target CPU and merged target features",
+      "my-qbe": "amd64_sysv",
+      "rust": "rustc -O default x86_64",
+      "go": "GOAMD64=v1",
+      "zig-safe": "default host",
+      "zig-fast": "default host",
+      "policy_note": "Optimized default build policies; instruction sets are not matched across arms. No forced target tuning or disabled MyLang checks.",
+      "llvm_target_probe": {
+        "command": [
+          "/home/epentland/.local/bin/zig",
+          "cc",
+          "-###",
+          "-c",
+          "-x",
+          "c",
+          "/dev/null"
+        ],
+        "target_cpu_entries": [
+          "x86-64",
+          "alderlake"
+        ],
+        "enabled_features": [
+          "+64bit",
+          "+adx",
+          "+aes",
+          "+allow-light-256-bit",
+          "+avx",
+          "+avx2",
+          "+avxvnni",
+          "+bmi",
+          "+bmi2",
+          "+clflushopt",
+          "+clwb",
+          "+cmov",
+          "+crc32",
+          "+cx16",
+          "+cx8",
+          "+f16c",
+          "+false-deps-perm",
+          "+fast-15bytenop",
+          "+fast-gather",
+          "+fast-scalar-fsqrt",
+          "+fast-shld-rotate",
+          "+fast-variable-crosslane-shuffle",
+          "+fast-variable-perlane-shuffle",
+          "+fast-vector-fsqrt",
+          "+fma",
+          "+fsgsbase",
+          "+fxsr",
+          "+gfni",
+          "+hreset",
+          "+idivq-to-divl",
+          "+invpcid",
+          "+kl",
+          "+lzcnt",
+          "+macrofusion",
+          "+mmx",
+          "+movbe",
+          "+movdir64b",
+          "+movdiri",
+          "+no-bypass-delay-blend",
+          "+no-bypass-delay-mov",
+          "+no-bypass-delay-shuffle",
+          "+nopl",
+          "+pclmul",
+          "+pku",
+          "+popcnt",
+          "+prefer-movmsk-over-vtest",
+          "+prfchw",
+          "+ptwrite",
+          "+rdpid",
+          "+rdrnd",
+          "+rdseed",
+          "+sahf",
+          "+serialize",
+          "+sha",
+          "+shstk",
+          "+slow-3ops-lea",
+          "+slow-pmullq",
+          "+sse",
+          "+sse2",
+          "+sse3",
+          "+sse4.1",
+          "+sse4.2",
+          "+ssse3",
+          "+tuning-fast-imm-vector-shift",
+          "+vaes",
+          "+vpclmulqdq",
+          "+vzeroupper",
+          "+waitpkg",
+          "+widekl",
+          "+x87",
+          "+xsave",
+          "+xsavec",
+          "+xsaveopt",
+          "+xsaves"
+        ],
+        "feature_entries": [
+          "-16bit-mode",
+          "-32bit-mode",
+          "+64bit",
+          "+adx",
+          "+aes",
+          "+allow-light-256-bit",
+          "-amx-avx512",
+          "-amx-bf16",
+          "-amx-complex",
+          "-amx-fp16",
+          "-amx-fp8",
+          "-amx-int8",
+          "-amx-movrs",
+          "-amx-tf32",
+          "-amx-tile",
+          "+avx",
+          "-avx10.1",
+          "-avx10.2",
+          "+avx2",
+          "-avx512bf16",
+          "-avx512bitalg",
+          "-avx512bw",
+          "-avx512cd",
+          "-avx512dq",
+          "-avx512f",
+          "-avx512fp16",
+          "-avx512ifma",
+          "-avx512vbmi",
+          "-avx512vbmi2",
+          "-avx512vl",
+          "-avx512vnni",
+          "-avx512vp2intersect",
+          "-avx512vpopcntdq",
+          "-avxifma",
+          "-avxneconvert",
+          "+avxvnni",
+          "-avxvnniint16",
+          "-avxvnniint8",
+          "+bmi",
+          "+bmi2",
+          "-branch-hint",
+          "-branchfusion",
+          "-ccmp",
+          "-cf",
+          "-cldemote",
+          "+clflushopt",
+          "+clwb",
+          "-clzero",
+          "+cmov",
+          "-cmpccxadd",
+          "+crc32",
+          "+cx16",
+          "+cx8",
+          "-egpr",
+          "-enqcmd",
+          "-ermsb",
+          "+f16c",
+          "-false-deps-getmant",
+          "-false-deps-lzcnt-tzcnt",
+          "-false-deps-mulc",
+          "-false-deps-mullq",
+          "+false-deps-perm",
+          "-false-deps-popcnt",
+          "-false-deps-range",
+          "-fast-11bytenop",
+          "+fast-15bytenop",
+          "-fast-7bytenop",
+          "-fast-bextr",
+          "-fast-dpwssd",
+          "+fast-gather",
+          "-fast-hops",
+          "-fast-imm16",
+          "-fast-lzcnt",
+          "-fast-movbe",
+          "+fast-scalar-fsqrt",
+          "-fast-scalar-shift-masks",
+          "+fast-shld-rotate",
+          "+fast-variable-crosslane-shuffle",
+          "+fast-variable-perlane-shuffle",
+          "+fast-vector-fsqrt",
+          "-fast-vector-shift-masks",
+          "-faster-shift-than-shuffle",
+          "+fma",
+          "-fma4",
+          "+fsgsbase",
+          "-fsrm",
+          "+fxsr",
+          "+gfni",
+          "-harden-sls-ijmp",
+          "-harden-sls-ret",
+          "+hreset",
+          "-idivl-to-divb",
+          "+idivq-to-divl",
+          "-inline-asm-use-gpr32",
+          "+invpcid",
+          "+kl",
+          "-lea-sp",
+          "-lea-uses-ag",
+          "-lvi-cfi",
+          "-lvi-load-hardening",
+          "-lwp",
+          "+lzcnt",
+          "+macrofusion",
+          "+mmx",
+          "+movbe",
+          "+movdir64b",
+          "+movdiri",
+          "-movrs",
+          "-mwaitx",
+          "-ndd",
+          "-nf",
+          "-no-bypass-delay",
+          "+no-bypass-delay-blend",
+          "+no-bypass-delay-mov",
+          "+no-bypass-delay-shuffle",
+          "+nopl",
+          "-pad-short-functions",
+          "+pclmul",
+          "-pconfig",
+          "+pku",
+          "+popcnt",
+          "-ppx",
+          "-prefer-128-bit",
+          "-prefer-256-bit",
+          "-prefer-legacy-setcc",
+          "-prefer-mask-registers",
+          "+prefer-movmsk-over-vtest",
+          "-prefer-no-gather",
+          "-prefer-no-scatter",
+          "-prefetchi",
+          "+prfchw",
+          "+ptwrite",
+          "-push2pop2",
+          "-raoint",
+          "+rdpid",
+          "-rdpru",
+          "+rdrnd",
+          "+rdseed",
+          "-retpoline",
+          "-retpoline-external-thunk",
+          "-retpoline-indirect-branches",
+          "-retpoline-indirect-calls",
+          "-rtm",
+          "+sahf",
+          "-sbb-dep-breaking",
+          "+serialize",
+          "-seses",
+          "-sgx",
+          "+sha",
+          "-sha512",
+          "+shstk",
+          "+slow-3ops-lea",
+          "-slow-incdec",
+          "-slow-lea",
+          "-slow-pmaddwd",
+          "-slow-pmulld",
+          "+slow-pmullq",
+          "-slow-shld",
+          "-slow-two-mem-ops",
+          "-slow-unaligned-mem-16",
+          "-slow-unaligned-mem-32",
+          "-sm3",
+          "-sm4",
+          "+sse",
+          "+sse2",
+          "+sse3",
+          "+sse4.1",
+          "+sse4.2",
+          "-sse4a",
+          "-sse-unaligned-mem",
+          "+ssse3",
+          "-tagged-globals",
+          "-tbm",
+          "-tsxldtrk",
+          "+tuning-fast-imm-vector-shift",
+          "-uintr",
+          "-use-glm-div-sqrt-costs",
+          "-use-slm-arith-costs",
+          "-usermsr",
+          "+vaes",
+          "+vpclmulqdq",
+          "+vzeroupper",
+          "+waitpkg",
+          "-wbnoinvd",
+          "+widekl",
+          "+x87",
+          "-xop",
+          "+xsave",
+          "+xsavec",
+          "+xsaveopt",
+          "+xsaves",
+          "-zu"
+        ],
+        "exit_status": 0
+      },
+      "rust_text": "cargo release defaults, portable target; locked serde_json dependency",
+      "mylang_symbols": "--keep-symbols preserves names for profiling; release optimization remains enabled"
+    },
+    "binaries": {
+      "llvm": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/.mylang-cache/goal110-join/join-runner/bin/compute-my-llvm",
+        "bytes": 467344,
+        "sha256": "42da273ff03514d65eff3404ec681578377022d9c71d135acef37835dcece4ae"
+      },
+      "qbe": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/.mylang-cache/goal110-join/join-runner/bin/compute-my-qbe",
+        "bytes": 1268272,
+        "sha256": "fbdba297a0c87620c89512bc4262be356405a4d5dead81a2d020218aa46090cb"
+      }
+    },
+    "commands": {
+      "llvm": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/zig-out/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/benchmarks/runtime/expanded/compute/main.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/.mylang-cache/goal110-join/join-runner/bin/compute-my-llvm",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/.mylang-cache/goal110-join/join-runner/mycache",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/.mylang-cache/goal110-join/join-runner/native_clock.o",
+        "--zig",
+        "/home/epentland/.local/bin/zig",
+        "--qbe",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/zig-out/bin/qbe",
+        "--mode",
+        "ReleaseFast",
+        "--backend",
+        "llvm",
+        "--llvm-opt",
+        "3",
+        "--lto",
+        "--keep-symbols"
+      ],
+      "qbe": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/zig-out/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/benchmarks/runtime/expanded/compute/main.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/.mylang-cache/goal110-join/join-runner/bin/compute-my-qbe",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/.mylang-cache/goal110-join/join-runner/mycache",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/.mylang-cache/goal110-join/join-runner/native_clock.o",
+        "--zig",
+        "/home/epentland/.local/bin/zig",
+        "--qbe",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/zig-out/bin/qbe",
+        "--mode",
+        "ReleaseFast",
+        "--backend",
+        "qbe",
+        "--keep-symbols"
+      ]
+    }
+  },
+  "runner": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/experiments/runtime-goal110-scalar-slots-20261004/build-and-check.py",
+    "bytes": 7623,
+    "sha256": "c65cd3bedd6852bb27e057dd8b0cf6e24749b25460cc37faf6c36e3e4bd812df"
+  },
+  "host_mode": "Debug",
+  "guest_mode": "ReleaseFast",
+  "builds": [
+    {
+      "backend": "llvm",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/zig-out/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/benchmarks/runtime/expanded/compute/main.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-slots-guests/compute-my-llvm",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-slots-guests/mycache",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/.mylang-cache/goal110-join/join-runner/native_clock.o",
+        "--qbe",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/zig-out/bin/qbe",
+        "--mode",
+        "ReleaseFast",
+        "--backend",
+        "llvm",
+        "--keep-symbols",
+        "--llvm-opt",
+        "3",
+        "--lto"
+      ],
+      "status": 0,
+      "binary": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-slots-guests/compute-my-llvm",
+        "bytes": 467320,
+        "sha256": "4dd2666d4377d494db144e43b03fa8e92e2f8452797690f0ec40fe7aac193e67"
+      },
+      "manifest": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-slots-guests/compute-my-llvm.qbe-manifest.json",
+        "bytes": 6104,
+        "sha256": "fc033be333d77453c1b906c3f388f51f045ae20091af0b4fa0c3e01864fd705a"
+      },
+      "build_log": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/experiments/runtime-goal110-scalar-slots-20261004/llvm-guest-build.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "entry_disassembly": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/experiments/runtime-goal110-scalar-slots-20261004/llvm-candidate-entry.s",
+        "bytes": 307925,
+        "sha256": "6bf1908d8ea7267ce7e654a74e6b6515fb021df88098f6892732f8380c0ee2b1"
+      }
+    },
+    {
+      "backend": "qbe",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/zig-out/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/benchmarks/runtime/expanded/compute/main.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-slots-guests/compute-my-qbe",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-slots-guests/mycache",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/.mylang-cache/goal110-join/join-runner/native_clock.o",
+        "--qbe",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/zig-out/bin/qbe",
+        "--mode",
+        "ReleaseFast",
+        "--backend",
+        "qbe",
+        "--keep-symbols"
+      ],
+      "status": 0,
+      "binary": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-slots-guests/compute-my-qbe",
+        "bytes": 1268240,
+        "sha256": "e98077fe7c1f54d787c1e1886a1183348691040561f5fc005b67cfd708cf118a"
+      },
+      "manifest": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-slots-guests/compute-my-qbe.qbe-manifest.json",
+        "bytes": 491,
+        "sha256": "1f94d2ac410ff0e54ec5145df5d296fba05e8958001f90c6588c8cd306fba9d7"
+      },
+      "build_log": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/experiments/runtime-goal110-scalar-slots-20261004/qbe-guest-build.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "entry_disassembly": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/experiments/runtime-goal110-scalar-slots-20261004/qbe-candidate-entry.s",
+        "bytes": 636445,
+        "sha256": "91c998da8a29a0a587f7ae2a639be1b99e3cfee7a1d1112c249b036c18584b51"
+      }
+    }
+  ],
+  "qualification": [
+    {
+      "backend": "llvm",
+      "case": "integer_math",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 86995
+    },
+    {
+      "backend": "llvm",
+      "case": "integer_math",
+      "size": 64,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 87901
+    },
+    {
+      "backend": "llvm",
+      "case": "integer_math",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 92875
+    },
+    {
+      "backend": "llvm",
+      "case": "integer_math",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 5579890
+    },
+    {
+      "backend": "llvm",
+      "case": "integer_math",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 5579470
+    },
+    {
+      "backend": "llvm",
+      "case": "integer_math",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 5583438
+    },
+    {
+      "backend": "llvm",
+      "case": "integer_math",
+      "size": 2,
+      "iterations": 1,
+      "seed": 2,
+      "checksum": 106
+    },
+    {
+      "backend": "llvm",
+      "case": "integer_math",
+      "size": 7,
+      "iterations": 17,
+      "seed": 17,
+      "checksum": 39644
+    },
+    {
+      "backend": "llvm",
+      "case": "integer_math",
+      "size": 67,
+      "iterations": 19,
+      "seed": 999983,
+      "checksum": 577224
+    },
+    {
+      "backend": "llvm",
+      "case": "float_math",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 58846755
+    },
+    {
+      "backend": "llvm",
+      "case": "float_math",
+      "size": 64,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 69006036
+    },
+    {
+      "backend": "llvm",
+      "case": "float_math",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 60807339
+    },
+    {
+      "backend": "llvm",
+      "case": "float_math",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 271841929
+    },
+    {
+      "backend": "llvm",
+      "case": "float_math",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 276491338
+    },
+    {
+      "backend": "llvm",
+      "case": "float_math",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 273212113
+    },
+    {
+      "backend": "llvm",
+      "case": "float_math",
+      "size": 2,
+      "iterations": 1,
+      "seed": 2,
+      "checksum": 2309
+    },
+    {
+      "backend": "llvm",
+      "case": "float_math",
+      "size": 7,
+      "iterations": 17,
+      "seed": 17,
+      "checksum": 3126844
+    },
+    {
+      "backend": "llvm",
+      "case": "float_math",
+      "size": 67,
+      "iterations": 19,
+      "seed": 999983,
+      "checksum": 385084734
+    },
+    {
+      "backend": "llvm",
+      "case": "branch_predictable",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 273351
+    },
+    {
+      "backend": "llvm",
+      "case": "branch_predictable",
+      "size": 64,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 310818
+    },
+    {
+      "backend": "llvm",
+      "case": "branch_predictable",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 285027
+    },
+    {
+      "backend": "llvm",
+      "case": "branch_predictable",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 19390119
+    },
+    {
+      "backend": "llvm",
+      "case": "branch_predictable",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 19411812
+    },
+    {
+      "backend": "llvm",
+      "case": "branch_predictable",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 19392741
+    },
+    {
+      "backend": "llvm",
+      "case": "branch_predictable",
+      "size": 2,
+      "iterations": 1,
+      "seed": 2,
+      "checksum": 135
+    },
+    {
+      "backend": "llvm",
+      "case": "branch_predictable",
+      "size": 7,
+      "iterations": 17,
+      "seed": 17,
+      "checksum": 49623
+    },
+    {
+      "backend": "llvm",
+      "case": "branch_predictable",
+      "size": 67,
+      "iterations": 19,
+      "seed": 999983,
+      "checksum": 1858702
+    },
+    {
+      "backend": "llvm",
+      "case": "branch_mixed",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 350559
+    },
+    {
+      "backend": "llvm",
+      "case": "branch_mixed",
+      "size": 64,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 408492
+    },
+    {
+      "backend": "llvm",
+      "case": "branch_mixed",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 372225
+    },
+    {
+      "backend": "llvm",
+      "case": "branch_mixed",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 24902937
+    },
+    {
+      "backend": "llvm",
+      "case": "branch_mixed",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 24937896
+    },
+    {
+      "backend": "llvm",
+      "case": "branch_mixed",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 24919905
+    },
+    {
+      "backend": "llvm",
+      "case": "branch_mixed",
+      "size": 2,
+      "iterations": 1,
+      "seed": 2,
+      "checksum": 125
+    },
+    {
+      "backend": "llvm",
+      "case": "branch_mixed",
+      "size": 7,
+      "iterations": 17,
+      "seed": 17,
+      "checksum": 48671
+    },
+    {
+      "backend": "llvm",
+      "case": "branch_mixed",
+      "size": 67,
+      "iterations": 19,
+      "seed": 999983,
+      "checksum": 2323644
+    },
+    {
+      "backend": "llvm",
+      "case": "record_construct",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 137136
+    },
+    {
+      "backend": "llvm",
+      "case": "record_construct",
+      "size": 64,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 153108
+    },
+    {
+      "backend": "llvm",
+      "case": "record_construct",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 141662
+    },
+    {
+      "backend": "llvm",
+      "case": "record_construct",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 9560607
+    },
+    {
+      "backend": "llvm",
+      "case": "record_construct",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 9568443
+    },
+    {
+      "backend": "llvm",
+      "case": "record_construct",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 9561920
+    },
+    {
+      "backend": "llvm",
+      "case": "record_construct",
+      "size": 2,
+      "iterations": 1,
+      "seed": 2,
+      "checksum": 172
+    },
+    {
+      "backend": "llvm",
+      "case": "record_construct",
+      "size": 7,
+      "iterations": 17,
+      "seed": 17,
+      "checksum": 50780
+    },
+    {
+      "backend": "llvm",
+      "case": "record_construct",
+      "size": 67,
+      "iterations": 19,
+      "seed": 999983,
+      "checksum": 928258
+    },
+    {
+      "backend": "llvm",
+      "case": "record_update",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 137136
+    },
+    {
+      "backend": "llvm",
+      "case": "record_update",
+      "size": 64,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 153108
+    },
+    {
+      "backend": "llvm",
+      "case": "record_update",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 141662
+    },
+    {
+      "backend": "llvm",
+      "case": "record_update",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 9560607
+    },
+    {
+      "backend": "llvm",
+      "case": "record_update",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 9568443
+    },
+    {
+      "backend": "llvm",
+      "case": "record_update",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 9561920
+    },
+    {
+      "backend": "llvm",
+      "case": "record_update",
+      "size": 2,
+      "iterations": 1,
+      "seed": 2,
+      "checksum": 172
+    },
+    {
+      "backend": "llvm",
+      "case": "record_update",
+      "size": 7,
+      "iterations": 17,
+      "seed": 17,
+      "checksum": 50780
+    },
+    {
+      "backend": "llvm",
+      "case": "record_update",
+      "size": 67,
+      "iterations": 19,
+      "seed": 999983,
+      "checksum": 928258
+    },
+    {
+      "backend": "llvm",
+      "case": "call_direct",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 265179
+    },
+    {
+      "backend": "llvm",
+      "case": "call_direct",
+      "size": 64,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 303690
+    },
+    {
+      "backend": "llvm",
+      "case": "call_direct",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 274935
+    },
+    {
+      "backend": "llvm",
+      "case": "call_direct",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 18684129
+    },
+    {
+      "backend": "llvm",
+      "case": "call_direct",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 18706044
+    },
+    {
+      "backend": "llvm",
+      "case": "call_direct",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 18691005
+    },
+    {
+      "backend": "llvm",
+      "case": "call_direct",
+      "size": 2,
+      "iterations": 1,
+      "seed": 2,
+      "checksum": 137
+    },
+    {
+      "backend": "llvm",
+      "case": "call_direct",
+      "size": 7,
+      "iterations": 17,
+      "seed": 17,
+      "checksum": 49385
+    },
+    {
+      "backend": "llvm",
+      "case": "call_direct",
+      "size": 67,
+      "iterations": 19,
+      "seed": 999983,
+      "checksum": 1780648
+    },
+    {
+      "backend": "llvm",
+      "case": "call_indirect",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 441837
+    },
+    {
+      "backend": "llvm",
+      "case": "call_indirect",
+      "size": 64,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 303690
+    },
+    {
+      "backend": "llvm",
+      "case": "call_indirect",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 274935
+    },
+    {
+      "backend": "llvm",
+      "case": "call_indirect",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 31132023
+    },
+    {
+      "backend": "llvm",
+      "case": "call_indirect",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 18706044
+    },
+    {
+      "backend": "llvm",
+      "case": "call_indirect",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 18691005
+    },
+    {
+      "backend": "llvm",
+      "case": "call_indirect",
+      "size": 2,
+      "iterations": 1,
+      "seed": 2,
+      "checksum": 137
+    },
+    {
+      "backend": "llvm",
+      "case": "call_indirect",
+      "size": 7,
+      "iterations": 17,
+      "seed": 17,
+      "checksum": 82229
+    },
+    {
+      "backend": "llvm",
+      "case": "call_indirect",
+      "size": 67,
+      "iterations": 19,
+      "seed": 999983,
+      "checksum": 2966898
+    },
+    {
+      "backend": "llvm",
+      "case": "option_handle",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 196995
+    },
+    {
+      "backend": "llvm",
+      "case": "option_handle",
+      "size": 64,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 230934
+    },
+    {
+      "backend": "llvm",
+      "case": "option_handle",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 204735
+    },
+    {
+      "backend": "llvm",
+      "case": "option_handle",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 14000592
+    },
+    {
+      "backend": "llvm",
+      "case": "option_handle",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 14021751
+    },
+    {
+      "backend": "llvm",
+      "case": "option_handle",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 14006172
+    },
+    {
+      "backend": "llvm",
+      "case": "option_handle",
+      "size": 2,
+      "iterations": 1,
+      "seed": 2,
+      "checksum": 125
+    },
+    {
+      "backend": "llvm",
+      "case": "option_handle",
+      "size": 7,
+      "iterations": 17,
+      "seed": 17,
+      "checksum": 42041
+    },
+    {
+      "backend": "llvm",
+      "case": "option_handle",
+      "size": 67,
+      "iterations": 19,
+      "seed": 999983,
+      "checksum": 1338181
+    },
+    {
+      "backend": "llvm",
+      "case": "result_propagate",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 203988
+    },
+    {
+      "backend": "llvm",
+      "case": "result_propagate",
+      "size": 64,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 235569
+    },
+    {
+      "backend": "llvm",
+      "case": "result_propagate",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 222996
+    },
+    {
+      "backend": "llvm",
+      "case": "result_propagate",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 14905605
+    },
+    {
+      "backend": "llvm",
+      "case": "result_propagate",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 14925405
+    },
+    {
+      "backend": "llvm",
+      "case": "result_propagate",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 14922453
+    },
+    {
+      "backend": "llvm",
+      "case": "result_propagate",
+      "size": 2,
+      "iterations": 1,
+      "seed": 2,
+      "checksum": 125
+    },
+    {
+      "backend": "llvm",
+      "case": "result_propagate",
+      "size": 7,
+      "iterations": 17,
+      "seed": 17,
+      "checksum": 39950
+    },
+    {
+      "backend": "llvm",
+      "case": "result_propagate",
+      "size": 67,
+      "iterations": 19,
+      "seed": 999983,
+      "checksum": 1433431
+    },
+    {
+      "backend": "llvm",
+      "case": "binary_search",
+      "size": 16,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 113
+    },
+    {
+      "backend": "llvm",
+      "case": "binary_search",
+      "size": 16,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 127
+    },
+    {
+      "backend": "llvm",
+      "case": "binary_search",
+      "size": 16,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 131
+    },
+    {
+      "backend": "llvm",
+      "case": "binary_search",
+      "size": 256,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 27018
+    },
+    {
+      "backend": "llvm",
+      "case": "binary_search",
+      "size": 256,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 28350
+    },
+    {
+      "backend": "llvm",
+      "case": "binary_search",
+      "size": 256,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 27375
+    },
+    {
+      "backend": "llvm",
+      "case": "binary_search",
+      "size": 2,
+      "iterations": 1,
+      "seed": 2,
+      "checksum": 2
+    },
+    {
+      "backend": "llvm",
+      "case": "binary_search",
+      "size": 7,
+      "iterations": 17,
+      "seed": 17,
+      "checksum": 130
+    },
+    {
+      "backend": "llvm",
+      "case": "binary_search",
+      "size": 67,
+      "iterations": 19,
+      "seed": 999983,
+      "checksum": 14278
+    },
+    {
+      "backend": "llvm",
+      "case": "packet_decode",
+      "size": 16,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 23868
+    },
+    {
+      "backend": "llvm",
+      "case": "packet_decode",
+      "size": 16,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 403224
+    },
+    {
+      "backend": "llvm",
+      "case": "packet_decode",
+      "size": 16,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 236448
+    },
+    {
+      "backend": "llvm",
+      "case": "packet_decode",
+      "size": 256,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 861120
+    },
+    {
+      "backend": "llvm",
+      "case": "packet_decode",
+      "size": 256,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 6817920
+    },
+    {
+      "backend": "llvm",
+      "case": "packet_decode",
+      "size": 256,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 4117248
+    },
+    {
+      "backend": "llvm",
+      "case": "packet_decode",
+      "size": 2,
+      "iterations": 1,
+      "seed": 2,
+      "checksum": 257
+    },
+    {
+      "backend": "llvm",
+      "case": "packet_decode",
+      "size": 7,
+      "iterations": 17,
+      "seed": 17,
+      "checksum": 46019
+    },
+    {
+      "backend": "llvm",
+      "case": "packet_decode",
+      "size": 67,
+      "iterations": 19,
+      "seed": 999983,
+      "checksum": 6353866
+    },
+    {
+      "backend": "qbe",
+      "case": "integer_math",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 86995
+    },
+    {
+      "backend": "qbe",
+      "case": "integer_math",
+      "size": 64,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 87901
+    },
+    {
+      "backend": "qbe",
+      "case": "integer_math",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 92875
+    },
+    {
+      "backend": "qbe",
+      "case": "integer_math",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 5579890
+    },
+    {
+      "backend": "qbe",
+      "case": "integer_math",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 5579470
+    },
+    {
+      "backend": "qbe",
+      "case": "integer_math",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 5583438
+    },
+    {
+      "backend": "qbe",
+      "case": "integer_math",
+      "size": 2,
+      "iterations": 1,
+      "seed": 2,
+      "checksum": 106
+    },
+    {
+      "backend": "qbe",
+      "case": "integer_math",
+      "size": 7,
+      "iterations": 17,
+      "seed": 17,
+      "checksum": 39644
+    },
+    {
+      "backend": "qbe",
+      "case": "integer_math",
+      "size": 67,
+      "iterations": 19,
+      "seed": 999983,
+      "checksum": 577224
+    },
+    {
+      "backend": "qbe",
+      "case": "float_math",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 58846755
+    },
+    {
+      "backend": "qbe",
+      "case": "float_math",
+      "size": 64,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 69006036
+    },
+    {
+      "backend": "qbe",
+      "case": "float_math",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 60807339
+    },
+    {
+      "backend": "qbe",
+      "case": "float_math",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 271841929
+    },
+    {
+      "backend": "qbe",
+      "case": "float_math",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 276491338
+    },
+    {
+      "backend": "qbe",
+      "case": "float_math",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 273212113
+    },
+    {
+      "backend": "qbe",
+      "case": "float_math",
+      "size": 2,
+      "iterations": 1,
+      "seed": 2,
+      "checksum": 2309
+    },
+    {
+      "backend": "qbe",
+      "case": "float_math",
+      "size": 7,
+      "iterations": 17,
+      "seed": 17,
+      "checksum": 3126844
+    },
+    {
+      "backend": "qbe",
+      "case": "float_math",
+      "size": 67,
+      "iterations": 19,
+      "seed": 999983,
+      "checksum": 385084734
+    },
+    {
+      "backend": "qbe",
+      "case": "branch_predictable",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 273351
+    },
+    {
+      "backend": "qbe",
+      "case": "branch_predictable",
+      "size": 64,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 310818
+    },
+    {
+      "backend": "qbe",
+      "case": "branch_predictable",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 285027
+    },
+    {
+      "backend": "qbe",
+      "case": "branch_predictable",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 19390119
+    },
+    {
+      "backend": "qbe",
+      "case": "branch_predictable",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 19411812
+    },
+    {
+      "backend": "qbe",
+      "case": "branch_predictable",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 19392741
+    },
+    {
+      "backend": "qbe",
+      "case": "branch_predictable",
+      "size": 2,
+      "iterations": 1,
+      "seed": 2,
+      "checksum": 135
+    },
+    {
+      "backend": "qbe",
+      "case": "branch_predictable",
+      "size": 7,
+      "iterations": 17,
+      "seed": 17,
+      "checksum": 49623
+    },
+    {
+      "backend": "qbe",
+      "case": "branch_predictable",
+      "size": 67,
+      "iterations": 19,
+      "seed": 999983,
+      "checksum": 1858702
+    },
+    {
+      "backend": "qbe",
+      "case": "branch_mixed",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 350559
+    },
+    {
+      "backend": "qbe",
+      "case": "branch_mixed",
+      "size": 64,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 408492
+    },
+    {
+      "backend": "qbe",
+      "case": "branch_mixed",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 372225
+    },
+    {
+      "backend": "qbe",
+      "case": "branch_mixed",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 24902937
+    },
+    {
+      "backend": "qbe",
+      "case": "branch_mixed",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 24937896
+    },
+    {
+      "backend": "qbe",
+      "case": "branch_mixed",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 24919905
+    },
+    {
+      "backend": "qbe",
+      "case": "branch_mixed",
+      "size": 2,
+      "iterations": 1,
+      "seed": 2,
+      "checksum": 125
+    },
+    {
+      "backend": "qbe",
+      "case": "branch_mixed",
+      "size": 7,
+      "iterations": 17,
+      "seed": 17,
+      "checksum": 48671
+    },
+    {
+      "backend": "qbe",
+      "case": "branch_mixed",
+      "size": 67,
+      "iterations": 19,
+      "seed": 999983,
+      "checksum": 2323644
+    },
+    {
+      "backend": "qbe",
+      "case": "record_construct",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 137136
+    },
+    {
+      "backend": "qbe",
+      "case": "record_construct",
+      "size": 64,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 153108
+    },
+    {
+      "backend": "qbe",
+      "case": "record_construct",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 141662
+    },
+    {
+      "backend": "qbe",
+      "case": "record_construct",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 9560607
+    },
+    {
+      "backend": "qbe",
+      "case": "record_construct",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 9568443
+    },
+    {
+      "backend": "qbe",
+      "case": "record_construct",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 9561920
+    },
+    {
+      "backend": "qbe",
+      "case": "record_construct",
+      "size": 2,
+      "iterations": 1,
+      "seed": 2,
+      "checksum": 172
+    },
+    {
+      "backend": "qbe",
+      "case": "record_construct",
+      "size": 7,
+      "iterations": 17,
+      "seed": 17,
+      "checksum": 50780
+    },
+    {
+      "backend": "qbe",
+      "case": "record_construct",
+      "size": 67,
+      "iterations": 19,
+      "seed": 999983,
+      "checksum": 928258
+    },
+    {
+      "backend": "qbe",
+      "case": "record_update",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 137136
+    },
+    {
+      "backend": "qbe",
+      "case": "record_update",
+      "size": 64,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 153108
+    },
+    {
+      "backend": "qbe",
+      "case": "record_update",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 141662
+    },
+    {
+      "backend": "qbe",
+      "case": "record_update",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 9560607
+    },
+    {
+      "backend": "qbe",
+      "case": "record_update",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 9568443
+    },
+    {
+      "backend": "qbe",
+      "case": "record_update",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 9561920
+    },
+    {
+      "backend": "qbe",
+      "case": "record_update",
+      "size": 2,
+      "iterations": 1,
+      "seed": 2,
+      "checksum": 172
+    },
+    {
+      "backend": "qbe",
+      "case": "record_update",
+      "size": 7,
+      "iterations": 17,
+      "seed": 17,
+      "checksum": 50780
+    },
+    {
+      "backend": "qbe",
+      "case": "record_update",
+      "size": 67,
+      "iterations": 19,
+      "seed": 999983,
+      "checksum": 928258
+    },
+    {
+      "backend": "qbe",
+      "case": "call_direct",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 265179
+    },
+    {
+      "backend": "qbe",
+      "case": "call_direct",
+      "size": 64,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 303690
+    },
+    {
+      "backend": "qbe",
+      "case": "call_direct",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 274935
+    },
+    {
+      "backend": "qbe",
+      "case": "call_direct",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 18684129
+    },
+    {
+      "backend": "qbe",
+      "case": "call_direct",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 18706044
+    },
+    {
+      "backend": "qbe",
+      "case": "call_direct",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 18691005
+    },
+    {
+      "backend": "qbe",
+      "case": "call_direct",
+      "size": 2,
+      "iterations": 1,
+      "seed": 2,
+      "checksum": 137
+    },
+    {
+      "backend": "qbe",
+      "case": "call_direct",
+      "size": 7,
+      "iterations": 17,
+      "seed": 17,
+      "checksum": 49385
+    },
+    {
+      "backend": "qbe",
+      "case": "call_direct",
+      "size": 67,
+      "iterations": 19,
+      "seed": 999983,
+      "checksum": 1780648
+    },
+    {
+      "backend": "qbe",
+      "case": "call_indirect",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 441837
+    },
+    {
+      "backend": "qbe",
+      "case": "call_indirect",
+      "size": 64,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 303690
+    },
+    {
+      "backend": "qbe",
+      "case": "call_indirect",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 274935
+    },
+    {
+      "backend": "qbe",
+      "case": "call_indirect",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 31132023
+    },
+    {
+      "backend": "qbe",
+      "case": "call_indirect",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 18706044
+    },
+    {
+      "backend": "qbe",
+      "case": "call_indirect",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 18691005
+    },
+    {
+      "backend": "qbe",
+      "case": "call_indirect",
+      "size": 2,
+      "iterations": 1,
+      "seed": 2,
+      "checksum": 137
+    },
+    {
+      "backend": "qbe",
+      "case": "call_indirect",
+      "size": 7,
+      "iterations": 17,
+      "seed": 17,
+      "checksum": 82229
+    },
+    {
+      "backend": "qbe",
+      "case": "call_indirect",
+      "size": 67,
+      "iterations": 19,
+      "seed": 999983,
+      "checksum": 2966898
+    },
+    {
+      "backend": "qbe",
+      "case": "option_handle",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 196995
+    },
+    {
+      "backend": "qbe",
+      "case": "option_handle",
+      "size": 64,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 230934
+    },
+    {
+      "backend": "qbe",
+      "case": "option_handle",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 204735
+    },
+    {
+      "backend": "qbe",
+      "case": "option_handle",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 14000592
+    },
+    {
+      "backend": "qbe",
+      "case": "option_handle",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 14021751
+    },
+    {
+      "backend": "qbe",
+      "case": "option_handle",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 14006172
+    },
+    {
+      "backend": "qbe",
+      "case": "option_handle",
+      "size": 2,
+      "iterations": 1,
+      "seed": 2,
+      "checksum": 125
+    },
+    {
+      "backend": "qbe",
+      "case": "option_handle",
+      "size": 7,
+      "iterations": 17,
+      "seed": 17,
+      "checksum": 42041
+    },
+    {
+      "backend": "qbe",
+      "case": "option_handle",
+      "size": 67,
+      "iterations": 19,
+      "seed": 999983,
+      "checksum": 1338181
+    },
+    {
+      "backend": "qbe",
+      "case": "result_propagate",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 203988
+    },
+    {
+      "backend": "qbe",
+      "case": "result_propagate",
+      "size": 64,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 235569
+    },
+    {
+      "backend": "qbe",
+      "case": "result_propagate",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 222996
+    },
+    {
+      "backend": "qbe",
+      "case": "result_propagate",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 14905605
+    },
+    {
+      "backend": "qbe",
+      "case": "result_propagate",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 14925405
+    },
+    {
+      "backend": "qbe",
+      "case": "result_propagate",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 14922453
+    },
+    {
+      "backend": "qbe",
+      "case": "result_propagate",
+      "size": 2,
+      "iterations": 1,
+      "seed": 2,
+      "checksum": 125
+    },
+    {
+      "backend": "qbe",
+      "case": "result_propagate",
+      "size": 7,
+      "iterations": 17,
+      "seed": 17,
+      "checksum": 39950
+    },
+    {
+      "backend": "qbe",
+      "case": "result_propagate",
+      "size": 67,
+      "iterations": 19,
+      "seed": 999983,
+      "checksum": 1433431
+    },
+    {
+      "backend": "qbe",
+      "case": "binary_search",
+      "size": 16,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 113
+    },
+    {
+      "backend": "qbe",
+      "case": "binary_search",
+      "size": 16,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 127
+    },
+    {
+      "backend": "qbe",
+      "case": "binary_search",
+      "size": 16,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 131
+    },
+    {
+      "backend": "qbe",
+      "case": "binary_search",
+      "size": 256,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 27018
+    },
+    {
+      "backend": "qbe",
+      "case": "binary_search",
+      "size": 256,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 28350
+    },
+    {
+      "backend": "qbe",
+      "case": "binary_search",
+      "size": 256,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 27375
+    },
+    {
+      "backend": "qbe",
+      "case": "binary_search",
+      "size": 2,
+      "iterations": 1,
+      "seed": 2,
+      "checksum": 2
+    },
+    {
+      "backend": "qbe",
+      "case": "binary_search",
+      "size": 7,
+      "iterations": 17,
+      "seed": 17,
+      "checksum": 130
+    },
+    {
+      "backend": "qbe",
+      "case": "binary_search",
+      "size": 67,
+      "iterations": 19,
+      "seed": 999983,
+      "checksum": 14278
+    },
+    {
+      "backend": "qbe",
+      "case": "packet_decode",
+      "size": 16,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 23868
+    },
+    {
+      "backend": "qbe",
+      "case": "packet_decode",
+      "size": 16,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 403224
+    },
+    {
+      "backend": "qbe",
+      "case": "packet_decode",
+      "size": 16,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 236448
+    },
+    {
+      "backend": "qbe",
+      "case": "packet_decode",
+      "size": 256,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 861120
+    },
+    {
+      "backend": "qbe",
+      "case": "packet_decode",
+      "size": 256,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 6817920
+    },
+    {
+      "backend": "qbe",
+      "case": "packet_decode",
+      "size": 256,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 4117248
+    },
+    {
+      "backend": "qbe",
+      "case": "packet_decode",
+      "size": 2,
+      "iterations": 1,
+      "seed": 2,
+      "checksum": 257
+    },
+    {
+      "backend": "qbe",
+      "case": "packet_decode",
+      "size": 7,
+      "iterations": 17,
+      "seed": 17,
+      "checksum": 46019
+    },
+    {
+      "backend": "qbe",
+      "case": "packet_decode",
+      "size": 67,
+      "iterations": 19,
+      "seed": 999983,
+      "checksum": 6353866
+    }
+  ],
+  "finished_utc": "2026-10-04T03:35:46.585110+00:00"
+}

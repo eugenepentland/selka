@@ -1,0 +1,13 @@
+# Deferred hybrid LLVM scalar-address experiment
+
+Source `1fdae8e1` extends unintegrated a29 on accepted join 957f97c6. Both pointer candidates are deferred because actual optimized compute code is unchanged. Neither is integrated; no runtime timing or official hybrid host build was performed.
+
+The hybrid retains the strict no-escape deletion path, and adds a separate raw-address plan for single-definition eight-byte entry allocations. Integer definitions remain for copies, calls, arithmetic and escaping values. It substitutes only direct allocation names in load/store addresses, including mixed widths. No allocation moves or alias/inbounds/overflow claims change. Existing proof fixtures assert every strict admission belongs to the address plan; additional tests cover integer retention, early nested-call/callee uses, identity/lifetime refusals and OOM.
+
+First replay passed 36/37: a new IR assertion included the retained ptrtoint in its memory-access count. The corrected count checks load/store operands; final replay passed 37/37 with actual exit 0. Both logs/source hashes are preserved. Source commit Guardian passed 88/88. Diagnosis executed before commit, using the already-built focused compiler and a separate diagnostic cache, explicitly uncommitted/pre-production.
+
+Normal ReleaseFast/LLVM O3/full-LTO/frame-map diagnosis captured 12 SSA units, each byte-identical to frozen a29, and passed 108 untimed checksum cases. Main unoptimized LLVM inttoptr occurrences fell 5,601→2,970 and direct mem uses rose 523→3,154. These are static input counts. Optimization already removes the conversions: the entire diagnostic ELF is byte-identical to the NEW pristine recovered Debug 5a control, SHA256 `4dd2666d4377d494db144e43b03fa8e92e2f8452797690f0ec40fe7aac193e67`. Entry remains 20,050 bytes / 4,148 instructions / 728 B frame / 1,000 static stack accesses; .text 169,554 bytes. Actual-machine-comparison.json records read-only inspection and unchanged artifact hashes.
+
+Guest-build-qualification.json binds focused compiler/source/patch hashes, exact SSA checks, build policy and oracle outcomes. Production-source/ and committed-source-binding.json preserve final source. Compressed inputs/disassemblies are indexed in the sibling scalar-slots archive.
+
+The initial diagnostic refused BEFORE compilation because retired controls no longer matched their manifest after my unsafe objcopy inspection. That incident/recovery is documented in the sibling archive; the successful diagnosis uses ONLY NEW pristine `goal110-text-rf-host-20261004/.mylang-cache/goal110-join-objcopy-recovery-20261004/runner` artifacts. No old receipt is retroactively rewritten.

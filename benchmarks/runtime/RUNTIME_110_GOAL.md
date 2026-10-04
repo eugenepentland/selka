@@ -8,30 +8,30 @@ the raw evidence for every reported result.
 ## Status
 
 <!-- STATUS-START -->
-- **Campaign:** active; sorting improvement integrated with a documented QBE tradeoff.
-- **Last document update:** 2026-10-04 04:18:15 UTC.
+- **Campaign:** active; readiness and sorting improvements integrated with recorded tradeoffs.
+- **Last document update:** 2026-10-04 04:44:10 UTC.
 - **Active batch:** certified list-readiness inlining, search alignment, and
-  scalar-address lowering diagnostics.
+  duplicate ownership-check elimination in compute.
 - **Current implementation:** `perf/runtime-parity-20261003`, production source
-  `63df6b6c481b12fd711755ec40cdcb5d1c984ccc`, equivalent to sorting `8043c4d9`.
+  `7e7773e43c934e67e32db3205a9f867049f9b46a`, equivalent to readiness `63842d3c`.
 - **Latest complete integrated measurement:** B0, before join and sorting changes.
 - **Acceptance scope:** LLVM required; QBE tracked separately.
 - **Current confirmations:** **0/80** after the production change. The eight
   earlier G2 confirmations remain in history and require fresh integrated checks.
 - **LLVM states:** 71 above target, three observations awaiting confirmation,
   six stale confirmations. Mixed revisions remain visible; this is not a full-suite pass.
-- **Dashboard artifact:** [After sorting integration](candidates/goal110-dashboard-20261004-sort.json).
-- **Active operations:** readiness `63842d3c` passed720 qualifications and516
-  holdouts and is next for timing. Scanner alignment `57034382` is built and
-  finishing nearby-input checks. The strict and hybrid scalar-pointer changes
-  both leave actual optimized code unchanged and are being deferred.
+- **Dashboard artifact:** [After readiness integration](candidates/goal110-dashboard-20261004-readiness.json).
+- **Active operations:** integrated readiness after an independent15-round
+  repeat confirmed a2.1% small-sort gain and1.1% small nested-mutation cost.
+  The latter remains fastest. Combined equality/parser/alignment validation and
+  conservative duplicate ownership-check elimination are in progress.
 - **Sorting tradeoff:** repeated small LLVM integer-sort improvement of 17.6%
   is accepted alongside an 11.0% large QBE nested-mutation regression. The QBE
   nested instruction stream is unchanged; code/data layout is a hypothesis,
-  not an established cause. Small LLVM integer sorting still misses at 1.3607×.
-- **Next action:** investigate the repeated search slowdown and two compiler
-  mechanisms using existing artifacts before another host build. The parser
-  timing lane has ended; builds and checks have resumed. No new confirmations.
+  not an established cause. Latest small LLVM integer sorting still misses at1.3402× after readiness.
+- **Next action:** build and qualify the combined text and duplicate-check
+  candidates, then screen them in separate quiet windows. Rebuild the normal
+  integrated compiler for confirmation after this batch settles.
 
 | Backend | Required targets | Latest observed ≤1.10 | Latest observed >1.10 | Current goal confirmations |
 |---|---:|---:|---:|---:|
@@ -41,7 +41,7 @@ the raw evidence for every reported result.
 
 The counts above use the **fastest current configuration in each measured row**.
 They differ from the earlier campaign's frozen historical 1.00 targets. G2
-confirmed eight LLVM cells on the join source. Sorting T7 updates eight observed
+confirmed eight LLVM cells on the join source. Readiness T9 updates eight observed
 rows but provides no normal confirmation; every target still needs acceptance
 on the current integrated source. QBE being above 1.10 does not prevent completion.
 
@@ -247,8 +247,8 @@ measure QBE alongside it without treating its existing gaps as acceptance work.
 | Batch | Cases | Initial purpose | State |
 |---|---|---|---|
 | B1 | `mutate_nested`, `bytes_scan`, `string_search` | Confirm existing LLVM wins and establish regression checks | Reconfirmed 6/6 at integrated join957f97c6 / G2 |
-| B2 | `string_equal`, `string_join` | Equality/ownership overhead and nearby large-input targets | Join both sizes confirmed at G2; equality99 rejected and deferred pending shared cause |
-| B3 | `record_reads`, `record_construct`, `record_update` | Record representation, scalar replacement and transfers | General direct scalar-slot lowering is in focused/native checks |
+| B2 | `string_equal`, `string_join` | Equality/ownership overhead and nearby large-input targets | Join both sizes confirmed at G2; equality99 unintegrated; combined alignment/equality candidate is in validation |
+| B3 | `record_reads`, `record_construct`, `record_update` | Record representation, scalar replacement and transfers | Strict/hybrid scalar-pointer lowering deferred: actual code unchanged; adjacent duplicate ownership checks found; conservative elimination in progress |
 | B4 | `call_direct`, `call_indirect`, `option_handle`, `result_propagate` | Calls, inlining, dispatch and return paths | `d14e26f4` speeds direct calls but retains fallback/record regressions; unintegrated |
 | B5 | `integer_math`, `float_math`, `branch_predictable`, `branch_mixed` | Scalar lowering and loop invariants | Queued |
 | B6 | `list_scan`, `list_append`, `list_filter`, `mutate_unique` | Iteration, capacity and uniqueness | Queued |
@@ -256,8 +256,8 @@ measure QBE alongside it without treating its existing gaps as acceptance work.
 | B8 | `dict_lookup`, `dict_lookup_str` | Lookup/probe and key costs | Queued |
 | B9 | `dict_update`, `dict_update_str`, `set_dedup` | Publication, replacement and deduplication | Queued |
 | B10 | `binary_search`, `packet_decode` | Bounds, branches and scalar reads | Queued |
-| B11 | `sort_int`, `sort_records` | Comparator dispatch and scratch work | `2a49da29` rejected; disjoint-run rotation8043c4d9 passed native checks, guests building |
-| B12 | `string_split`, `int_parse`, `int_format` | Text ownership, parsing and formatting | Queued |
+| B11 | `sort_int`, `sort_records` | Comparator dispatch and scratch work | Rotation804 and readiness638 integrated as7e7773e4; small integer sort remains open |
+| B12 | `string_split`, `int_parse`, `int_format` | Text ownership, parsing and formatting | Parser52 deferred after search regression; alignment570 diagnostic queued |
 | B13 | `word_count`, `csv_aggregate`, `json_transform`, `lox_eval` | Combined application behavior and remaining library costs | Queued |
 
 B1's LLVM observations are already at 1.00; this batch first qualifies the new
@@ -363,8 +363,8 @@ does not supply the new goal's confirmation protocol.
 | packet_decode / large (256) | 660.8722 | 1.2066 | 3.0576 | 1.9560 | **1.0000** | 2.2540 | 11.4511 | O / O | B0 |
 | list_scan / small (64) | 49.0371 | **1.0000** | 1.2722 | 1.8459 | 1.3498 | 2.0643 | 5.0333 | O / O | B0 |
 | list_scan / large (4096) | 3380.0797 | **1.0000** | 1.2127 | 1.6581 | 1.3890 | 1.5361 | 3.6315 | O / O | B0 |
-| list_append / small (64) | 116.6963 | 1.3316 | 1.8960 | 2.1422 | **1.0000** | 2.6790 | 4.2871 | O / O | T7 |
-| list_append / large (4096) | 5492.3848 | 1.0786 | 1.9315 | 2.1213 | **1.0000** | 2.3875 | 3.8839 | O / O | T7 |
+| list_append / small (64) | 115.1849 | 1.3508 | 1.9135 | 2.1715 | **1.0000** | 2.6792 | 4.3123 | O / O | T9 |
+| list_append / large (4096) | 5414.5766 | 1.0894 | 1.9588 | 2.1366 | **1.0000** | 2.4072 | 3.9112 | O / O | T9 |
 | list_filter / small (64) | 177.9840 | 1.0990 | 1.9368 | 1.5068 | **1.0000** | 2.6375 | 4.7879 | O / O | B0 |
 | list_filter / large (4096) | 6892.5245 | **1.0000** | 1.9650 | 1.8369 | 1.2613 | 2.4967 | 5.3200 | O / O | B0 |
 | dict_lookup / small (64) | 300.9516 | 2.4699 | 1.7785 | 2.0004 | **1.0000** | 1.9397 | 3.2588 | O / O | B0 |
@@ -381,12 +381,12 @@ does not supply the new goal's confirmation protocol.
 | alloc_short / large (1024) | 3.9012 | 327.5994 | 536.1037 | 1374.7989 | **1.0000** | 19711.5691 | 26589.1038 | O / O | B0 |
 | alloc_retained / small (64) | 1292.6997 | 1.0697 | 1.4853 | 1.0303 | **1.0000** | 2.3540 | 3.5644 | O / O | B0 |
 | alloc_retained / large (1024) | 20710.2684 | 1.0504 | 1.2628 | 1.0366 | **1.0000** | 2.2667 | 3.3646 | O / O | B0 |
-| mutate_nested / small (64) | 719.2670 | 1.5723 | 1.5873 | 1.6002 | 1.4487 | **1.0000** | 1.1548 | P / O | T7 |
-| mutate_nested / large (1024) | 7131.9083 | 2.6814 | 2.3925 | 2.6951 | 2.4699 | **1.0000** | 1.2309 | P / O | T7 |
-| sort_int / small (64) | 162.9593 | 1.3593 | 6.3105 | 1.6248 | **1.0000** | 1.3607 | 2.5518 | O / O | T7 |
-| sort_int / large (4096) | 44161.2680 | 1.4352 | 5.2027 | 1.4470 | 1.0013 | **1.0000** | 1.2097 | P / O | T7 |
-| sort_records / small (64) | 542.3958 | 1.1991 | 12.8080 | 1.4046 | **1.0000** | 2.2466 | 2.8732 | O / O | T7 |
-| sort_records / large (4096) | 49756.5747 | **1.0000** | 24.2944 | 2.2739 | 1.8195 | 1.2157 | 1.5656 | O / O | T7 |
+| mutate_nested / small (64) | 725.6244 | 1.5319 | 1.5667 | 1.6185 | 1.4389 | **1.0000** | 1.1389 | P / O | T9 |
+| mutate_nested / large (1024) | 6984.3321 | 2.7290 | 2.4279 | 2.7002 | 2.5072 | **1.0000** | 1.2342 | P / O | T9 |
+| sort_int / small (64) | 161.2429 | 1.3579 | 6.3145 | 1.6313 | **1.0000** | 1.3402 | 2.5690 | O / O | T9 |
+| sort_int / large (4096) | 43559.5301 | 1.4501 | 5.2613 | 1.4596 | **1.0000** | 1.0125 | 1.2332 | P / O | T9 |
+| sort_records / small (64) | 534.9452 | 1.1915 | 12.9614 | 1.4126 | **1.0000** | 2.2464 | 2.9003 | O / O | T9 |
+| sort_records / large (4096) | 51470.2384 | **1.0000** | 23.3619 | 2.1788 | 1.7380 | 1.2257 | 1.4972 | O / O | T9 |
 | lox_eval / small (16) | 738.1632 | **1.0000** | 1.1383 | 2.6921 | 2.6291 | 3.6607 | 4.0643 | O / O | B0 |
 | lox_eval / large (256) | 10981.4215 | **1.0000** | 1.1776 | 2.7947 | 2.7405 | 3.6183 | 3.9186 | O / O | B0 |
 | bytes_scan / small (64) | 3.4936 | 5.0533 | 6.7494 | 7.8731 | 3.4318 | **1.0000** | 2.3316 | S / O | G2 |
@@ -433,6 +433,10 @@ does not supply the new goal's confirmation protocol.
 | T7 | Sorting `8043c4d9`, integrated as `63df6b6c`; six-arm5r/1w and paired15r/3w repeat | [Archive](../../experiments/runtime-goal110-sort-rotation-20261004/README.md), [observed analysis](candidates/goal110-sort-8043c4d9-20261004-observed.json), [coordinator review](candidates/goal110-rejected-screens-20261004-0334-review.json) | LLVM small integer sort improves17.6%, still1.3607× fastest. QBE nested-large+11.0% is an explicit tradeoff. No goal confirmations. |
 
 | T8 | Unintegrated parser `52e6d074`; six-arm5r/1w and matched Debug5a paired screen | [Archive](../../experiments/runtime-goal110-int-parse-20261004/README.md), [paired raw](../../experiments/runtime-goal110-int-parse-20261004/parser-before-after.json.gz), [coordinator review](candidates/goal110-parser-52e6d074-20261004-review.json) | Modest parsing gains accompany a16.8% large LLVM search regression. No accepted rows changed. |
+
+| T9 | Readiness `63842d3c`, integrated as `7e7773e4`; six-arm5r/1w plus independent matched15r/3w repeat | [Archive](../../experiments/runtime-goal110-presize-ready-20261004/README.md), [observed analysis](candidates/goal110-readiness-63842d3c-20261004-observed.json), [coordinator review](candidates/goal110-screens-20261004-0438-review.json) | Repeated LLVM small integer sort0.97896 after/before; nested-small1.01061 is accepted and remains fastest. No normal goal confirmation. |
+| T10 | Unintegrated scanner alignment `57034382`; six-arm5r/1w and three-artifact matched comparison | [Archive](../../experiments/runtime-goal110-search-align-20261004/README.md), [coordinator review](candidates/goal110-screens-20261004-0438-review.json) | Large search570/5a0.99935 versus52/5a1.16262. General placement restores search in this run; individual-address causality unproven. |
+| D3 | Deferred scalar-pointer sources `a29aa6a9` and `1fdae8e1`; no timing | [Strict proof and incident archive](../../experiments/runtime-goal110-scalar-slots-20261004/README.md), [hybrid archive](../../experiments/runtime-goal110-scalar-addresses-20261004/README.md), [coordinator review](candidates/goal110-screens-20261004-0438-review.json) | Actual optimized code unchanged. Root checked96 raw/archive bindings and identical live hybrid/control ELFs; neither source is integrated. |
 
 B0 comparison JSON (uncompressed) SHA256:
 `dbb1906bcac50cb015171cce52ff68a0297f728db81e9ec4927f4f158117d473`.
@@ -503,6 +507,14 @@ Append entries; do not remove failed experiments or historical outcomes.
 | 2026-10-04 04:11:30 UTC | Readiness `63842d3c`; search and scalar diagnostics | Actual LLVM retains13 ordinary readiness calls, including a reachable certified sort-comprehension guard. The candidate chooses the existing hot alias under the identical proof;20 focused tests,53 native ASan/UBSan cases andGuardian88 pass. The empty-list append guard refuses its capacity check, so append is a control, not a claimed direct beneficiary. Parser52 search caller/helper bodies are identical after relocation normalization but move32 bytes modulo64; a scanner-only alignment probe is planned. Disposable objcopy replay confirms ELF-header/section-table rewriting without allocated-section changes. | No new timing or acceptance. Build readiness separately, test scanner alignment as a hypothesis, and recover source-bound compute controls into fresh paths before further scalar diagnosis. Prior mutated files and the incident remain preserved. |
 
 | 2026-10-04 04:18:15 UTC | Static scalar rejection; readiness638 and alignment570 readying | Hybrid direct-address lowering passes37 LLVM tests,12 identical emitted SSA units and108 untimed checks but produces an ELF byte-identical to a fresh accepted-source compute control. No timing/full host rebuild is warranted. Root verified all24 recovered guest hashes,16 external reference hashes and both compute allocated-section/program-header identities in the [recovery review](candidates/goal110-control-recovery-20261004-review.json). Readiness638 passes720 qualifications/516 holdouts; alignment570 passes31,104 native boundary cases and is finishing guest checks. | Defer scalar-pointer optimization and preserve its incident/negative evidence. Screen readiness first, then alignment; scanner, caller and index-walker placements all change, so the alignment experiment cannot isolate one address change. No accepted rows changed. |
+
+| 2026-10-04 04:29:00 UTC | Readiness638 timing; scalar archives | User scope remains LLVM required and QBE tracked separately. Readiness638 starts its prepared all-six-arm5r/1w screen and matched804 control; alignment570 is qualified and queued next. Scalar source candidates remain unintegrated; evidence commit `1d02c3dc` preserves identical-machine-code results and the control-artifact incident. | Quiet timing: all builds/tests/commits held. No new timing or acceptance claimed at launch. |
+
+| 2026-10-04 04:32:10 UTC | Isolated readiness `63842d3c` | Six-arm5r/1w screen passes240 samples/720 qualifications: LLVM integer sort1.34017 small/1.01248 large; records2.24642/1.22575; nested1/1; append2.67919/2.40716. Matched804→638 paired LLVM small integer sort0.97997 after/before (220.57→216.15ns; CI0.97086–0.98565), large0.99381; records0.99306/0.95377, nested1.01162/0.99572, append0.99592/1.00111. QBE ratios range0.99597–1.00457. | Modest candidate, not adopted or confirmed. Repeat the targeted gain and nested controls after alignment570, which now owns the quiet lane. All raw results remain in the isolated readiness worktree pending archive. |
+
+| 2026-10-04 04:37:00 UTC | Isolated alignment `57034382` | Six-arm screen passes360 samples/720 qualifications; the matched5a/52/570 comparison passes432 outcomes. LLVM570/5a search0.99985/0.99935, join1.00933/0.97845, bytes0.99456/0.97128, equality1.00173/0.99986, parse0.98141/0.98792, format0.96596/0.96944. Large search570/52 is0.85957 while52/5a is1.16262 in the same run. QBE570/5a ranges0.93467–1.03000. | General alignment change recovers search in this session; scanner-only causality remains unproven. Prepare combined equality/parser/alignment source after quiet readiness repeat. No production integration or target confirmations yet. |
+
+| 2026-10-04 04:44:10 UTC | Integrated `7e7773e4` / T9 | Independent15r/3w repeat confirms LLVM small integer sort0.97896 after/before (219.87→215.24ns; CI0.97644–0.98317), nested-small1.01061 (714.87→722.45ns; CI1.00732–1.01435), nested-large0.98074. QBE intervals cross1 in all three cells. Root replayed840 paired outcomes,14 live executable bindings, both six-arm reports (600 samples/1440 qualifications),96 scalar archive bindings and33 alignment archive bindings. | Adopt readiness with the explicit1.1% nested-small cost, retaining its leading ratio. Source bytes match638. Dashboard updates eight observed rows; all80 targets still need current-source acceptance. Combined text now starts from7e and uses638 as its matched control. |
 
 For future entries, include the affected cases/sizes/backends and before → after
 ratios, or say explicitly that the step produced no timing result. Link long

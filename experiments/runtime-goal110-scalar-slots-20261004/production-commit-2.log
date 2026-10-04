@@ -1,0 +1,10 @@
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: cold gate — no prior green stamp on this tree; a re-run after a green will skip via the cache and confirm
+guardian: file-size: 20 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 25 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 8627 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 9 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed
+[perf/goal110-llvm-slots-20261004 a29aa6a9] perf(llvm): preserve proven scalar-slot allocation pointers
+ 6 files changed, 210 insertions(+), 7 deletions(-)
+ create mode 100644 src/qbe_build_llvm_slots.zig

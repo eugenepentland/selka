@@ -1,0 +1,1499 @@
+{
+  "kind": "PRE-PRODUCTION-uncommitted-hybrid-address-native-diagnosis",
+  "started_utc": "2026-10-04T04:14:29.069823+00:00",
+  "source_revision": "a29aa6a9ade06c09b949f42de50bbd14d9cbaf02",
+  "compiler": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/zig-out/focus/mylang",
+    "bytes": 253304952,
+    "sha256": "18059125dffd4a47d9c4057480ebf2df06460e55b0d417f45bf5187b3388bcec"
+  },
+  "compiler_source_binding": {
+    "uncommitted": true,
+    "sources": {
+      "src/qbe_build_llvm_slots.zig": "da044cdde527a4ffb31695c10207b908011ba6fa740fca0ada6afc118212e9cf",
+      "src/qbe_build_llvm_emit.zig": "862304db9ea4082e1ad1df3352dbab6c108609847a5f6dafa79beda5139f97e1",
+      "src/qbe_build_llvm_lower.zig": "6baa4e23ca1ffc8eaf3fa7bb943060717737710b708fdff06c1b3ed92ab4924f",
+      "src/qbe_build_llvm_test.zig": "12d1552f9195abba2ed3f7e42a4c7f25453467b98b066570df52a1464a16843d",
+      "SPEC.md": "6f7d81795cf818ddffcea9aed2cc1adf336e78ff029f8bf5579cd7dfbe7ad26b"
+    },
+    "patch": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/experiments/runtime-goal110-scalar-addresses-20261004/uncommitted-production.patch",
+      "bytes": 22664,
+      "sha256": "896957f402c735e72b6d8e2f2ef74ac567c4291345b2bc464ad1fff596102eb5"
+    }
+  },
+  "source": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/benchmarks/runtime/expanded/compute/main.my",
+    "bytes": 5525,
+    "sha256": "d0abe8dea7693c5c0c17f871d631264721f47b8c4cd35f76f865ef68499a02e9"
+  },
+  "clock": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/.mylang-cache/goal110-join-objcopy-recovery-20261004/runner/native_clock.o",
+    "bytes": 1840,
+    "sha256": "d4f78b33801beaed2d1f789b184785731ed69a1f88f777f84c25796303f4658f"
+  },
+  "control": {
+    "manifest": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/.mylang-cache/goal110-join-objcopy-recovery-20261004/runner/manifest.json",
+      "bytes": 834524,
+      "sha256": "a5da83884425db6a06fc83d936b1503f8c1560c23203bc41a03f1c00883d36bf"
+    },
+    "compiler_build_receipt": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/.mylang-cache/goal110-join/join-compiler-receipt.json",
+      "bytes": 656394,
+      "sha256": "6c0285cfcca85ade2fb6ef22aa4c1f1a25257b81e6230bb7c9fb7a19f11b7115"
+    },
+    "source_revision": "5a60ef1039aca32657ef5877a464eb8a81d6c115",
+    "guest_policy": {
+      "my-llvm": "default Zig/Clang-derived CPU/features; first target CPU and merged target features",
+      "my-qbe": "amd64_sysv",
+      "rust": "rustc -O default x86_64",
+      "go": "GOAMD64=v1",
+      "zig-safe": "default host",
+      "zig-fast": "default host",
+      "policy_note": "Optimized default build policies; instruction sets are not matched across arms. No forced target tuning or disabled MyLang checks.",
+      "llvm_target_probe": {
+        "command": [
+          "/home/epentland/.local/bin/zig",
+          "cc",
+          "-###",
+          "-c",
+          "-x",
+          "c",
+          "/dev/null"
+        ],
+        "target_cpu_entries": [
+          "x86-64",
+          "alderlake"
+        ],
+        "enabled_features": [
+          "+64bit",
+          "+adx",
+          "+aes",
+          "+allow-light-256-bit",
+          "+avx",
+          "+avx2",
+          "+avxvnni",
+          "+bmi",
+          "+bmi2",
+          "+clflushopt",
+          "+clwb",
+          "+cmov",
+          "+crc32",
+          "+cx16",
+          "+cx8",
+          "+f16c",
+          "+false-deps-perm",
+          "+fast-15bytenop",
+          "+fast-gather",
+          "+fast-scalar-fsqrt",
+          "+fast-shld-rotate",
+          "+fast-variable-crosslane-shuffle",
+          "+fast-variable-perlane-shuffle",
+          "+fast-vector-fsqrt",
+          "+fma",
+          "+fsgsbase",
+          "+fxsr",
+          "+gfni",
+          "+hreset",
+          "+idivq-to-divl",
+          "+invpcid",
+          "+kl",
+          "+lzcnt",
+          "+macrofusion",
+          "+mmx",
+          "+movbe",
+          "+movdir64b",
+          "+movdiri",
+          "+no-bypass-delay-blend",
+          "+no-bypass-delay-mov",
+          "+no-bypass-delay-shuffle",
+          "+nopl",
+          "+pclmul",
+          "+pku",
+          "+popcnt",
+          "+prefer-movmsk-over-vtest",
+          "+prfchw",
+          "+ptwrite",
+          "+rdpid",
+          "+rdrnd",
+          "+rdseed",
+          "+sahf",
+          "+serialize",
+          "+sha",
+          "+shstk",
+          "+slow-3ops-lea",
+          "+slow-pmullq",
+          "+sse",
+          "+sse2",
+          "+sse3",
+          "+sse4.1",
+          "+sse4.2",
+          "+ssse3",
+          "+tuning-fast-imm-vector-shift",
+          "+vaes",
+          "+vpclmulqdq",
+          "+vzeroupper",
+          "+waitpkg",
+          "+widekl",
+          "+x87",
+          "+xsave",
+          "+xsavec",
+          "+xsaveopt",
+          "+xsaves"
+        ],
+        "feature_entries": [
+          "-16bit-mode",
+          "-32bit-mode",
+          "+64bit",
+          "+adx",
+          "+aes",
+          "+allow-light-256-bit",
+          "-amx-avx512",
+          "-amx-bf16",
+          "-amx-complex",
+          "-amx-fp16",
+          "-amx-fp8",
+          "-amx-int8",
+          "-amx-movrs",
+          "-amx-tf32",
+          "-amx-tile",
+          "+avx",
+          "-avx10.1",
+          "-avx10.2",
+          "+avx2",
+          "-avx512bf16",
+          "-avx512bitalg",
+          "-avx512bw",
+          "-avx512cd",
+          "-avx512dq",
+          "-avx512f",
+          "-avx512fp16",
+          "-avx512ifma",
+          "-avx512vbmi",
+          "-avx512vbmi2",
+          "-avx512vl",
+          "-avx512vnni",
+          "-avx512vp2intersect",
+          "-avx512vpopcntdq",
+          "-avxifma",
+          "-avxneconvert",
+          "+avxvnni",
+          "-avxvnniint16",
+          "-avxvnniint8",
+          "+bmi",
+          "+bmi2",
+          "-branch-hint",
+          "-branchfusion",
+          "-ccmp",
+          "-cf",
+          "-cldemote",
+          "+clflushopt",
+          "+clwb",
+          "-clzero",
+          "+cmov",
+          "-cmpccxadd",
+          "+crc32",
+          "+cx16",
+          "+cx8",
+          "-egpr",
+          "-enqcmd",
+          "-ermsb",
+          "+f16c",
+          "-false-deps-getmant",
+          "-false-deps-lzcnt-tzcnt",
+          "-false-deps-mulc",
+          "-false-deps-mullq",
+          "+false-deps-perm",
+          "-false-deps-popcnt",
+          "-false-deps-range",
+          "-fast-11bytenop",
+          "+fast-15bytenop",
+          "-fast-7bytenop",
+          "-fast-bextr",
+          "-fast-dpwssd",
+          "+fast-gather",
+          "-fast-hops",
+          "-fast-imm16",
+          "-fast-lzcnt",
+          "-fast-movbe",
+          "+fast-scalar-fsqrt",
+          "-fast-scalar-shift-masks",
+          "+fast-shld-rotate",
+          "+fast-variable-crosslane-shuffle",
+          "+fast-variable-perlane-shuffle",
+          "+fast-vector-fsqrt",
+          "-fast-vector-shift-masks",
+          "-faster-shift-than-shuffle",
+          "+fma",
+          "-fma4",
+          "+fsgsbase",
+          "-fsrm",
+          "+fxsr",
+          "+gfni",
+          "-harden-sls-ijmp",
+          "-harden-sls-ret",
+          "+hreset",
+          "-idivl-to-divb",
+          "+idivq-to-divl",
+          "-inline-asm-use-gpr32",
+          "+invpcid",
+          "+kl",
+          "-lea-sp",
+          "-lea-uses-ag",
+          "-lvi-cfi",
+          "-lvi-load-hardening",
+          "-lwp",
+          "+lzcnt",
+          "+macrofusion",
+          "+mmx",
+          "+movbe",
+          "+movdir64b",
+          "+movdiri",
+          "-movrs",
+          "-mwaitx",
+          "-ndd",
+          "-nf",
+          "-no-bypass-delay",
+          "+no-bypass-delay-blend",
+          "+no-bypass-delay-mov",
+          "+no-bypass-delay-shuffle",
+          "+nopl",
+          "-pad-short-functions",
+          "+pclmul",
+          "-pconfig",
+          "+pku",
+          "+popcnt",
+          "-ppx",
+          "-prefer-128-bit",
+          "-prefer-256-bit",
+          "-prefer-legacy-setcc",
+          "-prefer-mask-registers",
+          "+prefer-movmsk-over-vtest",
+          "-prefer-no-gather",
+          "-prefer-no-scatter",
+          "-prefetchi",
+          "+prfchw",
+          "+ptwrite",
+          "-push2pop2",
+          "-raoint",
+          "+rdpid",
+          "-rdpru",
+          "+rdrnd",
+          "+rdseed",
+          "-retpoline",
+          "-retpoline-external-thunk",
+          "-retpoline-indirect-branches",
+          "-retpoline-indirect-calls",
+          "-rtm",
+          "+sahf",
+          "-sbb-dep-breaking",
+          "+serialize",
+          "-seses",
+          "-sgx",
+          "+sha",
+          "-sha512",
+          "+shstk",
+          "+slow-3ops-lea",
+          "-slow-incdec",
+          "-slow-lea",
+          "-slow-pmaddwd",
+          "-slow-pmulld",
+          "+slow-pmullq",
+          "-slow-shld",
+          "-slow-two-mem-ops",
+          "-slow-unaligned-mem-16",
+          "-slow-unaligned-mem-32",
+          "-sm3",
+          "-sm4",
+          "+sse",
+          "+sse2",
+          "+sse3",
+          "+sse4.1",
+          "+sse4.2",
+          "-sse4a",
+          "-sse-unaligned-mem",
+          "+ssse3",
+          "-tagged-globals",
+          "-tbm",
+          "-tsxldtrk",
+          "+tuning-fast-imm-vector-shift",
+          "-uintr",
+          "-use-glm-div-sqrt-costs",
+          "-use-slm-arith-costs",
+          "-usermsr",
+          "+vaes",
+          "+vpclmulqdq",
+          "+vzeroupper",
+          "+waitpkg",
+          "-wbnoinvd",
+          "+widekl",
+          "+x87",
+          "-xop",
+          "+xsave",
+          "+xsavec",
+          "+xsaveopt",
+          "+xsaves",
+          "-zu"
+        ],
+        "exit_status": 0
+      },
+      "rust_text": "cargo release defaults, portable target; locked serde_json dependency",
+      "mylang_symbols": "--keep-symbols preserves names for profiling; release optimization remains enabled"
+    },
+    "binaries": {
+      "llvm": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/.mylang-cache/goal110-join-objcopy-recovery-20261004/runner/bin/compute-my-llvm",
+        "bytes": 467320,
+        "sha256": "4dd2666d4377d494db144e43b03fa8e92e2f8452797690f0ec40fe7aac193e67"
+      },
+      "qbe": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/.mylang-cache/goal110-join-objcopy-recovery-20261004/runner/bin/compute-my-qbe",
+        "bytes": 1268240,
+        "sha256": "e98077fe7c1f54d787c1e1886a1183348691040561f5fc005b67cfd708cf118a"
+      }
+    },
+    "commands": {
+      "llvm": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/zig-out/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/benchmarks/runtime/expanded/compute/main.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/.mylang-cache/goal110-join-objcopy-recovery-20261004/runner/bin/compute-my-llvm",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/.mylang-cache/goal110-join-objcopy-recovery-20261004/runner/mycache",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/.mylang-cache/goal110-join-objcopy-recovery-20261004/runner/native_clock.o",
+        "--zig",
+        "/home/epentland/.local/bin/zig",
+        "--qbe",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/zig-out/bin/qbe",
+        "--mode",
+        "ReleaseFast",
+        "--backend",
+        "llvm",
+        "--llvm-opt",
+        "3",
+        "--lto",
+        "--keep-symbols"
+      ],
+      "qbe": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/zig-out/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/benchmarks/runtime/expanded/compute/main.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/.mylang-cache/goal110-join-objcopy-recovery-20261004/runner/bin/compute-my-qbe",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/.mylang-cache/goal110-join-objcopy-recovery-20261004/runner/mycache",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/.mylang-cache/goal110-join-objcopy-recovery-20261004/runner/native_clock.o",
+        "--zig",
+        "/home/epentland/.local/bin/zig",
+        "--qbe",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/zig-out/bin/qbe",
+        "--mode",
+        "ReleaseFast",
+        "--backend",
+        "qbe",
+        "--keep-symbols"
+      ]
+    }
+  },
+  "runner": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/experiments/runtime-goal110-scalar-addresses-20261004/build-diagnostic.py",
+    "bytes": 8329,
+    "sha256": "8089161ecb6017060b87215fcddb899d86227eec3ab7bc75e7e5a64633ef9fef"
+  },
+  "host_mode": "Debug",
+  "guest_mode": "ReleaseFast",
+  "builds": [
+    {
+      "backend": "llvm",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/zig-out/focus/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/benchmarks/runtime/expanded/compute/main.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-addresses-diagnostic/compute-my-llvm",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-addresses-diagnostic/mycache",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/.mylang-cache/goal110-join-objcopy-recovery-20261004/runner/native_clock.o",
+        "--qbe",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/zig-out/focus/qbe",
+        "--mode",
+        "ReleaseFast",
+        "--backend",
+        "llvm",
+        "--keep-symbols",
+        "--llvm-opt",
+        "3",
+        "--lto"
+      ],
+      "status": 0,
+      "binary": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-addresses-diagnostic/compute-my-llvm",
+        "bytes": 467320,
+        "sha256": "4dd2666d4377d494db144e43b03fa8e92e2f8452797690f0ec40fe7aac193e67"
+      },
+      "manifest": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-addresses-diagnostic/compute-my-llvm.qbe-manifest.json",
+        "bytes": 6200,
+        "sha256": "5afa9314042cb88751effb5269493b80bdcba44b2d7bb270b5b6a50a5cbae063"
+      },
+      "build_log": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/experiments/runtime-goal110-scalar-addresses-20261004/llvm-guest-build.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "entry_disassembly": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/experiments/runtime-goal110-scalar-addresses-20261004/llvm-candidate-entry.s",
+        "bytes": 307933,
+        "sha256": "4c06dd3410f2bebfa59812af27558dd52c615101e69bd3a5fcc1ef55f0af956e"
+      }
+    }
+  ],
+  "qualification": [
+    {
+      "backend": "llvm",
+      "case": "integer_math",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 86995
+    },
+    {
+      "backend": "llvm",
+      "case": "integer_math",
+      "size": 64,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 87901
+    },
+    {
+      "backend": "llvm",
+      "case": "integer_math",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 92875
+    },
+    {
+      "backend": "llvm",
+      "case": "integer_math",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 5579890
+    },
+    {
+      "backend": "llvm",
+      "case": "integer_math",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 5579470
+    },
+    {
+      "backend": "llvm",
+      "case": "integer_math",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 5583438
+    },
+    {
+      "backend": "llvm",
+      "case": "integer_math",
+      "size": 2,
+      "iterations": 1,
+      "seed": 2,
+      "checksum": 106
+    },
+    {
+      "backend": "llvm",
+      "case": "integer_math",
+      "size": 7,
+      "iterations": 17,
+      "seed": 17,
+      "checksum": 39644
+    },
+    {
+      "backend": "llvm",
+      "case": "integer_math",
+      "size": 67,
+      "iterations": 19,
+      "seed": 999983,
+      "checksum": 577224
+    },
+    {
+      "backend": "llvm",
+      "case": "float_math",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 58846755
+    },
+    {
+      "backend": "llvm",
+      "case": "float_math",
+      "size": 64,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 69006036
+    },
+    {
+      "backend": "llvm",
+      "case": "float_math",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 60807339
+    },
+    {
+      "backend": "llvm",
+      "case": "float_math",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 271841929
+    },
+    {
+      "backend": "llvm",
+      "case": "float_math",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 276491338
+    },
+    {
+      "backend": "llvm",
+      "case": "float_math",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 273212113
+    },
+    {
+      "backend": "llvm",
+      "case": "float_math",
+      "size": 2,
+      "iterations": 1,
+      "seed": 2,
+      "checksum": 2309
+    },
+    {
+      "backend": "llvm",
+      "case": "float_math",
+      "size": 7,
+      "iterations": 17,
+      "seed": 17,
+      "checksum": 3126844
+    },
+    {
+      "backend": "llvm",
+      "case": "float_math",
+      "size": 67,
+      "iterations": 19,
+      "seed": 999983,
+      "checksum": 385084734
+    },
+    {
+      "backend": "llvm",
+      "case": "branch_predictable",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 273351
+    },
+    {
+      "backend": "llvm",
+      "case": "branch_predictable",
+      "size": 64,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 310818
+    },
+    {
+      "backend": "llvm",
+      "case": "branch_predictable",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 285027
+    },
+    {
+      "backend": "llvm",
+      "case": "branch_predictable",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 19390119
+    },
+    {
+      "backend": "llvm",
+      "case": "branch_predictable",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 19411812
+    },
+    {
+      "backend": "llvm",
+      "case": "branch_predictable",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 19392741
+    },
+    {
+      "backend": "llvm",
+      "case": "branch_predictable",
+      "size": 2,
+      "iterations": 1,
+      "seed": 2,
+      "checksum": 135
+    },
+    {
+      "backend": "llvm",
+      "case": "branch_predictable",
+      "size": 7,
+      "iterations": 17,
+      "seed": 17,
+      "checksum": 49623
+    },
+    {
+      "backend": "llvm",
+      "case": "branch_predictable",
+      "size": 67,
+      "iterations": 19,
+      "seed": 999983,
+      "checksum": 1858702
+    },
+    {
+      "backend": "llvm",
+      "case": "branch_mixed",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 350559
+    },
+    {
+      "backend": "llvm",
+      "case": "branch_mixed",
+      "size": 64,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 408492
+    },
+    {
+      "backend": "llvm",
+      "case": "branch_mixed",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 372225
+    },
+    {
+      "backend": "llvm",
+      "case": "branch_mixed",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 24902937
+    },
+    {
+      "backend": "llvm",
+      "case": "branch_mixed",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 24937896
+    },
+    {
+      "backend": "llvm",
+      "case": "branch_mixed",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 24919905
+    },
+    {
+      "backend": "llvm",
+      "case": "branch_mixed",
+      "size": 2,
+      "iterations": 1,
+      "seed": 2,
+      "checksum": 125
+    },
+    {
+      "backend": "llvm",
+      "case": "branch_mixed",
+      "size": 7,
+      "iterations": 17,
+      "seed": 17,
+      "checksum": 48671
+    },
+    {
+      "backend": "llvm",
+      "case": "branch_mixed",
+      "size": 67,
+      "iterations": 19,
+      "seed": 999983,
+      "checksum": 2323644
+    },
+    {
+      "backend": "llvm",
+      "case": "record_construct",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 137136
+    },
+    {
+      "backend": "llvm",
+      "case": "record_construct",
+      "size": 64,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 153108
+    },
+    {
+      "backend": "llvm",
+      "case": "record_construct",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 141662
+    },
+    {
+      "backend": "llvm",
+      "case": "record_construct",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 9560607
+    },
+    {
+      "backend": "llvm",
+      "case": "record_construct",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 9568443
+    },
+    {
+      "backend": "llvm",
+      "case": "record_construct",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 9561920
+    },
+    {
+      "backend": "llvm",
+      "case": "record_construct",
+      "size": 2,
+      "iterations": 1,
+      "seed": 2,
+      "checksum": 172
+    },
+    {
+      "backend": "llvm",
+      "case": "record_construct",
+      "size": 7,
+      "iterations": 17,
+      "seed": 17,
+      "checksum": 50780
+    },
+    {
+      "backend": "llvm",
+      "case": "record_construct",
+      "size": 67,
+      "iterations": 19,
+      "seed": 999983,
+      "checksum": 928258
+    },
+    {
+      "backend": "llvm",
+      "case": "record_update",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 137136
+    },
+    {
+      "backend": "llvm",
+      "case": "record_update",
+      "size": 64,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 153108
+    },
+    {
+      "backend": "llvm",
+      "case": "record_update",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 141662
+    },
+    {
+      "backend": "llvm",
+      "case": "record_update",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 9560607
+    },
+    {
+      "backend": "llvm",
+      "case": "record_update",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 9568443
+    },
+    {
+      "backend": "llvm",
+      "case": "record_update",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 9561920
+    },
+    {
+      "backend": "llvm",
+      "case": "record_update",
+      "size": 2,
+      "iterations": 1,
+      "seed": 2,
+      "checksum": 172
+    },
+    {
+      "backend": "llvm",
+      "case": "record_update",
+      "size": 7,
+      "iterations": 17,
+      "seed": 17,
+      "checksum": 50780
+    },
+    {
+      "backend": "llvm",
+      "case": "record_update",
+      "size": 67,
+      "iterations": 19,
+      "seed": 999983,
+      "checksum": 928258
+    },
+    {
+      "backend": "llvm",
+      "case": "call_direct",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 265179
+    },
+    {
+      "backend": "llvm",
+      "case": "call_direct",
+      "size": 64,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 303690
+    },
+    {
+      "backend": "llvm",
+      "case": "call_direct",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 274935
+    },
+    {
+      "backend": "llvm",
+      "case": "call_direct",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 18684129
+    },
+    {
+      "backend": "llvm",
+      "case": "call_direct",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 18706044
+    },
+    {
+      "backend": "llvm",
+      "case": "call_direct",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 18691005
+    },
+    {
+      "backend": "llvm",
+      "case": "call_direct",
+      "size": 2,
+      "iterations": 1,
+      "seed": 2,
+      "checksum": 137
+    },
+    {
+      "backend": "llvm",
+      "case": "call_direct",
+      "size": 7,
+      "iterations": 17,
+      "seed": 17,
+      "checksum": 49385
+    },
+    {
+      "backend": "llvm",
+      "case": "call_direct",
+      "size": 67,
+      "iterations": 19,
+      "seed": 999983,
+      "checksum": 1780648
+    },
+    {
+      "backend": "llvm",
+      "case": "call_indirect",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 441837
+    },
+    {
+      "backend": "llvm",
+      "case": "call_indirect",
+      "size": 64,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 303690
+    },
+    {
+      "backend": "llvm",
+      "case": "call_indirect",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 274935
+    },
+    {
+      "backend": "llvm",
+      "case": "call_indirect",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 31132023
+    },
+    {
+      "backend": "llvm",
+      "case": "call_indirect",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 18706044
+    },
+    {
+      "backend": "llvm",
+      "case": "call_indirect",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 18691005
+    },
+    {
+      "backend": "llvm",
+      "case": "call_indirect",
+      "size": 2,
+      "iterations": 1,
+      "seed": 2,
+      "checksum": 137
+    },
+    {
+      "backend": "llvm",
+      "case": "call_indirect",
+      "size": 7,
+      "iterations": 17,
+      "seed": 17,
+      "checksum": 82229
+    },
+    {
+      "backend": "llvm",
+      "case": "call_indirect",
+      "size": 67,
+      "iterations": 19,
+      "seed": 999983,
+      "checksum": 2966898
+    },
+    {
+      "backend": "llvm",
+      "case": "option_handle",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 196995
+    },
+    {
+      "backend": "llvm",
+      "case": "option_handle",
+      "size": 64,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 230934
+    },
+    {
+      "backend": "llvm",
+      "case": "option_handle",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 204735
+    },
+    {
+      "backend": "llvm",
+      "case": "option_handle",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 14000592
+    },
+    {
+      "backend": "llvm",
+      "case": "option_handle",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 14021751
+    },
+    {
+      "backend": "llvm",
+      "case": "option_handle",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 14006172
+    },
+    {
+      "backend": "llvm",
+      "case": "option_handle",
+      "size": 2,
+      "iterations": 1,
+      "seed": 2,
+      "checksum": 125
+    },
+    {
+      "backend": "llvm",
+      "case": "option_handle",
+      "size": 7,
+      "iterations": 17,
+      "seed": 17,
+      "checksum": 42041
+    },
+    {
+      "backend": "llvm",
+      "case": "option_handle",
+      "size": 67,
+      "iterations": 19,
+      "seed": 999983,
+      "checksum": 1338181
+    },
+    {
+      "backend": "llvm",
+      "case": "result_propagate",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 203988
+    },
+    {
+      "backend": "llvm",
+      "case": "result_propagate",
+      "size": 64,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 235569
+    },
+    {
+      "backend": "llvm",
+      "case": "result_propagate",
+      "size": 64,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 222996
+    },
+    {
+      "backend": "llvm",
+      "case": "result_propagate",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 14905605
+    },
+    {
+      "backend": "llvm",
+      "case": "result_propagate",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 14925405
+    },
+    {
+      "backend": "llvm",
+      "case": "result_propagate",
+      "size": 4096,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 14922453
+    },
+    {
+      "backend": "llvm",
+      "case": "result_propagate",
+      "size": 2,
+      "iterations": 1,
+      "seed": 2,
+      "checksum": 125
+    },
+    {
+      "backend": "llvm",
+      "case": "result_propagate",
+      "size": 7,
+      "iterations": 17,
+      "seed": 17,
+      "checksum": 39950
+    },
+    {
+      "backend": "llvm",
+      "case": "result_propagate",
+      "size": 67,
+      "iterations": 19,
+      "seed": 999983,
+      "checksum": 1433431
+    },
+    {
+      "backend": "llvm",
+      "case": "binary_search",
+      "size": 16,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 113
+    },
+    {
+      "backend": "llvm",
+      "case": "binary_search",
+      "size": 16,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 127
+    },
+    {
+      "backend": "llvm",
+      "case": "binary_search",
+      "size": 16,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 131
+    },
+    {
+      "backend": "llvm",
+      "case": "binary_search",
+      "size": 256,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 27018
+    },
+    {
+      "backend": "llvm",
+      "case": "binary_search",
+      "size": 256,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 28350
+    },
+    {
+      "backend": "llvm",
+      "case": "binary_search",
+      "size": 256,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 27375
+    },
+    {
+      "backend": "llvm",
+      "case": "binary_search",
+      "size": 2,
+      "iterations": 1,
+      "seed": 2,
+      "checksum": 2
+    },
+    {
+      "backend": "llvm",
+      "case": "binary_search",
+      "size": 7,
+      "iterations": 17,
+      "seed": 17,
+      "checksum": 130
+    },
+    {
+      "backend": "llvm",
+      "case": "binary_search",
+      "size": 67,
+      "iterations": 19,
+      "seed": 999983,
+      "checksum": 14278
+    },
+    {
+      "backend": "llvm",
+      "case": "packet_decode",
+      "size": 16,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 23868
+    },
+    {
+      "backend": "llvm",
+      "case": "packet_decode",
+      "size": 16,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 403224
+    },
+    {
+      "backend": "llvm",
+      "case": "packet_decode",
+      "size": 16,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 236448
+    },
+    {
+      "backend": "llvm",
+      "case": "packet_decode",
+      "size": 256,
+      "iterations": 3,
+      "seed": 1,
+      "checksum": 861120
+    },
+    {
+      "backend": "llvm",
+      "case": "packet_decode",
+      "size": 256,
+      "iterations": 3,
+      "seed": 424242,
+      "checksum": 6817920
+    },
+    {
+      "backend": "llvm",
+      "case": "packet_decode",
+      "size": 256,
+      "iterations": 3,
+      "seed": 1000000,
+      "checksum": 4117248
+    },
+    {
+      "backend": "llvm",
+      "case": "packet_decode",
+      "size": 2,
+      "iterations": 1,
+      "seed": 2,
+      "checksum": 257
+    },
+    {
+      "backend": "llvm",
+      "case": "packet_decode",
+      "size": 7,
+      "iterations": 17,
+      "seed": 17,
+      "checksum": 46019
+    },
+    {
+      "backend": "llvm",
+      "case": "packet_decode",
+      "size": 67,
+      "iterations": 19,
+      "seed": 999983,
+      "checksum": 6353866
+    }
+  ],
+  "frozen_input_comparison": [
+    {
+      "name": "myl_f_0f5912491d2de36e5414f85c642fb5ea4e1ed1309826128da061157c48716dab.ssa",
+      "frozen": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-slots-guests/llvm-dump/myl_f_0f5912491d2de36e5414f85c642fb5ea4e1ed1309826128da061157c48716dab.ssa",
+        "bytes": 2077,
+        "sha256": "ee88be97769a85c366e941cb32042576372356911877c2a652b68c57f76e74d0"
+      },
+      "captured": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-addresses-diagnostic/llvm-dump/myl_f_0f5912491d2de36e5414f85c642fb5ea4e1ed1309826128da061157c48716dab.ssa",
+        "bytes": 2077,
+        "sha256": "ee88be97769a85c366e941cb32042576372356911877c2a652b68c57f76e74d0"
+      },
+      "byte_identical": true
+    },
+    {
+      "name": "myl_f_17303d726ab0869e1051922be702d2f9c3749ec85bd07184d07a9bb33e8aac3f.ssa",
+      "frozen": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-slots-guests/llvm-dump/myl_f_17303d726ab0869e1051922be702d2f9c3749ec85bd07184d07a9bb33e8aac3f.ssa",
+        "bytes": 202,
+        "sha256": "80d5985f48cfc372aee1d1f83ac7229421e60b3135243dc434a8f554714cfecf"
+      },
+      "captured": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-addresses-diagnostic/llvm-dump/myl_f_17303d726ab0869e1051922be702d2f9c3749ec85bd07184d07a9bb33e8aac3f.ssa",
+        "bytes": 202,
+        "sha256": "80d5985f48cfc372aee1d1f83ac7229421e60b3135243dc434a8f554714cfecf"
+      },
+      "byte_identical": true
+    },
+    {
+      "name": "myl_f_8340dc055bec62af6bc5ec8a63347300a765d35db6c5abfa9c31d85a59222d78.ssa",
+      "frozen": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-slots-guests/llvm-dump/myl_f_8340dc055bec62af6bc5ec8a63347300a765d35db6c5abfa9c31d85a59222d78.ssa",
+        "bytes": 8314,
+        "sha256": "f7e2a53519a7a12b95d9b082dd913b66a58189d5f6f66f28e4c9c4e8ceb67866"
+      },
+      "captured": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-addresses-diagnostic/llvm-dump/myl_f_8340dc055bec62af6bc5ec8a63347300a765d35db6c5abfa9c31d85a59222d78.ssa",
+        "bytes": 8314,
+        "sha256": "f7e2a53519a7a12b95d9b082dd913b66a58189d5f6f66f28e4c9c4e8ceb67866"
+      },
+      "byte_identical": true
+    },
+    {
+      "name": "myl_f_958e150c8e8d6bdababd5dd9f6c01f405c7a76ec04c592bc872ef959f2b49b31.ssa",
+      "frozen": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-slots-guests/llvm-dump/myl_f_958e150c8e8d6bdababd5dd9f6c01f405c7a76ec04c592bc872ef959f2b49b31.ssa",
+        "bytes": 1161,
+        "sha256": "e338bfccca0d1f05a9142c52f4109a856f409c083a43d81e75a9b1c30c22eaef"
+      },
+      "captured": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-addresses-diagnostic/llvm-dump/myl_f_958e150c8e8d6bdababd5dd9f6c01f405c7a76ec04c592bc872ef959f2b49b31.ssa",
+        "bytes": 1161,
+        "sha256": "e338bfccca0d1f05a9142c52f4109a856f409c083a43d81e75a9b1c30c22eaef"
+      },
+      "byte_identical": true
+    },
+    {
+      "name": "myl_f_eccc1b0a7698081677ef19e6adfc9eddb3e4e74ce8bb8dcc7378a10d96886bef.ssa",
+      "frozen": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-slots-guests/llvm-dump/myl_f_eccc1b0a7698081677ef19e6adfc9eddb3e4e74ce8bb8dcc7378a10d96886bef.ssa",
+        "bytes": 2287,
+        "sha256": "a545121ee3244613eb5e56a16bd6cfcb6ab1091d25045cb6321804856af40558"
+      },
+      "captured": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-addresses-diagnostic/llvm-dump/myl_f_eccc1b0a7698081677ef19e6adfc9eddb3e4e74ce8bb8dcc7378a10d96886bef.ssa",
+        "bytes": 2287,
+        "sha256": "a545121ee3244613eb5e56a16bd6cfcb6ab1091d25045cb6321804856af40558"
+      },
+      "byte_identical": true
+    },
+    {
+      "name": "myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5.ssa",
+      "frozen": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-slots-guests/llvm-dump/myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5.ssa",
+        "bytes": 514911,
+        "sha256": "4b9df132eda0d9c88a34ca42e8dd0df7bf60c774c9c2ea408d8de89520ace024"
+      },
+      "captured": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-addresses-diagnostic/llvm-dump/myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5.ssa",
+        "bytes": 514911,
+        "sha256": "4b9df132eda0d9c88a34ca42e8dd0df7bf60c774c9c2ea408d8de89520ace024"
+      },
+      "byte_identical": true
+    },
+    {
+      "name": "myl_f_5369b4c66e5b43253a9b5eea086246fe91113f976d8e1318e9f59662c8ee3596.ssa",
+      "frozen": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-slots-guests/llvm-dump/myl_f_5369b4c66e5b43253a9b5eea086246fe91113f976d8e1318e9f59662c8ee3596.ssa",
+        "bytes": 4013,
+        "sha256": "cad5630fec2f5f1bc2d0d4f9089aa4d8385a70bcc722b4923648d13fea2312f7"
+      },
+      "captured": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-addresses-diagnostic/llvm-dump/myl_f_5369b4c66e5b43253a9b5eea086246fe91113f976d8e1318e9f59662c8ee3596.ssa",
+        "bytes": 4013,
+        "sha256": "cad5630fec2f5f1bc2d0d4f9089aa4d8385a70bcc722b4923648d13fea2312f7"
+      },
+      "byte_identical": true
+    },
+    {
+      "name": "myl_f_33d8232212d3f1a1dc899b2b3b8bea00099cfffd34f229b9617aa3b58f06664c.ssa",
+      "frozen": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-slots-guests/llvm-dump/myl_f_33d8232212d3f1a1dc899b2b3b8bea00099cfffd34f229b9617aa3b58f06664c.ssa",
+        "bytes": 110443,
+        "sha256": "4ba66f68d07f5e8f226d31286c07183b466c73026aeb14f9245c622febab7670"
+      },
+      "captured": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-addresses-diagnostic/llvm-dump/myl_f_33d8232212d3f1a1dc899b2b3b8bea00099cfffd34f229b9617aa3b58f06664c.ssa",
+        "bytes": 110443,
+        "sha256": "4ba66f68d07f5e8f226d31286c07183b466c73026aeb14f9245c622febab7670"
+      },
+      "byte_identical": true
+    },
+    {
+      "name": "myl_f_b09f29efbbc619dfba8ae868481552f0edb3b268eea9cb9716361714c70d0deb.ssa",
+      "frozen": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-slots-guests/llvm-dump/myl_f_b09f29efbbc619dfba8ae868481552f0edb3b268eea9cb9716361714c70d0deb.ssa",
+        "bytes": 9684,
+        "sha256": "089b9a4c0ebe0ea6b2e823f0c6a093e563cfe2dfbc6626f7c632063ee2f48300"
+      },
+      "captured": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-addresses-diagnostic/llvm-dump/myl_f_b09f29efbbc619dfba8ae868481552f0edb3b268eea9cb9716361714c70d0deb.ssa",
+        "bytes": 9684,
+        "sha256": "089b9a4c0ebe0ea6b2e823f0c6a093e563cfe2dfbc6626f7c632063ee2f48300"
+      },
+      "byte_identical": true
+    },
+    {
+      "name": "myl_f_c022a6ad651d6537a30c1e2f178a185a896cdb5bde02baa31c70d91d735e3e85.ssa",
+      "frozen": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-slots-guests/llvm-dump/myl_f_c022a6ad651d6537a30c1e2f178a185a896cdb5bde02baa31c70d91d735e3e85.ssa",
+        "bytes": 2425,
+        "sha256": "1c66291d3161a92c821c47f14d74af56a906449e4a4386fb7735140e13cdb53e"
+      },
+      "captured": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-addresses-diagnostic/llvm-dump/myl_f_c022a6ad651d6537a30c1e2f178a185a896cdb5bde02baa31c70d91d735e3e85.ssa",
+        "bytes": 2425,
+        "sha256": "1c66291d3161a92c821c47f14d74af56a906449e4a4386fb7735140e13cdb53e"
+      },
+      "byte_identical": true
+    },
+    {
+      "name": "myl_f_279bca7ea3455002813d3428837243f19fa395122ecd3289e227e37ae96a304d.ssa",
+      "frozen": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-slots-guests/llvm-dump/myl_f_279bca7ea3455002813d3428837243f19fa395122ecd3289e227e37ae96a304d.ssa",
+        "bytes": 1162,
+        "sha256": "cfbfe3d45cf59918a3866cfc46050fc9508014a3fe98bc754304c790d79afa02"
+      },
+      "captured": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-addresses-diagnostic/llvm-dump/myl_f_279bca7ea3455002813d3428837243f19fa395122ecd3289e227e37ae96a304d.ssa",
+        "bytes": 1162,
+        "sha256": "cfbfe3d45cf59918a3866cfc46050fc9508014a3fe98bc754304c790d79afa02"
+      },
+      "byte_identical": true
+    },
+    {
+      "name": "myl_f_b32cc247615f368431c1e05319a02632884f2ce62053e22555b89ba57c349ecd.ssa",
+      "frozen": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-slots-guests/llvm-dump/myl_f_b32cc247615f368431c1e05319a02632884f2ce62053e22555b89ba57c349ecd.ssa",
+        "bytes": 17605,
+        "sha256": "618d925b032804bc017a3f63952e700a447f973759e7585c982a9e658bff1fc3"
+      },
+      "captured": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-addresses-diagnostic/llvm-dump/myl_f_b32cc247615f368431c1e05319a02632884f2ce62053e22555b89ba57c349ecd.ssa",
+        "bytes": 17605,
+        "sha256": "618d925b032804bc017a3f63952e700a447f973759e7585c982a9e658bff1fc3"
+      },
+      "byte_identical": true
+    }
+  ],
+  "finished_utc": "2026-10-04T04:14:32.725104+00:00"
+}

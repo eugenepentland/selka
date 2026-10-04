@@ -1,0 +1,12 @@
+{
+  "revision": "1fdae8e1444743786650acef2ddb17eefa4411cc",
+  "source_hashes": {
+    "SPEC.md": "6f7d81795cf818ddffcea9aed2cc1adf336e78ff029f8bf5579cd7dfbe7ad26b",
+    "src/qbe_build_llvm_slots.zig": "da044cdde527a4ffb31695c10207b908011ba6fa740fca0ada6afc118212e9cf",
+    "src/qbe_build_llvm_emit.zig": "862304db9ea4082e1ad1df3352dbab6c108609847a5f6dafa79beda5139f97e1",
+    "src/qbe_build_llvm_lower.zig": "6baa4e23ca1ffc8eaf3fa7bb943060717737710b708fdff06c1b3ed92ab4924f",
+    "src/qbe_build_llvm_test.zig": "12d1552f9195abba2ed3f7e42a4c7f25453467b98b066570df52a1464a16843d"
+  },
+  "precommit_patch_sha256": "896957f402c735e72b6d8e2f2ef74ac567c4291345b2bc464ad1fff596102eb5",
+  "diagnostic_was_uncommitted_at_execution": true
+}

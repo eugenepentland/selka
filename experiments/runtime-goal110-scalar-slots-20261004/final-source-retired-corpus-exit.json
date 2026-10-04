@@ -1,0 +1,14 @@
+{
+  "command": [
+    "scripts/build-slot.sh",
+    "build",
+    "zig",
+    "build",
+    "test-units",
+    "-Dtest-filter=whole golden corpus",
+    "-j2",
+    "--summary",
+    "all"
+  ],
+  "exit_status": 0
+}

@@ -1,0 +1,96 @@
+{
+  "kind": "untimed-actual-compute-machine-code-no-profit-proof",
+  "source_revision": "a29aa6a9ade06c09b949f42de50bbd14d9cbaf02",
+  "control_revision": "5a60ef1039aca32657ef5877a464eb8a81d6c115",
+  "guest_mode": "ReleaseFast",
+  "llvm_optimization": "3",
+  "llvm_lto": "full",
+  "machine_code": [
+    {
+      "backend": "llvm",
+      "entry": "myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5",
+      "entry_disassembly_identical_except_filename_header": true,
+      "entire_text_section_byte_identical": true,
+      "arms": [
+        {
+          "arm": "control",
+          "binary": "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/.mylang-cache/goal110-join/join-runner/bin/compute-my-llvm",
+          "binary_sha256": "fa609878afefc2a5cf73af24a1a3bb55748761150b39f6882ec0ad8f317d326b",
+          "text_sha256": "9b5ea3e04a129179947ba072eb141e2b6a6ce5fee7849671bf3501da1185ca85",
+          "text_bytes": 169554,
+          "entry_instruction_count": 4148,
+          "entry_stack_access_instructions": 1000,
+          "entry_spill_stores": 412
+        },
+        {
+          "arm": "candidate",
+          "binary": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-slots-guests/compute-my-llvm",
+          "binary_sha256": "a360c8ec6a611a8bb82f9ceb7266d9ad7d887b555832e8693edf4947adf46d34",
+          "text_sha256": "9b5ea3e04a129179947ba072eb141e2b6a6ce5fee7849671bf3501da1185ca85",
+          "text_bytes": 169554,
+          "entry_instruction_count": 4148,
+          "entry_stack_access_instructions": 1000,
+          "entry_spill_stores": 412
+        }
+      ]
+    },
+    {
+      "backend": "qbe",
+      "entry": "myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5",
+      "entry_disassembly_identical_except_filename_header": true,
+      "entire_text_section_byte_identical": true,
+      "arms": [
+        {
+          "arm": "control",
+          "binary": "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/.mylang-cache/goal110-join/join-runner/bin/compute-my-qbe",
+          "binary_sha256": "aa3cae5ab71c1ea98af1fe122241c0ef6aa7d11d3989ad881695e34a739d6625",
+          "text_sha256": "6b091060ab8d7dae37da80f63c536ae50ca3d02320528f3b8e7d239b22164e09",
+          "text_bytes": 204125,
+          "entry_instruction_count": 9429,
+          "entry_stack_access_instructions": 0,
+          "entry_spill_stores": 0
+        },
+        {
+          "arm": "candidate",
+          "binary": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-slots-guests/compute-my-qbe",
+          "binary_sha256": "9779710d7c1861720937dbe8785a1b4d80cdb34478a3695d113f9106f28e026e",
+          "text_sha256": "6b091060ab8d7dae37da80f63c536ae50ca3d02320528f3b8e7d239b22164e09",
+          "text_bytes": 204125,
+          "entry_instruction_count": 9429,
+          "entry_stack_access_instructions": 0,
+          "entry_spill_stores": 0
+        }
+      ]
+    }
+  ],
+  "allocations_after_sticky": 173,
+  "admitted_allocations_after_sticky": 93,
+  "not_admitted_hot_scratch_cells": [
+    {
+      "temporary": "s0",
+      "allocation_block": "@entry",
+      "position": "160",
+      "size": "8",
+      "definitions": "1",
+      "admitted": "false"
+    },
+    {
+      "temporary": "s1",
+      "allocation_block": "@entry",
+      "position": "161",
+      "size": "8",
+      "definitions": "1",
+      "admitted": "false"
+    },
+    {
+      "temporary": "s2",
+      "allocation_block": "@entry",
+      "position": "162",
+      "size": "8",
+      "definitions": "1",
+      "admitted": "false"
+    }
+  ],
+  "additional_same_block_word_only_alias_candidates": [],
+  "conclusion": "Static no-profit for compute; no runtime timing performed. Both whole .text sections and entry instruction streams are unchanged."
+}

@@ -1,0 +1,186 @@
+{
+  "schema": "mylang-goal110-presize-ready-binary-v1",
+  "status": "pass",
+  "artifacts": {
+    "llvm": {
+      "baseline": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-sort-rotation-20261004/.mylang-cache/goal110-rotation-debug/runner/bin/collections-my-llvm",
+        "sha256": "15537a5ae589c78fd1bd6e4b03d0dec8cc1a0d44236b9753d5cf95f148c34e92",
+        "text_bytes": 292594,
+        "batch_address": "0x1032fc0",
+        "batch_bytes": 51595,
+        "ordinary_calls_whole_guest": [
+          "0x10343fd",
+          "0x10345ef",
+          "0x1034a6f",
+          "0x1034c5f",
+          "0x1035208",
+          "0x1038dd6",
+          "0x10391a5",
+          "0x103a25b",
+          "0x1041bfe",
+          "0x1041ddf",
+          "0x1048f7c",
+          "0x104902d",
+          "0x104a117"
+        ],
+        "hot_calls_whole_guest": [],
+        "ordinary_calls_batch": [
+          "0x10343fd",
+          "0x10345ef",
+          "0x1034a6f",
+          "0x1034c5f",
+          "0x1035208",
+          "0x1038dd6",
+          "0x10391a5",
+          "0x103a25b"
+        ],
+        "hot_calls_batch": [],
+        "assembly_sha256": "20a02b578d5ac9626cca02b5e5ac00ade08402c05d8e63e0e3ccd50b91af7ab5"
+      },
+      "candidate": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-presize-ready-20261004/.mylang-cache/goal110-presize-ready-debug/runner/bin/collections-my-llvm",
+        "sha256": "a2b61a2ec1f336aedea734ff3b47eac1ffafd084ee53ed57672ded03581afdec",
+        "text_bytes": 293522,
+        "batch_address": "0x1032fd0",
+        "batch_bytes": 52108,
+        "ordinary_calls_whole_guest": [
+          "0x10346b2",
+          "0x1034dd2",
+          "0x1035369",
+          "0x1039edf",
+          "0x103af7d",
+          "0x1041f20",
+          "0x104932c",
+          "0x10493dd",
+          "0x104a4c7"
+        ],
+        "hot_calls_whole_guest": [],
+        "ordinary_calls_batch": [
+          "0x10346b2",
+          "0x1034dd2",
+          "0x1035369",
+          "0x1039edf",
+          "0x103af7d"
+        ],
+        "hot_calls_batch": [],
+        "assembly_sha256": "26bb3d52bac741aaa28012ce70bd7acb1818d4e71c7915acc49cd3c44427fd02"
+      }
+    },
+    "qbe": {
+      "baseline": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-sort-rotation-20261004/.mylang-cache/goal110-rotation-debug/runner/bin/collections-my-qbe",
+        "sha256": "93ec975f257d0d116807a83eb9f54916a8aa6e03c64d2623960fc72d6bf6a0ca",
+        "text_bytes": 419462,
+        "batch_address": "0x1016ab0",
+        "batch_bytes": 132860,
+        "ordinary_calls_whole_guest": [
+          "0x10196e5",
+          "0x101b695",
+          "0x101b875",
+          "0x1032707",
+          "0x10328e2",
+          "0x10336fb",
+          "0x1035304",
+          "0x10354e2",
+          "0x103a5d1",
+          "0x103a776",
+          "0x104bb06",
+          "0x104bc1a",
+          "0x104c920"
+        ],
+        "hot_calls_whole_guest": [
+          "0x1020d8e",
+          "0x10235ae",
+          "0x103f122"
+        ],
+        "ordinary_calls_batch": [
+          "0x10196e5",
+          "0x101b695",
+          "0x101b875",
+          "0x1032707",
+          "0x10328e2",
+          "0x10336fb",
+          "0x1035304",
+          "0x10354e2"
+        ],
+        "hot_calls_batch": [
+          "0x1020d8e",
+          "0x10235ae"
+        ],
+        "assembly_sha256": "dc827ec3c3985ea7a96392611159198398f05741f2019b7703c375c2a51fc6f1"
+      },
+      "candidate": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-presize-ready-20261004/.mylang-cache/goal110-presize-ready-debug/runner/bin/collections-my-qbe",
+        "sha256": "6a97f44864c2e329baa51024f8e6a3ece7653d9d118f54447dd6d7dbc94514aa",
+        "text_bytes": 419462,
+        "batch_address": "0x1016ab0",
+        "batch_bytes": 132860,
+        "ordinary_calls_whole_guest": [
+          "0x10196e5",
+          "0x101b875",
+          "0x10328e2",
+          "0x10336fb",
+          "0x10354e2",
+          "0x103a776",
+          "0x104bb06",
+          "0x104bc1a",
+          "0x104c920"
+        ],
+        "hot_calls_whole_guest": [
+          "0x101b695",
+          "0x1020d8e",
+          "0x10235ae",
+          "0x1032707",
+          "0x1035304",
+          "0x103a5d1",
+          "0x103f122"
+        ],
+        "ordinary_calls_batch": [
+          "0x10196e5",
+          "0x101b875",
+          "0x10328e2",
+          "0x10336fb",
+          "0x10354e2"
+        ],
+        "hot_calls_batch": [
+          "0x101b695",
+          "0x1020d8e",
+          "0x10235ae",
+          "0x1032707",
+          "0x1035304"
+        ],
+        "assembly_sha256": "2ea3aaf2fa4bbbfa3ac687b87fcbc6a84d3b55b6948825708b3390892b0cd4cf"
+      }
+    }
+  },
+  "llvm_sort_int_inlined_admission_range": [
+    "0x1039a17",
+    "0x1039b2e"
+  ],
+  "llvm_inlined_range_instructions": 59,
+  "llvm_inlined_range_no_calls": true,
+  "llvm_sort_int_original_fallback_ordinary_call": "0x1039edf",
+  "qbe_batch_identical_instructions_addresses_except_three_ready_callee_substitutions": true,
+  "qbe_batch_callee_changes": [
+    [
+      "0x101b695",
+      "call   10671e0 <myl_rc_list_plain_ready>",
+      "call   10672c0 <myl_rc_list_plain_ready_hot>"
+    ],
+    [
+      "0x1032707",
+      "call   10671e0 <myl_rc_list_plain_ready>",
+      "call   10672c0 <myl_rc_list_plain_ready_hot>"
+    ],
+    [
+      "0x1035304",
+      "call   10671e0 <myl_rc_list_plain_ready>",
+      "call   10672c0 <myl_rc_list_plain_ready_hot>"
+    ]
+  ],
+  "limitations": [
+    "Static inspection establishes surviving guard call removal and unchanged fallback presence, not performance.",
+    "LLVM register allocation/layout may change; QBE other functions/data and foreign libraries are outside this batch comparison."
+  ]
+}

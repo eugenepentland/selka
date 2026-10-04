@@ -1,0 +1,16 @@
+{
+  "command": [
+    "scripts/build-slot.sh",
+    "build",
+    "zig",
+    "test",
+    "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.task-actual-slot-proof.zig",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.task-tmp/zig-local",
+    "--global-cache-dir",
+    "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.task-tmp/zig-global"
+  ],
+  "exit_status": 0,
+  "revision": "a29aa6a9ade06c09b949f42de50bbd14d9cbaf02",
+  "generator_sha256": "d152765f22f3fae72d33827f0e8f92932f0b14e60368ab2f3c707341eeb3b47d"
+}

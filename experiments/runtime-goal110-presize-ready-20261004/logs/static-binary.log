@@ -1,0 +1,1 @@
+PASS LLVM presize barrier removed; original fallback retained; QBE batch changes only three readiness callees

@@ -1,0 +1,403 @@
+{
+  "schema": "mylang-goal110-presize-ready-timing-evidence-v1",
+  "status": "adoptable_pending_coordinator_integration",
+  "source_revision": "63842d3c32ab3079d878cff89224478543f9b7f3",
+  "source_fingerprint": "9640b4bcb037da06b9947bd06a42e91710a35a92eef319c16deb82ba0a6b0b62",
+  "validation_receipt_sha256": "1481885c71f3f1136f17ceab15c24cf8263d60b7632f6ea7ac9c0340bcc98316",
+  "validation_snapshot_preceded_timing": true,
+  "six_arm_session_id": "693cd1d6-6d63-44cb-bfa2-3b1984e73325",
+  "repeat_session_id": "33abd131-20be-4585-b69f-632e7aadc564",
+  "timing_intervals": {
+    "six-arm-screen": {
+      "started_utc": "2026-10-04T04:29:17.608308+00:00",
+      "finished_utc": "2026-10-04T04:30:17.672573+00:00"
+    },
+    "paired-screen": {
+      "started_utc": "2026-10-04T04:30:45.020821+00:00",
+      "finished_utc": "2026-10-04T04:31:05.648463+00:00"
+    },
+    "paired-repeat": {
+      "started_utc": "2026-10-04T04:36:54.227537+00:00",
+      "finished_utc": "2026-10-04T04:37:10.785218+00:00"
+    }
+  },
+  "coordinator_decision": "Adoptable as a modest LLVM tradeoff after independent repeat:2.1% small integer sort gain with1.1% nested-small cost; still fastest. Integration and normal RF confirmation remain coordinator work.",
+  "no_goal_pass_claimed": true,
+  "guest_policy": "Debug compiler hosts; ordinary ReleaseFast LLVM O3/LTO and QBE; CPU2 and normal per-invocation timing lock; no builds/commits/report work overlaps guest timing.",
+  "initial_paired_outcomes": 192,
+  "repeat_paired_outcomes": 216,
+  "six_arm_samples": 240,
+  "six_arm_qualifications": 720,
+  "results": [
+    {
+      "case": "sort_records",
+      "profile": "small",
+      "initial_medians_ns_per_op": {
+        "before-llvm": 1206.7934272778145,
+        "before-qbe": 1546.938546065015,
+        "after-llvm": 1198.412830035102,
+        "after-qbe": 1546.567400925879
+      },
+      "initial_ratios": {
+        "llvm": 0.9930554831893501,
+        "qbe": 0.9997600776449198
+      },
+      "initial_paired_95": {
+        "llvm": [
+          0.9900345074667255,
+          0.9970318964235765
+        ],
+        "qbe": [
+          0.9791396756121212,
+          1.0012661768480562
+        ]
+      },
+      "repeat_medians_ns_per_op": null,
+      "repeat_ratios": null,
+      "repeat_paired_95": null
+    },
+    {
+      "case": "sort_records",
+      "profile": "large",
+      "initial_medians_ns_per_op": {
+        "before-llvm": 62410.54112038141,
+        "before-qbe": 76895.40047675805,
+        "after-llvm": 59525.32538736591,
+        "after-qbe": 76754.46364719905
+      },
+      "initial_ratios": {
+        "llvm": 0.9537703778685349,
+        "qbe": 0.9981671617718982
+      },
+      "initial_paired_95": {
+        "llvm": [
+          0.9291374841363796,
+          0.9932070048420886
+        ],
+        "qbe": [
+          0.9890553938526483,
+          1.0018597586166957
+        ]
+      },
+      "repeat_medians_ns_per_op": null,
+      "repeat_ratios": null,
+      "repeat_paired_95": null
+    },
+    {
+      "case": "sort_int",
+      "profile": "small",
+      "initial_medians_ns_per_op": {
+        "before-llvm": 220.56873273227288,
+        "before-qbe": 411.1384576609687,
+        "after-llvm": 216.15058415165612,
+        "after-qbe": 411.47334788129376
+      },
+      "initial_ratios": {
+        "llvm": 0.9799692888203718,
+        "qbe": 1.0008145436508915
+      },
+      "initial_paired_95": {
+        "llvm": [
+          0.9708618178210607,
+          0.9856498865062184
+        ],
+        "qbe": [
+          0.9959474508460954,
+          1.0155618287916113
+        ]
+      },
+      "repeat_medians_ns_per_op": {
+        "before-llvm": 219.86878122547424,
+        "before-qbe": 406.1306987487478,
+        "after-llvm": 215.24277547009692,
+        "after-qbe": 406.5618064993651
+      },
+      "repeat_ratios": {
+        "llvm": 0.978960151916095,
+        "qbe": 1.0010615000342142
+      },
+      "repeat_paired_95": {
+        "llvm": [
+          0.9764444780303108,
+          0.9831733235570452
+        ],
+        "qbe": [
+          0.9973423843253687,
+          1.0082206292538505
+        ]
+      }
+    },
+    {
+      "case": "sort_int",
+      "profile": "large",
+      "initial_medians_ns_per_op": {
+        "before-llvm": 44306.35370051635,
+        "before-qbe": 53379.90017211704,
+        "after-llvm": 44032.03872633391,
+        "after-qbe": 53623.88209982788
+      },
+      "initial_ratios": {
+        "llvm": 0.9938086763799918,
+        "qbe": 1.0045706703632669
+      },
+      "initial_paired_95": {
+        "llvm": [
+          0.9727337654369084,
+          0.9978047094462708
+        ],
+        "qbe": [
+          1.0009983779859313,
+          1.019086212870548
+        ]
+      },
+      "repeat_medians_ns_per_op": null,
+      "repeat_ratios": null,
+      "repeat_paired_95": null
+    },
+    {
+      "case": "mutate_nested",
+      "profile": "small",
+      "initial_medians_ns_per_op": {
+        "before-llvm": 712.8339524826038,
+        "before-qbe": 825.2410800920406,
+        "after-llvm": 721.1195558759114,
+        "after-qbe": 823.256896121538
+      },
+      "initial_ratios": {
+        "llvm": 1.0116234690623969,
+        "qbe": 0.9975956311211733
+      },
+      "initial_paired_95": {
+        "llvm": [
+          1.0008591076531246,
+          1.0204875154484598
+        ],
+        "qbe": [
+          0.9905539379891997,
+          1.000592692124945
+        ]
+      },
+      "repeat_medians_ns_per_op": {
+        "before-llvm": 714.8703390535333,
+        "before-qbe": 824.5667156441463,
+        "after-llvm": 722.452704388567,
+        "after-qbe": 822.8002273294336
+      },
+      "repeat_ratios": {
+        "llvm": 1.0106066302108332,
+        "qbe": 0.9978576769093418
+      },
+      "repeat_paired_95": {
+        "llvm": [
+          1.0073218561490134,
+          1.0143452932729053
+        ],
+        "qbe": [
+          0.994861744868286,
+          1.000967797647787
+        ]
+      }
+    },
+    {
+      "case": "mutate_nested",
+      "profile": "large",
+      "initial_medians_ns_per_op": {
+        "before-llvm": 6968.496075778078,
+        "before-qbe": 8677.097158322056,
+        "after-llvm": 6938.649797023004,
+        "after-qbe": 8642.12395128552
+      },
+      "initial_ratios": {
+        "llvm": 0.9957169698554015,
+        "qbe": 0.9959694807608565
+      },
+      "initial_paired_95": {
+        "llvm": [
+          0.9731644256521725,
+          1.005906271265426
+        ],
+        "qbe": [
+          0.9813415998399222,
+          1.0084380593195446
+        ]
+      },
+      "repeat_medians_ns_per_op": {
+        "before-llvm": 7077.965764546685,
+        "before-qbe": 8670.5649526387,
+        "after-llvm": 6941.63748308525,
+        "after-qbe": 8681.891339648173
+      },
+      "repeat_ratios": {
+        "llvm": 0.9807390589335288,
+        "qbe": 1.0013063032306824
+      },
+      "repeat_paired_95": {
+        "llvm": [
+          0.9702219377352944,
+          0.9875297897215252
+        ],
+        "qbe": [
+          0.9964021414691389,
+          1.0073421678604961
+        ]
+      }
+    },
+    {
+      "case": "list_append",
+      "profile": "small",
+      "initial_medians_ns_per_op": {
+        "before-llvm": 307.10068276574873,
+        "before-qbe": 496.01932678158505,
+        "after-llvm": 305.8470937565693,
+        "after-qbe": 494.68982333053043
+      },
+      "initial_ratios": {
+        "llvm": 0.9959179869028957,
+        "qbe": 0.997319653934291
+      },
+      "initial_paired_95": {
+        "llvm": [
+          0.9904330522705904,
+          1.0079142246759816
+        ],
+        "qbe": [
+          0.9953495340128303,
+          1.0054310396989048
+        ]
+      },
+      "repeat_medians_ns_per_op": null,
+      "repeat_ratios": null,
+      "repeat_paired_95": null
+    },
+    {
+      "case": "list_append",
+      "profile": "large",
+      "initial_medians_ns_per_op": {
+        "before-llvm": 12993.91507835663,
+        "before-qbe": 21019.806014400678,
+        "after-llvm": 13008.306649724693,
+        "after-qbe": 20975.135747564593
+      },
+      "initial_ratios": {
+        "llvm": 1.0011075623690995,
+        "qbe": 0.9978748487590475
+      },
+      "initial_paired_95": {
+        "llvm": [
+          0.9962114868797828,
+          1.0048413503176303
+        ],
+        "qbe": [
+          0.9967601045689708,
+          0.9988255453666447
+        ]
+      },
+      "repeat_medians_ns_per_op": null,
+      "repeat_ratios": null,
+      "repeat_paired_95": null
+    }
+  ],
+  "current_fastest_levels": [
+    {
+      "case": "sort_records",
+      "profile": "small",
+      "llvm_vs_current_fastest": 2.2464204273321657
+    },
+    {
+      "case": "sort_records",
+      "profile": "large",
+      "llvm_vs_current_fastest": 1.2257460425305666
+    },
+    {
+      "case": "sort_int",
+      "profile": "small",
+      "llvm_vs_current_fastest": 1.3401680443882593
+    },
+    {
+      "case": "sort_int",
+      "profile": "large",
+      "llvm_vs_current_fastest": 1.0124836974047071
+    },
+    {
+      "case": "mutate_nested",
+      "profile": "small",
+      "llvm_vs_current_fastest": 1.0
+    },
+    {
+      "case": "mutate_nested",
+      "profile": "large",
+      "llvm_vs_current_fastest": 1.0
+    },
+    {
+      "case": "list_append",
+      "profile": "small",
+      "llvm_vs_current_fastest": 2.679192473185655
+    },
+    {
+      "case": "list_append",
+      "profile": "large",
+      "llvm_vs_current_fastest": 2.4071621341680447
+    }
+  ],
+  "evidence": {
+    "six-arm-screen.json.gz": {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-presize-ready-20261004/.mylang-cache/goal110-presize-ready-review/six-arm-screen.json",
+      "raw_sha256": "20f286774876a955755458e47563c6318bf7913329f319ea04b4a9dd474564b2",
+      "archive_sha256": "0fd093fca1b63f83aa725e8c2015a62944d0b508bf212f4f198461cb82a10690",
+      "raw_bytes": 2253690,
+      "archive_bytes": 557784
+    },
+    "logs/six-arm-screen.log": {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-presize-ready-20261004/.mylang-cache/goal110-presize-ready-review/six-arm-screen.log",
+      "raw_sha256": "3627d9ba0ea3cac38af8bea686cd7af330139b73c1f7ba3e0ca41d8219010ed9",
+      "archive_sha256": "3627d9ba0ea3cac38af8bea686cd7af330139b73c1f7ba3e0ca41d8219010ed9",
+      "raw_bytes": 1702,
+      "archive_bytes": 1702
+    },
+    "paired-screen.json.gz": {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-presize-ready-20261004/.mylang-cache/goal110-presize-ready-review/paired-screen.json",
+      "raw_sha256": "ccbe168cba4ee02c69577dd2b5b229f571393c927ee62559ae415f1db68959f8",
+      "archive_sha256": "a6b87c0f1bbb1cbbfafeae9d05c6ee192466d1fa6659d907f6deb6f14e967988",
+      "raw_bytes": 1678709,
+      "archive_bytes": 522611
+    },
+    "logs/paired-screen.log": {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-presize-ready-20261004/.mylang-cache/goal110-presize-ready-review/paired-screen.log",
+      "raw_sha256": "7d32fc396590e9a79c8851a4e2777548a46f7db15529b889a20b1b973ee4f7ca",
+      "archive_sha256": "7d32fc396590e9a79c8851a4e2777548a46f7db15529b889a20b1b973ee4f7ca",
+      "raw_bytes": 735,
+      "archive_bytes": 735
+    },
+    "paired-repeat.json.gz": {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-presize-ready-20261004/.mylang-cache/goal110-presize-ready-review/paired-repeat.json",
+      "raw_sha256": "f2cff6b7838d7e321bdf752363d7bde77192c88b1d72666f62a595568ddd97c6",
+      "archive_sha256": "79e99d8d0a34b9f038c98544c133ae8a2061746d9641d217c641dca32b2ffbcf",
+      "raw_bytes": 1677436,
+      "archive_bytes": 522044
+    },
+    "logs/paired-repeat.log": {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-presize-ready-20261004/.mylang-cache/goal110-presize-ready-review/paired-repeat.log",
+      "raw_sha256": "2e9dd27059e4a650a0610eccde10fd39634e21395d7808445fb397df7cc88e1f",
+      "archive_sha256": "2e9dd27059e4a650a0610eccde10fd39634e21395d7808445fb397df7cc88e1f",
+      "raw_bytes": 358,
+      "archive_bytes": 358
+    }
+  },
+  "helper_sha256": {
+    "verify-archive.py": "bc80bacc7b85af4dbda47e1aad4b5f3a82778d87cf206ab7616f470fc6374e83",
+    "native-ready-check.py": "4b575439952fd917d2b09fa81ff856eef07e88c1248f38b7704c92fdb13d0da7",
+    "verify-timing.py": "bfafcc1070ee9c3f022cdd277552c7f0584346db6282127b0e6c6bbb5acb0d53",
+    "time-paired.py": "5275342962f572987e3edf60d6cdd27df1feabe887aaa7fe84d4394d24c10e08",
+    "qualify.py": "354dcdd38284f64a3225b5235b20d0ed1e5131c8019ba88b11e26693d3cd66c6",
+    "static-binary.py": "41367eb9253b08b11d871d881f073fe964f9e4f149c17c48fe7711493b88de09",
+    "static-source.py": "c339b205a3d8f1b81760d7b2ffafdf6b1226fcfbc7e6ce0d3ec04bb9d2ec7967",
+    "time-paired-repeat.py": "40ed769ac6013918b88930cfdf452dd139935929eb3ff21ed37e18a5b11d7794"
+  },
+  "limitations": [
+    "Exploratory subset screen and paired Debug-host diagnostics do not constitute normal six-arm goal acceptance or confirmation.",
+    "Paired percentile intervals resample identical round indexes and are not corrected for multiple comparisons.",
+    "Only certified guard inlining is the direct mechanism; record/nested effects are observations, not causal attribution.",
+    "Repeatable small nested LLVM cost is explicitly retained; QBE intervals cross1 in targeted repeat.",
+    "Original raw subset/complete statuses, validation snapshot and five-round helper bytes are unchanged."
+  ]
+}

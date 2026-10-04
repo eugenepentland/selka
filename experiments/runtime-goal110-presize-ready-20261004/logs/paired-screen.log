@@ -1,0 +1,10 @@
+sort_records small {'llvm': 0.9930554831893501, 'qbe': 0.9997600776449198}
+sort_records large {'llvm': 0.9537703778685349, 'qbe': 0.9981671617718982}
+sort_int small {'llvm': 0.9799692888203718, 'qbe': 1.0008145436508915}
+sort_int large {'llvm': 0.9938086763799918, 'qbe': 1.0045706703632669}
+mutate_nested small {'llvm': 1.0116234690623969, 'qbe': 0.9975956311211733}
+mutate_nested large {'llvm': 0.9957169698554015, 'qbe': 0.9959694807608565}
+list_append small {'llvm': 0.9959179869028957, 'qbe': 0.997319653934291}
+list_append large {'llvm': 1.0011075623690995, 'qbe': 0.9978748487590475}
+Guest timing complete; computing exploratory paired intervals
+PASS paired Debug-host presize readiness screen: 160 measured samples, 32 warmups

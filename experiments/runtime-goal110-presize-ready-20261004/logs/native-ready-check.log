@@ -1,0 +1,2 @@
+native RC collections: 53 passed
+PASS native_rc_collections optimized ASan/UBSan: ordinary/hot predicates, cold metadata, pending finalizers, managed/refused widths, growth/alias/generation/heap refusal
