@@ -1,0 +1,27 @@
+{
+  "status": "pass",
+  "reviewed_utc": "2026-10-04T12:59:28.811377+00:00",
+  "archive_commit": "b31743c3b7c34f241afb8f7a7e39defeb182673c",
+  "index_sha256": "8afe638519ecc9ddeefee243d04d9d1aaf1fcdf256c00027b06ed7002156e25e",
+  "tracked_files": 139,
+  "stored_decoded_members": 200,
+  "live_sources": 198,
+  "live_bindings": 119,
+  "tested_comment_reconstruction": [
+    {
+      "path": "src/qbe_test.zig",
+      "changes": "exact two spec/spec-case comment tags",
+      "reconstructed_sha256": "de8c8e0d2ad60da391c761d33eb4ace2fbd4664af29cd1eb801aba26c9224aca"
+    }
+  ],
+  "script_sha256": "45e265f3922c23b5d68433ed29c257f63bf22993d8b133f1248cdadf1cdfba61",
+  "replay": {
+    "status": 0,
+    "stdout": "PASS 200 exact stored bindings, 119 live bindings; no guests executed\n"
+  },
+  "limitations": [
+    "Archive byte integrity, separate from prior semantic/static/timing reviews.",
+    "Initial strict live-equality attempt rejected the intentionally historical two-comment snapshot; exact reconstruction verifies it.",
+    "ELFs remain live and receipt-bound, not stored in Git."
+  ]
+}

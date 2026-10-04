@@ -1,0 +1,28 @@
+{
+  "schema": "mylang-dictionary-word-repeat-driver-v1",
+  "driver_session_id": "d6054b1b-6cdf-4923-9490-6e30d59f6ba8",
+  "commands_sha256": "c3ff44f5b61d0745e368c71ea6dee2894419209f9f57908e1a265b618fdc5989",
+  "driver_sha256": "8d82b0f3eb4f136995af02131c196c67898abdee2c036f2d1d33532ca8833747",
+  "started_utc": "2026-10-04T12:41:31.659409+00:00",
+  "command": [
+    "python3",
+    "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/time-repeat.py",
+    "--plans",
+    "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/screen-raw.json",
+    "--before-manifest",
+    "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/.mylang-cache/goal110-integrated-debug/runner/manifest.json",
+    "--after-manifest",
+    "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/runner/manifest.json",
+    "--rounds",
+    "15",
+    "--warmups",
+    "3",
+    "--cpu",
+    "2",
+    "--output",
+    "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/paired-repeat.json"
+  ],
+  "status": 0,
+  "finished_utc": "2026-10-04T12:42:29.776367+00:00",
+  "log_sha256": "384e06f2f7623c12ca9b2c6213bdf8e5332ad3ee20455ef1cde299134593d6dc"
+}

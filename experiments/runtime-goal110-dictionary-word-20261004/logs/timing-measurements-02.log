@@ -1,0 +1,99 @@
+Qualifying record_reads
+Qualifying tagged_stack
+Qualifying mutate_unique
+Qualifying mutate_shared
+Qualifying integer_math
+Qualifying float_math
+Qualifying branch_predictable
+Qualifying branch_mixed
+Qualifying record_construct
+Qualifying record_update
+Qualifying call_direct
+Qualifying call_indirect
+Qualifying option_handle
+Qualifying result_propagate
+Qualifying binary_search
+Qualifying packet_decode
+Qualifying list_scan
+Qualifying list_append
+Qualifying list_filter
+Qualifying dict_lookup
+Qualifying dict_lookup_str
+Qualifying dict_update
+Qualifying dict_update_str
+Qualifying set_dedup
+Qualifying alloc_short
+Qualifying alloc_retained
+Qualifying mutate_nested
+Qualifying sort_int
+Qualifying sort_records
+Qualifying lox_eval
+Qualifying bytes_scan
+Qualifying string_equal
+Qualifying string_search
+Qualifying string_split
+Qualifying string_join
+Qualifying int_parse
+Qualifying int_format
+Qualifying word_count
+Qualifying csv_aggregate
+Qualifying json_transform
+Calibrating dict_lookup/small
+Calibrating dict_lookup/large
+Calibrating dict_lookup_str/small
+Calibrating dict_lookup_str/large
+Calibrating dict_update/small
+Calibrating dict_update/large
+Calibrating dict_update_str/small
+Calibrating dict_update_str/large
+Calibrating set_dedup/small
+Calibrating set_dedup/large
+Calibrating mutate_nested/small
+Calibrating mutate_nested/large
+Calibrating string_search/small
+Calibrating string_search/large
+Measuring 1/14: dict_lookup/small x212304
+Measuring 2/14: dict_lookup/large x1795
+Measuring 3/14: dict_lookup_str/small x141208
+Measuring 4/14: dict_lookup_str/large x1244
+Measuring 5/14: dict_update/small x20357
+Measuring 6/14: dict_update/large x122
+Measuring 7/14: dict_update_str/small x10748
+Measuring 8/14: dict_update_str/large x75
+Measuring 9/14: set_dedup/small x185022
+Measuring 10/14: set_dedup/large x955
+Measuring 11/14: mutate_nested/small x73139
+Measuring 12/14: mutate_nested/large x7220
+Measuring 13/14: string_search/small x2699072
+Measuring 14/14: string_search/large x318911
+PASS subset: 420 samples; 720 qualifications; /home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/screen-raw.json
+dict_lookup small guest samples complete
+dict_lookup large guest samples complete
+dict_lookup_str small guest samples complete
+dict_lookup_str large guest samples complete
+dict_update small guest samples complete
+dict_update large guest samples complete
+dict_update_str small guest samples complete
+dict_update_str large guest samples complete
+set_dedup small guest samples complete
+set_dedup large guest samples complete
+mutate_nested small guest samples complete
+mutate_nested large guest samples complete
+string_search small guest samples complete
+string_search large guest samples complete
+All paired guest timing ended at 2026-10-04T12:17:54.470853+00:00; bootstrap begins
+dict_lookup small {'llvm': {'candidate_to_before': 0.8006028810692714, 'paired_bootstrap_95_interval': [0.799684041328617, 0.8070969748148986]}, 'qbe': {'candidate_to_before': 0.9256652597299905, 'paired_bootstrap_95_interval': [0.902653291004617, 0.9273548009341326]}}
+dict_lookup large {'llvm': {'candidate_to_before': 0.7919614846300242, 'paired_bootstrap_95_interval': [0.7860221170766811, 0.807178932103861]}, 'qbe': {'candidate_to_before': 0.9011922656578555, 'paired_bootstrap_95_interval': [0.8996857766011143, 0.9046059679665401]}}
+dict_lookup_str small {'llvm': {'candidate_to_before': 1.048384419755532, 'paired_bootstrap_95_interval': [1.0354827923341001, 1.053085502042521]}, 'qbe': {'candidate_to_before': 1.0032343728121262, 'paired_bootstrap_95_interval': [1.0025281129079664, 1.0932129460743105]}}
+dict_lookup_str large {'llvm': {'candidate_to_before': 1.0046088109550884, 'paired_bootstrap_95_interval': [0.9974015676502319, 1.0127012857406918]}, 'qbe': {'candidate_to_before': 0.9895437901112517, 'paired_bootstrap_95_interval': [0.9801490132306065, 0.9952965038526586]}}
+dict_update small {'llvm': {'candidate_to_before': 0.9655910288036217, 'paired_bootstrap_95_interval': [0.9624744587904316, 0.9685283082078829]}, 'qbe': {'candidate_to_before': 1.0087534948132701, 'paired_bootstrap_95_interval': [1.0074162305857242, 1.0099583283820408]}}
+dict_update large {'llvm': {'candidate_to_before': 0.9890636384706086, 'paired_bootstrap_95_interval': [0.9836575060126811, 0.9933732705470929]}, 'qbe': {'candidate_to_before': 0.9955515269829849, 'paired_bootstrap_95_interval': [0.9947390133151685, 1.0019466073295173]}}
+dict_update_str small {'llvm': {'candidate_to_before': 0.9689513820476415, 'paired_bootstrap_95_interval': [0.9578139058087947, 0.9812630209168802]}, 'qbe': {'candidate_to_before': 0.9856029386619436, 'paired_bootstrap_95_interval': [0.9782423234708979, 0.9913393608366703]}}
+dict_update_str large {'llvm': {'candidate_to_before': 0.9894571278335246, 'paired_bootstrap_95_interval': [0.9860610425018727, 0.9953349017877676]}, 'qbe': {'candidate_to_before': 0.9924127765550228, 'paired_bootstrap_95_interval': [0.9880557430890605, 1.004574232037613]}}
+set_dedup small {'llvm': {'candidate_to_before': 1.0030204420505167, 'paired_bootstrap_95_interval': [0.9899349705102194, 1.0053240246318953]}, 'qbe': {'candidate_to_before': 0.9893910227122321, 'paired_bootstrap_95_interval': [0.9877919041661343, 1.0058704628971336]}}
+set_dedup large {'llvm': {'candidate_to_before': 0.9827019309661271, 'paired_bootstrap_95_interval': [0.9810599277407833, 0.9899342880597289]}, 'qbe': {'candidate_to_before': 0.9935250040538368, 'paired_bootstrap_95_interval': [0.9911820371124963, 1.0037761344962388]}}
+mutate_nested small {'llvm': {'candidate_to_before': 0.9938995511696483, 'paired_bootstrap_95_interval': [0.9914949661997683, 1.0015856936643721]}, 'qbe': {'candidate_to_before': 1.0136547866210637, 'paired_bootstrap_95_interval': [1.0063381515330971, 1.0177608405060226]}}
+mutate_nested large {'llvm': {'candidate_to_before': 1.0197911595643925, 'paired_bootstrap_95_interval': [1.015515328173121, 1.0342803971383145]}, 'qbe': {'candidate_to_before': 1.0504521514356737, 'paired_bootstrap_95_interval': [1.0340928566893381, 1.0648847154773706]}}
+string_search small {'llvm': {'candidate_to_before': 0.9936215659178647, 'paired_bootstrap_95_interval': [0.9854393047270835, 1.0064941070894178]}, 'qbe': {'candidate_to_before': 0.9997061345005976, 'paired_bootstrap_95_interval': [0.9945157605889148, 1.003594105200199]}}
+string_search large {'llvm': {'candidate_to_before': 0.9923086005376021, 'paired_bootstrap_95_interval': [0.980021095549514, 1.0042511233975044]}, 'qbe': {'candidate_to_before': 0.9999250471923168, 'paired_bootstrap_95_interval': [0.986957058530314, 1.0064715123771864]}}
+PASS measurements driver; all commands exit0

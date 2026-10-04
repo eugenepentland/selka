@@ -1,0 +1,4 @@
+{"compiler": {"path": "/usr/bin/x86_64-linux-gnu-gcc-15", "sha256": "b5f1b773a7c733738352000c92a077dc5852a1a2fc6d836b1e411be1e9ec5f88"}, "driver": {"path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/native-proof.py", "sha256": "da84135afeb06b7cd1e0748ae81c5715c0a66f836bb59b1588c853a2328dc750"}}
+native dictionary word differential tests passed
+native dictionary word differential tests passed
+native word differentials passed ordinary+counted; seven GC/RC state/collision/fallback/refusal cases each

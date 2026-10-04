@@ -1,0 +1,84 @@
+{
+  "schema": "mylang-dictionary-word-timing-driver-v1",
+  "driver_session_id": "0bc90825-ad04-4d1e-8438-465a1cd24852",
+  "phase": "measurements",
+  "started_utc": "2026-10-04T12:15:06.363495+00:00",
+  "commands": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/timing-02/timing-commands.json",
+    "sha256": "5ae8061b33fe11c0516b3903d1d285dd5d412cebc38f607dce101efb1306c6b1"
+  },
+  "script": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/execute-commands.py",
+    "sha256": "8acc5fd656dea63800175be4475fe59531c9712633022c1182165aee7aa94911"
+  },
+  "runs": [
+    {
+      "command": [
+        "python3",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/screen.py",
+        "--mylang",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/zig-out/bin/mylang",
+        "--zig",
+        "/home/epentland/.local/bin/zig",
+        "--candidate-id",
+        "a2dfdfa9-dictionary-word-debug",
+        "--compiler-receipt",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/compiler-receipt.json",
+        "--reuse-reference-manifest",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/.mylang-cache/goal110-integrated-debug/runner/manifest.json",
+        "--expected-reference-manifest-sha256",
+        "a64af04cdb495d00c49d562789fcb6341349bf3f411d7783ba7400ba4cbe92ce",
+        "--work",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/runner",
+        "--output",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/screen-raw.json",
+        "--skip-build",
+        "--rounds",
+        "5",
+        "--warmups",
+        "1",
+        "--cpu",
+        "2",
+        "--only",
+        "dict_lookup",
+        "dict_lookup_str",
+        "dict_update",
+        "dict_update_str",
+        "set_dedup",
+        "mutate_nested",
+        "string_search"
+      ],
+      "started_utc": "2026-10-04T12:15:06.363579+00:00",
+      "log": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/timing-02/command-0.log",
+      "status": 0,
+      "finished_utc": "2026-10-04T12:17:01.024929+00:00",
+      "log_sha256": "d7cb12f9d129718ab786619e638bcbcf10c6fd08d6f5ae65c175a371a2ca43af"
+    },
+    {
+      "command": [
+        "python3",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/time-paired.py",
+        "--plans",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/screen-raw.json",
+        "--before-manifest",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/.mylang-cache/goal110-integrated-debug/runner/manifest.json",
+        "--after-manifest",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/runner/manifest.json",
+        "--rounds",
+        "5",
+        "--warmups",
+        "1",
+        "--cpu",
+        "2",
+        "--output",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/paired-screen.json"
+      ],
+      "started_utc": "2026-10-04T12:17:01.025149+00:00",
+      "log": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/timing-02/command-1.log",
+      "status": 0,
+      "finished_utc": "2026-10-04T12:17:55.474736+00:00",
+      "log_sha256": "302c54d41e66ba6162ab889a608a9c032104dc81f153774e9e93f20c87886736"
+    }
+  ],
+  "finished_utc": "2026-10-04T12:17:55.474809+00:00"
+}

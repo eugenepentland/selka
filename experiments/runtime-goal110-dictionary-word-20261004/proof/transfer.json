@@ -1,0 +1,43 @@
+{
+  "schema": "mylang-typed-word-transfer-v1",
+  "created_utc": "2026-10-04T11:10:03.185180+00:00",
+  "original_base": "64fb7e62732db9cea46414248fd59ba362e31b56",
+  "new_base": "1a3980631e79bc65f048acd063d7250800f01901",
+  "patch": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-20261004/.mylang-cache/goal110-dict-word-transfer/typed.patch",
+    "sha256": "352f7d171185e75608162a817114f60f80e76825f300ff91b44b3c1f03abd999"
+  },
+  "files": {
+    "SPEC.md": "f0b3d30635fd67c4fcb4f672cd2101e1a6a518779978480e91064f5ec074e49e",
+    "scripts/test_native_memory.py": "1669f3abade64e6d688f428d1c479dbd764e4577f7a322fbad930e79ae3151c4",
+    "src/native_dictionary.c": "bfc47f41b685ca3fca426f4c61c72bf861a53e769be75e846a777bd57d54e113",
+    "src/native_dictionary.h": "ae924ef73790ac3668356235caac32f0a2b037cba9a5a82ccf7347dd0eec9c74",
+    "src/qbe_managed.zig": "cd13d37634a374a54be5f286cdf542865ae2a775abb2e28a57482e5f4f921b34",
+    "src/qbe_roots.zig": "d07c4ae5560498cd24729219433b81639ea7910f05dd3c6bf00474b33d481c63",
+    "tests/native_dictionary_word_test.c": "8e19b559d14cdd8c433b578a774775fc0fd30d71240eb8f655ff333a8c3b6e60"
+  },
+  "compiled": false,
+  "applied_utc": "2026-10-04T11:11:04.303023+00:00",
+  "new_worktree": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004",
+  "clean_base_verified": true,
+  "patch_check_status": 0,
+  "patch_apply_status": 0,
+  "touched_files": [
+    "SPEC.md",
+    "scripts/test_native_memory.py",
+    "src/native_dictionary.c",
+    "src/native_dictionary.h",
+    "src/qbe_managed.zig",
+    "src/qbe_roots.zig",
+    "tests/native_dictionary_word_test.c"
+  ],
+  "post_apply_hashes": {
+    "SPEC.md": "40b7bc025e16fc354f1617bbccb2ab34b834cabd25b8b748cb97c073b0c0bcf6",
+    "scripts/test_native_memory.py": "1669f3abade64e6d688f428d1c479dbd764e4577f7a322fbad930e79ae3151c4",
+    "src/native_dictionary.c": "bfc47f41b685ca3fca426f4c61c72bf861a53e769be75e846a777bd57d54e113",
+    "src/native_dictionary.h": "ae924ef73790ac3668356235caac32f0a2b037cba9a5a82ccf7347dd0eec9c74",
+    "src/qbe_managed.zig": "cd13d37634a374a54be5f286cdf542865ae2a775abb2e28a57482e5f4f921b34",
+    "src/qbe_roots.zig": "d07c4ae5560498cd24729219433b81639ea7910f05dd3c6bf00474b33d481c63",
+    "tests/native_dictionary_word_test.c": "8e19b559d14cdd8c433b578a774775fc0fd30d71240eb8f655ff333a8c3b6e60"
+  }
+}

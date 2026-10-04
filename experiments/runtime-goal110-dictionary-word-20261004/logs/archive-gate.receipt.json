@@ -1,0 +1,15 @@
+{
+  "command": [
+    "scripts/build-slot.sh",
+    "gate",
+    "/home/epentland/ai/canopy/guardian-zig/zig-out/bin/guardian-check",
+    "all",
+    ".",
+    "--full"
+  ],
+  "started_utc": "2026-10-04T12:55:11.655942+00:00",
+  "guardian_sha256": "d052f36983f7c352adc9ae2b88791859a25c5f9e6d4591c10e3402a140ea977d",
+  "exit_status": 0,
+  "finished_utc": "2026-10-04T12:55:12.906105+00:00",
+  "log_sha256": "60fe01e99bc89bcaae250714bad1cd91644415e3c1bee9d499a049fe006c5430"
+}

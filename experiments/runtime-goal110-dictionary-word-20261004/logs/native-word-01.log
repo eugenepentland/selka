@@ -1,0 +1,12 @@
+{"compiler": {"path": "/usr/bin/x86_64-linux-gnu-gcc-15", "sha256": "b5f1b773a7c733738352000c92a077dc5852a1a2fc6d836b1e411be1e9ec5f88"}, "driver": {"path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/native-proof.py", "sha256": "7aba473be8762222f9a53bcd0b8490eba30b0a633e8a943de3d0f9459d633ef3"}}
+Traceback (most recent call last):
+  File "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/native-proof.py", line 29, in <module>
+    t.run_suite(root,[str(compiler)]+flags+(['-DMYL_NATIVE_RC_COUNTING=1'] if policy=='counted' else []),directory,suite,list(paths))
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/scripts/test_native_memory.py", line 71, in run_suite
+    subprocess.run([str(executable)], check=True)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/native-proof.py", line 21, in captured
+    assert done.returncode==0,(command,done.returncode)
+           ^^^^^^^^^^^^^^^^^^
+AssertionError: (['/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/native-proof/ordinary/native_dictionary_word'], -6)

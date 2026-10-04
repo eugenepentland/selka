@@ -1,0 +1,26 @@
+Building clock
+Building legacy/my-llvm
+Building legacy/my-qbe
+Building legacy/rust
+Building legacy/go
+Building legacy/zig-safe
+Building legacy/zig-fast
+Building compute/my-llvm
+Building compute/my-qbe
+Building compute/rust
+Building compute/go
+Building compute/zig-safe
+Building compute/zig-fast
+Building collections/my-llvm
+Building collections/my-qbe
+Building collections/rust
+Building collections/go
+Building collections/zig-safe
+Building collections/zig-fast
+Building text/my-llvm
+Building text/my-qbe
+Building text/rust
+Building text/go
+Building text/zig-safe
+Building text/zig-fast
+PASS all 24 executables built; no baseline measured.

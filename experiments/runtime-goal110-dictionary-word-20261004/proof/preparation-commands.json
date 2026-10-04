@@ -1,0 +1,77 @@
+{
+  "schema": "mylang-dictionary-word-preparation-commands-v1",
+  "source_revision": "a2dfdfa994e19ac3c80373a443913c7ecdef23d7",
+  "timing": false,
+  "control_receipt": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/.mylang-cache/goal110-integrated-debug/compiler-receipt.json",
+    "sha256": "09abb6ac81ae944bd247016d3dc19c5cd29d8fbcc3d5c74d5f48c02a7f43c14c"
+  },
+  "control_manifest": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/.mylang-cache/goal110-integrated-debug/runner/manifest.json",
+    "sha256": "a64af04cdb495d00c49d562789fcb6341349bf3f411d7783ba7400ba4cbe92ce"
+  },
+  "host": [
+    "python3",
+    "benchmarks/runtime/build_compiler.py",
+    "--source-root",
+    "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004",
+    "--source-revision",
+    "a2dfdfa994e19ac3c80373a443913c7ecdef23d7",
+    "--zig",
+    "/home/epentland/.local/bin/zig",
+    "--optimize",
+    "Debug",
+    "--work",
+    "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug",
+    "--output",
+    "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/compiler-receipt.json"
+  ],
+  "language": [
+    "python3",
+    "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/language/native-checks.py",
+    "--before-receipt",
+    "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/.mylang-cache/goal110-integrated-debug/compiler-receipt.json",
+    "--after-receipt",
+    "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/compiler-receipt.json",
+    "--output",
+    "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/language/official-proof-01"
+  ],
+  "guests": [
+    "python3",
+    "benchmarks/runtime/expanded/run.py",
+    "--candidate-id",
+    "a2dfdfa9-dictionary-word-debug",
+    "--mylang",
+    "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/zig-out/bin/mylang",
+    "--compiler-receipt",
+    "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/compiler-receipt.json",
+    "--reuse-reference-manifest",
+    "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/.mylang-cache/goal110-integrated-debug/runner/manifest.json",
+    "--expected-reference-manifest-sha256",
+    "a64af04cdb495d00c49d562789fcb6341349bf3f411d7783ba7400ba4cbe92ce",
+    "--cpu",
+    "0",
+    "--work",
+    "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/runner",
+    "--output",
+    "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/build-only.json",
+    "--build-only"
+  ],
+  "holdouts": [
+    "python3",
+    "benchmarks/runtime/diagnostics/holdouts.py",
+    "--manifest",
+    "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/runner/manifest.json",
+    "--output",
+    "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/holdouts.json",
+    "--cpu",
+    "0"
+  ],
+  "helpers": {
+    "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/benchmarks/runtime/build_compiler.py": "358da42bfe0f2587c9424adcbc7d429772d4500362616aeb1378ef2721e5ac83",
+    "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/benchmarks/runtime/expanded/run.py": "6c28224bf77a5127bd7c28072337caa80571f7a57c5f60c77d765a366d342e4a",
+    "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/benchmarks/runtime/diagnostics/holdouts.py": "1eeb8484148799594d5e76dfc6a793646073cfdb596e6ea2c46910040b34f3fc",
+    "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/language/native-checks.py": "bb8dbf3ea70992d33f0f53ee84f6d1aa555bec6de7d2a9653a23e243bb9ca4a8",
+    "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/language/dictionary-word.my": "7648d0ebc506d254481c64446005d8f3a315d355fca0b1c095c470f03f339ccb"
+  }
+}

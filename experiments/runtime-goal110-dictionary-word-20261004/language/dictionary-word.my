@@ -1,0 +1,76 @@
+def parsed(text: str) -> int:
+    match int(text):
+        case Some(value):
+            return value
+        case None:
+            return 0
+
+def read_word(values: dict[i64, i64], key: i64) -> i64:
+    return values[key]
+
+def announced(out: Stream, value: int) -> int:
+    out.print(43)
+    return value
+
+def change(values: mut dict[i64, i64], key: i64) -> int:
+    values[key] = 17
+    return 19
+
+def reset(values: mut dict[i64, i64]) -> int:
+    values.clear()
+    values[1] = 17
+    return 19
+
+def main(args: list[str], out: Stream) -> int:
+    kind = parsed(args[0])
+    key = parsed(args[1])
+    delta = parsed(args[2])
+    out.print(41)
+    values: dict[i64, i64] = {-1: 7, 0: 11, 1: 13}
+    if kind == 0:
+        return read_word(values, key)
+    if kind == 1:
+        return values.get(key, announced(out, delta))
+    if kind == 2:
+        saved = values
+        values[key] = delta
+        return saved.get(key, 23) + values[key]
+    if kind == 3:
+        _ = change(mut values, key)
+        return read_word(values, key)
+    if kind == 4:
+        popped = values.pop(key)
+        return popped + values.get(key, 23)
+    if kind == 5:
+        saved = values
+        for at in range(128):
+            values[at] = at + 5
+        return saved[0] + values[127]
+    if kind == 6:
+        return values.get(key, delta + 1)
+    if kind == 7:
+        values[key] = values.get(key, 0) + 1
+        return values[key]
+    if kind == 8:
+        unsigned: dict[u64, u64] = {18446744073709551615u64: 9223372036854775808u64, 0u64: 1u64}
+        return 71 if unsigned[18446744073709551615u64] == 9223372036854775808u64 else 72
+    if kind == 9:
+        narrow: dict[i32, i64] = {0i32: 29}
+        return narrow.get(i32(key), delta)
+    if kind == 10:
+        words: dict[str, i64] = {"abc": 31}
+        return words.get("abc", delta)
+    if kind == 11:
+        managed: dict[i64, str] = {1: "abc"}
+        return len(managed.get(key, "defgh"))
+    if kind == 12:
+        empty: dict[i64, i64] = {}
+        return empty.get(key, delta)
+    if kind == 13:
+        return values.get(key, reset(mut values))
+    if kind == 14:
+        values.clear()
+        values[-1] = delta
+        return values.get(-1, 99) + values.get(0, 3)
+    mixed: dict[u64, i64] = {18446744073709551615u64: 73}
+    return mixed[18446744073709551615u64]

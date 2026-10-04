@@ -1,0 +1,52 @@
+{
+  "schema": "mylang-dictionary-word-focused-source-proof-v1",
+  "base_revision": "1a3980631e79bc65f048acd063d7250800f01901",
+  "source_revision": "a2dfdfa994e19ac3c80373a443913c7ecdef23d7",
+  "status": "passed",
+  "files": {
+    "SPEC.md": "40b7bc025e16fc354f1617bbccb2ab34b834cabd25b8b748cb97c073b0c0bcf6",
+    "scripts/test_native_memory.py": "1669f3abade64e6d688f428d1c479dbd764e4577f7a322fbad930e79ae3151c4",
+    "src/native_dictionary.c": "bfc47f41b685ca3fca426f4c61c72bf861a53e769be75e846a777bd57d54e113",
+    "src/native_dictionary.h": "ae924ef73790ac3668356235caac32f0a2b037cba9a5a82ccf7347dd0eec9c74",
+    "src/qbe_managed.zig": "cd13d37634a374a54be5f286cdf542865ae2a775abb2e28a57482e5f4f921b34",
+    "src/qbe_roots.zig": "d07c4ae5560498cd24729219433b81639ea7910f05dd3c6bf00474b33d481c63",
+    "src/qbe_test.zig": "214611e22de62b0e05865ca6839addcc2aeea8d3ddc11dce3d8f53746009044e",
+    "tests/native_dictionary_word_test.c": "b148313f723dee66414cd3d1c35caae2ea03d5570185d49601cbdf4fd089252f"
+  },
+  "unit_source_snapshot": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/unit-03-before.json",
+    "sha256": "87c35f5e655fa4b6cc6fbf25dd6837235ff2980f031c55c20fd6aaf6d4e71503"
+  },
+  "unit_result": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/logs/units-03.log",
+    "sha256": "f4404b7eb5c7cb7407ebe7283f7688d4cb969dc83a20b5023d676ab00a706026",
+    "exit_status": 0,
+    "named": 3,
+    "unnamed": 12,
+    "passed": 15
+  },
+  "comment_only_reconstruction": {
+    "path": "src/qbe_test.zig",
+    "tested_sha256": "de8c8e0d2ad60da391c761d33eb4ace2fbd4664af29cd1eb801aba26c9224aca",
+    "final_sha256": "214611e22de62b0e05865ca6839addcc2aeea8d3ddc11dce3d8f53746009044e",
+    "changes": "Two duplicate primary spec tags corrected to spec-case; exact old bytes reconstructed."
+  },
+  "native_result": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/native-proof-02/receipt.json",
+    "sha256": "6f4fe022552c12a9b18994ca5198390d100b9fc721258f27568a2d67c6a24933"
+  },
+  "guardian": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/logs/gate-02.log",
+    "sha256": "2661379d1eb38c8a65104815fc2e97509c226f6b46d57fa2f8d7b76e5df769e8",
+    "exit_status": 0,
+    "passed": 88
+  },
+  "retained_failures": [
+    "units-01: zero requested named matches, refused exit1",
+    "native-word-01: unregistered RC record abort, exit1 driver/-6 binary",
+    "units-02: f64 fixture unknown-type,14pass/1fail exit1",
+    "gate-01:2duplicate primary spec tags exit1"
+  ],
+  "receipt_construction_correction": "First receipt assembly asserted status==passed; native schema spells successful status pass. Corrected assertion; native/source/tests unaffected. Source commit hook ran cached Guardian green.",
+  "limitations": "Focused compiler selection and native C differential only; official language/LLVM/code/performance proof pending."
+}

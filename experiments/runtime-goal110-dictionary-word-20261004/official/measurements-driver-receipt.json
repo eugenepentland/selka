@@ -1,0 +1,59 @@
+{
+  "schema": "mylang-dictionary-word-timing-driver-v1",
+  "driver_session_id": "9801636f-9623-4b45-8e2a-5fc958a9db9e",
+  "phase": "measurements",
+  "started_utc": "2026-10-04T12:10:23.024150+00:00",
+  "commands": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/timing-commands.json",
+    "sha256": "d3c5641b2a41ddddf70cd506b13c52da778bf439fef71de1b069aa6c75e46cc7"
+  },
+  "script": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/execute-commands.py",
+    "sha256": "8acc5fd656dea63800175be4475fe59531c9712633022c1182165aee7aa94911"
+  },
+  "runs": [
+    {
+      "command": [
+        "python3",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/screen.py",
+        "--mylang",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/zig-out/bin/mylang",
+        "--zig",
+        "/home/epentland/.local/bin/zig",
+        "--candidate-id",
+        "dictionary-word-a2dfdfa9-debug",
+        "--compiler-receipt",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/compiler-receipt.json",
+        "--reuse-reference-manifest",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/.mylang-cache/goal110-integrated-debug/runner/manifest.json",
+        "--expected-reference-manifest-sha256",
+        "a64af04cdb495d00c49d562789fcb6341349bf3f411d7783ba7400ba4cbe92ce",
+        "--work",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/runner",
+        "--output",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/screen-raw.json",
+        "--skip-build",
+        "--rounds",
+        "5",
+        "--warmups",
+        "1",
+        "--cpu",
+        "2",
+        "--only",
+        "dict_lookup",
+        "dict_lookup_str",
+        "dict_update",
+        "dict_update_str",
+        "set_dedup",
+        "mutate_nested",
+        "string_search"
+      ],
+      "started_utc": "2026-10-04T12:10:23.024226+00:00",
+      "log": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/command-0.log",
+      "status": 1,
+      "finished_utc": "2026-10-04T12:10:24.209643+00:00",
+      "log_sha256": "62d440e2ecec72101009247a51a9fa4f166db3d2d6d9eb099da34e707004ad34"
+    }
+  ],
+  "finished_utc": "2026-10-04T12:10:24.209709+00:00"
+}

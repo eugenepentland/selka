@@ -1,0 +1,2248 @@
+{
+  "schema": "mylang-dictionary-word-evidence-archive-v1",
+  "created_utc": "2026-10-04T12:55:47.440661+00:00",
+  "source_revision": "a2dfdfa994e19ac3c80373a443913c7ecdef23d7",
+  "control_revision": "1a3980631e79bc65f048acd063d7250800f01901",
+  "files": [
+    {
+      "path": "official/command-0.log",
+      "sha256": "62d440e2ecec72101009247a51a9fa4f166db3d2d6d9eb099da34e707004ad34",
+      "bytes": 1012,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/command-0.log",
+      "source_sha256": "62d440e2ecec72101009247a51a9fa4f166db3d2d6d9eb099da34e707004ad34",
+      "source_bytes": 1012,
+      "encoding": "identity"
+    },
+    {
+      "path": "official/compiler-build.log",
+      "sha256": "c3729438e595dbe80f18f3e47a23e664a8c1fe007e02efbc85cca12807146fbe",
+      "bytes": 1715,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/compiler-build.log",
+      "source_sha256": "c3729438e595dbe80f18f3e47a23e664a8c1fe007e02efbc85cca12807146fbe",
+      "source_bytes": 1715,
+      "encoding": "identity"
+    },
+    {
+      "path": "official/compiler-receipt.json.gz",
+      "sha256": "e9ad7d671f2c494711a6dd17580a3506d4c2039d4ae6e683a6280154f8f1f386",
+      "bytes": 247053,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/compiler-receipt.json",
+      "source_sha256": "8dd4dd2cb11ff9f03ea807b0441eb5a4b84dc9ebb48d2f512ce12e0a58e6c5c8",
+      "source_bytes": 658779,
+      "encoding": "gzip"
+    },
+    {
+      "path": "official/execute-commands.py",
+      "sha256": "8acc5fd656dea63800175be4475fe59531c9712633022c1182165aee7aa94911",
+      "bytes": 1830,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/execute-commands.py",
+      "source_sha256": "8acc5fd656dea63800175be4475fe59531c9712633022c1182165aee7aa94911",
+      "source_bytes": 1830,
+      "encoding": "identity"
+    },
+    {
+      "path": "official/finalize-screen.py",
+      "sha256": "901a744bb269ab4a3e90a4e612e6456a2b5699e493141df67bf34d8ae387963b",
+      "bytes": 800,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/finalize-screen.py",
+      "source_sha256": "901a744bb269ab4a3e90a4e612e6456a2b5699e493141df67bf34d8ae387963b",
+      "source_bytes": 800,
+      "encoding": "identity"
+    },
+    {
+      "path": "official/holdouts.json.gz",
+      "sha256": "957239c2c31c67e7f27444c1762d60b9beae7a7400a83cff74553bcea2a8eadf",
+      "bytes": 267715,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/holdouts.json",
+      "source_sha256": "1d3746d7a27b2005b17024b58781c2c7eb7985db6e5ffa5c21cee0a4e28794d4",
+      "source_bytes": 1103766,
+      "encoding": "gzip"
+    },
+    {
+      "path": "official/measurements-driver-receipt.json",
+      "sha256": "a4a2a3c24bc69cff1b57fb6f22a83067605084ba2fbe6aca75854961b3fc71ff",
+      "bytes": 2726,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/measurements-driver-receipt.json",
+      "source_sha256": "a4a2a3c24bc69cff1b57fb6f22a83067605084ba2fbe6aca75854961b3fc71ff",
+      "source_bytes": 2726,
+      "encoding": "identity"
+    },
+    {
+      "path": "official/paired-repeat.json.gz",
+      "sha256": "c543de0f1ef72be7491fd7327862a3e1f7b8ef2f96cd6788db10f1426d1c79c4",
+      "bytes": 549135,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/paired-repeat.json",
+      "source_sha256": "cbd2381a58729fdb7bc17d74227189764319b265469776b9ba2c01df7739c776",
+      "source_bytes": 2969757,
+      "encoding": "gzip"
+    },
+    {
+      "path": "official/paired-repeat.progress.json.gz",
+      "sha256": "b05b392ae2fd01135291c22a87d64788917cad981a8b959b998edd9372f93e28",
+      "bytes": 49535,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/paired-repeat.progress.json",
+      "source_sha256": "e936e88a04d6acd98f4f10ae0b36979d795568778cf477293cd68e31011da088",
+      "source_bytes": 1559848,
+      "encoding": "gzip"
+    },
+    {
+      "path": "official/paired-screen.json.gz",
+      "sha256": "c2ef655bad16a346d6919be2fe317539d13731feb6c0b66307a0e387030abac5",
+      "bytes": 544868,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/paired-screen.json",
+      "source_sha256": "a04de13920bf70d93f376849346ab4d1d1ed6b58b243c80821bd2dc6b05f5ae9",
+      "source_bytes": 2642345,
+      "encoding": "gzip"
+    },
+    {
+      "path": "official/paired-screen.progress.json.gz",
+      "sha256": "e79c230f4496e6c2f7b8577dac94d0478d14ef361cf3ac4273ca2c5a1eddbe0d",
+      "bytes": 44047,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/paired-screen.progress.json",
+      "source_sha256": "294e3c9703af62346b43c5583ac712773bc4defd949094220732d3e6328ed774",
+      "source_bytes": 1232279,
+      "encoding": "gzip"
+    },
+    {
+      "path": "official/prepare-readiness.py",
+      "sha256": "b468e4577734664bd9e639b671ca7a7d1aa469b64e33c4cb9752b34e23296045",
+      "bytes": 6368,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/prepare-readiness.py",
+      "source_sha256": "b468e4577734664bd9e639b671ca7a7d1aa469b64e33c4cb9752b34e23296045",
+      "source_bytes": 6368,
+      "encoding": "identity"
+    },
+    {
+      "path": "official/qualification.json.gz",
+      "sha256": "0b48d28749608df30d427a1f5cc58bec1608cbfaf4f35c5eb981946bdeacb28d",
+      "bytes": 10534,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/qualification.json",
+      "source_sha256": "94a7e67b2355abe4dc6cc4fcf32673bf980254faeaf65b2a47946699b9a4fcb0",
+      "source_bytes": 393855,
+      "encoding": "gzip"
+    },
+    {
+      "path": "official/qualify720.py",
+      "sha256": "1038c4184f40f330873cb90e7ef4410581a6094322afb050904853cabc948d41",
+      "bytes": 2435,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/qualify720.py",
+      "source_sha256": "1038c4184f40f330873cb90e7ef4410581a6094322afb050904853cabc948d41",
+      "source_bytes": 2435,
+      "encoding": "identity"
+    },
+    {
+      "path": "official/readiness.json",
+      "sha256": "a53c39cbb865e78e39f06e9fb2844d894d8907691e2a51b3f3c038d576fcf4f4",
+      "bytes": 21376,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/readiness.json",
+      "source_sha256": "a53c39cbb865e78e39f06e9fb2844d894d8907691e2a51b3f3c038d576fcf4f4",
+      "source_bytes": 21376,
+      "encoding": "identity"
+    },
+    {
+      "path": "official/screen-comparison.json.gz",
+      "sha256": "80a184aaa759b0027d4e61e7c4ea2682022bff3f62120a49054901285c6213b5",
+      "bytes": 274223,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/screen-comparison.json",
+      "source_sha256": "7a4cad58023c7be6f342691e27342723b5a8a2cd15e3c8d47558cd454bdbe2a4",
+      "source_bytes": 918100,
+      "encoding": "gzip"
+    },
+    {
+      "path": "official/screen-comparison.md",
+      "sha256": "89ed79496d90aed9f122a7d8d1ad33cb08ae22f18dff2be99d0277069fa6d8b5",
+      "bytes": 4688,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/screen-comparison.md",
+      "source_sha256": "89ed79496d90aed9f122a7d8d1ad33cb08ae22f18dff2be99d0277069fa6d8b5",
+      "source_bytes": 4688,
+      "encoding": "identity"
+    },
+    {
+      "path": "official/screen-raw.json.gz",
+      "sha256": "318781a79fd8cc881c0dc3eccd4657b6168f5538e3b21d27b45d80a4c987f712",
+      "bytes": 706851,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/screen-raw.json",
+      "source_sha256": "3dba4291203153a7c17b2a178fdcac7c2ac79c716c430c6c19d44de3cbe72b13",
+      "source_bytes": 7696663,
+      "encoding": "gzip"
+    },
+    {
+      "path": "official/screen-raw.md",
+      "sha256": "74f7d6c18de25da2b1918189964807c5a718fe61141950cf3df255f1a8fee3cf",
+      "bytes": 79,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/screen-raw.md",
+      "source_sha256": "74f7d6c18de25da2b1918189964807c5a718fe61141950cf3df255f1a8fee3cf",
+      "source_bytes": 79,
+      "encoding": "identity"
+    },
+    {
+      "path": "official/screen.json.gz",
+      "sha256": "4503ee1e3fa3accc55f9aeb43e89150b8b5ce0fd123f0fdb325e2212958cb5b1",
+      "bytes": 713400,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/screen.json",
+      "source_sha256": "1a51a229d97e0eec9e1a862cccc9ea5825b67f78df85509750e2c04c585368df",
+      "source_bytes": 7731934,
+      "encoding": "gzip"
+    },
+    {
+      "path": "official/screen.py",
+      "sha256": "5250b5bb969e04a58219a433aabfedcc664a935d55f643517abfdd674a45f775",
+      "bytes": 2009,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/screen.py",
+      "source_sha256": "5250b5bb969e04a58219a433aabfedcc664a935d55f643517abfdd674a45f775",
+      "source_bytes": 2009,
+      "encoding": "identity"
+    },
+    {
+      "path": "official/time-paired-01.py",
+      "sha256": "5b67699732e2e4e898733ef2d9f7e9c4cf21702d972617ff0d46372c4cb5a89d",
+      "bytes": 8896,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/time-paired-01.py",
+      "source_sha256": "5b67699732e2e4e898733ef2d9f7e9c4cf21702d972617ff0d46372c4cb5a89d",
+      "source_bytes": 8896,
+      "encoding": "identity"
+    },
+    {
+      "path": "official/time-paired.py",
+      "sha256": "3c87f4b35f17671621b30eb9de9bba3f210f26b420983dabe9ccf92c7666ef6a",
+      "bytes": 9024,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/time-paired.py",
+      "source_sha256": "3c87f4b35f17671621b30eb9de9bba3f210f26b420983dabe9ccf92c7666ef6a",
+      "source_bytes": 9024,
+      "encoding": "identity"
+    },
+    {
+      "path": "official/time-repeat.py",
+      "sha256": "50d6a3fe6cff2f706689ea8cd6f74e863f92ee4ebac91b5e7a35afa6ba04d1d0",
+      "bytes": 9393,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/time-repeat.py",
+      "source_sha256": "50d6a3fe6cff2f706689ea8cd6f74e863f92ee4ebac91b5e7a35afa6ba04d1d0",
+      "source_bytes": 9393,
+      "encoding": "identity"
+    },
+    {
+      "path": "official/timing-commands-01.json",
+      "sha256": "ecc65b57e9806947f2cef28c9b95c4c7e425a68b42207b6d6596bc3b1ad71443",
+      "bytes": 6658,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/timing-commands-01.json",
+      "source_sha256": "ecc65b57e9806947f2cef28c9b95c4c7e425a68b42207b6d6596bc3b1ad71443",
+      "source_bytes": 6658,
+      "encoding": "identity"
+    },
+    {
+      "path": "official/timing-commands.json",
+      "sha256": "d3c5641b2a41ddddf70cd506b13c52da778bf439fef71de1b069aa6c75e46cc7",
+      "bytes": 6658,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/timing-commands.json",
+      "source_sha256": "d3c5641b2a41ddddf70cd506b13c52da778bf439fef71de1b069aa6c75e46cc7",
+      "source_bytes": 6658,
+      "encoding": "identity"
+    },
+    {
+      "path": "official/timing-02/analysis-driver-receipt.json",
+      "sha256": "aa051e685b022b273a6e9e5bae82540975d58d00c65b5f94511e3f3571aa08d4",
+      "bytes": 2616,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/timing-02/analysis-driver-receipt.json",
+      "source_sha256": "aa051e685b022b273a6e9e5bae82540975d58d00c65b5f94511e3f3571aa08d4",
+      "source_bytes": 2616,
+      "encoding": "identity"
+    },
+    {
+      "path": "official/timing-02/command-0.log",
+      "sha256": "d7cb12f9d129718ab786619e638bcbcf10c6fd08d6f5ae65c175a371a2ca43af",
+      "bytes": 2178,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/timing-02/command-0.log",
+      "source_sha256": "d7cb12f9d129718ab786619e638bcbcf10c6fd08d6f5ae65c175a371a2ca43af",
+      "source_bytes": 2178,
+      "encoding": "identity"
+    },
+    {
+      "path": "official/timing-02/command-1.log",
+      "sha256": "302c54d41e66ba6162ab889a608a9c032104dc81f153774e9e93f20c87886736",
+      "bytes": 4496,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/timing-02/command-1.log",
+      "source_sha256": "302c54d41e66ba6162ab889a608a9c032104dc81f153774e9e93f20c87886736",
+      "source_bytes": 4496,
+      "encoding": "identity"
+    },
+    {
+      "path": "official/timing-02/command-2.log",
+      "sha256": "ce601a66aad38ddc633131cc6b44c850087f632390039c50d32b647aec28201e",
+      "bytes": 55,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/timing-02/command-2.log",
+      "source_sha256": "ce601a66aad38ddc633131cc6b44c850087f632390039c50d32b647aec28201e",
+      "source_bytes": 55,
+      "encoding": "identity"
+    },
+    {
+      "path": "official/timing-02/command-3.log",
+      "sha256": "0097f4e79292567ecc7d2a0d53b959513243e47994a09d58991fc0695b435e28",
+      "bytes": 61,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/timing-02/command-3.log",
+      "source_sha256": "0097f4e79292567ecc7d2a0d53b959513243e47994a09d58991fc0695b435e28",
+      "source_bytes": 61,
+      "encoding": "identity"
+    },
+    {
+      "path": "official/timing-02/measurements-driver-receipt.json",
+      "sha256": "029efc098635ea2f3913da61c511923abe12fa774d15cbfdf81945189af8b65e",
+      "bytes": 4111,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/timing-02/measurements-driver-receipt.json",
+      "source_sha256": "029efc098635ea2f3913da61c511923abe12fa774d15cbfdf81945189af8b65e",
+      "source_bytes": 4111,
+      "encoding": "identity"
+    },
+    {
+      "path": "official/timing-02/preflight-before.json",
+      "sha256": "fca85a4603cb47fa2282db11301c4edc439baff3bdd20d15e8fe563b8d777879",
+      "bytes": 1761,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/timing-02/preflight-before.json",
+      "source_sha256": "fca85a4603cb47fa2282db11301c4edc439baff3bdd20d15e8fe563b8d777879",
+      "source_bytes": 1761,
+      "encoding": "identity"
+    },
+    {
+      "path": "official/timing-02/preflight.json",
+      "sha256": "b217dca70a5af1fa2d074c52f8778b47f0fa8b1d6472a69ace30d722ee5ed740",
+      "bytes": 1862,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/timing-02/preflight.json",
+      "source_sha256": "b217dca70a5af1fa2d074c52f8778b47f0fa8b1d6472a69ace30d722ee5ed740",
+      "source_bytes": 1862,
+      "encoding": "identity"
+    },
+    {
+      "path": "official/timing-02/timing-commands.json",
+      "sha256": "5ae8061b33fe11c0516b3903d1d285dd5d412cebc38f607dce101efb1306c6b1",
+      "bytes": 6658,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/timing-02/timing-commands.json",
+      "source_sha256": "5ae8061b33fe11c0516b3903d1d285dd5d412cebc38f607dce101efb1306c6b1",
+      "source_bytes": 6658,
+      "encoding": "identity"
+    },
+    {
+      "path": "official/repeat/commands.json",
+      "sha256": "c3ff44f5b61d0745e368c71ea6dee2894419209f9f57908e1a265b618fdc5989",
+      "bytes": 5112,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/repeat/commands.json",
+      "source_sha256": "c3ff44f5b61d0745e368c71ea6dee2894419209f9f57908e1a265b618fdc5989",
+      "source_bytes": 5112,
+      "encoding": "identity"
+    },
+    {
+      "path": "official/repeat/driver-receipt.json",
+      "sha256": "db6db5c506a5a88a0431d932f89101a3617c1eddc53319824c0a1bb9f08d8438",
+      "bytes": 1404,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/repeat/driver-receipt.json",
+      "source_sha256": "db6db5c506a5a88a0431d932f89101a3617c1eddc53319824c0a1bb9f08d8438",
+      "source_bytes": 1404,
+      "encoding": "identity"
+    },
+    {
+      "path": "official/repeat/execute.py",
+      "sha256": "8d82b0f3eb4f136995af02131c196c67898abdee2c036f2d1d33532ca8833747",
+      "bytes": 1116,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/repeat/execute.py",
+      "source_sha256": "8d82b0f3eb4f136995af02131c196c67898abdee2c036f2d1d33532ca8833747",
+      "source_bytes": 1116,
+      "encoding": "identity"
+    },
+    {
+      "path": "official/repeat/repeat.log",
+      "sha256": "384e06f2f7623c12ca9b2c6213bdf8e5332ad3ee20455ef1cde299134593d6dc",
+      "bytes": 1966,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/repeat/repeat.log",
+      "source_sha256": "384e06f2f7623c12ca9b2c6213bdf8e5332ad3ee20455ef1cde299134593d6dc",
+      "source_bytes": 1966,
+      "encoding": "identity"
+    },
+    {
+      "path": "proof/current-production.patch",
+      "sha256": "adf98a7f2403d05f293c9a656856ddef4d0ea1170950f54ccd729913edcf228f",
+      "bytes": 22733,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/current-production.patch",
+      "source_sha256": "adf98a7f2403d05f293c9a656856ddef4d0ea1170950f54ccd729913edcf228f",
+      "source_bytes": 22733,
+      "encoding": "identity"
+    },
+    {
+      "path": "proof/final-production.patch",
+      "sha256": "59d97f6ad15b193864f81719fef17bbe74d27d4a7f0b86fc593d540dd8d4329a",
+      "bytes": 33717,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/final-production.patch",
+      "source_sha256": "59d97f6ad15b193864f81719fef17bbe74d27d4a7f0b86fc593d540dd8d4329a",
+      "source_bytes": 33717,
+      "encoding": "identity"
+    },
+    {
+      "path": "proof/focused-source-proof.json",
+      "sha256": "dcf2efefe6125876f76507c480a1eefe6191943306d773f672bcc564e2175187",
+      "bytes": 3144,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/focused-source-proof.json",
+      "source_sha256": "dcf2efefe6125876f76507c480a1eefe6191943306d773f672bcc564e2175187",
+      "source_bytes": 3144,
+      "encoding": "identity"
+    },
+    {
+      "path": "proof/native-proof-01.py",
+      "sha256": "7aba473be8762222f9a53bcd0b8490eba30b0a633e8a943de3d0f9459d633ef3",
+      "bytes": 2822,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/native-proof-01.py",
+      "source_sha256": "7aba473be8762222f9a53bcd0b8490eba30b0a633e8a943de3d0f9459d633ef3",
+      "source_bytes": 2822,
+      "encoding": "identity"
+    },
+    {
+      "path": "proof/native-proof.py",
+      "sha256": "da84135afeb06b7cd1e0748ae81c5715c0a66f836bb59b1588c853a2328dc750",
+      "bytes": 2825,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/native-proof.py",
+      "source_sha256": "da84135afeb06b7cd1e0748ae81c5715c0a66f836bb59b1588c853a2328dc750",
+      "source_bytes": 2825,
+      "encoding": "identity"
+    },
+    {
+      "path": "proof/preparation-commands.json",
+      "sha256": "24aa0744be38d5b193e135847b7cca613ca6dfb710d5c0a87da7cac5e0e116b4",
+      "bytes": 4509,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/preparation-commands.json",
+      "source_sha256": "24aa0744be38d5b193e135847b7cca613ca6dfb710d5c0a87da7cac5e0e116b4",
+      "source_bytes": 4509,
+      "encoding": "identity"
+    },
+    {
+      "path": "proof/transfer.json",
+      "sha256": "c60b575d49e4ca99452da3151f3c62c91903f082cd133946d7ec8240aee59b09",
+      "bytes": 2370,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/transfer.json",
+      "source_sha256": "c60b575d49e4ca99452da3151f3c62c91903f082cd133946d7ec8240aee59b09",
+      "source_bytes": 2370,
+      "encoding": "identity"
+    },
+    {
+      "path": "proof/typed-transfer.patch",
+      "sha256": "352f7d171185e75608162a817114f60f80e76825f300ff91b44b3c1f03abd999",
+      "bytes": 19131,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/typed-transfer.patch",
+      "source_sha256": "352f7d171185e75608162a817114f60f80e76825f300ff91b44b3c1f03abd999",
+      "source_bytes": 19131,
+      "encoding": "identity"
+    },
+    {
+      "path": "proof/unit-02-before.json",
+      "sha256": "5ad8f7f6a55500d3ddd65c2ad7db73174de1eecc4b5adf07a4ec06337b7595ad",
+      "bytes": 82583,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/unit-02-before.json",
+      "source_sha256": "5ad8f7f6a55500d3ddd65c2ad7db73174de1eecc4b5adf07a4ec06337b7595ad",
+      "source_bytes": 82583,
+      "encoding": "identity"
+    },
+    {
+      "path": "proof/unit-03-before.json",
+      "sha256": "87c35f5e655fa4b6cc6fbf25dd6837235ff2980f031c55c20fd6aaf6d4e71503",
+      "bytes": 82504,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/unit-03-before.json",
+      "source_sha256": "87c35f5e655fa4b6cc6fbf25dd6837235ff2980f031c55c20fd6aaf6d4e71503",
+      "source_bytes": 82504,
+      "encoding": "identity"
+    },
+    {
+      "path": "logs/archive-gate.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "bytes": 2,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/logs/archive-gate.exit",
+      "source_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "source_bytes": 2,
+      "encoding": "identity"
+    },
+    {
+      "path": "logs/archive-gate.log",
+      "sha256": "60fe01e99bc89bcaae250714bad1cd91644415e3c1bee9d499a049fe006c5430",
+      "bytes": 403,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/logs/archive-gate.log",
+      "source_sha256": "60fe01e99bc89bcaae250714bad1cd91644415e3c1bee9d499a049fe006c5430",
+      "source_bytes": 403,
+      "encoding": "identity"
+    },
+    {
+      "path": "logs/archive-gate.receipt.json",
+      "sha256": "47185b1c88882992ab18509886fea4422155b9e485236bd89bed5b5cc4b59ac2",
+      "bytes": 470,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/logs/archive-gate.receipt.json",
+      "source_sha256": "47185b1c88882992ab18509886fea4422155b9e485236bd89bed5b5cc4b59ac2",
+      "source_bytes": 470,
+      "encoding": "identity"
+    },
+    {
+      "path": "logs/gate-01.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "bytes": 2,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/logs/gate-01.exit",
+      "source_sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "source_bytes": 2,
+      "encoding": "identity"
+    },
+    {
+      "path": "logs/gate-01.log",
+      "sha256": "9bc10cddd133cc2329e9e9fb41a4c9b14d55844c199dca3d89a55c7e33c74465",
+      "bytes": 848,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/logs/gate-01.log",
+      "source_sha256": "9bc10cddd133cc2329e9e9fb41a4c9b14d55844c199dca3d89a55c7e33c74465",
+      "source_bytes": 848,
+      "encoding": "identity"
+    },
+    {
+      "path": "logs/gate-02.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "bytes": 2,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/logs/gate-02.exit",
+      "source_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "source_bytes": 2,
+      "encoding": "identity"
+    },
+    {
+      "path": "logs/gate-02.log",
+      "sha256": "2661379d1eb38c8a65104815fc2e97509c226f6b46d57fa2f8d7b76e5df769e8",
+      "bytes": 521,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/logs/gate-02.log",
+      "source_sha256": "2661379d1eb38c8a65104815fc2e97509c226f6b46d57fa2f8d7b76e5df769e8",
+      "source_bytes": 521,
+      "encoding": "identity"
+    },
+    {
+      "path": "logs/holdouts.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "bytes": 2,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/logs/holdouts.exit",
+      "source_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "source_bytes": 2,
+      "encoding": "identity"
+    },
+    {
+      "path": "logs/holdouts.log",
+      "sha256": "eb66e9fc422e3bdd9ea3b208eafd19a7b76a31a9901b96a3b302202d5b03f32c",
+      "bytes": 3569,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/logs/holdouts.log",
+      "source_sha256": "eb66e9fc422e3bdd9ea3b208eafd19a7b76a31a9901b96a3b302202d5b03f32c",
+      "source_bytes": 3569,
+      "encoding": "identity"
+    },
+    {
+      "path": "logs/language-01.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "bytes": 2,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/logs/language-01.exit",
+      "source_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "source_bytes": 2,
+      "encoding": "identity"
+    },
+    {
+      "path": "logs/language-01.log",
+      "sha256": "7d7e3c07826a419072a7f472411a7c89c01e2e0d2c75748a7ceacae1f70b6439",
+      "bytes": 875,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/logs/language-01.log",
+      "source_sha256": "7d7e3c07826a419072a7f472411a7c89c01e2e0d2c75748a7ceacae1f70b6439",
+      "source_bytes": 875,
+      "encoding": "identity"
+    },
+    {
+      "path": "logs/native-word-01.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "bytes": 2,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/logs/native-word-01.exit",
+      "source_sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "source_bytes": 2,
+      "encoding": "identity"
+    },
+    {
+      "path": "logs/native-word-01.log",
+      "sha256": "51cd1712ecd30985167df6d098137b208a645c9c6fe6b7cff72aaa80465c39af",
+      "bytes": 1503,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/logs/native-word-01.log",
+      "source_sha256": "51cd1712ecd30985167df6d098137b208a645c9c6fe6b7cff72aaa80465c39af",
+      "source_bytes": 1503,
+      "encoding": "identity"
+    },
+    {
+      "path": "logs/native-word-02.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "bytes": 2,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/logs/native-word-02.exit",
+      "source_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "source_bytes": 2,
+      "encoding": "identity"
+    },
+    {
+      "path": "logs/native-word-02.log",
+      "sha256": "2af73c4fd57ddededff30ae4981b3f7726455ce6fb44827eca3c91569a247738",
+      "bytes": 572,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/logs/native-word-02.log",
+      "source_sha256": "2af73c4fd57ddededff30ae4981b3f7726455ce6fb44827eca3c91569a247738",
+      "source_bytes": 572,
+      "encoding": "identity"
+    },
+    {
+      "path": "logs/official-guests.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "bytes": 2,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/logs/official-guests.exit",
+      "source_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "source_bytes": 2,
+      "encoding": "identity"
+    },
+    {
+      "path": "logs/official-guests.log",
+      "sha256": "45b25674f9497f6d6b9cbc583db55099fb289fd5c7c20e69cf0808bbad23aa97",
+      "bytes": 640,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/logs/official-guests.log",
+      "source_sha256": "45b25674f9497f6d6b9cbc583db55099fb289fd5c7c20e69cf0808bbad23aa97",
+      "source_bytes": 640,
+      "encoding": "identity"
+    },
+    {
+      "path": "logs/official-host.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "bytes": 2,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/logs/official-host.exit",
+      "source_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "source_bytes": 2,
+      "encoding": "identity"
+    },
+    {
+      "path": "logs/official-host.log",
+      "sha256": "e61b381ba64c64b76858ee08a1127604e2dfa4e3fb1b7bcb151d332671fed4e3",
+      "bytes": 170,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/logs/official-host.log",
+      "source_sha256": "e61b381ba64c64b76858ee08a1127604e2dfa4e3fb1b7bcb151d332671fed4e3",
+      "source_bytes": 170,
+      "encoding": "identity"
+    },
+    {
+      "path": "logs/qualification.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "bytes": 2,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/logs/qualification.exit",
+      "source_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "source_bytes": 2,
+      "encoding": "identity"
+    },
+    {
+      "path": "logs/qualification.log",
+      "sha256": "c909e29626eeb3da072360d05424ea37b8e42122977fa88b1b78f438d97ccf24",
+      "bytes": 1015,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/logs/qualification.log",
+      "source_sha256": "c909e29626eeb3da072360d05424ea37b8e42122977fa88b1b78f438d97ccf24",
+      "source_bytes": 1015,
+      "encoding": "identity"
+    },
+    {
+      "path": "logs/static-code-02.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "bytes": 2,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/logs/static-code-02.exit",
+      "source_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "source_bytes": 2,
+      "encoding": "identity"
+    },
+    {
+      "path": "logs/static-code-02.log",
+      "sha256": "8bb55f5b166e489416282f4b17f5dc315ef2eb307060a4101081634ba6fb219b",
+      "bytes": 4478,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/logs/static-code-02.log",
+      "source_sha256": "8bb55f5b166e489416282f4b17f5dc315ef2eb307060a4101081634ba6fb219b",
+      "source_bytes": 4478,
+      "encoding": "identity"
+    },
+    {
+      "path": "logs/static-code.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "bytes": 2,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/logs/static-code.exit",
+      "source_sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "source_bytes": 2,
+      "encoding": "identity"
+    },
+    {
+      "path": "logs/static-code.log",
+      "sha256": "c2eee6ac0b94daf6e9d1a49473ab1fbb980af880a7cf9ff009414bbfb5786fb3",
+      "bytes": 499,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/logs/static-code.log",
+      "source_sha256": "c2eee6ac0b94daf6e9d1a49473ab1fbb980af880a7cf9ff009414bbfb5786fb3",
+      "source_bytes": 499,
+      "encoding": "identity"
+    },
+    {
+      "path": "logs/timing-analysis.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "bytes": 2,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/logs/timing-analysis.exit",
+      "source_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "source_bytes": 2,
+      "encoding": "identity"
+    },
+    {
+      "path": "logs/timing-analysis.log",
+      "sha256": "ada43197f61132c6bd15dd819a61bf6968228d8bb706d4be8498303ae320c1d2",
+      "bytes": 157,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/logs/timing-analysis.log",
+      "source_sha256": "ada43197f61132c6bd15dd819a61bf6968228d8bb706d4be8498303ae320c1d2",
+      "source_bytes": 157,
+      "encoding": "identity"
+    },
+    {
+      "path": "logs/timing-measurements-02.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "bytes": 2,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/logs/timing-measurements-02.exit",
+      "source_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "source_bytes": 2,
+      "encoding": "identity"
+    },
+    {
+      "path": "logs/timing-measurements-02.log",
+      "sha256": "2e58d7b9e94abdc5ed55706a92ea54b18b7c4b6808d2cb64c1231121e704bf18",
+      "bytes": 6719,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/logs/timing-measurements-02.log",
+      "source_sha256": "2e58d7b9e94abdc5ed55706a92ea54b18b7c4b6808d2cb64c1231121e704bf18",
+      "source_bytes": 6719,
+      "encoding": "identity"
+    },
+    {
+      "path": "logs/timing-measurements.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "bytes": 2,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/logs/timing-measurements.exit",
+      "source_sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "source_bytes": 2,
+      "encoding": "identity"
+    },
+    {
+      "path": "logs/timing-measurements.log",
+      "sha256": "62d440e2ecec72101009247a51a9fa4f166db3d2d6d9eb099da34e707004ad34",
+      "bytes": 1012,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/logs/timing-measurements.log",
+      "source_sha256": "62d440e2ecec72101009247a51a9fa4f166db3d2d6d9eb099da34e707004ad34",
+      "source_bytes": 1012,
+      "encoding": "identity"
+    },
+    {
+      "path": "logs/units-01.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "bytes": 2,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/logs/units-01.exit",
+      "source_sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "source_bytes": 2,
+      "encoding": "identity"
+    },
+    {
+      "path": "logs/units-01.log",
+      "sha256": "b857c061f7520990b0b52866bbfe19cb1a3c7b4327da01477ecbbd20116d8a6a",
+      "bytes": 2031,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/logs/units-01.log",
+      "source_sha256": "b857c061f7520990b0b52866bbfe19cb1a3c7b4327da01477ecbbd20116d8a6a",
+      "source_bytes": 2031,
+      "encoding": "identity"
+    },
+    {
+      "path": "logs/units-02.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "bytes": 2,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/logs/units-02.exit",
+      "source_sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "source_bytes": 2,
+      "encoding": "identity"
+    },
+    {
+      "path": "logs/units-02.log",
+      "sha256": "6fe8f1ecaa5bdaa2abc14b55f91e0810ea0668def0c2a38e3fb9818b5c8e12b6",
+      "bytes": 6331,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/logs/units-02.log",
+      "source_sha256": "6fe8f1ecaa5bdaa2abc14b55f91e0810ea0668def0c2a38e3fb9818b5c8e12b6",
+      "source_bytes": 6331,
+      "encoding": "identity"
+    },
+    {
+      "path": "logs/units-03.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "bytes": 2,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/logs/units-03.exit",
+      "source_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "source_bytes": 2,
+      "encoding": "identity"
+    },
+    {
+      "path": "logs/units-03.log",
+      "sha256": "f4404b7eb5c7cb7407ebe7283f7688d4cb969dc83a20b5023d676ab00a706026",
+      "bytes": 1375,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/logs/units-03.log",
+      "source_sha256": "f4404b7eb5c7cb7407ebe7283f7688d4cb969dc83a20b5023d676ab00a706026",
+      "source_bytes": 1375,
+      "encoding": "identity"
+    },
+    {
+      "path": "proof/native-proof-01/before.json",
+      "sha256": "66613f13a35d1f45203883706923f9dfc91c83361da7341b415df4794be7f84f",
+      "bytes": 5882,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/native-proof/before.json",
+      "source_sha256": "66613f13a35d1f45203883706923f9dfc91c83361da7341b415df4794be7f84f",
+      "source_bytes": 5882,
+      "encoding": "identity"
+    },
+    {
+      "path": "proof/native-proof-01/running.json",
+      "sha256": "8303dc10918e30ed24e28185272fbe1db5a3472b52500328c565dd52cbe47f8a",
+      "bytes": 9569,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/native-proof/running.json",
+      "source_sha256": "8303dc10918e30ed24e28185272fbe1db5a3472b52500328c565dd52cbe47f8a",
+      "source_bytes": 9569,
+      "encoding": "identity"
+    },
+    {
+      "path": "proof/native-proof-02/before.json",
+      "sha256": "bf78b372ff2e4d33893353fc7343dfcd3d326b7653e6acf9f965f91eb8cf3bf9",
+      "bytes": 5882,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/native-proof-02/before.json",
+      "source_sha256": "bf78b372ff2e4d33893353fc7343dfcd3d326b7653e6acf9f965f91eb8cf3bf9",
+      "source_bytes": 5882,
+      "encoding": "identity"
+    },
+    {
+      "path": "proof/native-proof-02/receipt.json",
+      "sha256": "6f4fe022552c12a9b18994ca5198390d100b9fc721258f27568a2d67c6a24933",
+      "bytes": 13498,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/native-proof-02/receipt.json",
+      "source_sha256": "6f4fe022552c12a9b18994ca5198390d100b9fc721258f27568a2d67c6a24933",
+      "source_bytes": 13498,
+      "encoding": "identity"
+    },
+    {
+      "path": "proof/native-proof-02/running.json",
+      "sha256": "d86dbcafd12379c43c672a9fae0093c0eb047bf6810cdfde1bbb93d71d611f1b",
+      "bytes": 13405,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/native-proof-02/running.json",
+      "source_sha256": "d86dbcafd12379c43c672a9fae0093c0eb047bf6810cdfde1bbb93d71d611f1b",
+      "source_bytes": 13405,
+      "encoding": "identity"
+    },
+    {
+      "path": "language/dictionary-word.my",
+      "sha256": "7648d0ebc506d254481c64446005d8f3a315d355fca0b1c095c470f03f339ccb",
+      "bytes": 2321,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/language/dictionary-word.my",
+      "source_sha256": "7648d0ebc506d254481c64446005d8f3a315d355fca0b1c095c470f03f339ccb",
+      "source_bytes": 2321,
+      "encoding": "identity"
+    },
+    {
+      "path": "language/native-checks.py",
+      "sha256": "bb8dbf3ea70992d33f0f53ee84f6d1aa555bec6de7d2a9653a23e243bb9ca4a8",
+      "bytes": 8723,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/language/native-checks.py",
+      "source_sha256": "bb8dbf3ea70992d33f0f53ee84f6d1aa555bec6de7d2a9653a23e243bb9ca4a8",
+      "source_bytes": 8723,
+      "encoding": "identity"
+    },
+    {
+      "path": "language/official-report.json.gz",
+      "sha256": "52095fcfbef2a927d138edd74835758fe2fe47da880c785908681b1adccc22aa",
+      "bytes": 2023816,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/language/official-proof-01/report.json",
+      "source_sha256": "a1310006aac7ee4b154daa35d11e1229953f7e1125b695a63d6dce52100fb29b",
+      "source_bytes": 14054013,
+      "encoding": "gzip"
+    },
+    {
+      "path": "production.patch",
+      "sha256": "59d97f6ad15b193864f81719fef17bbe74d27d4a7f0b86fc593d540dd8d4329a",
+      "bytes": 33717,
+      "encoding": "identity",
+      "command": [
+        "git",
+        "diff",
+        "1a3980631e79bc65f048acd063d7250800f01901",
+        "a2dfdfa994e19ac3c80373a443913c7ecdef23d7",
+        "--",
+        "SPEC.md",
+        "scripts/test_native_memory.py",
+        "src/native_dictionary.c",
+        "src/native_dictionary.h",
+        "src/qbe_managed.zig",
+        "src/qbe_roots.zig",
+        "src/qbe_test.zig",
+        "tests/native_dictionary_word_test.c"
+      ]
+    },
+    {
+      "path": "candidate/compiler-receipt.json.gz",
+      "sha256": "e9ad7d671f2c494711a6dd17580a3506d4c2039d4ae6e683a6280154f8f1f386",
+      "bytes": 247053,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/compiler-receipt.json",
+      "source_sha256": "8dd4dd2cb11ff9f03ea807b0441eb5a4b84dc9ebb48d2f512ce12e0a58e6c5c8",
+      "source_bytes": 658779,
+      "encoding": "gzip"
+    },
+    {
+      "path": "candidate/runner-manifest.json.gz",
+      "sha256": "dcbf7535cd503085b582882fc142d5dfc538307a418ce9f7f2cdc03a5cd65546",
+      "bytes": 261107,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/runner/manifest.json",
+      "source_sha256": "35b9bdc1c2f99f1ad6040af002bab09d53a85e4decf11e5b1b827bf890aa50ba",
+      "source_bytes": 835564,
+      "encoding": "gzip"
+    },
+    {
+      "path": "native-metadata/candidate/legacy-my-llvm.json",
+      "sha256": "a5ef56df441964f2d9c1dd12c72d56bbda1b263ed3d7c5c9896e2de37830a8e4",
+      "bytes": 2911,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/runner/bin/legacy-my-llvm.qbe-manifest.json",
+      "source_sha256": "a5ef56df441964f2d9c1dd12c72d56bbda1b263ed3d7c5c9896e2de37830a8e4",
+      "source_bytes": 2911,
+      "encoding": "identity"
+    },
+    {
+      "path": "native-metadata/candidate/legacy-my-qbe.json",
+      "sha256": "95870e2022cd46aa9f762da46753b1ba4dd27b1544f8a149dd3332bed88321bf",
+      "bytes": 501,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/runner/bin/legacy-my-qbe.qbe-manifest.json",
+      "source_sha256": "95870e2022cd46aa9f762da46753b1ba4dd27b1544f8a149dd3332bed88321bf",
+      "source_bytes": 501,
+      "encoding": "identity"
+    },
+    {
+      "path": "native-metadata/candidate/compute-my-llvm.json",
+      "sha256": "6161a2a6c2c343d3caf642048b4dd1d4319e7dae11e4df1987c8c26d0bde2bd2",
+      "bytes": 6268,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/runner/bin/compute-my-llvm.qbe-manifest.json",
+      "source_sha256": "6161a2a6c2c343d3caf642048b4dd1d4319e7dae11e4df1987c8c26d0bde2bd2",
+      "source_bytes": 6268,
+      "encoding": "identity"
+    },
+    {
+      "path": "native-metadata/candidate/compute-my-qbe.json",
+      "sha256": "79d20aa3c35255a254801f3667038d86e573602f24eb9be78051171ceb80637f",
+      "bytes": 501,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/runner/bin/compute-my-qbe.qbe-manifest.json",
+      "source_sha256": "79d20aa3c35255a254801f3667038d86e573602f24eb9be78051171ceb80637f",
+      "source_bytes": 501,
+      "encoding": "identity"
+    },
+    {
+      "path": "native-metadata/candidate/collections-my-llvm.json",
+      "sha256": "b7b1d2293ac4d53080817b6cdbaf75d190c6657e78ae93e20ef1cc9f4a81452a",
+      "bytes": 4826,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/runner/bin/collections-my-llvm.qbe-manifest.json",
+      "source_sha256": "b7b1d2293ac4d53080817b6cdbaf75d190c6657e78ae93e20ef1cc9f4a81452a",
+      "source_bytes": 4826,
+      "encoding": "identity"
+    },
+    {
+      "path": "native-metadata/candidate/collections-my-qbe.json",
+      "sha256": "0cf60dbbb45b7ccf67f01700329690a5771879999da974ee3650075d34ff3163",
+      "bytes": 501,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/runner/bin/collections-my-qbe.qbe-manifest.json",
+      "source_sha256": "0cf60dbbb45b7ccf67f01700329690a5771879999da974ee3650075d34ff3163",
+      "source_bytes": 501,
+      "encoding": "identity"
+    },
+    {
+      "path": "native-metadata/candidate/text-my-llvm.json",
+      "sha256": "f67a9081f7bc0e87a061d6ca6a01c86a503a201bc4a2df8a1b01ba49995675cc",
+      "bytes": 63614,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/runner/bin/text-my-llvm.qbe-manifest.json",
+      "source_sha256": "f67a9081f7bc0e87a061d6ca6a01c86a503a201bc4a2df8a1b01ba49995675cc",
+      "source_bytes": 63614,
+      "encoding": "identity"
+    },
+    {
+      "path": "native-metadata/candidate/text-my-qbe.json",
+      "sha256": "0382fbe5eba6794771525dc5b71c1bf9f3756d2e6d5e6221372035e017347e11",
+      "bytes": 501,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/runner/bin/text-my-qbe.qbe-manifest.json",
+      "source_sha256": "0382fbe5eba6794771525dc5b71c1bf9f3756d2e6d5e6221372035e017347e11",
+      "source_bytes": 501,
+      "encoding": "identity"
+    },
+    {
+      "path": "control/compiler-receipt.json.gz",
+      "sha256": "16eeead7b3f16b04cd6a6fd1aa028920a98974393b7c4b180d22243be4312f8e",
+      "bytes": 247024,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/.mylang-cache/goal110-integrated-debug/compiler-receipt.json",
+      "source_sha256": "09abb6ac81ae944bd247016d3dc19c5cd29d8fbcc3d5c74d5f48c02a7f43c14c",
+      "source_bytes": 658536,
+      "encoding": "gzip"
+    },
+    {
+      "path": "control/runner-manifest.json.gz",
+      "sha256": "aece7bebb967b77f2cce54537d3de09a8b6852772ea0ecbcfee37873e554ac5f",
+      "bytes": 261130,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/.mylang-cache/goal110-integrated-debug/runner/manifest.json",
+      "source_sha256": "a64af04cdb495d00c49d562789fcb6341349bf3f411d7783ba7400ba4cbe92ce",
+      "source_bytes": 834085,
+      "encoding": "gzip"
+    },
+    {
+      "path": "native-metadata/control/legacy-my-llvm.json",
+      "sha256": "68762d5b9626c66a362a23481bfa7dfdb158c20e6fbe0e4fc882fd4ff5f9ba03",
+      "bytes": 2856,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/.mylang-cache/goal110-integrated-debug/runner/bin/legacy-my-llvm.qbe-manifest.json",
+      "source_sha256": "68762d5b9626c66a362a23481bfa7dfdb158c20e6fbe0e4fc882fd4ff5f9ba03",
+      "source_bytes": 2856,
+      "encoding": "identity"
+    },
+    {
+      "path": "native-metadata/control/legacy-my-qbe.json",
+      "sha256": "4ade13b1b379b817eb3cfcff7546d32e4d316dc689403a8d4200ac25bb9bd63b",
+      "bytes": 491,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/.mylang-cache/goal110-integrated-debug/runner/bin/legacy-my-qbe.qbe-manifest.json",
+      "source_sha256": "4ade13b1b379b817eb3cfcff7546d32e4d316dc689403a8d4200ac25bb9bd63b",
+      "source_bytes": 491,
+      "encoding": "identity"
+    },
+    {
+      "path": "native-metadata/control/compute-my-llvm.json",
+      "sha256": "ef2c1a192cf2272befe7fe9ca8dfb50c2bd84259734863705d8ac560fe6e129d",
+      "bytes": 6150,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/.mylang-cache/goal110-integrated-debug/runner/bin/compute-my-llvm.qbe-manifest.json",
+      "source_sha256": "ef2c1a192cf2272befe7fe9ca8dfb50c2bd84259734863705d8ac560fe6e129d",
+      "source_bytes": 6150,
+      "encoding": "identity"
+    },
+    {
+      "path": "native-metadata/control/compute-my-qbe.json",
+      "sha256": "b12498c7b4f3db8891ea25123e56a8410bba3ac49f8d8b7350f41d186c977d7e",
+      "bytes": 491,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/.mylang-cache/goal110-integrated-debug/runner/bin/compute-my-qbe.qbe-manifest.json",
+      "source_sha256": "b12498c7b4f3db8891ea25123e56a8410bba3ac49f8d8b7350f41d186c977d7e",
+      "source_bytes": 491,
+      "encoding": "identity"
+    },
+    {
+      "path": "native-metadata/control/collections-my-llvm.json",
+      "sha256": "9f018cb4232fe00387aed9655acaf4afab101a2d5b6839a60b3fb56014fddb62",
+      "bytes": 4735,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/.mylang-cache/goal110-integrated-debug/runner/bin/collections-my-llvm.qbe-manifest.json",
+      "source_sha256": "9f018cb4232fe00387aed9655acaf4afab101a2d5b6839a60b3fb56014fddb62",
+      "source_bytes": 4735,
+      "encoding": "identity"
+    },
+    {
+      "path": "native-metadata/control/collections-my-qbe.json",
+      "sha256": "6c3721ea2cd75ed9dd48626580d51c9927f20cdd0b3f3f512d2ea02bb4eb21ce",
+      "bytes": 491,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/.mylang-cache/goal110-integrated-debug/runner/bin/collections-my-qbe.qbe-manifest.json",
+      "source_sha256": "6c3721ea2cd75ed9dd48626580d51c9927f20cdd0b3f3f512d2ea02bb4eb21ce",
+      "source_bytes": 491,
+      "encoding": "identity"
+    },
+    {
+      "path": "native-metadata/control/text-my-llvm.json",
+      "sha256": "006af2693e0d082b8a3059269c427b22da166bacf308f862451c5d24ca7ad7cc",
+      "bytes": 62425,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/.mylang-cache/goal110-integrated-debug/runner/bin/text-my-llvm.qbe-manifest.json",
+      "source_sha256": "006af2693e0d082b8a3059269c427b22da166bacf308f862451c5d24ca7ad7cc",
+      "source_bytes": 62425,
+      "encoding": "identity"
+    },
+    {
+      "path": "native-metadata/control/text-my-qbe.json",
+      "sha256": "c1544810cc25e997ea3289ec06a16dbe10e8570f175de5db0128effa3be52a46",
+      "bytes": 491,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/.mylang-cache/goal110-integrated-debug/runner/bin/text-my-qbe.qbe-manifest.json",
+      "source_sha256": "c1544810cc25e997ea3289ec06a16dbe10e8570f175de5db0128effa3be52a46",
+      "source_bytes": 491,
+      "encoding": "identity"
+    },
+    {
+      "path": "helpers/timing/screen.py",
+      "sha256": "5250b5bb969e04a58219a433aabfedcc664a935d55f643517abfdd674a45f775",
+      "bytes": 2009,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/screen.py",
+      "source_sha256": "5250b5bb969e04a58219a433aabfedcc664a935d55f643517abfdd674a45f775",
+      "source_bytes": 2009,
+      "encoding": "identity"
+    },
+    {
+      "path": "helpers/timing/time-paired.py",
+      "sha256": "3c87f4b35f17671621b30eb9de9bba3f210f26b420983dabe9ccf92c7666ef6a",
+      "bytes": 9024,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/time-paired.py",
+      "source_sha256": "3c87f4b35f17671621b30eb9de9bba3f210f26b420983dabe9ccf92c7666ef6a",
+      "source_bytes": 9024,
+      "encoding": "identity"
+    },
+    {
+      "path": "helpers/timing/finalize-screen.py",
+      "sha256": "901a744bb269ab4a3e90a4e612e6456a2b5699e493141df67bf34d8ae387963b",
+      "bytes": 800,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/finalize-screen.py",
+      "source_sha256": "901a744bb269ab4a3e90a4e612e6456a2b5699e493141df67bf34d8ae387963b",
+      "source_bytes": 800,
+      "encoding": "identity"
+    },
+    {
+      "path": "helpers/timing/execute-commands.py",
+      "sha256": "8acc5fd656dea63800175be4475fe59531c9712633022c1182165aee7aa94911",
+      "bytes": 1830,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/execute-commands.py",
+      "source_sha256": "8acc5fd656dea63800175be4475fe59531c9712633022c1182165aee7aa94911",
+      "source_bytes": 1830,
+      "encoding": "identity"
+    },
+    {
+      "path": "helpers/benchmarks/runtime/expanded/run.py",
+      "sha256": "6c28224bf77a5127bd7c28072337caa80571f7a57c5f60c77d765a366d342e4a",
+      "bytes": 23613,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/benchmarks/runtime/expanded/run.py",
+      "source_sha256": "6c28224bf77a5127bd7c28072337caa80571f7a57c5f60c77d765a366d342e4a",
+      "source_bytes": 23613,
+      "encoding": "identity"
+    },
+    {
+      "path": "helpers/benchmarks/runtime/runner.py",
+      "sha256": "e2238327ab7f603e7c0772b791ad4a2534ba90c6ce49a0d4e362790112b3b690",
+      "bytes": 21628,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/benchmarks/runtime/runner.py",
+      "source_sha256": "e2238327ab7f603e7c0772b791ad4a2534ba90c6ce49a0d4e362790112b3b690",
+      "source_bytes": 21628,
+      "encoding": "identity"
+    },
+    {
+      "path": "helpers/benchmarks/runtime/compare_candidate.py",
+      "sha256": "ca202996170e072e7b95ebf3b20896142ec794d14e336c958af277037a7d7123",
+      "bytes": 10636,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/benchmarks/runtime/compare_candidate.py",
+      "source_sha256": "ca202996170e072e7b95ebf3b20896142ec794d14e336c958af277037a7d7123",
+      "source_bytes": 10636,
+      "encoding": "identity"
+    },
+    {
+      "path": "helpers/benchmarks/runtime/expanded/verify.py",
+      "sha256": "34c6a85cedf05e4f8bf7759b699f814b601c5cf22aca01fd4e1dfada7796202a",
+      "bytes": 14469,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/benchmarks/runtime/expanded/verify.py",
+      "source_sha256": "34c6a85cedf05e4f8bf7759b699f814b601c5cf22aca01fd4e1dfada7796202a",
+      "source_bytes": 14469,
+      "encoding": "identity"
+    },
+    {
+      "path": "helpers/benchmarks/runtime/diagnostics/holdouts.py",
+      "sha256": "1eeb8484148799594d5e76dfc6a793646073cfdb596e6ea2c46910040b34f3fc",
+      "bytes": 8012,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/benchmarks/runtime/diagnostics/holdouts.py",
+      "source_sha256": "1eeb8484148799594d5e76dfc6a793646073cfdb596e6ea2c46910040b34f3fc",
+      "source_bytes": 8012,
+      "encoding": "identity"
+    },
+    {
+      "path": "helpers/benchmarks/runtime/expanded/registry.py",
+      "sha256": "04661575c2246c0848fa97196864f5d2a640994ef5b6f68919d87da402e4495b",
+      "bytes": 2949,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/benchmarks/runtime/expanded/registry.py",
+      "source_sha256": "04661575c2246c0848fa97196864f5d2a640994ef5b6f68919d87da402e4495b",
+      "source_bytes": 2949,
+      "encoding": "identity"
+    },
+    {
+      "path": "helpers/timing/time-repeat.py",
+      "sha256": "50d6a3fe6cff2f706689ea8cd6f74e863f92ee4ebac91b5e7a35afa6ba04d1d0",
+      "bytes": 9393,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/time-repeat.py",
+      "source_sha256": "50d6a3fe6cff2f706689ea8cd6f74e863f92ee4ebac91b5e7a35afa6ba04d1d0",
+      "source_bytes": 9393,
+      "encoding": "identity"
+    },
+    {
+      "path": "helpers/timing/repeat/execute.py",
+      "sha256": "8d82b0f3eb4f136995af02131c196c67898abdee2c036f2d1d33532ca8833747",
+      "bytes": 1116,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/repeat/execute.py",
+      "source_sha256": "8d82b0f3eb4f136995af02131c196c67898abdee2c036f2d1d33532ca8833747",
+      "source_bytes": 1116,
+      "encoding": "identity"
+    },
+    {
+      "path": "helpers/benchmarks/runtime/build_compiler.py",
+      "sha256": "358da42bfe0f2587c9424adcbc7d429772d4500362616aeb1378ef2721e5ac83",
+      "bytes": 5993,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/benchmarks/runtime/build_compiler.py",
+      "source_sha256": "358da42bfe0f2587c9424adcbc7d429772d4500362616aeb1378ef2721e5ac83",
+      "source_bytes": 5993,
+      "encoding": "identity"
+    },
+    {
+      "path": "helpers/proof/language/native-checks.py",
+      "sha256": "bb8dbf3ea70992d33f0f53ee84f6d1aa555bec6de7d2a9653a23e243bb9ca4a8",
+      "bytes": 8723,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/language/native-checks.py",
+      "source_sha256": "bb8dbf3ea70992d33f0f53ee84f6d1aa555bec6de7d2a9653a23e243bb9ca4a8",
+      "source_bytes": 8723,
+      "encoding": "identity"
+    },
+    {
+      "path": "helpers/proof/language/dictionary-word.my",
+      "sha256": "7648d0ebc506d254481c64446005d8f3a315d355fca0b1c095c470f03f339ccb",
+      "bytes": 2321,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/language/dictionary-word.my",
+      "source_sha256": "7648d0ebc506d254481c64446005d8f3a315d355fca0b1c095c470f03f339ccb",
+      "source_bytes": 2321,
+      "encoding": "identity"
+    },
+    {
+      "path": "timing-summary.json",
+      "sha256": "6d8de6a7b724947d51476fe9b99ce3f6925b6e9b8101c81cb3debd2874a29517",
+      "bytes": 29474,
+      "encoding": "identity"
+    },
+    {
+      "path": "README.md",
+      "sha256": "33b85ebb18311503021e41c6cf2d4c9204285ba3ca1844b21658c547ae847576",
+      "bytes": 7212,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/experiments/runtime-goal110-dictionary-word-20261004/README.md",
+      "source_sha256": "33b85ebb18311503021e41c6cf2d4c9204285ba3ca1844b21658c547ae847576",
+      "source_bytes": 7212,
+      "encoding": "identity"
+    },
+    {
+      "path": "archive.py",
+      "sha256": "7d34114287ee14e1ddd2f6dac2ee5f031612164a50af8d9066d6973b0ae18420",
+      "bytes": 7008,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/experiments/runtime-goal110-dictionary-word-20261004/archive.py",
+      "source_sha256": "7d34114287ee14e1ddd2f6dac2ee5f031612164a50af8d9066d6973b0ae18420",
+      "source_bytes": 7008,
+      "encoding": "identity"
+    },
+    {
+      "path": "verify-archive.py",
+      "sha256": "92b209052f211d44debc1cb24117eb46da916d8388449b836fb4ed3845d76261",
+      "bytes": 1129,
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/experiments/runtime-goal110-dictionary-word-20261004/verify-archive.py",
+      "source_sha256": "92b209052f211d44debc1cb24117eb46da916d8388449b836fb4ed3845d76261",
+      "source_bytes": 1129,
+      "encoding": "identity"
+    }
+  ],
+  "packs": [
+    {
+      "path": "language-emission-and-sidecars.tar.gz",
+      "sha256": "b50bf8c2a6e4005c64d63a5017fabb7b234c11fd150ba4ebd99c1341fdc57d71",
+      "bytes": 1454551,
+      "entries": [
+        {
+          "path": "gc-v1-llvm-accounted0/after/emission.json",
+          "sha256": "a66af658742d7d591c3efdf88b6412c47aa11b9142f68a7eb55ce6ab4566db07",
+          "bytes": 224878,
+          "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/language/official-proof-01/gc-v1-llvm-accounted0/after/emission.json"
+        },
+        {
+          "path": "gc-v1-llvm-accounted0/after/guest.qbe-manifest.json",
+          "sha256": "1ea4441a881b8a6d990cba53643faf4d8733b95dcbc312ddbdd38f19be953d2b",
+          "bytes": 3714,
+          "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/language/official-proof-01/gc-v1-llvm-accounted0/after/guest.qbe-manifest.json"
+        },
+        {
+          "path": "gc-v1-llvm-accounted0/before/emission.json",
+          "sha256": "9639bf497152ac1d51fc5e916fb7ff3917735850b7480e1d83b9290155b55363",
+          "bytes": 224798,
+          "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/language/official-proof-01/gc-v1-llvm-accounted0/before/emission.json"
+        },
+        {
+          "path": "gc-v1-llvm-accounted0/before/guest.qbe-manifest.json",
+          "sha256": "117bc93fd1d5e00b6f4dc43b35261d5d0fecf996931ee1f268550a81304c930f",
+          "bytes": 3721,
+          "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/language/official-proof-01/gc-v1-llvm-accounted0/before/guest.qbe-manifest.json"
+        },
+        {
+          "path": "rc-v5-counting-llvm-accounted0/after/emission.json",
+          "sha256": "4d97acdd8b1e8dc936807b0ea9e21e49c1b02824812d41c0fd618ea41067e081",
+          "bytes": 469028,
+          "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/language/official-proof-01/rc-v5-counting-llvm-accounted0/after/emission.json"
+        },
+        {
+          "path": "rc-v5-counting-llvm-accounted0/after/guest.qbe-manifest.json",
+          "sha256": "8df9214e5fe64768ebd0efcd53b16e39bdc5073925729be1bf30e22e0163569e",
+          "bytes": 3777,
+          "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/language/official-proof-01/rc-v5-counting-llvm-accounted0/after/guest.qbe-manifest.json"
+        },
+        {
+          "path": "rc-v5-counting-llvm-accounted0/before/emission.json",
+          "sha256": "4d97acdd8b1e8dc936807b0ea9e21e49c1b02824812d41c0fd618ea41067e081",
+          "bytes": 469028,
+          "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/language/official-proof-01/rc-v5-counting-llvm-accounted0/before/emission.json"
+        },
+        {
+          "path": "rc-v5-counting-llvm-accounted0/before/guest.qbe-manifest.json",
+          "sha256": "3ad56e498f8ac326b9d41e9a81ef4bc332c0651be0b5186605be503744acba5e",
+          "bytes": 3784,
+          "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/language/official-proof-01/rc-v5-counting-llvm-accounted0/before/guest.qbe-manifest.json"
+        },
+        {
+          "path": "rc-v5-llvm-accounted0/after/emission.json",
+          "sha256": "8da08c318a9962aeca7c896ea615c3fd239ade9aebd7cc1719c7bb0fafd0edfa",
+          "bytes": 809642,
+          "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/language/official-proof-01/rc-v5-llvm-accounted0/after/emission.json"
+        },
+        {
+          "path": "rc-v5-llvm-accounted0/after/guest.qbe-manifest.json",
+          "sha256": "e3d82d913521c3d8d463f20743c2c5a92ddd39762013b3c0a08a29f9e4eb3778",
+          "bytes": 3575,
+          "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/language/official-proof-01/rc-v5-llvm-accounted0/after/guest.qbe-manifest.json"
+        },
+        {
+          "path": "rc-v5-llvm-accounted0/before/emission.json",
+          "sha256": "03db62598495cf7ee553420e2205fc3cc4f5b6e000ca7bc8f0373ea419d6afc4",
+          "bytes": 809562,
+          "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/language/official-proof-01/rc-v5-llvm-accounted0/before/emission.json"
+        },
+        {
+          "path": "rc-v5-llvm-accounted0/before/guest.qbe-manifest.json",
+          "sha256": "059eb93012647c7060472672670e775f8ceed27582670e1d53bca36d5393cad9",
+          "bytes": 3571,
+          "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/language/official-proof-01/rc-v5-llvm-accounted0/before/guest.qbe-manifest.json"
+        },
+        {
+          "path": "rc-v5-llvm-accounted1/after/emission.json",
+          "sha256": "8da08c318a9962aeca7c896ea615c3fd239ade9aebd7cc1719c7bb0fafd0edfa",
+          "bytes": 809642,
+          "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/language/official-proof-01/rc-v5-llvm-accounted1/after/emission.json"
+        },
+        {
+          "path": "rc-v5-llvm-accounted1/after/guest.qbe-manifest.json",
+          "sha256": "2f5d09ab6cfa61d01b1a98300f963908e334cd7e2cac8a66d1e064ebdd93b6ec",
+          "bytes": 3575,
+          "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/language/official-proof-01/rc-v5-llvm-accounted1/after/guest.qbe-manifest.json"
+        },
+        {
+          "path": "rc-v5-llvm-accounted1/before/emission.json",
+          "sha256": "03db62598495cf7ee553420e2205fc3cc4f5b6e000ca7bc8f0373ea419d6afc4",
+          "bytes": 809562,
+          "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/language/official-proof-01/rc-v5-llvm-accounted1/before/emission.json"
+        },
+        {
+          "path": "rc-v5-llvm-accounted1/before/guest.qbe-manifest.json",
+          "sha256": "85b359b5c306818431dd7ce0dc59a9d1ac4af237b7d1a12ce119fd8e34bde5a1",
+          "bytes": 3571,
+          "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/language/official-proof-01/rc-v5-llvm-accounted1/before/guest.qbe-manifest.json"
+        },
+        {
+          "path": "rc-v5-qbe-accounted0/after/emission.json",
+          "sha256": "8da08c318a9962aeca7c896ea615c3fd239ade9aebd7cc1719c7bb0fafd0edfa",
+          "bytes": 809642,
+          "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/language/official-proof-01/rc-v5-qbe-accounted0/after/emission.json"
+        },
+        {
+          "path": "rc-v5-qbe-accounted0/after/guest.qbe-manifest.json",
+          "sha256": "f74b1f64799f5b18a885d9aad1e25ee7d35838d0c6040e0f0b3d83b040765a3f",
+          "bytes": 3575,
+          "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/language/official-proof-01/rc-v5-qbe-accounted0/after/guest.qbe-manifest.json"
+        },
+        {
+          "path": "rc-v5-qbe-accounted0/before/emission.json",
+          "sha256": "03db62598495cf7ee553420e2205fc3cc4f5b6e000ca7bc8f0373ea419d6afc4",
+          "bytes": 809562,
+          "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/language/official-proof-01/rc-v5-qbe-accounted0/before/emission.json"
+        },
+        {
+          "path": "rc-v5-qbe-accounted0/before/guest.qbe-manifest.json",
+          "sha256": "6d0c75a18f0ef608b6126d8af03c7ee1ff7ed3b046058718c52e0a43a01455b2",
+          "bytes": 3571,
+          "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/language/official-proof-01/rc-v5-qbe-accounted0/before/guest.qbe-manifest.json"
+        },
+        {
+          "path": "rc-v5-qbe-accounted1/after/emission.json",
+          "sha256": "8da08c318a9962aeca7c896ea615c3fd239ade9aebd7cc1719c7bb0fafd0edfa",
+          "bytes": 809642,
+          "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/language/official-proof-01/rc-v5-qbe-accounted1/after/emission.json"
+        },
+        {
+          "path": "rc-v5-qbe-accounted1/after/guest.qbe-manifest.json",
+          "sha256": "30304582ddaf8523ee8beaad97f6234799d7be073d3fce1f07d656d2efc6aa82",
+          "bytes": 3575,
+          "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/language/official-proof-01/rc-v5-qbe-accounted1/after/guest.qbe-manifest.json"
+        },
+        {
+          "path": "rc-v5-qbe-accounted1/before/emission.json",
+          "sha256": "03db62598495cf7ee553420e2205fc3cc4f5b6e000ca7bc8f0373ea419d6afc4",
+          "bytes": 809562,
+          "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/language/official-proof-01/rc-v5-qbe-accounted1/before/emission.json"
+        },
+        {
+          "path": "rc-v5-qbe-accounted1/before/guest.qbe-manifest.json",
+          "sha256": "64d8aa3ed6f53c4d4205d3d026efd64377f8de293f3d489eb2a364ba539fd261",
+          "bytes": 3571,
+          "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/language/official-proof-01/rc-v5-qbe-accounted1/before/guest.qbe-manifest.json"
+        },
+        {
+          "path": "rc-v5-sites-llvm-accounted0/after/emission.json",
+          "sha256": "7b889c96cd577500a0a181ea9d8f33f3db4bca428667adc600a90d255018c503",
+          "bytes": 816959,
+          "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/language/official-proof-01/rc-v5-sites-llvm-accounted0/after/emission.json"
+        },
+        {
+          "path": "rc-v5-sites-llvm-accounted0/after/guest.qbe-manifest.json",
+          "sha256": "1051fc8c681a28cf0c5b3b63216216fffc8341673f630eab0bc1bb16b0d9b180",
+          "bytes": 3756,
+          "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/language/official-proof-01/rc-v5-sites-llvm-accounted0/after/guest.qbe-manifest.json"
+        },
+        {
+          "path": "rc-v5-sites-llvm-accounted0/before/emission.json",
+          "sha256": "7b889c96cd577500a0a181ea9d8f33f3db4bca428667adc600a90d255018c503",
+          "bytes": 816959,
+          "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/language/official-proof-01/rc-v5-sites-llvm-accounted0/before/emission.json"
+        },
+        {
+          "path": "rc-v5-sites-llvm-accounted0/before/guest.qbe-manifest.json",
+          "sha256": "1be5359f476fa55f055db044a69ee47bdeedf79e3b04432c8ae1c72379a26faf",
+          "bytes": 3763,
+          "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/language/official-proof-01/rc-v5-sites-llvm-accounted0/before/guest.qbe-manifest.json"
+        }
+      ]
+    },
+    {
+      "path": "optimized-static.tar.gz",
+      "sha256": "2904fe2aab126d9b40f5bab6ef9f582da1b623a6c9403738af26576547eed6f2",
+      "bytes": 5638671,
+      "entries": [
+        {
+          "path": "after-batch_result.ssa",
+          "sha256": "be34744e2a1be04ba1ed4df6ec44ec494d98e8f349ef0b0262cd83f7e6ab186a",
+          "bytes": 2449677,
+          "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/static/after-batch_result.ssa"
+        },
+        {
+          "path": "after-collections.json",
+          "sha256": "d2efb28cdc012038cf7013252eb889d6e98f0449e917658946b06278311c7bc3",
+          "bytes": 4196622,
+          "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/static/after-collections.json"
+        },
+        {
+          "path": "after-myl_f_4c388c09641a7cf53a57c584f19db2c37bf5f9318d201409d2cca2d83d777934.asm",
+          "sha256": "ea4f603d486fd18dc8a68b06319cc49399e580f0954ff19e9e4d80a30ecbf3ae",
+          "bytes": 500295,
+          "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/static/after-myl_f_4c388c09641a7cf53a57c584f19db2c37bf5f9318d201409d2cca2d83d777934.asm"
+        },
+        {
+          "path": "after-myl_native_dictionary_read.asm",
+          "sha256": "e22497767adf7ac3b9597a29527b247a14504309a9e9aef2a732799764a32a7f",
+          "bytes": 7025,
+          "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/static/after-myl_native_dictionary_read.asm"
+        },
+        {
+          "path": "after-myl_native_dictionary_read_word.asm",
+          "sha256": "a6bc73a8100152330cf0de388ea94f05b6e127d03e37865baf4214fe08abb763",
+          "bytes": 4223,
+          "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/static/after-myl_native_dictionary_read_word.asm"
+        },
+        {
+          "path": "after-read_walk.asm",
+          "sha256": "a16daeb988ec60111f73e897c93bb0d6b114a5615051b6eb5f26a4a71d0907ff",
+          "bytes": 5793,
+          "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/static/after-read_walk.asm"
+        },
+        {
+          "path": "before-batch_result.ssa",
+          "sha256": "be0ebea6de08e854793fe73961c9958226bf04a94ff0ff640c0d43680c91c4e8",
+          "bytes": 2449667,
+          "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/static/before-batch_result.ssa"
+        },
+        {
+          "path": "before-collections.json",
+          "sha256": "59100377df5a1bb574eee50f4db90336893831d835a72b067379111d984a5ca1",
+          "bytes": 4196612,
+          "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/static/before-collections.json"
+        },
+        {
+          "path": "before-myl_f_4c388c09641a7cf53a57c584f19db2c37bf5f9318d201409d2cca2d83d777934.asm",
+          "sha256": "7ed38df5c7814f560bd845e12479eaf479cc4dafe3b168d608b072aa73f080a2",
+          "bytes": 500276,
+          "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/static/before-myl_f_4c388c09641a7cf53a57c584f19db2c37bf5f9318d201409d2cca2d83d777934.asm"
+        },
+        {
+          "path": "before-myl_native_dictionary_read.asm",
+          "sha256": "5364690d9b666c37e60a6f34e5f7a402becddcf331f0b8226e69d9c2690586ab",
+          "bytes": 7016,
+          "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/static/before-myl_native_dictionary_read.asm"
+        },
+        {
+          "path": "before-read_walk.asm",
+          "sha256": "b81109f4b826ef8eeebc3bf2d7569febd5dc4636331e54ba3aae605ff36a4847",
+          "bytes": 5784,
+          "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/static/before-read_walk.asm"
+        },
+        {
+          "path": "code-before.json",
+          "sha256": "5ebc95dd996613c0b6eff4bb6777ccaee22d7d97969a76fb83ef340edaee976f",
+          "bytes": 1119,
+          "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/static/code-before.json"
+        },
+        {
+          "path": "code-proof-01.py",
+          "sha256": "a8e141645dc2738bcdbf7335618037f36d39a6de9a3b8aed7be1f36904cdb2db",
+          "bytes": 6626,
+          "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/static/code-proof-01.py"
+        },
+        {
+          "path": "code-proof.json",
+          "sha256": "e38e9acf70aa8b23f374ce5ba26fcc40d625dce8d7c52e773a88469d5541a1e8",
+          "bytes": 256235,
+          "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/static/code-proof.json"
+        },
+        {
+          "path": "code-proof.py",
+          "sha256": "1956384b1005c70a658ecbcbe04833364ebf4edbb4b4eae1db14133e1384bf15",
+          "bytes": 6626,
+          "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/static/code-proof.py"
+        },
+        {
+          "path": "frozen-before.json",
+          "sha256": "2eb90f1139d321d8f0615172b91694a5de720ebd91f3d15f7de363f518b3a5e0",
+          "bytes": 675354,
+          "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/static/frozen-before.json"
+        },
+        {
+          "path": "frozen-emission.json",
+          "sha256": "89572d37c0d6976ad789081c55abab336f8644849561d2209c788f2ae8a113ae",
+          "bytes": 676680,
+          "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/static/frozen-emission.json"
+        },
+        {
+          "path": "frozen-running.json",
+          "sha256": "bb5bfca746092f4430c32e03a2667bf8359253be92af168c00bb831905358655",
+          "bytes": 676382,
+          "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/static/frozen-running.json"
+        },
+        {
+          "path": "layout-audit-01.py",
+          "sha256": "f7cecec437115c59a158eeced1060a98ad4b73c751ef63baf0cf57b402b84453",
+          "bytes": 4857,
+          "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/static/layout-audit-01.py"
+        },
+        {
+          "path": "layout-audit.py",
+          "sha256": "60b4802b622427128e8da5633a5ba7815c8f38be6c624f1702b75ff6b53a063b",
+          "bytes": 5368,
+          "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/static/layout-audit.py"
+        },
+        {
+          "path": "layout/after-llvm.asm",
+          "sha256": "2e9fe27b622201de6ec195cc1311413770a715278a5e366459916ff44805dc69",
+          "bytes": 2776446,
+          "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/static/layout/after-llvm.asm"
+        },
+        {
+          "path": "layout/after-qbe.asm",
+          "sha256": "4797ce1dc64a1c41bae6bbd6e3027026925cbaed0ea7336e1328b4f788b4c5c3",
+          "bytes": 3868818,
+          "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/static/layout/after-qbe.asm"
+        },
+        {
+          "path": "layout/before-llvm.asm",
+          "sha256": "9cb9c6fb32111ba1035117de2d6cb11225f08a6ebd4fa1d4cb822c588a6e3c02",
+          "bytes": 2772419,
+          "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/static/layout/before-llvm.asm"
+        },
+        {
+          "path": "layout/before-qbe.asm",
+          "sha256": "d0e7f697554d1e8ac027a2d89fe261b46f79a4c73cad7489c23b81c0b49dd7a2",
+          "bytes": 3865862,
+          "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/static/layout/before-qbe.asm"
+        },
+        {
+          "path": "layout/llvm-myl_f_4c388c09641a7cf53a57c584f19db2c37bf5f9318d201409d2cca2d83d777934.diff",
+          "sha256": "4f343bca9957fede38e0dca5fc8f040bec8f47c96dea26d2451813ff19c9687c",
+          "bytes": 533,
+          "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/static/layout/llvm-myl_f_4c388c09641a7cf53a57c584f19db2c37bf5f9318d201409d2cca2d83d777934.diff"
+        },
+        {
+          "path": "layout/llvm-pointer_fast.diff",
+          "sha256": "d65b1f2ed97185e032c9dbe17cdb55ffa65db999a27470cb7ae4660613f39a32",
+          "bytes": 214,
+          "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/static/layout/llvm-pointer_fast.diff"
+        },
+        {
+          "path": "layout/llvm-transfer_pointer.diff",
+          "sha256": "aaef66180e7b9928141c923e3ed6e9317bf4d2b9b3b8c1839b996101ef58cccf",
+          "bytes": 240,
+          "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/static/layout/llvm-transfer_pointer.diff"
+        },
+        {
+          "path": "layout/qbe-myl_f_4c388c09641a7cf53a57c584f19db2c37bf5f9318d201409d2cca2d83d777934.diff",
+          "sha256": "3eab5972872b183819085dff16ff2987e2cf3fd9f54ee21b9510472920fa89d7",
+          "bytes": 554,
+          "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/static/layout/qbe-myl_f_4c388c09641a7cf53a57c584f19db2c37bf5f9318d201409d2cca2d83d777934.diff"
+        },
+        {
+          "path": "layout/report.json",
+          "sha256": "2394989e411cfd70f8c2cd62d00d6f00b3ea272a201ce313f588661e0207cf34",
+          "bytes": 200630,
+          "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/static/layout/report.json"
+        }
+      ]
+    },
+    {
+      "path": "production-source.tar.gz",
+      "sha256": "c3a3cba0c6ba62c30f9d177d314933ad88592e5486626a7be95fbc98113ea1fb",
+      "bytes": 333265,
+      "entries": [
+        {
+          "path": "SPEC.md",
+          "sha256": "40b7bc025e16fc354f1617bbccb2ab34b834cabd25b8b748cb97c073b0c0bcf6",
+          "bytes": 768970,
+          "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/SPEC.md"
+        },
+        {
+          "path": "scripts/test_native_memory.py",
+          "sha256": "1669f3abade64e6d688f428d1c479dbd764e4577f7a322fbad930e79ae3151c4",
+          "bytes": 9025,
+          "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/scripts/test_native_memory.py"
+        },
+        {
+          "path": "src/native_dictionary.c",
+          "sha256": "bfc47f41b685ca3fca426f4c61c72bf861a53e769be75e846a777bd57d54e113",
+          "bytes": 77821,
+          "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/src/native_dictionary.c"
+        },
+        {
+          "path": "src/native_dictionary.h",
+          "sha256": "ae924ef73790ac3668356235caac32f0a2b037cba9a5a82ccf7347dd0eec9c74",
+          "bytes": 10651,
+          "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/src/native_dictionary.h"
+        },
+        {
+          "path": "src/qbe_managed.zig",
+          "sha256": "cd13d37634a374a54be5f286cdf542865ae2a775abb2e28a57482e5f4f921b34",
+          "bytes": 77979,
+          "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/src/qbe_managed.zig"
+        },
+        {
+          "path": "src/qbe_roots.zig",
+          "sha256": "d07c4ae5560498cd24729219433b81639ea7910f05dd3c6bf00474b33d481c63",
+          "bytes": 22818,
+          "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/src/qbe_roots.zig"
+        },
+        {
+          "path": "src/qbe_test.zig",
+          "sha256": "214611e22de62b0e05865ca6839addcc2aeea8d3ddc11dce3d8f53746009044e",
+          "bytes": 145240,
+          "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/src/qbe_test.zig"
+        },
+        {
+          "path": "tests/native_dictionary_word_test.c",
+          "sha256": "b148313f723dee66414cd3d1c35caae2ea03d5570185d49601cbdf4fd089252f",
+          "bytes": 10607,
+          "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/tests/native_dictionary_word_test.c"
+        }
+      ]
+    },
+    {
+      "path": "unit-tested-comment-snapshot.tar.gz",
+      "sha256": "8b4e9e523010b49fc05a308cf7c3f25fc978ea7f82f3414bedd69e1c2a398a35",
+      "bytes": 26214,
+      "entries": [
+        {
+          "path": "src/qbe_test.zig",
+          "sha256": "de8c8e0d2ad60da391c761d33eb4ace2fbd4664af29cd1eb801aba26c9224aca",
+          "bytes": 145230,
+          "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/src/qbe_test.zig",
+          "reconstruction": "Reverse exactly the two documented primary spec\u2192spec-case comment corrections"
+        }
+      ]
+    }
+  ],
+  "live_bindings": [
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/runner/bin/legacy-my-llvm",
+      "sha256": "2cba5fba3279a42787563c900e2167b4aa1b8b2f5654a485bf36030898b63c4e",
+      "kind": "candidate guest"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/runner/bin/legacy-my-qbe",
+      "sha256": "d2004c08744a910818eee3e7a4e8df0b8eb063b0e4e0a6ce6c6be022963ce0b9",
+      "kind": "candidate guest"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/runner/bin/legacy-rust",
+      "sha256": "cc6488c8f54e33c93e483b78db70d21ef88309bbb38856394a5e94abde17099f",
+      "kind": "candidate guest"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/runner/bin/legacy-go",
+      "sha256": "2e8d267a37dd077ba5993c00658197c739750cdde576a3c2b98261c9f133bd17",
+      "kind": "candidate guest"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/runner/bin/legacy-zig-safe",
+      "sha256": "ed51d49b2018d1543fff0e80b7d23cb8b941e232fd93033cfc7f4b0175b8b4cd",
+      "kind": "candidate guest"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/runner/bin/legacy-zig-fast",
+      "sha256": "5ec59c0266719ed9b4d926a243432a903e66f672034227f3653ca11c41bc81bb",
+      "kind": "candidate guest"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/runner/bin/compute-my-llvm",
+      "sha256": "8361cf0d09b0251c7335e1374d5e7bc14316feec5988863959329b9197269605",
+      "kind": "candidate guest"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/runner/bin/compute-my-qbe",
+      "sha256": "ddc70600717b1e4bb4faf36e212cbbda7399e705c6279e33f9980058d12ba0fb",
+      "kind": "candidate guest"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/runner/bin/compute-rust",
+      "sha256": "342de880685aeee869ada3a39ad109b59795221d944b5e0b2089a7eaebc83655",
+      "kind": "candidate guest"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/runner/bin/compute-go",
+      "sha256": "9d7e9f9c912eb8f93f2c610023ddad89a52a473f90d569d038947edacbd48b68",
+      "kind": "candidate guest"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/runner/bin/compute-zig-safe",
+      "sha256": "807a12c75a50a9e59590e710a84ed874132e3d2e273b83a23475b04f1c8eec2a",
+      "kind": "candidate guest"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/runner/bin/compute-zig-fast",
+      "sha256": "eef38971a3afb65f80d611a6d1ab23cec85d5fbac71841d35538e4823dd28928",
+      "kind": "candidate guest"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/runner/bin/collections-my-llvm",
+      "sha256": "89a2428549b11008794e8fca1328ef6bf7f3ccf4095fe863bf3f939ec16aa632",
+      "kind": "candidate guest"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/runner/bin/collections-my-qbe",
+      "sha256": "d8085a45485bea0f27ddd1df4eb22bbb0c3f58c271d029a0ec42e13e35c65d6b",
+      "kind": "candidate guest"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/runner/bin/collections-rust",
+      "sha256": "4b7ee53e36cbc6eefaf6bf2b559906eecf348a18ee2fc5acc90b3aceb9d93d21",
+      "kind": "candidate guest"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/runner/bin/collections-go",
+      "sha256": "039eca570573f3fa304e3ec5e3df2976a9256e1ee7af43a9192a58bdd9917da6",
+      "kind": "candidate guest"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/runner/bin/collections-zig-safe",
+      "sha256": "77f77faf4a8a3f4f5956b81efc737f598933ff48cd0938f6df3a8d005a2e096b",
+      "kind": "candidate guest"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/runner/bin/collections-zig-fast",
+      "sha256": "ab34bafd6a39d4a6fefe32ab4720c6fa6b0c3b322072b9bac55ca1620b095d0b",
+      "kind": "candidate guest"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/runner/bin/text-my-llvm",
+      "sha256": "618d2709b2a1fbe266327150126de81ae736d8937cd7e2ebd95c9b5678d0d32e",
+      "kind": "candidate guest"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/runner/bin/text-my-qbe",
+      "sha256": "ec6dcc31a07cf2cbae5c5bdd91e28de8cd280b5d2ef32ce5adce687964a66b96",
+      "kind": "candidate guest"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/runner/bin/text-rust",
+      "sha256": "230ff4317181142193c29c7ee5f260fa6866d527fb59caf512aefe33c1a0b7d4",
+      "kind": "candidate guest"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/runner/bin/text-go",
+      "sha256": "afb67832762f3925b772321b0a0ee58101305268d7935eec0669e7c49e9c38d3",
+      "kind": "candidate guest"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/runner/bin/text-zig-safe",
+      "sha256": "6ae0410adb082a0a657a5b23ddc24751a9cfbe31763f082b84f7376a01835649",
+      "kind": "candidate guest"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/runner/bin/text-zig-fast",
+      "sha256": "aee37be81b0094356f1f4323d6979530082101a1adf368d8792118b5a1447e6f",
+      "kind": "candidate guest"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/zig-out/bin/mylang",
+      "sha256": "16fcaca5e0dfe65a7e41277d74b4e1c91a840a711c8799e83eb70745d984885e",
+      "kind": "candidate compiler"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/.mylang-cache/goal110-integrated-debug/runner/bin/legacy-my-llvm",
+      "sha256": "16124c23976fbc7afd67a204ecde6ae35e105c8c8e32ecbbbf86547696e1aa2e",
+      "kind": "control guest"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/.mylang-cache/goal110-integrated-debug/runner/bin/legacy-my-qbe",
+      "sha256": "641285d548ec1d4b85bfe3f22613573ace1716a6b5394d592c72dfe9b9c22b06",
+      "kind": "control guest"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/.mylang-cache/goal110-integrated-debug/runner/bin/legacy-rust",
+      "sha256": "cc6488c8f54e33c93e483b78db70d21ef88309bbb38856394a5e94abde17099f",
+      "kind": "control guest"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/.mylang-cache/goal110-integrated-debug/runner/bin/legacy-go",
+      "sha256": "2e8d267a37dd077ba5993c00658197c739750cdde576a3c2b98261c9f133bd17",
+      "kind": "control guest"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/.mylang-cache/goal110-integrated-debug/runner/bin/legacy-zig-safe",
+      "sha256": "ed51d49b2018d1543fff0e80b7d23cb8b941e232fd93033cfc7f4b0175b8b4cd",
+      "kind": "control guest"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/.mylang-cache/goal110-integrated-debug/runner/bin/legacy-zig-fast",
+      "sha256": "5ec59c0266719ed9b4d926a243432a903e66f672034227f3653ca11c41bc81bb",
+      "kind": "control guest"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/.mylang-cache/goal110-integrated-debug/runner/bin/compute-my-llvm",
+      "sha256": "ac5a94756e1710a8093fd29f3687ca5893bc41aea6d8d965d6a3ef62b5241250",
+      "kind": "control guest"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/.mylang-cache/goal110-integrated-debug/runner/bin/compute-my-qbe",
+      "sha256": "6f13b9317e8bd2cb60bf8d4026bb79fc2b1e8a315361a9f3d17d6b15d4459d97",
+      "kind": "control guest"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/.mylang-cache/goal110-integrated-debug/runner/bin/compute-rust",
+      "sha256": "342de880685aeee869ada3a39ad109b59795221d944b5e0b2089a7eaebc83655",
+      "kind": "control guest"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/.mylang-cache/goal110-integrated-debug/runner/bin/compute-go",
+      "sha256": "9d7e9f9c912eb8f93f2c610023ddad89a52a473f90d569d038947edacbd48b68",
+      "kind": "control guest"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/.mylang-cache/goal110-integrated-debug/runner/bin/compute-zig-safe",
+      "sha256": "807a12c75a50a9e59590e710a84ed874132e3d2e273b83a23475b04f1c8eec2a",
+      "kind": "control guest"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/.mylang-cache/goal110-integrated-debug/runner/bin/compute-zig-fast",
+      "sha256": "eef38971a3afb65f80d611a6d1ab23cec85d5fbac71841d35538e4823dd28928",
+      "kind": "control guest"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/.mylang-cache/goal110-integrated-debug/runner/bin/collections-my-llvm",
+      "sha256": "d931599573e8094f971eee6880ad39a50a4560682117ff0796d12ae8eeea998a",
+      "kind": "control guest"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/.mylang-cache/goal110-integrated-debug/runner/bin/collections-my-qbe",
+      "sha256": "d92d60d159071f030a827303a5973c3b64d503e20fea7dd3a1b34e1ef08fce09",
+      "kind": "control guest"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/.mylang-cache/goal110-integrated-debug/runner/bin/collections-rust",
+      "sha256": "4b7ee53e36cbc6eefaf6bf2b559906eecf348a18ee2fc5acc90b3aceb9d93d21",
+      "kind": "control guest"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/.mylang-cache/goal110-integrated-debug/runner/bin/collections-go",
+      "sha256": "039eca570573f3fa304e3ec5e3df2976a9256e1ee7af43a9192a58bdd9917da6",
+      "kind": "control guest"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/.mylang-cache/goal110-integrated-debug/runner/bin/collections-zig-safe",
+      "sha256": "77f77faf4a8a3f4f5956b81efc737f598933ff48cd0938f6df3a8d005a2e096b",
+      "kind": "control guest"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/.mylang-cache/goal110-integrated-debug/runner/bin/collections-zig-fast",
+      "sha256": "ab34bafd6a39d4a6fefe32ab4720c6fa6b0c3b322072b9bac55ca1620b095d0b",
+      "kind": "control guest"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/.mylang-cache/goal110-integrated-debug/runner/bin/text-my-llvm",
+      "sha256": "a78b321f823fb14886e750ea77b293f62758a189a48ef5d3bd072282bca54b08",
+      "kind": "control guest"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/.mylang-cache/goal110-integrated-debug/runner/bin/text-my-qbe",
+      "sha256": "be72c3bcf06678d61e066a72701396fb312ae63382f690be94e938177991617e",
+      "kind": "control guest"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/.mylang-cache/goal110-integrated-debug/runner/bin/text-rust",
+      "sha256": "230ff4317181142193c29c7ee5f260fa6866d527fb59caf512aefe33c1a0b7d4",
+      "kind": "control guest"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/.mylang-cache/goal110-integrated-debug/runner/bin/text-go",
+      "sha256": "afb67832762f3925b772321b0a0ee58101305268d7935eec0669e7c49e9c38d3",
+      "kind": "control guest"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/.mylang-cache/goal110-integrated-debug/runner/bin/text-zig-safe",
+      "sha256": "6ae0410adb082a0a657a5b23ddc24751a9cfbe31763f082b84f7376a01835649",
+      "kind": "control guest"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/.mylang-cache/goal110-integrated-debug/runner/bin/text-zig-fast",
+      "sha256": "aee37be81b0094356f1f4323d6979530082101a1adf368d8792118b5a1447e6f",
+      "kind": "control guest"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/zig-out/bin/mylang",
+      "sha256": "aa85182890cef3fb918051670eb12141f6224e76f776c42c1d3bbcb57342c3c7",
+      "kind": "control compiler"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/screen.py",
+      "sha256": "5250b5bb969e04a58219a433aabfedcc664a935d55f643517abfdd674a45f775",
+      "kind": "helper"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/time-paired.py",
+      "sha256": "3c87f4b35f17671621b30eb9de9bba3f210f26b420983dabe9ccf92c7666ef6a",
+      "kind": "helper"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/finalize-screen.py",
+      "sha256": "901a744bb269ab4a3e90a4e612e6456a2b5699e493141df67bf34d8ae387963b",
+      "kind": "helper"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/execute-commands.py",
+      "sha256": "8acc5fd656dea63800175be4475fe59531c9712633022c1182165aee7aa94911",
+      "kind": "helper"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/benchmarks/runtime/expanded/run.py",
+      "sha256": "6c28224bf77a5127bd7c28072337caa80571f7a57c5f60c77d765a366d342e4a",
+      "kind": "helper"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/benchmarks/runtime/runner.py",
+      "sha256": "e2238327ab7f603e7c0772b791ad4a2534ba90c6ce49a0d4e362790112b3b690",
+      "kind": "helper"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/benchmarks/runtime/compare_candidate.py",
+      "sha256": "ca202996170e072e7b95ebf3b20896142ec794d14e336c958af277037a7d7123",
+      "kind": "helper"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/benchmarks/runtime/expanded/verify.py",
+      "sha256": "34c6a85cedf05e4f8bf7759b699f814b601c5cf22aca01fd4e1dfada7796202a",
+      "kind": "helper"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/benchmarks/runtime/diagnostics/holdouts.py",
+      "sha256": "1eeb8484148799594d5e76dfc6a793646073cfdb596e6ea2c46910040b34f3fc",
+      "kind": "helper"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/benchmarks/runtime/expanded/registry.py",
+      "sha256": "04661575c2246c0848fa97196864f5d2a640994ef5b6f68919d87da402e4495b",
+      "kind": "helper"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/time-repeat.py",
+      "sha256": "50d6a3fe6cff2f706689ea8cd6f74e863f92ee4ebac91b5e7a35afa6ba04d1d0",
+      "kind": "helper"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/repeat/execute.py",
+      "sha256": "8d82b0f3eb4f136995af02131c196c67898abdee2c036f2d1d33532ca8833747",
+      "kind": "helper"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/benchmarks/runtime/build_compiler.py",
+      "sha256": "358da42bfe0f2587c9424adcbc7d429772d4500362616aeb1378ef2721e5ac83",
+      "kind": "helper"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/language/native-checks.py",
+      "sha256": "bb8dbf3ea70992d33f0f53ee84f6d1aa555bec6de7d2a9653a23e243bb9ca4a8",
+      "kind": "helper"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/language/dictionary-word.my",
+      "sha256": "7648d0ebc506d254481c64446005d8f3a315d355fca0b1c095c470f03f339ccb",
+      "kind": "helper"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/src/native_arena.c",
+      "sha256": "bfdf613ed1e4d1763d9286f31a348cae8e7aa533cd640d6430e31ea9ff225974",
+      "kind": "native tested source"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/src/native_arena.h",
+      "sha256": "3188f7c85ed524079d651de8cd8621d13b1d2b224ae958593a21237351f3e0d8",
+      "kind": "native tested source"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/src/native_bytes.c",
+      "sha256": "6900e33c8f0c70161303d5fc5e7008a2f5dfbc4b53c5ca3d3967e42df7725b4f",
+      "kind": "native tested source"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/src/native_bytes.h",
+      "sha256": "06d244ea35acf2db549788cb2c18ac1996dff8835d71394c3d6a444a01395937",
+      "kind": "native tested source"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/src/native_collections.c",
+      "sha256": "624a66d23998c4a399a4caedd04b96acf77961e2e1e2628c862ab5fba2dd9b26",
+      "kind": "native tested source"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/src/native_collections.h",
+      "sha256": "130fbc8927a65d6efb5360d343460f145015e011b2e9eb1181338727836e7096",
+      "kind": "native tested source"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/src/native_cow.c",
+      "sha256": "f8816d59f2adc1656c3ca0dcb50762836c57efcee6480161a448f1d9bcad90a2",
+      "kind": "native tested source"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/src/native_cow.h",
+      "sha256": "01d004fa5afe3fd3455cc2b91d8cdfdf5addea2e39d88b8ef449bf5d92b194ce",
+      "kind": "native tested source"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/src/native_dictionary.c",
+      "sha256": "bfc47f41b685ca3fca426f4c61c72bf861a53e769be75e846a777bd57d54e113",
+      "kind": "native tested source"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/src/native_dictionary.h",
+      "sha256": "ae924ef73790ac3668356235caac32f0a2b037cba9a5a82ccf7347dd0eec9c74",
+      "kind": "native tested source"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/src/native_embed.h",
+      "sha256": "7cdf12418c8234e77a279e104cece27bfbd5765b0f385b72fc57cf65626f31f1",
+      "kind": "native tested source"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/src/native_equal.c",
+      "sha256": "5d772d2390c0027bd021788d36b4e40976b33eebd56bee4e9db0ce1f17675619",
+      "kind": "native tested source"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/src/native_equal.h",
+      "sha256": "4107275cb5cfd826299d254434b817b223a4801a4a6c08e13ea6e7bcb19fcd8a",
+      "kind": "native tested source"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/src/native_heap.c",
+      "sha256": "fe479f040ce625621457e6a8a3a74a58a6dd225e958cb7e6898ffbb06ae6fd0e",
+      "kind": "native tested source"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/src/native_heap.h",
+      "sha256": "f7e359748b97f38eb43698018418348957a89725793bc2ea4747985ca70dc8f4",
+      "kind": "native tested source"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/src/native_host.h",
+      "sha256": "2d6ad789149a27c39646b9d4624eecd3acd42dcba62d573d456e68ac660f3e9c",
+      "kind": "native tested source"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/src/native_print.c",
+      "sha256": "3d8374492e1b913239545ef04aa8356f6c55247a79c7fd6dcdd0321a812a7692",
+      "kind": "native tested source"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/src/native_print.h",
+      "sha256": "7dd5b8f5378c1697e6afc4e29fd3073a6dcd776463d72a7b1cfd289b74835e9d",
+      "kind": "native tested source"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/src/native_providers.h",
+      "sha256": "4d46dfbd088368fc951b939f68f3f299bb9ae22b9fc8882fc8d1f2e78e819365",
+      "kind": "native tested source"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/src/native_python.h",
+      "sha256": "83897d22b76dba6482124c58dff0262936ba79f1216fc8694126333a583d87b0",
+      "kind": "native tested source"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/src/native_rc.c",
+      "sha256": "5868f6642e5076efba07d538a2efd008cd9e5449ecf862c027234922cc61c72c",
+      "kind": "native tested source"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/src/native_rc.h",
+      "sha256": "75f4554a95669884046a38a7d1012634bf82c571e772755b031b4e4127e92f54",
+      "kind": "native tested source"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/src/native_rc_alloc.c",
+      "sha256": "66cb3ccb8a063a185d282861eb71b82592959941a98b14f9c4523959499ee26b",
+      "kind": "native tested source"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/src/native_rc_alloc.h",
+      "sha256": "e060accc87d760c1d737ffc4614389df1c1ef51e73406d3848e2837b6f6acb25",
+      "kind": "native tested source"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/src/native_rc_collections.h",
+      "sha256": "c6162814e2eba027118003ffe84ab7e3963f52304cf5803fbb3716062afdd388",
+      "kind": "native tested source"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/src/native_rc_dictionary.h",
+      "sha256": "d871f96db43a7986f3a280a2922082308f9a27ff5b55e21ccf1dbb845a8a26e8",
+      "kind": "native tested source"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/src/native_rc_internal.h",
+      "sha256": "2fb5175373436165e519d3f399a2b5f80a05c36407ccec13c3192d1ab228f081",
+      "kind": "native tested source"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/src/native_rc_scope.c",
+      "sha256": "9e2315ab33ac8b0960ec3a856ed3081a88e7a290811c34cf4f922178ad4520d7",
+      "kind": "native tested source"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/src/native_rc_shapes.c",
+      "sha256": "fbb49df9efaa6dc34f68ae4882b3a6b29cbb91163f8fbd33d0e08c2076e9eab9",
+      "kind": "native tested source"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/src/native_rc_stats.c",
+      "sha256": "b5a4b32bf2329284568401077ff3ce1798b3aba9e8d0340b3a84eb6aabcb01aa",
+      "kind": "native tested source"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/src/native_rc_stats.h",
+      "sha256": "31af592f1d45c5055b44e731441ad0279f4bd6614de15068cf85942ddbf34e1e",
+      "kind": "native tested source"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/src/native_rc_transfer.c",
+      "sha256": "080bd05bc8203ccecbbf0fa97b46bc94933aac4a452c3d554a4e927decc9017e",
+      "kind": "native tested source"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/src/native_rc_values.c",
+      "sha256": "b8c209772babbf0983953205f4151220df51cafbc52b2acd2f5ce6cd936e0e67",
+      "kind": "native tested source"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/src/native_rc_values.h",
+      "sha256": "95a0450fa9a046e0480baa09d2f19a18f81786946ffc341ed21cea775a615e60",
+      "kind": "native tested source"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/src/native_rc_walk.c",
+      "sha256": "46f1d46e3fc94b521e225597ee7b1d27dd416b67286811245f5f2ea13ebe5f57",
+      "kind": "native tested source"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/src/native_regions.c",
+      "sha256": "97b1210bcdd3d34660042042ff6dac9476e61f7b00a339a12f237d3e69452281",
+      "kind": "native tested source"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/src/native_regions.h",
+      "sha256": "e242fde4f01c5b13b0e1626ef2c899d8b918327fdb548f389973a2d997fc69bc",
+      "kind": "native tested source"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/src/native_repr.c",
+      "sha256": "84d9d161df86dcee5af44e79b5f8e4e7ab888e8ac5bb2dcdc962cccc5138f81c",
+      "kind": "native tested source"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/src/native_scoped.c",
+      "sha256": "cce43fedb6e09988b9b3463a3fd331aa27cf1107f0f21b990ddbadec5cb3a5a0",
+      "kind": "native tested source"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/src/native_scoped.h",
+      "sha256": "9cc2a681f381c7a4bc920a0b0c2721c81dd0f1ee89320110e6779518f3c606e1",
+      "kind": "native tested source"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/src/native_search.c",
+      "sha256": "53e309bf4347b14e8e02317ccba9a6c3d2eb4cf2c734063d8bb276cb12d48003",
+      "kind": "native tested source"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/src/native_test_runner.c",
+      "sha256": "d09a9f659c43e7a4fa7440548d0266e7965b0fc72224d888ac863f2dcd727db2",
+      "kind": "native tested source"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/src/native_text.c",
+      "sha256": "102e8b2810853662682dfa87d00cd5e11c19a51c46e2875362d5cd7435e5bac1",
+      "kind": "native tested source"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/src/native_text.h",
+      "sha256": "c1fe4eefa54b05fe533917ace4767f4f7d3001cb28872cb81bd6076eb861c2c2",
+      "kind": "native tested source"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/src/native_text_methods.c",
+      "sha256": "5ff7be6ffae94d5fe739779d56a060b97420d1100900e52854e7d70eb0befa75",
+      "kind": "native tested source"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/src/native_text_methods.h",
+      "sha256": "d997ca962ee917ffb8cda9f160651a0ef7cac4e7a7c4ef9e8ac028c7ed12d9ff",
+      "kind": "native tested source"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/src/native_trim.c",
+      "sha256": "436907c74731232cd699537f3ebd2cc51589b072a811fffada2821f7c3545996",
+      "kind": "native tested source"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/src/native_unicode.h",
+      "sha256": "08934bcc567f9b2baa5d56f9aa66d363f7ad44da806bc905d746050724d77373",
+      "kind": "native tested source"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/src/native_unicode_data.h",
+      "sha256": "84d09818fc74d1ae7d50c8d80902c10256c65dc1386307fef2c3c334eb43fc0c",
+      "kind": "native tested source"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/src/native_value_copy.c",
+      "sha256": "6f9e357b93a73a154e2dfadd86aed3c5320991031f2a6d94e3d124af291d0533",
+      "kind": "native tested source"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/src/native_value_copy.h",
+      "sha256": "5072f377e855f6691ddd735b97143a3fa253e29b919dd4de780d7f17bd758e2a",
+      "kind": "native tested source"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/scripts/test_native_memory.py",
+      "sha256": "1669f3abade64e6d688f428d1c479dbd764e4577f7a322fbad930e79ae3151c4",
+      "kind": "native tested source"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/tests/native_dictionary_word_test.c",
+      "sha256": "b148313f723dee66414cd3d1c35caae2ea03d5570185d49601cbdf4fd089252f",
+      "kind": "native tested source"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/SPEC.md",
+      "sha256": "40b7bc025e16fc354f1617bbccb2ab34b834cabd25b8b748cb97c073b0c0bcf6",
+      "kind": "native tested source"
+    }
+  ],
+  "excluded": "Compiled hosts, guests, native test binaries, objects and caches; original immutable receipts/manifests bind the live artifacts. One changed-source pack is retained; unchanged sources remain reconstructible from the pinned Git revisions. No artifact is modified."
+}

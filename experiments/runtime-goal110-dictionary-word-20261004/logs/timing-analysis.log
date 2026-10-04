@@ -1,0 +1,3 @@
+PASS finalized six-arm raw report with artifact checks
+PASS focused: 28 candidate comparisons; 80 immutable targets
+PASS analysis driver; all commands exit0

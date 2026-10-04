@@ -1,0 +1,33 @@
+{
+  "status": 0,
+  "started_utc": "2026-10-04T12:51:02.451186+00:00",
+  "finished_utc": "2026-10-04T12:51:03.705230+00:00",
+  "source": "a2dfdfa994e19ac3c80373a443913c7ecdef23d7",
+  "exact_files": [
+    "SPEC.md",
+    "scripts/test_native_memory.py",
+    "src/native_dictionary.c",
+    "src/native_dictionary.h",
+    "src/qbe_managed.zig",
+    "src/qbe_roots.zig",
+    "src/qbe_test.zig",
+    "tests/native_dictionary_word_test.c"
+  ],
+  "integrated_revision": "0d8a360c35221424436ee65157beaab7b16639a8",
+  "guardian_log": "guardian: run-all: whole-tree run \u2014 blocking gate run (commit/CI enforces the whole-tree guarantee)\nguardian: file-size: 20 finding(s) \u2014 report-only (--verbose for detail)\nguardian: function-length: 25 finding(s) \u2014 report-only (--verbose for detail)\nguardian: line-length: 8675 finding(s) \u2014 report-only (--verbose for detail)\nguardian: abi-layout: 9 finding(s) \u2014 report-only (--verbose for detail)\nguardian: run-all: 88 check(s) passed\n[perf/runtime-parity-20261003 0d8a360c] perf: integrate proved integer dictionary reads\n 8 files changed, 278 insertions(+), 3 deletions(-)\n create mode 100644 tests/native_dictionary_word_test.c\n",
+  "guardian_log_sha256": "3d023d867997cb59b4125d3af998cd970384cafe4d81629e510913c3da4cac89",
+  "source_trees": {
+    "src": {
+      "candidate": "07506c8f9600be7d9c59d9fc3bd8c2de6c050075",
+      "integrated": "07506c8f9600be7d9c59d9fc3bd8c2de6c050075"
+    },
+    "tests": {
+      "candidate": "b32be4a54f2399a08427a4786cdce84f1f87c7a9",
+      "integrated": "b32be4a54f2399a08427a4786cdce84f1f87c7a9"
+    },
+    "scripts": {
+      "candidate": "e0afd4889dd66244642ec79e17617f8a834be35c",
+      "integrated": "e0afd4889dd66244642ec79e17617f8a834be35c"
+    }
+  }
+}
