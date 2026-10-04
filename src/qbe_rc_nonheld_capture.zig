@@ -18,37 +18,55 @@ pub fn ordinaryInput(comptime E: type, self: *E, target: usize, at: usize) bool 
     const code = self.function.scope.instructions;
     if (code.len > 4096 or at == 0 or at >= code.len) return false;
     const source = pair(E, self, target, at) orelse return false;
+    return ordinaryPublication(E, self, target, at) == source;
+}
+
+/// Prove only the named source's physical publication and the exact pair.
+/// This does not prove the target has no H token, an empty operand prefix,
+/// or a safe receiver lifetime; those obligations remain with the caller.
+pub fn ordinaryPublication(comptime E: type, self: *E, target: usize, at: usize) ?usize {
+    const state = self.cow.?.rc orelse return null;
+    if (!canonical(state)) return null;
+    const code = self.function.scope.instructions;
+    if (code.len > 4096 or at == 0 or at >= code.len) return null;
+    const source = receiverPair(E, self, target, at) orelse return null;
     const locals = self.function.scope.locals;
-    if (target < self.function.signature.parameter_count or !locals[target].usage.temporary) return false;
-    if (source < self.function.signature.parameter_count or locals[source].usage.temporary) return false;
-    if (locals[source].origin != .local) return false;
-    if (referenced(E, self, target) or referenced(E, self, source)) return false;
-    if (locals[source].ty != locals[target].ty) return false;
+    if (target < self.function.signature.parameter_count or !locals[target].usage.temporary) return null;
+    if (source < self.function.signature.parameter_count or locals[source].usage.temporary) return null;
+    if (locals[source].origin != .local) return null;
+    if (referenced(E, self, target) or referenced(E, self, source)) return null;
+    if (locals[source].ty != locals[target].ty) return null;
     const plan = self.cow.?.plan;
-    if (plan.place(source) != null or plan.place(target) != null) return false;
-    if (source < plan.aliases.len and plan.aliases[source] != cow.none) return false;
-    if (state.plan.locals.entry[source].ownership != .empty) return false;
-    if (@backingInt(state.plan.locals.entry[source].storage) != source) return false;
-    if (@backingInt(state.plan.locals.entry[target].storage) != target) return false;
-    if (cow.iterationOwner(self.function, target)) return false;
+    if (plan.place(source) != null or plan.place(target) != null) return null;
+    if (source < plan.aliases.len and plan.aliases[source] != cow.none) return null;
+    if (state.plan.locals.entry[source].ownership != .empty) return null;
+    if (@backingInt(state.plan.locals.entry[source].storage) != source) return null;
+    if (@backingInt(state.plan.locals.entry[target].storage) != target) return null;
+    if (cow.iterationOwner(self.function, target)) return null;
     for (at - 1..at + 1) |pc| {
         const site = plan.at(pc);
-        if (site.read_captures.len != 0 or site.shares.len != 0) return false;
-        for (state.plan.records.transfers) |transfer| if (transfer.intercepts(pc)) return false;
+        if (site.read_captures.len != 0 or site.shares.len != 0) return null;
+        for (state.plan.records.transfers) |transfer| if (transfer.intercepts(pc)) return null;
     }
-    const definition = sourceStore(E, self, source, target, at) orelse return false;
-    for (code, 0..) |instruction, pc| if (encloses(instruction.op, pc, definition)) return false;
-    return true;
+    const definition = sourceStore(E, self, source, target, at) orelse return null;
+    for (code, 0..) |instruction, pc| if (encloses(instruction.op, pc, definition)) return null;
+    return source;
+}
+
+fn receiverPair(comptime E: type, self: *E, target: usize, at: usize) ?usize {
+    const code = self.function.scope.instructions;
+    if (at == 0 or at >= code.len) return null;
+    if (self.isBranchTarget(at) or code[at].op != .store_local) return null;
+    if (@backingInt(code[at].op.store_local) != target or code[at - 1].op != .load_local) return null;
+    return @backingInt(code[at - 1].op.load_local);
 }
 
 fn pair(comptime E: type, self: *E, target: usize, at: usize) ?usize {
-    const code = self.function.scope.instructions;
-    if (self.isBranchTarget(at) or code[at].op != .store_local) return null;
-    if (@backingInt(code[at].op.store_local) != target or code[at - 1].op != .load_local) return null;
+    const source = receiverPair(E, self, target, at) orelse return null;
     const before = self.states[at - 1] orelse return null;
     const after = self.states[at] orelse return null;
     if (before.len != 0 or after.len != 1 or after[0] != self.function.scope.locals[target].ty) return null;
-    return @backingInt(code[at - 1].op.load_local);
+    return source;
 }
 
 fn referenced(comptime E: type, self: *E, local: usize) bool {

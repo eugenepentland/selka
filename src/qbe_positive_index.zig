@@ -13,6 +13,7 @@ pub const Certificate = managed.PositiveIndex;
 pub fn emit(comptime E: type, self: *E, start: usize) Error!void {
     if (!self.checks or self.step_checks) return;
     if (self.version != null or self.original != null) return;
+    if (try @import("qbe_rc_index_update.zig").forwardRead(E, self, start)) return;
     const proof = try certify(E, self, start) orelse return;
     const saved = self.pc;
     defer self.pc = saved;

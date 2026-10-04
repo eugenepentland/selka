@@ -162,6 +162,7 @@ fn emitOperation(comptime E: type, self: *E, op: BufferOperation, stack: []const
             try boolean(E, self, output, base);
         },
         .read => {
+            if (try @import("qbe_rc_index_update.zig").value(E, self)) |forwarded| return self.store(base, forwarded);
             // QBE-LOOP-VERSION-1: an invariant element the loop's guard read.
             if (self.loopValue()) |hoisted| return self.store(base, hoisted);
             const index_value = try self.load("s", base);
@@ -197,8 +198,13 @@ fn emitOperation(comptime E: type, self: *E, op: BufferOperation, stack: []const
                 }
             } else {
                 const index_value = try self.load("s", base);
-                const length = try receiverLength(E, self, list);
-                try inlineIndexWrite(E, self, .{ .input = list, .at = index_value, .raw_index = index_value, .length = length, .element = element, .slot = position }, normalized_index_failure);
+                if (try @import("qbe_rc_index_update.zig").checkedWrite(E, self)) {
+                    const address = try elementAddress(E, self, list, index_value, element);
+                    try self.writeValue(address, try self.load("s", position), element);
+                } else {
+                    const length = try receiverLength(E, self, list);
+                    try inlineIndexWrite(E, self, .{ .input = list, .at = index_value, .raw_index = index_value, .length = length, .element = element, .slot = position }, normalized_index_failure);
+                }
             }
             try self.print(store_unit, .{base});
         },

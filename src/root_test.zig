@@ -332,6 +332,7 @@ test {
     _ = @import("qbe_rc_empty_locals_test.zig");
     _ = @import("qbe_rc_nonheld_capture_test.zig");
     _ = @import("qbe_rc_unique_capture_test.zig");
+    _ = @import("qbe_rc_index_update_test.zig");
     _ = @import("qbe_rc_dictionary_tail_test.zig");
     _ = @import("qbe_rc_dictionary_key_test.zig");
     _ = @import("qbe_rc_dictionary_loop_test.zig");

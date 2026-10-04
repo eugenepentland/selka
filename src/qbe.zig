@@ -3048,6 +3048,7 @@ const Emitter = struct {
     }
     fn emitOp(self: *Emitter, op: @FieldType(bytecode.Instruction, "op"), stack: []const typed.Type) GenerateError!void {
         const h = stack.len;
+        if (op == .jump_if_false and try @import("qbe_rc_index_update.zig").branch(Emitter, self)) return;
         if (try @import("qbe_rc_locals.zig").emit(Emitter, self, op, stack)) {
             // RC-RANGE-KEY-1: a range local's span travels with its counted store.
             if (op == .store_local and self.range_keys.role(self.pc) == .store and !self.moves.aliased(@backingInt(op.store_local)))
