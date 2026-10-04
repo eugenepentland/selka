@@ -73,6 +73,8 @@ fn store(comptime E: type, self: *E, index: usize, operand: usize) Error!void {
         try receiverCleanup(E, self, index, operand);
         if (@import("qbe_rc_dictionary_tail.zig").store(E, self, index)) {
             try self.print(" # RC-DICTIONARY-TAIL-1 local {d} root {d}\n", .{ index, parent });
+        } else if (@import("qbe_rc_unique_capture.zig").store(E, self, index, parent)) {
+            try self.print(" # RC-UNIQUE-CAPTURE-1 local {d} root {d}\n", .{ index, parent });
         } else try @import("qbe_rc_unique.zig").local(E, self, .{ .local = parent });
         const value = try self.load("l", parent);
         try @import("qbe_cow.zig").Lower(E).borrowReceiver(self, index, value);
