@@ -10,6 +10,12 @@ on 2026-10-04.
 - two Claude-run decision lanes, WP-8 (direct-emitter spike) and WP-9 (ideal ladder study);
 - a decision point at the end of Wave 1 (§5).
 
+**Revision 3 (2026-10-04).** This revision adds:
+- the WP-9 ladder study's results (§3.2, full study in
+  `experiments/runtime-ideal-ladder-20261004/README.md`);
+- **WP-10**: implementation fixes the study found. They are independent of the Wave 1
+  decision, so they can start now.
+
 **Base.** `perf/runtime-parity-20261003` at `ac72a905` (integrated production source
 `0d8a360c`), worktree `/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-20261003`.
 
@@ -56,6 +62,9 @@ Give this to the coordinating agent:
 >
 > **Integration.** Integrate a lane only after reviewing its evidence and running the full
 > gate yourself.
+>
+> **Available now.** WP-10 (implementation fixes from the ladder study) is independent of the
+> Wave 1 decision. Start it as lanes free up, beginning with 10a and 10b.
 >
 > **Held and reserved work.** WP-6 is on hold until the Wave 1 decision (§5). Claude agents
 > run WP-8 and WP-9 on their own branches; Codex lanes do not take them or edit those
@@ -292,6 +301,57 @@ exploratory timings on a non-timing CPU of a busy host.
 4. **The levers need a front end that knows ranges, widths and loop shape.** These are
    exactly what the QBE IL → LLVM translation cannot carry without a growing comment-marker
    side channel. WP-8 tests the alternative.
+
+### 3.2 Ideal-ladder study: eight more cases (WP-9)
+
+**What was done.** The same method as §3.1 was applied to eight more cases: `float_math`,
+`list_filter`, `dict_lookup`, `tagged_stack`, `string_split`, `branch_mixed`, the
+`json_transform` parse component and the `lox_eval` dispatch loop.
+- Every step reproduces the benchmark checksums.
+- Every case has an input-from-file holdout and a baseline-x86-64 build.
+- Source and tables: `experiments/runtime-ideal-ladder-20261004/README.md` (branch
+  `claude/ideal-ladder-20261004`, fast-forwarded into this branch).
+- The numbers are exploratory, from a shared host.
+
+**Findings that change priorities.**
+1. **Implementation fixes dominate the L1 gate.** In 6 of 8 cases, the largest step toward
+   ≤1.10× Zig ReleaseSafe is an implementation fix that needs no new fact or language rule.
+   The fixes are below, and form WP-10.
+
+   | Case | Fix | Gain | Notes |
+   |---|---|---|---|
+   | `float_math` | Inline `int(float)` | 1.87× | Reaches Zig ReleaseSafe parity alone. It is a call into `myl_qbe_float_unary` today, which took 32% of samples in an independent check. |
+   | `tagged_stack`, `lox_eval` | Build unions in place | 1.77×, 3.04× | Removes a store-forwarding stall. Independent check: 30,010 `ld_blocks.store_forward` in mylang against 36 in Rust for the same run. |
+   | `dict_lookup` | Read-only probe that writes no hint | 1.78× | |
+   | `string_split`, JSON | Non-escaping temporaries and `encode()` | ~3–4× | Already WP-4 steps 5–6. |
+2. **`llvm.assume`/`!range` on values does not make LLVM narrow** `sitofp`/`fptosi` or the
+   arithmetic: `float_math` v13 gained 1.00×. Emitting narrow types from the front end
+   gained 2.3–2.5×. This is direct evidence that markers alone (WP-6a) cannot unlock the
+   vector loops, and it supports WP-8.
+3. **L2 sticky checks and hoisted bounds give 0.9–1.3×.** WP-3 Stages A–C stay behind
+   everything else.
+4. **File data does not need a range language feature (yet).** A runtime guard computed
+   once over an immutable list (all elements within a bound), followed by the vector loop,
+   recovered the whole gain in 3 of 4 cases.
+5. **The dictionary gap is representation and protocol**, not LLVM facts:
+   - two dependent cache lines per lookup;
+   - hint writes on read-only lookups;
+   - 0.5 branch mispredicts per lookup.
+
+   A flat, well-hashed table gives 3.2× on sparse keys, and a branch-free AVX2 bucket probe
+   5.3×. A further 3.3× on the fixture's sequential keys is hash luck and does not count.
+6. **Some range facts cross function boundaries** (dictionary values, lists passed to
+   helpers). Local analysis alone will not find them.
+
+**Lever ranking toward faster-than-fastest**, by total gain across the nine cases:
+1. range → emitted narrow types → vectorization;
+2. SIMD library kernels (byte scan, bucketed probe, gather);
+3. removing allocations and copies;
+4. union materialization;
+5. modular strength reduction;
+6. RC protocol on unique locals;
+7. fusion;
+8. then typed decode, threaded dispatch, FMA, and last L2.
 
 ## 4. Work packages
 
@@ -799,11 +859,113 @@ while keeping mylang's semantics?
 - one ladder table per case;
 - a cross-case table: fact → cases → gain → category → the WP or language feature it implies.
 
+### WP-10 Implementation fixes from the ladder study — start now, independent of the decision
+
+**Status.** These need no language rule, no new fact source and no backend decision. Each
+moves gate rows directly. Run them as separate small lanes.
+
+**Before and after each item:**
+- Re-measure on the current integrated head (the study's reference binaries are B0, before
+  PY-DICT-4).
+- Show the mechanism moved, with counters or assembly, not only timings.
+
+**10a. Inline checked float → integer conversion** (S). The highest value per line changed.
+- **Today.** `int(float)` and the other f64 → integer conversions go through
+  `myl_qbe_float_unary` (`src/qbe_runtime.c:764`), an out-of-line switch on an op code. They
+  are emitted from `src/qbe.zig` (~3200, `.unary_float`) when
+  `scalar_lower.floatUnary` declines.
+- **Change.** Lower them inline on both backends: truncate (`cvttsd2si` on LLVM), then
+  compare `a >= -2^63 && a < 2^63`. NaN fails the compare. The cold path raises the same
+  `R_FLOAT_CONVERSION`.
+- **Also check** `floor`, `ceil`, `trunc`, `abs`, negation and int → float, which go through
+  the same helper.
+- **Tests.** NaN, ±inf, ±2^63 boundaries, −0.0, and values just inside and outside the range.
+  Trap kind and detail must be unchanged.
+- **Rows.** `float_math` (study: 1.87×, reaching Zig ReleaseSafe parity), plus any row using
+  `int(float)`.
+
+**10b. Build unions and small records in place** (M).
+- **Today.** A 16-byte union value is built in a stack temporary with two narrow stores, then
+  copied with one 16-byte load. The QBE `blit` becomes `llvm.memmove`
+  (`src/qbe_build_llvm_lower.zig` `onBlit`), which LLVM turns into a vector copy. The load
+  cannot be forwarded from the two stores, so every step stalls.
+- **Step 1 (smallest).** Lower constant-size blits of 32 bytes or less, at 8-byte alignment,
+  as i64 load/store pairs. Do all loads first, which preserves overlap semantics. Compare
+  `ld_blocks.store_forward` per step before and after.
+- **Step 2.** Have the emitters construct unions and small records directly into their
+  destination (list slot, local, field) with field-wise stores, so no temporary exists. Read
+  them field-wise.
+  - Look in `src/qbe_aggregate.zig`, the variant transfer code (`qbe_rc_native_variant.zig`,
+    `native_variant_policy.zig`) and the list append/store paths.
+  - Coordinate with WP-5 owners where these touch RC glue.
+- **Tests.**
+  - Aliasing: a union copied and then the source mutated.
+  - Unions with managed payloads (the plain-variant path only applies to unmanaged ones).
+  - Overlapping blits.
+- **Rows and evidence.**
+  - Study: `tagged_stack` 1.77×, `lox_eval` 3.04×; `record_construct` and `record_update` may
+    also move.
+  - Required counter: `cpu_core/ld_blocks.store_forward/u` per step should fall from ~1.8 to
+    ~0 on `tagged_stack`.
+
+**10c. Read-only dictionary probes** (S/M).
+- **Today.** Every read writes the last-probe hint record (`recall` → `read_walk` → `locate` in
+  `src/native_dictionary.c`), including reads in loops that never mutate the dictionary.
+  PY-DICT-4's typed integer read still writes it.
+- **Change.** Where the dictionary is not mutated in the region (no `mut` access and no write
+  through the binding, which value semantics makes checkable), call a read-only probe entry
+  point. It writes no hint, and the caller hoists the header fields.
+- **Keep** the hint path for get-then-set sequences (PY-DICT-4).
+- **Rows.** Study: `dict_lookup` 1.78×, sparse keys 1.72×; `dict_lookup_str` and
+  `word_count` reads are likely to move too.
+- **Coordinate with WP-5.** This must not touch hold/scope/loan paths. If a probe takes a
+  hold today, leave that to one-count.
+
+**10d. Modular strength reduction** (M).
+- **Change.** Replace `%` by a positive constant when a range is known locally:
+  - `x % M` with `x ∈ [0, 2M)` becomes a conditional subtract;
+  - an affine `(a + b·j) % m` in a counted loop becomes an induction variable with
+    compare-and-reset;
+  - a cursor wrap `(c + 1) % n` becomes compare-and-reset.
+- **Where.** `src/qbe_scalar.zig`, `src/qbe_constant_divisor.zig`, and the loop facts
+  (`src/qbe_loop_facts.zig`; LLVM-FLOOR-RESULT-RANGE-1 already carries one such fact).
+  Derive ranges locally, including loop-carried `x % M ∈ [0, M)`. This works at the bytecode
+  level, so it helps under either backend route.
+- **Tests.** Negative operands (Python floor semantics), `M` = 1, values exactly at the
+  bound, and loops with zero trips.
+- **Rows.** Study: `tagged_stack` 1.46×, the `dict_lookup` query key 1.81×, `list_filter`
+  1.11×.
+
+**10e. Follow-up, design first: dictionary table layout** (L).
+- **Proposal.** Store `{key, value}` (or key/value arrays) in the slots, with load ≤ ½, a
+  stronger multiplicative hash and a branch-free 4-slot bucket probe. Keep the entry list
+  for insertion order.
+- **Before starting.** Write a short design note with sparse-key, string-key and mixed-key
+  measurements. The study's dense-key gains are fixture-shaped; the sparse table (3.2–5.3×)
+  is the evidence to use.
+- **Not in scope:** the hash-luck result.
+
+**Not in WP-10, because they belong elsewhere:**
+- RC/ready-call protocol on unique locals (WP-5, WP-6c);
+- non-escaping temporaries and borrowed `encode()` (WP-4 steps 5–6);
+- range → narrow emission and runtime range guards (the Wave 1 decision: WP-6a or the
+  WP-8 route);
+- threaded dispatch and typed JSON decode (later, after evidence on real programs).
+
+**Acceptance for every item.**
+- A SPEC tag and focused tests.
+- The full gate (CLAUDE.md), `test-qbe` and `test-qbe-build`.
+- The Lox port.
+- The 720/516 checks.
+- A paired screen of the named rows under L1, judged against WP-1's layout bands.
+- The counter or assembly evidence named above.
+
 ## 5. Order, lanes and file ownership
 
 ```
 Wave 1 (now):     WP-0 | WP-1 | WP-2 | WP-4 steps 1-4 | WP-3 steps 1-2 | one-count G0/G1/C0
-                  + Claude lanes: WP-8 spike | WP-9 ladder study
+                  + Claude lanes: WP-8 spike | WP-9 ladder study (done)
+                  + WP-10a/10b as lanes free up, then 10c/10d (independent of the decision)
 Decision:         markers (WP-6a/6b) or direct emitter (from WP-8), chosen by the user
 Wave 2:           WP-4 steps 5-6 | WP-7 | one-count C2/C6 | the chosen LLVM-facts route
                   | WP-3 Stages A/B (data-from-input loops first)
@@ -830,10 +992,11 @@ The choice, which the user makes:
 **One owner per shared file per wave.** Other lanes send interface requests or follow-up
 patches to that owner.
 
-| Area | Files | Wave-2 owner |
+| Area | Files | Owner |
 |---|---|---|
-| LLVM translator and build flags | `src/qbe_build_llvm_*.zig`, `src/qbe_build.zig` link paths | WP-6a (WP-1 lands its flag change in wave 1) |
-| Scalar and index checks | `src/qbe_scalar.zig`, `src/qbe_managed.zig` check emitters, `src/qbe_loop_*.zig` | WP-3 |
+| LLVM translator and build flags | `src/qbe_build_llvm_*.zig`, `src/qbe_build.zig` link paths | Wave 1: WP-1 (flags), then WP-10b step 1 (`onBlit`). Wave 2: the route chosen at the decision |
+| Scalar and index checks | `src/qbe_scalar.zig`, `src/qbe_managed.zig` check emitters, `src/qbe_loop_*.zig` | Wave 1: WP-10a, then WP-10d (WP-3 is spec-only). Wave 2: WP-3 Stages A/B after WP-10d |
+| Dictionary runtime | `src/native_dictionary.[ch]`, `src/qbe_rc_dictionary_*.zig` | WP-10c, then 10e; coordinate with WP-6c and WP-5 |
 | Allocator and RC runtime | `src/native_rc_alloc.c`, `src/native_heap.c`, `src/qbe_runtime_rc.c`, `src/qbe_rc_local_list.zig` | WP-4, then one-count |
 | Text runtime and lowering | `src/native_text.[ch]`, `src/qbe_managed.zig` text paths, `src/sema_loops.zig` | WP-7 |
 | Hold, scope and loan paths | `qbe_rc_holds`, `qbe_rc_read_loans`, `rc_borrow_flow`, scope capture in `src/qbe_runtime_rc.c` | one-count only |
