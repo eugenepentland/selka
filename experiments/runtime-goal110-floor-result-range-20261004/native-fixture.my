@@ -1,0 +1,90 @@
+def floor_one(value: int) -> int:
+    return value % 1
+def floor_two(value: int) -> int:
+    return value % 2
+def floor_three(value: int) -> int:
+    return value % 3
+def floor_large(value: int) -> int:
+    return value % 1000000007
+def floor_maximum(value: int) -> int:
+    return value % 9223372036854775807
+def truncated(value: int) -> int:
+    return remtrunc(value, 3)
+def negative_divisor(value: int) -> int:
+    return value % -3
+def variable(value: int, divisor: int) -> int:
+    return value % divisor
+def zero_bool(count: int, phase: int) -> int:
+    checksum = 0
+    for at in range(count):
+        increment = 1 if at % 2 == phase else 0
+        checksum = (checksum + increment) % 1000000007
+    return checksum
+def seeded_bool(seed: int, count: int, phase: int) -> int:
+    checksum = seed
+    for at in range(count):
+        increment = 1 if at % 2 == phase else 0
+        checksum = (checksum + increment) % 1000000007
+    return checksum
+def signed_updates(seed: int, count: int) -> int:
+    checksum = seed
+    for at in range(count):
+        increment = -17 if at % 3 == 0 else 23
+        checksum = (checksum + increment) % 1000000007
+    return checksum
+def checked(value: int, increment: int) -> int:
+    return (value + increment) % 3
+def zero_divisor(value: int) -> int:
+    return value % 0
+def minimum_negative_one(value: int) -> int:
+    return remtrunc(value, -1)
+def recursive(value: int, depth: int) -> int:
+    if depth <= 0:
+        return value
+    return recursive((value - 17) % 1000000007, depth - 1)
+def parsed(text: str) -> int:
+    match int(text):
+        case Some(value):
+            return value
+        case None:
+            return 0
+def main(args: list[str], out: Stream) -> int:
+    kind = parsed(args[0])
+    value = parsed(args[1])
+    other = parsed(args[2])
+    phase = parsed(args[3])
+    out.print(41)
+    result = 0
+    if kind == 0:
+        result = floor_one(value)
+    elif kind == 1:
+        result = floor_two(value)
+    elif kind == 2:
+        result = floor_three(value)
+    elif kind == 3:
+        result = floor_large(value)
+    elif kind == 4:
+        result = floor_maximum(value)
+    elif kind == 5:
+        result = truncated(value)
+    elif kind == 6:
+        result = negative_divisor(value)
+    elif kind == 7:
+        result = variable(value, other)
+    elif kind == 8:
+        result = zero_bool(other, phase)
+    elif kind == 9:
+        result = seeded_bool(value, other, phase)
+    elif kind == 10:
+        result = signed_updates(value, other)
+    elif kind == 11:
+        result = checked(value, other)
+    elif kind == 12:
+        result = zero_divisor(value)
+    elif kind == 13:
+        result = minimum_negative_one(value)
+    else:
+        result = recursive(value, other)
+    out.print(result)
+    out.print(43)
+    return 0

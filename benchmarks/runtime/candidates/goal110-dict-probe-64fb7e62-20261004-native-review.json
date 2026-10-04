@@ -1,0 +1,23 @@
+{
+  "status": "pass",
+  "reviewed_utc": "2026-10-04T10:10:37.054268+00:00",
+  "source_revision": "64fb7e62732db9cea46414248fd59ba362e31b56",
+  "tested_source_bindings": 56,
+  "comment_only_reconstructions": 2,
+  "sanitizer_builds": 4,
+  "exact_process_outcomes": 4,
+  "binaries": {
+    "native_rc_stats": "9089168f1c535b75795a16c3d3864ac152570a335c1800cc04e4596e20ddaa8f",
+    "native_rc_collections": "44464d50bbc4d7acb6ee478f1ce477cec15c148cf8363dce8dc776a06dbd3bf1",
+    "native_text_dictionary": "0628d2804815e004856e81a8572310c499fb8346fcc65a6524314d5c65d3da77",
+    "native_dictionary_probe": "b7c2e13812a57a8fbcdd112796f354c2f4e3c6d66ea2ebae13262ce1ec98869e"
+  },
+  "receipt_sha256": "108d79a74ce172bccc0e64489288319d294b0817b8b0e12b8a13a7623788f05f",
+  "source_binding_sha256": "01c1dee71b3fda62c63659796b64b250a3797f5dd87c6c8d4f183cd15cb676f8",
+  "script_sha256": "6e507bdd50d0a6f8a0a9d123ee8509ff7ddb069e9eece43995ab7dc5b27f74db",
+  "limitations": [
+    "Saved process replay; no new native executions.",
+    "SPEC documentation change reviewed separately; C comment tags reconstructed exactly.",
+    "No guest timing or goal confirmation."
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "status": "pass",
+  "reviewed_utc": "2026-10-04T10:25:58.491158+00:00",
+  "source_revision": "64fb7e62732db9cea46414248fd59ba362e31b56",
+  "receipt_sha256": "b3f85a1ddbeb88fb3e80f06c5f24d19df4985e925958805431a550537e993191",
+  "unchanged_allocated_and_executable_groups": [
+    "legacy/my-llvm",
+    "legacy/my-qbe",
+    "compute/my-llvm",
+    "compute/my-qbe"
+  ],
+  "changed_groups": [
+    "collections/my-llvm",
+    "collections/my-qbe",
+    "text/my-llvm",
+    "text/my-qbe"
+  ],
+  "limitations": [
+    "Read-only static replay; no new timing.",
+    "Collections QBE-policy frontend IL compared; LLVM native body proves publication-store removal."
+  ]
+}

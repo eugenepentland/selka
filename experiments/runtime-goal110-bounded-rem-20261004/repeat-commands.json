@@ -1,0 +1,41 @@
+{
+  "status": "prepared_not_executed",
+  "source_revision": "5e97db47f08f667d97419abafd098df263a2aec3",
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/goal110-bounded-rem-20261004",
+  "rounds": 15,
+  "warmups": 3,
+  "cpu": 2,
+  "scope": [
+    [
+      "list_filter",
+      "small"
+    ],
+    [
+      "list_filter",
+      "large"
+    ],
+    [
+      "sort_int",
+      "small"
+    ],
+    [
+      "mutate_nested",
+      "large"
+    ]
+  ],
+  "command": [
+    "python3",
+    "experiments/runtime-goal110-bounded-rem-20261004/time-paired-repeat.py",
+    "--screen",
+    ".mylang-cache/goal110-bounded-rem-debug/screen.json",
+    "--before-manifest",
+    "/home/epentland/ai/canopy/mylang-worktrees/goal110-g4-rf-20261004/.mylang-cache/goal110-g4-rf/runner/manifest.json",
+    "--after-manifest",
+    ".mylang-cache/goal110-bounded-rem-debug/runner/manifest.json",
+    "--output",
+    ".mylang-cache/goal110-bounded-rem-debug/paired-repeat.json"
+  ],
+  "helper_sha256": "2c97f5f4be19dabf3a4e00765cf73d8ac6f23b7ae38413cb7e9e66a97eb5b175",
+  "original_plan_sha256": "3108dc557cdeacb3262836e07d0b1d31bf34ef427971ecec56dee788b06ce030",
+  "policy": "Root START required; unchanged guests and original screen calibration plans; both backends; 288outcomes; targeted repeat is not full goal confirmation."
+}
