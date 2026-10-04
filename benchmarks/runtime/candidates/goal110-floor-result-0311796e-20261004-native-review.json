@@ -1,0 +1,33 @@
+{
+  "status": "pass",
+  "reviewed_utc": "2026-10-04T09:40:04.165415+00:00",
+  "source_revision": "0311796e84e192e3ac1e4fd0bb9d5824b55be1e2",
+  "pairs": 2763,
+  "executions": 5526,
+  "counts": {
+    "success": 2604,
+    "R_DIVISION_BY_ZERO": 70,
+    "R_OVERFLOW": 70,
+    "startup_memory": 7,
+    "R_STEP_LIMIT": 6,
+    "R_FRAME_LIMIT": 6
+  },
+  "policies": {
+    "rc-v5-llvm-accounted0": 393,
+    "rc-v5-llvm-accounted1": 399,
+    "rc-v5-qbe-accounted0": 393,
+    "rc-v5-qbe-accounted1": 399,
+    "rc-v5-counting-llvm-accounted0": 393,
+    "rc-v5-sites-llvm-accounted0": 393,
+    "gc-v1-llvm-accounted0": 393
+  },
+  "live_file_bindings": 5275,
+  "report_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-floor-result-range-20261004/.mylang-cache/goal110-floor-result-range-diagnostic/native-matrix/native-differential.json",
+  "report_sha256": "a4e868c0e439c63ec3cb5b6f8c5a8587113138a01c122f6b77435e2bf8ea6f37",
+  "script_sha256": "69686eae537db8d98ef5d8197a65df17e7966bb1313f1b02bc63ed809bdc91b8",
+  "limitations": [
+    "Saved process outcomes and current artifacts; no new executions.",
+    "Host policies differ: G4 ReleaseFast control and pinned Debug candidate, with normal optimized guests.",
+    "No runtime benchmark or goal acceptance claim."
+  ]
+}

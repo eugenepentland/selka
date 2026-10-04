@@ -9,7 +9,7 @@ the raw evidence for every reported result.
 
 <!-- STATUS-START -->
 - **Campaign:** active; checked-index/value reuse is integrated after repeated LLVM gains.
-- **Last document update:** 2026-10-04 09:31:30 UTC.
+- **Last document update:** 2026-10-04 10:07:58 UTC.
 - **Active batch:** bounded signed remainder and LLVM final-result range facts; dictionary lookup audit next.
 - **Current implementation:** `perf/runtime-parity-20261003`, production source
   `eaf4cda8f5c758cadafaadfa5e328c0fba252ac6`, adding exact source14ffa2c0 to6cf.
@@ -29,10 +29,20 @@ the raw evidence for every reported result.
   control coverage does not establish fresh goal confirmations.
 - **Arithmetic work:** the bounded-bias successor preserves the old signed-input
   admission and is pinned at5e97db47 after57 focused checks and88 Guardian checks.
-  Root replays49 exact native pairs with independent oracles; its Debug compiler
-  is building for actual LLVM guest checks. LLVM range annotation0311796e passes18 focused checks
-  and88 Guardian checks, has a pinned Debug compiler and is undergoing actual
-  LLVM-O3/fullLTO native checks. Both remain isolated and untimed.
+  Root replays49 exact native pairs with independent oracles; its pinned Debug
+  compiler and optimized guests pass720 qualification/516 holdout outcomes;
+  root independently verifies18 actual LLVM boundary pairs. Its first matched
+  screen improves LLVM filtering5.9%/7.6% and small sorting5.2%; the signed
+  supplement improves negative-input LLVM4.8%/14.2%. The independent15r/3w repeat
+  confirms filtering5.99%/7.44% and small sorting5.18%, with a repeated12.0%
+  QBE large-nested cost under investigation. LLVM range annotation0311796e passes18 focused checks
+  and88 Guardian checks. Root independently replays2763 actual native pairs
+  across seven policies, including140 arithmetic failures and19 budget probes;
+  200 ordinary text oracle records also pass. The actual equality checksum loses
+  six arithmetic instructions while the signed control retains its correction.
+  Annotation screening leaves equality1.2506×. An independent15r/3w repeat
+  confirms a10.0% LLVM small-equality gain and a15.5% large-search cost.
+  It stays unintegrated; actual search-code diagnosis follows timing.
 - **Deferred candidates:** bounded equality3dc repeats a3.2% LLVM small-case gain
   but costs3.5% on large search and leaves small equality above1.10. Remainder27de
   improves filter/sorting but slows negative-input LLVM probes6.9%/12.0%.
@@ -40,9 +50,10 @@ the raw evidence for every reported result.
 - **Remaining nearby targets:** small equality **1.3898×** and small integer
   sorting **1.3925×** inG4 B. The next integrated run must also reconfirm the ten
   previously passing LLVM cells.
-- **Next action:** commit the reviewed mutation archive/dashboard, finish the
-  two arithmetic candidates' actual-code checks, then screen promising candidates
-  in a small serialized timing window. Reserve the next ReleaseFast compiler
+- **Next action:** diagnose the repeated annotation LLVM search and bounded-bias
+  QBE nested costs; archive both candidates. Timing is finished and workers are
+  released. Dictionary cache publication proceeds through its final gate and
+  pinned Debug build. Both arithmetic candidates remain unintegrated. Reserve the next ReleaseFast compiler
   rebuild for a promising integrated milestone.
 
 | Backend | Required targets | Latest observed ≤1.10 | Latest observed >1.10 | Current goal confirmations |
@@ -262,13 +273,13 @@ measure QBE alongside it without treating its existing gaps as acceptance work.
 | Batch | Cases | Initial purpose | State |
 |---|---|---|---|
 | B1 | `mutate_nested`, `bytes_scan`, `string_search` | Confirm existing LLVM wins and establish regression checks | G4 confirmed6/6; stale after index-reuse integrationeaf4cda8 |
-| B2 | `string_equal`, `string_join` | Equality/ownership overhead and nearby large-input targets | G4 join/large-equality confirmations now stale; small remains1.3898×. Bounded equality3dc deferred; LLVM result-range0311796e native checks in progress |
+| B2 | `string_equal`, `string_join` | Equality/ownership overhead and nearby large-input targets | G4 join/large-equality confirmations now stale; small remains1.3898×. Bounded equality3dc deferred; LLVM result-range0311796e deferred after repeated15.5% large-search cost despite10% small-equality gain |
 | B3 | `record_reads`, `record_construct`, `record_update` | Record representation, scalar replacement and transfers | Strict/hybrid scalar-pointer lowering deferred: actual code unchanged; record targets remain open |
 | B4 | `call_direct`, `call_indirect`, `option_handle`, `result_propagate` | Calls, inlining, dispatch and return paths | `d14e26f4` speeds direct calls but retains fallback/record regressions; unintegrated |
 | B5 | `integer_math`, `float_math`, `branch_predictable`, `branch_mixed` | Scalar lowering and loop invariants | Queued |
-| B6 | `list_scan`, `list_append`, `list_filter`, `mutate_unique` | Iteration, capacity and uniqueness | Append/unique gains integrated; remainder27de deferred for negative-input cost, bounded-bias successor in progress. Index/value reuse14ffa2c0 adopted aseaf4cda8 after repeated LLVM unique gains5.2%/5.4% and unchanged allocated-code controls |
+| B6 | `list_scan`, `list_append`, `list_filter`, `mutate_unique` | Iteration, capacity and uniqueness | Append/unique gains integrated; remainder27de deferred for negative-input cost, bounded-bias successor repeats LLVM filter/sort gains but a12% QBE nested cost remains under investigation. Index/value reuse14ffa2c0 adopted aseaf4cda8 after repeated LLVM unique gains5.2%/5.4% and unchanged allocated-code controls |
 | B7 | `tagged_stack`, `mutate_shared`, `alloc_short`, `alloc_retained` | Ownership, allocation elimination and retained data | Queued |
-| B8 | `dict_lookup`, `dict_lookup_str` | Lookup/probe and key costs | [G4 static triage](../../experiments/runtime-goal110-map-audit-20261004/README.md) identifies remaining dynamic layout and cache-write work; implementation queued |
+| B8 | `dict_lookup`, `dict_lookup_str` | Lookup/probe and key costs | [G4 static triage](../../experiments/runtime-goal110-map-audit-20261004/README.md) identifies dynamic layout/cache writes. Probe-cache publication64fb7e62 passes native sanitizer suites/88 Guardian checks; pinned Debug host builds. Typed lookup remains the next hypothesis |
 | B9 | `dict_update`, `dict_update_str`, `set_dedup` | Publication, replacement and deduplication | Queued |
 | B10 | `binary_search`, `packet_decode` | Bounds, branches and scalar reads | Queued |
 | B11 | `sort_int`, `sort_records` | Comparator dispatch and scratch work | G4 large-integer-sort confirmation now stale; small remains1.3925×; record sorting remains open |
@@ -637,3 +648,30 @@ diagnostic notes and raw evidence rather than pasting build logs here.
 
 
 | 2026-10-04 09:31:30 UTC | Mutation archive1b8ab336 and bounded-bias5e97db47 reviewed | Root verifies all85 exact committed archive files,1894 raw/member bindings and1893 live origins. [Archive review](candidates/goal110-index-14ffa2c0-20261004-archive-review.json). Bounded-bias final source57 tests/88 Guardian checks pass; root checks11 source/8 log bindings and49 complete native pairs, including38 new bias pairs and11 append controls. [Source review](candidates/goal110-bounded-rem-5e97db47-20261004-source-review.json). Four LLVM-policy pairs execute throughQBE; actual LLVM ELF checks remain pending. | Preserve measured mutation gain and sourceeaf4. Bounded-bias Debug host builds; annotation0311796e actual LLVM checks run. Dictionary follow-up starts fromeaf4 in a new worktree. No new timing or goal confirmation. |
+
+
+| 2026-10-04 09:35:30 UTC | Evidence checkpointd9810f25; arithmetic native proof | Mutation archive/dashboard commit passes whole-tree88 Guardian checks; mandatory feedback committed as355509f inGuardian. Bounded-bias5e97 Debug compiler SHA46e2d49b is validated and guests build. Annotation0311796e Debug compiler SHAe29567b2 emits19 LLVM range assumptions in the real text kernel; equality checksum loses seven instructions, while a recursive signed control retains correction and checked-subtraction failure. | Actual native policy/boundary checks precede timing; no performance gain claimed from instruction count alone. Fresh dictionary treegoal110-dict-read-20261004 starts one narrow cache-field publication change, independently of typed lookup. Sourceeaf4 andLLVM O70/S10 unchanged. |
+
+
+| 2026-10-04 09:41:00 UTC | Annotation0311796e actual native replay passes | Root independently verifies2763 paired native outcomes/5526 executions across7 policies,14 ELF/sidecar identities and both compiler source bindings. Closed-form arithmetic oracles confirm2604 successes,70 overflow,70 division-by-zero,7 startup-memory,6 step-limit and6 frame-limit pairs. [Native replay](candidates/goal110-floor-result-0311796e-20261004-native-review.json). All200 diagnostic text records are ordinary oracle outcomes, not a192+6+2 mixed receipt. | Finish final guest/code bindings and prepare exploratory text timing. Bounded-bias real LLVM wide-unsigned-bias and exact-magnitude endpoint checks run separately from the12 standard pairs. Dictionary candidate changes only ordinary found-cache publication; tests pending. No new speed or confirmation. |
+
+
+| 2026-10-04 09:43:00 UTC | Annotation assembly-count correction | Precise code proof counts equality arithmetic17→11 instructions, or20→14 including loop inc/cmp/je. The earlier seven-instruction estimate is superseded by six removed arithmetic instructions. Root separately replays all200 ordinary text records with independent registry oracles and exact helper/live-guest bindings. [Text replay](candidates/goal110-floor-result-0311796e-20261004-text-review.json). | Final24guest runner is building with16 frozen foreign references. Recheck final text artifact against the diagnostic proof before timing; no speed claim yet. |
+
+
+| 2026-10-04 09:49:30 UTC | Annotation quiet screen START approved | Root verifies final24guest manifest409ddeac, pinnedDebug host, helperbindings and finaltextELF identical to reviewed diagnostic892b089c. Exactcommands4de03754 select equality/search/bytes/join/parse/format at both sizes, sixarms5r/1w then G4matched5r/1w onCPU2. Calls/reporting agents confirm actualidle. Bounded-bias commands3108dc55 and host/24guests/helpers are also validated; root replay passes18actualLLVM boundary pairs. [Bias LLVM review](candidates/goal110-bounded-rem-5e97db47-20261004-llvm-review.json). | MaintainquietHOLD through the two serial candidate screens. No optional repeat has started. No builds/tests/Guardian/commits/heavy analysis until RELEASE. Sourceeaf4 anddashboard O70/S10 remain unchanged; no new measured result yet. |
+
+
+| 2026-10-04 09:54:00 UTC | Annotation initial tradeoff; bounded-bias START | Annotation031 six-arm screen finishes09:52:06,360samples/720qualifications; matchedG4 finishes09:52:49.836796 with288 complete paired outcomes. SmallLLVM equality3.65935ns versusRust2.92597ns is1.25064×; matchedLLVM equality0.90417small/0.97886large, but largeLLVMsearch1.15704 (QBE0.99552). Other LLVM control medians≤1.00546 and QBE≤1.00297. | Keepannotationunintegrated. START bounded-bias exactcommands3108dc55, eight frozenrows then matchedG4 and signed supplement. The prepared annotation two-row15r/3w repeat follows under the samequietHOLD. No new integratedsource or targetconfirmation. |
+
+
+| 2026-10-04 10:03:00 UTC | Bounded-bias first screens complete; annotation repeat starts | Bounded5e97 six-arm session296b1b31 finishes09:55:59 with240 samples/720 qualifications; LLVM fastest ratios append2.3764/1.8540, filter2.3820/2.1649, sort1.3169/1.0000, nested1.0000/1.0000. MatchedG4 sessiondd217d10 has192 outcomes: LLVM append1.0141/.9977, filter.9409/.9236, sort.9479/.9789, nested.9962/1.0032. QBE large nested1.1252, preliminary95% interval[1.0751,1.1595]. Signed supplement2ecbdd7c ends09:57:41 with96 outcomes; negativeLLVM.95235/.85815, positive.96182/.86053; negative admission is preserved and its previous slowdown is absent. | Annotation independent two-row15r/3w starts10:02:36.509UTC using unchanged commands4de03754. KeepquietHOLD. Prepare a bounded-bias repeat of gains and QBE nested control; no adoption or goal closure from exploratory screens. Integratedsourceeaf4/dashboard O70/S10 unchanged. |
+
+
+| 2026-10-04 10:04:32 UTC | Annotation repeat confirms search blocker | Exact two-row15r/3w repeat ends10:02:49.505UTC with144 outcomes. SmallLLVM equality.900423; largeLLVMsearch1.154867. QBE.999073/1.001366. Both initial gain and cost replicate. | Keep0311796e unintegrated. Bounded-bias targeted repeat prepared ascommands0c5bd410/helper2c97f5f4: filterbothsizes, smallsort and largenested; fourarms15r/3w,288 outcomes. Rootreviews helperdiff and authorizes START under continuingquietHOLD. No newsource or goalconfirmation. |
+
+
+| 2026-10-04 10:07:58 UTC | Timing released; bounded repeat confirms gain and QBE cost | Bounded repeat6600ce5a ends10:05:11.463UTC,288 outcomes: LLVM filter.94013/.92558, smallsort.94817, largenested.99986; QBE largenested1.11993 repeats the cost. All timing jobs ended; root RELEASES allworkers10:05:30. | Root independently replays saved streams/checksums/oracles/medians/intervals and creates separate exploratory six-arm observations. Agents diagnose actualcode regressions and archive candidates; dictionary gate/Debugbuild resumes. No candidate source is adopted yet; integratedeaf4 remains O70/S10. |
+
+
+| 2026-10-04 10:08:45 UTC | Independent arithmetic timing replay and dictionary source pin | [Root replay](candidates/goal110-arithmetic-candidates-20261004-timing-review.json) verifies1008 outcomes across five distinct sessions, liveguest/helper bindings, independent checksum oracles, medians and recomputed paired intervals. Annotation repeatLLVM equality.90042[.89422,.90772], search1.15487[1.15085,1.16223]; bias filter.94013[.93768,.94342]/.92558[.92344,.92766], smallsort.94817[.94564,.95149], QBE largenested1.11993[1.09366,1.13595]. [T17 annotation observations](candidates/goal110-floor-result-0311796e-20261004-observed.json) and [T18 bias observations](candidates/goal110-bounded-rem-5e97db47-20261004-observed.json) pass artifact verification; neither can confirm targets. | Dictionary source64fb7e62 onbaseeaf4 passes88 Guardian checks and four native sanitizer suites; comment-only spec-tag correction is bound to tested bytes. Its Debughost build starts. Keep integrated dashboard unchanged while candidates remain unadopted. |

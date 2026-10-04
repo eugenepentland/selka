@@ -1,0 +1,23 @@
+{
+  "status": "pass",
+  "reviewed_utc": "2026-10-04T09:45:02.994571+00:00",
+  "actual_llvm_pairs": 18,
+  "executions": 36,
+  "counts": {
+    "base_success": 8,
+    "base_failure": 4,
+    "wide_bias": 4,
+    "exact_magnitude": 2
+  },
+  "reports": {
+    "actual-llvm-semantics.json": "ef3de9b424b697f5689811d00e1a75b360c62e152dbcff3e662c85acb544ee3e",
+    "actual-llvm-width.json": "f250f7884878f1e80e3457418710cffef46bfd7470ef72272270b34b5aaee263"
+  },
+  "script_sha256": "cb85dbeaa9de5dbdafe129ea9021f4761b8f4b9c2b67ac6304245805c9b94149",
+  "reused_oracle_sha256": "10a57d7b31386ecdfdc3de6d497f499601fae70a253abe2667bd0995d7e3a975",
+  "limitations": [
+    "Saved exact process replay; no new executions or timing.",
+    "ReleaseFast LLVM-O3/fullLTO guests built by a pinned Debug host.",
+    "Memory-refusal oracle is specific to the recorded one-MiB fixture."
+  ]
+}
