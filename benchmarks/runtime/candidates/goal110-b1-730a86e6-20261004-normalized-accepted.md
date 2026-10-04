@@ -1,0 +1,23 @@
+LLVM ≤1.10; 80 required cells. QBE: tracked, 0 required cells.
+
+Evidence `G1`; source `730a86e62b47c922dc1411d24b5868c3bd2132f3`; scope `subset`.
+Execution identity SHA256: `7eb71fec5dd0b4d7764c5eb74a9a57e05e63b4052e6e16d25012c6c3b63091c2`. Goal complete: **False**.
+
+<!-- DASHBOARD-START -->
+| Case / profile (size) | Best ns/iteration | Rust | Go | Zig Safe | Zig Fast | MyLang LLVM | MyLang QBE | State LLVM / QBE | Evidence |
+|---|---:|---:|---:|---:|---:|---:|---:|---|---|
+| mutate_nested / small (64) | 909.7296 | 1.4770 | 1.5487 | 1.5239 | 1.3798 | **1.0000** | 1.1346 | C / O | G1 |
+| mutate_nested / large (1024) | 8702.5518 | 2.5893 | 2.3812 | 2.5576 | 2.3413 | **1.0000** | 1.1070 | C / O | G1 |
+| bytes_scan / small (64) | 3.6132 | 4.9535 | 6.6721 | 7.6987 | 3.3981 | **1.0000** | 2.3594 | C / O | G1 |
+| bytes_scan / large (4096) | 88.9207 | 13.5780 | 13.9344 | 18.5810 | 8.9383 | **1.0000** | 1.0693 | C / I | G1 |
+| string_search / small (64) | 22.2408 | 2.1525 | 1.2343 | 4.5417 | 3.7611 | **1.0000** | 1.2519 | C / O | G1 |
+| string_search / large (4096) | 101.0547 | 14.4075 | 7.1893 | 33.8407 | 29.9761 | **1.0000** | 1.0212 | C / I | G1 |
+<!-- DASHBOARD-END -->
+
+| ID | Production source / sessions | Raw evidence (uncompressed SHA256) |
+|---|---|---|
+| G1 | `730a86e62b47c922dc1411d24b5868c3bd2132f3`; `c463b27d-f6d6-4fd0-84b7-086faff0d341` (15 rounds, 3 warmups), `f58b516a-fc86-49b6-b5fc-49bda2057537` (15 rounds, 3 warmups) | [report](/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-20261003/benchmarks/runtime/candidates/goal110-b1-730a86e6-20261004-b.json.gz) (`22375b630b78f3fa98e5d6df5f878efa07d2dfb257172b7e52f29e3df6867221`), [anchor](/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-20261003/benchmarks/runtime/candidates/final-730a86e6-releasefast-20261003.json.gz) (`5120ad6c5f38f3c4cf8441fa832b8e85cb8550689a3aa6e068f2be2a9d4c55a9`), [confirmation](/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-20261003/benchmarks/runtime/candidates/goal110-b1-730a86e6-20261004-a.json.gz) (`ec140a53df9f487d8e15cbbe4d1c28972f4263ab20c531ecd2677d2383fe50e1`), [checks](/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-20261003/benchmarks/runtime/candidates/goal110-b1-730a86e6-20261004-normalized-checks.json) (`961b244c6cf9c1681b9e567d78556e773216c8b79121b96ab4eef190ad2f3c00`) |
+
+C requires independent normal sessions and correctness receipts; I is inconclusive; S is stale; R reopens a previously confirmed LLVM cell.
+P is an observation awaiting confirmation; O exceeds the unrounded threshold. QBE states are informational.
+The JSON retains all five competitor intervals, self intervals, exact times, calibration, source/guest/policy hashes and host conditions.

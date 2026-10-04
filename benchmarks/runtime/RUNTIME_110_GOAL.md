@@ -8,39 +8,41 @@ the raw evidence for every reported result.
 ## Status
 
 <!-- STATUS-START -->
-- **Campaign:** active; B1 confirmed; equality and loop candidates held after regressions.
-- **Last document update:** 2026-10-04 01:59:08 UTC.
-- **Active batch:** isolated B2 join candidate `5a60ef10` and B11 numeric
-  counting-sort permutation candidate, builds/checks in progress. B3/B4 loop
-  candidate `5dc31c3a` and equality candidate `965d416c` remain unintegrated
-  after LLVM regressions; agents are investigating emitted code.
-- **Current implementation:** `perf/runtime-parity-20261003`; production source
-  `730a86e62b47c922dc1411d24b5868c3bd2132f3`.
-- **Latest complete integrated measurement:** B0, the prior campaign's final run.
+- **Campaign:** active; join integrated, optimized-build confirmation pending.
+- **Last document update:** 2026-10-04 02:28:09 UTC.
+- **Active batch:** B11 sorting screen next (`2a49da29`); revised B3/B4 loop
+  candidate `d14e26f4` has passed 20 focused checks and 216 guest checks.
+- **Current implementation:** `perf/runtime-parity-20261003`, source
+  `957f97c6d9906ef11cf344ce055dada8be8446ea`, production-equivalent to join `5a60ef10`.
+- **Latest complete integrated measurement:** B0, before the join change.
 - **Acceptance scope:** LLVM required; QBE tracked separately.
-- **New goal confirmations:** **6/80 required LLVM targets** at production `730a86e6`.
-- **LLVM states:** 6 confirmed, 1 observed within 1.10 awaiting confirmation,
-  73 above 1.10; 0 stale confirmations and 0 reopened confirmed targets.
-- **Dashboard artifact:** [B1 accepted status](candidates/goal110-dashboard-20261004-b1.json).
-- **Active operations:** all timed sessions have finished. A build interval
-  is open for join and sorting correctness checks; no timing overlaps it.
-  No experimental production changes have been integrated into the accepted
-  branch yet.
-- **Next action:** qualify and screen the isolated join/sorting candidates.
-  Diagnose the loop candidate's LLVM record-update/fallback regressions before
-  revising admission or lowering; preserve the rejected candidate evidence.
+- **Current confirmations:** **0/80** after the production change. The prior
+  six G1 confirmations remain historical evidence and need rechecking.
+- **LLVM states:** 7 observations awaiting confirmation, 71 above target,
+  2 stale confirmations, no reopened failures. Four prior confirmed text cells
+  now have passing T3 observations; the two untouched nested-mutation cells
+  retain stale G1 evidence. Results from multiple production revisions remain visible.
+- **Dashboard artifact:** [After join integration](candidates/goal110-dashboard-20261004-join.json).
+- **Active operations:** sorting and revised loop binaries are built; the next
+  quiet timing lane belongs to sorting. ReleaseFast compiler rebuild is held
+  until that screen so adopted changes can share one expensive build.
+- **Next action:** screen sorting with controls, then build and confirm the
+  integrated production revision. Equality remains open; its first candidate
+  was rejected and a separate revision is in progress.
 
-| Backend | Required targets | Latest observed ≤1.10 | Latest observed >1.10 | Goal confirmations |
+| Backend | Required targets | Latest observed ≤1.10 | Latest observed >1.10 | Current goal confirmations |
 |---|---:|---:|---:|---:|
-| MyLang LLVM | 80 | 7 | 73 | 6 |
-| MyLang QBE | 0 (80 tracked) | 2 | 78 | Not required |
+| MyLang LLVM | 80 | 9 | 71 | 0 (6 historical) |
+| MyLang QBE | 0 (80 tracked) | 3 | 77 | Not required |
 <!-- STATUS-END -->
 
 The counts above use the **fastest current configuration in each measured row**.
 They differ from the earlier campaign's counts against its frozen historical
 1.00 targets. An observed result below 1.10 is not yet a confirmed pass for this
-new goal. Six LLVM targets are confirmed at the linked production revision;
-74 remain unresolved. QBE being above 1.10 does not prevent completion.
+new goal. The six prior LLVM confirmations belong to production `730a86e6`; the
+new join implementation needs independent normal confirmation. Nine latest
+observations are within the threshold, including historical measurements.
+QBE being above 1.10 does not prevent completion.
 
 - [Live speed table](#live-speed-table)
 - [Work queue](#work-queue)
@@ -243,17 +245,17 @@ measure QBE alongside it without treating its existing gaps as acceptance work.
 
 | Batch | Cases | Initial purpose | State |
 |---|---|---|---|
-| B1 | `mutate_nested`, `bytes_scan`, `string_search` | Confirm existing LLVM wins and establish regression checks | Confirmed 6/6 at `730a86e6` (G1) |
-| B2 | `string_equal`, `string_join` | Equality/ownership overhead and nearby large-input targets | `965d416c` held: repeatable LLVM search regression; separate join candidate in progress |
+| B1 | `mutate_nested`, `bytes_scan`, `string_search` | Confirm existing LLVM wins and establish regression checks | Historically confirmed 6/6 at `730a86e6`; recheck after join integration |
+| B2 | `string_equal`, `string_join` | Equality/ownership overhead and nearby large-input targets | Join `5a60ef10` integrated, both sizes observed within target; equality open |
 | B3 | `record_reads`, `record_construct`, `record_update` | Record representation, scalar replacement and transfers | Queued |
-| B4 | `call_direct`, `call_indirect`, `option_handle`, `result_propagate` | Calls, inlining, dispatch and return paths | `5dc31c3a` held: LLVM record/fallback regressions; emitted-code diagnosis |
+| B4 | `call_direct`, `call_indirect`, `option_handle`, `result_propagate` | Calls, inlining, dispatch and return paths | `5dc31c3a` rejected; renamed-copy revision `d14e26f4` checked, timing queued |
 | B5 | `integer_math`, `float_math`, `branch_predictable`, `branch_mixed` | Scalar lowering and loop invariants | Queued |
 | B6 | `list_scan`, `list_append`, `list_filter`, `mutate_unique` | Iteration, capacity and uniqueness | Queued |
 | B7 | `tagged_stack`, `mutate_shared`, `alloc_short`, `alloc_retained` | Ownership, allocation elimination and retained data | Queued |
 | B8 | `dict_lookup`, `dict_lookup_str` | Lookup/probe and key costs | Queued |
 | B9 | `dict_update`, `dict_update_str`, `set_dedup` | Publication, replacement and deduplication | Queued |
 | B10 | `binary_search`, `packet_decode` | Bounds, branches and scalar reads | Queued |
-| B11 | `sort_int`, `sort_records` | Comparator dispatch and scratch work | Isolated counting-sort permutation candidate in progress |
+| B11 | `sort_int`, `sort_records` | Comparator dispatch and scratch work | `2a49da29` qualified; focused timing next |
 | B12 | `string_split`, `int_parse`, `int_format` | Text ownership, parsing and formatting | Queued |
 | B13 | `word_count`, `csv_aggregate`, `json_transform`, `lox_eval` | Combined application behavior and remaining library costs | Queued |
 
@@ -378,24 +380,24 @@ does not supply the new goal's confirmation protocol.
 | alloc_short / large (1024) | 3.9012 | 327.5994 | 536.1037 | 1374.7989 | **1.0000** | 19711.5691 | 26589.1038 | O / O | B0 |
 | alloc_retained / small (64) | 1292.6997 | 1.0697 | 1.4853 | 1.0303 | **1.0000** | 2.3540 | 3.5644 | O / O | B0 |
 | alloc_retained / large (1024) | 20710.2684 | 1.0504 | 1.2628 | 1.0366 | **1.0000** | 2.2667 | 3.3646 | O / O | B0 |
-| mutate_nested / small (64) | 909.7296 | 1.4770 | 1.5487 | 1.5239 | 1.3798 | **1.0000** | 1.1346 | C / O | G1 |
-| mutate_nested / large (1024) | 8702.5518 | 2.5893 | 2.3812 | 2.5576 | 2.3413 | **1.0000** | 1.1070 | C / O | G1 |
+| mutate_nested / small (64) | 909.7296 | 1.4770 | 1.5487 | 1.5239 | 1.3798 | **1.0000** | 1.1346 | S / O | G1 |
+| mutate_nested / large (1024) | 8702.5518 | 2.5893 | 2.3812 | 2.5576 | 2.3413 | **1.0000** | 1.1070 | S / O | G1 |
 | sort_int / small (64) | 171.4333 | 1.3346 | 6.3726 | 1.6065 | **1.0000** | 1.6126 | 2.8249 | O / O | B0 |
 | sort_int / large (4096) | 44258.7276 | 1.4306 | 5.3712 | 1.4788 | 1.0267 | **1.0000** | 1.2139 | P / O | B0 |
 | sort_records / small (64) | 571.1779 | 1.1716 | 12.9634 | 1.4071 | **1.0000** | 2.1426 | 2.8365 | O / O | B0 |
 | sort_records / large (4096) | 52264.4234 | **1.0000** | 24.5636 | 2.2368 | 1.7803 | 1.1932 | 1.5272 | O / O | B0 |
 | lox_eval / small (16) | 738.1632 | **1.0000** | 1.1383 | 2.6921 | 2.6291 | 3.6607 | 4.0643 | O / O | B0 |
 | lox_eval / large (256) | 10981.4215 | **1.0000** | 1.1776 | 2.7947 | 2.7405 | 3.6183 | 3.9186 | O / O | B0 |
-| bytes_scan / small (64) | 3.6132 | 4.9535 | 6.6721 | 7.6987 | 3.3981 | **1.0000** | 2.3594 | C / O | G1 |
-| bytes_scan / large (4096) | 88.9207 | 13.5780 | 13.9344 | 18.5810 | 8.9383 | **1.0000** | 1.0693 | C / I | G1 |
-| string_equal / small (64) | 3.0562 | **1.0000** | 1.5325 | 1.3735 | 1.2617 | 1.3640 | 7.2900 | O / O | B0 |
-| string_equal / large (4096) | 30.9760 | **1.0000** | 1.2294 | 2.1009 | 1.6346 | 1.1642 | 23.0765 | O / O | B0 |
-| string_search / small (64) | 22.2408 | 2.1525 | 1.2343 | 4.5417 | 3.7611 | **1.0000** | 1.2519 | C / O | G1 |
-| string_search / large (4096) | 101.0547 | 14.4075 | 7.1893 | 33.8407 | 29.9761 | **1.0000** | 1.0212 | C / I | G1 |
+| bytes_scan / small (64) | 3.4672 | 5.0991 | 6.8245 | 8.1435 | 3.4708 | **1.0000** | 2.3453 | P / O | T3 |
+| bytes_scan / large (4096) | 75.6007 | 14.0428 | 13.4011 | 18.8035 | 9.2021 | **1.0000** | 1.0412 | P / P | T3 |
+| string_equal / small (64) | 2.9688 | **1.0000** | 1.5119 | 1.3398 | 1.2732 | 1.3576 | 7.3130 | O / O | T3 |
+| string_equal / large (4096) | 30.0438 | **1.0000** | 1.2331 | 2.1291 | 1.6502 | 1.1718 | 22.8477 | O / O | T3 |
+| string_search / small (64) | 19.4227 | 2.1785 | 1.2610 | 4.5741 | 3.8087 | **1.0000** | 1.2565 | P / O | T3 |
+| string_search / large (4096) | 87.0177 | 14.7777 | 7.3699 | 33.8576 | 29.9673 | **1.0000** | 1.0584 | P / P | T3 |
 | string_split / small (64) | 557.5921 | **1.0000** | 1.8763 | 1.8560 | 1.7269 | 6.2247 | 8.1218 | O / O | B0 |
 | string_split / large (4096) | 28435.3492 | **1.0000** | 2.3570 | 2.1980 | 2.0666 | 7.6152 | 9.7548 | O / O | B0 |
-| string_join / small (64) | 220.9090 | **1.0000** | 1.8606 | 1.4400 | 1.2367 | 1.8723 | 1.5513 | O / O | B0 |
-| string_join / large (4096) | 13591.0305 | **1.0000** | 1.9143 | 1.3440 | 1.2312 | 1.6706 | 1.1320 | O / O | B0 |
+| string_join / small (64) | 216.4277 | **1.0000** | 1.8303 | 1.4205 | 1.2220 | 1.0520 | 1.3984 | P / O | T3 |
+| string_join / large (4096) | 12641.8773 | 1.0560 | 2.0088 | 1.3856 | 1.2960 | **1.0000** | 1.0594 | P / P | T3 |
 | int_parse / small (64) | 4.4765 | **1.0000** | 5.4265 | 1.2862 | 1.2858 | 2.3003 | 4.1124 | O / O | B0 |
 | int_parse / large (4096) | 5.1722 | **1.0000** | 5.3121 | 1.3142 | 1.2250 | 2.2325 | 3.8033 | O / O | B0 |
 | int_format / small (64) | 14.6652 | **1.0000** | 1.1260 | 2.8091 | 2.2430 | 4.1006 | 5.8296 | O / O | B0 |
@@ -418,6 +420,8 @@ does not supply the new goal's confirmation protocol.
 
 | T1 | Unintegrated text source `965d416c`; 5-round screen and 15-round paired control | [Investigation and archives](../../experiments/runtime-goal110-text-20261004/README.md), [quiet paired report](../../experiments/runtime-goal110-text-20261004/equality-quiet15-before-after.json.gz) | Equality improves; large LLVM search and equal64 helper regressions prevent adoption. Matched-host controls retained. No goal confirmations. |
 | T2 | Unintegrated loop source `5dc31c3a`; paired five-round selected and fallback screens | [Investigation and archives](../../experiments/runtime-goal110-calls-20261004/README.md), [independent correctness review](../../experiments/runtime-goal110-subset-independent-review-20261004/REVIEW.md) | Rejected for integration: record/fallback LLVM regressions despite QBE gains. No goal confirmations. |
+
+| T3 | Join `5a60ef10`, integrated as `957f97c6`; Debug host, RF guests; 5 rounds/1 warmup | [Raw screen](../../experiments/runtime-goal110-join-20261004/join-screen.json.gz), [observed analysis](candidates/goal110-join-5a60ef10-20261004-observed.json), [paired controls](../../experiments/runtime-goal110-join-20261004/join-before-after.json.gz), [review](../../experiments/runtime-goal110-join-20261004/README.md) | Join small1.05204/large1.000; no material paired control regression. Exploratory observations, no confirmations. |
 
 B0 comparison JSON (uncompressed) SHA256:
 `dbb1906bcac50cb015171cce52ff68a0297f728db81e9ec4927f4f158117d473`.
@@ -454,6 +458,12 @@ Append entries; do not remove failed experiments or historical outcomes.
 | 2026-10-04 01:53:10 UTC | Isolated `965d416c` / quiet T1 repeat, archive `5777c59a` | Fifteen paired rounds confirm LLVM equality after/before0.9105 (small) and0.3545 (large), but large search1.1589; QBE search0.9930. Checksums pass. No cgroup throttling was recorded; thermal counters still advanced. A search-helper alignment change is observed but not established as the cause. | Keep equality unintegrated. Preserve raw results and investigate against the existing Debug730 control; move timing lane to the loop screen. Join and numeric-sort permutation optimizations remain isolated. |
 
 | 2026-10-04 01:59:08 UTC | Isolated `5dc31c3a` / selected screen + fallback sentinel | Five-round paired LLVM after/before: direct calls0.9099/0.9263, option0.9547/1.0385, result0.9995/1.0377, record update4.0479/4.2583 (small/large). Excluded branch sentinel1.3661/1.6405. QBE improves in all ten cells. Root independently replayed240 outcomes against the compute oracle and recomputed medians; all pass. | Reject this candidate for integration. Correctness and fewer dispatches do not establish LLVM profitability. Agent inspects actual record/fallback loops; builds open for separate join/sorting work. Raw [selected screen](../../experiments/runtime-goal110-calls-20261004/selected-screen.json.gz) and [sentinel](../../experiments/runtime-goal110-calls-20261004/fallback-sentinel.json.gz). |
+
+| 2026-10-04 02:06:41 UTC | Isolated loop diagnosis; join `5a60ef10`; sort `2a49da29` | LLVM translator replay shows selected record addresses lose alias classes when loop copying changes one-definition temporary names to multiple definitions. Safe scoped renaming is in progress. Join has passed native sanitizers and built24 benchmark executables; sort passed32 native suites,46,234 permutations and6 host-failure probes. | No new timing or acceptance yet. Sort compiler build finishes before the next quiet join screen. The integrated branch retains production730a86e6; rejected experiment archives are committed in `b4dc3a15`. |
+
+| 2026-10-04 02:17:02 UTC | Join `5a60ef10` / T3 exploratory, archive `b1021e2b` | Six-arm five-round screen: LLVM join small1.05204, large1.000. Paired Debug730→Debug5a LLVM after/before0.56298/0.55530; QBE0.94280/0.90415. Six equality/search/bytes controls have no material regression. Root replayed192 paired outcomes against the independent oracle and verified all4 live hashes; live expanded verification passed. | Promising, not confirmed. Reporting anchor comparison exposed unnormalized cache/output directory paths; build flags/ISA/reference bytes remain unchanged, and a focused helper fix is in progress. Screen sorting before the next costly RF build; retain all raw results in the [join investigation](../../experiments/runtime-goal110-join-20261004/README.md). |
+
+| 2026-10-04 02:28:09 UTC | Integrated `957f97c6` / T3 | Adopted only the validated join optimization. Root independently passed18 reporting tests, live source/artifact/anchor verification,192 paired outcomes and4 live hashes. Fixed cache-path normalization regenerated B0/G1 analyses under a new checks identity without changing any raw samples or prior receipts. Dashboard now has9 latest observations within1.10 but0 current confirmations after the production change. | Sort screen next; then one RF build and normal independent confirmation. Historical6 G1 confirmations remain visible; no goal completion claimed. |
 
 For future entries, include the affected cases/sizes/backends and before → after
 ratios, or say explicitly that the step produced no timing result. Link long

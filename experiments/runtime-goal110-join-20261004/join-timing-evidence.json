@@ -1,0 +1,34 @@
+{
+  "candidate_source": "5a60ef1039aca32657ef5877a464eb8a81d6c115",
+  "before_source": "730a86e62b47c922dc1411d24b5868c3bd2132f3",
+  "before_compiler_receipt": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-harness-20261003/.mylang-cache/runtime-candidate-730a86e6-debug/compiler-receipt.json",
+  "before_compiler_receipt_sha256": "cf46c10232bc695411dfb27ca73ec0c45901439e29e555c00425eb12a87f6e41",
+  "status": "promising exploratory screen; ReleaseFast compiler and normal independent confirmation pending",
+  "host_policy": "Both paired compiler hostsDebug; guestLLVM O3/fullLTO andQBE",
+  "evidence": [
+    {
+      "raw": "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/.mylang-cache/goal110-join/join-screen.json",
+      "raw_sha256": "366c33f9783fc0036b32f206f17bc5a4b4c4da3b3cd575c534b468daa270fa4e",
+      "retained": "experiments/runtime-goal110-join-20261004/join-screen.json.gz",
+      "retained_sha256": "cd89c6b0568cd730ee88561aca298de0d9604ee7a5db0160aca94920fefe88f3"
+    },
+    {
+      "raw": "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/.mylang-cache/goal110-join/join-before-after.json",
+      "raw_sha256": "e395f920fe5fc8a5d9dd4ed0999485d1ebfc6f0871ca8bd4c4b9d469214670fd",
+      "retained": "experiments/runtime-goal110-join-20261004/join-before-after.json.gz",
+      "retained_sha256": "e85cafd2ba20bfdff3f01951499b425454ed7c96c94900f781c4fa28d6def80f"
+    },
+    {
+      "raw": "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/.mylang-cache/goal110-join/join-screen.log",
+      "raw_sha256": "cfc8e1413bdb5acbf57fe260ddbe74b21cfebf87a305a11e243b51dbbe52d091",
+      "retained": "experiments/runtime-goal110-join-20261004/join-screen.log.gz",
+      "retained_sha256": "0fd2db7f1b89d7f9c7e9d67174659502fa2716aa662beb8a2608e28003ba7559"
+    },
+    {
+      "raw": "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/.mylang-cache/goal110-join/join-before-after.log",
+      "raw_sha256": "dfcab879706d1e615a7149c40ad1d5c8ef36821cda27474841b2878131132584",
+      "retained": "experiments/runtime-goal110-join-20261004/join-before-after.log.gz",
+      "retained_sha256": "8cffec1823b8551230193ab8137735292e503d29b979375bc0e0d840233d2008"
+    }
+  ]
+}

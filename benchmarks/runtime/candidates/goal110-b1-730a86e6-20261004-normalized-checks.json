@@ -1,0 +1,61 @@
+{
+  "schema": "mylang-runtime-goal110-checks-v1",
+  "status": "pass",
+  "reviewed_utc": "2026-10-04T02:24:06.437977+00:00",
+  "execution_identity_sha256": "7eb71fec5dd0b4d7764c5eb74a9a57e05e63b4052e6e16d25012c6c3b63091c2",
+  "coverage": [
+    "mutate_nested",
+    "bytes_scan",
+    "string_search"
+  ],
+  "checks": [
+    {
+      "name": "fresh session A qualification",
+      "kind": "qualification",
+      "status": "pass",
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-20261003/benchmarks/runtime/candidates/goal110-b1-730a86e6-20261004-a.json.gz",
+      "sha256": "a13202e7cbd65979b3d9119d5f73fcea9ee0e30425507f856dba697108845714"
+    },
+    {
+      "name": "fresh session B qualification",
+      "kind": "qualification",
+      "status": "pass",
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-20261003/benchmarks/runtime/candidates/goal110-b1-730a86e6-20261004-b.json.gz",
+      "sha256": "f56fe5349d299195afc704b33f87a7cdcfc1c3f3a40a07654619ace469944382"
+    },
+    {
+      "name": "same-artifact RF nearby-input holdouts",
+      "kind": "holdout",
+      "status": "pass",
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-20261003/benchmarks/runtime/candidates/final-730a86e6-holdouts-20261003.json.gz",
+      "sha256": "3a92b1c4f755e46020f6142f8054e58f37ccf95593554273c64bc9de3b793848"
+    },
+    {
+      "name": "unchanged-production repository validation",
+      "kind": "repository",
+      "status": "pass",
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-20261003/benchmarks/runtime/candidates/validation/730a86e6-validation.json",
+      "sha256": "5e5bd6324c090fa815e3f7b9be3ef57138ca315f3fc77ce382005b8910eadec5"
+    }
+  ],
+  "review_receipt": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-20261003/benchmarks/runtime/candidates/goal110-b1-730a86e6-20261004-correctness-review.json",
+    "sha256": "80a49dd4c18f78c2cc30d81d1af67c71424dc999a85ee3816e5bec2515aa5966"
+  },
+  "reviewed_outcomes": [
+    "Both fresh expanded reports verified with live artifact checks, including 720 checksum qualifications each.",
+    "All 516 prior RF holdout cells replayed against independent oracles; exact identity and guest hashes match both fresh timing sessions, and live manifest verification passed.",
+    "Current production bytes match source730a86e6; existing source-matched full semantic gate logs and LLVM corpus/trace/boundary results were reviewed."
+  ],
+  "limitations": [
+    "Coordinator-reviewed attestation, not a newly executed whole-repository gate or holdout run.",
+    "Whole-repository semantic checks used Debug host at the same production source; timing qualifications and exact-artifact holdouts used ReleaseFast.",
+    "Prior four-shard memory diagnostic remains recorded; successful default12-shard gate had no memory diagnostic."
+  ],
+  "normalization_review": {
+    "reporting_revision": "59e21574",
+    "previous_receipt": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-20261003/benchmarks/runtime/candidates/goal110-b1-730a86e6-20261004-checks.json",
+    "previous_receipt_sha256": "3acb3592f2b6b7229af79b7014e64f89af56e8793437b74073e8a5ea173c878d",
+    "changes": "Normalize only build cache/output path operands and wrapper location; production, compiler, guests, build flags, ISA, checks and raw measured evidence unchanged."
+  }
+}

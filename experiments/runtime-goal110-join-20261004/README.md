@@ -42,3 +42,43 @@ TMPDIR="$PWD/.mylang-cache/goal110-join/tmp" scripts/build-slot.sh build python3
 The coordinator owns serialized timing and acceptance; no timing claim is made
 by this implementation commit. join-before-helper.asm records the original
 source-730a86e6 LLVM helper for comparison with the eventual guest.
+
+The official Debug compiler build and all 24 expanded ReleaseFast guests passed.
+`join-validation-receipt.json` binds source, test/log hashes, actual compiler
+receipt, guest manifest, and unchanged text fixture/contract hashes. The LLVM
+helper uses a multiply/overflow test for separator sizing (no variable divide),
+and emits bounded inline loads/stores on the short paths; the remaining memcpy
+calls are guarded by sizes above 16. Both text guests pass 120 exact independent
+checksums, six runtime-control failures and two artifact/backend records.
+Finite step/frame controls refuse with their existing no-accounting errors,
+and MYLANG_MEMORY_LIMIT=1 triggers R_MEMORY_BUDGET.
+
+The first compiler attempt refused a copied local Zig configure cache belonging
+to the equality worktree; an empty private local cache resolved that without
+changing any checks. The initial guest probe included SIZE=1, outside the frozen
+SIZE>=2 contract. It refused with exit2, and valid nearby SIZE=2 replaced that
+probe. Both rejected attempts are retained; neither changed benchmark inputs
+or implementation. No timing or acceptance is claimed by this receipt.
+
+The exploratory six-arm screen passes 720 exact qualifications and records
+240 samples (four cases, both sizes, five rounds and one warmup on CPU 2).
+LLVM/current-fastest join is 1.05204 small (227.69 ns versus Rust 216.43 ns)
+and 1.00000 large (LLVM 12641.88 ns is fastest). The same-session paired
+comparison uses verified source-730a86e6 Debug-host guests before and
+source-5a60ef10 Debug-host guests after, preserving identical calibration:
+LLVM join after/before is 0.56298 small and 0.55530 large; QBE is 0.94280
+and 0.90415. All equality/search/bytes controls at both sizes are within
+0.994–1.006 of their paired before arm. Per-sample host/cgroup snapshots
+and all observations are retained. This is exploratory evidence; official
+ReleaseFast compiler policy and normal confirmation remain pending.
+
+Pieces above 16 bytes retain the same bulk memcpy after one size branch.
+The native suite covers those boundaries through 257-byte pieces and 65-byte
+separators, while metadata work decreases. No special long-piece performance
+claim is made. Equality is unchanged and remains above the 1.10 goal in this
+screen (LLVM/current-fastest 1.3576 small and 1.1718 large).
+
+`join-timing-evidence.json` binds each compressed report to its raw report
+hash and distinguishes the paired source-730 baseline from the runner's
+supplemental original frozen winner. No acceptance claim or production
+integration is made by this evidence commit.
