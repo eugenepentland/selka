@@ -9,19 +9,23 @@ the raw evidence for every reported result.
 
 <!-- STATUS-START -->
 - **Campaign:** active. LLVM must reach ≤1.10×; QBE is tracked separately.
-- **Last document update:** 2026-10-04 11:02:22 UTC.
+- **Last document update:** 2026-10-04 11:55:15 UTC.
 - **Integrated source:** `1a3980631e79bc65f048acd063d7250800f01901` on
   `perf/runtime-parity-20261003`. Checked-index/value reuse, LLVM-only bounded
   remainder and reduced dictionary probe writes are integrated. All 88 Guardian
-  checks pass; the combined compiler/guest validation is underway.
-- **LLVM status:** **70 open, ten stale, zero current confirmations**.
-  The ten previously confirmed G4 cells need reconfirmation after integration;
-  their last measured ratio remains 1.0000×. No new target is closed.
+  checks pass. The combined compiler, 24 optimized guests, focused tests and
+  720 qualification/516 holdout checks pass. The 28-row regression screen
+  preserves the main gains with measured LLVM costs of at most 3.4%; full-suite
+  performance and goal confirmation remain pending.
+- **LLVM status:** **70 open, seven stale, three provisional, zero current confirmations**.
+  The fresh screen observes large integer sorting and both nested-mutation sizes
+  at 1.0000×. The seven remaining historical confirmations need remeasurement.
+  No new target is closed.
 - **Latest full-suite measurement:** B0, before this campaign's changes.
   The [live speed table](#live-speed-table) retains each row's evidence and date;
-  the [dashboard artifact](candidates/goal110-dashboard-20261004-remainder-dictionary.json)
+  the [dashboard artifact](candidates/goal110-dashboard-20261004-integrated-screen.json)
   contains the current integrated state.
-- **Latest integrated gain:** repeated LLVM unique-mutation improvements of
+- **Previously measured index gain:** repeated LLVM unique-mutation improvements of
   5.2%/5.4% and shared-mutation improvements of 5.1%/1.1% (small/large).
   Unique mutation still measures 1.3576×/1.4381× the fastest runtime;
   shared mutation measures 10.7449×/3.3703×. Other allocated control code is
@@ -32,7 +36,7 @@ the raw evidence for every reported result.
   match G4, removing the earlier candidate’s 12% nested-mutation cost.
   The source passes 58 focused tests; independent source/image/outcome reviews
   and fresh 720 qualification/516 holdout outcomes pass. The combined revision
-  still needs its own checks and measurements.
+  passes its checks; additional LLVM compute/legacy code changes need timing.
 - **Text range facts:** candidate `0311796e` repeats a 10% small-equality gain,
   but equality remains about 1.25× the fastest runtime and large search slows
   15.5%. It remains unintegrated. A diagnostic changing placement while
@@ -49,28 +53,35 @@ the raw evidence for every reported result.
   about 1%; LLVM search/nested controls stay stable. The eight-row 15r/3w
   repeat confirms a 3.5% small integer lookup gain and 1.8%/1.4% string lookup
   gains, with 1.4%/0.9% string update costs. These costs are accepted for the
-  lookup improvement. This change is now integrated; combined checks are pending.
-- **Current activity:** build and validate the combined revision in a fresh
-  worktree; compare its runtime images with the accepted controls before
-  selecting a small timing batch. Archive the text placement diagnostic and
-  investigate general loop alignment. Audit typed dictionary lookups and
-  remaining compute range/dispatch costs. No new target is closed.
+  lookup improvement. This change is now integrated; combined correctness checks and the 28-row regression screen pass.
+- **Current activity:** the combined 14-case/two-size screen and matched
+  comparison are complete. Independent replay verifies 672 matched outcomes,
+  artifact identities, plans, checksums and intervals. LLVM filtering improves
+  6.9%/7.3%, small sorting 5.9%, and direct calls 8.3%/9.7%; measured arithmetic
+  and small shared-mutation costs of 1–3.4% are accepted for these gains.
+  The live table includes all 28 fresh six-configuration rows. Typed
+  integer lookup `a2dfdfa9` passes independent replay of 368 native language
+  pairs, including exact errors, snapshots and accounting; its benchmark guests
+  are building. General loop alignment `5818cee8` passes independent replay of
+  2,763 native pairs, 200 text checks and 516 holdouts; all four QBE runtime
+  images match the control. LLVM code-size/alignment review and screen planning
+  continue. Neither new candidate has been timed or integrated.
 - **Deferred experiments:** bounded equality `3dcbe723` leaves equality above
   target and costs large search; nonnegative remainder `27de73d3` slows signed
   inputs. Their evidence is retained. Neither is integrated.
 
 | Backend | Required targets | Latest observed ≤1.10 | Latest observed >1.10 | Current goal confirmations |
 |---|---:|---:|---:|---:|
-| MyLang LLVM | 80 | 10 | 70 | 0; ten historical confirmations stale |
+| MyLang LLVM | 80 | 10 | 70 | 0; seven stale, three provisional |
 | MyLang QBE | 0 (80 tracked) | 3 | 77 | 0; three historical confirmations stale |
 <!-- STATUS-END -->
 
 The counts above use the **fastest current configuration in each measured row**.
-They differ from the earlier campaign's frozen historical 1.00 targets. G4
-reconfirms the eight historical G2 cells and adds large equality and large integer
-sorting on the integrated source. Both independent15r/3w sessions cover12 rows;
-small equality and small integer sorting remain open. The other68 rows retain
-older observations. QBE being above1.10 does not prevent completion.
+They differ from the earlier campaign's frozen historical 1.00 targets. The
+28-row integrated screen replaces earlier observations for those cells; the
+remaining rows retain their dated evidence. Three required cells are currently
+observed fastest but await normal independent confirmation. Seven historical G4
+confirmations are stale. QBE being above 1.10 does not prevent completion.
 
 - [Live speed table](#live-speed-table)
 - [Work queue](#work-queue)
@@ -358,18 +369,18 @@ does not supply the new goal's confirmation protocol.
 <!-- DASHBOARD-START -->
 | Case / profile (size) | Best ns/iteration | Rust | Go | Zig Safe | Zig Fast | MyLang LLVM | MyLang QBE | State LLVM / QBE | Evidence |
 |---|---:|---:|---:|---:|---:|---:|---:|---|---|
-| record_reads / small (64) | 3.8071 | **1.0000** | 1.2034 | 1.3815 | 1.2844 | 1.4038 | 2.9913 | O / O | T16-index-screen |
-| record_reads / large (4096) | 3.8857 | **1.0000** | 1.2041 | 1.4121 | 1.2350 | 1.4356 | 4.0160 | O / O | T16-index-screen |
-| tagged_stack / small (64) | 5.6965 | **1.0000** | 1.0531 | 1.8438 | 1.8624 | 2.9293 | 3.7731 | O / O | T13 |
-| tagged_stack / large (4096) | 5.7073 | **1.0000** | 1.0523 | 1.8383 | 1.8592 | 2.9234 | 3.7499 | O / O | T13 |
-| mutate_unique / small (64) | 2.9026 | **1.0000** | 1.1507 | 1.2895 | 1.2372 | 1.3576 | 6.7536 | O / O | T16-index-screen |
-| mutate_unique / large (1024) | 2.9017 | **1.0000** | 1.1506 | 1.2876 | 1.2364 | 1.4381 | 6.7739 | O / O | T16-index-screen |
-| mutate_shared / small (64) | 9.7464 | 1.0487 | 5.5117 | 1.5753 | **1.0000** | 10.7449 | 16.0660 | O / O | T16-index-screen |
-| mutate_shared / large (1024) | 65.1761 | **1.0000** | 8.9154 | 2.2502 | 1.7374 | 3.3703 | 4.1422 | O / O | T16-index-screen |
-| integer_math / small (64) | 105.7685 | **1.0000** | 1.3640 | 1.3398 | 1.1877 | 1.8197 | 5.0610 | O / O | B0 |
-| integer_math / large (4096) | 6392.6711 | **1.0000** | 1.3269 | 1.3768 | 1.2743 | 1.8377 | 5.2206 | O / O | B0 |
-| float_math / small (64) | 91.4178 | 1.5745 | 1.5169 | 1.5610 | **1.0000** | 2.5058 | 6.5162 | O / O | B0 |
-| float_math / large (4096) | 5916.6681 | 1.5073 | 1.4176 | 1.3404 | **1.0000** | 2.5444 | 6.5156 | O / O | B0 |
+| record_reads / small (64) | 3.7877 | **1.0000** | 1.2019 | 1.3863 | 1.2845 | 1.4058 | 3.0336 | O / O | T23 |
+| record_reads / large (4096) | 3.8772 | **1.0000** | 1.2158 | 1.3819 | 1.2270 | 1.4536 | 5.3357 | O / O | T23 |
+| tagged_stack / small (64) | 5.6853 | **1.0000** | 1.0509 | 1.8421 | 1.8684 | 2.5140 | 3.7534 | O / O | T23 |
+| tagged_stack / large (4096) | 5.6855 | **1.0000** | 1.0550 | 1.8432 | 1.8596 | 2.5225 | 3.7416 | O / O | T23 |
+| mutate_unique / small (64) | 2.9043 | **1.0000** | 1.1559 | 1.2861 | 1.2303 | 1.3552 | 6.9106 | O / O | T23 |
+| mutate_unique / large (1024) | 2.9338 | **1.0000** | 1.1361 | 1.2706 | 1.2207 | 1.3425 | 6.8547 | O / O | T23 |
+| mutate_shared / small (64) | 9.9566 | 1.0419 | 5.4084 | 1.5597 | **1.0000** | 11.0573 | 15.9027 | O / O | T23 |
+| mutate_shared / large (1024) | 65.8456 | **1.0000** | 8.7702 | 2.2172 | 1.7165 | 3.3511 | 4.1241 | O / O | T23 |
+| integer_math / small (64) | 87.6222 | **1.0000** | 1.3475 | 1.3396 | 1.1951 | 1.8522 | 4.7356 | O / O | T23 |
+| integer_math / large (4096) | 5116.3262 | **1.0000** | 1.3754 | 1.3663 | 1.2326 | 1.9323 | 5.0436 | O / O | T23 |
+| float_math / small (64) | 69.5057 | 1.5220 | 1.4749 | 1.4627 | **1.0000** | 2.6101 | 6.6248 | O / O | T23 |
+| float_math / large (4096) | 4032.8056 | 1.5643 | 1.5243 | 1.4760 | **1.0000** | 2.7541 | 7.1190 | O / O | T23 |
 | branch_predictable / small (64) | 60.8996 | 1.0064 | 1.9126 | 2.1806 | **1.0000** | 2.1627 | 6.7382 | O / O | B0 |
 | branch_predictable / large (4096) | 3857.2533 | **1.0000** | 2.0636 | 2.3532 | 1.0083 | 2.1880 | 6.9528 | O / O | B0 |
 | branch_mixed / small (64) | 80.8896 | 1.0122 | 1.4726 | 1.7674 | **1.0000** | 1.4963 | 5.7080 | O / O | B0 |
@@ -378,8 +389,8 @@ does not supply the new goal's confirmation protocol.
 | record_construct / large (4096) | 8032.3910 | **1.0000** | 1.4712 | 1.5283 | 1.3087 | 1.8130 | 9.9099 | O / O | B0 |
 | record_update / small (64) | 135.6380 | **1.0000** | 1.3243 | 1.6213 | 1.2125 | 1.8238 | 12.6456 | O / O | B0 |
 | record_update / large (4096) | 7810.9254 | **1.0000** | 1.4069 | 1.6395 | 1.3422 | 2.0557 | 14.0277 | O / O | B0 |
-| call_direct / small (64) | 53.5971 | **1.0000** | 1.4886 | 1.4581 | 1.1261 | 1.6899 | 18.3277 | O / O | B0 |
-| call_direct / large (4096) | 2328.1370 | **1.0000** | 1.7183 | 1.5253 | 1.0437 | 2.1965 | 27.0024 | O / O | B0 |
+| call_direct / small (64) | 43.0422 | **1.0000** | 1.4509 | 1.4092 | 1.0792 | 1.7664 | 17.8754 | O / O | T23 |
+| call_direct / large (4096) | 1872.4606 | 1.0029 | 1.6970 | 1.5042 | **1.0000** | 2.2573 | 25.9222 | O / O | T23 |
 | call_indirect / small (64) | 119.4754 | 1.0756 | 1.3121 | 1.4906 | **1.0000** | 1.3423 | 8.8352 | O / O | B0 |
 | call_indirect / large (4096) | 6998.9496 | 1.1581 | 1.3453 | 1.5799 | **1.0000** | 1.3756 | 9.6028 | O / O | B0 |
 | option_handle / small (64) | 50.9477 | **1.0000** | 2.2121 | 2.3130 | 1.7541 | 2.2282 | 21.0979 | O / O | B0 |
@@ -392,28 +403,28 @@ does not supply the new goal's confirmation protocol.
 | packet_decode / large (256) | 660.8722 | 1.2066 | 3.0576 | 1.9560 | **1.0000** | 2.2540 | 11.4511 | O / O | B0 |
 | list_scan / small (64) | 49.0371 | **1.0000** | 1.2722 | 1.8459 | 1.3498 | 2.0643 | 5.0333 | O / O | B0 |
 | list_scan / large (4096) | 3380.0797 | **1.0000** | 1.2127 | 1.6581 | 1.3890 | 1.5361 | 3.6315 | O / O | B0 |
-| list_append / small (64) | 112.7540 | 1.3635 | 1.9205 | 2.1700 | **1.0000** | 2.3878 | 4.0291 | O / O | T12 |
-| list_append / large (4096) | 5316.1692 | 1.0883 | 1.9989 | 2.1341 | **1.0000** | 1.8502 | 3.7854 | O / O | T12 |
-| list_filter / small (64) | 139.3599 | 1.0775 | 1.9520 | 1.4605 | **1.0000** | 2.5734 | 4.5527 | O / O | T12 |
-| list_filter / large (4096) | 5380.9056 | **1.0000** | 1.9535 | 1.8042 | 1.3147 | 2.3925 | 5.2128 | O / O | T12 |
-| dict_lookup / small (64) | 300.9516 | 2.4699 | 1.7785 | 2.0004 | **1.0000** | 1.9397 | 3.2588 | O / O | B0 |
-| dict_lookup / large (4096) | 33803.0743 | 1.3746 | **1.0000** | 1.7895 | 1.3927 | 1.7863 | 2.6548 | O / O | B0 |
-| dict_lookup_str / small (64) | 467.1945 | 2.2418 | 1.4048 | 1.2997 | **1.0000** | 1.4698 | 2.2298 | O / O | B0 |
-| dict_lookup_str / large (4096) | 48823.4819 | 1.4964 | **1.0000** | 1.5235 | 1.2243 | 1.6699 | 2.3235 | O / O | B0 |
+| list_append / small (64) | 112.2182 | 1.3628 | 1.9333 | 2.1863 | **1.0000** | 2.3995 | 4.0635 | O / O | T23 |
+| list_append / large (4096) | 5345.9445 | 1.0907 | 1.9814 | 2.1433 | **1.0000** | 1.8588 | 3.7341 | O / O | T23 |
+| list_filter / small (64) | 139.1761 | 1.0770 | 1.9613 | 1.4703 | **1.0000** | 2.3556 | 4.5698 | O / O | T23 |
+| list_filter / large (4096) | 5397.4366 | **1.0000** | 1.9264 | 1.8166 | 1.3058 | 2.1953 | 5.1807 | O / O | T23 |
+| dict_lookup / small (64) | 242.2439 | 2.5270 | 1.7406 | 1.9302 | **1.0000** | 1.8093 | 2.6274 | O / O | T23 |
+| dict_lookup / large (4096) | 28710.4867 | 1.3829 | **1.0000** | 1.7417 | 1.3986 | 1.7195 | 2.2188 | O / O | T23 |
+| dict_lookup_str / small (64) | 376.3802 | 2.2426 | 1.3774 | 1.2809 | **1.0000** | 1.4061 | 2.1836 | O / O | T23 |
+| dict_lookup_str / large (4096) | 39638.9637 | 1.4502 | **1.0000** | 1.5207 | 1.2190 | 1.6267 | 2.1550 | O / O | T23 |
 | dict_update / small (64) | 2901.9315 | 2.4568 | 3.3928 | 2.0251 | **1.0000** | 5.0071 | 6.7677 | O / O | B0 |
 | dict_update / large (4096) | 517545.3553 | 1.0873 | 1.1729 | 1.3933 | **1.0000** | 2.2007 | 2.7962 | O / O | B0 |
-| dict_update_str / small (64) | 5815.2123 | 2.7412 | 1.9978 | 1.3210 | **1.0000** | 2.9788 | 3.8135 | O / O | B0 |
-| dict_update_str / large (4096) | 813334.5833 | 1.5250 | **1.0000** | 1.2508 | 1.0737 | 1.7264 | 2.0366 | O / O | B0 |
+| dict_update_str / small (64) | 4722.3498 | 2.8825 | 1.9687 | 1.3140 | **1.0000** | 2.9540 | 3.7561 | O / O | T23 |
+| dict_update_str / large (4096) | 656304.5789 | 1.4081 | **1.0000** | 1.2331 | 1.0832 | 1.6795 | 1.9685 | O / O | T23 |
 | set_dedup / small (64) | 315.2532 | 3.2981 | 3.9658 | 2.1143 | **1.0000** | 10.2592 | 13.5868 | O / O | B0 |
 | set_dedup / large (4096) | 65854.8194 | 1.1052 | 1.2774 | 1.4120 | **1.0000** | 3.3251 | 4.2926 | O / O | B0 |
 | alloc_short / small (64) | 3.9337 | 20.8925 | 38.2879 | 88.5583 | **1.0000** | 1256.0525 | 1706.3399 | O / O | B0 |
 | alloc_short / large (1024) | 3.9012 | 327.5994 | 536.1037 | 1374.7989 | **1.0000** | 19711.5691 | 26589.1038 | O / O | B0 |
 | alloc_retained / small (64) | 1292.6997 | 1.0697 | 1.4853 | 1.0303 | **1.0000** | 2.3540 | 3.5644 | O / O | B0 |
 | alloc_retained / large (1024) | 20710.2684 | 1.0504 | 1.2628 | 1.0366 | **1.0000** | 2.2667 | 3.3646 | O / O | B0 |
-| mutate_nested / small (64) | 743.1072 | 1.5630 | 1.5550 | 1.5835 | 1.4494 | **1.0000** | 1.1819 | S / O | G4 |
-| mutate_nested / large (1024) | 7194.4692 | 2.7668 | 2.4057 | 2.7373 | 2.5132 | **1.0000** | 1.1046 | S / O | G4 |
-| sort_int / small (64) | 165.2368 | 1.3727 | 6.4191 | 1.6209 | **1.0000** | 1.3925 | 2.5638 | O / O | G4 |
-| sort_int / large (4096) | 44151.3168 | 1.4312 | 5.2569 | 1.4696 | 1.0165 | **1.0000** | 1.2146 | S / O | G4 |
+| mutate_nested / small (64) | 722.3398 | 1.5287 | 1.5612 | 1.5608 | 1.4159 | **1.0000** | 1.1565 | P / O | T23 |
+| mutate_nested / large (1024) | 6964.8301 | 2.7224 | 2.4334 | 2.6850 | 2.4637 | **1.0000** | 1.1309 | P / O | T23 |
+| sort_int / small (64) | 163.0341 | 1.3315 | 6.2027 | 1.6060 | **1.0000** | 1.3095 | 2.5459 | O / O | T23 |
+| sort_int / large (4096) | 43055.9702 | 1.4655 | 5.2876 | 1.4752 | 1.0073 | **1.0000** | 1.2402 | P / O | T23 |
 | sort_records / small (64) | 534.9452 | 1.1915 | 12.9614 | 1.4126 | **1.0000** | 2.2464 | 2.9003 | O / O | T9 |
 | sort_records / large (4096) | 51470.2384 | **1.0000** | 23.3619 | 2.1788 | 1.7380 | 1.2257 | 1.4972 | O / O | T9 |
 | lox_eval / small (16) | 738.1632 | **1.0000** | 1.1383 | 2.6921 | 2.6291 | 3.6607 | 4.0643 | O / O | B0 |
@@ -482,8 +493,9 @@ does not supply the new goal's confirmation protocol.
 | T17 | Unintegrated range annotation `0311796e`; six-arm 5r/1w and independent two-row matched 15r/3w repeat | [Archive](../../experiments/runtime-goal110-floor-result-range-20261004/README.md), [observations](candidates/goal110-floor-result-0311796e-20261004-observed.json), [timing replay](candidates/goal110-arithmetic-candidates-20261004-timing-review.json), [archive review](candidates/goal110-floor-result-0311796e-20261004-archive-review.json) | Small LLVM equality improves 10% but remains 1.2506×; large search slows 15.5%. Caller/helpers retain normalized instructions with changed placement; no causal attribution or target confirmation. |
 | T18 | Unintegrated bounded bias `5e97db47`; six-arm 5r/1w, matched four-row 15r/3w repeat and signed supplement | [Archive](../../experiments/runtime-goal110-bounded-rem-20261004/README.md), [observations](candidates/goal110-bounded-rem-5e97db47-20261004-observed.json), [timing replay](candidates/goal110-arithmetic-candidates-20261004-timing-review.json), [archive review](candidates/goal110-bounded-rem-5e97db47-20261004-archive-review.json) | Repeated LLVM filter gains 6.0%/7.4% and small-sort gain 5.2%; QBE nested cost repeats 12%. LLVM-only successor T20 integrated; original all-backend candidate remains deferred. No goal confirmation. |
 | T19 | Dictionary probe publication adopted in1a398063 `64fb7e62`; seven cases at both sizes, six-arm 5r/1w and matched screen | [Archive](../../experiments/runtime-goal110-dictionary-probe-20261004/README.md), [observations](candidates/goal110-dict-probe-64fb7e62-20261004-observed.json), [timing replay](candidates/goal110-dict-probe-64fb7e62-20261004-timing-review.json), [static review](candidates/goal110-dict-probe-64fb7e62-20261004-static-review.json) | LLVM lookup small/large remains 1.7813×/1.7146×; string lookup 1.3993×/1.6338×. Initial relative gains 3.6% small integer lookup and 2.7%/1.2% string lookup; approximately 1% string update cost. Repeat confirms lookup gains and approximately 1% string update cost; no goal confirmation. |
-| T20 | LLVM-only bounded remainder successor `df09fb4b`; no new timing | [Archive](../../experiments/runtime-goal110-bounded-rem-llvm-20261004/README.md), [source review](candidates/goal110-bounded-rem-df09fb4b-20261004-source-review.json), [image review](candidates/goal110-bounded-rem-df09fb4b-20261004-image-review.json), [archive review](candidates/goal110-bounded-rem-df09fb4b-20261004-archive-review.json) | Eight runtime images independently match: LLVM equals T18; QBE equals G4. Fresh 720 qualifications and 516 holdouts pass. Adopted in1a398063 without repeated timing of unchanged code; combined validation pending, no integrated goal confirmation. |
+| T20 | LLVM-only bounded remainder successor `df09fb4b`; no new timing | [Archive](../../experiments/runtime-goal110-bounded-rem-llvm-20261004/README.md), [source review](candidates/goal110-bounded-rem-df09fb4b-20261004-source-review.json), [image review](candidates/goal110-bounded-rem-df09fb4b-20261004-image-review.json), [archive review](candidates/goal110-bounded-rem-df09fb4b-20261004-archive-review.json) | Eight runtime images independently match: LLVM equals T18; QBE equals G4. Fresh 720 qualifications and 516 holdouts pass. Adopted in1a398063 without repeated timing of unchanged code; combined correctness passes; LLVM compute/legacy changes also need regression timing. No integrated goal confirmation. |
 | T21 | Diagnostic search placement counterfactual; three LLVM executables, two rows, 15r/3w | [Archive](../../experiments/runtime-goal110-search-placement-20261004/README.md), [code/oracle review](candidates/goal110-search-placement-20261004-review.json), [timing replay](candidates/goal110-search-placement-20261004-timing-review.json), [archive review](candidates/goal110-search-placement-20261004-archive-review.json) | Sole 32-byte padding change recovers search from1.1491× to1.0080×G4; equality stays0.9120×G4. Later symbols move too. Diagnostic only; no production padding, adoption or target confirmation. |
+| T22 | Integrated `1a398063`; focused correctness and runtime-image comparison, no timing yet | [Independent checkpoint review](candidates/goal110-integrated-1a398063-20261004-review.json) | Four focused batches58/22/15/17,49native pairs and720qualification/516holdout outcomes pass. AllQBE andLLVMtext images match controls; LLVMcompute/legacy/collections differ. Source changes before clocks also affect timed register allocation/placement. Fourteen-case screen being prepared. |
 
 | D3 | Deferred scalar-pointer sources `a29aa6a9` and `1fdae8e1`; no timing | [Strict proof and incident archive](../../experiments/runtime-goal110-scalar-slots-20261004/README.md), [hybrid archive](../../experiments/runtime-goal110-scalar-addresses-20261004/README.md), [coordinator review](candidates/goal110-screens-20261004-0438-review.json) | Actual optimized code unchanged. Root checked96 raw/archive bindings and identical live hybrid/control ELFs; neither source is integrated. |
 
@@ -494,6 +506,8 @@ B0 raw report (uncompressed) SHA256:
 Prior [correctness receipts](candidates/validation/730a86e6-validation.json) and
 [independent replay](candidates/validation/730a86e6-coordinator-replay.json)
 describe the starting implementation. New changes require new validation.
+
+| T23 | Integrated `1a398063`; six-arm session `3a8d0bc2-e996-40d7-a049-0d1250097d63`, 11:37:23–11:39:41 UTC; paired session `3eb2697e-bad6-426c-b663-262c60b1801d`, last guest 11:42:21 UTC; 5r/1w | [Complete archive](../../experiments/runtime-goal110-integrated-20261004/README.md), [observed speeds](candidates/goal110-integrated-1a398063-20261004-observed.json), [independent paired review](candidates/goal110-integrated-1a398063-20261004-timing-review.json), [combined correctness](candidates/goal110-integrated-1a398063-20261004-review.json) | 28 fresh rows; LLVM filtering improves 6.9%/7.3%, small sorting 5.9%, direct calls 8.3%/9.7% against index14. LLVM arithmetic and small shared-mutation costs of 1–3.4% are explicit accepted tradeoffs in this subset. Three rows observed fastest; no confirmation or full-suite acceptance. |
 
 ## Progress log
 
@@ -710,3 +724,13 @@ diagnostic notes and raw evidence rather than pasting build logs here.
 | 2026-10-04 10:56:23 UTC | Combined source integrated; placement sensitivity observed | Source1a398063 combines exact reviewed LLVM-only remainder and dictionary publication with accepted index reuse;88Guardianchecks pass. All non-shared candidate source files match their reviewed bytes; SPEC/import merges retain both mechanisms. Text diagnostic5157a204 runs108outcomes10:52:52.553–10:52:57.797UTC: annotation/G4search1.1491, adjustedplacement/G4search1.0080; equality remains0.9120 ofG4. | Fresh integrated Debughost/24optimizedguests, focusedtests and720/516checks assigned. No inferred combined performance. Text padding is diagnostic only; investigate general alignment. Dictionary archive README full-stream claim corrected in review because timing retains parsed status/checksum, not raw streams. |
 
 | 2026-10-04 11:02:22 UTC | Complete dictionary and placement evidence archived | Root verifies107dictionary files/173bindings (170exact live payloads plus2known comment-only reconstructions) and896placement files/884compressed/raw/live payloads plus11helpers. Independent placement timing replay verifies108full outcomes and frozenplans; search/G4CI[1.00018,1.01104], equality/G4CI[.90473,.91671]. [Dictionary archive review](candidates/goal110-dict-probe-64fb7e62-20261004-archive-review.json) records the corrected parsed-output retention claim. | Integrated1a398063 remainder58 and separately bounded index test batches run before its host/guest build. Typedlookup isolated design approved with runtime fallback; general loop-alignment design pending. Dashboard retains70open/10stale; no new confirmed target. |
+
+| 2026-10-04 11:08:08 UTC | Integrated focused batches finished; host building | Fresh1a398063 logs report58remainder,22indexproof,15indexnative-a and17indexnative-b test passes. The agent retains actual outer process status separately because Zig logs append a misleading “failed command” line even when a test process succeeds; the final status receipt is pending. Source-bound Debughost build is active, started approximately11:07:10UTC. | Continue directly to24ordinaryRFguests,720/516correctness and all8image comparisons. Next typedlookup implementation and general32-byte natural-loop alignment proceed in isolated trees. No new timing or target confirmation. |
+
+| 2026-10-04 11:15:34 UTC | Integrated correctness passes; wider LLVM changes found | [Independent checkpoint review](candidates/goal110-integrated-1a398063-20261004-review.json) verifies4focusedbatches(58/22/15/17),49savednativepairs,1236qualification/holdoutoracles and all8runtime-image comparisons. Integrated compiler SHAaa851828,receipt09abb6ac. Only5imagesmatch:4QBE plusLLVMtext. LLVMcompute andlegacy differ fromindex14 in addition toexpectedLLVMcollections; old5e/df09 comparisons established equality to5e, not equality toG4/index in those groups. | Investigate additional changed functions/placement and include their affected bodies in small regression screens. Do not transfer prior collection-only timing to compute/legacy or claim combined performance. Source remains1a398063;70LLVMtargetsopen/10stale. |
+
+| 2026-10-04 11:25:20 UTC | Integrated screen scoped; next candidates progress | Compute LLVM5e→df09→1a runtime images are exact (only nonexecuting e_shoff differs). Relative toG4/index, only generatedmain changes20,133→20,142bytes, with new bias in value setup beforeclock; timed register allocation/dispatch placement changes. Legacy index→1a main16,365→16,346bytes plushelperplacement; other209functions normalize identically. Alignment5818cee8 passes46focused/88Guardian and beginsDebughost build. Typedword-read ordinary/counted sanitizer suites pass; unitfixture needs float instead of unsupportedf64 spelling. | Prepare14cases×2sizes six-arm5r/1w plus matched index→integrated comparisons: filter,sort_int,append,nested,dict_lookup,dict_lookup_str,dict_update_str,integer_math,float_math,call_direct andall4legacycases. No timing untilcommandsreviewed and workersidle. Keep source performanceprovisional. |
+
+| 2026-10-04 11:48:15 UTC | Integrated T23 screen and independent replay complete | Six-arm screen passes 840 timed samples and 720 qualifications. Root verifies all 672 matched outcomes, exact 28 plans, live artifacts, independent checksum oracles, medians and paired intervals. Filtering after/before 0.9306/0.9266; small sorting 0.9411; direct calls 0.9174/0.9032. LLVM integer/float and small shared-mutation costs range 1–3.4%; their upper intervals remain below 1.05. QBE large record-read interval is wide, so no improvement claim. | Accept these measured subset tradeoffs for the filtering/sorting gains. Refresh all 28 dashboard rows: 70 open, seven stale, three provisional, zero current LLVM confirmations. Remaining full-suite evidence is B0. Typed lookup a2df is checking actual LLVM behavior; loop alignment5818 passes native/text/holdouts, with unchanged QBE runtime images and all LLVM groups changed. |
+
+| 2026-10-04 11:55:15 UTC | Integrated evidence archived; successor semantics independently checked | Archive0a640822 retains 63 files/54 compressed raw payloads with 20 changed source snapshots and exact patch. Its 88 Guardian checks pass; [Integration-checkout live replay](candidates/goal110-integrated-1a398063-20261004-archive-review.json) passes all 63 tracked files, 54 raw/gzip/live payloads, 2,625 pinned source blobs and the saved correctness/timing outcomes. [Typed lookup language review](candidates/goal110-dict-word-a2dfdfa9-20261004-language-review.json) verifies 368 pairs/736 calls, 14 optimized builds and 14 emissions against an independent dictionary state model. [Alignment native review](candidates/goal110-loop-align-5818cee8-20261004-native-review.json) verifies 2,763 pairs/5,526 executions and all source/tool/guest bindings against independent floor oracles. | Preserve current source1a and updated T23 table. Finish candidate guest/static preparation, then serialize their bounded screens. Compute investigation now targets invariant specialization before guarded loop planning; text investigation will consider generic private scalar-slot range facts. No successor timings or new confirmations. |

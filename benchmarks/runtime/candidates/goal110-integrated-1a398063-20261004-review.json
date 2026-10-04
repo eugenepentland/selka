@@ -1,0 +1,119 @@
+{
+  "status": "pass",
+  "reviewed_utc": "2026-10-04T11:14:29.433493+00:00",
+  "source_revision": "1a3980631e79bc65f048acd063d7250800f01901",
+  "focused_batches": {
+    "remainder": 58,
+    "index-proof": 22,
+    "index-native-a": 15,
+    "index-native-b": 17
+  },
+  "saved_native_pairs": 49,
+  "checks": {
+    "qualification.json": 720,
+    "holdouts.json": 516
+  },
+  "images": [
+    {
+      "group": "compute",
+      "backend": "llvm",
+      "runtime_image_equal": false,
+      "changed_sections": [
+        ".eh_frame",
+        ".rodata",
+        ".text",
+        "mylang_frame_map"
+      ]
+    },
+    {
+      "group": "compute",
+      "backend": "qbe",
+      "runtime_image_equal": true,
+      "changed_sections": []
+    },
+    {
+      "group": "collections",
+      "backend": "llvm",
+      "runtime_image_equal": false,
+      "changed_sections": [
+        ".bss",
+        ".data",
+        ".data.rel.ro",
+        ".dynamic",
+        ".eh_frame",
+        ".eh_frame_hdr",
+        ".fini",
+        ".got",
+        ".got.plt",
+        ".init",
+        ".plt",
+        ".rela.dyn",
+        ".rela.plt",
+        ".relro_padding",
+        ".rodata",
+        ".tbss",
+        ".text",
+        "mylang_frame_map"
+      ]
+    },
+    {
+      "group": "collections",
+      "backend": "qbe",
+      "runtime_image_equal": true,
+      "changed_sections": []
+    },
+    {
+      "group": "text",
+      "backend": "llvm",
+      "runtime_image_equal": true,
+      "changed_sections": []
+    },
+    {
+      "group": "text",
+      "backend": "qbe",
+      "runtime_image_equal": true,
+      "changed_sections": []
+    },
+    {
+      "group": "legacy",
+      "backend": "llvm",
+      "runtime_image_equal": false,
+      "changed_sections": [
+        ".bss",
+        ".data",
+        ".data.rel.ro",
+        ".dynamic",
+        ".eh_frame",
+        ".eh_frame_hdr",
+        ".fini",
+        ".got",
+        ".got.plt",
+        ".init",
+        ".plt",
+        ".rela.dyn",
+        ".rela.plt",
+        ".relro_padding",
+        ".rodata",
+        ".tbss",
+        ".text",
+        "mylang_frame_map"
+      ]
+    },
+    {
+      "group": "legacy",
+      "backend": "qbe",
+      "runtime_image_equal": true,
+      "changed_sections": []
+    }
+  ],
+  "manifest_sha256": "a64af04cdb495d00c49d562789fcb6341349bf3f411d7783ba7400ba4cbe92ce",
+  "focused_receipt_sha256": "22f1f39f91d207af6a560038c2188f06553164348f5b0d9cb251f3a18300d9a2",
+  "comparison_sha256": "5330a80fbe0ae220f2e53d20472a2c56789bb1b2770294e04bd171a0a702de4f",
+  "script_sha256": "25485ef4feb753bfa2128cd5032b5a914e207891439f6a66258bf63f70a1e7c3",
+  "limitations": [
+    "Replay of saved outcomes and static images; no new executions or timing.",
+    "Focused outer statuses are explicitly recorded by the executing agent; misleading Zig failed-command log wording retained.",
+    "Five images match controls; LLVM compute, legacy and collections differ and require investigation/timing.",
+    "Integrated performance remains provisional; no goal confirmation."
+  ]
+}

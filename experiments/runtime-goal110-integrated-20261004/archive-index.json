@@ -1,0 +1,538 @@
+{
+  "schema": "mylang-goal110-integrated-archive-v1",
+  "source_revision": "1a3980631e79bc65f048acd063d7250800f01901",
+  "baseline_source_revision": "6cf7bdce11bc205862bf75b9d9ce72e46caad0a2",
+  "created_utc": "2026-10-04T11:49:26.362776+00:00",
+  "files": [
+    {
+      "role": "commands",
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/experiments/runtime-goal110-integrated-20261004/commands.json",
+      "archive_path": "raw/commands.gz",
+      "raw_sha256": "764894e68b783763f1a2c59813bdfbdd7a8f3ca4eebfb901120ec7865aa29e2a",
+      "raw_bytes": 5069,
+      "gzip_sha256": "45a10246c54fbb5d7b4ad19dced0ced60a981e66b29ffb585a1f61196ad2d9e7",
+      "gzip_bytes": 1580
+    },
+    {
+      "role": "screen",
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/.mylang-cache/goal110-integrated-debug/integrated-screen.json",
+      "archive_path": "raw/screen.gz",
+      "raw_sha256": "fac94b55563f8755b8c359c32909ab5af3924c6a853b105974a2c27b2fded11c",
+      "raw_bytes": 3104415,
+      "gzip_sha256": "b049dc56f508d03da8c224f5ed1258a483863015f18a6f9124dc826a100e72b7",
+      "gzip_bytes": 597503
+    },
+    {
+      "role": "paired",
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/.mylang-cache/goal110-integrated-debug/integrated-before-after.json",
+      "archive_path": "raw/paired.gz",
+      "raw_sha256": "167dee3e223428f959c4e74a6101431d471e28cd191a76abb802612932bbea0c",
+      "raw_bytes": 1811551,
+      "gzip_sha256": "0bc6369e0a36888eaa13132ee22a49ae6340e6bb9366961d282bfdb5c7c2d99d",
+      "gzip_bytes": 535931
+    },
+    {
+      "role": "compiler",
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/.mylang-cache/goal110-integrated-debug/compiler-receipt.json",
+      "archive_path": "raw/compiler.gz",
+      "raw_sha256": "09abb6ac81ae944bd247016d3dc19c5cd29d8fbcc3d5c74d5f48c02a7f43c14c",
+      "raw_bytes": 658536,
+      "gzip_sha256": "16eeead7b3f16b04cd6a6fd1aa028920a98974393b7c4b180d22243be4312f8e",
+      "gzip_bytes": 247024
+    },
+    {
+      "role": "manifest",
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/.mylang-cache/goal110-integrated-debug/runner/manifest.json",
+      "archive_path": "raw/manifest.gz",
+      "raw_sha256": "a64af04cdb495d00c49d562789fcb6341349bf3f411d7783ba7400ba4cbe92ce",
+      "raw_bytes": 834085,
+      "gzip_sha256": "aece7bebb967b77f2cce54537d3de09a8b6852772ea0ecbcfee37873e554ac5f",
+      "gzip_bytes": 261130
+    },
+    {
+      "role": "qualification",
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/.mylang-cache/goal110-integrated-debug/qualification.json",
+      "archive_path": "raw/qualification.gz",
+      "raw_sha256": "622995113aad7f253086351e12d5513f27bf032e45edbc73651b6434bd7e2bcb",
+      "raw_bytes": 965999,
+      "gzip_sha256": "79ca6d676611741d1af0b45ad93095448e35b9b3d6670f8da5900f3a3535f2f6",
+      "gzip_bytes": 264497
+    },
+    {
+      "role": "holdouts",
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/.mylang-cache/goal110-integrated-debug/holdouts.json",
+      "archive_path": "raw/holdouts.gz",
+      "raw_sha256": "eb8bc98dec7aad5a676fa8789b14aa7afe2682ad75d4af415ea4bce5611d8c2f",
+      "raw_bytes": 1097599,
+      "gzip_sha256": "88f0ea9a4251ce93dee7191532ddca41511739acf898ad3ac1f7e8e2974b96a7",
+      "gzip_bytes": 267636
+    },
+    {
+      "role": "images",
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/.mylang-cache/goal110-integrated-debug/image-comparison.json",
+      "archive_path": "raw/images.gz",
+      "raw_sha256": "5330a80fbe0ae220f2e53d20472a2c56789bb1b2770294e04bd171a0a702de4f",
+      "raw_bytes": 83089,
+      "gzip_sha256": "4ea6b32e6b615e7cafffbab1ebcd984bded6092bfc3dad295f04224b63cdfaa2",
+      "gzip_bytes": 9540
+    },
+    {
+      "role": "static",
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/.mylang-cache/goal110-integrated-review/static-final/function-deltas.json",
+      "archive_path": "raw/static.gz",
+      "raw_sha256": "ecdaf9732cb1c1950eb604bc91d650c87e2ae3c925a600e0fdd0c8a037222f72",
+      "raw_bytes": 49345,
+      "gzip_sha256": "65a725df8f0fd2b7c83babc1064d1df1e101b83200c5cdba649148254c697fee",
+      "gzip_bytes": 6439
+    },
+    {
+      "role": "focused_checkpoint",
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/.mylang-cache/goal110-integrated-review/focused-checkpoint.json",
+      "archive_path": "raw/focused_checkpoint.gz",
+      "raw_sha256": "22f1f39f91d207af6a560038c2188f06553164348f5b0d9cb251f3a18300d9a2",
+      "raw_bytes": 6006,
+      "gzip_sha256": "ebb44caadbadea16467b62c4bbbd41deef2ae5896c5ce8fe0753c099cc406666",
+      "gzip_bytes": 1136
+    },
+    {
+      "role": "six_arm_process",
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/.mylang-cache/goal110-integrated-review/timing-six-arm-process.json",
+      "archive_path": "raw/six_arm_process.gz",
+      "raw_sha256": "03f0d2aa17eb1e72c0d4e904d82052993b9a01b3ab2e62a4f56e1c982aaf9eee",
+      "raw_bytes": 2281,
+      "gzip_sha256": "70729d785d184327ce3b98970493f8abeac224e1f61e5fab73c2b2d6798c01f2",
+      "gzip_bytes": 917
+    },
+    {
+      "role": "paired_process",
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/.mylang-cache/goal110-integrated-review/timing-paired-process.json",
+      "archive_path": "raw/paired_process.gz",
+      "raw_sha256": "a44aba7a319b7e7f77cff75ffcfb5bb7d99f07dd6cf679f8c7aab405469ef5ee",
+      "raw_bytes": 1908,
+      "gzip_sha256": "fdf139cda146bdb0e21145391043af3d42b21c333720d2849ee1c682c9a67af8",
+      "gzip_bytes": 743
+    },
+    {
+      "role": "six_arm_log",
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/.mylang-cache/goal110-integrated-review/timing-six-arm.log",
+      "archive_path": "raw/six_arm_log.gz",
+      "raw_sha256": "1ec8942f869e23cd039afbf68d6a37901d29962f1bdfbc0512e7b5438a1f4a22",
+      "raw_bytes": 3218,
+      "gzip_sha256": "814599193658a246a6e41338d296cb249aa52840eeff9646ebff76729afcd3b2",
+      "gzip_bytes": 863
+    },
+    {
+      "role": "paired_log",
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/.mylang-cache/goal110-integrated-review/timing-paired.log",
+      "archive_path": "raw/paired_log.gz",
+      "raw_sha256": "862c574a56bb47f9efbf80f9fc5ee3f0317633d9750e7ddd38257694b8aa2358",
+      "raw_bytes": 2206,
+      "gzip_sha256": "a5b4d536867b39b3a31ca2e4b36b325a90954db9c3eac5f462e97d870c03fdde",
+      "gzip_bytes": 882
+    },
+    {
+      "role": "compiler_log",
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/.mylang-cache/goal110-integrated-debug/compiler-build.log",
+      "archive_path": "raw/compiler_log.gz",
+      "raw_sha256": "da20a82bd6108ee9c964a9e3e40211815c27d7293f360d410e9dd85f78d5a319",
+      "raw_bytes": 1715,
+      "gzip_sha256": "7f4c36dbc8e37e482b3c3b792b73791d7edc7fe73215e7ce163958793793ff64",
+      "gzip_bytes": 619
+    },
+    {
+      "role": "guest_build_log",
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/.mylang-cache/goal110-integrated-review/guest-build.log",
+      "archive_path": "raw/guest_build_log.gz",
+      "raw_sha256": "45b25674f9497f6d6b9cbc583db55099fb289fd5c7c20e69cf0808bbad23aa97",
+      "raw_bytes": 640,
+      "gzip_sha256": "92139515fcd3a1545dc2b2a3e434185abcf488a59f7b3e1e5a0ce64ed13293e1",
+      "gzip_bytes": 199
+    },
+    {
+      "role": "qualification_log",
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/.mylang-cache/goal110-integrated-review/qualification.log",
+      "archive_path": "raw/qualification_log.gz",
+      "raw_sha256": "5dc2a9a20610176e71e3aeee62f43d36cdf55bb69b607574ee401527235fbe4f",
+      "raw_bytes": 1000,
+      "gzip_sha256": "6044de8a8e44733c76ecdd5f1dacd0eeacbb77be954972784c7b7588a305b8d3",
+      "gzip_bytes": 356
+    },
+    {
+      "role": "holdouts_log",
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/.mylang-cache/goal110-integrated-review/holdouts.log",
+      "archive_path": "raw/holdouts_log.gz",
+      "raw_sha256": "eb66e9fc422e3bdd9ea3b208eafd19a7b76a31a9901b96a3b302202d5b03f32c",
+      "raw_bytes": 3569,
+      "gzip_sha256": "d79d7335a6c3b4da407d6b262d969e8fb48a8a034d93a7a1c4aea203df26a5ef",
+      "gzip_bytes": 576
+    },
+    {
+      "role": "image_log",
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/.mylang-cache/goal110-integrated-review/image-comparison.log",
+      "archive_path": "raw/image_log.gz",
+      "raw_sha256": "8ba79dd584d86013667a8cc8d2e214d02df655277b3c5bfaca3c4e7f03ca5b0f",
+      "raw_bytes": 606,
+      "gzip_sha256": "0482893f93246a2e09dbcc9eadca02b1e8f44f0845455909429248436ee70991",
+      "gzip_bytes": 204
+    },
+    {
+      "role": "screen_verify_log",
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/.mylang-cache/goal110-integrated-review/verify-screen.log",
+      "archive_path": "raw/screen_verify_log.gz",
+      "raw_sha256": "ed376d86c67f707eec9c4eba1f5ef28d6379496b52b3f0bf1e59e982fc0e2517",
+      "raw_bytes": 77,
+      "gzip_sha256": "6f731917288d35d8a27003f1be0d9cf8752d2790da2a2593b471e9ae1615cd0d",
+      "gzip_bytes": 93
+    },
+    {
+      "role": "paired_verify_log",
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/.mylang-cache/goal110-integrated-review/verify-paired.log",
+      "archive_path": "raw/paired_verify_log.gz",
+      "raw_sha256": "c206720ffaf91c2c71e93219bfd60cb2924f87313c7a391d71f06861221adbc1",
+      "raw_bytes": 29,
+      "gzip_sha256": "18a6192c610c2461909b35bbcb885d381e00976588338042b0ba47fb8a6bb6f5",
+      "gzip_bytes": 47
+    },
+    {
+      "role": "analysis",
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/experiments/runtime-goal110-integrated-20261004/analysis.json",
+      "archive_path": "raw/analysis.gz",
+      "raw_sha256": "98928fd24c432bd7be065abd5b4464a9a9517cc608680bd21f319b9e580236a4",
+      "raw_bytes": 31785,
+      "gzip_sha256": "68b9cd067c06a2255dcb9c34b547618ebc9f15863cc387eb424dec166ad42b16",
+      "gzip_bytes": 6878
+    },
+    {
+      "role": "results",
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/experiments/runtime-goal110-integrated-20261004/results.md",
+      "archive_path": "raw/results.gz",
+      "raw_sha256": "0be08412d3c6b8d074d988ae95761075b0989383f2b1ed86e8f60161752e8dc6",
+      "raw_bytes": 4160,
+      "gzip_sha256": "1ba83e7084320193a3e3157bb8f3ff2b7a1268ff31e9bae45441d7537df0c8a8",
+      "gzip_bytes": 1665
+    },
+    {
+      "role": "unit_remainder",
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/.mylang-cache/goal110-integrated-review/unit-remainder.log",
+      "archive_path": "raw/unit_remainder.gz",
+      "raw_sha256": "ff4b08b2771c906be897b57b48e863c499da420620f03f5a5aa4ab9cf149c5e2",
+      "raw_bytes": 271605,
+      "gzip_sha256": "748d4b04f1e97656e120d29c78943a50115d4df1af847d9e143e3adcada2d57c",
+      "gzip_bytes": 38455
+    },
+    {
+      "role": "unit_index-proof",
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/.mylang-cache/goal110-integrated-review/unit-index-proof.log",
+      "archive_path": "raw/unit_index-proof.gz",
+      "raw_sha256": "b13289be34d755909b8c5de6c5fa8a6c81f464f123a1964996b5b06c8876dbca",
+      "raw_bytes": 2618,
+      "gzip_sha256": "2816c5e7c40a0bbdd1745180d9d09f7c88e254da81da8aedf48d812c0178e2f5",
+      "gzip_bytes": 1097
+    },
+    {
+      "role": "unit_index-native-a",
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/.mylang-cache/goal110-integrated-review/unit-index-native-a.log",
+      "archive_path": "raw/unit_index-native-a.gz",
+      "raw_sha256": "8b0b1e86827fce6352724e0997a0cacfd39c1b83fef5c660e7f23ece9d665457",
+      "raw_bytes": 2315,
+      "gzip_sha256": "d7231bba514a977d82b69ed9e6d59621f85978d7a0b8a4d1c72c1efa8c6739a6",
+      "gzip_bytes": 905
+    },
+    {
+      "role": "unit_index-native-b",
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/.mylang-cache/goal110-integrated-review/unit-index-native-b.log",
+      "archive_path": "raw/unit_index-native-b.gz",
+      "raw_sha256": "daa9888fdc91f8217f6603063acc6ef42d53fb595503f8c76aeee7ed3d967300",
+      "raw_bytes": 2898,
+      "gzip_sha256": "0e4f3f58c102fe0378371d796927aa8db6aafcd00025b8a3cd278f1fd1427787",
+      "gzip_bytes": 1021
+    },
+    {
+      "role": "diff_compute-g4-5e-myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5",
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/.mylang-cache/goal110-integrated-review/static-final/compute-g4-5e-myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5.diff",
+      "archive_path": "raw/diff_compute-g4-5e-myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5.gz",
+      "raw_sha256": "f3848346503d219c71d17dcdaf3bd15a5e7c001dba3537e9b73823502f8e3ab1",
+      "raw_bytes": 262347,
+      "gzip_sha256": "fe7ce7f7796f91914c65e93c41a657f003ea7b1379b0b908767c98fec8a8e902",
+      "gzip_bytes": 21699
+    },
+    {
+      "role": "diff_compute-index-integrated-myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5",
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/.mylang-cache/goal110-integrated-review/static-final/compute-index-integrated-myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5.diff",
+      "archive_path": "raw/diff_compute-index-integrated-myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5.gz",
+      "raw_sha256": "1bbdade061c43aef37ce92cf5880e22d625a54a19f880abe5bfab99cba440e8c",
+      "raw_bytes": 262358,
+      "gzip_sha256": "34ca4dc1a075d8df1cf4ad06f01d5f9fc654c2c7b32324ac1c4c4d584844e41b",
+      "gzip_bytes": 21708
+    },
+    {
+      "role": "diff_legacy-df09-integrated-myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5",
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/.mylang-cache/goal110-integrated-review/static-final/legacy-df09-integrated-myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5.diff",
+      "archive_path": "raw/diff_legacy-df09-integrated-myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5.gz",
+      "raw_sha256": "fd7cc6755a48ca07a79db600b6f39a2f7646a55c25ed3bd6107ae17a1dc6477d",
+      "raw_bytes": 238895,
+      "gzip_sha256": "eb127e3c04977f7b5f208055c2a8a920a17ebcdb4bf7e2f74145baf79e55bee4",
+      "gzip_bytes": 23917
+    },
+    {
+      "role": "diff_legacy-g4-5e-myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5",
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/.mylang-cache/goal110-integrated-review/static-final/legacy-g4-5e-myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5.diff",
+      "archive_path": "raw/diff_legacy-g4-5e-myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5.gz",
+      "raw_sha256": "299f3fe955de152b0043dd16125df7e32cee25be657e04642ff40f97fc6f9b03",
+      "raw_bytes": 107704,
+      "gzip_sha256": "c8768d446e5bd61b3fddc6e30c1c99ad72c7479cbe9123da82f34e5dceebf3f7",
+      "gzip_bytes": 10681
+    },
+    {
+      "role": "diff_legacy-g4-index-myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5",
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/.mylang-cache/goal110-integrated-review/static-final/legacy-g4-index-myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5.diff",
+      "archive_path": "raw/diff_legacy-g4-index-myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5.gz",
+      "raw_sha256": "3475786b1029273f8d31ed172675432d710895199df03b9004c258a0073b6693",
+      "raw_bytes": 240006,
+      "gzip_sha256": "9c8f1ca986d5e46a280a97d9da42b5970d6115dad094a3104b6047315c2c922b",
+      "gzip_bytes": 24167
+    },
+    {
+      "role": "diff_legacy-index-integrated-myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5",
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/.mylang-cache/goal110-integrated-review/static-final/legacy-index-integrated-myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5.diff",
+      "archive_path": "raw/diff_legacy-index-integrated-myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5.gz",
+      "raw_sha256": "1c68148df5ce3c312b5257b31483250642ac92371dcbbdb7d11aa355e42eeda4",
+      "raw_bytes": 36374,
+      "gzip_sha256": "8faa550441e35907aa7e08d1656efa9097a26bdfb3888d1e6dac560a6c27abd7",
+      "gzip_bytes": 4297
+    },
+    {
+      "role": "source_SPEC.md",
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/SPEC.md",
+      "archive_path": "raw/source_SPEC.md.gz",
+      "raw_sha256": "2fbbd5711789fb8a1319af6c9dd8ab3b54bc5a64f9c45a6c81eabcb918de97d5",
+      "raw_bytes": 768575,
+      "gzip_sha256": "0637dd435382a68e4d08547088ebdc181ac52d243ab153f6395958c602e1ebcd",
+      "gzip_bytes": 258985
+    },
+    {
+      "role": "source_scripts__test_native_memory.py",
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/scripts/test_native_memory.py",
+      "archive_path": "raw/source_scripts__test_native_memory.py.gz",
+      "raw_sha256": "29845c56532280dfef8d9275bd31b3f512456e77b098b0a0a65e16b1020e9362",
+      "raw_bytes": 8951,
+      "gzip_sha256": "bffacf4c8f895b5e9af101aa227ccbd5210e8757c9b61b82ad0546d0f6088095",
+      "gzip_bytes": 2412
+    },
+    {
+      "role": "source_src__native_dictionary.c",
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/src/native_dictionary.c",
+      "archive_path": "raw/source_src__native_dictionary.c.gz",
+      "raw_sha256": "287cb8f739126c9feb375e6a0dce9a0d23362656e0804724e0e47d1a9d9c56a1",
+      "raw_bytes": 76139,
+      "gzip_sha256": "cfb7d19799401842bd75fba416cdb958ab5a7c7b8745c39477e7c4b196d1a6cd",
+      "gzip_bytes": 17363
+    },
+    {
+      "role": "source_src__native_dictionary.h",
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/src/native_dictionary.h",
+      "archive_path": "raw/source_src__native_dictionary.h.gz",
+      "raw_sha256": "663d5c673d74ebab6b43afeb4bfee6c96691d2adeaa30db1f9785bb3b5a9e58f",
+      "raw_bytes": 10391,
+      "gzip_sha256": "699ad951d82aae2625cee8d515b0c106c25fa21e2f32c04c670971854ce4701c",
+      "gzip_bytes": 3580
+    },
+    {
+      "role": "source_src__qbe.zig",
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/src/qbe.zig",
+      "archive_path": "raw/source_src__qbe.zig.gz",
+      "raw_sha256": "8124c4d818d41df4e2861c5d768b5b56416d1875018112bdf6e308e8d1dd2cb6",
+      "raw_bytes": 177854,
+      "gzip_sha256": "1dc9615e8dee515116c35d7265848cb78858d6f38144473674620fdccb67ea30",
+      "gzip_bytes": 44174
+    },
+    {
+      "role": "source_src__qbe_constant_divisor.zig",
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/src/qbe_constant_divisor.zig",
+      "archive_path": "raw/source_src__qbe_constant_divisor.zig.gz",
+      "raw_sha256": "75daa219825dd0db157d3946dceaaf63deccaa9a3cf6fab89c8599a8d739f720",
+      "raw_bytes": 7126,
+      "gzip_sha256": "fcb322d13fe43d7a942e6b97c1d0a6c259ec44273ec6830a3fb33314169e534e",
+      "gzip_bytes": 2164
+    },
+    {
+      "role": "source_src__qbe_loop_facts.zig",
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/src/qbe_loop_facts.zig",
+      "archive_path": "raw/source_src__qbe_loop_facts.zig.gz",
+      "raw_sha256": "abae8f6b5d8b28cef870731a2e27b4fe74dc7fb1c947675ce5c66bf6c3d52e3e",
+      "raw_bytes": 62166,
+      "gzip_sha256": "dd7437ffb7b04823d8905d55477e7e1929512d0e9caab6cd28187447b50ae826",
+      "gzip_bytes": 15523
+    },
+    {
+      "role": "source_src__qbe_loop_remainder_bias.zig",
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/src/qbe_loop_remainder_bias.zig",
+      "archive_path": "raw/source_src__qbe_loop_remainder_bias.zig.gz",
+      "raw_sha256": "8210efb2f15ef634e266bdb15543a0182d7c19e2cc9957415b1ae3272fd7d13c",
+      "raw_bytes": 2586,
+      "gzip_sha256": "b0f096bda8ba1b145b24ffa10d84c0c86ed847fb27840cf346249a0fdcf664a4",
+      "gzip_bytes": 1099
+    },
+    {
+      "role": "source_src__qbe_loop_remainder_bias_test.zig",
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/src/qbe_loop_remainder_bias_test.zig",
+      "archive_path": "raw/source_src__qbe_loop_remainder_bias_test.zig.gz",
+      "raw_sha256": "a0363d5f1c7eea4af78461e6f127d53d33bc13fa329ed8b97e627d7ccce70d61",
+      "raw_bytes": 28599,
+      "gzip_sha256": "0148ba4ddd7245e2ffb7c5525628ce9a75608e076f45371424e49b6478b0051d",
+      "gzip_bytes": 6013
+    },
+    {
+      "role": "source_src__qbe_managed.zig",
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/src/qbe_managed.zig",
+      "archive_path": "raw/source_src__qbe_managed.zig.gz",
+      "raw_sha256": "b840f8d3ba8f0d355e124ac55b6482148634a71c8908d006a720a87739536e92",
+      "raw_bytes": 77197,
+      "gzip_sha256": "9aa8755319cf94a585719b31367798755bca058575b5d3b0cf704111a8a4af2f",
+      "gzip_bytes": 17175
+    },
+    {
+      "role": "source_src__qbe_positive_index.zig",
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/src/qbe_positive_index.zig",
+      "archive_path": "raw/source_src__qbe_positive_index.zig.gz",
+      "raw_sha256": "3e985e9616a55e28fad82bd83b097acdfb841981f239030f0e297a564b65d88d",
+      "raw_bytes": 6782,
+      "gzip_sha256": "752fbad2b669e58b557e7896be5c08a1bae52bdc9605c0ca5d0ca914ee8664b5",
+      "gzip_bytes": 2297
+    },
+    {
+      "role": "source_src__qbe_rc_append_version.zig",
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/src/qbe_rc_append_version.zig",
+      "archive_path": "raw/source_src__qbe_rc_append_version.zig.gz",
+      "raw_sha256": "2d83fde53d2f155644be05d87dd5a4d20f1084ac173d8f6e0204b027026cbcf2",
+      "raw_bytes": 8663,
+      "gzip_sha256": "65099bb52e7280f2ffbc18780816d01d7c594980b824cbd45e20dde87a7fb067",
+      "gzip_bytes": 2764
+    },
+    {
+      "role": "source_src__qbe_rc_index_update.zig",
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/src/qbe_rc_index_update.zig",
+      "archive_path": "raw/source_src__qbe_rc_index_update.zig.gz",
+      "raw_sha256": "35b99a71426b38d6a6558ca3ebfd9b3c5d229ea8381a9f35dcf91b65c291bbc4",
+      "raw_bytes": 16509,
+      "gzip_sha256": "4d4d6bfff7565bfc8eb585351f85b3a949dd76bc719d9f931ba0a6cd222908ce",
+      "gzip_bytes": 4125
+    },
+    {
+      "role": "source_src__qbe_rc_index_update_test.zig",
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/src/qbe_rc_index_update_test.zig",
+      "archive_path": "raw/source_src__qbe_rc_index_update_test.zig.gz",
+      "raw_sha256": "d0337d7fe25f1f6413d8ffb716af8b29b3d440745926dffbe66d95d516da1687",
+      "raw_bytes": 31721,
+      "gzip_sha256": "dd7aa466602a690da2c24864d3ceac0fa45196d52ff9709ec6dedfef0e238d41",
+      "gzip_bytes": 6296
+    },
+    {
+      "role": "source_src__qbe_rc_nonheld_capture.zig",
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/src/qbe_rc_nonheld_capture.zig",
+      "archive_path": "raw/source_src__qbe_rc_nonheld_capture.zig.gz",
+      "raw_sha256": "a722989f924723809b287df7de270f242a4243de3e72e4e0ed61405ab92539c9",
+      "raw_bytes": 9175,
+      "gzip_sha256": "8c49eabcc284888d4ab623b68baac5eb761ab21c80a805aa08884a1ab1b171e7",
+      "gzip_bytes": 2596
+    },
+    {
+      "role": "source_src__qbe_remainder_bias.zig",
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/src/qbe_remainder_bias.zig",
+      "archive_path": "raw/source_src__qbe_remainder_bias.zig.gz",
+      "raw_sha256": "8c459eba172a07689646079c58a0d9ff43fc38006b372dfa73355130c972740f",
+      "raw_bytes": 1542,
+      "gzip_sha256": "6f2b8fbe65e1bab7051692bbf9823bbdc2091f7629888570d5597a39b2128e39",
+      "gzip_bytes": 688
+    },
+    {
+      "role": "source_src__qbe_remainder_bias_test.zig",
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/src/qbe_remainder_bias_test.zig",
+      "archive_path": "raw/source_src__qbe_remainder_bias_test.zig.gz",
+      "raw_sha256": "b0d5271aab14ddf720c114fe18725530067fa80e556ccb7e9d3a0d79a8edf977",
+      "raw_bytes": 2940,
+      "gzip_sha256": "3338e1f4dcc58adcf1581b54657bc0985cfdbfda98f0641baa494fedb7eeaadd",
+      "gzip_bytes": 981
+    },
+    {
+      "role": "source_src__qbe_scalar.zig",
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/src/qbe_scalar.zig",
+      "archive_path": "raw/source_src__qbe_scalar.zig.gz",
+      "raw_sha256": "bf73fb5abd215d7c8ca1cf3d507e5875786205a440eed7ecea8de89140a91b52",
+      "raw_bytes": 23353,
+      "gzip_sha256": "6e77ab0f6a60fd3ebb14ed8bc85815ef33d6df447ca25fcb53a4553eb0116890",
+      "gzip_bytes": 5333
+    },
+    {
+      "role": "source_src__root_test.zig",
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/src/root_test.zig",
+      "archive_path": "raw/source_src__root_test.zig.gz",
+      "raw_sha256": "2156b1683acee2b49f20501f257dc9df9c01a61598187af44b77cc013eb1d2f8",
+      "raw_bytes": 15899,
+      "gzip_sha256": "eb489f9d5d84ef8485b1574d16f6f801150831b912d4a601640ed2eb1711fdb1",
+      "gzip_bytes": 2615
+    },
+    {
+      "role": "source_tests__native_dictionary_probe_test.c",
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/tests/native_dictionary_probe_test.c",
+      "archive_path": "raw/source_tests__native_dictionary_probe_test.c.gz",
+      "raw_sha256": "8dfd1cfaa65b0fb0dac40c686de206375732374f6fb535ca350c5705d8937839",
+      "raw_bytes": 10455,
+      "gzip_sha256": "cee719f5c4a7e6bf5f06416110175bbbdbc33b4a7173ec7355152f75e51326cd",
+      "gzip_bytes": 2440
+    },
+    {
+      "role": "production_patch",
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004/.mylang-cache/goal110-integrated-review/production-g4-to-integrated.patch",
+      "archive_path": "raw/production_patch.gz",
+      "raw_sha256": "55c7de1c3aed9815368a256649c2086702a47aed74f40e93d4d5b45131993e0f",
+      "raw_bytes": 146204,
+      "gzip_sha256": "9866162a0172ac7e5497f1398c333772162b7072a59824b64bccc114ae6dd314",
+      "gzip_bytes": 35102
+    }
+  ],
+  "production_sources": {
+    "SPEC.md": "source_SPEC.md",
+    "scripts/test_native_memory.py": "source_scripts__test_native_memory.py",
+    "src/native_dictionary.c": "source_src__native_dictionary.c",
+    "src/native_dictionary.h": "source_src__native_dictionary.h",
+    "src/qbe.zig": "source_src__qbe.zig",
+    "src/qbe_constant_divisor.zig": "source_src__qbe_constant_divisor.zig",
+    "src/qbe_loop_facts.zig": "source_src__qbe_loop_facts.zig",
+    "src/qbe_loop_remainder_bias.zig": "source_src__qbe_loop_remainder_bias.zig",
+    "src/qbe_loop_remainder_bias_test.zig": "source_src__qbe_loop_remainder_bias_test.zig",
+    "src/qbe_managed.zig": "source_src__qbe_managed.zig",
+    "src/qbe_positive_index.zig": "source_src__qbe_positive_index.zig",
+    "src/qbe_rc_append_version.zig": "source_src__qbe_rc_append_version.zig",
+    "src/qbe_rc_index_update.zig": "source_src__qbe_rc_index_update.zig",
+    "src/qbe_rc_index_update_test.zig": "source_src__qbe_rc_index_update_test.zig",
+    "src/qbe_rc_nonheld_capture.zig": "source_src__qbe_rc_nonheld_capture.zig",
+    "src/qbe_remainder_bias.zig": "source_src__qbe_remainder_bias.zig",
+    "src/qbe_remainder_bias_test.zig": "source_src__qbe_remainder_bias_test.zig",
+    "src/qbe_scalar.zig": "source_src__qbe_scalar.zig",
+    "src/root_test.zig": "source_src__root_test.zig",
+    "tests/native_dictionary_probe_test.c": "source_tests__native_dictionary_probe_test.c"
+  },
+  "helper_sha256": {
+    "experiments/runtime-goal110-integrated-20261004/verify-archive.py": "daa70ad5317629d86adca82d8a3a2ac9f4734b7ed551718266c887c96e6dd74c",
+    "experiments/runtime-goal110-integrated-20261004/time-paired.py": "7b31f4b1f9a34f475d7dffdeb62fe55af9cad5485e9c099da5db1e222a5124de",
+    "experiments/runtime-goal110-integrated-20261004/inspect-deltas.py": "4e492a2ab0cb7633d405967fa0026eb026a13c15a8a4141bd04d249941ceab27",
+    "experiments/runtime-goal110-integrated-20261004/compare-controls.py": "4d8b49c0d8023607dbf7c1e0888657d430367c7d08c6b6522afc43b52a7134a2",
+    "benchmarks/runtime/expanded/verify.py": "34c6a85cedf05e4f8bf7759b699f814b601c5cf22aca01fd4e1dfada7796202a",
+    "benchmarks/runtime/expanded/run.py": "6c28224bf77a5127bd7c28072337caa80571f7a57c5f60c77d765a366d342e4a",
+    "benchmarks/runtime/runner.py": "e2238327ab7f603e7c0772b791ad4a2534ba90c6ce49a0d4e362790112b3b690",
+    "benchmarks/runtime/build_compiler.py": "358da42bfe0f2587c9424adcbc7d429772d4500362616aeb1378ef2721e5ac83",
+    "benchmarks/runtime/compare_candidate.py": "ca202996170e072e7b95ebf3b20896142ec794d14e336c958af277037a7d7123",
+    "benchmarks/runtime/diagnostics/holdouts.py": "1eeb8484148799594d5e76dfc6a793646073cfdb596e6ea2c46910040b34f3fc",
+    "benchmarks/runtime/expanded/registry.py": "04661575c2246c0848fa97196864f5d2a640994ef5b6f68919d87da402e4495b",
+    "benchmarks/runtime/oracle.py": "14bff3ae5eec751b5182b81c2485448ceba02f01a7dc98b064bb6bc3af8889d5",
+    "benchmarks/runtime/expanded/compute/oracle.py": "fd1109575fbb29b4e54818fe04acf0c1c5b6a8466f54c9d3c6d18d703c7a297e",
+    "benchmarks/runtime/expanded/collections/oracle.py": "357785b3c650484955daef3f6ccc885e393f46f7566c825d8ddf670077affbb9",
+    "benchmarks/runtime/expanded/text/oracle.py": "9f955c24e2db9fd2af698f44d4bc0ec2f0b095ef93e99ee1befbd362907c6bde",
+    "experiments/runtime-goal110-bounded-rem-llvm-20261004/qualify.py": "9f32fdb41621be3bee0774ca1c1fe2652fb63d5c9a914ffacf7b49697d6d3f2f",
+    "experiments/runtime-goal110-bounded-rem-llvm-20261004/compare-executables.py": "61179d4879f73446dee5f74a30dca9741badafe27d2735a495201e46d7e9ae0a",
+    "experiments/runtime-goal110-bounded-rem-20261004/static-qbe-nested.py": "34091210cbf7d435de9a59784a7c70cf506a70684f21137567786ae900065161"
+  },
+  "scope": "Exploratory14cases/bothsizes5r1w; subsettradeoffs only, no fullsuite or independent goal confirmation; unchanged source/artifacts preserved.",
+  "verifier_note": "Initial complete offline replay passed; changed only source-object parser to cursor/memoryview to avoid quadratic slicing of282.8MB. Raw archives unchanged; final replay validates corrected verifier."
+}

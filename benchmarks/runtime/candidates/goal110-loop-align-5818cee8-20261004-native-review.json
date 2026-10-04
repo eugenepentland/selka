@@ -1,0 +1,33 @@
+{
+  "status": "pass",
+  "reviewed_utc": "2026-10-04T11:49:35.245930+00:00",
+  "source_revision": "5818cee8e679c1f30fd5966963210511fcf69919",
+  "pairs": 2763,
+  "executions": 5526,
+  "counts": {
+    "success": 2604,
+    "R_DIVISION_BY_ZERO": 70,
+    "R_OVERFLOW": 70,
+    "startup_memory": 7,
+    "R_STEP_LIMIT": 6,
+    "R_FRAME_LIMIT": 6
+  },
+  "policies": {
+    "rc-v5-llvm-accounted0": 393,
+    "rc-v5-llvm-accounted1": 399,
+    "rc-v5-qbe-accounted0": 393,
+    "rc-v5-qbe-accounted1": 399,
+    "rc-v5-counting-llvm-accounted0": 393,
+    "rc-v5-sites-llvm-accounted0": 393,
+    "gc-v1-llvm-accounted0": 393
+  },
+  "live_file_bindings": 5289,
+  "report_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-natural-loop-align-20261004/.mylang-cache/goal110-natural-loop-align/native/native-differential.json",
+  "report_sha256": "c34c0a4a89873d0de4f301f253e78d39256bb471aa0481426634318671cb7ad6",
+  "script_sha256": "400c5c4784cb3d8eb092f7e5fb5779eed31c64bb7b9bafdf792d7674789e610b",
+  "limitations": [
+    "Saved process outcomes and current artifacts; no new executions.",
+    "Both hosts use Debug; control is integrated1a and candidate is5818, with normal optimized guests.",
+    "No runtime benchmark or goal acceptance claim."
+  ]
+}
