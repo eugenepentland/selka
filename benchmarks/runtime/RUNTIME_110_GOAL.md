@@ -9,7 +9,7 @@ the raw evidence for every reported result.
 
 <!-- STATUS-START -->
 - **Campaign:** active; G4 confirms ten LLVM cells on the integrated ReleaseFast build.
-- **Last document update:** 2026-10-04 07:41:28 UTC.
+- **Last document update:** 2026-10-04 07:48:35 UTC.
 - **Active batch:** guarded nonnegative remainder and checked list-index/value reuse.
 - **Current implementation:** `perf/runtime-parity-20261003`, production source
   `6cf7bdce11bc205862bf75b9d9ce72e46caad0a2`, combining text, append, mutation and short-join changes.
@@ -24,12 +24,15 @@ the raw evidence for every reported result.
   80-row native screen: all 64 affected 17–64-byte rows improved by 12.9–39.1%.
   All invocation checksums/statuses pass. One unchanged 128-byte control is 5.3%
   slower and needs an independent repeat. Its official ReleaseFast compiler
-  build is authorized; these helper results do not establish goal acceptance.
+  build passes; fresh guests are building. These helper results do not establish
+  goal acceptance.
   Corrected remainder `27de73d3` passes 59 focused tests and its source gate;
   root independently replays 41 native pairs. Its fresh RF host is authorized.
   The index-update candidate passes 24 focused tests after narrow i64 floor-op
-  support, but still has no frozen-benchmark hits. Targeted refusal diagnostics
-  are running before any official host build for that candidate.
+  support. The corrected diagnostic reaches both frozen mutation writes. A narrow
+  scalar-stack-prefix extension for the following read is approved after exact
+  clean-host attribution; ownership protocols remain intact. Earlier wrong-host
+  no-hit claims are withdrawn in the progress log.
 - **Remaining nearby targets:** small equality **1.3898×** and small integer
   sorting **1.3925×** in G4 B. The bounded equality candidate is under evaluation.
 - **Append tradeoff:** repeated LLVM append gains of 11.2%/23.0% are accepted
@@ -594,3 +597,9 @@ diagnostic notes and raw evidence rather than pasting build logs here.
 
 
 | 2026-10-04 07:41:28 UTC | Corrected remainder `27de73d3` pinned | Final59 focused results and whole-tree88 source/commit gates pass. Root independently replays41 complete accounted/unaccounted pairs (32success/9failure), including9 LLVM-scalar-policy pairs executed throughQBE. Real LLVM translation contains unsigned remainder in the admitted copy and signed remainder in fallback. [Independent replay](candidates/goal110-remainder-27de73d3-20261004-native-review.json). | Fresh successorRF host is authorized in a separate worktree;073 artifacts remain intact. Require actual LLVM boundary executions and signed-input performance checks before adoption. Index-update24 tests pass but no real benchmark hit yet; diagnostics remain isolated. |
+
+
+| 2026-10-04 07:44:40 UTC | Mutation diagnostic attribution correction | The new focused build installed its compiler under `zig-out/focus/focus/mylang`, but the diagnostic read the old `zig-out/focus/mylang`. Withdraw the new floor-stage/no-hit conclusion and final-source counting attribution; compiled24/13 unit results remain valid. Earlier four same-policy pairs retain only their recorded earlier-source attribution. | Preserve wrong-host receipts. Require exact resolved executable/source bindings and an expected-marker control before redoing actual frozen-port diagnostics. No official mutation host or timing was run. EqualityRF host completes successfully; its24 guests are building. |
+
+
+| 2026-10-04 07:48:35 UTC | Corrected mutation diagnostic and native equality replay | The correctly resolved diagnostic compiler emits two checked-index rewrite sites in frozen ports (shared/unique writes); the following unique read is refused because checksum already occupies a plain scalar stack slot. Root approves a separately proved following-read scalar prefix without weakening existing token-deletion admission. Root independently replays all1,282 equality helper processes and3 raw archive bindings,10 helper bindings and native source bindings. [Equality replay](candidates/goal110-bounded-3dcbe723-20261004-native-review.json). | Finish exact clean-host attribution, then test the narrow prefix change. Equality and corrected-remainder official guests/qualification remain pending. No new source integration, timing or goal confirmation. |
