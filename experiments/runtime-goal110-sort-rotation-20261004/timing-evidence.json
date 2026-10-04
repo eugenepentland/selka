@@ -1,0 +1,824 @@
+{
+  "schema": "mylang-goal110-sort-rotation-timing-v1",
+  "status": "adopted_by_coordinator_llvm_first_tradeoff",
+  "candidate_revision": "8043c4d9e0ad907c8a1b9e8416a1e58815eef0df",
+  "validation_receipt_sha256": "dd3d064f440a6c142995e037c413cdc5ef155ab22c1bf8ae3f3e8a0743f30ab3",
+  "cpu": 2,
+  "diagnostic_decision": [
+    "LLVM small sort_int gain repeats at ratio0.82396; current-fastest ratio1.36067 remains above1.10.",
+    "QBE nested-large regression repeats at ratio1.10972; normalized nested kernel and all96 direct/tail-call targets are instruction-identical except symbol addresses.",
+    "Only six sort routines change normalized instructions; shifted code/data alignment may affect QBE nested performance, but causality is unproven.",
+    "After independent static/holdout/paired/live-artifact replay, the coordinator adopted unchanged804 as63df6b6c with an explicit LLVM-first tradeoff. This screening archive establishes no new goal cell."
+  ],
+  "reports": {
+    "six-arm-screen": {
+      "schema": "mylang-runtime-expanded-v2",
+      "status": "subset",
+      "started_utc": "2026-10-04T03:22:09.667479+00:00",
+      "finished_utc": "2026-10-04T03:23:21.214137+00:00",
+      "session_id": "118e5b2a-23a0-4b29-a630-9906fbbe59af",
+      "rounds": 5,
+      "warmups": 1,
+      "llvm_current_fastest": [
+        {
+          "case": "sort_records",
+          "profile": "small",
+          "llvm_ns_per_op": 1218.5527341922202,
+          "fastest_arm": "zig-fast",
+          "fastest_ns_per_op": 542.3958053883188,
+          "ratio": 2.2466116479640155
+        },
+        {
+          "case": "sort_records",
+          "profile": "large",
+          "llvm_ns_per_op": 60488.672,
+          "fastest_arm": "rust",
+          "fastest_ns_per_op": 49756.57466666667,
+          "ratio": 1.2156920448248434
+        },
+        {
+          "case": "sort_int",
+          "profile": "small",
+          "llvm_ns_per_op": 221.73451700782613,
+          "fastest_arm": "zig-fast",
+          "fastest_ns_per_op": 162.959276713619,
+          "ratio": 1.3606744057749927
+        },
+        {
+          "case": "sort_int",
+          "profile": "large",
+          "llvm_ns_per_op": 44161.26801405975,
+          "fastest_arm": "my-llvm",
+          "fastest_ns_per_op": 44161.26801405975,
+          "ratio": 1.0
+        },
+        {
+          "case": "mutate_nested",
+          "profile": "small",
+          "llvm_ns_per_op": 719.2669775656061,
+          "fastest_arm": "my-llvm",
+          "fastest_ns_per_op": 719.2669775656061,
+          "ratio": 1.0
+        },
+        {
+          "case": "mutate_nested",
+          "profile": "large",
+          "llvm_ns_per_op": 7131.908278327833,
+          "fastest_arm": "my-llvm",
+          "fastest_ns_per_op": 7131.908278327833,
+          "ratio": 1.0
+        },
+        {
+          "case": "list_append",
+          "profile": "small",
+          "llvm_ns_per_op": 312.62578459093777,
+          "fastest_arm": "zig-fast",
+          "fastest_ns_per_op": 116.69627275488982,
+          "ratio": 2.678969749510171
+        },
+        {
+          "case": "list_append",
+          "profile": "large",
+          "llvm_ns_per_op": 13112.956215793589,
+          "fastest_arm": "zig-fast",
+          "fastest_ns_per_op": 5492.38477326036,
+          "ratio": 2.3874795297725555
+        }
+      ]
+    },
+    "paired-screen": {
+      "schema": "mylang-goal110-sort-paired-screen-v1",
+      "status": "complete",
+      "started_utc": "2026-10-04T03:23:37.187728+00:00",
+      "finished_utc": "2026-10-04T03:23:57.898515+00:00",
+      "session_id": null,
+      "rounds": 5,
+      "warmups": 1,
+      "rows": [
+        {
+          "plan": {
+            "case": "sort_records",
+            "size": 64,
+            "profile": "small",
+            "seed": 42,
+            "group": "collections",
+            "family": "library-sort",
+            "level": "micro",
+            "unit": "one complete SIZE-element dataset operation",
+            "iterations": 96171,
+            "expected": 439284004,
+            "calibration": {
+              "fastest_ns": 51121163,
+              "slowest_ns": 659469777,
+              "target_ns": 50000000,
+              "slowest_cap_ns": 1000000000,
+              "iteration_cap": 10000000,
+              "reason": "target",
+              "limited": false,
+              "target_reached": true,
+              "slowest_budget_exceeded": false
+            }
+          },
+          "medians_ns_per_op": {
+            "before-llvm": 1188.8192282496802,
+            "before-qbe": 1538.723825269572,
+            "after-llvm": 1219.1042310051887,
+            "after-qbe": 1558.979276497073
+          },
+          "after_before_ratios": {
+            "llvm": 1.025474859453693,
+            "qbe": 1.0131637990488336
+          },
+          "paired_bootstrap_95": {
+            "llvm": [
+              1.0212887379083067,
+              1.0271324765125862
+            ],
+            "qbe": [
+              1.0094337968294211,
+              1.0236545499764904
+            ]
+          }
+        },
+        {
+          "plan": {
+            "case": "sort_records",
+            "size": 4096,
+            "profile": "large",
+            "seed": 42,
+            "group": "collections",
+            "family": "library-sort",
+            "level": "micro",
+            "unit": "one complete SIZE-element dataset operation",
+            "iterations": 750,
+            "expected": 567621625,
+            "calibration": {
+              "fastest_ns": 37042216,
+              "slowest_ns": 900548413,
+              "target_ns": 50000000,
+              "slowest_cap_ns": 1000000000,
+              "iteration_cap": 10000000,
+              "reason": "pilot_limit",
+              "limited": true,
+              "target_reached": false,
+              "slowest_budget_exceeded": false
+            }
+          },
+          "medians_ns_per_op": {
+            "before-llvm": 60235.901333333335,
+            "before-qbe": 77362.39066666667,
+            "after-llvm": 60845.72933333334,
+            "after-qbe": 77386.42933333333
+          },
+          "after_before_ratios": {
+            "llvm": 1.0101239955989922,
+            "qbe": 1.000310728074191
+          },
+          "paired_bootstrap_95": {
+            "llvm": [
+              0.9910983540579985,
+              1.0301802803383857
+            ],
+            "qbe": [
+              0.9982629414764319,
+              1.0089309373807183
+            ]
+          }
+        },
+        {
+          "plan": {
+            "case": "sort_int",
+            "size": 64,
+            "profile": "small",
+            "seed": 42,
+            "group": "collections",
+            "family": "library-sort",
+            "level": "micro",
+            "unit": "one complete SIZE-element dataset operation",
+            "iterations": 305771,
+            "expected": 584430486,
+            "calibration": {
+              "fastest_ns": 50261277,
+              "slowest_ns": 315073195,
+              "target_ns": 50000000,
+              "slowest_cap_ns": 1000000000,
+              "iteration_cap": 10000000,
+              "reason": "target",
+              "limited": false,
+              "target_reached": true,
+              "slowest_budget_exceeded": false
+            }
+          },
+          "medians_ns_per_op": {
+            "before-llvm": 269.47072809390033,
+            "before-qbe": 472.9230535269859,
+            "after-llvm": 221.59588057729476,
+            "after-qbe": 413.71479636721597
+          },
+          "after_before_ratios": {
+            "llvm": 0.8223374840924355,
+            "qbe": 0.8748036139955453
+          },
+          "paired_bootstrap_95": {
+            "llvm": [
+              0.8223374840924355,
+              0.8269964155665289
+            ],
+            "qbe": [
+              0.868779895065587,
+              0.8836546895254909
+            ]
+          }
+        },
+        {
+          "plan": {
+            "case": "sort_int",
+            "size": 4096,
+            "profile": "large",
+            "seed": 42,
+            "group": "collections",
+            "family": "library-sort",
+            "level": "micro",
+            "unit": "one complete SIZE-element dataset operation",
+            "iterations": 1138,
+            "expected": 76008323,
+            "calibration": {
+              "fastest_ns": 49601063,
+              "slowest_ns": 257966055,
+              "target_ns": 50000000,
+              "slowest_cap_ns": 1000000000,
+              "iteration_cap": 10000000,
+              "reason": "slowest_arm_budget",
+              "limited": true,
+              "target_reached": false,
+              "slowest_budget_exceeded": false
+            }
+          },
+          "medians_ns_per_op": {
+            "before-llvm": 44331.22319859402,
+            "before-qbe": 53847.735500878734,
+            "after-llvm": 44398.61775043937,
+            "after-qbe": 53516.39543057996
+          },
+          "after_before_ratios": {
+            "llvm": 1.0015202502205598,
+            "qbe": 0.9938467222954368
+          },
+          "paired_bootstrap_95": {
+            "llvm": [
+              0.9973553681421468,
+              1.0070491373329367
+            ],
+            "qbe": [
+              0.9887462358170497,
+              1.0005834362545714
+            ]
+          }
+        },
+        {
+          "plan": {
+            "case": "mutate_nested",
+            "size": 64,
+            "profile": "small",
+            "seed": 42,
+            "group": "collections",
+            "family": "mutate",
+            "level": "micro",
+            "unit": "one complete SIZE-element dataset operation",
+            "iterations": 72478,
+            "expected": 897947893,
+            "calibration": {
+              "fastest_ns": 50890416,
+              "slowest_ns": 81462117,
+              "target_ns": 50000000,
+              "slowest_cap_ns": 1000000000,
+              "iteration_cap": 10000000,
+              "reason": "target",
+              "limited": false,
+              "target_reached": true,
+              "slowest_budget_exceeded": false
+            }
+          },
+          "medians_ns_per_op": {
+            "before-llvm": 725.1848009051023,
+            "before-qbe": 829.7691851320401,
+            "after-llvm": 717.2830790032838,
+            "after-qbe": 831.9563177791881
+          },
+          "after_before_ratios": {
+            "llvm": 0.989103850643372,
+            "qbe": 1.002635832574091
+          },
+          "paired_bootstrap_95": {
+            "llvm": [
+              0.9760514696098735,
+              0.9928212164210267
+            ],
+            "qbe": [
+              0.9871957730244423,
+              1.026332871485187
+            ]
+          }
+        },
+        {
+          "plan": {
+            "case": "mutate_nested",
+            "size": 1024,
+            "profile": "large",
+            "seed": 42,
+            "group": "collections",
+            "family": "mutate",
+            "level": "micro",
+            "unit": "one complete SIZE-element dataset operation",
+            "iterations": 7272,
+            "expected": 162175116,
+            "calibration": {
+              "fastest_ns": 50437381,
+              "slowest_ns": 137476664,
+              "target_ns": 50000000,
+              "slowest_cap_ns": 1000000000,
+              "iteration_cap": 10000000,
+              "reason": "target",
+              "limited": false,
+              "target_reached": true,
+              "slowest_budget_exceeded": false
+            }
+          },
+          "medians_ns_per_op": {
+            "before-llvm": 7068.896177117712,
+            "before-qbe": 7843.191694169417,
+            "after-llvm": 7066.100522552255,
+            "after-qbe": 8674.29194169417
+          },
+          "after_before_ratios": {
+            "llvm": 0.9996045132796678,
+            "qbe": 1.1059645460587924
+          },
+          "paired_bootstrap_95": {
+            "llvm": [
+              0.9909942103609263,
+              1.0315019481843126
+            ],
+            "qbe": [
+              1.0796108882820636,
+              1.1176690664719526
+            ]
+          }
+        },
+        {
+          "plan": {
+            "case": "list_append",
+            "size": 64,
+            "profile": "small",
+            "seed": 42,
+            "group": "collections",
+            "family": "list",
+            "level": "micro",
+            "unit": "one complete SIZE-element dataset operation",
+            "iterations": 427930,
+            "expected": 640889824,
+            "calibration": {
+              "fastest_ns": 48326244,
+              "slowest_ns": 211798282,
+              "target_ns": 50000000,
+              "slowest_cap_ns": 1000000000,
+              "iteration_cap": 10000000,
+              "reason": "slowest_arm_budget",
+              "limited": true,
+              "target_reached": false,
+              "slowest_budget_exceeded": false
+            }
+          },
+          "medians_ns_per_op": {
+            "before-llvm": 310.38769424905945,
+            "before-qbe": 500.52170915803987,
+            "after-llvm": 313.85838338045943,
+            "after-qbe": 499.8034281307691
+          },
+          "after_before_ratios": {
+            "llvm": 1.0111817871510558,
+            "qbe": 0.9985649353182321
+          },
+          "paired_bootstrap_95": {
+            "llvm": [
+              0.9371534955256812,
+              1.0221639686271398
+            ],
+            "qbe": [
+              0.9936010388178667,
+              1.0125040777658687
+            ]
+          }
+        },
+        {
+          "plan": {
+            "case": "list_append",
+            "size": 4096,
+            "profile": "large",
+            "seed": 42,
+            "group": "collections",
+            "family": "list",
+            "level": "micro",
+            "unit": "one complete SIZE-element dataset operation",
+            "iterations": 10232,
+            "expected": 424138553,
+            "calibration": {
+              "fastest_ns": 54964260,
+              "slowest_ns": 212214109,
+              "target_ns": 50000000,
+              "slowest_cap_ns": 1000000000,
+              "iteration_cap": 10000000,
+              "reason": "target",
+              "limited": false,
+              "target_reached": true,
+              "slowest_budget_exceeded": false
+            }
+          },
+          "medians_ns_per_op": {
+            "before-llvm": 13183.750097732604,
+            "before-qbe": 21428.61278342455,
+            "after-llvm": 13120.147478498828,
+            "after-qbe": 21408.239053948397
+          },
+          "after_before_ratios": {
+            "llvm": 0.9951756807613704,
+            "qbe": 0.9990492277926684
+          },
+          "paired_bootstrap_95": {
+            "llvm": [
+              0.9913596768564131,
+              0.9989684581835784
+            ],
+            "qbe": [
+              0.9946530493133839,
+              1.000462953135722
+            ]
+          }
+        }
+      ]
+    },
+    "paired-repeat": {
+      "schema": "mylang-goal110-sort-paired-repeat-v1",
+      "status": "complete",
+      "started_utc": "2026-10-04T03:25:44.573363+00:00",
+      "finished_utc": "2026-10-04T03:26:19.216924+00:00",
+      "session_id": "5aea9874-b35d-4099-b5b7-fa640e5ccb98",
+      "rounds": 15,
+      "warmups": 3,
+      "rows": [
+        {
+          "plan": {
+            "case": "sort_records",
+            "size": 64,
+            "profile": "small",
+            "seed": 42,
+            "group": "collections",
+            "family": "library-sort",
+            "level": "micro",
+            "unit": "one complete SIZE-element dataset operation",
+            "iterations": 96171,
+            "expected": 439284004,
+            "calibration": {
+              "fastest_ns": 51121163,
+              "slowest_ns": 659469777,
+              "target_ns": 50000000,
+              "slowest_cap_ns": 1000000000,
+              "iteration_cap": 10000000,
+              "reason": "target",
+              "limited": false,
+              "target_reached": true,
+              "slowest_budget_exceeded": false
+            }
+          },
+          "medians_ns_per_op": {
+            "before-llvm": 1181.0650299986482,
+            "before-qbe": 1529.6849985962504,
+            "after-llvm": 1204.426469517838,
+            "after-qbe": 1544.5385407243348
+          },
+          "after_before_ratios": {
+            "llvm": 1.0197799773304748,
+            "qbe": 1.0097101966363762
+          },
+          "paired_bootstrap_95": {
+            "llvm": [
+              0.9969416958999032,
+              1.0305009693876988
+            ],
+            "qbe": [
+              1.0071959131310553,
+              1.0121012683731845
+            ]
+          }
+        },
+        {
+          "plan": {
+            "case": "sort_records",
+            "size": 4096,
+            "profile": "large",
+            "seed": 42,
+            "group": "collections",
+            "family": "library-sort",
+            "level": "micro",
+            "unit": "one complete SIZE-element dataset operation",
+            "iterations": 750,
+            "expected": 567621625,
+            "calibration": {
+              "fastest_ns": 37042216,
+              "slowest_ns": 900548413,
+              "target_ns": 50000000,
+              "slowest_cap_ns": 1000000000,
+              "iteration_cap": 10000000,
+              "reason": "pilot_limit",
+              "limited": true,
+              "target_reached": false,
+              "slowest_budget_exceeded": false
+            }
+          },
+          "medians_ns_per_op": {
+            "before-llvm": 59833.22933333334,
+            "before-qbe": 76918.59333333334,
+            "after-llvm": 60547.51733333334,
+            "after-qbe": 76897.79466666667
+          },
+          "after_before_ratios": {
+            "llvm": 1.0119379817529266,
+            "qbe": 0.9997296015727103
+          },
+          "paired_bootstrap_95": {
+            "llvm": [
+              0.970838451480898,
+              1.0736377658773424
+            ],
+            "qbe": [
+              0.9932026592979069,
+              1.003136229474331
+            ]
+          }
+        },
+        {
+          "plan": {
+            "case": "sort_int",
+            "size": 64,
+            "profile": "small",
+            "seed": 42,
+            "group": "collections",
+            "family": "library-sort",
+            "level": "micro",
+            "unit": "one complete SIZE-element dataset operation",
+            "iterations": 305771,
+            "expected": 584430486,
+            "calibration": {
+              "fastest_ns": 50261277,
+              "slowest_ns": 315073195,
+              "target_ns": 50000000,
+              "slowest_cap_ns": 1000000000,
+              "iteration_cap": 10000000,
+              "reason": "target",
+              "limited": false,
+              "target_reached": true,
+              "slowest_budget_exceeded": false
+            }
+          },
+          "medians_ns_per_op": {
+            "before-llvm": 268.65719443635925,
+            "before-qbe": 471.18581552861457,
+            "after-llvm": 221.36380493899028,
+            "after-qbe": 412.03178849531184
+          },
+          "after_before_ratios": {
+            "llvm": 0.8239638078682756,
+            "qbe": 0.8744571141919055
+          },
+          "paired_bootstrap_95": {
+            "llvm": [
+              0.8199193304441478,
+              0.8275893620675687
+            ],
+            "qbe": [
+              0.8720031488720342,
+              0.8783265251892529
+            ]
+          }
+        },
+        {
+          "plan": {
+            "case": "sort_int",
+            "size": 4096,
+            "profile": "large",
+            "seed": 42,
+            "group": "collections",
+            "family": "library-sort",
+            "level": "micro",
+            "unit": "one complete SIZE-element dataset operation",
+            "iterations": 1138,
+            "expected": 76008323,
+            "calibration": {
+              "fastest_ns": 49601063,
+              "slowest_ns": 257966055,
+              "target_ns": 50000000,
+              "slowest_cap_ns": 1000000000,
+              "iteration_cap": 10000000,
+              "reason": "slowest_arm_budget",
+              "limited": true,
+              "target_reached": false,
+              "slowest_budget_exceeded": false
+            }
+          },
+          "medians_ns_per_op": {
+            "before-llvm": 44093.73901581722,
+            "before-qbe": 53681.12478031634,
+            "after-llvm": 44300.1546572935,
+            "after-qbe": 53462.96397188049
+          },
+          "after_before_ratios": {
+            "llvm": 1.0046812914051637,
+            "qbe": 0.9959359866372277
+          },
+          "paired_bootstrap_95": {
+            "llvm": [
+              1.0009242970245826,
+              1.0102211022375687
+            ],
+            "qbe": [
+              0.9943459042908828,
+              0.998597671729434
+            ]
+          }
+        },
+        {
+          "plan": {
+            "case": "mutate_nested",
+            "size": 64,
+            "profile": "small",
+            "seed": 42,
+            "group": "collections",
+            "family": "mutate",
+            "level": "micro",
+            "unit": "one complete SIZE-element dataset operation",
+            "iterations": 72478,
+            "expected": 897947893,
+            "calibration": {
+              "fastest_ns": 50890416,
+              "slowest_ns": 81462117,
+              "target_ns": 50000000,
+              "slowest_cap_ns": 1000000000,
+              "iteration_cap": 10000000,
+              "reason": "target",
+              "limited": false,
+              "target_reached": true,
+              "slowest_budget_exceeded": false
+            }
+          },
+          "medians_ns_per_op": {
+            "before-llvm": 726.0894340351555,
+            "before-qbe": 830.6885123761693,
+            "after-llvm": 716.2431910372803,
+            "after-qbe": 829.578741135241
+          },
+          "after_before_ratios": {
+            "llvm": 0.9864393523217163,
+            "qbe": 0.9986640344432429
+          },
+          "paired_bootstrap_95": {
+            "llvm": [
+              0.9804761217353435,
+              0.9897692392721591
+            ],
+            "qbe": [
+              0.9952798154426469,
+              1.0009343436270444
+            ]
+          }
+        },
+        {
+          "plan": {
+            "case": "mutate_nested",
+            "size": 1024,
+            "profile": "large",
+            "seed": 42,
+            "group": "collections",
+            "family": "mutate",
+            "level": "micro",
+            "unit": "one complete SIZE-element dataset operation",
+            "iterations": 7272,
+            "expected": 162175116,
+            "calibration": {
+              "fastest_ns": 50437381,
+              "slowest_ns": 137476664,
+              "target_ns": 50000000,
+              "slowest_cap_ns": 1000000000,
+              "iteration_cap": 10000000,
+              "reason": "target",
+              "limited": false,
+              "target_reached": true,
+              "slowest_budget_exceeded": false
+            }
+          },
+          "medians_ns_per_op": {
+            "before-llvm": 7119.6452145214525,
+            "before-qbe": 7880.640951595159,
+            "after-llvm": 7128.335121012101,
+            "after-qbe": 8745.309405940594
+          },
+          "after_before_ratios": {
+            "llvm": 1.0012205533041063,
+            "qbe": 1.1097205747167573
+          },
+          "paired_bootstrap_95": {
+            "llvm": [
+              0.9967846846214703,
+              1.014504461662959
+            ],
+            "qbe": [
+              1.0983355169599511,
+              1.1176251187370165
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "raw_binary_hashes": {
+    "before-llvm": "95a365b32a2e78d44535dc9cfaede1492e114dea3290981fab8478ad12eda111",
+    "before-qbe": "9434945299cca7aae22bcfcd0ffca769473671b8251f98dedf411405c55c5873",
+    "after-llvm": "15537a5ae589c78fd1bd6e4b03d0dec8cc1a0d44236b9753d5cf95f148c34e92",
+    "after-qbe": "93ec975f257d0d116807a83eb9f54916a8aa6e03c64d2623960fc72d6bf6a0ca"
+  },
+  "evidence": {
+    "six-arm-screen.json.gz": {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-sort-rotation-20261004/.mylang-cache/goal110-rotation-review/six-arm-screen.json",
+      "raw_sha256": "2874c15c578fed8df4cbad0cd2d7b4c55f1585ab82d7b1987d8bbf0817f9de88",
+      "archive_sha256": "5d3930c5bcba69d841fa1e7bbd8c05ef2869aee54720fda3b5c6457931f8119b",
+      "raw_bytes": 2260474,
+      "archive_bytes": 558480
+    },
+    "six-arm-screen.log.gz": {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-sort-rotation-20261004/.mylang-cache/goal110-rotation-review/six-arm-screen.log",
+      "raw_sha256": "b0e6a676fa38cc114539c97bb321cfe6a5e73a43cc0995c23c469baec6ce7597",
+      "archive_sha256": "d7905f5ceb2cca98f55157859626c8e9da31a136ad163543483223de8af71b8c",
+      "raw_bytes": 1698,
+      "archive_bytes": 586
+    },
+    "paired-screen.json.gz": {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-sort-rotation-20261004/.mylang-cache/goal110-rotation-review/paired-screen.json",
+      "raw_sha256": "8cd6dd1c91b254222b4c857ab30713793e52c8c688cdb5d3fd629a9646551a58",
+      "archive_sha256": "9681ebd88d3216d6cab84d0c01817a087f7927438c3232a5d537c47685ac0987",
+      "raw_bytes": 1678208,
+      "archive_bytes": 522609
+    },
+    "paired-screen.log.gz": {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-sort-rotation-20261004/.mylang-cache/goal110-rotation-review/paired-screen.log",
+      "raw_sha256": "9de17f81cc38e945bdd6fac715e61d47e816935a77edc553a3b2708c3452bd1c",
+      "archive_sha256": "cbee80432ad9b664638365f608ac6f610a5ea408e4e172bc2e03512d4b228d31",
+      "raw_bytes": 719,
+      "archive_bytes": 385
+    },
+    "paired-repeat.json.gz": {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-sort-rotation-20261004/.mylang-cache/goal110-rotation-review/paired-repeat.json",
+      "raw_sha256": "236aa527de14d070fb1f7900bc5dda280bd07b2a7612d4204771e7d842b228b2",
+      "archive_sha256": "79012407169d5c25229896cb6dfccf1345016b2be120c3cee34fffd53cd66ae6",
+      "raw_bytes": 1725388,
+      "archive_bytes": 525816
+    },
+    "paired-repeat.log.gz": {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-sort-rotation-20261004/.mylang-cache/goal110-rotation-review/paired-repeat.log",
+      "raw_sha256": "73614e69e8edb373bcf1d600df2245d628b9a718d379a606e34a4b670289cc46",
+      "archive_sha256": "e5dd8d022499b120998220b08fe14b4b509f74a71b7480b74ff4ce3629145b72",
+      "raw_bytes": 575,
+      "archive_bytes": 331
+    },
+    "logs/six-arm-screen-verify.log": {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-sort-rotation-20261004/.mylang-cache/goal110-rotation-review/six-arm-screen-verify.log",
+      "raw_sha256": "6629fac8203d9ee5388405fa9fd80f2056623edbb1821c73121e45333cf76ee7",
+      "archive_sha256": "6629fac8203d9ee5388405fa9fd80f2056623edbb1821c73121e45333cf76ee7",
+      "raw_bytes": 76,
+      "archive_bytes": 76
+    },
+    "logs/paired-screen-verify.log": {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-sort-rotation-20261004/.mylang-cache/goal110-rotation-review/paired-screen-verify.log",
+      "raw_sha256": "6385227583b0ff2deca8745c87ec0eca235995691be78306e93ed75a6d8dbfbb",
+      "archive_sha256": "6385227583b0ff2deca8745c87ec0eca235995691be78306e93ed75a6d8dbfbb",
+      "raw_bytes": 35,
+      "archive_bytes": 35
+    },
+    "logs/paired-repeat-verify.log": {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-sort-rotation-20261004/.mylang-cache/goal110-rotation-review/paired-repeat-verify.log",
+      "raw_sha256": "fdb75390a7e039ca747dd58618ea3f28c905fe972bc7b60802b57e412c99f278",
+      "archive_sha256": "fdb75390a7e039ca747dd58618ea3f28c905fe972bc7b60802b57e412c99f278",
+      "raw_bytes": 35,
+      "archive_bytes": 35
+    }
+  },
+  "preserved_original_helper_sha256": "2f0bdf77d4ca75ed2dde83393936bb83f09af717562c0899c4494445482988fb",
+  "limitations": [
+    "Initial screen and five-round pair are exploratory; fifteen-round paired repeat still has only two MyLang backend arms per revision and Debug hosts. None is an ordinary goal confirmation.",
+    "Paired percentile intervals resample identical round indexes without multiple-comparison correction.",
+    "No further runtime timings were performed during static investigation."
+  ],
+  "integration": {
+    "commit": "63df6b6c481b12fd711755ec40cdcb5d1c984ccc",
+    "production_byte_identical_to_candidate": true,
+    "decision": "Accept repeated17.6% LLVM small integer sort gain with documented11.0% QBE nested-large regression; no new goal acceptance cell."
+  }
+}

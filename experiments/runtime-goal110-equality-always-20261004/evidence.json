@@ -1,0 +1,429 @@
+{
+  "source_revision": "99a4d07131a1e6e2fa38605f47265e23b451627d",
+  "before_source": "5a60ef1039aca32657ef5877a464eb8a81d6c115",
+  "compiler_policy": "Debug hosts; RF guests; LLVM O3/full LTO; QBE; unchanged verified references",
+  "status": "rejected for integration; equality deferred",
+  "observed_llvm_current_fastest": {
+    "string_equal/small": 1.3915741640105412,
+    "string_equal/large": 1.0,
+    "string_join/small": 1.0860265619210947,
+    "string_join/large": 1.0,
+    "string_search/small": 1.0,
+    "string_search/large": 1.095649064479706,
+    "bytes_scan/small": 1.0,
+    "bytes_scan/large": 1.0031488224508667
+  },
+  "paired_effects": [
+    {
+      "plan": {
+        "case": "string_equal",
+        "size": 64,
+        "profile": "small",
+        "seed": 42,
+        "group": "text",
+        "family": "strings",
+        "level": "micro",
+        "unit": "one string equality comparison",
+        "iterations": 10000000,
+        "expected": 5000000,
+        "calibration": {
+          "fastest_ns": 28171936,
+          "slowest_ns": 200038657,
+          "target_ns": 50000000,
+          "slowest_cap_ns": 1000000000,
+          "iteration_cap": 10000000,
+          "reason": "iteration_cap",
+          "limited": true,
+          "target_reached": false,
+          "slowest_budget_exceeded": false
+        }
+      },
+      "medians_ns_per_op": {
+        "before-llvm": 3.9777525,
+        "after-llvm": 4.0534533,
+        "before-qbe": 21.206599,
+        "after-qbe": 20.8471196
+      },
+      "after_before_ratios": {
+        "llvm": 1.0190310483118294,
+        "qbe": 0.9830487010199042
+      }
+    },
+    {
+      "plan": {
+        "case": "string_equal",
+        "size": 4096,
+        "profile": "large",
+        "seed": 42,
+        "group": "text",
+        "family": "strings",
+        "level": "micro",
+        "unit": "one string equality comparison",
+        "iterations": 3981808,
+        "expected": 1990904,
+        "calibration": {
+          "fastest_ns": 48614092,
+          "slowest_ns": 922158804,
+          "target_ns": 50000000,
+          "slowest_cap_ns": 1000000000,
+          "iteration_cap": 10000000,
+          "reason": "slowest_arm_budget",
+          "limited": true,
+          "target_reached": false,
+          "slowest_budget_exceeded": false
+        }
+      },
+      "medians_ns_per_op": {
+        "before-llvm": 35.246244921904825,
+        "after-llvm": 12.480164538320281,
+        "before-qbe": 687.0676730269265,
+        "after-qbe": 231.5168270293294
+      },
+      "after_before_ratios": {
+        "llvm": 0.35408494056523204,
+        "qbe": 0.33696364436615855
+      }
+    },
+    {
+      "plan": {
+        "case": "string_join",
+        "size": 64,
+        "profile": "small",
+        "seed": 42,
+        "group": "text",
+        "family": "strings",
+        "level": "micro",
+        "unit": "one full fragment join and output fold",
+        "iterations": 246074,
+        "expected": 514283381,
+        "calibration": {
+          "fastest_ns": 51578480,
+          "slowest_ns": 94779987,
+          "target_ns": 50000000,
+          "slowest_cap_ns": 1000000000,
+          "iteration_cap": 10000000,
+          "reason": "target",
+          "limited": false,
+          "target_reached": true,
+          "slowest_budget_exceeded": false
+        }
+      },
+      "medians_ns_per_op": {
+        "before-llvm": 227.59385388135277,
+        "after-llvm": 236.63645895137236,
+        "before-qbe": 300.3124182156587,
+        "after-qbe": 296.6548558563684
+      },
+      "after_before_ratios": {
+        "llvm": 1.039731323653114,
+        "qbe": 0.987820808806302
+      }
+    },
+    {
+      "plan": {
+        "case": "string_join",
+        "size": 4096,
+        "profile": "large",
+        "seed": 42,
+        "group": "text",
+        "family": "strings",
+        "level": "micro",
+        "unit": "one full fragment join and output fold",
+        "iterations": 4280,
+        "expected": 539077757,
+        "calibration": {
+          "fastest_ns": 52697794,
+          "slowest_ns": 106406677,
+          "target_ns": 50000000,
+          "slowest_cap_ns": 1000000000,
+          "iteration_cap": 10000000,
+          "reason": "target",
+          "limited": false,
+          "target_reached": true,
+          "slowest_budget_exceeded": false
+        }
+      },
+      "medians_ns_per_op": {
+        "before-llvm": 12435.268224299065,
+        "after-llvm": 12398.283411214954,
+        "before-qbe": 13324.257242990654,
+        "after-qbe": 13420.296261682242
+      },
+      "after_before_ratios": {
+        "llvm": 0.9970258130008132,
+        "qbe": 1.0072078328225096
+      }
+    },
+    {
+      "plan": {
+        "case": "string_search",
+        "size": 64,
+        "profile": "small",
+        "seed": 42,
+        "group": "text",
+        "family": "strings",
+        "level": "micro",
+        "unit": "one substring search",
+        "iterations": 2625071,
+        "expected": 92533717,
+        "calibration": {
+          "fastest_ns": 49652916,
+          "slowest_ns": 222052729,
+          "target_ns": 50000000,
+          "slowest_cap_ns": 1000000000,
+          "iteration_cap": 10000000,
+          "reason": "slowest_arm_budget",
+          "limited": true,
+          "target_reached": false,
+          "slowest_budget_exceeded": false
+        }
+      },
+      "medians_ns_per_op": {
+        "before-llvm": 19.42173868821072,
+        "after-llvm": 19.495991536990807,
+        "before-qbe": 24.223977180045797,
+        "after-qbe": 24.901535996550187
+      },
+      "after_before_ratios": {
+        "llvm": 1.0038231823613795,
+        "qbe": 1.0279705851548822
+      }
+    },
+    {
+      "plan": {
+        "case": "string_search",
+        "size": 4096,
+        "profile": "large",
+        "seed": 42,
+        "group": "text",
+        "family": "strings",
+        "level": "micro",
+        "unit": "one substring search",
+        "iterations": 352283,
+        "expected": 722618452,
+        "calibration": {
+          "fastest_ns": 31246566,
+          "slowest_ns": 996760753,
+          "target_ns": 50000000,
+          "slowest_cap_ns": 1000000000,
+          "iteration_cap": 10000000,
+          "reason": "slowest_arm_budget",
+          "limited": true,
+          "target_reached": false,
+          "slowest_budget_exceeded": false
+        }
+      },
+      "medians_ns_per_op": {
+        "before-llvm": 86.52217393402464,
+        "after-llvm": 100.6346488476594,
+        "before-qbe": 91.73000967971772,
+        "after-qbe": 91.29815801500499
+      },
+      "after_before_ratios": {
+        "llvm": 1.1631081868608144,
+        "qbe": 0.9952921441279623
+      }
+    },
+    {
+      "plan": {
+        "case": "bytes_scan",
+        "size": 64,
+        "profile": "small",
+        "seed": 42,
+        "group": "text",
+        "family": "bytes",
+        "level": "micro",
+        "unit": "one full byte-buffer scan",
+        "iterations": 10000000,
+        "expected": 599999433,
+        "calibration": {
+          "fastest_ns": 35382951,
+          "slowest_ns": 271788291,
+          "target_ns": 50000000,
+          "slowest_cap_ns": 1000000000,
+          "iteration_cap": 10000000,
+          "reason": "iteration_cap",
+          "limited": true,
+          "target_reached": false,
+          "slowest_budget_exceeded": false
+        }
+      },
+      "medians_ns_per_op": {
+        "before-llvm": 3.4641913,
+        "after-llvm": 3.5675158,
+        "before-qbe": 8.1177191,
+        "after-qbe": 8.0603202
+      },
+      "after_before_ratios": {
+        "llvm": 1.029826441744138,
+        "qbe": 0.9929291837654248
+      }
+    },
+    {
+      "plan": {
+        "case": "bytes_scan",
+        "size": 4096,
+        "profile": "large",
+        "seed": 42,
+        "group": "text",
+        "family": "bytes",
+        "level": "micro",
+        "unit": "one full byte-buffer scan",
+        "iterations": 641070,
+        "expected": 792394462,
+        "calibration": {
+          "fastest_ns": 49891917,
+          "slowest_ns": 932879419,
+          "target_ns": 50000000,
+          "slowest_cap_ns": 1000000000,
+          "iteration_cap": 10000000,
+          "reason": "slowest_arm_budget",
+          "limited": true,
+          "target_reached": false,
+          "slowest_budget_exceeded": false
+        }
+      },
+      "medians_ns_per_op": {
+        "before-llvm": 75.19644344611353,
+        "after-llvm": 78.50440825494876,
+        "before-qbe": 78.2268504219508,
+        "after-qbe": 78.34973403840455
+      },
+      "after_before_ratios": {
+        "llvm": 1.043990974270023,
+        "qbe": 1.001570862380256
+      }
+    }
+  ],
+  "native_distribution_status": "helpers built, no timing;80 medium rows and340 full rows prepared but skipped after guest regressions",
+  "prerequisite": "Understand the shared lowering/code-layout mechanism behind repeated large LLVM search regressions before revisiting equality; restored inlining did not remove the regression and is not a demonstrated cause. Small equality remains above target.",
+  "source_check_script_hashes": {
+    "src/native_text.c": "fb65eab8d9aeac61910bfd81d28f6926c214b1d14c778ac985fadb5e1a28e4ce",
+    "src/native_text.h": "c1fe4eefa54b05fe533917ace4767f4f7d3001cb28872cb81bd6076eb861c2c2",
+    "tests/native_text_dictionary_test.c": "17e29b4a15caa66426b32516aca6da3bc3ff683923ac92e3e70921b04e23327f",
+    "experiments/runtime-goal110-equality-always-20261004/native-tests.log": "18789525525ad0d1df3853d59986999a157c484445cb77fb17ed5910c8ef4911",
+    "experiments/runtime-goal110-equality-always-20261004/native-checks.py": "3929c8cd103fbad1cbc117cfcd2e82e1dac67f59c5de50c40ee8b66837394aa8",
+    "experiments/runtime-goal110-equality-always-20261004/time-guests.py": "b14e0fe0fe0bc171f9d14238afd808f6faf8b99339f4a3f461376d19fe48b276",
+    "experiments/runtime-goal110-equality-always-20261004/time-distributions.py": "603cab7a1fbeac269465a968200de2e89755c00b19a8e6eda928def972c33076",
+    "experiments/runtime-goal110-equality-always-20261004/guest-checks.py": "1a8f6d7669c0b2ebb216015cf68f84a1d9cc6e2bfe1ac5fc53ec0ba9af0095d2",
+    "experiments/runtime-goal110-equality-always-20261004/llvm-kernel.asm.gz": "27d8df6fe254694cef293a7194858eb5d9ff9848646b59d3758961435be41eeb"
+  },
+  "retained": [
+    {
+      "raw": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-always-20261004/.mylang-cache/goal110-equality-always/compiler-receipt.json",
+      "raw_sha256": "9fe85e0a9bf6998737d231c7f5c8df7154582fbce1c274b1e8349747478da8f2",
+      "archive": "experiments/runtime-goal110-equality-always-20261004/compiler-receipt.json.gz",
+      "archive_sha256": "3317a52e968e1195a76e49cccb2cfc5d184a550fad73de7fe75a83449440ec9d"
+    },
+    {
+      "raw": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-always-20261004/.mylang-cache/goal110-equality-always/compiler-build.log",
+      "raw_sha256": "36dd2806200d1b7e2b44aac86a11d1ad6ba33aeed44b5488cd870071fc2dac7e",
+      "archive": "experiments/runtime-goal110-equality-always-20261004/compiler-build.log.gz",
+      "archive_sha256": "218504c50eec617c991884bf86465c4af510dcd2361414fa56d7ce06cdc16aa9"
+    },
+    {
+      "raw": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-always-20261004/.mylang-cache/goal110-equality-always/guests-build-driver.log",
+      "raw_sha256": "45b25674f9497f6d6b9cbc583db55099fb289fd5c7c20e69cf0808bbad23aa97",
+      "archive": "experiments/runtime-goal110-equality-always-20261004/guests-build-driver.log.gz",
+      "archive_sha256": "92139515fcd3a1545dc2b2a3e434185abcf488a59f7b3e1e5a0ce64ed13293e1"
+    },
+    {
+      "raw": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-always-20261004/.mylang-cache/goal110-equality-always/text-guest-checks.json",
+      "raw_sha256": "d4567039127f12f32156968c08c9a814b7dcf1c0b9a48711263cb776e30f21cc",
+      "archive": "experiments/runtime-goal110-equality-always-20261004/text-guest-checks.json.gz",
+      "archive_sha256": "1d91347dc56492372eef8edc614d8980da483daf76b116b3b6fbff623e1666ad"
+    },
+    {
+      "raw": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-always-20261004/.mylang-cache/goal110-equality-always/validation.log",
+      "raw_sha256": "4ccfb8fb7661fa143f8ee406dfb03a47ba9918c3541d0ae0d071aab40017cf41",
+      "archive": "experiments/runtime-goal110-equality-always-20261004/validation.log.gz",
+      "archive_sha256": "4c465975b9066d262f2276a33b37ca8737c37bedcd8e22fb7d66896811a17167"
+    },
+    {
+      "raw": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-always-20261004/.mylang-cache/goal110-equality-always/equality-screen.json",
+      "raw_sha256": "90a59aa6d25fda25fe47d3c041339c2205b7b25209cceab380c2abb0ece57690",
+      "archive": "experiments/runtime-goal110-equality-always-20261004/equality-screen.json.gz",
+      "archive_sha256": "c61f98c5fe53c4596c3924c57d1aad66b577d864163a4f1582413ff7331af3cf"
+    },
+    {
+      "raw": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-always-20261004/.mylang-cache/goal110-equality-always/equality-screen.log",
+      "raw_sha256": "cffe26f0513df7968f69dacba6643cb6b21576745ef2d07c388ef264e96b3f05",
+      "archive": "experiments/runtime-goal110-equality-always-20261004/equality-screen.log.gz",
+      "archive_sha256": "bee3bf18c6a5149edc50fd63f41b5f2f325bda4f9a915de7edb7e40480899058"
+    },
+    {
+      "raw": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-always-20261004/.mylang-cache/goal110-equality-always/equality-before-after.json",
+      "raw_sha256": "7d35d681a4527f659bd41a6a121edb8a54752f3c05e38650b3b33432a90fc016",
+      "archive": "experiments/runtime-goal110-equality-always-20261004/equality-before-after.json.gz",
+      "archive_sha256": "5576877b37feb7a1cd1594d1200f5a409113e7761978dc089c5b1c18f06d8372"
+    },
+    {
+      "raw": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-always-20261004/.mylang-cache/goal110-equality-always/equality-before-after.log",
+      "raw_sha256": "99ee102c19f7a00f9b2694423b72dd6d3908a50285d95a553b4ea4c2ffc3242c",
+      "archive": "experiments/runtime-goal110-equality-always-20261004/equality-before-after.log.gz",
+      "archive_sha256": "8d65a0ee81536ed76c5083f8e4281de3b6f72d8d2abc116fa536d297758403f4"
+    },
+    {
+      "raw": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-always-20261004/.mylang-cache/goal110-equality-always/runner/manifest.json",
+      "raw_sha256": "9320cda67bedacaaf158f6f5f13370535de2c59cdd968fcc16045856a4f650eb",
+      "archive": "experiments/runtime-goal110-equality-always-20261004/manifest.json.gz",
+      "archive_sha256": "b8e98bae9f9158a01992811ce659f5e7dfd69579809427a0ff17bcbaf1f83109"
+    },
+    {
+      "raw": "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/.mylang-cache/goal110-join/join-compiler-receipt.json",
+      "raw_sha256": "6c0285cfcca85ade2fb6ef22aa4c1f1a25257b81e6230bb7c9fb7a19f11b7115",
+      "archive": "experiments/runtime-goal110-equality-always-20261004/before-compiler-receipt.json.gz",
+      "archive_sha256": "d89940d78c8edd68984f15a2bd8018846ef59cb4aedb697c79f442fee1323a4d"
+    },
+    {
+      "raw": "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/.mylang-cache/goal110-join/join-runner/manifest.json",
+      "raw_sha256": "ce91e4fa047ca147560dd073e07d92afeecc60e336dd1dfccc6aa913e639a410",
+      "archive": "experiments/runtime-goal110-equality-always-20261004/before-manifest.json.gz",
+      "archive_sha256": "34e5438798742111e0427b2025f44c92938dbaa843b5d91e851aa8017ad2b9b3"
+    }
+  ],
+  "commands": {
+    "cwd": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-always-20261004",
+    "screen": [
+      "python3",
+      "benchmarks/runtime/expanded/run.py",
+      "--candidate-id",
+      "goal110-equality-always-99a4d071-debug",
+      "--compiler-receipt",
+      ".mylang-cache/goal110-equality-always/compiler-receipt.json",
+      "--work",
+      ".mylang-cache/goal110-equality-always/runner",
+      "--reuse-reference-manifest",
+      "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-harness-20261003/.mylang-cache/runtime-candidate-730a86e6-releasefast/runner/manifest.json",
+      "--expected-reference-manifest-sha256",
+      "94ea9f6343133da2fefdcb327458fbb5fcf6d7f099ba29385ebb5b0bd430d721",
+      "--skip-build",
+      "--only",
+      "string_equal",
+      "string_join",
+      "string_search",
+      "bytes_scan",
+      "--rounds",
+      "5",
+      "--warmups",
+      "1",
+      "--cpu",
+      "2",
+      "--output",
+      ".mylang-cache/goal110-equality-always/equality-screen.json"
+    ],
+    "pair": [
+      "python3",
+      "experiments/runtime-goal110-equality-always-20261004/time-guests.py",
+      ".mylang-cache/goal110-equality-always/equality-screen.json",
+      "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/.mylang-cache/goal110-join/join-runner/bin",
+      ".mylang-cache/goal110-equality-always/equality-before-after.json"
+    ]
+  },
+  "native_helper_hashes": {
+    ".mylang-cache/goal110-equality-always/helper-before": "9e9ed401151275006e24c9c94b309840c1faaad4a473e1dcee3b09591a8a22c9",
+    ".mylang-cache/goal110-equality-always/helper-after": "4fb73e68e35fbba8c4ef09a3c84ab706fd19fddb3b6c922674584a680d9e156f",
+    ".mylang-cache/goal110-equality-always/before-text.c": "060965bfa7aabe7bfeb3248a8f619cb6b534ecb45543e546afdb77b62c16c6ed"
+  },
+  "provenance_limit": "Local receipt/live checks; no independent reproducibility attestation or causal layout claim."
+}

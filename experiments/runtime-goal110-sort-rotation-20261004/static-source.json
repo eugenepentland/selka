@@ -1,0 +1,26 @@
+{
+  "schema": "mylang-goal110-sort-rotation-source-v1",
+  "status": "pass",
+  "baseline_revision": "957f97c6d9906ef11cf344ce055dada8be8446ea",
+  "candidate_revision": "8043c4d9e0ad907c8a1b9e8416a1e58815eef0df",
+  "production_files_changed": [
+    "src/native_collections.c"
+  ],
+  "baseline_source_sha256": "1ca6e59ce8d7f4a1eac82ae6a7fdb6873f0f0424a98f2ce509d53e4f9b3b69be",
+  "candidate_source_sha256": "624a66d23998c4a399a4caedd04b96acf77961e2e1e2628c862ab5fba2dd9b26",
+  "inserted_block_sha256": "9a3697517f4ae43c90f43da8a2e316b1b81ac43550f7a6505978644fb80d218d",
+  "inserted_lines": 19,
+  "removing_only_inserted_block_recovers_entire_baseline_source_byte_for_byte": true,
+  "proof": [
+    "The existing upper trim leaves a left value strictly greater than the first right value; otherwise it returns.",
+    "Because the left run is sorted, its last value is at least as large; the lower trim therefore retains at least that first right value.",
+    "Both trimmed runs are nonempty, so reading last-1 is valid.",
+    "The guard requires the greatest remaining right value to be strictly less than the least remaining left value.",
+    "Keeping each run ordered while exchanging their positions is sorted and preserves every tie order within a run; strict separation permits no cross-run ties.",
+    "Holding the shorter run uses at most floor(count/2) elements of the already reserved scratch.",
+    "The original allocation order, sizes, failure-before-mutation behavior, merge fallback, key evaluation, COW/refcount handling, and keyed sorted-copy path are byte-identical outside the inserted block."
+  ],
+  "limitations": [
+    "Static equivalence and bounded tests do not establish performance or exhaustive behavior at every representable list length."
+  ]
+}

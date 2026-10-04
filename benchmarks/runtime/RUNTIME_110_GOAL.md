@@ -8,40 +8,39 @@ the raw evidence for every reported result.
 ## Status
 
 <!-- STATUS-START -->
-- **Campaign:** active; join and B1 controls confirmed on the integrated source.
-- **Last document update:** 2026-10-04 03:10:28 UTC.
-- **Active batch:** separate equality, sorting and LLVM scalar-slot candidates
-  are being built and checked. No new candidate has been integrated.
+- **Campaign:** active; sorting improvement integrated with a documented QBE tradeoff.
+- **Last document update:** 2026-10-04 03:47:10 UTC.
+- **Active batch:** integer-parser screen next; scalar-storage lowering under investigation.
 - **Current implementation:** `perf/runtime-parity-20261003`, production source
-  `957f97c6d9906ef11cf344ce055dada8be8446ea`, equivalent to join `5a60ef10`.
-- **Latest complete integrated measurement:** B0, before the join change.
+  `63df6b6c481b12fd711755ec40cdcb5d1c984ccc`, equivalent to sorting `8043c4d9`.
+- **Latest complete integrated measurement:** B0, before join and sorting changes.
 - **Acceptance scope:** LLVM required; QBE tracked separately.
-- **Current confirmations:** **8/80** at G2: join, byte scanning, string search
-  and nested mutation, both sizes. Two independent ReleaseFast-host sessions
-  passed; the worst LLVM paired upper95 bound was 1.053874.
-- **LLVM states:** 8 confirmed, 1 historical observation awaiting confirmation,
-  71 above target, no stale confirmations or reopened failures. Results from
-  multiple production revisions remain visible; this is not a full-suite pass.
-- **Dashboard artifact:** [After G2 confirmation](candidates/goal110-dashboard-20261004-g2.json).
-- **Active operations:** equality `99a4d071` and sorting `8043c4d9` builds/checks;
-  the new direct scalar-slot lowering has passed focused tests and is undergoing
-  native differential checks. Earlier sort `2a49da29` and loop `d14e26f4` are
-  rejected/unintegrated, with all evidence retained. No timing is active.
-- **Next action:** finish candidate correctness/build checks, then run one short
-  paired regression screen at a time against matched Debug join controls.
+- **Current confirmations:** **0/80** after the production change. The eight
+  earlier G2 confirmations remain in history and require fresh integrated checks.
+- **LLVM states:** 71 above target, three observations awaiting confirmation,
+  six stale confirmations. Mixed revisions remain visible; this is not a full-suite pass.
+- **Dashboard artifact:** [After sorting integration](candidates/goal110-dashboard-20261004-sort.json).
+- **Active operations:** parser `52e6d074` passed grammar and guest checks and
+  reduced the integer parser's stack frame; its exploratory timing is next.
+  Scalar-slot `a29aa6a9` leaves machine code unchanged, so its timing was skipped.
+- **Sorting tradeoff:** repeated small LLVM integer-sort improvement of 17.6%
+  is accepted alongside an 11.0% large QBE nested-mutation regression. The QBE
+  nested instruction stream is unchanged; code/data layout is a hypothesis,
+  not an established cause. Small LLVM integer sorting still misses at 1.3607×.
+- **Next action:** screen parsing and its controls, then build the integrated
+  ReleaseFast source and recheck affected targets. No new completion claim.
 
 | Backend | Required targets | Latest observed ≤1.10 | Latest observed >1.10 | Current goal confirmations |
 |---|---:|---:|---:|---:|
-| MyLang LLVM | 80 | 9 | 71 | 8 |
-| MyLang QBE | 0 (80 tracked) | 3 | 77 | 3 informational; not required |
+| MyLang LLVM | 80 | 9 | 71 | 0; eight earlier G2 confirmations need rechecking |
+| MyLang QBE | 0 (80 tracked) | 3 | 77 | 0; three earlier confirmations are stale |
 <!-- STATUS-END -->
 
 The counts above use the **fastest current configuration in each measured row**.
 They differ from the earlier campaign's frozen historical 1.00 targets. G2
-confirms eight LLVM cells on the accepted join source, including the six B1
-cells previously confirmed at `730a86e6`. One older integer-sort observation is
-also within threshold but has no current confirmation. The other 72 cells still
-need goal acceptance. QBE being above 1.10 does not prevent completion.
+confirmed eight LLVM cells on the join source. Sorting T7 updates eight observed
+rows but provides no normal confirmation; every target still needs acceptance
+on the current integrated source. QBE being above 1.10 does not prevent completion.
 
 - [Live speed table](#live-speed-table)
 - [Work queue](#work-queue)
@@ -245,7 +244,7 @@ measure QBE alongside it without treating its existing gaps as acceptance work.
 | Batch | Cases | Initial purpose | State |
 |---|---|---|---|
 | B1 | `mutate_nested`, `bytes_scan`, `string_search` | Confirm existing LLVM wins and establish regression checks | Reconfirmed 6/6 at integrated join957f97c6 / G2 |
-| B2 | `string_equal`, `string_join` | Equality/ownership overhead and nearby large-input targets | Join both sizes confirmed at G2; equality99a4d071 built/checking separately |
+| B2 | `string_equal`, `string_join` | Equality/ownership overhead and nearby large-input targets | Join both sizes confirmed at G2; equality99 rejected and deferred pending shared cause |
 | B3 | `record_reads`, `record_construct`, `record_update` | Record representation, scalar replacement and transfers | General direct scalar-slot lowering is in focused/native checks |
 | B4 | `call_direct`, `call_indirect`, `option_handle`, `result_propagate` | Calls, inlining, dispatch and return paths | `d14e26f4` speeds direct calls but retains fallback/record regressions; unintegrated |
 | B5 | `integer_math`, `float_math`, `branch_predictable`, `branch_mixed` | Scalar lowering and loop invariants | Queued |
@@ -361,8 +360,8 @@ does not supply the new goal's confirmation protocol.
 | packet_decode / large (256) | 660.8722 | 1.2066 | 3.0576 | 1.9560 | **1.0000** | 2.2540 | 11.4511 | O / O | B0 |
 | list_scan / small (64) | 49.0371 | **1.0000** | 1.2722 | 1.8459 | 1.3498 | 2.0643 | 5.0333 | O / O | B0 |
 | list_scan / large (4096) | 3380.0797 | **1.0000** | 1.2127 | 1.6581 | 1.3890 | 1.5361 | 3.6315 | O / O | B0 |
-| list_append / small (64) | 148.6046 | 1.3928 | 2.0184 | 2.2165 | **1.0000** | 2.7172 | 4.4791 | O / O | B0 |
-| list_append / large (4096) | 6910.9729 | 1.0796 | 1.9621 | 2.1933 | **1.0000** | 2.4487 | 3.8480 | O / O | B0 |
+| list_append / small (64) | 116.6963 | 1.3316 | 1.8960 | 2.1422 | **1.0000** | 2.6790 | 4.2871 | O / O | T7 |
+| list_append / large (4096) | 5492.3848 | 1.0786 | 1.9315 | 2.1213 | **1.0000** | 2.3875 | 3.8839 | O / O | T7 |
 | list_filter / small (64) | 177.9840 | 1.0990 | 1.9368 | 1.5068 | **1.0000** | 2.6375 | 4.7879 | O / O | B0 |
 | list_filter / large (4096) | 6892.5245 | **1.0000** | 1.9650 | 1.8369 | 1.2613 | 2.4967 | 5.3200 | O / O | B0 |
 | dict_lookup / small (64) | 300.9516 | 2.4699 | 1.7785 | 2.0004 | **1.0000** | 1.9397 | 3.2588 | O / O | B0 |
@@ -379,24 +378,24 @@ does not supply the new goal's confirmation protocol.
 | alloc_short / large (1024) | 3.9012 | 327.5994 | 536.1037 | 1374.7989 | **1.0000** | 19711.5691 | 26589.1038 | O / O | B0 |
 | alloc_retained / small (64) | 1292.6997 | 1.0697 | 1.4853 | 1.0303 | **1.0000** | 2.3540 | 3.5644 | O / O | B0 |
 | alloc_retained / large (1024) | 20710.2684 | 1.0504 | 1.2628 | 1.0366 | **1.0000** | 2.2667 | 3.3646 | O / O | B0 |
-| mutate_nested / small (64) | 737.5527 | 1.6006 | 1.5794 | 1.6219 | 1.4777 | **1.0000** | 1.1408 | C / O | G2 |
-| mutate_nested / large (1024) | 7197.6200 | 2.8005 | 2.4226 | 2.7753 | 2.5558 | **1.0000** | 1.1193 | C / O | G2 |
-| sort_int / small (64) | 171.4333 | 1.3346 | 6.3726 | 1.6065 | **1.0000** | 1.6126 | 2.8249 | O / O | B0 |
-| sort_int / large (4096) | 44258.7276 | 1.4306 | 5.3712 | 1.4788 | 1.0267 | **1.0000** | 1.2139 | P / O | B0 |
-| sort_records / small (64) | 571.1779 | 1.1716 | 12.9634 | 1.4071 | **1.0000** | 2.1426 | 2.8365 | O / O | B0 |
-| sort_records / large (4096) | 52264.4234 | **1.0000** | 24.5636 | 2.2368 | 1.7803 | 1.1932 | 1.5272 | O / O | B0 |
+| mutate_nested / small (64) | 719.2670 | 1.5723 | 1.5873 | 1.6002 | 1.4487 | **1.0000** | 1.1548 | P / O | T7 |
+| mutate_nested / large (1024) | 7131.9083 | 2.6814 | 2.3925 | 2.6951 | 2.4699 | **1.0000** | 1.2309 | P / O | T7 |
+| sort_int / small (64) | 162.9593 | 1.3593 | 6.3105 | 1.6248 | **1.0000** | 1.3607 | 2.5518 | O / O | T7 |
+| sort_int / large (4096) | 44161.2680 | 1.4352 | 5.2027 | 1.4470 | 1.0013 | **1.0000** | 1.2097 | P / O | T7 |
+| sort_records / small (64) | 542.3958 | 1.1991 | 12.8080 | 1.4046 | **1.0000** | 2.2466 | 2.8732 | O / O | T7 |
+| sort_records / large (4096) | 49756.5747 | **1.0000** | 24.2944 | 2.2739 | 1.8195 | 1.2157 | 1.5656 | O / O | T7 |
 | lox_eval / small (16) | 738.1632 | **1.0000** | 1.1383 | 2.6921 | 2.6291 | 3.6607 | 4.0643 | O / O | B0 |
 | lox_eval / large (256) | 10981.4215 | **1.0000** | 1.1776 | 2.7947 | 2.7405 | 3.6183 | 3.9186 | O / O | B0 |
-| bytes_scan / small (64) | 3.4936 | 5.0533 | 6.7494 | 7.8731 | 3.4318 | **1.0000** | 2.3316 | C / O | G2 |
-| bytes_scan / large (4096) | 75.9983 | 13.9961 | 13.2417 | 18.9235 | 9.1867 | **1.0000** | 1.0389 | C / C | G2 |
+| bytes_scan / small (64) | 3.4936 | 5.0533 | 6.7494 | 7.8731 | 3.4318 | **1.0000** | 2.3316 | S / O | G2 |
+| bytes_scan / large (4096) | 75.9983 | 13.9961 | 13.2417 | 18.9235 | 9.1867 | **1.0000** | 1.0389 | S / S | G2 |
 | string_equal / small (64) | 2.9688 | **1.0000** | 1.5119 | 1.3398 | 1.2732 | 1.3576 | 7.3130 | O / O | T3 |
 | string_equal / large (4096) | 30.0438 | **1.0000** | 1.2331 | 2.1291 | 1.6502 | 1.1718 | 22.8477 | O / O | T3 |
-| string_search / small (64) | 19.5710 | 2.1818 | 1.2578 | 4.5687 | 3.7994 | **1.0000** | 1.2554 | C / O | G2 |
-| string_search / large (4096) | 87.2513 | 14.8271 | 7.3482 | 34.0815 | 30.1024 | **1.0000** | 1.0635 | C / C | G2 |
+| string_search / small (64) | 19.5710 | 2.1818 | 1.2578 | 4.5687 | 3.7994 | **1.0000** | 1.2554 | S / O | G2 |
+| string_search / large (4096) | 87.2513 | 14.8271 | 7.3482 | 34.0815 | 30.1024 | **1.0000** | 1.0635 | S / S | G2 |
 | string_split / small (64) | 557.5921 | **1.0000** | 1.8763 | 1.8560 | 1.7269 | 6.2247 | 8.1218 | O / O | B0 |
 | string_split / large (4096) | 28435.3492 | **1.0000** | 2.3570 | 2.1980 | 2.0666 | 7.6152 | 9.7548 | O / O | B0 |
-| string_join / small (64) | 218.7103 | **1.0000** | 1.8238 | 1.4099 | 1.2128 | 1.0464 | 1.3873 | C / O | G2 |
-| string_join / large (4096) | 12572.0989 | 1.0570 | 2.0184 | 1.3990 | 1.3022 | **1.0000** | 1.0738 | C / C | G2 |
+| string_join / small (64) | 218.7103 | **1.0000** | 1.8238 | 1.4099 | 1.2128 | 1.0464 | 1.3873 | S / O | G2 |
+| string_join / large (4096) | 12572.0989 | 1.0570 | 2.0184 | 1.3990 | 1.3022 | **1.0000** | 1.0738 | S / S | G2 |
 | int_parse / small (64) | 4.4765 | **1.0000** | 5.4265 | 1.2862 | 1.2858 | 2.3003 | 4.1124 | O / O | B0 |
 | int_parse / large (4096) | 5.1722 | **1.0000** | 5.3121 | 1.3142 | 1.2250 | 2.2325 | 3.8033 | O / O | B0 |
 | int_format / small (64) | 14.6652 | **1.0000** | 1.1260 | 2.8091 | 2.2430 | 4.1006 | 5.8296 | O / O | B0 |
@@ -425,6 +424,10 @@ does not supply the new goal's confirmation protocol.
 | T4 | Rejected sorting `2a49da29`; Debug host, six-arm and paired five-round screens | [Complete archive](../../experiments/runtime-goal110-sort-counting-20261004/README.md), [coordinator replay](candidates/goal110-rejected-screens-20261004-0240-review.json) | No material LLVM gain; QBE record-sort regressions. No integrated dashboard rows replaced. |
 | T5 | Rejected loop `d14e26f4`; matched Debug-host paired screen | [Complete archive](../../experiments/runtime-goal110-copy-locals-20261004/README.md), [paired raw](../../experiments/runtime-goal110-copy-locals-20261004/regression-screen.json.gz) | Direct calls improve, but fallback and record regressions remain. No integrated dashboard rows replaced. |
 | G2 | Integrated join957f97c6; sessions `0a7c22fa-7d2c-49b4-b64f-ffbb4803a5cf` and `653a9088-22ea-4938-b01e-8af53a1346fa`; 02:51:25–02:54:43 and 02:55:34–02:59:02 UTC; RF host,15r/3w each | [Accepted analysis](candidates/goal110-join-957f97c6-rf-20261004-accepted.json), [complete archive](../../experiments/runtime-goal110-integrated-rf-20261004/README.md), [review](candidates/goal110-join-957f97c6-rf-20261004-correctness-review.json), [checks](candidates/goal110-join-957f97c6-rf-20261004-checks.json) | Eight LLVM cells confirmed; latest displayed medians from B. Three QBE confirmations are informational. Full80 goal remains incomplete. |
+
+| T6 | Rejected equality `99a4d071` and untimed precursor `1c367e95`; Debug hosts | [Equality99 archive](../../experiments/runtime-goal110-equality-always-20261004/README.md), [untimed static checks](../../experiments/runtime-goal110-equality-inline-20261004/static-validation.json), [coordinator replay](candidates/goal110-rejected-screens-20261004-0334-review.json) | Large equality improves but small equality does not, and LLVM large search regresses16.3%. No accepted rows change. |
+
+| T7 | Sorting `8043c4d9`, integrated as `63df6b6c`; six-arm5r/1w and paired15r/3w repeat | [Archive](../../experiments/runtime-goal110-sort-rotation-20261004/README.md), [observed analysis](candidates/goal110-sort-8043c4d9-20261004-observed.json), [coordinator review](candidates/goal110-rejected-screens-20261004-0334-review.json) | LLVM small integer sort improves17.6%, still1.3607× fastest. QBE nested-large+11.0% is an explicit tradeoff. No goal confirmations. |
 
 B0 comparison JSON (uncompressed) SHA256:
 `dbb1906bcac50cb015171cce52ff68a0297f728db81e9ec4927f4f158117d473`.
@@ -477,6 +480,16 @@ Append entries; do not remove failed experiments or historical outcomes.
 | 2026-10-04 02:56:00 UTC | Integrated join957f97c6 / RF session A | Normal15r/3w six-arm run passed720 samples and720 qualifications. LLVM/current-fastest: join1.047461 small (227.532ns versus Rust217.223),1.000 large (12530.122ns); bytes/search/nested mutation1.000 at both sizes. [Raw A](../../experiments/runtime-goal110-integrated-rf-20261004/confirmation-a.json.gz). | Independent B is running on the same artifacts. Bootstrap, coordinator checks and dashboard merge wait until timing finishes; no new C states yet. |
 
 | 2026-10-04 03:10:28 UTC | Integrated join957f97c6 / G2 | Both normal sessions pass720 samples and720 qualifications each. Latest LLVM join1.046350 small /1.000 large; all six B1 controls1.000. All80 per-peer LLVM interval checks across A/B pass, worst upper95=1.053874. Root replayed516 exact-artifact holdouts,120 text oracles,6 refusal records,2 live text artifacts and all24 manifest/source/assets; reviewed applicable native sanitizer checks and13 RF archive bindings. | Confirm8/80 LLVM cells. The one historical sort observation remains unconfirmed and71 cells remain above target. No fresh whole-repository gate or full-suite acceptance is claimed. New candidates remain isolated; next short timing lane waits for their checks. |
+
+| 2026-10-04 03:22:14 UTC | Isolated equality `99a4d071` | Five-round six-arm screen passes240 samples/720 qualifications: LLVM equality1.391574 small/1.000 large; large search1.095649 versus current fastest. Matched Debug5a→99 after/before LLVM equality1.01903/0.35408, join1.03973/0.99703, search1.00382/1.16311, bytes1.02983/1.04399 (small/large). QBE equality0.98305/0.33696; controls0.9878–1.0280. Restored LLVM inlining did not remove the search regression. [Six-arm raw](../../experiments/runtime-goal110-equality-always-20261004/equality-screen.json.gz), [paired raw](../../experiments/runtime-goal110-equality-always-20261004/equality-before-after.json.gz). | Reject99; skip medium-distribution timing because there is no adoption case. Defer equality after several unsuccessful related hypotheses, retain the repeated search interaction as a prerequisite, and investigate independent parsing/formatting or split work. Sorting804 now owns the quiet lane; integrated G2 rows remain unchanged. |
+
+| 2026-10-04 03:25:36 UTC | Isolated sorting `8043c4d9` | Six-arm five-round screen passes240 samples/720 qualifications: LLVM integer sort1.3607 small/1.000 large, records2.2466/1.2157. Matched Debug5a→804 LLVM integer sort0.82234/1.00152 after/before; records1.02547/1.01012; nested0.98910/0.99960; append1.01118/0.99518. QBE integer sort0.87480/0.99385, records1.01316/1.00031, but large nested mutation1.10596 (7843→8674ns; exploratory CI1.07961–1.11767). [Six-arm raw](../../experiments/runtime-goal110-sort-rotation-20261004/six-arm-screen.json.gz), [paired raw](../../experiments/runtime-goal110-sort-rotation-20261004/paired-screen.json.gz). | Keep unintegrated pending an independent15r/3w paired repeat of both sorts/nested mutation. Small integer sorting improves materially but still misses the1.10 goal. QBE's existing gaps are optional, but this new regression needs evidence and an explicit decision. |
+
+| 2026-10-04 03:34:40 UTC | Isolated sorting `8043c4d9` / repeat `5aea9874-b35d-4099-b5b7-fa640e5ccb98` | Independent15r/3w paired repeat confirms LLVM small integer sort0.82396 after/before (268.66→221.36ns; CI0.81992–0.82759), but QBE large nested mutation1.10972 (7880.64→8745.31ns; CI1.09834–1.11763). LLVM large sort1.00468; records1.01978/1.01194; nested0.98644/1.00122. Root independently replayed192 equality outcomes and624 sorting outcomes, checked12 live executable bindings and recomputed medians/ratios in the [review](candidates/goal110-rejected-screens-20261004-0334-review.json). | Keep804 unintegrated and inspect the QBE regression before a tradeoff decision. Timing ended; scalar-slot final-source checks and integer-parser outlining are running. No accepted dashboard rows changed. |
+
+| 2026-10-04 03:39:10 UTC | Isolated scalar slots `a29aa6a9`; integer parser `52e6d074` | Scalar-slot final-source checks pass34 LLVM tests,13 retired-corpus tests and630 native oracle comparisons/1260 calls. Actual LLVM/QBE compute entry machine code remains unchanged; timing skipped. The proof rejects address copies in real scratch uses; transitive uses are being inspected. Parser outline passes4 native-format plus3 shared-grammar tests and its Debug host build; guests are building. Both source commits passGuardian88. Equality99 and untimed1c archives are retained with12+6 independently checked archive bindings. | No performance acceptance. Investigate the scalar proof before another build, screen parsing after actual-frame inspection, and review804's documented QBE tradeoff. |
+
+| 2026-10-04 03:47:10 UTC | Integrated `63df6b6c` / T7 | Adopted rotation804 after repeated LLVM small-sort gain0.82396 and QBE nested-large slowdown1.10972. Root replayed516 holdouts,49 archive bindings and the static comparison:402 named QBE functions, only six sorting bodies changed,2649 nested instructions and96 direct/tail-call routines equivalent after address normalization. Source bytes match804 exactly. | Explicit LLVM-first tradeoff; QBE regression retained and causality unresolved. Latest8-row screen merges into the dashboard; earlier confirmations are stale or superseded by observations. Next parser screen uses isolated52 versus5a; it is not integrated acceptance. |
 
 For future entries, include the affected cases/sizes/backends and before → after
 ratios, or say explicitly that the step produced no timing result. Link long

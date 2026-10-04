@@ -1,0 +1,56 @@
+{
+  "source_revision": "1c367e95cf9079035948a72fc0a01046d057b785",
+  "compiler_optimize": "Debug",
+  "guest_optimize": "ReleaseFast; LLVM O3/full LTO; QBE",
+  "native_checks": "five O3 ASan/UBSan suites pass; see native-tests.log",
+  "guest_checks": 128,
+  "hot_equality_calls": [
+    "104f1b7",
+    "104f229"
+  ],
+  "conclusion": "Outlining only the long helper did not restore LLVM hot equality inlining; no timing or integration claimed.",
+  "source_hashes": {
+    "src/native_text.c": "5e7e9e075f107c4d47cb732104387a4b7d5405d7ee2fd8479b540302cfe3334b",
+    "tests/native_text_dictionary_test.c": "92a6ca8f9c87abc7372c7c20e4416816aace83590da8c262d3f7eafbc05a07ae",
+    "experiments/runtime-goal110-equality-inline-20261004/native-tests.log": "18789525525ad0d1df3853d59986999a157c484445cb77fb17ed5910c8ef4911",
+    "experiments/runtime-goal110-equality-inline-20261004/native-checks.py": "3929c8cd103fbad1cbc117cfcd2e82e1dac67f59c5de50c40ee8b66837394aa8",
+    "experiments/runtime-goal110-equality-inline-20261004/guest-checks.py": "1a8f6d7669c0b2ebb216015cf68f84a1d9cc6e2bfe1ac5fc53ec0ba9af0095d2"
+  },
+  "retained": [
+    {
+      "raw": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-inline-20261004/.mylang-cache/goal110-equality-inline/compiler-receipt.json",
+      "raw_sha256": "9812ed5a882b354b4b495737b53cd36395f28f7ea34d8b7b289488e33f76cbcb",
+      "archive": "experiments/runtime-goal110-equality-inline-20261004/compiler-receipt.json.gz",
+      "archive_sha256": "a04ddfdc3d66c50c154cbd79057f9194dad369fbc30a77dd561f8cef3de84661"
+    },
+    {
+      "raw": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-inline-20261004/.mylang-cache/goal110-equality-inline/compiler-build.log",
+      "raw_sha256": "448197ce2f7ee2c30b94e33911d021b1a85c3c1b0aba30ac8f8f413ddc99bfd6",
+      "archive": "experiments/runtime-goal110-equality-inline-20261004/compiler-build.log.gz",
+      "archive_sha256": "44533f1f3e9aaea840d8cb08e43733a96b31f8422e025a54d7ee2ea3c161f3a4"
+    },
+    {
+      "raw": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-inline-20261004/.mylang-cache/goal110-equality-inline/guests-build-driver.log",
+      "raw_sha256": "45b25674f9497f6d6b9cbc583db55099fb289fd5c7c20e69cf0808bbad23aa97",
+      "archive": "experiments/runtime-goal110-equality-inline-20261004/guests-build-driver.log.gz",
+      "archive_sha256": "92139515fcd3a1545dc2b2a3e434185abcf488a59f7b3e1e5a0ce64ed13293e1"
+    },
+    {
+      "raw": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-inline-20261004/.mylang-cache/goal110-equality-inline/text-guest-checks.json",
+      "raw_sha256": "9a06fdfa67b1d66043fec5a48b78416572b65e40965e4cbfd73ef0dd7f562ddc",
+      "archive": "experiments/runtime-goal110-equality-inline-20261004/text-guest-checks.json.gz",
+      "archive_sha256": "e4c6fbc270f2415c164a2e9ec288840d50215de17dc80bbaebcec085c8e12e77"
+    },
+    {
+      "raw": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-inline-20261004/.mylang-cache/goal110-equality-inline/runner/manifest.json",
+      "raw_sha256": "f20ab7b7a8d298c05363a8a16e24fc83c5e1c16b351085ce1c9ad4a947eaf25f",
+      "archive": "experiments/runtime-goal110-equality-inline-20261004/manifest.json.gz",
+      "archive_sha256": "91841e428cf8d8d3e99c077f1682562b48c279892eb6b7a60632b71ef554abe1"
+    },
+    {
+      "raw_sha256": "8658576fcb45187110a5e45ce2554edee3ca5b3adab16afa708f33e99f9d1cc7",
+      "archive": "experiments/runtime-goal110-equality-inline-20261004/llvm-kernel-equal.asm.gz",
+      "archive_sha256": "b07ec36c70ec948ba0e554c47e1c11d36de8ff3fdb6c7e7b74f96af6c3a899f2"
+    }
+  ]
+}
