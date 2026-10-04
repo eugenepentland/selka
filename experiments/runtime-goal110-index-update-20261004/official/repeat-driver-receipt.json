@@ -1,0 +1,27 @@
+{
+  "schema": "mylang-index-update-timing-phase-v1",
+  "phase": "paired_repeat",
+  "session_id": "3c46c8be-a460-41c4-8a56-5e987de9da4d",
+  "started_utc": "2026-10-04T09:17:11.458478+00:00",
+  "command": [
+    "python3",
+    "/home/epentland/ai/canopy/mylang-worktrees/goal110-index-forward-rf-20261004/.mylang-cache/goal110-index-forward-rf/time-paired.py",
+    "--plans",
+    "/home/epentland/ai/canopy/mylang-worktrees/goal110-index-forward-rf-20261004/.mylang-cache/goal110-index-forward-rf/screen-raw.json",
+    "--before-manifest",
+    "/home/epentland/ai/canopy/mylang-worktrees/goal110-g4-rf-20261004/.mylang-cache/goal110-g4-rf/runner/manifest.json",
+    "--after-manifest",
+    "/home/epentland/ai/canopy/mylang-worktrees/goal110-index-forward-rf-20261004/.mylang-cache/goal110-index-forward-rf/runner/manifest.json",
+    "--rounds",
+    "15",
+    "--warmups",
+    "3",
+    "--cpu",
+    "2",
+    "--output",
+    "/home/epentland/ai/canopy/mylang-worktrees/goal110-index-forward-rf-20261004/.mylang-cache/goal110-index-forward-rf/paired-repeat.json"
+  ],
+  "commands_sha256": "368f460d115792b8033d1616e0557c7dd46768097d785cf62bfc87f7d98b61b5",
+  "exit_status": 0,
+  "finished_utc": "2026-10-04T09:18:52.011871+00:00"
+}

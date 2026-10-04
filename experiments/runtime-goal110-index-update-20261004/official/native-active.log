@@ -1,0 +1,7 @@
+{"compilers": {"before": {"path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-g4-rf-20261004/zig-out/bin/mylang", "sha256": "6d284b91b0ca95b566f38ea5a2e6d914b56d9c0c75694310773065d3cc0f5e4f"}, "after": {"path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-index-forward-rf-20261004/zig-out/bin/mylang", "sha256": "59c98b1c06dd1815809528c2e4e88e713deeeb4ad42418dc38f33d41585574cf"}}, "source_binding": {"path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-index-forward-20261004/.mylang-cache/goal110-index-update/static/final-checks/passed-preflight.json", "sha256": "84a797ea0089af2c7bc1439cca310aa40ef97d83c3f5ee0b7290fee109916bdf"}}
+{"backend": "qbe", "oracle_cases": 68, "paired_calls": 136, "status": "pass"}
+{"backend": "qbe", "memory_refusal": "pass"}
+{"backend": "llvm", "oracle_cases": 68, "paired_calls": 136, "status": "pass"}
+{"backend": "llvm", "memory_refusal": "pass"}
+{"backend": "qbe", "gc_stress_pairs": 4, "status": "pass"}
+{"backend": "llvm", "gc_stress_pairs": 4, "status": "pass"}

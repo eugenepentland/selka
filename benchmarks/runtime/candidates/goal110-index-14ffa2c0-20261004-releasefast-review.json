@@ -1,0 +1,254 @@
+{
+  "status": "pass",
+  "reviewed_utc": "2026-10-04T09:19:28.080905+00:00",
+  "source_revision": "14ffa2c0f385a11e5216bbdec5bdff429f9f981b",
+  "source_bindings": 2621,
+  "asset_bindings": 15,
+  "guest_bindings": 24,
+  "native": {
+    "success": 106,
+    "failure": 30,
+    "memory_refusal": 2,
+    "gc": 8,
+    "instrumentation": 4
+  },
+  "qualification": 720,
+  "holdouts": 516,
+  "initial": {
+    "session": "f6e54af4-e77b-41ed-b1bc-76f34cf19edc",
+    "outcomes": 144,
+    "rows": [
+      {
+        "case": "mutate_unique",
+        "size": 64,
+        "after_before": {
+          "llvm": 0.9493430306191898,
+          "qbe": 0.9434747816096921
+        },
+        "reported_intervals": {
+          "llvm": [
+            0.7440821097879693,
+            0.9515986698073925
+          ],
+          "qbe": [
+            0.9382842709442729,
+            0.9522766470017091
+          ]
+        }
+      },
+      {
+        "case": "mutate_unique",
+        "size": 1024,
+        "after_before": {
+          "llvm": 0.9480031283240936,
+          "qbe": 0.9511374507288975
+        },
+        "reported_intervals": {
+          "llvm": [
+            0.946463776328526,
+            1.0063356250212505
+          ],
+          "qbe": [
+            0.949486039189198,
+            0.9540781199504594
+          ]
+        }
+      },
+      {
+        "case": "mutate_shared",
+        "size": 64,
+        "after_before": {
+          "llvm": 0.9495199726457436,
+          "qbe": 0.9837909957383986
+        },
+        "reported_intervals": {
+          "llvm": [
+            0.9425767551732015,
+            0.9505500042520693
+          ],
+          "qbe": [
+            0.9811743156219518,
+            0.9862605115312598
+          ]
+        }
+      },
+      {
+        "case": "mutate_shared",
+        "size": 1024,
+        "after_before": {
+          "llvm": 0.9857899389228123,
+          "qbe": 0.9729021188366325
+        },
+        "reported_intervals": {
+          "llvm": [
+            0.9299011784687529,
+            0.9937213853318284
+          ],
+          "qbe": [
+            0.9698572745144789,
+            0.9772283426989723
+          ]
+        }
+      },
+      {
+        "case": "record_reads",
+        "size": 64,
+        "after_before": {
+          "llvm": 0.9881040364931734,
+          "qbe": 1.0032783971980355
+        },
+        "reported_intervals": {
+          "llvm": [
+            0.9861723571028858,
+            0.9964554105957667
+          ],
+          "qbe": [
+            0.9919749826620475,
+            1.0118102781041367
+          ]
+        }
+      },
+      {
+        "case": "record_reads",
+        "size": 4096,
+        "after_before": {
+          "llvm": 0.9861058439430913,
+          "qbe": 0.9737851676148825
+        },
+        "reported_intervals": {
+          "llvm": [
+            0.9598146247656638,
+            1.0041493417557998
+          ],
+          "qbe": [
+            0.835193339108606,
+            1.1179619862139707
+          ]
+        }
+      }
+    ],
+    "raw_sha256": "ef3c243f3e527aaf0a77289678f4df418d21e159617a96d3aa36c509ff8a0f95"
+  },
+  "repeat": {
+    "session": "342395ef-864a-4cf5-8b62-0e63689ba7bf",
+    "outcomes": 432,
+    "rows": [
+      {
+        "case": "mutate_unique",
+        "size": 64,
+        "after_before": {
+          "llvm": 0.9481362642949812,
+          "qbe": 0.9469332372724325
+        },
+        "reported_intervals": {
+          "llvm": [
+            0.9436355274346202,
+            0.9513304792625993
+          ],
+          "qbe": [
+            0.944464970829236,
+            0.9505933974818092
+          ]
+        }
+      },
+      {
+        "case": "mutate_unique",
+        "size": 1024,
+        "after_before": {
+          "llvm": 0.9456477036490526,
+          "qbe": 0.9443391667842973
+        },
+        "reported_intervals": {
+          "llvm": [
+            0.9358176558755651,
+            0.9577027401039935
+          ],
+          "qbe": [
+            0.9416437658130421,
+            0.9503293786905809
+          ]
+        }
+      },
+      {
+        "case": "mutate_shared",
+        "size": 64,
+        "after_before": {
+          "llvm": 0.9488123946454227,
+          "qbe": 0.9833522130201883
+        },
+        "reported_intervals": {
+          "llvm": [
+            0.945289851294594,
+            0.9512524745861944
+          ],
+          "qbe": [
+            0.9812428019078239,
+            0.9848772740087481
+          ]
+        }
+      },
+      {
+        "case": "mutate_shared",
+        "size": 1024,
+        "after_before": {
+          "llvm": 0.9887246957755175,
+          "qbe": 0.9731883828232274
+        },
+        "reported_intervals": {
+          "llvm": [
+            0.9848532655568221,
+            0.9905732589124052
+          ],
+          "qbe": [
+            0.9711557165135143,
+            0.9748542502712046
+          ]
+        }
+      },
+      {
+        "case": "record_reads",
+        "size": 64,
+        "after_before": {
+          "llvm": 0.9864143102885868,
+          "qbe": 1.001833992814938
+        },
+        "reported_intervals": {
+          "llvm": [
+            0.9790736223204827,
+            0.9929305780361409
+          ],
+          "qbe": [
+            0.9982064726150113,
+            1.0059175957424582
+          ]
+        }
+      },
+      {
+        "case": "record_reads",
+        "size": 4096,
+        "after_before": {
+          "llvm": 0.9917204799094781,
+          "qbe": 0.9967807532606745
+        },
+        "reported_intervals": {
+          "llvm": [
+            0.986304646790168,
+            1.0123093292460754
+          ],
+          "qbe": [
+            0.9804607538441665,
+            1.0282605689436803
+          ]
+        }
+      }
+    ],
+    "raw_sha256": "32017016683d19f6b350ac5d7d97e729cba1663060851897b24d4a38d2e4bd9a"
+  },
+  "script_sha256": "fca76a8f4bd06af05bc6b6ea2fb5c5c872e068c6af2af696b5fb77c6f020c084",
+  "limitations": [
+    "Saved outcomes and current identities; no new executions.",
+    "Paired medians and oracles independently recomputed; reported confidence intervals are not independently recomputed.",
+    "Timing outcomes retain parsed checksums/status, not full streams.",
+    "Exploratory adoption evidence; no goal confirmation or whole-repository gate."
+  ]
+}

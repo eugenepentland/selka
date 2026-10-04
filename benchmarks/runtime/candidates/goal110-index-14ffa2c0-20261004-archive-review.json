@@ -1,0 +1,13 @@
+{
+  "status": "pass",
+  "reviewed_utc": "2026-10-04T09:31:09.180474+00:00",
+  "archive_commit": "1b8ab336cf657a02c7c693a974c763ef551bb438",
+  "index_sha256": "814fb4d85847fa4a4ccecaaf7fdd633524c02cd8050006da68cea9db7cd4f0df",
+  "raw_or_member_bindings": 1894,
+  "live_origin_matches": 1893,
+  "exact_committed_files": 85,
+  "timing": false,
+  "limitations": [
+    "Archive and live-byte replay; no new executions or confidence-interval recalculation."
+  ]
+}

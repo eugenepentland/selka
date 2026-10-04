@@ -8,56 +8,47 @@ the raw evidence for every reported result.
 ## Status
 
 <!-- STATUS-START -->
-- **Campaign:** active; G4 confirms ten LLVM cells on the integrated ReleaseFast build.
-- **Last document update:** 2026-10-04 08:45:10 UTC.
-- **Active batch:** bounded signed remainder, LLVM result-range facts and checked list-index/value reuse.
+- **Campaign:** active; checked-index/value reuse is integrated after repeated LLVM gains.
+- **Last document update:** 2026-10-04 09:31:30 UTC.
+- **Active batch:** bounded signed remainder and LLVM final-result range facts; dictionary lookup audit next.
 - **Current implementation:** `perf/runtime-parity-20261003`, production source
-  `6cf7bdce11bc205862bf75b9d9ce72e46caad0a2`, combining text, append, mutation and short-join changes.
+  `eaf4cda8f5c758cadafaadfa5e328c0fba252ac6`, adding exact source14ffa2c0 to6cf.
 - **Latest complete integrated measurement:** B0, before this campaign's changes.
 - **Acceptance scope:** LLVM required; QBE tracked separately.
-- **Current confirmations:** **10/80 LLVM**, all at **1.0000×** in both G4 sessions.
-  All ten pass the paired upper-95% threshold against every peer in both sessions.
-- **LLVM states:** 70 open, ten confirmed, none pending or reopened in the latest table.
+- **Current confirmations:** **0/80 LLVM**. The ten G4 confirmations are **stale**
+  after the source change; their last measured speed remains1.0000×.
+- **LLVM states:** 70 open, ten stale. No target has reopened or newly closed.
   Unmeasured rows retain older evidence; this is not a full-suite pass.
-- **Dashboard artifact:** [G4 confirmed speeds](candidates/goal110-dashboard-20261004-g4.json).
-- **Active operations:** both measured candidates remain unintegrated while
-  their tradeoffs are reviewed. Bounded equality repeats a 3.2% LLVM small-case
-  gain and 28.0% QBE gain, alongside a 3.5% LLVM large-search cost and a 4.7%
-  native 128-byte control cost. Small equality still exceeds 1.10×.
-  Corrected remainder improves matched LLVM small sorting by 13.1% and filter
-  by 6.2%/8.1%, with append essentially unchanged. Its separate negative-input
-  probe slows LLVM by 6.9%/12.0% and QBE by 16.1%/26.8%. A fresh experiment
-  will add a proved multiple of the divisor before unsigned remainder, retaining
-  the old signed-input admission without an extra loop copy or sign guard.
-  The mutation prefix extension emits four exact frozen-port hits, including
-  unique-value forwarding. Split test groups now pass all thirty unique tests
-  within their declared memory bounds, and Guardian passes all 88 checks.
-  Root independently verifies 136 actual QBE/LLVM behavior pairs, two allocation
-  refusals and four identical accounting pairs. The source is pinned at
-  `14ffa2c0`; a fresh official ReleaseFast build is authorized before timing.
+- **Dashboard artifact:** [Latest speeds and states](candidates/goal110-dashboard-20261004-index.json).
+- **Latest mutation result:** independent15r/3w repeats LLVM unique gains5.2%/5.4%,
+  shared gains5.1%/1.1%, and no material record-read regression. The six-arm screen
+  leaves unique at1.3576×/1.4381× and shared at10.7449×/3.3703×. Root independently
+  checks150 official behavior/GC/accounting pairs,1236 qualification/holdout
+  outcomes and576 matched outcomes. All allocated sections and executable LOADs
+  of the other six MyLang control binaries are unchanged fromG4. This static
+  control coverage does not establish fresh goal confirmations.
+- **Arithmetic work:** the bounded-bias successor preserves the old signed-input
+  admission and is pinned at5e97db47 after57 focused checks and88 Guardian checks.
+  Root replays49 exact native pairs with independent oracles; its Debug compiler
+  is building for actual LLVM guest checks. LLVM range annotation0311796e passes18 focused checks
+  and88 Guardian checks, has a pinned Debug compiler and is undergoing actual
+  LLVM-O3/fullLTO native checks. Both remain isolated and untimed.
+- **Deferred candidates:** bounded equality3dc repeats a3.2% LLVM small-case gain
+  but costs3.5% on large search and leaves small equality above1.10. Remainder27de
+  improves filter/sorting but slows negative-input LLVM probes6.9%/12.0%.
+  Both remain unintegrated, with full evidence retained.
 - **Remaining nearby targets:** small equality **1.3898×** and small integer
-  sorting **1.3925×** in G4 B. The bounded equality candidate is under evaluation.
-- **Append tradeoff:** repeated LLVM append gains of 11.2%/23.0% are accepted
-  with the repeated 3.9% small-filter cost. Both append targets remain open.
-- **Mutation result:** repeated LLVM unique-mutation gains are 4.4%/4.6%.
-  The QBE large-record-read repeat was +2.5%, with a wide interval; the earlier
-  slowdown above 5% did not repeat. Unique mutation remains open.
-- **Text result:** short join retains its repeated 33.6%/53.6% LLVM gains.
-  Both join sizes, both scans, both searches and large equality now confirm at1.00.
-- **Sorting tradeoff:** small integer sorting's earlier17.6% LLVM gain was
-  accepted alongside the repeated11.0% QBE large nested-mutation cost. Large
-  LLVM sorting and both nested-mutation sizes now confirm at1.00 in G4.
-- **Next action:** preserve the measured candidate archives, finish the mutation
-  checks, and review the bounded-bias proof. The isolated LLVM IR experiment
-  removes redundant signed checksum correction when given the final remainder's
-  proved range. A minimal compiler annotation is being implemented in another
-  isolated worktree. No new integrated production
-  change or goal confirmation is claimed.
+  sorting **1.3925×** inG4 B. The next integrated run must also reconfirm the ten
+  previously passing LLVM cells.
+- **Next action:** commit the reviewed mutation archive/dashboard, finish the
+  two arithmetic candidates' actual-code checks, then screen promising candidates
+  in a small serialized timing window. Reserve the next ReleaseFast compiler
+  rebuild for a promising integrated milestone.
 
 | Backend | Required targets | Latest observed ≤1.10 | Latest observed >1.10 | Current goal confirmations |
 |---|---:|---:|---:|---:|
-| MyLang LLVM | 80 | 10 | 70 | 10 on current integrated source |
-| MyLang QBE | 0 (80 tracked) | 3 | 77 | 3 informational confirmations |
+| MyLang LLVM | 80 | 10 | 70 | 0; ten historical confirmations stale |
+| MyLang QBE | 0 (80 tracked) | 3 | 77 | 0; three historical confirmations stale |
 <!-- STATUS-END -->
 
 The counts above use the **fastest current configuration in each measured row**.
@@ -218,7 +209,9 @@ Keep benchmark timing serial on the reserved CPU. Existing invocations acquire
 the timing lock themselves; do not wrap the runner in that same lock. Use
 `scripts/build-slot.sh` for builds, private Zig caches, disk TMPDIR and `-j2`.
 Respect the repository's build and Guardian requirements, including committing
-Guardian feedback when a gate is exercised.
+Guardian feedback when a gate is exercised. Prepare and review exact timing
+commands before holding other workers; release the hold when guest measurements
+finish, so bootstrap analysis and archiving do not delay implementation.
 
 ### 3. Guard previous progress
 
@@ -268,17 +261,17 @@ measure QBE alongside it without treating its existing gaps as acceptance work.
 
 | Batch | Cases | Initial purpose | State |
 |---|---|---|---|
-| B1 | `mutate_nested`, `bytes_scan`, `string_search` | Confirm existing LLVM wins and establish regression checks | Reconfirmed 6/6 at integrated6cf7bdce / G4 |
-| B2 | `string_equal`, `string_join` | Equality/ownership overhead and nearby large-input targets | G4 confirms both join sizes and large equality at1.00; small equality remains1.3898×; medium comparison audit active |
+| B1 | `mutate_nested`, `bytes_scan`, `string_search` | Confirm existing LLVM wins and establish regression checks | G4 confirmed6/6; stale after index-reuse integrationeaf4cda8 |
+| B2 | `string_equal`, `string_join` | Equality/ownership overhead and nearby large-input targets | G4 join/large-equality confirmations now stale; small remains1.3898×. Bounded equality3dc deferred; LLVM result-range0311796e native checks in progress |
 | B3 | `record_reads`, `record_construct`, `record_update` | Record representation, scalar replacement and transfers | Strict/hybrid scalar-pointer lowering deferred: actual code unchanged; record targets remain open |
 | B4 | `call_direct`, `call_indirect`, `option_handle`, `result_propagate` | Calls, inlining, dispatch and return paths | `d14e26f4` speeds direct calls but retains fallback/record regressions; unintegrated |
 | B5 | `integer_math`, `float_math`, `branch_predictable`, `branch_mixed` | Scalar lowering and loop invariants | Queued |
-| B6 | `list_scan`, `list_append`, `list_filter`, `mutate_unique` | Iteration, capacity and uniqueness | Append/unique gains integrated; Remainder073e450b is untimed pending LLVM lowering fix; index/value reuse codegen review active |
+| B6 | `list_scan`, `list_append`, `list_filter`, `mutate_unique` | Iteration, capacity and uniqueness | Append/unique gains integrated; remainder27de deferred for negative-input cost, bounded-bias successor in progress. Index/value reuse14ffa2c0 adopted aseaf4cda8 after repeated LLVM unique gains5.2%/5.4% and unchanged allocated-code controls |
 | B7 | `tagged_stack`, `mutate_shared`, `alloc_short`, `alloc_retained` | Ownership, allocation elimination and retained data | Queued |
-| B8 | `dict_lookup`, `dict_lookup_str` | Lookup/probe and key costs | Queued |
+| B8 | `dict_lookup`, `dict_lookup_str` | Lookup/probe and key costs | [G4 static triage](../../experiments/runtime-goal110-map-audit-20261004/README.md) identifies remaining dynamic layout and cache-write work; implementation queued |
 | B9 | `dict_update`, `dict_update_str`, `set_dedup` | Publication, replacement and deduplication | Queued |
 | B10 | `binary_search`, `packet_decode` | Bounds, branches and scalar reads | Queued |
-| B11 | `sort_int`, `sort_records` | Comparator dispatch and scratch work | G4 confirms large integer sort at1.00; small remains1.3925×; record sorting remains open |
+| B11 | `sort_int`, `sort_records` | Comparator dispatch and scratch work | G4 large-integer-sort confirmation now stale; small remains1.3925×; record sorting remains open |
 | B12 | `string_split`, `int_parse`, `int_format` | Text ownership, parsing and formatting | Parser outline/alignment integrated in textd9; parsing/formatting still above target |
 | B13 | `word_count`, `csv_aggregate`, `json_transform`, `lox_eval` | Combined application behavior and remaining library costs | Queued |
 
@@ -351,14 +344,14 @@ does not supply the new goal's confirmation protocol.
 <!-- DASHBOARD-START -->
 | Case / profile (size) | Best ns/iteration | Rust | Go | Zig Safe | Zig Fast | MyLang LLVM | MyLang QBE | State LLVM / QBE | Evidence |
 |---|---:|---:|---:|---:|---:|---:|---:|---|---|
-| record_reads / small (64) | 3.8008 | **1.0000** | 1.2025 | 1.3853 | 1.2846 | 1.4097 | 3.0617 | O / O | T13 |
-| record_reads / large (4096) | 3.8753 | **1.0000** | 1.2089 | 1.4026 | 1.2431 | 1.4464 | 3.6482 | O / O | T13 |
+| record_reads / small (64) | 3.8071 | **1.0000** | 1.2034 | 1.3815 | 1.2844 | 1.4038 | 2.9913 | O / O | T16-index-screen |
+| record_reads / large (4096) | 3.8857 | **1.0000** | 1.2041 | 1.4121 | 1.2350 | 1.4356 | 4.0160 | O / O | T16-index-screen |
 | tagged_stack / small (64) | 5.6965 | **1.0000** | 1.0531 | 1.8438 | 1.8624 | 2.9293 | 3.7731 | O / O | T13 |
 | tagged_stack / large (4096) | 5.7073 | **1.0000** | 1.0523 | 1.8383 | 1.8592 | 2.9234 | 3.7499 | O / O | T13 |
-| mutate_unique / small (64) | 2.9211 | **1.0000** | 1.1442 | 1.2812 | 1.2289 | 1.4440 | 7.2121 | O / O | T13 |
-| mutate_unique / large (1024) | 2.9232 | **1.0000** | 1.1449 | 1.2823 | 1.2286 | 1.4551 | 7.2059 | O / O | T13 |
-| mutate_shared / small (64) | 9.9771 | 1.0340 | 5.3741 | 1.5700 | **1.0000** | 11.0875 | 15.4259 | O / O | T13 |
-| mutate_shared / large (1024) | 65.4858 | **1.0000** | 8.8544 | 2.2447 | 1.7325 | 3.4656 | 4.1223 | O / O | T13 |
+| mutate_unique / small (64) | 2.9026 | **1.0000** | 1.1507 | 1.2895 | 1.2372 | 1.3576 | 6.7536 | O / O | T16-index-screen |
+| mutate_unique / large (1024) | 2.9017 | **1.0000** | 1.1506 | 1.2876 | 1.2364 | 1.4381 | 6.7739 | O / O | T16-index-screen |
+| mutate_shared / small (64) | 9.7464 | 1.0487 | 5.5117 | 1.5753 | **1.0000** | 10.7449 | 16.0660 | O / O | T16-index-screen |
+| mutate_shared / large (1024) | 65.1761 | **1.0000** | 8.9154 | 2.2502 | 1.7374 | 3.3703 | 4.1422 | O / O | T16-index-screen |
 | integer_math / small (64) | 105.7685 | **1.0000** | 1.3640 | 1.3398 | 1.1877 | 1.8197 | 5.0610 | O / O | B0 |
 | integer_math / large (4096) | 6392.6711 | **1.0000** | 1.3269 | 1.3768 | 1.2743 | 1.8377 | 5.2206 | O / O | B0 |
 | float_math / small (64) | 91.4178 | 1.5745 | 1.5169 | 1.5610 | **1.0000** | 2.5058 | 6.5162 | O / O | B0 |
@@ -403,24 +396,24 @@ does not supply the new goal's confirmation protocol.
 | alloc_short / large (1024) | 3.9012 | 327.5994 | 536.1037 | 1374.7989 | **1.0000** | 19711.5691 | 26589.1038 | O / O | B0 |
 | alloc_retained / small (64) | 1292.6997 | 1.0697 | 1.4853 | 1.0303 | **1.0000** | 2.3540 | 3.5644 | O / O | B0 |
 | alloc_retained / large (1024) | 20710.2684 | 1.0504 | 1.2628 | 1.0366 | **1.0000** | 2.2667 | 3.3646 | O / O | B0 |
-| mutate_nested / small (64) | 743.1072 | 1.5630 | 1.5550 | 1.5835 | 1.4494 | **1.0000** | 1.1819 | C / O | G4 |
-| mutate_nested / large (1024) | 7194.4692 | 2.7668 | 2.4057 | 2.7373 | 2.5132 | **1.0000** | 1.1046 | C / O | G4 |
+| mutate_nested / small (64) | 743.1072 | 1.5630 | 1.5550 | 1.5835 | 1.4494 | **1.0000** | 1.1819 | S / O | G4 |
+| mutate_nested / large (1024) | 7194.4692 | 2.7668 | 2.4057 | 2.7373 | 2.5132 | **1.0000** | 1.1046 | S / O | G4 |
 | sort_int / small (64) | 165.2368 | 1.3727 | 6.4191 | 1.6209 | **1.0000** | 1.3925 | 2.5638 | O / O | G4 |
-| sort_int / large (4096) | 44151.3168 | 1.4312 | 5.2569 | 1.4696 | 1.0165 | **1.0000** | 1.2146 | C / O | G4 |
+| sort_int / large (4096) | 44151.3168 | 1.4312 | 5.2569 | 1.4696 | 1.0165 | **1.0000** | 1.2146 | S / O | G4 |
 | sort_records / small (64) | 534.9452 | 1.1915 | 12.9614 | 1.4126 | **1.0000** | 2.2464 | 2.9003 | O / O | T9 |
 | sort_records / large (4096) | 51470.2384 | **1.0000** | 23.3619 | 2.1788 | 1.7380 | 1.2257 | 1.4972 | O / O | T9 |
 | lox_eval / small (16) | 738.1632 | **1.0000** | 1.1383 | 2.6921 | 2.6291 | 3.6607 | 4.0643 | O / O | B0 |
 | lox_eval / large (256) | 10981.4215 | **1.0000** | 1.1776 | 2.7947 | 2.7405 | 3.6183 | 3.9186 | O / O | B0 |
-| bytes_scan / small (64) | 3.4649 | 5.0849 | 6.8839 | 7.9880 | 3.4720 | **1.0000** | 2.3692 | C / O | G4 |
-| bytes_scan / large (4096) | 75.3386 | 14.1340 | 13.3834 | 18.8670 | 9.2750 | **1.0000** | 1.0494 | C / C | G4 |
+| bytes_scan / small (64) | 3.4649 | 5.0849 | 6.8839 | 7.9880 | 3.4720 | **1.0000** | 2.3692 | S / O | G4 |
+| bytes_scan / large (4096) | 75.3386 | 14.1340 | 13.3834 | 18.8670 | 9.2750 | **1.0000** | 1.0494 | S / S | G4 |
 | string_equal / small (64) | 2.9979 | **1.0000** | 1.4842 | 1.3563 | 1.2735 | 1.3898 | 7.2728 | O / O | G4 |
-| string_equal / large (4096) | 12.7438 | 2.4308 | 2.9087 | 5.0839 | 3.9540 | **1.0000** | 18.7675 | C / O | G4 |
-| string_search / small (64) | 19.5696 | 2.1785 | 1.2547 | 4.5712 | 3.7904 | **1.0000** | 1.2549 | C / O | G4 |
-| string_search / large (4096) | 87.5278 | 14.7733 | 7.3155 | 33.9751 | 30.0027 | **1.0000** | 1.0550 | C / C | G4 |
+| string_equal / large (4096) | 12.7438 | 2.4308 | 2.9087 | 5.0839 | 3.9540 | **1.0000** | 18.7675 | S / O | G4 |
+| string_search / small (64) | 19.5696 | 2.1785 | 1.2547 | 4.5712 | 3.7904 | **1.0000** | 1.2549 | S / O | G4 |
+| string_search / large (4096) | 87.5278 | 14.7733 | 7.3155 | 33.9751 | 30.0027 | **1.0000** | 1.0550 | S / S | G4 |
 | string_split / small (64) | 557.5921 | **1.0000** | 1.8763 | 1.8560 | 1.7269 | 6.2247 | 8.1218 | O / O | B0 |
 | string_split / large (4096) | 28435.3492 | **1.0000** | 2.3570 | 2.1980 | 2.0666 | 7.6152 | 9.7548 | O / O | B0 |
-| string_join / small (64) | 162.8626 | 1.3451 | 2.4317 | 1.8955 | 1.6336 | **1.0000** | 1.1664 | C / O | G4 |
-| string_join / large (4096) | 5763.9243 | 2.3079 | 4.3569 | 3.0551 | 2.8575 | **1.0000** | 1.0115 | C / C | G4 |
+| string_join / small (64) | 162.8626 | 1.3451 | 2.4317 | 1.8955 | 1.6336 | **1.0000** | 1.1664 | S / O | G4 |
+| string_join / large (4096) | 5763.9243 | 2.3079 | 4.3569 | 3.0551 | 2.8575 | **1.0000** | 1.0115 | S / S | G4 |
 | int_parse / small (64) | 4.4652 | **1.0000** | 5.4083 | 1.2816 | 1.2776 | 2.2302 | 4.0938 | O / O | T14 |
 | int_parse / large (4096) | 5.0104 | **1.0000** | 5.3917 | 1.3551 | 1.2539 | 2.2453 | 3.8461 | O / O | T14 |
 | int_format / small (64) | 14.7507 | **1.0000** | 1.1094 | 2.7537 | 2.1862 | 3.9779 | 5.8586 | O / O | T14 |
@@ -469,6 +462,8 @@ does not supply the new goal's confirmation protocol.
 
 
 | G4 | Integrated`6cf7bdce`; A`620102fe-f182-439c-a8ff-2bbc42b25152`06:37:24–06:42:12 UTC, B`bcc5273b-e669-4cf3-9682-5580ed530ff0`06:42:44–06:47:37 UTC; RF host,15r/3w each | [Accepted analysis](candidates/goal110-g4-6cf7bdce-rf-20261004-accepted.json), [complete archive](../../experiments/runtime-goal110-g4-rf-20261004/README.md), [independent correctness review](candidates/goal110-g4-6cf7bdce-rf-20261004-correctness-review.json), [checks](candidates/goal110-g4-6cf7bdce-rf-20261004-checks.json) | Ten LLVM cells confirmed at1.00 with all paired upper95% comparisons≤1.10 in both sessions. Small equality1.389811 and small integer sort1.392460 remain open. Three QBE confirmations are informational. No full-suite or new full-repository acceptance. |
+
+| T16 | Index reuse `14ffa2c0`, integrated as `eaf4cda8`; six-arm5r/1w and matched15r/3w repeat | [Complete archive](../../experiments/runtime-goal110-index-update-20261004/README.md), [observed speeds](candidates/goal110-index-14ffa2c0-20261004-observed.json), [official correctness/repeat review](candidates/goal110-index-14ffa2c0-20261004-releasefast-review.json), [unchanged control code](candidates/goal110-index-14ffa2c0-20261004-controls-review.json) | LLVM unique after/before0.94814/0.94565; shared0.94881/0.98872. No material measured regression; allocated code for compute/collections/text is identical. Six targets remain open; no normal confirmation. |
 
 | D3 | Deferred scalar-pointer sources `a29aa6a9` and `1fdae8e1`; no timing | [Strict proof and incident archive](../../experiments/runtime-goal110-scalar-slots-20261004/README.md), [hybrid archive](../../experiments/runtime-goal110-scalar-addresses-20261004/README.md), [coordinator review](candidates/goal110-screens-20261004-0438-review.json) | Actual optimized code unchanged. Root checked96 raw/archive bindings and identical live hybrid/control ELFs; neither source is integrated. |
 
@@ -624,3 +619,21 @@ diagnostic notes and raw evidence rather than pasting build logs here.
 | 2026-10-04 08:35:00 UTC | Candidate archives reviewed; signed-range follow-up | Root checks 140 compressed/raw/live-file bindings and 22 metadata bindings, then independently replays 720 paired outcomes and medians across the initial text comparison, repeat, frozen remainder rows and signed supplement. The supplement uses an independent residue-sum oracle. [Archive review](candidates/goal110-candidate-archives-20261004-0835-review.json). Text archives32b/7e2d and remainder945f retain the measured costs and refusal history. Mutation split groups pass30 unique tests within unchanged bounds; Guardian88 passes. | Keep3dc/27de unintegrated. Fresh bounded-bias work preserves the old signed fast-loop admission; isolated LLVM range assumptions remove checksum correction in a synthetic experiment, with production interface review pending. No new measured result or goal confirmation; integrated source6cf/C10 remains current. |
 
 | 2026-10-04 08:45:10 UTC | Mutation14ffa2c0 ready for official build; LLVM range experiment passes | Root independently checks106 successful and30 failing actual QBE/LLVM pairs, two detach allocation refusals and four identical accounting pairs, with full streams and source/artifact bindings. All30 unique focused tests pass within unchanged bounds. [Mutation review](candidates/goal110-index-update-20261004-native-review.json). Actual LLVM mutation entry shrinks16825→16365 bytes, removing repeated write-index checks and the following value reload while retaining first-read checks and COW. Root separately verifies127 raw/6metadata bindings and27452 saved IR outcomes, including1400 overflow statuses. [IR review](candidates/goal110-floor-range-ir-20261004-review.json). | A fresh14ffa2c0 ReleaseFast host is building; timing follows24guest builds and qualification. Fresh6cf-based bounded-bias and final-result annotation implementations are isolated. Source integration and G4 confirmations remain unchanged; no new benchmark timing result. |
+
+
+| 2026-10-04 08:54:06 UTC | Index-reuse official compiler complete | Fresh14ffa2c0 ReleaseFast host completed08:45:34–08:51:48 UTC, exit0, source/assets unchanged and Guardian88 passed. Compiler SHA59c98b1c06dd1815809528c2e4e88e713deeeb4ad42418dc38f33d41585574cf; receipt29ad2a6fefbb1d2d579ad0dbdf60a1e446d91416a115b99e1e723d191c1863f4. | All24 guests,720 qualification cells,516 holdouts and final official-host behavior checks precede a six-row screen of unique/shared mutation and record reads at both sizes. No timing started. Arithmetic candidates remain isolated; integrated6cf/G4 C10 unchanged. |
+
+
+| 2026-10-04 09:05:05 UTC | Index-reuse six-row exploratory timing starts | Exact14ffa2c0 RF manifest e02fd8476ee7b36d04e74a46287dcdbcc0fade79156f40b4e0de2d9e6674a171 passes24guest/source bindings,720qualifications and516holdouts. Root verified2621source/15installed-asset host bindings and reviewed timingcommands1ebd0784/8helper identities. Six-arm5r/1w run starts with driver83a60a10; a same-plan G4 comparison follows. | Both implementation agents are idle under HOLD. No builds/tests/Guardian/commits or heavy analysis during measurement. Bounded-bias52 focused results and range-annotation18 results pass but remain unpinned/untimed; no new goal confirmation. |
+
+
+| 2026-10-04 09:15:00 UTC | Index-reuse initial screen complete; independent repeat starts | Six-arm5r/1w yields180 measured samples/720 qualifications. Matched sessionf6e54af4 passes144 outcomes: LLVM unique0.94934/0.94800, shared0.94952/0.98579, record reads0.98810/0.98611 after/before (small/large). Large-unique upper95 crosses1; QBE large-record interval is wide. All six required LLVM targets remain above1.10. | Start independent15r/3w on unchanged6plans/4before-after arms, command SHA368f460d. This is adoption evidence, not normal goal confirmation. Quiet HOLD remains until guest timing ends; integrated6cf andG4 C10/O70 are unchanged. |
+
+
+| 2026-10-04 09:19:30 UTC | Index-reuse independent repeat complete | Repeat15r/3w retains the exact initial6plans/4arms and passes432 outcomes. LLVM large unique0.94565 (95% interval0.93582–0.95770), shared0.94881/0.98872, records0.98641/0.99172; QBE records1.00183/0.99678 and large-record upper95=1.02826. | Release build/test hold. Root independently replays official native/GC/accounting outcomes and both paired sessions; preserve the archive. Check prior-pass control code or measure a nested-mutation sentinel before adoption. Source remains6cf, no new goal confirmation. |
+
+
+| 2026-10-04 09:27:00 UTC | Index reuse integrated aseaf4cda8 / T16 | Exact8-file production source14ffa2c0 is cherry-picked with no source delta. Root replay passes150 official process pairs,720 qualifications,516 holdouts and576 paired outcomes. Independent ELF parsing confirms allocated sections/program headers/executable LOADs unchanged for compute/collections/text on both backends; only mapped section-header-table offsets differ. [Control review](candidates/goal110-index-14ffa2c0-20261004-controls-review.json). | Adopt repeated LLVM unique gains5.2%/5.4%; no new target closes. New dashboard isLLVM O70/S10, QBE O77/S3. Prior G4 confirmations are stale until normal integrated recheck. Arithmetic candidates stay isolated; no additional timing or whole-repository acceptance. |
+
+
+| 2026-10-04 09:31:30 UTC | Mutation archive1b8ab336 and bounded-bias5e97db47 reviewed | Root verifies all85 exact committed archive files,1894 raw/member bindings and1893 live origins. [Archive review](candidates/goal110-index-14ffa2c0-20261004-archive-review.json). Bounded-bias final source57 tests/88 Guardian checks pass; root checks11 source/8 log bindings and49 complete native pairs, including38 new bias pairs and11 append controls. [Source review](candidates/goal110-bounded-rem-5e97db47-20261004-source-review.json). Four LLVM-policy pairs execute throughQBE; actual LLVM ELF checks remain pending. | Preserve measured mutation gain and sourceeaf4. Bounded-bias Debug host builds; annotation0311796e actual LLVM checks run. Dictionary follow-up starts fromeaf4 in a new worktree. No new timing or goal confirmation. |
