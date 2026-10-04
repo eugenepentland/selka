@@ -9,9 +9,9 @@ the raw evidence for every reported result.
 
 <!-- STATUS-START -->
 - **Campaign:** active; combined text improvement integrated; small join reopened.
-- **Last document update:** 2026-10-04 05:17:36 UTC.
-- **Active batch:** certified list-readiness inlining, search alignment, and
-  duplicate ownership-check elimination in compute.
+- **Last document update:** 2026-10-04 05:31:00 UTC.
+- **Active batch:** duplicate ownership-check elimination in compute and
+  scalar arithmetic specialization for growing append loops.
 - **Current implementation:** `perf/runtime-parity-20261003`, production source
   `f994742ddb734fd1bf2f4c0a995e1dd438036f01`, equivalent to text `d9d6362f`.
 - **Latest complete integrated measurement:** B0, before join and sorting changes.
@@ -21,10 +21,11 @@ the raw evidence for every reported result.
 - **LLVM states:** 70 open above target, nine observations awaiting confirmation,
   one reopened regression (small join). Evidence spans revisions; this is not a full-suite pass.
 - **Dashboard artifact:** [After text integration](candidates/goal110-dashboard-20261004-text.json).
-- **Active operations:** duplicate ownership-check elimination passed focused
-  proof/native checks and is preparing its final source-bound build. Arithmetic-only
-  append-loop specialization passed initial emitted-code checks and is adding
-  refusal/native coverage. The normal integrated RF build waits for this batch.
+- **Active operations:** mutation candidate `d4c28bda` passed24 focused and14
+  readiness tests; its pinned Debug host is built and native differential checks
+  are running. Append candidate `6910e083` passed27 focused tests and its pinned
+  Debug host; fresh guests are building. The separate argv correction is integrated
+  as `dfcb900b`. The normal integrated RF build waits for this batch.
 - **Text tradeoff:** large equality improves 64.4%, while small join slows 5.5%
   and is observed at 1.1183× current fastest. Its target is reopened. Join/score
   helper instructions are unchanged; caller code and placement differ, with no
@@ -533,6 +534,8 @@ Append entries; do not remove failed experiments or historical outcomes.
 | 2026-10-04 05:11:39 UTC | Native test argument audit | Found that `qbe_loop_unswitch_test.sameInputOutcome` passes numeric argv without the runtime-options delimiter and can compare matching option failures. A separate test-only fix adds the delimiter and explicit successful results. Root independently verified the historical432-execution matrix uses direct subprocess argv, then replayed144 saved oracle cases (138 successes/6 division failures); its evidence and direct benchmark timings are unaffected. The prior independent review now has an appended correction. | Preserve original receipts and the [coverage review](candidates/goal110-argv-coverage-20261004-review.json). New mutation tests pass19 focused checks with explicit real guest outputs after correcting the same delimiter mistake; a test-layout Guardian finding is being corrected before its source pin. No new timing or target acceptance. |
 
 | 2026-10-04 05:17:36 UTC | Integrated `f994742d` / T11 | Accepted the general bounded equality, separated floating-parser frame and aligned scanner combination. Repeat LLVM large equality0.35592 accompanies small join1.05524; search1.00471. Root verified source equivalence to d9,504 paired outcomes,360 samples/720 qualifications,80 medium-helper rows,43 raw/archive plus13 static bindings, and independently replayed identical native join/score bodies. The caller changes code/placement without frame or stack-reference count growth. | Explicit tradeoff: retain64.4% large-equality gain and reopen small join at1.118284× current fastest. Dashboard nowO70/P9/R1 for LLVM, with0 current confirmations. No goal completion, RF acceptance or causal placement explanation claimed. Root production Guardian88 passed; mutation/append work continues. |
+
+| 2026-10-04 05:31:00 UTC | Mutation/append source pins and argv fix | Mutation `d4c28bda` combines the uniqueness proof with accepted readiness, passing24 focused and14 affected readiness tests. Append `6910e083` passes27 focused tests, including exact native growth/overflow/refusal outcomes and frozen-project emission. Both official source-bound Debug hosts are built; native differentials and fresh guests continue against unchanged638 controls. The separate guest-argv test correction `61e9bd6f` is integrated as `dfcb900b`; its23-test differential batch and explicit successful fold oracle pass. | No new timing or target confirmations. Production optimizations remain isolated pending actual-code and paired screens. Limited review of the two other argument-forwarding environment helpers confirms their callers intentionally pass runtime options, so they do not need the guest delimiter. |
 
 For future entries, include the affected cases/sizes/backends and before → after
 ratios, or say explicitly that the step produced no timing result. Link long
