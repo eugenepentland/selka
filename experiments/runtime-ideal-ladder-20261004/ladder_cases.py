@@ -45,7 +45,7 @@ CASES['list_filter'] = dict(
         (9, "+ branchless select"),
         (10, "+ strength-reduced remainder (induction)"),
         (11, "hand AVX2 u16, fused, rank by in-register scan"),
-    ]) + [('v30 holdout: file data, fused scalar branchless', 'list_filter', 30, 'file'),
+    ]) + [('v30 holdout: file data, fused scalar, branchy, sticky checks', 'list_filter', 30, 'file'),
           ('v31 holdout: file data, guard + hoisted r_j + AVX2', 'list_filter', 31, 'file'),
           ('v20 holdout reference: today reading file', 'list_filter', 20, 'file'),
           ('v8 baseline x86-64', 'list_filter_base', 8),

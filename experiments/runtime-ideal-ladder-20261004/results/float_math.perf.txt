@@ -1,26 +1,26 @@
 == float_math perf: size=4096 iterations=6000; per unit = element
-version                                          cyc/iter   instr/iter  cyc/unit instr/unit
-v0: today incl. in-loop kind dispatch             53602.4     208934.0    13.087     51.009
-v1: dispatch unswitched: bounds check, runtime-call int(float), checked add      49108.4     172068.0    11.989     42.009
-v2: + inline checked int(float)                   26248.0      90145.0     6.408     22.008
-v3: + immutable list, one bounds check, sticky checks (L2)      30428.8      90147.0     7.429     22.009
-v4: + element range: no checks (f64, i64)         14024.6      33595.0     3.424      8.202
-v13: v4 + result range assume (types stay i64)      14028.1      33595.0     3.425      8.202
-v5: + i32 conversions (plain C)                    5672.4      14144.0     1.385      3.453
-v6: + u16 storage (plain C)                        5721.3      13114.0     1.397      3.202
-v7: hand AVX2 f64, i64 storage                     5151.3      14895.0     1.258      3.636
-v8: hand AVX2 f64, u16 storage                     5248.1      13870.0     1.281      3.386
-v9: + FMA contraction                              3856.1      11822.0     0.941      2.886
-v10: f32 lanes (precision narrowing)               1568.4       5442.0     0.383      1.329
-v11: WORK ELIM: integer identity                   1249.6       3638.0     0.305      0.888
-v12: WORK ELIM: closed form                          18.2         35.0     0.004      0.009
-v30 holdout: data from file, v3 (no range)        29921.1      90147.0     7.305     22.009
-v31 holdout: data from file, runtime range guard + AVX2       5095.7      14399.0     1.244      3.515
-v3 baseline x86-64 (no AVX2)                      31787.9     102437.0     7.761     25.009
-v4 baseline x86-64                                16703.2      44078.0     4.078     10.761
-v5 baseline x86-64                                11212.5      31791.0     2.737      7.761
-v6 baseline x86-64                                11101.3      31791.0     2.710      7.761
-B0 rust                                           28659.1     106530.1     6.997     26.008
-B0 zig-safe                                       26823.6      98349.0     6.549     24.011
-B0 zig-fast                                       17674.8      81955.0     4.315     20.009
-B0 my-llvm                                        47905.3     188458.0    11.696     46.010
+version                                          cyc/iter   instr/iter  cyc/unit instr/unit brmiss/u   sfwd/u
+v0: today incl. in-loop kind dispatch             54400.6     208934.0    13.281     51.009   0.0003  -0.0000
+v1: dispatch unswitched: bounds check, runtime-call int(float), checked add      49140.1     172068.0    11.997     42.009   0.0002   0.0000
+v2: + inline checked int(float)                   26264.8      90145.0     6.412     22.008   0.0003  -0.0000
+v3: + immutable list, one bounds check, sticky checks (L2)      29910.2      90147.0     7.302     22.009   0.0003  -0.0000
+v4: + element range: no checks (f64, i64)         14023.8      33595.0     3.424      8.202   0.0002  -0.0000
+v13: v4 + result range assume (types stay i64)      14021.4      33595.0     3.423      8.202   0.0002   0.0000
+v5: + i32 conversions (plain C)                    5668.5      14144.0     1.384      3.453   0.0002   0.0000
+v6: + u16 storage (plain C)                        5665.6      13114.0     1.383      3.202   0.0002   0.0000
+v7: hand AVX2 f64, i64 storage                     5137.3      14895.0     1.254      3.636   0.0002   0.0000
+v8: hand AVX2 f64, u16 storage                     5269.2      13870.0     1.286      3.386   0.0002   0.0000
+v9: + FMA contraction                              3861.6      11822.0     0.943      2.886   0.0002  -0.0000
+v10: f32 lanes (precision narrowing)               1563.1       5442.0     0.382      1.329   0.0002  -0.0000
+v11: WORK ELIM: integer identity                   1240.5       3638.0     0.303      0.888   0.0002   0.0000
+v12: WORK ELIM: closed form                          19.4         35.0     0.005      0.009   0.0000  -0.0000
+v30 holdout: data from file, v3 (no range)        29927.4      90147.0     7.306     22.009   0.0002  -0.0000
+v31 holdout: data from file, runtime range guard + AVX2       5078.7      14399.0     1.240      3.515   0.0002   0.0000
+v3 baseline x86-64 (no AVX2)                      31757.0     102437.0     7.753     25.009   0.0002  -0.0000
+v4 baseline x86-64                                16098.9      44078.0     3.930     10.761   0.0002   0.0000
+v5 baseline x86-64                                11218.8      31791.0     2.739      7.761   0.0002   0.0000
+v6 baseline x86-64                                11068.2      31791.0     2.702      7.761   0.0002   0.0000
+B0 rust                                           28604.9     106529.9     6.984     26.008   0.0002   0.0000
+B0 zig-safe                                       26682.1      98349.0     6.514     24.011   0.0002  -0.0000
+B0 zig-fast                                       17691.9      81955.0     4.319     20.009   0.0002   0.0000
+B0 my-llvm                                        47891.7     188458.0    11.692     46.010   0.0003  -0.0000

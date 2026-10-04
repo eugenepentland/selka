@@ -1,24 +1,24 @@
 == list_filter perf: size=4096 iterations=8000; per unit = element
-version                                          cyc/iter   instr/iter  cyc/unit instr/unit brmiss/u
-v1: today: heap lists, header traffic, plain_ready call, checked fold      47974.0     240070.0    11.712     58.611   0.0151
-v2: + immutable locals: headers in regs, sticky checks (L2)      45266.9     229333.9    11.051     55.990   0.0153
-v3: + typed append (no plain_ready call)          38912.2     188382.8     9.500     45.992   0.0152
-v4: + bounded result capacity (one alloc, no growth)      41552.3     185690.7    10.145     45.335   0.0158
-v5: + allocation hoisted out of the batch loop      38156.1     185079.7     9.315     45.185   0.0165
-v12: + sign fact only: unsigned mod, i64 storage      18965.1      79287.6     4.630     19.357   0.0140
-v6: + range x<1009: u32 storage                   18742.3      75872.8     4.576     18.524   0.0141
-v7: + fuse generator into filter (no input list)      20130.4      84727.8     4.915     20.686   0.0147
-v8: + fuse fold (no lists), branchy               21168.2      79252.4     5.168     19.349   0.0187
-v9: + branchless select                           25091.9     106530.0     6.126     26.008   0.0002
-v10: + strength-reduced remainder (induction)      19074.3      61477.0     4.657     15.009   0.0002
-v11: hand AVX2 u16, fused, rank by in-register scan       2704.6       8434.0     0.660      2.059   0.0002
-v30 holdout: file data, fused scalar branchless      23711.1     113370.3     5.789     27.678   0.0135
-v31 holdout: file data, guard + hoisted r_j + AVX2       2694.6       8678.0     0.658      2.119   0.0002
-v20 holdout reference: today reading file         40017.0     226084.0     9.770     55.196   0.0155
-v8 baseline x86-64                                20863.1      83349.4     5.094     20.349   0.0156
-v9 baseline x86-64                                24966.8     110627.0     6.095     27.009   0.0002
-v10 baseline x86-64                               19027.3      61478.0     4.645     15.009   0.0002
-B0 rust                                           23512.1     124012.7     5.740     30.277   0.0153
-B0 zig-safe                                       43365.2     243064.9    10.587     59.342   0.0177
-B0 zig-fast                                       30660.3     149585.2     7.485     36.520   0.0177
-B0 my-llvm                                        56129.2     314215.1    13.703     76.713   0.0160
+version                                          cyc/iter   instr/iter  cyc/unit instr/unit brmiss/u   sfwd/u
+v1: today: heap lists, header traffic, plain_ready call, checked fold      46872.6     240070.0    11.444     58.611   0.0155  -0.0000
+v2: + immutable locals: headers in regs, sticky checks (L2)      44786.5     229333.8    10.934     55.990   0.0155  -0.0000
+v3: + typed append (no plain_ready call)          38146.5     188382.7     9.313     45.992   0.0155   0.0000
+v4: + bounded result capacity (one alloc, no growth)      37554.8     185690.7     9.169     45.335   0.0161   0.0000
+v5: + allocation hoisted out of the batch loop      37741.0     185079.7     9.214     45.185   0.0169   0.0000
+v12: + sign fact only: unsigned mod, i64 storage      19019.9      79287.6     4.644     19.357   0.0140   0.0000
+v6: + range x<1009: u32 storage                   18696.6      75872.8     4.565     18.524   0.0142   0.0000
+v7: + fuse generator into filter (no input list)      20171.9      84727.8     4.925     20.686   0.0147  -0.0000
+v8: + fuse fold (no lists), branchy               21176.9      79252.4     5.170     19.349   0.0187   0.0000
+v9: + branchless select                           25128.4     106530.0     6.135     26.008   0.0002  -0.0000
+v10: + strength-reduced remainder (induction)      19052.1      61477.0     4.651     15.009   0.0002   0.0000
+v11: hand AVX2 u16, fused, rank by in-register scan       2708.4       8434.0     0.661      2.059   0.0002   0.0000
+v30 holdout: file data, fused scalar, branchy, sticky checks      23704.0     113370.3     5.787     27.678   0.0136   0.0000
+v31 holdout: file data, guard + hoisted r_j + AVX2       2693.4       8678.0     0.658      2.119   0.0002   0.0000
+v20 holdout reference: today reading file         40213.5     226084.0     9.818     55.196   0.0155   0.0000
+v8 baseline x86-64                                21089.8      83349.4     5.149     20.349   0.0160   0.0000
+v9 baseline x86-64                                25047.5     110627.0     6.115     27.009   0.0002   0.0000
+v10 baseline x86-64                               19066.5      61478.0     4.655     15.009   0.0003   0.0000
+B0 rust                                           23692.6     124012.7     5.784     30.277   0.0153   0.0000
+B0 zig-safe                                       43860.4     243064.9    10.708     59.342   0.0176   0.0000
+B0 zig-fast                                       30755.5     149585.2     7.509     36.520   0.0180   0.0000
+B0 my-llvm                                        56376.3     314215.1    13.764     76.713   0.0160   0.0000
