@@ -28,6 +28,8 @@ typedef struct {
  * `bytes` the span, so the record nominates only that same query; an absence
  * also carries `epoch`, the heap's collection count, so it applies only while
  * that text cannot have been reclaimed and its address reused. */
+/* A found ordinary probe publishes only key, entry and state. Other fields may
+ * retain an earlier probe's bytes and are read only under their own state. */
 typedef struct {
     uint64_t key;
     size_t entry;

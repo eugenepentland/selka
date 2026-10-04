@@ -228,6 +228,8 @@ test {
     _ = @import("arrays_test.zig");
     _ = @import("array_places_test.zig");
     _ = @import("qbe_loop_facts_test.zig");
+    _ = @import("qbe_remainder_bias_test.zig");
+    _ = @import("qbe_loop_remainder_bias_test.zig");
     _ = @import("qbe_positive_index_test.zig");
     _ = @import("qbe_rc_field_inout_test.zig");
     _ = @import("qbe_loop_version.zig");

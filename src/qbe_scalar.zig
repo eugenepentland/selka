@@ -296,6 +296,11 @@ fn checkedMul(comptime E: type, self: *E, op: typed.BinaryOp, info: typed.Type.I
 }
 /// Lower truncating or flooring division and remainder with exact traps.
 fn checkedDivRem(comptime E: type, self: *E, op: typed.BinaryOp, info: typed.Type.Integer, values: Operands) Error!void {
+    if (try @import("qbe_loop_remainder_bias.zig").lower(E, self, op, info, .{
+        .left = values.left,
+        .right = values.right,
+        .result = values.result,
+    })) return;
     if (self.scalar_policy == .qbe) {
         if (try @import("qbe_constant_divisor.zig").lower(E, self, op, info, .{ .left = values.left, .right = values.right, .result = values.result })) return;
     }

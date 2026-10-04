@@ -58,6 +58,7 @@
 const std = @import("std");
 const bytecode = @import("bytecode.zig");
 const typed = @import("typed.zig");
+const remainder_bias = @import("qbe_remainder_bias.zig");
 
 /// Failures while planning; an unsupported shape is never an error, only an
 /// unversioned loop.
@@ -151,6 +152,8 @@ pub const Action = struct {
     unchecked: bool = false,
     /// The index operand is non-negative, so no from-end correction applies.
     nonnegative: bool = false,
+    /// A flooring-only remainder recipe proved over exactly the old guard.
+    floor_remainder_bias: ?RemainderBias = null,
     /// How the copy lowers the instruction beyond dropping its checks.
     effect: enum {
         none,
@@ -169,6 +172,12 @@ pub const Action = struct {
     /// No path through the copy reaches the instruction: it lies behind a
     /// branch the guard proved always taken, so the copy omits it.
     dead: bool = false,
+};
+
+/// The old magnitude certificate and its already bounded private leaves.
+pub const RemainderBias = struct {
+    recipe: remainder_bias.Plan,
+    leaves: []const NodeId,
 };
 
 /// One loop the emitter versions.
@@ -204,6 +213,8 @@ pub const Input = struct {
     states: []const ?[]const typed.Type,
     /// Box projections can clone pinned children under value semantics.
     box_cow: bool = false,
+    /// Optional instruction selection only; disabling it preserves the plan.
+    floor_remainder_bias: bool = true,
 };
 
 /// Loop bodies longer than this many instructions are left alone. The copy
@@ -290,6 +301,7 @@ const Interner = struct {
     allocator: std.mem.Allocator,
     list: std.ArrayList(Node) = .empty,
     index: std.AutoHashMapUnmanaged(Node, NodeId) = .empty,
+    bias_work: usize = 262144,
     fn intern(self: *Interner, node: Node) Error!NodeId {
         if (self.index.get(node)) |id| return id;
         const id: NodeId = @intCast(self.list.items.len);
@@ -334,6 +346,7 @@ const State = struct {
 
 /// A checked `+ - *` the copy may lower unchecked when its bound fits.
 const Arithmetic = struct { pc: usize, value: NodeId };
+const FloorRemainder = struct { pc: usize, value: NodeId, divisor: u64 };
 
 /// One local write either adds a bounded increment or replaces it with a bounded value.
 const Update = union(enum) { increment: NodeId, bounded: u64 };
@@ -374,6 +387,7 @@ const Analyzer = struct {
     actions: []Action = &.{},
     requirements: std.ArrayList(Step) = .empty,
     arithmetic: std.ArrayList(Arithmetic) = .empty,
+    floor_remainders: std.ArrayList(FloorRemainder) = .empty,
     /// Set when the body does not have the stack discipline the pass assumes.
     broken: bool = false,
 
@@ -421,12 +435,15 @@ const Analyzer = struct {
     /// Plan the loop, or return null when its shape or contents rule it out
     /// or when the copy would prove nothing.
     fn run(self: *Analyzer) Error!?Loop {
+        defer self.floor_remainders.deinit(self.allocator);
         if (self.back - self.head > max_body or self.back < self.head + 5) return null;
         if (!try self.header()) return null;
         if (!try self.contents()) return null;
         if (!self.entered()) return null;
         if (!try self.evaluate()) return null;
-        return self.finish();
+        var loop = try self.finish() orelse return null;
+        try self.attachRemainderBias(&loop);
+        return loop;
     }
 
     /// The four header instructions and the counter's store before the back
@@ -884,17 +901,30 @@ const Analyzer = struct {
     /// The magnitude of a value in terms of the leaf bound, collecting the
     /// leaves the guard must bound. Null when no bound is known.
     fn magnitude(self: *Analyzer, id: NodeId, leaves: *std.ArrayList(NodeId), depth: u8) Error!?Magnitude {
+        return self.magnitudeWork(id, leaves, depth, null);
+    }
+
+    fn magnitudeWork(self: *Analyzer, id: NodeId, leaves: *std.ArrayList(NodeId), depth: u8, work: ?*usize) Error!?Magnitude {
         if (depth > 24) return null;
+        if (work) |budget| {
+            if (budget.* == 0) return null;
+            budget.* -= 1;
+        }
         switch (self.get(id)) {
             .constant => |value| return .{ .coefficient = @abs(value), .degree = 0 },
             .length => {
+                if (work != null) return null;
                 try addLeaf(self.allocator, leaves, id);
                 return Magnitude.one;
             },
-            .leaf => |value| return self.leafMagnitude(id, value, leaves, depth),
+            .leaf => |value| {
+                if (work != null and !scalarMagnitudeLeaf(value)) return null;
+                return self.leafMagnitude(id, value, leaves, depth);
+            },
             .operation => |operation| {
-                const left = try self.magnitude(operation.left, leaves, depth + 1) orelse return null;
-                const right = try self.magnitude(operation.right, leaves, depth + 1) orelse return null;
+                if (work != null and operation.operator == .quotient) return null;
+                const left = try self.magnitudeWork(operation.left, leaves, depth + 1, work) orelse return null;
+                const right = try self.magnitudeWork(operation.right, leaves, depth + 1, work) orelse return null;
                 return switch (operation.operator) {
                     .mul => Magnitude.product(left, right),
                     // |floor(a / d)| <= |a| for every integer d with |d| >= 1.
@@ -941,10 +971,41 @@ const Analyzer = struct {
             },
         }
     }
+
+    fn scalarMagnitudeLeaf(value: Leaf) bool {
+        return value.kind == .local or value.kind == .entry or value.kind == .counter;
+    }
     fn counterLeaves(self: *Analyzer, leaves: *std.ArrayList(NodeId)) Error!void {
         try addLeaf(self.allocator, leaves, try self.leaf(.entry, self.counter.slot));
         try addLeaf(self.allocator, leaves, self.counter.bound);
         try addLeaf(self.allocator, leaves, self.counter.step);
+    }
+
+    /// Attach optional metadata only after the complete old plan is settled.
+    fn attachRemainderBias(self: *Analyzer, loop: *const Loop) Error!void {
+        if (self.nodes.list.items.len > 4096) return;
+        for (self.floor_remainders.items) |candidate| {
+            var leaves: std.ArrayList(NodeId) = .empty;
+            defer leaves.deinit(self.allocator);
+            const bound = try self.magnitudeWork(candidate.value, &leaves, 0, &self.nodes.bias_work) orelse continue;
+            if (!self.alreadyBounded(loop, leaves.items)) continue;
+            const limit = remainder_bias.magnitude(bound.coefficient, bound.degree, loop.bits) orelse continue;
+            const recipe = remainder_bias.plan(limit, candidate.divisor) orelse continue;
+            self.actions[candidate.pc - self.head].floor_remainder_bias = .{ .recipe = recipe, .leaves = try leaves.toOwnedSlice(self.allocator) };
+        }
+    }
+
+    fn alreadyBounded(self: *const Analyzer, loop: *const Loop, leaves: []const NodeId) bool {
+        for (leaves) |id| {
+            if (self.get(id) == .constant) continue;
+            var found = false;
+            for (loop.guard) |step| if (step == .bounded and step.bounded == id) {
+                found = true;
+                break;
+            };
+            if (!found) return false;
+        }
+        return true;
     }
 
     /// Choose the leaf bound, keep the arithmetic that fits it, and assemble
@@ -1057,7 +1118,7 @@ const Machine = struct {
                 try self.push(if (predicate == .lt and a.constantOf(right) == 0) try a.node(.{ .negative = left }) else try a.node(.unknown));
             },
             .cmp_bool, .cmp_enum, .cmp_domain => return self.consume(2),
-            .rem_i64_checked => return self.remainder(),
+            .rem_i64_checked => return self.remainder(false),
             .div_i64_checked => return self.quotient(),
             .not_bool, .unary_float, .get_field, .neg_i64_checked, .neg_integer => return self.consume(1),
             .wrap_domain, .unwrap_domain => {},
@@ -1071,7 +1132,7 @@ const Machine = struct {
                     .sub => try self.arith(.sub),
                     .mul => try self.arith(.mul),
                     .div, .floor_div => return self.quotient(),
-                    .rem, .floor_rem => return self.remainder(),
+                    .rem, .floor_rem => return self.remainder(binary.op == .floor_rem),
                     else => return self.consume(2),
                 }
             },
@@ -1122,13 +1183,16 @@ const Machine = struct {
     /// A constant remainder has magnitude below the divisor, independently
     /// of its dividend. The original operation still runs before this bound
     /// is used; no guard evaluates its operands or moves its failure earlier.
-    fn remainder(self: *Machine) Error!?bool {
+    fn remainder(self: *Machine, flooring: bool) Error!?bool {
         const a = self.analyzer;
         if (self.stack.items.len < 2) return null;
         const divisor = a.constantOf(self.stack.items[self.stack.items.len - 1]) orelse return self.consume(2);
         if (divisor == 0) return self.consume(2);
         _ = self.pop() orelse return null;
-        _ = self.pop() orelse return null;
+        const dividend = self.pop() orelse return null;
+        if (flooring and divisor > 0 and !std.math.isPowerOfTwo(@as(u64, @intCast(divisor)))) {
+            if (a.input.floor_remainder_bias and a.code().len <= 4096) try a.floor_remainders.append(a.allocator, .{ .pc = self.pc, .value = dividend, .divisor = @intCast(divisor) });
+        }
         const maximum = @abs(divisor) - 1;
         const value = if (maximum == 0) try a.constant(0) else try a.leaf(.narrow, @intCast(64 - @clz(maximum)));
         try self.push(value);

@@ -68,7 +68,8 @@ fn safeGuards(comptime E: type, self: *E, loop: *const facts.Loop, receiver: fac
     return room;
 }
 
-fn safeNode(comptime E: type, self: *E, id: facts.NodeId, depth: usize, budget: *usize) bool {
+/// Shared private scalar leaf/DAG certificate; optional recipes add no guards.
+pub fn safeNode(comptime E: type, self: *E, id: facts.NodeId, depth: usize, budget: *usize) bool {
     const nodes = self.loop_plan.nodes;
     if (id >= nodes.len or depth > 32 or budget.* == 0) return false;
     budget.* -= 1;

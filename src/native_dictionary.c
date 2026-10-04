@@ -628,7 +628,12 @@ static inline __attribute__((always_inline)) located locate(const myl_native_dic
     else if (dict->key_kind==KEY_WORD) found=probe_word(dict,bits);
     else found=probe_scalar(dict,bits);
     if (!recorded) last->state=PROBE_NONE;
-    else if (found.entry!=NO_ENTRY) *last=(myl_native_dictionary_probe){.key=bits,.entry=found.entry,.state=PROBE_FOUND};
+    else if (found.entry!=NO_ENTRY) {
+        /* PY-DICT-4: this state reads only key and entry. Retain the
+         * unused absence/span fields; their consumers require their own state
+         * and every publisher of that state initializes its required fields. */
+        last->key=bits; last->entry=found.entry; last->state=PROBE_FOUND;
+    }
     else if (dict->key_kind!=KEY_TEXT && found.slot!=NO_SLOT) *last=(myl_native_dictionary_probe){.key=bits,.slot=found.slot,.hash=found.hash,.state=PROBE_ABSENT};
     else last->state=PROBE_NONE;
     return found;

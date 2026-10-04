@@ -1975,7 +1975,7 @@ const Emitter = struct {
         // anything to prove, and step accounting counts every instruction the
         // original executes, so a counted build keeps one copy.
         const version_loops = self.checks and !self.step_checks;
-        if (version_loops) self.loop_plan = try loop_facts.plan(self.allocator, .{
+        if (version_loops) try @import("qbe_loop_remainder_bias.zig").plan(Emitter, self, .{
             .program = self.program,
             .function = f,
             .states = self.states,

@@ -104,7 +104,8 @@ pub fn lower(comptime E: type, self: *E, op: typed.BinaryOp, info: typed.Type.In
     return true;
 }
 
-fn literal(comptime E: type, self: *E) ?i128 {
+/// A concrete operand literal, without evaluating or moving any instruction.
+pub fn literal(comptime E: type, self: *E) ?i128 {
     const pc = self.pc;
     if (pc == 0 or pc >= self.states.len or self.isBranchTarget(pc)) return null;
     const here = self.states[pc] orelse return null;
