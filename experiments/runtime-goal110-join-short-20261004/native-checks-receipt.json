@@ -1,0 +1,47 @@
+{
+  "status": "passed",
+  "source_base": "dfcb900be5c56ac3634620e9e672057e50c4ba41",
+  "command": [
+    "scripts/build-slot.sh",
+    "build",
+    "python3",
+    "experiments/runtime-goal110-join-short-20261004/native-checks.py"
+  ],
+  "environment": {
+    "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/goal110-join-short-20261004/.mylang-cache/goal110-join-short/tmp"
+  },
+  "compiler": {
+    "path": "/usr/bin/x86_64-linux-gnu-gcc-15",
+    "sha256": "b5f1b773a7c733738352000c92a077dc5852a1a2fc6d836b1e411be1e9ec5f88"
+  },
+  "flags": [
+    "-std=c11",
+    "-O3",
+    "-Wall",
+    "-Wextra",
+    "-Werror",
+    "-fsanitize=address,undefined",
+    "-ffunction-sections",
+    "-fdata-sections",
+    "-Wl,--gc-sections"
+  ],
+  "exit_status": 0,
+  "files": {
+    "src/native_text.c": "102e8b2810853662682dfa87d00cd5e11c19a51c46e2875362d5cd7435e5bac1",
+    "tests/native_text_methods_test.c": "43b4da92ba2649ce761637236668d3c216b0db8b18db9220078d1e166fca194c",
+    "scripts/test_native_memory.py": "6bcd5fafd5e10caeff03cd9e6e73d7547a9a6f1129684030312caebd15c9efec",
+    "experiments/runtime-goal110-join-short-20261004/native-checks.py": "0f04b1cd1a0af992b699a25d0dbd148617fbd0fb526924738a4d6f5f16e6eaca",
+    "experiments/runtime-goal110-join-short-20261004/native-checks.log": "57409b2dc5d9ad180eb250b75f7a96e31e81981a89ddbfaa1421c86b0c70c5de"
+  },
+  "suites": [
+    "native_text_methods",
+    "native_text_views",
+    "native_text_index",
+    "native_text_dictionary",
+    "native_rc_collections"
+  ],
+  "mixed_width_outcomes": 684,
+  "retained_search_outcomes": 31104,
+  "native_rc_cases": 53,
+  "limits": "Portable C sanitizer correctness only; no guest or timing acceptance."
+}
