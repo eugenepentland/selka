@@ -1023,6 +1023,72 @@ test "QBE-PURE-READ-1 a read-only collection probe pushes no roots" {
     try std.testing.expect(std.mem.count(u8, bump, "=l add %root") != 0);
 }
 
+// spec-case: PY-DICT-4
+// spec-case: QBE-PURE-READ-1
+test "PY-DICT-4 word schemas specialize ordinary index and get" {
+    const collector = language.runtime_mode.pinCollector();
+    defer language.runtime_mode.set(collector);
+    var parsed = try emitted(std.testing.allocator,
+        \\def signed(d: dict[i64, i64], k: i64) -> i64:
+        \\    return d[k] + d.get(k, 3)
+        \\
+        \\def unsigned(d: dict[u64, u64], k: u64) -> u64:
+        \\    return d[k]
+        \\
+        \\def mixed(d: dict[i64, u64], k: i64) -> u64:
+        \\    return d[k]
+        \\
+        \\def reverse(d: dict[u64, i64], k: u64) -> i64:
+        \\    return d[k]
+        \\
+        \\def narrow(d: dict[i32, i64], k: i32) -> i64:
+        \\    return d[k]
+        \\
+        \\def managed(d: dict[i64, str], k: i64) -> str:
+        \\    return d[k]
+        \\
+        \\def text_key(d: dict[str, i64], k: str) -> i64:
+        \\    return d[k]
+        \\
+        \\def floating(d: dict[i64, float], k: i64) -> float:
+        \\    return d[k]
+        \\
+        \\def main() -> i64:
+        \\    d: dict[i64, i64] = {1: 7}
+        \\    return signed(d, 1)
+    );
+    defer parsed.deinit();
+    const signed = named(parsed.value, "signed").?.il;
+    try std.testing.expectEqual(@as(usize, 2), std.mem.count(u8, signed, "dictionary_read_word("));
+    try std.testing.expect(std.mem.indexOf(u8, signed, "myl_qbe_root_mark") == null);
+    try std.testing.expect(std.mem.indexOf(u8, named(parsed.value, "unsigned").?.il, "dictionary_read_word(") != null);
+    try std.testing.expect(std.mem.indexOf(u8, named(parsed.value, "mixed").?.il, "dictionary_read_word(") != null);
+    try std.testing.expect(std.mem.indexOf(u8, named(parsed.value, "reverse").?.il, "dictionary_read_word(") != null);
+    try std.testing.expect(std.mem.indexOf(u8, named(parsed.value, "narrow").?.il, "dictionary_read(") != null);
+    try std.testing.expect(std.mem.indexOf(u8, named(parsed.value, "managed").?.il, "dictionary_read(") != null);
+    try std.testing.expect(std.mem.indexOf(u8, named(parsed.value, "text_key").?.il, "dictionary_read(") != null);
+    try std.testing.expect(std.mem.indexOf(u8, named(parsed.value, "floating").?.il, "dictionary_read(") != null);
+}
+
+// spec-case: PY-DICT-4
+// spec-case: RC-SITES-1
+test "PY-DICT-4 word counting and sites retain ordinary callee inventories" {
+    const saved = language.runtime_mode.get();
+    defer language.runtime_mode.set(saved);
+    for ([_]language.runtime_mode.Selection{ .rc_counting, .rc_sites }) |mode| {
+        language.runtime_mode.set(mode);
+        var parsed = try emitted(std.testing.allocator,
+            \\def main() -> i64:
+            \\    d: dict[i64, i64] = {1: 7}
+            \\    return d[1] + d.get(3, 9)
+        );
+        defer parsed.deinit();
+        const text = named(parsed.value, "main").?.il;
+        try std.testing.expectEqual(@as(usize, 2), std.mem.count(u8, text, "call $myl_native_dictionary_read("));
+        try std.testing.expect(std.mem.indexOf(u8, text, "dictionary_read_word") == null);
+    }
+}
+
 // spec: QBE-PURECALL-1
 test "a call to a function that cannot allocate pushes no roots" {
     // RC-DEFAULT-1: reads the tracing collector's lowering, not the RC default's.

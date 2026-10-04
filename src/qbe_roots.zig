@@ -69,6 +69,9 @@ const pure_callees = [_][]const u8{
     // a frame whose only calls are these never reaches a collection and needs no
     // root record around them.
     "myl_native_dictionary_read",
+    // The guarded word read writes its hint/output just like the ordinary read;
+    // pure here means allocation-free and no collection, not LLVM readnone.
+    "myl_native_dictionary_read_word",
     "myl_native_dictionary_contains",
     // A described slice (`DICT-RANGE-KEY-1`): the span computation and the two
     // lookups by span read the heap's collection count and nothing else of it.
@@ -419,6 +422,7 @@ fn restoreTo(comptime Emitter: type, self: *Emitter, scope: ?usize) GenerateErro
 test "trap helpers and listed runtime reads are no safepoint, an indirect call always is" {
     try std.testing.expect(pureCalleeName("myl_qbe_fail_step"));
     try std.testing.expect(pureCalleeName("myl_native_dictionary_read"));
+    try std.testing.expect(pureCalleeName("myl_native_dictionary_read_word"));
     try std.testing.expect(!pureCalleeName("myl_native_list_append"));
     try std.testing.expect(callsIndirectly(" %v3 =l call %v2(l %ctx)\n"));
     try std.testing.expect(!callsIndirectly(" %v3 =l call $myl_f_1(l %ctx)\n"));

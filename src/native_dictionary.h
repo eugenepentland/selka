@@ -74,6 +74,9 @@ int myl_native_dictionary_contains(const myl_native_dictionary *, const void *ke
 /* Read returns zero for missing key, preserving output. Write returns zero on
  * allocation failure without altering entries or insertion order. */
 int myl_native_dictionary_read(const myl_native_dictionary *, const void *key, void *output);
+/* A plain word-key/value read, retaining the full read for other shapes. It
+ * allocates nothing, writes the ordinary probe hint, and leaves output on miss. */
+int myl_native_dictionary_read_word(const myl_native_dictionary *, const void *key, void *output);
 int myl_native_dictionary_write(myl_native_heap *, myl_native_dictionary *, const void *key, const void *value);
 /* The half of `write` that allocates nothing: the value of a key already present
  * is replaced and 1 answered; an absent key answers 0 and changes nothing, so

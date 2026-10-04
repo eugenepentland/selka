@@ -38,6 +38,7 @@ const io_lower = @import("qbe_io.zig");
 const render = @import("native_render.zig");
 const dictionary_write = " %v{d} =w call $myl_native_dictionary_write(l %heap, l %v{d}, l %v{d}, l %v{d})\n";
 const dictionary_length = " %v{d} =l call $myl_native_dictionary_length(l %v{d})\n";
+const dictionary_read = " %v{d} =w call $myl_native_dictionary_{s}(l %v{d}, l %v{d}, l %agg{d})\n";
 /// Byte offset of `storage` in a native list header (`native_collections.h`):
 /// two size words, the generation, the element descriptor, then the pointer.
 const list_storage_offset = format.list_storage_offset;
@@ -707,6 +708,18 @@ fn normalizedIndex(comptime E: type, self: *E, index_value: usize, length: usize
     );
     return chosen;
 }
+/// Select word dispatch only for proved integer schemas. The runtime keeps its
+/// checked shape fallback; output, missing-key traps and receiver cleanup retain
+/// their ordinary lowering. This changes no ownership or accounting policy.
+fn dictionaryRead(key: typed.Type, value: typed.Type) []const u8 {
+    // RC-SITES-1 exposes the callee name; retain the ordinary counting/site
+    // call inventory rather than changing diagnostic operation identities.
+    if (rc_mode.counting()) return "read";
+    const word_key = key == .i64 or key == .u64;
+    const word_value = value == .i64 or value == .u64;
+    return if (word_key and word_value) "read_word" else "read";
+}
+
 /// Index or replace managed elements using native unboxed storage.
 fn emitIndex(comptime E: type, self: *E, ty: typed.Type, stack: []const typed.Type) Error!void {
     const replacing = self.function.scope.instructions[self.pc].op == .replace_index;
@@ -732,7 +745,7 @@ fn emitIndex(comptime E: type, self: *E, ty: typed.Type, stack: []const typed.Ty
             try guardedWrite(E, self, stack, .{ .plain = .{ .dictionary = input, .key = key, .value = value } });
             try self.store(base, input);
         } else {
-            try self.print(" %v{d} =w call $myl_native_dictionary_read(l %v{d}, l %v{d}, l %agg{d})\n", .{ result, input, key, self.pc });
+            try self.print(dictionary_read, .{ result, dictionaryRead(schema.collection.key.?, schema.shape.buffer.?), input, key, self.pc });
             try self.require(result, missing_key_failure);
             try self.store(base, try self.readValue(try self.aggregatePointer(), schema.shape.buffer.?));
         }
@@ -1205,7 +1218,7 @@ fn dictionaryOperation(comptime E: type, self: *E, op: BufferOperation, stack: [
                 try guardedWrite(E, self, stack, .{ .plain = .{ .dictionary = input, .key = key, .value = value } });
                 try self.print(store_unit, .{base});
             } else {
-                try self.print(" %v{d} =w call $myl_native_dictionary_read(l %v{d}, l %v{d}, l %agg{d})\n", .{ result, input, key, self.pc });
+                try self.print(dictionary_read, .{ result, dictionaryRead(schema.collection.key.?, schema.shape.buffer.?), input, key, self.pc });
                 if (op.kind == .get) {
                     try foundOrDefault(E, self, result, null, base, op.output);
                 } else {

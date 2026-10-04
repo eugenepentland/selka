@@ -667,6 +667,38 @@ int myl_native_dictionary_read(const myl_native_dictionary *dict, const void *ke
     copy_value(dict,output,entry_at(dict,index)+dict->value_offset);
     return 1;
 }
+/* PY-DICT-4: a proved scalar-word read keeps the ordinary query and output ABI.
+ * Unsupported runtime shapes keep the complete read; plain words compare and
+ * copy bits without key-kind/width dispatch. This still writes the probe hint
+ * and output, but allocates nothing and is not a collector safepoint. */
+int myl_native_dictionary_read_word(const myl_native_dictionary *dict, const void *key, void *output) {
+    if (dict->key_kind!=KEY_WORD || dict->value->kind!=MYL_NATIVE_PLAIN || dict->value->size!=8)
+        return myl_native_dictionary_read(dict,key,output);
+    uint64_t bits,held;
+    memcpy(&bits,key,8);
+    myl_native_dictionary_probe *last=(myl_native_dictionary_probe *)&dict->last;
+    size_t index=NO_ENTRY;
+    if (last->state==PROBE_FOUND && last->key==bits && last->entry<dict->entries->length) {
+        memcpy(&held,entry_at(dict,last->entry),8);
+        if (held==bits) index=last->entry;
+    }
+    if (index==NO_ENTRY) {
+        if (last->state==PROBE_ABSENT && last->key==bits) return 0;
+        /* Arena construction and table refusal retain the generic scan. */
+        if (!dict->index.capacity) return myl_native_dictionary_read(dict,key,output);
+        located found=probe_word(dict,bits);
+        if (found.entry==NO_ENTRY) {
+            if (found.slot!=NO_SLOT) *last=(myl_native_dictionary_probe){.key=bits,.slot=found.slot,.hash=found.hash,.state=PROBE_ABSENT};
+            else last->state=PROBE_NONE;
+            return 0;
+        }
+        index=found.entry;
+        last->key=bits; last->entry=index; last->state=PROBE_FOUND;
+    }
+    memcpy(&held,entry_at(dict,index)+dict->value_offset,8);
+    memcpy(output,&held,8);
+    return 1;
+}
 /* Append one new key the caller's lookup found absent, and name it in the table
  * at the empty slot that lookup ended on when the table did not change in
  * between — so a write after a missed read walks the table at most once more. */

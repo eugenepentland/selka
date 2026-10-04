@@ -135,6 +135,7 @@ SUITES = (
     ("native_sort_rotation", ["native_heap.c", "native_collections.c"]),
     ("native_text_dictionary", ["native_heap.c", "native_collections.c", "native_text.c", "native_dictionary.c"]),
     ("native_dictionary_probe", ["native_heap.c", "native_dictionary.c"]),
+    ("native_dictionary_word", ["native_heap.c", "native_dictionary.c"]),
     ("native_equal", ["native_heap.c", "native_collections.c", "native_text.c", "native_dictionary.c", "native_equal.c"]),
     ("native_equal_allocations", ["native_heap.c", "native_collections.c", "native_text.c", "native_dictionary.c", "native_equal.c"]),
     ("native_bytes", ["native_heap.c", "native_collections.c", "native_text.c", "native_bytes.c"]),
