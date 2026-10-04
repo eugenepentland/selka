@@ -128,14 +128,14 @@ def cmd_time(case, rounds):
 
 def perf_cycles(argv):
     p = subprocess.run(['taskset', '-c', CPU, 'perf', 'stat', '-x,', '-e',
-                        'cpu_core/cycles/u,cpu_core/instructions/u,cpu_core/branch-misses/u'] + argv,
+                        'cpu_core/cycles/u,cpu_core/instructions/u,cpu_core/branch-misses/u,cpu_core/ld_blocks.store_forward/u'] + argv,
                        capture_output=True, text=True)
     vals = {}
     for line in p.stderr.splitlines():
         f = line.split(',')
         if len(f) > 2 and f[2].startswith('cpu_core/'):
             vals[f[2].split('/')[1]] = int(f[0])
-    return vals['cycles'], vals['instructions'], vals['branch-misses']
+    return vals['cycles'], vals['instructions'], vals['branch-misses'], vals['ld_blocks.store_forward']
 
 
 def cmd_perf(case):
@@ -144,20 +144,21 @@ def cmd_perf(case):
     seed = c.get('seed', 42)
     unit = size if c.get('unit_div', 1) == 'size' else c.get('unit_div', 1)
     print(f'== {case} perf: size={size} iterations={it}; per unit = {"element" if unit == size else unit}')
-    print(f'{"version":44s} {"cyc/iter":>12s} {"instr/iter":>12s} {"cyc/unit":>9s} {"instr/unit":>10s} {"brmiss/u":>8s}')
+    print(f'{"version":44s} {"cyc/iter":>12s} {"instr/iter":>12s} {"cyc/unit":>9s} {"instr/unit":>10s} {"brmiss/u":>8s} {"sfwd/u":>8s}')
     res = {}
     for label, build in arms(case):
         if label.startswith('B0') and label not in ('B0 rust', 'B0 zig-fast', 'B0 zig-safe', 'B0 my-llvm'):
             continue
-        c1, i1, m1 = perf_cycles(build(size, 1, seed))
+        c1, i1, m1, f1 = perf_cycles(build(size, 1, seed))
         runs = [perf_cycles(build(size, it, seed)) for _ in range(3)]
         runs.sort(key=lambda r: r[0])
-        cN, iN, mN = runs[1]  # the median run by cycles
+        cN, iN, mN, fN = runs[1]  # the median run by cycles
         cyc = (cN - c1) / (it - 1)
         ins = (iN - i1) / (it - 1)
         mis = (mN - m1) / (it - 1)
-        res[label] = {'cycles_per_iter': cyc, 'instr_per_iter': ins, 'branch_miss_per_iter': mis}
-        print(f'{label:44s} {cyc:12.1f} {ins:12.1f} {cyc / unit:9.3f} {ins / unit:10.3f} {mis / unit:8.4f}')
+        sfw = (fN - f1) / (it - 1)
+        res[label] = {'cycles_per_iter': cyc, 'instr_per_iter': ins, 'branch_miss_per_iter': mis, 'store_forward_blocks_per_iter': sfw}
+        print(f'{label:44s} {cyc:12.1f} {ins:12.1f} {cyc / unit:9.3f} {ins / unit:10.3f} {mis / unit:8.4f} {sfw / unit:8.4f}')
     (HERE / 'results' / f'{case}.perf.json').write_text(json.dumps(res, indent=1))
 
 

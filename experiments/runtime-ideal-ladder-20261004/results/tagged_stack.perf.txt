@@ -1,0 +1,19 @@
+== tagged_stack perf: size=4096 iterations=4000000; per unit = 1
+version                                          cyc/iter   instr/iter  cyc/unit instr/unit brmiss/u   sfwd/u
+v1: today: heap list, RC checks, ready calls, floor mods, idiv cursor         84.6        180.8    84.615    180.750   0.0006   1.8251
+v2: + value semantics: local list, header in regs         65.3         90.8    65.326     90.750   0.0000   1.7848
+v8: + tagged values built in place (no store-forward stall)         36.9         77.0    36.936     77.000   0.0000  -0.0000
+v3: + stack scalar-replaced (balanced push/pop)         37.0         77.0    36.974     77.000   0.0000  -0.0000
+v4: + range facts: unsigned, no overflow checks         24.1         39.5    24.115     39.500   0.0000   0.0000
+v5: + % M as cond-subtract, cursor compare-reset         16.5         35.5    16.471     35.500   0.0002   0.0000
+v6: + residue tracking (r = base mod 97)             10.5         33.3    10.546     33.250   0.0001   0.0000
+v7: + table lookup for r % k                          9.8         30.8     9.843     30.750   0.0000  -0.0000
+v30 holdout: opcodes from file, no range facts         33.8         62.0    33.843     62.000   0.0001   0.0000
+v31 holdout: file + runtime guard + v7                9.8         30.8     9.804     30.750   0.0001  -0.0000
+v20 holdout reference: today, file                   84.7        180.8    84.680    180.750   0.0001   1.8276
+v5 baseline x86-64                                   16.5         35.5    16.504     35.500   0.0000   0.0000
+v7 baseline x86-64                                    9.8         30.8     9.830     30.750   0.0001  -0.0000
+B0 rust                                              27.4         45.5    27.393     45.500   0.0023  -0.0000
+B0 zig-safe                                          53.8        119.8    53.838    119.750   0.0011   0.9997
+B0 zig-fast                                          53.1        102.3    53.083    102.250   0.0007   0.9968
+B0 my-llvm                                           88.3        223.3    88.321    223.250   0.0001   1.8318

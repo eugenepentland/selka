@@ -1,0 +1,343 @@
+{
+ "case": "tagged_stack",
+ "rounds": 7,
+ "cpu": "10",
+ "profiles": {
+  "small": {
+   "size": 64,
+   "iterations": 4000000,
+   "rows": [
+    {
+     "label": "v1: today: heap list, RC checks, ready calls, floor mods, idiv cursor",
+     "median_ns_per_iter": 24.57813525,
+     "ns_per_unit": 24.57813525,
+     "min_ns_per_iter": 22.08836425,
+     "max_ns_per_iter": 25.365737,
+     "ratio_rust": 2.8349130983614157,
+     "ratio_fastest_b0": 2.8349130983614157
+    },
+    {
+     "label": "v2: + value semantics: local list, header in regs",
+     "median_ns_per_iter": 19.74576,
+     "ns_per_unit": 19.74576,
+     "min_ns_per_iter": 18.96559575,
+     "max_ns_per_iter": 20.08064925,
+     "ratio_rust": 2.2775329817220737,
+     "ratio_fastest_b0": 2.2775329817220737
+    },
+    {
+     "label": "v8: + tagged values built in place (no store-forward stall)",
+     "median_ns_per_iter": 10.989428,
+     "ns_per_unit": 10.989428,
+     "min_ns_per_iter": 10.22797325,
+     "max_ns_per_iter": 11.6336185,
+     "ratio_rust": 1.267552361634095,
+     "ratio_fastest_b0": 1.267552361634095
+    },
+    {
+     "label": "v3: + stack scalar-replaced (balanced push/pop)",
+     "median_ns_per_iter": 11.022689,
+     "ns_per_unit": 11.022689,
+     "min_ns_per_iter": 10.22368875,
+     "max_ns_per_iter": 11.59465825,
+     "ratio_rust": 1.271388781427765,
+     "ratio_fastest_b0": 1.271388781427765
+    },
+    {
+     "label": "v4: + range facts: unsigned, no overflow checks",
+     "median_ns_per_iter": 7.729804,
+     "ns_per_unit": 7.729804,
+     "min_ns_per_iter": 7.007191,
+     "max_ns_per_iter": 8.114682,
+     "ratio_rust": 0.8915779160815898,
+     "ratio_fastest_b0": 0.8915779160815898
+    },
+    {
+     "label": "v5: + % M as cond-subtract, cursor compare-reset",
+     "median_ns_per_iter": 5.375682,
+     "ns_per_unit": 5.375682,
+     "min_ns_per_iter": 5.1097525,
+     "max_ns_per_iter": 5.45888025,
+     "ratio_rust": 0.620046686187297,
+     "ratio_fastest_b0": 0.620046686187297
+    },
+    {
+     "label": "v6: + residue tracking (r = base mod 97)",
+     "median_ns_per_iter": 2.875874,
+     "ns_per_unit": 2.875874,
+     "min_ns_per_iter": 2.58514125,
+     "max_ns_per_iter": 3.00392975,
+     "ratio_rust": 0.3317116123297856,
+     "ratio_fastest_b0": 0.3317116123297856
+    },
+    {
+     "label": "v7: + table lookup for r % k",
+     "median_ns_per_iter": 2.38920675,
+     "ns_per_unit": 2.38920675,
+     "min_ns_per_iter": 2.172812,
+     "max_ns_per_iter": 2.48799125,
+     "ratio_rust": 0.27557800627972817,
+     "ratio_fastest_b0": 0.27557800627972817
+    },
+    {
+     "label": "v30 holdout: opcodes from file, no range facts",
+     "median_ns_per_iter": 10.918367,
+     "ns_per_unit": 10.918367,
+     "min_ns_per_iter": 9.743308,
+     "max_ns_per_iter": 11.3789725,
+     "ratio_rust": 1.259355980678682,
+     "ratio_fastest_b0": 1.259355980678682
+    },
+    {
+     "label": "v31 holdout: file + runtime guard + v7",
+     "median_ns_per_iter": 2.4548495,
+     "ns_per_unit": 2.4548495,
+     "min_ns_per_iter": 2.23355775,
+     "max_ns_per_iter": 2.4963875,
+     "ratio_rust": 0.28314943063290254,
+     "ratio_fastest_b0": 0.28314943063290254
+    },
+    {
+     "label": "v20 holdout reference: today, file",
+     "median_ns_per_iter": 24.51445475,
+     "ns_per_unit": 24.51445475,
+     "min_ns_per_iter": 22.1290675,
+     "max_ns_per_iter": 25.19371675,
+     "ratio_rust": 2.8275680055899772,
+     "ratio_fastest_b0": 2.8275680055899772
+    },
+    {
+     "label": "v5 baseline x86-64",
+     "median_ns_per_iter": 5.28140425,
+     "ns_per_unit": 5.28140425,
+     "min_ns_per_iter": 4.83674275,
+     "max_ns_per_iter": 5.49889625,
+     "ratio_rust": 0.6091724182397705,
+     "ratio_fastest_b0": 0.6091724182397705
+    },
+    {
+     "label": "v7 baseline x86-64",
+     "median_ns_per_iter": 2.3981595,
+     "ns_per_unit": 2.3981595,
+     "min_ns_per_iter": 2.320857,
+     "max_ns_per_iter": 2.53025875,
+     "ratio_rust": 0.27661064231916715,
+     "ratio_fastest_b0": 0.27661064231916715
+    },
+    {
+     "label": "B0 rust",
+     "median_ns_per_iter": 8.669802,
+     "ns_per_unit": 8.669802,
+     "min_ns_per_iter": 8.53177975,
+     "max_ns_per_iter": 9.1745405,
+     "ratio_rust": 1.0,
+     "ratio_fastest_b0": 1.0
+    },
+    {
+     "label": "B0 go",
+     "median_ns_per_iter": 9.35078475,
+     "ns_per_unit": 9.35078475,
+     "min_ns_per_iter": 8.9550715,
+     "max_ns_per_iter": 9.728321,
+     "ratio_rust": 1.0785465169792805,
+     "ratio_fastest_b0": 1.0785465169792805
+    },
+    {
+     "label": "B0 zig-safe",
+     "median_ns_per_iter": 15.95747275,
+     "ns_per_unit": 15.95747275,
+     "min_ns_per_iter": 15.5537665,
+     "max_ns_per_iter": 16.86496325,
+     "ratio_rust": 1.8405809902002375,
+     "ratio_fastest_b0": 1.8405809902002375
+    },
+    {
+     "label": "B0 zig-fast",
+     "median_ns_per_iter": 16.71258275,
+     "ns_per_unit": 16.71258275,
+     "min_ns_per_iter": 15.564623,
+     "max_ns_per_iter": 17.11655975,
+     "ratio_rust": 1.9276775582648829,
+     "ratio_fastest_b0": 1.9276775582648829
+    },
+    {
+     "label": "B0 my-llvm",
+     "median_ns_per_iter": 25.241003,
+     "ns_per_unit": 25.241003,
+     "min_ns_per_iter": 23.827237,
+     "max_ns_per_iter": 26.4780205,
+     "ratio_rust": 2.911370178926808,
+     "ratio_fastest_b0": 2.911370178926808
+    }
+   ]
+  },
+  "large": {
+   "size": 4096,
+   "iterations": 4000000,
+   "rows": [
+    {
+     "label": "v1: today: heap list, RC checks, ready calls, floor mods, idiv cursor",
+     "median_ns_per_iter": 23.79980725,
+     "ns_per_unit": 23.79980725,
+     "min_ns_per_iter": 22.71432775,
+     "max_ns_per_iter": 24.22374325,
+     "ratio_rust": 2.803688252315609,
+     "ratio_fastest_b0": 2.803688252315609
+    },
+    {
+     "label": "v2: + value semantics: local list, header in regs",
+     "median_ns_per_iter": 18.5268445,
+     "ns_per_unit": 18.5268445,
+     "min_ns_per_iter": 18.23945725,
+     "max_ns_per_iter": 18.7164545,
+     "ratio_rust": 2.182517519217642,
+     "ratio_fastest_b0": 2.182517519217642
+    },
+    {
+     "label": "v8: + tagged values built in place (no store-forward stall)",
+     "median_ns_per_iter": 10.7193475,
+     "ns_per_unit": 10.7193475,
+     "min_ns_per_iter": 10.076598,
+     "max_ns_per_iter": 11.37141725,
+     "ratio_rust": 1.2627710948473623,
+     "ratio_fastest_b0": 1.2627710948473623
+    },
+    {
+     "label": "v3: + stack scalar-replaced (balanced push/pop)",
+     "median_ns_per_iter": 10.62672575,
+     "ns_per_unit": 10.62672575,
+     "min_ns_per_iter": 10.00648575,
+     "max_ns_per_iter": 10.91908975,
+     "ratio_rust": 1.2518599765489604,
+     "ratio_fastest_b0": 1.2518599765489604
+    },
+    {
+     "label": "v4: + range facts: unsigned, no overflow checks",
+     "median_ns_per_iter": 7.38891175,
+     "ns_per_unit": 7.38891175,
+     "min_ns_per_iter": 6.99896125,
+     "max_ns_per_iter": 7.71040775,
+     "ratio_rust": 0.8704358339234771,
+     "ratio_fastest_b0": 0.8704358339234771
+    },
+    {
+     "label": "v5: + % M as cond-subtract, cursor compare-reset",
+     "median_ns_per_iter": 5.207644,
+     "ns_per_unit": 5.207644,
+     "min_ns_per_iter": 4.87596925,
+     "max_ns_per_iter": 5.34981175,
+     "ratio_rust": 0.6134759896024732,
+     "ratio_fastest_b0": 0.6134759896024732
+    },
+    {
+     "label": "v6: + residue tracking (r = base mod 97)",
+     "median_ns_per_iter": 2.70732525,
+     "ns_per_unit": 2.70732525,
+     "min_ns_per_iter": 2.64265175,
+     "max_ns_per_iter": 2.7755835,
+     "ratio_rust": 0.31893098624243765,
+     "ratio_fastest_b0": 0.31893098624243765
+    },
+    {
+     "label": "v7: + table lookup for r % k",
+     "median_ns_per_iter": 2.32348475,
+     "ns_per_unit": 2.32348475,
+     "min_ns_per_iter": 2.2018495,
+     "max_ns_per_iter": 2.4795605,
+     "ratio_rust": 0.2737134309358522,
+     "ratio_fastest_b0": 0.2737134309358522
+    },
+    {
+     "label": "v30 holdout: opcodes from file, no range facts",
+     "median_ns_per_iter": 10.426027,
+     "ns_per_unit": 10.426027,
+     "min_ns_per_iter": 10.1170615,
+     "max_ns_per_iter": 11.12208175,
+     "ratio_rust": 1.228217065422887,
+     "ratio_fastest_b0": 1.228217065422887
+    },
+    {
+     "label": "v31 holdout: file + runtime guard + v7",
+     "median_ns_per_iter": 2.2819755,
+     "ns_per_unit": 2.2819755,
+     "min_ns_per_iter": 2.1968725,
+     "max_ns_per_iter": 2.3933375,
+     "ratio_rust": 0.26882351752752276,
+     "ratio_fastest_b0": 0.26882351752752276
+    },
+    {
+     "label": "v20 holdout reference: today, file",
+     "median_ns_per_iter": 23.57530825,
+     "ns_per_unit": 23.57530825,
+     "min_ns_per_iter": 22.96101675,
+     "max_ns_per_iter": 24.49799,
+     "ratio_rust": 2.7772416007799494,
+     "ratio_fastest_b0": 2.7772416007799494
+    },
+    {
+     "label": "v5 baseline x86-64",
+     "median_ns_per_iter": 4.974667,
+     "ns_per_unit": 4.974667,
+     "min_ns_per_iter": 4.8961735,
+     "max_ns_per_iter": 5.32119975,
+     "ratio_rust": 0.5860306043899635,
+     "ratio_fastest_b0": 0.5860306043899635
+    },
+    {
+     "label": "v7 baseline x86-64",
+     "median_ns_per_iter": 2.33001125,
+     "ns_per_unit": 2.33001125,
+     "min_ns_per_iter": 2.179811,
+     "max_ns_per_iter": 2.48960725,
+     "ratio_rust": 0.2744822720943762,
+     "ratio_fastest_b0": 0.2744822720943762
+    },
+    {
+     "label": "B0 rust",
+     "median_ns_per_iter": 8.4887495,
+     "ns_per_unit": 8.4887495,
+     "min_ns_per_iter": 8.2301465,
+     "max_ns_per_iter": 9.02034775,
+     "ratio_rust": 1.0,
+     "ratio_fastest_b0": 1.0
+    },
+    {
+     "label": "B0 go",
+     "median_ns_per_iter": 8.831326,
+     "ns_per_unit": 8.831326,
+     "min_ns_per_iter": 8.45996775,
+     "max_ns_per_iter": 9.4448545,
+     "ratio_rust": 1.04035653307946,
+     "ratio_fastest_b0": 1.04035653307946
+    },
+    {
+     "label": "B0 zig-safe",
+     "median_ns_per_iter": 15.44053525,
+     "ns_per_unit": 15.44053525,
+     "min_ns_per_iter": 15.1948155,
+     "max_ns_per_iter": 16.633344,
+     "ratio_rust": 1.818941087848098,
+     "ratio_fastest_b0": 1.818941087848098
+    },
+    {
+     "label": "B0 zig-fast",
+     "median_ns_per_iter": 15.94414675,
+     "ns_per_unit": 15.94414675,
+     "min_ns_per_iter": 14.991344,
+     "max_ns_per_iter": 16.62997425,
+     "ratio_rust": 1.8782680240475935,
+     "ratio_fastest_b0": 1.8782680240475935
+    },
+    {
+     "label": "B0 my-llvm",
+     "median_ns_per_iter": 24.231445,
+     "ns_per_unit": 24.231445,
+     "min_ns_per_iter": 23.31139125,
+     "max_ns_per_iter": 25.04578575,
+     "ratio_rust": 2.8545364661779686,
+     "ratio_fastest_b0": 2.8545364661779686
+    }
+   ]
+  }
+ }
+}

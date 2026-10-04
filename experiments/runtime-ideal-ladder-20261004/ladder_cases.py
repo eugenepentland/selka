@@ -88,3 +88,24 @@ CASES['dict_lookup_sparse'] = dict(
               ('v30 inline slots + Fibonacci hash, sparse', 'dict_lookup', 30, 'file'),
               ('v31 AVX2 4-slot buckets, sparse', 'dict_lookup', 31, 'file')],
 )
+
+CASES['tagged_stack'] = dict(
+    group='legacy', bench='tagged_stack', gen_exe='tagged_stack', sizes=(64, 4096), iters=(4000000, 4000000),
+    unit_div=1,
+    verify=[(2, 1, 1), (3, 7, 42), (17, 31, 999983), (64, 1000, 42), (4096, 20000, 42), (4100, 5001, 7),
+            (1000, 3333, 13), (33, 4000, 5), (5000, 60000, 999999), (2, 3000000, 1000000)],
+    versions=V('tagged_stack', [
+        (1, "today: heap list, RC checks, ready calls, floor mods, idiv cursor"),
+        (2, "+ value semantics: local list, header in regs"),
+        (8, "+ tagged values built in place (no store-forward stall)"),
+        (3, "+ stack scalar-replaced (balanced push/pop)"),
+        (4, "+ range facts: unsigned, no overflow checks"),
+        (5, "+ % M as cond-subtract, cursor compare-reset"),
+        (6, "+ residue tracking (r = base mod 97)"),
+        (7, "+ table lookup for r % k"),
+    ]) + [('v30 holdout: opcodes from file, no range facts', 'tagged_stack', 30, 'file'),
+          ('v31 holdout: file + runtime guard + v7', 'tagged_stack', 31, 'file'),
+          ('v20 holdout reference: today, file', 'tagged_stack', 20, 'file'),
+          ('v5 baseline x86-64', 'tagged_stack_base', 5),
+          ('v7 baseline x86-64', 'tagged_stack_base', 7)],
+)
