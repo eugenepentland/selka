@@ -1,0 +1,137 @@
+{
+  "status": "pass",
+  "reviewed_utc": "2026-10-04T12:43:23.898780+00:00",
+  "session": "ac4d3604-c619-420c-94e1-84490e5b2c23",
+  "outcomes": 432,
+  "rows": [
+    {
+      "case": "dict_lookup",
+      "profile": "small",
+      "comparisons": {
+        "llvm": {
+          "ratio": 0.8045096129205165,
+          "paired_95": [
+            0.8020890638736186,
+            0.8060280810487547
+          ]
+        },
+        "qbe": {
+          "ratio": 0.9256269747559189,
+          "paired_95": [
+            0.923237051703855,
+            0.92747006267689
+          ]
+        }
+      }
+    },
+    {
+      "case": "dict_lookup",
+      "profile": "large",
+      "comparisons": {
+        "llvm": {
+          "ratio": 0.7891937089018164,
+          "paired_95": [
+            0.7876433606416359,
+            0.7910373982012087
+          ]
+        },
+        "qbe": {
+          "ratio": 0.9034487120884369,
+          "paired_95": [
+            0.9000673312250845,
+            0.9086864363055223
+          ]
+        }
+      }
+    },
+    {
+      "case": "dict_lookup_str",
+      "profile": "small",
+      "comparisons": {
+        "llvm": {
+          "ratio": 1.0456893090886759,
+          "paired_95": [
+            1.0422786198234597,
+            1.0494281182540663
+          ]
+        },
+        "qbe": {
+          "ratio": 1.0033887330315068,
+          "paired_95": [
+            1.0020341829148491,
+            1.0058167927585322
+          ]
+        }
+      }
+    },
+    {
+      "case": "dict_update",
+      "profile": "small",
+      "comparisons": {
+        "llvm": {
+          "ratio": 0.9629948592817006,
+          "paired_95": [
+            0.9608243547897419,
+            0.9666187562067248
+          ]
+        },
+        "qbe": {
+          "ratio": 1.005628623329174,
+          "paired_95": [
+            1.0009634173383983,
+            1.0086627475506587
+          ]
+        }
+      }
+    },
+    {
+      "case": "dict_update",
+      "profile": "large",
+      "comparisons": {
+        "llvm": {
+          "ratio": 0.9888778950626682,
+          "paired_95": [
+            0.9875864777709518,
+            0.9918525279164729
+          ]
+        },
+        "qbe": {
+          "ratio": 0.9980871595495282,
+          "paired_95": [
+            0.9943319439189977,
+            1.0001314303987086
+          ]
+        }
+      }
+    },
+    {
+      "case": "mutate_nested",
+      "profile": "large",
+      "comparisons": {
+        "llvm": {
+          "ratio": 1.0440351999988466,
+          "paired_95": [
+            1.041329494143394,
+            1.052828630565832
+          ]
+        },
+        "qbe": {
+          "ratio": 1.057251782895183,
+          "paired_95": [
+            1.0516594369706778,
+            1.063840521237839
+          ]
+        }
+      }
+    }
+  ],
+  "raw_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/paired-repeat.json",
+  "raw_sha256": "cbd2381a58729fdb7bc17d74227189764319b265469776b9ba2c01df7739c776",
+  "script_sha256": "d6462dbd89d4bd2ac733b4147f43475820f7efedeb1c0ad2df0c38684f0c7406",
+  "bootstrap_helper_sha256": "ca202996170e072e7b95ebf3b20896142ec794d14e336c958af277037a7d7123",
+  "limitations": [
+    "Saved parsed timing outcomes; no new guest executions.",
+    "Intervals recomputed with the established helper; no simultaneous coverage claim.",
+    "Exploratory comparison; no goal confirmation."
+  ]
+}
