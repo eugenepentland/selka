@@ -1,0 +1,16 @@
+{
+  "status": "pass",
+  "reviewed_utc": "2026-10-04T10:49:27.209768+00:00",
+  "proof_sha256": "d565302adcc37aae282ef1c00f74e1ca28468e705f22f1ba794fe327585741eb",
+  "checks_sha256": "dddfb4ac785ce6e4ecd42ba687d040efb5dcd382ee4656b7be621dd8995b6326",
+  "commands_sha256": "589e6d2744a11b71b3f7484a618283f453c3aef2bc961af0e8d6afacd515ba58",
+  "outcomes": 200,
+  "disassemblies": 8,
+  "script_sha256": "4425cb5a72641e7b92e7d37124dbb8e98f3d2ff2f8d06d1e78bb864e57ec03ed",
+  "limitations": [
+    "Read-only disassembly and saved oracle replay; no timing.",
+    "The sole assembly delta inserts 32 NOP bytes before the search loop label.",
+    "Later symbol placements also move; this diagnoses placement sensitivity only.",
+    "Normalization was reviewed in the candidate helper; whole raw and annotated assembly identity is checked independently."
+  ]
+}
