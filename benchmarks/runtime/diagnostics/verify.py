@@ -146,10 +146,11 @@ def verify_sources(report):
         key = tuple(row[name] for name in ('case', 'arm', 'size', 'seed', 'iterations'))
         probes[key] += 1
         result(row, original_checksum(key[0], key[2], key[4], key[3]))
-    expected_probes = Counter({(case, arm, size, seed, count): 2 for case in cases for arm in plans[(case, inventory()[case]['sizes'][0])]['guests']
-                               for size, seed, count in ((2, 1, 1), (3, 42, 7), (17, 999983, 31))})
+    expected_probes = Counter((case, arm, probe_size, seed, count)
+                              for (case, _), plan in plans.items() for arm in plan['guests']
+                              for probe_size, seed, count in ((2, 1, 1), (3, 42, 7), (17, 999983, 31)))
     require(probes == expected_probes, 'missing or duplicate source qualification')
-    # Source controls deliberately requalify the same edge probes before each size.
+    # Each size requalifies its guests; the original winner can differ by size.
     wanted_extra = {(label, case, arm, size, seed, count) for label, meta in report['inputs'].items()
                     if meta.get('kind') == 'unmeasured_compiler_manifest' for case in inventory()
                     for arm in ('my-llvm', 'my-qbe') for size, seed, count in ((2, 1, 1), (3, 42, 7), (17, 999983, 31))}

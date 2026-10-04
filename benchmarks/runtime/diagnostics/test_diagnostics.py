@@ -22,14 +22,14 @@ def cell(case, size, arm, count, elapsed, **extra):
             'checksum': replay.original_checksum(case, size, count, 42), **extra}
 
 
-def source_report():
+def source_report(original_arms=('rust', 'rust')):
     report = {'schema': 'mylang-runtime-same-session-sources-v1', 'status': 'focused_complete',
               'rounds': 15, 'warmup_rounds': 3, 'inputs': {'main': {}, 'candidate': {}},
               'plans': [], 'samples': [], 'warmups': [], 'memory': [], 'qualification': [], 'comparisons': []}
-    guests = ['main/my-llvm', 'main/my-qbe', 'candidate/my-llvm', 'candidate/my-qbe', 'original/rust']
-    for size in replay.inventory()['integer_math']['sizes']:
+    for size, original_arm in zip(replay.inventory()['integer_math']['sizes'], original_arms):
+        guests = ['main/my-llvm', 'main/my-qbe', 'candidate/my-llvm', 'candidate/my-qbe', 'original/' + original_arm]
         report['plans'].append({'case': 'integer_math', 'size': size, 'iterations': 7,
-                                'guests': guests, 'original_reference': {'arm': 'rust'}})
+                                'guests': guests, 'original_reference': {'arm': original_arm}})
         for arm in guests:
             value = 50 if arm.startswith('candidate') else 25 if arm.startswith('original') else 100
             for field, rounds in (('samples', range(15)), ('warmups', range(-3, 0))):
@@ -41,7 +41,7 @@ def source_report():
                 row.update(seed=seed, checksum=replay.original_checksum('integer_math', probe_size, count, seed))
                 report['qualification'].append(row)
         for arm in ('my-llvm', 'my-qbe'):
-            for denominator, ratio in (('main/' + arm, .5), ('original/rust', 2.0)):
+            for denominator, ratio in (('main/' + arm, .5), ('original/' + original_arm, 2.0)):
                 report['comparisons'].append({'case': 'integer_math', 'size': size, 'numerator': 'candidate/' + arm,
                                              'denominator': denominator, 'ratio_of_medians': ratio,
                                              'paired_bootstrap_95_interval': [ratio, ratio]})
@@ -78,6 +78,13 @@ def component_report():
 class DiagnosticTests(unittest.TestCase):
     def test_same_session_known_win_and_loss(self):
         self.assertEqual(replay.verify_sources(source_report()), 10)
+
+    def test_original_winner_can_change_between_sizes(self):
+        report = source_report(('rust', 'zig-fast'))
+        self.assertEqual(replay.verify_sources(report), 10)
+        next(row for row in report['qualification'] if row['arm'] == 'original/zig-fast')['arm'] = 'original/rust'
+        with self.assertRaisesRegex(ValueError, 'missing or duplicate source qualification'):
+            replay.verify_sources(report)
 
     def test_source_report_rejects_corruption(self):
         for change in ('ratio', 'interval', 'checksum', 'missing_sample', 'duplicate_probe', 'unknown_arm', 'empty'):
