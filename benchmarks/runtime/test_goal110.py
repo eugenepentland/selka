@@ -10,6 +10,7 @@ from unittest.mock import patch
 import goal110 as goal
 
 ARCHIVE = Path(__file__).parent / 'candidates/final-730a86e6-releasefast-20261003.json.gz'
+RELOCATED = Path(__file__).parent / 'candidates/fixtures/goal110-relocated-join-manifest-20261004.json.gz'
 
 
 def fixture(cases=('mutate_nested',)):
@@ -168,6 +169,71 @@ class GoalTests(unittest.TestCase):
         command[command.index('--backend') + 1] = 'qbe'
         with self.assertRaisesRegex(ValueError, 'actual guest backend'):
             goal.execution_identity(report)
+
+    def test_live_relocated_manifest_retains_the_starting_build_policy(self):
+        live, _ = goal.read_document(RELOCATED)
+        anchor, _ = goal.read_document(ARCHIVE)
+        before = copy.deepcopy(live)
+        goal.check_anchor(goal.execution_identity(live), goal.execution_identity(anchor))
+        for report in (live, anchor):
+            policy = goal.policy_identity(report)
+            for name, command in policy['guest_commands'].items():
+                if name.endswith(('/my-llvm', '/my-qbe')):
+                    self.assertEqual(command[command.index('--cache-dir') + 1], '$MYLANG_CACHE')
+            cargo = policy['guest_commands']['text/rust']
+            self.assertEqual(cargo[cargo.index('--target-dir') + 1], '$CARGO_TARGET')
+            self.assertEqual(policy['compiler_command'][0], '$BUILD_WRAPPER')
+        self.assertEqual(live, before)
+
+    def test_shared_and_separate_compiler_harness_roots_have_identical_policy(self):
+        live, _ = goal.read_document(RELOCATED)
+        receipt = live['identity']['compiler_build_receipt']['receipt']
+        paths = {live['identity']['source_root']: '/relocated/harness/benchmarks/runtime',
+                 receipt['source_root']: '/relocated/compiler'}
+
+        def relocate(value):
+            if isinstance(value, str):
+                for path in sorted(paths, key=len, reverse=True):
+                    value = value.replace(path, paths[path])
+                return value
+            if isinstance(value, dict):
+                return {relocate(key): relocate(item) for key, item in value.items()}
+            if isinstance(value, list):
+                return [relocate(item) for item in value]
+            return value
+
+        moved = relocate(live)
+        moved['identity']['build_wrapper'] = '/relocated/harness/scripts/build-slot.sh'
+        self.assertNotEqual(moved['identity']['build_wrapper'], moved['identity']['compiler_build_receipt']['receipt']['command'][0])
+        self.assertEqual(goal.execution_identity(live), goal.execution_identity(moved))
+
+    def test_relocated_paths_never_hide_flag_source_or_tool_policy_changes(self):
+        live, _ = goal.read_document(RELOCATED)
+        anchor, _ = goal.read_document(ARCHIVE)
+        original = goal.execution_identity(anchor)
+        for mutation in ('mode', 'optimization', 'lto', 'cargo', 'extra_flag', 'source', 'tool', 'wrapper', 'operand'):
+            changed = copy.deepcopy(live)
+            command = changed['identity']['commands']['collections/my-llvm']
+            if mutation == 'mode':
+                command[command.index('--mode') + 1] = 'Debug'
+            elif mutation == 'optimization':
+                command[command.index('--llvm-opt') + 1] = '2'
+            elif mutation == 'lto':
+                command.remove('--lto')
+            elif mutation == 'cargo':
+                changed['identity']['commands']['text/rust'].remove('--release')
+            elif mutation == 'extra_flag':
+                command.extend(['--target', 'x86_64_v3'])
+            elif mutation == 'source':
+                command[2] = str(Path(changed['identity']['source_root']) / 'expanded/collections/other.my')
+            elif mutation == 'tool':
+                changed['identity']['tools']['zig']['sha256'] = 'f' * 64
+            elif mutation == 'wrapper':
+                changed['identity']['compiler_build_receipt']['receipt']['build_wrapper_sha256'] = 'f' * 64
+            else:
+                command[command.index('--cache-dir') + 1] = '--mode'
+            with self.subTest(mutation=mutation), self.assertRaises(ValueError):
+                goal.check_anchor(goal.execution_identity(changed), original)
 
     def test_confirmation_failure_cannot_be_hidden_by_passing_first_session(self):
         first = fixture()

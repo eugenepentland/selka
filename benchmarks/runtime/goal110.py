@@ -66,6 +66,9 @@ def normalized_command(command, identity):
     receipt = identity['compiler_build_receipt']['receipt']
     replacements = {identity['source_root']: '$BENCHMARK_ROOT', receipt['source_root']: '$COMPILER_ROOT',
                     identity['build_wrapper']: '$BUILD_WRAPPER'}
+    # The compiler and benchmark may use wrappers in different checkouts.
+    # Their exact contents are pinned separately by the policy's two hashes.
+    replacements[receipt['command'][0]] = '$BUILD_WRAPPER'
     replacements.update({tool['path']: '$TOOL/' + name for name, tool in identity['tools'].items()})
     replacements.update({path: '$GUEST/' + name for name, path in identity['binary_paths'].items()})
     replacements.update({path: '$CACHE/' + name for name, path in identity['private_cache_environment'].items()
@@ -74,10 +77,20 @@ def normalized_command(command, identity):
     clock = identity['clock_build']
     replacements[clock[clock.index('-o') + 1]] = '$NATIVE_CLOCK'
     result = []
+    path_options = {'--cache-dir': '$MYLANG_CACHE', '--target-dir': '$CARGO_TARGET'}
+    operand = None
     for argument in command:
+        if operand is not None:
+            require(bool(argument) and not argument.startswith('-'), 'missing path operand for ' + operand)
+            result.append(path_options[operand])
+            operand = None
+            continue
+        if argument in path_options:
+            operand = argument
         for path in sorted(replacements, key=len, reverse=True):
             argument = argument.replace(path, replacements[path])
         result.append(argument)
+    require(operand is None, 'missing path operand for ' + str(operand))
     return result
 
 
