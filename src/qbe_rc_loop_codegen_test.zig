@@ -113,13 +113,23 @@ test "RC-PRESIZED-APPEND-1 a certified comprehension appends into guarded room w
     var rc = try emit(comprehension, .rc);
     defer rc.deinit();
     const main = try named(rc.value, "main");
-    const guard = std.mem.indexOf(u8, main, "call $myl_rc_list_plain_ready") orelse return error.TestUnexpectedResult;
+    const guard = std.mem.indexOf(u8, main, "call $myl_rc_list_plain_ready_hot(") orelse return error.TestUnexpectedResult;
+    const original = std.mem.indexOfPos(u8, main, guard, "\n@oi") orelse return error.TestUnexpectedResult;
+    try t.expect(std.mem.indexOf(u8, main[guard..original], ", 4611686018427387904\n") != null);
+    try t.expect(std.mem.indexOf(u8, main[original..], "call $myl_rc_list_plain_ready(") != null);
+    try t.expect(std.mem.indexOf(u8, main[original..], "myl_rc_list_append") != null);
     const copy = fastCopy(main[guard..]) orelse return error.TestUnexpectedResult;
     try t.expect(std.mem.indexOf(u8, copy, "call") == null);
     try t.expect(std.mem.indexOf(u8, copy, "%rcappend") == null);
     var counting = try emit(comprehension, .rc_counting);
     defer counting.deinit();
-    try t.expect(std.mem.indexOf(u8, try named(counting.value, "main"), "@fi") != null);
+    const counted_main = try named(counting.value, "main");
+    try t.expect(std.mem.indexOf(u8, counted_main, "call $myl_rc_list_plain_ready_hot(") != null);
+    try t.expect(std.mem.indexOf(u8, counted_main, ", 4611686018427387904\n") != null);
+    try t.expect(std.mem.indexOf(u8, counted_main, "@fi") != null);
+    var gc = try emit(comprehension, .gc);
+    defer gc.deinit();
+    try t.expect(std.mem.indexOf(u8, try named(gc.value, "main"), "myl_rc_list_plain_ready") == null);
 }
 
 const appends =
@@ -135,6 +145,31 @@ const appends =
     \\def main() -> int:
     \\    return grown(3)
 ;
+
+// spec-case: RC-PRESIZED-APPEND-1
+test "RC-PRESIZED-APPEND-1 refused parameter and checked loops retain ordinary admission" {
+    var rc = try emit(appends, .rc);
+    defer rc.deinit();
+    const parameter = try named(rc.value, "parameter");
+    try t.expect(std.mem.indexOf(u8, parameter, "myl_rc_list_plain_ready_hot") == null);
+    try t.expect(std.mem.indexOf(u8, parameter, "call $myl_rc_list_plain_ready(") != null);
+    try t.expect(std.mem.indexOf(u8, parameter, "call $myl_rc_list_append(") != null);
+    try t.expect(std.mem.indexOf(u8, parameter, "@fi") == null);
+
+    const saved = runtime.get();
+    defer runtime.set(saved);
+    runtime.set(.rc);
+    var compilation = try compiler.Compilation.init(t.allocator, "rc_checked_append.my", comprehension);
+    defer compilation.deinit();
+    const text = try compilation.emitQbe(t.allocator);
+    defer t.allocator.free(text);
+    var checked = try std.json.parseFromSlice(Manifest, t.allocator, text, .{ .allocate = .alloc_always, .ignore_unknown_fields = true });
+    defer checked.deinit();
+    const checked_main = try named(checked.value, "main");
+    try t.expect(std.mem.indexOf(u8, checked_main, "myl_rc_list_plain_ready_hot") == null);
+    try t.expect(std.mem.indexOf(u8, checked_main, "call $myl_rc_list_plain_ready(") != null);
+    try t.expect(std.mem.indexOf(u8, checked_main, "call $myl_rc_list_append(") != null);
+}
 
 // spec: RC-FRESH-APPEND-GENERATION-1
 test "RC-FRESH-APPEND-GENERATION-1 a certified fresh append loop tests room without the frozen generation" {

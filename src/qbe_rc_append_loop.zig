@@ -48,7 +48,9 @@ pub const Presized = struct { head: usize, header: usize, generation: usize, roo
 /// quiet scalar append loop. The guard asks the runtime once whether the list
 /// may take room writes (the answer the certificate already reuses across the
 /// loop) and bounds the generation so no append can reach the frozen marker;
-/// either refusal enters the original loop. False emits nothing.
+/// either refusal enters the original loop. The identical hot query is an
+/// inlining hint at this already-certified guard, not a new admission proof.
+/// False emits nothing.
 /// A collector build presizes every planned append; it always admits.
 pub fn presized(comptime E: type, self: *E, append: Presized) Error!bool {
     if (!@import("runtime_mode.zig").enabled()) return true;
@@ -60,7 +62,7 @@ pub fn presized(comptime E: type, self: *E, append: Presized) Error!bool {
     if (!certified) return false;
     const ready = self.temp();
     const young = self.temp();
-    try self.print(" %v{d} =w call $myl_rc_list_plain_ready(l %heap, l %v{d})\n jnz %v{d}, @rcpresized{d}, @oi{d}\n@rcpresized{d}\n", .{ ready, append.header, ready, ready, append.head, ready });
+    try self.print(" %v{d} =w call $myl_rc_list_plain_ready_hot(l %heap, l %v{d})\n jnz %v{d}, @rcpresized{d}, @oi{d}\n@rcpresized{d}\n", .{ ready, append.header, ready, ready, append.head, ready });
     try self.print(" %v{d} =l cultl %v{d}, {d}\n jnz %v{d}, @rcpresized{d}, @oi{d}\n@rcpresized{d}\n", .{ young, append.generation, @as(u64, 1) << 62, young, young, append.head, young });
     return true;
 }
