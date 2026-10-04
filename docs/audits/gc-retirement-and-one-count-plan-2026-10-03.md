@@ -7,6 +7,10 @@ from. It covers two user goals:
 2. **One count per RC object.** Every object carries `owners` and `holds` today; the goal
    is `owners` only.
 
+**Decisions D1–D4 (section 4.2) were accepted on 2026-10-04: the user took the recommended
+option for each.** The runtime-performance plan `docs/audits/runtime-language-levers-2026-10-04.md`
+(WP-5) schedules this work.
+
 Base: `main` at `6df58b02`. The facts below were checked on that commit by three review
 lanes on 2026-10-03; the evidence index is at the end. Read sections 1–3 before any work
 package (WP).
@@ -357,7 +361,10 @@ proofs that remove traffic, and is compatible.
 
 ### 4.2 Decisions for the user
 
-| # | Decision | Recommended | Alternatives |
+**Accepted 2026-10-04:** the user accepted the recommended option for D1, D2, D3 and D4.
+The alternatives stay in the table for the record.
+
+| # | Decision | Recommended (accepted 2026-10-04) | Alternatives (rejected) |
 |---|---|---|---|
 | **D1** | Iteration semantics without a hold | **Live place.** When the source is a place rooted at a local or parameter (`xs`, `vm.objects`, `a.b[i].c`), the loop holds a reference to the slot, not a token, and re-reads the header on each step. Writes by the body or by `mut` callees stay visible, exactly as in Python, and growth is harmless. The length check still traps structural changes. A non-place source (call result, literal) is owned by the loop (O1). The loop snapshots at entry (O) only when the body rebinds the **root local**; the write-back idiom `wb = it.rt; f(mut wb); it.rt = wb` stays live. Add an `iteration_check` on every indexed collection along the path, so `del rows[0]` by a callee traps instead of silently switching rows. | **Snapshot (Swift).** Iterate the value at loop entry. This silently diverges from Python (the first example gives 3, not 10) and adds an O(n) copy per loop to the Lox `mark(mut vm, o)` idiom, unless an interprocedural proof shows current-index-only writes. **Keep a count for iteration only:** see the stopping rule |
 | **D2** | Stored dictionary views | **Views cannot be stored.** `d.keys()`, `d.values()` and `d.items()` may appear only as iteration sources (lowered as D1 over the mapping place) or as immediate arguments (`len`, `in`, `list`, `set`, `sorted`). Storing one is a compile error with the fix-it `list(d.keys())`. | **Views become values:** a snapshot of the mapping, with `view.mapping[k] = v` writing the view's own copy. This is a silent divergence from Python |
@@ -466,7 +473,7 @@ counts before rejecting.
 | WP | Work | Needs | Size |
 |---|---|---|---|
 | **C0 Census and shadow modes** | The census counters and per-kind tags exist on `claude/hold-census` (4.3, RC-HOLD-CENSUS-1); land them, after the full gate, which that lane did not run. Add a **hold-as-owner shadow switch**, where every hold acquire and release goes to `owners`: failing guest tests are exactly the semantic dependences (expected K1, K2, K5), and the clone delta is the cost. Add the **proof-denial reference mode** deferred from G1: certificates denied at the choke points (`ownership.analyze`, `qbe.zig:1941-1978` certificates and finalize planners, per-site proofs, COW-PIN-ELIDE-1), with its own runtime identity. | Can start now | M |
-| **C1 Decisions** | Diagnostic-only passes count D1/D2/D3 sites in `tests/lang`, the corpus, the Lox port, schematic and the EDA app. The user decides D1–D4. | C0 | S |
+| **C1 Decisions** | Diagnostic-only passes count D1/D2/D3 sites in `tests/lang`, the corpus, the Lox port, schematic and the EDA app. D1–D4 were accepted on 2026-10-04. The counts now size the migration and list the sites to fix; they no longer gate the decision. | C0 | S |
 | **C2 Call pins** | Drop the hold from K4 call pins and their backing-storage holds; keep PINNED on the header and let `storage_extend` test it instead of `holds == 0`. This removes all 5.18M corpus flips by construction. First prove that RC-ELEMENT-BORROW-1 address borrows never span storage growth. | C0 | M |
 | **C3 MUT-EXCLUSIVE-4** | Implement the rule, then remove K5/K6 holds (and the pin, if place-last lowering holds up). | D3 | M |
 | **C4 Live-place iteration** | Place-source forms in `prelude_builtins.zig` desugars (`for`, `sum`, `any`/`all`, `zip`, `enumerate`); delete the `iterationOwner` hold paths (`qbe_rc_views`, `qbe_rc_holds.mayHold`, `cow_plan`, `ownership_classify`); make the iterated place count as read every iteration in `rc_field_transfer`; dereference in `qbe_loop_facts`; restate the element-borrow condition in `qbe_borrow.zig:130,632`; per-path `iteration_check`. `iteration_identity.my`'s named-snapshot test changes to Python's answer (10) | D1 | M–L |
@@ -501,8 +508,8 @@ operand loans relocate between temps (RC-LOAN-RELOCATE-1), so do not use one wit
 now:        G0 (docs) | G1 (model oracle + RC check mode) | C0 (census + shadow + reference mode)
 after EDA merge lands (codex/differential-fuzz-20261002 or its successor):
             G2 -> G3 -> G4 -> G5 -> G6        (one lane; G4/G5 not alongside src/qbe*.zig perf lanes)
-after C0:   C1 (user decides D1-D4) ; C2 and C6 (no language change) may run beside G2/G3
-after G5 + decisions:  C3, C4, C5 (separate lanes; C4 and C5 share the iteration lowering, so land C4 first)
+after C0:   C1 (site counts; D1-D4 accepted 2026-10-04) ; C2 and C6 (no language change) may run beside G2/G3
+after G5:  C3, C4, C5 (separate lanes; C4 and C5 share the iteration lowering, so land C4 first)
 then:       C7 -> C8
 ```
 
