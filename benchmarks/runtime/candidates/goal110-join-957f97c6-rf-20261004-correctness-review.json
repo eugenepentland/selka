@@ -1,0 +1,55 @@
+{
+  "schema": "mylang-goal110-join-correctness-review-v1",
+  "status": "pass",
+  "reviewed_utc": "2026-10-04T03:05:44.948704+00:00",
+  "source_revision": "957f97c6d9906ef11cf344ce055dada8be8446ea",
+  "execution_identity_sha256": "eae9e7de7b53c2773937229a73bcb1e022235656c1bed259901c18baa2724bb5",
+  "coverage": [
+    "string_join",
+    "bytes_scan",
+    "string_search",
+    "mutate_nested"
+  ],
+  "live_analysis_verified_both_sessions": true,
+  "fresh_qualifications": [
+    720,
+    720
+  ],
+  "fresh_holdouts_replayed": 516,
+  "holdout_identity_matches_both_sessions": true,
+  "holdout_manifest_all24_guests_clock_sources_assets_live_checked": true,
+  "text_oracle_outcomes_replayed": 120,
+  "text_refusal_records_reviewed": 6,
+  "text_live_artifact_records_checked": 2,
+  "rf_archive_bindings_checked": 13,
+  "native_source_matches_tested_5a60ef10": true,
+  "native_sanitizer_suites_reviewed": 5,
+  "worst_llvm_pairwise_upper95_both_sessions": 1.0538738216310495,
+  "limitations": [
+    "Native log retains an initial fixture-length failure followed by the corrected methods pass; the other four suites passed without runtime changes.",
+    "No fresh whole-repository semantic gate is claimed. Source-matched native checks and fresh exact-RF-artifact qualifications/holdouts support this focused acceptance; final whole-suite repository gates remain required.",
+    "Holdouts retain generator shapes, not every Unicode/alias/error topology. Per-comparison intervals are not simultaneous confidence over the entire campaign; small byte scan calibration hit the existing iteration cap."
+  ],
+  "reviewed_evidence": [
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-20261003/experiments/runtime-goal110-join-20261004/join-native-tests.log",
+      "sha256": "46bbc91364e7c1d8670c92f5d181c354a561a9261cb0e87142a23bc4333d960b"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-20261003/experiments/runtime-goal110-join-20261004/join-validation-receipt.json",
+      "sha256": "3cc06e0cde089d3ee28db2fbdb2f3d4d19dded00628019edddb61ff340927363"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-20261003/experiments/runtime-goal110-integrated-rf-20261004/text-guest-checks.json.gz",
+      "sha256": "b5c2020227cea5ff665dfd579c28efa7bebae357fa49c18a4c7d662486127e16"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-20261003/experiments/runtime-goal110-integrated-rf-20261004/evidence.json",
+      "sha256": "28c9b84bce7011139ae5655146bf00e864351c2a1e023a31be330ca70085c840"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-20261003/benchmarks/runtime/candidates/goal110-join-957f97c6-rf-20261004-verified.json",
+      "sha256": "4b4fd2f37b826628e1f4371067be134cba6de83d826b990d51b5315869649dbb"
+    }
+  ]
+}

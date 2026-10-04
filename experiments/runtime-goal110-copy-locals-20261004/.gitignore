@@ -1,0 +1,14 @@
+# Raw local inspection copies; use gzip -dk to restore.
+/candidate-actual-main.ssa
+/candidate-translator-input.ll
+/candidate-translator-input.sigs.json
+/candidate-translator-input.ssa
+/compiler-build-receipt.json
+/guest-build-qualification.json
+/joins-matrix-receipt.json
+/llvm-before-entry.s
+/llvm-candidate-entry.s
+/qbe-before-entry.s
+/qbe-candidate-entry.s
+/regression-screen.json
+/__pycache__/

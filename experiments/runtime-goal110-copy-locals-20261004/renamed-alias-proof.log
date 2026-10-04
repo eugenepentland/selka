@@ -1,0 +1,3 @@
+1/2 .task-alias-proof.test.actual before, rejected and renamed LLVM alias facts...OK
+2/2 src.qbe_build_llvm_sticky.test.a loop that calls, or has no overflow check to drop, is left alone...OK
+All 2 tests passed.

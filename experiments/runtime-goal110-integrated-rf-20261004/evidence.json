@@ -1,0 +1,215 @@
+{
+  "source_revision": "957f97c6d9906ef11cf344ce055dada8be8446ea",
+  "candidate_id": "goal110-integrated-957f97c6-releasefast",
+  "compiler_policy": "ReleaseFast host; ReleaseFast guests; LLVM O3/full LTO; unchanged references",
+  "status": "two RF sessions complete; coordinator acceptance review is separate",
+  "sessions": [
+    {
+      "measurement_session_id": "0a7c22fa-7d2c-49b4-b64f-ffbb4803a5cf",
+      "started_utc": "2026-10-04T02:51:25.013494+00:00",
+      "finished_utc": "2026-10-04T02:54:43.367877+00:00"
+    },
+    {
+      "measurement_session_id": "653a9088-22ea-4938-b01e-8af53a1346fa",
+      "started_utc": "2026-10-04T02:55:34.454509+00:00",
+      "finished_utc": "2026-10-04T02:59:02.579494+00:00"
+    }
+  ],
+  "commands": {
+    "cwd": "/home/epentland/ai/canopy/mylang-worktrees/goal110-join-rf-20261004",
+    "compiler": [
+      "python3",
+      "benchmarks/runtime/build_compiler.py",
+      "--source-root",
+      "/home/epentland/ai/canopy/mylang-worktrees/goal110-join-rf-20261004",
+      "--source-revision",
+      "957f97c6d9906ef11cf344ce055dada8be8446ea",
+      "--optimize",
+      "ReleaseFast",
+      "--work",
+      ".mylang-cache/goal110-integrated-rf-20261004",
+      "--output",
+      ".mylang-cache/goal110-integrated-rf-20261004/compiler-receipt.json"
+    ],
+    "guests": [
+      "python3",
+      "benchmarks/runtime/expanded/run.py",
+      "--candidate-id",
+      "goal110-integrated-957f97c6-releasefast",
+      "--compiler-receipt",
+      ".mylang-cache/goal110-integrated-rf-20261004/compiler-receipt.json",
+      "--work",
+      ".mylang-cache/goal110-integrated-rf-20261004/runner",
+      "--reuse-reference-manifest",
+      "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-harness-20261003/.mylang-cache/runtime-candidate-730a86e6-releasefast/runner/manifest.json",
+      "--expected-reference-manifest-sha256",
+      "94ea9f6343133da2fefdcb327458fbb5fcf6d7f099ba29385ebb5b0bd430d721",
+      "--build-only",
+      "--output",
+      ".mylang-cache/goal110-integrated-rf-20261004/build-only.json"
+    ],
+    "text_checks": [
+      "scripts/build-slot.sh",
+      "build",
+      "python3",
+      "experiments/runtime-goal110-integrated-rf-20261004/guest-checks.py",
+      ".mylang-cache/goal110-integrated-rf-20261004/runner/bin/text-my-llvm",
+      ".mylang-cache/goal110-integrated-rf-20261004/runner/bin/text-my-qbe"
+    ],
+    "holdouts": [
+      "scripts/build-slot.sh",
+      "build",
+      "python3",
+      "benchmarks/runtime/diagnostics/holdouts.py",
+      "--manifest",
+      ".mylang-cache/goal110-integrated-rf-20261004/runner/manifest.json",
+      "--output",
+      ".mylang-cache/goal110-integrated-rf-20261004/holdouts.json",
+      "--cpu",
+      "0"
+    ],
+    "session_a": {
+      "argv": [
+        "python3",
+        "benchmarks/runtime/expanded/run.py",
+        "--candidate-id",
+        "goal110-integrated-957f97c6-releasefast",
+        "--compiler-receipt",
+        ".mylang-cache/goal110-integrated-rf-20261004/compiler-receipt.json",
+        "--work",
+        ".mylang-cache/goal110-integrated-rf-20261004/runner",
+        "--reuse-reference-manifest",
+        "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-harness-20261003/.mylang-cache/runtime-candidate-730a86e6-releasefast/runner/manifest.json",
+        "--expected-reference-manifest-sha256",
+        "94ea9f6343133da2fefdcb327458fbb5fcf6d7f099ba29385ebb5b0bd430d721",
+        "--skip-build",
+        "--only",
+        "string_join",
+        "bytes_scan",
+        "string_search",
+        "mutate_nested",
+        "--rounds",
+        "15",
+        "--warmups",
+        "3",
+        "--cpu",
+        "2",
+        "--output",
+        ".mylang-cache/goal110-integrated-rf-20261004/confirmation-a.json"
+      ],
+      "stdout_stderr_log": ".mylang-cache/goal110-integrated-rf-20261004/confirmation-a.log"
+    },
+    "session_b": {
+      "argv": [
+        "python3",
+        "benchmarks/runtime/expanded/run.py",
+        "--candidate-id",
+        "goal110-integrated-957f97c6-releasefast",
+        "--compiler-receipt",
+        ".mylang-cache/goal110-integrated-rf-20261004/compiler-receipt.json",
+        "--work",
+        ".mylang-cache/goal110-integrated-rf-20261004/runner",
+        "--reuse-reference-manifest",
+        "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-harness-20261003/.mylang-cache/runtime-candidate-730a86e6-releasefast/runner/manifest.json",
+        "--expected-reference-manifest-sha256",
+        "94ea9f6343133da2fefdcb327458fbb5fcf6d7f099ba29385ebb5b0bd430d721",
+        "--skip-build",
+        "--only",
+        "string_join",
+        "bytes_scan",
+        "string_search",
+        "mutate_nested",
+        "--rounds",
+        "15",
+        "--warmups",
+        "3",
+        "--cpu",
+        "2",
+        "--output",
+        ".mylang-cache/goal110-integrated-rf-20261004/confirmation-b.json"
+      ],
+      "stdout_stderr_log": ".mylang-cache/goal110-integrated-rf-20261004/confirmation-b.log"
+    }
+  },
+  "retained": [
+    {
+      "raw": "/home/epentland/ai/canopy/mylang-worktrees/goal110-join-rf-20261004/.mylang-cache/goal110-integrated-rf-20261004/compiler-receipt.json",
+      "raw_sha256": "d81900ea1adca63998ca59eb5c7f9f482f9a5cc75c7ddc91703ccde65ba298be",
+      "archive": "experiments/runtime-goal110-integrated-rf-20261004/compiler-receipt.json.gz",
+      "archive_sha256": "b04f50d3b514d739b49037ec927c7a068b5147439bb0b448abeace959273dc94"
+    },
+    {
+      "raw": "/home/epentland/ai/canopy/mylang-worktrees/goal110-join-rf-20261004/.mylang-cache/goal110-integrated-rf-20261004/compiler-build.log",
+      "raw_sha256": "b839252692b49b749da96b7b79ae669f843b0bcb033f19b6744e0d6bb44f42ee",
+      "archive": "experiments/runtime-goal110-integrated-rf-20261004/compiler-build.log.gz",
+      "archive_sha256": "c8aafffee4d3c70b4b71b4f9e27c0a35780180dc1948da0f012d43eb9619c719"
+    },
+    {
+      "raw": "/home/epentland/ai/canopy/mylang-worktrees/goal110-join-rf-20261004/.mylang-cache/goal110-integrated-rf-20261004/guests-build-driver.log",
+      "raw_sha256": "45b25674f9497f6d6b9cbc583db55099fb289fd5c7c20e69cf0808bbad23aa97",
+      "archive": "experiments/runtime-goal110-integrated-rf-20261004/guests-build-driver.log.gz",
+      "archive_sha256": "92139515fcd3a1545dc2b2a3e434185abcf488a59f7b3e1e5a0ce64ed13293e1"
+    },
+    {
+      "raw": "/home/epentland/ai/canopy/mylang-worktrees/goal110-join-rf-20261004/.mylang-cache/goal110-integrated-rf-20261004/text-guest-checks.json",
+      "raw_sha256": "74ca916d755380c3c8f3fd58ffff23fd725a2f9843adf492f802402328f6403c",
+      "archive": "experiments/runtime-goal110-integrated-rf-20261004/text-guest-checks.json.gz",
+      "archive_sha256": "b5c2020227cea5ff665dfd579c28efa7bebae357fa49c18a4c7d662486127e16"
+    },
+    {
+      "raw": "/home/epentland/ai/canopy/mylang-worktrees/goal110-join-rf-20261004/.mylang-cache/goal110-integrated-rf-20261004/holdouts.json",
+      "raw_sha256": "b0ba9b41f4b6587aa15605e30105b5a78718591596b9b705c8d46109fef0ccf1",
+      "archive": "experiments/runtime-goal110-integrated-rf-20261004/holdouts.json.gz",
+      "archive_sha256": "4033c30b4faca9acda5c60d438d305ec1ab105f88275a4e1d767f0647f2a38e7"
+    },
+    {
+      "raw": "/home/epentland/ai/canopy/mylang-worktrees/goal110-join-rf-20261004/.mylang-cache/goal110-integrated-rf-20261004/holdouts.log",
+      "raw_sha256": "eb66e9fc422e3bdd9ea3b208eafd19a7b76a31a9901b96a3b302202d5b03f32c",
+      "archive": "experiments/runtime-goal110-integrated-rf-20261004/holdouts.log.gz",
+      "archive_sha256": "d79d7335a6c3b4da407d6b262d969e8fb48a8a034d93a7a1c4aea203df26a5ef"
+    },
+    {
+      "raw": "/home/epentland/ai/canopy/mylang-worktrees/goal110-join-rf-20261004/.mylang-cache/goal110-integrated-rf-20261004/confirmation-a.json",
+      "raw_sha256": "e4cbbd2285fa3db65cf6b3a71d19f231cfe5fc8ad81189976271de0450a377fd",
+      "archive": "experiments/runtime-goal110-integrated-rf-20261004/confirmation-a.json.gz",
+      "archive_sha256": "db259c24ccec0af413eb4f2e3fef9b5fa5fcce88836bf7b0ece9735dd6379aa6"
+    },
+    {
+      "raw": "/home/epentland/ai/canopy/mylang-worktrees/goal110-join-rf-20261004/.mylang-cache/goal110-integrated-rf-20261004/confirmation-a.log",
+      "raw_sha256": "18f1a63fcbd1f9a897037f33e9fd06988993b54bacab5414f8ca6050afc7fbb9",
+      "archive": "experiments/runtime-goal110-integrated-rf-20261004/confirmation-a.log.gz",
+      "archive_sha256": "b428c69acf8f62e6289e038c2cd4d541c2b7303c123fcfb14890a55f325900cf"
+    },
+    {
+      "raw": "/home/epentland/ai/canopy/mylang-worktrees/goal110-join-rf-20261004/.mylang-cache/goal110-integrated-rf-20261004/confirmation-b.json",
+      "raw_sha256": "fdbb4001d3ebbeae82827a300c43c8dcbfc8dc1ad8fb0b9814919d367e1f0edc",
+      "archive": "experiments/runtime-goal110-integrated-rf-20261004/confirmation-b.json.gz",
+      "archive_sha256": "332d3c03bc0938118c0e884a3377ae808f48678d2276782812cdbf694e6264fb"
+    },
+    {
+      "raw": "/home/epentland/ai/canopy/mylang-worktrees/goal110-join-rf-20261004/.mylang-cache/goal110-integrated-rf-20261004/confirmation-b.log",
+      "raw_sha256": "7ba873122283c72f6d6577e32789709a41b34557a68b9ce468ff550b7fb13c65",
+      "archive": "experiments/runtime-goal110-integrated-rf-20261004/confirmation-b.log.gz",
+      "archive_sha256": "74424421d8ba9f938a6b7551a55b3ed238eb8625549b7a100854cb28686c783d"
+    },
+    {
+      "raw": "/home/epentland/ai/canopy/mylang-worktrees/goal110-join-rf-20261004/.mylang-cache/goal110-integrated-rf-20261004/validation.log",
+      "raw_sha256": "076c26e9e37eaf77692f4230a869c7e2c485923fdec47b81836bb396a2aa031c",
+      "archive": "experiments/runtime-goal110-integrated-rf-20261004/validation.log.gz",
+      "archive_sha256": "896d6ab54c743fa0e10b4efa0c93bdcd3196e3bc6b5f05c6fefc6a0c855c0c35"
+    },
+    {
+      "raw": "/home/epentland/ai/canopy/mylang-worktrees/goal110-join-rf-20261004/.mylang-cache/goal110-integrated-rf-20261004/runner/manifest.json",
+      "raw_sha256": "d17149a26c583f3797f48040f74041a4a1527747722e67571fbe9c10977503e3",
+      "archive": "experiments/runtime-goal110-integrated-rf-20261004/manifest.json.gz",
+      "archive_sha256": "e7db5b49db8d73dc2cafd79ba76f76e7c413b100441f30c5b4de1662a5a914d6"
+    },
+    {
+      "raw": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-harness-20261003/.mylang-cache/runtime-candidate-730a86e6-releasefast/runner/manifest.json",
+      "raw_sha256": "94ea9f6343133da2fefdcb327458fbb5fcf6d7f099ba29385ebb5b0bd430d721",
+      "archive": "experiments/runtime-goal110-integrated-rf-20261004/reference-manifest.json.gz",
+      "archive_sha256": "e7940dfb725539629285620037d88b6a0518dca500a4cf56475ce5541373925a"
+    }
+  ],
+  "provenance_limit": "Local source and live artifact checks; no independent reproducibility attestation."
+}

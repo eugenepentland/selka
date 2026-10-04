@@ -1,0 +1,49 @@
+arm	temporary	definitions_after_sticky	class	load_store_alias_suffix
+before	ctx	1	foreign	, !alias.scope !4, !noalias !3
+before	s0	1	frame	, !alias.scope !3, !noalias !4
+before	s1	1	frame	, !alias.scope !3, !noalias !4
+before	l86	1	frame	, !alias.scope !3, !noalias !4
+before	l89	1	frame	, !alias.scope !3, !noalias !4
+before	l90	1	frame	, !alias.scope !3, !noalias !4
+before	v8324	1	element	, !alias.scope !12, !noalias !13
+before	v8326	1	element	, !alias.scope !12, !noalias !13
+before	v8327	1	unknown	
+before	v8343	1	unknown	
+before	v8332	1	unknown	
+before	v8370	1	frame	, !alias.scope !3, !noalias !4
+before	v8484	1	unknown	
+before	u4_v8324	0	unknown	
+before	u4_v8326	0	unknown	
+before	u4_v8370	0	unknown	
+rejected	ctx	1	foreign	, !alias.scope !4, !noalias !3
+rejected	s0	1	frame	, !alias.scope !3, !noalias !4
+rejected	s1	1	frame	, !alias.scope !3, !noalias !4
+rejected	l86	1	frame	, !alias.scope !3, !noalias !4
+rejected	l89	1	frame	, !alias.scope !3, !noalias !4
+rejected	l90	1	frame	, !alias.scope !3, !noalias !4
+rejected	v8324	2	unknown	
+rejected	v8326	2	unknown	
+rejected	v8327	2	unknown	
+rejected	v8343	2	unknown	
+rejected	v8332	2	unknown	
+rejected	v8370	2	unknown	
+rejected	v8484	2	unknown	
+rejected	u4_v8324	0	unknown	
+rejected	u4_v8326	0	unknown	
+rejected	u4_v8370	0	unknown	
+renamed	ctx	1	foreign	, !alias.scope !4, !noalias !3
+renamed	s0	1	frame	, !alias.scope !3, !noalias !4
+renamed	s1	1	frame	, !alias.scope !3, !noalias !4
+renamed	l86	1	frame	, !alias.scope !3, !noalias !4
+renamed	l89	1	frame	, !alias.scope !3, !noalias !4
+renamed	l90	1	frame	, !alias.scope !3, !noalias !4
+renamed	v8324	1	element	, !alias.scope !12, !noalias !13
+renamed	v8326	1	element	, !alias.scope !12, !noalias !13
+renamed	v8327	1	unknown	
+renamed	v8343	1	unknown	
+renamed	v8332	1	unknown	
+renamed	v8370	1	frame	, !alias.scope !3, !noalias !4
+renamed	v8484	1	unknown	
+renamed	u4_v8324	1	element	, !alias.scope !12, !noalias !13
+renamed	u4_v8326	1	element	, !alias.scope !12, !noalias !13
+renamed	u4_v8370	1	frame	, !alias.scope !3, !noalias !4

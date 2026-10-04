@@ -1,0 +1,74 @@
+{
+  "schema": "mylang-goal110-sort-binary-v1",
+  "status": "pass",
+  "source_revision": "2a49da2960ad76471cbf2764c068d724cb9c5121",
+  "compiler_policy": "Candidate host Debug; LLVM guest ReleaseFast, O3, LTO. Baseline host ReleaseFast; same guest policy.",
+  "binaries": {
+    "baseline": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-harness-20261003/.mylang-cache/runtime-candidate-730a86e6-releasefast/runner/bin/collections-my-llvm",
+      "sha256": "b7ae862d780cdfc4535003f4bf0529e95f583e1b633ba3cbf1de3260899ec1c1",
+      "symbols": {
+        "myl_native_list_sort_keyed": {
+          "address": "0x1055f00",
+          "bytes": 552
+        },
+        "keyed_place": {
+          "address": "0x1056130",
+          "bytes": 1816
+        },
+        "keyed_sort_words": {
+          "address": "0x1056850",
+          "bytes": 4717
+        },
+        "keyed_sort_entries": {
+          "address": "0x1057ac0",
+          "bytes": 1186
+        }
+      },
+      "listed_symbol_bytes": 8271,
+      "whole_text_bytes": 292002
+    },
+    "candidate": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-sort-permutation-20261004/.mylang-cache/goal110-sort-debug/runner/bin/collections-my-llvm",
+      "sha256": "f3795333fc89bec452c4e24abdd52536040457e16f235dc96177c11b01519538",
+      "symbols": {
+        "myl_native_list_sort_keyed": {
+          "address": "0x1055940",
+          "bytes": 552
+        },
+        "keyed_place": {
+          "address": "0x1055b70",
+          "bytes": 343
+        },
+        "keyed_sort_words": {
+          "address": "0x1055cd0",
+          "bytes": 3453
+        },
+        "keyed_sort_entries": {
+          "address": "0x1056a50",
+          "bytes": 1186
+        },
+        "keyed_permute": {
+          "address": "0x1057350",
+          "bytes": 1592
+        }
+      },
+      "listed_symbol_bytes": 7126,
+      "whole_text_bytes": 290866
+    }
+  },
+  "assembly_sha256": {
+    "keyed_sort_words": "2f042d5f5de2afcae9b0955748b7738676bee884b2c9d0a27a731a8fb54fec88",
+    "keyed_permute": "3ecdf4026534455480a3b080083e64fd393d3eff57cbf61b1c93a2afc0d19a66"
+  },
+  "observations": [
+    "LLVM keyed_sort_words writes the inverse high lanes at 0x10567a0..0x10567e4.",
+    "The counting path passes shift=32 to keyed_permute at 0x105680e..0x1056814.",
+    "keyed_permute compacts the selected lane, then gathers cycles using the original fixed-point/mark/prefetch handling.",
+    "The 24-byte nonclosing gather at 0x1057842..0x1057852 performs one full element transfer, instead of the former three transfers."
+  ],
+  "limitations": [
+    "Pinned assembly and code sizes are static evidence only, not a runtime performance result.",
+    "The host compiler modes differ; a ReleaseFast host receipt is still required for acceptance."
+  ]
+}

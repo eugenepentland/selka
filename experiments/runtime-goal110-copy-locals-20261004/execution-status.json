@@ -1,0 +1,58 @@
+{
+  "kind": "observed-command-completion-receipts",
+  "source_revision": "d14e26f4473d6c50f56751736ed8ef325adcaecd",
+  "commands": [
+    {
+      "name": "final-invariant-units",
+      "argv": [
+        "scripts/build-slot.sh",
+        "build",
+        "zig",
+        "build",
+        "test-units",
+        "-Doptimize=Debug",
+        "-Dtest-filter=invariant loop",
+        "-j2"
+      ],
+      "observed_exit": 0,
+      "passed": 20,
+      "log": "final-invariant-tests.log"
+    },
+    {
+      "name": "Boolean-join-matrix",
+      "observed_exit": 0,
+      "passed_inputs": 144,
+      "guest_executions": 432,
+      "log": "joins-matrix.log",
+      "receipt": "joins-matrix-receipt.json"
+    },
+    {
+      "name": "actual-LLVM-alias-facts-replay",
+      "observed_exit": 0,
+      "passed": 2,
+      "log": "renamed-alias-proof.log"
+    },
+    {
+      "name": "paired-regression-screen",
+      "argv": [
+        "python3",
+        "experiments/runtime-goal110-copy-locals-20261004/time-guests.py",
+        "--cases",
+        "record_update",
+        "branch_predictable",
+        "call_direct",
+        "--rounds",
+        "5",
+        "--warmups",
+        "1",
+        "--cpu",
+        "2",
+        "--output",
+        "experiments/runtime-goal110-copy-locals-20261004/regression-screen.json"
+      ],
+      "observed_exit": 0,
+      "checked_outcomes": 144,
+      "log": "regression-screen.log"
+    }
+  ]
+}

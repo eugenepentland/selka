@@ -1,0 +1,9 @@
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: file-size: 20 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 25 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 8627 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 9 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed
+[perf/goal110-calls-20261004 d14e26f4] perf: preserve copy-local LLVM facts in loop specialization
+ 4 files changed, 226 insertions(+), 15 deletions(-)
+ create mode 100644 src/qbe_loop_unswitch_names.zig

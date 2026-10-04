@@ -1,0 +1,152 @@
+{
+  "schema": "mylang-goal110-rejected-screens-coordinator-review-v1",
+  "reviewed_utc": "2026-10-04T02:40:37.493242+00:00",
+  "status": "pass",
+  "scope": "Independent oracle outcomes, round/arm completeness, live executable hashes, medians and ratios; no bootstrap recomputation or acceptance claim. Candidates remain unintegrated.",
+  "checks": [
+    {
+      "name": "sorting",
+      "raw_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-sort-permutation-20261004/.mylang-cache/goal110-sort-review/sort-before-after.json",
+      "raw_sha256": "5526831ed9f52bf5c8a010ce5eb0b98e2cfb0b1d44adebd8601bef671519fc4c",
+      "status": "pass",
+      "outcomes_replayed": 192,
+      "live_binary_hashes_checked": 4,
+      "rows": [
+        {
+          "case": "sort_records",
+          "size": 64,
+          "candidate_to_before": {
+            "llvm": 1.0573388113684772,
+            "qbe": 1.0824941267492307
+          }
+        },
+        {
+          "case": "sort_records",
+          "size": 4096,
+          "candidate_to_before": {
+            "llvm": 1.0149906198591296,
+            "qbe": 1.023352693446888
+          }
+        },
+        {
+          "case": "sort_int",
+          "size": 64,
+          "candidate_to_before": {
+            "llvm": 1.0165792752253557,
+            "qbe": 0.9750736453112497
+          }
+        },
+        {
+          "case": "sort_int",
+          "size": 4096,
+          "candidate_to_before": {
+            "llvm": 0.9993819120446812,
+            "qbe": 0.9920382007006763
+          }
+        },
+        {
+          "case": "mutate_nested",
+          "size": 64,
+          "candidate_to_before": {
+            "llvm": 0.9983596583428401,
+            "qbe": 0.9915917240844732
+          }
+        },
+        {
+          "case": "mutate_nested",
+          "size": 1024,
+          "candidate_to_before": {
+            "llvm": 0.988833858744815,
+            "qbe": 1.0249221522793277
+          }
+        },
+        {
+          "case": "list_append",
+          "size": 64,
+          "candidate_to_before": {
+            "llvm": 1.061404376569712,
+            "qbe": 0.9838090133590619
+          }
+        },
+        {
+          "case": "list_append",
+          "size": 4096,
+          "candidate_to_before": {
+            "llvm": 0.9890029539817746,
+            "qbe": 0.9965885992323965
+          }
+        }
+      ],
+      "archive_review": {
+        "status": "pass",
+        "source_evidence_commit": "bb0827af33c56b0de35f767b96e8b286599f9996",
+        "directory": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-20261003/experiments/runtime-goal110-sort-counting-20261004",
+        "archive_hash_and_raw_byte_bindings_checked": 24
+      }
+    },
+    {
+      "name": "copy-locals",
+      "raw_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/experiments/runtime-goal110-copy-locals-20261004/regression-screen.json",
+      "raw_sha256": "0068da7d5398253ed52fa0df3caf2bee90f6154e1a701388e1ed5264c7577d2d",
+      "status": "pass",
+      "outcomes_replayed": 144,
+      "live_binary_hashes_checked": 4,
+      "rows": [
+        {
+          "case": "record_update",
+          "size": 64,
+          "candidate_to_before": {
+            "llvm": 1.0134668695265203,
+            "qbe": 0.8143342369253301
+          }
+        },
+        {
+          "case": "record_update",
+          "size": 4096,
+          "candidate_to_before": {
+            "llvm": 1.0657795153422776,
+            "qbe": 0.8098959550654624
+          }
+        },
+        {
+          "case": "branch_predictable",
+          "size": 64,
+          "candidate_to_before": {
+            "llvm": 1.1272765861519427,
+            "qbe": 0.9658493727043339
+          }
+        },
+        {
+          "case": "branch_predictable",
+          "size": 4096,
+          "candidate_to_before": {
+            "llvm": 1.121621224672302,
+            "qbe": 0.9429921970260575
+          }
+        },
+        {
+          "case": "call_direct",
+          "size": 64,
+          "candidate_to_before": {
+            "llvm": 0.7264120393940254,
+            "qbe": 0.2688314506837117
+          }
+        },
+        {
+          "case": "call_direct",
+          "size": 4096,
+          "candidate_to_before": {
+            "llvm": 0.6775640593530123,
+            "qbe": 0.25174029011870197
+          }
+        }
+      ],
+      "archive_review": {
+        "status": "pass",
+        "source_evidence_commit": "8b7017b84381b0ae49a00e33c8740feca0454f0a",
+        "directory": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-20261003/experiments/runtime-goal110-copy-locals-20261004",
+        "archive_hash_and_raw_byte_bindings_checked": 12
+      }
+    }
+  ]
+}

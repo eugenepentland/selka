@@ -1,0 +1,69 @@
+{
+  "schema": "mylang-goal110-sort-static-v1",
+  "status": "pass",
+  "baseline_revision": "ffc2412fab9843081c749516a29d9599d585f86b",
+  "candidate_revision": "2a49da2960ad76471cbf2764c068d724cb9c5121",
+  "production_files_changed": [
+    "src/native_collections.c"
+  ],
+  "source_path": "src/native_collections.c",
+  "baseline_source_sha256": "1ca6e59ce8d7f4a1eac82ae6a7fdb6873f0f0424a98f2ce509d53e4f9b3b69be",
+  "candidate_source_sha256": "051953f56a03a38a944de5dcb629f98bdf2322b80bdbe9f7a12d6509bb00a50f",
+  "unchanged_functions": {
+    "key_shape_decode": {
+      "sha256": "36d6107f91e3e31726660f1f66030a9939dfba4f91c250258fc61bb0435133ae",
+      "byte_identical_to_baseline": true
+    },
+    "key_word": {
+      "sha256": "79a953ee6ae5429c52b7346e250afff5543e62e8d4ed6497cf0d18aaf4fe4631",
+      "byte_identical_to_baseline": true
+    },
+    "keyed_count": {
+      "sha256": "a9b5a45fd21aa3c1e84b85c2251f6e1a6fc9754b7299889fcd9ccae913a4d987",
+      "byte_identical_to_baseline": true
+    },
+    "keyed_sort_words": {
+      "sha256": "7c250af73eed323fbba8096614f53b0c29540a68a1ed374c9560c60a795bb99a",
+      "byte_identical_to_baseline": true
+    },
+    "keyed_sort_entries": {
+      "sha256": "be25df25ae04b787366a2aacfe4482bb27e35bc71ac5fa16c5ee9ba17a4ede48",
+      "byte_identical_to_baseline": true
+    },
+    "myl_native_list_sort_keyed": {
+      "sha256": "a41ebd5ea49681a0a41925d2eaa497931a98bb970f3b01ed10a513bb25271c3b",
+      "byte_identical_to_baseline": true
+    },
+    "myl_rc_list_sort_keyed": {
+      "sha256": "c1a9d741f34f39bbdf540c48cc89fc986d2d8f19a0835bd20e4e6d3645d89ccd",
+      "byte_identical_to_baseline": true
+    },
+    "sort_elements": {
+      "sha256": "c13bd056c140bdae5ea8c1377756813c6850b2018fb9edd8d3d7438c2290e6c0",
+      "byte_identical_to_baseline": true
+    },
+    "myl_native_list_sort": {
+      "sha256": "07b2831d4c0c6659e9107e188cbbfd5c906d7cb5e06c153a410bcdbb567c9adc",
+      "byte_identical_to_baseline": true
+    }
+  },
+  "gather_cycle_normalized_unchanged_except_lane_selection": true,
+  "ordinary_gather_normalized_unchanged_except_explicit_zero_lane": true,
+  "sorted_copy_scatter_byte_identical": {
+    "sha256": "0f6e53f3d752da18df94d6b68d9762d75929952ce67a2e0b92038257f50c0461",
+    "pass": true
+  },
+  "proof": [
+    "Counting admission remains count<=UINT32_MAX and high-low<count.",
+    "Stable slot assignment makes dest a bijection over 0..count-1, with each destination representable in 32 bits.",
+    "Writing inverse into a destination high lane leaves every future low-lane destination read intact.",
+    "Every high lane is assigned once, then forward compaction reads 8i before writing 4i.",
+    "The same gather cycle preserves every full element byte and uses its original fixed-point/mark/prefetch handling.",
+    "All scratch allocation calls/order/request sizes and before-movement refusals remain byte-identical; the 2*element temporary reservation remains."
+  ],
+  "limitations": [
+    "Static source proof is not performance evidence.",
+    "Binary instruction/code-size inspection follows compiler/guest builds.",
+    "Tests bound memory and correctness for tested widths/cycles; no exhaustive coverage of all representable list lengths."
+  ]
+}
