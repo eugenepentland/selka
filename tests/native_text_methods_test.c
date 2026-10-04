@@ -185,7 +185,7 @@ static void free_join_operand(myl_native_text *text) {
 }
 static void join_payload_boundaries(void) {
     static const size_t lengths[]={0,1,2,3,4,5,7,8,9,15,16,17,23,31,32,33,63,64,65,257};
-    static const size_t widths[]={0,1,2,3,4,7,8,9,15,16,17,33,65};
+    static const size_t widths[]={0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,33,65};
     myl_native_heap heap;
     myl_native_heap_init(&heap,1<<27);
     heap.next_collection=SIZE_MAX;
@@ -218,6 +218,50 @@ static void join_payload_boundaries(void) {
         free_join_operand(empty); free_join_operand(separator); free_join_operand(part);
     }
     myl_native_heap_destroy(&heap);
+}
+/* A short separator is used repeatedly over mixed-width inputs, including
+   empty pieces; one seventeen-octet piece switches the same request to the
+   general copy path. Exact payloads and views expose both copy endpoints. */
+static void join_mixed_widths(void) {
+    static const size_t lengths[]={0,1,2,3,4,7,8,9,15,16};
+    static const size_t counts[]={2,17,64};
+    static const size_t offsets[]={0,1,7};
+    myl_native_heap heap;
+    myl_native_heap_init(&heap,1<<27); heap.next_collection=SIZE_MAX;
+    size_t checked=0;
+    for (size_t width=0;width<=18;width++)
+    for (size_t row=0;row<sizeof offsets/sizeof *offsets;row++)
+    for (int wide=0;wide<=1;wide++)
+    for (size_t column=0;column<sizeof counts/sizeof *counts;column++)
+    for (int bulk=0;bulk<=1;bulk++) {
+        const size_t count=counts[column], offset=offsets[row];
+        myl_native_text *separator=join_operand(width,offset,!wide);
+        myl_native_text *parts[64];
+        unsigned char expected[4096];
+        size_t bytes=0,scalars=0;
+        for (size_t i=0;i<count;i++) {
+            size_t length=bulk && i==count/2 ? 17 : lengths[i%(sizeof lengths/sizeof *lengths)];
+            parts[i]=join_operand(length,offset,wide);
+            if (i) {
+                memcpy(expected+bytes,myl_native_text_storage(separator),width);
+                bytes+=width; scalars+=separator->length;
+            }
+            memcpy(expected+bytes,myl_native_text_storage(parts[i]),length);
+            bytes+=length; scalars+=parts[i]->length;
+        }
+        myl_native_list list={.length=count,.storage=parts};
+        const size_t allocations=heap.allocations;
+        myl_native_text *result=myl_native_text_join(&heap,separator,&list);
+        assert(result && heap.allocations==allocations+1 && !heap.collections && !heap.roots);
+        assert(result->bytes==bytes && result->length==scalars);
+        assert(!!(result->flags&MYL_TEXT_ASCII)==(scalars==bytes));
+        assert(!memcmp(myl_native_text_storage(result),expected,bytes));
+        for (size_t i=0;i<count;i++) free_join_operand(parts[i]);
+        free_join_operand(separator);
+        checked++;
+    }
+    myl_native_heap_destroy(&heap);
+    printf("mixed-width short/bulk joins: %zu oracle outcomes\n",checked);
 }
 /* Rooted operands survive a join safepoint, and a refused output allocation
    leaves every input available. Overflow refuses before touching the heap. */
@@ -261,6 +305,7 @@ static void join_collection_and_limits(void) {
 }
 int main(void) {
     join_payload_boundaries();
+    join_mixed_widths();
     join_collection_and_limits();
     myl_native_heap heap;
     myl_native_heap_init(&heap,1<<20); heap.stress=1;

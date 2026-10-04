@@ -950,8 +950,7 @@ myl_native_list *myl_native_text_split(myl_native_heap *heap, myl_native_text *i
 /* Copies into a fresh text. Up to 16 octets need only two bounded loads and
  * stores; overlapping endpoints cover the middle without reading padding from
  * a view. Larger pieces retain the bulk memcpy path. */
-static inline void copy_octets(unsigned char *output, const unsigned char *input, size_t count) {
-    if (count>16) { memcpy(output,input,count); return; }
+static inline void copy_short_octets(unsigned char *output, const unsigned char *input, size_t count) {
     if (count>=8) {
         uint64_t first,last;
         memcpy(&first,input,8); memcpy(&last,input+count-8,8);
@@ -966,10 +965,52 @@ static inline void copy_octets(unsigned char *output, const unsigned char *input
         memcpy(output,&first,2); memcpy(output+count-2,&last,2);
     } else if (count) output[0]=input[0];
 }
+static inline void copy_octets(unsigned char *output, const unsigned char *input, size_t count) {
+    if (count>16) { memcpy(output,input,count); return; }
+    copy_short_octets(output,input,count);
+}
+/* The sizing pass proves every copy in this leaf is at most sixteen octets.
+ * Choose the separator's bounded word width once, then keep its endpoints in
+ * registers while the output cursor advances. Only bounded fixed-size copies
+ * appear in this leaf, and no input aliases the fresh output.
+ * The two overlapping stores cover any separator in the chosen size band. */
+#define JOIN_SHORT_WORDS(Word) do { \
+    Word first,last; \
+    memcpy(&first,between,sizeof first); \
+    memcpy(&last,between+width-sizeof last,sizeof last); \
+    for (size_t i=0;i<length;i++) { \
+        if (i) { \
+            memcpy(output,&first,sizeof first); \
+            memcpy(output+width-sizeof last,&last,sizeof last); \
+            output+=width; \
+        } \
+        const myl_native_text *part=items[i]; \
+        const size_t bytes=part->bytes; \
+        if (bytes) copy_short_octets(output,myl_native_text_storage(part),bytes); \
+        output+=bytes; \
+    } \
+    return; \
+} while (0)
+static __attribute__((noinline)) void join_short(unsigned char *output, myl_native_text *const *items, size_t length,
+                                                const unsigned char *between, size_t width) {
+    if (!length) return;
+    if (width>=8) JOIN_SHORT_WORDS(uint64_t);
+    if (width>=4) JOIN_SHORT_WORDS(uint32_t);
+    if (width>=2) JOIN_SHORT_WORDS(uint16_t);
+    if (width) JOIN_SHORT_WORDS(unsigned char);
+    for (size_t i=0;i<length;i++) {
+        const myl_native_text *part=items[i];
+        const size_t bytes=part->bytes;
+        if (bytes) copy_short_octets(output,myl_native_text_storage(part),bytes);
+        output+=bytes;
+    }
+}
+#undef JOIN_SHORT_WORDS
 myl_native_text *myl_native_text_join(myl_native_heap *heap, myl_native_text *separator, myl_native_list *list) {
     const size_t length=list->length, width=separator->bytes;
     size_t count=0, scalars=0;
     int plain=separator->flags&MYL_TEXT_ASCII;
+    int short_copies=width<=16;
     myl_native_text **items=list->storage;
     /* All inputs are immutable during this operation. Size the separators once
      * and retain the checked byte total; scalar counts never exceed octets. */
@@ -983,6 +1024,7 @@ myl_native_text *myl_native_text_join(myl_native_heap *heap, myl_native_text *se
         count+=items[i]->bytes;
         scalars+=items[i]->length;
         plain&=items[i]->flags&MYL_TEXT_ASCII;
+        short_copies&=items[i]->bytes<=16;
     }
     myl_native_root a,b;
     myl_native_root_push(heap,&a,&separator,&myl_rc_pointer_leaf); myl_native_root_push(heap,&b,&list,&myl_rc_pointer_leaf);
@@ -990,13 +1032,16 @@ myl_native_text *myl_native_text_join(myl_native_heap *heap, myl_native_text *se
     if (result) {
         unsigned char *output=(unsigned char *)(result+1);
         const unsigned char *between=myl_native_text_storage(separator);
-        size_t at=0;
-        for (size_t i=0;i<length;i++) {
-            if (i && width) { copy_octets(output+at,between,width); at+=width; }
-            const myl_native_text *part=items[i];
-            const size_t bytes=part->bytes;
-            if (bytes) copy_octets(output+at,myl_native_text_storage(part),bytes);
-            at+=bytes;
+        if (short_copies) join_short(output,items,length,between,width);
+        else {
+            size_t at=0;
+            for (size_t i=0;i<length;i++) {
+                if (i && width) { copy_octets(output+at,between,width); at+=width; }
+                const myl_native_text *part=items[i];
+                const size_t bytes=part->bytes;
+                if (bytes) copy_octets(output+at,myl_native_text_storage(part),bytes);
+                at+=bytes;
+            }
         }
         myl_native_text_publish(result,scalars,plain);
     }
