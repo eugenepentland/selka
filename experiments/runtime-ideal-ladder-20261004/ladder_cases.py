@@ -109,3 +109,26 @@ CASES['tagged_stack'] = dict(
           ('v5 baseline x86-64', 'tagged_stack_base', 5),
           ('v7 baseline x86-64', 'tagged_stack_base', 7)],
 )
+
+CASES['string_split'] = dict(
+    group='text', bench='string_split', gen_exe='string_split', sizes=(64, 4096), iters=(20000, 600),
+    unit_div='size',
+    verify=[(2, 1, 1), (3, 7, 42), (17, 31, 999983), (64, 100, 42), (4096, 20, 42), (4100, 5, 7), (1000, 3, 13),
+            (33, 40, 5), (5000, 6, 999999), (130, 9, 3)],
+    versions=V('string_split', [
+        (1, "today: owned pieces, encode copies, RC drain"),
+        (2, "+ no RC/malloc: region allocation (L3)"),
+        (3, "+ borrowed encode (no copy)"),
+        (4, "+ pieces as views (no copy, no per-piece alloc)"),
+        (5, "+ fuse split into score (no parts list)"),
+        (9, "+ byte-level fusion, per-part sums kept"),
+        (6, "+ split-fold identity (no per-part work), scalar"),
+        (7, "hand AVX2 scan (psadbw + cmpeq/popcnt)"),
+        (8, "WORK ELIM: memoize the two documents"),
+    ]) + [('v30 holdout: documents from file, v5', 'string_split', 30, 'file'),
+          ('v31 holdout: documents from file, hand AVX2', 'string_split', 31, 'file'),
+          ('v20 holdout reference: today, file', 'string_split', 20, 'file'),
+          ('v5 baseline x86-64', 'string_split_base', 5),
+          ('v9 baseline x86-64', 'string_split_base', 9),
+          ('v6 baseline x86-64', 'string_split_base', 6)],
+)
