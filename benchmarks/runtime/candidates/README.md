@@ -13,6 +13,10 @@ targets remains an individual acceptance decision. The final integrated full
 run, correctness gates and independent timing confirmation passed.
 Intermediate results retain their original source identities.
 
+The next campaign's [1.10× goal and live status](../RUNTIME_110_GOAL.md) is
+prepared separately. Its dashboard starts from the measurements below; no new
+timings were collected to initialize it.
+
 ## Final integrated measurement
 
 [Current fastest = 1.00](final-730a86e6-releasefast-20261003-fastest.md) ·
