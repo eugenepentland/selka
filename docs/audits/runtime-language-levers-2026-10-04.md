@@ -1,7 +1,14 @@
 # Runtime performance: change the rules before more tuning — plan, 2026-10-04
 
-**Status.** The user accepted decisions L1–L3 and the recommended one-count decisions D1–D4
-on 2026-10-04. Nothing in this plan is implemented yet.
+**Status.** The user accepted decisions L1–L4 and the recommended one-count decisions D1–D4
+on 2026-10-04.
+
+**Revision 2 (2026-10-04).** This revision adds:
+- the `integer_math` ideal-ladder pilot (§3.1);
+- L4: a single platform for the optimized path;
+- WP-6 on hold;
+- two Claude-run decision lanes, WP-8 (direct-emitter spike) and WP-9 (ideal ladder study);
+- a decision point at the end of Wave 1 (§5).
 
 **Base.** `perf/runtime-parity-20261003` at `ac72a905` (integrated production source
 `0d8a360c`), worktree `/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-20261003`.
@@ -50,6 +57,10 @@ Give this to the coordinating agent:
 > **Integration.** Integrate a lane only after reviewing its evidence and running the full
 > gate yourself.
 >
+> **Held and reserved work.** WP-6 is on hold until the Wave 1 decision (§5). Claude agents
+> run WP-8 and WP-9 on their own branches; Codex lanes do not take them or edit those
+> branches.
+>
 > **End of each wave.** Run the integrated 80-row screen under L1 and report what moved.
 > Do not merge into `main`.
 
@@ -86,6 +97,7 @@ correctness receipts.
 | **L2** | In release builds, a failing compiler-inserted check may trap anywhere in its effect-free region (rule below). Debug builds keep exact traps. | Accepted 2026-10-04 |
 | **L3** | Remove the memory budget from the language. The OS-level process ceiling stays as a host safety net. | Accepted 2026-10-04 ("we don't need the memory budget in the language at all for now") |
 | D1–D4 | One-count RC: live-place iteration, non-storable dictionary views, MUT-EXCLUSIVE-4, a saturating 32-bit count | Accepted 2026-10-04 (the recommended options in the one-count plan §4.2) |
+| **L4** | The optimized (LLVM) path may target one platform for now: x86-64 Linux with AVX2 (the alderlake-class host). QBE stays the fast Debug backend and a correctness reference, with no performance goal. | Accepted 2026-10-04 ("I'm okay with it only working with one platform for now") |
 
 ### 2.1 L1: the comparator
 
@@ -245,6 +257,42 @@ by a few percent, so the counts below may shift slightly when WP-0 recomputes th
 T21 showed that a 32-byte padding change alone moves that row from 1.149× to 1.008×.
 The single-change gains being judged are about the same size as these layout effects.
 
+### 3.1 Ideal-ladder pilot: `integer_math`
+
+Source, commands and full results: `experiments/runtime-ideal-ladder-20261004/`.
+
+**What was built.** The kernel was re-implemented in C as a ladder: each version gives the
+compiler one more fact. Every version reproduces the benchmark checksum. These are
+exploratory timings on a non-timing CPU of a busy host.
+
+| Version | vs Rust (large) | Cycles/elem |
+|---|---:|---:|
+| mylang LLVM today | 1.87 | 11.4 |
+| Rust (fastest arm) | 1.00 | 5.8 |
+| + L2 sticky checks, immutable list, one bounds check | 2.04 | — |
+| + element range 0..1008 (i64 and floor kept) | 0.31 | 1.75 |
+| + u16 storage and u16 arithmetic, plain C | — | 2.4× better than the previous step (measured in a later, busier run: 0.87 vs 2.06) |
+| Hand AVX2 intrinsics, i64 storage | 0.08 | 0.48 |
+| Hand AVX2 intrinsics, u16 storage | 0.06 | 0.35 |
+
+**What it shows.**
+
+1. **The fact that matters is the element range.** It comes from the comprehension that
+   builds `values`, which is never mutated, so value semantics makes it provable.
+   - Rust and Zig lose that fact because the data passes through memory.
+   - With the fact, checks are omitted under the existing RELEASE-CHECKED-1, and LLVM
+     vectorizes on its own.
+2. **L2-style checks gave nothing on this kernel.** WP-3's value is for data whose range is
+   unknown.
+3. **LLVM does not narrow i64 arithmetic itself.** The front end must emit the narrowest
+   proven width.
+   - QBE IL cannot express 16-bit arithmetic or vectors at all.
+   - Hand vectorization adds another ~2× over LLVM's best from C.
+   - The estimated hardware floor is ~0.25 cycles/elem.
+4. **The levers need a front end that knows ranges, widths and loop shape.** These are
+   exactly what the QBE IL → LLVM translation cannot carry without a growing comment-marker
+   side channel. WP-8 tests the alternative.
+
 ## 4. Work packages
 
 Paths are relative to the campaign worktree. Sizes: S ≤ 1 day, M a few days, L a week or more.
@@ -354,7 +402,10 @@ knows.
      loads, which never change after construction;
    - add `nonnull`/`dereferenceable` on that pointer;
    - replace `inttoptr(i64 slot)` with real `ptr` for the list base;
-   - add `!range` on `kind`.
+   - add `!range` on `kind`;
+   - **as its own step**, add `!range` (or `llvm.assume`) on the element loads of `values`
+     (0..1008) and on `phase` (0..16). The pilot (§3.1) shows this is the fact that unlocks
+     vectorization, so measure it separately from the steps above.
 3. Compile the hand-edited `.ll` with the same `-cc1`/LTO flags. Link it, and check that its
    checksums match the unedited build.
 4. Inspect the assembly for `integer_math`, `call_direct`, `branch_predictable` and
@@ -362,19 +413,25 @@ knows.
 5. Time the edited guest against the unedited one in the same session (paired 15r/3w, both
    sizes, these four rows).
 
-**Decision rule for WP-6.**
-- **If** the edited build moves the four rows by about 10% or more, **or** removes the
-  in-loop bounds check and reloads, WP-6 proceeds.
-- **Otherwise** record the null result. WP-6 then shrinks to its collection items (6c)
-  only.
+**Use of the result.** WP-2 is one of three inputs to the Wave 1 decision (§5). It
+measures how far facts carried through today's translator get. For each step, report:
+- the speed change;
+- whether the in-loop bounds check, the reloads and the scalar loop are gone;
+- whether LLVM vectorized.
 
 **Deliverable.** An experiment note under `experiments/runtime-llvm-facts-20261004/`
 containing the edited `.ll` diff, assembly extracts, checksums and the paired report.
 
-### WP-3 Trap regions (L2) — M, spec now, implementation in stages
+### WP-3 Trap regions (L2) — M, spec now; Stages A–C after the Wave 1 decision
 
 **Goal.** Implement L2, then use it to replace exact-fallback machinery with simpler, faster
 code.
+
+**Pilot finding (§3.1).** On `integer_math`, sticky overflow flags plus a hoisted bounds
+check gave no gain. Range facts removed the checks under today's RELEASE-CHECKED-1 instead.
+- Keep steps 1–2 (spec and mode plumbing) in Wave 1.
+- Schedule Stages A–C after the Wave 1 decision. Prioritize loops whose data comes from
+  input, where no range is known; that is where L2 is the only route to vectorization.
 
 **Facts.**
 - **Overflow checks** are emitted in `src/qbe_scalar.zig`:
@@ -545,7 +602,11 @@ hold, scope-capture or loan paths. That includes `scope_capture*` and `myl_rc_sc
 `dict_lookup*`, `dict_update*`, `set_dedup`, `lox_eval`, `tagged_stack` and
 `mutate_shared` rows under L1 after C6 and after C7.
 
-### WP-6 Give LLVM the facts — M/L, after WP-2
+### WP-6 Give LLVM the facts — ON HOLD until the Wave 1 decision (§5)
+
+**Hold.** Do not start 6a or 6b. They extend the comment-marker channel, which a direct
+emitter (WP-8) would replace. 6c (typed collection operations) is useful on either path; it
+may start after the decision, or earlier if the coordinator needs it for WP-5.
 
 **Goal.** Make LLVM see what value semantics guarantees, so it can do the work that is
 currently hand-built ahead of it. That pre-LLVM work today includes:
@@ -593,9 +654,7 @@ probe entry points selected at compile time, generic fallback kept) to:
 Prefer one generic implementation, specialized per key/value kind, over hand-written copies.
 Coordinate with WP-5: these paths also carry hold/loan calls.
 
-**6d. Design only: emit LLVM from typed bytecode.** Write a design note (no code) for a
-direct typed-bytecode → LLVM emitter that keeps QBE as the fast-compile backend. Start it
-only if 6a hits a wall the WP-2 experiment did not predict.
+**6d. Superseded by WP-8**, the direct-emitter spike run in Wave 1.
 
 **Acceptance per item.**
 - Full gate (CLAUDE.md), `zig build test-qbe`, `zig build test-qbe-build` and `fmt-check`.
@@ -652,14 +711,121 @@ and `string_split` without changing any surface syntax.
 - `tests/lang/standard_json.my` and `text_views.my`.
 - Paired screens of the text rows and applications under L1.
 
+### WP-8 Direct typed-bytecode → LLVM spike — Claude lane, Wave 1 (decision input)
+
+**Owner and branch.**
+- A Claude agent owns this lane, not a Codex lane.
+- Branch `claude/llvm-direct-spike-20261004` from `claude/runtime-levers-plan` (the campaign's
+  `ac72a905` plus these documents), in its own locked worktree.
+- It is not integrated during Wave 1.
+- The new path is off unless an environment flag enables it.
+
+**Question.** Can mylang's compiler emit LLVM IR directly from typed bytecode, carrying the
+facts value semantics proves? Does that reach the §3.1 hand-written levels automatically
+while keeping mylang's semantics?
+
+**Scope.**
+- **Region shape.** A separate emitter path handles one region shape: a counted loop over an
+  immutable `list[int]` (then `list[float]`) with a scalar body and a scalar reduction.
+  Everything else in the function stays on today's path. Regions it cannot prove fall back
+  unchanged.
+- **Facts, derived from bytecode analysis and never hard-coded:**
+  - the list is immutable after construction;
+  - element ranges come from the constructing comprehension;
+  - ranges of loop variables and invariants;
+  - the trip count is at most the length.
+- **What it emits:** real pointers with `noalias`/`readonly`; the narrowest proven integer
+  width; and, in milestone B, explicit vector code for the reduction.
+- **Checks:** none is emitted unless it is proven unnecessary. A region with an unproven
+  check is refused in the spike.
+
+**Milestones.**
+- **A.** A single-kernel mylang program shaped like `integer_math` (same checksum) reaches at
+  least the "element range" step of §3.1 automatically.
+- **B.** Narrow width and an explicit vector reduction reach the u16 and hand-intrinsics
+  steps.
+- **C.** The same machinery runs on `float_math` and `list_scan` shapes. Report what the real
+  compute benchmark's per-iteration `kind` dispatch requires.
+
+**Deliverable.** `experiments/llvm-direct-spike-20261004/README.md` containing:
+- the cycles/element ladder against Rust and today's mylang;
+- IR and assembly extracts;
+- what generalization needs: RC operations, trap traces (debug info or frame maps), the
+  ABI with functions on the QBE path, and compile-time cost;
+- a size estimate.
+
+**Acceptance.**
+- Identical checksums.
+- Focused tests for the analysis, covering both admitted and refused regions.
+- Guardian passes on every commit.
+- Default compiler behaviour is unchanged.
+
+### WP-9 Ideal ladder study — Claude lane, Wave 1 (decision input)
+
+**Owner and branch.**
+- A Claude agent owns this lane.
+- Branch `claude/ideal-ladder-20261004` from `claude/runtime-levers-plan`, in its own locked
+  worktree.
+- Files only under `experiments/runtime-ideal-ladder-20261004/`.
+
+**Cases.** Eight, in addition to `integer_math`:
+- `float_math`, `branch_mixed`, `list_filter`, `dict_lookup`, `tagged_stack`,
+  `string_split`;
+- one component of `json_transform`;
+- the dispatch loop of `lox_eval`.
+
+**Method per case.**
+1. Write a C ladder with `zig cc -O3` and native features, matching MyLang LLVM's policy.
+2. Add one fact or representation choice per step. Every step must reproduce the
+   benchmark checksum at both sizes.
+3. Step 0 implements today's mylang semantics.
+4. Make the last steps hand-vectorized or hand-structured where that applies.
+5. Add one **holdout** step whose data comes from arguments or a file instead of
+   in-program generation.
+
+**Classify every fact** as one of:
+- derivable by the compiler from today's source and rules;
+- needing a language rule;
+- needing the programmer to state it;
+- true of the fixture only, which is not allowed.
+
+**Measurement.**
+- Seven interleaved rounds per version.
+- Report cycles (`perf stat -e cpu_core/cycles/u`) and nanoseconds.
+- Pin to CPU 10, never CPUs 2–3.
+- The results are exploratory, not campaign evidence.
+
+**Deliverable.** A README with:
+- one ladder table per case;
+- a cross-case table: fact → cases → gain → category → the WP or language feature it implies.
+
 ## 5. Order, lanes and file ownership
 
 ```
-Wave 1 (now):     WP-0 | WP-1 | WP-2 | WP-4 steps 1-4 | WP-3 step 1-2 | one-count G0/G1/C0
-Wave 2:           WP-3 Stage A/B | WP-4 steps 5-6 | WP-6a (if WP-2 passes) | WP-7 | one-count C2/C6
-Wave 3:           WP-6b/6c | WP-3 clean-up | one-count C3-C8 (after G5)
+Wave 1 (now):     WP-0 | WP-1 | WP-2 | WP-4 steps 1-4 | WP-3 steps 1-2 | one-count G0/G1/C0
+                  + Claude lanes: WP-8 spike | WP-9 ladder study
+Decision:         markers (WP-6a/6b) or direct emitter (from WP-8), chosen by the user
+Wave 2:           WP-4 steps 5-6 | WP-7 | one-count C2/C6 | the chosen LLVM-facts route
+                  | WP-3 Stages A/B (data-from-input loops first)
+Wave 3:           WP-6c | WP-3 clean-up | one-count C3-C8 (after G5)
 Each wave ends:   integrated full 80-row screen under L1, then the independent confirmation
 ```
+
+**Wave 1 decision point.** This happens before any Wave 2 lane starts.
+
+The inputs:
+- **WP-2:** how far facts carried through today's translator get.
+- **WP-8:** whether a direct emitter reaches the hand-written levels automatically, and what
+  generalizing it costs.
+- **WP-9:** whether the same levers hold across eight more cases, and which facts need
+  language features.
+
+The choice, which the user makes:
+- **(a) Continue WP-6a/6b** on the marker channel.
+- **(b) Build a direct typed-bytecode → LLVM emitter.**
+  - It goes function by function, falling back to today's path, and is LLVM-only per L4.
+  - It replaces WP-6a/6b and, over time, the hand-built pre-LLVM loop passes.
+  - QBE stays for Debug builds and as a correctness reference.
 
 **One owner per shared file per wave.** Other lanes send interface requests or follow-up
 patches to that owner.
