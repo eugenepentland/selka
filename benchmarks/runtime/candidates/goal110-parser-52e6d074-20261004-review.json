@@ -118,5 +118,12 @@
     "directory": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-20261003/experiments/runtime-goal110-int-parse-20261004",
     "raw_archive_bindings_checked": 14,
     "source_and_helper_hashes_checked": 8
+  },
+  "search_static_review": {
+    "status": "pass",
+    "evidence_commit": "70666035",
+    "relocation_normalized_bodies_independently_replayed": 3,
+    "archive_bindings_checked": 15,
+    "scope": "Caller kernel, octet scanner and index walker preserve normalized instructions, including instruction offsets and NOPs. Their placements change; causality remains unproven."
   }
 }

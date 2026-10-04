@@ -9,8 +9,9 @@ the raw evidence for every reported result.
 
 <!-- STATUS-START -->
 - **Campaign:** active; sorting improvement integrated with a documented QBE tradeoff.
-- **Last document update:** 2026-10-04 04:04:40 UTC.
-- **Active batch:** integer-parser results under review; scalar-storage lowering under investigation.
+- **Last document update:** 2026-10-04 04:18:15 UTC.
+- **Active batch:** certified list-readiness inlining, search alignment, and
+  scalar-address lowering diagnostics.
 - **Current implementation:** `perf/runtime-parity-20261003`, production source
   `63df6b6c481b12fd711755ec40cdcb5d1c984ccc`, equivalent to sorting `8043c4d9`.
 - **Latest complete integrated measurement:** B0, before join and sorting changes.
@@ -20,11 +21,10 @@ the raw evidence for every reported result.
 - **LLVM states:** 71 above target, three observations awaiting confirmation,
   six stale confirmations. Mixed revisions remain visible; this is not a full-suite pass.
 - **Dashboard artifact:** [After sorting integration](candidates/goal110-dashboard-20261004-sort.json).
-- **Active operations:** parser `52e6d074` passed grammar and guest checks and
-  reduced the integer parser's stack frame. Its paired screen shows only a
-  modest parsing gain and a repeated 16.8% LLVM large-search slowdown; it stays
-  unintegrated while the search interaction is investigated.
-  Scalar-slot `a29aa6a9` leaves machine code unchanged, so its timing was skipped.
+- **Active operations:** readiness `63842d3c` passed720 qualifications and516
+  holdouts and is next for timing. Scanner alignment `57034382` is built and
+  finishing nearby-input checks. The strict and hybrid scalar-pointer changes
+  both leave actual optimized code unchanged and are being deferred.
 - **Sorting tradeoff:** repeated small LLVM integer-sort improvement of 17.6%
   is accepted alongside an 11.0% large QBE nested-mutation regression. The QBE
   nested instruction stream is unchanged; code/data layout is a hypothesis,
@@ -499,6 +499,10 @@ Append entries; do not remove failed experiments or historical outcomes.
 | 2026-10-04 03:57:20 UTC | Isolated integer parser `52e6d074` | Five-round six-arm screen passes360 samples/720 qualifications: LLVM parsing2.2723/2.2453× current fastest. The matched5a→52 pair passes288 outcomes: parsing0.95216/0.97983 after/before, formatting1.02454/1.04157, CSV0.99477/1.01780, JSON1.00528/1.00116, search1.00481/1.16849 and join1.02304/0.97588 (small/large). QBE parsing0.97307/0.98996 and join0.87108/0.83008. Root independently replayed all288 outcomes/medians and four live hashes; the [review](candidates/goal110-parser-52e6d074-20261004-review.json) retains the result. | Keep52 unintegrated: the modest parsing gain accompanies another16.8% large LLVM search regression. The same blocker now follows an independent parser change, so inspect exact search code/layout before more text iteration. Scalar direct-address mapping and certified list-readiness inlining are in static investigation. Integrated dashboard unchanged. |
 
 | 2026-10-04 04:04:40 UTC | Diagnostic artifact incident | Live hashes caught modified Debug5a compute controls, last written03:44:39. The static inspection used `objcopy --dump-section` without a separate output ELF, which rewrites the input. Only compute controls changed; root verified text, collections and legacy hashes still match. No measured compute run used the modified files. Parser52 review independently passes288 paired outcomes, four live text hashes,360 six-arm samples/720 qualifications and14 archive bindings. | Quarantine the changed compute artifacts; preserve the failure and compare loadable sections before recovering pristine controls into new paths. Existing text/sorting timings remain bound to unchanged bytes. Use read-only disassembly tools or a disposable output ELF. Source optimization work continues. |
+
+| 2026-10-04 04:11:30 UTC | Readiness `63842d3c`; search and scalar diagnostics | Actual LLVM retains13 ordinary readiness calls, including a reachable certified sort-comprehension guard. The candidate chooses the existing hot alias under the identical proof;20 focused tests,53 native ASan/UBSan cases andGuardian88 pass. The empty-list append guard refuses its capacity check, so append is a control, not a claimed direct beneficiary. Parser52 search caller/helper bodies are identical after relocation normalization but move32 bytes modulo64; a scanner-only alignment probe is planned. Disposable objcopy replay confirms ELF-header/section-table rewriting without allocated-section changes. | No new timing or acceptance. Build readiness separately, test scanner alignment as a hypothesis, and recover source-bound compute controls into fresh paths before further scalar diagnosis. Prior mutated files and the incident remain preserved. |
+
+| 2026-10-04 04:18:15 UTC | Static scalar rejection; readiness638 and alignment570 readying | Hybrid direct-address lowering passes37 LLVM tests,12 identical emitted SSA units and108 untimed checks but produces an ELF byte-identical to a fresh accepted-source compute control. No timing/full host rebuild is warranted. Root verified all24 recovered guest hashes,16 external reference hashes and both compute allocated-section/program-header identities in the [recovery review](candidates/goal110-control-recovery-20261004-review.json). Readiness638 passes720 qualifications/516 holdouts; alignment570 passes31,104 native boundary cases and is finishing guest checks. | Defer scalar-pointer optimization and preserve its incident/negative evidence. Screen readiness first, then alignment; scanner, caller and index-walker placements all change, so the alignment experiment cannot isolate one address change. No accepted rows changed. |
 
 For future entries, include the affected cases/sizes/backends and before → after
 ratios, or say explicitly that the step produced no timing result. Link long

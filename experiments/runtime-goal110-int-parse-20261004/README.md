@@ -53,3 +53,14 @@ repeated search regression. No extra timing or confirmation was run.
 evidence.json retains exact commands, native checks, receipt/assets/manifest,
 raw/archive hashes, both reports and matched-host parser disassembly. The next
 step is a causal search-helper/layout investigation; no cause is claimed yet.
+
+Read-only search diagnosis binds the exact before/after hashes from the pair.
+The scanner (772 bytes), index helper (1659 bytes) and actual shared kernel
+(11984 bytes) have identical relocation-normalized instructions, including all
+relative instruction/branch offsets and NOPs. The kernel entry and timed search
+loop move from a 64-byte boundary to offset32; the scanner does too. The index
+helper moves from offset32 to a boundary. Several placements changed, so this
+is a correlation rather than a proven cause. search-layout.py records the exact
+normalization, literal relocation mappings and backward targets; its read-only
+objdump/nm inputs and outputs are archived in search-layout-evidence.json.
+A separate scanner alignment diagnostic follows under unchanged algorithms.

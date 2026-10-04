@@ -1,0 +1,33 @@
+{
+  "schema": "mylang-control-recovery-coordinator-review-v1",
+  "status": "pass",
+  "reviewed_utc": "2026-10-04T04:16:22.708240+00:00",
+  "agent_receipt": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/experiments/runtime-goal110-scalar-slots-20261004/recovery-verification.json",
+  "agent_receipt_sha256": "bfb0e13ffa11eb05df61fa9d7e4e011242f437fa6206b6ad4caf9e4d00abd19e",
+  "new_manifest": "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/.mylang-cache/goal110-join-objcopy-recovery-20261004/runner/manifest.json",
+  "new_manifest_sha256": "a5da83884425db6a06fc83d936b1503f8c1560c23203bc41a03f1c00883d36bf",
+  "live_guest_hashes_checked": 24,
+  "clock_checked": true,
+  "unchanged_external_reference_hashes": 16,
+  "compute_rows": [
+    {
+      "backend": "llvm",
+      "retired_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/.mylang-cache/goal110-join/join-runner/bin/compute-my-llvm",
+      "retired_mutated_sha256": "fa609878afefc2a5cf73af24a1a3bb55748761150b39f6882ec0ad8f317d326b",
+      "recovered_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/.mylang-cache/goal110-join-objcopy-recovery-20261004/runner/bin/compute-my-llvm",
+      "recovered_sha256": "4dd2666d4377d494db144e43b03fa8e92e2f8452797690f0ec40fe7aac193e67",
+      "allocated_sections_identical": 26,
+      "entry_and_program_headers_identical": true
+    },
+    {
+      "backend": "qbe",
+      "retired_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/.mylang-cache/goal110-join/join-runner/bin/compute-my-qbe",
+      "retired_mutated_sha256": "aa3cae5ab71c1ea98af1fe122241c0ef6aa7d11d3989ad881695e34a739d6625",
+      "recovered_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/.mylang-cache/goal110-join-objcopy-recovery-20261004/runner/bin/compute-my-qbe",
+      "recovered_sha256": "e98077fe7c1f54d787c1e1886a1183348691040561f5fc005b67cfd708cf118a",
+      "allocated_sections_identical": 26,
+      "entry_and_program_headers_identical": true
+    }
+  ],
+  "scope": "Independently compared all SHF_ALLOC section names/types/flags/addresses/sizes/alignments/entry sizes and payloads, entry point, program headers between retired rewritten controls and fresh source-bound controls. Original whole-ELF bytes were not recovered; old receipts remain unchanged. No new timing or correctness execution in this replay."
+}
