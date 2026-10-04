@@ -1,0 +1,528 @@
+{
+  "source_revision": "52e6d0740da7e29a4bf95ad2e04e73c85dbfdf79",
+  "before_source": "5a60ef1039aca32657ef5877a464eb8a81d6c115",
+  "compiler_policy": "Debug hosts; RF guests; LLVM O3/full LTO; QBE; unchanged verified external references",
+  "status": "unintegrated; repeated large LLVM search regression prevents adoption",
+  "paired_effects": [
+    {
+      "plan": {
+        "case": "int_parse",
+        "size": 64,
+        "profile": "small",
+        "seed": 42,
+        "group": "text",
+        "family": "conversion",
+        "level": "micro",
+        "unit": "one strict signed decimal parse",
+        "iterations": 10000000,
+        "expected": 841562451,
+        "calibration": {
+          "fastest_ns": 47915713,
+          "slowest_ns": 306274950,
+          "target_ns": 50000000,
+          "slowest_cap_ns": 1000000000,
+          "iteration_cap": 10000000,
+          "reason": "iteration_cap",
+          "limited": true,
+          "target_reached": false,
+          "slowest_budget_exceeded": false
+        }
+      },
+      "medians_ns_per_op": {
+        "before-llvm": 11.7304778,
+        "after-llvm": 11.169339,
+        "before-qbe": 20.991286,
+        "after-qbe": 20.4260584
+      },
+      "after_before_ratios": {
+        "llvm": 0.9521640286468128,
+        "qbe": 0.9730732266712959
+      }
+    },
+    {
+      "plan": {
+        "case": "int_parse",
+        "size": 4096,
+        "profile": "large",
+        "seed": 42,
+        "group": "text",
+        "family": "conversion",
+        "level": "micro",
+        "unit": "one strict signed decimal parse",
+        "iterations": 8581575,
+        "expected": 754849610,
+        "calibration": {
+          "fastest_ns": 48371791,
+          "slowest_ns": 296259166,
+          "target_ns": 50000000,
+          "slowest_cap_ns": 1000000000,
+          "iteration_cap": 10000000,
+          "reason": "slowest_arm_budget",
+          "limited": true,
+          "target_reached": false,
+          "slowest_budget_exceeded": false
+        }
+      },
+      "medians_ns_per_op": {
+        "before-llvm": 12.770824819453306,
+        "after-llvm": 12.51330064702575,
+        "before-qbe": 21.81661140291846,
+        "after-qbe": 21.597624911510998
+      },
+      "after_before_ratios": {
+        "llvm": 0.9798349616357371,
+        "qbe": 0.9899623966635731
+      }
+    },
+    {
+      "plan": {
+        "case": "int_format",
+        "size": 64,
+        "profile": "small",
+        "seed": 42,
+        "group": "text",
+        "family": "conversion",
+        "level": "micro",
+        "unit": "one signed decimal formatting and output fold",
+        "iterations": 3160417,
+        "expected": 704575320,
+        "calibration": {
+          "fastest_ns": 53156959,
+          "slowest_ns": 302334259,
+          "target_ns": 50000000,
+          "slowest_cap_ns": 1000000000,
+          "iteration_cap": 10000000,
+          "reason": "target",
+          "limited": false,
+          "target_reached": true,
+          "slowest_budget_exceeded": false
+        }
+      },
+      "medians_ns_per_op": {
+        "before-llvm": 66.41017530281606,
+        "after-llvm": 68.03957104394769,
+        "before-qbe": 96.34192006940856,
+        "after-qbe": 95.06679055327193
+      },
+      "after_before_ratios": {
+        "llvm": 1.02453533263091,
+        "qbe": 0.9867645411756588
+      }
+    },
+    {
+      "plan": {
+        "case": "int_format",
+        "size": 4096,
+        "profile": "large",
+        "seed": 42,
+        "group": "text",
+        "family": "conversion",
+        "level": "micro",
+        "unit": "one signed decimal formatting and output fold",
+        "iterations": 2780407,
+        "expected": 901529575,
+        "calibration": {
+          "fastest_ns": 48254167,
+          "slowest_ns": 271717609,
+          "target_ns": 50000000,
+          "slowest_cap_ns": 1000000000,
+          "iteration_cap": 10000000,
+          "reason": "slowest_arm_budget",
+          "limited": true,
+          "target_reached": false,
+          "slowest_budget_exceeded": false
+        }
+      },
+      "medians_ns_per_op": {
+        "before-llvm": 66.87850555692026,
+        "after-llvm": 69.6587165116474,
+        "before-qbe": 99.1945974096598,
+        "after-qbe": 97.8915374619615
+      },
+      "after_before_ratios": {
+        "llvm": 1.0415710687847368,
+        "qbe": 0.9868635996140309
+      }
+    },
+    {
+      "plan": {
+        "case": "csv_aggregate",
+        "size": 16,
+        "profile": "small",
+        "seed": 42,
+        "group": "text",
+        "family": "text_application",
+        "level": "application",
+        "unit": "one complete CSV parse/validate/group/fold job",
+        "iterations": 15087,
+        "expected": 242900700,
+        "calibration": {
+          "fastest_ns": 49777522,
+          "slowest_ns": 447223563,
+          "target_ns": 50000000,
+          "slowest_cap_ns": 1000000000,
+          "iteration_cap": 10000000,
+          "reason": "slowest_arm_budget",
+          "limited": true,
+          "target_reached": false,
+          "slowest_budget_exceeded": false
+        }
+      },
+      "medians_ns_per_op": {
+        "before-llvm": 20153.80042420627,
+        "after-llvm": 20048.460197521046,
+        "before-qbe": 29705.72015642606,
+        "after-qbe": 29987.577914761052
+      },
+      "after_before_ratios": {
+        "llvm": 0.9947731829993363,
+        "qbe": 1.0094883327807158
+      }
+    },
+    {
+      "plan": {
+        "case": "csv_aggregate",
+        "size": 256,
+        "profile": "large",
+        "seed": 42,
+        "group": "text",
+        "family": "text_application",
+        "level": "application",
+        "unit": "one complete CSV parse/validate/group/fold job",
+        "iterations": 862,
+        "expected": 4542037,
+        "calibration": {
+          "fastest_ns": 51406197,
+          "slowest_ns": 424955685,
+          "target_ns": 50000000,
+          "slowest_cap_ns": 1000000000,
+          "iteration_cap": 10000000,
+          "reason": "target",
+          "limited": false,
+          "target_reached": true,
+          "slowest_budget_exceeded": false
+        }
+      },
+      "medians_ns_per_op": {
+        "before-llvm": 335180.54176334105,
+        "after-llvm": 341145.3062645012,
+        "before-qbe": 484902.2505800464,
+        "after-qbe": 496020.1125290023
+      },
+      "after_before_ratios": {
+        "llvm": 1.0177956765323557,
+        "qbe": 1.0229280477367482
+      }
+    },
+    {
+      "plan": {
+        "case": "json_transform",
+        "size": 16,
+        "profile": "small",
+        "seed": 42,
+        "group": "text",
+        "family": "text_application",
+        "level": "application",
+        "unit": "one complete JSON parse/filter/transform/serialize/fold job",
+        "iterations": 6470,
+        "expected": 247147134,
+        "calibration": {
+          "fastest_ns": 50589817,
+          "slowest_ns": 746112107,
+          "target_ns": 50000000,
+          "slowest_cap_ns": 1000000000,
+          "iteration_cap": 10000000,
+          "reason": "target",
+          "limited": false,
+          "target_reached": true,
+          "slowest_budget_exceeded": false
+        }
+      },
+      "medians_ns_per_op": {
+        "before-llvm": 59121.41097372489,
+        "after-llvm": 59433.76893353941,
+        "before-qbe": 94968.90355486862,
+        "after-qbe": 96841.6400309119
+      },
+      "after_before_ratios": {
+        "llvm": 1.005283330601723,
+        "qbe": 1.019719470331268
+      }
+    },
+    {
+      "plan": {
+        "case": "json_transform",
+        "size": 256,
+        "profile": "large",
+        "seed": 42,
+        "group": "text",
+        "family": "text_application",
+        "level": "application",
+        "unit": "one complete JSON parse/filter/transform/serialize/fold job",
+        "iterations": 392,
+        "expected": 264073914,
+        "calibration": {
+          "fastest_ns": 57287729,
+          "slowest_ns": 683000779,
+          "target_ns": 50000000,
+          "slowest_cap_ns": 1000000000,
+          "iteration_cap": 10000000,
+          "reason": "target",
+          "limited": false,
+          "target_reached": true,
+          "slowest_budget_exceeded": false
+        }
+      },
+      "medians_ns_per_op": {
+        "before-llvm": 908756.1198979592,
+        "after-llvm": 909808.6556122449,
+        "before-qbe": 1481717.2040816327,
+        "after-qbe": 1516680.2653061224
+      },
+      "after_before_ratios": {
+        "llvm": 1.0011582158196677,
+        "qbe": 1.0235963118523415
+      }
+    },
+    {
+      "plan": {
+        "case": "string_search",
+        "size": 64,
+        "profile": "small",
+        "seed": 42,
+        "group": "text",
+        "family": "strings",
+        "level": "micro",
+        "unit": "one substring search",
+        "iterations": 2388616,
+        "expected": 84198714,
+        "calibration": {
+          "fastest_ns": 53803916,
+          "slowest_ns": 236393181,
+          "target_ns": 50000000,
+          "slowest_cap_ns": 1000000000,
+          "iteration_cap": 10000000,
+          "reason": "target",
+          "limited": false,
+          "target_reached": true,
+          "slowest_budget_exceeded": false
+        }
+      },
+      "medians_ns_per_op": {
+        "before-llvm": 19.832816576628474,
+        "after-llvm": 19.928208636298173,
+        "before-qbe": 25.522104850675035,
+        "after-qbe": 25.439511415815687
+      },
+      "after_before_ratios": {
+        "llvm": 1.0048098090002058,
+        "qbe": 0.9967638470516994
+      }
+    },
+    {
+      "plan": {
+        "case": "string_search",
+        "size": 4096,
+        "profile": "large",
+        "seed": 42,
+        "group": "text",
+        "family": "strings",
+        "level": "micro",
+        "unit": "one substring search",
+        "iterations": 302090,
+        "expected": 619662111,
+        "calibration": {
+          "fastest_ns": 34863994,
+          "slowest_ns": 1012244715,
+          "target_ns": 50000000,
+          "slowest_cap_ns": 1000000000,
+          "iteration_cap": 10000000,
+          "reason": "slowest_arm_budget",
+          "limited": true,
+          "target_reached": false,
+          "slowest_budget_exceeded": true
+        }
+      },
+      "medians_ns_per_op": {
+        "before-llvm": 88.51314177894005,
+        "after-llvm": 103.42692244033235,
+        "before-qbe": 93.69024462908405,
+        "after-qbe": 96.11848786785396
+      },
+      "after_before_ratios": {
+        "llvm": 1.1684922754028908,
+        "qbe": 1.0259177809641038
+      }
+    },
+    {
+      "plan": {
+        "case": "string_join",
+        "size": 64,
+        "profile": "small",
+        "seed": 42,
+        "group": "text",
+        "family": "strings",
+        "level": "micro",
+        "unit": "one full fragment join and output fold",
+        "iterations": 217693,
+        "expected": 532286818,
+        "calibration": {
+          "fastest_ns": 54945850,
+          "slowest_ns": 103115365,
+          "target_ns": 50000000,
+          "slowest_cap_ns": 1000000000,
+          "iteration_cap": 10000000,
+          "reason": "target",
+          "limited": false,
+          "target_reached": true,
+          "slowest_budget_exceeded": false
+        }
+      },
+      "medians_ns_per_op": {
+        "before-llvm": 239.65031029936654,
+        "after-llvm": 245.17169592040167,
+        "before-qbe": 309.9214398258097,
+        "after-qbe": 269.9664481632391
+      },
+      "after_before_ratios": {
+        "llvm": 1.0230393426744908,
+        "qbe": 0.8710802592907828
+      }
+    },
+    {
+      "plan": {
+        "case": "string_join",
+        "size": 4096,
+        "profile": "large",
+        "seed": 42,
+        "group": "text",
+        "family": "strings",
+        "level": "micro",
+        "unit": "one full fragment join and output fold",
+        "iterations": 4201,
+        "expected": 363020326,
+        "calibration": {
+          "fastest_ns": 53923740,
+          "slowest_ns": 129163685,
+          "target_ns": 50000000,
+          "slowest_cap_ns": 1000000000,
+          "iteration_cap": 10000000,
+          "reason": "target",
+          "limited": false,
+          "target_reached": true,
+          "slowest_budget_exceeded": false
+        }
+      },
+      "medians_ns_per_op": {
+        "before-llvm": 13013.14210902166,
+        "after-llvm": 12699.319685789098,
+        "before-qbe": 13854.348726493692,
+        "after-qbe": 11500.248512258986
+      },
+      "after_before_ratios": {
+        "llvm": 0.9758841930255262,
+        "qbe": 0.8300822174532855
+      }
+    }
+  ],
+  "source_check_script_hashes": {
+    "src/native_format.zig": "163e14ee0083893aed3a1ce74bf62d6345fe241d937623959817c5e0a2be08f7",
+    "src/number_text.zig": "dc73e4fcdaf4d9ecf21f895133884b91e836afe321b450bb4b5226662786820c",
+    "src/number_text_test.zig": "5c14b6bf394fd62198953177ba9cc29e2adc5de4905169f92e9e0835e689b611",
+    "experiments/runtime-goal110-int-parse-20261004/native-format-tests.log": "706e140ad671c3b96183b178204ca69ffaeba93f04d7fca3895b38678fa54598",
+    "experiments/runtime-goal110-int-parse-20261004/number-grammar-tests.log": "87120fcb3dddf6ea23a603304d33586f33abbaeee764b28e556af0f856a8f897",
+    "experiments/runtime-goal110-int-parse-20261004/time-guests.py": "b14e0fe0fe0bc171f9d14238afd808f6faf8b99339f4a3f461376d19fe48b276",
+    "experiments/runtime-goal110-int-parse-20261004/guest-checks.py": "b293ff4497a50f731e15749e9f204919813845d23c70e854acb5461790922792",
+    "experiments/runtime-goal110-int-parse-20261004/commands.json": "818c53e73a3b57cff5546035bf29a22f1440b6d72161f8f09fd8d81ba566e06c"
+  },
+  "retained": [
+    {
+      "raw": "/home/epentland/ai/canopy/mylang-worktrees/goal110-int-parse-20261004/.mylang-cache/goal110-int-parse/compiler-receipt.json",
+      "raw_sha256": "6ede7d7f71b7d3738e9fb4f5976f529fbc485356d1848f71b2473ae79a06499d",
+      "archive": "experiments/runtime-goal110-int-parse-20261004/compiler-receipt.json.gz",
+      "archive_sha256": "48675d7fe16fadee62c50ac471f59a29bb51e1cf296f4ce954c15071aebeab73"
+    },
+    {
+      "raw": "/home/epentland/ai/canopy/mylang-worktrees/goal110-int-parse-20261004/.mylang-cache/goal110-int-parse/compiler-build.log",
+      "raw_sha256": "c56cc05ed61dacd55894d7167ebfbdb45f3cca2c32040383df7a2d7e754828cf",
+      "archive": "experiments/runtime-goal110-int-parse-20261004/compiler-build.log.gz",
+      "archive_sha256": "83549e0563c8cdd801c008810fd6118cdb1ad6293ade617e9040d850c9fe895d"
+    },
+    {
+      "raw": "/home/epentland/ai/canopy/mylang-worktrees/goal110-int-parse-20261004/.mylang-cache/goal110-int-parse/guests-build-driver.log",
+      "raw_sha256": "45b25674f9497f6d6b9cbc583db55099fb289fd5c7c20e69cf0808bbad23aa97",
+      "archive": "experiments/runtime-goal110-int-parse-20261004/guests-build-driver.log.gz",
+      "archive_sha256": "92139515fcd3a1545dc2b2a3e434185abcf488a59f7b3e1e5a0ce64ed13293e1"
+    },
+    {
+      "raw": "/home/epentland/ai/canopy/mylang-worktrees/goal110-int-parse-20261004/.mylang-cache/goal110-int-parse/text-guest-checks.json",
+      "raw_sha256": "b8a2b2be5bbae13e42032ce2a3ee1e1c4da5d839888f1729a3ce2857faf47c03",
+      "archive": "experiments/runtime-goal110-int-parse-20261004/text-guest-checks.json.gz",
+      "archive_sha256": "135055d80aefa4e2c46bed1206c065dbfa331e734ab0c9456601022c4762b1aa"
+    },
+    {
+      "raw": "/home/epentland/ai/canopy/mylang-worktrees/goal110-int-parse-20261004/.mylang-cache/goal110-int-parse/validation.log",
+      "raw_sha256": "38d59037b963d824cd90d8ed6b222e0b55c36e9d47252a48697e307996c87737",
+      "archive": "experiments/runtime-goal110-int-parse-20261004/validation.log.gz",
+      "archive_sha256": "b10aba09edcd6b1eeb755636372f32e70b0cac233cfdf043ac38bae561218299"
+    },
+    {
+      "raw": "/home/epentland/ai/canopy/mylang-worktrees/goal110-int-parse-20261004/.mylang-cache/goal110-int-parse/parser-screen.json",
+      "raw_sha256": "b19d97add63777ce3759d71f6c701f52f1ee9ec110cd4c7f816b8a63de792815",
+      "archive": "experiments/runtime-goal110-int-parse-20261004/parser-screen.json.gz",
+      "archive_sha256": "9a420ae0256f3c60c44e493247f8f981e85f30422099c9e83dad0a023353964c"
+    },
+    {
+      "raw": "/home/epentland/ai/canopy/mylang-worktrees/goal110-int-parse-20261004/.mylang-cache/goal110-int-parse/parser-screen.log",
+      "raw_sha256": "71e32561f7e8b1d2b05da42950978f563feaf54cc84a6becf745f125d290d29e",
+      "archive": "experiments/runtime-goal110-int-parse-20261004/parser-screen.log.gz",
+      "archive_sha256": "bf710622bd5b0e6773c5fd364c20c062fbdc90da16f4606eb16f55fc8ac539ae"
+    },
+    {
+      "raw": "/home/epentland/ai/canopy/mylang-worktrees/goal110-int-parse-20261004/.mylang-cache/goal110-int-parse/parser-before-after.json",
+      "raw_sha256": "6d2615ceaff55eeb3cc4213b9a1391f10a06b4f0ebc31ba62c53726c59872683",
+      "archive": "experiments/runtime-goal110-int-parse-20261004/parser-before-after.json.gz",
+      "archive_sha256": "bafa8d3b646072db357d230a6611b0fd82a176173e264f935cd8ca8b83f3eea3"
+    },
+    {
+      "raw": "/home/epentland/ai/canopy/mylang-worktrees/goal110-int-parse-20261004/.mylang-cache/goal110-int-parse/parser-before-after.log",
+      "raw_sha256": "79d0d05dae3fa0f9967b354f88cf93f4981326952617cff427b2ce2dd7184807",
+      "archive": "experiments/runtime-goal110-int-parse-20261004/parser-before-after.log.gz",
+      "archive_sha256": "6e441e7187e7e8777333937adc1fe06ce6d96a75797ca1ed24d5a1a157048d23"
+    },
+    {
+      "raw": "/home/epentland/ai/canopy/mylang-worktrees/goal110-int-parse-20261004/.mylang-cache/goal110-int-parse/parse-before-debug5a.asm",
+      "raw_sha256": "e34f6232f0a90dbbbfc3cb981ceeb9b25308f758290661b9955e0d23c6c3739d",
+      "archive": "experiments/runtime-goal110-int-parse-20261004/parse-before-debug5a.asm.gz",
+      "archive_sha256": "5541112d8836b56e3fcad10dbdc0d6f0590573ea33fcce0873cab6495f11d30d"
+    },
+    {
+      "raw": "/home/epentland/ai/canopy/mylang-worktrees/goal110-int-parse-20261004/.mylang-cache/goal110-int-parse/parse-after.asm",
+      "raw_sha256": "5937e59591f92caa52d656f9efe788f1672a4f91dd76828148d06b792a8a1ce4",
+      "archive": "experiments/runtime-goal110-int-parse-20261004/parse-after.asm.gz",
+      "archive_sha256": "c1174c5b819ad7531d1e517feb8d9811145251ddb8237d90287968aba2a93fec"
+    },
+    {
+      "raw": "/home/epentland/ai/canopy/mylang-worktrees/goal110-int-parse-20261004/.mylang-cache/goal110-int-parse/runner/manifest.json",
+      "raw_sha256": "7cb9deea12c18edc31dd818aaa8bda8450a88193307ffb64b5544bd8cd56f907",
+      "archive": "experiments/runtime-goal110-int-parse-20261004/manifest.json.gz",
+      "archive_sha256": "a9c7e4b931af875a0991c36446655044b1687413813843860d7742ca483305d4"
+    },
+    {
+      "raw": "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/.mylang-cache/goal110-join/join-compiler-receipt.json",
+      "raw_sha256": "6c0285cfcca85ade2fb6ef22aa4c1f1a25257b81e6230bb7c9fb7a19f11b7115",
+      "archive": "experiments/runtime-goal110-int-parse-20261004/before-compiler-receipt.json.gz",
+      "archive_sha256": "d89940d78c8edd68984f15a2bd8018846ef59cb4aedb697c79f442fee1323a4d"
+    },
+    {
+      "raw": "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/.mylang-cache/goal110-join/join-runner/manifest.json",
+      "raw_sha256": "ce91e4fa047ca147560dd073e07d92afeecc60e336dd1dfccc6aa913e639a410",
+      "archive": "experiments/runtime-goal110-int-parse-20261004/before-manifest.json.gz",
+      "archive_sha256": "34e5438798742111e0427b2025f44c92938dbaa843b5d91e851aa8017ad2b9b3"
+    }
+  ],
+  "static_observation": "Parser export shrinks from about3104 to410bytes, integer calls reserve no0x3b8 floating frame and save2rather than5callee registers.",
+  "timing_limit": "Five-round exploratory same-session comparisons, not optimized-policy confirmation or a causal layout test.",
+  "prerequisite": "Investigate exact baseline/candidate search-helper body and loop address shifts before further text candidate iteration.",
+  "provenance_limit": "Local receipt/live checks; no independent reproducibility attestation."
+}

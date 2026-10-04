@@ -9,8 +9,8 @@ the raw evidence for every reported result.
 
 <!-- STATUS-START -->
 - **Campaign:** active; sorting improvement integrated with a documented QBE tradeoff.
-- **Last document update:** 2026-10-04 03:47:10 UTC.
-- **Active batch:** integer-parser screen next; scalar-storage lowering under investigation.
+- **Last document update:** 2026-10-04 04:04:40 UTC.
+- **Active batch:** integer-parser results under review; scalar-storage lowering under investigation.
 - **Current implementation:** `perf/runtime-parity-20261003`, production source
   `63df6b6c481b12fd711755ec40cdcb5d1c984ccc`, equivalent to sorting `8043c4d9`.
 - **Latest complete integrated measurement:** B0, before join and sorting changes.
@@ -21,14 +21,17 @@ the raw evidence for every reported result.
   six stale confirmations. Mixed revisions remain visible; this is not a full-suite pass.
 - **Dashboard artifact:** [After sorting integration](candidates/goal110-dashboard-20261004-sort.json).
 - **Active operations:** parser `52e6d074` passed grammar and guest checks and
-  reduced the integer parser's stack frame; its exploratory timing is next.
+  reduced the integer parser's stack frame. Its paired screen shows only a
+  modest parsing gain and a repeated 16.8% LLVM large-search slowdown; it stays
+  unintegrated while the search interaction is investigated.
   Scalar-slot `a29aa6a9` leaves machine code unchanged, so its timing was skipped.
 - **Sorting tradeoff:** repeated small LLVM integer-sort improvement of 17.6%
   is accepted alongside an 11.0% large QBE nested-mutation regression. The QBE
   nested instruction stream is unchanged; code/data layout is a hypothesis,
   not an established cause. Small LLVM integer sorting still misses at 1.3607×.
-- **Next action:** screen parsing and its controls, then build the integrated
-  ReleaseFast source and recheck affected targets. No new completion claim.
+- **Next action:** investigate the repeated search slowdown and two compiler
+  mechanisms using existing artifacts before another host build. The parser
+  timing lane has ended; builds and checks have resumed. No new confirmations.
 
 | Backend | Required targets | Latest observed ≤1.10 | Latest observed >1.10 | Current goal confirmations |
 |---|---:|---:|---:|---:|
@@ -429,6 +432,8 @@ does not supply the new goal's confirmation protocol.
 
 | T7 | Sorting `8043c4d9`, integrated as `63df6b6c`; six-arm5r/1w and paired15r/3w repeat | [Archive](../../experiments/runtime-goal110-sort-rotation-20261004/README.md), [observed analysis](candidates/goal110-sort-8043c4d9-20261004-observed.json), [coordinator review](candidates/goal110-rejected-screens-20261004-0334-review.json) | LLVM small integer sort improves17.6%, still1.3607× fastest. QBE nested-large+11.0% is an explicit tradeoff. No goal confirmations. |
 
+| T8 | Unintegrated parser `52e6d074`; six-arm5r/1w and matched Debug5a paired screen | [Archive](../../experiments/runtime-goal110-int-parse-20261004/README.md), [paired raw](../../experiments/runtime-goal110-int-parse-20261004/parser-before-after.json.gz), [coordinator review](candidates/goal110-parser-52e6d074-20261004-review.json) | Modest parsing gains accompany a16.8% large LLVM search regression. No accepted rows changed. |
+
 B0 comparison JSON (uncompressed) SHA256:
 `dbb1906bcac50cb015171cce52ff68a0297f728db81e9ec4927f4f158117d473`.
 B0 raw report (uncompressed) SHA256:
@@ -490,6 +495,10 @@ Append entries; do not remove failed experiments or historical outcomes.
 | 2026-10-04 03:39:10 UTC | Isolated scalar slots `a29aa6a9`; integer parser `52e6d074` | Scalar-slot final-source checks pass34 LLVM tests,13 retired-corpus tests and630 native oracle comparisons/1260 calls. Actual LLVM/QBE compute entry machine code remains unchanged; timing skipped. The proof rejects address copies in real scratch uses; transitive uses are being inspected. Parser outline passes4 native-format plus3 shared-grammar tests and its Debug host build; guests are building. Both source commits passGuardian88. Equality99 and untimed1c archives are retained with12+6 independently checked archive bindings. | No performance acceptance. Investigate the scalar proof before another build, screen parsing after actual-frame inspection, and review804's documented QBE tradeoff. |
 
 | 2026-10-04 03:47:10 UTC | Integrated `63df6b6c` / T7 | Adopted rotation804 after repeated LLVM small-sort gain0.82396 and QBE nested-large slowdown1.10972. Root replayed516 holdouts,49 archive bindings and the static comparison:402 named QBE functions, only six sorting bodies changed,2649 nested instructions and96 direct/tail-call routines equivalent after address normalization. Source bytes match804 exactly. | Explicit LLVM-first tradeoff; QBE regression retained and causality unresolved. Latest8-row screen merges into the dashboard; earlier confirmations are stale or superseded by observations. Next parser screen uses isolated52 versus5a; it is not integrated acceptance. |
+
+| 2026-10-04 03:57:20 UTC | Isolated integer parser `52e6d074` | Five-round six-arm screen passes360 samples/720 qualifications: LLVM parsing2.2723/2.2453× current fastest. The matched5a→52 pair passes288 outcomes: parsing0.95216/0.97983 after/before, formatting1.02454/1.04157, CSV0.99477/1.01780, JSON1.00528/1.00116, search1.00481/1.16849 and join1.02304/0.97588 (small/large). QBE parsing0.97307/0.98996 and join0.87108/0.83008. Root independently replayed all288 outcomes/medians and four live hashes; the [review](candidates/goal110-parser-52e6d074-20261004-review.json) retains the result. | Keep52 unintegrated: the modest parsing gain accompanies another16.8% large LLVM search regression. The same blocker now follows an independent parser change, so inspect exact search code/layout before more text iteration. Scalar direct-address mapping and certified list-readiness inlining are in static investigation. Integrated dashboard unchanged. |
+
+| 2026-10-04 04:04:40 UTC | Diagnostic artifact incident | Live hashes caught modified Debug5a compute controls, last written03:44:39. The static inspection used `objcopy --dump-section` without a separate output ELF, which rewrites the input. Only compute controls changed; root verified text, collections and legacy hashes still match. No measured compute run used the modified files. Parser52 review independently passes288 paired outcomes, four live text hashes,360 six-arm samples/720 qualifications and14 archive bindings. | Quarantine the changed compute artifacts; preserve the failure and compare loadable sections before recovering pristine controls into new paths. Existing text/sorting timings remain bound to unchanged bytes. Use read-only disassembly tools or a disposable output ELF. Source optimization work continues. |
 
 For future entries, include the affected cases/sizes/backends and before → after
 ratios, or say explicitly that the step produced no timing result. Link long
