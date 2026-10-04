@@ -15,5 +15,18 @@
     "comparisons_with_live_artifacts": "PASS complete: 160 candidate comparisons; 80 immutable targets",
     "unseen_input_replay": "PASS holdout replay: 516 cells"
   },
-  "scope": "Coordinator independently replayed saved evidence with repository verifier code. This is analysis replay, not a new timing session or independently attested build."
+  "scope": "Coordinator independently replayed saved evidence with repository verifier code. This is analysis replay, not a new timing session or independently attested build.",
+  "confirmation": {
+    "report_sha256": "9a1a112b939204496cc298122194fe276cdf13934b6ded79b25f5375ffe2ca15",
+    "verifier_sha256": "cfb7cb711c48cea87cbd0ded6ca67795f82f5eacbe7c3dc44af2a53fb7c28427",
+    "result": "PASS diagnostic replay: 154 groups",
+    "initial_rejection": "The old verifier expected the same original-reference arm at both sizes and rejected correct string-search qualification multiplicities. Corrected per-plan probe counting is regression-tested; raw capture unchanged.",
+    "initial_rejection_log_sha256": "12c53501d892aa211c0e5a7694fc2af37cfcc9381dcbd5d5b1baff1dc9a958c0"
+  },
+  "profiles": {
+    "profile_json_sha256": "9564257c84960b0dca1f3ce6135c470fa2f4b8f4a4cc9492df15df8bd1cd1607",
+    "archive_sha256": "db75fae788a3d5bcd70823c0652091cb71228f044ae127c32462e552b960a242",
+    "result": "PASS 40 exact oracle checksums,160 raw artifact hashes,unchanged identities and explicit CPU-core counter selections",
+    "scope": "Archive integrity and checksum replay only; sampling-quality flags remain false and no causal cost claim follows."
+  }
 }
