@@ -1,0 +1,8 @@
+{
+  "status": "passed",
+  "archive_bindings": 47,
+  "script_bindings": 3,
+  "evidence_sha256": "801b7fc6785326d6b52bc91c772b66eac3ef4dcac758e66aeb49f27e4180da16",
+  "script_sha256": "0b3ba3f27cad9f4eb34b1dae38107484667ec8b3c067445d971b6dea96e2dbb8",
+  "limit": "Read-only byte verification; no guest executions or new timings."
+}
