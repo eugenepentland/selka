@@ -1,0 +1,19 @@
+{
+  "status": "pass",
+  "reviewed_utc": "2026-10-04T08:44:48.103411+00:00",
+  "counts": {
+    "success": 106,
+    "failure": 30,
+    "memory_refusal": 2,
+    "instrumentation": 4
+  },
+  "focused_unique_tests": 30,
+  "source_review_sha256": "8af48fb8a1bcddf7b10c2551316a9218e0a452757572d63dcc8471eadcb77162",
+  "live_file_bindings": 592,
+  "timing": false,
+  "limitations": [
+    "Diagnostic host only; official ReleaseFast build and benchmark timing remain pending.",
+    "Same-policy instrumentation equivalence is distinct from optimization-enabled behavior."
+  ],
+  "script_sha256": "883544c8099501ebb8b6f4ae3905e9dee863888b279c6579dc388f32ae28b02c"
+}

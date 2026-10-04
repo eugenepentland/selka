@@ -1,0 +1,1079 @@
+{
+  "status": "isolated_proof_passed_no_production_edit",
+  "source_context": "6cf7bdce11bc205862bf75b9d9ce72e46caad0a2",
+  "created_utc": "2026-10-04T08:43:38.152545+00:00",
+  "llvm_docs": [
+    "https://llvm.org/docs/LangRef.html#llvm-assume-intrinsic",
+    "https://llvm.org/docs/LangRef.html#range-metadata"
+  ],
+  "tools": {
+    "zig": {
+      "path": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "sha256": "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f",
+      "version": "0.17.0-dev.1683+5ceec001b"
+    },
+    "objdump": {
+      "path": "/usr/bin/x86_64-linux-gnu-objdump",
+      "sha256": "44f07f8da860b15bd4dec909f229dec536595fb170a616fe3ab29c7b21c9736f",
+      "version": "GNU objdump (GNU Binutils for Ubuntu) 2.46"
+    },
+    "nm": {
+      "path": "/usr/bin/x86_64-linux-gnu-nm",
+      "sha256": "f04262bf48192a7cbb78a17ca49ae03f8930b0372bd0115576f957b2e2a57a01",
+      "version": "GNU nm (GNU Binutils for Ubuntu) 2.46"
+    }
+  },
+  "library_sha256": "662bcd4b4d5027e4a9ec7152cd970545b97ad5e6c689417bfee2937c27ff8722",
+  "input_ir_sha256": "c14430ab50587f6837c97e139d05f844189645da01b57b03c92c9c2de751c10e",
+  "outcomes": 27452,
+  "overflow_outcomes": 1400,
+  "raw_bindings": [
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/floor-range.ll",
+      "raw_sha256": "c14430ab50587f6837c97e139d05f844189645da01b57b03c92c9c2de751c10e",
+      "raw_bytes": 55714,
+      "archive": "floor-range.ll.gz",
+      "gzip_sha256": "3e4f547cdcc642f6b388e32efa0fc1f62e015586d7dcba5eaa6433fe619d89bb",
+      "gzip_bytes": 1555
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/floor-range.so",
+      "raw_sha256": "662bcd4b4d5027e4a9ec7152cd970545b97ad5e6c689417bfee2937c27ff8722",
+      "raw_bytes": 16784,
+      "archive": "floor-range.so.gz",
+      "gzip_sha256": "353694d9b5bcf42707cfc7804717c8a037ff50831e3abe9f1caa5d3899e5c942",
+      "gzip_bytes": 3409
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/floor-range.optimized.ll",
+      "raw_sha256": "b3ac9e19b8a812610b19701a8a589b208e02634014c8d0e2cc34c95b46e38cc9",
+      "raw_bytes": 91246,
+      "archive": "floor-range.optimized.ll.gz",
+      "gzip_sha256": "7712866214f8ac0b01513670b52dc19110efc7232f17fbfacc05ba5674688c23",
+      "gzip_bytes": 3377
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/outcomes-final.json",
+      "raw_sha256": "a0462f64dcb9e384c74d1f44fa68c53e5ba478375738428826537b4c92558739",
+      "raw_bytes": 8091407,
+      "archive": "outcomes-final.json.gz",
+      "gzip_sha256": "8bc504baf4c070c5fad2a84c50cbbff5ee7da8c4286274a482d4203efb01e21f",
+      "gzip_bytes": 665763
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/check-final.log",
+      "raw_sha256": "b5a3d8a8893fe1424d5bcab1449681f9d3f24d78608c404ca1520e00f3fd3390",
+      "raw_bytes": 86,
+      "archive": "check-final.log.gz",
+      "gzip_sha256": "1a34dd216b8c7cbb96d773e82b4e9b65f94c5edf8e8a2413f2a4479a802580c0",
+      "gzip_bytes": 101
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/build.log",
+      "raw_sha256": "4ed44ea871c80b3fbd8da926776f55a71b22306637975bac0c517c34b220aff0",
+      "raw_bytes": 37,
+      "archive": "build.log.gz",
+      "gzip_sha256": "d14b2832413ad3c2cd96890acfe93ecddf44f0e0efe73eeb554604c21ae912c0",
+      "gzip_bytes": 57
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/build-controlled.log",
+      "raw_sha256": "9103d7bd214a079f307c73d5a5c0df21f78054abba820f726897450033d9c8e0",
+      "raw_bytes": 127,
+      "archive": "build-controlled.log.gz",
+      "gzip_sha256": "f420a086a4e1953eaf3c0c8a51f77826dda036bd1ba67faa5b139d334fb19daf",
+      "gzip_bytes": 125
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/opt-build.log",
+      "raw_sha256": "23fdf0950631b240e132a0fa2b2b7e4aae3ca3889a21db1331e7c39a76099c68",
+      "raw_bytes": 215,
+      "archive": "opt-build.log.gz",
+      "gzip_sha256": "a970d9fb91c83f215b55c302f7f24a9f4528df72979b753d6839466b4bd2bb44",
+      "gzip_bytes": 172
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/compiler-driver.txt",
+      "raw_sha256": "d7279f29928f1a188be6ed880b57a215d9b11e6e9ba70c1510a83c0e9776a867",
+      "raw_bytes": 7580,
+      "archive": "compiler-driver.txt.gz",
+      "gzip_sha256": "311b0ea39ad505d13d257374a9d684da63015fa753771d8ed8e7e77ad6a71278",
+      "gzip_bytes": 1839
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/compiler-probe-valid.txt",
+      "raw_sha256": "94d7d6c42741dedaf2fdfc705b3271505ba5b7504a90b454ee16b067d04896fb",
+      "raw_bytes": 7630,
+      "archive": "compiler-probe-valid.txt.gz",
+      "gzip_sha256": "fb7f5c90ab383c25334188179a26fac41c26d841319e0cac0f944c4ba836c6c0",
+      "gzip_bytes": 1791
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/compiler-version.txt",
+      "raw_sha256": "11d97b15537e3b19512ea7d5f610c60167c26bd5ac429467305a7151772d48b3",
+      "raw_bytes": 156,
+      "archive": "compiler-version.txt.gz",
+      "gzip_sha256": "1b748bb211872c454f553f99541e2da165ba076e9c8f483afd0fc016d901ab40",
+      "gzip_bytes": 154
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/static.json",
+      "raw_sha256": "3dff06a2f2fa4b50b081df3ef58742b6e11ea6a7d69305333a6a8f7f350b9f3f",
+      "raw_bytes": 35970,
+      "archive": "static.json.gz",
+      "gzip_sha256": "18bd726c2ed5e29e4c626634d167757b93d54391c21c706a0ccfab06a588c7da",
+      "gzip_bytes": 7653
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/symbols.txt",
+      "raw_sha256": "6b290a9f3139576d35729d19826d3f9f0202f402bb3a10d63e19dbcb7d3d978f",
+      "raw_bytes": 4017,
+      "archive": "symbols.txt.gz",
+      "gzip_sha256": "a5002dd056eb14631dc657c0e64d29869362e019c59ed7d4caccc83a97bb25ab",
+      "gzip_bytes": 566
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/inspect.log",
+      "raw_sha256": "f3ffb5fe11ef6c6dfdc5ea345b12f30c5513020dc68a09661163422be3606362",
+      "raw_bytes": 1390,
+      "archive": "inspect.log.gz",
+      "gzip_sha256": "bb4ed9d1246642d59f2a6060e7241834465faff8f75a030e8d8a5e7581b6a304",
+      "gzip_bytes": 232
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/loop_seeded_bool_assume_d1000000007.asm",
+      "raw_sha256": "3004cb38f2a0b97798cb75a4acf4e7e2a67a83cf2f04242761ca9f1c0a2f421f",
+      "raw_bytes": 1258,
+      "archive": "loop_seeded_bool_assume_d1000000007.asm.gz",
+      "gzip_sha256": "b82fd8d3cb2651b5d5a31ac8c760d3f3d1d9e14908574243d66a483ff1448cda",
+      "gzip_bytes": 523
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/loop_seeded_bool_assume_d3.asm",
+      "raw_sha256": "25f02c3c5a2b9c980618a9bf8c245d53ef7c91fabacfec067ca7f64e8e7753c6",
+      "raw_bytes": 1158,
+      "archive": "loop_seeded_bool_assume_d3.asm.gz",
+      "gzip_sha256": "40817afa792f6ee1880598c35dca5f885ca8a36fa7bc5b0f445e991d826dfdcf",
+      "gzip_bytes": 494
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/loop_seeded_bool_assume_d9223372036854775807.asm",
+      "raw_sha256": "5e323926d5cdd6076e6c0debf61575d087bc6b273a0dce6c76a7e1c139da4251",
+      "raw_bytes": 1376,
+      "archive": "loop_seeded_bool_assume_d9223372036854775807.asm.gz",
+      "gzip_sha256": "1d16f16c6de44490d52d6d4108f5c9cb8a2150f838319c4f1514b08ab9c976ba",
+      "gzip_bytes": 545
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/loop_seeded_bool_baseline_d1000000007.asm",
+      "raw_sha256": "e75cde7ea6c92a31dad6747b0598ef5ee87df0ca36cffd4bae83142468901f83",
+      "raw_bytes": 1266,
+      "archive": "loop_seeded_bool_baseline_d1000000007.asm.gz",
+      "gzip_sha256": "7b3dc494df3ea2dafb93e2baaff51e00e7ddda60b15d170438eab51dd8c7e9a3",
+      "gzip_bytes": 521
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/loop_seeded_bool_baseline_d3.asm",
+      "raw_sha256": "c628b04d7e52745316858be1f16517a5bdae6229efeb65fa07bf1ac7986e382e",
+      "raw_bytes": 1166,
+      "archive": "loop_seeded_bool_baseline_d3.asm.gz",
+      "gzip_sha256": "c5e39d7ad811db59b7e09c455d589c4b571de0f61c02a1f8c6d2d3288b419a9c",
+      "gzip_bytes": 495
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/loop_seeded_bool_baseline_d9223372036854775807.asm",
+      "raw_sha256": "c4bc72e4679dfd151a53f304a8828f9ed5c017a93cc765aae1538cf3195f691d",
+      "raw_bytes": 1384,
+      "archive": "loop_seeded_bool_baseline_d9223372036854775807.asm.gz",
+      "gzip_sha256": "6ae899230c4b726a489fd1e219e8615885de809255414f4bdbb6dbe3e0417785",
+      "gzip_bytes": 546
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/loop_seeded_bool_select_assume_d1000000007.asm",
+      "raw_sha256": "09f9ee22647613ef1fa085597d1ad0ac5563b6888441e868c91ab378079915c4",
+      "raw_bytes": 1320,
+      "archive": "loop_seeded_bool_select_assume_d1000000007.asm.gz",
+      "gzip_sha256": "ba772e626840e0dbbdfc45c2d1835ddde0a042cd5f0dfbc5f7b96b11e17dbd33",
+      "gzip_bytes": 545
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/loop_seeded_bool_select_assume_d3.asm",
+      "raw_sha256": "272c6a5a91c918c5bb0b6364bf18a3123e0a08baf06330917a8c9e17573f8d9f",
+      "raw_bytes": 1220,
+      "archive": "loop_seeded_bool_select_assume_d3.asm.gz",
+      "gzip_sha256": "e9620fba465a51649f9609cc944ac172da8f17b1b86132a7a0166c09f4020384",
+      "gzip_bytes": 512
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/loop_seeded_bool_select_assume_d9223372036854775807.asm",
+      "raw_sha256": "05be3404c0c371f89f5806557e80e7abce7aaae9653be3772cd7245d19584c54",
+      "raw_bytes": 1385,
+      "archive": "loop_seeded_bool_select_assume_d9223372036854775807.asm.gz",
+      "gzip_sha256": "0d31711929980a3cfa0497a4dc67477d0f351dc833ec0e868657698323e00fef",
+      "gzip_bytes": 556
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/loop_seeded_bool_select_d1000000007.asm",
+      "raw_sha256": "97820ed53f407820f08a66be38daddba2e511731ab55f90ac9941d353e32063d",
+      "raw_bytes": 1292,
+      "archive": "loop_seeded_bool_select_d1000000007.asm.gz",
+      "gzip_sha256": "6679756927387cf8e5d718081e5a2a4741afaedeeacb8ed7102e501c3dd15bb5",
+      "gzip_bytes": 539
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/loop_seeded_bool_select_d3.asm",
+      "raw_sha256": "4447a10763caf6eba0fd33a4a539b119718fcb0929b7c71e452cfaff89ec4697",
+      "raw_bytes": 1192,
+      "archive": "loop_seeded_bool_select_d3.asm.gz",
+      "gzip_sha256": "53870346480bc1c7d7e760a43d1c2b9d0403754735b75bb313d426c87f661cd3",
+      "gzip_bytes": 505
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/loop_seeded_bool_select_d9223372036854775807.asm",
+      "raw_sha256": "3b2bac6db519df668bad09c0e56ff176535c9ebe3ee1de78c2e69cebf8841564",
+      "raw_bytes": 1357,
+      "archive": "loop_seeded_bool_select_d9223372036854775807.asm.gz",
+      "gzip_sha256": "525f50d7ae5b49852586a81fadca506a02bd32f390cd2ed31c70298c5d95c38e",
+      "gzip_bytes": 549
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/loop_signed_updates_assume_d1000000007.asm",
+      "raw_sha256": "8fe45f20740f24e272e8b7a1eabcfd1515eec695ff11a234a9c5b18b5a6950ef",
+      "raw_bytes": 1225,
+      "archive": "loop_signed_updates_assume_d1000000007.asm.gz",
+      "gzip_sha256": "30ecae88bb1d2cb15b2081bb4710ebc1aebd9196b2cc67ab0d0d370b743174c4",
+      "gzip_bytes": 512
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/loop_signed_updates_assume_d3.asm",
+      "raw_sha256": "c47bc82e4991e86a7ab1bdb5b954862a1ae4f342b669b8f9e16cae7535c3f21e",
+      "raw_bytes": 1125,
+      "archive": "loop_signed_updates_assume_d3.asm.gz",
+      "gzip_sha256": "5476dcebd8f126c6861c5aad28efe00d2527187fe9521c4535ca9bc90cc8180e",
+      "gzip_bytes": 480
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/loop_signed_updates_assume_d9223372036854775807.asm",
+      "raw_sha256": "3a220242432b4b1c7b61643a213ea121b580705e3e12f9e7d72fcf8245cea35d",
+      "raw_bytes": 1337,
+      "archive": "loop_signed_updates_assume_d9223372036854775807.asm.gz",
+      "gzip_sha256": "cb273d37520124c989af00a03129f861213d019e2e73d109f14dbf3d8dd0b7c4",
+      "gzip_bytes": 527
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/loop_signed_updates_baseline_d1000000007.asm",
+      "raw_sha256": "3fe4ef9d1095d7bff9f9d0574d259601d0b4cdda8f3da8bdebe1482d8801b2f3",
+      "raw_bytes": 1233,
+      "archive": "loop_signed_updates_baseline_d1000000007.asm.gz",
+      "gzip_sha256": "9f0546491eda3a49c3910b0dcc4d866d9cbcba3378ef18de3f8794c477561f11",
+      "gzip_bytes": 510
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/loop_signed_updates_baseline_d3.asm",
+      "raw_sha256": "dfdd2835fa522a5396772257e89336cc7d384796a2bbfdb03e12d29282a281e2",
+      "raw_bytes": 1133,
+      "archive": "loop_signed_updates_baseline_d3.asm.gz",
+      "gzip_sha256": "a4e864fde95f8ac5d6d5208480dcb8693ec58bb7a13926535f5e02fe50dfd6d8",
+      "gzip_bytes": 478
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/loop_signed_updates_baseline_d9223372036854775807.asm",
+      "raw_sha256": "7a00578749608c13a2d60ee32c7c735a31a4a7499a58815c08d94da73b417332",
+      "raw_bytes": 1345,
+      "archive": "loop_signed_updates_baseline_d9223372036854775807.asm.gz",
+      "gzip_sha256": "6a65f44b48c38559bc4aa152b43e27c34a44b966526815f9e8bce3a316f1e17c",
+      "gzip_bytes": 524
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/loop_signed_updates_select_assume_d1000000007.asm",
+      "raw_sha256": "4101332c070d3991ebbdfb01f4b152eb782cdb37de6d61018a714165baaacaa0",
+      "raw_bytes": 1311,
+      "archive": "loop_signed_updates_select_assume_d1000000007.asm.gz",
+      "gzip_sha256": "2071de6a901ace0f0ccb13d4847ed13565b92a31183c3cf509555c808242bf73",
+      "gzip_bytes": 533
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/loop_signed_updates_select_assume_d3.asm",
+      "raw_sha256": "a58f2d8a633f9d54c02b8c5c780bb58306988aeb83d4b987be067e196e25b33b",
+      "raw_bytes": 1211,
+      "archive": "loop_signed_updates_select_assume_d3.asm.gz",
+      "gzip_sha256": "003461f8e120d1f53211c68cbf71ee9ea98d4a82ce07399cd30f944318424129",
+      "gzip_bytes": 499
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/loop_signed_updates_select_assume_d9223372036854775807.asm",
+      "raw_sha256": "d21e85e6e96d03ef278d4c7933932979ef79e7891318680454941b7509dcdfc6",
+      "raw_bytes": 1348,
+      "archive": "loop_signed_updates_select_assume_d9223372036854775807.asm.gz",
+      "gzip_sha256": "af3300685660927460422e66aee96db0ca5f20844d971379688d8c57125a019f",
+      "gzip_bytes": 539
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/loop_signed_updates_select_d1000000007.asm",
+      "raw_sha256": "c3cf03a48af84eae3a3eb620312040c89b5c1a44d633d35ccbef1a21321e7456",
+      "raw_bytes": 1283,
+      "archive": "loop_signed_updates_select_d1000000007.asm.gz",
+      "gzip_sha256": "35675c370ff24618bc7a0bf6f665d61fb7af197ba552c61ff511dc4ddf1f9902",
+      "gzip_bytes": 526
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/loop_signed_updates_select_d3.asm",
+      "raw_sha256": "82eb6bdf9b09e4355f50fcce2cddd8d90738f0467944577ba188e2fcee3dfba1",
+      "raw_bytes": 1183,
+      "archive": "loop_signed_updates_select_d3.asm.gz",
+      "gzip_sha256": "ed7c8769fe91c8f9f0efab9df0655dfa5ac27473f6b9466444d69f288b59baef",
+      "gzip_bytes": 491
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/loop_signed_updates_select_d9223372036854775807.asm",
+      "raw_sha256": "52ed6d7022e5b71596248cbf5f6b08f0cf93734d8703c5044e8281d5530a7658",
+      "raw_bytes": 1320,
+      "archive": "loop_signed_updates_select_d9223372036854775807.asm.gz",
+      "gzip_sha256": "5fad9bbf3ae1b8b0c5b1ae9f5be4bc2de7cd9cb43def887396f0c82a9d6748d4",
+      "gzip_bytes": 528
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/loop_zero_bool_assume_d1000000007.asm",
+      "raw_sha256": "b2c32dbc3aeef091a54b207193096ec1b2ae8d5cc43dec95e9173a54077afb31",
+      "raw_bytes": 3009,
+      "archive": "loop_zero_bool_assume_d1000000007.asm.gz",
+      "gzip_sha256": "6f2fd17d22148349f70931ef35b00b5ff03680bcb680f8c02f2dd3f845f2ed7f",
+      "gzip_bytes": 936
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/loop_zero_bool_assume_d3.asm",
+      "raw_sha256": "f6e8449f7089aa4d690e3303ca1a38f3b3f1b3afc75574f98bad052e278c19f6",
+      "raw_bytes": 2921,
+      "archive": "loop_zero_bool_assume_d3.asm.gz",
+      "gzip_sha256": "655d935e2302efab8233811f2949e37b71eb4042dbe0013024c5f9842e6f269c",
+      "gzip_bytes": 916
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/loop_zero_bool_assume_d9223372036854775807.asm",
+      "raw_sha256": "8a4294dd395d5ac01091daf1f1116740c6ee6a8fd5e60970118d6d12f4bf02aa",
+      "raw_bytes": 1375,
+      "archive": "loop_zero_bool_assume_d9223372036854775807.asm.gz",
+      "gzip_sha256": "4b25cbbe199ecf32568d021023fd75d552677b22e03e9e8305747de301dde69a",
+      "gzip_bytes": 544
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/loop_zero_bool_baseline_d1000000007.asm",
+      "raw_sha256": "7d34fe575b26c35f575ef3c4707d61d87bfed8cf83755c592f0efca8cc38b7ff",
+      "raw_bytes": 4059,
+      "archive": "loop_zero_bool_baseline_d1000000007.asm.gz",
+      "gzip_sha256": "e5d12ded784dcdcbc210474dc89d5a388591a31ca9bd877ad29fb403bc592d85",
+      "gzip_bytes": 1113
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/loop_zero_bool_baseline_d3.asm",
+      "raw_sha256": "498c888b79ef0de7b3531ee4e773d41683fcbd0cf1a2ee4186f8b5056ee11946",
+      "raw_bytes": 2935,
+      "archive": "loop_zero_bool_baseline_d3.asm.gz",
+      "gzip_sha256": "a07a22b1cb47d1af37b4b1c2037460aa37d81d9b3f5ea4a1642ea0310d6d53ad",
+      "gzip_bytes": 911
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/loop_zero_bool_baseline_d9223372036854775807.asm",
+      "raw_sha256": "5dd37b87638d641e7f5528e9a7453e001734287e68fe0cebf2b3c41e4bbc3449",
+      "raw_bytes": 1383,
+      "archive": "loop_zero_bool_baseline_d9223372036854775807.asm.gz",
+      "gzip_sha256": "3a8f0688c4eaf4199ed5ed0aa7cf3712002796a29accb9316af06b269c15323c",
+      "gzip_bytes": 542
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/loop_zero_bool_select_assume_d1000000007.asm",
+      "raw_sha256": "12c4a818498324f6693f70a20f0ca9fa0f0e11368f93e688ab25ca0c2675435f",
+      "raw_bytes": 3058,
+      "archive": "loop_zero_bool_select_assume_d1000000007.asm.gz",
+      "gzip_sha256": "b194cc5677cb2ace7f40ebd91b7192e7ca2867fee97fb0783a193e78355520b8",
+      "gzip_bytes": 945
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/loop_zero_bool_select_assume_d3.asm",
+      "raw_sha256": "91b07be7b4e60e3fd9a3f0c8ccefed8fe579e7481050a98fe9ec0650fbad7c9f",
+      "raw_bytes": 2970,
+      "archive": "loop_zero_bool_select_assume_d3.asm.gz",
+      "gzip_sha256": "3dce25c7cd4571416c013cffdc51a9f439dc8eb308544a93356672f29ce095fe",
+      "gzip_bytes": 912
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/loop_zero_bool_select_assume_d9223372036854775807.asm",
+      "raw_sha256": "4488c8babae4fc8ce50f777318d51b286158d4a8d3658291d14a698e8c1be938",
+      "raw_bytes": 1384,
+      "archive": "loop_zero_bool_select_assume_d9223372036854775807.asm.gz",
+      "gzip_sha256": "3db717d2a262bed217c5181628b581a2bea922c7f8fddb06fb733494601ba778",
+      "gzip_bytes": 555
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/loop_zero_bool_select_d1000000007.asm",
+      "raw_sha256": "62a7fe143325be5f08008a764772ecc6051220f5b2b480cb32001ab333b195d6",
+      "raw_bytes": 4072,
+      "archive": "loop_zero_bool_select_d1000000007.asm.gz",
+      "gzip_sha256": "9cdcfd0a4cb1be733b1f938dd993f9cdc18f6e40002d13ab94795e70a864a4e1",
+      "gzip_bytes": 1138
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/loop_zero_bool_select_d3.asm",
+      "raw_sha256": "3d52c75e46f01b34c1e2f3bc4e4af22b42fe9eac805ebdc6b082738860cc9bbd",
+      "raw_bytes": 2921,
+      "archive": "loop_zero_bool_select_d3.asm.gz",
+      "gzip_sha256": "c1be857f3808d1f185b1ffc782e4c35dcd35fac2ee66af967034a1e83e77cdb9",
+      "gzip_bytes": 910
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/loop_zero_bool_select_d9223372036854775807.asm",
+      "raw_sha256": "73b2411e22c36478854bb9cb2edb10c152ec1500b1e281c2b7073dc164a85df4",
+      "raw_bytes": 1356,
+      "archive": "loop_zero_bool_select_d9223372036854775807.asm.gz",
+      "gzip_sha256": "2b50b83271e1a11d1e25fc4540161e64579ea819d4f16e535eea4613a08b6eec",
+      "gzip_bytes": 547
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/scalar_assume_d1.asm",
+      "raw_sha256": "6618a51a4ce0b578e2cf19e07a60c7054fddc42f2e5f59d30b15a0876056b2c2",
+      "raw_bytes": 333,
+      "archive": "scalar_assume_d1.asm.gz",
+      "gzip_sha256": "d11053009990773f0e5334323af82b045be09e8d9537164d1df8b22b1b3355e7",
+      "gzip_bytes": 219
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/scalar_assume_d1000000007.asm",
+      "raw_sha256": "d256839a562d026ab32a84d65ccb17526389b0d103903b20a7d3fb2ceebdbdc6",
+      "raw_bytes": 725,
+      "archive": "scalar_assume_d1000000007.asm.gz",
+      "gzip_sha256": "14b79def0848e3e109ccf3e909c7dac088c086d9ff73ed2cab5a65d15582b4ce",
+      "gzip_bytes": 341
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/scalar_assume_d2.asm",
+      "raw_sha256": "ae0ff10c33f34a795a1c17abf482d68b82582ed274d885eda7767ba319849b88",
+      "raw_bytes": 360,
+      "archive": "scalar_assume_d2.asm.gz",
+      "gzip_sha256": "c5c433f9c2dabf6566d87da3d19dc67800e2140d6e0722303326c56371b23212",
+      "gzip_bytes": 234
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/scalar_assume_d3.asm",
+      "raw_sha256": "3e4705fad267fa085915a5fcaafd96ac7ddd72430a713917e6d4e4c5540afff3",
+      "raw_bytes": 651,
+      "archive": "scalar_assume_d3.asm.gz",
+      "gzip_sha256": "47c73b0c12a7431c265ac8082c4b09e645cf45c84726bfe1864d1c4de2eaf74a",
+      "gzip_bytes": 319
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/scalar_assume_d9223372036854775807.asm",
+      "raw_sha256": "c1aa3f37b28ab016dc94f2ff4122b16a9a58caca51498258d8c13e87acd2316d",
+      "raw_bytes": 767,
+      "archive": "scalar_assume_d9223372036854775807.asm.gz",
+      "gzip_sha256": "cdedc486f672fb95f174b7c5dadc0d61061598b6b2f517139e92018aad71d160",
+      "gzip_bytes": 358
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/scalar_baseline_d1.asm",
+      "raw_sha256": "bda4eb4d87d91108708c14012afe2f2a97332491ae99c39233f72cb02286cc64",
+      "raw_bytes": 335,
+      "archive": "scalar_baseline_d1.asm.gz",
+      "gzip_sha256": "2f849026cdd0fc2e3341d3c3a17c390a3d22ca5094674907e974269d00df6124",
+      "gzip_bytes": 221
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/scalar_baseline_d1000000007.asm",
+      "raw_sha256": "1e704668a53d6a4c7ddba0db0c897e467b2000b5878c5c265ad43f94a86b2a16",
+      "raw_bytes": 727,
+      "archive": "scalar_baseline_d1000000007.asm.gz",
+      "gzip_sha256": "6833ac1c10721dc9c1c471b87edb7363914a0185ba995269a098e04e436ef020",
+      "gzip_bytes": 343
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/scalar_baseline_d2.asm",
+      "raw_sha256": "79bd0a3d54fdd3a018e5bcfe8ce803a73addc3df0c3daa15ee63630196a70945",
+      "raw_bytes": 362,
+      "archive": "scalar_baseline_d2.asm.gz",
+      "gzip_sha256": "7ba5fd26cdb978b4b92e5919cf532db66045ada162db5877ed20fd9d61c4c600",
+      "gzip_bytes": 236
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/scalar_baseline_d3.asm",
+      "raw_sha256": "59d724d2cd44df625343058fe840564bad19eb53f7f82047d3899ba82fd282ce",
+      "raw_bytes": 653,
+      "archive": "scalar_baseline_d3.asm.gz",
+      "gzip_sha256": "a68d4bfe8c5b524d61b2d2cb0ffb8fc8dd24fe7f5562d4444912f1bce745befd",
+      "gzip_bytes": 323
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/scalar_baseline_d9223372036854775807.asm",
+      "raw_sha256": "620b8998001fd3e527f4ffb72900ab18492050d882b71f2c6efe285dcb466a5e",
+      "raw_bytes": 769,
+      "archive": "scalar_baseline_d9223372036854775807.asm.gz",
+      "gzip_sha256": "af8c869248ebf1aab4822151619e037ca9603a08acbc30ab290dc76e326a93d4",
+      "gzip_bytes": 360
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/scalar_select_assume_d1.asm",
+      "raw_sha256": "a19e133e0f6d613a26dfeb29e6148d6cc501173ef82b8de37b6e3d2d009f1d93",
+      "raw_bytes": 340,
+      "archive": "scalar_select_assume_d1.asm.gz",
+      "gzip_sha256": "9b3341226e8e05869928d129cc696a450cab84ebc16e2e04d4853ca894b303e9",
+      "gzip_bytes": 223
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/scalar_select_assume_d1000000007.asm",
+      "raw_sha256": "e4da01d56ce5a875a07448cf53a0eb9005c3f7fcc4a8d6536fb68e7f4178e664",
+      "raw_bytes": 765,
+      "archive": "scalar_select_assume_d1000000007.asm.gz",
+      "gzip_sha256": "10118acc79de73eb2ba2fd7ab14b0570bb1bb199baa1a1c29162cb25827e585d",
+      "gzip_bytes": 371
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/scalar_select_assume_d2.asm",
+      "raw_sha256": "7280efafdbddd9c0ba31e11e4fa08224b984b71695a2495d2dd6f19040988790",
+      "raw_bytes": 367,
+      "archive": "scalar_select_assume_d2.asm.gz",
+      "gzip_sha256": "9878dfbe3be46a556651d344e91e0cd18cdf39426fb0abf762ff15139e5fa779",
+      "gzip_bytes": 238
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/scalar_select_assume_d3.asm",
+      "raw_sha256": "a49bb4273971513ebba77688f6e9085a81bcc4b14ce8e352ec29cef54be5814e",
+      "raw_bytes": 691,
+      "archive": "scalar_select_assume_d3.asm.gz",
+      "gzip_sha256": "0d98d0d5a38fb95da5e3e87be9b11f9ad09d56293a2dffc6e6e94bc41ce51c09",
+      "gzip_bytes": 341
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/scalar_select_assume_d9223372036854775807.asm",
+      "raw_sha256": "7de9bb8dffd93aa3e3dd2f8b36252fac4d914bb529b95f33d71f13c020c53a96",
+      "raw_bytes": 746,
+      "archive": "scalar_select_assume_d9223372036854775807.asm.gz",
+      "gzip_sha256": "610b8c1880c83f222d7e103dc688a79f63efbdfa9bd5e282f3b30111c8ab9075",
+      "gzip_bytes": 356
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/scalar_select_d1.asm",
+      "raw_sha256": "186cfe3df7915e7ef4f87235402d46c06ad540f0800449a270d717d6fada3962",
+      "raw_bytes": 333,
+      "archive": "scalar_select_d1.asm.gz",
+      "gzip_sha256": "b010b1b4716cf7befa70001deac5aa6ac751aac005ec8124f259cc76a6cd894c",
+      "gzip_bytes": 219
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/scalar_select_d1000000007.asm",
+      "raw_sha256": "debf5b6046791c17d6dba7de850a1f53394e6eedca1508c5e54f5ac299952582",
+      "raw_bytes": 758,
+      "archive": "scalar_select_d1000000007.asm.gz",
+      "gzip_sha256": "48b6a256f20cba1c44a4897e9602300f84b25c2c6844100285bfef0b8fd4fdcc",
+      "gzip_bytes": 368
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/scalar_select_d2.asm",
+      "raw_sha256": "6a8107d26af53bd7612aa2ae3ad106b3362c031bdbedcc424ebd91be855df653",
+      "raw_bytes": 360,
+      "archive": "scalar_select_d2.asm.gz",
+      "gzip_sha256": "17a3c0180411dd9b0955dc78bef39824ed855b156c3272a76f3ade510638df81",
+      "gzip_bytes": 234
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/scalar_select_d3.asm",
+      "raw_sha256": "59731d0cfa58d41cac99a27af5edb75e0154cd4a630320cf8fb411960da52a06",
+      "raw_bytes": 684,
+      "archive": "scalar_select_d3.asm.gz",
+      "gzip_sha256": "d684273f8aa0aa1378d93cde0dd4dae1fe80dce9c832697e63bed21a7b136345",
+      "gzip_bytes": 338
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/scalar_select_d9223372036854775807.asm",
+      "raw_sha256": "995c3c17c3ac0c8ba8ddef1a8eacc5bf939f07336cfb1280de370fd63491074b",
+      "raw_bytes": 739,
+      "archive": "scalar_select_d9223372036854775807.asm.gz",
+      "gzip_sha256": "e265264eea6aaa4404b100f34df43602518a69424a6acb5fef4adc4a1836c904",
+      "gzip_bytes": 351
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/scalar_assume_d1.optimized.ll",
+      "raw_sha256": "38dbb4b3fb72e4804752aaf4027440bb29093e1ce2d61f7f81e3f2cc686b520b",
+      "raw_bytes": 94,
+      "archive": "scalar_assume_d1.optimized.ll.gz",
+      "gzip_sha256": "ea5453da0c77a87211377f62cd973d261f7dcf49b012ce12adc69d7c81d034a0",
+      "gzip_bytes": 107
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/scalar_assume_d1000000007.optimized.ll",
+      "raw_sha256": "3f7c88b65d8f63a5ee4975c098a5ff0fd93b25ed1df6dc0ecb215fdfa3281986",
+      "raw_bytes": 372,
+      "archive": "scalar_assume_d1000000007.optimized.ll.gz",
+      "gzip_sha256": "7e4956ec03235b0a70ba0842b91c7852608ed596d1befe6920fdd885c847c477",
+      "gzip_bytes": 224
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/scalar_assume_d2.optimized.ll",
+      "raw_sha256": "46eac85dfedbaf91754cd9761c1a16dd4d580813dd7fc71841c5466087a2e421",
+      "raw_bytes": 138,
+      "archive": "scalar_assume_d2.optimized.ll.gz",
+      "gzip_sha256": "a06e81945c64e7cf6bc4c2f1a0ac76b5c7f5b965037f4141da4a00764c5bec9d",
+      "gzip_bytes": 130
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/scalar_assume_d3.optimized.ll",
+      "raw_sha256": "b66fabffda89043840bce7d571da8ca29b886a258896abdea50d0aaf41afd4fd",
+      "raw_bytes": 327,
+      "archive": "scalar_assume_d3.optimized.ll.gz",
+      "gzip_sha256": "bc7fa7138143a22111e6dc2946fdb1baaf95b531e1cd4c7c96a79f6c21a5bb4f",
+      "gzip_bytes": 215
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/scalar_assume_d9223372036854775807.optimized.ll",
+      "raw_sha256": "b15103a61923c8bfc7aef62b343b5b69b2b51ae76ae87bb814c888e87ed16928",
+      "raw_bytes": 413,
+      "archive": "scalar_assume_d9223372036854775807.optimized.ll.gz",
+      "gzip_sha256": "9e0bf0401571b3644fe2301955cae404397b126705d3e0a9a3ac8f92c75920d1",
+      "gzip_bytes": 235
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/scalar_baseline_d1.optimized.ll",
+      "raw_sha256": "22a730d1b39657c5552802e3db9f3eff27e5e72f67797776610591b239bded9b",
+      "raw_bytes": 96,
+      "archive": "scalar_baseline_d1.optimized.ll.gz",
+      "gzip_sha256": "b92b5a9d331028576eb5a8ce62bb4260efa34e0707ae4ebd0ce2f97956a8ec57",
+      "gzip_bytes": 108
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/scalar_baseline_d1000000007.optimized.ll",
+      "raw_sha256": "10b8f5baa4e0c01b5dff8c06fe29bae129e9b097f4d5f23ed3c49b1ea0e786cb",
+      "raw_bytes": 295,
+      "archive": "scalar_baseline_d1000000007.optimized.ll.gz",
+      "gzip_sha256": "75720cbe83da3e3ac822d52c99770aee68eed07016c509f9ec937bea2fb0d50c",
+      "gzip_bytes": 192
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/scalar_baseline_d2.optimized.ll",
+      "raw_sha256": "458c152b91b7580a967dc6c417d0be5f84903f9ec624ee529926e3211f40b880",
+      "raw_bytes": 140,
+      "archive": "scalar_baseline_d2.optimized.ll.gz",
+      "gzip_sha256": "b769554fec5ac8b57b6f58dc89f0e1f99de1d041f86822d3801bb90fa741679a",
+      "gzip_bytes": 131
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/scalar_baseline_d3.optimized.ll",
+      "raw_sha256": "de57fff70c1793953e8174e042972591eced28df35fbb054d6c7d0f2803039b0",
+      "raw_bytes": 250,
+      "archive": "scalar_baseline_d3.optimized.ll.gz",
+      "gzip_sha256": "5f98d6bd7de217d190f0e52bfb16cc74fdee0c14df76906032e6b05dc11e67b1",
+      "gzip_bytes": 181
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/scalar_baseline_d9223372036854775807.optimized.ll",
+      "raw_sha256": "b16fe02fa834178764a8f27839b9f245d96517ae53f4745ddaa606dfc59ed6a1",
+      "raw_bytes": 283,
+      "archive": "scalar_baseline_d9223372036854775807.optimized.ll.gz",
+      "gzip_sha256": "166856f01218d381f7574a6a8d129ba3cdb8891c7f7ef8ede0c5bec525b2cd61",
+      "gzip_bytes": 189
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/scalar_select_assume_d1.optimized.ll",
+      "raw_sha256": "28144e19bea394b555ec5b5b5ef4bcb6549b217199bf5e5f3b1994609da07972",
+      "raw_bytes": 101,
+      "archive": "scalar_select_assume_d1.optimized.ll.gz",
+      "gzip_sha256": "0ded8195e7351b1e65e0743ff4f2d22138b5e388c09f87090ac005f24cf66671",
+      "gzip_bytes": 111
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/scalar_select_assume_d1000000007.optimized.ll",
+      "raw_sha256": "130cbffa15e66803928d462d2f33ad5ad31150ffba210fb640f8057169b572ab",
+      "raw_bytes": 392,
+      "archive": "scalar_select_assume_d1000000007.optimized.ll.gz",
+      "gzip_sha256": "bdd1a196e8ca7e1830e95c39990825d6ab5eaccd191eb5da9d4c259c12c75e2d",
+      "gzip_bytes": 229
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/scalar_select_assume_d2.optimized.ll",
+      "raw_sha256": "1d66d16275d56cda1798b05d1ddd04b4ad48d1f16cb29a9c6971c10808aa19f2",
+      "raw_bytes": 145,
+      "archive": "scalar_select_assume_d2.optimized.ll.gz",
+      "gzip_sha256": "90582b401a37b8fa633f997c37db8e44db1dbc0495ce982bb6d103329fff34f3",
+      "gzip_bytes": 134
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/scalar_select_assume_d3.optimized.ll",
+      "raw_sha256": "7d01c6e54892a33657d8e5527e58de4bbd72d192044db0bf9322b4166c5c830b",
+      "raw_bytes": 347,
+      "archive": "scalar_select_assume_d3.optimized.ll.gz",
+      "gzip_sha256": "d8678720b72e62a3a2dc513035131c0a4bb2a8a2e613b1b527a9603bebda2cef",
+      "gzip_bytes": 222
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/scalar_select_assume_d9223372036854775807.optimized.ll",
+      "raw_sha256": "08cc17eef0530d162d93112602e5ed5b18248e1acfc925f314734f8feee0505f",
+      "raw_bytes": 433,
+      "archive": "scalar_select_assume_d9223372036854775807.optimized.ll.gz",
+      "gzip_sha256": "4e26e3d4d886b975a5e17c9d1783207e1fc7ec4d5d4a7660e967e439316b600f",
+      "gzip_bytes": 242
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/scalar_select_d1.optimized.ll",
+      "raw_sha256": "699b3f46e3e21c1063516de768b513b47f68a0a5f9db10b870fb43f3ba2c1640",
+      "raw_bytes": 94,
+      "archive": "scalar_select_d1.optimized.ll.gz",
+      "gzip_sha256": "aa5642bf1b38e1a0da42d61a6a9fec3b32db56889a5303a3fd4a1f99bb817bce",
+      "gzip_bytes": 107
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/scalar_select_d1000000007.optimized.ll",
+      "raw_sha256": "38271c29d7a014682f26f37ce219fe88fff77cb4060d61ee8c30b42ea8fb2a87",
+      "raw_bytes": 306,
+      "archive": "scalar_select_d1000000007.optimized.ll.gz",
+      "gzip_sha256": "2ab233b7307e9aac47f004ed95b432c1a6d85284c48ee63d0ea33f4f9d990158",
+      "gzip_bytes": 192
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/scalar_select_d2.optimized.ll",
+      "raw_sha256": "387ae381b8ff830fb36823fd3a783c006b330f5f69fc4030c052a9ea3d0b6b0c",
+      "raw_bytes": 138,
+      "archive": "scalar_select_d2.optimized.ll.gz",
+      "gzip_sha256": "05736081387e056518c2a7cce410ade710784ca86cc002cc2159ca7ddf884a44",
+      "gzip_bytes": 129
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/scalar_select_d3.optimized.ll",
+      "raw_sha256": "ba20c3b9fae1ff57aa4174b359078777773dc69f3f88d6ad5f37dd963e476a53",
+      "raw_bytes": 261,
+      "archive": "scalar_select_d3.optimized.ll.gz",
+      "gzip_sha256": "8bcc133b11ccd4df87040f9a736b64973ed3ad43b79aef3f145995c3c88df20f",
+      "gzip_bytes": 182
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/scalar_select_d9223372036854775807.optimized.ll",
+      "raw_sha256": "f2764b29246b00d4e70d8befd3a4d9714ea686619511054f80f45c85be2e77b6",
+      "raw_bytes": 294,
+      "archive": "scalar_select_d9223372036854775807.optimized.ll.gz",
+      "gzip_sha256": "fd079cc8d0a65e610f648ff30cb0a98f253a5d1c299561f46afa28bb67cb1848",
+      "gzip_bytes": 189
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/loop_seeded_bool_assume_d1000000007.optimized.ll",
+      "raw_sha256": "a768188ebc6fa0231e0af3f322d3fa01d113428e65a240520bbf6777151daa0a",
+      "raw_bytes": 1664,
+      "archive": "loop_seeded_bool_assume_d1000000007.optimized.ll.gz",
+      "gzip_sha256": "9cdbe4e8147a196fffc1b1faa62b15cf4f95d5128c18aff8d6a982c5f22d6693",
+      "gzip_bytes": 639
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/loop_seeded_bool_assume_d3.optimized.ll",
+      "raw_sha256": "3454ea027aa734cd40f1608469e805a62be5eaf616f85c7498b4e3e49835e6d8",
+      "raw_bytes": 1628,
+      "archive": "loop_seeded_bool_assume_d3.optimized.ll.gz",
+      "gzip_sha256": "8ac010fc506ac01ea4102baad008b1e08736a2e98330b46f6ff8267419a580e7",
+      "gzip_bytes": 632
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/loop_seeded_bool_assume_d9223372036854775807.optimized.ll",
+      "raw_sha256": "03a7e3939ad39eb421711e74ac6a88022b771c43e004ae4de05983d2187658ea",
+      "raw_bytes": 1696,
+      "archive": "loop_seeded_bool_assume_d9223372036854775807.optimized.ll.gz",
+      "gzip_sha256": "0deba194b22158d3b3bcc792469b77c8eac60bf8fc85d9985fe85b7bb0285b96",
+      "gzip_bytes": 653
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/loop_seeded_bool_baseline_d1000000007.optimized.ll",
+      "raw_sha256": "d0f1b0ae2c8ebab568ecb4fa0e88b2dcce388e1e48d20e7deb629247af6cc1d3",
+      "raw_bytes": 1577,
+      "archive": "loop_seeded_bool_baseline_d1000000007.optimized.ll.gz",
+      "gzip_sha256": "a20265879253bf07d2c3e899e92283e8f4ef816edf028ebaf162e2bc63bbfedf",
+      "gzip_bytes": 610
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/loop_seeded_bool_baseline_d3.optimized.ll",
+      "raw_sha256": "66c537ebca91fa9f325cce7d074b9fdea02bf12003604b6b2d6060dc5c061f66",
+      "raw_bytes": 1550,
+      "archive": "loop_seeded_bool_baseline_d3.optimized.ll.gz",
+      "gzip_sha256": "8de2a3a792a2c9ed5d0538d5fc734941d33815d23f71c686ad35862ffafd678d",
+      "gzip_bytes": 603
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/loop_seeded_bool_baseline_d9223372036854775807.optimized.ll",
+      "raw_sha256": "1563f6bff4413cac69d0cf9c6269a173696c53acd2f2e0ee971f4a3d0aaee4d1",
+      "raw_bytes": 1600,
+      "archive": "loop_seeded_bool_baseline_d9223372036854775807.optimized.ll.gz",
+      "gzip_sha256": "2f3f3600b83061d70227aabf04f587b09c890c752b945b0b9042dcd226097633",
+      "gzip_bytes": 623
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/loop_seeded_bool_select_assume_d1000000007.optimized.ll",
+      "raw_sha256": "e44d7cddbac47662444f579c45ddcda34422e967d81e16be10b829c0ec18a8d3",
+      "raw_bytes": 1684,
+      "archive": "loop_seeded_bool_select_assume_d1000000007.optimized.ll.gz",
+      "gzip_sha256": "ddb9083db7b569f5abea16f83392e5cfcc4a4a5695099ff1585db1aaf2475433",
+      "gzip_bytes": 646
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/loop_seeded_bool_select_assume_d3.optimized.ll",
+      "raw_sha256": "af4bcfefcd20fd088d44692a5231be017539d2fefd710f79799bd19640a89a18",
+      "raw_bytes": 1648,
+      "archive": "loop_seeded_bool_select_assume_d3.optimized.ll.gz",
+      "gzip_sha256": "d8f90c42f52c4ea14bc7447ddb97c10e077016ff17227fbbcc6464029112bb78",
+      "gzip_bytes": 640
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/loop_seeded_bool_select_assume_d9223372036854775807.optimized.ll",
+      "raw_sha256": "579695d1b30e1333930af70fe27393e82a8003f35cd00ec229e8b8fe52f17061",
+      "raw_bytes": 1716,
+      "archive": "loop_seeded_bool_select_assume_d9223372036854775807.optimized.ll.gz",
+      "gzip_sha256": "39d412a47ab83bc81166a18ef7ba67dab4a056917551f68bc56ec62e7fd55b07",
+      "gzip_bytes": 660
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/loop_seeded_bool_select_d1000000007.optimized.ll",
+      "raw_sha256": "88854a1102dcc65f03c0be6be4e1dbec1cb00cd2feec85dd0a36bdb55e17aeb9",
+      "raw_bytes": 1588,
+      "archive": "loop_seeded_bool_select_d1000000007.optimized.ll.gz",
+      "gzip_sha256": "feaf6cde0bcf8473ebd3f9d940dbfd3380445f7dbad4e25a297476097e3968ab",
+      "gzip_bytes": 610
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/loop_seeded_bool_select_d3.optimized.ll",
+      "raw_sha256": "f808d26e292f5c6af051700a11f32012251ddd43934327888b859196330e175c",
+      "raw_bytes": 1561,
+      "archive": "loop_seeded_bool_select_d3.optimized.ll.gz",
+      "gzip_sha256": "43669d36e3ece9c58794ffd5c9d6aede66c376c2268923c6d93ddb1cbada8543",
+      "gzip_bytes": 605
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/loop_seeded_bool_select_d9223372036854775807.optimized.ll",
+      "raw_sha256": "6386a99f7381b934be21abb7a0ec2d593584a24b43f2fce0de3482e71c31f538",
+      "raw_bytes": 1611,
+      "archive": "loop_seeded_bool_select_d9223372036854775807.optimized.ll.gz",
+      "gzip_sha256": "d48d9e4a4e755244cfcf35f578581297831b697facfa3f6073cba5eac75a6f3e",
+      "gzip_bytes": 624
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/loop_signed_updates_assume_d1000000007.optimized.ll",
+      "raw_sha256": "97567ae04e2de51a33e08e30ccbe2355f759bb39004d2851137d04a93fc93823",
+      "raw_bytes": 1623,
+      "archive": "loop_signed_updates_assume_d1000000007.optimized.ll.gz",
+      "gzip_sha256": "1f137f0d8e7babf59dc8b077d3708fda2122c2be934ba888aa8140f83a131505",
+      "gzip_bytes": 619
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/loop_signed_updates_assume_d3.optimized.ll",
+      "raw_sha256": "46bc622081e11aa0762080dc728bef303c9a9c1e2f5237774fbb03412ed3b158",
+      "raw_bytes": 1578,
+      "archive": "loop_signed_updates_assume_d3.optimized.ll.gz",
+      "gzip_sha256": "806f97316909129590e0d0fcd8cf46e3ef819296b3fadca52af4498088d5ef0a",
+      "gzip_bytes": 612
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/loop_signed_updates_assume_d9223372036854775807.optimized.ll",
+      "raw_sha256": "5272fa7e0415197ef8431406e5661b6b6c506561e994e72b27d44d238753191b",
+      "raw_bytes": 1664,
+      "archive": "loop_signed_updates_assume_d9223372036854775807.optimized.ll.gz",
+      "gzip_sha256": "fa70e64c170450a8d0c3fdd889098a0e41120153c354927096c500418df2fd49",
+      "gzip_bytes": 632
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/loop_signed_updates_baseline_d1000000007.optimized.ll",
+      "raw_sha256": "1847b5732765cf16bbd4116703b4d6046ceb1a78c5aa35109e7a5e654575c916",
+      "raw_bytes": 1546,
+      "archive": "loop_signed_updates_baseline_d1000000007.optimized.ll.gz",
+      "gzip_sha256": "6e70fad35e97963afc2d20bd03b0bafbc68593cfcac80f598828ad2ccc2d63d4",
+      "gzip_bytes": 598
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/loop_signed_updates_baseline_d3.optimized.ll",
+      "raw_sha256": "0bda360ad6f2e3e21093884b3111cfdce2c9ec72b01ba029a76f80ba8e93f8d7",
+      "raw_bytes": 1501,
+      "archive": "loop_signed_updates_baseline_d3.optimized.ll.gz",
+      "gzip_sha256": "3a0f3d21aa535f4fc094e1e40e048aac39823bdf0cd80bc955cffb3ab5130b55",
+      "gzip_bytes": 586
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/loop_signed_updates_baseline_d9223372036854775807.optimized.ll",
+      "raw_sha256": "ee69d2d074dae7cc65d6514033cb68f4a20785aa9f11b2771b2231ae46f82246",
+      "raw_bytes": 1534,
+      "archive": "loop_signed_updates_baseline_d9223372036854775807.optimized.ll.gz",
+      "gzip_sha256": "6940040d0fee5d1a751720c4d41e0b0430b2a842444e76279ad62f9d8bcc67f3",
+      "gzip_bytes": 593
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/loop_signed_updates_select_assume_d1000000007.optimized.ll",
+      "raw_sha256": "67426d147113010a8832bb6b7ec94a9f0aa7df6da628d6d2cbf29f5517111fcd",
+      "raw_bytes": 1643,
+      "archive": "loop_signed_updates_select_assume_d1000000007.optimized.ll.gz",
+      "gzip_sha256": "0bae64481362023bc0d94f9a34bb635eccbb73421d8d0ea952c6370bd6dc1552",
+      "gzip_bytes": 625
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/loop_signed_updates_select_assume_d3.optimized.ll",
+      "raw_sha256": "85e547f0d736054e8e14510ab81f0c6a83a962017ae896dd71b756b8ec4fb9fa",
+      "raw_bytes": 1598,
+      "archive": "loop_signed_updates_select_assume_d3.optimized.ll.gz",
+      "gzip_sha256": "7c5906e54b17eda3c2705c7d3d962d9c87b8cbfa3ff11354e3d674564e07e4ee",
+      "gzip_bytes": 620
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/loop_signed_updates_select_assume_d9223372036854775807.optimized.ll",
+      "raw_sha256": "5f66fb71deeb87a2803cfd65285c0ca5db77a6bb8db3e8943ee7594fe883ee3f",
+      "raw_bytes": 1684,
+      "archive": "loop_signed_updates_select_assume_d9223372036854775807.optimized.ll.gz",
+      "gzip_sha256": "e6ca7c02d9cde3e81de8c29a2286636a8b428ee6cfbae50b3d07d4766af8a2b5",
+      "gzip_bytes": 640
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/loop_signed_updates_select_d1000000007.optimized.ll",
+      "raw_sha256": "828005a766a39bd42c50c25e85141cbbd677385f1d668d76c979256f953d8cda",
+      "raw_bytes": 1557,
+      "archive": "loop_signed_updates_select_d1000000007.optimized.ll.gz",
+      "gzip_sha256": "0dfaf5917565b88b53c259bf24985d6f7895e455eb3fd12c5c459c779431803e",
+      "gzip_bytes": 597
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/loop_signed_updates_select_d3.optimized.ll",
+      "raw_sha256": "eedd33a3cb0574ebd969a25e8ba7842de09d27f3fb166c41ca15a968016425b3",
+      "raw_bytes": 1512,
+      "archive": "loop_signed_updates_select_d3.optimized.ll.gz",
+      "gzip_sha256": "ba5190b3f5f1b603319898d3550ed9ac4eaf458937ab5f975292a8251d8166ba",
+      "gzip_bytes": 587
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/loop_signed_updates_select_d9223372036854775807.optimized.ll",
+      "raw_sha256": "01ea60589452b15b249ac31e6e078da098db3ee448a15502aa2637521de24ea9",
+      "raw_bytes": 1545,
+      "archive": "loop_signed_updates_select_d9223372036854775807.optimized.ll.gz",
+      "gzip_sha256": "6dfe273780b809ab5cb4592f08ba8a56c0977c0db0da34b0461f7f642e44fa2d",
+      "gzip_bytes": 594
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/loop_zero_bool_assume_d1000000007.optimized.ll",
+      "raw_sha256": "07706eb7dff3827785ba4e0216a892f92515cfb1aa2abca293074ce6ff5c0fc2",
+      "raw_bytes": 4112,
+      "archive": "loop_zero_bool_assume_d1000000007.optimized.ll.gz",
+      "gzip_sha256": "eaaa195b081bdf703be3fafce9fc4b4a01242ed564496901b695fdf66440a626",
+      "gzip_bytes": 956
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/loop_zero_bool_assume_d3.optimized.ll",
+      "raw_sha256": "8296e5d70da34685204089fe9b553c82cc8ef6efd1e35d67d225025bbad8762c",
+      "raw_bytes": 4049,
+      "archive": "loop_zero_bool_assume_d3.optimized.ll.gz",
+      "gzip_sha256": "eab41fc2abbae2f104a5ccf44af7da1699ab36da6db47abcc9ec53ab218d7970",
+      "gzip_bytes": 948
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/loop_zero_bool_assume_d9223372036854775807.optimized.ll",
+      "raw_sha256": "06aa0c275ed84f2af446ab33aa93e97020a32bfee849da927dce3d9afd52eb24",
+      "raw_bytes": 1720,
+      "archive": "loop_zero_bool_assume_d9223372036854775807.optimized.ll.gz",
+      "gzip_sha256": "b747e3142c8186d2ab493d3d1ba4367788743e09517c939026a160b3094e1020",
+      "gzip_bytes": 661
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/loop_zero_bool_baseline_d1000000007.optimized.ll",
+      "raw_sha256": "e34075e9db61e7c8dd5d0d063707eb590cb462b0b7f26ccfd4b9bb29a49e4012",
+      "raw_bytes": 4805,
+      "archive": "loop_zero_bool_baseline_d1000000007.optimized.ll.gz",
+      "gzip_sha256": "bc25bfbe044bd44a30839577c2295acb2e58e1452682080b09df0ac3e5e28cc9",
+      "gzip_bytes": 1089
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/loop_zero_bool_baseline_d3.optimized.ll",
+      "raw_sha256": "f785b5f3bcbcc987d80f8a401cbca9cd26316c55fb42229e8c9f7d98986c4ec3",
+      "raw_bytes": 4051,
+      "archive": "loop_zero_bool_baseline_d3.optimized.ll.gz",
+      "gzip_sha256": "8bdca6e6c2cd7f2276a1dd313a913888ed7c8f667e9c5807949f29134ad68ad8",
+      "gzip_bytes": 952
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/loop_zero_bool_baseline_d9223372036854775807.optimized.ll",
+      "raw_sha256": "1b75fcf65c6acdff1208b5981d356111838f7b3f1ebc0a1cf4292c041fc0b4a8",
+      "raw_bytes": 1590,
+      "archive": "loop_zero_bool_baseline_d9223372036854775807.optimized.ll.gz",
+      "gzip_sha256": "e989fa9c8890a069362bed14591d37fe584e78db466fa17f43cbde8599bfc969",
+      "gzip_bytes": 620
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/loop_zero_bool_select_assume_d1000000007.optimized.ll",
+      "raw_sha256": "635416c572c8621b4e5a9cdc8b6d2c7a296051c4bf1d973c6c698bd9a025180f",
+      "raw_bytes": 4119,
+      "archive": "loop_zero_bool_select_assume_d1000000007.optimized.ll.gz",
+      "gzip_sha256": "05bdc15855cae2c06463eb7793f2202fab8dd1dfb8ce3ec7146a5c2198798088",
+      "gzip_bytes": 961
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/loop_zero_bool_select_assume_d3.optimized.ll",
+      "raw_sha256": "d277c143a90227784d2008556124b94131ef333e07a6373993039b9fdd63d58c",
+      "raw_bytes": 4056,
+      "archive": "loop_zero_bool_select_assume_d3.optimized.ll.gz",
+      "gzip_sha256": "6188a6373d8459875f3176b359e4814dca42caf93ef011e2ce4cf8e5fc35cb42",
+      "gzip_bytes": 954
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/loop_zero_bool_select_assume_d9223372036854775807.optimized.ll",
+      "raw_sha256": "a0f3b4bb9c61ede416603f6ae6879e6374cfe217307990497bacb6cd948ee831",
+      "raw_bytes": 1740,
+      "archive": "loop_zero_bool_select_assume_d9223372036854775807.optimized.ll.gz",
+      "gzip_sha256": "1012836d731286b5971c1d0d499ac3781ff0568e506f7f2a05bd88dde554f244",
+      "gzip_bytes": 669
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/loop_zero_bool_select_d1000000007.optimized.ll",
+      "raw_sha256": "b1d5f6cb65bad87398dbb97a422e01f5c20794d43602f7d5037d8f4932414acd",
+      "raw_bytes": 4879,
+      "archive": "loop_zero_bool_select_d1000000007.optimized.ll.gz",
+      "gzip_sha256": "ac99c001123099f239e0d35eafd5521596608cf0122f366afd06d22670e9eb87",
+      "gzip_bytes": 1102
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/loop_zero_bool_select_d3.optimized.ll",
+      "raw_sha256": "ec13084fc9abc2dd89be720add5d2ebab066c6759b71ad60cea77752b5b10477",
+      "raw_bytes": 4049,
+      "archive": "loop_zero_bool_select_d3.optimized.ll.gz",
+      "gzip_sha256": "8c76a867700a9edd7173ac70d8b88abb1d003935b205177fb78ee3844bcd9956",
+      "gzip_bytes": 951
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/loop_zero_bool_select_d9223372036854775807.optimized.ll",
+      "raw_sha256": "5bf237252e556cbb72c955fa7b1ad5a073d8f761661c58a9c5f0397e36abd245",
+      "raw_bytes": 1601,
+      "archive": "loop_zero_bool_select_d9223372036854775807.optimized.ll.gz",
+      "gzip_sha256": "1e5ad035c411d67464560727660df8a6f9f7257a9afd9e7d537ec4cf817a4026",
+      "gzip_bytes": 620
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/guardian-proof.log",
+      "raw_sha256": "84f1f73f3268390241116f44488bebd2b5a477bd89f45b4112cf979cea6e9679",
+      "raw_bytes": 403,
+      "archive": "guardian-proof.log.gz",
+      "gzip_sha256": "f52a41a7cfb7d2fce842b7f51510c57e418fba682282d54139900b98817394e8",
+      "gzip_bytes": 184
+    }
+  ],
+  "metadata_bindings": [
+    {
+      "path": "generate-ir.py",
+      "sha256": "f04005a6a1d6f22ecf4d575c0de43d067025707b2a2a05f785d0d5c6df7b7baf"
+    },
+    {
+      "path": "check-ir.py",
+      "sha256": "a109cfb2968b21c2d1eb3de137a10c8a512a30ad54520702052517d5062d5ec0"
+    },
+    {
+      "path": "inspect-ir.py",
+      "sha256": "38635dd636afd450d88dae5e18e5af65e14a2ea8d95ecf878c4a13afbf869763"
+    },
+    {
+      "path": "README.md",
+      "sha256": "b211ba40e707e9b565651fe98fbc5b7cbdc88f14c558cdd9543ff0bc2a5289f5"
+    },
+    {
+      "path": "PROPOSAL.md",
+      "sha256": "4e5e0eb804f87cca12ce42ac79477fcc02f93aebf07247ba481433f8e3b281e4"
+    },
+    {
+      "path": "commands.json",
+      "sha256": "ed41b294256de39966a89542a1f908ed59a65f6c3171acdf785b1b0e96f935e7"
+    }
+  ],
+  "production_input_hashes": {
+    "src/qbe_scalar.zig": "7f5ee19ed84d902ff7e4b53b647dbf2fc47e9ebb8e9f699da37cc39761c4b92e",
+    "src/qbe_build_llvm_il.zig": "2446f66d130d38bcfb6bed916cbe895ad239784e3bbda13b82ecab32032038a9",
+    "src/qbe_build_llvm_lower.zig": "ac431807e5d24cd8d94a76d7b64e386e1c126ee0afc5e2ffe542b557c2bcfcaf"
+  }
+}

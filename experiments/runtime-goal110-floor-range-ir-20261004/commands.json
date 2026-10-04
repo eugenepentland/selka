@@ -1,0 +1,97 @@
+{
+  "working_directory": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004",
+  "environment": {
+    "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/tmp",
+    "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/zig-local",
+    "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/zig-global"
+  },
+  "generate": [
+    "python3",
+    "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/experiments/runtime-goal110-floor-range-ir-20261004/generate-ir.py",
+    "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/floor-range.ll"
+  ],
+  "accepted_build": [
+    "scripts/build-slot.sh",
+    "build",
+    "/home/epentland/.local/bin/zig",
+    "cc",
+    ".mylang-cache/goal110-floor-range-ir/floor-range.ll",
+    "-O3",
+    "-flto",
+    "-shared",
+    "-fPIC",
+    "-o",
+    ".mylang-cache/goal110-floor-range-ir/floor-range.so"
+  ],
+  "optimized_ir": [
+    "scripts/build-slot.sh",
+    "build",
+    "/home/epentland/.local/bin/zig",
+    "cc",
+    ".mylang-cache/goal110-floor-range-ir/floor-range.ll",
+    "-O3",
+    "-S",
+    "-emit-llvm",
+    "-o",
+    ".mylang-cache/goal110-floor-range-ir/floor-range.optimized.ll"
+  ],
+  "valid_compile_probe": [
+    "/home/epentland/.local/bin/zig",
+    "cc",
+    "-###",
+    "-c",
+    "-flto",
+    "-O3",
+    "-fPIC",
+    "-g0",
+    "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/floor-range.ll",
+    "-o",
+    "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/probe-only.o"
+  ],
+  "check": [
+    "python3",
+    "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/experiments/runtime-goal110-floor-range-ir-20261004/check-ir.py",
+    "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/floor-range.so",
+    "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir/outcomes-final.json"
+  ],
+  "inspect": [
+    "python3",
+    "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/experiments/runtime-goal110-floor-range-ir-20261004/inspect-ir.py",
+    "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-floor-range-ir"
+  ],
+  "failed_explicit_ir_build": [
+    "scripts/build-slot.sh",
+    "build",
+    "/home/epentland/.local/bin/zig",
+    "cc",
+    "-shared",
+    "-fPIC",
+    "-O3",
+    "-flto",
+    "-x",
+    "ir",
+    ".mylang-cache/goal110-floor-range-ir/floor-range.ll",
+    "-o",
+    ".mylang-cache/goal110-floor-range-ir/floor-range.so"
+  ],
+  "first_unwrapped_diagnostic_build": [
+    "zig",
+    "cc",
+    ".mylang-cache/goal110-floor-range-ir/floor-range.ll",
+    "-O3",
+    "-flto",
+    "-shared",
+    "-fPIC",
+    "-o",
+    ".mylang-cache/goal110-floor-range-ir/floor-range.so"
+  ],
+  "guardian": [
+    "scripts/build-slot.sh",
+    "build",
+    "/home/epentland/ai/canopy/guardian-zig/zig-out/bin/guardian-check",
+    "all",
+    ".",
+    "--full"
+  ],
+  "scope": "Isolated IR only; no production/benchmark edits or timings; accepted artifact rebuilt via wrapper/private caches."
+}

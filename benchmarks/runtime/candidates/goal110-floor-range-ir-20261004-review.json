@@ -1,0 +1,10 @@
+{
+  "status": "pass",
+  "archive_evidence_sha256": "177eb1b44b89b99cd396b21946d677396f15c7f2fd21ae2821351c5279722792",
+  "raw_bindings": 127,
+  "metadata_bindings": 6,
+  "independently_replayed_outcomes": 27452,
+  "functions": 56,
+  "overflow_statuses": 1400,
+  "scope": "Saved isolated LLVM IR outcomes and archive bytes only; no new native execution or performance claim."
+}

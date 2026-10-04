@@ -9,7 +9,7 @@ the raw evidence for every reported result.
 
 <!-- STATUS-START -->
 - **Campaign:** active; G4 confirms ten LLVM cells on the integrated ReleaseFast build.
-- **Last document update:** 2026-10-04 08:35:00 UTC.
+- **Last document update:** 2026-10-04 08:45:10 UTC.
 - **Active batch:** bounded signed remainder, LLVM result-range facts and checked list-index/value reuse.
 - **Current implementation:** `perf/runtime-parity-20261003`, production source
   `6cf7bdce11bc205862bf75b9d9ce72e46caad0a2`, combining text, append, mutation and short-join changes.
@@ -32,7 +32,9 @@ the raw evidence for every reported result.
   The mutation prefix extension emits four exact frozen-port hits, including
   unique-value forwarding. Split test groups now pass all thirty unique tests
   within their declared memory bounds, and Guardian passes all 88 checks.
-  Actual LLVM code and instrumented process comparisons are still being checked.
+  Root independently verifies 136 actual QBE/LLVM behavior pairs, two allocation
+  refusals and four identical accounting pairs. The source is pinned at
+  `14ffa2c0`; a fresh official ReleaseFast build is authorized before timing.
 - **Remaining nearby targets:** small equality **1.3898×** and small integer
   sorting **1.3925×** in G4 B. The bounded equality candidate is under evaluation.
 - **Append tradeoff:** repeated LLVM append gains of 11.2%/23.0% are accepted
@@ -48,7 +50,8 @@ the raw evidence for every reported result.
 - **Next action:** preserve the measured candidate archives, finish the mutation
   checks, and review the bounded-bias proof. The isolated LLVM IR experiment
   removes redundant signed checksum correction when given the final remainder's
-  proved range; its compiler integration is under review. No new production
+  proved range. A minimal compiler annotation is being implemented in another
+  isolated worktree. No new integrated production
   change or goal confirmation is claimed.
 
 | Backend | Required targets | Latest observed ≤1.10 | Latest observed >1.10 | Current goal confirmations |
@@ -619,3 +622,5 @@ diagnostic notes and raw evidence rather than pasting build logs here.
 | 2026-10-04 08:24:02 UTC | Remainder negative-input blocker and text repeat | Remainder six-armcdad3663 passes240samples/720qualifications; matched214afcd5 passes192outcomes. LLVM ratios small/large: append0.9905/0.9948, filter0.9376/0.9194, sort0.8688/0.9760, nested0.9829/0.9935. Supplementfc3b2e26 passes96outcomes; negative LLVM1.0686/1.1201 and QBE1.1606/1.2680, while positive LLVM0.9617/0.8585. Text15r/3w repeat9583c652 passes144outcomes: small equalityLLVM0.96831/QBE0.71952, large searchLLVM1.03520/QBE1.00467. | Both candidates stay unintegrated pending review. Retain all initial costs and calibration caps. Plan to preserve the old optimized signed path rather than accept the negative slowdown. Text range-fact work is an isolated IR experiment; no new production behavior or goal confirmation. Source remains6cf and dashboardC10/O70. |
 
 | 2026-10-04 08:35:00 UTC | Candidate archives reviewed; signed-range follow-up | Root checks 140 compressed/raw/live-file bindings and 22 metadata bindings, then independently replays 720 paired outcomes and medians across the initial text comparison, repeat, frozen remainder rows and signed supplement. The supplement uses an independent residue-sum oracle. [Archive review](candidates/goal110-candidate-archives-20261004-0835-review.json). Text archives32b/7e2d and remainder945f retain the measured costs and refusal history. Mutation split groups pass30 unique tests within unchanged bounds; Guardian88 passes. | Keep3dc/27de unintegrated. Fresh bounded-bias work preserves the old signed fast-loop admission; isolated LLVM range assumptions remove checksum correction in a synthetic experiment, with production interface review pending. No new measured result or goal confirmation; integrated source6cf/C10 remains current. |
+
+| 2026-10-04 08:45:10 UTC | Mutation14ffa2c0 ready for official build; LLVM range experiment passes | Root independently checks106 successful and30 failing actual QBE/LLVM pairs, two detach allocation refusals and four identical accounting pairs, with full streams and source/artifact bindings. All30 unique focused tests pass within unchanged bounds. [Mutation review](candidates/goal110-index-update-20261004-native-review.json). Actual LLVM mutation entry shrinks16825→16365 bytes, removing repeated write-index checks and the following value reload while retaining first-read checks and COW. Root separately verifies127 raw/6metadata bindings and27452 saved IR outcomes, including1400 overflow statuses. [IR review](candidates/goal110-floor-range-ir-20261004-review.json). | A fresh14ffa2c0 ReleaseFast host is building; timing follows24guest builds and qualification. Fresh6cf-based bounded-bias and final-result annotation implementations are isolated. Source integration and G4 confirmations remain unchanged; no new benchmark timing result. |

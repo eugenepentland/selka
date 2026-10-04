@@ -1,0 +1,18 @@
+{
+  "scope": "read-only static triage; no performance measurement or production edit",
+  "source_revision": "6cf7bdce11bc205862bf75b9d9ce72e46caad0a2",
+  "manifest": "/home/epentland/ai/canopy/mylang-worktrees/goal110-g4-rf-20261004/.mylang-cache/goal110-g4-rf/runner/manifest.json",
+  "manifest_sha256": "4757812159060d11f035115d40fbf94e894bc08030e961fa7c2fdd8d955f4479",
+  "binary": "/home/epentland/ai/canopy/mylang-worktrees/goal110-g4-rf-20261004/.mylang-cache/goal110-g4-rf/runner/bin/collections-my-llvm",
+  "binary_sha256": "02e90fd182b34d87d33b9f9b3cdbadc9bcf2025b9a21e2bb2d1ceac869545efb",
+  "files": {
+    "src/native_dictionary.c": "783978b1b69ad4f74efb97300f0361208cce81f5c5a6e3df0b40e8ec55c9b8b5",
+    "src/native_dictionary.h": "a51d82fa55ac5e1715874d056e1ba0ac3ab952aee046e53facbb967cb96dfac3",
+    "src/qbe_managed.zig": "a05bdb34507ba9e93647f7fe46835a756041bf55734c48625a407d3a2739c32b",
+    "benchmarks/runtime/expanded/collections/main.my": "09b900a51f725290311e158fed0295ce8d8bca8eeb1c18578d8b1f7f446891eb",
+    "experiments/runtime-goal110-map-audit-20261004/read_walk.asm": "df1544ce86351a5923ea0bc79c87557e47c88361366eac219423afed43e984f7",
+    "experiments/runtime-goal110-map-audit-20261004/contains_walk.asm": "61b2bb3a07c2f9b28048a6af97b8e87eb70a341ff9e77454a2b1affe10b20ce4",
+    "experiments/runtime-goal110-map-audit-20261004/myl_native_dictionary_read.asm": "b62b7d9b64d23547e23ca239d66e7762754bccfcf818d3c8d0b2396c563e0703",
+    "experiments/runtime-goal110-map-audit-20261004/probe_text.asm": "aed9c2d26999bed1c22566d21bbad6cdc24a49abb697d72a4c4de7e124eb01a3"
+  }
+}
