@@ -35,4 +35,15 @@ static inline int64_t floormod(int64_t a, int64_t b) {
 typedef struct { int64_t len; int64_t *data; } list_i64;
 
 #define MOD 1000000007LL
+
+#ifdef __AVX2__
+#include <immintrin.h>
+/* Horizontal sum of eight u32 lanes into a u64 (widen first: the lanes' sum can pass 2^32). */
+static inline uint64_t hsum_u32x8(__m256i v) {
+    __m256i w = _mm256_add_epi64(_mm256_cvtepu32_epi64(_mm256_castsi256_si128(v)),
+                                 _mm256_cvtepu32_epi64(_mm256_extracti128_si256(v, 1)));
+    __m128i a = _mm_add_epi64(_mm256_castsi256_si128(w), _mm256_extracti128_si256(w, 1));
+    return (uint64_t)_mm_cvtsi128_si64(a) + (uint64_t)_mm_extract_epi64(a, 1);
+}
+#endif
 #endif

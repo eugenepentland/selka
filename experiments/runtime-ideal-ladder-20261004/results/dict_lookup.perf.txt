@@ -1,0 +1,21 @@
+== dict_lookup perf: size=4096 iterations=1500; per unit = element
+version                                          cyc/iter   instr/iter  cyc/unit instr/unit brmiss/u
+v1: today: generic read call, hint record, out-param     209501.2     572128.4    51.148    139.680   0.5146
+v2: + immutable dict: no hint record, hoisted fields     117787.8     312693.1    28.757     76.341   0.2189
+v3: + typed int/int, probe inlined               104877.5     238669.6    25.605     58.269   0.2060
+v4: + inline {key,value} slots, load<=1/2, 1-mul hash      45953.4     186418.1    11.219     45.512   0.0084
+v10: v4 layout with mylang hash (fold_multiply)     149188.0     237356.9    36.423     57.948   0.3996
+v5: + query-key induction (no div, no flags)      25444.5     100415.1     6.212     24.515   0.0076
+v6: dense-key direct addressing (runtime flag)      18181.5      61625.8     4.439     15.045   0.0045
+v7: hand AVX2 gather over dense, i64 values        7017.3      16551.1     1.713      4.041   0.0002
+v7n: hand AVX2 gather, u32 values                  3077.5       5050.1     0.751      1.233   0.0001
+v8: hand AVX2 4-slot buckets (general keys)       39089.5     158255.6     9.543     38.637   0.0044
+v20 holdout ref: today, identity keys from file     216394.7     580320.4    52.831    141.680   0.4950
+v21 holdout: + immutable dict, identity keys from file     126774.2     320885.1    30.951     78.341   0.2167
+v30 holdout: best scalar table, keys from file      26352.3     116799.1     6.434     28.515   0.0080
+v31 holdout: AVX2 buckets, keys from file         39626.5     162351.6     9.674     39.637   0.0044
+v5 baseline x86-64                                25886.4     104512.1     6.320     25.516   0.0072
+B0 rust                                          173140.5     768123.7    42.271    187.530   0.0372
+B0 zig-safe                                      213716.7     664444.4    52.177    162.218   0.4330
+B0 zig-fast                                      174523.5     307898.4    42.608     75.171   0.5289
+B0 my-llvm                                       210337.9     669022.1    51.352    163.335   0.4915

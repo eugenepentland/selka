@@ -1,0 +1,109 @@
+{
+ "case": "dict_lookup_sparse",
+ "rounds": 7,
+ "cpu": "10",
+ "profiles": {
+  "small": {
+   "size": 64,
+   "iterations": 40000,
+   "rows": [
+    {
+     "label": "v20 today model, sparse keys from file",
+     "median_ns_per_iter": 569.746775,
+     "ns_per_unit": 8.902293359375,
+     "min_ns_per_iter": 554.77845,
+     "max_ns_per_iter": 579.877925,
+     "ratio_rust": 1.0,
+     "ratio_fastest_b0": 1.0
+    },
+    {
+     "label": "v21 + immutable dict (no hint), sparse",
+     "median_ns_per_iter": 340.050275,
+     "ns_per_unit": 5.313285546875,
+     "min_ns_per_iter": 328.728275,
+     "max_ns_per_iter": 350.781075,
+     "ratio_rust": 0.5968445806472534,
+     "ratio_fastest_b0": 0.5968445806472534
+    },
+    {
+     "label": "v22 + typed, probe inlined, sparse",
+     "median_ns_per_iter": 321.796625,
+     "ns_per_unit": 5.028072265625,
+     "min_ns_per_iter": 306.986225,
+     "max_ns_per_iter": 417.098425,
+     "ratio_rust": 0.56480640017664,
+     "ratio_fastest_b0": 0.56480640017664
+    },
+    {
+     "label": "v30 inline slots + Fibonacci hash, sparse",
+     "median_ns_per_iter": 152.137475,
+     "ns_per_unit": 2.377148046875,
+     "min_ns_per_iter": 144.9728,
+     "max_ns_per_iter": 163.81865,
+     "ratio_rust": 0.26702647856146267,
+     "ratio_fastest_b0": 0.26702647856146267
+    },
+    {
+     "label": "v31 AVX2 4-slot buckets, sparse",
+     "median_ns_per_iter": 186.96615,
+     "ns_per_unit": 2.92134609375,
+     "min_ns_per_iter": 185.9516,
+     "max_ns_per_iter": 194.358275,
+     "ratio_rust": 0.3281565744711763,
+     "ratio_fastest_b0": 0.3281565744711763
+    }
+   ]
+  },
+  "large": {
+   "size": 4096,
+   "iterations": 1500,
+   "rows": [
+    {
+     "label": "v20 today model, sparse keys from file",
+     "median_ns_per_iter": 75561.63666666667,
+     "ns_per_unit": 18.447665201822918,
+     "min_ns_per_iter": 74592.34733333334,
+     "max_ns_per_iter": 76426.89333333333,
+     "ratio_rust": 1.0,
+     "ratio_fastest_b0": 1.0
+    },
+    {
+     "label": "v21 + immutable dict (no hint), sparse",
+     "median_ns_per_iter": 42352.69733333333,
+     "ns_per_unit": 10.340013997395832,
+     "min_ns_per_iter": 40551.704,
+     "max_ns_per_iter": 43815.114,
+     "ratio_rust": 0.5605052934489552,
+     "ratio_fastest_b0": 0.5605052934489552
+    },
+    {
+     "label": "v22 + typed, probe inlined, sparse",
+     "median_ns_per_iter": 57572.344,
+     "ns_per_unit": 14.055748046875,
+     "min_ns_per_iter": 56625.19,
+     "max_ns_per_iter": 59202.221333333335,
+     "ratio_rust": 0.7619255820777836,
+     "ratio_fastest_b0": 0.7619255820777836
+    },
+    {
+     "label": "v30 inline slots + Fibonacci hash, sparse",
+     "median_ns_per_iter": 23011.662666666667,
+     "ns_per_unit": 5.618081705729167,
+     "min_ns_per_iter": 21984.858,
+     "max_ns_per_iter": 23201.862,
+     "ratio_rust": 0.304541612408166,
+     "ratio_fastest_b0": 0.304541612408166
+    },
+    {
+     "label": "v31 AVX2 4-slot buckets, sparse",
+     "median_ns_per_iter": 13826.260666666667,
+     "ns_per_unit": 3.3755519205729168,
+     "min_ns_per_iter": 12298.498666666666,
+     "max_ns_per_iter": 13966.382,
+     "ratio_rust": 0.18297989927957709,
+     "ratio_fastest_b0": 0.18297989927957709
+    }
+   ]
+  }
+ }
+}

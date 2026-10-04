@@ -1,0 +1,433 @@
+{
+ "case": "list_filter",
+ "rounds": 7,
+ "cpu": "10",
+ "profiles": {
+  "small": {
+   "size": 64,
+   "iterations": 300000,
+   "rows": [
+    {
+     "label": "v1: today: heap lists, header traffic, plain_ready call, checked fold",
+     "median_ns_per_iter": 270.1401266666667,
+     "ns_per_unit": 4.220939479166667,
+     "min_ns_per_iter": 254.74836666666667,
+     "max_ns_per_iter": 302.15671333333336,
+     "ratio_rust": 1.243753732395127,
+     "ratio_fastest_b0": 1.4733555155269296
+    },
+    {
+     "label": "v2: + immutable locals: headers in regs, sticky checks (L2)",
+     "median_ns_per_iter": 268.10163,
+     "ns_per_unit": 4.18908796875,
+     "min_ns_per_iter": 254.66134666666667,
+     "max_ns_per_iter": 285.48645666666664,
+     "ratio_rust": 1.2343682780054865,
+     "ratio_fastest_b0": 1.4622374697027984
+    },
+    {
+     "label": "v3: + typed append (no plain_ready call)",
+     "median_ns_per_iter": 222.22873333333334,
+     "ns_per_unit": 3.4723239583333334,
+     "min_ns_per_iter": 217.83314333333334,
+     "max_ns_per_iter": 242.45674,
+     "ratio_rust": 1.023164606973882,
+     "ratio_fastest_b0": 1.2120447784095578
+    },
+    {
+     "label": "v4: + bounded result capacity (one alloc, no growth)",
+     "median_ns_per_iter": 183.55704666666668,
+     "ns_per_unit": 2.868078854166667,
+     "min_ns_per_iter": 173.27922333333333,
+     "max_ns_per_iter": 199.30635,
+     "ratio_rust": 0.8451160688941208,
+     "ratio_fastest_b0": 1.0011277867426063
+    },
+    {
+     "label": "v5: + allocation hoisted out of the batch loop",
+     "median_ns_per_iter": 180.41189333333332,
+     "ns_per_unit": 2.818935833333333,
+     "min_ns_per_iter": 169.95679666666666,
+     "max_ns_per_iter": 190.43465666666665,
+     "ratio_rust": 0.830635450092475,
+     "ratio_fastest_b0": 0.9839739893115326
+    },
+    {
+     "label": "v12: + sign fact only: unsigned mod, i64 storage",
+     "median_ns_per_iter": 82.69213,
+     "ns_per_unit": 1.29206453125,
+     "min_ns_per_iter": 79.41281,
+     "max_ns_per_iter": 91.84212666666667,
+     "ratio_rust": 0.38072331791755926,
+     "ratio_fastest_b0": 0.4510063252339602
+    },
+    {
+     "label": "v6: + range x<1009: u32 storage",
+     "median_ns_per_iter": 88.42824666666667,
+     "ns_per_unit": 1.3816913541666667,
+     "min_ns_per_iter": 85.68301,
+     "max_ns_per_iter": 91.34298666666666,
+     "ratio_rust": 0.4071330061103237,
+     "ratio_fastest_b0": 0.4822913447267052
+    },
+    {
+     "label": "v7: + fuse generator into filter (no input list)",
+     "median_ns_per_iter": 99.69714666666667,
+     "ns_per_unit": 1.5577679166666667,
+     "min_ns_per_iter": 92.71803,
+     "max_ns_per_iter": 106.90639333333333,
+     "ratio_rust": 0.45901621431019934,
+     "ratio_fastest_b0": 0.543752395233313
+    },
+    {
+     "label": "v8: + fuse fold (no lists), branchy",
+     "median_ns_per_iter": 102.35293666666666,
+     "ns_per_unit": 1.5992646354166666,
+     "min_ns_per_iter": 91.22072666666666,
+     "max_ns_per_iter": 116.51919333333333,
+     "ratio_rust": 0.4712437525353276,
+     "ratio_fastest_b0": 0.5582371846382188
+    },
+    {
+     "label": "v9: + branchless select",
+     "median_ns_per_iter": 121.95513666666666,
+     "ns_per_unit": 1.9055490104166666,
+     "min_ns_per_iter": 108.24411333333333,
+     "max_ns_per_iter": 139.89814333333334,
+     "ratio_rust": 0.5614943558573557,
+     "ratio_fastest_b0": 0.6651484008386134
+    },
+    {
+     "label": "v10: + strength-reduced remainder (induction)",
+     "median_ns_per_iter": 90.41816333333334,
+     "ns_per_unit": 1.4127838020833334,
+     "min_ns_per_iter": 79.62205,
+     "max_ns_per_iter": 95.76312666666666,
+     "ratio_rust": 0.4162947930386902,
+     "ratio_fastest_b0": 0.49314443320507856
+    },
+    {
+     "label": "v11: hand AVX2 u16, fused, rank by in-register scan",
+     "median_ns_per_iter": 18.523006666666667,
+     "ns_per_unit": 0.2894219791666667,
+     "min_ns_per_iter": 17.207843333333333,
+     "max_ns_per_iter": 19.388763333333333,
+     "ratio_rust": 0.0852818830031637,
+     "ratio_fastest_b0": 0.1010252507586572
+    },
+    {
+     "label": "v30 holdout: file data, fused scalar branchless",
+     "median_ns_per_iter": 114.04340333333333,
+     "ns_per_unit": 1.7819281770833333,
+     "min_ns_per_iter": 110.16068,
+     "max_ns_per_iter": 117.94013333333334,
+     "ratio_rust": 0.5250678982833928,
+     "ratio_fastest_b0": 0.6219974773239126
+    },
+    {
+     "label": "v31 holdout: file data, guard + hoisted r_j + AVX2",
+     "median_ns_per_iter": 17.632293333333333,
+     "ns_per_unit": 0.27550458333333333,
+     "min_ns_per_iter": 17.13592,
+     "max_ns_per_iter": 21.19166,
+     "ratio_rust": 0.08118094455134155,
+     "ratio_fastest_b0": 0.09616726309642673
+    },
+    {
+     "label": "v20 holdout reference: today reading file",
+     "median_ns_per_iter": 251.43984666666665,
+     "ns_per_unit": 3.9287476041666665,
+     "min_ns_per_iter": 233.72407333333334,
+     "max_ns_per_iter": 275.59877,
+     "ratio_rust": 1.1576556642042681,
+     "ratio_fastest_b0": 1.3713634086160769
+    },
+    {
+     "label": "v8 baseline x86-64",
+     "median_ns_per_iter": 100.57818,
+     "ns_per_unit": 1.5715340625,
+     "min_ns_per_iter": 94.30453,
+     "max_ns_per_iter": 110.90769,
+     "ratio_rust": 0.46307258501757664,
+     "ratio_fastest_b0": 0.5485575877718931
+    },
+    {
+     "label": "v9 baseline x86-64",
+     "median_ns_per_iter": 116.09465,
+     "ns_per_unit": 1.81397890625,
+     "min_ns_per_iter": 110.9959,
+     "max_ns_per_iter": 126.09232,
+     "ratio_rust": 0.5345120550223796,
+     "ratio_fastest_b0": 0.6331850621797114
+    },
+    {
+     "label": "v10 baseline x86-64",
+     "median_ns_per_iter": 88.97858666666667,
+     "ns_per_unit": 1.3902904166666668,
+     "min_ns_per_iter": 85.17791666666666,
+     "max_ns_per_iter": 91.76188333333333,
+     "ratio_rust": 0.4096668297134012,
+     "ratio_fastest_b0": 0.48529292203556473
+    },
+    {
+     "label": "B0 rust",
+     "median_ns_per_iter": 217.19744,
+     "ns_per_unit": 3.39371,
+     "min_ns_per_iter": 200.11532333333332,
+     "max_ns_per_iter": 228.37422666666666,
+     "ratio_rust": 1.0,
+     "ratio_fastest_b0": 1.184603894767538
+    },
+    {
+     "label": "B0 go",
+     "median_ns_per_iter": 364.2231033333333,
+     "ns_per_unit": 5.690985989583333,
+     "min_ns_per_iter": 340.26537333333334,
+     "max_ns_per_iter": 385.99882333333335,
+     "ratio_rust": 1.6769217138716428,
+     "ratio_fastest_b0": 1.9864879934726027
+    },
+    {
+     "label": "B0 zig-safe",
+     "median_ns_per_iter": 281.33165,
+     "ns_per_unit": 4.39580703125,
+     "min_ns_per_iter": 251.90617,
+     "max_ns_per_iter": 336.31832333333335,
+     "ratio_rust": 1.2952806902328131,
+     "ratio_fastest_b0": 1.5343945504669751
+    },
+    {
+     "label": "B0 zig-fast",
+     "median_ns_per_iter": 183.35026666666667,
+     "ns_per_unit": 2.8648479166666667,
+     "min_ns_per_iter": 172.52516333333332,
+     "max_ns_per_iter": 208.81057666666666,
+     "ratio_rust": 0.8441640318903697,
+     "ratio_fastest_b0": 1.0
+    },
+    {
+     "label": "B0 my-llvm",
+     "median_ns_per_iter": 482.29482,
+     "ns_per_unit": 7.5358565625,
+     "min_ns_per_iter": 446.1390666666667,
+     "max_ns_per_iter": 529.2312566666667,
+     "ratio_rust": 2.2205363930624595,
+     "ratio_fastest_b0": 2.63045605969485
+    }
+   ]
+  },
+  "large": {
+   "size": 4096,
+   "iterations": 8000,
+   "rows": [
+    {
+     "label": "v1: today: heap lists, header traffic, plain_ready call, checked fold",
+     "median_ns_per_iter": 15830.6005,
+     "ns_per_unit": 3.8648927001953126,
+     "min_ns_per_iter": 14888.41125,
+     "max_ns_per_iter": 19289.034125,
+     "ratio_rust": 1.9636800268801844,
+     "ratio_fastest_b0": 1.9636800268801844
+    },
+    {
+     "label": "v2: + immutable locals: headers in regs, sticky checks (L2)",
+     "median_ns_per_iter": 14344.526,
+     "ns_per_unit": 3.50208154296875,
+     "min_ns_per_iter": 13665.86525,
+     "max_ns_per_iter": 17631.9505,
+     "ratio_rust": 1.7793424324783829,
+     "ratio_fastest_b0": 1.7793424324783829
+    },
+    {
+     "label": "v3: + typed append (no plain_ready call)",
+     "median_ns_per_iter": 12474.228875,
+     "ns_per_unit": 3.045466033935547,
+     "min_ns_per_iter": 11134.9665,
+     "max_ns_per_iter": 14405.810875,
+     "ratio_rust": 1.547344593312779,
+     "ratio_fastest_b0": 1.547344593312779
+    },
+    {
+     "label": "v4: + bounded result capacity (one alloc, no growth)",
+     "median_ns_per_iter": 12277.3245,
+     "ns_per_unit": 2.9973936767578127,
+     "min_ns_per_iter": 11408.971875,
+     "max_ns_per_iter": 13931.14825,
+     "ratio_rust": 1.522919923611031,
+     "ratio_fastest_b0": 1.522919923611031
+    },
+    {
+     "label": "v5: + allocation hoisted out of the batch loop",
+     "median_ns_per_iter": 12495.550625,
+     "ns_per_unit": 3.0506715393066406,
+     "min_ns_per_iter": 11990.836875,
+     "max_ns_per_iter": 13687.505,
+     "ratio_rust": 1.549989413679077,
+     "ratio_fastest_b0": 1.549989413679077
+    },
+    {
+     "label": "v12: + sign fact only: unsigned mod, i64 storage",
+     "median_ns_per_iter": 6169.16225,
+     "ns_per_unit": 1.5061431274414063,
+     "min_ns_per_iter": 5772.13825,
+     "max_ns_per_iter": 7289.5935,
+     "ratio_rust": 0.7652432826479463,
+     "ratio_fastest_b0": 0.7652432826479463
+    },
+    {
+     "label": "v6: + range x<1009: u32 storage",
+     "median_ns_per_iter": 6468.783625,
+     "ns_per_unit": 1.5792928771972656,
+     "min_ns_per_iter": 6022.268625,
+     "max_ns_per_iter": 7650.019875,
+     "ratio_rust": 0.802409308643857,
+     "ratio_fastest_b0": 0.802409308643857
+    },
+    {
+     "label": "v7: + fuse generator into filter (no input list)",
+     "median_ns_per_iter": 6716.33875,
+     "ns_per_unit": 1.6397311401367187,
+     "min_ns_per_iter": 6136.876,
+     "max_ns_per_iter": 7724.16075,
+     "ratio_rust": 0.833116864842646,
+     "ratio_fastest_b0": 0.833116864842646
+    },
+    {
+     "label": "v8: + fuse fold (no lists), branchy",
+     "median_ns_per_iter": 7425.40725,
+     "ns_per_unit": 1.8128435668945313,
+     "min_ns_per_iter": 6392.656625,
+     "max_ns_per_iter": 8379.15225,
+     "ratio_rust": 0.9210720659823559,
+     "ratio_fastest_b0": 0.9210720659823559
+    },
+    {
+     "label": "v9: + branchless select",
+     "median_ns_per_iter": 8592.091,
+     "ns_per_unit": 2.097678466796875,
+     "min_ns_per_iter": 7396.46125,
+     "max_ns_per_iter": 9992.71125,
+     "ratio_rust": 1.06579137574958,
+     "ratio_fastest_b0": 1.06579137574958
+    },
+    {
+     "label": "v10: + strength-reduced remainder (induction)",
+     "median_ns_per_iter": 6192.248625,
+     "ns_per_unit": 1.5117794494628907,
+     "min_ns_per_iter": 5830.96225,
+     "max_ns_per_iter": 7369.71175,
+     "ratio_rust": 0.7681069929336405,
+     "ratio_fastest_b0": 0.7681069929336405
+    },
+    {
+     "label": "v11: hand AVX2 u16, fused, rank by in-register scan",
+     "median_ns_per_iter": 885.690125,
+     "ns_per_unit": 0.21623294067382812,
+     "min_ns_per_iter": 807.35375,
+     "max_ns_per_iter": 1070.2715,
+     "ratio_rust": 0.10986393147041477,
+     "ratio_fastest_b0": 0.10986393147041477
+    },
+    {
+     "label": "v30 holdout: file data, fused scalar branchless",
+     "median_ns_per_iter": 8541.62375,
+     "ns_per_unit": 2.085357360839844,
+     "min_ns_per_iter": 7420.455625,
+     "max_ns_per_iter": 9248.772125,
+     "ratio_rust": 1.0595312511992467,
+     "ratio_fastest_b0": 1.0595312511992467
+    },
+    {
+     "label": "v31 holdout: file data, guard + hoisted r_j + AVX2",
+     "median_ns_per_iter": 918.211125,
+     "ns_per_unit": 0.22417263793945313,
+     "min_ns_per_iter": 825.311375,
+     "max_ns_per_iter": 1053.359,
+     "ratio_rust": 0.1138979438348965,
+     "ratio_fastest_b0": 0.1138979438348965
+    },
+    {
+     "label": "v20 holdout reference: today reading file",
+     "median_ns_per_iter": 13361.33375,
+     "ns_per_unit": 3.2620443725585937,
+     "min_ns_per_iter": 13176.670625,
+     "max_ns_per_iter": 16615.537125,
+     "ratio_rust": 1.6573840150507944,
+     "ratio_fastest_b0": 1.6573840150507944
+    },
+    {
+     "label": "v8 baseline x86-64",
+     "median_ns_per_iter": 7841.521,
+     "ns_per_unit": 1.914433837890625,
+     "min_ns_per_iter": 6750.582,
+     "max_ns_per_iter": 8119.16525,
+     "ratio_rust": 0.9726881913330786,
+     "ratio_fastest_b0": 0.9726881913330786
+    },
+    {
+     "label": "v9 baseline x86-64",
+     "median_ns_per_iter": 9189.63525,
+     "ns_per_unit": 2.243563293457031,
+     "min_ns_per_iter": 7753.123625,
+     "max_ns_per_iter": 9604.4635,
+     "ratio_rust": 1.1399127401856353,
+     "ratio_fastest_b0": 1.1399127401856353
+    },
+    {
+     "label": "v10 baseline x86-64",
+     "median_ns_per_iter": 6489.157875,
+     "ns_per_unit": 1.5842670593261718,
+     "min_ns_per_iter": 5605.0475,
+     "max_ns_per_iter": 7626.014,
+     "ratio_rust": 0.8049365979774273,
+     "ratio_fastest_b0": 0.8049365979774273
+    },
+    {
+     "label": "B0 rust",
+     "median_ns_per_iter": 8061.700625,
+     "ns_per_unit": 1.9681886291503907,
+     "min_ns_per_iter": 7602.600875,
+     "max_ns_per_iter": 8850.57725,
+     "ratio_rust": 1.0,
+     "ratio_fastest_b0": 1.0
+    },
+    {
+     "label": "B0 go",
+     "median_ns_per_iter": 16795.679125,
+     "ns_per_unit": 4.100507598876953,
+     "min_ns_per_iter": 15119.47975,
+     "max_ns_per_iter": 19881.275875,
+     "ratio_rust": 2.0833915703735273,
+     "ratio_fastest_b0": 2.0833915703735273
+    },
+    {
+     "label": "B0 zig-safe",
+     "median_ns_per_iter": 14723.331125,
+     "ns_per_unit": 3.5945632629394533,
+     "min_ns_per_iter": 13565.57925,
+     "max_ns_per_iter": 25370.19275,
+     "ratio_rust": 1.8263306726302553,
+     "ratio_fastest_b0": 1.8263306726302553
+    },
+    {
+     "label": "B0 zig-fast",
+     "median_ns_per_iter": 10369.61775,
+     "ns_per_unit": 2.5316449584960936,
+     "min_ns_per_iter": 9361.0315,
+     "max_ns_per_iter": 16246.38325,
+     "ratio_rust": 1.286281670872639,
+     "ratio_fastest_b0": 1.286281670872639
+    },
+    {
+     "label": "B0 my-llvm",
+     "median_ns_per_iter": 20009.28325,
+     "ns_per_unit": 4.885078918457031,
+     "min_ns_per_iter": 18043.5325,
+     "max_ns_per_iter": 23459.45075,
+     "ratio_rust": 2.4820176512074337,
+     "ratio_fastest_b0": 2.4820176512074337
+    }
+   ]
+  }
+ }
+}

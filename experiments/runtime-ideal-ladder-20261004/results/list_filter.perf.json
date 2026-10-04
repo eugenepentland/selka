@@ -1,0 +1,112 @@
+{
+ "v1: today: heap lists, header traffic, plain_ready call, checked fold": {
+  "cycles_per_iter": 47973.99574946868,
+  "instr_per_iter": 240070.03550443804,
+  "branch_miss_per_iter": 61.994749343667955
+ },
+ "v2: + immutable locals: headers in regs, sticky checks (L2)": {
+  "cycles_per_iter": 45266.93886735842,
+  "instr_per_iter": 229333.85073134143,
+  "branch_miss_per_iter": 62.61982747843481
+ },
+ "v3: + typed append (no plain_ready call)": {
+  "cycles_per_iter": 38912.2017752219,
+  "instr_per_iter": 188382.76172021503,
+  "branch_miss_per_iter": 62.123265408176024
+ },
+ "v4: + bounded result capacity (one alloc, no growth)": {
+  "cycles_per_iter": 41552.29066133266,
+  "instr_per_iter": 185690.7157144643,
+  "branch_miss_per_iter": 64.54094261782723
+ },
+ "v5: + allocation hoisted out of the batch loop": {
+  "cycles_per_iter": 38156.070383797975,
+  "instr_per_iter": 185079.70471308913,
+  "branch_miss_per_iter": 67.66545818227279
+ },
+ "v12: + sign fact only: unsigned mod, i64 storage": {
+  "cycles_per_iter": 18965.136142017753,
+  "instr_per_iter": 79287.59819977498,
+  "branch_miss_per_iter": 57.259907488436056
+ },
+ "v6: + range x<1009: u32 storage": {
+  "cycles_per_iter": 18742.31878984873,
+  "instr_per_iter": 75872.79884985623,
+  "branch_miss_per_iter": 57.9479934991874
+ },
+ "v7: + fuse generator into filter (no input list)": {
+  "cycles_per_iter": 20130.393424178023,
+  "instr_per_iter": 84727.81785223153,
+  "branch_miss_per_iter": 60.12989123640455
+ },
+ "v8: + fuse fold (no lists), branchy": {
+  "cycles_per_iter": 21168.16164520565,
+  "instr_per_iter": 79252.41792724091,
+  "branch_miss_per_iter": 76.71158894861858
+ },
+ "v9: + branchless select": {
+  "cycles_per_iter": 25091.90973871734,
+  "instr_per_iter": 106530.02037754719,
+  "branch_miss_per_iter": 1.002000250031254
+ },
+ "v10: + strength-reduced remainder (induction)": {
+  "cycles_per_iter": 19074.314039254907,
+  "instr_per_iter": 61477.01875234404,
+  "branch_miss_per_iter": 1.002375296912114
+ },
+ "v11: hand AVX2 u16, fused, rank by in-register scan": {
+  "cycles_per_iter": 2704.616202025253,
+  "instr_per_iter": 8434.011501437679,
+  "branch_miss_per_iter": 1.016252031503938
+ },
+ "v30 holdout: file data, fused scalar branchless": {
+  "cycles_per_iter": 23711.09038629829,
+  "instr_per_iter": 113370.3395424428,
+  "branch_miss_per_iter": 55.33229153644206
+ },
+ "v31 holdout: file data, guard + hoisted r_j + AVX2": {
+  "cycles_per_iter": 2694.621577697212,
+  "instr_per_iter": 8678.011626453306,
+  "branch_miss_per_iter": 1.0201275159394925
+ },
+ "v20 holdout reference: today reading file": {
+  "cycles_per_iter": 40016.96574571822,
+  "instr_per_iter": 226084.0171271409,
+  "branch_miss_per_iter": 63.46330791348919
+ },
+ "v8 baseline x86-64": {
+  "cycles_per_iter": 20863.092136517065,
+  "instr_per_iter": 83349.41805225653,
+  "branch_miss_per_iter": 63.76347043380422
+ },
+ "v9 baseline x86-64": {
+  "cycles_per_iter": 24966.753594199276,
+  "instr_per_iter": 110627.02200275034,
+  "branch_miss_per_iter": 1.008501062632829
+ },
+ "v10 baseline x86-64": {
+  "cycles_per_iter": 19027.264158019752,
+  "instr_per_iter": 61478.01887735967,
+  "branch_miss_per_iter": 1.0032504063007877
+ },
+ "B0 rust": {
+  "cycles_per_iter": 23512.07763470434,
+  "instr_per_iter": 124012.66333291662,
+  "branch_miss_per_iter": 62.62220277534692
+ },
+ "B0 zig-safe": {
+  "cycles_per_iter": 43365.215276909614,
+  "instr_per_iter": 243064.86160770096,
+  "branch_miss_per_iter": 72.53469183647957
+ },
+ "B0 zig-fast": {
+  "cycles_per_iter": 30660.283035379423,
+  "instr_per_iter": 149585.19414926865,
+  "branch_miss_per_iter": 72.48681085135642
+ },
+ "B0 my-llvm": {
+  "cycles_per_iter": 56129.17852231529,
+  "instr_per_iter": 314215.1435179397,
+  "branch_miss_per_iter": 65.54869358669833
+ }
+}

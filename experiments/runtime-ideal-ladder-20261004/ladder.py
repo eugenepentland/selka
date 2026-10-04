@@ -25,7 +25,7 @@ def data_file(case, size, seed):
     path = BUILD / 'data' / f'{case}_{size}_{seed}.bin'
     if not path.exists():
         path.parent.mkdir(exist_ok=True)
-        subprocess.run([str(BUILD / c['gen_exe']), 'gen', str(size), str(seed), str(path)], check=True)
+        subprocess.run([str(BUILD / c['gen_exe']), c.get('gen_mode', 'gen'), str(size), str(seed), str(path)], check=True)
     return str(path)
 
 
@@ -56,12 +56,14 @@ def run_once(argv, cpu=CPU, env=None):
 def cmd_verify(case):
     c = CASES[case]
     ok = True
-    ref = [a for a in arms(case) if a[0] == 'B0 rust'][0][1]
+    ref = ([a for a in arms(case) if a[0] == 'B0 rust'] or arms(case)[:1])[0][1]
     for size, it, seed in c['verify']:
         want, _, err = run_once(ref(size, it, seed))
         row = []
         for label, build in arms(case):
             if label.startswith('B0') and label != 'B0 my-llvm':
+                continue
+            if label == arms(case)[0][0] and not any(a[0] == 'B0 rust' for a in arms(case)):
                 continue
             got, _, err = run_once(build(size, it, seed))
             if got != want:
@@ -106,8 +108,9 @@ def cmd_time(case, rounds):
             rows.append({'label': label, 'median_ns_per_iter': med / it,
                          'ns_per_unit': med / it / (size if unit == 'size' else unit),
                          'min_ns_per_iter': min(s) / it, 'max_ns_per_iter': max(s) / it})
-        rust = [x for x in rows if x['label'] == 'B0 rust'][0]['median_ns_per_iter']
-        b0 = [x['median_ns_per_iter'] for x in rows if x['label'].startswith('B0')]
+        rr = [x for x in rows if x['label'] == 'B0 rust'] or rows[:1]
+        rust = rr[0]['median_ns_per_iter']
+        b0 = [x['median_ns_per_iter'] for x in rows if x['label'].startswith('B0')] or [rust]
         fastest = min(b0)
         for x in rows:
             x['ratio_rust'] = x['median_ns_per_iter'] / rust
@@ -125,14 +128,14 @@ def cmd_time(case, rounds):
 
 def perf_cycles(argv):
     p = subprocess.run(['taskset', '-c', CPU, 'perf', 'stat', '-x,', '-e',
-                        'cpu_core/cycles/u,cpu_core/instructions/u'] + argv,
+                        'cpu_core/cycles/u,cpu_core/instructions/u,cpu_core/branch-misses/u'] + argv,
                        capture_output=True, text=True)
     vals = {}
     for line in p.stderr.splitlines():
         f = line.split(',')
         if len(f) > 2 and f[2].startswith('cpu_core/'):
             vals[f[2].split('/')[1]] = int(f[0])
-    return vals['cycles'], vals['instructions']
+    return vals['cycles'], vals['instructions'], vals['branch-misses']
 
 
 def cmd_perf(case):
@@ -141,17 +144,20 @@ def cmd_perf(case):
     seed = c.get('seed', 42)
     unit = size if c.get('unit_div', 1) == 'size' else c.get('unit_div', 1)
     print(f'== {case} perf: size={size} iterations={it}; per unit = {"element" if unit == size else unit}')
-    print(f'{"version":44s} {"cyc/iter":>12s} {"instr/iter":>12s} {"cyc/unit":>9s} {"instr/unit":>10s}')
+    print(f'{"version":44s} {"cyc/iter":>12s} {"instr/iter":>12s} {"cyc/unit":>9s} {"instr/unit":>10s} {"brmiss/u":>8s}')
     res = {}
     for label, build in arms(case):
         if label.startswith('B0') and label not in ('B0 rust', 'B0 zig-fast', 'B0 zig-safe', 'B0 my-llvm'):
             continue
-        c1, i1 = perf_cycles(build(size, 1, seed))
-        cN, iN = perf_cycles(build(size, it, seed))
+        c1, i1, m1 = perf_cycles(build(size, 1, seed))
+        runs = [perf_cycles(build(size, it, seed)) for _ in range(3)]
+        runs.sort(key=lambda r: r[0])
+        cN, iN, mN = runs[1]  # the median run by cycles
         cyc = (cN - c1) / (it - 1)
         ins = (iN - i1) / (it - 1)
-        res[label] = {'cycles_per_iter': cyc, 'instr_per_iter': ins}
-        print(f'{label:44s} {cyc:12.1f} {ins:12.1f} {cyc / unit:9.3f} {ins / unit:10.3f}')
+        mis = (mN - m1) / (it - 1)
+        res[label] = {'cycles_per_iter': cyc, 'instr_per_iter': ins, 'branch_miss_per_iter': mis}
+        print(f'{label:44s} {cyc:12.1f} {ins:12.1f} {cyc / unit:9.3f} {ins / unit:10.3f} {mis / unit:8.4f}')
     (HERE / 'results' / f'{case}.perf.json').write_text(json.dumps(res, indent=1))
 
 

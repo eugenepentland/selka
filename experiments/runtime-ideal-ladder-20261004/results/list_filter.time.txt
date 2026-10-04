@@ -1,0 +1,51 @@
+== list_filter small: size=64 iterations=300000 checksum=143151768
+version                                           ns/iter   ns/unit   x rust x fastest
+v1: today: heap lists, header traffic, plain_ready call, checked fold        270.1     4.221    1.244     1.473
+v2: + immutable locals: headers in regs, sticky checks (L2)        268.1     4.189    1.234     1.462
+v3: + typed append (no plain_ready call)            222.2     3.472    1.023     1.212
+v4: + bounded result capacity (one alloc, no growth)        183.6     2.868    0.845     1.001
+v5: + allocation hoisted out of the batch loop        180.4     2.819    0.831     0.984
+v12: + sign fact only: unsigned mod, i64 storage         82.7     1.292    0.381     0.451
+v6: + range x<1009: u32 storage                      88.4     1.382    0.407     0.482
+v7: + fuse generator into filter (no input list)         99.7     1.558    0.459     0.544
+v8: + fuse fold (no lists), branchy                 102.4     1.599    0.471     0.558
+v9: + branchless select                             122.0     1.906    0.561     0.665
+v10: + strength-reduced remainder (induction)         90.4     1.413    0.416     0.493
+v11: hand AVX2 u16, fused, rank by in-register scan         18.5     0.289    0.085     0.101
+v30 holdout: file data, fused scalar branchless        114.0     1.782    0.525     0.622
+v31 holdout: file data, guard + hoisted r_j + AVX2         17.6     0.276    0.081     0.096
+v20 holdout reference: today reading file           251.4     3.929    1.158     1.371
+v8 baseline x86-64                                  100.6     1.572    0.463     0.549
+v9 baseline x86-64                                  116.1     1.814    0.535     0.633
+v10 baseline x86-64                                  89.0     1.390    0.410     0.485
+B0 rust                                             217.2     3.394    1.000     1.185
+B0 go                                               364.2     5.691    1.677     1.986
+B0 zig-safe                                         281.3     4.396    1.295     1.534
+B0 zig-fast                                         183.4     2.865    0.844     1.000
+B0 my-llvm                                          482.3     7.536    2.221     2.630
+== list_filter large: size=4096 iterations=8000 checksum=694074253
+version                                           ns/iter   ns/unit   x rust x fastest
+v1: today: heap lists, header traffic, plain_ready call, checked fold      15830.6     3.865    1.964     1.964
+v2: + immutable locals: headers in regs, sticky checks (L2)      14344.5     3.502    1.779     1.779
+v3: + typed append (no plain_ready call)          12474.2     3.045    1.547     1.547
+v4: + bounded result capacity (one alloc, no growth)      12277.3     2.997    1.523     1.523
+v5: + allocation hoisted out of the batch loop      12495.6     3.051    1.550     1.550
+v12: + sign fact only: unsigned mod, i64 storage       6169.2     1.506    0.765     0.765
+v6: + range x<1009: u32 storage                    6468.8     1.579    0.802     0.802
+v7: + fuse generator into filter (no input list)       6716.3     1.640    0.833     0.833
+v8: + fuse fold (no lists), branchy                7425.4     1.813    0.921     0.921
+v9: + branchless select                            8592.1     2.098    1.066     1.066
+v10: + strength-reduced remainder (induction)       6192.2     1.512    0.768     0.768
+v11: hand AVX2 u16, fused, rank by in-register scan        885.7     0.216    0.110     0.110
+v30 holdout: file data, fused scalar branchless       8541.6     2.085    1.060     1.060
+v31 holdout: file data, guard + hoisted r_j + AVX2        918.2     0.224    0.114     0.114
+v20 holdout reference: today reading file         13361.3     3.262    1.657     1.657
+v8 baseline x86-64                                 7841.5     1.914    0.973     0.973
+v9 baseline x86-64                                 9189.6     2.244    1.140     1.140
+v10 baseline x86-64                                6489.2     1.584    0.805     0.805
+B0 rust                                            8061.7     1.968    1.000     1.000
+B0 go                                             16795.7     4.101    2.083     2.083
+B0 zig-safe                                       14723.3     3.595    1.826     1.826
+B0 zig-fast                                       10369.6     2.532    1.286     1.286
+B0 my-llvm                                        20009.3     4.885    2.482     2.482
+wrote /home/epentland/ai/canopy/mylang-worktrees/claude-ideal-ladder-20261004/experiments/runtime-ideal-ladder-20261004/results/list_filter.json

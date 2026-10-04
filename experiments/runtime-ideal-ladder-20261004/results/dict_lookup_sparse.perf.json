@@ -1,0 +1,27 @@
+{
+ "v20 today model, sparse keys from file": {
+  "cycles_per_iter": 225285.6124082722,
+  "instr_per_iter": 585266.9799866577,
+  "branch_miss_per_iter": 2196.3222148098735
+ },
+ "v21 + immutable dict (no hint), sparse": {
+  "cycles_per_iter": 130964.49633088725,
+  "instr_per_iter": 325908.3955970647,
+  "branch_miss_per_iter": 951.3702468312208
+ },
+ "v22 + typed, probe inlined, sparse": {
+  "cycles_per_iter": 179737.45296864575,
+  "instr_per_iter": 259846.80920613743,
+  "branch_miss_per_iter": 2055.5396931287523
+ },
+ "v30 inline slots + Fibonacci hash, sparse": {
+  "cycles_per_iter": 70155.59906604403,
+  "instr_per_iter": 152743.3342228152,
+  "branch_miss_per_iter": 810.8192128085391
+ },
+ "v31 AVX2 4-slot buckets, sparse": {
+  "cycles_per_iter": 42461.207471647765,
+  "instr_per_iter": 168882.35023348898,
+  "branch_miss_per_iter": 13.867244829886591
+ }
+}

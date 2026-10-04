@@ -1,0 +1,7 @@
+== dict_lookup_sparse perf: size=4096 iterations=1500; per unit = element
+version                                          cyc/iter   instr/iter  cyc/unit instr/unit brmiss/u
+v20 today model, sparse keys from file           225285.6     585267.0    55.001    142.887   0.5362
+v21 + immutable dict (no hint), sparse           130964.5     325908.4    31.974     79.567   0.2323
+v22 + typed, probe inlined, sparse               179737.5     259846.8    43.881     63.439   0.5018
+v30 inline slots + Fibonacci hash, sparse         70155.6     152743.3    17.128     37.291   0.1980
+v31 AVX2 4-slot buckets, sparse                   42461.2     168882.4    10.367     41.231   0.0034

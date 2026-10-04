@@ -26,3 +26,65 @@ CASES['float_math'] = dict(
           ] + [('v3 baseline x86-64 (no AVX2)', 'float_math_base', 3), ('v4 baseline x86-64', 'float_math_base', 4),
           ('v5 baseline x86-64', 'float_math_base', 5), ('v6 baseline x86-64', 'float_math_base', 6)],
 )
+
+CASES['list_filter'] = dict(
+    group='collections', bench='list_filter', gen_exe='list_filter', sizes=(64, 4096), iters=(300000, 8000),
+    unit_div='size',
+    verify=[(2, 1, 1), (3, 7, 42), (17, 31, 999983), (64, 100, 42), (4096, 20, 42), (4100, 5, 7), (1000, 3, 13),
+            (33, 40, 5), (5000, 6, 999999)],
+    versions=V('list_filter', [
+        (1, "today: heap lists, header traffic, plain_ready call, checked fold"),
+        (2, "+ immutable locals: headers in regs, sticky checks (L2)"),
+        (3, "+ typed append (no plain_ready call)"),
+        (4, "+ bounded result capacity (one alloc, no growth)"),
+        (5, "+ allocation hoisted out of the batch loop"),
+        (12, "+ sign fact only: unsigned mod, i64 storage"),
+        (6, "+ range x<1009: u32 storage"),
+        (7, "+ fuse generator into filter (no input list)"),
+        (8, "+ fuse fold (no lists), branchy"),
+        (9, "+ branchless select"),
+        (10, "+ strength-reduced remainder (induction)"),
+        (11, "hand AVX2 u16, fused, rank by in-register scan"),
+    ]) + [('v30 holdout: file data, fused scalar branchless', 'list_filter', 30, 'file'),
+          ('v31 holdout: file data, guard + hoisted r_j + AVX2', 'list_filter', 31, 'file'),
+          ('v20 holdout reference: today reading file', 'list_filter', 20, 'file'),
+          ('v8 baseline x86-64', 'list_filter_base', 8),
+          ('v9 baseline x86-64', 'list_filter_base', 9),
+          ('v10 baseline x86-64', 'list_filter_base', 10)],
+)
+
+CASES['dict_lookup'] = dict(
+    group='collections', bench='dict_lookup', gen_exe='dict_lookup', sizes=(64, 4096), iters=(40000, 1500),
+    unit_div='size',
+    verify=[(2, 1, 1), (3, 7, 42), (17, 31, 999983), (64, 100, 42), (4096, 20, 42), (4100, 5, 7), (1000, 3, 13),
+            (33, 40, 5), (5000, 6, 999999)],
+    versions=V('dict_lookup', [
+        (1, "today: generic read call, hint record, out-param"),
+        (2, "+ immutable dict: no hint record, hoisted fields"),
+        (3, "+ typed int/int, probe inlined"),
+    ]) + [('v4: + inline {key,value} slots, load<=1/2, 1-mul hash', 'dict_lookup', 4),
+          ('v10: v4 layout with mylang hash (fold_multiply)', 'dict_lookup', 10),
+          ('v5: + query-key induction (no div, no flags)', 'dict_lookup', 5),
+          ('v6: dense-key direct addressing (runtime flag)', 'dict_lookup', 6),
+          ('v7: hand AVX2 gather over dense, i64 values', 'dict_lookup', 7),
+          ('v7n: hand AVX2 gather, u32 values', 'dict_lookup', 9),
+          ('v8: hand AVX2 4-slot buckets (general keys)', 'dict_lookup', 8),
+          ('v20 holdout ref: today, identity keys from file', 'dict_lookup', 20, 'file'),
+          ('v21 holdout: + immutable dict, identity keys from file', 'dict_lookup', 21, 'file'),
+          ('v30 holdout: best scalar table, keys from file', 'dict_lookup', 30, 'file'),
+          ('v31 holdout: AVX2 buckets, keys from file', 'dict_lookup', 31, 'file'),
+          ('v5 baseline x86-64', 'dict_lookup_base', 5)],
+)
+
+# Same kernel, but the dictionary keys are 40-bit pseudo-random ids from a file. There is no
+# benchmark checksum for these, so there are no B0 arms; v20 (today's model) is the reference.
+CASES['dict_lookup_sparse'] = dict(
+    group='collections', bench='dict_lookup', gen_exe='dict_lookup', gen_mode='gensparse', b0=[],
+    sizes=(64, 4096), iters=(40000, 1500), unit_div='size',
+    verify=[(3, 7, 42), (64, 100, 42), (4096, 20, 42), (4100, 5, 7), (1000, 3, 13)],
+    versions=[('v20 today model, sparse keys from file', 'dict_lookup', 20, 'file'),
+              ('v21 + immutable dict (no hint), sparse', 'dict_lookup', 21, 'file'),
+              ('v22 + typed, probe inlined, sparse', 'dict_lookup', 22, 'file'),
+              ('v30 inline slots + Fibonacci hash, sparse', 'dict_lookup', 30, 'file'),
+              ('v31 AVX2 4-slot buckets, sparse', 'dict_lookup', 31, 'file')],
+)
