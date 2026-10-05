@@ -105,9 +105,9 @@ pub fn finish(init: std.process.Init, module: *ir.Module, unit: Unit, options: O
     if (options.show.stats) {
         const format = "mylang-core: inlined {d} calls, unswitched {d} loops, versioned {d} loops, proved {d} checks, vectorized {d} loops\n";
         try report.print(allocator, format, .{ result.counts.inlined, result.counts.unswitched, result.counts.versioned, result.counts.proven, result.counts.vectorized });
-        const counting = "mylang-core: ownership: {d} updates in place, {d} tested, {d} copied; {d} retains, {d} releases ({d} pairs elided)\n";
+        const counting = "mylang-core: ownership: {d} updates in place, {d} tested, {d} copied; {d} retains, {d} releases ({d} pairs elided); {d} lists on the stack\n";
         const o = result.own;
-        try report.print(allocator, counting, .{ o.in_place, o.tested, o.copied, o.retains, o.releases, o.elided });
+        try report.print(allocator, counting, .{ o.in_place, o.tested, o.copied, o.retains, o.releases, o.elided, o.promoted });
     }
     const llvm = emit_llvm.emitModule(allocator, module, .{
         .locator = .{ .context = &unit.src, .locate = locate },

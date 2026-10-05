@@ -40,6 +40,8 @@
 //! but pure reads between them (R-2: LLVM cannot fold such a pair itself).
 const std = @import("std");
 const ir = @import("ir.zig");
+const facts = @import("facts.zig");
+const promotion = @import("promote.zig");
 
 /// The pass only allocates.
 pub const Error = std.mem.Allocator.Error;
@@ -48,6 +50,8 @@ pub const Error = std.mem.Allocator.Error;
 pub const Options = struct {
     /// Verify builds assert every statically unique update (form 1) at run time.
     verify: bool = false,
+    /// The function's facts (release builds): lists they bound may live on the stack.
+    facts: ?*const facts.Facts = null,
 };
 
 /// What the pass did, summed over functions.
@@ -59,8 +63,8 @@ pub const Stats = struct {
     releases: u32 = 0,
     /// `retain x … release x` pairs the peephole removed.
     elided: u32 = 0,
-    /// Blocks the pass added (copy-on-write arms, asserts, split edges).
-    blocks: u32 = 0,
+    /// Lists promoted to the stack (`promote.zig`).
+    promoted: u32 = 0,
 
     /// Add `other`'s counts to these.
     pub fn add(self: *Stats, other: Stats) void {
@@ -70,7 +74,7 @@ pub const Stats = struct {
         self.retains += other.retains;
         self.releases += other.releases;
         self.elided += other.elided;
-        self.blocks += other.blocks;
+        self.promoted += other.promoted;
     }
 };
 
@@ -96,8 +100,12 @@ pub fn run(arena: std.mem.Allocator, module: *ir.Module, options: Options) Error
 /// Run the pass over one function of `module`.
 pub fn function(arena: std.mem.Allocator, module: *const ir.Module, f: *ir.Function, options: Options) Error!Stats {
     var stats: Stats = .{};
-    const blocks_before = f.blocks.items.len;
     var marks: Marks = .{};
+    if (options.facts) |known| {
+        const promoted = try promotion.promote(arena, module, f, known, options.verify);
+        marks.stack = promoted.values;
+        stats.promoted = promoted.lists;
+    }
     // Popped elements are found (or read) before anything moves.
     try markPops(.{ .arena = arena, .f = f }, module, &marks);
     var phase_a = try Analysis.of(arena, module, f, &marks);
@@ -109,7 +117,6 @@ pub fn function(arena: std.mem.Allocator, module: *const ir.Module, f: *ir.Funct
     stats.elided = try elidePairs(arena, f);
     stats.retains -= stats.elided;
     stats.releases -= stats.elided;
-    stats.blocks = @intCast(f.blocks.items.len - blocks_before);
     return stats;
 }
 
@@ -139,6 +146,8 @@ const no_block = std.math.maxInt(u32);
 /// elements, the field a `record_set` drops).
 const Marks = struct {
     owned_get: std.AutoHashMapUnmanaged(u32, void) = .empty,
+    /// Values of lists promoted to the stack: never counted.
+    stack: std.AutoHashMapUnmanaged(u32, void) = .empty,
 };
 
 /// Where a value is live, by block.
@@ -251,6 +260,7 @@ const Analysis = struct {
         const live_phi = try self.livePhis();
         for (f.insts.items, 0..) |instruction, i| {
             if (instruction.op == .phi and !live_phi[i]) self.class[i] = .none;
+            if (self.marks.stack.contains(@intCast(i))) self.class[i] = .none;
         }
         for (self.parent, 0..) |p, child| {
             if (p != .none and self.class[child] == .borrowed) try self.children[p.index()].append(self.arena, @fromBackingInt(@intCast(child)));
@@ -524,6 +534,8 @@ fn copyOnWrite(a: *Analysis, options: Options, stats: *Stats) Error!void {
         for (block.insts.items, 0..) |ref, pos| {
             const instruction = f.inst(ref);
             if (!isUpdate(instruction.op)) continue;
+            // A push into a promoted list: in place by construction (`promote.zig`).
+            if (instruction.op == .list_push and instruction.data == promotion.stack_push) continue;
             const list = f.resolve(instruction.a);
             const form: Form = if (!a.counted(list) or a.liveAfter(list, @intCast(b), @intCast(pos)))
                 .copied

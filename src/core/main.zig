@@ -199,7 +199,8 @@ fn testCommand(init: std.process.Init, args: []const []const u8) !u8 {
 
 /// The coverage sweep: check each file and try to build each of its functions alone.
 /// Prints `ok NAME\tproven=P exact=E` (the checks the fact pass proves and keeps in
-/// reachable code of the function analysed alone), `refused REASON\tNAME` or
+/// reachable code of the function analysed alone; `stack=S`, the lists it would put on
+/// the stack), `refused REASON\tNAME` or
 /// `frontend FILE` per line.
 fn coverageCommand(init: std.process.Init, arguments: []const []const u8) !u8 {
     var out: std.ArrayList(u8) = .empty;
@@ -232,7 +233,9 @@ fn coverageCommand(init: std.process.Init, arguments: []const []const u8) !u8 {
                 if (!live) continue;
                 for (block.insts.items) |ref| exact += @intFromBool(function.inst(ref).check == .exact);
             }
-            try out.print(keep, "ok {s}\tproven={d} exact={d}\n", .{ outcome.name, known.proven, exact });
+            // Lists the release build would put on the stack (`promote.zig`).
+            const stack = try @import("promote.zig").promote(allocator, &outcome.module.?, &function, &known, false);
+            try out.print(keep, "ok {s}\tproven={d} exact={d} stack={d}\n", .{ outcome.name, known.proven, exact, stack.lists });
         }
     }
     try std.Io.File.stdout().writeStreamingAll(init.io, out.items);

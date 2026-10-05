@@ -65,10 +65,19 @@ pub const TrapKind = enum(u8) { overflow, division_by_zero, list_bounds, float_c
 
 const Site = struct { kind: TrapKind, location: Location, width: u16, operation: []const u8, function: []const u8 };
 
+/// `  %x = getelementptr inbounds i8, ptr p, i64 0`: a new name for the same block.
+const same_pointer = "  {s} = getelementptr inbounds i8, ptr {s}, i64 0\n";
+
 /// The `data` of an `unreachable` that asserts a uniqueness claim (`own.unique_assert`).
 const unique_assert = 1;
 /// The `data` of a `release` of a statically unique block (`own.unique_release`).
 const unique_release = 1;
+/// The `data` of an `unreachable` asserting a stack list's room (`promote.capacity_assert`).
+const capacity_assert = 2;
+/// The `data` of a push into a stack list (`promote.stack_push`).
+const stack_push = 1;
+/// The size class marking a block that lives in a stack frame (`runtime/core_rt.c`).
+const stack_kind = "-16777216";
 
 /// Header offsets of list and string blocks.
 const len_offset = 8;
@@ -800,6 +809,7 @@ const FunctionEmitter = struct {
             .convert => try self.convert(out, name, inst),
             .list_new => {
                 const element = self.state.module.compound(inst.ty).list;
+                if (inst.data != 0) return self.stackList(out, name, inst.data - 1, element);
                 try out.print(self.a(), "  {s} = call ptr @myl_core_list_new(i64 {s}, i64 {d})\n", .{ name, try self.value(inst.a), self.state.stride(element) });
                 try self.attachLayout(out, name, element);
             },
@@ -860,7 +870,11 @@ const FunctionEmitter = struct {
                 try self.storeValue(out, self.function.signature.ret, try self.value(inst.a), "%ret");
                 try out.appendSlice(self.a(), "  ret void\n");
             } else try out.print(self.a(), "  ret {s}\n", .{try self.typedValue(inst.a)}),
-            .@"unreachable" => if (inst.data == unique_assert) {
+            .@"unreachable" => if (inst.data == capacity_assert) {
+                const location = self.state.options.locator.locate(self.state.options.locator.context, inst.span);
+                const index = try self.state.site(.{ .kind = .fact, .location = location, .width = 64, .operation = "a stack list's length below its capacity", .function = self.function.name });
+                try out.print(self.a(), "  call void @myl_core_trap(i32 {d}, i64 0, i64 0){s}\n  unreachable\n", .{ index, try self.trapLocation(index) });
+            } else if (inst.data == unique_assert) {
                 // `own.zig`'s assert of a statically unique update (verify builds only).
                 const location = self.state.options.locator.locate(self.state.options.locator.context, inst.span);
                 const index = try self.state.site(.{ .kind = .fact, .location = location, .width = 32, .operation = "count == 1 before an in-place update", .function = self.function.name });
@@ -1308,7 +1322,7 @@ const FunctionEmitter = struct {
         if (managed) try self.loadValue(out, element, slot, old);
         try self.storeValue(out, element, try self.value(self.function.operands(inst.data)[0]), slot);
         if (managed) try self.counted(out, .release, element, old);
-        try out.print(self.a(), "  {s} = getelementptr inbounds i8, ptr {s}, i64 0\n", .{ name, list });
+        try out.print(self.a(), same_pointer, .{ name, list });
     }
 
     /// Drop the last element of list `a` in place (its value was read before, and is
@@ -1325,7 +1339,7 @@ const FunctionEmitter = struct {
             try self.trapIf(out, empty, try self.site(.list_empty, inst, "pop"), "0", len);
         }
         try out.print(self.a(), "  {s} = sub nuw i64 {s}, 1\n  store i64 {s}, ptr {s}, align 8, " ++ tbaa_header ++ "\n", .{ next, len, next, at });
-        try out.print(self.a(), "  {s} = getelementptr inbounds i8, ptr {s}, i64 0\n", .{ name, list });
+        try out.print(self.a(), same_pointer, .{ name, list });
     }
 
     /// Read one field (or a union's tag or payload) of an inline element, at its
@@ -1447,6 +1461,26 @@ const FunctionEmitter = struct {
         return std.fmt.allocPrint(self.a(), instruction_location, .{try self.state.debug.location(self.a(), location, self.scope)});
     }
 
+    /// A list `promote.zig` put on the stack: an entry-block `alloca` with the block
+    /// header (count 1, the stack class, room for `capacity` elements), set up where
+    /// the `list_new` runs; nothing counts, frees or grows it.
+    fn stackList(self: *FunctionEmitter, out: *Out, name: []const u8, capacity: u64, element: ir.Type) !void {
+        const bytes = data_offset + capacity * self.state.stride(element);
+        const frame = try self.fresh("%stacklist");
+        try self.state.allocas.print(self.a(), "  {s} = alloca [{d} x i8], align 32\n", .{ frame, bytes });
+        try out.print(self.a(), "  {s} = getelementptr inbounds i8, ptr {s}, i64 0\n  store i32 1, ptr {s}, align 8, " ++ tbaa_count ++ "\n", .{ name, frame, name });
+        const fields = [_]struct { offset: u32, ty: []const u8, value: []const u8 }{
+            .{ .offset = 4, .ty = "i32", .value = stack_kind },
+            .{ .offset = len_offset, .ty = "i64", .value = "0" },
+            .{ .offset = cap_offset, .ty = "i64", .value = try std.fmt.allocPrint(self.a(), "{d}", .{capacity}) },
+            .{ .offset = 24, .ty = "i64", .value = "0" },
+        };
+        for (fields) |field| {
+            const at = try self.fresh("%sh");
+            try out.print(self.a(), "  {s} = getelementptr inbounds i8, ptr {s}, i64 {d}\n  store {s} {s}, ptr {s}, align 4, " ++ tbaa_header ++ "\n", .{ at, name, field.offset, field.ty, field.value, at });
+        }
+    }
+
     /// The release of a block `own.zig` proved unique: free it without the count test
     /// (verify builds first assert the count is 1 and trap `R_CORE_FACT`).
     fn freeUnique(self: *FunctionEmitter, out: *Out, inst: ir.Inst) !void {
@@ -1559,7 +1593,10 @@ const FunctionEmitter = struct {
         const len_at = try self.fresh("%pl");
         const len = try self.fresh("%plen");
         const next = try self.fresh("%pn");
-        try out.print(self.a(), "  {s} = call ptr @myl_core_list_reserve(ptr {s}, i64 {d})\n", .{ name, try self.value(inst.a), self.state.stride(element) });
+        if (inst.data == stack_push) {
+            // A promoted list's room is proven (`promote.zig`): no growth call.
+            try out.print(self.a(), same_pointer, .{ name, try self.value(inst.a) });
+        } else try out.print(self.a(), "  {s} = call ptr @myl_core_list_reserve(ptr {s}, i64 {d})\n", .{ name, try self.value(inst.a), self.state.stride(element) });
         try out.print(self.a(), header_tagged_line, .{ len_at, name, len_offset, len, len_at });
         const slot = try self.elementSlot(out, name, len, element);
         if (element == .bool or element.isCompound()) {

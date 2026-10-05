@@ -464,6 +464,7 @@ const leak_fixtures = [_]struct { name: []const u8, args: []const []const u8 }{
     .{ .name = "control", .args = &.{ "3", "x" } },
     .{ .name = "list_alias", .args = &.{} },
     .{ .name = "rc_lists", .args = &.{ "a", "b" } },
+    .{ .name = "rc_stack", .args = &.{ "a", "b", "c", "d" } },
 };
 
 // spec: NEW-CORE-RC-7
@@ -477,4 +478,57 @@ test "every test/core program ends with no block live under MYL_CORE_LEAKCHECK=1
         try std.testing.expectEqualStrings("", try leakChecked(arena.allocator(), root, fixture.name, false, fixture.args));
         try std.testing.expectEqualStrings("", try leakChecked(arena.allocator(), root, fixture.name, true, fixture.args));
     }
+}
+
+/// Build `test/core/rc_stack.my` with `flags`, run it with four arguments under the leak
+/// check, and return the build's report and the run.
+fn stackRun(arena: std.mem.Allocator, root: []const u8, tag: []const u8, flags: []const []const u8) !struct { report: []const u8, run: std.process.RunResult } {
+    const source = try std.fmt.allocPrint(arena, "{s}/rc_stack.my", .{options.fixtures});
+    const output = try std.fmt.allocPrint(arena, "{s}/rc_stack-{s}", .{ root, tag });
+    const cache = try std.fmt.allocPrint(arena, "{s}/cache", .{root});
+    var argv: std.ArrayList([]const u8) = .empty;
+    try argv.appendSlice(arena, &.{ options.core_path, "build", source, "-o", output, "--cache-dir", cache, "--stats" });
+    try argv.appendSlice(arena, flags);
+    const built = try std.process.run(arena, std.testing.io, .{ .argv = argv.items });
+    try std.testing.expect(built.term == .exited and built.term.exited == 0);
+    var environment = try std.testing.environ.createMap(arena);
+    try environment.put("MYL_CORE_LEAKCHECK", "1");
+    const ran = try std.process.run(arena, std.testing.io, .{ .argv = &.{ output, "a", "b", "c", "d" }, .environ_map = &environment });
+    return .{ .report = built.stderr, .run = ran };
+}
+
+// spec: NEW-CORE-STACK-1
+test "lists that never escape and whose length the facts bound live on the stack, with the old core's output and no leak" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    var dir = std.testing.tmpDir(.{});
+    defer dir.cleanup();
+    const root = try dir.dir.realPathFileAlloc(std.testing.io, ".", arena.allocator());
+    // The comprehension, the emptied list, the two-element literal and the bounded fill
+    // loop go on the stack; the list `escapes` returns stays on the heap.
+    const release = try stackRun(arena.allocator(), root, "release", &.{"--release"});
+    try std.testing.expect(contains(release.report, "; 4 lists on the stack\n"));
+    try std.testing.expectEqualStrings("475 16 3\n", release.run.stdout);
+    try std.testing.expectEqualStrings("", release.run.stderr);
+    const debug = try stackRun(arena.allocator(), root, "debug", &.{});
+    try std.testing.expect(contains(debug.report, "; 0 lists on the stack\n"));
+    try std.testing.expectEqualStrings("475 16 3\n", debug.run.stdout);
+    const verify = try stackRun(arena.allocator(), root, "verify", &.{ "--release", "--verify-facts", "--emit-llvm", try std.fmt.allocPrint(arena.allocator(), "{s}/verify.ll", .{root}) });
+    try std.testing.expectEqualStrings("475 16 3\n", verify.run.stdout);
+    const llvm = try dir.dir.readFileAlloc(std.testing.io, "verify.ll", arena.allocator(), .limited(1 << 24));
+    try std.testing.expect(contains(llvm, "a stack list's length below its capacity"));
+    try std.testing.expect(contains(llvm, "alloca [64 x i8], align 32"));
+}
+
+// spec-case: NEW-CORE-STACK-1
+test "a wrong length bound behind a stack list is caught by the verify build" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    var dir = std.testing.tmpDir(.{});
+    defer dir.cleanup();
+    const root = try dir.dir.realPathFileAlloc(std.testing.io, ".", arena.allocator());
+    // `seed % 5` taken to lie in [0, 3]: the fill loop's capacity would be 3, not 4.
+    const sabotaged = try stackRun(arena.allocator(), root, "sabotage", &.{ "--release", "--sabotage-facts" });
+    try std.testing.expectEqual(@as(u8, 1), sabotaged.run.term.exited);
+    try std.testing.expect(contains(sabotaged.run.stderr, "error[R_CORE_FACT]"));
 }

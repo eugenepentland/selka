@@ -50,7 +50,13 @@ pub fn buildRoots(allocator: std.mem.Allocator, program: typed.Program, roots: [
 }
 
 /// How one checked function fared: built (its Core IR), or the reason it was refused.
-pub const Outcome = struct { name: []const u8, refusal: ?[]const u8, function: ?ir.Function = null };
+pub const Outcome = struct {
+    name: []const u8,
+    refusal: ?[]const u8,
+    function: ?ir.Function = null,
+    /// The types the built function uses (its own module's interned compounds).
+    module: ?ir.Module = null,
+};
 
 /// Try to build every function of `program` on its own (the coverage sweep).
 pub fn coverage(allocator: std.mem.Allocator, program: typed.Program) Error![]Outcome {
@@ -77,6 +83,7 @@ pub fn coverage(allocator: std.mem.Allocator, program: typed.Program) Error![]Ou
                 break :blk null;
             },
         };
+        outcome.module = mb.module;
     }
     return outcomes;
 }

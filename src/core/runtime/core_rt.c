@@ -99,6 +99,9 @@ static int64_t live_blocks;
 enum { MYL_GRANULE = 32, MYL_SMALL = 1024, MYL_CLASSES = MYL_SMALL / MYL_GRANULE, MYL_CHUNK = 1 << 16 };
 #define MYL_KIND_MASK 0xffu
 #define MYL_CLASS_SHIFT 24
+/* Class 0xff marks a list `promote.zig` put in a stack frame (`emit_llvm.zig`
+   `stackList`): nothing releases it and its pushes skip `myl_core_list_grow`, so no
+   function here ever sees one. */
 
 void *myl_core_free_lists[MYL_CLASSES + 1];
 #define free_lists myl_core_free_lists

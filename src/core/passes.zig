@@ -76,7 +76,7 @@ pub fn run(arena: std.mem.Allocator, module: *ir.Module, mode: Mode) Error!Resul
         }
         result.counts.versioned += guarded;
         // Ownership after the facts: the instructions and blocks it adds have none.
-        result.own.add(try own.function(arena, module, function, .{ .verify = verify }));
+        result.own.add(try own.function(arena, module, function, .{ .verify = verify, .facts = &known }));
         try extend(arena, &known, function);
         slot.* = known;
         // Vector code comes only from trusted facts, never in a verify build.

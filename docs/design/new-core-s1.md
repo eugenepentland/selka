@@ -377,6 +377,32 @@ Every mode's site is the instruction's span; function names print module-qualifi
 paths as the old core shows them (§13 R-1). Recorders carry `"call-inline-cost"="0"`.
 Until the verifier admits modes 2–4 and `a` on mode 3, `trace_test.zig` runs them unverified.
 
+### 6.3 Lists on the stack (checkpoint O-2c, 2026-10-05)
+
+`promote.zig`, run by `own.zig` first in release builds (it needs the facts). A list
+qualifies when it is built in the function from `list_new` by a straight chain of pushes
+or by a counted fill loop the facts recognized (`listFacts`: the header phi's length is the
+loop bound), its elements hold no blocks, every other use only reads it (`list_len`,
+`list_get`, `list_get_field`) and no read can run after a push of the version it reads
+(a CFG walk that stops at the version's definition), and its capacity (the push count, or
+`hi` of the bound's interval) is at most 4 KiB of elements. Calls, returns, stores, other
+phis and other updates make it escape (no callee analysis yet: any call escapes).
+- *Marks:* `list_new.data = capacity + 1`, each filling push `data = 1`; the web's values
+  are never counted (no retain, release or copy-on-write test).
+- *Emission:* an entry-block `alloca [32 + capacity × stride] align 32` with the block
+  header (count 1, size class 0xff, `cap` = capacity) written where the `list_new` runs,
+  and pushes without the growth test. No web value reaches a phi, so an instance is dead
+  before its `list_new` runs again in an enclosing loop.
+- *Verify builds* assert `len < capacity` before each such push (`R_CORE_FACT`); the
+  `--sabotage-facts` build of `test/core/rc_stack.my` (where `seed % 5` bounds a fill loop)
+  is caught.
+- *Results:* alloc_short 18.4 → 4.86 / 5.05 cycles per element (Rust 5.02 / 5.39, Zig
+  Safe 21.8 / 22.2): LLVM keeps both lists in registers. Other rows and every S0 kernel
+  binary are unchanged (the kernels' code is identical to the S1 head's). Promotions
+  (`mylang-core coverage` now prints `stack=N`): test/core 7 lists in 4 of 71 functions,
+  tests/lang 174 in 99 of 902, bench/parity 1 in 41, examples and benchmarks/runtime 0.
+  tests/lang release conformance is unchanged (218 matching, 31 mismatching, all builder).
+
 ## 7. `mut` parameters
 
 **Semantics:** `inout`. The callee's writes, including a rebinding of the whole parameter, reach the caller's variable. The checker guarantees the call-site marker, a mutable local argument, and no overlap (D3).
