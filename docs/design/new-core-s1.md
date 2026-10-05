@@ -67,6 +67,74 @@ D3 (MUT-EXCLUSIVE-4, `E_MUTATION_OVERLAP`) is enforced by the checker (`src/mut_
 
 `list_get_field` lets a list of records be read field by field, so a whole record is never loaded or copied just to read one field (`record_reads`). The builder emits it for `xs[i].f` (`field(index(..))`).
 
+### 2.1 As built in step 0 (2026-10-05; `ir.zig` is frozen from here)
+
+**Types.** `ir.Compound` is `list(T)`, `record([]Type)`, `union([]Type)` and `box(T)`; `option` is gone.
+- A union case without a payload is `.void`. `Module.option(payload)` interns `union{void, payload}` (None is tag 0). `union_tag` is `u32`.
+- `Module.intern` copies a record's or union's type list and compares it by contents.
+- Layout helpers on `Module`: `size`, `alignment`, `words`, `fieldOffset`, `unionLayout`, `passedInMemory`, `pathTarget`, `managed`, `isBlock`, `kind`, `valid`.
+- A record has C layout: fields at natural alignment, size rounded to the record's alignment. Nested records are inline.
+
+**Union forms (`UnionLayout`).** The design's two forms became three:
+
+| form | when | registers | memory |
+|---|---|---|---|
+| `niche` | two cases, one without a payload and one a `str`/list/box | `ptr`, null for the empty case | the pointer (8 bytes) |
+| `scalar` | every payload case has the same non-aggregate type `T` | `{i8, T}` (`Option[int]` and `Option[bool]` as in S0) | tag word, then `T` at 8 |
+| `words` | anything else | `{i8, [N x i64]}`, the payload's memory image | tag word, then `N` words |
+
+The emitter reads and writes a `words` payload through an entry-block stack slot, which SROA removes.
+
+**Operands that differ from the table above.**
+- `err_trace`: `data` is the `TraceMode` (`origin` 0, `append` 1). The site is the instruction's `span`; `a` is unused. The emitter adds a site-table entry of kind `trace` (7) and calls `myl_core_err_trace(i32 site, i32 mode)`.
+- `list_set`: `data` packs a one-element `extra` list holding the value.
+- `list_get_field`: `data` is an `ir.FieldPath`: up to 5 steps of 12 bits each, plus the length.
+  - On a record, a step is a field index.
+  - On a union, step 0 reads the tag (`u32`) and step `k + 1` reads case `k`'s payload.
+  - A box cannot be crossed; deeper reads use `record_get`.
+- `retain`/`release` take any managed type. The emitter counts every block the value holds: each managed record field; a niche union when it is not null; a union's payload under its tag, so an integer in a payload word is never counted.
+- `is_unique` takes only a block pointer (`str`, list or box).
+
+**Ownership semantics, fixed for O.**
+- `list_set` consumes the list and the value, and releases the element it replaces (load old, store new, release old).
+- `list_pop` does not release the popped element: the builder's `list_get` before it takes the list's owner.
+- `list_push` consumes the value.
+- `own.copyShared` treats `list_set` and `list_pop` like `list_push`: it puts a `list_copy` before them unless the operand is provably unique.
+
+**Records in the emitter.**
+- Every record is an LLVM struct value in SSA, whatever its size.
+- At calls between internal functions, a record or union over 4 words goes in by `ptr noalias readonly` (the callee loads it at entry) and comes back through `sret([S x i8])`.
+- A list element, box payload or slot is loaded and stored field by field; no aggregate load or store and no `memcpy` are emitted.
+- *Not built:* memory-backed SSA values for large records, and the WP-10b fusion of `record_make`/`union_make` with their consumer. Both are V's.
+
+**Counting (§6, R-2).**
+- `retain`, `release` and `is_unique` load the `u32` count with `!tbaa` `myl.count` and `!range [1, 0)`.
+- A saturated count is branched around and never stored, because string constants live in read-only memory. `retain` is therefore a compare-and-branch, not a branchless `uadd.sat`.
+- `release` calls the `cold` `myl_core_free(ptr)` at 0.
+- TBAA scaffold: `!1` is the root, `!3` the count, `!5` the header (len/cap), `!7` the data. S0's list length loads, element loads and push stores now carry `!5`/`!7`. `!range` nodes for facts start at `!9`.
+
+**Runtime.**
+- `myl_core_box_new(size)` creates a block of kind 2 with the value at 32.
+- `myl_core_free` frees the block only.
+- `myl_core_err_trace` is a stub.
+- Trap kind 6 (`list_empty`) prints `R_LIST_BOUNDS (length N)` with a `pop` record, as the old core's `myl_qbe_fail_pop_bounds` does. `list_set` and `list_get_field` use the `index` detail of `list_get`.
+
+**Verifier** (`verify_ir.zig`). It checks:
+- that reachable blocks are terminated, with phis first;
+- phi arity against the predecessors;
+- predecessor lists against the terminators;
+- every operation's operand and result types;
+- SSA dominance;
+- `verifyPlan`: values a vector plan reads before its loop must dominate the preheader.
+
+It runs in debug builds of `mylang-core`, after construction and after the release passes, and on every module `test_support` builds, optimizes or runs.
+
+**Open for V and O.**
+- `myl_core_list_copy` copies elements with `memcpy`, so a copied list of managed elements must retain them (O).
+- `myl_core_free` must release children by kind and element descriptor (O).
+- `list_reserve`'s grow frees the old block whatever its count (the uniqueness rule).
+- `print` of a record, union or box is `UnsupportedInstruction` (V).
+
 ## 3. Records
 
 **Value semantics, two representations, one rule.** A record is an SSA value in the IR, always. The emitter chooses the representation by size:
