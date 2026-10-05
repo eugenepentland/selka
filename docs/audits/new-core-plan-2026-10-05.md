@@ -143,7 +143,7 @@ gate of its own, and test results keyed by code.
 
 ## 4. Decisions for the user
 
-All of N1–N5 were accepted on 2026-10-05. N6 is open until S1.
+All of N1–N5 were accepted on 2026-10-05. **N6 was decided on 2026-10-05: retire arenas** (Option B in `docs/design/new-core-s1.md` §11 on `claude/new-core-s1-20261005`). The new core treats `with arena()` as a plain block now. Removing arenas from the old core and the `mylang fix` migration are a later lane.
 
 | ID | Decision | Recommended | Why |
 |---|---|---|---|
@@ -152,7 +152,7 @@ All of N1–N5 were accepted on 2026-10-05. N6 is open until S1.
 | **N3** | Which front-end output the new core starts from | **`typed.Program`** (the typed tree) | Bytecode drops types on loads, stores and calls, and makes the ownership decision inside QBE emission. The typed tree has types, spans, mutability and ownership summaries per local. S0 confirms this choice by lowering three kernels. |
 | **N4** | What happens to the running Codex campaign | **Continue the language and runtime items** (WP-0 gate reporting, WP-4 memory budget, WP-5 one-count RC). **Finish in-flight WP-10 items, then stop new old-back-end performance work** (WP-1 policy work, WP-3 Stages A–C, WP-10c–e, and the proposed WP-11). | Both cores need L3 and one-count RC. Tuning the old back end is lost when it is replaced. |
 | **N5** | Debug builds and tests in the new core | **LLVM -O0 with per-function object caching.** No QBE in the new core. Revisit an in-process interpreter only if S1 measurements demand it. | One code generator means one set of semantics. Incremental caching hides most of LLVM -O0's cost; an interpreter would be a second semantics to keep in sync. |
-| **N6** | `with arena()` in the new core | **Decide in S1.** Either support it as a region allocator under RC, or retire it with a `mylang fix` migration. | It depends on the RC design. The Lox and EDA code use it. |
+| **N6** | `with arena()` in the new core | **Decide in S1.** Either support it as a region allocator under RC, or retire it with a `mylang fix` migration. | It depends on the RC design. *Correction, 2026-10-05:* the Lox port has 0 arena blocks and the EDA tree has no `.my` files. All 156 `tests/lang` blocks test the feature itself. **Decided: retire.** |
 
 ## 5. Architecture of the new core
 
