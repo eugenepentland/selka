@@ -15,7 +15,7 @@ the new core cannot build counts against it: a test it refuses is `unsupported`
 
 usage:
   conformance.py [--set clean13|s1|excluded|all | FILE...] [--modes debug,release]
-                 [--why] [--jobs N] [--pin PATH] [--include-arena]
+                 [--why] [--verbose] [--jobs N] [--pin PATH] [--include-arena]
                  [--mylang P] [--core P] [--cache-dir D] [--verbose]
 
 FILE is a path, or a bare name that means tests/lang/NAME.my. Exit status 1 when any
@@ -149,7 +149,7 @@ def keep(name, include_arena):
 
 def compare(path, old, news, include_arena):
     """Per-file result: old/new test tables compared, for each mode."""
-    result = {"file": short(path), "tests": 0, "modes": {}, "problems": [], "reasons": collections.Counter(), "pass": [], "known_fail": []}
+    result = {"file": short(path), "tests": 0, "modes": {}, "problems": [], "reasons": collections.Counter(), "unsupported": {}, "pass": [], "known_fail": []}
     if isinstance(old, str):
         result["problems"].append(old)
         return result
@@ -182,6 +182,7 @@ def compare(path, old, news, include_arena):
                 stats["unsupported"] += 1
                 if mode == next(iter(news)):
                     result["reasons"][got[1]] += 1
+                    result["unsupported"][name] = got[1]
             elif got == expected and expected[0] != "skip":
                 stats["match"] += 1
             else:
@@ -225,8 +226,8 @@ def table(results, modes, why):
     return "\n".join(lines), totals
 
 
-def explain(results):
-    """Unsupported tests grouped by the construct that blocks them."""
+def explain(results, verbose):
+    """Unsupported tests grouped by the construct that blocks them, then the blocking features of each file."""
     by_reason = collections.Counter()
     files = collections.defaultdict(set)
     for r in results:
@@ -236,6 +237,15 @@ def explain(results):
     lines = ["", "blocking features of the unsupported tests (tests / files):"]
     for reason, n in by_reason.most_common():
         lines.append("  %4d / %2d  %s" % (n, len(files[reason]), reason))
+    lines += ["", "blocking features per file (file: tests unsupported of tests; the features, most common first):"]
+    for r in results:
+        if not r["reasons"]:
+            continue
+        total = sum(r["reasons"].values())
+        lines.append("  %-30s %3d of %3d: %s" % (r["file"], total, r["tests"], ", ".join("%s x%d" % kv for kv in r["reasons"].most_common())))
+        if verbose:
+            for name, reason in sorted(r["unsupported"].items()):
+                lines.append("      %s: %s" % (name, reason))
     return "\n".join(lines)
 
 
@@ -287,7 +297,7 @@ def main():
             bad = True
             print("PROBLEM %s: %s" % (r["file"], problem))
     if args.why:
-        print(explain(results))
+        print(explain(results, args.verbose))
         for name in names:
             if name in EXCLUDED:
                 print("  excluded %-28s %s" % (name, EXCLUDED[name]))
