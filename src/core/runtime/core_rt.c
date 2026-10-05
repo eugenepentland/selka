@@ -71,7 +71,7 @@ typedef struct {
     int64_t reserved;
 } myl_block;
 
-enum { MYL_KIND_LIST = 0, MYL_KIND_STR = 1, MYL_KIND_BOX = 2 };
+enum { MYL_KIND_LIST = 0, MYL_KIND_STR = 1, MYL_KIND_BOX = 2, MYL_KIND_BYTES = 3 };
 enum { MYL_HEADER = 32, MYL_ALIGN = 32 };
 /* A saturated count (D4): the block is immortal, never written and never freed. */
 #define MYL_SATURATED UINT32_MAX
@@ -354,11 +354,14 @@ myl_block *myl_core_list_copy(myl_block *list, int64_t element_size) {
     return copy;
 }
 
+static void core_text_publish(myl_block *text);
+
 static myl_block *str_from(const char *bytes, size_t len) {
     myl_block *text = block_new(MYL_KIND_STR, (int64_t)len, 1);
     memcpy(block_data(text), bytes, len);
     block_data(text)[len] = 0;
     text->len = (int64_t)len;
+    core_text_publish(text);
     return text;
 }
 
@@ -387,7 +390,7 @@ __attribute__((cold)) void myl_core_free_block(myl_block *block) {
         myl_block *dying = pending;
         pending = (myl_block *)(intptr_t)dying->cap;
         myl_layout *layout = layout_of(dying);
-        if (layout && kind_of(dying) != MYL_KIND_STR) {
+        if (layout && kind_of(dying) != MYL_KIND_STR && kind_of(dying) != MYL_KIND_BYTES) {
             int64_t count = element_count(dying);
             for (int64_t i = 0; i < count; ++i) {
                 const unsigned char *element = block_data(dying) + i * (int64_t)layout[0];
@@ -498,7 +501,7 @@ typedef struct {
 extern const myl_core_site myl_core_sites[];
 extern const char myl_core_source_path[];
 
-enum { TRAP_OVERFLOW, TRAP_DIVISION_BY_ZERO, TRAP_LIST_BOUNDS, TRAP_FLOAT_CONVERSION, TRAP_CAST, TRAP_FACT, TRAP_LIST_EMPTY, TRAP_ITERATION_MUTATION = 10 };
+enum { TRAP_OVERFLOW, TRAP_DIVISION_BY_ZERO, TRAP_LIST_BOUNDS, TRAP_FLOAT_CONVERSION, TRAP_CAST, TRAP_FACT, TRAP_LIST_EMPTY, TRAP_ITERATION_MUTATION = 10, TRAP_TEXT_BOUNDS = 11, TRAP_TEXT_SEPARATOR = 12, TRAP_TEXT_STEP = 13, TRAP_BYTE_RANGE = 14, TRAP_TEXT_SCALAR = 15 };
 
 
 
@@ -866,8 +869,9 @@ void myl_core_trap(int32_t index, int64_t a, int64_t b) {
         snprintf(detail, sizeof detail, " (%s: left %lld, right %lld)", site->operation, (long long)a, (long long)b);
         snprintf(record, sizeof record, "\036MYLANG-TRAP {\"version\":1,\"operation\":\"%s\",\"left\":%lld,\"right\":%lld}\n", site->operation, (long long)a, (long long)b);
         break;
+    case TRAP_TEXT_BOUNDS:
     case TRAP_LIST_BOUNDS:
-        code = "R_LIST_BOUNDS";
+        code = site->kind == TRAP_TEXT_BOUNDS ? "R_TEXT_BOUNDS" : "R_LIST_BOUNDS";
         snprintf(detail, sizeof detail, " (index %lld, length %lld)", (long long)a, (long long)b);
         snprintf(record, sizeof record, "\036MYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":%lld,\"length\":%lld}\n", (long long)a, (long long)b);
         break;
@@ -883,6 +887,10 @@ void myl_core_trap(int32_t index, int64_t a, int64_t b) {
     case TRAP_FLOAT_CONVERSION:
         code = "R_FLOAT_CONVERSION";
         break;
+    case TRAP_TEXT_SEPARATOR: code = "R_EMPTY_SEPARATOR"; break;
+    case TRAP_TEXT_STEP: code = "R_SLICE_STEP"; break;
+    case TRAP_BYTE_RANGE: code = "R_BYTE_RANGE"; break;
+    case TRAP_TEXT_SCALAR: code = "R_TEXT_SCALAR"; break;
     case TRAP_FACT:
         /* Verify builds only: a fact the compiler relied on does not hold. */
         code = "R_CORE_FACT";
@@ -1011,56 +1019,6 @@ void myl_core_main_error_str(myl_block *text) {
 /* ---- lane V helpers (checkpoint V-2) ---------------------------------------------
  * Appended for the builder's `assert`, `str ==`, `len(str)` and the text builders; the rest of the file is lane O's. */
 
-/* `a == b` for two strings: the same block, or the same bytes. */
-bool myl_core_str_eq(const myl_block *a, const myl_block *b) {
-    if (a == b) return true;
-    if (a->len != b->len) return false;
-    return memcmp((const unsigned char *)a + MYL_HEADER, (const unsigned char *)b + MYL_HEADER, (size_t)a->len) == 0;
-}
-
-/* `len(text)`: the Unicode scalars of a string, the bytes that do not continue one. */
-uint64_t myl_core_str_chars(const myl_block *text) {
-    const unsigned char *bytes = (const unsigned char *)text + MYL_HEADER;
-    uint64_t scalars = 0;
-    for (int64_t i = 0; i < text->len; ++i) scalars += (bytes[i] & 0xC0) != 0x80;
-    return scalars;
-}
-
-/* ---- text builders: concatenation, join, str(x) ---- */
-
-static myl_block *str_new(int64_t len) {
-    myl_block *text = block_new(MYL_KIND_STR, len, 1);
-    text->len = len;
-    block_data(text)[len] = 0;
-    return text;
-}
-
-/* `a + b` for two strings: a fresh string. */
-myl_block *myl_core_str_concat(const myl_block *a, const myl_block *b) {
-    myl_block *text = str_new(a->len + b->len);
-    memcpy(block_data(text), (const unsigned char *)a + MYL_HEADER, (size_t)a->len);
-    memcpy(block_data(text) + a->len, (const unsigned char *)b + MYL_HEADER, (size_t)b->len);
-    return text;
-}
-
-/* `separator.join(parts)`: the strings of the list with the separator between them. */
-myl_block *myl_core_str_join(const myl_block *separator, myl_block *parts) {
-    myl_block **items = (myl_block **)block_data(parts);
-    int64_t total = parts->len > 1 ? separator->len * (parts->len - 1) : 0;
-    for (int64_t i = 0; i < parts->len; ++i) total += items[i]->len;
-    myl_block *text = str_new(total);
-    unsigned char *at = block_data(text);
-    for (int64_t i = 0; i < parts->len; ++i) {
-        if (i != 0) {
-            memcpy(at, (const unsigned char *)separator + MYL_HEADER, (size_t)separator->len);
-            at += separator->len;
-        }
-        memcpy(at, (const unsigned char *)items[i] + MYL_HEADER, (size_t)items[i]->len);
-        at += items[i]->len;
-    }
-    return text;
-}
-
 /* `str(x)` of an integer, in decimal. */
 myl_block *myl_core_str_from_i64(int64_t value) {
     char text[32];
@@ -1078,6 +1036,8 @@ myl_block *myl_core_str_from_u64(uint64_t value) {
 myl_block *myl_core_str_from_bool(bool value) {
     return value ? str_from("True", 4) : str_from("False", 5);
 }
+
+bool myl_core_str_eq(const myl_block *, const myl_block *);
 
 /* ---- sort: a stable merge sort over the element kinds ----
  * `list.sort()` and `sorted(list)` give a new list (the caller's value is replaced, as every

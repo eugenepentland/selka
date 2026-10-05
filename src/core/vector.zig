@@ -233,8 +233,10 @@ fn laneShaped(f: *const ir.Function, known: facts.Facts, body: *const Body, ref:
     const ok = switch (inst.op) {
         .phi, .cmp => true,
         .add, .sub, .mul => inst.check == .proven,
+        .bit_xor => inst.ty.integer() != null,
+        .convert => inst.check == .none and f.inst(f.resolve(inst.a)).ty == .u8 and inst.ty.integer() != null and inst.ty.integer().?.bits >= 8,
         .floor_div, .floor_rem, .div, .rem => inst.check == .proven and positiveConstant(f, inst.b) != null,
-        .list_get => inst.check == .proven and (inst.ty == .i64 or inst.ty == .bool) and indexIsCounter(f, known, inst.b, counter) and !definedIn(f, body.in_loop, inst.a),
+        .list_get => inst.check == .proven and (inst.ty == .i64 or inst.ty == .bool or inst.ty == .u8) and indexIsCounter(f, known, inst.b, counter) and !definedIn(f, body.in_loop, inst.a),
         else => false,
     };
     if (!ok or inst.op == .phi) return ok;
@@ -605,7 +607,9 @@ const Writer = struct {
                 };
                 try self.put("  {s} = icmp {s} {s} {s}, {s}\n", .{ name, spelled, v, try self.lane(inst.a), try self.lane(inst.b) });
             },
-            .list_get => if (inst.ty == .bool) try self.loadMask(name, self.f.resolve(inst.a)) else try self.load(name, self.f.resolve(inst.a)),
+            .list_get => if (inst.ty == .bool) try self.loadMask(name, self.f.resolve(inst.a)) else if (inst.ty == .u8) try self.loadBytes(name, self.f.resolve(inst.a)) else try self.load(name, self.f.resolve(inst.a)),
+            .convert => try self.put("  {s} = add {s} {s}, zeroinitializer\n", .{ name, v, try self.lane(inst.a) }),
+            .bit_xor => try self.put("  {s} = xor {s} {s}, {s}\n", .{ name, v, try self.lane(inst.a), try self.lane(inst.b) }),
             .add, .sub, .mul => {
                 const op = switch (inst.op) {
                     .add => "add",
@@ -624,13 +628,17 @@ const Writer = struct {
     fn packedLoads(self: *Writer) bool {
         // `packusdw` is x86; the generic load is a plain `trunc`, which keeps element order.
         if (!self.e.target.x86_avx2 or self.e.plan.bits != 16) return false;
+        var byte_load = false;
+        var integer_load = false;
         for (self.e.plan.body) |ref| {
             const inst = self.f.inst(ref);
+            if (inst.op == .list_get and inst.ty == .u8) byte_load = true;
             if (inst.op != .list_get or inst.ty != .i64) continue;
+            integer_load = true;
             const elements = self.e.known.aggregates.lists[self.f.resolve(inst.a).index()].elements orelse return false;
             if (elements.lo < 0 or elements.hi > 0xffff) return false;
         }
-        return true;
+        return !byte_load or integer_load;
     }
 
     /// A `list[bool]` slice as a lane mask: one byte per element, non-zero is true. When
@@ -646,6 +654,19 @@ const Writer = struct {
             bytes = try std.fmt.allocPrint(self.arena, "{s}.s", .{name});
         }
         try self.put("  {s} = icmp ne <{d} x i8> {s}, zeroinitializer\n", .{ name, self.lanes(), bytes });
+    }
+
+    /// Octets widen without changing their unsigned values; packed mixed loads share one permutation.
+    fn loadBytes(self: *Writer, name: []const u8, list: ir.Ref) Error!void {
+        const n = self.e.id;
+        try self.put("  {s}.p = getelementptr inbounds i8, ptr %vp{d}.{d}, i64 %vj{d}\n", .{ name, n, list.index(), n });
+        try self.put("  {s}.b = load <{d} x i8>, ptr {s}.p, align 1\n", .{ name, self.lanes(), name });
+        var bytes = try std.fmt.allocPrint(self.arena, "{s}.b", .{name});
+        if (self.packedLoads()) {
+            try self.put("  {s}.s = shufflevector <16 x i8> {s}, <16 x i8> poison, <16 x i32> <i32 0, i32 1, i32 4, i32 5, i32 8, i32 9, i32 12, i32 13, i32 2, i32 3, i32 6, i32 7, i32 10, i32 11, i32 14, i32 15>\n", .{ name, bytes });
+            bytes = try std.fmt.allocPrint(self.arena, "{s}.s", .{name});
+        }
+        try self.put("  {s} = zext <{d} x i8> {s} to {s}\n", .{ name, self.lanes(), bytes, try self.vec() });
     }
 
     fn load(self: *Writer, name: []const u8, list: ir.Ref) Error!void {
@@ -697,7 +718,7 @@ const Writer = struct {
 
 /// The in-memory element type a list read loads.
 fn storage(ty: ir.Type) []const u8 {
-    return if (ty == .bool) "i8" else "i64";
+    return if (ty == .bool or ty == .u8) "i8" else "i64";
 }
 
 /// How many elements one block covers: as many vector iterations as keep the

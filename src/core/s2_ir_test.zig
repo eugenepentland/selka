@@ -137,12 +137,12 @@ fn exercise(op: ir.Op, allocator: std.mem.Allocator) !void {
     try verify_ir.verifyModule(a, &program.module, &failure);
     const text = try print.module(a, &program.module);
     try std.testing.expect(std.mem.indexOf(u8, text, @tagName(op)) != null);
-    const ran = try support.runModule(a, &program.module, false);
+    const ran = if (op == .str_append or op == .str_append_char) try support.runOwned(a, &program.module, .{ .leakcheck = false }) else try support.runModule(a, &program.module, false);
     const expected: ?[]const u8 = switch (op) {
         .str_char, .str_from_view => "A\n",
         .array_get => "0\n",
         .array_set, .call_indirect => "42\n",
-        .func_ref, .str_view_of => "",
+        .func_ref, .str_view_of, .str_width, .str_code, .str_append, .str_append_char, .str_slice => "",
         else => null,
     };
     if (expected) |stdout| {
@@ -633,9 +633,7 @@ test "S2 builder dispatch stubs keep precise source refusals until Wave B" {
     defer arena.deinit();
     const a = arena.allocator();
     try refuseSource(a, "def main() -> int:\n    d: dict[int, int] = {}\n    return len(d)\n", "dict type");
-    try refuseSource(a, "def main() -> int:\n    raw = b\"abc\"\n    return len(raw)\n", "bytes type");
     try refuseSource(a, "def main() -> int:\n    xs: [2]int = [1, 2]\n    return xs[0]\n", "fixed array type");
     try refuseSource(a, "def target(x: int) -> int effects():\n    return x\ndef main() -> int:\n    f = target\n    return f(1)\n", "function_value");
-    try refuseSource(a, "def main() -> int:\n    s = \"abc\"\n    ch = s[0]\n    return len(ch)\n", "index");
     try std.testing.expect(true);
 }

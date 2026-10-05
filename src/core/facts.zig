@@ -735,6 +735,15 @@ fn transfer(a: *Analysis, ref: ir.Ref, block: ir.BlockId) ?Interval {
             if (d.lo <= 0 or x.lo < 0) break :blk full;
             break :blk .{ .lo = 0, .hi = @min(x.hi, d.hi - 1) };
         },
+        .bit_xor => blk: {
+            const x = a.rangeAt(i.a, block) orelse break :blk full;
+            const y = a.rangeAt(i.b, block) orelse break :blk full;
+            if (x.lo < 0 or y.lo < 0) break :blk full;
+            const high: u128 = @intCast(@max(x.hi, y.hi));
+            const bits: u8 = @intCast(128 - @clz(high));
+            const bound: i128 = if (bits == 0) 0 else @intCast((@as(u128, 1) << @intCast(bits)) - 1);
+            break :blk (Interval{ .lo = 0, .hi = bound }).meet(full.?);
+        },
         .convert => blk: {
             const x = a.rangeAt(i.a, block) orelse break :blk full;
             break :blk x.meet(full.?);
@@ -1142,7 +1151,7 @@ fn lengthBound(a: *Analysis, ref: ir.Ref, block: ir.BlockId) ?LengthBound {
         },
         .list_len => {
             const list = a.liveOperand(i.a);
-            if (a.f.inst(list).op != .param) return .{};
+            if (a.f.inst(list).op != .param and a.f.inst(list).ty != .bytes) return .{};
             return .{ .list = list, .strict = a.sabotage == .length };
         },
         .convert => return if (i.check == .none) .{} else knownBound(a, i.a),
