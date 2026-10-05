@@ -219,23 +219,6 @@ test "a recursive union stores the payload that closes the cycle in a box and re
     try std.testing.expect(contains(text, "box_get record{union{"));
 }
 
-const managed_write =
-    \\record Item:
-    \\    payload: list[int]
-    \\
-    \\
-    \\def touch(xs: list[Item]) -> int:
-    \\    copy = xs
-    \\    copy[0] = Item(payload=[1])
-    \\    return len(copy)
-    \\
-    \\
-    \\def main(out: Stream) -> int:
-    \\    out.print(touch([Item(payload=[2])]))
-    \\    return 0
-    \\
-;
-
 const array_field =
     \\record Grid:
     \\    cells: [4]int
@@ -253,12 +236,10 @@ const array_field =
 ;
 
 // spec-case: NEW-CORE-IR-2
-test "an element write of a managed element and a record holding an unsupported type are refused with their reason, every time" {
+test "a record holding an unsupported type is refused with its reason, every time it is used" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     var refusal: build.Refusal = .{};
-    try std.testing.expectError(error.Unsupported, support.buildSource(arena.allocator(), managed_write, &refusal));
-    try std.testing.expectEqualStrings("element write of a managed element (needs ownership)", refusal.reason);
     // A type that failed to map stays unmapped: the second use is refused for the same reason.
     try std.testing.expectError(error.Unsupported, support.buildSource(arena.allocator(), array_field, &refusal));
     try std.testing.expectEqualStrings("fixed array type", refusal.reason);
@@ -356,49 +337,16 @@ const callback_in_index =
 ;
 
 // spec-case: NEW-CORE-PLACE-1
-test "an append to a list element, a str comparison and a read through a place a callback rewrites are refused, never lowered wrongly" {
+test "an append to a list element is a push onto the element and a list_set of it; a str comparison and a read through a place a callback rewrites are refused" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
+    const text = try support.irText(arena.allocator(), append_to_element);
+    // `copy[i].append(v)`: read the element, push onto it, store it back with `list_set`: the append is not dropped.
+    try std.testing.expect(contains(text, "list_push list[i64]"));
+    try std.testing.expect(contains(text, "list_set.exact list[list[i64]]"));
     var refusal: build.Refusal = .{};
-    try std.testing.expectError(error.Unsupported, support.buildSource(arena.allocator(), append_to_element, &refusal));
-    try std.testing.expectEqualStrings("element write of a managed element (needs ownership)", refusal.reason);
     try std.testing.expectError(error.Unsupported, support.buildSource(arena.allocator(), text_equality, &refusal));
     try std.testing.expectEqualStrings("str equality", refusal.reason);
     try std.testing.expectError(error.Unsupported, support.buildSource(arena.allocator(), callback_in_index, &refusal));
     try std.testing.expectEqualStrings("write to a receiver's place while its arguments are evaluated", refusal.reason);
-}
-
-const escaping_lists =
-    \\record Holder:
-    \\    items: list[int]
-    \\
-    \\
-    \\def fresh() -> Holder:
-    \\    return Holder(items=[1, 2])
-    \\
-    \\
-    \\def shared(h0: Holder) -> int:
-    \\    h = h0
-    \\    items = [0]
-    \\    for i in range(3):
-    \\        h.items = items
-    \\        items.append(i)
-    \\    return len(h.items) * 10 + len(items)
-    \\
-    \\
-    \\def main(out: Stream) -> int:
-    \\    out.print(shared(fresh()))
-    \\    return 0
-    \\
-;
-
-// spec: NEW-CORE-ESCAPE-1
-test "a list stored into a record is copied unless it is a fresh list nothing else uses, so a later in-place append cannot change it" {
-    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
-    defer arena.deinit();
-    const text = try support.irText(arena.allocator(), escaping_lists);
-    // `fresh` stores a list literal nothing else names: no copy. `shared` stores a loop-carried list: copied.
-    const fresh = "fn fresh() -> record{list[i64]}\nb0:\n  %1 = list_new list[i64] 2:i64\n  %3 = list_push list[i64] %1, 1:i64\n";
-    try std.testing.expect(contains(text, fresh ++ "  %5 = list_push list[i64] %3, 2:i64\n  %6 = record_make record{list[i64]} %5\n  ret %6\n"));
-    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, text, "list_copy list[i64] %"));
 }

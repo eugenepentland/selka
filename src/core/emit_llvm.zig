@@ -32,7 +32,8 @@ pub const Options = struct {
     /// The path traps report (the entry file's).
     source_path: []const u8,
     /// Parameter names of `main`, which select stdout or stderr for a `Stream`.
-    main_parameters: []const []const u8,
+    /// What the C entry needs to know about `main`.
+    main: Main,
     /// Per function, the facts a release build computed (empty in debug builds):
     /// element ranges become `!range` metadata on list loads.
     facts: []const ?facts.Facts = &.{},
@@ -46,12 +47,27 @@ pub const Options = struct {
     target: @import("target.zig").Target = @import("target.zig").current,
 };
 
+/// `main` as the C entry calls it.
+pub const Main = struct {
+    /// Parameter names, which select stdout or stderr for a `Stream`.
+    parameters: []const []const u8 = &.{},
+    /// When `main` returns a `Result`, the tags of its `Ok` and `Err` cases (the
+    /// checker's order): the entry reports an `Err` (RESULT-MAIN-1/2).
+    result: ?MainResult = null,
+};
+
+/// The case tags of `main`'s `Result` return type.
+pub const MainResult = struct { ok_tag: u32, error_tag: u32 };
+
 /// Trap kinds, in the order the runtime's code table lists them. `list_empty` is a
 /// pop of an empty list (`R_LIST_BOUNDS`, operation `pop`); `trace` marks an
 /// error-trace site, which never traps.
 pub const TrapKind = enum(u8) { overflow, division_by_zero, list_bounds, float_conversion, cast, fact, list_empty, trace };
 
 const Site = struct { kind: TrapKind, location: Location, width: u16, operation: []const u8, function: []const u8 };
+
+/// The `data` of an `unreachable` that asserts a uniqueness claim (`own.unique_assert`).
+const unique_assert = 1;
 
 /// Header offsets of list and string blocks.
 const len_offset = 8;
@@ -130,6 +146,9 @@ pub fn emitModule(allocator: std.mem.Allocator, module: *const ir.Module, option
     try out.appendSlice(allocator, metadata);
     try out.appendSlice(allocator, tbaa_metadata);
     try out.appendSlice(allocator, state.meta.ranges.items);
+    try out.appendSlice(allocator, state.layouts.text.items);
+    try out.appendSlice(allocator, trace_call_attributes);
+    try state.debug.finish(allocator, &out);
     return out.toOwnedSlice(allocator);
 }
 
@@ -150,6 +169,10 @@ const ModuleState = struct {
     meta: Metadata = .{},
     /// The `alloca`s of the function being emitted, placed in its entry block.
     allocas: Out = .empty,
+    /// Element layouts of lists and boxes whose elements hold blocks.
+    layouts: Layouts = .{},
+    /// DWARF line tables for trap frames (`Traps.dwarf_lines`).
+    debug: Debug = .{},
 
     fn declareExtern(self: *ModuleState, function: *const ir.Function) !void {
         try self.externs.print(self.allocator, "declare {s} @{s}(", .{ try self.llvmType(function.signature.ret), c_abi.symbol(function.name) });
@@ -167,6 +190,23 @@ const ModuleState = struct {
         self.meta.range_count += 1;
         try self.meta.ranges.print(self.allocator, "!{d} = !{{i{d} {d}, i{d} {d}}}\n", .{ self.meta.range_count, bits, range.lo, bits, range.hi + 1 });
         return std.fmt.allocPrint(self.allocator, ", !range !{d}", .{self.meta.range_count});
+    }
+
+    /// The `@myl.layout.N` constant for elements of `ty` (a managed type), emitted once.
+    fn layoutSymbol(self: *ModuleState, ty: ir.Type) ![]const u8 {
+        for (self.layouts.types.items, 0..) |known, i| {
+            if (known == ty) return std.fmt.allocPrint(self.allocator, "@myl.layout.{d}", .{i});
+        }
+        var parts: LayoutParts = .{};
+        try layoutParts(self.allocator, self.module, ty, 0, 0, &parts);
+        const index = self.layouts.types.items.len;
+        try self.layouts.types.append(self.allocator, ty);
+        const words = 3 + 2 * parts.refs.items.len + 3 * parts.guards.items.len;
+        try self.layouts.text.print(self.allocator, "@myl.layout.{d} = private constant [{d} x i32] [i32 {d}, i32 {d}, i32 {d}", .{ index, words, @max(1, self.module.size(ty)), parts.refs.items.len, parts.guards.items.len });
+        for (parts.refs.items) |ref| try self.layouts.text.print(self.allocator, ", i32 {d}, i32 {d}", .{ ref[0], ref[1] });
+        for (parts.guards.items) |g| try self.layouts.text.print(self.allocator, ", i32 {d}, i32 {d}, i32 {d}", .{ g[0], g[1], g[2] });
+        try self.layouts.text.appendSlice(self.allocator, "], align 4\n");
+        return std.fmt.allocPrint(self.allocator, "@myl.layout.{d}", .{index});
     }
 
     fn site(self: *ModuleState, s: Site) !u32 {
@@ -240,6 +280,11 @@ const ModuleState = struct {
             \\declare void @myl_core_err_trace(i32, i32) nounwind cold
             \\declare void @llvm.memcpy.p0.p0.i64(ptr noalias nocapture writeonly, ptr noalias nocapture readonly, i64, i1 immarg)
             \\declare void @llvm.memmove.p0.p0.i64(ptr nocapture writeonly, ptr nocapture readonly, i64, i1 immarg)
+            \\declare void @myl_core_release(ptr) nounwind
+            \\declare void @myl_core_main_error_i64(i64) nounwind cold
+            \\declare void @myl_core_main_error_u64(i64) nounwind cold
+            \\declare void @myl_core_main_error_bool(i1 zeroext) nounwind cold
+            \\declare void @myl_core_main_error_str(ptr) nounwind cold
             \\
         );
         try out.appendSlice(self.allocator, self.externs.items);
@@ -274,34 +319,134 @@ const ModuleState = struct {
         }
     }
 
-    /// `int main(argc, argv)`: build the arguments `main` asks for, call it, exit with its status.
+    /// `int main(argc, argv)`: build the arguments `main` asks for, call it, release
+    /// the arguments (`main` borrows them) and exit with its status. A `main` returning
+    /// a `Result` reports an `Err` with its trace first (RESULT-MAIN-1/2, ERROR-TRACE-2).
     fn emitEntry(self: *ModuleState, out: *Out) !void {
         const entry = &self.module.functions.items[self.module.entry];
-        try out.appendSlice(self.allocator, "define i32 @main(i32 %argc, ptr %argv) {\nentry:\n");
+        // `dwarf_lines`: the C entry has a subprogram too (named `myl.entry`, which trap
+        // frames never print), or inlining `main` into it would drop every location.
+        var at: []const u8 = "";
+        var scope: []const u8 = "";
+        if (self.options.target.traps == .dwarf_lines) {
+            const node = try self.debug.subprogram(self.allocator, "myl.entry", 1);
+            scope = try std.fmt.allocPrint(self.allocator, function_scope, .{node});
+            at = try std.fmt.allocPrint(self.allocator, instruction_location, .{try self.debug.location(self.allocator, .{ .line = 1, .column = 1 }, node)});
+        }
+        try out.print(self.allocator, "define i32 @main(i32 %argc, ptr %argv) uwtable{s} {{\nentry:\n", .{scope});
         var arguments: Out = .empty;
+        var owns_args = false;
         for (entry.signature.params, 0..) |param, i| {
             if (i != 0) try arguments.appendSlice(self.allocator, ", ");
             if (param == .cap) {
-                const name = if (i < self.options.main_parameters.len) self.options.main_parameters[i] else "";
+                const name = if (i < self.options.main.parameters.len) self.options.main.parameters[i] else "";
                 try arguments.print(self.allocator, "i64 {d}", .{@as(u8, if (std.mem.eql(u8, name, "err")) 2 else 1)});
             } else if (param.isCompound() and self.module.compound(param) == .list and self.module.compound(param).list == .str) {
                 try out.appendSlice(self.allocator, "  %args = call ptr @myl_core_args(i32 %argc, ptr %argv)\n");
                 try arguments.appendSlice(self.allocator, "ptr %args");
+                owns_args = true;
             } else return error.UnsupportedEntry;
         }
+        const release_args = if (owns_args) "  call void @myl_core_release(ptr %args)\n" else "";
         const ret = entry.signature.ret;
+        const callee = try symbol(self.allocator, entry.name);
         if (ret == .void) {
-            try out.print(self.allocator, "  call void {s}({s})\n  %s = call i32 @myl_core_exit(i64 0)\n", .{ try symbol(self.allocator, entry.name), arguments.items });
-        } else {
-            const ty = try self.llvmType(ret);
-            try out.print(self.allocator, "  %r = call {s} {s}({s})\n", .{ ty, try symbol(self.allocator, entry.name), arguments.items });
-            if (ret == .i64) {
-                try out.appendSlice(self.allocator, "  %s = call i32 @myl_core_exit(i64 %r)\n");
-            } else return error.UnsupportedEntry;
-        }
+            try out.print(self.allocator, "  call void {s}({s}){s}\n{s}  %s = call i32 @myl_core_exit(i64 0)\n", .{ callee, arguments.items, at, release_args });
+        } else if (ret == .i64) {
+            try out.print(self.allocator, "  %r = call i64 {s}({s}){s}\n{s}  %s = call i32 @myl_core_exit(i64 %r)\n", .{ callee, arguments.items, at, release_args });
+        } else if (self.options.main.result != null and self.module.kind(ret) == .@"union" and !self.module.passedInMemory(ret)) {
+            try out.print(self.allocator, "  %r = call {s} {s}({s}){s}\n", .{ try self.llvmType(ret), callee, arguments.items, at });
+            return self.resultEntry(out, ret, release_args);
+        } else return error.UnsupportedEntry;
         try out.appendSlice(self.allocator, "  ret i32 %s\n}\n");
     }
+
+    /// The rest of the entry for `%r`, a `Result` returned by `main`: `Ok(code)` exits
+    /// with `code` (`Ok(None)` with 0); `Err(value)` writes `error: VALUE` and the
+    /// trace, releases the value and exits with it when it is an integer, else 1.
+    fn resultEntry(self: *ModuleState, out: *Out, ret: ir.Type, release_args: []const u8) !void {
+        const shape = self.options.main.result.?;
+        const cases = self.module.compound(ret).@"union";
+        if (shape.ok_tag >= cases.len or shape.error_tag >= cases.len) return error.UnsupportedEntry;
+        const ok_type = cases[shape.ok_tag];
+        const error_type = cases[shape.error_tag];
+        if (ok_type != .void and ok_type.integer() == null) return error.UnsupportedEntry;
+        if (error_type != .bool and error_type != .str and error_type.integer() == null) return error.UnsupportedEntry;
+        const layout = self.module.unionLayout(ret);
+        var helper: FunctionEmitter = .{ .state = self, .function = &self.module.functions.items[self.module.entry], .index = self.module.entry };
+        self.allocas = .empty;
+        var body: Out = .empty;
+        if (layout.form == .niche) {
+            try body.print(self.allocator, "  %failed = icmp {s} ptr %r, null\n", .{if (layout.empty_case == shape.error_tag) "eq" else "ne"});
+        } else {
+            try body.print(self.allocator, "  %tag = extractvalue {s} %r, 0\n  %failed = icmp eq i8 %tag, {d}\n", .{ try self.llvmType(ret), shape.error_tag });
+        }
+        try body.appendSlice(self.allocator, "  br i1 %failed, label %failed.main, label %ok.main\nok.main:\n");
+        if (ok_type == .void) {
+            try body.print(self.allocator, "{s}  %s = call i32 @myl_core_exit(i64 0)\n  ret i32 %s\n", .{release_args});
+        } else {
+            try helper.unionPayload(&body, .{ .result = "%ok", .union_type = ret, .value = "%r", .case = shape.ok_tag });
+            try body.print(self.allocator, "  %code = {s} {s} %ok to i64\n{s}  %s = call i32 @myl_core_exit(i64 %code)\n  ret i32 %s\n", .{ widening(ok_type), try self.llvmType(ok_type), release_args });
+        }
+        try body.appendSlice(self.allocator, "failed.main:\n");
+        try helper.unionPayload(&body, .{ .result = "%error", .union_type = ret, .value = "%r", .case = shape.error_tag });
+        if (error_type == .str) {
+            try body.print(self.allocator, "  call void @myl_core_main_error_str(ptr %error)\n  call void @myl_core_release(ptr %error)\n{s}  %e = call i32 @myl_core_exit(i64 1)\n", .{release_args});
+        } else if (error_type == .bool) {
+            try body.print(self.allocator, "  call void @myl_core_main_error_bool(i1 zeroext %error)\n{s}  %e = call i32 @myl_core_exit(i64 1)\n", .{release_args});
+        } else {
+            const info = error_type.integer().?;
+            const report = "  %status = {s} {s} %error to i64\n  call void @myl_core_main_error_{s}(i64 %status)\n{s}  %e = call i32 @myl_core_exit(i64 %status)\n";
+            try body.print(self.allocator, report, .{ widening(error_type), try self.llvmType(error_type), if (info.signed) "i64" else "u64", release_args });
+        }
+        try body.appendSlice(self.allocator, "  ret i32 %e\n}\n");
+        try out.appendSlice(self.allocator, self.allocas.items);
+        try out.appendSlice(self.allocator, body.items);
+    }
 };
+
+/// `sext` or `zext` an integer of `ty` to `i64` (`add` for `i64` itself is not a cast,
+/// so a 64-bit value uses the no-op `sext i64 … to i64`'s spelling `bitcast`).
+fn widening(ty: ir.Type) []const u8 {
+    const info = ty.integer().?;
+    if (info.bits == 64) return "bitcast";
+    return if (info.signed) "sext" else "zext";
+}
+
+// ---- element layouts (lane O: the runtime's free and copy read them) ----------------
+
+/// The `@myl.layout.N` constants of a module: per managed element type, where its
+/// blocks are (`runtime/core_rt.c`, "element layouts").
+const Layouts = struct {
+    types: std.ArrayList(ir.Type) = .empty,
+    text: Out = .empty,
+};
+
+/// One element's block references and the union-tag guards they depend on.
+const LayoutParts = struct {
+    refs: std.ArrayList([2]u32) = .empty,
+    guards: std.ArrayList([3]u32) = .empty,
+};
+
+/// Collect the block pointers in a value of `ty` stored at `base`, each counted only under `guard`.
+fn layoutParts(allocator: std.mem.Allocator, module: *const ir.Module, ty: ir.Type, base: u32, guard: u32, parts: *LayoutParts) std.mem.Allocator.Error!void {
+    if (!module.managed(ty)) return;
+    if (module.isBlock(ty)) return parts.refs.append(allocator, .{ base, guard });
+    switch (module.compound(ty)) {
+        .record => |fields| for (fields, 0..) |field, i| try layoutParts(allocator, module, field, base + module.fieldOffset(ty, i), guard, parts),
+        .@"union" => |cases| {
+            const layout = module.unionLayout(ty);
+            // A niche pointer may be null, which the runtime skips.
+            if (layout.form == .niche) return parts.refs.append(allocator, .{ base, guard });
+            for (cases, 0..) |case, k| {
+                if (!module.managed(case)) continue;
+                try parts.guards.append(allocator, .{ base, @intCast(k), guard });
+                try layoutParts(allocator, module, case, base + 8, @intCast(parts.guards.items.len), parts);
+            }
+        },
+        .list, .box => unreachable,
+    }
+}
 
 fn escaped(allocator: std.mem.Allocator, out: *Out, text: []const u8) !void {
     for (text) |byte| {
@@ -362,6 +507,8 @@ const FunctionEmitter = struct {
     label: []const u8 = "",
     vectors: VectorState = .{},
     memory: MemoryState = .{},
+    /// The function's `DISubprogram` node (`dwarf_lines`), or 0.
+    scope: u32 = 0,
 
     fn a(self: *FunctionEmitter) std.mem.Allocator {
         return self.state.allocator;
@@ -418,7 +565,8 @@ const FunctionEmitter = struct {
             } else try out.print(self.a(), "{s}{s} %p{d}", .{ separator, try self.ty(param), i });
         }
         try self.analyzeMemory(&entry);
-        try out.appendSlice(self.a(), ") nounwind {\n");
+        // `uwtable`: a trap walks the stack through `.eh_frame`, which needs every frame's CFI.
+        try out.print(self.a(), ") nounwind uwtable{s} {{\n", .{try self.functionScope()});
         const bodies = try self.a().alloc(Out, f.blocks.items.len);
         try self.exit_labels.resize(self.a(), f.blocks.items.len);
         for (f.blocks.items, 0..) |block, b| {
@@ -796,7 +944,8 @@ const FunctionEmitter = struct {
     fn trapIf(self: *FunctionEmitter, out: *Out, failed: []const u8, site_index: u32, left: []const u8, right: []const u8) !void {
         const trap = try self.fresh("trap");
         const next = try self.fresh(self.label);
-        try out.print(self.a(), "  br i1 {s}, label %{s}, label %{s}, !prof !0\n{s}:\n  call void @myl_core_trap(i32 {d}, i64 {s}, i64 {s})\n  unreachable\n{s}:\n", .{ failed, trap, next, trap, site_index, left, right, next });
+        const at = try self.trapLocation(site_index);
+        try out.print(self.a(), "  br i1 {s}, label %{s}, label %{s}, !prof !0\n{s}:\n  call void @myl_core_trap(i32 {d}, i64 {s}, i64 {s}){s}\n  unreachable\n{s}:\n", .{ failed, trap, next, trap, site_index, left, right, at, next });
         self.label = next;
     }
 
@@ -894,6 +1043,7 @@ const FunctionEmitter = struct {
             .list_new => {
                 const element = self.state.module.compound(inst.ty).list;
                 try out.print(self.a(), "  {s} = call ptr @myl_core_list_new(i64 {s}, i64 {d})\n", .{ name, try self.value(inst.a), self.state.stride(element) });
+                try self.attachLayout(out, name, element);
             },
             .list_len, .str_len => {
                 const at = try self.fresh("%h");
@@ -925,6 +1075,7 @@ const FunctionEmitter = struct {
             .box_make => {
                 const inner = self.state.module.compound(inst.ty).box;
                 try out.print(self.a(), "  {s} = call ptr @myl_core_box_new(i64 {d})\n", .{ name, self.state.module.size(inner) });
+                try self.attachLayout(out, name, inner);
                 try self.storeOperand(out, inner, inst.a, try self.offsetPointer(out, name, data_offset));
             },
             .box_get => try self.loadValue(out, inst.ty, try self.offsetPointer(out, try self.value(inst.a), data_offset), name),
@@ -941,8 +1092,11 @@ const FunctionEmitter = struct {
             .err_trace => {
                 const mode: ir.TraceMode = if (inst.data == 0) .origin else .append;
                 const location = self.state.options.locator.locate(self.state.options.locator.context, inst.span);
-                const index = try self.state.site(.{ .kind = .trace, .location = location, .width = 0, .operation = @tagName(mode), .function = self.function.name });
-                try out.print(self.a(), "  call void @myl_core_err_trace(i32 {d}, i32 {d})\n", .{ index, @backingInt(mode) });
+                // The site's operation is the action the trace reports (ERROR-TRACE-2).
+                const action: []const u8 = if (mode == .origin) "Err(...) created" else "? propagated";
+                const index = try self.state.site(.{ .kind = .trace, .location = location, .width = 0, .operation = action, .function = self.function.name });
+                // ERROR-TRACE-5: the recorder never counts against inlining.
+                try out.print(self.a(), "  call void @myl_core_err_trace(i32 {d}, i32 {d}) #1\n", .{ index, @backingInt(mode) });
             },
             .call => try self.call(out, name, inst),
             .print => try self.print(out, inst),
@@ -958,7 +1112,12 @@ const FunctionEmitter = struct {
                 try self.storeOperand(out, self.function.signature.ret, inst.a, "%ret");
                 try out.appendSlice(self.a(), "  ret void\n");
             } else try out.print(self.a(), "  ret {s}\n", .{try self.typedValue(inst.a)}),
-            .@"unreachable" => try out.appendSlice(self.a(), "  unreachable\n"),
+            .@"unreachable" => if (inst.data == unique_assert) {
+                // `own.zig`'s assert of a statically unique update (verify builds only).
+                const location = self.state.options.locator.locate(self.state.options.locator.context, inst.span);
+                const index = try self.state.site(.{ .kind = .fact, .location = location, .width = 32, .operation = "count == 1 before an in-place update", .function = self.function.name });
+                try out.print(self.a(), "  call void @myl_core_trap(i32 {d}, i64 0, i64 1){s}\n  unreachable\n", .{ index, try self.trapLocation(index) });
+            } else try out.appendSlice(self.a(), "  unreachable\n"),
         }
     }
 
@@ -1600,6 +1759,39 @@ const FunctionEmitter = struct {
         }
     }
 
+    // ---- trap frames (lane O; docs/design/new-core-s1.md §13 R-1) -------------------
+
+    /// ` !dbg !N` naming this function's `DISubprogram` (`dwarf_lines` only).
+    fn functionScope(self: *FunctionEmitter) ![]const u8 {
+        if (self.state.options.target.traps != .dwarf_lines) return "";
+        const location = self.state.options.locator.locate(self.state.options.locator.context, self.function.span);
+        self.scope = try self.state.debug.subprogram(self.a(), unqualifiedName(self.function.name), location.line);
+        return std.fmt.allocPrint(self.a(), function_scope, .{self.scope});
+    }
+
+    /// `, !dbg !N` for a call at `span` (`dwarf_lines` only): LLVM keeps it through
+    /// inlining as an inline record, so a return address maps to every frame it stands for.
+    fn callLocation(self: *FunctionEmitter, span: u32) ![]const u8 {
+        if (self.scope == 0) return "";
+        const location = self.state.options.locator.locate(self.state.options.locator.context, span);
+        return std.fmt.allocPrint(self.a(), instruction_location, .{try self.state.debug.location(self.a(), location, self.scope)});
+    }
+
+    fn trapLocation(self: *FunctionEmitter, site_index: u32) ![]const u8 {
+        if (self.scope == 0) return "";
+        const location = self.state.sites.items[site_index].location;
+        return std.fmt.allocPrint(self.a(), instruction_location, .{try self.state.debug.location(self.a(), location, self.scope)});
+    }
+
+    /// Record in a fresh list's or box's header (`reserved`, offset 24) where the blocks
+    /// in its elements are, when `element` holds any: the runtime's free releases them
+    /// and its copy retains them.
+    fn attachLayout(self: *FunctionEmitter, out: *Out, block: []const u8, element: ir.Type) !void {
+        if (!self.state.module.managed(element)) return;
+        const at = try self.fresh("%lay");
+        try out.print(self.a(), "  {s} = getelementptr inbounds i8, ptr {s}, i64 24\n  store ptr {s}, ptr {s}, align 8, " ++ tbaa_header ++ "\n", .{ at, block, try self.state.layoutSymbol(element), at });
+    }
+
     /// Branch on `condition` into a fresh block; returns the join label `leaveIf` ends it with.
     fn enterIf(self: *FunctionEmitter, out: *Out, condition: []const u8) ![]const u8 {
         const then = try self.fresh("rc.then");
@@ -1724,10 +1916,10 @@ const FunctionEmitter = struct {
         }
         const target = if (external) try std.fmt.allocPrint(self.a(), "@{s}", .{c_abi.symbol(callee.name)}) else try symbol(self.a(), callee.name);
         if (ret == .void or sret) {
-            try out.print(self.a(), "  call void {s}({s})\n", .{ target, arguments.items });
+            try out.print(self.a(), "  call void {s}({s}){s}\n", .{ target, arguments.items, try self.callLocation(inst.span) });
             if (sret) try out.print(self.a(), identity_line, .{ name, result_slot });
         } else {
-            try out.print(self.a(), "  {s} = call {s} {s}({s})\n", .{ name, try self.ty(ret), target, arguments.items });
+            try out.print(self.a(), "  {s} = call {s} {s}({s}){s}\n", .{ name, try self.ty(ret), target, arguments.items, try self.callLocation(inst.span) });
         }
     }
 
@@ -1771,6 +1963,64 @@ fn storageType(ty: ir.Type) []const u8 {
         else => if (ty.isCompound()) "ptr" else "i64",
     };
 }
+
+/// ` !dbg !N` on a function definition and `, !dbg !N` on an instruction.
+const function_scope = " !dbg !{d}";
+const instruction_location = ", !dbg !{d}";
+
+/// A function name without its module qualifier (`mod::f` → `f`), as traps print it.
+fn unqualifiedName(name: []const u8) []const u8 {
+    const at = std.mem.lastIndexOfScalar(u8, name, ':') orelse return name;
+    return name[at + 1 ..];
+}
+
+/// The DWARF metadata of a `dwarf_lines` module: one compile unit and file, one
+/// `DISubprogram` per function, one `DILocation` per call and trap. Numbered from
+/// `first_node`, clear of the TBAA and `!range` nodes.
+const Debug = struct {
+    text: Out = .empty,
+    next: u32 = first_node,
+    unit: u32 = 0,
+
+    const first_node = 1_000_000;
+
+    fn node(self: *Debug, allocator: std.mem.Allocator, comptime format: []const u8, args: anytype) !u32 {
+        const id = self.next;
+        self.next += 1;
+        try self.text.print(allocator, "!{d} = ", .{id});
+        try self.text.print(allocator, format ++ "\n", args);
+        return id;
+    }
+
+    /// Start the compile unit (file, unit and subroutine type) on first use.
+    fn begin(self: *Debug, allocator: std.mem.Allocator) !void {
+        if (self.unit != 0) return;
+        _ = try self.node(allocator, "!DIFile(filename: \"program.my\", directory: \"/\")", .{});
+        self.unit = try self.node(allocator, "distinct !DICompileUnit(language: DW_LANG_C99, file: !{d}, producer: \"mylang-core\", isOptimized: true, runtimeVersion: 0, emissionKind: FullDebug)", .{first_node});
+        _ = try self.node(allocator, "!DISubroutineType(types: !{{}})", .{});
+    }
+
+    fn subprogram(self: *Debug, allocator: std.mem.Allocator, name: []const u8, line: u32) !u32 {
+        try self.begin(allocator);
+        const format = "distinct !DISubprogram(name: \"{s}\", scope: !{d}, file: !{d}, line: {d}, type: !{d}, scopeLine: {d}, spFlags: DISPFlagDefinition | DISPFlagOptimized, unit: !{d})";
+        return self.node(allocator, format, .{ name, first_node, first_node, line, first_node + 2, line, self.unit });
+    }
+
+    fn location(self: *Debug, allocator: std.mem.Allocator, at: Location, scope: u32) !u32 {
+        return self.node(allocator, "!DILocation(line: {d}, column: {d}, scope: !{d})", .{ at.line, at.column, scope });
+    }
+
+    /// The nodes and the module flags that make LLVM emit them (DWARF 4: the runtime's reader).
+    fn finish(self: *Debug, allocator: std.mem.Allocator, out: *Out) !void {
+        if (self.unit == 0) return;
+        try out.appendSlice(allocator, self.text.items);
+        try out.print(allocator, "!llvm.dbg.cu = !{{!{d}}}\n!llvm.module.flags = !{{!{d}, !{d}}}\n", .{ self.unit, self.next, self.next + 1 });
+        try out.print(allocator, "!{d} = !{{i32 2, !\"Debug Info Version\", i32 3}}\n!{d} = !{{i32 7, !\"Dwarf Version\", i32 4}}\n", .{ self.next, self.next + 1 });
+    }
+};
+
+/// Attribute group `#1`: an error-trace recorder call costs nothing to inline around (ERROR-TRACE-5).
+const trace_call_attributes = "attributes #1 = { \"call-inline-cost\"=\"0\" }\n";
 
 /// The branch-weight metadata every trap branch names (`!0`: the trap is cold).
 pub const metadata = "!0 = !{!\"branch_weights\", i32 1, i32 1048575}\n";

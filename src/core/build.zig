@@ -10,10 +10,8 @@
 const std = @import("std");
 const typed = @import("mylang").typed;
 const ir = @import("ir.zig");
-const own = @import("own.zig");
 const fuse = @import("fuse.zig");
 const flags = @import("flags.zig");
-const escape = @import("escape.zig");
 
 /// Refusal reasons several constructs share.
 const refuse_payload = "match payload";
@@ -59,14 +57,7 @@ pub fn buildRoots(allocator: std.mem.Allocator, program: typed.Program, roots: [
     for (mb.module.functions.items) |*function| {
         if (function.signature.linkage == .internal) _ = try fuse.projections(allocator, function, &mb.module);
     }
-    // A list stored or returned must not stay shared with a variable that is later updated in place.
-    for (mb.module.functions.items, 0..) |*function, index| {
-        if (function.signature.linkage == .internal) _ = try escape.copyEscaping(allocator, function, &mb.module, mb.exempt.get(@intCast(index)) orelse .{});
-    }
-    // A push appends in place, so its operand must be the only live reference to its block.
-    for (mb.module.functions.items) |*function| {
-        if (function.signature.linkage == .internal) _ = try own.copyShared(allocator, function);
-    }
+    // Ownership (copies before shared updates, counting) is `own.zig`'s, after the release passes.
     return mb.module;
 }
 
@@ -113,8 +104,6 @@ const ModuleBuilder = struct {
     /// Checked record and union type → IR type. An entry is made before the type's fields
     /// are mapped, so a recursive type (through a boxed field) finds itself.
     types: std.AutoHashMapUnmanaged(typed.Type, ir.Type) = .empty,
-    /// Per IR function index, what its `mut` parameters hand back unchanged (`escape.zig`).
-    exempt: std.AutoHashMapUnmanaged(u32, escape.Exempt) = .empty,
 
     fn refuse(self: *ModuleBuilder, reason: []const u8, span: u32) Error {
         self.refusal.* = .{ .reason = reason, .span = span };
@@ -135,10 +124,8 @@ const ModuleBuilder = struct {
         const linkage: ir.Linkage = if (function.policy.c_abi) .extern_c else if (function.policy.host != null) return self.refuse("host function", span) else .internal;
         const declared = try self.mapType(function.signature.return_type, span);
         if (linkage == .extern_c and function.signature.declared_mutates.len != 0) return self.refuse("mut parameter of an extern function", span);
-        const returned = try self.returnType(function, declared, all, span);
-        const ret = returned.ty;
+        const ret = try self.returnType(function, declared, all, span);
         const index: u32 = @intCast(self.module.functions.items.len);
-        if (function.signature.declared_mutates.len != 0) try self.exempt.put(self.allocator, index, returned.exempt);
         try self.module.functions.append(self.allocator, .{ .name = function.name, .signature = .{ .params = params, .ret = ret, .linkage = linkage }, .span = span });
         try self.ids.put(self.allocator, @backingInt(id), index);
         try self.pending.append(self.allocator, id);
@@ -149,17 +136,16 @@ const ModuleBuilder = struct {
     /// a record of that value (unless it is `unit`) followed by each `mut` parameter's final
     /// value in parameter order. The caller writes those values back into its places, which
     /// is the `inout` of a `mut` parameter done by value (docs/design/new-core-s1.md §7).
-    fn returnType(self: *ModuleBuilder, function: typed.Function, declared: ir.Type, params: []const ir.Type, span: u32) Error!Returned {
+    fn returnType(self: *ModuleBuilder, function: typed.Function, declared: ir.Type, params: []const ir.Type, span: u32) Error!ir.Type {
         const mutated = function.signature.declared_mutates;
-        if (mutated.len == 0) return .{ .ty = declared };
+        if (mutated.len == 0) return declared;
         if (function.signature.mutates.len != mutated.len) return self.refuse("inferred mut parameter", span);
         var parts: std.ArrayList(ir.Type) = .empty;
         defer parts.deinit(self.allocator);
         if (declared != .void) try parts.append(self.allocator, declared);
         for (mutated) |position| try parts.append(self.allocator, params[position]);
-        if (parts.items.len == 1) return .{ .ty = parts.items[0], .exempt = .{ .direct = true } };
-        const record = try self.module.intern(self.allocator, .{ .record = parts.items });
-        return .{ .ty = record, .exempt = .{ .record = record, .first_field = if (declared != .void) 1 else 0 } };
+        if (parts.items.len == 1) return parts.items[0];
+        return self.module.intern(self.allocator, .{ .record = parts.items });
     }
 
     /// The Core IR type of a checked type, or a refusal.
@@ -251,9 +237,6 @@ const ModuleBuilder = struct {
         return reserved;
     }
 };
-
-/// The IR return type of a function and, for one with `mut` parameters, what it hands back unchanged.
-const Returned = struct { ty: ir.Type, exempt: escape.Exempt = .{} };
 
 /// Per-block definitions, incomplete phis and sealed flags of the SSA construction.
 const Ssa = struct {
@@ -744,13 +727,11 @@ const FnBuilder = struct {
         }
     }
 
-    /// `list` with element `index` replaced by `value`; the index is checked. The replaced
-    /// element is released, which is only sound once ownership places the matching retains
-    /// (a copied list shares its elements), so an element that holds a block is refused until then.
+    /// `list` with element `index` replaced by `value`; the index is checked, and ownership
+    /// releases the element that is replaced.
     fn listSet(self: *FnBuilder, list: ir.Ref, index: ir.Ref, value: ir.Ref, span: u32) Error!ir.Ref {
         const list_type = self.typeOfRef(list);
         if (self.mb.module.kind(list_type) != .list) return self.mb.refuse("element write of a non-list", span);
-        if (self.mb.module.managed(self.mb.module.compound(list_type).list)) return self.mb.refuse("element write of a managed element (needs ownership)", span);
         const data = try self.extraSlice(&.{value});
         return self.emit(.{ .op = .list_set, .ty = self.typeOfRef(list), .a = list, .b = index, .data = data, .check = .exact, .span = span });
     }
@@ -762,6 +743,13 @@ const FnBuilder = struct {
             break :blk try self.storeInto(child, steps[1..], value, span);
         };
         return self.stepSet(base, steps[0], inner, span);
+    }
+
+    /// The value at `place` as its root stands now.
+    fn readPlace(self: *FnBuilder, place: Place, span: u32) Error!ir.Ref {
+        var value = try self.read(place.root, self.current.?);
+        for (place.steps) |step| value = try self.stepGet(value, step, span);
+        return value;
     }
 
     /// Store `value` at `place`: rebuild the path from the root's current value and write the root.
@@ -923,6 +911,10 @@ const FnBuilder = struct {
             try self.seal(failed);
             try self.seal(succeeded);
             self.current = failed;
+            // TODO(trace kinds): a `?` that converts the error into a case of the caller's error union
+            // is `? converted to Union.case` (ERROR-TRACE-2), and a `return` of an `Err` the statement
+            // did not construct appends `returned`; both wait for lane O's `ir.TraceMode` kinds, so
+            // every propagation is `append` for now.
             _ = try self.emit(.{ .op = .err_trace, .ty = .void, .data = @backingInt(ir.TraceMode.append), .span = span });
             var error_value = try self.payloadOf(input, shape.error_tag, span);
             if (shape.error_type != wanted.error_type) {
@@ -1219,17 +1211,21 @@ const FnBuilder = struct {
         const mutated = self.mb.program.functions[@backingInt(callee)].signature.declared_mutates;
         var arguments: std.ArrayList(ir.Ref) = .empty;
         defer arguments.deinit(self.allocator());
-        // A `mut` argument is the place the callee's final value is written back to.
+        // A `mut` argument is the place the callee's final value is written back to. The callee
+        // writes the caller's tree when the call runs, not where the argument is evaluated, so the
+        // place is only located while the arguments are evaluated and its value read after them.
         const places = try self.allocator().alloc(Place, mutated.len);
-        for (argument_nodes, 0..) |argument, position| {
+        const values = try self.allocator().alloc(ir.Ref, argument_nodes.len);
+        for (argument_nodes, values, 0..) |argument, *value, position| {
             const slot = std.mem.indexOfScalar(u16, mutated, @intCast(position));
             var place: ?Place = null;
-            const value = try self.expressionPlace(argument, if (slot != null) &place else null);
+            value.* = try self.expressionPlace(argument, if (slot != null) &place else null);
             if (slot) |at| places[at] = place orelse return self.mb.refuse("mut argument that is not a place", span);
-            // A `unit` argument is evaluated for its effects and not passed.
-            if (value != .none and self.typeOfRef(value) != .void) try arguments.append(self.allocator(), value);
         }
         if (self.current == null) return .none;
+        for (mutated, places) |position, place| values[position] = try self.readPlace(place, span);
+        // A `unit` argument is evaluated for its effects and not passed.
+        for (values) |value| if (value != .none and self.typeOfRef(value) != .void) try arguments.append(self.allocator(), value);
         const ret = self.mb.module.functions.items[index].signature.ret;
         const data = try self.extraSlice(arguments.items);
         const result = try self.emit(.{ .op = .call, .ty = ret, .a = @fromBackingInt(@intCast(index)), .data = data, .span = span });

@@ -200,7 +200,7 @@ fn buildExecutable(init: std.process.Init, options: Options, checked: frontend.C
     var request = options.build;
     request.output = try std.fmt.allocPrint(allocator, "{s}/{s}-{x}-{s}{s}", .{ directory, frontend.entryOf(options.path).module, digest, flavor, tag });
     var log: std.ArrayList(u8) = .empty;
-    const unit: pipeline.Unit = .{ .src = checked.src, .source_path = absolute, .main_parameters = &.{} };
+    const unit: pipeline.Unit = .{ .src = checked.src, .source_path = absolute, .main = .{} };
     _ = pipeline.finish(init, &module, unit, request, &log) catch |err| switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
         error.Unsupported => return .{ .failed = .{ .name = name, .status = .unsupported, .reason = try firstLine(allocator, log.items) } },

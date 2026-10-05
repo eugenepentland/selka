@@ -1,0 +1,78 @@
+module rc_lists
+
+
+def shared_tail(xs: list[int], extra: int) -> list[int]:
+    ys = xs
+    ys.append(extra)
+    return ys
+
+
+def build(n: int) -> list[int]:
+    out: list[int] = []
+    for i in range(n):
+        out.append(i * 2)
+    return out
+
+
+def early(xs: list[int], limit: int) -> int:
+    temp = build(limit)
+    if len(xs) > limit:
+        return len(temp)
+    other = build(2)
+    return len(temp) + len(other)
+
+
+def names(n: int) -> list[str]:
+    out: list[str] = []
+    for i in range(n):
+        if i % 2 == 0:
+            out.append("even")
+        else:
+            out.append("odd")
+    return out
+
+
+def nested(n: int) -> int:
+    rows: list[list[int]] = []
+    for i in range(n):
+        row = build(i)
+        rows.append(row)
+        rows.append(row)
+    total = 0
+    for r in rows:
+        total = total + len(r)
+    return total
+
+
+def alias_phi(n: int) -> int:
+    a = build(3)
+    b = a
+    if n > 2:
+        b = build(n)
+    b.append(7)
+    return len(a) * 100 + len(b)
+
+
+def keep_first(rows: list[list[int]]) -> list[int]:
+    first = rows[0]
+    return first
+
+
+def main(args: list[str], out: Stream) -> int:
+    base = build(4)
+    grown = shared_tail(base, 9)
+    out.print(len(base), len(grown), grown[4])
+    out.print(early(base, 2), early(base, 10))
+    words = names(5)
+    out.print(len(words), words[0], words[1], len(args))
+    out.print(nested(6), alias_phi(1), alias_phi(5))
+    copy = words
+    copy.append("x")
+    out.print(len(words), len(copy), copy[5])
+    grid: list[list[int]] = []
+    grid.append(base)
+    grid.append(grown)
+    kept = keep_first(grid)
+    kept.append(1)
+    out.print(len(kept), len(base), len(grid[0]))
+    return 0

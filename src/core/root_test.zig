@@ -17,4 +17,6 @@ comptime {
     _ = @import("test_runner_test.zig");
     _ = @import("conformance_test.zig");
     _ = @import("rows_test.zig");
+    _ = @import("own_test.zig");
+    _ = @import("trace_test.zig");
 }

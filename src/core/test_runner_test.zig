@@ -108,7 +108,7 @@ test "the dispatching entry parses argv[0] as a test index and calls that test, 
     try std.testing.expect(std.mem.indexOf(u8, text, "call bool test_second(1:cap)") != null);
     try std.testing.expect(std.mem.indexOf(u8, text, "ret 64:i64") != null);
     const context: u8 = 0;
-    const llvm = try emit_llvm.emitModule(a, &module, .{ .locator = .{ .context = &context, .locate = lineOne }, .source_path = "two.my", .main_parameters = &.{} });
+    const llvm = try emit_llvm.emitModule(a, &module, .{ .locator = .{ .context = &context, .locate = lineOne }, .source_path = "two.my", .main = .{} });
     try std.testing.expect(std.mem.indexOf(u8, llvm, "call ptr @myl_core_args(i32 %argc, ptr %argv)") != null);
     try std.testing.expect(std.mem.indexOf(u8, llvm, "call i32 @myl_core_exit(i64 %r)") != null);
 }

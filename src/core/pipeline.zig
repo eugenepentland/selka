@@ -9,6 +9,7 @@ const emit_llvm = @import("emit_llvm.zig");
 const driver = @import("driver.zig");
 const passes = @import("passes.zig");
 const verify_ir = @import("verify_ir.zig");
+const target_description = @import("target.zig");
 
 /// What the command line asked for.
 pub const Options = struct {
@@ -37,6 +38,9 @@ pub const Show = struct {
     /// Emit only generic LLVM vector code, no x86 intrinsics (`--generic-vectors`): the
     /// portable fallback a target without AVX2 would get, testable on this one.
     generic_vectors: bool = false,
+    /// How trap reports find their caller frames (`--trap-frames=dwarf|labels|none`;
+    /// default: the target's).
+    trap_frames: ?target_description.Traps = null,
 };
 
 /// Why a build stopped after its report was written.
@@ -62,7 +66,7 @@ pub fn build(init: std.process.Init, path: []const u8, options: Options, report:
         else => |other| return other,
     };
     const absolute = std.Io.Dir.cwd().realPathFileAlloc(init.io, path, allocator) catch path;
-    return finish(init, &module, .{ .src = checked.src, .source_path = absolute, .main_parameters = try mainParameters(allocator, checked.program) }, options, report);
+    return finish(init, &module, .{ .src = checked.src, .source_path = absolute, .main = .{ .parameters = try mainParameters(allocator, checked.program), .result = mainResult(checked.program) } }, options, report);
 }
 
 /// What the back half of a build needs to know about the checked source.
@@ -71,8 +75,9 @@ pub const Unit = struct {
     src: language.source.Source,
     /// The path traps report (the entry file's, absolute).
     source_path: []const u8,
-    /// Names of the entry function's parameters, which pick stdout or stderr for a `Stream`.
-    main_parameters: []const []const u8,
+    /// The entry function's parameter names (which pick stdout or stderr for a
+    /// `Stream`) and, when it returns a `Result`, its case tags.
+    main: emit_llvm.Main,
 };
 
 /// The back half of `build`: run the release passes on `module`, emit LLVM IR, and
@@ -91,20 +96,24 @@ pub fn finish(init: std.process.Init, module: *ir.Module, unit: Unit, options: O
         .sabotage_widening => .sabotage_widening,
         .sabotage_length => .sabotage_length,
     };
-    const result = if (options.release) try passes.run(allocator, module, mode) else passes.Result{ .known = &.{}, .plans = &.{} };
-    if (verify_ir.enabled and options.release) try verify_ir.check(allocator, module, result.plans, report);
+    var result = if (options.release) try passes.run(allocator, module, mode) else passes.Result{ .known = &.{}, .plans = &.{} };
+    if (!options.release) result.own = try passes.ownership(allocator, module);
+    if (verify_ir.enabled) try verify_ir.check(allocator, module, result.plans, report);
     if (options.show.stats) {
         const format = "mylang-core: inlined {d} calls, unswitched {d} loops, versioned {d} loops, proved {d} checks, vectorized {d} loops\n";
-        try report.print(allocator, format, .{ result.inlined, result.unswitched, result.versioned, result.proven, result.vectorized });
+        try report.print(allocator, format, .{ result.counts.inlined, result.counts.unswitched, result.counts.versioned, result.counts.proven, result.counts.vectorized });
+        const counting = "mylang-core: ownership: {d} updates in place, {d} tested, {d} copied; {d} retains, {d} releases ({d} pairs elided)\n";
+        const o = result.own;
+        try report.print(allocator, counting, .{ o.in_place, o.tested, o.copied, o.retains, o.releases, o.elided });
     }
     const llvm = emit_llvm.emitModule(allocator, module, .{
         .locator = .{ .context = &unit.src, .locate = locate },
         .source_path = unit.source_path,
-        .main_parameters = unit.main_parameters,
+        .main = unit.main,
         .facts = result.known,
         .verify = verify and options.release,
         .vectors = result.plans,
-        .target = if (options.show.generic_vectors) @import("target.zig").generic_256 else @import("target.zig").current,
+        .target = targetFor(options.show),
     }) catch |err| switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
         else => {
@@ -134,10 +143,25 @@ fn locate(context: *const anyopaque, offset: u32) emit_llvm.Location {
     return .{ .line = at.line, .column = at.column };
 }
 
+/// The `Ok` and `Err` tags of `main`'s return type when it is a `Result`.
+fn mainResult(program: language.typed.Program) ?emit_llvm.MainResult {
+    const main = program.functions[@backingInt(program.main)];
+    const shape = language.typed.resultShape(main.signature.return_type, program.records) orelse return null;
+    return .{ .ok_tag = @intCast(shape.ok_tag), .error_tag = @intCast(shape.error_tag) };
+}
+
 /// The names of `main`'s parameters, which pick stdout or stderr for a `Stream`.
 fn mainParameters(allocator: std.mem.Allocator, program: language.typed.Program) std.mem.Allocator.Error![]const []const u8 {
     const main = program.functions[@backingInt(program.main)];
     const names = try allocator.alloc([]const u8, main.signature.parameter_count);
     for (names, main.scope.locals[0..names.len]) |*name, local| name.* = local.name;
     return names;
+}
+
+/// The target description a build uses: the generic vector fallback when asked for,
+/// and the trap-frame mechanism `--trap-frames` picks.
+fn targetFor(show: Show) target_description.Target {
+    var target = if (show.generic_vectors) target_description.generic_256 else target_description.current;
+    if (show.trap_frames) |frames| target.traps = frames;
+    return target;
 }

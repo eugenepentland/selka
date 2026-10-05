@@ -220,3 +220,29 @@ test "pop of an empty list and a list_set past the end trap R_LIST_BOUNDS like t
         try std.testing.expect(std.mem.indexOf(u8, set, "error[R_LIST_BOUNDS]: native execution failed (index 2, length 2)") != null);
     }
 }
+
+const v_nested_output =
+    \\302 2
+    \\550278 1 1
+    \\
+;
+
+// spec-case: NEW-CORE-PLACE-1
+test "appends and writes to elements of lists of lists and records print what the old core prints" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    try std.testing.expect(try matches(arena.allocator(), "v_nested", v_nested_output, 0));
+}
+
+const v_mut_window_output =
+    \\102 True 1
+    \\2 3 2
+    \\
+;
+
+// spec-case: NEW-CORE-MUT-1
+test "a mut argument's value is read when the call runs, after a nested call that writes the same place" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    try std.testing.expect(try matches(arena.allocator(), "v_mut_window", v_mut_window_output, 0));
+}

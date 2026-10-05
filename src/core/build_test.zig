@@ -200,8 +200,10 @@ const aliased_pushes =
 test "a push onto a parameter's list copies it first; a push onto a list the function owns alone does not" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
-    const text = try support.irText(arena.allocator(), aliased_pushes);
-    // Only `grow`'s push copies: `fill`'s list is fresh, and its loop phi is dead after each push.
+    const text = try support.ownedText(arena.allocator(), aliased_pushes);
+    // Only `grow`'s push copies (its list is borrowed): `fill`'s list is fresh, and its loop
+    // phi is dead after each push, so neither copies nor tests its count.
     try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, text, "list_copy list[i64] param0"));
     try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, text, "list_copy"));
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, text, "is_unique"));
 }
