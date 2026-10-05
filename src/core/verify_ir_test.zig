@@ -122,3 +122,32 @@ test "a vector plan that reads a loop value before the loop is rejected, as the 
     try std.testing.expectError(error.InvalidIr, verify_ir.verifyPlan(a, &module, f, plan, &failure));
     try std.testing.expect(std.mem.indexOf(u8, failure.reason, "does not dominate its use") != null);
 }
+
+/// `f() -> void` with one `err_trace` of `mode`, naming a case string when `named`.
+fn traceProgram(arena: std.mem.Allocator, module: *ir.Module, mode: u64, named: bool) !void {
+    var h = try Hand.init(arena, module, "f", .{ .params = &.{}, .ret = .void });
+    const case = if (named) try h.emit(.{ .op = .str_const, .ty = .str, .data = 0 }) else ir.Ref.none;
+    _ = try h.emit(.{ .op = .err_trace, .ty = .void, .a = case, .data = mode, .span = 1 });
+    _ = try h.emit(.{ .op = .ret, .ty = .void });
+    _ = try h.finish();
+}
+
+// spec: NEW-CORE-VERIFY-IR-2
+test "the verifier admits err_trace modes 0 to 4, with a case string only on converted" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var failure: verify_ir.Failure = .{};
+    var returned: ir.Module = .{};
+    try traceProgram(a, &returned, @backingInt(ir.TraceMode.returned), false);
+    try verify(a, &returned, &failure);
+    var converted: ir.Module = .{};
+    try traceProgram(a, &converted, @backingInt(ir.TraceMode.converted), true);
+    try verify(a, &converted, &failure);
+    var unnamed: ir.Module = .{};
+    try traceProgram(a, &unnamed, @backingInt(ir.TraceMode.converted), false);
+    try std.testing.expectError(error.InvalidIr, verify(a, &unnamed, &failure));
+    var unknown: ir.Module = .{};
+    try traceProgram(a, &unknown, 5, false);
+    try std.testing.expectError(error.InvalidIr, verify(a, &unknown, &failure));
+}

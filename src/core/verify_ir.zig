@@ -423,7 +423,8 @@ const Verifier = struct {
             .box_get => if (self.compoundOf(s.a, .box)) |inner| inner == inst.ty else false,
             .retain, .release => inst.ty == .void and self.module.managed(s.a),
             .is_unique => inst.ty == .bool and self.module.isBlock(s.a),
-            .err_trace => inst.ty == .void and inst.a == .none and inst.data <= 1,
+            // Mode 3 (`converted`) names the case in a `str` operand; the others take none.
+            .err_trace => inst.ty == .void and inst.data <= 4 and if (inst.data == 3) inst.a != .none and s.a == .str else inst.a == .none,
             else => null,
         };
     }

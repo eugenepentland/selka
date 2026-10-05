@@ -144,10 +144,7 @@ fn kindsProgram(arena: std.mem.Allocator, propagated: usize) !ir.Module {
 
 fn kindsReport(arena: std.mem.Allocator, propagated: usize) ![]const u8 {
     var module = try kindsProgram(arena, propagated);
-    // The verifier admits these modes once lane V extends `ir.TraceMode` (§6.2).
-    var run_options = result_main;
-    run_options.check_ir = false;
-    const run = try support.runOwned(arena, &module, run_options);
+    const run = try support.runOwned(arena, &module, result_main);
     try std.testing.expectEqual(@as(u8, 1), run.status);
     return run.stderr;
 }
