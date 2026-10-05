@@ -94,6 +94,9 @@ pub const Error = error{ OutOfMemory, UnsupportedEntry, UnsupportedInstruction }
 /// The end of an LLVM `c"..."` constant: a NUL, the closing quote and the line end.
 const nul_terminator = "\\00\"\n";
 
+/// `  %x = icmp eq type value, 0`: a divisor's zero test.
+const zero_test_line = "  {s} = icmp eq {s} {s}, 0\n";
+
 /// `  %x = or i1 %a, %b`: two failure conditions merged.
 const or_line = "  {s} = or i1 {s}, {s}\n";
 /// `  %x = icmp pred type value, constant`: one side of a range test.
@@ -1184,19 +1187,23 @@ const FunctionEmitter = struct {
         const is_rem = inst.op == .rem or inst.op == .floor_rem;
         const operation = @tagName(inst.op);
         if (inst.check == .proven and self.state.options.verify) {
-            // The fact behind `proven`: both operands non-negative, the divisor positive.
-            const negative = try self.fresh("%vn");
+            // The fact behind `proven`: both operands non-negative, the divisor positive. An unsigned
+            // operand is never negative (its high values are not), so only the divisor's zero is tested.
             const nonpositive = try self.fresh("%vz");
-            const either = try self.fresh("%ve");
-            try out.print(self.a(), "  {s} = icmp slt {s} {s}, 0\n  {s} = icmp sle {s} {s}, 0\n", .{ negative, tyname, left, nonpositive, tyname, right });
-            try out.print(self.a(), or_line, .{ either, negative, nonpositive });
+            var either = nonpositive;
+            if (info.signed) {
+                const negative = try self.fresh("%vn");
+                either = try self.fresh("%ve");
+                try out.print(self.a(), "  {s} = icmp slt {s} {s}, 0\n  {s} = icmp sle {s} {s}, 0\n", .{ negative, tyname, left, nonpositive, tyname, right });
+                try out.print(self.a(), or_line, .{ either, negative, nonpositive });
+            } else try out.print(self.a(), zero_test_line, .{ nonpositive, tyname, right });
             try self.trapIf(out, either, try self.site(.division_by_zero, inst, operation), try self.widened(out, inst.a), try self.widened(out, inst.b));
         }
         if (!info.signed or inst.check == .proven) {
             const divisor = self.constantOf(inst.b);
             if (inst.check != .proven and (divisor == null or divisor.? == 0)) {
                 const zero = try self.fresh("%z");
-                try out.print(self.a(), "  {s} = icmp eq {s} {s}, 0\n", .{ zero, tyname, right });
+                try out.print(self.a(), zero_test_line, .{ zero, tyname, right });
                 try self.trapIf(out, zero, try self.site(.division_by_zero, inst, operation), try self.widened(out, inst.a), try self.widened(out, inst.b));
             }
             try out.print(self.a(), binary_line, .{ name, if (is_rem) "urem" else "udiv", tyname, left, right });
@@ -1205,7 +1212,7 @@ const FunctionEmitter = struct {
         const divisor = self.constantOf(inst.b);
         if (divisor == null or divisor.? == 0) {
             const zero = try self.fresh("%z");
-            try out.print(self.a(), "  {s} = icmp eq {s} {s}, 0\n", .{ zero, tyname, right });
+            try out.print(self.a(), zero_test_line, .{ zero, tyname, right });
             try self.trapIf(out, zero, try self.site(.division_by_zero, inst, operation), try self.widened(out, inst.a), try self.widened(out, inst.b));
         }
         // `MIN / -1` overflows; `MIN % -1` is 0, which LLVM's `srem` leaves undefined.

@@ -1,0 +1,22 @@
+module v_udiv
+
+
+def half(x: u8) -> u8:
+    return x // 2u8
+
+
+def rest(x: u32) -> u32:
+    return x % 7u32
+
+
+def whole(x: u64) -> u64:
+    return x // 1u64
+
+
+def third(x: u64) -> u64:
+    return x // 3u64
+
+
+def main(out: Stream) -> int:
+    out.print(half(254u8), half(255u8), rest(4294967294u32), whole(18446744073709551615u64), third(18446744073709551615u64))
+    return 0

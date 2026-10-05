@@ -499,3 +499,15 @@ test "a domain over an integer or a bool is its wire type: wrap and unwrap chang
     defer arena.deinit();
     try std.testing.expect(try matches(arena.allocator(), "v_domain", v_domain_output, 0));
 }
+
+const v_udiv_output =
+    \\127 127 2 18446744073709551615 6148914691236517205
+    \\
+;
+
+// spec: NEW-CORE-VERIFY-4
+test "a verify build does not call an unsigned operand above half its range negative: proven unsigned divisions of high values run" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    try std.testing.expect(try matches(arena.allocator(), "v_udiv", v_udiv_output, 0));
+}
