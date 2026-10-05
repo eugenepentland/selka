@@ -10,6 +10,17 @@ on 2026-10-04.
 - two Claude-run decision lanes, WP-8 (direct-emitter spike) and WP-9 (ideal ladder study);
 - a decision point at the end of Wave 1 (§5).
 
+**Revision 4 (2026-10-05): scope change.** The user accepted the new-core plan
+(`docs/audits/new-core-plan-2026-10-05.md`, decisions N1–N5).
+
+What changes for this campaign:
+- **Continue:** WP-0, WP-4 and WP-5 (one-count RC on the shared runtime), plus the dev-loop
+  fixes DL-1 to DL-5 from that plan.
+- **Finish in-flight items, then start no new performance work on the old back end:**
+  WP-1's alignment policy, WP-3 Stages A–C, WP-10c–e, and the WP-11 typed-region route.
+  The new core redoes these.
+- **Keep:** correctness and real-program fixes on the old core (Lox, EDA).
+
 **Revision 3 (2026-10-04).** This revision adds:
 - the WP-9 ladder study's results (§3.2, full study in
   `experiments/runtime-ideal-ladder-20261004/README.md`);
@@ -63,8 +74,14 @@ Give this to the coordinating agent:
 > **Integration.** Integrate a lane only after reviewing its evidence and running the full
 > gate yourself.
 >
-> **Available now.** WP-10 (implementation fixes from the ladder study) is independent of the
-> Wave 1 decision. Start it as lanes free up, beginning with 10a and 10b.
+> **Scope change (revision 4, 2026-10-05).** A new compiler core is being built
+> (`docs/audits/new-core-plan-2026-10-05.md`).
+> - Continue WP-0, WP-4, WP-5 and the dev-loop fixes DL-1 to DL-5.
+> - Finish in-flight work. Start no new performance work on the old back end: no new WP-1
+>   policy work, WP-3 Stages A–C, WP-10c–e or WP-11.
+> - Correctness and real-program fixes on the old core continue.
+>
+> **WP-10 status.** WP-10a and 10b may finish if already started. 10c–e move to the new core.
 >
 > **Held and reserved work.** WP-6 is on hold until the Wave 1 decision (§5). Claude agents
 > run WP-8 and WP-9 on their own branches; Codex lanes do not take them or edit those

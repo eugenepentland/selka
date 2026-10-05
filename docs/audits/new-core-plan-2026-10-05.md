@@ -1,6 +1,9 @@
 # A new compiler core, grown from the microbenchmarks — plan, 2026-10-05
 
-**Status:** proposed. Decisions N1–N6 (§4) are the user's. Nothing here is implemented.
+**Status:** the user accepted N1–N5 on 2026-10-05, as recommended in §4. N6 (arenas) is
+decided during S1. Nothing here is implemented yet.
+
+**Cache cleanup done the same day (DL-5):** the finished spike's 29 GB `.tmp` was removed.
 
 **Base:** `claude/runtime-levers-plan` (the campaign's `ac72a905` plus the runtime-levers plan
 and its experiments).
@@ -133,6 +136,8 @@ DL-1 and DL-2 matter for both cores. Under the new core they become design rules
 gate of its own, and test results keyed by code.
 
 ## 4. Decisions for the user
+
+All of N1–N5 were accepted on 2026-10-05. N6 is open until S1.
 
 | ID | Decision | Recommended | Why |
 |---|---|---|---|
