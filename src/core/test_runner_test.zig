@@ -46,7 +46,7 @@ const discovery_source =
 fn discovered(arena: std.mem.Allocator) ![]discover.Case {
     var unit = try language.Compilation.init(arena, "found.my", discovery_source ++ runner.check_stub);
     try unit.check();
-    return discover.discover(arena, unit.program.?, "found", discovery_source);
+    return discover.discover(arena, unit.program.?, "found", &.{.{ .name = "found", .text = discovery_source }});
 }
 
 // spec: NEW-CORE-TEST-1

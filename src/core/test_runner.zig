@@ -20,6 +20,7 @@ const pipeline = @import("pipeline.zig");
 const discover = @import("test_runner_discover.zig");
 const entry = @import("test_runner_entry.zig");
 const report = @import("test_runner_report.zig");
+const typed = @import("mylang").typed;
 
 /// The old runner's stub, appended to a file that defines no `main` of its own.
 pub const check_stub = "\n\ndef main() -> int:\n    return 0\n";
@@ -66,7 +67,9 @@ pub fn run(init: std.process.Init, options: Options) Error!u8 {
         },
     };
     var chosen: std.ArrayList(Selected) = .empty;
-    for (try discover.discover(allocator, checked.program, located.module, bytes)) |case| {
+    const entry_module = moduleName(checked.program, located.module);
+    const modules = try moduleSources(init, allocator, checked.program, located.root, .{ .name = entry_module, .text = bytes });
+    for (try discover.discover(allocator, checked.program, entry_module, modules)) |case| {
         if (!discover.matches(options.filter, case.name)) continue;
         const refused = try classify(init.gpa, allocator, checked, case);
         try chosen.append(allocator, .{ .case = case, .verdict = refused orelse .{ .name = case.name, .status = .failed, .reason = "not run" }, .ready = refused == null });
@@ -103,6 +106,34 @@ fn classify(gpa: std.mem.Allocator, keep: std.mem.Allocator, checked: frontend.C
 
 fn refusal(case: discover.Case, reason: []const u8, at: []const u8) report.Verdict {
     return .{ .name = case.name, .status = .unsupported, .reason = reason, .at = at };
+}
+
+/// The entry module's name, which qualifies its tests: the prefix of the (stub) `main`'s
+/// own name, since a `module` header may differ from the file's stem; the stem for a header-less file.
+fn moduleName(program: typed.Program, stem: []const u8) []const u8 {
+    const main = program.functions[@backingInt(program.main)].name;
+    const split = std.mem.lastIndexOf(u8, main, "::") orelse return stem;
+    return main[0..split];
+}
+
+/// The entry module's text and the source of every other module a function belongs to,
+/// read from `root` (a module `a.b` is `root/a/b.my`); a module without a file is left out.
+fn moduleSources(init: std.process.Init, allocator: std.mem.Allocator, program: typed.Program, root: []const u8, entry_module: discover.Module) std.mem.Allocator.Error![]const discover.Module {
+    var modules: std.ArrayList(discover.Module) = .empty;
+    try modules.append(allocator, entry_module);
+    for (program.functions) |function| {
+        const split = std.mem.lastIndexOf(u8, function.name, "::") orelse continue;
+        const name = function.name[0..split];
+        var known = false;
+        for (modules.items) |module| known = known or std.mem.eql(u8, module.name, name);
+        if (known) continue;
+        const relative = try std.fmt.allocPrint(allocator, "{s}.my", .{name});
+        std.mem.replaceScalar(u8, relative[0..name.len], '.', '/');
+        const path = try std.fs.path.join(allocator, &.{ root, relative });
+        const text = std.Io.Dir.cwd().readFileAlloc(init.io, path, allocator, .limited(64 << 20)) catch "";
+        try modules.append(allocator, .{ .name = name, .text = text });
+    }
+    return modules.toOwnedSlice(allocator);
 }
 
 fn definesMain(bytes: []const u8) bool {
@@ -150,7 +181,7 @@ const Built = union(enum) { built: []const u8, failed: report.Verdict };
 fn buildExecutable(init: std.process.Init, options: Options, checked: frontend.Checked, chosen: []const Selected, positions: []const usize, tag: []const u8) Error!Built {
     const allocator = init.arena.allocator();
     const name = chosen[positions[0]].case.name;
-    const roots = try allocator.alloc(@import("mylang").typed.FunctionId, positions.len);
+    const roots = try allocator.alloc(typed.FunctionId, positions.len);
     for (positions, roots) |position, *root| root.* = chosen[position].case.function;
     var why: build.Refusal = .{};
     var module = build.buildRoots(allocator, checked.program, roots, &why) catch |err| switch (err) {

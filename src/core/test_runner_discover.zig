@@ -32,15 +32,26 @@ pub const Case = struct {
     streams: []const i64,
 };
 
-/// Every test of `program`, sorted by qualified name. `stem` is the entry file's module
-/// name; `text` is the entry file's source, scanned for `@test` markers.
-pub fn discover(allocator: std.mem.Allocator, program: typed.Program, stem: []const u8, text: []const u8) std.mem.Allocator.Error![]Case {
-    const declarations = try scan(allocator, text);
+/// A module's name and source text, which says which of its functions are `public` or `@test`.
+pub const Module = struct { name: []const u8, text: []const u8 };
+
+/// Every test of `program`, sorted by qualified name. A function name without a module prefix
+/// belongs to `entry` (a header-less file). `modules` holds the source of every module whose
+/// tests count: the old runner discovers them in the whole project, imports included; a
+/// module with no source here has only its defaulting `test_` functions found.
+pub fn discover(allocator: std.mem.Allocator, program: typed.Program, entry: []const u8, modules: []const Module) std.mem.Allocator.Error![]Case {
+    const scans = try allocator.alloc([]const Declared, modules.len);
+    for (modules, scans) |module, *scanned| scanned.* = try scan(allocator, module.text);
     var found: std.ArrayList(Case) = .empty;
     for (program.functions) |function| {
         if (function.type_arguments.len != 0 or function.policy.c_abi or function.policy.host != null) continue;
-        const own = localName(function.name, stem) orelse continue;
-        const declared = find(declarations, own);
+        const split = std.mem.lastIndexOf(u8, function.name, "::");
+        const module = if (split) |at| function.name[0..at] else entry;
+        const own = if (split) |at| function.name[at + 2 ..] else function.name;
+        var declared: Declared = .{};
+        for (modules, scans) |source, scanned| if (std.mem.eql(u8, source.name, module)) {
+            declared = find(scanned, own);
+        };
         if (!std.mem.startsWith(u8, own, "test_") and !declared.marked) continue;
         const result = typed.typeName(function.signature.return_type, program.records);
         const shape: Shape = if (function.signature.return_type == .bool)
@@ -59,7 +70,7 @@ pub fn discover(allocator: std.mem.Allocator, program: typed.Program, stem: []co
         const defaulting = function.signature.parameter_count == 0 and shape == .boolean;
         const always = declared.public or declared.marked;
         if (!always and !defaulting) continue;
-        const name = try std.fmt.allocPrint(allocator, "{s}::{s}", .{ stem, own });
+        const name = try std.fmt.allocPrint(allocator, "{s}::{s}", .{ module, own });
         try found.append(allocator, .{ .name = name, .function = function.id, .shape = shape, .other_parameters = others, .streams = try streams.toOwnedSlice(allocator) });
     }
     std.mem.sort(Case, found.items, {}, lessByName);
@@ -76,14 +87,6 @@ const Declared = struct { name: []const u8 = "", public: bool = false, marked: b
 fn find(declarations: []const Declared, wanted: []const u8) Declared {
     for (declarations) |declared| if (std.mem.eql(u8, declared.name, wanted)) return declared;
     return .{};
-}
-
-/// The function's name inside the entry module: `stem::x` gives `x`, a header-less file's
-/// bare name is its own, and another module's function gives null.
-fn localName(name: []const u8, stem: []const u8) ?[]const u8 {
-    const split = std.mem.lastIndexOf(u8, name, "::") orelse return name;
-    if (!std.mem.eql(u8, name[0..split], stem)) return null;
-    return name[split + 2 ..];
 }
 
 /// The top-level `def` lines of `text`, each with its `public` and `@test` markers.
