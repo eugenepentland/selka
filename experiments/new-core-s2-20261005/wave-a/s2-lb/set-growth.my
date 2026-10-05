@@ -1,0 +1,6 @@
+def main() -> int:
+    values = {1}
+    snapshot = values
+    for value in values:
+        values.add(value + 1)
+    return len(values) + len(snapshot)

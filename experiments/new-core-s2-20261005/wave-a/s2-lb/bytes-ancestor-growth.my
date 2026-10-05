@@ -1,0 +1,7 @@
+def main() -> int:
+    rows = [b"ab"]
+    snapshot = rows
+    for octet in rows[0]:
+        rows.append(b"cd")
+        _ = octet
+    return len(snapshot)

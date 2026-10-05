@@ -1,0 +1,37 @@
+module mut_callee_rebinding
+
+
+def replace(items: mut list[int]) -> None:
+    items = [7, 8]
+
+
+def grow_by_rebinding(items: mut list[int]) -> None:
+    items = [7, 8, 9]
+
+
+# spec-case: D1-LIVE-PLACE
+public def test_same_length_mut_callee_rebinding_is_live() -> bool:
+    items = [1, 2]
+    saved = items
+    total = 0
+    for value in items:
+        total += value
+        replace(mut items)
+    return total == 9 and items == [7, 8] and saved == [1, 2]
+
+
+# spec-case: D1-LIVE-PLACE
+public def test_mut_callee_rebinding_growth_is_live() -> bool:
+    items = [1, 2]
+    saved = items
+    total = 0
+    for value in items:
+        total += value
+        grow_by_rebinding(mut items)
+    return total == 18 and items == [7, 8, 9] and saved == [1, 2]
+
+
+def main() -> int:
+    assert test_same_length_mut_callee_rebinding_is_live()
+    assert test_mut_callee_rebinding_growth_is_live()
+    return 0

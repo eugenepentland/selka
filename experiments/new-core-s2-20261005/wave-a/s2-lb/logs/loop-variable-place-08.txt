@@ -1,0 +1,3 @@
+experiments/new-core-s2-20261005/wave-a/s2-lb/loop-variable-place.my:8:13: error[E_VALUE_BINDING_WRITE]: `row` holds a copy of the element this loop visits, so a change to it is lost when the iteration ends; change the collection through its place (`for i in range(len(xs)): xs[i]...`, `d[key]...`), or assign `row` to a local first if the change is meant to stay local
+              row[1] = 9
+              ^

@@ -14,6 +14,7 @@ const numeric_surface = @import("numeric_surface.zig");
 const callables = @import("callables.zig");
 const record_layouts = @import("record_layouts.zig");
 const range_step = @import("range_step.zig");
+const iteration_place = @import("iteration_place.zig");
 const Error = diagnostic.Error;
 
 /// Value families the prelude folds and orderings understand.
@@ -47,10 +48,10 @@ pub const Walk = struct { owner: typed.LocalId, index: typed.LocalId, limit: typ
 pub const Zip = struct { left: Walk, right: Walk, limit: typed.LocalId };
 
 /// One prepared walk over a list: its source, reserved slots, direction and body.
-pub const Step = struct { span: source.Span, input: typed.NodeId, walk: Walk, descending: bool, body: typed.StatementId };
+pub const Step = struct { span: source.Span, input: typed.NodeId, walk: Walk, descending: bool, body: typed.StatementId, syntax_body: ?ast.StatementId = null };
 
 /// One prepared walk over two lists: both sources, reserved slots and body.
-pub const ZipStep = struct { span: source.Span, left: typed.NodeId, right: typed.NodeId, zip: Zip, body: typed.StatementId };
+pub const ZipStep = struct { span: source.Span, left: typed.NodeId, right: typed.NodeId, zip: Zip, body: typed.StatementId, syntax_body: ?ast.StatementId = null };
 
 /// The prelude operations of one checker: bare Python builtins built from checked
 /// collection operations, so no runtime support is added beyond the existing traps.
@@ -348,10 +349,11 @@ fn sum(comptime Checker: type, checker: *Checker, span: source.Span, input: type
     const index = try b.local(.i64);
     const limit = try b.local(.i64);
     const total = try b.local(element);
+    const prepared = try iteration_place.prepare(Checker, b, input, owner, null);
     const nb = numericBuilder(Checker, checker, span, element);
     const zero = if (floating) try nb.append(try nb.literal("0.0", checker.sink)) else try b.node(element, .{ .integer = 0 });
     const i = try b.read(index);
-    const guard = try b.stmt(.{ .discard = try b.operation(owner, .iteration_check, &.{try b.read(limit)}) });
+    const guard = try iteration_place.guard(Checker, b, prepared, owner, limit);
     const addend = try b.operation(owner, .read, &.{i});
     const added = if (floating)
         try nb.append(try nb.binary(.add, try b.read(total), addend, checker.sink))
@@ -367,8 +369,7 @@ fn sum(comptime Checker: type, checker: *Checker, span: source.Span, input: type
     }) });
     const loop = checker.loops.next;
     checker.loops.next += 1;
-    return b.block(&.{
-        try b.stmt(.{ .initialize = .{ .slot = owner, .value = input } }),
+    return iteration_place.foldBlock(Checker, b, prepared, &.{
         try b.stmt(.{ .initialize = .{ .slot = index, .value = try b.integer(0) } }),
         try b.stmt(.{ .initialize = .{ .slot = limit, .value = try b.length(owner) } }),
         try b.stmt(.{ .initialize = .{ .slot = total, .value = zero } }),
@@ -390,8 +391,9 @@ fn anyAll(comptime Checker: type, checker: *Checker, span: source.Span, input: t
     const limit = try b.local(.i64);
     const total = try b.local(.bool);
     const done = try b.local(.bool);
+    const prepared = try iteration_place.prepare(Checker, b, input, owner, null);
     const i = try b.read(index);
-    const guard = try b.stmt(.{ .discard = try b.operation(owner, .iteration_check, &.{try b.read(limit)}) });
+    const guard = try iteration_place.guard(Checker, b, prepared, owner, limit);
     const folded = try b.binary(if (is_any) .logical_or else .logical_and, try b.read(total), try b.operation(owner, .read, &.{i}), .bool);
     // An answer is decided as soon as `any` sees true or `all` sees false, so
     // stop reading the rest of the list; the loop test re-reads `done`.
@@ -414,8 +416,7 @@ fn anyAll(comptime Checker: type, checker: *Checker, span: source.Span, input: t
     const active = try b.binary(.logical_and, try b.binary(.lt, i, try b.read(limit), .bool), try b.node(.bool, .{
         .unary = .{ .op = .not, .operand = try b.read(done), .op_span = span },
     }), .bool);
-    return b.block(&.{
-        try b.stmt(.{ .initialize = .{ .slot = owner, .value = input } }),
+    return iteration_place.foldBlock(Checker, b, prepared, &.{
         try b.stmt(.{ .initialize = .{ .slot = index, .value = try b.integer(0) } }),
         try b.stmt(.{ .initialize = .{ .slot = limit, .value = try b.length(owner) } }),
         try b.stmt(.{ .initialize = .{ .slot = total, .value = try b.node(.bool, .{ .boolean = !is_any }) } }),
@@ -812,7 +813,10 @@ fn walkStatementsCall(comptime Checker: type, checker: *Checker, step: Step) Err
     const b = builder(Checker, checker, span);
     const i = try b.read(walk.index);
     const count = try b.read(walk.limit);
-    const guard = try b.stmt(.{ .discard = try b.operation(walk.owner, .iteration_check, &.{count}) });
+    var prepared = try iteration_place.prepare(Checker, b, input, walk.owner, if (step.syntax_body) |syntax| .{ .statement = syntax } else null);
+    // Reversed iteration retains its fixed bound and exact length guard.
+    if (descending) prepared.growing = false;
+    const guard = try iteration_place.guard(Checker, b, prepared, walk.owner, walk.limit);
     const position = if (descending) try b.binary(.sub, try b.binary(.sub, count, try b.integer(1), .i64), i, .i64) else i;
     const iteration = try b.stmt(.{ .block = try keep(Checker, checker, &.{
         guard,
@@ -823,12 +827,14 @@ fn walkStatementsCall(comptime Checker: type, checker: *Checker, step: Step) Err
         guard,
         try b.stmt(.{ .assign = .{ .slot = walk.index, .value = try b.binary(.add, i, try b.integer(1), .i64) } }),
     }) });
-    return keep(Checker, checker, &.{
-        try b.stmt(.{ .initialize = .{ .slot = walk.owner, .value = input } }),
+    var statements: std.ArrayList(typed.StatementId) = .empty;
+    try statements.appendSlice(checker.allocator, prepared.setup);
+    try statements.appendSlice(checker.allocator, &.{
         try b.stmt(.{ .initialize = .{ .slot = walk.index, .value = try b.integer(0) } }),
         try b.stmt(.{ .initialize = .{ .slot = walk.limit, .value = try b.length(walk.owner) } }),
         try b.stmt(.{ .loop = .{ .id = walk.loop, .condition = try b.binary(.lt, i, count, .bool), .body = iteration, .step = advance } }),
     });
+    return statements.toOwnedSlice(checker.allocator);
 }
 
 /// Reserve the slots of a parallel walk over two lists.
@@ -860,9 +866,14 @@ fn zipStatementsCall(comptime Checker: type, checker: *Checker, step: ZipStep) E
     const body = step.body;
     const b = builder(Checker, checker, span);
     const i = try b.read(zip.left.index);
+    const syntax_body: ?iteration_place.Body = if (step.syntax_body) |syntax| .{ .statement = syntax } else null;
+    const left = try iteration_place.prepare(Checker, b, left_input, zip.left.owner, syntax_body);
+    const right = try iteration_place.prepare(Checker, b, right_input, zip.right.owner, syntax_body);
+    const length = try shortLength(Checker, checker, span, try b.read(zip.left.limit), try b.read(zip.right.limit));
     const guard = try b.stmt(.{ .block = try keep(Checker, checker, &.{
-        try b.stmt(.{ .discard = try b.operation(zip.left.owner, .iteration_check, &.{try b.read(zip.left.limit)}) }),
-        try b.stmt(.{ .discard = try b.operation(zip.right.owner, .iteration_check, &.{try b.read(zip.right.limit)}) }),
+        try iteration_place.guard(Checker, b, left, zip.left.owner, zip.left.limit),
+        try iteration_place.guard(Checker, b, right, zip.right.owner, zip.right.limit),
+        try b.stmt(.{ .assign = .{ .slot = zip.limit, .value = length } }),
     }) });
     const iteration = try b.stmt(.{ .block = try keep(Checker, checker, &.{
         guard,
@@ -874,15 +885,17 @@ fn zipStatementsCall(comptime Checker: type, checker: *Checker, step: ZipStep) E
         guard,
         try b.stmt(.{ .assign = .{ .slot = zip.left.index, .value = try b.binary(.add, i, try b.integer(1), .i64) } }),
     }) });
-    return keep(Checker, checker, &.{
-        try b.stmt(.{ .initialize = .{ .slot = zip.left.owner, .value = left_input } }),
-        try b.stmt(.{ .initialize = .{ .slot = zip.right.owner, .value = right_input } }),
+    var statements: std.ArrayList(typed.StatementId) = .empty;
+    try statements.appendSlice(checker.allocator, left.setup);
+    try statements.appendSlice(checker.allocator, right.setup);
+    try statements.appendSlice(checker.allocator, &.{
         try b.stmt(.{ .initialize = .{ .slot = zip.left.limit, .value = try b.length(zip.left.owner) } }),
         try b.stmt(.{ .initialize = .{ .slot = zip.right.limit, .value = try b.length(zip.right.owner) } }),
         try b.stmt(.{ .initialize = .{ .slot = zip.limit, .value = try shortLength(Checker, checker, span, try b.read(zip.left.limit), try b.read(zip.right.limit)) } }),
         try b.stmt(.{ .initialize = .{ .slot = zip.left.index, .value = try b.integer(0) } }),
         try b.stmt(.{ .loop = .{ .id = zip.left.loop, .condition = try b.binary(.lt, i, try b.read(zip.limit), .bool), .body = iteration, .step = advance } }),
     });
+    return statements.toOwnedSlice(checker.allocator);
 }
 
 /// Exact Python scalar repr keeps the ordinary printing and str paths unchanged.

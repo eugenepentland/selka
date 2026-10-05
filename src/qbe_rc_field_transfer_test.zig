@@ -244,9 +244,9 @@ test "RC closed field transfer moves record fields of owned locals across closed
     const expected = [_]struct { []const u8, bool }{
         .{ "caller_record", true }, .{ "branched", true },      .{ "looped", true },   .{ "sibling_read", true },
         .{ "field_read", false },   .{ "whole_passed", false }, .{ "partial", false }, .{ "breaking", false },
-        // ITERATION-FIELD-SNAPSHOT-1: the live loop is an observer, so a
-        // named field transfer retains an independent collection value.
-        .{ "iterated", false },     .{ "looped_back", false },
+        // D1-LIVE-PLACE: the back edge re-reads the restored field after
+        // the closed interval, allowing the existing store-back transfer.
+        .{ "iterated", true },      .{ "looped_back", false },
     };
     for (expected) |case| try t.expectEqual(case[1], contains(try named(manifest.value, case[0]), marker));
 }

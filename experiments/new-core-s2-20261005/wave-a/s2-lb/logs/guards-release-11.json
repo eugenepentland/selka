@@ -1,0 +1,69 @@
+{
+  "backend": "LLVM O3/full LTO (--release)",
+  "cases": [
+    {
+      "source": "terminal-growth-shrink.my",
+      "runtime": "rc",
+      "exit": 1,
+      "stderr": "experiments/new-core-s2-20261005/wave-a/s2-lb/terminal-growth-shrink.my:3:5: error[R_LIST_ITERATION_MUTATION]: native execution failed\n  in main at experiments/new-core-s2-20261005/wave-a/s2-lb/terminal-growth-shrink.my:3:5\n",
+      "stdout": "",
+      "seconds": 0.198
+    },
+    {
+      "source": "indexed-array-ancestor-growth.my",
+      "runtime": "rc",
+      "exit": 1,
+      "stderr": "experiments/new-core-s2-20261005/wave-a/s2-lb/indexed-array-ancestor-growth.my:3:5: error[R_LIST_ITERATION_MUTATION]: native execution failed\n  in main at experiments/new-core-s2-20261005/wave-a/s2-lb/indexed-array-ancestor-growth.my:3:5\n",
+      "stdout": "",
+      "seconds": 0.558
+    },
+    {
+      "source": "set-growth.my",
+      "runtime": "rc",
+      "exit": 1,
+      "stderr": "experiments/new-core-s2-20261005/wave-a/s2-lb/set-growth.my:4:5: error[R_LIST_ITERATION_MUTATION]: native execution failed\n  in main at experiments/new-core-s2-20261005/wave-a/s2-lb/set-growth.my:4:5\n",
+      "stdout": "",
+      "seconds": 0.23
+    },
+    {
+      "source": "dict-ancestor-growth.my",
+      "runtime": "rc",
+      "exit": 1,
+      "stderr": "experiments/new-core-s2-20261005/wave-a/s2-lb/dict-ancestor-growth.my:3:5: error[R_LIST_ITERATION_MUTATION]: native execution failed\n  in main at experiments/new-core-s2-20261005/wave-a/s2-lb/dict-ancestor-growth.my:3:5\n",
+      "stdout": "",
+      "seconds": 0.303
+    },
+    {
+      "source": "text-ancestor-shrink.my",
+      "runtime": "rc",
+      "exit": 1,
+      "stderr": "experiments/new-core-s2-20261005/wave-a/s2-lb/text-ancestor-shrink.my:4:5: error[R_LIST_ITERATION_MUTATION]: native execution failed\n  in main at experiments/new-core-s2-20261005/wave-a/s2-lb/text-ancestor-shrink.my:4:5\n",
+      "stdout": "",
+      "seconds": 1.74
+    },
+    {
+      "source": "text-ancestor-shrink.my",
+      "runtime": "gc",
+      "exit": 1,
+      "stderr": "experiments/new-core-s2-20261005/wave-a/s2-lb/text-ancestor-shrink.my:4:5: error[R_LIST_ITERATION_MUTATION]: native execution failed\n  in main at experiments/new-core-s2-20261005/wave-a/s2-lb/text-ancestor-shrink.my:4:5\n",
+      "stdout": "",
+      "seconds": 5.373
+    },
+    {
+      "source": "bytes-ancestor-growth.my",
+      "runtime": "rc",
+      "exit": 1,
+      "stderr": "experiments/new-core-s2-20261005/wave-a/s2-lb/bytes-ancestor-growth.my:4:5: error[R_LIST_ITERATION_MUTATION]: native execution failed\n  in main at experiments/new-core-s2-20261005/wave-a/s2-lb/bytes-ancestor-growth.my:4:5\n",
+      "stdout": "",
+      "seconds": 1.487
+    },
+    {
+      "source": "bytes-ancestor-growth.my",
+      "runtime": "gc",
+      "exit": 1,
+      "stderr": "experiments/new-core-s2-20261005/wave-a/s2-lb/bytes-ancestor-growth.my:4:5: error[R_LIST_ITERATION_MUTATION]: native execution failed\n  in main at experiments/new-core-s2-20261005/wave-a/s2-lb/bytes-ancestor-growth.my:4:5\n",
+      "stdout": "",
+      "seconds": 1.491
+    }
+  ]
+}

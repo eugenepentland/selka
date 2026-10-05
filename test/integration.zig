@@ -13398,17 +13398,19 @@ const iterated_write_back =
     \\    rt.objects.append(value)
     \\def main() -> int:
     \\    it = Interp(rt=Runtime(objects=[1, 2]))
+    \\    saved = it.rt
     \\    seen = 0
     \\    for x in it.rt.objects:
     \\        seen = seen + x
-    \\        wb = it.rt
-    \\        push(mut wb, x)
-    \\        it.rt = wb
-    \\    return 0 if seen == 3 and len(it.rt.objects) == 4 else 1
+    \\        if x < 3:
+    \\            wb = it.rt
+    \\            push(mut wb, x + 2)
+    \\            it.rt = wb
+    \\    return 0 if seen == 10 and len(it.rt.objects) == 4 and saved.objects == [1, 2] else 1
 ;
 
 // spec-case: RC-ITERATION-HOLD-TRANSFER-1
-test "CLI growth written back through a named field preserves the iteration snapshot" {
+test "CLI growth written back through a named field remains live" {
     try invokeOptions("run", iterated_write_back, &.{}, 0, "0\n", "");
     try invokeOptions("run", iterated_write_back, &.{"--rc-runtime"}, 0, "0\n", "");
     try invokeOptions("run", iterated_write_back, &.{"--rc-runtime=stats"}, 0, "0\n", "MYLANG_RC_COUNTS ");

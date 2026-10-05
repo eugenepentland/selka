@@ -12,6 +12,7 @@ const call_arguments = @import("call_arguments.zig");
 const eShadowing = diagnostic.shadowing;
 const eResultLoop = diagnostic.result_loop;
 const std = @import("std");
+const iteration_place = @import("iteration_place.zig");
 const dictionary_views = @import("dictionary_views.zig");
 const eCollectionMethod = sema_shared.eCollectionMethod;
 const eTupleArity = diagnostic.tuple_arity;
@@ -102,9 +103,7 @@ fn statementForEach(comptime Checker: type, self: *Checker, stmt: ast.Statement,
     const projected = view != null and view.? != .item;
     const iterable = if (projected) try dictionary_views.owner(Checker, self, stmt.span, source_value) else source_value;
     const iterable_type = self.nodes.items[@backingInt(iterable)].ty;
-    // A fixed array iterates like a list over the value it had when the
-    // loop began: the loop reads a copy, so element writes in the body
-    // change the array but not the elements this loop visits.
+    // Fixed arrays have a static bound; their place reads follow D1 too.
     const fixed = arrays.fixed(self.catalog, iterable_type);
     if (fixed == null and !collectionType(Checker, self, iterable_type)) return self.sink.fail(eCollectionMethod, stmt.span, "iteration requires a collection, fixed array or dictionary view");
     const kind = self.catalog.records[iterable_type.recordIndex()].collection.kind;
@@ -116,7 +115,7 @@ fn statementForEach(comptime Checker: type, self: *Checker, stmt: ast.Statement,
         if (pair.fields.len != 2) return self.sink.fail(eTupleArity, stmt.span, try self.twoNameLoopMessage(pair.fields.len));
     }
     const first_type = if (unpack) self.catalog.records[element.recordIndex()].fields[0].ty else element;
-    // PY-ARRAY-ITER-2: a fixed array's copy is made only if the body writes it.
+    // PY-ARRAY-ITER-2: a stable fixed-array local is walked in place.
     var source_walk = try beginWalk(Checker, self, b, iterable, fixed);
     const index = try b.local(.i64);
     const limit = try b.local(.i64);
@@ -146,13 +145,14 @@ fn statementForEach(comptime Checker: type, self: *Checker, stmt: ast.Statement,
     const init_before = try self.initSnapshot();
     const body = try self.statement(each.body);
     _ = self.counters.remove(index);
-    const owner = try endWalk(Checker, self, b, &source_walk);
+    const owner = try endWalk(Checker, self, b, &source_walk, each.body);
+    const prepared = try walkSource(Checker, b, source_walk, iterable, owner, each.body);
     self.initRestore(init_before);
     if (!body.terminates) try self.samePending(before, stmt.span, eResultLoop);
     self.restorePending(before);
     const i = try b.read(index);
     // A fixed array's length is its type's, and nothing can resize it.
-    const iteration_check = if (fixed == null) try b.stmt(.{ .discard = try b.operation(owner, .iteration_check, &.{try b.read(limit)}) }) else null;
+    const iteration_check = try walkGuard(Checker, b, prepared, owner, limit);
     var iteration_statements: std.ArrayList(typed.StatementId) = .empty;
     if (iteration_check) |guarded| try iteration_statements.append(self.allocator, guarded);
     const value = try iterationRead(Checker, self, b, owner, i, .{ .kind = kind, .fixed = fixed, .projection = if (projected) view else null });
@@ -180,7 +180,26 @@ fn statementForEach(comptime Checker: type, self: *Checker, stmt: ast.Statement,
         try b.stmt(.{ .loop = .{ .id = loop_id, .condition = try b.binary(.lt, i, try b.read(limit), .bool), .body = iteration, .step = step } }),
     };
     // Walking the array in place, the loop reads the variable itself.
-    return .{ .block = try self.allocator.dupe(typed.StatementId, setup[@intFromBool(source_walk.in_place)..]) };
+    return finishWalk(Checker, self, source_walk, prepared, &setup);
+}
+
+fn walkGuard(comptime Checker: type, b: collections.Builder(Checker), prepared: ?iteration_place.Source, owner: typed.LocalId, limit: typed.LocalId) Error!?typed.StatementId {
+    return if (prepared) |place| try iteration_place.guard(Checker, b, place, owner, limit) else null;
+}
+
+fn walkSource(comptime Checker: type, b: collections.Builder(Checker), walk: Walk, input: typed.NodeId, owner: typed.LocalId, body: ast.StatementId) Error!?iteration_place.Source {
+    return if (walk.in_place) null else try iteration_place.prepare(Checker, b, input, owner, .{ .statement = body });
+}
+
+/// Use D1's prepared entry, or the fixed-array copy decision, before the loop.
+fn finishWalk(comptime Checker: type, self: *Checker, walk: Walk, prepared: ?iteration_place.Source, setup: []const typed.StatementId) Error!@FieldType(typed.Statement, "data") {
+    if (prepared) |source_walk_place| {
+        var statements: std.ArrayList(typed.StatementId) = .empty;
+        try statements.appendSlice(self.allocator, source_walk_place.setup);
+        try statements.appendSlice(self.allocator, setup[1..]);
+        return .{ .block = try statements.toOwnedSlice(self.allocator) };
+    }
+    return .{ .block = try self.allocator.dupe(typed.StatementId, setup[@intFromBool(walk.in_place)..]) };
 }
 /// PY-FOR-REBIND-1: whether a loop body can assign `name`.
 fn bodyAssigns(comptime Checker: type, self: *Checker, body: ast.StatementId, name: []const u8) Error!bool {
@@ -206,29 +225,26 @@ fn appendRebinding(comptime Checker: type, self: *Checker, b: collections.Builde
     if (position.rebound) try statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = position.slot, .value = counter } }));
 }
 /// The source a `for` loop reads its elements from, decided around its body.
-const Walk = struct { owner: ?typed.LocalId, variable: ?typed.LocalId, writes: usize, ty: typed.Type, in_place: bool = false };
+const Walk = struct { owner: ?typed.LocalId, variable: ?typed.LocalId, ty: typed.Type, in_place: bool = false };
 /// Start deciding a loop's source. A managed collection is a reference, so
 /// the loop's copy of it is only a pointer and is taken as before. A fixed
 /// array held in a local variable waits for the body.
 fn beginWalk(comptime Checker: type, self: *Checker, b: collections.Builder(Checker), iterable: typed.NodeId, fixed: ?typed.Array) Error!Walk {
     const source_type = self.nodes.items[@backingInt(iterable)].ty;
-    if (fixed == null) return .{ .owner = try b.local(source_type), .variable = null, .writes = 0, .ty = source_type };
+    if (fixed == null) return .{ .owner = try b.local(source_type), .variable = null, .ty = source_type };
     const variable = switch (self.nodes.items[@backingInt(iterable)].data) {
-        // A `mut` array parameter may be one of two writable names for the
-        // same array, so a write through the other would show.
-        .local => |slot| if (self.referenceParameter(slot)) null else slot,
+        .local => |slot| slot,
         else => null,
     };
-    const writes = if (variable) |slot| self.locals.items[@backingInt(slot)].usage.writes else 0;
-    return .{ .owner = null, .variable = variable, .writes = writes, .ty = source_type };
+    return .{ .owner = null, .variable = variable, .ty = source_type };
 }
-/// PY-ARRAY-ITER-2: once the body is checked, a fixed array the body never
-/// writes is walked where it lives, so the loop copies nothing; otherwise
-/// the loop reads a copy taken when it began, as `PY-ARRAY-ITER-1` says.
-fn endWalk(comptime Checker: type, self: *Checker, b: collections.Builder(Checker), walk: *Walk) Error!typed.LocalId {
+/// Walk a fixed-array local directly unless the body replaces its root.
+fn endWalk(comptime Checker: type, self: *Checker, b: collections.Builder(Checker), walk: *Walk, body: ast.StatementId) Error!typed.LocalId {
     if (walk.owner) |owner| return owner;
-    if (walk.variable) |slot| if (self.locals.items[@backingInt(slot)].usage.writes == walk.writes) {
+    const syntax: loop_rebinding.Syntax = .{ .program = self.syntax, .src = self.src };
+    if (walk.variable) |slot| if (!try loop_rebinding.rebinds(self.allocator, syntax, body, self.locals.items[@backingInt(slot)].name, false)) {
         walk.in_place = true;
+        self.locals.items[@backingInt(slot)].usage.reads += 1;
         return slot;
     };
     return b.local(walk.ty);
@@ -298,10 +314,10 @@ fn preludeIteration(comptime Checker: type, self: *Checker, stmt: ast.Statement,
     if (!body.terminates) try self.samePending(before, stmt.span, eResultLoop);
     self.restorePending(before);
     if (zip) |pair| {
-        const statements = try builtins.zipStatements(.{ .span = stmt.span, .left = sources[0], .right = sources[1], .zip = pair, .body = body.id });
+        const statements = try builtins.zipStatements(.{ .span = stmt.span, .left = sources[0], .right = sources[1], .zip = pair, .body = body.id, .syntax_body = each.body });
         return statements;
     }
-    const statements = try builtins.walkStatements(.{ .span = stmt.span, .input = sources[0], .walk = walk, .descending = true, .body = body.id });
+    const statements = try builtins.walkStatements(.{ .span = stmt.span, .input = sources[0], .walk = walk, .descending = true, .body = body.id, .syntax_body = each.body });
     return statements;
 }
 fn iterationValue(comptime Checker: type, self: *Checker, b: collections.Builder(Checker), owner: typed.LocalId, kind: ManagedKind, index: typed.NodeId) Error!typed.NodeId {

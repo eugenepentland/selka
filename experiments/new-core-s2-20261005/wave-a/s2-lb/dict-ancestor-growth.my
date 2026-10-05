@@ -1,0 +1,5 @@
+def main() -> int:
+    rows = {1: [1, 2]}
+    for value in rows[1]:
+        rows[2] = [value]
+    return len(rows)

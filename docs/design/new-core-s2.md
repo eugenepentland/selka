@@ -957,3 +957,60 @@ The user accepted every recommendation:
    - The old core moves first (package S2-Lb, which takes over the one-count plan's C4 front-end half). The new core follows (S2-I, per s1 §15.1).
 
 Packages, order and gates: `docs/audits/new-core-s2-implementation-plan-2026-10-05.md`.
+
+## D1 in the shared front end and old core (S2-Lb as built)
+
+The checker now prepares managed iteration sources in `iteration_place.zig`, used
+by ordinary `for`/`enumerate` and the prelude desugars. A loop whose body may write
+below its stable source root refreshes the place before every element and on every
+continued/final step. Each indexed ancestor has an exact entry-length
+`iteration_check`; each path index is evaluated and normalized once at entry.
+This makes shared-payload writes, writes through `mut` callees, and record-field
+write-back visible while preserving independent copies taken before the loop.
+The back edge reads the root, which also prevents last-read field moves from
+removing a value the next iteration needs.
+
+For a live list or mutable byte buffer, the terminal guard compares its current
+length to the last observed length: growth updates the bound and is visited;
+a decrease traps `R_LIST_ITERATION_MUTATION`. Growth followed by shrink on a later
+step traps even when the new length equals the entry length. Guards observe length
+at iteration boundaries, so a transient grow-and-shrink entirely within one body
+is not detected when the observed length is unchanged. Dictionaries and sets,
+and every indexed ancestor, retain exact length equality. `break` bypasses the
+next guard, as before. `reversed` retains its fixed bound and exact terminal guard.
+
+Direct syntactic assignment to the root in the body (including a root target in
+destructuring) selects an independent entry snapshot. Field assignment to a
+stable record root stays live. A `mut` callee's write-back, including whole
+collection rebinding under `MUT-REBIND-CALLER-1`, stays live; the exception is a
+syntactic root assignment in the body, not a transitive call-effect rule. The
+combined callee-rebinding tests are in
+`experiments/new-core-s2-20261005/wave-a/s2-lb/mut_callee_rebinding.my`, to run after
+S2-La and S2-Lb merge.
+
+Non-place sources remain owned at entry. Immutable string/bytes places refresh
+too, including same-length field replacement; terminal lengths remain exact
+(Unicode scalar count for text), and managed indexed ancestors retain guards.
+Fixed-array places follow D1 too: stable local and
+parameter roots are read directly, and fields/indexed places refresh each step.
+Their terminal length needs no guard, while managed indexed ancestors retain
+exact-length guards. Named copies stay independent; syntactic root assignment
+still selects an entry snapshot. The old array tests expected snapshot iteration
+after element writes; these were amended because §12's D1 decision has no array
+exception. Read-only loops keep the entry-borrow path.
+Direct collection forms of `sum`, `any`, and `all` use the shared source/guard
+helpers; their numeric/Boolean folds call no user callback and have no
+source-writing body, so the entry borrow
+is sufficient. Generator folds and comprehensions can call user code; both the
+dedicated unfiltered form and generated loop form use the same D1 helper.
+`iteration_effects.zig` follows syntax IDs through statements and expressions,
+including produced values, filters and nested clauses. Generated statement
+spans cover only a clause/filter, so span-based scans were insufficient.
+Assignment expressions are unavailable, so a comprehension cannot syntactically
+rebind its source root; whole-root write-back through a mut callee stays live.
+C4's shared-front-end/old-core semantic work moved from WP-5 to
+S2-Lb; the remaining RC hold-count re-plumbing stays paused. Existing lifetime
+holds remain for hidden receivers and snapshots.
+
+Evidence and the package's gate results are in
+`experiments/new-core-s2-20261005/wave-a/s2-lb/`.
