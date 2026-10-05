@@ -223,6 +223,16 @@ Each stage has an exit check. The user decides go or stop at S0 and S2.
 | **S4 Projects** | Modules and `.myi`, incremental per-module builds, `mylang test` on projects, the Lox port, an EDA slice. | The Lox port and the EDA slice pass their tests under the new core, with build and test times at or below the old core's. |
 | **S5 Switch and delete** | Make the new core the default for release builds, then for debug builds. Delete QBE IL emission, the translator, the GC, two-count RC and the old ownership lowering. | The full gate on the new core alone. A deletion count, and a compiler rebuild time below S0's baseline. |
 
+**Status, 2026-10-05 10:30 UTC.**
+
+- **S0** is complete.
+- **S1** is complete except two refusals parked as language questions for the user. Branch `claude/new-core-s1-20261005`:
+  - full `tests/lang`: 745 of 1,470 tests supported, all matching the old core at debug and release;
+  - leak and verify sweeps clean;
+  - all 14 S1 rows at or below Zig ReleaseSafe;
+  - coverage 2,269 of 3,509 functions.
+- **The S2 design** is `docs/design/new-core-s2.md` on that branch. S2 implementation waits for the user.
+
 **Overfitting guard.** Benchmark-first growth admitted 0 of 143 real loops in the spike. From
 S1 on, every stage reports the coverage sweep over `examples/`, `bench/`, the Lox port and
 EDA sources (functions accepted, refusal reasons), next to the benchmark rows. Grow the
