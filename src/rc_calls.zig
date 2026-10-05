@@ -19,7 +19,7 @@ pub fn guest(allocator: std.mem.Allocator, catalog: *shapes.Catalog, function: b
             continue;
         }
         const writes = @import("ownership_model.zig").writesParameter(function, position);
-        mode.* = if (!writes) .read else if (typed.referenceMut(catalog.native.records, local.ty)) .caller_storage else .mutable_payload;
+        mode.* = if (!writes) .read else if (@import("mut_abi.zig").reference(catalog.native.records, function, position)) .caller_storage else .mutable_payload;
     }
     const result = try catalog.get(function.signature.return_type);
     return .{

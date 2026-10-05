@@ -1,0 +1,87 @@
+## examples: 93 files (7 not checkable alone), 207 functions, 157 accepted (76%)
+  checks in accepted functions (analysed alone): proven 77, still exact 95
+  front end: 4 x error[E_MODULE_NAME]: declared `module shop.money`, but this
+  front end: 1 x error[E_MODULE_NAME]: declared `module config.values`, but t
+  front end: 1 x error[E_MODULE_NAME]: declared `module shop.billing`, but th
+     19  fixed array type
+     11  capability type
+      5  resource type
+      3  host function
+      3  bytes type
+      2  extern
+      2  function value type
+      2  shift_right
+      1  string index
+      1  text_chr
+      1  dict type
+## bench/parity: 45 files (0 not checkable alone), 123 functions, 74 accepted (60%)
+  checks in accepted functions (analysed alone): proven 95, still exact 89
+      6  bytes type
+      5  dict type
+      5  f64_sqrt
+      3  slice
+      3  index
+      3  string index
+      2  shift_left
+      2  split
+      1  fixed array type
+      1  shift_right
+      1  operator on an aggregate value
+      1  function value type
+## tests/lang: 203 files (7 not checkable alone), 3050 functions, 1986 accepted (65%)
+  checks in accepted functions (analysed alone): proven 2503, still exact 1706
+  front end: 2 x error[E_EMBED_MISSING]: cannot embed "embed_fixtures/lines.t
+  front end: 2 x error[E_MUTATION_OVERLAP]: receiver `state.count` overlaps `
+  front end: 1 x error[E_EMBED_MISSING]: cannot embed "embed_fixtures/nul.bin
+    319  dict type
+    280  bytes type
+    122  fixed array type
+     50  function value type
+     38  capability type
+     35  function_value
+     32  set type
+     23  slice
+     16  index
+     11  split
+     10  equality of a recursive value
+      9  text of a non-integer value
+## benchmarks/runtime: 3 files (0 not checkable alone), 141 functions, 54 accepted (38%)
+  checks in accepted functions (analysed alone): proven 34, still exact 56
+     35  bytes type
+     25  dict type
+      3  string index
+      2  split
+      2  slice
+      1  extern
+      1  contains
+      1  is_digit
+      1  is_alpha
+      1  is_space
+      1  starts_with
+      1  ends_with
+## all corpora: checks proven 2620, still exact 1853 (in 2170 accepted functions)
+## all corpora: 3521 functions, 2271 accepted (64%)
+    350  dict type
+    324  bytes type
+    142  fixed array type
+     53  function value type
+     49  capability type
+     35  function_value
+     32  set type
+     28  slice
+     20  index
+     15  split
+     11  string index
+     11  shift_right
+     10  f64_sqrt
+     10  equality of a recursive value
+      9  operator on an aggregate value
+      9  text of a non-integer value
+      7  extend
+      6  resource type
+      6  count
+      6  strip
+      6  replace
+      6  number_format
+      6  write to a list while it is iterated (live-place iteration)
+      6  text_tail

@@ -24,6 +24,9 @@ pub fn local(comptime E: type, self: *E, unique: cow.Unique) Error!void {
     if (unique.alias != cow.none and receiverFilled(E, self, unique.alias)) {
         return local(E, self, .{ .local = unique.alias });
     }
+    if (self.callerStorage(unique.local)) {
+        return field(E, self, .{ .ty = self.function.scope.locals[unique.local].ty, .address = try self.callerAddress(unique.local) });
+    }
     const address = self.temp();
     const guard = try frame.guard(E, self, unique.local);
     try self.print(" %v{d} =l copy %l{d}\n", .{ address, unique.local });

@@ -1,0 +1,114 @@
+guardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source 1b6c13222675)
+guardian: run-all: cached — 0 blocking (inputs unchanged since last green run)
+guardian: run-all: cached — 0 blocking (inputs unchanged since last green run)
+doc-coverage: 230 documented features (154 language, 76 tooling) across 57 pages
+  docs/README.md: 1
+  docs/arenas.md: 1
+  docs/byte-io-bulk.md: 1
+  docs/bytes.md: 6
+  docs/c-ffi.md: 3
+  docs/const-length-generics.md: 1
+  docs/contracts.md: 2
+  docs/diagnostic-recovery.md: 1
+  docs/effects.md: 9
+  docs/experiments/incremental-contract.md: 4
+  docs/floating-point.md: 4
+  docs/functions.md: 9
+  docs/generic-inference.md: 2
+  docs/generics.md: 5
+  docs/integer-operations.md: 5
+  docs/io.md: 9
+  docs/lambdas.md: 1
+  docs/managed-memory.md: 10
+  docs/match-expressions.md: 1
+  docs/module-constants.md: 4
+  docs/modules.md: 6
+  docs/performance.md: 2
+  docs/python-syntax.md: 9
+  docs/python-text-surface.md: 4
+  docs/range-iteration.md: 2
+  docs/records-and-unions.md: 14
+  docs/reference.md: 1
+  docs/results-and-options.md: 11
+  docs/sets.md: 3
+  docs/source-evaluation.md: 1
+  docs/standard-library.md: 14
+  docs/statements.md: 6
+  docs/structured-loop-exits.md: 1
+  docs/text.md: 8
+  docs/tooling/agent-context.md: 1
+  docs/tooling/api-diff.md: 1
+  docs/tooling/byte-runner.md: 3
+  docs/tooling/caches.md: 7
+  docs/tooling/documentation-gate.md: 2
+  docs/tooling/fix.md: 3
+  docs/tooling/guest-tests.md: 16
+  docs/tooling/import-policy.md: 2
+  docs/tooling/interface-files.md: 1
+  docs/tooling/invocation.md: 1
+  docs/tooling/lint.md: 1
+  docs/tooling/module-interfaces.md: 4
+  docs/tooling/native-build.md: 2
+  docs/tooling/navigation.md: 6
+  docs/tooling/ownership.md: 2
+  docs/tooling/packages.md: 1
+  docs/tooling/runtime-budgets.md: 5
+  docs/tooling/work-report.md: 3
+  docs/tuples.md: 2
+  docs/type-aliases.md: 1
+  docs/typed-holes.md: 2
+  docs/typed-json.md: 1
+  docs/value-semantics.md: 2
+doc-coverage: 14 standard modules, 178 exports named in docs/standard-library.md
+doc-coverage: 0 failures
+Build Summary: 26/26 steps succeeded
+test-doc-coverage success
++- run exe mylang success 180ms
+   +- compile exe mylang debug native cached 10ms MaxRSS:41M
+   |  +- run exe qbe-build-assets (qbe_build_assets) cached
+   |     +- compile exe qbe-build-assets debug native cached 9ms MaxRSS:37M
+   +- install success
+      +- install mylang cached
+      |  +- compile exe mylang debug native (+1 more reused dependencies)
+      |  +- run ../guardian-zig/zig-out/bin/guardian-check success 85ms
+      |     +- guardian-selfcheck success
+      |        +- run ../guardian-zig/zig-out/bin/guardian-check success 5ms
+      +- install qbe cached
+      |  +- compile exe qbe fast native cached 17ms MaxRSS:36M
+      |  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+      +- install generated/ cached
+      |  +- run exe mylang (mylang-runtime) cached
+      |     +- compile exe mylang debug native (+1 more reused dependencies)
+      |     +- install mylang (+2 more reused dependencies)
+      |     +- compile exe qbe fast native (reused)
+      +- install board-trial cached
+      |  +- compile exe board-trial debug native cached 9ms MaxRSS:38M
+      |  |  +- options cached
+      |  |  |  +- compile exe qbe fast native (reused)
+      |  |  +- run exe qbe-build-assets (qbe_build_assets) (+1 more reused dependencies)
+      |  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+      +- install schematic-svg cached
+      |  +- compile exe schematic-svg debug native cached 9ms MaxRSS:40M
+      |  |  +- options (+1 more reused dependencies)
+      |  |  +- run exe qbe-build-assets (qbe_build_assets) (+1 more reused dependencies)
+      |  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+      +- install mylang-io cached
+      |  +- compile exe mylang-io debug native cached 9ms MaxRSS:38M
+      |  |  +- options (+1 more reused dependencies)
+      |  |  +- run exe qbe-build-assets (qbe_build_assets) (+1 more reused dependencies)
+      |  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+      +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+test-docs success
++- mylang doctest . cached
+|  +- install (+7 more reused dependencies)
+|  +- hash declared test inputs success 555ms
+|  +- record the test environment success 4ms
+|  +- compile exe qbe fast native (reused)
+|  +- compile exe mylang debug native (+1 more reused dependencies)
+|  +- compile exe mylang debug native (+1 more reused dependencies)
++- run ../guardian-zig/zig-out/bin/guardian-check success 81ms
+   +- guardian-selfcheck (+1 more reused dependencies)
+
+real 0.95
+user 0.39
+sys 0.15

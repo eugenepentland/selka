@@ -261,7 +261,8 @@ fn validateInstruction(allocator: std.mem.Allocator, program: Program, function:
         // Only a fixed array (and, under value semantics, a record) crosses a
         // call as its caller's own storage.
         .ref_local => |slot| if (@backingInt(slot) >= function.scope.locals.len or
-            !typed.referenceMut(program.records, function.scope.locals[@backingInt(slot)].ty))
+            !(typed.referenceMut(program.records, function.scope.locals[@backingInt(slot)].ty) or
+                @import("mut_abi.zig").collection(program.records, function.scope.locals[@backingInt(slot)].ty)))
         {
             return error.InternalError;
         },

@@ -531,8 +531,8 @@ fn referenceRecordParameter(comptime Checker: type, self: *Checker, slot: typed.
 }
 /// Refuse rebinding a `mut` fixed-array parameter as a whole. The name is
 /// the caller's array, so `values = other` would either silently stay local
-/// (the list rule) or overwrite the caller's array (the element rule); the
-/// program says which it means by writing elements or copying to a local.
+/// or overwrite the caller's fixed array; the program says which it means
+/// by writing elements or copying to a local.
 fn requireRebindable(comptime Checker: type, self: *Checker, slot: typed.LocalId, name: source.Span) Error!void {
     if (!referenceParameter(Checker, self, slot)) return;
     const text = self.src.text(name);

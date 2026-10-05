@@ -54,11 +54,12 @@ def changed(points: mut list[Point]) -> int:
 
 
 def callback(points: mut list[Point]):
-    points[changed(mut points)].x = 23
+    mutation_result_57 = changed(mut points)
+    points[mutation_result_57].x = 23
 
 
 # spec-case: RC-EMPTY-FRAME-1
-public def test_callback_fallback_keeps_receiver_scopes_and_snapshots() -> bool:
+public def test_completed_callback_keeps_caller_and_snapshot_independent() -> bool:
     points = [Point(3, 5)]
     before = points
     callback(mut points)
@@ -69,5 +70,5 @@ def main() -> int:
     assert test_caller_snapshot_and_negative_index_survive_unlinked_callee()
     assert test_inherited_arena_preserves_older_receiver_and_snapshot()
     assert test_arena_owned_caller_keeps_pin_until_plain_loop_returns()
-    assert test_callback_fallback_keeps_receiver_scopes_and_snapshots()
+    assert test_completed_callback_keeps_caller_and_snapshot_independent()
     return 0

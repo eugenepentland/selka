@@ -1,0 +1,56 @@
+guardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source 1b6c13222675)
+guardian: diff-scoped vs 1fd1d566793dcae92449d937aca595c55ee318c8: 157/812 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 11 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 2826 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 1 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 1/88 failed (bool-ops-per-condition) — diff-scoped vs 1fd1d566793dcae92449d937aca595c55ee318c8, 157 file(s) in scope
+guardian: failures grouped by check (1):
+  bool-ops-per-condition (1 finding)
+    - src/origins.zig:588: condition has 5 boolean ops (cap 3)
+      fix: split into nested/sequential ifs, or extract into a named bool.
+  caution: zig-out binaries predate this failed run (installs are gated on green) — rebuild green before running them
+install
++- install qbe
+   +- run ../guardian-zig/zig-out/bin/guardian-check failure
+error: process exited with code 1
+failed command: ../guardian-zig/zig-out/bin/guardian-check all . --quiet
+
+Build Summary: 10/19 steps succeeded (1 failed)
+install transitive failure
++- install mylang transitive failure
+|  +- compile exe mylang debug native success 19s MaxRSS:555M
+|  |  +- run exe qbe-build-assets (qbe_build_assets) success 126ms
+|  |     +- compile exe qbe-build-assets debug native cached 18ms MaxRSS:41M
+|  +- run ../guardian-zig/zig-out/bin/guardian-check failure
+|     +- guardian-selfcheck success
+|        +- run ../guardian-zig/zig-out/bin/guardian-check success 15ms
++- install qbe transitive failure
+|  +- compile exe qbe fast native cached 50ms MaxRSS:40M
+|  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
++- install generated/ transitive failure
+|  +- run exe mylang (mylang-runtime) transitive failure
+|     +- compile exe mylang debug native (+1 more reused dependencies)
+|     +- install mylang (+2 more reused dependencies)
+|     +- compile exe qbe fast native (reused)
++- install board-trial transitive failure
+|  +- compile exe board-trial debug native success 14s MaxRSS:442M
+|  |  +- options cached
+|  |  |  +- compile exe qbe fast native (reused)
+|  |  +- run exe qbe-build-assets (qbe_build_assets) (+1 more reused dependencies)
+|  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
++- install schematic-svg transitive failure
+|  +- compile exe schematic-svg debug native success 16s MaxRSS:442M
+|  |  +- options (+1 more reused dependencies)
+|  |  +- run exe qbe-build-assets (qbe_build_assets) (+1 more reused dependencies)
+|  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
++- install mylang-io transitive failure
+|  +- compile exe mylang-io debug native success 14s MaxRSS:442M
+|  |  +- options (+1 more reused dependencies)
+|  |  +- run exe qbe-build-assets (qbe_build_assets) (+1 more reused dependencies)
+|  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
++- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+
+real 20.36
+user 63.38
+sys 7.36

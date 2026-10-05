@@ -30,7 +30,8 @@ const source =
     \\    rt.stack = [Value.nil, Value.nil]
     \\    return 1
     \\def callback(rt: mut Runtime, item: Value):
-    \\    rt.stack[bump(mut rt)] = item
+    \\    mutation_result_33 = bump(mut rt)
+    \\    rt.stack[mutation_result_33] = item
     \\def managed(rt: mut Runtime, name: str):
     \\    rt.names[0] = name
     \\def main() -> int:
@@ -76,8 +77,8 @@ test "RC field receivers of a named record need no loan or receiver scope" {
 }
 
 // spec-case: RC-INERT-FIELD-RECEIVER-1
-test "RC field receivers keep scopes across callbacks" {
-    try t.expect(try scopes("callback") > 0);
+test "RC field receivers selected after a mut call need no receiver scope" {
+    try t.expectEqual(@as(usize, 0), try scopes("callback"));
 }
 
 // spec-case: RC-INERT-COUNTED-RECEIVER-1

@@ -157,6 +157,33 @@ test "CLI fix applies every structured fix across modules to a fixed point" {
 }
 
 // spec-case: FIX-MIGRATION-1
+test "CLI fix splits receiver overlap into a preceding call without repeating effects" {
+    const original = @embedFile("fixtures/fix-migration/receiver-overlap.my");
+    var project = try Project.init(&.{.{ .path = "main.my", .data = original }});
+    defer project.deinit();
+    const preview = try project.run("fix", "main.my", &.{"--check"});
+    defer preview.deinit();
+    try testing.expectEqual(@as(u8, 1), preview.status);
+    try testing.expect(contains(preview.stdout, "E_MUTATION_OVERLAP"));
+    const before = try project.read("main.my");
+    defer testing.allocator.free(before);
+    try testing.expectEqualStrings(original, before);
+    const fixed = try project.run("fix", "main.my", &.{});
+    defer fixed.deinit();
+    try testing.expectEqual(@as(u8, 0), fixed.status);
+    const after = try project.read("main.my");
+    defer testing.allocator.free(after);
+    try testing.expectEqual(@as(usize, 1), std.mem.count(u8, after, "selected(mut items)"));
+    try testing.expect(contains(after, " = selected(mut items)\n    items[mutation_result_"));
+    const checked = try project.run("check", "main.my", &.{});
+    defer checked.deinit();
+    try testing.expectEqual(@as(u8, 0), checked.status);
+    const again = try project.run("fix", "main.my", &.{"--check"});
+    defer again.deinit();
+    try testing.expectEqual(@as(u8, 0), again.status);
+}
+
+// spec-case: FIX-MIGRATION-1
 test "CLI fix reports what it cannot fix once and exits 1" {
     const library =
         \\module lib
@@ -306,4 +333,48 @@ test "CLI fix migrates the pinned pre-marker Lox corpus with no hand edits" {
     const heap = try project.read("heap.my");
     defer testing.allocator.free(heap);
     try testing.expect(contains(heap, "    mark_table(mut marker, rt.globals)\n"));
+}
+
+const abi_append_producer = "module lib\n\npublic def change(items: mut list[int]):\n    items.append(9)\n\npublic def append_only(items: mut list[int]):\n    items.append(3)\n";
+const abi_rebind_producer = "module lib\n\npublic def change(items: mut list[int]):\n    items = [7]\n    items.append(8)\n\npublic def append_only(items: mut list[int]):\n    items.append(3)\n";
+const abi_consumer =
+    \\module main
+    \\
+    \\import lib
+    \\def main() -> int:
+    \\    first = [1]
+    \\    first_saved = first
+    \\    lib.change(mut first)
+    \\    action = lib.change
+    \\    second = [1]
+    \\    second_saved = second
+    \\    action(mut second)
+    \\    third = [1]
+    \\    third_saved = third
+    \\    append = lib.append_only
+    \\    append(mut third)
+    \\    lib.append_only(mut third)
+    \\    return 1 if first == second and first != [1] and first_saved == [1] and second_saved == [1] and third == [1, 3, 3] and third_saved == [1] else 0
+;
+
+fn abiRun(project: *const Project) !void {
+    const result = try project.run("run", "main.my", &.{ "--print-result", "--report" });
+    defer result.deinit();
+    try testing.expectEqual(@as(u8, 1), result.status);
+    try testing.expectEqualStrings("1\n", result.stdout);
+    try testing.expect(contains(result.stderr, "work-report-v1"));
+}
+
+// spec-case: MUT-REBIND-CALLER-1
+test "CLI warm imported direct and callback ABIs follow producer rebinding changes" {
+    var project = try Project.init(&.{ .{ .path = "main.my", .data = abi_consumer }, .{ .path = "lib.my", .data = abi_append_producer } });
+    defer project.deinit();
+    try abiRun(&project);
+    try abiRun(&project);
+    try project.temp.dir.writeFile(testing.io, .{ .sub_path = "lib.my", .data = abi_rebind_producer });
+    try abiRun(&project);
+    try abiRun(&project);
+    const consumer = try project.read("main.my");
+    defer testing.allocator.free(consumer);
+    try testing.expectEqualStrings(abi_consumer, consumer);
 }

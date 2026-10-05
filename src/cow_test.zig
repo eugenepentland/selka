@@ -455,7 +455,7 @@ test "copy on write: fixed array paths retain dictionary keys and collection own
 }
 
 // spec-case: COW-NESTED-1
-test "copy on write: a callback replacing an equal array entry detaches the pending receiver" {
+test "copy on write: a completed callback updates the current equal array entry" {
     const saved = value_semantics.enabled();
     value_semantics.setEnabled(true);
     defer value_semantics.setEnabled(saved);
@@ -468,17 +468,18 @@ test "copy on write: a callback replacing an equal array entry detaches the pend
         \\def main() -> int:
         \\    original: dict[str, [1]list[int]] = {"k": [[1]]}
         \\    changed = original
-        \\    changed["k"][index(mut changed)].append(2)
+        \\    mutation_result_471 = index(mut changed)
+        \\    changed["k"][mutation_result_471].append(2)
         \\    return len(original["k"][0]) * 10 + len(changed["k"][0])
     ;
     const a = std.testing.allocator;
-    try std.testing.expectEqual(@as(i64, 11), try run(a, source, false));
-    try std.testing.expectEqual(@as(i64, 11), try run(a, source, true));
+    try std.testing.expectEqual(@as(i64, 12), try run(a, source, false));
+    try std.testing.expectEqual(@as(i64, 12), try run(a, source, true));
     const il = try unitText(a, source, "main", checks);
     defer a.free(il);
-    try std.testing.expect(count(il, "call $myl_native_cow_scope_prepare(") == 1);
-    try std.testing.expect(count(il, "call $myl_native_cow_scope_release(") > 0);
-    try std.testing.expect(count(il, "extern $myl_native_cow_scope_type") == 1);
+    try std.testing.expectEqual(@as(usize, 0), count(il, "call $myl_native_cow_scope_prepare("));
+    try std.testing.expectEqual(@as(usize, 0), count(il, "call $myl_native_cow_scope_release("));
+    try std.testing.expectEqual(@as(usize, 0), count(il, "extern $myl_native_cow_scope_type"));
 }
 
 const fields =

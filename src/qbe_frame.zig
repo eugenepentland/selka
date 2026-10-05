@@ -162,8 +162,9 @@ pub fn Lower(comptime Emitter: type) type {
 fn allocateStorage(comptime Emitter: type, self: *Emitter, capacity: usize) GenerateError!void {
     const f = self.function;
     try rc_frame.Lower(Emitter).allocate(self);
-    if (self.cow) |state| for (state.plan.places) |maybe| {
+    if (self.cow) |state| for (state.plan.places, 0..) |maybe, index| {
         const place = maybe orelse continue;
+        if (@import("cow_plan.zig").referencedLocal(f, index)) try allocateIndex(Emitter, self, "cowref", index, 8);
         if (!cow_lower.Lower(Emitter).scoped(self, place)) continue;
         try allocateIndex(Emitter, self, "cowscope", place.fill, cow_lower.Lower(Emitter).scopeStorage(self, place));
         const value = self.temp();
@@ -684,6 +685,7 @@ fn frameBytes(comptime Emitter: type, self: *Emitter, capacity: usize, temporari
         size = try addFrame(size, try placeholderBytes(Emitter, self, i, local.ty));
     }
     size = try addFrame(size, cow_lower.Lower(Emitter).scopeBytes(self));
+    size = try addFrame(size, cow_lower.Lower(Emitter).referenceBytes(self));
     size = try addFrame(size, try rc_frame.Lower(Emitter).bytes(self));
     size = try addFrame(size, temporaries);
     size = try addFrame(size, self.range_keys.frameBytes());

@@ -1,0 +1,30 @@
+test-units
++- run test 18 pass, 1 fail (19 total)
+guardian/test: test wall 2.41s; slowest over 50ms:
+guardian/test:   1.73s  mut_callback_abi_test.test.mut callback adapter RC keeps two interior slots and managed returns independent
+guardian/test:   0.67s  mut_callback_abi_test.test.mut callback adapter GC stress keeps two interior slots and managed returns independent
+guardian/test: FAIL — 1 failed of 19
+guardian/test: RESULT {"passed":18,"failed":1,"skipped":0}
+error: 'mut_callback_abi_test.test.mut callback adapter RC keeps two interior slots and managed returns independent' failed:
+       guardian/test: 19 test(s) selected by filter: "mut callback adapter" — 7 match by name, 12 unnamed test block(s) run regardless
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:614:14: 0x14d32f9 in expect (std.zig)
+           if (!ok) return error.TestUnexpectedResult;
+                    ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-language/src/mut_callback_abi_test.zig:187:5: 0x2c0831c in test.mut callback adapter RC keeps two interior slots and managed returns independent (root_test.zig)
+           try t.expect(!result.trapped());
+           ^
+failed command: sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_QBE=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-language/zig-out/focus/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./.zig-cache/o/8aa595206a44c2ef743363cb4a3e9094/test "--guardian-filter=mut callback adapter" --cache-dir=./.zig-cache --seed=0xe32af239 --listen=-
+
+Build Summary: 8/10 steps succeeded (1 failed); 18/19 tests passed (1 failed)
+test-units transitive failure
++- run test 18 pass, 1 fail (19 total)
+   +- compile test debug native success 3s MaxRSS:485M
+   |  +- run exe qbe-build-assets (qbe_build_assets) success 68ms
+   |  |  +- compile exe qbe-build-assets debug native cached 7ms MaxRSS:36M
+   |  +- options cached
+   |     +- compile exe qbe fast native cached 15ms MaxRSS:35M
+   +- install generated to qbe cached
+   |  +- compile exe qbe fast native (reused)
+   +- install generated to mylang success
+      +- compile exe mylang debug native success 4s MaxRSS:556M
+         +- run exe qbe-build-assets (qbe_build_assets) (+1 more reused dependencies)

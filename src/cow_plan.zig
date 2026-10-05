@@ -305,6 +305,14 @@ pub fn iterationOwner(function: bytecode.Function, index: usize) bool {
     return false;
 }
 
+/// An interior writable argument passes the address of its prepared leaf slot.
+pub fn referencedLocal(function: bytecode.Function, index: usize) bool {
+    for (function.scope.instructions) |instruction| {
+        if (instruction.op == .ref_local and li(instruction.op.ref_local) == index) return true;
+    }
+    return false;
+}
+
 /// The one reachable store into `index`, or null. A terminal drop only ends
 /// the place lifetime; named-argument evaluation emits that cleanup explicitly.
 fn singleStore(planner: *const Planner, index: u32) ?usize {
@@ -323,7 +331,7 @@ fn singleStore(planner: *const Planner, index: u32) ?usize {
             },
             .load_local => |slot| if (li(slot) == index and ended) return null,
             .switch_variant => |dispatch| for (dispatch.arms) |arm| if (arm.slot) |slot| if (li(slot) == index) return null,
-            .ref_local => |slot| if (li(slot) == index) return null,
+            .ref_local => |slot| if (li(slot) == index and ended) return null,
             else => {},
         }
     }
@@ -489,6 +497,7 @@ fn keepWritten(planner: *Planner) Error![]const bool {
     for (planner.code(), 0..) |instruction, pc| {
         if (!planner.reachable(pc)) continue;
         switch (instruction.op) {
+            .ref_local => |slot| written[li(slot)] = true,
             .buffer_operation => |operation| if (writes(operation.kind)) {
                 written[li(operation.owner)] = true;
             },

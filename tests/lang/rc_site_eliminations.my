@@ -50,7 +50,8 @@ def grow_stack(m: mut Machine) -> int:
 
 
 def replaced_receiver(m: mut Machine, item: Value):
-    m.stack[grow_stack(mut m)] = item
+    mutation_result_53 = grow_stack(mut m)
+    m.stack[mutation_result_53] = item
 
 
 def rename(m: mut Machine, name: str):
@@ -436,10 +437,10 @@ public def test_field_receivers_of_local_records_and_negative_indices() -> bool:
 
 
 # spec-case: RC-INERT-FIELD-RECEIVER-1
-public def test_index_callback_replacing_the_field_list_keeps_scoped_receiver() -> bool:
+public def test_completed_callback_replaces_the_field_list_before_update() -> bool:
     m = Machine([Value.nil, Value.nil], [], [], 0, 0)
     replaced_receiver(mut m, Value.number(4.0))
-    return m.stack == [Value.nil, Value.nil, Value.nil]
+    return m.stack == [Value.nil, Value.number(4.0), Value.nil]
 
 
 # spec-case: RC-INERT-FIELD-RECEIVER-1
@@ -662,7 +663,7 @@ def main() -> int:
         test_relocated_loans_inside_arenas(),
         test_field_receivers_write_through_mut_records_and_keep_snapshots(),
         test_field_receivers_of_local_records_and_negative_indices(),
-        test_index_callback_replacing_the_field_list_keeps_scoped_receiver(),
+        test_completed_callback_replaces_the_field_list_before_update(),
         test_managed_element_field_stores_keep_their_scope(),
         test_field_receivers_inside_arenas(),
         test_payload_bindings_read_in_place_keep_their_owner(),

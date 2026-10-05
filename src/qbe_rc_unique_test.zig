@@ -1,4 +1,4 @@
-//! Caller uniqueness contracts survive scalar writes but not local rebinding.
+//! Payload parameters keep caller uniqueness; rebound parameters check caller storage.
 const std = @import("std");
 const compiler = @import("compiler.zig");
 const runtime = @import("runtime_mode.zig");
@@ -36,5 +36,5 @@ test "RC-MUT-UNIQUE-1 an unchanged scalar-list mut parameter uses caller uniquen
     var manifest = try emitted();
     defer manifest.deinit();
     try t.expect(std.mem.indexOf(u8, try named(manifest.value, "stable"), "myl_qbe_rc_unique_local") == null);
-    try t.expect(std.mem.indexOf(u8, try named(manifest.value, "rebound"), "myl_qbe_rc_unique_local") != null);
+    try t.expect(std.mem.indexOf(u8, try named(manifest.value, "rebound"), "myl_qbe_rc_unique_field") != null);
 }

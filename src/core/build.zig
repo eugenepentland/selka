@@ -324,12 +324,6 @@ const FnBuilder = struct {
     /// The type the function declares it returns; `function.signature.ret` is a record
     /// of it and the `mut` parameters' final values when there are any.
     declared_ret: ir.Type = .void,
-    /// The `mut` list parameters this path of the walk has rebound (`items = other`): a rebinding
-    /// detaches the name from the caller's collection, so only the payload it had then is written
-    /// back (COW-MUT-REBIND-1), which `connected` holds as a variable.
-    rebound: std.ArrayList(u32) = .empty,
-    /// Per `mut` list parameter, the synthetic variable of the value still tied to the caller.
-    connected: std.AutoHashMapUnmanaged(u32, u32) = .empty,
 
     fn allocator(self: *FnBuilder) std.mem.Allocator {
         return self.mb.allocator;
@@ -560,7 +554,6 @@ const FnBuilder = struct {
                 var place: ?Place = null;
                 const value = try self.expressionPlace(store.value, &place);
                 const block = self.current orelse return;
-                try self.detachParameter(self.local(store.slot), span);
                 try self.write(self.local(store.slot), block, value);
                 try self.assigned(self.local(store.slot));
                 try self.noteAlias(store.slot, place);
@@ -679,21 +672,15 @@ const FnBuilder = struct {
         // A condition that cannot complete (it returns first) reaches neither side.
         if (!self.hasPreds(then_block) and !self.hasPreds(else_block)) return;
         try self.seal(then_block);
-        const base = self.rebound.items.len;
-        var paths: std.ArrayList([]const u32) = .empty;
-        defer paths.deinit(self.allocator());
         self.current = then_block;
         try self.statement(then_body);
-        try self.endPath(base, &paths);
         try self.jump(join);
         if (else_body) |other| {
             try self.seal(else_block);
             self.current = else_block;
             try self.statement(other);
-            try self.endPath(base, &paths);
             try self.jump(join);
-        } else try paths.append(self.allocator(), &.{});
-        try self.joinPaths(paths.items, @intCast(self.nodeOf(condition).span.start));
+        }
         try self.seal(join);
         self.enter(join);
     }
@@ -743,9 +730,6 @@ const FnBuilder = struct {
         if (arms.len == 0) return self.mb.refuse("empty match", span);
         const tag = try self.emit(.{ .op = .union_tag, .ty = .u32, .a = value, .span = span });
         const join = try self.newBlock();
-        const base = self.rebound.items.len;
-        var paths: std.ArrayList([]const u32) = .empty;
-        defer paths.deinit(self.allocator());
         for (arms, 0..) |arm, i| {
             const arm_block = try self.newBlock();
             if (i + 1 < arms.len) {
@@ -758,7 +742,6 @@ const FnBuilder = struct {
                 const resume_at = next;
                 self.current = arm_block;
                 try self.armBody(arm, value, value_place, span);
-                try self.endPath(base, &paths);
                 try self.jump(join);
                 self.current = resume_at;
             } else {
@@ -766,11 +749,9 @@ const FnBuilder = struct {
                 try self.seal(arm_block);
                 self.current = arm_block;
                 try self.armBody(arm, value, value_place, span);
-                try self.endPath(base, &paths);
                 try self.jump(join);
             }
         }
-        try self.joinPaths(paths.items, span);
         try self.seal(join);
         self.enter(join);
     }
@@ -834,40 +815,6 @@ const FnBuilder = struct {
     /// Note an assignment to `variable`.
     fn assigned(self: *FnBuilder, variable: u32) Error!void {
         try self.versions.put(self.allocator(), variable, self.version(variable) + 1);
-    }
-
-    /// `items = value` of a `mut` list parameter detaches the name from the caller's collection:
-    /// from here on only the payload it had before is written back, and the new binding is an
-    /// ordinary local (a write to it copies, COW-MUT-REBIND-1). Which paths rebound it is a fact of
-    /// the walk, so a rebinding in a loop is refused, and paths that join must agree (`joinPaths`).
-    fn detachParameter(self: *FnBuilder, variable: u32, span: u32) Error!void {
-        const connected = self.connected.get(variable) orelse return;
-        if (std.mem.indexOfScalar(u32, self.rebound.items, variable) != null) return;
-        if (self.loops.items.len != 0) return self.mb.refuse("rebinding of a mut collection parameter in a loop", span);
-        try self.write(connected, self.current.?, try self.read(variable, self.current.?));
-        try self.rebound.append(self.allocator(), variable);
-    }
-
-    /// One path of a fork ended: what it rebound leaves `rebound` (back to the fork's state) and,
-    /// when the path reaches the join, is kept in `paths`.
-    fn endPath(self: *FnBuilder, base: usize, paths: *std.ArrayList([]const u32)) Error!void {
-        const added = try self.allocator().dupe(u32, self.rebound.items[base..]);
-        self.rebound.shrinkRetainingCapacity(base);
-        if (self.current != null) try paths.append(self.allocator(), added);
-    }
-
-    /// The paths that reach a join must have rebound the same `mut` list parameters, which stay
-    /// rebound after it; whether one was rebound cannot be a run-time fact.
-    fn joinPaths(self: *FnBuilder, paths: []const []const u32, span: u32) Error!void {
-        if (paths.len == 0) return;
-        for (paths[1..]) |other| {
-            var same = other.len == paths[0].len;
-            if (same) for (other) |variable| {
-                if (std.mem.indexOfScalar(u32, paths[0], variable) == null) same = false;
-            };
-            if (!same) return self.mb.refuse("conditional rebinding of a mut collection parameter", span);
-        }
-        try self.rebound.appendSlice(self.allocator(), paths[0]);
     }
 
     /// The value a read through receiver `owner` sees. A receiver the checker rooted at a place
@@ -1211,9 +1158,7 @@ const FnBuilder = struct {
             defer parts.deinit(self.allocator());
             if (self.declared_ret != .void) try parts.append(self.allocator(), result);
             for (mutated) |position| {
-                // A rebound collection writes back the payload that was still the caller's.
-                const rebound = std.mem.indexOfScalar(u32, self.rebound.items, position) != null;
-                try parts.append(self.allocator(), try self.read(if (rebound) self.connected.get(position).? else position, self.current.?));
+                try parts.append(self.allocator(), try self.read(position, self.current.?));
             }
             value = if (parts.items.len == 1) parts.items[0] else try self.emit(.{ .op = .record_make, .ty = self.function.signature.ret, .data = try self.extraSlice(parts.items), .span = span });
         }
@@ -1515,9 +1460,9 @@ const FnBuilder = struct {
         }
         var arguments: std.ArrayList(ir.Ref) = .empty;
         defer arguments.deinit(self.allocator());
-        // A `mut` argument is the place the callee's final value is written back to. The callee
-        // writes the caller's tree when the call runs, not where the argument is evaluated, so the
-        // place is only located while the arguments are evaluated and its value read after them.
+        // A whole `mut` argument names the current caller variable. Interior arguments select
+        // a value before later arguments; an ancestor write can orphan that selected value.
+        // Until the IR can retain that identity, refuse the changed interior path precisely.
         const places = try self.allocator().alloc(Place, mutated.len);
         const values = try self.allocator().alloc(ir.Ref, argument_nodes.len);
         for (argument_nodes, values, 0..) |argument, *value, position| {
@@ -1527,7 +1472,10 @@ const FnBuilder = struct {
             if (slot) |at| places[at] = place orelse return self.mb.refuse("mut argument that is not a place", span);
         }
         if (self.current == null) return .none;
-        for (mutated, places) |position, place| values[position] = try self.readPlace(place, span);
+        for (mutated, places) |position, place| {
+            if (place.steps.len > 0 and self.version(place.root) != place.root_version) return self.mb.refuse("interior mut argument ancestor changed during later argument evaluation", span);
+            values[position] = try self.readPlace(place, span);
+        }
         // A `unit` argument is evaluated for its effects and not passed.
         for (values) |value| if (value != .none and self.typeOfRef(value) != .void) try arguments.append(self.allocator(), value);
         const ret = self.mb.module.functions.items[index].signature.ret;
@@ -1752,8 +1700,6 @@ fn optionNoneTag(records: []const typed.Record, ty: typed.Type) ?usize {
 fn buildFunction(mb: *ModuleBuilder, checked: typed.Function, declared: ir.Function) Error!ir.Function {
     var b: FnBuilder = .{ .mb = mb, .function = declared, .checked = checked };
     b.declared_ret = try mb.mapType(checked.signature.return_type, declared.span);
-    defer b.rebound.deinit(mb.allocator);
-    defer b.connected.deinit(mb.allocator);
     defer b.places.deinit(mb.allocator);
     defer b.versions.deinit(mb.allocator);
     defer b.ssa.defs.deinit(mb.allocator);
@@ -1765,10 +1711,6 @@ fn buildFunction(mb: *ModuleBuilder, checked: typed.Function, declared: ir.Funct
     for (checked.scope.locals) |local| {
         const ty = mb.mapType(local.ty, @intCast(local.declaration.start)) catch .void;
         try b.ssa.types.append(mb.allocator, ty);
-    }
-    for (checked.signature.declared_mutates) |position| {
-        const ty = b.ssa.types.items[position];
-        if (mb.module.kind(ty) == .list) try b.connected.put(mb.allocator, position, try b.synthetic(ty));
     }
     const entry = try b.newBlock();
     try b.seal(entry);

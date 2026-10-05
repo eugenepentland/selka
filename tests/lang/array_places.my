@@ -186,7 +186,8 @@ public def test_an_array_parameter_written_after_a_local_copy_leaves_the_caller_
 # spec-case: PY-ARRAY-WRITE-1
 public def test_the_value_is_computed_before_the_array_is_read() -> bool:
     values: [4]i64 = [1, 2, 3, 4]
-    values[0] = side_effect(mut values)
+    mutation_result_189 = side_effect(mut values)
+    values[0] = mutation_result_189
     return values[0] == 7 and values[1] == 50
 
 

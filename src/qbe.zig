@@ -38,6 +38,7 @@ const prelude = @import("prelude.zig");
 const qbe_wire = @import("qbe_wire.zig");
 const qbe_embeds = @import("qbe_embeds.zig");
 const fragments = @import("qbe_fragments.zig");
+const mut_callbacks = @import("mut_callback_abi.zig");
 const exports = @import("qbe_exports.zig");
 /// Failures producing independent QBE native units.
 pub const GenerateError = error{ InternalError, OutOfMemory, SourceError, WriteFailed };
@@ -58,6 +59,8 @@ const store_scalar = " storel {d}, %s{d}\n";
 /// An unconditional jump to an instruction label: its prefix, then its pc.
 const jump_label = " jmp @{s}{d}\n";
 const Location = struct { path: []const u8, line: usize, column: usize };
+/// Synthetic callback shims have no consumer-specific source dependency.
+const callback_location: Location = .{ .path = "@mut_callback", .line = 1, .column = 1 };
 /// One contiguous splice of an inlined callee body into a caller: the callee's
 /// metadata symbol, the caller pc range its body occupies, the callee-local pc
 /// the range starts at, and the caller pc whose location entry is the call site.
@@ -1411,11 +1414,13 @@ const Shape = struct { lean: bool = false, executable: bool = false };
 /// Compute one unit's per-instruction positions and assertion messages and
 /// its inline frames into `a`.
 fn fillPositions(a: std.mem.Allocator, program: bytecode.Program, sources: Located, index: usize, unit: *Unit) GenerateError!void {
-    const code = program.functions[index].scope.instructions;
+    const function = program.functions[index];
+    const code = function.scope.instructions;
+    const synthetic = mut_callbacks.isAdapter(function.name);
     const locations = try a.alloc(Location, code.len);
     const messages = try a.alloc([]const u8, code.len);
     for (code, locations, messages) |instruction, *location, *message| {
-        location.* = sources.locate(instruction.span.start);
+        location.* = if (synthetic) callback_location else sources.locate(instruction.span.start);
         // ERROR-TRACE-1: a converting `?` never traps, so its slot names the
         // union case the error trace reports it wrapped the error in.
         message.* = if (instruction.op == .assert_true) instruction.op.assert_true.message else try error_trace.conversionCase(a, program.records, instruction.op) orelse "";
@@ -1445,7 +1450,11 @@ fn metaPass(pass: EmitPass, reuse: *Reuse, src: Source) GenerateError!void {
         if (pass.selected != null and !pass.selected.?[index]) continue;
         defer _ = scratch.reset(.retain_capacity);
         var key: fragments.MetaKey = .init(reuse.finals[index]);
-        try sources.fold(&key, pass.program.functions[index].scope.instructions);
+        const function = pass.program.functions[index];
+        if (mut_callbacks.isAdapter(function.name)) {
+            sources.last.clearRetainingCapacity();
+            key.source(fragments.sourceDigest(callback_location.path, "mut-callback-meta-v1"));
+        } else try sources.fold(&key, function.scope.instructions);
         if (reuse.standin) |standin| standin.sources[index] = try pass.allocator.dupe(u32, sources.last.items);
         const identity = key.finish();
         if (try store.meta(identity)) |digest| {
@@ -1832,7 +1841,20 @@ const Emitter = struct {
     pub fn load(self: *Emitter, comptime kind: []const u8, slot: usize) GenerateError!usize {
         const id = self.temp();
         try self.print(" %v{d} =l loadl %{s}{d}\n", .{ id, kind, slot });
+        if (comptime std.mem.eql(u8, kind, "l")) {
+            if (self.callerStorage(slot) and self.isScalar(self.function.scope.locals[slot].ty)) {
+                const value = self.temp();
+                try self.print(" %v{d} =l loadl %v{d}\n", .{ value, id });
+                return value;
+            }
+        }
         return id;
+    }
+    /// Address the initialized value owned by the caller of a `mut` parameter.
+    pub fn callerAddress(self: *Emitter, slot: usize) GenerateError!usize {
+        const caller = self.temp();
+        try self.print(" %v{d} =l loadl %l{d}\n", .{ caller, slot });
+        return caller;
     }
     /// Shared lowering primitive for target operation emitters.
     pub fn store(self: *Emitter, slot: usize, id: usize) GenerateError!void {
@@ -2342,11 +2364,7 @@ const Emitter = struct {
     /// writes the caller's value through it: an element or field write lands
     /// in the caller's variable, and no entry copy is ever taken.
     pub fn callerStorage(self: *Emitter, index: usize) bool {
-        const signature = self.function.signature;
-        if (index >= signature.parameter_count) return false;
-        for (signature.declared_mutates) |position| if (position == index)
-            return typed.referenceMut(self.program.records, self.function.scope.locals[index].ty);
-        return false;
+        return @import("mut_abi.zig").reference(self.program.records, self.function, index);
     }
     /// Whether an operand already on the stack below the read at this pc is a
     /// `ref_local` of local `index`: the call that consumes both will write
@@ -2383,6 +2401,10 @@ const Emitter = struct {
         const flags = try self.allocator.alloc(borrow_lower.Borrow, f.scope.locals.len);
         @memset(flags, .none);
         for (f.scope.locals[0..f.signature.parameter_count], 0..) |local, index| {
+            if (self.callerStorage(index)) {
+                flags[index] = .value;
+                continue;
+            }
             if (self.isScalar(local.ty)) continue;
             const value = try self.layout(local.ty);
             if (value.copy != .bytes or value.drop) continue;
@@ -3032,8 +3054,9 @@ const Emitter = struct {
         if (self.callerStorage(index)) {
             // A `mut` array parameter stores into the caller's array.
             if (!forwarded) {
-                const caller = try self.load("l", index);
-                try self.print(" blit %v{d}, %v{d}, {d}\n", .{ try self.load("s", h - 1), caller, (try self.layout(ty)).size });
+                const caller = try self.callerAddress(index);
+                const value = try self.load("s", h - 1);
+                if (self.isScalar(ty)) try self.print(" storel %v{d}, %v{d}\n", .{ value, caller }) else try self.print(" blit %v{d}, %v{d}, {d}\n", .{ value, caller, (try self.layout(ty)).size });
             }
         } else if (self.byReference(index)) {
             try self.print(" storel %v{d}, %l{d}\n", .{ try self.load("s", h - 1), index });
@@ -3116,11 +3139,11 @@ const Emitter = struct {
             .push_unit => try self.print(" storel 0, %s{d}\n", .{h}),
             .make_record, .get_field, .update_record, .array_length, .get_index, .replace_index, .make_variant, .switch_variant => try @import("qbe_aggregate.zig").emit(self, op, stack),
             .ref_local => |slot| {
-                // The argument a `mut` array parameter receives: the address of
-                // this frame's variable, or the caller's address a `mut` array
-                // parameter of this function already holds.
+                // An interior mut argument receives its detached leaf slot;
+                // a root receives this frame's slot or forwarded caller storage.
                 const index = @backingInt(slot);
-                if (self.byReference(index)) try self.store(h, try self.load("l", index)) else try self.print(" storel %l{d}, %s{d}\n", .{ index, h });
+                if (try cow_lower.Lower(Emitter).reference(self, index)) |leaf| return self.store(h, leaf);
+                if (self.byReference(index)) try self.store(h, try self.callerAddress(index)) else try self.print(" storel %l{d}, %s{d}\n", .{ index, h });
             },
             .load_local, .move_local => |slot| {
                 // QBE-MOVE-ELIDE-1: an alias reads the slot that holds its value

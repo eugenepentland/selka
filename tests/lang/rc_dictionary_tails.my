@@ -37,10 +37,11 @@ def test_completed_key_and_rhs_callbacks_keep_order() -> bool:
     return True
 
 # RC-DICTIONARY-TAIL-1 control
-def test_pending_callback_remains_scoped() -> bool:
+def test_call_completes_before_dictionary_key_selection() -> bool:
     counts = {1: 7}
     seen: list[int] = []
-    counts[callback(mut counts, mut seen, 11)] = 13
+    mutation_result_43 = callback(mut counts, mut seen, 11)
+    counts[mutation_result_43] = 13
     assert seen == [11]
     assert counts[1] == 13
     assert counts[2] == 11

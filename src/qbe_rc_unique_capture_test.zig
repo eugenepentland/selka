@@ -42,7 +42,8 @@ const source =
     \\    return 0
     \\def callback() -> int:
     \\    values = [7, 11]
-    \\    values[change(mut values)] = 13
+    \\    mutation_result_45 = change(mut values)
+    \\    values[mutation_result_45] = 13
     \\    return values[0]
     \\def rebound() -> int:
     \\    values = [7, 11]
@@ -87,7 +88,7 @@ test "RC duplicate capture removes only the second checked named-root guard" {
     const cases = [_]struct { name: []const u8, copies: usize }{
         .{ .name = "once", .copies = 1 },     .{ .name = "snapshot", .copies = 1 },
         .{ .name = "repeat", .copies = 2 },   .{ .name = "plain", .copies = 0 },
-        .{ .name = "callback", .copies = 0 }, .{ .name = "rebound", .copies = 0 },
+        .{ .name = "callback", .copies = 1 }, .{ .name = "rebound", .copies = 0 },
         .{ .name = "held", .copies = 0 },     .{ .name = "managed", .copies = 0 },
     };
     for (cases) |case| try checkAdmission(try body(result.value, case.name), case.copies);

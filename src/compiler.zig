@@ -248,7 +248,8 @@ pub const Compilation = struct {
         try self.check();
         if (self.code == null) {
             const lowered = try lower.lowerWith(.{ .output = self.arena.allocator(), .scratch = self.arena.child_allocator }, self.program.?, drop_debug);
-            self.code = try @import("bytecode_inline.zig").inlineProgram(self.arena.allocator(), lowered);
+            const inlined = try @import("bytecode_inline.zig").inlineProgram(self.arena.allocator(), lowered);
+            self.code = try @import("mut_callback_abi.zig").adapt(self.arena.allocator(), inlined);
         }
     }
 

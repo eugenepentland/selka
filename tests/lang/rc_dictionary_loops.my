@@ -56,7 +56,8 @@ def calls(times: int) -> int:
     counts: dict[str, int] = {}
     for i in range(times):
         key = keys[0]
-        counts[key] = change(mut counts)
+        mutation_result_59 = change(mut counts)
+        counts[key] = mutation_result_59
     return counts["key"]
 
 def test_callback_and_reference_keep_fallback() -> bool:

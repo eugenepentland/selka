@@ -1,0 +1,63 @@
+guardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source 1b6c13222675)
+guardian: run-all: cached — 0 blocking (inputs unchanged since last green run)
+guardian: run-all: cached — 0 blocking (inputs unchanged since last green run)
+Build Summary: 29/29 steps succeeded
+test-qbe-build success
++- run test cached
+|  +- compile test debug native cached 6ms MaxRSS:41M
+|  |  +- options cached
+|  |  |  +- compile exe qbe fast native cached 13ms MaxRSS:38M
+|  |  +- run exe qbe-build-assets (qbe_build_assets) cached
+|  |     +- compile exe qbe-build-assets debug native cached 7ms MaxRSS:38M
+|  +- install success
+|  |  +- install mylang cached
+|  |  |  +- compile exe mylang debug native cached 6ms MaxRSS:41M
+|  |  |  |  +- run exe qbe-build-assets (qbe_build_assets) (+1 more reused dependencies)
+|  |  |  +- run ../guardian-zig/zig-out/bin/guardian-check success 73ms
+|  |  |     +- guardian-selfcheck success
+|  |  |        +- run ../guardian-zig/zig-out/bin/guardian-check success 4ms
+|  |  +- install qbe cached
+|  |  |  +- compile exe qbe fast native (reused)
+|  |  |  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+|  |  +- install generated/ cached
+|  |  |  +- run exe mylang (mylang-runtime) cached
+|  |  |     +- compile exe mylang debug native (+1 more reused dependencies)
+|  |  |     +- install mylang (+2 more reused dependencies)
+|  |  |     +- compile exe qbe fast native (reused)
+|  |  +- install board-trial cached
+|  |  |  +- compile exe board-trial debug native cached 4ms MaxRSS:41M
+|  |  |  |  +- options (+1 more reused dependencies)
+|  |  |  |  +- run exe qbe-build-assets (qbe_build_assets) (+1 more reused dependencies)
+|  |  |  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+|  |  +- install schematic-svg cached
+|  |  |  +- compile exe schematic-svg debug native cached 7ms MaxRSS:41M
+|  |  |  |  +- options (+1 more reused dependencies)
+|  |  |  |  +- run exe qbe-build-assets (qbe_build_assets) (+1 more reused dependencies)
+|  |  |  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+|  |  +- install mylang-io cached
+|  |  |  +- compile exe mylang-io debug native cached 7ms MaxRSS:41M
+|  |  |  |  +- options (+1 more reused dependencies)
+|  |  |  |  +- run exe qbe-build-assets (qbe_build_assets) (+1 more reused dependencies)
+|  |  |  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+|  |  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+|  +- hash declared test inputs success 80ms
+|  +- record the test environment success 4ms
+|  +- compile exe qbe fast native (reused)
+|  +- compile exe mylang debug native (+1 more reused dependencies)
++- run test cached
+|  +- compile test debug native cached 6ms MaxRSS:41M
+|  |  +- run exe qbe-build-assets (qbe_build_assets) (+1 more reused dependencies)
+|  +- install (+7 more reused dependencies)
+|  +- hash declared test inputs (reused)
+|  +- record the test environment (reused)
+|  +- compile exe qbe fast native (reused)
+|  +- compile exe mylang debug native (+1 more reused dependencies)
++- run exe host-bridge-test cached
+|  +- compile exe host-bridge-test debug native cached 14ms MaxRSS:37M
+|  +- install (+7 more reused dependencies)
++- run ../guardian-zig/zig-out/bin/guardian-check success 78ms
+   +- guardian-selfcheck (+1 more reused dependencies)
+
+real 0.25
+user 0.20
+sys 0.14

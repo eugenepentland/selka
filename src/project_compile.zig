@@ -59,6 +59,8 @@ const semantic_key = @import("semantic_key.zig");
 const fragments = @import("qbe_fragments.zig");
 const lower = @import("lower.zig");
 const bytecode_inline = @import("bytecode_inline.zig");
+const bytecode = @import("bytecode.zig");
+const callback_abi = @import("mut_callback_abi.zig");
 /// Project-level checked and lowered state borrowing the interface index and its arena.
 pub const Compilation = struct {
     index: *interfaces.Index,
@@ -66,7 +68,7 @@ pub const Compilation = struct {
     syntax: @import("ast.zig").Program,
     diagnostics: diagnostic.Sink,
     program: ?typed.Program = null,
-    code: ?@import("bytecode.zig").Program = null,
+    code: ?bytecode.Program = null,
     /// Persistent per-function unit reuse for native emission, when the
     /// command has a fragment store (`QBE-FRAGMENT-REUSE-1`).
     reuse: ?@import("qbe_fragments.zig").Reuse = null,
@@ -278,8 +280,13 @@ pub const Compilation = struct {
             error.OutOfMemory => return error.OutOfMemory,
             else => return error.InternalError,
         };
-        stats.* = .{ .lowered_functions = count, .emitted_fragments = count };
-        return @import("qbe.zig").generateSelectedWithInterface(allocator, inlined, self.src, &self.diagnostics, .{ .roots = roots, .schema = schema, .reuse = self.reuse, .policy = policy }, selected) catch |err| switch (err) {
+        const adapted = try callback_abi.adapt(self.index.project.arena.allocator(), inlined);
+        const emitted = try allocator.alloc(bool, adapted.functions.len);
+        defer allocator.free(emitted);
+        @memcpy(emitted[0..selected.len], selected);
+        @memset(emitted[selected.len..], true);
+        stats.* = .{ .lowered_functions = count, .emitted_fragments = count + adapted.functions.len - inlined.functions.len };
+        return @import("qbe.zig").generateSelectedWithInterface(allocator, adapted, self.src, &self.diagnostics, .{ .roots = roots, .schema = schema, .reuse = self.reuse, .policy = policy }, emitted) catch |err| switch (err) {
             error.OutOfMemory => return error.OutOfMemory,
             error.SourceError => return error.SourceError,
             error.WriteFailed => return error.WriteFailed,
@@ -440,7 +447,8 @@ pub const Compilation = struct {
         if (self.code != null) return;
         if (try self.lowerStandIns(drop_debug)) return;
         const lowered = try lower.lowerWith(self.lowering(), self.program.?, drop_debug);
-        self.code = try bytecode_inline.inlineProgram(self.index.project.arena.allocator(), lowered);
+        const inlined = try bytecode_inline.inlineProgram(self.index.project.arena.allocator(), lowered);
+        self.code = try callback_abi.adapt(self.index.project.arena.allocator(), inlined);
     }
 
     /// Explain ownership across the checked project, including per-function
@@ -480,9 +488,13 @@ pub const Compilation = struct {
             error.OutOfMemory => return error.OutOfMemory,
             else => return error.InternalError,
         };
-        standins.pre = try a.dupe(@import("bytecode.zig").Function, lowered.functions);
+        const targets = try callbackTargets(a, self.program.?, lowered, standins.records);
+        const reserved = try callback_abi.prepare(a, lowered, targets);
+        const adapted = try callback_abi.adapt(a, reserved);
+        try extendStandIns(a, standins, adapted.functions.len);
+        standins.pre = try a.dupe(bytecode.Function, adapted.functions);
         standins.drop_debug = drop_debug;
-        self.code = try bytecode_inline.inlineProgram(a, lowered);
+        self.code = try bytecode_inline.inlineProgram(a, adapted);
         return true;
     }
 
@@ -490,17 +502,55 @@ pub const Compilation = struct {
     fn lowerMore(context: *anyopaque, standins: *fragments.Standins) error{ OutOfMemory, InternalError }!void {
         const self: *Compilation = @ptrCast(@alignCast(context));
         const a = self.index.project.arena.allocator();
-        const fresh = try a.alloc(bool, standins.selected.len);
-        for (fresh, standins.selected, standins.pre) |*wanted, chosen, known| wanted.* = chosen and known.scope.instructions.len == 0;
+        const count = self.program.?.functions.len;
+        const fresh = try a.alloc(bool, count);
+        for (fresh, standins.selected[0..count], standins.pre[0..count]) |*wanted, chosen, known| wanted.* = chosen and known.scope.instructions.len == 0;
         const lowered = lower.lowerSelectedWith(self.lowering(), self.program.?, fresh, standins.drop_debug) catch |err| switch (err) {
             error.OutOfMemory => return error.OutOfMemory,
             else => return error.InternalError,
         };
-        for (fresh, standins.pre, lowered.functions) |wanted, *known, function| {
+        for (fresh, standins.pre[0..count], lowered.functions) |wanted, *known, function| {
             if (wanted) known.* = function;
         }
+        const adapted = try callback_abi.adapt(a, .{ .functions = standins.pre, .records = lowered.records, .main = lowered.main });
+        if (adapted.functions.len != standins.pre.len) return error.InternalError;
+        @memcpy(standins.pre, adapted.functions);
     }
 };
+
+/// Reserve callback targets before a cached body can be expanded into this table.
+fn callbackTargets(a: std.mem.Allocator, program: typed.Program, code: bytecode.Program, records: []const ?*const fragments.Record) error{OutOfMemory}![]const typed.FunctionId {
+    const marked = try a.alloc(bool, code.functions.len);
+    @memset(marked, false);
+    for (program.nodes) |node| if (node.data == .function_value) {
+        marked[@backingInt(node.data.function_value)] = true;
+    };
+    var by_name: std.StringHashMapUnmanaged(usize) = .empty;
+    for (code.functions, 0..) |function, index| try by_name.put(a, function.name, index);
+    for (records) |record| if (record) |stored| for (stored.facts.values) |name| {
+        if (by_name.get(callback_abi.canonicalName(name))) |index| marked[index] = true;
+    };
+    var targets: std.ArrayList(typed.FunctionId) = .empty;
+    for (marked, 0..) |chosen, index| if (chosen) try targets.append(a, @fromBackingInt(index));
+    return targets.items;
+}
+
+/// Synthetic adapters have real bodies and no source-fragment stand-in key.
+fn extendStandIns(a: std.mem.Allocator, standins: *fragments.Standins, count: usize) error{OutOfMemory}!void {
+    const old = standins.selected.len;
+    const selected = try a.alloc(bool, count);
+    @memcpy(selected[0..old], standins.selected);
+    @memset(selected[old..], true);
+    const records = try a.alloc(?*const fragments.Record, count);
+    @memcpy(records[0..old], standins.records);
+    @memset(records[old..], null);
+    const keys = try a.alloc(?fragments.Digest, count);
+    @memcpy(keys[0..old], standins.keys);
+    @memset(keys[old..], null);
+    standins.selected = selected;
+    standins.records = records;
+    standins.keys = keys;
+}
 
 /// A function's source identity (EMIT-STANDIN-1): its stable declaration key,
 /// dependency context, region digest and region length, and its name; null

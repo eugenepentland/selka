@@ -532,6 +532,7 @@ fn statement(comptime Checker: type, self: *Checker, statement_id: ast.Statement
         .assignment => |a| try statementAssignment(Checker, self, stmt, a, &flow),
         .gather_step => |step| try self.statementGatherStep(stmt, step),
     };
+    try @import("mut_exclusive.zig").checkReceivers(Checker, self, stmt);
     const result: typed.StatementId = @fromBackingInt(self.statements.items.len);
     try self.statements.append(self.allocator, .{ .span = stmt.span, .terminates = flow.terminates, .owned_cleanup = flow.owned_cleanup, .data = data });
     return .{ .id = result, .terminates = flow.terminates, .looping = flow.looping };

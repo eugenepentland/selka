@@ -32,10 +32,11 @@ def nested_argument(rows: mut list[list[int]], saved: mut list[list[list[int]]])
 
 
 # spec-case: COW-RECEIVER-ARGUMENT-1
-public def test_nested_argument_scopes_preserve_both_receivers() -> bool:
+public def test_nested_mut_call_finishes_before_the_outer_receiver_update() -> bool:
     rows = [[1], [8]]
     saved: list[list[list[int]]] = []
-    rows[0].append(nested_argument(mut rows, mut saved))
+    selected = nested_argument(mut rows, mut saved)
+    rows[0].append(selected)
     return rows[0] == [1, 3] and rows[1] == [8, 2] and saved[0][0] == [1] and saved[0][1] == [8]
 
 

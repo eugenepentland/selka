@@ -1,0 +1,35 @@
+guardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source 1b6c13222675)
+guardian: diff-scoped vs 1fd1d566793dcae92449d937aca595c55ee318c8: 136/809 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 10 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 1 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 1/88 failed (line-length) — diff-scoped vs 1fd1d566793dcae92449d937aca595c55ee318c8, 136 file(s) in scope
+guardian: failures grouped by check (1):
+  line-length (1 finding)
+    - src/mut_exclusive.zig:319: line is 362 chars (hard limit 240)
+      fix: split the expression when doing so improves readability
+  caution: zig-out binaries predate this failed run (installs are gated on green) — rebuild green before running them
+install
++- install mylang
+   +- run ../guardian-zig/zig-out/bin/guardian-check failure
+error: process exited with code 1
+failed command: ../guardian-zig/zig-out/bin/guardian-check all . --quiet
+
+Build Summary: 6/12 steps succeeded (1 failed)
+install transitive failure
++- install mylang transitive failure
+|  +- compile exe mylang debug native success 3s MaxRSS:557M
+|  |  +- run exe qbe-build-assets (qbe_build_assets) success 45ms
+|  |     +- compile exe qbe-build-assets debug native cached 7ms MaxRSS:41M
+|  +- run ../guardian-zig/zig-out/bin/guardian-check failure
+|     +- guardian-selfcheck success
+|        +- run ../guardian-zig/zig-out/bin/guardian-check success 5ms
++- install qbe transitive failure
+|  +- compile exe qbe fast native cached 13ms MaxRSS:41M
+|  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
++- install generated/ transitive failure
+|  +- run exe mylang (mylang-runtime) transitive failure
+|     +- compile exe mylang debug native (+1 more reused dependencies)
+|     +- install mylang (+2 more reused dependencies)
+|     +- compile exe qbe fast native (reused)
++- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)

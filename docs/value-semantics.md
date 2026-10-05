@@ -93,7 +93,37 @@ The argument of a `mut` record must be a mutable local: `mut holder.counter`
 or `mut rows[i]` is `E_MUTATION_MARKER` ("copy the field or element into a
 local, pass `mut` that local, and store it back"), and a `for` or `match`
 binding is `E_IMMUTABLE`. A `mut` list or dict argument may still be an element
-or a field, since the callee changes that collection in place.
+or a field, since the call updates that collection place, including a whole rebinding.
+
+**A whole `mut` binding belongs to the caller.** Rebinding a `mut` list,
+dictionary, set, record or tuple parameter updates the caller's variable,
+including inside a loop or on only one branch. Values used as read-only
+sources and copies saved before the call stay independent. A `mut` fixed
+array can be updated element by element; rebinding it remains
+`E_ASSIGNMENT_TARGET`.
+
+A whole-local mut argument names the caller's current variable when the call
+starts, after all arguments evaluate. An interior argument such as `mut rows[0]`
+retains the collection selected when that argument evaluates. If a later
+argument replaces that entry, the callee changes the held old collection and
+leaves the replacement intact. If the entry is unchanged, whole rebinding by
+the callee publishes its final value into that entry.
+
+```mylang
+# doc: value-semantics
+# doc: expect 27
+
+def replace(items: mut list[int], source: list[int], choose: bool):
+    if choose:
+        items = source
+    items.append(7)
+
+def main() -> int:
+    items = [1]
+    source = [2]
+    replace(mut items, source, True)
+    return items[0] * 10 + items[1]
+```
 
 **Loop variables and match bindings are copies, so writing through one is an
 error.** `for row in grid: row.append(0)` would change a copy that is gone when
@@ -154,6 +184,33 @@ def main() -> int:
 The callee sees `source` as `[1, 2]` even though it appends to `target`, which
 is the same variable. The natural recursive helper
 `walk(adj, node, mut path, mut found)` is accepted.
+
+**Finish an overlapping `mut` call before updating its receiver.** A statement
+such as `items[selected(mut items)] = 9` or
+`rows[0].append(clear_rows(mut rows))` is `E_MUTATION_OVERLAP`: the update's
+receiver overlaps a mutable argument evaluated in the same statement. The
+same-root rule follows field and index paths until either path ends. Disjoint
+fields or roots stay legal, and read-only arguments keep their snapshots.
+Save the call's result first, then select the receiver from its current value:
+
+```mylang
+# doc: value-semantics
+# doc: expect 19
+
+def selected(items: mut list[int]) -> int:
+    items.append(2)
+    return 1
+
+def main() -> int:
+    items = [1]
+    index = selected(mut items)
+    items[index] = 9
+    return items[0] * 10 + items[index]
+```
+
+For a simple unconditional update, `mylang fix` performs that split. An
+expression with other effects or conditional evaluation needs an explicit
+choice of order.
 
 **Two `mut` arguments must name disjoint places.** A `mut` argument names a
 place: a variable plus a path of fields, indices and dictionary keys. Two `mut`
@@ -301,12 +358,11 @@ list even when `change` clears `values`, appends `91` and returns `0`: the read
 returns `7`, and `values` is `[91]` afterward. A negative index is normalized
 using the captured list's length. The same rule applies to dictionary keys;
 copying an already pinned receiver preserves the caller's mutation target.
-If an array index calls a function, the receiver evaluated before that call
-keeps its identity. Replacing or removing its containing entry leaves the
-pending write on the old value. Updating another entry, growing a dictionary,
-or moving a list element keeps the pending write on the selected value.
-This also holds when a replacement is equal to the old value or the callback
-saves a snapshot of the parent. Temporary pins protect just the selected
+Reads and mut arguments retain the value selected before later arguments
+evaluate. Replacing or removing its containing entry leaves that selected
+value alive through the call. A statement that updates a receiver while an
+evaluated mut call overlaps it is rejected; call first, then perform the
+update in a separate statement. Temporary pins protect just the selected
 field path and its possible array elements; unrelated recursive branches
 stay lazy. The pins are released when evaluation finishes or returns early.
 Checks proven stable across a loop are hoisted.
@@ -327,8 +383,6 @@ ordinary builds emit no counter calls.
   remain bounded at 1,024 edges and trap `R_COW_DEPTH` if exceeded rather
   than leaving a mutable child unshared.
 - A copy is not reported as a `managed_allocation` effect.
-- Rebinding a whole `mut` list or dict parameter does not reach the caller; it
-  is rejected as a `mut` that is never written.
 - A function with a `mut` record parameter cannot be a function value, and a
   callback type with one cannot take a lambda.
 - A write to a local copy that is never read or stored back afterwards is not

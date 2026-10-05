@@ -52,7 +52,7 @@ def main() -> int:
     assert test_conditional_indices_and_zero_iterations_preserve_owners()
     assert test_three_level_shared_projection_keeps_named_row_and_outer_snapshot()
     assert test_plain_record_writes_keep_snapshot_and_negative_index()
-    assert test_plain_record_index_callback_keeps_pending_snapshot()
+    assert test_plain_record_call_finishes_before_selection_and_keeps_snapshot()
     assert test_nested_plain_record_writes_preserve_arena_values()
     return 0
 
@@ -95,10 +95,11 @@ public def test_plain_record_writes_keep_snapshot_and_negative_index() -> bool:
 
 
 # spec-case: RC-INERT-PLAIN-UPDATE-1
-public def test_plain_record_index_callback_keeps_pending_snapshot() -> bool:
+public def test_plain_record_call_finishes_before_selection_and_keeps_snapshot() -> bool:
     points = [Point(3, 7)]
     snapshots: list[list[Point]] = []
-    points[save_points(mut points, mut snapshots)].x = 13
+    mutation_result_101 = save_points(mut points, mut snapshots)
+    points[mutation_result_101].x = 13
     return points == [Point(13, 9)] and snapshots == [[Point(3, 7)]]
 
 

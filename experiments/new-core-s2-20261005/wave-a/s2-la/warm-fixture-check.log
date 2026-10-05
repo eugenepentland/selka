@@ -1,0 +1,3 @@
+main.my:1:1: error[E_MODULE_HEADER]: `lib` is not a standard module (base64, byte_builder, environment, filesystem, hex, json, math, network, path, pool, random, sort, strings, time); a file without a `module` header can import only those. To import `lib.my` from this project, start this file with `module main`
+  import lib
+  ^

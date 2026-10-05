@@ -1,0 +1,49 @@
+thread 2305191 panic: integer does not fit in destination type
+/home/epentland/ai/canopy/mylang/src/origins.zig:43:47: 0x1c45bca in fromPosition (compiler.zig)
+        return .{ .positions = @as(u16, 1) << @intCast(position) };
+                                              ^
+/home/epentland/ai/canopy/mylang/src/origins.zig:310:83: 0x1c44d6a in localOrigin (compiler.zig)
+        if (index < function.signature.parameter_count) return Origin.fromPosition(@intCast(index));
+                                                                                  ^
+/home/epentland/ai/canopy/mylang/src/origins.zig:432:28: 0x1c4db53 in absorbDirectWrite (compiler.zig)
+        context.localOrigin(function, origins, owner)
+                           ^
+/home/epentland/ai/canopy/mylang/src/origins.zig:479:22: 0x1c4ba22 in applyExpression (compiler.zig)
+    absorbDirectWrite(context, function, origins, node, summary);
+                     ^
+/home/epentland/ai/canopy/mylang/src/origins.zig:505:55: 0x1c4b217 in analyzeFunction (compiler.zig)
+        .expression => |expression_id| applyExpression(context, function, origins, expression_id, &summary),
+                                                      ^
+/home/epentland/ai/canopy/mylang/src/origins.zig:529:49: 0x1c49485 in buildSummaries (compiler.zig)
+            const computed = try analyzeFunction(&context, index);
+                                                ^
+/home/epentland/ai/canopy/mylang/src/origins.zig:970:37: 0x1c2fe2f in check (compiler.zig)
+    const built = try buildSummaries(allocator, program);
+                                    ^
+/home/epentland/ai/canopy/mylang/src/effects.zig:666:59: 0x1c27a1f in check (compiler.zig)
+    const mutation_violated = @import("origins.zig").check(allocator, program, .{ .exported = exported, .src = request.src, .syntax = request.syntax, .sink = sink }) catch |err| switch (err) {
+                                                          ^
+/home/epentland/ai/canopy/mylang/src/sema.zig:5882:37: 0x1b5d6a6 in checkCached (compiler.zig)
+    try @import("effects.zig").check(allocator, checked, .{ .exported = exported, .src = src, .syntax = program, .sink = sink });
+                                    ^
+/home/epentland/ai/canopy/mylang/src/compiler.zig:176:44: 0x232b36b in checkWithCache (compiler.zig)
+        self.program = try sema.checkCached(sink.allocator, self.src, self.syntax.?, &sink, null, cache);
+                                           ^
+/home/epentland/ai/canopy/mylang/src/main.zig:502:31: 0x13756ab in runCommand (main.zig)
+    compilation.checkWithCache(&counting) catch |err| switch (err) {
+                              ^
+/home/epentland/ai/canopy/mylang/src/main.zig:311:30: 0x1398581 in run (main.zig)
+    const status = runCommand(command_init, with_frontend) catch |err| {
+                             ^
+/home/epentland/ai/canopy/mylang/src/main.zig:283:23: 0x139b1ab in dispatch (main.zig)
+    const status = run(init, parsed) catch |err| status: {
+                      ^
+/home/epentland/ai/canopy/mylang/src/main.zig:124:28: 0x139c098 in main (main.zig)
+    const status = dispatch(init) catch |err| status: {
+                           ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/start.zig:791:30: 0x1364b5d in callMain (std.zig)
+    return wrapMain(root.main(.{
+                             ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/start.zig:218:5: 0x13641e1 in _start (std.zig)
+    asm volatile (switch (native_arch) {
+    ^

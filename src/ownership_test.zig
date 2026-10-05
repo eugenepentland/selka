@@ -323,8 +323,8 @@ test "OWNERSHIP-ANALYSIS-1 the shared liveness solution fails cleanly without me
     try std.testing.expectError(error.OutOfMemory, liveness.solve(failing.allocator(), .{ .function = function, .states = &states, .pinned = &.{false} }));
 }
 
-// spec: COW-MUT-REBIND-1
-test "COW-MUT-REBIND-1 a rebound mut parameter keeps its borrow role and requires checks" {
+// spec: MUT-REBIND-CALLER-1
+test "MUT-REBIND-CALLER-1 a rebound mut parameter keeps its caller-storage role and requires checks" {
     var parsed = try explained(std.testing.allocator,
         \\def replaced(xs: mut list[int], other: list[int]) -> list[int]:
         \\    xs = other
@@ -339,8 +339,8 @@ test "COW-MUT-REBIND-1 a rebound mut parameter keeps its borrow role and require
     try std.testing.expectEqualStrings("mut_param", try role(parsed.value, "xs"));
 }
 
-// spec-case: COW-MUT-REBIND-1
-test "COW-MUT-REBIND-1 a conditional parameter replacement checks its captured receiver" {
+// spec-case: MUT-REBIND-CALLER-1
+test "MUT-REBIND-CALLER-1 a conditional parameter replacement checks its captured receiver" {
     var parsed = try explained(std.testing.allocator,
         \\def replaced(xs: mut list[int], other: list[int], choose: bool) -> list[int]:
         \\    if choose:

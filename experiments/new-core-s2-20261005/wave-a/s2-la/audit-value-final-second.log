@@ -1,0 +1,382 @@
+packed_calls.my:8:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p0: int,
+      ^
+packed_calls.my:9:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p1: int,
+      ^
+packed_calls.my:10:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p2: int,
+      ^
+packed_calls.my:11:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p3: int,
+      ^
+packed_calls.my:12:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p4: int,
+      ^
+packed_calls.my:13:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p5: int,
+      ^
+packed_calls.my:14:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p6: int,
+      ^
+packed_calls.my:15:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p7: int,
+      ^
+packed_calls.my:16:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p8: int,
+      ^
+packed_calls.my:17:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p9: int,
+      ^
+packed_calls.my:18:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p10: int,
+      ^
+packed_calls.my:19:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p11: int,
+      ^
+packed_calls.my:20:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p12: int,
+      ^
+packed_calls.my:21:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p13: int,
+      ^
+packed_calls.my:22:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p14: int,
+      ^
+packed_calls.my:23:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p15: int,
+      ^
+packed_calls.my:24:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p16: int,
+      ^
+packed_calls.my:25:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p17: int,
+      ^
+packed_calls.my:26:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p18: int,
+      ^
+packed_calls.my:27:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p19: int,
+      ^
+packed_calls.my:28:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p20: int,
+      ^
+packed_calls.my:29:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p21: int,
+      ^
+packed_calls.my:30:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p22: int,
+      ^
+packed_calls.my:31:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p23: int,
+      ^
+packed_calls.my:32:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p24: int,
+      ^
+packed_calls.my:33:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p25: int,
+      ^
+packed_calls.my:34:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p26: int,
+      ^
+packed_calls.my:35:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p27: int,
+      ^
+packed_calls.my:36:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p28: int,
+      ^
+packed_calls.my:37:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p29: int,
+      ^
+packed_calls.my:38:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p30: int,
+      ^
+packed_calls.my:39:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p31: int,
+      ^
+packed_calls.my:40:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p32: int,
+      ^
+packed_calls.my:41:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p33: int,
+      ^
+packed_calls.my:42:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p34: int,
+      ^
+packed_calls.my:43:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p35: int,
+      ^
+packed_calls.my:44:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p36: int,
+      ^
+packed_calls.my:45:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p37: int,
+      ^
+packed_calls.my:46:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p38: int,
+      ^
+packed_calls.my:47:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p39: int,
+      ^
+packed_calls.my:48:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p40: int,
+      ^
+packed_calls.my:49:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p41: int,
+      ^
+packed_calls.my:50:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p42: int,
+      ^
+packed_calls.my:51:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p43: int,
+      ^
+packed_calls.my:52:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p44: int,
+      ^
+packed_calls.my:53:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p45: int,
+      ^
+packed_calls.my:54:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p46: int,
+      ^
+packed_calls.my:55:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p47: int,
+      ^
+packed_calls.my:56:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p48: int,
+      ^
+packed_calls.my:57:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p49: int,
+      ^
+packed_calls.my:58:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p50: int,
+      ^
+packed_calls.my:59:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p51: int,
+      ^
+packed_calls.my:60:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p52: int,
+      ^
+packed_calls.my:61:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p53: int,
+      ^
+packed_calls.my:62:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p54: int,
+      ^
+packed_calls.my:63:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p55: int,
+      ^
+packed_calls.my:64:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p56: int,
+      ^
+packed_calls.my:65:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p57: int,
+      ^
+packed_calls.my:66:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p58: int,
+      ^
+packed_calls.my:67:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p59: int,
+      ^
+packed_calls.my:68:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p60: int,
+      ^
+packed_calls.my:69:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p61: int,
+      ^
+packed_calls.my:70:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p62: int,
+      ^
+packed_calls.my:71:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p63: int,
+      ^
+packed_calls.my:72:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p64: int,
+      ^
+packed_calls.my:73:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p65: int,
+      ^
+packed_calls.my:74:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p66: int,
+      ^
+packed_calls.my:75:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p67: int,
+      ^
+packed_calls.my:76:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p68: int,
+      ^
+packed_calls.my:77:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p69: int,
+      ^
+packed_calls.my:78:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p70: int,
+      ^
+packed_calls.my:79:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p71: int,
+      ^
+packed_calls.my:80:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p72: int,
+      ^
+packed_calls.my:81:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p73: int,
+      ^
+packed_calls.my:82:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p74: int,
+      ^
+packed_calls.my:83:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p75: int,
+      ^
+packed_calls.my:84:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p76: int,
+      ^
+packed_calls.my:85:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p77: int,
+      ^
+packed_calls.my:86:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p78: int,
+      ^
+packed_calls.my:87:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p79: int,
+      ^
+packed_calls.my:88:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p80: int,
+      ^
+packed_calls.my:89:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p81: int,
+      ^
+packed_calls.my:90:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p82: int,
+      ^
+packed_calls.my:91:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p83: int,
+      ^
+packed_calls.my:92:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p84: int,
+      ^
+packed_calls.my:93:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p85: int,
+      ^
+packed_calls.my:94:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p86: int,
+      ^
+packed_calls.my:95:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p87: int,
+      ^
+packed_calls.my:96:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p88: int,
+      ^
+packed_calls.my:97:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p89: int,
+      ^
+packed_calls.my:98:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p90: int,
+      ^
+packed_calls.my:99:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p91: int,
+      ^
+packed_calls.my:100:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p92: int,
+      ^
+packed_calls.my:101:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p93: int,
+      ^
+packed_calls.my:102:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p94: int,
+      ^
+packed_calls.my:103:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p95: int,
+      ^
+packed_calls.my:104:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p96: int,
+      ^
+packed_calls.my:105:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p97: int,
+      ^
+packed_calls.my:106:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p98: int,
+      ^
+packed_calls.my:107:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p99: int,
+      ^
+packed_calls.my:108:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p100: int,
+      ^
+packed_calls.my:109:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p101: int,
+      ^
+packed_calls.my:110:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p102: int,
+      ^
+packed_calls.my:111:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p103: int,
+      ^
+packed_calls.my:112:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p104: int,
+      ^
+packed_calls.my:113:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p105: int,
+      ^
+packed_calls.my:114:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p106: int,
+      ^
+packed_calls.my:115:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p107: int,
+      ^
+packed_calls.my:116:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p108: int,
+      ^
+packed_calls.my:117:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p109: int,
+      ^
+packed_calls.my:118:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p110: int,
+      ^
+packed_calls.my:119:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p111: int,
+      ^
+packed_calls.my:120:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p112: int,
+      ^
+packed_calls.my:121:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p113: int,
+      ^
+packed_calls.my:122:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p114: int,
+      ^
+packed_calls.my:123:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p115: int,
+      ^
+packed_calls.my:124:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p116: int,
+      ^
+packed_calls.my:125:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p117: int,
+      ^
+packed_calls.my:126:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p118: int,
+      ^
+packed_calls.my:127:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p119: int,
+      ^
+packed_calls.my:128:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p120: int,
+      ^
+packed_calls.my:129:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p121: int,
+      ^
+packed_calls.my:130:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p122: int,
+      ^
+packed_calls.my:131:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p123: int,
+      ^
+packed_calls.my:132:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p124: int,
+      ^
+packed_calls.my:133:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p125: int,
+      ^
+packed_calls.my:134:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      p126: int
+      ^
+fix: nothing to fix

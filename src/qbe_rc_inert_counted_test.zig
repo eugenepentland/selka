@@ -31,7 +31,8 @@ const source =
     \\    table.count += 1
     \\    return 0
     \\def callback(table: mut Table, value: list[int]):
-    \\    table.rows[counted_index(mut table)] = value
+    \\    mutation_result_34 = counted_index(mut table)
+    \\    table.rows[mutation_result_34] = value
     \\def main() -> int:
     \\    table = Table([[1]], [[[1]]], [Tree.leaf], 0)
     \\    field_store(mut table, 0, [2])
@@ -61,7 +62,7 @@ test "RC counted element stores through a stable owner omit the receiver scope" 
     defer manifest.deinit();
     const expected = [_]struct { []const u8, bool }{
         .{ "managed", false },  .{ "field_store", false }, .{ "field_append", false }, .{ "fresh_store", false },
-        .{ "recursive", true }, .{ "nested", true },       .{ "callback", true },
+        .{ "recursive", true }, .{ "nested", true },       .{ "callback", false },
     };
     for (expected) |case| try t.expectEqual(case[1], contains(try named(manifest.value, case[0]), pin));
 }

@@ -1,0 +1,47 @@
+test-units
++- run test 12 pass, 1 fail (13 total)
+guardian/test: test wall 1.09s; slowest over 50ms:
+guardian/test:   1.09s  mut_callback_abi_test.test.mut callback adapter RC keeps two interior slots and managed returns independent
+guardian/test: FAIL — 1 failed of 13
+guardian/test: RESULT {"passed":12,"failed":1,"skipped":0}
+error: 'mut_callback_abi_test.test.mut callback adapter RC keeps two interior slots and managed returns independent' failed:
+       guardian/test: 13 test(s) selected by filter: "mut callback adapter RC keeps" — 1 match by name, 12 unnamed test block(s) run regardless
+       callback diagnostic: MYLANG_RC_COUNTS {"version"
+       MYLANG_RC_COUNTS {"version":1,"runtime":"rc-v5-counting","saturated":false,"owner_acquire":18,"owner_release":58,"hold_acquire":14,"hold_release":14,"owner_limit":0,"hold_limit":0,"heap_allocate":40,"arena_allocate":0,"retire":40,"clone_shell":5,"unique_check":33}
+
+
+       ====== expected this output: =========
+       ␃
+
+       ======== instead found this: =========
+       MYLANG_RC_COUNTS {"version"␃
+
+       ======================================
+       First difference occurs on line 1:
+       expected:
+
+       ^ (end of string)
+       found:
+       MYLANG_RC_COUNTS {"version"
+       ^ ('\x4d')
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:681:9: 0x14db955 in expectEqualStrings (std.zig)
+               return error.TestExpectedEqual;
+               ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-language/src/mut_callback_abi_test.zig:189:5: 0x14dbc42 in test.mut callback adapter RC keeps two interior slots and managed returns independent (root_test.zig)
+           try t.expectEqualStrings("", result.trap.code);
+           ^
+failed command: sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_QBE=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-language/zig-out/focus/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./.zig-cache/o/748b86962910c9fcbaa3d0973f2fab0c/test "--guardian-filter=mut callback adapter RC keeps" --cache-dir=./.zig-cache --seed=0x67a6ec86 --listen=-
+
+Build Summary: 8/10 steps succeeded (1 failed); 12/13 tests passed (1 failed)
+test-units transitive failure
++- run test 12 pass, 1 fail (13 total)
+   +- compile test debug native success 3s MaxRSS:488M
+   |  +- run exe qbe-build-assets (qbe_build_assets) cached
+   |  |  +- compile exe qbe-build-assets debug native cached 7ms MaxRSS:36M
+   |  +- options cached
+   |     +- compile exe qbe fast native cached 15ms MaxRSS:36M
+   +- install generated to qbe cached
+   |  +- compile exe qbe fast native (reused)
+   +- install generated to mylang cached
+      +- compile exe mylang debug native cached 6ms MaxRSS:41M
+         +- run exe qbe-build-assets (qbe_build_assets) (+1 more reused dependencies)

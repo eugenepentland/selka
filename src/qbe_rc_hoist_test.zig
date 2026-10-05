@@ -21,7 +21,8 @@ const source =
     \\def calls(count: int) -> list[int]:
     \\    items = [0, 0]
     \\    for at in range(count):
-    \\        items[callback(mut items)] = at
+    \\        mutation_result_24 = callback(mut items)
+    \\        items[mutation_result_24] = at
     \\    return items
     \\def snapshots(count: int) -> list[int]:
     \\    items = [0, 0]
@@ -81,7 +82,8 @@ const buffer_source =
     \\    empty: list[int] = []
     \\    buffer = byte_buffer(empty)
     \\    for at in range(count):
-    \\        _ = buffer.append_byte(grow(mut buffer))
+    \\        value = grow(mut buffer)
+    \\        _ = buffer.append_byte(value)
     \\    return buffer
     \\def main() -> int:
     \\    return len(appended(2))

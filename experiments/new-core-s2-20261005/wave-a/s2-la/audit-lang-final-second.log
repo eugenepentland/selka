@@ -1,0 +1,73 @@
+contracts.my:74:35: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def biggest[T](values: list[int], tag: T) -> int:
+                                    ^
+python_variants.my:105:27: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+                  case Some(_found):
+                            ^
+/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-language/tests/lang/rc_borrowed_calls.my:35:13: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def swapped(left: list[Node], right: list[Node]) -> Node:
+              ^
+@stdlib/random.my:96:84: warning[W_DERIVED_EFFECTS]: `effects(mutation, managed_allocation)` is exactly what the parameters imply; remove it
+  public def randint(generator: mut Random, low: int, high: int) -> Result[int, str] effects(mutation, managed_allocation):
+                                                                                     ^
+/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-language/tests/lang/rc_mut_payload_snapshots.my:62:9: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+          snapshot = parts
+          ^
+/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-language/tests/lang/rc_readonly_body.my:14:27: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+          case Wrapped.leaf(values):
+                            ^
+/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-language/tests/lang/rc_readonly_managed_calls.my:13:43: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def choose(index: int, first: list[Item], second: list[Item]) -> Item:
+                                            ^
+constant_methods.my:24:23: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def generic_pieces[T](value: T) -> int:
+                        ^
+discard_names.my:89:22: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def generic_loops[T](value: T, count: int) -> int:
+                       ^
+embed.my:21:23: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def generic_length[T](value: T) -> int noalloc:
+                        ^
+error_traces.my:58:17: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+          case Ok(port):
+                  ^
+error_traces.my:64:37: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+                  case AppError.Usage(code):
+                                      ^
+float_constants.my:51:15: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def scaled[T](value: T) -> float:
+                ^
+/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-language/tests/lang/gc_arena_root_lifetimes.my:12:10: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def make(n: int) -> list[int]:
+           ^
+/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-language/tests/lang/gc_arena_root_lifetimes.my:16:11: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def total(xs: list[int]) -> int:
+            ^
+/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-language/tests/lang/gc_arena_root_lifetimes.my:20:12: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def total2(xss: list[list[int]]) -> int:
+             ^
+/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-language/tests/lang/gc_arena_root_lifetimes.my:27:10: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def dsum(d: dict[str, list[int]]) -> int:
+           ^
+/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-language/tests/lang/gc_arena_root_lifetimes.my:41:9: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+          tmp7 = p0.items
+          ^
+gc_generations.my:102:64: warning[W_DERIVED_EFFECTS]: `effects(mutation, managed_allocation)` is exactly what the parameters imply; remove it
+  def replace_every(nodes: mut list[Node], step: int, base: int) effects(mutation, managed_allocation):
+                                                                 ^
+mut_rebind_modules.my:1:1: error[E_MODULE_HEADER]: `mut_rebind_helpers` is not a standard module (base64, byte_builder, environment, filesystem, hex, json, math, network, path, pool, random, sort, strings, time); a file without a `module` header can import only those. To import `mut_rebind_helpers.my` from this project, start this file with `module mut_rebind_modules`
+  import mut_rebind_helpers as helpers
+  ^
+option_equality.my:28:28: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def generic_comparisons[T](value: T) -> bool:
+                             ^
+rc_inert_returns.my:109:13: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def consume(file: TextFile, flag: bool) -> Node:
+              ^
+tuples.my:29:5: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      number, letter = found
+      ^
+tuples.my:101:18: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+          case Err(message):
+                   ^
+fix: nothing to fix

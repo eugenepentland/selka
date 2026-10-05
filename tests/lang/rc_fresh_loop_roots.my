@@ -63,7 +63,8 @@ def change(items: mut list[int]) -> int:
 public def test_callback_retains_pending_receiver_protocol() -> bool:
     items = [1]
     for at in range(3):
-        items.append(change(mut items))
+        mutation_result_66 = change(mut items)
+        items.append(mutation_result_66)
     return items == [1, 9, 3, 9, 3, 9, 3]
 
 

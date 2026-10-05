@@ -400,7 +400,8 @@ def sweep(rt: mut Runtime):
 public def collect(rt: mut Runtime):
     mark_roots(rt)
     while len(rt.marker.gray) > 0:
-        blacken(rt, rt.marker.gray.pop())
+        gray = rt.marker.gray.pop()
+        blacken(rt, gray)
     i = 0
     while i < len(rt.strings.entries):
         entry = rt.strings.entries[i]

@@ -1,0 +1,9 @@
+argv: ["zig-out/focus/mylang", "run", "test/core/v_snapshot.my", "--no-cache", "--cache-dir=.mylang-cache/wave-a/v-snapshot-rc", "--rc-runtime"]
+exit: 0
+stdout:
+1 50
+1 4
+1 7
+1 50 1
+11 3 17
+stderr:
