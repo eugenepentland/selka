@@ -1,0 +1,41 @@
+diff --git a/src/core/facts.zig b/src/core/facts.zig
+index 5c87a9fe..88164279 100644
+--- a/src/core/facts.zig
++++ b/src/core/facts.zig
+@@ -471,6 +471,7 @@ pub fn analyze(arena: std.mem.Allocator, f: *ir.Function, options: Options) Erro
+     }
+     // Ranges short of a fixed point are not facts: prove nothing.
+     if (converged) mark(&a, options.fold);
++    if (unchecked_experiment) uncheckAll(a.f);
+     a.facts.counted = if (converged) a.counted.items else &.{};
+     return a.facts;
+ }
+@@ -743,6 +744,15 @@ fn compare(a: *Analysis, i: ir.Inst, block: ir.BlockId) ?Interval {
+     return if (decided) |value| Interval.point(@intFromBool(value)) else unknown;
+ }
+ 
++/// EXPERIMENT ONLY (not for commit): treat every check as proven, like C.
++pub var unchecked_experiment: bool = false;
++
++fn uncheckAll(f: *ir.Function) void {
++    for (f.insts.items) |*i| {
++        if (i.check == .exact) i.check = .proven;
++    }
++}
++
+ /// Turn every check the facts rule out into `proven` and fold decided comparisons.
+ fn mark(a: *Analysis, fold: bool) void {
+     for (a.f.blocks.items, 0..) |block, b| {
+diff --git a/src/core/main.zig b/src/core/main.zig
+index 6d1df0d8..c4415039 100644
+--- a/src/core/main.zig
++++ b/src/core/main.zig
+@@ -108,6 +108,8 @@ fn buildCommand(init: std.process.Init, args: []const []const u8) !u8 {
+             options.show.stats = true;
+         } else if (std.mem.eql(u8, arg, "--verify-facts")) {
+             options.facts = .verify;
++        } else if (std.mem.eql(u8, arg, "--unchecked-experiment")) {
++            @import("facts.zig").unchecked_experiment = true;
+         } else if (std.mem.eql(u8, arg, "--sabotage-facts")) {
+             options.facts = .sabotage;
+         } else if (std.mem.eql(u8, arg, "-o") and has_value) {
