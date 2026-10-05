@@ -6,14 +6,53 @@ note is the specification**: every package below cites its sections. Where this 
 the design note disagree, the design note's §11 (integrator review) and §12 (the user's
 decisions) win.
 
-## Launch instruction
+## Launch instruction (Wave B, revision 2026-10-05 evening)
 
-> Implement stage S2 of mylang's new compiler core following
-> `docs/audits/new-core-s2-implementation-plan-2026-10-05.md` on branch
-> `claude/new-core-s2-20261005`. Work packages S2-0, S2-La and S2-Lb first, then S2-D,
-> S2-T, S2-F and S2-I in parallel, then S2-X. Use one locked worktree per package and integrate on
-> `codex/new-core-s2-integration`. Hold every gate in §5. Never merge into `main`. Finish
-> with the S2 exit report in §7 and stop for the user's go/stop decision on S3.
+> Continue stage S2 of mylang's new compiler core following
+> `docs/audits/new-core-s2-implementation-plan-2026-10-05.md` on
+> `codex/new-core-s2-integration`, starting from `aae74ae2`. Wave A is accepted (see
+> "Status after Wave A"). Run S2-D, S2-T, S2-F and S2-I in parallel, each in its own
+> locked worktree cut from the integration head, then S2-X. Hold every gate in §5 and the
+> Wave A rules below. Never merge into `main`. Finish with the S2 exit report in §7 and
+> stop for the user's go/stop decision on S3.
+
+## Status after Wave A (accepted 2026-10-05)
+
+**Wave A is done.** S2-0 (IR), S2-La (`MUT-OVERLAP-RECEIVER-1`, `MUT-REBIND-CALLER-1`) and
+S2-Lb (D1 in the front end and old core) are merged.
+- **Evidence:** `experiments/new-core-s2-20261005/wave-a/REPORT.md`, including its completion section.
+- **As-built shapes:** design note §13–15.
+- **Qualification at the head:**
+  - full old-core gate 115/115;
+  - test-qbe 519/519, test-qbe-build 29/29, fmt-check clean;
+  - test-core 187/187;
+  - new-core conformance 769 matching, 0 mismatching;
+  - leak and `--verify-facts` sweeps clean;
+  - fuzz S0/S1/RC/rebinding: 200 cases each, 0 mismatches;
+  - all 20 S0/S1 benchmark definitions identical;
+  - 14 S1 rows within 1.10× Zig ReleaseSafe.
+
+**What changed since the plan was written. Each item binds Wave B.**
+1. **`ir.zig` is frozen** at the S2-0 shapes (design note §13). Changes go through the coordinator.
+2. **`own.zig` never empties a record phi** (`NEW-CORE-RC-12`, commit `44831afb`).
+   - The bug was a release-only double free at unswitched loop exits. It showed only under `MYL_CORE_LEAKCHECK=1`, which walks the free lists.
+   - S2-I owns `own.zig` in Wave B. Ownership rules for new ops (dict entries, `str_append`, `list_sort`, `array_set`) must keep phis owned.
+3. **A crash leaves stderr empty.** Any leak or verify sweep must check the exit status and stdout, not only stderr.
+   - `own_test.zig`'s fixture leak sweep compares stderr only. Make it check the exit status as part of S2-I or S2-X.
+   - `experiments/new-core-s2-20261005/wave-a/integration/fuzz_qualification.py` already rejects negative and signal exits. Reuse it for Wave B fuzz, extended with dict and text features.
+4. **D1 now covers fixed arrays** (PY-ARRAY-ITER-1/2: a loop over an array place sees writes made during the loop). S2-F's fixed-array lowering and S2-I's live-place lowering must implement that, not the old entry-copy behaviour.
+5. **The interior-mut refusal is conservative.** The new core refuses an interior `mut` argument whose ancestor a later argument changes (`interior mut argument ancestor changed during later argument evaluation`). S2-I may narrow it, but only with exact old-core agreement.
+6. **Parameter positions** (`ORIGIN-WIDE-1`, commit `c5e7afe4`). The checker tracks them in `origins.Mask` (u64). An aggregate parameter past position 64 is `E_PARAMETER_POSITION`; scalars are unlimited. Function values (S2-F) and callbacks must not reintroduce a narrower mask.
+7. **Persisted formats.** `module-interface-v5`, `check-summaries-v6` and `mutation-v2` are current. Bump the version of any persisted shape a package changes.
+8. **Memory.** The unit-shard ceiling is 2.5G (`build.zig` `shard_unit`). Zig's runner reports an RSS overrun but keeps the step green, so read `MaxRSS` in the gate summary when a package adds heavy Zig tests.
+9. **Gate-step contention.** Run `test-core` timings with the gate slot held, as `wave-a/check_stage.py` does. Under a concurrent full gate it runs 3× slower and breaks the 5-minute rule.
+10. **Lox.** The Lox port needs four two-statement migrations under `MUT-OVERLAP-RECEIVER-1`: `resolver.my` 195, 251 and 259, and `heap.my:300`. They are documented, not applied, because the checkout is outside this repo. Don't touch it.
+
+**Reusable tooling from Wave A:**
+- `wave-a/check_stage.py` (post-merge checks);
+- `wave-a/compare_code.py` (code identity of S0/S1 definitions);
+- `wave-a/integration/fuzz_qualification.py` and `fuzz-commands.md` (200-case qualification at most two jobs at a time);
+- the baseline compilers in `.mylang-cache/wave-a/baseline/`.
 
 ## 1. Where things are
 
