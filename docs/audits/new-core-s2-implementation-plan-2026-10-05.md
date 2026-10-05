@@ -372,9 +372,8 @@ plan's WP-5, revision 5:
 - a one-function dispatch hook in `build_text.zig` for number conversions, which S2-T2 fills.
 
 **Exit:**
-- the 6 text and bytes rows build, match and are measured (`string_equal`,
-  `string_search`, `string_split`, `string_join`, `bytes_scan`, and any other text row of
-  §7 except the two integer rows);
+- the 5 text and bytes rows build, match and are measured: `string_equal`,
+  `string_search`, `string_split`, `string_join` and `bytes_scan`;
 - the bytes and text files of design note §6 are at 0 mismatches;
 - the verify build asserts that a `str_view` never escapes;
 - Unicode cases are tested: mixed ASCII, 4-byte scalars, empty strings, and non-ASCII
