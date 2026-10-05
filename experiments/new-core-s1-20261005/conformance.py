@@ -16,6 +16,7 @@ the new core cannot build counts against it: a test it refuses is `unsupported`
 usage:
   conformance.py [--set clean13|s1|excluded|all | FILE...] [--modes debug,release]
                  [--why] [--verbose] [--jobs N] [--pin PATH] [--include-arena]
+                 [--leakcheck] [--verify]
                  [--mylang P] [--core P] [--cache-dir D] [--verbose]
 
 FILE is a path, or a bare name that means tests/lang/NAME.my. Exit status 1 when any
@@ -79,15 +80,17 @@ class Tool:
         self.mylang = args.mylang
         self.core = args.core
         self.cache = args.cache_dir
+        self.leakcheck = getattr(args, "leakcheck", False)
+        self.verify = getattr(args, "verify", False)
         # Keep every child off the reserved timing CPUs (2, 3, 11) and off 10, the measurement CPU.
         allowed = sorted(set(os.sched_getaffinity(0)) - {2, 3, 10, 11})
         self.cpus = ",".join(map(str, allowed)) if allowed else None
 
-    def run(self, argv, timeout=600):
+    def run(self, argv, timeout=600, env=None):
         if self.cpus and os.path.exists("/usr/bin/taskset"):
             argv = ["taskset", "-c", self.cpus] + argv
         try:
-            done = subprocess.run(argv, capture_output=True, text=True, cwd=ROOT, timeout=timeout)
+            done = subprocess.run(argv, capture_output=True, text=True, cwd=ROOT, timeout=timeout, env=env)
         except subprocess.TimeoutExpired:
             return None
         return done
@@ -100,7 +103,11 @@ class Tool:
         argv = [self.core, "test", path, "--json", "--cache-dir", self.cache]
         if release:
             argv.append("--release")
-        done = self.run(argv)
+        if release and self.verify:
+            argv.append("--verify-facts")
+        # --leakcheck: a test that ends with blocks live fails with `leak: N blocks live at exit`.
+        env = dict(os.environ, MYL_CORE_LEAKCHECK="1") if self.leakcheck else None
+        done = self.run(argv, env=env)
         return parse(done, "new core " + ("release" if release else "debug"))
 
 
@@ -256,6 +263,8 @@ def main():
     ap.add_argument("--modes", default="debug,release")
     ap.add_argument("--why", action="store_true", help="list each blocking feature, and why excluded files are excluded")
     ap.add_argument("--jobs", type=int, default=3)
+    ap.add_argument("--leakcheck", action="store_true", help="run the new core's tests with MYL_CORE_LEAKCHECK=1: a leak fails the test")
+    ap.add_argument("--verify", action="store_true", help="build the release mode with --verify-facts (facts, uniqueness and stack capacity asserted)")
     ap.add_argument("--pin", default=None, help="write the pins file test-core checks (tests passing everywhere)")
     ap.add_argument("--include-arena", action="store_true")
     ap.add_argument("--verbose", action="store_true")

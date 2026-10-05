@@ -970,7 +970,8 @@ fn countOwned(a: *Analysis, ref: ir.Ref, actions: *std.ArrayList(Action)) Error!
         if (last) |pos| {
             const consumed = for (a.uses[ref.index()].items) |use| {
                 const here = !use.onEdge() and use.block == b and use.pos == pos;
-                if (here and use.consume > 0) break true;
+                // A use that also borrows the value (a `mut` call reading it too) does not move it.
+                if (here and use.consume > 0 and use.borrow == 0) break true;
             } else false;
             if (consumed) continue;
             const at = block.insts.items[pos];

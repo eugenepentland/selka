@@ -666,3 +666,37 @@ test "a block shared on one of several paths into a loop is tested before the lo
         try std.testing.expectEqualStrings("70\n", (try std.process.run(arena.allocator(), std.testing.io, .{ .argv = &.{ output, "x" } })).stdout);
     }
 }
+
+const taken_and_read =
+    \\def bump_and_count(xs: mut list[int], view: list[int]) -> int:
+    \\    xs[0] = 2
+    \\    return len(view) + view[0] * 10
+    \\
+    \\
+    \\public def test_a_mut_argument_also_read_is_a_snapshot_and_freed() -> bool:
+    \\    xs = [1, 2]
+    \\    n = bump_and_count(mut xs, xs)
+    \\    return n == 12 and xs == [2, 2]
+    \\
+;
+
+// spec: NEW-CORE-RC-10
+test "a call that takes a mut argument and also reads it gets a second owner, and the caller's is released after it" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    var dir = std.testing.tmpDir(.{});
+    defer dir.cleanup();
+    try dir.dir.writeFile(std.testing.io, .{ .sub_path = "taken.my", .data = taken_and_read });
+    const root = try dir.dir.realPathFileAlloc(std.testing.io, ".", arena.allocator());
+    var environment = try std.testing.environ.createMap(arena.allocator());
+    try environment.put("MYL_CORE_LEAKCHECK", "1");
+    for ([_][]const []const u8{ &.{}, &.{"--release"} }) |flags| {
+        var argv: std.ArrayList([]const u8) = .empty;
+        try argv.appendSlice(arena.allocator(), &.{ options.core_path, "test", try std.fs.path.join(arena.allocator(), &.{ root, "taken.my" }), "--cache-dir", try std.fs.path.join(arena.allocator(), &.{ root, "cache" }) });
+        try argv.appendSlice(arena.allocator(), flags);
+        const ran = try std.process.run(arena.allocator(), std.testing.io, .{ .argv = argv.items, .environ_map = &environment });
+        // Under the leak check the runner fails a test that ends with blocks live (`leak: …`).
+        try std.testing.expect(contains(ran.stdout, "passed taken::test_a_mut_argument_also_read_is_a_snapshot_and_freed"));
+        try std.testing.expect(!contains(ran.stdout, "leak:"));
+    }
+}

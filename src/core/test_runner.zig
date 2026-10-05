@@ -225,8 +225,16 @@ fn runTest(init: std.process.Init, executable: []const u8, table_index: usize, n
     };
     defer init.gpa.free(result.stdout);
     defer init.gpa.free(result.stderr);
+    // Under MYL_CORE_LEAKCHECK=1 a test that ends with blocks live says so: it fails.
+    if (std.mem.indexOf(u8, result.stderr, leak_marker)) |at| {
+        const line = std.mem.sliceTo(result.stderr[at..], '\n');
+        return .{ .name = name, .status = .failed, .reason = try std.fmt.allocPrint(allocator, "leak: {s}", .{line[leak_marker.len..]}) };
+    }
     return .{ .name = name, .status = if (result.term == .exited and result.term.exited == entry.status_pass) .passed else .failed, .reason = try failureReason(allocator, result.term, result.stderr) };
 }
+
+/// The start of the runtime's leak report (`runtime/core_rt.c`, `leak_report`).
+const leak_marker = "myl-core leakcheck: ";
 
 /// Why a run did not pass, in the old runner's words: `expected true, got false`, or a
 /// trap's `R_CODE (detail)` followed by its `  in …` frames. Empty for a pass.
