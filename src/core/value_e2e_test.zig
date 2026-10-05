@@ -150,6 +150,22 @@ test "mut parameters of lists and records write their final values back to the c
     try std.testing.expect(try matches(arena.allocator(), "v_mut", v_mut_output, 0));
 }
 
+const v_mut_rebind_output =
+    \\2208 33 1958
+    \\38943 38678 33 163
+    \\1 1923 2243 51
+    \\2 3 1957 90466 33
+    \\3 102 109246 2 2563
+    \\
+;
+
+// spec: NEW-CORE-MUT-2
+test "a mut list parameter rebound as a whole is detached from the caller (a mut record's rebinding reaches it): only the payload the list had then is written back" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    try std.testing.expect(try matches(arena.allocator(), "v_mut_rebind", v_mut_rebind_output, 0));
+}
+
 const v_wide_output =
     \\66 4 48
     \\1974 5
@@ -291,7 +307,25 @@ test "the value fixtures end with no block live under MYL_CORE_LEAKCHECK=1, debu
     var dir = std.testing.tmpDir(.{});
     defer dir.cleanup();
     const root = try scratch(arena.allocator(), dir);
-    const names = [_][]const u8{ "v_records", "v_unions", "v_lists", "v_mut", "v_wide", "v_wide_managed", "v_nested", "v_mut_window", "v_equality" };
+    const names = [_][]const u8{
+        "v_records",
+        "v_unions",
+        "v_lists",
+        "v_mut",
+        "v_wide",
+        "v_wide_managed",
+        "v_nested",
+        "v_mut_window",
+        "v_equality",
+        "v_mut_rebind",
+        "v_arena",
+        "v_str_eq",
+        "v_methods",
+        "v_narrow",
+        "v_snapshot",
+        "v_text",
+        "v_loops",
+    };
     for (names) |name| {
         try std.testing.expectEqualStrings("", try leakReport(arena.allocator(), root, name, .debug));
         try std.testing.expectEqualStrings("", try leakReport(arena.allocator(), root, name, .release));
@@ -333,4 +367,149 @@ test "a main that returns an Err reports it with the old core's error return tra
         };
         for (lines) |line| try std.testing.expect(std.mem.indexOf(u8, failed.stderr, line) != null);
     }
+}
+
+const v_str_eq_output =
+    \\True False True False True False
+    \\True False False
+    \\True False True
+    \\True False
+    \\True False False True
+    \\2 -1
+    \\
+;
+
+// spec-case: NEW-CORE-STR-1
+test "str == and != compare bytes, inside records, unions and lists, as the old core does" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    try std.testing.expect(try matches(arena.allocator(), "v_str_eq", v_str_eq_output, 0));
+}
+
+const v_arena_output =
+    \\19507
+    \\4 5 44
+    \\6
+    \\
+;
+
+// spec-case: NEW-CORE-ARENA-1
+test "with arena() blocks, escape, break and continue out of them print what the old core prints" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    try std.testing.expect(try matches(arena.allocator(), "v_arena", v_arena_output, 0));
+}
+
+// spec-case: NEW-CORE-ASSERT-1
+test "a failed assert traps R_ASSERT with its message at the condition, flushing the output before it, at every level" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    try std.testing.expect(try matches(arena.allocator(), "v_assert", "6\n4\n", 1));
+    for ([_]Mode{ .debug, .release, .verify }) |mode| {
+        const failed = try stderrOf(arena.allocator(), "v_assert", mode);
+        try std.testing.expect(std.mem.indexOf(u8, failed, "v_assert.my:14:16: error[R_ASSERT]: native execution failed: limit exceeded\n  in v_assert::checked_sum at ") != null);
+        try std.testing.expect(std.mem.indexOf(u8, failed, "MYLANG-TRAP {\"version\":1,\"operation\":\"limit exceeded\"}") != null);
+    }
+}
+
+const v_methods_output =
+    \\7
+    \\3 4
+    \\1 2 1
+    \\1 1
+    \\43
+    \\202
+    \\
+;
+
+// spec: NEW-CORE-LIST-3
+test "len of a string counts scalars, clear and copy keep value semantics, and keyword calls evaluate in source order" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    try std.testing.expect(try matches(arena.allocator(), "v_methods", v_methods_output, 0));
+}
+
+const v_narrow_output =
+    \\2 105 140 3
+    \\142 40 2
+    \\0 -1
+    \\
+;
+
+// spec: NEW-CORE-PLACE-2
+test "a write through a narrowed Option (xs.append, xs[i] = v after `is None` returns) reaches the Option the caller holds" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    try std.testing.expect(try matches(arena.allocator(), "v_narrow", v_narrow_output, 0));
+}
+
+const v_snapshot_output =
+    \\1 50
+    \\1 4
+    \\1 1
+    \\1 50 1
+    \\11 3 17
+    \\
+;
+
+// spec: NEW-CORE-PLACE-3
+test "a read through a receiver captured before an argument wrote its place sees the receiver as it was" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    try std.testing.expect(try matches(arena.allocator(), "v_snapshot", v_snapshot_output, 0));
+}
+
+const v_text_output =
+    \\total 7 of 3 items 2 True None a-xb
+    \\-9223372036854775807 18446744073709551615 -5 200 False
+    \\héllo 5  True
+    \\w0, w1, w4, w9 w0 True w0w1w4
+    \\465 n4 6
+    \\
+;
+
+// spec: NEW-CORE-TEXT-1
+test "f-strings, str(x), concatenation and join build the old core's text, with nothing leaked" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    try std.testing.expect(try matches(arena.allocator(), "v_text", v_text_output, 0));
+}
+
+const v_loops_output =
+    \\2 -1 -1
+    \\45 0 30 0
+    \\61 0
+    \\
+;
+
+// spec: NEW-CORE-LOOP-1
+test "while True has no exit edge: only break and return leave it, and the function needs no return after it" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    try std.testing.expect(try matches(arena.allocator(), "v_loops", v_loops_output, 0));
+}
+
+const v_domain_output =
+    \\1000 True True
+    \\4 2 True
+    \\
+;
+
+// spec: NEW-CORE-DOMAIN-1
+test "a domain over an integer or a bool is its wire type: wrap and unwrap change nothing, equality compares the values" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    try std.testing.expect(try matches(arena.allocator(), "v_domain", v_domain_output, 0));
+}
+
+const v_udiv_output =
+    \\127 127 2 18446744073709551615 6148914691236517205
+    \\
+;
+
+// spec: NEW-CORE-VERIFY-4
+test "a verify build does not call an unsigned operand above half its range negative: proven unsigned divisions of high values run" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    try std.testing.expect(try matches(arena.allocator(), "v_udiv", v_udiv_output, 0));
 }

@@ -61,8 +61,9 @@ pub const MainResult = struct { ok_tag: u32, error_tag: u32 };
 
 /// Trap kinds, in the order the runtime's code table lists them. `list_empty` is a
 /// pop of an empty list (`R_LIST_BOUNDS`, operation `pop`); `trace` marks an
-/// error-trace site, which never traps.
-pub const TrapKind = enum(u8) { overflow, division_by_zero, list_bounds, float_conversion, cast, fact, list_empty, trace };
+/// error-trace site, which never traps; `assertion` is a failed `assert` or contract clause (its
+/// `width` is the `typed.AssertionKind`, its `operation` the message).
+pub const TrapKind = enum(u8) { overflow, division_by_zero, list_bounds, float_conversion, cast, fact, list_empty, trace, assertion };
 
 const Site = struct { kind: TrapKind, location: Location, width: u16, operation: []const u8, function: []const u8 };
 
@@ -89,6 +90,12 @@ const Out = std.ArrayList(u8);
 
 /// Why emission stopped: a construct the builder admitted but this emitter cannot lower yet.
 pub const Error = error{ OutOfMemory, UnsupportedEntry, UnsupportedInstruction };
+
+/// The end of an LLVM `c"..."` constant: a NUL, the closing quote and the line end.
+const nul_terminator = "\\00\"\n";
+
+/// `  %x = icmp eq type value, 0`: a divisor's zero test.
+const zero_test_line = "  {s} = icmp eq {s} {s}, 0\n";
 
 /// `  %x = or i1 %a, %b`: two failure conditions merged.
 const or_line = "  {s} = or i1 {s}, {s}\n";
@@ -188,14 +195,16 @@ const ModuleState = struct {
     debug: Debug = .{},
 
     fn declareExtern(self: *ModuleState, function: *const ir.Function) !void {
-        try self.externs.print(self.allocator, "declare {s} @{s}(", .{ try self.llvmType(function.signature.ret), c_abi.symbol(function.name) });
+        const returns = try self.llvmType(function.signature.ret);
+        try self.externs.print(self.allocator, "declare {s}{s} @{s}(", .{ if (function.signature.ret == .bool) "zeroext " else "", returns, c_abi.symbol(function.name) });
         var first = true;
         for (function.signature.params) |param| {
             if (!c_abi.passes(param)) continue;
             try self.externs.print(self.allocator, "{s}{s}", .{ if (first) "" else ", ", try self.llvmType(param) });
             first = false;
         }
-        try self.externs.appendSlice(self.allocator, ") nounwind\n");
+        // The runtime's string helpers only read their arguments, so LLVM may merge and hoist calls.
+        try self.externs.appendSlice(self.allocator, if (flags.readsOnly(c_abi.symbol(function.name))) ") nounwind willreturn memory(argmem: read)\n" else ") nounwind\n");
     }
 
     /// A `!range` node for `[lo, hi]` in a `bits`-wide integer.
@@ -288,6 +297,7 @@ const ModuleState = struct {
             \\declare void @myl_core_print_end(i64) nounwind
             \\declare ptr @myl_core_box_new(i64) nounwind
             \\declare void @myl_core_err_trace(i32, i32) nounwind cold
+            \\declare void @myl_core_assert_fail(i32) noreturn nounwind cold
             \\declare void @llvm.memcpy.p0.p0.i64(ptr noalias nocapture writeonly, ptr noalias nocapture readonly, i64, i1 immarg)
             \\declare void @llvm.memmove.p0.p0.i64(ptr nocapture writeonly, ptr nocapture readonly, i64, i1 immarg)
             \\declare void @myl_core_release(ptr) nounwind
@@ -304,12 +314,14 @@ const ModuleState = struct {
     fn emitSites(self: *ModuleState, out: *Out) !void {
         try out.print(self.allocator, "@myl_core_source_path = constant [{d} x i8] c\"", .{self.options.source_path.len + 1});
         try escaped(self.allocator, out, self.options.source_path);
-        try out.appendSlice(self.allocator, "\\00\"\n");
+        try out.appendSlice(self.allocator, nul_terminator);
         for (self.sites.items, 0..) |s, i| {
-            try out.print(self.allocator, "@myl.op.{d} = private constant [{d} x i8] c\"{s}\\00\"\n", .{ i, s.operation.len + 1, s.operation });
+            try out.print(self.allocator, "@myl.op.{d} = private constant [{d} x i8] c\"", .{ i, s.operation.len + 1 });
+            try escaped(self.allocator, out, s.operation);
+            try out.appendSlice(self.allocator, nul_terminator);
             try out.print(self.allocator, "@myl.fn.{d} = private constant [{d} x i8] c\"", .{ i, s.function.len + 1 });
             try escaped(self.allocator, out, s.function);
-            try out.appendSlice(self.allocator, "\\00\"\n");
+            try out.appendSlice(self.allocator, nul_terminator);
         }
         try out.print(self.allocator, "@myl_core_site_count = constant i32 {d}\n", .{self.sites.items.len});
         try out.print(self.allocator, "@myl_core_sites = constant [{d} x %myl.site] [", .{self.sites.items.len});
@@ -1127,6 +1139,13 @@ const FunctionEmitter = struct {
                 const location = self.state.options.locator.locate(self.state.options.locator.context, inst.span);
                 const index = try self.state.site(.{ .kind = .fact, .location = location, .width = 32, .operation = "count == 1 before an in-place update", .function = self.function.name });
                 try out.print(self.a(), "  call void @myl_core_trap(i32 {d}, i64 0, i64 1){s}\n  unreachable\n", .{ index, try self.trapLocation(index) });
+            } else if (inst.data & flags.assertion_trap != 0) {
+                // A failed `assert` or contract clause: the message is in the module's string table.
+                const location = self.state.options.locator.locate(self.state.options.locator.context, inst.span);
+                const kind: u16 = @truncate(inst.data >> 32);
+                const message = self.state.module.strings.items[@as(u32, @truncate(inst.data))];
+                const index = try self.state.site(.{ .kind = .assertion, .location = location, .width = kind, .operation = message, .function = self.function.name });
+                try out.print(self.a(), "  call void @myl_core_assert_fail(i32 {d}){s}\n  unreachable\n", .{ index, try self.trapLocation(index) });
             } else try out.appendSlice(self.a(), "  unreachable\n"),
         }
     }
@@ -1168,19 +1187,23 @@ const FunctionEmitter = struct {
         const is_rem = inst.op == .rem or inst.op == .floor_rem;
         const operation = @tagName(inst.op);
         if (inst.check == .proven and self.state.options.verify) {
-            // The fact behind `proven`: both operands non-negative, the divisor positive.
-            const negative = try self.fresh("%vn");
+            // The fact behind `proven`: both operands non-negative, the divisor positive. An unsigned
+            // operand is never negative (its high values are not), so only the divisor's zero is tested.
             const nonpositive = try self.fresh("%vz");
-            const either = try self.fresh("%ve");
-            try out.print(self.a(), "  {s} = icmp slt {s} {s}, 0\n  {s} = icmp sle {s} {s}, 0\n", .{ negative, tyname, left, nonpositive, tyname, right });
-            try out.print(self.a(), or_line, .{ either, negative, nonpositive });
+            var either = nonpositive;
+            if (info.signed) {
+                const negative = try self.fresh("%vn");
+                either = try self.fresh("%ve");
+                try out.print(self.a(), "  {s} = icmp slt {s} {s}, 0\n  {s} = icmp sle {s} {s}, 0\n", .{ negative, tyname, left, nonpositive, tyname, right });
+                try out.print(self.a(), or_line, .{ either, negative, nonpositive });
+            } else try out.print(self.a(), zero_test_line, .{ nonpositive, tyname, right });
             try self.trapIf(out, either, try self.site(.division_by_zero, inst, operation), try self.widened(out, inst.a), try self.widened(out, inst.b));
         }
         if (!info.signed or inst.check == .proven) {
             const divisor = self.constantOf(inst.b);
             if (inst.check != .proven and (divisor == null or divisor.? == 0)) {
                 const zero = try self.fresh("%z");
-                try out.print(self.a(), "  {s} = icmp eq {s} {s}, 0\n", .{ zero, tyname, right });
+                try out.print(self.a(), zero_test_line, .{ zero, tyname, right });
                 try self.trapIf(out, zero, try self.site(.division_by_zero, inst, operation), try self.widened(out, inst.a), try self.widened(out, inst.b));
             }
             try out.print(self.a(), binary_line, .{ name, if (is_rem) "urem" else "udiv", tyname, left, right });
@@ -1189,7 +1212,7 @@ const FunctionEmitter = struct {
         const divisor = self.constantOf(inst.b);
         if (divisor == null or divisor.? == 0) {
             const zero = try self.fresh("%z");
-            try out.print(self.a(), "  {s} = icmp eq {s} {s}, 0\n", .{ zero, tyname, right });
+            try out.print(self.a(), zero_test_line, .{ zero, tyname, right });
             try self.trapIf(out, zero, try self.site(.division_by_zero, inst, operation), try self.widened(out, inst.a), try self.widened(out, inst.b));
         }
         // `MIN / -1` overflows; `MIN % -1` is 0, which LLVM's `srem` leaves undefined.

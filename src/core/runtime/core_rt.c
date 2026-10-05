@@ -1004,3 +1004,103 @@ void myl_core_main_error_str(myl_block *text) {
     myl_core_print_str(2, text);
     error_end();
 }
+
+/* ---- lane V helpers (checkpoint V-2) ---------------------------------------------
+ * Appended for the builder's `assert`, `str ==`, `len(str)` and the text builders; the rest of the file is lane O's. */
+
+/* `a == b` for two strings: the same block, or the same bytes. */
+bool myl_core_str_eq(const myl_block *a, const myl_block *b) {
+    if (a == b) return true;
+    if (a->len != b->len) return false;
+    return memcmp((const unsigned char *)a + MYL_HEADER, (const unsigned char *)b + MYL_HEADER, (size_t)a->len) == 0;
+}
+
+/* `len(text)`: the Unicode scalars of a string, the bytes that do not continue one. */
+uint64_t myl_core_str_chars(const myl_block *text) {
+    const unsigned char *bytes = (const unsigned char *)text + MYL_HEADER;
+    uint64_t scalars = 0;
+    for (int64_t i = 0; i < text->len; ++i) scalars += (bytes[i] & 0xC0) != 0x80;
+    return scalars;
+}
+
+/* ---- text builders: concatenation, join, str(x) ---- */
+
+static myl_block *str_new(int64_t len) {
+    myl_block *text = block_new(MYL_KIND_STR, len, 1);
+    text->len = len;
+    block_data(text)[len] = 0;
+    return text;
+}
+
+/* `a + b` for two strings: a fresh string. */
+myl_block *myl_core_str_concat(const myl_block *a, const myl_block *b) {
+    myl_block *text = str_new(a->len + b->len);
+    memcpy(block_data(text), (const unsigned char *)a + MYL_HEADER, (size_t)a->len);
+    memcpy(block_data(text) + a->len, (const unsigned char *)b + MYL_HEADER, (size_t)b->len);
+    return text;
+}
+
+/* `separator.join(parts)`: the strings of the list with the separator between them. */
+myl_block *myl_core_str_join(const myl_block *separator, myl_block *parts) {
+    myl_block **items = (myl_block **)block_data(parts);
+    int64_t total = parts->len > 1 ? separator->len * (parts->len - 1) : 0;
+    for (int64_t i = 0; i < parts->len; ++i) total += items[i]->len;
+    myl_block *text = str_new(total);
+    unsigned char *at = block_data(text);
+    for (int64_t i = 0; i < parts->len; ++i) {
+        if (i != 0) {
+            memcpy(at, (const unsigned char *)separator + MYL_HEADER, (size_t)separator->len);
+            at += separator->len;
+        }
+        memcpy(at, (const unsigned char *)items[i] + MYL_HEADER, (size_t)items[i]->len);
+        at += items[i]->len;
+    }
+    return text;
+}
+
+/* `str(x)` of an integer, in decimal. */
+myl_block *myl_core_str_from_i64(int64_t value) {
+    char text[32];
+    int len = snprintf(text, sizeof text, "%lld", (long long)value);
+    return str_from(text, (size_t)len);
+}
+
+myl_block *myl_core_str_from_u64(uint64_t value) {
+    char text[32];
+    int len = snprintf(text, sizeof text, "%llu", (unsigned long long)value);
+    return str_from(text, (size_t)len);
+}
+
+/* `str(b)` of a boolean: `True` or `False`. */
+myl_block *myl_core_str_from_bool(bool value) {
+    return value ? str_from("True", 4) : str_from("False", 5);
+}
+
+/* A failed `assert`, `@requires`, `@ensures` or `@invariant`: the old core's report. The site's
+   `width` is the clause kind (0 `assert` .. 3 `invariant`) and its `operation` the message; the
+   first line, the `in f at` frames and the `MYLANG-TRAP` record are those of any trap, the record
+   carrying only the message. Exit status 1. */
+void myl_core_assert_fail(int32_t index) {
+    static const char *const codes[] = {"R_ASSERT", "R_REQUIRES", "R_ENSURES", "R_INVARIANT"};
+    const myl_core_site *site = &myl_core_sites[index];
+    const char *code = site->width >= 0 && site->width < 4 ? codes[site->width] : codes[0];
+    stream_flush(&streams[0]);
+    char text[2048];
+    int len = snprintf(text, sizeof text, "%s:%d:%d: error[%s]: native execution failed%s%s\n  in %s at %s:%d:%d\n",
+        myl_core_source_path, site->line, site->column, code, site->operation[0] ? ": " : "", site->operation,
+        site->function, myl_core_source_path, site->line, site->column);
+    stream_write(&streams[1], text, (size_t)(len < (int)sizeof text ? len : (int)sizeof text - 1));
+    trap_frames();
+    /* The record: {"version":1,"operation":"MESSAGE"} with the message JSON-escaped. */
+    char record[2048];
+    size_t used = (size_t)snprintf(record, sizeof record, "\036MYLANG-TRAP {\"version\":1,\"operation\":\"");
+    for (const unsigned char *byte = (const unsigned char *)site->operation; *byte && used + 8 < sizeof record; ++byte) {
+        if (*byte == '"' || *byte == '\\') used += (size_t)snprintf(record + used, sizeof record - used, "\\%c", *byte);
+        else if (*byte < 0x20) used += (size_t)snprintf(record + used, sizeof record - used, "\\u%04x", *byte);
+        else record[used++] = (char)*byte;
+    }
+    used += (size_t)snprintf(record + used, sizeof record - used, "\"}\n");
+    stream_write(&streams[1], record, used < sizeof record ? used : sizeof record - 1);
+    flush_all();
+    os_exit(1);
+}

@@ -1,0 +1,30 @@
+module v_narrow
+
+
+def append_one(candidate: mut Option[list[int]], item: int) -> int:
+    if candidate is None:
+        return 0
+    candidate.append(item)
+    return len(candidate)
+
+
+def bump_first(candidate: mut Option[list[int]]) -> int:
+    if candidate is None:
+        return -1
+    candidate[0] = candidate[0] + 100
+    return candidate[0]
+
+
+def main(out: Stream) -> int:
+    items: list[int] = [40]
+    candidate: Option[list[int]] = Some(items.copy())
+    count = append_one(mut candidate, 2)
+    other: Option[list[int]] = Some([5, 6])
+    out.print(count, bump_first(mut other), bump_first(mut candidate), append_one(mut other, 7))
+    if candidate is None:
+        return 1
+    candidate[0] = candidate[0] + candidate[1]
+    out.print(candidate[0], items[0], len(candidate))
+    nothing: Option[list[int]] = None
+    out.print(append_one(mut nothing, 5), bump_first(mut nothing))
+    return 0

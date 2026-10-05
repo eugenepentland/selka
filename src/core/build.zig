@@ -124,6 +124,8 @@ const ModuleBuilder = struct {
     /// Checked record and union type → IR type. An entry is made before the type's fields
     /// are mapped, so a recursive type (through a boxed field) finds itself.
     types: std.AutoHashMapUnmanaged(typed.Type, ir.Type) = .empty,
+    /// The runtime functions the module declared (`runtimeFunction`), by symbol.
+    runtime: std.StringHashMapUnmanaged(u32) = .empty,
 
     fn refuse(self: *ModuleBuilder, reason: []const u8, span: u32) Error {
         self.refusal.* = .{ .reason = reason, .span = span };
@@ -206,9 +208,24 @@ const ModuleBuilder = struct {
         if (record.contract.callback != null) return self.refuse("function value type", span);
         if (record.shape.array != null) return self.refuse("fixed array type", span);
         if (record.shape.resource != null) return self.refuse("resource type", span);
-        if (record.shape.domain != null) return self.refuse("domain type", span);
+        // A domain is its wire type: `wrap` and `unwrap` change nothing at run time.
+        if (record.shape.domain) |wire| {
+            const underlying = try self.mapType(wire, span);
+            if (underlying == .void or underlying == .cap) return self.refuse("domain type", span);
+            return underlying;
+        }
         if (record.isManagedRecord()) return self.refuse("class type", span);
         return self.mapRecord(ty, record, span);
+    }
+
+    /// The IR index of the runtime function `symbol`, declared in the module as an `extern_c`
+    /// function with these parameters and result on first use.
+    fn runtimeFunction(self: *ModuleBuilder, symbol: []const u8, params: []const ir.Type, ret: ir.Type) Error!u32 {
+        if (self.runtime.get(symbol)) |index| return index;
+        const index: u32 = @intCast(self.module.functions.items.len);
+        try self.module.functions.append(self.allocator, .{ .name = symbol, .signature = .{ .params = try self.allocator.dupe(ir.Type, params), .ret = ret, .linkage = .extern_c } });
+        try self.runtime.put(self.allocator, symbol, index);
+        return index;
     }
 
     /// Reserve the IR type of a checked record or union before its parts are mapped.
@@ -277,13 +294,14 @@ const LoopTargets = struct { id: usize, latch: ir.BlockId, exit: ir.BlockId };
 /// `iteration_check` on the alias has been built: from then on a write to the root is refused.
 const Alias = struct { hidden: u32, root: u32, iterating: bool = false };
 
-/// One step from a value to a part of it: a record field, or a list element by index.
-const Step = union(enum) { field: u32, element: ir.Ref };
+/// One step from a value to a part of it: a record field, a list element by index, or the payload
+/// of one case of a union (the narrowing `if x is None: ...` makes of an `Option`).
+const Step = union(enum) { field: u32, element: ir.Ref, payload: u32 };
 
 /// Where a value lives: a local and a path of steps from it, and how many times the local had
 /// been written when the place was named. A write to a hidden receiver (`s.items.append(v)`,
 /// `xs[i][j] = v`) rebuilds the path and stores the new root back, unless the root was written
-/// since (`receiverOf`).
+/// since (`writableReceiverOf`).
 const Place = struct { root: u32, steps: []const Step, root_version: u32 = 0 };
 
 const FnBuilder = struct {
@@ -303,6 +321,12 @@ const FnBuilder = struct {
     /// The type the function declares it returns; `function.signature.ret` is a record
     /// of it and the `mut` parameters' final values when there are any.
     declared_ret: ir.Type = .void,
+    /// The `mut` list parameters this path of the walk has rebound (`items = other`): a rebinding
+    /// detaches the name from the caller's collection, so only the payload it had then is written
+    /// back (COW-MUT-REBIND-1), which `connected` holds as a variable.
+    rebound: std.ArrayList(u32) = .empty,
+    /// Per `mut` list parameter, the synthetic variable of the value still tied to the caller.
+    connected: std.AutoHashMapUnmanaged(u32, u32) = .empty,
 
     fn allocator(self: *FnBuilder) std.mem.Allocator {
         return self.mb.allocator;
@@ -497,6 +521,14 @@ const FnBuilder = struct {
         }
     }
 
+    /// A loop over `alias` is running: it iterates that list for good, whatever the body assigns to the name.
+    /// Assigning the alias itself would break that, which the checker never emits.
+    fn guardAlias(self: *FnBuilder, variable: u32, span: u32) Error!void {
+        for (self.aliases.items) |alias| {
+            if (alias.iterating and alias.hidden == variable) return self.mb.refuse("write to a list while it is iterated (live-place iteration)", span);
+        }
+    }
+
     /// The loop's `iteration_check` on `owner` has been reached: the alias is iterated from here on.
     fn markIterating(self: *FnBuilder, owner: typed.LocalId) void {
         const variable = self.local(owner);
@@ -519,10 +551,13 @@ const FnBuilder = struct {
             },
             .initialize, .assign => |store| {
                 if (store.element) return self.mb.refuse("element store", span);
-                try self.guardPlace(self.local(store.slot), span);
+                // Rebinding the name of a list a loop iterates leaves the loop on the list it started with,
+                // which the alias is; only a write to the list is refused (`guardPlace`).
+                try self.guardAlias(self.local(store.slot), span);
                 var place: ?Place = null;
                 const value = try self.expressionPlace(store.value, &place);
                 const block = self.current orelse return;
+                try self.detachParameter(self.local(store.slot), span);
                 try self.write(self.local(store.slot), block, value);
                 try self.assigned(self.local(store.slot));
                 try self.noteAlias(store.slot, place);
@@ -538,15 +573,47 @@ const FnBuilder = struct {
             .loop => |loop| try self.loopStatement(loop.id, loop.condition, loop.body, loop.step),
             .loop_exit => |exit| {
                 for (self.loops.items) |targets| if (targets.id == exit.target) {
-                    if (exit.arenas.len != 0) return self.mb.refuse("arena loop exit", span);
                     return self.jump(if (exit.continuing) targets.latch else targets.exit);
                 };
                 return self.mb.refuse("loop exit target", span);
             },
             .match => |m| try self.matchStatement(m.value, m.arms, span),
-            .assertion => return self.mb.refuse("assertion", span),
-            .with_scope => return self.mb.refuse("with scope", span),
+            .assertion => |check| try self.assertStatement(check),
+            // The interim arena rule (docs/design/new-core-s1.md §11): a `with arena()` block is a plain
+            // block, and `n.escape(v)` is `v`; reference counting frees at last use. The checker has
+            // already rejected every program that lets an arena value outlive its block.
+            .with_scope => |scope| {
+                if (scope.resource != null) return self.mb.refuse("with scope over a resource", span);
+                try self.statement(scope.body);
+            },
         }
+    }
+
+    /// `assert condition[, message]` (and the `@requires`, `@ensures` and `@invariant` clauses the
+    /// checker places as assertions): a false condition traps with the clause's code and message at
+    /// the condition's position, as the old core does. A message computed from values is refused.
+    fn assertStatement(self: *FnBuilder, check: typed.Assertion) Error!void {
+        const condition_span: u32 = @intCast(self.nodeOf(check.condition).span.start);
+        if (check.message_value != null) return self.mb.refuse("assertion with a message value", condition_span);
+        const condition = try self.expression(check.condition);
+        if (self.current == null) return;
+        // A condition known at build time (the checker's `assert false` after a narrowing) leaves no
+        // branch: a true one is nothing, a false one ends the path.
+        const known = self.function.inst(self.function.resolve(condition));
+        if (known.op == .iconst and known.data != 0) return;
+        const failed = if (known.op == .iconst) self.current.? else try self.newBlock();
+        const passed: ?ir.BlockId = if (known.op == .iconst) null else try self.newBlock();
+        if (passed) |next| {
+            try self.branch(condition, next, failed, condition_span);
+            try self.seal(failed);
+            try self.seal(next);
+        }
+        self.current = failed;
+        const message = self.mb.module.strings.items.len;
+        try self.mb.module.strings.append(self.allocator(), check.message);
+        const data = flags.assertion_trap | (@as(u64, @backingInt(check.kind)) << 32) | message;
+        _ = try self.emit(.{ .op = .@"unreachable", .ty = .void, .data = data, .span = condition_span });
+        self.current = passed;
     }
 
     fn branchStatement(self: *FnBuilder, condition: typed.NodeId, then_body: typed.StatementId, else_body: ?typed.StatementId) Error!void {
@@ -557,15 +624,21 @@ const FnBuilder = struct {
         const else_block = if (else_body != null) try self.newBlock() else join;
         try self.branch(cond, then_block, else_block, @intCast(self.nodeOf(condition).span.start));
         try self.seal(then_block);
+        const base = self.rebound.items.len;
+        var paths: std.ArrayList([]const u32) = .empty;
+        defer paths.deinit(self.allocator());
         self.current = then_block;
         try self.statement(then_body);
+        try self.endPath(base, &paths);
         try self.jump(join);
         if (else_body) |other| {
             try self.seal(else_block);
             self.current = else_block;
             try self.statement(other);
+            try self.endPath(base, &paths);
             try self.jump(join);
-        }
+        } else try paths.append(self.allocator(), &.{});
+        try self.joinPaths(paths.items, @intCast(self.nodeOf(condition).span.start));
         try self.seal(join);
         self.enter(join);
     }
@@ -578,7 +651,11 @@ const FnBuilder = struct {
         const body_block = try self.newBlock();
         const latch = try self.newBlock();
         const exit = try self.newBlock();
-        try self.branch(cond, body_block, exit, @intCast(self.nodeOf(condition).span.start));
+        // `while True:` has no exit edge: only a `break` (or a return) leaves it.
+        const known = self.function.inst(self.function.resolve(cond));
+        if (known.op == .iconst and known.data != 0) {
+            try self.jump(body_block);
+        } else try self.branch(cond, body_block, exit, @intCast(self.nodeOf(condition).span.start));
         try self.seal(body_block);
         try self.loops.append(self.allocator(), .{ .id = id, .latch = latch, .exit = exit });
         self.current = body_block;
@@ -596,11 +673,15 @@ const FnBuilder = struct {
     }
 
     fn matchStatement(self: *FnBuilder, value_node: typed.NodeId, arms: []const typed.MatchArm, span: u32) Error!void {
-        const value = try self.expression(value_node);
+        var value_place: ?Place = null;
+        const value = try self.expressionPlace(value_node, &value_place);
         if (self.current == null) return;
         if (arms.len == 0) return self.mb.refuse("empty match", span);
         const tag = try self.emit(.{ .op = .union_tag, .ty = .u32, .a = value, .span = span });
         const join = try self.newBlock();
+        const base = self.rebound.items.len;
+        var paths: std.ArrayList([]const u32) = .empty;
+        defer paths.deinit(self.allocator());
         for (arms, 0..) |arm, i| {
             const arm_block = try self.newBlock();
             if (i + 1 < arms.len) {
@@ -612,25 +693,32 @@ const FnBuilder = struct {
                 try self.seal(arm_block);
                 const resume_at = next;
                 self.current = arm_block;
-                try self.armBody(arm, value, span);
+                try self.armBody(arm, value, value_place, span);
+                try self.endPath(base, &paths);
                 try self.jump(join);
                 self.current = resume_at;
             } else {
                 try self.jump(arm_block);
                 try self.seal(arm_block);
                 self.current = arm_block;
-                try self.armBody(arm, value, span);
+                try self.armBody(arm, value, value_place, span);
+                try self.endPath(base, &paths);
                 try self.jump(join);
             }
         }
+        try self.joinPaths(paths.items, span);
         try self.seal(join);
         self.enter(join);
     }
 
-    fn armBody(self: *FnBuilder, arm: typed.MatchArm, value: ir.Ref, span: u32) Error!void {
+    fn armBody(self: *FnBuilder, arm: typed.MatchArm, value: ir.Ref, value_place: ?Place, span: u32) Error!void {
         if (arm.slot) |slot| {
             const payload = try self.payloadOf(value, arm.tag, span);
             try self.write(self.local(slot), self.current.?, payload);
+            // A checker-hidden binding (the narrowing of `x is None`) names the payload in place:
+            // a write through it must rebuild the union it came from.
+            const place: ?Place = if (value_place) |found| try self.extendPlace(found, .{ .payload = @intCast(arm.tag) }) else null;
+            try self.noteAlias(slot, place);
         }
         try self.statement(arm.body);
     }
@@ -684,12 +772,54 @@ const FnBuilder = struct {
         try self.versions.put(self.allocator(), variable, self.version(variable) + 1);
     }
 
-    /// The value of receiver `owner`. A receiver the checker rooted at a place (`frame.code`,
-    /// `xs`) is a reference to what the place held then; if evaluating the operation's arguments
-    /// wrote that place (a `mut` call in an index), whether the write shows through depends on
-    /// whether the callee changed the list in place or replaced it, which a value cannot tell,
-    /// so the operation is refused.
-    fn receiverOf(self: *FnBuilder, owner: typed.LocalId, span: u32) Error!ir.Ref {
+    /// `items = value` of a `mut` list parameter detaches the name from the caller's collection:
+    /// from here on only the payload it had before is written back, and the new binding is an
+    /// ordinary local (a write to it copies, COW-MUT-REBIND-1). Which paths rebound it is a fact of
+    /// the walk, so a rebinding in a loop is refused, and paths that join must agree (`joinPaths`).
+    fn detachParameter(self: *FnBuilder, variable: u32, span: u32) Error!void {
+        const connected = self.connected.get(variable) orelse return;
+        if (std.mem.indexOfScalar(u32, self.rebound.items, variable) != null) return;
+        if (self.loops.items.len != 0) return self.mb.refuse("rebinding of a mut collection parameter in a loop", span);
+        try self.write(connected, self.current.?, try self.read(variable, self.current.?));
+        try self.rebound.append(self.allocator(), variable);
+    }
+
+    /// One path of a fork ended: what it rebound leaves `rebound` (back to the fork's state) and,
+    /// when the path reaches the join, is kept in `paths`.
+    fn endPath(self: *FnBuilder, base: usize, paths: *std.ArrayList([]const u32)) Error!void {
+        const added = try self.allocator().dupe(u32, self.rebound.items[base..]);
+        self.rebound.shrinkRetainingCapacity(base);
+        if (self.current != null) try paths.append(self.allocator(), added);
+    }
+
+    /// The paths that reach a join must have rebound the same `mut` list parameters, which stay
+    /// rebound after it; whether one was rebound cannot be a run-time fact.
+    fn joinPaths(self: *FnBuilder, paths: []const []const u32, span: u32) Error!void {
+        if (paths.len == 0) return;
+        for (paths[1..]) |other| {
+            var same = other.len == paths[0].len;
+            if (same) for (other) |variable| {
+                if (std.mem.indexOfScalar(u32, paths[0], variable) == null) same = false;
+            };
+            if (!same) return self.mb.refuse("conditional rebinding of a mut collection parameter", span);
+        }
+        try self.rebound.appendSlice(self.allocator(), paths[0]);
+    }
+
+    /// The value a read through receiver `owner` sees. A receiver the checker rooted at a place
+    /// (`frame.code`, `xs`) was captured before the operation's arguments were evaluated, and
+    /// stays that snapshot when an argument writes the place (`xs[poke(mut xs)]` reads the list
+    /// as it was, a replaced field included): the hidden local's own value.
+    fn receiverOf(self: *FnBuilder, owner: typed.LocalId) Error!ir.Ref {
+        return self.read(self.local(owner), self.current.?);
+    }
+
+    /// The value a write through receiver `owner` applies to. If evaluating the arguments wrote
+    /// the receiver's place, the old runtime applies the write to the payload the receiver
+    /// captured, which is the place's still (an in-place change of the place) or no longer (the
+    /// callee replaced the field, or cleared the parent) reachable from it; a value cannot tell
+    /// the two apart, so the write is refused rather than guessed.
+    fn writableReceiverOf(self: *FnBuilder, owner: typed.LocalId, span: u32) Error!ir.Ref {
         const variable = self.local(owner);
         const alias = try self.read(variable, self.current.?);
         const place = self.places.get(variable) orelse return alias;
@@ -737,6 +867,7 @@ const FnBuilder = struct {
                 if (self.mb.module.kind(list_type) != .list) return self.mb.refuse("element of a non-list value", span);
                 return self.emit(.{ .op = .list_get, .ty = self.mb.module.compound(list_type).list, .a = base, .b = index, .check = .exact, .span = span });
             },
+            .payload => |tag| return self.payloadOf(base, tag, span),
         }
     }
 
@@ -745,7 +876,19 @@ const FnBuilder = struct {
         switch (step) {
             .field => |index| return self.fieldSet(base, index, value, span),
             .element => |index| return self.listSet(base, index, value, span),
+            .payload => |tag| return self.payloadSet(base, tag, value, span),
         }
+    }
+
+    /// Union `base` rebuilt as case `tag` carrying `value` (boxed again when the payload is boxed).
+    fn payloadSet(self: *FnBuilder, base: ir.Ref, tag: u32, value: ir.Ref, span: u32) Error!ir.Ref {
+        const union_type = self.typeOfRef(base);
+        const cases = switch (self.mb.module.kind(union_type) orelse return self.mb.refuse(refuse_payload, span)) {
+            .@"union" => self.mb.module.compound(union_type).@"union",
+            else => return self.mb.refuse(refuse_payload, span),
+        };
+        if (tag >= cases.len or cases[tag] == .void) return self.mb.refuse(refuse_payload, span);
+        return self.emit(.{ .op = .union_make, .ty = union_type, .a = try self.boxFor(cases[tag], value, span), .data = tag, .span = span });
     }
 
     /// `list` with element `index` replaced by `value`; the index is checked, and ownership
@@ -829,15 +972,19 @@ const FnBuilder = struct {
             .wrap => |operand| return self.wrap(operand, try self.typeOf(id), span),
             .unwrap => |operand| {
                 const value = try self.expression(operand);
-                if (value != .none and self.function.inst(value).ty == .f64) return value;
+                if (value == .none) return .none;
+                // A domain is its wire type, and a `float` unwraps to its bits only as the prelude spells it.
+                if (self.function.inst(value).ty == .f64 or self.function.inst(value).ty == try self.typeOf(id)) return value;
                 return self.mb.refuse("unwrap", span);
             },
-            .call => |c| return self.call(c.function, c.arguments, c.evaluation != null, span),
+            .call => |c| return self.call(c.function, c.arguments, if (c.evaluation) |e| e.body else null, span),
             .buffer_operation => |operation| return self.bufferOperation(operation, try self.typeOf(id), span, out),
             .acquire_buffer => |acquire| {
                 const capacity = try self.expression(acquire.capacity);
                 return self.emit(.{ .op = .list_new, .ty = try self.typeOf(id), .a = capacity, .span = span });
             },
+            .arena_escape => |value| return self.expression(value),
+            .length => |operand| return self.stringLength(operand, span),
             .variant => |case| return self.variantMake(id, case.tag, case.value, span),
             .record => |fields| return self.recordMake(id, fields, span),
             .update => |update| return self.recordUpdate(update.base, update.fields, span),
@@ -999,7 +1146,11 @@ const FnBuilder = struct {
             var parts: std.ArrayList(ir.Ref) = .empty;
             defer parts.deinit(self.allocator());
             if (self.declared_ret != .void) try parts.append(self.allocator(), result);
-            for (mutated) |position| try parts.append(self.allocator(), try self.read(position, self.current.?));
+            for (mutated) |position| {
+                // A rebound collection writes back the payload that was still the caller's.
+                const rebound = std.mem.indexOfScalar(u32, self.rebound.items, position) != null;
+                try parts.append(self.allocator(), try self.read(if (rebound) self.connected.get(position).? else position, self.current.?));
+            }
             value = if (parts.items.len == 1) parts.items[0] else try self.emit(.{ .op = .record_make, .ty = self.function.signature.ret, .data = try self.extraSlice(parts.items), .span = span });
         }
         _ = try self.emit(.{ .op = .ret, .ty = .void, .a = if (self.function.signature.ret == .void) .none else value, .span = span });
@@ -1074,8 +1225,9 @@ const FnBuilder = struct {
     }
 
     /// `==` and `!=` of two records, unions (enums, `Option`, `Result`) or lists: structural,
-    /// never a pointer comparison. A `str` (S2's text runtime) and a recursive value are refused.
+    /// never a pointer comparison. A `str` compares by bytes through the runtime; a recursive value is refused.
     fn aggregateCompare(self: *FnBuilder, op: typed.BinaryOp, left: ir.Ref, right: ir.Ref, span: u32) Error!ir.Ref {
+        if (op == .add and self.typeOfRef(left) == .str) return self.runtimeCall(flags.str_concat_symbol, &.{ .str, .str }, .str, &.{ left, right }, span);
         if (op != .eq and op != .ne) return self.mb.refuse(if (op == .add) "concatenation" else "operator on an aggregate value", span);
         const same = try self.equal(left, right, span);
         if (self.current == null or op == .eq) return same;
@@ -1102,7 +1254,9 @@ const FnBuilder = struct {
     fn equal(self: *FnBuilder, a: ir.Ref, b: ir.Ref, span: u32) Error!ir.Ref {
         const m = self.mb.module;
         const ty = self.typeOfRef(a);
-        if (ty == .str) return self.mb.refuse("str equality", span);
+        if (ty == .str) {
+            return self.runtimeCall(flags.str_eq_symbol, &.{ .str, .str }, .bool, &.{ a, b }, span);
+        }
         // A recursive value would need a function that calls itself, not an expansion in place.
         if (self.recursive(ty, 0)) return self.mb.refuse("equality of a recursive value", span);
         if (ty == .f64) return self.emit(.{ .op = .fcmp, .ty = .bool, .a = a, .b = b, .data = @backingInt(ir.Predicate.eq), .span = span });
@@ -1246,7 +1400,15 @@ const FnBuilder = struct {
     fn cast(self: *FnBuilder, operand_node: typed.NodeId, target: ir.Type, span: u32) Error!ir.Ref {
         const operand = try self.expression(operand_node);
         if (self.current == null) return .none;
+        if (operand == .none) {
+            // `str(None)`: the text of a `unit` value.
+            if (target != .str or self.nodeOf(operand_node).ty != .unit) return self.mb.refuse("cast of a value that has no result", span);
+            const index = self.mb.module.strings.items.len;
+            try self.mb.module.strings.append(self.allocator(), "None");
+            return self.detached(.{ .op = .str_const, .ty = .str, .data = index });
+        }
         const source = self.function.inst(operand).ty;
+        if (target == .str) return self.textOf(operand, span);
         if (source == target) return operand;
         const from = source.integer() orelse return self.mb.refuse("cast source", span);
         const to = target.integer() orelse return self.mb.refuse("cast target", span);
@@ -1257,7 +1419,11 @@ const FnBuilder = struct {
 
     /// `wrap` builds a domain value: for `float` from IEEE bits (a constant) or a float operation.
     fn wrap(self: *FnBuilder, operand_node: typed.NodeId, target: ir.Type, span: u32) Error!ir.Ref {
-        if (target != .f64) return self.mb.refuse("domain wrap", span);
+        if (target != .f64) {
+            const wire = try self.expression(operand_node);
+            if (wire == .none or self.function.inst(wire).ty != target) return self.mb.refuse("domain wrap", span);
+            return wire;
+        }
         const operand = self.nodeOf(operand_node);
         if (operand.data == .integer) {
             const bits: u64 = @truncate(@as(u128, @bitCast(operand.data.integer)));
@@ -1268,10 +1434,21 @@ const FnBuilder = struct {
         return self.mb.refuse("float bits", span);
     }
 
-    fn call(self: *FnBuilder, callee: typed.FunctionId, argument_nodes: []const typed.NodeId, has_evaluation: bool, span: u32) Error!ir.Ref {
-        if (has_evaluation) return self.mb.refuse("call evaluation body", span);
+    /// A call. `evaluation` is the checker's block that binds the arguments of a keyword call
+    /// to temporaries in source order; it runs first and the arguments read the temporaries.
+    fn call(self: *FnBuilder, callee: typed.FunctionId, argument_nodes: []const typed.NodeId, evaluation: ?typed.StatementId, span: u32) Error!ir.Ref {
         const index = try self.mb.functionIndex(callee);
         const mutated = self.mb.program.functions[@backingInt(callee)].signature.declared_mutates;
+        if (evaluation) |body| {
+            // A `mut` argument the checker could not leave as the caller's variable is a temporary,
+            // which the callee's final value would be written back to instead of the place.
+            for (mutated) |position| {
+                const argument = self.nodeOf(argument_nodes[position]);
+                if (argument.data == .local and std.mem.eql(u8, self.checked.scope.locals[@backingInt(argument.data.local)].name, "<argument>")) return self.mb.refuse("keyword call with a mut argument that is not a local", span);
+            }
+            try self.statement(body);
+            if (self.current == null) return .none;
+        }
         var arguments: std.ArrayList(ir.Ref) = .empty;
         defer arguments.deinit(self.allocator());
         // A `mut` argument is the place the callee's final value is written back to. The callee
@@ -1320,12 +1497,15 @@ const FnBuilder = struct {
         const argument_nodes = operation.arguments;
         const receiver_type = self.ssa.types.items[self.local(owner)];
         switch (kind) {
-            .length => return self.emit(.{ .op = if (receiver_type == .str) .str_len else .list_len, .ty = .u64, .a = try self.receiverOf(owner, span), .span = span }),
+            .length => {
+                const receiver = try self.receiverOf(owner);
+                return if (receiver_type == .str) self.stringChars(receiver, span) else self.emit(.{ .op = .list_len, .ty = .u64, .a = receiver, .span = span });
+            },
             .read => {
                 if (receiver_type == .str) return self.mb.refuse("string index", span);
                 const index = try self.expression(argument_nodes[0]);
                 if (self.current == null) return .none;
-                const receiver = try self.receiverOf(owner, span);
+                const receiver = try self.receiverOf(owner);
                 if (out) |place| place.* = try self.extendPlace(try self.placeOfLocal(owner), .{ .element = index });
                 return self.emit(.{ .op = .list_get, .ty = ty, .a = receiver, .b = index, .check = .exact, .span = span });
             },
@@ -1334,7 +1514,7 @@ const FnBuilder = struct {
                 const value = try self.expression(argument_nodes[0]);
                 if (self.current == null) return .none;
                 // The receiver is read after the argument, which may have written its place.
-                const list = try self.receiverOf(owner, span);
+                const list = try self.writableReceiverOf(owner, span);
                 const pushed = try self.emit(.{ .op = .list_push, .ty = self.function.inst(list).ty, .a = list, .b = value, .span = span });
                 try self.writeOwner(owner, pushed, span);
                 return .none;
@@ -1345,14 +1525,14 @@ const FnBuilder = struct {
                 const index = try self.expression(argument_nodes[0]);
                 const value = try self.expression(argument_nodes[1]);
                 if (self.current == null) return .none;
-                const list = try self.receiverOf(owner, span);
+                const list = try self.writableReceiverOf(owner, span);
                 try self.writeOwner(owner, try self.listSet(list, index, value, span), span);
                 return .none;
             },
             .pop => {
                 if (!receiver_type.isCompound() or self.mb.module.kind(receiver_type) != .list) return self.mb.refuse("pop of a non-list", span);
                 try self.guardPlace(self.local(owner), span);
-                const list = try self.receiverOf(owner, span);
+                const list = try self.writableReceiverOf(owner, span);
                 // The last element is read first (index `len - 1`, wrapping to a failing index
                 // when empty, which the read reports as the empty-list pop), then dropped.
                 const length = try self.emit(.{ .op = .list_len, .ty = .u64, .a = list, .span = span });
@@ -1362,18 +1542,73 @@ const FnBuilder = struct {
                 try self.writeOwner(owner, rest, span);
                 return element;
             },
+            // `xs.clear()` replaces the list with an empty one; the old value dies by ownership.
+            .clear => {
+                if (self.mb.module.kind(receiver_type) != .list) return self.mb.refuse("clear of a non-list", span);
+                try self.guardPlace(self.local(owner), span);
+                const empty = try self.emit(.{ .op = .list_new, .ty = receiver_type, .a = try self.constant(.i64, 0), .span = span });
+                try self.writeOwner(owner, empty, span);
+                return .none;
+            },
+            // A copy of a value is the value: the next write to either copies (copy on write).
+            .copy => {
+                if (self.mb.module.kind(receiver_type) != .list) return self.mb.refuse("copy of a non-list", span);
+                return self.receiverOf(owner);
+            },
             // A write to an iterated place while the loop runs is refused (`guardPlace`), so the
             // length cannot change and the check cannot fail.
             .iteration_check => {
                 self.markIterating(owner);
                 return .none;
             },
+            // `separator.join(parts)`: the runtime builds one string from a list of strings.
+            .join => {
+                if (receiver_type != .str) return self.mb.refuse("join on a non-string", span);
+                const parts = try self.expression(argument_nodes[0]);
+                if (self.current == null) return .none;
+                const parts_type = self.typeOfRef(parts);
+                if (self.mb.module.kind(parts_type) != .list or self.mb.module.compound(parts_type).list != .str) return self.mb.refuse("join of a list that is not of strings", span);
+                return self.runtimeCall(flags.str_join_symbol, &.{ .str, parts_type }, .str, &.{ try self.receiverOf(owner), parts }, span);
+            },
             .parse_int => {
                 if (receiver_type != .str) return self.mb.refuse("parse_int receiver", span);
-                return self.emit(.{ .op = .str_parse_int, .ty = ty, .a = try self.receiverOf(owner, span), .span = span });
+                return self.emit(.{ .op = .str_parse_int, .ty = ty, .a = try self.receiverOf(owner), .span = span });
             },
             else => return self.mb.refuse(@tagName(kind), span),
         }
+    }
+
+    /// `len(text)` of a string that is not a local (a field, an element, a call result).
+    fn stringLength(self: *FnBuilder, operand: typed.NodeId, span: u32) Error!ir.Ref {
+        const value = try self.expression(operand);
+        if (self.current == null) return .none;
+        if (self.typeOfRef(value) != .str) return self.mb.refuse("length of a non-string", span);
+        const chars = try self.stringChars(value, span);
+        return self.emit(.{ .op = .convert, .ty = .i64, .a = chars, .check = .exact, .span = span });
+    }
+
+    /// A call of the runtime function `symbol` (declared in the module on first use) with `arguments`.
+    fn runtimeCall(self: *FnBuilder, symbol: []const u8, params: []const ir.Type, ret: ir.Type, arguments: []const ir.Ref, span: u32) Error!ir.Ref {
+        const callee = try self.mb.runtimeFunction(symbol, params, ret);
+        return self.emit(.{ .op = .call, .ty = ret, .a = @fromBackingInt(@intCast(callee)), .data = try self.extraSlice(arguments), .span = span });
+    }
+
+    /// The text of `value`, as `str(value)` and an f-string part spell it: a string as it is, an
+    /// integer in decimal, a boolean as `True` or `False`.
+    fn textOf(self: *FnBuilder, value: ir.Ref, span: u32) Error!ir.Ref {
+        const ty = self.typeOfRef(value);
+        if (ty == .str) return value;
+        if (ty == .bool) return self.runtimeCall(flags.str_from_bool_symbol, &.{.bool}, .str, &.{value}, span);
+        const info = ty.integer() orelse return self.mb.refuse("text of a non-integer value", span);
+        const wide: ir.Type = if (info.signed) .i64 else .u64;
+        const operand = if (ty == wide) value else try self.emit(.{ .op = .convert, .ty = wide, .a = value, .span = span });
+        return self.runtimeCall(if (info.signed) flags.str_from_i64_symbol else flags.str_from_u64_symbol, &.{wide}, .str, &.{operand}, span);
+    }
+
+    /// The length of string `value` in Unicode scalars, which is what `len` counts (not bytes):
+    /// the runtime counts the bytes that do not continue a scalar.
+    fn stringChars(self: *FnBuilder, value: ir.Ref, span: u32) Error!ir.Ref {
+        return self.runtimeCall(flags.str_chars_symbol, &.{.str}, .u64, &.{value}, span);
     }
 
     /// A string literal: the checker spells it as code points, stored here as UTF-8.
@@ -1429,6 +1664,8 @@ fn optionNoneTag(records: []const typed.Record, ty: typed.Type) ?usize {
 fn buildFunction(mb: *ModuleBuilder, checked: typed.Function, declared: ir.Function) Error!ir.Function {
     var b: FnBuilder = .{ .mb = mb, .function = declared, .checked = checked };
     b.declared_ret = try mb.mapType(checked.signature.return_type, declared.span);
+    defer b.rebound.deinit(mb.allocator);
+    defer b.connected.deinit(mb.allocator);
     defer b.places.deinit(mb.allocator);
     defer b.versions.deinit(mb.allocator);
     defer b.ssa.defs.deinit(mb.allocator);
@@ -1440,6 +1677,10 @@ fn buildFunction(mb: *ModuleBuilder, checked: typed.Function, declared: ir.Funct
     for (checked.scope.locals) |local| {
         const ty = mb.mapType(local.ty, @intCast(local.declaration.start)) catch .void;
         try b.ssa.types.append(mb.allocator, ty);
+    }
+    for (checked.signature.declared_mutates) |position| {
+        const ty = b.ssa.types.items[position];
+        if (mb.module.kind(ty) == .list) try b.connected.put(mb.allocator, position, try b.synthetic(ty));
     }
     const entry = try b.newBlock();
     try b.seal(entry);

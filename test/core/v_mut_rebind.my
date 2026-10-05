@@ -1,0 +1,88 @@
+module v_mut_rebind
+
+
+def replace_list(items: mut list[int], other: list[int]) -> list[int]:
+    items.append(5)
+    items = other
+    items.append(7)
+    items[0] = 9
+    return items
+
+
+def replace_rows(items: mut list[list[int]], other: list[list[int]]) -> list[list[int]]:
+    items = other
+    for index in range(6):
+        items[index % 2][0] = index
+    return items
+
+
+def rebound_twice(items: mut list[int], first: list[int], second: list[int]) -> int:
+    items.append(1)
+    items = first
+    items.append(2)
+    items = second
+    items[0] = 3
+    return len(items)
+
+
+def early(items: mut list[int], other: list[int], leave: bool) -> int:
+    items.append(4)
+    if leave:
+        items = other
+        items.append(6)
+        return len(items)
+    items.append(8)
+    return len(items)
+
+
+record Box:
+    items: list[int]
+    n: int
+
+
+def reset_box(b: mut Box, other: Box) -> int:
+    b.n = 5
+    b.items.append(1)
+    b = other
+    b.n = b.n + 100
+    b.items.append(2)
+    return len(b.items)
+
+
+def digest(xs: list[int]) -> int:
+    h = len(xs)
+    for x in xs:
+        h = h * 31 + x
+    return h
+
+
+def digest_rows(rows: list[list[int]]) -> int:
+    h = len(rows)
+    for row in rows:
+        h = h * 131 + digest(row)
+    return h
+
+
+def main(out: Stream) -> int:
+    items = [1]
+    source = [2]
+    changed = replace_list(mut items, source)
+    out.print(digest(changed), digest(source), digest(items))
+    rows = [[1]]
+    row = [2]
+    shared = [row, row]
+    moved = replace_rows(mut rows, shared)
+    out.print(digest_rows(moved), digest_rows(shared), digest(row), digest_rows(rows))
+    held = [0]
+    first = [10, 11]
+    second = [20]
+    out.print(rebound_twice(mut held, first, second), digest(held), digest(first), digest(second))
+    a = [1]
+    b = [1]
+    other = [2]
+    out.print(early(mut a, other, True), early(mut b, other, False), digest(a), digest(b), digest(other))
+    box = Box(items=[10], n=1)
+    spare = Box(items=[20, 21], n=2)
+    got = reset_box(mut box, spare)
+    out.print(got, box.n, digest(box.items), spare.n, digest(spare.items))
+    return 0
