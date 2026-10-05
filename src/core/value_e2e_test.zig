@@ -327,6 +327,7 @@ test "the value fixtures end with no block live under MYL_CORE_LEAKCHECK=1, debu
         "v_loops",
         "v_hull",
         "v_sort",
+        "v_units",
     };
     for (names) |name| {
         try std.testing.expectEqualStrings("", try leakReport(arena.allocator(), root, name, .debug));
@@ -561,4 +562,17 @@ test "xs.sort() and sorted(xs) of integers, floats and text give the old core's 
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     try std.testing.expect(try matches(arena.allocator(), "v_sort", v_sort_output, 0));
+}
+
+const v_units_output =
+    \\455 122
+    \\0 True
+    \\
+;
+
+// spec: NEW-CORE-UNIT-1
+test "a list of None holds its length: append, write, read, pop, iteration, copies and equality match the old core" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    try std.testing.expect(try matches(arena.allocator(), "v_units", v_units_output, 0));
 }

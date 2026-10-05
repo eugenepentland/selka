@@ -195,8 +195,9 @@ const ModuleBuilder = struct {
             .string => return .str,
             .list => {
                 const element = try self.mapType(record.shape.buffer.?, span);
-                if (element == .void or element == .cap) return self.refuse("list element type", span);
-                return self.module.intern(self.allocator, .{ .list = element });
+                if (element == .cap) return self.refuse("list element type", span);
+                // A list of `None` holds nothing but its length: a list of `false`, whose elements read as unit.
+                return self.module.intern(self.allocator, .{ .list = if (element == .void) .bool else element });
             },
             .dictionary => return self.refuse(if (record.collection.set) "set type" else "dict type", span),
             .bytes => return self.refuse("bytes type", span),
@@ -1543,12 +1544,14 @@ const FnBuilder = struct {
                 if (self.current == null) return .none;
                 const receiver = try self.receiverOf(owner);
                 if (out) |place| place.* = try self.extendPlace(try self.placeOfLocal(owner), .{ .element = index });
-                return self.emit(.{ .op = .list_get, .ty = ty, .a = receiver, .b = index, .check = .exact, .span = span });
+                const element = try self.emit(.{ .op = .list_get, .ty = if (ty == .void) .bool else ty, .a = receiver, .b = index, .check = .exact, .span = span });
+                return if (ty == .void) .none else element;
             },
             .append => {
                 try self.guardPlace(self.local(owner), span);
-                const value = try self.expression(argument_nodes[0]);
+                var value = try self.expression(argument_nodes[0]);
                 if (self.current == null) return .none;
+                if (value == .none or self.typeOfRef(value) == .void) value = try self.constant(.bool, 0);
                 // The receiver is read after the argument, which may have written its place.
                 const list = try self.writableReceiverOf(owner, span);
                 const pushed = try self.emit(.{ .op = .list_push, .ty = self.function.inst(list).ty, .a = list, .b = value, .span = span });
@@ -1559,8 +1562,9 @@ const FnBuilder = struct {
                 if (receiver_type == .str) return self.mb.refuse("string element write", span);
                 try self.guardPlace(self.local(owner), span);
                 const index = try self.expression(argument_nodes[0]);
-                const value = try self.expression(argument_nodes[1]);
+                var value = try self.expression(argument_nodes[1]);
                 if (self.current == null) return .none;
+                if (value == .none or self.typeOfRef(value) == .void) value = try self.constant(.bool, 0);
                 const list = try self.writableReceiverOf(owner, span);
                 try self.writeOwner(owner, try self.listSet(list, index, value, span), span);
                 return .none;
@@ -1573,10 +1577,10 @@ const FnBuilder = struct {
                 // when empty, which the read reports as the empty-list pop), then dropped.
                 const length = try self.emit(.{ .op = .list_len, .ty = .u64, .a = list, .span = span });
                 const last = try self.emit(.{ .op = .sub, .ty = .u64, .a = length, .b = try self.constant(.u64, 1), .span = span });
-                const element = try self.emit(.{ .op = .list_get, .ty = ty, .a = list, .b = last, .data = flags.pop_read, .check = .exact, .span = span });
+                const element = try self.emit(.{ .op = .list_get, .ty = if (ty == .void) .bool else ty, .a = list, .b = last, .data = flags.pop_read, .check = .exact, .span = span });
                 const rest = try self.emit(.{ .op = .list_pop, .ty = receiver_type, .a = list, .check = .exact, .span = span });
                 try self.writeOwner(owner, rest, span);
-                return element;
+                return if (ty == .void) .none else element;
             },
             // `xs.clear()` replaces the list with an empty one; the old value dies by ownership.
             .clear => {
