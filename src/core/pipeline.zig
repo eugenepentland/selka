@@ -4,6 +4,7 @@ const std = @import("std");
 const language = @import("mylang");
 const frontend = @import("frontend.zig");
 const build_ir = @import("build.zig");
+const ir = @import("ir.zig");
 const emit_llvm = @import("emit_llvm.zig");
 const driver = @import("driver.zig");
 const passes = @import("passes.zig");
@@ -60,8 +61,27 @@ pub fn build(init: std.process.Init, path: []const u8, options: Options, report:
         },
         else => |other| return other,
     };
+    const absolute = std.Io.Dir.cwd().realPathFileAlloc(init.io, path, allocator) catch path;
+    return finish(init, &module, .{ .src = checked.src, .source_path = absolute, .main = .{ .parameters = try mainParameters(allocator, checked.program), .result = mainResult(checked.program) } }, options, report);
+}
+
+/// What the back half of a build needs to know about the checked source.
+pub const Unit = struct {
+    /// The merged source trap positions are located in.
+    src: language.source.Source,
+    /// The path traps report (the entry file's, absolute).
+    source_path: []const u8,
+    /// The entry function's parameter names (which pick stdout or stderr for a
+    /// `Stream`) and, when it returns a `Result`, its case tags.
+    main: emit_llvm.Main,
+};
+
+/// The back half of `build`: run the release passes on `module`, emit LLVM IR, and
+/// link the executable. `mylang-core test` reaches it with a module of its own making.
+pub fn finish(init: std.process.Init, module: *ir.Module, unit: Unit, options: Options, report: *std.ArrayList(u8)) Error!u8 {
+    const allocator = init.arena.allocator();
     // A debug build of the compiler checks the IR it built, and again after the release passes.
-    if (verify_ir.enabled) try verify_ir.check(allocator, &module, &.{}, report);
+    if (verify_ir.enabled) try verify_ir.check(allocator, module, &.{}, report);
     // Release builds compute facts and drop the checks they rule out; debug builds keep every check.
     const verify = options.facts != .on and options.facts != .off;
     const mode: passes.Mode = switch (options.facts) {
@@ -72,9 +92,9 @@ pub fn build(init: std.process.Init, path: []const u8, options: Options, report:
         .sabotage_widening => .sabotage_widening,
         .sabotage_length => .sabotage_length,
     };
-    var result = if (options.release) try passes.run(allocator, &module, mode) else passes.Result{ .known = &.{}, .plans = &.{} };
-    if (!options.release) result.own = try passes.ownership(allocator, &module);
-    if (verify_ir.enabled) try verify_ir.check(allocator, &module, result.plans, report);
+    var result = if (options.release) try passes.run(allocator, module, mode) else passes.Result{ .known = &.{}, .plans = &.{} };
+    if (!options.release) result.own = try passes.ownership(allocator, module);
+    if (verify_ir.enabled) try verify_ir.check(allocator, module, result.plans, report);
     if (options.show.stats) {
         const format = "mylang-core: inlined {d} calls, unswitched {d} loops, versioned {d} loops, proved {d} checks, vectorized {d} loops\n";
         try report.print(allocator, format, .{ result.counts.inlined, result.counts.unswitched, result.counts.versioned, result.counts.proven, result.counts.vectorized });
@@ -82,11 +102,10 @@ pub fn build(init: std.process.Init, path: []const u8, options: Options, report:
         const o = result.own;
         try report.print(allocator, counting, .{ o.in_place, o.tested, o.copied, o.retains, o.releases, o.elided });
     }
-    const absolute = std.Io.Dir.cwd().realPathFileAlloc(init.io, path, allocator) catch path;
-    const llvm = emit_llvm.emitModule(allocator, &module, .{
-        .locator = .{ .context = &checked.src, .locate = locate },
-        .source_path = absolute,
-        .main = .{ .parameters = try mainParameters(allocator, checked.program), .result = mainResult(checked.program) },
+    const llvm = emit_llvm.emitModule(allocator, module, .{
+        .locator = .{ .context = &unit.src, .locate = locate },
+        .source_path = unit.source_path,
+        .main = unit.main,
         .facts = result.known,
         .verify = verify and options.release,
         .vectors = result.plans,
