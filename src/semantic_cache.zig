@@ -28,7 +28,7 @@ pub const symbolic = generic_cache;
 pub const specializations = generic_specializations;
 /// Version of the M1/M2 mutation-contract encoding that semantic entries embed.
 /// A change invalidates every retained body just like a changed effect contract.
-pub const mutation_contract_version = "mutation-v1";
+pub const mutation_contract_version = "mutation-v2";
 
 /// Observations count actual checked or copied bodies, including changed-source
 /// requests. `checked` increments at the `checkFunction` execution site and

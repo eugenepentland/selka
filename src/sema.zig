@@ -1345,7 +1345,7 @@ const Checker = struct {
         const allocator = self.allocator;
         const src = self.src;
         const sink = self.sink;
-        for (function.signature.parameters) |parameter| {
+        for (function.signature.parameters, 0..) |parameter, position| {
             const name = src.text(parameter.name);
             if (self.active.get(name)) |previous| return sink.failRelated(
                 "E_DUPLICATE_PARAMETER",
@@ -1359,6 +1359,15 @@ const Checker = struct {
             if (try self.topLevel(parameter.name)) return sink.fail(eShadowing, parameter.name, "parameter shadows a top-level function");
             const slot: typed.LocalId = @fromBackingInt(self.locals.items.len);
             const parameter_type = try self.ty(parameter.ty);
+            // ORIGIN-WIDE-1: the mutation and alias analysis names the positions of
+            // aggregate parameters exactly in an `origins.Mask`. An aggregate past it
+            // is a located error, not a conservative answer that would demand `mut`
+            // on every parameter; scalar parameters are never tracked and stay unlimited.
+            if (position >= origins.mask_positions and parameter_type.isAggregate()) return sink.fail(
+                "E_PARAMETER_POSITION",
+                parameter.name,
+                "a list, string, record or other aggregate parameter must be one of a function's first 64 parameters; move it earlier or group parameters into a record",
+            );
             // `mut` promises a write the caller can observe, so it is accepted
             // only on a type that can carry one. Rejecting it here, before any
             // body or call is checked, keeps the declaration out of the published

@@ -728,7 +728,7 @@ test "semantic cache binds the mutation contract version and effects contract" {
     const baseline_checked = cache.statistics.checked;
 
     // A changed mutation-contract encoding must invalidate every retained body.
-    cache.context.mutation_contract = "mutation-v2";
+    cache.context.mutation_contract = "mutation-contract-under-test";
     try compare(t.allocator, &cache, prefix ++ suffix, 42);
     try t.expectEqual(baseline_reused, cache.statistics.reused);
     try t.expectEqual(baseline_checked + 3, cache.statistics.checked);

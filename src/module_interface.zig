@@ -22,12 +22,13 @@
 const std = @import("std");
 const codec = @import("persist_codec.zig");
 const summary = @import("semantic_summary.zig");
+const origins = @import("origins.zig");
 const effect_set = @import("effect_set.zig");
 const source = @import("source.zig");
 const embed = @import("embed.zig");
 
 /// Payload version; bump for any layout or meaning change so old artifacts miss.
-pub const format_version = "module-interface-v4";
+pub const format_version = "module-interface-v5";
 /// File extension of one stored interface.
 pub const extension = ".myi";
 
@@ -349,11 +350,12 @@ pub fn hashFact(hash: *std.crypto.hash.Blake3, fact: summary.Fact) void {
     var bits: [2]u8 = undefined;
     std.mem.writeInt(u16, &bits, fact.graph_mask, .little);
     hash.update(&bits);
-    std.mem.writeInt(u16, &bits, fact.mutates, .little);
-    hash.update(&bits);
+    var mask: [8]u8 = undefined;
+    std.mem.writeInt(origins.Mask, &mask, fact.mutates, .little);
+    hash.update(&mask);
     inline for (.{ fact.return_origin, fact.borrow_origin }) |origin| {
-        std.mem.writeInt(u16, &bits, origin.positions, .little);
-        hash.update(&bits);
+        std.mem.writeInt(origins.Mask, &mask, origin.positions, .little);
+        hash.update(&mask);
         hash.update(&.{@as(u8, @intFromBool(origin.unknown))});
     }
     std.mem.writeInt(u16, &bits, fact.inferred.caller_storage, .little);

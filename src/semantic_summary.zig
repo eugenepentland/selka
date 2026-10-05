@@ -21,7 +21,7 @@ const codec = @import("persist_codec.zig");
 const semantic_key = @import("semantic_key.zig");
 
 /// Payload version; bump for any layout or meaning change so old payloads miss.
-pub const format_version = "check-summaries-v5";
+pub const format_version = "check-summaries-v6";
 
 /// One stored diagnostic without related notes, its span relative to the start
 /// of its function's declaration region.
@@ -45,7 +45,7 @@ pub const Region = struct { len: u32, digest: [32]u8, names: []const semantic_ke
 /// mutation summary without its witness spans, which only locate diagnostics.
 pub const Fact = struct {
     graph_mask: effect_set.Mask = 0,
-    mutates: u16 = 0,
+    mutates: origins.Mask = 0,
     mutates_unknown: bool = false,
     return_origin: origins.Origin = .{},
     borrow_origin: origins.Origin = .{},

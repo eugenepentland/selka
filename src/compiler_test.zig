@@ -1021,3 +1021,37 @@ test "a checked project lowers and emits the same program after its merged synta
     defer testing.allocator.free(released);
     try testing.expectEqualStrings(kept, released);
 }
+
+/// A library with `public def wide(a0: int, ..., items: mut list[int])` of `count`
+/// parameters whose body reads every one and appends to `items`.
+fn wideSource(allocator: std.mem.Allocator, count: usize) ![]u8 {
+    var text: std.Io.Writer.Allocating = .init(allocator);
+    defer text.deinit();
+    try text.writer.writeAll("public def wide(");
+    for (0..count - 1) |i| try text.writer.print("a{d}: int, ", .{i});
+    try text.writer.writeAll("items: mut list[int]) -> None:\n    items.append(0");
+    for (0..count - 1) |i| try text.writer.print(" + a{d}", .{i});
+    try text.writer.writeAll(")\n");
+    return text.toOwnedSlice();
+}
+
+/// Check `wideSource(count)` as a library; the first diagnostic's code, or "" when it checks.
+fn wideCheck(count: usize) ![]const u8 {
+    const text = try wideSource(testing.allocator, count);
+    defer testing.allocator.free(text);
+    var compilation = try language.Compilation.init(testing.allocator, "wide.my", text);
+    defer compilation.deinit();
+    try compilation.parse();
+    compilation.checkLibrary() catch |err| switch (err) {
+        error.SourceError => return compilation.diagnostics.items[0].code,
+        else => return err,
+    };
+    return "";
+}
+
+// spec: ORIGIN-WIDE-1
+test "a mut collection at parameter 17 or 64 checks, and one at parameter 65 is a located error" {
+    try testing.expectEqualStrings("", try wideCheck(17));
+    try testing.expectEqualStrings("", try wideCheck(64));
+    try testing.expectEqualStrings("E_PARAMETER_POSITION", try wideCheck(65));
+}
