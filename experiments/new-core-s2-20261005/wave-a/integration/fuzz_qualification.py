@@ -27,6 +27,7 @@ HARNESSES = {
     "rc": "experiments/new-core-s1-20261005/lane-o/rc_fuzz.py",
     "rebinding": "experiments/new-core-s2-20261005/wave-a/fuzz_rebinding.py",
     "iteration": "experiments/new-core-s2-20261005/wave-b/fuzz_iteration.py",
+    "number": "experiments/new-core-s2-20261005/wave-b/s2-t2/fuzz_number.py",
 }
 
 

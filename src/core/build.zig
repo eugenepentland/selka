@@ -1608,10 +1608,7 @@ const FnBuilder = struct {
                 if (self.mb.module.kind(parts_type) != .list or self.mb.module.compound(parts_type).list != .str) return self.mb.refuse("join of a list that is not of strings", span);
                 return self.runtimeCall(flags.str_join_symbol, &.{ .str, parts_type }, .str, &.{ try self.receiverOf(owner), parts }, span);
             },
-            .parse_int => {
-                if (receiver_type != .str) return self.mb.refuse("parse_int receiver", span);
-                return self.emit(.{ .op = .str_parse_int, .ty = ty, .a = try self.receiverOf(owner), .span = span });
-            },
+            .parse_int => return build_text.number(@TypeOf(self), self, operation, ty, span),
             else => return self.mb.refuse(@tagName(kind), span),
         }
     }

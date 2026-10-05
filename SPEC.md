@@ -1891,3 +1891,5 @@ The separate `mylang-core` executable (`zig build core`, `docs/design/new-core-i
 - [NEW-CORE-TEXT-BYTES-1] The new core shares counted str/bytes leaf storage, preserves UTF-8 scalar indexing and slices, maintains value semantics through consuming appends, and lowers split, join, search, encode and byte XOR without linking the old runtime.
 
 - [NEW-CORE-TEXT-BYTES-2] An immutable byte reduction may widen u8 loads to bounded integer lanes, including XOR of nonnegative bounded operands; the scalar tail and verify assertions preserve the scalar result.
+
+- [NEW-CORE-NUMBER-1] Integer text parsing reads plain decimal inputs of at most sixteen digits in safe one-to-eight-byte SWAR words; whitespace, separators, long numbers and invalid inputs use the full pinned grammar. Signed and unsigned decimal formatting and printing write two digits per division with exact zero, sign and 64-bit edge results.
