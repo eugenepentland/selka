@@ -111,6 +111,8 @@ const ModuleBuilder = struct {
     /// Checked record and union type → IR type. An entry is made before the type's fields
     /// are mapped, so a recursive type (through a boxed field) finds itself.
     types: std.AutoHashMapUnmanaged(typed.Type, ir.Type) = .empty,
+    /// The index of the runtime's string comparison once a `str ==` declared it.
+    str_eq: ?u32 = null,
 
     fn refuse(self: *ModuleBuilder, reason: []const u8, span: u32) Error {
         self.refusal.* = .{ .reason = reason, .span = span };
@@ -196,6 +198,16 @@ const ModuleBuilder = struct {
         if (record.shape.domain != null) return self.refuse("domain type", span);
         if (record.isManagedRecord()) return self.refuse("class type", span);
         return self.mapRecord(ty, record, span);
+    }
+
+    /// The IR index of the runtime's string comparison, declared as an extern on first use.
+    fn strEqual(self: *ModuleBuilder) Error!u32 {
+        if (self.str_eq) |index| return index;
+        const params = try self.allocator.dupe(ir.Type, &.{ .str, .str });
+        const index: u32 = @intCast(self.module.functions.items.len);
+        try self.module.functions.append(self.allocator, .{ .name = flags.str_eq_symbol, .signature = .{ .params = params, .ret = .bool, .linkage = .extern_c } });
+        self.str_eq = index;
+        return index;
     }
 
     /// Reserve the IR type of a checked record or union before its parts are mapped.
@@ -532,15 +544,41 @@ const FnBuilder = struct {
             .loop => |loop| try self.loopStatement(loop.id, loop.condition, loop.body, loop.step),
             .loop_exit => |exit| {
                 for (self.loops.items) |targets| if (targets.id == exit.target) {
-                    if (exit.arenas.len != 0) return self.mb.refuse("arena loop exit", span);
                     return self.jump(if (exit.continuing) targets.latch else targets.exit);
                 };
                 return self.mb.refuse("loop exit target", span);
             },
             .match => |m| try self.matchStatement(m.value, m.arms, span),
-            .assertion => return self.mb.refuse("assertion", span),
-            .with_scope => return self.mb.refuse("with scope", span),
+            .assertion => |check| try self.assertStatement(check),
+            // The interim arena rule (docs/design/new-core-s1.md §11): a `with arena()` block is a plain
+            // block, and `n.escape(v)` is `v`; reference counting frees at last use. The checker has
+            // already rejected every program that lets an arena value outlive its block.
+            .with_scope => |scope| {
+                if (scope.resource != null) return self.mb.refuse("with scope over a resource", span);
+                try self.statement(scope.body);
+            },
         }
+    }
+
+    /// `assert condition[, message]` (and the `@requires`, `@ensures` and `@invariant` clauses the
+    /// checker places as assertions): a false condition traps with the clause's code and message at
+    /// the condition's position, as the old core does. A message computed from values is refused.
+    fn assertStatement(self: *FnBuilder, check: typed.Assertion) Error!void {
+        const condition_span: u32 = @intCast(self.nodeOf(check.condition).span.start);
+        if (check.message_value != null) return self.mb.refuse("assertion with a message value", condition_span);
+        const condition = try self.expression(check.condition);
+        if (self.current == null) return;
+        const failed = try self.newBlock();
+        const passed = try self.newBlock();
+        try self.branch(condition, passed, failed, condition_span);
+        try self.seal(failed);
+        try self.seal(passed);
+        self.current = failed;
+        const message = self.mb.module.strings.items.len;
+        try self.mb.module.strings.append(self.allocator(), check.message);
+        const data = flags.assertion_trap | (@as(u64, @backingInt(check.kind)) << 32) | message;
+        _ = try self.emit(.{ .op = .@"unreachable", .ty = .void, .data = data, .span = condition_span });
+        self.current = passed;
     }
 
     fn branchStatement(self: *FnBuilder, condition: typed.NodeId, then_body: typed.StatementId, else_body: ?typed.StatementId) Error!void {
@@ -878,6 +916,7 @@ const FnBuilder = struct {
                 const capacity = try self.expression(acquire.capacity);
                 return self.emit(.{ .op = .list_new, .ty = try self.typeOf(id), .a = capacity, .span = span });
             },
+            .arena_escape => |value| return self.expression(value),
             .variant => |case| return self.variantMake(id, case.tag, case.value, span),
             .record => |fields| return self.recordMake(id, fields, span),
             .update => |update| return self.recordUpdate(update.base, update.fields, span),
@@ -1118,7 +1157,7 @@ const FnBuilder = struct {
     }
 
     /// `==` and `!=` of two records, unions (enums, `Option`, `Result`) or lists: structural,
-    /// never a pointer comparison. A `str` (S2's text runtime) and a recursive value are refused.
+    /// never a pointer comparison. A `str` compares by bytes through the runtime; a recursive value is refused.
     fn aggregateCompare(self: *FnBuilder, op: typed.BinaryOp, left: ir.Ref, right: ir.Ref, span: u32) Error!ir.Ref {
         if (op != .eq and op != .ne) return self.mb.refuse(if (op == .add) "concatenation" else "operator on an aggregate value", span);
         const same = try self.equal(left, right, span);
@@ -1146,7 +1185,11 @@ const FnBuilder = struct {
     fn equal(self: *FnBuilder, a: ir.Ref, b: ir.Ref, span: u32) Error!ir.Ref {
         const m = self.mb.module;
         const ty = self.typeOfRef(a);
-        if (ty == .str) return self.mb.refuse("str equality", span);
+        if (ty == .str) {
+            const callee = try self.mb.strEqual();
+            const data = try self.extraSlice(&.{ a, b });
+            return self.emit(.{ .op = .call, .ty = .bool, .a = @fromBackingInt(@intCast(callee)), .data = data, .span = span });
+        }
         // A recursive value would need a function that calls itself, not an expansion in place.
         if (self.recursive(ty, 0)) return self.mb.refuse("equality of a recursive value", span);
         if (ty == .f64) return self.emit(.{ .op = .fcmp, .ty = .bool, .a = a, .b = b, .data = @backingInt(ir.Predicate.eq), .span = span });

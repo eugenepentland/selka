@@ -1,0 +1,35 @@
+module v_str_eq
+
+
+record Tag:
+    name: str
+    weight: int
+
+
+union Label:
+    word: str,
+    count: int,
+    none
+
+
+def same(a: str, b: str) -> bool:
+    return a == b
+
+
+def first_match(words: list[str], wanted: str) -> int:
+    for i in range(len(words)):
+        if words[i] == wanted:
+            return i
+    return -1
+
+
+def main(out: Stream) -> int:
+    out.print(same("abc", "abc"), same("abc", "abd"), same("", ""), same("a", ""), "x" != "y", "x" != "x")
+    out.print(same("héllo", "héllo"), same("héllo", "hello"), same("ab", "abc"))
+    xs = ["one", "two", "three"]
+    ys = ["one", "two", "three"]
+    out.print(xs == ys, xs == ["one", "two"], xs != ["one", "two", "four"])
+    out.print(Tag(name="n", weight=1) == Tag(name="n", weight=1), Tag(name="n", weight=1) == Tag(name="m", weight=1))
+    out.print(Label.word("q") == Label.word("q"), Label.word("q") == Label.word("r"), Label.word("q") == Label.none, Label.count(1) == Label.count(1))
+    out.print(first_match(xs, "three"), first_match(xs, "four"))
+    return 0

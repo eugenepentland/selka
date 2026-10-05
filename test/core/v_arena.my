@@ -1,0 +1,62 @@
+module v_arena
+
+
+record Row:
+    id: int
+    cells: list[int]
+
+
+def squares(n: int) -> list[int]:
+    out: list[int] = []
+    for i in range(n):
+        out.append(i * i)
+    return out
+
+
+def total(xs: list[int]) -> int:
+    sum = 0
+    for x in xs:
+        sum += x
+    return sum
+
+
+def staged(rounds: int) -> int:
+    kept: list[int] = []
+    count = 0
+    for round in range(rounds):
+        with arena() as scratch:
+            built = squares(round + 3)
+            count += total(built)
+            if round == rounds - 1:
+                kept = scratch.escape(built)
+    return count * 100 + len(kept)
+
+
+def nested(n: int) -> Row:
+    result = Row(id=0, cells=[])
+    with arena() as outer:
+        row = Row(id=n, cells=squares(n))
+        with arena():
+            inner = squares(n + 1)
+            row.cells.append(total(inner))
+        result = outer.escape(row)
+    return result
+
+
+def early(n: int) -> int:
+    for i in range(n):
+        with arena():
+            if i == 2:
+                break
+            if i == 0:
+                continue
+    return n
+
+
+def main(out: Stream) -> int:
+    out.print(staged(5))
+    row = nested(4)
+    out.print(row.id, len(row.cells), total(row.cells))
+    with arena():
+        out.print(early(6))
+    return 0

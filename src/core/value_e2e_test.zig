@@ -306,7 +306,7 @@ test "the value fixtures end with no block live under MYL_CORE_LEAKCHECK=1, debu
     var dir = std.testing.tmpDir(.{});
     defer dir.cleanup();
     const root = try scratch(arena.allocator(), dir);
-    const names = [_][]const u8{ "v_records", "v_unions", "v_lists", "v_mut", "v_wide", "v_wide_managed", "v_nested", "v_mut_window", "v_equality" };
+    const names = [_][]const u8{ "v_records", "v_unions", "v_lists", "v_mut", "v_wide", "v_wide_managed", "v_nested", "v_mut_window", "v_equality", "v_mut_rebind", "v_arena", "v_str_eq" };
     for (names) |name| {
         try std.testing.expectEqualStrings("", try leakReport(arena.allocator(), root, name, .debug));
         try std.testing.expectEqualStrings("", try leakReport(arena.allocator(), root, name, .release));
@@ -347,5 +347,48 @@ test "a main that returns an Err reports it with the old core's error return tra
             "v_trace.my:57:9   v_trace::main     ? propagated\n",
         };
         for (lines) |line| try std.testing.expect(std.mem.indexOf(u8, failed.stderr, line) != null);
+    }
+}
+
+const v_str_eq_output =
+    \\True False True False True False
+    \\True False False
+    \\True False True
+    \\True False
+    \\True False False True
+    \\2 -1
+    \\
+;
+
+// spec-case: NEW-CORE-STR-1
+test "str == and != compare bytes, inside records, unions and lists, as the old core does" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    try std.testing.expect(try matches(arena.allocator(), "v_str_eq", v_str_eq_output, 0));
+}
+
+const v_arena_output =
+    \\19507
+    \\4 5 44
+    \\6
+    \\
+;
+
+// spec-case: NEW-CORE-ARENA-1
+test "with arena() blocks, escape, break and continue out of them print what the old core prints" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    try std.testing.expect(try matches(arena.allocator(), "v_arena", v_arena_output, 0));
+}
+
+// spec-case: NEW-CORE-ASSERT-1
+test "a failed assert traps R_ASSERT with its message at the condition, flushing the output before it, at every level" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    try std.testing.expect(try matches(arena.allocator(), "v_assert", "6\n4\n", 1));
+    for ([_]Mode{ .debug, .release, .verify }) |mode| {
+        const failed = try stderrOf(arena.allocator(), "v_assert", mode);
+        try std.testing.expect(std.mem.indexOf(u8, failed, "v_assert.my:14:16: error[R_ASSERT]: native execution failed: limit exceeded\n  in v_assert::checked_sum at ") != null);
+        try std.testing.expect(std.mem.indexOf(u8, failed, "MYLANG-TRAP {\"version\":1,\"operation\":\"limit exceeded\"}") != null);
     }
 }

@@ -308,8 +308,23 @@ const text_equality =
     \\    return a == b
     \\
     \\
+    \\def differ(a: str, b: str) -> bool:
+    \\    return a != b
+    \\
+    \\
     \\def main(out: Stream) -> int:
-    \\    out.print(same("a", "b"))
+    \\    out.print(same("a", "b"), differ("a", "b"))
+    \\    return 0
+    \\
+;
+
+const text_concatenation =
+    \\def joined(a: str, b: str) -> str:
+    \\    return a + b
+    \\
+    \\
+    \\def main(out: Stream) -> int:
+    \\    out.print(joined("a", "b"))
     \\    return 0
     \\
 ;
@@ -337,7 +352,7 @@ const callback_in_index =
 ;
 
 // spec-case: NEW-CORE-PLACE-1
-test "an append to a list element is a push onto the element and a list_set of it; a str comparison and a read through a place a callback rewrites are refused" {
+test "an append to a list element is a push onto the element and a list_set of it; a str concatenation and a read through a place a callback rewrites are refused" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const text = try support.irText(arena.allocator(), append_to_element);
@@ -345,8 +360,8 @@ test "an append to a list element is a push onto the element and a list_set of i
     try std.testing.expect(contains(text, "list_push list[i64]"));
     try std.testing.expect(contains(text, "list_set.exact list[list[i64]]"));
     var refusal: build.Refusal = .{};
-    try std.testing.expectError(error.Unsupported, support.buildSource(arena.allocator(), text_equality, &refusal));
-    try std.testing.expectEqualStrings("str equality", refusal.reason);
+    try std.testing.expectError(error.Unsupported, support.buildSource(arena.allocator(), text_concatenation, &refusal));
+    try std.testing.expectEqualStrings("concatenation", refusal.reason);
     try std.testing.expectError(error.Unsupported, support.buildSource(arena.allocator(), callback_in_index, &refusal));
     try std.testing.expectEqualStrings("write to a receiver's place while its arguments are evaluated", refusal.reason);
 }
@@ -502,4 +517,61 @@ test "a rebinding of a mut list parameter on only some of the paths that join, o
     try std.testing.expectEqualStrings("conditional rebinding of a mut collection parameter", refusal.reason);
     try std.testing.expectError(error.Unsupported, support.buildSource(arena.allocator(), loop_rebind, &refusal));
     try std.testing.expectEqualStrings("rebinding of a mut collection parameter in a loop", refusal.reason);
+}
+
+// spec: NEW-CORE-STR-1
+test "str == and != call the runtime's byte comparison, an extern the module declares once" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const text = try support.irText(arena.allocator(), text_equality);
+    const same = text[std.mem.indexOf(u8, text, "fn same").?..std.mem.indexOf(u8, text, "fn differ").?];
+    try std.testing.expect(contains(same, "call bool myl_core_str_eq(param0, param1)"));
+    const differ = text[std.mem.indexOf(u8, text, "fn differ").?..std.mem.indexOf(u8, text, "fn myl_core_str_eq").?];
+    try std.testing.expect(contains(differ, "call bool myl_core_str_eq(param0, param1)"));
+    try std.testing.expect(contains(differ, "not bool"));
+    // One declaration serves both.
+    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, text, "fn myl_core_str_eq(str, str) -> bool extern"));
+}
+
+const arena_scopes =
+    \\def main(out: Stream) -> int:
+    \\    kept: list[int] = []
+    \\    with arena() as scratch:
+    \\        built = [1, 2, 3]
+    \\        kept = scratch.escape(built)
+    \\    out.print(len(kept))
+    \\    return 0
+    \\
+;
+
+// spec: NEW-CORE-ARENA-1
+test "a with arena() block is a plain block and n.escape(v) is v: no region operation reaches the IR" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const text = try support.irText(arena.allocator(), arena_scopes);
+    try std.testing.expect(contains(text, "list_push list[i64]"));
+    try std.testing.expect(contains(text, "list_len"));
+    try std.testing.expect(!contains(text, "call"));
+}
+
+const assertions =
+    \\def clamp(x: int) -> int:
+    \\    assert x >= 0, "negative"
+    \\    return x
+    \\
+    \\
+    \\def main(out: Stream) -> int:
+    \\    out.print(clamp(3))
+    \\    return 0
+    \\
+;
+
+// spec: NEW-CORE-ASSERT-1
+test "an assert is a branch on its condition to a block that ends in a trap carrying the message" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const text = try support.irText(arena.allocator(), assertions);
+    const clamp = text[std.mem.indexOf(u8, text, "fn clamp").?..];
+    try std.testing.expect(contains(clamp, "branch"));
+    try std.testing.expect(contains(clamp, "unreachable"));
 }
