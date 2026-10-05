@@ -200,9 +200,8 @@ const ModuleState = struct {
             try self.externs.print(self.allocator, "{s}{s}", .{ if (first) "" else ", ", try self.llvmType(param) });
             first = false;
         }
-        // The runtime's string comparison only reads its arguments, so LLVM may merge and hoist calls.
-        const reads_only = std.mem.eql(u8, c_abi.symbol(function.name), flags.str_eq_symbol);
-        try self.externs.appendSlice(self.allocator, if (reads_only) ") nounwind willreturn memory(argmem: read)\n" else ") nounwind\n");
+        // The runtime's string helpers only read their arguments, so LLVM may merge and hoist calls.
+        try self.externs.appendSlice(self.allocator, if (flags.readsOnly(c_abi.symbol(function.name))) ") nounwind willreturn memory(argmem: read)\n" else ") nounwind\n");
     }
 
     /// A `!range` node for `[lo, hi]` in a `bits`-wide integer.

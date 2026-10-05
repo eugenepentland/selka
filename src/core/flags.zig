@@ -1,4 +1,5 @@
 //! Operand conventions the builder and the emitter share on top of `ir.zig`'s shapes.
+const std = @import("std");
 
 /// `list_get.data` of the read a `pop` starts with: a failing index is reported as the pop
 /// of an empty list (`R_LIST_BOUNDS`, operation `pop`), as the old core does.
@@ -17,3 +18,11 @@ pub const assertion_trap: u64 = 1 << 63;
 /// The runtime's string comparison, declared in a module as an `extern_c` function on first use
 /// (`build.zig`) and emitted with `memory(argmem: read)` attributes (`emit_llvm.zig`).
 pub const str_eq_symbol = "myl_core_str_eq";
+
+/// The runtime's count of a string's Unicode scalars (`len(text)`), declared like `str_eq_symbol`.
+pub const str_chars_symbol = "myl_core_str_chars";
+
+/// Whether `symbol` names a runtime function that only reads the blocks it is passed.
+pub fn readsOnly(symbol: []const u8) bool {
+    return std.mem.eql(u8, symbol, str_eq_symbol) or std.mem.eql(u8, symbol, str_chars_symbol);
+}

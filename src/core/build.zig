@@ -111,8 +111,8 @@ const ModuleBuilder = struct {
     /// Checked record and union type → IR type. An entry is made before the type's fields
     /// are mapped, so a recursive type (through a boxed field) finds itself.
     types: std.AutoHashMapUnmanaged(typed.Type, ir.Type) = .empty,
-    /// The index of the runtime's string comparison once a `str ==` declared it.
-    str_eq: ?u32 = null,
+    /// The runtime functions the module declared (`runtimeFunction`), by symbol.
+    runtime: std.StringHashMapUnmanaged(u32) = .empty,
 
     fn refuse(self: *ModuleBuilder, reason: []const u8, span: u32) Error {
         self.refusal.* = .{ .reason = reason, .span = span };
@@ -200,13 +200,13 @@ const ModuleBuilder = struct {
         return self.mapRecord(ty, record, span);
     }
 
-    /// The IR index of the runtime's string comparison, declared as an extern on first use.
-    fn strEqual(self: *ModuleBuilder) Error!u32 {
-        if (self.str_eq) |index| return index;
-        const params = try self.allocator.dupe(ir.Type, &.{ .str, .str });
+    /// The IR index of the runtime function `symbol`, declared in the module as an `extern_c`
+    /// function with these parameters and result on first use.
+    fn runtimeFunction(self: *ModuleBuilder, symbol: []const u8, params: []const ir.Type, ret: ir.Type) Error!u32 {
+        if (self.runtime.get(symbol)) |index| return index;
         const index: u32 = @intCast(self.module.functions.items.len);
-        try self.module.functions.append(self.allocator, .{ .name = flags.str_eq_symbol, .signature = .{ .params = params, .ret = .bool, .linkage = .extern_c } });
-        self.str_eq = index;
+        try self.module.functions.append(self.allocator, .{ .name = symbol, .signature = .{ .params = try self.allocator.dupe(ir.Type, params), .ret = ret, .linkage = .extern_c } });
+        try self.runtime.put(self.allocator, symbol, index);
         return index;
     }
 
@@ -910,13 +910,14 @@ const FnBuilder = struct {
                 if (value != .none and self.function.inst(value).ty == .f64) return value;
                 return self.mb.refuse("unwrap", span);
             },
-            .call => |c| return self.call(c.function, c.arguments, c.evaluation != null, span),
+            .call => |c| return self.call(c.function, c.arguments, if (c.evaluation) |e| e.body else null, span),
             .buffer_operation => |operation| return self.bufferOperation(operation, try self.typeOf(id), span, out),
             .acquire_buffer => |acquire| {
                 const capacity = try self.expression(acquire.capacity);
                 return self.emit(.{ .op = .list_new, .ty = try self.typeOf(id), .a = capacity, .span = span });
             },
             .arena_escape => |value| return self.expression(value),
+            .length => |operand| return self.stringLength(operand, span),
             .variant => |case| return self.variantMake(id, case.tag, case.value, span),
             .record => |fields| return self.recordMake(id, fields, span),
             .update => |update| return self.recordUpdate(update.base, update.fields, span),
@@ -1186,7 +1187,7 @@ const FnBuilder = struct {
         const m = self.mb.module;
         const ty = self.typeOfRef(a);
         if (ty == .str) {
-            const callee = try self.mb.strEqual();
+            const callee = try self.mb.runtimeFunction(flags.str_eq_symbol, &.{ .str, .str }, .bool);
             const data = try self.extraSlice(&.{ a, b });
             return self.emit(.{ .op = .call, .ty = .bool, .a = @fromBackingInt(@intCast(callee)), .data = data, .span = span });
         }
@@ -1355,10 +1356,21 @@ const FnBuilder = struct {
         return self.mb.refuse("float bits", span);
     }
 
-    fn call(self: *FnBuilder, callee: typed.FunctionId, argument_nodes: []const typed.NodeId, has_evaluation: bool, span: u32) Error!ir.Ref {
-        if (has_evaluation) return self.mb.refuse("call evaluation body", span);
+    /// A call. `evaluation` is the checker's block that binds the arguments of a keyword call
+    /// to temporaries in source order; it runs first and the arguments read the temporaries.
+    fn call(self: *FnBuilder, callee: typed.FunctionId, argument_nodes: []const typed.NodeId, evaluation: ?typed.StatementId, span: u32) Error!ir.Ref {
         const index = try self.mb.functionIndex(callee);
         const mutated = self.mb.program.functions[@backingInt(callee)].signature.declared_mutates;
+        if (evaluation) |body| {
+            // A `mut` argument the checker could not leave as the caller's variable is a temporary,
+            // which the callee's final value would be written back to instead of the place.
+            for (mutated) |position| {
+                const argument = self.nodeOf(argument_nodes[position]);
+                if (argument.data == .local and std.mem.eql(u8, self.checked.scope.locals[@backingInt(argument.data.local)].name, "<argument>")) return self.mb.refuse("keyword call with a mut argument that is not a local", span);
+            }
+            try self.statement(body);
+            if (self.current == null) return .none;
+        }
         var arguments: std.ArrayList(ir.Ref) = .empty;
         defer arguments.deinit(self.allocator());
         // A `mut` argument is the place the callee's final value is written back to. The callee
@@ -1407,7 +1419,10 @@ const FnBuilder = struct {
         const argument_nodes = operation.arguments;
         const receiver_type = self.ssa.types.items[self.local(owner)];
         switch (kind) {
-            .length => return self.emit(.{ .op = if (receiver_type == .str) .str_len else .list_len, .ty = .u64, .a = try self.receiverOf(owner, span), .span = span }),
+            .length => {
+                const receiver = try self.receiverOf(owner, span);
+                return if (receiver_type == .str) self.stringChars(receiver, span) else self.emit(.{ .op = .list_len, .ty = .u64, .a = receiver, .span = span });
+            },
             .read => {
                 if (receiver_type == .str) return self.mb.refuse("string index", span);
                 const index = try self.expression(argument_nodes[0]);
@@ -1449,6 +1464,19 @@ const FnBuilder = struct {
                 try self.writeOwner(owner, rest, span);
                 return element;
             },
+            // `xs.clear()` replaces the list with an empty one; the old value dies by ownership.
+            .clear => {
+                if (self.mb.module.kind(receiver_type) != .list) return self.mb.refuse("clear of a non-list", span);
+                try self.guardPlace(self.local(owner), span);
+                const empty = try self.emit(.{ .op = .list_new, .ty = receiver_type, .a = try self.constant(.i64, 0), .span = span });
+                try self.writeOwner(owner, empty, span);
+                return .none;
+            },
+            // A copy of a value is the value: the next write to either copies (copy on write).
+            .copy => {
+                if (self.mb.module.kind(receiver_type) != .list) return self.mb.refuse("copy of a non-list", span);
+                return self.receiverOf(owner, span);
+            },
             // A write to an iterated place while the loop runs is refused (`guardPlace`), so the
             // length cannot change and the check cannot fail.
             .iteration_check => {
@@ -1461,6 +1489,22 @@ const FnBuilder = struct {
             },
             else => return self.mb.refuse(@tagName(kind), span),
         }
+    }
+
+    /// `len(text)` of a string that is not a local (a field, an element, a call result).
+    fn stringLength(self: *FnBuilder, operand: typed.NodeId, span: u32) Error!ir.Ref {
+        const value = try self.expression(operand);
+        if (self.current == null) return .none;
+        if (self.typeOfRef(value) != .str) return self.mb.refuse("length of a non-string", span);
+        const chars = try self.stringChars(value, span);
+        return self.emit(.{ .op = .convert, .ty = .i64, .a = chars, .check = .exact, .span = span });
+    }
+
+    /// The length of string `value` in Unicode scalars, which is what `len` counts (not bytes):
+    /// the runtime counts the bytes that do not continue a scalar.
+    fn stringChars(self: *FnBuilder, value: ir.Ref, span: u32) Error!ir.Ref {
+        const callee = try self.mb.runtimeFunction(flags.str_chars_symbol, &.{.str}, .u64);
+        return self.emit(.{ .op = .call, .ty = .u64, .a = @fromBackingInt(@intCast(callee)), .data = try self.extraSlice(&.{value}), .span = span });
     }
 
     /// A string literal: the checker spells it as code points, stored here as UTF-8.

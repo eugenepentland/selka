@@ -306,7 +306,7 @@ test "the value fixtures end with no block live under MYL_CORE_LEAKCHECK=1, debu
     var dir = std.testing.tmpDir(.{});
     defer dir.cleanup();
     const root = try scratch(arena.allocator(), dir);
-    const names = [_][]const u8{ "v_records", "v_unions", "v_lists", "v_mut", "v_wide", "v_wide_managed", "v_nested", "v_mut_window", "v_equality", "v_mut_rebind", "v_arena", "v_str_eq" };
+    const names = [_][]const u8{ "v_records", "v_unions", "v_lists", "v_mut", "v_wide", "v_wide_managed", "v_nested", "v_mut_window", "v_equality", "v_mut_rebind", "v_arena", "v_str_eq", "v_methods" };
     for (names) |name| {
         try std.testing.expectEqualStrings("", try leakReport(arena.allocator(), root, name, .debug));
         try std.testing.expectEqualStrings("", try leakReport(arena.allocator(), root, name, .release));
@@ -391,4 +391,21 @@ test "a failed assert traps R_ASSERT with its message at the condition, flushing
         try std.testing.expect(std.mem.indexOf(u8, failed, "v_assert.my:14:16: error[R_ASSERT]: native execution failed: limit exceeded\n  in v_assert::checked_sum at ") != null);
         try std.testing.expect(std.mem.indexOf(u8, failed, "MYLANG-TRAP {\"version\":1,\"operation\":\"limit exceeded\"}") != null);
     }
+}
+
+const v_methods_output =
+    \\7
+    \\3 4
+    \\1 2 1
+    \\1 1
+    \\43
+    \\202
+    \\
+;
+
+// spec: NEW-CORE-LIST-3
+test "len of a string counts scalars, clear and copy keep value semantics, and keyword calls evaluate in source order" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    try std.testing.expect(try matches(arena.allocator(), "v_methods", v_methods_output, 0));
 }

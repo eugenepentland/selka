@@ -1006,13 +1006,21 @@ void myl_core_main_error_str(myl_block *text) {
 }
 
 /* ---- lane V helpers (checkpoint V-2) ---------------------------------------------
- * Appended for the builder's `assert` and `str ==`; the rest of the file is lane O's. */
+ * Appended for the builder's `assert`, `str ==` and `len(str)`; the rest of the file is lane O's. */
 
 /* `a == b` for two strings: the same block, or the same bytes. */
 bool myl_core_str_eq(const myl_block *a, const myl_block *b) {
     if (a == b) return true;
     if (a->len != b->len) return false;
     return memcmp((const unsigned char *)a + MYL_HEADER, (const unsigned char *)b + MYL_HEADER, (size_t)a->len) == 0;
+}
+
+/* `len(text)`: the Unicode scalars of a string, the bytes that do not continue one. */
+uint64_t myl_core_str_chars(const myl_block *text) {
+    const unsigned char *bytes = (const unsigned char *)text + MYL_HEADER;
+    uint64_t scalars = 0;
+    for (int64_t i = 0; i < text->len; ++i) scalars += (bytes[i] & 0xC0) != 0x80;
+    return scalars;
 }
 
 /* A failed `assert`, `@requires`, `@ensures` or `@invariant`: the old core's report. The site's
