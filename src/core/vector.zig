@@ -627,7 +627,7 @@ const Writer = struct {
         for (self.e.plan.body) |ref| {
             const inst = self.f.inst(ref);
             if (inst.op != .list_get or inst.ty != .i64) continue;
-            const elements = self.e.known.lists[self.f.resolve(inst.a).index()].elements orelse return false;
+            const elements = self.e.known.aggregates.lists[self.f.resolve(inst.a).index()].elements orelse return false;
             if (elements.lo < 0 or elements.hi > 0xffff) return false;
         }
         return true;

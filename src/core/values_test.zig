@@ -122,7 +122,7 @@ test "records: make, get and set in registers, inline list elements read by fiel
     // Small records are struct values; the six-word one crosses the call in memory.
     try std.testing.expect(contains(run.llvm, "insertvalue { i64, i1, i32 }"));
     try std.testing.expect(contains(run.llvm, "extractvalue { i64, i1, i32 }"));
-    try std.testing.expect(contains(run.llvm, "define internal void @\"my.grow\"(ptr noalias sret([48 x i8]) align 8 %ret, ptr noalias readonly align 8 %p0.mem)"));
+    try std.testing.expect(contains(run.llvm, "define internal void @\"my.grow\"(ptr noalias sret([48 x i8]) align 8 %ret, ptr noalias readonly align 8 %p0)"));
     // The nested field is one GEP at its offset from the element slot, stride 24.
     try std.testing.expect(contains(run.llvm, "getelementptr inbounds [24 x i8]"));
     try std.testing.expect(contains(run.llvm, ", i64 20\n"));

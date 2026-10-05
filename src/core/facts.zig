@@ -105,6 +105,9 @@ pub const ListFact = struct {
     /// The list's length is `max(length, 0)` for this value.
     length: ir.Ref = .none,
     elements: ?Interval = null,
+    /// The list's length lies in this interval: a new list is empty, a push adds one, a pop
+    /// removes one, a write or copy keeps it. A fact about the value, like every list fact.
+    len: ?Interval = null,
 };
 
 /// `value <= len(list)` (`<` when `strict`) for a list parameter. A parameter is one
@@ -128,11 +131,19 @@ pub const LengthBound = struct {
     }
 };
 
+/// What is known about lists and records, per instruction.
+pub const Aggregates = struct {
+    lists: []ListFact,
+    /// The interval of each field of a record value (integers and booleans; other fields have
+    /// none), through `record_make`, `record_set` and phis. Null when unknown.
+    fields: []?[]const ?Interval,
+};
+
 /// The facts of one function.
 pub const Facts = struct {
     /// Per instruction: its interval (integers and booleans), null when unknown or unreachable.
     ranges: []?Interval,
-    lists: []ListFact,
+    aggregates: Aggregates,
     /// Per instruction: the interval of a float value, null when unknown (it may be NaN or infinite).
     floats: []?FloatInterval,
     /// Per block: whether any execution reaches it.
@@ -493,6 +504,7 @@ fn recompute(a: *Analysis, ref: ir.Ref, block: ir.BlockId, changes: []u8) bool {
             changed = true;
         }
     }
+    if (recomputeAggregates(a, ref, block, changes)) changed = true;
     if (f.inst(ref).ty != .f64) return changed;
     const old_float = a.facts.floats[ref.index()];
     var next_float = transferFloat(a, ref, block);
@@ -516,16 +528,20 @@ pub fn analyze(arena: std.mem.Allocator, f: *ir.Function, options: Options) Erro
         .shape = try shape(arena, f),
         .facts = .{
             .ranges = try arena.alloc(?Interval, f.insts.items.len),
-            .lists = try arena.alloc(ListFact, f.insts.items.len),
+            .aggregates = .{
+                .lists = try arena.alloc(ListFact, f.insts.items.len),
+                .fields = try arena.alloc(?[]const ?Interval, f.insts.items.len),
+            },
             .floats = try arena.alloc(?FloatInterval, f.insts.items.len),
             .reachable = try arena.alloc(bool, f.blocks.items.len),
             .bounds = try arena.alloc(?LengthBound, f.insts.items.len),
         },
     };
+    @memset(a.facts.aggregates.fields, null);
     @memset(a.facts.bounds, null);
     @memset(a.facts.ranges, null);
     @memset(a.facts.floats, null);
-    @memset(a.facts.lists, .{});
+    @memset(a.facts.aggregates.lists, .{});
     try findCounted(&a);
     const changes = try arena.alloc(u8, f.insts.items.len);
     @memset(changes, 0);
@@ -560,8 +576,9 @@ pub fn analyze(arena: std.mem.Allocator, f: *ir.Function, options: Options) Erro
     if (converged) mark(&a, options.fold) else {
         @memset(a.facts.ranges, null);
         @memset(a.facts.floats, null);
-        @memset(a.facts.lists, .{});
+        @memset(a.facts.aggregates.lists, .{});
         @memset(a.facts.bounds, null);
+        @memset(a.facts.aggregates.fields, null);
     }
     a.facts.counted = if (converged) a.counted.items else &.{};
     return a.facts;
@@ -655,9 +672,10 @@ fn listFacts(a: *Analysis) !bool {
             const push_block = a.shape.block_of[pushed_ref.index()] orelse continue;
             if (!onStraightChain(a, counted.loop, push_block)) continue;
             const elements = a.rangeAt(pushed.b, push_block);
-            const fact: ListFact = .{ .length = counted.bound, .elements = elements };
-            if (!std.meta.eql(a.facts.lists[ref.index()], fact)) {
-                a.facts.lists[ref.index()] = fact;
+            var fact: ListFact = .{ .length = counted.bound, .elements = elements };
+            fact.len = a.facts.aggregates.lists[ref.index()].len;
+            if (!std.meta.eql(a.facts.aggregates.lists[ref.index()], fact)) {
+                a.facts.aggregates.lists[ref.index()] = fact;
                 changed = true;
             }
             var capped = false;
@@ -708,14 +726,24 @@ fn transfer(a: *Analysis, ref: ir.Ref, block: ir.BlockId) ?Interval {
             const x = a.rangeAt(i.a, block) orelse break :blk full;
             break :blk x.meet(full.?);
         },
-        .list_len, .str_len => .{ .lo = 0, .hi = max_list_length },
+        .list_len => blk: {
+            const known = a.facts.aggregates.lists[a.liveOperand(i.a).index()].len orelse break :blk .{ .lo = 0, .hi = max_list_length };
+            break :blk known.meet(.{ .lo = 0, .hi = max_list_length });
+        },
+        .str_len => .{ .lo = 0, .hi = max_list_length },
+        .record_get => blk: {
+            const table = fieldsOf(a, i.a) orelse break :blk full;
+            if (i.data >= table.len) break :blk full;
+            const field = table[@intCast(i.data)] orelse break :blk full;
+            break :blk if (full) |limits| field.meet(limits) else field;
+        },
         .float_to_int => blk: {
             const converted = toInt(floatOf(a, i.a) orelse break :blk full) orelse break :blk full;
             break :blk converted.meet(full.?);
         },
         .list_get => blk: {
             const list = a.liveOperand(i.a);
-            break :blk a.facts.lists[list.index()].elements orelse full;
+            break :blk a.facts.aggregates.lists[list.index()].elements orelse full;
         },
         .cmp => compare(a, i, block),
         .not => blk: {
@@ -757,6 +785,167 @@ fn transferFloat(a: *Analysis, ref: ir.Ref, block: ir.BlockId) ?FloatInterval {
         },
         else => null,
     };
+}
+
+/// The field intervals of record value `raw`, when known.
+fn fieldsOf(a: *Analysis, raw: ir.Ref) ?[]const ?Interval {
+    return a.facts.aggregates.fields[a.f.resolve(raw).index()];
+}
+
+/// The interval of an integer or boolean operand, null for any other type.
+fn scalarRange(a: *Analysis, operand: ir.Ref, block: ir.BlockId) ?Interval {
+    if (typeRange(a.inst(operand).ty) == null) return null;
+    return a.rangeAt(operand, block);
+}
+
+fn sameFields(x: ?[]const ?Interval, y: ?[]const ?Interval) bool {
+    const left = x orelse return y == null;
+    const right = y orelse return false;
+    if (left.len != right.len) return false;
+    for (left, right) |p, q| if (!std.meta.eql(p, q)) return false;
+    return true;
+}
+
+fn hullOf(x: ?Interval, y: ?Interval) ?Interval {
+    const p = x orelse return null;
+    const q = y orelse return null;
+    return p.hull(q);
+}
+
+/// The field intervals a record instruction's value has: `record_make` takes its operands'
+/// intervals, `record_set` replaces one field of its base's, and a phi joins its live operands'.
+fn recordFields(a: *Analysis, ref: ir.Ref, block: ir.BlockId) !?[]const ?Interval {
+    const i = a.f.inst(ref);
+    switch (i.op) {
+        .record_make => {
+            const operands = a.f.operands(i.data);
+            const out = try a.arena.alloc(?Interval, operands.len);
+            for (operands, out) |operand, *field| field.* = scalarRange(a, operand, block);
+            return out;
+        },
+        .record_set => {
+            const base = fieldsOf(a, i.a) orelse return null;
+            if (i.data >= base.len) return null;
+            const out = try a.arena.dupe(?Interval, base);
+            out[@intCast(i.data)] = scalarRange(a, i.b, block);
+            return out;
+        },
+        .phi => {
+            var joined: ?[]?Interval = null;
+            for (a.f.operands(i.data), a.f.blocks.items[block.index()].preds.items) |operand, pred| {
+                if (!a.edgeLive(pred, block)) continue;
+                const table = fieldsOf(a, operand) orelse return null;
+                if (joined) |out| {
+                    if (out.len != table.len) return null;
+                    for (out, table) |*field, other| field.* = hullOf(field.*, other);
+                } else joined = try a.arena.dupe(?Interval, table);
+            }
+            return joined;
+        },
+        else => return null,
+    }
+}
+
+/// The list fact an instruction gives its result, from its operand's.
+fn listFact(a: *Analysis, ref: ir.Ref, block: ir.BlockId) ListFact {
+    const i = a.f.inst(ref);
+    const none: ListFact = .{};
+    switch (i.op) {
+        .list_new => return .{ .len = Interval.point(0) },
+        .list_copy => return a.facts.aggregates.lists[a.f.resolve(i.a).index()],
+        .list_push => {
+            const old = a.facts.aggregates.lists[a.f.resolve(i.a).index()];
+            const value = scalarRange(a, i.b, block);
+            var out: ListFact = .{};
+            if (old.len) |len| out.len = .{ .lo = len.lo + 1, .hi = @min(len.hi + 1, max_list_length) };
+            // An empty list holds only the pushed value; any other list the hull of its elements and it.
+            if (old.len) |len| {
+                if (len.lo == 0 and len.hi == 0) out.elements = value;
+            }
+            if (out.elements == null) out.elements = if (old.elements) |held| (if (value) |v| held.hull(v) else null) else null;
+            return out;
+        },
+        .list_pop => {
+            const old = a.facts.aggregates.lists[a.f.resolve(i.a).index()];
+            var out: ListFact = .{ .elements = old.elements };
+            if (old.len) |len| out.len = .{ .lo = @max(len.lo - 1, 0), .hi = @max(len.hi - 1, 0) };
+            return out;
+        },
+        .list_set => {
+            const old = a.facts.aggregates.lists[a.f.resolve(i.a).index()];
+            const value = scalarRange(a, a.f.operands(i.data)[0], block);
+            var out: ListFact = .{ .length = old.length, .len = old.len };
+            if (old.elements) |held| out.elements = if (value) |v| held.hull(v) else null;
+            return out;
+        },
+        else => return none,
+    }
+}
+
+/// Record field intervals and list lengths, element hulls: recompute them for `ref`, widening
+/// what keeps changing. Returns whether anything changed.
+fn recomputeAggregates(a: *Analysis, ref: ir.Ref, block: ir.BlockId, changes: []u8) bool {
+    const i = a.f.inst(ref);
+    var changed = false;
+    switch (i.op) {
+        .record_make, .record_set, .phi => {
+            const old = a.facts.aggregates.fields[ref.index()];
+            var next = recordFields(a, ref, block) catch return false;
+            if (old != null and next != null and !sameFields(old, next)) {
+                changes[ref.index()] +|= 1;
+                // A field that keeps changing joins the unknown.
+                if (changes[ref.index()] > 8) {
+                    const widened = a.arena.dupe(?Interval, next.?) catch return false;
+                    for (widened, old.?) |*field, before| {
+                        if (!std.meta.eql(field.*, before)) field.* = null;
+                    }
+                    next = widened;
+                }
+            }
+            if (!sameFields(old, next)) {
+                a.facts.aggregates.fields[ref.index()] = next;
+                changed = true;
+            }
+        },
+        else => {},
+    }
+    switch (i.op) {
+        .list_new, .list_copy, .list_push, .list_pop, .list_set => {
+            const next = listFact(a, ref, block);
+            if (!std.meta.eql(a.facts.aggregates.lists[ref.index()], next)) {
+                a.facts.aggregates.lists[ref.index()] = next;
+                changed = true;
+            }
+        },
+        .phi => if (joinLengths(a, ref, block, changes)) {
+            changed = true;
+        },
+        else => {},
+    }
+    return changed;
+}
+
+/// A phi of lists has the hull of its live operands' lengths (a phi of anything else has none),
+/// widened to the largest possible length when it keeps growing.
+fn joinLengths(a: *Analysis, ref: ir.Ref, block: ir.BlockId, changes: []u8) bool {
+    const i = a.f.inst(ref);
+    var joined: ?Interval = null;
+    for (a.f.operands(i.data), a.f.blocks.items[block.index()].preds.items) |operand, pred| {
+        if (!a.edgeLive(pred, block)) continue;
+        const len = a.facts.aggregates.lists[a.f.resolve(operand).index()].len orelse {
+            joined = null;
+            break;
+        };
+        joined = if (joined) |so_far| so_far.hull(len) else len;
+    }
+    const old = a.facts.aggregates.lists[ref.index()].len;
+    if (old != null and joined != null and !std.meta.eql(old, joined)) {
+        changes[ref.index()] +|= 1;
+        if (changes[ref.index()] > 8) joined = .{ .lo = 0, .hi = max_list_length };
+    }
+    if (std.meta.eql(old, joined)) return false;
+    a.facts.aggregates.lists[ref.index()].len = joined;
+    return true;
 }
 
 fn arithmetic(op: ir.Op, x: Interval, y: Interval) Interval {
@@ -968,7 +1157,40 @@ fn mark(a: *Analysis, fold: bool) void {
     }
 }
 
+/// Whether a bounds or empty-list check of a list access cannot fail.
+fn provableAccess(a: *Analysis, i: ir.Inst, block: ir.BlockId) bool {
+    switch (i.op) {
+        .list_get, .list_get_field, .list_set => {
+            const index = a.liveOperand(i.b);
+            const range = a.rangeAt(index, block) orelse return false;
+            if (range.lo < 0) return false;
+            const list = a.liveOperand(i.a);
+            // The list is known to be longer than every index.
+            if (a.facts.aggregates.lists[list.index()].len) |len| {
+                if (range.hi < len.lo) return true;
+            }
+            // `index < len(list)` for a list parameter: by the index's own bound, or by a
+            // dominating `index < y` (or `index <= y` with `y` strictly bounded) and `y`'s bound.
+            const bound = (a.facts.bounds[index.index()] orelse LengthBound{}).best(lessBound(a, index, block));
+            if (bound.list == list and bound.strict) return true;
+            const length = a.facts.aggregates.lists[list.index()].length;
+            if (length == .none) return false;
+            return a.knownLess(index, length, block);
+        },
+        .list_pop => {
+            // A pop of a list known to hold an element cannot fail.
+            const len = a.facts.aggregates.lists[a.liveOperand(i.a).index()].len orelse return false;
+            return len.lo >= 1;
+        },
+        else => return false,
+    }
+}
+
 fn provable(a: *Analysis, i: ir.Inst, block: ir.BlockId) bool {
+    switch (i.op) {
+        .list_get, .list_get_field, .list_set, .list_pop => return provableAccess(a, i, block),
+        else => {},
+    }
     const limits = typeRange(i.ty) orelse return false;
     switch (i.op) {
         .add, .sub, .mul => {
@@ -996,19 +1218,6 @@ fn provable(a: *Analysis, i: ir.Inst, block: ir.BlockId) bool {
             const x = floatOf(a, i.a) orelse return false;
             const converted = toInt(x) orelse return false;
             return converted.within(limits);
-        },
-        .list_get => {
-            const index = a.liveOperand(i.b);
-            const range = a.rangeAt(index, block) orelse return false;
-            if (range.lo < 0) return false;
-            const list = a.liveOperand(i.a);
-            // `index < len(list)` for a list parameter: by the index's own bound, or by a
-            // dominating `index < y` (or `index <= y` with `y` strictly bounded) and `y`'s bound.
-            const bound = (a.facts.bounds[index.index()] orelse LengthBound{}).best(lessBound(a, index, block));
-            if (bound.list == list and bound.strict) return true;
-            const length = a.facts.lists[list.index()].length;
-            if (length == .none) return false;
-            return a.knownLess(index, length, block);
         },
         else => return false,
     }

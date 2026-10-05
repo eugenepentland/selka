@@ -101,6 +101,9 @@ const count_load_line = "  {s} = load i32, ptr {s}, align 8, " ++ tbaa_count ++ 
 /// The header field loads of a list or string, tagged as header data.
 const header_tagged_line = "  {s} = getelementptr inbounds i8, ptr {s}, i64 {d}\n  {s} = load i64, ptr {s}, align 8, " ++ tbaa_header ++ "\n";
 
+/// `  %x = getelementptr inbounds i8, ptr %p, i64 0`: a second name for the same pointer.
+const identity_line = "  {s} = getelementptr inbounds i8, ptr {s}, i64 0\n";
+
 /// One instruction line of the shape `  %x = op type a, b`.
 const binary_line = "  {s} = {s} {s} {s}, {s}\n";
 
@@ -185,6 +188,8 @@ const ModuleState = struct {
             _ => switch (self.module.compound(ty)) {
                 .list, .box => "ptr",
                 .record => |fields| blk: {
+                    // Over four words a value lives in memory (a stack slot): its SSA value is the pointer.
+                    if (self.module.passedInMemory(ty)) break :blk "ptr";
                     var text: Out = .empty;
                     try text.appendSlice(self.allocator, "{ ");
                     for (fields, 0..) |field, i| try text.print(self.allocator, "{s}{s}", .{ if (i == 0) "" else ", ", try self.llvmType(field) });
@@ -192,6 +197,7 @@ const ModuleState = struct {
                     break :blk text.items;
                 },
                 .@"union" => blk: {
+                    if (self.module.passedInMemory(ty)) break :blk "ptr";
                     const layout = self.module.unionLayout(ty);
                     break :blk switch (layout.form) {
                         .niche => "ptr",
@@ -232,6 +238,8 @@ const ModuleState = struct {
             \\declare ptr @myl_core_box_new(i64) nounwind
             \\declare void @myl_core_free(ptr) nounwind cold
             \\declare void @myl_core_err_trace(i32, i32) nounwind cold
+            \\declare void @llvm.memcpy.p0.p0.i64(ptr noalias nocapture writeonly, ptr noalias nocapture readonly, i64, i1 immarg)
+            \\declare void @llvm.memmove.p0.p0.i64(ptr nocapture writeonly, ptr nocapture readonly, i64, i1 immarg)
             \\
         );
         try out.appendSlice(self.allocator, self.externs.items);
@@ -315,6 +323,24 @@ const VectorState = struct {
     block: u32 = 0,
 };
 
+/// What the emitter knows about the values that live in memory (records and unions over four
+/// words, docs/design/new-core-s1.md §3): who uses each value, which constructions are stored
+/// straight into their consumer, which phis own a stack slot and how edges were split to fill them.
+const MemoryState = struct {
+    /// Uses of each instruction's value, and the last instruction that used it.
+    uses: []u32 = &.{},
+    users: []ir.Ref = &.{},
+    /// Per instruction: a `record_make` or `union_make` that is never materialized, because its
+    /// only use stores it into its destination field by field.
+    fused: []bool = &.{},
+    /// Per block: the phis whose type lives in memory.
+    phis: []const []const ir.Ref = &.{},
+    /// Every instruction that reads a value living in memory, by the value's instruction index.
+    readers: std.AutoHashMapUnmanaged(u32, std.ArrayList(ir.Ref)) = .empty,
+    /// The label of the block that fills a memory phi on an edge `pred << 32 | block`, where the edge was split.
+    edges: std.AutoHashMapUnmanaged(u64, []const u8) = .empty,
+};
+
 /// Which count update `counted` emits.
 const Counting = enum { retain, release };
 
@@ -335,6 +361,7 @@ const FunctionEmitter = struct {
     /// The label the body being rendered currently ends in.
     label: []const u8 = "",
     vectors: VectorState = .{},
+    memory: MemoryState = .{},
 
     fn a(self: *FunctionEmitter) std.mem.Allocator {
         return self.state.allocator;
@@ -383,13 +410,14 @@ const FunctionEmitter = struct {
         try out.print(self.a(), "define internal {s} {s}(", .{ if (sret) "void" else try self.ty(f.signature.ret), try symbol(self.a(), f.name) });
         if (sret) try out.print(self.a(), "ptr noalias sret({s}) align 8 %ret", .{try self.state.memoryType(f.signature.ret)});
         var entry: Out = .empty;
+        // A value over four words is used where the caller keeps it: the parameter is its pointer.
         for (f.signature.params, 0..) |param, i| {
             const separator = if (i == 0 and !sret) "" else ", ";
             if (m.passedInMemory(param)) {
-                try out.print(self.a(), "{s}ptr noalias readonly align 8 %p{d}.mem", .{ separator, i });
-                try self.loadValue(&entry, param, try std.fmt.allocPrint(self.a(), "%p{d}.mem", .{i}), try std.fmt.allocPrint(self.a(), "%p{d}", .{i}));
+                try out.print(self.a(), "{s}ptr noalias readonly align 8 %p{d}", .{ separator, i });
             } else try out.print(self.a(), "{s}{s} %p{d}", .{ separator, try self.ty(param), i });
         }
+        try self.analyzeMemory(&entry);
         try out.appendSlice(self.a(), ") nounwind {\n");
         const bodies = try self.a().alloc(Out, f.blocks.items.len);
         try self.exit_labels.resize(self.a(), f.blocks.items.len);
@@ -408,7 +436,8 @@ const FunctionEmitter = struct {
                 const inst = f.inst(ref);
                 if (inst.op == .phi or inst.op == .copy) continue;
                 try self.instruction(&bodies[b], ref, inst);
-                if (!inst.op.terminates()) try self.assertFacts(&bodies[b], ref, inst);
+                // A construction stored straight into its consumer never exists as a value to assert about.
+                if (!inst.op.terminates() and !self.memory.fused[ref.index()]) try self.assertFacts(&bodies[b], ref, inst);
             }
             self.exit_labels.items[b] = self.label;
         }
@@ -422,16 +451,179 @@ const FunctionEmitter = struct {
             for (block.insts.items) |ref| {
                 const inst = f.inst(ref);
                 if (inst.op != .phi) continue;
+                // A phi of a value in memory is its own stack slot, filled on each incoming edge.
+                if (m.passedInMemory(inst.ty)) continue;
                 try out.print(self.a(), "  %v{d} = phi {s} ", .{ ref.index(), try self.ty(inst.ty) });
                 for (f.operands(inst.data), block.preds.items, 0..) |operand, pred, i| {
                     const resumed = if (self.vectorPreheader(pred, @intCast(b))) self.vectors.resume_values.get(@intCast(ref.index())) else null;
-                    try out.print(self.a(), "{s}[ {s}, %{s} ]", .{ if (i == 0) "" else ", ", resumed orelse try self.value(operand), self.exit_labels.items[pred.index()] });
+                    const edge = self.memory.edges.get(edgeKey(pred.index(), b));
+                    try out.print(self.a(), "{s}[ {s}, %{s} ]", .{ if (i == 0) "" else ", ", resumed orelse try self.value(operand), edge orelse self.exit_labels.items[pred.index()] });
                 }
                 try out.appendSlice(self.a(), "\n");
             }
             try out.appendSlice(self.a(), bodies[b].items);
         }
         try out.appendSlice(self.a(), "}\n");
+    }
+
+    /// Count uses, decide which constructions are stored straight into their consumer, and give
+    /// every phi of a value in memory its stack slot (defined in the entry block as `%vN`).
+    fn analyzeMemory(self: *FunctionEmitter, entry: *Out) !void {
+        _ = entry;
+        const f = self.function;
+        const m = self.state.module;
+        const count = f.insts.items.len;
+        const mem = &self.memory;
+        mem.uses = try self.a().alloc(u32, count);
+        mem.users = try self.a().alloc(ir.Ref, count);
+        mem.fused = try self.a().alloc(bool, count);
+        @memset(mem.uses, 0);
+        @memset(mem.users, .none);
+        @memset(mem.fused, false);
+        const block_of = try self.a().alloc(u32, count);
+        @memset(block_of, std.math.maxInt(u32));
+        const phis = try self.a().alloc([]const ir.Ref, f.blocks.items.len);
+        for (f.blocks.items, 0..) |block, b| {
+            var mine: std.ArrayList(ir.Ref) = .empty;
+            for (block.insts.items) |ref| {
+                block_of[ref.index()] = @intCast(b);
+                const inst = f.inst(ref);
+                if (inst.op == .phi and m.passedInMemory(inst.ty)) try mine.append(self.a(), ref);
+                if (inst.op == .copy) continue;
+                const operands = f.valueOperands(inst);
+                for (0..operands.len()) |i| {
+                    const used = f.resolve(operands.get(i));
+                    mem.uses[used.index()] += 1;
+                    mem.users[used.index()] = ref;
+                    if (m.passedInMemory(f.inst(used).ty)) {
+                        const list = try mem.readers.getOrPut(self.a(), @intCast(used.index()));
+                        if (!list.found_existing) list.value_ptr.* = .empty;
+                        try list.value_ptr.append(self.a(), ref);
+                    }
+                }
+            }
+            phis[b] = mine.items;
+        }
+        mem.phis = phis;
+        // A construction whose only use stores it (a push, a write, a return through `sret`, a box,
+        // or a field of a construction that is itself stored so) is never built on its own.
+        for (f.blocks.items, 0..) |block, b| {
+            var at = block.insts.items.len;
+            while (at > 0) {
+                at -= 1;
+                const ref = block.insts.items[at];
+                const inst = f.inst(ref);
+                if (inst.op != .record_make and inst.op != .union_make) continue;
+                if (mem.uses[ref.index()] != 1 or block_of[mem.users[ref.index()].index()] != b) continue;
+                if (inst.op == .union_make and m.unionLayout(inst.ty).form == .niche) continue;
+                const user = mem.users[ref.index()];
+                const consumer = f.inst(user);
+                mem.fused[ref.index()] = switch (consumer.op) {
+                    .list_push => f.resolve(consumer.b) == ref,
+                    .list_set => f.resolve(f.operands(consumer.data)[0]) == ref,
+                    .ret => f.resolve(consumer.a) == ref and m.passedInMemory(f.signature.ret),
+                    .box_make => f.resolve(consumer.a) == ref,
+                    .record_make, .union_make => mem.fused[user.index()],
+                    else => false,
+                };
+            }
+        }
+        for (phis) |block_phis| for (block_phis) |phi| {
+            const slot = try self.stackSlot(m.size(f.inst(phi).ty));
+            try self.state.allocas.print(self.a(), "  %v{d} = getelementptr inbounds i8, ptr {s}, i64 0\n", .{ phi.index(), slot });
+        };
+    }
+
+    fn edgeKey(pred: usize, block: usize) u64 {
+        return (@as(u64, pred) << 32) | block;
+    }
+
+    /// On the edge from block `pred` into `target`, copy the incoming value of each phi that lives
+    /// in memory into the phi's own slot. With several such phis, an incoming value may be another
+    /// phi's slot, so all are copied out to temporaries first.
+    fn fillMemoryPhis(self: *FunctionEmitter, out: *Out, pred: usize, target: usize) !void {
+        const phis = self.memory.phis[target];
+        if (phis.len == 0) return;
+        const f = self.function;
+        const m = self.state.module;
+        const position = for (f.blocks.items[target].preds.items, 0..) |candidate, i| {
+            if (candidate.index() == pred) break i;
+        } else return;
+        var staged = false;
+        for (phis) |phi| {
+            const incoming = f.resolve(f.operands(f.inst(phi).data)[position]);
+            if (std.mem.indexOfScalar(ir.Ref, phis, incoming) != null) staged = true;
+        }
+        var copies: std.ArrayList(struct { phi: ir.Ref, from: []const u8 }) = .empty;
+        for (phis) |phi| {
+            const incoming = f.resolve(f.operands(f.inst(phi).data)[position]);
+            if (f.inst(incoming).op == .undef) continue;
+            const size = m.size(f.inst(phi).ty);
+            if (!staged) {
+                try self.copyBytes(out, try self.value(phi), try self.value(incoming), size, true);
+                continue;
+            }
+            const temporary = try self.stackSlot(size);
+            try self.copyBytes(out, temporary, try self.value(incoming), size, false);
+            try copies.append(self.a(), .{ .phi = phi, .from = temporary });
+        }
+        for (copies.items) |copy| try self.copyBytes(out, try self.value(copy.phi), copy.from, m.size(f.inst(copy.phi).ty), false);
+    }
+
+    /// `branch`: a successor with phis in memory gets a block of its own on the edge, which fills them.
+    fn branchTo(self: *FunctionEmitter, out: *Out, inst: ir.Inst) !void {
+        const targets = ir.unpackTargets(inst.data);
+        const pred: usize = self.vectors.block;
+        const sides = [2]usize{ targets.then.index(), targets.otherwise.index() };
+        var labels: [2][]const u8 = undefined;
+        for (sides, &labels) |target, *label| {
+            label.* = if (self.memory.phis[target].len != 0) try self.fresh("edge") else try std.fmt.allocPrint(self.a(), "b{d}", .{target});
+        }
+        try out.print(self.a(), "  br i1 {s}, label %{s}, label %{s}\n", .{ try self.value(inst.a), labels[0], labels[1] });
+        for (sides, labels) |target, label| {
+            if (self.memory.phis[target].len == 0) continue;
+            try out.print(self.a(), "{s}:\n", .{label});
+            try self.fillMemoryPhis(out, pred, target);
+            try out.print(self.a(), "  br label %b{d}\n", .{target});
+            try self.memory.edges.put(self.a(), edgeKey(pred, target), label);
+        }
+    }
+
+    /// `retain` or `release` the blocks a record or union in memory references: each managed field,
+    /// or the payload of each managed case under its tag, loaded out of memory and counted as a value.
+    fn countedMemory(self: *FunctionEmitter, out: *Out, mode: Counting, value_type: ir.Type, ptr: []const u8) Error!void {
+        const m = self.state.module;
+        if (!m.managed(value_type)) return;
+        switch (m.compound(value_type)) {
+            .record => |fields| for (fields, 0..) |field, i| {
+                if (!m.managed(field)) continue;
+                const loaded = try self.fresh("%cm");
+                try self.loadValue(out, field, try self.offsetPointer(out, ptr, m.fieldOffset(value_type, i)), loaded);
+                try self.countedValue(out, mode, field, loaded);
+            },
+            .@"union" => |cases| {
+                const word = try self.fresh("%cw");
+                const tag = try self.fresh("%ct");
+                try out.print(self.a(), word_load_line ++ "  {s} = trunc i64 {s} to i8\n", .{ word, ptr, tag, word });
+                for (cases, 0..) |case, k| {
+                    if (!m.managed(case)) continue;
+                    const here = try self.fresh("%cc");
+                    try out.print(self.a(), "  {s} = icmp eq i8 {s}, {d}\n", .{ here, tag, k });
+                    const join = try self.enterIf(out, here);
+                    const loaded = try self.fresh("%cp");
+                    try self.loadValue(out, case, try self.offsetPointer(out, ptr, 8), loaded);
+                    try self.countedValue(out, mode, case, loaded);
+                    try self.leaveIf(out, join);
+                }
+            },
+            .list, .box => unreachable,
+        }
+    }
+
+    /// Count a value held in a register or, over four words, a pointer to its slot.
+    fn countedValue(self: *FunctionEmitter, out: *Out, mode: Counting, value_type: ir.Type, text: []const u8) Error!void {
+        if (self.state.module.passedInMemory(value_type)) return self.countedMemory(out, mode, value_type, text);
+        return self.counted(out, mode, value_type, text);
     }
 
     /// The check an instruction gets emitted with: verify mode emits proven checks as exact ones.
@@ -490,6 +682,57 @@ const FunctionEmitter = struct {
     fn assertFacts(self: *FunctionEmitter, out: *Out, ref: ir.Ref, inst: ir.Inst) !void {
         try self.assertRange(out, ref, inst);
         try self.assertBound(out, ref, inst);
+        try self.assertAggregate(out, ref, inst);
+    }
+
+    /// Verify mode: a list's length lies in the interval the facts gave it, and every field of
+    /// a record with a field interval lies in it.
+    fn assertAggregate(self: *FunctionEmitter, out: *Out, ref: ir.Ref, inst: ir.Inst) !void {
+        const known = self.knownFacts() orelse return;
+        const m = self.state.module;
+        const kind = m.kind(inst.ty) orelse return;
+        if (kind == .list) {
+            const len = known.aggregates.lists[ref.index()].len orelse return;
+            const at = try self.fresh("%al");
+            const length = try self.fresh("%an");
+            const outside = try self.fresh("%ax");
+            const below = try self.fresh("%ab");
+            const above = try self.fresh("%aa");
+            try out.print(self.a(), header_load_line, .{ at, try self.value(ref), len_offset, length, at });
+            try out.print(self.a(), "  {s} = icmp ult i64 {s}, {d}\n  {s} = icmp ugt i64 {s}, {d}\n  {s} = or i1 {s}, {s}\n", .{ below, length, len.lo, above, length, len.hi, outside, below, above });
+            const operation = try std.fmt.allocPrint(self.a(), "list length [{d}, {d}]", .{ len.lo, len.hi });
+            const index = try self.state.site(.{ .kind = .fact, .location = self.state.options.locator.locate(self.state.options.locator.context, inst.span), .width = 64, .operation = operation, .function = self.function.name });
+            return self.trapIf(out, outside, index, length, "0");
+        }
+        if (kind != .record) return;
+        const table = known.aggregates.fields[ref.index()] orelse return;
+        const fields = m.compound(inst.ty).record;
+        for (table, fields, 0..) |range_or_none, field, k| {
+            const range = range_or_none orelse continue;
+            const info: struct { bits: u16, signed: bool } = if (field.integer()) |found| .{ .bits = found.bits, .signed = found.signed } else if (field == .bool) .{ .bits = 1, .signed = false } else continue;
+            const full = facts.typeRange(field) orelse continue;
+            if (range.lo > range.hi or (range.lo <= full.lo and range.hi >= full.hi)) continue;
+            const loaded = try self.fresh("%af");
+            if (m.passedInMemory(inst.ty)) {
+                try self.loadValue(out, field, try self.offsetPointer(out, try self.value(ref), m.fieldOffset(inst.ty, k)), loaded);
+            } else try out.print(self.a(), "  {s} = extractvalue {s}, {d}\n", .{ loaded, try self.typedValue(ref), k });
+            const tyname = try self.ty(field);
+            const below = try self.fresh("%ab");
+            const above = try self.fresh("%aa");
+            const outside = try self.fresh("%ax");
+            const signed = info.signed;
+            try out.print(self.a(), bound_line, .{ below, if (signed) "slt" else "ult", tyname, loaded, range.lo });
+            try out.print(self.a(), bound_line, .{ above, if (signed) "sgt" else "ugt", tyname, loaded, range.hi });
+            try out.print(self.a(), or_line, .{ outside, below, above });
+            const wide_value = if (info.bits == 64) loaded else blk: {
+                const wide = try self.fresh("%aw");
+                try out.print(self.a(), "  {s} = {s} {s} {s} to i64\n", .{ wide, if (signed) "sext" else "zext", tyname, loaded });
+                break :blk wide;
+            };
+            const operation = try std.fmt.allocPrint(self.a(), "record field {d} range [{d}, {d}]", .{ k, range.lo, range.hi });
+            const index = try self.state.site(.{ .kind = .fact, .location = self.state.options.locator.locate(self.state.options.locator.context, inst.span), .width = info.bits, .operation = operation, .function = self.function.name });
+            try self.trapIf(out, outside, index, wide_value, "0");
+        }
     }
 
     /// Verify mode: the value is at most (below, when strict) the length of the list
@@ -670,22 +913,27 @@ const FunctionEmitter = struct {
                 try out.print(self.a(), "  {s} = call zeroext i1 @myl_core_str_parse_int(ptr {s}, ptr %slot)\n  {s} = load i64, ptr %slot, align 8\n  {s} = zext i1 {s} to i8\n", .{ ok, try self.value(inst.a), parsed, tag, ok });
                 try out.print(self.a(), "  {s} = insertvalue {{ i8, i64 }} poison, i8 {s}, 0\n  {s} = insertvalue {{ i8, i64 }} {s}, i64 {s}, 1\n", .{ partial, tag, name, partial, parsed });
             },
-            .union_make => try self.unionMake(out, name, inst),
+            .union_make => if (!self.memory.fused[ref.index()]) try self.unionMake(out, name, inst),
             .union_tag => try self.unionTag(out, name, inst.a),
             .union_payload => try self.unionPayload(out, .{ .result = name, .union_type = self.typeOf(inst.a), .value = try self.value(inst.a), .case = @intCast(inst.data) }),
-            .record_make => try self.recordMake(out, name, inst),
-            .record_get => try out.print(self.a(), "  {s} = extractvalue {s}, {d}\n", .{ name, try self.typedValue(inst.a), inst.data }),
-            .record_set => try out.print(self.a(), "  {s} = insertvalue {s}, {s}, {d}\n", .{ name, try self.typedValue(inst.a), try self.typedValue(inst.b), inst.data }),
+            .record_make => if (!self.memory.fused[ref.index()]) try self.recordMake(out, name, inst),
+            .record_get => try self.recordGet(out, name, inst),
+            .record_set => try self.recordSet(out, name, ref, inst),
             .list_set => try self.listSet(out, name, inst),
             .list_pop => try self.listPop(out, name, inst),
             .list_get_field => try self.listGetField(out, name, inst),
             .box_make => {
                 const inner = self.state.module.compound(inst.ty).box;
                 try out.print(self.a(), "  {s} = call ptr @myl_core_box_new(i64 {d})\n", .{ name, self.state.module.size(inner) });
-                try self.storeValue(out, inner, try self.value(inst.a), try self.offsetPointer(out, name, data_offset));
+                try self.storeOperand(out, inner, inst.a, try self.offsetPointer(out, name, data_offset));
             },
             .box_get => try self.loadValue(out, inst.ty, try self.offsetPointer(out, try self.value(inst.a), data_offset), name),
-            .retain, .release => try self.counted(out, if (inst.op == .retain) .retain else .release, self.typeOf(inst.a), try self.value(inst.a)),
+            .retain, .release => {
+                const mode: Counting = if (inst.op == .retain) .retain else .release;
+                if (self.state.module.passedInMemory(self.typeOf(inst.a))) {
+                    try self.countedMemory(out, mode, self.typeOf(inst.a), try self.value(inst.a));
+                } else try self.counted(out, mode, self.typeOf(inst.a), try self.value(inst.a));
+            },
             .is_unique => {
                 const count = try self.fresh("%rc");
                 try out.print(self.a(), count_load_line ++ "  {s} = icmp eq i32 {s}, 1\n", .{ count, try self.value(inst.a), name, count });
@@ -700,16 +948,14 @@ const FunctionEmitter = struct {
             .print => try self.print(out, inst),
             .jump => {
                 try self.vectorPrologue(out, @intCast(inst.data));
+                try self.fillMemoryPhis(out, self.vectors.block, @intCast(inst.data));
                 try out.print(self.a(), "  br label %b{d}\n", .{inst.data});
             },
-            .branch => {
-                const targets = ir.unpackTargets(inst.data);
-                try out.print(self.a(), "  br i1 {s}, label %b{d}, label %b{d}\n", .{ try self.value(inst.a), @backingInt(targets.then), @backingInt(targets.otherwise) });
-            },
+            .branch => try self.branchTo(out, inst),
             .ret => if (inst.a == .none) {
                 try out.appendSlice(self.a(), "  ret void\n");
             } else if (self.state.module.passedInMemory(self.function.signature.ret)) {
-                try self.storeValue(out, self.function.signature.ret, try self.value(inst.a), "%ret");
+                try self.storeOperand(out, self.function.signature.ret, inst.a, "%ret");
                 try out.appendSlice(self.a(), "  ret void\n");
             } else try out.print(self.a(), "  ret {s}\n", .{try self.typedValue(inst.a)}),
             .@"unreachable" => try out.appendSlice(self.a(), "  unreachable\n"),
@@ -959,6 +1205,13 @@ const FunctionEmitter = struct {
     fn loadValue(self: *FunctionEmitter, out: *Out, value_type: ir.Type, ptr: []const u8, result: []const u8) Error!void {
         const m = self.state.module;
         if (value_type == .void) return error.UnsupportedInstruction;
+        if (m.passedInMemory(value_type)) {
+            // A value over four words is copied into a stack slot of its own: its SSA value is that slot.
+            const slot = try self.stackSlot(m.size(value_type));
+            try self.copyBytes(out, slot, ptr, m.size(value_type), false);
+            try out.print(self.a(), identity_line, .{ result, slot });
+            return;
+        }
         if (value_type == .bool) {
             const byte = try self.fresh("%lb");
             try out.print(self.a(), "  {s} = load i8, ptr {s}, align 1, " ++ tbaa_data ++ "\n  {s} = trunc i8 {s} to i1\n", .{ byte, ptr, result, byte });
@@ -1020,6 +1273,7 @@ const FunctionEmitter = struct {
     fn storeValue(self: *FunctionEmitter, out: *Out, value_type: ir.Type, text: []const u8, ptr: []const u8) Error!void {
         const m = self.state.module;
         if (value_type == .void) return error.UnsupportedInstruction;
+        if (m.passedInMemory(value_type)) return self.copyBytes(out, ptr, text, m.size(value_type), false);
         if (value_type == .bool) {
             const byte = try self.fresh("%sb");
             try out.print(self.a(), "  {s} = zext i1 {s} to i8\n  store i8 {s}, ptr {s}, align 1, " ++ tbaa_data ++ "\n", .{ byte, text, byte, ptr });
@@ -1062,7 +1316,98 @@ const FunctionEmitter = struct {
         }
     }
 
+    /// Copy `size` bytes from `src` to `dst`; `overlap` when they may be the same slot.
+    fn copyBytes(self: *FunctionEmitter, out: *Out, dst: []const u8, src: []const u8, size: u32, overlap: bool) !void {
+        try out.print(self.a(), "  call void @llvm.mem{s}.p0.p0.i64(ptr {s}, ptr {s}, i64 {d}, i1 false)\n", .{ if (overlap) "move" else "cpy", dst, src, size });
+    }
+
+    /// Store operand `raw` of type `value_type` at `dst`: a construction fused into this store
+    /// writes its fields there, any other value is stored as its memory image.
+    fn storeOperand(self: *FunctionEmitter, out: *Out, value_type: ir.Type, raw: ir.Ref, dst: []const u8) Error!void {
+        const ref = self.function.resolve(raw);
+        if (self.memory.fused[ref.index()]) return self.storeMake(out, self.function.inst(ref), dst);
+        return self.storeValue(out, value_type, try self.value(ref), dst);
+    }
+
+    /// The fields of a `record_make`, or the tag word and payload of a `union_make`, stored at `dst`
+    /// with no temporary: nothing is built in registers or copied.
+    fn storeMake(self: *FunctionEmitter, out: *Out, inst: ir.Inst, dst: []const u8) Error!void {
+        const m = self.state.module;
+        switch (inst.op) {
+            .record_make => for (self.function.operands(inst.data), m.compound(inst.ty).record, 0..) |operand, field, i| {
+                try self.storeOperand(out, field, operand, try self.offsetPointer(out, dst, m.fieldOffset(inst.ty, i)));
+            },
+            .union_make => {
+                try out.print(self.a(), "  store i64 {d}, ptr {s}, align 8, " ++ tbaa_data ++ "\n", .{ inst.data, dst });
+                if (inst.a == .none) return;
+                try self.storeOperand(out, m.compound(inst.ty).@"union"[@intCast(inst.data)], inst.a, try self.offsetPointer(out, dst, 8));
+            },
+            else => unreachable,
+        }
+    }
+
+    /// A record or union over four words, built in a stack slot of its own.
+    fn makeInMemory(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) !void {
+        const slot = try self.stackSlot(self.state.module.size(inst.ty));
+        try self.storeMake(out, inst, slot);
+        try out.print(self.a(), identity_line, .{ name, slot });
+    }
+
+    /// `record_get`: `extractvalue` from a record in registers, one load from a record in memory.
+    fn recordGet(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) !void {
+        const m = self.state.module;
+        const record_type = self.typeOf(inst.a);
+        if (!m.passedInMemory(record_type)) return out.print(self.a(), "  {s} = extractvalue {s}, {d}\n", .{ name, try self.typedValue(inst.a), inst.data });
+        const at = try self.offsetPointer(out, try self.value(inst.a), m.fieldOffset(record_type, @intCast(inst.data)));
+        try self.loadValue(out, inst.ty, at, name);
+    }
+
+    /// `record_set`: `insertvalue` for a record in registers. A record in memory is copied into a
+    /// slot of its own and the field stored, or, when the old value's only use is this write and it
+    /// was made in this block, written where it is.
+    fn recordSet(self: *FunctionEmitter, out: *Out, name: []const u8, ref: ir.Ref, inst: ir.Inst) !void {
+        const m = self.state.module;
+        if (!m.passedInMemory(inst.ty)) return out.print(self.a(), "  {s} = insertvalue {s}, {s}, {d}\n", .{ name, try self.typedValue(inst.a), try self.typedValue(inst.b), inst.data });
+        const old = self.function.resolve(inst.a);
+        var slot: []const u8 = try self.value(old);
+        if (!self.writableInPlace(old, ref)) {
+            slot = try self.stackSlot(m.size(inst.ty));
+            try self.copyBytes(out, slot, try self.value(old), m.size(inst.ty), false);
+        }
+        const field = m.compound(inst.ty).record[@intCast(inst.data)];
+        try self.storeOperand(out, field, inst.b, try self.offsetPointer(out, slot, m.fieldOffset(inst.ty, @intCast(inst.data))));
+        try out.print(self.a(), identity_line, .{ name, slot });
+    }
+
+    /// Whether the memory value `old` may be updated where `writer` (a `record_set` of it) runs: it
+    /// was made by an instruction of this block, so each run of the block makes it again (not a
+    /// parameter, nor a slot filled on an edge), and every other reader is in this block, runs before
+    /// the write and has finished with it by then (a load, a call, a copy into a container).
+    fn writableInPlace(self: *FunctionEmitter, old: ir.Ref, writer: ir.Ref) bool {
+        const f = self.function;
+        const inst = f.inst(old);
+        if (inst.op == .param or inst.op == .phi or inst.op.isConstant()) return false;
+        const block = f.blocks.items[self.vectors.block].insts.items;
+        const written = std.mem.indexOfScalar(ir.Ref, block, writer) orelse return false;
+        if (std.mem.indexOfScalar(ir.Ref, block, old) == null) return false;
+        const readers = self.memory.readers.get(@intCast(old.index())) orelse return false;
+        for (readers.items) |reader| {
+            if (reader == writer) continue;
+            const at = std.mem.indexOfScalar(ir.Ref, block, reader) orelse return false;
+            if (at >= written) return false;
+            switch (f.inst(reader).op) {
+                .record_get, .union_tag, .union_payload, .call, .list_push, .list_set, .box_make, .record_set => {},
+                .record_make, .union_make => if (self.memory.fused[reader.index()]) return false,
+                else => return false,
+            }
+            // A construction stored later would read the changed value.
+            if (self.memory.fused[reader.index()]) return false;
+        }
+        return true;
+    }
+
     fn recordMake(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) !void {
+        if (self.state.module.passedInMemory(inst.ty)) return self.makeInMemory(out, name, inst);
         const tyname = try self.ty(inst.ty);
         const fields = self.function.operands(inst.data);
         if (fields.len == 0) {
@@ -1079,6 +1424,7 @@ const FunctionEmitter = struct {
 
     fn unionMake(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) !void {
         const m = self.state.module;
+        if (m.passedInMemory(inst.ty)) return self.makeInMemory(out, name, inst);
         const layout = m.unionLayout(inst.ty);
         const tyname = try self.ty(inst.ty);
         const payload_type = m.compound(inst.ty).@"union"[@intCast(inst.data)];
@@ -1118,6 +1464,10 @@ const FunctionEmitter = struct {
         const union_type = self.typeOf(raw);
         const layout = self.state.module.unionLayout(union_type);
         const tag = try self.fresh("%t");
+        if (self.state.module.passedInMemory(union_type)) {
+            try out.print(self.a(), word_load_line ++ "  {s} = trunc i64 {s} to i32\n", .{ tag, try self.value(raw), name, tag });
+            return;
+        }
         if (layout.form == .niche) {
             // The payload case is the non-null pointer.
             try out.print(self.a(), "  {s} = icmp {s} ptr {s}, null\n  {s} = zext i1 {s} to i32\n", .{ tag, if (layout.empty_case == 0) "ne" else "eq", try self.value(raw), name, tag });
@@ -1130,6 +1480,10 @@ const FunctionEmitter = struct {
     fn unionPayload(self: *FunctionEmitter, out: *Out, read: PayloadRead) Error!void {
         const m = self.state.module;
         const layout = m.unionLayout(read.union_type);
+        if (m.passedInMemory(read.union_type)) {
+            // The payload sits after the tag word.
+            return self.loadValue(out, m.compound(read.union_type).@"union"[read.case], try self.offsetPointer(out, read.value, 8), read.result);
+        }
         const tyname = try self.ty(read.union_type);
         switch (layout.form) {
             .niche => try out.print(self.a(), "  {s} = getelementptr i8, ptr {s}, i64 0\n", .{ read.result, read.value }),
@@ -1159,9 +1513,9 @@ const FunctionEmitter = struct {
         const managed = m.managed(element);
         const old = if (managed) try self.fresh("%old") else "";
         if (managed) try self.loadValue(out, element, slot, old);
-        try self.storeValue(out, element, try self.value(self.function.operands(inst.data)[0]), slot);
+        try self.storeOperand(out, element, self.function.operands(inst.data)[0], slot);
         if (managed) try self.counted(out, .release, element, old);
-        try out.print(self.a(), "  {s} = getelementptr inbounds i8, ptr {s}, i64 0\n", .{ name, list });
+        try out.print(self.a(), identity_line, .{ name, list });
     }
 
     /// Drop the last element of list `a` in place (its value was read before, and is
@@ -1178,7 +1532,7 @@ const FunctionEmitter = struct {
             try self.trapIf(out, empty, try self.site(.list_empty, inst, "pop"), "0", len);
         }
         try out.print(self.a(), "  {s} = sub nuw i64 {s}, 1\n  store i64 {s}, ptr {s}, align 8, " ++ tbaa_header ++ "\n", .{ next, len, next, at });
-        try out.print(self.a(), "  {s} = getelementptr inbounds i8, ptr {s}, i64 0\n", .{ name, list });
+        try out.print(self.a(), identity_line, .{ name, list });
     }
 
     /// Read one field (or a union's tag or payload) of an inline element, at its
@@ -1338,7 +1692,7 @@ const FunctionEmitter = struct {
         try out.print(self.a(), header_tagged_line, .{ len_at, name, len_offset, len, len_at });
         const slot = try self.elementSlot(out, name, len, element);
         if (element == .bool or element.isCompound()) {
-            try self.storeValue(out, element, try self.value(inst.b), slot);
+            try self.storeOperand(out, element, inst.b, slot);
         } else {
             try out.print(self.a(), "  store {s}, ptr {s}, align {d}, " ++ tbaa_data ++ "\n", .{ try self.typedValue(inst.b), slot, elementSize(element) });
         }
@@ -1363,9 +1717,7 @@ const FunctionEmitter = struct {
             const separator = if (first) "" else ", ";
             first = false;
             if (!external and m.passedInMemory(param)) {
-                const slot = try self.stackSlot(m.size(param));
-                try self.storeValue(out, param, try self.value(argument), slot);
-                try arguments.print(self.a(), "{s}ptr {s}", .{ separator, slot });
+                try arguments.print(self.a(), "{s}ptr {s}", .{ separator, try self.value(argument) });
                 continue;
             }
             try arguments.print(self.a(), "{s}{s}", .{ separator, try self.typedValue(argument) });
@@ -1373,7 +1725,7 @@ const FunctionEmitter = struct {
         const target = if (external) try std.fmt.allocPrint(self.a(), "@{s}", .{c_abi.symbol(callee.name)}) else try symbol(self.a(), callee.name);
         if (ret == .void or sret) {
             try out.print(self.a(), "  call void {s}({s})\n", .{ target, arguments.items });
-            if (sret) try self.loadValue(out, ret, result_slot, name);
+            if (sret) try out.print(self.a(), identity_line, .{ name, result_slot });
         } else {
             try out.print(self.a(), "  {s} = call {s} {s}({s})\n", .{ name, try self.ty(ret), target, arguments.items });
         }

@@ -81,6 +81,8 @@ fn guard(arena: std.mem.Allocator, f: *ir.Function, module: *const ir.Module, us
     const ty = f.inst(value).ty;
     if (module.kind(ty) != .list) return 0;
     if (moved(f, uses, value)) return 0;
+    // A returned list that was made in this function is nobody else's: the function ends.
+    if (store.op == .ret and try madeHere(arena, f, value)) return 0;
     const copy: ir.Ref = @fromBackingInt(@intCast(f.insts.items.len));
     try f.insts.append(arena, .{ .op = .list_copy, .ty = ty, .a = value, .span = store.span });
     try f.blocks.items[site.block].insts.insert(arena, site.at.*, copy);
@@ -91,6 +93,29 @@ fn guard(arena: std.mem.Allocator, f: *ir.Function, module: *const ir.Module, us
         .extra => |i| f.extra.items[ir.ExtraSlice.unpack(store.data).start + i] = copy,
     }
     return 1;
+}
+
+/// Whether the storage of `value` was made in this function (a literal, a push chain, a copy, or phis
+/// of those), so no caller's variable and no container names it.
+fn madeHere(arena: std.mem.Allocator, f: *const ir.Function, value: ir.Ref) Error!bool {
+    var seen: std.ArrayList(ir.Ref) = .empty;
+    try seen.append(arena, value);
+    var next: usize = 0;
+    while (next < seen.items.len) : (next += 1) {
+        const inst = f.inst(seen.items[next]);
+        switch (inst.op) {
+            .list_new, .list_copy => {},
+            .list_push, .list_set, .list_pop => try remember(arena, f, &seen, inst.a),
+            .phi => for (f.operands(inst.data)) |operand| try remember(arena, f, &seen, operand),
+            else => return false,
+        }
+    }
+    return true;
+}
+
+fn remember(arena: std.mem.Allocator, f: *const ir.Function, seen: *std.ArrayList(ir.Ref), raw: ir.Ref) Error!void {
+    const ref = f.resolve(raw);
+    if (std.mem.indexOfScalar(ir.Ref, seen.items, ref) == null) try seen.append(arena, ref);
 }
 
 /// Whether the store can take `value` without a copy: its storage was made in this
