@@ -17,8 +17,14 @@ const ir = @import("ir.zig");
 /// The pass only allocates.
 pub const Error = std.mem.Allocator.Error;
 
-/// Insert a `list_copy` before every `list_push` whose operand may be shared;
-/// returns how many it inserted.
+/// Whether `op` updates its list operand's block in place: a push, an element
+/// write or a pop (until the S1 ownership pass, every in-place update is treated as a push).
+fn inPlace(op: ir.Op) bool {
+    return op == .list_push or op == .list_set or op == .list_pop;
+}
+
+/// Insert a `list_copy` before every in-place list update (`list_push`, `list_set`,
+/// `list_pop`) whose operand may be shared; returns how many it inserted.
 pub fn copyShared(arena: std.mem.Allocator, f: *ir.Function) Error!u32 {
     var inserted: u32 = 0;
     for (0..f.blocks.items.len) |b| {
@@ -26,7 +32,7 @@ pub fn copyShared(arena: std.mem.Allocator, f: *ir.Function) Error!u32 {
         while (position < f.blocks.items[b].insts.items.len) : (position += 1) {
             const ref = f.blocks.items[b].insts.items[position];
             const push = f.inst(ref);
-            if (push.op != .list_push) continue;
+            if (!inPlace(push.op)) continue;
             const block: ir.BlockId = @fromBackingInt(@intCast(b));
             if (try unique(arena, f, f.resolve(push.a), .{ .block = block, .position = position, .push = ref })) continue;
             const copy: ir.Ref = @fromBackingInt(@intCast(f.insts.items.len));
@@ -53,8 +59,8 @@ fn unique(arena: std.mem.Allocator, f: *const ir.Function, value: ir.Ref, site: 
         const current = f.inst(sharing.items[next]);
         switch (current.op) {
             .list_new, .list_copy => {},
-            // Its own storage is its operand's (consumed by that push), already a new instance here.
-            .list_push => {},
+            // Its own storage is its operand's (consumed by that update), already a new instance here.
+            .list_push, .list_set, .list_pop => {},
             .phi => for (f.operands(current.data)) |operand| {
                 const source = f.resolve(operand);
                 if (std.mem.indexOfScalar(ir.Ref, sharing.items, source) == null) try sharing.append(arena, source);
@@ -137,14 +143,10 @@ fn usedOnEdgeFrom(f: *const ir.Function, block: ir.BlockId, value: ir.Ref) Error
 
 /// Whether `inst` (not a phi) reads `value`.
 fn uses(f: *const ir.Function, inst: ir.Inst, value: ir.Ref) bool {
-    switch (inst.op) {
-        .phi, .jump => return false,
-        .call, .print => {
-            for (f.operands(inst.data)) |operand| if (f.resolve(operand) == value) return true;
-            return false;
-        },
-        else => return (inst.a != .none and f.resolve(inst.a) == value) or (inst.b != .none and f.resolve(inst.b) == value),
-    }
+    if (inst.op == .phi) return false;
+    const operands = f.valueOperands(inst);
+    for (0..operands.len()) |i| if (f.resolve(operands.get(i)) == value) return true;
+    return false;
 }
 
 /// The block that defines `value`, or null for a value outside every block (a parameter).

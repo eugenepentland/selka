@@ -7,6 +7,7 @@ const build_ir = @import("build.zig");
 const emit_llvm = @import("emit_llvm.zig");
 const driver = @import("driver.zig");
 const passes = @import("passes.zig");
+const verify_ir = @import("verify_ir.zig");
 
 /// What the command line asked for.
 pub const Options = struct {
@@ -38,7 +39,7 @@ pub const Show = struct {
 };
 
 /// Why a build stopped after its report was written.
-pub const Error = error{ SourceError, Unsupported, ToolFailed, WriteFailed, OutOfMemory };
+pub const Error = error{ SourceError, Unsupported, ToolFailed, WriteFailed, OutOfMemory, InvalidIr };
 
 /// Build `path` into `options.output`.
 pub fn build(init: std.process.Init, path: []const u8, options: Options, report: *std.ArrayList(u8)) Error!u8 {
@@ -59,6 +60,8 @@ pub fn build(init: std.process.Init, path: []const u8, options: Options, report:
         },
         else => |other| return other,
     };
+    // A debug build of the compiler checks the IR it built, and again after the release passes.
+    if (verify_ir.enabled) try verify_ir.check(allocator, &module, &.{}, report);
     // Release builds compute facts and drop the checks they rule out; debug builds keep every check.
     const verify = options.facts != .on and options.facts != .off;
     const mode: passes.Mode = switch (options.facts) {
@@ -70,6 +73,7 @@ pub fn build(init: std.process.Init, path: []const u8, options: Options, report:
         .sabotage_length => .sabotage_length,
     };
     const result = if (options.release) try passes.run(allocator, &module, mode) else passes.Result{ .known = &.{}, .plans = &.{} };
+    if (verify_ir.enabled and options.release) try verify_ir.check(allocator, &module, result.plans, report);
     if (options.show.stats) {
         const format = "mylang-core: inlined {d} calls, unswitched {d} loops, versioned {d} loops, proved {d} checks, vectorized {d} loops\n";
         try report.print(allocator, format, .{ result.inlined, result.unswitched, result.versioned, result.proven, result.vectorized });

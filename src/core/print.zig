@@ -18,8 +18,22 @@ pub fn typeName(allocator: std.mem.Allocator, m: *const ir.Module, ty: ir.Type) 
     if (!ty.isCompound()) return @tagName(ty);
     return switch (m.compound(ty)) {
         .list => |element| std.fmt.allocPrint(allocator, "list[{s}]", .{try typeName(allocator, m, element)}),
-        .option => |payload| std.fmt.allocPrint(allocator, "option[{s}]", .{try typeName(allocator, m, payload)}),
+        .box => |inner| std.fmt.allocPrint(allocator, "box[{s}]", .{try typeName(allocator, m, inner)}),
+        .record => |fields| typeList(allocator, m, "record", fields),
+        .@"union" => |cases| if (cases.len == 2 and cases[0] == .void and cases[1] != .void)
+            std.fmt.allocPrint(allocator, "option[{s}]", .{try typeName(allocator, m, cases[1])})
+        else
+            typeList(allocator, m, "union", cases),
     };
+}
+
+/// `name{T, U, ...}`: a record's fields or a union's case payloads.
+fn typeList(allocator: std.mem.Allocator, m: *const ir.Module, name: []const u8, types: []const ir.Type) std.mem.Allocator.Error![]const u8 {
+    var out: std.ArrayList(u8) = .empty;
+    try out.print(allocator, "{s}{{", .{name});
+    for (types, 0..) |ty, i| try out.print(allocator, "{s}{s}", .{ if (i == 0) "" else ", ", try typeName(allocator, m, ty) });
+    try out.appendSlice(allocator, "}");
+    return out.toOwnedSlice(allocator);
 }
 
 /// Append one function's listing to `out`.
@@ -97,6 +111,32 @@ fn instruction(allocator: std.mem.Allocator, out: *std.ArrayList(u8), m: *const 
             if (inst.a != .none) {
                 try out.appendSlice(allocator, " ");
                 try operand(allocator, out, m, f, inst.a);
+            }
+        },
+        .record_get, .record_set => {
+            try out.appendSlice(allocator, " ");
+            try operand(allocator, out, m, f, inst.a);
+            try out.print(allocator, ", field{d}", .{inst.data});
+            if (inst.b != .none) {
+                try out.appendSlice(allocator, ", ");
+                try operand(allocator, out, m, f, inst.b);
+            }
+        },
+        .list_get_field => {
+            try out.appendSlice(allocator, " ");
+            try operand(allocator, out, m, f, inst.a);
+            try out.appendSlice(allocator, ", ");
+            try operand(allocator, out, m, f, inst.b);
+            const path = ir.FieldPath.unpack(inst.data);
+            try out.appendSlice(allocator, ", path");
+            for (path.slice(), 0..) |step, i| try out.print(allocator, "{s}{d}", .{ if (i == 0) " " else ".", step });
+        },
+        .err_trace => try out.print(allocator, " {s}", .{@tagName(@as(ir.TraceMode, @fromBackingInt(@intCast(@min(inst.data, 1)))))}),
+        .record_make, .list_set => {
+            const operands = f.valueOperands(inst);
+            for (0..operands.len()) |i| {
+                try out.appendSlice(allocator, if (i == 0) " " else ", ");
+                try operand(allocator, out, m, f, operands.get(i));
             }
         },
         else => {

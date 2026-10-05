@@ -145,7 +145,7 @@ const ModuleBuilder = struct {
             const option = variants.is_union and !variants.fallible and variants.cases.len == 2 and
                 variants.cases[0].payload == null and variants.cases[1].payload != null and
                 std.mem.startsWith(u8, record.name, "Option");
-            if (option) return self.module.intern(self.allocator, .{ .option = try self.mapType(variants.cases[1].payload.?, span) });
+            if (option) return self.module.option(self.allocator, try self.mapType(variants.cases[1].payload.?, span));
             if (variants.fallible) return self.refuse("Result type", span);
             if (!variants.is_union) return self.refuse("enum type", span);
             return self.refuse(if (std.mem.startsWith(u8, record.name, "Option")) "Option of an aggregate" else "union type", span);
@@ -502,7 +502,7 @@ const FnBuilder = struct {
     fn armBody(self: *FnBuilder, arm: typed.MatchArm, value: ir.Ref, union_type: ir.Type, span: u32) Error!void {
         if (arm.slot) |slot| {
             const payload_type = switch (self.mb.module.compound(union_type)) {
-                .option => |payload| payload,
+                .@"union" => |cases| if (arm.tag < cases.len and cases[arm.tag] != .void) cases[arm.tag] else return self.mb.refuse("match payload", span),
                 else => return self.mb.refuse("match payload", span),
             };
             const payload = try self.emit(.{ .op = .union_payload, .ty = payload_type, .a = value, .data = arm.tag, .span = span });

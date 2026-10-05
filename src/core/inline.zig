@@ -70,6 +70,12 @@ fn splice(arena: std.mem.Allocator, caller: *ir.Function, callee: *const ir.Func
         var inst = callee.inst(old);
         inst.a = remap(callee, map, inst.a);
         inst.b = remap(callee, map, inst.b);
+        if (inst.op.hasExtra()) {
+            // `record_make` and `list_set` carry operands in the callee's extra list.
+            const start: u32 = @intCast(caller.extra.items.len);
+            for (callee.operands(inst.data)) |operand| try caller.extra.append(arena, remap(callee, map, operand));
+            inst.data = (ir.ExtraSlice{ .start = start, .len = @intCast(caller.extra.items.len - start) }).pack();
+        }
         const ref = try append(arena, caller, inst);
         map[old.index()] = ref;
         try inserted.append(arena, ref);

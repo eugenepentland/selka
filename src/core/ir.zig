@@ -73,13 +73,92 @@ pub const Type = enum(u32) {
     }
 };
 
-/// A compound type's structure.
+/// A compound type's structure (docs/design/new-core-s1.md §2). Slices are owned by
+/// the module (`Module.intern` copies them).
 pub const Compound = union(enum) {
-    /// `list[T]`: an immutable list value of scalar elements.
+    /// `list[T]`: an immutable list value. Elements may be scalars, `str`, lists,
+    /// records, unions or boxes; `T` is the element type, not a storage type.
     list: Type,
-    /// `Option[T]`: tag 0 is `None`, tag 1 is `Some(T)` (the checker's case order).
-    option: Type,
+    /// A record: its field types in declaration order. A value, never a reference;
+    /// a nested record field is stored inline (flattened) in its parent.
+    record: []const Type,
+    /// A tagged union: one payload type per case, `.void` for a case without one.
+    /// The tag is the case index in the checker's case order, so `Option[T]` is
+    /// `{void, T}` (None is tag 0) and `Result[T, E]` lists its cases as the checker does.
+    @"union": []const Type,
+    /// An immutable reference-counted block holding one `T`: boxed (recursive)
+    /// record fields and union payloads.
+    box: Type,
 };
+
+/// How a union value is laid out (docs/design/new-core-s1.md §4).
+pub const UnionForm = enum(u8) {
+    /// Two cases, one without a payload and one whose payload is a block pointer
+    /// (`str`, a list or a box): the value is that pointer, null for the empty case.
+    niche,
+    /// Every case with a payload has the same scalar or pointer type: `{i8 tag, T}`
+    /// in registers.
+    scalar,
+    /// Anything else: `{i8 tag, [N x i64] words}` in registers, the payload's
+    /// memory image in the words.
+    words,
+};
+
+/// The layout of one union type. In memory every non-niche form is an 8-byte tag
+/// word followed by the payload's memory image in `payload_words` words.
+pub const UnionLayout = struct {
+    form: UnionForm,
+    /// Payload words in memory and in the `words` form's registers.
+    payload_words: u32,
+    /// `niche`: the index of the case without a payload (null pointer).
+    empty_case: u32 = 0,
+    /// `scalar`: the one payload type. `niche`: the pointer payload type.
+    payload: Type = .void,
+};
+
+/// One step of a `list_get_field` path. On a record it selects a field; on a union
+/// step 0 is the tag (`u32`) and step `k + 1` the payload of case `k`.
+pub const FieldPath = struct {
+    /// The most steps one path holds; deeper reads go through `record_get`.
+    pub const max_steps = 5;
+    len: u8 = 0,
+    steps: [max_steps]u12 = @splat(0),
+
+    /// A path from `steps`, or null when it is empty, too long or a step exceeds 4095.
+    pub fn init(steps: []const u32) ?FieldPath {
+        if (steps.len == 0 or steps.len > max_steps) return null;
+        var path: FieldPath = .{ .len = @intCast(steps.len) };
+        for (steps, 0..) |step, i| path.steps[i] = std.math.cast(u12, step) orelse return null;
+        return path;
+    }
+
+    /// Pack into an instruction's `data` field: the length in the low 4 bits, then 12 bits per step.
+    pub fn pack(self: FieldPath) u64 {
+        var data: u64 = self.len;
+        for (self.steps[0..self.len], 0..) |step, i| data |= @as(u64, step) << @intCast(4 + 12 * i);
+        return data;
+    }
+
+    /// Unpack from an instruction's `data` field.
+    pub fn unpack(data: u64) FieldPath {
+        var path: FieldPath = .{ .len = @intCast(@min(data & 0xf, max_steps)) };
+        for (0..path.len) |i| path.steps[i] = @truncate(data >> @intCast(4 + 12 * i));
+        return path;
+    }
+
+    /// The steps in order.
+    pub fn slice(self: *const FieldPath) []const u12 {
+        return self.steps[0..self.len];
+    }
+};
+
+/// The two kinds of `err_trace` (ERROR-TRACE-1): building an `Err` starts a trace,
+/// a `?` that propagates one appends its site.
+pub const TraceMode = enum(u8) { origin, append };
+
+/// Records and unions of at most this many words travel as LLVM struct values in
+/// registers; larger ones are passed by pointer and returned through `sret` (§3).
+pub const max_register_words = 4;
 
 /// What a checkable instruction promises about its failure path.
 pub const Check = enum(u8) {
@@ -156,12 +235,40 @@ pub const Op = enum(u8) {
     str_len,
     /// `int(a)` for string `a`: an `option(i64)`.
     str_parse_int,
-    /// A union value with tag `data` and payload `a` (or none).
+    /// A union value with tag `data` and payload `a` (none for a case without one).
     union_make,
     /// The tag of union `a` (`u32`).
     union_tag,
-    /// The payload of union `a` under tag `data`.
+    /// The payload of union `a` under tag `data` (only meaningful when that is its tag).
     union_payload,
+    /// A record of the field values in `extra` at `data`, in declaration order.
+    record_make,
+    /// Field `data` of record `a`.
+    record_get,
+    /// Record `a` with field `data` replaced by `b`; consumes `a`.
+    record_set,
+    /// List `a` with element `b` replaced by `extra[0]` at `data` (bounds-checked);
+    /// consumes `a` and the value, and drops the element it replaces.
+    list_set,
+    /// List `a` without its last element (checked: an empty list traps); consumes
+    /// `a`. The element is not dropped: the builder reads it with `list_get` first,
+    /// and that read takes the list's ownership of it.
+    list_pop,
+    /// The value at `FieldPath.unpack(data)` inside element `b` of list `a`
+    /// (bounds-checked), read without loading the whole element.
+    list_get_field,
+    /// A fresh box holding `a`; consumes `a`.
+    box_make,
+    /// The value box `a` holds.
+    box_get,
+    /// Add one owner to managed value `a` (every block it references).
+    retain,
+    /// Drop one owner of managed value `a`; a block whose last owner goes is freed.
+    release,
+    /// Whether block pointer `a` (a `str`, list or box) has exactly one owner (`bool`).
+    is_unique,
+    /// Record the error-trace site at this instruction's span; `data` is a `TraceMode`.
+    err_trace,
     /// Direct call of function `a` (its index into `Module.functions`), arguments in `extra` at `data`.
     call,
     /// Write `extra[1..]` to stream `extra[0]`, separated by spaces and ended by a newline.
@@ -182,11 +289,29 @@ pub const Op = enum(u8) {
             else => false,
         };
     }
+
+    /// Whether `data` packs an `extra` operand list (an `ExtraSlice`).
+    pub fn hasExtra(self: Op) bool {
+        return switch (self) {
+            .phi, .call, .print, .record_make, .list_set => true,
+            else => false,
+        };
+    }
+
+    /// Whether the operation is a constant or parameter: defined outside every block,
+    /// materialized at each use, so it dominates every use.
+    pub fn isConstant(self: Op) bool {
+        return switch (self) {
+            .param, .iconst, .fconst, .undef, .str_const => true,
+            else => false,
+        };
+    }
 };
 
 /// One instruction. `data` holds the immediate (constant bits, predicate, block,
-/// callee, tag, or a packed `extra` slice); `span` is the start offset of the
-/// source span in the merged source, for traps and traces.
+/// callee, tag, field index, `FieldPath`, `TraceMode`, or a packed `extra` slice);
+/// `span` is the start offset of the source span in the merged source, for traps,
+/// traces and error-trace sites.
 pub const Inst = struct {
     op: Op,
     ty: Type,
@@ -287,6 +412,40 @@ pub const Function = struct {
         const slice = ExtraSlice.unpack(data);
         return self.extra.items[slice.start..][0..slice.len];
     }
+
+    /// Every value `inst` reads, in order: `a` and `b` where the operation reads
+    /// them as values (a call's `a` is its callee), then its `extra` list.
+    pub fn valueOperands(self: *const Function, instruction: Inst) Operands {
+        var out: Operands = .{};
+        switch (instruction.op) {
+            .phi, .call, .print, .record_make => {},
+            .jump, .@"unreachable" => return out,
+            else => for ([_]Ref{ instruction.a, instruction.b }) |operand| {
+                if (operand == .none) continue;
+                out.direct[out.direct_len] = operand;
+                out.direct_len += 1;
+            },
+        }
+        if (instruction.op.hasExtra()) out.extra = self.operands(instruction.data);
+        return out;
+    }
+};
+
+/// The values one instruction reads (`Function.valueOperands`), unresolved.
+pub const Operands = struct {
+    direct: [2]Ref = .{ .none, .none },
+    direct_len: u8 = 0,
+    extra: []const Ref = &.{},
+
+    /// How many operands there are.
+    pub fn len(self: *const Operands) usize {
+        return self.direct_len + self.extra.len;
+    }
+
+    /// Operand `i`, `0 <= i < len()`.
+    pub fn get(self: *const Operands, i: usize) Ref {
+        return if (i < self.direct_len) self.direct[i] else self.extra[i - self.direct_len];
+    }
 };
 
 /// A whole program: interned compound types and functions.
@@ -298,17 +457,194 @@ pub const Module = struct {
     /// The function `main` is, by index.
     entry: u32 = 0,
 
-    /// The interned type for `compound`.
+    /// The interned type for `compound`; a record's or union's type list is copied.
     pub fn intern(self: *Module, allocator: std.mem.Allocator, wanted: Compound) std.mem.Allocator.Error!Type {
         for (self.compounds.items, 0..) |existing, i| {
-            if (std.meta.eql(existing, wanted)) return @fromBackingInt(@intCast(Type.first_compound + i));
+            if (sameCompound(existing, wanted)) return @fromBackingInt(@intCast(Type.first_compound + i));
         }
-        try self.compounds.append(allocator, wanted);
+        const owned: Compound = switch (wanted) {
+            .record => |fields| .{ .record = try allocator.dupe(Type, fields) },
+            .@"union" => |cases| .{ .@"union" = try allocator.dupe(Type, cases) },
+            else => wanted,
+        };
+        try self.compounds.append(allocator, owned);
         return @fromBackingInt(@intCast(Type.first_compound + self.compounds.items.len - 1));
+    }
+
+    /// The interned `Option[payload]`: a union of no payload (tag 0) and `payload` (tag 1).
+    pub fn option(self: *Module, allocator: std.mem.Allocator, payload: Type) std.mem.Allocator.Error!Type {
+        return self.intern(allocator, .{ .@"union" = &.{ .void, payload } });
     }
 
     /// The structure of a compound type.
     pub fn compound(self: *const Module, ty: Type) Compound {
         return self.compounds.items[@backingInt(ty) - Type.first_compound];
     }
+
+    /// Whether `ty` names a type: a scalar, or a compound this module interned.
+    pub fn valid(self: *const Module, ty: Type) bool {
+        return !ty.isCompound() or @backingInt(ty) - Type.first_compound < self.compounds.items.len;
+    }
+
+    /// The compound kind of `ty`, or null for a scalar.
+    pub fn kind(self: *const Module, ty: Type) ?std.meta.Tag(Compound) {
+        if (!ty.isCompound()) return null;
+        return std.meta.activeTag(self.compound(ty));
+    }
+
+    /// Whether a value of `ty` is a pointer to a counted block: `str`, a list or a box.
+    pub fn isBlock(self: *const Module, ty: Type) bool {
+        if (ty == .str) return true;
+        const k = self.kind(ty) orelse return false;
+        return k == .list or k == .box;
+    }
+
+    /// Whether a value of `ty` holds a reference to a counted block anywhere: a block
+    /// pointer, or a record or union with such a field or payload. Only these need RC.
+    pub fn managed(self: *const Module, ty: Type) bool {
+        if (self.isBlock(ty)) return true;
+        if (!ty.isCompound()) return false;
+        return switch (self.compound(ty)) {
+            .record => |fields| for (fields) |field| {
+                if (self.managed(field)) break true;
+            } else false,
+            .@"union" => |cases| for (cases) |case| {
+                if (self.managed(case)) break true;
+            } else false,
+            else => false,
+        };
+    }
+
+    /// Bytes a value of `ty` occupies in memory (a list element, a box, a field, a payload).
+    /// A record follows C layout and its size is a multiple of its alignment.
+    pub fn size(self: *const Module, ty: Type) u32 {
+        return switch (ty) {
+            .void => 0,
+            .bool, .i8, .u8 => 1,
+            .i16, .u16 => 2,
+            .i32, .u32 => 4,
+            .i64, .u64, .f64, .cap, .str => 8,
+            _ => switch (self.compound(ty)) {
+                .list, .box => 8,
+                .record => |fields| blk: {
+                    var offset: u32 = 0;
+                    for (fields) |field| offset = std.mem.alignForward(u32, offset, self.alignment(field)) + self.size(field);
+                    break :blk std.mem.alignForward(u32, offset, self.alignment(ty));
+                },
+                .@"union" => blk: {
+                    const layout = self.unionLayout(ty);
+                    break :blk if (layout.form == .niche) 8 else 8 + 8 * layout.payload_words;
+                },
+            },
+        };
+    }
+
+    /// The alignment of `ty` in memory, in bytes.
+    pub fn alignment(self: *const Module, ty: Type) u32 {
+        if (!ty.isCompound()) return @max(1, self.size(ty));
+        return switch (self.compound(ty)) {
+            .list, .box, .@"union" => 8,
+            .record => |fields| blk: {
+                var most: u32 = 1;
+                for (fields) |field| most = @max(most, self.alignment(field));
+                break :blk most;
+            },
+        };
+    }
+
+    /// The memory size of `ty` in 8-byte words, rounded up.
+    pub fn words(self: *const Module, ty: Type) u32 {
+        return (self.size(ty) + 7) / 8;
+    }
+
+    /// Whether a record or union of `ty` crosses calls in memory (more than
+    /// `max_register_words` words) rather than as an LLVM struct value.
+    pub fn passedInMemory(self: *const Module, ty: Type) bool {
+        const k = self.kind(ty) orelse return false;
+        return (k == .record or k == .@"union") and self.words(ty) > max_register_words;
+    }
+
+    /// The byte offset of field `index` inside a record of type `record`.
+    pub fn fieldOffset(self: *const Module, record: Type, index: usize) u32 {
+        const fields = self.compound(record).record;
+        var offset: u32 = 0;
+        for (fields[0..index]) |field| offset = std.mem.alignForward(u32, offset, self.alignment(field)) + self.size(field);
+        return std.mem.alignForward(u32, offset, self.alignment(fields[index]));
+    }
+
+    /// The layout of union type `ty` (§4).
+    pub fn unionLayout(self: *const Module, ty: Type) UnionLayout {
+        const cases = self.compound(ty).@"union";
+        var payload_words: u32 = 0;
+        var only: Type = .void;
+        var uniform = true;
+        for (cases) |case| {
+            if (case == .void) continue;
+            payload_words = @max(payload_words, self.words(case));
+            if (only != .void and only != case) uniform = false;
+            only = case;
+            const k = self.kind(case);
+            if (k == .record or k == .@"union") uniform = false;
+        }
+        if (cases.len == 2 and (cases[0] == .void) != (cases[1] == .void) and self.isBlock(only)) {
+            return .{ .form = .niche, .payload_words = 1, .empty_case = if (cases[0] == .void) 0 else 1, .payload = only };
+        }
+        if (uniform and only != .void) return .{ .form = .scalar, .payload_words = payload_words, .payload = only };
+        return .{ .form = .words, .payload_words = payload_words };
+    }
+
+    /// The type and byte offset `path` reaches inside a value of `ty`, or null when a
+    /// step does not fit (a field or case out of range, a scalar, a list or a box).
+    pub fn pathTarget(self: *const Module, ty: Type, path: FieldPath) ?PathTarget {
+        var current = ty;
+        var offset: u32 = 0;
+        var tag_of: Type = .void;
+        for (path.slice()) |step| {
+            const k = self.kind(current) orelse return null;
+            switch (k) {
+                .record => {
+                    const fields = self.compound(current).record;
+                    if (step >= fields.len) return null;
+                    offset += self.fieldOffset(current, step);
+                    current = fields[step];
+                },
+                .@"union" => {
+                    const cases = self.compound(current).@"union";
+                    if (step == 0) {
+                        // The tag: a scalar, so any further step fails above.
+                        tag_of = current;
+                        current = .u32;
+                        continue;
+                    }
+                    if (step - 1 >= cases.len or cases[step - 1] == .void) return null;
+                    if (self.unionLayout(current).form != .niche) offset += 8;
+                    current = cases[step - 1];
+                },
+                else => return null,
+            }
+        }
+        return .{ .ty = current, .offset = offset, .tag_of = tag_of };
+    }
 };
+
+/// Where a `FieldPath` leads inside an element.
+pub const PathTarget = struct {
+    /// The type of the value read.
+    ty: Type,
+    /// Its byte offset from the start of the element.
+    offset: u32,
+    /// When the last step reads a union's tag, that union's type (whose value starts
+    /// at `offset`); `.void` otherwise.
+    tag_of: Type = .void,
+};
+
+/// Whether two compound descriptions are the same type.
+fn sameCompound(x: Compound, y: Compound) bool {
+    if (std.meta.activeTag(x) != std.meta.activeTag(y)) return false;
+    return switch (x) {
+        .list => |element| element == y.list,
+        .box => |inner| inner == y.box,
+        .record => |fields| std.mem.eql(Type, fields, y.record),
+        .@"union" => |cases| std.mem.eql(Type, cases, y.@"union"),
+    };
+}

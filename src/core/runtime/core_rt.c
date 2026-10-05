@@ -2,8 +2,8 @@
  *
  * Blocks: a 32-byte header {u32 count, u32 kind, i64 len, i64 cap, i64 reserved}
  * followed by 32-byte-aligned data. `count` is the single saturating 32-bit
- * reference count of D4; S0 creates every block with count 1 and frees none (the
- * ownership pass that releases them is S1). There is no collector and no memory
+ * reference count of D4; every block starts with count 1, and the emitted code
+ * counts inline and frees through `myl_core_free` (S1). There is no collector and no memory
  * budget (L3): an allocation the OS refuses ends the process with one message.
  *
  * Output: one buffer per standard stream, flushed when full, at exit and before a
@@ -46,7 +46,7 @@ typedef struct {
     int64_t reserved;
 } myl_block;
 
-enum { MYL_KIND_LIST = 0, MYL_KIND_STR = 1 };
+enum { MYL_KIND_LIST = 0, MYL_KIND_STR = 1, MYL_KIND_BOX = 2 };
 enum { MYL_HEADER = 32, MYL_ALIGN = 32 };
 
 static unsigned char *block_data(myl_block *block) { return (unsigned char *)block + MYL_HEADER; }
@@ -172,6 +172,31 @@ static myl_block *str_from(const char *bytes, size_t len) {
     return text;
 }
 
+/* A box: an immutable block holding one value of `size` bytes at offset 32,
+   which the emitted code stores right after this returns (`box_make`). */
+myl_block *myl_core_box_new(int64_t size) {
+    myl_block *box = block_new(MYL_KIND_BOX, size, 1);
+    box->len = size;
+    return box;
+}
+
+/* ---- one-count RC (docs/design/new-core-s1.md §6) ------------------------------
+ * Retain and release are emitted inline: the count is a u32 at offset 0,
+ * 0xFFFFFFFF is saturated (D4) and never changes. A release that drops the last
+ * owner calls this cold function. Step 0 frees the block only; releasing the
+ * children a list, box or record field holds (by `kind` and the element
+ * descriptor in `reserved`) is lane O's. */
+void myl_core_free(myl_block *block) { free(block); }
+
+/* ---- error traces (ERROR-TRACE-1..5) -------------------------------------------
+ * Called on Err paths only: mode 0 starts a trace at `site` (building an Err),
+ * mode 1 appends a `?` site. Step 0 records nothing; lane O keeps the ring of
+ * site indices and prints it when `main` returns Err. */
+void myl_core_err_trace(int32_t site, int32_t mode) {
+    (void)site;
+    (void)mode;
+}
+
 /* `main`'s `args`: every command-line argument after the program name. */
 myl_block *myl_core_args(int32_t argc, char **argv) {
     int64_t count = argc > 1 ? argc - 1 : 0;
@@ -233,7 +258,7 @@ typedef struct {
 extern const myl_core_site myl_core_sites[];
 extern const char myl_core_source_path[];
 
-enum { TRAP_OVERFLOW, TRAP_DIVISION_BY_ZERO, TRAP_LIST_BOUNDS, TRAP_FLOAT_CONVERSION, TRAP_CAST, TRAP_FACT };
+enum { TRAP_OVERFLOW, TRAP_DIVISION_BY_ZERO, TRAP_LIST_BOUNDS, TRAP_FLOAT_CONVERSION, TRAP_CAST, TRAP_FACT, TRAP_LIST_EMPTY };
 
 static const char *unqualified(const char *name) {
     const char *at = strrchr(name, ':');
@@ -262,6 +287,12 @@ void myl_core_trap(int32_t index, int64_t a, int64_t b) {
         code = "R_LIST_BOUNDS";
         snprintf(detail, sizeof detail, " (index %lld, length %lld)", (long long)a, (long long)b);
         snprintf(record, sizeof record, "MYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":%lld,\"length\":%lld}\n", (long long)a, (long long)b);
+        break;
+    case TRAP_LIST_EMPTY:
+        /* A pop of an empty list: the old core's code and `pop` detail (PY-COLLECTIONS-20). */
+        code = "R_LIST_BOUNDS";
+        snprintf(detail, sizeof detail, " (length %lld)", (long long)b);
+        snprintf(record, sizeof record, "MYLANG-TRAP {\"version\":1,\"operation\":\"pop\",\"length\":%lld}\n", (long long)b);
         break;
     case TRAP_FLOAT_CONVERSION:
         code = "R_FLOAT_CONVERSION";

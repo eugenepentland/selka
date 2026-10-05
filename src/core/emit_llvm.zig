@@ -45,8 +45,10 @@ pub const Options = struct {
     target: @import("target.zig").Target = @import("target.zig").current,
 };
 
-/// Trap kinds, in the order the runtime's code table lists them.
-pub const TrapKind = enum(u8) { overflow, division_by_zero, list_bounds, float_conversion, cast, fact };
+/// Trap kinds, in the order the runtime's code table lists them. `list_empty` is a
+/// pop of an empty list (`R_LIST_BOUNDS`, operation `pop`); `trace` marks an
+/// error-trace site, which never traps.
+pub const TrapKind = enum(u8) { overflow, division_by_zero, list_bounds, float_conversion, cast, fact, list_empty, trace };
 
 const Site = struct { kind: TrapKind, location: Location, width: u16, operation: []const u8, function: []const u8 };
 
@@ -67,6 +69,36 @@ const bound_line = "  {s} = icmp {s} {s} {s}, {d}\n";
 
 /// `  %at = getelementptr inbounds i8, ptr list, i64 offset` then `  %x = load i64, ptr %at`: one header field.
 const header_load_line = "  {s} = getelementptr inbounds i8, ptr {s}, i64 {d}\n  {s} = load i64, ptr {s}, align 8\n";
+
+/// TBAA access tags and the count's `!range` (docs/design/new-core-s1.md §6, R-2):
+/// the reference count, the header's length and capacity, and element, field and
+/// box data are three types no access of another aliases, so LLVM may move or fold
+/// count updates across data accesses. Fixed node numbers, emitted with the module.
+const tbaa_count = "!tbaa !3";
+const tbaa_header = "!tbaa !5";
+const tbaa_data = "!tbaa !7";
+/// A count is never 0 while its block is reachable: `[1, 0)`, i.e. 1 through saturated.
+const count_range = "!range !8";
+/// The first `!range` node number free for fact intervals.
+const first_range_node = 8;
+/// The TBAA scaffold and the count range, as numbered above.
+const tbaa_metadata =
+    \\!1 = !{!"myl.tbaa"}
+    \\!2 = !{!"myl.count", !1, i64 0}
+    \\!3 = !{!2, !2, i64 0}
+    \\!4 = !{!"myl.header", !1, i64 0}
+    \\!5 = !{!4, !4, i64 0}
+    \\!6 = !{!"myl.data", !1, i64 0}
+    \\!7 = !{!6, !6, i64 0}
+    \\!8 = !{i32 1, i32 0}
+    \\
+;
+/// `  %x = load i64, ptr %at` of one data word (a union's tag word or payload word).
+const word_load_line = "  {s} = load i64, ptr {s}, align 8, " ++ tbaa_data ++ "\n";
+/// The count load every `retain`, `release` and `is_unique` starts with.
+const count_load_line = "  {s} = load i32, ptr {s}, align 8, " ++ tbaa_count ++ ", " ++ count_range ++ "\n";
+/// The header field loads of a list or string, tagged as header data.
+const header_tagged_line = "  {s} = getelementptr inbounds i8, ptr {s}, i64 {d}\n  {s} = load i64, ptr {s}, align 8, " ++ tbaa_header ++ "\n";
 
 /// One instruction line of the shape `  %x = op type a, b`.
 const binary_line = "  {s} = {s} {s} {s}, {s}\n";
@@ -92,14 +124,16 @@ pub fn emitModule(allocator: std.mem.Allocator, module: *const ir.Module, option
     try state.emitSites(&out);
     try state.emitStrings(&out);
     try out.appendSlice(allocator, metadata);
+    try out.appendSlice(allocator, tbaa_metadata);
     try out.appendSlice(allocator, state.meta.ranges.items);
     return out.toOwnedSlice(allocator);
 }
 
-/// Module-wide numbering: `!range` nodes (from 1; `!0` is the trap branch weight) and vector loops.
+/// Module-wide numbering: `!range` nodes (after the fixed TBAA nodes; `!0` is the
+/// trap branch weight) and vector loops.
 const Metadata = struct {
     ranges: Out = .empty,
-    range_count: u32 = 0,
+    range_count: u32 = first_range_node,
     vector_count: u32 = 0,
 };
 
@@ -110,6 +144,8 @@ const ModuleState = struct {
     sites: std.ArrayList(Site) = .empty,
     externs: Out = .empty,
     meta: Metadata = .{},
+    /// The `alloca`s of the function being emitted, placed in its entry block.
+    allocas: Out = .empty,
 
     fn declareExtern(self: *ModuleState, function: *const ir.Function) !void {
         try self.externs.print(self.allocator, "declare {s} @{s}(", .{ try self.llvmType(function.signature.ret), c_abi.symbol(function.name) });
@@ -146,10 +182,34 @@ const ModuleState = struct {
             .f64 => "double",
             .str => "ptr",
             _ => switch (self.module.compound(ty)) {
-                .list => "ptr",
-                .option => |payload| std.fmt.allocPrint(self.allocator, "{{ i8, {s} }}", .{try self.llvmType(payload)}),
+                .list, .box => "ptr",
+                .record => |fields| blk: {
+                    var text: Out = .empty;
+                    try text.appendSlice(self.allocator, "{ ");
+                    for (fields, 0..) |field, i| try text.print(self.allocator, "{s}{s}", .{ if (i == 0) "" else ", ", try self.llvmType(field) });
+                    try text.appendSlice(self.allocator, if (fields.len == 0) "}" else " }");
+                    break :blk text.items;
+                },
+                .@"union" => blk: {
+                    const layout = self.module.unionLayout(ty);
+                    break :blk switch (layout.form) {
+                        .niche => "ptr",
+                        .scalar => std.fmt.allocPrint(self.allocator, "{{ i8, {s} }}", .{try self.llvmType(layout.payload)}),
+                        .words => std.fmt.allocPrint(self.allocator, "{{ i8, [{d} x i64] }}", .{layout.payload_words}),
+                    };
+                },
             },
         };
+    }
+
+    /// `[S x i8]`: the memory image of a value of `ty`, for `sret` and argument slots.
+    fn memoryType(self: *ModuleState, ty: ir.Type) ![]const u8 {
+        return std.fmt.allocPrint(self.allocator, "[{d} x i8]", .{self.module.size(ty)});
+    }
+
+    /// Bytes between consecutive list elements of type `ty`.
+    fn stride(self: *ModuleState, ty: ir.Type) u32 {
+        return @max(1, self.module.size(ty));
     }
 
     fn emitPrelude(self: *ModuleState, out: *Out) !void {
@@ -168,6 +228,9 @@ const ModuleState = struct {
             \\declare void @myl_core_print_str(i64, ptr) nounwind
             \\declare void @myl_core_print_sep(i64) nounwind
             \\declare void @myl_core_print_end(i64) nounwind
+            \\declare ptr @myl_core_box_new(i64) nounwind
+            \\declare void @myl_core_free(ptr) nounwind cold
+            \\declare void @myl_core_err_trace(i32, i32) nounwind cold
             \\
         );
         try out.appendSlice(self.allocator, self.externs.items);
@@ -251,6 +314,12 @@ const VectorState = struct {
     block: u32 = 0,
 };
 
+/// Which count update `counted` emits.
+const Counting = enum { retain, release };
+
+/// One `union_payload` read: the name it defines, the union's type and value, and the case.
+const PayloadRead = struct { result: []const u8, union_type: ir.Type, value: []const u8, case: u32 };
+
 /// The operands of one floor division or remainder.
 const FloorOperands = struct { result: []const u8, type_name: []const u8, left: []const u8, right: []const u8, safe: []const u8, is_rem: bool };
 
@@ -305,8 +374,21 @@ const FunctionEmitter = struct {
 
     fn emitFunction(self: *FunctionEmitter, out: *Out) !void {
         const f = self.function;
-        try out.print(self.a(), "define internal {s} {s}(", .{ try self.ty(f.signature.ret), try symbol(self.a(), f.name) });
-        for (f.signature.params, 0..) |param, i| try out.print(self.a(), "{s}{s} %p{d}", .{ if (i == 0) "" else ", ", try self.ty(param), i });
+        const m = self.state.module;
+        self.state.allocas = .empty;
+        // Records and unions over four words cross calls in memory: by a read-only
+        // pointer in, through `sret` out (docs/design/new-core-s1.md §3).
+        const sret = m.passedInMemory(f.signature.ret);
+        try out.print(self.a(), "define internal {s} {s}(", .{ if (sret) "void" else try self.ty(f.signature.ret), try symbol(self.a(), f.name) });
+        if (sret) try out.print(self.a(), "ptr noalias sret({s}) align 8 %ret", .{try self.state.memoryType(f.signature.ret)});
+        var entry: Out = .empty;
+        for (f.signature.params, 0..) |param, i| {
+            const separator = if (i == 0 and !sret) "" else ", ";
+            if (m.passedInMemory(param)) {
+                try out.print(self.a(), "{s}ptr noalias readonly align 8 %p{d}.mem", .{ separator, i });
+                try self.loadValue(&entry, param, try std.fmt.allocPrint(self.a(), "%p{d}.mem", .{i}), try std.fmt.allocPrint(self.a(), "%p{d}", .{i}));
+            } else try out.print(self.a(), "{s}{s} %p{d}", .{ separator, try self.ty(param), i });
+        }
         try out.appendSlice(self.a(), ") nounwind {\n");
         const bodies = try self.a().alloc(Out, f.blocks.items.len);
         try self.exit_labels.resize(self.a(), f.blocks.items.len);
@@ -329,7 +411,10 @@ const FunctionEmitter = struct {
             }
             self.exit_labels.items[b] = self.label;
         }
-        try out.appendSlice(self.a(), "entry:\n  %slot = alloca i64, align 8\n  br label %b0\n");
+        try out.appendSlice(self.a(), "entry:\n  %slot = alloca i64, align 8\n");
+        try out.appendSlice(self.a(), self.state.allocas.items);
+        try out.appendSlice(self.a(), entry.items);
+        try out.appendSlice(self.a(), "  br label %b0\n");
         for (f.blocks.items, 0..) |block, b| {
             if (b != 0 and block.preds.items.len == 0) continue;
             try out.print(self.a(), "b{d}:\n", .{b});
@@ -564,17 +649,17 @@ const FunctionEmitter = struct {
             .convert => try self.convert(out, name, inst),
             .list_new => {
                 const element = self.state.module.compound(inst.ty).list;
-                try out.print(self.a(), "  {s} = call ptr @myl_core_list_new(i64 {s}, i64 {d})\n", .{ name, try self.value(inst.a), elementSize(element) });
+                try out.print(self.a(), "  {s} = call ptr @myl_core_list_new(i64 {s}, i64 {d})\n", .{ name, try self.value(inst.a), self.state.stride(element) });
             },
             .list_len, .str_len => {
                 const at = try self.fresh("%h");
-                try out.print(self.a(), header_load_line, .{ at, try self.value(inst.a), len_offset, name, at });
+                try out.print(self.a(), header_tagged_line, .{ at, try self.value(inst.a), len_offset, name, at });
             },
             .list_get => try self.listGet(out, name, inst),
             .list_push => try self.listPush(out, name, inst),
             .list_copy => {
                 const element = self.state.module.compound(inst.ty).list;
-                try out.print(self.a(), "  {s} = call ptr @myl_core_list_copy(ptr {s}, i64 {d})\n", .{ name, try self.value(inst.a), elementSize(element) });
+                try out.print(self.a(), "  {s} = call ptr @myl_core_list_copy(ptr {s}, i64 {d})\n", .{ name, try self.value(inst.a), self.state.stride(element) });
             },
             .str_parse_int => {
                 const ok = try self.fresh("%ok");
@@ -584,18 +669,32 @@ const FunctionEmitter = struct {
                 try out.print(self.a(), "  {s} = call zeroext i1 @myl_core_str_parse_int(ptr {s}, ptr %slot)\n  {s} = load i64, ptr %slot, align 8\n  {s} = zext i1 {s} to i8\n", .{ ok, try self.value(inst.a), parsed, tag, ok });
                 try out.print(self.a(), "  {s} = insertvalue {{ i8, i64 }} poison, i8 {s}, 0\n  {s} = insertvalue {{ i8, i64 }} {s}, i64 {s}, 1\n", .{ partial, tag, name, partial, parsed });
             },
-            .union_make => {
-                const tyname = try self.ty(inst.ty);
-                const payload_type = self.state.module.compound(inst.ty).option;
-                const partial = try self.fresh("%u");
-                const payload = if (inst.a == .none) "zeroinitializer" else try self.value(inst.a);
-                try out.print(self.a(), "  {s} = insertvalue {s} poison, i8 {d}, 0\n  {s} = insertvalue {s} {s}, {s} {s}, 1\n", .{ partial, tyname, inst.data, name, tyname, partial, try self.ty(payload_type), payload });
+            .union_make => try self.unionMake(out, name, inst),
+            .union_tag => try self.unionTag(out, name, inst.a),
+            .union_payload => try self.unionPayload(out, .{ .result = name, .union_type = self.typeOf(inst.a), .value = try self.value(inst.a), .case = @intCast(inst.data) }),
+            .record_make => try self.recordMake(out, name, inst),
+            .record_get => try out.print(self.a(), "  {s} = extractvalue {s}, {d}\n", .{ name, try self.typedValue(inst.a), inst.data }),
+            .record_set => try out.print(self.a(), "  {s} = insertvalue {s}, {s}, {d}\n", .{ name, try self.typedValue(inst.a), try self.typedValue(inst.b), inst.data }),
+            .list_set => try self.listSet(out, name, inst),
+            .list_pop => try self.listPop(out, name, inst),
+            .list_get_field => try self.listGetField(out, name, inst),
+            .box_make => {
+                const inner = self.state.module.compound(inst.ty).box;
+                try out.print(self.a(), "  {s} = call ptr @myl_core_box_new(i64 {d})\n", .{ name, self.state.module.size(inner) });
+                try self.storeValue(out, inner, try self.value(inst.a), try self.offsetPointer(out, name, data_offset));
             },
-            .union_tag => {
-                const tag = try self.fresh("%t");
-                try out.print(self.a(), "  {s} = extractvalue {s}, 0\n  {s} = zext i8 {s} to i32\n", .{ tag, try self.typedValue(inst.a), name, tag });
+            .box_get => try self.loadValue(out, inst.ty, try self.offsetPointer(out, try self.value(inst.a), data_offset), name),
+            .retain, .release => try self.counted(out, if (inst.op == .retain) .retain else .release, self.typeOf(inst.a), try self.value(inst.a)),
+            .is_unique => {
+                const count = try self.fresh("%rc");
+                try out.print(self.a(), count_load_line ++ "  {s} = icmp eq i32 {s}, 1\n", .{ count, try self.value(inst.a), name, count });
             },
-            .union_payload => try out.print(self.a(), "  {s} = extractvalue {s}, 1\n", .{ name, try self.typedValue(inst.a) }),
+            .err_trace => {
+                const mode: ir.TraceMode = if (inst.data == 0) .origin else .append;
+                const location = self.state.options.locator.locate(self.state.options.locator.context, inst.span);
+                const index = try self.state.site(.{ .kind = .trace, .location = location, .width = 0, .operation = @tagName(mode), .function = self.function.name });
+                try out.print(self.a(), "  call void @myl_core_err_trace(i32 {d}, i32 {d})\n", .{ index, @backingInt(mode) });
+            },
             .call => try self.call(out, name, inst),
             .print => try self.print(out, inst),
             .jump => {
@@ -606,7 +705,12 @@ const FunctionEmitter = struct {
                 const targets = ir.unpackTargets(inst.data);
                 try out.print(self.a(), "  br i1 {s}, label %b{d}, label %b{d}\n", .{ try self.value(inst.a), @backingInt(targets.then), @backingInt(targets.otherwise) });
             },
-            .ret => if (inst.a == .none) try out.appendSlice(self.a(), "  ret void\n") else try out.print(self.a(), "  ret {s}\n", .{try self.typedValue(inst.a)}),
+            .ret => if (inst.a == .none) {
+                try out.appendSlice(self.a(), "  ret void\n");
+            } else if (self.state.module.passedInMemory(self.function.signature.ret)) {
+                try self.storeValue(out, self.function.signature.ret, try self.value(inst.a), "%ret");
+                try out.appendSlice(self.a(), "  ret void\n");
+            } else try out.print(self.a(), "  ret {s}\n", .{try self.typedValue(inst.a)}),
             .@"unreachable" => try out.appendSlice(self.a(), "  unreachable\n"),
         }
     }
@@ -794,23 +898,384 @@ const FunctionEmitter = struct {
     fn listGet(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) !void {
         const list = try self.value(inst.a);
         const index = try self.value(inst.b);
-        if (self.checkOf(inst) == .exact) {
-            const at = try self.fresh("%lh");
-            const len = try self.fresh("%len");
-            const outside = try self.fresh("%oob");
-            try out.print(self.a(), "  {s} = getelementptr inbounds i8, ptr {s}, i64 {d}\n  {s} = load i64, ptr {s}, align 8\n  {s} = icmp uge i64 {s}, {s}\n", .{ at, list, len_offset, len, at, outside, index, len });
-            try self.trapIf(out, outside, try self.site(.list_bounds, inst, "index"), index, len);
-        }
+        try self.boundsCheck(out, inst, list, index);
+        const slot = try self.elementSlot(out, list, index, inst.ty);
+        if (inst.ty == .bool or inst.ty.isCompound()) return self.loadValue(out, inst.ty, slot, name);
+        const stored = storageType(inst.ty);
+        try out.print(self.a(), "  {s} = load {s}, ptr {s}, align {d}{s}, " ++ tbaa_data ++ "\n", .{ name, stored, slot, elementSize(inst.ty), try self.loadRange(name, inst.ty) });
+    }
+
+    /// Trap unless `0 <= index < len(list)` (the index is unsigned here), for an exact check.
+    fn boundsCheck(self: *FunctionEmitter, out: *Out, inst: ir.Inst, list: []const u8, index: []const u8) !void {
+        if (self.checkOf(inst) != .exact) return;
+        const at = try self.fresh("%lh");
+        const len = try self.fresh("%len");
+        const outside = try self.fresh("%oob");
+        try out.print(self.a(), header_tagged_line, .{ at, list, len_offset, len, at });
+        try out.print(self.a(), "  {s} = icmp uge i64 {s}, {s}\n", .{ outside, index, len });
+        try self.trapIf(out, outside, try self.site(.list_bounds, inst, "index"), index, len);
+    }
+
+    /// The address of element `index` of `list`: a typed `getelementptr` for scalars and
+    /// pointers, a byte stride for records and unions stored inline.
+    fn elementSlot(self: *FunctionEmitter, out: *Out, list: []const u8, index: []const u8, element: ir.Type) ![]const u8 {
         const data = try self.fresh("%data");
         const slot = try self.fresh("%elt");
-        const stored = storageType(inst.ty);
-        try out.print(self.a(), "  {s} = getelementptr inbounds i8, ptr {s}, i64 {d}\n  {s} = getelementptr inbounds {s}, ptr {s}, i64 {s}\n", .{ data, list, data_offset, slot, stored, data, index });
-        if (inst.ty == .bool) {
-            const byte = try self.fresh("%byte");
-            try out.print(self.a(), "  {s} = load i8, ptr {s}, align 1\n  {s} = trunc i8 {s} to i1\n", .{ byte, slot, name, byte });
-        } else {
-            try out.print(self.a(), "  {s} = load {s}, ptr {s}, align {d}{s}\n", .{ name, stored, slot, elementSize(inst.ty), try self.loadRange(name, inst.ty) });
+        const inline_value = element.isCompound() and !self.state.module.isBlock(element);
+        const stepped = if (inline_value) try std.fmt.allocPrint(self.a(), "[{d} x i8]", .{self.state.stride(element)}) else storageType(element);
+        try out.print(self.a(), "  {s} = getelementptr inbounds i8, ptr {s}, i64 {d}\n  {s} = getelementptr inbounds {s}, ptr {s}, i64 {s}\n", .{ data, list, data_offset, slot, stepped, data, index });
+        return slot;
+    }
+
+    /// The type of the value `raw` stands for.
+    fn typeOf(self: *FunctionEmitter, raw: ir.Ref) ir.Type {
+        return self.function.inst(self.function.resolve(raw)).ty;
+    }
+
+    /// `ptr + offset`, or `ptr` itself at offset 0.
+    fn offsetPointer(self: *FunctionEmitter, out: *Out, ptr: []const u8, offset: u32) ![]const u8 {
+        if (offset == 0) return ptr;
+        const at = try self.fresh("%fp");
+        try out.print(self.a(), "  {s} = getelementptr inbounds i8, ptr {s}, i64 {d}\n", .{ at, ptr, offset });
+        return at;
+    }
+
+    /// An entry-block stack slot of `bytes` bytes, 8-byte aligned.
+    fn stackSlot(self: *FunctionEmitter, bytes: u32) ![]const u8 {
+        const slot = try self.fresh("%stack");
+        try self.state.allocas.print(self.a(), "  {s} = alloca [{d} x i8], align 8\n", .{ slot, @max(bytes, 1) });
+        return slot;
+    }
+
+    /// Load the memory image of a `ty` value at `ptr` into register value `result`: field
+    /// by field for records and unions, so no aggregate load is emitted (§3).
+    fn loadValue(self: *FunctionEmitter, out: *Out, value_type: ir.Type, ptr: []const u8, result: []const u8) Error!void {
+        const m = self.state.module;
+        if (value_type == .void) return error.UnsupportedInstruction;
+        if (value_type == .bool) {
+            const byte = try self.fresh("%lb");
+            try out.print(self.a(), "  {s} = load i8, ptr {s}, align 1, " ++ tbaa_data ++ "\n  {s} = trunc i8 {s} to i1\n", .{ byte, ptr, result, byte });
+            return;
         }
+        if (!value_type.isCompound() or m.isBlock(value_type)) {
+            try out.print(self.a(), "  {s} = load {s}, ptr {s}, align {d}, " ++ tbaa_data ++ "\n", .{ result, try self.ty(value_type), ptr, m.size(value_type) });
+            return;
+        }
+        const tyname = try self.ty(value_type);
+        switch (m.compound(value_type)) {
+            .record => |fields| {
+                if (fields.len == 0) {
+                    try out.print(self.a(), "  {s} = select i1 true, {s} zeroinitializer, {s} zeroinitializer\n", .{ result, tyname, tyname });
+                    return;
+                }
+                var partial: []const u8 = "poison";
+                for (fields, 0..) |field, i| {
+                    const field_value = try self.fresh("%lf");
+                    try self.loadValue(out, field, try self.offsetPointer(out, ptr, m.fieldOffset(value_type, i)), field_value);
+                    const next = if (i + 1 == fields.len) result else try self.fresh("%lr");
+                    try out.print(self.a(), "  {s} = insertvalue {s} {s}, {s} {s}, {d}\n", .{ next, tyname, partial, try self.ty(field), field_value, i });
+                    partial = next;
+                }
+            },
+            .@"union" => {
+                const layout = m.unionLayout(value_type);
+                if (layout.form == .niche) {
+                    try out.print(self.a(), "  {s} = load ptr, ptr {s}, align 8, " ++ tbaa_data ++ "\n", .{ result, ptr });
+                    return;
+                }
+                const word = try self.fresh("%lt");
+                const tag = try self.fresh("%lt");
+                try out.print(self.a(), word_load_line ++ "  {s} = trunc i64 {s} to i8\n", .{ word, ptr, tag, word });
+                const last_words = layout.form == .words and layout.payload_words == 0;
+                const tagged = if (last_words) result else try self.fresh("%lu");
+                try out.print(self.a(), "  {s} = insertvalue {s} poison, i8 {s}, 0\n", .{ tagged, tyname, tag });
+                const payload_at = try self.offsetPointer(out, ptr, 8);
+                if (layout.form == .scalar) {
+                    const payload = try self.fresh("%lp");
+                    try self.loadValue(out, layout.payload, payload_at, payload);
+                    try out.print(self.a(), "  {s} = insertvalue {s} {s}, {s} {s}, 1\n", .{ result, tyname, tagged, try self.ty(layout.payload), payload });
+                    return;
+                }
+                var partial = tagged;
+                for (0..layout.payload_words) |k| {
+                    const loaded = try self.fresh("%lw");
+                    try out.print(self.a(), word_load_line, .{ loaded, try self.offsetPointer(out, payload_at, @intCast(8 * k)) });
+                    const next = if (k + 1 == layout.payload_words) result else try self.fresh("%lu");
+                    try out.print(self.a(), "  {s} = insertvalue {s} {s}, i64 {s}, 1, {d}\n", .{ next, tyname, partial, loaded, k });
+                    partial = next;
+                }
+            },
+            .list, .box => unreachable,
+        }
+    }
+
+    /// Store register value `value` of type `ty` as its memory image at `ptr`, field by field.
+    fn storeValue(self: *FunctionEmitter, out: *Out, value_type: ir.Type, text: []const u8, ptr: []const u8) Error!void {
+        const m = self.state.module;
+        if (value_type == .void) return error.UnsupportedInstruction;
+        if (value_type == .bool) {
+            const byte = try self.fresh("%sb");
+            try out.print(self.a(), "  {s} = zext i1 {s} to i8\n  store i8 {s}, ptr {s}, align 1, " ++ tbaa_data ++ "\n", .{ byte, text, byte, ptr });
+            return;
+        }
+        if (!value_type.isCompound() or m.isBlock(value_type)) {
+            try out.print(self.a(), "  store {s} {s}, ptr {s}, align {d}, " ++ tbaa_data ++ "\n", .{ try self.ty(value_type), text, ptr, m.size(value_type) });
+            return;
+        }
+        const tyname = try self.ty(value_type);
+        switch (m.compound(value_type)) {
+            .record => |fields| for (fields, 0..) |field, i| {
+                const field_value = try self.fresh("%sf");
+                try out.print(self.a(), "  {s} = extractvalue {s} {s}, {d}\n", .{ field_value, tyname, text, i });
+                try self.storeValue(out, field, field_value, try self.offsetPointer(out, ptr, m.fieldOffset(value_type, i)));
+            },
+            .@"union" => {
+                const layout = m.unionLayout(value_type);
+                if (layout.form == .niche) {
+                    try out.print(self.a(), "  store ptr {s}, ptr {s}, align 8, " ++ tbaa_data ++ "\n", .{ text, ptr });
+                    return;
+                }
+                const tag = try self.fresh("%st");
+                const word = try self.fresh("%st");
+                // The whole tag word is written, so a later load of it is defined.
+                try out.print(self.a(), "  {s} = extractvalue {s} {s}, 0\n  {s} = zext i8 {s} to i64\n  store i64 {s}, ptr {s}, align 8, " ++ tbaa_data ++ "\n", .{ tag, tyname, text, word, tag, word, ptr });
+                const payload_at = try self.offsetPointer(out, ptr, 8);
+                if (layout.form == .scalar) {
+                    const payload = try self.fresh("%sp");
+                    try out.print(self.a(), "  {s} = extractvalue {s} {s}, 1\n", .{ payload, tyname, text });
+                    return self.storeValue(out, layout.payload, payload, payload_at);
+                }
+                for (0..layout.payload_words) |k| {
+                    const stored = try self.fresh("%sw");
+                    try out.print(self.a(), "  {s} = extractvalue {s} {s}, 1, {d}\n", .{ stored, tyname, text, k });
+                    try out.print(self.a(), "  store i64 {s}, ptr {s}, align 8, " ++ tbaa_data ++ "\n", .{ stored, try self.offsetPointer(out, payload_at, @intCast(8 * k)) });
+                }
+            },
+            .list, .box => unreachable,
+        }
+    }
+
+    fn recordMake(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) !void {
+        const tyname = try self.ty(inst.ty);
+        const fields = self.function.operands(inst.data);
+        if (fields.len == 0) {
+            try out.print(self.a(), "  {s} = select i1 true, {s} zeroinitializer, {s} zeroinitializer\n", .{ name, tyname, tyname });
+            return;
+        }
+        var partial: []const u8 = "poison";
+        for (fields, 0..) |field, i| {
+            const next = if (i + 1 == fields.len) name else try self.fresh("%rm");
+            try out.print(self.a(), "  {s} = insertvalue {s} {s}, {s}, {d}\n", .{ next, tyname, partial, try self.typedValue(field), i });
+            partial = next;
+        }
+    }
+
+    fn unionMake(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) !void {
+        const m = self.state.module;
+        const layout = m.unionLayout(inst.ty);
+        const tyname = try self.ty(inst.ty);
+        const payload_type = m.compound(inst.ty).@"union"[@intCast(inst.data)];
+        switch (layout.form) {
+            .niche => {
+                const pointer = if (inst.a == .none) "null" else try self.value(inst.a);
+                try out.print(self.a(), "  {s} = getelementptr i8, ptr {s}, i64 0\n", .{ name, pointer });
+            },
+            .scalar => {
+                const partial = try self.fresh("%u");
+                const payload = if (inst.a == .none) "zeroinitializer" else try self.value(inst.a);
+                try out.print(self.a(), "  {s} = insertvalue {s} poison, i8 {d}, 0\n  {s} = insertvalue {s} {s}, {s} {s}, 1\n", .{ partial, tyname, inst.data, name, tyname, partial, try self.ty(layout.payload), payload });
+            },
+            .words => {
+                // The payload's memory image, through a stack slot SROA removes.
+                const words = layout.payload_words;
+                const tagged = if (words == 0) name else try self.fresh("%u");
+                try out.print(self.a(), "  {s} = insertvalue {s} poison, i8 {d}, 0\n", .{ tagged, tyname, inst.data });
+                if (words == 0) return;
+                const slot = try self.stackSlot(8 * words);
+                try out.print(self.a(), "  store [{d} x i64] zeroinitializer, ptr {s}, align 8, " ++ tbaa_data ++ "\n", .{ words, slot });
+                if (payload_type != .void) try self.storeValue(out, payload_type, try self.value(inst.a), slot);
+                var partial = tagged;
+                for (0..words) |k| {
+                    const loaded = try self.fresh("%uw");
+                    try out.print(self.a(), word_load_line, .{ loaded, try self.offsetPointer(out, slot, @intCast(8 * k)) });
+                    const next = if (k + 1 == words) name else try self.fresh("%u");
+                    try out.print(self.a(), "  {s} = insertvalue {s} {s}, i64 {s}, 1, {d}\n", .{ next, tyname, partial, loaded, k });
+                    partial = next;
+                }
+            },
+        }
+    }
+
+    /// `union_tag`: the case index of a union value, as `i32`.
+    fn unionTag(self: *FunctionEmitter, out: *Out, name: []const u8, raw: ir.Ref) !void {
+        const union_type = self.typeOf(raw);
+        const layout = self.state.module.unionLayout(union_type);
+        const tag = try self.fresh("%t");
+        if (layout.form == .niche) {
+            // The payload case is the non-null pointer.
+            try out.print(self.a(), "  {s} = icmp {s} ptr {s}, null\n  {s} = zext i1 {s} to i32\n", .{ tag, if (layout.empty_case == 0) "ne" else "eq", try self.value(raw), name, tag });
+            return;
+        }
+        try out.print(self.a(), "  {s} = extractvalue {s}, 0\n  {s} = zext i8 {s} to i32\n", .{ tag, try self.typedValue(raw), name, tag });
+    }
+
+    /// `union_payload`: the payload of `case`, defined in `result`.
+    fn unionPayload(self: *FunctionEmitter, out: *Out, read: PayloadRead) Error!void {
+        const m = self.state.module;
+        const layout = m.unionLayout(read.union_type);
+        const tyname = try self.ty(read.union_type);
+        switch (layout.form) {
+            .niche => try out.print(self.a(), "  {s} = getelementptr i8, ptr {s}, i64 0\n", .{ read.result, read.value }),
+            .scalar => try out.print(self.a(), "  {s} = extractvalue {s} {s}, 1\n", .{ read.result, tyname, read.value }),
+            .words => {
+                const payload_type = m.compound(read.union_type).@"union"[read.case];
+                const slot = try self.stackSlot(8 * layout.payload_words);
+                for (0..layout.payload_words) |k| {
+                    const word = try self.fresh("%pw");
+                    try out.print(self.a(), "  {s} = extractvalue {s} {s}, 1, {d}\n", .{ word, tyname, read.value, k });
+                    try out.print(self.a(), "  store i64 {s}, ptr {s}, align 8, " ++ tbaa_data ++ "\n", .{ word, try self.offsetPointer(out, slot, @intCast(8 * k)) });
+                }
+                try self.loadValue(out, payload_type, slot, read.result);
+            },
+        }
+    }
+
+    /// Replace element `b` of list `a` in place with `extra[0]`; the element it
+    /// replaces is released when the element type is managed.
+    fn listSet(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) !void {
+        const m = self.state.module;
+        const list = try self.value(inst.a);
+        const index = try self.value(inst.b);
+        const element = m.compound(inst.ty).list;
+        try self.boundsCheck(out, inst, list, index);
+        const slot = try self.elementSlot(out, list, index, element);
+        const managed = m.managed(element);
+        const old = if (managed) try self.fresh("%old") else "";
+        if (managed) try self.loadValue(out, element, slot, old);
+        try self.storeValue(out, element, try self.value(self.function.operands(inst.data)[0]), slot);
+        if (managed) try self.counted(out, .release, element, old);
+        try out.print(self.a(), "  {s} = getelementptr inbounds i8, ptr {s}, i64 0\n", .{ name, list });
+    }
+
+    /// Drop the last element of list `a` in place (its value was read before, and is
+    /// not released); an empty list traps `R_LIST_BOUNDS` like the old core's pop.
+    fn listPop(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) !void {
+        const list = try self.value(inst.a);
+        const at = try self.fresh("%ph");
+        const len = try self.fresh("%plen");
+        const next = try self.fresh("%pn");
+        try out.print(self.a(), header_tagged_line, .{ at, list, len_offset, len, at });
+        if (self.checkOf(inst) == .exact) {
+            const empty = try self.fresh("%pe");
+            try out.print(self.a(), "  {s} = icmp eq i64 {s}, 0\n", .{ empty, len });
+            try self.trapIf(out, empty, try self.site(.list_empty, inst, "pop"), "0", len);
+        }
+        try out.print(self.a(), "  {s} = sub nuw i64 {s}, 1\n  store i64 {s}, ptr {s}, align 8, " ++ tbaa_header ++ "\n", .{ next, len, next, at });
+        try out.print(self.a(), "  {s} = getelementptr inbounds i8, ptr {s}, i64 0\n", .{ name, list });
+    }
+
+    /// Read one field (or a union's tag or payload) of an inline element, at its
+    /// offset from the element's slot, without loading the rest of the element.
+    fn listGetField(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) !void {
+        const m = self.state.module;
+        const list = try self.value(inst.a);
+        const index = try self.value(inst.b);
+        const element = m.compound(self.typeOf(inst.a)).list;
+        try self.boundsCheck(out, inst, list, index);
+        const slot = try self.elementSlot(out, list, index, element);
+        const target = m.pathTarget(element, ir.FieldPath.unpack(inst.data)) orelse return error.UnsupportedInstruction;
+        const at = try self.offsetPointer(out, slot, target.offset);
+        if (target.tag_of == .void) return self.loadValue(out, target.ty, at, name);
+        const layout = m.unionLayout(target.tag_of);
+        const loaded = try self.fresh("%gt");
+        if (layout.form == .niche) {
+            const present = try self.fresh("%gt");
+            const predicate = if (layout.empty_case == 0) "ne" else "eq";
+            try out.print(self.a(), "  {s} = load ptr, ptr {s}, align 8, " ++ tbaa_data ++ "\n", .{ loaded, at });
+            try out.print(self.a(), "  {s} = icmp {s} ptr {s}, null\n  {s} = zext i1 {s} to i32\n", .{ present, predicate, loaded, name, present });
+            return;
+        }
+        try out.print(self.a(), word_load_line ++ "  {s} = trunc i64 {s} to i32\n", .{ loaded, at, name, loaded });
+    }
+
+    /// `retain` or `release` every block a value of `ty` references: a block pointer
+    /// directly, a niche union when not null, a union's payload under its tag, and a
+    /// record's managed fields.
+    fn counted(self: *FunctionEmitter, out: *Out, mode: Counting, value_type: ir.Type, text: []const u8) Error!void {
+        const m = self.state.module;
+        if (!m.managed(value_type)) return;
+        if (m.isBlock(value_type)) return self.countBlock(out, mode, text);
+        const tyname = try self.ty(value_type);
+        switch (m.compound(value_type)) {
+            .record => |fields| for (fields, 0..) |field, i| {
+                if (!m.managed(field)) continue;
+                const field_value = try self.fresh("%cf");
+                try out.print(self.a(), "  {s} = extractvalue {s} {s}, {d}\n", .{ field_value, tyname, text, i });
+                try self.counted(out, mode, field, field_value);
+            },
+            .@"union" => |cases| {
+                const layout = m.unionLayout(value_type);
+                if (layout.form == .niche) {
+                    const present = try self.fresh("%cn");
+                    try out.print(self.a(), "  {s} = icmp ne ptr {s}, null\n", .{ present, text });
+                    const join = try self.enterIf(out, present);
+                    try self.countBlock(out, mode, text);
+                    return self.leaveIf(out, join);
+                }
+                const tag = try self.fresh("%ct");
+                try out.print(self.a(), "  {s} = extractvalue {s} {s}, 0\n", .{ tag, tyname, text });
+                for (cases, 0..) |case, k| {
+                    if (!m.managed(case)) continue;
+                    const here = try self.fresh("%cc");
+                    try out.print(self.a(), "  {s} = icmp eq i8 {s}, {d}\n", .{ here, tag, k });
+                    const join = try self.enterIf(out, here);
+                    const payload = try self.fresh("%cp");
+                    try self.unionPayload(out, .{ .result = payload, .union_type = value_type, .value = text, .case = @intCast(k) });
+                    try self.counted(out, mode, case, payload);
+                    try self.leaveIf(out, join);
+                }
+            },
+            .list, .box => unreachable,
+        }
+    }
+
+    /// Branch on `condition` into a fresh block; returns the join label `leaveIf` ends it with.
+    fn enterIf(self: *FunctionEmitter, out: *Out, condition: []const u8) ![]const u8 {
+        const then = try self.fresh("rc.then");
+        const join = try self.fresh(self.label);
+        try out.print(self.a(), "  br i1 {s}, label %{s}, label %{s}\n{s}:\n", .{ condition, then, join, then });
+        self.label = then;
+        return join;
+    }
+
+    fn leaveIf(self: *FunctionEmitter, out: *Out, join: []const u8) !void {
+        try out.print(self.a(), "  br label %{s}\n{s}:\n", .{ join, join });
+        self.label = join;
+    }
+
+    /// The inline count update of one block (§6, R-2): the count is a `u32` at offset
+    /// 0, tagged `myl.count` and known non-zero; `0xFFFFFFFF` is saturated (D4) and
+    /// never changes, so immortal string constants are never written; a release
+    /// that drops the last owner calls the cold, out-of-line `myl_core_free`.
+    fn countBlock(self: *FunctionEmitter, out: *Out, mode: Counting, block: []const u8) !void {
+        const count = try self.fresh("%rc");
+        const saturated = try self.fresh("%rs");
+        const update = try self.fresh(if (mode == .retain) "rc.inc" else "rc.dec");
+        const done = try self.fresh(self.label);
+        const next = try self.fresh("%rn");
+        try out.print(self.a(), count_load_line, .{ count, block });
+        try out.print(self.a(), "  {s} = icmp eq i32 {s}, -1\n  br i1 {s}, label %{s}, label %{s}\n{s}:\n", .{ saturated, count, saturated, done, update, update });
+        if (mode == .retain) {
+            try out.print(self.a(), "  {s} = add nuw i32 {s}, 1\n  store i32 {s}, ptr {s}, align 8, " ++ tbaa_count ++ "\n  br label %{s}\n{s}:\n", .{ next, count, next, block, done, done });
+        } else {
+            const last = try self.fresh("%rz");
+            const keep = try self.fresh("rc.keep");
+            const free = try self.fresh("rc.free");
+            try out.print(self.a(), "  {s} = sub nuw i32 {s}, 1\n  {s} = icmp eq i32 {s}, 0\n  br i1 {s}, label %{s}, label %{s}\n", .{ next, count, last, next, last, free, keep });
+            try out.print(self.a(), "{s}:\n  store i32 {s}, ptr {s}, align 8, " ++ tbaa_count ++ "\n  br label %{s}\n", .{ keep, next, block, done });
+            try out.print(self.a(), "{s}:\n  call void @myl_core_free(ptr {s})\n  br label %{s}\n{s}:\n", .{ free, block, done, done });
+        }
+        self.label = done;
     }
 
     /// The value an `%vN` name stands for.
@@ -859,39 +1324,51 @@ const FunctionEmitter = struct {
     /// Append in place: `myl_core_list_reserve` returns a block with room for one more element.
     fn listPush(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) !void {
         const element = self.state.module.compound(inst.ty).list;
-        const stored = storageType(element);
         const len_at = try self.fresh("%pl");
         const len = try self.fresh("%plen");
-        const data = try self.fresh("%pd");
-        const slot = try self.fresh("%ps");
         const next = try self.fresh("%pn");
-        try out.print(self.a(), "  {s} = call ptr @myl_core_list_reserve(ptr {s}, i64 {d})\n", .{ name, try self.value(inst.a), elementSize(element) });
-        try out.print(self.a(), header_load_line, .{ len_at, name, len_offset, len, len_at });
-        try out.print(self.a(), "  {s} = getelementptr inbounds i8, ptr {s}, i64 {d}\n  {s} = getelementptr inbounds {s}, ptr {s}, i64 {s}\n", .{ data, name, data_offset, slot, stored, data, len });
-        if (element == .bool) {
-            const byte = try self.fresh("%pb");
-            try out.print(self.a(), "  {s} = zext i1 {s} to i8\n  store i8 {s}, ptr {s}, align 1\n", .{ byte, try self.value(inst.b), byte, slot });
+        try out.print(self.a(), "  {s} = call ptr @myl_core_list_reserve(ptr {s}, i64 {d})\n", .{ name, try self.value(inst.a), self.state.stride(element) });
+        try out.print(self.a(), header_tagged_line, .{ len_at, name, len_offset, len, len_at });
+        const slot = try self.elementSlot(out, name, len, element);
+        if (element == .bool or element.isCompound()) {
+            try self.storeValue(out, element, try self.value(inst.b), slot);
         } else {
-            try out.print(self.a(), "  store {s}, ptr {s}, align {d}\n", .{ try self.typedValue(inst.b), slot, elementSize(element) });
+            try out.print(self.a(), "  store {s}, ptr {s}, align {d}, " ++ tbaa_data ++ "\n", .{ try self.typedValue(inst.b), slot, elementSize(element) });
         }
-        try out.print(self.a(), "  {s} = add nuw nsw i64 {s}, 1\n  store i64 {s}, ptr {s}, align 8\n", .{ next, len, next, len_at });
+        try out.print(self.a(), "  {s} = add nuw nsw i64 {s}, 1\n  store i64 {s}, ptr {s}, align 8, " ++ tbaa_header ++ "\n", .{ next, len, next, len_at });
     }
 
     fn call(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) !void {
-        const callee = &self.state.module.functions.items[inst.a.index()];
+        const m = self.state.module;
+        const callee = &m.functions.items[inst.a.index()];
         const external = callee.signature.linkage == .extern_c;
+        const ret = callee.signature.ret;
+        const sret = !external and m.passedInMemory(ret);
         var arguments: Out = .empty;
         var first = true;
-        for (self.function.operands(inst.data), callee.signature.params) |argument, param| {
-            if (external and !c_abi.passes(param)) continue;
-            try arguments.print(self.a(), "{s}{s}", .{ if (first) "" else ", ", try self.typedValue(argument) });
+        const result_slot = if (sret) try self.stackSlot(m.size(ret)) else "";
+        if (sret) {
+            try arguments.print(self.a(), "ptr sret({s}) align 8 {s}", .{ try self.state.memoryType(ret), result_slot });
             first = false;
         }
+        for (self.function.operands(inst.data), callee.signature.params) |argument, param| {
+            if (external and !c_abi.passes(param)) continue;
+            const separator = if (first) "" else ", ";
+            first = false;
+            if (!external and m.passedInMemory(param)) {
+                const slot = try self.stackSlot(m.size(param));
+                try self.storeValue(out, param, try self.value(argument), slot);
+                try arguments.print(self.a(), "{s}ptr {s}", .{ separator, slot });
+                continue;
+            }
+            try arguments.print(self.a(), "{s}{s}", .{ separator, try self.typedValue(argument) });
+        }
         const target = if (external) try std.fmt.allocPrint(self.a(), "@{s}", .{c_abi.symbol(callee.name)}) else try symbol(self.a(), callee.name);
-        if (callee.signature.ret == .void) {
+        if (ret == .void or sret) {
             try out.print(self.a(), "  call void {s}({s})\n", .{ target, arguments.items });
+            if (sret) try self.loadValue(out, ret, result_slot, name);
         } else {
-            try out.print(self.a(), "  {s} = call {s} {s}({s})\n", .{ name, try self.ty(callee.signature.ret), target, arguments.items });
+            try out.print(self.a(), "  {s} = call {s} {s}({s})\n", .{ name, try self.ty(ret), target, arguments.items });
         }
     }
 

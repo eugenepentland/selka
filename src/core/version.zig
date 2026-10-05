@@ -182,12 +182,12 @@ fn duplicate(arena: std.mem.Allocator, f: *ir.Function, loop: ir.Loop, condition
             var inst = f.insts.items[new.index()];
             inst.a = if (inst.op == .call) inst.a else mapRef(f, inst_map, inst.a);
             inst.b = mapRef(f, inst_map, inst.b);
+            if (inst.op.hasExtra()) {
+                var operands: std.ArrayList(ir.Ref) = .empty;
+                for (f.operands(inst.data)) |operand| try operands.append(arena, mapRef(f, inst_map, operand));
+                inst.data = try packOperands(arena, f, operands.items);
+            }
             switch (inst.op) {
-                .phi, .call, .print => {
-                    var operands: std.ArrayList(ir.Ref) = .empty;
-                    for (f.operands(inst.data)) |operand| try operands.append(arena, mapRef(f, inst_map, operand));
-                    inst.data = try packOperands(arena, f, operands.items);
-                },
                 .jump => inst.data = @backingInt(mapBlock(block_map, @fromBackingInt(@intCast(@as(u32, @intCast(inst.data)))))),
                 .branch => {
                     const targets = ir.unpackTargets(inst.data);
@@ -359,15 +359,12 @@ fn mergeExit(arena: std.mem.Allocator, f: *ir.Function, c: Copies) Error!void {
             f.insts.items[ref.index()].a = a;
             f.insts.items[ref.index()].b = second;
             if (before.op == .phi and b == exit.index()) continue;
-            switch (before.op) {
-                .phi, .call, .print => {
-                    const slice = ir.ExtraSlice.unpack(before.data);
-                    for (slice.start..slice.start + slice.len) |k| {
-                        const value = try use(arena, f, c, uses, f.extra.items[k], false);
-                        f.extra.items[k] = value;
-                    }
-                },
-                else => {},
+            if (before.op.hasExtra()) {
+                const slice = ir.ExtraSlice.unpack(before.data);
+                for (slice.start..slice.start + slice.len) |k| {
+                    const value = try use(arena, f, c, uses, f.extra.items[k], false);
+                    f.extra.items[k] = value;
+                }
             }
         }
     }
