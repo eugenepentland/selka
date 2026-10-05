@@ -231,7 +231,10 @@ Each stage has an exit check. The user decides go or stop at S0 and S2.
   - leak and verify sweeps clean;
   - all 14 S1 rows at or below Zig ReleaseSafe;
   - coverage 2,269 of 3,509 functions.
-- **The S2 design** is `docs/design/new-core-s2.md` on that branch. S2 implementation waits for the user.
+- **The S2 design** is `docs/design/new-core-s2.md`.
+- **S2 accepted by the user (2026-10-05).** It goes ahead with function values and fixed arrays. Hashing stays unseeded, short strings are deferred, the view ABI is evaluated only on a `string_split` gate miss, and O(n/32) non-ASCII indexing is accepted. A language change, `MUT-OVERLAP-RECEIVER-1`, is accepted too.
+- **Codex implements S2** from `docs/audits/new-core-s2-implementation-plan-2026-10-05.md` on branch `claude/new-core-s2-20261005`.
+- **Still open for the user:** rebinding a `mut` list against a `mut` record parameter, and D1 writes to a list while it is iterated.
 
 **Overfitting guard.** Benchmark-first growth admitted 0 of 143 real loops in the spike. From
 S1 on, every stage reports the coverage sweep over `examples/`, `bench/`, the Lox port and
