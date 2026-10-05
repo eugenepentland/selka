@@ -468,6 +468,7 @@ const leak_fixtures = [_]struct { name: []const u8, args: []const []const u8 }{
     .{ .name = "rc_mut", .args = &.{ "a", "b" } },
     .{ .name = "rc_shared_loops", .args = &.{} },
     .{ .name = "rc_alias_paths", .args = &.{"x"} },
+    .{ .name = "rc_phi_fields", .args = &.{} },
 };
 
 // spec: NEW-CORE-RC-7
@@ -760,4 +761,25 @@ test "a phi that may hold undef is released only when it holds a block: a zero-t
             try std.testing.expectEqualStrings("", run.stderr);
         }
     }
+}
+
+// spec: NEW-CORE-RC-12
+test "a record phi read only through its fields still takes its operands, so unswitched loop exits release nothing twice" {
+    var arena_state = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena_state.deinit();
+    const arena = arena_state.allocator();
+    var dir = std.testing.tmpDir(.{});
+    defer dir.cleanup();
+    const root = try dir.dir.realPathFileAlloc(std.testing.io, ".", arena);
+    const source = try std.fmt.allocPrint(arena, "{s}/rc_phi_fields.my", .{options.fixtures});
+    const output = try std.fmt.allocPrint(arena, "{s}/rc_phi_fields-release", .{root});
+    const cache = try std.fmt.allocPrint(arena, "{s}/cache", .{root});
+    const built = try std.process.run(arena, std.testing.io, .{ .argv = &.{ options.core_path, "build", source, "-o", output, "--release", "--link", options.clock_path, "--cache-dir", cache } });
+    try std.testing.expect(built.term == .exited and built.term.exited == 0);
+    var environment = try std.testing.environ.createMap(arena);
+    try environment.put("MYL_CORE_LEAKCHECK", "1");
+    const ran = try std.process.run(arena, std.testing.io, .{ .argv = &.{output}, .environ_map = &environment });
+    try std.testing.expect(ran.term == .exited and ran.term.exited == 0);
+    try std.testing.expectEqualStrings("48 1 1\n", ran.stdout);
+    try std.testing.expectEqualStrings("", ran.stderr);
 }

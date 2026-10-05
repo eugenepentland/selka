@@ -1,0 +1,24 @@
+# NEW-CORE-RC-12: a record joined by a phi (here the exits of the two loop versions a
+# release build's unswitching makes) whose only uses are field reads still takes its
+# operands on their edges; it is never emptied. `b.items` is shared with `xs` at the first
+# append, read after the loop, and replaced by `b = c`.
+
+record Bucket:
+    count: int
+    items: list[int]
+
+
+def main(args: list[str], out: Stream) -> int:
+    acc = len(args)
+    xs = [j for j in range(3)]
+    ys = [j for j in range(3)]
+    b = Bucket(3, xs)
+    c = Bucket(1, [7])
+    for r in range(2):
+        acc = acc + len(ys) * 3 + xs[0]
+        b.items.append(acc)
+    for x in b.items:
+        acc = acc + x
+    b = c
+    out.print(acc, b.count, c.count)
+    return 0

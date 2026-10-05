@@ -892,6 +892,11 @@ const Taking = struct {
     /// the reads own the fields and the record is never counted.
     fn empty(self: Taking, record: ir.Ref) Error!void {
         const f = self.f;
+        // A phi owns only what its operands hand it on their edges, and an emptied value
+        // is never counted: its operands would be released where they die on those edges
+        // while the reads still use the fields (a release build's unswitched loop exits
+        // joining the loop record). A phi stays an ordinary owned record.
+        if (f.inst(record).op == .phi) return;
         const home = self.graph.block_of[record.index()];
         if (home == no_block) return;
         const fields = self.module.compound(f.inst(record).ty).record;
