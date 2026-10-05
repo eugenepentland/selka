@@ -23,6 +23,11 @@ pub const Session = struct {
     files: language.project_files.Files,
     /// A file with no `module` header is checked alone, as `mylang build` does.
     single: ?language.Compilation = null,
+    /// Text appended to the entry file as it is read: `mylang-core test` appends the
+    /// old runner's stub `main` to a library file so the file can be checked as a program.
+    entry_suffix: []const u8 = "",
+    /// The entry module's file name relative to the root, set by `check` while a suffix is in use.
+    entry_file: []const u8 = "",
 
     /// Prepare to load the module graph rooted at `root` (the entry file's directory).
     pub fn init(allocator: std.mem.Allocator, io: std.Io, root: []const u8) Session {
@@ -46,7 +51,8 @@ pub const Session = struct {
             },
         };
         if (language.opensAsModule(bytes)) return self.check(allocator, entryOf(path).module, report);
-        self.single = try language.Compilation.init(self.project.arena.child_allocator, std.fs.path.basename(path), bytes);
+        const full = if (self.entry_suffix.len == 0) bytes else try std.mem.concat(allocator, u8, &.{ bytes, self.entry_suffix });
+        self.single = try language.Compilation.init(self.project.arena.child_allocator, std.fs.path.basename(path), full);
         const unit = &self.single.?;
         unit.check() catch |err| switch (err) {
             error.OutOfMemory => return error.OutOfMemory,
@@ -65,7 +71,8 @@ pub const Session = struct {
     /// Load `entry` (a module name: the file stem) and check it. On a source error
     /// the rendered diagnostics are appended to `report` and `SourceError` returns.
     pub fn check(self: *Session, allocator: std.mem.Allocator, entry: []const u8, report: *std.ArrayList(u8)) Error!Checked {
-        self.project.load(self.files.provider(), entry, .{}) catch |err| return self.loadFailure(allocator, err, report);
+        if (self.entry_suffix.len != 0) self.entry_file = try std.fmt.allocPrint(allocator, "{s}.my", .{entry});
+        self.project.load(self.provider(), entry, .{}) catch |err| return self.loadFailure(allocator, err, report);
         self.index = language.interfaces.build(&self.project) catch |err| return self.loadFailure(allocator, err, report);
         self.compilation = language.project_compile.Compilation.init(&self.index) catch |err| return self.loadFailure(allocator, err, report);
         self.compilation.check() catch |err| switch (err) {
@@ -80,6 +87,21 @@ pub const Session = struct {
             },
         };
         return .{ .program = self.compilation.program.?, .src = self.compilation.src };
+    }
+
+    /// The file provider: the disk, with `entry_suffix` appended to the entry file when set.
+    fn provider(self: *Session) language.project.Provider {
+        if (self.entry_suffix.len == 0) return self.files.provider();
+        return .{ .context = &self.files, .read = readEntry, .embed = language.project_files.Files.readEmbed };
+    }
+
+    fn readEntry(context: ?*anyopaque, allocator: std.mem.Allocator, relative: []const u8, limit: usize) language.project.ReadError![]u8 {
+        const files: *language.project_files.Files = @ptrCast(@alignCast(context.?));
+        const self: *Session = @fieldParentPtr("files", files);
+        const bytes = try language.project_files.Files.read(context, allocator, relative, limit);
+        if (!std.mem.eql(u8, relative, self.entry_file)) return bytes;
+        defer allocator.free(bytes);
+        return std.mem.concat(allocator, u8, &.{ bytes, self.entry_suffix }) catch error.OutOfMemory;
     }
 
     fn loadFailure(self: *Session, allocator: std.mem.Allocator, err: anyerror, report: *std.ArrayList(u8)) Error {

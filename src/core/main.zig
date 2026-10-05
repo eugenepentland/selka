@@ -9,6 +9,7 @@ const print = @import("print.zig");
 const pipeline = @import("pipeline.zig");
 const passes = @import("passes.zig");
 const facts = @import("facts.zig");
+const test_runner = @import("test_runner.zig");
 
 const usage =
     \\usage: mylang-core build FILE.my -o OUT [--release] [--link FILE.c]... [--emit-llvm PATH] [--no-facts | --verify-facts] [--stats] [--zig PATH] [--cache-dir DIR]
@@ -26,6 +27,7 @@ pub fn main(init: std.process.Init) !u8 {
     if (args.len >= 3 and std.mem.eql(u8, args[1], "dump-ir")) return dumpIr(init, args[2], args.len == 4 and std.mem.eql(u8, args[3], "--facts"));
     if (args.len >= 2 and std.mem.eql(u8, args[1], "build")) return buildCommand(init, args[2..]);
     if (args.len >= 3 and std.mem.eql(u8, args[1], "coverage")) return coverageCommand(init, args[2..]);
+    if (args.len >= 3 and std.mem.eql(u8, args[1], "test")) return testCommand(init, args[2..]);
     try std.Io.File.stderr().writeStreamingAll(init.io, usage);
     return 2;
 }
@@ -153,6 +155,44 @@ fn buildCommand(init: std.process.Init, args: []const []const u8) !u8 {
     };
     if (report.items.len != 0) try std.Io.File.stderr().writeStreamingAll(init.io, report.items);
     return status;
+}
+
+/// `mylang-core test`: the per-test conformance runner (`test_runner.zig`).
+fn testCommand(init: std.process.Init, args: []const []const u8) !u8 {
+    var options: test_runner.Options = .{ .path = "", .build = .{ .zig = init.environ_map.get("ZIG") orelse "zig" } };
+    var index: usize = 0;
+    while (index < args.len) : (index += 1) {
+        const arg = args[index];
+        const has_value = index + 1 < args.len;
+        if (std.mem.eql(u8, arg, "--release")) {
+            options.build.release = true;
+        } else if (std.mem.eql(u8, arg, "--json")) {
+            options.json = true;
+        } else if (std.mem.eql(u8, arg, "--no-facts")) {
+            options.build.facts = .off;
+        } else if (std.mem.eql(u8, arg, "--verify-facts")) {
+            options.build.facts = .verify;
+        } else if (std.mem.eql(u8, arg, "--filter") and has_value) {
+            index += 1;
+            options.filter = args[index];
+        } else if (std.mem.eql(u8, arg, "--zig") and has_value) {
+            index += 1;
+            options.build.zig = args[index];
+        } else if (std.mem.eql(u8, arg, "--cache-dir") and has_value) {
+            index += 1;
+            options.build.cache = args[index];
+        } else if (options.path.len == 0 and !std.mem.startsWith(u8, arg, "-")) {
+            options.path = arg;
+        } else {
+            try std.Io.File.stderr().writeStreamingAll(init.io, usage);
+            return 2;
+        }
+    }
+    if (options.path.len == 0) {
+        try std.Io.File.stderr().writeStreamingAll(init.io, usage);
+        return 2;
+    }
+    return test_runner.run(init, options);
 }
 
 /// The coverage sweep: check each file and try to build each of its functions alone.

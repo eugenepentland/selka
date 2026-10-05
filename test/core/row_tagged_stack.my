@@ -1,0 +1,83 @@
+module row_tagged_stack
+
+extern def runtime_bench_now(host: Host) -> i64 effects(host)
+
+# Row `tagged_stack` of benchmarks/runtime/ports/main.my as a program of its own, like compute_s0.my: arguments
+# `size iterations seed` (the original takes the row name first), the same setup, kernel,
+# checksum and output `checksum elapsed`. Setup that only other rows use is left out.
+
+
+union Value:
+    integer: int,
+    boolean: bool
+
+
+def as_integer(value: Value) -> int:
+    match value:
+        case Value.integer(n):
+            return n
+        case Value.boolean(_):
+            return 0
+
+
+def parse_number(text: str) -> int:
+    match int(text):
+        case Some(value):
+            return value
+        case None:
+            return 0
+
+
+def main(args: list[str], host: Host, out: Stream) -> int:
+    if len(args) != 3:
+        return 2
+    size = parse_number(args[0])
+    iterations = parse_number(args[1])
+    seed = parse_number(args[2])
+    if size < 2 or iterations < 1 or seed < 1 or seed > 1000000:
+        return 2
+    checksum = 0
+    opcodes = [(j + seed) % 4 for j in range(size)]
+    stack: list[Value] = [Value.integer(seed), Value.boolean(False)]
+    cursor = 0
+    start = runtime_bench_now(host)
+    for step in range(iterations):
+        popped = stack.pop()
+        base = as_integer(stack[0])
+        opcode = opcodes[cursor]
+        delta = 0
+        match popped:
+            case Value.boolean(b):
+                if opcode == 0:
+                    delta = 3 if b else 1
+                elif opcode == 1:
+                    delta = 7
+                elif opcode == 2:
+                    delta = 11
+                else:
+                    delta = 13
+            case Value.integer(n):
+                if opcode == 0:
+                    delta = n % 5
+                elif opcode == 1:
+                    delta = n % 7
+                elif opcode == 2:
+                    delta = n % 11
+                else:
+                    delta = n % 13
+        new_base = (base + delta + opcode + 1) % 1000003
+        stack[0] = Value.integer(new_base)
+        if opcode == 0 or opcode == 2:
+            stack.append(Value.boolean(new_base % 2 == 0))
+        else:
+            stack.append(Value.integer(new_base % 97))
+        cursor = (cursor + 1) % size
+    elapsed = runtime_bench_now(host) - start
+    checksum = as_integer(stack[0]) * 101
+    match stack[1]:
+        case Value.boolean(b):
+            checksum += 1 if b else 0
+        case Value.integer(n):
+            checksum += n
+    out.print(checksum, elapsed)
+    return 0

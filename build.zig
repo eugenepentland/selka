@@ -435,6 +435,7 @@ fn addCore(b: *std.Build, inputs: CoreInputs) void {
     options.addOptionPath("clock_path", b.path("benchmarks/runtime/ports/native_clock.c"));
     const root = std.Io.Dir.cwd().realPathFileAlloc(b.graph.io, ".", b.allocator) catch @panic("build root");
     options.addOption([]const u8, "fixtures", b.pathJoin(&.{ root, "test", "core" }));
+    options.addOption([]const u8, "lang_tests", b.pathJoin(&.{ root, "tests", "lang" }));
     const unit = b.addTest(.{ .max_rss = rss.compile, .filters = inputs.filters, .root_module = b.createModule(.{
         .root_source_file = b.path("src/core/root_test.zig"),
         .target = inputs.target,
