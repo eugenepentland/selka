@@ -439,3 +439,26 @@ test "a ? that passes the error on appends its site, one that wraps it into a ca
     const forward = text[std.mem.indexOf(u8, text, "fn forward").?..std.mem.indexOf(u8, text, "fn same").?];
     try std.testing.expect(contains(forward, "err_trace returned"));
 }
+
+/// A program in which a late-declared callee takes an element read as an argument: the
+/// call's `a` operand is a function index larger than the calling function's instruction table.
+fn lateCallee(arena: std.mem.Allocator) ![]const u8 {
+    var source: std.ArrayList(u8) = .empty;
+    try source.appendSlice(arena, "record Item:\n    a: int\n    b: int\n\n\n");
+    for (0..16) |i| try source.print(arena, "def g{d}() -> int:\n    return {d}\n\n\n", .{ i, i });
+    try source.appendSlice(arena, "def take(item: Item) -> int:\n    return item.a + item.b\n\n\n");
+    try source.appendSlice(arena, "def pick(xs: list[Item]) -> int:\n    return take(xs[0])\n\n\n");
+    try source.appendSlice(arena, "def main(out: Stream) -> int:\n    xs = [Item(a=1, b=2)]\n    out.print(g0() + g1() + g2() + g3() + pick(xs))\n    return 0\n");
+    return source.items;
+}
+
+// spec-case: NEW-CORE-FUSE-1
+test "an element read passed to a call is not a projection: fusion never treats a call's callee index as a value" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const text = try support.irText(arena.allocator(), try lateCallee(arena.allocator()));
+    const pick = text[std.mem.indexOf(u8, text, "fn pick").?..std.mem.indexOf(u8, text, "fn take").?];
+    // The whole element is passed, so it stays a `list_get`, whose use is the call.
+    try std.testing.expect(contains(pick, "list_get"));
+    try std.testing.expect(!contains(pick, "list_get_field"));
+}

@@ -101,6 +101,12 @@ fn fuseSource(arena: std.mem.Allocator, f: *ir.Function, module: *const ir.Modul
 
 /// The path step `user` adds when it projects `source`, or null when it is not a projection.
 fn stepOf(f: *const ir.Function, user: ir.Inst, source: ir.Ref) ?u12 {
+    // Only a projection's `a` is a value: a call's `a` is its callee's index and a phi's or a
+    // construction's is unused, so it must not be resolved as an instruction.
+    switch (user.op) {
+        .record_get, .union_tag, .union_payload => {},
+        else => return null,
+    }
     if (f.resolve(user.a) != source) return null;
     return switch (user.op) {
         .record_get => std.math.cast(u12, user.data),
