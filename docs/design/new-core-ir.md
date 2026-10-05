@@ -479,7 +479,7 @@ the large function; the old core shows the same sensitivity in the other directi
 The end-of-S0 column is from two runs at load average 5–9 on the 20-thread host. A run
 during a load spike near 50 measured 8–16 s per rebuild and 28–51 s per test step (the old
 core's release build of the slice took 6 s in the same run), kept in `results/` for
-comparison. The compiler is about 2.5× the size it was at checkpoint A.
+comparison. The new core is about twice the size it was at checkpoint A (6k against 2.9k lines).
 
 The default `zig build` is unchanged in behaviour: the new steps are off the install graph,
 and guests built by the `mylang` binary before and after the branch's changes are
