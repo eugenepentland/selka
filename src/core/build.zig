@@ -1053,27 +1053,26 @@ const FnBuilder = struct {
         return self.constant(ty, self.nodeOf(node).data.integer);
     }
 
-    /// `==` and `!=` of two records, unions (enums, `Option`, `Result`) or lists of integers or
-    /// booleans: structural, never a pointer comparison. A `str`, a list of anything else and
-    /// a list inside a union or record are refused until their equality is built.
+    /// `==` and `!=` of two records, unions (enums, `Option`, `Result`) or lists: structural,
+    /// never a pointer comparison. A `str` (S2's text runtime) and a recursive value are refused.
     fn aggregateCompare(self: *FnBuilder, op: typed.BinaryOp, left: ir.Ref, right: ir.Ref, span: u32) Error!ir.Ref {
         if (op != .eq and op != .ne) return self.mb.refuse(if (op == .add) "concatenation" else "operator on an aggregate value", span);
-        // A recursive value would need a function that calls itself, not an expansion in place.
-        if (self.holdsBox(self.typeOfRef(left))) return self.mb.refuse("equality of a recursive value", span);
         const same = try self.equal(left, right, span);
         if (self.current == null or op == .eq) return same;
         return self.emit(.{ .op = .not, .ty = .bool, .a = same, .span = span });
     }
 
-    /// Whether `ty` holds a `box` (a recursive field or payload) anywhere in its record and union parts.
-    fn holdsBox(self: *FnBuilder, ty: ir.Type) bool {
+    /// Whether `ty` is recursive: it holds a `box`, or nests deeper than equality is expanded
+    /// (a record that holds a list of itself).
+    fn recursive(self: *FnBuilder, ty: ir.Type, depth: u32) bool {
         const m = self.mb.module;
         const kind = m.kind(ty) orelse return false;
+        if (depth > 6) return true;
         switch (kind) {
             .box => return true,
-            .list => return false,
-            .record => for (m.compound(ty).record) |field| if (self.holdsBox(field)) return true,
-            .@"union" => for (m.compound(ty).@"union") |case| if (self.holdsBox(case)) return true,
+            .list => return self.recursive(m.compound(ty).list, depth + 1),
+            .record => for (m.compound(ty).record) |field| if (self.recursive(field, depth + 1)) return true,
+            .@"union" => for (m.compound(ty).@"union") |case| if (self.recursive(case, depth + 1)) return true,
         }
         return false;
     }
@@ -1084,6 +1083,8 @@ const FnBuilder = struct {
         const m = self.mb.module;
         const ty = self.typeOfRef(a);
         if (ty == .str) return self.mb.refuse("str equality", span);
+        // A recursive value would need a function that calls itself, not an expansion in place.
+        if (self.recursive(ty, 0)) return self.mb.refuse("equality of a recursive value", span);
         if (ty == .f64) return self.emit(.{ .op = .fcmp, .ty = .bool, .a = a, .b = b, .data = @backingInt(ir.Predicate.eq), .span = span });
         if (ty.integer() != null or ty == .bool) return self.emit(.{ .op = .cmp, .ty = .bool, .a = a, .b = b, .data = @backingInt(ir.Predicate.eq), .span = span });
         switch (m.kind(ty) orelse return self.mb.refuse(refuse_equality, span)) {
@@ -1139,10 +1140,9 @@ const FnBuilder = struct {
         return self.read(result, join);
     }
 
-    /// Two lists of integers or booleans are equal when their lengths are and every element pair is.
+    /// Two lists are equal when their lengths are and every element pair is.
     fn listEqual(self: *FnBuilder, a: ir.Ref, b: ir.Ref, span: u32) Error!ir.Ref {
         const element = self.mb.module.compound(self.typeOfRef(a)).list;
-        if (element.integer() == null and element != .bool) return self.mb.refuse(refuse_equality, span);
         const length_a = try self.emit(.{ .op = .list_len, .ty = .u64, .a = a, .span = span });
         const length_b = try self.emit(.{ .op = .list_len, .ty = .u64, .a = b, .span = span });
         const lengths = try self.emit(.{ .op = .cmp, .ty = .bool, .a = length_a, .b = length_b, .data = @backingInt(ir.Predicate.eq), .span = span });
@@ -1169,7 +1169,7 @@ const FnBuilder = struct {
         // The lengths agree, so both reads are in range.
         const x = try self.emit(.{ .op = .list_get, .ty = element, .a = a, .b = position, .span = span });
         const y = try self.emit(.{ .op = .list_get, .ty = element, .a = b, .b = position, .span = span });
-        const same = try self.emit(.{ .op = .cmp, .ty = .bool, .a = x, .b = y, .data = @backingInt(ir.Predicate.eq), .span = span });
+        const same = try self.equal(x, y, span);
         const latch = try self.newBlock();
         const differ = try self.newBlock();
         try self.branch(same, latch, differ, span);

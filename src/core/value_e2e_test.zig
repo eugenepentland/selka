@@ -178,6 +178,10 @@ const v_equality_output =
     \\True False True False
     \\True False
     \\True True
+    \\False True False
+    \\True False False True
+    \\True False
+    \\True False
     \\
 ;
 
