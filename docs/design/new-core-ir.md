@@ -5,7 +5,7 @@
 are fixed inputs. Sections marked *design only* describe S1+ work that S0 leaves room for
 but does not build. Measurements are in §11.
 
-**Built in S0** (about 5k lines of Zig plus 280 of C, 1.1k of them tests): `mylang-core
+**Built in S0** (about 5.7k lines of Zig plus 280 of C, 0.9k of them tests): `mylang-core
 build` compiles the S0 compute kernels (`integer_math`, `float_math`, `call_direct`,
 `branch_predictable`, `branch_mixed`, `binary_search`), a multi-kind program with the
 benchmark's per-element `kind` dispatch, and a control-flow program from `typed.Program`
@@ -153,12 +153,16 @@ and its position (the start of the coverage sweep's refusal list, plan §6).
 
 ## 4. The S0 vertical slice
 
-`experiments/new-core-s0-20261005/int_math.my` (kind 0 of the compute benchmark, from the
-WP-8 spike) needs: `list[str]` arguments, `len`, `int(text)` with `match` on
-`Option[int]`, a comprehension over `range`, nested counted loops, `//` and `%`, a `C`
-`extern` call through a `Host` capability, `out.print` of two integers and `main`'s
-exit status. `mylang-core build FILE.my -o OUT [--release] [--link C]` runs the whole
-pipeline. Results are in §11.
+`test/core/int_math.my` (kind 0 of the compute benchmark, from the WP-8 spike) needs:
+`list[str]` arguments, `len`, `int(text)` with `match` on `Option[int]`, a comprehension
+over `range`, nested counted loops, `//` and `%`, a C `extern` call through a `Host`
+capability, `out.print` of two integers and `main`'s exit status. The other S0 kernels add
+floats, `list[bool]`, helper calls and a data-dependent `while` over a list parameter;
+`compute_s0.my` puts all six kinds behind the benchmark's per-element `kind` dispatch.
+The unmodified `benchmarks/runtime/expanded/compute/main.my` is refused cleanly
+(`E_CORE_UNSUPPORTED: record type`, then `Result`, `bytes` and function values): those are
+S1. `mylang-core build FILE.my -o OUT [--release] [--link C]` runs the whole pipeline.
+Results are in §11.
 
 ## 5. Facts
 
@@ -348,20 +352,25 @@ each noting the old function it was ported from.
 ## 9. Files and reachability
 
 ```
-src/core/main.zig        CLI: build, dump-typed, dump-ir [--facts] (guardian orphan root)
-src/core/pipeline.zig    one build: check → IR → facts (release) → LLVM → link
+src/core/main.zig        CLI: build, coverage, dump-typed, dump-ir [--facts] (guardian orphan root)
+src/core/pipeline.zig    one build: check → IR → release passes → LLVM → link
+src/core/passes.zig      the release passes in order
+src/core/inline.zig      single-block leaf inlining
+src/core/version.zig     loop copies behind a guard: unswitching, trip-count guards
+src/core/vector.zig      narrow-lane vector plans and their LLVM
 src/core/frontend.zig    front-end loading (module graph or single file), positions
 src/core/typed_dump.zig  dump-typed
 src/core/ir.zig          Core IR types, module/function/block/instruction
 src/core/build.zig       typed.Program → Core IR
 src/core/print.zig       textual IR (dump-ir, unit tests)
-src/core/facts.zig       intervals, list facts, check marking
+src/core/facts.zig       intervals (int, float), list facts, counted loops, check marking
 src/core/emit_llvm.zig   LLVM IR text
 src/core/driver.zig      zig cc invocation and linking
 src/core/runtime/core_rt.c
 src/core/root_test.zig   test root (guardian test-reachability root); *_test.zig beside it
-test/core/*.my           slice programs (int_math, control, overflow, bounds)
-experiments/new-core-s0-20261005/  measure.py, build_all.sh, devloop.sh, results/
+test/core/*.my           the S0 kernels, compute_s0 (multi-kind), control, overflow, bounds
+experiments/new-core-s0-20261005/  fuzz.py, coverage.py, measure_kernels.py,
+                                   build_kernels.sh, measure.py, build_all.sh, devloop.sh, results/
 ```
 
 `guardian.toml` lists `src/core/main.zig` and `src/core/root_test.zig` as roots, so every new
@@ -378,90 +387,124 @@ file is reachable from one of them. The runtime C file is embedded into `mylang-
   print a time) and the exit status with goldens recorded from the old core.
 - **Differential** (`zig build test-core -Dcore-diff=true`): also builds each program with
   the old `mylang` and compares directly. The old compiler is built only in this mode.
-- **Conformance subset** (*checkpoint B / S1*): `tests/lang` files whose functions the new
-  core accepts, run under both cores; the refusal reasons are the coverage report.
-- **`zig build test-core`** is the new core's lane gate; it is not attached to `zig build
-  test` (the manager decides gate wiring).
+- **Fuzz** (`experiments/new-core-s0-20261005/fuzz.py`): whole-program differential fuzz
+  against the old core with debug, release and verify builds; `--sabotage` checks that the
+  verify build catches a wrong rule (§11).
+- **Coverage sweep** (`coverage.py` over `mylang-core coverage`): accepted functions and
+  refusal reasons per corpus. A `tests/lang` conformance subset (whole files the new core
+  accepts, run under both cores) waits for S1, when enough of a file builds.
+- **Gate wiring (decided by the manager, 2026-10-05):** `zig build test-core` (31 tests) on
+  every change; `-Dcore-diff=true` before each commit batch and at hand-off; neither is
+  attached to `zig build test`.
 
 ## 11. Measurements (2026-10-05)
 
-**Correctness.** `test/core/int_math.my` (the spike's `int_math.my`, kind 0 of
-`compute/main.my`) prints `561601106` for `4096 300 7`, `8773872` for 64 and `562398344`
-for 4100, at debug and release, identical to the old core's `--release` build; invalid
-arguments exit 2 in both. `zig build test-core -Dcore-diff=true` also rebuilds all four
-`test/core` programs with the old compiler and compares stdout and exit status: equal.
+Raw outputs are under `experiments/new-core-s0-20261005/results/`.
 
-**Cycles per element** (`experiments/new-core-s0-20261005/measure.py`, the spike's
-method: `perf stat` user cycles on CPU 10, start-up subtracted, 7 interleaved rounds,
-SMT sibling idle; raw output in `results/int_math-cycles-2026-10-05.txt`):
+**Correctness.** Every S0 kernel (`test/core/*.my`) prints the old core's checksum at 4096,
+64 and 4100 elements, at debug and release; so does the multi-kind `compute_s0.my` for all
+six kinds, and `control.my` its whole output and exit status. `zig build test-core
+-Dcore-diff=true` rebuilds the fixtures with the old compiler and compares directly.
 
-| Configuration | 4096 × 4000 | 64 × 250000 | instr/elem (4096) |
+**Fuzz** (`fuzz.py`: random S0-vocabulary programs, each built four ways — old core
+`--release` as the oracle, new core debug, release and `--verify-facts` — and run with
+five argument sets; stdout, exit status and trap kind must agree; a verify build must
+never trap `R_CORE_FACT`):
+
+| Run | Cases | Comparisons | Disagreements | `R_CORE_FACT` | Vectorized / versioned cases |
+|---|---:|---:|---:|---:|---:|
+| seed 21, before the fixes | 200 | 2,955 | 3 compiler crashes (fixed, now tests) | 0 | 42 / 22 |
+| seed 31, final | 200 | 3,000 | 0 (3 reported: the old core printed `R_LIST_BOUNDS:` without the `error[…]` prefix; same stdout, status and kind) | 0 | 44 / 41 |
+| sabotage, seed 78, final | 60 | 710 | 0 | caught in **55 of 60** cases | 12 / 11 |
+
+The first fuzz run (before the vector lowering) found a real miscompile: a variable divisor
+of -1 returned the dividend; and building `branch_mixed` found a second (masks loaded in
+order against values loaded in `packusdw` order). Both are fixed and tested.
+
+**Cycles per element** (`measure_kernels.py`: `perf stat` user cycles on CPU 10, start-up
+subtracted, median of 7 interleaved rounds, a heavily loaded host; every configuration's
+checksum identical; "spike" is its level-2 build of the unmodified compute benchmark):
+
+| Kernel (4096 × 4000 / 64 × 250000) | Old core | **New core** | Spike L2 | C ladder (plain C / hand AVX2) | Rust | Zig ReleaseSafe |
+|---|---:|---:|---:|---:|---:|---:|
+| integer_math | 8.70 / 9.07 | **0.36 / 0.49** | 0.38 / 0.64 | 1.73 / 0.33 (v5/v7) | 5.71 / 6.18 | 7.81 / 8.32 |
+| float_math | 8.30 / 8.43 | **1.57 / 1.71** | 1.61 / 1.85 | 1.38 / 1.28 (v5/v8) | 6.97 / 7.33 | 6.51 / 7.03 |
+| call_direct | 3.04 / 3.16 | **0.30 / 0.32** | 0.31 / 0.49 | — | 2.02 / 2.94 | 3.02 / 4.12 |
+| branch_predictable | 4.03 / 4.15 | **0.40 / 0.50** | — | — | 3.20 / 3.25 | 7.70 / 7.91 |
+| branch_mixed | 4.12 / 4.13 | **0.40 / 0.49** | — | 0.62 / 0.30 (v8/v7) | 4.87 / 4.52 | 9.28 / 9.06 |
+| binary_search (iterations / 10) | 144 / 33 | **87 / 30** | — | — | 38 / 20 | 137 / 28 |
+
+Every kernel is at or below the spike's level 2 where it has one, and below the C ladder's
+best compiler-derived rung for `branch_mixed`; `float_math` is 13% above the ladder's
+plain-C v5 (no spike-level gap). `binary_search` has no facts to use (its indices are
+data-dependent) and is bound by branch prediction; Rust is 2.3× faster there (S1: relational
+facts `low ≤ middle < high ≤ len`, and if-conversion of trap-free diamonds).
+
+**Whole-function emission does not slow the other loops** (`compute_s0.my`: all six kinds
+in one `main` with the benchmark's per-element `if kind == …`; unswitching gives each kind
+its own straight loop): integer_math 0.36, float_math 1.57, call_direct 0.30, both branch
+kinds 0.40 cycles/element, the same as the single-kernel programs, against 3.7–10.1 for the
+old core on the same program. `binary_search` is the exception, 144 against 87 alone: the
+same instructions with 2.3× the branch misses (LLVM's layout of the search loop differs in
+the large function; the old core shows the same sensitivity in the other direction).
+
+**Dev loop.** Measured twice with `devloop.sh` (Debug compiler, `-j2`, build slot):
+
+| Loop | Old core (plan §2) | New core, checkpoint A (load ~7) | New core, end of S0 (load ~50) |
 |---|---:|---:|---:|
-| old core, `mylang build --release` | 8.69 | 9.07 | 38.0 |
-| new core release, `--no-facts` (every check exact) | 9.07 | 9.24 | 43.0 |
-| **new core release (facts)** | **1.67** | **1.91** | 4.47 |
-| spike level 1 (typed scalar), rebuilt from its branch | 1.67 | 2.00 | 4.47 |
-| spike level 2 (explicit narrow-lane vector) | 0.36 | 0.59 | 1.22 |
-| C ladder v5 (assumed ranges) | 1.73 | 1.98 | 4.46 |
-| C ladder v7 (hand AVX2, u16 storage) | 0.33 | 0.47 | 1.21 |
-| Rust (`compute-rust integer_math`) | 5.70 | 6.18 | 31.2 |
+| One-line edit → `zig build core` | 19.5–28.9 s | 1.8–2.2 s | 8.1–16.3 s |
+| Same under `--watch -fincremental` | 0.9–17 s | 0.13–0.55 s | not re-measured |
+| Edit → `zig build test-core` (31 tests, ~40 native builds) | 33.9 s (`test-units` arena) | 4.4–5.5 s (16 tests) | 28–51 s |
+| `test-core`, nothing changed (tests rerun) | — | 1.1 s | 13.8 s |
+| `test-core -Dcore-diff=true` | — | 25.6 s | 46.6 s |
+| Build the slice, debug, runtime cached / fresh cache dir | old debug + `--link` fails | 0.06–0.09 / 0.22–0.26 s | 0.18–0.21 / 0.61 s |
+| Build the slice, release, warm / fresh | 1.5–1.8 / 2.0–2.5 s | 0.06–0.08 / 0.28–0.31 s | 0.16–0.24 / 0.68 s |
 
-The facts alone reach level 1: LLVM sees `!range [0,1009)` on the element load, `nsw`
-arithmetic and `udiv`/`urem`, narrows to 16-bit lanes and vectorizes by itself
-(`vpmulhuw`, `vpmovzxwq` in the loop). Level 2 needs the explicit vector lowering
-(checkpoint B). Without facts the new core is 4% slower than the old one (43 against 38
-instructions per element): every check is an exact overflow intrinsic or compare in
-program order, and nothing is hoisted yet.
-
-**Dev loop** (`devloop.sh` under `scripts/build-slot.sh`, `-j2`, Debug compiler, warm
-global cache, about nine other lanes on the host; raw output in `results/`):
-
-| Loop | Old core (plan §2) | New core |
-|---|---:|---:|
-| One-line edit → rebuild (`zig build -Dcompiler-only` / `zig build core`) | 19.5–28.9 s | **1.8–2.2 s** (a first run measured 9.8–17.5 s, not reproduced) |
-| Same under `zig build --watch -fincremental`, edit → new binary | 0.9–17 s | **0.13–0.55 s** |
-| Edit → focused tests (`test-units -Dtest-filter=arena` / `test-core`, all 16 tests incl. 6 native builds) | 33.9 s | **4.4–5.5 s** |
-| Tests with nothing changed | — | 1.1–1.2 s |
-| `test-core -Dcore-diff=true` (also builds each fixture with the old compiler) | — | 25.6 s |
-| Build the slice, debug (`-O0`), runtime object cached / empty cache dir | — (old debug build with `--link` fails, see §12) | 0.06–0.09 s / 0.22–0.26 s |
-| Build the slice, release, warm / empty cache dir | 1.5–1.8 s / 2.0–2.5 s | 0.06–0.08 s / 0.28–0.31 s |
-| Build `control.my` debug, warm / empty cache dir | 0.28 s / 0.51 s | 0.04 s / 0.14 s |
-
-Caveats: the programs are tiny, so these say little about LLVM `-O0` on large programs
-(the plan's 1–4.5 s cold code generation for `collections`/`text` is still the S1 risk);
-"empty cache" means an empty `--cache-dir`, with Zig's global cache warm.
+The end-of-S0 run shared the 20-thread host with a load average near 50 (the old core's
+release build of the slice took 5.7–6.5 s in the same run, against 1.5–2.5 s before), so
+compare within a column. The test step grew from 16 to 31 tests, many of them native builds
+of the kernels at debug and release.
 
 The default `zig build` is unchanged in behaviour: the new steps are off the install graph,
 and guests built by the `mylang` binary before and after the branch's changes are
-byte-identical (`control.my` debug, `int_math.my` release). The `mylang` binary itself
-differs only because `src/compiler.zig` gained one line (debug-info line numbers).
+byte-identical. The `mylang` binary differs only because `src/compiler.zig` gained one line.
+
+**Coverage sweep** (`coverage.py`, `mylang-core coverage`: each function built alone;
+the first construct the builder refuses is the reason):
+
+| Corpus | Functions | Accepted |
+|---|---:|---:|
+| `examples/` | 207 | 59 (29%) |
+| `bench/parity` | 123 | 39 (32%) |
+| `tests/lang` (with a trivial `main` added where missing) | 3,038 | 896 (29%) |
+| `benchmarks/runtime` (compute, collections, text) | 141 | 36 (26%) |
+| Lox port (`bench/lox-mylang`) | not checkable: it uses `class` (E_VALUE_CLASS) | — |
+
+Refusal reasons over all corpora — the S1 vocabulary list, in order: record types (741) and
+record construction/field access (206+7), dictionaries (211, S2), `mut` parameters (174),
+`bytes` (142, S2), `Result` (138), unions (130), fixed arrays (114), `with` scopes (91),
+shifts and other operators (41), domains (39), element writes (38), length of strings and
+other collections (37), function values (37+13), `assert` (37), capabilities and file
+handles (33), sets (25), `sort` (18), `join`/`split`/`slice` (S2).
 
 ## 12. Open questions and risks for the manager
 
-1. **The list-length assumption** (`max_list_length = 2^47`, §5) is the only non-proven
-   input to the facts. Accept it as a language/platform rule (L4), or require a runtime
-   guard?
-2. **Runtime for S1:** keep growing `core_rt.c` with one-count RC (§8), or adopt the shared
-   runtime once WP-5 lands? Recommendation: keep our own block layout and port the shared
-   runtime's algorithms (text, dictionaries, formatting) into it, because the shared
-   runtime's ABI is QBE-shaped.
-3. **How strict is the stderr oracle?** The first trap line and `MYLANG-TRAP` record match;
-   the trace has only the innermost frame until PC-table traces land in S1. Is that
-   acceptable for the conformance comparison (stdout + exit status + trap kind)?
-4. **`Stream` selection:** `main`'s `Stream` parameter writes to stderr only when it is
-   named `err` (my reading of CLAUDE.md); confirm that this is the checker's rule and not a
-   type distinction S0 should take from `typed.Program`.
-5. **Gate wiring:** `zig build test-core` (5 s after an edit) is the proposed lane gate;
-   `-Dcore-diff=true` adds the old compiler's build (25 s). Which runs where?
-6. **Next for checkpoint B**, in this order unless redirected: the vector lowering (spike
-   level 2, required for the S0 exit check "at or below the spike"), the facts' verify mode
-   and a whole-program differential fuzz, then `float_math`, `call_direct`, `branch_*`,
-   `binary_search` and the unmodified `compute/main.my`.
-7. **Old-core issue found:** `mylang build` *without* `--release` and with `--link
-   file.c` fails (`native_clock.c:1:1: error: FileNotFound`, `NativeToolFailed`) even
-   with an absolute path; release builds work. Not investigated further.
-8. **Risks:** the fact pass is now load-bearing for soundness (a wrong interval silently
-   drops a check); the verify mode and fuzz (checkpoint B) are what keep it honest. The
-   builder refuses rather than guesses (`E_CORE_UNSUPPORTED`), so coverage, not
-   correctness, is what limits it today: no records, dictionaries, sets, string operations
-   beyond `int(text)` and printing, `assert`, `with`, or element stores yet.
+1. **S1 order.** The sweep says records first (741+213 functions), then `mut` parameters,
+   `Result`/unions with error traces, fixed arrays, `with` scopes and `assert`; dictionaries,
+   sets and `bytes` are S2. Records, unions and `Result` need the ownership pass (§6) only
+   when they hold managed values, so a first S1 lane can take scalar-field records and
+   unions before RC lands.
+2. **L2 regions were not needed in S0** (§7): every hot-loop check was proven or
+   guarded. They become necessary for loops over data without facts; do you want them in
+   S1, or with the runtime guards over list data?
+3. **binary_search** stays 2.3× behind Rust: relational facts and if-conversion of
+   trap-free diamonds (S1–S2).
+4. **Per-function object caching for `-O0`** (N5) is not built: a whole S0 program compiles
+   in under 0.3 s, so the cost is invisible until S1's larger programs.
+5. **Trap traces** still name only the innermost frame (PC-table traces: S1).
+6. **Lox port:** the version on `bench/lox-mylang` does not check in this tree (`class`
+   under value semantics, `E_MUTATION_OVERLAP` with legacy sharing); the sweep needs its
+   value-semantics port.
+7. **Risk:** the fact pass, the copy machinery (versioning, unswitching) and the vector
+   lowering are all load-bearing for soundness. The verify mode and the fuzz are the
+   guard: keep `fuzz.py` (and `--sabotage`) in the lane gate for every change to them.
