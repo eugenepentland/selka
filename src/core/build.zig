@@ -119,7 +119,8 @@ const ModuleBuilder = struct {
 
     fn mapAggregate(self: *ModuleBuilder, ty: typed.Type, span: u32) Error!ir.Type {
         const records = self.program.records;
-        if (!ty.isAggregate() or ty.recordIndex() >= records.len) return self.refuse("type", span);
+        if (!ty.isAggregate()) return self.refuse(if (ty.isFile()) "file handle type" else "capability type", span);
+        if (ty.recordIndex() >= records.len) return self.refuse("type", span);
         const record = records[ty.recordIndex()];
         if (record.isCollection()) switch (record.collection.kind) {
             .string => return .str,

@@ -36,7 +36,6 @@ def with_entry(files, scratch):
         if "def main(" in text:
             out.append(path)
             continue
-        copy = os.path.join(scratch, os.path.relpath(path, ROOT).replace("/", "__"))
         os.makedirs(scratch, exist_ok=True)
         stem = os.path.basename(path)[:-3]
         copy = os.path.join(scratch, stem + ".my")
@@ -52,7 +51,7 @@ def main():
     ap.add_argument("--lox", default=None, help="directory of the Lox port sources (branch bench/lox-mylang)")
     args = ap.parse_args()
     corpora = {
-        "examples": sorted(glob.glob(os.path.join(ROOT, "examples/**/*.my"), recursive=True)),
+        "examples": with_entry(sorted(glob.glob(os.path.join(ROOT, "examples/**/*.my"), recursive=True)), os.path.join(os.environ.get("TMPDIR", "/tmp"), "coverage-examples")),
         "bench/parity": sorted(glob.glob(os.path.join(ROOT, "bench/parity/**/*.my"), recursive=True)),
         "tests/lang": with_entry(sorted(glob.glob(os.path.join(ROOT, "tests/lang/*.my"))), os.path.join(os.environ.get("TMPDIR", "/tmp"), "coverage-entries")),
         "benchmarks/runtime": sorted(glob.glob(os.path.join(ROOT, "benchmarks/runtime/expanded/*/main.my"))),

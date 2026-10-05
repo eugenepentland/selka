@@ -147,7 +147,7 @@ fn sameAsOld(arena: std.mem.Allocator, root: []const u8, name: []const u8, args:
     if (!options.differential) return true;
     const new = try run(arena, try buildFixture(arena, root, name, .{ .compiler = options.core_path, .release = true }), args);
     const old = try run(arena, try buildFixture(arena, root, name, .{ .compiler = options.old_path, .release = true, .old = true }), args);
-    const timed = std.mem.eql(u8, name, "int_math");
+    const timed = !std.mem.eql(u8, name, "control") and !std.mem.eql(u8, name, "overflow") and !std.mem.eql(u8, name, "bounds");
     const same_out = if (timed) std.mem.eql(u8, firstField(new.stdout), firstField(old.stdout)) else std.mem.eql(u8, new.stdout, old.stdout);
     if (!same_out or new.status != old.status) report("{s} differs:\nnew ({d}):\n{s}\nold ({d}):\n{s}\n", .{ name, new.status, new.stdout, old.status, old.stdout });
     return same_out and new.status == old.status;
@@ -167,6 +167,9 @@ test "with -Dcore-diff=true every fixture matches the old compiler's build of it
     try std.testing.expect(try sameAsOld(arena.allocator(), root, "control", &.{ "3", "x" }));
     try std.testing.expect(try sameAsOld(arena.allocator(), root, "overflow", &.{}));
     try std.testing.expect(try sameAsOld(arena.allocator(), root, "bounds", &.{}));
+    try std.testing.expect(try sameAsOld(arena.allocator(), root, "float_math", &.{ "4100", "30", "7" }));
+    try std.testing.expect(try sameAsOld(arena.allocator(), root, "branch_mixed", &.{ "4100", "30", "7" }));
+    try std.testing.expect(try sameAsOld(arena.allocator(), root, "binary_search", &.{ "100", "30", "7" }));
 }
 
 /// One kernel's checksums at 4096 and 64 elements (300 iterations, seed 7), from one build.

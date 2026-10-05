@@ -1,0 +1,36 @@
+
+### integer_math (cycles/element, median of 5 interleaved rounds, CPU 10)
+| configuration | 4096 x 4000 | 64 x 250000 | checksum |
+|---|---:|---:|---|
+| old core --release | 10.118 | 10.698 | same |
+| new core release | 0.362 | 0.556 | same |
+
+### float_math (cycles/element, median of 5 interleaved rounds, CPU 10)
+| configuration | 4096 x 4000 | 64 x 250000 | checksum |
+|---|---:|---:|---|
+| old core --release | 9.203 | 9.558 | same |
+| new core release | 1.573 | 1.820 | same |
+
+### call_direct (cycles/element, median of 5 interleaved rounds, CPU 10)
+| configuration | 4096 x 4000 | 64 x 250000 | checksum |
+|---|---:|---:|---|
+| old core --release | 3.688 | 4.287 | same |
+| new core release | 0.303 | 0.373 | same |
+
+### branch_predictable (cycles/element, median of 5 interleaved rounds, CPU 10)
+| configuration | 4096 x 4000 | 64 x 250000 | checksum |
+|---|---:|---:|---|
+| old core --release | 7.466 | 6.821 | same |
+| new core release | 0.399 | 0.527 | same |
+
+### branch_mixed (cycles/element, median of 5 interleaved rounds, CPU 10)
+| configuration | 4096 x 4000 | 64 x 250000 | checksum |
+|---|---:|---:|---|
+| old core --release | 5.505 | 5.132 | same |
+| new core release | 0.399 | 0.526 | same |
+
+### binary_search (cycles/element, median of 5 interleaved rounds, CPU 10)
+| configuration | 4096 x 4000 | 64 x 250000 | checksum |
+|---|---:|---:|---|
+| old core --release | 110.102 | 31.609 | same |
+| new core release | 144.060 | 29.769 | same |

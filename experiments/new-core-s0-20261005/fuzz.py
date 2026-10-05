@@ -155,7 +155,7 @@ def run(argv, timeout=20):
         done = subprocess.run(argv, capture_output=True, text=True, timeout=timeout)
     except subprocess.TimeoutExpired:
         return ("TIMEOUT", 124, "")
-    trap = re.search(r"error\[(R_[A-Z_]+)\]", done.stderr)
+    trap = re.search(r"\b(R_[A-Z_]+)\b", done.stderr)
     return (done.stdout, done.returncode, trap.group(1) if trap else "")
 
 

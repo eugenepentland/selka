@@ -15,6 +15,8 @@ for k in int_math float_math call_direct branch_predictable branch_mixed binary_
   "$mylang" build "$root/test/core/$k.my" -o "$out/${k}_old" --release --link "$clock" --cache-dir "$cache/old"
   "$core" build "$root/test/core/$k.my" -o "$out/${k}_new" --release --link "$clock" --cache-dir "$cache/core"
 done
+"$mylang" build "$root/test/core/compute_s0.my" -o "$out/compute_s0_old" --release --link "$clock" --cache-dir "$cache/old"
+"$core" build "$root/test/core/compute_s0.my" -o "$out/compute_s0_new" --release --link "$clock" --cache-dir "$cache/core"
 if [ -n "$spike" ]; then
   MYLANG_LLVM_DIRECT=2 "$spike" build "$root/benchmarks/runtime/expanded/compute/main.my" -o "$out/compute_spike_l2" --release --link "$clock" --cache-dir "$cache/spike"
 fi

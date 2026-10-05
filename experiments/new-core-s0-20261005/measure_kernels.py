@@ -35,8 +35,18 @@ def run(cpu, argv):
     raise SystemExit("no cycle count: %s" % done.stderr)
 
 
+KINDS = {"integer_math": "0", "float_math": "1", "branch_predictable": "2", "branch_mixed": "3", "call_direct": "6", "binary_search": "10"}
+
+
 def configurations(args, kernel):
     b, r = args.bin, args.runner
+    if args.multi:
+        # test/core/compute_s0.my: every S0 kind in one program, dispatching on `kind` per element.
+        kind = KINDS[kernel]
+        return [
+            ("old core --release", lambda s, i: [f"{b}/compute_s0_old", kind, str(s), str(i), str(SEED)]),
+            ("new core release", lambda s, i: [f"{b}/compute_s0_new", kind, str(s), str(i), str(SEED)]),
+        ]
     name = FILES.get(kernel, kernel)
     rows = [
         ("old core --release", lambda s, i: [f"{b}/{name}_old", str(s), str(i), str(SEED)]),
@@ -60,6 +70,7 @@ def main():
     ap.add_argument("--kernels", default="integer_math,float_math,call_direct,branch_predictable,branch_mixed,binary_search")
     ap.add_argument("--rounds", type=int, default=7)
     ap.add_argument("--cpu", type=int, default=10)
+    ap.add_argument("--multi", action="store_true", help="measure compute_s0_old/_new (the multi-kind program) instead")
     args = ap.parse_args()
     if args.cpu in (2, 3, 11):
         raise SystemExit("never run on CPUs 2, 3 or 11")
