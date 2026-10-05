@@ -508,6 +508,14 @@ const FnBuilder = struct {
         }
     }
 
+    /// A loop over `alias` is running: it iterates that list for good, whatever the body assigns to the name.
+    /// Assigning the alias itself would break that, which the checker never emits.
+    fn guardAlias(self: *FnBuilder, variable: u32, span: u32) Error!void {
+        for (self.aliases.items) |alias| {
+            if (alias.iterating and alias.hidden == variable) return self.mb.refuse("write to a list while it is iterated (live-place iteration)", span);
+        }
+    }
+
     /// The loop's `iteration_check` on `owner` has been reached: the alias is iterated from here on.
     fn markIterating(self: *FnBuilder, owner: typed.LocalId) void {
         const variable = self.local(owner);
@@ -530,7 +538,9 @@ const FnBuilder = struct {
             },
             .initialize, .assign => |store| {
                 if (store.element) return self.mb.refuse("element store", span);
-                try self.guardPlace(self.local(store.slot), span);
+                // Rebinding the name of a list a loop iterates leaves the loop on the list it started with,
+                // which the alias is; only a write to the list is refused (`guardPlace`).
+                try self.guardAlias(self.local(store.slot), span);
                 var place: ?Place = null;
                 const value = try self.expressionPlace(store.value, &place);
                 const block = self.current orelse return;

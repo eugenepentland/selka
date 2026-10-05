@@ -35,8 +35,18 @@ def skip_odd(n: int) -> int:
     return total
 
 
+def rebinding(values: list[int]) -> int:
+    total = 0
+    names = values
+    for x in names:
+        names = [7]
+        total += x
+    return total * 10 + len(names)
+
+
 def main(out: Stream) -> int:
     xs = [4, 8, 15, 16, 23, 42]
     out.print(find_first(xs, 15), find_first(xs, 5), find_first([], 1))
     out.print(count_up(10), count_up(0), skip_odd(11), skip_odd(0))
+    out.print(rebinding([1, 2, 3]), rebinding([]))
     return 0

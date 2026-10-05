@@ -477,6 +477,7 @@ test "f-strings, str(x), concatenation and join build the old core's text, with 
 const v_loops_output =
     \\2 -1 -1
     \\45 0 30 0
+    \\61 0
     \\
 ;
 
