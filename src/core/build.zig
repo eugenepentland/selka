@@ -11,6 +11,8 @@ const std = @import("std");
 const typed = @import("mylang").typed;
 const ir = @import("ir.zig");
 const own = @import("own.zig");
+const fuse = @import("fuse.zig");
+const flags = @import("flags.zig");
 
 /// Refusal reasons several constructs share.
 const refuse_payload = "match payload";
@@ -41,6 +43,10 @@ pub fn buildModule(allocator: std.mem.Allocator, program: typed.Program, refusal
         }
     }
     mb.pending.deinit(allocator);
+    // Element reads that are only taken apart become field reads, before ownership sees their uses of the list.
+    for (mb.module.functions.items) |*function| {
+        if (function.signature.linkage == .internal) _ = try fuse.projections(allocator, function, &mb.module);
+    }
     // A push appends in place, so its operand must be the only live reference to its block.
     for (mb.module.functions.items) |*function| {
         if (function.signature.linkage == .internal) _ = try own.copyShared(allocator, function);
@@ -1101,7 +1107,7 @@ const FnBuilder = struct {
                 // when empty, which the read reports as the empty-list pop), then dropped.
                 const length = try self.emit(.{ .op = .list_len, .ty = .u64, .a = list, .span = span });
                 const last = try self.emit(.{ .op = .sub, .ty = .u64, .a = length, .b = try self.constant(.u64, 1), .span = span });
-                const element = try self.emit(.{ .op = .list_get, .ty = ty, .a = list, .b = last, .data = pop_read, .check = .exact, .span = span });
+                const element = try self.emit(.{ .op = .list_get, .ty = ty, .a = list, .b = last, .data = flags.pop_read, .check = .exact, .span = span });
                 const rest = try self.emit(.{ .op = .list_pop, .ty = receiver_type, .a = list, .check = .exact, .span = span });
                 try self.writeOwner(owner, rest, span);
                 return element;
@@ -1154,10 +1160,6 @@ const FnBuilder = struct {
         return .none;
     }
 };
-
-/// `list_get.data` of the read a `pop` starts with: a failing index is reported as the pop
-/// of an empty list (`R_LIST_BOUNDS`, operation `pop`), as the old core does.
-pub const pop_read: u64 = 1;
 
 /// The tag of `None` when `ty` is an `Option` (a two-case union whose first case has no payload).
 fn optionNoneTag(records: []const typed.Record, ty: typed.Type) ?usize {

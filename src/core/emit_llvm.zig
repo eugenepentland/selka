@@ -15,6 +15,7 @@ const ir = @import("ir.zig");
 const facts = @import("facts.zig");
 const vector = @import("vector.zig");
 const c_abi = @import("c_abi.zig");
+const flags = @import("flags.zig");
 
 /// A source line and column for a span start.
 pub const Location = struct { line: u32, column: u32 };
@@ -913,6 +914,8 @@ const FunctionEmitter = struct {
         const outside = try self.fresh("%oob");
         try out.print(self.a(), header_tagged_line, .{ at, list, len_offset, len, at });
         try out.print(self.a(), "  {s} = icmp uge i64 {s}, {s}\n", .{ outside, index, len });
+        // The read a `pop` starts with fails exactly when the list is empty, which is the pop trap.
+        if (inst.op == .list_get and inst.data == flags.pop_read) return self.trapIf(out, outside, try self.site(.list_empty, inst, "pop"), "0", len);
         try self.trapIf(out, outside, try self.site(.list_bounds, inst, "index"), index, len);
     }
 

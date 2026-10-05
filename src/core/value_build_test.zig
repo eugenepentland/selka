@@ -263,3 +263,48 @@ test "an element write of a managed element and a record holding an unsupported 
     try std.testing.expectError(error.Unsupported, support.buildSource(arena.allocator(), array_field, &refusal));
     try std.testing.expectEqualStrings("fixed array type", refusal.reason);
 }
+
+const projections =
+    \\record Item:
+    \\    code: int
+    \\    bias: int
+    \\
+    \\
+    \\union Value:
+    \\    integer: int,
+    \\    pair: Item
+    \\
+    \\
+    \\def read_code(items: list[Item], i: int) -> int:
+    \\    return items[i].code + items[i].bias
+    \\
+    \\
+    \\def peek(vs: list[Value], i: int) -> int:
+    \\    match vs[i]:
+    \\        case Value.integer(n):
+    \\            return n
+    \\        case Value.pair(p):
+    \\            return p.code * 10 + p.bias
+    \\
+    \\
+    \\def main(out: Stream) -> int:
+    \\    out.print(read_code([Item(code=1, bias=2)], 0), peek([Value.integer(5)], 0))
+    \\    return 0
+    \\
+;
+
+// spec: NEW-CORE-FUSE-1
+test "a field read of a list element and a match on a union element read the parts they use, not the whole element" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const text = try support.irText(arena.allocator(), projections);
+    try std.testing.expect(!contains(text, "list_get.exact record"));
+    try std.testing.expect(!contains(text, "list_get.exact union"));
+    // `items[i].code`: one field read; `match vs[i]`: the tag with the bounds check, then the payload without one.
+    try std.testing.expect(contains(text, "list_get_field.exact i64 param0, %9, path 0"));
+    try std.testing.expect(contains(text, "list_get_field.exact u32 param0, %9, path 0"));
+    try std.testing.expect(contains(text, "list_get_field i64 param0, %9, path 1"));
+    // The payload record's fields are paths of two steps: case 1's payload (step 2), then the field.
+    try std.testing.expect(contains(text, "list_get_field i64 param0, %9, path 2.0"));
+    try std.testing.expect(contains(text, "list_get_field i64 param0, %9, path 2.1"));
+}
