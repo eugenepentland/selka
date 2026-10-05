@@ -465,6 +465,9 @@ const leak_fixtures = [_]struct { name: []const u8, args: []const []const u8 }{
     .{ .name = "list_alias", .args = &.{} },
     .{ .name = "rc_lists", .args = &.{ "a", "b" } },
     .{ .name = "rc_stack", .args = &.{ "a", "b", "c", "d" } },
+    .{ .name = "rc_mut", .args = &.{ "a", "b" } },
+    .{ .name = "rc_shared_loops", .args = &.{} },
+    .{ .name = "rc_alias_paths", .args = &.{"x"} },
 };
 
 // spec: NEW-CORE-RC-7
@@ -531,4 +534,135 @@ test "a wrong length bound behind a stack list is caught by the verify build" {
     const sabotaged = try stackRun(arena.allocator(), root, "sabotage", &.{ "--release", "--sabotage-facts" });
     try std.testing.expectEqual(@as(u8, 1), sabotaged.run.term.exited);
     try std.testing.expect(contains(sabotaged.run.stderr, "error[R_CORE_FACT]"));
+}
+
+const handed_over =
+    \\record Bag:
+    \\    name: str
+    \\    items: list[int]
+    \\
+    \\
+    \\def add(xs: mut list[int], v: int):
+    \\    xs.append(v)
+    \\
+    \\
+    \\def add_counted(xs: mut list[int], v: int) -> int:
+    \\    xs.append(v)
+    \\    return len(xs)
+    \\
+    \\
+    \\def put(bag: mut Bag, v: int):
+    \\    bag.items.append(v)
+    \\
+    \\
+    \\def grow(n: int) -> int:
+    \\    xs: list[int] = []
+    \\    bag = Bag(name="b", items=[])
+    \\    total = 0
+    \\    for i in range(n):
+    \\        add(mut xs, i)
+    \\        total += add_counted(mut xs, i)
+    \\        put(mut bag, i)
+    \\    return total + len(xs) + len(bag.items)
+    \\
+    \\
+    \\def main(out: Stream) -> int:
+    \\    out.print(grow(4))
+    \\    return 0
+    \\
+;
+
+// spec: NEW-CORE-MUT-OWN-1
+test "a mut argument is handed over: the callee updates it in place when unique, and a mut record's list field is taken, not copied" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    // Debug: the calls stay; each callee tests its count instead of copying, and the
+    // caller neither retains nor copies around the calls.
+    const debug = try support.ownedText(arena.allocator(), handed_over);
+    for ([_][]const u8{ "add", "add_counted", "put" }) |name| {
+        const text = functionIr(debug, name);
+        try std.testing.expect(contains(text, "is_unique"));
+        try std.testing.expectEqual(std.mem.count(u8, text, "is_unique"), std.mem.count(u8, text, "list_copy"));
+    }
+    const grow = functionIr(debug, "grow");
+    try std.testing.expect(!contains(grow, "retain") and !contains(grow, "list_copy"));
+    // Release: the calls are inlined; every copy left is the copy arm of a count test,
+    // so a loop of appends through `mut` stays linear.
+    const release = try support.optimizedText(arena.allocator(), handed_over);
+    const grown = functionIr(release, "grow");
+    try std.testing.expect(contains(grown, "is_unique"));
+    try std.testing.expectEqual(std.mem.count(u8, grown, "is_unique"), std.mem.count(u8, grown, "list_copy"));
+    try std.testing.expect(!contains(grown, "retain"));
+}
+
+// spec-case: NEW-CORE-MUT-OWN-1
+test "mut appends, mut records and aliases match the old core, linear and leak-free, debug and release" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    var dir = std.testing.tmpDir(.{});
+    defer dir.cleanup();
+    const root = try dir.dir.realPathFileAlloc(std.testing.io, ".", arena.allocator());
+    // 400,000 appends through `mut` each way: a copy per append would take minutes.
+    const args = [_][]const u8{ "a", "b", "c", "d" };
+    for ([_]bool{ false, true }) |release| {
+        const source = try std.fmt.allocPrint(arena.allocator(), "{s}/rc_mut.my", .{options.fixtures});
+        const output = try std.fmt.allocPrint(arena.allocator(), "{s}/rc_mut-{}", .{ root, release });
+        var argv: std.ArrayList([]const u8) = .empty;
+        try argv.appendSlice(arena.allocator(), &.{ options.core_path, "build", source, "-o", output, "--cache-dir", try std.fmt.allocPrint(arena.allocator(), "{s}/cache", .{root}) });
+        if (release) try argv.append(arena.allocator(), "--release");
+        const built = try std.process.run(arena.allocator(), std.testing.io, .{ .argv = argv.items });
+        try std.testing.expect(built.term == .exited and built.term.exited == 0);
+        var environment = try std.testing.environ.createMap(arena.allocator());
+        try environment.put("MYL_CORE_LEAKCHECK", "1");
+        var run_argv: std.ArrayList([]const u8) = .empty;
+        try run_argv.append(arena.allocator(), output);
+        try run_argv.appendSlice(arena.allocator(), &args);
+        const ran = try std.process.run(arena.allocator(), std.testing.io, .{ .argv = run_argv.items, .environ_map = &environment });
+        // `b = a; add(mut a, 3)` leaves `b` at two elements; `other = bag` keeps five items.
+        try std.testing.expectEqualStrings("2400003 32 75\n", ran.stdout);
+        try std.testing.expectEqualStrings("", ran.stderr);
+    }
+}
+
+// spec: NEW-CORE-RC-9
+test "a list retained into a container in one iteration is never updated in place in the next without a count test" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    var dir = std.testing.tmpDir(.{});
+    defer dir.cleanup();
+    const root = try dir.dir.realPathFileAlloc(std.testing.io, ".", arena.allocator());
+    // The old core's output: each saved snapshot keeps its own length.
+    try std.testing.expectEqualStrings("", try leakChecked(arena.allocator(), root, "rc_shared_loops", true, &.{}));
+    for ([_]bool{ false, true }) |release| {
+        const source = try std.fmt.allocPrint(arena.allocator(), "{s}/rc_shared_loops.my", .{options.fixtures});
+        const output = try std.fmt.allocPrint(arena.allocator(), "{s}/shared-{}", .{ root, release });
+        var argv: std.ArrayList([]const u8) = .empty;
+        try argv.appendSlice(arena.allocator(), &.{ options.core_path, "build", source, "-o", output, "--cache-dir", try std.fmt.allocPrint(arena.allocator(), "{s}/cache", .{root}) });
+        if (release) try argv.append(arena.allocator(), "--release");
+        const built = try std.process.run(arena.allocator(), std.testing.io, .{ .argv = argv.items });
+        try std.testing.expect(built.term == .exited and built.term.exited == 0);
+        const ran = try std.process.run(arena.allocator(), std.testing.io, .{ .argv = &.{output} });
+        try std.testing.expectEqualStrings("3 5 7 7\n1 6 True\n", ran.stdout);
+    }
+}
+
+// spec-case: NEW-CORE-RC-9
+test "a block shared on one of several paths into a loop is tested before the loop appends to it, release and verify" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    var dir = std.testing.tmpDir(.{});
+    defer dir.cleanup();
+    const root = try dir.dir.realPathFileAlloc(std.testing.io, ".", arena.allocator());
+    const source = try std.fmt.allocPrint(arena.allocator(), "{s}/rc_alias_paths.my", .{options.fixtures});
+    for ([_][]const []const u8{ &.{"--release"}, &.{ "--release", "--verify-facts" } }, 0..) |flags, k| {
+        const output = try std.fmt.allocPrint(arena.allocator(), "{s}/alias-{d}", .{ root, k });
+        var argv: std.ArrayList([]const u8) = .empty;
+        try argv.appendSlice(arena.allocator(), &.{ options.core_path, "build", source, "-o", output, "--cache-dir", try std.fmt.allocPrint(arena.allocator(), "{s}/cache", .{root}) });
+        try argv.appendSlice(arena.allocator(), flags);
+        const built = try std.process.run(arena.allocator(), std.testing.io, .{ .argv = argv.items });
+        try std.testing.expect(built.term == .exited and built.term.exited == 0);
+        // The old core's output for no argument and for one.
+        try std.testing.expectEqualStrings("62\n", (try std.process.run(arena.allocator(), std.testing.io, .{ .argv = &.{output} })).stdout);
+        try std.testing.expectEqualStrings("70\n", (try std.process.run(arena.allocator(), std.testing.io, .{ .argv = &.{ output, "x" } })).stdout);
+    }
 }

@@ -100,6 +100,19 @@ pub fn coverage(allocator: std.mem.Allocator, program: typed.Program) Error![]Ou
     return outcomes;
 }
 
+/// The `ir.Signature.owned` bits of a function whose parameters (`unit` ones included)
+/// are `all` and whose `mut` parameters sit at `mutated`: a `mut` parameter is passed
+/// by value and returned, so the call hands it over (bits count passed parameters only).
+fn ownedParameters(all: []const ir.Type, mutated: []const u16) u64 {
+    var bits: u64 = 0;
+    for (mutated) |position| {
+        var passed: u6 = 0;
+        for (all[0..position]) |param| passed += @intFromBool(param != .void);
+        if (position < all.len and all[position] != .void) bits |= @as(u64, 1) << passed;
+    }
+    return bits;
+}
+
 const ModuleBuilder = struct {
     allocator: std.mem.Allocator,
     program: typed.Program,
@@ -133,7 +146,7 @@ const ModuleBuilder = struct {
         if (linkage == .extern_c and function.signature.declared_mutates.len != 0) return self.refuse("mut parameter of an extern function", span);
         const ret = try self.returnType(function, declared, all, span);
         const index: u32 = @intCast(self.module.functions.items.len);
-        try self.module.functions.append(self.allocator, .{ .name = function.name, .signature = .{ .params = params, .ret = ret, .linkage = linkage }, .span = span });
+        try self.module.functions.append(self.allocator, .{ .name = function.name, .signature = .{ .params = params, .ret = ret, .linkage = linkage, .owned = ownedParameters(all, function.signature.declared_mutates) }, .span = span });
         try self.ids.put(self.allocator, @backingInt(id), index);
         try self.pending.append(self.allocator, id);
         return index;

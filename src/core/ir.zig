@@ -385,6 +385,9 @@ pub const Signature = struct {
     params: []const Type,
     ret: Type,
     linkage: Linkage = .internal,
+    /// Bit `i`: parameter `i` is passed owned (a `mut` parameter, by value: the call
+    /// consumes the argument, the callee owns it and returns its final value).
+    owned: u64 = 0,
 };
 
 /// A function: its instructions, blocks, packed operand lists and loops.

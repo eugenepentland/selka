@@ -403,6 +403,41 @@ phis and other updates make it escape (no callee analysis yet: any call escapes)
   tests/lang 174 in 99 of 902, bench/parity 1 in 41, examples and benchmarks/runtime 0.
   tests/lang release conformance is unchanged (218 matching, 31 mismatching, all builder).
 
+### 6.4 Shared blocks across loops and `mut` ownership (checkpoint O-2b, 2026-10-05)
+
+**The uniqueness bug** (`rc_fresh_loop_roots::test_prior_enclosing_iteration_publication_refuses_freshness`).
+Form 1's "nothing shares it before the update" used a CFG walk that stopped where the
+shared *value* was defined again. A block outlives its SSA value through phis: `items`
+retained into `saved` at the end of one outer iteration re-enters the inner loop as the
+same block through the outer and inner header phis, and was then pushed in place (4
+where the old core prints 3). The walk (`carries`) now tracks which members of the
+update's phi web hold the block: a phi takes it on an edge whose operand holds it, a
+member defined again holds a new one, and the update is shared when it is reached with
+its operand holding the block. It also used to stop at the first path reaching the
+update (fuzz: `rc_alias_paths.my`). Two related fixes: a removed trivial phi (`copy`)
+among a block's phis no longer ends the phi scan, and a value a call both takes (`mut`)
+and borrows gets a second owner (`rc_pin_elide`), as does a part borrowed by the call that
+takes its owner (`mut_record_call_window`).
+
+**`mut` ownership on the by-value ABI (§14).** `ir.Signature.owned` (bit per parameter, set
+by the builder for `mut` parameters; an `ir.zig` addition) makes the parameter owned in the
+callee (defined on entry; updated after a count test, form 2) and its argument a consuming
+use in the caller: moved when the caller's value is dead until the write-back (no retain),
+retained when it is still read (`b = a; f(mut a)`, so the callee sees count 2 and copies).
+`takeFields` keeps record-shaped `mut` traffic copy-free:
+- `g = r.f; …; r' = record_set(r, f, v)` in one block, `g` the only read of `f` there and
+  nothing but other-field reads of `r` reachable after `g`: `g` owns the field and the set
+  drops nothing (`bag.items.append(x)` in a `mut Bag` callee or its inlined copy);
+- an owned record read only field by field in its block, each block-holding field once:
+  the reads own the fields and the record is never counted (the write-back of a call with
+  a result, or its inlined `record_make`).
+A loop of 400,000 `mut` appends (list, and a record's list field, at debug and release with
+the calls inlined) runs in milliseconds; before, release copied on every call.
+
+**Rebinding a `mut` parameter** (`mut_rebinding`, two tests) is not ownership: V's
+write-back returns the rebound value, so `items = other` inside the callee reaches the
+caller's `items`; the old core leaves the caller's variable alone (COW-MUT-REBIND-1).
+
 ## 7. `mut` parameters
 
 **Semantics:** `inout`. The callee's writes, including a rebinding of the whole parameter, reach the caller's variable. The checker guarantees the call-site marker, a mutable local argument, and no overlap (D3).
