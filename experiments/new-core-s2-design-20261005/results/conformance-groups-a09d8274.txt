@@ -1,0 +1,156 @@
+== s2+fa 26 files 118 tests unsupported
+    aggregate_refs 3 / 12 : fixed array type x3
+    array_negative_index 19 / 20 : fixed array type x18, dict type x1
+    array_places 22 / 22 : fixed array type x22
+    array_writes 10 / 10 : fixed array type x10
+    backlog/const_lengths___const_length_function_parameters_specialize 1 / 1 : fixed array type x1
+    backlog/const_lengths___one_helper_serves_distinct_nominal_element_t 1 / 1 : fixed array type x1
+    dictionary_range_keys 8 / 8 : dict type x7, fixed array type x1
+    expected_type_inference 1 / 5 : fixed array type x1
+    loop_rebinding 4 / 14 : fixed array type x2, dict type x1, string index x1
+    migrated/generic_arrays 3 / 3 : fixed array type x3
+    migrated/surface_statements 1 / 8 : fixed array type x1
+    mut_argument_places 13 / 14 : dict type x12, fixed array type x1
+    mut_reference_roots 1 / 4 : fixed array type x1
+    nominal_bodies 1 / 2 : fixed array type x1
+    nominal_instances 1 / 3 : fixed array type x1
+    number_literals 1 / 10 : fixed array type x1
+    python_arrays 2 / 5 : fixed array type x2
+    rc_aggregate_values 3 / 14 : fixed array type x2, dict type x1
+    rc_glue_values 4 / 6 : bytes type x3, fixed array type x1
+    rc_match_scalars 4 / 4 : fixed array type x3, bytes type x1
+    rc_plain_aggregates 3 / 6 : fixed array type x3
+    rc_plain_retains 2 / 4 : fixed array type x2
+    rc_read_loans 2 / 7 : fixed array type x1, bytes type x1
+    rc_readonly_managed_calls 2 / 2 : fixed array type x1, bytes type x1
+    rc_scalar_replacements 1 / 3 : fixed array type x1
+    value_equality 5 / 7 : equality of a recursive value x3, dict type x1, fixed array type x1
+== s2 80 files 397 tests unsupported
+    borrowed_roots 1 / 7 : dict type x1
+    byte_buffer 8 / 8 : bytes type x8
+    byte_buffer_from_list 10 / 10 : bytes type x10
+    byte_iteration_reductions 2 / 2 : bytes type x2
+    byte_range_fusion 2 / 2 : bytes type x2
+    byte_ranges_llvm 1 / 1 : bytes type x1
+    byte_views 6 / 6 : bytes type x6
+    collection_read_callbacks 4 / 10 : dict type x4
+    constant_list_image 3 / 4 : array x2, bytes type x1
+    constant_methods 9 / 9 : upper x3, bytes type x2, split x2, replace x1, index x1
+    contracts 1 / 11 : print options x1
+    dict_comprehensions 8 / 10 : dict type x7, set type x1
+    dictionary_hash_index 6 / 6 : dict type x6
+    dictionary_hashing 11 / 11 : dict type x11
+    dictionary_views 5 / 5 : dict type x5
+    discard_names 2 / 9 : dict type x2
+    embed 8 / 8 : bytes type x7, blob x1
+    field_augmented 3 / 6 : extend x3
+    format_specs 6 / 6 : number_format x4, float_round x1, text_format x1
+    gc_footprint 1 / 6 : dict type x1
+    generator_arguments 3 / 8 : upper x1, operator on an aggregate value x1, sort x1
+    immutable_equal 2 / 3 : bytes type x1, slice x1
+    live_view_snapshots 9 / 9 : dict type x9
+    migrated/managed_values 10 / 11 : dict type x4, contains x4, split x1, index x1
+    migrated/python_format 1 / 3 : text of a non-integer value x1
+    migrated/python_surface 1 / 3 : bytes type x1
+    mut_dictionary_arguments 1 / 1 : dict type x1
+    option_equality 1 / 11 : parse_float x1
+    print_rendering 2 / 2 : text of a non-integer value x2
+    python_bytes 13 / 13 : bytes type x13
+    python_collections 9 / 22 : dict type x3, extend x2, index_of x1, sort x1, bytes type x1, slice_step x1
+    python_comprehension 1 / 4 : dict type x1
+    python_expressions 6 / 17 : operator on an aggregate value x3, bytes type x2, extend x1
+    python_split_scalar 4 / 4 : bytes type x1, text_ord x1, split x1, split_whitespace x1
+    python_strings 3 / 3 : replace x1, splitlines x1, strip x1
+    python_text_surface 20 / 21 : bytes type x9, find_range x2, find_start x2, strip_chars x1, dict type x1, rfind x1, number_format x1, slice x1, text_repr x1, strip x1
+    python_values 7 / 8 : index x2, dict type x2, contains x1, split x1, slice x1
+    rc_borrowed_results 4 / 4 : bytes type x4
+    rc_box_writeback 3 / 3 : dict type x3
+    rc_buffer_loops 5 / 5 : bytes type x5
+    rc_byte_loop_versions 4 / 4 : bytes type x4
+    rc_byte_receivers 4 / 4 : bytes type x4
+    rc_compact_journal 1 / 2 : dict type x1
+    rc_dictionary_keys 10 / 10 : dict type x9, split x1
+    rc_dictionary_loops 6 / 6 : dict type x6
+    rc_dictionary_tails 6 / 6 : dict type x6
+    rc_dictionary_text_loops 2 / 2 : dict type x2
+    rc_dictionary_views 5 / 5 : dict type x5
+    rc_field_transfers 1 / 8 : dict type x1
+    rc_fresh_loop_roots 1 / 8 : sort x1
+    rc_interval_anchors 5 / 5 : bytes type x5
+    rc_journal_types 2 / 2 : dict type x2
+    rc_loop_guard_context 1 / 1 : bytes type x1
+    rc_loop_operand_isolation 2 / 2 : bytes type x2
+    rc_mut_list_aliases 3 / 4 : bytes type x3
+    rc_mut_payload_snapshots 3 / 4 : dict type x3
+    rc_named_releases 2 / 4 : dict type x1, slice x1
+    rc_nested_read_loans 2 / 6 : dict type x1, index x1
+    rc_owning_element_borrows 8 / 8 : bytes type x8
+    rc_plain_field_loans 5 / 5 : bytes type x4, dict type x1
+    rc_plain_replacements 1 / 2 : dict type x1
+    rc_range_key_anchors 5 / 5 : dict type x4, slice x1
+    rc_readonly_bytes 2 / 2 : bytes type x2
+    rc_readonly_calls 5 / 5 : bytes type x5
+    rc_semantic_history 10 / 10 : dict type x10
+    rc_semantic_publication 5 / 6 : dict type x5
+    rc_temporary_lifetimes 3 / 7 : sort x2, split x1
+    rc_view_receivers 7 / 7 : dict type x7
+    rc_writeback_moves 17 / 18 : dict type x17
+    record_field_snapshots 2 / 11 : dict type x1, bytes type x1
+    scalable_sorting 4 / 4 : sort x3, operator on an aggregate value x1
+    scalar_dictionary_publication 3 / 3 : dict type x2, set type x1
+    sets 17 / 18 : set type x14, dict type x3
+    standard_json 4 / 4 : dict type x4
+    standard_strings 5 / 5 : bytes type x3, slice x2
+    text_index 13 / 13 : index x4, slice x4, text_tail x2, string index x1, find x1, strip x1
+    text_literal_index 1 / 1 : index x1
+    text_scanning 8 / 8 : count x3, replace x2, split x2, bytes type x1
+    text_views 8 / 8 : slice x5, split x1, dict type x1, text_tail x1
+    tuples 2 / 5 : find x1, text of a non-integer value x1
+== s2+fv 12 files 65 tests unsupported
+    callback_slots 3 / 3 : function value type x3
+    callbacks 8 / 8 : function value type x6, function_value x2
+    keyed_sorting 18 / 18 : function_value x13, function value type x3, sort_keyed x2
+    lambda_sort_keys 5 / 5 : function_value x5
+    migrated/structural_constraints 1 / 10 : function value type x1
+    option_niche 5 / 12 : equality of a recursive value x2, function value type x1, dict type x1, text of a non-integer value x1
+    rc_borrowed_calls 4 / 4 : bytes type x3, function_value x1
+    rc_borrowed_loops 4 / 4 : bytes type x3, function_value x1
+    rc_borrowed_readonly_entries 2 / 2 : function value type x1, bytes type x1
+    rc_call_lifetimes 1 / 3 : function value type x1
+    rc_collection_builtins 6 / 6 : bytes type x1, dict type x1, split x1, function_value x1, pop_at x1, set type x1
+    sorted_keys 8 / 8 : function_value x7, function value type x1
+== other 31 files 137 tests unsupported
+    capability_fields 6 / 6 : capability type x6
+    checked_arithmetic 2 / 6 : saturating_add x2
+    error_traces 2 / 5 : the runner's entry cannot read this test's result type yet (Result[bool, E]) x1, test parameters other than Stream (property test or capability stand-in; out of S1 scope) x1
+    float_constants 1 / 14 : f64_sqrt x1
+    float_environment 1 / 1 : f64_sqrt x1
+    float_integer_casts 3 / 8 : f64_to_u64 x3
+    float_nan 4 / 4 : f64_sqrt x1, fixed array type x1, sort x1, text of a non-integer value x1
+    integer_float_rounding 1 / 3 : f64_from_u64 x1
+    iteration_identity 6 / 8 : dict type x3, write to a list while it is iterated (live-place iteration) x2, fixed array type x1
+    local_stack_list 1 / 1 : list element type x1
+    math_trig 4 / 4 : bytes type x1, f64_sin x1, f64_cos x1, text of a non-integer value x1
+    mut_rebinding 2 / 4 : conditional rebinding of a mut collection parameter x1, dict type x1
+    properties 16 / 16 : test parameters other than Stream (property test or capability stand-in; out of S1 scope) x16
+    python_core 4 / 10 : f64_floor x2, function value type x1, function_value x1
+    rc_capability_values 14 / 14 : capability type x9, dict type x3, test parameters other than Stream (property test or capability stand-in; out of S1 scope) x2
+    rc_contract_results 1 / 3 : capability type x1
+    rc_empty_frames 1 / 2 : write to a receiver's place while its arguments are evaluated x1
+    rc_inert_receivers 1 / 7 : write to a receiver's place while its arguments are evaluated x1
+    rc_inert_returns 1 / 7 : capability type x1
+    rc_loop_uniqueness 1 / 4 : write to a receiver's place while its arguments are evaluated x1
+    rc_nonheld_captures 2 / 6 : write to a receiver's place while its arguments are evaluated x1, write to a list while it is iterated (live-place iteration) x1
+    rc_owned_values 3 / 9 : dict type x2, write to a receiver's place while its arguments are evaluated x1
+    rc_pin_elide 6 / 26 : function value type x3, write to a list while it is iterated (live-place iteration) x2, dict type x1
+    rc_plain_record_writes 1 / 4 : write to a receiver's place while its arguments are evaluated x1
+    rc_record_field_reads 1 / 8 : f64_sqrt x1
+    rc_site_eliminations 10 / 27 : bytes type x9, write to a receiver's place while its arguments are evaluated x1
+    recursive_values 9 / 10 : equality of a recursive value x3, fixed array type x2, set type x1, dict type x1, test parameters other than Stream (property test or capability stand-in; out of S1 scope) x1, text of a non-integer value x1
+    root_liveness 3 / 9 : write to a list while it is iterated (live-place iteration) x1, bytes type x1, function value type x1
+    rounding 4 / 4 : f64_trunc x4
+    stable_sorting 13 / 13 : sort x7, shift_right x5, function value type x1
+    test_capabilities 13 / 13 : capability type x9, dict type x2, test parameters other than Stream (property test or capability stand-in; out of S1 scope) x2
+== s2+fa+fv 2 files 18 tests unsupported
+    migrated/generic_inference 3 / 4 : fixed array type x2, function value type x1
+    operand_snapshots 15 / 55 : dict type x4, fixed array type x2, index_of x2, sort x1, bytes type x1, function_value x1, function value type x1, set type x1, text of a non-integer value x1, contains x1
