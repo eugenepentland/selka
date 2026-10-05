@@ -276,28 +276,28 @@ const runtime_harness =
     \\const myl_core_site myl_core_sites[1];
     \\const char myl_core_source_path[] = "harness";
     \\int main(void) {
-    \\    myl_block *head = myl_core_list_new(1, 8);
+    \\    myl_block *head = myl_core_list_new_slow(1, 8);
     \\    head->reserved = (int64_t)(intptr_t)layout_blocks;
     \\    myl_block *tail = head;
     \\    for (int i = 0; i < 1000000; ++i) {
-    \\        myl_block *next = myl_core_list_new(1, 8);
+    \\        myl_block *next = myl_core_list_new_slow(1, 8);
     \\        next->reserved = (int64_t)(intptr_t)layout_blocks;
     \\        ((myl_block **)block_data(tail))[0] = next;
     \\        tail->len = 1;
     \\        tail = next;
     \\    }
-    \\    myl_block *immortal = myl_core_list_new(0, 8);
+    \\    myl_block *immortal = myl_core_list_new_slow(0, 8);
     \\    immortal->count = MYL_SATURATED - 1;
     \\    retain_block(immortal);
     \\    retain_block(immortal);
     \\    ((myl_block **)block_data(tail))[0] = immortal;
     \\    tail->len = 1;
     \\    myl_block *copy = myl_core_list_copy(tail, 8);
-    \\    int64_t before = live_blocks;
+    \\    int64_t before = live_count();
     \\    myl_core_release(head);
     \\    myl_core_release(copy);
     \\    myl_core_release(immortal);
-    \\    printf("%lld %lld %u\n", (long long)before, (long long)live_blocks, immortal->count == MYL_SATURATED);
+    \\    printf("%lld %lld %u\n", (long long)before, (long long)live_count(), immortal->count == MYL_SATURATED);
     \\    return 0;
     \\}
     \\
@@ -323,6 +323,57 @@ test "the runtime frees a list-of-lists chain a million deep without recursion, 
     const ran = try std.process.run(a, std.testing.io, .{ .argv = &.{output} });
     // Head, a million links, the immortal block and the copy were live; only the immortal block stays.
     try std.testing.expectEqualStrings("1000003 1 1\n", ran.stdout);
+}
+
+/// A C program that includes the runtime and checks the allocator: a freed small block
+/// is the next one of its class, a small list's capacity fills its size class, a large
+/// list grows in place by `realloc`, and the live count stays exact throughout.
+const allocator_harness =
+    \\#include "core_rt.c"
+    \\const myl_core_site myl_core_sites[1];
+    \\const char myl_core_source_path[] = "harness";
+    \\int main(void) {
+    \\    myl_block *a = myl_core_list_new_slow(4, 8);
+    \\    int64_t cap = a->cap;
+    \\    myl_core_release(a);
+    \\    myl_block *b = myl_core_list_new_slow(3, 8);
+    \\    int reused = a == b;
+    \\    myl_block *big = myl_core_list_new_slow(200, 8);
+    \\    big->len = big->cap;
+    \\    big = myl_core_list_grow(big, 8);
+    \\    int64_t live = live_count(), grown = big->cap;
+    \\    myl_core_release(b);
+    \\    myl_core_release(big);
+    \\    printf("%lld %d %lld %lld %lld\n", (long long)cap, reused, grown >= 400 ? 400LL : 0LL, (long long)live, (long long)live_count());
+    \\    return 0;
+    \\}
+    \\
+;
+
+/// Compile `source` (a C program including the runtime) with `zig cc` and run it; returns stdout.
+fn runHarness(a: std.mem.Allocator, source_text: []const u8) ![]const u8 {
+    var dir = std.testing.tmpDir(.{});
+    defer dir.cleanup();
+    try dir.dir.writeFile(std.testing.io, .{ .sub_path = "core_rt.c", .data = driver.runtime_source });
+    try dir.dir.writeFile(std.testing.io, .{ .sub_path = "harness.c", .data = source_text });
+    const root = try dir.dir.realPathFileAlloc(std.testing.io, ".", a);
+    var environment = try std.testing.environ.createMap(a);
+    const zig = environment.get("ZIG") orelse "zig";
+    const source = try std.fs.path.join(a, &.{ root, "harness.c" });
+    const output = try std.fs.path.join(a, &.{ root, "harness" });
+    try environment.put("ZIG_LOCAL_CACHE_DIR", try std.fs.path.join(a, &.{ root, "zig-local" }));
+    const built = try std.process.run(a, std.testing.io, .{ .argv = &.{ zig, "cc", "-O0", "-std=c11", "-o", output, source }, .environ_map = &environment });
+    try std.testing.expectEqualStrings("", built.stderr);
+    const ran = try std.process.run(a, std.testing.io, .{ .argv = &.{output} });
+    return ran.stdout;
+}
+
+// spec: NEW-CORE-ALLOC-1
+test "the allocator reuses a freed small block for its class, fills small lists to their class and keeps the live count exact" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    // A 4-element list of i64 is a 64-byte block: 4 elements fit, and 3 reuse it.
+    try std.testing.expectEqualStrings("4 1 400 2 0\n", try runHarness(arena.allocator(), allocator_harness));
 }
 
 /// Build `test/core/NAME.my` with the new core and run it with `MYL_CORE_LEAKCHECK=1`.

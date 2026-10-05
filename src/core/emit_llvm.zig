@@ -96,7 +96,7 @@ const tbaa_data = "!tbaa !7";
 /// A count is never 0 while its block is reachable: `[1, 0)`, i.e. 1 through saturated.
 const count_range = "!range !8";
 /// The first `!range` node number free for fact intervals.
-const first_range_node = 8;
+const first_range_node = 10;
 /// The TBAA scaffold and the count range, as numbered above.
 const tbaa_metadata =
     \\!1 = !{!"myl.tbaa"}
@@ -107,6 +107,8 @@ const tbaa_metadata =
     \\!6 = !{!"myl.data", !1, i64 0}
     \\!7 = !{!6, !6, i64 0}
     \\!8 = !{i32 1, i32 0}
+    \\!9 = !{!"branch_weights", i32 1, i32 2000}
+    \\!10 = !{!"branch_weights", i32 2000, i32 1}
     \\
 ;
 /// `  %x = load i64, ptr %at` of one data word (a union's tag word or payload word).
@@ -258,8 +260,6 @@ const ModuleState = struct {
             \\declare void @myl_core_trap(i32, i64, i64) noreturn nounwind cold
             \\declare ptr @myl_core_args(i32, ptr) nounwind
             \\declare i32 @myl_core_exit(i64) nounwind
-            \\declare ptr @myl_core_list_new(i64, i64) nounwind
-            \\declare ptr @myl_core_list_reserve(ptr, i64) nounwind
             \\declare ptr @myl_core_list_copy(ptr, i64) nounwind
             \\declare zeroext i1 @myl_core_str_parse_int(ptr, ptr) nounwind
             \\declare void @myl_core_print_i64(i64, i64) nounwind
@@ -269,7 +269,6 @@ const ModuleState = struct {
             \\declare void @myl_core_print_sep(i64) nounwind
             \\declare void @myl_core_print_end(i64) nounwind
             \\declare ptr @myl_core_box_new(i64) nounwind
-            \\declare void @myl_core_free(ptr) nounwind cold
             \\declare void @myl_core_err_trace(i32, i32) nounwind cold
             \\declare void @myl_core_release(ptr) nounwind
             \\declare void @myl_core_main_error_i64(i64) nounwind cold
@@ -278,6 +277,7 @@ const ModuleState = struct {
             \\declare void @myl_core_main_error_str(ptr) nounwind cold
             \\
         );
+        try out.appendSlice(self.allocator, runtime_fast_paths);
         try out.appendSlice(self.allocator, self.externs.items);
     }
 
@@ -1659,6 +1659,91 @@ const Debug = struct {
         try out.print(allocator, "!{d} = !{{i32 2, !\"Debug Info Version\", i32 3}}\n!{d} = !{{i32 7, !\"Dwarf Version\", i32 4}}\n", .{ self.next, self.next + 1 });
     }
 };
+
+/// The allocator's common cases, inlined into every caller (`runtime/core_rt.c`,
+/// "allocation"): a small list taken from its size class's free list, a push into a
+/// list with room, and the free of a small block that holds no blocks. Everything
+/// else calls the runtime. Free-list accesses carry no TBAA tag; nothing is counted
+/// here (the leak check counts free-list entries at exit).
+const runtime_fast_paths =
+    \\@myl_core_free_lists = external global [33 x ptr]
+    \\declare ptr @myl_core_list_new_slow(i64, i64) nounwind
+    \\declare ptr @myl_core_list_grow(ptr, i64) nounwind
+    \\declare void @myl_core_free_block(ptr) nounwind cold
+    \\define internal ptr @myl_core_list_new(i64 %cap, i64 %size) alwaysinline nounwind {
+    \\entry:
+    \\  %many = icmp ugt i64 %cap, 1024
+    \\  %data = mul i64 %cap, %size
+    \\  %bytes = add i64 %data, 63
+    \\  %class = lshr i64 %bytes, 5
+    \\  %large = icmp ugt i64 %class, 32
+    \\  %slow = or i1 %many, %large
+    \\  br i1 %slow, label %call, label %small, !prof !9
+    \\small:
+    \\  %slot = getelementptr inbounds [33 x ptr], ptr @myl_core_free_lists, i64 0, i64 %class
+    \\  %head = load ptr, ptr %slot, align 8
+    \\  %empty = icmp eq ptr %head, null
+    \\  br i1 %empty, label %call, label %pop, !prof !9
+    \\pop:
+    \\  %next = load ptr, ptr %head, align 8
+    \\  store ptr %next, ptr %slot, align 8
+    \\  store i32 1, ptr %head, align 8, !tbaa !3
+    \\  %class32 = trunc i64 %class to i32
+    \\  %kind = shl i32 %class32, 24
+    \\  %kind_at = getelementptr inbounds i8, ptr %head, i64 4
+    \\  store i32 %kind, ptr %kind_at, align 4, !tbaa !5
+    \\  %len_at = getelementptr inbounds i8, ptr %head, i64 8
+    \\  store i64 0, ptr %len_at, align 8, !tbaa !5
+    \\  %room_total = shl i64 %class, 5
+    \\  %room = sub i64 %room_total, 32
+    \\  %fits = udiv i64 %room, %size
+    \\  %cap_at = getelementptr inbounds i8, ptr %head, i64 16
+    \\  store i64 %fits, ptr %cap_at, align 8, !tbaa !5
+    \\  %reserved_at = getelementptr inbounds i8, ptr %head, i64 24
+    \\  store i64 0, ptr %reserved_at, align 8, !tbaa !5
+    \\  ret ptr %head
+    \\call:
+    \\  %made = call ptr @myl_core_list_new_slow(i64 %cap, i64 %size)
+    \\  ret ptr %made
+    \\}
+    \\define internal ptr @myl_core_list_reserve(ptr %list, i64 %size) alwaysinline nounwind {
+    \\entry:
+    \\  %len_at = getelementptr inbounds i8, ptr %list, i64 8
+    \\  %len = load i64, ptr %len_at, align 8, !tbaa !5
+    \\  %cap_at = getelementptr inbounds i8, ptr %list, i64 16
+    \\  %cap = load i64, ptr %cap_at, align 8, !tbaa !5
+    \\  %room = icmp ult i64 %len, %cap
+    \\  br i1 %room, label %fits, label %grow, !prof !10
+    \\fits:
+    \\  ret ptr %list
+    \\grow:
+    \\  %grown = call ptr @myl_core_list_grow(ptr %list, i64 %size)
+    \\  ret ptr %grown
+    \\}
+    \\define internal void @myl_core_free(ptr %block) alwaysinline nounwind {
+    \\entry:
+    \\  %kind_at = getelementptr inbounds i8, ptr %block, i64 4
+    \\  %kind = load i32, ptr %kind_at, align 4, !tbaa !5
+    \\  %class32 = lshr i32 %kind, 24
+    \\  %reserved_at = getelementptr inbounds i8, ptr %block, i64 24
+    \\  %reserved = load i64, ptr %reserved_at, align 8, !tbaa !5
+    \\  %small = icmp ne i32 %class32, 0
+    \\  %plain = icmp eq i64 %reserved, 0
+    \\  %fast = and i1 %small, %plain
+    \\  br i1 %fast, label %push, label %call, !prof !10
+    \\push:
+    \\  %class = zext i32 %class32 to i64
+    \\  %slot = getelementptr inbounds [33 x ptr], ptr @myl_core_free_lists, i64 0, i64 %class
+    \\  %head = load ptr, ptr %slot, align 8
+    \\  store ptr %head, ptr %block, align 8
+    \\  store ptr %block, ptr %slot, align 8
+    \\  ret void
+    \\call:
+    \\  call void @myl_core_free_block(ptr %block)
+    \\  ret void
+    \\}
+    \\
+;
 
 /// Attribute group `#1`: an error-trace recorder call costs nothing to inline around (ERROR-TRACE-5).
 const trace_call_attributes = "attributes #1 = { \"call-inline-cost\"=\"0\" }\n";
