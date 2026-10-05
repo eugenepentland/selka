@@ -945,6 +945,15 @@ The user accepted every recommendation:
 5. **O(n/32) random indexing into long non-ASCII text is accepted.** The sample array is not ported.
 6. **Language change, `MUT-OVERLAP-RECEIVER`:** an assignment or update whose receiver place overlaps a `mut` argument evaluated in the same statement, for example `items[f(mut items)] = v`, `m.stack[grow(mut m)] = v` or `rows[0].append(clear(mut rows))`, is a compile error. It extends D3's `E_MUTATION_OVERLAP`. A separate front-end lane implements it in the shared checker with SPEC, docs and `tests/lang` updates; the new core then has nothing to lower.
 
-S1's other two refusals stay refused until the user decides them:
-- rebinding a `mut` list parameter, against a `mut` record parameter;
-- writing to a list while a `for` loop iterates it, under D1.
+7. **Language change, `MUT-REBIND-CALLER-1`** (decided 2026-10-05):
+   - Rebinding a `mut` list, dict or set parameter as a whole reaches the caller, as it already does for `mut` records and tuples (VALUE-SEMANTICS-3/11). `mut` means "this is the caller's variable" for every type.
+   - Fixed arrays keep `E_ASSIGNMENT_TARGET`.
+   - It replaces `COW-MUT-REBIND-1`.
+   - In the new core, the by-value `mut` ABI writes back the final value; S1 V-2's detach logic and its refusals go.
+8. **D1 holds regardless of sharing** (decided 2026-10-05):
+   - A `for` loop over a place re-reads it every step and sees writes made during the loop, whether or not the payload is shared. A copy taken before the loop is unaffected.
+   - This is the accepted D1. The old core's shared-case answer was an accident.
+   - `iteration_identity.my`'s named-snapshot test changes to 10.
+   - The old core moves first (package S2-Lb, which takes over the one-count plan's C4 front-end half). The new core follows (S2-I, per s1 §15.1).
+
+Packages, order and gates: `docs/audits/new-core-s2-implementation-plan-2026-10-05.md`.

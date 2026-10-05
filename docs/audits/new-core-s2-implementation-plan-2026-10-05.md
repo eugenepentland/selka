@@ -10,8 +10,8 @@ decisions) win.
 
 > Implement stage S2 of mylang's new compiler core following
 > `docs/audits/new-core-s2-implementation-plan-2026-10-05.md` on branch
-> `claude/new-core-s2-20261005`. Work packages S2-0 and S2-L first, then S2-D, S2-T and
-> S2-F in parallel, then S2-X. Use one locked worktree per package and integrate on
+> `claude/new-core-s2-20261005`. Work packages S2-0, S2-La and S2-Lb first, then S2-D,
+> S2-T, S2-F and S2-I in parallel, then S2-X. Use one locked worktree per package and integrate on
 > `codex/new-core-s2-integration`. Hold every gate in §5. Never merge into `main`. Finish
 > with the S2 exit report in §7 and stop for the user's go/stop decision on S3.
 
@@ -52,15 +52,31 @@ contains, all accepted:
 3. **No short strings in S2.**
 4. **The view ABI** (a `str` parameter accepting `(ptr, len)` views) is evaluated **only if `string_split` misses the gate.** It needs a design-note entry and the coordinator's sign-off first.
 5. **O(n/32) random indexing into long non-ASCII text is accepted.** No sample array.
-6. **Language change `MUT-OVERLAP-RECEIVER-1`** (package S2-L).
+6. **Language change `MUT-OVERLAP-RECEIVER-1`** (package S2-La).
+7. **Language change `MUT-REBIND-CALLER-1`** (package S2-La): rebinding a `mut` list, dict
+   or set parameter as a whole reaches the caller, exactly as rebinding a `mut` record or
+   tuple parameter already does (VALUE-SEMANTICS-3/11).
+   - This covers `items = other`, a rebinding inside a loop, and a rebinding on only some
+     paths. `mut` means "this is the caller's variable" for every type.
+   - Fixed arrays are unchanged: rebinding a `mut` array stays `E_ASSIGNMENT_TARGET`
+     (PY-ARRAY-MUT-1).
+   - It replaces `COW-MUT-REBIND-1`.
+8. **D1 holds regardless of sharing** (packages S2-Lb and S2-I).
+   - A `for` loop over a place re-reads that place on every step. It sees writes made
+     during the loop whether or not the payload is also held by another variable.
+   - A variable that took a copy before the loop (`s = xs`) is unaffected; value semantics
+     stays.
+   - This is the accepted D1 (one-count plan §4.2, "Live place"). The old core's
+     shared-case answer was an accident.
+   - `iteration_identity.my`'s named-snapshot test changes to Python's answer (10), as the
+     one-count plan's C4 says.
 
 **Earlier decisions that still bind:**
 - L1–L4, D1–D4, N1–N6 (N6: arenas retired; the new core lowers `with arena()` as a plain block) and R1 (the new core has its own runtime: port algorithms, never link the old runtime).
 - S1 §13 R-1 to R-6.
 
-**Open language questions. Do NOT decide or implement them;** the new core keeps refusing:
-- rebinding a `mut` **list** parameter, which today does not reach the caller, against a `mut` **record** parameter, which does;
-- writing to a list while a `for` loop iterates it (D1), where the old core's answer depends on whether the list is shared.
+**No language questions are open.** Decisions 6–8 change the old core, which is the oracle,
+so S2-La and S2-Lb land **before** the new-core packages are graded against it.
 
 ## 3. Work packages
 
@@ -111,7 +127,9 @@ Include layout helpers and the `managed`/`isBlock` answers.
 - Record the as-built shapes in the design note, in a new "as built in S2-0" section.
 - **`ir.zig` is frozen after S2-0.** Any later change goes through the coordinator.
 
-### S2-L. Language change `MUT-OVERLAP-RECEIVER-1` (one agent; about 2–3 h; independent, parallel with S2-0)
+### S2-La. Language changes `MUT-OVERLAP-RECEIVER-1` and `MUT-REBIND-CALLER-1` (one agent; about 4–5 h; wave A, parallel with S2-0)
+
+#### Part 1: `MUT-OVERLAP-RECEIVER-1`
 
 **The rule.** An assignment or update whose receiver place overlaps a `mut` argument evaluated in the same statement is a compile error, `E_MUTATION_OVERLAP`. It extends D3/`MUT-EXCLUSIVE` and the existing `E_MUTATION_OVERLAP`. Overlap means the same root variable, where one path is a prefix of the other.
 
@@ -149,13 +167,81 @@ Include layout helpers and the `managed`/`isBlock` answers.
   - keep `mylang doc-coverage .` and `zig build test-docs` green.
 - **Stop and report** if the rule would reject legal-looking code in `examples/`, `bench/` or the Lox port.
 
-**Exit:**
-- the full old-core gate is green:
+#### Part 2: `MUT-REBIND-CALLER-1`
+
+**The rule (decision 7).** Rebinding a `mut` list, dict or set parameter as a whole reaches
+the caller's variable, as it already does for `mut` records and tuples.
+
+**Old core.**
+- Lower a rebound `mut` collection parameter the way a `mut` record parameter is lowered:
+  the caller's variable is passed by reference (VALUE-SEMANTICS-11), so a rebinding writes
+  the caller's variable.
+- Keep RC-MUT-UNIQUE-1's fast path, the mutable-payload ABI, for parameters the body never
+  rebinds. Choose the ABI per parameter, from whether the body can rebind it.
+- `RC-MUT-UNIQUE-1` already says rebound parameters keep ordinary checks; keep that.
+
+**New core (`src/core/build.zig`, the `mut` write-back, design note s1 §14–15).**
+- The by-value ABI writes back the parameter's **final** value.
+- Remove V-2's detach-at-rebinding logic, and the refusals of rebinding inside a loop or on
+  only some paths.
+- This is a small change. Coordinate the merge with S2-0, which touches `build.zig` only
+  for its dispatch calls.
+
+**Tests, SPEC, docs.**
+- Add `MUT-REBIND-CALLER-1` with Zig and guest tests: a list, a dict, a set and a record,
+  written before and after the rebinding, in a loop, and on one path only.
+- Change `tests/lang/mut_rebinding.my` (for example
+  `test_rebound_mut_list_does_not_mutate_its_readonly_source`) to the new answers: the
+  caller now sees the rebound value, and the read-only source stays unchanged.
+- Retire or amend `COW-MUT-REBIND-1`.
+- Update the `mut` documentation.
+- **Stop and report** if `examples/`, `bench/` or the Lox port rely on the old behaviour.
+
+#### Exit (both parts)
+- The full old-core gate is green:
   - `zig build test`;
   - `zig build test-qbe`;
   - `zig build test-qbe-build`;
   - `zig build fmt-check`.
-- New-core conformance still has 0 mismatches. The 4 refused tests disappear or become rejection tests.
+- New-core conformance still has 0 mismatches:
+  - the 4 refused overlap tests disappear or become rejection tests;
+  - the `mut_rebinding` tests match under the new rule in both cores.
+
+### S2-Lb. D1 live-place iteration in the old core (one agent; about 3–4 h; wave A)
+
+**The rule (decision 8):** the accepted D1 (one-count plan §4.2), regardless of sharing.
+
+**Where.** This takes over **C4's front-end and old-core half** from the runtime-levers
+plan's WP-5, revision 5:
+- the place-source forms in `prelude_builtins.zig`'s desugars (`for`, `sum`,
+  `any`/`all`, `zip`, `enumerate`);
+- a per-path `iteration_check`;
+- the iterated place counted as read on every iteration.
+
+**Goal.** The old core gives D1's answers, including when the payload is shared.
+- Remove the `iterationOwner` hold paths only as far as the answer needs. The rest of C4's
+  RC re-plumbing stays paused.
+- Don't change `src/core/`. The new-core half is S2-I.
+
+**Tests and SPEC.**
+- `tests/lang/iteration_identity.my`'s
+  `test_named_snapshot_remains_independent_of_iteration_writes` changes to Python's answer
+  (10).
+- Amend `COW-ITERATION-IDENTITY-1` and any other bullet that describes the old shared-case
+  answer.
+- Add a `D1-LIVE-PLACE` SPEC bullet with tests:
+  - an element write while iterating;
+  - an append while iterating, with growth visible;
+  - the length-check trap on a structural change;
+  - a shared payload;
+  - a write through a `mut` callee;
+  - a rebinding of the root, which snapshots at entry.
+
+**Exit.**
+- The full old-core gate is green.
+- New-core conformance shows 0 mismatches. The new core still refuses the
+  write-while-iterating case until S2-I, which counts as unsupported, not as a mismatch.
+- Tell the runtime-levers coordinator that C4's front-end half moved here.
 
 ### S2-D. Dictionaries and sets (one agent; about 4–5 h; after S2-0)
 
@@ -235,6 +321,30 @@ Include layout helpers and the `managed`/`isBlock` answers.
 - the function-value and fixed-array files of §6 are at 0 mismatches;
 - an IR test shows a known-target `call_indirect` becoming a direct call.
 
+### S2-I. D1 live-place iteration in the new core (one agent; about 2–3 h; wave B, after S2-0 and S2-Lb)
+
+**Spec:** decision 8 and `docs/design/new-core-s1.md` §15.1, which says what the exact
+lowering needs.
+- **The loop's alias** is a non-owning view of the root's block:
+  - `own.zig` does not count it as a second owner, so updates aren't forced to copy;
+  - `facts.zig` does not treat it as immutable, so it gives no hulls or lengths that an
+    in-place write would break.
+- **Each step re-reads the place.**
+- **`iteration_check`** traps a structural change, as D1 says.
+- **The root local:** the loop snapshots at entry only when the body rebinds it.
+- **Fast path:** keep the S0/S1 borrow at entry when no write to the place is proven, so
+  `list_scan` and the other loops lose nothing.
+
+**Owns `own.zig` during wave B,** and the loop paths of `build.zig`. Other packages send
+`own.zig` patches through the coordinator.
+
+**Exit:**
+- the write-while-iterating tests are supported and match the old core after S2-Lb, at
+  debug, release and `--verify-facts`;
+- fuzz has write-while-iterating programs (element writes, appends, `mut` callees, shared
+  payloads) and is clean with the leak check;
+- the S1 rows and S0 kernels show no regression.
+
 ### S2-X. Integration and exit (coordinator)
 
 1. **Merges.** Merge each package after its exit check.
@@ -253,8 +363,8 @@ Include layout helpers and the `managed`/`isBlock` answers.
 
 | Wave | Packages | Parallel? |
 |---|---|---|
-| A | S2-0 (IR), S2-L (language change) | yes; they touch disjoint files (`src/core/` against the shared checker) |
-| B | S2-D, S2-T, S2-F | yes, after S2-0 is merged; T publishes the string hash first |
+| A | S2-0 (IR); S2-La (overlap rule, `mut` rebinding); S2-Lb (D1 in the old core) | yes. S2-0 is in `src/core/`. S2-La and S2-Lb are in the front end and old core, apart from S2-La's small `build.zig` write-back change. **Merge S2-La and S2-Lb before grading anything against the old core**, since they change its answers. Their full gates share one gate slot, so they run one after the other. |
+| B | S2-D, S2-T, S2-F, S2-I | yes, after S2-0 is merged (S2-I also needs S2-Lb). T publishes the string hash first. S2-I owns `own.zig`. |
 | C | S2-X | after B |
 
 At most four build-heavy agents at once on this machine.
@@ -274,7 +384,7 @@ At most four build-heavy agents at once on this machine.
 | Rows | `experiments/new-core-s1-20261005/measure_rows.py --runner /home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin --build --rows …` | CPU 10; ≤ 1.10× Zig ReleaseSafe per row; checksums identical |
 | Kernels | `experiments/new-core-s0-20261005/measure_kernels.py` | S0 kernels within ±1% |
 | Coverage | `experiments/new-core-s0-20261005/coverage.py` | reported at each package's exit |
-| Full old-core gate | `scripts/build-slot.sh gate -- zig build test --summary all`, then `test-qbe`, `test-qbe-build` and `fmt-check` | **only S2-L** (it changes the shared checker) and the final S2-X integration |
+| Full old-core gate | `scripts/build-slot.sh gate -- zig build test --summary all`, then `test-qbe`, `test-qbe-build` and `fmt-check` | **only S2-La and S2-Lb** (they change the shared front end and the old core) and the final S2-X integration |
 
 **Gate-log caution.** A `failed command:` line also prints for a green step that writes to stderr. Read the Build Summary lines.
 
@@ -292,7 +402,7 @@ At most four build-heavy agents at once on this machine.
   - tests with `expect*` and no top-level `if`/`while`/`for`/`switch`;
   - every new `src/*.zig` file reachable from a `guardian.toml` root;
   - a spec tag for every behavioural line: `// spec:` with a matching `SPEC.md` bullet (`NEW-CORE-*` for the new core).
-- **Never edit `tests/lang/`,** except S2-L for its rule. Copies and split programs go under `test/core/`.
+- **Never edit `tests/lang/`,** except S2-La and S2-Lb for their rules. Copies and split programs go under `test/core/`.
 - **Correctness:**
   - **A wrong answer is never acceptable.** A construct either matches the old core or is refused precisely with `E_CORE_UNSUPPORTED`.
   - **Every new fact needs a verify-mode assert,** and every new promotion or uniqueness claim needs one too.
@@ -303,7 +413,7 @@ At most four build-heavy agents at once on this machine.
   - a mismatch is unexplained;
   - a language-behaviour change seems needed;
   - `ir.zig` must change after S2-0.
-- **Old-core bugs** are reported, not fixed (S2-L is the only old-core change).
+- **Old-core bugs** are reported, not fixed (S2-La and S2-Lb are the only old-core changes).
 - **Branches:** no pushes or merges to `main`; the old core stays the default until S5.
 - **Clean-up:** delete temporary caches outside the worktrees at hand-off. `scripts/prune-caches.sh` handles stale worktree caches.
 
