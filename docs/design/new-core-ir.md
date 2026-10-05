@@ -259,6 +259,8 @@ faster):
 
 ## 6. Ownership and one-count RC (*design only, S1*)
 
+*S1 design: `new-core-s1.md` (records, unions, lists, RC, `mut`, conformance, N6, lanes).*
+
 The plan's D1–D4 (one saturating 32-bit count, live-place iteration, non-storable dictionary
 views, MUT-EXCLUSIVE-4) are built in from the first S1 commit. The IR already has the shape
 they need:
