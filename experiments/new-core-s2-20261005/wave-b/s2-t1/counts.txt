@@ -1,0 +1,20 @@
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: build slot 1 after 25s (all 3 build slot(s) busy)
+
+bytes_scan: static LLVM count-update sites and helper calls; runtime execution placement reviewed separately
+my.row_bytes_scan::kernel: increments=0 decrements=0 calls=['llvm.sadd.with.overflow.i64', 'myl_core_trap', '"my.row_bytes_scan::bytes_job"', 'llvm.sadd.with.overflow.i64', 'myl_core_trap']
+
+string_equal: static LLVM count-update sites and helper calls; runtime execution placement reviewed separately
+my.row_string_equal::kernel: increments=0 decrements=0 calls=['llvm.sadd.with.overflow.i64', 'myl_core_trap', 'myl_core_trap', 'llvm.sadd.with.overflow.i64', 'myl_core_trap', 'myl_core_trap', 'myl_core_trap', 'llvm.sadd.with.overflow.i64', 'myl_core_trap', 'myl_core_trap', 'myl_core_str_eq']
+
+string_search: static LLVM count-update sites and helper calls; runtime execution placement reviewed separately
+my.row_string_search::kernel: increments=0 decrements=0 calls=['llvm.sadd.with.overflow.i64', 'myl_core_trap', 'myl_core_trap', 'llvm.sadd.with.overflow.i64', 'myl_core_trap', 'myl_core_trap', 'myl_core_trap', 'llvm.sadd.with.overflow.i64', 'myl_core_trap', 'myl_core_trap', 'myl_core_str_find', 'llvm.sadd.with.overflow.i64', 'myl_core_trap', 'llvm.sadd.with.overflow.i64', 'myl_core_trap', 'llvm.sadd.with.overflow.i64', 'myl_core_trap', 'llvm.sadd.with.overflow.i64', 'myl_core_trap', 'myl_core_trap', 'llvm.sadd.with.overflow.i64', 'myl_core_trap', 'myl_core_trap', 'myl_core_trap', 'llvm.sadd.with.overflow.i64', 'myl_core_trap', 'myl_core_trap', 'myl_core_str_find', 'llvm.sadd.with.overflow.i64', 'myl_core_trap', 'llvm.sadd.with.overflow.i64', 'myl_core_trap']
+
+string_split: static LLVM count-update sites and helper calls; runtime execution placement reviewed separately
+my.row_string_split::kernel: increments=0 decrements=1 calls=['llvm.sadd.with.overflow.i64', 'myl_core_trap', 'myl_core_trap', 'llvm.sadd.with.overflow.i64', 'myl_core_trap', 'myl_core_trap', '"my.row_string_split::split_job"', 'myl_core_free', 'llvm.sadd.with.overflow.i64', 'myl_core_trap']
+my.row_string_split::split_job: increments=0 decrements=1 calls=['myl_core_str_split', 'myl_core_trap', 'myl_core_trap', '"my.row_string_split::score"', 'llvm.sadd.with.overflow.i64', 'myl_core_trap', 'myl_core_free']
+my.row_string_split::score: increments=0 decrements=0 calls=['llvm.x86.avx2.pmadd.wd', 'llvm.vector.reduce.add.v8i32']
+
+string_join: static LLVM count-update sites and helper calls; runtime execution placement reviewed separately
+my.row_string_join::kernel: increments=0 decrements=2 calls=['llvm.sadd.with.overflow.i64', 'myl_core_trap', 'myl_core_str_join', 'myl_core_free', '"my.row_string_join::score"', 'myl_core_free', 'llvm.sadd.with.overflow.i64', 'myl_core_trap']
+my.row_string_join::score: increments=0 decrements=0 calls=['llvm.x86.avx2.pmadd.wd', 'llvm.vector.reduce.add.v8i32']

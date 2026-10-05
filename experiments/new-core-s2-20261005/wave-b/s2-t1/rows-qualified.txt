@@ -1,0 +1,76 @@
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: all 3 build slot(s) busy; waiting (60s so far)
+build-slot: all 3 build slot(s) busy; waiting (121s so far)
+build-slot: all 3 build slot(s) busy; waiting (181s so far)
+build-slot: all 3 build slot(s) busy; waiting (241s so far)
+build-slot: build slot 1 after 296s (all 3 build slot(s) busy)
+row_bytes_scan.my:35:12: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def inputs(kind: str, size: int, seed: int) -> Inputs:
+             ^
+row_bytes_scan.my:44:12: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def kernel(kind: str, data: Inputs, iterations: int, seed: int) -> int:
+             ^
+row_string_equal.my:30:12: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def inputs(kind: str, size: int, seed: int) -> Inputs:
+             ^
+row_string_equal.my:40:12: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def kernel(kind: str, data: Inputs, iterations: int, seed: int) -> int:
+             ^
+row_string_search.my:30:12: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def inputs(kind: str, size: int, seed: int) -> Inputs:
+             ^
+row_string_search.my:40:12: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def kernel(kind: str, data: Inputs, iterations: int, seed: int) -> int:
+             ^
+row_string_split.my:43:12: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def inputs(kind: str, size: int, seed: int) -> Inputs:
+             ^
+row_string_split.my:54:12: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def kernel(kind: str, data: Inputs, iterations: int, seed: int) -> int:
+             ^
+row_string_join.my:36:12: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def inputs(kind: str, size: int, seed: int) -> Inputs:
+             ^
+row_string_join.my:47:12: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def kernel(kind: str, data: Inputs, iterations: int, seed: int) -> int:
+             ^
+
+### bytes_scan (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 0.086 | 0.247 | same |
+| new core release | 1.240 | 1.631 | same |
+| Rust | 1.136 | 1.201 | same |
+| Zig ReleaseSafe | 1.402 | 1.769 | same |
+
+### string_equal (cycles per iteration, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 53.618 | 16.830 | same |
+| new core release | 135.095 | 15.886 | same |
+| Rust | 135.727 | 12.693 | same |
+| Zig ReleaseSafe | 277.760 | 16.932 | same |
+
+### string_search (cycles per iteration, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 421.141 | 80.578 | same |
+| new core release | 1080.594 | 89.298 | same |
+| Rust | 5583.528 | 184.103 | same |
+| Zig ReleaseSafe | 12927.329 | 384.311 | same |
+
+### string_split (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 201.757 | 210.401 | same |
+| new core release | 63.219 | 67.529 | same |
+| Rust | 28.074 | 35.542 | same |
+| Zig ReleaseSafe | 65.499 | 69.148 | same |
+
+### string_join (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 6.114 | 9.942 | same |
+| new core release | 5.800 | 6.539 | same |
+| Rust | 13.967 | 14.530 | same |
+| Zig ReleaseSafe | 18.052 | 20.336 | same |
