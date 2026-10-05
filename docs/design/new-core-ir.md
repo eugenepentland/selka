@@ -1,14 +1,17 @@
 # The new compiler core: Core IR, facts and LLVM emission (S0 design)
 
-**Status:** checkpoint A of stage S0 (`docs/audits/new-core-plan-2026-10-05.md` §6),
-2026-10-05. Branch `claude/new-core-s0-20261005`. Decisions N1–N5, L1–L4 and D1–D4 are
-fixed inputs. Sections marked *design only* describe S1+ work that S0 must leave room for
-but does not build; *checkpoint B* marks S0 work not yet done. Measurements are in §11.
+**Status:** stage S0 complete (checkpoints A and B, `docs/audits/new-core-plan-2026-10-05.md`
+§6), 2026-10-05. Branch `claude/new-core-s0-20261005`. Decisions N1–N5, L1–L4 and D1–D4
+are fixed inputs. Sections marked *design only* describe S1+ work that S0 leaves room for
+but does not build. Measurements are in §11.
 
-**Built at checkpoint A** (about 2.9k lines of Zig plus 260 of C, 0.6k of them tests):
-`mylang-core build` compiles the integer_math slice and a control-flow program from
-`typed.Program` through the Core IR and LLVM; release builds run the fact pass, which
-already brings the slice to the spike's level-1 speed (1.67 cycles/element, §11).
+**Built in S0** (about 5k lines of Zig plus 280 of C, 1.1k of them tests): `mylang-core
+build` compiles the S0 compute kernels (`integer_math`, `float_math`, `call_direct`,
+`branch_predictable`, `branch_mixed`, `binary_search`), a multi-kind program with the
+benchmark's per-element `kind` dispatch, and a control-flow program from `typed.Program`
+through the Core IR and LLVM. Release builds run inlining, loop unswitching, the fact pass,
+trip-count guards and the narrow-lane vector lowering; `--verify-facts` checks every fact
+at run time, and a whole-program differential fuzz compares all of it with the old core.
 
 ## 1. Shape of the core
 
@@ -17,8 +20,12 @@ FILE.my ─► front end (module "mylang": lexer, parser, sema)      reused, unc
               │  typed.Program  (src/typed.zig)                    decision N3
               ▼
           src/core/build.zig      typed tree → Core IR (SSA, on-the-fly construction)
-          (B) src/core/verify.zig IR well-formedness checks, and the facts' verify mode
-          src/core/facts.zig      intervals, list facts, trip counts → marks checks proven
+          src/core/passes.zig     release passes, in order:
+            inline.zig            single-block leaf calls inlined
+            version.zig           loop unswitching on invariant branches
+            facts.zig             intervals (int and float), list facts, trip counts
+            version.zig           trip-count guarded copies of wide reductions, facts again
+            vector.zig            narrow-lane vector plans for counted reductions
           (S1) src/core/own.zig   ownership: uniqueness, borrows, one-count RC insertion
           src/core/emit_llvm.zig  Core IR → LLVM IR text (typed accesses, attributes)
           src/core/driver.zig     zig cc: .ll + runtime C → executable (-O0 / -O3)
@@ -187,15 +194,29 @@ faster):
   construction, in release builds only. It mutates the IR in two ways: `exact` → `proven`,
   and a comparison it decides becomes a boolean constant (so the dead branch folds in
   LLVM). The interval table stays beside the function for the emitter (`!range`).
-- **Runtime guards over immutable data** (*design, S0 checkpoint B*): when a list's element
-  range is unknown (file data) but the list is an immutable value, the emitter can version a
-  loop: one pass computes `min`/`max` (hoisted out of every loop the value is invariant in),
-  and the fast version runs when the hull fits the narrow lanes. The ladder study recovered
-  the whole gain this way in 3 of 4 cases.
-
-A `verify` mode (ported from the spike's `llvm_direct_verify.zig`, *checkpoint B*) emits an
-assertion for every fact the emitter used (`len`, element hulls, intervals) and traps on a
-violation; the differential fuzz runs with it on.
+- **Float intervals** (finite doubles, one ulp of outward rounding per operation, none
+  for a possible NaN or infinity) prove `int(f)` in range; a value proven inside `i32` is
+  converted to and from double through `i32`, which AVX2 vectorizes (`float_math`).
+- **Trip-count guards** (`version.zig`, the first runtime guard). A reduction `acc += s`
+  with `s ≥ 0` that the 2^47 rule cannot bound (`float_math` sums values up to 1.07·10^6)
+  gets a guarded copy: `if bound ≤ K` (K the largest trip count for which the sum fits,
+  less one trip of slack) the copy, whose sum the next fact pass proves, runs; otherwise the
+  original with its exact checks. The guard's taken edge is a single-predecessor block, so
+  the ordinary edge refinement does the proof.
+- **Loop unswitching** (`version.zig`) uses the same copy machinery: a branch in an
+  innermost loop whose condition compares only loop-invariant values becomes a guard before
+  the loop, with the branch constant in each copy. The benchmark's `if kind == 0 … elif …`
+  per element becomes one straight loop per kind (up to 16 copies per function).
+- **Runtime guards over list data** (*S1*): when a list's element range is unknown (file
+  data), the same copy machinery can guard on a `min`/`max` pass over the immutable list.
+  The ladder study recovered the whole gain this way in 3 of 4 cases.
+- **Verify mode** (`--verify-facts`, from the spike's `llvm_direct_verify.zig`). Every
+  check the facts proved is emitted anyway, every fact interval is asserted after its
+  definition, blocks the facts call unreachable assert that they never run, comparisons
+  are not folded, and no fact-derived promise (`nsw`, `!range`, narrowed conversions,
+  vector code) reaches LLVM. A violated fact traps `R_CORE_FACT`. `--sabotage-facts` is the
+  same build with one deliberately wrong rule (`x % c ∈ [0, c-2]`), for testing the
+  verifier and the fuzz.
 
 ## 6. Ownership and one-count RC (*design only, S1*)
 
@@ -254,13 +275,14 @@ as the old core prints them), and exit status 1.
   a call-site table keyed by return address (PC-table traces), walked through frame
   pointers on a trap, gives every `in f at file:line:col` line with no per-call runtime
   bookkeeping.
-- **Release builds** (L2, *checkpoint B*): checks become `region` by default. A region is the code between two
-  visible effects (stream writes, capability/`extern` calls, exit). The emitter may (a) hoist
-  a bounds check to one `high ≤ len` test before a counted loop, (b) merge overflow flags into
-  one sticky `or` tested at the region exit, and (c) drop checks the facts prove. S0 emits
-  them exactly (a correct L2 implementation of "exact"); (a)–(b) arrive with the vector
-  lowering. A loop that is not proven to terminate tests its sticky flag every iteration
-  (L2 constraint 3).
+- **Release builds** (L2). A region is the code between two visible effects (stream
+  writes, capability/`extern` calls, exit). L2 lets the emitter (a) hoist a bounds check to
+  one `high ≤ len` test before a counted loop, (b) merge overflow flags into one sticky `or`
+  tested at the region exit (every iteration in a loop not proven to terminate), and (c)
+  drop checks the facts prove. **S0 needed only (c):** in every S0 kernel the facts prove
+  every check in the hot loop, or the trip-count guard selects a copy where they are proven,
+  so (a) and (b) were not built; S0 emits every remaining check exactly, which is a valid L2
+  implementation. They are the lever for loops over data with no facts (S1–S2, file data).
 
 **LLVM emission** (`src/core/emit_llvm.zig`) writes LLVM IR text and lets `zig cc`
 (clang) parse it. Text over the C API keeps the core free of a libLLVM dependency and is
@@ -270,10 +292,16 @@ cheap at S0's sizes; per-function bitcode caching is S1 work.
   typed `getelementptr inbounds T`/`load T` against a data pointer derived once per list
   value; parameters carrying list data get `noalias` and `readonly` where the IR proves the
   callee does not write (always, in S0).
-- **Narrow types:** a value whose interval fits a narrower type is emitted in that type
-  where it pays (loads with `!range`, `zext`/`trunc` at the edges). The vector lowering
-  (*checkpoint B*, the spike's `llvm_direct_vector.zig` ported) emits `<16 x i16>` lanes,
-  `pmaddwd` reductions and multiply-high reciprocals for constant divisors.
+- **Narrow types:** element loads carry `!range`; proven-`i32` conversions go through
+  `i32`. The vector lowering (`vector.zig`, the spike's `llvm_direct_vector.zig` ported to
+  the Core IR) takes a counted reduction whose body is a straight chain (decided branches
+  followed) or contains if/else diamonds: `<16 x i16>` lanes (or `<8 x i32>`), `packusdw`
+  loads of the `i64` storage, `pmulhuw` reciprocals for constant divisors (checked
+  exhaustively over the proven dividend range), lane `select`s for the diamonds with
+  `list[bool]` masks permuted like the packed values, and `pmaddwd` into 32-bit lanes folded
+  into the 64-bit total per block. It emits the vector part in front of the unchanged scalar
+  loop, which then runs the remaining `trips mod lanes` elements from the vector part's
+  counter and sum; whole-function emission means no call is spliced into the host loop.
 - **Arithmetic:** `exact`/`region` checks use `llvm.sadd/ssub/smul.with.overflow`;
   `proven` operations get `nsw`/`nuw`. Floor division over proven non-negative operands is
   `udiv`/`urem`; otherwise the fix-up `q - ((r != 0) & ((r ^ d) < 0))`.
@@ -310,8 +338,12 @@ saturating 32-bit count of D4. S0 creates blocks with count 1 and releases nothi
 is the S1 ownership pass); the only free is the old block when a push outgrows it, which
 the IR's uniqueness rule makes safe. String constants are emitted as static blocks whose
 count is saturated (`0xFFFFFFFF`), so no release will ever free them.
-S1 either keeps this runtime and grows it, or adopts the shared runtime if WP-5 lands with a
-compatible block — a decision for S1 (plan §9's risk), not forced now.
+**Decided (user, 2026-10-05): the new core keeps its own runtime.** `core_rt.c` grows with
+this block layout and its single saturating count. The shared runtime (`src/native_*.c`,
+`src/qbe_runtime*.c`: two counts, the GC, a QBE-shaped ABI) is never linked. Its algorithms
+are ported into `core_rt` as S1–S3 need them (text and UTF-8, dictionaries and sets, number
+formatting and parsing, I/O and capabilities), as C adapted to these blocks or rewritten,
+each noting the old function it was ported from.
 
 ## 9. Files and reachability
 

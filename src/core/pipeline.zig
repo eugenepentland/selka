@@ -63,7 +63,10 @@ pub fn build(init: std.process.Init, path: []const u8, options: Options, report:
         .sabotage => .sabotage,
     };
     const result = if (options.release) try passes.run(allocator, &module, mode) else passes.Result{ .known = &.{}, .plans = &.{} };
-    if (options.show.stats) try report.print(allocator, "mylang-core: inlined {d} calls, versioned {d} loops, proved {d} checks, vectorized {d} loops\n", .{ result.inlined, result.versioned, result.proven, result.vectorized });
+    if (options.show.stats) {
+        const format = "mylang-core: inlined {d} calls, unswitched {d} loops, versioned {d} loops, proved {d} checks, vectorized {d} loops\n";
+        try report.print(allocator, format, .{ result.inlined, result.unswitched, result.versioned, result.proven, result.vectorized });
+    }
     const absolute = std.Io.Dir.cwd().realPathFileAlloc(init.io, path, allocator) catch path;
     const llvm = emit_llvm.emitModule(allocator, &module, .{
         .locator = .{ .context = &checked.src, .locate = locate },

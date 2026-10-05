@@ -11,6 +11,7 @@ const passes = @import("passes.zig");
 
 const usage =
     \\usage: mylang-core build FILE.my -o OUT [--release] [--link FILE.c]... [--emit-llvm PATH] [--no-facts | --verify-facts] [--stats] [--zig PATH] [--cache-dir DIR]
+    \\       mylang-core coverage FILE.my...   (one line per function: ok, or the refusal reason)
     \\       mylang-core dump-typed FILE.my [FUNCTION]
     \\       mylang-core dump-ir FILE.my [--facts]   (--facts: after the release passes, with intervals)
     \\
@@ -23,6 +24,7 @@ pub fn main(init: std.process.Init) !u8 {
     if (args.len >= 3 and std.mem.eql(u8, args[1], "dump-typed")) return dumpTyped(init, args[2], if (args.len >= 4) args[3] else null);
     if (args.len >= 3 and std.mem.eql(u8, args[1], "dump-ir")) return dumpIr(init, args[2], args.len == 4 and std.mem.eql(u8, args[3], "--facts"));
     if (args.len >= 2 and std.mem.eql(u8, args[1], "build")) return buildCommand(init, args[2..]);
+    if (args.len >= 3 and std.mem.eql(u8, args[1], "coverage")) return coverageCommand(init, args[2..]);
     try std.Io.File.stderr().writeStreamingAll(init.io, usage);
     return 2;
 }
@@ -144,4 +146,33 @@ fn buildCommand(init: std.process.Init, args: []const []const u8) !u8 {
     };
     if (report.items.len != 0) try std.Io.File.stderr().writeStreamingAll(init.io, report.items);
     return status;
+}
+
+/// The coverage sweep: check each file and try to build each of its functions alone.
+/// Prints `ok NAME`, `refused REASON\tNAME` or `frontend FILE` per line.
+fn coverageCommand(init: std.process.Init, arguments: []const []const u8) !u8 {
+    var out: std.ArrayList(u8) = .empty;
+    for (arguments) |path| {
+        var scratch = std.heap.ArenaAllocator.init(init.gpa);
+        defer scratch.deinit();
+        const allocator = scratch.allocator();
+        const entry = frontend.entryOf(path);
+        var session = frontend.Session.init(init.gpa, init.io, entry.root);
+        defer session.deinit();
+        var report: std.ArrayList(u8) = .empty;
+        const checked = session.checkFile(allocator, path, &report) catch |err| switch (err) {
+            error.OutOfMemory => return err,
+            else => {
+                const first = std.mem.sliceTo(report.items, '\n');
+                try out.print(init.arena.allocator(), "frontend {s}\t{s}\n", .{ path, first });
+                continue;
+            },
+        };
+        for (try build.coverage(allocator, checked.program)) |outcome| {
+            const keep = init.arena.allocator();
+            if (outcome.refusal) |reason| try out.print(keep, "refused {s}\t{s}\n", .{ reason, outcome.name }) else try out.print(keep, "ok {s}\n", .{outcome.name});
+        }
+    }
+    try std.Io.File.stdout().writeStreamingAll(init.io, out.items);
+    return 0;
 }

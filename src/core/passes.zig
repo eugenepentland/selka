@@ -1,6 +1,6 @@
-//! The release passes, in order, shared by `mylang-core build`, `dump-ir --release`
-//! and the tests: leaf inlining, facts, trip-count guards (then facts again), and
-//! the vector plans. Debug builds run none of them.
+//! The release passes, in order, shared by `mylang-core build`, `dump-ir --facts`
+//! and the tests: leaf inlining, loop unswitching, facts, trip-count guards (then
+//! facts again), and the vector plans. Debug builds run none of them.
 const std = @import("std");
 const ir = @import("ir.zig");
 const facts = @import("facts.zig");
@@ -20,6 +20,8 @@ pub const Result = struct {
     known: []?facts.Facts,
     plans: [][]const vector.Plan,
     inlined: u32 = 0,
+    /// Loop copies added by unswitching and by trip-count guards.
+    unswitched: u32 = 0,
     versioned: u32 = 0,
     proven: u32 = 0,
     vectorized: u32 = 0,
@@ -39,12 +41,16 @@ pub fn run(arena: std.mem.Allocator, module: *ir.Module, mode: Mode) Error!Resul
     const options: facts.Options = .{ .fold = !verify, .sabotage = mode == .sabotage };
     for (module.functions.items, result.known, result.plans) |*function, *slot, *plan| {
         if (function.signature.linkage != .internal) continue;
+        result.unswitched += try version.unswitch(arena, function);
         var known = try facts.analyze(arena, function, options);
+        result.proven += known.proven;
         // A reduction proven only under a trip bound gets a guarded copy; the facts then run again.
         const guarded = try version.versionReductions(arena, function, known);
-        if (guarded != 0) known = try facts.analyze(arena, function, options);
+        if (guarded != 0) {
+            known = try facts.analyze(arena, function, options);
+            result.proven += known.proven;
+        }
         result.versioned += guarded;
-        result.proven += known.proven;
         slot.* = known;
         // Vector code comes only from trusted facts, never in a verify build.
         if (!verify) plan.* = try vector.plan(arena, function, known);

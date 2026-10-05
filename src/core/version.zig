@@ -48,7 +48,7 @@ fn tripLimit(f: *const ir.Function, known: facts.Facts, counted: facts.Counted) 
         const update = f.inst(f.resolve(operands[latch_index]));
         if (update.op != .add or update.check != .exact) continue;
         const step = if (f.resolve(update.a) == ref) update.b else if (f.resolve(update.b) == ref) update.a else continue;
-        const s = known.ranges[f.resolve(step).index()] orelse return null;
+        const s = rangeOf(f, known, step) orelse return null;
         const init = rangeOf(f, known, operands[1 - latch_index]) orelse return null;
         if (s.lo < 0 or s.hi <= 0 or init.lo < 0) return null;
         const room = @as(i128, std.math.maxInt(i64)) - init.hi;
@@ -66,6 +66,8 @@ fn rangeOf(f: *const ir.Function, known: facts.Facts, raw: ir.Ref) ?facts.Interv
     const ref = f.resolve(raw);
     const inst = f.inst(ref);
     if (inst.op == .iconst) return facts.Interval.point(@as(i64, @bitCast(inst.data)));
+    // An earlier copy in this pass may have added values the facts have not seen.
+    if (ref.index() >= known.ranges.len) return null;
     return known.ranges[ref.index()];
 }
 
@@ -117,11 +119,22 @@ fn preheaderOf(f: *const ir.Function, loop: ir.Loop) ?ir.BlockId {
 }
 
 fn version(arena: std.mem.Allocator, f: *ir.Function, counted: facts.Counted, limit: i128) Error!bool {
-    const loop = counted.loop;
-    const preheader = preheaderOf(f, loop) orelse return false;
+    const span = f.inst(f.blocks.items[counted.loop.header.index()].insts.items[0]).span;
+    const cap = try appendInst(arena, f, .{ .op = .iconst, .ty = .i64, .data = @bitCast(@as(i64, @intCast(limit + 1))) });
+    const condition: ir.Inst = .{ .op = .cmp, .ty = .bool, .a = f.resolve(counted.bound), .b = cap, .data = @backingInt(ir.Predicate.lt), .span = span };
+    return (try duplicate(arena, f, counted.loop, condition)) != null;
+}
+
+/// Clone `loop` behind a guard block that evaluates `condition` and enters the clone
+/// when it holds, the original otherwise. Returns the maps from original to clone,
+/// or null (nothing changed) when the loop's shape does not allow it.
+fn duplicate(arena: std.mem.Allocator, f: *ir.Function, loop: ir.Loop, condition_inst: ir.Inst) Error!?Copies {
+    const preheader = preheaderOf(f, loop) orelse return null;
     const inside = try members(arena, f, loop);
-    // The exit must be reached from inside the loop only.
-    for (f.blocks.items[loop.exit.index()].preds.items) |pred| if (!inside[pred.index()]) return false;
+    // The exit may also be entered by earlier copies of this loop; it must be entered from it.
+    var exits = false;
+    for (f.blocks.items[loop.exit.index()].preds.items) |pred| exits = exits or inside[pred.index()];
+    if (!exits) return null;
     const original_blocks = f.blocks.items.len;
     // Map loop blocks and instructions to their clones.
     const block_map = try arena.alloc(?ir.BlockId, original_blocks);
@@ -156,6 +169,9 @@ fn version(arena: std.mem.Allocator, f: *ir.Function, counted: facts.Counted, li
     try f.blocks.append(arena, .{});
     const entry: ir.BlockId = @fromBackingInt(@intCast(f.blocks.items.len));
     try f.blocks.append(arena, .{});
+    // The original keeps a preheader of its own too, ending in a jump, so it can be duplicated again.
+    const stay: ir.BlockId = @fromBackingInt(@intCast(f.blocks.items.len));
+    try f.blocks.append(arena, .{});
     const header_span = f.inst(f.blocks.items[loop.header.index()].insts.items[0]).span;
     // Rewrite the clones' operands, targets and predecessors.
     for (0..original_blocks) |b| {
@@ -187,24 +203,109 @@ fn version(arena: std.mem.Allocator, f: *ir.Function, counted: facts.Counted, li
         for (f.blocks.items[b].preds.items) |pred| try preds.append(arena, if (pred == preheader) entry else mapBlock(block_map, pred));
         f.blocks.items[clone.index()].preds = preds;
     }
-    // The original header is now entered from the guard; the preheader jumps to the guard.
+    // The original header is now entered through `stay`; the preheader jumps to the guard.
     for (f.blocks.items[loop.header.index()].preds.items) |*pred| {
-        if (pred.* == preheader) pred.* = guard;
+        if (pred.* == preheader) pred.* = stay;
     }
     const pre_insts = f.blocks.items[preheader.index()].insts.items;
     f.insts.items[pre_insts[pre_insts.len - 1].index()].data = @backingInt(guard);
     const clone_header = block_map[loop.header.index()].?;
-    const cap = try appendInst(arena, f, .{ .op = .iconst, .ty = .i64, .data = @bitCast(@as(i64, @intCast(limit + 1))) });
-    const condition = try appendInst(arena, f, .{ .op = .cmp, .ty = .bool, .a = f.resolve(counted.bound), .b = cap, .data = @backingInt(ir.Predicate.lt), .span = header_span });
-    const branch = try appendInst(arena, f, .{ .op = .branch, .ty = .void, .a = condition, .data = ir.packTargets(entry, loop.header), .span = header_span });
+    const condition = try appendInst(arena, f, condition_inst);
+    const branch = try appendInst(arena, f, .{ .op = .branch, .ty = .void, .a = condition, .data = ir.packTargets(entry, stay), .span = header_span });
     try f.blocks.items[guard.index()].insts.appendSlice(arena, &.{ condition, branch });
     try f.blocks.items[guard.index()].preds.append(arena, preheader);
     const enter = try appendInst(arena, f, .{ .op = .jump, .ty = .void, .data = @backingInt(clone_header), .span = header_span });
     try f.blocks.items[entry.index()].insts.append(arena, enter);
     try f.blocks.items[entry.index()].preds.append(arena, guard);
-    try mergeExit(arena, f, .{ .loop = loop, .inside = inside, .block_map = block_map, .inst_map = inst_map, .original_blocks = original_blocks });
+    const resume_original = try appendInst(arena, f, .{ .op = .jump, .ty = .void, .data = @backingInt(loop.header), .span = header_span });
+    try f.blocks.items[stay.index()].insts.append(arena, resume_original);
+    try f.blocks.items[stay.index()].preds.append(arena, guard);
+    const copies: Copies = .{ .loop = loop, .inside = inside, .block_map = block_map, .inst_map = inst_map, .original_blocks = original_blocks };
+    try mergeExit(arena, f, copies);
     try f.loops.append(arena, .{ .id = loop.id, .header = clone_header, .body = block_map[loop.body.index()].?, .latch = block_map[loop.latch.index()].?, .exit = loop.exit });
-    return true;
+    return copies;
+}
+
+/// How many loop copies unswitching may add to one function.
+const unswitch_budget = 16;
+
+/// Loop unswitching: a branch inside an innermost loop whose condition compares
+/// only values defined outside the loop (or constants) is decided once, before the
+/// loop, by a guard; the clone takes the branch's then-side, the original its
+/// else-side, each as a constant the fact pass folds. The compute benchmark's
+/// per-element `if kind == …` dispatch becomes one straight loop per kind.
+/// Returns how many loops were added.
+pub fn unswitch(arena: std.mem.Allocator, f: *ir.Function) Error!u32 {
+    var added: u32 = 0;
+    var index: usize = 0;
+    while (index < f.loops.items.len and added < unswitch_budget) : (index += 1) {
+        while (added < unswitch_budget) {
+            const loop = f.loops.items[index];
+            if (try containsLoop(arena, f, loop)) break;
+            const branch = (try invariantBranch(arena, f, loop)) orelse break;
+            const cmp = f.inst(f.resolve(f.inst(branch).a));
+            const copies = (try duplicate(arena, f, loop, cmp)) orelse break;
+            const yes = try appendInst(arena, f, .{ .op = .iconst, .ty = .bool, .data = 1 });
+            const no = try appendInst(arena, f, .{ .op = .iconst, .ty = .bool, .data = 0 });
+            f.insts.items[copies.inst_map[branch.index()].index()].a = yes;
+            f.insts.items[branch.index()].a = no;
+            added += 1;
+        }
+    }
+    return added;
+}
+
+/// Whether another recorded loop's header lies inside `loop` (it is not innermost).
+fn containsLoop(arena: std.mem.Allocator, f: *const ir.Function, loop: ir.Loop) Error!bool {
+    const inside = try members(arena, f, loop);
+    for (f.loops.items) |other| {
+        if (other.header != loop.header and inside[other.header.index()]) return true;
+    }
+    return false;
+}
+
+/// The first branch on a loop-invariant comparison in a block of `loop` that control
+/// can still reach (constant branches are followed).
+fn invariantBranch(arena: std.mem.Allocator, f: *const ir.Function, loop: ir.Loop) Error!?ir.Ref {
+    const inside = try members(arena, f, loop);
+    const defined = try arena.alloc(bool, f.insts.items.len);
+    @memset(defined, false);
+    for (f.blocks.items, 0..) |block, b| {
+        if (!inside[b]) continue;
+        for (block.insts.items) |ref| defined[ref.index()] = true;
+    }
+    const live = try arena.alloc(bool, f.blocks.items.len);
+    @memset(live, false);
+    var pending: std.ArrayList(ir.BlockId) = .empty;
+    try pending.append(arena, loop.body);
+    while (pending.pop()) |block| {
+        if (live[block.index()] or !inside[block.index()] or block == loop.header) continue;
+        live[block.index()] = true;
+        const insts = f.blocks.items[block.index()].insts.items;
+        const last = f.inst(insts[insts.len - 1]);
+        switch (last.op) {
+            .jump => try pending.append(arena, @fromBackingInt(@as(u32, @intCast(last.data)))),
+            .branch => {
+                const targets = ir.unpackTargets(last.data);
+                const condition = f.inst(f.resolve(last.a));
+                if (condition.op == .iconst) {
+                    try pending.append(arena, if (condition.data != 0) targets.then else targets.otherwise);
+                    continue;
+                }
+                const invariant = condition.op == .cmp and !isDefined(f, defined, condition.a) and !isDefined(f, defined, condition.b);
+                if (invariant) return insts[insts.len - 1];
+                try pending.append(arena, targets.then);
+                try pending.append(arena, targets.otherwise);
+            },
+            else => {},
+        }
+    }
+    return null;
+}
+
+fn isDefined(f: *const ir.Function, defined: []const bool, raw: ir.Ref) bool {
+    const ref = f.resolve(raw);
+    return ref.index() < defined.len and defined[ref.index()];
 }
 
 /// What `mergeExit` needs to know about one versioned loop.
@@ -220,14 +321,18 @@ const Copies = struct {
 fn mergeExit(arena: std.mem.Allocator, f: *ir.Function, c: Copies) Error!void {
     const exit = c.loop.exit;
     const old_preds = try arena.dupe(ir.BlockId, f.blocks.items[exit.index()].preds.items);
-    for (old_preds) |pred| try f.blocks.items[exit.index()].preds.append(arena, c.block_map[pred.index()].?);
-    // Existing exit phis take the mapped operand on each new edge.
+    for (old_preds) |pred| {
+        if (c.block_map[pred.index()]) |copy| try f.blocks.items[exit.index()].preds.append(arena, copy);
+    }
+    // Existing exit phis take the mapped operand on each new edge (edges from the loop only).
     for (f.blocks.items[exit.index()].insts.items) |ref| {
         const inst = f.insts.items[ref.index()];
         if (inst.op != .phi) continue;
         var operands: std.ArrayList(ir.Ref) = .empty;
         try operands.appendSlice(arena, f.operands(inst.data));
-        for (f.operands(inst.data)) |operand| try operands.append(arena, mapped(f, c.inst_map, operand));
+        for (f.operands(inst.data), old_preds) |operand, pred| {
+            if (c.block_map[pred.index()] != null) try operands.append(arena, mapped(f, c.inst_map, operand));
+        }
         f.insts.items[ref.index()].data = try packOperands(arena, f, operands.items);
     }
     // Values defined inside the original loop and read outside both copies.
@@ -284,6 +389,8 @@ fn use(arena: std.mem.Allocator, f: *ir.Function, c: Copies, uses: Uses, raw: ir
     if (uses.merged[ref.index()] != .none) return uses.merged[ref.index()];
     const exit = c.loop.exit;
     var operands: std.ArrayList(ir.Ref) = .empty;
+    // Edges from an earlier copy of the loop never reach here: their uses were merged by
+    // that copy's own exit phis, which are what later code reads.
     for (f.blocks.items[exit.index()].preds.items) |pred| {
         const from_clone = pred.index() >= c.original_blocks;
         try operands.append(arena, if (from_clone) c.inst_map[ref.index()] else ref);

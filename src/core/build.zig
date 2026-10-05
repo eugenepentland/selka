@@ -38,6 +38,35 @@ pub fn buildModule(allocator: std.mem.Allocator, program: typed.Program, refusal
     return mb.module;
 }
 
+/// How one checked function fared: built, or the reason it was refused.
+pub const Outcome = struct { name: []const u8, refusal: ?[]const u8 };
+
+/// Try to build every function of `program` on its own (the coverage sweep).
+pub fn coverage(allocator: std.mem.Allocator, program: typed.Program) Error![]Outcome {
+    const outcomes = try allocator.alloc(Outcome, program.functions.len);
+    for (program.functions, outcomes) |function, *outcome| {
+        outcome.* = .{ .name = function.name, .refusal = null };
+        if (function.policy.c_abi or function.policy.host != null) {
+            outcome.refusal = if (function.policy.c_abi) "extern" else "host function";
+            continue;
+        }
+        var refusal: Refusal = .{};
+        var mb: ModuleBuilder = .{ .allocator = allocator, .program = program, .refusal = &refusal };
+        const index = mb.functionIndex(function.id) catch |err| switch (err) {
+            error.OutOfMemory => return error.OutOfMemory,
+            error.Unsupported => {
+                outcome.refusal = refusal.reason;
+                continue;
+            },
+        };
+        _ = buildFunction(&mb, function, mb.module.functions.items[index]) catch |err| switch (err) {
+            error.OutOfMemory => return error.OutOfMemory,
+            error.Unsupported => outcome.refusal = refusal.reason,
+        };
+    }
+    return outcomes;
+}
+
 const ModuleBuilder = struct {
     allocator: std.mem.Allocator,
     program: typed.Program,
@@ -99,7 +128,8 @@ const ModuleBuilder = struct {
                 if (element == .void or element == .cap) return self.refuse("list element type", span);
                 return self.module.intern(self.allocator, .{ .list = element });
             },
-            else => return self.refuse("collection type", span),
+            .dictionary => return self.refuse(if (record.collection.set) "set type" else "dict type", span),
+            .bytes => return self.refuse("bytes type", span),
         };
         if (record.shape.domain != null and std.mem.eql(u8, record.name, "float")) return .f64;
         if (record.shape.variants) |variants| {
@@ -107,8 +137,16 @@ const ModuleBuilder = struct {
                 variants.cases[0].payload == null and variants.cases[1].payload != null and
                 std.mem.startsWith(u8, record.name, "Option");
             if (option) return self.module.intern(self.allocator, .{ .option = try self.mapType(variants.cases[1].payload.?, span) });
+            if (variants.fallible) return self.refuse("Result type", span);
+            if (!variants.is_union) return self.refuse("enum type", span);
+            return self.refuse(if (std.mem.startsWith(u8, record.name, "Option")) "Option of an aggregate" else "union type", span);
         }
-        return self.refuse("aggregate type", span);
+        if (record.contract.callback != null) return self.refuse("function value type", span);
+        if (record.shape.array != null) return self.refuse("fixed array type", span);
+        if (record.shape.resource != null) return self.refuse("resource type", span);
+        if (record.shape.domain != null) return self.refuse("domain type", span);
+        if (record.isManagedRecord()) return self.refuse("class type", span);
+        return self.refuse("record type", span);
     }
 };
 

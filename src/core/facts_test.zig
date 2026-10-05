@@ -109,3 +109,22 @@ test "a loop whose condition variable steps through a join is not a counted loop
     try std.testing.expect(std.mem.indexOf(u8, text, "list_get.exact i64 param0") != null);
     try std.testing.expect(std.mem.indexOf(u8, text, "add.exact i64") != null);
 }
+
+const huge_reduction =
+    \\def main(args: list[str], out: Stream) -> int:
+    \\    n = len(args)
+    \\    total = 0
+    \\    for j in range(0 - 9223372036854775807, n):
+    \\        total += 4611686018427387904
+    \\    out.print(total)
+    \\    return 0
+    \\
+;
+
+// spec-case: NEW-CORE-FACTS-2
+test "a reduction whose bound exceeds every integer type is clamped, not overflowed, and keeps its check" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const text = try support.optimizedText(arena.allocator(), huge_reduction);
+    try std.testing.expect(std.mem.indexOf(u8, text, "add.exact i64") != null);
+}

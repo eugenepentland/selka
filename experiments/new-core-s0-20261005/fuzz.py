@@ -56,6 +56,16 @@ class Gen:
             right = self.expr(names, depth - 1)
         return "(%s %s %s)" % (left, op, right)
 
+    def lane_expr(self, names, depth):
+        """A non-negative expression of the shape the vector lowering takes."""
+        if depth <= 0 or self.r.random() < 0.25:
+            return self.r.choice(names) if self.r.random() < 0.7 else str(self.r.randint(0, 40))
+        op = self.r.choice(["+", "*", "//", "%", "+"])
+        left = self.lane_expr(names, depth - 1)
+        if op in ("//", "%"):
+            return "(%s %s %d)" % (left, op, self.r.choice([1, 2, 3, 7, 16, 17, 101, 1009]))
+        return "(%s %s %s)" % (left, op, self.lane_expr(names, depth - 1))
+
     def cond(self, names, depth):
         a = self.expr(names, depth)
         b = self.expr(names, depth)
@@ -92,30 +102,40 @@ class Gen:
             "    if n < 0 or n > 100 or rounds < 0 or rounds > 5:",
             "        return 3",
         ]
+        lane_shaped = r.random() < 0.5
         element = self.expr(["j", "seed"], 2)
-        modulus = r.choice(["1009", "17", "65536", "7", "1000000007", None])
+        modulus = r.choice(["1009", "17", "4000", "7"]) if lane_shaped else r.choice(["1009", "17", "65536", "7", "1000000007", None])
         if modulus:
             element = "(%s) %% %s" % (element, modulus)
         lines.append("    values = [%s for j in range(n)]" % element)
+        lines.append("    second = [(j * %d + 3) %% %d for j in range(n)]" % (r.randint(1, 50), r.choice([7, 64, 1009, 4000])))
         if r.random() < 0.4:
-            lines.append("    flags = [%s for j in range(n)]" % self.cond(["j", "seed"], 1))
+            flag = "(%s) %% %d < %d" % (self.expr(["j", "seed"], 1), r.choice([2, 3, 101]), r.randint(0, 60)) if lane_shaped else self.cond(["j", "seed"], 1)
+            lines.append("    flags = [%s for j in range(n)]" % flag)
         else:
             lines.append("    flags = [j % 3 != 0 for j in range(n)]")
         lines += ["    acc = 0", "    for b in range(rounds):", "        phase = b %% %d" % r.randint(1, 20), "        total = 0"]
         bound = r.choice(["n", "n", "len(values)", "n - 1", "n + %d" % r.randint(0, 2)])
         lines.append("        for j in range(%s):" % bound)
-        index = r.choice(["j", "j", "j", "j + 1", "n - 1 - j", "0 - 1 - j"])
+        index = "j" if lane_shaped else r.choice(["j", "j", "j", "j + 1", "n - 1 - j", "0 - 1 - j"])
         lines.append("            x = values[%s]" % index)
-        names = ["x", "phase", "j", "seed"]
-        lines.append("            v = %s" % self.expr(names, 3))
+        lines.append("            y = second[j % n]" if bound not in ("n", "len(values)", "n - 1") else "            y = second[j]")
+        names = ["x", "phase", "j", "seed", "y"]
+        if lane_shaped:
+            lines.append("            v = %s" % self.lane_expr(["x", "phase", "y"], 3))
+        else:
+            lines.append("            v = %s" % self.expr(names, 3))
         if r.random() < 0.5:
             lines.append("            if flags[%s]:" % ("j" if bound in ("n", "len(values)", "n - 1") else "j % n"))
-            lines += ["                v = %s" % self.expr(names + ["v"], 2), "            else:", "                v = v + %s" % self.const()]
-        if helpers and r.random() < 0.6:
+            if lane_shaped:
+                lines += ["                v = %s" % self.lane_expr(["x", "phase", "v"], 2), "            else:", "                v = v + %d" % r.randint(0, 30)]
+            else:
+                lines += ["                v = %s" % self.expr(names + ["v"], 2), "            else:", "                v = v + %s" % self.const()]
+        if helpers and r.random() < 0.6 and not lane_shaped:
             lines.append("            v = helper%d(v, %s)" % (r.randrange(helpers), self.expr(names, 1)))
-        if r.random() < 0.3:
+        if r.random() < 0.3 and not lane_shaped:
             lines += ["            if %s:" % self.cond(names, 1), "                continue"]
-        if r.random() < 0.2:
+        if r.random() < 0.2 and not lane_shaped:
             lines += ["            if %s:" % self.cond(names, 1), "                break"]
         lines.append("            total += v")
         if r.random() < 0.8:
@@ -154,7 +174,7 @@ def main():
     ap.add_argument("--core", default=os.path.join(ROOT, "zig-out/bin/mylang-core"))
     args = ap.parse_args()
     work = tempfile.mkdtemp(prefix="core-fuzz.", dir=os.environ.get("TMPDIR"))
-    stats = {"cases": 0, "old_rejected": 0, "new_refused": 0, "compared": 0, "mismatch": 0, "fact": 0, "traps": 0, "caught": 0}
+    stats = {"cases": 0, "old_rejected": 0, "new_refused": 0, "compared": 0, "mismatch": 0, "fact": 0, "traps": 0, "caught": 0, "vectorized": 0, "versioned": 0}
     rng = random.Random(args.seed)
     for case in range(args.cases):
         source = Gen(rng).program()
@@ -168,7 +188,7 @@ def main():
             stats["old_rejected"] += 1
             continue
         builds = {}
-        modes = {"debug": [], "release": ["--release"], "verify": ["--release", "--sabotage-facts" if args.sabotage else "--verify-facts"]}
+        modes = {"debug": [], "release": ["--release", "--stats"], "verify": ["--release", "--sabotage-facts" if args.sabotage else "--verify-facts"]}
         refused = False
         for mode, flags in modes.items():
             out = os.path.join(work, "%s%d" % (mode, case))
@@ -179,9 +199,18 @@ def main():
                     break
                 print("case %d: new core build failed (%s):\n%s" % (case, mode, err[:2000]))
                 stats["mismatch"] += 1
+                if args.keep:
+                    os.makedirs(args.keep, exist_ok=True)
+                    shutil.copy(path, args.keep)
                 refused = True
                 break
             builds[mode] = out
+            if mode == "release":
+                found = re.search(r"versioned (\d+) loops, proved \d+ checks, vectorized (\d+) loops", err)
+                if found and int(found.group(2)):
+                    stats["vectorized"] += 1
+                if found and int(found.group(1)):
+                    stats["versioned"] += 1
         if refused:
             stats["new_refused"] += 1
             continue

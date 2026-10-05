@@ -225,3 +225,45 @@ test "a verify build checks every fact at run time, and catches a deliberately w
     try std.testing.expectEqual(@as(u8, 1), sabotaged.status);
     try std.testing.expect(std.mem.indexOf(u8, sabotaged.stderr, "error[R_CORE_FACT]: native execution failed (range [0, 1007]: value 1008") != null);
 }
+
+/// compute_s0's checksum for one kind and size (300 iterations, seed 7).
+fn kindChecksum(arena: std.mem.Allocator, executable: []const u8, kind: []const u8, size: []const u8) ![]const u8 {
+    return firstField((try run(arena, executable, &.{ kind, size, "300", "7" })).stdout);
+}
+
+/// Every kind of compute_s0 at 4096 and 64 elements, in kind order.
+fn computeChecksums(arena: std.mem.Allocator, executable: []const u8) ![12][]const u8 {
+    const kinds = [_][]const u8{ "0", "1", "2", "3", "6", "10" };
+    var sums: [12][]const u8 = undefined;
+    for (kinds, 0..) |kind, i| {
+        sums[i] = try kindChecksum(arena, executable, kind, "4096");
+        sums[6 + i] = try kindChecksum(arena, executable, kind, "64");
+    }
+    return sums;
+}
+
+const compute_expected = [12][]const u8{ "561601106", "86580286", "965504293", "524637494", "894136189", "70251766", "8773872", "119488164", "28108500", "35092986", "27260364", "197974" };
+
+// spec: NEW-CORE-UNSWITCH-1
+test "the multi-kind compute program, dispatching on an invariant kind per element, matches the old core at debug and release" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    var dir = std.testing.tmpDir(.{});
+    defer dir.cleanup();
+    const root = try scratch(arena.allocator(), dir);
+    const debug = try computeChecksums(arena.allocator(), try buildFixture(arena.allocator(), root, "compute_s0", .{ .compiler = options.core_path, .release = false }));
+    const release = try computeChecksums(arena.allocator(), try buildFixture(arena.allocator(), root, "compute_s0", .{ .compiler = options.core_path, .release = true }));
+    try std.testing.expect(sameSums(debug));
+    try std.testing.expect(sameSums(release));
+}
+
+/// Whether every checksum equals the old core's.
+fn sameSums(got: [12][]const u8) bool {
+    for (compute_expected, got) |expected, sum| {
+        if (!std.mem.eql(u8, expected, sum)) {
+            report("compute_s0 checksum {s}, expected {s}\n", .{ sum, expected });
+            return false;
+        }
+    }
+    return true;
+}

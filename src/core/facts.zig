@@ -397,7 +397,9 @@ pub const Options = struct {
 fn recompute(a: *Analysis, ref: ir.Ref, block: ir.BlockId, changes: []u8) bool {
     const f = a.f;
     var changed = false;
-    const next = transfer(a, ref, block);
+    // No value leaves its type, so neither does its interval (and i128 arithmetic stays exact).
+    const limits = typeRange(f.inst(ref).ty);
+    const next = if (transfer(a, ref, block)) |range| (if (limits) |l| range.meet(l) else range) else null;
     const old = a.facts.ranges[ref.index()];
     const widened = if (old != null and next != null and !std.meta.eql(old, next)) blk: {
         changes[ref.index()] +|= 1;
@@ -721,7 +723,7 @@ fn reduction(a: *Analysis, ref: ir.Ref, block: ir.BlockId) ?Interval {
         const start = a.rangeAt(operands[1 - latch_index], header.preds.items[1 - latch_index]) orelse return null;
         const trips = tripBound(a, block) orelse return null;
         if (s.lo < 0) return null;
-        return .{ .lo = start.lo, .hi = start.hi + trips * s.hi };
+        return .{ .lo = start.lo, .hi = start.hi +| mulSat(trips, s.hi) };
     }
     return null;
 }

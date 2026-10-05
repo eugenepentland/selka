@@ -130,3 +130,33 @@ test "a reduction too wide for 2^47 trips gets a guarded copy where its sum is p
     try std.testing.expect(std.mem.indexOf(u8, text, "add.exact i64") != null);
     try std.testing.expectEqual(@as(usize, 2), std.mem.count(u8, text, "float_to_int.proven i64"));
 }
+
+const dispatch =
+    \\def main(args: list[str], out: Stream) -> int:
+    \\    kind = len(args)
+    \\    n = len(args) + 100
+    \\    values = [(j * 37 + 5) % 1009 for j in range(n)]
+    \\    total = 0
+    \\    for j in range(n):
+    \\        x = values[j]
+    \\        value = 0
+    \\        if kind == 0:
+    \\            value = x * 3
+    \\        elif kind == 1:
+    \\            value = x + 7
+    \\        total += value
+    \\    out.print(total)
+    \\    return 0
+    \\
+;
+
+// spec-case: NEW-CORE-UNSWITCH-1
+test "a branch on a loop-invariant comparison is decided once before the loop, leaving straight loops that vectorize" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const text = try support.releaseLlvmText(arena.allocator(), dispatch);
+    // One vector loop for kind 0 and one for kind 1; the remaining copy only adds zero.
+    try std.testing.expect(std.mem.indexOf(u8, text, "vexit1:") != null);
+    try std.testing.expect(std.mem.indexOf(u8, text, "vexit2:") != null);
+    try std.testing.expect(std.mem.indexOf(u8, text, "@llvm.x86.avx2.pmadd.wd") != null);
+}
