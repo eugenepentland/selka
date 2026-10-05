@@ -1,0 +1,28 @@
+build-slot: all 1 gate slot(s) busy; waiting (0s so far)
+build-slot: all 1 gate slot(s) busy; waiting (60s so far)
+build-slot: all 1 gate slot(s) busy; waiting (120s so far)
+build-slot: gate slot 1 after 140s (all 1 gate slot(s) busy)
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: cold gate — no prior green stamp on this tree; a re-run after a green will skip via the cache and confirm
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 26 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 9 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 4/88 failed (spec, anytype-budget, dead-pub, line-length)
+guardian: failures grouped by check (4):
+  spec (8 findings)
+    - duplicate tag: id:new-core-s2-ir-1
+    - in: src/core/s2_ir_test.zig
+    - in: src/core/function_build_test.zig
+    - +5 more — use --verbose for full detail
+  anytype-budget (2 findings)
+    - src/core/emit_fn.zig: 3 `anytype` parameters (limit: 2)
+      fix: replace anytype with comptime-typed generics where possible.
+    - src/core/build.zig: 3 `anytype` parameters (limit: 2)
+  dead-pub (1 finding)
+    - src/core/flags.zig: src/core/flags.zig::list_sort_symbol: unused public declaration
+      fix: remove, demote to private (drop `pub`), or reference from a test.
+  line-length (2 findings)
+    - src/core/build.zig:1555: line is 262 chars (hard limit 240)
+      fix: split the expression when doing so improves readability
+    - src/core/build.zig:1724: line is 293 chars (hard limit 240)
+  caution: zig-out binaries predate this failed run (installs are gated on green) — rebuild green before running them

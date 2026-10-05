@@ -1,0 +1,26 @@
+file                     tests | debug   match misma unsup | release match misma unsup
+--------------------------------------------------------------------------------------
+callbacks                    8 |             8     0     0 |             8     0     0
+python_arrays                5 |             5     0     0 |             5     0     0
+array_negative_index        20 |            19     0     1 |            19     0     1
+array_places                22 |            22     0     0 |            22     0     0
+array_writes                10 |            10     0     0 |            10     0     0
+keyed_sorting               18 |            17     0     1 |            17     0     1
+lambda_sort_keys             5 |             3     0     2 |             3     0     2
+sorted_keys                  8 |             8     0     0 |             8     0     0
+f_features                   4 |             4     0     0 |             4     0     0
+--------------------------------------------------------------------------------------
+TOTAL                      100
+  debug    matching 96, mismatching 0, unsupported 4 (of 100 tests; 96 supported)
+  release  matching 96, mismatching 0, unsupported 4 (of 100 tests; 96 supported)
+
+blocking features of the unsupported tests (tests / files):
+     1 /  1  dict type
+     1 /  1  text of a non-integer value
+     1 /  1  lower
+     1 /  1  text_tail
+
+blocking features per file (file: tests unsupported of tests; the features, most common first):
+  array_negative_index             1 of  20: dict type x1
+  keyed_sorting                    1 of  18: text of a non-integer value x1
+  lambda_sort_keys                 2 of   5: lower x1, text_tail x1

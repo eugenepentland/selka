@@ -1,0 +1,23 @@
+core
++- install mylang-core
+   +- compile exe mylang-core debug native 1 errors
+src/core/emit_fn.zig:40:51: error: expected type 'ir.Module', found '*const ir.Module'
+    const kind = @import("build_fn.zig").sortKind(module, module.compound(inst.ty).list) orelse return error.UnsupportedInstruction;
+                                                  ^~~~~~
+src/core/ir.zig:529:20: note: struct declared here
+pub const Module = struct {
+                   ^~~~~~
+src/core/build_fn.zig:42:27: note: parameter type declared here
+pub fn sortKind(module: ir.Module, element: ir.Type) ?u64 {
+                        ~~^~~~~~~
+referenced by:
+    instruction__anon_38942: src/core/emit_fn.zig:12:35
+    instruction: src/core/emit_llvm.zig:1033:90
+    11 reference(s) hidden; use '-freference-trace=13' to see all references
+error: 1 compilation errors
+failed command: /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig build-exe -ODebug --dep mylang -Mroot=src/core/main.zig -ODebug --dep runtime_contract -Mmylang=src/compiler.zig -ODebug -Mruntime_contract=src/runtime_contract.zig --cache-dir .zig-cache --global-cache-dir /home/epentland/.cache/zig --name mylang-core --zig-lib-dir /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/ --listen=-
+
+Build Summary: 0/3 steps succeeded (1 failed)
+core transitive failure
++- install mylang-core transitive failure
+   +- compile exe mylang-core debug native 1 errors

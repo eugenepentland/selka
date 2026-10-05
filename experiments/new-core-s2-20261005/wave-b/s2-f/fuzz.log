@@ -1,0 +1,10 @@
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: all 3 build slot(s) busy; waiting (60s so far)
+build-slot: all 3 build slot(s) busy; waiting (121s so far)
+build-slot: all 3 build slot(s) busy; waiting (181s so far)
+build-slot: all 3 build slot(s) busy; waiting (241s so far)
+build-slot: build slot 2 after 281s (all 3 build slot(s) busy)
+qualification progress: s1: seen=25 elapsed=93.38s
+qualification progress: s1: seen=50 elapsed=178.38s
+records,unions,propagate,mut,alias cases=50 old_rejected=0 refused=0 compared=750 mismatch=0 fact=0 traps=0 caught=0
+qualification {"kind": "s1", "qualified": true, "accepted": 50, "old_rejected": 0, "core_refused": 0, "core_build_failed": 0, "elapsed_seconds": 181.74274473101832}

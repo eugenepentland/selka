@@ -1,0 +1,2 @@
+build-slot: all 1 gate slot(s) busy; waiting (0s so far)
+build-slot: gate slot 1 after 20s (all 1 gate slot(s) busy)

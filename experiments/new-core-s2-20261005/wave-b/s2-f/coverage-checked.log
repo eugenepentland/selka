@@ -1,0 +1,85 @@
+## examples: 93 files (7 not checkable alone), 207 functions, 178 accepted (86%)
+  checks in accepted functions (analysed alone): proven 93, still exact 141
+  front end: 4 x error[E_MODULE_NAME]: declared `module shop.money`, but this
+  front end: 1 x error[E_MODULE_NAME]: declared `module config.values`, but t
+  front end: 1 x error[E_MODULE_NAME]: declared `module shop.billing`, but th
+     11  capability type
+      5  resource type
+      3  host function
+      3  bytes type
+      2  extern
+      2  shift_right
+      1  string index
+      1  text_chr
+      1  dict type
+## bench/parity: 45 files (0 not checkable alone), 123 functions, 75 accepted (61%)
+  checks in accepted functions (analysed alone): proven 98, still exact 89
+      6  bytes type
+      5  dict type
+      5  f64_sqrt
+      3  slice
+      3  index of a non-array
+      3  string index
+      2  shift_right
+      2  shift_left
+      2  split
+      1  operator on an aggregate value
+      1  is_digit
+      1  is_alpha
+## tests/lang: 205 files (4 not checkable alone), 3156 functions, 2250 accepted (71%)
+  checks in accepted functions (analysed alone): proven 2828, still exact 2461
+  front end: 2 x error[E_EMBED_MISSING]: cannot embed "embed_fixtures/lines.t
+  front end: 1 x error[E_EMBED_MISSING]: cannot embed "embed_fixtures/nul.bin
+  front end: 1 x error[E_EMBED_MISSING]: cannot embed "embed_fixtures/support
+    327  dict type
+    290  bytes type
+     38  capability type
+     34  set type
+     27  write to a list while it is iterated (live-place iteration)
+     23  slice
+     14  index of a non-array
+     11  equality of a recursive value
+     11  split
+     10  text of a non-integer value
+      8  operator on an aggregate value
+      8  shift_right
+## benchmarks/runtime: 3 files (0 not checkable alone), 141 functions, 54 accepted (38%)
+  checks in accepted functions (analysed alone): proven 34, still exact 56
+     35  bytes type
+     25  dict type
+      3  string index
+      2  split
+      2  slice
+      1  extern
+      1  contains
+      1  is_digit
+      1  is_alpha
+      1  is_space
+      1  starts_with
+      1  ends_with
+## all corpora: checks proven 2964, still exact 2653 (in 2452 accepted functions)
+## all corpora: 3627 functions, 2557 accepted (70%)
+    358  dict type
+    334  bytes type
+     49  capability type
+     34  set type
+     28  slice
+     27  write to a list while it is iterated (live-place iteration)
+     18  index of a non-array
+     15  string index
+     15  split
+     12  shift_right
+     11  equality of a recursive value
+     10  f64_sqrt
+     10  text of a non-integer value
+      9  operator on an aggregate value
+      7  extend
+      6  resource type
+      6  count
+      6  strip
+      6  replace
+      6  number_format
+      6  text_tail
+      5  find
+      5  lower
+      5  interior mut argument ancestor changed during later argument evaluation
