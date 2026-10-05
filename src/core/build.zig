@@ -623,7 +623,11 @@ const FnBuilder = struct {
         const body_block = try self.newBlock();
         const latch = try self.newBlock();
         const exit = try self.newBlock();
-        try self.branch(cond, body_block, exit, @intCast(self.nodeOf(condition).span.start));
+        // `while True:` has no exit edge: only a `break` (or a return) leaves it.
+        const known = self.function.inst(self.function.resolve(cond));
+        if (known.op == .iconst and known.data != 0) {
+            try self.jump(body_block);
+        } else try self.branch(cond, body_block, exit, @intCast(self.nodeOf(condition).span.start));
         try self.seal(body_block);
         try self.loops.append(self.allocator(), .{ .id = id, .latch = latch, .exit = exit });
         self.current = body_block;

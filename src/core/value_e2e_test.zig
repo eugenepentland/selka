@@ -306,7 +306,25 @@ test "the value fixtures end with no block live under MYL_CORE_LEAKCHECK=1, debu
     var dir = std.testing.tmpDir(.{});
     defer dir.cleanup();
     const root = try scratch(arena.allocator(), dir);
-    const names = [_][]const u8{ "v_records", "v_unions", "v_lists", "v_mut", "v_wide", "v_wide_managed", "v_nested", "v_mut_window", "v_equality", "v_mut_rebind", "v_arena", "v_str_eq", "v_methods", "v_narrow", "v_snapshot", "v_text" };
+    const names = [_][]const u8{
+        "v_records",
+        "v_unions",
+        "v_lists",
+        "v_mut",
+        "v_wide",
+        "v_wide_managed",
+        "v_nested",
+        "v_mut_window",
+        "v_equality",
+        "v_mut_rebind",
+        "v_arena",
+        "v_str_eq",
+        "v_methods",
+        "v_narrow",
+        "v_snapshot",
+        "v_text",
+        "v_loops",
+    };
     for (names) |name| {
         try std.testing.expectEqualStrings("", try leakReport(arena.allocator(), root, name, .debug));
         try std.testing.expectEqualStrings("", try leakReport(arena.allocator(), root, name, .release));
@@ -454,4 +472,17 @@ test "f-strings, str(x), concatenation and join build the old core's text, with 
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     try std.testing.expect(try matches(arena.allocator(), "v_text", v_text_output, 0));
+}
+
+const v_loops_output =
+    \\2 -1 -1
+    \\45 0 30 0
+    \\
+;
+
+// spec: NEW-CORE-LOOP-1
+test "while True has no exit edge: only break and return leave it, and the function needs no return after it" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    try std.testing.expect(try matches(arena.allocator(), "v_loops", v_loops_output, 0));
 }

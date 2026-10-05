@@ -318,13 +318,13 @@ const text_equality =
     \\
 ;
 
-const text_concatenation =
-    \\def joined(a: str, b: str) -> str:
-    \\    return a + b
+const text_ordering =
+    \\def before(a: str, b: str) -> bool:
+    \\    return a < b
     \\
     \\
     \\def main(out: Stream) -> int:
-    \\    out.print(joined("a", "b"))
+    \\    out.print(before("a", "b"))
     \\    return 0
     \\
 ;
@@ -352,7 +352,7 @@ const callback_in_index =
 ;
 
 // spec-case: NEW-CORE-PLACE-1
-test "an append to a list element is a push onto the element and a list_set of it; a str concatenation is refused, and a read through a place a callback rewrites is the captured receiver's" {
+test "an append to a list element is a push onto the element and a list_set of it; a str ordering is refused, and a read through a place a callback rewrites is the captured receiver's" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const text = try support.irText(arena.allocator(), append_to_element);
@@ -360,8 +360,8 @@ test "an append to a list element is a push onto the element and a list_set of i
     try std.testing.expect(contains(text, "list_push list[i64]"));
     try std.testing.expect(contains(text, "list_set.exact list[list[i64]]"));
     var refusal: build.Refusal = .{};
-    try std.testing.expectError(error.Unsupported, support.buildSource(arena.allocator(), text_concatenation, &refusal));
-    try std.testing.expectEqualStrings("concatenation", refusal.reason);
+    try std.testing.expectError(error.Unsupported, support.buildSource(arena.allocator(), text_ordering, &refusal));
+    try std.testing.expectEqualStrings("operator on an aggregate value", refusal.reason);
     // A read through a receiver a callback rewrites the place of sees the receiver as captured.
     const selected = try support.irText(arena.allocator(), callback_in_index);
     try std.testing.expect(contains(selected, "list_get.exact i64 %1"));
