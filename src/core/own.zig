@@ -261,6 +261,10 @@ const Analysis = struct {
                 // A `mut` parameter is handed over by value (`Signature.owned`).
                 .param => if (ownedParameter(f.signature, instruction.data)) .owned else .borrowed,
                 .str_const, .undef => .immortal,
+                .call => if (self.encodedSource(instruction)) |source| blk: {
+                    self.parent[i] = source;
+                    break :blk .borrowed;
+                } else .owned,
                 .copy => .none,
                 .list_get, .list_get_field, .record_get, .union_payload, .box_get, .dict_entry_key, .dict_entry_value, .array_get, .str_view_of => blk: {
                     if (self.marks.owned_get.contains(@intCast(i))) break :blk .owned;
@@ -279,6 +283,18 @@ const Analysis = struct {
         for (self.parent, 0..) |p, child| {
             if (p != .none and self.class[child] == .borrowed) try self.children[p.index()].append(self.arena, @fromBackingInt(@intCast(child)));
         }
+    }
+
+    /// `encode()` changes only the source type. Its byte reads keep the text alive;
+    /// an escaping byte value is retained by the ordinary borrowed-value rules.
+    fn encodedSource(self: *const Analysis, instruction: ir.Inst) ?ir.Ref {
+        const callee = self.module.functions.items[instruction.a.index()];
+        if (callee.signature.linkage != .extern_c or callee.signature.ret != .bytes) return null;
+        if (!std.mem.eql(u8, callee.name, @import("flags.zig").text_encode_symbol)) return null;
+        const operands = self.f.operands(instruction.data);
+        if (operands.len != 1 or callee.signature.params.len != 1) return null;
+        if (callee.signature.params[0] != .str or callee.signature.owned != 0) return null;
+        return self.f.resolve(operands[0]);
     }
 
     /// Phis read by a non-phi instruction, directly or through other live phis.

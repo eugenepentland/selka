@@ -141,13 +141,13 @@ const iterate_only =
 ;
 
 // spec: NEW-CORE-IR-3
-test "a loop over a list place reads it live: a write to the place inside the loop is refused, not snapshotted" {
+// spec-case: NEW-CORE-ITERATION-1
+test "a loop over a list place refreshes writes and guards changing length" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
-    var refusal: build.Refusal = .{};
-    const outcome = support.buildSource(arena.allocator(), iterate_and_grow, &refusal);
-    try std.testing.expectError(error.Unsupported, outcome);
-    try std.testing.expect(std.mem.indexOf(u8, refusal.reason, "live-place iteration") != null);
+    const growing = try support.irText(arena.allocator(), iterate_and_grow);
+    try std.testing.expect(std.mem.indexOf(u8, growing, "list_push") != null);
+    try std.testing.expect(std.mem.indexOf(u8, growing, "unreachable") != null);
     const text = try support.irText(arena.allocator(), iterate_only);
     try std.testing.expect(std.mem.indexOf(u8, text, "list_get.exact i64") != null);
 }

@@ -26,6 +26,7 @@ HARNESSES = {
     "s1": "experiments/new-core-s1-20261005/fuzz.py",
     "rc": "experiments/new-core-s1-20261005/lane-o/rc_fuzz.py",
     "rebinding": "experiments/new-core-s2-20261005/wave-a/fuzz_rebinding.py",
+    "iteration": "experiments/new-core-s2-20261005/wave-b/fuzz_iteration.py",
 }
 
 
@@ -153,6 +154,9 @@ def qualify(args, monitor, status, output, error):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--kind", choices=HARNESSES, required=True)
+    parser.add_argument("--harness", type=Path, help="Override the generator for this feature kind")
+    parser.add_argument("--mylang", type=Path, default=ROOT / "zig-out/bin/mylang")
+    parser.add_argument("--core", type=Path, default=ROOT / "zig-out/bin/mylang-core")
     parser.add_argument("--cases", type=int, default=200)
     parser.add_argument("--seed", type=int, required=True)
     parser.add_argument("--evidence", type=Path, required=True)
@@ -168,15 +172,16 @@ def main():
                       MYL_CORE_LEAKCHECK="1")
     if set(os.sched_getaffinity(0)) & {2, 3, 10, 11}:
         raise SystemExit("launch through scripts/build-slot.sh build; reserved CPUs must be excluded")
-    spec = importlib.util.spec_from_file_location("fuzz_harness", ROOT / HARNESSES[args.kind])
+    harness_path = args.harness.resolve() if args.harness else ROOT / HARNESSES[args.kind]
+    spec = importlib.util.spec_from_file_location("fuzz_harness", harness_path)
     harness = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(harness)
     original_run = subprocess.run
     monitor = Monitor(args, original_run)
-    arguments = [str(ROOT / HARNESSES[args.kind]), "--cases", str(args.cases), "--seed", str(args.seed),
+    arguments = [str(harness_path), "--cases", str(args.cases), "--seed", str(args.seed),
                  "--keep", str(args.cache_root / "sources"),
-                 "--mylang", str(ROOT / "zig-out/bin/mylang"), "--core", str(ROOT / "zig-out/bin/mylang-core")]
-    if args.kind in ("s1", "rebinding"):
+                 "--mylang", str(args.mylang), "--core", str(args.core)]
+    if args.kind in ("s1", "rebinding", "iteration"):
         arguments += ["--features", "all" if args.kind == "s1" else "mut,records,alias"]
     sys.argv = arguments
     output = Tee(sys.stdout)

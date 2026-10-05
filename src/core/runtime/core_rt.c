@@ -498,7 +498,7 @@ typedef struct {
 extern const myl_core_site myl_core_sites[];
 extern const char myl_core_source_path[];
 
-enum { TRAP_OVERFLOW, TRAP_DIVISION_BY_ZERO, TRAP_LIST_BOUNDS, TRAP_FLOAT_CONVERSION, TRAP_CAST, TRAP_FACT, TRAP_LIST_EMPTY };
+enum { TRAP_OVERFLOW, TRAP_DIVISION_BY_ZERO, TRAP_LIST_BOUNDS, TRAP_FLOAT_CONVERSION, TRAP_CAST, TRAP_FACT, TRAP_LIST_EMPTY, TRAP_ITERATION_MUTATION = 10 };
 
 
 
@@ -876,6 +876,9 @@ void myl_core_trap(int32_t index, int64_t a, int64_t b) {
         code = "R_LIST_BOUNDS";
         snprintf(detail, sizeof detail, " (length %lld)", (long long)b);
         snprintf(record, sizeof record, "\036MYLANG-TRAP {\"version\":1,\"operation\":\"pop\",\"length\":%lld}\n", (long long)b);
+        break;
+    case TRAP_ITERATION_MUTATION:
+        code = "R_LIST_ITERATION_MUTATION";
         break;
     case TRAP_FLOAT_CONVERSION:
         code = "R_FLOAT_CONVERSION";

@@ -15,6 +15,12 @@ pub const error_stream: i64 = 3;
 /// 32..39 hold the `typed.AssertionKind`. The emitter reports it through `myl_core_assert_fail`.
 pub const assertion_trap: u64 = 1 << 63;
 
+/// An `unreachable` reached when a refreshed iteration place changed its guarded length.
+pub const iteration_trap: u64 = 1 << 61;
+
+/// Allocation-free text-to-bytes identity; ownership treats its result as a source borrow.
+pub const text_encode_symbol = "myl_core_text_encode";
+
 /// The runtime's string comparison, declared in a module as an `extern_c` function on first use
 /// (`build.zig`) and emitted with `memory(argmem: read)` attributes (`emit_llvm.zig`).
 pub const str_eq_symbol = "myl_core_str_eq";
