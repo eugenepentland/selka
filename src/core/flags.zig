@@ -30,6 +30,9 @@ pub const str_from_i64_symbol = "myl_core_str_from_i64";
 pub const str_from_u64_symbol = "myl_core_str_from_u64";
 pub const str_from_bool_symbol = "myl_core_str_from_bool";
 
+/// The runtime's sort: a sorted copy of a list of integers, booleans, floats or strings.
+pub const list_sort_symbol = "myl_core_list_sort";
+
 /// Whether `symbol` names a runtime function that only reads the blocks it is passed.
 pub fn readsOnly(symbol: []const u8) bool {
     return std.mem.eql(u8, symbol, str_eq_symbol) or std.mem.eql(u8, symbol, str_chars_symbol);

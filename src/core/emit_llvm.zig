@@ -186,6 +186,8 @@ const ModuleState = struct {
     options: Options,
     sites: std.ArrayList(Site) = .empty,
     externs: Out = .empty,
+    /// The C symbols already declared in `externs`.
+    declared: std.ArrayList([]const u8) = .empty,
     meta: Metadata = .{},
     /// The `alloca`s of the function being emitted, placed in its entry block.
     allocas: Out = .empty,
@@ -195,6 +197,11 @@ const ModuleState = struct {
     debug: Debug = .{},
 
     fn declareExtern(self: *ModuleState, function: *const ir.Function) !void {
+        // Several signatures of one runtime function (`myl_core_list_sort` over lists of different
+        // elements) are one declaration.
+        const symbol_name = c_abi.symbol(function.name);
+        for (self.declared.items) |known| if (std.mem.eql(u8, known, symbol_name)) return;
+        try self.declared.append(self.allocator, symbol_name);
         const returns = try self.llvmType(function.signature.ret);
         try self.externs.print(self.allocator, "declare {s}{s} @{s}(", .{ if (function.signature.ret == .bool) "zeroext " else "", returns, c_abi.symbol(function.name) });
         var first = true;

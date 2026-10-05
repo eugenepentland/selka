@@ -1076,6 +1076,93 @@ myl_block *myl_core_str_from_bool(bool value) {
     return value ? str_from("True", 4) : str_from("False", 5);
 }
 
+/* ---- sort: a stable merge sort over the element kinds ----
+ * `list.sort()` and `sorted(list)` give a new list (the caller's value is replaced, as every
+ * update is a value) holding the elements in the order the language documents: integers by
+ * value, `float` with every NaN after every ordered value and the signed zeros tied, text by
+ * Unicode scalar value (UTF-8 byte order). Equal elements keep their order, so the result is the
+ * one the old core's merge sort (src/native_collections.c) gives. Insertion-sorted blocks of 16,
+ * then bottom-up merges through one scratch buffer. */
+#define SORT_BLOCK 16
+#define DEFINE_SORT(NAME, T, LESS) \
+static void NAME(T *a, T *scratch, size_t n) { \
+    for (size_t lo = 0; lo < n; lo += SORT_BLOCK) { \
+        size_t hi = lo + SORT_BLOCK < n ? lo + SORT_BLOCK : n; \
+        for (size_t i = lo + 1; i < hi; ++i) { \
+            T v = a[i]; \
+            size_t j = i; \
+            while (j > lo && LESS(v, a[j - 1])) { a[j] = a[j - 1]; --j; } \
+            a[j] = v; \
+        } \
+    } \
+    T *from = a, *to = scratch; \
+    for (size_t width = SORT_BLOCK; width < n; width *= 2) { \
+        for (size_t lo = 0; lo < n; lo += 2 * width) { \
+            size_t mid = lo + width < n ? lo + width : n; \
+            size_t hi = lo + 2 * width < n ? lo + 2 * width : n; \
+            size_t i = lo, j = mid, k = lo; \
+            while (i < mid && j < hi) to[k++] = LESS(from[j], from[i]) ? from[j++] : from[i++]; \
+            while (i < mid) to[k++] = from[i++]; \
+            while (j < hi) to[k++] = from[j++]; \
+        } \
+        T *swap = from; from = to; to = swap; \
+    } \
+    if (from != a) memcpy(a, from, n * sizeof(T)); \
+}
+#define SORT_LT(x, y) ((x) < (y))
+#define SORT_FLOAT_LT(x, y) ((x) < (y) || ((y) != (y) && (x) == (x)))
+static bool sort_text_lt(const myl_block *x, const myl_block *y) {
+    int64_t common = x->len < y->len ? x->len : y->len;
+    int order = memcmp((const unsigned char *)x + MYL_HEADER, (const unsigned char *)y + MYL_HEADER, (size_t)common);
+    return order != 0 ? order < 0 : x->len < y->len;
+}
+#define SORT_TEXT_LT(x, y) sort_text_lt((x), (y))
+DEFINE_SORT(sort_i8, int8_t, SORT_LT)
+DEFINE_SORT(sort_i16, int16_t, SORT_LT)
+DEFINE_SORT(sort_i32, int32_t, SORT_LT)
+DEFINE_SORT(sort_i64, int64_t, SORT_LT)
+DEFINE_SORT(sort_u8, uint8_t, SORT_LT)
+DEFINE_SORT(sort_u16, uint16_t, SORT_LT)
+DEFINE_SORT(sort_u32, uint32_t, SORT_LT)
+DEFINE_SORT(sort_u64, uint64_t, SORT_LT)
+DEFINE_SORT(sort_f64, double, SORT_FLOAT_LT)
+typedef myl_block *text_ptr;
+DEFINE_SORT(sort_text, text_ptr, SORT_TEXT_LT)
+
+/* A sorted copy of `list`. `kind` is the element kind (0 signed integer, 1 unsigned integer or
+   bool, 2 `float`, 3 text) with the element size in bytes above its low byte. */
+myl_block *myl_core_list_sort(myl_block *list, int64_t kind) {
+    int64_t size = kind >> 8;
+    myl_block *sorted = myl_core_list_copy(list, size);
+    size_t n = (size_t)sorted->len;
+    if (n < 2) return sorted;
+    void *scratch = malloc(n * (size_t)size);
+    if (!scratch) out_of_memory();
+    void *data = block_data(sorted);
+    switch (kind & 0xff) {
+    case 0:
+        switch (size) {
+        case 1: sort_i8(data, scratch, n); break;
+        case 2: sort_i16(data, scratch, n); break;
+        case 4: sort_i32(data, scratch, n); break;
+        default: sort_i64(data, scratch, n); break;
+        }
+        break;
+    case 1:
+        switch (size) {
+        case 1: sort_u8(data, scratch, n); break;
+        case 2: sort_u16(data, scratch, n); break;
+        case 4: sort_u32(data, scratch, n); break;
+        default: sort_u64(data, scratch, n); break;
+        }
+        break;
+    case 2: sort_f64(data, scratch, n); break;
+    default: sort_text(data, scratch, n); break;
+    }
+    free(scratch);
+    return sorted;
+}
+
 /* A failed `assert`, `@requires`, `@ensures` or `@invariant`: the old core's report. The site's
    `width` is the clause kind (0 `assert` .. 3 `invariant`) and its `operation` the message; the
    first line, the `in f at` frames and the `MYLANG-TRAP` record are those of any trap, the record

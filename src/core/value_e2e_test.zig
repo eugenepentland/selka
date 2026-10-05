@@ -326,6 +326,7 @@ test "the value fixtures end with no block live under MYL_CORE_LEAKCHECK=1, debu
         "v_text",
         "v_loops",
         "v_hull",
+        "v_sort",
     };
     for (names) |name| {
         try std.testing.expectEqualStrings("", try leakReport(arena.allocator(), root, name, .debug));
@@ -535,4 +536,29 @@ test "a list a loop rewrites keeps the hull of what it was given and what is wri
         try std.testing.expectEqual(@as(u8, 1), trapped.status);
         try std.testing.expect(std.mem.indexOf(u8, trapped.stderr, "error[R_OVERFLOW]: native execution failed (mul: left 5764607523034234879, right 2, width 64)") != null);
     }
+}
+
+const v_sort_output =
+    \\0 True 0 0 0
+    \\1 True 999999567 999999567 999999567
+    \\2 True 999995170 999995170 999995170
+    \\15 True 13616722 637315704 637315704
+    \\16 True 610459072 144699617 144699617
+    \\17 True 311143526 869027907 869027907
+    \\100 True 587004387 399235360 399235360
+    \\1000 True 376096651 67562437 67562437
+    \\5000 True 886678288 132888976 132888976
+    \\840054931 948237542 -3 12
+    \\, Apple, apple, fig, fig, pear, zebra, éclair 428206146 8
+    \\-128 -100 127 0 18446744073709551615 0 255
+    \\-725 -100 2 1 200 350 1000 1000
+    \\90399 a -497,84,482
+    \\
+;
+
+// spec: NEW-CORE-SORT-1
+test "xs.sort() and sorted(xs) of integers, floats and text give the old core's order: stable, NaN last, signed zeros tied, no leak" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    try std.testing.expect(try matches(arena.allocator(), "v_sort", v_sort_output, 0));
 }

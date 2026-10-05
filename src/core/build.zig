@@ -124,8 +124,6 @@ const ModuleBuilder = struct {
     /// Checked record and union type → IR type. An entry is made before the type's fields
     /// are mapped, so a recursive type (through a boxed field) finds itself.
     types: std.AutoHashMapUnmanaged(typed.Type, ir.Type) = .empty,
-    /// The runtime functions the module declared (`runtimeFunction`), by symbol.
-    runtime: std.StringHashMapUnmanaged(u32) = .empty,
 
     fn refuse(self: *ModuleBuilder, reason: []const u8, span: u32) Error {
         self.refusal.* = .{ .reason = reason, .span = span };
@@ -221,10 +219,14 @@ const ModuleBuilder = struct {
     /// The IR index of the runtime function `symbol`, declared in the module as an `extern_c`
     /// function with these parameters and result on first use.
     fn runtimeFunction(self: *ModuleBuilder, symbol: []const u8, params: []const ir.Type, ret: ir.Type) Error!u32 {
-        if (self.runtime.get(symbol)) |index| return index;
+        // One declaration per symbol and signature: a runtime function over lists of several element
+        // types has a Core IR signature for each, which are one `ptr` function to LLVM.
+        for (self.module.functions.items, 0..) |function, index| {
+            if (function.signature.linkage != .extern_c or !std.mem.eql(u8, function.name, symbol)) continue;
+            if (function.signature.ret == ret and std.mem.eql(ir.Type, function.signature.params, params)) return @intCast(index);
+        }
         const index: u32 = @intCast(self.module.functions.items.len);
         try self.module.functions.append(self.allocator, .{ .name = symbol, .signature = .{ .params = try self.allocator.dupe(ir.Type, params), .ret = ret, .linkage = .extern_c } });
-        try self.runtime.put(self.allocator, symbol, index);
         return index;
     }
 
@@ -1595,6 +1597,17 @@ const FnBuilder = struct {
                 self.markIterating(owner);
                 return .none;
             },
+            // `xs.sort()` (and what `sorted(xs)` sorts): the runtime returns the sorted list, which replaces the place.
+            .sort => {
+                if (self.mb.module.kind(receiver_type) != .list) return self.mb.refuse("sort of a non-list", span);
+                try self.guardPlace(self.local(owner), span);
+                const element = self.mb.module.compound(receiver_type).list;
+                const code = sortKind(self.mb.module, element) orelse return self.mb.refuse("sort of this element type", span);
+                const list = try self.writableReceiverOf(owner, span);
+                const sorted = try self.runtimeCall(flags.list_sort_symbol, &.{ receiver_type, .i64 }, receiver_type, &.{ list, try self.constant(.i64, code) }, span);
+                try self.writeOwner(owner, sorted, span);
+                return .none;
+            },
             // `separator.join(parts)`: the runtime builds one string from a list of strings.
             .join => {
                 if (receiver_type != .str) return self.mb.refuse("join on a non-string", span);
@@ -1683,6 +1696,16 @@ const FnBuilder = struct {
         return .none;
     }
 };
+
+/// The runtime's code for sorting a list of `element`s (`myl_core_list_sort`): 0 signed integer,
+/// 1 unsigned integer or boolean, 2 `float`, 3 text, with the element size above the low byte.
+fn sortKind(module: ir.Module, element: ir.Type) ?i128 {
+    if (element == .str) return 3 | (8 << 8);
+    if (element == .f64) return 2 | (8 << 8);
+    if (element == .bool) return 1 | (1 << 8);
+    const info = element.integer() orelse return null;
+    return @as(i128, @intFromBool(!info.signed)) | (@as(i128, module.size(element)) << 8);
+}
 
 /// The tag of `None` when `ty` is an `Option` (a two-case union whose first case has no payload).
 fn optionNoneTag(records: []const typed.Record, ty: typed.Type) ?usize {
