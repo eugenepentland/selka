@@ -8,7 +8,10 @@ from. It covers two user goals:
    is `owners` only.
 
 **Decisions D1–D4 (section 4.2) were accepted on 2026-10-04: the user took the recommended
-option for each.** The runtime-performance plan `docs/audits/runtime-language-levers-2026-10-04.md`
+option for each.**
+
+**2026-10-05:** Part G and the checker and front-end halves of Part C continue. The
+old-core RC re-plumbing (C2, C6–C8) is paused. See §5. The runtime-performance plan `docs/audits/runtime-language-levers-2026-10-04.md`
 (WP-5) schedules this work.
 
 Base: `main` at `6df58b02`. The facts below were checked on that commit by three review
@@ -503,6 +506,26 @@ A plain save/restore "loaned" bit is sound only for strictly LIFO holders on one
 operand loans relocate between temps (RC-LOAN-RELOCATE-1), so do not use one without a proof.
 
 ## 5. Order and lanes
+
+**Scope change, 2026-10-05 (the user accepted it).** A new compiler core is being built with
+its own runtime and one count from day one. The plan is `docs/audits/new-core-plan-2026-10-05.md`
+on `claude/runtime-levers-plan`; this split is revision 5 of
+`docs/audits/runtime-language-levers-2026-10-04.md`.
+
+**Continue:**
+- Part G in full;
+- C1;
+- C3's checker rule (MUT-EXCLUSIVE-4);
+- C4's front-end half: live-place desugaring, `iteration_check`, and updating
+  `iteration_identity.my`;
+- C5's checker half (`E_VIEW_STORED`).
+
+**Paused:**
+- C0 beyond what C1 needs;
+- C2, C6, C7 and C8;
+- the old-core RC halves of C3, C4 and C5.
+
+The order below still applies to the parts that continue.
 
 ```
 now:        G0 (docs) | G1 (model oracle + RC check mode) | C0 (census + shadow + reference mode)
