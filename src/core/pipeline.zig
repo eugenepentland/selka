@@ -9,6 +9,7 @@ const emit_llvm = @import("emit_llvm.zig");
 const driver = @import("driver.zig");
 const passes = @import("passes.zig");
 const verify_ir = @import("verify_ir.zig");
+const target_description = @import("target.zig");
 
 /// What the command line asked for.
 pub const Options = struct {
@@ -37,6 +38,9 @@ pub const Show = struct {
     /// Emit only generic LLVM vector code, no x86 intrinsics (`--generic-vectors`): the
     /// portable fallback a target without AVX2 would get, testable on this one.
     generic_vectors: bool = false,
+    /// How trap reports find their caller frames (`--trap-frames=dwarf|labels|none`;
+    /// default: the target's).
+    trap_frames: ?target_description.Traps = null,
 };
 
 /// Why a build stopped after its report was written.
@@ -109,7 +113,7 @@ pub fn finish(init: std.process.Init, module: *ir.Module, unit: Unit, options: O
         .facts = result.known,
         .verify = verify and options.release,
         .vectors = result.plans,
-        .target = if (options.show.generic_vectors) @import("target.zig").generic_256 else @import("target.zig").current,
+        .target = targetFor(options.show),
     }) catch |err| switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
         else => {
@@ -152,4 +156,12 @@ fn mainParameters(allocator: std.mem.Allocator, program: language.typed.Program)
     const names = try allocator.alloc([]const u8, main.signature.parameter_count);
     for (names, main.scope.locals[0..names.len]) |*name, local| name.* = local.name;
     return names;
+}
+
+/// The target description a build uses: the generic vector fallback when asked for,
+/// and the trap-frame mechanism `--trap-frames` picks.
+fn targetFor(show: Show) target_description.Target {
+    var target = if (show.generic_vectors) target_description.generic_256 else target_description.current;
+    if (show.trap_frames) |frames| target.traps = frames;
+    return target;
 }

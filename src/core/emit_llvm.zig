@@ -60,8 +60,8 @@ pub const MainResult = struct { ok_tag: u32, error_tag: u32 };
 
 /// Trap kinds, in the order the runtime's code table lists them. `list_empty` is a
 /// pop of an empty list (`R_LIST_BOUNDS`, operation `pop`); `trace` marks an
-/// error-trace site, which never traps.
-pub const TrapKind = enum(u8) { overflow, division_by_zero, list_bounds, float_conversion, cast, fact, list_empty, trace };
+/// error-trace site and `call` a call's return address (`pc_labels` frames), which never trap.
+pub const TrapKind = enum(u8) { overflow, division_by_zero, list_bounds, float_conversion, cast, fact, list_empty, trace, call };
 
 const Site = struct { kind: TrapKind, location: Location, width: u16, operation: []const u8, function: []const u8 };
 
@@ -144,6 +144,7 @@ pub fn emitModule(allocator: std.mem.Allocator, module: *const ir.Module, option
     try out.appendSlice(allocator, state.meta.ranges.items);
     try out.appendSlice(allocator, state.layouts.text.items);
     try out.appendSlice(allocator, trace_call_attributes);
+    try state.debug.finish(allocator, &out);
     return out.toOwnedSlice(allocator);
 }
 
@@ -166,6 +167,8 @@ const ModuleState = struct {
     allocas: Out = .empty,
     /// Element layouts of lists and boxes whose elements hold blocks.
     layouts: Layouts = .{},
+    /// DWARF line tables for trap frames (`Traps.dwarf_lines`).
+    debug: Debug = .{},
 
     fn declareExtern(self: *ModuleState, function: *const ir.Function) !void {
         try self.externs.print(self.allocator, "declare {s} @{s}(", .{ try self.llvmType(function.signature.ret), c_abi.symbol(function.name) });
@@ -312,7 +315,16 @@ const ModuleState = struct {
     /// a `Result` reports an `Err` with its trace first (RESULT-MAIN-1/2, ERROR-TRACE-2).
     fn emitEntry(self: *ModuleState, out: *Out) !void {
         const entry = &self.module.functions.items[self.module.entry];
-        try out.appendSlice(self.allocator, "define i32 @main(i32 %argc, ptr %argv) {\nentry:\n");
+        // `dwarf_lines`: the C entry has a subprogram too (named `myl.entry`, which trap
+        // frames never print), or inlining `main` into it would drop every location.
+        var at: []const u8 = "";
+        var scope: []const u8 = "";
+        if (self.options.target.traps == .dwarf_lines) {
+            const node = try self.debug.subprogram(self.allocator, "myl.entry", 1);
+            scope = try std.fmt.allocPrint(self.allocator, function_scope, .{node});
+            at = try std.fmt.allocPrint(self.allocator, instruction_location, .{try self.debug.location(self.allocator, .{ .line = 1, .column = 1 }, node)});
+        }
+        try out.print(self.allocator, "define i32 @main(i32 %argc, ptr %argv) uwtable{s} {{\nentry:\n", .{scope});
         var arguments: Out = .empty;
         var owns_args = false;
         for (entry.signature.params, 0..) |param, i| {
@@ -330,11 +342,11 @@ const ModuleState = struct {
         const ret = entry.signature.ret;
         const callee = try symbol(self.allocator, entry.name);
         if (ret == .void) {
-            try out.print(self.allocator, "  call void {s}({s})\n{s}  %s = call i32 @myl_core_exit(i64 0)\n", .{ callee, arguments.items, release_args });
+            try out.print(self.allocator, "  call void {s}({s}){s}\n{s}  %s = call i32 @myl_core_exit(i64 0)\n", .{ callee, arguments.items, at, release_args });
         } else if (ret == .i64) {
-            try out.print(self.allocator, "  %r = call i64 {s}({s})\n{s}  %s = call i32 @myl_core_exit(i64 %r)\n", .{ callee, arguments.items, release_args });
+            try out.print(self.allocator, "  %r = call i64 {s}({s}){s}\n{s}  %s = call i32 @myl_core_exit(i64 %r)\n", .{ callee, arguments.items, at, release_args });
         } else if (self.options.main.result != null and self.module.kind(ret) == .@"union" and !self.module.passedInMemory(ret)) {
-            try out.print(self.allocator, "  %r = call {s} {s}({s})\n", .{ try self.llvmType(ret), callee, arguments.items });
+            try out.print(self.allocator, "  %r = call {s} {s}({s}){s}\n", .{ try self.llvmType(ret), callee, arguments.items, at });
             return self.resultEntry(out, ret, release_args);
         } else return error.UnsupportedEntry;
         try out.appendSlice(self.allocator, "  ret i32 %s\n}\n");
@@ -467,6 +479,8 @@ const FunctionEmitter = struct {
     /// The label the body being rendered currently ends in.
     label: []const u8 = "",
     vectors: VectorState = .{},
+    /// The function's `DISubprogram` node (`dwarf_lines`), or 0.
+    scope: u32 = 0,
 
     fn a(self: *FunctionEmitter) std.mem.Allocator {
         return self.state.allocator;
@@ -522,7 +536,8 @@ const FunctionEmitter = struct {
                 try self.loadValue(&entry, param, try std.fmt.allocPrint(self.a(), "%p{d}.mem", .{i}), try std.fmt.allocPrint(self.a(), "%p{d}", .{i}));
             } else try out.print(self.a(), "{s}{s} %p{d}", .{ separator, try self.ty(param), i });
         }
-        try out.appendSlice(self.a(), ") nounwind {\n");
+        // `uwtable`: a trap walks the stack through `.eh_frame`, which needs every frame's CFI.
+        try out.print(self.a(), ") nounwind uwtable{s} {{\n", .{try self.functionScope()});
         const bodies = try self.a().alloc(Out, f.blocks.items.len);
         try self.exit_labels.resize(self.a(), f.blocks.items.len);
         for (f.blocks.items, 0..) |block, b| {
@@ -685,7 +700,8 @@ const FunctionEmitter = struct {
     fn trapIf(self: *FunctionEmitter, out: *Out, failed: []const u8, site_index: u32, left: []const u8, right: []const u8) !void {
         const trap = try self.fresh("trap");
         const next = try self.fresh(self.label);
-        try out.print(self.a(), "  br i1 {s}, label %{s}, label %{s}, !prof !0\n{s}:\n  call void @myl_core_trap(i32 {d}, i64 {s}, i64 {s})\n  unreachable\n{s}:\n", .{ failed, trap, next, trap, site_index, left, right, next });
+        const at = try self.trapLocation(site_index);
+        try out.print(self.a(), "  br i1 {s}, label %{s}, label %{s}, !prof !0\n{s}:\n  call void @myl_core_trap(i32 {d}, i64 {s}, i64 {s}){s}\n  unreachable\n{s}:\n", .{ failed, trap, next, trap, site_index, left, right, at, next });
         self.label = next;
     }
 
@@ -853,7 +869,7 @@ const FunctionEmitter = struct {
                 // `own.zig`'s assert of a statically unique update (verify builds only).
                 const location = self.state.options.locator.locate(self.state.options.locator.context, inst.span);
                 const index = try self.state.site(.{ .kind = .fact, .location = location, .width = 32, .operation = "count == 1 before an in-place update", .function = self.function.name });
-                try out.print(self.a(), "  call void @myl_core_trap(i32 {d}, i64 0, i64 1)\n  unreachable\n", .{index});
+                try out.print(self.a(), "  call void @myl_core_trap(i32 {d}, i64 0, i64 1){s}\n  unreachable\n", .{ index, try self.trapLocation(index) });
             } else try out.appendSlice(self.a(), "  unreachable\n"),
         }
     }
@@ -1382,6 +1398,40 @@ const FunctionEmitter = struct {
         }
     }
 
+    // ---- trap frames (lane O; docs/design/new-core-s1.md §13 R-1) -------------------
+
+    /// ` !dbg !N` naming this function's `DISubprogram` (`dwarf_lines` only).
+    fn functionScope(self: *FunctionEmitter) ![]const u8 {
+        if (self.state.options.target.traps != .dwarf_lines) return "";
+        const location = self.state.options.locator.locate(self.state.options.locator.context, self.function.span);
+        self.scope = try self.state.debug.subprogram(self.a(), unqualifiedName(self.function.name), location.line);
+        return std.fmt.allocPrint(self.a(), function_scope, .{self.scope});
+    }
+
+    /// `, !dbg !N` for a call at `span` (`dwarf_lines` only): LLVM keeps it through
+    /// inlining as an inline record, so a return address maps to every frame it stands for.
+    fn callLocation(self: *FunctionEmitter, span: u32) ![]const u8 {
+        if (self.scope == 0) return "";
+        const location = self.state.options.locator.locate(self.state.options.locator.context, span);
+        return std.fmt.allocPrint(self.a(), instruction_location, .{try self.state.debug.location(self.a(), location, self.scope)});
+    }
+
+    fn trapLocation(self: *FunctionEmitter, site_index: u32) ![]const u8 {
+        if (self.scope == 0) return "";
+        const location = self.state.sites.items[site_index].location;
+        return std.fmt.allocPrint(self.a(), instruction_location, .{try self.state.debug.location(self.a(), location, self.scope)});
+    }
+
+    /// `pc_labels` only: a label right after the call, recorded with the call's site in
+    /// section `myl_sites` (local numeric label, so copies made by inlining, unrolling
+    /// or tail duplication each record their own address).
+    fn callLabel(self: *FunctionEmitter, out: *Out, inst: ir.Inst, external: bool) !void {
+        if (self.state.options.target.traps != .pc_labels or external) return;
+        const location = self.state.options.locator.locate(self.state.options.locator.context, inst.span);
+        const index = try self.state.site(.{ .kind = .call, .location = location, .width = 0, .operation = "call", .function = self.function.name });
+        try out.print(self.a(), "  call void asm sideeffect \"1:\\0A.pushsection myl_sites,\\22a\\22,@progbits\\0A.balign 8\\0A.quad 1b\\0A.quad {d}\\0A.popsection\", \"\"()\n", .{index});
+    }
+
     /// Record in a fresh list's or box's header (`reserved`, offset 24) where the blocks
     /// in its elements are, when `element` holds any: the runtime's free releases them
     /// and its copy retains them.
@@ -1517,10 +1567,12 @@ const FunctionEmitter = struct {
         }
         const target = if (external) try std.fmt.allocPrint(self.a(), "@{s}", .{c_abi.symbol(callee.name)}) else try symbol(self.a(), callee.name);
         if (ret == .void or sret) {
-            try out.print(self.a(), "  call void {s}({s})\n", .{ target, arguments.items });
+            try out.print(self.a(), "  call void {s}({s}){s}\n", .{ target, arguments.items, try self.callLocation(inst.span) });
+            try self.callLabel(out, inst, external);
             if (sret) try self.loadValue(out, ret, result_slot, name);
         } else {
-            try out.print(self.a(), "  {s} = call {s} {s}({s})\n", .{ name, try self.ty(ret), target, arguments.items });
+            try out.print(self.a(), "  {s} = call {s} {s}({s}){s}\n", .{ name, try self.ty(ret), target, arguments.items, try self.callLocation(inst.span) });
+            try self.callLabel(out, inst, external);
         }
     }
 
@@ -1564,6 +1616,61 @@ fn storageType(ty: ir.Type) []const u8 {
         else => if (ty.isCompound()) "ptr" else "i64",
     };
 }
+
+/// ` !dbg !N` on a function definition and `, !dbg !N` on an instruction.
+const function_scope = " !dbg !{d}";
+const instruction_location = ", !dbg !{d}";
+
+/// A function name without its module qualifier (`mod::f` → `f`), as traps print it.
+fn unqualifiedName(name: []const u8) []const u8 {
+    const at = std.mem.lastIndexOfScalar(u8, name, ':') orelse return name;
+    return name[at + 1 ..];
+}
+
+/// The DWARF metadata of a `dwarf_lines` module: one compile unit and file, one
+/// `DISubprogram` per function, one `DILocation` per call and trap. Numbered from
+/// `first_node`, clear of the TBAA and `!range` nodes.
+const Debug = struct {
+    text: Out = .empty,
+    next: u32 = first_node,
+    unit: u32 = 0,
+
+    const first_node = 1_000_000;
+
+    fn node(self: *Debug, allocator: std.mem.Allocator, comptime format: []const u8, args: anytype) !u32 {
+        const id = self.next;
+        self.next += 1;
+        try self.text.print(allocator, "!{d} = ", .{id});
+        try self.text.print(allocator, format ++ "\n", args);
+        return id;
+    }
+
+    /// Start the compile unit (file, unit and subroutine type) on first use.
+    fn begin(self: *Debug, allocator: std.mem.Allocator) !void {
+        if (self.unit != 0) return;
+        _ = try self.node(allocator, "!DIFile(filename: \"program.my\", directory: \"/\")", .{});
+        self.unit = try self.node(allocator, "distinct !DICompileUnit(language: DW_LANG_C99, file: !{d}, producer: \"mylang-core\", isOptimized: true, runtimeVersion: 0, emissionKind: FullDebug)", .{first_node});
+        _ = try self.node(allocator, "!DISubroutineType(types: !{{}})", .{});
+    }
+
+    fn subprogram(self: *Debug, allocator: std.mem.Allocator, name: []const u8, line: u32) !u32 {
+        try self.begin(allocator);
+        const format = "distinct !DISubprogram(name: \"{s}\", scope: !{d}, file: !{d}, line: {d}, type: !{d}, scopeLine: {d}, spFlags: DISPFlagDefinition | DISPFlagOptimized, unit: !{d})";
+        return self.node(allocator, format, .{ name, first_node, first_node, line, first_node + 2, line, self.unit });
+    }
+
+    fn location(self: *Debug, allocator: std.mem.Allocator, at: Location, scope: u32) !u32 {
+        return self.node(allocator, "!DILocation(line: {d}, column: {d}, scope: !{d})", .{ at.line, at.column, scope });
+    }
+
+    /// The nodes and the module flags that make LLVM emit them (DWARF 4: the runtime's reader).
+    fn finish(self: *Debug, allocator: std.mem.Allocator, out: *Out) !void {
+        if (self.unit == 0) return;
+        try out.appendSlice(allocator, self.text.items);
+        try out.print(allocator, "!llvm.dbg.cu = !{{!{d}}}\n!llvm.module.flags = !{{!{d}, !{d}}}\n", .{ self.unit, self.next, self.next + 1 });
+        try out.print(allocator, "!{d} = !{{i32 2, !\"Debug Info Version\", i32 3}}\n!{d} = !{{i32 7, !\"Dwarf Version\", i32 4}}\n", .{ self.next, self.next + 1 });
+    }
+};
 
 /// Attribute group `#1`: an error-trace recorder call costs nothing to inline around (ERROR-TRACE-5).
 const trace_call_attributes = "attributes #1 = { \"call-inline-cost\"=\"0\" }\n";

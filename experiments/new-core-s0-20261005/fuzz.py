@@ -186,7 +186,9 @@ def run(argv, timeout=20):
         done = subprocess.run(argv, capture_output=True, text=True, timeout=timeout)
     except subprocess.TimeoutExpired:
         return ("TIMEOUT", 124, "")
-    trap = re.search(r"\b(R_[A-Z_]+)\b", done.stderr)
+    # With MYL_CORE_LEAKCHECK=1 in the environment, a new-core build that ends with
+    # blocks live reports it, which shows up as a trap-code mismatch against the oracle.
+    trap = re.search(r"\b(R_[A-Z_]+|myl-core leakcheck)\b", done.stderr)
     return (done.stdout, done.returncode, trap.group(1) if trap else "")
 
 

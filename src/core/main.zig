@@ -107,6 +107,8 @@ fn buildCommand(init: std.process.Init, args: []const []const u8) !u8 {
             options.facts = .off;
         } else if (std.mem.eql(u8, arg, "--generic-vectors")) {
             options.show.generic_vectors = true;
+        } else if (trapFrames(arg)) |frames| {
+            options.show.trap_frames = frames;
         } else if (std.mem.eql(u8, arg, "--stats")) {
             options.show.stats = true;
         } else if (std.mem.eql(u8, arg, "--verify-facts")) {
@@ -235,4 +237,11 @@ fn coverageCommand(init: std.process.Init, arguments: []const []const u8) !u8 {
     }
     try std.Io.File.stdout().writeStreamingAll(init.io, out.items);
     return 0;
+}
+
+/// The mechanism `--trap-frames=NAME` names (a `target.Traps`), or null for any other argument.
+fn trapFrames(arg: []const u8) ?@import("target.zig").Traps {
+    const flag = "--trap-frames=";
+    if (!std.mem.startsWith(u8, arg, flag)) return null;
+    return std.meta.stringToEnum(@import("target.zig").Traps, arg[flag.len..]);
 }

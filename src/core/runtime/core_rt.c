@@ -17,6 +17,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <elf.h>
+#include <execinfo.h>
+#include <fcntl.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
 
 /* ---- platform layer (POSIX) ------------------------------------------------
  * Every operating-system call the runtime makes goes through these functions;
@@ -37,6 +42,24 @@ static void os_write(int fd, const unsigned char *bytes, size_t len) {
 
 /* End the process now, with no atexit handlers (a trap or a fatal error). */
 static void os_exit(int status) { _exit(status); }
+
+/* The return addresses on the stack, innermost first, walked through `.eh_frame`
+   (glibc's `backtrace`, which is libgcc's `_Unwind_Backtrace`; no unwinder is
+   linked into the program). */
+static int os_stack(void **pcs, int capacity) { return backtrace(pcs, capacity); }
+
+/* This executable's bytes, mapped read-only (for its DWARF sections), or NULL. */
+static const unsigned char *os_map_self(size_t *size) {
+    int fd = open("/proc/self/exe", O_RDONLY);
+    if (fd < 0) return NULL;
+    struct stat info;
+    void *bytes = MAP_FAILED;
+    if (fstat(fd, &info) == 0) bytes = mmap(NULL, (size_t)info.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+    close(fd);
+    if (bytes == MAP_FAILED) return NULL;
+    *size = (size_t)info.st_size;
+    return bytes;
+}
 
 /* ---- blocks ------------------------------------------------------------------ */
 
@@ -383,9 +406,383 @@ static const char *unqualified(const char *name) {
     return at ? at + 1 : name;
 }
 
-/* Report a failed check the way the old core does (code, detail and the
-   `MYLANG-TRAP` record on stderr) and exit 1. Only the innermost frame is named
-   in S0; the PC-table trace is S1 work. */
+
+/* ---- trap frames (docs/design/new-core-s1.md §13 R-1) ----------------------------
+ * A trap names the frame it happened in from the site table, then every caller:
+ * the stack's return addresses, each mapped to the frames it stands for. A
+ * `dwarf_lines` build carries DWARF 4 line tables and inline records (the
+ * emitter's `!dbg`), read here from the executable file: per return address the
+ * chain of subprogram and inlined-subroutine entries holding it gives one frame per
+ * inlined call. A `pc_labels` build (the measured alternative) has a label after
+ * every call in section `myl_sites`; the first label at or after a return address
+ * names its call site. */
+
+typedef struct { const unsigned char *p, *end; } dw_cursor;
+
+static uint64_t dw_fixed(dw_cursor *c, int n) {
+    uint64_t v = 0;
+    if (c->end - c->p < n) { c->p = c->end; return 0; }
+    for (int i = 0; i < n; ++i) v |= (uint64_t)c->p[i] << (8 * i);
+    c->p += n;
+    return v;
+}
+
+static uint64_t dw_uleb(dw_cursor *c) {
+    uint64_t v = 0;
+    for (int shift = 0; c->p < c->end; shift += 7) {
+        unsigned char byte = *c->p++;
+        if (shift < 64) v |= (uint64_t)(byte & 0x7f) << shift;
+        if (!(byte & 0x80)) break;
+    }
+    return v;
+}
+
+static int64_t dw_sleb(dw_cursor *c) {
+    int64_t v = 0;
+    int shift = 0;
+    unsigned char byte = 0;
+    while (c->p < c->end) {
+        byte = *c->p++;
+        if (shift < 64) v |= (int64_t)(byte & 0x7f) << shift;
+        shift += 7;
+        if (!(byte & 0x80)) break;
+    }
+    if (shift < 64 && (byte & 0x40)) v |= -((int64_t)1 << shift);
+    return v;
+}
+
+static const char *dw_cstring(dw_cursor *c) {
+    const char *text = (const char *)c->p;
+    while (c->p < c->end && *c->p) ++c->p;
+    if (c->p < c->end) ++c->p;
+    return text;
+}
+
+typedef struct { const unsigned char *data; size_t size; } dw_section;
+
+static struct {
+    int state; /* 0 not loaded, 1 loaded, -1 unavailable */
+    dw_section info, abbrev, line, str, ranges;
+    intptr_t bias;
+} dwarf;
+
+extern const char __ehdr_start[] __attribute__((weak));
+
+static void dwarf_load(void) {
+    if (dwarf.state != 0) return;
+    dwarf.state = -1;
+    size_t size = 0;
+    const unsigned char *file = os_map_self(&size);
+    if (!file || size < sizeof(Elf64_Ehdr) || !__ehdr_start) return;
+    const Elf64_Ehdr *header = (const Elf64_Ehdr *)file;
+    if (header->e_shoff + (uint64_t)header->e_shnum * sizeof(Elf64_Shdr) > size || header->e_shstrndx >= header->e_shnum) return;
+    const Elf64_Shdr *sections = (const Elf64_Shdr *)(file + header->e_shoff);
+    const char *names = (const char *)file + sections[header->e_shstrndx].sh_offset;
+    for (int i = 0; i < header->e_shnum; ++i) {
+        const char *name = names + sections[i].sh_name;
+        dw_section section = {file + sections[i].sh_offset, sections[i].sh_size};
+        if (sections[i].sh_offset + sections[i].sh_size > size) continue;
+        if (strcmp(name, ".debug_info") == 0) dwarf.info = section;
+        else if (strcmp(name, ".debug_abbrev") == 0) dwarf.abbrev = section;
+        else if (strcmp(name, ".debug_line") == 0) dwarf.line = section;
+        else if (strcmp(name, ".debug_str") == 0) dwarf.str = section;
+        else if (strcmp(name, ".debug_ranges") == 0) dwarf.ranges = section;
+    }
+    /* Run-time address = file address + bias (0 for a position-dependent executable). */
+    const Elf64_Phdr *programs = (const Elf64_Phdr *)(file + header->e_phoff);
+    for (int i = 0; i < header->e_phnum; ++i) {
+        if (programs[i].p_type == PT_LOAD && programs[i].p_offset == 0) dwarf.bias = (intptr_t)__ehdr_start - (intptr_t)programs[i].p_vaddr;
+    }
+    if (dwarf.info.data && dwarf.abbrev.data && dwarf.line.data) dwarf.state = 1;
+}
+
+/* One debugging entry, with the attributes the frames need. */
+typedef struct {
+    uint64_t tag, low, high, ranges, origin, call_line, call_column, stmt_list;
+    const char *name, *producer;
+    bool children, has_low, high_offset, has_ranges, has_origin;
+} dw_entry;
+
+typedef struct { const unsigned char *unit, *abbrev; uint64_t base, stmt_list; int addr_size; } dw_unit;
+
+static const unsigned char *dw_find_abbrev(const dw_unit *unit, uint64_t code) {
+    dw_cursor c = {unit->abbrev, dwarf.abbrev.data + dwarf.abbrev.size};
+    while (c.p < c.end) {
+        uint64_t current = dw_uleb(&c);
+        if (current == 0) return NULL;
+        if (current == code) return c.p;
+        dw_uleb(&c);
+        ++c.p;
+        for (;;) {
+            uint64_t name = dw_uleb(&c), form = dw_uleb(&c);
+            if (form == 0x21) dw_sleb(&c);
+            if (name == 0 && form == 0) break;
+        }
+    }
+    return NULL;
+}
+
+/* Read one attribute value of `form`; strings come back in `*text`. Returns false for a form it cannot size. */
+static bool dw_value(dw_cursor *c, const dw_unit *unit, uint64_t form, uint64_t *value, const char **text) {
+    *value = 0;
+    switch (form) {
+    case 0x01: *value = dw_fixed(c, unit->addr_size); return true;                       /* addr */
+    case 0x0b: case 0x11: case 0x0c: *value = dw_fixed(c, 1); return true;                /* data1 ref1 flag */
+    case 0x05: case 0x12: *value = dw_fixed(c, 2); return true;                           /* data2 ref2 */
+    case 0x06: case 0x13: case 0x17: case 0x10: *value = dw_fixed(c, 4); return true;     /* data4 ref4 sec_offset ref_addr */
+    case 0x07: case 0x14: case 0x20: *value = dw_fixed(c, 8); return true;                /* data8 ref8 ref_sig8 */
+    case 0x0d: *value = (uint64_t)dw_sleb(c); return true;
+    case 0x0f: case 0x15: *value = dw_uleb(c); return true;
+    case 0x19: *value = 1; return true;                                                   /* flag_present */
+    case 0x08: *text = dw_cstring(c); return true;                                        /* string */
+    case 0x0e: {                                                                          /* strp */
+        uint64_t at = dw_fixed(c, 4);
+        if (dwarf.str.data && at < dwarf.str.size) *text = (const char *)dwarf.str.data + at;
+        return true;
+    }
+    case 0x0a: c->p += dw_fixed(c, 1); return c->p <= c->end;                             /* block1 */
+    case 0x03: c->p += dw_fixed(c, 2); return c->p <= c->end;                             /* block2 */
+    case 0x04: c->p += dw_fixed(c, 4); return c->p <= c->end;                             /* block4 */
+    case 0x09: case 0x18: { uint64_t n = dw_uleb(c); c->p += n; return c->p <= c->end; } /* block exprloc */
+    default: return false;
+    }
+}
+
+/* Parse the entry at `c` (which advances past it); false at a null entry or the end. */
+static bool dw_read_entry(dw_cursor *c, const dw_unit *unit, dw_entry *entry, bool *null_entry) {
+    *null_entry = false;
+    memset(entry, 0, sizeof *entry);
+    uint64_t code = dw_uleb(c);
+    if (code == 0) { *null_entry = true; return c->p < c->end; }
+    const unsigned char *spec = dw_find_abbrev(unit, code);
+    if (!spec) return false;
+    dw_cursor a = {spec, dwarf.abbrev.data + dwarf.abbrev.size};
+    entry->tag = dw_uleb(&a);
+    entry->children = *a.p++ != 0;
+    for (;;) {
+        uint64_t name = dw_uleb(&a), form = dw_uleb(&a);
+        int64_t implicit = form == 0x21 ? dw_sleb(&a) : 0;
+        if (name == 0 && form == 0) break;
+        uint64_t value = (uint64_t)implicit;
+        const char *text = NULL;
+        if (form != 0x21 && !dw_value(c, unit, form, &value, &text)) return false;
+        switch (name) {
+        case 0x03: entry->name = text; break;                                             /* name */
+        case 0x11: entry->low = value; entry->has_low = true; break;                      /* low_pc */
+        case 0x12: entry->high = value; entry->high_offset = form != 0x01; break;         /* high_pc */
+        case 0x55: entry->ranges = value; entry->has_ranges = true; break;                /* ranges */
+        case 0x31: entry->origin = value; entry->has_origin = true; break;                /* abstract_origin */
+        case 0x59: entry->call_line = value; break;                                       /* call_line */
+        case 0x57: entry->call_column = value; break;                                     /* call_column */
+        case 0x10: entry->stmt_list = value; break;                                       /* stmt_list */
+        case 0x25: entry->producer = text; break;                                         /* producer */
+        default: break;
+        }
+    }
+    return true;
+}
+
+static bool dw_holds(const dw_unit *unit, const dw_entry *entry, uint64_t pc) {
+    if (entry->has_low && !entry->has_ranges) {
+        uint64_t high = entry->high_offset ? entry->low + entry->high : entry->high;
+        return pc >= entry->low && pc < high;
+    }
+    if (!entry->has_ranges || !dwarf.ranges.data || entry->ranges >= dwarf.ranges.size) return false;
+    dw_cursor c = {dwarf.ranges.data + entry->ranges, dwarf.ranges.data + dwarf.ranges.size};
+    uint64_t base = unit->base;
+    while (c.p < c.end) {
+        uint64_t begin = dw_fixed(&c, unit->addr_size), end = dw_fixed(&c, unit->addr_size);
+        if (begin == 0 && end == 0) break;
+        if (begin == UINT64_MAX) { base = end; continue; }
+        if (pc >= base + begin && pc < base + end) return true;
+    }
+    return false;
+}
+
+/* The name of an entry, through its abstract origin. */
+static const char *dw_name(const dw_unit *unit, const dw_entry *entry) {
+    dw_entry current = *entry;
+    for (int hops = 0; hops < 4; ++hops) {
+        if (current.name) return current.name;
+        if (!current.has_origin) break;
+        dw_cursor c = {unit->unit + current.origin, dwarf.info.data + dwarf.info.size};
+        bool null_entry;
+        if (!dw_read_entry(&c, unit, &current, &null_entry) || null_entry) break;
+    }
+    return "?";
+}
+
+/* The line and column the line program of `unit` gives `pc`; false when none covers it. */
+static bool dw_line(const dw_unit *unit, uint64_t pc, uint64_t *line_out, uint64_t *column_out) {
+    if (unit->stmt_list >= dwarf.line.size) return false;
+    dw_cursor c = {dwarf.line.data + unit->stmt_list, dwarf.line.data + dwarf.line.size};
+    uint64_t length = dw_fixed(&c, 4);
+    const unsigned char *end = c.p + length;
+    if (end > c.end) return false;
+    c.end = end;
+    uint64_t version = dw_fixed(&c, 2);
+    if (version < 2 || version > 4) return false;
+    uint64_t header_length = dw_fixed(&c, 4);
+    const unsigned char *program = c.p + header_length;
+    uint64_t min_length = dw_fixed(&c, 1);
+    if (version >= 4) dw_fixed(&c, 1);
+    dw_fixed(&c, 1);
+    int line_base = (int8_t)dw_fixed(&c, 1);
+    uint64_t line_range = dw_fixed(&c, 1);
+    uint64_t opcode_base = dw_fixed(&c, 1);
+    const unsigned char *lengths = c.p;
+    if (line_range == 0 || program > end) return false;
+    c.p = program;
+    uint64_t address = 0, line = 1, column = 0;
+    bool found = false, have_previous = false;
+    uint64_t previous_address = 0, previous_line = 0, previous_column = 0;
+#define DW_ROW()                                                                                   \
+    do {                                                                                           \
+        if (have_previous && previous_address <= pc && pc < address) {                             \
+            *line_out = previous_line; *column_out = previous_column; found = true;                \
+        }                                                                                          \
+        previous_address = address; previous_line = line; previous_column = column; have_previous = true; \
+    } while (0)
+    while (c.p < c.end && !found) {
+        uint64_t opcode = dw_fixed(&c, 1);
+        if (opcode >= opcode_base) {
+            uint64_t adjusted = opcode - opcode_base;
+            address += (adjusted / line_range) * min_length;
+            line += (uint64_t)(line_base + (int64_t)(adjusted % line_range));
+            DW_ROW();
+        } else if (opcode == 0) {
+            uint64_t size = dw_uleb(&c);
+            const unsigned char *next = c.p + size;
+            uint64_t sub = dw_fixed(&c, 1);
+            if (sub == 1) { /* end_sequence */
+                DW_ROW();
+                have_previous = false;
+                address = 0; line = 1; column = 0;
+            } else if (sub == 2) address = dw_fixed(&c, (int)(size - 1));
+            c.p = next;
+        } else if (opcode == 1) DW_ROW();
+        else if (opcode == 2) address += dw_uleb(&c) * min_length;
+        else if (opcode == 3) line += (uint64_t)dw_sleb(&c);
+        else if (opcode == 5) column = dw_uleb(&c);
+        else if (opcode == 8) address += ((255 - opcode_base) / line_range) * min_length;
+        else if (opcode == 9) address += dw_fixed(&c, 2);
+        else for (uint64_t i = 0; i < lengths[opcode - 1]; ++i) dw_uleb(&c); /* file, negate_stmt, … */
+    }
+#undef DW_ROW
+    return found;
+}
+
+enum { DW_MAX_DEPTH = 64 };
+
+/* The frames of return address `pc` (already less one, inside the call), innermost
+   first, written as `  in f at path:line:column` lines; `skip` drops that many inner
+   frames. Returns how many frames the address stands for (0: not this program's code). */
+static int dwarf_frames(uint64_t pc, int skip) {
+    dwarf_load();
+    if (dwarf.state != 1) return 0;
+    pc -= (uint64_t)dwarf.bias;
+    dw_cursor units = {dwarf.info.data, dwarf.info.data + dwarf.info.size};
+    while (units.p + 11 <= units.end) {
+        const unsigned char *start = units.p;
+        uint64_t length = dw_fixed(&units, 4);
+        if (length >= 0xfffffff0 || units.p + length > units.end) return 0;
+        const unsigned char *next = units.p + length;
+        uint64_t version = dw_fixed(&units, 2);
+        if (version != 4) { units.p = next; continue; }
+        dw_unit unit = {start, dwarf.abbrev.data + dw_fixed(&units, 4), 0, 0, 0};
+        unit.addr_size = (int)dw_fixed(&units, 1);
+        dw_cursor c = {units.p, next};
+        units.p = next;
+        /* The compile unit: ours carries producer "mylang-core". */
+        dw_entry cu;
+        bool null_entry;
+        if (!dw_read_entry(&c, &unit, &cu, &null_entry) || cu.tag != 0x11) continue;
+        if (!cu.producer || strcmp(cu.producer, "mylang-core") != 0) continue;
+        unit.stmt_list = cu.stmt_list;
+        unit.base = cu.low;
+        dw_entry chain[DW_MAX_DEPTH];
+        bool holds[DW_MAX_DEPTH];
+        int depth = 0, chain_length = 0;
+        holds[0] = true;
+        dw_entry entry;
+        while (c.p < c.end && dw_read_entry(&c, &unit, &entry, &null_entry)) {
+            if (null_entry) {
+                if (depth == 0) break;
+                --depth;
+                continue;
+            }
+            bool inside = depth < DW_MAX_DEPTH - 1 && holds[depth] && (entry.tag == 0x2e || entry.tag == 0x1d) && dw_holds(&unit, &entry, pc);
+            if (inside) {
+                chain[depth] = entry;
+                chain_length = depth + 1;
+            }
+            if (entry.children && depth < DW_MAX_DEPTH - 1) {
+                ++depth;
+                holds[depth] = inside;
+            }
+        }
+        if (chain_length == 0) return 0;
+        /* chain[0..chain_length) from the subprogram inward; print innermost first. */
+        uint64_t line = 0, column = 0;
+        dw_line(&unit, pc, &line, &column);
+        char text[1024];
+        int printed = 0;
+        for (int k = chain_length - 1; k >= 0; --k, ++printed) {
+            /* The C entry, into which `main` may be inlined, is no frame of the program. */
+            if (strcmp(dw_name(&unit, &chain[k]), "myl.entry") == 0) break;
+            if (printed < skip) {
+                line = chain[k].call_line;
+                column = chain[k].call_column;
+                continue;
+            }
+            int len = snprintf(text, sizeof text, "  in %s at %s:%llu:%llu\n", dw_name(&unit, &chain[k]), myl_core_source_path, (unsigned long long)line, (unsigned long long)column);
+            stream_write(&streams[1], text, (size_t)(len < (int)sizeof text ? len : (int)sizeof text - 1));
+            line = chain[k].call_line;
+            column = chain[k].call_column;
+        }
+        return chain_length;
+    }
+    return 0;
+}
+
+/* `pc_labels`: one (label address, site) pair per call, in section `myl_sites`. */
+typedef struct { uintptr_t label; uint64_t site; } myl_pc_site;
+extern const myl_pc_site __start_myl_sites[] __attribute__((weak));
+extern const myl_pc_site __stop_myl_sites[] __attribute__((weak));
+
+/* The call site whose label is the first at or after `pc` (within one call's reach). */
+static const myl_core_site *label_site(uintptr_t pc) {
+    if (!__start_myl_sites) return NULL;
+    const myl_pc_site *best = NULL;
+    for (const myl_pc_site *at = __start_myl_sites; at < __stop_myl_sites; ++at) {
+        if (at->label >= pc && at->label - pc < 64 && (!best || at->label < best->label)) best = at;
+    }
+    return best ? &myl_core_sites[best->site] : NULL;
+}
+
+/* Write the caller frames of a trap: every frame above the trapping function. */
+__attribute__((noinline)) static void trap_frames(void) {
+    void *pcs[128];
+    int count = os_stack(pcs, 128);
+    /* [0] here, [1] myl_core_trap, [2] the trapping function (named by its site), then its callers. */
+    for (int i = 2; i < count; ++i) {
+        uintptr_t pc = (uintptr_t)pcs[i];
+        if (__start_myl_sites) {
+            if (i == 2) continue;
+            const myl_core_site *site = label_site(pc);
+            if (!site) break;
+            char text[1024];
+            int len = snprintf(text, sizeof text, "  in %s at %s:%d:%d\n", unqualified(site->function), myl_core_source_path, site->line, site->column);
+            stream_write(&streams[1], text, (size_t)(len < (int)sizeof text ? len : (int)sizeof text - 1));
+            continue;
+        }
+        if (dwarf_frames(pc - 1, i == 2 ? 1 : 0) == 0) break;
+    }
+}
+
+/* Report a failed check the way the old core does (code, detail, one `in f at …`
+   line per frame and the `MYLANG-TRAP` record on stderr) and exit 1. The trapping
+   frame comes from the site table, its callers from `trap_frames`. */
 void myl_core_trap(int32_t index, int64_t a, int64_t b) {
     const myl_core_site *site = &myl_core_sites[index];
     char detail[256] = "";
@@ -427,9 +824,11 @@ void myl_core_trap(int32_t index, int64_t a, int64_t b) {
     }
     stream_flush(&streams[0]);
     char text[1024];
-    int len = snprintf(text, sizeof text, "%s:%d:%d: error[%s]: native execution failed%s\n  in %s at %s:%d:%d\n%s",
-        myl_core_source_path, site->line, site->column, code, detail, unqualified(site->function), myl_core_source_path, site->line, site->column, record);
+    int len = snprintf(text, sizeof text, "%s:%d:%d: error[%s]: native execution failed%s\n  in %s at %s:%d:%d\n",
+        myl_core_source_path, site->line, site->column, code, detail, unqualified(site->function), myl_core_source_path, site->line, site->column);
     stream_write(&streams[1], text, (size_t)(len < (int)sizeof text ? len : (int)sizeof text - 1));
+    trap_frames();
+    stream_write(&streams[1], record, strlen(record));
     flush_all();
     os_exit(1);
 }

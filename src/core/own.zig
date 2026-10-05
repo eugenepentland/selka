@@ -392,6 +392,28 @@ const Analysis = struct {
         return succ != live.def and live.in.isSet(succ);
     }
 
+    /// Whether `site` can run after instruction `pos` of `block` (from its top when
+    /// `pos` is null) while `value` keeps the same dynamic value: on a path that does
+    /// not pass `value`'s definition again.
+    fn reaches(self: *const Analysis, value: ir.Ref, block: u32, pos: ?u32, site: ir.Ref) Error!bool {
+        const target = self.where[site.index()];
+        if (target.block == block and (pos == null or target.pos > pos.?)) return true;
+        const def = self.where[value.index()].block;
+        const seen = try std.DynamicBitSetUnmanaged.initEmpty(self.arena, self.f.blocks.items.len);
+        var visited = seen;
+        var stack: std.ArrayList(u32) = .empty;
+        try stack.append(self.arena, block);
+        while (stack.pop()) |b| {
+            for (successors(self.f, b).slice()) |succ| {
+                if (succ == def or visited.isSet(succ)) continue;
+                if (succ == target.block) return true;
+                visited.set(succ);
+                try stack.append(self.arena, succ);
+            }
+        }
+        return false;
+    }
+
     /// Promote every borrowed part whose counted owner is consumed while it is in use;
     /// returns whether any was promoted.
     fn promote(self: *Analysis) Error!bool {
@@ -455,23 +477,26 @@ fn staticallyUnique(a: *const Analysis, value: ir.Ref, site: ir.Ref) Error!bool 
             },
             else => return false,
         }
-        if (shared(a, current, site)) return false;
+        if (try shared(a, current, site)) return false;
     }
     return true;
 }
 
-/// Whether some use of `value` other than `site` may give its block a second owner:
-/// a call argument, or a consuming use the value outlives (it gets a retain).
-fn shared(a: *const Analysis, value: ir.Ref, site: ir.Ref) bool {
+/// Whether some use of `value` other than `site` may give its block a second owner
+/// before the update: a call argument (the callee may keep it) or a consuming use,
+/// either one with the value still live after it (so the update may follow), or a
+/// use that consumes it twice. A last use on another path shares nothing.
+fn shared(a: *const Analysis, value: ir.Ref, site: ir.Ref) Error!bool {
     for (a.uses[value.index()].items) |use| {
         if (use.onEdge()) {
-            if (use.consume > 1 or a.liveInto(value, use.succ)) return true;
+            if (use.consume > 1 or (a.liveInto(value, use.succ) and try a.reaches(value, use.succ, null, site))) return true;
             continue;
         }
         const at = a.f.blocks.items[use.block].insts.items[use.pos];
         if (at == site) continue;
-        if (a.inst(at).op == .call) return true;
-        if (use.consume > 1 or (use.consume == 1 and a.liveAfter(value, use.block, use.pos))) return true;
+        const sharing = a.inst(at).op == .call or use.consume == 1;
+        if (use.consume > 1) return true;
+        if (sharing and a.liveAfter(value, use.block, use.pos) and try a.reaches(value, use.block, use.pos, site)) return true;
     }
     return false;
 }

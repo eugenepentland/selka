@@ -7,8 +7,12 @@ const std = @import("std");
 /// The C calling convention `extern def` calls are lowered for (see `c_abi.zig`).
 pub const CAbi = enum { sysv_x86_64 };
 
-/// How traps are raised and reported (see `runtime/core_rt.c`, `myl_core_trap`).
-pub const Traps = enum { posix_exit };
+/// How traps are raised and reported (see `runtime/core_rt.c`, `myl_core_trap`): the
+/// trap ends the process; its caller frames come from a walk of the stack through
+/// `.eh_frame` and, per return address, from DWARF line tables and inline records
+/// (`dwarf_lines`, docs/design/new-core-s1.md §13 R-1), from labels the emitter puts
+/// after every call (`pc_labels`, the measured alternative), or not at all (`posix_exit`).
+pub const Traps = enum { posix_exit, pc_labels, dwarf_lines };
 
 /// Everything target-specific the core uses.
 pub const Target = struct {
@@ -47,7 +51,7 @@ pub const x86_64_linux_avx2: Target = .{
     .x86_avx2 = true,
     .user_address_bits = 47,
     .c_abi = .sysv_x86_64,
-    .traps = .posix_exit,
+    .traps = .dwarf_lines,
 };
 
 /// The target every build uses (L4).
