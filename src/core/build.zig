@@ -21,9 +21,19 @@ pub const Refusal = struct { reason: []const u8 = "", span: u32 = 0 };
 /// Build the module for `program`, reachable from its `main`. On
 /// `error.Unsupported`, `refusal` names the construct.
 pub fn buildModule(allocator: std.mem.Allocator, program: typed.Program, refusal: *Refusal) Error!ir.Module {
+    return buildRoots(allocator, program, &.{program.main}, refusal);
+}
+
+/// Build the module reachable from several `roots` (the test runner's one executable
+/// holds every test of a file). The roots take the first function indices in order
+/// and `entry` is the first one; the caller replaces `entry` with its own dispatcher.
+pub fn buildRoots(allocator: std.mem.Allocator, program: typed.Program, roots: []const typed.FunctionId, refusal: *Refusal) Error!ir.Module {
     var mb: ModuleBuilder = .{ .allocator = allocator, .program = program, .refusal = refusal };
     defer mb.ids.deinit(allocator);
-    mb.module.entry = try mb.functionIndex(program.main);
+    for (roots, 0..) |root, position| {
+        const index = try mb.functionIndex(root);
+        if (position == 0) mb.module.entry = index;
+    }
     var next: usize = 0;
     while (next < mb.pending.items.len) : (next += 1) {
         const id = mb.pending.items[next];
