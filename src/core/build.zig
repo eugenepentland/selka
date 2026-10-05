@@ -13,11 +13,13 @@ const ir = @import("ir.zig");
 const own = @import("own.zig");
 const fuse = @import("fuse.zig");
 const flags = @import("flags.zig");
+const escape = @import("escape.zig");
 
 /// Refusal reasons several constructs share.
 const refuse_payload = "match payload";
 const refuse_field_index = "field index";
 const refuse_non_record = "field of a non-record value";
+const refuse_equality = "aggregate equality";
 
 /// Why building stopped.
 pub const Error = error{ OutOfMemory, Unsupported };
@@ -56,6 +58,10 @@ pub fn buildRoots(allocator: std.mem.Allocator, program: typed.Program, roots: [
     // Element reads that are only taken apart become field reads, before ownership sees their uses of the list.
     for (mb.module.functions.items) |*function| {
         if (function.signature.linkage == .internal) _ = try fuse.projections(allocator, function, &mb.module);
+    }
+    // A list stored or returned must not stay shared with a variable that is later updated in place.
+    for (mb.module.functions.items, 0..) |*function, index| {
+        if (function.signature.linkage == .internal) _ = try escape.copyEscaping(allocator, function, &mb.module, mb.exempt.get(@intCast(index)) orelse .{});
     }
     // A push appends in place, so its operand must be the only live reference to its block.
     for (mb.module.functions.items) |*function| {
@@ -107,6 +113,8 @@ const ModuleBuilder = struct {
     /// Checked record and union type → IR type. An entry is made before the type's fields
     /// are mapped, so a recursive type (through a boxed field) finds itself.
     types: std.AutoHashMapUnmanaged(typed.Type, ir.Type) = .empty,
+    /// Per IR function index, what its `mut` parameters hand back unchanged (`escape.zig`).
+    exempt: std.AutoHashMapUnmanaged(u32, escape.Exempt) = .empty,
 
     fn refuse(self: *ModuleBuilder, reason: []const u8, span: u32) Error {
         self.refusal.* = .{ .reason = reason, .span = span };
@@ -117,14 +125,20 @@ const ModuleBuilder = struct {
     fn functionIndex(self: *ModuleBuilder, id: typed.FunctionId) Error!u32 {
         if (self.ids.get(@backingInt(id))) |index| return index;
         const function = self.program.functions[@backingInt(id)];
-        const params = try self.allocator.alloc(ir.Type, function.signature.parameter_count);
-        for (params, function.scope.locals[0..params.len]) |*param, local| param.* = try self.mapType(local.ty, @intCast(local.declaration.start));
+        const all = try self.allocator.alloc(ir.Type, function.signature.parameter_count);
+        for (all, function.scope.locals[0..all.len]) |*param, local| param.* = try self.mapType(local.ty, @intCast(local.declaration.start));
+        // A `unit` parameter carries nothing, so it is not passed.
+        var passed: std.ArrayList(ir.Type) = .empty;
+        for (all) |param| if (param != .void) try passed.append(self.allocator, param);
+        const params = passed.items;
         const span: u32 = @intCast(function.declaration.start);
         const linkage: ir.Linkage = if (function.policy.c_abi) .extern_c else if (function.policy.host != null) return self.refuse("host function", span) else .internal;
         const declared = try self.mapType(function.signature.return_type, span);
         if (linkage == .extern_c and function.signature.declared_mutates.len != 0) return self.refuse("mut parameter of an extern function", span);
-        const ret = try self.returnType(function, declared, params, span);
+        const returned = try self.returnType(function, declared, all, span);
+        const ret = returned.ty;
         const index: u32 = @intCast(self.module.functions.items.len);
+        if (function.signature.declared_mutates.len != 0) try self.exempt.put(self.allocator, index, returned.exempt);
         try self.module.functions.append(self.allocator, .{ .name = function.name, .signature = .{ .params = params, .ret = ret, .linkage = linkage }, .span = span });
         try self.ids.put(self.allocator, @backingInt(id), index);
         try self.pending.append(self.allocator, id);
@@ -135,16 +149,17 @@ const ModuleBuilder = struct {
     /// a record of that value (unless it is `unit`) followed by each `mut` parameter's final
     /// value in parameter order. The caller writes those values back into its places, which
     /// is the `inout` of a `mut` parameter done by value (docs/design/new-core-s1.md §7).
-    fn returnType(self: *ModuleBuilder, function: typed.Function, declared: ir.Type, params: []const ir.Type, span: u32) Error!ir.Type {
+    fn returnType(self: *ModuleBuilder, function: typed.Function, declared: ir.Type, params: []const ir.Type, span: u32) Error!Returned {
         const mutated = function.signature.declared_mutates;
-        if (mutated.len == 0) return declared;
+        if (mutated.len == 0) return .{ .ty = declared };
         if (function.signature.mutates.len != mutated.len) return self.refuse("inferred mut parameter", span);
         var parts: std.ArrayList(ir.Type) = .empty;
         defer parts.deinit(self.allocator);
         if (declared != .void) try parts.append(self.allocator, declared);
         for (mutated) |position| try parts.append(self.allocator, params[position]);
-        if (parts.items.len == 1) return parts.items[0];
-        return self.module.intern(self.allocator, .{ .record = parts.items });
+        if (parts.items.len == 1) return .{ .ty = parts.items[0], .exempt = .{ .direct = true } };
+        const record = try self.module.intern(self.allocator, .{ .record = parts.items });
+        return .{ .ty = record, .exempt = .{ .record = record, .first_field = if (declared != .void) 1 else 0 } };
     }
 
     /// The Core IR type of a checked type, or a refusal.
@@ -237,6 +252,9 @@ const ModuleBuilder = struct {
     }
 };
 
+/// The IR return type of a function and, for one with `mut` parameters, what it hands back unchanged.
+const Returned = struct { ty: ir.Type, exempt: escape.Exempt = .{} };
+
 /// Per-block definitions, incomplete phis and sealed flags of the SSA construction.
 const Ssa = struct {
     /// (block << 32 | variable) → value.
@@ -259,9 +277,11 @@ const Alias = struct { hidden: u32, root: u32, iterating: bool = false };
 /// One step from a value to a part of it: a record field, or a list element by index.
 const Step = union(enum) { field: u32, element: ir.Ref };
 
-/// Where a value lives: a local and a path of steps from it. A write to a hidden receiver
-/// (`s.items.append(v)`, `xs[i][j] = v`) rebuilds the path and stores the new root back.
-const Place = struct { root: u32, steps: []const Step };
+/// Where a value lives: a local and a path of steps from it, and how many times the local had
+/// been written when the place was named. A write to a hidden receiver (`s.items.append(v)`,
+/// `xs[i][j] = v`) rebuilds the path and stores the new root back, unless the root was written
+/// since (`receiverOf`).
+const Place = struct { root: u32, steps: []const Step, root_version: u32 = 0 };
 
 const FnBuilder = struct {
     mb: *ModuleBuilder,
@@ -275,6 +295,8 @@ const FnBuilder = struct {
     aliases: std.ArrayList(Alias) = .empty,
     /// The place each checker-hidden receiver local was initialized from.
     places: std.AutoHashMapUnmanaged(u32, Place) = .empty,
+    /// How many times each local has been assigned so far (the builder's own count of writes).
+    versions: std.AutoHashMapUnmanaged(u32, u32) = .empty,
     /// The type the function declares it returns; `function.signature.ret` is a record
     /// of it and the `mut` parameters' final values when there are any.
     declared_ret: ir.Type = .void,
@@ -499,6 +521,7 @@ const FnBuilder = struct {
                 const value = try self.expressionPlace(store.value, &place);
                 const block = self.current orelse return;
                 try self.write(self.local(store.slot), block, value);
+                try self.assigned(self.local(store.slot));
                 try self.noteAlias(store.slot, place);
             },
             .discard => |value| _ = try self.expression(value),
@@ -642,16 +665,39 @@ const FnBuilder = struct {
     // ---- places ---------------------------------------------------------------------
 
     /// The place a checked local names: the one its hidden receiver was initialized from, else itself.
-    fn placeOfLocal(self: *FnBuilder, slot: typed.LocalId) Place {
+    fn placeOfLocal(self: *FnBuilder, slot: typed.LocalId) Error!Place {
         const variable = self.local(slot);
-        return self.places.get(variable) orelse .{ .root = variable, .steps = &.{} };
+        if (self.places.get(variable)) |place| return place;
+        return .{ .root = variable, .steps = &.{}, .root_version = self.version(variable) };
+    }
+
+    fn version(self: *FnBuilder, variable: u32) u32 {
+        return self.versions.get(variable) orelse 0;
+    }
+
+    /// Note an assignment to `variable`.
+    fn assigned(self: *FnBuilder, variable: u32) Error!void {
+        try self.versions.put(self.allocator(), variable, self.version(variable) + 1);
+    }
+
+    /// The value of receiver `owner`. A receiver the checker rooted at a place (`frame.code`,
+    /// `xs`) is a reference to what the place held then; if evaluating the operation's arguments
+    /// wrote that place (a `mut` call in an index), whether the write shows through depends on
+    /// whether the callee changed the list in place or replaced it, which a value cannot tell,
+    /// so the operation is refused.
+    fn receiverOf(self: *FnBuilder, owner: typed.LocalId, span: u32) Error!ir.Ref {
+        const variable = self.local(owner);
+        const alias = try self.read(variable, self.current.?);
+        const place = self.places.get(variable) orelse return alias;
+        if (self.version(place.root) != place.root_version) return self.mb.refuse("write to a receiver's place while its arguments are evaluated", span);
+        return alias;
     }
 
     fn extendPlace(self: *FnBuilder, place: Place, step: Step) Error!Place {
         const steps = try self.allocator().alloc(Step, place.steps.len + 1);
         @memcpy(steps[0..place.steps.len], place.steps);
         steps[place.steps.len] = step;
-        return .{ .root = place.root, .steps = steps };
+        return .{ .root = place.root, .steps = steps, .root_version = place.root_version };
     }
 
     /// Field `index` of record `base`, out of its box when the field is boxed.
@@ -719,18 +765,24 @@ const FnBuilder = struct {
     }
 
     /// Store `value` at `place`: rebuild the path from the root's current value and write the root.
-    fn storePlace(self: *FnBuilder, place: Place, value: ir.Ref, span: u32) Error!void {
+    fn storePlace(self: *FnBuilder, place: Place, value: ir.Ref, span: u32) Error!ir.Ref {
         try self.guardPlace(place.root, span);
-        const block = self.current orelse return;
+        const block = self.current orelse return .none;
         const root = try self.read(place.root, block);
         const rebuilt = try self.storeInto(root, place.steps, value, span);
         try self.write(place.root, self.current.?, rebuilt);
+        try self.assigned(place.root);
+        return rebuilt;
     }
 
     /// A write through receiver `owner` produced `value`: bind it, and store it back where the receiver came from.
     fn writeOwner(self: *FnBuilder, owner: typed.LocalId, value: ir.Ref, span: u32) Error!void {
         try self.write(self.local(owner), self.current.?, value);
-        if (self.places.get(self.local(owner))) |place| try self.storePlace(place, value, span);
+        try self.assigned(self.local(owner));
+        if (self.places.getPtr(self.local(owner))) |place| {
+            _ = try self.storePlace(place.*, value, span);
+            place.root_version = self.version(place.root);
+        }
     }
 
     // ---- expressions --------------------------------------------------------------
@@ -755,7 +807,7 @@ const FnBuilder = struct {
             .boolean => |value| return self.constant(.bool, @intFromBool(value)),
             .unit => return .none,
             .local => |slot| {
-                if (out) |place| place.* = self.placeOfLocal(slot);
+                if (out) |place| place.* = try self.placeOfLocal(slot);
                 return self.read(self.local(slot), self.current.?);
             },
             .block_value => |block| {
@@ -916,11 +968,20 @@ const FnBuilder = struct {
 
     fn binary(self: *FnBuilder, op: typed.BinaryOp, left_node: typed.NodeId, right_node: typed.NodeId, span: u32) Error!ir.Ref {
         if (op == .logical_and or op == .logical_or) return self.shortCircuit(op == .logical_or, left_node, right_node, span);
-        const left = try self.expression(left_node);
-        const right = try self.expression(right_node);
+        var left = try self.expression(left_node);
+        var right = try self.expression(right_node);
         if (self.current == null) return .none;
+        // The checker may type the literal of `i16 + 1` as `i64`: it takes the other operand's type.
+        if (op != .shift_left and op != .shift_right) {
+            const left_type = self.typeOfRef(left);
+            const right_type = self.typeOfRef(right);
+            if (left_type != right_type) {
+                if (self.nodeOf(right_node).data == .integer and self.nodeOf(left_node).data != .integer) right = try self.literalAs(right_node, left_type);
+                if (self.nodeOf(left_node).data == .integer and self.nodeOf(right_node).data != .integer) left = try self.literalAs(left_node, right_type);
+            }
+        }
         const ty = self.typeOfRef(left);
-        if (self.mb.module.kind(ty) == .@"union") return self.enumCompare(op, left, right, span);
+        if (ty == .str or ty.isCompound()) return self.aggregateCompare(op, left, right, span);
         const is_float = ty == .f64;
         const Shape = struct { op: ir.Op, check: ir.Check = .none, predicate: ?ir.Predicate = null };
         const shape: Shape = switch (op) {
@@ -966,13 +1027,132 @@ const FnBuilder = struct {
         });
     }
 
-    /// `==` and `!=` of two enum values (a union whose cases carry nothing): their tags compare.
-    fn enumCompare(self: *FnBuilder, op: typed.BinaryOp, left: ir.Ref, right: ir.Ref, span: u32) Error!ir.Ref {
+    /// The integer literal `node` as a constant of integer type `ty`.
+    fn literalAs(self: *FnBuilder, node: typed.NodeId, ty: ir.Type) Error!ir.Ref {
+        if (ty.integer() == null) return self.expression(node);
+        return self.constant(ty, self.nodeOf(node).data.integer);
+    }
+
+    /// `==` and `!=` of two records, unions (enums, `Option`, `Result`) or lists of integers or
+    /// booleans: structural, never a pointer comparison. A `str`, a list of anything else and
+    /// a list inside a union or record are refused until their equality is built.
+    fn aggregateCompare(self: *FnBuilder, op: typed.BinaryOp, left: ir.Ref, right: ir.Ref, span: u32) Error!ir.Ref {
         if (op != .eq and op != .ne) return self.mb.refuse(@tagName(op), span);
-        for (self.mb.module.compound(self.typeOfRef(left)).@"union") |case| if (case != .void) return self.mb.refuse("aggregate equality", span);
-        const a = try self.emit(.{ .op = .union_tag, .ty = .u32, .a = left, .span = span });
-        const b = try self.emit(.{ .op = .union_tag, .ty = .u32, .a = right, .span = span });
-        return self.emit(.{ .op = .cmp, .ty = .bool, .a = a, .b = b, .data = @backingInt(if (op == .eq) ir.Predicate.eq else ir.Predicate.ne), .span = span });
+        const same = try self.equal(left, right, span);
+        if (self.current == null or op == .eq) return same;
+        return self.emit(.{ .op = .not, .ty = .bool, .a = same, .span = span });
+    }
+
+    /// Whether two values of one type are equal: fields and payloads compare with the type's
+    /// own equality (floats as IEEE numbers), and a union's payloads only when its tags are equal.
+    fn equal(self: *FnBuilder, a: ir.Ref, b: ir.Ref, span: u32) Error!ir.Ref {
+        const m = self.mb.module;
+        const ty = self.typeOfRef(a);
+        if (ty == .str) return self.mb.refuse("str equality", span);
+        if (ty == .f64) return self.emit(.{ .op = .fcmp, .ty = .bool, .a = a, .b = b, .data = @backingInt(ir.Predicate.eq), .span = span });
+        if (ty.integer() != null or ty == .bool) return self.emit(.{ .op = .cmp, .ty = .bool, .a = a, .b = b, .data = @backingInt(ir.Predicate.eq), .span = span });
+        switch (m.kind(ty) orelse return self.mb.refuse(refuse_equality, span)) {
+            .record => {
+                var all = try self.constant(.bool, 1);
+                for (m.compound(ty).record, 0..) |_, i| {
+                    const here = try self.equal(try self.fieldGet(a, i, span), try self.fieldGet(b, i, span), span);
+                    all = try self.emit(.{ .op = .bit_and, .ty = .bool, .a = all, .b = here, .span = span });
+                }
+                return all;
+            },
+            .@"union" => return self.unionEqual(a, b, span),
+            .list => return self.listEqual(a, b, span),
+            .box => return self.mb.refuse(refuse_equality, span),
+        }
+    }
+
+    /// Two unions are equal when their tags are and the payloads of that case are.
+    fn unionEqual(self: *FnBuilder, a: ir.Ref, b: ir.Ref, span: u32) Error!ir.Ref {
+        const cases = self.mb.module.compound(self.typeOfRef(a)).@"union";
+        const tag_a = try self.emit(.{ .op = .union_tag, .ty = .u32, .a = a, .span = span });
+        const tag_b = try self.emit(.{ .op = .union_tag, .ty = .u32, .a = b, .span = span });
+        const tags = try self.emit(.{ .op = .cmp, .ty = .bool, .a = tag_a, .b = tag_b, .data = @backingInt(ir.Predicate.eq), .span = span });
+        var payloads: std.ArrayList(u32) = .empty;
+        defer payloads.deinit(self.allocator());
+        for (cases, 0..) |case, k| if (case != .void) try payloads.append(self.allocator(), @intCast(k));
+        if (payloads.items.len == 0) return tags;
+        const result = try self.synthetic(.bool);
+        try self.write(result, self.current.?, tags);
+        const check = try self.newBlock();
+        const join = try self.newBlock();
+        try self.branch(tags, check, join, span);
+        try self.seal(check);
+        self.current = check;
+        for (payloads.items) |case| {
+            const arm = try self.newBlock();
+            const next = try self.newBlock();
+            const is_case = try self.emit(.{ .op = .cmp, .ty = .bool, .a = tag_a, .b = try self.constant(.u32, case), .data = @backingInt(ir.Predicate.eq), .span = span });
+            try self.branch(is_case, arm, next, span);
+            try self.seal(arm);
+            try self.seal(next);
+            self.current = arm;
+            const same = try self.equal(try self.payloadOf(a, case, span), try self.payloadOf(b, case, span), span);
+            try self.write(result, self.current.?, same);
+            try self.jump(join);
+            self.current = next;
+        }
+        // A tag that carries no payload: equal tags are equal values.
+        try self.write(result, self.current.?, tags);
+        try self.jump(join);
+        try self.seal(join);
+        self.enter(join);
+        return self.read(result, join);
+    }
+
+    /// Two lists of integers or booleans are equal when their lengths are and every element pair is.
+    fn listEqual(self: *FnBuilder, a: ir.Ref, b: ir.Ref, span: u32) Error!ir.Ref {
+        const element = self.mb.module.compound(self.typeOfRef(a)).list;
+        if (element.integer() == null and element != .bool) return self.mb.refuse(refuse_equality, span);
+        const length_a = try self.emit(.{ .op = .list_len, .ty = .u64, .a = a, .span = span });
+        const length_b = try self.emit(.{ .op = .list_len, .ty = .u64, .a = b, .span = span });
+        const lengths = try self.emit(.{ .op = .cmp, .ty = .bool, .a = length_a, .b = length_b, .data = @backingInt(ir.Predicate.eq), .span = span });
+        const result = try self.synthetic(.bool);
+        const index = try self.synthetic(.u64);
+        try self.write(result, self.current.?, lengths);
+        try self.write(index, self.current.?, try self.constant(.u64, 0));
+        const header = try self.newBlock();
+        const join = try self.newBlock();
+        const start = try self.newBlock();
+        try self.branch(lengths, start, join, span);
+        try self.seal(start);
+        self.current = start;
+        try self.jump(header);
+        self.current = header;
+        const position = try self.read(index, header);
+        const more = try self.emit(.{ .op = .cmp, .ty = .bool, .a = position, .b = length_a, .data = @backingInt(ir.Predicate.lt), .span = span });
+        const body = try self.newBlock();
+        const finished = try self.newBlock();
+        try self.branch(more, body, finished, span);
+        try self.seal(body);
+        try self.seal(finished);
+        self.current = body;
+        // The lengths agree, so both reads are in range.
+        const x = try self.emit(.{ .op = .list_get, .ty = element, .a = a, .b = position, .span = span });
+        const y = try self.emit(.{ .op = .list_get, .ty = element, .a = b, .b = position, .span = span });
+        const same = try self.emit(.{ .op = .cmp, .ty = .bool, .a = x, .b = y, .data = @backingInt(ir.Predicate.eq), .span = span });
+        const latch = try self.newBlock();
+        const differ = try self.newBlock();
+        try self.branch(same, latch, differ, span);
+        try self.seal(latch);
+        try self.seal(differ);
+        self.current = latch;
+        try self.write(index, latch, try self.emit(.{ .op = .add, .ty = .u64, .a = position, .b = try self.constant(.u64, 1), .span = span }));
+        try self.jump(header);
+        try self.seal(header);
+        self.current = differ;
+        try self.write(result, differ, try self.constant(.bool, 0));
+        try self.jump(join);
+        self.current = finished;
+        try self.write(result, finished, try self.constant(.bool, 1));
+        try self.jump(join);
+        try self.seal(join);
+        self.enter(join);
+        return self.read(result, join);
     }
 
     /// `a or b` / `a and b`: the right operand runs only when it decides the result.
@@ -1044,8 +1224,10 @@ const FnBuilder = struct {
         for (argument_nodes, 0..) |argument, position| {
             const slot = std.mem.indexOfScalar(u16, mutated, @intCast(position));
             var place: ?Place = null;
-            try arguments.append(self.allocator(), try self.expressionPlace(argument, if (slot != null) &place else null));
+            const value = try self.expressionPlace(argument, if (slot != null) &place else null);
             if (slot) |at| places[at] = place orelse return self.mb.refuse("mut argument that is not a place", span);
+            // A `unit` argument is evaluated for its effects and not passed.
+            if (value != .none and self.typeOfRef(value) != .void) try arguments.append(self.allocator(), value);
         }
         if (self.current == null) return .none;
         const ret = self.mb.module.functions.items[index].signature.ret;
@@ -1068,7 +1250,7 @@ const FnBuilder = struct {
         const first: usize = if (has_value) 1 else 0;
         for (places, 0..) |place, k| {
             const part = if (wrapped) try self.emit(.{ .op = .record_get, .ty = parts[first + k], .a = result, .data = first + k, .span = span }) else result;
-            try self.storePlace(place, part, span);
+            _ = try self.storePlace(place, part, span);
         }
         return if (has_value) value else .none;
     }
@@ -1077,24 +1259,23 @@ const FnBuilder = struct {
         const kind = operation.kind;
         const owner = operation.owner;
         const argument_nodes = operation.arguments;
-        const receiver = try self.read(self.local(owner), self.current.?);
-        const receiver_type = self.function.inst(receiver).ty;
+        const receiver_type = self.ssa.types.items[self.local(owner)];
         switch (kind) {
-            .length => return self.emit(.{ .op = if (receiver_type == .str) .str_len else .list_len, .ty = .u64, .a = receiver, .span = span }),
+            .length => return self.emit(.{ .op = if (receiver_type == .str) .str_len else .list_len, .ty = .u64, .a = try self.receiverOf(owner, span), .span = span }),
             .read => {
                 if (receiver_type == .str) return self.mb.refuse("string index", span);
                 const index = try self.expression(argument_nodes[0]);
                 if (self.current == null) return .none;
-                if (out) |place| place.* = try self.extendPlace(self.placeOfLocal(owner), .{ .element = index });
+                const receiver = try self.receiverOf(owner, span);
+                if (out) |place| place.* = try self.extendPlace(try self.placeOfLocal(owner), .{ .element = index });
                 return self.emit(.{ .op = .list_get, .ty = ty, .a = receiver, .b = index, .check = .exact, .span = span });
             },
             .append => {
                 try self.guardPlace(self.local(owner), span);
                 const value = try self.expression(argument_nodes[0]);
                 if (self.current == null) return .none;
-                // The receiver is read again: the argument may not change it, but
-                // the checker's owner local is the value the push consumes.
-                const list = try self.read(self.local(owner), self.current.?);
+                // The receiver is read after the argument, which may have written its place.
+                const list = try self.receiverOf(owner, span);
                 const pushed = try self.emit(.{ .op = .list_push, .ty = self.function.inst(list).ty, .a = list, .b = value, .span = span });
                 try self.writeOwner(owner, pushed, span);
                 return .none;
@@ -1105,14 +1286,14 @@ const FnBuilder = struct {
                 const index = try self.expression(argument_nodes[0]);
                 const value = try self.expression(argument_nodes[1]);
                 if (self.current == null) return .none;
-                const list = try self.read(self.local(owner), self.current.?);
+                const list = try self.receiverOf(owner, span);
                 try self.writeOwner(owner, try self.listSet(list, index, value, span), span);
                 return .none;
             },
             .pop => {
                 if (!receiver_type.isCompound() or self.mb.module.kind(receiver_type) != .list) return self.mb.refuse("pop of a non-list", span);
                 try self.guardPlace(self.local(owner), span);
-                const list = try self.read(self.local(owner), self.current.?);
+                const list = try self.receiverOf(owner, span);
                 // The last element is read first (index `len - 1`, wrapping to a failing index
                 // when empty, which the read reports as the empty-list pop), then dropped.
                 const length = try self.emit(.{ .op = .list_len, .ty = .u64, .a = list, .span = span });
@@ -1130,7 +1311,7 @@ const FnBuilder = struct {
             },
             .parse_int => {
                 if (receiver_type != .str) return self.mb.refuse("parse_int receiver", span);
-                return self.emit(.{ .op = .str_parse_int, .ty = ty, .a = receiver, .span = span });
+                return self.emit(.{ .op = .str_parse_int, .ty = ty, .a = try self.receiverOf(owner, span), .span = span });
             },
             else => return self.mb.refuse(@tagName(kind), span),
         }
@@ -1186,6 +1367,7 @@ fn buildFunction(mb: *ModuleBuilder, checked: typed.Function, declared: ir.Funct
     var b: FnBuilder = .{ .mb = mb, .function = declared, .checked = checked };
     b.declared_ret = try mb.mapType(checked.signature.return_type, declared.span);
     defer b.places.deinit(mb.allocator);
+    defer b.versions.deinit(mb.allocator);
     defer b.ssa.defs.deinit(mb.allocator);
     defer b.ssa.incomplete.deinit(mb.allocator);
     defer b.ssa.sealed.deinit(mb.allocator);
@@ -1199,8 +1381,15 @@ fn buildFunction(mb: *ModuleBuilder, checked: typed.Function, declared: ir.Funct
     const entry = try b.newBlock();
     try b.seal(entry);
     b.current = entry;
-    for (declared.signature.params, 0..) |ty, i| {
-        const param = try b.detached(.{ .op = .param, .ty = ty, .data = i });
+    var passed: u64 = 0;
+    for (checked.scope.locals[0..checked.signature.parameter_count], 0..) |local, i| {
+        const ty = try mb.mapType(local.ty, @intCast(local.declaration.start));
+        if (ty == .void) {
+            try b.write(@intCast(i), entry, try b.detached(.{ .op = .undef, .ty = .void }));
+            continue;
+        }
+        const param = try b.detached(.{ .op = .param, .ty = ty, .data = passed });
+        passed += 1;
         try b.write(@intCast(i), entry, param);
     }
     try b.statement(checked.scope.body);

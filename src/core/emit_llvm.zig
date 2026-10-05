@@ -881,8 +881,12 @@ const FunctionEmitter = struct {
             const below_hi = try self.fresh("%fh");
             const ok = try self.fresh("%fok");
             const failed = try self.fresh("%fbad");
-            // Unsigned targets accept (-1, 2^N): truncation maps (-1, 0) to 0.
-            try out.print(self.a(), "  {s} = fcmp {s} double {s}, 0x{X:0>16}\n", .{ above_lo, if (to.signed) "oge" else "ogt", operand, @as(u64, @bitCast(lo)) });
+            // The value is truncated toward zero first, then checked: every target accepts the
+            // values that truncate into its range, which are those above `lo - 1` (signed: `lo`
+            // itself when `lo - 1` is not a double) and below `hi`; unsigned ones accept (-1, 2^N).
+            const above = if (to.signed and lo - 1.0 != lo) lo - 1.0 else lo;
+            const inclusive = to.signed and lo - 1.0 == lo;
+            try out.print(self.a(), "  {s} = fcmp {s} double {s}, 0x{X:0>16}\n", .{ above_lo, if (inclusive) "oge" else "ogt", operand, @as(u64, @bitCast(above)) });
             try out.print(self.a(), "  {s} = fcmp olt double {s}, 0x{X:0>16}\n  {s} = and i1 {s}, {s}\n  {s} = xor i1 {s}, true\n", .{ below_hi, operand, @as(u64, @bitCast(hi)), ok, above_lo, below_hi, failed, ok });
             const bits = try self.fresh("%fb");
             try out.print(self.a(), "  {s} = bitcast double {s} to i64\n", .{ bits, operand });

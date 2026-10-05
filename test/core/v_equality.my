@@ -1,0 +1,42 @@
+module v_equality
+
+record Flt:
+    x: float
+    n: int
+
+
+record Pair:
+    a: int
+    b: bool
+
+
+record Line:
+    from_point: Pair
+    to_point: Pair
+    live: bool
+
+
+union Shape:
+    one: int,
+    two: Pair,
+    none
+
+
+def main(out: Stream) -> int:
+    nan = 0.0 / 0.0
+    out.print(Flt(x=nan, n=1) == Flt(x=nan, n=1), Flt(x=0.0, n=1) == Flt(x=-0.0, n=1), nan == nan, 0.0 == -0.0)
+    out.print(Pair(a=1, b=True) == Pair(a=1, b=True), Pair(a=1, b=True) != Pair(a=1, b=False))
+    out.print(Line(from_point=Pair(a=1, b=True), to_point=Pair(a=2, b=False), live=True) == Line(from_point=Pair(a=1, b=True), to_point=Pair(a=2, b=False), live=True))
+    out.print(Line(from_point=Pair(a=1, b=True), to_point=Pair(a=2, b=False), live=True) == Line(from_point=Pair(a=1, b=True), to_point=Pair(a=3, b=False), live=True))
+    out.print(Shape.one(3) == Shape.one(3), Shape.one(3) == Shape.one(4), Shape.two(Pair(a=1, b=False)) == Shape.two(Pair(a=1, b=False)), Shape.none == Shape.none, Shape.one(1) == Shape.none)
+    o: Option[int] = Some(3)
+    n: Option[int] = None
+    out.print(o == Some(3), o == n, n == None, o != n)
+    xs = [1, 2, 3]
+    ys = [1, 2, 3]
+    out.print(xs == ys, xs == [1, 2], xs != [1, 2, 4], xs == [1, 2, 4])
+    bs = [True, False]
+    out.print(bs == [True, False], bs == [True, True])
+    small = [u8(1), u8(2)]
+    out.print(small == [u8(1), u8(2)], small != [u8(1), u8(3)])
+    return 0

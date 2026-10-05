@@ -308,3 +308,97 @@ test "a field read of a list element and a match on a union element read the par
     try std.testing.expect(contains(text, "list_get_field i64 param0, %9, path 2.0"));
     try std.testing.expect(contains(text, "list_get_field i64 param0, %9, path 2.1"));
 }
+
+const append_to_element =
+    \\def grow(rows: list[list[int]], i: int, v: int) -> int:
+    \\    copy = rows
+    \\    copy[i].append(v)
+    \\    return len(copy[i])
+    \\
+    \\
+    \\def main(out: Stream) -> int:
+    \\    out.print(grow([[1], [2, 3]], 1, 9))
+    \\    return 0
+    \\
+;
+
+const text_equality =
+    \\def same(a: str, b: str) -> bool:
+    \\    return a == b
+    \\
+    \\
+    \\def main(out: Stream) -> int:
+    \\    out.print(same("a", "b"))
+    \\    return 0
+    \\
+;
+
+const callback_in_index =
+    \\record Frame:
+    \\    code: list[int]
+    \\    ip: int
+    \\
+    \\
+    \\def replace(frame: mut Frame) -> int:
+    \\    frame.code = [17, 19]
+    \\    return 0
+    \\
+    \\
+    \\def selected(frame: mut Frame) -> int:
+    \\    return frame.code[replace(mut frame)]
+    \\
+    \\
+    \\def main(out: Stream) -> int:
+    \\    frame = Frame([7, 11], 0)
+    \\    out.print(selected(mut frame))
+    \\    return 0
+    \\
+;
+
+// spec-case: NEW-CORE-PLACE-1
+test "an append to a list element, a str comparison and a read through a place a callback rewrites are refused, never lowered wrongly" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    var refusal: build.Refusal = .{};
+    try std.testing.expectError(error.Unsupported, support.buildSource(arena.allocator(), append_to_element, &refusal));
+    try std.testing.expectEqualStrings("element write of a managed element (needs ownership)", refusal.reason);
+    try std.testing.expectError(error.Unsupported, support.buildSource(arena.allocator(), text_equality, &refusal));
+    try std.testing.expectEqualStrings("str equality", refusal.reason);
+    try std.testing.expectError(error.Unsupported, support.buildSource(arena.allocator(), callback_in_index, &refusal));
+    try std.testing.expectEqualStrings("write to a receiver's place while its arguments are evaluated", refusal.reason);
+}
+
+const escaping_lists =
+    \\record Holder:
+    \\    items: list[int]
+    \\
+    \\
+    \\def fresh() -> Holder:
+    \\    return Holder(items=[1, 2])
+    \\
+    \\
+    \\def shared(h0: Holder) -> int:
+    \\    h = h0
+    \\    items = [0]
+    \\    for i in range(3):
+    \\        h.items = items
+    \\        items.append(i)
+    \\    return len(h.items) * 10 + len(items)
+    \\
+    \\
+    \\def main(out: Stream) -> int:
+    \\    out.print(shared(fresh()))
+    \\    return 0
+    \\
+;
+
+// spec: NEW-CORE-ESCAPE-1
+test "a list stored into a record is copied unless it is a fresh list nothing else uses, so a later in-place append cannot change it" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const text = try support.irText(arena.allocator(), escaping_lists);
+    // `fresh` stores a list literal nothing else names: no copy. `shared` stores a loop-carried list: copied.
+    const fresh = "fn fresh() -> record{list[i64]}\nb0:\n  %1 = list_new list[i64] 2:i64\n  %3 = list_push list[i64] %1, 1:i64\n";
+    try std.testing.expect(contains(text, fresh ++ "  %5 = list_push list[i64] %3, 2:i64\n  %6 = record_make record{list[i64]} %5\n  ret %6\n"));
+    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, text, "list_copy list[i64] %"));
+}
