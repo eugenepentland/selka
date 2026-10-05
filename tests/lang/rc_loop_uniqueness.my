@@ -39,7 +39,8 @@ public def test_callback_and_named_snapshot_keep_checks_inside_the_loop() -> boo
     before = items
     for index in range(5):
         before = items
-        items[selected(mut items)] = index
+        mutation_result_42 = selected(mut items)
+        items[mutation_result_42] = index
     return items == [9, 4] and before == [9, 3]
 
 

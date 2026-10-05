@@ -37,6 +37,7 @@ const project_compile = @import("project_compile.zig");
 const test_facts = @import("native_test_facts.zig");
 const symbols = @import("module_symbols.zig");
 const diagnostic = @import("diagnostic.zig");
+const mut_abi = @import("mut_abi.zig");
 
 /// Failures of one module compile. `SourceError` means the module did not
 /// check (its diagnostics are on the returned compilation); `MissingEmission`
@@ -186,7 +187,7 @@ pub fn compile(gpa: std.mem.Allocator, arena: std.mem.Allocator, request: Reques
     };
     const imported = try arena.alloc(?native_interface.Imported, program.functions.len);
     var counts: Counts = .{ .functions = program.functions.len, .diagnostics = compilation.diagnostics.items.items.len };
-    for (program.functions, stood, imported) |function, skipped, *entry| {
+    for (@constCast(program.functions), stood, imported) |*function, skipped, *entry| {
         entry.* = null;
         if (!skipped) continue;
         counts.stood_in += 1;
@@ -195,6 +196,7 @@ pub fn compile(gpa: std.mem.Allocator, arena: std.mem.Allocator, request: Reques
             out.problem = try std.fmt.allocPrint(arena, "no emission facts for `{s}`: compile its module first, under the same configuration", .{function.name});
             return error.MissingEmission;
         };
+        try restoreCallerStorage(program.records, function, stated.caller_storage);
         entry.* = .{ .allocates = stated.allocates, .writes = stated.writes };
     }
     const selected = try arena.alloc(bool, program.functions.len);
@@ -209,17 +211,22 @@ pub fn compile(gpa: std.mem.Allocator, arena: std.mem.Allocator, request: Reques
         return checked.publish(.{ .arena = arena });
     }
     var emit = try emitted(arena, .{ .compilation = compilation, .program = program, .code = code, .own = modules[own].name, .is_entry = request.module.is_entry });
-    for (emit) |chosen| counts.emitted += @intFromBool(chosen);
-    const physical = try @import("module_physical.zig").archive(arena, code, emit);
     const imported_interfaces = try interfacesOf(arena, request, modules, own);
     const restored = @import("module_physical_inputs.zig").restore(arena, code, emit, imported, imported_interfaces) catch |err| {
         out.problem = "invalid imported physical data";
         return err;
     };
-    code = restored.code;
-    emit = @constCast(restored.emit);
+    code = try @import("mut_callback_abi.zig").adapt(arena, restored.code);
+    emit = try arena.alloc(bool, code.functions.len);
+    @memcpy(@constCast(emit)[0..restored.emit.len], restored.emit);
+    @memset(@constCast(emit)[restored.emit.len..], true);
+    for (emit) |chosen| counts.emitted += @intFromBool(chosen);
+    const adapted_imports = try arena.alloc(?native_interface.Imported, code.functions.len);
+    @memcpy(adapted_imports[0..restored.imported.len], restored.imported);
+    @memset(adapted_imports[restored.imported.len..], null);
+    const physical = try @import("module_physical.zig").archive(arena, code, emit);
     var parts: native_interface.Parts = .{};
-    const template: native_interface.Module = .{ .emit = emit, .imported = restored.imported, .remap = try remapOf(arena, request.module.library, modules, own), .arenas = request.config.arenas, .parts = &parts };
+    const template: native_interface.Module = .{ .emit = emit, .imported = adapted_imports, .remap = try remapOf(arena, request.module.library, modules, own), .arenas = request.config.arenas, .parts = &parts };
     var step: InterfaceStep = .{ .arena = arena, .request = request, .out = out, .body = .{ .lowered = &lowered, .code = code, .emit = emit, .archive = physical, .dependencies = imported_interfaces }, .own = own };
     var module = template;
     module.analyzed = .{ .arena = arena, .context = &step, .run = InterfaceStep.announced };
@@ -374,7 +381,7 @@ const InterfaceStep = struct {
         const built = try builder.buildOne(arena, inputs, self.own, .{ .foreign = &foreign, .import_hashes = imports });
         var interface = built.interface;
         if (!self.request.check_only) {
-            interface.emission = try emissionSection(arena, .{ .interface = interface, .prepared = prepared, .program = program, .report = facts, .emit = self.body.emit, .config = self.request.config });
+            interface.emission = try emissionSection(arena, .{ .interface = interface, .prepared = prepared, .code = self.body.code, .report = facts, .emit = self.body.emit, .config = self.request.config });
             interface.emission.physical = self.body.archive;
         }
         self.out.interface = interface;
@@ -708,6 +715,12 @@ fn lowerInlined(allocators: lower.Allocators, program: typed.Program, selected: 
     };
 }
 
+/// Restore the producer's direct-call ABI before lowering an imported stub.
+fn restoreCallerStorage(records: []const typed.Record, function: *typed.Function, mask: u16) Error!void {
+    if (!mut_abi.valid(records, function.*, mask)) return error.InternalError;
+    function.signature.inferred.caller_storage = mask;
+}
+
 /// The emission facts of every function the loaded modules' interfaces
 /// declare, by checked name, refusing an interface computed under another
 /// configuration.
@@ -822,7 +835,7 @@ fn ownedBy(scope: Scope, function: typed.Function, name: []const u8) bool {
 const Section = struct {
     interface: iface.Interface,
     prepared: @import("semantic_key.zig").Prepared,
-    program: typed.Program,
+    code: bytecode.Program,
     report: fragments.Report,
     emit: []const bool,
     config: iface.EmissionConfig,
@@ -834,7 +847,7 @@ const Section = struct {
 fn emissionSection(allocator: std.mem.Allocator, section: Section) Error!iface.Emission {
     var by_key: std.StringHashMapUnmanaged(usize) = .empty;
     for (section.prepared.ordinary_ast, 0..) |ast_index, instance| {
-        if (instance < section.program.functions.len) try by_key.put(allocator, section.prepared.keys[ast_index], instance);
+        if (instance < section.code.functions.len) try by_key.put(allocator, section.prepared.keys[ast_index], instance);
     }
     var functions: std.ArrayList(iface.EmittedFunction) = .empty;
     for (section.interface.declarations.functions) |function| {
@@ -847,6 +860,7 @@ fn emissionSection(allocator: std.mem.Allocator, section: Section) Error!iface.E
             .writes = facts.writes,
             .stable = facts.marks.physical.stable,
             .physical = facts.marks.physical.identity,
+            .caller_storage = section.code.functions[instance].signature.inferred.caller_storage,
         });
     }
     std.mem.sort(iface.EmittedFunction, functions.items, {}, emittedBefore);

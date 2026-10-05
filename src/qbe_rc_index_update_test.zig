@@ -81,7 +81,8 @@ const functions =
     \\    return 0
     \\def callback(index: int) -> int:
     \\    values = [7, 11]
-    \\    values[index] = values[index] + change(mut values)
+    \\    mutation_result_84 = change(mut values)
+    \\    values[index] = values[index] + mutation_result_84
     \\    return values[index]
     \\def distinct(index: int) -> int:
     \\    left = [7, 11]
@@ -153,10 +154,12 @@ test "RC index update reuses checked indices and forwards exact stored i64 value
     try t.expectEqual(@as(usize, 3), std.mem.count(u8, try body(result.value, "modulo"), marker));
     try t.expectEqual(@as(usize, 3), std.mem.count(u8, try body(result.value, "quotient"), marker));
     try t.expectEqual(@as(usize, 3), std.mem.count(u8, try body(result.value, "checksum_update"), marker));
+    // Once the mut call finishes, the current receiver admits the same update.
+    try t.expectEqual(@as(usize, 3), std.mem.count(u8, try body(result.value, "callback"), marker));
     // The complete first negative correction remains, including its checked
     // cast/add cold path; a valid native i64-list length cannot overflow it.
     try t.expect(std.mem.indexOf(u8, provenance, "myl_qbe_fail_overflow_op") != null);
-    for ([_][]const u8{ "alias", "rebound", "resized", "callback", "distinct", "changed_index", "narrow", "managed" }) |name|
+    for ([_][]const u8{ "alias", "rebound", "resized", "distinct", "changed_index", "narrow", "managed" }) |name|
         try t.expect(std.mem.indexOf(u8, try body(result.value, name), marker) == null);
 }
 
@@ -612,13 +615,13 @@ test "RC index update preserves actual counting and site reports with positive n
 }
 
 // spec-case: RC-INDEX-UPDATE-1
-test "RC index update executes refused aliases rebinds resizes callbacks and changed indices" {
+test "RC index update executes aliases rebinds resizes and calls before updates" {
     const saved = runtime.get();
     defer runtime.set(saved);
     runtime.set(.rc);
     var compilation = try compiler.Compilation.init(t.allocator, "refused_index_update.my", native_source);
     defer compilation.deinit();
-    for ([_][]const u8{ "alias", "rebound", "resized", "callback", "distinct", "changed" }, [_]i64{ 710, 10, 10, 7, 10, 10 }) |name, expected| {
+    for ([_][]const u8{ "alias", "rebound", "resized", "callback", "distinct", "changed" }, [_]i64{ 710, 10, 10, 17, 10, 10 }) |name, expected| {
         const result = try outcome(&compilation, name, 0, 3);
         try t.expect(!result.failed);
         try t.expectEqual(expected, result.value);

@@ -87,7 +87,7 @@ fn emitEnd(comptime E: type, self: *E, watermark: usize) Error!void {
         // A parameter read through the caller's address keeps no slot of its
         // own, so the value this check reads is the one at that address.
         if (self.byReference(index)) {
-            const source = try self.load("l", index);
+            const source = try self.callerAddress(index);
             try self.print(" %v{d} =w call $myl_qbe_region_retains(l %ctx, l extern ${s}, l %v{d})\n", .{ retained, try self.descriptor(local.ty), source });
         } else try self.print(" %v{d} =w call $myl_qbe_region_retains(l %ctx, l extern ${s}, l %l{d})\n", .{ retained, try self.descriptor(local.ty), index });
         const label = self.temp();

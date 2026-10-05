@@ -69,7 +69,8 @@ public def test_record_and_list_snapshots_survive_named_scalar_write() -> bool:
 public def test_complete_rhs_rebinding_precedes_named_scalar_commit() -> bool:
     state = State([7], [8], [9], 2)
     saved = state
-    state.count = rhs(mut state)
+    next_count = rhs(mut state)
+    state.count = next_count
     return state.count == 43 and state.values == [11] and state.links == [13] and saved.count == 2 and saved.code == [8]
 
 
@@ -107,7 +108,8 @@ public def test_inner_arena_cleanup_requires_new_named_definition() -> bool:
 public def test_published_record_snapshot_keeps_original_scalar_bits() -> bool:
     state = State([7], [8], [9], 0)
     published = [state]
-    state.count = rhs(mut state)
+    next_count = rhs(mut state)
+    state.count = next_count
     state.count = state.count + 1
     return published[0].count == 0 and published[0].values == [7] and state.count == 44 and state.values == [11]
 

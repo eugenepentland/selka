@@ -27,7 +27,7 @@ const source = @import("source.zig");
 const embed = @import("embed.zig");
 
 /// Payload version; bump for any layout or meaning change so old artifacts miss.
-pub const format_version = "module-interface-v3";
+pub const format_version = "module-interface-v4";
 /// File extension of one stored interface.
 pub const extension = ".myi";
 
@@ -143,6 +143,7 @@ pub const Emission = struct {
 pub const EmittedFunction = struct {
     name: []const u8,
     allocates: bool,
+    caller_storage: u16 = 0,
     writes: []const bool,
     stable: []const bool = &.{},
     physical: [32]u8 = @splat(0),
@@ -191,7 +192,7 @@ fn onOff(flag: bool) []const u8 {
 /// marks and value targets are link inputs, not a dependent's.
 pub fn emissionHash(interface: Interface) [32]u8 {
     var hash = std.crypto.hash.Blake3.init(.{});
-    hash.update("module-emission-hash-v4");
+    hash.update("module-emission-hash-v5");
     frame(&hash, interface.module);
     frame(&hash, interface.emission.config);
     count(&hash, interface.emission.functions.len);
@@ -203,6 +204,9 @@ pub fn emissionHash(interface: Interface) [32]u8 {
         count(&hash, function.stable.len);
         for (function.stable) |flag| hash.update(&.{@intFromBool(flag)});
         hash.update(&function.physical);
+        var storage: [2]u8 = undefined;
+        std.mem.writeInt(u16, &storage, function.caller_storage, .little);
+        hash.update(&storage);
     }
     count(&hash, interface.emission.physical.records.len);
     for (interface.emission.physical.records) |row| {
@@ -352,7 +356,9 @@ pub fn hashFact(hash: *std.crypto.hash.Blake3, fact: summary.Fact) void {
         hash.update(&bits);
         hash.update(&.{@as(u8, @intFromBool(origin.unknown))});
     }
-    const flags = [_]bool{ fact.mutates_unknown, fact.writes, fact.external };
+    std.mem.writeInt(u16, &bits, fact.inferred.caller_storage, .little);
+    hash.update(&bits);
+    const flags = [_]bool{ fact.mutates_unknown, fact.inferred.writes, fact.inferred.external };
     for (flags) |flag| hash.update(&.{@as(u8, @intFromBool(flag))});
 }
 
@@ -431,8 +437,8 @@ fn renderTo(allocator: std.mem.Allocator, writer: *std.Io.Writer, interface: Int
             function.fact.return_origin.positions,
             if (function.fact.mutates_unknown) " mutates-unknown" else "",
             if (function.fact.return_origin.unknown) " origin-unknown" else "",
-            if (function.fact.writes) " writes" else "",
-            if (function.fact.external) " external" else "",
+            if (function.fact.inferred.writes) " writes" else "",
+            if (function.fact.inferred.external) " external" else "",
             function.fingerprint[0..8],
         });
     }

@@ -58,7 +58,8 @@ public def test_a_callback_or_snapshot_inside_the_loop_keeps_every_check() -> bo
     kept = bytes(buffer)
     for index in range(3):
         kept = bytes(buffer)
-        _ = buffer.append_byte(grow(mut buffer))
+        value = grow(mut buffer)
+        _ = buffer.append_byte(value)
     return buffer == b"!.!.!." and kept == b"!.!."
 
 

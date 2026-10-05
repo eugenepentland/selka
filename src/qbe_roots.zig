@@ -362,7 +362,7 @@ fn roots(comptime Emitter: type, self: *Emitter, stack: []const typed.Type) Gene
         // QBE-MOVE-ELIDE-1: an alias's value lives in the slot it names.
         const storage = self.moves.resolve(i);
         const traced = if (self.byReference(storage))
-            try std.fmt.allocPrint(self.allocator, "%v{d}", .{try self.load("l", storage)})
+            try std.fmt.allocPrint(self.allocator, "%v{d}", .{try self.callerAddress(storage)})
         else
             try std.fmt.allocPrint(self.allocator, "%l{d}", .{storage});
         try pushRoot(Emitter, self, .{ .index = count, .source = traced, .copy = scalar(local.ty, self.program.records), .descriptor = try self.descriptor(local.ty) }, previous, base);
@@ -370,7 +370,12 @@ fn roots(comptime Emitter: type, self: *Emitter, stack: []const typed.Type) Gene
         count += 1;
     };
     for (stack, 0..) |ty, i| if ((try self.layout(ty)).trace) {
-        const by_value = scalar(ty, self.program.records);
+        // A `ref_local` operand carries the caller/leaf slot's address, even
+        // when its collection type normally occupies one payload word.
+        const flow = (self.ownership orelse return error.InternalError).operands[self.pc] orelse return error.InternalError;
+        const read = flow[i].read;
+        const reference = flow[i].part == .whole and read < self.function.scope.instructions.len and self.function.scope.instructions[read].op == .ref_local;
+        const by_value = scalar(ty, self.program.records) and !reference;
         const traced = if (by_value)
             try std.fmt.allocPrint(self.allocator, "%s{d}", .{i})
         else

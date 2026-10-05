@@ -77,7 +77,8 @@ def callback(items: mut list[int], index: int) -> int:
 public def test_callback_loop_retains_operation_admission() -> bool:
     items: list[int] = []
     for index in range(20):
-        items.append(callback(mut items, index))
+        mutation_result_80 = callback(mut items, index)
+        items.append(mutation_result_80)
     return len(items) == 13 and items[0] == 7 and items[-1] == 19
 
 

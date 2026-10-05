@@ -1,0 +1,163 @@
+[
+  {
+    "fixture": "0205-mut_rebind_modules",
+    "adapter": "@mut_callback:mut_rebind_helpers::append_only",
+    "il_equal": true,
+    "whole_meta": {
+      "name": "@mut_callback:mut_rebind_helpers::append_only",
+      "paths": [
+        "mcdrv_mut_rebind_modules.my"
+      ],
+      "positions": "0:1:1 0:1:1 0:1:1",
+      "assertions": [],
+      "inlines": []
+    },
+    "module_meta": {
+      "name": "@mut_callback:mut_rebind_helpers::append_only",
+      "paths": [
+        "mylang_interface_root.my"
+      ],
+      "positions": "0:1:1 0:1:1 0:1:1",
+      "assertions": [],
+      "inlines": []
+    }
+  },
+  {
+    "fixture": "0287-rc_pin_elide",
+    "adapter": "@mut_callback:rc_pin_elide::poke",
+    "il_equal": true,
+    "whole_meta": {
+      "name": "@mut_callback:rc_pin_elide::poke",
+      "paths": [
+        "mcdrv_rc_pin_elide.my"
+      ],
+      "positions": "0:1:1 0:1:1 0:1:1",
+      "assertions": [],
+      "inlines": []
+    },
+    "module_meta": {
+      "name": "@mut_callback:rc_pin_elide::poke",
+      "paths": [
+        "mylang_interface_root.my"
+      ],
+      "positions": "0:1:1 0:1:1 0:1:1",
+      "assertions": [],
+      "inlines": []
+    }
+  },
+  {
+    "fixture": "0287-rc_pin_elide",
+    "adapter": "@mut_callback:rc_pin_elide::snap",
+    "il_equal": true,
+    "whole_meta": {
+      "name": "@mut_callback:rc_pin_elide::snap",
+      "paths": [
+        "mcdrv_rc_pin_elide.my"
+      ],
+      "positions": "0:1:1 0:1:1 0:1:1",
+      "assertions": [],
+      "inlines": []
+    },
+    "module_meta": {
+      "name": "@mut_callback:rc_pin_elide::snap",
+      "paths": [
+        "mylang_interface_root.my"
+      ],
+      "positions": "0:1:1 0:1:1 0:1:1",
+      "assertions": [],
+      "inlines": []
+    }
+  },
+  {
+    "fixture": "0200-mut_argument_places",
+    "adapter": "@mut_callback:mut_argument_places::change",
+    "il_equal": true,
+    "whole_meta": {
+      "name": "@mut_callback:mut_argument_places::change",
+      "paths": [
+        "mcdrv_mut_argument_places.my"
+      ],
+      "positions": "0:1:1 0:1:1 0:1:1 0:1:1",
+      "assertions": [],
+      "inlines": []
+    },
+    "module_meta": {
+      "name": "@mut_callback:mut_argument_places::change",
+      "paths": [
+        "mylang_interface_root.my"
+      ],
+      "positions": "0:1:1 0:1:1 0:1:1 0:1:1",
+      "assertions": [],
+      "inlines": []
+    }
+  },
+  {
+    "fixture": "0200-mut_argument_places",
+    "adapter": "@mut_callback:mut_argument_places::write_twice",
+    "il_equal": true,
+    "whole_meta": {
+      "name": "@mut_callback:mut_argument_places::write_twice",
+      "paths": [
+        "mcdrv_mut_argument_places.my"
+      ],
+      "positions": "0:1:1 0:1:1 0:1:1 0:1:1",
+      "assertions": [],
+      "inlines": []
+    },
+    "module_meta": {
+      "name": "@mut_callback:mut_argument_places::write_twice",
+      "paths": [
+        "mylang_interface_root.my"
+      ],
+      "positions": "0:1:1 0:1:1 0:1:1 0:1:1",
+      "assertions": [],
+      "inlines": []
+    }
+  },
+  {
+    "fixture": "0200-mut_argument_places",
+    "adapter": "@mut_callback:mut_argument_places::capture_change",
+    "il_equal": true,
+    "whole_meta": {
+      "name": "@mut_callback:mut_argument_places::capture_change",
+      "paths": [
+        "mcdrv_mut_argument_places.my"
+      ],
+      "positions": "0:1:1 0:1:1 0:1:1 0:1:1",
+      "assertions": [],
+      "inlines": []
+    },
+    "module_meta": {
+      "name": "@mut_callback:mut_argument_places::capture_change",
+      "paths": [
+        "mylang_interface_root.my"
+      ],
+      "positions": "0:1:1 0:1:1 0:1:1 0:1:1",
+      "assertions": [],
+      "inlines": []
+    }
+  },
+  {
+    "fixture": "0203-mut_rebind_caller",
+    "adapter": "@mut_callback:mut_rebind_caller::replace_child",
+    "il_equal": true,
+    "whole_meta": {
+      "name": "@mut_callback:mut_rebind_caller::replace_child",
+      "paths": [
+        "mcdrv_mut_rebind_caller.my"
+      ],
+      "positions": "0:1:1 0:1:1 0:1:1",
+      "assertions": [],
+      "inlines": []
+    },
+    "module_meta": {
+      "name": "@mut_callback:mut_rebind_caller::replace_child",
+      "paths": [
+        "mylang_interface_root.my"
+      ],
+      "positions": "0:1:1 0:1:1 0:1:1",
+      "assertions": [],
+      "inlines": []
+    }
+  }
+]

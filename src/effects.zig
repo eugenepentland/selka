@@ -27,6 +27,7 @@ const bytecode_model = @import("bytecode_model.zig");
 const callables = @import("callables.zig");
 const typed_walk = @import("typed_walk.zig");
 const entry_adapter = @import("entry_adapter.zig");
+const mut_abi = @import("mut_abi.zig");
 const Witness = struct { span: Span, via: ?usize = null };
 const Edge = struct { caller: usize, span: Span };
 fn allocatingSequence(records: []const typed.Record, ty: typed.Type) bool {
@@ -160,15 +161,18 @@ fn recordExpressionMutation(ctx: *const ExpressionMutationContext, node: typed.N
     return !owner_is_fresh;
 }
 
-/// The parameter position an element write `a[i] = v` writes through: a
-/// fixed-array parameter, whose element writes reach the caller when it is
-/// `mut` and are refused as undeclared writes when it is not.
+/// The parameter position an assignment writes through: fixed-array elements
+/// and whole `mut` record or collection variables reach caller storage.
 fn elementWriteInput(program: typed.Program, function: typed.Function, statement: typed.Statement) ?u16 {
     if (statement.data != .assign) return null;
     const store = statement.data.assign;
     const slot = @backingInt(store.slot);
-    if (!store.element or slot >= function.signature.parameter_count) return null;
-    if (!typed.referenceArray(program.records, function.scope.locals[slot].ty)) return null;
+    if (slot >= function.signature.parameter_count) return null;
+    const ty = function.scope.locals[slot].ty;
+    const array_write = store.element and typed.referenceArray(program.records, ty);
+    const caller_write = std.mem.indexOfScalar(u16, function.signature.declared_mutates, @intCast(slot)) != null and
+        (typed.referenceRecord(program.records, ty) or mut_abi.collection(program.records, ty));
+    if (!array_write and !caller_write) return null;
     return @intCast(slot);
 }
 
@@ -830,6 +834,13 @@ fn checkContractPurity(ctx: CeilingContext, index: usize) diagnostic.Error!bool 
 /// Run the M2 mutation pass over `program` and, when the request asks for them,
 /// hand back each function's final effect mask and mutation summary.
 fn mutationPass(allocator: std.mem.Allocator, program: typed.Program, request: Request, graph: *const Graph) diagnostic.Error!bool {
+    for (@constCast(program.functions), 0..) |*function, index| if (origin_pass.standIn(request.stubs, index)) |fact| {
+        if (!mut_abi.valid(program.records, function.*, fact.caller_storage)) return error.InternalError;
+        function.signature.inferred.caller_storage = fact.caller_storage;
+    };
+    const storage = try mut_abi.collect(allocator, program);
+    defer allocator.free(storage);
+    for (@constCast(program.functions), storage) |*function, mask| function.signature.inferred.caller_storage = mask;
     const summaries: ?[]origin_pass.Summary = if (request.facts) |facts| try allocator.alloc(origin_pass.Summary, facts.len) else null;
     defer if (summaries) |owned| allocator.free(owned);
     const violated = origin_pass.check(allocator, program, .{
@@ -843,7 +854,7 @@ fn mutationPass(allocator: std.mem.Allocator, program: typed.Program, request: R
         error.OutOfMemory => return error.OutOfMemory,
     };
     if (request.facts) |facts| for (facts, 0..) |*fact, index| {
-        fact.* = .{ .graph_mask = if (index < graph.states.len) graph.states[index].mask else 0, .summary = summaries.?[index] };
+        fact.* = .{ .graph_mask = if (index < graph.states.len) graph.states[index].mask else 0, .caller_storage = storage[index], .summary = summaries.?[index] };
     };
     return violated;
 }

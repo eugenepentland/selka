@@ -21,7 +21,8 @@ const source =
     \\    items.append(Point(3, 5))
     \\    return 0
     \\def callback_field(items: mut list[Point]) -> int:
-    \\    items[point_index(mut items)].x = 7
+    \\    mutation_result_24 = point_index(mut items)
+    \\    items[mutation_result_24].x = 7
     \\    return len(items)
     \\def scalar(items: mut list[int], index: int) -> int:
     \\    items[index] = 7
@@ -33,7 +34,8 @@ const source =
     \\    items.append(9)
     \\    return 0
     \\def callback(items: mut list[int]) -> int:
-    \\    items[mutating_index(mut items)] = 7
+    \\    mutation_result_36 = mutating_index(mut items)
+    \\    items[mutation_result_36] = 7
     \\    return len(items)
     \\def managed(items: mut list[list[int]], value: list[int]) -> int:
     \\    items[0] = value

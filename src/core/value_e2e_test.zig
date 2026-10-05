@@ -151,16 +151,16 @@ test "mut parameters of lists and records write their final values back to the c
 }
 
 const v_mut_rebind_output =
-    \\2208 33 1958
-    \\38943 38678 33 163
-    \\1 1923 2243 51
-    \\2 3 1957 90466 33
+    \\2208 33 2208
+    \\38943 38678 33 38943
+    \\1 34 2243 51
+    \\2 3 1990 90466 33
     \\3 102 109246 2 2563
     \\
 ;
 
 // spec: NEW-CORE-MUT-2
-test "a mut list parameter rebound as a whole is detached from the caller (a mut record's rebinding reaches it): only the payload the list had then is written back" {
+test "whole mut collection and record rebinding writes the final value back while preserving source snapshots" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     try std.testing.expect(try matches(arena.allocator(), "v_mut_rebind", v_mut_rebind_output, 0));
@@ -449,13 +449,14 @@ test "a write through a narrowed Option (xs.append, xs[i] = v after `is None` re
 const v_snapshot_output =
     \\1 50
     \\1 4
-    \\1 1
+    \\1 7
     \\1 50 1
     \\11 3 17
     \\
 ;
 
 // spec: NEW-CORE-PLACE-3
+// spec-case: MUT-REBIND-CALLER-1
 test "a read through a receiver captured before an argument wrote its place sees the receiver as it was" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();

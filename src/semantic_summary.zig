@@ -21,7 +21,7 @@ const codec = @import("persist_codec.zig");
 const semantic_key = @import("semantic_key.zig");
 
 /// Payload version; bump for any layout or meaning change so old payloads miss.
-pub const format_version = "check-summaries-v4";
+pub const format_version = "check-summaries-v5";
 
 /// One stored diagnostic without related notes, its span relative to the start
 /// of its function's declaration region.
@@ -49,8 +49,7 @@ pub const Fact = struct {
     mutates_unknown: bool = false,
     return_origin: origins.Origin = .{},
     borrow_origin: origins.Origin = .{},
-    writes: bool = false,
-    external: bool = false,
+    inferred: struct { writes: bool = false, external: bool = false, caller_storage: u16 = 0 } = .{},
 };
 
 /// What one checked body reached besides its own declaration: the functions
@@ -156,20 +155,19 @@ pub fn fromFact(fact: origins.Fact) Fact {
         .mutates_unknown = fact.summary.mutates_unknown,
         .return_origin = fact.summary.return_origin,
         .borrow_origin = fact.summary.borrow_origin,
-        .writes = fact.summary.writes,
-        .external = fact.summary.external,
+        .inferred = .{ .writes = fact.summary.writes, .external = fact.summary.external, .caller_storage = fact.caller_storage },
     };
 }
 
 /// Convert persisted facts back to the passes' shape; witness spans stay empty.
 pub fn toFact(fact: Fact) origins.Fact {
-    return .{ .graph_mask = fact.graph_mask, .summary = .{
+    return .{ .graph_mask = fact.graph_mask, .caller_storage = fact.inferred.caller_storage, .summary = .{
         .return_origin = fact.return_origin,
         .borrow_origin = fact.borrow_origin,
         .mutates = fact.mutates,
         .mutates_unknown = fact.mutates_unknown,
-        .writes = fact.writes,
-        .external = fact.external,
+        .writes = fact.inferred.writes,
+        .external = fact.inferred.external,
     } };
 }
 

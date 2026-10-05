@@ -69,6 +69,7 @@ pub fn check(comptime Checker: type, self: *Checker, call_name: source.Span, arg
     if (marked < 2) return;
     var places: std.ArrayList(Place) = .empty;
     for (arguments) |argument| {
+        if (self.syntax.nodes.items[@backingInt(argument)].data != .mut_argument) continue;
         if (try place(Checker, self, argument)) |found| try places.append(self.allocator, found);
     }
     for (places.items, 0..) |first, index| {
@@ -84,9 +85,8 @@ pub fn check(comptime Checker: type, self: *Checker, call_name: source.Span, arg
 fn place(comptime Checker: type, self: *Checker, argument: ast.NodeId) Error!?Place {
     const nodes = self.syntax.nodes.items;
     const marker = nodes[@backingInt(argument)];
-    if (marker.data != .mut_argument) return null;
     var steps: std.ArrayList(Step) = .empty;
-    var at = marker.data.mut_argument;
+    var at = if (marker.data == .mut_argument) marker.data.mut_argument else argument;
     while (true) {
         switch (nodes[@backingInt(at)].data) {
             .name => |name| {
@@ -259,4 +259,189 @@ fn unknownKey(comptime Checker: type, self: *Checker, pair: [2]Place, depth: usi
         "`{s}` and `{s}` may name one {s}, because only two different constant {s} are provably distinct and `{s}` and `{s}` are not",
         .{ first, second, what, verb, left_key, right_key },
     );
+}
+
+/// Reject a receiver assignment or update that overlaps a mut call evaluated in
+/// the same statement. Read-only calls and disjoint receiver paths keep snapshots.
+pub fn checkReceivers(comptime Checker: type, self: *Checker, stmt: ast.Statement) Error!void {
+    var nodes: std.ArrayList(ast.NodeId) = .empty;
+    defer nodes.deinit(self.allocator);
+    try syntaxChildren(self.allocator, &nodes, stmt.data);
+    if (nodes.items.len == 0) return;
+    const root = nodes.items[0];
+    var cursor: usize = 0;
+    while (cursor < nodes.items.len) : (cursor += 1) try syntaxChildren(self.allocator, &nodes, self.syntax.nodes.items[@backingInt(nodes.items[cursor])].data);
+    if (stmt.data == .assignment) {
+        const name = stmt.data.assignment.name;
+        const receiver = Place{ .argument = root, .root = self.src.text(name), .root_node = root, .steps = &.{} };
+        try receiverCalls(Checker, self, .{ .place = receiver, .span = name, .statement = stmt.span, .expression = root }, nodes.items);
+    }
+    for (nodes.items) |id| {
+        const node = self.syntax.nodes.items[@backingInt(id)];
+        if (node.data == .buffer_operation and receiverMutation(node.data.buffer_operation.kind)) {
+            const operation = node.data.buffer_operation;
+            var receiver = Place{ .argument = id, .root = self.src.text(operation.owner), .root_node = id, .steps = &.{} };
+            var span = operation.owner;
+            if (operation.kind == .write and operation.arguments.len != 0) {
+                const index = operation.arguments[0];
+                const steps = try self.allocator.alloc(Step, 1);
+                const slot = self.active.get(receiver.root) orelse return error.InternalError;
+                const ty = self.locals.items[@backingInt(slot)].ty;
+                steps[0] = .{ .node = id, .operand = index, .key = key(Checker, self, index), .keyed = ty.isAggregate() and self.catalog.records[ty.recordIndex()].collection.kind == .dictionary };
+                receiver.steps = steps;
+                span.end = self.syntax.nodes.items[@backingInt(index)].span.end;
+                while (span.end < node.span.end and self.src.bytes[span.end] != ']') span.end += 1;
+                if (span.end < node.span.end) span.end += 1;
+            }
+            try receiverCalls(Checker, self, .{ .place = receiver, .span = span, .statement = stmt.span, .expression = root }, nodes.items);
+            continue;
+        }
+        if (node.data == .call and node.data.call.owner != null and mutatingMethod(self.src.text(node.data.call.name))) {
+            const owner = node.data.call.owner.?;
+            if (!self.active.contains(self.src.text(owner))) continue;
+            const receiver = Place{ .argument = id, .root = self.src.text(owner), .root_node = id, .steps = &.{} };
+            try receiverCalls(Checker, self, .{ .place = receiver, .span = owner, .statement = stmt.span, .expression = root }, nodes.items);
+            continue;
+        }
+        if (node.data == .list_operation and node.data.list_operation.kind == .write) {
+            const operation = node.data.list_operation;
+            var receiver = try place(Checker, self, operation.base) orelse continue;
+            const steps = try self.allocator.alloc(Step, receiver.steps.len + 1);
+            @memcpy(steps[0..receiver.steps.len], receiver.steps);
+            const index = operation.arguments[0];
+            steps[receiver.steps.len] = .{ .node = id, .operand = index, .key = key(Checker, self, index), .keyed = dictionaryReceiver(Checker, self, operation.base) };
+            receiver.steps = steps;
+            var span = self.syntax.nodes.items[@backingInt(operation.base)].span;
+            span.end = self.syntax.nodes.items[@backingInt(index)].span.end;
+            while (span.end < node.span.end and self.src.bytes[span.end] != ']') span.end += 1;
+            if (span.end < node.span.end) span.end += 1;
+            try receiverCalls(Checker, self, .{ .place = receiver, .span = span, .statement = stmt.span, .expression = root }, nodes.items);
+            continue;
+        }
+        const target: ast.NodeId = switch (node.data) {
+            .field_assignment => |write| write.target,
+            .index_assignment => |write| write.target,
+            .method_call => |call| if (mutatingMethod(self.src.text(call.name))) call.base else continue,
+            .list_operation => |operation| if (receiverMutation(operation.kind)) operation.base else continue,
+            else => continue,
+        };
+        const receiver = try place(Checker, self, target) orelse continue;
+        try receiverCalls(Checker, self, .{ .place = receiver, .span = self.syntax.nodes.items[@backingInt(target)].span, .statement = stmt.span, .expression = root }, nodes.items);
+    }
+}
+
+fn receiverMutation(kind: @import("buffer_operations.zig").Kind) bool {
+    return kind.writesReceiver() or kind == .set_add or kind == .set_discard;
+}
+
+const Receiver = struct { place: Place, span: source.Span, statement: source.Span, expression: ast.NodeId };
+
+fn mutatingMethod(name: []const u8) bool {
+    const kind = @import("buffer_operations.zig").method(name) orelse return false;
+    return receiverMutation(kind);
+}
+
+fn receiverCalls(comptime Checker: type, self: *Checker, receiver: Receiver, nodes: []const ast.NodeId) Error!void {
+    for (nodes) |id| {
+        const node = self.syntax.nodes.items[@backingInt(id)];
+        const arguments = switch (node.data) {
+            .call => |call| call.arguments,
+            .method_call => |call| call.arguments,
+            else => continue,
+        };
+        for (arguments) |argument| {
+            if (self.syntax.nodes.items[@backingInt(argument)].data != .mut_argument) continue;
+            const writable = try place(Checker, self, argument) orelse continue;
+            if (compare(receiver.place, writable) == null) continue;
+            const message = try std.fmt.allocPrint(
+                self.allocator,
+                "receiver `{s}` overlaps `{s}` evaluated in this statement; " ++
+                    "make the call `{s}` in its own statement first, save its result in a local, then update the receiver using that local",
+                .{ self.src.text(receiver.span), self.src.text(argumentSpan(Checker, self, writable)), self.src.text(node.span) },
+            );
+            try self.sink.items.append(self.allocator, .{
+                .code = overlap_code,
+                .span = argumentSpan(Checker, self, writable),
+                .message = message,
+                .related = .{ .span = receiver.span, .message = "the assignment or update receiver names an overlapping place" },
+                .provenance = .{ .fix = try splitReceiverFix(Checker, self, receiver, id) },
+            });
+            return error.SourceError;
+        }
+    }
+}
+
+/// Walk expression-bearing syntax fields, excluding statements and source spans.
+fn syntaxChildren(allocator: std.mem.Allocator, nodes: *std.ArrayList(ast.NodeId), value: anytype) std.mem.Allocator.Error!void {
+    const T = @TypeOf(value);
+    if (T == ast.NodeId) return nodes.append(allocator, value);
+    switch (@typeInfo(T)) {
+        .@"union" => switch (value) {
+            inline else => |payload| try syntaxChildren(allocator, nodes, payload),
+        },
+        .@"struct" => inline for (@typeInfo(T).@"struct".field_names) |field| try syntaxChildren(allocator, nodes, @field(value, field)),
+        .optional => if (value) |payload| try syntaxChildren(allocator, nodes, payload),
+        .pointer => |pointer| if (pointer.size == .slice and pointer.child != u8) {
+            for (value) |element| try syntaxChildren(allocator, nodes, element);
+        },
+        else => {},
+    }
+}
+
+/// Split only an unconditional call in a simple one-line update: no other
+/// expression can have effects or conditional evaluation that the edit moves.
+fn splitReceiverFix(comptime Checker: type, self: *Checker, receiver: Receiver, call: ast.NodeId) Error!?diagnostic.Fix {
+    if (!simpleAround(Checker, self, receiver.expression, call)) return null;
+    const node = self.syntax.nodes.items[@backingInt(call)];
+    const checked = self.resolved[@backingInt(call)] orelse return null;
+    if (self.nodes.items[@backingInt(checked)].ty == .unit) return null;
+    const bytes = self.src.bytes;
+    var start = receiver.statement.start;
+    while (start > 0 and bytes[start - 1] != '\n') start -= 1;
+    var indent = start;
+    while (indent < bytes.len and (bytes[indent] == ' ' or bytes[indent] == '\t')) indent += 1;
+    if (std.mem.indexOfScalar(u8, self.src.text(node.span), '\n') != null) return null;
+    var serial = node.span.start;
+    var name = try std.fmt.allocPrint(self.allocator, "mutation_result_{d}", .{serial});
+    while (self.active.contains(name) or std.mem.indexOf(u8, bytes, name) != null) {
+        serial += 1;
+        name = try std.fmt.allocPrint(self.allocator, "mutation_result_{d}", .{serial});
+    }
+    const more = try self.allocator.alloc(diagnostic.Edit, 1);
+    more[0] = .{ .span = node.span, .text = name };
+    return .{ .edit = .{ .span = .{ .start = start, .end = start }, .text = try std.fmt.allocPrint(self.allocator, "{s}{s} = {s}\n", .{ bytes[start..indent], name, self.src.text(node.span) }) }, .more = more };
+}
+
+fn simpleAround(comptime Checker: type, self: *Checker, id: ast.NodeId, call: ast.NodeId) bool {
+    if (id == call) return true;
+    return switch (self.syntax.nodes.items[@backingInt(id)].data) {
+        .name, .integer, .boolean, .text, .bytes, .unit => true,
+        .field => |field| simpleAround(Checker, self, field.base, call),
+        .index => |index| simpleAround(Checker, self, index.base, call) and simpleAround(Checker, self, index.index, call),
+        .field_assignment => |write| simpleAround(Checker, self, write.target, call) and simpleAround(Checker, self, write.value, call),
+        .index_assignment => |write| simpleAround(Checker, self, write.target, call) and simpleAround(Checker, self, write.value, call),
+        .buffer_operation => |operation| blk: {
+            if (!receiverMutation(operation.kind)) break :blk false;
+            for (operation.arguments) |argument| if (!simpleAround(Checker, self, argument, call)) break :blk false;
+            break :blk true;
+        },
+        .list_operation => |operation| blk: {
+            if (!receiverMutation(operation.kind) or !simpleAround(Checker, self, operation.base, call)) break :blk false;
+            for (operation.arguments) |argument| if (!simpleAround(Checker, self, argument, call)) break :blk false;
+            break :blk true;
+        },
+        .method_call => |method| blk: {
+            if (!mutatingMethod(self.src.text(method.name)) or !simpleAround(Checker, self, method.base, call)) break :blk false;
+            for (method.arguments) |argument| if (!simpleAround(Checker, self, argument, call)) break :blk false;
+            break :blk true;
+        },
+        .call => |method| blk: {
+            const owner = method.owner orelse break :blk false;
+            if (!self.active.contains(self.src.text(owner))) break :blk false;
+            if (!mutatingMethod(self.src.text(method.name))) break :blk false;
+            for (method.arguments) |argument| if (!simpleAround(Checker, self, argument, call)) break :blk false;
+            break :blk true;
+        },
+        else => false,
+    };
 }

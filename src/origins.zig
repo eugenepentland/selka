@@ -90,7 +90,7 @@ pub const Summary = struct {
 /// them: the propagated effect mask (before the mutation bit is added) and the
 /// mutation summary. A check that did not materialize a body stands these in
 /// for it; a pass that computes them can hand them back for the next check.
-pub const Fact = struct { graph_mask: effect_set.Mask = 0, summary: Summary = .{} };
+pub const Fact = struct { graph_mask: effect_set.Mask = 0, caller_storage: u16 = 0, summary: Summary = .{} };
 
 /// The stand-in facts for function `index`, or null when its body was checked.
 pub fn standIn(stubs: []const ?Fact, index: usize) ?Fact {
@@ -573,10 +573,8 @@ const WriteSite = struct {
     }
 };
 
-/// Record an element write `a[i] = v` into a local. Only a fixed-array
-/// parameter's own storage belongs to the caller — a `mut` one is the caller's
-/// array, and any other is refused as an undeclared write exactly as a list
-/// parameter is — so a write into any other local stays inside this frame.
+/// Record assignments that write a parameter's caller storage: fixed-array
+/// elements and whole `mut` record or collection variables.
 fn absorbElementWrite(context: *const Context, function: typed.Function, origins: []const Origin, store: typed.Store, span: source.Span, summary: *Summary) void {
     const slot = @backingInt(store.slot);
     if (slot >= function.signature.parameter_count) return;
@@ -584,8 +582,11 @@ fn absorbElementWrite(context: *const Context, function: typed.Function, origins
     const array_write = store.element and typed.referenceArray(context.program.records, ty);
     // VALUE-SEMANTICS-3: any assignment to a `mut` record parameter (a field
     // write rebuilds it) lands in the caller's record.
-    const record_write = typed.referenceRecord(context.program.records, ty) and declaredMut(function, slot);
-    if (!array_write and !record_write) return;
+    const declared_mut = declaredMut(function, slot);
+    const record_write = typed.referenceRecord(context.program.records, ty) and declared_mut;
+    const collection_write = @import("mut_abi.zig").collection(context.program.records, ty) and declared_mut;
+    const caller_write = array_write or record_write or collection_write;
+    if (!caller_write) return;
     const site = WriteSite{ .context = context, .function = function, .origins = origins, .arguments = &.{}, .summary = summary };
     site.absorbWrite(Origin.fromPosition(@intCast(slot)), span);
 }

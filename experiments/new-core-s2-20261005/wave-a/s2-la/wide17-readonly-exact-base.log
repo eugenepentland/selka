@@ -1,0 +1,58 @@
+thread 2340910 panic: integer does not fit in destination type
+/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/src/origins.zig:45:47: 0x2a4226a in fromPosition (compiler.zig)
+        return .{ .positions = @as(u16, 1) << @intCast(position) };
+                                              ^
+/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/src/origins.zig:424:83: 0x2a41d6a in localOrigin (compiler.zig)
+        if (index < function.signature.parameter_count) return Origin.fromPosition(@intCast(index));
+                                                                                  ^
+/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/src/origins.zig:337:46: 0x2a3837b in nodeOrigin (compiler.zig)
+            .local => |slot| self.localOrigin(function, origins, slot),
+                                             ^
+/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/src/origins.zig:647:91: 0x2a5bde0 in applyStatement (compiler.zig)
+            summary.return_origin = Origin.merge(summary.return_origin, context.nodeOrigin(function, origins, value, 0));
+                                                                                          ^
+/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/src/origins.zig:682:60: 0x2a53e50 in analyzeFunction (compiler.zig)
+            .statement => |statement_id| if (applyStatement(context, function, origins, statement_id, &summary)) {
+                                                           ^
+/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/src/origins.zig:723:58: 0x2a52164 in buildSummaries (compiler.zig)
+            computed.borrow_origin = (try analyzeFunction(&physical, index)).return_origin;
+                                                         ^
+/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/src/origins.zig:1340:37: 0x2a239d5 in check (compiler.zig)
+    const built = try buildSummaries(allocator, program, request.stubs);
+                                    ^
+/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/src/effects.zig:835:39: 0x2a224fe in mutationPass (compiler.zig)
+    const violated = origin_pass.check(allocator, program, .{
+                                      ^
+/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/src/effects.zig:641:47: 0x2a1278c in check (compiler.zig)
+    const mutation_violated = try mutationPass(allocator, program, request, &graph);
+                                              ^
+/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/src/sema.zig:1923:33: 0x28d4244 in checkCore (compiler.zig)
+    @import("effects.zig").check(allocator, checked, .{ .exported = exported, .src = src, .syntax = program, .sink = sink, .stubs = stubs, .facts = facts }) catch |err| return retryOr(&plan, err);
+                                ^
+/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/src/sema.zig:1776:21: 0x28cf122 in checkCached (compiler.zig)
+    return checkCore(allocator, src, program, sink, .{ .names = module_names, .cache = cache });
+                    ^
+/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/src/compiler.zig:222:44: 0x336b465 in checkWithCache (compiler.zig)
+        self.program = try sema.checkCached(sink.allocator, self.src, self.syntax.?, &sink, null, cache);
+                                           ^
+/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/src/main.zig:887:38: 0x336dcc3 in checkUnit (main.zig)
+    return compilation.checkWithCache(semantic);
+                                     ^
+/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/src/main.zig:755:14: 0x14f796b in runCommand (main.zig)
+    checkUnit(parsed, &compilation, &counting) catch |err| switch (err) {
+             ^
+/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/src/main.zig:499:30: 0x152bdcd in run (main.zig)
+    const status = runCommand(command_init, with_frontend) catch |err| {
+                             ^
+/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/src/main.zig:462:23: 0x152fee9 in dispatch (main.zig)
+    const status = run(init, parsed) catch |err| status: {
+                      ^
+/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/src/main.zig:197:28: 0x1531368 in main (main.zig)
+    const status = dispatch(init) catch |err| status: {
+                           ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/start.zig:791:30: 0x14e1b5d in callMain (std.zig)
+    return wrapMain(root.main(.{
+                             ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/start.zig:218:5: 0x14e11e1 in _start (std.zig)
+    asm volatile (switch (native_arch) {
+    ^

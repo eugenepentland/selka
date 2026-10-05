@@ -244,6 +244,82 @@ fn metaDigest(allocator: std.mem.Allocator, manifest: []const u8, name: []const 
     return (try unitNamed(allocator, manifest, name)).?.object.get("meta_digest").?.string;
 }
 
+const callback_metadata_source =
+    \\def change(items: mut list[int]):
+    \\    for value in [7, 8]:
+    \\        items.append(value)
+    \\def main() -> int:
+    \\    items = [1]
+    \\    callback = change
+    \\    callback(mut items)
+    \\    return len(items)
+;
+
+fn callbackMetadata(a: std.mem.Allocator, path: []const u8, text: []const u8, reuse: ?fragments.Reuse) ![]u8 {
+    var compilation = try language.Compilation.init(t.allocator, path, text);
+    defer compilation.deinit();
+    try compilation.emit();
+    var sink: @import("diagnostic.zig").Sink = .{ .allocator = compilation.arena.allocator() };
+    return @import("qbe.zig").generateWithInterface(a, compilation.code.?, compilation.src, &sink, .{ .reuse = reuse });
+}
+
+// spec-case: MUT-REBIND-CALLER-1
+test "mut callback metadata has synthetic positions across consumer source paths and edits" {
+    const collector_runtime = language.runtime_mode.pinCollector();
+    defer language.runtime_mode.set(collector_runtime);
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const first = try callbackMetadata(a, "first.my", callback_metadata_source, null);
+    const moved = try callbackMetadata(a, "interface_root.my", "# shifted consumer\n\n" ++ callback_metadata_source, null);
+    const left = (try unitNamed(a, first, "@mut_callback:change")).?;
+    const right = (try unitNamed(a, moved, "@mut_callback:change")).?;
+    try expectSamePositions(left, right);
+    var positions: units.Positions = .init(left);
+    while (positions.next()) |location| {
+        try t.expectEqualStrings("@mut_callback", location.path);
+        try t.expectEqual(@as(usize, 1), location.line);
+        try t.expectEqual(@as(usize, 1), location.column);
+    }
+    const canonical_left = (try unitNamed(a, first, "change")).?;
+    const canonical_right = (try unitNamed(a, moved, "change")).?;
+    var original_positions: units.Positions = .init(canonical_left);
+    var moved_positions: units.Positions = .init(canonical_right);
+    const first_position = original_positions.next().?;
+    const shifted = moved_positions.next().?;
+    try t.expectEqualStrings("first.my", first_position.path);
+    try t.expectEqualStrings("interface_root.my", shifted.path);
+    try t.expect(shifted.line > first_position.line);
+}
+
+// spec-case: MUT-REBIND-CALLER-1
+test "mut callback metadata digest and stand-in dependencies ignore unrelated first source edits" {
+    const collector_runtime = language.runtime_mode.pinCollector();
+    defer language.runtime_mode.set(collector_runtime);
+    var directory = t.tmpDir(.{});
+    defer directory.cleanup();
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const root = try directory.dir.realPathFileAlloc(t.io, ".", a);
+    var opened: Opened = undefined;
+    try opened.init(root);
+    defer opened.deinit();
+    const first = try callbackMetadata(a, "first.my", callback_metadata_source, .{ .store = &opened.store, .lean = true });
+    const moved = try callbackMetadata(a, "interface_root.my", "# shifted consumer\n\n" ++ callback_metadata_source, .{ .store = &opened.store, .lean = true });
+    try t.expectEqualStrings(try metaDigest(a, first, "@mut_callback:change"), try metaDigest(a, moved, "@mut_callback:change"));
+    try t.expect(!std.mem.eql(u8, try metaDigest(a, first, "change"), try metaDigest(a, moved, "change")));
+    const base = try std.fs.path.join(a, &.{ root, "standin" });
+    const cold = try emitStandIn(a, base, &mut_abi_original);
+    const edited: Files = .{ .main = "# moved\n\n" ++ mut_abi_main, .helper = mut_abi_helper };
+    const warm = try emitStandIn(a, base, &edited);
+    try t.expect(warm.statistics.standin.reused > 0);
+    const name = "@mut_callback:helper::append_only";
+    try t.expectEqualStrings(try metaDigest(a, cold.manifest, name), try metaDigest(a, warm.manifest, name));
+    const fresh = try emit(a, &edited, .{ .store = &opened.store, .lean = true, .executable = true });
+    try expectSameBuild(a, fresh, warm.manifest);
+}
+
 // spec: EMIT-META-1
 test "an edit computes metadata only for units of the sources it changed" {
     var directory = t.tmpDir(.{});
@@ -459,6 +535,59 @@ fn expectStandInMatches(allocator: std.mem.Allocator, root: []const u8, referenc
     const full = try emitLean(allocator, reference, files);
     try expectSameBuild(allocator, full.manifest, stood.manifest);
     return stood.statistics.standin;
+}
+
+const mut_abi_main =
+    \\module main
+    \\import helper
+    \\def main() -> int:
+    \\    items = [1]
+    \\    saved = items
+    \\    helper.change(mut items)
+    \\    callback = helper.change
+    \\    callback(mut items)
+    \\    append = helper.append_only
+    \\    append(mut items)
+    \\    helper.append_only(mut items)
+    \\    return len(items) + len(saved)
+;
+const mut_abi_helper =
+    \\module helper
+    \\public def change(items: mut list[int]):
+    \\    for value in [7, 8]:
+    \\        items.append(value)
+    \\public def append_only(items: mut list[int]):
+    \\    for value in [3, 4]:
+    \\        items.append(value)
+;
+const mut_abi_original: Files = .{ .main = mut_abi_main, .helper = mut_abi_helper };
+const mut_abi_rebound: Files = .{
+    .main = mut_abi_main,
+    .helper = replaced(mut_abi_helper, "public def change(items: mut list[int]):\n", "public def change(items: mut list[int]):\n    items = [9]\n"),
+};
+
+// spec-case: MUT-REBIND-CALLER-1
+test "mut ABI fragment reuse reserves callback adapters and follows producer rebinding" {
+    const collector_runtime = language.runtime_mode.pinCollector();
+    defer language.runtime_mode.set(collector_runtime);
+    var directory = t.tmpDir(.{});
+    defer directory.cleanup();
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const base = try directory.dir.realPathFileAlloc(t.io, ".", a);
+    const root = try std.fs.path.join(a, &.{ base, "standin" });
+    const reference = try std.fs.path.join(a, &.{ base, "full" });
+    const cold = try expectStandInMatches(a, root, reference, &mut_abi_original);
+    try t.expectEqual(@as(usize, 0), cold.reused);
+    const warm = try expectStandInMatches(a, root, reference, &mut_abi_original);
+    try t.expect(warm.reused > 0);
+    _ = try expectStandInMatches(a, root, reference, &mut_abi_rebound);
+    const rebound = try expectStandInMatches(a, root, reference, &mut_abi_rebound);
+    try t.expect(rebound.reused > 0);
+    _ = try expectStandInMatches(a, root, reference, &mut_abi_original);
+    const restored = try expectStandInMatches(a, root, reference, &mut_abi_original);
+    try t.expectEqual(warm.reused, restored.reused);
 }
 
 // spec: EMIT-STANDIN-1

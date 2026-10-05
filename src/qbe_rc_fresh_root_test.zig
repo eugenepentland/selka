@@ -59,7 +59,8 @@ const source =
     \\def calls(count: int) -> int:
     \\    items = [1]
     \\    for at in range(count):
-    \\        items.append(callback(mut items))
+    \\        mutation_result_62 = callback(mut items)
+    \\        items.append(mutation_result_62)
     \\    return len(items)
     \\def main() -> int:
     \\    return grow(0)

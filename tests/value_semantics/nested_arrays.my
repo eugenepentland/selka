@@ -148,35 +148,43 @@ public def test_list_array_path_inside_a_loop() -> bool:
 
 
 # spec-case: COW-NESTED-1
-public def test_later_index_replaces_the_dictionary_entry() -> bool:
+public def test_replacement_call_finishes_before_dictionary_receiver_selection() -> bool:
     original: dict[str, [1]list[int]] = {"k": [[1]]}
     changed = original
-    changed["k"][replace_entry(mut changed)].append(2)
-    return original["k"][0] == [1] and changed["k"][0] == [9]
+    selected = replace_entry(mut changed)
+    changed["k"][selected].append(2)
+    return original["k"][0] == [1] and changed["k"][0] == [9, 2]
 
 
 # spec-case: COW-NESTED-1
-public def test_later_index_removes_the_dictionary_entry() -> bool:
+public def test_removed_entry_can_be_reinserted_before_receiver_selection() -> bool:
     original: dict[str, [1]list[int]] = {"k": [[1]]}
     changed = original
-    changed["k"][remove_entries(mut changed)].append(2)
-    return original["k"][0] == [1] and len(changed) == 0
+    selected = remove_entries(mut changed)
+    removed = len(changed) == 0
+    changed["k"] = [[9]]
+    changed["k"][selected].append(2)
+    return original["k"][0] == [1] and removed and changed["k"][0] == [9, 2]
 
 
 # spec-case: COW-NESTED-1
-public def test_later_index_rehashes_the_dictionary() -> bool:
+public def test_rehash_call_finishes_before_dictionary_receiver_selection() -> bool:
     original: dict[str, [1]list[int]] = {"k": [[1]]}
     changed = original
-    changed["k"][grow_entries(mut changed)].append(2)
+    selected = grow_entries(mut changed)
+    changed["k"][selected].append(2)
     return original["k"][0] == [1] and changed["k"][0] == [1, 2] and len(changed) == 41
 
 
 # spec-case: COW-NESTED-1
-public def test_later_index_clears_the_outer_list() -> bool:
+public def test_cleared_outer_list_can_be_repopulated_before_receiver_selection() -> bool:
     original: list[[1]list[int]] = [[[1]]]
     changed = original
-    changed[0][clear_rows(mut changed)].append(2)
-    return original[0][0] == [1] and len(changed) == 0
+    selected = clear_rows(mut changed)
+    cleared = len(changed) == 0
+    changed.append([[9]])
+    changed[0][selected].append(2)
+    return original[0][0] == [1] and cleared and changed[0][0] == [9, 2]
 
 
 # spec-case: COW-NESTED-1

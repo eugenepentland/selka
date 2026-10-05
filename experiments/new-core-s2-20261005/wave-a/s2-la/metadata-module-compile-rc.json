@@ -1,0 +1,108 @@
+{
+ "totals": {
+  "programs": 4,
+  "equal": 4,
+  "reference_failed": 0,
+  "modules": 9,
+  "units_compared": 124,
+  "units_whole": 124,
+  "specializations_shared": 0,
+  "interfaces_compared": 9,
+  "executables_identical": 4,
+  "different": []
+ },
+ "results": [
+  {
+   "entry": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-language/tests/lang/mut_argument_places.my",
+   "status": "equal",
+   "problems": [],
+   "whole_emit_seconds": 1.515,
+   "modules": 2,
+   "compile_seconds": 2.051,
+   "interfaces_compared": 2,
+   "units_compared": 30,
+   "units_whole": 30,
+   "specializations_shared": 0,
+   "physical_entries_compared": 30,
+   "physical_contracts": {
+    "borrowed": 0,
+    "immortal": 0,
+    "stable_parameters": 1,
+    "stood_in": 15
+   },
+   "link_seconds": 0.353,
+   "link_compiled_function_objects": 0,
+   "executables_identical": true,
+   "exit_status": 0
+  },
+  {
+   "entry": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-language/tests/lang/mut_rebind_caller.my",
+   "status": "equal",
+   "problems": [],
+   "whole_emit_seconds": 3.027,
+   "modules": 2,
+   "compile_seconds": 4.131,
+   "interfaces_compared": 2,
+   "units_compared": 34,
+   "units_whole": 34,
+   "specializations_shared": 0,
+   "physical_entries_compared": 34,
+   "physical_contracts": {
+    "borrowed": 0,
+    "immortal": 0,
+    "stable_parameters": 0,
+    "stood_in": 18
+   },
+   "link_seconds": 0.305,
+   "link_compiled_function_objects": 0,
+   "executables_identical": true,
+   "exit_status": 0
+  },
+  {
+   "entry": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-language/tests/lang/mut_rebind_modules.my",
+   "status": "equal",
+   "problems": [],
+   "whole_emit_seconds": 0.397,
+   "modules": 3,
+   "compile_seconds": 0.777,
+   "interfaces_compared": 3,
+   "units_compared": 8,
+   "units_whole": 8,
+   "specializations_shared": 0,
+   "physical_entries_compared": 8,
+   "physical_contracts": {
+    "borrowed": 0,
+    "immortal": 0,
+    "stable_parameters": 0,
+    "stood_in": 10
+   },
+   "link_seconds": 0.26,
+   "link_compiled_function_objects": 0,
+   "executables_identical": true,
+   "exit_status": 0
+  },
+  {
+   "entry": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-language/tests/lang/rc_pin_elide.my",
+   "status": "equal",
+   "problems": [],
+   "whole_emit_seconds": 2.536,
+   "modules": 2,
+   "compile_seconds": 3.189,
+   "interfaces_compared": 2,
+   "units_compared": 52,
+   "units_whole": 52,
+   "specializations_shared": 0,
+   "physical_entries_compared": 52,
+   "physical_contracts": {
+    "borrowed": 0,
+    "immortal": 0,
+    "stable_parameters": 12,
+    "stood_in": 26
+   },
+   "link_seconds": 0.327,
+   "link_compiled_function_objects": 0,
+   "executables_identical": true,
+   "exit_status": 0
+  }
+ ]
+}

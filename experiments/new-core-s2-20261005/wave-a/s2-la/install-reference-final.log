@@ -1,0 +1,40 @@
+guardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source 1b6c13222675)
+guardian: run-all: cached — 0 blocking (inputs unchanged since last green run)
+Build Summary: 19/19 steps succeeded
+install success
++- install mylang success
+|  +- compile exe mylang debug native cached 9ms MaxRSS:41M
+|  |  +- run exe qbe-build-assets (qbe_build_assets) cached
+|  |     +- compile exe qbe-build-assets debug native cached 6ms MaxRSS:40M
+|  +- run ../guardian-zig/zig-out/bin/guardian-check success 102ms
+|     +- guardian-selfcheck success
+|        +- run ../guardian-zig/zig-out/bin/guardian-check success 5ms
++- install qbe cached
+|  +- compile exe qbe fast native cached 12ms MaxRSS:39M
+|  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
++- install generated/ success
+|  +- run exe mylang (mylang-runtime) success 14s
+|     +- compile exe mylang debug native (+1 more reused dependencies)
+|     +- install mylang (+2 more reused dependencies)
+|     +- compile exe qbe fast native (reused)
++- install board-trial success
+|  +- compile exe board-trial debug native success 3s MaxRSS:440M
+|  |  +- options cached
+|  |  |  +- compile exe qbe fast native (reused)
+|  |  +- run exe qbe-build-assets (qbe_build_assets) (+1 more reused dependencies)
+|  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
++- install schematic-svg success
+|  +- compile exe schematic-svg debug native success 4s MaxRSS:440M
+|  |  +- options (+1 more reused dependencies)
+|  |  +- run exe qbe-build-assets (qbe_build_assets) (+1 more reused dependencies)
+|  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
++- install mylang-io success
+|  +- compile exe mylang-io debug native success 4s MaxRSS:445M
+|  |  +- options (+1 more reused dependencies)
+|  |  +- run exe qbe-build-assets (qbe_build_assets) (+1 more reused dependencies)
+|  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
++- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+
+real 15.09
+user 55.10
+sys 7.17

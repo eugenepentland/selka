@@ -1,0 +1,83 @@
+test-units
++- run test 28 pass, 2 fail (30 total)
+guardian/test: test wall 2.52s; slowest over 50ms:
+guardian/test:   0.70s  mut_exclusive_test.test.receiver overlap rejects assignments and updates while keeping independent roots
+guardian/test:   0.62s  mut_callback_abi_test.test.mut callback adapter later readonly rows preserve captured RC leaf and snapshots
+guardian/test:   0.41s  mut_callback_abi_test.test.mut callback adapter RC keeps two interior slots and managed returns independent
+guardian/test:   0.39s  mut_callback_abi_test.test.mut callback adapter later readonly record preserves captured RC field and snapshots
+guardian/test:   0.16s  mut_callback_abi_test.test.mut callback adapter later readonly rows preserve captured GC leaf and snapshots
+guardian/test:   0.12s  mut_callback_abi_test.test.mut callback adapter later readonly record preserves captured GC field and snapshots
+guardian/test:   0.07s  mut_callback_abi_test.test.mut callback adapter GC stress keeps two interior slots and managed returns independent
+guardian/test: FAIL — 2 failed of 30
+guardian/test: RESULT {"passed":28,"failed":2,"skipped":0}
+error: 'mut_exclusive_test.test.receiver overlap rejects assignments and updates while keeping independent roots' failed:
+       guardian/test: 30 test(s) selected by filter: "mut collection ABI", "receiver overlap", "physical bytecode preserves" (+2 more) — 18 match by name, 12 unnamed test block(s) run regardless
+
+       ====== expected this output: =========
+       p[make(mut p)]␃
+
+       ======== instead found this: =========
+       p␃
+
+       ======================================
+       First difference occurs on line 1:
+       expected:
+       p[make(mut p)]
+        ^ ('\x5b')
+       found:
+       p
+        ^ (end of string)
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:681:9: 0x14db505 in expectEqualStrings (std.zig)
+               return error.TestExpectedEqual;
+               ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-language/src/mut_exclusive_test.zig:106:5: 0x2cde083 in rejectsProgram (root_test.zig)
+           try t.expectEqualStrings(related, found.related);
+           ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-language/src/mut_exclusive_test.zig:96:5: 0x2cdf5e1 in rejects__anon_284526 (root_test.zig)
+           return rejectsProgram(helpers ++ body, span, related, why);
+           ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-language/src/mut_exclusive_test.zig:266:5: 0x2cdf883 in test.receiver overlap rejects assignments and updates while keeping independent roots (root_test.zig)
+           try rejects(main("    p = [1]\n    p[make(mut p)] = 9\n"), "mut p", "p[make(mut p)]", "own statement first");
+           ^
+error: 'mut_exclusive_test.test.receiver overlap covers mapping and set updates keyword calls and function values' failed:
+       ====== expected this output: =========
+       values[select(mut values)]␃
+
+       ======== instead found this: =========
+       values␃
+
+       ======================================
+       First difference occurs on line 1:
+       expected:
+       values[select(mut values)]
+             ^ ('\x5b')
+       found:
+       values
+             ^ (end of string)
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:681:9: 0x14db505 in expectEqualStrings (std.zig)
+               return error.TestExpectedEqual;
+               ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-language/src/mut_exclusive_test.zig:106:5: 0x2cde083 in rejectsProgram (root_test.zig)
+           try t.expectEqualStrings(related, found.related);
+           ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-language/src/mut_exclusive_test.zig:290:5: 0x2cde884 in test.receiver overlap covers mapping and set updates keyword calls and function values (root_test.zig)
+           try rejectsProgram(dict ++ "def main() -> int:\n    values = {0: 1}\n    values[select(mut values)] = 9\n    return len(values)\n", "mut values", "values[select(mut values)]", "own statement first");
+           ^
+failed command: sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_QBE=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-language/zig-out/focus/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./.zig-cache/o/eb5e8825bf56ac9bbec3fc8a79f8f1f4/test "--guardian-filter=mut collection ABI" "--guardian-filter=receiver overlap" "--guardian-filter=physical bytecode preserves" "--guardian-filter=caller storage ABI" "--guardian-filter=mut callback adapter" --cache-dir=./.zig-cache --seed=0x5f47f701 --listen=-
+
+Build Summary: 9/11 steps succeeded (1 failed); 28/30 tests passed (2 failed)
+test-units transitive failure
++- run test 28 pass, 2 fail (30 total)
+   +- compile test debug native success 2s MaxRSS:486M
+   |  +- run exe qbe-build-assets (qbe_build_assets) success 50ms
+   |  |  +- compile exe qbe-build-assets debug native cached 7ms MaxRSS:36M
+   |  +- options cached
+   |     +- compile exe qbe fast native cached 14ms MaxRSS:35M
+   +- install generated to qbe cached
+   |  +- compile exe qbe fast native (reused)
+   +- install generated to mylang success
+      +- compile exe mylang debug native success 3s MaxRSS:557M
+         +- run exe qbe-build-assets (qbe_build_assets) (+1 more reused dependencies)
+affected-compiler success
++- install generated to mylang (+1 more reused dependencies)
++- install generated to qbe (+1 more reused dependencies)

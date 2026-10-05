@@ -260,6 +260,8 @@ test {
     _ = @import("managed_frontend_test.zig");
     _ = @import("sema_mut_arguments_test.zig");
     _ = @import("mut_exclusive_test.zig");
+    _ = @import("mut_abi_test.zig");
+    _ = @import("mut_callback_abi_test.zig");
     _ = @import("recursive_resources_test.zig");
     _ = @import("surface_collections_test.zig");
     _ = @import("builtin_context_test.zig");

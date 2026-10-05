@@ -22,7 +22,8 @@ const source =
     \\    items.append(Point(9, 11))
     \\    return 0
     \\def callback(items: mut list[Point]) -> int:
-    \\    items[change(mut items)].x = 7
+    \\    mutation_result_25 = change(mut items)
+    \\    items[mutation_result_25].x = 7
     \\    return len(items)
     \\def iterate(items: list[Point]) -> int:
     \\    total = 0
@@ -79,7 +80,7 @@ test "RC empty local journals keep parameter operand scratch and native admissio
 }
 
 // spec: RC-EMPTY-RECEIVER-STORAGE-1
-test "RC empty receiver scopes omit unused storage while callbacks retain it" {
+test "RC empty receiver scopes omit storage when a mut call precedes selection" {
     const saved = runtime.get();
     defer runtime.set(saved);
     runtime.set(.rc);
@@ -90,7 +91,7 @@ test "RC empty receiver scopes omit unused storage while callbacks retain it" {
     try t.expect(!contains(il, "%rcg"));
     try t.expect(!contains(il, "# rc-frame"));
     try t.expect(contains(il, "myl_qbe_fail_frame"));
-    try t.expect(contains(try named(manifest.value, "callback"), "%rcborrow"));
+    try t.expect(!contains(try named(manifest.value, "callback"), "%rcborrow"));
     try t.expect(contains(try named(manifest.value, "callback"), "myl_qbe_rc_scope_pin"));
 }
 

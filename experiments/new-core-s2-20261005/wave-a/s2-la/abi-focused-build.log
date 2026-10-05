@@ -1,0 +1,53 @@
+test-units
++- run test 12 pass, 1 fail (13 total)
+guardian/test: test wall 0.19s; slowest over 50ms:
+guardian/test:   0.19s  mut_abi_test.test.mut collection ABI propagates recursive rebinding and preserves direct payload parameters
+guardian/test: FAIL — 1 failed of 13
+guardian/test: RESULT {"passed":12,"failed":1,"skipped":0}
+error: 'mut_abi_test.test.mut collection ABI propagates recursive rebinding and preserves direct payload parameters' failed:
+       guardian/test: 13 test(s) selected by filter: "mut collection ABI" — 1 match by name, 12 unnamed test block(s) run regardless
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-language/src/effects.zig:664:19: 0x15ebf5d in check (root_test.zig)
+           if (violated) return error.SourceError;
+                         ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-language/src/sema.zig:1605:5: 0x15e911f in retryOr (root_test.zig)
+           return err;
+           ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-language/src/sema.zig:1923:170: 0x133d15c in checkCore (root_test.zig)
+           @import("effects.zig").check(allocator, checked, .{ .exported = exported, .src = src, .syntax = program, .sink = sink, .stubs = stubs, .facts = facts }) catch |err| return retryOr(&plan, err);
+                                                                                                                                                                                ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-language/src/sema.zig:1776:5: 0x133812b in checkCached (root_test.zig)
+           return checkCore(allocator, src, program, sink, .{ .names = module_names, .cache = cache });
+           ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-language/src/compiler.zig:222:24: 0x13378ac in checkWithCache (root_test.zig)
+               self.program = try sema.checkCached(sink.allocator, self.src, self.syntax.?, &sink, null, cache);
+                              ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-language/src/compiler.zig:202:9: 0x1335ff6 in check (root_test.zig)
+               return self.checkWithCache(null);
+               ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-language/src/compiler.zig:248:9: 0x1335b31 in emitWithOptions (root_test.zig)
+               try self.check();
+               ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-language/src/compiler.zig:243:9: 0x1335a66 in emit (root_test.zig)
+               return self.emitWithOptions(false);
+               ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-language/src/mut_abi_test.zig:36:5: 0x1330b3b in test.mut collection ABI propagates recursive rebinding and preserves direct payload parameters (root_test.zig)
+           try compilation.emit();
+           ^
+failed command: sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_QBE=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-language/zig-out/focus/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./.zig-cache/o/bb179a75adc53b55b87e58825a1c8867/test "--guardian-filter=mut collection ABI" --cache-dir=./.zig-cache --seed=0x73e16a6 --listen=-
+
+Build Summary: 9/11 steps succeeded (1 failed); 12/13 tests passed (1 failed)
+test-units transitive failure
++- run test 12 pass, 1 fail (13 total)
+   +- compile test debug native success 1s MaxRSS:325M
+   |  +- run exe qbe-build-assets (qbe_build_assets) success 53ms
+   |  |  +- compile exe qbe-build-assets debug native cached 7ms MaxRSS:37M
+   |  +- options cached
+   |     +- compile exe qbe fast native cached 15ms MaxRSS:36M
+   +- install generated to qbe cached
+   |  +- compile exe qbe fast native (reused)
+   +- install generated to mylang success
+      +- compile exe mylang debug native success 3s MaxRSS:550M
+         +- run exe qbe-build-assets (qbe_build_assets) (+1 more reused dependencies)
+affected-compiler success
++- install generated to mylang (+1 more reused dependencies)
++- install generated to qbe (+1 more reused dependencies)

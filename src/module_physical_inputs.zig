@@ -192,6 +192,7 @@ const State = struct {
             .parameter_count = count,
             .constant_arguments = plain.signature.constant_arguments,
             .declared_mutates = plain.signature.declared_mutates,
+            .inferred = .{ .caller_storage = plain.signature.inferred.caller_storage },
         };
         plain.scope = .{ .locals = parameters, .instructions = &.{} };
         return physical.write(self.a, .{ .functions = self.functions.items, .records = self.records.items }, plain);

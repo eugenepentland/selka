@@ -1,0 +1,14 @@
+passed mut_rebind_caller::test_conditional_dict_rebind_reaches_caller_and_preserves_sources
+passed mut_rebind_caller::test_conditional_list_rebind_reaches_caller_and_preserves_sources
+passed mut_rebind_caller::test_conditional_record_rebind_reaches_caller_and_preserves_sources
+passed mut_rebind_caller::test_conditional_set_rebind_reaches_caller_and_preserves_sources
+passed mut_rebind_caller::test_function_value_uses_caller_variable_for_rebinding
+passed mut_rebind_caller::test_loop_dict_rebind_writes_final_value
+passed mut_rebind_caller::test_loop_list_rebind_writes_final_value
+passed mut_rebind_caller::test_loop_record_rebind_writes_final_value
+passed mut_rebind_caller::test_loop_set_rebind_writes_final_value
+failed mut_rebind_caller::test_nested_element_and_field_places_receive_rebound_values: NativeTestProcessFailed: .{ .signal = .ABRT }
+50e98537750fe3cbf1efc6f482d0fa718a4a9e71cb90d6bcbd5dbdc437fce3fe: mylang-runtime/native_rc_alloc.c:215: void slab_free(myl_native_heap *, rc_slab *): Assertion `!slab->live' failed.
+
+passed mut_rebind_caller::test_recursive_forwarding_propagates_rebind_without_order_dependence
+10 passed, 0 cached, 1 failed, 0 skipped

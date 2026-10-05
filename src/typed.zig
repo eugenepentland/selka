@@ -658,6 +658,8 @@ pub const FunctionPolicy = struct {
 };
 /// Checked write and physical-result facts used after body inference.
 pub const InferredFacts = struct {
+    /// Lowered mut collection positions that receive caller storage, including transitive rebinding.
+    caller_storage: u16 = 0,
     /// Any managed receiver write in the body.
     writes: bool = false,
     /// A write not proven to target definitely fresh local storage.

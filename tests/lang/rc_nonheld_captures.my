@@ -62,9 +62,10 @@ def replace_index(flags: mut list[bool]) -> int:
     return 0
 
 
-def test_callback_and_source_rebind_use_full_path() -> bool:
+def test_call_then_source_rebind_preserves_values() -> bool:
     flags = [True, False]
-    flags[replace_index(mut flags)] = False
+    mutation_result_67 = replace_index(mut flags)
+    flags[mutation_result_67] = False
     count = 0
     for flag in flags:
         if flag:
@@ -120,7 +121,7 @@ def main() -> int:
         return 3
     if not test_user_loop_copy_remains_independent():
         return 4
-    if not test_callback_and_source_rebind_use_full_path():
+    if not test_call_then_source_rebind_preserves_values():
         return 5
     if not test_parameter_snapshot_and_arena_cleanup():
         return 6

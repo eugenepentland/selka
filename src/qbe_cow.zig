@@ -35,6 +35,7 @@ const rc_local_roles = @import("qbe_rc_local_roles.zig");
 const inert_receiver = @import("qbe_rc_inert_receiver.zig");
 const semantics = @import("value_semantics.zig");
 const Source = @import("ownership.zig").Source;
+const mut_abi = @import("mut_abi.zig");
 const cow_keep_label = "@cowkeep{d}\n";
 const store_pointer = " storel %v{d}, %v{d}\n";
 const store_local = " storel %v{d}, %l{d}\n";
@@ -133,6 +134,7 @@ pub fn Lower(comptime E: type) type {
             if (beginning != cow_plan.none) try beginScope(E, self, state.plan.places[beginning].?, stack);
             if (site.fill) try fillPlace(E, self, pc, stack);
             try shares(E, self, pc, stack, site.shares);
+            try selectCallReferences(E, self, pc);
         }
         /// Whether this place retains temporary pins across an index callback.
         pub fn scoped(self: *const E, place: cow_plan.Place) bool {
@@ -146,6 +148,17 @@ pub fn Lower(comptime E: type) type {
                 if (scopePlace(E, self, place)) count += scopeStorageBytes(E, self, place);
             };
             return count;
+        }
+        /// Stable leaf addresses captured while interior mut arguments evaluate.
+        pub fn referenceBytes(self: *const E) usize {
+            return referencesStorage(E, self);
+        }
+        /// Address of an interior argument's original place, after its detachment.
+        pub fn reference(self: *E, index: usize) Error!?usize {
+            const state = self.cow orelse return null;
+            if (state.plan.place(index) == null) return null;
+            const address = try self.load("cowref", index);
+            return address;
         }
         /// Storage for one scope root and its finite source-path projection.
         pub fn scopeStorage(self: *const E, place: cow_plan.Place) usize {
@@ -235,6 +248,15 @@ pub fn Lower(comptime E: type) type {
     };
 }
 
+fn referencesStorage(comptime E: type, self: *const E) usize {
+    const state = self.cow orelse return 0;
+    var count: usize = 0;
+    for (state.plan.places, 0..) |place, index| {
+        if (place != null and cow_plan.referencedLocal(self.function, index)) count += 8;
+    }
+    return count;
+}
+
 fn refineRcLoops(comptime E: type, self: *E, state: *State) Error!void {
     if (!try @import("qbe_rc_hoist.zig").refine(E, self)) return;
     @memset(state.captures, .{});
@@ -308,6 +330,12 @@ const Callee = union(enum) {
             .indirect => |signature| signature.parameters[position],
         };
     }
+    fn reference(self: Callee, records: []const typed.Record, position: usize) bool {
+        return switch (self) {
+            .direct => |function| mut_abi.reference(records, function, position),
+            .indirect => |signature| mut_abi.collection(records, signature.parameters[position]),
+        };
+    }
     fn writes(self: Callee, position: usize) bool {
         return switch (self) {
             .direct => |function| writesParameter(function, position),
@@ -315,6 +343,53 @@ const Callee = union(enum) {
         };
     }
 };
+
+/// Later arguments may replace the selected entry without changing its slot's
+/// address. Keep the captured value in that case; an unchanged entry still
+/// receives whole-variable writeback through its actual caller storage.
+fn selectCallReferences(comptime E: type, self: *E, pc: usize) Error!void {
+    const state = self.cow orelse return;
+    const callee: Callee = switch (self.function.scope.instructions[pc].op) {
+        .call => |target| .{ .direct = self.program.functions[@backingInt(target)] },
+        .invoke => |ty| .{ .indirect = self.program.records[ty.recordIndex()].contract.callback.? },
+        else => return,
+    };
+    const operands = self.ownership.?.operands[pc] orelse return error.InternalError;
+    const base = operands.len - callee.valueCount();
+    for (0..callee.count()) |position| {
+        if (!callee.writes(position) or !callee.reference(self.program.records, position)) continue;
+        if (!mut_abi.collection(self.program.records, callee.parameter(position))) continue;
+        const source = operands[base + position];
+        if (source.part != .whole or source.read >= self.function.scope.instructions.len) continue;
+        const local = switch (self.function.scope.instructions[source.read].op) {
+            .ref_local => |local| @backingInt(local),
+            else => continue,
+        };
+        if (state.plan.place(local) == null) continue;
+        const address = try self.load("s", base + position);
+        const current = try self.load("v", address);
+        const captured = try self.load("l", local);
+        const same = self.temp();
+        const label = self.temp();
+        try self.print(" %v{d} =w ceql %v{d}, %v{d}\n jnz %v{d}, @cowrefkept{d}, @cowrefcaptured{d}\n@cowrefcaptured{d}\n", .{ same, current, captured, same, label, label, label });
+        const fallback = self.temp();
+        try self.print(" %v{d} =l copy %l{d}\n", .{ fallback, local });
+        if (runtime_mode.enabled()) {
+            // Receiver captures are raw borrows protected by their scope. A
+            // callee can replace this fallback, so first give it an owner.
+            const ty = self.function.scope.locals[local].ty;
+            try rc_values.copied(E, self, ty, fallback);
+            try rc_frame.drop(E, self, local);
+            const work = try rc_values.workAddress(E, self);
+            try self.print(rc_values.blit_value, .{ work, fallback, (try self.layout(ty)).size });
+            try rc_frame.entry(E, self, local, ty, fallback);
+            try rc_frame.initialized(E, self, local, true);
+            try rc_frame.initialized(E, self, rc_frame.pending(E, self), false);
+        }
+        try self.store(base + position, fallback);
+        try self.print("@cowrefkept{d}\n", .{label});
+    }
+}
 
 fn pinCall(comptime E: type, self: *E, callee: Callee, args: []usize, base: usize) Error!Pins {
     if (runtime_mode.enabled()) return pinCallRc(E, self, callee, args, base);
@@ -324,7 +399,7 @@ fn pinCall(comptime E: type, self: *E, callee: Callee, args: []usize, base: usiz
     const state = self.cow orelse return pins;
     for (args, 0..) |*arg, position| {
         if (position >= callee.count()) break;
-        if (!callee.writes(position)) continue;
+        if (!callee.writes(position) or callee.reference(self.program.records, position)) continue;
         if (!cow_plan.payloadType(self.program, callee.parameter(position))) continue;
         // A later read-only argument can have shared this same root
         // after its earlier mut-argument load was checked. Resolve
@@ -359,7 +434,7 @@ fn pinCallRc(comptime E: type, self: *E, callee: Callee, args: []usize, base: us
     if (self.cow == null) return pins;
     for (args, 0..) |*arg, position| {
         if (position >= callee.count()) break;
-        if (!callee.writes(position)) continue;
+        if (!callee.writes(position) or callee.reference(self.program.records, position)) continue;
         if (!cow_plan.payloadType(self.program, callee.parameter(position))) continue;
         const operands = self.ownership.?.operands[self.pc] orelse return error.InternalError;
         const source = operands[base + position];
@@ -427,11 +502,17 @@ fn prepareMutArgument(comptime E: type, self: *E, arg: *usize, source: Source, s
     if (runtime_mode.enabled()) return prepareMutArgumentRc(E, self, arg, source, slot);
     const label = self.temp();
     if (source.part == .whole) {
-        try testShared(E, self, arg.*, label);
+        // Whole locals denote the current caller variable at call entry. A
+        // later argument can have rebound it since its original payload load.
+        const current = try self.load("l", source.local);
+        try self.store(slot, current);
+        try testShared(E, self, current, label);
         const copy = self.temp();
-        try self.print(unique_call, .{ copy, arg.* });
+        try self.print(unique_call, .{ copy, current });
         try self.require(copy, format.allocation_failure);
-        try self.print(store_local, .{ copy, source.local });
+        if (self.byReference(source.local)) {
+            try self.print(store_pointer, .{ copy, try self.callerAddress(source.local) });
+        } else try self.print(store_local, .{ copy, source.local });
         try self.print(store_operand, .{ copy, slot });
     } else {
         if (source.read == cow_plan.none) return error.InternalError;
@@ -518,7 +599,9 @@ fn uniqueLocal(comptime E: type, self: *E, unique: cow_plan.Unique, stack: []con
     const value = try self.load("l", unique.local);
     try testShared(E, self, value, label);
     const copy = try copyCall(E, self, value, null, stack);
-    try self.print(store_local, .{ copy, unique.local });
+    if (self.callerStorage(unique.local)) {
+        try self.print(store_pointer, .{ copy, try self.callerAddress(unique.local) });
+    } else try self.print(store_local, .{ copy, unique.local });
     if (unique.alias != cow_plan.none) try self.print(store_local, .{ copy, unique.alias });
     try self.print(cow_keep_label, .{label});
 }
@@ -618,7 +701,6 @@ fn fillPlace(comptime E: type, self: *E, pc: usize, stack: []const typed.Type) E
     const label = self.temp();
     var value = try self.load("s", top);
     const box_path = placeHasBox(E, self, place);
-    if (!box_path and !runtime_mode.enabled()) try testShared(E, self, value, label);
     var container: ?usize = null;
     var cursor: Cursor = switch (place.step) {
         .element => element: {
@@ -643,11 +725,13 @@ fn fillPlace(comptime E: type, self: *E, pc: usize, stack: []const typed.Type) E
     };
     if (runtime_mode.enabled()) try rc_values.drop(E, self, top);
     cursor = try fieldChain(E, self, place, cursor);
+    try saveReference(E, self, place, cursor.address);
     if (runtime_mode.enabled()) {
         try rc_unique.field(E, self, .{ .ty = stack[top], .address = cursor.address, .container = cursor.cell orelse container, .held = cursor.held, .loan = cursor.loan });
         try reboxRcPlace(E, self, place);
         return self.store(top, try self.load("v", cursor.address));
     }
+    if (!box_path) try testShared(E, self, value, label);
     if (box_path) {
         // Detaching a box shares its old direct child (or replaces a pinned
         // one), so the operand read before the detachment is stale. Test and
@@ -948,8 +1032,18 @@ fn beginScope(comptime E: type, self: *E, place: cow_plan.Place, stack: []const 
         if (cursor.cell) |body| try qbe_alloc.barrier(*E, self, body);
         try self.require(done, format.allocation_failure);
     }
+    const leaf = try fieldChainRange(E, self, chainBegin(place), place.fill, cursor, .read);
+    try saveReference(E, self, place, leaf.address);
     if (place.step != .field) try self.print("@cowempty{d}\n", .{place.fill});
     try scopeRootStore(E, self, place.fill);
+}
+
+fn saveReference(comptime E: type, self: *E, place: cow_plan.Place, address: usize) Error!void {
+    const instruction = self.function.scope.instructions[place.fill].op;
+    if (instruction != .store_local) return;
+    const index = @backingInt(instruction.store_local);
+    if (!cow_plan.referencedLocal(self.function, index)) return;
+    try self.print(" storel %v{d}, %cowref{d}\n", .{ address, index });
 }
 
 fn scopePin(comptime E: type, self: *E, pins: usize, payload: usize) Error!void {

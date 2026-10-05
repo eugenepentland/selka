@@ -1,0 +1,75 @@
+guardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source 1b6c13222675)
+guardian: diff-scoped vs 1fd1d566793dcae92449d937aca595c55ee318c8: 157/812 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 11 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 2828 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 1 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 5/88 failed (spec, cognitive-complexity, bool-ops-per-condition, repeated-string-literal, try-in-return) — diff-scoped vs 1fd1d566793dcae92449d937aca595c55ee318c8, 157 file(s) in scope
+guardian: failures grouped by check (5):
+  spec (15 findings)
+    - duplicate tag: id:mut-rebind-caller-1
+    - in: src/mut_callback_abi_test.zig
+    - in: src/mut_callback_abi_test.zig
+    - +12 more — use --verbose for full detail
+  cognitive-complexity (1 finding)
+    - src/qbe_cow.zig: fn Lower cognitive complexity 26 (limit: 25)
+      fix: extract helpers; reduce nested control flow.
+  bool-ops-per-condition (3 findings)
+    - src/origins.zig:587: condition has 5 boolean ops (cap 3)
+      fix: split into nested/sequential ifs, or extract into a named bool.
+    - src/mut_exclusive.zig:441: condition has 4 boolean ops (cap 3)
+    - src/mut_abi.zig:34: condition has 4 boolean ops (cap 3)
+  repeated-string-literal (1 finding)
+    - src/project_compile.zig: string literal bytecode.zig appears 3 times (lines 62, 71, 495) — extract a const
+      fix: extract the literal/const into a shared file-scope const and import it.
+  try-in-return (2 findings)
+    - src/qbe_cow.zig:163: `return try self.load...` — bind the tried value to a local, then return it
+      fix: const v = try <expr>; return v;
+    - src/mut_callback_abi.zig:73: `return try adapter...` — bind the tried value to a local, then return it
+  caution: zig-out binaries predate this failed run (installs are gated on green) — rebuild green before running them
+install
++- install generated/
+   +- run exe mylang (mylang-runtime)
+      +- install mylang
+         +- run ../guardian-zig/zig-out/bin/guardian-check failure
+error: process exited with code 1
+failed command: ../guardian-zig/zig-out/bin/guardian-check all . --quiet
+
+Build Summary: 10/19 steps succeeded (1 failed)
+install transitive failure
++- install mylang transitive failure
+|  +- compile exe mylang debug native cached 7ms MaxRSS:41M
+|  |  +- run exe qbe-build-assets (qbe_build_assets) cached
+|  |     +- compile exe qbe-build-assets debug native cached 6ms MaxRSS:39M
+|  +- run ../guardian-zig/zig-out/bin/guardian-check failure
+|     +- guardian-selfcheck success
+|        +- run ../guardian-zig/zig-out/bin/guardian-check success 4ms
++- install qbe transitive failure
+|  +- compile exe qbe fast native cached 14ms MaxRSS:39M
+|  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
++- install generated/ transitive failure
+|  +- run exe mylang (mylang-runtime) transitive failure
+|     +- compile exe mylang debug native (+1 more reused dependencies)
+|     +- install mylang (+2 more reused dependencies)
+|     +- compile exe qbe fast native (reused)
++- install board-trial transitive failure
+|  +- compile exe board-trial debug native success 3s MaxRSS:441M
+|  |  +- options success
+|  |  |  +- compile exe qbe fast native (reused)
+|  |  +- run exe qbe-build-assets (qbe_build_assets) (+1 more reused dependencies)
+|  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
++- install schematic-svg transitive failure
+|  +- compile exe schematic-svg debug native success 4s MaxRSS:446M
+|  |  +- options (+1 more reused dependencies)
+|  |  +- run exe qbe-build-assets (qbe_build_assets) (+1 more reused dependencies)
+|  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
++- install mylang-io transitive failure
+|  +- compile exe mylang-io debug native success 3s MaxRSS:449M
+|  |  +- options (+1 more reused dependencies)
+|  |  +- run exe qbe-build-assets (qbe_build_assets) (+1 more reused dependencies)
+|  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
++- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+
+real 4.10
+user 30.46
+sys 3.61

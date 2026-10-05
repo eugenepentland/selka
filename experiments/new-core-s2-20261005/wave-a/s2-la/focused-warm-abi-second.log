@@ -1,0 +1,73 @@
+test-cli
++- run test 4 pass, 1 fail (5 total)
+guardian/test: test wall 1.16s; slowest over 50ms:
+guardian/test:   0.95s  fix_cli_test.test.CLI fix splits receiver overlap into a preceding call without repeating effects
+guardian/test:   0.21s  fix_cli_test.test.CLI warm imported direct and callback ABIs follow producer rebinding changes
+guardian/test: FAIL — 1 failed of 5
+guardian/test: RESULT {"passed":4,"failed":1,"skipped":0}
+error: 'fix_cli_test.test.CLI warm imported direct and callback ABIs follow producer rebinding changes' failed:
+       guardian/test: 5 test(s) selected by filter: "mut collection ABI", "caller storage ABI", "physical bytecode preserves" (+4 more) — 2 match by name, 3 unnamed test block(s) run regardless
+
+       ====== expected this output: =========
+       1
+       ␃
+
+       ======== instead found this: =========
+       ␃
+
+       ======================================
+       First difference occurs on line 1:
+       expected:
+       1
+       ^ ('\x31')
+       found:
+
+       ^ (end of string)
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:681:9: 0x1266a95 in expectEqualStrings (std.zig)
+               return error.TestExpectedEqual;
+               ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-language/test/fix_cli_test.zig:362:5: 0x1266e5f in abiRun (integration.zig)
+           try testing.expectEqualStrings("1\n", result.stdout);
+           ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-language/test/fix_cli_test.zig:370:5: 0x126737c in test.CLI warm imported direct and callback ABIs follow producer rebinding changes (integration.zig)
+           try abiRun(&project);
+           ^
+failed command: sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_QBE=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-language/zig-out/focus/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./.zig-cache/o/1104a5a412f92416a56d7e979bca7d40/test "--guardian-filter=mut collection ABI" "--guardian-filter=caller storage ABI" "--guardian-filter=physical bytecode preserves" "--guardian-filter=semantic stand in facts" "--guardian-filter=mut callback adapter" "--guardian-filter=receiver overlap" "--guardian-filter=CLI warm imported direct" --cache-dir=./.zig-cache --seed=0x1254e0a6 --listen=-
+
+test-units
++- run test w
+guardian/test: 33 test(s) selected by filter: "mut collection ABI", "caller storage ABI", "physical bytecode preserves" (+4 more) — 21 match by name, 12 unnamed test block(s) run regardless
+guardian/test: test wall 1.72s; slowest over 50ms:
+guardian/test:   0.61s  mut_callback_abi_test.test.mut callback adapter RC keeps two interior slots and managed returns independent
+guardian/test:   0.50s  mut_callback_abi_test.test.mut callback adapter later readonly rows preserve captured RC leaf and snapshots
+guardian/test:   0.30s  mut_callback_abi_test.test.mut callback adapter later readonly record preserves captured RC field and snapshots
+guardian/test:   0.14s  mut_callback_abi_test.test.mut callback adapter GC stress keeps two interior slots and managed returns independent
+guardian/test:   0.08s  mut_callback_abi_test.test.mut callback adapter later readonly rows preserve captured GC leaf and snapshots
+guardian/test: PASS — 33 passed
+guardian/test: RESULT {"passed":33,"failed":0,"skipped":0}
+failed command: sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_QBE=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-language/zig-out/focus/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./.zig-cache/o/60650988a67f562c75a62bfd72475261/test "--guardian-filter=mut collection ABI" "--guardian-filter=caller storage ABI" "--guardian-filter=physical bytecode preserves" "--guardian-filter=semantic stand in facts" "--guardian-filter=mut callback adapter" "--guardian-filter=receiver overlap" "--guardian-filter=CLI warm imported direct" --cache-dir=./.zig-cache --seed=0x1254e0a6 --listen=-
+
+Build Summary: 13/15 steps succeeded (1 failed); 37/38 tests passed (1 failed)
+test-cli transitive failure
++- run test 4 pass, 1 fail (5 total)
+   +- compile test debug native success 351ms MaxRSS:159M
+   |  +- options success
+   |     +- compile exe mylang debug native success 4s MaxRSS:556M
+   |     |  +- run exe qbe-build-assets (qbe_build_assets) success 55ms
+   |     |     +- compile exe qbe-build-assets debug native cached 5ms MaxRSS:40M
+   |     +- compile exe qbe fast native cached 12ms MaxRSS:40M
+   +- install generated to qbe cached
+   |  +- compile exe qbe fast native (reused)
+   +- install generated to mylang success
+      +- compile exe mylang debug native (+1 more reused dependencies)
+test-units success
++- run test 33 pass (33 total) 1s MaxRSS:113M
+   +- compile test debug native success 3s MaxRSS:486M
+   |  +- run exe qbe-build-assets (qbe_build_assets) (+1 more reused dependencies)
+   |  +- options cached
+   |     +- compile exe qbe fast native (reused)
+   +- install generated to qbe (+1 more reused dependencies)
+   +- install generated to mylang (+1 more reused dependencies)
+affected-compiler success
++- install generated to mylang (+1 more reused dependencies)
++- install generated to qbe (+1 more reused dependencies)

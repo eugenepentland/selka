@@ -64,11 +64,13 @@ def replace_mapping(view: mut DictValues[int, list[int]]) -> int:
 
 
 # spec-case: RC-HELD-RECEIVER-1
-public def test_pending_mapping_survives_callback_rebinding_view() -> bool:
+public def test_explicit_row_snapshot_survives_view_rebinding() -> bool:
     mapping = {1: [7]}
     view = mapping.values()
-    view.mapping[1].append(replace_mapping(mut view))
-    return list(view) == [[8]] and mapping[1] == [7, 9]
+    selected_row = view.mapping[1]
+    value = replace_mapping(mut view)
+    selected_row.append(value)
+    return list(view) == [[8]] and mapping[1] == [7] and selected_row == [7, 9]
 
 
 # spec-case: RC-HELD-RECEIVER-1
@@ -86,6 +88,6 @@ def main() -> int:
     assert test_held_only_mapping_remains_mutable()
     assert test_nested_view_field_detaches_without_releasing_snapshot()
     assert test_pending_nested_mapping_receiver_pins_snapshot_path()
-    assert test_pending_mapping_survives_callback_rebinding_view()
+    assert test_explicit_row_snapshot_survives_view_rebinding()
     assert test_list_of_views_preserves_ordinary_mapping_snapshots()
     return 0

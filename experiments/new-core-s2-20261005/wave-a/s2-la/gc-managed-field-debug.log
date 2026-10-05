@@ -1,0 +1,5 @@
+failed rc_site_eliminations::test_managed_elements_and_nested_record_fields_relocate_whole_values: NativeTestProcessFailed: .{ .signal = .ABRT }
+thread 4011233 panic: pointer index expression with base 0x4 overflowed to 0xfffffffffffffff4
+Cannot print stack trace: stack tracing is disabled
+
+0 passed, 0 cached, 1 failed, 0 skipped

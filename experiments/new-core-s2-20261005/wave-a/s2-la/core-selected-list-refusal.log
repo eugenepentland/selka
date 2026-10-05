@@ -1,0 +1,2 @@
+exit: 1
+mut_selected_list.my:15:12: error[E_CORE_UNSUPPORTED]: the new core does not support interior mut argument ancestor changed during later argument evaluation yet

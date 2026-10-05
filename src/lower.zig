@@ -10,6 +10,7 @@ const typed = @import("typed.zig");
 const bc = @import("bytecode.zig");
 const value_semantics = @import("value_semantics.zig");
 const evaluation_order = @import("value_semantics_order.zig");
+const mut_abi = @import("mut_abi.zig");
 const Span = @import("source.zig").Span;
 const Label = enum(usize) { _ };
 const Work = union(enum) {
@@ -30,6 +31,7 @@ const Emitter = struct {
     /// no abandoned growth buffers (two to three times the code, before).
     scratch: std.mem.Allocator,
     program: typed.Program,
+    mut_references: []const u16 = &.{},
     /// A `--mode ReleaseFast` build drops `debug` nodes in lowering; Debug builds
     /// and `run`/`test` keep them.
     drop_debug: bool = false,
@@ -73,10 +75,8 @@ const Emitter = struct {
             // A `mut` fixed array (or, under value semantics, record) crosses
             // as the caller's own variable, which the checker proved the
             // argument names.
-            if (referencePosition(self.program, callee, i)) {
-                const argument = self.program.nodes[@backingInt(call.arguments[i])];
-                if (argument.data != .local) return error.InternalError;
-                try self.instruction(argument.span, .{ .ref_local = argument.data.local });
+            if (referencePosition(self, callee, i)) {
+                try self.referenceArgument(call.arguments[i]);
             } else if (declaredMutable(callee.signature.declared_mutates, i)) {
                 try self.mutableArgument(call.arguments[i]);
             } else try self.readOnlyArgument(call.arguments[i], writable);
@@ -86,11 +86,19 @@ const Emitter = struct {
     /// Whether parameter `position` of `callee` is a `mut` fixed array (or,
     /// under value semantics, record), which receives the address of the
     /// caller's variable instead of a copy.
-    fn referencePosition(program: typed.Program, callee: typed.Function, position: usize) bool {
-        if (position >= callee.signature.parameter_count) return false;
-        for (callee.signature.declared_mutates) |declared| if (declared == position)
-            return typed.referenceMut(program.records, callee.scope.locals[position].ty);
-        return false;
+    fn referencePosition(self: *Emitter, callee: typed.Function, position: usize) bool {
+        var lowered = callee;
+        lowered.signature.inferred.caller_storage = self.mut_references[@backingInt(callee.id)];
+        return mut_abi.reference(self.program.records, lowered, position);
+    }
+    /// Materialize an interior collection place while retaining its store-back path.
+    fn referenceArgument(self: *Emitter, id: typed.NodeId) !void {
+        const node = self.program.nodes[@backingInt(id)];
+        if (node.data == .local) return self.instruction(node.span, .{ .ref_local = node.data.local });
+        const owner = try self.hiddenLocal(node.ty, node.span, "<mut-argument>");
+        try self.instruction(node.span, .{ .ref_local = owner });
+        try self.instruction(node.span, .{ .store_local = owner });
+        try self.push(.{ .expression = id });
     }
     /// Whether `position` is one of a callee's declared `mut` positions: its
     /// argument is the caller's own value, never a value-semantics copy.
@@ -571,7 +579,9 @@ const Emitter = struct {
                 var i = call.arguments.len;
                 while (i > 0) {
                     i -= 1;
-                    if (declaredMutable(positions, i)) try self.mutableArgument(call.arguments[i]) else try self.readOnlyArgument(call.arguments[i], writable);
+                    if (declaredMutable(positions, i)) {
+                        if (mut_abi.collection(self.program.records, self.program.nodes[@backingInt(call.arguments[i])].ty)) try self.referenceArgument(call.arguments[i]) else try self.mutableArgument(call.arguments[i]);
+                    } else try self.readOnlyArgument(call.arguments[i], writable);
                 }
                 try self.push(.{ .expression = call.callee });
             },
@@ -816,10 +826,12 @@ pub fn lowerWith(allocators: Allocators, checked: typed.Program, drop_debug: boo
     const program = try physical(allocator, checked);
     var scratch = std.heap.ArenaAllocator.init(allocators.scratch);
     defer scratch.deinit();
+    const mut_references = try mut_abi.collect(allocator, program);
+    defer allocator.free(mut_references);
     const functions = try allocator.alloc(bc.Function, program.functions.len);
     for (program.functions, 0..) |function, index| {
         defer _ = scratch.reset(.free_all);
-        functions[index] = try lowerFunction(.{ .output = allocator, .scratch = scratch.allocator() }, program, function, true, drop_debug);
+        functions[index] = try lowerFunction(.{ .output = allocator, .scratch = scratch.allocator() }, program, function, mut_references, true, drop_debug);
     }
     const result: bc.Program = .{ .functions = functions, .main = program.main, .records = program.records };
     // Validation's tables are temporary too.
@@ -842,10 +854,12 @@ pub fn lowerSelectedWith(allocators: Allocators, checked: typed.Program, selecte
     const program = try physical(allocator, checked);
     var scratch = std.heap.ArenaAllocator.init(allocators.scratch);
     defer scratch.deinit();
+    const mut_references = try mut_abi.collect(allocator, program);
+    defer allocator.free(mut_references);
     const functions = try allocator.alloc(bc.Function, program.functions.len);
     for (program.functions, 0..) |function, index| {
         defer _ = scratch.reset(.free_all);
-        functions[index] = try lowerFunction(.{ .output = allocator, .scratch = scratch.allocator() }, program, function, selected[index], drop_debug);
+        functions[index] = try lowerFunction(.{ .output = allocator, .scratch = scratch.allocator() }, program, function, mut_references, selected[index], drop_debug);
     }
     const result: bc.Program = .{ .functions = functions, .main = program.main, .records = program.records };
     bc.validateSelected(scratch.allocator(), result, selected) catch |err| return if (err == error.OutOfMemory) error.OutOfMemory else error.InternalError;
@@ -866,8 +880,8 @@ fn physical(allocator: std.mem.Allocator, checked: typed.Program) std.mem.Alloca
 /// emitter list and validation table and is reset after each function.
 pub const Allocators = struct { output: std.mem.Allocator, scratch: std.mem.Allocator };
 
-fn lowerFunction(allocators: Allocators, program: typed.Program, function: typed.Function, with_body: bool, drop_debug: bool) LowerError!bc.Function {
-    var emitter: Emitter = .{ .allocator = allocators.output, .scratch = allocators.scratch, .program = program, .drop_debug = drop_debug, .declared_locals = function.scope.locals.len };
+fn lowerFunction(allocators: Allocators, program: typed.Program, function: typed.Function, mut_references: []const u16, with_body: bool, drop_debug: bool) LowerError!bc.Function {
+    var emitter: Emitter = .{ .allocator = allocators.output, .scratch = allocators.scratch, .program = program, .mut_references = mut_references, .drop_debug = drop_debug, .declared_locals = function.scope.locals.len };
     defer emitter.loops.deinit(allocators.scratch);
     var facts: value_semantics.Facts = undefined;
     var snapshots: evaluation_order.Snapshots = undefined;
@@ -897,7 +911,11 @@ fn lowerFunction(allocators: Allocators, program: typed.Program, function: typed
             .mutates = function.signature.mutates,
             .return_origin = function.signature.return_origin,
             .declared_mutates = function.signature.declared_mutates,
-            .inferred = function.signature.inferred,
+            .inferred = blk: {
+                var inferred = function.signature.inferred;
+                inferred.caller_storage = mut_references[@backingInt(function.id)];
+                break :blk inferred;
+            },
         },
         .scope = .{
             .locals = locals,

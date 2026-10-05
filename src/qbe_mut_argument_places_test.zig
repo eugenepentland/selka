@@ -73,5 +73,8 @@ test "COW-MUT-ARGUMENT-1 indirect mutable calls prepare and release receiver sco
     const text = try mainText(manifest.value);
     const call = std.mem.indexOf(u8, text, " call %v") orelse return error.TestUnexpectedResult;
     try t.expect(std.mem.indexOf(u8, text[0..call], "call $myl_qbe_rc_scope_pin") != null);
-    try t.expect(std.mem.count(u8, text[call..], "call $myl_qbe_rc_scope_end") >= 2);
+    // Parent and leaf pins share one journal; it closes after invocation.
+    const opened = std.mem.count(u8, text[0..call], "call $myl_qbe_rc_scope_begin");
+    try t.expect(opened > 0);
+    try t.expectEqual(opened, std.mem.count(u8, text[call..], "call $myl_qbe_rc_scope_end"));
 }

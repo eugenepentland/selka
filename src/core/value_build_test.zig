@@ -510,14 +510,12 @@ const loop_rebind =
 ;
 
 // spec-case: NEW-CORE-MUT-2
-test "a rebinding of a mut list parameter on only some of the paths that join, or inside a loop, is refused" {
+test "a mut collection rebinding through conditional paths and loops builds final caller writeback" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     var refusal: build.Refusal = .{};
-    try std.testing.expectError(error.Unsupported, support.buildSource(arena.allocator(), conditional_rebind, &refusal));
-    try std.testing.expectEqualStrings("conditional rebinding of a mut collection parameter", refusal.reason);
-    try std.testing.expectError(error.Unsupported, support.buildSource(arena.allocator(), loop_rebind, &refusal));
-    try std.testing.expectEqualStrings("rebinding of a mut collection parameter in a loop", refusal.reason);
+    _ = try support.buildSource(arena.allocator(), conditional_rebind, &refusal);
+    _ = try support.buildSource(arena.allocator(), loop_rebind, &refusal);
 }
 
 // spec: NEW-CORE-STR-1
@@ -592,10 +590,96 @@ const stale_write =
 ;
 
 // spec-case: NEW-CORE-PLACE-3
-test "a write through a receiver whose place an argument wrote is refused: the old runtime may apply it to a payload that is no longer reachable" {
+test "the checker rejects a receiver whose place an evaluated mut argument overlaps" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     var refusal: build.Refusal = .{};
-    try std.testing.expectError(error.Unsupported, support.buildSource(arena.allocator(), stale_write, &refusal));
-    try std.testing.expectEqualStrings("write to a receiver's place while its arguments are evaluated", refusal.reason);
+    try std.testing.expectError(error.SourceError, support.buildSource(arena.allocator(), stale_write, &refusal));
+}
+
+const changed_mut_entry =
+    \\def replace_entry(root: mut list[list[int]]) -> list[list[int]]:
+    \\    root[0] = [21]
+    \\    return root
+    \\
+    \\def rebind_selected(target: mut list[int], source: list[list[int]]) -> int:
+    \\    before = target[0]
+    \\    target = [13]
+    \\    return before * 10000 + target[0] * 100 + source[0][0]
+    \\
+    \\def main() -> int:
+    \\    items = [[7]]
+    \\    return rebind_selected(mut items[0], replace_entry(mut items))
+;
+
+const changed_mut_field =
+    \\record Box:
+    \\    items: list[int]
+    \\
+    \\def replace_field(box: mut Box) -> Box:
+    \\    box.items = [21]
+    \\    return box
+    \\
+    \\def rebind_selected(target: mut list[int], source: Box) -> int:
+    \\    before = target[0]
+    \\    target = [13]
+    \\    return before * 10000 + target[0] * 100 + source.items[0]
+    \\
+    \\def main() -> int:
+    \\    box = Box([7])
+    \\    return rebind_selected(mut box.items, replace_field(mut box))
+;
+
+// spec-case: NEW-CORE-MUT-1
+test "interior mut arguments whose ancestors change during later evaluation are precisely refused" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    var refusal: build.Refusal = .{};
+    try std.testing.expectError(error.Unsupported, support.buildSource(arena.allocator(), changed_mut_entry, &refusal));
+    try std.testing.expectEqualStrings("interior mut argument ancestor changed during later argument evaluation", refusal.reason);
+    try std.testing.expectError(error.Unsupported, support.buildSource(arena.allocator(), changed_mut_field, &refusal));
+    try std.testing.expectEqualStrings("interior mut argument ancestor changed during later argument evaluation", refusal.reason);
+}
+
+const changed_mut_root =
+    \\def replace_root(items: mut list[int]) -> list[int]:
+    \\    items = [21]
+    \\    return items
+    \\
+    \\def append_current(items: mut list[int], source: list[int]) -> int:
+    \\    items.append(13)
+    \\    return len(items) + source[0]
+    \\
+    \\def main() -> int:
+    \\    items = [7]
+    \\    return append_current(mut items, replace_root(mut items))
+;
+
+// spec-case: NEW-CORE-MUT-1
+test "whole mut arguments reread the current caller root after later rebinding" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    var refusal: build.Refusal = .{};
+    _ = try support.buildSource(arena.allocator(), changed_mut_root, &refusal);
+    try std.testing.expectEqualStrings("", refusal.reason);
+}
+
+const stable_mut_entry =
+    \\def rebind_selected(target: mut list[int], source: list[list[int]]) -> int:
+    \\    before = target[0]
+    \\    target = [13]
+    \\    return before + target[0] + source[0][0]
+    \\
+    \\def main() -> int:
+    \\    items = [[7]]
+    \\    return rebind_selected(mut items[0], items)
+;
+
+// spec-case: NEW-CORE-MUT-1
+test "interior mut arguments with later readonly snapshots still build caller writeback" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const text = try support.irText(arena.allocator(), stable_mut_entry);
+    try std.testing.expect(contains(text, "call record{i64, list[i64]} rebind_selected("));
+    try std.testing.expect(contains(text, "list_set.exact list[list[i64]]"));
 }

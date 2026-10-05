@@ -1,0 +1,69 @@
+test-core
++- run test 149 pass, 1 fail (150 total)
+no_such_file_in_tests_lang (debug): mylang-core test did not finish cleanly:
+error: cannot read /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-language/tests/lang/no_such_file_in_tests_lang.my: FileNotFound
+
+no_such_row: the new core failed to build the row:
+error: cannot read /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-language/test/core/row_no_such_row.my: FileNotFound
+
+error: 'value_e2e_test.test.a read through a receiver captured before an argument wrote its place sees the receiver as it was' failed:
+       v_snapshot (debug) printed:
+       1 50
+       1 4
+       1 7
+       1 50 1
+       11 3 17
+       status 0, expected:
+       1 50
+       1 4
+       1 1
+       1 50 1
+       11 3 17
+       status 0
+
+       v_snapshot (release) printed:
+       1 50
+       1 4
+       1 7
+       1 50 1
+       11 3 17
+       status 0, expected:
+       1 50
+       1 4
+       1 1
+       1 50 1
+       11 3 17
+       status 0
+
+       v_snapshot (verify) printed:
+       1 50
+       1 4
+       1 7
+       1 50 1
+       11 3 17
+       status 0, expected:
+       1 50
+       1 4
+       1 1
+       1 50 1
+       11 3 17
+       status 0
+
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:614:14: 0x1384a59 in expect (std.zig)
+           if (!ok) return error.TestUnexpectedResult;
+                    ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-language/src/core/value_e2e_test.zig:462:5: 0x206e8fb in test.a read through a receiver captured before an argument wrote its place sees the receiver as it was (root_test.zig)
+           try std.testing.expect(try matches(arena.allocator(), "v_snapshot", v_snapshot_output, 0));
+           ^
+failed command: ./.zig-cache/o/2a9dd2592a2841c022d5c84d7aebd918/test --cache-dir=./.zig-cache --seed=0xdf88d1a7 --listen=-
+
+Build Summary: 3/5 steps succeeded (1 failed); 149/150 tests passed (1 failed)
+test-core transitive failure
++- run test 149 pass, 1 fail (150 total)
+   +- compile test debug native success 1s MaxRSS:328M
+      +- options cached
+         +- compile exe mylang-core debug native cached 7ms MaxRSS:41M
+
+real 87.78
+user 79.14
+sys 18.08

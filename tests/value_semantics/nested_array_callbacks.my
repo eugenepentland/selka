@@ -61,7 +61,8 @@ def remove_first(value: mut list[[1]list[int]]) -> int:
 
 
 def nested_index(value: mut dict[str, [1]list[int]]) -> int:
-    value["k"][write_other(mut value)].append(7)
+    selected = write_other(mut value)
+    value["k"][selected].append(7)
     return 0
 
 
@@ -75,44 +76,50 @@ def stop_early(value: mut dict[str, [1]list[int]]) -> Option[int]:
 
 
 # spec-case: COW-NESTED-1
-public def test_equal_replacements_are_indistinguishable() -> bool:
+public def test_equal_replacements_before_update_have_equal_results() -> bool:
     original: dict[str, [1]list[int]] = {"k": [[1]]}
     first = original
     second = original
-    first["k"][replace_alias(mut first)].append(2)
-    second["k"][replace_fresh(mut second)].append(2)
-    return original["k"][0] == [1] and first["k"][0] == [1] and second["k"][0] == [1]
+    selected = replace_alias(mut first)
+    first["k"][selected].append(2)
+    selected = replace_fresh(mut second)
+    second["k"][selected].append(2)
+    return original["k"][0] == [1] and first["k"][0] == [1, 2] and second["k"][0] == [1, 2]
 
 
 # spec-case: COW-NESTED-1
-public def test_reinserting_the_same_value_replaces_the_pending_entry() -> bool:
+public def test_reinserted_equal_entry_is_updated_after_the_call() -> bool:
     original: dict[str, [1]list[int]] = {"k": [[1]]}
     changed = original
-    changed["k"][replace_self(mut changed)].append(2)
-    return original["k"][0] == [1] and changed["k"][0] == [1]
+    selected = replace_self(mut changed)
+    changed["k"][selected].append(2)
+    return original["k"][0] == [1] and changed["k"][0] == [1, 2]
 
 
 # spec-case: COW-NESTED-1
-public def test_deletion_and_equal_reinsertion_replaces_the_pending_entry() -> bool:
+public def test_deleted_and_reinserted_entry_is_updated_after_the_call() -> bool:
     original: dict[str, [1]list[int]] = {"k": [[1]]}
     changed = original
-    changed["k"][remove_and_reinsert(mut changed)].append(2)
-    return original["k"][0] == [1] and changed["k"][0] == [1]
+    selected = remove_and_reinsert(mut changed)
+    changed["k"][selected].append(2)
+    return original["k"][0] == [1] and changed["k"][0] == [1, 2]
 
 
 # spec-case: COW-NESTED-1
-public def test_replacing_another_entry_keeps_the_pending_write() -> bool:
+public def test_other_entry_write_finishes_before_the_current_update() -> bool:
     original: dict[str, [1]list[int]] = {"k": [[1]], "other": [[0]]}
     changed = original
-    changed["k"][write_other(mut changed)].append(2)
+    selected = write_other(mut changed)
+    changed["k"][selected].append(2)
     return original["k"][0] == [1] and original["other"][0] == [0] and changed["k"][0] == [1, 2] and changed["other"][0] == [8]
 
 
 # spec-case: COW-NESTED-1
-public def test_mutating_the_pending_leaf_keeps_both_writes() -> bool:
+public def test_leaf_call_and_later_update_keep_both_writes() -> bool:
     original: dict[str, [1]list[int]] = {"k": [[1]]}
     changed = original
-    changed["k"][grow_leaf(mut changed)].append(2)
+    selected = grow_leaf(mut changed)
+    changed["k"][selected].append(2)
     return original["k"][0] == [1] and changed["k"][0] == [1, 7, 2]
 
 
@@ -121,7 +128,8 @@ public def test_a_callback_can_snapshot_the_whole_parent() -> bool:
     original: dict[str, [1]list[int]] = {"k": [[1]]}
     changed = original
     saved: list[dict[str, [1]list[int]]] = []
-    changed["k"][capture_parent(mut changed, mut saved)].append(2)
+    selected = capture_parent(mut changed, mut saved)
+    changed["k"][selected].append(2)
     return original["k"][0] == [1] and changed["k"][0] == [1, 2] and saved[0]["k"][0] == [1] and len(saved[0]) == 1
 
 
@@ -130,39 +138,44 @@ public def test_a_callback_can_snapshot_an_outer_ancestor() -> bool:
     original: list[dict[str, [1]list[int]]] = [{"k": [[1]]}]
     changed = original
     saved: list[list[dict[str, [1]list[int]]]] = []
-    changed[0]["k"][capture_outer(mut changed, mut saved)].append(2)
+    selected = capture_outer(mut changed, mut saved)
+    changed[0]["k"][selected].append(2)
     return original[0]["k"][0] == [1] and changed[0]["k"][0] == [1, 2] and saved[0][0]["k"][0] == [1] and len(saved[0][0]) == 1
 
 
 # spec-case: COW-NESTED-1
-public def test_equal_list_element_replacement_detaches_the_receiver() -> bool:
+public def test_equal_list_element_replacement_is_updated_after_the_call() -> bool:
     original: list[[1]list[int]] = [[[1]]]
     changed = original
-    changed[0][replace_row_alias(mut changed)].append(2)
-    return original[0][0] == [1] and changed[0][0] == [1]
+    selected = replace_row_alias(mut changed)
+    changed[0][selected].append(2)
+    return original[0][0] == [1] and changed[0][0] == [1, 2]
 
 
 # spec-case: COW-NESTED-1
-public def test_reordering_list_elements_preserves_the_selected_receiver() -> bool:
+public def test_reordering_finishes_before_selecting_the_current_receiver() -> bool:
     original: list[[1]list[int]] = [[[1]], [[8]]]
     changed = original
-    changed[0][reverse_rows(mut changed)].append(2)
-    return original[0][0] == [1] and changed[0][0] == [8] and changed[1][0] == [1, 2]
+    selected = reverse_rows(mut changed)
+    changed[0][selected].append(2)
+    return original[0][0] == [1] and changed[0][0] == [8, 2] and changed[1][0] == [1]
 
 
 # spec-case: COW-NESTED-1
-public def test_removing_an_earlier_element_preserves_the_selected_receiver() -> bool:
+public def test_removing_an_element_finishes_before_selecting_the_shifted_receiver() -> bool:
     original: list[[1]list[int]] = [[[8]], [[1]]]
     changed = original
-    changed[1][remove_first(mut changed)].append(2)
+    selected = remove_first(mut changed)
+    changed[0][selected].append(2)
     return original[1][0] == [1] and changed[0][0] == [1, 2] and len(changed) == 1
 
 
 # spec-case: COW-NESTED-1
-public def test_nested_pending_receivers_restore_outer_pins() -> bool:
+public def test_nested_calls_finish_before_each_receiver_is_selected() -> bool:
     original: dict[str, [1]list[int]] = {"k": [[1]]}
     changed = original
-    changed["k"][nested_index(mut changed)].append(2)
+    selected = nested_index(mut changed)
+    changed["k"][selected].append(2)
     copied = changed
     changed["k"][0].append(3)
     return original["k"][0] == [1] and copied["k"][0] == [1, 7, 2] and changed["k"][0] == [1, 7, 2, 3]
@@ -188,7 +201,8 @@ def overwrite_collision(value: mut dict[int, [1]list[int]]) -> int:
 public def test_colliding_keys_do_not_invalidate_the_other_receiver() -> bool:
     original: dict[int, [1]list[int]] = {73358: [[1]], 137867: [[0]]}
     changed = original
-    changed[73358][overwrite_collision(mut changed)].append(2)
+    selected = overwrite_collision(mut changed)
+    changed[73358][selected].append(2)
     return original[73358][0] == [1] and changed[73358][0] == [1, 2] and changed[137867][0] == [8]
 
 
@@ -238,14 +252,15 @@ public def test_deep_recursive_siblings_are_outside_the_pending_path() -> bool:
 
 
 # spec-case: ARENA-ESCAPE-VALUE-1
-public def test_a_pending_receiver_inside_an_arena_can_escape_afterward() -> bool:
+public def test_a_current_receiver_updated_inside_an_arena_can_escape_afterward() -> bool:
     original: dict[str, [1]list[int]] = {"k": [[1]]}
     kept = original
     untouched = True
     with arena() as scratch:
         inside: dict[str, [1]list[int]] = {"k": [[1]]}
         changed = inside
-        changed["k"][write_other(mut changed)].append(2)
+        selected = write_other(mut changed)
+        changed["k"][selected].append(2)
         untouched = inside["k"][0] == [1]
         kept = scratch.escape(changed)
     return untouched and original["k"][0] == [1] and kept["k"][0] == [1, 2] and kept["other"][0] == [8]

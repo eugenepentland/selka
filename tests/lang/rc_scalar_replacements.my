@@ -63,7 +63,8 @@ def replacement(values: mut list[Scalars]) -> i8:
 public def test_callback_replacement_refreshes_the_parent_before_scalar_store() -> bool:
     values = [Scalars(1i8, 2u16, False, 3.5, Distance.make(4u16))]
     before = values
-    values[0].small = replacement(mut values)
+    mutation_result_66 = replacement(mut values)
+    values[0].small = mutation_result_66
     return values[0].small == -13i8 and values[0].medium == 6u16 and len(values) == 2 and before[0].small == 1i8
 
 

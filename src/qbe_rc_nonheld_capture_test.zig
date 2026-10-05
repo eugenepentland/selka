@@ -55,7 +55,8 @@ const source =
     \\    return 0
     \\def callback() -> int:
     \\    flags = [True, True]
-    \\    flags[change(mut flags)] = False
+    \\    mutation_result_58 = change(mut flags)
+    \\    flags[mutation_result_58] = False
     \\    total = 0
     \\    for flag in flags:
     \\        if flag:
@@ -108,6 +109,7 @@ test "RC nonheld captures retain actual iterator holds and owner frames" {
     try t.expect(!contains(try named(manifest.value, "parameter"), marker));
     try t.expect(!contains(try named(manifest.value, "repeated"), marker));
     try t.expect(!contains(try named(manifest.value, "rebound"), marker));
-    try t.expect(!contains(try named(manifest.value, "callback"), marker));
+    // The earlier mut call has finished before the new receiver is captured.
+    try t.expect(contains(try named(manifest.value, "callback"), marker));
     try t.expect(!contains(try named(manifest.value, "pattern"), marker));
 }

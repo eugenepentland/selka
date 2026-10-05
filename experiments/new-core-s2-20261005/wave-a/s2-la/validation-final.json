@@ -1,0 +1,96 @@
+{
+  "utc": "2026-10-05T16:13:57.614796+00:00",
+  "base": "9ee2a484",
+  "branch": "codex/new-core-s2-language",
+  "scope": "S2-La, Wave A",
+  "freeze": {
+    "source_tests": {
+      "files": 1771,
+      "changed": []
+    },
+    "docs": {
+      "files": 3,
+      "changed": []
+    }
+  },
+  "gates": {
+    "test": {
+      "steps": "115/115",
+      "zig_tests_passed": 2983,
+      "zig_tests_cached_or_skipped": 30399,
+      "rc_guests": "1608/1608",
+      "gc_stress_guests": "1608/1608",
+      "value_guests_each": "145/145",
+      "whole_module_executable_comparisons": 340,
+      "seconds": 905.14,
+      "log": "gate-test-final-third.log"
+    },
+    "test-qbe": {
+      "steps": "51/51",
+      "tests": "519/519",
+      "seconds": 78.31,
+      "log": "gate-qbe-final.log"
+    },
+    "test-qbe-build": {
+      "steps": "29/29 cached",
+      "seconds": 0.25,
+      "log": "gate-qbe-build-final.log"
+    },
+    "fmt-check": {
+      "steps": "2/2",
+      "seconds": 0.21,
+      "log": "gate-fmt-final.log"
+    },
+    "test-docs_and_test-doc-coverage": {
+      "steps": "26/26",
+      "coverage_failures": 0,
+      "features": 230,
+      "pages": 57,
+      "standard_modules": 14,
+      "exports": 178,
+      "seconds": 0.95,
+      "log": "gate-docs-final.log"
+    },
+    "test-core_precommit": {
+      "steps": "5/5",
+      "tests": "150/150",
+      "seconds": 114.56,
+      "log": "gate-core-precommit-final.log"
+    },
+    "guardian": {
+      "checks": "88/88",
+      "log": "guardian-core-admission-final.log"
+    }
+  },
+  "focused_mut_conformance": {
+    "tests": 47,
+    "debug_matches": 16,
+    "release_matches": 16,
+    "mismatches": 0,
+    "precise_refusals": 31,
+    "leakcheck": true,
+    "verify": true,
+    "log": "mut-conformance-final.log"
+  },
+  "focused_runtime": {
+    "mut_guests_each": "27/27 RC, GC-stress, release",
+    "original_interior_guests_each": "15/15 RC, GC-stress, release",
+    "counted_allocations": 785,
+    "counted_retirements": 785,
+    "counted_holds_acquired": 343,
+    "counted_holds_released": 343,
+    "warm_producer_change_runs": "12/12 RC, GC-stress, release"
+  },
+  "isolated_rebuild_seconds": 5.5,
+  "remaining_limitations": [
+    "New-core dictionary, set and callback support remains Wave B",
+    "New-core changed-ancestor interior selected value receives precise E_CORE_UNSUPPORTED",
+    "Pre-existing old-core retained managed origin position16 panic reported, not fixed",
+    "External Lox requires four documented migrations; checkout unchanged"
+  ],
+  "coordinator_owns": [
+    "integration conformance and baseline pins",
+    "CPU10 rows and fuzz",
+    "Guardian shared feedback commit"
+  ]
+}

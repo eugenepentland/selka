@@ -1,0 +1,5 @@
+{"version":"diagnostic-v1","kind":"diagnostic","diagnostic":{"code":"W_DERIVED_EFFECTS","severity":"warning","message":"`effects(mutation, managed_allocation)` is exactly what the parameters imply; remove it","location":{"path":"@stdlib/random.my","start":{"line":96,"column":84},"end":{"line":96,"column":121},"bytes":{"start":3410,"end":3447}},"notes":[],"stack":{"frames":[],"omitted":0}}}
+{"version":"diagnostic-v1","kind":"diagnostic","diagnostic":{"code":"W_UNUSED_BINDING","severity":"warning","message":"binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed","location":{"path":"/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-language/examples/generic-resources.my","start":{"line":33,"column":13},"end":{"line":33,"column":17},"bytes":{"start":344,"end":348}},"notes":[],"stack":{"frames":[],"omitted":0}}}
+would fix examples/named-constraints/production.my: 1 edit (W_UNUSED_IMPORT)
+would fix examples/schema/main.my: 1 edit (W_UNUSED_IMPORT)
+fix --check: 2 edits in 2 files would change

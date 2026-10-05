@@ -16,7 +16,8 @@ def observe_then_change(state: mut State) -> int:
 
 
 def from_callback(state: mut State):
-    state.count = observe_then_change(mut state)
+    next_count = observe_then_change(mut state)
+    state.count = next_count
 
 
 def toggled(state: mut State):
@@ -85,7 +86,8 @@ public def test_same_call_snapshot_and_pinned_parent_keep_distinct_scalar_bits()
     first = with_snapshot(mut state, state)
     states = [state]
     saved = states
-    state.values.append(count_for_append(mut state))
+    mutation_result_88 = count_for_append(mut state)
+    state.values.append(mutation_result_88)
     changed = states[0]
     add(mut changed, 4)
     states[0] = changed

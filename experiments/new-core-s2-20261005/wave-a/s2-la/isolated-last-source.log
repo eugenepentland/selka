@@ -1,0 +1,8 @@
+Build Summary: 7/7 steps succeeded
+affected-compiler success
++- install generated to mylang success
+|  +- compile exe mylang debug native success 3s MaxRSS:559M
+|     +- run exe qbe-build-assets (qbe_build_assets) success 48ms
+|        +- compile exe qbe-build-assets debug native cached 5ms MaxRSS:41M
++- install generated to qbe cached
+   +- compile exe qbe fast native cached 13ms MaxRSS:40M

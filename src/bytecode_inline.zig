@@ -115,7 +115,7 @@ fn eligible(program: bytecode.Program, index: usize, code: []const bytecode.Inst
     // caller's variable; a splice would bind a copy of it instead, so such a
     // callee keeps its call.
     for (function.signature.declared_mutates) |position| {
-        if (position < locals.len and typed.referenceMut(program.records, locals[position].ty)) return false;
+        if (position < locals.len and @import("mut_abi.zig").reference(program.records, function, position)) return false;
     }
     var returns = false;
     for (code) |instruction| {

@@ -533,6 +533,9 @@ fn hashSignature(hash: *Sha, allocator: std.mem.Allocator, program: typed.Progra
         hash.update(&encoded);
     }
     hash.update(&[_]u8{ @intFromBool(function.signature.inferred.writes), @intFromBool(function.signature.inferred.external) });
+    var storage_bytes: [2]u8 = undefined;
+    std.mem.writeInt(u16, &storage_bytes, function.signature.inferred.caller_storage, .little);
+    hash.update(&storage_bytes);
     var effect_bytes: [4]u8 = undefined;
     std.mem.writeInt(u32, &effect_bytes, function.policy.effects, .little);
     hash.update(&effect_bytes);
@@ -745,6 +748,31 @@ test "native function fact key changes with physical return origin" {
     try hashSignature(&first, a, program, function, &catalog);
     var second = Sha.init(.{});
     function.signature.inferred.borrow_origin = .fresh;
+    try hashSignature(&second, a, program, function, &catalog);
+    var first_digest: [32]u8 = undefined;
+    var second_digest: [32]u8 = undefined;
+    first.final(&first_digest);
+    second.final(&second_digest);
+    try std.testing.expect(!std.mem.eql(u8, &first_digest, &second_digest));
+}
+
+// spec-case: MUT-REBIND-CALLER-1
+test "native function fact key changes with caller storage ABI" {
+    const a = std.testing.allocator;
+    const program: typed.Program = .{ .nodes = &.{}, .statements = &.{}, .functions = &.{}, .main = @fromBackingInt(0) };
+    var catalog = try native_types.Catalog.initRecords(a, &.{});
+    defer catalog.deinit();
+    var function: typed.Function = .{
+        .scope = .{ .body = @fromBackingInt(0) },
+        .id = @fromBackingInt(0),
+        .name = "accessor",
+        .declaration = .{ .start = 0, .end = 0 },
+    };
+    var first = Sha.init(.{});
+    function.signature.inferred.caller_storage = 1;
+    try hashSignature(&first, a, program, function, &catalog);
+    var second = Sha.init(.{});
+    function.signature.inferred.caller_storage = 0;
     try hashSignature(&second, a, program, function, &catalog);
     var first_digest: [32]u8 = undefined;
     var second_digest: [32]u8 = undefined;

@@ -2015,11 +2015,14 @@ fn checkHostType(allocator: std.mem.Allocator, catalog: []const typed.Record, ty
     };
 }
 
-/// Whether local `slot` of `function` is a `mut` record parameter, which
-/// under value semantics is the caller's own variable (`VALUE-SEMANTICS-3`).
-fn inoutRecord(catalog: []const typed.Record, function: typed.Function, slot: usize) bool {
+/// Whether local `slot` is a `mut` record or collection parameter whose
+/// assignment changes the caller's variable.
+fn callerBinding(catalog: []const typed.Record, function: typed.Function, slot: usize) bool {
     if (slot >= function.signature.parameter_count) return false;
-    for (function.signature.declared_mutates) |position| if (position == slot) return typed.referenceRecord(catalog, function.scope.locals[slot].ty);
+    for (function.signature.declared_mutates) |position| if (position == slot) {
+        const ty = function.scope.locals[slot].ty;
+        return typed.referenceRecord(catalog, ty) or @import("mut_abi.zig").collection(catalog, ty);
+    };
     return false;
 }
 
@@ -2047,9 +2050,9 @@ fn warnBindings(allocator: std.mem.Allocator, catalog: []const typed.Record, fun
                 });
             }
             if (local.usage.temporary or local.usage.reads != 0) continue;
-            // VALUE-SEMANTICS-3: rebinding a `mut` record parameter reaches
-            // the caller, so the binding is used even if the body never reads it.
-            if (inoutRecord(catalog, function, slot)) continue;
+            // Rebinding a `mut` caller variable uses the parameter even when
+            // the body never reads its previous value.
+            if (callerBinding(catalog, function, slot)) continue;
             // A capability parameter is the signature's whole claim to an
             // effect: a body that never reads it promises authority it does not
             // use, so the over-claim is rejected rather than warned about.

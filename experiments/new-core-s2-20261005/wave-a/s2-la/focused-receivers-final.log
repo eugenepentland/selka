@@ -1,0 +1,24 @@
+test-units
++- run test w
+guardian/test: 15 test(s) selected by filter: "receiver overlap" — 3 match by name, 12 unnamed test block(s) run regardless
+guardian/test: test wall 0.01s
+guardian/test: PASS — 15 passed
+guardian/test: RESULT {"passed":15,"failed":0,"skipped":0}
+failed command: sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_QBE=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-language/zig-out/focus/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./.zig-cache/o/205ef9a135eff0695d358fac59a38305/test "--guardian-filter=receiver overlap" --cache-dir=./.zig-cache --seed=0x2f57ffd2 --listen=-
+
+Build Summary: 11/11 steps succeeded; 15/15 tests passed
+test-units success
++- run test 15 pass (15 total) 32ms MaxRSS:16M
+   +- compile test debug native success 1s MaxRSS:322M
+   |  +- run exe qbe-build-assets (qbe_build_assets) success 48ms
+   |  |  +- compile exe qbe-build-assets debug native cached 7ms MaxRSS:36M
+   |  +- options cached
+   |     +- compile exe qbe fast native cached 14ms MaxRSS:36M
+   +- install generated to qbe cached
+   |  +- compile exe qbe fast native (reused)
+   +- install generated to mylang success
+      +- compile exe mylang debug native success 3s MaxRSS:548M
+         +- run exe qbe-build-assets (qbe_build_assets) (+1 more reused dependencies)
+affected-compiler success
++- install generated to mylang (+1 more reused dependencies)
++- install generated to qbe (+1 more reused dependencies)

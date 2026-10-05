@@ -1,0 +1,12 @@
+guardian: diff-scoped vs 1fd1d566793dcae92449d937aca595c55ee318c8: 136/809 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 10 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 1 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 2/88 failed (spec, line-length) — diff-scoped vs 1fd1d566793dcae92449d937aca595c55ee318c8, 136 file(s) in scope
+guardian: failures grouped by check (2):
+  spec (1 finding)
+    - tag not on a test: tests/lang/mut_rebind_caller.my:1: # spec: MUT-REBIND-CALLER-1
+  line-length (1 finding)
+    - src/mut_exclusive.zig:319: line is 362 chars (hard limit 240)
+      fix: split the expression when doing so improves readability
+  caution: zig-out binaries predate this failed run (installs are gated on green) — rebuild green before running them

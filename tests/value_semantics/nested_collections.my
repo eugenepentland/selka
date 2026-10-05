@@ -166,16 +166,18 @@ public def test_key_mutates_original() -> bool:
 
 
 # spec-case: COW-NESTED-1
-public def test_key_replaces_changed_receiver() -> bool:
+public def test_key_replacement_finishes_before_receiver_selection() -> bool:
     original: list[dict[str, list[int]]] = [{"k": [1]}]
     changed = original
-    changed[0][replace_key(mut changed)].append(2)
-    return original[0]["k"] == [1] and changed[0]["k"] == [9]
+    selected = replace_key(mut changed)
+    changed[0][selected].append(2)
+    return original[0]["k"] == [1] and changed[0]["k"] == [9, 2]
 
 
 # spec-case: COW-NESTED-1
-public def test_key_grows_changed_receiver() -> bool:
+public def test_key_growth_finishes_before_receiver_selection() -> bool:
     original: list[dict[str, list[int]]] = [{"k": [1]}]
     changed = original
-    changed[0][grow_key(mut changed)].append(2)
+    selected = grow_key(mut changed)
+    changed[0][selected].append(2)
     return original[0]["k"] == [1] and changed[0]["k"] == [1, 7, 2]

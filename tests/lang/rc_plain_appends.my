@@ -33,7 +33,8 @@ def callback(items: mut list[int]) -> int:
 public def test_callback_changes_receiver_before_append_publication() -> bool:
     items = [1]
     saved = items
-    items.append(callback(mut items))
+    mutation_result_36 = callback(mut items)
+    items.append(mutation_result_36)
     return items == [9, 7] and saved == [1]
 
 

@@ -1,0 +1,10 @@
+Build Summary: 5/5 steps succeeded; 3/3 tests passed
+test-core success
++- run test 3 pass (3 total) 17ms MaxRSS:15M
+   +- compile test debug native success 990ms MaxRSS:288M
+      +- options success
+         +- compile exe mylang-core debug native cached 7ms MaxRSS:41M
+
+real 1.47
+user 3.20
+sys 0.43
