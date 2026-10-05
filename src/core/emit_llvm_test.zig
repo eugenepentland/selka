@@ -85,3 +85,64 @@ test "an instruction or entry signature the emitter cannot lower is an error, no
     const text = try emitHand(arena.allocator(), &valid);
     try std.testing.expect(std.mem.indexOf(u8, text, "fadd double 0x0000000000000000, 0x0000000000000000") != null);
 }
+
+const searching =
+    \\def search(values: list[int], key: int) -> int:
+    \\    low = 0
+    \\    high = len(values)
+    \\    while low < high:
+    \\        middle = (low + high) // 2
+    \\        if values[middle] < key:
+    \\            low = middle + 1
+    \\        else:
+    \\            high = middle
+    \\    return low
+    \\
+    \\
+    \\def main(args: list[str], out: Stream) -> int:
+    \\    out.print(search([1, 3, 5], len(args)))
+    \\    return 0
+    \\
+;
+
+/// The text of one emitted function, from its `define` to its closing brace.
+fn functionText(text: []const u8, name: []const u8) []const u8 {
+    const start = std.mem.indexOf(u8, text, name) orelse return "";
+    const end = std.mem.indexOfPos(u8, text, start, "\n}\n") orelse return "";
+    return text[start..end];
+}
+
+// spec: NEW-CORE-LLVM-2
+test "proven arithmetic on non-negative values is nuw nsw, their comparisons are unsigned, and a proven search reads without a bounds test" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const text = try support.releaseLlvmText(arena.allocator(), searching);
+    const search = functionText(text, "define internal i64 @\"my.search\"");
+    try std.testing.expect(search.len != 0);
+    // `low + high` and `middle + 1`; `low < high` compares unsigned; `// 2` divides unsigned.
+    try std.testing.expectEqual(@as(usize, 2), std.mem.count(u8, search, "add nuw nsw i64"));
+    try std.testing.expect(std.mem.indexOf(u8, search, "icmp ult i64") != null);
+    try std.testing.expect(std.mem.indexOf(u8, search, "udiv i64") != null);
+    try std.testing.expect(std.mem.indexOf(u8, search, "icmp slt i64 %v6") == null);
+    // The element comparison `values[middle] < key` stays signed: neither side is known non-negative.
+    try std.testing.expect(std.mem.indexOf(u8, search, "icmp slt i64") != null);
+    // No bounds test on `values[middle]`; what traps remain sit behind the folded `middle < 0`.
+    try std.testing.expect(std.mem.indexOf(u8, search, "icmp uge i64") == null);
+    try std.testing.expect(std.mem.indexOf(u8, search, "br i1 false") != null);
+}
+
+// spec: NEW-CORE-VERIFY-2
+test "a verify build asserts each length bound and gives LLVM no unsigned promise" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const text = try support.verifyLlvmText(arena.allocator(), searching);
+    const search = functionText(text, "define internal i64 @\"my.search\"");
+    try std.testing.expect(search.len != 0);
+    try std.testing.expect(std.mem.indexOf(u8, text, "below the list length") != null);
+    try std.testing.expect(std.mem.indexOf(u8, text, "at most the list length") != null);
+    try std.testing.expect(std.mem.indexOf(u8, search, "nuw") == null);
+    try std.testing.expect(std.mem.indexOf(u8, search, "icmp ult i64 %v") == null);
+    // Every proven check is still emitted: the read's bounds test and both overflow intrinsics.
+    try std.testing.expect(std.mem.indexOf(u8, search, "icmp uge i64") != null);
+    try std.testing.expect(std.mem.indexOf(u8, search, "@llvm.sadd.with.overflow.i64") != null);
+}

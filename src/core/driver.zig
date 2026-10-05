@@ -41,7 +41,9 @@ pub fn link(allocator: std.mem.Allocator, io: std.Io, environ: *const std.proces
     const program = request.program;
     cwd.writeFile(io, .{ .sub_path = program, .data = request.llvm }) catch return error.WriteFailed;
     var argv: std.ArrayList([]const u8) = .empty;
-    try argv.appendSlice(allocator, &.{ request.zig, "cc", if (request.release) "-O3" else "-O0", target.cpu_flag, "-Wno-override-module", "-o", request.output, program, runtime_object });
+    try argv.appendSlice(allocator, &.{ request.zig, "cc", if (request.release) "-O3" else "-O0" });
+    try argv.appendSlice(allocator, target.cpu_flags);
+    try argv.appendSlice(allocator, &.{ "-Wno-override-module", "-o", request.output, program, runtime_object });
     try argv.appendSlice(allocator, request.links);
     try run(allocator, io, &environment, argv.items, log);
 }
@@ -57,7 +59,11 @@ fn runtimeObject(allocator: std.mem.Allocator, io: std.Io, environment: *const s
     const source = try std.fs.path.join(allocator, &.{ request.work, try std.fmt.allocPrint(allocator, "{s}.c", .{stem}) });
     cwd.writeFile(io, .{ .sub_path = source, .data = runtime_source }) catch return error.WriteFailed;
     const partial = try std.fmt.allocPrint(allocator, "{s}.partial", .{object});
-    try run(allocator, io, environment, &.{ request.zig, "cc", "-c", "-O2", target.cpu_flag, "-std=c11", "-o", partial, source }, log);
+    var argv: std.ArrayList([]const u8) = .empty;
+    try argv.appendSlice(allocator, &.{ request.zig, "cc", "-c", "-O2" });
+    try argv.appendSlice(allocator, target.cpu_flags);
+    try argv.appendSlice(allocator, &.{ "-std=c11", "-o", partial, source });
+    try run(allocator, io, environment, argv.items, log);
     cwd.rename(partial, cwd, object, io) catch return error.WriteFailed;
     return object;
 }

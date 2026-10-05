@@ -12,8 +12,9 @@ const version = @import("version.zig");
 pub const Error = std.mem.Allocator.Error;
 
 /// How the fact pass runs: `trusted` facts drive the vector lowering; `verify` keeps
-/// comparisons unfolded and plans no vectors; `sabotage` is verify with one wrong rule.
-pub const Mode = enum { off, trusted, verify, sabotage };
+/// comparisons unfolded and plans no vectors; `sabotage`, `sabotage_widening` and
+/// `sabotage_length` are verify with one wrong rule (`facts.Sabotage`).
+pub const Mode = enum { off, trusted, verify, sabotage, sabotage_widening, sabotage_length };
 
 /// What the passes produced, per function, and what they did.
 pub const Result = struct {
@@ -38,7 +39,13 @@ pub fn run(arena: std.mem.Allocator, module: *ir.Module, mode: Mode) Error!Resul
     result.inlined = try inline_leaves.inlineLeaves(arena, module);
     if (mode == .off) return result;
     const verify = mode != .trusted;
-    const options: facts.Options = .{ .fold = !verify, .sabotage = mode == .sabotage };
+    const sabotage: facts.Sabotage = switch (mode) {
+        .sabotage => .remainder,
+        .sabotage_widening => .widening,
+        .sabotage_length => .length,
+        else => .none,
+    };
+    const options: facts.Options = .{ .fold = !verify, .sabotage = sabotage };
     for (module.functions.items, result.known, result.plans) |*function, *slot, *plan| {
         if (function.signature.linkage != .internal) continue;
         result.unswitched += try version.unswitch(arena, function);

@@ -65,6 +65,9 @@ const or_line = "  {s} = or i1 {s}, {s}\n";
 /// `  %x = icmp pred type value, constant`: one side of a range test.
 const bound_line = "  {s} = icmp {s} {s} {s}, {d}\n";
 
+/// `  %at = getelementptr inbounds i8, ptr list, i64 offset` then `  %x = load i64, ptr %at`: one header field.
+const header_load_line = "  {s} = getelementptr inbounds i8, ptr {s}, i64 {d}\n  {s} = load i64, ptr {s}, align 8\n";
+
 /// One instruction line of the shape `  %x = op type a, b`.
 const binary_line = "  {s} = {s} {s} {s}, {s}\n";
 
@@ -315,13 +318,13 @@ const FunctionEmitter = struct {
             try self.assertReachable(&bodies[b], @intCast(b));
             for (block.insts.items) |ref| {
                 const inst = f.inst(ref);
-                if (inst.op == .phi) try self.assertRange(&bodies[b], ref, inst);
+                if (inst.op == .phi) try self.assertFacts(&bodies[b], ref, inst);
             }
             for (block.insts.items) |ref| {
                 const inst = f.inst(ref);
                 if (inst.op == .phi or inst.op == .copy) continue;
                 try self.instruction(&bodies[b], ref, inst);
-                if (!inst.op.terminates()) try self.assertRange(&bodies[b], ref, inst);
+                if (!inst.op.terminates()) try self.assertFacts(&bodies[b], ref, inst);
             }
             self.exit_labels.items[b] = self.label;
         }
@@ -394,6 +397,32 @@ const FunctionEmitter = struct {
         const location = self.state.options.locator.locate(self.state.options.locator.context, at.span);
         const index = try self.state.site(.{ .kind = .fact, .location = location, .width = 64, .operation = "unreachable block", .function = self.function.name });
         try self.trapIf(out, "true", index, "0", "0");
+    }
+
+    /// Verify mode: the value's interval and its list-length bound hold.
+    fn assertFacts(self: *FunctionEmitter, out: *Out, ref: ir.Ref, inst: ir.Inst) !void {
+        try self.assertRange(out, ref, inst);
+        try self.assertBound(out, ref, inst);
+    }
+
+    /// Verify mode: the value is at most (below, when strict) the length of the list
+    /// parameter the facts bound it by.
+    fn assertBound(self: *FunctionEmitter, out: *Out, ref: ir.Ref, inst: ir.Inst) !void {
+        const known = self.knownFacts() orelse return;
+        const info = inst.ty.integer() orelse return;
+        if (inst.op == .iconst or known.bounds.len == 0) return;
+        const bound = known.bounds[ref.index()] orelse return;
+        if (bound.list == .none) return;
+        const at = try self.fresh("%bh");
+        const len = try self.fresh("%bl");
+        const failed = try self.fresh("%bf");
+        const name = try self.widened(out, ref);
+        const predicate = if (bound.strict) (if (info.signed) "sge" else "uge") else (if (info.signed) "sgt" else "ugt");
+        try out.print(self.a(), header_load_line, .{ at, try self.value(bound.list), len_offset, len, at });
+        try out.print(self.a(), "  {s} = icmp {s} i64 {s}, {s}\n", .{ failed, predicate, name, len });
+        const operation: []const u8 = if (bound.strict) "below the list length" else "at most the list length";
+        const index = try self.state.site(.{ .kind = .fact, .location = self.state.options.locator.locate(self.state.options.locator.context, inst.span), .width = info.bits, .operation = operation, .function = self.function.name });
+        try self.trapIf(out, failed, index, name, len);
     }
 
     /// Verify mode: the value lies in the interval the facts gave it.
@@ -482,7 +511,10 @@ const FunctionEmitter = struct {
             .not => try out.print(self.a(), "  {s} = xor i1 {s}, true\n", .{ name, try self.value(inst.a) }),
             .cmp => {
                 const operand_type = self.function.inst(self.function.resolve(inst.a)).ty;
-                const signed = if (operand_type.integer()) |info| info.signed else false;
+                // Two operands the facts prove non-negative compare the same either way;
+                // unsigned predicates let LLVM relate the comparison to unsigned bounds checks.
+                const unsigned_safe = self.nonNegative(inst.a) and self.nonNegative(inst.b);
+                const signed = if (operand_type.integer()) |info| info.signed and !unsigned_safe else false;
                 const predicate: ir.Predicate = @fromBackingInt(@intCast(inst.data));
                 const spelled = switch (predicate) {
                     .eq => "eq",
@@ -535,7 +567,7 @@ const FunctionEmitter = struct {
             },
             .list_len, .str_len => {
                 const at = try self.fresh("%h");
-                try out.print(self.a(), "  {s} = getelementptr inbounds i8, ptr {s}, i64 {d}\n  {s} = load i64, ptr {s}, align 8\n", .{ at, try self.value(inst.a), len_offset, name, at });
+                try out.print(self.a(), header_load_line, .{ at, try self.value(inst.a), len_offset, name, at });
             },
             .list_get => try self.listGet(out, name, inst),
             .list_push => try self.listPush(out, name, inst),
@@ -591,7 +623,11 @@ const FunctionEmitter = struct {
                 try out.print(self.a(), "  {s} = extractvalue {{ {s}, i1 }} {s}, 1\n", .{ failed, tyname, pair });
                 try self.trapIf(out, failed, try self.site(.overflow, inst, op), try self.widened(out, inst.a), try self.widened(out, inst.b));
             },
-            .proven => try out.print(self.a(), binary_line, .{ name, op, if (info.signed) "nsw" else "nuw", try self.typedValue(inst.a), try self.value(inst.b) }),
+            .proven => {
+                // A proven signed operation on non-negative operands with a non-negative result wraps in neither sense.
+                const both = info.signed and self.nonNegative(inst.a) and self.nonNegative(inst.b) and self.nonNegative(self.refOf(name));
+                try out.print(self.a(), binary_line, .{ name, op, if (both) "nuw nsw" else if (info.signed) "nsw" else "nuw", try self.typedValue(inst.a), try self.value(inst.b) });
+            },
             .none => try out.print(self.a(), "  {s} = {s} {s}, {s}\n", .{ name, op, try self.typedValue(inst.a), try self.value(inst.b) }),
         }
     }
@@ -778,6 +814,19 @@ const FunctionEmitter = struct {
         return @fromBackingInt(std.fmt.parseInt(u32, name[2..], 10) catch 0);
     }
 
+    /// Whether trusted facts prove an integer value non-negative (never in verify builds).
+    fn nonNegative(self: *FunctionEmitter, raw: ir.Ref) bool {
+        const ref = self.function.resolve(raw);
+        const inst = self.function.inst(ref);
+        const info = inst.ty.integer() orelse return false;
+        if (!info.signed) return true;
+        if (inst.op == .iconst) return @as(i64, @bitCast(inst.data)) >= 0;
+        if (self.state.options.verify or self.index >= self.state.options.facts.len) return false;
+        const known = self.state.options.facts[self.index] orelse return false;
+        const range = known.ranges[ref.index()] orelse return false;
+        return range.lo >= 0;
+    }
+
     /// Whether trusted facts put an integer value inside `i32` (never in verify builds).
     fn fitsI32(self: *FunctionEmitter, raw: ir.Ref) bool {
         if (self.state.options.verify or self.index >= self.state.options.facts.len) return false;
@@ -812,7 +861,7 @@ const FunctionEmitter = struct {
         const slot = try self.fresh("%ps");
         const next = try self.fresh("%pn");
         try out.print(self.a(), "  {s} = call ptr @myl_core_list_reserve(ptr {s}, i64 {d})\n", .{ name, try self.value(inst.a), elementSize(element) });
-        try out.print(self.a(), "  {s} = getelementptr inbounds i8, ptr {s}, i64 {d}\n  {s} = load i64, ptr {s}, align 8\n", .{ len_at, name, len_offset, len, len_at });
+        try out.print(self.a(), header_load_line, .{ len_at, name, len_offset, len, len_at });
         try out.print(self.a(), "  {s} = getelementptr inbounds i8, ptr {s}, i64 {d}\n  {s} = getelementptr inbounds {s}, ptr {s}, i64 {s}\n", .{ data, name, data_offset, slot, stored, data, len });
         if (element == .bool) {
             const byte = try self.fresh("%pb");

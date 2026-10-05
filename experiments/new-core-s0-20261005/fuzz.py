@@ -75,9 +75,38 @@ class Gen:
             c = "%s %s %s" % (c, self.r.choice(["and", "or"]), d)
         return c
 
+    def probe(self):
+        """A helper over a list parameter (S1 checkpoint A): a binary search, a strided
+        scan or a guarded read, each with an even chance of an off-by-one mutation that
+        the facts must not prove (the old core then traps R_LIST_BOUNDS too)."""
+        r = self.r
+        wrong = r.random() < 0.5
+        shape = r.choice(["search", "search", "scan", "guard"])
+        lines = ["def probe(xs: list[int], key: int) -> int:"]
+        if shape == "search":
+            inclusive = wrong and r.random() < 0.5
+            lines += ["    low = 0", "    high = len(xs)%s" % (" + 1" if wrong and not inclusive else ""),
+                      "    while low %s high:" % ("<=" if inclusive else "<"),
+                      "        middle = (low + high) // 2",
+                      "        if xs[middle] < key:", "            low = middle + 1", "        else:",
+                      "            high = middle%s" % (" - 1" if inclusive else ""),
+                      "    if low < len(xs) and xs[low] == key:", "        return low + 1", "    return 0"]
+        elif shape == "scan":
+            lines += ["    total = 0", "    i = key %% %d" % r.randint(1, 5),
+                      "    while i %s len(xs):" % ("<=" if wrong else "<"),
+                      "        total += xs[i]", "        i += %d" % r.randint(1, 3), "    return total"]
+        else:
+            lines += ["    i = key %% %d - %d" % (r.randint(5, 80), r.randint(0, 3)), "    if i >= 0:",
+                      "        if i %s len(xs):" % ("<=" if wrong else "<"),
+                      "            return xs[i]", "    return 0"]
+        return lines + ["", ""]
+
     def program(self):
         r = self.r
         lines = []
+        with_probe = r.random() < 0.5
+        if with_probe:
+            lines += self.probe()
         helpers = r.randint(0, 2)
         for h in range(helpers):
             lines += ["def helper%d(a: int, b: int) -> int:" % h]
@@ -146,6 +175,8 @@ class Gen:
             lines += ["    k = seed % 1000 + 2", "    steps = 0", "    while k != 1 and steps < 200:",
                       "        if k % 2 == 0:", "            k = k // 2", "        else:", "            k = 3 * k + 1",
                       "        steps += 1", "    acc = acc + steps"]
+        if with_probe:
+            lines.append("    acc = acc + probe(%s, %s)" % (r.choice(["values", "second"]), self.expr(["seed", "n", "acc"], 1)))
         lines += ["    out.print(acc, len(values))", "    return acc % 7", ""]
         return "\n".join(lines) + "\n"
 
@@ -170,6 +201,7 @@ def main():
     ap.add_argument("--seed", type=int, default=1)
     ap.add_argument("--keep", default=None)
     ap.add_argument("--sabotage", action="store_true")
+    ap.add_argument("--rule", default="", help="with --sabotage: widening or length (default: the remainder rule)")
     ap.add_argument("--mylang", default=os.path.join(ROOT, "zig-out/bin/mylang"))
     ap.add_argument("--core", default=os.path.join(ROOT, "zig-out/bin/mylang-core"))
     args = ap.parse_args()
@@ -188,7 +220,8 @@ def main():
             stats["old_rejected"] += 1
             continue
         builds = {}
-        modes = {"debug": [], "release": ["--release", "--stats"], "verify": ["--release", "--sabotage-facts" if args.sabotage else "--verify-facts"]}
+        sabotage = "--sabotage-facts" + ("=" + args.rule if args.rule else "")
+        modes = {"debug": [], "release": ["--release", "--stats"], "verify": ["--release", sabotage if args.sabotage else "--verify-facts"]}
         refused = False
         for mode, flags in modes.items():
             out = os.path.join(work, "%s%d" % (mode, case))

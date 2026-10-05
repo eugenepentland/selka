@@ -38,8 +38,8 @@ pub fn buildModule(allocator: std.mem.Allocator, program: typed.Program, refusal
     return mb.module;
 }
 
-/// How one checked function fared: built, or the reason it was refused.
-pub const Outcome = struct { name: []const u8, refusal: ?[]const u8 };
+/// How one checked function fared: built (its Core IR), or the reason it was refused.
+pub const Outcome = struct { name: []const u8, refusal: ?[]const u8, function: ?ir.Function = null };
 
 /// Try to build every function of `program` on its own (the coverage sweep).
 pub fn coverage(allocator: std.mem.Allocator, program: typed.Program) Error![]Outcome {
@@ -59,9 +59,12 @@ pub fn coverage(allocator: std.mem.Allocator, program: typed.Program) Error![]Ou
                 continue;
             },
         };
-        _ = buildFunction(&mb, function, mb.module.functions.items[index]) catch |err| switch (err) {
+        outcome.function = buildFunction(&mb, function, mb.module.functions.items[index]) catch |err| switch (err) {
             error.OutOfMemory => return error.OutOfMemory,
-            error.Unsupported => outcome.refusal = refusal.reason,
+            error.Unsupported => blk: {
+                outcome.refusal = refusal.reason;
+                break :blk null;
+            },
         };
     }
     return outcomes;

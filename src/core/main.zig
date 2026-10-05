@@ -8,10 +8,11 @@ const build = @import("build.zig");
 const print = @import("print.zig");
 const pipeline = @import("pipeline.zig");
 const passes = @import("passes.zig");
+const facts = @import("facts.zig");
 
 const usage =
     \\usage: mylang-core build FILE.my -o OUT [--release] [--link FILE.c]... [--emit-llvm PATH] [--no-facts | --verify-facts] [--stats] [--zig PATH] [--cache-dir DIR]
-    \\       mylang-core coverage FILE.my...   (one line per function: ok, or the refusal reason)
+    \\       mylang-core coverage FILE.my...   (one line per function: ok with its checks, or the refusal reason)
     \\       mylang-core dump-typed FILE.my [FUNCTION]
     \\       mylang-core dump-ir FILE.my [--facts]   (--facts: after the release passes, with intervals)
     \\
@@ -110,6 +111,10 @@ fn buildCommand(init: std.process.Init, args: []const []const u8) !u8 {
             options.facts = .verify;
         } else if (std.mem.eql(u8, arg, "--sabotage-facts")) {
             options.facts = .sabotage;
+        } else if (std.mem.eql(u8, arg, "--sabotage-facts=widening")) {
+            options.facts = .sabotage_widening;
+        } else if (std.mem.eql(u8, arg, "--sabotage-facts=length")) {
+            options.facts = .sabotage_length;
         } else if (std.mem.eql(u8, arg, "-o") and has_value) {
             index += 1;
             options.output = args[index];
@@ -151,7 +156,9 @@ fn buildCommand(init: std.process.Init, args: []const []const u8) !u8 {
 }
 
 /// The coverage sweep: check each file and try to build each of its functions alone.
-/// Prints `ok NAME`, `refused REASON\tNAME` or `frontend FILE` per line.
+/// Prints `ok NAME\tproven=P exact=E` (the checks the fact pass proves and keeps in
+/// reachable code of the function analysed alone), `refused REASON\tNAME` or
+/// `frontend FILE` per line.
 fn coverageCommand(init: std.process.Init, arguments: []const []const u8) !u8 {
     var out: std.ArrayList(u8) = .empty;
     for (arguments) |path| {
@@ -172,7 +179,18 @@ fn coverageCommand(init: std.process.Init, arguments: []const []const u8) !u8 {
         };
         for (try build.coverage(allocator, checked.program)) |outcome| {
             const keep = init.arena.allocator();
-            if (outcome.refusal) |reason| try out.print(keep, "refused {s}\t{s}\n", .{ reason, outcome.name }) else try out.print(keep, "ok {s}\n", .{outcome.name});
+            if (outcome.refusal) |reason| {
+                try out.print(keep, "refused {s}\t{s}\n", .{ reason, outcome.name });
+                continue;
+            }
+            var function = outcome.function.?;
+            const known = try facts.analyze(allocator, &function, .{});
+            var exact: u32 = 0;
+            for (function.blocks.items, known.reachable) |block, live| {
+                if (!live) continue;
+                for (block.insts.items) |ref| exact += @intFromBool(function.inst(ref).check == .exact);
+            }
+            try out.print(keep, "ok {s}\tproven={d} exact={d}\n", .{ outcome.name, known.proven, exact });
         }
     }
     try std.Io.File.stdout().writeStreamingAll(init.io, out.items);

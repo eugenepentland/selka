@@ -14,8 +14,9 @@ pub const Traps = enum { posix_exit };
 pub const Target = struct {
     /// The LLVM triple; empty lets clang use the host's (`zig cc` native target).
     triple: []const u8,
-    /// Code generation flags for the CPU: features decide the vector instructions.
-    cpu_flag: []const u8,
+    /// Code generation flags for the CPU: features decide the vector instructions,
+    /// and code layout follows the core's fetch and prediction windows.
+    cpu_flags: []const []const u8,
     /// Bits of one vector register the lowering fills.
     vector_bits: u16,
     /// x86 AVX2 intrinsics are available (`packusdw`, `pmulhuw`, `pmaddwd`); without
@@ -37,7 +38,11 @@ pub const Target = struct {
 /// mappings: the runtime never asks for an address above 2^47).
 pub const x86_64_linux_avx2: Target = .{
     .triple = "",
-    .cpu_flag = "-march=native",
+    // Innermost loops start on a 64-byte boundary (LLVM's x86 default is 16): Golden
+    // Cove's uop cache and branch predictor work in 64-byte windows, so a small hot
+    // loop that straddles two pays two lookups per iteration and its branches'
+    // prediction depends on where the straddle falls (binary-search-fix README).
+    .cpu_flags = &.{ "-march=native", "-mllvm", "-x86-experimental-pref-innermost-loop-alignment=6" },
     .vector_bits = 256,
     .x86_avx2 = true,
     .user_address_bits = 47,

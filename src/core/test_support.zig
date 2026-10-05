@@ -61,6 +61,16 @@ pub fn releaseLlvmText(arena: std.mem.Allocator, source: []const u8) Error![]u8 
     return releaseLlvmTextFor(arena, source, @import("target.zig").current);
 }
 
+/// The LLVM IR a `--verify-facts` release build of `source` emits.
+pub fn verifyLlvmText(arena: std.mem.Allocator, source: []const u8) Error![]u8 {
+    var refusal: build.Refusal = .{};
+    var module = try buildSource(arena, source, &refusal);
+    const result = try passes.run(arena, &module, .verify);
+    const context: u8 = 0;
+    const locator: emit_llvm.Locator = .{ .context = &context, .locate = firstLine };
+    return emit_llvm.emitModule(arena, &module, .{ .locator = locator, .source_path = "test.my", .main_parameters = &.{"out"}, .facts = result.known, .verify = true });
+}
+
 /// The LLVM IR a release build of `source` emits for target description `target`.
 pub fn releaseLlvmTextFor(arena: std.mem.Allocator, source: []const u8, target: @import("target.zig").Target) Error![]u8 {
     var refusal: build.Refusal = .{};

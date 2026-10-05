@@ -12,7 +12,9 @@ import argparse, collections, glob, os, re, subprocess
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
-def sweep(core, files):
+def sweep(core, files, checks=None):
+    """`checks` (a dict) collects, per accepted function, the (proven, exact) counts
+    newer `mylang-core coverage` prints after the name (S1: `proven=P exact=E`)."""
     done = subprocess.run([core, "coverage"] + files, capture_output=True, text=True)
     frontend, outcomes = [], {}
     for line in done.stdout.splitlines():
@@ -20,7 +22,11 @@ def sweep(core, files):
         if kind == "frontend":
             frontend.append(rest.partition("\t")[2])
         elif kind == "ok":
+            rest, _, counts = rest.partition("\t")
             outcomes.setdefault(rest, None)
+            found = re.match(r"proven=(\d+) exact=(\d+)", counts)
+            if found and checks is not None:
+                checks.setdefault(rest, (int(found.group(1)), int(found.group(2))))
         elif kind == "refused":
             reason, _, name = rest.partition("\t")
             if outcomes.get(name, "x") is not None:
@@ -59,17 +65,24 @@ def main():
     if args.lox:
         corpora["lox port"] = sorted(glob.glob(os.path.join(args.lox, "*.my")))
     total = collections.Counter()
+    all_checks = {}
     for name, files in corpora.items():
-        frontend, outcomes = sweep(args.core, files)
+        checks = {}
+        frontend, outcomes = sweep(args.core, files, checks)
+        all_checks.update(checks)
         accepted = sum(1 for reason in outcomes.values() if reason is None)
         reasons = collections.Counter(reason for reason in outcomes.values() if reason is not None)
         total.update(reasons)
         total["(accepted)"] += accepted
         print(f"## {name}: {len(files)} files ({len(frontend)} not checkable alone), {len(outcomes)} functions, {accepted} accepted ({100.0 * accepted / max(1, len(outcomes)):.0f}%)")
+        if checks:
+            print(f"  checks in accepted functions (analysed alone): proven {sum(p for p, _ in checks.values())}, still exact {sum(e for _, e in checks.values())}")
         for problem, count in collections.Counter(re.sub(r"^.*?error", "error", p)[:60] for p in frontend).most_common(3):
             print(f"  front end: {count} x {problem}")
         for reason, count in reasons.most_common(12):
             print(f"  {count:5d}  {reason}")
+    if all_checks:
+        print(f"## all corpora: checks proven {sum(p for p, _ in all_checks.values())}, still exact {sum(e for _, e in all_checks.values())} (in {len(all_checks)} accepted functions)")
     functions = sum(total.values())
     print(f"## all corpora: {functions} functions, {total['(accepted)']} accepted ({100.0 * total['(accepted)'] / max(1, functions):.0f}%)")
     for reason, count in total.most_common(25):

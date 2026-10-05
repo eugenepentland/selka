@@ -7,6 +7,10 @@ const options = @import("core_test_options");
 /// The build flags the tests pass.
 const optimize_flag = "--release";
 const cache_flag = "--cache-dir";
+/// The build cache under a test's scratch directory.
+const cache_format = "{s}/cache";
+/// A fixture's source: `test/core/NAME.my`.
+const fixture_format = "{s}/{s}.my";
 
 /// Failure detail goes to the test's stderr.
 const report = std.debug.print;
@@ -26,7 +30,7 @@ fn scratch(arena: std.mem.Allocator, dir: std.testing.TmpDir) ![]const u8 {
 
 /// Build `test/core/NAME.my` into the scratch directory and return the executable's path.
 fn buildFixture(arena: std.mem.Allocator, root: []const u8, name: []const u8, how: Build) ![]const u8 {
-    const source = try std.fmt.allocPrint(arena, "{s}/{s}.my", .{ options.fixtures, name });
+    const source = try std.fmt.allocPrint(arena, fixture_format, .{ options.fixtures, name });
     const output = try std.fmt.allocPrint(arena, "{s}/{s}-{s}{s}", .{ root, name, if (how.release) "release" else "debug", if (how.old) "-old" else "" });
     const cache = try std.fmt.allocPrint(arena, "{s}/cache{s}", .{ root, if (how.old) "-old" else "" });
     var argv: std.ArrayList([]const u8) = .empty;
@@ -212,7 +216,7 @@ test "the S0 compute kernels give the old core's checksums at 4096 and 64 elemen
 fn verified(arena: std.mem.Allocator, root: []const u8, flag: []const u8) !Outcome {
     const output = try std.fmt.allocPrint(arena, "{s}/int_math{s}", .{ root, flag });
     const source = try std.fmt.allocPrint(arena, "{s}/int_math.my", .{options.fixtures});
-    const cache = try std.fmt.allocPrint(arena, "{s}/cache", .{root});
+    const cache = try std.fmt.allocPrint(arena, cache_format, .{root});
     const result = try std.process.run(arena, std.testing.io, .{ .argv = &.{ options.core_path, "build", source, "-o", output, optimize_flag, flag, "--link", options.clock_path, cache_flag, cache } });
     try std.testing.expect(result.term == .exited and result.term.exited == 0);
     return run(arena, output, &.{ "4096", "300", "7" });
@@ -231,6 +235,34 @@ test "a verify build checks every fact at run time, and catches a deliberately w
     const sabotaged = try verified(arena.allocator(), root, "--sabotage-facts");
     try std.testing.expectEqual(@as(u8, 1), sabotaged.status);
     try std.testing.expect(std.mem.indexOf(u8, sabotaged.stderr, "error[R_CORE_FACT]: native execution failed (range [0, 1007]: value 1008") != null);
+}
+
+/// A release build of `test/core/NAME.my` with `flag` (a verify or sabotage mode), run at 4096 elements.
+fn verifiedKernel(arena: std.mem.Allocator, root: []const u8, name: []const u8, flag: []const u8) !Outcome {
+    const output = try std.fmt.allocPrint(arena, "{s}/{s}{s}", .{ root, name, flag });
+    const source = try std.fmt.allocPrint(arena, fixture_format, .{ options.fixtures, name });
+    const cache = try std.fmt.allocPrint(arena, cache_format, .{root});
+    const result = try std.process.run(arena, std.testing.io, .{ .argv = &.{ options.core_path, "build", source, "-o", output, optimize_flag, flag, "--link", options.clock_path, cache_flag, cache } });
+    try std.testing.expect(result.term == .exited and result.term.exited == 0);
+    return run(arena, output, &.{ "4096", "300", "7" });
+}
+
+// spec-case: NEW-CORE-VERIFY-2
+test "binary_search's widened intervals and length bounds hold at run time, and wrong widening or length rules are caught" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    var dir = std.testing.tmpDir(.{});
+    defer dir.cleanup();
+    const root = try scratch(arena.allocator(), dir);
+    const honest = try verifiedKernel(arena.allocator(), root, "binary_search", "--verify-facts");
+    try std.testing.expectEqualStrings("70251766", firstField(honest.stdout));
+    try std.testing.expectEqual(@as(u8, 0), honest.status);
+    const widening = try verifiedKernel(arena.allocator(), root, "binary_search", "--sabotage-facts=widening");
+    try std.testing.expectEqual(@as(u8, 1), widening.status);
+    try std.testing.expect(std.mem.indexOf(u8, widening.stderr, "error[R_CORE_FACT]: native execution failed (range [0, 0]: value") != null);
+    const length = try verifiedKernel(arena.allocator(), root, "binary_search", "--sabotage-facts=length");
+    try std.testing.expectEqual(@as(u8, 1), length.status);
+    try std.testing.expect(std.mem.indexOf(u8, length.stderr, "error[R_CORE_FACT]: native execution failed (below the list length") != null);
 }
 
 /// compute_s0's checksum for one kind and size (300 iterations, seed 7).
@@ -277,9 +309,9 @@ fn sameSums(got: [12][]const u8) bool {
 
 /// One kernel's 4096-element checksum from a release build with only generic vector code.
 fn genericChecksum(arena: std.mem.Allocator, root: []const u8, name: []const u8) ![]const u8 {
-    const source = try std.fmt.allocPrint(arena, "{s}/{s}.my", .{ options.fixtures, name });
+    const source = try std.fmt.allocPrint(arena, fixture_format, .{ options.fixtures, name });
     const output = try std.fmt.allocPrint(arena, "{s}/{s}-generic", .{ root, name });
-    const cache = try std.fmt.allocPrint(arena, "{s}/cache", .{root});
+    const cache = try std.fmt.allocPrint(arena, cache_format, .{root});
     const result = try std.process.run(arena, std.testing.io, .{ .argv = &.{ options.core_path, "build", source, "-o", output, optimize_flag, "--generic-vectors", "--link", options.clock_path, cache_flag, cache } });
     try std.testing.expect(result.term == .exited and result.term.exited == 0);
     return firstField((try run(arena, output, &.{ "4100", "300", "7" })).stdout);

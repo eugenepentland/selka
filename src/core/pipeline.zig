@@ -20,8 +20,10 @@ pub const Options = struct {
     /// Fact pass mode in a release build: `on`, `off` (`--no-facts`, to measure
     /// what facts buy), `verify` (`--verify-facts`: every fact the build relies on
     /// is also checked at run time and traps `R_CORE_FACT` when it does not hold),
-    /// or `sabotage` (`--sabotage-facts`, test only: verify with one wrong rule).
-    facts: enum { on, off, verify, sabotage } = .on,
+    /// or `sabotage` (`--sabotage-facts`, test only: verify with one wrong rule), with
+    /// `sabotage_widening` and `sabotage_length` for the other wrong rules of `facts.Sabotage`
+    /// (`--sabotage-facts=widening`, `--sabotage-facts=length`).
+    facts: enum { on, off, verify, sabotage, sabotage_widening, sabotage_length } = .on,
 };
 
 /// Extra outputs of a build.
@@ -58,12 +60,14 @@ pub fn build(init: std.process.Init, path: []const u8, options: Options, report:
         else => |other| return other,
     };
     // Release builds compute facts and drop the checks they rule out; debug builds keep every check.
-    const verify = options.facts == .verify or options.facts == .sabotage;
+    const verify = options.facts != .on and options.facts != .off;
     const mode: passes.Mode = switch (options.facts) {
         .on => .trusted,
         .off => .off,
         .verify => .verify,
         .sabotage => .sabotage,
+        .sabotage_widening => .sabotage_widening,
+        .sabotage_length => .sabotage_length,
     };
     const result = if (options.release) try passes.run(allocator, &module, mode) else passes.Result{ .known = &.{}, .plans = &.{} };
     if (options.show.stats) {

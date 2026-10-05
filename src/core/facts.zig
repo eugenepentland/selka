@@ -107,6 +107,27 @@ pub const ListFact = struct {
     elements: ?Interval = null,
 };
 
+/// `value <= len(list)` (`<` when `strict`) for a list parameter. A parameter is one
+/// list for the whole call and lists are immutable values, so the relation holds
+/// wherever the value does, in every iteration of every loop.
+pub const LengthBound = struct {
+    /// The list parameter, or `.none` when no bound is known.
+    list: ir.Ref = .none,
+    strict: bool = false,
+
+    /// What both bounds guarantee.
+    pub fn meet(x: LengthBound, y: LengthBound) LengthBound {
+        if (x.list != y.list or x.list == .none) return .{};
+        return .{ .list = x.list, .strict = x.strict and y.strict };
+    }
+    /// The more informative of two bounds that both hold.
+    fn best(x: LengthBound, y: LengthBound) LengthBound {
+        if (y.list == .none) return x;
+        if (x.list == .none or (y.strict and !x.strict)) return y;
+        return x;
+    }
+};
+
 /// The facts of one function.
 pub const Facts = struct {
     /// Per instruction: its interval (integers and booleans), null when unknown or unreachable.
@@ -120,6 +141,9 @@ pub const Facts = struct {
     proven: u32 = 0,
     /// The counted loops found (for the vector lowering).
     counted: []const Counted = &.{},
+    /// Per instruction: the list parameter whose length bounds the value; null when
+    /// none was computed (unreachable, or only constants at most 0 flow in).
+    bounds: []?LengthBound = &.{},
 };
 
 /// Dominators, reverse postorder and the block of every instruction.
@@ -233,7 +257,7 @@ const Analysis = struct {
     counted: std.ArrayList(Counted) = .empty,
     /// Numeric upper bounds that hold in every block a given block dominates: (block, value, hi).
     caps: std.ArrayList(struct { block: ir.BlockId, value: ir.Ref, hi: i128 }) = .empty,
-    sabotage: bool = false,
+    sabotage: Sabotage = .none,
 
     fn inst(self: *Analysis, ref: ir.Ref) ir.Inst {
         return self.f.inst(self.f.resolve(ref));
@@ -387,13 +411,60 @@ pub const Options = struct {
     /// Fold decided comparisons to constants. Verify builds keep them, so a block the
     /// facts call unreachable still exists and can assert that it never runs.
     fold: bool = true,
-    /// Deliberately wrong rule for testing the verify mode and the fuzz: `x % c`
-    /// is taken to lie in `[0, c - 2]` instead of `[0, c - 1]`.
-    sabotage: bool = false,
+    /// Deliberately wrong rule for testing the verify mode and the fuzz.
+    sabotage: Sabotage = .none,
 };
 
-/// Recompute one instruction's interval (and float interval), widening a value
-/// that keeps changing to its type's range; returns whether anything changed.
+/// The deliberately wrong rules (`--sabotage-facts`, `--sabotage-facts=widening`, `=length`).
+pub const Sabotage = enum {
+    none,
+    /// `x % c` is taken to lie in `[0, c - 2]` instead of `[0, c - 1]`.
+    remainder,
+    /// Widening rounds a growing bound to the threshold on the wrong side (down for
+    /// an upper bound, up for a lower one), so the widened interval may miss values.
+    widening,
+    /// `len(xs)` of a list parameter is taken to be strictly below `len(xs)`.
+    length,
+};
+
+/// The bounds a widened interval may stop at before its type's own: 0, the
+/// list-length bound 2^47 (NEW-CORE-FACTS-3) and 2^47 + 1. Indices and lengths
+/// computed from list lengths settle there (`low = middle + 1` with `middle < len`).
+pub const thresholds = [_]i128{ 0, max_list_length, max_list_length + 1 };
+
+/// Threshold widening: each bound of `next` that leaves `old` moves out to the
+/// nearest threshold that still holds it, or to the type's limit; a bound that
+/// stays inside `old` keeps `old`'s. The result holds `old` and `next`, and every
+/// bound it changes lands on one of finitely many values, so iteration stops.
+pub fn widen(old: Interval, next: Interval, limits: Interval, sabotage: Sabotage) Interval {
+    var out = old;
+    if (next.lo < old.lo) out.lo = if (sabotage == .widening) thresholdAbove(next.lo, limits) else thresholdBelow(next.lo, limits);
+    if (next.hi > old.hi) out.hi = if (sabotage == .widening) thresholdBelow(next.hi, limits) else thresholdAbove(next.hi, limits);
+    return out;
+}
+
+/// The largest threshold at or below `value`, else the type's lower limit.
+fn thresholdBelow(value: i128, limits: Interval) i128 {
+    var out = limits.lo;
+    for (thresholds) |t| {
+        if (t <= value and t > out and t <= limits.hi) out = t;
+    }
+    return out;
+}
+
+/// The smallest threshold at or above `value`, else the type's upper limit.
+fn thresholdAbove(value: i128, limits: Interval) i128 {
+    var out = limits.hi;
+    for (thresholds) |t| {
+        if (t >= value and t < out and t >= limits.lo) out = t;
+    }
+    return out;
+}
+
+/// Recompute one instruction's interval (and float interval), widening a phi
+/// that keeps changing to the next threshold (`widen`); returns whether anything changed.
+/// Every cycle of SSA values passes through a phi, so widening phis alone ends the
+/// iteration, and a value computed from them (`low + high`) keeps its exact transfer.
 fn recompute(a: *Analysis, ref: ir.Ref, block: ir.BlockId, changes: []u8) bool {
     const f = a.f;
     var changed = false;
@@ -401,13 +472,26 @@ fn recompute(a: *Analysis, ref: ir.Ref, block: ir.BlockId, changes: []u8) bool {
     const limits = typeRange(f.inst(ref).ty);
     const next = if (transfer(a, ref, block)) |range| (if (limits) |l| range.meet(l) else range) else null;
     const old = a.facts.ranges[ref.index()];
-    const widened = if (old != null and next != null and !std.meta.eql(old, next)) blk: {
+    const moved = old != null and next != null and !std.meta.eql(old, next);
+    const widened = if (moved and f.inst(ref).op == .phi) blk: {
         changes[ref.index()] +|= 1;
-        break :blk if (changes[ref.index()] > 8) typeRange(f.inst(ref).ty) else next;
+        if (changes[ref.index()] <= 8) break :blk next;
+        const l = limits orelse break :blk null;
+        break :blk widen(old.?, next.?, l, a.sabotage);
     } else next;
     if (!std.meta.eql(old, widened)) {
         a.facts.ranges[ref.index()] = widened;
         changed = true;
+    }
+    if (f.inst(ref).ty.integer() != null) {
+        // A bound only weakens (pending, strict, non-strict, none), so this part terminates too.
+        const old_bound = a.facts.bounds[ref.index()];
+        const next_bound = lengthBound(a, ref, block);
+        const merged = if (old_bound) |o| (if (next_bound) |n| o.meet(n) else o) else next_bound;
+        if (!std.meta.eql(old_bound, merged)) {
+            a.facts.bounds[ref.index()] = merged;
+            changed = true;
+        }
     }
     if (f.inst(ref).ty != .f64) return changed;
     const old_float = a.facts.floats[ref.index()];
@@ -435,8 +519,10 @@ pub fn analyze(arena: std.mem.Allocator, f: *ir.Function, options: Options) Erro
             .lists = try arena.alloc(ListFact, f.insts.items.len),
             .floats = try arena.alloc(?FloatInterval, f.insts.items.len),
             .reachable = try arena.alloc(bool, f.blocks.items.len),
+            .bounds = try arena.alloc(?LengthBound, f.insts.items.len),
         },
     };
+    @memset(a.facts.bounds, null);
     @memset(a.facts.ranges, null);
     @memset(a.facts.floats, null);
     @memset(a.facts.lists, .{});
@@ -469,8 +555,14 @@ pub fn analyze(arena: std.mem.Allocator, f: *ir.Function, options: Options) Erro
             break;
         }
     }
-    // Ranges short of a fixed point are not facts: prove nothing.
-    if (converged) mark(&a, options.fold);
+    // Ranges short of a fixed point are not facts: prove nothing, and leave the
+    // emitter no interval to turn into `!range`, `nuw` or a narrowed conversion.
+    if (converged) mark(&a, options.fold) else {
+        @memset(a.facts.ranges, null);
+        @memset(a.facts.floats, null);
+        @memset(a.facts.lists, .{});
+        @memset(a.facts.bounds, null);
+    }
     a.facts.counted = if (converged) a.counted.items else &.{};
     return a.facts;
 }
@@ -604,7 +696,7 @@ fn transfer(a: *Analysis, ref: ir.Ref, block: ir.BlockId) ?Interval {
             const d = a.rangeAt(i.b, block) orelse break :blk full;
             if (d.lo <= 0) break :blk full;
             if (x.lo >= 0 and x.hi < d.lo) break :blk x;
-            break :blk .{ .lo = 0, .hi = d.hi - if (a.sabotage) @as(i128, 2) else 1 };
+            break :blk .{ .lo = 0, .hi = d.hi - if (a.sabotage == .remainder) @as(i128, 2) else 1 };
         },
         .rem => blk: {
             const x = a.rangeAt(i.a, block) orelse break :blk full;
@@ -728,6 +820,117 @@ fn reduction(a: *Analysis, ref: ir.Ref, block: ir.BlockId) ?Interval {
     return null;
 }
 
+/// The bound a value is known to have where it is used: constants, parameters and
+/// values not analysed yet have none.
+fn knownBound(a: *Analysis, raw: ir.Ref) LengthBound {
+    const ref = a.f.resolve(raw);
+    return switch (a.f.inst(ref).op) {
+        .iconst, .param, .undef => .{},
+        else => a.facts.bounds[ref.index()] orelse .{},
+    };
+}
+
+/// The bound `x` has where `block` executes because a dominating branch edge says
+/// `x < y` (strict, through `y`'s bound) or `x <= y` (`y`'s bound as it is).
+fn lessBound(a: *Analysis, x: ir.Ref, block: ir.BlockId) LengthBound {
+    var out: LengthBound = .{};
+    var b: ?ir.BlockId = block;
+    while (b) |current| {
+        if (a.edgeCondition(current)) |edge| {
+            var predicate: ir.Predicate = @fromBackingInt(@intCast(edge.cmp.data));
+            if (!edge.taken) predicate = switch (predicate) {
+                .lt => .ge,
+                .le => .gt,
+                .gt => .le,
+                .ge => .lt,
+                else => predicate,
+            };
+            const left = a.f.resolve(edge.cmp.a);
+            const right = a.f.resolve(edge.cmp.b);
+            // `x < y` or `y > x` (strict); `x <= y` or `y >= x` (as `y`'s bound).
+            const other: ?ir.Ref = if (left == x and (predicate == .lt or predicate == .le)) right else if (right == x and (predicate == .gt or predicate == .ge)) left else null;
+            if (other) |y| {
+                const strict = predicate == .lt or predicate == .gt;
+                const through = knownBound(a, y);
+                if (through.list != .none) out = out.best(.{ .list = through.list, .strict = through.strict or strict });
+            }
+        }
+        if (current.index() == 0) break;
+        b = a.shape.idom[current.index()];
+    }
+    return out;
+}
+
+/// One step of the length-bound analysis: `len(xs)` of a list parameter, value-preserving
+/// conversions, `x + c` (`c <= 0`), `x + 1` under `x < y`, `x // d` of a non-negative `x`,
+/// the midpoint `(x + y) // 2` under `x < y` (strictly below `y`), and phis (every live
+/// operand bounded by the same list; operands not analysed yet are assumed, as in SCCP).
+fn lengthBound(a: *Analysis, ref: ir.Ref, block: ir.BlockId) ?LengthBound {
+    const i = a.f.inst(ref);
+    switch (i.op) {
+        .phi => {
+            var out: ?LengthBound = null;
+            var zero = false;
+            for (a.f.operands(i.data), a.f.blocks.items[block.index()].preds.items) |operand, pred| {
+                if (!a.edgeLive(pred, block)) continue;
+                const value = a.f.resolve(operand);
+                const op = a.f.inst(value);
+                if (op.op == .iconst) {
+                    if (constantValue(op) > 0) return .{};
+                    zero = true;
+                    continue;
+                }
+                if (op.op == .param or op.op == .undef) return .{};
+                // Not analysed yet (a back edge in the first round): assumed, and checked when it is.
+                const known = a.facts.bounds[value.index()] orelse continue;
+                out = if (out) |so_far| so_far.meet(known) else known;
+            }
+            // A constant at most 0 is at most every length, but not below an empty list's.
+            if (zero) return if (out) |so_far| .{ .list = so_far.list } else .{};
+            return out;
+        },
+        .list_len => {
+            const list = a.liveOperand(i.a);
+            if (a.f.inst(list).op != .param) return .{};
+            return .{ .list = list, .strict = a.sabotage == .length };
+        },
+        .convert => return if (i.check == .none) .{} else knownBound(a, i.a),
+        .add, .sub => {
+            if (i.check == .none) return .{};
+            const constant = a.inst(i.b);
+            const c: ?i128 = if (constant.op == .iconst) constantValue(constant) else null;
+            const step = c orelse return .{};
+            // `x + c` with `c <= 0` (or `x - c` with `c >= 0`) is at most `x`.
+            if ((i.op == .add and step <= 0) or (i.op == .sub and step >= 0)) return knownBound(a, i.a);
+            // `x + 1` with `x < len` is at most `len`.
+            if (i.op == .add and step == 1) {
+                const x = knownBound(a, i.a).best(lessBound(a, a.f.resolve(i.a), block));
+                if (x.strict) return .{ .list = x.list };
+            }
+            return .{};
+        },
+        .floor_div, .div => {
+            const divisor = a.inst(i.b);
+            if (divisor.op != .iconst or constantValue(divisor) < 1) return .{};
+            const dividend = a.rangeAt(i.a, block) orelse return .{};
+            // A non-negative `x // d` is at most `x`.
+            if (dividend.lo < 0) return .{};
+            var out = knownBound(a, i.a);
+            const sum = a.inst(i.a);
+            if (constantValue(divisor) == 2 and sum.op == .add and sum.check != .none) {
+                const x = a.f.resolve(sum.a);
+                const y = a.f.resolve(sum.b);
+                // `(x + y) // 2` is at most the larger operand, and below `y` when `x < y`.
+                out = out.best(knownBound(a, x).meet(knownBound(a, y)));
+                if (a.knownLess(x, y, block) and knownBound(a, y).list != .none) out = out.best(.{ .list = knownBound(a, y).list, .strict = true });
+                if (a.knownLess(y, x, block) and knownBound(a, x).list != .none) out = out.best(.{ .list = knownBound(a, x).list, .strict = true });
+            }
+            return out;
+        },
+        else => return .{},
+    }
+}
+
 fn compare(a: *Analysis, i: ir.Inst, block: ir.BlockId) ?Interval {
     const unknown: Interval = .{ .lo = 0, .hi = 1 };
     const x = a.rangeAt(i.a, block) orelse return unknown;
@@ -799,6 +1002,10 @@ fn provable(a: *Analysis, i: ir.Inst, block: ir.BlockId) bool {
             const range = a.rangeAt(index, block) orelse return false;
             if (range.lo < 0) return false;
             const list = a.liveOperand(i.a);
+            // `index < len(list)` for a list parameter: by the index's own bound, or by a
+            // dominating `index < y` (or `index <= y` with `y` strictly bounded) and `y`'s bound.
+            const bound = (a.facts.bounds[index.index()] orelse LengthBound{}).best(lessBound(a, index, block));
+            if (bound.list == list and bound.strict) return true;
             const length = a.facts.lists[list.index()].length;
             if (length == .none) return false;
             return a.knownLess(index, length, block);

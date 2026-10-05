@@ -183,17 +183,40 @@ faster):
   (`runtime-language-levers` §3.1).
 - **Trip counts** per recorded `Loop`: counter, start, bound, step. The accumulator rule
   (entry range + trips × summand range) bounds reductions such as `pass_total`.
+- **Length bounds** (S1 checkpoint A, NEW-CORE-FACTS-5). Per integer value, an optional
+  `value ≤ len(p)` (or `<`) for a list *parameter* `p`: one immutable list for the whole
+  call, so the relation holds in every iteration of every loop. Rules: `len(p)`;
+  value-preserving conversions; `x + c` with `c ≤ 0`; `x + 1` under `x < len(p)`; `x // d`
+  of a non-negative `x`; the midpoint `(x + y) // 2` under a dominating `x < y` (strictly
+  below `y`); phis whose live operands share the bound (operands not analysed yet are
+  assumed, as in SCCP; a bound only weakens, so this terminates too). This is the one
+  relational fact binary search needs (`middle < high ≤ len`), and it also proves
+  `for j in range(len(p)): p[j]`, `for x in p` and `if i < len(p): p[i]` over parameters.
+  Lists built in the function keep the length facts above; a list that can change length
+  (S1 `mut` parameters, `append`/`pop`) must be excluded from these bounds when it lands.
 - **Check marking.** Each `exact` check whose operands' intervals rule out failure becomes
   `proven`: overflow, division by zero, `i64` floor fix-ups (non-negative operands), and
-  list bounds (`0 ≤ i < len` where `len`'s list fact equals the loop bound).
+  list bounds (`0 ≤ i < len` where `len`'s list fact equals the loop bound, or where the
+  index's length bound, or a dominating `i < y` with `y`'s, is strict for the same list
+  parameter).
 - **One assumption,** stated once in `facts.zig`: a list holds at most `2^47` elements
   (elements of at least one byte in the 47-bit user address space of L4's single
   platform), so once a list of length `n` exists, `n ≤ 2^47`. It bounds trip counts and
   hence reductions. Unlike the spike, no counter ceiling is assumed: a counted loop's
   counter is bounded by its own loop bound (`[start, max(start, bound)]`), which is a fact.
 - **Fixed point or nothing.** The pass iterates in reverse postorder with monotone
-  reachability (as in SCCP) and widens a phi to its type range after eight changes; if
-  the ranges do not settle within 64 rounds, nothing is proven.
+  reachability (as in SCCP). A phi whose interval has changed eight times is widened with
+  **thresholds** (S1 checkpoint A, NEW-CORE-FACTS-4): each bound that grows moves out to the
+  nearest of 0, 2^47 and 2^47 + 1 that holds it, else to the type's limit; a bound that
+  stays inside keeps its value. Only phis widen (every SSA cycle passes through one), so
+  `low + high` keeps its exact transfer instead of jumping to the type range first. The
+  thresholds are the list-length rule's bound and one past it: indices and lengths derived
+  from list lengths settle there (`low = middle + 1` with `middle < len ≤ 2^47`), which
+  proves `low + high` and `middle + 1` cannot overflow without relational reasoning. A
+  widened bound moves through at most four values, so the iteration still ends. If the
+  ranges do not settle within 64 rounds, nothing is proven and the emitter gets no
+  interval at all (S0 left the unconverged ranges in the table, where `!range` and the
+  `i32` narrowing could read them; fixed in checkpoint A).
 - **Where it runs and what it changes.** `facts.analyze` runs per function after
   construction, in release builds only. It mutates the IR in two ways: `exact` → `proven`,
   and a comparison it decides becomes a boolean constant (so the dead branch folds in
@@ -220,7 +243,10 @@ faster):
   are not folded, and no fact-derived promise (`nsw`, `!range`, narrowed conversions,
   vector code) reaches LLVM. A violated fact traps `R_CORE_FACT`. `--sabotage-facts` is the
   same build with one deliberately wrong rule (`x % c ∈ [0, c-2]`), for testing the
-  verifier and the fuzz.
+  verifier and the fuzz. Checkpoint A adds an assert per length bound (`value ≤ len(p)`,
+  `< len(p)`) and two more wrong rules: `--sabotage-facts=widening` (a growing bound is
+  rounded to the threshold on the wrong side) and `--sabotage-facts=length` (`len(p)` is
+  taken to be below itself); binary_search's verify build catches both.
 
 ## 6. Ownership and one-count RC (*design only, S1*)
 
@@ -307,8 +333,15 @@ cheap at S0's sizes; per-function bitcode caching is S1 work.
   loop, which then runs the remaining `trips mod lanes` elements from the vector part's
   counter and sum; whole-function emission means no call is spliced into the host loop.
 - **Arithmetic:** `exact`/`region` checks use `llvm.sadd/ssub/smul.with.overflow`;
-  `proven` operations get `nsw`/`nuw`. Floor division over proven non-negative operands is
-  `udiv`/`urem`; otherwise the fix-up `q - ((r != 0) & ((r ^ d) < 0))`.
+  `proven` operations get `nsw`/`nuw`, and `nuw nsw` when the facts prove both operands and
+  the result non-negative. Floor division over proven non-negative operands is
+  `udiv`/`urem` (LLVM turns `// 2` into a shift); otherwise the fix-up
+  `q - ((r != 0) & ((r ^ d) < 0))`. A comparison of two proven non-negative values uses
+  unsigned predicates (`ult`, …), the form LLVM relates to the unsigned bounds tests.
+  None of this happens in verify builds. (Checkpoint A found that LLVM does *not* remove
+  the binary-search bounds check from `nuw` and unsigned compares alone, contrary to the
+  S0 analysis: `high ≤ len` is a loop invariant through a phi, which neither constraint
+  elimination nor SCEV derives; the length-bound fact proves it instead.)
 - **Unions:** `Option`/`Result`/small unions travel as SSA pairs (`{tag, payload}`) and are
   stored field-wise into their destination (WP-10b's in-place rule by construction, so no
   stack temporary and no store-forwarding stall).
@@ -357,6 +390,7 @@ named places so a later macOS (x86-64 or arm64) or Windows port is local work:
 | Target-specific item | Where it lives |
 |---|---|
 | LLVM triple, CPU flags (`-march=native`), vector width, available intrinsics | `src/core/target.zig` (`Target`, `current`); read by `driver.zig`, `emit_llvm.zig`, `vector.zig` |
+| Code layout: innermost loops aligned to 64 bytes (`-x86-experimental-pref-innermost-loop-alignment=6`, checkpoint A) | `target.zig` `cpu_flags`, passed by `driver.zig` |
 | Address-space bound behind the list-length rule (47 bits) | `target.zig` `user_address_bits` / `maxListLength`; `facts.max_list_length` is derived from it |
 | x86 intrinsics (`packusdw`, `pmulhuw`, `pmaddwd`) | `vector.zig`, each behind `target.x86_avx2` with a generic LLVM fallback (plain `trunc` loads, vector `udiv`, 64-bit lane sums); `--generic-vectors` builds the fallback and the tests check its results |
 | C ABI of `extern` calls (SysV x86-64, scalars and pointers) | `src/core/c_abi.zig` |
@@ -455,6 +489,10 @@ best compiler-derived rung for `branch_mixed`; `float_math` is 13% above the lad
 plain-C v5 (no spike-level gap). `binary_search` has no facts to use (its indices are
 data-dependent) and is bound by branch prediction; Rust is 2.3× faster there (S1: relational
 facts `low ≤ middle < high ≤ len`, and if-conversion of trap-free diamonds).
+**S1 checkpoint A** (`experiments/new-core-s1-20261005/binary-search-fix/README.md`):
+threshold widening, length bounds, unsigned-friendly emission and 64-byte innermost-loop
+alignment take binary_search to 30.4 / 17.9 cycles per search (Rust 37.6 / 19.5) with every
+check proven, the other kernels within ±1.1%.
 
 **Whole-function emission does not slow the other loops** (`compute_s0.my`: all six kinds
 in one `main` with the benchmark's per-element `if kind == …`; unswitching gives each kind
@@ -514,7 +552,8 @@ handles (33), sets (25), `sort` (18), `join`/`split`/`slice` (S2).
    guarded. They become necessary for loops over data without facts; do you want them in
    S1, or with the runtime guards over list data?
 3. **binary_search** stays 2.3× behind Rust: relational facts and if-conversion of
-   trap-free diamonds (S1–S2).
+   trap-free diamonds (S1–S2). *Resolved in S1 checkpoint A without if-conversion
+   (0.81× / 0.92× Rust).*
 4. **Per-function object caching for `-O0`** (N5) is not built: a whole S0 program compiles
    in under 0.3 s, so the cost is invisible until S1's larger programs.
 5. **Trap traces** still name only the innermost frame (PC-table traces: S1).
