@@ -413,9 +413,7 @@ static const char *unqualified(const char *name) {
  * `dwarf_lines` build carries DWARF 4 line tables and inline records (the
  * emitter's `!dbg`), read here from the executable file: per return address the
  * chain of subprogram and inlined-subroutine entries holding it gives one frame per
- * inlined call. A `pc_labels` build (the measured alternative) has a label after
- * every call in section `myl_sites`; the first label at or after a return address
- * names its call site. */
+ * inlined call (§13 R-1 records why not labels after calls). */
 
 typedef struct { const unsigned char *p, *end; } dw_cursor;
 
@@ -745,38 +743,13 @@ static int dwarf_frames(uint64_t pc, int skip) {
     return 0;
 }
 
-/* `pc_labels`: one (label address, site) pair per call, in section `myl_sites`. */
-typedef struct { uintptr_t label; uint64_t site; } myl_pc_site;
-extern const myl_pc_site __start_myl_sites[] __attribute__((weak));
-extern const myl_pc_site __stop_myl_sites[] __attribute__((weak));
-
-/* The call site whose label is the first at or after `pc` (within one call's reach). */
-static const myl_core_site *label_site(uintptr_t pc) {
-    if (!__start_myl_sites) return NULL;
-    const myl_pc_site *best = NULL;
-    for (const myl_pc_site *at = __start_myl_sites; at < __stop_myl_sites; ++at) {
-        if (at->label >= pc && at->label - pc < 64 && (!best || at->label < best->label)) best = at;
-    }
-    return best ? &myl_core_sites[best->site] : NULL;
-}
-
 /* Write the caller frames of a trap: every frame above the trapping function. */
 __attribute__((noinline)) static void trap_frames(void) {
     void *pcs[128];
     int count = os_stack(pcs, 128);
     /* [0] here, [1] myl_core_trap, [2] the trapping function (named by its site), then its callers. */
     for (int i = 2; i < count; ++i) {
-        uintptr_t pc = (uintptr_t)pcs[i];
-        if (__start_myl_sites) {
-            if (i == 2) continue;
-            const myl_core_site *site = label_site(pc);
-            if (!site) break;
-            char text[1024];
-            int len = snprintf(text, sizeof text, "  in %s at %s:%d:%d\n", unqualified(site->function), myl_core_source_path, site->line, site->column);
-            stream_write(&streams[1], text, (size_t)(len < (int)sizeof text ? len : (int)sizeof text - 1));
-            continue;
-        }
-        if (dwarf_frames(pc - 1, i == 2 ? 1 : 0) == 0) break;
+        if (dwarf_frames((uintptr_t)pcs[i] - 1, i == 2 ? 1 : 0) == 0) break;
     }
 }
 

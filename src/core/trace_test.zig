@@ -13,12 +13,18 @@ fn contains(text: []const u8, needle: []const u8) bool {
 
 /// Build `test/core/trap_frames.my` with the new core and run it with two arguments.
 fn trapped(arena: std.mem.Allocator, root: []const u8, release: bool) ![]const u8 {
+    return trappedWith(arena, root, release, &.{});
+}
+
+/// `trapped` with extra build flags.
+fn trappedWith(arena: std.mem.Allocator, root: []const u8, release: bool, flags: []const []const u8) ![]const u8 {
     const source = try std.fmt.allocPrint(arena, "{s}/trap_frames.my", .{options.fixtures});
     const output = try std.fmt.allocPrint(arena, "{s}/trap_frames-{s}", .{ root, if (release) "release" else "debug" });
     const cache = try std.fmt.allocPrint(arena, "{s}/cache", .{root});
     var argv: std.ArrayList([]const u8) = .empty;
     try argv.appendSlice(arena, &.{ options.core_path, "build", source, "-o", output, "--cache-dir", cache });
     if (release) try argv.append(arena, "--release");
+    try argv.appendSlice(arena, flags);
     const built = try std.process.run(arena, std.testing.io, .{ .argv = argv.items });
     try std.testing.expect(built.term == .exited and built.term.exited == 0);
     const ran = try std.process.run(arena, std.testing.io, .{ .argv = &.{ output, "a", "b" } });
@@ -44,6 +50,18 @@ test "a trap names every caller frame like the old core, at debug and at -O3 whe
     const root = try dir.dir.realPathFileAlloc(std.testing.io, ".", arena.allocator());
     try sameFrames(try trapped(arena.allocator(), root, false));
     try sameFrames(try trapped(arena.allocator(), root, true));
+}
+
+// spec-case: NEW-CORE-TRAP-2
+test "a build without the line tables names only the trapping frame and emits no debug sections" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    var dir = std.testing.tmpDir(.{});
+    defer dir.cleanup();
+    const root = try dir.dir.realPathFileAlloc(std.testing.io, ".", arena.allocator());
+    const stderr = try trappedWith(arena.allocator(), root, true, &.{"--trap-frames=posix_exit"});
+    try std.testing.expect(contains(stderr, "/trap_frames.my:6:25\nMYLANG-TRAP {"));
+    try std.testing.expect(!contains(stderr, "  in mid at "));
 }
 
 /// `inner(n) -> Result[int, str]`: `Err("too big")` (a trace origin) when `n > 2`, else

@@ -259,6 +259,65 @@ Otherwise each step reads the current version and performs the iteration check.
 
 **Uniqueness** comes from the same liveness. Form 1 of §5 is "owned, fresh origin, no other live sharer" (B1's `unique`). Form 2 is "owned, otherwise".
 
+### 6.1 As built in checkpoint O-1 (lane O, 2026-10-05)
+
+**Where it runs.** `own.zig` runs per function in release builds after the facts (and
+the trip-count guards), before the vector plans, and grows the fact tables over what it
+adds (no facts; new blocks reachable); debug builds run it after construction
+(`pipeline.finish`). `build.zig` no longer calls B1's `copyShared`.
+
+**Phase A, copy on write.** Per update (`list_push`, `list_set`, `list_pop`) of list `a`:
+- form 3 (`list_copy` first, no test) when `a` is borrowed **or still live after the
+  update** (an owned value used later is shared by definition, so a retain plus a test
+  would only copy anyway);
+- form 1 when `a` is owned, dead after, and statically unique: from `list_new`,
+  `list_copy`, an update, or phis of those, with no call argument and no retained
+  consuming use that can still reach the update (liveness plus a CFG walk that stops at
+  the value's definition, so a call after a loop does not taint the loop's appends);
+- form 2 otherwise: `is_unique` branch, `list_copy` + `release` arm, a phi into the update.
+- Verify builds put `is_unique` + a block ending in `unreachable` with `data = 1` before
+  every form-1 update; the emitter makes that block an `R_CORE_FACT` trap
+  (`count == 1 before an in-place update`).
+- The `list_get` before a `list_pop` of the same list owns the popped element (§2.1); a
+  pop without one gets a read of the dropped slot after it, released at once.
+- A `record_set` of a managed field reads the old field first (owned: the consumed
+  record's reference goes with it) and releases it after.
+
+**Phase B, counting.** Per-value block liveness, where a borrowed part's uses (`list_get`,
+`list_get_field`, `record_get`, `union_payload`, `box_get` of a managed value) count as
+borrow uses of its nearest owned ancestor:
+- a consuming use moves the value when nothing later needs it, otherwise a `retain` goes
+  first; a phi operand is consumed on its edge;
+- an owned value dies after its last use (before it when that is the `ret`), or on the
+  edge where it stops being live: at the top of a one-predecessor successor, else at the
+  end of a one-successor predecessor, else in a split block; no release goes on a path
+  into a block ending in `unreachable`;
+- a borrowed value a consuming use takes is retained first; immortal values (string
+  constants, `undef`) are never counted;
+- **promotion** (not in the §6 sketch): a borrowed part whose owned ancestor is consumed
+  while the part is still used is retained right after its read and counted from there,
+  so an element read before an in-place update of its list does not force a copy of the
+  list; without it the ancestor's liveness alone would keep it valid;
+- phis no live instruction reads are ignored (their operands are not consumed).
+- **R-2:** retains arise only at non-last consuming uses, borrowed escapes and
+  promotions, so no cancelling pair is emitted by construction; `elidePairs` drops any
+  `retain x … release x` in one block with only pure reads between. Every S0 kernel's
+  hot loops hold no count operation (0 retains in the whole programs; the 1–2 releases
+  drop `main`'s lists after the loops; per-iteration instruction counts are equal to the
+  pre-O build's).
+
+**Runtime.** `reserved` holds a pointer to an `i32` element layout the emitter writes
+once per managed element type (`@myl.layout.N`: size, block-pointer offsets, each guarded
+by a chain of union-tag tests), stored by `list_new` and `box_make`; `list_copy` and
+growth copy it, `list_copy` retains every child, and `myl_core_free` releases children
+iteratively through a pending chain linked in the dying blocks' `cap` words. The C entry
+releases `args` after `main` and an `Err` payload after reporting it. `MYL_CORE_LEAKCHECK=1`
+reports blocks still allocated when `main` returns. `myl_core_err_trace` keeps the origin
+and a 32-entry ring; the site's operation is the action text. Only `Err(...) created`
+and `? propagated` can be told apart today: the verifier holds `err_trace`'s `data` to a
+bare `TraceMode`, so `returned`, `? converted to Union.case` and `Err produced by the
+runtime` need an IR change (§13 R-1 note for the integrator).
+
 ## 7. `mut` parameters
 
 **Semantics:** `inout`. The callee's writes, including a rebinding of the whole parameter, reach the caller's variable. The checker guarantees the call-site marker, a mutable local argument, and no overlap (D3).
@@ -430,6 +489,51 @@ Changes to this note, binding on the lanes:
 - Avoid the pairs at the source, Perceus-style: borrow inference plus last-use moves, and a peephole in own.zig that drops `retain x … release x` with no consuming use or call in between.
 - Also put `!range [1, 0)` (1..SAT) on count loads, so LLVM can do what it can.
 - Every row report counts the retain and release operations left in hot loops after -O3. The target is 0 where ownership is static: `mutate_unique`, `list_append`, `alloc_short`, `record_update`.
+
+**R-1 decided (lane O, checkpoint O-1, 2026-10-05): DWARF line tables, not call labels.**
+- *Built:* every function gets `uwtable` and a `DISubprogram` (the C entry too, named
+  `myl.entry`, so inlining `main` into it keeps the locations; it is never printed); every
+  call and every trap call gets `!dbg` with its source position; the module asks for
+  DWARF 4 (`emissionKind: FullDebug` with no variables or types: `LineTablesOnly`
+  emits no subprogram DIE for a function nothing was inlined into). `myl_core_trap`
+  prints the site's frame, then walks the stack with glibc `backtrace` (libgcc's
+  `_Unwind_Backtrace` over `.eh_frame`; nothing is linked in, unlike zig's static
+  `-lunwind`, +20 KB) and maps each return address through the executable's own
+  `.debug_info`/`.debug_ranges`/`.debug_line` (read from `/proc/self/exe`, ~350 lines
+  of C): the subprogram and inlined-subroutine entries holding the address give one
+  frame each, the innermost line from the line table, the others from `call_line`.
+  `--trap-frames=posix_exit` builds without the tables, for measurement.
+- *Frames:* `test/core/trap_frames.my` (a bounds trap two calls deep) prints the old
+  core's frames, `leaf 6:25 / mid 11:9 / main 20:15`, at -O0 and at -O3 where LLVM has
+  inlined everything into the C entry. Names are unqualified, as the first frame already
+  was (the old core prints `trap_frames::leaf`).
+- *Labels (candidate a) lose:* an `asm sideeffect` label after each internal call in
+  section `myl_sites` (local numeric labels, so inlined, unrolled or duplicated copies
+  each record their own address) names only frames whose call survived: at -O3 the
+  same program printed the trapping frame alone, since the inlined calls' labels sit in
+  `main` with no record of the inline chain. The asm also stays in loops LLVM inlines a
+  call into and blocks optimization there: binary_search 4096 went from 30.8 to 33.7–34.2
+  cycles per search (+11%).
+- *Cost of the tables (S0 kernels, `measure_variants.py`, CPU 10, 7–15 interleaved
+  rounds, cycles per element, `base` = the S1 head before lane O):*
+
+  | kernel (4096 / 64) | base | RC, no tables | RC + DWARF | RC + labels |
+  |---|---:|---:|---:|---:|
+  | integer_math | 0.355 / 0.491 | 0.355 / 0.492 | 0.356 / 0.490 | 0.356 / 0.492 |
+  | float_math | 1.566 / 1.704 | 1.567 / 1.706 | 1.566 / 1.704 | 1.565 / 1.705 |
+  | call_direct | 0.298 / 0.320 | 0.300 / 0.321 | 0.299 / 0.321 | 0.300 / 0.321 |
+  | branch_predictable | 0.397 / 0.496 | 0.396 / 0.497 | 0.398 / 0.498 | 0.397 / 0.497 |
+  | branch_mixed | 0.393 / 0.496 | 0.394 / 0.496 | 0.394 / 0.496 | 0.393 / 0.497 |
+  | binary_search | 30.37–30.47 / 17.64–17.69 | 30.81–30.93 / 17.81–17.85 | 30.79–31.20 / 17.81–17.85 | 33.65–34.18 / 17.59–17.61 |
+
+  The DWARF build's code is the no-table build's instruction for instruction (only
+  non-loaded sections grow: +552–568 bytes per kernel binary, 0.5%; labels +168–264);
+  compile time is within run-to-run noise (compute_s0, fresh clang cache: debug 82–87 ms
+  either way, release 202–257 ms against 217–248 ms). binary_search's +1.3–1.8% against
+  `base` is layout, not work: its search and outer loops are the same instructions at
+  the same 64-byte alignment, the program executes the same instructions per iteration
+  (458,883 per outer iteration in both; 6k more once, for the frees at exit), and the
+  difference is branch misses (128k against 144–159k per run) from moved addresses.
 
 **R-3. No generics or imports in S1.**
 - Generics stay out of S1, and so do imports: imports are S4.

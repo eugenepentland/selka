@@ -60,8 +60,8 @@ pub const MainResult = struct { ok_tag: u32, error_tag: u32 };
 
 /// Trap kinds, in the order the runtime's code table lists them. `list_empty` is a
 /// pop of an empty list (`R_LIST_BOUNDS`, operation `pop`); `trace` marks an
-/// error-trace site and `call` a call's return address (`pc_labels` frames), which never trap.
-pub const TrapKind = enum(u8) { overflow, division_by_zero, list_bounds, float_conversion, cast, fact, list_empty, trace, call };
+/// error-trace site, which never traps.
+pub const TrapKind = enum(u8) { overflow, division_by_zero, list_bounds, float_conversion, cast, fact, list_empty, trace };
 
 const Site = struct { kind: TrapKind, location: Location, width: u16, operation: []const u8, function: []const u8 };
 
@@ -1422,16 +1422,6 @@ const FunctionEmitter = struct {
         return std.fmt.allocPrint(self.a(), instruction_location, .{try self.state.debug.location(self.a(), location, self.scope)});
     }
 
-    /// `pc_labels` only: a label right after the call, recorded with the call's site in
-    /// section `myl_sites` (local numeric label, so copies made by inlining, unrolling
-    /// or tail duplication each record their own address).
-    fn callLabel(self: *FunctionEmitter, out: *Out, inst: ir.Inst, external: bool) !void {
-        if (self.state.options.target.traps != .pc_labels or external) return;
-        const location = self.state.options.locator.locate(self.state.options.locator.context, inst.span);
-        const index = try self.state.site(.{ .kind = .call, .location = location, .width = 0, .operation = "call", .function = self.function.name });
-        try out.print(self.a(), "  call void asm sideeffect \"1:\\0A.pushsection myl_sites,\\22a\\22,@progbits\\0A.balign 8\\0A.quad 1b\\0A.quad {d}\\0A.popsection\", \"\"()\n", .{index});
-    }
-
     /// Record in a fresh list's or box's header (`reserved`, offset 24) where the blocks
     /// in its elements are, when `element` holds any: the runtime's free releases them
     /// and its copy retains them.
@@ -1568,11 +1558,9 @@ const FunctionEmitter = struct {
         const target = if (external) try std.fmt.allocPrint(self.a(), "@{s}", .{c_abi.symbol(callee.name)}) else try symbol(self.a(), callee.name);
         if (ret == .void or sret) {
             try out.print(self.a(), "  call void {s}({s}){s}\n", .{ target, arguments.items, try self.callLocation(inst.span) });
-            try self.callLabel(out, inst, external);
             if (sret) try self.loadValue(out, ret, result_slot, name);
         } else {
             try out.print(self.a(), "  {s} = call {s} {s}({s}){s}\n", .{ name, try self.ty(ret), target, arguments.items, try self.callLocation(inst.span) });
-            try self.callLabel(out, inst, external);
         }
     }
 
