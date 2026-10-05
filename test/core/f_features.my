@@ -1,0 +1,84 @@
+module f_features
+
+record Row:
+    key: int
+    ordinal: int
+    text: str
+
+
+def by_key(row: Row) -> int:
+    return row.key
+
+
+def inc(x: int) -> int:
+    return x + 1
+
+
+def apply(f: def(int) -> int, x: int) -> int:
+    return f(x)
+
+
+def replace_word(words: mut [2]str, word: str):
+    words[-1] = word
+
+
+def rewrite_last(words: mut list[str], word: str):
+    words[-1] = word
+
+
+def rewrite_first(words: mut list[str], word: str):
+    words[0] = word
+
+
+def choose() -> def(int) -> int:
+    return inc
+
+
+# spec: NEW-CORE-S2-IR-1
+public def test_callbacks_pass_return_and_live_fixed_array_writes() -> bool:
+    f = choose()
+    values: [3]int = [1, 2, 3]
+    saved = values
+    total = 0
+    for value in values:
+        total += value
+        values[1] = 20
+    return apply(f, 41) == 42 and total == 24 and saved[1] == 2
+
+
+# spec-case: NEW-CORE-S2-IR-1
+public def test_managed_array_mut_write_keeps_snapshot() -> bool:
+    words: [2]str = ["alpha" + str(1), "beta" + str(2)]
+    saved = words
+    replace_word(mut words, "gamma" + str(3))
+    return saved[-1] == "beta2" and words[-1] == "gamma3"
+
+
+# spec-case: NEW-CORE-S2-IR-1
+public def test_mut_callback_copies_managed_list_back_without_changing_snapshot() -> bool:
+    words = [str(1), str(2)]
+    saved = words
+    f = rewrite_last if len(words[0]) > 0 else rewrite_first
+    f(mut words, "delta" + str(4))
+    return saved == ["1", "2"] and words == ["1", "delta4"]
+
+
+# spec: NEW-CORE-SORT-1
+public def test_keyed_records_remain_stable_and_snapshot_keeps_order() -> bool:
+    rows = [Row(key=2, ordinal=0, text="a" + str(1)), Row(key=1, ordinal=1, text="b" + str(2)), Row(key=2, ordinal=2, text="c" + str(3))]
+    saved = rows
+    rows.sort(key=by_key, reverse=True)
+    return rows[0].ordinal == 0 and rows[1].ordinal == 2 and rows[2].ordinal == 1 and saved[1].text == "b2"
+
+
+# spec-case: NEW-CORE-SORT-1
+public def test_sort_narrow_numeric_and_tuple_keys() -> bool:
+    rows = [Row(key=2, ordinal=0, text="a" + str(1)), Row(key=1, ordinal=1, text="b" + str(2)), Row(key=2, ordinal=2, text="c" + str(3))]
+    copied = sorted(rows, key=lambda row: (row.key, row.text))
+    values = [u8(200), u8(1), u8(255), u8(2)]
+    values.sort()
+    return copied[0].ordinal == 1 and copied[1].ordinal == 0 and copied[2].ordinal == 2 and values[0] == 1u8 and values[3] == 255u8
+
+
+def main() -> int:
+    return 0

@@ -23,7 +23,6 @@ fn operationProgram(a: std.mem.Allocator, op: ir.Op) !Program {
     try m.strings.append(a, "Aé💩");
     var h = try Hand.init(a, &m, "main", .{ .params = &.{.cap}, .ret = .i64 });
     const d = try h.loose(.{ .op = .undef, .ty = dict });
-    const xs = try h.loose(.{ .op = .undef, .ty = list });
     const ar = try h.emit(.{ .op = .record_make, .ty = array, .data = try h.extra(&.{ try h.int(.i64, 0), try h.int(.i64, 0) }) });
     const text = try h.loose(.{ .op = .str_const, .ty = .str });
     const offset = try h.int(.u64, 0);
@@ -90,7 +89,7 @@ fn operationProgram(a: std.mem.Allocator, op: ir.Op) !Program {
         },
         .list_sort => {
             inst.ty = list;
-            inst.a = xs;
+            inst.a = try h.emit(.{ .op = .list_new, .ty = list, .a = offset });
             inst.b = try h.int(.bool, 0);
         },
         .array_get => {
@@ -142,7 +141,7 @@ fn exercise(op: ir.Op, allocator: std.mem.Allocator) !void {
         .str_char, .str_from_view => "A\n",
         .array_get => "0\n",
         .array_set, .call_indirect => "42\n",
-        .func_ref, .str_view_of => "",
+        .func_ref, .str_view_of, .list_sort => "",
         else => null,
     };
     if (expected) |stdout| {
@@ -628,14 +627,12 @@ fn refuseSource(a: std.mem.Allocator, source: []const u8, reason: []const u8) !v
 }
 
 // spec-case: NEW-CORE-S2-IR-1
-test "S2 builder dispatch stubs keep precise source refusals until Wave B" {
+test "remaining S2 builder dispatch stubs keep precise source refusals" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const a = arena.allocator();
     try refuseSource(a, "def main() -> int:\n    d: dict[int, int] = {}\n    return len(d)\n", "dict type");
     try refuseSource(a, "def main() -> int:\n    raw = b\"abc\"\n    return len(raw)\n", "bytes type");
-    try refuseSource(a, "def main() -> int:\n    xs: [2]int = [1, 2]\n    return xs[0]\n", "fixed array type");
-    try refuseSource(a, "def target(x: int) -> int effects():\n    return x\ndef main() -> int:\n    f = target\n    return f(1)\n", "function_value");
-    try refuseSource(a, "def main() -> int:\n    s = \"abc\"\n    ch = s[0]\n    return len(ch)\n", "index");
+    try refuseSource(a, "def main() -> int:\n    s = \"abc\"\n    ch = s[0]\n    return len(ch)\n", "index of a non-array");
     try std.testing.expect(true);
 }

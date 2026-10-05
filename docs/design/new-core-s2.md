@@ -1141,3 +1141,43 @@ untouched, as authorized by the user. The old frontend's pre-existing managed
 origin overflow at parameter position 16 is reported rather than widened.
 Aggregate Wave A qualification is recorded in
 `experiments/new-core-s2-20261005/wave-a/REPORT.md`.
+
+
+## 17. Functions, sort and fixed arrays (S2-F as built in Wave B)
+
+Source function values map to the frozen `func_ref` and `call_indirect` IR.
+Callback signatures use the direct functions' by-value copy-in/copy-out mut
+ABI and the full u64 owned-argument mask. Arguments evaluate in source order;
+whole mut places reload at call entry, while a later ancestor rewrite of a
+captured interior argument retains the accepted precise refusal.
+Functions with mut fixed-array or record parameters remain checker-refused
+as values under PY-ARRAY-MUT-1; their direct calls preserve caller write-back.
+
+A resolved function constant becomes a direct call before inlining. A
+2-target phi of constants whose arms share one scalar branch is expanded to
+ordinary direct-call control flow using the original condition. The existing
+S0 unswitcher can then separate the inner loops, and leaf inlining exposes the
+arithmetic. The inliner also clones blockless `func_ref` constants returned by
+choosers and folds their following calls. Dynamic targets remain indirect.
+
+Unkeyed sorting now uses the consuming `list_sort` op and S1 ownership's COW
+forms. `core_sort.c` independently ports the old core's stable natural-run
+powersort, including signed/unsigned/narrow integers, NaN-last float ordering,
+text and bytes. Reverse comparison preserves tie order. Keyed sorts use the
+already checked guest key-building loop, counting/packed numeric-key paths,
+and a stable merge for text, bytes and flat tuple keys. One sorted owning
+copy leaves every alias unchanged. The runtime takes exact source/key strides
+packed in a u64: unmanaged aggregates carry no reference-layout descriptor,
+so their stride must never be inferred from the `reserved` pointer.
+
+Fixed arrays map to `Compound.array` and use aggregate construction, equality,
+place rebuilding and the frozen `array_get`/`array_set` ops. Signed negative
+indices normalize once before a mut place is captured; enum table indices
+extract the enum tag. Array element writes are value updates and mut returns
+write back the final array. Whole mut-array rebinding remains checker-refused.
+The accepted checker refreshes array places during D1 iteration, and each
+lowered array read observes that current SSA value. Earlier named copies stay
+independent. Managed array elements retain S2-0's aggregate ownership rules.
+
+Package commands, results, repairs and source commits are recorded in
+`experiments/new-core-s2-20261005/wave-b/s2-f/README.md`.

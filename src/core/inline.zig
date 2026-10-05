@@ -21,7 +21,9 @@ pub fn inlineLeaves(arena: std.mem.Allocator, module: *ir.Module) Error!u32 {
             var at: usize = 0;
             while (at < block.insts.items.len) : (at += 1) {
                 const ref = block.insts.items[at];
-                const call = caller.insts.items[ref.index()];
+                var call = caller.insts.items[ref.index()];
+                @import("build_fn.zig").directTarget(caller, &call);
+                caller.insts.items[ref.index()] = call;
                 if (call.op != .call or call.a.index() == index) continue;
                 const callee = &module.functions.items[call.a.index()];
                 const result = leaf(callee) orelse continue;
@@ -42,7 +44,7 @@ fn leaf(callee: *const ir.Function) ?ir.Ref {
     const last = callee.inst(insts[insts.len - 1]);
     if (last.op != .ret or last.a == .none) return null;
     for (insts[0 .. insts.len - 1]) |ref| switch (callee.inst(ref).op) {
-        .call, .print, .phi, .jump, .branch, .ret, .@"unreachable" => return null,
+        .call, .call_indirect, .print, .phi, .jump, .branch, .ret, .@"unreachable" => return null,
         else => {},
     };
     return last.a;
@@ -60,7 +62,7 @@ fn splice(arena: std.mem.Allocator, caller: *ir.Function, callee: *const ir.Func
     for (callee.insts.items, 0..) |inst, i| {
         map[i] = switch (inst.op) {
             .param => arguments[@intCast(inst.data)],
-            .iconst, .fconst, .undef, .str_const => try append(arena, caller, inst),
+            .iconst, .fconst, .undef, .str_const, .func_ref => try append(arena, caller, inst),
             else => .none,
         };
     }
