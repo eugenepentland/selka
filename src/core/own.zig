@@ -108,6 +108,7 @@ pub fn function(arena: std.mem.Allocator, module: *const ir.Module, f: *ir.Funct
     }
     // Popped elements are found (or read) before anything moves.
     try markPops(.{ .arena = arena, .f = f }, module, &marks);
+    try takeFields(arena, module, f, &marks);
     var phase_a = try Analysis.of(arena, module, f, &marks);
     try phase_a.analyze();
     try copyOnWrite(&phase_a, options, &stats);
@@ -148,6 +149,10 @@ const Marks = struct {
     owned_get: std.AutoHashMapUnmanaged(u32, void) = .empty,
     /// Values of lists promoted to the stack: never counted.
     stack: std.AutoHashMapUnmanaged(u32, void) = .empty,
+    /// `record_set`s whose old field a read took over (`takeFields`): nothing to drop.
+    taken: std.AutoHashMapUnmanaged(u32, void) = .empty,
+    /// Records whose block-holding fields were all read out (`takeFields`): never counted.
+    emptied: std.AutoHashMapUnmanaged(u32, void) = .empty,
 };
 
 /// Where a value is live, by block.
@@ -204,6 +209,10 @@ const Analysis = struct {
         @memset(self.promoted, false);
         @memset(self.uses, .empty);
         @memset(self.live, null);
+        // An owned parameter is defined on entry: in the entry block, before its first instruction.
+        for (f.insts.items, 0..) |instruction, i| {
+            if (instruction.op == .param and ownedParameter(f.signature, instruction.data)) self.where[i] = .{ .block = 0, .pos = 0 };
+        }
         for (f.blocks.items, 0..) |block, b| {
             for (block.insts.items, 0..) |ref, pos| self.where[ref.index()] = .{ .block = @intCast(b), .pos = @intCast(pos) };
             const insts = block.insts.items;
@@ -245,7 +254,8 @@ const Analysis = struct {
         for (f.insts.items, 0..) |instruction, i| {
             if (!self.module.managed(instruction.ty)) continue;
             self.class[i] = switch (instruction.op) {
-                .param => .borrowed,
+                // A `mut` parameter is handed over by value (`Signature.owned`).
+                .param => if (ownedParameter(f.signature, instruction.data)) .owned else .borrowed,
                 .str_const, .undef => .immortal,
                 .copy => .none,
                 .list_get, .list_get_field, .record_get, .union_payload, .box_get => blk: {
@@ -260,7 +270,7 @@ const Analysis = struct {
         const live_phi = try self.livePhis();
         for (f.insts.items, 0..) |instruction, i| {
             if (instruction.op == .phi and !live_phi[i]) self.class[i] = .none;
-            if (self.marks.stack.contains(@intCast(i))) self.class[i] = .none;
+            if (self.marks.stack.contains(@intCast(i)) or self.marks.emptied.contains(@intCast(i))) self.class[i] = .none;
         }
         for (self.parent, 0..) |p, child| {
             if (p != .none and self.class[child] == .borrowed) try self.children[p.index()].append(self.arena, @fromBackingInt(@intCast(child)));
@@ -310,7 +320,7 @@ const Analysis = struct {
                 }
                 const operands = f.valueOperands(instruction);
                 for (0..operands.len()) |k| {
-                    const consumes = consuming(instruction, k);
+                    const consumes = consuming(instruction, k) or self.handedOver(instruction, k);
                     try self.addUse(f.resolve(operands.get(k)), .{ .block = @intCast(b), .pos = @intCast(pos), .consume = @intFromBool(consumes), .borrow = @intFromBool(!consumes) });
                 }
             }
@@ -329,6 +339,12 @@ const Analysis = struct {
             }
         }
         try list.append(self.arena, use);
+    }
+
+    /// Whether operand `k` of a call is an argument the callee takes over (a `mut` one).
+    fn handedOver(self: *const Analysis, instruction: ir.Inst, k: usize) bool {
+        if (instruction.op != .call) return false;
+        return ownedParameter(self.module.functions.items[instruction.a.index()].signature, k);
     }
 
     /// The nearest counted value `ref` was read from, or `none` (a parameter or constant root).
@@ -407,24 +423,13 @@ const Analysis = struct {
         return succ != live.def and live.in.isSet(succ);
     }
 
-    /// Whether `site` can run after instruction `pos` of `block` (from its top when
-    /// `pos` is null) while `value` keeps the same dynamic value: on a path that does
-    /// not pass `value`'s definition again.
-    fn reaches(self: *const Analysis, value: ir.Ref, block: u32, pos: ?u32, site: ir.Ref) Error!bool {
-        const target = self.where[site.index()];
-        if (target.block == block and (pos == null or target.pos > pos.?)) return true;
-        const def = self.where[value.index()].block;
-        const seen = try std.DynamicBitSetUnmanaged.initEmpty(self.arena, self.f.blocks.items.len);
-        var visited = seen;
-        var stack: std.ArrayList(u32) = .empty;
-        try stack.append(self.arena, block);
-        while (stack.pop()) |b| {
-            for (successors(self.f, b).slice()) |succ| {
-                if (succ == def or visited.isSet(succ)) continue;
-                if (succ == target.block) return true;
-                visited.set(succ);
-                try stack.append(self.arena, succ);
-            }
+    /// Whether the instruction at `pos` of `block` reads `ref` without taking it: a call
+    /// that is handed the owner (`mut`) and borrows the part runs with both.
+    fn borrowedAt(self: *const Analysis, ref: ir.Ref, block: u32, pos: u32) bool {
+        const live = self.live[ref.index()] orelse return false;
+        for (live.uses) |use| {
+            const here = !use.onEdge() and use.block == block and use.pos == pos;
+            if (here and use.borrow > 0) return true;
         }
         return false;
     }
@@ -440,7 +445,7 @@ const Analysis = struct {
             if (holder == .none) continue;
             for (self.uses[holder.index()].items) |use| {
                 if (use.consume == 0) continue;
-                const still = if (use.onEdge()) self.liveInto(ref, use.succ) else self.liveAfter(ref, use.block, use.pos);
+                const still = if (use.onEdge()) self.liveInto(ref, use.succ) else self.liveAfter(ref, use.block, use.pos) or self.borrowedAt(ref, use.block, use.pos);
                 if (still) {
                     self.promoted[i] = true;
                     changed = true;
@@ -451,6 +456,11 @@ const Analysis = struct {
         return changed;
     }
 };
+
+/// Whether parameter `index` of a function with `signature` is passed owned.
+fn ownedParameter(signature: ir.Signature, index: u64) bool {
+    return index < 64 and signature.owned & (@as(u64, 1) << @intCast(index)) != 0;
+}
 
 /// Whether operand `k` (in `valueOperands` order) of `instruction` is consumed.
 fn consuming(instruction: ir.Inst, k: usize) bool {
@@ -475,39 +485,53 @@ fn isUpdate(op: ir.Op) bool {
 /// from an allocation, a copy or another update (or phis of those), and no use
 /// before shares it.
 fn staticallyUnique(a: *const Analysis, value: ir.Ref, site: ir.Ref) Error!bool {
-    var seen: std.AutoHashMapUnmanaged(u32, void) = .empty;
-    var stack: std.ArrayList(ir.Ref) = .empty;
-    try stack.append(a.arena, value);
-    try seen.put(a.arena, @backingInt(value), {});
-    while (stack.pop()) |current| {
-        if (a.class[current.index()] != .owned) return false;
+    var web: std.ArrayList(ir.Ref) = .empty;
+    var index: std.AutoHashMapUnmanaged(u32, u6) = .empty;
+    try web.append(a.arena, value);
+    var next: usize = 0;
+    while (next < web.items.len) : (next += 1) {
+        const current = web.items[next];
+        if (a.class[current.index()] != .owned or web.items.len > 64) return false;
         const instruction = a.inst(current);
         switch (instruction.op) {
             .list_new, .list_copy, .list_push, .list_set, .list_pop => {},
             .phi => for (a.f.operands(instruction.data)) |operand| {
                 const source = a.f.resolve(operand);
-                if (seen.contains(@backingInt(source))) continue;
-                try seen.put(a.arena, @backingInt(source), {});
-                try stack.append(a.arena, source);
+                if (std.mem.indexOfScalar(ir.Ref, web.items, source) == null) try web.append(a.arena, source);
             },
             else => return false,
         }
-        if (try shared(a, current, site)) return false;
+    }
+    for (web.items, 0..) |member, i| try index.put(a.arena, @backingInt(member), @intCast(i));
+    for (web.items) |member| {
+        if (try shared(a, .{ .members = web.items, .index = &index }, member, site)) return false;
     }
     return true;
 }
 
-/// Whether some use of `value` other than `site` may give its block a second owner
-/// before the update: a call argument (the callee may keep it) or a consuming use,
-/// either one with the value still live after it (so the update may follow), or a
-/// use that consumes it twice. A last use on another path shares nothing. With
-/// `site` none the question is about the value's death: then any call may have
-/// kept it, even its last use.
-fn shared(a: *const Analysis, value: ir.Ref, site: ir.Ref) Error!bool {
+/// The values one block may pass through on its way to an update: the updated value
+/// and, through phis, everything that flows into it (`staticallyUnique`).
+const Web = struct {
+    members: []const ir.Ref,
+    index: *const std.AutoHashMapUnmanaged(u32, u6),
+
+    fn bit(self: Web, ref: ir.Ref) ?u64 {
+        const i = self.index.get(@backingInt(ref)) orelse return null;
+        return @as(u64, 1) << i;
+    }
+};
+
+/// Whether some use of web member `value` other than `site` may give the block a
+/// second owner that it still has at the update: a call argument (the callee may keep
+/// it) or a consuming use the value outlives, or a use that consumes it twice. With
+/// `site` none the question is about the value's death: then any call may have kept
+/// it, even its last use, and any such use counts.
+fn shared(a: *const Analysis, web: Web, value: ir.Ref, site: ir.Ref) Error!bool {
     for (a.uses[value.index()].items) |use| {
         if (use.onEdge()) {
             if (use.consume > 1) return true;
-            if (a.liveInto(value, use.succ) and (site == .none or try a.reaches(value, use.succ, null, site))) return true;
+            if (!a.liveInto(value, use.succ)) continue;
+            if (site == .none or try carries(a, web, value, .{ .block = use.block, .edge = use.succ }, site)) return true;
             continue;
         }
         const at = a.f.blocks.items[use.block].insts.items[use.pos];
@@ -516,9 +540,85 @@ fn shared(a: *const Analysis, value: ir.Ref, site: ir.Ref) Error!bool {
         if (use.consume > 1 or (call and site == .none)) return true;
         const may_share = call or use.consume == 1;
         if (!may_share or !a.liveAfter(value, use.block, use.pos)) continue;
-        if (site == .none or try a.reaches(value, use.block, use.pos, site)) return true;
+        if (site == .none or try carries(a, web, value, .{ .block = use.block, .pos = use.pos }, site)) return true;
     }
     return false;
+}
+
+/// Where a walk of `carries` starts: after instruction `pos` of `block`, or on the
+/// edge from `block` into `edge`.
+const Start = struct { block: u32, pos: u32 = 0, edge: u32 = no_block };
+
+/// Whether the block `value` holds at `start` can still be held, by some web member,
+/// when `site` updates it: a walk of the CFG that tracks which members hold the block
+/// (a phi takes it on an edge whose operand holds it; a member defined again holds a
+/// new block) and stops where none does.
+fn carries(a: *const Analysis, web: Web, value: ir.Ref, start: Start, site: ir.Ref) Error!bool {
+    const f = a.f;
+    const State = struct { block: u32, holders: u64 };
+    var seen: std.AutoHashMapUnmanaged(u64, void) = .empty;
+    var stack: std.ArrayList(State) = .empty;
+    const first = web.bit(value).?;
+    var from: u32 = start.pos + 1;
+    var block = start.block;
+    var holders = first;
+    if (start.edge != no_block) {
+        holders = enter(f, web, start.block, start.edge, first);
+        block = start.edge;
+        from = 0;
+    }
+    while (true) {
+        const insts = f.blocks.items[block].insts.items;
+        var done = false;
+        for (insts[@min(from, insts.len)..]) |ref| {
+            const inst = f.inst(ref);
+            if (inst.op == .phi) continue;
+            if (ref == site) {
+                if ((web.bit(f.resolve(inst.a)) orelse 0) & holders != 0) return true;
+                // This path reaches the update with a block nothing shares; others may not.
+                done = true;
+                break;
+            }
+            if (web.bit(ref)) |b| holders &= ~b;
+            if (holders == 0) {
+                done = true;
+                break;
+            }
+        }
+        if (!done) {
+            for (successors(f, block).slice()) |succ| {
+                const next = enter(f, web, block, succ, holders);
+                if (next == 0) continue;
+                const key = (@as(u64, succ) << 32) ^ next ^ (next >> 32);
+                if ((try seen.getOrPut(a.arena, key)).found_existing) continue;
+                try stack.append(a.arena, .{ .block = succ, .holders = next });
+            }
+        }
+        const state = stack.pop() orelse return false;
+        block = state.block;
+        holders = state.holders;
+        from = 0;
+    }
+}
+
+/// The holders after the edge `from → to`: each web phi of `to` holds the block when
+/// its operand on this edge does, and no longer when it does not.
+fn enter(f: *const ir.Function, web: Web, from: u32, to: u32, holders: u64) u64 {
+    const target = f.blocks.items[to];
+    const pred = for (target.preds.items, 0..) |p, i| {
+        if (@backingInt(p) == from) break i;
+    } else return holders;
+    var out = holders;
+    for (target.insts.items) |ref| {
+        const inst = f.inst(ref);
+        // Phis lead the block; a removed trivial phi (`copy`) may sit among them.
+        if (inst.op == .copy) continue;
+        if (inst.op != .phi) break;
+        const b = web.bit(ref) orelse continue;
+        const operand = f.resolve(f.operands(inst.data)[pred]);
+        if ((web.bit(operand) orelse 0) & holders != 0) out |= b else out &= ~b;
+    }
+    return out;
 }
 
 /// Phase A: give every in-place update its form, extract the fields `record_set`
@@ -631,6 +731,164 @@ fn poppedRead(f: *const ir.Function, earlier: []const ir.Ref, list: ir.Ref) ?ir.
     return null;
 }
 
+/// Reads that take a record's fields over instead of borrowing them, so an update of
+/// the field does not copy it (§6.4):
+/// - `g = record_get(r, f)` and `record_set(r, f, v)` in one block, `g` first, where `r`
+///   is owned and has no other use but reads of other fields: `g` owns the field (the
+///   record's reference goes to it) and the set drops nothing. This is a `mut` record's
+///   `r.items.append(x)`: the list is updated in place when unique.
+/// - an owned record whose only uses are reads in its own block, each block-holding
+///   field read once: the reads own the fields and the record is never counted. This is
+///   the write-back of a call with a result and `mut` parameters (or of its inlined body).
+fn takeFields(arena: std.mem.Allocator, module: *const ir.Module, f: *const ir.Function, marks: *Marks) Error!void {
+    const graph = try UseGraph.of(arena, f);
+    for (f.insts.items, 0..) |record, i| {
+        if (module.kind(record.ty) != .record or !module.managed(record.ty)) continue;
+        if (!ownedRecord(f, record)) continue;
+        const ref: ir.Ref = @fromBackingInt(@intCast(i));
+        var reads_only = true;
+        var set: ?ir.Ref = null;
+        for (graph.uses[i].items) |user| {
+            const inst = f.inst(user);
+            if (inst.op == .record_get and f.resolve(inst.a) == ref) continue;
+            const replaces = inst.op == .record_set and f.resolve(inst.a) == ref and f.resolve(inst.b) != ref;
+            if (replaces) {
+                set = set orelse user;
+            } else reads_only = false;
+        }
+        const ctx: Taking = .{ .arena = arena, .module = module, .f = f, .graph = graph, .marks = marks };
+        if (set) |update| {
+            try ctx.takeReplaced(ref, update);
+        } else if (reads_only) try ctx.empty(ref);
+    }
+}
+
+/// Every instruction's users (copies resolved) and block, for `takeFields`.
+const UseGraph = struct {
+    uses: []std.ArrayList(ir.Ref),
+    block_of: []u32,
+
+    fn of(arena: std.mem.Allocator, f: *const ir.Function) Error!UseGraph {
+        const graph: UseGraph = .{ .uses = try arena.alloc(std.ArrayList(ir.Ref), f.insts.items.len), .block_of = try arena.alloc(u32, f.insts.items.len) };
+        @memset(graph.uses, .empty);
+        @memset(graph.block_of, no_block);
+        for (f.blocks.items, 0..) |block, b| {
+            if (b != 0 and block.preds.items.len == 0) continue;
+            for (block.insts.items) |ref| {
+                graph.block_of[ref.index()] = @intCast(b);
+                const inst = f.inst(ref);
+                if (inst.op == .copy) continue;
+                var list: std.ArrayList(ir.Ref) = .empty;
+                if (inst.op == .phi) try list.appendSlice(arena, f.operands(inst.data)) else {
+                    const direct = f.valueOperands(inst);
+                    for (0..direct.len()) |k| try list.append(arena, direct.get(k));
+                }
+                for (list.items) |operand| {
+                    const used = f.resolve(operand);
+                    if (used != .none) try graph.uses[used.index()].append(arena, ref);
+                }
+            }
+        }
+        return graph;
+    }
+};
+
+/// The two ways `takeFields` hands a record's fields to their reads.
+const Taking = struct {
+    arena: std.mem.Allocator,
+    module: *const ir.Module,
+    f: *const ir.Function,
+    graph: UseGraph,
+    marks: *Marks,
+
+    /// `g = record_get(r, f)` then `update = record_set(r, f, v)` in one block: `g` owns
+    /// the field when it is the only read of it there and nothing but reads of other
+    /// fields can use `r` after it.
+    fn takeReplaced(self: Taking, record: ir.Ref, update: ir.Ref) Error!void {
+        const f = self.f;
+        const field = f.inst(update).data;
+        if (!self.module.managed(self.module.compound(f.inst(record).ty).record[@intCast(field)])) return;
+        const update_block = self.graph.block_of[update.index()];
+        var taker: ?ir.Ref = null;
+        var readers: u32 = 0;
+        for (f.blocks.items[update_block].insts.items) |user| {
+            if (user == update) break;
+            const inst = f.inst(user);
+            if (inst.op != .record_get or inst.data != field or f.resolve(inst.a) != record) continue;
+            taker = user;
+            readers += 1;
+        }
+        // An earlier read of the field would lose the record's reference under it.
+        const get = taker orelse return;
+        if (readers != 1) return;
+        const def_block = if (f.inst(record).op == .param) 0 else self.graph.block_of[record.index()];
+        for (self.graph.uses[record.index()].items) |user| {
+            const inst = f.inst(user);
+            if (user == get or user == update) continue;
+            if (inst.op == .record_get and inst.data != field) continue;
+            if (try runsAfter(self.arena, f, self.graph.block_of, get, user, def_block)) return;
+        }
+        try self.marks.owned_get.put(self.arena, @backingInt(get), {});
+        try self.marks.taken.put(self.arena, @backingInt(update), {});
+    }
+
+    /// A record used only by reads in its own block, each block-holding field read once:
+    /// the reads own the fields and the record is never counted.
+    fn empty(self: Taking, record: ir.Ref) Error!void {
+        const f = self.f;
+        const home = self.graph.block_of[record.index()];
+        if (home == no_block) return;
+        const fields = self.module.compound(f.inst(record).ty).record;
+        const counts = try self.arena.alloc(u32, fields.len);
+        @memset(counts, 0);
+        for (self.graph.uses[record.index()].items) |user| {
+            if (self.graph.block_of[user.index()] != home) return;
+            counts[@intCast(f.inst(user).data)] += 1;
+        }
+        for (fields, counts) |field, n| {
+            if (self.module.managed(field) and n != 1) return;
+        }
+        for (self.graph.uses[record.index()].items) |user| {
+            if (self.module.managed(f.inst(user).ty)) try self.marks.owned_get.put(self.arena, @backingInt(user), {});
+        }
+        try self.marks.emptied.put(self.arena, @backingInt(record), {});
+    }
+};
+
+/// Whether a record value is owned where it is defined: built, updated, joined,
+/// returned by a call, or a `mut` parameter.
+fn ownedRecord(f: *const ir.Function, record: ir.Inst) bool {
+    return switch (record.op) {
+        .record_make, .record_set, .phi, .call => true,
+        .param => ownedParameter(f.signature, record.data),
+        else => false,
+    };
+}
+
+/// Whether `second` can run after `first` without passing block `def` (where the
+/// value both read is defined again).
+fn runsAfter(arena: std.mem.Allocator, f: *const ir.Function, block_of: []const u32, first: ir.Ref, second: ir.Ref, def: u32) Error!bool {
+    const from = block_of[first.index()];
+    const target = block_of[second.index()];
+    if (from == target) {
+        const insts = f.blocks.items[from].insts.items;
+        if (std.mem.indexOfScalar(ir.Ref, insts, second).? > std.mem.indexOfScalar(ir.Ref, insts, first).?) return true;
+    }
+    const seen = try arena.alloc(bool, f.blocks.items.len);
+    @memset(seen, false);
+    var stack: std.ArrayList(u32) = .empty;
+    try stack.append(arena, from);
+    while (stack.pop()) |b| {
+        for (successors(f, b).slice()) |succ| {
+            if (succ == def or seen[succ]) continue;
+            if (succ == target) return true;
+            seen[succ] = true;
+            try stack.append(arena, succ);
+        }
+    }
+    return false;
+}
+
 /// Before each `record_set` of a managed field, read the field it drops (an owned
 /// value: the record's reference to it goes with the consumed record) and release it after.
 fn extractDroppedFields(a: *Analysis) Error!void {
@@ -642,7 +900,7 @@ fn extractDroppedFields(a: *Analysis) Error!void {
         while (pos < f.blocks.items[b].insts.items.len) : (pos += 1) {
             const ref = f.blocks.items[b].insts.items[pos];
             const set = f.inst(ref);
-            if (set.op != .record_set) continue;
+            if (set.op != .record_set or a.marks.taken.contains(@backingInt(ref))) continue;
             const field = a.module.compound(set.ty).record[@intCast(set.data)];
             if (!a.module.managed(field)) continue;
             const old = try e.insertBefore(ref, .{ .op = .record_get, .ty = field, .a = set.a, .data = set.data, .span = set.span });
@@ -694,7 +952,9 @@ fn countOwned(a: *Analysis, ref: ir.Ref, actions: *std.ArrayList(Action)) Error!
             const extra = use.consume - @intFromBool(!a.liveInto(ref, use.succ));
             for (0..extra) |_| try actions.append(a.arena, .{ .place = .{ .edge = .{ .from = use.block, .to = use.succ } }, .op = .retain, .value = ref });
         } else {
-            const extra = use.consume - @intFromBool(!a.liveAfter(ref, use.block, use.pos));
+            // A call that both takes the value (`mut`) and borrows it gets a second owner.
+            const moves = !a.liveAfter(ref, use.block, use.pos) and use.borrow == 0;
+            const extra = use.consume - @intFromBool(moves);
             const at = f.blocks.items[use.block].insts.items[use.pos];
             for (0..extra) |_| try actions.append(a.arena, .{ .place = .{ .before = at }, .op = .retain, .value = ref });
         }
@@ -752,7 +1012,7 @@ fn countBorrowed(a: *Analysis, ref: ir.Ref, actions: *std.ArrayList(Action)) Err
 
 /// Right after `ref` is defined: after its block's phi group for a phi.
 fn placeAfterDef(a: *const Analysis, ref: ir.Ref) Place {
-    if (a.inst(ref).op == .phi) return .{ .top = a.where[ref.index()].block };
+    if (a.inst(ref).op == .phi or a.inst(ref).op == .param) return .{ .top = a.where[ref.index()].block };
     return .{ .after = ref };
 }
 
