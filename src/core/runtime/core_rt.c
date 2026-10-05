@@ -486,10 +486,6 @@ extern const char myl_core_source_path[];
 
 enum { TRAP_OVERFLOW, TRAP_DIVISION_BY_ZERO, TRAP_LIST_BOUNDS, TRAP_FLOAT_CONVERSION, TRAP_CAST, TRAP_FACT, TRAP_LIST_EMPTY };
 
-static const char *unqualified(const char *name) {
-    const char *at = strrchr(name, ':');
-    return at ? at + 1 : name;
-}
 
 
 /* ---- trap frames (docs/design/new-core-s1.md §13 R-1) ----------------------------
@@ -849,23 +845,23 @@ void myl_core_trap(int32_t index, int64_t a, int64_t b) {
     switch (site->kind) {
     case TRAP_OVERFLOW:
         snprintf(detail, sizeof detail, " (%s: left %lld, right %lld, width %d)", site->operation, (long long)a, (long long)b, site->width);
-        snprintf(record, sizeof record, "MYLANG-TRAP {\"version\":1,\"operation\":\"%s\",\"left\":%lld,\"right\":%lld,\"width\":%d}\n", site->operation, (long long)a, (long long)b, site->width);
+        snprintf(record, sizeof record, "\036MYLANG-TRAP {\"version\":1,\"operation\":\"%s\",\"left\":%lld,\"right\":%lld,\"width\":%d}\n", site->operation, (long long)a, (long long)b, site->width);
         break;
     case TRAP_DIVISION_BY_ZERO:
         code = "R_DIVISION_BY_ZERO";
         snprintf(detail, sizeof detail, " (%s: left %lld, right %lld)", site->operation, (long long)a, (long long)b);
-        snprintf(record, sizeof record, "MYLANG-TRAP {\"version\":1,\"operation\":\"%s\",\"left\":%lld,\"right\":%lld}\n", site->operation, (long long)a, (long long)b);
+        snprintf(record, sizeof record, "\036MYLANG-TRAP {\"version\":1,\"operation\":\"%s\",\"left\":%lld,\"right\":%lld}\n", site->operation, (long long)a, (long long)b);
         break;
     case TRAP_LIST_BOUNDS:
         code = "R_LIST_BOUNDS";
         snprintf(detail, sizeof detail, " (index %lld, length %lld)", (long long)a, (long long)b);
-        snprintf(record, sizeof record, "MYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":%lld,\"length\":%lld}\n", (long long)a, (long long)b);
+        snprintf(record, sizeof record, "\036MYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":%lld,\"length\":%lld}\n", (long long)a, (long long)b);
         break;
     case TRAP_LIST_EMPTY:
         /* A pop of an empty list: the old core's code and `pop` detail (PY-COLLECTIONS-20). */
         code = "R_LIST_BOUNDS";
         snprintf(detail, sizeof detail, " (length %lld)", (long long)b);
-        snprintf(record, sizeof record, "MYLANG-TRAP {\"version\":1,\"operation\":\"pop\",\"length\":%lld}\n", (long long)b);
+        snprintf(record, sizeof record, "\036MYLANG-TRAP {\"version\":1,\"operation\":\"pop\",\"length\":%lld}\n", (long long)b);
         break;
     case TRAP_FLOAT_CONVERSION:
         code = "R_FLOAT_CONVERSION";
@@ -877,13 +873,13 @@ void myl_core_trap(int32_t index, int64_t a, int64_t b) {
         break;
     default:
         snprintf(detail, sizeof detail, " (cast: left %lld, width %d)", (long long)a, site->width);
-        snprintf(record, sizeof record, "MYLANG-TRAP {\"version\":1,\"operation\":\"cast\",\"left\":%lld,\"width\":%d}\n", (long long)a, site->width);
+        snprintf(record, sizeof record, "\036MYLANG-TRAP {\"version\":1,\"operation\":\"cast\",\"left\":%lld,\"width\":%d}\n", (long long)a, site->width);
         break;
     }
     stream_flush(&streams[0]);
     char text[1024];
     int len = snprintf(text, sizeof text, "%s:%d:%d: error[%s]: native execution failed%s\n  in %s at %s:%d:%d\n",
-        myl_core_source_path, site->line, site->column, code, detail, unqualified(site->function), myl_core_source_path, site->line, site->column);
+        myl_core_source_path, site->line, site->column, code, detail, site->function, myl_core_source_path, site->line, site->column);
     stream_write(&streams[1], text, (size_t)(len < (int)sizeof text ? len : (int)sizeof text - 1));
     trap_frames();
     stream_write(&streams[1], record, strlen(record));
@@ -942,7 +938,7 @@ static void trace_write(void) {
     char where[1024];
     for (size_t i = 0; i < count; ++i) {
         int len = trace_where(listed[i], where, sizeof where);
-        int name = (int)strlen(unqualified(listed[i]->function));
+        int name = (int)strlen(listed[i]->function);
         if (len > width) width = len;
         if (name > name_width) name_width = name;
     }
@@ -954,7 +950,7 @@ static void trace_write(void) {
         }
         if (i == count) break;
         trace_where(listed[i], where, sizeof where);
-        int len = snprintf(line, sizeof line, "  %-*s  %-*s  %s\n", width, where, name_width, unqualified(listed[i]->function), listed[i]->operation);
+        int len = snprintf(line, sizeof line, "  %-*s  %-*s  %s\n", width, where, name_width, listed[i]->function, listed[i]->operation);
         stream_write(&streams[1], line, (size_t)(len < (int)sizeof line ? len : (int)sizeof line - 1));
     }
 }

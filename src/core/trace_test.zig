@@ -32,13 +32,18 @@ fn trappedWith(arena: std.mem.Allocator, root: []const u8, release: bool, flags:
     return ran.stderr;
 }
 
-/// The frames the old core prints for this trap, innermost first (its names are module-qualified).
+/// The old core's report of this trap, byte for byte: a module-headed file shows its
+/// path relative to the module root and module-qualified names, and the record follows
+/// an ASCII record separator.
+const old_report =
+    "trap_frames.my:6:25: error[R_LIST_BOUNDS]: native execution failed (index 3, length 3)\n" ++
+    "  in trap_frames::leaf at trap_frames.my:6:25\n" ++
+    "  in trap_frames::mid at trap_frames.my:11:9\n" ++
+    "  in trap_frames::main at trap_frames.my:20:15\n" ++
+    "\x1eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":3,\"length\":3}\n";
+
 fn sameFrames(stderr: []const u8) !void {
-    const first = std.mem.indexOf(u8, stderr, "trap_frames.my:6:25: error[R_LIST_BOUNDS]: native execution failed (index 3, length 3)\n  in leaf at ") orelse return error.TestUnexpectedResult;
-    const leaf = std.mem.indexOfPos(u8, stderr, first, "/trap_frames.my:6:25\n  in mid at ") orelse return error.TestUnexpectedResult;
-    const mid = std.mem.indexOfPos(u8, stderr, leaf, "/trap_frames.my:11:9\n  in main at ") orelse return error.TestUnexpectedResult;
-    const main = std.mem.indexOfPos(u8, stderr, mid, "/trap_frames.my:20:15\nMYLANG-TRAP {") orelse return error.TestUnexpectedResult;
-    try std.testing.expect(main > mid and mid > leaf);
+    try std.testing.expectEqualStrings(old_report, stderr);
 }
 
 // spec: NEW-CORE-TRAP-2
@@ -60,8 +65,8 @@ test "a build without the line tables names only the trapping frame and emits no
     defer dir.cleanup();
     const root = try dir.dir.realPathFileAlloc(std.testing.io, ".", arena.allocator());
     const stderr = try trappedWith(arena.allocator(), root, true, &.{"--trap-frames=posix_exit"});
-    try std.testing.expect(contains(stderr, "/trap_frames.my:6:25\nMYLANG-TRAP {"));
-    try std.testing.expect(!contains(stderr, "  in mid at "));
+    try std.testing.expect(contains(stderr, "  in trap_frames::leaf at trap_frames.my:6:25\n\x1eMYLANG-TRAP {"));
+    try std.testing.expect(!contains(stderr, "  in trap_frames::mid at "));
 }
 
 /// `inner(n) -> Result[int, str]`: `Err("too big")` (a trace origin) when `n > 2`, else

@@ -1404,7 +1404,7 @@ const FunctionEmitter = struct {
     fn functionScope(self: *FunctionEmitter) ![]const u8 {
         if (self.state.options.target.traps != .dwarf_lines) return "";
         const location = self.state.options.locator.locate(self.state.options.locator.context, self.function.span);
-        self.scope = try self.state.debug.subprogram(self.a(), unqualifiedName(self.function.name), location.line);
+        self.scope = try self.state.debug.subprogram(self.a(), self.function.name, location.line);
         return std.fmt.allocPrint(self.a(), function_scope, .{self.scope});
     }
 
@@ -1608,12 +1608,6 @@ fn storageType(ty: ir.Type) []const u8 {
 /// ` !dbg !N` on a function definition and `, !dbg !N` on an instruction.
 const function_scope = " !dbg !{d}";
 const instruction_location = ", !dbg !{d}";
-
-/// A function name without its module qualifier (`mod::f` → `f`), as traps print it.
-fn unqualifiedName(name: []const u8) []const u8 {
-    const at = std.mem.lastIndexOfScalar(u8, name, ':') orelse return name;
-    return name[at + 1 ..];
-}
 
 /// The DWARF metadata of a `dwarf_lines` module: one compile unit and file, one
 /// `DISubprogram` per function, one `DILocation` per call and trap. Numbered from

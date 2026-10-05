@@ -65,15 +65,18 @@ pub fn build(init: std.process.Init, path: []const u8, options: Options, report:
         },
         else => |other| return other,
     };
+    // A header-less file is checked alone; the old core shows its absolute path.
     const absolute = std.Io.Dir.cwd().realPathFileAlloc(init.io, path, allocator) catch path;
-    return finish(init, &module, .{ .src = checked.src, .source_path = absolute, .main = .{ .parameters = try mainParameters(allocator, checked.program), .result = mainResult(checked.program) } }, options, report);
+    const shown = if (session.single != null) absolute else shownPath(checked.src, checked.program);
+    return finish(init, &module, .{ .src = checked.src, .source_path = shown, .main = .{ .parameters = try mainParameters(allocator, checked.program), .result = mainResult(checked.program) } }, options, report);
 }
 
 /// What the back half of a build needs to know about the checked source.
 pub const Unit = struct {
     /// The merged source trap positions are located in.
     src: language.source.Source,
-    /// The path traps report (the entry file's, absolute).
+    /// The path traps and error traces report: the entry file's, as the old core shows it
+    /// (`shownPath`).
     source_path: []const u8,
     /// The entry function's parameter names (which pick stdout or stderr for a
     /// `Stream`) and, when it returns a `Result`, its case tags.
@@ -164,4 +167,12 @@ fn targetFor(show: Show) target_description.Target {
     var target = if (show.generic_vectors) target_description.generic_256 else target_description.current;
     if (show.trap_frames) |frames| target.traps = frames;
     return target;
+}
+
+/// The path reports show for a module-headed entry file, as the front end names it and
+/// the old core prints it: relative to its module root.
+pub fn shownPath(src: language.source.Source, program: language.typed.Program) []const u8 {
+    const main = program.functions[@backingInt(program.main)];
+    const start: u32 = @intCast(main.declaration.start);
+    return frontend.position(src, .{ .start = start, .end = start }).path;
 }
