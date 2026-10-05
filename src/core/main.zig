@@ -7,12 +7,12 @@ const typed_dump = @import("typed_dump.zig");
 const build = @import("build.zig");
 const print = @import("print.zig");
 const pipeline = @import("pipeline.zig");
-const facts = @import("facts.zig");
+const passes = @import("passes.zig");
 
 const usage =
-    \\usage: mylang-core build FILE.my -o OUT [--release] [--link FILE.c]... [--emit-llvm PATH] [--no-facts] [--zig PATH] [--cache-dir DIR]
+    \\usage: mylang-core build FILE.my -o OUT [--release] [--link FILE.c]... [--emit-llvm PATH] [--no-facts | --verify-facts] [--stats] [--zig PATH] [--cache-dir DIR]
     \\       mylang-core dump-typed FILE.my [FUNCTION]
-    \\       mylang-core dump-ir FILE.my [--facts]
+    \\       mylang-core dump-ir FILE.my [--facts]   (--facts: after the release passes, with intervals)
     \\
 ;
 
@@ -68,11 +68,22 @@ fn dumpIr(init: std.process.Init, path: []const u8, with_facts: bool) !u8 {
         },
         else => return err,
     };
-    if (with_facts) for (module.functions.items) |*function| {
-        if (function.signature.linkage == .internal) _ = try facts.analyze(allocator, function);
-    };
+    var ranges: std.ArrayList(u8) = .empty;
+    if (with_facts) {
+        const result = try passes.run(allocator, &module, .trusted);
+        for (module.functions.items, result.known) |function, maybe| {
+            const known = maybe orelse continue;
+            try ranges.print(allocator, "facts {s}:", .{function.name});
+            for (known.ranges, known.floats, 0..) |range, float, index| {
+                if (range) |r| try ranges.print(allocator, " %{d}=[{d},{d}]", .{ index, r.lo, r.hi });
+                if (float) |r| try ranges.print(allocator, " %{d}=[{e},{e}]", .{ index, r.lo, r.hi });
+            }
+            try ranges.appendSlice(allocator, "\n");
+        }
+    }
     const text = try print.module(allocator, &module);
     try std.Io.File.stdout().writeStreamingAll(init.io, text);
+    try std.Io.File.stdout().writeStreamingAll(init.io, ranges.items);
     return 0;
 }
 
@@ -88,7 +99,13 @@ fn buildCommand(init: std.process.Init, args: []const []const u8) !u8 {
         if (std.mem.eql(u8, arg, "--release")) {
             options.release = true;
         } else if (std.mem.eql(u8, arg, "--no-facts")) {
-            options.facts = false;
+            options.facts = .off;
+        } else if (std.mem.eql(u8, arg, "--stats")) {
+            options.show.stats = true;
+        } else if (std.mem.eql(u8, arg, "--verify-facts")) {
+            options.facts = .verify;
+        } else if (std.mem.eql(u8, arg, "--sabotage-facts")) {
+            options.facts = .sabotage;
         } else if (std.mem.eql(u8, arg, "-o") and has_value) {
             index += 1;
             options.output = args[index];
@@ -97,7 +114,7 @@ fn buildCommand(init: std.process.Init, args: []const []const u8) !u8 {
             try links.append(allocator, args[index]);
         } else if (std.mem.eql(u8, arg, "--emit-llvm") and has_value) {
             index += 1;
-            options.emit_llvm = args[index];
+            options.show.llvm = args[index];
         } else if (std.mem.eql(u8, arg, "--zig") and has_value) {
             index += 1;
             options.zig = args[index];

@@ -207,7 +207,7 @@ typedef struct {
 extern const myl_core_site myl_core_sites[];
 extern const char myl_core_source_path[];
 
-enum { TRAP_OVERFLOW, TRAP_DIVISION_BY_ZERO, TRAP_LIST_BOUNDS, TRAP_FLOAT_CONVERSION, TRAP_CAST };
+enum { TRAP_OVERFLOW, TRAP_DIVISION_BY_ZERO, TRAP_LIST_BOUNDS, TRAP_FLOAT_CONVERSION, TRAP_CAST, TRAP_FACT };
 
 static const char *unqualified(const char *name) {
     const char *at = strrchr(name, ':');
@@ -239,6 +239,11 @@ void myl_core_trap(int32_t index, int64_t a, int64_t b) {
         break;
     case TRAP_FLOAT_CONVERSION:
         code = "R_FLOAT_CONVERSION";
+        break;
+    case TRAP_FACT:
+        /* Verify builds only: a fact the compiler relied on does not hold. */
+        code = "R_CORE_FACT";
+        snprintf(detail, sizeof detail, " (%s: value %lld, other %lld)", site->operation, (long long)a, (long long)b);
         break;
     default:
         snprintf(detail, sizeof detail, " (cast: left %lld, width %d)", (long long)a, site->width);

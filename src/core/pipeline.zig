@@ -6,7 +6,7 @@ const frontend = @import("frontend.zig");
 const build_ir = @import("build.zig");
 const emit_llvm = @import("emit_llvm.zig");
 const driver = @import("driver.zig");
-const facts = @import("facts.zig");
+const passes = @import("passes.zig");
 
 /// What the command line asked for.
 pub const Options = struct {
@@ -14,11 +14,22 @@ pub const Options = struct {
     output: []const u8 = "",
     release: bool = false,
     links: []const []const u8 = &.{},
-    /// Also write the emitted LLVM IR here.
-    emit_llvm: ?[]const u8 = null,
+    /// What to show besides the executable.
+    show: Show = .{},
     cache: []const u8 = ".mylang-cache/core",
-    /// Skip the fact pass in a release build (`--no-facts`, for measuring what facts buy).
-    facts: bool = true,
+    /// Fact pass mode in a release build: `on`, `off` (`--no-facts`, to measure
+    /// what facts buy), `verify` (`--verify-facts`: every fact the build relies on
+    /// is also checked at run time and traps `R_CORE_FACT` when it does not hold),
+    /// or `sabotage` (`--sabotage-facts`, test only: verify with one wrong rule).
+    facts: enum { on, off, verify, sabotage } = .on,
+};
+
+/// Extra outputs of a build.
+pub const Show = struct {
+    /// Also write the emitted LLVM IR here (`--emit-llvm`).
+    llvm: ?[]const u8 = null,
+    /// Print what the release passes did (`--stats`) to the report.
+    stats: bool = false,
 };
 
 /// Why a build stopped after its report was written.
@@ -44,17 +55,23 @@ pub fn build(init: std.process.Init, path: []const u8, options: Options, report:
         else => |other| return other,
     };
     // Release builds compute facts and drop the checks they rule out; debug builds keep every check.
-    const known = try allocator.alloc(?facts.Facts, module.functions.items.len);
-    @memset(known, null);
-    if (options.release and options.facts) for (module.functions.items, known) |*function, *slot| {
-        if (function.signature.linkage == .internal) slot.* = try facts.analyze(allocator, function);
+    const verify = options.facts == .verify or options.facts == .sabotage;
+    const mode: passes.Mode = switch (options.facts) {
+        .on => .trusted,
+        .off => .off,
+        .verify => .verify,
+        .sabotage => .sabotage,
     };
+    const result = if (options.release) try passes.run(allocator, &module, mode) else passes.Result{ .known = &.{}, .plans = &.{} };
+    if (options.show.stats) try report.print(allocator, "mylang-core: inlined {d} calls, versioned {d} loops, proved {d} checks, vectorized {d} loops\n", .{ result.inlined, result.versioned, result.proven, result.vectorized });
     const absolute = std.Io.Dir.cwd().realPathFileAlloc(init.io, path, allocator) catch path;
     const llvm = emit_llvm.emitModule(allocator, &module, .{
         .locator = .{ .context = &checked.src, .locate = locate },
         .source_path = absolute,
         .main_parameters = try mainParameters(allocator, checked.program),
-        .facts = known,
+        .facts = result.known,
+        .verify = verify and options.release,
+        .vectors = result.plans,
     }) catch |err| switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
         else => {
@@ -62,7 +79,7 @@ pub fn build(init: std.process.Init, path: []const u8, options: Options, report:
             return error.Unsupported;
         },
     };
-    if (options.emit_llvm) |where| std.Io.Dir.cwd().writeFile(init.io, .{ .sub_path = where, .data = llvm }) catch return error.WriteFailed;
+    if (options.show.llvm) |where| std.Io.Dir.cwd().writeFile(init.io, .{ .sub_path = where, .data = llvm }) catch return error.WriteFailed;
     var digest: [8]u8 = undefined;
     std.crypto.hash.Blake3.hash(options.output, &digest, .{});
     const program = try std.fs.path.join(allocator, &.{ options.cache, try std.fmt.allocPrint(allocator, "{s}-{x}.ll", .{ std.fs.path.basename(options.output), digest }) });

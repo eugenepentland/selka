@@ -168,3 +168,60 @@ test "with -Dcore-diff=true every fixture matches the old compiler's build of it
     try std.testing.expect(try sameAsOld(arena.allocator(), root, "overflow", &.{}));
     try std.testing.expect(try sameAsOld(arena.allocator(), root, "bounds", &.{}));
 }
+
+/// One kernel's checksums at 4096 and 64 elements (300 iterations, seed 7), from one build.
+fn kernelChecksums(arena: std.mem.Allocator, root: []const u8, name: []const u8, release: bool) ![2][]const u8 {
+    const executable = try buildFixture(arena, root, name, .{ .compiler = options.core_path, .release = release });
+    const large = firstField((try run(arena, executable, &.{ "4096", "300", "7" })).stdout);
+    const small = firstField((try run(arena, executable, &.{ "64", "300", "7" })).stdout);
+    return .{ large, small };
+}
+
+/// Whether a kernel's debug and release builds both give the expected checksums.
+fn kernelMatches(arena: std.mem.Allocator, root: []const u8, name: []const u8, expected: [2][]const u8) !bool {
+    const debug = try kernelChecksums(arena, root, name, false);
+    const release = try kernelChecksums(arena, root, name, true);
+    const same = std.mem.eql(u8, debug[0], expected[0]) and std.mem.eql(u8, debug[1], expected[1]) and
+        std.mem.eql(u8, release[0], expected[0]) and std.mem.eql(u8, release[1], expected[1]);
+    if (!same) report("{s}: debug {s} {s}, release {s} {s}, expected {s} {s}\n", .{ name, debug[0], debug[1], release[0], release[1], expected[0], expected[1] });
+    return same;
+}
+
+// spec: NEW-CORE-KERNELS-1
+test "the S0 compute kernels give the old core's checksums at 4096 and 64 elements, debug and release" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    var dir = std.testing.tmpDir(.{});
+    defer dir.cleanup();
+    const root = try scratch(arena.allocator(), dir);
+    try std.testing.expect(try kernelMatches(arena.allocator(), root, "float_math", .{ "86580286", "119488164" }));
+    try std.testing.expect(try kernelMatches(arena.allocator(), root, "call_direct", .{ "894136189", "27260364" }));
+    try std.testing.expect(try kernelMatches(arena.allocator(), root, "branch_predictable", .{ "965504293", "28108500" }));
+    try std.testing.expect(try kernelMatches(arena.allocator(), root, "branch_mixed", .{ "524637494", "35092986" }));
+    try std.testing.expect(try kernelMatches(arena.allocator(), root, "binary_search", .{ "70251766", "197974" }));
+}
+
+/// The integer_math checksum line and trap code of a verify (or sabotaged) release build.
+fn verified(arena: std.mem.Allocator, root: []const u8, flag: []const u8) !Outcome {
+    const output = try std.fmt.allocPrint(arena, "{s}/int_math{s}", .{ root, flag });
+    const source = try std.fmt.allocPrint(arena, "{s}/int_math.my", .{options.fixtures});
+    const cache = try std.fmt.allocPrint(arena, "{s}/cache", .{root});
+    const result = try std.process.run(arena, std.testing.io, .{ .argv = &.{ options.core_path, "build", source, "-o", output, "--release", flag, "--link", options.clock_path, "--cache-dir", cache } });
+    try std.testing.expect(result.term == .exited and result.term.exited == 0);
+    return run(arena, output, &.{ "4096", "300", "7" });
+}
+
+// spec: NEW-CORE-VERIFY-1
+test "a verify build checks every fact at run time, and catches a deliberately wrong interval rule" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    var dir = std.testing.tmpDir(.{});
+    defer dir.cleanup();
+    const root = try scratch(arena.allocator(), dir);
+    const honest = try verified(arena.allocator(), root, "--verify-facts");
+    try std.testing.expectEqualStrings("561601106", firstField(honest.stdout));
+    try std.testing.expectEqual(@as(u8, 0), honest.status);
+    const sabotaged = try verified(arena.allocator(), root, "--sabotage-facts");
+    try std.testing.expectEqual(@as(u8, 1), sabotaged.status);
+    try std.testing.expect(std.mem.indexOf(u8, sabotaged.stderr, "error[R_CORE_FACT]: native execution failed (range [0, 1007]: value 1008") != null);
+}

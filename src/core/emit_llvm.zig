@@ -13,6 +13,7 @@
 const std = @import("std");
 const ir = @import("ir.zig");
 const facts = @import("facts.zig");
+const vector = @import("vector.zig");
 
 /// A source line and column for a span start.
 pub const Location = struct { line: u32, column: u32 };
@@ -33,10 +34,16 @@ pub const Options = struct {
     /// Per function, the facts a release build computed (empty in debug builds):
     /// element ranges become `!range` metadata on list loads.
     facts: []const ?facts.Facts = &.{},
+    /// Verify mode: every proven check is emitted anyway, every fact interval and
+    /// unreachable block is asserted, and a failure traps `R_CORE_FACT`. No `nsw`,
+    /// `!range` or other fact-derived promise reaches LLVM, so it cannot fold the asserts away.
+    verify: bool = false,
+    /// Per function, the loops the vector lowering takes (empty in debug and verify builds).
+    vectors: []const []const vector.Plan = &.{},
 };
 
 /// Trap kinds, in the order the runtime's code table lists them.
-pub const TrapKind = enum(u8) { overflow, division_by_zero, list_bounds, float_conversion, cast };
+pub const TrapKind = enum(u8) { overflow, division_by_zero, list_bounds, float_conversion, cast, fact };
 
 const Site = struct { kind: TrapKind, location: Location, width: u16, operation: []const u8, function: []const u8 };
 
@@ -49,6 +56,11 @@ const Out = std.ArrayList(u8);
 
 /// Why emission stopped: a construct the builder admitted but this emitter cannot lower yet.
 pub const Error = error{ OutOfMemory, UnsupportedEntry, UnsupportedInstruction };
+
+/// `  %x = or i1 %a, %b`: two failure conditions merged.
+const or_line = "  {s} = or i1 {s}, {s}\n";
+/// `  %x = icmp pred type value, constant`: one side of a range test.
+const bound_line = "  {s} = icmp {s} {s} {s}, {d}\n";
 
 /// One instruction line of the shape `  %x = op type a, b`.
 const binary_line = "  {s} = {s} {s} {s}, {s}\n";
@@ -63,6 +75,7 @@ pub fn emitModule(allocator: std.mem.Allocator, module: *const ir.Module, option
             continue;
         }
         var emitter: FunctionEmitter = .{ .state = &state, .function = function, .index = @intCast(index) };
+        if (index < options.vectors.len) emitter.vectors.plans = options.vectors[index];
         try emitter.emitFunction(&body);
     }
     try state.emitEntry(&body);
@@ -73,9 +86,16 @@ pub fn emitModule(allocator: std.mem.Allocator, module: *const ir.Module, option
     try state.emitSites(&out);
     try state.emitStrings(&out);
     try out.appendSlice(allocator, metadata);
-    try out.appendSlice(allocator, state.ranges.items);
+    try out.appendSlice(allocator, state.meta.ranges.items);
     return out.toOwnedSlice(allocator);
 }
+
+/// Module-wide numbering: `!range` nodes (from 1; `!0` is the trap branch weight) and vector loops.
+const Metadata = struct {
+    ranges: Out = .empty,
+    range_count: u32 = 0,
+    vector_count: u32 = 0,
+};
 
 const ModuleState = struct {
     allocator: std.mem.Allocator,
@@ -83,9 +103,7 @@ const ModuleState = struct {
     options: Options,
     sites: std.ArrayList(Site) = .empty,
     externs: Out = .empty,
-    /// `!range` metadata nodes, numbered from 1 (`!0` is the trap branch weight).
-    ranges: Out = .empty,
-    range_count: u32 = 0,
+    meta: Metadata = .{},
 
     fn declareExtern(self: *ModuleState, function: *const ir.Function) !void {
         try self.externs.print(self.allocator, "declare {s} @{s}(", .{ try self.llvmType(function.signature.ret), cName(function.name) });
@@ -100,9 +118,9 @@ const ModuleState = struct {
 
     /// A `!range` node for `[lo, hi]` in a `bits`-wide integer.
     fn rangeNode(self: *ModuleState, bits: u16, range: facts.Interval) ![]const u8 {
-        self.range_count += 1;
-        try self.ranges.print(self.allocator, "!{d} = !{{i{d} {d}, i{d} {d}}}\n", .{ self.range_count, bits, range.lo, bits, range.hi + 1 });
-        return std.fmt.allocPrint(self.allocator, ", !range !{d}", .{self.range_count});
+        self.meta.range_count += 1;
+        try self.meta.ranges.print(self.allocator, "!{d} = !{{i{d} {d}, i{d} {d}}}\n", .{ self.meta.range_count, bits, range.lo, bits, range.hi + 1 });
+        return std.fmt.allocPrint(self.allocator, ", !range !{d}", .{self.meta.range_count});
     }
 
     fn site(self: *ModuleState, s: Site) !u32 {
@@ -223,6 +241,18 @@ fn symbol(allocator: std.mem.Allocator, name: []const u8) ![]const u8 {
     return std.fmt.allocPrint(allocator, "@\"my.{s}\"", .{name});
 }
 
+/// The vectorized loops of one function, and the header phi values their vector parts resume with.
+const VectorState = struct {
+    plans: []const vector.Plan = &.{},
+    /// Header phi → the value it takes on the edge from the vector part.
+    resume_values: std.AutoHashMapUnmanaged(u32, []const u8) = .empty,
+    /// The IR block whose body is being rendered.
+    block: u32 = 0,
+};
+
+/// The operands of one floor division or remainder.
+const FloorOperands = struct { result: []const u8, type_name: []const u8, left: []const u8, right: []const u8, safe: []const u8, is_rem: bool };
+
 const FunctionEmitter = struct {
     state: *ModuleState,
     function: *const ir.Function,
@@ -233,6 +263,7 @@ const FunctionEmitter = struct {
     counter: u32 = 0,
     /// The label the body being rendered currently ends in.
     label: []const u8 = "",
+    vectors: VectorState = .{},
 
     fn a(self: *FunctionEmitter) std.mem.Allocator {
         return self.state.allocator;
@@ -283,10 +314,17 @@ const FunctionEmitter = struct {
             self.exit_labels.items[b] = try std.fmt.allocPrint(self.a(), "b{d}", .{b});
             if (b != 0 and block.preds.items.len == 0) continue;
             self.label = self.exit_labels.items[b];
+            self.vectors.block = @intCast(b);
+            try self.assertReachable(&bodies[b], @intCast(b));
+            for (block.insts.items) |ref| {
+                const inst = f.inst(ref);
+                if (inst.op == .phi) try self.assertRange(&bodies[b], ref, inst);
+            }
             for (block.insts.items) |ref| {
                 const inst = f.inst(ref);
                 if (inst.op == .phi or inst.op == .copy) continue;
                 try self.instruction(&bodies[b], ref, inst);
+                if (!inst.op.terminates()) try self.assertRange(&bodies[b], ref, inst);
             }
             self.exit_labels.items[b] = self.label;
         }
@@ -299,7 +337,8 @@ const FunctionEmitter = struct {
                 if (inst.op != .phi) continue;
                 try out.print(self.a(), "  %v{d} = phi {s} ", .{ ref.index(), try self.ty(inst.ty) });
                 for (f.operands(inst.data), block.preds.items, 0..) |operand, pred, i| {
-                    try out.print(self.a(), "{s}[ {s}, %{s} ]", .{ if (i == 0) "" else ", ", try self.value(operand), self.exit_labels.items[pred.index()] });
+                    const resumed = if (self.vectorPreheader(pred, @intCast(b))) self.vectors.resume_values.get(@intCast(ref.index())) else null;
+                    try out.print(self.a(), "{s}[ {s}, %{s} ]", .{ if (i == 0) "" else ", ", resumed orelse try self.value(operand), self.exit_labels.items[pred.index()] });
                 }
                 try out.appendSlice(self.a(), "\n");
             }
@@ -308,9 +347,92 @@ const FunctionEmitter = struct {
         try out.appendSlice(self.a(), "}\n");
     }
 
+    /// The check an instruction gets emitted with: verify mode emits proven checks as exact ones.
+    fn checkOf(self: *FunctionEmitter, inst: ir.Inst) ir.Check {
+        return if (inst.check == .proven and self.state.options.verify) .exact else inst.check;
+    }
+
+    /// Whether `pred` → `header` is the edge a vectorized loop is entered by.
+    fn vectorPreheader(self: *FunctionEmitter, pred: ir.BlockId, header: u32) bool {
+        for (self.vectors.plans) |plan| {
+            if (plan.loop.header.index() == header and plan.preheader == pred) return true;
+        }
+        return false;
+    }
+
+    fn scalarName(context: *anyopaque, ref: ir.Ref) vector.Error![]const u8 {
+        const self: *FunctionEmitter = @ptrCast(@alignCast(context));
+        return self.value(ref) catch return error.OutOfMemory;
+    }
+
+    /// In front of the jump into a vectorized loop's header, run its vector part.
+    fn vectorPrologue(self: *FunctionEmitter, out: *Out, target: u32) !void {
+        for (self.vectors.plans) |plan| {
+            if (plan.loop.header.index() != target or plan.preheader.index() != self.vectors.block) continue;
+            self.state.meta.vector_count += 1;
+            const resumed = try vector.emit(self.a(), out, self.function, .{
+                .plan = plan,
+                .id = self.state.meta.vector_count,
+                .known = self.state.options.facts[self.index].?,
+                .scalars = .{ .context = self, .name = scalarName },
+                .from = self.label,
+            });
+            try self.vectors.resume_values.put(self.a(), @intCast(plan.carried.counter.index()), resumed.counter);
+            try self.vectors.resume_values.put(self.a(), @intCast(plan.carried.acc.index()), resumed.acc);
+            self.label = resumed.label;
+        }
+    }
+
+    fn knownFacts(self: *FunctionEmitter) ?facts.Facts {
+        if (!self.state.options.verify or self.index >= self.state.options.facts.len) return null;
+        return self.state.options.facts[self.index];
+    }
+
+    /// Verify mode: a block the facts call unreachable traps if it ever runs.
+    fn assertReachable(self: *FunctionEmitter, out: *Out, block: u32) !void {
+        const known = self.knownFacts() orelse return;
+        if (known.reachable[block]) return;
+        const at: ir.Inst = .{ .op = .@"unreachable", .ty = .void, .span = self.function.span };
+        const location = self.state.options.locator.locate(self.state.options.locator.context, at.span);
+        const index = try self.state.site(.{ .kind = .fact, .location = location, .width = 64, .operation = "unreachable block", .function = self.function.name });
+        try self.trapIf(out, "true", index, "0", "0");
+    }
+
+    /// Verify mode: the value lies in the interval the facts gave it.
+    fn assertRange(self: *FunctionEmitter, out: *Out, ref: ir.Ref, inst: ir.Inst) !void {
+        const known = self.knownFacts() orelse return;
+        const info = inst.ty.integer() orelse return;
+        const range = known.ranges[ref.index()] orelse return;
+        const full = facts.typeRange(inst.ty).?;
+        if (inst.op == .iconst or range.lo > range.hi) return;
+        const tyname = try self.ty(inst.ty);
+        const name = try self.value(ref);
+        var failed: ?[]const u8 = null;
+        if (range.lo > full.lo) {
+            const below = try self.fresh("%rl");
+            try out.print(self.a(), bound_line, .{ below, if (info.signed) "slt" else "ult", tyname, name, range.lo });
+            failed = below;
+        }
+        if (range.hi < full.hi) {
+            const above = try self.fresh("%rh");
+            try out.print(self.a(), bound_line, .{ above, if (info.signed) "sgt" else "ugt", tyname, name, range.hi });
+            if (failed) |other| {
+                const either = try self.fresh("%rx");
+                try out.print(self.a(), or_line, .{ either, other, above });
+                failed = either;
+            } else failed = above;
+        }
+        const condition = failed orelse return;
+        const operation = try std.fmt.allocPrint(self.a(), "range [{d}, {d}]", .{ range.lo, range.hi });
+        const index = try self.state.site(.{ .kind = .fact, .location = self.state.options.locator.locate(self.state.options.locator.context, inst.span), .width = info.bits, .operation = operation, .function = self.function.name });
+        try self.trapIf(out, condition, index, try self.widened(out, ref), "0");
+    }
+
     fn site(self: *FunctionEmitter, kind: TrapKind, inst: ir.Inst, operation: []const u8) !u32 {
         const width: u16 = if (inst.ty.integer()) |info| info.bits else 64;
-        return self.state.site(.{ .kind = kind, .location = self.state.options.locator.locate(self.state.options.locator.context, inst.span), .width = width, .operation = operation, .function = self.function.name });
+        // In verify mode a check the facts proved is still emitted, and its failure is the fact's.
+        const effective: TrapKind = if (inst.check == .proven) .fact else kind;
+        return self.state.site(.{ .kind = effective, .location = self.state.options.locator.locate(self.state.options.locator.context, inst.span), .width = width, .operation = operation, .function = self.function.name });
     }
 
     /// Branch to a cold trap when `failed` (an `i1` operand) holds, and continue in a new label.
@@ -339,7 +461,7 @@ const FunctionEmitter = struct {
             .div, .rem, .floor_div, .floor_rem => try self.division(out, name, inst),
             .neg => {
                 const info = inst.ty.integer().?;
-                if (inst.check == .exact) {
+                if (self.checkOf(inst) == .exact) {
                     const pair = try self.fresh("%n");
                     const tyname = try self.ty(inst.ty);
                     try out.print(self.a(), "  {s} = call {{ {s}, i1 }} @llvm.{s}sub.with.overflow.{s}({s} 0, {s})\n", .{ pair, tyname, if (info.signed) "s" else "u", tyname, tyname, try self.typedValue(inst.a) });
@@ -397,8 +519,15 @@ const FunctionEmitter = struct {
                 try out.print(self.a(), "  {s} = fcmp {s} double {s}, {s}\n", .{ name, spelled, try self.value(inst.a), try self.value(inst.b) });
             },
             .int_to_float => {
-                const signed = (self.function.inst(self.function.resolve(inst.a)).ty.integer() orelse return error.UnsupportedInstruction).signed;
-                try out.print(self.a(), "  {s} = {s} {s} to double\n", .{ name, if (signed) "sitofp" else "uitofp", try self.typedValue(inst.a) });
+                const source = self.function.inst(self.function.resolve(inst.a)).ty;
+                const signed = (source.integer() orelse return error.UnsupportedInstruction).signed;
+                if (source == .i64 and self.fitsI32(inst.a)) {
+                    // Narrow first: AVX2 converts i32 lanes to doubles in one instruction, i64 lanes not at all.
+                    const narrow = try self.fresh("%n32");
+                    try out.print(self.a(), "  {s} = trunc i64 {s} to i32\n  {s} = sitofp i32 {s} to double\n", .{ narrow, try self.value(inst.a), name, narrow });
+                } else {
+                    try out.print(self.a(), "  {s} = {s} {s} to double\n", .{ name, if (signed) "sitofp" else "uitofp", try self.typedValue(inst.a) });
+                }
             },
             .float_to_int => try self.floatToInt(out, name, inst),
             .convert => try self.convert(out, name, inst),
@@ -434,7 +563,10 @@ const FunctionEmitter = struct {
             .union_payload => try out.print(self.a(), "  {s} = extractvalue {s}, 1\n", .{ name, try self.typedValue(inst.a) }),
             .call => try self.call(out, name, inst),
             .print => try self.print(out, inst),
-            .jump => try out.print(self.a(), "  br label %b{d}\n", .{inst.data}),
+            .jump => {
+                try self.vectorPrologue(out, @intCast(inst.data));
+                try out.print(self.a(), "  br label %b{d}\n", .{inst.data});
+            },
             .branch => {
                 const targets = ir.unpackTargets(inst.data);
                 try out.print(self.a(), "  br i1 {s}, label %b{d}, label %b{d}\n", .{ try self.value(inst.a), @backingInt(targets.then), @backingInt(targets.otherwise) });
@@ -452,7 +584,7 @@ const FunctionEmitter = struct {
             else => "mul",
         };
         const tyname = try self.ty(inst.ty);
-        switch (inst.check) {
+        switch (self.checkOf(inst)) {
             .exact => {
                 const pair = try self.fresh("%p");
                 try out.print(self.a(), "  {s} = call {{ {s}, i1 }} @llvm.{s}{s}.with.overflow.{s}({s}, {s})\n", .{ pair, tyname, if (info.signed) "s" else "u", op, tyname, try self.typedValue(inst.a), try self.typedValue(inst.b) });
@@ -476,6 +608,15 @@ const FunctionEmitter = struct {
         const right = try self.value(inst.b);
         const is_rem = inst.op == .rem or inst.op == .floor_rem;
         const operation = @tagName(inst.op);
+        if (inst.check == .proven and self.state.options.verify) {
+            // The fact behind `proven`: both operands non-negative, the divisor positive.
+            const negative = try self.fresh("%vn");
+            const nonpositive = try self.fresh("%vz");
+            const either = try self.fresh("%ve");
+            try out.print(self.a(), "  {s} = icmp slt {s} {s}, 0\n  {s} = icmp sle {s} {s}, 0\n", .{ negative, tyname, left, nonpositive, tyname, right });
+            try out.print(self.a(), or_line, .{ either, negative, nonpositive });
+            try self.trapIf(out, either, try self.site(.division_by_zero, inst, operation), try self.widened(out, inst.a), try self.widened(out, inst.b));
+        }
         if (!info.signed or inst.check == .proven) {
             const divisor = self.constantOf(inst.b);
             if (inst.check != .proven and (divisor == null or divisor.? == 0)) {
@@ -494,8 +635,12 @@ const FunctionEmitter = struct {
         }
         // `MIN / -1` overflows; `MIN % -1` is 0, which LLVM's `srem` leaves undefined.
         var safe = right;
+        // With a divisor of -1 the division runs by 1 instead (no `srem` UB), and the
+        // quotient is then replaced by `-left` (MIN // -1 trapped above); the remainder is 0 either way.
+        var minus_one_flag: ?[]const u8 = null;
         if (divisor == null or divisor.? == -1) {
             const minus_one = try self.fresh("%m");
+            minus_one_flag = minus_one;
             try out.print(self.a(), "  {s} = icmp eq {s} {s}, -1\n", .{ minus_one, tyname, right });
             if (!is_rem) {
                 const minimum = try self.fresh("%mn");
@@ -506,11 +651,25 @@ const FunctionEmitter = struct {
             safe = try self.fresh("%d");
             try out.print(self.a(), "  {s} = select i1 {s}, {s} 1, {s} {s}\n", .{ safe, minus_one, tyname, tyname, right });
         }
+        // The quotient as computed with `safe`; `name` is bound last.
+        const computed = if (!is_rem and minus_one_flag != null) try self.fresh("%qd") else name;
         if (inst.op == .div or inst.op == .rem) {
-            try out.print(self.a(), binary_line, .{ name, if (is_rem) "srem" else "sdiv", tyname, left, safe });
-            return;
+            try out.print(self.a(), binary_line, .{ computed, if (is_rem) "srem" else "sdiv", tyname, left, safe });
+        } else {
+            try self.floorAdjust(out, .{ .result = computed, .type_name = tyname, .left = left, .right = right, .safe = safe, .is_rem = is_rem });
         }
-        // Python floor semantics: adjust when the remainder is nonzero and its sign differs from the divisor's.
+        if (computed.ptr != name.ptr) {
+            const negated = try self.fresh("%qn");
+            try out.print(self.a(), "  {s} = sub {s} 0, {s}\n  {s} = select i1 {s}, {s} {s}, {s} {s}\n", .{ negated, tyname, left, name, minus_one_flag.?, tyname, negated, tyname, computed });
+        }
+    }
+
+    /// Python floor semantics: adjust when the remainder is nonzero and its sign differs from the divisor's.
+    fn floorAdjust(self: *FunctionEmitter, out: *Out, d: FloorOperands) !void {
+        const tyname = d.type_name;
+        const left = d.left;
+        const right = d.right;
+        const safe = d.safe;
         const q = try self.fresh("%q");
         const r = try self.fresh("%r");
         const nonzero = try self.fresh("%rnz");
@@ -520,12 +679,12 @@ const FunctionEmitter = struct {
         try out.print(self.a(), "  {s} = sdiv {s} {s}, {s}\n  {s} = srem {s} {s}, {s}\n", .{ q, tyname, left, safe, r, tyname, left, safe });
         try out.print(self.a(), "  {s} = icmp ne {s} {s}, 0\n  {s} = xor {s} {s}, {s}\n", .{ nonzero, tyname, r, mixed, tyname, r, right });
         try out.print(self.a(), "  {s} = icmp slt {s} {s}, 0\n  {s} = and i1 {s}, {s}\n", .{ negative, tyname, mixed, fix, nonzero, negative });
-        if (is_rem) {
+        if (d.is_rem) {
             const add = try self.fresh("%ra");
-            try out.print(self.a(), "  {s} = select i1 {s}, {s} {s}, {s} 0\n  {s} = add {s} {s}, {s}\n", .{ add, fix, tyname, right, tyname, name, tyname, r, add });
+            try out.print(self.a(), "  {s} = select i1 {s}, {s} {s}, {s} 0\n  {s} = add {s} {s}, {s}\n", .{ add, fix, tyname, right, tyname, d.result, tyname, r, add });
         } else {
             const sub = try self.fresh("%qs");
-            try out.print(self.a(), "  {s} = zext i1 {s} to {s}\n  {s} = sub {s} {s}, {s}\n", .{ sub, fix, tyname, name, tyname, q, sub });
+            try out.print(self.a(), "  {s} = zext i1 {s} to {s}\n  {s} = sub {s} {s}, {s}\n", .{ sub, fix, tyname, d.result, tyname, q, sub });
         }
     }
 
@@ -535,7 +694,7 @@ const FunctionEmitter = struct {
         const to = inst.ty.integer() orelse return error.UnsupportedInstruction;
         const from_name = try self.ty(source_type);
         const operand = try self.value(inst.a);
-        if (inst.check == .exact) {
+        if (self.checkOf(inst) == .exact) {
             const lo_from: i128 = if (from.signed) -(@as(i128, 1) << @intCast(from.bits - 1)) else 0;
             const hi_from: i128 = if (from.signed) (@as(i128, 1) << @intCast(from.bits - 1)) - 1 else (@as(i128, 1) << @intCast(from.bits)) - 1;
             const lo_to: i128 = if (to.signed) -(@as(i128, 1) << @intCast(to.bits - 1)) else 0;
@@ -543,16 +702,16 @@ const FunctionEmitter = struct {
             var failed: ?[]const u8 = null;
             if (lo_to > lo_from) {
                 const below = try self.fresh("%lo");
-                try out.print(self.a(), "  {s} = icmp {s} {s} {s}, {d}\n", .{ below, if (from.signed) "slt" else "ult", from_name, operand, lo_to });
+                try out.print(self.a(), bound_line, .{ below, if (from.signed) "slt" else "ult", from_name, operand, lo_to });
                 failed = below;
             }
             if (hi_to < hi_from) {
                 const above = try self.fresh("%hi");
                 // `hi_to` fits the source type here, so print it in that type's two's complement.
-                try out.print(self.a(), "  {s} = icmp {s} {s} {s}, {d}\n", .{ above, if (from.signed) "sgt" else "ugt", from_name, operand, hi_to });
+                try out.print(self.a(), bound_line, .{ above, if (from.signed) "sgt" else "ugt", from_name, operand, hi_to });
                 if (failed) |other| {
                     const either = try self.fresh("%cv");
-                    try out.print(self.a(), "  {s} = or i1 {s}, {s}\n", .{ either, other, above });
+                    try out.print(self.a(), or_line, .{ either, other, above });
                     failed = either;
                 } else failed = above;
             }
@@ -573,7 +732,7 @@ const FunctionEmitter = struct {
         const lo: f64 = if (to.signed) -std.math.pow(f64, 2, @floatFromInt(to.bits - 1)) else -1.0;
         const hi: f64 = if (to.signed) std.math.pow(f64, 2, @floatFromInt(to.bits - 1)) else std.math.pow(f64, 2, @floatFromInt(to.bits));
         const operand = try self.value(inst.a);
-        if (inst.check == .exact) {
+        if (self.checkOf(inst) == .exact) {
             const above_lo = try self.fresh("%fl");
             const below_hi = try self.fresh("%fh");
             const ok = try self.fresh("%fok");
@@ -585,13 +744,18 @@ const FunctionEmitter = struct {
             try out.print(self.a(), "  {s} = bitcast double {s} to i64\n", .{ bits, operand });
             try self.trapIf(out, failed, try self.site(.float_conversion, inst, "convert"), bits, "0");
         }
+        if (inst.ty == .i64 and inst.check == .proven and self.fitsI32(self.refOf(name))) {
+            const narrow = try self.fresh("%f32");
+            try out.print(self.a(), "  {s} = fptosi double {s} to i32\n  {s} = sext i32 {s} to i64\n", .{ narrow, operand, name, narrow });
+            return;
+        }
         try out.print(self.a(), "  {s} = {s} double {s} to {s}\n", .{ name, if (to.signed) "fptosi" else "fptoui", operand, try self.ty(inst.ty) });
     }
 
     fn listGet(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) !void {
         const list = try self.value(inst.a);
         const index = try self.value(inst.b);
-        if (inst.check == .exact) {
+        if (self.checkOf(inst) == .exact) {
             const at = try self.fresh("%lh");
             const len = try self.fresh("%len");
             const outside = try self.fresh("%oob");
@@ -610,10 +774,26 @@ const FunctionEmitter = struct {
         }
     }
 
+    /// The value an `%vN` name stands for.
+    fn refOf(self: *FunctionEmitter, name: []const u8) ir.Ref {
+        _ = self;
+        return @fromBackingInt(std.fmt.parseInt(u32, name[2..], 10) catch 0);
+    }
+
+    /// Whether trusted facts put an integer value inside `i32` (never in verify builds).
+    fn fitsI32(self: *FunctionEmitter, raw: ir.Ref) bool {
+        if (self.state.options.verify or self.index >= self.state.options.facts.len) return false;
+        const known = self.state.options.facts[self.index] orelse return false;
+        const ref = self.function.resolve(raw);
+        const inst = self.function.inst(ref);
+        const range = if (inst.op == .iconst) facts.Interval.point(@as(i64, @bitCast(inst.data))) else known.ranges[ref.index()] orelse return false;
+        return range.lo >= std.math.minInt(i32) and range.hi <= std.math.maxInt(i32);
+    }
+
     /// `, !range !N` when the facts bound the loaded value more tightly than its type.
     fn loadRange(self: *FunctionEmitter, name: []const u8, loaded: ir.Type) ![]const u8 {
         const info = loaded.integer() orelse return "";
-        if (self.index >= self.state.options.facts.len) return "";
+        if (self.state.options.verify or self.index >= self.state.options.facts.len) return "";
         const known = self.state.options.facts[self.index] orelse return "";
         const index = std.fmt.parseInt(usize, name[2..], 10) catch return "";
         const range = known.ranges[index] orelse return "";

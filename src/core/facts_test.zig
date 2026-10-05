@@ -81,3 +81,31 @@ test "the 2^47 list-length rule bounds reductions: 1008 * 2^47 fits i64 and 9999
     try std.testing.expectEqual(@as(usize, 3), std.mem.count(u8, wide, "add.proven i64"));
     try std.testing.expect(std.mem.indexOf(u8, wide, "list_get.proven i64") != null);
 }
+
+const searching =
+    \\def search(values: list[int], key: int) -> int:
+    \\    low = 0
+    \\    high = len(values)
+    \\    while low < high:
+    \\        middle = (low + high) // 2
+    \\        if values[middle] < key:
+    \\            low = middle + 1
+    \\        else:
+    \\            high = middle
+    \\    return low
+    \\
+    \\
+    \\def main(out: Stream) -> int:
+    \\    out.print(search([1, 3, 5], 4))
+    \\    return 0
+    \\
+;
+
+// spec-case: NEW-CORE-FACTS-2
+test "a loop whose condition variable steps through a join is not a counted loop and keeps its checks" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const text = try support.factsText(arena.allocator(), searching);
+    try std.testing.expect(std.mem.indexOf(u8, text, "list_get.exact i64 param0") != null);
+    try std.testing.expect(std.mem.indexOf(u8, text, "add.exact i64") != null);
+}

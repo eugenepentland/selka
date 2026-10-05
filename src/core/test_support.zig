@@ -7,6 +7,7 @@ const build = @import("build.zig");
 const print = @import("print.zig");
 const emit_llvm = @import("emit_llvm.zig");
 const facts = @import("facts.zig");
+const passes = @import("passes.zig");
 
 /// Everything checking, building or emitting a test program can fail with.
 pub const Error = language.diagnostic.Error || build.Error || emit_llvm.Error;
@@ -42,7 +43,24 @@ pub fn factsText(arena: std.mem.Allocator, source: []const u8) Error![]u8 {
     var refusal: build.Refusal = .{};
     var module = try buildSource(arena, source, &refusal);
     for (module.functions.items) |*function| {
-        if (function.signature.linkage == .internal) _ = try facts.analyze(arena, function);
+        if (function.signature.linkage == .internal) _ = try facts.analyze(arena, function, .{});
     }
     return print.module(arena, &module);
+}
+
+/// The textual Core IR of `source` after the release passes.
+pub fn optimizedText(arena: std.mem.Allocator, source: []const u8) Error![]u8 {
+    var refusal: build.Refusal = .{};
+    var module = try buildSource(arena, source, &refusal);
+    _ = try passes.run(arena, &module, .trusted);
+    return print.module(arena, &module);
+}
+
+/// The LLVM IR a release build of `source` emits.
+pub fn releaseLlvmText(arena: std.mem.Allocator, source: []const u8) Error![]u8 {
+    var refusal: build.Refusal = .{};
+    var module = try buildSource(arena, source, &refusal);
+    const result = try passes.run(arena, &module, .trusted);
+    const context: u8 = 0;
+    return emit_llvm.emitModule(arena, &module, .{ .locator = .{ .context = &context, .locate = firstLine }, .source_path = "test.my", .main_parameters = &.{ "args", "out" }, .facts = result.known, .vectors = result.plans });
 }
