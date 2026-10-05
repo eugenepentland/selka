@@ -553,3 +553,22 @@ Changes to this note, binding on the lanes:
 - a change to language behaviour is needed. Park it for the user.
 
 **R-6. Old-core bugs found by a lane are reported, not fixed.**
+
+## 14. Lane V, checkpoint V-1: as built, and where it differs from §3–§7
+
+**What the checked tree actually gives the builder** (corrections to §1):
+- `xs[i] = v` on a list is `buffer_operation write`, not `replace` (`replace` is the fixed-array form).
+- Writes through a nested place (`s.items.append(v)`, `xs[i].f = v`, `xs[i][j] = v`) are rooted in checker-hidden `<collection>` locals read from the place; the old runtime shares the list block, the new core must store the new value back.
+- The checker can type the literal in `i16 + 1` as `i64`; the builder retypes it.
+
+**Places (`build.zig`).** The builder remembers, for each hidden receiver, the place it was read from (a local plus field and element steps) and, after a write through it, rebuilds the path from the root's current value (`record_set` for a field, `list_set` for an element) and writes the root. If the root was written between rooting the receiver and using it (a `mut` call in an index), whether the write shows through depends on whether the old runtime changed the list in place or replaced it, which a value cannot tell: the operation is refused.
+
+**`mut` ABI, by value (differs from §7).** `ir.zig` has no `ptr` type and no slot load or store, so the slot ABI would need three new operations. A `mut` parameter is passed by value and returned: a function with `mut` parameters returns a record of its result (unless `unit`) followed by each `mut` parameter's final value (the value alone when it is the only part), and the caller writes each back into the argument's place, reading the place's value after the other arguments are evaluated. Under D3 this is `inout`: nothing else can name the place during the call. For ownership the parameter is owned (the caller's variable is overwritten by the result); facts about a parameter value stay sound because the old value is dead after any in-place update. If the slot ABI is still wanted, it needs `slot_load`/`slot_store` and a `ptr` type in `ir.zig`.
+
+**Memory-backed values (§3).** A record or union over four words is a pointer to a stack slot: a parameter is the caller's read-only pointer, `record_get` is a load at the field's offset, `record_set` copies into a fresh slot or, when the old value's other readers ran earlier in the same block, writes it where it is, and a value read out of a list, box or call result is copied into a fresh slot (never a view). A loop-carried one owns a slot filled on each incoming edge (conditional edges get a block of their own), staged through temporaries when several meet. A `record_make` or `union_make` whose only use stores it (`list_push`, `list_set`, `ret` through `sret`, `box_make`, or a field of such a construction) is written straight into the destination (WP-10b).
+
+**Projection fusion (`fuse.zig`).** `xs[i].f` and `match xs[i]` become `list_get_field` reads (§4), before ownership.
+
+**Facts (§5).** Record field intervals through `record_make`/`record_set`/phis; list lengths through new/push/pop/set/copy/phis and element hulls through writes and pushes; a read below the length's lower bound and a pop of a list at least one long are proven; verify asserts each. Facts about `mut` results stay empty because the result of a call has none.
+
+**Equality, `?`, `pop`.** `==` on records, unions and lists of integers or booleans is structural (build-time expansion, loops for lists); `str`, recursive values and other lists are refused. `?` appends `err_trace` on the error arm and converts the error into the caller's union case; `converted` and `returned` trace kinds wait for `ir.TraceMode`. `pop` reads element `len - 1` (`flags.pop_read` makes a failing index the empty-list pop trap) and then `list_pop`s.
