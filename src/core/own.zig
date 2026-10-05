@@ -74,6 +74,11 @@ pub const Stats = struct {
     }
 };
 
+/// The `data` of a `release` whose value is statically unique (fresh, never shared):
+/// the emitter frees the block without testing its count (verify builds assert
+/// `count == 1` first).
+pub const unique_release: u64 = 1;
+
 /// The `data` of an `unreachable` that asserts a statically unique update: verify
 /// builds emit it as an `R_CORE_FACT` trap (`emit_llvm.zig`).
 pub const unique_assert: u64 = 1;
@@ -485,18 +490,23 @@ fn staticallyUnique(a: *const Analysis, value: ir.Ref, site: ir.Ref) Error!bool 
 /// Whether some use of `value` other than `site` may give its block a second owner
 /// before the update: a call argument (the callee may keep it) or a consuming use,
 /// either one with the value still live after it (so the update may follow), or a
-/// use that consumes it twice. A last use on another path shares nothing.
+/// use that consumes it twice. A last use on another path shares nothing. With
+/// `site` none the question is about the value's death: then any call may have
+/// kept it, even its last use.
 fn shared(a: *const Analysis, value: ir.Ref, site: ir.Ref) Error!bool {
     for (a.uses[value.index()].items) |use| {
         if (use.onEdge()) {
-            if (use.consume > 1 or (a.liveInto(value, use.succ) and try a.reaches(value, use.succ, null, site))) return true;
+            if (use.consume > 1) return true;
+            if (a.liveInto(value, use.succ) and (site == .none or try a.reaches(value, use.succ, null, site))) return true;
             continue;
         }
         const at = a.f.blocks.items[use.block].insts.items[use.pos];
         if (at == site) continue;
-        const sharing = a.inst(at).op == .call or use.consume == 1;
-        if (use.consume > 1) return true;
-        if (sharing and a.liveAfter(value, use.block, use.pos) and try a.reaches(value, use.block, use.pos, site)) return true;
+        const call = a.inst(at).op == .call;
+        if (use.consume > 1 or (call and site == .none)) return true;
+        const may_share = call or use.consume == 1;
+        if (!may_share or !a.liveAfter(value, use.block, use.pos)) continue;
+        if (site == .none or try a.reaches(value, use.block, use.pos, site)) return true;
     }
     return false;
 }
@@ -642,7 +652,9 @@ const Place = union(enum) {
     edge: struct { from: u32, to: u32 },
 };
 
-const Action = struct { place: Place, op: ir.Op, value: ir.Ref };
+/// A counting instruction to insert; `data` is `unique_release` for a release of a
+/// value no other owner can share.
+const Action = struct { place: Place, op: ir.Op, value: ir.Ref, data: u64 = 0 };
 
 fn count(a: *Analysis, stats: *Stats) Error!void {
     var actions: std.ArrayList(Action) = .empty;
@@ -660,6 +672,8 @@ fn count(a: *Analysis, stats: *Stats) Error!void {
 fn countOwned(a: *Analysis, ref: ir.Ref, actions: *std.ArrayList(Action)) Error!void {
     const f = a.f;
     const live = a.live[ref.index()].?;
+    // A list nothing shares (form 1's rule) has count 1 wherever it dies.
+    const release_data: u64 = if (try staticallyUnique(a, ref, .none)) unique_release else 0;
     if (a.promoted[ref.index()]) try actions.append(a.arena, .{ .place = placeAfterDef(a, ref), .op = .retain, .value = ref });
     // Consuming uses: the last one moves, the others take a retained owner.
     for (a.uses[ref.index()].items) |use| {
@@ -689,10 +703,10 @@ fn countOwned(a: *Analysis, ref: ir.Ref, actions: *std.ArrayList(Action)) Error!
             if (consumed) continue;
             const at = block.insts.items[pos];
             const place: Place = if (f.inst(at).op.terminates()) .{ .before = at } else .{ .after = at };
-            try actions.append(a.arena, .{ .place = place, .op = .release, .value = ref });
+            try actions.append(a.arena, .{ .place = place, .op = .release, .value = ref, .data = release_data });
         } else if (b == live.def) {
             // Defined and never used.
-            try actions.append(a.arena, .{ .place = placeAfterDef(a, ref), .op = .release, .value = ref });
+            try actions.append(a.arena, .{ .place = placeAfterDef(a, ref), .op = .release, .value = ref, .data = release_data });
         }
     }
     // Deaths on edges: live at the end of `b`, but neither needed in a successor nor taken by its phi.
@@ -704,7 +718,7 @@ fn countOwned(a: *Analysis, ref: ir.Ref, actions: *std.ArrayList(Action)) Error!
             const taken = for (a.uses[ref.index()].items) |use| {
                 if (use.onEdge() and use.block == b and use.succ == succ) break true;
             } else false;
-            if (!taken) try actions.append(a.arena, .{ .place = .{ .edge = .{ .from = @intCast(b), .to = succ } }, .op = .release, .value = ref });
+            if (!taken) try actions.append(a.arena, .{ .place = .{ .edge = .{ .from = @intCast(b), .to = succ } }, .op = .release, .value = ref, .data = release_data });
         }
     }
 }
@@ -745,7 +759,7 @@ fn apply(a: *Analysis, actions: []const Action, stats: *Stats) Error!void {
     for ([_]ir.Op{ .retain, .release }) |op| {
         for (actions) |action| {
             if (action.op != op) continue;
-            const counted = try e.newInst(.{ .op = op, .ty = .void, .a = action.value, .span = f.inst(action.value).span });
+            const counted = try e.newInst(.{ .op = op, .ty = .void, .a = action.value, .data = action.data, .span = f.inst(action.value).span });
             if (op == .retain) stats.retains += 1 else stats.releases += 1;
             const list = switch (action.place) {
                 .before => |at| try listFor(arena, &before, @backingInt(at)),

@@ -215,14 +215,16 @@ pub const RunOptions = struct {
     own: bool = true,
     /// `main`'s parameter names and, when it returns a `Result`, its case tags.
     main: emit_llvm.Main = .{ .parameters = &.{"out"} },
+    /// Verify the IR first; off only for operand forms the verifier does not admit yet.
+    check_ir: bool = true,
 };
 
 /// Run the ownership pass over `module` (as a build would, after construction),
 /// verify, emit, compile and run it, by default with the leak check on.
 pub fn runOwned(arena: std.mem.Allocator, module: *ir.Module, options: RunOptions) RunError!Run {
-    try verified(arena, module, &.{});
+    if (options.check_ir) try verified(arena, module, &.{});
     if (options.own) _ = try @import("own.zig").run(arena, module, .{ .verify = options.verify });
-    try verified(arena, module, &.{});
+    if (options.check_ir) try verified(arena, module, &.{});
     const context: u8 = 0;
     const llvm = try emit_llvm.emitModule(arena, module, .{ .locator = .{ .context = &context, .locate = firstLine }, .source_path = "hand.my", .main = options.main, .verify = options.verify });
     return runLlvm(arena, llvm, options);

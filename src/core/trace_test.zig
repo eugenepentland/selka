@@ -121,3 +121,48 @@ test "main returning Err prints error: VALUE and the aligned trace, origin first
     try std.testing.expect(contains(failed.llvm, "call void @myl_core_err_trace(i32 ") and contains(failed.llvm, "#1\n"));
     try std.testing.expect(contains(failed.llvm, "attributes #1 = { \"call-inline-cost\"=\"0\" }"));
 }
+
+/// `main() -> Result[int, str]` returning `Err("bad")`, after recording: its origin, a
+/// `returned` site on the origin's line (folded into it), a converting `?`
+/// (`Wrapped.bad`) and `propagated` propagating `?` sites.
+fn kindsProgram(arena: std.mem.Allocator, propagated: usize) !ir.Module {
+    var m: ir.Module = .{};
+    const result = try m.intern(arena, .{ .@"union" = &.{ .i64, .str } });
+    try m.strings.append(arena, "bad");
+    try m.strings.append(arena, "Wrapped.bad");
+    var h = try Hand.init(arena, &m, "main", .{ .params = &.{}, .ret = result });
+    _ = try h.emit(.{ .op = .err_trace, .ty = .void, .data = 0, .span = 10 });
+    _ = try h.emit(.{ .op = .err_trace, .ty = .void, .data = 4, .span = 20 });
+    const case = try h.loose(.{ .op = .str_const, .ty = .str, .data = 1 });
+    _ = try h.emit(.{ .op = .err_trace, .ty = .void, .a = case, .data = 3, .span = 3000 });
+    for (0..propagated) |i| _ = try h.emit(.{ .op = .err_trace, .ty = .void, .data = 1, .span = @intCast(4001 + i) });
+    const message = try h.loose(.{ .op = .str_const, .ty = .str, .data = 0 });
+    _ = try h.emit(.{ .op = .ret, .ty = .void, .a = try h.emit(.{ .op = .union_make, .ty = result, .data = 1, .a = message }) });
+    _ = try h.finish();
+    return m;
+}
+
+fn kindsReport(arena: std.mem.Allocator, propagated: usize) ![]const u8 {
+    var module = try kindsProgram(arena, propagated);
+    // The verifier admits these modes once lane V extends `ir.TraceMode` (§6.2).
+    var run_options = result_main;
+    run_options.check_ir = false;
+    const run = try support.runOwned(arena, &module, run_options);
+    try std.testing.expectEqual(@as(u8, 1), run.status);
+    return run.stderr;
+}
+
+// spec: NEW-CORE-ERRTRACE-2
+test "trace modes: a returned site on its origin's line folds, a conversion names its case, and the ring drops the oldest appends" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    try std.testing.expectEqualStrings(
+        "error: bad\n  hand.my:1:11    main  Err(...) created\n  hand.my:1:3001  main  ? converted to Wrapped.bad\n" ++
+            "  hand.my:1:4002  main  ? propagated\n  hand.my:1:4003  main  ? propagated\n",
+        try kindsReport(arena.allocator(), 2),
+    );
+    // 42 appends: the ring keeps the last 32 (propagations 9 to 40).
+    const long = try kindsReport(arena.allocator(), 40);
+    try std.testing.expect(std.mem.startsWith(u8, long, "error: bad\n  hand.my:1:11    main  Err(...) created\n  ... 10 more entries dropped ...\n  hand.my:1:4010  main  ? propagated\n"));
+    try std.testing.expect(std.mem.endsWith(u8, long, "  hand.my:1:4041  main  ? propagated\n"));
+}

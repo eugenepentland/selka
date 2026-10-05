@@ -104,6 +104,63 @@ test "the copy-on-write forms print the old core's values with nothing left live
     try std.testing.expectEqualStrings("", release.stderr);
 }
 
+const unique_frees =
+    \\def fresh(n: int) -> int:
+    \\    out: list[int] = []
+    \\    for i in range(n):
+    \\        out.append(i)
+    \\    return len(out)
+    \\
+    \\
+    \\def keep(xs: list[int]) -> list[int]:
+    \\    return xs
+    \\
+    \\
+    \\def passed(n: int) -> int:
+    \\    out: list[int] = []
+    \\    out.append(n)
+    \\    kept = keep(out)
+    \\    return len(kept)
+    \\
+    \\
+    \\def main(out: Stream) -> int:
+    \\    out.print(fresh(3), passed(4))
+    \\    return 0
+    \\
+;
+
+// spec: NEW-CORE-RC-8
+test "a list nothing can share is freed at its death without a count test; one a call saw keeps the test" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    var refusal: @import("build.zig").Refusal = .{};
+    var module = try support.buildSource(arena.allocator(), unique_frees, &refusal);
+    const run = try support.runOwned(arena.allocator(), &module, .{});
+    try std.testing.expectEqualStrings("3 1\n", run.stdout);
+    try std.testing.expectEqualStrings("", run.stderr);
+    const fresh_llvm = llvmFunction(run.llvm, "@\"my.fresh\"(");
+    try std.testing.expect(contains(fresh_llvm, "call void @myl_core_free(ptr ") and !contains(fresh_llvm, "rc.dec"));
+    const passed_llvm = llvmFunction(run.llvm, "@\"my.passed\"(");
+    try std.testing.expect(contains(passed_llvm, "rc.dec"));
+    var verify_module = try support.buildSource(arena.allocator(), unique_frees, &refusal);
+    const verified = try support.runOwned(arena.allocator(), &verify_module, .{ .release = true, .verify = true });
+    try std.testing.expectEqualStrings("3 1\n", verified.stdout);
+    try std.testing.expect(contains(verified.llvm, "count == 1 before freeing a unique block"));
+}
+
+/// One emitted function's text, from its `define` to its closing brace.
+fn llvmFunction(text: []const u8, name: []const u8) []const u8 {
+    const header = std.mem.indexOf(u8, text, "define internal") orelse return "";
+    var at = header;
+    while (std.mem.indexOfPos(u8, text, at, "define internal")) |start| : (at = start + 1) {
+        const line_end = std.mem.indexOfScalarPos(u8, text, start, '\n') orelse return "";
+        if (std.mem.indexOf(u8, text[start..line_end], name) == null) continue;
+        const end = std.mem.indexOfPos(u8, text, start, "\n}\n") orelse return "";
+        return text[start..end];
+    }
+    return "";
+}
+
 /// main(out): a record holding a list and a string, a list of such records updated
 /// by field, element write and pop, an `Option[list]` (niche), a words-form union
 /// with a list case, a box of a list and a list of unions; it prints lengths.

@@ -67,6 +67,8 @@ const Site = struct { kind: TrapKind, location: Location, width: u16, operation:
 
 /// The `data` of an `unreachable` that asserts a uniqueness claim (`own.unique_assert`).
 const unique_assert = 1;
+/// The `data` of a `release` of a statically unique block (`own.unique_release`).
+const unique_release = 1;
 
 /// Header offsets of list and string blocks.
 const len_offset = 8;
@@ -835,20 +837,13 @@ const FunctionEmitter = struct {
                 try self.storeValue(out, inner, try self.value(inst.a), try self.offsetPointer(out, name, data_offset));
             },
             .box_get => try self.loadValue(out, inst.ty, try self.offsetPointer(out, try self.value(inst.a), data_offset), name),
-            .retain, .release => try self.counted(out, if (inst.op == .retain) .retain else .release, self.typeOf(inst.a), try self.value(inst.a)),
+            .retain => try self.counted(out, .retain, self.typeOf(inst.a), try self.value(inst.a)),
+            .release => if (inst.data == unique_release) try self.freeUnique(out, inst) else try self.counted(out, .release, self.typeOf(inst.a), try self.value(inst.a)),
             .is_unique => {
                 const count = try self.fresh("%rc");
                 try out.print(self.a(), count_load_line ++ "  {s} = icmp eq i32 {s}, 1\n", .{ count, try self.value(inst.a), name, count });
             },
-            .err_trace => {
-                const mode: ir.TraceMode = if (inst.data == 0) .origin else .append;
-                const location = self.state.options.locator.locate(self.state.options.locator.context, inst.span);
-                // The site's operation is the action the trace reports (ERROR-TRACE-2).
-                const action: []const u8 = if (mode == .origin) "Err(...) created" else "? propagated";
-                const index = try self.state.site(.{ .kind = .trace, .location = location, .width = 0, .operation = action, .function = self.function.name });
-                // ERROR-TRACE-5: the recorder never counts against inlining.
-                try out.print(self.a(), "  call void @myl_core_err_trace(i32 {d}, i32 {d}) #1\n", .{ index, @backingInt(mode) });
-            },
+            .err_trace => try self.errTrace(out, inst),
             .call => try self.call(out, name, inst),
             .print => try self.print(out, inst),
             .jump => {
@@ -1398,6 +1393,36 @@ const FunctionEmitter = struct {
         }
     }
 
+    /// One error-trace record (ERROR-TRACE-1/2). `data` is the trace mode, numbered as
+    /// docs/design/new-core-s1.md §6.2 fixes for the IR: 0 `origin` (`Err(...)`
+    /// built), 1 `append` (a `?` passing the error on), 2 `runtime` (a runtime call
+    /// answered `Err`), 3 `converted` (a `?` wrapping it into a case of the caller's
+    /// error union; `a` is a string constant naming `Union.case`), 4 `returned` (a
+    /// `return` of an `Err` the statement did not build). Origins (0, 2) restart the
+    /// trace; the rest append. The site's operation is the action text the trace prints.
+    fn errTrace(self: *FunctionEmitter, out: *Out, inst: ir.Inst) !void {
+        const location = self.state.options.locator.locate(self.state.options.locator.context, inst.span);
+        const action: []const u8 = switch (inst.data) {
+            0 => "Err(...) created",
+            2 => "Err produced by the runtime",
+            3 => try std.fmt.allocPrint(self.a(), "? converted to {s}", .{self.caseName(inst.a)}),
+            4 => "returned",
+            else => "? propagated",
+        };
+        const restarts: u8 = if (inst.data == 0 or inst.data == 2) 0 else 1;
+        const index = try self.state.site(.{ .kind = .trace, .location = location, .width = 0, .operation = action, .function = self.function.name });
+        // ERROR-TRACE-5: the recorder never counts against inlining.
+        try out.print(self.a(), "  call void @myl_core_err_trace(i32 {d}, i32 {d}) #1\n", .{ index, restarts });
+    }
+
+    /// The text of string constant `raw` (a converting `?`'s `Union.case`), or "?".
+    fn caseName(self: *FunctionEmitter, raw: ir.Ref) []const u8 {
+        if (raw == .none) return "?";
+        const inst = self.function.inst(self.function.resolve(raw));
+        if (inst.op != .str_const) return "?";
+        return self.state.module.strings.items[@intCast(inst.data)];
+    }
+
     // ---- trap frames (lane O; docs/design/new-core-s1.md §13 R-1) -------------------
 
     /// ` !dbg !N` naming this function's `DISubprogram` (`dwarf_lines` only).
@@ -1420,6 +1445,21 @@ const FunctionEmitter = struct {
         if (self.scope == 0) return "";
         const location = self.state.sites.items[site_index].location;
         return std.fmt.allocPrint(self.a(), instruction_location, .{try self.state.debug.location(self.a(), location, self.scope)});
+    }
+
+    /// The release of a block `own.zig` proved unique: free it without the count test
+    /// (verify builds first assert the count is 1 and trap `R_CORE_FACT`).
+    fn freeUnique(self: *FunctionEmitter, out: *Out, inst: ir.Inst) !void {
+        const block = try self.value(inst.a);
+        if (self.state.options.verify) {
+            const count = try self.fresh("%uc");
+            const shared = try self.fresh("%us");
+            try out.print(self.a(), count_load_line ++ "  {s} = icmp ne i32 {s}, 1\n", .{ count, block, shared, count });
+            const location = self.state.options.locator.locate(self.state.options.locator.context, inst.span);
+            const index = try self.state.site(.{ .kind = .fact, .location = location, .width = 32, .operation = "count == 1 before freeing a unique block", .function = self.function.name });
+            try self.trapIf(out, shared, index, "0", "1");
+        }
+        try out.print(self.a(), "  call void @myl_core_free(ptr {s})\n", .{block});
     }
 
     /// Record in a fresh list's or box's header (`reserved`, offset 24) where the blocks

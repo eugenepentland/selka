@@ -136,7 +136,9 @@ static myl_block *block_alloc(uint32_t kind, size_t data, size_t *room) {
         block = small_alloc(class);
         *room = (size_t)class * MYL_GRANULE - MYL_HEADER;
     } else {
-        block = malloc(bytes);
+        /* 32-byte alignment keeps element data on vector boundaries (measured:
+           16-byte `malloc` alignment cost integer_math 4% and binary_search 10%). */
+        block = aligned_alloc(MYL_ALIGN, (bytes + MYL_ALIGN - 1) & ~(size_t)(MYL_ALIGN - 1));
         if (!block) out_of_memory();
         *room = data;
         ++live_blocks;
@@ -300,9 +302,18 @@ myl_block *myl_core_list_grow(myl_block *list, int64_t element_size) {
     if (list->len < list->cap) return list;
     int64_t cap = list->cap < 4 ? 8 : list->cap * 2;
     if (class_of(list) == 0) {
-        /* A large block grows in place where the allocator can (one block either way). */
-        myl_block *moved = realloc(list, MYL_HEADER + (size_t)cap * (size_t)element_size);
+        /* A large block grows in place where the allocator can (one block either
+           way), and moves to a fresh aligned block when `realloc` loses the alignment. */
+        size_t bytes = MYL_HEADER + (size_t)cap * (size_t)element_size;
+        myl_block *moved = realloc(list, bytes);
         if (!moved) out_of_memory();
+        if (((uintptr_t)moved & (MYL_ALIGN - 1)) != 0) {
+            myl_block *aligned = aligned_alloc(MYL_ALIGN, (bytes + MYL_ALIGN - 1) & ~(size_t)(MYL_ALIGN - 1));
+            if (!aligned) out_of_memory();
+            memcpy(aligned, moved, MYL_HEADER + (size_t)moved->len * (size_t)element_size);
+            free(moved);
+            moved = aligned;
+        }
         moved->cap = cap;
         return moved;
     }

@@ -318,6 +318,65 @@ and `? propagated` can be told apart today: the verifier holds `err_trace`'s `da
 bare `TraceMode`, so `returned`, `? converted to Union.case` and `Err produced by the
 runtime` need an IR change (§13 R-1 note for the integrator).
 
+### 6.1.1 Allocator and the buildable rows (checkpoint O-2a, 2026-10-05)
+
+**Profile first.** `perf record` on CPU 10: alloc_short spent 26% in `myl_core_free`,
+13% in `block_new`, 12% in glibc `free` and most of the rest in `aligned_alloc`, plus a
+call per push to `myl_core_list_reserve`; alloc_retained was dominated by glibc.
+
+**Built** (`core_rt.c` "allocation", `emit_llvm.zig` `runtime_fast_paths`):
+- size classes per 32 bytes up to 1 KiB (header included), each a free list, carved from
+  64 KiB chunks never returned; the class sits in `kind`'s high byte; a list's `cap` is
+  all its block holds, so a small list grows within its class;
+- larger blocks `aligned_alloc(32)`; a large list grows with `realloc` (re-aligned if it
+  moved off 32 bytes: 16-byte `malloc` alignment cost integer_math 4% at 4096);
+- `myl_core_list_new`, `myl_core_list_reserve` and `myl_core_free` are `alwaysinline`
+  IR in every module (pop/push on `myl_core_free_lists`, the `len < cap` test); the C
+  slow paths are `_slow`, `list_grow`, `free_block` (children, large blocks);
+- the leak count needs no fast-path counting: carved plus large blocks, less large frees
+  and free-list entries at exit (`live_count`);
+- a release of a list nothing can share (§6.1's form-1 rule at its death; a call that
+  received it shares it) carries `data = 1` and frees without the count test (verify
+  builds assert `count == 1`).
+
+**Rows the new core builds without V** (`measure_rows.py`, CPU 10, 9 rounds, cycles per
+element at 4096 / 64; count updates and allocator calls in the innermost loops from
+`lane-o/count_rc_in_loops.py` over the -O3 assembly):
+
+| row | before O-2a | O-2a | Zig ReleaseSafe | ratio | count updates in innermost loops |
+|---|---:|---:|---:|---:|---:|
+| alloc_short | 107 / 108 | 18.4 / 19.2 | 21.8 / 22.2 | 0.84 / 0.86 | 0 (none in the whole program) |
+| alloc_retained | 247 / 183 | 34.7 / 31.9 | 80.8 / 78.9 | 0.43 / 0.40 | 0 |
+| list_append | 8.7 / 10.8 | 7.1 / 11.1 | 12.3 / 16.8 | 0.57 / 0.66 | 0 (growth calls only) |
+| list_filter | 10.3 / 14.2 | 8.1 / 10.4 | 10.6 / 13.9 | 0.77 / 0.74 | 0 (growth calls only) |
+| list_scan | 4.0 / 4.1 | 4.0 / 4.0 | 4.6 / 4.7 | 0.87 / 0.87 | 0 |
+| option_handle | 2.0 / 2.4 | 2.0 / 2.4 | 6.5 / 7.4 | 0.30 / 0.33 | 0 |
+
+The count updates left anywhere are once per batch (a list passed to `fold`, released
+after the call) or once per run. S0 kernels against O-1: the same within 1% except
+binary_search 4096, +8–10% (30.3 → 33.0): the same instructions per iteration (458,883),
+with branch misses 150–160k → 250–290k per run from the hot loop's moved address (same
+64-byte alignment; the inline allocator paths make `main` longer), the layout
+sensitivity S0 already recorded for this kernel.
+
+### 6.2 `err_trace` modes (checkpoint O-2a; for lane V's `ir.TraceMode` and verifier)
+
+`data` is the mode, in this order (`TraceMode` gains three members; `a` is `none` except
+for `converted`). The emitter (`errTrace`) writes the action text into the site table and
+calls `myl_core_err_trace(site, restart)`; restart modes reset the ring.
+
+| `data` | name | emitted | runtime | printed action |
+|---:|---|---|---|---|
+| 0 | `origin` | where `Err(...)` is built (ERROR-TRACE-1) | restart: origin = site, 0 appends | `Err(...) created` |
+| 1 | `append` | on a `?` error arm that passes the error on unchanged | append | `? propagated` |
+| 2 | `runtime` | after a runtime or capability call that answers `Err` (S2+) | restart | `Err produced by the runtime` |
+| 3 | `converted` | on a `?` error arm that wraps the error into a case of the caller's error union; `a` = a `str_const` holding `Union.case` (the old core's spelling) | append | `? converted to Union.case` |
+| 4 | `returned` | on the path where `return e` returns an `Err` the statement did not build (a variable, a call, a conditional), after testing the tag; not for `return Err(...)` (already the origin) nor `return Ok(...)` | append; folded into the line before when that site is in the same function on the same line | `returned` |
+
+Every mode's site is the instruction's span; function names print module-qualified and
+paths as the old core shows them (§13 R-1). Recorders carry `"call-inline-cost"="0"`.
+Until the verifier admits modes 2–4 and `a` on mode 3, `trace_test.zig` runs them unverified.
+
 ## 7. `mut` parameters
 
 **Semantics:** `inout`. The callee's writes, including a rebinding of the whole parameter, reach the caller's variable. The checker guarantees the call-site marker, a mutable local argument, and no overlap (D3).
