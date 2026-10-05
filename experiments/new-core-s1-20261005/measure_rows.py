@@ -17,7 +17,7 @@ usage: measure_rows.py --runner DIR [--bin DIR] [--build] [--rows a,b] [--rounds
   --build compiles the row programs into --bin first (default: a fresh directory under TMPDIR)
 Only run this on CPU 10 or another quiet CPU, never 2, 3 or 11.
 """
-import argparse, os, random, re, statistics, subprocess, sys, tempfile
+import argparse, os, random, re, shutil, statistics, subprocess, sys, tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(os.path.dirname(HERE))
@@ -62,6 +62,14 @@ def build_programs(args, rows):
     """Compile every row program with both cores into args.bin; returns row -> reason for rows the new core refuses."""
     refused = {}
     cache = tempfile.mkdtemp(prefix="rows-cache.")
+    try:
+        build_all(args, rows, cache, refused)
+    finally:
+        shutil.rmtree(cache, ignore_errors=True)
+    return refused
+
+
+def build_all(args, rows, cache, refused):
     for row in rows:
         source = os.path.join(ROOT, "test/core/row_%s.my" % row)
         subprocess.run([args.mylang, "build", source, "-o", os.path.join(args.bin, "row_%s_old" % row), "--release", "--link", CLOCK, "--cache-dir", cache + "/old"], check=True)
@@ -73,7 +81,6 @@ def build_programs(args, rows):
                 os.remove(os.path.join(args.bin, "row_%s_new" % row))
             except FileNotFoundError:
                 pass
-    return refused
 
 
 def runner_binary(args, suite, kind):
@@ -111,8 +118,9 @@ def main():
     if args.cpu in (2, 3, 11):
         raise SystemExit("never run on CPUs 2, 3 or 11")
     rows = args.rows.split(",")
+    scratch = None
     if args.bin is None:
-        args.bin = tempfile.mkdtemp(prefix="rows-bin.")
+        args.bin = scratch = tempfile.mkdtemp(prefix="rows-bin.")
         args.build = True
     os.makedirs(args.bin, exist_ok=True)
     refused = build_programs(args, rows) if args.build else {}
@@ -145,6 +153,8 @@ def main():
         for name, _ in configs:
             same = all({c for (s, c) in checks[name] if s == size} == reference[size] for size in SIZES)
             print("| %s | %.3f | %.3f | %s |" % (name, table[name][4096], table[name][64], "same" if same else "DIFFERENT"))
+    if scratch:
+        shutil.rmtree(scratch, ignore_errors=True)
     return 0
 
 

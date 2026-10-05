@@ -10,7 +10,7 @@ per row, whether it builds (its checksum must then match too) or the first const
 
 usage: verify_rows.py [--rows a,b] [--mylang P] [--core P] [--keep DIR]
 """
-import argparse, os, re, subprocess, sys, tempfile
+import argparse, os, re, shutil, subprocess, sys, tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(os.path.dirname(HERE))
@@ -88,6 +88,8 @@ def main():
             failures += 0 if agree else 1
             status.append("%s: %s" % (mode, "same checksums" if agree else "DIFFERENT"))
         print("%-18s %-24s %s" % (row, "%d/%d checksums equal" % (same, len(CASES)), "; ".join(status)))
+    if not args.keep:
+        shutil.rmtree(work, ignore_errors=True)
     return 1 if failures else 0
 
 
