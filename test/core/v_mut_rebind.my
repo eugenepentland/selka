@@ -1,0 +1,70 @@
+module v_mut_rebind
+
+
+def replace_list(items: mut list[int], other: list[int]) -> list[int]:
+    items.append(5)
+    items = other
+    items.append(7)
+    items[0] = 9
+    return items
+
+
+def replace_rows(items: mut list[list[int]], other: list[list[int]]) -> list[list[int]]:
+    items = other
+    for index in range(6):
+        items[index % 2][0] = index
+    return items
+
+
+def rebound_twice(items: mut list[int], first: list[int], second: list[int]) -> int:
+    items.append(1)
+    items = first
+    items.append(2)
+    items = second
+    items[0] = 3
+    return len(items)
+
+
+def early(items: mut list[int], other: list[int], leave: bool) -> int:
+    items.append(4)
+    if leave:
+        items = other
+        items.append(6)
+        return len(items)
+    items.append(8)
+    return len(items)
+
+
+def digest(xs: list[int]) -> int:
+    h = len(xs)
+    for x in xs:
+        h = h * 31 + x
+    return h
+
+
+def digest_rows(rows: list[list[int]]) -> int:
+    h = len(rows)
+    for row in rows:
+        h = h * 131 + digest(row)
+    return h
+
+
+def main(out: Stream) -> int:
+    items = [1]
+    source = [2]
+    changed = replace_list(mut items, source)
+    out.print(digest(changed), digest(source), digest(items))
+    rows = [[1]]
+    row = [2]
+    shared = [row, row]
+    moved = replace_rows(mut rows, shared)
+    out.print(digest_rows(moved), digest_rows(shared), digest(row), digest_rows(rows))
+    held = [0]
+    first = [10, 11]
+    second = [20]
+    out.print(rebound_twice(mut held, first, second), digest(held), digest(first), digest(second))
+    a = [1]
+    b = [1]
+    other = [2]
+    out.print(early(mut a, other, True), early(mut b, other, False), digest(a), digest(b), digest(other))
+    return 0

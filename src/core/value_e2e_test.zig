@@ -150,6 +150,21 @@ test "mut parameters of lists and records write their final values back to the c
     try std.testing.expect(try matches(arena.allocator(), "v_mut", v_mut_output, 0));
 }
 
+const v_mut_rebind_output =
+    \\2208 33 1958
+    \\38943 38678 33 163
+    \\1 1923 2243 51
+    \\2 3 1957 90466 33
+    \\
+;
+
+// spec: NEW-CORE-MUT-2
+test "a mut list parameter rebound as a whole is detached from the caller: only the payload it had then is written back" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    try std.testing.expect(try matches(arena.allocator(), "v_mut_rebind", v_mut_rebind_output, 0));
+}
+
 const v_wide_output =
     \\66 4 48
     \\1974 5

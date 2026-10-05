@@ -462,3 +462,44 @@ test "an element read passed to a call is not a projection: fusion never treats 
     try std.testing.expect(contains(pick, "list_get"));
     try std.testing.expect(!contains(pick, "list_get_field"));
 }
+
+const conditional_rebind =
+    \\def conditional(items: mut list[int], other: list[int], use_other: bool) -> list[int]:
+    \\    if use_other:
+    \\        items = other
+    \\    items[0] = 7
+    \\    return items
+    \\
+    \\
+    \\def main(out: Stream) -> int:
+    \\    original = [1]
+    \\    out.print(len(conditional(mut original, [2], False)))
+    \\    return 0
+    \\
+;
+
+const loop_rebind =
+    \\def loop_rebind(items: mut list[int], other: list[int]) -> int:
+    \\    items.append(0)
+    \\    for i in range(2):
+    \\        items = other
+    \\    return len(items)
+    \\
+    \\
+    \\def main(out: Stream) -> int:
+    \\    original = [1]
+    \\    out.print(loop_rebind(mut original, [2]))
+    \\    return 0
+    \\
+;
+
+// spec-case: NEW-CORE-MUT-2
+test "a rebinding of a mut list parameter on only some of the paths that join, or inside a loop, is refused" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    var refusal: build.Refusal = .{};
+    try std.testing.expectError(error.Unsupported, support.buildSource(arena.allocator(), conditional_rebind, &refusal));
+    try std.testing.expectEqualStrings("conditional rebinding of a mut collection parameter", refusal.reason);
+    try std.testing.expectError(error.Unsupported, support.buildSource(arena.allocator(), loop_rebind, &refusal));
+    try std.testing.expectEqualStrings("rebinding of a mut collection parameter in a loop", refusal.reason);
+}
