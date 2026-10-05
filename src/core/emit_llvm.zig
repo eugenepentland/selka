@@ -66,7 +66,7 @@ pub const MainResult = struct { ok_tag: u32, error_tag: u32 };
 /// pop of an empty list (`R_LIST_BOUNDS`, operation `pop`); `trace` marks an
 /// error-trace site, which never traps; `assertion` is a failed `assert` or contract clause (its
 /// `width` is the `typed.AssertionKind`, its `operation` the message).
-pub const TrapKind = enum(u8) { overflow, division_by_zero, list_bounds, float_conversion, cast, fact, list_empty, trace, assertion, iteration_mutation = 10 };
+pub const TrapKind = enum(u8) { overflow, division_by_zero, list_bounds, float_conversion, cast, fact, list_empty, trace, assertion, missing_key = 9, iteration_mutation = 10 };
 
 const Site = struct { kind: TrapKind, location: Location, width: u16, operation: []const u8, function: []const u8 };
 
@@ -91,6 +91,7 @@ const len_offset = 8;
 const cap_offset = 16;
 const data_offset = 32;
 
+const trap_zero = "  call void @myl_core_trap(i32 {d}, i64 0, i64 0){s}\n  unreachable\n";
 const Out = std.ArrayList(u8);
 
 /// Why emission stopped: a construct the builder admitted but this emitter cannot lower yet.
@@ -211,6 +212,7 @@ const ModuleState = struct {
         // Several signatures of one runtime function (`myl_core_list_sort` over lists of different
         // elements) are one declaration.
         const symbol_name = c_abi.symbol(function.name);
+        if (std.mem.eql(u8, symbol_name, flags.str_eq_symbol)) return;
         for (self.declared.items) |known| if (std.mem.eql(u8, known, symbol_name)) return;
         try self.declared.append(self.allocator, symbol_name);
         const returns = try self.llvmType(function.signature.ret);
@@ -310,6 +312,21 @@ const ModuleState = struct {
             \\declare ptr @myl_core_args(i32, ptr) nounwind
             \\declare i32 @myl_core_exit(i64) nounwind
             \\declare void @myl_core_s2_unsupported(i32) noreturn nounwind cold
+            \\declare ptr @myl_core_dict_new(i64, ptr) nounwind
+            \\declare i32 @llvm.cttz.i32(i32, i1 immarg) nounwind readnone
+            \\declare zeroext i1 @myl_core_str_eq(ptr, ptr) nounwind
+            \\declare i32 @myl_core_str_hash(ptr) nounwind
+            \\declare void @llvm.memset.p0.i64(ptr, i8, i64, i1) nounwind
+            \\declare i64 @myl_core_dict_hash(ptr, ptr) nounwind
+            \\declare i64 @myl_core_dict_find_span(ptr, ptr, i64) nounwind
+            \\declare i64 @myl_core_dict_find(ptr, ptr, i64) nounwind willreturn memory(argmem: read)
+            \\declare ptr @myl_core_dict_set(ptr, i64, ptr) nounwind
+            \\declare ptr @myl_core_dict_insert(ptr, i64, ptr, ptr, i1 zeroext) nounwind
+            \\declare ptr @myl_core_dict_remove(ptr, i64) nounwind
+            \\declare ptr @myl_core_dict_copy(ptr) nounwind
+            \\declare ptr @myl_core_dict_clear(ptr) nounwind
+            \\declare i64 @myl_core_dict_entries(ptr) nounwind willreturn memory(argmem: read)
+            \\declare zeroext i1 @myl_core_dict_live(ptr, i64) nounwind willreturn memory(argmem: read)
             \\declare ptr @myl_core_ir_str_char(ptr, i64) nounwind
             \\declare ptr @myl_core_ir_str_from_view(ptr, i64) nounwind
             \\declare ptr @myl_core_list_copy(ptr, i64) nounwind
@@ -561,6 +578,50 @@ const FunctionEmitter = struct {
     /// Emitting a release of a value that may be `undef` (`own.empty_release`): every
     /// block pointer is tested for null first.
     may_be_empty: bool = false,
+
+    /// Whether operation sub-emitters must assert runtime invariants.
+    pub fn verifyMode(self: *FunctionEmitter) bool {
+        return self.state.options.verify;
+    }
+
+    /// The frozen module shapes available to operation sub-emitters.
+    pub fn module(self: *FunctionEmitter) *const ir.Module {
+        return self.state.module;
+    }
+
+    /// Emit a dictionary descriptor and inline probe once per dictionary type.
+    pub fn dictDescriptor(self: *FunctionEmitter, dict_type: ir.Type) Error![]const u8 {
+        const name = try std.fmt.allocPrint(self.a(), "@myl.dict.{d}", .{@backingInt(dict_type)});
+        for (self.state.declared.items) |known| if (std.mem.eql(u8, known, name)) return name;
+        try self.state.declared.append(self.a(), name);
+        const shape = self.state.module.compound(dict_type).dict;
+        const value_offset = std.mem.alignForward(u32, self.state.module.size(shape.key), self.state.module.alignment(shape.value));
+        const stride = @max(1, std.mem.alignForward(u32, value_offset + self.state.module.size(shape.value), @max(self.state.module.alignment(shape.key), self.state.module.alignment(shape.value))));
+        var parts: LayoutParts = .{};
+        try layoutParts(self.a(), self.state.module, shape.key, 0, 0, &parts);
+        try layoutParts(self.a(), self.state.module, shape.value, value_offset, 0, &parts);
+        const words = 3 + 2 * parts.refs.items.len + 3 * parts.guards.items.len;
+        try self.state.layouts.text.print(self.a(), "{s}.layout = private constant [{d} x i32] [i32 {d}, i32 {d}, i32 {d}", .{ name, words, stride, parts.refs.items.len, parts.guards.items.len });
+        for (parts.refs.items) |reference| try self.state.layouts.text.print(self.a(), ", i32 {d}, i32 {d}", .{ reference[0], reference[1] });
+        for (parts.guards.items) |guard| try self.state.layouts.text.print(self.a(), ", i32 {d}, i32 {d}, i32 {d}", .{ guard[0], guard[1], guard[2] });
+        try self.state.layouts.text.appendSlice(self.a(), "], align 4\n");
+        const structural = shape.key.integer() == null and shape.key != .bool and shape.key != .str and shape.key != .bytes;
+        const hash = if (structural) try std.fmt.allocPrint(self.a(), "{s}.key.hash", .{name}) else "null";
+        const same = if (structural) try std.fmt.allocPrint(self.a(), "{s}.key.same", .{name}) else "null";
+        try self.state.layouts.text.print(self.a(), "{s} = private constant {{ i32, i32, i32, i32, ptr, ptr, ptr }} {{ i32 {d}, i32 {d}, i32 {d}, i32 {d}, ptr {s}.layout, ptr {s}, ptr {s} }}, align 8\n", .{
+            name,
+            stride,
+            value_offset,
+            @as(u32, if (structural) 3 else if (shape.key == .str or shape.key == .bytes) 2 else 0),
+            self.state.module.size(shape.key),
+            name,
+            hash,
+            same,
+        });
+        if (structural) try emit_dict.keyDefinitions(@TypeOf(self), self, &self.state.layouts.text, shape.key, try std.fmt.allocPrint(self.a(), "{s}.key", .{name}));
+        try emit_dict.probeDefinition(@TypeOf(self), self, &self.state.layouts.text, dict_type, name);
+        return name;
+    }
 
     /// The allocation context used by operation sub-emitters.
     pub fn a(self: *FunctionEmitter) std.mem.Allocator {
@@ -1028,7 +1089,8 @@ const FunctionEmitter = struct {
         const name = try std.fmt.allocPrint(self.a(), "%v{d}", .{ref.index()});
         switch (inst.op) {
             .param, .iconst, .fconst, .undef, .str_const, .func_ref, .copy, .phi => {},
-            .dict_new, .dict_len, .dict_find, .dict_entry_key, .dict_entry_value, .dict_set_value, .dict_insert, .dict_remove, .dict_entries, .dict_entry_live, .dict_copy, .dict_clear => try emit_dict.instruction(self, out, name, inst),
+            .dict_new, .dict_len, .dict_find, .dict_entry_key, .dict_entry_value, .dict_set_value => try emit_dict.instruction(@TypeOf(self), self, out, name, inst),
+            .dict_insert, .dict_remove, .dict_entries, .dict_entry_live, .dict_copy, .dict_clear => try emit_dict.instruction(@TypeOf(self), self, out, name, inst),
             .str_char, .str_width, .str_code, .str_append, .str_append_char, .str_slice, .str_view_of, .str_from_view => try emit_text.instruction(self, out, name, inst),
             .list_sort, .array_get, .array_set, .call_indirect => try emit_fn.instruction(self, out, name, inst),
             .add, .sub, .mul => try self.arithmetic(out, name, inst),
@@ -1182,15 +1244,18 @@ const FunctionEmitter = struct {
         if (inst.data == capacity_assert) {
             const location = self.state.options.locator.locate(self.state.options.locator.context, inst.span);
             const index = try self.state.site(.{ .kind = .fact, .location = location, .width = 64, .operation = "a stack list's length below its capacity", .function = self.function.name });
-            try out.print(self.a(), "  call void @myl_core_trap(i32 {d}, i64 0, i64 0){s}\n  unreachable\n", .{ index, try self.trapLocation(index) });
+            try out.print(self.a(), trap_zero, .{ index, try self.trapLocation(index) });
         } else if (inst.data == unique_assert) {
             // `own.zig`'s assert of a statically unique update (verify builds only).
             const location = self.state.options.locator.locate(self.state.options.locator.context, inst.span);
             const index = try self.state.site(.{ .kind = .fact, .location = location, .width = 32, .operation = "count == 1 before an in-place update", .function = self.function.name });
             try out.print(self.a(), "  call void @myl_core_trap(i32 {d}, i64 0, i64 1){s}\n  unreachable\n", .{ index, try self.trapLocation(index) });
+        } else if (inst.data == flags.dict_missing_trap) {
+            const index = try self.site(.missing_key, inst, "key");
+            try out.print(self.a(), trap_zero, .{ index, try self.trapLocation(index) });
         } else if (inst.data == flags.iteration_trap) {
             const index = try self.site(.iteration_mutation, inst, "iteration");
-            try out.print(self.a(), "  call void @myl_core_trap(i32 {d}, i64 0, i64 0){s}\n  unreachable\n", .{ index, try self.trapLocation(index) });
+            try out.print(self.a(), trap_zero, .{ index, try self.trapLocation(index) });
         } else if (inst.data & flags.assertion_trap != 0) {
             // A failed `assert` or contract clause: the message is in the module's string table.
             const location = self.state.options.locator.locate(self.state.options.locator.context, inst.span);
@@ -1592,7 +1657,7 @@ const FunctionEmitter = struct {
 
     /// Store operand `raw` of type `value_type` at `dst`: a construction fused into this store
     /// writes its fields there, any other value is stored as its memory image.
-    fn storeOperand(self: *FunctionEmitter, out: *Out, value_type: ir.Type, raw: ir.Ref, dst: []const u8) Error!void {
+    pub fn storeOperand(self: *FunctionEmitter, out: *Out, value_type: ir.Type, raw: ir.Ref, dst: []const u8) Error!void {
         const ref = self.function.resolve(raw);
         if (self.memory.fused[ref.index()]) return self.storeMake(out, self.function.inst(ref), dst);
         return self.storeValue(out, value_type, try self.value(ref), dst);

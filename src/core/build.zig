@@ -9,9 +9,11 @@
 //! support stops the build with `error.Unsupported` and a `Refusal`.
 const std = @import("std");
 const typed = @import("mylang").typed;
+const Field = @FieldType(@FieldType(typed.Node, "data"), "field");
 const ir = @import("ir.zig");
 const fuse = @import("fuse.zig");
 const flags = @import("flags.zig");
+const fuse_dict = @import("fuse_dict.zig");
 const build_dict = @import("build_dict.zig");
 const build_text = @import("build_text.zig");
 const build_fn = @import("build_fn.zig");
@@ -21,6 +23,7 @@ const refuse_payload = "match payload";
 const refuse_field_index = "field index";
 const refuse_non_record = "field of a non-record value";
 const refuse_equality = "aggregate equality";
+const view_value_marker: u32 = 1 << 31;
 
 /// Why building stopped.
 pub const Error = error{ OutOfMemory, Unsupported };
@@ -58,7 +61,10 @@ pub fn buildRoots(allocator: std.mem.Allocator, program: typed.Program, roots: [
     mb.pending.deinit(allocator);
     // Element reads that are only taken apart become field reads, before ownership sees their uses of the list.
     for (mb.module.functions.items) |*function| {
-        if (function.signature.linkage == .internal) _ = try fuse.projections(allocator, function, &mb.module);
+        if (function.signature.linkage == .internal) {
+            _ = try fuse.projections(allocator, function, &mb.module);
+            _ = try fuse_dict.probes(allocator, function);
+        }
     }
     // Ownership (copies before shared updates, counting) is `own.zig`'s, after the release passes.
     return mb.module;
@@ -137,6 +143,7 @@ const ModuleBuilder = struct {
     fn functionIndex(self: *ModuleBuilder, id: typed.FunctionId) Error!u32 {
         if (self.ids.get(@backingInt(id))) |index| return index;
         const function = self.program.functions[@backingInt(id)];
+        if (self.viewType(function.signature.return_type)) return self.refuse("escaping live dictionary view", @intCast(function.declaration.start));
         const all = try self.allocator.alloc(ir.Type, function.signature.parameter_count);
         for (all, function.scope.locals[0..all.len]) |*param, local| param.* = try self.mapType(local.ty, @intCast(local.declaration.start));
         // A `unit` parameter carries nothing, so it is not passed.
@@ -197,12 +204,19 @@ const ModuleBuilder = struct {
         if (record.isCollection()) switch (record.collection.kind) {
             .string => return .str,
             .list => {
+                if (self.viewType(record.shape.buffer.?)) return self.refuse("list storage of live dictionary views", span);
                 const element = try self.mapType(record.shape.buffer.?, span);
                 if (element == .cap) return self.refuse("list element type", span);
                 // A list of `None` holds nothing but its length: a list of `false`, whose elements read as unit.
                 return self.module.intern(self.allocator, .{ .list = if (element == .void) .bool else element });
             },
-            .dictionary => return self.refuse(build_dict.typeRefusal(record.collection.set), span),
+            .dictionary => {
+                const key = try self.mapType(record.collection.key.?, span);
+                if (!build_dict.keySupported(self.module, key)) return self.refuse("dictionary key type", span);
+                if (!record.collection.set and self.viewType(record.shape.buffer.?)) return self.refuse("dictionary storage of live dictionary views", span);
+                const value = if (record.collection.set) .void else try self.mapType(record.shape.buffer.?, span);
+                return self.module.intern(self.allocator, .{ .dict = .{ .key = key, .value = value } });
+            },
             .bytes => return self.refuse(build_text.bytesRefusal(), span),
         };
         if (record.shape.domain != null and std.mem.eql(u8, record.name, "float")) return .f64;
@@ -242,8 +256,13 @@ const ModuleBuilder = struct {
         return reserved;
     }
 
+    fn viewType(self: *ModuleBuilder, ty: typed.Type) bool {
+        return ty.isAggregate() and ty.recordIndex() < self.program.records.len and self.program.records[ty.recordIndex()].shape.builtin == .live_view;
+    }
+
     /// The type a field or payload is stored as: its own type, or a `box` of it when it closes a recursive type.
     fn stored(self: *ModuleBuilder, ty: typed.Type, boxed: bool, span: u32) Error!ir.Type {
+        if (self.viewType(ty)) return self.refuse("aggregate storage of live dictionary views", span);
         const mapped = try self.mapType(ty, span);
         if (mapped == .cap) return self.refuse("record field type", span);
         if (!boxed or mapped == .void) return mapped;
@@ -303,9 +322,11 @@ const Step = union(enum) { field: u32, element: ir.Ref, payload: u32 };
 /// been written when the place was named. A write to a hidden receiver (`s.items.append(v)`,
 /// `xs[i][j] = v`) rebuilds the path and stores the new root back, unless the root was written
 /// since (`writableReceiverOf`).
-const Place = struct { root: u32, steps: []const Step, root_version: u32 = 0 };
+const Place = struct { root: u32, steps: []const Step, root_version: u32 = 0, through_view: bool = false };
 
 const FnBuilder = struct {
+    /// Source-place provenance shared with feature builders; no runtime view object.
+    pub const FeaturePlace = Place;
     mb: *ModuleBuilder,
     function: ir.Function,
     /// The block instructions are appended to; null after a terminator.
@@ -321,11 +342,13 @@ const FnBuilder = struct {
     /// of it and the `mut` parameters' final values when there are any.
     declared_ret: ir.Type = .void,
 
-    fn allocator(self: *FnBuilder) std.mem.Allocator {
+    /// The allocation context for feature builders.
+    pub fn allocator(self: *FnBuilder) std.mem.Allocator {
         return self.mb.allocator;
     }
 
-    fn nodeOf(self: *FnBuilder, id: typed.NodeId) typed.Node {
+    /// The checked node used by feature builders.
+    pub fn nodeOf(self: *FnBuilder, id: typed.NodeId) typed.Node {
         return self.mb.program.nodes[@backingInt(id)];
     }
 
@@ -333,9 +356,20 @@ const FnBuilder = struct {
         return self.mb.program.statements[@backingInt(id)];
     }
 
+    /// Refuse a source feature with its exact reason.
+    pub fn refuse(self: *FnBuilder, reason: []const u8, span: u32) Error {
+        return self.mb.refuse(reason, span);
+    }
+
+    /// The frozen module shapes available to feature builders.
+    pub fn module(self: *FnBuilder) *ir.Module {
+        return &self.mb.module;
+    }
+
     // ---- instructions and blocks -------------------------------------------------
 
-    fn newBlock(self: *FnBuilder) Error!ir.BlockId {
+    /// Create a block for feature builder control flow.
+    pub fn newBlock(self: *FnBuilder) Error!ir.BlockId {
         const id: ir.BlockId = @fromBackingInt(@intCast(self.function.blocks.items.len));
         try self.function.blocks.append(self.allocator(), .{});
         try self.ssa.sealed.append(self.allocator(), false);
@@ -350,19 +384,21 @@ const FnBuilder = struct {
     }
 
     /// Append an instruction to the current block.
-    fn emit(self: *FnBuilder, inst: ir.Inst) Error!ir.Ref {
+    pub fn emit(self: *FnBuilder, inst: ir.Inst) Error!ir.Ref {
         const block = self.current orelse return self.mb.refuse("unreachable code", inst.span);
         const ref = try self.detached(inst);
         try self.function.blocks.items[block.index()].insts.append(self.allocator(), ref);
         return ref;
     }
 
-    fn constant(self: *FnBuilder, ty: ir.Type, value: i128) Error!ir.Ref {
+    /// A detached scalar constant for feature builders.
+    pub fn constant(self: *FnBuilder, ty: ir.Type, value: i128) Error!ir.Ref {
         const bits: u64 = @bitCast(@as(i64, @truncate(value)));
         return self.detached(.{ .op = .iconst, .ty = ty, .data = bits });
     }
 
-    fn extraSlice(self: *FnBuilder, refs: []const ir.Ref) Error!u64 {
+    /// Pack extra operands for feature builders.
+    pub fn extraSlice(self: *FnBuilder, refs: []const ir.Ref) Error!u64 {
         const start: u32 = @intCast(self.function.extra.items.len);
         try self.function.extra.appendSlice(self.allocator(), refs);
         return (ir.ExtraSlice{ .start = start, .len = @intCast(refs.len) }).pack();
@@ -372,14 +408,16 @@ const FnBuilder = struct {
         try self.function.blocks.items[block.index()].preds.append(self.allocator(), pred);
     }
 
-    fn jump(self: *FnBuilder, target: ir.BlockId) Error!void {
+    /// End the current feature builder block with a jump.
+    pub fn jump(self: *FnBuilder, target: ir.BlockId) Error!void {
         const from = self.current orelse return;
         _ = try self.emit(.{ .op = .jump, .ty = .void, .data = @backingInt(target) });
         try self.addPred(target, from);
         self.current = null;
     }
 
-    fn branch(self: *FnBuilder, condition: ir.Ref, then: ir.BlockId, otherwise: ir.BlockId, span: u32) Error!void {
+    /// End the current feature builder block with a condition.
+    pub fn branch(self: *FnBuilder, condition: ir.Ref, then: ir.BlockId, otherwise: ir.BlockId, span: u32) Error!void {
         const from = self.current orelse return;
         _ = try self.emit(.{ .op = .branch, .ty = .void, .a = condition, .data = ir.packTargets(then, otherwise), .span = span });
         try self.addPred(then, from);
@@ -392,7 +430,8 @@ const FnBuilder = struct {
     }
 
     /// Continue in `block` if anything reaches it.
-    fn enter(self: *FnBuilder, block: ir.BlockId) void {
+    /// Enter a reachable feature builder block.
+    pub fn enter(self: *FnBuilder, block: ir.BlockId) void {
         self.current = if (self.hasPreds(block)) block else null;
     }
 
@@ -402,11 +441,13 @@ const FnBuilder = struct {
         return (@as(u64, @backingInt(block)) << 32) | variable;
     }
 
-    fn write(self: *FnBuilder, variable: u32, block: ir.BlockId, value: ir.Ref) Error!void {
+    /// Bind an SSA local in a feature builder block.
+    pub fn write(self: *FnBuilder, variable: u32, block: ir.BlockId, value: ir.Ref) Error!void {
         try self.ssa.defs.put(self.allocator(), key(block, variable), value);
     }
 
-    fn read(self: *FnBuilder, variable: u32, block: ir.BlockId) Error!ir.Ref {
+    /// Read an SSA local in a feature builder block.
+    pub fn read(self: *FnBuilder, variable: u32, block: ir.BlockId) Error!ir.Ref {
         if (self.ssa.defs.get(key(block, variable))) |value| return self.function.resolve(value);
         return self.readRecursive(variable, block);
     }
@@ -467,7 +508,8 @@ const FnBuilder = struct {
         return same;
     }
 
-    fn seal(self: *FnBuilder, block: ir.BlockId) Error!void {
+    /// Complete the predecessor set of a feature builder block.
+    pub fn seal(self: *FnBuilder, block: ir.BlockId) Error!void {
         if (self.ssa.incomplete.fetchRemove(@backingInt(block))) |entry| {
             var pending = entry.value;
             defer pending.deinit(self.allocator());
@@ -476,13 +518,15 @@ const FnBuilder = struct {
         self.ssa.sealed.items[block.index()] = true;
     }
 
-    fn local(self: *FnBuilder, slot: typed.LocalId) u32 {
+    /// Feature builders resolve a receiver place without evaluating it twice.
+    pub fn local(self: *FnBuilder, slot: typed.LocalId) u32 {
         _ = self;
         return @intCast(@backingInt(slot));
     }
 
     /// A fresh variable for a value joined across control flow (short-circuit operators).
-    fn synthetic(self: *FnBuilder, ty: ir.Type) Error!u32 {
+    /// Reserve an SSA local for a feature builder join.
+    pub fn synthetic(self: *FnBuilder, ty: ir.Type) Error!u32 {
         try self.ssa.types.append(self.allocator(), ty);
         return @intCast(self.ssa.types.items.len - 1);
     }
@@ -492,8 +536,38 @@ const FnBuilder = struct {
     /// Remember a hidden receiver's place for write-back. Checker-generated refreshes
     /// read the current root into a new SSA value; they never retain an entry alias.
     fn noteAlias(self: *FnBuilder, slot: typed.LocalId, place: ?Place) Error!void {
-        const name = self.checked.scope.locals[@backingInt(slot)].name;
-        if (name.len == 0 or name[0] != '<') return;
+        const local_info = self.checked.scope.locals[@backingInt(slot)];
+        const name = local_info.name;
+        if (self.isView(local_info.ty)) {
+            if (self.places.contains(self.local(slot))) return self.mb.refuse("rebinding a live dictionary view", @intCast(local_info.declaration.start));
+            if (place == null) return self.mb.refuse("live dictionary view with unproved source identity", @intCast(local_info.declaration.start));
+            if (place) |source| {
+                var aliases = self.places.iterator();
+                while (aliases.next()) |entry| {
+                    if (entry.key_ptr.* < self.checked.scope.locals.len) continue;
+                    if (entry.value_ptr.root == source.root) return self.mb.refuse("ordinary dictionary snapshot combined with a live view", @intCast(local_info.declaration.start));
+                }
+                if (source.steps.len != 0) return self.mb.refuse("live dictionary view of an interior place", @intCast(local_info.declaration.start));
+                try self.places.put(self.allocator(), self.local(slot), source);
+            }
+            return;
+        }
+        if (name.len == 0 or name[0] != '<') {
+            if (self.mb.module.kind(self.ssa.types.items[self.local(slot)]) == .dict) if (place) |source| {
+                if (source.root == self.local(slot)) return;
+                var views = self.places.iterator();
+                while (views.next()) |entry| {
+                    const other = entry.key_ptr.*;
+                    if (other >= self.checked.scope.locals.len) continue;
+                    if (!self.isView(self.checked.scope.locals[other].ty)) continue;
+                    if (entry.value_ptr.root == source.root) {
+                        return self.mb.refuse("ordinary dictionary snapshot combined with a live view", @intCast(local_info.declaration.start));
+                    }
+                }
+                try self.places.put(self.allocator(), @as(u32, @intCast(self.checked.scope.locals.len)) + self.local(slot), source);
+            };
+            return;
+        }
         const variable = self.local(slot);
         const found = place orelse {
             _ = self.places.remove(variable);
@@ -540,6 +614,7 @@ const FnBuilder = struct {
             },
             .initialize, .assign => |store| {
                 if (store.element) return self.mb.refuse("element store", span);
+                try self.guardViewRebind(self.local(store.slot), span);
                 var place: ?Place = null;
                 const value = try self.expressionPlace(store.value, &place);
                 const block = self.current orelse return;
@@ -758,7 +833,7 @@ const FnBuilder = struct {
     }
 
     /// The type of the value `ref` stands for.
-    fn typeOfRef(self: *FnBuilder, ref: ir.Ref) ir.Type {
+    pub fn typeOfRef(self: *FnBuilder, ref: ir.Ref) ir.Type {
         return self.function.inst(self.function.resolve(ref)).ty;
     }
 
@@ -791,7 +866,8 @@ const FnBuilder = struct {
     // ---- places ---------------------------------------------------------------------
 
     /// The place a checked local names: the one its hidden receiver was initialized from, else itself.
-    fn placeOfLocal(self: *FnBuilder, slot: typed.LocalId) Error!Place {
+    /// Feature builders resolve a receiver place without evaluating it twice.
+    pub fn placeOfLocal(self: *FnBuilder, slot: typed.LocalId) Error!Place {
         const variable = self.local(slot);
         if (self.places.get(variable)) |place| return place;
         return .{ .root = variable, .steps = &.{}, .root_version = self.version(variable) };
@@ -810,7 +886,7 @@ const FnBuilder = struct {
     /// (`frame.code`, `xs`) was captured before the operation's arguments were evaluated, and
     /// stays that snapshot when an argument writes the place (`xs[poke(mut xs)]` reads the list
     /// as it was, a replaced field included): the hidden local's own value.
-    fn receiverOf(self: *FnBuilder, owner: typed.LocalId) Error!ir.Ref {
+    pub fn receiverOf(self: *FnBuilder, owner: typed.LocalId) Error!ir.Ref {
         return self.read(self.local(owner), self.current.?);
     }
 
@@ -819,7 +895,7 @@ const FnBuilder = struct {
     /// captured, which is the place's still (an in-place change of the place) or no longer (the
     /// callee replaced the field, or cleared the parent) reachable from it; a value cannot tell
     /// the two apart, so the write is refused rather than guessed.
-    fn writableReceiverOf(self: *FnBuilder, owner: typed.LocalId, span: u32) Error!ir.Ref {
+    pub fn writableReceiverOf(self: *FnBuilder, owner: typed.LocalId, span: u32) Error!ir.Ref {
         const variable = self.local(owner);
         const alias = try self.read(variable, self.current.?);
         const place = self.places.get(variable) orelse return alias;
@@ -827,11 +903,12 @@ const FnBuilder = struct {
         return alias;
     }
 
-    fn extendPlace(self: *FnBuilder, place: Place, step: Step) Error!Place {
+    /// Feature builders resolve a receiver place without evaluating it twice.
+    pub fn extendPlace(self: *FnBuilder, place: Place, step: Step) Error!Place {
         const steps = try self.allocator().alloc(Step, place.steps.len + 1);
         @memcpy(steps[0..place.steps.len], place.steps);
         steps[place.steps.len] = step;
-        return .{ .root = place.root, .steps = steps, .root_version = place.root_version };
+        return .{ .root = place.root, .steps = steps, .root_version = place.root_version, .through_view = place.through_view };
     }
 
     /// Field `index` of record `base`, out of its box when the field is boxed.
@@ -864,6 +941,7 @@ const FnBuilder = struct {
             .field => |index| return self.fieldGet(base, index, span),
             .element => |index| {
                 const list_type = self.typeOfRef(base);
+                if (self.mb.module.kind(list_type) == .dict) return self.emit(.{ .op = .dict_entry_value, .ty = self.mb.module.compound(list_type).dict.value, .a = base, .b = index, .span = span });
                 if (self.mb.module.kind(list_type) != .list) return self.mb.refuse("element of a non-list value", span);
                 return self.emit(.{ .op = .list_get, .ty = self.mb.module.compound(list_type).list, .a = base, .b = index, .check = .exact, .span = span });
             },
@@ -895,6 +973,7 @@ const FnBuilder = struct {
     /// releases the element that is replaced.
     fn listSet(self: *FnBuilder, list: ir.Ref, index: ir.Ref, value: ir.Ref, span: u32) Error!ir.Ref {
         const list_type = self.typeOfRef(list);
+        if (self.mb.module.kind(list_type) == .dict) return self.emit(.{ .op = .dict_set_value, .ty = list_type, .a = list, .b = index, .data = try self.extraSlice(&.{value}), .span = span });
         if (self.mb.module.kind(list_type) != .list) return self.mb.refuse("element write of a non-list", span);
         const data = try self.extraSlice(&.{value});
         return self.emit(.{ .op = .list_set, .ty = self.typeOfRef(list), .a = list, .b = index, .data = data, .check = .exact, .span = span });
@@ -927,7 +1006,7 @@ const FnBuilder = struct {
     }
 
     /// A write through receiver `owner` produced `value`: bind it, and store it back where the receiver came from.
-    fn writeOwner(self: *FnBuilder, owner: typed.LocalId, value: ir.Ref, span: u32) Error!void {
+    pub fn writeOwner(self: *FnBuilder, owner: typed.LocalId, value: ir.Ref, span: u32) Error!void {
         try self.write(self.local(owner), self.current.?, value);
         try self.assigned(self.local(owner));
         if (self.places.getPtr(self.local(owner))) |place| {
@@ -938,12 +1017,82 @@ const FnBuilder = struct {
 
     // ---- expressions --------------------------------------------------------------
 
+    fn localExpression(self: *FnBuilder, slot: typed.LocalId, ty: typed.Type, out: ?*?Place, span: u32) Error!ir.Ref {
+        if (self.isView(ty)) if (self.places.get(self.local(slot))) |source| {
+            if (out) |place| place.* = source;
+            const dict = try self.readPlace(source, span);
+            return self.viewValue(self.ssa.types.items[self.local(slot)], dict, span);
+        };
+        if (out) |place| place.* = try self.placeOfLocal(slot);
+        return self.read(self.local(slot), self.current.?);
+    }
+
+    fn fieldPlace(self: *FnBuilder, field: Field, found: Place, span: u32) Error!Place {
+        if (self.isView(self.nodeOf(field.base).ty) and field.index == 0) {
+            if (self.mb.module.kind(self.typeOfRef(try self.readPlace(found, span))) == .dict) {
+                var source = found;
+                source.through_view = true;
+                return source;
+            }
+        }
+        return self.extendPlace(found, .{ .field = @intCast(field.index) });
+    }
+
+    fn guardViewRebind(self: *FnBuilder, variable: u32, span: u32) Error!void {
+        var iterator = self.places.iterator();
+        while (iterator.next()) |entry| {
+            const slot = entry.key_ptr.*;
+            if (slot >= self.checked.scope.locals.len or !self.isView(self.checked.scope.locals[slot].ty)) continue;
+            if (entry.value_ptr.root == variable) return self.mb.refuse("rebinding the source place of a live dictionary view", span);
+        }
+    }
+
+    fn isView(self: *FnBuilder, ty: typed.Type) bool {
+        return ty.isAggregate() and ty.recordIndex() < self.mb.program.records.len and self.mb.program.records[ty.recordIndex()].shape.builtin == .live_view;
+    }
+
+    fn markView(self: *FnBuilder, ref: ir.Ref) Error!ir.Ref {
+        try self.places.put(self.allocator(), view_value_marker | @as(u32, @intCast(ref.index())), .{ .root = std.math.maxInt(u32), .steps = &.{} });
+        return ref;
+    }
+
+    fn viewValue(self: *FnBuilder, ty: ir.Type, dict: ir.Ref, span: u32) Error!ir.Ref {
+        return self.markView(try self.emit(.{ .op = .record_make, .ty = ty, .data = try self.extraSlice(&.{dict}), .span = span }));
+    }
+
+    fn validateViews(self: *FnBuilder) Error!void {
+        var wrappers: std.ArrayList(ir.Ref) = .empty;
+        defer wrappers.deinit(self.allocator());
+        var markers = self.places.iterator();
+        while (markers.next()) |entry| {
+            if (entry.key_ptr.* & view_value_marker != 0) try wrappers.append(self.allocator(), @fromBackingInt(entry.key_ptr.* & ~view_value_marker));
+        }
+        var views = self.places.iterator();
+        while (views.next()) |entry| {
+            const slot = entry.key_ptr.*;
+            if (slot >= self.checked.scope.locals.len or !self.isView(self.checked.scope.locals[slot].ty)) continue;
+            var sources: std.ArrayList(ir.Ref) = .empty;
+            defer sources.deinit(self.allocator());
+            var definitions = self.ssa.defs.iterator();
+            while (definitions.next()) |definition| {
+                if (@as(u32, @truncate(definition.key_ptr.*)) == entry.value_ptr.root) try sources.append(self.allocator(), definition.value_ptr.*);
+            }
+            const span: u32 = @intCast(self.checked.scope.locals[slot].declaration.start);
+            switch (try fuse_dict.viewIdentity(self.allocator(), &self.function, &self.mb.module, sources.items, wrappers.items)) {
+                .safe => {},
+                .exposed => return self.mb.refuse("aggregate or captured dictionary alias combined with a live view", span),
+                .unknown => return self.mb.refuse("live dictionary view with unproved source identity", span),
+            }
+        }
+    }
+
     fn typeOf(self: *FnBuilder, id: typed.NodeId) Error!ir.Type {
         const n = self.nodeOf(id);
         return self.mb.mapType(n.ty, @intCast(n.span.start));
     }
 
-    fn expression(self: *FnBuilder, id: typed.NodeId) Error!ir.Ref {
+    /// Evaluate a checked expression for a feature builder.
+    pub fn expression(self: *FnBuilder, id: typed.NodeId) Error!ir.Ref {
         return self.expressionPlace(id, null);
     }
 
@@ -957,10 +1106,7 @@ const FnBuilder = struct {
             .integer => |value| return self.constant(try self.typeOf(id), value),
             .boolean => |value| return self.constant(.bool, @intFromBool(value)),
             .unit => return .none,
-            .local => |slot| {
-                if (out) |place| place.* = try self.placeOfLocal(slot);
-                return self.read(self.local(slot), self.current.?);
-            },
+            .local => |slot| return self.localExpression(slot, n.ty, out, span),
             .block_value => |block| {
                 try self.statement(block.body);
                 return self.expressionPlace(block.value, out);
@@ -979,13 +1125,21 @@ const FnBuilder = struct {
             .call => |c| return self.call(c.function, c.arguments, if (c.evaluation) |e| e.body else null, span),
             .buffer_operation => |operation| return self.bufferOperation(operation, try self.typeOf(id), span, out),
             .acquire_buffer => |acquire| {
-                const capacity = try self.expression(acquire.capacity);
-                return self.emit(.{ .op = .list_new, .ty = try self.typeOf(id), .a = capacity, .span = span });
+                var capacity = try self.expression(acquire.capacity);
+                const buffer_type = try self.typeOf(id);
+                if (self.mb.module.kind(buffer_type) == .dict and self.typeOfRef(capacity) != .u64) capacity = try self.emit(.{ .op = .convert, .ty = .u64, .a = capacity, .check = .exact, .span = span });
+                return self.emit(.{ .op = if (self.mb.module.kind(buffer_type) == .dict) .dict_new else .list_new, .ty = buffer_type, .a = capacity, .span = span });
             },
             .arena_escape => |value| return self.expression(value),
             .length => |operand| return self.stringLength(operand, span),
             .variant => |case| return self.variantMake(id, case.tag, case.value, span),
-            .record => |fields| return self.recordMake(id, fields, span),
+            .record => |fields| {
+                if (self.isView(n.ty) and out != null and fields.len == 1) {
+                    const dict = try self.expressionPlace(fields[0].value, out);
+                    return self.viewValue(try self.typeOf(id), dict, span);
+                }
+                return self.recordMake(id, fields, span);
+            },
             .update => |update| return self.recordUpdate(update.base, update.fields, span),
             .field => |field| {
                 var base_place: ?Place = null;
@@ -993,15 +1147,40 @@ const FnBuilder = struct {
                 if (self.current == null) return .none;
                 const value = try self.fieldGet(base, field.index, span);
                 if (out) |place| if (base_place) |found| {
-                    place.* = try self.extendPlace(found, .{ .field = @intCast(field.index) });
+                    place.* = try self.fieldPlace(field, found, span);
                 };
                 return value;
+            },
+            .index => |access| {
+                var base_place: ?Place = null;
+                const base = try self.expressionPlace(access.base, if (out != null) &base_place else null);
+                const dict_key = try self.expression(access.index);
+                if (self.current == null) return .none;
+                const ty = self.typeOfRef(base);
+                if (self.mb.module.kind(ty) != .dict) return self.mb.refuse("index", span);
+                const probe = try build_dict.find(@TypeOf(self), self, base, dict_key, span);
+                try build_dict.requirePresent(@TypeOf(self), self, probe, span);
+                if (out) |place| if (base_place) |found| {
+                    place.* = try self.extendPlace(found, .{ .element = probe });
+                };
+                const value_type = self.mb.module.compound(ty).dict.value;
+                return if (value_type == .void) .none else self.emit(.{ .op = .dict_entry_value, .ty = value_type, .a = base, .b = probe, .span = span });
+            },
+            .replace => |replace| {
+                const base = try self.expression(replace.base);
+                const dict_key = try self.expression(replace.index);
+                const value = try self.expression(replace.value);
+                if (self.current == null) return .none;
+                if (self.mb.module.kind(self.typeOfRef(base)) != .dict) return self.mb.refuse("replace", span);
+                return build_dict.put(@TypeOf(self), self, base, dict_key, value, span);
             },
             .function_value => return self.mb.refuse(build_fn.valueRefusal(), span),
             .propagate => |try_value| return self.tryValue(try_value.value, try_value.output, span),
             .print => |print| return self.printNode(print, span),
             .array => |items| {
-                if (try self.typeOf(id) != .str) return self.mb.refuse("array", span);
+                const literal_type = try self.typeOf(id);
+                if (self.mb.module.kind(literal_type) == .dict) return build_dict.literal(@TypeOf(self), self, literal_type, items, span);
+                if (literal_type != .str) return self.mb.refuse("array", span);
                 return self.stringConstant(items, span);
             },
             else => return self.mb.refuse(@tagName(n.data), span),
@@ -1046,7 +1225,8 @@ const FnBuilder = struct {
             values[init.index] = try self.boxFor(stored[init.index], value, span);
         }
         for (values) |value| if (value == .none) return self.mb.refuse("record field without a value", span);
-        return self.emit(.{ .op = .record_make, .ty = ty, .data = try self.extraSlice(values), .span = span });
+        const made = try self.emit(.{ .op = .record_make, .ty = ty, .data = try self.extraSlice(values), .span = span });
+        return if (self.isView(self.nodeOf(id).ty)) self.markView(made) else made;
     }
 
     /// `update`: the base with each listed field replaced.
@@ -1250,7 +1430,7 @@ const FnBuilder = struct {
 
     /// Whether two values of one type are equal: fields and payloads compare with the type's
     /// own equality (floats as IEEE numbers), and a union's payloads only when its tags are equal.
-    fn equal(self: *FnBuilder, a: ir.Ref, b: ir.Ref, span: u32) Error!ir.Ref {
+    pub fn equal(self: *FnBuilder, a: ir.Ref, b: ir.Ref, span: u32) Error!ir.Ref {
         const m = self.mb.module;
         const ty = self.typeOfRef(a);
         if (ty == .str) {
@@ -1271,7 +1451,8 @@ const FnBuilder = struct {
             },
             .@"union" => return self.unionEqual(a, b, span),
             .list => return self.listEqual(a, b, span),
-            .box, .dict, .array, .@"fn" => return self.mb.refuse(refuse_equality, span),
+            .dict => return build_dict.equal(@TypeOf(self), self, a, b, span),
+            .box, .array, .@"fn" => return self.mb.refuse(refuse_equality, span),
         }
     }
 
@@ -1457,6 +1638,7 @@ const FnBuilder = struct {
         const values = try self.allocator().alloc(ir.Ref, argument_nodes.len);
         for (argument_nodes, values, 0..) |argument, *value, position| {
             const slot = std.mem.indexOfScalar(u16, mutated, @intCast(position));
+            if (slot != null and self.isView(self.nodeOf(argument).ty)) return self.mb.refuse("mut live dictionary view argument", span);
             var place: ?Place = null;
             value.* = try self.expressionPlace(argument, if (slot != null) &place else null);
             if (slot) |at| places[at] = place orelse return self.mb.refuse("mut argument that is not a place", span);
@@ -1469,6 +1651,9 @@ const FnBuilder = struct {
         // A `unit` argument is evaluated for its effects and not passed.
         for (values) |value| if (value != .none and self.typeOfRef(value) != .void) try arguments.append(self.allocator(), value);
         const ret = self.mb.module.functions.items[index].signature.ret;
+        if (self.mb.module.kind(ret) == .dict) for (argument_nodes) |argument| {
+            if (self.isView(self.nodeOf(argument).ty)) return self.mb.refuse("dictionary snapshot returned from a live view", span);
+        };
         const data = try self.extraSlice(arguments.items);
         const result = try self.emit(.{ .op = .call, .ty = ret, .a = @fromBackingInt(@intCast(index)), .data = data, .span = span });
         if (mutated.len == 0) return if (ret == .void) .none else result;
@@ -1498,6 +1683,9 @@ const FnBuilder = struct {
         const owner = operation.owner;
         const argument_nodes = operation.arguments;
         const receiver_type = self.ssa.types.items[self.local(owner)];
+        if (self.mb.module.kind(receiver_type) == .dict and kind != .iteration_check) {
+            return build_dict.operation(@TypeOf(self), self, operation, ty, span, out);
+        }
         switch (kind) {
             .length => {
                 const receiver = try self.receiverOf(owner);
@@ -1588,13 +1776,18 @@ const FnBuilder = struct {
     fn stringLength(self: *FnBuilder, operand: typed.NodeId, span: u32) Error!ir.Ref {
         const value = try self.expression(operand);
         if (self.current == null) return .none;
+        if (self.mb.module.kind(self.typeOfRef(value)) == .dict) {
+            const length = try self.emit(.{ .op = .dict_len, .ty = .u64, .a = value, .span = span });
+            return self.emit(.{ .op = .convert, .ty = .i64, .a = length, .check = .exact, .span = span });
+        }
         if (self.typeOfRef(value) != .str) return self.mb.refuse("length of a non-string", span);
         const chars = try self.stringChars(value, span);
         return self.emit(.{ .op = .convert, .ty = .i64, .a = chars, .check = .exact, .span = span });
     }
 
     /// A call of the runtime function `symbol` (declared in the module on first use) with `arguments`.
-    fn runtimeCall(self: *FnBuilder, symbol: []const u8, params: []const ir.Type, ret: ir.Type, arguments: []const ir.Ref, span: u32) Error!ir.Ref {
+    /// Invoke an extern helper for a feature builder.
+    pub fn runtimeCall(self: *FnBuilder, symbol: []const u8, params: []const ir.Type, ret: ir.Type, arguments: []const ir.Ref, span: u32) Error!ir.Ref {
         const callee = try self.mb.runtimeFunction(symbol, params, ret);
         return self.emit(.{ .op = .call, .ty = ret, .a = @fromBackingInt(@intCast(callee)), .data = try self.extraSlice(arguments), .span = span });
     }
@@ -1710,5 +1903,6 @@ fn buildFunction(mb: *ModuleBuilder, checked: typed.Function, declared: ir.Funct
         if (b.declared_ret != .void) return mb.refuse("missing return", declared.span);
         try b.returnValue(.none, declared.span);
     }
+    try b.validateViews();
     return b.function;
 }

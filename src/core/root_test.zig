@@ -21,4 +21,5 @@ comptime {
     _ = @import("trace_test.zig");
     _ = @import("s2_ir_test.zig");
     _ = @import("iteration_test.zig");
+    _ = @import("dict_test.zig");
 }

@@ -136,9 +136,20 @@ pub const LengthBound = struct {
     }
 };
 
+/// The live-entry length and inserted scalar hulls of an immutable dictionary value.
+pub const DictFact = struct {
+    len: ?Interval = null,
+    keys: ?Interval = null,
+    values: ?Interval = null,
+    /// A loop phi may join only predecessors whose transfer has settled.
+    settled: bool = false,
+};
+
 /// What is known about lists and records, per instruction.
 pub const Aggregates = struct {
     lists: []ListFact,
+    /// Dictionary facts never cross calls or apply to mutable place aliases.
+    dicts: []DictFact,
     /// The interval of each field of a record value (integers and booleans; other fields have
     /// none), through `record_make`, `record_set` and phis. Null when unknown.
     fields: []?[]const ?Interval,
@@ -163,7 +174,7 @@ pub const Facts = struct {
 };
 
 /// Dominators, reverse postorder and the block of every instruction.
-const Shape = struct {
+pub const Shape = struct {
     rpo: []ir.BlockId,
     idom: []?ir.BlockId,
     block_of: []?ir.BlockId,
@@ -171,7 +182,8 @@ const Shape = struct {
     order: []u32,
 };
 
-fn shape(arena: std.mem.Allocator, f: *const ir.Function) !Shape {
+/// Dominators and reverse postorder used by fact and probe passes.
+pub fn shape(arena: std.mem.Allocator, f: *const ir.Function) std.mem.Allocator.Error!Shape {
     const count = f.blocks.items.len;
     const block_of = try arena.alloc(?ir.BlockId, f.insts.items.len);
     @memset(block_of, null);
@@ -539,6 +551,7 @@ pub fn analyze(arena: std.mem.Allocator, f: *ir.Function, options: Options) Erro
             .ranges = try arena.alloc(?Interval, f.insts.items.len),
             .aggregates = .{
                 .lists = try arena.alloc(ListFact, f.insts.items.len),
+                .dicts = try arena.alloc(DictFact, f.insts.items.len),
                 .fields = try arena.alloc(?[]const ?Interval, f.insts.items.len),
             },
             .floats = try arena.alloc(?FloatInterval, f.insts.items.len),
@@ -551,6 +564,7 @@ pub fn analyze(arena: std.mem.Allocator, f: *ir.Function, options: Options) Erro
     @memset(a.facts.ranges, null);
     @memset(a.facts.floats, null);
     @memset(a.facts.aggregates.lists, .{});
+    @memset(a.facts.aggregates.dicts, .{});
     try findCounted(&a);
     const changes = try arena.alloc(u8, f.insts.items.len);
     @memset(changes, 0);
@@ -589,6 +603,7 @@ pub fn analyze(arena: std.mem.Allocator, f: *ir.Function, options: Options) Erro
         @memset(a.facts.ranges, null);
         @memset(a.facts.floats, null);
         @memset(a.facts.aggregates.lists, .{});
+        @memset(a.facts.aggregates.dicts, .{});
         @memset(a.facts.bounds, null);
         @memset(a.facts.aggregates.fields, null);
     }
@@ -743,6 +758,10 @@ fn transfer(a: *Analysis, ref: ir.Ref, block: ir.BlockId) ?Interval {
             const known = a.facts.aggregates.lists[a.liveOperand(i.a).index()].len orelse break :blk .{ .lo = 0, .hi = max_list_length };
             break :blk known.meet(.{ .lo = 0, .hi = max_list_length });
         },
+        .dict_len => a.facts.aggregates.dicts[a.liveOperand(i.a).index()].len orelse .{ .lo = 0, .hi = max_list_length },
+        .dict_entries => .{ .lo = 0, .hi = max_list_length },
+        .dict_entry_key => a.facts.aggregates.dicts[a.liveOperand(i.a).index()].keys orelse full,
+        .dict_entry_value => a.facts.aggregates.dicts[a.liveOperand(i.a).index()].values orelse full,
         .str_len => .{ .lo = 0, .hi = max_list_length },
         .record_get => blk: {
             const table = fieldsOf(a, i.a) orelse break :blk full;
@@ -939,7 +958,79 @@ fn recomputeAggregates(a: *Analysis, ref: ir.Ref, block: ir.BlockId, changes: []
         },
         else => {},
     }
+    if (recomputeDict(a, ref, block, changes)) changed = true;
     return changed;
+}
+
+/// Dictionary lengths and hulls follow only immutable SSA values.
+fn recomputeDict(a: *Analysis, ref: ir.Ref, block: ir.BlockId, changes: []u8) bool {
+    const i = a.f.inst(ref);
+    const old = a.facts.aggregates.dicts[ref.index()];
+    var next: DictFact = .{};
+    switch (i.op) {
+        .dict_new, .dict_clear => next = .{ .len = Interval.point(0), .settled = true },
+        .dict_copy => next = a.facts.aggregates.dicts[a.f.resolve(i.a).index()],
+        .dict_insert, .dict_remove, .dict_set_value => {
+            next = a.facts.aggregates.dicts[a.f.resolve(i.a).index()];
+            if (i.op == .dict_insert) {
+                const operands = a.f.operands(i.data);
+                const key = scalarRange(a, operands[0], block);
+                const value = if (operands[1] == .none) null else scalarRange(a, operands[1], block);
+                const empty = if (next.len) |len| len.hi == 0 else false;
+                next.keys = if (empty) key else hullOf(next.keys, key);
+                next.values = if (empty) value else hullOf(next.values, value);
+                const probe = a.rangeAt(i.b, block);
+                if (next.len) |len| next.len = .{ .lo = len.lo + @as(i128, @intFromBool(probe != null and probe.?.hi < 0)), .hi = @min(len.hi + 1, max_list_length) };
+            } else if (i.op == .dict_remove) {
+                if (next.len) |len| next.len = .{ .lo = @max(0, len.lo - 1), .hi = @max(0, len.hi - 1) };
+            } else next.values = hullOf(next.values, scalarRange(a, a.f.operands(i.data)[0], block));
+        },
+        .phi => {
+            var seen = false;
+            for (a.f.operands(i.data), a.f.blocks.items[block.index()].preds.items) |operand, pred| {
+                if (!a.edgeLive(pred, block)) continue;
+                const source = a.f.resolve(operand);
+                const source_op = a.f.inst(source).op;
+                const held = a.facts.aggregates.dicts[source.index()];
+                const pending = switch (source_op) {
+                    .dict_new, .dict_clear, .dict_copy, .dict_insert, .dict_remove, .dict_set_value, .phi => !held.settled,
+                    else => false,
+                };
+                if (pending) continue;
+                if (!seen) next = held else {
+                    const empty_before = if (next.len) |len| len.hi == 0 else false;
+                    const empty_other = if (held.len) |len| len.hi == 0 else false;
+                    next.len = hullOf(next.len, held.len);
+                    if (empty_before) {
+                        next.keys = held.keys;
+                        next.values = held.values;
+                    } else if (!empty_other) {
+                        next.keys = hullOf(next.keys, held.keys);
+                        next.values = hullOf(next.values, held.values);
+                    }
+                }
+                seen = true;
+            }
+            if (!seen) return false;
+            next.settled = true;
+            if (old.settled and !std.meta.eql(old.len, next.len)) {
+                changes[ref.index()] +|= 1;
+                if (changes[ref.index()] > 8 and next.len != null) next.len = .{ .lo = 0, .hi = max_list_length };
+            }
+            const hull_changed = !std.meta.eql(old.keys, next.keys) or !std.meta.eql(old.values, next.values);
+            if (old.settled and hull_changed) {
+                a.element_changes[ref.index()] +|= 1;
+                if (a.element_changes[ref.index()] > 8) {
+                    next.keys = null;
+                    next.values = null;
+                }
+            }
+        },
+        else => return false,
+    }
+    if (std.meta.eql(old, next)) return false;
+    a.facts.aggregates.dicts[ref.index()] = next;
+    return true;
 }
 
 /// Whether `operand`'s list fact is still to be computed: it is a list operation or a phi the

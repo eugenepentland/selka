@@ -1,0 +1,105 @@
+module d_collections
+
+record Holder:
+    values: dict[int, list[int]]
+
+def change(d: mut dict[int, int], value: int):
+    d = {7: value}
+    d[8] = value + 1
+
+def test_order_copy_remove_reinsert() -> bool:
+    d: dict[int, int] = {2: 7, 1: 9}
+    saved = d
+    d[2] = 13
+    deleted = d.pop(1)
+    d[1] = deleted + 1
+    order = 0
+    for key in d:
+        order = order * 10 + key
+    return saved[2] == 7 and saved[1] == 9 and d[2] == 13 and order == 21
+
+def test_index_growth_tombstones() -> bool:
+    d: dict[int, int] = {}
+    for j in range(100):
+        d[j * 17] = j
+    for j in range(70):
+        gone = d.pop(j * 17)
+        if gone != j:
+            return False
+    for j in range(100):
+        d[j * 17] = j + 1
+    total = 0
+    for key, value in d.items():
+        total += value + key
+    return len(d) == 100 and total == 5050 + 17 * 4950
+
+def test_managed_values_and_nested_places() -> bool:
+    d: dict[int, list[int]] = {}
+    d[1] = [3 for j in range(2)]
+    d[2] = [4 for j in range(1)]
+    h = Holder(d)
+    saved = h
+    h.values[1].append(9)
+    before = h.values.pop(2)
+    h.values[2] = before
+    return len(saved.values[1]) == 2 and len(h.values[1]) == 3 and h.values[1][2] == 9 and before[0] == 4
+
+def test_mut_whole_rebind() -> bool:
+    d: dict[int, int] = {2: 3}
+    saved = d
+    change(mut d, 19)
+    return len(saved) == 1 and saved[2] == 3 and len(d) == 2 and d[7] == 19
+
+def test_set_and_defaults() -> bool:
+    values: set[int] = set()
+    values.add(3)
+    values.add(1)
+    values.add(3)
+    values.discard(7)
+    other = values
+    values.discard(1)
+    return len(other) == 2 and len(values) == 1 and 3 in values and 1 in other
+
+def test_missing_key_trap() -> bool:
+    d: dict[int, int] = {}
+    return d[7] == 0
+
+record PlainKey:
+    high: u64
+    low: i16
+
+record TextKey:
+    label: str
+    number: int
+
+union Choice:
+    Empty,
+    Number: int,
+    Named: TextKey
+
+public def test_structural_hashes_ignore_padding_and_inactive_payloads() -> bool:
+    points: set[PlainKey] = set()
+    for i in range(100):
+        points.add(PlainKey(high=u64(i % 9), low=i16(i % 5)))
+    texts: dict[TextKey, int] = {TextKey(label="ab" + "c", number=7): 13}
+    choices: dict[Choice, int] = {Choice.Empty: 1, Choice.Number(3): 2, Choice.Named(TextKey(label="key", number=8)): 3}
+    saved = choices
+    choices[Choice.Number(3)] = 17
+    _ = choices.pop(Choice.Named(TextKey(label="ke" + "y", number=8)))
+    return len(points) == 45 and PlainKey(high=u64(8), low=i16(4)) in points and texts[TextKey(label="abc", number=7)] == 13 and choices[Choice.Empty] == 1 and choices[Choice.Number(3)] == 17 and len(saved) == 3 and saved[Choice.Number(3)] == 2
+
+public def test_bound_dictionary_views_refresh_values_and_explicit_snapshots() -> bool:
+    mapping = {"a": 10, "b": 20}
+    values = mapping.values()
+    keys = mapping.keys()
+    items = mapping.items()
+    frozen = list(values)
+    mapping["b"] = 30
+    mapping["c"] = 2
+    total = 0
+    for value in values:
+        total += value
+    paired = 0
+    for key, value in items:
+        paired += len(key) + value
+    return total == 42 and paired == 45 and len(keys) == 3 and frozen == [10, 20] and list(keys) == ["a", "b", "c"]

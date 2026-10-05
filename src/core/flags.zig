@@ -43,3 +43,6 @@ pub const list_sort_symbol = "myl_core_list_sort";
 pub fn readsOnly(symbol: []const u8) bool {
     return std.mem.eql(u8, symbol, str_eq_symbol) or std.mem.eql(u8, symbol, str_chars_symbol);
 }
+
+/// A failed dictionary read or pop reports the located missing-key trap.
+pub const dict_missing_trap: u64 = 1 << 62;

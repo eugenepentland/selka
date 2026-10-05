@@ -1168,3 +1168,88 @@ and stdout as well as stderr, including its intentional status-255 trap fixture.
 
 Package commands, results and the implementation commit are recorded in
 `experiments/new-core-s2-20261005/wave-b/s2-i/README.md`.
+
+## 17. Ordered dictionaries and sets (S2-D as built)
+
+The runtime retains the hybrid layout of §2.3: dense naturally aligned entries,
+cached full hashes, a separate half-full 16-byte control index with 32-bit entry
+numbers, and a hash-filtered scan for eight entries or fewer. Deletes mark both
+the index and the dense-entry bitmap. A rebuild compacts live entries without
+changing their order and uses the same triangular group sequence as lookup.
+Scalar rebuilds find an empty group without comparing keys. Hashes are fixed
+production hashes; no sequential-key specialization is used. Literal and
+comprehension capacity hints reach `dict_new`; counted fill-loop hinting remains
+a possible remedy if a dense row misses the gate.
+
+Integer probes and cached string probes have an LLVM first-group path; later
+groups and small tables use the C path. Structural record, array and union keys
+hash fields recursively, ignoring padding and inactive union payloads. Borrowed
+string-view lookups hash and compare the byte span directly. Pure probes of the
+same dictionary and key SSA values share a dominating probe, including across
+the default-value branch. Ownership retains borrowed managed entries before an
+update and uses the existing dictionary copy operation on shared receivers.
+The runtime joins dictionary children to the iterative release worklist.
+
+Length and scalar key/value hulls are facts of each immutable dictionary SSA
+value. Removal and insertion update lengths; insertion's lower bound increases
+only where a missing probe is proved. Phi joins widen rather than assume a
+loop's dictionary stays fixed. Verification checks the probe provenance and
+unique count before consuming updates, as well as emitted length and hull facts.
+
+**Measured layout decision.** `layout_real.py` extracts the production LLVM
+first-group probes from emitted dictionary rows and links them with the complete
+new runtime into the reference dense, sparse, miss and churn workloads using
+`zig cc -O3 -march=native -flto`. Measurements use CPU 10, the shared CPU lock,
+and three interleaved rounds; all layouts have matching checksums. These are
+user cycles per operation for the old table shape and the emitted hybrid:
+
+| Workload | 4096 old | 4096 hybrid | 65536 old | 65536 hybrid |
+|---|---:|---:|---:|---:|
+| dense integer lookup | 9.57 | 13.18 | 26.38 | 19.83 |
+| integer update, two probes | 28.72 | 56.90 | 54.64 | 72.73 |
+| integer update, one probe | 35.90 | 77.09 | 48.11 | 67.03 |
+| set deduplication | 25.65 | 26.08 | 21.20 | 27.31 |
+| sparse integer keys | 26.73 | 17.38 | 56.48 | 39.37 |
+| deletion churn | 70.91 | 81.22 | 83.92 | 86.66 |
+| string lookup | 45.06 | 21.44 | 98.49 | 59.44 |
+| mixed-length string misses | 57.84 | 36.46 | 114.47 | 98.34 |
+| tiny-word count | 58.35 | 96.72 | 59.26 | 95.77 |
+
+The C layout control exposes the expected dense-update and small-word costs;
+the five compiled-language dictionary/set rows pass the L1 gate against Zig
+ReleaseSafe. Therefore the hybrid remains selected and the CPython fallback is
+not triggered. Tiny-word costs remain evidence for S2-T2 and final integration,
+not grounds to tune a hash to the benchmark keys. Complete size-64 controls,
+candidate comparisons and row timings are retained in the package evidence.
+
+**View precision.** The checker permits more persistent view storage than the
+original §2.5 premise assumed. Existing source-place provenance supports a fresh
+unshared local-root view, direct temporary iteration views, and explicit
+`list(view)` snapshots. A persistent interior view must retain the original
+child identity after its ancestor changes; rereading that ancestor is incorrect.
+The frozen IR cannot distinguish all those identities, so the builder gives a
+precise `E_CORE_UNSUPPORTED` for interior, escaping, aggregate/list-stored or
+mut-argument views, explicit view/root rebinding, ordinary dictionary snapshots
+combined with a persistent view, and writes through the view's mapping field.
+It also refuses a dictionary snapshot returned from a view argument. These
+refusals preserve the old-core result instead of creating a snapshot where a
+live view is required. No IR shape or language behavior changed.
+
+A final audit found ordinary aggregate aliases need the same boundary: storing
+the dictionary in a record before binding the view makes the old core retain
+the original mapping. A refresh would read the updated root instead. The
+builder now validates identity after SSA construction, following dictionary
+origins, copy/phi aliases, explicitly marked view wrappers and mapping
+projections. It refuses ordinary record/tuple/array/union/list/dictionary stores,
+returns and opaque calls that expose that mapping before or after binding. A
+persistent view with conditional or unproved source provenance is also refused;
+only fresh origins without exposed aliases are admitted. Direct temporary
+iteration views retain the shared checker's exact receiver behavior.
+The nine new identity fixtures cover those aggregate and returned cases. The
+repaired source has 919 matches and 621 refusals / 1540 tests with no mismatch
+in either mode; its own leak/verify sweep has 220 matches and 121 refusals / 341.
+All five measured row binaries retain identical machine code after this builder
+repair, so the existing row gates and layout decision remain valid.
+
+Package commands, qualification counts, implementation commit and complete
+evidence are recorded in `experiments/new-core-s2-20261005/wave-b/s2-d/README.md`.
