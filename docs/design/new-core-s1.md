@@ -336,3 +336,48 @@ After step 0, `ir.zig` is frozen. Changes to it go through the step-0 owner.
 3. O needs V's `mut` lowering (call-site slots) before its `mut` work. V needs O's `retain`/`release` placement before managed-field records can pass conformance.
 
 Integration happens on this branch, with a test-core plus conformance run per merge. Records of scalars and unions land first (V alone), then managed fields (V+O).
+
+## 13. Review decisions (2026-10-05, integrator)
+
+The user approved, 2026-10-05:
+- N6 = **Option B, retire arenas.**
+  - In S1 only the §11 interim rule applies.
+  - Removing arenas from the old core, the `mylang fix` rewrite and the doc and diagnostic deletion are a later lane outside S1. Codex owns the old core now.
+- S1 conformance is graded per test function (§9 set plus the 13 clean files). Arena tests are excluded.
+
+Changes to this note, binding on the lanes:
+
+**R-1. Trap traces: spike before committing to §4's inline-asm labels.**
+- *Owner:* lane O.
+- *Candidate 1:* inline-asm labels after calls.
+- *Candidate 2:* `-gline-tables-only` plus a small `.debug_line` reader in `core_rt.c`, with `_Unwind_Backtrace` in both.
+- *Requirements:*
+  - labels must stay unique under inlining, unrolling and tail duplication (local numeric labels or `%=`);
+  - neither candidate may change S0 kernel or S1 row cycles by more than 1%;
+  - frames must be correct at -O3.
+- Choose by measurement and record the choice here.
+
+**R-2. Retain and release pairs: own.zig must not emit cancelling pairs.**
+- LLVM cannot fold `retain; …; release` on its own. To prove the release does not free, it must know that the count is ≥ 1, the same kind of premise that failed for the bounds check in checkpoint A.
+- Avoid the pairs at the source, Perceus-style: borrow inference plus last-use moves, and a peephole in own.zig that drops `retain x … release x` with no consuming use or call in between.
+- Also put `!range [1, 0)` (1..SAT) on count loads, so LLVM can do what it can.
+- Every row report counts the retain and release operations left in hot loops after -O3. The target is 0 where ownership is static: `mutate_unique`, `list_append`, `alloc_short`, `record_update`.
+
+**R-3. No generics or imports in S1.**
+- Generics stay out of S1, and so do imports: imports are S4.
+- Split copies of the `migrated/propagation` cases go in `test/core/`. `tests/lang/` is never edited by the new-core lanes.
+
+**R-4. Lane order and ownership.**
+- **Start in parallel now:** step 0 (Opus) and C (Sonnet). The C runner starts on the S0 vocabulary.
+- **After step 0 is merged:** V (Sonnet) and O (Opus) start.
+- **Branches and worktrees:** each lane has its own branch and worktree, cut from the S1 branch. The integrator merges each into `claude/new-core-s1-20261005` after test-core, the conformance list, fuzz and review.
+- **Freeze:** `ir.zig` is frozen after step 0. Any later change to it goes through the integrator.
+- **Shared test lists** (`src/core/root_test.zig`, the test-core list in `build.zig`): lanes only append, and the integrator resolves conflicts.
+
+**R-5. Stop conditions for every lane.** Stop and report if any of these happens:
+- a rebuild after an edit takes over 10 s;
+- test-core takes over 5 min;
+- a fuzz or conformance mismatch is not explained;
+- a change to language behaviour is needed. Park it for the user.
+
+**R-6. Old-core bugs found by a lane are reported, not fixed.**
