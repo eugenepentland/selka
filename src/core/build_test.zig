@@ -165,14 +165,15 @@ const mutating_helper =
     \\
 ;
 
-// spec-case: NEW-CORE-IR-3
-test "a function with a mut parameter is refused until ownership lands" {
+// spec: NEW-CORE-MUT-1
+test "a mut parameter is passed by value and returned: the caller writes the callee's final value back" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
-    var refusal: build.Refusal = .{};
-    const outcome = support.buildSource(arena.allocator(), mutating_helper, &refusal);
-    try std.testing.expectError(error.Unsupported, outcome);
-    try std.testing.expectEqualStrings("mut parameter", refusal.reason);
+    const text = try support.irText(arena.allocator(), mutating_helper);
+    // `grow` returns the list it ends with, and `main` continues with that value.
+    try std.testing.expect(std.mem.indexOf(u8, text, "fn grow(list[i64]) -> list[i64]") != null);
+    try std.testing.expect(std.mem.indexOf(u8, text, "%9 = call list[i64] grow(%8)") != null);
+    try std.testing.expect(std.mem.indexOf(u8, text, "%10 = list_len u64 %9") != null);
 }
 
 const aliased_pushes =

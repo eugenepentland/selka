@@ -12,6 +12,11 @@ const typed = @import("mylang").typed;
 const ir = @import("ir.zig");
 const own = @import("own.zig");
 
+/// Refusal reasons several constructs share.
+const refuse_payload = "match payload";
+const refuse_field_index = "field index";
+const refuse_non_record = "field of a non-record value";
+
 /// Why building stopped.
 pub const Error = error{ OutOfMemory, Unsupported };
 
@@ -83,6 +88,9 @@ const ModuleBuilder = struct {
     /// Checked function id → IR function index.
     ids: std.AutoHashMapUnmanaged(usize, u32) = .empty,
     pending: std.ArrayList(typed.FunctionId) = .empty,
+    /// Checked record and union type → IR type. An entry is made before the type's fields
+    /// are mapped, so a recursive type (through a boxed field) finds itself.
+    types: std.AutoHashMapUnmanaged(typed.Type, ir.Type) = .empty,
 
     fn refuse(self: *ModuleBuilder, reason: []const u8, span: u32) Error {
         self.refusal.* = .{ .reason = reason, .span = span };
@@ -96,15 +104,31 @@ const ModuleBuilder = struct {
         const params = try self.allocator.alloc(ir.Type, function.signature.parameter_count);
         for (params, function.scope.locals[0..params.len]) |*param, local| param.* = try self.mapType(local.ty, @intCast(local.declaration.start));
         const span: u32 = @intCast(function.declaration.start);
-        // A `mut` parameter writes through to the caller's place; that is S1 (ownership).
-        if (function.signature.mutates.len != 0 or function.signature.declared_mutates.len != 0) return self.refuse("mut parameter", span);
         const linkage: ir.Linkage = if (function.policy.c_abi) .extern_c else if (function.policy.host != null) return self.refuse("host function", span) else .internal;
-        const ret = try self.mapType(function.signature.return_type, span);
+        const declared = try self.mapType(function.signature.return_type, span);
+        if (linkage == .extern_c and function.signature.declared_mutates.len != 0) return self.refuse("mut parameter of an extern function", span);
+        const ret = try self.returnType(function, declared, params, span);
         const index: u32 = @intCast(self.module.functions.items.len);
         try self.module.functions.append(self.allocator, .{ .name = function.name, .signature = .{ .params = params, .ret = ret, .linkage = linkage }, .span = span });
         try self.ids.put(self.allocator, @backingInt(id), index);
         try self.pending.append(self.allocator, id);
         return index;
+    }
+
+    /// The IR return type of `function`: its declared type, or, when it has `mut` parameters,
+    /// a record of that value (unless it is `unit`) followed by each `mut` parameter's final
+    /// value in parameter order. The caller writes those values back into its places, which
+    /// is the `inout` of a `mut` parameter done by value (docs/design/new-core-s1.md §7).
+    fn returnType(self: *ModuleBuilder, function: typed.Function, declared: ir.Type, params: []const ir.Type, span: u32) Error!ir.Type {
+        const mutated = function.signature.declared_mutates;
+        if (mutated.len == 0) return declared;
+        if (function.signature.mutates.len != mutated.len) return self.refuse("inferred mut parameter", span);
+        var parts: std.ArrayList(ir.Type) = .empty;
+        defer parts.deinit(self.allocator);
+        if (declared != .void) try parts.append(self.allocator, declared);
+        for (mutated) |position| try parts.append(self.allocator, params[position]);
+        if (parts.items.len == 1) return parts.items[0];
+        return self.module.intern(self.allocator, .{ .record = parts.items });
     }
 
     /// The Core IR type of a checked type, or a refusal.
@@ -141,21 +165,59 @@ const ModuleBuilder = struct {
             .bytes => return self.refuse("bytes type", span),
         };
         if (record.shape.domain != null and std.mem.eql(u8, record.name, "float")) return .f64;
-        if (record.shape.variants) |variants| {
-            const option = variants.is_union and !variants.fallible and variants.cases.len == 2 and
-                variants.cases[0].payload == null and variants.cases[1].payload != null and
-                std.mem.startsWith(u8, record.name, "Option");
-            if (option) return self.module.option(self.allocator, try self.mapType(variants.cases[1].payload.?, span));
-            if (variants.fallible) return self.refuse("Result type", span);
-            if (!variants.is_union) return self.refuse("enum type", span);
-            return self.refuse(if (std.mem.startsWith(u8, record.name, "Option")) "Option of an aggregate" else "union type", span);
-        }
+        if (record.shape.variants) |variants| return self.mapUnion(ty, variants, span);
         if (record.contract.callback != null) return self.refuse("function value type", span);
         if (record.shape.array != null) return self.refuse("fixed array type", span);
         if (record.shape.resource != null) return self.refuse("resource type", span);
         if (record.shape.domain != null) return self.refuse("domain type", span);
         if (record.isManagedRecord()) return self.refuse("class type", span);
-        return self.refuse("record type", span);
+        return self.mapRecord(ty, record, span);
+    }
+
+    /// Reserve the IR type of a checked record or union before its parts are mapped.
+    fn reserve(self: *ModuleBuilder, ty: typed.Type) Error!ir.Type {
+        const reserved: ir.Type = @fromBackingInt(@intCast(ir.Type.first_compound + self.module.compounds.items.len));
+        try self.module.compounds.append(self.allocator, .{ .record = &.{} });
+        try self.types.put(self.allocator, ty, reserved);
+        return reserved;
+    }
+
+    /// The type a field or payload is stored as: its own type, or a `box` of it when it closes a recursive type.
+    fn stored(self: *ModuleBuilder, ty: typed.Type, boxed: bool, span: u32) Error!ir.Type {
+        const mapped = try self.mapType(ty, span);
+        if (mapped == .cap) return self.refuse("record field type", span);
+        if (!boxed or mapped == .void) return mapped;
+        return self.module.intern(self.allocator, .{ .box = mapped });
+    }
+
+    fn mapRecord(self: *ModuleBuilder, ty: typed.Type, record: typed.Record, span: u32) Error!ir.Type {
+        if (self.types.get(ty)) |known| return known;
+        const reserved = try self.reserve(ty);
+        const fields = try self.allocator.alloc(ir.Type, record.fields.len);
+        for (record.fields, fields) |field, *out| {
+            out.* = self.stored(field.ty, field.boxed, span) catch |err| return self.unreserve(ty, err);
+            if (out.* == .void) return self.unreserve(ty, self.refuse("record field type", span));
+        }
+        self.module.compounds.items[@backingInt(reserved) - ir.Type.first_compound] = .{ .record = fields };
+        return reserved;
+    }
+
+    /// Mapping `ty` failed: forget its reservation, so a later use is refused again instead of finding an empty type.
+    fn unreserve(self: *ModuleBuilder, ty: typed.Type, err: Error) Error {
+        _ = self.types.remove(ty);
+        return err;
+    }
+
+    /// A union, `Option`, `Result` or payload-free enum: one IR case per checked case, in the checker's order.
+    fn mapUnion(self: *ModuleBuilder, ty: typed.Type, variants: typed.Variants, span: u32) Error!ir.Type {
+        if (self.types.get(ty)) |known| return known;
+        const reserved = try self.reserve(ty);
+        const cases = try self.allocator.alloc(ir.Type, variants.cases.len);
+        for (variants.cases, cases) |case, *out| {
+            out.* = if (case.payload) |payload| self.stored(payload, case.boxed, span) catch |err| return self.unreserve(ty, err) else .void;
+        }
+        self.module.compounds.items[@backingInt(reserved) - ir.Type.first_compound] = .{ .@"union" = cases };
+        return reserved;
     }
 };
 
@@ -174,8 +236,16 @@ const Ssa = struct {
 const LoopTargets = struct { id: usize, latch: ir.BlockId, exit: ir.BlockId };
 
 /// A checker-hidden local that names a list or string place (`root`) while a
-/// loop iterates it or an index reads it.
-const Alias = struct { hidden: u32, root: u32 };
+/// loop iterates it or an index reads it. `iterating` is set once the loop's
+/// `iteration_check` on the alias has been built: from then on a write to the root is refused.
+const Alias = struct { hidden: u32, root: u32, iterating: bool = false };
+
+/// One step from a value to a part of it: a record field, or a list element by index.
+const Step = union(enum) { field: u32, element: ir.Ref };
+
+/// Where a value lives: a local and a path of steps from it. A write to a hidden receiver
+/// (`s.items.append(v)`, `xs[i][j] = v`) rebuilds the path and stores the new root back.
+const Place = struct { root: u32, steps: []const Step };
 
 const FnBuilder = struct {
     mb: *ModuleBuilder,
@@ -187,6 +257,11 @@ const FnBuilder = struct {
     checked: typed.Function,
     /// Active aliases, innermost last; a block statement drops the ones it opened.
     aliases: std.ArrayList(Alias) = .empty,
+    /// The place each checker-hidden receiver local was initialized from.
+    places: std.AutoHashMapUnmanaged(u32, Place) = .empty,
+    /// The type the function declares it returns; `function.signature.ret` is a record
+    /// of it and the `mut` parameters' final values when there are any.
+    declared_ret: ir.Type = .void,
 
     fn allocator(self: *FnBuilder) std.mem.Allocator {
         return self.mb.allocator;
@@ -356,25 +431,36 @@ const FnBuilder = struct {
 
     // ---- live places (D1) -----------------------------------------------------------
 
-    /// Record `hidden = root` when the checker binds a hidden local to a list or string place.
-    fn noteAlias(self: *FnBuilder, slot: typed.LocalId, value: typed.NodeId) Error!void {
+    /// Record where a checker-hidden receiver came from: its `place` (so a write through it
+    /// can be stored back), and, for a list or string, an alias of the place's root for D1.
+    fn noteAlias(self: *FnBuilder, slot: typed.LocalId, place: ?Place) Error!void {
         const name = self.checked.scope.locals[@backingInt(slot)].name;
         if (name.len == 0 or name[0] != '<') return;
-        const root = switch (self.nodeOf(value).data) {
-            .local => |source| self.local(source),
-            else => return,
+        const variable = self.local(slot);
+        const found = place orelse {
+            _ = self.places.remove(variable);
+            return;
         };
-        const ty = self.ssa.types.items[root];
-        if (ty != .str and !(ty.isCompound() and self.mb.module.compound(ty) == .list)) return;
-        try self.aliases.append(self.allocator(), .{ .hidden = self.local(slot), .root = root });
+        try self.places.put(self.allocator(), variable, found);
+        const ty = self.ssa.types.items[variable];
+        if (ty != .str and !(ty.isCompound() and self.mb.module.kind(ty).? == .list)) return;
+        try self.aliases.append(self.allocator(), .{ .hidden = variable, .root = found.root });
     }
 
     /// D1 (live-place iteration): a loop over a place sees the body's writes to it.
-    /// The Core IR reads the alias, which equals the place only while nothing
-    /// writes the place, so S0 refuses such a write instead of iterating a snapshot.
+    /// The Core IR reads the alias, which equals the place only while nothing writes
+    /// the place, so the builder refuses such a write instead of iterating a snapshot.
     fn guardPlace(self: *FnBuilder, variable: u32, span: u32) Error!void {
         for (self.aliases.items) |alias| {
-            if (alias.root == variable or alias.hidden == variable) return self.mb.refuse("write to a list while it is iterated (live-place iteration)", span);
+            if (alias.iterating and (alias.root == variable or alias.hidden == variable)) return self.mb.refuse("write to a list while it is iterated (live-place iteration)", span);
+        }
+    }
+
+    /// The loop's `iteration_check` on `owner` has been reached: the alias is iterated from here on.
+    fn markIterating(self: *FnBuilder, owner: typed.LocalId) void {
+        const variable = self.local(owner);
+        for (self.aliases.items) |*alias| {
+            if (alias.hidden == variable) alias.iterating = true;
         }
     }
 
@@ -393,17 +479,17 @@ const FnBuilder = struct {
             .initialize, .assign => |store| {
                 if (store.element) return self.mb.refuse("element store", span);
                 try self.guardPlace(self.local(store.slot), span);
-                const value = try self.expression(store.value);
+                var place: ?Place = null;
+                const value = try self.expressionPlace(store.value, &place);
                 const block = self.current orelse return;
                 try self.write(self.local(store.slot), block, value);
-                try self.noteAlias(store.slot, store.value);
+                try self.noteAlias(store.slot, place);
             },
             .discard => |value| _ = try self.expression(value),
             .ret => |value| {
                 const result = try self.expression(value);
                 if (self.current == null) return;
-                _ = try self.emit(.{ .op = .ret, .ty = .void, .a = if (self.function.signature.ret == .void) .none else result, .span = span });
-                self.current = null;
+                try self.returnValue(result, span);
             },
             .branch => |b| try self.branchStatement(b.condition, b.then_body, b.else_body),
             .loop => |loop| try self.loopStatement(loop.id, loop.condition, loop.body, loop.step),
@@ -470,7 +556,6 @@ const FnBuilder = struct {
         const value = try self.expression(value_node);
         if (self.current == null) return;
         if (arms.len == 0) return self.mb.refuse("empty match", span);
-        const union_type = self.function.inst(value).ty;
         const tag = try self.emit(.{ .op = .union_tag, .ty = .u32, .a = value, .span = span });
         const join = try self.newBlock();
         for (arms, 0..) |arm, i| {
@@ -484,14 +569,14 @@ const FnBuilder = struct {
                 try self.seal(arm_block);
                 const resume_at = next;
                 self.current = arm_block;
-                try self.armBody(arm, value, union_type, span);
+                try self.armBody(arm, value, span);
                 try self.jump(join);
                 self.current = resume_at;
             } else {
                 try self.jump(arm_block);
                 try self.seal(arm_block);
                 self.current = arm_block;
-                try self.armBody(arm, value, union_type, span);
+                try self.armBody(arm, value, span);
                 try self.jump(join);
             }
         }
@@ -499,16 +584,137 @@ const FnBuilder = struct {
         self.enter(join);
     }
 
-    fn armBody(self: *FnBuilder, arm: typed.MatchArm, value: ir.Ref, union_type: ir.Type, span: u32) Error!void {
+    fn armBody(self: *FnBuilder, arm: typed.MatchArm, value: ir.Ref, span: u32) Error!void {
         if (arm.slot) |slot| {
-            const payload_type = switch (self.mb.module.compound(union_type)) {
-                .@"union" => |cases| if (arm.tag < cases.len and cases[arm.tag] != .void) cases[arm.tag] else return self.mb.refuse("match payload", span),
-                else => return self.mb.refuse("match payload", span),
-            };
-            const payload = try self.emit(.{ .op = .union_payload, .ty = payload_type, .a = value, .data = arm.tag, .span = span });
+            const payload = try self.payloadOf(value, arm.tag, span);
             try self.write(self.local(slot), self.current.?, payload);
         }
         try self.statement(arm.body);
+    }
+
+    /// The type of the value `ref` stands for.
+    fn typeOfRef(self: *FnBuilder, ref: ir.Ref) ir.Type {
+        return self.function.inst(self.function.resolve(ref)).ty;
+    }
+
+    /// The payload of case `tag` of union `value`, read out of its box when the case is boxed.
+    fn payloadOf(self: *FnBuilder, value: ir.Ref, tag: usize, span: u32) Error!ir.Ref {
+        const union_type = self.typeOfRef(value);
+        const cases = switch (self.mb.module.kind(union_type) orelse return self.mb.refuse(refuse_payload, span)) {
+            .@"union" => self.mb.module.compound(union_type).@"union",
+            else => return self.mb.refuse(refuse_payload, span),
+        };
+        if (tag >= cases.len) return self.mb.refuse(refuse_payload, span);
+        if (cases[tag] == .void) return .none;
+        const payload = try self.emit(.{ .op = .union_payload, .ty = cases[tag], .a = value, .data = tag, .span = span });
+        return self.unbox(payload, span);
+    }
+
+    /// The value inside `value` when it is a `box` (a recursive field or payload), else `value`.
+    fn unbox(self: *FnBuilder, value: ir.Ref, span: u32) Error!ir.Ref {
+        const ty = self.typeOfRef(value);
+        if (self.mb.module.kind(ty) != .box) return value;
+        return self.emit(.{ .op = .box_get, .ty = self.mb.module.compound(ty).box, .a = value, .span = span });
+    }
+
+    /// `value` as stored in a slot of type `stored`: boxed when the slot is a `box`.
+    fn boxFor(self: *FnBuilder, stored: ir.Type, value: ir.Ref, span: u32) Error!ir.Ref {
+        if (self.mb.module.kind(stored) != .box) return value;
+        return self.emit(.{ .op = .box_make, .ty = stored, .a = value, .span = span });
+    }
+
+    // ---- places ---------------------------------------------------------------------
+
+    /// The place a checked local names: the one its hidden receiver was initialized from, else itself.
+    fn placeOfLocal(self: *FnBuilder, slot: typed.LocalId) Place {
+        const variable = self.local(slot);
+        return self.places.get(variable) orelse .{ .root = variable, .steps = &.{} };
+    }
+
+    fn extendPlace(self: *FnBuilder, place: Place, step: Step) Error!Place {
+        const steps = try self.allocator().alloc(Step, place.steps.len + 1);
+        @memcpy(steps[0..place.steps.len], place.steps);
+        steps[place.steps.len] = step;
+        return .{ .root = place.root, .steps = steps };
+    }
+
+    /// Field `index` of record `base`, out of its box when the field is boxed.
+    fn fieldGet(self: *FnBuilder, base: ir.Ref, index: usize, span: u32) Error!ir.Ref {
+        const record_type = self.typeOfRef(base);
+        const fields = switch (self.mb.module.kind(record_type) orelse return self.mb.refuse(refuse_non_record, span)) {
+            .record => self.mb.module.compound(record_type).record,
+            else => return self.mb.refuse(refuse_non_record, span),
+        };
+        if (index >= fields.len) return self.mb.refuse(refuse_field_index, span);
+        const got = try self.emit(.{ .op = .record_get, .ty = fields[index], .a = base, .data = index, .span = span });
+        return self.unbox(got, span);
+    }
+
+    /// Record `base` with field `index` replaced by `value` (boxed again when the field is boxed).
+    fn fieldSet(self: *FnBuilder, base: ir.Ref, index: usize, value: ir.Ref, span: u32) Error!ir.Ref {
+        const record_type = self.typeOfRef(base);
+        const fields = switch (self.mb.module.kind(record_type) orelse return self.mb.refuse(refuse_non_record, span)) {
+            .record => self.mb.module.compound(record_type).record,
+            else => return self.mb.refuse(refuse_non_record, span),
+        };
+        if (index >= fields.len) return self.mb.refuse(refuse_field_index, span);
+        const stored = try self.boxFor(fields[index], value, span);
+        return self.emit(.{ .op = .record_set, .ty = record_type, .a = base, .b = stored, .data = index, .span = span });
+    }
+
+    /// The part of `base` that `step` reaches.
+    fn stepGet(self: *FnBuilder, base: ir.Ref, step: Step, span: u32) Error!ir.Ref {
+        switch (step) {
+            .field => |index| return self.fieldGet(base, index, span),
+            .element => |index| {
+                const list_type = self.typeOfRef(base);
+                if (self.mb.module.kind(list_type) != .list) return self.mb.refuse("element of a non-list value", span);
+                return self.emit(.{ .op = .list_get, .ty = self.mb.module.compound(list_type).list, .a = base, .b = index, .check = .exact, .span = span });
+            },
+        }
+    }
+
+    /// `base` with the part `step` reaches replaced by `value`.
+    fn stepSet(self: *FnBuilder, base: ir.Ref, step: Step, value: ir.Ref, span: u32) Error!ir.Ref {
+        switch (step) {
+            .field => |index| return self.fieldSet(base, index, value, span),
+            .element => |index| return self.listSet(base, index, value, span),
+        }
+    }
+
+    /// `list` with element `index` replaced by `value`; the index is checked. The replaced
+    /// element is released, which is only sound once ownership places the matching retains
+    /// (a copied list shares its elements), so an element that holds a block is refused until then.
+    fn listSet(self: *FnBuilder, list: ir.Ref, index: ir.Ref, value: ir.Ref, span: u32) Error!ir.Ref {
+        const list_type = self.typeOfRef(list);
+        if (self.mb.module.kind(list_type) != .list) return self.mb.refuse("element write of a non-list", span);
+        if (self.mb.module.managed(self.mb.module.compound(list_type).list)) return self.mb.refuse("element write of a managed element (needs ownership)", span);
+        const data = try self.extraSlice(&.{value});
+        return self.emit(.{ .op = .list_set, .ty = self.typeOfRef(list), .a = list, .b = index, .data = data, .check = .exact, .span = span });
+    }
+
+    fn storeInto(self: *FnBuilder, base: ir.Ref, steps: []const Step, value: ir.Ref, span: u32) Error!ir.Ref {
+        if (steps.len == 0) return value;
+        const inner = if (steps.len == 1) value else blk: {
+            const child = try self.stepGet(base, steps[0], span);
+            break :blk try self.storeInto(child, steps[1..], value, span);
+        };
+        return self.stepSet(base, steps[0], inner, span);
+    }
+
+    /// Store `value` at `place`: rebuild the path from the root's current value and write the root.
+    fn storePlace(self: *FnBuilder, place: Place, value: ir.Ref, span: u32) Error!void {
+        try self.guardPlace(place.root, span);
+        const block = self.current orelse return;
+        const root = try self.read(place.root, block);
+        const rebuilt = try self.storeInto(root, place.steps, value, span);
+        try self.write(place.root, self.current.?, rebuilt);
+    }
+
+    /// A write through receiver `owner` produced `value`: bind it, and store it back where the receiver came from.
+    fn writeOwner(self: *FnBuilder, owner: typed.LocalId, value: ir.Ref, span: u32) Error!void {
+        try self.write(self.local(owner), self.current.?, value);
+        if (self.places.get(self.local(owner))) |place| try self.storePlace(place, value, span);
     }
 
     // ---- expressions --------------------------------------------------------------
@@ -519,6 +725,12 @@ const FnBuilder = struct {
     }
 
     fn expression(self: *FnBuilder, id: typed.NodeId) Error!ir.Ref {
+        return self.expressionPlace(id, null);
+    }
+
+    /// Build expression `id`. When `out` is given and the expression names a place (a local,
+    /// a field of a place, an element read of a place), `out` receives that place.
+    fn expressionPlace(self: *FnBuilder, id: typed.NodeId, out: ?*?Place) Error!ir.Ref {
         const n = self.nodeOf(id);
         const span: u32 = @intCast(n.span.start);
         if (self.current == null) return .none;
@@ -526,10 +738,13 @@ const FnBuilder = struct {
             .integer => |value| return self.constant(try self.typeOf(id), value),
             .boolean => |value| return self.constant(.bool, @intFromBool(value)),
             .unit => return .none,
-            .local => |slot| return self.read(self.local(slot), self.current.?),
+            .local => |slot| {
+                if (out) |place| place.* = self.placeOfLocal(slot);
+                return self.read(self.local(slot), self.current.?);
+            },
             .block_value => |block| {
                 try self.statement(block.body);
-                return self.expression(block.value);
+                return self.expressionPlace(block.value, out);
             },
             .binary => |b| return self.binary(b.op, b.left, b.right, @intCast(b.op_span.start)),
             .unary => |u| return self.unary(u.op, u.operand, try self.typeOf(id), @intCast(u.op_span.start)),
@@ -541,15 +756,25 @@ const FnBuilder = struct {
                 return self.mb.refuse("unwrap", span);
             },
             .call => |c| return self.call(c.function, c.arguments, c.evaluation != null, span),
-            .buffer_operation => |operation| return self.bufferOperation(operation.kind, operation.owner, operation.arguments, try self.typeOf(id), span),
+            .buffer_operation => |operation| return self.bufferOperation(operation, try self.typeOf(id), span, out),
             .acquire_buffer => |acquire| {
                 const capacity = try self.expression(acquire.capacity);
                 return self.emit(.{ .op = .list_new, .ty = try self.typeOf(id), .a = capacity, .span = span });
             },
-            .variant => |variant| {
-                const payload = if (variant.value) |value| try self.expression(value) else .none;
-                return self.emit(.{ .op = .union_make, .ty = try self.typeOf(id), .a = payload, .data = variant.tag, .span = span });
+            .variant => |case| return self.variantMake(id, case.tag, case.value, span),
+            .record => |fields| return self.recordMake(id, fields, span),
+            .update => |update| return self.recordUpdate(update.base, update.fields, span),
+            .field => |field| {
+                var base_place: ?Place = null;
+                const base = try self.expressionPlace(field.base, if (out != null) &base_place else null);
+                if (self.current == null) return .none;
+                const value = try self.fieldGet(base, field.index, span);
+                if (out) |place| if (base_place) |found| {
+                    place.* = try self.extendPlace(found, .{ .field = @intCast(field.index) });
+                };
+                return value;
             },
+            .propagate => |try_value| return self.tryValue(try_value.value, try_value.output, span),
             .print => |print| return self.printNode(print, span),
             .array => |items| {
                 if (try self.typeOf(id) != .str) return self.mb.refuse("array", span);
@@ -559,12 +784,127 @@ const FnBuilder = struct {
         }
     }
 
+    /// `Name(...)` or `Union.case(...)`: a union value, boxing a recursive payload. Building an
+    /// `Err` starts an error trace at this site (ERROR-TRACE-1).
+    fn variantMake(self: *FnBuilder, id: typed.NodeId, tag: usize, value_node: ?typed.NodeId, span: u32) Error!ir.Ref {
+        const ty = try self.typeOf(id);
+        var payload: ir.Ref = .none;
+        if (value_node) |value| {
+            payload = try self.expression(value);
+            if (self.current == null) return .none;
+        }
+        const cases = switch (self.mb.module.kind(ty) orelse return self.mb.refuse("variant type", span)) {
+            .@"union" => self.mb.module.compound(ty).@"union",
+            else => return self.mb.refuse("variant type", span),
+        };
+        if (tag >= cases.len) return self.mb.refuse("variant tag", span);
+        if (payload != .none) payload = try self.boxFor(cases[tag], payload, span);
+        const made = try self.emit(.{ .op = .union_make, .ty = ty, .a = payload, .data = tag, .span = span });
+        if (typed.resultShape(self.nodeOf(id).ty, self.mb.program.records)) |shape| {
+            if (shape.error_tag == tag) _ = try self.emit(.{ .op = .err_trace, .ty = .void, .data = @backingInt(ir.TraceMode.origin), .span = span });
+        }
+        return made;
+    }
+
+    /// `Name(fields)`: the fields are evaluated in the order written and placed in declaration order.
+    fn recordMake(self: *FnBuilder, id: typed.NodeId, fields: []const typed.FieldInit, span: u32) Error!ir.Ref {
+        const ty = try self.typeOf(id);
+        const stored = switch (self.mb.module.kind(ty) orelse return self.mb.refuse("record type", span)) {
+            .record => self.mb.module.compound(ty).record,
+            else => return self.mb.refuse("record type", span),
+        };
+        const values = try self.allocator().alloc(ir.Ref, stored.len);
+        @memset(values, .none);
+        for (fields) |init| {
+            if (init.index >= stored.len) return self.mb.refuse(refuse_field_index, span);
+            const value = try self.expression(init.value);
+            if (self.current == null) return .none;
+            values[init.index] = try self.boxFor(stored[init.index], value, span);
+        }
+        for (values) |value| if (value == .none) return self.mb.refuse("record field without a value", span);
+        return self.emit(.{ .op = .record_make, .ty = ty, .data = try self.extraSlice(values), .span = span });
+    }
+
+    /// `update`: the base with each listed field replaced.
+    fn recordUpdate(self: *FnBuilder, base_node: typed.NodeId, fields: []const typed.FieldInit, span: u32) Error!ir.Ref {
+        var base = try self.expression(base_node);
+        if (self.current == null) return .none;
+        for (fields) |init| {
+            const value = try self.expression(init.value);
+            if (self.current == null) return .none;
+            base = try self.fieldSet(base, init.index, value, span);
+        }
+        return base;
+    }
+
+    /// `value?`: the payload on success; on failure `return` the failure in the function's own
+    /// result type, converting the error into the case of the caller's error union that carries it.
+    fn tryValue(self: *FnBuilder, value_node: typed.NodeId, output: typed.Type, span: u32) Error!ir.Ref {
+        const input = try self.expression(value_node);
+        if (self.current == null) return .none;
+        const records = self.mb.program.records;
+        const input_type = self.nodeOf(value_node).ty;
+        const result = try self.mb.mapType(output, span);
+        const tag = try self.emit(.{ .op = .union_tag, .ty = .u32, .a = input, .span = span });
+        const failed = try self.newBlock();
+        const succeeded = try self.newBlock();
+        if (typed.resultShape(input_type, records)) |shape| {
+            const wanted = typed.resultShape(output, records) orelse return self.mb.refuse("propagation into a non-result", span);
+            const is_error = try self.emit(.{ .op = .cmp, .ty = .bool, .a = tag, .b = try self.constant(.u32, @intCast(shape.error_tag)), .data = @backingInt(ir.Predicate.eq), .span = span });
+            try self.branch(is_error, failed, succeeded, span);
+            try self.seal(failed);
+            try self.seal(succeeded);
+            self.current = failed;
+            _ = try self.emit(.{ .op = .err_trace, .ty = .void, .data = @backingInt(ir.TraceMode.append), .span = span });
+            var error_value = try self.payloadOf(input, shape.error_tag, span);
+            if (shape.error_type != wanted.error_type) {
+                const case = typed.wrappingCase(records, wanted.error_type, shape.error_type) orelse return self.mb.refuse("error conversion", span);
+                const union_type = try self.mb.mapType(wanted.error_type, span);
+                const stored = self.mb.module.compound(union_type).@"union"[case];
+                error_value = try self.emit(.{ .op = .union_make, .ty = union_type, .a = try self.boxFor(stored, error_value, span), .data = case, .span = span });
+            }
+            const stored = self.mb.module.compound(result).@"union"[wanted.error_tag];
+            const failure = try self.emit(.{ .op = .union_make, .ty = result, .a = try self.boxFor(stored, error_value, span), .data = wanted.error_tag, .span = span });
+            try self.returnValue(failure, span);
+            self.current = succeeded;
+            return self.payloadOf(input, shape.ok_tag, span);
+        }
+        const none_tag = optionNoneTag(records, input_type) orelse return self.mb.refuse("propagation of a non-result", span);
+        _ = optionNoneTag(records, output) orelse return self.mb.refuse("propagation into a non-option", span);
+        const is_none = try self.emit(.{ .op = .cmp, .ty = .bool, .a = tag, .b = try self.constant(.u32, @intCast(none_tag)), .data = @backingInt(ir.Predicate.eq), .span = span });
+        try self.branch(is_none, failed, succeeded, span);
+        try self.seal(failed);
+        try self.seal(succeeded);
+        self.current = failed;
+        const none = try self.emit(.{ .op = .union_make, .ty = result, .data = none_tag, .span = span });
+        try self.returnValue(none, span);
+        self.current = succeeded;
+        return self.payloadOf(input, 1 - none_tag, span);
+    }
+
+    /// End the function with `result`. A function with `mut` parameters returns a record of its
+    /// result (unless `unit`) and the final value of each `mut` parameter.
+    fn returnValue(self: *FnBuilder, result: ir.Ref, span: u32) Error!void {
+        const mutated = self.checked.signature.declared_mutates;
+        var value = result;
+        if (mutated.len != 0) {
+            var parts: std.ArrayList(ir.Ref) = .empty;
+            defer parts.deinit(self.allocator());
+            if (self.declared_ret != .void) try parts.append(self.allocator(), result);
+            for (mutated) |position| try parts.append(self.allocator(), try self.read(position, self.current.?));
+            value = if (parts.items.len == 1) parts.items[0] else try self.emit(.{ .op = .record_make, .ty = self.function.signature.ret, .data = try self.extraSlice(parts.items), .span = span });
+        }
+        _ = try self.emit(.{ .op = .ret, .ty = .void, .a = if (self.function.signature.ret == .void) .none else value, .span = span });
+        self.current = null;
+    }
+
     fn binary(self: *FnBuilder, op: typed.BinaryOp, left_node: typed.NodeId, right_node: typed.NodeId, span: u32) Error!ir.Ref {
         if (op == .logical_and or op == .logical_or) return self.shortCircuit(op == .logical_or, left_node, right_node, span);
         const left = try self.expression(left_node);
         const right = try self.expression(right_node);
         if (self.current == null) return .none;
-        const ty = self.function.inst(left).ty;
+        const ty = self.typeOfRef(left);
+        if (self.mb.module.kind(ty) == .@"union") return self.enumCompare(op, left, right, span);
         const is_float = ty == .f64;
         const Shape = struct { op: ir.Op, check: ir.Check = .none, predicate: ?ir.Predicate = null };
         const shape: Shape = switch (op) {
@@ -608,6 +948,15 @@ const FnBuilder = struct {
             .check = shape.check,
             .span = span,
         });
+    }
+
+    /// `==` and `!=` of two enum values (a union whose cases carry nothing): their tags compare.
+    fn enumCompare(self: *FnBuilder, op: typed.BinaryOp, left: ir.Ref, right: ir.Ref, span: u32) Error!ir.Ref {
+        if (op != .eq and op != .ne) return self.mb.refuse(@tagName(op), span);
+        for (self.mb.module.compound(self.typeOfRef(left)).@"union") |case| if (case != .void) return self.mb.refuse("aggregate equality", span);
+        const a = try self.emit(.{ .op = .union_tag, .ty = .u32, .a = left, .span = span });
+        const b = try self.emit(.{ .op = .union_tag, .ty = .u32, .a = right, .span = span });
+        return self.emit(.{ .op = .cmp, .ty = .bool, .a = a, .b = b, .data = @backingInt(if (op == .eq) ir.Predicate.eq else ir.Predicate.ne), .span = span });
     }
 
     /// `a or b` / `a and b`: the right operand runs only when it decides the result.
@@ -671,17 +1020,47 @@ const FnBuilder = struct {
     fn call(self: *FnBuilder, callee: typed.FunctionId, argument_nodes: []const typed.NodeId, has_evaluation: bool, span: u32) Error!ir.Ref {
         if (has_evaluation) return self.mb.refuse("call evaluation body", span);
         const index = try self.mb.functionIndex(callee);
+        const mutated = self.mb.program.functions[@backingInt(callee)].signature.declared_mutates;
         var arguments: std.ArrayList(ir.Ref) = .empty;
         defer arguments.deinit(self.allocator());
-        for (argument_nodes) |argument| try arguments.append(self.allocator(), try self.expression(argument));
+        // A `mut` argument is the place the callee's final value is written back to.
+        const places = try self.allocator().alloc(Place, mutated.len);
+        for (argument_nodes, 0..) |argument, position| {
+            const slot = std.mem.indexOfScalar(u16, mutated, @intCast(position));
+            var place: ?Place = null;
+            try arguments.append(self.allocator(), try self.expressionPlace(argument, if (slot != null) &place else null));
+            if (slot) |at| places[at] = place orelse return self.mb.refuse("mut argument that is not a place", span);
+        }
         if (self.current == null) return .none;
         const ret = self.mb.module.functions.items[index].signature.ret;
         const data = try self.extraSlice(arguments.items);
-        const ref = try self.emit(.{ .op = .call, .ty = ret, .a = @fromBackingInt(@intCast(index)), .data = data, .span = span });
-        return if (ret == .void) .none else ref;
+        const result = try self.emit(.{ .op = .call, .ty = ret, .a = @fromBackingInt(@intCast(index)), .data = data, .span = span });
+        if (mutated.len == 0) return if (ret == .void) .none else result;
+        const declared = try self.mb.mapType(self.mb.program.functions[@backingInt(callee)].signature.return_type, span);
+        return self.writeBack(result, declared != .void, places, span);
     }
 
-    fn bufferOperation(self: *FnBuilder, kind: anytype, owner: typed.LocalId, argument_nodes: []const typed.NodeId, ty: ir.Type, span: u32) Error!ir.Ref {
+    /// A call to a function with `mut` parameters returned `result`: its own value (unless
+    /// `unit`) and each `mut` parameter's final value. Store those into the caller's places.
+    fn writeBack(self: *FnBuilder, result: ir.Ref, has_value: bool, places: []const Place, span: u32) Error!ir.Ref {
+        const record_type = self.typeOfRef(result);
+        const parts: []const ir.Type = if (self.mb.module.kind(record_type) == .record) self.mb.module.compound(record_type).record else &.{};
+        // One part alone is not wrapped in a record.
+        const wrapped = has_value or places.len > 1;
+        var value: ir.Ref = result;
+        if (wrapped) value = if (has_value) try self.emit(.{ .op = .record_get, .ty = parts[0], .a = result, .data = 0, .span = span }) else .none;
+        const first: usize = if (has_value) 1 else 0;
+        for (places, 0..) |place, k| {
+            const part = if (wrapped) try self.emit(.{ .op = .record_get, .ty = parts[first + k], .a = result, .data = first + k, .span = span }) else result;
+            try self.storePlace(place, part, span);
+        }
+        return if (has_value) value else .none;
+    }
+
+    fn bufferOperation(self: *FnBuilder, operation: anytype, ty: ir.Type, span: u32, out: ?*?Place) Error!ir.Ref {
+        const kind = operation.kind;
+        const owner = operation.owner;
+        const argument_nodes = operation.arguments;
         const receiver = try self.read(self.local(owner), self.current.?);
         const receiver_type = self.function.inst(receiver).ty;
         switch (kind) {
@@ -690,22 +1069,49 @@ const FnBuilder = struct {
                 if (receiver_type == .str) return self.mb.refuse("string index", span);
                 const index = try self.expression(argument_nodes[0]);
                 if (self.current == null) return .none;
+                if (out) |place| place.* = try self.extendPlace(self.placeOfLocal(owner), .{ .element = index });
                 return self.emit(.{ .op = .list_get, .ty = ty, .a = receiver, .b = index, .check = .exact, .span = span });
             },
             .append => {
                 try self.guardPlace(self.local(owner), span);
                 const value = try self.expression(argument_nodes[0]);
-                const block = self.current orelse return .none;
+                if (self.current == null) return .none;
                 // The receiver is read again: the argument may not change it, but
                 // the checker's owner local is the value the push consumes.
-                const list = try self.read(self.local(owner), block);
+                const list = try self.read(self.local(owner), self.current.?);
                 const pushed = try self.emit(.{ .op = .list_push, .ty = self.function.inst(list).ty, .a = list, .b = value, .span = span });
-                try self.write(self.local(owner), self.current.?, pushed);
+                try self.writeOwner(owner, pushed, span);
                 return .none;
             },
-            // The iterated place cannot change length here: every write to it while an
-            // alias is active is refused (`guardPlace`), so the check cannot fail.
-            .iteration_check => return .none,
+            .write => {
+                if (receiver_type == .str) return self.mb.refuse("string element write", span);
+                try self.guardPlace(self.local(owner), span);
+                const index = try self.expression(argument_nodes[0]);
+                const value = try self.expression(argument_nodes[1]);
+                if (self.current == null) return .none;
+                const list = try self.read(self.local(owner), self.current.?);
+                try self.writeOwner(owner, try self.listSet(list, index, value, span), span);
+                return .none;
+            },
+            .pop => {
+                if (!receiver_type.isCompound() or self.mb.module.kind(receiver_type) != .list) return self.mb.refuse("pop of a non-list", span);
+                try self.guardPlace(self.local(owner), span);
+                const list = try self.read(self.local(owner), self.current.?);
+                // The last element is read first (index `len - 1`, wrapping to a failing index
+                // when empty, which the read reports as the empty-list pop), then dropped.
+                const length = try self.emit(.{ .op = .list_len, .ty = .u64, .a = list, .span = span });
+                const last = try self.emit(.{ .op = .sub, .ty = .u64, .a = length, .b = try self.constant(.u64, 1), .span = span });
+                const element = try self.emit(.{ .op = .list_get, .ty = ty, .a = list, .b = last, .data = pop_read, .check = .exact, .span = span });
+                const rest = try self.emit(.{ .op = .list_pop, .ty = receiver_type, .a = list, .check = .exact, .span = span });
+                try self.writeOwner(owner, rest, span);
+                return element;
+            },
+            // A write to an iterated place while the loop runs is refused (`guardPlace`), so the
+            // length cannot change and the check cannot fail.
+            .iteration_check => {
+                self.markIterating(owner);
+                return .none;
+            },
             .parse_int => {
                 if (receiver_type != .str) return self.mb.refuse("parse_int receiver", span);
                 return self.emit(.{ .op = .str_parse_int, .ty = ty, .a = receiver, .span = span });
@@ -749,8 +1155,25 @@ const FnBuilder = struct {
     }
 };
 
+/// `list_get.data` of the read a `pop` starts with: a failing index is reported as the pop
+/// of an empty list (`R_LIST_BOUNDS`, operation `pop`), as the old core does.
+pub const pop_read: u64 = 1;
+
+/// The tag of `None` when `ty` is an `Option` (a two-case union whose first case has no payload).
+fn optionNoneTag(records: []const typed.Record, ty: typed.Type) ?usize {
+    if (!ty.isAggregate() or ty.recordIndex() >= records.len) return null;
+    const record = records[ty.recordIndex()];
+    const variants = record.shape.variants orelse return null;
+    if (!variants.is_union or variants.fallible or variants.cases.len != 2) return null;
+    if (variants.cases[0].payload != null or variants.cases[1].payload == null) return null;
+    if (!std.mem.startsWith(u8, record.name, "Option")) return null;
+    return 0;
+}
+
 fn buildFunction(mb: *ModuleBuilder, checked: typed.Function, declared: ir.Function) Error!ir.Function {
     var b: FnBuilder = .{ .mb = mb, .function = declared, .checked = checked };
+    b.declared_ret = try mb.mapType(checked.signature.return_type, declared.span);
+    defer b.places.deinit(mb.allocator);
     defer b.ssa.defs.deinit(mb.allocator);
     defer b.ssa.incomplete.deinit(mb.allocator);
     defer b.ssa.sealed.deinit(mb.allocator);
@@ -770,8 +1193,8 @@ fn buildFunction(mb: *ModuleBuilder, checked: typed.Function, declared: ir.Funct
     }
     try b.statement(checked.scope.body);
     if (b.current != null) {
-        if (declared.signature.ret != .void) return mb.refuse("missing return", declared.span);
-        _ = try b.emit(.{ .op = .ret, .ty = .void });
+        if (b.declared_ret != .void) return mb.refuse("missing return", declared.span);
+        try b.returnValue(.none, declared.span);
     }
     return b.function;
 }

@@ -10,4 +10,5 @@ comptime {
     _ = @import("e2e_test.zig");
     _ = @import("values_test.zig");
     _ = @import("verify_ir_test.zig");
+    _ = @import("value_build_test.zig");
 }

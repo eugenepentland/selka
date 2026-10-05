@@ -86,6 +86,12 @@ const Dumper = struct {
         }
     }
 
+    fn fieldInit(self: *Dumper, field: typed.FieldInit, depth: usize) std.mem.Allocator.Error!void {
+        try self.indent(depth);
+        try self.out.print(self.allocator, "field .{d}\n", .{field.index});
+        try self.node(field.value, depth + 1);
+    }
+
     fn node(self: *Dumper, id: typed.NodeId, depth: usize) std.mem.Allocator.Error!void {
         const n = self.program.nodes[@backingInt(id)];
         try self.indent(depth);
@@ -153,7 +159,18 @@ const Dumper = struct {
             },
             .record => |fields| {
                 try self.out.appendSlice(self.allocator, "\n");
-                for (fields) |field| try self.node(field.value, depth + 1);
+                for (fields) |field| try self.fieldInit(field, depth + 1);
+            },
+            .update => |update| {
+                try self.out.appendSlice(self.allocator, "\n");
+                try self.node(update.base, depth + 1);
+                for (update.fields) |field| try self.fieldInit(field, depth + 1);
+            },
+            .replace => |replace| {
+                try self.out.print(self.allocator, " from_end={}\n", .{replace.from_end});
+                try self.node(replace.base, depth + 1);
+                try self.node(replace.index, depth + 1);
+                try self.node(replace.value, depth + 1);
             },
             else => try self.out.appendSlice(self.allocator, " ...\n"),
         }
