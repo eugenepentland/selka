@@ -1,0 +1,45 @@
+usage: mylang test <entry.my> [--filter GLOB] [--cases FILE] [--json] [--force]
+       mylang test <entry.my|directory> --bench GLOB [--bench-output FILE] [--bench-baseline FILE] [--bench-policy FILE]
+       mylang bench-promote --candidate FILE --approver NAME --reason TEXT [--baseline FILE] [--output FILE] [--revision REV]
+       mylang invoke <entry.my> --function 'module::name' (--describe | --input=FILE) [--format=json]
+       mylang build <file.my> (-o <output> | --run) [--help]
+       mylang doc-coverage [<repo-root>] (every implemented feature and standard export needs a documented example)
+       mylang doctest [<repo-root>] [--filter GLOB] [--report PATH] [--jobs N] [--verbose] (run every fenced documentation example)
+       mylang reference --query TERM [--format=text|json] (compiler-derived facts from this executable)
+       mylang docs [TOPIC] (list the user guides built into this executable, or print one)
+       mylang packages lock CONFIG.json --output LOCK.json | build ENTRY.my --lock LOCK.json [--command C] [--receipt FILE] (offline locked local packages)
+       mylang invoke <entry.my> --function='module::name' (--describe | --input=FILE) (call one exported function natively)
+       mylang dump-tokens <file.my> (stage-0 `tokens-v1` JSON on stdout; lexical failures exit 1)
+       mylang interfaces emit|check|oracle <entry.my> | show <module.myi> (per-module interface artifacts; `mylang interfaces` prints the options)
+       mylang compile-module <entry.my> --module=NAME ... | link-modules <entry.my> --units=DIR -o OUT (per-module build; `mylang compile-module` prints the options)
+       mylang <schema-project|input-module|check|run|dump-bytecode|discover-duplicates|discover-project-duplicates|report-project-quality|report-quality|fmt|fmt-module|fmt-project|emit-qbe|emit-project-qbe|list-modules|list-interfaces|list-declarations|check-project|check-module|run-project|check-policy> <file.my>
+  schema-project: --schema-report (include checked source and compiler identities)
+  check: type-check a program; a file that declares no main is checked as a library, like check-module
+  check-module: type-check a library module and its imports without an executable main
+  input-module: reads a typed JSON manifest and writes generated module source
+  run: builds the program natively and runs it; it loads the reachable module graph when the entry file opens with a module header or an import/export directive, including a headerless script that imports embedded standard modules, and stays single-unit otherwise; run-project is the explicit project-entry alias
+  run/run-project: unbounded in instructions and frames by default; --max-steps=N and --max-frames=N impose a ceiling and --timeout=SECONDS caps elapsed time; --max-memory=BYTES --gc-stress --print-result --cache-dir=DIR --qbe=PATH --zig=PATH (native objects default to .mylang-cache/qbe, shared with build); the build is QBE unless --release asks for LLVM -O3 with LTO
+  run/run-project: --max-memory takes K/M/G suffixes and caps the guest process's address space; MYLANG_MEMORY_LIMIT names the same ceiling and MYLANG_HOST_MEMORY_LIMIT replaces the compiler's own 8G ceiling (0 removes it)
+  run/run-project authority: every capability is granted by default; --restrict denies them and enables --allow-read=DIR --allow-write=DIR --allow-endpoint=IP:PORT (repeatable) --allow-clock --allow-random[=SEED] --allow-env[=NAME,...] --allow-host --allow-all. An endpoint grant is a literal numeric address, never a DNS name. Under --restrict an entry point requesting an ungranted capability exits 2 before execution; --allow-random=SEED pins the seed in either mode
+  run/run-project: -- ends compiler options; every later value is a guest argument
+  run: --timings (native execution nanoseconds on stderr; excludes compilation and linking)
+  schema-project: --inputs=manifest.json (repeat for up to 16 modules)
+  discover-duplicates/discover-project-duplicates: --min-nodes=N --population=production|tests|generated|reference|intentional --timings --approximate --max-work=N
+  report-quality/report-project-quality: --max-function-lines=N --max-parameters=N --max-nesting=N --max-decisions=N --max-line-bytes=N (0 disables a signal)
+  check-policy: --policy=path.json (required; policy failures exit 3)
+  lint: --gate --accept --json --profile=agent|strict|safety --against=REF (blocking findings exit 3)
+  tests-for: <entry.my> <qualified-name> lists the tests that reach a declaration
+  api-diff: <entry.my> --write=FILE | --against=FILE [--json] (classified interface changes)
+  api: <entry.my> --write | --check [--json] (the generated .api interface file beside every module; stale files exit 1)
+  context: <entry.my> --symbol=NAME | --at=PATH:LINE:COLUMN [--context-bytes=N] [--format=json] [--against=FILE] (one bounded agent-context-v1 answer about one declaration)
+  fmt-project: --check (required; checks the reachable import graph)
+  fmt/fmt-module: --check (otherwise writes formatted source to stdout)
+  list-declarations: parse-only declarations-v1 JSON with byte ranges
+  index-project: navigation-summary-v1 per-module declaration counts by default; --module=NAME --symbol=NAME --kind=function|type|constraint|field|case|parameter|local select navigation-v1 records (navigation-selection-v1); --full prints the complete navigation-v1 document
+  project-dependencies: checked module graph and hashes; --inputs supported
+  one-shot commands: --timings=json (phase-timings-v1 JSON Lines on stderr)
+  build: --timings=json records the frontend, codegen, link and native phases it already measures for --report
+    --report prints work-report-v1 actual work/reuse plus a frontend-cache-v1 comparison receipt on stderr; --timings=json also adds them; --cache-dir=DIR selects their root; --no-cache disables reuse
+    --explain-invalidation prints an invalidation-report-v1 comparison on stderr for project-dependencies, check-project, run-project and module-syntax run; --no-cache explains against no baseline
+  all commands: --diagnostics=text|json (stderr JSON Lines; stdout unchanged)
+  check-session: persistent check/clear/quit lines on stdin; JSON status on stdout; --inputs supported

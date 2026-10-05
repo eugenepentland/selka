@@ -1,0 +1,7 @@
+Build Summary: 2/2 steps succeeded
+fmt-check success
++- zig fmt --check success
+
+real 0.21
+user 0.19
+sys 0.02

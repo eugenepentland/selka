@@ -225,13 +225,14 @@ public def test_enumerate_and_a_comprehension_walk_an_array() -> bool:
 
 
 # spec-case: PY-ARRAY-ITER-1
-public def test_a_loop_reads_the_value_the_array_had_when_it_began() -> bool:
+public def test_a_loop_reads_later_writes_to_the_array_place() -> bool:
     values: [3]i64 = [1, 2, 3]
+    saved = values
     seen = 0
     for value in values:
         values[2] = 100
         seen = seen * 10 + value
-    return seen == 123 and values[2] == 100
+    return seen == 220 and values[2] == 100 and saved[2] == 3
 
 
 # spec-case: PY-ARRAY-ITER-1

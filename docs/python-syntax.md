@@ -267,7 +267,32 @@ def main() -> int:
 `for index in range(end)` / `range(start, end)` / `range(start, end, step)` support
 `break` and `continue`. A [stepped range](range-iteration.md#stepped-ranges) counts
 down for a negative step.
-List iteration fixes its initial bound and rejects length changes through aliases.
+Iteration over a place reads its current value on every step. Element writes and
+`mut` callee updates stay visible even when another variable holds a copy. A live
+list accepts growth; a decrease from its last observed length traps
+`R_LIST_ITERATION_MUTATION`. Dictionary and set length changes, and length changes
+to an indexed ancestor such as `rows` in `for value in rows[0]`, also trap.
+Indices are evaluated once at entry. Direct assignment to the root variable in
+the loop body selects an independent entry snapshot. A callee's `mut` write-back
+remains live, including replacement of the collection with another value.
+Fixed-array places also see later element writes; their terminal length is fixed.
+Copies made before any loop remain independent. Non-place sources retain their
+entry value.
+
+```mylang
+def main() -> int:
+    items = [1, 2]
+    saved = items
+    total = 0
+    for value in items:
+        total += value
+        items[1] = 9
+        if value == 9:
+            items.append(3)
+    assert total == 13
+    assert saved == [1, 2]
+    return 0
+```
 
 Classes declare **value records**, with annotated fields and named construction:
 `Node(value=42, children=[])`. They have no inheritance, methods, or implicit
@@ -562,7 +587,9 @@ In particular:
 - Binary64 arithmetic follows IEEE behavior, including infinities/NaNs on floating
   division by zero. It does not raise Python exceptions.
 - Lists are homogeneous; `range` takes one to three arguments and slices have no
-  step. Changing a list's length during iteration traps.
+  step. A live list place accepts growth and traps a decrease from the last
+  observed length; indexed ancestors, dictionaries and sets retain exact length
+  checks.
 - GC roots and collection transport across host/JSON boundaries are not
   implemented.
 - Formatting validates source and rewrites it into the one canonical layout;

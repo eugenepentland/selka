@@ -1,0 +1,301 @@
+module live_place_iteration
+
+
+def change(items: mut list[int]) -> None:
+    items[1] = 9
+
+
+def select(counter: mut list[int]) -> int:
+    counter[0] += 1
+    return 0
+
+
+def select_last(counter: mut list[int]) -> int:
+    counter[0] += 1
+    return -1
+
+
+def change_array(items: mut [2]int) -> None:
+    items[1] = 9
+
+
+record Holder:
+    items: list[int]
+
+
+record FixedHolder:
+    items: [2]int
+
+
+# spec: D1-LIVE-PLACE
+public def test_element_writes_remain_live_with_a_named_copy() -> bool:
+    items = [1, 2]
+    saved = items
+    total = 0
+    for value in items:
+        total += value
+        items[1] = 9
+    return total == 10 and items == [1, 9] and saved == [1, 2]
+
+
+# spec-case: D1-LIVE-PLACE
+public def test_append_growth_is_visible_through_continue() -> bool:
+    items = [1]
+    saved = items
+    total = 0
+    for value in items:
+        total += value
+        if value < 4:
+            items.append(value + 1)
+            continue
+    return total == 10 and items == [1, 2, 3, 4] and saved == [1]
+
+
+# spec-case: D1-LIVE-PLACE
+public def test_mut_callee_element_writes_remain_live() -> bool:
+    items = [1, 2]
+    saved = items
+    total = 0
+    for value in items:
+        total += value
+        change(mut items)
+    return total == 10 and saved == [1, 2]
+
+
+# spec-case: D1-LIVE-PLACE
+public def test_field_writeback_refreshes_the_place() -> bool:
+    holder = Holder([1, 2])
+    saved = holder
+    total = 0
+    for value in holder.items:
+        total += value
+        working = holder
+        change(mut working.items)
+        holder.items = working.items
+    return total == 10 and holder.items == [1, 9] and saved.items == [1, 2]
+
+
+# spec-case: D1-LIVE-PLACE
+public def test_root_rebinding_takes_an_entry_snapshot() -> bool:
+    items = [1, 2]
+    total = 0
+    for value in items:
+        items[1] = 9
+        items = [7, 8]
+        total += value
+    return total == 3 and items == [7, 8]
+
+
+# spec-case: D1-LIVE-PLACE
+public def test_record_root_rebinding_takes_an_entry_snapshot() -> bool:
+    holder = Holder([1, 2])
+    total = 0
+    for value in holder.items:
+        holder.items[1] = 9
+        holder = Holder([7, 8])
+        total += value
+    return total == 3 and holder.items == [7, 8]
+
+
+# spec-case: D1-LIVE-PLACE
+public def test_indexed_place_keeps_its_entry_index() -> bool:
+    rows = [[1, 2], [7, 8]]
+    at = 0
+    total = 0
+    for value in rows[at]:
+        total += value
+        rows[0][1] = 9
+        at = 1
+    return total == 10 and rows[1] == [7, 8]
+
+
+# spec-case: D1-LIVE-PLACE
+public def test_index_expression_is_evaluated_once() -> bool:
+    rows = [[1, 2]]
+    counter = [0]
+    total = 0
+    for value in rows[select(mut counter)]:
+        total += value
+        rows[0][1] = 9
+    return total == 10 and counter == [1]
+
+
+# spec-case: D1-LIVE-PLACE
+public def test_compound_index_expression_keeps_its_setup() -> bool:
+    rows = [[7, 8], [1, 2]]
+    counter = [0]
+    total = 0
+    for value in rows[select(mut counter) + 1]:
+        total += value
+        rows[1][1] = 9
+    return total == 10 and counter == [1]
+
+
+# spec-case: D1-LIVE-PLACE
+public def test_negative_index_is_normalized_once_at_entry() -> bool:
+    rows = [[7, 8], [1, 2]]
+    counter = [0]
+    total = 0
+    for value in rows[select_last(mut counter)]:
+        total += value
+        rows[-1][1] = 9
+    return total == 10 and counter == [1] and rows[0] == [7, 8]
+
+
+# spec-case: D1-LIVE-PLACE
+public def test_enumerate_refreshes_elements_and_growth() -> bool:
+    items = [1]
+    total = 0
+    for at, value in enumerate(items):
+        total += at + value
+        if at < 2:
+            items.append(value + 1)
+    return total == 9 and items == [1, 2, 3]
+
+
+# spec-case: D1-LIVE-PLACE
+public def test_zip_refreshes_each_place_and_shorter_length() -> bool:
+    left = [1]
+    right = [10]
+    saved = right
+    total = 0
+    for a, b in zip(left, right):
+        total += a + b
+        if a < 3:
+            left.append(a + 1)
+            right.append(b + 10)
+    return total == 66 and saved == [10]
+
+
+# spec-case: D1-LIVE-PLACE
+public def test_zip_sees_shared_element_writes() -> bool:
+    left = [1, 2]
+    right = [10, 20]
+    saved = right
+    total = 0
+    for a, b in zip(left, right):
+        total += a + b
+        right[1] = 90
+    return total == 103 and saved == [10, 20]
+
+
+# spec-case: D1-LIVE-PLACE
+public def test_byte_buffer_append_growth_is_visible() -> bool:
+    items = byte_buffer([1])
+    saved = items
+    total = 0
+    for value in items:
+        total += value
+        if value < 3:
+            _ = items.append_byte(value + 1)
+    return total == 6 and len(items) == 3 and len(saved) == 1
+
+
+# spec-case: D1-LIVE-PLACE
+public def test_immutable_source_root_rebinding_keeps_entry_text() -> bool:
+    text = "ab"
+    total = 0
+    for letter in text:
+        text = "longer"
+        total += len(letter)
+    return total == 2 and text == "longer"
+
+
+# spec-case: D1-LIVE-PLACE
+public def test_dictionary_values_refresh_through_a_shared_payload() -> bool:
+    mapping = {1: 10, 2: 20}
+    saved = mapping
+    total = 0
+    for value in mapping.values():
+        total += value
+        mapping[2] = 90
+    return total == 100 and saved == {1: 10, 2: 20}
+
+
+# spec-case: D1-LIVE-PLACE
+public def test_reductions_over_places_preserve_value_reads() -> bool:
+    holder = Holder([1, 2, 3])
+    flags = [False, True]
+    return sum(holder.items) == 6 and any(flags) and not all(flags)
+
+
+# spec-case: D1-LIVE-PLACE
+public def test_fixed_array_mut_callee_writes_remain_live() -> bool:
+    items: [2]int = [1, 2]
+    saved = items
+    total = 0
+    for value in items:
+        total += value
+        change_array(mut items)
+    return total == 10 and saved == [1, 2]
+
+
+# spec-case: D1-LIVE-PLACE
+public def test_fixed_array_field_writes_remain_live() -> bool:
+    holder = FixedHolder([1, 2])
+    saved = holder
+    total = 0
+    for value in holder.items:
+        total += value
+        holder.items[1] = 9
+    return total == 10 and saved.items == [1, 2]
+
+
+# spec-case: D1-LIVE-PLACE
+public def test_fixed_array_root_assignment_selects_an_entry_snapshot() -> bool:
+    items: [2]int = [1, 2]
+    total = 0
+    for value in items:
+        items[1] = 9
+        items = [7, 8]
+        total += value
+    return total == 3 and items == [7, 8]
+
+
+# spec-case: D1-LIVE-PLACE
+public def test_fixed_array_indexed_place_reads_the_same_entry_index() -> bool:
+    rows: list[[2]int] = [[1, 2], [7, 8]]
+    at = 0
+    total = 0
+    for value in rows[at]:
+        total += value
+        rows[0][1] = 9
+        at = 1
+    return total == 10 and rows[1] == [7, 8]
+
+
+# spec-case: D1-LIVE-PLACE
+public def test_managed_array_root_snapshot_preserves_child_values() -> bool:
+    items: [2]list[int] = [[1], [2]]
+    total = 0
+    for row in items:
+        items[1][0] = 9
+        items = [[7], [8]]
+        total += row[0]
+    return total == 3 and items[0] == [7] and items[1] == [8]
+
+
+def main() -> int:
+    assert test_element_writes_remain_live_with_a_named_copy()
+    assert test_append_growth_is_visible_through_continue()
+    assert test_mut_callee_element_writes_remain_live()
+    assert test_field_writeback_refreshes_the_place()
+    assert test_root_rebinding_takes_an_entry_snapshot()
+    assert test_record_root_rebinding_takes_an_entry_snapshot()
+    assert test_indexed_place_keeps_its_entry_index()
+    assert test_index_expression_is_evaluated_once()
+    assert test_compound_index_expression_keeps_its_setup()
+    assert test_negative_index_is_normalized_once_at_entry()
+    assert test_enumerate_refreshes_elements_and_growth()
+    assert test_zip_refreshes_each_place_and_shorter_length()
+    assert test_zip_sees_shared_element_writes()
+    assert test_byte_buffer_append_growth_is_visible()
+    assert test_immutable_source_root_rebinding_keeps_entry_text()
+    assert test_dictionary_values_refresh_through_a_shared_payload()
+    assert test_reductions_over_places_preserve_value_reads()
+    assert test_fixed_array_mut_callee_writes_remain_live()
+    assert test_fixed_array_field_writes_remain_live()
+    assert test_fixed_array_root_assignment_selects_an_entry_snapshot()
+    assert test_fixed_array_indexed_place_reads_the_same_entry_index()
+    assert test_managed_array_root_snapshot_preserves_child_values()
+    return 0

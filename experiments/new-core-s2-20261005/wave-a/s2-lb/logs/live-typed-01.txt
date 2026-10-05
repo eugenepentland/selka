@@ -1,0 +1,1539 @@
+fn live_place_iteration::change #0 params=1 ret=unit cabi=false host=false
+  local %0 items: List<i64> mut
+  local %1 <collection>: List<i64> mut
+  local %2 <collection>: i64 mut
+  local %3 <collection>: i64 mut
+  block
+    block
+      discard
+        block_value : unit
+          block
+            initialize %2
+              integer : i64 9
+            initialize %1
+              local : List<i64> %0
+          buffer_operation : unit write owner=%1
+            block_value : i64
+              block
+                initialize %3
+                  integer : i64 1
+                branch
+                  binary : bool lt
+                    local : i64 %3
+                    integer : i64 0
+                  assign %3
+                    binary : i64 add
+                      cast : i64
+                        buffer_operation : u64 length owner=%1
+                      local : i64 %3
+              local : i64 %3
+            local : i64 %2
+    ret
+      unit : unit ...
+fn live_place_iteration::test_element_writes_remain_live_with_a_named_copy #1 params=0 ret=bool cabi=false host=false
+  local %0 <collection>: List<i64> mut
+  local %1 items: List<i64> mut
+  local %2 saved: List<i64> mut
+  local %3 total: i64 mut
+  local %4 <collection>: List<i64> mut
+  local %5 <collection>: i64 mut
+  local %6 <collection>: i64 mut
+  local %7 value: i64 mut
+  local %8 <collection>: List<i64> mut
+  local %9 <collection>: i64 mut
+  local %10 <collection>: i64 mut
+  local %11 <collection>: List<i64> mut
+  local %12 <collection>: List<i64> mut
+  block
+    initialize %1
+      block_value : List<i64>
+        block
+          initialize %0
+            acquire_buffer : List<i64>
+              integer : i64 2
+          discard
+            buffer_operation : unit append owner=%0
+              integer : i64 1
+          discard
+            buffer_operation : unit append owner=%0
+              integer : i64 2
+        local : List<i64> %0
+    initialize %2
+      local : List<i64> %1
+    initialize %3
+      integer : i64 0
+    block
+      initialize %4
+        local : List<i64> %1
+      initialize %5
+        integer : i64 0
+      initialize %6
+        cast : i64
+          buffer_operation : u64 length owner=%4
+      loop id=0
+        binary : bool lt
+          local : i64 %5
+          local : i64 %6
+        block
+          block
+            assign %4
+              local : List<i64> %1
+            branch
+              binary : bool lt
+                cast : i64
+                  buffer_operation : u64 length owner=%4
+                local : i64 %6
+              discard
+                buffer_operation : unit iteration_check owner=%4
+                  local : i64 %6
+            assign %6
+              cast : i64
+                buffer_operation : u64 length owner=%4
+          initialize %7
+            buffer_operation : i64 read owner=%4
+              local : i64 %5
+          block
+            assign %3
+              binary : i64 add
+                local : i64 %3
+                local : i64 %7
+            discard
+              block_value : unit
+                block
+                  initialize %9
+                    integer : i64 9
+                  initialize %8
+                    local : List<i64> %1
+                buffer_operation : unit write owner=%8
+                  block_value : i64
+                    block
+                      initialize %10
+                        integer : i64 1
+                      branch
+                        binary : bool lt
+                          local : i64 %10
+                          integer : i64 0
+                        assign %10
+                          binary : i64 add
+                            cast : i64
+                              buffer_operation : u64 length owner=%8
+                            local : i64 %10
+                    local : i64 %10
+                  local : i64 %9
+        step:
+          block
+            block
+              assign %4
+                local : List<i64> %1
+              branch
+                binary : bool lt
+                  cast : i64
+                    buffer_operation : u64 length owner=%4
+                  local : i64 %6
+                discard
+                  buffer_operation : unit iteration_check owner=%4
+                    local : i64 %6
+              assign %6
+                cast : i64
+                  buffer_operation : u64 length owner=%4
+            assign %5
+              binary : i64 add
+                local : i64 %5
+                integer : i64 1
+    ret
+      binary : bool logical_and
+        binary : bool logical_and
+          binary : bool eq
+            local : i64 %3
+            integer : i64 10
+          binary : bool eq
+            local : List<i64> %1
+            block_value : List<i64>
+              block
+                initialize %11
+                  acquire_buffer : List<i64>
+                    integer : i64 2
+                discard
+                  buffer_operation : unit append owner=%11
+                    integer : i64 1
+                discard
+                  buffer_operation : unit append owner=%11
+                    integer : i64 9
+              local : List<i64> %11
+        binary : bool eq
+          local : List<i64> %2
+          block_value : List<i64>
+            block
+              initialize %12
+                acquire_buffer : List<i64>
+                  integer : i64 2
+              discard
+                buffer_operation : unit append owner=%12
+                  integer : i64 1
+              discard
+                buffer_operation : unit append owner=%12
+                  integer : i64 2
+            local : List<i64> %12
+fn live_place_iteration::test_append_growth_is_visible_through_continue #2 params=0 ret=bool cabi=false host=false
+  local %0 <collection>: List<i64> mut
+  local %1 items: List<i64> mut
+  local %2 saved: List<i64> mut
+  local %3 total: i64 mut
+  local %4 <collection>: List<i64> mut
+  local %5 <collection>: i64 mut
+  local %6 <collection>: i64 mut
+  local %7 value: i64 mut
+  local %8 <collection>: List<i64> mut
+  local %9 <collection>: List<i64> mut
+  block
+    initialize %1
+      block_value : List<i64>
+        block
+          initialize %0
+            acquire_buffer : List<i64>
+              integer : i64 1
+          discard
+            buffer_operation : unit append owner=%0
+              integer : i64 1
+        local : List<i64> %0
+    initialize %2
+      local : List<i64> %1
+    initialize %3
+      integer : i64 0
+    block
+      initialize %4
+        local : List<i64> %1
+      initialize %5
+        integer : i64 0
+      initialize %6
+        cast : i64
+          buffer_operation : u64 length owner=%4
+      loop id=1
+        binary : bool lt
+          local : i64 %5
+          local : i64 %6
+        block
+          block
+            discard
+              buffer_operation : unit iteration_check owner=%4
+                local : i64 %6
+          initialize %7
+            buffer_operation : i64 read owner=%4
+              local : i64 %5
+          block
+            assign %3
+              binary : i64 add
+                local : i64 %3
+                local : i64 %7
+            branch
+              binary : bool lt
+                local : i64 %7
+                integer : i64 4
+              block
+                discard
+                  buffer_operation : unit append owner=%1
+                    binary : i64 add
+                      local : i64 %7
+                      integer : i64 1
+                loop_exit target=1 continue=true
+        step:
+          block
+            block
+              discard
+                buffer_operation : unit iteration_check owner=%4
+                  local : i64 %6
+            assign %5
+              binary : i64 add
+                local : i64 %5
+                integer : i64 1
+    ret
+      binary : bool logical_and
+        binary : bool logical_and
+          binary : bool eq
+            local : i64 %3
+            integer : i64 10
+          binary : bool eq
+            local : List<i64> %1
+            block_value : List<i64>
+              block
+                initialize %8
+                  acquire_buffer : List<i64>
+                    integer : i64 4
+                discard
+                  buffer_operation : unit append owner=%8
+                    integer : i64 1
+                discard
+                  buffer_operation : unit append owner=%8
+                    integer : i64 2
+                discard
+                  buffer_operation : unit append owner=%8
+                    integer : i64 3
+                discard
+                  buffer_operation : unit append owner=%8
+                    integer : i64 4
+              local : List<i64> %8
+        binary : bool eq
+          local : List<i64> %2
+          block_value : List<i64>
+            block
+              initialize %9
+                acquire_buffer : List<i64>
+                  integer : i64 1
+              discard
+                buffer_operation : unit append owner=%9
+                  integer : i64 1
+            local : List<i64> %9
+fn live_place_iteration::test_mut_callee_element_writes_remain_live #3 params=0 ret=bool cabi=false host=false
+  local %0 <collection>: List<i64> mut
+  local %1 items: List<i64> mut
+  local %2 saved: List<i64> mut
+  local %3 total: i64 mut
+  local %4 <collection>: List<i64> mut
+  local %5 <collection>: i64 mut
+  local %6 <collection>: i64 mut
+  local %7 value: i64 mut
+  local %8 <collection>: List<i64> mut
+  block
+    initialize %1
+      block_value : List<i64>
+        block
+          initialize %0
+            acquire_buffer : List<i64>
+              integer : i64 2
+          discard
+            buffer_operation : unit append owner=%0
+              integer : i64 1
+          discard
+            buffer_operation : unit append owner=%0
+              integer : i64 2
+        local : List<i64> %0
+    initialize %2
+      local : List<i64> %1
+    initialize %3
+      integer : i64 0
+    block
+      initialize %4
+        local : List<i64> %1
+      initialize %5
+        integer : i64 0
+      initialize %6
+        cast : i64
+          buffer_operation : u64 length owner=%4
+      loop id=2
+        binary : bool lt
+          local : i64 %5
+          local : i64 %6
+        block
+          block
+            assign %4
+              local : List<i64> %1
+            branch
+              binary : bool lt
+                cast : i64
+                  buffer_operation : u64 length owner=%4
+                local : i64 %6
+              discard
+                buffer_operation : unit iteration_check owner=%4
+                  local : i64 %6
+            assign %6
+              cast : i64
+                buffer_operation : u64 length owner=%4
+          initialize %7
+            buffer_operation : i64 read owner=%4
+              local : i64 %5
+          block
+            assign %3
+              binary : i64 add
+                local : i64 %3
+                local : i64 %7
+            discard
+              call : unit live_place_iteration::change
+                local : List<i64> %1
+        step:
+          block
+            block
+              assign %4
+                local : List<i64> %1
+              branch
+                binary : bool lt
+                  cast : i64
+                    buffer_operation : u64 length owner=%4
+                  local : i64 %6
+                discard
+                  buffer_operation : unit iteration_check owner=%4
+                    local : i64 %6
+              assign %6
+                cast : i64
+                  buffer_operation : u64 length owner=%4
+            assign %5
+              binary : i64 add
+                local : i64 %5
+                integer : i64 1
+    ret
+      binary : bool logical_and
+        binary : bool eq
+          local : i64 %3
+          integer : i64 10
+        binary : bool eq
+          local : List<i64> %2
+          block_value : List<i64>
+            block
+              initialize %8
+                acquire_buffer : List<i64>
+                  integer : i64 2
+              discard
+                buffer_operation : unit append owner=%8
+                  integer : i64 1
+              discard
+                buffer_operation : unit append owner=%8
+                  integer : i64 2
+            local : List<i64> %8
+fn live_place_iteration::test_field_writeback_refreshes_the_place #4 params=0 ret=bool cabi=false host=false
+  local %0 <collection>: List<i64> mut
+  local %1 holder: live_place_iteration::Holder mut
+  local %2 saved: live_place_iteration::Holder mut
+  local %3 total: i64 mut
+  local %4 <collection>: List<i64> mut
+  local %5 <collection>: i64 mut
+  local %6 <collection>: i64 mut
+  local %7 value: i64 mut
+  local %8 working: live_place_iteration::Holder mut
+  local %9 <collection>: live_place_iteration::Holder mut
+  local %10 <collection>: List<i64> mut
+  local %11 <collection>: List<i64> mut
+  local %12 <collection>: List<i64> mut
+  block
+    initialize %1
+      record : live_place_iteration::Holder
+        field .0
+          block_value : List<i64>
+            block
+              initialize %0
+                acquire_buffer : List<i64>
+                  integer : i64 2
+              discard
+                buffer_operation : unit append owner=%0
+                  integer : i64 1
+              discard
+                buffer_operation : unit append owner=%0
+                  integer : i64 2
+            local : List<i64> %0
+    initialize %2
+      local : live_place_iteration::Holder %1
+    initialize %3
+      integer : i64 0
+    block
+      initialize %4
+        field : List<i64> .0
+          local : live_place_iteration::Holder %1
+      initialize %5
+        integer : i64 0
+      initialize %6
+        cast : i64
+          buffer_operation : u64 length owner=%4
+      loop id=3
+        binary : bool lt
+          local : i64 %5
+          local : i64 %6
+        block
+          block
+            assign %4
+              field : List<i64> .0
+                local : live_place_iteration::Holder %1
+            branch
+              binary : bool lt
+                cast : i64
+                  buffer_operation : u64 length owner=%4
+                local : i64 %6
+              discard
+                buffer_operation : unit iteration_check owner=%4
+                  local : i64 %6
+            assign %6
+              cast : i64
+                buffer_operation : u64 length owner=%4
+          initialize %7
+            buffer_operation : i64 read owner=%4
+              local : i64 %5
+          block
+            assign %3
+              binary : i64 add
+                local : i64 %3
+                local : i64 %7
+            initialize %8
+              local : live_place_iteration::Holder %1
+            discard
+              call : unit live_place_iteration::change
+                field : List<i64> .0
+                  local : live_place_iteration::Holder %8
+            discard
+              block_value : unit
+                block
+                  initialize %10
+                    field : List<i64> .0
+                      local : live_place_iteration::Holder %8
+                  initialize %9
+                    local : live_place_iteration::Holder %1
+                  initialize %9
+                    local : live_place_iteration::Holder %1
+                  assign %1
+                    update : live_place_iteration::Holder
+                      local : live_place_iteration::Holder %9
+                      field .0
+                        local : List<i64> %10
+                unit : unit ...
+        step:
+          block
+            block
+              assign %4
+                field : List<i64> .0
+                  local : live_place_iteration::Holder %1
+              branch
+                binary : bool lt
+                  cast : i64
+                    buffer_operation : u64 length owner=%4
+                  local : i64 %6
+                discard
+                  buffer_operation : unit iteration_check owner=%4
+                    local : i64 %6
+              assign %6
+                cast : i64
+                  buffer_operation : u64 length owner=%4
+            assign %5
+              binary : i64 add
+                local : i64 %5
+                integer : i64 1
+    ret
+      binary : bool logical_and
+        binary : bool logical_and
+          binary : bool eq
+            local : i64 %3
+            integer : i64 10
+          binary : bool eq
+            field : List<i64> .0
+              local : live_place_iteration::Holder %1
+            block_value : List<i64>
+              block
+                initialize %11
+                  acquire_buffer : List<i64>
+                    integer : i64 2
+                discard
+                  buffer_operation : unit append owner=%11
+                    integer : i64 1
+                discard
+                  buffer_operation : unit append owner=%11
+                    integer : i64 9
+              local : List<i64> %11
+        binary : bool eq
+          field : List<i64> .0
+            local : live_place_iteration::Holder %2
+          block_value : List<i64>
+            block
+              initialize %12
+                acquire_buffer : List<i64>
+                  integer : i64 2
+              discard
+                buffer_operation : unit append owner=%12
+                  integer : i64 1
+              discard
+                buffer_operation : unit append owner=%12
+                  integer : i64 2
+            local : List<i64> %12
+fn live_place_iteration::test_root_rebinding_takes_an_entry_snapshot #5 params=0 ret=bool cabi=false host=false
+  local %0 <collection>: List<i64> mut
+  local %1 items: List<i64> mut
+  local %2 total: i64 mut
+  local %3 <collection>: List<i64> mut
+  local %4 <collection>: i64 mut
+  local %5 <collection>: i64 mut
+  local %6 value: i64 mut
+  local %7 <collection>: List<i64> mut
+  local %8 <collection>: i64 mut
+  local %9 <collection>: i64 mut
+  local %10 <collection>: List<i64> mut
+  local %11 <collection>: List<i64> mut
+  local %12 <collection>: List<i64> mut
+  block
+    initialize %1
+      block_value : List<i64>
+        block
+          initialize %0
+            acquire_buffer : List<i64>
+              integer : i64 2
+          discard
+            buffer_operation : unit append owner=%0
+              integer : i64 1
+          discard
+            buffer_operation : unit append owner=%0
+              integer : i64 2
+        local : List<i64> %0
+    initialize %2
+      integer : i64 0
+    block
+      initialize %3
+        block_value : List<i64>
+          block
+            initialize %11
+              local : List<i64> %1
+          buffer_operation : List<i64> copy owner=%11
+      initialize %4
+        integer : i64 0
+      initialize %5
+        cast : i64
+          buffer_operation : u64 length owner=%3
+      loop id=4
+        binary : bool lt
+          local : i64 %4
+          local : i64 %5
+        block
+          block
+            discard
+              buffer_operation : unit iteration_check owner=%3
+                local : i64 %5
+          initialize %6
+            buffer_operation : i64 read owner=%3
+              local : i64 %4
+          block
+            discard
+              block_value : unit
+                block
+                  initialize %8
+                    integer : i64 9
+                  initialize %7
+                    local : List<i64> %1
+                buffer_operation : unit write owner=%7
+                  block_value : i64
+                    block
+                      initialize %9
+                        integer : i64 1
+                      branch
+                        binary : bool lt
+                          local : i64 %9
+                          integer : i64 0
+                        assign %9
+                          binary : i64 add
+                            cast : i64
+                              buffer_operation : u64 length owner=%7
+                            local : i64 %9
+                    local : i64 %9
+                  local : i64 %8
+            assign %1
+              block_value : List<i64>
+                block
+                  initialize %10
+                    acquire_buffer : List<i64>
+                      integer : i64 2
+                  discard
+                    buffer_operation : unit append owner=%10
+                      integer : i64 7
+                  discard
+                    buffer_operation : unit append owner=%10
+                      integer : i64 8
+                local : List<i64> %10
+            assign %2
+              binary : i64 add
+                local : i64 %2
+                local : i64 %6
+        step:
+          block
+            block
+              discard
+                buffer_operation : unit iteration_check owner=%3
+                  local : i64 %5
+            assign %4
+              binary : i64 add
+                local : i64 %4
+                integer : i64 1
+    ret
+      binary : bool logical_and
+        binary : bool eq
+          local : i64 %2
+          integer : i64 3
+        binary : bool eq
+          local : List<i64> %1
+          block_value : List<i64>
+            block
+              initialize %12
+                acquire_buffer : List<i64>
+                  integer : i64 2
+              discard
+                buffer_operation : unit append owner=%12
+                  integer : i64 7
+              discard
+                buffer_operation : unit append owner=%12
+                  integer : i64 8
+            local : List<i64> %12
+fn live_place_iteration::test_record_root_rebinding_takes_an_entry_snapshot #6 params=0 ret=bool cabi=false host=false
+  local %0 <collection>: List<i64> mut
+  local %1 holder: live_place_iteration::Holder mut
+  local %2 total: i64 mut
+  local %3 <collection>: List<i64> mut
+  local %4 <collection>: i64 mut
+  local %5 <collection>: i64 mut
+  local %6 value: i64 mut
+  local %7 <collection>: List<i64> mut
+  local %8 <collection>: i64 mut
+  local %9 <collection>: i64 mut
+  local %10 <collection>: List<i64> mut
+  local %11 <collection>: List<i64> mut
+  local %12 <collection>: List<i64> mut
+  block
+    initialize %1
+      record : live_place_iteration::Holder
+        field .0
+          block_value : List<i64>
+            block
+              initialize %0
+                acquire_buffer : List<i64>
+                  integer : i64 2
+              discard
+                buffer_operation : unit append owner=%0
+                  integer : i64 1
+              discard
+                buffer_operation : unit append owner=%0
+                  integer : i64 2
+            local : List<i64> %0
+    initialize %2
+      integer : i64 0
+    block
+      initialize %3
+        block_value : List<i64>
+          block
+            initialize %11
+              field : List<i64> .0
+                local : live_place_iteration::Holder %1
+          buffer_operation : List<i64> copy owner=%11
+      initialize %4
+        integer : i64 0
+      initialize %5
+        cast : i64
+          buffer_operation : u64 length owner=%3
+      loop id=5
+        binary : bool lt
+          local : i64 %4
+          local : i64 %5
+        block
+          block
+            discard
+              buffer_operation : unit iteration_check owner=%3
+                local : i64 %5
+          initialize %6
+            buffer_operation : i64 read owner=%3
+              local : i64 %4
+          block
+            discard
+              block_value : unit
+                block
+                  initialize %8
+                    integer : i64 9
+                  initialize %7
+                    field : List<i64> .0
+                      local : live_place_iteration::Holder %1
+                buffer_operation : unit write owner=%7
+                  block_value : i64
+                    block
+                      initialize %9
+                        integer : i64 1
+                      branch
+                        binary : bool lt
+                          local : i64 %9
+                          integer : i64 0
+                        assign %9
+                          binary : i64 add
+                            cast : i64
+                              buffer_operation : u64 length owner=%7
+                            local : i64 %9
+                    local : i64 %9
+                  local : i64 %8
+            assign %1
+              record : live_place_iteration::Holder
+                field .0
+                  block_value : List<i64>
+                    block
+                      initialize %10
+                        acquire_buffer : List<i64>
+                          integer : i64 2
+                      discard
+                        buffer_operation : unit append owner=%10
+                          integer : i64 7
+                      discard
+                        buffer_operation : unit append owner=%10
+                          integer : i64 8
+                    local : List<i64> %10
+            assign %2
+              binary : i64 add
+                local : i64 %2
+                local : i64 %6
+        step:
+          block
+            block
+              discard
+                buffer_operation : unit iteration_check owner=%3
+                  local : i64 %5
+            assign %4
+              binary : i64 add
+                local : i64 %4
+                integer : i64 1
+    ret
+      binary : bool logical_and
+        binary : bool eq
+          local : i64 %2
+          integer : i64 3
+        binary : bool eq
+          field : List<i64> .0
+            local : live_place_iteration::Holder %1
+          block_value : List<i64>
+            block
+              initialize %12
+                acquire_buffer : List<i64>
+                  integer : i64 2
+              discard
+                buffer_operation : unit append owner=%12
+                  integer : i64 7
+              discard
+                buffer_operation : unit append owner=%12
+                  integer : i64 8
+            local : List<i64> %12
+fn live_place_iteration::test_indexed_place_keeps_its_entry_index #7 params=0 ret=bool cabi=false host=false
+  local %0 <collection>: List<i64> mut
+  local %1 <collection>: List<i64> mut
+  local %2 <collection>: List<List<i64>> mut
+  local %3 rows: List<List<i64>> mut
+  local %4 at: i64 mut
+  local %5 total: i64 mut
+  local %6 <collection>: List<List<i64>> mut
+  local %7 <collection>: i64 mut
+  local %8 <collection>: List<i64> mut
+  local %9 <collection>: i64 mut
+  local %10 <collection>: i64 mut
+  local %11 value: i64 mut
+  local %12 <collection>: List<List<i64>> mut
+  local %13 <collection>: i64 mut
+  local %14 <collection>: List<i64> mut
+  local %15 <collection>: i64 mut
+  local %16 <collection>: i64 mut
+  local %17 <collection>: List<List<i64>> mut
+  local %18 <collection>: i64 mut
+  local %19 <collection>: List<i64> mut
+  block
+    initialize %3
+      block_value : List<List<i64>>
+        block
+          initialize %2
+            acquire_buffer : List<List<i64>>
+              integer : i64 2
+          discard
+            buffer_operation : unit append owner=%2
+              block_value : List<i64>
+                block
+                  initialize %0
+                    acquire_buffer : List<i64>
+                      integer : i64 2
+                  discard
+                    buffer_operation : unit append owner=%0
+                      integer : i64 1
+                  discard
+                    buffer_operation : unit append owner=%0
+                      integer : i64 2
+                local : List<i64> %0
+          discard
+            buffer_operation : unit append owner=%2
+              block_value : List<i64>
+                block
+                  initialize %1
+                    acquire_buffer : List<i64>
+                      integer : i64 2
+                  discard
+                    buffer_operation : unit append owner=%1
+                      integer : i64 7
+                  discard
+                    buffer_operation : unit append owner=%1
+                      integer : i64 8
+                local : List<i64> %1
+        local : List<List<i64>> %2
+    initialize %4
+      integer : i64 0
+    initialize %5
+      integer : i64 0
+    block
+      initialize %8
+        block_value : List<i64>
+          block
+            initialize %6
+              local : List<List<i64>> %3
+          buffer_operation : List<i64> read owner=%6
+            block_value : i64
+              block
+                initialize %7
+                  local : i64 %4
+                branch
+                  binary : bool lt
+                    local : i64 %7
+                    integer : i64 0
+                  assign %7
+                    binary : i64 add
+                      cast : i64
+                        buffer_operation : u64 length owner=%6
+                      local : i64 %7
+              local : i64 %7
+      initialize %9
+        integer : i64 0
+      initialize %10
+        cast : i64
+          buffer_operation : u64 length owner=%8
+      loop id=6
+        binary : bool lt
+          local : i64 %9
+          local : i64 %10
+        block
+          block
+            discard
+              buffer_operation : unit iteration_check owner=%8
+                local : i64 %10
+          initialize %11
+            buffer_operation : i64 read owner=%8
+              local : i64 %9
+          block
+            assign %5
+              binary : i64 add
+                local : i64 %5
+                local : i64 %11
+            discard
+              block_value : unit
+                block
+                  initialize %15
+                    integer : i64 9
+                  initialize %14
+                    block_value : List<i64>
+                      block
+                        initialize %12
+                          local : List<List<i64>> %3
+                      buffer_operation : List<i64> read owner=%12
+                        block_value : i64
+                          block
+                            initialize %13
+                              integer : i64 0
+                            branch
+                              binary : bool lt
+                                local : i64 %13
+                                integer : i64 0
+                              assign %13
+                                binary : i64 add
+                                  cast : i64
+                                    buffer_operation : u64 length owner=%12
+                                  local : i64 %13
+                          local : i64 %13
+                buffer_operation : unit write owner=%14
+                  block_value : i64
+                    block
+                      initialize %16
+                        integer : i64 1
+                      branch
+                        binary : bool lt
+                          local : i64 %16
+                          integer : i64 0
+                        assign %16
+                          binary : i64 add
+                            cast : i64
+                              buffer_operation : u64 length owner=%14
+                            local : i64 %16
+                    local : i64 %16
+                  local : i64 %15
+            assign %4
+              integer : i64 1
+        step:
+          block
+            block
+              discard
+                buffer_operation : unit iteration_check owner=%8
+                  local : i64 %10
+            assign %9
+              binary : i64 add
+                local : i64 %9
+                integer : i64 1
+    ret
+      binary : bool logical_and
+        binary : bool eq
+          local : i64 %5
+          integer : i64 10
+        binary : bool eq
+          block_value : List<i64>
+            block
+              initialize %17
+                local : List<List<i64>> %3
+            buffer_operation : List<i64> read owner=%17
+              block_value : i64
+                block
+                  initialize %18
+                    integer : i64 1
+                  branch
+                    binary : bool lt
+                      local : i64 %18
+                      integer : i64 0
+                    assign %18
+                      binary : i64 add
+                        cast : i64
+                          buffer_operation : u64 length owner=%17
+                        local : i64 %18
+                local : i64 %18
+          block_value : List<i64>
+            block
+              initialize %19
+                acquire_buffer : List<i64>
+                  integer : i64 2
+              discard
+                buffer_operation : unit append owner=%19
+                  integer : i64 7
+              discard
+                buffer_operation : unit append owner=%19
+                  integer : i64 8
+            local : List<i64> %19
+fn live_place_iteration::test_enumerate_refreshes_elements_and_growth #8 params=0 ret=bool cabi=false host=false
+  local %0 <collection>: List<i64> mut
+  local %1 items: List<i64> mut
+  local %2 total: i64 mut
+  local %3 <collection>: List<i64> mut
+  local %4 at: i64
+  local %5 <collection>: i64 mut
+  local %6 value: i64 mut
+  local %7 <collection>: List<i64> mut
+  block
+    initialize %1
+      block_value : List<i64>
+        block
+          initialize %0
+            acquire_buffer : List<i64>
+              integer : i64 1
+          discard
+            buffer_operation : unit append owner=%0
+              integer : i64 1
+        local : List<i64> %0
+    initialize %2
+      integer : i64 0
+    block
+      initialize %3
+        local : List<i64> %1
+      initialize %4
+        integer : i64 0
+      initialize %5
+        cast : i64
+          buffer_operation : u64 length owner=%3
+      loop id=7
+        binary : bool lt
+          local : i64 %4
+          local : i64 %5
+        block
+          block
+            discard
+              buffer_operation : unit iteration_check owner=%3
+                local : i64 %5
+          initialize %6
+            buffer_operation : i64 read owner=%3
+              local : i64 %4
+          block
+            assign %2
+              binary : i64 add
+                local : i64 %2
+                binary : i64 add
+                  local : i64 %4
+                  local : i64 %6
+            branch
+              binary : bool lt
+                local : i64 %4
+                integer : i64 2
+              block
+                discard
+                  buffer_operation : unit append owner=%1
+                    binary : i64 add
+                      local : i64 %6
+                      integer : i64 1
+        step:
+          block
+            block
+              discard
+                buffer_operation : unit iteration_check owner=%3
+                  local : i64 %5
+            assign %4
+              binary : i64 add
+                local : i64 %4
+                integer : i64 1
+    ret
+      binary : bool logical_and
+        binary : bool eq
+          local : i64 %2
+          integer : i64 9
+        binary : bool eq
+          local : List<i64> %1
+          block_value : List<i64>
+            block
+              initialize %7
+                acquire_buffer : List<i64>
+                  integer : i64 3
+              discard
+                buffer_operation : unit append owner=%7
+                  integer : i64 1
+              discard
+                buffer_operation : unit append owner=%7
+                  integer : i64 2
+              discard
+                buffer_operation : unit append owner=%7
+                  integer : i64 3
+            local : List<i64> %7
+fn live_place_iteration::test_zip_refreshes_each_place_and_shorter_length #9 params=0 ret=bool cabi=false host=false
+  local %0 <collection>: List<i64> mut
+  local %1 left: List<i64> mut
+  local %2 <collection>: List<i64> mut
+  local %3 right: List<i64> mut
+  local %4 saved: List<i64> mut
+  local %5 total: i64 mut
+  local %6 <collection>: List<i64> mut
+  local %7 <collection>: i64 mut
+  local %8 <collection>: i64 mut
+  local %9 a: i64 mut
+  local %10 <collection>: List<i64> mut
+  local %11 <collection>: i64 mut
+  local %12 <collection>: i64 mut
+  local %13 b: i64 mut
+  local %14 <collection>: i64 mut
+  local %15 <collection>: i64 mut
+  local %16 <collection>: i64 mut
+  local %17 <collection>: List<i64> mut
+  block
+    initialize %1
+      block_value : List<i64>
+        block
+          initialize %0
+            acquire_buffer : List<i64>
+              integer : i64 1
+          discard
+            buffer_operation : unit append owner=%0
+              integer : i64 1
+        local : List<i64> %0
+    initialize %3
+      block_value : List<i64>
+        block
+          initialize %2
+            acquire_buffer : List<i64>
+              integer : i64 1
+          discard
+            buffer_operation : unit append owner=%2
+              integer : i64 10
+        local : List<i64> %2
+    initialize %4
+      local : List<i64> %3
+    initialize %5
+      integer : i64 0
+    block
+      initialize %6
+        local : List<i64> %1
+      initialize %10
+        local : List<i64> %3
+      initialize %8
+        cast : i64
+          buffer_operation : u64 length owner=%6
+      initialize %12
+        cast : i64
+          buffer_operation : u64 length owner=%10
+      initialize %14
+        block_value : i64
+          block
+            initialize %16
+              local : i64 %12
+            branch
+              binary : bool lt
+                local : i64 %8
+                local : i64 %12
+              assign %16
+                local : i64 %8
+          local : i64 %16
+      initialize %7
+        integer : i64 0
+      loop id=8
+        binary : bool lt
+          local : i64 %7
+          local : i64 %14
+        block
+          block
+            block
+              discard
+                buffer_operation : unit iteration_check owner=%6
+                  local : i64 %8
+            block
+              discard
+                buffer_operation : unit iteration_check owner=%10
+                  local : i64 %12
+            assign %14
+              block_value : i64
+                block
+                  initialize %15
+                    local : i64 %12
+                  branch
+                    binary : bool lt
+                      local : i64 %8
+                      local : i64 %12
+                    assign %15
+                      local : i64 %8
+                local : i64 %15
+          initialize %9
+            buffer_operation : i64 read owner=%6
+              local : i64 %7
+          initialize %13
+            buffer_operation : i64 read owner=%10
+              local : i64 %7
+          block
+            assign %5
+              binary : i64 add
+                local : i64 %5
+                binary : i64 add
+                  local : i64 %9
+                  local : i64 %13
+            branch
+              binary : bool lt
+                local : i64 %9
+                integer : i64 3
+              block
+                discard
+                  buffer_operation : unit append owner=%1
+                    binary : i64 add
+                      local : i64 %9
+                      integer : i64 1
+                discard
+                  buffer_operation : unit append owner=%3
+                    binary : i64 add
+                      local : i64 %13
+                      integer : i64 10
+        step:
+          block
+            block
+              block
+                discard
+                  buffer_operation : unit iteration_check owner=%6
+                    local : i64 %8
+              block
+                discard
+                  buffer_operation : unit iteration_check owner=%10
+                    local : i64 %12
+              assign %14
+                block_value : i64
+                  block
+                    initialize %15
+                      local : i64 %12
+                    branch
+                      binary : bool lt
+                        local : i64 %8
+                        local : i64 %12
+                      assign %15
+                        local : i64 %8
+                  local : i64 %15
+            assign %7
+              binary : i64 add
+                local : i64 %7
+                integer : i64 1
+    ret
+      binary : bool logical_and
+        binary : bool eq
+          local : i64 %5
+          integer : i64 66
+        binary : bool eq
+          local : List<i64> %4
+          block_value : List<i64>
+            block
+              initialize %17
+                acquire_buffer : List<i64>
+                  integer : i64 1
+              discard
+                buffer_operation : unit append owner=%17
+                  integer : i64 10
+            local : List<i64> %17
+fn live_place_iteration::test_dictionary_values_refresh_through_a_shared_payload #10 params=0 ret=bool cabi=false host=false
+  local %0 mapping: dict<i64,i64> mut
+  local %1 saved: dict<i64,i64> mut
+  local %2 total: i64 mut
+  local %3 <collection>: dict<i64,i64> mut
+  local %4 <collection>: i64 mut
+  local %5 <collection>: i64 mut
+  local %6 value: i64 mut
+  local %7 <collection>: dict<i64,i64> mut
+  local %8 <collection>: i64 mut
+  block
+    initialize %0
+      array : dict<i64,i64>
+        integer : i64 1
+        integer : i64 10
+        integer : i64 2
+        integer : i64 20
+    initialize %1
+      local : dict<i64,i64> %0
+    initialize %2
+      integer : i64 0
+    block
+      initialize %3
+        local : dict<i64,i64> %0
+      initialize %4
+        integer : i64 0
+      initialize %5
+        cast : i64
+          buffer_operation : i64 length owner=%3
+      loop id=10
+        binary : bool lt
+          local : i64 %4
+          local : i64 %5
+        block
+          block
+            assign %3
+              local : dict<i64,i64> %0
+            discard
+              buffer_operation : unit iteration_check owner=%3
+                local : i64 %5
+          initialize %6
+            buffer_operation : i64 value_at owner=%3
+              local : i64 %4
+          block
+            assign %2
+              binary : i64 add
+                local : i64 %2
+                local : i64 %6
+            discard
+              block_value : unit
+                block
+                  initialize %8
+                    integer : i64 90
+                  initialize %7
+                    local : dict<i64,i64> %0
+                buffer_operation : unit write owner=%7
+                  integer : i64 2
+                  local : i64 %8
+        step:
+          block
+            block
+              assign %3
+                local : dict<i64,i64> %0
+              discard
+                buffer_operation : unit iteration_check owner=%3
+                  local : i64 %5
+            assign %4
+              binary : i64 add
+                local : i64 %4
+                integer : i64 1
+    ret
+      binary : bool logical_and
+        binary : bool eq
+          local : i64 %2
+          integer : i64 100
+        binary : bool eq
+          local : dict<i64,i64> %1
+          array : dict<i64,i64>
+            integer : i64 1
+            integer : i64 10
+            integer : i64 2
+            integer : i64 20
+fn live_place_iteration::test_reductions_over_places_preserve_value_reads #11 params=0 ret=bool cabi=false host=false
+  local %0 <collection>: List<i64> mut
+  local %1 holder: live_place_iteration::Holder mut
+  local %2 <collection>: List<bool> mut
+  local %3 flags: List<bool> mut
+  local %4 <collection>: List<i64> mut
+  local %5 <collection>: i64 mut
+  local %6 <collection>: i64 mut
+  local %7 <collection>: i64 mut
+  local %8 <collection>: List<bool> mut
+  local %9 <collection>: i64 mut
+  local %10 <collection>: i64 mut
+  local %11 <collection>: bool mut
+  local %12 <collection>: bool mut
+  local %13 <collection>: List<bool> mut
+  local %14 <collection>: i64 mut
+  local %15 <collection>: i64 mut
+  local %16 <collection>: bool mut
+  local %17 <collection>: bool mut
+  block
+    initialize %1
+      record : live_place_iteration::Holder
+        field .0
+          block_value : List<i64>
+            block
+              initialize %0
+                acquire_buffer : List<i64>
+                  integer : i64 3
+              discard
+                buffer_operation : unit append owner=%0
+                  integer : i64 1
+              discard
+                buffer_operation : unit append owner=%0
+                  integer : i64 2
+              discard
+                buffer_operation : unit append owner=%0
+                  integer : i64 3
+            local : List<i64> %0
+    initialize %3
+      block_value : List<bool>
+        block
+          initialize %2
+            acquire_buffer : List<bool>
+              integer : i64 2
+          discard
+            buffer_operation : unit append owner=%2
+              boolean : bool false
+          discard
+            buffer_operation : unit append owner=%2
+              boolean : bool true
+        local : List<bool> %2
+    ret
+      binary : bool logical_and
+        binary : bool logical_and
+          binary : bool eq
+            block_value : i64
+              block
+                initialize %4
+                  field : List<i64> .0
+                    local : live_place_iteration::Holder %1
+                initialize %5
+                  integer : i64 0
+                initialize %6
+                  cast : i64
+                    buffer_operation : u64 length owner=%4
+                initialize %7
+                  integer : i64 0
+                loop id=11
+                  binary : bool lt
+                    local : i64 %5
+                    local : i64 %6
+                  block
+                    discard
+                      buffer_operation : unit iteration_check owner=%4
+                        local : i64 %6
+                    assign %7
+                      binary : i64 add
+                        local : i64 %7
+                        buffer_operation : i64 read owner=%4
+                          local : i64 %5
+                  step:
+                    block
+                      discard
+                        buffer_operation : unit iteration_check owner=%4
+                          local : i64 %6
+                      assign %5
+                        binary : i64 add
+                          local : i64 %5
+                          integer : i64 1
+              local : i64 %7
+            integer : i64 6
+          block_value : bool
+            block
+              initialize %8
+                local : List<bool> %3
+              initialize %9
+                integer : i64 0
+              initialize %10
+                cast : i64
+                  buffer_operation : u64 length owner=%8
+              initialize %11
+                boolean : bool false
+              initialize %12
+                boolean : bool false
+              loop id=12
+                binary : bool logical_and
+                  binary : bool lt
+                    local : i64 %9
+                    local : i64 %10
+                  unary : bool not
+                    local : bool %12
+                block
+                  discard
+                    buffer_operation : unit iteration_check owner=%8
+                      local : i64 %10
+                  assign %11
+                    binary : bool logical_or
+                      local : bool %11
+                      buffer_operation : bool read owner=%8
+                        local : i64 %9
+                  branch
+                    binary : bool logical_or
+                      local : bool %11
+                      buffer_operation : bool read owner=%8
+                        local : i64 %9
+                    assign %12
+                      boolean : bool true
+                step:
+                  block
+                    discard
+                      buffer_operation : unit iteration_check owner=%8
+                        local : i64 %10
+                    assign %9
+                      binary : i64 add
+                        local : i64 %9
+                        integer : i64 1
+            local : bool %11
+        unary : bool not
+          block_value : bool
+            block
+              initialize %13
+                local : List<bool> %3
+              initialize %14
+                integer : i64 0
+              initialize %15
+                cast : i64
+                  buffer_operation : u64 length owner=%13
+              initialize %16
+                boolean : bool true
+              initialize %17
+                boolean : bool false
+              loop id=13
+                binary : bool logical_and
+                  binary : bool lt
+                    local : i64 %14
+                    local : i64 %15
+                  unary : bool not
+                    local : bool %17
+                block
+                  discard
+                    buffer_operation : unit iteration_check owner=%13
+                      local : i64 %15
+                  assign %16
+                    binary : bool logical_and
+                      local : bool %16
+                      buffer_operation : bool read owner=%13
+                        local : i64 %14
+                  branch
+                    unary : bool not
+                      binary : bool logical_and
+                        local : bool %16
+                        buffer_operation : bool read owner=%13
+                          local : i64 %14
+                    assign %17
+                      boolean : bool true
+                step:
+                  block
+                    discard
+                      buffer_operation : unit iteration_check owner=%13
+                        local : i64 %15
+                    assign %14
+                      binary : i64 add
+                        local : i64 %14
+                        integer : i64 1
+            local : bool %16
+fn live_place_iteration::main #12 params=0 ret=i64 cabi=false host=false
+  block
+    assertion test_element_writes_remain_live_with_a_named_copy()
+      call : bool live_place_iteration::test_element_writes_remain_live_with_a_named_copy
+    assertion test_append_growth_is_visible_through_continue()
+      call : bool live_place_iteration::test_append_growth_is_visible_through_continue
+    assertion test_mut_callee_element_writes_remain_live()
+      call : bool live_place_iteration::test_mut_callee_element_writes_remain_live
+    assertion test_field_writeback_refreshes_the_place()
+      call : bool live_place_iteration::test_field_writeback_refreshes_the_place
+    assertion test_root_rebinding_takes_an_entry_snapshot()
+      call : bool live_place_iteration::test_root_rebinding_takes_an_entry_snapshot
+    assertion test_record_root_rebinding_takes_an_entry_snapshot()
+      call : bool live_place_iteration::test_record_root_rebinding_takes_an_entry_snapshot
+    assertion test_indexed_place_keeps_its_entry_index()
+      call : bool live_place_iteration::test_indexed_place_keeps_its_entry_index
+    assertion test_enumerate_refreshes_elements_and_growth()
+      call : bool live_place_iteration::test_enumerate_refreshes_elements_and_growth
+    assertion test_zip_refreshes_each_place_and_shorter_length()
+      call : bool live_place_iteration::test_zip_refreshes_each_place_and_shorter_length
+    assertion test_dictionary_values_refresh_through_a_shared_payload()
+      call : bool live_place_iteration::test_dictionary_values_refresh_through_a_shared_payload
+    assertion test_reductions_over_places_preserve_value_reads()
+      call : bool live_place_iteration::test_reductions_over_places_preserve_value_reads
+    ret
+      integer : i64 0

@@ -1,0 +1,33 @@
+{
+  "backend": "LLVM O3/full LTO (--release)",
+  "cases": [
+    {
+      "source": "terminal-growth-shrink.my",
+      "exit": 1,
+      "stderr": "experiments/new-core-s2-20261005/wave-a/s2-lb/terminal-growth-shrink.my:3:5: error[R_LIST_ITERATION_MUTATION]: native execution failed\n  in main at experiments/new-core-s2-20261005/wave-a/s2-lb/terminal-growth-shrink.my:3:5\n",
+      "stdout": "",
+      "seconds": 1.165
+    },
+    {
+      "source": "indexed-array-ancestor-growth.my",
+      "exit": 1,
+      "stderr": "experiments/new-core-s2-20261005/wave-a/s2-lb/indexed-array-ancestor-growth.my:3:5: error[R_LIST_ITERATION_MUTATION]: native execution failed\n  in main at experiments/new-core-s2-20261005/wave-a/s2-lb/indexed-array-ancestor-growth.my:3:5\n",
+      "stdout": "",
+      "seconds": 1.246
+    },
+    {
+      "source": "set-growth.my",
+      "exit": 1,
+      "stderr": "experiments/new-core-s2-20261005/wave-a/s2-lb/set-growth.my:4:5: error[R_LIST_ITERATION_MUTATION]: native execution failed\n  in main at experiments/new-core-s2-20261005/wave-a/s2-lb/set-growth.my:4:5\n",
+      "stdout": "",
+      "seconds": 1.472
+    },
+    {
+      "source": "dict-ancestor-growth.my",
+      "exit": 1,
+      "stderr": "experiments/new-core-s2-20261005/wave-a/s2-lb/dict-ancestor-growth.my:3:5: error[R_LIST_ITERATION_MUTATION]: native execution failed\n  in main at experiments/new-core-s2-20261005/wave-a/s2-lb/dict-ancestor-growth.my:3:5\n",
+      "stdout": "",
+      "seconds": 1.596
+    }
+  ]
+}

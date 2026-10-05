@@ -60,8 +60,8 @@ fn writesNode(syntax: Syntax, id: ast.NodeId, name: []const u8) bool {
     return rootedAt(syntax, target, name);
 }
 
-/// Whether a place — a name, or fields and elements below one — starts at `name`.
-fn rootedAt(syntax: Syntax, id: ast.NodeId, name: []const u8) bool {
+/// Whether a place starts at the named root, including fields and indices.
+pub fn rootedAt(syntax: Syntax, id: ast.NodeId, name: []const u8) bool {
     var at = id;
     for (0..64) |_| switch (syntax.program.nodes.items[@backingInt(at)].data) {
         .name => |span| return named(syntax, span, name),
@@ -70,6 +70,37 @@ fn rootedAt(syntax: Syntax, id: ast.NodeId, name: []const u8) bool {
         else => return false,
     };
     return true;
+}
+
+/// Whether the body replaces the root binding itself; writes below it stay live.
+pub fn rebinds(allocator: std.mem.Allocator, syntax: Syntax, body: ast.StatementId, name: []const u8) std.mem.Allocator.Error!bool {
+    var work: std.ArrayList(ast.StatementId) = .empty;
+    defer work.deinit(allocator);
+    try work.append(allocator, body);
+    while (work.pop()) |id| {
+        const statement = syntax.program.statements.items[@backingInt(id)];
+        const replaced = switch (statement.data) {
+            .assignment => |assignment| assignment.op == .set and named(syntax, assignment.name, name),
+            .binding => |binding| named(syntax, binding.name, name),
+            .discard => |value| destructures(syntax, value, name),
+            else => false,
+        };
+        if (replaced) return true;
+        try ast.appendNested(allocator, &work, statement);
+    }
+    return false;
+}
+
+fn destructures(syntax: Syntax, id: ast.NodeId, name: []const u8) bool {
+    const node = syntax.program.nodes.items[@backingInt(id)];
+    if (node.data != .field_assignment) return false;
+    const target = syntax.program.nodes.items[@backingInt(node.data.field_assignment.target)];
+    if (target.data != .tuple) return false;
+    for (target.data.tuple) |part| {
+        const item = syntax.program.nodes.items[@backingInt(part)];
+        if (item.data == .name and named(syntax, item.data.name, name)) return true;
+    }
+    return false;
 }
 
 fn named(syntax: Syntax, span: source.Span, name: []const u8) bool {

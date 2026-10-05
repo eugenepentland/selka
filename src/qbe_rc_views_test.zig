@@ -27,7 +27,8 @@ const iteration_dictionary =
 const iteration_list =
     \\def grow(values: mut list[int]) -> int:
     \\    for value in values:
-    \\        values.append(value)
+    \\        _ = value
+    \\        _ = values.pop()
     \\        continue
     \\    return 0
     \\def main() -> int:

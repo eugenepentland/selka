@@ -154,6 +154,8 @@ const Checker = struct {
     nodes: std.ArrayList(typed.Node) = .empty,
     statements: std.ArrayList(typed.Statement) = .empty,
     locals: std.ArrayList(typed.Local) = .empty,
+    /// Statements in earlier functions use a different local ID namespace.
+    function_statement_start: usize = 0,
     active: std.StringHashMapUnmanaged(typed.LocalId) = .empty,
     resolved: []?typed.NodeId,
     expected_types: std.AutoHashMapUnmanaged(source.Span, typed.Type) = .empty,
@@ -218,6 +220,7 @@ const Checker = struct {
         self.expected_types.clearRetainingCapacity();
         self.option_facts.clear();
         self.locals = .empty;
+        self.function_statement_start = self.statements.items.len;
         self.counters.clearRetainingCapacity();
         self.active.clearRetainingCapacity();
         self.owner = if (function.policy.owner) |owner| try self.ty(owner) else null;
@@ -386,6 +389,7 @@ const Checker = struct {
         self.expected_types.clearRetainingCapacity();
         self.option_facts.clear();
         self.locals = .empty;
+        self.function_statement_start = self.statements.items.len;
         self.counters.clearRetainingCapacity();
         self.active.clearRetainingCapacity();
         self.owner = null;

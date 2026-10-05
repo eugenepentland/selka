@@ -184,13 +184,13 @@ public def test_a_loop_over_an_array_the_body_never_writes_sees_every_element() 
 
 
 # spec-case: PY-ARRAY-ITER-2
-public def test_a_loop_whose_body_writes_the_array_still_walks_the_first_value() -> bool:
+public def test_a_loop_sees_array_writes_from_the_end() -> bool:
     values: [3]i64 = [1, 2, 3]
     seen = 0
     for value in values:
         values[-1] = 100
         seen = seen * 10 + value
-    return seen == 123 and values[2] == 100
+    return seen == 220 and values[2] == 100
 
 
 # spec: PY-DESTRUCTURE-PLACE-1
