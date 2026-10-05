@@ -160,3 +160,19 @@ test "a branch on a loop-invariant comparison is decided once before the loop, l
     try std.testing.expect(std.mem.indexOf(u8, text, "vexit2:") != null);
     try std.testing.expect(std.mem.indexOf(u8, text, "@llvm.x86.avx2.pmadd.wd") != null);
 }
+
+const targets = @import("target.zig");
+const c_abi = @import("c_abi.zig");
+
+// spec: NEW-CORE-TARGET-1
+test "target choices come from one description, and without x86 intrinsics the vector code is generic LLVM" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    try std.testing.expectEqual(@as(u16, 256), targets.current.vector_bits);
+    try std.testing.expectEqual(@as(i128, 1) << 47, targets.current.maxListLength());
+    const generic = try support.releaseLlvmTextFor(arena.allocator(), branchy, targets.generic_256);
+    try std.testing.expect(std.mem.indexOf(u8, generic, "@llvm.x86.") == null);
+    try std.testing.expect(std.mem.indexOf(u8, generic, "select <16 x i1>") != null);
+    try std.testing.expect(std.mem.indexOf(u8, generic, "@llvm.vector.reduce.add.v16i64") != null);
+    try std.testing.expectEqualStrings("runtime_bench_now", c_abi.symbol("int_math::runtime_bench_now"));
+}

@@ -14,6 +14,7 @@ const std = @import("std");
 const ir = @import("ir.zig");
 const facts = @import("facts.zig");
 const vector = @import("vector.zig");
+const c_abi = @import("c_abi.zig");
 
 /// A source line and column for a span start.
 pub const Location = struct { line: u32, column: u32 };
@@ -40,6 +41,8 @@ pub const Options = struct {
     verify: bool = false,
     /// Per function, the loops the vector lowering takes (empty in debug and verify builds).
     vectors: []const []const vector.Plan = &.{},
+    /// The target description (`target.zig`): vector width and available intrinsics.
+    target: @import("target.zig").Target = @import("target.zig").current,
 };
 
 /// Trap kinds, in the order the runtime's code table lists them.
@@ -106,10 +109,10 @@ const ModuleState = struct {
     meta: Metadata = .{},
 
     fn declareExtern(self: *ModuleState, function: *const ir.Function) !void {
-        try self.externs.print(self.allocator, "declare {s} @{s}(", .{ try self.llvmType(function.signature.ret), cName(function.name) });
+        try self.externs.print(self.allocator, "declare {s} @{s}(", .{ try self.llvmType(function.signature.ret), c_abi.symbol(function.name) });
         var first = true;
         for (function.signature.params) |param| {
-            if (param == .cap) continue;
+            if (!c_abi.passes(param)) continue;
             try self.externs.print(self.allocator, "{s}{s}", .{ if (first) "" else ", ", try self.llvmType(param) });
             first = false;
         }
@@ -228,12 +231,6 @@ fn escaped(allocator: std.mem.Allocator, out: *Out, text: []const u8) !void {
     for (text) |byte| {
         if (byte < 0x20 or byte >= 0x7f or byte == '"' or byte == '\\') try out.print(allocator, "\\{X:0>2}", .{byte}) else try out.append(allocator, byte);
     }
-}
-
-/// The C symbol of an `extern def`: its unqualified name.
-fn cName(name: []const u8) []const u8 {
-    const at = std.mem.lastIndexOfScalar(u8, name, ':') orelse return name;
-    return name[at + 1 ..];
 }
 
 /// The LLVM symbol of a mylang function.
@@ -376,6 +373,7 @@ const FunctionEmitter = struct {
                 .known = self.state.options.facts[self.index].?,
                 .scalars = .{ .context = self, .name = scalarName },
                 .from = self.label,
+                .target = self.state.options.target,
             });
             try self.vectors.resume_values.put(self.a(), @intCast(plan.carried.counter.index()), resumed.counter);
             try self.vectors.resume_values.put(self.a(), @intCast(plan.carried.acc.index()), resumed.acc);
@@ -831,11 +829,11 @@ const FunctionEmitter = struct {
         var arguments: Out = .empty;
         var first = true;
         for (self.function.operands(inst.data), callee.signature.params) |argument, param| {
-            if (external and param == .cap) continue;
+            if (external and !c_abi.passes(param)) continue;
             try arguments.print(self.a(), "{s}{s}", .{ if (first) "" else ", ", try self.typedValue(argument) });
             first = false;
         }
-        const target = if (external) try std.fmt.allocPrint(self.a(), "@{s}", .{cName(callee.name)}) else try symbol(self.a(), callee.name);
+        const target = if (external) try std.fmt.allocPrint(self.a(), "@{s}", .{c_abi.symbol(callee.name)}) else try symbol(self.a(), callee.name);
         if (callee.signature.ret == .void) {
             try out.print(self.a(), "  call void {s}({s})\n", .{ target, arguments.items });
         } else {

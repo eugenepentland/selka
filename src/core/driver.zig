@@ -3,10 +3,11 @@
 //! The runtime is compiled once per content into the work directory at -O2,
 //! whatever the program's level, so a debug build pays only for the program's
 //! own code. The program's `.ll` is compiled at -O0 (debug) or -O3 for the
-//! host CPU (release, L4) and linked with the runtime and any `--link` C files.
+//! target CPU (release, L4; `target.zig`) and linked with the runtime and any `--link` C files.
 //! A minimal driver rather than the old core's `qbe_build_llvm_compile.zig`:
 //! that one is bound to the QBE manifest, fragment store and object cache.
 const std = @import("std");
+const target = @import("target.zig").current;
 
 /// The runtime C source, compiled into every program.
 pub const runtime_source = @embedFile("runtime/core_rt.c");
@@ -40,7 +41,7 @@ pub fn link(allocator: std.mem.Allocator, io: std.Io, environ: *const std.proces
     const program = request.program;
     cwd.writeFile(io, .{ .sub_path = program, .data = request.llvm }) catch return error.WriteFailed;
     var argv: std.ArrayList([]const u8) = .empty;
-    try argv.appendSlice(allocator, &.{ request.zig, "cc", if (request.release) "-O3" else "-O0", "-march=native", "-Wno-override-module", "-o", request.output, program, runtime_object });
+    try argv.appendSlice(allocator, &.{ request.zig, "cc", if (request.release) "-O3" else "-O0", target.cpu_flag, "-Wno-override-module", "-o", request.output, program, runtime_object });
     try argv.appendSlice(allocator, request.links);
     try run(allocator, io, &environment, argv.items, log);
 }
@@ -56,7 +57,7 @@ fn runtimeObject(allocator: std.mem.Allocator, io: std.Io, environment: *const s
     const source = try std.fs.path.join(allocator, &.{ request.work, try std.fmt.allocPrint(allocator, "{s}.c", .{stem}) });
     cwd.writeFile(io, .{ .sub_path = source, .data = runtime_source }) catch return error.WriteFailed;
     const partial = try std.fmt.allocPrint(allocator, "{s}.partial", .{object});
-    try run(allocator, io, environment, &.{ request.zig, "cc", "-c", "-O2", "-march=native", "-std=c11", "-o", partial, source }, log);
+    try run(allocator, io, environment, &.{ request.zig, "cc", "-c", "-O2", target.cpu_flag, "-std=c11", "-o", partial, source }, log);
     cwd.rename(partial, cwd, object, io) catch return error.WriteFailed;
     return object;
 }

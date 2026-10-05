@@ -16,6 +16,28 @@
 #include <string.h>
 #include <unistd.h>
 
+/* ---- platform layer (POSIX) ------------------------------------------------
+ * Every operating-system call the runtime makes goes through these functions;
+ * the rest of the file is portable C11. A Windows or macOS port replaces this
+ * section (or moves it to a core_rt_<os>.c); arguments arrive through the
+ * LLVM-emitted C `main`, and future clock, file, network and environment
+ * access belongs here too. */
+
+/* Write all of `len` bytes to a standard stream (1 or 2), as far as the OS allows. */
+static void os_write(int fd, const unsigned char *bytes, size_t len) {
+    size_t done = 0;
+    while (done < len) {
+        ssize_t wrote = write(fd, bytes + done, len - done);
+        if (wrote <= 0) break;
+        done += (size_t)wrote;
+    }
+}
+
+/* End the process now, with no atexit handlers (a trap or a fatal error). */
+static void os_exit(int status) { _exit(status); }
+
+/* ---- blocks ------------------------------------------------------------------ */
+
 typedef struct {
     uint32_t count;
     uint32_t kind;
@@ -57,12 +79,7 @@ static myl_stream streams[2] = {{.fd = 1}, {.fd = 2}};
 static myl_stream *stream_for(int64_t fd) { return &streams[fd == 2 ? 1 : 0]; }
 
 static void stream_flush(myl_stream *stream) {
-    size_t done = 0;
-    while (done < stream->used) {
-        ssize_t wrote = write(stream->fd, stream->bytes + done, stream->used - done);
-        if (wrote <= 0) break;
-        done += (size_t)wrote;
-    }
+    os_write(stream->fd, stream->bytes, stream->used);
     stream->used = 0;
 }
 
@@ -87,8 +104,8 @@ static void flush_all(void) {
 static void out_of_memory(void) {
     flush_all();
     static const char message[] = "fatal: out of memory\n";
-    (void)!write(2, message, sizeof message - 1);
-    _exit(1);
+    os_write(2, (const unsigned char *)message, sizeof message - 1);
+    os_exit(1);
 }
 
 void myl_core_print_i64(int64_t fd, int64_t value) {
@@ -256,7 +273,7 @@ void myl_core_trap(int32_t index, int64_t a, int64_t b) {
         myl_core_source_path, site->line, site->column, code, detail, unqualified(site->function), myl_core_source_path, site->line, site->column, record);
     stream_write(&streams[1], text, (size_t)(len < (int)sizeof text ? len : (int)sizeof text - 1));
     flush_all();
-    _exit(1);
+    os_exit(1);
 }
 
 /* `main`'s result is the exit status, truncated to the low 8 bits. */

@@ -58,9 +58,15 @@ pub fn optimizedText(arena: std.mem.Allocator, source: []const u8) Error![]u8 {
 
 /// The LLVM IR a release build of `source` emits.
 pub fn releaseLlvmText(arena: std.mem.Allocator, source: []const u8) Error![]u8 {
+    return releaseLlvmTextFor(arena, source, @import("target.zig").current);
+}
+
+/// The LLVM IR a release build of `source` emits for target description `target`.
+pub fn releaseLlvmTextFor(arena: std.mem.Allocator, source: []const u8, target: @import("target.zig").Target) Error![]u8 {
     var refusal: build.Refusal = .{};
     var module = try buildSource(arena, source, &refusal);
     const result = try passes.run(arena, &module, .trusted);
     const context: u8 = 0;
-    return emit_llvm.emitModule(arena, &module, .{ .locator = .{ .context = &context, .locate = firstLine }, .source_path = "test.my", .main_parameters = &.{ "args", "out" }, .facts = result.known, .vectors = result.plans });
+    const locator: emit_llvm.Locator = .{ .context = &context, .locate = firstLine };
+    return emit_llvm.emitModule(arena, &module, .{ .locator = locator, .source_path = "test.my", .main_parameters = &.{ "args", "out" }, .facts = result.known, .vectors = result.plans, .target = target });
 }

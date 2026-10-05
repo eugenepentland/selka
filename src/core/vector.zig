@@ -20,6 +20,7 @@
 const std = @import("std");
 const ir = @import("ir.zig");
 const facts = @import("facts.zig");
+const target_info = @import("target.zig");
 
 /// Planning and emission only allocate.
 pub const Error = std.mem.Allocator.Error;
@@ -410,6 +411,9 @@ pub const Emission = struct {
     scalars: Scalars,
     /// The label the preheader's code currently ends in.
     from: []const u8,
+    /// Vector width and whether x86 intrinsics may be used; every intrinsic has a
+    /// generic LLVM fallback that is correct on any target.
+    target: target_info.Target = target_info.current,
 };
 
 /// The values the scalar loop starts from after the vector part.
@@ -435,7 +439,7 @@ const Writer = struct {
     }
 
     fn lanes(self: *Writer) u32 {
-        return 256 / @as(u32, self.e.plan.bits);
+        return self.e.target.vector_bits / @as(u32, self.e.plan.bits);
     }
 
     fn vec(self: *Writer) Error![]const u8 {
@@ -522,7 +526,8 @@ const Writer = struct {
         }
         try self.put("  %vhas{d} = icmp sgt i64 %vnv{d}, 0\n  br i1 %vhas{d}, label %vblock{d}, label %vexit{d}\n", .{ n, n, n, n, n });
         const summand_range = self.e.known.ranges[p.carried.summand.index()].?;
-        const madd = p.bits == 16 and summand_range.hi <= 0x7fff;
+        // `pmaddwd` is x86; elsewhere the summands widen to 64-bit lanes (generic, slower).
+        const madd = self.e.target.x86_avx2 and p.bits == 16 and summand_range.hi <= 0x7fff;
         const block_elements = blockElements(summand_range.hi, count, madd);
         try self.put("vblock{d}:\n  %vb{d} = phi i64 [ 0, %{s} ], [ %vlim{d}, %vbend{d} ]\n  %vtot{d} = phi i64 [ {s}, %{s} ], [ %vtot2{d}, %vbend{d} ]\n", .{ n, n, from, n, n, n, acc0, from, n, n });
         try self.put("  %vcap{d} = add nuw i64 %vb{d}, {d}\n  %vover{d} = icmp ult i64 %vcap{d}, %vnv{d}\n", .{ n, n, block_elements, n, n, n });
@@ -591,7 +596,8 @@ const Writer = struct {
     /// Whether the i64 lists load with `packusdw`: every lane must then come from the
     /// same element permutation, so the plan decides once for all its loads.
     fn packedLoads(self: *Writer) bool {
-        if (self.e.plan.bits != 16) return false;
+        // `packusdw` is x86; the generic load is a plain `trunc`, which keeps element order.
+        if (!self.e.target.x86_avx2 or self.e.plan.bits != 16) return false;
         for (self.e.plan.body) |ref| {
             const inst = self.f.inst(ref);
             if (inst.op != .list_get or inst.ty != .i64) continue;
@@ -645,7 +651,9 @@ const Writer = struct {
         const remainder = inst.op == .floor_rem or inst.op == .rem;
         const quotient = if (remainder) try std.fmt.allocPrint(self.arena, "{s}.q", .{name}) else name;
         const dividend = rangeOf(self.f, self.e.known, inst.a).?;
-        const found = if (self.e.plan.bits == 16) reciprocal(divisor, @intCast(dividend.lo), @intCast(dividend.hi)) else null;
+        // `pmulhuw` is x86; the generic form is a vector `udiv` by the constant, which LLVM
+        // lowers with its own multiply-high sequence where the target has one.
+        const found = if (self.e.target.x86_avx2 and self.e.plan.bits == 16) reciprocal(divisor, @intCast(dividend.lo), @intCast(dividend.hi)) else null;
         if (found) |r| {
             const multiplier = try self.splatConstant(@intCast(r.multiplier));
             if (r.shift == 0) {

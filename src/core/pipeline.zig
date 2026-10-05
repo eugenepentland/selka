@@ -30,6 +30,9 @@ pub const Show = struct {
     llvm: ?[]const u8 = null,
     /// Print what the release passes did (`--stats`) to the report.
     stats: bool = false,
+    /// Emit only generic LLVM vector code, no x86 intrinsics (`--generic-vectors`): the
+    /// portable fallback a target without AVX2 would get, testable on this one.
+    generic_vectors: bool = false,
 };
 
 /// Why a build stopped after its report was written.
@@ -75,6 +78,7 @@ pub fn build(init: std.process.Init, path: []const u8, options: Options, report:
         .facts = result.known,
         .verify = verify and options.release,
         .vectors = result.plans,
+        .target = if (options.show.generic_vectors) @import("target.zig").generic_256 else @import("target.zig").current,
     }) catch |err| switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
         else => {

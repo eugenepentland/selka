@@ -349,6 +349,20 @@ are ported into `core_rt` as S1–S3 need them (text and UTF-8, dictionaries and
 formatting and parsing, I/O and capabilities), as C adapted to these blocks or rewritten,
 each noting the old function it was ported from.
 
+### 8.1 Portability
+
+L4 holds: x86-64 Linux with AVX2 is the only target. Platform assumptions are kept in a few
+named places so a later macOS (x86-64 or arm64) or Windows port is local work:
+
+| Target-specific item | Where it lives |
+|---|---|
+| LLVM triple, CPU flags (`-march=native`), vector width, available intrinsics | `src/core/target.zig` (`Target`, `current`); read by `driver.zig`, `emit_llvm.zig`, `vector.zig` |
+| Address-space bound behind the list-length rule (47 bits) | `target.zig` `user_address_bits` / `maxListLength`; `facts.max_list_length` is derived from it |
+| x86 intrinsics (`packusdw`, `pmulhuw`, `pmaddwd`) | `vector.zig`, each behind `target.x86_avx2` with a generic LLVM fallback (plain `trunc` loads, vector `udiv`, 64-bit lane sums); `--generic-vectors` builds the fallback and the tests check its results |
+| C ABI of `extern` calls (SysV x86-64, scalars and pointers) | `src/core/c_abi.zig` |
+| Operating-system calls (write, exit; later clock, files, network, environment) | the platform-layer section at the top of `runtime/core_rt.c` (`os_write`, `os_exit`); argv arrives through the LLVM-emitted C `main` |
+| Traps and traces (today: report and `_exit`, innermost frame only) | `myl_core_trap` in `core_rt.c` is the only trap entry the emitter calls; PC-table traces (S1) go behind it; `target.zig` names the mechanism (`Traps`) |
+
 ## 9. Files and reachability
 
 ```
@@ -358,6 +372,8 @@ src/core/passes.zig      the release passes in order
 src/core/inline.zig      single-block leaf inlining
 src/core/version.zig     loop copies behind a guard: unswitching, trip-count guards
 src/core/vector.zig      narrow-lane vector plans and their LLVM
+src/core/target.zig      the target description (§8.1)
+src/core/c_abi.zig       C ABI of extern calls (§8.1)
 src/core/frontend.zig    front-end loading (module graph or single file), positions
 src/core/typed_dump.zig  dump-typed
 src/core/ir.zig          Core IR types, module/function/block/instruction

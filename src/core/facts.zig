@@ -16,9 +16,9 @@
 const std = @import("std");
 const ir = @import("ir.zig");
 
-/// A list holds at most 2^47 elements: elements of at least one byte in the 47-bit
-/// x86-64 Linux user address space (L4). A list that reaches this many cannot be built.
-pub const max_list_length: i128 = 1 << 47;
+/// A list holds at most this many elements: elements of at least one byte in the
+/// target's user address space (2^47 on x86-64 Linux, L4; see `target.zig`).
+pub const max_list_length: i128 = @import("target.zig").current.maxListLength();
 
 /// A closed integer interval, exact in `i128`.
 pub const Interval = struct {

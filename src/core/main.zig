@@ -102,6 +102,8 @@ fn buildCommand(init: std.process.Init, args: []const []const u8) !u8 {
             options.release = true;
         } else if (std.mem.eql(u8, arg, "--no-facts")) {
             options.facts = .off;
+        } else if (std.mem.eql(u8, arg, "--generic-vectors")) {
+            options.show.generic_vectors = true;
         } else if (std.mem.eql(u8, arg, "--stats")) {
             options.show.stats = true;
         } else if (std.mem.eql(u8, arg, "--verify-facts")) {
