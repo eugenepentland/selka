@@ -926,3 +926,11 @@ No question below changes language behaviour unless it says so.
    core's emitted code. The layout ranking is the decision input; the rows' final numbers
    come from lane D. The `word_count` small-table gap (+23–31%) is measured but its fix (the
    no-index scan below 8 entries) is not.
+
+## 11. Integrator review (2026-10-05)
+
+- **The S2 gate rows test the layout's weak case.** `dict_lookup`, `dict_update` and `set_dedup` use dense sequential keys, where the CPython layout measured 20–37% faster than `hybrid` (§2.2 reading 1), and `word_count` is a tiny table, where `hybrid` is 23–31% slower until the scan-below-8 path exists. `hybrid` is still the right default for real programs (random and string keys, 1.5–2.6× faster), but:
+  - Keep the dictionary IR operations (§2.4) independent of the layout, so the table can be swapped without touching the builder or the facts.
+  - Lane D measures the rows against the L1 gate (Zig ReleaseSafe) as soon as `get`/`set` work. If a dense-key row misses the gate with `hybrid`, the first remedy is builder-known capacity and the cheap-rebuild path. The fallback is the CPython layout behind the same operations. Record the decision with the numbers here.
+  - Never tune the hash to the fixtures' sequential keys (WP-10e).
+- **S2 does not start without the user.** §10's questions go to the user with the S1 summary.
