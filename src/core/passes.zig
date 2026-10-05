@@ -92,7 +92,10 @@ fn extend(arena: std.mem.Allocator, known: *facts.Facts, f: *const ir.Function) 
     const insts = f.insts.items.len;
     const blocks = f.blocks.items.len;
     if (known.ranges.len < insts) known.ranges = try grown(?facts.Interval, arena, known.ranges, insts, null);
-    if (known.lists.len < insts) known.lists = try grown(facts.ListFact, arena, known.lists, insts, .{});
+    if (known.aggregates.lists.len < insts) {
+        known.aggregates.lists = try grown(facts.ListFact, arena, known.aggregates.lists, insts, .{});
+        known.aggregates.fields = try grown(?[]const ?facts.Interval, arena, known.aggregates.fields, insts, null);
+    }
     if (known.floats.len < insts) known.floats = try grown(?facts.FloatInterval, arena, known.floats, insts, null);
     if (known.bounds.len != 0 and known.bounds.len < insts) known.bounds = try grown(?facts.LengthBound, arena, known.bounds, insts, null);
     if (known.reachable.len < blocks) known.reachable = try grown(bool, arena, known.reachable, blocks, true);

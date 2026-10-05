@@ -18,7 +18,14 @@ pub fn typeName(allocator: std.mem.Allocator, m: *const ir.Module, ty: ir.Type) 
     if (!ty.isCompound()) return @tagName(ty);
     return switch (m.compound(ty)) {
         .list => |element| std.fmt.allocPrint(allocator, "list[{s}]", .{try typeName(allocator, m, element)}),
-        .box => |inner| std.fmt.allocPrint(allocator, "box[{s}]", .{try typeName(allocator, m, inner)}),
+        // A box may close a recursive type, so a record or union inside one is named by index.
+        .box => |inner| if (m.kind(inner)) |k|
+            switch (k) {
+                .record, .@"union" => std.fmt.allocPrint(allocator, "box[#{d}]", .{@backingInt(inner)}),
+                else => std.fmt.allocPrint(allocator, "box[{s}]", .{try typeName(allocator, m, inner)}),
+            }
+        else
+            std.fmt.allocPrint(allocator, "box[{s}]", .{try typeName(allocator, m, inner)}),
         .record => |fields| typeList(allocator, m, "record", fields),
         .@"union" => |cases| if (cases.len == 2 and cases[0] == .void and cases[1] != .void)
             std.fmt.allocPrint(allocator, "option[{s}]", .{try typeName(allocator, m, cases[1])})

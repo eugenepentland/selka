@@ -178,7 +178,7 @@ fn readsAfter(arena: std.mem.Allocator, f: *const ir.Function, value: ir.Ref, up
 /// A header phi the fact pass gave a length (`listFacts`): its other operand is one
 /// push of the phi, used by nothing else; the capacity is the bound's upper end.
 fn fillLoop(f: *const ir.Function, users: Users, known: *const facts.Facts, phi: ir.Ref, list: ir.Ref) ?struct { push: ir.Ref, capacity: u64 } {
-    const fact = known.lists[phi.index()];
+    const fact = known.aggregates.lists[phi.index()];
     if (fact.length == .none) return null;
     const operands = f.operands(f.inst(phi).data);
     if (operands.len != 2) return null;

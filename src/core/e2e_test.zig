@@ -5,7 +5,7 @@
 const std = @import("std");
 const options = @import("core_test_options");
 /// The build flags the tests pass.
-const optimize_flag = "--release";
+pub const optimize_flag = "--release";
 const cache_flag = "--cache-dir";
 /// The build cache under a test's scratch directory.
 const cache_format = "{s}/cache";
