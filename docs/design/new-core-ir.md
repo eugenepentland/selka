@@ -293,17 +293,17 @@ src/core/facts.zig       intervals, list facts, check marking
 src/core/emit_llvm.zig   LLVM IR text
 src/core/driver.zig      zig cc invocation and linking
 src/core/runtime/core_rt.c
-src/core/tests.zig       test root (guardian test-reachability root)
+src/core/root_test.zig       test root (guardian test-reachability root)
 test/core/*.my           slice programs and expected outputs
 ```
 
-`guardian.toml` lists `src/core/main.zig` and `src/core/tests.zig` as roots, so every new
+`guardian.toml` lists `src/core/main.zig` and `src/core/root_test.zig` as roots, so every new
 file is reachable from one of them. The runtime C file is embedded into `mylang-core` with
 `@embedFile` and written to the build's cache directory.
 
 ## 10. Tests and the dev loop
 
-- **Unit tests** (`src/core/*_test.zig`, reached from `src/core/tests.zig`): IR builder
+- **Unit tests** (`src/core/*_test.zig`, reached from `src/core/root_test.zig`): IR builder
   shapes on small programs checked from source (`print.zig` text compared exactly), facts,
   and emitter output fragments. Guardian rules apply (spec tags `NEW-CORE-*`).
 - **End-to-end** (`src/core/e2e_test.zig`): builds each `test/core/*.my` program with

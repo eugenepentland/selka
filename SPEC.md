@@ -1784,3 +1784,16 @@ no source semantics, runtime contract, guard, ownership permission or opcode.
 - [QBE-INTEGER-ANNIHILATOR-1] QBE folds integer multiplication, bitwise AND and unsigned multiply-high by zero to zero, and unsigned multiply-high by one to zero, after operands have been evaluated. Integer width is preserved, calls producing discarded values still execute, and floating multiplication remains unchanged for NaN and signed zero.
 
 - [NATIVE-SCALAR-BACKEND-1] Native LLVM builds retain checked division and remainder for LLVM constant-divisor optimization; QBE builds retain exact multiply-high recipes. Standalone emission defaults to QBE, and foreign frontend arguments are unchanged. The internal scalar policy partitions fragment, lean replay, module configuration and native-test result identities, and flows through selective emission. No value, overflow, zero-divisor, source trap or accounting semantics change.
+
+## New compiler core (S0)
+
+The separate `mylang-core` executable (`zig build core`, `docs/design/new-core-ir.md`) builds a program from the checked tree through the Core IR and LLVM, beside the old core.
+
+- [NEW-CORE-FRONTEND-1] `mylang-core` loads an entry path as the module named by its file stem under its directory (a header-less file is checked alone), through the unchanged front end, and maps a merged-source offset back to the file, 1-based line and column it came from.
+- [NEW-CORE-IR-1] The Core IR builder turns checked loops, branches, option matches and short-circuit `and`/`or` into SSA: each loop gets header, body, latch and exit blocks, loop-carried locals become phis in the header, and every checked arithmetic, conversion and list read keeps an exact check.
+- [NEW-CORE-IR-2] A construct the new core does not support yet stops the build with `E_CORE_UNSUPPORTED`, naming the construct and the source position where it occurs; nothing is emitted.
+- [NEW-CORE-LLVM-1] LLVM emission lowers exact checks to overflow intrinsics and range tests that branch, weighted cold, to `myl_core_trap` with a site index; the site table records trap kind, line, column, width, operation and function, and the C entry builds `main`'s arguments and exits with its result's low 8 bits.
+- [NEW-CORE-DRIVER-1] The native driver compiles the runtime once per runtime content into the cache directory and links it with the program's LLVM IR through `zig cc` (-O0 for debug, -O3 for the host CPU for release); a compiler or linker that cannot run or fails ends the build with its output reported.
+- [NEW-CORE-SLICE-1] `mylang-core build` compiles the integer_math slice (`test/core/int_math.my`) at debug and release; its checksums for 4096, 64 and 4100 elements (300 iterations, seed 7) equal the old core's, and invalid arguments exit 2 as they do there.
+- [NEW-CORE-SLICE-2] The control-flow program `test/core/control.my` (while, break and continue, floor division and remainder of negative operands, the `int(text)` grammar including overflow, short-circuit operators, boolean printing) prints and exits exactly as the old core's build does, at debug and release.
+- [NEW-CORE-TRAP-1] An overflow or list-bounds failure flushes stdout written before it, prints the old core's first stderr line (`path:line:column: error[CODE]: native execution failed (detail)`) and `MYLANG-TRAP` record, and exits 1.

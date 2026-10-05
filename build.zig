@@ -403,6 +403,52 @@ fn addRcFuzz(b: *std.Build) void {
     b.step("test-rc-fuzz", "Differential-fuzz the default RC runtime against --gc-runtime (opt-in, not part of test)").dependOn(&fuzz.step);
 }
 
+/// What the new core's steps build on: the shared front end module, the
+/// Guardian test runner, and the old compiler that serves as its oracle.
+const CoreInputs = struct {
+    target: std.Build.ResolvedTarget,
+    optimize: std.builtin.OptimizeMode,
+    front_end: *std.Build.Module,
+    guardian: *std.Build.Dependency,
+    old_compiler: *std.Build.Step.Compile,
+    filters: []const []const u8,
+};
+
+/// The new compiler core (docs/design/new-core-ir.md), kept off the default
+/// install graph (decision N2):
+/// - `zig build core` installs `zig-out/bin/mylang-core`;
+/// - `zig build test-core` runs its unit tests and the end-to-end slice;
+/// - `-Dcore-diff=true` also builds each slice program with the old compiler
+///   and requires the same stdout and exit status (it builds the old compiler).
+fn addCore(b: *std.Build, inputs: CoreInputs) void {
+    const exe = b.addExecutable(.{ .max_rss = rss.compile, .name = "mylang-core", .root_module = b.createModule(.{
+        .root_source_file = b.path("src/core/main.zig"),
+        .target = inputs.target,
+        .optimize = inputs.optimize,
+        .imports = &.{.{ .name = "mylang", .module = inputs.front_end }},
+    }) });
+    b.step("core", "Build and install the new compiler core, zig-out/bin/mylang-core").dependOn(&b.addInstallArtifact(exe, .{}).step);
+    const differential = b.option(bool, "core-diff", "test-core: also compare each slice program with the old compiler's build of it") orelse false;
+    const options = b.addOptions();
+    options.addOptionPath("core_path", exe.getEmittedBin());
+    options.addOption(bool, "differential", differential);
+    if (differential) options.addOptionPath("old_path", inputs.old_compiler.getEmittedBin()) else options.addOption([]const u8, "old_path", "");
+    options.addOptionPath("clock_path", b.path("benchmarks/runtime/ports/native_clock.c"));
+    const root = std.Io.Dir.cwd().realPathFileAlloc(b.graph.io, ".", b.allocator) catch @panic("build root");
+    options.addOption([]const u8, "fixtures", b.pathJoin(&.{ root, "test", "core" }));
+    const unit = b.addTest(.{ .max_rss = rss.compile, .test_runner = guardian.testRunner(inputs.guardian), .filters = inputs.filters, .root_module = b.createModule(.{
+        .root_source_file = b.path("src/core/root_test.zig"),
+        .target = inputs.target,
+        .optimize = inputs.optimize,
+        .imports = &.{.{ .name = "mylang", .module = inputs.front_end }},
+    }) });
+    unit.root_module.addOptions("core_test_options", options);
+    const run = b.addRunArtifact(unit);
+    run.step.max_rss = rss.driver;
+    run.has_side_effects = true;
+    b.step("test-core", "Run the new core's unit tests and its end-to-end slice (not part of test)").dependOn(&run.step);
+}
+
 pub fn build(b: *std.Build) void {
     if (!std.mem.eql(u8, builtin.zig_version_string, "0.17.0-dev.1683+5ceec001b"))
         @panic("mylang requires Guardian's Zig 0.17.0-dev.1683+5ceec001b toolchain (see .zigversion)");
@@ -618,6 +664,7 @@ pub fn build(b: *std.Build) void {
     // The application tests under `tests/application_comparison` and
     // `tests/development_velocity` read the runners from `zig-out/bin`, so they
     // need the default install.
+    addCore(b, .{ .target = target, .optimize = optimize, .front_end = core, .guardian = guardian_dep, .old_compiler = exe, .filters = test_filters });
     const compiler_only = b.option(bool, "compiler-only", "Install only mylang, qbe and the runtime, not board-trial, schematic-svg or mylang-io (for measurement installs)") orelse false;
     const board_runner = b.addExecutable(.{ .max_rss = rss.compile, .name = "board-trial", .root_module = board_module });
     if (!compiler_only) b.installArtifact(board_runner);

@@ -81,7 +81,8 @@ pub const lexer = @import("lexer.zig");
 pub const tokens_dump = @import("tokens_dump.zig");
 const parser = @import("parser.zig");
 const ast = @import("ast.zig");
-const typed = @import("typed.zig");
+/// The checked program the new compiler core (`src/core/`, `mylang-core`) lowers from.
+pub const typed = @import("typed.zig");
 const sema = @import("sema.zig");
 const lower = @import("lower.zig");
 pub const bytecode = @import("bytecode.zig");
