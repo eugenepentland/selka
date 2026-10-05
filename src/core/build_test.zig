@@ -114,3 +114,62 @@ test "a construct the new core does not support stops the build with a reason an
     try std.testing.expect(refusal.reason.len != 0);
     try std.testing.expect(refusal.span > 0);
 }
+
+const iterate_and_grow =
+    \\def main(out: Stream) -> int:
+    \\    xs = [1, 2, 3]
+    \\    total = 0
+    \\    for v in xs:
+    \\        total += v
+    \\        if total < 4:
+    \\            xs.append(v)
+    \\    out.print(total, len(xs))
+    \\    return 0
+    \\
+;
+
+const iterate_only =
+    \\def main(out: Stream) -> int:
+    \\    xs = [1, 2, 3]
+    \\    total = 0
+    \\    for v in xs:
+    \\        total += v
+    \\    out.print(total)
+    \\    return 0
+    \\
+;
+
+// spec: NEW-CORE-IR-3
+test "a loop over a list place reads it live: a write to the place inside the loop is refused, not snapshotted" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    var refusal: build.Refusal = .{};
+    const outcome = support.buildSource(arena.allocator(), iterate_and_grow, &refusal);
+    try std.testing.expectError(error.Unsupported, outcome);
+    try std.testing.expect(std.mem.indexOf(u8, refusal.reason, "live-place iteration") != null);
+    const text = try support.irText(arena.allocator(), iterate_only);
+    try std.testing.expect(std.mem.indexOf(u8, text, "list_get.exact i64") != null);
+}
+
+const mutating_helper =
+    \\def grow(xs: mut list[int]) -> None:
+    \\    xs.append(4)
+    \\
+    \\
+    \\def main(out: Stream) -> int:
+    \\    xs = [1, 2, 3]
+    \\    grow(mut xs)
+    \\    out.print(len(xs))
+    \\    return 0
+    \\
+;
+
+// spec-case: NEW-CORE-IR-3
+test "a function with a mut parameter is refused until ownership lands" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    var refusal: build.Refusal = .{};
+    const outcome = support.buildSource(arena.allocator(), mutating_helper, &refusal);
+    try std.testing.expectError(error.Unsupported, outcome);
+    try std.testing.expectEqualStrings("mut parameter", refusal.reason);
+}

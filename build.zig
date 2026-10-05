@@ -403,13 +403,12 @@ fn addRcFuzz(b: *std.Build) void {
     b.step("test-rc-fuzz", "Differential-fuzz the default RC runtime against --gc-runtime (opt-in, not part of test)").dependOn(&fuzz.step);
 }
 
-/// What the new core's steps build on: the shared front end module, the
-/// Guardian test runner, and the old compiler that serves as its oracle.
+/// What the new core's steps build on: the shared front end module and the
+/// old compiler that serves as its oracle.
 const CoreInputs = struct {
     target: std.Build.ResolvedTarget,
     optimize: std.builtin.OptimizeMode,
     front_end: *std.Build.Module,
-    guardian: *std.Build.Dependency,
     old_compiler: *std.Build.Step.Compile,
     filters: []const []const u8,
 };
@@ -436,7 +435,7 @@ fn addCore(b: *std.Build, inputs: CoreInputs) void {
     options.addOptionPath("clock_path", b.path("benchmarks/runtime/ports/native_clock.c"));
     const root = std.Io.Dir.cwd().realPathFileAlloc(b.graph.io, ".", b.allocator) catch @panic("build root");
     options.addOption([]const u8, "fixtures", b.pathJoin(&.{ root, "test", "core" }));
-    const unit = b.addTest(.{ .max_rss = rss.compile, .test_runner = guardian.testRunner(inputs.guardian), .filters = inputs.filters, .root_module = b.createModule(.{
+    const unit = b.addTest(.{ .max_rss = rss.compile, .filters = inputs.filters, .root_module = b.createModule(.{
         .root_source_file = b.path("src/core/root_test.zig"),
         .target = inputs.target,
         .optimize = inputs.optimize,
@@ -664,7 +663,7 @@ pub fn build(b: *std.Build) void {
     // The application tests under `tests/application_comparison` and
     // `tests/development_velocity` read the runners from `zig-out/bin`, so they
     // need the default install.
-    addCore(b, .{ .target = target, .optimize = optimize, .front_end = core, .guardian = guardian_dep, .old_compiler = exe, .filters = test_filters });
+    addCore(b, .{ .target = target, .optimize = optimize, .front_end = core, .old_compiler = exe, .filters = test_filters });
     const compiler_only = b.option(bool, "compiler-only", "Install only mylang, qbe and the runtime, not board-trial, schematic-svg or mylang-io (for measurement installs)") orelse false;
     const board_runner = b.addExecutable(.{ .max_rss = rss.compile, .name = "board-trial", .root_module = board_module });
     if (!compiler_only) b.installArtifact(board_runner);

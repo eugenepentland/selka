@@ -59,6 +59,8 @@ const ModuleBuilder = struct {
         const params = try self.allocator.alloc(ir.Type, function.signature.parameter_count);
         for (params, function.scope.locals[0..params.len]) |*param, local| param.* = try self.mapType(local.ty, @intCast(local.declaration.start));
         const span: u32 = @intCast(function.declaration.start);
+        // A `mut` parameter writes through to the caller's place; that is S1 (ownership).
+        if (function.signature.mutates.len != 0 or function.signature.declared_mutates.len != 0) return self.refuse("mut parameter", span);
         const linkage: ir.Linkage = if (function.policy.c_abi) .extern_c else if (function.policy.host != null) return self.refuse("host function", span) else .internal;
         const ret = try self.mapType(function.signature.return_type, span);
         const index: u32 = @intCast(self.module.functions.items.len);
@@ -124,6 +126,10 @@ const Ssa = struct {
 /// Where `break` and `continue` of one checked loop go.
 const LoopTargets = struct { id: usize, latch: ir.BlockId, exit: ir.BlockId };
 
+/// A checker-hidden local that names a list or string place (`root`) while a
+/// loop iterates it or an index reads it.
+const Alias = struct { hidden: u32, root: u32 };
+
 const FnBuilder = struct {
     mb: *ModuleBuilder,
     function: ir.Function,
@@ -132,6 +138,8 @@ const FnBuilder = struct {
     ssa: Ssa = .{},
     loops: std.ArrayList(LoopTargets) = .empty,
     checked: typed.Function,
+    /// Active aliases, innermost last; a block statement drops the ones it opened.
+    aliases: std.ArrayList(Alias) = .empty,
 
     fn allocator(self: *FnBuilder) std.mem.Allocator {
         return self.mb.allocator;
@@ -299,6 +307,30 @@ const FnBuilder = struct {
         return @intCast(self.ssa.types.items.len - 1);
     }
 
+    // ---- live places (D1) -----------------------------------------------------------
+
+    /// Record `hidden = root` when the checker binds a hidden local to a list or string place.
+    fn noteAlias(self: *FnBuilder, slot: typed.LocalId, value: typed.NodeId) Error!void {
+        const name = self.checked.scope.locals[@backingInt(slot)].name;
+        if (name.len == 0 or name[0] != '<') return;
+        const root = switch (self.nodeOf(value).data) {
+            .local => |source| self.local(source),
+            else => return,
+        };
+        const ty = self.ssa.types.items[root];
+        if (ty != .str and !(ty.isCompound() and self.mb.module.compound(ty) == .list)) return;
+        try self.aliases.append(self.allocator(), .{ .hidden = self.local(slot), .root = root });
+    }
+
+    /// D1 (live-place iteration): a loop over a place sees the body's writes to it.
+    /// The Core IR reads the alias, which equals the place only while nothing
+    /// writes the place, so S0 refuses such a write instead of iterating a snapshot.
+    fn guardPlace(self: *FnBuilder, variable: u32, span: u32) Error!void {
+        for (self.aliases.items) |alias| {
+            if (alias.root == variable or alias.hidden == variable) return self.mb.refuse("write to a list while it is iterated (live-place iteration)", span);
+        }
+    }
+
     // ---- statements ---------------------------------------------------------------
 
     fn statement(self: *FnBuilder, id: typed.StatementId) Error!void {
@@ -306,12 +338,18 @@ const FnBuilder = struct {
         const s = self.statementOf(id);
         const span: u32 = @intCast(s.span.start);
         switch (s.data) {
-            .block => |items| for (items) |item| try self.statement(item),
+            .block => |items| {
+                const open = self.aliases.items.len;
+                for (items) |item| try self.statement(item);
+                self.aliases.shrinkRetainingCapacity(@min(open, self.aliases.items.len));
+            },
             .initialize, .assign => |store| {
                 if (store.element) return self.mb.refuse("element store", span);
+                try self.guardPlace(self.local(store.slot), span);
                 const value = try self.expression(store.value);
                 const block = self.current orelse return;
                 try self.write(self.local(store.slot), block, value);
+                try self.noteAlias(store.slot, store.value);
             },
             .discard => |value| _ = try self.expression(value),
             .ret => |value| {
@@ -608,6 +646,7 @@ const FnBuilder = struct {
                 return self.emit(.{ .op = .list_get, .ty = ty, .a = receiver, .b = index, .check = .exact, .span = span });
             },
             .append => {
+                try self.guardPlace(self.local(owner), span);
                 const value = try self.expression(argument_nodes[0]);
                 const block = self.current orelse return .none;
                 // The receiver is read again: the argument may not change it, but
@@ -617,6 +656,9 @@ const FnBuilder = struct {
                 try self.write(self.local(owner), self.current.?, pushed);
                 return .none;
             },
+            // The iterated place cannot change length here: every write to it while an
+            // alias is active is refused (`guardPlace`), so the check cannot fail.
+            .iteration_check => return .none,
             .parse_int => {
                 if (receiver_type != .str) return self.mb.refuse("parse_int receiver", span);
                 return self.emit(.{ .op = .str_parse_int, .ty = ty, .a = receiver, .span = span });
@@ -667,6 +709,7 @@ fn buildFunction(mb: *ModuleBuilder, checked: typed.Function, declared: ir.Funct
     defer b.ssa.sealed.deinit(mb.allocator);
     defer b.ssa.types.deinit(mb.allocator);
     defer b.loops.deinit(mb.allocator);
+    defer b.aliases.deinit(mb.allocator);
     for (checked.scope.locals) |local| {
         const ty = mb.mapType(local.ty, @intCast(local.declaration.start)) catch .void;
         try b.ssa.types.append(mb.allocator, ty);

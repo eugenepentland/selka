@@ -54,3 +54,30 @@ test "a list parameter or an unbounded sum keeps its checks" {
     // The counter's own step is still proven: it stops below a bound that fits the type.
     try std.testing.expect(std.mem.indexOf(u8, text, "add.proven i64") != null);
 }
+
+const facts = @import("facts.zig");
+
+const wide_elements =
+    \\def main(args: list[str], out: Stream) -> int:
+    \\    n = len(args) + 100
+    \\    values = [(j * 7) % 1000000 for j in range(n)]
+    \\    total = 0
+    \\    for j in range(n):
+    \\        total += values[j]
+    \\    out.print(total)
+    \\    return 0
+    \\
+;
+
+// spec: NEW-CORE-FACTS-3
+test "the 2^47 list-length rule bounds reductions: 1008 * 2^47 fits i64 and 999999 * 2^47 does not" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    try std.testing.expectEqual(@as(i128, 1) << 47, facts.max_list_length);
+    const narrow = try support.factsText(arena.allocator(), filled_then_read);
+    try std.testing.expectEqual(@as(usize, 4), std.mem.count(u8, narrow, "add.proven i64"));
+    const wide = try support.factsText(arena.allocator(), wide_elements);
+    // `n + 100` and both counter steps are proven; the sum of up to 2^47 values below 10^6 is not.
+    try std.testing.expectEqual(@as(usize, 3), std.mem.count(u8, wide, "add.proven i64"));
+    try std.testing.expect(std.mem.indexOf(u8, wide, "list_get.proven i64") != null);
+}

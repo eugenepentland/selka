@@ -212,9 +212,22 @@ they need:
   passed out) skip the runtime test; otherwise the emitter tests the count and copies on
   write. This replaces `lower.zig`'s copy placement (VALUE-SEMANTICS-2/14) with a liveness
   question on SSA values: a "copy" is simply two live `Ref`s sharing a block.
-- **Borrows.** A read-only use inside a region where the owner stays live (`for x in xs`,
-  `len`, element reads, passing to a non-mutating parameter) is a borrow: no retain/release.
-  Live-place iteration (D1) becomes "the loop borrows the list value at loop entry".
+- **Borrows.** A read-only use inside a region where the owner stays live (`len`, element
+  reads, passing to a non-mutating parameter) is a borrow: no retain/release.
+- **Live-place iteration (D1) is not a snapshot.** When a `for` loop's source is a place
+  rooted at a local or parameter, every step reads the *current* value of that place: in
+  SSA, the builder re-reads the root variable's current version at each step (the header
+  phi of that variable), never a value captured at loop entry. Writes the body or a `mut`
+  callee makes to the iterated list stay visible, as in Python; a change to its structure
+  (length) is trapped by the existing `iteration_check`. Only when the body rebinds the
+  root local does the loop iterate the value it had at entry. Borrowing the list at entry
+  (one value, no count traffic, invariant length and data) is an *optimization*, valid only
+  when the builder or the facts prove the body and its callees never write that place: no
+  assignment to it or to a path under it and no `mut` passing of it. That is the common
+  case (every S0 kernel), so it costs nothing there. The checked tree already reads the
+  root local at every step (`buffer_operation read owner=…` inside the loop body, after
+  `iteration_check`), so the builder's SSA reads follow D1 by construction; the facts'
+  list facts attach to SSA values and so only ever describe the version actually read.
 - **RC insertion** runs after facts: a `retain` where a borrowed value becomes owned
   (stored, returned), a `release` after the last use of an owned value, and none for
   values the uniqueness analysis proves dead-on-arrival. Release of a count-1 block frees
