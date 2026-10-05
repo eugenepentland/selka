@@ -118,3 +118,29 @@ test "D1 managed ancestor of a fixed array still guards length" {
         \\    return 0
     );
 }
+
+// spec-case: D1-LIVE-PLACE
+test "D1 managed ancestor of immutable text still guards length" {
+    try trappedBoth(
+        \\def main() -> int:
+        \\    rows = ["a🙂"]
+        \\    snapshot = rows
+        \\    for letter in rows[0]:
+        \\        _ = letter
+        \\        rows.clear()
+        \\    return len(snapshot)
+    );
+}
+
+// spec-case: D1-LIVE-PLACE
+test "D1 managed ancestor of immutable bytes still guards length" {
+    try trappedBoth(
+        \\def main() -> int:
+        \\    rows = [b"ab"]
+        \\    snapshot = rows
+        \\    for octet in rows[0]:
+        \\        rows.append(b"cd")
+        \\        _ = octet
+        \\    return len(snapshot)
+    );
+}

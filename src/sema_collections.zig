@@ -9,6 +9,7 @@ const buffer_operations = @import("buffer_operations.zig");
 const ManagedKind = @import("runtime_values.zig").ManagedKind;
 const BufferKind = buffer_operations.Kind;
 const collections = @import("collection_lower.zig");
+const iteration_place = @import("iteration_place.zig");
 const option_flow = @import("option_flow.zig");
 const eListType = @import("collection_lower.zig").list_type_error;
 const call_arguments = @import("call_arguments.zig");
@@ -338,7 +339,7 @@ fn checkComprehension(comptime Checker: type, self: *Checker, node: ast.Node, ea
     const parts = try comprehensionBody(Checker, self, b, node, each, value_slot);
     const slots: ComprehensionSlots = .{ .owner = owner, .index = index, .limit = limit, .slot = value_slot };
     const source_values: ComprehensionSource = .{
-        .iterable = iterable,
+        .iterable = .{ .value = iterable, .body = .{ .expression = each.output } },
         .output = parts.output,
         .kind = schema.collection.kind,
         .reserve = each.filter == null and !each.set,
@@ -373,7 +374,7 @@ fn checkSetFromIterable(comptime Checker: type, self: *Checker, span: source.Spa
     const body = try sets.add(output, try b.read(value_slot));
     const slots: ComprehensionSlots = .{ .owner = owner, .index = index, .limit = limit, .slot = value_slot };
     return comprehensionLoop(Checker, self, b, slots, body, .{
-        .iterable = iterable,
+        .iterable = .{ .value = iterable },
         .output = output,
         .kind = schema.collection.kind,
         .reserve = false,
@@ -442,10 +443,11 @@ fn checkRangeComprehension(comptime Checker: type, self: *Checker, b: collection
     try statements.append(self.allocator, try b.stmt(.{ .loop = .{ .id = loop_id, .condition = condition, .body = parts.body, .step = step } }));
     return b.block(statements.items, try b.read(parts.output));
 }
-/// Assemble the fixed-bound iteration, its mutation check, and the produced list.
+/// Assemble D1 iteration, its mutation check, and the produced collection.
 const ComprehensionSlots = struct { owner: typed.LocalId, index: typed.LocalId, limit: typed.LocalId, slot: typed.LocalId };
+const ComprehensionInput = struct { value: typed.NodeId, body: ?iteration_place.Body = null };
 const ComprehensionSource = struct {
-    iterable: typed.NodeId,
+    iterable: ComprehensionInput,
     output: typed.LocalId,
     kind: ManagedKind,
     reserve: bool,
@@ -463,6 +465,7 @@ fn comprehensionLoop(
     body: typed.StatementId,
     source_values: ComprehensionSource,
 ) Error!typed.Node {
+    const prepared = try iteration_place.prepare(Checker, b, source_values.iterable.value, slots.owner, source_values.iterable.body);
     const i = try b.read(slots.index);
     const initialize = try b.stmt(.{ .initialize = .{ .slot = slots.slot, .value = try self.iterationRead(b, slots.owner, i, .{
         .kind = source_values.kind,
@@ -470,23 +473,15 @@ fn comprehensionLoop(
         .projection = source_values.projection,
     }) } });
     const advance = try b.stmt(.{ .assign = .{ .slot = slots.index, .value = try b.binary(.add, i, try b.integer(1), .i64) } });
-    // A fixed array cannot change length, so it needs no iteration guard.
-    const guard = if (source_values.fixed == null) try b.stmt(.{ .discard = try b.operation(slots.owner, .iteration_check, &.{try b.read(slots.limit)}) }) else null;
-    const iteration = try b.stmt(.{ .block = if (guard) |guarded|
-        try self.allocator.dupe(typed.StatementId, &.{ guarded, initialize, body })
-    else
-        try self.allocator.dupe(typed.StatementId, &.{ initialize, body }) });
-    const step = try b.stmt(.{ .block = if (guard) |guarded|
-        try self.allocator.dupe(typed.StatementId, &.{ guarded, advance })
-    else
-        try self.allocator.dupe(typed.StatementId, &.{advance}) });
+    const guard = try iteration_place.guard(Checker, b, prepared, slots.owner, slots.limit);
+    const iteration = try b.stmt(.{ .block = try self.allocator.dupe(typed.StatementId, &.{ guard, initialize, body }) });
+    const step = try b.stmt(.{ .block = try self.allocator.dupe(typed.StatementId, &.{ guard, advance }) });
     const loop_id = self.loops.next;
     self.loops.next += 1;
     const output_capacity = if (source_values.reserve) try b.read(slots.limit) else try b.integer(0);
     const output_type = self.locals.items[@backingInt(source_values.output)].ty;
     const acquire_output = if (source_values.set) try b.node(output_type, .{ .array = &.{} }) else try b.node(output_type, .{ .acquire_buffer = .{ .capacity = output_capacity } });
-    return b.block(&.{
-        try b.stmt(.{ .initialize = .{ .slot = slots.owner, .value = source_values.iterable } }),
+    return iteration_place.foldBlock(Checker, b, prepared, &.{
         try b.stmt(.{ .initialize = .{ .slot = slots.index, .value = try b.integer(0) } }),
         try b.stmt(.{ .initialize = .{ .slot = slots.limit, .value = if (source_values.fixed) |shape| try b.integer(@intCast(shape.length)) else try b.length(slots.owner) } }),
         try b.stmt(.{ .initialize = .{ .slot = source_values.output, .value = acquire_output } }),

@@ -276,6 +276,10 @@ Indices are evaluated once at entry. Direct assignment to the root variable in
 the loop body selects an independent entry snapshot. A callee's `mut` write-back
 remains live, including replacement of the collection with another value.
 Fixed-array places also see later element writes; their terminal length is fixed.
+Comprehensions and generator expressions follow the same source rule, including
+writes by their produced expressions and filters. Immutable string/bytes fields
+see same-length replacements; terminal length changes and changes to their
+indexed managed ancestors trap. String length counts Unicode scalars.
 Copies made before any loop remain independent. Non-place sources retain their
 entry value.
 

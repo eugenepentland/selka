@@ -19,12 +19,56 @@ def change_array(items: mut [2]int) -> None:
     items[1] = 9
 
 
+def keep_changed(items: mut list[int], value: int) -> int:
+    items[1] = 9
+    return value
+
+
+def keep_growing(items: mut list[int], value: int) -> int:
+    if value < 3:
+        items.append(value + 1)
+    return value
+
+
+def changed_filter(items: mut list[int], value: int) -> bool:
+    items[1] = 9
+    return value > 0
+
+
+def keep_changed_array(items: mut [2]int, value: int) -> int:
+    items[1] = 9
+    return value
+
+
+def keep_true(flags: mut list[bool], value: bool) -> bool:
+    flags[1] = True
+    return value
+
+
+def keep_false(flags: mut list[bool], value: bool) -> bool:
+    flags[1] = False
+    return value
+
+
+def keep_changed_child(items: mut [2]list[int], row: list[int]) -> int:
+    items[1][0] = 9
+    return row[0]
+
+
 record Holder:
     items: list[int]
 
 
 record FixedHolder:
     items: [2]int
+
+
+record TextHolder:
+    text: str
+
+
+record BytesHolder:
+    data: bytes
 
 
 # spec: D1-LIVE-PLACE
@@ -275,6 +319,136 @@ public def test_managed_array_root_snapshot_preserves_child_values() -> bool:
     return total == 3 and items[0] == [7] and items[1] == [8]
 
 
+# spec-case: D1-LIVE-PLACE
+public def test_unfiltered_comprehension_refreshes_a_shared_source() -> bool:
+    items = [1, 2]
+    saved = items
+    visited = [keep_changed(mut items, value) for value in items]
+    return visited == [1, 9] and saved == [1, 2]
+
+
+# spec-case: D1-LIVE-PLACE
+public def test_unfiltered_comprehension_visits_growth() -> bool:
+    items = [1]
+    saved = items
+    visited = [keep_growing(mut items, value) for value in items]
+    return visited == [1, 2, 3] and saved == [1]
+
+
+# spec-case: D1-LIVE-PLACE
+public def test_unfiltered_set_comprehension_refreshes_its_source() -> bool:
+    items = [1, 2]
+    saved = items
+    visited = {keep_changed(mut items, value) for value in items}
+    return visited == {1, 9} and saved == [1, 2]
+
+
+# spec-case: D1-LIVE-PLACE
+public def test_filtered_comprehension_sees_produced_value_writes() -> bool:
+    items = [1, 2]
+    saved = items
+    visited = [keep_changed(mut items, value) for value in items if True]
+    return visited == [1, 9] and saved == [1, 2]
+
+
+# spec-case: D1-LIVE-PLACE
+public def test_filtered_comprehension_sees_filter_writes() -> bool:
+    items = [1, 2]
+    saved = items
+    visited = [value for value in items if changed_filter(mut items, value)]
+    return visited == [1, 9] and saved == [1, 2]
+
+
+# spec-case: D1-LIVE-PLACE
+public def test_multiple_clauses_refresh_the_outer_shared_source() -> bool:
+    items = [1, 2]
+    saved = items
+    visited = [keep_changed(mut items, value) for value in items for _ in range(1)]
+    return visited == [1, 9] and saved == [1, 2]
+
+
+# spec-case: D1-LIVE-PLACE
+public def test_sum_generator_refreshes_after_produced_value_writes() -> bool:
+    items = [1, 2]
+    saved = items
+    total = sum(keep_changed(mut items, value) for value in items if True)
+    return total == 10 and saved == [1, 2]
+
+
+# spec-case: D1-LIVE-PLACE
+public def test_any_generator_refreshes_after_produced_value_writes() -> bool:
+    flags = [False, False]
+    saved = flags
+    result = any(keep_true(mut flags, value) for value in flags if True)
+    return result and saved == [False, False]
+
+
+# spec-case: D1-LIVE-PLACE
+public def test_all_generator_refreshes_after_produced_value_writes() -> bool:
+    flags = [True, True]
+    saved = flags
+    result = all(keep_false(mut flags, value) for value in flags if True)
+    return not result and saved == [True, True]
+
+
+# spec-case: D1-LIVE-PLACE
+public def test_fixed_array_comprehension_refreshes_after_mut_writes() -> bool:
+    items: [2]int = [1, 2]
+    saved = items
+    visited = [keep_changed_array(mut items, value) for value in items]
+    return visited == [1, 9] and saved == [1, 2]
+
+
+# spec-case: D1-LIVE-PLACE
+public def test_non_ascii_text_field_replacement_uses_current_scalars() -> bool:
+    holder = TextHolder("a🙂")
+    saved = holder
+    visited: list[str] = []
+    for letter in holder.text:
+        visited.append(letter)
+        holder.text = "aé"
+    return visited == ["a", "é"] and saved.text == "a🙂"
+
+
+# spec-case: D1-LIVE-PLACE
+public def test_immutable_bytes_field_replacement_reads_current_octets() -> bool:
+    holder = BytesHolder(b"ab")
+    saved = holder
+    visited: list[int] = []
+    for octet in holder.data:
+        visited.append(octet)
+        holder.data = b"az"
+    return visited == [97, 122] and saved.data == b"ab"
+
+
+# spec-case: D1-LIVE-PLACE
+public def test_immutable_child_root_rebinding_keeps_an_entry_snapshot() -> bool:
+    rows = ["ab"]
+    visited: list[str] = []
+    for letter in rows[0]:
+        visited.append(letter)
+        rows = []
+    return visited == ["a", "b"] and len(rows) == 0
+
+
+# spec-case: D1-LIVE-PLACE
+public def test_immutable_augmented_root_rebinding_keeps_entry_text() -> bool:
+    text = "ab"
+    visited: list[str] = []
+    for letter in text:
+        visited.append(letter)
+        text += "c"
+    return visited == ["a", "b"] and text == "abcc"
+
+
+# spec-case: D1-LIVE-PLACE
+public def test_managed_array_comprehension_preserves_copy_and_live_children() -> bool:
+    items: [2]list[int] = [[1], [2]]
+    saved = items
+    visited = [keep_changed_child(mut items, row) for row in items]
+    return visited == [1, 9] and saved[0] == [1] and saved[1] == [2]
+
+
 def main() -> int:
     assert test_element_writes_remain_live_with_a_named_copy()
     assert test_append_growth_is_visible_through_continue()
@@ -298,4 +472,19 @@ def main() -> int:
     assert test_fixed_array_root_assignment_selects_an_entry_snapshot()
     assert test_fixed_array_indexed_place_reads_the_same_entry_index()
     assert test_managed_array_root_snapshot_preserves_child_values()
+    assert test_unfiltered_comprehension_refreshes_a_shared_source()
+    assert test_unfiltered_comprehension_visits_growth()
+    assert test_unfiltered_set_comprehension_refreshes_its_source()
+    assert test_filtered_comprehension_sees_produced_value_writes()
+    assert test_filtered_comprehension_sees_filter_writes()
+    assert test_multiple_clauses_refresh_the_outer_shared_source()
+    assert test_sum_generator_refreshes_after_produced_value_writes()
+    assert test_any_generator_refreshes_after_produced_value_writes()
+    assert test_all_generator_refreshes_after_produced_value_writes()
+    assert test_fixed_array_comprehension_refreshes_after_mut_writes()
+    assert test_non_ascii_text_field_replacement_uses_current_scalars()
+    assert test_immutable_bytes_field_replacement_reads_current_octets()
+    assert test_immutable_child_root_rebinding_keeps_an_entry_snapshot()
+    assert test_immutable_augmented_root_rebinding_keeps_entry_text()
+    assert test_managed_array_comprehension_preserves_copy_and_live_children()
     return 0

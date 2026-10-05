@@ -1,0 +1,35 @@
+test-units
++- run test w
+guardian/test: 22 test(s) selected by filter: "D1" — 10 match by name, 12 unnamed test block(s) run regardless
+guardian/test: test wall 1.97s; slowest over 50ms:
+guardian/test:   0.39s  iteration_place_test.test.D1 managed ancestor of immutable text still guards length
+guardian/test:   0.36s  iteration_place_test.test.D1 managed ancestor of immutable bytes still guards length
+guardian/test:   0.23s  iteration_place_test.test.D1 dictionary ancestor growth traps before indexed list refresh
+guardian/test:   0.20s  iteration_place_test.test.D1 indexed ancestor shrink by mut callee traps
+guardian/test:   0.19s  iteration_place_test.test.D1 indexed ancestor growth traps before switching storage
+guardian/test:   0.12s  iteration_place_test.test.D1 managed ancestor of a fixed array still guards length
+guardian/test:   0.12s  iteration_place_test.test.D1 live list shrink traps on the final continued step
+guardian/test:   0.11s  iteration_place_test.test.D1 shared set growth still traps
+guardian/test:   0.10s  iteration_place_test.test.D1 growth then shrink traps against the last observed length
+guardian/test:   0.10s  iteration_place_test.test.D1 shared dictionary growth still traps
+guardian/test: PASS — 22 passed
+guardian/test: RESULT {"passed":22,"failed":0,"skipped":0}
+failed command: sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_QBE=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-iteration/zig-out/focus/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./.zig-cache/o/9bfd7d7de5dfc0fbd08191c3f8aff9fb/test --guardian-filter=D1 --cache-dir=./.zig-cache --seed=0x9b381578 --listen=-
+
+Build Summary: 10/10 steps succeeded; 22/22 tests passed
+test-units success
++- run test 22 pass (22 total) 2s MaxRSS:116M
+   +- compile test debug native success 2s MaxRSS:483M
+   |  +- run exe qbe-build-assets (qbe_build_assets) cached
+   |  |  +- compile exe qbe-build-assets debug native cached 7ms MaxRSS:37M
+   |  +- options cached
+   |     +- compile exe qbe fast native cached 14ms MaxRSS:36M
+   +- install generated to qbe cached
+   |  +- compile exe qbe fast native (reused)
+   +- install generated to mylang cached
+      +- compile exe mylang debug native cached 6ms MaxRSS:41M
+         +- run exe qbe-build-assets (qbe_build_assets) (+1 more reused dependencies)
+
+real 4.73
+user 8.37
+sys 1.08

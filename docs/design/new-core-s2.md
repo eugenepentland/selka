@@ -988,17 +988,27 @@ combined callee-rebinding tests are in
 `experiments/new-core-s2-20261005/wave-a/s2-lb/mut_callee_rebinding.my`, to run after
 S2-La and S2-Lb merge.
 
-Non-place sources remain owned at entry; immutable strings/bytes keep their
-existing entry behavior. Fixed-array places follow D1 too: stable local and
+Non-place sources remain owned at entry. Immutable string/bytes places refresh
+too, including same-length field replacement; terminal lengths remain exact
+(Unicode scalar count for text), and managed indexed ancestors retain guards.
+Fixed-array places follow D1 too: stable local and
 parameter roots are read directly, and fields/indexed places refresh each step.
 Their terminal length needs no guard, while managed indexed ancestors retain
 exact-length guards. Named copies stay independent; syntactic root assignment
 still selects an entry snapshot. The old array tests expected snapshot iteration
 after element writes; these were amended because §12's D1 decision has no array
 exception. Read-only loops keep the entry-borrow path.
-`sum`, `any`, and `all` use the shared source/guard helpers; their numeric/Boolean
-folds call no user callback and have no source-writing body, so the entry borrow
-is sufficient. C4's shared-front-end/old-core semantic work moved from WP-5 to
+Direct collection forms of `sum`, `any`, and `all` use the shared source/guard
+helpers; their numeric/Boolean folds call no user callback and have no
+source-writing body, so the entry borrow
+is sufficient. Generator folds and comprehensions can call user code; both the
+dedicated unfiltered form and generated loop form use the same D1 helper.
+`iteration_effects.zig` follows syntax IDs through statements and expressions,
+including produced values, filters and nested clauses. Generated statement
+spans cover only a clause/filter, so span-based scans were insufficient.
+Assignment expressions are unavailable, so a comprehension cannot syntactically
+rebind its source root; whole-root write-back through a mut callee stays live.
+C4's shared-front-end/old-core semantic work moved from WP-5 to
 S2-Lb; the remaining RC hold-count re-plumbing stays paused. Existing lifetime
 holds remain for hidden receivers and snapshots.
 

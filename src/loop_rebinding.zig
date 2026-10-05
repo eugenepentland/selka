@@ -73,14 +73,15 @@ pub fn rootedAt(syntax: Syntax, id: ast.NodeId, name: []const u8) bool {
 }
 
 /// Whether the body replaces the root binding itself; writes below it stay live.
-pub fn rebinds(allocator: std.mem.Allocator, syntax: Syntax, body: ast.StatementId, name: []const u8) std.mem.Allocator.Error!bool {
+/// Immutable collections also replace their root on augmented assignment.
+pub fn rebinds(allocator: std.mem.Allocator, syntax: Syntax, body: ast.StatementId, name: []const u8, augmented: bool) std.mem.Allocator.Error!bool {
     var work: std.ArrayList(ast.StatementId) = .empty;
     defer work.deinit(allocator);
     try work.append(allocator, body);
     while (work.pop()) |id| {
         const statement = syntax.program.statements.items[@backingInt(id)];
         const replaced = switch (statement.data) {
-            .assignment => |assignment| assignment.op == .set and named(syntax, assignment.name, name),
+            .assignment => |assignment| (assignment.op == .set or augmented) and named(syntax, assignment.name, name),
             .binding => |binding| named(syntax, binding.name, name),
             .discard => |value| destructures(syntax, value, name),
             else => false,

@@ -1,0 +1,8 @@
+Build Summary: 3/3 steps succeeded
+core success
++- install mylang-core success
+   +- compile exe mylang-core debug native success 1s MaxRSS:321M
+
+real 2.13
+user 3.98
+sys 0.45

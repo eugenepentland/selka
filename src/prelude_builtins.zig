@@ -813,7 +813,7 @@ fn walkStatementsCall(comptime Checker: type, checker: *Checker, step: Step) Err
     const b = builder(Checker, checker, span);
     const i = try b.read(walk.index);
     const count = try b.read(walk.limit);
-    var prepared = try iteration_place.prepare(Checker, b, input, walk.owner, step.syntax_body);
+    var prepared = try iteration_place.prepare(Checker, b, input, walk.owner, if (step.syntax_body) |syntax| .{ .statement = syntax } else null);
     // Reversed iteration retains its fixed bound and exact length guard.
     if (descending) prepared.growing = false;
     const guard = try iteration_place.guard(Checker, b, prepared, walk.owner, walk.limit);
@@ -866,8 +866,9 @@ fn zipStatementsCall(comptime Checker: type, checker: *Checker, step: ZipStep) E
     const body = step.body;
     const b = builder(Checker, checker, span);
     const i = try b.read(zip.left.index);
-    const left = try iteration_place.prepare(Checker, b, left_input, zip.left.owner, step.syntax_body);
-    const right = try iteration_place.prepare(Checker, b, right_input, zip.right.owner, step.syntax_body);
+    const syntax_body: ?iteration_place.Body = if (step.syntax_body) |syntax| .{ .statement = syntax } else null;
+    const left = try iteration_place.prepare(Checker, b, left_input, zip.left.owner, syntax_body);
+    const right = try iteration_place.prepare(Checker, b, right_input, zip.right.owner, syntax_body);
     const length = try shortLength(Checker, checker, span, try b.read(zip.left.limit), try b.read(zip.right.limit));
     const guard = try b.stmt(.{ .block = try keep(Checker, checker, &.{
         try iteration_place.guard(Checker, b, left, zip.left.owner, zip.left.limit),

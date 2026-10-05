@@ -1,0 +1,30 @@
+affected-compiler
++- install generated to mylang
+   +- compile exe mylang debug native 2 errors
+src/prelude_builtins.zig:816:102: error: capture 'body' shadows local constant from outer scope
+    var prepared = try iteration_place.prepare(Checker, b, input, walk.owner, if (step.syntax_body) |body| .{ .statement = body } else null);
+                                                                                                     ^~~~
+src/prelude_builtins.zig:812:11: note: previous declaration here
+    const body = step.body;
+          ^~~~
+src/prelude_builtins.zig:869:71: error: capture 'body' shadows local constant from outer scope
+    const syntax_body: ?iteration_place.Body = if (step.syntax_body) |body| .{ .statement = body } else null;
+                                                                      ^~~~
+src/prelude_builtins.zig:866:11: note: previous declaration here
+    const body = step.body;
+          ^~~~
+error: 2 compilation errors
+failed command: /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig build-exe -ODebug --dep mylang --dep memory_budget --dep runtime_contract --dep native_test_root=root --dep user-doc/primer --dep user-doc/syntax --dep user-doc/statements --dep user-doc/records --dep user-doc/functions --dep user-doc/errors --dep user-doc/text --dep user-doc/bytes --dep user-doc/io --dep user-doc/effects --dep user-doc/contracts --dep user-doc/modules --dep user-doc/memory --dep user-doc/sets --dep user-doc/arenas --dep user-doc/stdlib --dep user-doc/tests --dep user-doc/build --dep user-doc/navigation --dep user-doc/context --dep user-doc/api --dep user-doc/fix --dep qbe_build_assets -Mroot=src/main.zig -ODebug --dep runtime_contract -Mmylang=src/compiler.zig -ferror-tracing -ODebug -Mmemory_budget=src/memory_budget.zig -ODebug -Mruntime_contract=src/runtime_contract.zig -Muser-doc/primer=docs/primer.md -Muser-doc/syntax=docs/python-syntax.md -Muser-doc/statements=docs/statements.md -Muser-doc/records=docs/records-and-unions.md -Muser-doc/functions=docs/functions.md -Muser-doc/errors=docs/results-and-options.md -Muser-doc/text=docs/text.md -Muser-doc/bytes=docs/bytes.md -Muser-doc/io=docs/io.md -Muser-doc/effects=docs/effects.md -Muser-doc/contracts=docs/contracts.md -Muser-doc/modules=docs/modules.md -Muser-doc/memory=docs/managed-memory.md -Muser-doc/sets=docs/sets.md -Muser-doc/arenas=docs/arenas.md -Muser-doc/stdlib=docs/standard-library.md -Muser-doc/tests=docs/tooling/guest-tests.md -Muser-doc/build=docs/tooling/native-build.md -Muser-doc/navigation=docs/tooling/navigation.md -Muser-doc/context=docs/tooling/agent-context.md -Muser-doc/api=docs/tooling/interface-files.md -Muser-doc/fix=docs/tooling/fix.md -ODebug -Mqbe_build_assets=.zig-cache/o/911839472573f0b22c0658579ebf4600/qbe_build_assets/assets.zig --cache-dir .zig-cache --global-cache-dir /home/epentland/ai/canopy/.zig-global-cache --name mylang --zig-lib-dir /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/ --listen=-
+
+Build Summary: 4/7 steps succeeded (1 failed)
+affected-compiler transitive failure
++- install generated to mylang transitive failure
+|  +- compile exe mylang debug native 2 errors
+|     +- run exe qbe-build-assets (qbe_build_assets) success 69ms
+|        +- compile exe qbe-build-assets debug native cached 4ms MaxRSS:41M
++- install generated to qbe cached
+   +- compile exe qbe fast native cached 13ms MaxRSS:41M
+
+real 3.17
+user 9.10
+sys 0.80

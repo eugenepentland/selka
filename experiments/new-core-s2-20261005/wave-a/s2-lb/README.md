@@ -8,13 +8,15 @@ the accepted design §12 D1 decision in the old oracle. It does not edit `src/co
 `iteration_place.zig` prepares entry ownership, saves each index once, rebuilds
 stable rooted paths, and refreshes them before the body and at the continued/final
 back edge. The root is counted as read on each iteration. Read-only sources retain
-the entry-borrow fast path. `sum`, `any`, and `all` use the same helpers; their closed
-numeric/Boolean folds cannot write the source or call user callbacks.
+the entry-borrow fast path. Direct collection forms of `sum`, `any`, and `all` use
+the same helpers; their closed numeric/Boolean folds cannot write the source or
+call user callbacks. Generator folds and comprehensions can call user code and
+use the live-place path.
 
 | Source | Guard |
 | --- | --- |
 | Live list / mutable byte buffer | Current length must be at least the last observed length; update the bound after growth. |
-| Dictionary / set | Current length must equal entry length. |
+| Dictionary / set / immutable str or bytes | Current length must equal entry length (Unicode scalars for text, octets for bytes). |
 | Each indexed managed ancestor | Current length must equal that ancestor's entry length. |
 | Fixed-array terminal | Length is static; read the local directly or refresh the field/index path. |
 
@@ -44,7 +46,7 @@ side-effecting index tests each require the counter to increment exactly once.
 Temporary initializer lookup is bounded to the current function's statement
 range, because local IDs restart while statement IDs do not.
 
-## Focused evidence
+## Preliminary candidate evidence
 
 - [RC](logs/guest-live-rc-08.json), [GC-stress](logs/guest-live-gc-08.json), and
   [LLVM release](logs/guest-live-release-08.json): 22 fresh passes each, zero failures.
@@ -103,7 +105,7 @@ GC-stress language suites in that initial gate passed 1596 tests across 240 prog
 Zig prints `failed command` for some successful test stderr; the authoritative
 result is its final Build Summary.
 
-Final old-core gates:
+Old-core gates for preliminary candidate `f831003c`:
 
 | Command | Result | Wall time |
 | --- | --- | --- |
@@ -128,6 +130,66 @@ limit of 25) required extracting the foreach helpers. A duplicate canonical D1
 spec tag was resolved by retaining one `spec:` and using `spec-case:` for the
 remaining cases. The coordinator records this feedback in the shared Guardian
 repository.
+
+## Final D1 coverage correction
+
+A read-only audit against controlling design §12.8 found two remaining source
+paths: dedicated unfiltered list/set comprehensions bypassed the helper, and
+generated gather bodies had clause/filter spans that excluded their produced
+expressions. `iteration_effects.zig` now follows syntax IDs through the complete
+statement/expression tree. The dedicated comprehension uses the same source,
+guard and bound update as ordinary loops. Produced values, filters and nested
+clauses see source writes regardless of sharing. Assignment expressions are
+unavailable, so a comprehension cannot syntactically rebind its source root;
+callee whole-root write-back remains live.
+
+The immutable string/bytes shortcut also skipped managed ancestor guards and
+stable-field replacement. These places now refresh, with the existing exact
+terminal length check (Unicode scalars for text, octets for bytes). Syntactic
+root assignment keeps an entry snapshot, including immutable augmented root
+assignments such as `text += ...`; list `+=` is still in-place extend and stays
+live. The prior immutable-terminal exception had no basis in §12.8 and is removed.
+Read-only sources retain the entry fast path. No emitter or C4 count code changes.
+
+- [RC](logs/guest-live-rc-11.json), [GC-stress](logs/guest-live-gc-11.json), and
+  [LLVM release](logs/guest-live-release-11.json): 37 fresh passes each, zero failures.
+  Adds shared unfiltered/filtered/nested comprehensions, set comprehensions,
+  generator `sum`/`any`/`all`, fixed arrays with managed children, immutable field
+  replacement, non-ASCII scalar indexing, and immutable root snapshots.
+- [Structural guards](logs/d1-guards-10.log): 22/22 tests (10 named D1 cases and
+  12 unnamed roots), with each D1 case under RC and GC-stress.
+- [Optimized traps](logs/guards-release-11.json): 8/8 expected structural traps;
+  the new string/bytes ancestor cases run in both RC and GC-stress LLVM release.
+- [Fresh-core conformance](logs/conformance-d1-11.log): 87 tests; debug and release
+  each have 5 matches, 0 mismatches and 82 unsupported. The 22 live-list cases are
+  refused rather than mismatched. Other refusals are fixed arrays (48), dicts (5),
+  string indexing (4), bytes (2), and sets (1).
+- [Warm edited compiler](logs/build-focused-11.log): 3.60 s, compiler 3 s.
+  [Current core build](logs/build-core-11.log): 2.13 s, compiler 1 s.
+- [Whole-tree Guardian](logs/guardian-11.log): 88 checks pass in 1.64 s.
+- [Package-exit coverage](logs/coverage-exit-11.log): 2,280/3,558 accepted (64%),
+  including 26 explicit live-list refusals, in 6.20 s. Uses the private disk
+  `TMPDIR=.tmp/s2-lb/coverage-exit`. External Lox still has 24 value-class and two
+  missing-main refusals; this package does not change its source.
+
+Final follow-up old-core gates:
+
+| Command | Result | Wall time |
+| --- | --- | --- |
+| `zig build test --summary all` | [115/115 steps; 2,964/33,166 tests passed, 30,202 skipped](logs/gate-test-03.log) | 920.23 s |
+| `zig build test-qbe --summary all` | [51/51 steps; 518/518 tests passed](logs/gate-test-qbe-03.log) | 78.80 s |
+| `zig build test-qbe-build --summary all` | [29/29 steps; cached test verdicts](logs/gate-test-qbe-build-03.log) | 0.25 s |
+| `zig build fmt-check --summary all` | [2/2 steps](logs/gate-fmt-check-03.log) | 0.23 s |
+
+Both RC and GC-stress guest suites report 1,616 fresh passes, zero
+cached/failed/skipped cases, across 240 programs. The Zig summary's 30,202 skipped
+tests are not fresh passes. Plain runtime asset regeneration takes 17 s;
+the edited compiler cost remains the separate 3.60 s inner-loop measurement.
+The isolated [pre-commit checkpoint](logs/gate-test-core-03.log) passes 5/5 steps
+and 147/147 tests in 91.72 s, below the 5-minute limit. Nested `gate -- build`
+slots exclude admission time and isolate the run; the test binary compiles in
+1 s and the core compiler is cached. The missing-row diagnostic is an expected
+negative test; the authoritative Build Summary is green.
 
 ## C4 handoff and scope
 

@@ -1,12 +1,12 @@
 //! D1 live iteration reads a place again after each step, retaining its indices.
 const std = @import("std");
-const source = @import("source.zig");
-const ast = @import("ast.zig");
 const typed = @import("typed.zig");
 const collections = @import("collection_lower.zig");
-const loop_rebinding = @import("loop_rebinding.zig");
-const operations = @import("buffer_operations.zig");
+const effects = @import("iteration_effects.zig");
 const Error = @import("diagnostic.zig").Error;
+
+/// Syntax whose writes determine whether an iteration place needs refreshing.
+pub const Body = effects.Body;
 
 /// Prepared entry statements and the refresh preceding each live-place guard.
 pub const Source = struct {
@@ -18,16 +18,16 @@ pub const Source = struct {
 
 /// Prepare an iteration receiver. Root rebinding takes an entry copy;
 /// writes below a stable root read the current place, with indices evaluated once.
-pub fn prepare(comptime Checker: type, b: collections.Builder(Checker), input: typed.NodeId, owner: typed.LocalId, body: ?ast.StatementId) Error!Source {
+pub fn prepare(comptime Checker: type, b: collections.Builder(Checker), input: typed.NodeId, owner: typed.LocalId, body: ?Body) Error!Source {
     const checker = b.checker;
     const schema = checker.catalog.records[checker.locals.items[@backingInt(owner)].ty.recordIndex()];
     const checking = schema.shape.array == null;
+    const immutable = schema.collection.kind == .string or typed.isByteString(schema);
     const root = rootOf(Checker, checker, input, 0);
     if (root == null or body == null) return entry(Checker, b, owner, input, checking);
-    if (schema.collection.kind == .string or typed.isByteString(schema)) return entry(Checker, b, owner, input, checking);
     const name = checker.locals.items[@backingInt(root.?)].name;
-    const syntax: loop_rebinding.Syntax = .{ .program = checker.syntax, .src = checker.src };
-    if (try loop_rebinding.rebinds(checker.allocator, syntax, body.?, name)) {
+    if (try effects.rebinds(Checker, checker, body.?, name, immutable)) {
+        if (immutable) return entry(Checker, b, owner, input, checking);
         if (!checking) {
             // An inline array snapshot is an independent semantic home, so
             // lowering copies its managed children rather than borrowing them.
@@ -37,7 +37,7 @@ pub fn prepare(comptime Checker: type, b: collections.Builder(Checker), input: t
         const copy = try b.access(input, .copy, &.{}, false);
         return entry(Checker, b, owner, try b.node(copy.ty, copy.data), true);
     }
-    if (!try changes(Checker, checker, body.?, name)) return entry(Checker, b, owner, input, checking);
+    if (!try effects.changes(Checker, checker, body.?, name)) return entry(Checker, b, owner, input, checking);
     var path: Path(Checker) = .{ .b = b };
     const value = try path.rebuild(input, 0);
     try path.setup.append(checker.allocator, try b.stmt(.{ .initialize = .{ .slot = owner, .value = value } }));
@@ -122,45 +122,6 @@ fn projected(comptime Checker: type, checker: *Checker, input: typed.NodeId, ind
         } else return null;
     }
     return null;
-}
-
-fn changes(comptime Checker: type, checker: *Checker, body: ast.StatementId, name: []const u8) Error!bool {
-    const syntax: loop_rebinding.Syntax = .{ .program = checker.syntax, .src = checker.src };
-    if (try loop_rebinding.assigns(checker.allocator, syntax, body, name)) return true;
-    const span = checker.syntax.statements.items[@backingInt(body)].span;
-    for (checker.syntax.nodes.items) |node| {
-        if (node.span.start < span.start or node.span.end > span.end) continue;
-        const target: ?ast.NodeId = switch (node.data) {
-            .mut_argument => |value| value,
-            .list_operation => |op| if (writes(op.kind)) op.base else null,
-            .method_call => |call| if (methodChanges(Checker, checker, call.base, call.name)) call.base else null,
-            .call => |call| if (call.owner) |owner| blk: {
-                if (!std.mem.eql(u8, checker.src.text(owner), name)) break :blk null;
-                const slot = checker.active.get(name) orelse break :blk null;
-                if (receiverChanges(Checker, checker, checker.locals.items[@backingInt(slot)].ty, call.name)) return true;
-                break :blk null;
-            } else null,
-            .buffer_operation => |op| if (writes(op.kind) and std.mem.eql(u8, checker.src.text(op.owner), name)) return true else null,
-            else => null,
-        };
-        if (target) |value| if (loop_rebinding.rootedAt(syntax, value, name)) return true;
-    }
-    return false;
-}
-
-fn methodChanges(comptime Checker: type, checker: *Checker, base: ast.NodeId, name: source.Span) bool {
-    const resolved = checker.resolved[@backingInt(base)] orelse return true;
-    return receiverChanges(Checker, checker, checker.nodes.items[@backingInt(resolved)].ty, name);
-}
-
-fn receiverChanges(comptime Checker: type, checker: *Checker, ty: typed.Type, name: source.Span) bool {
-    if (!ty.isAggregate() or !checker.catalog.records[ty.recordIndex()].isCollection()) return true;
-    const kind = operations.method(checker.src.text(name)) orelse return true;
-    return writes(kind);
-}
-
-fn writes(kind: operations.Kind) bool {
-    return kind.writesReceiver() or kind == .set_add or kind == .set_discard;
 }
 
 fn Path(comptime Checker: type) type {

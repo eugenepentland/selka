@@ -188,7 +188,7 @@ fn walkGuard(comptime Checker: type, b: collections.Builder(Checker), prepared: 
 }
 
 fn walkSource(comptime Checker: type, b: collections.Builder(Checker), walk: Walk, input: typed.NodeId, owner: typed.LocalId, body: ast.StatementId) Error!?iteration_place.Source {
-    return if (walk.in_place) null else try iteration_place.prepare(Checker, b, input, owner, body);
+    return if (walk.in_place) null else try iteration_place.prepare(Checker, b, input, owner, .{ .statement = body });
 }
 
 /// Use D1's prepared entry, or the fixed-array copy decision, before the loop.
@@ -242,7 +242,7 @@ fn beginWalk(comptime Checker: type, self: *Checker, b: collections.Builder(Chec
 fn endWalk(comptime Checker: type, self: *Checker, b: collections.Builder(Checker), walk: *Walk, body: ast.StatementId) Error!typed.LocalId {
     if (walk.owner) |owner| return owner;
     const syntax: loop_rebinding.Syntax = .{ .program = self.syntax, .src = self.src };
-    if (walk.variable) |slot| if (!try loop_rebinding.rebinds(self.allocator, syntax, body, self.locals.items[@backingInt(slot)].name)) {
+    if (walk.variable) |slot| if (!try loop_rebinding.rebinds(self.allocator, syntax, body, self.locals.items[@backingInt(slot)].name, false)) {
         walk.in_place = true;
         self.locals.items[@backingInt(slot)].usage.reads += 1;
         return slot;
