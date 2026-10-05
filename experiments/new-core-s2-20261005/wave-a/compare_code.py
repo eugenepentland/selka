@@ -46,10 +46,13 @@ def main():
         before = definitions((baseline / f"{name}.ll").read_text())
         after = definitions(llvm.read_text())
         same = before == after
+        difference = output / f"{name}.diff"
         if not same:
-            (output / f"{name}.diff").write_text("".join(difflib.unified_diff(
+            difference.write_text("".join(difflib.unified_diff(
                 before.splitlines(True), after.splitlines(True), fromfile="baseline", tofile=args.stage,
             )))
+        else:
+            difference.unlink(missing_ok=True)
         digest = hashlib.sha256(after.encode()).hexdigest()
         print(name, "identical definitions" if same else "changed definitions; inspect diff", digest,
               f"{time.monotonic() - started:.3f}s", flush=True)

@@ -1,0 +1,133 @@
+{
+  "status": "stopped_for_coordinator_review",
+  "full_gate": {
+    "command": "zig build test -Dtest-rerun=true --summary all",
+    "exit_code": 0,
+    "summary": "115/115 steps succeeded; 2993/33502 tests passed (30509 skipped)",
+    "elapsed_seconds": 1062.38,
+    "guest_sweeps": {
+      "rc": {
+        "passed": 1645,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "dropped": 0,
+        "programs": 242
+      },
+      "gc_stress": {
+        "passed": 1645,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "dropped": 0,
+        "programs": 242
+      }
+    },
+    "incremental_walks": {
+      "default_steps": 120,
+      "module_project_steps": 60,
+      "mismatches": 0
+    },
+    "docs": {
+      "files_scanned": 758,
+      "blocks": 1119,
+      "run": 231,
+      "checked": 57,
+      "skipped": 11,
+      "mis_tagged": 0,
+      "failed": 0,
+      "documented_features": 230,
+      "doc_coverage_failures": 0
+    },
+    "guardian": {
+      "checks_passed": 88,
+      "files_in_diff_scope": 176,
+      "repository_source_files": 822,
+      "per_file_checks": 50,
+      "whole_tree_checks": 38,
+      "gate_summary_seconds": 4
+    },
+    "rss_diagnostic": {
+      "shard": "11/12",
+      "peak_bytes": 2406842368,
+      "limit_bytes": 2147483648,
+      "toolchain_observation": "Maker/Step.zig appends an RSS-limit error message but does not return MakeFailed, so the full summary is green."
+    }
+  },
+  "isolated_shard": {
+    "started_utc": "2026-10-05T17:14:37.796240+00:00",
+    "budget_bytes": 2147483648,
+    "seed": "0x37f9fdfd",
+    "expected_selected": 218,
+    "original_full_gate_peak_bytes": 2406842368,
+    "artifact": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.zig-cache/o/758b7b388b743c7a4f7d02051fa72250/test",
+    "artifact_sha256": "469ca9ab0b3eec6d208ef64a28f031b91acbbf617ed9db54b2d2fef8343d1df5",
+    "locks": "gate with waiting bash parent; build child",
+    "quiet_window": "Both active peer lanes confirmed no builds/native jobs/fuzz; no other mylang heavy process observed.",
+    "command": [
+      "/usr/bin/time",
+      "-v",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/experiments/new-core-s2-20261005/wave-a/integration/final-old-shard11-isolated-rss.log",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.zig-cache/o/758b7b388b743c7a4f7d02051fa72250/test",
+      "--guardian-shard=11/12",
+      "--cache-dir=./.zig-cache",
+      "--seed=0x37f9fdfd"
+    ],
+    "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration",
+    "environment": {
+      "PATH": "/home/epentland/.local/bin:/home/epentland/.codex/packages/standalone/releases/0.159.0-x86_64-unknown-linux-musl/codex-path:/home/epentland/.codex/tmp/arg0/codex-arg0TY4NiM:/home/epentland/.local/bin:/home/epentland/.local/bin:/home/epentland/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin",
+      "HOME": "/home/epentland",
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.tmp/final-old-qualification",
+      "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.tmp/final-old-qualification/mylang-zig-local.m0huxxjj",
+      "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/.zig-global-cache",
+      "MYLANG_QBE": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/zig-out/focus/qbe",
+      "MYLANG_ZIG": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig"
+    },
+    "elapsed_seconds": 138.878,
+    "exit_code": 0,
+    "results": [
+      {
+        "passed": 218,
+        "failed": 0,
+        "skipped": 0
+      }
+    ],
+    "peak_rss_bytes": 2336354304,
+    "selected_count_verified": true,
+    "tests_passed": true,
+    "within_budget": false,
+    "passed": false,
+    "completed_utc": "2026-10-05T17:16:57.464575+00:00"
+  },
+  "stability": {
+    "checked_utc": "2026-10-05T17:18:07.619335+00:00",
+    "frozen_utc": "2026-10-05T16:44:58.626308+00:00",
+    "source_fixture_spec_sha256": "56f2d5d0480fe754f6e97bebd965f8fefb3e8edfea30978f9e2257f721ec2bac",
+    "checks": [
+      {
+        "map": "files",
+        "count": 1371,
+        "mismatches": []
+      },
+      {
+        "map": "qualification_inputs",
+        "count": 6,
+        "mismatches": []
+      },
+      {
+        "map": "binaries",
+        "count": 2,
+        "mismatches": []
+      }
+    ],
+    "passed": true
+  },
+  "pending": [
+    "test-qbe",
+    "test-qbe-build",
+    "fmt-check",
+    "final six-case combined fixture in RC, GC-stress, release, GC-stress-release"
+  ],
+  "configuration_discovery": "final-old-tmpdir-discovery.json records the initial aborted run caused by TMPDIR under .mylang-cache; corrected complete run used .tmp/final-old-qualification. No compiler/test sources were changed."
+}

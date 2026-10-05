@@ -1,0 +1,6 @@
+$ zig-out/bin/mylang-core build experiments/new-core-s2-20261005/wave-a/integration/core-selected-place.my -o .mylang-cache/wave-a/final-selected-place/debug --cache-dir .mylang-cache/wave-a/final-selected-place/debug-cache
+core-selected-place.my:12:12: error[E_CORE_UNSUPPORTED]: the new core does not support interior mut argument ancestor changed during later argument evaluation yet
+exit=1
+$ zig-out/bin/mylang-core build experiments/new-core-s2-20261005/wave-a/integration/core-selected-place.my -o .mylang-cache/wave-a/final-selected-place/verified-release --cache-dir .mylang-cache/wave-a/final-selected-place/verified-release-cache --release --verify-facts
+core-selected-place.my:12:12: error[E_CORE_UNSUPPORTED]: the new core does not support interior mut argument ancestor changed during later argument evaluation yet
+exit=1

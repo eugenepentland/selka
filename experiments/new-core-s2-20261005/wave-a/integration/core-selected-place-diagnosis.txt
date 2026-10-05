@@ -1,0 +1,24 @@
+# Captured interior mut place: baseline correctness diagnosis
+Expected stdout: 721 1 21 1 7
+Source: core-selected-place.my
+
+binary=mylang sha256=d92643cba3765e404b197ed5a737b2d5cccb65616977579f225b839f47b03472
+command=['/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/wave-a/baseline/mylang', 'build', '/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/wave-a/core-interior-diagnostic/selected.my', '-o', '/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/wave-a/core-interior-diagnostic/baseline-mylang', '--release', '--cache-dir', '/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/wave-a/core-interior-diagnostic/baseline-mylang-cache']
+build_exit=0
+/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/wave-a/core-interior-diagnostic/selected.my:9:10: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def main(args: list[str], out: Stream) -> int:
+           ^
+
+run_exit=0
+stdout='721 1 21 1 7\n'
+stderr=''
+binary=mylang-core sha256=32517a0b9fa88477156e9d9e95d0accef8aeb1c683c3476dbb3fcb0f5751b9d9
+command=['/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/wave-a/baseline/mylang-core', 'build', '/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/wave-a/core-interior-diagnostic/selected.my', '-o', '/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/wave-a/core-interior-diagnostic/baseline-mylang-core', '--release', '--cache-dir', '/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/wave-a/core-interior-diagnostic/baseline-mylang-core-cache']
+build_exit=0
+
+run_exit=0
+stdout='2121 2 21 1 7\n'
+stderr=''
+current La old: exit=0 stdout='721 1 21 1 7\n' stderr=''
+current La core-debug: exit=0 stdout='2121 2 21 1 7\n' stderr=''
+current La core-verify: exit=0 stdout='2121 2 21 1 7\n' stderr=''

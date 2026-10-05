@@ -1,0 +1,115 @@
+$ scripts/build-slot.sh build -- /usr/bin/time -f %e -o /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/wave-a/after-lb/rows-seconds.txt python3 /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/experiments/new-core-s2-20261005/wave-a/check_stage.py --stage after-lb --measure-rows
+
+### record_reads (cycles per iteration, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 24.455 | 24.533 | same |
+| new core release | 17.577 | 17.409 | same |
+| Rust | 17.463 | 17.258 | same |
+| Zig ReleaseSafe | 23.978 | 23.911 | same |
+
+### tagged_stack (cycles per iteration, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 66.385 | 66.332 | same |
+| new core release | 33.607 | 33.485 | same |
+| Rust | 26.131 | 26.086 | same |
+| Zig ReleaseSafe | 54.185 | 54.098 | same |
+
+### mutate_unique (cycles per iteration, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 17.685 | 19.176 | same |
+| new core release | 14.807 | 15.101 | same |
+| Rust | 13.490 | 17.878 | same |
+| Zig ReleaseSafe | 17.209 | 23.108 | same |
+
+### mutate_shared (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 1.106 | 11.842 | same |
+| new core release | 0.679 | 1.321 | same |
+| Rust | 0.625 | 1.218 | same |
+| Zig ReleaseSafe | 1.310 | 1.711 | same |
+
+### record_construct (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 21.916 | 20.434 | same |
+| new core release | 2.701 | 2.925 | same |
+| Rust | 13.983 | 13.476 | same |
+| Zig ReleaseSafe | 18.060 | 18.583 | same |
+
+### record_update (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 14.011 | 17.804 | same |
+| new core release | 6.966 | 10.240 | same |
+| Rust | 7.363 | 10.588 | same |
+| Zig ReleaseSafe | 13.461 | 15.476 | same |
+
+### option_handle (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 5.489 | 5.872 | same |
+| new core release | 2.476 | 2.905 | same |
+| Rust | 3.836 | 4.095 | same |
+| Zig ReleaseSafe | 9.663 | 8.328 | same |
+
+### result_propagate (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 9.908 | 10.282 | same |
+| new core release | 5.990 | 6.895 | same |
+| Rust | 5.410 | 7.744 | same |
+| Zig ReleaseSafe | 9.485 | 10.435 | same |
+
+### list_scan (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 7.828 | 4.213 | same |
+| new core release | 7.428 | 4.584 | same |
+| Rust | 5.205 | 3.144 | same |
+| Zig ReleaseSafe | 8.517 | 5.014 | same |
+
+### list_append (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 8.732 | 14.263 | same |
+| new core release | 7.549 | 11.170 | same |
+| Rust | 6.601 | 10.395 | same |
+| Zig ReleaseSafe | 14.044 | 17.111 | same |
+
+### list_filter (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 9.393 | 17.794 | same |
+| new core release | 8.184 | 10.485 | same |
+| Rust | 5.831 | 10.258 | same |
+| Zig ReleaseSafe | 10.724 | 14.079 | same |
+
+### alloc_short (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 252.038 | 253.858 | same |
+| new core release | 5.095 | 5.093 | same |
+| Rust | 5.042 | 5.272 | same |
+| Zig ReleaseSafe | 22.055 | 22.493 | same |
+
+### alloc_retained (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 146.855 | 154.917 | same |
+| new core release | 33.203 | 32.603 | same |
+| Rust | 80.796 | 82.655 | same |
+| Zig ReleaseSafe | 81.100 | 79.531 | same |
+
+### mutate_nested (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 29.874 | 47.178 | same |
+| new core release | 9.990 | 11.897 | same |
+| Rust | 82.304 | 72.985 | same |
+| Zig ReleaseSafe | 76.781 | 74.684 | same |
+
+exit=0 command=179.11s wall_including_admission=179.15s

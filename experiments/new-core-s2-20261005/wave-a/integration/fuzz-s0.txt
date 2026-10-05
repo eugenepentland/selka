@@ -1,0 +1,11 @@
+qualification progress: s0: seen=25 elapsed=55.17s
+qualification progress: s0: seen=50 elapsed=115.82s
+qualification progress: s0: seen=75 elapsed=179.95s
+qualification progress: s0: seen=100 elapsed=244.83s
+qualification progress: s0: seen=125 elapsed=308.46s
+qualification progress: s0: seen=150 elapsed=376.50s
+qualification progress: s0: seen=175 elapsed=433.21s
+qualification progress: s0: seen=200 elapsed=494.06s
+cases=200 old_rejected=0 new_refused=0 compared=3000 mismatch=0 fact=0 traps=410 caught=0 vectorized=43 versioned=8
+qualification {"kind": "s0", "qualified": true, "accepted": 200, "old_rejected": 0, "core_refused": 0, "core_build_failed": 0, "elapsed_seconds": 496.0867229530122}
+s0 exit 0

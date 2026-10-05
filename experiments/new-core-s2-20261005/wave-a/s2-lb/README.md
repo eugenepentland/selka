@@ -27,10 +27,11 @@ guard. `reversed` keeps its fixed bound and exact terminal guard.
 
 Syntactic root assignment in the body selects an independent entry snapshot;
 field write-back stays live. A mut callee's whole-root write-back stays live too,
-including same-length replacement. The two integration-only cases in
+including same-length replacement. The six integration-only cases in
 [mut_callee_rebinding.my](mut_callee_rebinding.my) require S2-La's ABI change and
-must run after the two language lanes merge. They expect totals 9 and 18, with
-the prior named copies unchanged. They are kept outside `tests/lang` because the
+must run after the two language lanes merge. The coordinator extended the two
+original cases with forwarded mut parameters and function-value calls. All
+forms expect totals 9 and 18, with the prior named copies unchanged. They are kept outside `tests/lang` because the
 standalone Lb base has the previous callee-rebinding behavior.
 
 Fixed arrays initially appeared to be exempt because their inherited tests

@@ -1,0 +1,64 @@
+def probe(xs: list[int], key: int) -> int:
+    i = key % 80 - 1
+    if i >= 0:
+        if i < len(xs):
+            return xs[i]
+    return 0
+
+
+def helper0(a: int, b: int) -> int:
+    return ((a - a) // 16)
+
+
+def helper1(a: int, b: int) -> int:
+    if (b // 17) >= (b % b) or b < 1000003:
+        return ((b - b) // (25 - b))
+    return ((b + b) % (a + a))
+
+
+def number(text: str, fallback: int) -> int:
+    match int(text):
+        case Some(value):
+            return value
+        case None:
+            return fallback
+
+
+def main(args: list[str], out: Stream) -> int:
+    if len(args) != 3:
+        return 2
+    n = number(args[0], 3)
+    rounds = number(args[1], 2)
+    seed = number(args[2], 7)
+    if n < 0 or n > 100 or rounds < 0 or rounds > 5:
+        return 3
+    values = [(((j + 3) + j)) % 7 for j in range(n)]
+    second = [(j * 15 + 3) % 64 for j in range(n)]
+    flags = [j % 3 != 0 for j in range(n)]
+    acc = 0
+    for b in range(rounds):
+        phase = b % 11
+        total = 0
+        for j in range(n + 1):
+            x = values[j]
+            y = second[j % n]
+            v = ((phase % 17) % 7)
+            if flags[j % n]:
+                v = v
+            else:
+                v = v + 14
+            total += v
+        acc = (acc + total) % 1000000007
+    k = seed % 1000 + 2
+    steps = 0
+    while k != 1 and steps < 200:
+        if k % 2 == 0:
+            k = k // 2
+        else:
+            k = 3 * k + 1
+        steps += 1
+    acc = acc + steps
+    acc = acc + probe(values, (seed % (0 - 9)))
+    out.print(acc, len(values))
+    return acc % 7
+

@@ -1,0 +1,36 @@
+def number(text: str, fallback: int) -> int:
+    match int(text):
+        case Some(value):
+            return value
+        case None:
+            return fallback
+
+
+def main(args: list[str], out: Stream) -> int:
+    if len(args) != 3:
+        return 2
+    n = number(args[0], 3)
+    rounds = number(args[1], 2)
+    seed = number(args[2], 7)
+    if n < 0 or n > 100 or rounds < 0 or rounds > 5:
+        return 3
+    values = [((j + (seed % seed))) % 7 for j in range(n)]
+    second = [(j * 16 + 3) % 64 for j in range(n)]
+    flags = [((22 + (0 - 29))) % 3 < 32 for j in range(n)]
+    acc = 0
+    for b in range(rounds):
+        phase = b % 15
+        total = 0
+        for j in range(n):
+            x = values[j]
+            y = second[j]
+            v = phase
+            if flags[j]:
+                v = ((x + 28) + (x // 17))
+            else:
+                v = v + 16
+            total += v
+        acc = acc + total
+    out.print(acc, len(values))
+    return acc % 7
+

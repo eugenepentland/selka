@@ -1,0 +1,20 @@
+$ scripts/build-slot.sh gate -- scripts/build-slot.sh build -- /usr/bin/time -f %e -o /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/wave-a/after-lb/test-core-seconds.txt zig build test-core --summary all
+test-core
++- run test w
+no_such_file_in_tests_lang (debug): mylang-core test did not finish cleanly:
+error: cannot read /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/tests/lang/no_such_file_in_tests_lang.my: FileNotFound
+
+no_such_row: the new core failed to build the row:
+error: cannot read /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/test/core/row_no_such_row.my: FileNotFound
+
+failed command: ./.zig-cache/o/eec73d3dfd11f06292c653b9e974a878/test --cache-dir=./.zig-cache --seed=0x92b9bf13 --listen=-
+
+Build Summary: 5/5 steps succeeded; 147/147 tests passed
+test-core success
++- run test 147 pass (147 total) 1m MaxRSS:131M
+   +- compile test debug native success 1s MaxRSS:323M
+      +- options success
+         +- compile exe mylang-core debug native cached 7ms MaxRSS:41M
+
+
+exit=0 command=92.01s wall_including_admission=97.05s

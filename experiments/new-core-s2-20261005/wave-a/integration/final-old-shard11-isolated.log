@@ -1,0 +1,20 @@
+guardian/test: 218 test(s) selected [shard 11/12 of 2629]
+guardian/test: SLOW  48.73s  qbe_rc_index_update_test.test.RC index update forwards checksum prefixes but keeps managed and snapshot read fallbacks
+guardian/test: SLOW  58.37s  semantic_cache_test.test.semantic cache reuses unchanged checked bodies after edits and preserves diagnostics and ownership under allocation failures
+retention: budget=6006 retained=3410 spec_bytes=3410 evictions=44 oldest_fresh_checks=+1
+warning: something
+warning: something
+All 218 tests passed.
+guardian/test: test wall 138.76s; slowest over 50ms:
+guardian/test:   58.37s  semantic_cache_test.test.semantic cache reuses unchanged checked bodies after edits and preserves diagnostics and ownership under allocation failures
+guardian/test:   48.73s  qbe_rc_index_update_test.test.RC index update forwards checksum prefixes but keeps managed and snapshot read fallbacks
+guardian/test:   4.25s  semantic_cache_test.test.shared retention budget bounds distinct specializations and eviction forces fresh checks
+guardian/test:   3.41s  invoke_test.test.an export that calls another function is lowered with its call closure
+guardian/test:   3.33s  domain_codecs_test.test.source codec operations resolve declared methods and preserve formatting under allocation failures
+guardian/test:   2.14s  stdlib_codecs_test.test.standard base64 and hex match their vectors and reject noncanonical input
+guardian/test:   1.35s  qbe_positive_index_test.test.positive index executes positive negative minimum and empty exact trap fallbacks
+guardian/test:   1.03s  integers_test.test.all integer widths accept their limits and reject one-past literals
+guardian/test:   1.01s  native_execute.test.a wall-clock timeout ends an unbounded native run with R_TIMEOUT
+guardian/test:   0.91s  qbe_rc_dictionary_key_test.test.RC dictionary key whole-local lifetime and role controls
+guardian/test: PASS — 218 passed
+guardian/test: RESULT {"passed":218,"failed":0,"skipped":0}

@@ -1,0 +1,42 @@
+--- baseline-release
++++ current-release
+@@ -1339,8 +1339,8 @@
+ b4:
+   ret ptr %v14
+ b5:
+-  %v26 = phi ptr [ %v14, %b2.11 ], [ %v23, %b6.21 ]
+-  %v15 = call ptr @myl_core_list_reserve(ptr %v26, i64 8)
++  %v27 = phi ptr [ %v14, %b2.11 ], [ %v24, %b6.21 ]
++  %v15 = call ptr @myl_core_list_reserve(ptr %v27, i64 8)
+   %pl.13 = getelementptr inbounds i8, ptr %v15, i64 8
+   %plen.14 = load i64, ptr %pl.13, align 8, !tbaa !5
+   %data.16 = getelementptr inbounds i8, ptr %v15, i64 32
+@@ -1350,7 +1350,7 @@
+   store i64 %pn.15, ptr %pl.13, align 8, !tbaa !5
+   br label %b3
+ b6:
+-  %v23 = call ptr @myl_core_list_copy(ptr %v14, i64 8)
++  %v24 = call ptr @myl_core_list_copy(ptr %v14, i64 8)
+   %rc.18 = load i32, ptr %v14, align 8, !tbaa !3, !range !8
+   %rs.19 = icmp eq i32 %rc.18, -1
+   br i1 %rs.19, label %b6.21, label %rc.dec.20
+@@ -1585,8 +1585,8 @@
+   %v30 = getelementptr inbounds i8, ptr %v2, i64 0
+   ret ptr %v30
+ b5:
+-  %v38 = phi ptr [ %p0, %b0 ], [ %v35, %b6.51 ]
+-  %v2 = call ptr @myl_core_list_reserve(ptr %v38, i64 8)
++  %v39 = phi ptr [ %p0, %b0 ], [ %v36, %b6.51 ]
++  %v2 = call ptr @myl_core_list_reserve(ptr %v39, i64 8)
+   %pl.43 = getelementptr inbounds i8, ptr %v2, i64 8
+   %plen.44 = load i64, ptr %pl.43, align 8, !tbaa !5
+   %data.46 = getelementptr inbounds i8, ptr %v2, i64 32
+@@ -1596,7 +1596,7 @@
+   store i64 %pn.45, ptr %pl.43, align 8, !tbaa !5
+   br i1 false, label %b1, label %b2
+ b6:
+-  %v35 = call ptr @myl_core_list_copy(ptr %p0, i64 8)
++  %v36 = call ptr @myl_core_list_copy(ptr %p0, i64 8)
+   %rc.48 = load i32, ptr %p0, align 8, !tbaa !3, !range !8
+   %rs.49 = icmp eq i32 %rc.48, -1
+   br i1 %rs.49, label %b6.51, label %rc.dec.50

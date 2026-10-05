@@ -1,0 +1,54 @@
+
+### integer_math (cycles/element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 x 4000 | 64 x 250000 | checksum |
+|---|---:|---:|---|
+| old core base --release | 14.400 | 14.035 | same |
+| new core base release | 0.443 | 0.689 | same |
+| new core Wave A release | 0.472 | 0.644 | same |
+| Rust | 11.517 | 11.690 | same |
+| Zig ReleaseSafe | 13.711 | 8.922 | same |
+
+### float_math (cycles/element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 x 4000 | 64 x 250000 | checksum |
+|---|---:|---:|---|
+| old core base --release | 8.341 | 8.477 | same |
+| new core base release | 1.569 | 1.717 | same |
+| new core Wave A release | 1.569 | 1.706 | same |
+| Rust | 7.012 | 7.418 | same |
+| Zig ReleaseSafe | 6.563 | 7.092 | same |
+
+### call_direct (cycles/element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 x 4000 | 64 x 250000 | checksum |
+|---|---:|---:|---|
+| old core base --release | 3.074 | 3.238 | same |
+| new core base release | 0.306 | 0.325 | same |
+| new core Wave A release | 0.301 | 0.327 | same |
+| Rust | 2.040 | 2.952 | same |
+| Zig ReleaseSafe | 3.051 | 4.176 | same |
+
+### branch_predictable (cycles/element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 x 4000 | 64 x 250000 | checksum |
+|---|---:|---:|---|
+| old core base --release | 4.071 | 4.188 | same |
+| new core base release | 0.399 | 0.496 | same |
+| new core Wave A release | 0.401 | 0.497 | same |
+| Rust | 3.234 | 3.270 | same |
+| Zig ReleaseSafe | 7.785 | 7.861 | same |
+
+### branch_mixed (cycles/element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 x 4000 | 64 x 250000 | checksum |
+|---|---:|---:|---|
+| old core base --release | 4.139 | 4.143 | same |
+| new core base release | 0.400 | 0.497 | same |
+| new core Wave A release | 0.398 | 0.497 | same |
+| Rust | 4.882 | 4.532 | same |
+| Zig ReleaseSafe | 9.320 | 9.200 | same |
+
+### binary_search (cycles/element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 x 4000 | 64 x 250000 | checksum |
+|---|---:|---:|---|
+| old core base --release | 145.801 | 33.270 | same |
+| new core base release | 33.100 | 18.111 | same |
+| new core Wave A release | 33.524 | 18.113 | same |
+| Rust | 39.577 | 19.657 | same |
+| Zig ReleaseSafe | 138.728 | 28.428 | same |

@@ -1,0 +1,14 @@
+def replace_entry(root: mut list[list[int]]) -> list[list[int]]:
+    root[0] = [21]
+    return root
+
+def change(target: mut list[int], source: list[list[int]]) -> int:
+    target.append(13)
+    return target[0] * 100 + source[0][0]
+
+def main(args: list[str], out: Stream) -> int:
+    rows = [[7]]
+    saved = rows
+    seen = change(mut rows[0], replace_entry(mut rows))
+    out.print(seen, len(rows[0]), rows[0][0], len(saved[0]), saved[0][0])
+    return 0

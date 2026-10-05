@@ -1,0 +1,28 @@
+$ python3 experiments/new-core-s1-20261005/lane-o/count_rc_in_loops.py .mylang-cache/wave-a/wave-a/row_record_reads.ll
+innermost loops (depth 1): 0 count updates, 6 free/copy/alloc calls; all: [depth 0: 0 count updates, 2 calls, depth 1: 0 count updates, 6 calls]
+$ python3 experiments/new-core-s1-20261005/lane-o/count_rc_in_loops.py .mylang-cache/wave-a/wave-a/row_tagged_stack.ll
+innermost loops (depth 1): 0 count updates, 3 free/copy/alloc calls; all: [depth 0: 0 count updates, 7 calls, depth 1: 0 count updates, 3 calls]
+$ python3 experiments/new-core-s1-20261005/lane-o/count_rc_in_loops.py .mylang-cache/wave-a/wave-a/row_mutate_unique.ll
+innermost loops (depth 1): 0 count updates, 1 free/copy/alloc calls; all: [depth 0: 0 count updates, 2 calls, depth 1: 0 count updates, 1 calls]
+$ python3 experiments/new-core-s1-20261005/lane-o/count_rc_in_loops.py .mylang-cache/wave-a/wave-a/row_mutate_shared.ll
+innermost loops (depth 1): 0 count updates, 2 free/copy/alloc calls; all: [depth 0: 0 count updates, 3 calls, depth 1: 0 count updates, 2 calls]
+$ python3 experiments/new-core-s1-20261005/lane-o/count_rc_in_loops.py .mylang-cache/wave-a/wave-a/row_record_construct.ll
+innermost loops (depth 2): 0 count updates, 0 free/copy/alloc calls; all: [depth 0: 0 count updates, 2 calls, depth 1: 0 count updates, 1 calls]
+$ python3 experiments/new-core-s1-20261005/lane-o/count_rc_in_loops.py .mylang-cache/wave-a/wave-a/row_record_update.ll
+innermost loops (depth 2): 0 count updates, 0 free/copy/alloc calls; all: [depth 0: 0 count updates, 4 calls, depth 1: 0 count updates, 2 calls]
+$ python3 experiments/new-core-s1-20261005/lane-o/count_rc_in_loops.py .mylang-cache/wave-a/wave-a/row_option_handle.ll
+innermost loops (depth 2): 0 count updates, 0 free/copy/alloc calls; all: [depth 0: 0 count updates, 2 calls, depth 1: 0 count updates, 1 calls]
+$ python3 experiments/new-core-s1-20261005/lane-o/count_rc_in_loops.py .mylang-cache/wave-a/wave-a/row_result_propagate.ll
+innermost loops (depth 2): 0 count updates, 0 free/copy/alloc calls; all: [depth 0: 0 count updates, 2 calls, depth 1: 0 count updates, 1 calls]
+$ python3 experiments/new-core-s1-20261005/lane-o/count_rc_in_loops.py .mylang-cache/wave-a/wave-a/row_list_scan.ll
+innermost loops (depth 2): 0 count updates, 0 free/copy/alloc calls; all: [depth 0: 2 count updates, 3 calls, depth 1: 0 count updates, 1 calls]
+$ python3 experiments/new-core-s1-20261005/lane-o/count_rc_in_loops.py .mylang-cache/wave-a/wave-a/row_list_append.ll
+innermost loops (depth 2): 0 count updates, 1 free/copy/alloc calls; all: [depth 1: 1 count updates, 2 calls, depth 2: 0 count updates, 1 calls]
+$ python3 experiments/new-core-s1-20261005/lane-o/count_rc_in_loops.py .mylang-cache/wave-a/wave-a/row_list_filter.ll
+innermost loops (depth 2): 0 count updates, 2 free/copy/alloc calls; all: [depth 1: 1 count updates, 4 calls, depth 2: 0 count updates, 2 calls]
+$ python3 experiments/new-core-s1-20261005/lane-o/count_rc_in_loops.py .mylang-cache/wave-a/wave-a/row_alloc_short.ll
+innermost loops (depth 2): 0 count updates, 0 free/copy/alloc calls; all: []
+$ python3 experiments/new-core-s1-20261005/lane-o/count_rc_in_loops.py .mylang-cache/wave-a/wave-a/row_alloc_retained.ll
+innermost loops (depth 3): 0 count updates, 0 free/copy/alloc calls; all: [depth 1: 0 count updates, 2 calls, depth 2: 0 count updates, 6 calls]
+$ python3 experiments/new-core-s1-20261005/lane-o/count_rc_in_loops.py .mylang-cache/wave-a/wave-a/row_mutate_nested.ll
+innermost loops (depth 2): 0 count updates, 0 free/copy/alloc calls; all: [depth 0: 2 count updates, 3 calls, depth 1: 2 count updates, 10 calls]

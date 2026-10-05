@@ -1,0 +1,24 @@
+{
+  "classification": "qualification environment configuration error; no compiler or fixture change",
+  "aborted_gate_log": "final-old-test-tmpdir-discovery.log",
+  "failed_driver_invocations": 2,
+  "drivers": [
+    {
+      "command": "python3 tests/incremental_diff.py --steps 120 ./zig-out/bin/mylang",
+      "planned_steps": 120,
+      "mutation_comparisons_completed": 0,
+      "fixture_source_files": 5
+    },
+    {
+      "command": "python3 tests/incremental_diff.py --steps 60 --project tests/fixtures/module_projects ./zig-out/bin/mylang",
+      "planned_steps": 60,
+      "mutation_comparisons_completed": 0,
+      "fixture_source_files": 4
+    }
+  ],
+  "cause": "TMPDIR was nested beneath .mylang-cache; incremental_diff.py excludes every copied source with that component in its absolute path.parts, producing an empty pristine map and IndexError at the first rng.choice.",
+  "corrected_tmpdir": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.tmp/final-old-qualification",
+  "copied_project_driver_review": "Only incremental_diff filters the copied project by absolute path.parts. Interface/module oracles apply that filter when discovering repository entry paths, which remain outside .mylang-cache; copytree excludes cache descendants by basename. Corrected TMPDIR also avoids the absolute component filter.",
+  "source_change": false,
+  "corrected_rerun": "explicitly authorized by root after preserving and stopping the failed gate"
+}

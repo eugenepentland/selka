@@ -46,8 +46,8 @@ The final core-suite command takes the gate slot as well as the build slot:
 export ZIG_LOCAL_CACHE_DIR="$PWD/.zig-cache"
 export ZIG_GLOBAL_CACHE_DIR=/home/epentland/ai/canopy/.zig-global-cache
 export TMPDIR="$PWD/.tmp"
-scripts/build-slot.sh gate -- scripts/build-slot.sh build -- \
-  /usr/bin/time -f 'command_wall_seconds=%e' zig build test-core --summary all
+scripts/build-slot.sh gate -- bash -c '"$@"; result=$?; exit "$result"' -- \
+  scripts/build-slot.sh build -- /usr/bin/time -f 'command_wall_seconds=%e' zig build test-core --summary all
 ```
 
 Focused tests use `zig build test-core -Dtest-filter='S2 ' --summary all` through
@@ -94,3 +94,8 @@ The exact as-built shape and extern-C span admission are documented in
 `docs/design/new-core-s2.md` §13. General source string-parameter view ABI remains
 subject to user decision 4; it is not enabled here. `ir.zig` freezes only after
 coordinator acceptance.
+
+The coordinator discovered that direct nesting of the original wrappers reused
+descriptor 9 and dropped the outer gate lease. The command above retains a
+waiting parent; explicit scheduling isolated the historical accepted run.
+Final aggregate qualification is recorded in `../REPORT.md` and `../integration/`.

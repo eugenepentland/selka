@@ -1,0 +1,147 @@
+refused extern	main::runtime_bench_now
+ok main::integer	proven=0 exact=0 stack=0
+ok main::boolean	proven=0 exact=0 stack=0
+ok main::execute	proven=6 exact=19 stack=0
+ok main::row_key	proven=0 exact=0 stack=0
+ok main::fold	proven=4 exact=2 stack=0
+refused dict type	main::batch_result
+ok main::parse_number	proven=0 exact=0 stack=0
+refused dict type	main::main
+refused extern	main::runtime_bench_now
+ok main::parse_number	proven=0 exact=0 stack=0
+ok main::affine_a	proven=0 exact=2 stack=0
+ok main::affine_b	proven=0 exact=2 stack=0
+ok main::score	proven=0 exact=4 stack=0
+ok main::optional	proven=0 exact=2 stack=0
+ok main::checked	proven=0 exact=2 stack=0
+ok main::forwarded	proven=0 exact=2 stack=0
+ok main::search	proven=8 exact=0 stack=0
+refused bytes type	main::make_frame
+refused bytes type	main::decode
+refused bytes type	main::main
+refused extern	main::runtime_bench_now
+ok main::number	proven=0 exact=0 stack=0
+ok main::repeated	proven=0 exact=0 stack=0
+refused bytes type	main::score
+ok main::row_name	proven=0 exact=1 stack=0
+refused bytes type	main::inputs
+refused dict type	main::word_job
+refused string index	main::csv_rows
+refused dict type	main::csv_job
+refused dict type	main::json_integer
+refused dict type	main::json_active
+refused dict type	main::json_job
+refused bytes type	main::bytes_job
+refused split	main::split_job
+ok main::parse_job	proven=0 exact=0 stack=0
+refused bytes type	main::kernel
+refused contains	main::main
+ok strings::digits	proven=0 exact=0 stack=0
+ok strings::message	proven=0 exact=0 stack=0
+ok strings::base_digits	proven=0 exact=0 stack=0
+ok strings::letters	proven=0 exact=0 stack=0
+ok strings::whitespace	proven=0 exact=0 stack=0
+refused string index	strings::table_index
+refused string index	strings::all_in
+refused is_digit	strings::is_digit
+refused is_alpha	strings::is_alpha
+ok strings::is_alnum	proven=0 exact=0 stack=0
+refused is_space	strings::is_space
+refused starts_with	strings::starts_with
+refused ends_with	strings::ends_with
+refused find	strings::find
+refused count	strings::count
+refused lstrip	strings::lstrip
+refused rstrip	strings::rstrip
+refused strip	strings::strip
+refused split	strings::lines
+refused slice	strings::repeat
+ok strings::pad_left	proven=1 exact=3 stack=0
+ok strings::pad_right	proven=1 exact=3 stack=0
+refused upper	strings::upper
+refused lower	strings::lower
+refused replace	strings::substitute
+ok strings::to_int	proven=0 exact=0 stack=0
+refused parse_float	strings::to_float
+refused index	strings::format_int
+ok strings::product_error	proven=0 exact=0 stack=0
+refused slice	strings::format_float
+refused bytes type	strings::ord
+refused bytes type	strings::chr
+ok math::max_finite	proven=0 exact=0 stack=0
+ok math::pi	proven=0 exact=0 stack=0
+ok math::e	proven=0 exact=0 stack=0
+ok math::nan	proven=0 exact=0 stack=0
+ok math::infinity	proven=0 exact=0 stack=0
+ok math::is_nan	proven=0 exact=0 stack=0
+ok math::is_inf	proven=0 exact=0 stack=0
+ok math::is_finite	proven=0 exact=0 stack=0
+ok math::fabs	proven=0 exact=0 stack=0
+ok math::sign	proven=1 exact=0 stack=0
+ok math::trunc	proven=0 exact=1 stack=0
+ok math::floor	proven=0 exact=0 stack=0
+ok math::ceil	proven=0 exact=0 stack=0
+ok math::round	proven=0 exact=0 stack=0
+refused f64_sqrt	math::sqrt
+refused f64_sin	math::sin
+refused f64_cos	math::cos
+ok math::positive_power	proven=2 exact=0 stack=0
+ok math::saturated	proven=3 exact=1 stack=0
+ok math::pow	proven=0 exact=0 stack=0
+ok math::fmin	proven=0 exact=0 stack=0
+ok math::fmax	proven=0 exact=0 stack=0
+ok math::abs	proven=2 exact=1 stack=0
+ok math::gcd	proven=0 exact=1 stack=0
+ok math::lcm	proven=0 exact=3 stack=0
+ok math::isqrt	proven=3 exact=6 stack=0
+ok json::message	proven=0 exact=0 stack=0
+ok json::max_depth	proven=0 exact=0 stack=0
+refused dict type	json::null_value
+refused dict type	json::boolean
+refused dict type	json::integer
+refused dict type	json::number
+refused dict type	json::text
+refused dict type	json::array
+refused dict type	json::object
+refused dict type	json::type_name
+refused dict type	json::is_null
+refused dict type	json::as_bool
+refused dict type	json::as_int
+refused dict type	json::as_float
+refused dict type	json::as_str
+refused dict type	json::as_list
+refused dict type	json::as_dict
+refused dict type	json::get
+refused dict type	json::at
+refused bytes type	json::scanner_of
+refused bytes type	json::at_end
+refused bytes type	json::peek
+refused bytes type	json::advance
+refused bytes type	json::skip_whitespace
+refused bytes type	json::fail
+ok json::is_digit_byte	proven=0 exact=0 stack=0
+ok json::hex_value	proven=3 exact=1 stack=0
+refused bytes type	json::append_code_point
+refused bytes type	json::decoded
+refused bytes type	json::read_hex4
+refused bytes type	json::read_unicode_escape
+refused bytes type	json::read_escape
+refused bytes type	json::read_string
+refused bytes type	json::skip_digits
+refused bytes type	json::read_exponent
+refused bytes type	json::read_fraction
+refused bytes type	json::read_integer_part
+refused bytes type	json::read_number
+refused bytes type	json::read_literal
+refused bytes type	json::read_array
+refused bytes type	json::read_member
+refused bytes type	json::read_object
+refused bytes type	json::read_value
+refused dict type	json::loads
+refused bytes type	json::write_control
+refused bytes type	json::write_quoted
+refused bytes type	json::write_number
+refused bytes type	json::write_value
+refused bytes type	json::write_array
+refused bytes type	json::write_object
+refused dict type	json::dumps

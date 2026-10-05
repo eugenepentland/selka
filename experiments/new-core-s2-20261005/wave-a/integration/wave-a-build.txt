@@ -1,0 +1,8 @@
+$ scripts/build-slot.sh build -- /usr/bin/time -f %e -o /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/wave-a/wave-a/build-seconds.txt zig build core --summary all
+Build Summary: 3/3 steps succeeded
+core success
++- install mylang-core success
+   +- compile exe mylang-core debug native success 1s MaxRSS:327M
+
+
+exit=0 command=1.90s wall_including_admission=1.94s
