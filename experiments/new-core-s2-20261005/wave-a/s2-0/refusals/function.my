@@ -1,0 +1,6 @@
+def target(x: int) -> int effects():
+    return x
+
+def main() -> int:
+    f = target
+    return f(1)

@@ -1,0 +1,10 @@
+fn identity(i64) -> i64
+b0:
+  ret param0
+fn main(cap) -> i64
+b0:
+  %4 = record_make [2]i64 0:i64, 0:i64
+  %10 = array_set.exact [2]i64 %4, 0:i64, 42:i64
+  %11 = array_get.exact i64 %10, 0:i64
+  print param0, %11
+  ret 0:i64

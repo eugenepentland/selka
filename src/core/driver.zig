@@ -10,7 +10,7 @@ const std = @import("std");
 const target = @import("target.zig").current;
 
 /// The runtime C source, compiled into every program.
-pub const runtime_source = @embedFile("runtime/core_rt.c");
+pub const runtime_source = @embedFile("runtime/core_rt.c") ++ "\n" ++ @embedFile("runtime/core_dict.c") ++ "\n" ++ @embedFile("runtime/core_text.c") ++ "\n" ++ @embedFile("runtime/core_sort.c");
 
 /// One build: tools, directories, the program and how to optimize it.
 pub const Request = struct {

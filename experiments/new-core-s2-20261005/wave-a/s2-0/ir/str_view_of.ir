@@ -1,0 +1,8 @@
+fn identity(i64) -> i64
+b0:
+  ret param0
+fn main(cap) -> i64
+b0:
+  %4 = record_make [2]i64 0:i64, 0:i64
+  %11 = str_view_of str_view str0, 0:u64, 1:u64
+  ret 0:i64

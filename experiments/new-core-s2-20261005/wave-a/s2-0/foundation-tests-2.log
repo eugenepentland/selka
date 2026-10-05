@@ -1,0 +1,31 @@
+test-core
++- run test 30 pass, 2 fail (32 total)
+error: 's2_ir_test.test.S2 indirect calls own managed array arguments and return arrays in registers' failed:
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:614:14: 0x12be2e9 in expect (std.zig)
+           if (!ok) return error.TestUnexpectedResult;
+                    ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-ir/src/core/s2_ir_test.zig:423:5: 0x12be968 in exerciseArrayOwnership (root_test.zig)
+           try std.testing.expect(std.mem.indexOf(u8, core, "retain [") != null);
+           ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-ir/src/core/s2_ir_test.zig:434:5: 0x148c26c in test.S2 indirect calls own managed array arguments and return arrays in registers (root_test.zig)
+           try exerciseArrayOwnership(2);
+           ^
+error: 's2_ir_test.test.S2 indirect calls own managed array arguments and return arrays through sret' failed:
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:614:14: 0x12be2e9 in expect (std.zig)
+           if (!ok) return error.TestUnexpectedResult;
+                    ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-ir/src/core/s2_ir_test.zig:423:5: 0x12be968 in exerciseArrayOwnership (root_test.zig)
+           try std.testing.expect(std.mem.indexOf(u8, core, "retain [") != null);
+           ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-ir/src/core/s2_ir_test.zig:440:5: 0x12bf36c in test.S2 indirect calls own managed array arguments and return arrays through sret (root_test.zig)
+           try exerciseArrayOwnership(5);
+           ^
+failed command: ./.zig-cache/o/a919dc58a14b9e3022a70322c3622c53/test --cache-dir=./.zig-cache --seed=0xfaad4747 --listen=-
+
+Build Summary: 3/5 steps succeeded (1 failed); 30/32 tests passed (2 failed)
+test-core transitive failure
++- run test 30 pass, 2 fail (32 total)
+   +- compile test debug native success 2s MaxRSS:206M
+      +- options cached
+         +- compile exe mylang-core debug native cached 191ms MaxRSS:41M
+

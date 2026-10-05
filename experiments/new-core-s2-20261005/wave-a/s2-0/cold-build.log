@@ -1,0 +1,51 @@
+core
++- install mylang-core
+   +- compile exe mylang-core debug native 3 errors
+src/core/verify_ir.zig:432:65: error: capture shadows declaration of 'signature'
+            .func_ref => if (self.compoundOf(inst.ty, .@"fn")) |signature| inst.data < self.module.functions.items.len and sameSignature(signature, self.module.functions.items[@intCast(inst.data)].signature) and signature.linkage == .internal else false,
+                                                                ^~~~~~~~~
+src/core/verify_ir.zig:368:5: note: declared here
+    fn signature(self: *Verifier, b: usize, ref: ir.Ref, inst: ir.Inst) Error!void {
+    ^~
+src/core/build.zig:1311:9: error: switch must handle all possibilities
+        switch (kind) {
+        ^~~~~~
+src/core/ir.zig:97:5: note: unhandled enumeration value: 'dict'
+    dict: struct { key: Type, value: Type },
+    ^~~~
+src/core/ir.zig:99:5: note: unhandled enumeration value: 'array'
+    array: struct { elem: Type, n: u32 },
+    ^~~~~
+src/core/ir.zig:101:5: note: unhandled enumeration value: 'fn'
+    @"fn": Signature,
+    ^~~~~
+src/core/ir.zig:82:22: note: enum '@typeInfo(ir.Compound).@"union".tag_type.?' declared here
+pub const Compound = union(enum) {
+                     ^~~~~
+referenced by:
+    equal: src/core/build.zig:1329:27
+    aggregateCompare: src/core/build.zig:1300:36
+    12 reference(s) hidden; use '-freference-trace=14' to see all references
+src/core/build.zig:1332:9: error: switch must handle all possibilities
+        switch (m.kind(ty) orelse return self.mb.refuse(refuse_equality, span)) {
+        ^~~~~~
+src/core/ir.zig:97:5: note: unhandled enumeration value: 'dict'
+    dict: struct { key: Type, value: Type },
+    ^~~~
+src/core/ir.zig:99:5: note: unhandled enumeration value: 'array'
+    array: struct { elem: Type, n: u32 },
+    ^~~~~
+src/core/ir.zig:101:5: note: unhandled enumeration value: 'fn'
+    @"fn": Signature,
+    ^~~~~
+src/core/ir.zig:82:22: note: enum '@typeInfo(ir.Compound).@"union".tag_type.?' declared here
+pub const Compound = union(enum) {
+                     ^~~~~
+error: 3 compilation errors
+failed command: /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig build-exe -ODebug --dep mylang -Mroot=src/core/main.zig -ODebug --dep runtime_contract -Mmylang=src/compiler.zig -ODebug -Mruntime_contract=src/runtime_contract.zig --cache-dir .zig-cache --global-cache-dir /home/epentland/ai/canopy/.zig-global-cache --name mylang-core --zig-lib-dir /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/ --listen=-
+
+Build Summary: 0/3 steps succeeded (1 failed)
+core transitive failure
++- install mylang-core transitive failure
+   +- compile exe mylang-core debug native 3 errors
+

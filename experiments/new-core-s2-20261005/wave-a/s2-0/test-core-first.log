@@ -1,0 +1,115 @@
+test-core
++- run test 178 pass, 5 fail (183 total)
+error: 'value_e2e_test.test.a mut list parameter rebound as a whole is detached from the caller (a mut record's rebinding reaches it): only the payload the list had then is written back' failed:
+       build of v_mut_rebind (debug) failed:
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-ir/.zig-cache/tmp/dDFFT_iBN6-j2Iv_/cache-new/v_mut_rebind-debug-7ace84e60222ec47.ll:1161:32: error: '%v7' defined with type '{ ptr, i64 }' but expected 'ptr'
+        1161 |   call void @myl_core_free(ptr %v7)
+             |                                ^
+       1 error generated.
+       
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-ir/src/core/value_e2e_test.zig:38:9: 0x20a6fef in runFixture (root_test.zig)
+               return error.BuildFailed;
+               ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-ir/src/core/value_e2e_test.zig:55:21: 0x20a79ce in matches (root_test.zig)
+               const got = try runFixture(arena, root, name, mode);
+                           ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-ir/src/core/value_e2e_test.zig:166:28: 0x20b2443 in test.a mut list parameter rebound as a whole is detached from the caller (a mut record's rebinding reaches it): only the payload the list had then is written back (root_test.zig)
+           try std.testing.expect(try matches(arena.allocator(), "v_mut_rebind", v_mut_rebind_output, 0));
+                                  ^
+error: 'value_e2e_test.test.appends and writes to elements of lists of lists and records print what the old core prints' failed:
+       build of v_nested (debug) failed:
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-ir/.zig-cache/tmp/_Qan30vmjIvyed8Z/cache-new/v_nested-debug-83af5600e282ea06.ll:1248:32: error: '%v78' defined with type '{ ptr }' but expected 'ptr'
+        1248 |   call void @myl_core_free(ptr %v78)
+             |                                ^
+       1 error generated.
+       
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-ir/src/core/value_e2e_test.zig:38:9: 0x20a6fef in runFixture (root_test.zig)
+               return error.BuildFailed;
+               ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-ir/src/core/value_e2e_test.zig:55:21: 0x20a79ce in matches (root_test.zig)
+               const got = try runFixture(arena, root, name, mode);
+                           ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-ir/src/core/value_e2e_test.zig:257:28: 0x20b0d63 in test.appends and writes to elements of lists of lists and records print what the old core prints (root_test.zig)
+           try std.testing.expect(try matches(arena.allocator(), "v_nested", v_nested_output, 0));
+                                  ^
+error: 'value_e2e_test.test.the value fixtures end with no block live under MYL_CORE_LEAKCHECK=1, debug and release' failed:
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:614:14: 0x1391ab9 in expect (std.zig)
+           if (!ok) return error.TestUnexpectedResult;
+                    ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-ir/src/core/value_e2e_test.zig:296:5: 0x20ae8b2 in leakReport (root_test.zig)
+           try std.testing.expect(built.term == .exited and built.term.exited == 0);
+           ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-ir/src/core/value_e2e_test.zig:333:48: 0x20af3f0 in test.the value fixtures end with no block live under MYL_CORE_LEAKCHECK=1, debug and release (root_test.zig)
+               try std.testing.expectEqualStrings("", try leakReport(arena.allocator(), root, name, .debug));
+                                                      ^
+error: 'conformance_test.test.the pinned S1 conformance list passes at debug and release' failed:
+       conformance (debug): mut_collection_call_window::test_a_borrow_the_write_consumes_stays_a_borrow_of_the_same_value: pinned as passing, now failed
+       conformance (debug): mut_collection_call_window::test_a_borrowed_field_keeps_its_value_across_a_later_nested_mut_call: pinned as passing, now failed
+       conformance (debug): mut_collection_call_window::test_a_borrowed_field_keeps_its_value_across_a_later_pop_through_the_root: pinned as passing, now failed
+       conformance (debug): mut_collection_call_window::test_a_borrowed_field_passed_after_a_mut_collection_argument_keeps_its_value: pinned as passing, now failed
+       conformance (debug): gc_mut_argument_roots::test_snapshot_survives_mut_argument_clone: pinned as passing, now failed
+       conformance (debug): rc_named_record_writes::test_complete_rhs_rebinding_precedes_named_scalar_commit: pinned as passing, now failed
+       conformance (debug): rc_named_record_writes::test_named_rebinding_and_forwarded_mut_return_keep_ownership: pinned as passing, now failed
+       conformance (debug): rc_named_record_writes::test_published_record_snapshot_keeps_original_scalar_bits: pinned as passing, now failed
+       conformance (debug): rc_named_record_writes::test_record_and_list_snapshots_survive_named_scalar_write: pinned as passing, now failed
+       conformance (debug): rc_named_record_writes::test_inner_arena_cleanup_requires_new_named_definition: failed: build error (ToolFailed): /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-ir/.zig-cache/tmp/jF8zx5uYBlKC7I0a/cache/rc_named_record_writes-965579a69f0b9300-debug-probe-34a8602b8f3f8bd2.ll:149:32: error: '%v17' defined with type '{ ptr, ptr, ptr, i64 }' but expected 'ptr'
+       conformance (debug): rc_named_record_writes::test_named_home_in_caller_arena_preserves_heap_children: failed: build error (ToolFailed): /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-ir/.zig-cache/tmp/jF8zx5uYBlKC7I0a/cache/rc_named_record_writes-965579a69f0b9300-debug-probe-34a8602b8f3f8bd2.ll:392:32: error: '%v23' defined with type '{ ptr, ptr, ptr, i64 }' but expected 'ptr'
+       conformance (debug): rc_plain_record_writes::test_saved_record_and_child_snapshots_survive_scalar_publication: pinned as passing, now failed
+       conformance (debug): rc_plain_record_writes::test_arena_owned_children_keep_real_snapshot_marks: failed: build error (ToolFailed): /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-ir/.zig-cache/tmp/jF8zx5uYBlKC7I0a/cache/rc_plain_record_writes-b3f3abe9ca2b228a-debug-probe-a0d11d821c9c92e1.ll:279:32: error: '%v13' defined with type '{ ptr, i64, i1 }' but expected 'ptr'
+       conformance (debug): rc_fresh_returns::test_managed_locals_and_unknown_callees_keep_generic_cleanup: pinned as passing, now failed
+       conformance (debug): positive_list_index::test_positive_and_negative_reads_keep_scalar_updates_and_snapshots: pinned as passing, now failed
+       conformance (debug): move_elision::test_a_field_write_updates_only_its_own_record: pinned as passing, now failed
+       conformance (debug): move_elision::test_a_record_read_after_a_copy_is_written_keeps_its_value: pinned as passing, now failed
+       conformance (debug): rc_inline_glue::test_frames_sharing_lists_keep_them_alive: pinned as passing, now failed
+       conformance (debug): rc_inline_glue::test_published_lists_are_independent_values: pinned as passing, now failed
+       conformance (debug): rc_inline_glue::test_wide_records_keep_their_glue_drop: pinned as passing, now failed
+       expected 0, found 20
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:111:17: 0x1fba909 in expectEqualInner__anon_159303 (std.zig)
+                       return error.TestExpectedEqual;
+                       ^
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:75:5: 0x206e57e in expectEqual (root_test.zig)
+           return expectEqualInner(T, expected, actual);
+           ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-ir/src/core/conformance_test.zig:116:5: 0x206e616 in test.the pinned S1 conformance list passes at debug and release (root_test.zig)
+           try std.testing.expectEqual(@as(usize, 0), try violations(arena.allocator(), pins, false, cache));
+           ^
+error: 's2_ir_test.test.S2 builder dispatch stubs keep precise source refusals until Wave B' failed:
+       no_such_file_in_tests_lang (debug): mylang-core test did not finish cleanly:
+       error: cannot read /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-ir/tests/lang/no_such_file_in_tests_lang.my: FileNotFound
+       
+       no_such_row: the new core failed to build the row:
+       error: cannot read /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-ir/test/core/row_no_such_row.my: FileNotFound
+       
+       
+       ====== expected this output: =========
+       string index␃
+       
+       ======== instead found this: =========
+       index␃
+       
+       ======================================
+       First difference occurs on line 1:
+       expected:
+       string index
+       ^ ('\x73')
+       found:
+       index
+       ^ ('\x69')
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:681:9: 0x1391705 in expectEqualStrings (std.zig)
+               return error.TestExpectedEqual;
+               ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-ir/src/core/s2_ir_test.zig:624:5: 0x13919cb in refuseSource (root_test.zig)
+           try std.testing.expectEqualStrings(reason, refusal.reason);
+           ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-ir/src/core/s2_ir_test.zig:636:5: 0x1391ec5 in test.S2 builder dispatch stubs keep precise source refusals until Wave B (root_test.zig)
+           try refuseSource(a, "def main() -> int:\n    s = \"abc\"\n    ch = s[0]\n    return len(ch)\n", "string index");
+           ^
+failed command: ./.zig-cache/o/4a3a8adb66736959d3d94c5b2cc91dfd/test --cache-dir=./.zig-cache --seed=0x4014e55d --listen=-
+
+Build Summary: 3/5 steps succeeded (1 failed); 178/183 tests passed (5 failed)
+test-core transitive failure
++- run test 178 pass, 5 fail (183 total)
+   +- compile test debug native success 1s MaxRSS:325M
+      +- options success
+         +- compile exe mylang-core debug native success 1s MaxRSS:320M
+

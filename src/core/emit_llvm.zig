@@ -16,6 +16,9 @@ const facts = @import("facts.zig");
 const vector = @import("vector.zig");
 const c_abi = @import("c_abi.zig");
 const flags = @import("flags.zig");
+const emit_dict = @import("emit_dict.zig");
+const emit_text = @import("emit_text.zig");
+const emit_fn = @import("emit_fn.zig");
 
 /// A source line and column for a span start.
 pub const Location = struct { line: u32, column: u32 };
@@ -143,6 +146,9 @@ const header_tagged_line = "  {s} = getelementptr inbounds i8, ptr {s}, i64 {d}\
 const identity_line = "  {s} = getelementptr inbounds i8, ptr {s}, i64 0\n";
 
 /// One instruction line of the shape `  %x = op type a, b`.
+/// Extract one constant-index aggregate component from a register value.
+const extract_value_line = "  {s} = extractvalue {s} {s}, {d}\n";
+
 const binary_line = "  {s} = {s} {s} {s}, {s}\n";
 
 /// Render `module` as one LLVM IR module, including the C `main` entry.
@@ -210,9 +216,10 @@ const ModuleState = struct {
         const returns = try self.llvmType(function.signature.ret);
         try self.externs.print(self.allocator, "declare {s}{s} @{s}(", .{ if (function.signature.ret == .bool) "zeroext " else "", returns, c_abi.symbol(function.name) });
         var first = true;
-        for (function.signature.params) |param| {
+        for (function.signature.params, 0..) |param, i| {
             if (!c_abi.passes(param)) continue;
-            try self.externs.print(self.allocator, "{s}{s}", .{ if (first) "" else ", ", try self.llvmType(param) });
+            const span = i < 64 and function.signature.views & (@as(u64, 1) << @intCast(i)) != 0;
+            try self.externs.print(self.allocator, "{s}{s}", .{ if (first) "" else ", ", if (span) "ptr, i64" else try self.llvmType(param) });
             first = false;
         }
         // The runtime's string helpers only read their arguments, so LLVM may merge and hoist calls.
@@ -243,6 +250,7 @@ const ModuleState = struct {
         return std.fmt.allocPrint(self.allocator, "@myl.layout.{d}", .{index});
     }
 
+    /// Register a trap site for an operation sub-emitter.
     fn site(self: *ModuleState, s: Site) !u32 {
         try self.sites.append(self.allocator, s);
         return @intCast(self.sites.items.len - 1);
@@ -258,9 +266,11 @@ const ModuleState = struct {
             .i32, .u32 => "i32",
             .i64, .u64, .cap => "i64",
             .f64 => "double",
-            .str => "ptr",
+            .str, .bytes => "ptr",
+            .str_view => "{ ptr, i64 }",
             _ => switch (self.module.compound(ty)) {
-                .list, .box => "ptr",
+                .list, .box, .dict, .@"fn" => "ptr",
+                .array => |array| if (self.module.passedInMemory(ty)) "ptr" else std.fmt.allocPrint(self.allocator, "[{d} x {s}]", .{ array.n, try self.llvmType(array.elem) }),
                 .record => |fields| blk: {
                     // Over four words a value lives in memory (a stack slot): its SSA value is the pointer.
                     if (self.module.passedInMemory(ty)) break :blk "ptr";
@@ -299,6 +309,9 @@ const ModuleState = struct {
             \\declare void @myl_core_trap(i32, i64, i64) noreturn nounwind cold
             \\declare ptr @myl_core_args(i32, ptr) nounwind
             \\declare i32 @myl_core_exit(i64) nounwind
+            \\declare void @myl_core_s2_unsupported(i32) noreturn nounwind cold
+            \\declare ptr @myl_core_ir_str_char(ptr, i64) nounwind
+            \\declare ptr @myl_core_ir_str_from_view(ptr, i64) nounwind
             \\declare ptr @myl_core_list_copy(ptr, i64) nounwind
             \\declare zeroext i1 @myl_core_str_parse_int(ptr, ptr) nounwind
             \\declare void @myl_core_print_i64(i64, i64) nounwind
@@ -479,7 +492,8 @@ fn layoutParts(allocator: std.mem.Allocator, module: *const ir.Module, ty: ir.Ty
                 try layoutParts(allocator, module, case, base + 8, @intCast(parts.guards.items.len), parts);
             }
         },
-        .list, .box => unreachable,
+        .array => |array| for (0..array.n) |i| try layoutParts(allocator, module, array.elem, base + @as(u32, @intCast(i)) * module.size(array.elem), guard, parts),
+        .list, .box, .dict, .@"fn" => unreachable,
     }
 }
 
@@ -548,21 +562,25 @@ const FunctionEmitter = struct {
     /// block pointer is tested for null first.
     may_be_empty: bool = false,
 
-    fn a(self: *FunctionEmitter) std.mem.Allocator {
+    /// The allocation context used by operation sub-emitters.
+    pub fn a(self: *FunctionEmitter) std.mem.Allocator {
         return self.state.allocator;
     }
 
-    fn fresh(self: *FunctionEmitter, prefix: []const u8) ![]const u8 {
+    /// A unique LLVM temporary or label for an operation sub-emitter.
+    pub fn fresh(self: *FunctionEmitter, prefix: []const u8) Error![]const u8 {
         self.counter += 1;
         return std.fmt.allocPrint(self.a(), "{s}.{d}", .{ prefix, self.counter });
     }
 
-    fn ty(self: *FunctionEmitter, t: ir.Type) ![]const u8 {
+    /// The LLVM spelling of a Core type for an operation sub-emitter.
+    pub fn ty(self: *FunctionEmitter, t: ir.Type) Error![]const u8 {
         return self.state.llvmType(t);
     }
 
     /// The LLVM operand text for a value.
-    fn value(self: *FunctionEmitter, raw: ir.Ref) ![]const u8 {
+    /// The LLVM operand spelling for operation sub-emitters.
+    pub fn value(self: *FunctionEmitter, raw: ir.Ref) Error![]const u8 {
         const ref = self.function.resolve(raw);
         const inst = self.function.inst(ref);
         return switch (inst.op) {
@@ -571,6 +589,7 @@ const FunctionEmitter = struct {
             .param => std.fmt.allocPrint(self.a(), "%p{d}", .{inst.data}),
             .undef => self.undefValue(inst.ty),
             .str_const => std.fmt.allocPrint(self.a(), "@myl.str.{d}", .{inst.data}),
+            .func_ref => self.functionPointer(@intCast(inst.data)),
             else => std.fmt.allocPrint(self.a(), "%v{d}", .{ref.index()}),
         };
     }
@@ -802,7 +821,12 @@ const FunctionEmitter = struct {
                     try self.leaveIf(out, join);
                 }
             },
-            .list, .box => unreachable,
+            .array => |array| for (0..array.n) |i| {
+                const loaded = try self.fresh("%cm");
+                try self.loadValue(out, array.elem, try self.offsetPointer(out, ptr, @as(u32, @intCast(i)) * m.size(array.elem)), loaded);
+                try self.countedValue(out, mode, array.elem, loaded);
+            },
+            .list, .box, .dict, .@"fn" => unreachable,
         }
     }
 
@@ -971,7 +995,8 @@ const FunctionEmitter = struct {
         try self.trapIf(out, condition, index, try self.widened(out, ref), "0");
     }
 
-    fn site(self: *FunctionEmitter, kind: TrapKind, inst: ir.Inst, operation: []const u8) !u32 {
+    /// Register a trap site for operation sub-emitters.
+    pub fn site(self: *FunctionEmitter, kind: TrapKind, inst: ir.Inst, operation: []const u8) Error!u32 {
         const width: u16 = if (inst.ty.integer()) |info| info.bits else 64;
         // In verify mode a check the facts proved is still emitted, and its failure is the fact's.
         const effective: TrapKind = if (inst.check == .proven) .fact else kind;
@@ -979,7 +1004,8 @@ const FunctionEmitter = struct {
     }
 
     /// Branch to a cold trap when `failed` (an `i1` operand) holds, and continue in a new label.
-    fn trapIf(self: *FunctionEmitter, out: *Out, failed: []const u8, site_index: u32, left: []const u8, right: []const u8) !void {
+    /// Emit a conditional trap and continue in a fresh LLVM block.
+    pub fn trapIf(self: *FunctionEmitter, out: *Out, failed: []const u8, site_index: u32, left: []const u8, right: []const u8) Error!void {
         const trap = try self.fresh("trap");
         const next = try self.fresh(self.label);
         const at = try self.trapLocation(site_index);
@@ -988,7 +1014,8 @@ const FunctionEmitter = struct {
     }
 
     /// Sign- or zero-extend an integer operand to `i64` for a trap report.
-    fn widened(self: *FunctionEmitter, out: *Out, raw: ir.Ref) ![]const u8 {
+    /// Widen an integer operand to an i64 LLVM value.
+    pub fn widened(self: *FunctionEmitter, out: *Out, raw: ir.Ref) Error![]const u8 {
         const inst = self.function.inst(self.function.resolve(raw));
         const info = inst.ty.integer() orelse return "0";
         if (info.bits == 64) return self.value(raw);
@@ -1000,7 +1027,10 @@ const FunctionEmitter = struct {
     fn instruction(self: *FunctionEmitter, out: *Out, ref: ir.Ref, inst: ir.Inst) !void {
         const name = try std.fmt.allocPrint(self.a(), "%v{d}", .{ref.index()});
         switch (inst.op) {
-            .param, .iconst, .fconst, .undef, .str_const, .copy, .phi => {},
+            .param, .iconst, .fconst, .undef, .str_const, .func_ref, .copy, .phi => {},
+            .dict_new, .dict_len, .dict_find, .dict_entry_key, .dict_entry_value, .dict_set_value, .dict_insert, .dict_remove, .dict_entries, .dict_entry_live, .dict_copy, .dict_clear => try emit_dict.instruction(self, out, name, inst),
+            .str_char, .str_width, .str_code, .str_append, .str_append_char, .str_slice, .str_view_of, .str_from_view => try emit_text.instruction(self, out, name, inst),
+            .list_sort, .array_get, .array_set, .call_indirect => try emit_fn.instruction(self, out, name, inst),
             .add, .sub, .mul => try self.arithmetic(out, name, inst),
             .div, .rem, .floor_div, .floor_rem => try self.division(out, name, inst),
             .neg => {
@@ -1084,10 +1114,7 @@ const FunctionEmitter = struct {
                 try out.print(self.a(), "  {s} = call ptr @myl_core_list_new(i64 {s}, i64 {d})\n", .{ name, try self.value(inst.a), self.state.stride(element) });
                 try self.attachLayout(out, name, element);
             },
-            .list_len, .str_len => {
-                const at = try self.fresh("%h");
-                try out.print(self.a(), header_tagged_line, .{ at, try self.value(inst.a), len_offset, name, at });
-            },
+            .list_len, .str_len => try self.collectionLength(out, name, inst),
             .list_get => try self.listGet(out, name, inst),
             .list_push => try self.listPush(out, name, inst),
             .list_copy => {
@@ -1355,6 +1382,12 @@ const FunctionEmitter = struct {
         try out.print(self.a(), "  {s} = {s} double {s} to {s}\n", .{ name, if (to.signed) "fptosi" else "fptoui", operand, try self.ty(inst.ty) });
     }
 
+    fn collectionLength(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) Error!void {
+        if (self.typeOf(inst.a) == .str_view) return out.print(self.a(), "  {s} = extractvalue {{ ptr, i64 }} {s}, 1\n", .{ name, try self.value(inst.a) });
+        const at = try self.fresh("%h");
+        try out.print(self.a(), header_tagged_line, .{ at, try self.value(inst.a), len_offset, name, at });
+    }
+
     fn listGet(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) !void {
         const list = try self.value(inst.a);
         const index = try self.value(inst.b);
@@ -1390,7 +1423,8 @@ const FunctionEmitter = struct {
     }
 
     /// The type of the value `raw` stands for.
-    fn typeOf(self: *FunctionEmitter, raw: ir.Ref) ir.Type {
+    /// The resolved Core type of an operand.
+    pub fn typeOf(self: *FunctionEmitter, raw: ir.Ref) ir.Type {
         return self.function.inst(self.function.resolve(raw)).ty;
     }
 
@@ -1403,7 +1437,8 @@ const FunctionEmitter = struct {
     }
 
     /// An entry-block stack slot of `bytes` bytes, 8-byte aligned.
-    fn stackSlot(self: *FunctionEmitter, bytes: u32) ![]const u8 {
+    /// An entry-block stack slot for operation sub-emitters.
+    pub fn stackSlot(self: *FunctionEmitter, bytes: u32) Error![]const u8 {
         const slot = try self.fresh("%stack");
         try self.state.allocas.print(self.a(), "  {s} = alloca [{d} x i8], align 8\n", .{ slot, @max(bytes, 1) });
         return slot;
@@ -1411,7 +1446,8 @@ const FunctionEmitter = struct {
 
     /// Load the memory image of a `ty` value at `ptr` into register value `result`: field
     /// by field for records and unions, so no aggregate load is emitted (§3).
-    fn loadValue(self: *FunctionEmitter, out: *Out, value_type: ir.Type, ptr: []const u8, result: []const u8) Error!void {
+    /// Load a typed value field by field from an operation sub-emitter slot.
+    pub fn loadValue(self: *FunctionEmitter, out: *Out, value_type: ir.Type, ptr: []const u8, result: []const u8) Error!void {
         const m = self.state.module;
         if (value_type == .void) return error.UnsupportedInstruction;
         if (m.passedInMemory(value_type)) {
@@ -1426,7 +1462,7 @@ const FunctionEmitter = struct {
             try out.print(self.a(), "  {s} = load i8, ptr {s}, align 1, " ++ tbaa_data ++ "\n  {s} = trunc i8 {s} to i1\n", .{ byte, ptr, result, byte });
             return;
         }
-        if (!value_type.isCompound() or m.isBlock(value_type)) {
+        if (!value_type.isCompound() or m.isBlock(value_type) or m.kind(value_type) == .@"fn") {
             try out.print(self.a(), "  {s} = load {s}, ptr {s}, align {d}, " ++ tbaa_data ++ "\n", .{ result, try self.ty(value_type), ptr, m.size(value_type) });
             return;
         }
@@ -1474,12 +1510,24 @@ const FunctionEmitter = struct {
                     partial = next;
                 }
             },
-            .list, .box => unreachable,
+            .array => |array| {
+                var partial: []const u8 = "poison";
+                for (0..array.n) |i| {
+                    const loaded = try self.fresh("%la");
+                    try self.loadValue(out, array.elem, try self.offsetPointer(out, ptr, @as(u32, @intCast(i)) * m.size(array.elem)), loaded);
+                    const next = if (i + 1 == array.n) result else try self.fresh("%la");
+                    try out.print(self.a(), "  {s} = insertvalue {s} {s}, {s} {s}, {d}\n", .{ next, tyname, partial, try self.ty(array.elem), loaded, i });
+                    partial = next;
+                }
+                if (array.n == 0) try out.print(self.a(), "  {s} = freeze {s} zeroinitializer\n", .{ result, tyname });
+            },
+            .list, .box, .dict, .@"fn" => unreachable,
         }
     }
 
     /// Store register value `value` of type `ty` as its memory image at `ptr`, field by field.
-    fn storeValue(self: *FunctionEmitter, out: *Out, value_type: ir.Type, text: []const u8, ptr: []const u8) Error!void {
+    /// Store a typed value field by field into an operation sub-emitter slot.
+    pub fn storeValue(self: *FunctionEmitter, out: *Out, value_type: ir.Type, text: []const u8, ptr: []const u8) Error!void {
         const m = self.state.module;
         if (value_type == .void) return error.UnsupportedInstruction;
         if (m.passedInMemory(value_type)) return self.copyBytes(out, ptr, text, m.size(value_type), false);
@@ -1488,7 +1536,7 @@ const FunctionEmitter = struct {
             try out.print(self.a(), "  {s} = zext i1 {s} to i8\n  store i8 {s}, ptr {s}, align 1, " ++ tbaa_data ++ "\n", .{ byte, text, byte, ptr });
             return;
         }
-        if (!value_type.isCompound() or m.isBlock(value_type)) {
+        if (!value_type.isCompound() or m.isBlock(value_type) or m.kind(value_type) == .@"fn") {
             try out.print(self.a(), "  store {s} {s}, ptr {s}, align {d}, " ++ tbaa_data ++ "\n", .{ try self.ty(value_type), text, ptr, m.size(value_type) });
             return;
         }
@@ -1496,7 +1544,7 @@ const FunctionEmitter = struct {
         switch (m.compound(value_type)) {
             .record => |fields| for (fields, 0..) |field, i| {
                 const field_value = try self.fresh("%sf");
-                try out.print(self.a(), "  {s} = extractvalue {s} {s}, {d}\n", .{ field_value, tyname, text, i });
+                try out.print(self.a(), extract_value_line, .{ field_value, tyname, text, i });
                 try self.storeValue(out, field, field_value, try self.offsetPointer(out, ptr, m.fieldOffset(value_type, i)));
             },
             .@"union" => {
@@ -1521,7 +1569,12 @@ const FunctionEmitter = struct {
                     try out.print(self.a(), "  store i64 {s}, ptr {s}, align 8, " ++ tbaa_data ++ "\n", .{ stored, try self.offsetPointer(out, payload_at, @intCast(8 * k)) });
                 }
             },
-            .list, .box => unreachable,
+            .array => |array| for (0..array.n) |i| {
+                const element = try self.fresh("%sa");
+                try out.print(self.a(), extract_value_line, .{ element, tyname, text, i });
+                try self.storeValue(out, array.elem, element, try self.offsetPointer(out, ptr, @as(u32, @intCast(i)) * m.size(array.elem)));
+            },
+            .list, .box, .dict, .@"fn" => unreachable,
         }
     }
 
@@ -1542,6 +1595,11 @@ const FunctionEmitter = struct {
     /// with no temporary: nothing is built in registers or copied.
     fn storeMake(self: *FunctionEmitter, out: *Out, inst: ir.Inst, dst: []const u8) Error!void {
         const m = self.state.module;
+        if (m.kind(inst.ty) == .array) {
+            const array = m.compound(inst.ty).array;
+            for (self.function.operands(inst.data), 0..) |operand, i| try self.storeOperand(out, array.elem, operand, try self.offsetPointer(out, dst, @as(u32, @intCast(i)) * m.size(array.elem)));
+            return;
+        }
         switch (inst.op) {
             .record_make => for (self.function.operands(inst.data), m.compound(inst.ty).record, 0..) |operand, field, i| {
                 try self.storeOperand(out, field, operand, try self.offsetPointer(out, dst, m.fieldOffset(inst.ty, i)));
@@ -1780,7 +1838,7 @@ const FunctionEmitter = struct {
             .record => |fields| for (fields, 0..) |field, i| {
                 if (!m.managed(field)) continue;
                 const field_value = try self.fresh("%cf");
-                try out.print(self.a(), "  {s} = extractvalue {s} {s}, {d}\n", .{ field_value, tyname, text, i });
+                try out.print(self.a(), extract_value_line, .{ field_value, tyname, text, i });
                 try self.counted(out, mode, field, field_value);
             },
             .@"union" => |cases| {
@@ -1805,7 +1863,12 @@ const FunctionEmitter = struct {
                     try self.leaveIf(out, join);
                 }
             },
-            .list, .box => unreachable,
+            .array => |array| for (0..array.n) |i| {
+                const element = try self.fresh("%ca");
+                try out.print(self.a(), extract_value_line, .{ element, tyname, text, i });
+                try self.counted(out, mode, array.elem, element);
+            },
+            .list, .box, .dict, .@"fn" => unreachable,
         }
     }
 
@@ -2034,11 +2097,24 @@ const FunctionEmitter = struct {
         try out.print(self.a(), "  {s} = add nuw nsw i64 {s}, 1\n  store i64 {s}, ptr {s}, align 8, " ++ tbaa_header ++ "\n", .{ next, len, next, len_at });
     }
 
-    fn call(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) !void {
+    /// Emit a direct or indirect call under the internal aggregate ABI.
+    /// Resolve an internal function index to its quoted LLVM symbol.
+    pub fn functionPointer(self: *FunctionEmitter, index: u32) Error![]const u8 {
+        return symbol(self.a(), self.state.module.functions.items[index].name);
+    }
+
+    /// Emit a placeholder that traps precisely before its result can be observed.
+    pub fn unsupported(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) Error!void {
+        try out.print(self.a(), "  call void @myl_core_s2_unsupported(i32 {d})\n", .{@backingInt(inst.op)});
+        if (inst.ty != .void) try out.print(self.a(), "  {s} = freeze {s} poison\n", .{ name, try self.ty(inst.ty) });
+    }
+
+    /// Emit a direct or indirect call under the internal aggregate ABI.
+    pub fn call(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) Error!void {
         const m = self.state.module;
-        const callee = &m.functions.items[inst.a.index()];
-        const external = callee.signature.linkage == .extern_c;
-        const ret = callee.signature.ret;
+        const signature = if (inst.op == .call_indirect) m.compound(self.typeOf(inst.a)).@"fn" else m.functions.items[inst.a.index()].signature;
+        const external = signature.linkage == .extern_c;
+        const ret = signature.ret;
         const sret = !external and m.passedInMemory(ret);
         var arguments: Out = .empty;
         var first = true;
@@ -2047,17 +2123,35 @@ const FunctionEmitter = struct {
             try arguments.print(self.a(), "ptr sret({s}) align 8 {s}", .{ try self.state.memoryType(ret), result_slot });
             first = false;
         }
-        for (self.function.operands(inst.data), callee.signature.params) |argument, param| {
+        for (self.function.operands(inst.data), signature.params, 0..) |argument, param, i| {
             if (external and !c_abi.passes(param)) continue;
             const separator = if (first) "" else ", ";
             first = false;
+            if (external and i < 64 and signature.views & (@as(u64, 1) << @intCast(i)) != 0) {
+                const data = try self.fresh("%span");
+                const len = try self.fresh("%span");
+                const text = try self.value(argument);
+                if (self.typeOf(argument) == .str_view) {
+                    try out.print(self.a(), "  {s} = extractvalue {{ ptr, i64 }} {s}, 0\n  {s} = extractvalue {{ ptr, i64 }} {s}, 1\n", .{ data, text, len, text });
+                } else {
+                    const at = try self.fresh("%span");
+                    try out.print(self.a(), "  {s} = getelementptr inbounds i8, ptr {s}, i64 32\n  {s} = getelementptr inbounds i8, ptr {s}, i64 8\n  {s} = load i64, ptr {s}, align 8\n", .{ data, text, at, text, len, at });
+                }
+                try arguments.print(self.a(), "{s}ptr {s}, i64 {s}", .{ separator, data, len });
+                continue;
+            }
             if (!external and m.passedInMemory(param)) {
                 try arguments.print(self.a(), "{s}ptr {s}", .{ separator, try self.value(argument) });
                 continue;
             }
             try arguments.print(self.a(), "{s}{s}", .{ separator, try self.typedValue(argument) });
         }
-        const target = if (external) try std.fmt.allocPrint(self.a(), "@{s}", .{c_abi.symbol(callee.name)}) else try symbol(self.a(), callee.name);
+        const target = if (inst.op == .call_indirect)
+            try self.value(inst.a)
+        else if (external)
+            try std.fmt.allocPrint(self.a(), "@{s}", .{c_abi.symbol(m.functions.items[inst.a.index()].name)})
+        else
+            try self.functionPointer(@intCast(inst.a.index()));
         if (ret == .void or sret) {
             try out.print(self.a(), "  call void {s}({s}){s}\n", .{ target, arguments.items, try self.callLocation(inst.span) });
             if (sret) try out.print(self.a(), identity_line, .{ name, result_slot });

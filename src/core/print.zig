@@ -18,6 +18,9 @@ pub fn typeName(allocator: std.mem.Allocator, m: *const ir.Module, ty: ir.Type) 
     if (!ty.isCompound()) return @tagName(ty);
     return switch (m.compound(ty)) {
         .list => |element| std.fmt.allocPrint(allocator, "list[{s}]", .{try typeName(allocator, m, element)}),
+        .dict => |dict| std.fmt.allocPrint(allocator, "dict[{s}, {s}]", .{ try typeName(allocator, m, dict.key), try typeName(allocator, m, dict.value) }),
+        .array => |array| std.fmt.allocPrint(allocator, "[{d}]{s}", .{ array.n, try typeName(allocator, m, array.elem) }),
+        .@"fn" => |signature| std.fmt.allocPrint(allocator, "{s} -> {s}", .{ try typeList(allocator, m, "fn", signature.params), try typeName(allocator, m, signature.ret) }),
         // A box may close a recursive type, so a record or union inside one is named by index.
         .box => |inner| if (m.kind(inner)) |k|
             switch (k) {
@@ -76,6 +79,7 @@ fn operand(allocator: std.mem.Allocator, out: *std.ArrayList(u8), m: *const ir.M
         .param => try out.print(allocator, "param{d}", .{inst.data}),
         .undef => try out.appendSlice(allocator, "undef"),
         .str_const => try out.print(allocator, "str{d}", .{inst.data}),
+        .func_ref => try out.print(allocator, "&{s}", .{m.functions.items[@intCast(inst.data)].name}),
         else => try out.print(allocator, "%{d}", .{ref.index()}),
     }
 }
@@ -139,13 +143,14 @@ fn instruction(allocator: std.mem.Allocator, out: *std.ArrayList(u8), m: *const 
             for (path.slice(), 0..) |step, i| try out.print(allocator, "{s}{d}", .{ if (i == 0) " " else ".", step });
         },
         .err_trace => try out.print(allocator, " {s}", .{@tagName(@as(ir.TraceMode, @fromBackingInt(@intCast(@min(inst.data, 4)))))}),
-        .record_make, .list_set => {
+        .record_make, .list_set, .dict_set_value, .dict_insert, .str_append_char, .str_slice, .str_view_of, .array_set, .call_indirect => {
             const operands = f.valueOperands(inst);
             for (0..operands.len()) |i| {
                 try out.appendSlice(allocator, if (i == 0) " " else ", ");
                 try operand(allocator, out, m, f, operands.get(i));
             }
         },
+        .func_ref => try out.print(allocator, " &{s}", .{m.functions.items[@intCast(inst.data)].name}),
         else => {
             if (inst.a != .none) {
                 try out.appendSlice(allocator, " ");

@@ -1,0 +1,32 @@
+fn replace([5]str) -> [5]str
+b0:
+  %2 = str_char str str0, 1:u64
+  %7 = array_get.exact str param0, 0:i64
+  %5 = array_set.exact [5]str param0, 0:i64, %2
+  release %7
+  ret %5
+fn main(cap) -> i64
+b0:
+  %2 = str_char str str0, 0:u64
+  retain %2
+  retain %2
+  retain %2
+  retain %2
+  %3 = record_make [5]str %2, %2, %2, %2, %2
+  retain %3
+  %5 = call_indirect [5]str &replace, %3
+  %7 = array_get.exact str %3, 0:i64
+  retain %7
+  release %3
+  %9 = array_get.exact str %5, 0:i64
+  print param0, %7, %9
+  release %7
+  %13 = list_new list[[5]str] 1:u64
+  %17 = is_unique bool %13
+  branch %17, b1, b2
+b1: ; preds b0
+  %14 = list_push list[[5]str] %13, %5
+  release %14
+  ret 0:i64
+b2: ; preds b0
+  unreachable
