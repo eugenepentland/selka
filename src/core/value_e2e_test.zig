@@ -155,11 +155,12 @@ const v_mut_rebind_output =
     \\38943 38678 33 163
     \\1 1923 2243 51
     \\2 3 1957 90466 33
+    \\3 102 109246 2 2563
     \\
 ;
 
 // spec: NEW-CORE-MUT-2
-test "a mut list parameter rebound as a whole is detached from the caller: only the payload it had then is written back" {
+test "a mut list parameter rebound as a whole is detached from the caller (a mut record's rebinding reaches it): only the payload the list had then is written back" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     try std.testing.expect(try matches(arena.allocator(), "v_mut_rebind", v_mut_rebind_output, 0));
