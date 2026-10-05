@@ -1,0 +1,72 @@
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: build slot 2 after 35s (all 3 build slot(s) busy)
+row_bytes_scan.my:35:12: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def inputs(kind: str, size: int, seed: int) -> Inputs:
+             ^
+row_bytes_scan.my:44:12: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def kernel(kind: str, data: Inputs, iterations: int, seed: int) -> int:
+             ^
+row_string_equal.my:30:12: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def inputs(kind: str, size: int, seed: int) -> Inputs:
+             ^
+row_string_equal.my:40:12: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def kernel(kind: str, data: Inputs, iterations: int, seed: int) -> int:
+             ^
+row_string_search.my:30:12: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def inputs(kind: str, size: int, seed: int) -> Inputs:
+             ^
+row_string_search.my:40:12: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def kernel(kind: str, data: Inputs, iterations: int, seed: int) -> int:
+             ^
+row_string_split.my:43:12: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def inputs(kind: str, size: int, seed: int) -> Inputs:
+             ^
+row_string_split.my:54:12: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def kernel(kind: str, data: Inputs, iterations: int, seed: int) -> int:
+             ^
+row_string_join.my:36:12: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def inputs(kind: str, size: int, seed: int) -> Inputs:
+             ^
+row_string_join.my:47:12: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def kernel(kind: str, data: Inputs, iterations: int, seed: int) -> int:
+             ^
+
+### bytes_scan (cycles per element, median of 5 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 0.085 | 0.243 | same |
+| new core release | 1.232 | 1.606 | same |
+| Rust | 1.136 | 1.203 | same |
+| Zig ReleaseSafe | 1.417 | 1.852 | same |
+
+### string_equal (cycles per iteration, median of 5 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 53.666 | 16.600 | same |
+| new core release | 135.456 | 15.333 | same |
+| Rust | 134.853 | 12.716 | same |
+| Zig ReleaseSafe | 278.488 | 16.927 | same |
+
+### string_search (cycles per iteration, median of 5 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 420.928 | 79.437 | same |
+| new core release | 1080.611 | 87.453 | same |
+| Rust | 5584.261 | 182.784 | same |
+| Zig ReleaseSafe | 12931.760 | 386.372 | same |
+
+### string_split (cycles per element, median of 5 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 202.049 | 211.804 | same |
+| new core release | 63.968 | 68.179 | same |
+| Rust | 28.200 | 35.477 | same |
+| Zig ReleaseSafe | 65.493 | 69.382 | same |
+
+### string_join (cycles per element, median of 5 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 6.121 | 9.940 | same |
+| new core release | 24.291 | 22.858 | same |
+| Rust | 13.971 | 14.637 | same |
+| Zig ReleaseSafe | 18.147 | 20.336 | same |

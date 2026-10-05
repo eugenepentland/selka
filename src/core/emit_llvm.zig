@@ -18,6 +18,7 @@ const c_abi = @import("c_abi.zig");
 const flags = @import("flags.zig");
 const emit_dict = @import("emit_dict.zig");
 const emit_text = @import("emit_text.zig");
+const text_builder = @import("build_text.zig");
 const emit_fn = @import("emit_fn.zig");
 
 /// A source line and column for a span start.
@@ -66,11 +67,29 @@ pub const MainResult = struct { ok_tag: u32, error_tag: u32 };
 /// pop of an empty list (`R_LIST_BOUNDS`, operation `pop`); `trace` marks an
 /// error-trace site, which never traps; `assertion` is a failed `assert` or contract clause (its
 /// `width` is the `typed.AssertionKind`, its `operation` the message).
-pub const TrapKind = enum(u8) { overflow, division_by_zero, list_bounds, float_conversion, cast, fact, list_empty, trace, assertion, iteration_mutation = 10 };
+pub const TrapKind = enum(u8) {
+    overflow,
+    division_by_zero,
+    list_bounds,
+    float_conversion,
+    cast,
+    fact,
+    list_empty,
+    trace,
+    assertion,
+    iteration_mutation = 10,
+    text_bounds = 11,
+    text_separator = 12,
+    text_step = 13,
+    byte_range = 14,
+    text_scalar = 15,
+};
 
 const Site = struct { kind: TrapKind, location: Location, width: u16, operation: []const u8, function: []const u8 };
 
 /// `  %x = getelementptr inbounds i8, ptr p, i64 0`: a new name for the same block.
+const zero_trap_line = "  call void @myl_core_trap(i32 {d}, i64 0, i64 0){s}\n  unreachable\n";
+
 const same_pointer = "  {s} = getelementptr inbounds i8, ptr {s}, i64 0\n";
 
 /// The `data` of an `unreachable` that asserts a uniqueness claim (`own.unique_assert`).
@@ -311,6 +330,11 @@ const ModuleState = struct {
             \\declare i32 @myl_core_exit(i64) nounwind
             \\declare void @myl_core_s2_unsupported(i32) noreturn nounwind cold
             \\declare ptr @myl_core_ir_str_char(ptr, i64) nounwind
+            \\declare i64 @myl_core_ir_str_width(ptr, i64) nounwind
+            \\declare i32 @myl_core_ir_str_code(ptr, i64) nounwind
+            \\declare ptr @myl_core_ir_str_append(ptr, ptr) nounwind
+            \\declare ptr @myl_core_ir_str_append_char(ptr, ptr, i64) nounwind
+            \\declare ptr @myl_core_ir_str_slice(ptr, i64, i64) nounwind
             \\declare ptr @myl_core_ir_str_from_view(ptr, i64) nounwind
             \\declare ptr @myl_core_list_copy(ptr, i64) nounwind
             \\declare zeroext i1 @myl_core_str_parse_int(ptr, ptr) nounwind
@@ -361,7 +385,8 @@ const ModuleState = struct {
         for (self.module.strings.items, 0..) |bytes, i| {
             const block_type = try std.fmt.allocPrint(self.allocator, "{{ i32, i32, i64, i64, i64, [{d} x i8] }}", .{bytes.len + 1});
             try out.print(self.allocator, "@myl.str.{d} = private unnamed_addr constant {s} ", .{ i, block_type });
-            try out.print(self.allocator, "{{ i32 -1, i32 1, i64 {d}, i64 {d}, i64 0, [{d} x i8] c\"", .{ bytes.len, bytes.len, bytes.len + 1 });
+            const cached = text_builder.metadata(bytes);
+            try out.print(self.allocator, "{{ i32 -1, i32 {d}, i64 {d}, i64 {d}, i64 {d}, [{d} x i8] c\"", .{ cached.kind, bytes.len, bytes.len, cached.meta, bytes.len + 1 });
             try escaped(self.allocator, out, bytes);
             try out.appendSlice(self.allocator, "\\00\" }, align 32\n");
         }
@@ -1179,10 +1204,14 @@ const FunctionEmitter = struct {
     }
 
     fn trapTerminator(self: *FunctionEmitter, out: *Out, inst: ir.Inst) !void {
-        if (inst.data == capacity_assert) {
+        if (inst.data & flags.text_trap != 0) {
+            const kind: TrapKind = @fromBackingInt(@intCast(@as(u8, @truncate(inst.data))));
+            const index = try self.site(kind, inst, "text");
+            try out.print(self.a(), zero_trap_line, .{ index, try self.trapLocation(index) });
+        } else if (inst.data == capacity_assert) {
             const location = self.state.options.locator.locate(self.state.options.locator.context, inst.span);
             const index = try self.state.site(.{ .kind = .fact, .location = location, .width = 64, .operation = "a stack list's length below its capacity", .function = self.function.name });
-            try out.print(self.a(), "  call void @myl_core_trap(i32 {d}, i64 0, i64 0){s}\n  unreachable\n", .{ index, try self.trapLocation(index) });
+            try out.print(self.a(), zero_trap_line, .{ index, try self.trapLocation(index) });
         } else if (inst.data == unique_assert) {
             // `own.zig`'s assert of a statically unique update (verify builds only).
             const location = self.state.options.locator.locate(self.state.options.locator.context, inst.span);
@@ -1190,7 +1219,7 @@ const FunctionEmitter = struct {
             try out.print(self.a(), "  call void @myl_core_trap(i32 {d}, i64 0, i64 1){s}\n  unreachable\n", .{ index, try self.trapLocation(index) });
         } else if (inst.data == flags.iteration_trap) {
             const index = try self.site(.iteration_mutation, inst, "iteration");
-            try out.print(self.a(), "  call void @myl_core_trap(i32 {d}, i64 0, i64 0){s}\n  unreachable\n", .{ index, try self.trapLocation(index) });
+            try out.print(self.a(), zero_trap_line, .{ index, try self.trapLocation(index) });
         } else if (inst.data & flags.assertion_trap != 0) {
             // A failed `assert` or contract clause: the message is in the module's string table.
             const location = self.state.options.locator.locate(self.state.options.locator.context, inst.span);
@@ -2222,7 +2251,7 @@ fn storageType(ty: ir.Type) []const u8 {
         .i16, .u16 => "i16",
         .i32, .u32 => "i32",
         .f64 => "double",
-        .str => "ptr",
+        .str, .bytes => "ptr",
         else => if (ty.isCompound()) "ptr" else "i64",
     };
 }

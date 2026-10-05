@@ -30,7 +30,6 @@ pub const str_chars_symbol = "myl_core_str_chars";
 
 /// The runtime's string builders: concatenation, `separator.join(parts)`, and the text of an
 /// integer or a boolean (`str(x)`, the parts of an f-string).
-pub const str_concat_symbol = "myl_core_str_concat";
 pub const str_join_symbol = "myl_core_str_join";
 pub const str_from_i64_symbol = "myl_core_str_from_i64";
 pub const str_from_u64_symbol = "myl_core_str_from_u64";
@@ -41,5 +40,8 @@ pub const list_sort_symbol = "myl_core_list_sort";
 
 /// Whether `symbol` names a runtime function that only reads the blocks it is passed.
 pub fn readsOnly(symbol: []const u8) bool {
-    return std.mem.eql(u8, symbol, str_eq_symbol) or std.mem.eql(u8, symbol, str_chars_symbol);
+    return std.mem.eql(u8, symbol, str_eq_symbol);
 }
+
+/// Located text traps pack their explicit TrapKind in the low byte.
+pub const text_trap: u64 = 1 << 58;

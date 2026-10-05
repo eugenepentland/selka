@@ -1888,3 +1888,6 @@ The separate `mylang-core` executable (`zig build core`, `docs/design/new-core-i
 - [NEW-CORE-ITERATION-1] The new core lowers D1 live-place refreshes to current SSA reads, preserving COW snapshots and caller write-back. A refreshed receiver whose guarded length differs traps R_LIST_ITERATION_MUTATION; lists accept growth and reject shrink according to the shared checker. Read-only entry receivers keep their immutable borrow fast path.
 
 - [NEW-CORE-TEXT-BORROW-1] Text encode changes the pointer type to bytes without allocation or count traffic when borrowed. Byte uses keep their source alive; escaping byte values retain the source, so early source release and COW writes preserve exact values.
+- [NEW-CORE-TEXT-BYTES-1] The new core shares counted str/bytes leaf storage, preserves UTF-8 scalar indexing and slices, maintains value semantics through consuming appends, and lowers split, join, search, encode and byte XOR without linking the old runtime.
+
+- [NEW-CORE-TEXT-BYTES-2] An immutable byte reduction may widen u8 loads to bounded integer lanes, including XOR of nonnegative bounded operands; the scalar tail and verify assertions preserve the scalar result.

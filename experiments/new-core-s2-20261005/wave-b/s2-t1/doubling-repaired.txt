@@ -1,0 +1,30 @@
+file                     tests | debug   match misma unsup | release match misma unsup
+--------------------------------------------------------------------------------------
+t_text                      10 |            10     0     0 |            10     0     0
+text_index                  13 |             9     0     4 |             9     0     4
+text_scanning                8 |             3     0     5 |             3     0     5
+text_views                   8 |             2     0     6 |             2     0     6
+standard_strings             5 |             2     0     3 |             2     0     3
+gc_footprint                 6 |             5     0     1 |             5     0     1
+gc_generations               6 |             6     0     0 |             6     0     0
+--------------------------------------------------------------------------------------
+TOTAL                       56
+  debug    matching 37, mismatching 0, unsupported 19 (of 56 tests; 37 supported)
+  release  matching 37, mismatching 0, unsupported 19 (of 56 tests; 37 supported)
+
+blocking features of the unsupported tests (tests / files):
+     8 /  4  count
+     2 /  2  strip
+     2 /  1  replace
+     2 /  2  dict type
+     2 /  1  decode
+     1 /  1  text_ord
+     1 /  1  parse_float
+     1 /  1  rfind_range
+
+blocking features per file (file: tests unsupported of tests; the features, most common first):
+  text_index                       4 of  13: count x2, text_ord x1, strip x1
+  text_scanning                    5 of   8: count x3, replace x2
+  text_views                       6 of   8: count x2, parse_float x1, dict type x1, strip x1, rfind_range x1
+  standard_strings                 3 of   5: decode x2, count x1
+  gc_footprint                     1 of   6: dict type x1
