@@ -1,4 +1,5 @@
-//! Core IR builder tests: SSA shapes from checked source.
+//! Core IR builder tests: SSA shapes from checked source, the refusals of
+//! unsupported constructs, and the copies `own.zig` puts in front of shared pushes.
 const std = @import("std");
 const support = @import("test_support.zig");
 const build = @import("build.zig");
@@ -172,4 +173,34 @@ test "a function with a mut parameter is refused until ownership lands" {
     const outcome = support.buildSource(arena.allocator(), mutating_helper, &refusal);
     try std.testing.expectError(error.Unsupported, outcome);
     try std.testing.expectEqualStrings("mut parameter", refusal.reason);
+}
+
+const aliased_pushes =
+    \\def grow(xs: list[int]) -> int:
+    \\    copy = xs
+    \\    copy.append(1)
+    \\    return len(copy)
+    \\
+    \\
+    \\def fill(n: int) -> int:
+    \\    xs = [0]
+    \\    for j in range(n):
+    \\        xs.append(j)
+    \\    return len(xs)
+    \\
+    \\
+    \\def main(out: Stream) -> int:
+    \\    out.print(grow([1, 2]) + fill(3))
+    \\    return 0
+    \\
+;
+
+// spec-case: NEW-CORE-OWN-1
+test "a push onto a parameter's list copies it first; a push onto a list the function owns alone does not" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const text = try support.irText(arena.allocator(), aliased_pushes);
+    // Only `grow`'s push copies: `fill`'s list is fresh, and its loop phi is dead after each push.
+    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, text, "list_copy list[i64] param0"));
+    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, text, "list_copy"));
 }

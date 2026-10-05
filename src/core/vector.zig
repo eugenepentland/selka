@@ -279,6 +279,7 @@ fn planLoop(arena: std.mem.Allocator, f: *const ir.Function, known: facts.Facts,
     if (f.blocks.items[loop.latch.index()].insts.items.len != 2) return null;
     for (body.refs.items) |ref| if (!laneShaped(f, known, &body, ref, counted.counter)) return null;
     if (!contains(body.refs.items, reduction.summand)) return null;
+    if (!operandsSplattable(f, &body)) return null;
     const bits = laneWidth(f, known, &body) orelse return null;
     return .{
         .loop = loop,
@@ -288,6 +289,31 @@ fn planLoop(arena: std.mem.Allocator, f: *const ir.Function, known: facts.Facts,
         .selects = body.selects.items,
         .bits = bits,
     };
+}
+
+/// Whether every operand the lanes read from outside the body is defined outside the
+/// loop: the emitter splats those once before the vector part, so a loop value (the
+/// counter as a select arm, `v = j`) there would be read before it exists.
+fn operandsSplattable(f: *const ir.Function, body: *const Body) bool {
+    for (body.refs.items) |ref| {
+        const inst = f.inst(ref);
+        if (inst.op == .phi or inst.op == .list_get) continue;
+        for ([_]ir.Ref{ inst.a, inst.b }) |operand| {
+            if (!outsideOrInBody(f, body, operand)) return false;
+        }
+    }
+    for (body.selects.items) |select| {
+        for ([_]ir.Ref{ select.then_value, select.else_value }) |operand| {
+            if (!outsideOrInBody(f, body, operand)) return false;
+        }
+    }
+    return true;
+}
+
+fn outsideOrInBody(f: *const ir.Function, body: *const Body, raw: ir.Ref) bool {
+    if (raw == .none) return true;
+    const ref = f.resolve(raw);
+    return contains(body.refs.items, ref) or !definedIn(f, body.in_loop, ref);
 }
 
 /// The lane select a join phi becomes: the operand on the then edge where the condition holds.

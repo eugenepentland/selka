@@ -176,3 +176,31 @@ test "target choices come from one description, and without x86 intrinsics the v
     try std.testing.expect(std.mem.indexOf(u8, generic, "@llvm.vector.reduce.add.v16i64") != null);
     try std.testing.expectEqualStrings("runtime_bench_now", c_abi.symbol("int_math::runtime_bench_now"));
 }
+
+const counter_arm =
+    \\def main(args: list[str], out: Stream) -> int:
+    \\    n = len(args) + 100
+    \\    second = [(j * 38 + 3) % 64 for j in range(n)]
+    \\    flags = [j % 3 != 0 for j in range(n)]
+    \\    total = 0
+    \\    for j in range(n):
+    \\        v = second[j]
+    \\        if flags[j]:
+    \\            v = j
+    \\        else:
+    \\            v = v + 101
+    \\        total += v
+    \\    out.print(total)
+    \\    return 0
+    \\
+;
+
+// spec-case: NEW-CORE-VECTOR-2
+test "a select arm that is the loop counter keeps the loop scalar instead of splatting a value defined in the loop" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    // Fuzz seed 80 case 36: the counter was splatted before the vector part, where it does not exist yet.
+    const text = try support.releaseLlvmText(arena.allocator(), counter_arm);
+    try std.testing.expect(std.mem.indexOf(u8, text, "%vexit1") == null);
+    try std.testing.expect(std.mem.indexOf(u8, text, "select <") == null);
+}

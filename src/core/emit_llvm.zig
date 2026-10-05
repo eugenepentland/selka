@@ -160,6 +160,7 @@ const ModuleState = struct {
             \\declare i32 @myl_core_exit(i64) nounwind
             \\declare ptr @myl_core_list_new(i64, i64) nounwind
             \\declare ptr @myl_core_list_reserve(ptr, i64) nounwind
+            \\declare ptr @myl_core_list_copy(ptr, i64) nounwind
             \\declare zeroext i1 @myl_core_str_parse_int(ptr, ptr) nounwind
             \\declare void @myl_core_print_i64(i64, i64) nounwind
             \\declare void @myl_core_print_u64(i64, i64) nounwind
@@ -571,6 +572,10 @@ const FunctionEmitter = struct {
             },
             .list_get => try self.listGet(out, name, inst),
             .list_push => try self.listPush(out, name, inst),
+            .list_copy => {
+                const element = self.state.module.compound(inst.ty).list;
+                try out.print(self.a(), "  {s} = call ptr @myl_core_list_copy(ptr {s}, i64 {d})\n", .{ name, try self.value(inst.a), elementSize(element) });
+            },
             .str_parse_int => {
                 const ok = try self.fresh("%ok");
                 const parsed = try self.fresh("%int");

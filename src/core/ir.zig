@@ -147,8 +147,11 @@ pub const Op = enum(u8) {
     list_len,
     /// Element `b` of list `a` (bounds-checked).
     list_get,
-    /// List `a` with `b` appended; `a` must not be used afterwards.
+    /// List `a` with `b` appended; `a` must not be used afterwards (`own.zig` makes it so).
     list_push,
+    /// A fresh copy of list `a` with room for one more element: what a push of a
+    /// list that may be shared appends to.
+    list_copy,
     /// The byte length of string `a` (`u64`).
     str_len,
     /// `int(a)` for string `a`: an `option(i64)`.

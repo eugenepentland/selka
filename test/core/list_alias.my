@@ -1,0 +1,28 @@
+module list_alias
+
+def grow(xs: list[int]) -> int:
+    copy = xs
+    copy.append(1)
+    copy.append(2)
+    return len(copy) * 10 + len(xs)
+
+
+def local_alias(n: int) -> int:
+    a = [1, 2, 3]
+    b = a
+    for j in range(n):
+        b.append(j)
+    return len(a) * 100 + len(b)
+
+
+def fill(n: int) -> int:
+    xs = [0]
+    for j in range(n):
+        xs.append(j)
+    return len(xs)
+
+
+def main(out: Stream) -> int:
+    ys = [1, 2, 3]
+    out.print(grow(ys), len(ys), ys[2], local_alias(20), fill(50))
+    return 0

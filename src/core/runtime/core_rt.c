@@ -155,6 +155,15 @@ myl_block *myl_core_list_reserve(myl_block *list, int64_t element_size) {
     return grown;
 }
 
+/* A fresh copy of `list` with room for one more element: what a push appends to
+   when the list may be shared (`own.zig`), so the original block stays intact. */
+myl_block *myl_core_list_copy(myl_block *list, int64_t element_size) {
+    myl_block *copy = block_new(MYL_KIND_LIST, list->len + 1, element_size);
+    memcpy(block_data(copy), block_data(list), (size_t)list->len * (size_t)element_size);
+    copy->len = list->len;
+    return copy;
+}
+
 static myl_block *str_from(const char *bytes, size_t len) {
     myl_block *text = block_new(MYL_KIND_STR, (int64_t)len, 1);
     memcpy(block_data(text), bytes, len);

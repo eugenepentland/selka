@@ -192,8 +192,17 @@ faster):
   assumed, as in SCCP; a bound only weakens, so this terminates too). This is the one
   relational fact binary search needs (`middle < high ≤ len`), and it also proves
   `for j in range(len(p)): p[j]`, `for x in p` and `if i < len(p): p[i]` over parameters.
-  Lists built in the function keep the length facts above; a list that can change length
-  (S1 `mut` parameters, `append`/`pop`) must be excluded from these bounds when it lands.
+  Lists built in the function keep the length facts above.
+  **Invariant (checkpoint B):** a fact about `len(v)` (a length bound, or a list fact's
+  `length`) is a fact about the *value* `v`, and holds because nothing changes the length
+  of a list value after it is defined. Every length-changing operation produces a new
+  value (`list_push`, later `list_pop`), and it may reuse `v`'s block only when `v` is
+  dead afterwards: `own.zig` inserts `list_copy` before every push whose operand may be
+  shared (S0 broke this: `copy = xs; copy.append(v)` pushed onto the parameter's block
+  and freed it). So `len(p)` of a parameter is the same at every point of the call. S1
+  keeps the invariant by construction: a `mut` parameter is not one value but a place;
+  its reads produce a new SSA value after every call or write that may change it, and
+  length bounds refer only to those values, never to the place.
 - **Check marking.** Each `exact` check whose operands' intervals rule out failure becomes
   `proven`: overflow, division by zero, `i64` floor fix-ups (non-negative operands), and
   list bounds (`0 ≤ i < len` where `len`'s list fact equals the loop bound, or where the
