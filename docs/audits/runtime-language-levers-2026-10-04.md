@@ -998,6 +998,13 @@ moves gate rows directly. Run them as separate small lanes.
 - **Rows.** Study: `tagged_stack` 1.46×, the `dict_lookup` query key 1.81×, `list_filter`
   1.11×.
 
+> **2026-10-05 update:** WP-5's C4 front-end and old-core half (live-place iteration, D1)
+> moved to the new-core S2 plan as package **S2-Lb**
+> (`docs/audits/new-core-s2-implementation-plan-2026-10-05.md` on `claude/new-core-s2-20261005`).
+> The user also decided that D1 holds regardless of sharing.
+> WP-10e's dictionary layout is now designed in `docs/design/new-core-s2.md` §2.
+> Don't implement either one here.
+
 **10e. Follow-up, design first: dictionary table layout** (L).
 - **Proposal.** Store `{key, value}` (or key/value arrays) in the slots, with load ≤ ½, a
   stronger multiplicative hash and a branch-free 4-slot bucket probe. Keep the entry list
