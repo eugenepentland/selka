@@ -934,3 +934,17 @@ No question below changes language behaviour unless it says so.
   - Lane D measures the rows against the L1 gate (Zig ReleaseSafe) as soon as `get`/`set` work. If a dense-key row misses the gate with `hybrid`, the first remedy is builder-known capacity and the cheap-rebuild path. The fallback is the CPython layout behind the same operations. Record the decision with the numbers here.
   - Never tune the hash to the fixtures' sequential keys (WP-10e).
 - **S2 does not start without the user.** §10's questions go to the user with the S1 summary.
+
+## 12. User decisions (2026-10-05)
+
+The user accepted every recommendation:
+1. **S2 goes ahead,** with function values and **fixed arrays in S2** (lane F).
+2. **Hashing stays unseeded** (PY-DICT-2): it is deterministic, and the flooding risk is accepted.
+3. **Short strings are not in S2.** They are re-decided at S3 with profiles.
+4. **A `str` parameter that accepts views** (an ABI change) is evaluated in S2 **only if `string_split` misses the gate.**
+5. **O(n/32) random indexing into long non-ASCII text is accepted.** The sample array is not ported.
+6. **Language change, `MUT-OVERLAP-RECEIVER`:** an assignment or update whose receiver place overlaps a `mut` argument evaluated in the same statement, for example `items[f(mut items)] = v`, `m.stack[grow(mut m)] = v` or `rows[0].append(clear(mut rows))`, is a compile error. It extends D3's `E_MUTATION_OVERLAP`. A separate front-end lane implements it in the shared checker with SPEC, docs and `tests/lang` updates; the new core then has nothing to lower.
+
+S1's other two refusals stay refused until the user decides them:
+- rebinding a `mut` list parameter, against a `mut` record parameter;
+- writing to a list while a `for` loop iterates it, under D1.
