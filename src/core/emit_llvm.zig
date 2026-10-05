@@ -68,6 +68,8 @@ const Site = struct { kind: TrapKind, location: Location, width: u16, operation:
 
 /// The `data` of an `unreachable` that asserts a uniqueness claim (`own.unique_assert`).
 const unique_assert = 1;
+/// The `data` of a `release` of a statically unique block (`own.unique_release`).
+const unique_release = 1;
 
 /// Header offsets of list and string blocks.
 const len_offset = 8;
@@ -97,7 +99,7 @@ const tbaa_data = "!tbaa !7";
 /// A count is never 0 while its block is reachable: `[1, 0)`, i.e. 1 through saturated.
 const count_range = "!range !8";
 /// The first `!range` node number free for fact intervals.
-const first_range_node = 8;
+const first_range_node = 10;
 /// The TBAA scaffold and the count range, as numbered above.
 const tbaa_metadata =
     \\!1 = !{!"myl.tbaa"}
@@ -108,6 +110,8 @@ const tbaa_metadata =
     \\!6 = !{!"myl.data", !1, i64 0}
     \\!7 = !{!6, !6, i64 0}
     \\!8 = !{i32 1, i32 0}
+    \\!9 = !{!"branch_weights", i32 1, i32 2000}
+    \\!10 = !{!"branch_weights", i32 2000, i32 1}
     \\
 ;
 /// `  %x = load i64, ptr %at` of one data word (a union's tag word or payload word).
@@ -265,8 +269,6 @@ const ModuleState = struct {
             \\declare void @myl_core_trap(i32, i64, i64) noreturn nounwind cold
             \\declare ptr @myl_core_args(i32, ptr) nounwind
             \\declare i32 @myl_core_exit(i64) nounwind
-            \\declare ptr @myl_core_list_new(i64, i64) nounwind
-            \\declare ptr @myl_core_list_reserve(ptr, i64) nounwind
             \\declare ptr @myl_core_list_copy(ptr, i64) nounwind
             \\declare zeroext i1 @myl_core_str_parse_int(ptr, ptr) nounwind
             \\declare void @myl_core_print_i64(i64, i64) nounwind
@@ -276,7 +278,6 @@ const ModuleState = struct {
             \\declare void @myl_core_print_sep(i64) nounwind
             \\declare void @myl_core_print_end(i64) nounwind
             \\declare ptr @myl_core_box_new(i64) nounwind
-            \\declare void @myl_core_free(ptr) nounwind cold
             \\declare void @myl_core_err_trace(i32, i32) nounwind cold
             \\declare void @llvm.memcpy.p0.p0.i64(ptr noalias nocapture writeonly, ptr noalias nocapture readonly, i64, i1 immarg)
             \\declare void @llvm.memmove.p0.p0.i64(ptr nocapture writeonly, ptr nocapture readonly, i64, i1 immarg)
@@ -287,6 +288,7 @@ const ModuleState = struct {
             \\declare void @myl_core_main_error_str(ptr) nounwind cold
             \\
         );
+        try out.appendSlice(self.allocator, runtime_fast_paths);
         try out.appendSlice(self.allocator, self.externs.items);
     }
 
@@ -1081,7 +1083,9 @@ const FunctionEmitter = struct {
             .box_get => try self.loadValue(out, inst.ty, try self.offsetPointer(out, try self.value(inst.a), data_offset), name),
             .retain, .release => {
                 const mode: Counting = if (inst.op == .retain) .retain else .release;
-                if (self.state.module.passedInMemory(self.typeOf(inst.a))) {
+                if (inst.op == .release and inst.data == unique_release) {
+                    try self.freeUnique(out, inst);
+                } else if (self.state.module.passedInMemory(self.typeOf(inst.a))) {
                     try self.countedMemory(out, mode, self.typeOf(inst.a), try self.value(inst.a));
                 } else try self.counted(out, mode, self.typeOf(inst.a), try self.value(inst.a));
             },
@@ -1089,15 +1093,7 @@ const FunctionEmitter = struct {
                 const count = try self.fresh("%rc");
                 try out.print(self.a(), count_load_line ++ "  {s} = icmp eq i32 {s}, 1\n", .{ count, try self.value(inst.a), name, count });
             },
-            .err_trace => {
-                const mode: ir.TraceMode = if (inst.data == 0) .origin else .append;
-                const location = self.state.options.locator.locate(self.state.options.locator.context, inst.span);
-                // The site's operation is the action the trace reports (ERROR-TRACE-2).
-                const action: []const u8 = if (mode == .origin) "Err(...) created" else "? propagated";
-                const index = try self.state.site(.{ .kind = .trace, .location = location, .width = 0, .operation = action, .function = self.function.name });
-                // ERROR-TRACE-5: the recorder never counts against inlining.
-                try out.print(self.a(), "  call void @myl_core_err_trace(i32 {d}, i32 {d}) #1\n", .{ index, @backingInt(mode) });
-            },
+            .err_trace => try self.errTrace(out, inst),
             .call => try self.call(out, name, inst),
             .print => try self.print(out, inst),
             .jump => {
@@ -1759,13 +1755,43 @@ const FunctionEmitter = struct {
         }
     }
 
+    /// One error-trace record (ERROR-TRACE-1/2). `data` is the trace mode, numbered as
+    /// docs/design/new-core-s1.md §6.2 fixes for the IR: 0 `origin` (`Err(...)`
+    /// built), 1 `append` (a `?` passing the error on), 2 `runtime` (a runtime call
+    /// answered `Err`), 3 `converted` (a `?` wrapping it into a case of the caller's
+    /// error union; `a` is a string constant naming `Union.case`), 4 `returned` (a
+    /// `return` of an `Err` the statement did not build). Origins (0, 2) restart the
+    /// trace; the rest append. The site's operation is the action text the trace prints.
+    fn errTrace(self: *FunctionEmitter, out: *Out, inst: ir.Inst) !void {
+        const location = self.state.options.locator.locate(self.state.options.locator.context, inst.span);
+        const action: []const u8 = switch (inst.data) {
+            0 => "Err(...) created",
+            2 => "Err produced by the runtime",
+            3 => try std.fmt.allocPrint(self.a(), "? converted to {s}", .{self.caseName(inst.a)}),
+            4 => "returned",
+            else => "? propagated",
+        };
+        const restarts: u8 = if (inst.data == 0 or inst.data == 2) 0 else 1;
+        const index = try self.state.site(.{ .kind = .trace, .location = location, .width = 0, .operation = action, .function = self.function.name });
+        // ERROR-TRACE-5: the recorder never counts against inlining.
+        try out.print(self.a(), "  call void @myl_core_err_trace(i32 {d}, i32 {d}) #1\n", .{ index, restarts });
+    }
+
+    /// The text of string constant `raw` (a converting `?`'s `Union.case`), or "?".
+    fn caseName(self: *FunctionEmitter, raw: ir.Ref) []const u8 {
+        if (raw == .none) return "?";
+        const inst = self.function.inst(self.function.resolve(raw));
+        if (inst.op != .str_const) return "?";
+        return self.state.module.strings.items[@intCast(inst.data)];
+    }
+
     // ---- trap frames (lane O; docs/design/new-core-s1.md §13 R-1) -------------------
 
     /// ` !dbg !N` naming this function's `DISubprogram` (`dwarf_lines` only).
     fn functionScope(self: *FunctionEmitter) ![]const u8 {
         if (self.state.options.target.traps != .dwarf_lines) return "";
         const location = self.state.options.locator.locate(self.state.options.locator.context, self.function.span);
-        self.scope = try self.state.debug.subprogram(self.a(), unqualifiedName(self.function.name), location.line);
+        self.scope = try self.state.debug.subprogram(self.a(), self.function.name, location.line);
         return std.fmt.allocPrint(self.a(), function_scope, .{self.scope});
     }
 
@@ -1781,6 +1807,21 @@ const FunctionEmitter = struct {
         if (self.scope == 0) return "";
         const location = self.state.sites.items[site_index].location;
         return std.fmt.allocPrint(self.a(), instruction_location, .{try self.state.debug.location(self.a(), location, self.scope)});
+    }
+
+    /// The release of a block `own.zig` proved unique: free it without the count test
+    /// (verify builds first assert the count is 1 and trap `R_CORE_FACT`).
+    fn freeUnique(self: *FunctionEmitter, out: *Out, inst: ir.Inst) !void {
+        const block = try self.value(inst.a);
+        if (self.state.options.verify) {
+            const count = try self.fresh("%uc");
+            const shared = try self.fresh("%us");
+            try out.print(self.a(), count_load_line ++ "  {s} = icmp ne i32 {s}, 1\n", .{ count, block, shared, count });
+            const location = self.state.options.locator.locate(self.state.options.locator.context, inst.span);
+            const index = try self.state.site(.{ .kind = .fact, .location = location, .width = 32, .operation = "count == 1 before freeing a unique block", .function = self.function.name });
+            try self.trapIf(out, shared, index, "0", "1");
+        }
+        try out.print(self.a(), "  call void @myl_core_free(ptr {s})\n", .{block});
     }
 
     /// Record in a fresh list's or box's header (`reserved`, offset 24) where the blocks
@@ -1923,9 +1964,20 @@ const FunctionEmitter = struct {
         }
     }
 
+    /// The entry adapter's report of the `Err` `main` returned: the runtime writes `error: VALUE`
+    /// and the error return trace.
+    fn reportError(self: *FunctionEmitter, out: *Out, argument: ir.Ref) !void {
+        const argument_type = self.typeOf(argument);
+        if (argument_type == .bool) return out.print(self.a(), "  call void @myl_core_main_error_bool(i1 zeroext {s})\n", .{try self.value(argument)});
+        if (argument_type == .str) return out.print(self.a(), "  call void @myl_core_main_error_str(ptr {s})\n", .{try self.value(argument)});
+        const info = argument_type.integer() orelse return error.UnsupportedInstruction;
+        try out.print(self.a(), "  call void @myl_core_main_error_{s}(i64 {s})\n", .{ if (info.signed) "i64" else "u64", try self.widened(out, argument) });
+    }
+
     fn print(self: *FunctionEmitter, out: *Out, inst: ir.Inst) !void {
         const operands = self.function.operands(inst.data);
         const stream = try self.value(operands[0]);
+        if (self.constantOf(operands[0]) == flags.error_stream) return self.reportError(out, operands[1]);
         for (operands[1..], 0..) |argument, i| {
             if (i != 0) try out.print(self.a(), "  call void @myl_core_print_sep(i64 {s})\n", .{stream});
             const argument_type = self.function.inst(self.function.resolve(argument)).ty;
@@ -1967,12 +2019,6 @@ fn storageType(ty: ir.Type) []const u8 {
 /// ` !dbg !N` on a function definition and `, !dbg !N` on an instruction.
 const function_scope = " !dbg !{d}";
 const instruction_location = ", !dbg !{d}";
-
-/// A function name without its module qualifier (`mod::f` → `f`), as traps print it.
-fn unqualifiedName(name: []const u8) []const u8 {
-    const at = std.mem.lastIndexOfScalar(u8, name, ':') orelse return name;
-    return name[at + 1 ..];
-}
 
 /// The DWARF metadata of a `dwarf_lines` module: one compile unit and file, one
 /// `DISubprogram` per function, one `DILocation` per call and trap. Numbered from
@@ -2018,6 +2064,91 @@ const Debug = struct {
         try out.print(allocator, "!{d} = !{{i32 2, !\"Debug Info Version\", i32 3}}\n!{d} = !{{i32 7, !\"Dwarf Version\", i32 4}}\n", .{ self.next, self.next + 1 });
     }
 };
+
+/// The allocator's common cases, inlined into every caller (`runtime/core_rt.c`,
+/// "allocation"): a small list taken from its size class's free list, a push into a
+/// list with room, and the free of a small block that holds no blocks. Everything
+/// else calls the runtime. Free-list accesses carry no TBAA tag; nothing is counted
+/// here (the leak check counts free-list entries at exit).
+const runtime_fast_paths =
+    \\@myl_core_free_lists = external global [33 x ptr]
+    \\declare ptr @myl_core_list_new_slow(i64, i64) nounwind
+    \\declare ptr @myl_core_list_grow(ptr, i64) nounwind
+    \\declare void @myl_core_free_block(ptr) nounwind cold
+    \\define internal ptr @myl_core_list_new(i64 %cap, i64 %size) alwaysinline nounwind {
+    \\entry:
+    \\  %many = icmp ugt i64 %cap, 1024
+    \\  %data = mul i64 %cap, %size
+    \\  %bytes = add i64 %data, 63
+    \\  %class = lshr i64 %bytes, 5
+    \\  %large = icmp ugt i64 %class, 32
+    \\  %slow = or i1 %many, %large
+    \\  br i1 %slow, label %call, label %small, !prof !9
+    \\small:
+    \\  %slot = getelementptr inbounds [33 x ptr], ptr @myl_core_free_lists, i64 0, i64 %class
+    \\  %head = load ptr, ptr %slot, align 8
+    \\  %empty = icmp eq ptr %head, null
+    \\  br i1 %empty, label %call, label %pop, !prof !9
+    \\pop:
+    \\  %next = load ptr, ptr %head, align 8
+    \\  store ptr %next, ptr %slot, align 8
+    \\  store i32 1, ptr %head, align 8, !tbaa !3
+    \\  %class32 = trunc i64 %class to i32
+    \\  %kind = shl i32 %class32, 24
+    \\  %kind_at = getelementptr inbounds i8, ptr %head, i64 4
+    \\  store i32 %kind, ptr %kind_at, align 4, !tbaa !5
+    \\  %len_at = getelementptr inbounds i8, ptr %head, i64 8
+    \\  store i64 0, ptr %len_at, align 8, !tbaa !5
+    \\  %room_total = shl i64 %class, 5
+    \\  %room = sub i64 %room_total, 32
+    \\  %fits = udiv i64 %room, %size
+    \\  %cap_at = getelementptr inbounds i8, ptr %head, i64 16
+    \\  store i64 %fits, ptr %cap_at, align 8, !tbaa !5
+    \\  %reserved_at = getelementptr inbounds i8, ptr %head, i64 24
+    \\  store i64 0, ptr %reserved_at, align 8, !tbaa !5
+    \\  ret ptr %head
+    \\call:
+    \\  %made = call ptr @myl_core_list_new_slow(i64 %cap, i64 %size)
+    \\  ret ptr %made
+    \\}
+    \\define internal ptr @myl_core_list_reserve(ptr %list, i64 %size) alwaysinline nounwind {
+    \\entry:
+    \\  %len_at = getelementptr inbounds i8, ptr %list, i64 8
+    \\  %len = load i64, ptr %len_at, align 8, !tbaa !5
+    \\  %cap_at = getelementptr inbounds i8, ptr %list, i64 16
+    \\  %cap = load i64, ptr %cap_at, align 8, !tbaa !5
+    \\  %room = icmp ult i64 %len, %cap
+    \\  br i1 %room, label %fits, label %grow, !prof !10
+    \\fits:
+    \\  ret ptr %list
+    \\grow:
+    \\  %grown = call ptr @myl_core_list_grow(ptr %list, i64 %size)
+    \\  ret ptr %grown
+    \\}
+    \\define internal void @myl_core_free(ptr %block) alwaysinline nounwind {
+    \\entry:
+    \\  %kind_at = getelementptr inbounds i8, ptr %block, i64 4
+    \\  %kind = load i32, ptr %kind_at, align 4, !tbaa !5
+    \\  %class32 = lshr i32 %kind, 24
+    \\  %reserved_at = getelementptr inbounds i8, ptr %block, i64 24
+    \\  %reserved = load i64, ptr %reserved_at, align 8, !tbaa !5
+    \\  %small = icmp ne i32 %class32, 0
+    \\  %plain = icmp eq i64 %reserved, 0
+    \\  %fast = and i1 %small, %plain
+    \\  br i1 %fast, label %push, label %call, !prof !10
+    \\push:
+    \\  %class = zext i32 %class32 to i64
+    \\  %slot = getelementptr inbounds [33 x ptr], ptr @myl_core_free_lists, i64 0, i64 %class
+    \\  %head = load ptr, ptr %slot, align 8
+    \\  store ptr %head, ptr %block, align 8
+    \\  store ptr %block, ptr %slot, align 8
+    \\  ret void
+    \\call:
+    \\  call void @myl_core_free_block(ptr %block)
+    \\  ret void
+    \\}
+    \\
+;
 
 /// Attribute group `#1`: an error-trace recorder call costs nothing to inline around (ERROR-TRACE-5).
 const trace_call_attributes = "attributes #1 = { \"call-inline-cost\"=\"0\" }\n";

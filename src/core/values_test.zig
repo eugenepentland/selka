@@ -274,7 +274,7 @@ test "retain, release and is_unique count inline, saturate, and reach blocks ins
     try std.testing.expect(contains(run.llvm, "icmp eq i32 %rc"));
     try std.testing.expect(contains(run.llvm, "add nuw i32"));
     try std.testing.expect(contains(run.llvm, "call void @myl_core_free(ptr "));
-    try std.testing.expect(contains(run.llvm, "declare void @myl_core_free(ptr) nounwind cold"));
+    try std.testing.expect(contains(run.llvm, "declare void @myl_core_free_block(ptr) nounwind cold"));
     try std.testing.expect(contains(run.llvm, "call ptr @myl_core_box_new(i64 8)"));
 }
 

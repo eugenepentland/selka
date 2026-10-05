@@ -32,13 +32,18 @@ fn trappedWith(arena: std.mem.Allocator, root: []const u8, release: bool, flags:
     return ran.stderr;
 }
 
-/// The frames the old core prints for this trap, innermost first (its names are module-qualified).
+/// The old core's report of this trap, byte for byte: a module-headed file shows its
+/// path relative to the module root and module-qualified names, and the record follows
+/// an ASCII record separator.
+const old_report =
+    "trap_frames.my:6:25: error[R_LIST_BOUNDS]: native execution failed (index 3, length 3)\n" ++
+    "  in trap_frames::leaf at trap_frames.my:6:25\n" ++
+    "  in trap_frames::mid at trap_frames.my:11:9\n" ++
+    "  in trap_frames::main at trap_frames.my:20:15\n" ++
+    "\x1eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":3,\"length\":3}\n";
+
 fn sameFrames(stderr: []const u8) !void {
-    const first = std.mem.indexOf(u8, stderr, "trap_frames.my:6:25: error[R_LIST_BOUNDS]: native execution failed (index 3, length 3)\n  in leaf at ") orelse return error.TestUnexpectedResult;
-    const leaf = std.mem.indexOfPos(u8, stderr, first, "/trap_frames.my:6:25\n  in mid at ") orelse return error.TestUnexpectedResult;
-    const mid = std.mem.indexOfPos(u8, stderr, leaf, "/trap_frames.my:11:9\n  in main at ") orelse return error.TestUnexpectedResult;
-    const main = std.mem.indexOfPos(u8, stderr, mid, "/trap_frames.my:20:15\nMYLANG-TRAP {") orelse return error.TestUnexpectedResult;
-    try std.testing.expect(main > mid and mid > leaf);
+    try std.testing.expectEqualStrings(old_report, stderr);
 }
 
 // spec: NEW-CORE-TRAP-2
@@ -60,8 +65,8 @@ test "a build without the line tables names only the trapping frame and emits no
     defer dir.cleanup();
     const root = try dir.dir.realPathFileAlloc(std.testing.io, ".", arena.allocator());
     const stderr = try trappedWith(arena.allocator(), root, true, &.{"--trap-frames=posix_exit"});
-    try std.testing.expect(contains(stderr, "/trap_frames.my:6:25\nMYLANG-TRAP {"));
-    try std.testing.expect(!contains(stderr, "  in mid at "));
+    try std.testing.expect(contains(stderr, "  in trap_frames::leaf at trap_frames.my:6:25\n\x1eMYLANG-TRAP {"));
+    try std.testing.expect(!contains(stderr, "  in trap_frames::mid at "));
 }
 
 /// `inner(n) -> Result[int, str]`: `Err("too big")` (a trace origin) when `n > 2`, else
@@ -115,4 +120,46 @@ test "main returning Err prints error: VALUE and the aligned trace, origin first
     try std.testing.expectEqualStrings("", passed.stderr);
     try std.testing.expect(contains(failed.llvm, "call void @myl_core_err_trace(i32 ") and contains(failed.llvm, "#1\n"));
     try std.testing.expect(contains(failed.llvm, "attributes #1 = { \"call-inline-cost\"=\"0\" }"));
+}
+
+/// `main() -> Result[int, str]` returning `Err("bad")`, after recording: its origin, a
+/// `returned` site on the origin's line (folded into it), a converting `?`
+/// (`Wrapped.bad`) and `propagated` propagating `?` sites.
+fn kindsProgram(arena: std.mem.Allocator, propagated: usize) !ir.Module {
+    var m: ir.Module = .{};
+    const result = try m.intern(arena, .{ .@"union" = &.{ .i64, .str } });
+    try m.strings.append(arena, "bad");
+    try m.strings.append(arena, "Wrapped.bad");
+    var h = try Hand.init(arena, &m, "main", .{ .params = &.{}, .ret = result });
+    _ = try h.emit(.{ .op = .err_trace, .ty = .void, .data = 0, .span = 10 });
+    _ = try h.emit(.{ .op = .err_trace, .ty = .void, .data = 4, .span = 20 });
+    const case = try h.loose(.{ .op = .str_const, .ty = .str, .data = 1 });
+    _ = try h.emit(.{ .op = .err_trace, .ty = .void, .a = case, .data = 3, .span = 3000 });
+    for (0..propagated) |i| _ = try h.emit(.{ .op = .err_trace, .ty = .void, .data = 1, .span = @intCast(4001 + i) });
+    const message = try h.loose(.{ .op = .str_const, .ty = .str, .data = 0 });
+    _ = try h.emit(.{ .op = .ret, .ty = .void, .a = try h.emit(.{ .op = .union_make, .ty = result, .data = 1, .a = message }) });
+    _ = try h.finish();
+    return m;
+}
+
+fn kindsReport(arena: std.mem.Allocator, propagated: usize) ![]const u8 {
+    var module = try kindsProgram(arena, propagated);
+    const run = try support.runOwned(arena, &module, result_main);
+    try std.testing.expectEqual(@as(u8, 1), run.status);
+    return run.stderr;
+}
+
+// spec: NEW-CORE-ERRTRACE-2
+test "trace modes: a returned site on its origin's line folds, a conversion names its case, and the ring drops the oldest appends" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    try std.testing.expectEqualStrings(
+        "error: bad\n  hand.my:1:11    main  Err(...) created\n  hand.my:1:3001  main  ? converted to Wrapped.bad\n" ++
+            "  hand.my:1:4002  main  ? propagated\n  hand.my:1:4003  main  ? propagated\n",
+        try kindsReport(arena.allocator(), 2),
+    );
+    // 42 appends: the ring keeps the last 32 (propagations 9 to 40).
+    const long = try kindsReport(arena.allocator(), 40);
+    try std.testing.expect(std.mem.startsWith(u8, long, "error: bad\n  hand.my:1:11    main  Err(...) created\n  ... 10 more entries dropped ...\n  hand.my:1:4010  main  ? propagated\n"));
+    try std.testing.expect(std.mem.endsWith(u8, long, "  hand.my:1:4041  main  ? propagated\n"));
 }

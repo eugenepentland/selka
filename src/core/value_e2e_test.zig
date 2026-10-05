@@ -293,3 +293,40 @@ test "the value fixtures end with no block live under MYL_CORE_LEAKCHECK=1, debu
         try std.testing.expectEqualStrings("", try leakReport(arena.allocator(), root, name, .release));
     }
 }
+
+/// Run `test/core/NAME.my` built in `mode` with `args`.
+fn runWith(arena: std.mem.Allocator, root: []const u8, name: []const u8, mode: Mode, args: []const []const u8) !Outcome {
+    _ = try runFixture(arena, root, name, mode);
+    const output = try std.fmt.allocPrint(arena, "{s}/{s}-{s}", .{ root, name, @tagName(mode) });
+    var argv: std.ArrayList([]const u8) = .empty;
+    try argv.append(arena, output);
+    try argv.appendSlice(arena, args);
+    const result = try std.process.run(arena, std.testing.io, .{ .argv = argv.items });
+    const status: u8 = switch (result.term) {
+        .exited => |code| code,
+        else => 255,
+    };
+    return .{ .stdout = result.stdout, .stderr = result.stderr, .status = status };
+}
+
+// spec: NEW-CORE-TRACE-1
+test "a main that returns an Err reports it with the old core's error return trace: created, returned, propagated" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    try std.testing.expect(try matches(arena.allocator(), "v_trace", "run 3 8\nrun failed negative\n", 4));
+    var dir = std.testing.tmpDir(.{});
+    defer dir.cleanup();
+    const root = try scratch(arena.allocator(), dir);
+    for ([_]Mode{ .debug, .release }) |mode| {
+        const failed = try runWith(arena.allocator(), root, "v_trace", mode, &.{"x"});
+        try std.testing.expectEqual(@as(u8, 1), failed.status);
+        const lines = [_][]const u8{
+            "error: negative\n",
+            "v_trace.my:10:16  v_trace::parse    Err(...) created\n",
+            "v_trace.my:16:5   v_trace::forward  returned\n",
+            "v_trace.my:20:9   v_trace::pass_on  ? propagated\n",
+            "v_trace.my:57:9   v_trace::main     ? propagated\n",
+        };
+        for (lines) |line| try std.testing.expect(std.mem.indexOf(u8, failed.stderr, line) != null);
+    }
+}

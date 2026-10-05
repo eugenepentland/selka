@@ -511,6 +511,7 @@ const FnBuilder = struct {
             .ret => |value| {
                 const result = try self.expression(value);
                 if (self.current == null) return;
+                try self.traceReturned(value, result, span);
                 try self.returnValue(result, span);
             },
             .branch => |b| try self.branchStatement(b.condition, b.then_body, b.else_body),
@@ -911,14 +912,14 @@ const FnBuilder = struct {
             try self.seal(failed);
             try self.seal(succeeded);
             self.current = failed;
-            // TODO(trace kinds): a `?` that converts the error into a case of the caller's error union
-            // is `? converted to Union.case` (ERROR-TRACE-2), and a `return` of an `Err` the statement
-            // did not construct appends `returned`; both wait for lane O's `ir.TraceMode` kinds, so
-            // every propagation is `append` for now.
-            _ = try self.emit(.{ .op = .err_trace, .ty = .void, .data = @backingInt(ir.TraceMode.append), .span = span });
+            // An error passed on unchanged appends its site; one wrapped into a case of the caller's
+            // error union is `converted`, naming `Union.case` (design note §6.2).
+            const converted = shape.error_type != wanted.error_type;
+            const case = if (converted) typed.wrappingCase(records, wanted.error_type, shape.error_type) orelse return self.mb.refuse("error conversion", span) else 0;
+            const naming: ir.Ref = if (converted) try self.caseName(wanted.error_type, case) else .none;
+            _ = try self.emit(.{ .op = .err_trace, .ty = .void, .a = naming, .data = @backingInt(if (converted) ir.TraceMode.converted else ir.TraceMode.append), .span = span });
             var error_value = try self.payloadOf(input, shape.error_tag, span);
-            if (shape.error_type != wanted.error_type) {
-                const case = typed.wrappingCase(records, wanted.error_type, shape.error_type) orelse return self.mb.refuse("error conversion", span);
+            if (converted) {
                 const union_type = try self.mb.mapType(wanted.error_type, span);
                 const stored = self.mb.module.compound(union_type).@"union"[case];
                 error_value = try self.emit(.{ .op = .union_make, .ty = union_type, .a = try self.boxFor(stored, error_value, span), .data = case, .span = span });
@@ -940,6 +941,33 @@ const FnBuilder = struct {
         try self.returnValue(none, span);
         self.current = succeeded;
         return self.payloadOf(input, 1 - none_tag, span);
+    }
+
+    /// A string constant `Union.case` naming case `case` of the union `ty`, as the old core spells it.
+    fn caseName(self: *FnBuilder, ty: typed.Type, case: usize) Error!ir.Ref {
+        const record = self.mb.program.records[ty.recordIndex()];
+        const text = try std.fmt.allocPrint(self.allocator(), "{s}.{s}", .{ record.name, record.shape.variants.?.cases[case].name });
+        const index = self.mb.module.strings.items.len;
+        try self.mb.module.strings.append(self.allocator(), text);
+        return self.detached(.{ .op = .str_const, .ty = .str, .data = index });
+    }
+
+    /// `return value` in a function that returns a `Result`: when the statement did not build the
+    /// value itself (a variable, a call, a conditional) and it is an `Err`, its site is appended.
+    fn traceReturned(self: *FnBuilder, node: typed.NodeId, result: ir.Ref, span: u32) Error!void {
+        const shape = typed.resultShape(self.checked.signature.return_type, self.mb.program.records) orelse return;
+        if (result == .none or self.nodeOf(node).data == .variant) return;
+        const tag = try self.emit(.{ .op = .union_tag, .ty = .u32, .a = result, .span = span });
+        const is_error = try self.emit(.{ .op = .cmp, .ty = .bool, .a = tag, .b = try self.constant(.u32, @intCast(shape.error_tag)), .data = @backingInt(ir.Predicate.eq), .span = span });
+        const failed = try self.newBlock();
+        const done = try self.newBlock();
+        try self.branch(is_error, failed, done, span);
+        try self.seal(failed);
+        self.current = failed;
+        _ = try self.emit(.{ .op = .err_trace, .ty = .void, .data = @backingInt(ir.TraceMode.returned), .span = span });
+        try self.jump(done);
+        try self.seal(done);
+        self.enter(done);
     }
 
     /// End the function with `result`. A function with `mut` parameters returns a record of its
@@ -1349,7 +1377,11 @@ const FnBuilder = struct {
         if (print.debug or print.separator != null or print.terminator != null) return self.mb.refuse("print options", span);
         var operands: std.ArrayList(ir.Ref) = .empty;
         defer operands.deinit(self.allocator());
-        const stream = if (print.stream) |stream_node| try self.expression(stream_node) else try self.constant(.cap, if (print.sink == .stdout) 1 else 2);
+        const stream = if (print.stream) |stream_node| try self.expression(stream_node) else try self.constant(.cap, switch (print.sink) {
+            .stdout => 1,
+            .stderr => 2,
+            .error_report => flags.error_stream,
+        });
         try operands.append(self.allocator(), stream);
         for (print.arguments) |argument| {
             const value = try self.expression(argument);

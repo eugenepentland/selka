@@ -152,9 +152,12 @@ pub const FieldPath = struct {
     }
 };
 
-/// The two kinds of `err_trace` (ERROR-TRACE-1): building an `Err` starts a trace,
-/// a `?` that propagates one appends its site.
-pub const TraceMode = enum(u8) { origin, append };
+/// The kinds of `err_trace` (ERROR-TRACE-1, design note §6.2). `origin` (building an
+/// `Err`) and `runtime` (a runtime call answered `Err`) restart the trace; `append` is a `?`
+/// that passes the error on, `converted` a `?` that wraps it into a case of the caller's
+/// error union (`a` is a `str_const` naming `Union.case`), and `returned` the `Err` path of
+/// a `return e` whose `Err` the statement did not build.
+pub const TraceMode = enum(u8) { origin, append, runtime, converted, returned };
 
 /// Records and unions of at most this many words travel as LLVM struct values in
 /// registers; larger ones are passed by pointer and returned through `sret` (§3).

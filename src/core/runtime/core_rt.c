@@ -80,26 +80,104 @@ static unsigned char *block_data(myl_block *block) { return (unsigned char *)blo
 
 static void out_of_memory(void);
 
-/* Blocks allocated and not yet freed: the MYL_CORE_LEAKCHECK=1 report at exit. */
+/* Blocks ever carved from chunks plus large blocks not yet freed. A small block is
+   live exactly when it was carved and is not on a free list, so the
+   MYL_CORE_LEAKCHECK=1 count (`live_count`) needs no counting on the fast paths. */
 static int64_t live_blocks;
 
-static myl_block *block_new(uint32_t kind, int64_t cap, int64_t element_size) {
-    size_t bytes = MYL_HEADER + (size_t)(cap > 0 ? cap : 0) * (size_t)element_size + 1;
-    bytes = (bytes + MYL_ALIGN - 1) & ~(size_t)(MYL_ALIGN - 1);
-    myl_block *block = aligned_alloc(MYL_ALIGN, bytes);
-    if (!block) out_of_memory();
-    block->count = 1;
-    block->kind = kind;
-    block->len = 0;
-    block->cap = cap > 0 ? cap : 0;
-    block->reserved = 0;
+/* ---- allocation ----------------------------------------------------------------
+ * Blocks of up to MYL_SMALL bytes (header included) come from per-size-class free
+ * lists, one class per 32-byte granule, carved from 64 KiB chunks that are never
+ * returned; a freed small block goes back to its class's list. Larger blocks are
+ * `malloc`ed, and a large list grows with `realloc`. The class sits in the high
+ * byte of `kind` (0: large), so a free needs no size. A list's `cap` is all its
+ * block holds, so a small list grows within its class without moving.
+ * Single-threaded, like the counts. The common cases (a small list from a free
+ * list, a push with room, a free of a small block without children) are emitted
+ * inline by `emit_llvm.zig` against `myl_core_free_lists`; these functions are
+ * the rest. */
+enum { MYL_GRANULE = 32, MYL_SMALL = 1024, MYL_CLASSES = MYL_SMALL / MYL_GRANULE, MYL_CHUNK = 1 << 16 };
+#define MYL_KIND_MASK 0xffu
+#define MYL_CLASS_SHIFT 24
+
+void *myl_core_free_lists[MYL_CLASSES + 1];
+#define free_lists myl_core_free_lists
+static unsigned char *chunk_next, *chunk_end;
+
+static uint32_t kind_of(const myl_block *block) { return block->kind & MYL_KIND_MASK; }
+static uint32_t class_of(const myl_block *block) { return block->kind >> MYL_CLASS_SHIFT; }
+
+/* A small block of `class` granules: from its free list, else carved from a chunk. */
+static void *small_alloc(uint32_t class) {
+    void *block = free_lists[class];
+    if (block) {
+        free_lists[class] = *(void **)block;
+        return block;
+    }
+    size_t bytes = (size_t)class * MYL_GRANULE;
+    if ((size_t)(chunk_end - chunk_next) < bytes) {
+        chunk_next = aligned_alloc(MYL_ALIGN, MYL_CHUNK);
+        if (!chunk_next) out_of_memory();
+        chunk_end = chunk_next + MYL_CHUNK;
+    }
+    block = chunk_next;
+    chunk_next += bytes;
     ++live_blocks;
     return block;
 }
 
+/* A block for `data` bytes after the header; `*room` gets the data bytes it really holds. */
+static myl_block *block_alloc(uint32_t kind, size_t data, size_t *room) {
+    size_t bytes = MYL_HEADER + data;
+    myl_block *block;
+    uint32_t class = 0;
+    if (bytes <= MYL_SMALL) {
+        class = (uint32_t)((bytes + MYL_GRANULE - 1) / MYL_GRANULE);
+        block = small_alloc(class);
+        *room = (size_t)class * MYL_GRANULE - MYL_HEADER;
+    } else {
+        /* 32-byte alignment keeps element data on vector boundaries (measured:
+           16-byte `malloc` alignment cost integer_math 4% and binary_search 10%). */
+        block = aligned_alloc(MYL_ALIGN, (bytes + MYL_ALIGN - 1) & ~(size_t)(MYL_ALIGN - 1));
+        if (!block) out_of_memory();
+        *room = data;
+        ++live_blocks;
+    }
+    block->count = 1;
+    block->kind = kind | (class << MYL_CLASS_SHIFT);
+    block->len = 0;
+    block->reserved = 0;
+    return block;
+}
+
+/* A block of `kind` with room for `cap` elements of `element_size` bytes (a string
+   also for its terminating NUL); a list's `cap` is everything the block holds. */
+static myl_block *block_new(uint32_t kind, int64_t cap, int64_t element_size) {
+    size_t wanted = (size_t)(cap > 0 ? cap : 0) * (size_t)element_size + (kind == MYL_KIND_STR);
+    size_t room;
+    myl_block *block = block_alloc(kind, wanted, &room);
+    block->cap = kind == MYL_KIND_LIST && element_size > 0 ? (int64_t)(room / (size_t)element_size) : (cap > 0 ? cap : 0);
+    return block;
+}
+
+/* Blocks allocated and not freed: carved and large ones, less those on free lists. */
+static int64_t live_count(void) {
+    int64_t live = live_blocks;
+    for (int class = 1; class <= MYL_CLASSES; ++class) {
+        for (void *at = free_lists[class]; at; at = *(void **)at) --live;
+    }
+    return live;
+}
+
 static void block_free(myl_block *block) {
-    --live_blocks;
-    free(block);
+    uint32_t class = class_of(block);
+    if (class == 0) {
+        --live_blocks;
+        free(block);
+        return;
+    }
+    *(void **)block = free_lists[class];
+    free_lists[class] = block;
 }
 
 /* ---- element layouts ---------------------------------------------------------
@@ -138,7 +216,7 @@ static myl_block *reference_at(myl_layout *layout, const unsigned char *element,
 }
 
 /* How many elements a block's layout covers: a list's length, a box's one value. */
-static int64_t element_count(const myl_block *block) { return block->kind == MYL_KIND_BOX ? 1 : block->len; }
+static int64_t element_count(const myl_block *block) { return kind_of(block) == MYL_KIND_BOX ? 1 : block->len; }
 
 /* ---- buffered streams ------------------------------------------------------- */
 
@@ -212,16 +290,33 @@ void myl_core_print_end(int64_t fd) {
 
 /* ---- lists and strings ------------------------------------------------------ */
 
-myl_block *myl_core_list_new(int64_t cap, int64_t element_size) {
+/* A fresh list, when the emitted fast path finds no free block of its class. */
+myl_block *myl_core_list_new_slow(int64_t cap, int64_t element_size) {
     return block_new(MYL_KIND_LIST, cap, element_size);
 }
 
 /* A block with room for one more element: `list` itself while it has room,
    else a grown copy. The caller's old value is dead after the push (the IR's
    uniqueness rule), so growing frees the old block. */
-myl_block *myl_core_list_reserve(myl_block *list, int64_t element_size) {
+myl_block *myl_core_list_grow(myl_block *list, int64_t element_size) {
     if (list->len < list->cap) return list;
     int64_t cap = list->cap < 4 ? 8 : list->cap * 2;
+    if (class_of(list) == 0) {
+        /* A large block grows in place where the allocator can (one block either
+           way), and moves to a fresh aligned block when `realloc` loses the alignment. */
+        size_t bytes = MYL_HEADER + (size_t)cap * (size_t)element_size;
+        myl_block *moved = realloc(list, bytes);
+        if (!moved) out_of_memory();
+        if (((uintptr_t)moved & (MYL_ALIGN - 1)) != 0) {
+            myl_block *aligned = aligned_alloc(MYL_ALIGN, (bytes + MYL_ALIGN - 1) & ~(size_t)(MYL_ALIGN - 1));
+            if (!aligned) out_of_memory();
+            memcpy(aligned, moved, MYL_HEADER + (size_t)moved->len * (size_t)element_size);
+            free(moved);
+            moved = aligned;
+        }
+        moved->cap = cap;
+        return moved;
+    }
     myl_block *grown = block_new(MYL_KIND_LIST, cap, element_size);
     memcpy(block_data(grown), block_data(list), (size_t)list->len * (size_t)element_size);
     grown->len = list->len;
@@ -275,20 +370,21 @@ myl_block *myl_core_box_new(int64_t size) {
 /* ---- one-count RC (docs/design/new-core-s1.md §6) ------------------------------
  * Retain and release are emitted inline: the count is a u32 at offset 0,
  * 0xFFFFFFFF is saturated (D4) and never changes. A release that drops the last
- * owner calls `myl_core_free`, which frees the block and releases the blocks its
+ * owner calls `myl_core_free` (emitted: a small block without children goes
+ * straight back to its free list), else `myl_core_free_block`, which frees the block and releases the blocks its
  * elements hold, iteratively: a child whose last owner goes joins a pending
  * chain linked through its `cap` word (a dying block needs only `kind`, `len`
  * and `reserved`), so freeing a list of lists nested a million deep uses no
  * stack. The emitted release does not store the final 0, so a dying block is
  * recognized by the caller, never by its count. */
-__attribute__((cold)) void myl_core_free(myl_block *block) {
+__attribute__((cold)) void myl_core_free_block(myl_block *block) {
     block->cap = 0;
     myl_block *pending = block;
     while (pending) {
         myl_block *dying = pending;
         pending = (myl_block *)(intptr_t)dying->cap;
         myl_layout *layout = layout_of(dying);
-        if (layout && dying->kind != MYL_KIND_STR) {
+        if (layout && kind_of(dying) != MYL_KIND_STR) {
             int64_t count = element_count(dying);
             for (int64_t i = 0; i < count; ++i) {
                 const unsigned char *element = block_data(dying) + i * (int64_t)layout[0];
@@ -309,7 +405,7 @@ __attribute__((cold)) void myl_core_free(myl_block *block) {
 /* Drop one owner of `block` out of line: the C entry's `args` and `main`'s error. */
 void myl_core_release(myl_block *block) {
     if (!block || block->count == MYL_SATURATED) return;
-    if (block->count == 1) myl_core_free(block);
+    if (block->count == 1) myl_core_free_block(block);
     else --block->count;
 }
 
@@ -401,10 +497,6 @@ extern const char myl_core_source_path[];
 
 enum { TRAP_OVERFLOW, TRAP_DIVISION_BY_ZERO, TRAP_LIST_BOUNDS, TRAP_FLOAT_CONVERSION, TRAP_CAST, TRAP_FACT, TRAP_LIST_EMPTY };
 
-static const char *unqualified(const char *name) {
-    const char *at = strrchr(name, ':');
-    return at ? at + 1 : name;
-}
 
 
 /* ---- trap frames (docs/design/new-core-s1.md §13 R-1) ----------------------------
@@ -764,23 +856,23 @@ void myl_core_trap(int32_t index, int64_t a, int64_t b) {
     switch (site->kind) {
     case TRAP_OVERFLOW:
         snprintf(detail, sizeof detail, " (%s: left %lld, right %lld, width %d)", site->operation, (long long)a, (long long)b, site->width);
-        snprintf(record, sizeof record, "MYLANG-TRAP {\"version\":1,\"operation\":\"%s\",\"left\":%lld,\"right\":%lld,\"width\":%d}\n", site->operation, (long long)a, (long long)b, site->width);
+        snprintf(record, sizeof record, "\036MYLANG-TRAP {\"version\":1,\"operation\":\"%s\",\"left\":%lld,\"right\":%lld,\"width\":%d}\n", site->operation, (long long)a, (long long)b, site->width);
         break;
     case TRAP_DIVISION_BY_ZERO:
         code = "R_DIVISION_BY_ZERO";
         snprintf(detail, sizeof detail, " (%s: left %lld, right %lld)", site->operation, (long long)a, (long long)b);
-        snprintf(record, sizeof record, "MYLANG-TRAP {\"version\":1,\"operation\":\"%s\",\"left\":%lld,\"right\":%lld}\n", site->operation, (long long)a, (long long)b);
+        snprintf(record, sizeof record, "\036MYLANG-TRAP {\"version\":1,\"operation\":\"%s\",\"left\":%lld,\"right\":%lld}\n", site->operation, (long long)a, (long long)b);
         break;
     case TRAP_LIST_BOUNDS:
         code = "R_LIST_BOUNDS";
         snprintf(detail, sizeof detail, " (index %lld, length %lld)", (long long)a, (long long)b);
-        snprintf(record, sizeof record, "MYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":%lld,\"length\":%lld}\n", (long long)a, (long long)b);
+        snprintf(record, sizeof record, "\036MYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":%lld,\"length\":%lld}\n", (long long)a, (long long)b);
         break;
     case TRAP_LIST_EMPTY:
         /* A pop of an empty list: the old core's code and `pop` detail (PY-COLLECTIONS-20). */
         code = "R_LIST_BOUNDS";
         snprintf(detail, sizeof detail, " (length %lld)", (long long)b);
-        snprintf(record, sizeof record, "MYLANG-TRAP {\"version\":1,\"operation\":\"pop\",\"length\":%lld}\n", (long long)b);
+        snprintf(record, sizeof record, "\036MYLANG-TRAP {\"version\":1,\"operation\":\"pop\",\"length\":%lld}\n", (long long)b);
         break;
     case TRAP_FLOAT_CONVERSION:
         code = "R_FLOAT_CONVERSION";
@@ -792,13 +884,13 @@ void myl_core_trap(int32_t index, int64_t a, int64_t b) {
         break;
     default:
         snprintf(detail, sizeof detail, " (cast: left %lld, width %d)", (long long)a, site->width);
-        snprintf(record, sizeof record, "MYLANG-TRAP {\"version\":1,\"operation\":\"cast\",\"left\":%lld,\"width\":%d}\n", (long long)a, site->width);
+        snprintf(record, sizeof record, "\036MYLANG-TRAP {\"version\":1,\"operation\":\"cast\",\"left\":%lld,\"width\":%d}\n", (long long)a, site->width);
         break;
     }
     stream_flush(&streams[0]);
     char text[1024];
     int len = snprintf(text, sizeof text, "%s:%d:%d: error[%s]: native execution failed%s\n  in %s at %s:%d:%d\n",
-        myl_core_source_path, site->line, site->column, code, detail, unqualified(site->function), myl_core_source_path, site->line, site->column);
+        myl_core_source_path, site->line, site->column, code, detail, site->function, myl_core_source_path, site->line, site->column);
     stream_write(&streams[1], text, (size_t)(len < (int)sizeof text ? len : (int)sizeof text - 1));
     trap_frames();
     stream_write(&streams[1], record, strlen(record));
@@ -812,9 +904,11 @@ void myl_core_trap(int32_t index, int64_t a, int64_t b) {
    runs no releases (RC-TRAP-TEARDOWN-1) and is not checked. */
 static void leak_report(void) {
     const char *flag = getenv("MYL_CORE_LEAKCHECK");
-    if (!flag || strcmp(flag, "1") != 0 || live_blocks == 0) return;
+    if (!flag || strcmp(flag, "1") != 0) return;
+    int64_t live = live_count();
+    if (live == 0) return;
     char text[96];
-    int len = snprintf(text, sizeof text, "myl-core leakcheck: %lld blocks live at exit\n", (long long)live_blocks);
+    int len = snprintf(text, sizeof text, "myl-core leakcheck: %lld blocks live at exit\n", (long long)live);
     os_write(2, (const unsigned char *)text, (size_t)len);
 }
 
@@ -855,7 +949,7 @@ static void trace_write(void) {
     char where[1024];
     for (size_t i = 0; i < count; ++i) {
         int len = trace_where(listed[i], where, sizeof where);
-        int name = (int)strlen(unqualified(listed[i]->function));
+        int name = (int)strlen(listed[i]->function);
         if (len > width) width = len;
         if (name > name_width) name_width = name;
     }
@@ -867,7 +961,7 @@ static void trace_write(void) {
         }
         if (i == count) break;
         trace_where(listed[i], where, sizeof where);
-        int len = snprintf(line, sizeof line, "  %-*s  %-*s  %s\n", width, where, name_width, unqualified(listed[i]->function), listed[i]->operation);
+        int len = snprintf(line, sizeof line, "  %-*s  %-*s  %s\n", width, where, name_width, listed[i]->function, listed[i]->operation);
         stream_write(&streams[1], line, (size_t)(len < (int)sizeof line ? len : (int)sizeof line - 1));
     }
 }

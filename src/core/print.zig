@@ -138,7 +138,7 @@ fn instruction(allocator: std.mem.Allocator, out: *std.ArrayList(u8), m: *const 
             try out.appendSlice(allocator, ", path");
             for (path.slice(), 0..) |step, i| try out.print(allocator, "{s}{d}", .{ if (i == 0) " " else ".", step });
         },
-        .err_trace => try out.print(allocator, " {s}", .{@tagName(@as(ir.TraceMode, @fromBackingInt(@intCast(@min(inst.data, 1)))))}),
+        .err_trace => try out.print(allocator, " {s}", .{@tagName(@as(ir.TraceMode, @fromBackingInt(@intCast(@min(inst.data, 4)))))}),
         .record_make, .list_set => {
             const operands = f.valueOperands(inst);
             for (0..operands.len()) |i| {

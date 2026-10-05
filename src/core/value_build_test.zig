@@ -375,3 +375,67 @@ test "equality of a recursive value is refused instead of expanding forever" {
     try std.testing.expectError(error.Unsupported, support.buildSource(arena.allocator(), recursive_equality, &refusal));
     try std.testing.expectEqualStrings("equality of a recursive value", refusal.reason);
 }
+
+const converting =
+    \\union Failure:
+    \\    text: str,
+    \\    code: int
+    \\
+    \\
+    \\def parse(x: int) -> Result[int, str]:
+    \\    if x < 0:
+    \\        return Err("negative")
+    \\    return Ok(x)
+    \\
+    \\
+    \\def forward(x: int) -> Result[int, str]:
+    \\    r = parse(x)
+    \\    return r
+    \\
+    \\
+    \\def same(x: int) -> Result[int, str]:
+    \\    v = parse(x)?
+    \\    return Ok(v)
+    \\
+    \\
+    \\def lift(x: int) -> Result[int, Failure]:
+    \\    v = parse(x)?
+    \\    return Ok(v)
+    \\
+    \\
+    \\
+    \\def good(r: Result[int, str]) -> bool:
+    \\    match r:
+    \\        case Ok(_):
+    \\            return True
+    \\        case Err(_):
+    \\            return False
+    \\
+    \\
+    \\def good_failure(r: Result[int, Failure]) -> bool:
+    \\    match r:
+    \\        case Ok(_):
+    \\            return True
+    \\        case Err(_):
+    \\            return False
+    \\
+    \\
+    \\def main(out: Stream) -> int:
+    \\    out.print(good(forward(1)), good(same(1)), good_failure(lift(1)))
+    \\    return 0
+    \\
+;
+
+// spec-case: NEW-CORE-TRY-1
+test "a ? that passes the error on appends its site, one that wraps it into a case of the caller's union is converted and names Union.case, a return of a variable Err is returned" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const text = try support.irText(arena.allocator(), converting);
+    const same = text[std.mem.indexOf(u8, text, "fn same").?..std.mem.indexOf(u8, text, "fn lift").?];
+    try std.testing.expect(contains(same, "err_trace append"));
+    const lift = text[std.mem.indexOf(u8, text, "fn lift").?..];
+    try std.testing.expect(contains(lift, "err_trace converted"));
+    // `return r` of a variable: the tag is tested and `returned` recorded on the Err arm.
+    const forward = text[std.mem.indexOf(u8, text, "fn forward").?..std.mem.indexOf(u8, text, "fn same").?];
+    try std.testing.expect(contains(forward, "err_trace returned"));
+}
