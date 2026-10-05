@@ -276,8 +276,9 @@ const LoopTargets = struct { id: usize, latch: ir.BlockId, exit: ir.BlockId };
 /// `iteration_check` on the alias has been built: from then on a write to the root is refused.
 const Alias = struct { hidden: u32, root: u32, iterating: bool = false };
 
-/// One step from a value to a part of it: a record field, or a list element by index.
-const Step = union(enum) { field: u32, element: ir.Ref };
+/// One step from a value to a part of it: a record field, a list element by index, or the payload
+/// of one case of a union (the narrowing `if x is None: ...` makes of an `Option`).
+const Step = union(enum) { field: u32, element: ir.Ref, payload: u32 };
 
 /// Where a value lives: a local and a path of steps from it, and how many times the local had
 /// been written when the place was named. A write to a hidden receiver (`s.items.append(v)`,
@@ -634,7 +635,8 @@ const FnBuilder = struct {
     }
 
     fn matchStatement(self: *FnBuilder, value_node: typed.NodeId, arms: []const typed.MatchArm, span: u32) Error!void {
-        const value = try self.expression(value_node);
+        var value_place: ?Place = null;
+        const value = try self.expressionPlace(value_node, &value_place);
         if (self.current == null) return;
         if (arms.len == 0) return self.mb.refuse("empty match", span);
         const tag = try self.emit(.{ .op = .union_tag, .ty = .u32, .a = value, .span = span });
@@ -653,7 +655,7 @@ const FnBuilder = struct {
                 try self.seal(arm_block);
                 const resume_at = next;
                 self.current = arm_block;
-                try self.armBody(arm, value, span);
+                try self.armBody(arm, value, value_place, span);
                 try self.endPath(base, &paths);
                 try self.jump(join);
                 self.current = resume_at;
@@ -661,7 +663,7 @@ const FnBuilder = struct {
                 try self.jump(arm_block);
                 try self.seal(arm_block);
                 self.current = arm_block;
-                try self.armBody(arm, value, span);
+                try self.armBody(arm, value, value_place, span);
                 try self.endPath(base, &paths);
                 try self.jump(join);
             }
@@ -671,10 +673,14 @@ const FnBuilder = struct {
         self.enter(join);
     }
 
-    fn armBody(self: *FnBuilder, arm: typed.MatchArm, value: ir.Ref, span: u32) Error!void {
+    fn armBody(self: *FnBuilder, arm: typed.MatchArm, value: ir.Ref, value_place: ?Place, span: u32) Error!void {
         if (arm.slot) |slot| {
             const payload = try self.payloadOf(value, arm.tag, span);
             try self.write(self.local(slot), self.current.?, payload);
+            // A checker-hidden binding (the narrowing of `x is None`) names the payload in place:
+            // a write through it must rebuild the union it came from.
+            const place: ?Place = if (value_place) |found| try self.extendPlace(found, .{ .payload = @intCast(arm.tag) }) else null;
+            try self.noteAlias(slot, place);
         }
         try self.statement(arm.body);
     }
@@ -815,6 +821,7 @@ const FnBuilder = struct {
                 if (self.mb.module.kind(list_type) != .list) return self.mb.refuse("element of a non-list value", span);
                 return self.emit(.{ .op = .list_get, .ty = self.mb.module.compound(list_type).list, .a = base, .b = index, .check = .exact, .span = span });
             },
+            .payload => |tag| return self.payloadOf(base, tag, span),
         }
     }
 
@@ -823,7 +830,19 @@ const FnBuilder = struct {
         switch (step) {
             .field => |index| return self.fieldSet(base, index, value, span),
             .element => |index| return self.listSet(base, index, value, span),
+            .payload => |tag| return self.payloadSet(base, tag, value, span),
         }
+    }
+
+    /// Union `base` rebuilt as case `tag` carrying `value` (boxed again when the payload is boxed).
+    fn payloadSet(self: *FnBuilder, base: ir.Ref, tag: u32, value: ir.Ref, span: u32) Error!ir.Ref {
+        const union_type = self.typeOfRef(base);
+        const cases = switch (self.mb.module.kind(union_type) orelse return self.mb.refuse(refuse_payload, span)) {
+            .@"union" => self.mb.module.compound(union_type).@"union",
+            else => return self.mb.refuse(refuse_payload, span),
+        };
+        if (tag >= cases.len or cases[tag] == .void) return self.mb.refuse(refuse_payload, span);
+        return self.emit(.{ .op = .union_make, .ty = union_type, .a = try self.boxFor(cases[tag], value, span), .data = tag, .span = span });
     }
 
     /// `list` with element `index` replaced by `value`; the index is checked, and ownership

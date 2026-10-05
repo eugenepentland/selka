@@ -306,7 +306,7 @@ test "the value fixtures end with no block live under MYL_CORE_LEAKCHECK=1, debu
     var dir = std.testing.tmpDir(.{});
     defer dir.cleanup();
     const root = try scratch(arena.allocator(), dir);
-    const names = [_][]const u8{ "v_records", "v_unions", "v_lists", "v_mut", "v_wide", "v_wide_managed", "v_nested", "v_mut_window", "v_equality", "v_mut_rebind", "v_arena", "v_str_eq", "v_methods" };
+    const names = [_][]const u8{ "v_records", "v_unions", "v_lists", "v_mut", "v_wide", "v_wide_managed", "v_nested", "v_mut_window", "v_equality", "v_mut_rebind", "v_arena", "v_str_eq", "v_methods", "v_narrow" };
     for (names) |name| {
         try std.testing.expectEqualStrings("", try leakReport(arena.allocator(), root, name, .debug));
         try std.testing.expectEqualStrings("", try leakReport(arena.allocator(), root, name, .release));
@@ -408,4 +408,18 @@ test "len of a string counts scalars, clear and copy keep value semantics, and k
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     try std.testing.expect(try matches(arena.allocator(), "v_methods", v_methods_output, 0));
+}
+
+const v_narrow_output =
+    \\2 105 140 3
+    \\142 40 2
+    \\0 -1
+    \\
+;
+
+// spec: NEW-CORE-PLACE-2
+test "a write through a narrowed Option (xs.append, xs[i] = v after `is None` returns) reaches the Option the caller holds" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    try std.testing.expect(try matches(arena.allocator(), "v_narrow", v_narrow_output, 0));
 }
