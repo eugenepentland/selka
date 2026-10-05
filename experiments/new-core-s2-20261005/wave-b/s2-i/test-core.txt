@@ -1,0 +1,23 @@
+build-slot: all 1 gate slot(s) busy; waiting (0s so far)
+build-slot: all 1 gate slot(s) busy; waiting (60s so far)
+build-slot: all 1 gate slot(s) busy; waiting (120s so far)
+build-slot: all 1 gate slot(s) busy; waiting (180s so far)
+build-slot: gate slot 1 after 220s (all 1 gate slot(s) busy)
+test-core
++- run test w
+no_such_file_in_tests_lang (debug): mylang-core test did not finish cleanly:
+error: cannot read /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-live-iteration/tests/lang/no_such_file_in_tests_lang.my: FileNotFound
+
+no_such_row: the new core failed to build the row:
+error: cannot read /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-live-iteration/test/core/row_no_such_row.my: FileNotFound
+
+failed command: ./.zig-cache/o/1fe30dde9bbeaadeaf843b1440c3672a/test --cache-dir=./.zig-cache --seed=0x180689b8 --listen=-
+
+Build Summary: 5/5 steps succeeded; 189/189 tests passed
+test-core success
++- run test 189 pass (189 total) 2m MaxRSS:127M
+   +- compile test debug native success 1s MaxRSS:322M
+      +- options success
+         +- compile exe mylang-core debug native cached 7ms MaxRSS:38M
+
+command_seconds=150.88

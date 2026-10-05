@@ -295,11 +295,6 @@ const Ssa = struct {
 /// Where `break` and `continue` of one checked loop go.
 const LoopTargets = struct { id: usize, latch: ir.BlockId, exit: ir.BlockId };
 
-/// A checker-hidden local that names a list or string place (`root`) while a
-/// loop iterates it or an index reads it. `iterating` is set once the loop's
-/// `iteration_check` on the alias has been built: from then on a write to the root is refused.
-const Alias = struct { hidden: u32, root: u32, iterating: bool = false };
-
 /// One step from a value to a part of it: a record field, a list element by index, or the payload
 /// of one case of a union (the narrowing `if x is None: ...` makes of an `Option`).
 const Step = union(enum) { field: u32, element: ir.Ref, payload: u32 };
@@ -318,8 +313,6 @@ const FnBuilder = struct {
     ssa: Ssa = .{},
     loops: std.ArrayList(LoopTargets) = .empty,
     checked: typed.Function,
-    /// Active aliases, innermost last; a block statement drops the ones it opened.
-    aliases: std.ArrayList(Alias) = .empty,
     /// The place each checker-hidden receiver local was initialized from.
     places: std.AutoHashMapUnmanaged(u32, Place) = .empty,
     /// How many times each local has been assigned so far (the builder's own count of writes).
@@ -496,8 +489,8 @@ const FnBuilder = struct {
 
     // ---- live places (D1) -----------------------------------------------------------
 
-    /// Record where a checker-hidden receiver came from: its `place` (so a write through it
-    /// can be stored back), and, for a list or string, an alias of the place's root for D1.
+    /// Remember a hidden receiver's place for write-back. Checker-generated refreshes
+    /// read the current root into a new SSA value; they never retain an entry alias.
     fn noteAlias(self: *FnBuilder, slot: typed.LocalId, place: ?Place) Error!void {
         const name = self.checked.scope.locals[@backingInt(slot)].name;
         if (name.len == 0 or name[0] != '<') return;
@@ -507,34 +500,32 @@ const FnBuilder = struct {
             return;
         };
         try self.places.put(self.allocator(), variable, found);
-        const ty = self.ssa.types.items[variable];
-        if (ty != .str and !(ty.isCompound() and self.mb.module.kind(ty).? == .list)) return;
-        try self.aliases.append(self.allocator(), .{ .hidden = variable, .root = found.root });
     }
 
-    /// D1 (live-place iteration): a loop over a place sees the body's writes to it.
-    /// The Core IR reads the alias, which equals the place only while nothing writes
-    /// the place, so the builder refuses such a write instead of iterating a snapshot.
-    fn guardPlace(self: *FnBuilder, variable: u32, span: u32) Error!void {
-        for (self.aliases.items) |alias| {
-            if (alias.iterating and (alias.root == variable or alias.hidden == variable)) return self.mb.refuse("write to a list while it is iterated (live-place iteration)", span);
-        }
-    }
-
-    /// A loop over `alias` is running: it iterates that list for good, whatever the body assigns to the name.
-    /// Assigning the alias itself would break that, which the checker never emits.
-    fn guardAlias(self: *FnBuilder, variable: u32, span: u32) Error!void {
-        for (self.aliases.items) |alias| {
-            if (alias.iterating and alias.hidden == variable) return self.mb.refuse("write to a list while it is iterated (live-place iteration)", span);
-        }
-    }
-
-    /// The loop's `iteration_check` on `owner` has been reached: the alias is iterated from here on.
-    fn markIterating(self: *FnBuilder, owner: typed.LocalId) void {
-        const variable = self.local(owner);
-        for (self.aliases.items) |*alias| {
-            if (alias.hidden == variable) alias.iterating = true;
-        }
+    /// The checker refreshes writable iteration places before each guard. An entry-only
+    /// receiver is one immutable SSA value, so its length cannot change under COW.
+    fn iterationCheck(self: *FnBuilder, operation: anytype, span: u32) Error!ir.Ref {
+        if (self.version(self.local(operation.owner)) <= 1) return .none;
+        const receiver = try self.receiverOf(operation.owner);
+        const ty = self.typeOfRef(receiver);
+        const raw_length = if (ty == .str) try self.stringChars(receiver, span) else try self.emit(.{
+            .op = if (self.mb.module.kind(ty) == .dict) .dict_len else .list_len,
+            .ty = .u64,
+            .a = receiver,
+            .span = span,
+        });
+        const expected = try self.expression(operation.arguments[0]);
+        const length = if (self.typeOfRef(expected) == .u64) raw_length else try self.emit(.{ .op = .convert, .ty = self.typeOfRef(expected), .a = raw_length, .span = span });
+        const same = try self.emit(.{ .op = .cmp, .ty = .bool, .a = length, .b = expected, .data = @backingInt(ir.Predicate.eq), .span = span });
+        const passed = try self.newBlock();
+        const failed = try self.newBlock();
+        try self.branch(same, passed, failed, span);
+        try self.seal(failed);
+        self.current = failed;
+        _ = try self.emit(.{ .op = .@"unreachable", .ty = .void, .data = flags.iteration_trap, .span = span });
+        try self.seal(passed);
+        self.current = passed;
+        return .none;
     }
 
     // ---- statements ---------------------------------------------------------------
@@ -545,15 +536,10 @@ const FnBuilder = struct {
         const span: u32 = @intCast(s.span.start);
         switch (s.data) {
             .block => |items| {
-                const open = self.aliases.items.len;
                 for (items) |item| try self.statement(item);
-                self.aliases.shrinkRetainingCapacity(@min(open, self.aliases.items.len));
             },
             .initialize, .assign => |store| {
                 if (store.element) return self.mb.refuse("element store", span);
-                // Rebinding the name of a list a loop iterates leaves the loop on the list it started with,
-                // which the alias is; only a write to the list is refused (`guardPlace`).
-                try self.guardAlias(self.local(store.slot), span);
                 var place: ?Place = null;
                 const value = try self.expressionPlace(store.value, &place);
                 const block = self.current orelse return;
@@ -932,7 +918,6 @@ const FnBuilder = struct {
 
     /// Store `value` at `place`: rebuild the path from the root's current value and write the root.
     fn storePlace(self: *FnBuilder, place: Place, value: ir.Ref, span: u32) Error!ir.Ref {
-        try self.guardPlace(place.root, span);
         const block = self.current orelse return .none;
         const root = try self.read(place.root, block);
         const rebuilt = try self.storeInto(root, place.steps, value, span);
@@ -1528,7 +1513,6 @@ const FnBuilder = struct {
                 return if (ty == .void) .none else element;
             },
             .append => {
-                try self.guardPlace(self.local(owner), span);
                 var value = try self.expression(argument_nodes[0]);
                 if (self.current == null) return .none;
                 if (value == .none or self.typeOfRef(value) == .void) value = try self.constant(.bool, 0);
@@ -1540,7 +1524,6 @@ const FnBuilder = struct {
             },
             .write => {
                 if (receiver_type == .str) return self.mb.refuse("string element write", span);
-                try self.guardPlace(self.local(owner), span);
                 const index = try self.expression(argument_nodes[0]);
                 var value = try self.expression(argument_nodes[1]);
                 if (self.current == null) return .none;
@@ -1551,7 +1534,6 @@ const FnBuilder = struct {
             },
             .pop => {
                 if (!receiver_type.isCompound() or self.mb.module.kind(receiver_type) != .list) return self.mb.refuse("pop of a non-list", span);
-                try self.guardPlace(self.local(owner), span);
                 const list = try self.writableReceiverOf(owner, span);
                 // The last element is read first (index `len - 1`, wrapping to a failing index
                 // when empty, which the read reports as the empty-list pop), then dropped.
@@ -1565,7 +1547,6 @@ const FnBuilder = struct {
             // `xs.clear()` replaces the list with an empty one; the old value dies by ownership.
             .clear => {
                 if (self.mb.module.kind(receiver_type) != .list) return self.mb.refuse("clear of a non-list", span);
-                try self.guardPlace(self.local(owner), span);
                 const empty = try self.emit(.{ .op = .list_new, .ty = receiver_type, .a = try self.constant(.i64, 0), .span = span });
                 try self.writeOwner(owner, empty, span);
                 return .none;
@@ -1575,16 +1556,10 @@ const FnBuilder = struct {
                 if (self.mb.module.kind(receiver_type) != .list) return self.mb.refuse("copy of a non-list", span);
                 return self.receiverOf(owner);
             },
-            // A write to an iterated place while the loop runs is refused (`guardPlace`), so the
-            // length cannot change and the check cannot fail.
-            .iteration_check => {
-                self.markIterating(owner);
-                return .none;
-            },
+            .iteration_check => return self.iterationCheck(operation, span),
             // `xs.sort()` (and what `sorted(xs)` sorts): the runtime returns the sorted list, which replaces the place.
             .sort => {
                 if (self.mb.module.kind(receiver_type) != .list) return self.mb.refuse("sort of a non-list", span);
-                try self.guardPlace(self.local(owner), span);
                 const element = self.mb.module.compound(receiver_type).list;
                 const code = sortKind(self.mb.module, element) orelse return self.mb.refuse("sort of this element type", span);
                 const list = try self.writableReceiverOf(owner, span);
@@ -1712,7 +1687,6 @@ fn buildFunction(mb: *ModuleBuilder, checked: typed.Function, declared: ir.Funct
     defer b.ssa.sealed.deinit(mb.allocator);
     defer b.ssa.types.deinit(mb.allocator);
     defer b.loops.deinit(mb.allocator);
-    defer b.aliases.deinit(mb.allocator);
     for (checked.scope.locals) |local| {
         const ty = mb.mapType(local.ty, @intCast(local.declaration.start)) catch .void;
         try b.ssa.types.append(mb.allocator, ty);

@@ -66,7 +66,7 @@ pub const MainResult = struct { ok_tag: u32, error_tag: u32 };
 /// pop of an empty list (`R_LIST_BOUNDS`, operation `pop`); `trace` marks an
 /// error-trace site, which never traps; `assertion` is a failed `assert` or contract clause (its
 /// `width` is the `typed.AssertionKind`, its `operation` the message).
-pub const TrapKind = enum(u8) { overflow, division_by_zero, list_bounds, float_conversion, cast, fact, list_empty, trace, assertion };
+pub const TrapKind = enum(u8) { overflow, division_by_zero, list_bounds, float_conversion, cast, fact, list_empty, trace, assertion, iteration_mutation = 10 };
 
 const Site = struct { kind: TrapKind, location: Location, width: u16, operation: []const u8, function: []const u8 };
 
@@ -1174,24 +1174,31 @@ const FunctionEmitter = struct {
                 try self.storeOperand(out, self.function.signature.ret, inst.a, "%ret");
                 try out.appendSlice(self.a(), "  ret void\n");
             } else try out.print(self.a(), "  ret {s}\n", .{try self.typedValue(inst.a)}),
-            .@"unreachable" => if (inst.data == capacity_assert) {
-                const location = self.state.options.locator.locate(self.state.options.locator.context, inst.span);
-                const index = try self.state.site(.{ .kind = .fact, .location = location, .width = 64, .operation = "a stack list's length below its capacity", .function = self.function.name });
-                try out.print(self.a(), "  call void @myl_core_trap(i32 {d}, i64 0, i64 0){s}\n  unreachable\n", .{ index, try self.trapLocation(index) });
-            } else if (inst.data == unique_assert) {
-                // `own.zig`'s assert of a statically unique update (verify builds only).
-                const location = self.state.options.locator.locate(self.state.options.locator.context, inst.span);
-                const index = try self.state.site(.{ .kind = .fact, .location = location, .width = 32, .operation = "count == 1 before an in-place update", .function = self.function.name });
-                try out.print(self.a(), "  call void @myl_core_trap(i32 {d}, i64 0, i64 1){s}\n  unreachable\n", .{ index, try self.trapLocation(index) });
-            } else if (inst.data & flags.assertion_trap != 0) {
-                // A failed `assert` or contract clause: the message is in the module's string table.
-                const location = self.state.options.locator.locate(self.state.options.locator.context, inst.span);
-                const kind: u16 = @truncate(inst.data >> 32);
-                const message = self.state.module.strings.items[@as(u32, @truncate(inst.data))];
-                const index = try self.state.site(.{ .kind = .assertion, .location = location, .width = kind, .operation = message, .function = self.function.name });
-                try out.print(self.a(), "  call void @myl_core_assert_fail(i32 {d}){s}\n  unreachable\n", .{ index, try self.trapLocation(index) });
-            } else try out.appendSlice(self.a(), "  unreachable\n"),
+            .@"unreachable" => try self.trapTerminator(out, inst),
         }
+    }
+
+    fn trapTerminator(self: *FunctionEmitter, out: *Out, inst: ir.Inst) !void {
+        if (inst.data == capacity_assert) {
+            const location = self.state.options.locator.locate(self.state.options.locator.context, inst.span);
+            const index = try self.state.site(.{ .kind = .fact, .location = location, .width = 64, .operation = "a stack list's length below its capacity", .function = self.function.name });
+            try out.print(self.a(), "  call void @myl_core_trap(i32 {d}, i64 0, i64 0){s}\n  unreachable\n", .{ index, try self.trapLocation(index) });
+        } else if (inst.data == unique_assert) {
+            // `own.zig`'s assert of a statically unique update (verify builds only).
+            const location = self.state.options.locator.locate(self.state.options.locator.context, inst.span);
+            const index = try self.state.site(.{ .kind = .fact, .location = location, .width = 32, .operation = "count == 1 before an in-place update", .function = self.function.name });
+            try out.print(self.a(), "  call void @myl_core_trap(i32 {d}, i64 0, i64 1){s}\n  unreachable\n", .{ index, try self.trapLocation(index) });
+        } else if (inst.data == flags.iteration_trap) {
+            const index = try self.site(.iteration_mutation, inst, "iteration");
+            try out.print(self.a(), "  call void @myl_core_trap(i32 {d}, i64 0, i64 0){s}\n  unreachable\n", .{ index, try self.trapLocation(index) });
+        } else if (inst.data & flags.assertion_trap != 0) {
+            // A failed `assert` or contract clause: the message is in the module's string table.
+            const location = self.state.options.locator.locate(self.state.options.locator.context, inst.span);
+            const kind: u16 = @truncate(inst.data >> 32);
+            const message = self.state.module.strings.items[@as(u32, @truncate(inst.data))];
+            const index = try self.state.site(.{ .kind = .assertion, .location = location, .width = kind, .operation = message, .function = self.function.name });
+            try out.print(self.a(), "  call void @myl_core_assert_fail(i32 {d}){s}\n  unreachable\n", .{ index, try self.trapLocation(index) });
+        } else try out.appendSlice(self.a(), "  unreachable\n");
     }
 
     fn arithmetic(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) !void {
@@ -2114,6 +2121,14 @@ const FunctionEmitter = struct {
         const m = self.state.module;
         const signature = if (inst.op == .call_indirect) m.compound(self.typeOf(inst.a)).@"fn" else m.functions.items[inst.a.index()].signature;
         const external = signature.linkage == .extern_c;
+        const borrowed_bytes = external and signature.ret == .bytes and signature.owned == 0;
+        const text_parameter = signature.params.len == 1 and signature.params[0] == .str;
+        if (inst.op == .call and borrowed_bytes and text_parameter and
+            std.mem.eql(u8, m.functions.items[inst.a.index()].name, flags.text_encode_symbol))
+        {
+            const source = self.function.operands(inst.data)[0];
+            return out.print(self.a(), same_pointer, .{ name, try self.value(source) });
+        }
         const ret = signature.ret;
         const sret = !external and m.passedInMemory(ret);
         var arguments: Out = .empty;

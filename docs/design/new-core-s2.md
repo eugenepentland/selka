@@ -1141,3 +1141,30 @@ untouched, as authorized by the user. The old frontend's pre-existing managed
 origin overflow at parameter position 16 is reported rather than widened.
 Aggregate Wave A qualification is recorded in
 `experiments/new-core-s2-20261005/wave-a/REPORT.md`.
+
+
+## 16. Live-place iteration and text ownership (S2-I as built)
+
+The accepted checker already expresses D1 as a refreshed hidden receiver at each
+step, with an entry snapshot when the body syntactically rebinds the root. The
+new builder now accepts those refresh assignments instead of refusing writes
+through its former syntactic alias table. Place write-back still follows the
+existing SSA receiver paths. No frozen IR shape changed.
+
+An `iteration_check` on a refreshed receiver loads the current length, compares
+it with the entry length and branches to a located `R_LIST_ITERATION_MUTATION`
+trap on a difference. Strings use scalar length and dictionaries use dict length;
+stable entry receivers omit the guard. Element writes, same-length replacements
+and appends followed by break/continue follow the accepted old-core behavior.
+Facts belong to each refreshed SSA value, so a changing place gets no immutable
+entry-length claim. The 20 S0/S1 benchmark definitions remain identical.
+
+The exact extern helper `myl_core_text_encode(str) -> bytes` is a pointer identity
+when its signature borrows the source. Ownership ties borrowed byte uses to that
+source and retains an escaping byte value. This removes allocation and count
+traffic for a borrowed encode while preserving an independently escaping result.
+Record phis remain owned. The existing leak fixture helper now checks exit status
+and stdout as well as stderr, including its intentional status-255 trap fixture.
+
+Package commands, results and the implementation commit are recorded in
+`experiments/new-core-s2-20261005/wave-b/s2-i/README.md`.

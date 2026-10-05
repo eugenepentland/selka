@@ -1,0 +1,7 @@
+$ scripts/build-slot.sh build -- /usr/bin/time -f %e -o /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-live-iteration/.mylang-cache/wave-b/s2-i/fuzz-replay-seconds.txt python3 experiments/new-core-s2-20261005/wave-a/integration/fuzz_qualification.py --kind iteration --cases 50 --seed 512 --mylang /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-live-iteration/zig-out/bin/mylang --core /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-live-iteration/zig-out/bin/mylang-core --evidence /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-live-iteration/experiments/new-core-s2-20261005/wave-b/s2-i/fuzz --cache-root /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-live-iteration/.mylang-cache/wave-b/s2-i/fuzz
+qualification progress: iteration: seen=25 elapsed=144.20s
+qualification progress: iteration: seen=50 elapsed=286.91s
+mut,records,alias                  cases=50 old_rejected=0 refused=0 compared=750 mismatch=0 fact=0 traps=93 caught=0
+qualification {"kind": "iteration", "qualified": true, "accepted": 50, "old_rejected": 0, "core_refused": 0, "core_build_failed": 0, "elapsed_seconds": 291.6571173227858}
+
+exit=0 command_seconds=291.72

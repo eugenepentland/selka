@@ -449,6 +449,10 @@ fn leakChecked(arena: std.mem.Allocator, root: []const u8, name: []const u8, rel
     try run_argv.append(arena, output);
     try run_argv.appendSlice(arena, args);
     const ran = try std.process.run(arena, std.testing.io, .{ .argv = run_argv.items, .environ_map = &environment });
+    try std.testing.expect(ran.term == .exited);
+    const expected_status: u8 = if (std.mem.eql(u8, name, "control")) 255 else 0;
+    try std.testing.expectEqual(expected_status, ran.term.exited);
+    try std.testing.expect(ran.stdout.len > 0);
     return ran.stderr;
 }
 
@@ -782,4 +786,46 @@ test "a record phi read only through its fields still takes its operands, so uns
     try std.testing.expect(ran.term == .exited and ran.term.exited == 0);
     try std.testing.expectEqualStrings("48 1 1\n", ran.stdout);
     try std.testing.expectEqualStrings("", ran.stderr);
+}
+
+/// A heap text with byte reads through encode; the escaping form returns bytes
+/// from a helper while the source parameter is borrowed.
+fn encodedModule(a: std.mem.Allocator, escaping: bool) !ir.Module {
+    var m: ir.Module = .{};
+    try m.functions.append(a, .{ .name = @import("flags.zig").text_encode_symbol, .signature = .{ .params = &.{.str}, .ret = .bytes, .linkage = .extern_c } });
+    var helper = try Hand.init(a, &m, "bytes_of", .{ .params = &.{.str}, .ret = .bytes });
+    const encoded_param = try helper.emit(.{ .op = .call, .ty = .bytes, .a = @fromBackingInt(0), .data = try helper.extra(&.{try helper.param(0)}) });
+    _ = try helper.emit(.{ .op = .ret, .ty = .void, .a = encoded_param });
+    _ = try helper.finish();
+    m.entry = 2;
+    try m.strings.append(a, "ab");
+    var h = try Hand.init(a, &m, "main", .{ .params = &.{.cap}, .ret = .i64 });
+    const literal = try h.loose(.{ .op = .str_const, .ty = .str });
+    const view = try h.emit(.{ .op = .str_view_of, .ty = .str_view, .a = literal, .b = try h.int(.u64, 0), .data = try h.extra(&.{try h.int(.u64, 2)}) });
+    const text = try h.emit(.{ .op = .str_from_view, .ty = .str, .a = view });
+    const bytes = try h.emit(.{ .op = .call, .ty = .bytes, .a = @fromBackingInt(if (escaping) 1 else 0), .data = try h.extra(&.{text}) });
+    const byte = try h.emit(.{ .op = .list_get, .ty = .u8, .a = bytes, .b = try h.int(.u64, 1), .check = .exact });
+    const number = try h.emit(.{ .op = .convert, .ty = .i64, .a = byte });
+    try h.printValues(try h.param(0), &.{number});
+    _ = try h.emit(.{ .op = .ret, .ty = .void, .a = try h.int(.i64, 0) });
+    _ = try h.finish();
+    return m;
+}
+
+// spec: NEW-CORE-TEXT-BORROW-1
+test "encode borrows its text without counting, and escaping bytes retain that source" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    var borrowed = try encodedModule(arena.allocator(), false);
+    const first = try support.runOwned(arena.allocator(), &borrowed, .{ .release = true, .verify = true });
+    try std.testing.expectEqual(@as(u8, 0), first.status);
+    try std.testing.expectEqualStrings("98\n", first.stdout);
+    try std.testing.expectEqualStrings("", first.stderr);
+    try std.testing.expect(!contains(first.llvm, "call ptr @myl_core_text_encode"));
+    var escaped = try encodedModule(arena.allocator(), true);
+    const second = try support.runOwned(arena.allocator(), &escaped, .{ .verify = true });
+    try std.testing.expectEqual(@as(u8, 0), second.status);
+    try std.testing.expectEqualStrings("98\n", second.stdout);
+    try std.testing.expectEqualStrings("", second.stderr);
+    try std.testing.expect(contains(try print.module(arena.allocator(), &escaped), "retain "));
 }
