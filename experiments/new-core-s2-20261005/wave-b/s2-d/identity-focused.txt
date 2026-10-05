@@ -1,0 +1,16 @@
+file                     tests | debug   match misma unsup | release match misma unsup
+--------------------------------------------------------------------------------------
+d_view_identity              9 |             0     0     9 |             0     0     9
+d_collections                8 |             8     0     0 |             8     0     0
+--------------------------------------------------------------------------------------
+TOTAL                       17
+  debug    matching 8, mismatching 0, unsupported 9 (of 17 tests; 8 supported)
+  release  matching 8, mismatching 0, unsupported 9 (of 17 tests; 8 supported)
+
+blocking features of the unsupported tests (tests / files):
+     7 /  1  aggregate or captured dictionary alias combined with a live view
+     1 /  1  fixed array type
+     1 /  1  live dictionary view with unproved source identity
+
+blocking features per file (file: tests unsupported of tests; the features, most common first):
+  d_view_identity                  9 of   9: aggregate or captured dictionary alias combined with a live view x7, fixed array type x1, live dictionary view with unproved source identity x1

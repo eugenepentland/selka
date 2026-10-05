@@ -1,0 +1,85 @@
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: all 3 build slot(s) busy; waiting (60s so far)
+build-slot: build slot 1 after 86s (all 3 build slot(s) busy)
+row_dict_lookup.my:5:52: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def batch_result(size: int, batch: int, seed: int, values: list[int], keys: list[str], lookup: dict[int, int], lookup_str: dict[str, int]) -> int:
+                                                     ^
+row_dict_lookup.my:5:71: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def batch_result(size: int, batch: int, seed: int, values: list[int], keys: list[str], lookup: dict[int, int], lookup_str: dict[str, int]) -> int:
+                                                                        ^
+row_dict_lookup.my:5:112: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def batch_result(size: int, batch: int, seed: int, values: list[int], keys: list[str], lookup: dict[int, int], lookup_str: dict[str, int]) -> int:
+                                                                                                                 ^
+row_dict_lookup_str.my:5:52: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def batch_result(size: int, batch: int, seed: int, values: list[int], keys: list[str], lookup: dict[int, int], lookup_str: dict[str, int]) -> int:
+                                                     ^
+row_dict_lookup_str.my:5:88: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def batch_result(size: int, batch: int, seed: int, values: list[int], keys: list[str], lookup: dict[int, int], lookup_str: dict[str, int]) -> int:
+                                                                                         ^
+row_dict_update.my:5:71: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def batch_result(size: int, batch: int, seed: int, values: list[int], keys: list[str], lookup: dict[int, int], lookup_str: dict[str, int]) -> int:
+                                                                        ^
+row_dict_update.my:5:88: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def batch_result(size: int, batch: int, seed: int, values: list[int], keys: list[str], lookup: dict[int, int], lookup_str: dict[str, int]) -> int:
+                                                                                         ^
+row_dict_update.my:5:112: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def batch_result(size: int, batch: int, seed: int, values: list[int], keys: list[str], lookup: dict[int, int], lookup_str: dict[str, int]) -> int:
+                                                                                                                 ^
+row_dict_update_str.my:5:88: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def batch_result(size: int, batch: int, seed: int, values: list[int], keys: list[str], lookup: dict[int, int], lookup_str: dict[str, int]) -> int:
+                                                                                         ^
+row_dict_update_str.my:5:112: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def batch_result(size: int, batch: int, seed: int, values: list[int], keys: list[str], lookup: dict[int, int], lookup_str: dict[str, int]) -> int:
+                                                                                                                 ^
+row_set_dedup.my:5:52: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def batch_result(size: int, batch: int, seed: int, values: list[int], keys: list[str], lookup: dict[int, int], lookup_str: dict[str, int]) -> int:
+                                                     ^
+row_set_dedup.my:5:71: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def batch_result(size: int, batch: int, seed: int, values: list[int], keys: list[str], lookup: dict[int, int], lookup_str: dict[str, int]) -> int:
+                                                                        ^
+row_set_dedup.my:5:88: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def batch_result(size: int, batch: int, seed: int, values: list[int], keys: list[str], lookup: dict[int, int], lookup_str: dict[str, int]) -> int:
+                                                                                         ^
+row_set_dedup.my:5:112: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def batch_result(size: int, batch: int, seed: int, values: list[int], keys: list[str], lookup: dict[int, int], lookup_str: dict[str, int]) -> int:
+                                                                                                                 ^
+
+### dict_lookup (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 31.031 | 16.942 | same |
+| new core release | 15.677 | 15.210 | same |
+| Rust | 42.136 | 40.715 | same |
+| Zig ReleaseSafe | 52.256 | 31.061 | same |
+
+### dict_lookup_str (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 61.557 | 28.917 | same |
+| new core release | 22.620 | 19.885 | same |
+| Rust | 60.797 | 57.570 | same |
+| Zig ReleaseSafe | 62.553 | 31.866 | same |
+
+### dict_update (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 829.381 | 733.449 | same |
+| new core release | 199.720 | 202.974 | same |
+| Rust | 415.402 | 399.165 | same |
+| Zig ReleaseSafe | 550.250 | 312.223 | same |
+
+### dict_update_str (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 1015.588 | 854.181 | same |
+| new core release | 284.508 | 263.692 | same |
+| Rust | 918.343 | 863.812 | same |
+| Zig ReleaseSafe | 731.157 | 405.386 | same |
+
+### set_dedup (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 175.304 | 168.472 | same |
+| new core release | 24.520 | 29.895 | same |
+| Rust | 62.722 | 62.574 | same |
+| Zig ReleaseSafe | 81.144 | 37.615 | same |

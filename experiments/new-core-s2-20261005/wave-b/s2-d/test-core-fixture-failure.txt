@@ -1,0 +1,198 @@
+build-slot: all 1 gate slot(s) busy; waiting (0s so far)
+build-slot: all 1 gate slot(s) busy; waiting (60s so far)
+build-slot: gate slot 1 after 95s (all 1 gate slot(s) busy)
+test-core
++- run test 178 pass, 13 fail (191 total)
+error: 'build_test.test.a construct the new core does not support stops the build with a reason and position' failed:
+       expected error.Unsupported, found .{ .compounds = .{ .items = { .{ ... } }, .capacity = 3 }, .functions = .{ .items = { .{ ... } }, .capacity = 2 }, .strings = .{ .items = { { ... }, { ... } }, .capacity = 9 }, .entry = 0 }
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:57:9: 0x1ec7b26 in expectError__anon_133140 (std.zig)
+               return error.TestExpectedError;
+               ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-dictionaries/src/core/build_test.zig:114:5: 0x21b8d84 in test.a construct the new core does not support stops the build with a reason and position (root_test.zig)
+           try std.testing.expectError(error.Unsupported, outcome);
+           ^
+error: 's2_ir_test.test.S2 IR dict_new emits valid LLVM and verifies its result type' failed:
+       no_such_file_in_tests_lang (debug): mylang-core test did not finish cleanly:
+       error: cannot read /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-dictionaries/tests/lang/no_such_file_in_tests_lang.my: FileNotFound
+
+       no_such_row: the new core failed to build the row:
+       error: cannot read /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-dictionaries/test/core/row_no_such_row.my: FileNotFound
+
+       expected 1, found 0
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:111:17: 0x1ee8014 in expectEqualInner__anon_134533 (std.zig)
+                       return error.TestExpectedEqual;
+                       ^
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:75:5: 0x20d6373 in expectEqual (root_test.zig)
+           return expectEqualInner(T, expected, actual);
+           ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-dictionaries/src/core/s2_ir_test.zig:152:9: 0x20d63fe in exercise (root_test.zig)
+               try std.testing.expectEqual(@as(u8, 1), ran.status);
+               ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-dictionaries/src/core/s2_ir_test.zig:172:5: 0x20d903b in test.S2 IR dict_new emits valid LLVM and verifies its result type (root_test.zig)
+           try exercise(.dict_new, std.testing.allocator);
+           ^
+error: 's2_ir_test.test.S2 IR dict_len emits valid LLVM and verifies its result type' failed:
+       expected 1, found 0
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:111:17: 0x1ee8014 in expectEqualInner__anon_134533 (std.zig)
+                       return error.TestExpectedEqual;
+                       ^
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:75:5: 0x20d6373 in expectEqual (root_test.zig)
+           return expectEqualInner(T, expected, actual);
+           ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-dictionaries/src/core/s2_ir_test.zig:152:9: 0x20d63fe in exercise (root_test.zig)
+               try std.testing.expectEqual(@as(u8, 1), ran.status);
+               ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-dictionaries/src/core/s2_ir_test.zig:178:5: 0x20d8f2b in test.S2 IR dict_len emits valid LLVM and verifies its result type (root_test.zig)
+           try exercise(.dict_len, std.testing.allocator);
+           ^
+error: 's2_ir_test.test.S2 IR dict_find emits valid LLVM and verifies its result type' failed:
+       expected 1, found 255
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:111:17: 0x1ee8014 in expectEqualInner__anon_134533 (std.zig)
+                       return error.TestExpectedEqual;
+                       ^
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:75:5: 0x20d6373 in expectEqual (root_test.zig)
+           return expectEqualInner(T, expected, actual);
+           ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-dictionaries/src/core/s2_ir_test.zig:152:9: 0x20d63fe in exercise (root_test.zig)
+               try std.testing.expectEqual(@as(u8, 1), ran.status);
+               ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-dictionaries/src/core/s2_ir_test.zig:184:5: 0x20d8e1b in test.S2 IR dict_find emits valid LLVM and verifies its result type (root_test.zig)
+           try exercise(.dict_find, std.testing.allocator);
+           ^
+error: 's2_ir_test.test.S2 IR dict_entry_key emits valid LLVM and verifies its result type' failed:
+       expected 1, found 0
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:111:17: 0x1ee8014 in expectEqualInner__anon_134533 (std.zig)
+                       return error.TestExpectedEqual;
+                       ^
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:75:5: 0x20d6373 in expectEqual (root_test.zig)
+           return expectEqualInner(T, expected, actual);
+           ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-dictionaries/src/core/s2_ir_test.zig:152:9: 0x20d63fe in exercise (root_test.zig)
+               try std.testing.expectEqual(@as(u8, 1), ran.status);
+               ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-dictionaries/src/core/s2_ir_test.zig:190:5: 0x20d8d0b in test.S2 IR dict_entry_key emits valid LLVM and verifies its result type (root_test.zig)
+           try exercise(.dict_entry_key, std.testing.allocator);
+           ^
+error: 's2_ir_test.test.S2 IR dict_entry_value emits valid LLVM and verifies its result type' failed:
+       expected 1, found 0
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:111:17: 0x1ee8014 in expectEqualInner__anon_134533 (std.zig)
+                       return error.TestExpectedEqual;
+                       ^
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:75:5: 0x20d6373 in expectEqual (root_test.zig)
+           return expectEqualInner(T, expected, actual);
+           ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-dictionaries/src/core/s2_ir_test.zig:152:9: 0x20d63fe in exercise (root_test.zig)
+               try std.testing.expectEqual(@as(u8, 1), ran.status);
+               ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-dictionaries/src/core/s2_ir_test.zig:196:5: 0x20d8bfb in test.S2 IR dict_entry_value emits valid LLVM and verifies its result type (root_test.zig)
+           try exercise(.dict_entry_value, std.testing.allocator);
+           ^
+error: 's2_ir_test.test.S2 IR dict_set_value emits valid LLVM and verifies its result type' failed:
+       expected 1, found 255
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:111:17: 0x1ee8014 in expectEqualInner__anon_134533 (std.zig)
+                       return error.TestExpectedEqual;
+                       ^
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:75:5: 0x20d6373 in expectEqual (root_test.zig)
+           return expectEqualInner(T, expected, actual);
+           ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-dictionaries/src/core/s2_ir_test.zig:152:9: 0x20d63fe in exercise (root_test.zig)
+               try std.testing.expectEqual(@as(u8, 1), ran.status);
+               ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-dictionaries/src/core/s2_ir_test.zig:202:5: 0x20d8aeb in test.S2 IR dict_set_value emits valid LLVM and verifies its result type (root_test.zig)
+           try exercise(.dict_set_value, std.testing.allocator);
+           ^
+error: 's2_ir_test.test.S2 IR dict_insert emits valid LLVM and verifies its result type' failed:
+       expected 1, found 255
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:111:17: 0x1ee8014 in expectEqualInner__anon_134533 (std.zig)
+                       return error.TestExpectedEqual;
+                       ^
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:75:5: 0x20d6373 in expectEqual (root_test.zig)
+           return expectEqualInner(T, expected, actual);
+           ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-dictionaries/src/core/s2_ir_test.zig:152:9: 0x20d63fe in exercise (root_test.zig)
+               try std.testing.expectEqual(@as(u8, 1), ran.status);
+               ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-dictionaries/src/core/s2_ir_test.zig:208:5: 0x20d89db in test.S2 IR dict_insert emits valid LLVM and verifies its result type (root_test.zig)
+           try exercise(.dict_insert, std.testing.allocator);
+           ^
+error: 's2_ir_test.test.S2 IR dict_remove emits valid LLVM and verifies its result type' failed:
+       expected 1, found 255
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:111:17: 0x1ee8014 in expectEqualInner__anon_134533 (std.zig)
+                       return error.TestExpectedEqual;
+                       ^
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:75:5: 0x20d6373 in expectEqual (root_test.zig)
+           return expectEqualInner(T, expected, actual);
+           ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-dictionaries/src/core/s2_ir_test.zig:152:9: 0x20d63fe in exercise (root_test.zig)
+               try std.testing.expectEqual(@as(u8, 1), ran.status);
+               ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-dictionaries/src/core/s2_ir_test.zig:214:5: 0x20d88cb in test.S2 IR dict_remove emits valid LLVM and verifies its result type (root_test.zig)
+           try exercise(.dict_remove, std.testing.allocator);
+           ^
+error: 's2_ir_test.test.S2 IR dict_entries emits valid LLVM and verifies its result type' failed:
+       expected 1, found 0
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:111:17: 0x1ee8014 in expectEqualInner__anon_134533 (std.zig)
+                       return error.TestExpectedEqual;
+                       ^
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:75:5: 0x20d6373 in expectEqual (root_test.zig)
+           return expectEqualInner(T, expected, actual);
+           ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-dictionaries/src/core/s2_ir_test.zig:152:9: 0x20d63fe in exercise (root_test.zig)
+               try std.testing.expectEqual(@as(u8, 1), ran.status);
+               ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-dictionaries/src/core/s2_ir_test.zig:220:5: 0x20d87bb in test.S2 IR dict_entries emits valid LLVM and verifies its result type (root_test.zig)
+           try exercise(.dict_entries, std.testing.allocator);
+           ^
+error: 's2_ir_test.test.S2 IR dict_entry_live emits valid LLVM and verifies its result type' failed:
+       expected 1, found 0
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:111:17: 0x1ee8014 in expectEqualInner__anon_134533 (std.zig)
+                       return error.TestExpectedEqual;
+                       ^
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:75:5: 0x20d6373 in expectEqual (root_test.zig)
+           return expectEqualInner(T, expected, actual);
+           ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-dictionaries/src/core/s2_ir_test.zig:152:9: 0x20d63fe in exercise (root_test.zig)
+               try std.testing.expectEqual(@as(u8, 1), ran.status);
+               ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-dictionaries/src/core/s2_ir_test.zig:226:5: 0x20d86ab in test.S2 IR dict_entry_live emits valid LLVM and verifies its result type (root_test.zig)
+           try exercise(.dict_entry_live, std.testing.allocator);
+           ^
+error: 's2_ir_test.test.S2 IR dict_copy emits valid LLVM and verifies its result type' failed:
+       expected 1, found 255
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:111:17: 0x1ee8014 in expectEqualInner__anon_134533 (std.zig)
+                       return error.TestExpectedEqual;
+                       ^
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:75:5: 0x20d6373 in expectEqual (root_test.zig)
+           return expectEqualInner(T, expected, actual);
+           ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-dictionaries/src/core/s2_ir_test.zig:152:9: 0x20d63fe in exercise (root_test.zig)
+               try std.testing.expectEqual(@as(u8, 1), ran.status);
+               ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-dictionaries/src/core/s2_ir_test.zig:232:5: 0x20d859b in test.S2 IR dict_copy emits valid LLVM and verifies its result type (root_test.zig)
+           try exercise(.dict_copy, std.testing.allocator);
+           ^
+error: 's2_ir_test.test.S2 IR dict_clear emits valid LLVM and verifies its result type' failed:
+       expected 1, found 255
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:111:17: 0x1ee8014 in expectEqualInner__anon_134533 (std.zig)
+                       return error.TestExpectedEqual;
+                       ^
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:75:5: 0x20d6373 in expectEqual (root_test.zig)
+           return expectEqualInner(T, expected, actual);
+           ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-dictionaries/src/core/s2_ir_test.zig:152:9: 0x20d63fe in exercise (root_test.zig)
+               try std.testing.expectEqual(@as(u8, 1), ran.status);
+               ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-dictionaries/src/core/s2_ir_test.zig:238:5: 0x20d848b in test.S2 IR dict_clear emits valid LLVM and verifies its result type (root_test.zig)
+           try exercise(.dict_clear, std.testing.allocator);
+           ^
+failed command: ./.zig-cache/o/cebee504250a513e8b3139e29afb8756/test --cache-dir=./.zig-cache --seed=0xbea0b5b2 --listen=-
+
+Build Summary: 3/5 steps succeeded (1 failed); 178/191 tests passed (13 failed)
+test-core transitive failure
++- run test 178 pass, 13 fail (191 total)
+   +- compile test debug native success 1s MaxRSS:326M
+      +- options success
+         +- compile exe mylang-core debug native success 2s MaxRSS:317M
+
+Command exited with non-zero status 1
+elapsed=201.98 rss_kib=318632
