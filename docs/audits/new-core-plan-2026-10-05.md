@@ -3,6 +3,12 @@
 **Status:** the user accepted N1–N5 on 2026-10-05, as recommended in §4. N6 (arenas) is
 decided during S1. Nothing here is implemented yet.
 
+**Runtime decision (R1, the user, 2026-10-05): the new core keeps its own runtime.**
+- It grows S0's `src/core/runtime/core_rt.c`: 32-byte blocks with one saturating 32-bit count.
+- It never links the shared runtime, which has two counts, the GC and a QBE-shaped ABI.
+- The shared runtime's algorithms (text and UTF-8, dictionaries and sets, number
+  formatting and parsing, I/O and capabilities) are ported into it as S1–S3 need them.
+
 **Cache cleanup done the same day (DL-5):** the finished spike's 29 GB `.tmp` was removed.
 
 **Base:** `claude/runtime-levers-plan` (the campaign's `ac72a905` plus the runtime-levers plan
@@ -169,8 +175,8 @@ source ─ lexer ─ parser ─ sema/effects ─► typed.Program      (reused f
 **Reused from today:**
 - lexer, parser, sema, effects and capabilities, `typed.Program`, the module front end with
   its `.myi` facts, diagnostics and the CLI (front end: 140 files, 48.6k lines);
-- the runtime library's collections, text, bytes and I/O C code (about 10k lines), once one-count RC
-  (WP-5) lands in it;
+- the runtime library's *algorithms* for collections, text, bytes and I/O (about 10k lines of C),
+  **ported** into the new core's own runtime (R1), not linked;
 - the stdlib `.my` sources;
 - `tests/lang` (1,579 tests) as the conformance suite.
 
@@ -255,8 +261,8 @@ S0 measures these first; the targets below are then the budget each stage must h
 - **`typed.Program` may lack facts that `lower.zig` (909 lines) and `prelude_builtins.zig`
   (908) add while desugaring:** the `for` forms, `sum`, `zip`, `enumerate`. The new core may
   need to reuse or port that desugaring. S0 checks this.
-- **The shared runtime library sits on both cores' paths.** One-count RC (WP-5) has to land
-  there, or the new core needs its own RC runtime. Decide in S1.
+- **Runtime: decided, R1.** The new core has its own runtime, so porting text, Unicode,
+  dictionary and I/O algorithms is S1–S3 work. It is no longer coupled to WP-5.
 - **LLVM -O0 debug builds** cost 1–4.5 s of code generation per program cold, against QBE's
   0.3–1 s. Per-function caching must keep the edit-and-test loop fast; S1 measures it.
 
