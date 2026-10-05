@@ -352,7 +352,7 @@ const callback_in_index =
 ;
 
 // spec-case: NEW-CORE-PLACE-1
-test "an append to a list element is a push onto the element and a list_set of it; a str concatenation and a read through a place a callback rewrites are refused" {
+test "an append to a list element is a push onto the element and a list_set of it; a str concatenation is refused, and a read through a place a callback rewrites is the captured receiver's" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const text = try support.irText(arena.allocator(), append_to_element);
@@ -362,8 +362,9 @@ test "an append to a list element is a push onto the element and a list_set of i
     var refusal: build.Refusal = .{};
     try std.testing.expectError(error.Unsupported, support.buildSource(arena.allocator(), text_concatenation, &refusal));
     try std.testing.expectEqualStrings("concatenation", refusal.reason);
-    try std.testing.expectError(error.Unsupported, support.buildSource(arena.allocator(), callback_in_index, &refusal));
-    try std.testing.expectEqualStrings("write to a receiver's place while its arguments are evaluated", refusal.reason);
+    // A read through a receiver a callback rewrites the place of sees the receiver as captured.
+    const selected = try support.irText(arena.allocator(), callback_in_index);
+    try std.testing.expect(contains(selected, "list_get.exact i64 %1"));
 }
 
 const recursive_equality =
@@ -574,4 +575,27 @@ test "an assert is a branch on its condition to a block that ends in a trap carr
     const clamp = text[std.mem.indexOf(u8, text, "fn clamp").?..];
     try std.testing.expect(contains(clamp, "branch"));
     try std.testing.expect(contains(clamp, "unreachable"));
+}
+
+const stale_write =
+    \\def poke(xs: mut list[int]) -> int:
+    \\    xs[0] = 50
+    \\    return 1
+    \\
+    \\
+    \\def main(out: Stream) -> int:
+    \\    a = [1, 2, 3]
+    \\    a[poke(mut a)] = 9
+    \\    out.print(len(a))
+    \\    return 0
+    \\
+;
+
+// spec-case: NEW-CORE-PLACE-3
+test "a write through a receiver whose place an argument wrote is refused: the old runtime may apply it to a payload that is no longer reachable" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    var refusal: build.Refusal = .{};
+    try std.testing.expectError(error.Unsupported, support.buildSource(arena.allocator(), stale_write, &refusal));
+    try std.testing.expectEqualStrings("write to a receiver's place while its arguments are evaluated", refusal.reason);
 }

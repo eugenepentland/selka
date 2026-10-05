@@ -283,7 +283,7 @@ const Step = union(enum) { field: u32, element: ir.Ref, payload: u32 };
 /// Where a value lives: a local and a path of steps from it, and how many times the local had
 /// been written when the place was named. A write to a hidden receiver (`s.items.append(v)`,
 /// `xs[i][j] = v`) rebuilds the path and stores the new root back, unless the root was written
-/// since (`receiverOf`).
+/// since (`writableReceiverOf`).
 const Place = struct { root: u32, steps: []const Step, root_version: u32 = 0 };
 
 const FnBuilder = struct {
@@ -768,12 +768,20 @@ const FnBuilder = struct {
         try self.rebound.appendSlice(self.allocator(), paths[0]);
     }
 
-    /// The value of receiver `owner`. A receiver the checker rooted at a place (`frame.code`,
-    /// `xs`) is a reference to what the place held then; if evaluating the operation's arguments
-    /// wrote that place (a `mut` call in an index), whether the write shows through depends on
-    /// whether the callee changed the list in place or replaced it, which a value cannot tell,
-    /// so the operation is refused.
-    fn receiverOf(self: *FnBuilder, owner: typed.LocalId, span: u32) Error!ir.Ref {
+    /// The value a read through receiver `owner` sees. A receiver the checker rooted at a place
+    /// (`frame.code`, `xs`) was captured before the operation's arguments were evaluated, and
+    /// stays that snapshot when an argument writes the place (`xs[poke(mut xs)]` reads the list
+    /// as it was, a replaced field included): the hidden local's own value.
+    fn receiverOf(self: *FnBuilder, owner: typed.LocalId) Error!ir.Ref {
+        return self.read(self.local(owner), self.current.?);
+    }
+
+    /// The value a write through receiver `owner` applies to. If evaluating the arguments wrote
+    /// the receiver's place, the old runtime applies the write to the payload the receiver
+    /// captured, which is the place's still (an in-place change of the place) or no longer (the
+    /// callee replaced the field, or cleared the parent) reachable from it; a value cannot tell
+    /// the two apart, so the write is refused rather than guessed.
+    fn writableReceiverOf(self: *FnBuilder, owner: typed.LocalId, span: u32) Error!ir.Ref {
         const variable = self.local(owner);
         const alias = try self.read(variable, self.current.?);
         const place = self.places.get(variable) orelse return alias;
@@ -1439,14 +1447,14 @@ const FnBuilder = struct {
         const receiver_type = self.ssa.types.items[self.local(owner)];
         switch (kind) {
             .length => {
-                const receiver = try self.receiverOf(owner, span);
+                const receiver = try self.receiverOf(owner);
                 return if (receiver_type == .str) self.stringChars(receiver, span) else self.emit(.{ .op = .list_len, .ty = .u64, .a = receiver, .span = span });
             },
             .read => {
                 if (receiver_type == .str) return self.mb.refuse("string index", span);
                 const index = try self.expression(argument_nodes[0]);
                 if (self.current == null) return .none;
-                const receiver = try self.receiverOf(owner, span);
+                const receiver = try self.receiverOf(owner);
                 if (out) |place| place.* = try self.extendPlace(try self.placeOfLocal(owner), .{ .element = index });
                 return self.emit(.{ .op = .list_get, .ty = ty, .a = receiver, .b = index, .check = .exact, .span = span });
             },
@@ -1455,7 +1463,7 @@ const FnBuilder = struct {
                 const value = try self.expression(argument_nodes[0]);
                 if (self.current == null) return .none;
                 // The receiver is read after the argument, which may have written its place.
-                const list = try self.receiverOf(owner, span);
+                const list = try self.writableReceiverOf(owner, span);
                 const pushed = try self.emit(.{ .op = .list_push, .ty = self.function.inst(list).ty, .a = list, .b = value, .span = span });
                 try self.writeOwner(owner, pushed, span);
                 return .none;
@@ -1466,14 +1474,14 @@ const FnBuilder = struct {
                 const index = try self.expression(argument_nodes[0]);
                 const value = try self.expression(argument_nodes[1]);
                 if (self.current == null) return .none;
-                const list = try self.receiverOf(owner, span);
+                const list = try self.writableReceiverOf(owner, span);
                 try self.writeOwner(owner, try self.listSet(list, index, value, span), span);
                 return .none;
             },
             .pop => {
                 if (!receiver_type.isCompound() or self.mb.module.kind(receiver_type) != .list) return self.mb.refuse("pop of a non-list", span);
                 try self.guardPlace(self.local(owner), span);
-                const list = try self.receiverOf(owner, span);
+                const list = try self.writableReceiverOf(owner, span);
                 // The last element is read first (index `len - 1`, wrapping to a failing index
                 // when empty, which the read reports as the empty-list pop), then dropped.
                 const length = try self.emit(.{ .op = .list_len, .ty = .u64, .a = list, .span = span });
@@ -1494,7 +1502,7 @@ const FnBuilder = struct {
             // A copy of a value is the value: the next write to either copies (copy on write).
             .copy => {
                 if (self.mb.module.kind(receiver_type) != .list) return self.mb.refuse("copy of a non-list", span);
-                return self.receiverOf(owner, span);
+                return self.receiverOf(owner);
             },
             // A write to an iterated place while the loop runs is refused (`guardPlace`), so the
             // length cannot change and the check cannot fail.
@@ -1504,7 +1512,7 @@ const FnBuilder = struct {
             },
             .parse_int => {
                 if (receiver_type != .str) return self.mb.refuse("parse_int receiver", span);
-                return self.emit(.{ .op = .str_parse_int, .ty = ty, .a = try self.receiverOf(owner, span), .span = span });
+                return self.emit(.{ .op = .str_parse_int, .ty = ty, .a = try self.receiverOf(owner), .span = span });
             },
             else => return self.mb.refuse(@tagName(kind), span),
         }

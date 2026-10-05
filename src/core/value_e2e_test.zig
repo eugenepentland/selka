@@ -306,7 +306,7 @@ test "the value fixtures end with no block live under MYL_CORE_LEAKCHECK=1, debu
     var dir = std.testing.tmpDir(.{});
     defer dir.cleanup();
     const root = try scratch(arena.allocator(), dir);
-    const names = [_][]const u8{ "v_records", "v_unions", "v_lists", "v_mut", "v_wide", "v_wide_managed", "v_nested", "v_mut_window", "v_equality", "v_mut_rebind", "v_arena", "v_str_eq", "v_methods", "v_narrow" };
+    const names = [_][]const u8{ "v_records", "v_unions", "v_lists", "v_mut", "v_wide", "v_wide_managed", "v_nested", "v_mut_window", "v_equality", "v_mut_rebind", "v_arena", "v_str_eq", "v_methods", "v_narrow", "v_snapshot" };
     for (names) |name| {
         try std.testing.expectEqualStrings("", try leakReport(arena.allocator(), root, name, .debug));
         try std.testing.expectEqualStrings("", try leakReport(arena.allocator(), root, name, .release));
@@ -422,4 +422,20 @@ test "a write through a narrowed Option (xs.append, xs[i] = v after `is None` re
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     try std.testing.expect(try matches(arena.allocator(), "v_narrow", v_narrow_output, 0));
+}
+
+const v_snapshot_output =
+    \\1 50
+    \\1 4
+    \\1 1
+    \\1 50 1
+    \\11 3 17
+    \\
+;
+
+// spec: NEW-CORE-PLACE-3
+test "a read through a receiver captured before an argument wrote its place sees the receiver as it was" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    try std.testing.expect(try matches(arena.allocator(), "v_snapshot", v_snapshot_output, 0));
 }
