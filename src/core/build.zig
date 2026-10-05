@@ -569,11 +569,17 @@ const FnBuilder = struct {
         if (check.message_value != null) return self.mb.refuse("assertion with a message value", condition_span);
         const condition = try self.expression(check.condition);
         if (self.current == null) return;
-        const failed = try self.newBlock();
-        const passed = try self.newBlock();
-        try self.branch(condition, passed, failed, condition_span);
-        try self.seal(failed);
-        try self.seal(passed);
+        // A condition known at build time (the checker's `assert false` after a narrowing) leaves no
+        // branch: a true one is nothing, a false one ends the path.
+        const known = self.function.inst(self.function.resolve(condition));
+        if (known.op == .iconst and known.data != 0) return;
+        const failed = if (known.op == .iconst) self.current.? else try self.newBlock();
+        const passed: ?ir.BlockId = if (known.op == .iconst) null else try self.newBlock();
+        if (passed) |next| {
+            try self.branch(condition, next, failed, condition_span);
+            try self.seal(failed);
+            try self.seal(next);
+        }
         self.current = failed;
         const message = self.mb.module.strings.items.len;
         try self.mb.module.strings.append(self.allocator(), check.message);
@@ -1187,6 +1193,7 @@ const FnBuilder = struct {
     /// `==` and `!=` of two records, unions (enums, `Option`, `Result`) or lists: structural,
     /// never a pointer comparison. A `str` compares by bytes through the runtime; a recursive value is refused.
     fn aggregateCompare(self: *FnBuilder, op: typed.BinaryOp, left: ir.Ref, right: ir.Ref, span: u32) Error!ir.Ref {
+        if (op == .add and self.typeOfRef(left) == .str) return self.runtimeCall(flags.str_concat_symbol, &.{ .str, .str }, .str, &.{ left, right }, span);
         if (op != .eq and op != .ne) return self.mb.refuse(if (op == .add) "concatenation" else "operator on an aggregate value", span);
         const same = try self.equal(left, right, span);
         if (self.current == null or op == .eq) return same;
@@ -1214,9 +1221,7 @@ const FnBuilder = struct {
         const m = self.mb.module;
         const ty = self.typeOfRef(a);
         if (ty == .str) {
-            const callee = try self.mb.runtimeFunction(flags.str_eq_symbol, &.{ .str, .str }, .bool);
-            const data = try self.extraSlice(&.{ a, b });
-            return self.emit(.{ .op = .call, .ty = .bool, .a = @fromBackingInt(@intCast(callee)), .data = data, .span = span });
+            return self.runtimeCall(flags.str_eq_symbol, &.{ .str, .str }, .bool, &.{ a, b }, span);
         }
         // A recursive value would need a function that calls itself, not an expansion in place.
         if (self.recursive(ty, 0)) return self.mb.refuse("equality of a recursive value", span);
@@ -1361,7 +1366,15 @@ const FnBuilder = struct {
     fn cast(self: *FnBuilder, operand_node: typed.NodeId, target: ir.Type, span: u32) Error!ir.Ref {
         const operand = try self.expression(operand_node);
         if (self.current == null) return .none;
+        if (operand == .none) {
+            // `str(None)`: the text of a `unit` value.
+            if (target != .str or self.nodeOf(operand_node).ty != .unit) return self.mb.refuse("cast of a value that has no result", span);
+            const index = self.mb.module.strings.items.len;
+            try self.mb.module.strings.append(self.allocator(), "None");
+            return self.detached(.{ .op = .str_const, .ty = .str, .data = index });
+        }
         const source = self.function.inst(operand).ty;
+        if (target == .str) return self.textOf(operand, span);
         if (source == target) return operand;
         const from = source.integer() orelse return self.mb.refuse("cast source", span);
         const to = target.integer() orelse return self.mb.refuse("cast target", span);
@@ -1510,6 +1523,15 @@ const FnBuilder = struct {
                 self.markIterating(owner);
                 return .none;
             },
+            // `separator.join(parts)`: the runtime builds one string from a list of strings.
+            .join => {
+                if (receiver_type != .str) return self.mb.refuse("join on a non-string", span);
+                const parts = try self.expression(argument_nodes[0]);
+                if (self.current == null) return .none;
+                const parts_type = self.typeOfRef(parts);
+                if (self.mb.module.kind(parts_type) != .list or self.mb.module.compound(parts_type).list != .str) return self.mb.refuse("join of a list that is not of strings", span);
+                return self.runtimeCall(flags.str_join_symbol, &.{ .str, parts_type }, .str, &.{ try self.receiverOf(owner), parts }, span);
+            },
             .parse_int => {
                 if (receiver_type != .str) return self.mb.refuse("parse_int receiver", span);
                 return self.emit(.{ .op = .str_parse_int, .ty = ty, .a = try self.receiverOf(owner), .span = span });
@@ -1527,11 +1549,28 @@ const FnBuilder = struct {
         return self.emit(.{ .op = .convert, .ty = .i64, .a = chars, .check = .exact, .span = span });
     }
 
+    /// A call of the runtime function `symbol` (declared in the module on first use) with `arguments`.
+    fn runtimeCall(self: *FnBuilder, symbol: []const u8, params: []const ir.Type, ret: ir.Type, arguments: []const ir.Ref, span: u32) Error!ir.Ref {
+        const callee = try self.mb.runtimeFunction(symbol, params, ret);
+        return self.emit(.{ .op = .call, .ty = ret, .a = @fromBackingInt(@intCast(callee)), .data = try self.extraSlice(arguments), .span = span });
+    }
+
+    /// The text of `value`, as `str(value)` and an f-string part spell it: a string as it is, an
+    /// integer in decimal, a boolean as `True` or `False`.
+    fn textOf(self: *FnBuilder, value: ir.Ref, span: u32) Error!ir.Ref {
+        const ty = self.typeOfRef(value);
+        if (ty == .str) return value;
+        if (ty == .bool) return self.runtimeCall(flags.str_from_bool_symbol, &.{.bool}, .str, &.{value}, span);
+        const info = ty.integer() orelse return self.mb.refuse("text of a non-integer value", span);
+        const wide: ir.Type = if (info.signed) .i64 else .u64;
+        const operand = if (ty == wide) value else try self.emit(.{ .op = .convert, .ty = wide, .a = value, .span = span });
+        return self.runtimeCall(if (info.signed) flags.str_from_i64_symbol else flags.str_from_u64_symbol, &.{wide}, .str, &.{operand}, span);
+    }
+
     /// The length of string `value` in Unicode scalars, which is what `len` counts (not bytes):
     /// the runtime counts the bytes that do not continue a scalar.
     fn stringChars(self: *FnBuilder, value: ir.Ref, span: u32) Error!ir.Ref {
-        const callee = try self.mb.runtimeFunction(flags.str_chars_symbol, &.{.str}, .u64);
-        return self.emit(.{ .op = .call, .ty = .u64, .a = @fromBackingInt(@intCast(callee)), .data = try self.extraSlice(&.{value}), .span = span });
+        return self.runtimeCall(flags.str_chars_symbol, &.{.str}, .u64, &.{value}, span);
     }
 
     /// A string literal: the checker spells it as code points, stored here as UTF-8.

@@ -306,7 +306,7 @@ test "the value fixtures end with no block live under MYL_CORE_LEAKCHECK=1, debu
     var dir = std.testing.tmpDir(.{});
     defer dir.cleanup();
     const root = try scratch(arena.allocator(), dir);
-    const names = [_][]const u8{ "v_records", "v_unions", "v_lists", "v_mut", "v_wide", "v_wide_managed", "v_nested", "v_mut_window", "v_equality", "v_mut_rebind", "v_arena", "v_str_eq", "v_methods", "v_narrow", "v_snapshot" };
+    const names = [_][]const u8{ "v_records", "v_unions", "v_lists", "v_mut", "v_wide", "v_wide_managed", "v_nested", "v_mut_window", "v_equality", "v_mut_rebind", "v_arena", "v_str_eq", "v_methods", "v_narrow", "v_snapshot", "v_text" };
     for (names) |name| {
         try std.testing.expectEqualStrings("", try leakReport(arena.allocator(), root, name, .debug));
         try std.testing.expectEqualStrings("", try leakReport(arena.allocator(), root, name, .release));
@@ -438,4 +438,20 @@ test "a read through a receiver captured before an argument wrote its place sees
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     try std.testing.expect(try matches(arena.allocator(), "v_snapshot", v_snapshot_output, 0));
+}
+
+const v_text_output =
+    \\total 7 of 3 items 2 True None a-xb
+    \\-9223372036854775807 18446744073709551615 -5 200 False
+    \\héllo 5  True
+    \\w0, w1, w4, w9 w0 True w0w1w4
+    \\465 n4 6
+    \\
+;
+
+// spec: NEW-CORE-TEXT-1
+test "f-strings, str(x), concatenation and join build the old core's text, with nothing leaked" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    try std.testing.expect(try matches(arena.allocator(), "v_text", v_text_output, 0));
 }

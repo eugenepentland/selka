@@ -1006,7 +1006,7 @@ void myl_core_main_error_str(myl_block *text) {
 }
 
 /* ---- lane V helpers (checkpoint V-2) ---------------------------------------------
- * Appended for the builder's `assert`, `str ==` and `len(str)`; the rest of the file is lane O's. */
+ * Appended for the builder's `assert`, `str ==`, `len(str)` and the text builders; the rest of the file is lane O's. */
 
 /* `a == b` for two strings: the same block, or the same bytes. */
 bool myl_core_str_eq(const myl_block *a, const myl_block *b) {
@@ -1021,6 +1021,59 @@ uint64_t myl_core_str_chars(const myl_block *text) {
     uint64_t scalars = 0;
     for (int64_t i = 0; i < text->len; ++i) scalars += (bytes[i] & 0xC0) != 0x80;
     return scalars;
+}
+
+/* ---- text builders: concatenation, join, str(x) ---- */
+
+static myl_block *str_new(int64_t len) {
+    myl_block *text = block_new(MYL_KIND_STR, len, 1);
+    text->len = len;
+    block_data(text)[len] = 0;
+    return text;
+}
+
+/* `a + b` for two strings: a fresh string. */
+myl_block *myl_core_str_concat(const myl_block *a, const myl_block *b) {
+    myl_block *text = str_new(a->len + b->len);
+    memcpy(block_data(text), (const unsigned char *)a + MYL_HEADER, (size_t)a->len);
+    memcpy(block_data(text) + a->len, (const unsigned char *)b + MYL_HEADER, (size_t)b->len);
+    return text;
+}
+
+/* `separator.join(parts)`: the strings of the list with the separator between them. */
+myl_block *myl_core_str_join(const myl_block *separator, myl_block *parts) {
+    myl_block **items = (myl_block **)block_data(parts);
+    int64_t total = parts->len > 1 ? separator->len * (parts->len - 1) : 0;
+    for (int64_t i = 0; i < parts->len; ++i) total += items[i]->len;
+    myl_block *text = str_new(total);
+    unsigned char *at = block_data(text);
+    for (int64_t i = 0; i < parts->len; ++i) {
+        if (i != 0) {
+            memcpy(at, (const unsigned char *)separator + MYL_HEADER, (size_t)separator->len);
+            at += separator->len;
+        }
+        memcpy(at, (const unsigned char *)items[i] + MYL_HEADER, (size_t)items[i]->len);
+        at += items[i]->len;
+    }
+    return text;
+}
+
+/* `str(x)` of an integer, in decimal. */
+myl_block *myl_core_str_from_i64(int64_t value) {
+    char text[32];
+    int len = snprintf(text, sizeof text, "%lld", (long long)value);
+    return str_from(text, (size_t)len);
+}
+
+myl_block *myl_core_str_from_u64(uint64_t value) {
+    char text[32];
+    int len = snprintf(text, sizeof text, "%llu", (unsigned long long)value);
+    return str_from(text, (size_t)len);
+}
+
+/* `str(b)` of a boolean: `True` or `False`. */
+myl_block *myl_core_str_from_bool(bool value) {
+    return value ? str_from("True", 4) : str_from("False", 5);
 }
 
 /* A failed `assert`, `@requires`, `@ensures` or `@invariant`: the old core's report. The site's
