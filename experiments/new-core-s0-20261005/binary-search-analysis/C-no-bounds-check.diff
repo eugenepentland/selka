@@ -1,0 +1,11 @@
+--- .tmp/bs/new_bs_B.ll	2026-10-05 04:04:45.776255107 +0000
++++ .tmp/bs/new_bs_C.ll	2026-10-05 04:05:35.958817268 +0000
+@@ -573,7 +573,7 @@
+   %lh.15 = getelementptr inbounds i8, ptr %p0, i64 8
+   %len.16 = load i64, ptr %lh.15, align 8
+   %oob.17 = icmp uge i64 %v21, %len.16
+-  br i1 %oob.17, label %trap.18, label %b6.19, !prof !0
++  br label %b6.19
+ trap.18:
+   call void @myl_core_trap(i32 33, i64 %v21, i64 %len.16)
+   unreachable

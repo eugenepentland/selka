@@ -1,0 +1,28 @@
+--- .tmp/bs/new_bs_A.ll	2026-10-05 04:04:38.611829814 +0000
++++ .tmp/bs/new_bs_B.ll	2026-10-05 04:04:45.776255107 +0000
+@@ -539,21 +539,21 @@
+   %p.2 = call { i64, i1 } @llvm.sadd.with.overflow.i64(i64 %v6, i64 %v7)
+   %v10 = extractvalue { i64, i1 } %p.2, 0
+   %o.3 = extractvalue { i64, i1 } %p.2, 1
+-  br i1 %o.3, label %trap.4, label %b2.5, !prof !0
++  br label %b2.5
+ trap.4:
+   call void @myl_core_trap(i32 32, i64 %v6, i64 %v7)
+   unreachable
+ b2.5:
+-  %q.6 = sdiv i64 %v10, 2
++  %q.6 = lshr i64 %v10, 1
+   %r.7 = srem i64 %v10, 2
+   %rnz.8 = icmp ne i64 %r.7, 0
+   %x.9 = xor i64 %r.7, 2
+   %neg.10 = icmp slt i64 %x.9, 0
+   %fix.11 = and i1 %rnz.8, %neg.10
+-  %qs.12 = zext i1 %fix.11 to i64
++  %qs.12 = zext i1 false to i64
+   %v12 = sub i64 %q.6, %qs.12
+   %v15 = icmp slt i64 %v12, 0
+-  br i1 %v15, label %b5, label %b6
++  br label %b6
+ b3:
+   br label %b1
+ b4:
