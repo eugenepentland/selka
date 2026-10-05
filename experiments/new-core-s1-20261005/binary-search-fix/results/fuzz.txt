@@ -1,0 +1,22 @@
+# fuzz.py --cases 25 --seed 41
+cases=25 old_rejected=0 new_refused=0 compared=375 mismatch=0 fact=0 traps=37 caught=0 vectorized=4 versioned=9
+# fuzz.py --cases 200 --seed 42
+cases=200 old_rejected=0 new_refused=0 compared=3000 mismatch=0 fact=0 traps=445 caught=0 vectorized=30 versioned=35
+# fuzz.py --cases 60 --seed 78 --sabotage
+cases=60 old_rejected=0 new_refused=0 compared=720 mismatch=0 fact=0 traps=124 caught=52 vectorized=11 versioned=10
+# fuzz.py --cases 60 --seed 79 --sabotage --rule widening
+cases=60 old_rejected=0 new_refused=0 compared=773 mismatch=0 fact=0 traps=135 caught=35 vectorized=8 versioned=6
+# fuzz.py --cases 60 --seed 80 --sabotage --rule length
+case 36: new core build failed (release):
+mylang-core: inlined 0 calls, unswitched 0 loops, versioned 1 loops, proved 28 checks, vectorized 1 loops
+error: invalid LLVM IR input: Instruction does not dominate all uses!
+  %v419 = phi i64 [ %vc1, %vexit1 ], [ %v434, %b72 ]
+  %vs1.419.t = trunc i64 %v419 to i16
+
+1 error generated.
+
+cases=60 old_rejected=0 new_refused=1 compared=590 mismatch=1 fact=0 traps=107 caught=59 vectorized=11 versioned=9
+# The one failure (seed 80, case 36) is a release build, not the sabotage: invalid LLVM IR from the
+# vector lowering (a resume phi `%v419 = phi [%vc1, %vexit1], ...` used by `trunc` where it does not
+# dominate). The S0 compiler (93e516dc) fails identically; the program has no list-parameter probe.
+# Repro: vector-dominance-repro.my (`mylang-core build vector-dominance-repro.my -o x --release`).

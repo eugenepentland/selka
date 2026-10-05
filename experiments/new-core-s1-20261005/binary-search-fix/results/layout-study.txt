@@ -1,0 +1,39 @@
+# Layout study, 2026-10-05, CPU 10, measure_search.py (3 rounds unless noted), cycles / misses per search
+# Program: the checkpoint-A LLVM of test/core/binary_search.my (facts + length bounds), linked by hand
+# with zig cc -O3 -march=native, core_rt.c and native_clock.c compiled -O2. "pN": main's entry gets
+# `call void asm sideeffect ".skip N, 0x90"`, shifting every later instruction of main by N bytes.
+
+## Pipeline builds, 7 rounds
+v2 (no alignment flag)            4096: 40.2 / 0.218   64: 23.4 / 0.014
+v2 -falign-loops=64 (all loops)   4096: 30.0 / 0.064   64: 17.7 / 0.014
+v2 -falign-loops=32               4096: 37.4 / 0.113   64: 23.5 / 0.012
+Rust                              4096: 36.9 / 0.188   64: 19.5 / 0.037
+
+## Same .ll, padded (default 16-byte loop alignment): d = default, a = -falign-loops=64
+d0 35.2/0.072 22.8 | a0 38.8/0.311 17.7
+d16 74.3/1.257 26.6 | a16 40.7/0.376 17.6
+d32 30.1/0.057 18.1 | a32 38.2/0.298 18.0
+d48 88.3/2.013 21.4 | a48 31.0/0.082 18.2
+d528 76.4/1.272 26.7 | a528 45.0/0.510 17.6
+d1040 76.8/1.292 26.6 | a1040 37.8/0.282 17.6
+d2064 75.5/1.249 26.7 | a2064 37.8/0.287 17.6
+d3104 30.2/0.059 17.8 | a3104 34.6/0.190 17.8
+Rust 37.6/0.205 19.5
+
+## Same .ll, padded, -mllvm -x86-experimental-pref-innermost-loop-alignment=6 (shipped)
+i0 34.6/0.192 17.6
+i16 33.5/0.150 17.7
+i32 33.8/0.167 18.3
+i48 39.7/0.343 17.6
+i528 34.1/0.171 17.7
+i1040 33.4/0.158 17.7
+i2064 34.0/0.171 17.6
+i3104 32.4/0.123 18.6
+Rust 36.2/0.172 19.5
+
+## Earlier stages (3 rounds)
+S0 pipeline                                 138.6 / 3.058   30.6 / 0.022
+widening + nuw/unsigned (no length bounds)   76.0 / 1.399   23.9 / 0.013
+S0 variant D rebuilt from A+B+D diffs        89.2 / 1.769   26.0 / 0.014
+widening build, hand-linked                  91.8 / 2.042   24.0 / 0.014
+  same, bounds check deleted by hand         36.2 / 0.105   22.8 / 0.013
