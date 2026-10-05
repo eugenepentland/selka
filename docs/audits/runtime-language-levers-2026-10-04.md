@@ -10,6 +10,25 @@ on 2026-10-04.
 - two Claude-run decision lanes, WP-8 (direct-emitter spike) and WP-9 (ideal ladder study);
 - a decision point at the end of Wave 1 (§5).
 
+**Revision 5 (2026-10-05): WP-5 is split.** The user accepted this change.
+
+Background: the new core keeps its own runtime (decision R1 in
+`docs/audits/new-core-plan-2026-10-05.md`), so one-count RC inside the old compiler only
+benefits a compiler that S5 replaces.
+
+| Part | Status | Why |
+|---|---|---|
+| **Part G: GC retirement** (G0–G6, including G1's model oracle and RC check mode) | **Continue** | It deletes old-core code and removes GC/GC-stress columns from the gates, which helps the dev loop now. |
+| **C1** (site counts of the D1/D2/D3 rules) | **Continue** | Sizes the migration of existing programs. Take only the census pieces of C0 that C1 needs. |
+| **C3: the checker rule** MUT-EXCLUSIVE-4 (`E_MUTATION_OVERLAP` and its fix-it) | **Continue** | A front-end rule both cores rely on. |
+| **C4: the front-end half** (live-place desugaring in `prelude_builtins.zig`, the per-path `iteration_check`, updating `iteration_identity.my` to Python's answer) | **Continue** | The new core reads the same typed tree and must see the same iteration semantics. |
+| **C5: the checker half** (`E_VIEW_STORED` and its fix-it, updating the `dictionary_views` tests) | **Continue** | A front-end rule both cores rely on. |
+| **C0 beyond what C1 needs; C2; C6; C7; C8** | **Pause** | Rebuilding the old compiler's RC internals around one count (pins, loans, deleting `holds`, the 16-byte header). The new core builds one-count from day one. |
+| **The old-core RC halves of C3, C4 and C5** (removing hold kinds, view-hold and iteration-owner paths) | **Pause** | Same reason. The old holds become dead but harmless once the checker rules land. |
+
+Finish in-flight commits cleanly; do not leave a half-migrated RC state on the integration
+branch.
+
 **Revision 4 (2026-10-05): scope change.** The user accepted the new-core plan
 (`docs/audits/new-core-plan-2026-10-05.md`, decisions N1–N5).
 
@@ -73,6 +92,12 @@ Give this to the coordinating agent:
 >
 > **Integration.** Integrate a lane only after reviewing its evidence and running the full
 > gate yourself.
+>
+> **WP-5 split (revision 5, 2026-10-05).** Continue: GC retirement (Part G), C1, the checker
+> rules of C3 and C5, and the front-end half of C4 (live-place desugaring and its tests).
+> Pause: the old compiler's RC re-plumbing (C2, C6, C7, C8, the rest of C0, and the RC halves
+> of C3–C5). The new core has its own runtime and builds one-count in from the start. Full
+> table: the revision 5 note at the top, and WP-5.
 >
 > **Scope change (revision 4, 2026-10-05).** A new compiler core is being built
 > (`docs/audits/new-core-plan-2026-10-05.md`).
@@ -645,7 +670,27 @@ protection, and then make allocation elision legal and used.
   the `RLIMIT_AS` ceiling with exit 1.
 - Paired screens of the allocation and text rows under L1.
 
-### WP-5 One-count RC — follow the existing plan; stop tuning hold paths meanwhile
+### WP-5 One-count RC — split by revision 5: GC retirement and checker rules continue; old-core RC re-plumbing paused
+
+**Revision 5 status (2026-10-05).** This table overrides the parts of this section below that
+conflict with it.
+
+Background: the new core keeps its own runtime (decision R1 in
+`docs/audits/new-core-plan-2026-10-05.md`), so one-count RC inside the old compiler only
+benefits a compiler that S5 replaces.
+
+| Part | Status | Why |
+|---|---|---|
+| **Part G: GC retirement** (G0–G6, including G1's model oracle and RC check mode) | **Continue** | It deletes old-core code and removes GC/GC-stress columns from the gates, which helps the dev loop now. |
+| **C1** (site counts of the D1/D2/D3 rules) | **Continue** | Sizes the migration of existing programs. Take only the census pieces of C0 that C1 needs. |
+| **C3: the checker rule** MUT-EXCLUSIVE-4 (`E_MUTATION_OVERLAP` and its fix-it) | **Continue** | A front-end rule both cores rely on. |
+| **C4: the front-end half** (live-place desugaring in `prelude_builtins.zig`, the per-path `iteration_check`, updating `iteration_identity.my` to Python's answer) | **Continue** | The new core reads the same typed tree and must see the same iteration semantics. |
+| **C5: the checker half** (`E_VIEW_STORED` and its fix-it, updating the `dictionary_views` tests) | **Continue** | A front-end rule both cores rely on. |
+| **C0 beyond what C1 needs; C2; C6; C7; C8** | **Pause** | Rebuilding the old compiler's RC internals around one count (pins, loans, deleting `holds`, the 16-byte header). The new core builds one-count from day one. |
+| **The old-core RC halves of C3, C4 and C5** (removing hold kinds, view-hold and iteration-owner paths) | **Pause** | Same reason. The old holds become dead but harmless once the checker rules land. |
+
+Finish in-flight commits cleanly; do not leave a half-migrated RC state on the integration
+branch.
 
 **Goal.** Remove holds, the second RC count. They are a third of all count operations and
 the largest single cost in `word_count` (37% in `scope_capture_dictionary`).
