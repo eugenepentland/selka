@@ -325,6 +325,7 @@ test "the value fixtures end with no block live under MYL_CORE_LEAKCHECK=1, debu
         "v_snapshot",
         "v_text",
         "v_loops",
+        "v_hull",
     };
     for (names) |name| {
         try std.testing.expectEqualStrings("", try leakReport(arena.allocator(), root, name, .debug));
@@ -512,4 +513,26 @@ test "a verify build does not call an unsigned operand above half its range nega
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     try std.testing.expect(try matches(arena.allocator(), "v_udiv", v_udiv_output, 0));
+}
+
+const v_hull_output =
+    \\3807232 -1 -1 -1
+    \\3271444 87 2145 19
+    \\669 406 -1
+    \\
+;
+
+// spec-case: NEW-CORE-FACTS-8
+test "a list a loop rewrites keeps the hull of what it was given and what is written: remainders and bounds are proven, a doubling loop still traps" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    try std.testing.expect(try matches(arena.allocator(), "v_hull", v_hull_output, 192));
+    var dir = std.testing.tmpDir(.{});
+    defer dir.cleanup();
+    const root = try scratch(arena.allocator(), dir);
+    for ([_]Mode{ .debug, .release, .verify }) |mode| {
+        const trapped = try runWith(arena.allocator(), root, "v_hull", mode, &.{ "5", "100000", "999999" });
+        try std.testing.expectEqual(@as(u8, 1), trapped.status);
+        try std.testing.expect(std.mem.indexOf(u8, trapped.stderr, "error[R_OVERFLOW]: native execution failed (mul: left 5764607523034234879, right 2, width 64)") != null);
+    }
 }

@@ -100,3 +100,61 @@ test "a verify build asserts every list length interval and record field interva
     try std.testing.expect(contains(records, "record field 1 range [9, 9]"));
     try std.testing.expect(contains(records, "record field 0 range [0, 4]"));
 }
+
+const rewritten_list =
+    \\def churn(size: int, rounds: int, seed: int) -> int:
+    \\    if size < 2 or rounds < 1 or seed < 1 or seed > 1000000:
+    \\        return -1
+    \\    values = [(seed + j * 13) % 1009 for j in range(size)]
+    \\    checksum = 0
+    \\    for batch in range(rounds):
+    \\        index = (seed + batch * 17) % size
+    \\        values[index] = (values[index] + batch + 1) % 1000003
+    \\        checksum = (checksum + values[index]) % 1000000007
+    \\    return checksum
+    \\
+    \\
+    \\def main(out: Stream) -> int:
+    \\    out.print(churn(64, 100, 7))
+    \\    return 0
+    \\
+;
+
+// spec: NEW-CORE-FACTS-8
+test "a list rewritten in a loop has the hull of its entry and its writes, and an index remainder of the list's length is in bounds" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const text = try support.factsText(arena.allocator(), rewritten_list);
+    const body = text[std.mem.indexOf(u8, text, "fn churn").?..];
+    // `if size < 2 or ...: return` says `size >= 2` afterwards, so `% size` is an unsigned remainder, below `size = len(values)`.
+    try std.testing.expect(contains(body, "list_get.proven i64"));
+    try std.testing.expect(contains(body, "list_set.proven list[i64]"));
+    // The elements stay in [0, 1000002]: both remainders by constants are unsigned, and the checksum sum cannot overflow.
+    try std.testing.expect(!contains(body, "floor_rem.exact"));
+    try std.testing.expect(!contains(body, "list_get.exact"));
+}
+
+const either_or =
+    \\def guarded(size: int, n: int) -> int:
+    \\    if size < 2 or n < 1:
+    \\        return 0
+    \\    return 100 % size + n // size
+    \\
+    \\
+    \\def main(out: Stream) -> int:
+    \\    out.print(guarded(5, 7))
+    \\    return 0
+    \\
+;
+
+// spec: NEW-CORE-FACTS-9
+test "an or of comparisons is control flow, so what each failed test says about its operands holds after the if" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const text = try support.factsText(arena.allocator(), either_or);
+    const body = text[std.mem.indexOf(u8, text, "fn guarded").?..];
+    try std.testing.expect(contains(body, "floor_rem.proven"));
+    try std.testing.expect(contains(body, "floor_div.proven"));
+    // No boolean phi joins the two comparisons.
+    try std.testing.expect(!contains(body, "phi bool"));
+}

@@ -84,6 +84,14 @@ fn dumpIr(init: std.process.Init, path: []const u8, with_facts: bool) !u8 {
                 if (float) |r| try ranges.print(allocator, " %{d}=[{e},{e}]", .{ index, r.lo, r.hi });
             }
             try ranges.appendSlice(allocator, "\n");
+            // List facts (settled, length, elements, len), for the lists that carry any.
+            for (known.aggregates.lists, 0..) |list, index| {
+                if (!list.settled and list.len == null and list.elements == null) continue;
+                try ranges.print(allocator, "list {s} %{d}: settled={} length=%{d}", .{ function.name, index, list.settled, if (list.length == .none) -1 else @as(i64, @intCast(list.length.index())) });
+                if (list.elements) |e| try ranges.print(allocator, " elements=[{d},{d}]", .{ e.lo, e.hi });
+                if (list.len) |e| try ranges.print(allocator, " len=[{d},{d}]", .{ e.lo, e.hi });
+                try ranges.appendSlice(allocator, "\n");
+            }
         }
     }
     const text = try print.module(allocator, &module);

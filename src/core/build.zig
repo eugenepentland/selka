@@ -595,16 +595,18 @@ const FnBuilder = struct {
     fn assertStatement(self: *FnBuilder, check: typed.Assertion) Error!void {
         const condition_span: u32 = @intCast(self.nodeOf(check.condition).span.start);
         if (check.message_value != null) return self.mb.refuse("assertion with a message value", condition_span);
-        const condition = try self.expression(check.condition);
-        if (self.current == null) return;
         // A condition known at build time (the checker's `assert false` after a narrowing) leaves no
         // branch: a true one is nothing, a false one ends the path.
-        const known = self.function.inst(self.function.resolve(condition));
-        if (known.op == .iconst and known.data != 0) return;
-        const failed = if (known.op == .iconst) self.current.? else try self.newBlock();
-        const passed: ?ir.BlockId = if (known.op == .iconst) null else try self.newBlock();
+        const literal: ?bool = switch (self.nodeOf(check.condition).data) {
+            .boolean => |value| value,
+            else => null,
+        };
+        if (literal == true) return;
+        const failed = if (literal != null) self.current orelse return else try self.newBlock();
+        const passed: ?ir.BlockId = if (literal != null) null else try self.newBlock();
         if (passed) |next| {
-            try self.branch(condition, next, failed, condition_span);
+            try self.branchOn(check.condition, next, failed);
+            if (!self.hasPreds(next) and !self.hasPreds(failed)) return;
             try self.seal(failed);
             try self.seal(next);
         }
@@ -616,13 +618,40 @@ const FnBuilder = struct {
         self.current = passed;
     }
 
-    fn branchStatement(self: *FnBuilder, condition: typed.NodeId, then_body: typed.StatementId, else_body: ?typed.StatementId) Error!void {
-        const cond = try self.expression(condition);
+    /// Go to `then` when condition `node` holds and to `otherwise` when it does not, with `and`, `or`
+    /// and `not` as control flow instead of a boolean joined by a phi: each comparison then ends
+    /// its own block in a branch, so what a failed or passed test says about its operands (the fact
+    /// pass refines them along single-predecessor edges) reaches the blocks beyond it, which a
+    /// phi of booleans would hide (`if size < 2 or n < 1: return` says `size >= 2` afterwards).
+    /// The caller seals `then` and `otherwise` once every edge into them was made.
+    fn branchOn(self: *FnBuilder, node: typed.NodeId, then: ir.BlockId, otherwise: ir.BlockId) Error!void {
+        const n = self.nodeOf(node);
+        const span: u32 = @intCast(n.span.start);
+        switch (n.data) {
+            .binary => |b| if (b.op == .logical_and or b.op == .logical_or) {
+                const is_or = b.op == .logical_or;
+                const middle = try self.newBlock();
+                try self.branchOn(b.left, if (is_or) then else middle, if (is_or) middle else otherwise);
+                if (self.current == null and !self.hasPreds(middle)) return;
+                try self.seal(middle);
+                self.current = middle;
+                return self.branchOn(b.right, then, otherwise);
+            },
+            .unary => |u| if (u.op == .not) return self.branchOn(u.operand, otherwise, then),
+            else => {},
+        }
+        const condition = try self.expression(node);
         if (self.current == null) return;
+        try self.branch(condition, then, otherwise, span);
+    }
+
+    fn branchStatement(self: *FnBuilder, condition: typed.NodeId, then_body: typed.StatementId, else_body: ?typed.StatementId) Error!void {
         const then_block = try self.newBlock();
         const join = try self.newBlock();
         const else_block = if (else_body != null) try self.newBlock() else join;
-        try self.branch(cond, then_block, else_block, @intCast(self.nodeOf(condition).span.start));
+        try self.branchOn(condition, then_block, else_block);
+        // A condition that cannot complete (it returns first) reaches neither side.
+        if (!self.hasPreds(then_block) and !self.hasPreds(else_block)) return;
         try self.seal(then_block);
         const base = self.rebound.items.len;
         var paths: std.ArrayList([]const u32) = .empty;
@@ -647,15 +676,20 @@ const FnBuilder = struct {
         const header = try self.newBlock();
         try self.jump(header);
         self.current = header;
-        const cond = try self.expression(condition);
         const body_block = try self.newBlock();
         const latch = try self.newBlock();
         const exit = try self.newBlock();
         // `while True:` has no exit edge: only a `break` (or a return) leaves it.
-        const known = self.function.inst(self.function.resolve(cond));
-        if (known.op == .iconst and known.data != 0) {
+        const forever = switch (self.nodeOf(condition).data) {
+            .boolean => |value| value,
+            else => false,
+        };
+        if (forever) {
             try self.jump(body_block);
-        } else try self.branch(cond, body_block, exit, @intCast(self.nodeOf(condition).span.start));
+        } else {
+            try self.branchOn(condition, body_block, exit);
+            if (!self.hasPreds(body_block) and !self.hasPreds(exit)) return;
+        }
         try self.seal(body_block);
         try self.loops.append(self.allocator(), .{ .id = id, .latch = latch, .exit = exit });
         self.current = body_block;

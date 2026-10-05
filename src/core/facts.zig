@@ -108,6 +108,11 @@ pub const ListFact = struct {
     /// The list's length lies in this interval: a new list is empty, a push adds one, a pop
     /// removes one, a write or copy keeps it. A fact about the value, like every list fact.
     len: ?Interval = null,
+    /// The fact was computed (a list operation's result, or a phi joined at least once): a phi joining a
+    /// loop-carried list skips an operand that is not settled yet instead of reading it as unknown.
+    settled: bool = false,
+    /// `length` and `elements` come from a counted fill loop's pattern (`listFacts`), not from joining operands.
+    pattern: bool = false,
 };
 
 /// `value <= len(list)` (`<` when `strict`) for a list parameter. A parameter is one
@@ -269,6 +274,10 @@ const Analysis = struct {
     /// Numeric upper bounds that hold in every block a given block dominates: (block, value, hi).
     caps: std.ArrayList(struct { block: ir.BlockId, value: ir.Ref, hi: i128 }) = .empty,
     sabotage: Sabotage = .none,
+    /// The round of the fixed-point iteration being run (the first is 0).
+    round: usize = 0,
+    /// Per list phi, how many times its element hull or common length changed (widened past eight).
+    element_changes: []u8 = &.{},
 
     fn inst(self: *Analysis, ref: ir.Ref) ir.Inst {
         return self.f.inst(self.f.resolve(ref));
@@ -545,6 +554,8 @@ pub fn analyze(arena: std.mem.Allocator, f: *ir.Function, options: Options) Erro
     try findCounted(&a);
     const changes = try arena.alloc(u8, f.insts.items.len);
     @memset(changes, 0);
+    a.element_changes = try arena.alloc(u8, f.insts.items.len);
+    @memset(a.element_changes, 0);
     var round: usize = 0;
     var converged = false;
     // Reachability only grows (as in sparse conditional constant propagation):
@@ -552,6 +563,7 @@ pub fn analyze(arena: std.mem.Allocator, f: *ir.Function, options: Options) Erro
     @memset(a.facts.reachable, false);
     a.facts.reachable[0] = true;
     while (round < 64) : (round += 1) {
+        a.round = round;
         var changed = false;
         for (a.shape.rpo) |block| {
             if (!a.facts.reachable[block.index()]) {
@@ -672,8 +684,9 @@ fn listFacts(a: *Analysis) !bool {
             const push_block = a.shape.block_of[pushed_ref.index()] orelse continue;
             if (!onStraightChain(a, counted.loop, push_block)) continue;
             const elements = a.rangeAt(pushed.b, push_block);
-            var fact: ListFact = .{ .length = counted.bound, .elements = elements };
+            var fact: ListFact = .{ .length = counted.bound, .elements = elements, .pattern = true };
             fact.len = a.facts.aggregates.lists[ref.index()].len;
+            fact.settled = a.facts.aggregates.lists[ref.index()].settled;
             if (!std.meta.eql(a.facts.aggregates.lists[ref.index()], fact)) {
                 a.facts.aggregates.lists[ref.index()] = fact;
                 changed = true;
@@ -851,12 +864,16 @@ fn listFact(a: *Analysis, ref: ir.Ref, block: ir.BlockId) ListFact {
     const i = a.f.inst(ref);
     const none: ListFact = .{};
     switch (i.op) {
-        .list_new => return .{ .len = Interval.point(0) },
-        .list_copy => return a.facts.aggregates.lists[a.f.resolve(i.a).index()],
+        .list_new => return .{ .len = Interval.point(0), .settled = true },
+        .list_copy => {
+            var copied = a.facts.aggregates.lists[a.f.resolve(i.a).index()];
+            copied.settled = !pendingList(a, i.a);
+            return copied;
+        },
         .list_push => {
             const old = a.facts.aggregates.lists[a.f.resolve(i.a).index()];
             const value = scalarRange(a, i.b, block);
-            var out: ListFact = .{};
+            var out: ListFact = .{ .settled = !pendingList(a, i.a) };
             if (old.len) |len| out.len = .{ .lo = len.lo + 1, .hi = @min(len.hi + 1, max_list_length) };
             // An empty list holds only the pushed value; any other list the hull of its elements and it.
             if (old.len) |len| {
@@ -867,14 +884,14 @@ fn listFact(a: *Analysis, ref: ir.Ref, block: ir.BlockId) ListFact {
         },
         .list_pop => {
             const old = a.facts.aggregates.lists[a.f.resolve(i.a).index()];
-            var out: ListFact = .{ .elements = old.elements };
+            var out: ListFact = .{ .elements = old.elements, .settled = !pendingList(a, i.a) };
             if (old.len) |len| out.len = .{ .lo = @max(len.lo - 1, 0), .hi = @max(len.hi - 1, 0) };
             return out;
         },
         .list_set => {
             const old = a.facts.aggregates.lists[a.f.resolve(i.a).index()];
             const value = scalarRange(a, a.f.operands(i.data)[0], block);
-            var out: ListFact = .{ .length = old.length, .len = old.len };
+            var out: ListFact = .{ .length = old.length, .len = old.len, .settled = !pendingList(a, i.a) };
             if (old.elements) |held| out.elements = if (value) |v| held.hull(v) else null;
             return out;
         },
@@ -925,26 +942,71 @@ fn recomputeAggregates(a: *Analysis, ref: ir.Ref, block: ir.BlockId, changes: []
     return changed;
 }
 
-/// A phi of lists has the hull of its live operands' lengths (a phi of anything else has none),
-/// widened to the largest possible length when it keeps growing.
+/// Whether `operand`'s list fact is still to be computed: it is a list operation or a phi the
+/// pass has not reached (a loop's back edge), which a phi must not read as unknown.
+fn pendingList(a: *Analysis, operand: ir.Ref) bool {
+    const ref = a.f.resolve(operand);
+    return switch (a.f.inst(ref).op) {
+        .list_new, .list_copy, .list_push, .list_pop, .list_set, .phi => !a.facts.aggregates.lists[ref.index()].settled,
+        else => false,
+    };
+}
+
+/// A phi of lists has the hull of its settled live operands' lengths and elements, and their common
+/// `length` when they agree (a phi of anything else has none). An operand not settled yet, the back
+/// edge of a loop, is skipped: the first round holds the entry's facts, which later rounds can only
+/// weaken, and a fact that keeps changing is widened to unknown.
 fn joinLengths(a: *Analysis, ref: ir.Ref, block: ir.BlockId, changes: []u8) bool {
     const i = a.f.inst(ref);
+    if (!i.ty.isCompound()) return false;
+    // A counted loop's list phi gets its pattern facts at the end of the first round; until then
+    // it and what derives from it stay unsettled, so nothing reads them as unknown.
+    if (a.round == 0) for (a.counted.items) |counted| {
+        if (counted.loop.header == block) return false;
+    };
     var joined: ?Interval = null;
+    var hull: ?Interval = null;
+    var length: ir.Ref = .none;
+    var seen = false;
+    var lengths_known = true;
+    var elements_known = true;
     for (a.f.operands(i.data), a.f.blocks.items[block.index()].preds.items) |operand, pred| {
         if (!a.edgeLive(pred, block)) continue;
-        const len = a.facts.aggregates.lists[a.f.resolve(operand).index()].len orelse {
-            joined = null;
-            break;
-        };
-        joined = if (joined) |so_far| so_far.hull(len) else len;
+        if (pendingList(a, operand)) continue;
+        const fact = a.facts.aggregates.lists[a.f.resolve(operand).index()];
+        if (fact.len) |len| joined = if (joined) |so_far| so_far.hull(len) else len else lengths_known = false;
+        if (fact.elements) |held| hull = if (hull) |so_far| so_far.hull(held) else held else elements_known = false;
+        if (!seen) length = fact.length else if (length != fact.length) length = .none;
+        seen = true;
     }
-    const old = a.facts.aggregates.lists[ref.index()].len;
-    if (old != null and joined != null and !std.meta.eql(old, joined)) {
+    if (!seen) return false;
+    if (!lengths_known) joined = null;
+    if (!elements_known) hull = null;
+    var next = a.facts.aggregates.lists[ref.index()];
+    const old = next;
+    next.len = joined;
+    next.settled = true;
+    // A counted fill loop's phi keeps what its pattern proved (`listFacts`).
+    if (!old.pattern) {
+        next.elements = hull;
+        next.length = length;
+    }
+    // The length widens to every length when it keeps growing; the hull and the common length
+    // are counted apart, so a loop that only grows its list keeps what it knows of the elements.
+    if (old.settled and !std.meta.eql(old.len, next.len)) {
         changes[ref.index()] +|= 1;
-        if (changes[ref.index()] > 8) joined = .{ .lo = 0, .hi = max_list_length };
+        if (changes[ref.index()] > 8 and joined != null) next.len = .{ .lo = 0, .hi = max_list_length };
     }
-    if (std.meta.eql(old, joined)) return false;
-    a.facts.aggregates.lists[ref.index()].len = joined;
+    const hull_moved = !std.meta.eql(old.elements, next.elements) or old.length != next.length;
+    if (old.settled and !old.pattern and hull_moved) {
+        a.element_changes[ref.index()] +|= 1;
+        if (a.element_changes[ref.index()] > 8) {
+            next.elements = null;
+            next.length = .none;
+        }
+    }
+    if (std.meta.eql(old, next)) return false;
+    a.facts.aggregates.lists[ref.index()] = next;
     return true;
 }
 
@@ -1175,7 +1237,14 @@ fn provableAccess(a: *Analysis, i: ir.Inst, block: ir.BlockId) bool {
             if (bound.list == list and bound.strict) return true;
             const length = a.facts.aggregates.lists[list.index()].length;
             if (length == .none) return false;
-            return a.knownLess(index, length, block);
+            if (a.knownLess(index, length, block)) return true;
+            // `x % n` is below a positive `n`, and `n` is the list's length.
+            const producer = a.inst(index);
+            const divisor = a.rangeAt(length, block) orelse return false;
+            if (a.f.resolve(producer.b) != a.f.resolve(length) or divisor.lo < 1) return false;
+            if (producer.op == .floor_rem) return true;
+            const dividend = a.rangeAt(producer.a, block) orelse return false;
+            return producer.op == .rem and dividend.lo >= 0;
         },
         .list_pop => {
             // A pop of a list known to hold an element cannot fail.
