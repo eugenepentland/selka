@@ -5,7 +5,7 @@
 const std = @import("std");
 const options = @import("core_test_options");
 /// The build flags the tests pass.
-const release_build = "--release";
+const optimize_flag = "--release";
 const cache_flag = "--cache-dir";
 
 /// Failure detail goes to the test's stderr.
@@ -31,7 +31,7 @@ fn buildFixture(arena: std.mem.Allocator, root: []const u8, name: []const u8, ho
     const cache = try std.fmt.allocPrint(arena, "{s}/cache{s}", .{ root, if (how.old) "-old" else "" });
     var argv: std.ArrayList([]const u8) = .empty;
     try argv.appendSlice(arena, &.{ how.compiler, "build", source, "-o", output, "--link", options.clock_path, cache_flag, cache });
-    if (how.release or how.old) try argv.append(arena, release_build);
+    if (how.release or how.old) try argv.append(arena, optimize_flag);
     const result = try std.process.run(arena, std.testing.io, .{ .argv = argv.items });
     if (result.term != .exited or result.term.exited != 0) {
         report("build of {s} failed:\n{s}{s}\n", .{ name, result.stdout, result.stderr });
@@ -213,7 +213,7 @@ fn verified(arena: std.mem.Allocator, root: []const u8, flag: []const u8) !Outco
     const output = try std.fmt.allocPrint(arena, "{s}/int_math{s}", .{ root, flag });
     const source = try std.fmt.allocPrint(arena, "{s}/int_math.my", .{options.fixtures});
     const cache = try std.fmt.allocPrint(arena, "{s}/cache", .{root});
-    const result = try std.process.run(arena, std.testing.io, .{ .argv = &.{ options.core_path, "build", source, "-o", output, release_build, flag, "--link", options.clock_path, cache_flag, cache } });
+    const result = try std.process.run(arena, std.testing.io, .{ .argv = &.{ options.core_path, "build", source, "-o", output, optimize_flag, flag, "--link", options.clock_path, cache_flag, cache } });
     try std.testing.expect(result.term == .exited and result.term.exited == 0);
     return run(arena, output, &.{ "4096", "300", "7" });
 }
@@ -280,7 +280,7 @@ fn genericChecksum(arena: std.mem.Allocator, root: []const u8, name: []const u8)
     const source = try std.fmt.allocPrint(arena, "{s}/{s}.my", .{ options.fixtures, name });
     const output = try std.fmt.allocPrint(arena, "{s}/{s}-generic", .{ root, name });
     const cache = try std.fmt.allocPrint(arena, "{s}/cache", .{root});
-    const result = try std.process.run(arena, std.testing.io, .{ .argv = &.{ options.core_path, "build", source, "-o", output, release_build, "--generic-vectors", "--link", options.clock_path, cache_flag, cache } });
+    const result = try std.process.run(arena, std.testing.io, .{ .argv = &.{ options.core_path, "build", source, "-o", output, optimize_flag, "--generic-vectors", "--link", options.clock_path, cache_flag, cache } });
     try std.testing.expect(result.term == .exited and result.term.exited == 0);
     return firstField((try run(arena, output, &.{ "4100", "300", "7" })).stdout);
 }
@@ -294,4 +294,5 @@ test "the generic vector fallbacks compute the same checksums as the AVX2 code" 
     const root = try scratch(arena.allocator(), dir);
     try std.testing.expectEqualStrings("562398344", try genericChecksum(arena.allocator(), root, "int_math"));
     try std.testing.expectEqualStrings("526081700", try genericChecksum(arena.allocator(), root, "branch_mixed"));
+    try std.testing.expectEqualStrings("895125193", try genericChecksum(arena.allocator(), root, "call_direct"));
 }
