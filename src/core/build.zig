@@ -10,7 +10,6 @@
 const std = @import("std");
 const typed = @import("mylang").typed;
 const ir = @import("ir.zig");
-const own = @import("own.zig");
 
 /// Why building stopped.
 pub const Error = error{ OutOfMemory, Unsupported };
@@ -36,10 +35,7 @@ pub fn buildModule(allocator: std.mem.Allocator, program: typed.Program, refusal
         }
     }
     mb.pending.deinit(allocator);
-    // A push appends in place, so its operand must be the only live reference to its block.
-    for (mb.module.functions.items) |*function| {
-        if (function.signature.linkage == .internal) _ = try own.copyShared(allocator, function);
-    }
+    // Ownership (copies before shared updates, counting) is `own.zig`'s, after the release passes.
     return mb.module;
 }
 

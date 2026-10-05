@@ -70,7 +70,7 @@ fn noLocation(_: *const anyopaque, _: u32) emit_llvm.Location {
 
 fn emitHand(arena: std.mem.Allocator, module: *const ir.Module) emit_llvm.Error![]u8 {
     const context: u8 = 0;
-    return emit_llvm.emitModule(arena, module, .{ .locator = .{ .context = &context, .locate = noLocation }, .source_path = "hand.my", .main_parameters = &.{} });
+    return emit_llvm.emitModule(arena, module, .{ .locator = .{ .context = &context, .locate = noLocation }, .source_path = "hand.my", .main = .{} });
 }
 
 // spec-case: NEW-CORE-LLVM-1

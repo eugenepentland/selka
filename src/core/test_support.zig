@@ -60,7 +60,7 @@ pub fn llvmText(arena: std.mem.Allocator, source: []const u8) Error![]u8 {
     var refusal: build.Refusal = .{};
     const module = try buildSource(arena, source, &refusal);
     const context: u8 = 0;
-    return emit_llvm.emitModule(arena, &module, .{ .locator = .{ .context = &context, .locate = firstLine }, .source_path = "test.my", .main_parameters = &.{"out"} });
+    return emit_llvm.emitModule(arena, &module, .{ .locator = .{ .context = &context, .locate = firstLine }, .source_path = "test.my", .main = .{ .parameters = &.{"out"} } });
 }
 
 /// The textual Core IR of `source` after the release fact pass marked what it proved.
@@ -94,7 +94,7 @@ pub fn verifyLlvmText(arena: std.mem.Allocator, source: []const u8) Error![]u8 {
     const result = try runPasses(arena, &module, .verify);
     const context: u8 = 0;
     const locator: emit_llvm.Locator = .{ .context = &context, .locate = firstLine };
-    return emit_llvm.emitModule(arena, &module, .{ .locator = locator, .source_path = "test.my", .main_parameters = &.{"out"}, .facts = result.known, .verify = true });
+    return emit_llvm.emitModule(arena, &module, .{ .locator = locator, .source_path = "test.my", .main = .{ .parameters = &.{"out"} }, .facts = result.known, .verify = true });
 }
 
 /// The LLVM IR a release build of `source` emits for target description `target`.
@@ -104,7 +104,7 @@ pub fn releaseLlvmTextFor(arena: std.mem.Allocator, source: []const u8, target: 
     const result = try runPasses(arena, &module, .trusted);
     const context: u8 = 0;
     const locator: emit_llvm.Locator = .{ .context = &context, .locate = firstLine };
-    return emit_llvm.emitModule(arena, &module, .{ .locator = locator, .source_path = "test.my", .main_parameters = &.{ "args", "out" }, .facts = result.known, .vectors = result.plans, .target = target });
+    return emit_llvm.emitModule(arena, &module, .{ .locator = locator, .source_path = "test.my", .main = .{ .parameters = &.{ "args", "out" } }, .facts = result.known, .vectors = result.plans, .target = target });
 }
 
 // ---- hand-built IR ------------------------------------------------------------------
@@ -200,7 +200,44 @@ pub const RunError = Error || driver.Error;
 pub fn runModule(arena: std.mem.Allocator, module: *const ir.Module, release: bool) RunError!Run {
     try verified(arena, module, &.{});
     const context: u8 = 0;
-    const llvm = try emit_llvm.emitModule(arena, module, .{ .locator = .{ .context = &context, .locate = firstLine }, .source_path = "hand.my", .main_parameters = &.{"out"} });
+    const llvm = try emit_llvm.emitModule(arena, module, .{ .locator = .{ .context = &context, .locate = firstLine }, .source_path = "hand.my", .main = .{ .parameters = &.{"out"} } });
+    return runLlvm(arena, llvm, .{ .release = release, .leakcheck = false });
+}
+
+/// How `runOwned` builds and runs a hand-built module.
+pub const RunOptions = struct {
+    release: bool = false,
+    /// Verify mode: form-1 updates are asserted unique (`R_CORE_FACT`).
+    verify: bool = false,
+    /// Run with `MYL_CORE_LEAKCHECK=1`, so blocks live at exit are reported on stderr.
+    leakcheck: bool = true,
+    /// Run the ownership pass first (off: the module counts by hand, or leaks).
+    own: bool = true,
+};
+
+/// Run the ownership pass over `module` (as a build would, after construction),
+/// verify, emit, compile and run it, by default with the leak check on.
+pub fn runOwned(arena: std.mem.Allocator, module: *ir.Module, options: RunOptions) RunError!Run {
+    try verified(arena, module, &.{});
+    if (options.own) _ = try @import("own.zig").run(arena, module, .{ .verify = options.verify });
+    try verified(arena, module, &.{});
+    const context: u8 = 0;
+    const llvm = try emit_llvm.emitModule(arena, module, .{ .locator = .{ .context = &context, .locate = firstLine }, .source_path = "hand.my", .main = .{ .parameters = &.{"out"} }, .verify = options.verify });
+    return runLlvm(arena, llvm, options);
+}
+
+/// The textual Core IR of `source` after the debug pipeline's ownership pass.
+pub fn ownedText(arena: std.mem.Allocator, source: []const u8) Error![]u8 {
+    var refusal: build.Refusal = .{};
+    var module = try buildSource(arena, source, &refusal);
+    _ = try passes.ownership(arena, &module);
+    try verified(arena, &module, &.{});
+    return print.module(arena, &module);
+}
+
+/// Compile emitted LLVM IR with `zig cc` and run it with no arguments.
+fn runLlvm(arena: std.mem.Allocator, llvm: []const u8, options: RunOptions) RunError!Run {
+    const release = options.release;
     var dir = std.testing.tmpDir(.{});
     defer dir.cleanup();
     const root = dir.dir.realPathFileAlloc(std.testing.io, ".", arena) catch return error.ToolFailed;
@@ -220,7 +257,8 @@ pub fn runModule(arena: std.mem.Allocator, module: *const ir.Module, release: bo
         report("zig cc rejected the emitted module:\n{s}\n{s}\n", .{ log.items, llvm });
         return err;
     };
-    const result = std.process.run(arena, std.testing.io, .{ .argv = &.{output} }) catch return error.ToolFailed;
+    if (options.leakcheck) environment.put("MYL_CORE_LEAKCHECK", "1") catch return error.ToolFailed;
+    const result = std.process.run(arena, std.testing.io, .{ .argv = &.{output}, .environ_map = &environment }) catch return error.ToolFailed;
     const status: u8 = switch (result.term) {
         .exited => |code| code,
         else => 255,

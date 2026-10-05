@@ -72,17 +72,21 @@ pub fn build(init: std.process.Init, path: []const u8, options: Options, report:
         .sabotage_widening => .sabotage_widening,
         .sabotage_length => .sabotage_length,
     };
-    const result = if (options.release) try passes.run(allocator, &module, mode) else passes.Result{ .known = &.{}, .plans = &.{} };
-    if (verify_ir.enabled and options.release) try verify_ir.check(allocator, &module, result.plans, report);
+    var result = if (options.release) try passes.run(allocator, &module, mode) else passes.Result{ .known = &.{}, .plans = &.{} };
+    if (!options.release) result.own = try passes.ownership(allocator, &module);
+    if (verify_ir.enabled) try verify_ir.check(allocator, &module, result.plans, report);
     if (options.show.stats) {
         const format = "mylang-core: inlined {d} calls, unswitched {d} loops, versioned {d} loops, proved {d} checks, vectorized {d} loops\n";
-        try report.print(allocator, format, .{ result.inlined, result.unswitched, result.versioned, result.proven, result.vectorized });
+        try report.print(allocator, format, .{ result.counts.inlined, result.counts.unswitched, result.counts.versioned, result.counts.proven, result.counts.vectorized });
+        const counting = "mylang-core: ownership: {d} updates in place, {d} tested, {d} copied; {d} retains, {d} releases ({d} pairs elided)\n";
+        const o = result.own;
+        try report.print(allocator, counting, .{ o.in_place, o.tested, o.copied, o.retains, o.releases, o.elided });
     }
     const absolute = std.Io.Dir.cwd().realPathFileAlloc(init.io, path, allocator) catch path;
     const llvm = emit_llvm.emitModule(allocator, &module, .{
         .locator = .{ .context = &checked.src, .locate = locate },
         .source_path = absolute,
-        .main_parameters = try mainParameters(allocator, checked.program),
+        .main = .{ .parameters = try mainParameters(allocator, checked.program), .result = mainResult(checked.program) },
         .facts = result.known,
         .verify = verify and options.release,
         .vectors = result.plans,
@@ -114,6 +118,13 @@ fn locate(context: *const anyopaque, offset: u32) emit_llvm.Location {
     const src: *const language.source.Source = @ptrCast(@alignCast(context));
     const at = frontend.position(src.*, .{ .start = offset, .end = offset });
     return .{ .line = at.line, .column = at.column };
+}
+
+/// The `Ok` and `Err` tags of `main`'s return type when it is a `Result`.
+fn mainResult(program: language.typed.Program) ?emit_llvm.MainResult {
+    const main = program.functions[@backingInt(program.main)];
+    const shape = language.typed.resultShape(main.signature.return_type, program.records) orelse return null;
+    return .{ .ok_tag = @intCast(shape.ok_tag), .error_tag = @intCast(shape.error_tag) };
 }
 
 /// The names of `main`'s parameters, which pick stdout or stderr for a `Stream`.
