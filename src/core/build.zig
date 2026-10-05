@@ -605,11 +605,18 @@ const FnBuilder = struct {
             else => null,
         };
         if (literal == true) return;
+        const compound = self.isCompound(check.condition);
+        const plain = if (compound or literal != null) null else try self.expression(check.condition);
+        if (literal == null and !compound and self.current == null) return;
         const failed = if (literal != null) self.current orelse return else try self.newBlock();
         const passed: ?ir.BlockId = if (literal != null) null else try self.newBlock();
         if (passed) |next| {
-            try self.branchOn(check.condition, next, failed);
-            if (!self.hasPreds(next) and !self.hasPreds(failed)) return;
+            if (plain) |value| {
+                try self.branch(value, next, failed, condition_span);
+            } else {
+                try self.branchOn(check.condition, next, failed);
+                if (!self.hasPreds(next) and !self.hasPreds(failed)) return;
+            }
             try self.seal(failed);
             try self.seal(next);
         }
@@ -648,11 +655,27 @@ const FnBuilder = struct {
         try self.branch(condition, then, otherwise, span);
     }
 
+    /// Whether `node` is an `and`, an `or` or a `not`, which `branchOn` turns into control flow; any other
+    /// condition is evaluated first and branched on (so its blocks keep the numbering they had).
+    fn isCompound(self: *FnBuilder, node: typed.NodeId) bool {
+        return switch (self.nodeOf(node).data) {
+            .binary => |b| b.op == .logical_and or b.op == .logical_or,
+            .unary => |u| u.op == .not,
+            else => false,
+        };
+    }
+
     fn branchStatement(self: *FnBuilder, condition: typed.NodeId, then_body: typed.StatementId, else_body: ?typed.StatementId) Error!void {
+        // A plain condition is evaluated first, so the blocks it makes keep their numbers.
+        const compound = self.isCompound(condition);
+        const plain = if (compound) null else try self.expression(condition);
+        if (!compound and self.current == null) return;
         const then_block = try self.newBlock();
         const join = try self.newBlock();
         const else_block = if (else_body != null) try self.newBlock() else join;
-        try self.branchOn(condition, then_block, else_block);
+        if (plain) |value| {
+            try self.branch(value, then_block, else_block, @intCast(self.nodeOf(condition).span.start));
+        } else try self.branchOn(condition, then_block, else_block);
         // A condition that cannot complete (it returns first) reaches neither side.
         if (!self.hasPreds(then_block) and !self.hasPreds(else_block)) return;
         try self.seal(then_block);
@@ -679,6 +702,8 @@ const FnBuilder = struct {
         const header = try self.newBlock();
         try self.jump(header);
         self.current = header;
+        const compound = self.isCompound(condition);
+        const plain = if (compound) null else try self.expression(condition);
         const body_block = try self.newBlock();
         const latch = try self.newBlock();
         const exit = try self.newBlock();
@@ -689,6 +714,8 @@ const FnBuilder = struct {
         };
         if (forever) {
             try self.jump(body_block);
+        } else if (plain) |value| {
+            try self.branch(value, body_block, exit, @intCast(self.nodeOf(condition).span.start));
         } else {
             try self.branchOn(condition, body_block, exit);
             if (!self.hasPreds(body_block) and !self.hasPreds(exit)) return;

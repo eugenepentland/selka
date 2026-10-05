@@ -158,3 +158,28 @@ test "an or of comparisons is control flow, so what each failed test says about 
     // No boolean phi joins the two comparisons.
     try std.testing.expect(!contains(body, "phi bool"));
 }
+
+const plain_condition_loop =
+    \\def f(xs: list[int]) -> int:
+    \\    i = 0
+    \\    while xs[i] != 0:
+    \\        i += 1
+    \\    return i
+    \\
+    \\
+    \\def main(out: Stream) -> int:
+    \\    out.print(f([1, 2, 0]))
+    \\    return 0
+    \\
+;
+
+// spec-case: NEW-CORE-FACTS-9
+test "a plain condition is evaluated before the blocks of its branch are made: the blocks of its own index fix-up come first" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const text = try support.irText(arena.allocator(), plain_condition_loop);
+    const body = text[std.mem.indexOf(u8, text, "fn f").?..];
+    // The fix-up blocks b2 and b3 belong to the condition; the loop body and exit follow them.
+    try std.testing.expect(contains(body, "branch %16, b4, b6"));
+    try std.testing.expect(contains(body, "branch %6, b2, b3"));
+}
