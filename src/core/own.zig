@@ -78,6 +78,10 @@ pub const Stats = struct {
     }
 };
 
+/// The `data` of a `release` whose value may be `undef` (a phi fed by one, on a path
+/// the checker rules out): the emitter skips every null block pointer in it.
+pub const empty_release: u64 = 2;
+
 /// The `data` of a `release` whose value is statically unique (fresh, never shared):
 /// the emitter frees the block without testing its count (verify builds assert
 /// `count == 1` first).
@@ -421,6 +425,28 @@ const Analysis = struct {
     fn liveInto(self: *const Analysis, ref: ir.Ref, succ: u32) bool {
         const live = self.live[ref.index()] orelse return false;
         return succ != live.def and live.in.isSet(succ);
+    }
+
+    /// Whether `ref` is a phi that may hold `undef`: one of its operands is `undef` or
+    /// such a phi (the undef value is never owned, so its release must test for it).
+    fn maybeUndef(self: *const Analysis, ref: ir.Ref) bool {
+        const f = self.f;
+        if (f.inst(ref).op != .phi) return false;
+        var seen: std.AutoHashMapUnmanaged(u32, void) = .empty;
+        var stack: std.ArrayList(ir.Ref) = .empty;
+        stack.append(self.arena, ref) catch return true;
+        while (stack.pop()) |current| {
+            for (f.operands(f.inst(current).data)) |operand| {
+                const source = f.resolve(operand);
+                const op = f.inst(source).op;
+                if (op == .undef) return true;
+                if (op != .phi) continue;
+                const entry = seen.getOrPut(self.arena, @backingInt(source)) catch return true;
+                if (entry.found_existing) continue;
+                stack.append(self.arena, source) catch return true;
+            }
+        }
+        return false;
     }
 
     /// Whether the instruction at `pos` of `block` reads `ref` without taking it: a call
@@ -943,7 +969,7 @@ fn countOwned(a: *Analysis, ref: ir.Ref, actions: *std.ArrayList(Action)) Error!
     const f = a.f;
     const live = a.live[ref.index()].?;
     // A list nothing shares (form 1's rule) has count 1 wherever it dies.
-    const release_data: u64 = if (try staticallyUnique(a, ref, .none)) unique_release else 0;
+    const release_data = try releaseKind(a, ref);
     if (a.promoted[ref.index()]) try actions.append(a.arena, .{ .place = placeAfterDef(a, ref), .op = .retain, .value = ref });
     // Consuming uses: the last one moves, the others take a retained owner.
     for (a.uses[ref.index()].items) |use| {
@@ -970,7 +996,8 @@ fn countOwned(a: *Analysis, ref: ir.Ref, actions: *std.ArrayList(Action)) Error!
         if (last) |pos| {
             const consumed = for (a.uses[ref.index()].items) |use| {
                 const here = !use.onEdge() and use.block == b and use.pos == pos;
-                if (here and use.consume > 0) break true;
+                // A use that also borrows the value (a `mut` call reading it too) does not move it.
+                if (here and use.consume > 0 and use.borrow == 0) break true;
             } else false;
             if (consumed) continue;
             const at = block.insts.items[pos];
@@ -993,6 +1020,12 @@ fn countOwned(a: *Analysis, ref: ir.Ref, actions: *std.ArrayList(Action)) Error!
             if (!taken) try actions.append(a.arena, .{ .place = .{ .edge = .{ .from = @intCast(b), .to = succ } }, .op = .release, .value = ref, .data = release_data });
         }
     }
+}
+
+/// The `data` an owned value's releases carry: may be `undef`, unique, or plain.
+fn releaseKind(a: *Analysis, ref: ir.Ref) Error!u64 {
+    if (a.maybeUndef(ref)) return empty_release;
+    return if (try staticallyUnique(a, ref, .none)) unique_release else 0;
 }
 
 /// A borrowed value that a consuming use takes is retained first; an immortal one

@@ -666,3 +666,98 @@ test "a block shared on one of several paths into a loop is tested before the lo
         try std.testing.expectEqualStrings("70\n", (try std.process.run(arena.allocator(), std.testing.io, .{ .argv = &.{ output, "x" } })).stdout);
     }
 }
+
+const taken_and_read =
+    \\def bump_and_count(xs: mut list[int], view: list[int]) -> int:
+    \\    xs[0] = 2
+    \\    return len(view) + view[0] * 10
+    \\
+    \\
+    \\public def test_a_mut_argument_also_read_is_a_snapshot_and_freed() -> bool:
+    \\    xs = [1, 2]
+    \\    n = bump_and_count(mut xs, xs)
+    \\    return n == 12 and xs == [2, 2]
+    \\
+;
+
+// spec: NEW-CORE-RC-10
+test "a call that takes a mut argument and also reads it gets a second owner, and the caller's is released after it" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    var dir = std.testing.tmpDir(.{});
+    defer dir.cleanup();
+    try dir.dir.writeFile(std.testing.io, .{ .sub_path = "taken.my", .data = taken_and_read });
+    const root = try dir.dir.realPathFileAlloc(std.testing.io, ".", arena.allocator());
+    var environment = try std.testing.environ.createMap(arena.allocator());
+    try environment.put("MYL_CORE_LEAKCHECK", "1");
+    for ([_][]const []const u8{ &.{}, &.{"--release"} }) |flags| {
+        var argv: std.ArrayList([]const u8) = .empty;
+        try argv.appendSlice(arena.allocator(), &.{ options.core_path, "test", try std.fs.path.join(arena.allocator(), &.{ root, "taken.my" }), "--cache-dir", try std.fs.path.join(arena.allocator(), &.{ root, "cache" }) });
+        try argv.appendSlice(arena.allocator(), flags);
+        const ran = try std.process.run(arena.allocator(), std.testing.io, .{ .argv = argv.items, .environ_map = &environment });
+        // Under the leak check the runner fails a test that ends with blocks live (`leak: …`).
+        try std.testing.expect(contains(ran.stdout, "passed taken::test_a_mut_argument_also_read_is_a_snapshot_and_freed"));
+        try std.testing.expect(!contains(ran.stdout, "leak:"));
+    }
+}
+
+/// main(out): `p = phi [undef, entry], [next, latch]` of `list[int]` in a loop that runs
+/// `n` times (0 here), reading `p` only after the first iteration: on the zero-trip path
+/// the phi holds `undef` when it dies on the exit edge.
+fn undefLoopProgram(arena: std.mem.Allocator, record_shaped: bool) !ir.Module {
+    var m: ir.Module = .{};
+    const ints = try m.intern(arena, .{ .list = .i64 });
+    const holder = try m.intern(arena, .{ .record = &.{ .i64, ints, ints, ints, ints } });
+    const ty = if (record_shaped) holder else ints;
+    var h = try Hand.init(arena, &m, "main", .{ .params = try arena.dupe(ir.Type, &.{.cap}), .ret = .i64 });
+    const out = try h.param(0);
+    const header = try h.newBlock();
+    const body = try h.newBlock();
+    const read = try h.newBlock();
+    const latch = try h.newBlock();
+    const exit = try h.newBlock();
+    const undef = try h.loose(.{ .op = .undef, .ty = ty });
+    try h.jump(header);
+    // header: i = phi(0, i + 1); p = phi(undef, next); i < 0?
+    h.block = header;
+    const i = try h.loose(.{ .op = .phi, .ty = .i64 });
+    const p = try h.loose(.{ .op = .phi, .ty = ty });
+    try h.function.blocks.items[header.index()].insts.appendSlice(arena, &.{ i, p });
+    const more = try h.emit(.{ .op = .cmp, .ty = .bool, .a = i, .b = try h.int(.i64, 0), .data = @backingInt(ir.Predicate.lt) });
+    try h.branch(more, body, exit);
+    // body: if i > 0: read len(p)
+    h.block = body;
+    const later = try h.emit(.{ .op = .cmp, .ty = .bool, .a = i, .b = try h.int(.i64, 0), .data = @backingInt(ir.Predicate.gt) });
+    try h.branch(later, read, latch);
+    h.block = read;
+    const list = if (record_shaped) try h.emit(.{ .op = .record_get, .ty = ints, .a = p, .data = 1 }) else p;
+    const n = try h.emit(.{ .op = .list_len, .ty = .u64, .a = list });
+    try h.printValues(out, &.{n});
+    try h.jump(latch);
+    // latch: next = a fresh value; i + 1
+    h.block = latch;
+    const fresh = try pushed(&h, ints, &.{ 1, 2 });
+    const next = if (record_shaped) try h.emit(.{ .op = .record_make, .ty = holder, .data = try h.extra(&.{ try h.int(.i64, 1), fresh, try pushed(&h, ints, &.{3}), try pushed(&h, ints, &.{4}), try pushed(&h, ints, &.{5}) }) }) else fresh;
+    const step = try h.emit(.{ .op = .add, .ty = .i64, .a = i, .b = try h.int(.i64, 1), .check = .exact });
+    try h.jump(header);
+    h.function.insts.items[i.index()].data = try h.extra(&.{ try h.int(.i64, 0), step });
+    h.function.insts.items[p.index()].data = try h.extra(&.{ undef, next });
+    h.block = exit;
+    _ = try h.emit(.{ .op = .ret, .ty = .void, .a = try h.int(.i64, 0) });
+    _ = try h.finish();
+    return m;
+}
+
+// spec: NEW-CORE-RC-11
+test "a phi that may hold undef is released only when it holds a block: a zero-trip loop does not crash, list and record" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    for ([_]bool{ false, true }) |record_shaped| {
+        for ([_]bool{ false, true }) |release| {
+            var module = try undefLoopProgram(arena.allocator(), record_shaped);
+            const run = try support.runOwned(arena.allocator(), &module, .{ .release = release });
+            try std.testing.expectEqual(@as(u8, 0), run.status);
+            try std.testing.expectEqualStrings("", run.stderr);
+        }
+    }
+}

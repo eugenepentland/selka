@@ -655,6 +655,27 @@ Changes to this note, binding on the lanes:
   (458,883 per outer iteration in both; 6k more once, for the frees at exit), and the
   difference is branch misses (128k against 144–159k per run) from moved addresses.
 
+**Layout sensitivity of binary_search (checkpoint O-3, 2026-10-05; data, no policy landed).**
+With identical code, binary_search 4096 ranged from 30.4 to 44 cycles per search across
+builds whose only difference was where `main` landed (O-2a, O-2c). `lane-o/layout_shift.py`
+shifts every program address by 0–960 bytes in 64-byte steps (a padding function placed
+first) and builds each shift under four flag sets; megacycles for `4096 400 7`, median of 5:
+
+| policy | most shifts | worst shifts | spread |
+|---|---:|---:|---:|
+| current (innermost loops aligned to 64) | 50.1–51.4 | 64.5 (+512), 56.1 (+448), 56.0 (+0) | 29% |
+| + `-falign-functions=64` | 50.1–51.7 | 66.8 (+512), 56.2 (+448, +960) | 33% |
+| + `-falign-loops=64` (every loop) | 50.2–52.0 | 74.2 (+0), 73.2 (+960), 65.4 (+448) | 48% |
+| + `-falign-functions=4096` | 50.1–51.6 | 73.3 (+640), 59.5 (+128), 59.0 (+64) | 46% |
+
+The slow shifts execute the same instructions and double the branch misses: the search's
+data-dependent branch shares predictor state with other branches depending on address bits
+above the 64-byte line, which no alignment policy controls (larger alignments only move
+which shifts are slow). The lever is the code, not the layout: a branch-free search step
+(`cmov` for `low`/`high`, which LLVM does not choose here) would remove the predictor from
+the loop. That is facts/emission work, not a target flag; binary_search numbers should be
+read as a 50–65 megacycle band (≈30–39 cycles per search) until then.
+
 **R-3. No generics or imports in S1.**
 - Generics stay out of S1, and so do imports: imports are S4.
 - Split copies of the `migrated/propagation` cases go in `test/core/`. `tests/lang/` is never edited by the new-core lanes.

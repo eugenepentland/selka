@@ -74,6 +74,8 @@ const same_pointer = "  {s} = getelementptr inbounds i8, ptr {s}, i64 0\n";
 const unique_assert = 1;
 /// The `data` of a `release` of a statically unique block (`own.unique_release`).
 const unique_release = 1;
+/// The `data` of a `release` of a value that may be `undef` (`own.empty_release`).
+const empty_release = 2;
 /// The `data` of an `unreachable` asserting a stack list's room (`promote.capacity_assert`).
 const capacity_assert = 2;
 /// The `data` of a push into a stack list (`promote.stack_push`).
@@ -168,6 +170,7 @@ pub fn emitModule(allocator: std.mem.Allocator, module: *const ir.Module, option
     try out.appendSlice(allocator, state.meta.ranges.items);
     try out.appendSlice(allocator, state.layouts.text.items);
     try out.appendSlice(allocator, trace_call_attributes);
+    if (state.zeros != 0) try out.print(allocator, "@myl.zeros = private constant [{d} x i8] zeroinitializer, align 8\n", .{state.zeros});
     try state.debug.finish(allocator, &out);
     return out.toOwnedSlice(allocator);
 }
@@ -195,6 +198,8 @@ const ModuleState = struct {
     layouts: Layouts = .{},
     /// DWARF line tables for trap frames (`Traps.dwarf_lines`).
     debug: Debug = .{},
+    /// Bytes of the zeroed constant `@myl.zeros` (an `undef` record or union in memory), 0 for none.
+    zeros: u32 = 0,
 
     fn declareExtern(self: *ModuleState, function: *const ir.Function) !void {
         // Several signatures of one runtime function (`myl_core_list_sort` over lists of different
@@ -539,6 +544,9 @@ const FunctionEmitter = struct {
     memory: MemoryState = .{},
     /// The function's `DISubprogram` node (`dwarf_lines`), or 0.
     scope: u32 = 0,
+    /// Emitting a release of a value that may be `undef` (`own.empty_release`): every
+    /// block pointer is tested for null first.
+    may_be_empty: bool = false,
 
     fn a(self: *FunctionEmitter) std.mem.Allocator {
         return self.state.allocator;
@@ -561,7 +569,7 @@ const FunctionEmitter = struct {
             .iconst => if (inst.ty == .bool) (if (inst.data != 0) "true" else "false") else std.fmt.allocPrint(self.a(), "{d}", .{@as(i64, @bitCast(inst.data))}),
             .fconst => std.fmt.allocPrint(self.a(), "0x{X:0>16}", .{inst.data}),
             .param => std.fmt.allocPrint(self.a(), "%p{d}", .{inst.data}),
-            .undef => "poison",
+            .undef => self.undefValue(inst.ty),
             .str_const => std.fmt.allocPrint(self.a(), "@myl.str.{d}", .{inst.data}),
             else => std.fmt.allocPrint(self.a(), "%v{d}", .{ref.index()}),
         };
@@ -1112,6 +1120,8 @@ const FunctionEmitter = struct {
             .box_get => try self.loadValue(out, inst.ty, try self.offsetPointer(out, try self.value(inst.a), data_offset), name),
             .retain, .release => {
                 const mode: Counting = if (inst.op == .retain) .retain else .release;
+                self.may_be_empty = inst.op == .release and inst.data == empty_release;
+                defer self.may_be_empty = false;
                 if (inst.op == .release and inst.data == unique_release) {
                     try self.freeUnique(out, inst);
                 } else if (self.state.module.passedInMemory(self.typeOf(inst.a))) {
@@ -1873,6 +1883,21 @@ const FunctionEmitter = struct {
         }
     }
 
+    /// `undef` of `ty`: poison when it holds no block; otherwise a value whose every block
+    /// pointer is null (a null pointer, a zero struct, or for a record or union kept in
+    /// memory a pointer to zeroed memory), which a release of a possibly-`undef` value
+    /// (`empty_release`) tests and skips.
+    fn undefValue(self: *FunctionEmitter, value_type: ir.Type) ![]const u8 {
+        const m = self.state.module;
+        if (!m.managed(value_type)) return "poison";
+        if (m.passedInMemory(value_type)) {
+            self.state.zeros = @max(self.state.zeros, m.size(value_type));
+            return "@myl.zeros";
+        }
+        if (m.isBlock(value_type) or (m.kind(value_type) == .@"union" and m.unionLayout(value_type).form == .niche)) return "null";
+        return "zeroinitializer";
+    }
+
     /// The release of a block `own.zig` proved unique: free it without the count test
     /// (verify builds first assert the count is 1 and trap `R_CORE_FACT`).
     fn freeUnique(self: *FunctionEmitter, out: *Out, inst: ir.Inst) !void {
@@ -1916,6 +1941,16 @@ const FunctionEmitter = struct {
     /// never changes, so immortal string constants are never written; a release
     /// that drops the last owner calls the cold, out-of-line `myl_core_free`.
     fn countBlock(self: *FunctionEmitter, out: *Out, mode: Counting, block: []const u8) !void {
+        if (self.may_be_empty) {
+            // An `undef` value is all null pointers (`undefValue`): nothing to count.
+            const present = try self.fresh("%re");
+            try out.print(self.a(), "  {s} = icmp ne ptr {s}, null\n", .{ present, block });
+            const join = try self.enterIf(out, present);
+            self.may_be_empty = false;
+            defer self.may_be_empty = true;
+            try self.countBlock(out, mode, block);
+            return self.leaveIf(out, join);
+        }
         const count = try self.fresh("%rc");
         const saturated = try self.fresh("%rs");
         const update = try self.fresh(if (mode == .retain) "rc.inc" else "rc.dec");
