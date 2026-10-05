@@ -1029,10 +1029,25 @@ const FnBuilder = struct {
     /// booleans: structural, never a pointer comparison. A `str`, a list of anything else and
     /// a list inside a union or record are refused until their equality is built.
     fn aggregateCompare(self: *FnBuilder, op: typed.BinaryOp, left: ir.Ref, right: ir.Ref, span: u32) Error!ir.Ref {
-        if (op != .eq and op != .ne) return self.mb.refuse(@tagName(op), span);
+        if (op != .eq and op != .ne) return self.mb.refuse(if (op == .add) "concatenation" else "operator on an aggregate value", span);
+        // A recursive value would need a function that calls itself, not an expansion in place.
+        if (self.holdsBox(self.typeOfRef(left))) return self.mb.refuse("equality of a recursive value", span);
         const same = try self.equal(left, right, span);
         if (self.current == null or op == .eq) return same;
         return self.emit(.{ .op = .not, .ty = .bool, .a = same, .span = span });
+    }
+
+    /// Whether `ty` holds a `box` (a recursive field or payload) anywhere in its record and union parts.
+    fn holdsBox(self: *FnBuilder, ty: ir.Type) bool {
+        const m = self.mb.module;
+        const kind = m.kind(ty) orelse return false;
+        switch (kind) {
+            .box => return true,
+            .list => return false,
+            .record => for (m.compound(ty).record) |field| if (self.holdsBox(field)) return true,
+            .@"union" => for (m.compound(ty).@"union") |case| if (self.holdsBox(case)) return true,
+        }
+        return false;
     }
 
     /// Whether two values of one type are equal: fields and payloads compare with the type's

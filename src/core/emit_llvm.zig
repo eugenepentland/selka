@@ -1673,7 +1673,7 @@ const FunctionEmitter = struct {
         const old = if (managed) try self.fresh("%old") else "";
         if (managed) try self.loadValue(out, element, slot, old);
         try self.storeOperand(out, element, self.function.operands(inst.data)[0], slot);
-        if (managed) try self.counted(out, .release, element, old);
+        if (managed) try self.countedValue(out, .release, element, old);
         try out.print(self.a(), identity_line, .{ name, list });
     }
 

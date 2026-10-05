@@ -350,3 +350,28 @@ test "an append to a list element is a push onto the element and a list_set of i
     try std.testing.expectError(error.Unsupported, support.buildSource(arena.allocator(), callback_in_index, &refusal));
     try std.testing.expectEqualStrings("write to a receiver's place while its arguments are evaluated", refusal.reason);
 }
+
+const recursive_equality =
+    \\union Expr:
+    \\    num(value: int),
+    \\    add(left: Expr, right: Expr)
+    \\
+    \\
+    \\def same(a: Expr, b: Expr) -> bool:
+    \\    return a == b
+    \\
+    \\
+    \\def main(out: Stream) -> int:
+    \\    out.print(same(Expr.num(1), Expr.num(1)))
+    \\    return 0
+    \\
+;
+
+// spec-case: NEW-CORE-EQ-1
+test "equality of a recursive value is refused instead of expanding forever" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    var refusal: build.Refusal = .{};
+    try std.testing.expectError(error.Unsupported, support.buildSource(arena.allocator(), recursive_equality, &refusal));
+    try std.testing.expectEqualStrings("equality of a recursive value", refusal.reason);
+}

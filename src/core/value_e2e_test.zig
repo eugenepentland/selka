@@ -5,6 +5,9 @@
 const std = @import("std");
 const options = @import("core_test_options");
 
+/// The flag that builds with the release passes.
+const release_flag = @import("e2e_test.zig").optimize_flag;
+
 /// Failure detail goes to the test's stderr.
 const report = std.debug.print;
 
@@ -26,8 +29,8 @@ fn runFixture(arena: std.mem.Allocator, root: []const u8, name: []const u8, mode
     try argv.appendSlice(arena, &.{ if (mode == .old) options.old_path else options.core_path, "build", source, "-o", output, "--link", options.clock_path, "--cache-dir", cache });
     switch (mode) {
         .debug => {},
-        .release, .old => try argv.append(arena, "--release"),
-        .verify => try argv.appendSlice(arena, &.{ "--release", "--verify-facts" }),
+        .release, .old => try argv.append(arena, release_flag),
+        .verify => try argv.appendSlice(arena, &.{ release_flag, "--verify-facts" }),
     }
     const built = try std.process.run(arena, std.testing.io, .{ .argv = argv.items });
     if (built.term != .exited or built.term.exited != 0) {
@@ -245,4 +248,48 @@ test "a mut argument's value is read when the call runs, after a nested call tha
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     try std.testing.expect(try matches(arena.allocator(), "v_mut_window", v_mut_window_output, 0));
+}
+
+const v_wide_managed_output =
+    \\2834 3 1
+    \\103012 3104
+    \\3 3 50 2
+    \\
+;
+
+// spec-case: NEW-CORE-RECORD-3
+test "records and unions over four words that hold lists print what the old core prints" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    try std.testing.expect(try matches(arena.allocator(), "v_wide_managed", v_wide_managed_output, 0));
+}
+
+/// Build `test/core/NAME.my` in `mode` and run it under `MYL_CORE_LEAKCHECK=1`; its stderr.
+fn leakReport(arena: std.mem.Allocator, root: []const u8, name: []const u8, mode: Mode) ![]const u8 {
+    const source = try std.fmt.allocPrint(arena, "{s}/{s}.my", .{ options.fixtures, name });
+    const output = try std.fmt.allocPrint(arena, "{s}/{s}-leak-{s}", .{ root, name, @tagName(mode) });
+    const cache = try std.fmt.allocPrint(arena, "{s}/cache-leak", .{root});
+    var argv: std.ArrayList([]const u8) = .empty;
+    try argv.appendSlice(arena, &.{ options.core_path, "build", source, "-o", output, "--link", options.clock_path, "--cache-dir", cache });
+    if (mode == .release) try argv.append(arena, release_flag);
+    const built = try std.process.run(arena, std.testing.io, .{ .argv = argv.items });
+    try std.testing.expect(built.term == .exited and built.term.exited == 0);
+    var environment = try std.testing.environ.createMap(arena);
+    try environment.put("MYL_CORE_LEAKCHECK", "1");
+    const ran = try std.process.run(arena, std.testing.io, .{ .argv = &.{output}, .environ_map = &environment });
+    return ran.stderr;
+}
+
+// spec-case: NEW-CORE-RC-7
+test "the value fixtures end with no block live under MYL_CORE_LEAKCHECK=1, debug and release" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    var dir = std.testing.tmpDir(.{});
+    defer dir.cleanup();
+    const root = try scratch(arena.allocator(), dir);
+    const names = [_][]const u8{ "v_records", "v_unions", "v_lists", "v_mut", "v_wide", "v_wide_managed", "v_nested", "v_mut_window", "v_equality" };
+    for (names) |name| {
+        try std.testing.expectEqualStrings("", try leakReport(arena.allocator(), root, name, .debug));
+        try std.testing.expectEqualStrings("", try leakReport(arena.allocator(), root, name, .release));
+    }
 }
