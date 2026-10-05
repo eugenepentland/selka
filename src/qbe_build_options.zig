@@ -530,3 +530,24 @@ test "a link input written after a bare switch is still linked" {
     try std.testing.expectEqualStrings("-L/lib", forwarded.items[2]);
     try std.testing.expect(native_link.hasInputs(&.{ "main.my", "--release", "--link", "a.c" }));
 }
+// spec-case: BUILD-LINK-SOURCE-1
+test "a link compiles a --link input unless it is an object, an archive or a shared library" {
+    var environment: std.process.Environ.Map = .init(std.testing.allocator);
+    defer environment.deinit();
+    var context = try @import("qbe_build_io.zig").Context.init(std.testing.allocator, std.testing.io, &environment);
+    defer context.deinit();
+    const native_link = @import("native_link.zig");
+    try std.testing.expect(native_link.linkerInput("/work/helpers.o"));
+    try std.testing.expect(native_link.linkerInput("libhelpers.a"));
+    try std.testing.expect(native_link.linkerInput("libhelpers.so"));
+    try std.testing.expect(native_link.linkerInput("/usr/lib/libz.so.1.3"));
+    try std.testing.expect(!native_link.linkerInput("/work/helpers.c"));
+    try std.testing.expect(!native_link.linkerInput("start.S"));
+    try std.testing.expect(!native_link.linkerInput("libhelpers.so.c"));
+    try std.testing.expect(!native_link.linkerInput("libhelpers.so."));
+    try std.testing.expect(!native_link.linkerInput("/work/objects.o/README"));
+    try std.testing.expect(try native_link.compiles(context, &.{ "main.my", "--release", "--link", "/work/a.o", "--link=/work/b.c" }));
+    try std.testing.expect(!try native_link.compiles(context, &.{ "main.my", "--link", "/work/a.o", "--link-library", "c", "--library-path", "/work/lib.c" }));
+    // A guest argument after `--` is not a link input.
+    try std.testing.expect(!try native_link.compiles(context, &.{ "main.my", "--run", "--", "--link", "/work/b.c" }));
+}

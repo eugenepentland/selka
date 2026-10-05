@@ -1312,7 +1312,8 @@ const State = struct {
         if (self.cache.codegen.lto.on() and !parsed.library and self.usesFrameMap()) return self.linkAssembled(parsed, candidate);
         // BUILD-LINK-1: the command `zig cc` would run, without its host probe.
         const place: direct_link.Place = .{ .directory = self.cache.directory, .environment = self.cache.environment };
-        self.link_route = try direct_link.run(self.context, place, .{ .argv = try self.linkCommand(parsed, candidate), .objects = self.objects.items, .output = candidate, .scratch = self.cache.temporary });
+        const compiles = try native_link.compiles(self.context, parsed.link_arguments);
+        self.link_route = try direct_link.run(self.context, place, .{ .argv = try self.linkCommand(parsed, candidate), .objects = self.objects.items, .output = candidate, .scratch = self.cache.temporary, .compiles = compiles });
     }
     /// Whether this link is an LLVM frame-map executable, whose guest code keeps
     /// no frame pointer: its traps unwind by call-frame information, so it

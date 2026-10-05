@@ -30,6 +30,30 @@ pub fn hasInputs(raw: []const []const u8) bool {
     }
     return false;
 }
+/// Whether any `--link` input is one `zig cc` compiles before it links (C
+/// source, say) rather than one it hands the linker as it is
+/// (BUILD-LINK-SOURCE-1).
+pub fn compiles(context: fs.Context, raw: []const []const u8) fs.Error!bool {
+    var forwarded: std.ArrayList([]const u8) = .empty;
+    try append(context, raw, &forwarded, true);
+    var index: usize = 0;
+    while (index + 1 < forwarded.items.len) : (index += 2) {
+        if (std.mem.eql(u8, forwarded.items[index], "--link") and !linkerInput(forwarded.items[index + 1])) return true;
+    }
+    return false;
+}
+/// Whether `zig cc` passes `path` to the linker unchanged: an object, an
+/// archive or a shared library, versioned (`libx.so.1.2`) or not. Every other
+/// name counts as compiled, so an unfamiliar extension costs a driver link,
+/// never a broken one.
+pub fn linkerInput(path: []const u8) bool {
+    const name = std.fs.path.basename(path);
+    for ([_][]const u8{ ".o", ".a", ".so" }) |extension| if (std.mem.endsWith(u8, name, extension)) return true;
+    const version = name[(std.mem.indexOf(u8, name, ".so.") orelse return false) + ".so.".len ..];
+    if (version.len == 0) return false;
+    for (version) |c| if (!std.ascii.isDigit(c) and c != '.') return false;
+    return true;
+}
 /// Preserve input order and resolve paths before forwarding to another process.
 pub fn append(context: fs.Context, raw: []const []const u8, output: *std.ArrayList([]const u8), forwarding: bool) fs.Error!void {
     var i: usize = 0;

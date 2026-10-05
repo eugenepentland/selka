@@ -12553,6 +12553,86 @@ test "the first link records how zig cc links and every later link runs the link
     try testing.expectEqualStrings("17\n3:3\n", try programOutput(a, output));
 }
 
+/// A program that exits with whatever the C function `helper_status` returns.
+const linked_c_program =
+    \\extern def helper_status(host: Host) -> i64 effects(host)
+    \\
+    \\
+    \\def main(host: Host) -> int:
+    \\    return helper_status(host)
+;
+
+/// `helper.c`, defining `helper_status` to return `status`.
+fn writeLinkedHelper(directory: std.Io.Dir, comptime status: u8) !void {
+    const source = std.fmt.comptimePrint("#include <stdint.h>\nint64_t helper_status(void) {{ return {d}; }}\n", .{status});
+    try directory.writeFile(testing.io, .{ .sub_path = "helper.c", .data = source });
+}
+
+/// Run one `build ... --report` that writes `output`, then the program: the
+/// link route the report names and the program's exit status.
+fn linkedRouteAndStatus(allocator: std.mem.Allocator, argv: []const []const u8, output: []const u8) ![]const u8 {
+    const built = try std.process.run(allocator, testing.io, .{ .argv = argv });
+    try testing.expectEqualStrings("", built.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, built.term);
+    const report = try std.json.parseFromSliceLeaky(std.json.Value, allocator, built.stdout, .{});
+    const ran = try std.process.run(allocator, testing.io, .{ .argv = &.{output} });
+    const status = switch (ran.term) {
+        .exited => |code| code,
+        else => return error.TestUnexpectedResult,
+    };
+    return std.fmt.allocPrint(allocator, "{s} {d}", .{ report.object.get("link_route").?.string, status });
+}
+
+// spec: BUILD-LINK-SOURCE-1
+test "a non-release build links a C source given to --link and links its edit on the next build" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const root = try temporary.dir.realPathFileAlloc(testing.io, ".", a);
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = linked_c_program });
+    try writeLinkedHelper(temporary.dir, 7);
+    const entry = try std.fs.path.join(a, &.{ root, "main.my" });
+    const helper = try std.fs.path.join(a, &.{ root, "helper.c" });
+    const output = try std.fs.path.join(a, &.{ root, "program" });
+    const cache_argument = try std.fmt.allocPrint(a, "--cache-dir={s}/cache", .{root});
+    const debug = [_][]const u8{ compiler_path, "build", entry, "-o", output, "--link", helper, "--report", cache_argument, tools[0], tools[1] };
+    // Debug compiles the C file with UBSan; ReleaseFast and the unoptimized
+    // LLVM arm do not. Each links through `zig cc` itself, never its `-###`
+    // recording run, which only prints the C compile and then misses its object.
+    try testing.expectEqualStrings("driver 7", try linkedRouteAndStatus(a, &debug, output));
+    try testing.expectEqualStrings("driver 7", try linkedRouteAndStatus(a, &.{ compiler_path, "build", entry, "-o", output, "--link", helper, "--mode", "ReleaseFast", "--report", cache_argument, tools[0], tools[1] }, output));
+    try testing.expectEqualStrings("driver 7", try linkedRouteAndStatus(a, &.{ compiler_path, "build", entry, "-o", output, "--link", helper, "--backend", "llvm", "--llvm-opt", "0", "--report", cache_argument, tools[1] }, output));
+    // No template replays the object of the first compile: the edit is linked.
+    try writeLinkedHelper(temporary.dir, 9);
+    try testing.expectEqualStrings("driver 9", try linkedRouteAndStatus(a, &debug, output));
+    // The same function as a prebuilt object is linked from a recorded template.
+    const object = try std.fs.path.join(a, &.{ root, "helper.o" });
+    const compiled = try std.process.run(a, testing.io, .{ .argv = &.{ @import("test_options").zig_path, "cc", "-c", helper, "-o", object } });
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, compiled.term);
+    try testing.expectEqualStrings("recorded 9", try linkedRouteAndStatus(a, &.{ compiler_path, "build", entry, "-o", output, "--link", object, "--report", cache_argument, tools[0], tools[1] }, output));
+}
+
+// spec-case: BUILD-LINK-SOURCE-1
+test "mylang test links a C source given to --link into its test library" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const root = try temporary.dir.realPathFileAlloc(testing.io, ".", a);
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = linked_c_program ++ "\n\n\npublic def test_sum() -> bool:\n    return 3 + 4 == 7\n" });
+    try writeLinkedHelper(temporary.dir, 7);
+    const entry = try std.fs.path.join(a, &.{ root, "main.my" });
+    const helper = try std.fs.path.join(a, &.{ root, "helper.c" });
+    const cache = try std.fs.path.join(a, &.{ root, "cache" });
+    const tested = try std.process.run(a, testing.io, .{ .argv = &.{ compiler_path, "test", entry, "--link", helper, "--cache-dir", cache, tools[0], tools[1] } });
+    try testing.expectEqualStrings("", tested.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, tested.term);
+    try testing.expect(std.mem.indexOf(u8, tested.stdout, "passed main::test_sum\n") != null);
+}
+
 // spec-case: BUILD-NOOP-1
 test "an unchanged build keeps its executable without rebuilding and a replaced one is rebuilt" {
     var temporary = testing.tmpDir(.{});

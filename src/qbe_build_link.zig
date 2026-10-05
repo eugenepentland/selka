@@ -36,10 +36,11 @@ const probe_variables = [_][]const u8{ "PATH", "ZIG_GLOBAL_CACHE_DIR", "ZIG_LIBC
 const linker_prefix = "ld.lld ";
 
 /// One final link: the `zig cc` command (`argv[0]` is Zig, `argv[1]` is `cc`),
-/// the objects it names as one contiguous run, the output it writes, and this
+/// the objects it names as one contiguous run, the output it writes, this
 /// build's private scratch directory, which the compile-only path-mapping
-/// flags name and which differs on every build.
-pub const Link = struct { argv: []const []const u8, objects: []const []const u8, output: []const u8, scratch: []const u8 = "" };
+/// flags name and which differs on every build, and whether the command also
+/// compiles a source (a C file given to `--link`, BUILD-LINK-SOURCE-1).
+pub const Link = struct { argv: []const []const u8, objects: []const []const u8, output: []const u8, scratch: []const u8 = "", compiles: bool = false };
 
 /// Where templates are kept and the build environment (tool stamps, mode,
 /// target) that is part of every template's key.
@@ -50,11 +51,15 @@ pub const Place = struct { directory: []const u8, environment: []const u8 };
 pub const Route = enum { direct, recorded, driver };
 
 /// Link, directly when a template for this shape exists and still applies,
-/// otherwise through `zig cc`, recording a template when its command can be
-/// read back unambiguously.
+/// otherwise through `zig cc`, recording a template when the link compiles no
+/// source and its command can be read back unambiguously.
 pub fn run(context: fs.Context, place: Place, link: Link) fs.Error!Route {
     const a = context.allocator;
-    const run_start = objectRun(link) orelse {
+    // BUILD-LINK-SOURCE-1: `-###` reaches the compile of a source too, which
+    // then only prints its command and leaves no object (`FileNotFound`), and
+    // a template would replay whatever object the first compile made.
+    const recordable = if (link.compiles) null else objectRun(link);
+    const run_start = recordable orelse {
         try context.command(try responseArgv(context, try responsePath(context, link), link.argv, 2), null);
         return .driver;
     };

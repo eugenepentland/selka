@@ -590,6 +590,15 @@ when a path it names has disappeared, and a direct link that fails goes through
 `zig cc` again. `--report` names the route as `link_route` (`recorded`,
 `direct` or `driver`).
 
+A link with a `--link` input that `zig cc` compiles first — a C source, or any
+file other than an object (`.o`), an archive (`.a`) or a shared library (`.so`)
+— always takes the `driver` route and records no template
+(`BUILD-LINK-SOURCE-1`). `-###` would reach that compile too: clang would print
+its command instead of writing the object, and the link would fail with
+`helpers.c:1:1: error: FileNotFound`. A template would also keep linking the
+object of the source as it was first compiled. Objects, archives and shared
+libraries keep the recorded and direct routes.
+
 Every link command passes its arguments through a response file (`@link.rsp`
 beside the output, `BUILD-LINK-RSP-1`), because a link names every object: a
 million-line program's 19,007 objects are 4.66 MB of arguments, past what the
