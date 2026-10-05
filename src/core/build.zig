@@ -12,6 +12,9 @@ const typed = @import("mylang").typed;
 const ir = @import("ir.zig");
 const fuse = @import("fuse.zig");
 const flags = @import("flags.zig");
+const build_dict = @import("build_dict.zig");
+const build_text = @import("build_text.zig");
+const build_fn = @import("build_fn.zig");
 
 /// Refusal reasons several constructs share.
 const refuse_payload = "match payload";
@@ -199,13 +202,13 @@ const ModuleBuilder = struct {
                 // A list of `None` holds nothing but its length: a list of `false`, whose elements read as unit.
                 return self.module.intern(self.allocator, .{ .list = if (element == .void) .bool else element });
             },
-            .dictionary => return self.refuse(if (record.collection.set) "set type" else "dict type", span),
-            .bytes => return self.refuse("bytes type", span),
+            .dictionary => return self.refuse(build_dict.typeRefusal(record.collection.set), span),
+            .bytes => return self.refuse(build_text.bytesRefusal(), span),
         };
         if (record.shape.domain != null and std.mem.eql(u8, record.name, "float")) return .f64;
         if (record.shape.variants) |variants| return self.mapUnion(ty, variants, span);
-        if (record.contract.callback != null) return self.refuse("function value type", span);
-        if (record.shape.array != null) return self.refuse("fixed array type", span);
+        if (record.contract.callback != null) return self.refuse(build_fn.typeRefusal(false), span);
+        if (record.shape.array != null) return self.refuse(build_fn.typeRefusal(true), span);
         if (record.shape.resource != null) return self.refuse("resource type", span);
         // A domain is its wire type: `wrap` and `unwrap` change nothing at run time.
         if (record.shape.domain) |wire| {
@@ -1009,6 +1012,7 @@ const FnBuilder = struct {
                 };
                 return value;
             },
+            .function_value => return self.mb.refuse(build_fn.valueRefusal(), span),
             .propagate => |try_value| return self.tryValue(try_value.value, try_value.output, span),
             .print => |print| return self.printNode(print, span),
             .array => |items| {
@@ -1252,6 +1256,7 @@ const FnBuilder = struct {
         switch (kind) {
             .box => return true,
             .list => return self.recursive(m.compound(ty).list, depth + 1),
+            .dict, .array, .@"fn" => return false,
             .record => for (m.compound(ty).record) |field| if (self.recursive(field, depth + 1)) return true,
             .@"union" => for (m.compound(ty).@"union") |case| if (self.recursive(case, depth + 1)) return true,
         }
@@ -1281,7 +1286,7 @@ const FnBuilder = struct {
             },
             .@"union" => return self.unionEqual(a, b, span),
             .list => return self.listEqual(a, b, span),
-            .box => return self.mb.refuse(refuse_equality, span),
+            .box, .dict, .array, .@"fn" => return self.mb.refuse(refuse_equality, span),
         }
     }
 
@@ -1514,7 +1519,7 @@ const FnBuilder = struct {
                 return if (receiver_type == .str) self.stringChars(receiver, span) else self.emit(.{ .op = .list_len, .ty = .u64, .a = receiver, .span = span });
             },
             .read => {
-                if (receiver_type == .str) return self.mb.refuse("string index", span);
+                if (receiver_type == .str) return self.mb.refuse(build_text.indexRefusal(), span);
                 const index = try self.expression(argument_nodes[0]);
                 if (self.current == null) return .none;
                 const receiver = try self.receiverOf(owner);

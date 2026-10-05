@@ -1,0 +1,6 @@
+Build Summary: 3/3 steps succeeded
+core success
++- install mylang-core success
+   +- compile exe mylang-core debug native success 4s MaxRSS:326M
+
+command_wall_seconds=4.96

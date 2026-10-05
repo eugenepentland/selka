@@ -56,7 +56,38 @@ fn reported(arena: std.mem.Allocator, err: Error, failure: Failure, report: *std
 
 /// Verify every internal function of `module`.
 pub fn verifyModule(arena: std.mem.Allocator, module: *const ir.Module, failure: *Failure) Error!void {
+    for (module.compounds.items) |compound| {
+        const escaped = switch (compound) {
+            .list, .box => |element| element == .str_view,
+            .dict => |dict| dict.key == .str_view or dict.value == .str_view,
+            .array => |array| array.elem == .str_view,
+            .record, .@"union" => |fields| std.mem.indexOfScalar(ir.Type, fields, .str_view) != null,
+            .@"fn" => |sig| sig.ret == .str_view or std.mem.indexOfScalar(ir.Type, sig.params, .str_view) != null or sig.views != 0,
+        };
+        if (escaped) {
+            failure.* = .{ .reason = "str_view has no aggregate or function storage representation" };
+            return error.InvalidIr;
+        }
+    }
     for (module.functions.items) |*f| {
+        for (f.signature.params, 0..) |param, i| {
+            const span = i < 64 and f.signature.views & (@as(u64, 1) << @intCast(i)) != 0;
+            const invalid_span = span and !Verifier.admittedView(f.signature, i);
+            if (!module.valid(param) or invalid_span) {
+                failure.* = .{ .function = f.name, .reason = "invalid parameter type or extern span admission" };
+                return error.InvalidIr;
+            }
+        }
+        const out_of_range = f.signature.params.len < 64 and f.signature.views >> @intCast(f.signature.params.len) != 0;
+        const internal_span = f.signature.linkage == .internal and f.signature.views != 0;
+        if (!module.valid(f.signature.ret) or out_of_range or internal_span) {
+            failure.* = .{ .function = f.name, .reason = "invalid result type or extern span admission" };
+            return error.InvalidIr;
+        }
+        if (f.signature.ret == .str_view or std.mem.indexOfScalar(ir.Type, f.signature.params, .str_view) != null) {
+            failure.* = .{ .function = f.name, .reason = "str_view cannot cross a function boundary" };
+            return error.InvalidIr;
+        }
         if (f.signature.linkage != .internal) continue;
         try verifyFunction(arena, module, f, failure);
     }
@@ -134,6 +165,9 @@ const Verifier = struct {
 
     fn run(self: *Verifier) Error!void {
         try self.structure();
+        for (self.f.insts.items, 0..) |inst, i| {
+            if (inst.op == .func_ref) try self.signature(0, @fromBackingInt(@intCast(i)), inst);
+        }
         for (self.f.blocks.items, 0..) |block, b| {
             if (!self.graph.reachable[b]) continue;
             for (block.insts.items, 0..) |ref, at| {
@@ -152,6 +186,7 @@ const Verifier = struct {
         const f = self.f;
         if (f.blocks.items.len == 0) return self.fail(null, null, "a function with a body has no blocks", .{});
         for (f.signature.params) |param| if (!self.module.valid(param)) return self.fail(null, null, "parameter type is not interned", .{});
+        if (f.signature.ret == .str_view or std.mem.indexOfScalar(ir.Type, f.signature.params, .str_view) != null) return self.fail(null, null, "str_view cannot cross a function boundary", .{});
         try self.reach();
         self.position = try self.arena.alloc(?Position, f.insts.items.len);
         @memset(self.position, null);
@@ -363,6 +398,10 @@ const Verifier = struct {
     fn signature(self: *Verifier, b: usize, ref: ir.Ref, inst: ir.Inst) Error!void {
         const f = self.f;
         if (!self.module.valid(inst.ty)) return self.fail(b, ref, "result type is not interned", .{});
+        if (inst.op.hasExtra()) {
+            const extra = ir.ExtraSlice.unpack(inst.data);
+            if (extra.start > f.extra.items.len or extra.len > f.extra.items.len - extra.start) return self.fail(b, ref, "extra operands are out of range", .{});
+        }
         const operands = f.valueOperands(inst);
         for (0..operands.len()) |i| {
             const operand = operands.get(i);
@@ -374,8 +413,69 @@ const Verifier = struct {
             .a = if (inst.a != .none and inst.op != .call) self.typeOf(inst.a) else .void,
             .b = if (inst.b != .none) self.typeOf(inst.b) else .void,
         };
-        const ok = self.scalarSignature(shape) orelse self.aggregateSignature(shape) orelse self.controlSignature(shape);
+        try self.viewUses(b, ref, shape);
+        if (inst.op == .dict_insert and !self.insertProbe(shape)) return self.fail(b, ref, "dict_insert probe must come from dict_find of the same dictionary and key", .{});
+        const ok = self.s2Signature(shape) orelse self.scalarSignature(shape) orelse self.aggregateSignature(shape) orelse self.controlSignature(shape);
         if (!ok) return self.fail(b, ref, "{s} does not match its signature", .{@tagName(inst.op)});
+    }
+
+    fn viewUses(self: *Verifier, b: usize, ref: ir.Ref, s: Shape) Error!void {
+        if (s.inst.ty == .str_view and s.inst.op != .str_view_of and s.inst.op != .copy) return self.fail(b, ref, "str_view may only be defined by str_view_of", .{});
+        const operands = self.f.valueOperands(s.inst);
+        for (0..operands.len()) |i| {
+            if (self.typeOf(operands.get(i)) != .str_view) continue;
+            const admitted = switch (s.inst.op) {
+                .str_from_view, .str_len, .copy => i == 0,
+                .dict_find => i == 1 and if (self.compoundOf(s.a, .dict)) |dict| dict.key == .str else false,
+                .call => s.inst.a.index() < self.module.functions.items.len and admittedView(self.module.functions.items[s.inst.a.index()].signature, i),
+                else => false,
+            };
+            if (!admitted) return self.fail(b, ref, "str_view escapes through {s}", .{@tagName(s.inst.op)});
+        }
+    }
+
+    fn admittedView(sig: ir.Signature, index: usize) bool {
+        return sig.linkage == .extern_c and index < sig.params.len and index < 64 and sig.params[index] == .str and sig.views & (@as(u64, 1) << @intCast(index)) != 0 and sig.owned & (@as(u64, 1) << @intCast(index)) == 0;
+    }
+
+    fn insertProbe(self: *Verifier, s: Shape) bool {
+        if (s.inst.b == .none or s.extra.len != 2) return false;
+        const probe = self.f.inst(self.f.resolve(s.inst.b));
+        return probe.op == .dict_find and self.f.resolve(probe.a) == self.f.resolve(s.inst.a) and self.f.resolve(probe.b) == self.f.resolve(s.extra[0]);
+    }
+
+    fn s2Signature(self: *Verifier, s: Shape) ?bool {
+        const inst = s.inst;
+        return switch (inst.op) {
+            .dict_new => self.compoundOf(inst.ty, .dict) != null and s.a == .u64,
+            .dict_len, .dict_entries => self.compoundOf(s.a, .dict) != null and inst.ty == .u64,
+            .dict_find => if (self.compoundOf(s.a, .dict)) |dict| inst.ty == .i64 and (s.b == dict.key or (dict.key == .str and s.b == .str_view)) else false,
+            .dict_entry_key => if (self.compoundOf(s.a, .dict)) |dict| inst.ty == dict.key and s.b == .i64 else false,
+            .dict_entry_value => if (self.compoundOf(s.a, .dict)) |dict| inst.ty == dict.value and s.b == .i64 else false,
+            .dict_set_value => if (self.compoundOf(s.a, .dict)) |dict| inst.ty == s.a and s.b == .i64 and self.typesMatch(s.extra, &.{dict.value}) else false,
+            .dict_insert => if (self.compoundOf(s.a, .dict)) |dict| inst.ty == s.a and s.b == .i64 and self.typesMatch(s.extra, &.{ dict.key, dict.value }) else false,
+            .dict_remove => self.compoundOf(s.a, .dict) != null and inst.ty == s.a and s.b == .i64,
+            .dict_entry_live => self.compoundOf(s.a, .dict) != null and inst.ty == .bool and s.b == .i64,
+            .dict_copy, .dict_clear => self.compoundOf(s.a, .dict) != null and inst.ty == s.a,
+            .str_char => s.a == .str and s.b == .u64 and inst.ty == .str,
+            .str_width => s.a == .str and s.b == .u64 and inst.ty == .u64,
+            .str_code => s.a == .str and s.b == .u64 and inst.ty == .u32,
+            .str_append => inst.ty == .str and s.a == .str and s.b == .str,
+            .str_append_char => inst.ty == .str and s.a == .str and s.b == .str and self.typesMatch(s.extra, &.{.u64}),
+            .str_slice => inst.ty == .str and s.a == .str and s.b == .i64 and self.typesMatch(s.extra, &.{.i64}),
+            .str_view_of => inst.ty == .str_view and s.a == .str and s.b == .u64 and self.typesMatch(s.extra, &.{.u64}),
+            .str_from_view => inst.ty == .str and s.a == .str_view,
+            .list_sort => self.compoundOf(s.a, .list) != null and inst.ty == s.a and s.b == .bool,
+            .array_get => if (self.compoundOf(s.a, .array)) |array| inst.ty == array.elem and isInteger(s.b) else false,
+            .array_set => if (self.compoundOf(s.a, .array)) |array| inst.ty == s.a and isInteger(s.b) and self.typesMatch(s.extra, &.{array.elem}) else false,
+            .func_ref => if (self.compoundOf(inst.ty, .@"fn")) |sig| inst.data < self.module.functions.items.len and sameSignature(sig, self.module.functions.items[@intCast(inst.data)].signature) and sig.linkage == .internal else false,
+            .call_indirect => if (self.compoundOf(s.a, .@"fn")) |sig| sig.linkage == .internal and inst.ty == sig.ret and self.typesMatch(s.extra, sig.params) else false,
+            else => null,
+        };
+    }
+
+    fn sameSignature(a: ir.Signature, b: ir.Signature) bool {
+        return a.ret == b.ret and a.linkage == b.linkage and a.owned == b.owned and a.views == b.views and std.mem.eql(ir.Type, a.params, b.params);
     }
 
     /// Constants, arithmetic, comparisons and conversions; null for any other operation.
@@ -398,7 +498,7 @@ const Verifier = struct {
             .int_to_float => inst.ty == .f64 and isInteger(s.a),
             .float_to_int => isInteger(inst.ty) and s.a == .f64,
             .convert => isInteger(inst.ty) and isInteger(s.a),
-            .str_len => isInteger(inst.ty) and s.a == .str,
+            .str_len => isInteger(inst.ty) and (s.a == .str or s.a == .str_view),
             .str_parse_int => s.a == .str and self.compoundOf(inst.ty, .@"union") != null,
             else => null,
         };
@@ -409,14 +509,18 @@ const Verifier = struct {
         const inst = s.inst;
         return switch (inst.op) {
             .list_new => self.compoundOf(inst.ty, .list) != null and isInteger(s.a),
-            .list_len => isInteger(inst.ty) and self.compoundOf(s.a, .list) != null,
-            .list_get => if (self.compoundOf(s.a, .list)) |element| element == inst.ty and isInteger(s.b) else false,
+            .list_len => isInteger(inst.ty) and (self.compoundOf(s.a, .list) != null or s.a == .bytes),
+            .list_get => if (s.a == .bytes) inst.ty == .u8 and isInteger(s.b) else if (self.compoundOf(s.a, .list)) |element| element == inst.ty and isInteger(s.b) else false,
             .list_push => if (self.compoundOf(s.a, .list)) |element| inst.ty == s.a and s.b == element else false,
             .list_copy, .list_pop => self.compoundOf(s.a, .list) != null and inst.ty == s.a,
             .list_set => if (self.compoundOf(s.a, .list)) |element| inst.ty == s.a and isInteger(s.b) and s.extra.len == 1 and self.typeOf(s.extra[0]) == element else false,
             .list_get_field => self.fieldSignature(s),
             .union_make, .union_tag, .union_payload => self.unionSignature(s),
-            .record_make => if (self.compoundOf(inst.ty, .record)) |fields| self.typesMatch(s.extra, fields) else false,
+            .record_make => if (self.compoundOf(inst.ty, .record)) |fields| self.typesMatch(s.extra, fields) else if (self.compoundOf(inst.ty, .array)) |array| blk: {
+                if (s.extra.len != array.n) break :blk false;
+                for (s.extra) |element| if (self.typeOf(element) != array.elem) break :blk false;
+                break :blk true;
+            } else false,
             .record_get => if (self.compoundOf(s.a, .record)) |fields| inst.data < fields.len and fields[@intCast(inst.data)] == inst.ty else false,
             .record_set => if (self.compoundOf(s.a, .record)) |fields| inst.ty == s.a and inst.data < fields.len and fields[@intCast(inst.data)] == s.b else false,
             .box_make => if (self.compoundOf(inst.ty, .box)) |inner| s.a == inner else false,
@@ -437,7 +541,12 @@ const Verifier = struct {
             .call => blk: {
                 if (inst.a == .none or inst.a.index() >= m.functions.items.len) break :blk false;
                 const callee = m.functions.items[inst.a.index()].signature;
-                break :blk inst.ty == callee.ret and self.typesMatch(s.extra, callee.params);
+                if (inst.ty != callee.ret or s.extra.len != callee.params.len) break :blk false;
+                for (s.extra, callee.params, 0..) |argument, param, i| {
+                    const ty = self.typeOf(argument);
+                    if (ty != param and !(ty == .str_view and admittedView(callee, i))) break :blk false;
+                }
+                break :blk true;
             },
             .print => inst.ty == .void and s.extra.len != 0 and self.typeOf(s.extra[0]) == .cap,
             .jump => inst.data < self.f.blocks.items.len,

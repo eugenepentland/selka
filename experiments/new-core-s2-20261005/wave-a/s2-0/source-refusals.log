@@ -1,0 +1,10 @@
+dict: status=1
+dict.my:2:25: error[E_CORE_UNSUPPORTED]: the new core does not support dict type yet
+bytes: status=1
+bytes.my:2:11: error[E_CORE_UNSUPPORTED]: the new core does not support bytes type yet
+array: status=1
+array.my:2:18: error[E_CORE_UNSUPPORTED]: the new core does not support fixed array type yet
+function: status=1
+function.my:5:9: error[E_CORE_UNSUPPORTED]: the new core does not support function_value yet
+index: status=1
+index.my:3:10: error[E_CORE_UNSUPPORTED]: the new core does not support index yet

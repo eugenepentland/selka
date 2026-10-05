@@ -1,0 +1,40 @@
+test-core
++- run test 28 pass, 1 fail (29 total)
+error: 's2_ir_test.test.S2 ownership copies borrowed updates and recomputes insert probes on copied dictionaries' failed:
+       internal error[E_CORE_INVALID_IR]: invalid Core IR in updates: parameter type is not interned
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-ir/src/core/verify_ir.zig:149:9: 0x12b03d5 in fail__anon_42567 (root_test.zig)
+               return error.InvalidIr;
+               ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-ir/src/core/verify_ir.zig:174:73: 0x12a0e76 in structure (root_test.zig)
+               for (f.signature.params) |param| if (!self.module.valid(param)) return self.fail(null, null, "parameter type is not interned", .{});
+                                                                               ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-ir/src/core/verify_ir.zig:153:9: 0x128d3e4 in run (root_test.zig)
+               try self.structure();
+               ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-ir/src/core/verify_ir.zig:86:5: 0x128d270 in verifyFunction (root_test.zig)
+           try v.run();
+           ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-ir/src/core/verify_ir.zig:78:9: 0x128cd97 in verifyModule (root_test.zig)
+               try verifyFunction(arena, module, f, failure);
+               ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-ir/src/core/verify_ir.zig:54:5: 0x131d9ec in reported (root_test.zig)
+           return err;
+           ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-ir/src/core/verify_ir.zig:46:55: 0x131bd8d in check (root_test.zig)
+           verifyModule(arena, module, &failure) catch |err| return reported(arena, err, failure, report);
+                                                             ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-ir/src/core/test_support.zig:36:9: 0x1307d43 in verified (root_test.zig)
+               return err;
+               ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-ir/src/core/s2_ir_test.zig:308:5: 0x12bc7d8 in test.S2 ownership copies borrowed updates and recomputes insert probes on copied dictionaries (root_test.zig)
+           try support.verified(a, &borrowed, &.{});
+           ^
+failed command: ./.zig-cache/o/5fe147963aaa475282dfd229ffddee29/test --cache-dir=./.zig-cache --seed=0xb9c9bb3c --listen=-
+
+Build Summary: 3/5 steps succeeded (1 failed); 28/29 tests passed (1 failed)
+test-core transitive failure
++- run test 28 pass, 1 fail (29 total)
+   +- compile test debug native success 539ms MaxRSS:203M
+      +- options success
+         +- compile exe mylang-core debug native success 1s MaxRSS:322M
+

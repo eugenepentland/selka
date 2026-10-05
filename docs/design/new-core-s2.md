@@ -958,7 +958,89 @@ The user accepted every recommendation:
 
 Packages, order and gates: `docs/audits/new-core-s2-implementation-plan-2026-10-05.md`.
 
-## D1 in the shared front end and old core (S2-Lb as built)
+## 13. As built in S2-0 (Wave A, 2026-10-05)
+
+This is the IR foundation. Source lowering for the new features remains behind precise
+`E_CORE_UNSUPPORTED` refusals until the Wave B packages fill the dispatch files. The
+coordinator freezes `ir.zig` when accepting S2-0; subsequent changes go through it.
+
+**Types and layout.** `Type.bytes` is an 8-byte counted block pointer. It admits
+`list_len` and `list_get` (the latter returns `u8`), and shares the string header/data
+layout. `Compound.dict{key, value}` is an 8-byte counted pointer; no operation exposes
+index slots, control bytes or another table-layout detail. An option of either type
+uses the existing null-pointer niche. A set is a dictionary with `.void` values.
+
+`Compound.array{elem, n: u32}` is inline at `n * size(elem)` bytes, aligned like its
+element. It is managed exactly when it has at least one managed element. Arrays over
+four words use the existing pointer-argument and `sret` ABI. `FieldPath` steps may select
+constant array indices as well as record fields and union cases. `record_make` constructs
+an array from exactly `n` operands of type `elem`; register construction, stores into
+consumers, element-layout descriptors and retain/release traversal reuse the aggregate
+paths. `array_get` and `array_set` use normalized integer indices and check against `n`;
+`array_set.data` packs one extra operand, the replacement element.
+
+`Compound.fn(Signature)` is an unmanaged LLVM `ptr`. Interning copies and compares the
+parameter types and all signature metadata. `func_ref.data` is an internal function
+index; it is a constant, not a value operand. `call_indirect.a` is the function value
+and `data` packs the argument list. The verifier checks the target's full signature,
+and indirect calls use the same owned-argument bits and aggregate return ABI as direct
+calls. Known-target folding and source function-value lowering remain S2-F work.
+
+**Operations.** The twelve dictionary operations retain §2.4's operands and results.
+Entry numbers and probes are `i64`, capacities and counts are `u64`. `dict_insert`
+requires a `dict_find` of the same resolved dictionary and key SSA operands. When
+ownership copies or merges the dictionary operand, it recomputes the probe on the new
+operand before the insert, preserving that invariant.
+
+The eight text operations have these concrete extra operands:
+
+| operation | operands | result |
+|---|---|---|
+| `str_char`, `str_width`, `str_code` | `a: str`, `b: u64` byte offset | `str`, `u64`, `u32` respectively |
+| `str_append` | `a: str`, `b: str` | `str` |
+| `str_append_char` | `a: str`, `b: str`, `extra[0]: u64` byte offset in `b` | `str` |
+| `str_slice` | `a: str`, `b: i64` start scalar, `extra[0]: i64` end scalar | `str` |
+| `str_view_of` | `a: str`, `b: u64` byte offset, `extra[0]: u64` byte length | `str_view` |
+| `str_from_view` | `a: str_view` | owned `str` |
+
+`list_sort` takes `a: list`, `b: bool` reverse order and returns the same list type;
+the element type determines the eventual sort specialization. Keyed sorting remains a
+runtime helper composition, not another IR op.
+
+**Views.** `str_view` is an SSA `{ptr, i64}` byte span and has no storage layout
+(`size` is zero as a marker). It is unmanaged, but ownership tracks it as a borrow of
+its source, keeping that source alive across every use without counting the span.
+The verifier rejects it in aggregate types, phis, stores, returns and ordinary calls.
+Admitted uses are `str_from_view`, byte `str_len`, and the key of `dict_find` on a
+string-keyed dictionary. `Signature.views` additionally marks explicit borrowed extern-C
+`str` parameters that use a `(data, byte_length)` helper ABI. A marked parameter cannot
+be owned; internal signatures never admit views. This is only runtime span-helper
+admission, and does not implement or change source `str` parameter ABI (decision 4).
+
+**Ownership.** `Op.consumesOperand0()` covers list push/set/pop/sort, record and array
+set, dictionary set-value/insert/remove/clear and string append/append-char. Block
+updates use S1's three COW forms and verify-mode uniqueness assertions. Dictionary
+copies use `dict_copy`; string copies use a full byte span followed by `str_from_view`.
+Block uniqueness excludes value aggregates. Managed dictionary entry and array element
+reads borrow their owners; array replacement releases its previous managed element.
+
+**Dispatch and runtime.** New builder dispatch files preserve the prior refusal reasons.
+The three emitter dispatch files provide valid LLVM for every new operation. Fixed-array
+accesses, internal function references/calls, UTF-8 `str_char` and span materialization
+execute in hand-built IR. Other new operations call the placeholder runtime, which exits
+1 with `E_CORE_UNSUPPORTED` before an answer is observable. The character helper handles
+ASCII and 2–4-byte scalars; the immortal ASCII table and full text fast paths remain S2-T.
+`driver.zig` embeds all four C files, concatenates them into one translation unit, and
+hashes that complete source for the cached runtime object. No old-core runtime is linked.
+
+**Verification evidence.** `src/core/s2_ir_test.zig` provides one hand-built test per new
+op, LLVM compilation/execution, wrong operand/result rejection, COW probe provenance,
+view admission and lifetime, managed-array layout and cleanup, and owned indirect calls
+with register and `sret` returns. Evidence and development-loop logs are under
+`experiments/new-core-s2-20261005/wave-a/s2-0/`. Full conformance, rows, kernels, fuzz and
+coverage are graded by the coordinator after S2-La/S2-Lb merge, as the Wave A plan requires.
+
+## 14. D1 in the shared front end and old core (S2-Lb as built)
 
 The checker now prepares managed iteration sources in `iteration_place.zig`, used
 by ordinary `for`/`enumerate` and the prelude desugars. A loop whose body may write
@@ -1014,3 +1096,48 @@ holds remain for hidden receivers and snapshots.
 
 Evidence and the package's gate results are in
 `experiments/new-core-s2-20261005/wave-a/s2-lb/`.
+
+
+## 15. Caller variables and receiver overlap (S2-La as built)
+
+The shared checker enforces `MUT-OVERLAP-RECEIVER-1` on complete receiver and
+explicit mut-argument paths. Equal roots with a prefix relationship overlap;
+other roots and provably disjoint constant siblings remain legal. Readonly
+arguments keep value snapshots. The located diagnostic asks for a separate
+call statement and provides structured `mylang fix` edits when that rewrite
+is certain. Existing fixtures and the runnable mut documentation use the
+accepted two-statement form.
+
+A whole assignment to a mut list, dictionary or set parameter now writes the
+caller variable. Per-parameter caller-storage inference follows whole-variable
+forwarding through direct calls, recursion and callbacks; interior stores do
+not make the outer parameter rebound. Direct parameters that never rebind keep
+the mutable-payload ABI and `RC-MUT-UNIQUE-1`. Function values use uniform
+caller-storage adapters while each target retains its canonical direct ABI.
+The inferred mask survives bytecode, module interfaces (format v4), semantic
+stand-ins (format v5), archive comparison and native test facts. Imported
+producer authority is restored before adaptation. Reserved callback identities
+and synthetic metadata keep warm, selective and whole/module emission equal.
+
+Interior mut arguments capture the selected leaf before later arguments run.
+At call entry, an unchanged leaf receives writes through its actual storage;
+a replaced leaf uses an owning fallback for the captured value. Parent and
+payload lifetimes stay protected. GC roots distinguish whole slot references
+from borrowed call results. A whole-local mut argument reloads the current
+caller variable after argument evaluation under RC, GC and callback calls.
+
+The new core's by-value mut ABI writes back the parameter's final SSA value on
+every return. Detachment tracking and conditional/loop rebinding refusals are
+removed. A changed ancestor of a captured interior mut path receives the
+precise refusal `interior mut argument ancestor changed during later argument
+evaluation`. This closes a pre-existing S1 wrong answer without adding an IR
+shape; conditional and disjoint sibling writes under that root can also be
+refused conservatively. Stable interior paths and whole-current-root reads
+remain admitted. Fixed-array whole rebinding keeps `E_ASSIGNMENT_TARGET`.
+
+Package evidence is under `experiments/new-core-s2-20261005/wave-a/s2-la/`.
+The external Lox checkout requires four documented migrations and was left
+untouched, as authorized by the user. The old frontend's pre-existing managed
+origin overflow at parameter position 16 is reported rather than widened.
+Aggregate Wave A qualification is recorded in
+`experiments/new-core-s2-20261005/wave-a/REPORT.md`.

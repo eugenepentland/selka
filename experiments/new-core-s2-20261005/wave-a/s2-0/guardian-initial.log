@@ -1,0 +1,35 @@
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: cold gate — no prior green stamp on this tree; a re-run after a green will skip via the cache and confirm
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 26 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 9 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 7/88 failed (formatting, doc-comments, error-discipline, cognitive-complexity, allocator-hygiene, line-length, repeated-string-literal)
+guardian: failures grouped by check (7):
+  formatting (1 finding)
+    - src/core/s2_ir_test.zig:36: non-conforming formatting (first difference on this line)
+      fix: zig fmt src/core/s2_ir_test.zig
+  doc-comments (1 finding)
+    - src/core/emit_llvm.zig: pub fn call: has no /// doc comment
+      fix: add a real /// doc comment above each public declaration (>= 12 non-whitespace chars, no TODO/FIXME).
+  error-discipline (9 findings)
+    - src/core/emit_llvm.zig: pub fn site uses inferred error set `!T` (use `MyErr!T`)
+      fix: declare an explicit error set — `pub const MyError = error{ Foo, Bar };` — and return `MyError!void`.
+    - src/core/emit_llvm.zig: pub fn fresh uses inferred error set `!T` (use `MyErr!T`)
+    - src/core/emit_llvm.zig: pub fn ty uses inferred error set `!T` (use `MyErr!T`)
+    - +6 more — use --verbose for full detail
+  cognitive-complexity (1 finding)
+    - src/core/emit_llvm.zig: fn instruction cognitive complexity 26 (limit: 25)
+      fix: extract helpers; reduce nested control flow.
+  allocator-hygiene (2 findings)
+    - src/core/s2_ir_test.zig:68: hardcoded std.testing.allocator outside test block
+      fix: thread the allocator through as a parameter instead of hardcoding a global.
+    - src/core/s2_ir_test.zig:414: hardcoded std.testing.allocator outside test block
+  line-length (3 findings)
+    - src/core/own.zig:961: line is 277 chars (hard limit 240)
+      fix: split the expression when doing so improves readability
+    - src/core/emit_llvm.zig:2146: line is 250 chars (hard limit 240)
+    - src/core/emit_text.zig:19: line is 277 chars (hard limit 240)
+  repeated-string-literal (1 finding)
+    - src/core/emit_llvm.zig: string literal   {s} = extractvalue {s} {s}, {d}\n appears 4 times (lines 1545, 1572, 1839, 1866) — extract a const
+      fix: extract the literal/const into a shared file-scope const and import it.
+  caution: zig-out binaries predate this failed run (installs are gated on green) — rebuild green before running them

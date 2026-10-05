@@ -47,10 +47,14 @@ pub const Type = enum(u32) {
     cap,
     /// An immutable UTF-8 string block.
     str,
+    /// An immutable raw-octet block, sharing the string block layout.
+    bytes,
+    /// A borrowed UTF-8 span in SSA only; it has no storable memory layout.
+    str_view,
     _,
 
     /// The first index that names a compound type.
-    pub const first_compound: u32 = 13;
+    pub const first_compound: u32 = 15;
 
     /// Width and signedness of an integer type, or null for any other type.
     pub fn integer(self: Type) ?struct { bits: u16, signed: bool } {
@@ -89,6 +93,12 @@ pub const Compound = union(enum) {
     /// An immutable reference-counted block holding one `T`: boxed (recursive)
     /// record fields and union payloads.
     box: Type,
+    /// A dictionary value; its operations do not expose any table layout.
+    dict: struct { key: Type, value: Type },
+    /// A fixed inline array of `n` elements, at the element's natural stride.
+    array: struct { elem: Type, n: u32 },
+    /// A top-level function pointer with the internal call signature.
+    @"fn": Signature,
 };
 
 /// How a union value is laid out (docs/design/new-core-s1.md §4).
@@ -260,6 +270,56 @@ pub const Op = enum(u8) {
     /// The value at `FieldPath.unpack(data)` inside element `b` of list `a`
     /// (bounds-checked), read without loading the whole element.
     list_get_field,
+    /// Empty dictionary with capacity hint `a: u64`.
+    dict_new,
+    /// Live dictionary entries (`u64`).
+    dict_len,
+    /// Pure lookup of key `b` in dictionary `a`; `i64` entry or negative insertion probe.
+    dict_find,
+    /// Borrowed key at entry `b: i64` of dictionary `a`.
+    dict_entry_key,
+    /// Borrowed value at entry `b: i64` of dictionary `a`.
+    dict_entry_value,
+    /// Dictionary `a` with entry `b` assigned `extra[0]`; consumes `a` and the value.
+    dict_set_value,
+    /// Insert `extra = {key, value}` using negative probe `b` from `dict_find(a, key)`.
+    dict_insert,
+    /// Remove entry `b: i64` from dictionary `a`; consumes `a`.
+    dict_remove,
+    /// Number of written entries (`u64`), including dead entries.
+    dict_entries,
+    /// Whether entry `b: i64` of dictionary `a` is live (`bool`).
+    dict_entry_live,
+    /// Independent copy of dictionary `a`.
+    dict_copy,
+    /// Empty value of dictionary `a`'s type; consumes `a`.
+    dict_clear,
+    /// Character string at byte offset `b: u64` in string `a`.
+    str_char,
+    /// UTF-8 width (`u64`) at byte offset `b: u64` in string `a`.
+    str_width,
+    /// Unicode scalar (`u32`) at byte offset `b: u64` in string `a`.
+    str_code,
+    /// Append string `b` to string `a`; consumes `a`, borrows `b`.
+    str_append,
+    /// Append the character at `extra[0]: u64` in string `b` to string `a`; consumes `a`.
+    str_append_char,
+    /// Copy string `a` between scalar positions `b: i64` and `extra[0]: i64`.
+    str_slice,
+    /// Borrow a byte span of string `a`: offset `b: u64`, length `extra[0]: u64`.
+    str_view_of,
+    /// Materialize borrowed span `a: str_view` as an owned string.
+    str_from_view,
+    /// Stable sort of list `a`, reversed when `b: bool`; consumes `a`.
+    list_sort,
+    /// Element `b` of inline array `a`, bounds-checked against its fixed length.
+    array_get,
+    /// Array `a` with element `b` replaced by `extra[0]`; consumes the old array and value.
+    array_set,
+    /// Top-level internal function `data`, with the matching function pointer type.
+    func_ref,
+    /// Call function value `a`, with arguments in `extra` at `data`.
+    call_indirect,
     /// A fresh box holding `a`; consumes `a`.
     box_make,
     /// The value box `a` holds.
@@ -296,7 +356,7 @@ pub const Op = enum(u8) {
     /// Whether `data` packs an `extra` operand list (an `ExtraSlice`).
     pub fn hasExtra(self: Op) bool {
         return switch (self) {
-            .phi, .call, .print, .record_make, .list_set => true,
+            .phi, .call, .call_indirect, .print, .record_make, .list_set, .dict_set_value, .dict_insert, .str_append_char, .str_slice, .str_view_of, .array_set => true,
             else => false,
         };
     }
@@ -305,7 +365,15 @@ pub const Op = enum(u8) {
     /// materialized at each use, so it dominates every use.
     pub fn isConstant(self: Op) bool {
         return switch (self) {
-            .param, .iconst, .fconst, .undef, .str_const => true,
+            .param, .iconst, .fconst, .undef, .str_const, .func_ref => true,
+            else => false,
+        };
+    }
+
+    /// Whether an update takes ownership of its first value operand.
+    pub fn consumesOperand0(self: Op) bool {
+        return switch (self) {
+            .list_push, .list_set, .list_pop, .record_set, .array_set, .dict_set_value, .dict_insert, .dict_remove, .dict_clear, .str_append, .str_append_char, .list_sort => true,
             else => false,
         };
     }
@@ -388,6 +456,9 @@ pub const Signature = struct {
     /// Bit `i`: parameter `i` is passed owned (a `mut` parameter, by value: the call
     /// consumes the argument, the callee owns it and returns its final value).
     owned: u64 = 0,
+    /// Bit `i`: an extern-C `str` parameter takes a borrowed `(data, byte_length)`
+    /// span and admits an SSA `str_view`. Internal functions never use this ABI.
+    views: u64 = 0,
 };
 
 /// A function: its instructions, blocks, packed operand lists and loops.
@@ -471,6 +542,7 @@ pub const Module = struct {
         const owned: Compound = switch (wanted) {
             .record => |fields| .{ .record = try allocator.dupe(Type, fields) },
             .@"union" => |cases| .{ .@"union" = try allocator.dupe(Type, cases) },
+            .@"fn" => |signature| .{ .@"fn" = .{ .params = try allocator.dupe(Type, signature.params), .ret = signature.ret, .linkage = signature.linkage, .owned = signature.owned, .views = signature.views } },
             else => wanted,
         };
         try self.compounds.append(allocator, owned);
@@ -498,11 +570,11 @@ pub const Module = struct {
         return std.meta.activeTag(self.compound(ty));
     }
 
-    /// Whether a value of `ty` is a pointer to a counted block: `str`, a list or a box.
+    /// Whether `ty` is a counted block pointer: string, bytes, list, box or dictionary.
     pub fn isBlock(self: *const Module, ty: Type) bool {
-        if (ty == .str) return true;
+        if (ty == .str or ty == .bytes) return true;
         const k = self.kind(ty) orelse return false;
-        return k == .list or k == .box;
+        return k == .list or k == .box or k == .dict;
     }
 
     /// Whether a value of `ty` holds a reference to a counted block anywhere: a block
@@ -517,6 +589,7 @@ pub const Module = struct {
             .@"union" => |cases| for (cases) |case| {
                 if (self.managed(case)) break true;
             } else false,
+            .array => |array| array.n != 0 and self.managed(array.elem),
             else => false,
         };
     }
@@ -529,9 +602,11 @@ pub const Module = struct {
             .bool, .i8, .u8 => 1,
             .i16, .u16 => 2,
             .i32, .u32 => 4,
-            .i64, .u64, .f64, .cap, .str => 8,
+            .i64, .u64, .f64, .cap, .str, .bytes => 8,
+            .str_view => 0,
             _ => switch (self.compound(ty)) {
-                .list, .box => 8,
+                .list, .box, .dict, .@"fn" => 8,
+                .array => |array| array.n * self.size(array.elem),
                 .record => |fields| blk: {
                     var offset: u32 = 0;
                     for (fields) |field| offset = std.mem.alignForward(u32, offset, self.alignment(field)) + self.size(field);
@@ -549,7 +624,8 @@ pub const Module = struct {
     pub fn alignment(self: *const Module, ty: Type) u32 {
         if (!ty.isCompound()) return @max(1, self.size(ty));
         return switch (self.compound(ty)) {
-            .list, .box, .@"union" => 8,
+            .list, .box, .dict, .@"fn", .@"union" => 8,
+            .array => |array| self.alignment(array.elem),
             .record => |fields| blk: {
                 var most: u32 = 1;
                 for (fields) |field| most = @max(most, self.alignment(field));
@@ -567,7 +643,7 @@ pub const Module = struct {
     /// `max_register_words` words) rather than as an LLVM struct value.
     pub fn passedInMemory(self: *const Module, ty: Type) bool {
         const k = self.kind(ty) orelse return false;
-        return (k == .record or k == .@"union") and self.words(ty) > max_register_words;
+        return (k == .record or k == .@"union" or k == .array) and self.words(ty) > max_register_words;
     }
 
     /// The byte offset of field `index` inside a record of type `record`.
@@ -590,7 +666,7 @@ pub const Module = struct {
             if (only != .void and only != case) uniform = false;
             only = case;
             const k = self.kind(case);
-            if (k == .record or k == .@"union") uniform = false;
+            if (k == .record or k == .@"union" or k == .array) uniform = false;
         }
         if (cases.len == 2 and (cases[0] == .void) != (cases[1] == .void) and self.isBlock(only)) {
             return .{ .form = .niche, .payload_words = 1, .empty_case = if (cases[0] == .void) 0 else 1, .payload = only };
@@ -608,6 +684,12 @@ pub const Module = struct {
         for (path.slice()) |step| {
             const k = self.kind(current) orelse return null;
             switch (k) {
+                .array => {
+                    const array = self.compound(current).array;
+                    if (step >= array.n) return null;
+                    offset += step * self.size(array.elem);
+                    current = array.elem;
+                },
                 .record => {
                     const fields = self.compound(current).record;
                     if (step >= fields.len) return null;
@@ -652,5 +734,8 @@ fn sameCompound(x: Compound, y: Compound) bool {
         .box => |inner| inner == y.box,
         .record => |fields| std.mem.eql(Type, fields, y.record),
         .@"union" => |cases| std.mem.eql(Type, cases, y.@"union"),
+        .dict => |dict| dict.key == y.dict.key and dict.value == y.dict.value,
+        .array => |array| array.elem == y.array.elem and array.n == y.array.n,
+        .@"fn" => |signature| signature.ret == y.@"fn".ret and signature.linkage == y.@"fn".linkage and signature.owned == y.@"fn".owned and signature.views == y.@"fn".views and std.mem.eql(Type, signature.params, y.@"fn".params),
     };
 }

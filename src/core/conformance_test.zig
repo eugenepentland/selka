@@ -1,5 +1,5 @@
-//! The S1 conformance gate (docs/design/new-core-s1.md §9): every file of the pinned list
-//! (`test/core/conformance.pins`, the 31 `tests/lang` files) runs under `mylang-core test` at
+//! The S1 and S2 Wave A conformance gate: every file of the pinned list
+//! (`test/core/conformance.pins`, the 31 S1 and four Wave A files) runs under `mylang-core test` at
 //! debug and release. A test the pins record as passing must still pass, no other test may
 //! fail unless it is pinned `known-fail`, and a crash or a vanished test fails the gate.
 //! Tests the new core does not support yet are reported `unsupported` and never fail it.
@@ -103,7 +103,7 @@ fn violations(arena: std.mem.Allocator, pins: Parsed, release: bool, cache: []co
 }
 
 // spec: NEW-CORE-CONF-1
-test "the pinned S1 conformance list passes at debug and release" {
+test "the pinned S1 and Wave A conformance list passes at debug and release" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     var dir = std.testing.tmpDir(.{});
@@ -112,7 +112,7 @@ test "the pinned S1 conformance list passes at debug and release" {
     const path = try std.fmt.allocPrint(arena.allocator(), "{s}/conformance.pins", .{options.fixtures});
     const text = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, path, arena.allocator(), .limited(1 << 20));
     const pins = try parsePins(arena.allocator(), text);
-    try std.testing.expectEqual(@as(usize, 31), pins.files.len);
+    try std.testing.expectEqual(@as(usize, 35), pins.files.len);
     try std.testing.expectEqual(@as(usize, 0), try violations(arena.allocator(), pins, false, cache));
     try std.testing.expectEqual(@as(usize, 0), try violations(arena.allocator(), pins, true, cache));
 }

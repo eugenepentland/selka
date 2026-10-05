@@ -1,0 +1,18 @@
+test-core
++- run test w
+no_such_file_in_tests_lang (debug): mylang-core test did not finish cleanly:
+error: cannot read /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-ir/tests/lang/no_such_file_in_tests_lang.my: FileNotFound
+
+no_such_row: the new core failed to build the row:
+error: cannot read /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-ir/test/core/row_no_such_row.my: FileNotFound
+
+failed command: ./.zig-cache/o/ee5b870d96710b1486ff0c075dc313c3/test --cache-dir=./.zig-cache --seed=0xfe7b6f07 --listen=-
+
+Build Summary: 5/5 steps succeeded; 183/183 tests passed
+test-core success
++- run test 183 pass (183 total) 5m MaxRSS:131M
+   +- compile test debug native success 4s MaxRSS:327M
+      +- options success
+         +- compile exe mylang-core debug native success 4s MaxRSS:322M
+
+command_wall_seconds=316.82

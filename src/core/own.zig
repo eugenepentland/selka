@@ -256,13 +256,13 @@ const Analysis = struct {
     fn classify(self: *Analysis) Error!void {
         const f = self.f;
         for (f.insts.items, 0..) |instruction, i| {
-            if (!self.module.managed(instruction.ty)) continue;
+            if (!self.module.managed(instruction.ty) and instruction.ty != .str_view) continue;
             self.class[i] = switch (instruction.op) {
                 // A `mut` parameter is handed over by value (`Signature.owned`).
                 .param => if (ownedParameter(f.signature, instruction.data)) .owned else .borrowed,
                 .str_const, .undef => .immortal,
                 .copy => .none,
-                .list_get, .list_get_field, .record_get, .union_payload, .box_get => blk: {
+                .list_get, .list_get_field, .record_get, .union_payload, .box_get, .dict_entry_key, .dict_entry_value, .array_get, .str_view_of => blk: {
                     if (self.marks.owned_get.contains(@intCast(i))) break :blk .owned;
                     self.parent[i] = f.resolve(instruction.a);
                     break :blk .borrowed;
@@ -347,6 +347,10 @@ const Analysis = struct {
 
     /// Whether operand `k` of a call is an argument the callee takes over (a `mut` one).
     fn handedOver(self: *const Analysis, instruction: ir.Inst, k: usize) bool {
+        if (instruction.op == .call_indirect) {
+            if (k == 0) return false;
+            return ownedParameter(self.module.compound(self.inst(self.f.resolve(instruction.a)).ty).@"fn", k - 1);
+        }
         if (instruction.op != .call) return false;
         return ownedParameter(self.module.functions.items[instruction.a.index()].signature, k);
     }
@@ -465,6 +469,7 @@ const Analysis = struct {
     fn promote(self: *Analysis) Error!bool {
         var changed = false;
         for (self.class, 0..) |class, i| {
+            if (self.f.insts.items[i].ty == .str_view) continue;
             if (class != .borrowed or self.promoted[i] or self.parent[i] == .none) continue;
             const ref: ir.Ref = @fromBackingInt(@intCast(i));
             const holder = self.owner(ref);
@@ -490,19 +495,20 @@ fn ownedParameter(signature: ir.Signature, index: u64) bool {
 
 /// Whether operand `k` (in `valueOperands` order) of `instruction` is consumed.
 fn consuming(instruction: ir.Inst, k: usize) bool {
+    if (k == 0 and instruction.op.consumesOperand0()) return true;
     return switch (instruction.op) {
         // a (the list) and b (the value); a (the record) and b (the field value).
         .list_push, .record_set => true,
         // a (the list), b (the index), then extra[0] (the value).
-        .list_set => k != 1,
+        .list_set, .array_set, .dict_set_value, .dict_insert => k >= 2,
         .list_pop, .union_make, .box_make, .ret, .release, .record_make => true,
         else => false,
     };
 }
 
-/// Whether `op` updates its list operand in place.
+/// Whether `op` consumes and updates a counted block.
 fn isUpdate(op: ir.Op) bool {
-    return op == .list_push or op == .list_set or op == .list_pop;
+    return op.consumesOperand0() and op != .record_set and op != .array_set;
 }
 
 // ---- phase A: copy on write -------------------------------------------------------
@@ -511,6 +517,7 @@ fn isUpdate(op: ir.Op) bool {
 /// from an allocation, a copy or another update (or phis of those), and no use
 /// before shares it.
 fn staticallyUnique(a: *const Analysis, value: ir.Ref, site: ir.Ref) Error!bool {
+    if (!a.module.isBlock(a.inst(value).ty)) return false;
     var web: std.ArrayList(ir.Ref) = .empty;
     var index: std.AutoHashMapUnmanaged(u32, u6) = .empty;
     try web.append(a.arena, value);
@@ -520,12 +527,12 @@ fn staticallyUnique(a: *const Analysis, value: ir.Ref, site: ir.Ref) Error!bool 
         if (a.class[current.index()] != .owned or web.items.len > 64) return false;
         const instruction = a.inst(current);
         switch (instruction.op) {
-            .list_new, .list_copy, .list_push, .list_set, .list_pop => {},
+            .list_new, .list_copy, .dict_new, .dict_copy, .str_from_view => {},
             .phi => for (a.f.operands(instruction.data)) |operand| {
                 const source = a.f.resolve(operand);
                 if (std.mem.indexOfScalar(ir.Ref, web.items, source) == null) try web.append(a.arena, source);
             },
-            else => return false,
+            else => if (instruction.op.consumesOperand0()) {} else return false,
         }
     }
     for (web.items, 0..) |member, i| try index.put(a.arena, @backingInt(member), @intCast(i));
@@ -562,7 +569,7 @@ fn shared(a: *const Analysis, web: Web, value: ir.Ref, site: ir.Ref) Error!bool 
         }
         const at = a.f.blocks.items[use.block].insts.items[use.pos];
         if (at == site) continue;
-        const call = a.inst(at).op == .call;
+        const call = a.inst(at).op == .call or a.inst(at).op == .call_indirect;
         if (use.consume > 1 or (call and site == .none)) return true;
         const may_share = call or use.consume == 1;
         if (!may_share or !a.liveAfter(value, use.block, use.pos)) continue;
@@ -674,12 +681,12 @@ fn copyOnWrite(a: *Analysis, options: Options, stats: *Stats) Error!void {
         .copied => {
             stats.copied += 1;
             const update = f.inst(site.update);
-            const copy = try e.insertBefore(site.update, .{ .op = .list_copy, .ty = update.ty, .a = update.a, .span = update.span });
-            f.insts.items[site.update.index()].a = copy;
+            const copy = try copyBefore(e, a.module, site.update, update.a);
+            try useUpdatedOperand(e, site.update, copy);
         },
         .tested => {
             stats.tested += 1;
-            try testUnique(e, site.update);
+            try testUnique(e, a.module, site.update);
         },
         .in_place => {
             stats.in_place += 1;
@@ -690,8 +697,8 @@ fn copyOnWrite(a: *Analysis, options: Options, stats: *Stats) Error!void {
 }
 
 /// Split the block of `update` before it: `if is_unique(a)` the update runs on `a`,
-/// else on `c = list_copy(a)` after `release(a)`; both reach it through a phi.
-fn testUnique(e: Editor, update: ir.Ref) Error!void {
+/// else on a copy of `a` after `release(a)`; both reach it through a phi.
+fn testUnique(e: Editor, module: *const ir.Module, update: ir.Ref) Error!void {
     const f = e.f;
     const instruction = f.inst(update);
     const list = instruction.a;
@@ -700,13 +707,36 @@ fn testUnique(e: Editor, update: ir.Ref) Error!void {
     const unique = try e.append(at.head, .{ .op = .is_unique, .ty = .bool, .a = list, .span = instruction.span });
     const copy_block = try e.newBlock();
     try e.terminate(at.head, .{ .op = .branch, .ty = .void, .a = unique, .data = ir.packTargets(at.tail, copy_block), .span = instruction.span }, &.{ at.tail, copy_block });
-    const copy = try e.append(copy_block, .{ .op = .list_copy, .ty = ty, .a = list, .span = instruction.span });
+    const marker = try e.append(copy_block, .{ .op = .copy, .ty = ty, .a = list });
+    const copy = try copyBefore(e, module, marker, list);
     _ = try e.append(copy_block, .{ .op = .release, .ty = .void, .a = list, .span = instruction.span });
     try e.terminate(copy_block, .{ .op = .jump, .ty = .void, .data = @backingInt(at.tail), .span = instruction.span }, &.{at.tail});
     // The tail's predecessors are [head, copy_block], in that order.
     const phi = try e.newInst(.{ .op = .phi, .ty = ty, .data = try e.extraOf(&.{ list, copy }), .span = instruction.span });
     try f.blocks.items[at.tail.index()].insts.insert(e.arena, 0, phi);
-    f.insts.items[update.index()].a = phi;
+    try useUpdatedOperand(e, update, phi);
+}
+
+/// Copy the block in its own representation before a consuming update.
+fn copyBefore(e: Editor, module: *const ir.Module, before: ir.Ref, value: ir.Ref) Error!ir.Ref {
+    const ty = e.f.inst(e.f.resolve(value)).ty;
+    const span = e.f.inst(before).span;
+    if (ty != .str) return e.insertBefore(before, .{ .op = if (module.kind(ty) == .dict) .dict_copy else .list_copy, .ty = ty, .a = value, .span = span });
+    const zero = try e.newInst(.{ .op = .iconst, .ty = .u64 });
+    const len = try e.insertBefore(before, .{ .op = .str_len, .ty = .u64, .a = value, .span = span });
+    const view = try e.insertBefore(before, .{ .op = .str_view_of, .ty = .str_view, .a = value, .b = zero, .data = try e.extraOf(&.{len}), .span = span });
+    return e.insertBefore(before, .{ .op = .str_from_view, .ty = .str, .a = view, .span = span });
+}
+
+/// Preserve a dictionary insert's probe provenance when COW changes its operand.
+fn useUpdatedOperand(e: Editor, update: ir.Ref, value: ir.Ref) Error!void {
+    const inst = e.f.inst(update);
+    if (inst.op == .dict_insert) {
+        const old_probe = e.f.inst(e.f.resolve(inst.b));
+        const probe = try e.insertBefore(update, .{ .op = .dict_find, .ty = .i64, .a = value, .b = old_probe.b, .span = inst.span });
+        e.f.insts.items[update.index()].b = probe;
+    }
+    e.f.insts.items[update.index()].a = value;
 }
 
 /// Verify builds: trap `R_CORE_FACT` before a form-1 update unless its list's count is 1.
@@ -926,10 +956,18 @@ fn extractDroppedFields(a: *Analysis) Error!void {
         while (pos < f.blocks.items[b].insts.items.len) : (pos += 1) {
             const ref = f.blocks.items[b].insts.items[pos];
             const set = f.inst(ref);
-            if (set.op != .record_set or a.marks.taken.contains(@backingInt(ref))) continue;
-            const field = a.module.compound(set.ty).record[@intCast(set.data)];
+            if ((set.op != .record_set and set.op != .array_set) or a.marks.taken.contains(@backingInt(ref))) continue;
+            const field = if (set.op == .array_set) a.module.compound(set.ty).array.elem else a.module.compound(set.ty).record[@intCast(set.data)];
             if (!a.module.managed(field)) continue;
-            const old = try e.insertBefore(ref, .{ .op = .record_get, .ty = field, .a = set.a, .data = set.data, .span = set.span });
+            const old = try e.insertBefore(ref, .{
+                .op = if (set.op == .array_set) .array_get else .record_get,
+                .ty = field,
+                .a = set.a,
+                .b = if (set.op == .array_set) set.b else .none,
+                .data = if (set.op == .array_set) 0 else set.data,
+                .check = set.check,
+                .span = set.span,
+            });
             try a.marks.owned_get.put(a.arena, @backingInt(old), {});
             _ = try e.insertAfter(ref, .{ .op = .release, .ty = .void, .a = old, .span = set.span });
             pos += 2;
@@ -1031,6 +1069,7 @@ fn releaseKind(a: *Analysis, ref: ir.Ref) Error!u64 {
 /// A borrowed value that a consuming use takes is retained first; an immortal one
 /// needs no count.
 fn countBorrowed(a: *Analysis, ref: ir.Ref, actions: *std.ArrayList(Action)) Error!void {
+    if (a.f.inst(ref).ty == .str_view) return;
     if (a.class[ref.index()] == .immortal) return;
     for (a.uses[ref.index()].items) |use| {
         for (0..use.consume) |_| {

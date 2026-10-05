@@ -1,0 +1,35 @@
+test-core
++- run test 35 pass, 1 fail (36 total)
+error: 's2_ir_test.test.S2 builder dispatch stubs keep precise source refusals until Wave B' failed:
+       ====== expected this output: =========
+       function value type␃
+       
+       ======== instead found this: =========
+       function_value␃
+       
+       ======================================
+       First difference occurs on line 1:
+       expected:
+       function value type
+               ^ ('\x20')
+       found:
+       function_value
+               ^ ('\x5f')
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:681:9: 0x1374705 in expectEqualStrings (std.zig)
+               return error.TestExpectedEqual;
+               ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-ir/src/core/s2_ir_test.zig:548:5: 0x13749cb in refuseSource (root_test.zig)
+           try std.testing.expectEqualStrings(reason, refusal.reason);
+           ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-ir/src/core/s2_ir_test.zig:559:5: 0x1374e09 in test.S2 builder dispatch stubs keep precise source refusals until Wave B (root_test.zig)
+           try refuseSource(a, "def target(x: int) -> int effects():\n    return x\ndef main() -> int:\n    f = target\n    return f(1)\n", "function value type");
+           ^
+failed command: ./.zig-cache/o/de05946d67b831d275637cac4efd8468/test --cache-dir=./.zig-cache --seed=0x62fd8406 --listen=-
+
+Build Summary: 3/5 steps succeeded (1 failed); 35/36 tests passed (1 failed)
+test-core transitive failure
++- run test 35 pass, 1 fail (36 total)
+   +- compile test debug native success 1s MaxRSS:314M
+      +- options success
+         +- compile exe mylang-core debug native success 1s MaxRSS:321M
+
