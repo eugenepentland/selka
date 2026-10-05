@@ -1,0 +1,130 @@
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: all 3 build slot(s) busy; waiting (60s so far)
+build-slot: build slot 1 after 90s (all 3 build slot(s) busy)
+file                      tests | debug   match misma unsup | release match misma unsup
+---------------------------------------------------------------------------------------
+byte_buffer                   8 |             0     0     8 |             0     0     8
+byte_buffer_from_list        10 |             0     0    10 |             0     0    10
+byte_iteration_reductions     2 |             1     0     1 |             1     0     1
+byte_range_fusion             2 |             0     0     2 |             0     0     2
+byte_ranges_llvm              1 |             0     0     1 |             0     0     1
+byte_views                    6 |             0     0     6 |             0     0     6
+embed                         8 |             0     0     8 |             0     0     8
+immutable_equal               3 |             2     0     1 |             2     0     1
+python_bytes                 13 |             5     0     8 |             5     0     8
+rc_borrowed_results           4 |             3     0     1 |             3     0     1
+rc_buffer_loops               5 |             0     0     5 |             0     0     5
+rc_byte_loop_versions         4 |             2     0     2 |             2     0     2
+rc_byte_receivers             4 |             0     0     4 |             0     0     4
+rc_interval_anchors           5 |             5     0     0 |             5     0     0
+rc_loop_guard_context         1 |             0     0     1 |             0     0     1
+rc_loop_operand_isolation     2 |             2     0     0 |             2     0     0
+rc_mut_list_aliases           4 |             4     0     0 |             4     0     0
+rc_owning_element_borrows     8 |             8     0     0 |             8     0     0
+rc_plain_field_loans          5 |             4     0     1 |             4     0     1
+rc_readonly_bytes             2 |             2     0     0 |             2     0     0
+rc_readonly_calls             5 |             5     0     0 |             5     0     0
+constant_list_image           4 |             1     0     3 |             1     0     3
+migrated/python_surface       3 |             3     0     0 |             3     0     0
+python_text_surface          21 |             1     0    20 |             1     0    20
+constant_methods              9 |             1     0     8 |             1     0     8
+python_split_scalar           4 |             3     0     1 |             3     0     1
+python_strings                3 |             0     0     3 |             0     0     3
+standard_strings              5 |             1     1     3 |             1     1     3
+text_index                   13 |             0     9     4 |             0     9     4
+text_literal_index            1 |             0     0     1 |             0     0     1
+text_scanning                 8 |             2     1     5 |             2     1     5
+tuples                        5 |             4     0     1 |             4     0     1
+migrated/python_format        3 |             2     0     1 |             2     0     1
+print_rendering               2 |             0     0     2 |             0     0     2
+format_specs                  6 |             0     0     6 |             0     0     6
+t_text                        8 |             8     0     0 |             8     0     0
+---------------------------------------------------------------------------------------
+TOTAL                       197
+  debug    matching 69, mismatching 11, unsupported 117 (of 197 tests; 80 supported)
+  release  matching 69, mismatching 11, unsupported 117 (of 197 tests; 80 supported)
+PROBLEM standard_strings: debug: standard_strings::test_repeat_answers_every_count_exactly: old pass, new error E_CORE_UNSUPPORTED
+PROBLEM standard_strings: release: standard_strings::test_repeat_answers_every_count_exactly: old pass, new error E_CORE_UNSUPPORTED
+PROBLEM text_index: debug: text_index::test_a_text_of_four_octet_scalars: old pass, new error E_CORE_UNSUPPORTED
+PROBLEM text_index: debug: text_index::test_aliases_and_copies_read_independently: old pass, new error E_CORE_UNSUPPORTED
+PROBLEM text_index: debug: text_index::test_every_scalar_of_a_long_text_is_found_in_every_order: old pass, new error E_CORE_UNSUPPORTED
+PROBLEM text_index: debug: text_index::test_lookups_agree_on_both_sides_of_the_index_threshold: old pass, new error E_CORE_UNSUPPORTED
+PROBLEM text_index: debug: text_index::test_short_empty_and_ascii_texts_are_unchanged: old pass, new error E_CORE_UNSUPPORTED
+PROBLEM text_index: debug: text_index::test_slice_endpoints_clamp_and_count_from_the_end: old pass, new error E_CORE_UNSUPPORTED
+PROBLEM text_index: debug: text_index::test_slices_of_a_long_text_read_the_scalars_they_name: old pass, new error E_CORE_UNSUPPORTED
+PROBLEM text_index: debug: text_index::test_the_rest_of_a_text_after_each_cut: old pass, new error E_CORE_UNSUPPORTED
+PROBLEM text_index: debug: text_index::test_views_of_a_long_text_have_positions_of_their_own: old pass, new error E_CORE_UNSUPPORTED
+PROBLEM text_index: release: text_index::test_a_text_of_four_octet_scalars: old pass, new error E_CORE_UNSUPPORTED
+PROBLEM text_index: release: text_index::test_aliases_and_copies_read_independently: old pass, new error E_CORE_UNSUPPORTED
+PROBLEM text_index: release: text_index::test_every_scalar_of_a_long_text_is_found_in_every_order: old pass, new error E_CORE_UNSUPPORTED
+PROBLEM text_index: release: text_index::test_lookups_agree_on_both_sides_of_the_index_threshold: old pass, new error E_CORE_UNSUPPORTED
+PROBLEM text_index: release: text_index::test_short_empty_and_ascii_texts_are_unchanged: old pass, new error E_CORE_UNSUPPORTED
+PROBLEM text_index: release: text_index::test_slice_endpoints_clamp_and_count_from_the_end: old pass, new error E_CORE_UNSUPPORTED
+PROBLEM text_index: release: text_index::test_slices_of_a_long_text_read_the_scalars_they_name: old pass, new error E_CORE_UNSUPPORTED
+PROBLEM text_index: release: text_index::test_the_rest_of_a_text_after_each_cut: old pass, new error E_CORE_UNSUPPORTED
+PROBLEM text_index: release: text_index::test_views_of_a_long_text_have_positions_of_their_own: old pass, new error E_CORE_UNSUPPORTED
+PROBLEM text_scanning: debug: text_scanning::test_split_over_long_inputs: old pass, new error E_CORE_UNSUPPORTED
+PROBLEM text_scanning: release: text_scanning::test_split_over_long_inputs: old pass, new error E_CORE_UNSUPPORTED
+
+blocking features of the unsupported tests (tests / files):
+    31 /  7  byte_buffer type
+     8 /  2  blob
+     6 /  1  upper
+     6 /  3  count
+     5 /  2  view
+     5 /  1  find_any
+     5 /  2  number_format
+     4 /  3  decode
+     4 /  4  dict type
+     4 /  3  replace
+     4 /  3  text of a non-integer value
+     3 /  2  parse_int_range
+     3 /  1  array
+     3 /  1  sort of this element type
+     3 /  2  find_range
+     3 /  1  text_repr
+     3 /  3  strip
+     2 /  1  strip_chars
+     2 /  1  find_start
+     2 /  2  text_ord
+     1 /  1  parse_int of bytes
+     1 /  1  scalar_count
+     1 /  1  hex
+     1 /  1  function value type
+     1 /  1  function_value
+     1 /  1  rfind_range
+     1 /  1  sort_keyed
+     1 /  1  rfind
+     1 /  1  splitlines
+     1 /  1  float_round
+     1 /  1  text_format
+
+blocking features per file (file: tests unsupported of tests; the features, most common first):
+  byte_buffer                      8 of   8: byte_buffer type x8
+  byte_buffer_from_list           10 of  10: byte_buffer type x10
+  byte_iteration_reductions        1 of   2: byte_buffer type x1
+  byte_range_fusion                2 of   2: parse_int_range x2
+  byte_ranges_llvm                 1 of   1: parse_int_range x1
+  byte_views                       6 of   6: view x4, parse_int of bytes x1, scalar_count x1
+  embed                            8 of   8: blob x7, decode x1
+  immutable_equal                  1 of   3: byte_buffer type x1
+  python_bytes                     8 of  13: find_any x5, decode x1, hex x1, dict type x1
+  rc_borrowed_results              1 of   4: function value type x1
+  rc_buffer_loops                  5 of   5: byte_buffer type x5
+  rc_byte_loop_versions            2 of   4: byte_buffer type x2
+  rc_byte_receivers                4 of   4: byte_buffer type x4
+  rc_loop_guard_context            1 of   1: dict type x1
+  rc_plain_field_loans             1 of   5: dict type x1
+  constant_list_image              3 of   4: array x3
+  python_text_surface             20 of  21: sort of this element type x3, text_repr x3, strip_chars x2, find_range x2, find_start x2, view x1, function_value x1, dict type x1, rfind_range x1, sort_keyed x1, rfind x1, number_format x1, strip x1
+  constant_methods                 8 of   9: upper x6, replace x1, blob x1
+  python_split_scalar              1 of   4: text_ord x1
+  python_strings                   3 of   3: replace x1, splitlines x1, strip x1
+  standard_strings                 3 of   5: decode x2, count x1
+  text_index                       4 of  13: count x2, text_ord x1, strip x1
+  text_literal_index               1 of   1: find_range x1
+  text_scanning                    5 of   8: count x3, replace x2
+  tuples                           1 of   5: text of a non-integer value x1
+  migrated/python_format           1 of   3: text of a non-integer value x1
+  print_rendering                  2 of   2: text of a non-integer value x2
+  format_specs                     6 of   6: number_format x4, float_round x1, text_format x1

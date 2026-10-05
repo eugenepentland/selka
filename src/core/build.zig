@@ -14,6 +14,7 @@ const fuse = @import("fuse.zig");
 const flags = @import("flags.zig");
 const build_dict = @import("build_dict.zig");
 const build_text = @import("build_text.zig");
+const fuse_text = @import("fuse_text.zig");
 const build_fn = @import("build_fn.zig");
 
 /// Refusal reasons several constructs share.
@@ -58,7 +59,10 @@ pub fn buildRoots(allocator: std.mem.Allocator, program: typed.Program, roots: [
     mb.pending.deinit(allocator);
     // Element reads that are only taken apart become field reads, before ownership sees their uses of the list.
     for (mb.module.functions.items) |*function| {
-        if (function.signature.linkage == .internal) _ = try fuse.projections(allocator, function, &mb.module);
+        if (function.signature.linkage == .internal) {
+            _ = try fuse.projections(allocator, function, &mb.module);
+            _ = try fuse_text.cursors(allocator, &mb.module, function);
+        }
     }
     // Ownership (copies before shared updates, counting) is `own.zig`'s, after the release passes.
     return mb.module;
@@ -128,7 +132,8 @@ const ModuleBuilder = struct {
     /// are mapped, so a recursive type (through a boxed field) finds itself.
     types: std.AutoHashMapUnmanaged(typed.Type, ir.Type) = .empty,
 
-    fn refuse(self: *ModuleBuilder, reason: []const u8, span: u32) Error {
+    /// Record an unsupported feature at its source position.
+    pub fn refuse(self: *ModuleBuilder, reason: []const u8, span: u32) Error {
         self.refusal.* = .{ .reason = reason, .span = span };
         return error.Unsupported;
     }
@@ -203,7 +208,7 @@ const ModuleBuilder = struct {
                 return self.module.intern(self.allocator, .{ .list = if (element == .void) .bool else element });
             },
             .dictionary => return self.refuse(build_dict.typeRefusal(record.collection.set), span),
-            .bytes => return self.refuse(build_text.bytesRefusal(), span),
+            .bytes => return if (std.mem.eql(u8, record.name, "byte_buffer")) self.refuse("byte_buffer type", span) else .bytes,
         };
         if (record.shape.domain != null and std.mem.eql(u8, record.name, "float")) return .f64;
         if (record.shape.variants) |variants| return self.mapUnion(ty, variants, span);
@@ -321,11 +326,13 @@ const FnBuilder = struct {
     /// of it and the `mut` parameters' final values when there are any.
     declared_ret: ir.Type = .void,
 
-    fn allocator(self: *FnBuilder) std.mem.Allocator {
+    /// Builder operation available to the feature dispatch modules.
+    pub fn allocator(self: *FnBuilder) std.mem.Allocator {
         return self.mb.allocator;
     }
 
-    fn nodeOf(self: *FnBuilder, id: typed.NodeId) typed.Node {
+    /// Builder operation available to the feature dispatch modules.
+    pub fn nodeOf(self: *FnBuilder, id: typed.NodeId) typed.Node {
         return self.mb.program.nodes[@backingInt(id)];
     }
 
@@ -335,7 +342,8 @@ const FnBuilder = struct {
 
     // ---- instructions and blocks -------------------------------------------------
 
-    fn newBlock(self: *FnBuilder) Error!ir.BlockId {
+    /// Builder control-flow operation available to feature dispatch modules.
+    pub fn newBlock(self: *FnBuilder) Error!ir.BlockId {
         const id: ir.BlockId = @fromBackingInt(@intCast(self.function.blocks.items.len));
         try self.function.blocks.append(self.allocator(), .{});
         try self.ssa.sealed.append(self.allocator(), false);
@@ -343,26 +351,30 @@ const FnBuilder = struct {
     }
 
     /// Add an instruction that belongs to no block (constants, parameters, undef).
-    fn detached(self: *FnBuilder, inst: ir.Inst) Error!ir.Ref {
+    /// Builder operation available to the feature dispatch modules.
+    pub fn detached(self: *FnBuilder, inst: ir.Inst) Error!ir.Ref {
         const ref: ir.Ref = @fromBackingInt(@intCast(self.function.insts.items.len));
         try self.function.insts.append(self.allocator(), inst);
         return ref;
     }
 
     /// Append an instruction to the current block.
-    fn emit(self: *FnBuilder, inst: ir.Inst) Error!ir.Ref {
+    /// Builder operation available to the feature dispatch modules.
+    pub fn emit(self: *FnBuilder, inst: ir.Inst) Error!ir.Ref {
         const block = self.current orelse return self.mb.refuse("unreachable code", inst.span);
         const ref = try self.detached(inst);
         try self.function.blocks.items[block.index()].insts.append(self.allocator(), ref);
         return ref;
     }
 
-    fn constant(self: *FnBuilder, ty: ir.Type, value: i128) Error!ir.Ref {
+    /// Builder operation available to the feature dispatch modules.
+    pub fn constant(self: *FnBuilder, ty: ir.Type, value: i128) Error!ir.Ref {
         const bits: u64 = @bitCast(@as(i64, @truncate(value)));
         return self.detached(.{ .op = .iconst, .ty = ty, .data = bits });
     }
 
-    fn extraSlice(self: *FnBuilder, refs: []const ir.Ref) Error!u64 {
+    /// Builder operation available to the feature dispatch modules.
+    pub fn extraSlice(self: *FnBuilder, refs: []const ir.Ref) Error!u64 {
         const start: u32 = @intCast(self.function.extra.items.len);
         try self.function.extra.appendSlice(self.allocator(), refs);
         return (ir.ExtraSlice{ .start = start, .len = @intCast(refs.len) }).pack();
@@ -372,14 +384,16 @@ const FnBuilder = struct {
         try self.function.blocks.items[block.index()].preds.append(self.allocator(), pred);
     }
 
-    fn jump(self: *FnBuilder, target: ir.BlockId) Error!void {
+    /// Builder control-flow operation available to feature dispatch modules.
+    pub fn jump(self: *FnBuilder, target: ir.BlockId) Error!void {
         const from = self.current orelse return;
         _ = try self.emit(.{ .op = .jump, .ty = .void, .data = @backingInt(target) });
         try self.addPred(target, from);
         self.current = null;
     }
 
-    fn branch(self: *FnBuilder, condition: ir.Ref, then: ir.BlockId, otherwise: ir.BlockId, span: u32) Error!void {
+    /// Builder control-flow operation available to feature dispatch modules.
+    pub fn branch(self: *FnBuilder, condition: ir.Ref, then: ir.BlockId, otherwise: ir.BlockId, span: u32) Error!void {
         const from = self.current orelse return;
         _ = try self.emit(.{ .op = .branch, .ty = .void, .a = condition, .data = ir.packTargets(then, otherwise), .span = span });
         try self.addPred(then, from);
@@ -432,7 +446,8 @@ const FnBuilder = struct {
         return value;
     }
 
-    fn newPhi(self: *FnBuilder, block: ir.BlockId, variable: u32) Error!ir.Ref {
+    /// Builder control-flow operation available to feature dispatch modules.
+    pub fn newPhi(self: *FnBuilder, block: ir.BlockId, variable: u32) Error!ir.Ref {
         const ref = try self.detached(.{ .op = .phi, .ty = self.ssa.types.items[variable] });
         const list = &self.function.blocks.items[block.index()].insts;
         var at: usize = 0;
@@ -467,7 +482,8 @@ const FnBuilder = struct {
         return same;
     }
 
-    fn seal(self: *FnBuilder, block: ir.BlockId) Error!void {
+    /// Builder control-flow operation available to feature dispatch modules.
+    pub fn seal(self: *FnBuilder, block: ir.BlockId) Error!void {
         if (self.ssa.incomplete.fetchRemove(@backingInt(block))) |entry| {
             var pending = entry.value;
             defer pending.deinit(self.allocator());
@@ -476,7 +492,8 @@ const FnBuilder = struct {
         self.ssa.sealed.items[block.index()] = true;
     }
 
-    fn local(self: *FnBuilder, slot: typed.LocalId) u32 {
+    /// Builder operation available to the feature dispatch modules.
+    pub fn local(self: *FnBuilder, slot: typed.LocalId) u32 {
         _ = self;
         return @intCast(@backingInt(slot));
     }
@@ -758,7 +775,8 @@ const FnBuilder = struct {
     }
 
     /// The type of the value `ref` stands for.
-    fn typeOfRef(self: *FnBuilder, ref: ir.Ref) ir.Type {
+    /// Builder operation available to the feature dispatch modules.
+    pub fn typeOfRef(self: *FnBuilder, ref: ir.Ref) ir.Type {
         return self.function.inst(self.function.resolve(ref)).ty;
     }
 
@@ -810,7 +828,8 @@ const FnBuilder = struct {
     /// (`frame.code`, `xs`) was captured before the operation's arguments were evaluated, and
     /// stays that snapshot when an argument writes the place (`xs[poke(mut xs)]` reads the list
     /// as it was, a replaced field included): the hidden local's own value.
-    fn receiverOf(self: *FnBuilder, owner: typed.LocalId) Error!ir.Ref {
+    /// Builder operation available to the feature dispatch modules.
+    pub fn receiverOf(self: *FnBuilder, owner: typed.LocalId) Error!ir.Ref {
         return self.read(self.local(owner), self.current.?);
     }
 
@@ -819,7 +838,8 @@ const FnBuilder = struct {
     /// captured, which is the place's still (an in-place change of the place) or no longer (the
     /// callee replaced the field, or cleared the parent) reachable from it; a value cannot tell
     /// the two apart, so the write is refused rather than guessed.
-    fn writableReceiverOf(self: *FnBuilder, owner: typed.LocalId, span: u32) Error!ir.Ref {
+    /// Builder operation available to the feature dispatch modules.
+    pub fn writableReceiverOf(self: *FnBuilder, owner: typed.LocalId, span: u32) Error!ir.Ref {
         const variable = self.local(owner);
         const alias = try self.read(variable, self.current.?);
         const place = self.places.get(variable) orelse return alias;
@@ -927,7 +947,8 @@ const FnBuilder = struct {
     }
 
     /// A write through receiver `owner` produced `value`: bind it, and store it back where the receiver came from.
-    fn writeOwner(self: *FnBuilder, owner: typed.LocalId, value: ir.Ref, span: u32) Error!void {
+    /// Builder operation available to the feature dispatch modules.
+    pub fn writeOwner(self: *FnBuilder, owner: typed.LocalId, value: ir.Ref, span: u32) Error!void {
         try self.write(self.local(owner), self.current.?, value);
         try self.assigned(self.local(owner));
         if (self.places.getPtr(self.local(owner))) |place| {
@@ -943,7 +964,8 @@ const FnBuilder = struct {
         return self.mb.mapType(n.ty, @intCast(n.span.start));
     }
 
-    fn expression(self: *FnBuilder, id: typed.NodeId) Error!ir.Ref {
+    /// Builder operation available to the feature dispatch modules.
+    pub fn expression(self: *FnBuilder, id: typed.NodeId) Error!ir.Ref {
         return self.expressionPlace(id, null);
     }
 
@@ -982,6 +1004,7 @@ const FnBuilder = struct {
                 const capacity = try self.expression(acquire.capacity);
                 return self.emit(.{ .op = .list_new, .ty = try self.typeOf(id), .a = capacity, .span = span });
             },
+            .index => |index| return build_text.indexed(@TypeOf(self), self, index.base, index.index, span, try self.typeOf(id)),
             .arena_escape => |value| return self.expression(value),
             .length => |operand| return self.stringLength(operand, span),
             .variant => |case| return self.variantMake(id, case.tag, case.value, span),
@@ -1001,7 +1024,9 @@ const FnBuilder = struct {
             .propagate => |try_value| return self.tryValue(try_value.value, try_value.output, span),
             .print => |print| return self.printNode(print, span),
             .array => |items| {
-                if (try self.typeOf(id) != .str) return self.mb.refuse("array", span);
+                const ty = try self.typeOf(id);
+                if (ty == .bytes) return build_text.literal(@TypeOf(self), self, items, span);
+                if (ty != .str) return self.mb.refuse("array", span);
                 return self.stringConstant(items, span);
             },
             else => return self.mb.refuse(@tagName(n.data), span),
@@ -1170,7 +1195,7 @@ const FnBuilder = struct {
             }
         }
         const ty = self.typeOfRef(left);
-        if (ty == .str or ty.isCompound()) return self.aggregateCompare(op, left, right, span);
+        if (ty == .str or ty == .bytes or ty.isCompound()) return self.aggregateCompare(op, left, right, span);
         const is_float = ty == .f64;
         const Shape = struct { op: ir.Op, check: ir.Check = .none, predicate: ?ir.Predicate = null };
         const shape: Shape = switch (op) {
@@ -1225,7 +1250,11 @@ const FnBuilder = struct {
     /// `==` and `!=` of two records, unions (enums, `Option`, `Result`) or lists: structural,
     /// never a pointer comparison. A `str` compares by bytes through the runtime; a recursive value is refused.
     fn aggregateCompare(self: *FnBuilder, op: typed.BinaryOp, left: ir.Ref, right: ir.Ref, span: u32) Error!ir.Ref {
-        if (op == .add and self.typeOfRef(left) == .str) return self.runtimeCall(flags.str_concat_symbol, &.{ .str, .str }, .str, &.{ left, right }, span);
+        if (op == .add and self.typeOfRef(left) == .str) {
+            if (self.function.resolve(left) == self.function.resolve(right)) return self.runtimeCall("myl_core_str_concat", &.{ .str, .str }, .str, &.{ left, right }, span);
+            return self.emit(.{ .op = .str_append, .ty = .str, .a = left, .b = right, .span = span });
+        }
+        if (op == .add and self.typeOfRef(left) == .bytes) return self.runtimeCall("myl_core_bytes_concat", &.{ .bytes, .bytes }, .bytes, &.{ left, right }, span);
         if (op != .eq and op != .ne) return self.mb.refuse(if (op == .add) "concatenation" else "operator on an aggregate value", span);
         const same = try self.equal(left, right, span);
         if (self.current == null or op == .eq) return same;
@@ -1253,8 +1282,8 @@ const FnBuilder = struct {
     fn equal(self: *FnBuilder, a: ir.Ref, b: ir.Ref, span: u32) Error!ir.Ref {
         const m = self.mb.module;
         const ty = self.typeOfRef(a);
-        if (ty == .str) {
-            return self.runtimeCall(flags.str_eq_symbol, &.{ .str, .str }, .bool, &.{ a, b }, span);
+        if (ty == .str or ty == .bytes) {
+            return self.runtimeCall(flags.str_eq_symbol, &.{ ty, ty }, .bool, &.{ a, b }, span);
         }
         // A recursive value would need a function that calls itself, not an expansion in place.
         if (self.recursive(ty, 0)) return self.mb.refuse("equality of a recursive value", span);
@@ -1407,6 +1436,7 @@ const FnBuilder = struct {
             return self.detached(.{ .op = .str_const, .ty = .str, .data = index });
         }
         const source = self.function.inst(operand).ty;
+        if (target == .bytes and self.mb.module.kind(source) == .list) return build_text.fromList(@TypeOf(self), self, source, operand, span);
         if (target == .str) return self.textOf(operand, span);
         if (source == target) return operand;
         const from = source.integer() orelse return self.mb.refuse("cast source", span);
@@ -1498,13 +1528,15 @@ const FnBuilder = struct {
         const owner = operation.owner;
         const argument_nodes = operation.arguments;
         const receiver_type = self.ssa.types.items[self.local(owner)];
+        if (kind == .iteration_check) return self.iterationCheck(operation, span);
+        if (receiver_type == .str or receiver_type == .bytes) return build_text.operation(@TypeOf(self), self, operation, ty, span);
         switch (kind) {
             .length => {
                 const receiver = try self.receiverOf(owner);
                 return if (receiver_type == .str) self.stringChars(receiver, span) else self.emit(.{ .op = .list_len, .ty = .u64, .a = receiver, .span = span });
             },
             .read => {
-                if (receiver_type == .str) return self.mb.refuse(build_text.indexRefusal(), span);
+                if (receiver_type == .str) return self.mb.refuse("string index", span);
                 const index = try self.expression(argument_nodes[0]);
                 if (self.current == null) return .none;
                 const receiver = try self.receiverOf(owner);
@@ -1588,13 +1620,15 @@ const FnBuilder = struct {
     fn stringLength(self: *FnBuilder, operand: typed.NodeId, span: u32) Error!ir.Ref {
         const value = try self.expression(operand);
         if (self.current == null) return .none;
-        if (self.typeOfRef(value) != .str) return self.mb.refuse("length of a non-string", span);
-        const chars = try self.stringChars(value, span);
+        const value_type = self.typeOfRef(value);
+        if (value_type != .str and value_type != .bytes) return self.mb.refuse("length of a non-string", span);
+        const chars = if (value_type == .bytes) try self.emit(.{ .op = .list_len, .ty = .u64, .a = value, .span = span }) else try self.stringChars(value, span);
         return self.emit(.{ .op = .convert, .ty = .i64, .a = chars, .check = .exact, .span = span });
     }
 
     /// A call of the runtime function `symbol` (declared in the module on first use) with `arguments`.
-    fn runtimeCall(self: *FnBuilder, symbol: []const u8, params: []const ir.Type, ret: ir.Type, arguments: []const ir.Ref, span: u32) Error!ir.Ref {
+    /// Builder operation available to the feature dispatch modules.
+    pub fn runtimeCall(self: *FnBuilder, symbol: []const u8, params: []const ir.Type, ret: ir.Type, arguments: []const ir.Ref, span: u32) Error!ir.Ref {
         const callee = try self.mb.runtimeFunction(symbol, params, ret);
         return self.emit(.{ .op = .call, .ty = ret, .a = @fromBackingInt(@intCast(callee)), .data = try self.extraSlice(arguments), .span = span });
     }
@@ -1613,7 +1647,8 @@ const FnBuilder = struct {
 
     /// The length of string `value` in Unicode scalars, which is what `len` counts (not bytes):
     /// the runtime counts the bytes that do not continue a scalar.
-    fn stringChars(self: *FnBuilder, value: ir.Ref, span: u32) Error!ir.Ref {
+    /// Builder operation available to the feature dispatch modules.
+    pub fn stringChars(self: *FnBuilder, value: ir.Ref, span: u32) Error!ir.Ref {
         return self.runtimeCall(flags.str_chars_symbol, &.{.str}, .u64, &.{value}, span);
     }
 

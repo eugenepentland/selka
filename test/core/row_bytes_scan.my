@@ -1,0 +1,67 @@
+module row_bytes_scan
+
+# Split from benchmarks/runtime/expanded/text/main.my; identical timed work.
+
+extern def runtime_bench_now(host: Host) -> i64 effects(host)
+
+record Inputs:
+    raw: bytes
+    texts: list[str]
+    other: list[str]
+    numbers: list[int]
+    fragments: list[str]
+
+
+
+def number(text: str) -> int:
+    match int(text):
+        case Some(value):
+            return value
+        case None:
+            return 0
+
+def repeated(text: str, count: int) -> str:
+    result = ""
+    for j in range(count):
+        result += text
+    return result
+
+def bytes_job(raw: bytes, mask: int) -> int:
+    total = 0
+    for value in raw:
+        total += value ^ mask
+    return total
+
+def inputs(kind: str, size: int, seed: int) -> Inputs:
+    raw = b""
+    texts: list[str] = []
+    other: list[str] = []
+    numbers: list[int] = []
+    fragments: list[str] = []
+    raw = bytes([(seed + j * 37) % 256 for j in range(size)])
+    return Inputs(raw=raw, texts=texts, other=other, numbers=numbers, fragments=fragments)
+
+def kernel(kind: str, data: Inputs, iterations: int, seed: int) -> int:
+    checksum = 0
+    for step in range(iterations):
+        cursor = seed + step
+        value = bytes_job(data.raw, cursor % 256)
+        checksum = (checksum + value) % 1000000007
+    return checksum
+
+def main(args: list[str], host: Host, out: Stream) -> int:
+    if len(args) != 3:
+        return 2
+    kind = "bytes_scan"
+    size = number(args[0])
+    iterations = number(args[1])
+    seed = number(args[2])
+    if size < 2 or iterations < 1 or seed < 1 or seed > 1000000:
+        return 2
+    data = inputs(kind, size, seed)
+    checksum = 0
+    start = runtime_bench_now(host)
+    checksum = kernel(kind, data, iterations, seed)
+    elapsed = runtime_bench_now(host) - start
+    out.print(checksum, elapsed)
+    return 0

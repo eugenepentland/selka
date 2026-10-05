@@ -1,0 +1,19 @@
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: build slot 1 after 5s (all 3 build slot(s) busy)
+703954400 36269189
+
+ Performance counter stats for '.mylang-cache/s2-t1/split-diagnostic 4096 400 7':
+
+         119825362      cpu_core/cycles/u                                                     
+         572275551      cpu_core/instructions/u                                               
+         121448656      cpu_core/branches/u                                                   
+             17719      cpu_core/branch-misses/u                                              
+     <not counted>      cpu_atom/cache-misses/                                                  (0.00%)
+             14916      cpu_core/cache-misses/                                                
+
+       0.037052952 seconds time elapsed
+
+       0.036077000 seconds user
+       0.001002000 seconds sys
+
+

@@ -57,7 +57,9 @@ fn inert(inst: ir.Inst, strict: bool) bool {
 fn fuseSource(arena: std.mem.Allocator, f: *ir.Function, module: *const ir.Module, site: Site) Error!bool {
     const source = f.inst(site.source);
     if (source.op != .list_get and source.op != .list_get_field) return false;
-    const element = module.compound(f.inst(f.resolve(source.a)).ty).list;
+    const source_type = f.inst(f.resolve(source.a)).ty;
+    if (module.kind(source_type) != .list) return false;
+    const element = module.compound(source_type).list;
     if (module.kind(source.ty) == null) return false;
     const base: ir.FieldPath = if (source.op == .list_get_field) ir.FieldPath.unpack(source.data) else .{};
     var projected: std.ArrayList(Projection) = .empty;
