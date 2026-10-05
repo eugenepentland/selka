@@ -1,9 +1,14 @@
 # The new compiler core: Core IR, facts and LLVM emission (S0 design)
 
-**Status:** checkpoint A of stage S0 (`docs/audits/new-core-plan-2026-10-05.md` §6).
-Branch `claude/new-core-s0-20261005`. Decisions N1–N5, L1–L4 and D1–D4 are fixed inputs.
-Sections marked *design only* describe S1+ work that S0 must leave room for but does not
-build. Measurements live in §11 and are updated as the slice grows.
+**Status:** checkpoint A of stage S0 (`docs/audits/new-core-plan-2026-10-05.md` §6),
+2026-10-05. Branch `claude/new-core-s0-20261005`. Decisions N1–N5, L1–L4 and D1–D4 are
+fixed inputs. Sections marked *design only* describe S1+ work that S0 must leave room for
+but does not build; *checkpoint B* marks S0 work not yet done. Measurements are in §11.
+
+**Built at checkpoint A** (about 2.9k lines of Zig plus 260 of C, 0.6k of them tests):
+`mylang-core build` compiles the integer_math slice and a control-flow program from
+`typed.Program` through the Core IR and LLVM; release builds run the fact pass, which
+already brings the slice to the spike's level-1 speed (1.67 cycles/element, §11).
 
 ## 1. Shape of the core
 
@@ -12,7 +17,7 @@ FILE.my ─► front end (module "mylang": lexer, parser, sema)      reused, unc
               │  typed.Program  (src/typed.zig)                    decision N3
               ▼
           src/core/build.zig      typed tree → Core IR (SSA, on-the-fly construction)
-          src/core/verify.zig     structural checks (types, dominance-free use rules)
+          (B) src/core/verify.zig IR well-formedness checks, and the facts' verify mode
           src/core/facts.zig      intervals, list facts, trip counts → marks checks proven
           (S1) src/core/own.zig   ownership: uniqueness, borrows, one-count RC insertion
           src/core/emit_llvm.zig  Core IR → LLVM IR text (typed accesses, attributes)
@@ -104,7 +109,8 @@ through one `Ref` is invariant for that value's whole lifetime, so the emitter m
   (checked or proven);
 - each checkable instruction carries a `check` field: `exact` (trap at this instruction),
   `region` (release builds may move it inside its L2 region, §7) or `proven` (the fact pass
-  showed it cannot fail; nothing is emitted). `proven` also licenses `nsw`/`nuw` and, for
+  showed it cannot fail; nothing is emitted). S0 implements `none`, `exact` and `proven`;
+  `region` arrives with the L2 lowering. `proven` also licenses `nsw`/`nuw` and, for
   `floor_*` over non-negative operands, `udiv`/`urem`;
 - lists: `list.new(capacity)`, `list.len`, `list.get(l, i)` (bounds-checked), `list.push`;
   strings: `str.parse_int` (→ `option(i64)`), `str.len`;
@@ -169,10 +175,18 @@ faster):
 - **Check marking.** Each `exact` check whose operands' intervals rule out failure becomes
   `proven`: overflow, division by zero, `i64` floor fix-ups (non-negative operands), and
   list bounds (`0 ≤ i < len` where `len`'s list fact equals the loop bound).
-- **Assumptions,** stated once in `facts.zig`, as in the spike: a list holds at most `2^44`
-  elements (eight-byte elements in the 47-bit user address space) and a counter stepping by
-  one from a small start stays below `2^62`. Both need the manager's sign-off as language
-  rules (§12).
+- **One assumption,** stated once in `facts.zig`: a list holds at most `2^47` elements
+  (elements of at least one byte in the 47-bit user address space of L4's single
+  platform), so once a list of length `n` exists, `n ≤ 2^47`. It bounds trip counts and
+  hence reductions. Unlike the spike, no counter ceiling is assumed: a counted loop's
+  counter is bounded by its own loop bound (`[start, max(start, bound)]`), which is a fact.
+- **Fixed point or nothing.** The pass iterates in reverse postorder with monotone
+  reachability (as in SCCP) and widens a phi to its type range after eight changes; if
+  the ranges do not settle within 64 rounds, nothing is proven.
+- **Where it runs and what it changes.** `facts.analyze` runs per function after
+  construction, in release builds only. It mutates the IR in two ways: `exact` → `proven`,
+  and a comparison it decides becomes a boolean constant (so the dead branch folds in
+  LLVM). The interval table stays beside the function for the emitter (`!range`).
 - **Runtime guards over immutable data** (*design, S0 checkpoint B*): when a list's element
   range is unknown (file data) but the list is an immutable value, the emitter can version a
   loop: one pass computes `min`/`max` (hoisted out of every loop the value is invariant in),
@@ -218,13 +232,16 @@ and exit status must match; the trap's stderr report has the same first line and
 `MYLANG-TRAP` line (`R_OVERFLOW`, `R_DIVISION_BY_ZERO`, `R_LIST_BOUNDS`, …, detail fields
 as the old core prints them), and exit status 1.
 
-- **Debug builds** (`-O0`): every `exact` and `region` check is emitted in place, in
-  program order; the trap block calls `myl_core_trap(site, a, b)` (`noreturn`, `cold`) with
-  the site index into a constant table `{kind, operation, line, column, function}`. Traces
-  (*S1*): a call-site table keyed by return address (`PC-table traces`), walked through frame
-  pointers on a trap, gives the `in f at file:line:col` lines without any per-call runtime
+- **Debug builds** (`-O0`): every `exact` check is emitted in place, in program order;
+  the trap block calls `myl_core_trap(site, a, b)` (`noreturn`, `cold`, branch weight
+  1:2^20) with the site index into a constant table `{kind, line, column, width, operation,
+  function}`. Measured: the trap's first stderr line and `MYLANG-TRAP` record are the old
+  core's, byte for byte, for overflow and list bounds; the trace has only the innermost
+  frame (`in grow at …`), where the old core also names the callers. Full traces (*S1*):
+  a call-site table keyed by return address (PC-table traces), walked through frame
+  pointers on a trap, gives every `in f at file:line:col` line with no per-call runtime
   bookkeeping.
-- **Release builds** (L2): checks are `region` by default. A region is the code between two
+- **Release builds** (L2, *checkpoint B*): checks become `region` by default. A region is the code between two
   visible effects (stream writes, capability/`extern` calls, exit). The emitter may (a) hoist
   a bounds check to one `high ≤ len` test before a counted loop, (b) merge overflow flags into
   one sticky `or` tested at the region exit, and (c) drop checks the facts prove. S0 emits
@@ -276,15 +293,19 @@ benchmark's own `--link` C file.
 
 **The block layout S0 fixes, for S1:** a 32-byte header `{u32 count, u32 kind, i64 len,
 i64 cap, i64 reserved}` followed by 32-byte-aligned data. The count is the single
-saturating 32-bit count of D4; S0 sets it to 1 and never frees (the slice allocates once).
+saturating 32-bit count of D4. S0 creates blocks with count 1 and releases nothing (that
+is the S1 ownership pass); the only free is the old block when a push outgrows it, which
+the IR's uniqueness rule makes safe. String constants are emitted as static blocks whose
+count is saturated (`0xFFFFFFFF`), so no release will ever free them.
 S1 either keeps this runtime and grows it, or adopts the shared runtime if WP-5 lands with a
 compatible block — a decision for S1 (plan §9's risk), not forced now.
 
 ## 9. Files and reachability
 
 ```
-src/core/main.zig        CLI (guardian orphan root)
-src/core/frontend.zig    front-end loading, positions
+src/core/main.zig        CLI: build, dump-typed, dump-ir [--facts] (guardian orphan root)
+src/core/pipeline.zig    one build: check → IR → facts (release) → LLVM → link
+src/core/frontend.zig    front-end loading (module graph or single file), positions
 src/core/typed_dump.zig  dump-typed
 src/core/ir.zig          Core IR types, module/function/block/instruction
 src/core/build.zig       typed.Program → Core IR
@@ -293,8 +314,9 @@ src/core/facts.zig       intervals, list facts, check marking
 src/core/emit_llvm.zig   LLVM IR text
 src/core/driver.zig      zig cc invocation and linking
 src/core/runtime/core_rt.c
-src/core/root_test.zig       test root (guardian test-reachability root)
-test/core/*.my           slice programs and expected outputs
+src/core/root_test.zig   test root (guardian test-reachability root); *_test.zig beside it
+test/core/*.my           slice programs (int_math, control, overflow, bounds)
+experiments/new-core-s0-20261005/  measure.py, build_all.sh, devloop.sh, results/
 ```
 
 `guardian.toml` lists `src/core/main.zig` and `src/core/root_test.zig` as roots, so every new
@@ -316,10 +338,85 @@ file is reachable from one of them. The runtime C file is embedded into `mylang-
 - **`zig build test-core`** is the new core's lane gate; it is not attached to `zig build
   test` (the manager decides gate wiring).
 
-## 11. Measurements
+## 11. Measurements (2026-10-05)
 
-(Filled in by the slice; see the checkpoint-A report.)
+**Correctness.** `test/core/int_math.my` (the spike's `int_math.my`, kind 0 of
+`compute/main.my`) prints `561601106` for `4096 300 7`, `8773872` for 64 and `562398344`
+for 4100, at debug and release, identical to the old core's `--release` build; invalid
+arguments exit 2 in both. `zig build test-core -Dcore-diff=true` also rebuilds all four
+`test/core` programs with the old compiler and compares stdout and exit status: equal.
 
-## 12. Open questions
+**Cycles per element** (`experiments/new-core-s0-20261005/measure.py`, the spike's
+method: `perf stat` user cycles on CPU 10, start-up subtracted, 7 interleaved rounds,
+SMT sibling idle; raw output in `results/int_math-cycles-2026-10-05.txt`):
 
-(Filled in at the checkpoint.)
+| Configuration | 4096 × 4000 | 64 × 250000 | instr/elem (4096) |
+|---|---:|---:|---:|
+| old core, `mylang build --release` | 8.69 | 9.07 | 38.0 |
+| new core release, `--no-facts` (every check exact) | 9.07 | 9.24 | 43.0 |
+| **new core release (facts)** | **1.67** | **1.91** | 4.47 |
+| spike level 1 (typed scalar), rebuilt from its branch | 1.67 | 2.00 | 4.47 |
+| spike level 2 (explicit narrow-lane vector) | 0.36 | 0.59 | 1.22 |
+| C ladder v5 (assumed ranges) | 1.73 | 1.98 | 4.46 |
+| C ladder v7 (hand AVX2, u16 storage) | 0.33 | 0.47 | 1.21 |
+| Rust (`compute-rust integer_math`) | 5.70 | 6.18 | 31.2 |
+
+The facts alone reach level 1: LLVM sees `!range [0,1009)` on the element load, `nsw`
+arithmetic and `udiv`/`urem`, narrows to 16-bit lanes and vectorizes by itself
+(`vpmulhuw`, `vpmovzxwq` in the loop). Level 2 needs the explicit vector lowering
+(checkpoint B). Without facts the new core is 4% slower than the old one (43 against 38
+instructions per element): every check is an exact overflow intrinsic or compare in
+program order, and nothing is hoisted yet.
+
+**Dev loop** (`devloop.sh` under `scripts/build-slot.sh`, `-j2`, Debug compiler, warm
+global cache, about nine other lanes on the host; raw output in `results/`):
+
+| Loop | Old core (plan §2) | New core |
+|---|---:|---:|
+| One-line edit → rebuild (`zig build -Dcompiler-only` / `zig build core`) | 19.5–28.9 s | **1.8–2.2 s** (a first run measured 9.8–17.5 s, not reproduced) |
+| Same under `zig build --watch -fincremental`, edit → new binary | 0.9–17 s | **0.13–0.55 s** |
+| Edit → focused tests (`test-units -Dtest-filter=arena` / `test-core`, all 16 tests incl. 6 native builds) | 33.9 s | **4.4–5.5 s** |
+| Tests with nothing changed | — | 1.1–1.2 s |
+| `test-core -Dcore-diff=true` (also builds each fixture with the old compiler) | — | 25.6 s |
+| Build the slice, debug (`-O0`), runtime object cached / empty cache dir | — (old debug build with `--link` fails, see §12) | 0.06–0.09 s / 0.22–0.26 s |
+| Build the slice, release, warm / empty cache dir | 1.5–1.8 s / 2.0–2.5 s | 0.06–0.08 s / 0.28–0.31 s |
+| Build `control.my` debug, warm / empty cache dir | 0.28 s / 0.51 s | 0.04 s / 0.14 s |
+
+Caveats: the programs are tiny, so these say little about LLVM `-O0` on large programs
+(the plan's 1–4.5 s cold code generation for `collections`/`text` is still the S1 risk);
+"empty cache" means an empty `--cache-dir`, with Zig's global cache warm.
+
+The default `zig build` is unchanged in behaviour: the new steps are off the install graph,
+and guests built by the `mylang` binary before and after the branch's changes are
+byte-identical (`control.my` debug, `int_math.my` release). The `mylang` binary itself
+differs only because `src/compiler.zig` gained one line (debug-info line numbers).
+
+## 12. Open questions and risks for the manager
+
+1. **The list-length assumption** (`max_list_length = 2^47`, §5) is the only non-proven
+   input to the facts. Accept it as a language/platform rule (L4), or require a runtime
+   guard?
+2. **Runtime for S1:** keep growing `core_rt.c` with one-count RC (§8), or adopt the shared
+   runtime once WP-5 lands? Recommendation: keep our own block layout and port the shared
+   runtime's algorithms (text, dictionaries, formatting) into it, because the shared
+   runtime's ABI is QBE-shaped.
+3. **How strict is the stderr oracle?** The first trap line and `MYLANG-TRAP` record match;
+   the trace has only the innermost frame until PC-table traces land in S1. Is that
+   acceptable for the conformance comparison (stdout + exit status + trap kind)?
+4. **`Stream` selection:** `main`'s `Stream` parameter writes to stderr only when it is
+   named `err` (my reading of CLAUDE.md); confirm that this is the checker's rule and not a
+   type distinction S0 should take from `typed.Program`.
+5. **Gate wiring:** `zig build test-core` (5 s after an edit) is the proposed lane gate;
+   `-Dcore-diff=true` adds the old compiler's build (25 s). Which runs where?
+6. **Next for checkpoint B**, in this order unless redirected: the vector lowering (spike
+   level 2, required for the S0 exit check "at or below the spike"), the facts' verify mode
+   and a whole-program differential fuzz, then `float_math`, `call_direct`, `branch_*`,
+   `binary_search` and the unmodified `compute/main.my`.
+7. **Old-core issue found:** `mylang build` *without* `--release` and with `--link
+   file.c` fails (`native_clock.c:1:1: error: FileNotFound`, `NativeToolFailed`) even
+   with an absolute path; release builds work. Not investigated further.
+8. **Risks:** the fact pass is now load-bearing for soundness (a wrong interval silently
+   drops a check); the verify mode and fuzz (checkpoint B) are what keep it honest. The
+   builder refuses rather than guesses (`E_CORE_UNSUPPORTED`), so coverage, not
+   correctness, is what limits it today: no records, dictionaries, sets, string operations
+   beyond `int(text)` and printing, `assert`, `with`, or element stores yet.

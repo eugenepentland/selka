@@ -1,0 +1,26 @@
+
+int_math, size 4096, 4000 iterations, 7 interleaved rounds, CPU 10 (SMT sibling CPU 11 0.0% busy besides these runs)
+| configuration | median ns | spread (min-max) | cycles/elem | instr/elem | vs fastest | checksum |
+|---|---:|---:|---:|---:|---:|---|
+| old core --release | 31,457,641 | 31,399,558-31,939,501 | 8.689 | 38.03 | 25.39x | 488688792 ok |
+| new core release, no facts | 32,863,132 | 32,726,405-33,171,394 | 9.070 | 43.03 | 26.53x | 488688792 ok |
+| new core release (facts) | 6,043,174 | 6,007,147-6,086,081 | 1.672 | 4.47 | 4.88x | 488688792 ok |
+| spike L1 (typed scalar) | 6,033,230 | 6,013,381-6,081,527 | 1.673 | 4.47 | 4.87x | 488688792 ok |
+| spike L2 (vector) | 1,319,354 | 1,304,561-1,350,254 | 0.357 | 1.22 | 1.07x | 488688792 ok |
+| C v5 (assume ranges) | 6,237,792 | 6,204,628-6,323,155 | 1.726 | 4.46 | 5.04x | 488688792 ok |
+| C v7 (AVX2, u16 storage) | 1,238,825 | 1,228,170-1,243,391 | 0.334 | 1.21 | 1.00x | 488688792 ok |
+| Rust | 20,574,627 | 20,490,243-20,795,952 | 5.695 | 31.19 | 16.61x | 488688792 ok |
+checksums agree
+
+int_math, size 64, 250000 iterations, 7 interleaved rounds, CPU 10 (SMT sibling CPU 11 0.0% busy besides these runs)
+| configuration | median ns | spread (min-max) | cycles/elem | instr/elem | vs fastest | checksum |
+|---|---:|---:|---:|---:|---:|---|
+| old core --release | 33,525,433 | 32,609,292-34,128,152 | 9.068 | 38.58 | 19.02x | 309603053 ok |
+| new core release, no facts | 34,374,663 | 33,867,139-34,815,470 | 9.239 | 43.49 | 19.50x | 309603053 ok |
+| new core release (facts) | 7,109,408 | 6,825,252-7,272,909 | 1.912 | 5.15 | 4.03x | 309603053 ok |
+| spike L1 (typed scalar) | 7,339,704 | 7,033,065-7,534,898 | 1.999 | 5.30 | 4.16x | 309603053 ok |
+| spike L2 (vector) | 2,197,159 | 2,089,470-2,253,509 | 0.587 | 2.06 | 1.25x | 309603053 ok |
+| C v5 (assume ranges) | 7,369,122 | 7,171,831-7,453,284 | 1.978 | 5.30 | 4.18x | 309603053 ok |
+| C v7 (AVX2, u16 storage) | 1,762,674 | 1,695,774-1,828,025 | 0.471 | 1.76 | 1.00x | 309603053 ok |
+| Rust | 22,916,290 | 22,357,286-23,078,092 | 6.181 | 31.55 | 13.00x | 309603053 ok |
+checksums agree
