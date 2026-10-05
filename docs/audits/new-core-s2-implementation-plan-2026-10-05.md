@@ -11,9 +11,10 @@ decisions) win.
 > Continue stage S2 of mylang's new compiler core following
 > `docs/audits/new-core-s2-implementation-plan-2026-10-05.md` on
 > `codex/new-core-s2-integration`, starting from `aae74ae2`. Wave A is accepted (see
-> "Status after Wave A"). Run S2-D, S2-T, S2-F and S2-I in parallel, each in its own
-> locked worktree cut from the integration head, then S2-X. Hold every gate in §5 and the
-> Wave A rules below. Never merge into `main`. Finish with the S2 exit report in §7 and
+> "Status after Wave A"). Run S2-D, S2-T1, S2-F and S2-I in parallel, each in its own
+> locked worktree cut from the integration head, and start S2-T2 when the first of them
+> merges (at most four build-heavy agents at once), then S2-X. Hold every gate in §5, the
+> Wave A rules below and the "Wave B pace" rules. Never merge into `main`. Finish with the S2 exit report in §7 and
 > stop for the user's go/stop decision on S3.
 
 ## Status after Wave A (accepted 2026-10-05)
@@ -47,6 +48,38 @@ S2-Lb (D1 in the front end and old core) are merged.
 8. **Memory.** The unit-shard ceiling is 2.5G (`build.zig` `shard_unit`). Zig's runner reports an RSS overrun but keeps the step green, so read `MaxRSS` in the gate summary when a package adds heavy Zig tests.
 9. **Gate-step contention.** Run `test-core` timings with the gate slot held, as `wave-a/check_stage.py` does. Under a concurrent full gate it runs 3× slower and breaks the 5-minute rule.
 10. **Lox.** The Lox port needs four two-statement migrations under `MUT-OVERLAP-RECEIVER-1`: `resolver.my` 195, 251 and 259, and `heap.my:300`. They are documented, not applied, because the checkout is outside this repo. Don't touch it.
+
+## Wave B pace (user decision, 2026-10-05)
+
+Wave A spent about half its elapsed time on gates and evidence. Wave B keeps the same
+final bar and spends less per package:
+
+1. **Per-package exit checks.** A package that changes only `src/core/`, `test/core/` and
+   its experiments directory runs these, and only these, before its merge:
+   - `test-core` (gate slot held);
+   - full conformance at debug and release, 0 mismatches;
+   - the leak and `--verify-facts` sweep on its own conformance files;
+   - a **50-case** fuzz run of its own features through `fuzz_qualification.py`;
+   - the S0/S1 code-identity check (`compare_code.py`);
+   - its own rows.
+
+   It does **not** run the full old-core gate, the 200-case fuzz matrix or the 35-row
+   table. A package that touches anything outside `src/core/` (the shared front end,
+   the old core, `build.zig` beyond the test lists) does run the full old-core gate itself.
+2. **S2-X runs the full bar once, on the integrated head:**
+   - the full old-core gate (`test`, `test-qbe`, `test-qbe-build`, `fmt-check`);
+   - the 200-case fuzz matrix over every kind, Wave B's dict and text kinds included;
+   - the full leak and verify sweeps;
+   - all 35 rows;
+   - coverage.
+
+   A failure there is fixed, and only the failing check and the checks the fix could
+   affect are rerun.
+3. **Evidence is the command, its result and the commit.**
+   - Each package README lists those three for each check.
+   - Don't freeze file-hash manifests.
+   - Don't rerun a passing check to prove that nothing changed, unless a source file changed after it ran.
+   - Keep a failed run's log only when it explains a fix.
 
 **Reusable tooling from Wave A:**
 - `wave-a/check_stage.py` (post-merge checks);
@@ -121,7 +154,7 @@ so S2-La and S2-Lb land **before** the new-core packages are graded against it.
 
 Estimates are agent-hours, calibrated on S1, which took about 5 agent-hours across 4–5 lanes.
 
-### S2-0. IR first (one agent; about 1–1.5 h; blocks D, T and F)
+### S2-0. IR first (one agent; about 1–1.5 h; blocks D, T1, T2 and F)
 
 **Spec:** design note §8 "Step 0", with the ops of §2.4, §3, §4 and §5.
 
@@ -299,7 +332,7 @@ plan's WP-5, revision 5:
 - the dict section of `facts.zig`;
 - `test/core/row_dict_*.my`, `row_set_dedup.my` and `test/core/d_*.my`.
 
-**Depends on** S2-T's `myl_core_str_hash` and its string header flags. S2-T publishes them about 30 minutes in; until then S2-D works on integer keys.
+**Depends on** S2-T1's `myl_core_str_hash` and its string header flags. S2-T1 publishes them about 30 minutes in; until then S2-D works on integer keys.
 
 **Layout check, required before merge:**
 - Re-measure the chosen layout with D's real emitted probe against the `old` shape on CPU 10 (`experiments/new-core-s2-design-20261005/dict-layout/run.sh` is the reference).
@@ -317,31 +350,62 @@ plan's WP-5, revision 5:
 - leak check shows 0;
 - the verify build asserts the probe invariant and `count == 1` before in-place updates.
 
-### S2-T. Text, bytes, numbers (one agent; about 5–6 h; after S2-0)
+### S2-T1. Text and bytes (one agent; about 3.5–4 h; wave B)
 
-**Spec:** design note §3 and §4.
-- **Representation:** one block layout for `str` and `bytes`, so `encode()` is free. The header caches flags for ASCII, the hash and the scalar count.
-- **Iteration:** a UTF-8 cursor for `for ch in text`, with the 128 one-character ASCII strings immortal.
+**Spec:** design note §3.
+- **Representation:** one block layout for `str` and `bytes`, so `encode()` is free. The
+  header caches flags for ASCII, the hash and the scalar count.
+- **Iteration:** a UTF-8 cursor for `for ch in text`, with the 128 one-character ASCII
+  strings immortal.
 - **Indexing:** code-point indexing at O(n/32), with the ASCII fast path.
-- **Building:** in-place `+=` under S1's uniqueness rules, plus `join` and formatting.
+- **Building:** in-place `+=` under S1's uniqueness rules, plus `join` and f-string
+  formatting of strings.
 - **Views:** SSA-only views, and a fused `split` loop.
-- **Numbers:** an 8-digit SWAR fast path for `int(text)`, and two digits at a time for `str(int)`.
 - **Bytes:** byte iteration and `^`.
 
 **Owns:**
-- `build_text.zig`, `emit_text.zig` and `runtime/core_text.c`;
-- `fuse_text.zig`;
-- `test/core/row_string_*.my`, `row_bytes_scan.my`, `row_int_*.my` and `test/core/t_*.my`.
+- `build_text.zig`, `emit_text.zig`, `runtime/core_text.c` and `fuse_text.zig`;
+- `test/core/row_string_*.my`, `row_bytes_scan.my` and `test/core/t_*.my`.
 
-**Publishes first:** `myl_core_str_hash` and the header flags, for S2-D.
+**Publishes first,** within about 30 minutes:
+- `myl_core_str_hash` and the string header layout and flags, for S2-D and S2-T2;
+- a one-function dispatch hook in `build_text.zig` for number conversions, which S2-T2 fills.
 
 **Exit:**
-- the 7 text rows build, match and are measured;
+- the 6 text and bytes rows build, match and are measured (`string_equal`,
+  `string_search`, `string_split`, `string_join`, `bytes_scan`, and any other text row of
+  §7 except the two integer rows);
 - the bytes and text files of design note §6 are at 0 mismatches;
 - the verify build asserts that a `str_view` never escapes;
-- Unicode cases are tested: mixed ASCII, 4-byte scalars, empty strings, and non-ASCII indexing over at least 256 bytes;
-- fuzz is extended with random ASCII and non-ASCII strings, slices, `find`, `split`, concatenation in loops, and `int()` of 19-digit edges.
-- If `string_split` misses the gate, report it with counter evidence before proposing the view ABI (§2, decision 4).
+- Unicode cases are tested: mixed ASCII, 4-byte scalars, empty strings, and non-ASCII
+  indexing over at least 256 bytes;
+- fuzz has random ASCII and non-ASCII strings, slices, `find`, `split` and concatenation
+  in loops;
+- if `string_split` misses the gate, report it with counter evidence before proposing
+  the view ABI (§2, decision 4).
+
+### S2-T2. Numbers in text (one agent; about 1.5–2 h; wave B, starts when the first Wave B package merges)
+
+**Spec:** design note §4.1–4.2.
+- **`int(text)`:** an 8-digit SWAR fast path, with the exact old-core results and errors at
+  the 19-digit and sign edges.
+- **`str(int)` and printing integers:** two digits at a time.
+- **Stretch:** float text, only if the old core's exact output is matched.
+
+**Owns:**
+- a new `build_number.zig` and `runtime/core_number.c`, plus the one-line `driver.zig`
+  change that compiles the C file;
+- the number hook in `build_text.zig`, which T1 publishes;
+- `test/core/row_int_parse.my`, `row_int_format.my` and `test/core/n_*.my`.
+
+**Depends on** S2-T1's string header layout. It starts after T1 publishes it, and after
+the first Wave B package merges, to keep to four build-heavy agents.
+
+**Exit:**
+- `int_parse` and `int_format` build, match and are measured;
+- the integer-parsing and formatting tests of design note §6 are at 0 mismatches;
+- fuzz has `int()` of random digit strings, including the 19-digit edges, signs and
+  whitespace as the old core treats them.
 
 ### S2-F. Function values, sort, fixed arrays (one agent; about 3–4 h; after S2-0)
 
@@ -389,11 +453,12 @@ lowering needs.
 1. **Merges.** Merge each package after its exit check.
    - Expect **semantic** conflicts, not only textual ones. In S1, a facts table moved into a sub-struct and another lane's new code still read the old field.
    - Rebuild and run test-core after every merge, even a clean one.
-2. **After every merge into the integration branch:**
-   - test-core;
-   - the S1 rows (`measure_rows.py`), checking for no regression;
-   - full conformance at debug and release with 0 mismatches.
-3. **At the end:**
+2. **After every merge into the integration branch:** test-core and full conformance at
+   debug and release, 0 mismatches. That is the cheap check that catches semantic merge
+   conflicts. Rows, fuzz and the old-core gate wait for the end.
+3. **At the end, once,** the full bar from "Wave B pace" item 2:
+   - **gate:** the full old-core gate;
+   - **fuzz:** the 200-case fuzz matrix over every kind;
    - **sweeps:** the leak sweep and the `--verify-facts` sweep over every supported test (`conformance.py --leakcheck` and `--verify`);
    - **coverage:** the coverage sweep;
    - **rows:** all 35 microbenchmark rows measured against Zig ReleaseSafe and Rust.
@@ -403,7 +468,7 @@ lowering needs.
 | Wave | Packages | Parallel? |
 |---|---|---|
 | A | S2-0 (IR); S2-La (overlap rule, `mut` rebinding); S2-Lb (D1 in the old core) | yes. S2-0 is in `src/core/`. S2-La and S2-Lb are in the front end and old core, apart from S2-La's small `build.zig` write-back change. **Merge S2-La and S2-Lb before grading anything against the old core**, since they change its answers. Their full gates share one gate slot, so they run one after the other. |
-| B | S2-D, S2-T, S2-F, S2-I | yes, after S2-0 is merged (S2-I also needs S2-Lb). T publishes the string hash first. S2-I owns `own.zig`. |
+| B | S2-D, S2-T1, S2-F, S2-I; then S2-T2 | D, T1, F and I in parallel (four build-heavy agents). T2 starts when the first of them merges and T1 has published the string header. T1 publishes the string hash first. S2-I owns `own.zig`. |
 | C | S2-X | after B |
 
 At most four build-heavy agents at once on this machine.
@@ -419,11 +484,11 @@ At most four build-heavy agents at once on this machine.
 | Build | `scripts/build-slot.sh build -- zig build core` (new core), `… -- zig build` (old core, the oracle) | after every source change |
 | Lane gate | `scripts/build-slot.sh build -- zig build test-core --summary all` | before every commit; must stay ≤ 5 min |
 | Conformance | `python3 experiments/new-core-s1-20261005/conformance.py --set all --jobs 4 [--why] [--leakcheck] [--verify] [--pin test/core/conformance.pins]` | per test function against the old core; 0 mismatches always |
-| Fuzz | `experiments/new-core-s1-20261005/fuzz.py --features …`, `experiments/new-core-s1-20261005/lane-o/rc_fuzz.py`, `experiments/new-core-s0-20261005/fuzz.py`, all under `MYL_CORE_LEAKCHECK=1` | each package extends it for its features |
+| Fuzz | `experiments/new-core-s2-20261005/wave-a/integration/fuzz_qualification.py --kind … --cases N` over the S0, S1, RC, rebinding and new kinds; it applies `MYL_CORE_LEAKCHECK=1` and rejects crashes | packages: 50 cases of their own kinds; S2-X: 200 cases of every kind |
 | Rows | `experiments/new-core-s1-20261005/measure_rows.py --runner /home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin --build --rows …` | CPU 10; ≤ 1.10× Zig ReleaseSafe per row; checksums identical |
 | Kernels | `experiments/new-core-s0-20261005/measure_kernels.py` | S0 kernels within ±1% |
 | Coverage | `experiments/new-core-s0-20261005/coverage.py` | reported at each package's exit |
-| Full old-core gate | `scripts/build-slot.sh gate -- zig build test --summary all`, then `test-qbe`, `test-qbe-build` and `fmt-check` | **only S2-La and S2-Lb** (they change the shared front end and the old core) and the final S2-X integration |
+| Full old-core gate | `scripts/build-slot.sh gate -- zig build test --summary all`, then `test-qbe`, `test-qbe-build` and `fmt-check` | S2-La and S2-Lb, a Wave B package that touches anything outside `src/core/`, and the final S2-X integration, once |
 
 **Gate-log caution.** A `failed command:` line also prints for a green step that writes to stderr. Read the Build Summary lines.
 
