@@ -52,8 +52,11 @@ const rss = struct {
     /// shard the declarations alone passed a 30G machine's budget, so the build
     /// runner held the last shards back for most of a minute. The module-era
     /// semantic-cache shard later passed 199 tests with a 1.31G process peak
-    /// (2026-09-30); 2G admits that observed work while keeping it bounded.
-    const shard_unit: u64 = 2048 * mib;
+    /// (2026-09-30); 2G admitted that work. After S2 Wave A's tests the
+    /// shard holding `semantic_cache_test` and `qbe_rc_index_update_test`
+    /// peaked at 2.18G running alone (2,281,596 kB, 2026-10-05, 218 tests), so
+    /// 2.5G keeps a measured ceiling with headroom.
+    const shard_unit: u64 = 2560 * mib;
     /// One shard of the CLI root, which builds far fewer guests. Observed on a
     /// clean cache: 103M-141M for the test process, up to 1.22G for a moment
     /// across its tree; the ceiling is a concurrency budget.

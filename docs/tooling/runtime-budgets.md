@@ -250,7 +250,7 @@ The gate's two slow Zig test roots run as several processes rather than one:
 `zig build test` splits `src/root_test.zig` into `-Dtest-shards=N` shards
 (default 12) and `test/integration.zig` into `N/2`, each an independent run of
 the same test binary under `--guardian-shard=K/N`, declaring its own `max_rss`
-(1 GiB per unit shard, 768 MiB per CLI shard) so `zig build --maxrss` still
+(2.5 GiB per unit shard, 768 MiB per CLI shard) so `zig build --maxrss` still
 bounds the whole gate. Guardian's runner gives each shard the named tests whose
 position among them is `K` modulo `N`, and the unnamed `test { }` blocks to
 shard 0 alone, so the shards partition the root and their `N test(s) selected`
@@ -275,8 +275,8 @@ above the largest single process, which the runner checks and fails on. On
 2026-09-23 a clean-cache `zig build test` never held more than 5.8 GiB at once,
 while its declarations summed to far more than 30 GiB: the last unit shards
 waited most of a minute for reservations that were never used. The ceilings in
-`build.zig` now follow measured peaks — 1 GiB per unit shard (largest process
-570 MiB), 768 MiB per CLI shard (141 MiB), 1.5 GiB for the host-application
+`build.zig` now follow measured peaks — then 1 GiB per unit shard (largest process
+570 MiB; 2.5 GiB since a 2.18 GiB shard peak on 2026-10-05), 768 MiB per CLI shard (141 MiB), 1.5 GiB for the host-application
 roots and `tests/guest`, 256 MiB for checks that run no compiler — and a rerun
 of every test took 98 s instead of 136 s on the same loaded machine (81 s with
 no memory limit at all). Measure a step's tree before raising its ceiling; a
