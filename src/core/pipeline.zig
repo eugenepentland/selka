@@ -6,6 +6,7 @@ const frontend = @import("frontend.zig");
 const build_ir = @import("build.zig");
 const emit_llvm = @import("emit_llvm.zig");
 const driver = @import("driver.zig");
+const facts = @import("facts.zig");
 
 /// What the command line asked for.
 pub const Options = struct {
@@ -16,6 +17,8 @@ pub const Options = struct {
     /// Also write the emitted LLVM IR here.
     emit_llvm: ?[]const u8 = null,
     cache: []const u8 = ".mylang-cache/core",
+    /// Skip the fact pass in a release build (`--no-facts`, for measuring what facts buy).
+    facts: bool = true,
 };
 
 /// Why a build stopped after its report was written.
@@ -32,7 +35,7 @@ pub fn build(init: std.process.Init, path: []const u8, options: Options, report:
         else => return error.SourceError,
     };
     var refusal: build_ir.Refusal = .{};
-    const module = build_ir.buildModule(allocator, checked.program, &refusal) catch |err| switch (err) {
+    var module = build_ir.buildModule(allocator, checked.program, &refusal) catch |err| switch (err) {
         error.Unsupported => {
             const at = frontend.position(checked.src, .{ .start = refusal.span, .end = refusal.span });
             try report.print(allocator, "{s}:{d}:{d}: error[E_CORE_UNSUPPORTED]: the new core does not support {s} yet\n", .{ at.path, at.line, at.column, refusal.reason });
@@ -40,11 +43,18 @@ pub fn build(init: std.process.Init, path: []const u8, options: Options, report:
         },
         else => |other| return other,
     };
+    // Release builds compute facts and drop the checks they rule out; debug builds keep every check.
+    const known = try allocator.alloc(?facts.Facts, module.functions.items.len);
+    @memset(known, null);
+    if (options.release and options.facts) for (module.functions.items, known) |*function, *slot| {
+        if (function.signature.linkage == .internal) slot.* = try facts.analyze(allocator, function);
+    };
     const absolute = std.Io.Dir.cwd().realPathFileAlloc(init.io, path, allocator) catch path;
     const llvm = emit_llvm.emitModule(allocator, &module, .{
         .locator = .{ .context = &checked.src, .locate = locate },
         .source_path = absolute,
         .main_parameters = try mainParameters(allocator, checked.program),
+        .facts = known,
     }) catch |err| switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
         else => {

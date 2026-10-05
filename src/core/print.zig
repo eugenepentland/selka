@@ -85,6 +85,7 @@ fn instruction(allocator: std.mem.Allocator, out: *std.ArrayList(u8), m: *const 
             try out.appendSlice(allocator, ")");
         },
         .jump => try out.print(allocator, " b{d}", .{inst.data}),
+        .iconst => try out.print(allocator, " {d}", .{@as(i64, @bitCast(inst.data))}),
         .branch => {
             const targets = ir.unpackTargets(inst.data);
             try out.appendSlice(allocator, " ");

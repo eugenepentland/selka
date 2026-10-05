@@ -1,0 +1,643 @@
+//! Facts over the Core IR (docs/design/new-core-ir.md §5), release builds only.
+//!
+//! One pass per function computes, to a fixed point over the reachable CFG:
+//! - an integer interval for every value, refined per block by the branch
+//!   edges that dominate it (`x < y` on the taken edge of `if x < y`);
+//! - which branch edges can execute (a comparison the intervals decide folds);
+//! - list facts: a list filled by a counted loop from 0 to `n` with one push
+//!   per iteration has length `max(n, 0)` and elements in the hull of the
+//!   pushed values, and after it exists `n` is at most `max_list_length`;
+//! - reductions: `acc = phi(init, acc + s)` in a counted loop stays within
+//!   `init + trips * s`.
+//! Then `mark` turns every check the facts rule out into `proven`, folds
+//! decided comparisons to constants, and keeps the per-value ranges for the
+//! emitter's `!range` metadata. Nothing here assumes more than the two
+//! constants below, which are the stated assumptions of the S0 design.
+const std = @import("std");
+const ir = @import("ir.zig");
+
+/// A list holds at most 2^47 elements: elements of at least one byte in the 47-bit
+/// x86-64 Linux user address space (L4). A list that reaches this many cannot be built.
+pub const max_list_length: i128 = 1 << 47;
+
+/// A closed integer interval, exact in `i128`.
+pub const Interval = struct {
+    lo: i128,
+    hi: i128,
+
+    /// The interval holding exactly `value`.
+    pub fn point(value: i128) Interval {
+        return .{ .lo = value, .hi = value };
+    }
+    /// The smallest interval holding both.
+    pub fn hull(a: Interval, b: Interval) Interval {
+        return .{ .lo = @min(a.lo, b.lo), .hi = @max(a.hi, b.hi) };
+    }
+    /// The values both hold (may be empty: `lo > hi`).
+    pub fn meet(a: Interval, b: Interval) Interval {
+        return .{ .lo = @max(a.lo, b.lo), .hi = @min(a.hi, b.hi) };
+    }
+    /// Whether every value of `self` lies in `other`.
+    pub fn within(self: Interval, other: Interval) bool {
+        return self.lo >= other.lo and self.hi <= other.hi;
+    }
+};
+
+/// Every value a type can hold, or null for a non-integer type.
+pub fn typeRange(ty: ir.Type) ?Interval {
+    if (ty == .bool) return .{ .lo = 0, .hi = 1 };
+    const info = ty.integer() orelse return null;
+    if (info.signed) return .{ .lo = -(@as(i128, 1) << @intCast(info.bits - 1)), .hi = (@as(i128, 1) << @intCast(info.bits - 1)) - 1 };
+    return .{ .lo = 0, .hi = (@as(i128, 1) << @intCast(info.bits)) - 1 };
+}
+
+/// What a list value is known to hold.
+pub const ListFact = struct {
+    /// The list's length is `max(length, 0)` for this value.
+    length: ir.Ref = .none,
+    elements: ?Interval = null,
+};
+
+/// The facts of one function.
+pub const Facts = struct {
+    /// Per instruction: its interval (integers and booleans), null when unknown or unreachable.
+    ranges: []?Interval,
+    lists: []ListFact,
+    /// Per block: whether any execution reaches it.
+    reachable: []bool,
+    /// How many checks `mark` proved, for reports and tests.
+    proven: u32 = 0,
+};
+
+/// Dominators, reverse postorder and the block of every instruction.
+const Shape = struct {
+    rpo: []ir.BlockId,
+    idom: []?ir.BlockId,
+    block_of: []?ir.BlockId,
+    /// Position of each block in `rpo` (unreachable from the entry: maxInt).
+    order: []u32,
+};
+
+fn shape(arena: std.mem.Allocator, f: *const ir.Function) !Shape {
+    const count = f.blocks.items.len;
+    const block_of = try arena.alloc(?ir.BlockId, f.insts.items.len);
+    @memset(block_of, null);
+    for (f.blocks.items, 0..) |block, b| for (block.insts.items) |ref| {
+        block_of[ref.index()] = @fromBackingInt(@intCast(b));
+    };
+    // Reverse postorder from the entry by an explicit DFS.
+    const visited = try arena.alloc(bool, count);
+    @memset(visited, false);
+    var post: std.ArrayList(ir.BlockId) = .empty;
+    var stack: std.ArrayList(struct { block: ir.BlockId, next: u8 }) = .empty;
+    try stack.append(arena, .{ .block = @fromBackingInt(@intCast(0)), .next = 0 });
+    visited[0] = true;
+    while (stack.items.len != 0) {
+        const top = &stack.items[stack.items.len - 1];
+        const successors = successorsOf(f, top.block);
+        if (top.next < successors.len) {
+            const next = successors.buffer[top.next];
+            top.next += 1;
+            if (!visited[next.index()]) {
+                visited[next.index()] = true;
+                try stack.append(arena, .{ .block = next, .next = 0 });
+            }
+        } else {
+            try post.append(arena, top.block);
+            _ = stack.pop();
+        }
+    }
+    std.mem.reverse(ir.BlockId, post.items);
+    const order = try arena.alloc(u32, count);
+    @memset(order, std.math.maxInt(u32));
+    for (post.items, 0..) |block, i| order[block.index()] = @intCast(i);
+    // Cooper, Harvey and Kennedy's iterative dominators.
+    const idom = try arena.alloc(?ir.BlockId, count);
+    @memset(idom, null);
+    idom[0] = @fromBackingInt(@intCast(0));
+    var changed = true;
+    while (changed) {
+        changed = false;
+        for (post.items[1..]) |block| {
+            var chosen: ?ir.BlockId = null;
+            for (f.blocks.items[block.index()].preds.items) |pred| {
+                if (idom[pred.index()] == null) continue;
+                chosen = if (chosen) |other| intersect(idom, order, pred, other) else pred;
+            }
+            if (chosen != null and idom[block.index()] != chosen) {
+                idom[block.index()] = chosen;
+                changed = true;
+            }
+        }
+    }
+    return .{ .rpo = post.items, .idom = idom, .block_of = block_of, .order = order };
+}
+
+fn intersect(idom: []?ir.BlockId, order: []u32, a: ir.BlockId, b: ir.BlockId) ir.BlockId {
+    var x = a;
+    var y = b;
+    while (x != y) {
+        while (order[x.index()] > order[y.index()]) x = idom[x.index()].?;
+        while (order[y.index()] > order[x.index()]) y = idom[y.index()].?;
+    }
+    return x;
+}
+
+/// At most two successor blocks.
+const Successors = struct {
+    buffer: [2]ir.BlockId = undefined,
+    len: u8 = 0,
+};
+
+fn successorsOf(f: *const ir.Function, block: ir.BlockId) Successors {
+    var out: Successors = .{};
+    const insts = f.blocks.items[block.index()].insts.items;
+    if (insts.len == 0) return out;
+    const last = f.inst(insts[insts.len - 1]);
+    switch (last.op) {
+        .jump => {
+            out.buffer[0] = @fromBackingInt(@intCast(@as(u32, @intCast(last.data))));
+            out.len = 1;
+        },
+        .branch => {
+            const targets = ir.unpackTargets(last.data);
+            out.buffer = .{ targets.then, targets.otherwise };
+            out.len = 2;
+        },
+        else => {},
+    }
+    return out;
+}
+
+/// A counted loop: `counter = phi(start, counter + 1)` in the header, `counter < bound` its condition.
+const Counted = struct { loop: ir.Loop, counter: ir.Ref, start: ir.Ref, bound: ir.Ref };
+
+const Analysis = struct {
+    arena: std.mem.Allocator,
+    f: *ir.Function,
+    shape: Shape,
+    facts: Facts,
+    counted: std.ArrayList(Counted) = .empty,
+    /// Numeric upper bounds that hold in every block a given block dominates: (block, value, hi).
+    caps: std.ArrayList(struct { block: ir.BlockId, value: ir.Ref, hi: i128 }) = .empty,
+
+    fn inst(self: *Analysis, ref: ir.Ref) ir.Inst {
+        return self.f.inst(self.f.resolve(ref));
+    }
+
+    fn base(self: *Analysis, raw: ir.Ref) ?Interval {
+        const ref = self.f.resolve(raw);
+        const i = self.f.inst(ref);
+        return switch (i.op) {
+            .iconst => if (typeRange(i.ty) != null) Interval.point(constantValue(i)) else null,
+            .param, .undef, .call, .union_payload => typeRange(i.ty),
+            else => self.facts.ranges[ref.index()],
+        };
+    }
+
+    fn dominates(self: *Analysis, a: ir.BlockId, b: ir.BlockId) bool {
+        var x: ?ir.BlockId = b;
+        while (x) |current| {
+            if (current == a) return true;
+            if (current.index() == 0) return false;
+            x = self.shape.idom[current.index()];
+        }
+        return false;
+    }
+
+    /// The edge into `block` when it has one predecessor ending in a branch on a comparison.
+    fn edgeCondition(self: *Analysis, block: ir.BlockId) ?struct { cmp: ir.Inst, taken: bool } {
+        const preds = self.f.blocks.items[block.index()].preds.items;
+        if (preds.len != 1) return null;
+        const insts = self.f.blocks.items[preds[0].index()].insts.items;
+        const last = self.f.inst(insts[insts.len - 1]);
+        if (last.op != .branch) return null;
+        const targets = ir.unpackTargets(last.data);
+        if (targets.then == targets.otherwise) return null;
+        const condition = self.inst(last.a);
+        if (condition.op != .cmp) return null;
+        return .{ .cmp = condition, .taken = targets.then == block };
+    }
+
+    /// `ref`'s interval where `block` executes: its own interval narrowed by
+    /// every dominating branch edge and every list-length cap that covers `block`.
+    fn rangeAt(self: *Analysis, raw: ir.Ref, block: ir.BlockId) ?Interval {
+        const ref = self.f.resolve(raw);
+        var range = self.base(ref) orelse return null;
+        for (self.caps.items) |cap| {
+            if (cap.value == ref and self.dominates(cap.block, block)) range.hi = @min(range.hi, cap.hi);
+        }
+        var x: ?ir.BlockId = block;
+        while (x) |current| {
+            if (self.edgeCondition(current)) |edge| range = refine(self, range, ref, edge.cmp, edge.taken);
+            if (current.index() == 0) break;
+            x = self.shape.idom[current.index()];
+        }
+        return range;
+    }
+
+    /// Whether `x < y` holds wherever `block` executes, by a dominating branch edge.
+    fn knownLess(self: *Analysis, x: ir.Ref, y: ir.Ref, block: ir.BlockId) bool {
+        var b: ?ir.BlockId = block;
+        while (b) |current| {
+            if (self.edgeCondition(current)) |edge| {
+                const left = self.f.resolve(edge.cmp.a);
+                const right = self.f.resolve(edge.cmp.b);
+                const predicate: ir.Predicate = @fromBackingInt(@intCast(edge.cmp.data));
+                const same = left == x and right == y;
+                const holds = if (edge.taken) predicate == .lt else predicate == .ge;
+                if (same and holds) return true;
+            }
+            if (current.index() == 0) break;
+            b = self.shape.idom[current.index()];
+        }
+        return false;
+    }
+
+    /// The single executable operand of a phi, if the others come from dead edges.
+    fn liveOperand(self: *Analysis, ref: ir.Ref) ir.Ref {
+        const resolved = self.f.resolve(ref);
+        const i = self.f.inst(resolved);
+        if (i.op != .phi) return resolved;
+        const block = self.shape.block_of[resolved.index()] orelse return resolved;
+        var only: ir.Ref = .none;
+        for (self.f.operands(i.data), self.f.blocks.items[block.index()].preds.items) |operand, pred| {
+            if (!self.edgeLive(pred, block)) continue;
+            const value = self.f.resolve(operand);
+            if (only != .none and only != value) return resolved;
+            only = value;
+        }
+        return if (only == .none) resolved else only;
+    }
+
+    fn edgeLive(self: *Analysis, from: ir.BlockId, to: ir.BlockId) bool {
+        if (!self.facts.reachable[from.index()]) return false;
+        const insts = self.f.blocks.items[from.index()].insts.items;
+        const last = self.f.inst(insts[insts.len - 1]);
+        if (last.op != .branch) return true;
+        const condition = self.base(last.a) orelse return true;
+        const targets = ir.unpackTargets(last.data);
+        if (condition.lo == 1 and condition.hi == 1) return targets.then == to;
+        if (condition.lo == 0 and condition.hi == 0) return targets.otherwise == to;
+        return true;
+    }
+};
+
+fn constantValue(i: ir.Inst) i128 {
+    if (i.ty == .bool) return @intFromBool(i.data != 0);
+    const info = i.ty.integer().?;
+    if (!info.signed and info.bits == 64) return i.data;
+    return @as(i64, @bitCast(i.data));
+}
+
+fn refine(self: *Analysis, range: Interval, ref: ir.Ref, cmp: ir.Inst, taken: bool) Interval {
+    const left = self.f.resolve(cmp.a);
+    const right = self.f.resolve(cmp.b);
+    if (left != ref and right != ref) return range;
+    var predicate: ir.Predicate = @fromBackingInt(@intCast(cmp.data));
+    if (!taken) predicate = switch (predicate) {
+        .eq => .ne,
+        .ne => .eq,
+        .lt => .ge,
+        .le => .gt,
+        .gt => .le,
+        .ge => .lt,
+    };
+    // Put `ref` on the left: `other < ref` is `ref > other`.
+    const other = if (left == ref) right else left;
+    if (left != ref) predicate = switch (predicate) {
+        .lt => .gt,
+        .le => .ge,
+        .gt => .lt,
+        .ge => .le,
+        else => predicate,
+    };
+    const bound = self.base(other) orelse return range;
+    var out = range;
+    switch (predicate) {
+        .lt => out.hi = @min(out.hi, bound.hi - 1),
+        .le => out.hi = @min(out.hi, bound.hi),
+        .gt => out.lo = @max(out.lo, bound.lo + 1),
+        .ge => out.lo = @max(out.lo, bound.lo),
+        .eq => out = out.meet(bound),
+        .ne => {},
+    }
+    return out;
+}
+
+/// The fact pass only allocates.
+pub const Error = std.mem.Allocator.Error;
+
+/// Compute the facts of `f` and mark every check they rule out as `proven`.
+pub fn analyze(arena: std.mem.Allocator, f: *ir.Function) Error!Facts {
+    var a: Analysis = .{
+        .arena = arena,
+        .f = f,
+        .shape = try shape(arena, f),
+        .facts = .{
+            .ranges = try arena.alloc(?Interval, f.insts.items.len),
+            .lists = try arena.alloc(ListFact, f.insts.items.len),
+            .reachable = try arena.alloc(bool, f.blocks.items.len),
+        },
+    };
+    @memset(a.facts.ranges, null);
+    @memset(a.facts.lists, .{});
+    try findCounted(&a);
+    const changes = try arena.alloc(u8, f.insts.items.len);
+    @memset(changes, 0);
+    var round: usize = 0;
+    var converged = false;
+    // Reachability only grows (as in sparse conditional constant propagation):
+    // an edge found executable stays so, which keeps the iteration monotone.
+    @memset(a.facts.reachable, false);
+    a.facts.reachable[0] = true;
+    while (round < 64) : (round += 1) {
+        var changed = false;
+        for (a.shape.rpo) |block| {
+            if (!a.facts.reachable[block.index()]) {
+                for (f.blocks.items[block.index()].preds.items) |pred| {
+                    if (a.edgeLive(pred, block)) a.facts.reachable[block.index()] = true;
+                }
+                if (a.facts.reachable[block.index()]) changed = true;
+            }
+            if (!a.facts.reachable[block.index()]) continue;
+            for (f.blocks.items[block.index()].insts.items) |ref| {
+                const next = transfer(&a, ref, block);
+                const old = a.facts.ranges[ref.index()];
+                const widened = if (old != null and next != null and !std.meta.eql(old, next)) blk: {
+                    changes[ref.index()] +|= 1;
+                    break :blk if (changes[ref.index()] > 8) typeRange(f.inst(ref).ty) else next;
+                } else next;
+                if (!std.meta.eql(old, widened)) {
+                    a.facts.ranges[ref.index()] = widened;
+                    changed = true;
+                }
+            }
+        }
+        if (try listFacts(&a)) changed = true;
+        if (!changed) {
+            converged = true;
+            break;
+        }
+    }
+    // Ranges short of a fixed point are not facts: prove nothing.
+    if (converged) mark(&a);
+    return a.facts;
+}
+
+/// Recognize counted loops from the builder's loop records.
+fn findCounted(a: *Analysis) !void {
+    for (a.f.loops.items) |loop| {
+        const header = a.f.blocks.items[loop.header.index()];
+        if (header.preds.items.len != 2) continue;
+        const last = a.f.inst(header.insts.items[header.insts.items.len - 1]);
+        if (last.op != .branch or ir.unpackTargets(last.data).then != loop.body) continue;
+        const condition = a.inst(last.a);
+        if (condition.op != .cmp or @as(ir.Predicate, @fromBackingInt(@intCast(condition.data))) != .lt) continue;
+        const counter = a.f.resolve(condition.a);
+        const phi = a.f.inst(counter);
+        if (phi.op != .phi or a.shape.block_of[counter.index()] != loop.header) continue;
+        const operands = a.f.operands(phi.data);
+        const latch_index: usize = if (header.preds.items[0] == loop.latch) 0 else 1;
+        if (header.preds.items[latch_index] != loop.latch) continue;
+        const step = a.inst(operands[latch_index]);
+        const one = a.inst(step.b);
+        if (step.op != .add or a.f.resolve(step.a) != counter or one.op != .iconst or one.data != 1) continue;
+        try a.counted.append(a.arena, .{ .loop = loop, .counter = counter, .start = a.f.resolve(operands[1 - latch_index]), .bound = a.f.resolve(condition.b) });
+    }
+}
+
+/// The trip-count bound of the counted loop whose header is `header`, if any.
+fn tripBound(a: *Analysis, header: ir.BlockId) ?i128 {
+    for (a.counted.items) |counted| {
+        if (counted.loop.header != header) continue;
+        const bound = a.rangeAt(counted.bound, header) orelse return null;
+        const start = a.base(counted.start) orelse return null;
+        return @max(bound.hi - start.lo, 0);
+    }
+    return null;
+}
+
+/// List lengths and element hulls from counted fill loops; returns whether anything changed.
+fn listFacts(a: *Analysis) !bool {
+    var changed = false;
+    for (a.counted.items) |counted| {
+        const header = a.f.blocks.items[counted.loop.header.index()];
+        const latch_index: usize = if (header.preds.items[0] == counted.loop.latch) 0 else 1;
+        const start = a.inst(counted.start);
+        if (start.op != .iconst or start.data != 0) continue;
+        for (header.insts.items) |ref| {
+            const phi = a.f.inst(ref);
+            if (phi.op != .phi or !phi.ty.isCompound()) continue;
+            const operands = a.f.operands(phi.data);
+            const entry = a.inst(operands[1 - latch_index]);
+            const pushed_ref = a.f.resolve(operands[latch_index]);
+            const pushed = a.f.inst(pushed_ref);
+            if (entry.op != .list_new or pushed.op != .list_push or a.f.resolve(pushed.a) != ref) continue;
+            // Exactly one push per iteration: it sits in the body block, which falls straight into the latch.
+            if (a.shape.block_of[pushed_ref.index()] != counted.loop.body) continue;
+            const latch_preds = a.f.blocks.items[counted.loop.latch.index()].preds.items;
+            if (latch_preds.len != 1 or latch_preds[0] != counted.loop.body) continue;
+            const elements = a.rangeAt(pushed.b, counted.loop.body);
+            const fact: ListFact = .{ .length = counted.bound, .elements = elements };
+            if (!std.meta.eql(a.facts.lists[ref.index()], fact)) {
+                a.facts.lists[ref.index()] = fact;
+                changed = true;
+            }
+            var capped = false;
+            for (a.caps.items) |cap| capped = capped or (cap.value == counted.bound and cap.block == counted.loop.exit);
+            if (!capped) {
+                try a.caps.append(a.arena, .{ .block = counted.loop.exit, .value = counted.bound, .hi = max_list_length });
+                changed = true;
+            }
+        }
+    }
+    return changed;
+}
+
+fn transfer(a: *Analysis, ref: ir.Ref, block: ir.BlockId) ?Interval {
+    const i = a.f.inst(ref);
+    const full = typeRange(i.ty);
+    return switch (i.op) {
+        .phi => phiRange(a, ref, block),
+        .add, .sub, .mul => blk: {
+            const x = a.rangeAt(i.a, block) orelse break :blk full;
+            const y = a.rangeAt(i.b, block) orelse break :blk full;
+            const exact = arithmetic(i.op, x, y);
+            const limits = full orelse break :blk null;
+            if (exact.within(limits)) break :blk exact;
+            // A checked operation traps instead of leaving its type; a wrapping one can be anything.
+            break :blk if (i.check == .none) limits else exact.meet(limits);
+        },
+        .floor_div, .div => blk: {
+            const x = a.rangeAt(i.a, block) orelse break :blk full;
+            const d = a.rangeAt(i.b, block) orelse break :blk full;
+            if (d.lo <= 0 or x.lo < 0) break :blk full;
+            break :blk .{ .lo = @divFloor(x.lo, d.hi), .hi = @divFloor(x.hi, d.lo) };
+        },
+        .floor_rem => blk: {
+            const x = a.rangeAt(i.a, block) orelse break :blk full;
+            const d = a.rangeAt(i.b, block) orelse break :blk full;
+            if (d.lo <= 0) break :blk full;
+            if (x.lo >= 0 and x.hi < d.lo) break :blk x;
+            break :blk .{ .lo = 0, .hi = d.hi - 1 };
+        },
+        .rem => blk: {
+            const x = a.rangeAt(i.a, block) orelse break :blk full;
+            const d = a.rangeAt(i.b, block) orelse break :blk full;
+            if (d.lo <= 0 or x.lo < 0) break :blk full;
+            break :blk .{ .lo = 0, .hi = @min(x.hi, d.hi - 1) };
+        },
+        .convert => blk: {
+            const x = a.rangeAt(i.a, block) orelse break :blk full;
+            break :blk x.meet(full.?);
+        },
+        .list_len, .str_len => .{ .lo = 0, .hi = max_list_length },
+        .list_get => blk: {
+            const list = a.liveOperand(i.a);
+            break :blk a.facts.lists[list.index()].elements orelse full;
+        },
+        .cmp => compare(a, i, block),
+        .not => blk: {
+            const x = a.rangeAt(i.a, block) orelse break :blk full;
+            break :blk .{ .lo = 1 - x.hi, .hi = 1 - x.lo };
+        },
+        .iconst => if (full != null) Interval.point(constantValue(i)) else null,
+        else => full,
+    };
+}
+
+fn arithmetic(op: ir.Op, x: Interval, y: Interval) Interval {
+    return switch (op) {
+        .add => .{ .lo = x.lo + y.lo, .hi = x.hi + y.hi },
+        .sub => .{ .lo = x.lo - y.hi, .hi = x.hi - y.lo },
+        else => blk: {
+            const p = [4]i128{ mulSat(x.lo, y.lo), mulSat(x.lo, y.hi), mulSat(x.hi, y.lo), mulSat(x.hi, y.hi) };
+            break :blk .{ .lo = @min(@min(p[0], p[1]), @min(p[2], p[3])), .hi = @max(@max(p[0], p[1]), @max(p[2], p[3])) };
+        },
+    };
+}
+
+fn mulSat(x: i128, y: i128) i128 {
+    return std.math.mul(i128, x, y) catch if ((x < 0) == (y < 0)) std.math.maxInt(i128) else std.math.minInt(i128);
+}
+
+fn phiRange(a: *Analysis, ref: ir.Ref, block: ir.BlockId) ?Interval {
+    const i = a.f.inst(ref);
+    _ = typeRange(i.ty) orelse return null;
+    if (counterRange(a, ref, block)) |bounded| return bounded;
+    if (reduction(a, ref, block)) |bounded| return bounded;
+    var out: ?Interval = null;
+    for (a.f.operands(i.data), a.f.blocks.items[block.index()].preds.items) |operand, pred| {
+        if (!a.edgeLive(pred, block)) continue;
+        const range = a.rangeAt(operand, pred) orelse continue;
+        out = if (out) |so_far| so_far.hull(range) else range;
+    }
+    return out;
+}
+
+/// A counted loop's counter steps by one from `start` while below `bound`, so in
+/// the header it lies in `[lo(start), max(hi(start), hi(bound))]`.
+fn counterRange(a: *Analysis, ref: ir.Ref, block: ir.BlockId) ?Interval {
+    for (a.counted.items) |counted| {
+        if (counted.loop.header != block or counted.counter != ref) continue;
+        const start = a.base(counted.start) orelse return null;
+        const bound = a.rangeAt(counted.bound, block) orelse return null;
+        return .{ .lo = start.lo, .hi = @max(start.hi, bound.hi) };
+    }
+    return null;
+}
+
+/// `acc = phi(init, acc + s)` in a counted loop: `init + trips * s`, when `s` is non-negative.
+fn reduction(a: *Analysis, ref: ir.Ref, block: ir.BlockId) ?Interval {
+    for (a.counted.items) |counted| {
+        if (counted.loop.header != block or counted.counter == ref) continue;
+        const header = a.f.blocks.items[block.index()];
+        const latch_index: usize = if (header.preds.items[0] == counted.loop.latch) 0 else 1;
+        const operands = a.f.operands(a.f.inst(ref).data);
+        const update = a.inst(operands[latch_index]);
+        if (update.op != .add) return null;
+        const step = if (a.f.resolve(update.a) == ref) update.b else if (a.f.resolve(update.b) == ref) update.a else return null;
+        const where = a.shape.block_of[a.f.resolve(operands[latch_index]).index()] orelse return null;
+        const s = a.rangeAt(step, where) orelse return null;
+        const start = a.rangeAt(operands[1 - latch_index], header.preds.items[1 - latch_index]) orelse return null;
+        const trips = tripBound(a, block) orelse return null;
+        if (s.lo < 0) return null;
+        return .{ .lo = start.lo, .hi = start.hi + trips * s.hi };
+    }
+    return null;
+}
+
+fn compare(a: *Analysis, i: ir.Inst, block: ir.BlockId) ?Interval {
+    const unknown: Interval = .{ .lo = 0, .hi = 1 };
+    const x = a.rangeAt(i.a, block) orelse return unknown;
+    const y = a.rangeAt(i.b, block) orelse return unknown;
+    const decided: ?bool = switch (@as(ir.Predicate, @fromBackingInt(@intCast(i.data)))) {
+        .lt => if (x.hi < y.lo) true else if (x.lo >= y.hi) false else null,
+        .le => if (x.hi <= y.lo) true else if (x.lo > y.hi) false else null,
+        .gt => if (x.lo > y.hi) true else if (x.hi <= y.lo) false else null,
+        .ge => if (x.lo >= y.hi) true else if (x.hi < y.lo) false else null,
+        .eq => if (x.lo == x.hi and y.lo == y.hi and x.lo == y.lo) true else if (x.hi < y.lo or y.hi < x.lo) false else null,
+        .ne => if (x.hi < y.lo or y.hi < x.lo) true else if (x.lo == x.hi and y.lo == y.hi and x.lo == y.lo) false else null,
+    };
+    return if (decided) |value| Interval.point(@intFromBool(value)) else unknown;
+}
+
+/// Turn every check the facts rule out into `proven` and fold decided comparisons.
+fn mark(a: *Analysis) void {
+    for (a.f.blocks.items, 0..) |block, b| {
+        if (!a.facts.reachable[b]) continue;
+        const here: ir.BlockId = @fromBackingInt(@intCast(b));
+        for (block.insts.items) |ref| {
+            const i = &a.f.insts.items[ref.index()];
+            if (i.op == .cmp) {
+                const range = a.facts.ranges[ref.index()] orelse continue;
+                if (range.lo != range.hi) continue;
+                i.* = .{ .op = .iconst, .ty = .bool, .data = @intCast(range.lo), .span = i.span };
+                continue;
+            }
+            if (i.check != .exact) continue;
+            if (provable(a, i.*, here)) {
+                i.check = .proven;
+                a.facts.proven += 1;
+            }
+        }
+    }
+}
+
+fn provable(a: *Analysis, i: ir.Inst, block: ir.BlockId) bool {
+    const limits = typeRange(i.ty) orelse return false;
+    switch (i.op) {
+        .add, .sub, .mul => {
+            const x = a.rangeAt(i.a, block) orelse return false;
+            const y = a.rangeAt(i.b, block) orelse return false;
+            const exact = arithmetic(i.op, x, y);
+            // `proven` emits `nsw`/`nuw`, so the operands must also respect the signedness flag.
+            return exact.within(limits) and (limits.lo < 0 or (x.lo >= 0 and y.lo >= 0));
+        },
+        .neg => {
+            const x = a.rangeAt(i.a, block) orelse return false;
+            return x.lo > limits.lo;
+        },
+        .floor_div, .floor_rem, .div, .rem => {
+            // `proven` division is `udiv`/`urem`: both operands non-negative, the divisor non-zero.
+            const x = a.rangeAt(i.a, block) orelse return false;
+            const d = a.rangeAt(i.b, block) orelse return false;
+            return x.lo >= 0 and d.lo > 0;
+        },
+        .convert => {
+            const x = a.rangeAt(i.a, block) orelse return false;
+            return x.within(limits);
+        },
+        .list_get => {
+            const index = a.liveOperand(i.b);
+            const range = a.rangeAt(index, block) orelse return false;
+            if (range.lo < 0) return false;
+            const list = a.liveOperand(i.a);
+            const length = a.facts.lists[list.index()].length;
+            if (length == .none) return false;
+            return a.knownLess(index, length, block);
+        },
+        else => return false,
+    }
+}

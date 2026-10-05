@@ -7,11 +7,12 @@ const typed_dump = @import("typed_dump.zig");
 const build = @import("build.zig");
 const print = @import("print.zig");
 const pipeline = @import("pipeline.zig");
+const facts = @import("facts.zig");
 
 const usage =
-    \\usage: mylang-core build FILE.my -o OUT [--release] [--link FILE.c]... [--emit-llvm PATH] [--zig PATH] [--cache-dir DIR]
+    \\usage: mylang-core build FILE.my -o OUT [--release] [--link FILE.c]... [--emit-llvm PATH] [--no-facts] [--zig PATH] [--cache-dir DIR]
     \\       mylang-core dump-typed FILE.my [FUNCTION]
-    \\       mylang-core dump-ir FILE.my
+    \\       mylang-core dump-ir FILE.my [--facts]
     \\
 ;
 
@@ -20,7 +21,7 @@ pub fn main(init: std.process.Init) !u8 {
     const allocator = init.arena.allocator();
     const args = try init.minimal.args.toSlice(allocator);
     if (args.len >= 3 and std.mem.eql(u8, args[1], "dump-typed")) return dumpTyped(init, args[2], if (args.len >= 4) args[3] else null);
-    if (args.len == 3 and std.mem.eql(u8, args[1], "dump-ir")) return dumpIr(init, args[2]);
+    if (args.len >= 3 and std.mem.eql(u8, args[1], "dump-ir")) return dumpIr(init, args[2], args.len == 4 and std.mem.eql(u8, args[3], "--facts"));
     if (args.len >= 2 and std.mem.eql(u8, args[1], "build")) return buildCommand(init, args[2..]);
     try std.Io.File.stderr().writeStreamingAll(init.io, usage);
     return 2;
@@ -44,7 +45,7 @@ fn dumpTyped(init: std.process.Init, path: []const u8, filter: ?[]const u8) !u8 
     return 0;
 }
 
-fn dumpIr(init: std.process.Init, path: []const u8) !u8 {
+fn dumpIr(init: std.process.Init, path: []const u8, with_facts: bool) !u8 {
     const allocator = init.arena.allocator();
     const entry = frontend.entryOf(path);
     var session = frontend.Session.init(init.gpa, init.io, entry.root);
@@ -58,7 +59,7 @@ fn dumpIr(init: std.process.Init, path: []const u8) !u8 {
         else => return err,
     };
     var refusal: build.Refusal = .{};
-    const module = build.buildModule(allocator, checked.program, &refusal) catch |err| switch (err) {
+    var module = build.buildModule(allocator, checked.program, &refusal) catch |err| switch (err) {
         error.Unsupported => {
             const at = frontend.position(checked.src, .{ .start = refusal.span, .end = refusal.span });
             const text = try std.fmt.allocPrint(allocator, "{s}:{d}:{d}: error[E_CORE_UNSUPPORTED]: the new core does not support {s} yet\n", .{ at.path, at.line, at.column, refusal.reason });
@@ -66,6 +67,9 @@ fn dumpIr(init: std.process.Init, path: []const u8) !u8 {
             return 1;
         },
         else => return err,
+    };
+    if (with_facts) for (module.functions.items) |*function| {
+        if (function.signature.linkage == .internal) _ = try facts.analyze(allocator, function);
     };
     const text = try print.module(allocator, &module);
     try std.Io.File.stdout().writeStreamingAll(init.io, text);
@@ -83,6 +87,8 @@ fn buildCommand(init: std.process.Init, args: []const []const u8) !u8 {
         const has_value = index + 1 < args.len;
         if (std.mem.eql(u8, arg, "--release")) {
             options.release = true;
+        } else if (std.mem.eql(u8, arg, "--no-facts")) {
+            options.facts = false;
         } else if (std.mem.eql(u8, arg, "-o") and has_value) {
             index += 1;
             options.output = args[index];

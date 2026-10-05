@@ -12,6 +12,7 @@
 //! into the `@myl_core_sites` table this module defines.
 const std = @import("std");
 const ir = @import("ir.zig");
+const facts = @import("facts.zig");
 
 /// A source line and column for a span start.
 pub const Location = struct { line: u32, column: u32 };
@@ -29,6 +30,9 @@ pub const Options = struct {
     source_path: []const u8,
     /// Parameter names of `main`, which select stdout or stderr for a `Stream`.
     main_parameters: []const []const u8,
+    /// Per function, the facts a release build computed (empty in debug builds):
+    /// element ranges become `!range` metadata on list loads.
+    facts: []const ?facts.Facts = &.{},
 };
 
 /// Trap kinds, in the order the runtime's code table lists them.
@@ -69,6 +73,7 @@ pub fn emitModule(allocator: std.mem.Allocator, module: *const ir.Module, option
     try state.emitSites(&out);
     try state.emitStrings(&out);
     try out.appendSlice(allocator, metadata);
+    try out.appendSlice(allocator, state.ranges.items);
     return out.toOwnedSlice(allocator);
 }
 
@@ -78,6 +83,9 @@ const ModuleState = struct {
     options: Options,
     sites: std.ArrayList(Site) = .empty,
     externs: Out = .empty,
+    /// `!range` metadata nodes, numbered from 1 (`!0` is the trap branch weight).
+    ranges: Out = .empty,
+    range_count: u32 = 0,
 
     fn declareExtern(self: *ModuleState, function: *const ir.Function) !void {
         try self.externs.print(self.allocator, "declare {s} @{s}(", .{ try self.llvmType(function.signature.ret), cName(function.name) });
@@ -88,6 +96,13 @@ const ModuleState = struct {
             first = false;
         }
         try self.externs.appendSlice(self.allocator, ") nounwind\n");
+    }
+
+    /// A `!range` node for `[lo, hi]` in a `bits`-wide integer.
+    fn rangeNode(self: *ModuleState, bits: u16, range: facts.Interval) ![]const u8 {
+        self.range_count += 1;
+        try self.ranges.print(self.allocator, "!{d} = !{{i{d} {d}, i{d} {d}}}\n", .{ self.range_count, bits, range.lo, bits, range.hi + 1 });
+        return std.fmt.allocPrint(self.allocator, ", !range !{d}", .{self.range_count});
     }
 
     fn site(self: *ModuleState, s: Site) !u32 {
@@ -591,8 +606,22 @@ const FunctionEmitter = struct {
             const byte = try self.fresh("%byte");
             try out.print(self.a(), "  {s} = load i8, ptr {s}, align 1\n  {s} = trunc i8 {s} to i1\n", .{ byte, slot, name, byte });
         } else {
-            try out.print(self.a(), "  {s} = load {s}, ptr {s}, align {d}\n", .{ name, stored, slot, elementSize(inst.ty) });
+            try out.print(self.a(), "  {s} = load {s}, ptr {s}, align {d}{s}\n", .{ name, stored, slot, elementSize(inst.ty), try self.loadRange(name, inst.ty) });
         }
+    }
+
+    /// `, !range !N` when the facts bound the loaded value more tightly than its type.
+    fn loadRange(self: *FunctionEmitter, name: []const u8, loaded: ir.Type) ![]const u8 {
+        const info = loaded.integer() orelse return "";
+        if (self.index >= self.state.options.facts.len) return "";
+        const known = self.state.options.facts[self.index] orelse return "";
+        const index = std.fmt.parseInt(usize, name[2..], 10) catch return "";
+        const range = known.ranges[index] orelse return "";
+        const full = facts.typeRange(loaded).?;
+        if (range.lo > range.hi or (range.lo == full.lo and range.hi == full.hi)) return "";
+        // A half-open `!range` cannot spell an upper bound one past the type's maximum.
+        if (range.hi == full.hi) return "";
+        return self.state.rangeNode(info.bits, range);
     }
 
     /// Append in place: `myl_core_list_reserve` returns a block with room for one more element.
