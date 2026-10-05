@@ -464,22 +464,22 @@ old core on the same program. `binary_search` is the exception, 144 against 87 a
 same instructions with 2.3× the branch misses (LLVM's layout of the search loop differs in
 the large function; the old core shows the same sensitivity in the other direction).
 
-**Dev loop.** Measured twice with `devloop.sh` (Debug compiler, `-j2`, build slot):
+**Dev loop** (`devloop.sh`: Debug compiler, `-j2`, build slot; raw output in `results/`):
 
-| Loop | Old core (plan §2) | New core, checkpoint A (load ~7) | New core, end of S0 (load ~50) |
+| Loop | Old core (plan §2) | New core, checkpoint A | New core, end of S0 |
 |---|---:|---:|---:|
-| One-line edit → `zig build core` | 19.5–28.9 s | 1.8–2.2 s | 8.1–16.3 s |
+| One-line edit → `zig build core` | 19.5–28.9 s | 1.8–2.2 s | 2.5–6.0 s |
 | Same under `--watch -fincremental` | 0.9–17 s | 0.13–0.55 s | not re-measured |
-| Edit → `zig build test-core` (31 tests, ~40 native builds) | 33.9 s (`test-units` arena) | 4.4–5.5 s (16 tests) | 28–51 s |
-| `test-core`, nothing changed (tests rerun) | — | 1.1 s | 13.8 s |
-| `test-core -Dcore-diff=true` | — | 25.6 s | 46.6 s |
-| Build the slice, debug, runtime cached / fresh cache dir | old debug + `--link` fails | 0.06–0.09 / 0.22–0.26 s | 0.18–0.21 / 0.61 s |
-| Build the slice, release, warm / fresh | 1.5–1.8 / 2.0–2.5 s | 0.06–0.08 / 0.28–0.31 s | 0.16–0.24 / 0.68 s |
+| Edit → `zig build test-core` | 33.9 s (`test-units` arena) | 4.4–5.5 s (16 tests) | 6.5–7.5 s (31 tests, ~40 native builds) |
+| `test-core`, nothing changed (tests rerun) | — | 1.1 s | 3.8–3.9 s |
+| `test-core -Dcore-diff=true` | — | 25.6 s | 46.6 s (loaded host) |
+| Build the slice, debug, runtime cached / fresh cache dir | old debug + `--link` fails | 0.06–0.09 / 0.22–0.26 s | 0.06–0.07 / 0.17–0.19 s |
+| Build the slice, release, warm / fresh | 1.4–1.8 / 1.9–2.5 s | 0.06–0.08 / 0.28–0.31 s | 0.06 / 0.19 s |
 
-The end-of-S0 run shared the 20-thread host with a load average near 50 (the old core's
-release build of the slice took 5.7–6.5 s in the same run, against 1.5–2.5 s before), so
-compare within a column. The test step grew from 16 to 31 tests, many of them native builds
-of the kernels at debug and release.
+The end-of-S0 column is from two runs at load average 5–9 on the 20-thread host. A run
+during a load spike near 50 measured 8–16 s per rebuild and 28–51 s per test step (the old
+core's release build of the slice took 6 s in the same run), kept in `results/` for
+comparison. The compiler is about 2.5× the size it was at checkpoint A.
 
 The default `zig build` is unchanged in behaviour: the new steps are off the install graph,
 and guests built by the `mylang` binary before and after the branch's changes are
