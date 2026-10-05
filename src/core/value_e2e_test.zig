@@ -486,3 +486,16 @@ test "while True has no exit edge: only break and return leave it, and the funct
     defer arena.deinit();
     try std.testing.expect(try matches(arena.allocator(), "v_loops", v_loops_output, 0));
 }
+
+const v_domain_output =
+    \\1000 True True
+    \\4 2 True
+    \\
+;
+
+// spec: NEW-CORE-DOMAIN-1
+test "a domain over an integer or a bool is its wire type: wrap and unwrap change nothing, equality compares the values" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    try std.testing.expect(try matches(arena.allocator(), "v_domain", v_domain_output, 0));
+}

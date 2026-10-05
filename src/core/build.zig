@@ -195,7 +195,12 @@ const ModuleBuilder = struct {
         if (record.contract.callback != null) return self.refuse("function value type", span);
         if (record.shape.array != null) return self.refuse("fixed array type", span);
         if (record.shape.resource != null) return self.refuse("resource type", span);
-        if (record.shape.domain != null) return self.refuse("domain type", span);
+        // A domain is its wire type: `wrap` and `unwrap` change nothing at run time.
+        if (record.shape.domain) |wire| {
+            const underlying = try self.mapType(wire, span);
+            if (underlying == .void or underlying == .cap) return self.refuse("domain type", span);
+            return underlying;
+        }
         if (record.isManagedRecord()) return self.refuse("class type", span);
         return self.mapRecord(ty, record, span);
     }
@@ -944,7 +949,9 @@ const FnBuilder = struct {
             .wrap => |operand| return self.wrap(operand, try self.typeOf(id), span),
             .unwrap => |operand| {
                 const value = try self.expression(operand);
-                if (value != .none and self.function.inst(value).ty == .f64) return value;
+                if (value == .none) return .none;
+                // A domain is its wire type, and a `float` unwraps to its bits only as the prelude spells it.
+                if (self.function.inst(value).ty == .f64 or self.function.inst(value).ty == try self.typeOf(id)) return value;
                 return self.mb.refuse("unwrap", span);
             },
             .call => |c| return self.call(c.function, c.arguments, if (c.evaluation) |e| e.body else null, span),
@@ -1389,7 +1396,11 @@ const FnBuilder = struct {
 
     /// `wrap` builds a domain value: for `float` from IEEE bits (a constant) or a float operation.
     fn wrap(self: *FnBuilder, operand_node: typed.NodeId, target: ir.Type, span: u32) Error!ir.Ref {
-        if (target != .f64) return self.mb.refuse("domain wrap", span);
+        if (target != .f64) {
+            const wire = try self.expression(operand_node);
+            if (wire == .none or self.function.inst(wire).ty != target) return self.mb.refuse("domain wrap", span);
+            return wire;
+        }
         const operand = self.nodeOf(operand_node);
         if (operand.data == .integer) {
             const bits: u64 = @truncate(@as(u128, @bitCast(operand.data.integer)));
