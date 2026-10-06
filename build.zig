@@ -414,12 +414,16 @@ const CoreInputs = struct {
     front_end: *std.Build.Module,
     old_compiler: *std.Build.Step.Compile,
     filters: []const []const u8,
+    /// Guardian's test runner, which can run one shard of the root (`--guardian-shard`).
+    test_runner: std.Build.Step.Compile.TestRunner,
 };
 
 /// The new compiler core (docs/design/new-core-ir.md), kept off the default
 /// install graph (decision N2):
 /// - `zig build core` installs `zig-out/bin/mylang-core`;
-/// - `zig build test-core` runs its unit tests and the end-to-end slice;
+/// - `zig build test-core` runs its unit tests and the end-to-end slice, split into
+///   `-Dcore-shards=N` concurrent shards of one test binary (default 4; a
+///   `-Dtest-filter` run is one process);
 /// - `-Dcore-diff=true` also builds each slice program with the old compiler
 ///   and requires the same stdout and exit status (it builds the old compiler).
 fn addCore(b: *std.Build, inputs: CoreInputs) void {
@@ -439,17 +443,25 @@ fn addCore(b: *std.Build, inputs: CoreInputs) void {
     const root = std.Io.Dir.cwd().realPathFileAlloc(b.graph.io, ".", b.allocator) catch @panic("build root");
     options.addOption([]const u8, "fixtures", b.pathJoin(&.{ root, "test", "core" }));
     options.addOption([]const u8, "lang_tests", b.pathJoin(&.{ root, "tests", "lang" }));
-    const unit = b.addTest(.{ .max_rss = rss.compile, .filters = inputs.filters, .root_module = b.createModule(.{
+    const unit = b.addTest(.{ .max_rss = rss.compile, .filters = inputs.filters, .test_runner = inputs.test_runner, .root_module = b.createModule(.{
         .root_source_file = b.path("src/core/root_test.zig"),
         .target = inputs.target,
         .optimize = inputs.optimize,
         .imports = &.{.{ .name = "mylang", .module = inputs.front_end }},
     }) });
     unit.root_module.addOptions("core_test_options", options);
-    const run = b.addRunArtifact(unit);
-    run.step.max_rss = rss.driver;
-    run.has_side_effects = true;
-    b.step("test-core", "Run the new core's unit tests and its end-to-end slice (not part of test)").dependOn(&run.step);
+    const step = b.step("test-core", "Run the new core's unit tests and its end-to-end slice (not part of test)");
+    // Most of the root's time is end-to-end builds of guest programs, so shards
+    // of the one binary run concurrently; each test uses its own temporary tree.
+    const requested = b.option(usize, "core-shards", "test-core: concurrent shards of the core test root (default 4)") orelse 4;
+    const shards = if (inputs.filters.len == 0) @max(1, requested) else 1;
+    for (0..shards) |index| {
+        const run = b.addRunArtifact(unit);
+        run.step.max_rss = rss.driver;
+        run.has_side_effects = true;
+        if (shards > 1) guardian.announceShard(run, index, shards);
+        step.dependOn(&run.step);
+    }
 }
 
 pub fn build(b: *std.Build) void {
@@ -667,7 +679,7 @@ pub fn build(b: *std.Build) void {
     // The application tests under `tests/application_comparison` and
     // `tests/development_velocity` read the runners from `zig-out/bin`, so they
     // need the default install.
-    addCore(b, .{ .target = target, .optimize = optimize, .front_end = core, .old_compiler = exe, .filters = test_filters });
+    addCore(b, .{ .target = target, .optimize = optimize, .front_end = core, .old_compiler = exe, .filters = test_filters, .test_runner = guardian.testRunner(guardian_dep) });
     const compiler_only = b.option(bool, "compiler-only", "Install only mylang, qbe and the runtime, not board-trial, schematic-svg or mylang-io (for measurement installs)") orelse false;
     const board_runner = b.addExecutable(.{ .max_rss = rss.compile, .name = "board-trial", .root_module = board_module });
     if (!compiler_only) b.installArtifact(board_runner);
