@@ -1,0 +1,11 @@
+Auto-merging SPEC.md
+Auto-merging src/core/build.zig
+CONFLICT (content): Merge conflict in src/core/build.zig
+Auto-merging src/core/build_text.zig
+CONFLICT (content): Merge conflict in src/core/build_text.zig
+Auto-merging src/core/driver.zig
+Auto-merging src/core/emit_llvm.zig
+CONFLICT (content): Merge conflict in src/core/emit_llvm.zig
+Auto-merging src/core/runtime/core_rt.c
+CONFLICT (content): Merge conflict in src/core/runtime/core_rt.c
+Automatic merge failed; fix conflicts and then commit the result.

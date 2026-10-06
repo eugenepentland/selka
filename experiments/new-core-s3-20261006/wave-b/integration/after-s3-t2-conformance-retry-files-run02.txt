@@ -1,0 +1,12 @@
+file                     tests | debug   match misma unsup | release match misma unsup
+--------------------------------------------------------------------------------------
+array_places                22 |            22     0     0 |            22     0     0
+mut_dictionary_arguments     1 |             1     0     0 |             1     0     0
+--------------------------------------------------------------------------------------
+TOTAL                       23
+  debug    matching 23, mismatching 0, unsupported 0 (of 23 tests; 23 supported)
+  release  matching 23, mismatching 0, unsupported 0 (of 23 tests; 23 supported)
+
+blocking features of the unsupported tests (tests / files):
+
+blocking features per file (file: tests unsupported of tests; the features, most common first):
