@@ -1,0 +1,12 @@
+file                     tests | debug   match misma unsup | release match misma unsup
+--------------------------------------------------------------------------------------
+integer_text                 2 |             2     0     0 |             2     0     0
+n_numbers                    3 |             3     0     0 |             3     0     0
+--------------------------------------------------------------------------------------
+TOTAL                        5
+  debug    matching 5, mismatching 0, unsupported 0 (of 5 tests; 5 supported)
+  release  matching 5, mismatching 0, unsupported 0 (of 5 tests; 5 supported)
+
+blocking features of the unsupported tests (tests / files):
+
+blocking features per file (file: tests unsupported of tests; the features, most common first):
