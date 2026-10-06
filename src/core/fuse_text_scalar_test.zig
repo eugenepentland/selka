@@ -167,21 +167,11 @@ fn scalarHand(a: std.mem.Allocator, case: ScalarCase) !ir.Module {
     return module;
 }
 
-// spec-case: NEW-CORE-TEXT-BYTES-1
-test "scalar fusion emitter guards manual width and code reads before ASCII and retains Unicode and invalid offset fallback" {
-    var state = std.heap.ArenaAllocator.init(std.testing.allocator);
+fn scalarCases(allocator: std.mem.Allocator, cases: []const ScalarCase) !void {
+    var state = std.heap.ArenaAllocator.init(allocator);
     defer state.deinit();
     const a = state.allocator();
-    const text = "L\x00é€🙂";
-    for ([_]ScalarCase{
-        .{ .bytes = text, .offsets = &.{ 0, 1, 2, 4, 7 }, .stdout = "1\n76\n1\n0\n2\n233\n3\n8364\n4\n128578\n", .status = 0, .stderr = "" },
-        .{ .bytes = "", .offsets = &.{0}, .op = .str_width },
-        .{ .bytes = "", .offsets = &.{0}, .op = .str_code },
-        .{ .bytes = text, .offsets = &.{text.len}, .op = .str_width },
-        .{ .bytes = text, .offsets = &.{text.len}, .op = .str_code },
-        .{ .bytes = text, .offsets = &.{std.math.maxInt(u64)}, .op = .str_width },
-        .{ .bytes = text, .offsets = &.{std.math.maxInt(u64)}, .op = .str_code },
-    }) |case| {
+    for (cases) |case| {
         for ([_]support.RunOptions{ .{}, .{ .release = true }, .{ .release = true, .verify = true } }) |mode| {
             var module = try scalarHand(a, case);
             const result = try support.runOwned(a, &module, mode);
@@ -190,4 +180,28 @@ test "scalar fusion emitter guards manual width and code reads before ASCII and 
             try std.testing.expectEqualStrings(case.stderr, result.stderr);
         }
     }
+}
+
+fn invalidOffsets(allocator: std.mem.Allocator, op: ir.Op) !void {
+    const text = "L\x00é€🙂";
+    try scalarCases(allocator, &.{
+        .{ .bytes = "", .offsets = &.{0}, .op = op },
+        .{ .bytes = text, .offsets = &.{text.len}, .op = op },
+        .{ .bytes = text, .offsets = &.{std.math.maxInt(u64)}, .op = op },
+    });
+}
+
+// spec-case: NEW-CORE-TEXT-BYTES-1
+test "scalar fusion emitter preserves ASCII NUL and all Unicode widths in every native mode" {
+    try scalarCases(std.testing.allocator, &.{.{ .bytes = "L\x00é€🙂", .offsets = &.{ 0, 1, 2, 4, 7 }, .stdout = "1\n76\n1\n0\n2\n233\n3\n8364\n4\n128578\n", .status = 0, .stderr = "" }});
+}
+
+// spec-case: NEW-CORE-TEXT-BYTES-1
+test "scalar fusion emitter guards empty end and extreme manual width offsets in every native mode" {
+    try invalidOffsets(std.testing.allocator, .str_width);
+}
+
+// spec-case: NEW-CORE-TEXT-BYTES-1
+test "scalar fusion emitter guards empty end and extreme manual code offsets in every native mode" {
+    try invalidOffsets(std.testing.allocator, .str_code);
 }
