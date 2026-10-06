@@ -1,0 +1,46 @@
+module m_recursive_values
+
+record Link:
+    value: int
+    next: Option[Link]
+
+union Tree[T]:
+    leaf: T,
+    branch(left: Tree[T], right: Tree[T])
+
+def chain(n: int) -> Option[Link]:
+    result: Option[Link] = None
+    for i in range(n):
+        result = Some(Link(i, result))
+    return result
+
+# spec: NEW-CORE-S3-VALUES-1
+public def test_deep_hashing_and_nominal_rendering() -> bool:
+    a = chain(3000)
+    b = chain(3000)
+    distinct = chain(2999)
+    values: set[Option[Link]] = {a, b, distinct}
+    return a == b and a != distinct and len(values) == 2 and f"{chain(1)}" == "Some(Link(value=0, next=None))"
+
+# spec-case: NEW-CORE-S3-VALUES-1
+public def test_shared_nan_is_not_reflexive() -> bool:
+    nan: Tree[float] = Tree.leaf(0.0 / 0.0)
+    zero: Tree[float] = Tree.leaf(-0.0)
+    plus: Tree[float] = Tree.leaf(0.0)
+    for _ in range(40):
+        nan = Tree.branch(nan, nan)
+        zero = Tree.branch(zero, zero)
+        plus = Tree.branch(plus, plus)
+    return nan != nan and zero == plus
+
+# spec-case: NEW-CORE-S3-VALUES-1
+public def test_repeated_list_snapshots_stay_independent() -> bool:
+    a = [1, 2]
+    joined = a * 1
+    repeated = 2 * a
+    joined[0] = 8
+    repeated[1] = 9
+    nan = 0.0 / 0.0
+    numbers = [nan, -0.0]
+    units: list[None] = [None]
+    return a == [1, 2] and joined == [8, 2] and repeated == [1, 9, 1, 2] and nan not in numbers and 0.0 in numbers and None in units

@@ -1,7 +1,19 @@
 /* Number/text support, concatenated after the block and text runtimes.
    The inline LLVM fast path admits only plain digits up to eight places;
    this fallback preserves the full pinned whitespace/sign/underscore grammar. */
+#include <stddef.h>
 static bool ascii_space(unsigned char c) { return c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == '\f' || c == '\v'; }
+
+/* The independent Zig formatter allocates only through this Core-block adapter. */
+myl_block *myl_core_number_text_new(size_t length) {
+    if (length > INT64_MAX) out_of_memory();
+    myl_block *text = str_new((int64_t)length);
+    text->kind |= 1u << 8;
+    return text;
+}
+
+/* Invalid packed formats or impossible bounded-frame failures are internal errors. */
+_Noreturn void myl_core_number_text_invalid(void) { abort(); }
 
 /* `int(text)` with the pinned grammar (docs/bytes.md): surrounding ASCII
    whitespace, one optional sign, decimal digits with single `_` separators
@@ -111,4 +123,49 @@ void myl_core_print_u64(int64_t fd, uint64_t value) {
     unsigned length = core_number_length(value);
     core_number_write(buffer + length, value);
     stream_write(stream_for(fd), buffer, length);
+}
+
+/* Port of native_bytes' clamped byte-range parsing; no temporary decoded text. */
+static int64_t core_number_endpoint(int64_t index, int64_t length) {
+    if (index < 0) index += length;
+    return index < 0 ? 0 : index > length ? length : index;
+}
+static bool core_parse_int_range(myl_block *source, int64_t start, int64_t end, int64_t *out) {
+    start = core_number_endpoint(start, source->len);
+    end = core_number_endpoint(end, source->len);
+    if (end < start) end = start;
+    /* Parse directly through a span helper, keeping the published source immutable. */
+    const unsigned char *s = block_data(source) + start;
+    size_t lower = 0, upper = (size_t)(end - start);
+    while (lower < upper && ascii_space(s[lower])) ++lower;
+    while (upper > lower && ascii_space(s[upper - 1])) --upper;
+    bool negative = false;
+    if (lower < upper && (s[lower] == '+' || s[lower] == '-')) negative = s[lower++] == '-';
+    if (lower == upper) return false;
+    uint64_t magnitude = 0, bound = (uint64_t)INT64_MAX + negative;
+    bool digit_before = false;
+    for (size_t i = lower; i < upper; ++i) {
+        unsigned char c = s[i];
+        if (c == '_') { if (!digit_before || i + 1 == upper) return false; digit_before = false; continue; }
+        if (c < '0' || c > '9') return false;
+        uint64_t digit = c - '0';
+        if (magnitude > bound / 10 || (magnitude == bound / 10 && digit > bound % 10)) return false;
+        magnitude = magnitude * 10 + digit;
+        digit_before = true;
+    }
+    if (!digit_before) return false;
+    int64_t value = negative ? (magnitude == (uint64_t)INT64_MAX + 1 ? INT64_MIN : -(int64_t)magnitude) : (int64_t)magnitude;
+    *out = value;
+    return true;
+}
+
+/* Core's scalar Option uses the low byte of the SysV integer result register;
+   the second result register carries the scalar. Full-word C tags are 0 or 1. */
+typedef struct { uint64_t tag; int64_t value; } myl_core_parsed_int;
+_Static_assert(sizeof(myl_core_parsed_int) == 16, "Core scalar Option size");
+_Static_assert(offsetof(myl_core_parsed_int, value) == 8, "Core scalar Option payload");
+myl_core_parsed_int myl_core_parse_int_range(myl_block *source, int64_t start, int64_t end) {
+    myl_core_parsed_int result = { 0, 0 };
+    result.tag = core_parse_int_range(source, start, end, &result.value);
+    return result;
 }

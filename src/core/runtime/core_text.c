@@ -449,3 +449,478 @@ myl_block *myl_core_bytes_to_list(myl_block *bytes) {
 bool myl_core_bytes_contains_value(myl_block *bytes, int64_t value) {
     return value >= 0 && value <= 255 && memchr(block_data(bytes), (unsigned char)value, (size_t)bytes->len) != NULL;
 }
+
+/* S3 helpers port native_text_methods.c/native_search.c/native_trim.c/native_repr.c
+ * into independent one-count blocks. Inputs borrow, outputs own a fresh block. */
+static uint32_t core_unicode_next(const unsigned char *data, size_t *at) {
+    uint32_t point = data[(*at)++];
+    if (point < 0x80) return point;
+    unsigned count = point < 0xe0 ? 1 : point < 0xf0 ? 2 : 3;
+    point &= count == 1 ? 0x1f : count == 2 ? 0x0f : 0x07;
+    while (count--) point = (point << 6) | (data[(*at)++] & 0x3f);
+    return point;
+}
+
+static size_t core_unicode_previous(const unsigned char *data, size_t at) {
+    at--;
+    while ((data[at] & 0xc0) == 0x80) at--;
+    return at;
+}
+
+static bool core_unicode_space(uint32_t point) {
+    if (point < 128) return (point >= 9 && point <= 13) || (point >= 28 && point <= 32);
+    if (point >= 0x2000 && point <= 0x200a) return true;
+    switch (point) {
+    case 0x85: case 0xa0: case 0x1680: case 0x2028: case 0x2029:
+    case 0x202f: case 0x205f: case 0x3000: return true;
+    default: return false;
+    }
+}
+
+static void core_text_family(myl_block *result, const myl_block *source) {
+    core_text_publish(result);
+    if (kind_of(source) == MYL_KIND_BYTES) result->kind = (result->kind & ~MYL_KIND_MASK) | MYL_KIND_BYTES;
+}
+
+int64_t myl_core_text_bound(uint64_t value) { return value > INT64_MAX ? INT64_MAX : (int64_t)value; }
+
+myl_block *myl_core_text_case(myl_block *input, bool upper) {
+    myl_block *result = str_new(input->len);
+    memcpy(block_data(result), block_data(input), (size_t)input->len);
+    for (int64_t i = 0; i < input->len; i++) {
+        unsigned char *value = block_data(result) + i;
+        if (upper && *value >= 'a' && *value <= 'z') *value -= 32;
+        else if (!upper && *value >= 'A' && *value <= 'Z') *value += 32;
+    }
+    core_text_family(result, input);
+    return result;
+}
+
+bool myl_core_text_every(myl_block *input, int32_t property) {
+    if (!input->len) return false;
+    for (int64_t i = 0; i < input->len; i++) {
+        unsigned char value = block_data(input)[i];
+        bool good = property == 0 ? value >= '0' && value <= '9' :
+                    property == 1 ? (value >= 'a' && value <= 'z') || (value >= 'A' && value <= 'Z') : core_text_space(value);
+        if (!good) return false;
+    }
+    return true;
+}
+
+bool myl_core_text_scalar_valid(uint64_t code) {
+    return code <= 0x10ffff && (code < 0xd800 || code > 0xdfff);
+}
+
+static size_t core_unicode_encode(unsigned char *out, uint32_t point) {
+    if (point < 0x80) { out[0] = (unsigned char)point; return 1; }
+    if (point < 0x800) {
+        out[0] = (unsigned char)(0xc0 | (point >> 6)); out[1] = (unsigned char)(0x80 | (point & 63)); return 2;
+    }
+    if (point < 0x10000) {
+        out[0] = (unsigned char)(0xe0 | (point >> 12)); out[1] = (unsigned char)(0x80 | ((point >> 6) & 63));
+        out[2] = (unsigned char)(0x80 | (point & 63)); return 3;
+    }
+    out[0] = (unsigned char)(0xf0 | (point >> 18)); out[1] = (unsigned char)(0x80 | ((point >> 12) & 63));
+    out[2] = (unsigned char)(0x80 | ((point >> 6) & 63)); out[3] = (unsigned char)(0x80 | (point & 63)); return 4;
+}
+
+myl_block *myl_core_text_chr(uint64_t code) {
+    if (code < 128) return core_ascii_char((unsigned char)code);
+    unsigned char raw[4];
+    size_t width = core_unicode_encode(raw, (uint32_t)code);
+    return str_from((const char *)raw, width);
+}
+
+int64_t myl_core_text_ord(myl_block *text) {
+    size_t at = 0;
+    return (int64_t)core_unicode_next(block_data(text), &at);
+}
+
+/* Native search's constant-space two-way reverse matching, including periodic misses. */
+typedef struct { const unsigned char *data; size_t length; bool reverse; } core_octets;
+typedef struct { size_t first, last; bool valid; } core_search_window;
+typedef struct { size_t cut, period; } core_factorization;
+static unsigned char core_octet_at(core_octets text, size_t index) {
+    return text.data[text.reverse ? text.length - 1 - index : index];
+}
+
+static core_factorization core_maximal_suffix(core_octets needle, bool order) {
+    size_t suffix = SIZE_MAX, candidate = 0, offset = 1, period = 1;
+    while (offset < needle.length - candidate) {
+        unsigned char a = core_octet_at(needle, suffix + offset), b = core_octet_at(needle, candidate + offset);
+        if (a == b) {
+            if (offset == period) { candidate += period; offset = 1; }
+            else offset++;
+        } else if (order ? a > b : a < b) { candidate += offset; offset = 1; period = candidate - suffix; }
+        else { suffix = candidate++; offset = period = 1; }
+    }
+    return (core_factorization){suffix + 1, period};
+}
+
+static size_t core_periodic_memory(core_octets needle, core_factorization *split) {
+    for (size_t i = 0; i < split->cut; i++) {
+        if (core_octet_at(needle, i) != core_octet_at(needle, i + split->period)) {
+            size_t right = needle.length - split->cut, left = split->cut ? split->cut - 1 : 0;
+            split->period = (left > right ? left : right) + 1;
+            return 0;
+        }
+    }
+    return needle.length - split->period;
+}
+
+static size_t core_reverse_find(core_octets haystack, core_octets needle) {
+    core_factorization a = core_maximal_suffix(needle, false), b = core_maximal_suffix(needle, true);
+    core_factorization split = a.cut > b.cut ? a : b;
+    size_t memory_after = core_periodic_memory(needle, &split), memory = 0, at = 0;
+    while (at <= haystack.length - needle.length) {
+        size_t i = split.cut > memory ? split.cut : memory;
+        while (i < needle.length && core_octet_at(needle, i) == core_octet_at(haystack, at + i)) i++;
+        if (i < needle.length) { at += i - split.cut + 1; memory = 0; continue; }
+        i = split.cut;
+        while (i > memory && core_octet_at(needle, i - 1) == core_octet_at(haystack, at + i - 1)) i--;
+        if (i <= memory) return haystack.length - needle.length - at;
+        at += split.period; memory = memory_after;
+    }
+    return SIZE_MAX;
+}
+
+static size_t core_search_endpoint(size_t length, int64_t value, bool start) {
+    if (value >= 0) return start || (uint64_t)value <= length ? (size_t)value : length;
+    uint64_t distance = (uint64_t)(-(value + 1)) + 1;
+    return distance > length ? 0 : length - (size_t)distance;
+}
+
+static core_search_window core_window(size_t length, int64_t start, int64_t end) {
+    size_t first = core_search_endpoint(length, start, true), last = core_search_endpoint(length, end, false);
+    return (core_search_window){first, last, first <= last && first <= length};
+}
+
+enum { CORE_FIND, CORE_RFIND, CORE_INDEX, CORE_RINDEX, CORE_COUNT, CORE_PREFIX, CORE_SUFFIX };
+static int64_t core_empty_answer(core_search_window bounds, int mode) {
+    if (!bounds.valid) return mode == CORE_COUNT || mode >= CORE_PREFIX ? 0 : -1;
+    if (mode == CORE_COUNT) return (int64_t)(bounds.last - bounds.first) + 1;
+    if (mode >= CORE_PREFIX) return 1;
+    return (int64_t)(mode == CORE_RFIND || mode == CORE_RINDEX ? bounds.last : bounds.first);
+}
+
+static int64_t core_search_octets(core_octets input, core_octets needle, int mode) {
+    if (needle.length > input.length) return mode >= CORE_COUNT ? 0 : -1;
+    if (mode == CORE_COUNT) {
+        int64_t count = 0;
+        size_t at = 0;
+        extern void *memmem(const void *, size_t, const void *, size_t);
+        while (at <= input.length - needle.length) {
+            const unsigned char *hit = memmem(input.data + at, input.length - at, needle.data, needle.length);
+            if (!hit) break;
+            count++; at = (size_t)(hit - input.data) + needle.length;
+        }
+        return count;
+    }
+    if (mode >= CORE_PREFIX) {
+        size_t at = mode == CORE_PREFIX ? 0 : input.length - needle.length;
+        return memcmp(input.data + at, needle.data, needle.length) == 0;
+    }
+    size_t found;
+    if (mode == CORE_RFIND || mode == CORE_RINDEX) {
+        input.reverse = needle.reverse = true; found = core_reverse_find(input, needle);
+    } else {
+        extern void *memmem(const void *, size_t, const void *, size_t);
+        const unsigned char *hit = memmem(input.data, input.length, needle.data, needle.length);
+        found = hit ? (size_t)(hit - input.data) : SIZE_MAX;
+    }
+    return found == SIZE_MAX ? -1 : (int64_t)found;
+}
+
+int64_t myl_core_text_search(myl_block *input, myl_block *needle, int64_t start, int64_t end, int32_t mode) {
+    core_search_window bounds = core_window((size_t)myl_core_str_chars(input), start, end);
+    if (!needle->len) return core_empty_answer(bounds, mode);
+    if (!bounds.valid) return mode >= CORE_COUNT ? 0 : -1;
+    size_t first = (size_t)myl_core_str_offset(input, bounds.first), last = (size_t)myl_core_str_offset(input, bounds.last);
+    int64_t found = core_search_octets((core_octets){block_data(input) + first, last - first, false}, (core_octets){block_data(needle), (size_t)needle->len, false}, mode);
+    if (found < 0 || mode >= CORE_COUNT) return found;
+    return (int64_t)core_text_starts(block_data(input), 0, first + (size_t)found);
+}
+
+int64_t myl_core_bytes_search(myl_block *input, myl_block *needle, int64_t start, int64_t end, int32_t mode) {
+    core_search_window bounds = core_window((size_t)input->len, start, end);
+    if (!needle->len) return core_empty_answer(bounds, mode);
+    if (!bounds.valid) return mode >= CORE_COUNT ? 0 : -1;
+    int64_t found = core_search_octets((core_octets){block_data(input) + bounds.first, bounds.last - bounds.first, false}, (core_octets){block_data(needle), (size_t)needle->len, false}, mode);
+    return found < 0 || mode >= CORE_COUNT ? found : found + (int64_t)bounds.first;
+}
+
+/* Deterministic direct scalar membership, as native_trim.c; temporary wide bits
+ * belong to this call, and are freed before any counted result is published. */
+enum { CORE_SMALL_POINTS = 32, CORE_UNICODE_WORDS = 0x110000 / 64 };
+typedef struct { uint64_t ascii[4]; uint32_t small[CORE_SMALL_POINTS]; size_t count; uint64_t *wide; } core_scalar_set;
+static bool core_set_contains(const core_scalar_set *set, uint32_t point) {
+    if (point < 256) return (set->ascii[point / 64] >> (point % 64)) & 1;
+    if (set->wide) return (set->wide[point / 64] >> (point % 64)) & 1;
+    for (size_t i = 0; i < set->count; i++) if (set->small[i] == point) return true;
+    return false;
+}
+static void core_set_add(core_scalar_set *set, uint32_t point) {
+    if (point < 256) { set->ascii[point / 64] |= UINT64_C(1) << (point % 64); return; }
+    if (core_set_contains(set, point)) return;
+    if (!set->wide && set->count == CORE_SMALL_POINTS) {
+        set->wide = calloc(CORE_UNICODE_WORDS, sizeof(uint64_t));
+        if (!set->wide) out_of_memory();
+        for (size_t i = 0; i < set->count; i++) set->wide[set->small[i] / 64] |= UINT64_C(1) << (set->small[i] % 64);
+    }
+    if (set->wide) set->wide[point / 64] |= UINT64_C(1) << (point % 64);
+    else set->small[set->count++] = point;
+}
+
+myl_block *myl_core_text_trim(myl_block *input, myl_block *chars, int32_t ends, bool explicit_chars) {
+    core_scalar_set set = {0};
+    if (explicit_chars) for (size_t at = 0; at < (size_t)chars->len;) core_set_add(&set, core_unicode_next(block_data(chars), &at));
+    size_t low = 0, high = (size_t)input->len;
+    if (ends != 2) while (low < high) {
+        size_t next = low;
+        uint32_t point = core_unicode_next(block_data(input), &next);
+        if (!(explicit_chars ? core_set_contains(&set, point) : core_unicode_space(point))) break;
+        low = next;
+    }
+    if (ends != 1) while (high > low) {
+        size_t next = core_unicode_previous(block_data(input), high), cursor = next;
+        uint32_t point = core_unicode_next(block_data(input), &cursor);
+        if (!(explicit_chars ? core_set_contains(&set, point) : core_unicode_space(point))) break;
+        high = next;
+    }
+    free(set.wide);
+    return str_from((const char *)block_data(input) + low, high - low);
+}
+
+myl_block *myl_core_bytes_trim(myl_block *input, myl_block *chars, int32_t ends, bool explicit_chars) {
+    uint64_t set[4] = {0};
+    if (explicit_chars) for (int64_t i = 0; i < chars->len; i++) {
+        unsigned char value = block_data(chars)[i]; set[value / 64] |= UINT64_C(1) << (value % 64);
+    } else for (unsigned point = 0; point < 128; point++) if (core_text_space((unsigned char)point)) set[point / 64] |= UINT64_C(1) << (point % 64);
+    int64_t first = 0, last = input->len;
+    if (ends != 2) while (first < last) {
+        unsigned char value = block_data(input)[first];
+        if (!((set[value / 64] >> (value % 64)) & 1)) break;
+        first++;
+    }
+    if (ends != 1) while (last > first) {
+        unsigned char value = block_data(input)[last - 1];
+        if (!((set[value / 64] >> (value % 64)) & 1)) break;
+        last--;
+    }
+    return myl_core_bytes_slice(input, first, last);
+}
+
+myl_block *myl_core_text_replace(myl_block *input, myl_block *needle, myl_block *insert) {
+    int64_t hits = myl_core_bytes_search(input, needle, 0, INT64_MAX, CORE_COUNT);
+    uint64_t kept = (uint64_t)(input->len - hits * needle->len);
+    if (insert->len && (uint64_t)hits > (uint64_t)INT64_MAX / (uint64_t)insert->len) out_of_memory();
+    uint64_t added = (uint64_t)hits * (uint64_t)insert->len;
+    if (added > (uint64_t)INT64_MAX - kept) out_of_memory();
+    myl_block *result = str_new((int64_t)(kept + added));
+    int64_t at = 0, cursor = 0;
+    for (int64_t left = hits; left; left--) {
+        int64_t hit = core_text_find_bytes(input, needle, cursor);
+        memcpy(block_data(result) + at, block_data(input) + cursor, (size_t)(hit - cursor));
+        at += hit - cursor;
+        memcpy(block_data(result) + at, block_data(insert), (size_t)insert->len);
+        at += insert->len; cursor = hit + needle->len;
+    }
+    memcpy(block_data(result) + at, block_data(input) + cursor, (size_t)(input->len - cursor));
+    core_text_family(result, input);
+    return result;
+}
+
+static myl_block *core_append_line(myl_block *list, myl_block *input, size_t start, size_t end) {
+    myl_block *piece = str_from((const char *)block_data(input) + start, end - start);
+    core_text_family(piece, input);
+    if (list->len == list->cap) list = myl_core_list_grow(list, 8);
+    ((myl_block **)block_data(list))[list->len++] = piece;
+    return list;
+}
+
+myl_block *myl_core_text_splitlines(myl_block *input) {
+    myl_block *list = myl_core_list_new_slow(0, 8);
+    list->reserved = (int64_t)(intptr_t)core_text_list_layout;
+    size_t start = 0, cursor = 0;
+    while (cursor < (size_t)input->len) {
+        unsigned char octet = block_data(input)[cursor];
+        if (octet != '\n' && octet != '\r') { cursor++; continue; }
+        list = core_append_line(list, input, start, cursor);
+        cursor++;
+        if (octet == '\r' && cursor < (size_t)input->len && block_data(input)[cursor] == '\n') cursor++;
+        start = cursor;
+    }
+    if (start < (size_t)input->len) list = core_append_line(list, input, start, (size_t)input->len);
+    return list;
+}
+
+myl_block *myl_core_text_zfill(myl_block *input, int64_t width) {
+    uint64_t length = kind_of(input) == MYL_KIND_BYTES ? (uint64_t)input->len : myl_core_str_chars(input);
+    uint64_t target = width <= 0 ? 0 : (uint64_t)width > UINT32_MAX ? UINT32_MAX : (uint64_t)width;
+    uint64_t pad = target > length ? target - length : 0;
+    myl_block *result = str_new(input->len + (int64_t)pad);
+    size_t keep = input->len && (block_data(input)[0] == '+' || block_data(input)[0] == '-') ? 1 : 0;
+    if (keep) block_data(result)[0] = block_data(input)[0];
+    memset(block_data(result) + keep, '0', (size_t)pad);
+    memcpy(block_data(result) + keep + pad, block_data(input) + keep, (size_t)input->len - keep);
+    core_text_family(result, input);
+    return result;
+}
+
+int64_t myl_core_bytes_find_any(myl_block *input, myl_block *values, int64_t start) {
+    size_t length=input->len;
+    size_t at = start<0 ? 0 : ((uint64_t)start>length ? length : (size_t)start);
+    if (at>=length || !values->len) return -1;
+    const unsigned char *bytes=block_data(input);
+    const unsigned char *set=block_data(values);
+    if (values->len==1) {
+        const unsigned char *found=memchr(bytes+at,set[0],length-at);
+        return found ? (int64_t)(found-bytes) : -1;
+    }
+    if (values->len==2 && set[0]!=set[1]) {
+        /* A window at a time, doubling from 64 octets, and the second octet only
+           up to the first's hit: a search stops within twice the distance to its
+           answer, so a loop of searches over input missing one octet stays
+           linear instead of rescanning to the end on every call. */
+        size_t window=64;
+        while (at<length) {
+            size_t span=length-at<window ? length-at : window;
+            const unsigned char *first=memchr(bytes+at,set[0],span);
+            size_t bound=first ? (size_t)(first-(bytes+at)) : span;
+            const unsigned char *second=bound ? memchr(bytes+at,set[1],bound) : NULL;
+            if (second) return (int64_t)(second-bytes);
+            if (first) return (int64_t)(first-bytes);
+            at+=span;
+            if (window<=SIZE_MAX/2) window*=2;
+        }
+        return -1;
+    }
+    uint64_t members[4]={0,0,0,0};
+    for (size_t i=0;i<values->len;i++) members[set[i]>>6]|=(uint64_t)1<<(set[i]&63);
+    for (size_t i=at;i<length;i++) if (members[bytes[i]>>6]>>(bytes[i]&63)&1) return (int64_t)i;
+    return -1;
+}
+
+/* Validation/count ported from native_bytes.c, with -1 the invalid marker. */
+int64_t myl_core_span_utf8_count(const unsigned char *bytes, uint64_t length) {
+    uint64_t at = 0;
+    int64_t count = 0;
+    while (at < length) {
+        while (at + 8 <= length) {
+            uint64_t word;
+            memcpy(&word, bytes + at, 8);
+            if (word & UINT64_C(0x8080808080808080)) break;
+            at += 8; count += 8;
+        }
+        if (at < length && bytes[at] < 0x80) { at++; count++; continue; }
+        if (at == length) break;
+        unsigned char first = bytes[at];
+        unsigned remaining;
+        uint32_t minimum;
+        if (first >= 0xc2 && first <= 0xdf) { remaining = 1; minimum = 0x80; }
+        else if (first >= 0xe0 && first <= 0xef) { remaining = 2; minimum = 0x800; }
+        else if (first >= 0xf0 && first <= 0xf4) { remaining = 3; minimum = 0x10000; }
+        else return -1;
+        if (remaining > length - at - 1) return -1;
+        uint32_t point = first & ((1u << (6 - remaining)) - 1u);
+        for (unsigned index = 0; index < remaining; index++) {
+            unsigned char next = bytes[at + 1 + index];
+            if ((next & 0xc0) != 0x80) return -1;
+            point = (point << 6) | (next & 63u);
+        }
+        if (point < minimum || point > 0x10ffff || (point >= 0xd800 && point <= 0xdfff)) return -1;
+        at += remaining + 1; count++;
+    }
+    return count;
+}
+
+int64_t myl_core_bytes_utf8_count(myl_block *bytes) { return myl_core_span_utf8_count(block_data(bytes), (uint64_t)bytes->len); }
+int64_t myl_core_bytes_utf8_count_range(myl_block *bytes, int64_t start, int64_t end) {
+    size_t first = core_search_endpoint((size_t)bytes->len, start, false), last = core_search_endpoint((size_t)bytes->len, end, false);
+    return myl_core_span_utf8_count(block_data(bytes) + first, last > first ? last - first : 0);
+}
+myl_block *myl_core_bytes_decode_text(myl_block *bytes) { return str_from((const char *)block_data(bytes), (size_t)bytes->len); }
+myl_block *myl_core_bytes_utf8_error(void) { return str_from("invalid UTF-8 in byte string", sizeof("invalid UTF-8 in byte string") - 1); }
+
+/* Packed PY-FSTRING-SPEC-1 text layout, ported from format_spec.zig.
+ * Only fields accepted by its text resolver reach this entry. */
+myl_block *myl_core_text_format(myl_block *input, uint64_t spec) {
+    uint32_t fill = (uint32_t)(spec & 0x1fffff);
+    unsigned alignment = (unsigned)((spec >> 21) & 7);
+    uint64_t width = (spec >> 49) & 0xfff;
+    uint64_t scalars = myl_core_str_chars(input);
+    if ((spec >> 36) & 1) {
+        uint64_t precision = (spec >> 37) & 0xfff;
+        if (scalars > precision) scalars = precision;
+    }
+    uint64_t bytes = myl_core_str_offset(input, scalars), pad = width > scalars ? width - scalars : 0;
+    uint64_t left = alignment == 2 ? pad : alignment == 3 ? pad / 2 : 0;
+    unsigned char raw[4];
+    size_t fill_bytes = core_unicode_encode(raw, fill);
+    myl_block *result = str_new((int64_t)(bytes + pad * fill_bytes));
+    unsigned char *out = block_data(result);
+    for (uint64_t i = 0; i < left; i++) { memcpy(out, raw, fill_bytes); out += fill_bytes; }
+    memcpy(out, block_data(input), (size_t)bytes); out += bytes;
+    for (uint64_t i = left; i < pad; i++) { memcpy(out, raw, fill_bytes); out += fill_bytes; }
+    core_text_publish(result);
+    return result;
+}
+
+/* Scalar repr ports native_repr.c's quote/escape/Unicode16 printability rules. */
+typedef struct { const unsigned char *data; size_t length; bool bytes; unsigned char quote; } core_repr_input;
+typedef struct { unsigned char *data; size_t octets; } core_repr_output;
+static bool core_printable(uint32_t point) {
+    size_t low = 0, high = sizeof core_nonprintable / sizeof core_nonprintable[0];
+    while (low < high) {
+        size_t middle = low + (high - low) / 2;
+        if (point < core_nonprintable[middle][0]) high = middle;
+        else if (point > core_nonprintable[middle][1]) low = middle + 1;
+        else return false;
+    }
+    return true;
+}
+static void core_repr_bytes(core_repr_output *out, const unsigned char *data, size_t length) {
+    if (length > SIZE_MAX - out->octets) out_of_memory();
+    if (out->data) memcpy(out->data + out->octets, data, length);
+    out->octets += length;
+}
+static void core_repr_escape(core_repr_output *out, uint32_t point, unsigned digits) {
+    static const unsigned char hex[] = "0123456789abcdef";
+    unsigned char escaped[10] = {'\\', digits == 2 ? 'x' : digits == 4 ? 'u' : 'U'};
+    for (unsigned i = 0; i < digits; i++) escaped[2 + i] = hex[(point >> (4 * (digits - 1 - i))) & 15];
+    core_repr_bytes(out, escaped, digits + 2);
+}
+static void core_repr_point(core_repr_output *out, core_repr_input input, uint32_t point, size_t first, size_t last) {
+    unsigned char escaped[2] = {'\\', 0};
+    if (point == '\t') escaped[1] = 't';
+    else if (point == '\n') escaped[1] = 'n';
+    else if (point == '\r') escaped[1] = 'r';
+    else if (point == '\\' || point == input.quote) escaped[1] = (unsigned char)point;
+    if (escaped[1]) { core_repr_bytes(out, escaped, 2); return; }
+    if (!(input.bytes ? point >= 32 && point < 127 : core_printable(point))) {
+        core_repr_escape(out, point, point < 256 ? 2 : point < 65536 ? 4 : 8); return;
+    }
+    core_repr_bytes(out, input.data + first, last - first);
+}
+static void core_repr_render(core_repr_input input, core_repr_output *out) {
+    if (input.bytes) core_repr_bytes(out, (const unsigned char *)"b", 1);
+    core_repr_bytes(out, &input.quote, 1);
+    for (size_t at = 0; at < input.length;) {
+        size_t first = at;
+        uint32_t point = input.bytes ? input.data[at++] : core_unicode_next(input.data, &at);
+        core_repr_point(out, input, point, first, at);
+    }
+    core_repr_bytes(out, &input.quote, 1);
+}
+myl_block *myl_core_text_repr(myl_block *source, bool bytes) {
+    core_repr_input input = {block_data(source), (size_t)source->len, bytes, '\''};
+    if (memchr(input.data, '\'', input.length) && !memchr(input.data, '"', input.length)) input.quote = '"';
+    core_repr_output measured = {0};
+    core_repr_render(input, &measured);
+    if (measured.octets > INT64_MAX) out_of_memory();
+    myl_block *result = str_new((int64_t)measured.octets);
+    core_repr_output output = {block_data(result), 0};
+    core_repr_render(input, &output);
+    core_text_publish(result);
+    return result;
+}

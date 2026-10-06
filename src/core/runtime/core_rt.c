@@ -464,7 +464,7 @@ typedef struct {
 extern const myl_core_site myl_core_sites[];
 extern const char myl_core_source_path[];
 
-enum { TRAP_OVERFLOW, TRAP_DIVISION_BY_ZERO, TRAP_LIST_BOUNDS, TRAP_FLOAT_CONVERSION, TRAP_CAST, TRAP_FACT, TRAP_LIST_EMPTY, TRAP_MISSING_KEY = 9, TRAP_ITERATION_MUTATION = 10, TRAP_TEXT_BOUNDS = 11, TRAP_TEXT_SEPARATOR = 12, TRAP_TEXT_STEP = 13, TRAP_BYTE_RANGE = 14, TRAP_TEXT_SCALAR = 15, TRAP_INVALID_SHIFT = 17 };
+enum { TRAP_OVERFLOW, TRAP_DIVISION_BY_ZERO, TRAP_LIST_BOUNDS, TRAP_FLOAT_CONVERSION, TRAP_CAST, TRAP_FACT, TRAP_LIST_EMPTY, TRAP_MISSING_KEY = 9, TRAP_ITERATION_MUTATION = 10, TRAP_TEXT_BOUNDS = 11, TRAP_TEXT_SEPARATOR = 12, TRAP_TEXT_STEP = 13, TRAP_BYTE_RANGE = 14, TRAP_TEXT_SCALAR = 15, TRAP_TEXT_SUBSTRING = 16, TRAP_INVALID_SHIFT = 17 };
 
 
 
@@ -857,6 +857,7 @@ void myl_core_trap(int32_t index, int64_t a, int64_t b) {
     case TRAP_TEXT_STEP: code = "R_SLICE_STEP"; break;
     case TRAP_BYTE_RANGE: code = "R_BYTE_RANGE"; break;
     case TRAP_TEXT_SCALAR: code = "R_TEXT_SCALAR"; break;
+    case TRAP_TEXT_SUBSTRING: code = "R_SUBSTRING_NOT_FOUND"; break;
     case TRAP_INVALID_SHIFT: code = "R_INVALID_SHIFT"; break;
     case TRAP_FACT:
         /* Verify builds only: a fact the compiler relied on does not hold. */
@@ -890,7 +891,7 @@ __attribute__((cold,noinline)) static void core_io_failure(const char *code){
     stream_write(&streams[1],text,(size_t)(length<(int)sizeof text?length:(int)sizeof text-1));
     void *pcs[128];int count=os_stack(pcs,128),found=0;
     for(int i=2;i<count;++i){int frames=dwarf_frames((uintptr_t)pcs[i]-1,found?0:1);if(frames)found=1;else if(found)break;}
-    flush_all();os_exit(1);
+    flush_all();os_exit(strncmp(code,"R_",2)?2:1);
 }
 
 /* With MYL_CORE_LEAKCHECK=1, a program that ends with blocks still allocated says

@@ -87,7 +87,7 @@ pub fn Lower(comptime Context: type) type {
             return c.read(variable, done);
         }
         fn shapeOf(c: Context, ty: typed.Type, span: u32) Error!typed.ResultShape {
-            return typed.resultShape(ty, c.mb.program.records) orelse return c.mb.refuse("capability result shape", span);
+            return typed.resultShape(ty, c.mb.input.program.records) orelse return c.mb.refuse("capability result shape", span);
         }
         fn externalRead(c: Context, node_type: typed.Type, read: @FieldType(@FieldType(typed.Node, "data"), "external_read"), span: u32) Error!ir.Ref {
             const shape = try shapeOf(c, node_type, span);
@@ -128,7 +128,7 @@ pub fn Lower(comptime Context: type) type {
         }
         fn environmentGet(c: Context, node: typed.Node, get: @FieldType(@FieldType(typed.Node, "data"), "environment_get"), span: u32) Error!ir.Ref {
             const ty = try c.mb.mapType(node.ty, span);
-            if (typed.environmentShape(node.ty, c.mb.program.records) != null) return rawEnvironment(c, node, get, span);
+            if (typed.environmentShape(node.ty, c.mb.input.program.records) != null) return rawEnvironment(c, node, get, span);
             const cap = try c.expression(get.capability);
             const name = try byteRequest(c, get.name, span);
             return c.effectCall("myl_core_environment_text", &.{ .capability, c.typeOfRef(name) }, ty, &.{ cap, name }, span);
@@ -141,7 +141,7 @@ pub fn Lower(comptime Context: type) type {
             return mergeResult(c, node.ty, shape, box, false, span);
         }
         fn completeResource(c: Context, node: typed.Node, input: typed.NodeId, span: u32) Error!ir.Ref {
-            const shape = typed.completionShape(node.ty, c.mb.program.records) orelse return c.mb.refuse("resource completion shape", span);
+            const shape = typed.completionShape(node.ty, c.mb.input.program.records) orelse return c.mb.refuse("resource completion shape", span);
             const owner = try c.expression(input);
             const code = try c.effectCall("myl_core_resource_complete", &.{.resource}, .i64, &.{owner}, span);
             const ty = try c.mb.mapType(node.ty, span);
@@ -184,7 +184,7 @@ pub fn Lower(comptime Context: type) type {
             return c.effectCall("myl_core_io_bytes_from_u8_list", &.{list_ty}, .bytes, &.{list}, span);
         }
         fn rawEnvironment(c: Context, node: typed.Node, get: @FieldType(@FieldType(typed.Node, "data"), "environment_get"), span: u32) Error!ir.Ref {
-            const shape = typed.environmentShape(node.ty, c.mb.program.records).?;
+            const shape = typed.environmentShape(node.ty, c.mb.input.program.records).?;
             const cap = try c.expression(get.capability);
             const name = try byteRequest(c, get.name, span);
             const array = try c.mb.mapType(shape.bytes_type, span);
@@ -200,7 +200,7 @@ pub fn Lower(comptime Context: type) type {
                 const box = try c.effectCall("myl_core_resource_write", &.{ .resource, c.typeOfRef(input) }, try resultSlot(c, .u64), &.{ owner, input }, span);
                 return mergeResult(c, node.ty, shape, box, false, span);
             }
-            const shape = typed.resourceReadShape(node.ty, c.mb.program.records) orelse return c.mb.refuse("resource read shape", span);
+            const shape = typed.resourceReadShape(node.ty, c.mb.input.program.records) orelse return c.mb.refuse("resource read shape", span);
             const array = try c.mb.mapType(shape.bytes_type, span);
             const capacity = c.module().compound(array).array.n;
             const box = try c.effectCall("myl_core_resource_read", &.{ .resource, .u64 }, try rawSlot(c), &.{ owner, try c.constant(.u64, @intCast(capacity)) }, span);
