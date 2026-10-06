@@ -1,0 +1,58 @@
+module row
+
+extern def runtime_bench_now(host: Host) -> i64 effects(host)
+
+# Row `grid_dp` (CONTRACT.md): a minimum-cost path DP over two nested dynamic grids.
+# Arguments `size iterations seed`; output `checksum elapsed`. Both grids are `list[list[int]]`,
+# built row by row and released inside every batch.
+
+
+# The largest w with w * w <= n, the same integer loop in every language.
+def isqrt(n: int) -> int:
+    w = 0
+    while (w + 1) * (w + 1) <= n:
+        w += 1
+    return w
+
+
+def batch_result(w: int, h: int, batch: int, seed: int) -> int:
+    cost = [[(seed + batch + 13 * (i * w + j)) % 1009 for j in range(w)] for i in range(h)]
+    dp = [[0 for j in range(w)] for i in range(h)]
+    dp[0][0] = cost[0][0]
+    for j in range(1, w):
+        dp[0][j] = dp[0][j - 1] + cost[0][j]
+    for i in range(1, h):
+        dp[i][0] = dp[i - 1][0] + cost[i][0]
+        for j in range(1, w):
+            dp[i][j] = cost[i][j] + min(dp[i - 1][j], dp[i][j - 1])
+    return dp[h - 1][w - 1] + sum(dp[h - 1])
+
+
+def parse_number(text: str) -> int:
+    match int(text):
+        case Some(n):
+            return n
+        case None:
+            return 0
+
+
+def main(args: list[str], host: Host, out: Stream) -> int:
+    if len(args) != 3:
+        return 2
+    size = parse_number(args[0])
+    iterations = parse_number(args[1])
+    seed = parse_number(args[2])
+    if size < 2 or iterations < 1 or seed < 1 or seed > 1000000:
+        return 2
+    w = isqrt(size)
+    h = size // w
+    checksum = 0
+    start = runtime_bench_now(host)
+    for batch in range(iterations):
+        part = batch_result(w, h, batch, seed)
+        if part < 0:
+            return 2
+        checksum = (checksum + part) % 1000000007
+    elapsed = runtime_bench_now(host) - start
+    out.print(checksum, elapsed)
+    return 0

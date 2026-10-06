@@ -1,0 +1,14 @@
+module repro
+
+# File name has a dash, so the compiler cannot load it in place: copy it to repro.my to run it.
+
+# `[0] * 3` checks, `b * w` on an annotated list checks, but `[0] * w` with a non-literal count is
+# rejected by both compilers: `error[E_LIST_TYPE]: operation requires a managed list`, pointing at `[0]`.
+# grid_dp/row.my therefore builds each dp row as `[0 for j in range(w)]`.
+def work(w: int) -> int:
+    row = [0] * w
+    return len(row)
+
+
+def main() -> int:
+    return work(3)
