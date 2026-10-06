@@ -14,6 +14,7 @@ import re
 import shlex
 import subprocess
 import sys
+import tempfile
 import time
 
 
@@ -125,8 +126,9 @@ def main():
     commit = git(root, "rev-parse", "HEAD")
     source_unchanged(root, commit)
     evidence.mkdir(parents=True, exist_ok=True)
-    # NATIVE-ZIG-CACHE-4 requires test subprocess scratch outside .zig-cache.
-    cache = root / ".mylang-cache/s2-x/full-gates" / evidence.name
+    # NATIVE-ZIG-CACHE-4 excludes .zig-cache; incremental_diff also filters
+    # absolute paths containing .mylang-cache. Keep scratch outside both.
+    cache = Path(tempfile.mkdtemp(prefix=f"mylang-old-gate-{evidence.name}-", dir="/var/tmp"))
     (cache / "tmp").mkdir(parents=True, exist_ok=True)
     env = os.environ.copy()
     env.update(TMPDIR=str(cache / "tmp"), ZIG_LOCAL_CACHE_DIR=str(root / ".zig-cache"),
