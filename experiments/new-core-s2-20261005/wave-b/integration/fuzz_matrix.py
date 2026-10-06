@@ -27,7 +27,7 @@ def main():
         command = ['scripts/build-slot.sh', 'build', '--', 'python3',
                    'experiments/new-core-s2-20261005/wave-a/integration/fuzz_qualification.py',
                    '--kind', kind, '--cases', '200', '--seed', str(2201 + KINDS.index(kind)),
-                   '--mylang', str(ROOT / 'zig-out/bin/mylang'), '--core', str(ROOT / 'zig-out/bin/mylang-core'),
+                   '--mylang', str(ROOT / '.mylang-cache/wave-b/baseline/mylang'), '--core', str(ROOT / 'zig-out/bin/mylang-core'),
                    '--evidence', str(area / kind), '--cache-root', str(cache / kind)]
         with (area / f'{kind}.txt').open('w') as log:
             log.write(f'source_commit={commit}\n$ {shlex.join(command)}\n')
