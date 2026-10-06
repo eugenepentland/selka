@@ -433,14 +433,18 @@ test "the allocator reuses a freed small block for its class, fills small lists 
     try std.testing.expectEqualStrings("4 1 400 2 0\n", try runHarness(arena.allocator(), allocator_harness));
 }
 
-/// Build `test/core/NAME.my` with the new core and run it with `MYL_CORE_LEAKCHECK=1`.
-fn leakChecked(arena: std.mem.Allocator, root: []const u8, name: []const u8, release: bool, args: []const []const u8) ![]const u8 {
+/// The output of one leak-checked run of a `test/core` program.
+const Checked = struct { stdout: []const u8, stderr: []const u8 };
+
+/// Build `test/core/NAME.my` with the new core and `flags` (none: a debug build) and run
+/// it with `MYL_CORE_LEAKCHECK=1`.
+fn leakChecked(arena: std.mem.Allocator, root: []const u8, name: []const u8, flags: []const []const u8, args: []const []const u8) !Checked {
     const source = try std.fmt.allocPrint(arena, "{s}/{s}.my", .{ options.fixtures, name });
-    const output = try std.fmt.allocPrint(arena, "{s}/{s}-{s}", .{ root, name, if (release) "release" else "debug" });
+    const output = try std.fmt.allocPrint(arena, "{s}/{s}-{s}", .{ root, name, if (flags.len == 0) "debug" else flags[flags.len - 1] });
     const cache = try std.fmt.allocPrint(arena, "{s}/cache", .{root});
     var argv: std.ArrayList([]const u8) = .empty;
     try argv.appendSlice(arena, &.{ options.core_path, "build", source, "-o", output, "--link", options.clock_path, "--cache-dir", cache });
-    if (release) try argv.append(arena, "--release");
+    try argv.appendSlice(arena, flags);
     const built = try std.process.run(arena, std.testing.io, .{ .argv = argv.items });
     try std.testing.expect(built.term == .exited and built.term.exited == 0);
     var environment = try std.testing.environ.createMap(arena);
@@ -453,7 +457,7 @@ fn leakChecked(arena: std.mem.Allocator, root: []const u8, name: []const u8, rel
     const expected_status: u8 = if (std.mem.eql(u8, name, "control")) 255 else 0;
     try std.testing.expectEqual(expected_status, ran.term.exited);
     try std.testing.expect(ran.stdout.len > 0);
-    return ran.stderr;
+    return .{ .stdout = ran.stdout, .stderr = ran.stderr };
 }
 
 /// Every `test/core` program that runs to its end, with arguments it accepts.
@@ -473,6 +477,7 @@ const leak_fixtures = [_]struct { name: []const u8, args: []const []const u8 }{
     .{ .name = "rc_shared_loops", .args = &.{} },
     .{ .name = "rc_alias_paths", .args = &.{"x"} },
     .{ .name = "rc_phi_fields", .args = &.{} },
+    .{ .name = "rc_promote_order", .args = &.{} },
 };
 
 // spec: NEW-CORE-RC-7
@@ -483,8 +488,8 @@ test "every test/core program ends with no block live under MYL_CORE_LEAKCHECK=1
     defer dir.cleanup();
     const root = try dir.dir.realPathFileAlloc(std.testing.io, ".", arena.allocator());
     for (leak_fixtures) |fixture| {
-        try std.testing.expectEqualStrings("", try leakChecked(arena.allocator(), root, fixture.name, false, fixture.args));
-        try std.testing.expectEqualStrings("", try leakChecked(arena.allocator(), root, fixture.name, true, fixture.args));
+        try std.testing.expectEqualStrings("", (try leakChecked(arena.allocator(), root, fixture.name, &.{}, fixture.args)).stderr);
+        try std.testing.expectEqualStrings("", (try leakChecked(arena.allocator(), root, fixture.name, &.{"--release"}, fixture.args)).stderr);
     }
 }
 
@@ -637,7 +642,7 @@ test "a list retained into a container in one iteration is never updated in plac
     defer dir.cleanup();
     const root = try dir.dir.realPathFileAlloc(std.testing.io, ".", arena.allocator());
     // The old core's output: each saved snapshot keeps its own length.
-    try std.testing.expectEqualStrings("", try leakChecked(arena.allocator(), root, "rc_shared_loops", true, &.{}));
+    try std.testing.expectEqualStrings("", (try leakChecked(arena.allocator(), root, "rc_shared_loops", &.{"--release"}, &.{})).stderr);
     for ([_]bool{ false, true }) |release| {
         const source = try std.fmt.allocPrint(arena.allocator(), "{s}/rc_shared_loops.my", .{options.fixtures});
         const output = try std.fmt.allocPrint(arena.allocator(), "{s}/shared-{}", .{ root, release });
@@ -786,6 +791,26 @@ test "a record phi read only through its fields still takes its operands, so uns
     try std.testing.expect(ran.term == .exited and ran.term.exited == 0);
     try std.testing.expectEqualStrings("48 1 1\n", ran.stdout);
     try std.testing.expectEqualStrings("", ran.stderr);
+}
+
+// spec: NEW-CORE-RC-13
+test "a field read after its record was consumed by an earlier update stays borrowed, so a snapshot keeps the old list" {
+    var arena_state = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena_state.deinit();
+    const arena = arena_state.allocator();
+    var dir = std.testing.tmpDir(.{});
+    defer dir.cleanup();
+    const root = try dir.dir.realPathFileAlloc(std.testing.io, ".", arena);
+    const expected = "[1, 2, 3, 4] [1, 2, 3, 5] [9] [1, 2, 3]\n[7, 8, 9] [7, 8, 10] [5, 2] [7, 8] 13\n";
+    const debug = try leakChecked(arena, root, "rc_promote_order", &.{}, &.{});
+    try std.testing.expectEqualStrings(expected, debug.stdout);
+    try std.testing.expectEqualStrings("", debug.stderr);
+    const release = try leakChecked(arena, root, "rc_promote_order", &.{"--release"}, &.{});
+    try std.testing.expectEqualStrings(expected, release.stdout);
+    try std.testing.expectEqualStrings("", release.stderr);
+    const verify = try leakChecked(arena, root, "rc_promote_order", &.{ "--release", "--verify-facts" }, &.{});
+    try std.testing.expectEqualStrings(expected, verify.stdout);
+    try std.testing.expectEqualStrings("", verify.stderr);
 }
 
 /// A heap text with byte reads through encode; the escaping form returns bytes

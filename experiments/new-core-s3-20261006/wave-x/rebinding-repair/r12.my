@@ -1,0 +1,23 @@
+record Bucket:
+    count: int
+    items: list[int]
+
+def replace_loop(xs: mut list[int], k: int):
+    for phase in range(k % 4):
+        xs.append(phase)
+        xs = [(k + phase) % 1009]
+        xs.append(phase)
+
+def replace_once(xs: mut list[int], k: int):
+    xs = [k]
+
+def main(out: Stream) -> int:
+    xs = [1, 2, 3]
+    b = Bucket(3, xs)
+    c = b
+    replace_once(mut c.items, 3)
+    xs.append(4)
+    snap = b
+    b.items.append(5)
+    out.print(len(snap.items), len(b.items))
+    return 0
