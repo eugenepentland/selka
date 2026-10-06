@@ -428,13 +428,29 @@ static struct {
     int32_t ring[TRACE_RING];
 } error_trace = {.origin = -1};
 
-__attribute__((cold, noinline)) void myl_core_err_trace(int32_t site, int32_t mode) {
+static inline void core_err_trace_record(int32_t site, int32_t mode) {
     if (mode == 0) {
         error_trace.origin = site;
         error_trace.count = 0;
         return;
     }
     error_trace.ring[error_trace.count++ % TRACE_RING] = site;
+}
+
+/* Ordinary C callers keep their ABI. Compiler-owned err_trace operations use
+ * the register-preserving twin (ERROR-TRACE-6), with the same recording leaf. */
+__attribute__((cold, noinline)) void myl_core_err_trace(int32_t site, int32_t mode) {
+    core_err_trace_record(site, mode);
+}
+
+__attribute__((cold, noinline, preserve_most))
+void myl_core_err_trace_origin_preserve_most(int32_t site) {
+    core_err_trace_record(site, 0);
+}
+
+__attribute__((cold, noinline, preserve_most))
+void myl_core_err_trace_append_preserve_most(int32_t site) {
+    core_err_trace_record(site, 1);
 }
 
 /* `main`'s `args`: every command-line argument after the program name. */

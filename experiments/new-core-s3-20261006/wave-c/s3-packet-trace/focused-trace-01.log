@@ -1,0 +1,25 @@
+test-core
++- run test w
+guardian/test: 8 test(s) selected
+guardian/test: SLOW  5.77s  value_e2e_test.test.a main that returns an Err reports it with the old core's error return trace: created, returned, propagated
+guardian/test: SLOW  16.68s  trace_test.test.main returning Err prints error: VALUE and the aligned trace, origin first, and exits 1; Ok(code) exits with code
+guardian/test: SLOW  17.66s  trace_test.test.trace modes: a returned site on its origin's line folds, a conversion names its case, and the ring drops the oldest appends
+guardian/test: SLOW  8.26s  trace_test.test.the explicit trace operation preserves registers while an ordinary extern trace call and unrelated call keep their ABI
+guardian/test: test wall 53.96s; slowest over 50ms:
+guardian/test:   17.66s  trace_test.test.trace modes: a returned site on its origin's line folds, a conversion names its case, and the ring drops the oldest appends
+guardian/test:   16.68s  trace_test.test.main returning Err prints error: VALUE and the aligned trace, origin first, and exits 1; Ok(code) exits with code
+guardian/test:   8.26s  trace_test.test.the explicit trace operation preserves registers while an ordinary extern trace call and unrelated call keep their ABI
+guardian/test:   5.77s  value_e2e_test.test.a main that returns an Err reports it with the old core's error return trace: created, returned, propagated
+guardian/test:   2.82s  trace_test.test.a trap names every caller frame like the old core, at debug and at -O3 where the calls are inlined
+guardian/test:   2.75s  trace_test.test.a build without the line tables names only the trapping frame and emits no debug sections
+guardian/test: PASS — 8 passed
+guardian/test: RESULT {"passed":8,"failed":0,"skipped":0}
+failed command: ./.zig-cache/o/ef59aaeebf724a61bd7e92bbf000ec6a/test --cache-dir=./.zig-cache --seed=0xc3b5e968 --listen=-
+
+Build Summary: 5/5 steps succeeded; 8/8 tests passed
+test-core success
++- run test 8 pass (8 total) 53s MaxRSS:247M
+   +- compile test debug native success 1s MaxRSS:334M
+      +- options success
+         +- compile exe mylang-core debug native cached 5ms MaxRSS:38M
+
