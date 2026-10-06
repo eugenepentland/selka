@@ -254,7 +254,6 @@ fn runLlvm(arena: std.mem.Allocator, llvm: []const u8, options: RunOptions) RunE
     driver.link(arena, std.testing.io, &environment, .{
         .zig = zig,
         .work = root,
-        .program = try std.fs.path.join(arena, &.{ root, "hand.ll" }),
         .output = output,
         .release = release,
         .links = &.{},

@@ -3,6 +3,7 @@ const std = @import("std");
 const ir = @import("ir.zig");
 const emit_render = @import("emit_render.zig");
 const Out = std.ArrayList(u8);
+const equal_prefix = "myl_core_equal_";
 /// Allocation or an unsupported representation stops this stage.
 pub const Error = error{ OutOfMemory, UnsupportedEntry, UnsupportedInstruction };
 
@@ -26,14 +27,25 @@ pub fn dynamic(module: ir.Module, ty: ir.Type) bool {
 
 /// Replace a typed recursive adapter declaration with its LLVM definition.
 pub fn adapter(a: std.mem.Allocator, out: *Out, function: *const ir.Function) Error!bool {
-    if (try emit_render.adapter(a, out, function)) return true;
+    return adapterNamed(a, out, function, .{ .symbol = function.name, .linkage = "internal" });
+}
+
+/// Whether compiler-authorized lowering supplied an equality or rendering adapter.
+pub fn generated(function: *const ir.Function) bool {
     if (function.signature.linkage != .runtime_c) return false;
-    const prefix = "myl_core_equal_";
+    return std.mem.startsWith(u8, function.name, equal_prefix) or std.mem.startsWith(u8, function.name, "myl_core_show_");
+}
+
+/// Emit an authorized adapter with the unit's stable symbol and linkage.
+pub fn adapterNamed(a: std.mem.Allocator, out: *Out, function: *const ir.Function, names: emit_render.AdapterNames) Error!bool {
+    if (try emit_render.adapterNamed(a, out, function, names)) return true;
+    if (function.signature.linkage != .runtime_c) return false;
+    const prefix = equal_prefix;
     if (!std.mem.startsWith(u8, function.name, prefix)) return false;
     const number = function.name[prefix.len..];
-    try out.print(a, "define internal zeroext i1 @{s}(ptr %left, ptr %right) nounwind {{\nentry:\n" ++
+    try out.print(a, "define {s} fastcc zeroext i1 @{s}(ptr %left, ptr %right) nounwind {{\nentry:\n" ++
         "  %l = getelementptr inbounds i8, ptr %left, i64 32\n  %r = getelementptr inbounds i8, ptr %right, i64 32\n" ++
-        "  %same = call zeroext i1 @myl_core_values_equal(ptr @myl.value.{s}, ptr %l, ptr %r)\n  ret i1 %same\n}}\n", .{ function.name, number });
+        "  %same = call zeroext i1 @myl_core_values_equal(ptr @myl.value.{s}, ptr %l, ptr %r)\n  ret i1 %same\n}}\n", .{ names.linkage, names.symbol, number });
     return true;
 }
 
@@ -47,7 +59,7 @@ pub fn key(comptime Context: type, c: Context, out: *Out, ty: ir.Type, symbol: [
 
 fn needed(m: *const ir.Module) bool {
     for (m.functions.items) |f| {
-        if (f.signature.linkage == .runtime_c and std.mem.startsWith(u8, f.name, "myl_core_equal_")) return true;
+        if (f.signature.linkage == .runtime_c and std.mem.startsWith(u8, f.name, equal_prefix)) return true;
         if (f.signature.linkage == .runtime_c and std.mem.startsWith(u8, f.name, "myl_core_show_")) return true;
     }
     for (m.compounds.items) |shape| if (shape == .dict and dynamic(m.*, shape.dict.key)) return true;

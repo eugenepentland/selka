@@ -9,6 +9,7 @@
 const std = @import("std");
 const target = @import("target.zig").current;
 const number_runtime = @import("number_runtime.zig");
+const emit_units = @import("emit_units.zig");
 
 /// The runtime C source, compiled into every program.
 pub const runtime_source = @embedFile("runtime/core_rt.c") ++ "\n" ++
@@ -25,13 +26,13 @@ pub const Request = struct {
     zig: []const u8,
     /// Scratch directory for the runtime object and clang's cache.
     work: []const u8,
-    /// Where the program's `.ll` is written (unique per output, so builds can run at once).
-    program: []const u8,
     output: []const u8,
     release: bool,
     /// Extra C sources to compile and link (`--link`).
     links: []const []const u8,
-    llvm: []const u8,
+    llvm: []const u8 = "",
+    /// Independent LLVM inputs; an empty list uses the legacy single-module input.
+    units: []const emit_units.Unit = &.{},
 };
 
 /// Why a native build failed; the tool's output was written to `log`.
@@ -45,15 +46,32 @@ pub fn link(allocator: std.mem.Allocator, io: std.Io, environ: *const std.proces
     defer environment.deinit();
     environment.put("ZIG_LOCAL_CACHE_DIR", try std.fs.path.join(allocator, &.{ request.work, "zig-local" })) catch return error.OutOfMemory;
     const runtime_object = try runtimeObject(allocator, io, &environment, request, log);
-    const program = request.program;
-    cwd.writeFile(io, .{ .sub_path = program, .data = request.llvm }) catch return error.WriteFailed;
+    var digest: [8]u8 = undefined;
+    std.crypto.hash.Blake3.hash(request.output, &digest, .{});
+    const staging = try std.fs.path.join(allocator, &.{ request.work, try std.fmt.allocPrint(allocator, "program-{x}", .{digest}) });
+    cwd.createDirPath(io, staging) catch return error.WriteFailed;
     var argv: std.ArrayList([]const u8) = .empty;
     try argv.appendSlice(allocator, &.{ request.zig, "cc", if (request.release) "-O3" else "-O0" });
     try argv.appendSlice(allocator, target.cpu_flags);
-    try argv.appendSlice(allocator, &.{ "-Wno-override-module", "-o", request.output, program, runtime_object });
-    if (number_runtime.needed(request.llvm)) try argv.append(allocator, try number_runtime.object(allocator, io, &environment, request, log));
+    try argv.appendSlice(allocator, &.{ "-Wno-override-module", "-o", request.output });
+    var number = number_runtime.needed(request.llvm);
+    var math = std.mem.indexOf(u8, request.llvm, "llvm.sin.f64") != null or std.mem.indexOf(u8, request.llvm, "llvm.cos.f64") != null;
+    if (request.units.len == 0) {
+        const program = try std.fs.path.join(allocator, &.{ staging, "whole.ll" });
+        cwd.writeFile(io, .{ .sub_path = program, .data = request.llvm }) catch return error.WriteFailed;
+        try argv.append(allocator, program);
+    }
+    for (request.units) |unit| {
+        const program = try std.fs.path.join(allocator, &.{ staging, try std.fmt.allocPrint(allocator, "{s}.ll", .{unit.name}) });
+        cwd.writeFile(io, .{ .sub_path = program, .data = unit.llvm }) catch return error.WriteFailed;
+        try argv.append(allocator, program);
+        number = number or unit.number;
+        math = math or unit.math;
+    }
+    try argv.append(allocator, runtime_object);
+    if (number) try argv.append(allocator, try number_runtime.object(allocator, io, &environment, request, log));
     try argv.appendSlice(allocator, request.links);
-    if (std.mem.indexOf(u8, request.llvm, "llvm.sin.f64") != null or std.mem.indexOf(u8, request.llvm, "llvm.cos.f64") != null) try argv.append(allocator, "-lm");
+    if (math) try argv.append(allocator, "-lm");
     try run(allocator, io, &environment, argv.items, log);
 }
 
@@ -66,8 +84,14 @@ fn runtimeObject(allocator: std.mem.Allocator, io: std.Io, environment: *const s
     const cwd = std.Io.Dir.cwd();
     if (cwd.access(io, object, .{})) |_| return object else |_| {}
     const source = try std.fs.path.join(allocator, &.{ request.work, try std.fmt.allocPrint(allocator, "{s}.c", .{stem}) });
-    cwd.writeFile(io, .{ .sub_path = source, .data = runtime_source }) catch return error.WriteFailed;
-    const partial = try std.fmt.allocPrint(allocator, "{s}.partial", .{object});
+    var nonce: [16]u8 = undefined;
+    std.Io.random(io, &nonce);
+    const staging = try std.fmt.allocPrint(allocator, "{s}.{x}.partial", .{ source, nonce });
+    defer removeFile(io, staging);
+    cwd.writeFile(io, .{ .sub_path = staging, .data = runtime_source }) catch return error.WriteFailed;
+    cwd.rename(staging, cwd, source, io) catch return error.WriteFailed;
+    const partial = try std.fmt.allocPrint(allocator, "{s}.{x}.partial", .{ object, nonce });
+    defer removeFile(io, partial);
     var argv: std.ArrayList([]const u8) = .empty;
     try argv.appendSlice(allocator, &.{ request.zig, "cc", "-c", "-O2" });
     try argv.appendSlice(allocator, target.cpu_flags);
@@ -75,6 +99,11 @@ fn runtimeObject(allocator: std.mem.Allocator, io: std.Io, environment: *const s
     try run(allocator, io, environment, argv.items, log);
     cwd.rename(partial, cwd, object, io) catch return error.WriteFailed;
     return object;
+}
+
+fn removeFile(io: std.Io, path: []const u8) void {
+    // A successfully published file already moved away; cleanup is best effort.
+    std.Io.Dir.cwd().deleteFile(io, path) catch return;
 }
 
 fn run(allocator: std.mem.Allocator, io: std.Io, environment: *const std.process.Environ.Map, argv: []const []const u8, log: *std.ArrayList(u8)) Error!void {

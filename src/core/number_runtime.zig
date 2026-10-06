@@ -62,16 +62,18 @@ pub fn object(allocator: std.mem.Allocator, io: std.Io, environment: *const std.
         if (report) try log.print(allocator, "number-text cache hit: {s}\n", .{path});
         return path;
     } else |_| {}
-    // Keep both source staging and output private to each program during concurrent misses.
-    var output_digest: [8]u8 = undefined;
-    std.crypto.hash.Blake3.hash(request.output, &output_digest, .{});
-    const directory = try std.fs.path.join(allocator, &.{ request.work, try std.fmt.allocPrint(allocator, "{s}-{x}", .{ stem, output_digest }) });
+    // Every cold builder owns its staging and partial; concurrent publication is atomic.
+    var nonce: [16]u8 = undefined;
+    std.Io.random(io, &nonce);
+    const directory = try std.fs.path.join(allocator, &.{ request.work, try std.fmt.allocPrint(allocator, "{s}-{x}", .{ stem, nonce }) });
     cwd.createDirPath(io, directory) catch return error.WriteFailed;
+    defer removeTree(io, directory);
     for (sources) |source| {
         const file = try std.fs.path.join(allocator, &.{ directory, source.name });
         cwd.writeFile(io, .{ .sub_path = file, .data = source.bytes }) catch return error.WriteFailed;
     }
-    const partial = try std.fmt.allocPrint(allocator, "{s}.{x}.partial", .{ path, output_digest });
+    const partial = try std.fmt.allocPrint(allocator, "{s}.{x}.partial", .{ path, nonce });
+    defer removeFile(io, partial);
     var argv: std.ArrayList([]const u8) = .empty;
     try argv.appendSlice(allocator, &.{ request.zig, "build-obj", try std.fs.path.join(allocator, &.{ directory, sources[0].name }) });
     try argv.appendSlice(allocator, options);
@@ -80,6 +82,14 @@ pub fn object(allocator: std.mem.Allocator, io: std.Io, environment: *const std.
     _ = try execute(allocator, io, environment, argv.items, log);
     cwd.rename(partial, cwd, path, io) catch return error.WriteFailed;
     return path;
+}
+
+fn removeTree(io: std.Io, path: []const u8) void {
+    std.Io.Dir.cwd().deleteTree(io, path) catch return;
+}
+
+fn removeFile(io: std.Io, path: []const u8) void {
+    std.Io.Dir.cwd().deleteFile(io, path) catch return;
 }
 
 fn execute(allocator: std.mem.Allocator, io: std.Io, environment: *const std.process.Environ.Map, argv: []const []const u8, log: *std.ArrayList(u8)) Error![]const u8 {

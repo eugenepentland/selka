@@ -37,10 +37,10 @@ pub fn beforeCall(comptime Context: type, c: Context, out: *std.ArrayList(u8), i
     if (function.signature.linkage != .runtime_c or !effectHelper(function.name)) return;
     if (!declared(@TypeOf(c.state), c.state, "myl_core_io_at")) {
         try c.state.declared.append(c.a(), "myl_core_io_at");
-        try c.state.externs.appendSlice(c.a(), "declare void @myl_core_io_at(i32) nounwind\n");
+        try c.state.externs.appendSlice(c.a(), "declare void @myl_core_io_at(ptr) nounwind\n");
     }
     const site = try c.site(.trace, inst, "effect");
-    try out.print(c.a(), "  call void @myl_core_io_at(i32 {d})\n", .{site});
+    try out.print(c.a(), "  call void @myl_core_io_at(ptr @myl.site.{d})\n", .{site});
 }
 
 fn effectHelper(name: []const u8) bool {

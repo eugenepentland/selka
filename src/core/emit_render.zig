@@ -6,17 +6,25 @@ const Out = std.ArrayList(u8);
 /// Invalid private metadata or allocation stops emission.
 pub const Error = error{ OutOfMemory, UnsupportedInstruction };
 
+/// An adapter's LLVM symbol and visibility, independent of lowering metadata IDs.
+pub const AdapterNames = struct { symbol: []const u8, linkage: []const u8 };
+
 /// Source IDs name adapters independently of their erased physical IR type.
 pub fn adapter(a: std.mem.Allocator, out: *Out, function: *const ir.Function) Error!bool {
+    return adapterNamed(a, out, function, .{ .symbol = function.name, .linkage = "internal" });
+}
+
+/// Emit source-aware rendering under the stable symbol assigned by unit emission.
+pub fn adapterNamed(a: std.mem.Allocator, out: *Out, function: *const ir.Function, naming: AdapterNames) Error!bool {
     if (function.signature.linkage != .runtime_c) return false;
     // Metadata declarations carry authority only and have no emitted symbol.
     if (std.mem.startsWith(u8, function.name, metadata.declaration_prefix)) return true;
     const prefix = "myl_core_show_";
     if (!std.mem.startsWith(u8, function.name, prefix)) return false;
     const number = function.name[prefix.len..];
-    try out.print(a, "define internal ptr @{s}(ptr %value) nounwind {{\nentry:\n" ++
+    try out.print(a, "define {s} fastcc ptr @{s}(ptr %value) nounwind {{\nentry:\n" ++
         "  %at = getelementptr inbounds i8, ptr %value, i64 32\n" ++
-        "  %text = call ptr @myl_core_values_render(ptr @myl.render.{s}, ptr %at)\n  ret ptr %text\n}}\n", .{ function.name, number });
+        "  %text = call ptr @myl_core_values_render(ptr @myl.render.{s}, ptr %at)\n  ret ptr %text\n}}\n", .{ naming.linkage, naming.symbol, number });
     return true;
 }
 

@@ -13,6 +13,7 @@
 #define _POSIX_C_SOURCE 200809L
 #include <stdbool.h>
 #include <stdint.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -419,16 +420,27 @@ void myl_core_release(myl_block *block) {
 /* ---- error traces (ERROR-TRACE-1..5) -------------------------------------------
  * Called on Err paths only: mode 0 restarts the trace with `site` as its origin
  * (building an Err), mode 1 appends a site (a `?` that propagates one). Sites
- * index `myl_core_sites`, whose operation names the action. The ring keeps the
+ * point to immutable unit-local records whose operation names the action. The ring keeps the
  * last 32 appends (ERROR-TRACE-4); nothing is allocated. */
+typedef struct {
+    int32_t kind;
+    int32_t line;
+    int32_t column;
+    int32_t width;
+    const char *operation;
+    const char *function;
+    const char *path;
+} myl_core_site;
+
+
 enum { TRACE_RING = 32 };
 static struct {
-    int32_t origin;
+    const myl_core_site *origin;
     uint64_t count;
-    int32_t ring[TRACE_RING];
-} error_trace = {.origin = -1};
+    const myl_core_site *ring[TRACE_RING];
+} error_trace;
 
-static inline void core_err_trace_record(int32_t site, int32_t mode) {
+static inline void core_err_trace_record(const myl_core_site *site, int32_t mode) {
     if (mode == 0) {
         error_trace.origin = site;
         error_trace.count = 0;
@@ -439,17 +451,17 @@ static inline void core_err_trace_record(int32_t site, int32_t mode) {
 
 /* Ordinary C callers keep their ABI. Compiler-owned err_trace operations use
  * the register-preserving twin (ERROR-TRACE-6), with the same recording leaf. */
-__attribute__((cold, noinline)) void myl_core_err_trace(int32_t site, int32_t mode) {
+__attribute__((cold, noinline)) void myl_core_err_trace(const myl_core_site *site, int32_t mode) {
     core_err_trace_record(site, mode);
 }
 
 __attribute__((cold, noinline, preserve_most))
-void myl_core_err_trace_origin_preserve_most(int32_t site) {
+void myl_core_err_trace_origin_preserve_most(const myl_core_site *site) {
     core_err_trace_record(site, 0);
 }
 
 __attribute__((cold, noinline, preserve_most))
-void myl_core_err_trace_append_preserve_most(int32_t site) {
+void myl_core_err_trace_append_preserve_most(const myl_core_site *site) {
     core_err_trace_record(site, 1);
 }
 
@@ -468,17 +480,6 @@ myl_block *myl_core_args(int32_t argc, char **argv) {
 
 /* ---- traps and exit --------------------------------------------------------- */
 
-typedef struct {
-    int32_t kind;
-    int32_t line;
-    int32_t column;
-    int32_t width;
-    const char *operation;
-    const char *function;
-} myl_core_site;
-
-extern const myl_core_site myl_core_sites[];
-extern const char myl_core_source_path[];
 
 enum { TRAP_OVERFLOW, TRAP_DIVISION_BY_ZERO, TRAP_LIST_BOUNDS, TRAP_FLOAT_CONVERSION, TRAP_CAST, TRAP_FACT, TRAP_LIST_EMPTY, TRAP_MISSING_KEY = 9, TRAP_ITERATION_MUTATION = 10, TRAP_TEXT_BOUNDS = 11, TRAP_TEXT_SEPARATOR = 12, TRAP_TEXT_STEP = 13, TRAP_BYTE_RANGE = 14, TRAP_TEXT_SCALAR = 15, TRAP_TEXT_SUBSTRING = 16, TRAP_INVALID_SHIFT = 17, TRAP_LIST_VALUE = 18, TRAP_LIST_POP_INDEX = 19 };
 
@@ -573,7 +574,7 @@ static void dwarf_load(void) {
 
 /* One debugging entry, with the attributes the frames need. */
 typedef struct {
-    uint64_t tag, low, high, ranges, origin, call_line, call_column, stmt_list;
+    uint64_t tag, low, high, ranges, origin, call_line, call_column, call_file, stmt_list;
     const char *name, *producer;
     bool children, has_low, high_offset, has_ranges, has_origin;
 } dw_entry;
@@ -647,6 +648,7 @@ static bool dw_read_entry(dw_cursor *c, const dw_unit *unit, dw_entry *entry, bo
         case 0x12: entry->high = value; entry->high_offset = form != 0x01; break;         /* high_pc */
         case 0x55: entry->ranges = value; entry->has_ranges = true; break;                /* ranges */
         case 0x31: entry->origin = value; entry->has_origin = true; break;                /* abstract_origin */
+        case 0x58: entry->call_file = value; break;                                       /* call_file */
         case 0x59: entry->call_line = value; break;                                       /* call_line */
         case 0x57: entry->call_column = value; break;                                     /* call_column */
         case 0x10: entry->stmt_list = value; break;                                       /* stmt_list */
@@ -688,7 +690,7 @@ static const char *dw_name(const dw_unit *unit, const dw_entry *entry) {
 }
 
 /* The line and column the line program of `unit` gives `pc`; false when none covers it. */
-static bool dw_line(const dw_unit *unit, uint64_t pc, uint64_t *line_out, uint64_t *column_out) {
+static bool dw_line(const dw_unit *unit, uint64_t pc, uint64_t *line_out, uint64_t *column_out, uint64_t *file_out) {
     if (unit->stmt_list >= dwarf.line.size) return false;
     dw_cursor c = {dwarf.line.data + unit->stmt_list, dwarf.line.data + dwarf.line.size};
     uint64_t length = dw_fixed(&c, 4);
@@ -708,15 +710,15 @@ static bool dw_line(const dw_unit *unit, uint64_t pc, uint64_t *line_out, uint64
     const unsigned char *lengths = c.p;
     if (line_range == 0 || program > end) return false;
     c.p = program;
-    uint64_t address = 0, line = 1, column = 0;
+    uint64_t address = 0, line = 1, column = 0, file = 1;
     bool found = false, have_previous = false;
-    uint64_t previous_address = 0, previous_line = 0, previous_column = 0;
+    uint64_t previous_address = 0, previous_line = 0, previous_column = 0, previous_file = 1;
 #define DW_ROW()                                                                                   \
     do {                                                                                           \
         if (have_previous && previous_address <= pc && pc < address) {                             \
-            *line_out = previous_line; *column_out = previous_column; found = true;                \
+            *line_out = previous_line; *column_out = previous_column; *file_out = previous_file; found = true;                \
         }                                                                                          \
-        previous_address = address; previous_line = line; previous_column = column; have_previous = true; \
+        previous_address = address; previous_line = line; previous_column = column; previous_file = file; have_previous = true; \
     } while (0)
     while (c.p < c.end && !found) {
         uint64_t opcode = dw_fixed(&c, 1);
@@ -732,12 +734,13 @@ static bool dw_line(const dw_unit *unit, uint64_t pc, uint64_t *line_out, uint64
             if (sub == 1) { /* end_sequence */
                 DW_ROW();
                 have_previous = false;
-                address = 0; line = 1; column = 0;
+                address = 0; line = 1; column = 0; file = 1;
             } else if (sub == 2) address = dw_fixed(&c, (int)(size - 1));
             c.p = next;
         } else if (opcode == 1) DW_ROW();
         else if (opcode == 2) address += dw_uleb(&c) * min_length;
         else if (opcode == 3) line += (uint64_t)dw_sleb(&c);
+        else if (opcode == 4) file = dw_uleb(&c);
         else if (opcode == 5) column = dw_uleb(&c);
         else if (opcode == 8) address += ((255 - opcode_base) / line_range) * min_length;
         else if (opcode == 9) address += dw_fixed(&c, 2);
@@ -748,6 +751,38 @@ static bool dw_line(const dw_unit *unit, uint64_t pc, uint64_t *line_out, uint64
 }
 
 enum { DW_MAX_DEPTH = 64 };
+
+/* Resolve a DWARF 2–4 file-table index, including its directory. Our DIFile names
+   are source paths; this also handles LLVM splitting a relative path into parts. */
+static const char *dw_file(const dw_unit *unit, uint64_t index, char *out, size_t capacity) {
+    if (unit->stmt_list >= dwarf.line.size) return "?";
+    dw_cursor c = {dwarf.line.data + unit->stmt_list, dwarf.line.data + dwarf.line.size};
+    dw_fixed(&c, 4);
+    uint64_t version = dw_fixed(&c, 2);
+    dw_fixed(&c, 4);
+    dw_fixed(&c, 1);
+    if (version >= 4) dw_fixed(&c, 1);
+    dw_fixed(&c, 3);
+    uint64_t opcodes = dw_fixed(&c, 1);
+    if (opcodes == 0 || c.end - c.p < (ptrdiff_t)(opcodes - 1)) return "?";
+    c.p += opcodes - 1;
+    const unsigned char *directories = c.p;
+    while (c.p < c.end && *c.p) dw_cstring(&c);
+    if (c.p < c.end) ++c.p;
+    for (uint64_t current = 1; c.p < c.end && *c.p; ++current) {
+        const char *name = dw_cstring(&c);
+        uint64_t directory = dw_uleb(&c);
+        dw_uleb(&c); dw_uleb(&c);
+        if (current != index) continue;
+        if (directory == 0 || name[0] == '/') return name;
+        dw_cursor dirs = {directories, c.end};
+        const char *prefix = "";
+        for (uint64_t i = 1; i <= directory && dirs.p < dirs.end && *dirs.p; ++i) prefix = dw_cstring(&dirs);
+        snprintf(out, capacity, "%s/%s", prefix, name);
+        return out;
+    }
+    return "?";
+}
 
 /* The frames of return address `pc` (already less one, inside the call), innermost
    first, written as `  in f at path:line:column` lines; `skip` drops that many inner
@@ -796,11 +831,11 @@ static int dwarf_frames(uint64_t pc, int skip) {
                 holds[depth] = inside;
             }
         }
-        if (chain_length == 0) return 0;
+        if (chain_length == 0) continue;
         /* chain[0..chain_length) from the subprogram inward; print innermost first. */
-        uint64_t line = 0, column = 0;
-        dw_line(&unit, pc, &line, &column);
-        char text[1024];
+        uint64_t line = 0, column = 0, file = 1;
+        dw_line(&unit, pc, &line, &column, &file);
+        char text[1024], path[1024];
         int printed = 0;
         for (int k = chain_length - 1; k >= 0; --k, ++printed) {
             /* The C entry, into which `main` may be inlined, is no frame of the program. */
@@ -808,12 +843,14 @@ static int dwarf_frames(uint64_t pc, int skip) {
             if (printed < skip) {
                 line = chain[k].call_line;
                 column = chain[k].call_column;
+                file = chain[k].call_file;
                 continue;
             }
-            int len = snprintf(text, sizeof text, "  in %s at %s:%llu:%llu\n", dw_name(&unit, &chain[k]), myl_core_source_path, (unsigned long long)line, (unsigned long long)column);
+            int len = snprintf(text, sizeof text, "  in %s at %s:%llu:%llu\n", dw_name(&unit, &chain[k]), dw_file(&unit, file, path, sizeof path), (unsigned long long)line, (unsigned long long)column);
             stream_write(&streams[1], text, (size_t)(len < (int)sizeof text ? len : (int)sizeof text - 1));
             line = chain[k].call_line;
             column = chain[k].call_column;
+                file = chain[k].call_file;
         }
         return chain_length;
     }
@@ -845,8 +882,7 @@ static size_t core_operation_record(char *record, size_t capacity, const char *o
 /* Report a failed check the way the old core does (code, detail, one `in f at …`
    line per frame and the `MYLANG-TRAP` record on stderr) and exit 1. The trapping
    frame comes from the site table, its callers from `trap_frames`. */
-void myl_core_trap(int32_t index, int64_t a, int64_t b) {
-    const myl_core_site *site = &myl_core_sites[index];
+void myl_core_trap(const myl_core_site *site, int64_t a, int64_t b) {
     char detail[256] = "";
     char record[256] = "";
     const char *code = "R_OVERFLOW";
@@ -908,7 +944,7 @@ void myl_core_trap(int32_t index, int64_t a, int64_t b) {
     stream_flush(&streams[0]);
     char text[1024];
     int len = snprintf(text, sizeof text, "%s:%d:%d: error[%s]: native execution failed%s\n  in %s at %s:%d:%d\n",
-        myl_core_source_path, site->line, site->column, code, detail, site->function, myl_core_source_path, site->line, site->column);
+        site->path, site->line, site->column, code, detail, site->function, site->path, site->line, site->column);
     stream_write(&streams[1], text, (size_t)(len < (int)sizeof text ? len : (int)sizeof text - 1));
     trap_frames();
     stream_write(&streams[1], record, strlen(record));
@@ -916,13 +952,13 @@ void myl_core_trap(int32_t index, int64_t a, int64_t b) {
     os_exit(1);
 }
 
-static int32_t core_io_site=-1;
-void myl_core_io_at(int32_t site){core_io_site=site;}
+static const myl_core_site *core_io_site;
+void myl_core_io_at(const myl_core_site *site){core_io_site=site;}
 /* Runtime effects keep their checked call site; walk past C adapters before
    printing the guest callers, just as a generated trap keeps its site frame. */
 __attribute__((cold,noinline)) static void core_io_failure(const char *code){
     stream_flush(&streams[0]);char text[1024];int length;
-    if(core_io_site>=0){const myl_core_site *site=&myl_core_sites[core_io_site];length=snprintf(text,sizeof text,"%s:%d:%d: error[%s]: native execution failed\n  in %s at %s:%d:%d\n",myl_core_source_path,site->line,site->column,code,site->function,myl_core_source_path,site->line,site->column);}
+    if(core_io_site){const myl_core_site *site=core_io_site;length=snprintf(text,sizeof text,"%s:%d:%d: error[%s]: native execution failed\n  in %s at %s:%d:%d\n",site->path,site->line,site->column,code,site->function,site->path,site->line,site->column);}
     else length=snprintf(text,sizeof text,"error[%s]: native execution failed\n",code);
     stream_write(&streams[1],text,(size_t)(length<(int)sizeof text?length:(int)sizeof text-1));
     void *pcs[128];int count=os_stack(pcs,128),found=0;
@@ -961,12 +997,12 @@ int32_t myl_core_exit(int64_t status) {
 /* ---- `main` returning Err (RESULT-MAIN-1/2, ERROR-TRACE-2) ---------------------- */
 
 static int trace_where(const myl_core_site *site, char *out, size_t size) {
-    return snprintf(out, size, "%s:%d:%d", myl_core_source_path, site->line, site->column);
+    return snprintf(out, size, "%s:%d:%d", site->path, site->line, site->column);
 }
 
 /* A `returned` site on the line of the site before it, in the same function, is folded into it. */
 static bool trace_folds(const myl_core_site *previous, const myl_core_site *site) {
-    return strcmp(site->operation, "returned") == 0 && strcmp(previous->function, site->function) == 0 && previous->line == site->line;
+    return strcmp(site->operation, "returned") == 0 && strcmp(previous->function, site->function) == 0 && previous->line == site->line && strcmp(previous->path, site->path) == 0;
 }
 
 /* The trace, origin first: one `  path:line:column  function  action` line per
@@ -975,12 +1011,12 @@ static bool trace_folds(const myl_core_site *previous, const myl_core_site *site
 static void trace_write(void) {
     const myl_core_site *listed[1 + TRACE_RING];
     size_t count = 0, gap = 0;
-    if (error_trace.origin >= 0) listed[count++] = &myl_core_sites[error_trace.origin];
+    if (error_trace.origin) listed[count++] = error_trace.origin;
     gap = count;
     uint64_t kept = error_trace.count < TRACE_RING ? error_trace.count : TRACE_RING;
     uint64_t dropped = error_trace.count - kept;
     for (uint64_t i = error_trace.count - kept; i < error_trace.count; ++i) {
-        const myl_core_site *site = &myl_core_sites[error_trace.ring[i % TRACE_RING]];
+        const myl_core_site *site = error_trace.ring[i % TRACE_RING];
         if (count && trace_folds(listed[count - 1], site)) continue;
         listed[count++] = site;
     }
@@ -1143,15 +1179,14 @@ myl_block *myl_core_list_sort(myl_block *list, int64_t kind) {
    `width` is the clause kind (0 `assert` .. 3 `invariant`) and its `operation` the message; the
    first line, the `in f at` frames and the `MYLANG-TRAP` record are those of any trap, the record
    carrying only the message. Exit status 1. */
-void myl_core_assert_fail(int32_t index) {
+void myl_core_assert_fail(const myl_core_site *site) {
     static const char *const codes[] = {"R_ASSERT", "R_REQUIRES", "R_ENSURES", "R_INVARIANT"};
-    const myl_core_site *site = &myl_core_sites[index];
     const char *code = site->width >= 0 && site->width < 4 ? codes[site->width] : codes[0];
     stream_flush(&streams[0]);
     char text[2048];
     int len = snprintf(text, sizeof text, "%s:%d:%d: error[%s]: native execution failed%s%s\n  in %s at %s:%d:%d\n",
-        myl_core_source_path, site->line, site->column, code, site->operation[0] ? ": " : "", site->operation,
-        site->function, myl_core_source_path, site->line, site->column);
+        site->path, site->line, site->column, code, site->operation[0] ? ": " : "", site->operation,
+        site->function, site->path, site->line, site->column);
     stream_write(&streams[1], text, (size_t)(len < (int)sizeof text ? len : (int)sizeof text - 1));
     trap_frames();
     /* The record: {"version":1,"operation":"MESSAGE"} with the message JSON-escaped. */

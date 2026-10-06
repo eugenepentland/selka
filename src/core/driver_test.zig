@@ -14,7 +14,6 @@ test "a compiler that cannot run fails the build with ToolFailed and says why" {
     const outcome = driver.link(arena.allocator(), std.testing.io, &environment, .{
         .zig = "/nonexistent/mylang-core-test/zig",
         .work = root,
-        .program = try std.fs.path.join(arena.allocator(), &.{ root, "p.ll" }),
         .output = try std.fs.path.join(arena.allocator(), &.{ root, "p" }),
         .release = false,
         .links = &.{},

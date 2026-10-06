@@ -234,11 +234,11 @@ fn definition(text: []const u8, name: []const u8) []const u8 {
 test "a byte reduction that only converts and XORs runs in 8-bit lanes summed by psadbw, and widens on a generic target" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
-    const x86 = definition(try support.releaseLlvmText(arena.allocator(), byte_helper), "define internal i64 @\"my.score\"(");
+    const x86 = definition(try support.releaseLlvmText(arena.allocator(), byte_helper), "define internal fastcc i64 @\"my.score\"(");
     try std.testing.expect(std.mem.indexOf(u8, x86, "load <32 x i8>") != null);
     try std.testing.expect(std.mem.indexOf(u8, x86, "xor <32 x i8>") != null);
     try std.testing.expect(std.mem.indexOf(u8, x86, "@llvm.x86.avx2.psad.bw") != null);
-    const generic = definition(try support.releaseLlvmTextFor(arena.allocator(), byte_helper, @import("target.zig").generic_256), "define internal i64 @\"my.score\"(");
+    const generic = definition(try support.releaseLlvmTextFor(arena.allocator(), byte_helper, @import("target.zig").generic_256), "define internal fastcc i64 @\"my.score\"(");
     try std.testing.expect(std.mem.indexOf(u8, generic, "psad") == null);
     try std.testing.expect(std.mem.indexOf(u8, generic, "zext <32 x i8>") != null);
 }
@@ -248,7 +248,7 @@ test "a parameter takes the hull of every call's argument, so a helper's byte su
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const a = arena.allocator();
-    const released = definition(try support.releaseLlvmText(a, byte_helper), "define internal i64 @\"my.score\"(");
+    const released = definition(try support.releaseLlvmText(a, byte_helper), "define internal fastcc i64 @\"my.score\"(");
     try std.testing.expect(std.mem.indexOf(u8, released, "with.overflow") == null);
     try std.testing.expect(std.mem.indexOf(u8, try support.verifyLlvmText(a, byte_helper), "range [3, 200]") != null);
 }

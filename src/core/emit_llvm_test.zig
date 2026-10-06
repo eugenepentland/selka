@@ -14,14 +14,14 @@ const checked =
 ;
 
 // spec: NEW-CORE-LLVM-1
-test "exact checks become overflow intrinsics and range tests branching to a cold trap with a site index" {
+test "exact checks become overflow intrinsics and range tests branching to a cold trap with a site pointer" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const text = try support.llvmText(arena.allocator(), checked);
     try std.testing.expect(std.mem.indexOf(u8, text, "@llvm.smul.with.overflow.i64") != null);
     try std.testing.expect(std.mem.indexOf(u8, text, "@llvm.sadd.with.overflow.i64") != null);
-    try std.testing.expect(std.mem.indexOf(u8, text, "call void @myl_core_trap(i32 0,") != null);
-    try std.testing.expect(std.mem.indexOf(u8, text, "@myl_core_sites = constant [") != null);
+    try std.testing.expect(std.mem.indexOf(u8, text, "call void @myl_core_trap(ptr @myl.site.0,") != null);
+    try std.testing.expect(std.mem.indexOf(u8, text, "@myl.site.0 = private constant %myl.site") != null);
     try std.testing.expect(std.mem.indexOf(u8, text, "!prof !0") != null);
 }
 
@@ -117,7 +117,7 @@ test "proven arithmetic on non-negative values is nuw nsw, their comparisons are
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const text = try support.releaseLlvmText(arena.allocator(), searching);
-    const search = functionText(text, "define internal i64 @\"my.search\"");
+    const search = functionText(text, "define internal fastcc i64 @\"my.search\"");
     try std.testing.expect(search.len != 0);
     // `low + high` and `middle + 1`; `low < high` compares unsigned; `// 2` divides unsigned.
     try std.testing.expectEqual(@as(usize, 2), std.mem.count(u8, search, "add nuw nsw i64"));
@@ -136,7 +136,7 @@ test "a verify build asserts each length bound and gives LLVM no unsigned promis
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const text = try support.verifyLlvmText(arena.allocator(), searching);
-    const search = functionText(text, "define internal i64 @\"my.search\"");
+    const search = functionText(text, "define internal fastcc i64 @\"my.search\"");
     try std.testing.expect(search.len != 0);
     try std.testing.expect(std.mem.indexOf(u8, text, "below the list length") != null);
     try std.testing.expect(std.mem.indexOf(u8, text, "at most the list length") != null);

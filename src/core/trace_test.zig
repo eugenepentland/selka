@@ -127,8 +127,8 @@ test "main returning Err prints error: VALUE and the aligned trace, origin first
         const passed = try support.runOwned(arena.allocator(), &passing, resultOptions(mode));
         try std.testing.expectEqual(@as(u8, 7), passed.status);
         try std.testing.expectEqualStrings("", passed.stderr);
-        try std.testing.expect(contains(failed.llvm, "call preserve_mostcc void @myl_core_err_trace_origin_preserve_most(i32 ") and contains(failed.llvm, "#1\n"));
-        try std.testing.expect(contains(failed.llvm, "call preserve_mostcc void @myl_core_err_trace_append_preserve_most(i32 "));
+        try std.testing.expect(contains(failed.llvm, "call preserve_mostcc void @myl_core_err_trace_origin_preserve_most(ptr @myl.site.") and contains(failed.llvm, "#1\n"));
+        try std.testing.expect(contains(failed.llvm, "call preserve_mostcc void @myl_core_err_trace_append_preserve_most(ptr @myl.site."));
         try std.testing.expect(contains(failed.llvm, "attributes #1 = { \"call-inline-cost\"=\"0\" }"));
     }
 }
@@ -186,13 +186,13 @@ test "trace modes: a returned site on its origin's line folds, a conversion name
 
 fn foreignProgram(arena: std.mem.Allocator) !ir.Module {
     var module: ir.Module = .{};
-    try module.functions.append(arena, .{ .name = "myl_core_err_trace", .signature = .{ .params = &.{ .i32, .i32 }, .ret = .void, .linkage = .extern_c } });
+    try module.functions.append(arena, .{ .name = "myl_core_err_trace", .signature = .{ .params = &.{ .bytes, .i32 }, .ret = .void, .linkage = .extern_c } });
     var unrelated = try Hand.init(arena, &module, "unrelated", .{ .params = &.{.i64}, .ret = .i64 });
     _ = try unrelated.emit(.{ .op = .ret, .ty = .void, .a = try unrelated.param(0) });
     const unrelated_id = try unrelated.finish();
     var main = try Hand.init(arena, &module, "main", .{ .params = &.{}, .ret = .i64 });
     _ = try main.emit(.{ .op = .err_trace, .ty = .void, .data = 0, .span = 10 });
-    _ = try main.emit(.{ .op = .call, .ty = .void, .a = @fromBackingInt(0), .data = try main.extra(&.{ try main.int(.i32, 0), try main.int(.i32, 0) }) });
+    _ = try main.emit(.{ .op = .call, .ty = .void, .a = @fromBackingInt(0), .data = try main.extra(&.{ try main.loose(.{ .op = .undef, .ty = .bytes }), try main.int(.i32, 0) }) });
     const value = try main.emit(.{ .op = .call, .ty = .i64, .a = @fromBackingInt(unrelated_id), .data = try main.extra(&.{try main.int(.i64, 7)}) });
     _ = try main.emit(.{ .op = .ret, .ty = .void, .a = value });
     module.entry = try main.finish();
@@ -209,9 +209,9 @@ test "the explicit trace operation preserves registers while an ordinary extern 
         try std.testing.expectEqual(@as(u8, 7), run.status);
         try std.testing.expectEqualStrings("", run.stdout);
         try std.testing.expectEqualStrings("", run.stderr);
-        try std.testing.expect(contains(run.llvm, "declare void @myl_core_err_trace(i32, i32) nounwind\n"));
-        try std.testing.expect(contains(run.llvm, "call void @myl_core_err_trace(i32 0, i32 0)"));
-        try std.testing.expect(contains(run.llvm, "call preserve_mostcc void @myl_core_err_trace_origin_preserve_most(i32 0)"));
-        try std.testing.expect(contains(run.llvm, "call i64 @\"my.unrelated\"(i64 7)"));
+        try std.testing.expect(contains(run.llvm, "declare void @myl_core_err_trace(ptr, i32) nounwind\n"));
+        try std.testing.expect(contains(run.llvm, "call void @myl_core_err_trace(ptr null, i32 0)"));
+        try std.testing.expect(contains(run.llvm, "call preserve_mostcc void @myl_core_err_trace_origin_preserve_most(ptr @myl.site.0)"));
+        try std.testing.expect(contains(run.llvm, "call fastcc i64 @\"my.unrelated\"(i64 7)"));
     }
 }

@@ -149,7 +149,7 @@ int64_t myl_core_test_run(void (*trial)(void)){
 #endif
             core_test_values=tmpfile();if(!core_test_values)_exit(70);
             core_test_capture(".out",1);core_test_capture(".err",2);
-            alarm(60);error_trace.origin=-1;error_trace.count=0;trial();alarm(0);flush_all();
+            alarm(60);error_trace.origin=NULL;error_trace.count=0;trial();alarm(0);flush_all();
             core_io_cleanup();
             const char *check=getenv("MYL_CORE_LEAKCHECK");
             if(check&&strcmp(check,"0")&&live_count()!=baseline){

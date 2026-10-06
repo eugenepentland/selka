@@ -1923,3 +1923,9 @@ The separate `mylang-core` executable (`zig build core`, `docs/design/new-core-i
 
 
 - [NEW-CORE-S3-RUNNER-1] Core property trials preserve the old name-derived seed, generated type shapes, 100-run default, precondition/invariant discard rule and greedy shrink order. Copied trial inputs do not share capability or filesystem state, completed outcomes survive a later fatal trap, and only True or Ok(True) passes. Counterexamples retain the original and minimal inputs, shrink/discard counts and reproduction command.
+
+
+## New core S4 emission
+
+- [NEW-CORE-S4-UNITS-1] Independent source-module, generic, adapter and entry units have deterministic LLVM text with stable program symbols and explicit fastcc calls. Reached strings, layouts, dictionary and value/render descriptors, zeros and metadata use local first-use numbering. Unrelated edits preserve unit text; consumed inline bodies and facts change it. Native linking unions number and math dependencies over every unit.
+- [NEW-CORE-S4-SITES-1] Traps, assertions, effect sites and error traces carry pointers to private immutable site records containing the original source path. Debug compile units and file tables preserve caller paths across separately compiled modules.
