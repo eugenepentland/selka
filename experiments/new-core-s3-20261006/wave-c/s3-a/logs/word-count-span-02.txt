@@ -1,0 +1,10 @@
+build-slot: all 1 gate slot(s) busy; waiting (0s so far)
+build-slot: gate slot 1 after 10s (all 1 gate slot(s) busy)
+build word_count old: status=0
+build word_count new: status=1
+measurement INVALID: build failed/refused: ['/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/zig-out/bin/mylang-core', 'build', '/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/test/core/row_word_count.my', '-o', '/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/word-count-span-02/row_word_count_new', '--release', '--cache-dir', '/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/word-count-span-02/cache/new', '--link', '/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/benchmarks/runtime/ports/native_clock.c', '--emit-llvm', '/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/word-count-span-02/llvm/row_word_count.ll']
+/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/word-count-span-02/cache/new/row_word_count_new-6116196de7be22cb.ll:1430:3: error: multiple definition of local value named 'entry'
+ 1430 |   %entry = phi i64 [ 0, %small_table ], [ %next, %scan_next ]
+      |   ^
+1 error generated.
+

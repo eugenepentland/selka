@@ -1,0 +1,64 @@
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: cold gate — no prior green stamp on this tree; a re-run after a green will skip via the cache and confirm
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 28 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 10258 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 11 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed
+[codex/new-core-s3-applications ac81831bd] benchmarks: admit and split S3 application workloads
+ 55 files changed, 14194 insertions(+)
+ create mode 100644 experiments/new-core-s3-20261006/wave-c/s3-a/REPORT.md
+ create mode 100644 experiments/new-core-s3-20261006/wave-c/s3-a/apps-01.json
+ create mode 100644 experiments/new-core-s3-20261006/wave-c/s3-a/logs/apps-01.txt
+ create mode 100644 experiments/new-core-s3-20261006/wave-c/s3-a/logs/core-install-01.time
+ create mode 100644 experiments/new-core-s3-20261006/wave-c/s3-a/logs/core-install-01.txt
+ create mode 100644 experiments/new-core-s3-20261006/wave-c/s3-a/logs/profile-apps-01.txt
+ create mode 100644 experiments/new-core-s3-20261006/wave-c/s3-a/logs/profile-csv_aggregate-01.txt
+ create mode 100644 experiments/new-core-s3-20261006/wave-c/s3-a/logs/profile-json_transform-01.txt
+ create mode 100644 experiments/new-core-s3-20261006/wave-c/s3-a/logs/profile-packet_decode-01.txt
+ create mode 100644 experiments/new-core-s3-20261006/wave-c/s3-a/logs/qualification-01.txt
+ create mode 100644 experiments/new-core-s3-20261006/wave-c/s3-a/logs/word-count-01.txt
+ create mode 100644 experiments/new-core-s3-20261006/wave-c/s3-a/logs/word-count-profile-01.txt
+ create mode 100644 experiments/new-core-s3-20261006/wave-c/s3-a/measure_all40.py
+ create mode 100644 experiments/new-core-s3-20261006/wave-c/s3-a/profile-csv_aggregate-01.txt
+ create mode 100644 experiments/new-core-s3-20261006/wave-c/s3-a/profile-json_transform-01.txt
+ create mode 100644 experiments/new-core-s3-20261006/wave-c/s3-a/profile-packet_decode-01.txt
+ create mode 100644 experiments/new-core-s3-20261006/wave-c/s3-a/qualification-01/build-csv_aggregate-debug.json
+ create mode 100644 experiments/new-core-s3-20261006/wave-c/s3-a/qualification-01/build-csv_aggregate-old.json
+ create mode 100644 experiments/new-core-s3-20261006/wave-c/s3-a/qualification-01/build-csv_aggregate-release.json
+ create mode 100644 experiments/new-core-s3-20261006/wave-c/s3-a/qualification-01/build-csv_aggregate-verify.json
+ create mode 100644 experiments/new-core-s3-20261006/wave-c/s3-a/qualification-01/build-json_transform-debug.json
+ create mode 100644 experiments/new-core-s3-20261006/wave-c/s3-a/qualification-01/build-json_transform-old.json
+ create mode 100644 experiments/new-core-s3-20261006/wave-c/s3-a/qualification-01/build-json_transform-release.json
+ create mode 100644 experiments/new-core-s3-20261006/wave-c/s3-a/qualification-01/build-json_transform-verify.json
+ create mode 100644 experiments/new-core-s3-20261006/wave-c/s3-a/qualification-01/build-lox_eval-debug.json
+ create mode 100644 experiments/new-core-s3-20261006/wave-c/s3-a/qualification-01/build-lox_eval-old.json
+ create mode 100644 experiments/new-core-s3-20261006/wave-c/s3-a/qualification-01/build-lox_eval-release.json
+ create mode 100644 experiments/new-core-s3-20261006/wave-c/s3-a/qualification-01/build-lox_eval-verify.json
+ create mode 100644 experiments/new-core-s3-20261006/wave-c/s3-a/qualification-01/build-original-collections.json
+ create mode 100644 experiments/new-core-s3-20261006/wave-c/s3-a/qualification-01/build-original-compute.json
+ create mode 100644 experiments/new-core-s3-20261006/wave-c/s3-a/qualification-01/build-original-text-new-debug.json
+ create mode 100644 experiments/new-core-s3-20261006/wave-c/s3-a/qualification-01/build-original-text-new-release.json
+ create mode 100644 experiments/new-core-s3-20261006/wave-c/s3-a/qualification-01/build-original-text-new-verify.json
+ create mode 100644 experiments/new-core-s3-20261006/wave-c/s3-a/qualification-01/build-original-text.json
+ create mode 100644 experiments/new-core-s3-20261006/wave-c/s3-a/qualification-01/build-packet_decode-debug.json
+ create mode 100644 experiments/new-core-s3-20261006/wave-c/s3-a/qualification-01/build-packet_decode-old.json
+ create mode 100644 experiments/new-core-s3-20261006/wave-c/s3-a/qualification-01/build-packet_decode-release.json
+ create mode 100644 experiments/new-core-s3-20261006/wave-c/s3-a/qualification-01/build-packet_decode-verify.json
+ create mode 100644 experiments/new-core-s3-20261006/wave-c/s3-a/qualification-01/build-word_count-debug.json
+ create mode 100644 experiments/new-core-s3-20261006/wave-c/s3-a/qualification-01/build-word_count-old.json
+ create mode 100644 experiments/new-core-s3-20261006/wave-c/s3-a/qualification-01/build-word_count-release.json
+ create mode 100644 experiments/new-core-s3-20261006/wave-c/s3-a/qualification-01/build-word_count-verify.json
+ create mode 100644 experiments/new-core-s3-20261006/wave-c/s3-a/qualification-01/summary.json
+ create mode 100644 experiments/new-core-s3-20261006/wave-c/s3-a/qualify_apps.py
+ create mode 100644 experiments/new-core-s3-20261006/wave-c/s3-a/split_apps.py
+ create mode 100644 experiments/new-core-s3-20261006/wave-c/s3-a/word-count-01.json
+ create mode 100644 experiments/new-core-s3-20261006/wave-c/s3-a/word-count-annotate-01.txt
+ create mode 100644 experiments/new-core-s3-20261006/wave-c/s3-a/word-count-hotspots-01.txt
+ create mode 100644 experiments/new-core-s3-20261006/wave-c/s3-a/word-count-profile-01.txt
+ create mode 100644 experiments/new-core-s3-20261006/wave-c/s3-a/word-count-profile-02.txt
+ create mode 100644 test/core/row_csv_aggregate.my
+ create mode 100644 test/core/row_json_transform.my
+ create mode 100644 test/core/row_lox_eval.my
+ create mode 100644 test/core/row_packet_decode.my
+ create mode 100644 test/core/row_word_count.my

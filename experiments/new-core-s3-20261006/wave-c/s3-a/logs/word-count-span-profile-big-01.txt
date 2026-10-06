@@ -1,0 +1,3 @@
+204223118 1245127108
+[ perf record: Woken up 1 times to write data ]
+[ perf record: Captured and wrote 0.244 MB .mylang-cache/s3-a/word-count-span-profile-big-01.data (1247 samples) ]

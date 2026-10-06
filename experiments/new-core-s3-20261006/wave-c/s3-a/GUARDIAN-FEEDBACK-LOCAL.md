@@ -1,0 +1,7 @@
+# Coordinator-owned Guardian feedback candidate
+
+- good: The S3-A foundation commit `ac81831bd9e6100bf8d31cc07ca97bcff9f82d6c` ran the normal whole-tree commit hook and passed all 88 checks. Report-only file-size/function-length/line-length/ABI findings did not incorrectly block the benchmark fixtures and retained raw JSON/profile evidence. No bypass or `guardian-check` compound old gate was used.
+- wish: Successful `zig build test-core -Dtest-filter='private split' --summary all` logs (`logs/split-tests-03.txt`, `06.txt`, `08.txt`) include a `failed command:` line directly after Guardian prints `PASS` and `RESULT {passed:3,failed:0,skipped:0}`; the outer build still correctly exits zero and reports success. A clearly neutral label for the executed test command would make captured gate evidence easier to scan.
+- good: The S3-A compiler commit's whole-tree Guardian gate caught duplicate primary spec tags in supplemental tests, a missing print alias, long emission lines, a repeated temporary-name literal and complex conditions. Those checks accurately identified local issues; using `spec-case`, the existing print-alias convention and mechanical expression formatting makes all 88 checks pass. The rejected receipts are retained as `logs/word-commit-02.txt` and `logs/word-guardian-03.txt`; the corrected whole-tree receipt is `logs/word-guardian-04.txt`.
+
+This file is local evidence only. The coordinator serializes the required final append and commit in the shared Guardian FEEDBACK.md.

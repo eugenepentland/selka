@@ -1,0 +1,15 @@
+{
+  "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/oracle/mylang",
+    "build",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/experiments/new-core-s3-20261006/wave-c/s3-a/fuzz-split-50-01/0031/split_0031.my",
+    "-o",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/fuzz-split-50-01/old",
+    "--release",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/fuzz-split-50-01/old-cache"
+  ],
+  "status": 0,
+  "stdout": "",
+  "stderr": ""
+}

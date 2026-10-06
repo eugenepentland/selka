@@ -1,0 +1,16 @@
+build word_count old: status=0
+build word_count new: status=0
+
+### word_count (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 291.682 | 377.244 | same |
+| new core release | 53.051 | 66.381 | same |
+| Rust | 59.213 | 66.211 | same |
+| Zig ReleaseSafe | 47.473 | 51.000 | same |
+| new / old | 0.182 | 0.176 | same |
+| new / Zig | 1.118 | 1.302 | same |
+| new / Rust | 0.896 | 1.003 | same |
+
+valid rows: 1; speed gate misses: ['word_count/4096', 'word_count/64']
+Both new/old and new/Zig must be at most 1.10. binary_search misses require the plan's identical-code/layout-noise review; all other misses require repair.

@@ -423,6 +423,16 @@ myl_block *myl_core_str_slice_step(myl_block *text, int64_t start, int64_t end, 
 myl_block *myl_core_bytes_slice_step(myl_block *text, int64_t start, int64_t end, int64_t step) { return core_text_slice_step(text, start, end, step, false); }
 
 static bool core_text_space(unsigned char ch) { return ch == ' ' || (ch >= 9 && ch <= 13); }
+/* Private split-loop cursors use the same six whitespace octets as the list form.
+   Offsets remain within the immutable source; non-ASCII UTF-8 is never a separator. */
+int64_t myl_core_split_ws_start(myl_block *text, int64_t at) {
+    while (at < text->len && core_text_space(block_data(text)[at])) ++at;
+    return at;
+}
+int64_t myl_core_split_ws_end(myl_block *text, int64_t at) {
+    while (at < text->len && !core_text_space(block_data(text)[at])) ++at;
+    return at;
+}
 myl_block *myl_core_str_split_whitespace(myl_block *text) {
     myl_block *list = myl_core_list_new_slow(0, 8);
     list->reserved = (int64_t)(intptr_t)core_text_list_layout;

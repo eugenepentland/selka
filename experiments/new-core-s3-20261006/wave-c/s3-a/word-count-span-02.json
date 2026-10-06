@@ -1,0 +1,7 @@
+{
+  "valid": false,
+  "cpu": 10,
+  "rounds": 7,
+  "rows": {},
+  "error": "build failed/refused: ['/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/zig-out/bin/mylang-core', 'build', '/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/test/core/row_word_count.my', '-o', '/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/word-count-span-02/row_word_count_new', '--release', '--cache-dir', '/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/word-count-span-02/cache/new', '--link', '/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/benchmarks/runtime/ports/native_clock.c', '--emit-llvm', '/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/word-count-span-02/llvm/row_word_count.ll']\n/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/word-count-span-02/cache/new/row_word_count_new-6116196de7be22cb.ll:1430:3: error: multiple definition of local value named 'entry'\n 1430 |   %entry = phi i64 [ 0, %small_table ], [ %next, %scan_next ]\n      |   ^\n1 error generated.\n"
+}

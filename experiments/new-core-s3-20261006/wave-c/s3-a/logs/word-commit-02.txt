@@ -1,0 +1,28 @@
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 28 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 11 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 5/88 failed (spec, debug-print-ban, bool-ops-per-condition, line-length, repeated-string-literal)
+guardian: failures grouped by check (5):
+  spec (8 findings)
+    - duplicate tag: id:new-core-dict-1
+    - in: src/core/dict_scalar_store_test.zig
+    - in: src/core/dict_test.zig
+    - +5 more — use --verbose for full detail
+  debug-print-ban (1 finding)
+    - src/core/dict_scalar_store_test.zig:17: std.debug.print reference outside allowed paths
+      fix: route through reporter.print/detail, or alias once at file scope and use the alias.
+  bool-ops-per-condition (4 findings)
+    - src/core/fuse_text_split.zig:85: condition has 5 boolean ops (cap 3)
+      fix: split into nested/sequential ifs, or extract into a named bool.
+    - src/core/fuse_text_split.zig:94: condition has 4 boolean ops (cap 3)
+    - src/core/fuse_text_split.zig:107: condition has 4 boolean ops (cap 3)
+    - +1 more — use --verbose for full detail
+  line-length (2 findings)
+    - src/core/fuse_text_split.zig:153: line is 242 chars (hard limit 240)
+      fix: split the expression when doing so improves readability
+    - src/core/emit_dict.zig:93: line is 259 chars (hard limit 240)
+  repeated-string-literal (1 finding)
+    - src/core/emit_dict.zig: string literal %dictstore appears 3 times (lines 90, 91, 92) — extract a const
+      fix: extract the literal/const into a shared file-scope const and import it.
+  caution: zig-out binaries predate this failed run (installs are gated on green) — rebuild green before running them

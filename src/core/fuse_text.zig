@@ -2,6 +2,11 @@
 const std = @import("std");
 const ir = @import("ir.zig");
 
+/// Borrow dictionary keys in private whitespace-split loops before ownership.
+pub fn whitespace(arena: std.mem.Allocator, module: *ir.Module) std.mem.Allocator.Error!void {
+    try @import("fuse_text_split.zig").run(arena, module);
+}
+
 /// Convert scalar-index loops over an unchanged receiver into byte-offset loops.
 pub fn cursors(arena: std.mem.Allocator, module: *ir.Module, f: *ir.Function) std.mem.Allocator.Error!u32 {
     var changed: u32 = 0;

@@ -1,0 +1,81 @@
+build word_count old: status=0
+build word_count new: status=0
+build dict_lookup old: status=0
+build dict_lookup new: status=0
+build dict_lookup_str old: status=0
+build dict_lookup_str new: status=0
+build dict_update old: status=0
+build dict_update new: status=0
+build dict_update_str old: status=0
+build dict_update_str new: status=0
+build set_dedup old: status=0
+build set_dedup new: status=0
+
+### word_count (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 291.066 | 377.834 | same |
+| new core release | 39.879 | 53.263 | same |
+| Rust | 59.246 | 66.166 | same |
+| Zig ReleaseSafe | 47.208 | 50.893 | same |
+| new / old | 0.137 | 0.141 | same |
+| new / Zig | 0.845 | 1.047 | same |
+| new / Rust | 0.673 | 0.805 | same |
+
+### dict_lookup (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 30.941 | 16.939 | same |
+| new core release | 15.371 | 15.258 | same |
+| Rust | 42.207 | 41.651 | same |
+| Zig ReleaseSafe | 52.337 | 31.121 | same |
+| new / old | 0.497 | 0.901 | same |
+| new / Zig | 0.294 | 0.490 | same |
+| new / Rust | 0.364 | 0.366 | same |
+
+### dict_lookup_str (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 62.011 | 28.675 | same |
+| new core release | 27.218 | 19.816 | same |
+| Rust | 64.713 | 57.309 | same |
+| Zig ReleaseSafe | 62.812 | 31.903 | same |
+| new / old | 0.439 | 0.691 | same |
+| new / Zig | 0.433 | 0.621 | same |
+| new / Rust | 0.421 | 0.346 | same |
+
+### dict_update (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 827.239 | 731.503 | same |
+| new core release | 191.838 | 182.705 | same |
+| Rust | 415.239 | 398.886 | same |
+| Zig ReleaseSafe | 549.963 | 309.679 | same |
+| new / old | 0.232 | 0.250 | same |
+| new / Zig | 0.349 | 0.590 | same |
+| new / Rust | 0.462 | 0.458 | same |
+
+### dict_update_str (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 1025.832 | 882.514 | same |
+| new core release | 276.833 | 250.257 | same |
+| Rust | 920.686 | 861.430 | same |
+| Zig ReleaseSafe | 731.204 | 404.517 | same |
+| new / old | 0.270 | 0.284 | same |
+| new / Zig | 0.379 | 0.619 | same |
+| new / Rust | 0.301 | 0.291 | same |
+
+### set_dedup (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 175.502 | 168.279 | same |
+| new core release | 24.643 | 28.799 | same |
+| Rust | 62.455 | 62.519 | same |
+| Zig ReleaseSafe | 81.055 | 37.572 | same |
+| new / old | 0.140 | 0.171 | same |
+| new / Zig | 0.304 | 0.767 | same |
+| new / Rust | 0.395 | 0.461 | same |
+
+valid rows: 6; speed gate misses: []
+Both new/old and new/Zig must be at most 1.10. binary_search misses require the plan's identical-code/layout-noise review; all other misses require repair.

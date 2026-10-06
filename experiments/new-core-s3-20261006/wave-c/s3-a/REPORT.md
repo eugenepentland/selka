@@ -87,3 +87,140 @@ adds no compiler or gate-list source, so does not rerun that unchanged proof.
 The next compiler source change receives fresh required qualification. Frozen
 `ir.zig`, record phi ownership, first-64 aggregate parameter masks and persisted
 formats remain unchanged. No main merge or push occurred.
+
+## Retained word fusion prototypes
+
+Release-only private whitespace-split loops now use byte cursors and source-rooted
+SSA views when every word use is a dictionary probe or insertion key. The
+compiler's split declaration and new cursor helpers use authorized `runtime_c`
+linkage, exact signatures, zero ownership/view argument masks. A source extern
+lookalike cannot activate fusion. All loop-index/list/word uses are validated
+before changing the IR; observable indices, escaped lists/words, ordinary calls
+and word phis retain the materialized loop. Insertions explicitly materialize an
+owned key and repeat `dict_find` against the same current dictionary/key before
+`dict_insert`. No `own.zig` or frozen IR edit is needed.
+
+A generated borrowed-key descriptor probe inlines the existing cached-hash
+small-table scan only when the dictionary has no index or deletion bitmap.
+Hashing calls the existing Core span hash and mixes its bits identically;
+comparison checks byte length then `memcmp`. Indexed/deleted dictionaries retain
+the existing runtime span probe and negative insertion-probe semantics. This
+helper is emitted only for dictionary types with actual SSA-view probes.
+
+| Prototype | New cycles 4096 / 64 | New/old | New/Zig | Status |
+|---|---:|---:|---:|---|
+| Cursor and owned-on-insert only | 64.785 / 76.779 | .222 / .203 | 1.368 / 1.512 | both Zig sizes miss |
+| Cursor plus inline clean-small span probe | 53.051 / 66.381 | .182 / .176 | 1.118 / 1.302 | both Zig sizes miss |
+
+Every timing uses seven interleaved rounds and three startup samples, strict
+four-program output/status/checksum/cycle checks, CPU10 and its shared lock.
+`word-count-prototype-01.json` and `word-count-span-03.json` retain raw samples.
+The intermediate `word-count-span-02.json` is deliberately invalid: the LLVM
+prototype used `%entry` both as a block label and value name. The build rejected
+it before any measurement; it was corrected to `%number` and retained unchanged.
+
+Own-source exclusive installation times were 2.86 s (cursor), 1.73 s (span), and
+0.88 s (cached installation after the exact-signature authority hook); the latter
+follows an actual source compilation performed by the preceding Core test build.
+Each build and test has a unique log under `logs/`.
+
+The semantic gate `split-tests-08.txt` passes 3/3 in 3.05 s test wall. Its native
+fixture covers all six ASCII whitespace octets, UTF-8 and non-ASCII whitespace,
+empty input, managed dictionary returns, an owned temporary input, source
+rebinding, break/continue, captured dictionaries, growth beyond eight keys,
+deletion fallback, and actual 32-bit hash collisions. The pair
+`collision002553`/`collision005a0e` hashes to `ae700d18`; their counts stay distinct.
+Five IR near misses and an identical-signature extern-authority near miss are
+explicitly checked. `split-qualification-01/summary.json` additionally verifies
+identical pinned output, zero exits and empty stderr against the corrected old
+oracle and new debug/release/verify, with leakcheck in all new modes.
+
+Failures are retained: the initial list-alias rewrite replaced a forwarding copy
+among header phis with an `undef`, violating the phi prefix. The correction keeps
+a copy of an out-of-block undef list constant, which stays dead and unowned.
+`split-keys-failure-02.ir` preserves the rejected IR. Earlier syntax/prototype
+logs remain evidence and are not counted as successful gates.
+
+The post-span profiles retain 1247/1762 samples at sizes 4096/64, zero lost.
+Remaining hotspots: scalar dictionary set 21.32%/19.38%, span hash 17.19%/13.64%,
+end cursor 9.74%/7.55%, start cursor 6.02%/5.85%, main 28.21%/29.70%. The next
+proposed owning-package repair is a typed store for scalar dictionary values;
+managed-value release and copy behavior stays in the existing runtime path.
+No next-step performance qualification is claimed here.
+
+The generated split-key fuzz probe `fuzz-split-probe-02` passes three programs,
+45 debug/release/verify comparisons and strict leak/status/stderr checks. The
+first generated probe was rejected by the old checker because JSON's `\\f`
+escape is outside mylang; the generator now emits the equivalent admitted
+`\\x0c` octet, and retains that initial rejection without counting it as a
+compiler mismatch. The required final 50-case run will use the final source.
+
+## Qualified word package, before sibling application merges
+
+The profile-driven scalar store is restricted to integer, bool, f64 and unit
+dictionary values. Ownership still supplies the unique dictionary after COW;
+the store uses the existing descriptor stride and value offset and returns the
+same dictionary pointer. Managed values keep their runtime release/copy path.
+`d_scalar_stores.my` verifies snapshots, indexed and tombstoned dictionaries,
+bool/unit, narrow signed/unsigned values, NaN and signed zero in debug, release
+and verify with leakcheck. Four focused Core tests pass in
+`logs/split-store-tests-13.txt`. Earlier failures are retained.
+
+`word-dict-store-04.json` qualifies the final word source and every affected
+dictionary/set micro row at both sizes. Cycles below are per original row unit;
+each cell is size 4096 / size 64. Every ratio is at most 1.10.
+
+| Row | Old | New | Rust | Zig ReleaseSafe | New/old | New/Zig |
+|---|---:|---:|---:|---:|---:|---:|
+| word_count | 291.066 / 377.834 | 39.879 / 53.263 | 59.246 / 66.166 | 47.208 / 50.893 | .137 / .141 | .845 / 1.047 |
+| dict_lookup | 30.941 / 16.939 | 15.371 / 15.258 | 42.207 / 41.651 | 52.337 / 31.121 | .497 / .901 | .294 / .490 |
+| dict_lookup_str | 62.011 / 28.675 | 27.218 / 19.816 | 64.713 / 57.309 | 62.812 / 31.903 | .439 / .691 | .433 / .621 |
+| dict_update | 827.239 / 731.503 | 191.838 / 182.705 | 415.239 / 398.886 | 549.963 / 309.679 | .232 / .250 | .349 / .590 |
+| dict_update_str | 1025.832 / 882.514 | 276.833 / 250.257 | 920.686 / 861.430 | 731.204 / 404.517 | .270 / .284 | .379 / .619 |
+| set_dedup | 175.502 / 168.279 | 24.643 / 28.799 | 62.455 / 62.519 | 81.055 / 37.572 | .140 / .171 | .304 / .767 |
+
+The fresh 50-source split-key sweep, `fuzz-split-50-01/summary.json`, completes
+750 exact old/new comparisons across debug/release/verify, five argument cases,
+zero mismatches, zero nonempty stderr and zero leak reports in 149.99 s. Native
+`split-qualification-02` also matches the corrected old oracle on seven pinned
+output lines. It adds original-source lifetime coverage while heap list and
+dictionary entries are overwritten inside the cursor loop. Each resulting
+dictionary retains all original keys correctly.
+
+Own-source Core32 passes 258/258 in 139.97 s, maximum shard 68.80 s. Full strict
+conformance matches 1518/1518 in both debug and release, zero mismatches and zero
+unsupported, with leakcheck and verify, in 184.60 s. See unique `word-test-core32`
+and `word-full-conformance` logs. The final installed build took 0.64 s after the
+focused Core test compiled the exact source; earlier fresh source installations
+were 2.86 s and 1.73 s. No measured Core build or Core test exceeded its limit.
+
+`word35-diffs-01` retains fresh full raw LLVM diffs and semantic-metadata/SSA
+definition diffs for every original row against the accepted C baseline. Thirty-
+one rows have identical normalized definitions. The four affected dictionary
+functions contain exactly six approved scalar-set replacements, counts 1/1/2/2;
+all other call counts are unchanged. `exact-store-review-02.json` establishes the
+stronger instruction-by-instruction correspondence after expanding only those
+six old i64 set calls into the exact stride-16, block-offset-40 typed store and
+same-dictionary forwarding. It removes only the six proven-private spill slots,
+then checks semantic metadata and bijective SSA/block names. Every remaining
+instruction, operand, trap, branch and phi edge matches. Raw diffs remain intact.
+The first review receipt is a retained tool failure from stale match offsets;
+the corrected receipt qualifies, with no compiler change between them.
+
+Frozen IR, ownership implementation, persisted formats, aggregate masks and all
+reference workload algorithms remain unchanged. This is the word package proof;
+the final all40 A gate awaits the qualified packet and character packages,
+combined-source Core/conformance, and the final combined old gate required by
+the sibling SPEC update. No full-A performance claim is made here.
+
+The normal commit's whole-tree Guardian check found local test-tag and formatting
+issues; `word-commit-02.txt` retains that rejection and `word-guardian-03.txt`
+retains its follow-up. Supplemental tests now use `spec-case`, diagnostics use
+the existing file-scope print alias, and boolean/line/literal formatting follows
+the gate rules. These mechanical corrections leave the transformation and LLVM
+store recipe unchanged. `word-guardian-04.txt` passes all 88 checks. The exact
+corrected source is freshly installed in 1.78 s, then passes Core32 258/258 in
+98.56 s, maximum shard 45.20 s, and full conformance 1518/1518 debug/release with
+zero mismatch/unsupported and verify/leakcheck. The uniquely named
+`word-style-test-core32-02` and `word-style-full-conformance-02` logs retain the
+refresh. Final combined all40 timing will use a fresh compiler source build.

@@ -74,7 +74,7 @@ pub fn operation(comptime Context: type, context: Context, node: Operation, ty: 
             return context.runtimeCall(if (node.kind == .join) "myl_core_str_join" else "myl_core_str_split", &.{ receiver_type, context.typeOfRef(argument) }, ty, &.{ receiver, argument }, span);
         },
         .parse_int, .parse_float, .parse_int_range, .parse_float_range, .number_format, .hex, .from_hex, .float_round => return number(Context, context, node, ty, span),
-        .split_whitespace => return context.runtimeCall("myl_core_str_split_whitespace", &.{receiver_type}, ty, &.{receiver}, span),
+        .split_whitespace => return context.effectCall("myl_core_str_split_whitespace", &.{receiver_type}, ty, &.{receiver}, span),
         .to_list => return context.runtimeCall("myl_core_bytes_to_list", &.{receiver_type}, ty, &.{receiver}, span),
         .copy => return receiver,
         else => return context.mb.refuse(@tagName(node.kind), span),

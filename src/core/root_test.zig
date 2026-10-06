@@ -30,6 +30,7 @@ comptime {
     _ = @import("text_test.zig");
     _ = @import("function_build_test.zig");
     _ = @import("dict_test.zig");
+    _ = @import("dict_scalar_store_test.zig");
     _ = @import("number_test.zig");
     _ = @import("s3_ir_test.zig");
     _ = @import("s3_numeric_test.zig");

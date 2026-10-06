@@ -24,7 +24,7 @@ pub fn instruction(comptime Context: type, c: Context, out: *@import("std").Arra
                 const data = try c.fresh("%dictspan");
                 const length = try c.fresh("%dictspanlen");
                 try out.print(arena, "  {s} = extractvalue {{ ptr, i64 }} {s}, 0\n  {s} = extractvalue {{ ptr, i64 }} {s}, 1\n" ++
-                    "  {s} = call i64 @myl_core_dict_find_span(ptr {s}, ptr {s}, i64 {s})\n", .{ data, try c.value(inst.b), length, try c.value(inst.b), name, try c.value(inst.a), data, length });
+                    "  {s} = call i64 {s}.find_span(ptr {s}, ptr {s}, i64 {s})\n", .{ data, try c.value(inst.b), length, try c.value(inst.b), name, try c.dictDescriptor(dict_type), try c.value(inst.a), data, length });
                 return;
             }
             const key = try slot(Context, c, out, shape.key, inst.b, module.size(shape.key));
@@ -60,6 +60,10 @@ pub fn instruction(comptime Context: type, c: Context, out: *@import("std").Arra
             try c.loadValue(out, inst.ty, pointer, name);
         },
         .dict_set_value => {
+            if (shape.value.integer() != null or shape.value == .bool or shape.value == .f64 or shape.value == .void) {
+                try scalarSet(c, out, name, inst, .{ .stride = stride, .offset = value_offset, .value = shape.value });
+                return;
+            }
             const value = try slot(Context, c, out, shape.value, c.function.operands(inst.data)[0], stride - value_offset);
             try out.print(arena, "  {s} = call ptr @myl_core_dict_set(ptr {s}, i64 {s}, ptr {s})\n", .{ name, try c.value(inst.a), try c.value(inst.b), value });
         },
@@ -77,6 +81,24 @@ pub fn instruction(comptime Context: type, c: Context, out: *@import("std").Arra
     }
 }
 
+const ScalarStore = struct { stride: u32, offset: u32, value: ir.Type };
+
+fn scalarSet(c: anytype, out: *@import("std").ArrayList(u8), name: []const u8, inst: ir.Inst, layout: ScalarStore) Error!void {
+    // Ownership already supplied the unique dictionary, including COW and verify checks.
+    // A scalar value has no reference to release; padding has no observable value.
+    if (layout.value != .void) {
+        const prefix = "%dictstore";
+        const offset = try c.fresh(prefix);
+        const total = try c.fresh(prefix);
+        const pointer = try c.fresh(prefix);
+        try out.print(c.a(), "  {s} = mul i64 {s}, {d}\n  {s} = add i64 {s}, {d}\n  {s} = getelementptr inbounds i8, ptr {s}, i64 {s}\n", .{
+            offset, try c.value(inst.b), layout.stride, total, offset, 32 + layout.offset, pointer, try c.value(inst.a), total,
+        });
+        try c.storeOperand(out, layout.value, c.function.operands(inst.data)[0], pointer);
+    }
+    try out.print(c.a(), "  {s} = getelementptr inbounds i8, ptr {s}, i64 0\n", .{ name, try c.value(inst.a) });
+}
+
 fn slot(comptime Context: type, c: Context, out: *@import("std").ArrayList(u8), ty: ir.Type, value: ir.Ref, size: u32) Error![]const u8 {
     if (ty == .void) return "null";
     const pointer = try c.stackSlot(@max(1, size));
@@ -92,6 +114,7 @@ pub fn probeDefinition(comptime Context: type, c: Context, out: *@import("std").
     const shape = m.compound(dict_type).dict;
     const value_offset = @import("std").mem.alignForward(u32, m.size(shape.key), m.alignment(shape.value));
     const stride = @max(1, @import("std").mem.alignForward(u32, value_offset + m.size(shape.value), @max(m.alignment(shape.key), m.alignment(shape.value))));
+    if (shape.key == .str and @import("emit_dict_span.zig").used(m, dict_type)) try @import("emit_dict_span.zig").definition(c, out, dict_type, symbol);
     if (shape.key.integer() == null and shape.key != .bool and shape.key != .str and shape.key != .bytes) {
         try out.print(a, "define internal i64 {s}.find(ptr %dict, ptr %key, i64 %hash) alwaysinline nounwind {{\nentry:\n  %result = call i64 @myl_core_dict_find(ptr %dict, ptr %key, i64 %hash)\n  ret i64 %result\n}}\n", .{symbol});
         return;

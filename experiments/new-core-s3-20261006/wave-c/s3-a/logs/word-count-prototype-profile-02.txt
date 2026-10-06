@@ -1,0 +1,3 @@
+867040650 1107911433
+[ perf record: Woken up 1 times to write data ]
+[ perf record: Captured and wrote 0.213 MB .mylang-cache/s3-a/word-count-prototype-profile-02.data (1111 samples) ]

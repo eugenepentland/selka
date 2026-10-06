@@ -1,0 +1,33 @@
+build-slot: all 1 gate slot(s) busy; waiting (0s so far)
+build-slot: gate slot 1 after 5s (all 1 gate slot(s) busy)
+test-core
++- run test 1 pass, 1 fail (2 total)
+guardian/test: test wall 0.27s; slowest over 50ms:
+guardian/test:   0.26s  text_test.test.private split dictionary keys preserve whitespace, UTF8, source snapshots, insertion ownership and captured dictionaries
+guardian/test: FAIL — 1 failed of 2
+guardian/test: RESULT {"passed":1,"failed":1,"skipped":0}
+error: 'text_test.test.private split dictionary keys preserve whitespace, UTF8, source snapshots, insertion ownership and captured dictionaries' failed:
+       guardian/test: 2 test(s) selected
+       text build failed: fast.my:26:9: error[E_SYNTAX]: a del statement is not part of the language
+             del deleted["b"]
+                 ^
+         alternative: remove with `_ = xs.pop(index)` for a list or `_ = d.pop(key)` for a dictionary
+       
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:614:14: 0x1384079 in expect (std.zig)
+           if (!ok) return error.TestUnexpectedResult;
+                    ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/src/core/text_test.zig:88:5: 0x1f65054 in fastPathsOutput (root_test.zig)
+           try std.testing.expect(built.term == .exited and built.term.exited == 0);
+           ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/src/core/text_test.zig:213:54: 0x1f65e24 in test.private split dictionary keys preserve whitespace, UTF8, source snapshots, insertion ownership and captured dictionaries (root_test.zig)
+               try std.testing.expectEqualStrings(expected, try fastPathsOutput(arena, root, mode));
+                                                            ^
+failed command: ./.zig-cache/o/209ece618cd1c222e58c1ae9cce699c6/test --cache-dir=./.zig-cache --seed=0x58cd39c1 --listen=-
+
+Build Summary: 3/5 steps succeeded (1 failed); 1/2 tests passed (1 failed)
+test-core transitive failure
++- run test 1 pass, 1 fail (2 total)
+   +- compile test debug native success 992ms MaxRSS:302M
+      +- options success
+         +- compile exe mylang-core debug native success 1s MaxRSS:344M
+
