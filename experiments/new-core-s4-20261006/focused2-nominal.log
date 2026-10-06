@@ -1,0 +1,33 @@
+test-units
++- run test w
+guardian/test: 97 test(s) selected by filter: "nominal" — 85 match by name, 12 unnamed test block(s) run regardless
+guardian/test: SLOW  7.40s  nominal_providers_test.test.nominal providers unwind traps at every instruction including failed completion ownership transfer
+guardian/test: test wall 15.91s; slowest over 50ms:
+guardian/test:   7.40s  nominal_providers_test.test.nominal providers unwind traps at every instruction including failed completion ownership transfer
+guardian/test:   2.83s  nominal_bodies_test.test.nominal bodies release shape catalogs and VM storage after every allocation failure
+guardian/test:   1.72s  nominal_instances_test.test.nominal catalog interns each list type once however often the checker asks for it
+guardian/test:   0.31s  nominal_type_syntax_test.test.public nominal templates survive cached syntax and project relocation with requirements intact
+guardian/test:   0.30s  semantic_cache_test.test.const-length specialization keys keep identity and nominal generics miss conservatively
+guardian/test:   0.28s  semantic_cache_test.test.constant-length and nominal specializations stay on the fresh path
+guardian/test:   0.26s  nominal_instances_test.test.nominal catalog reuses nested generic instances whose arguments complete later
+guardian/test:   0.19s  nominal_layouts_test.test.a large ordinary project is not refused for its total layout work
+guardian/test:   0.17s  nominal_layouts_test.test.nominal layout expansion bounds distinct array identities
+guardian/test:   0.13s  nominal_providers_test.test.nominal providers unwind every compiler allocation failure
+guardian/test: PASS — 97 passed
+guardian/test: RESULT {"passed":97,"failed":0,"skipped":0}
+failed command: sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_QBE=/home/epentland/ai/canopy/mylang-worktrees/claude-new-core-s4-design/zig-out/focus/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./.zig-cache/o/620b8bb5645417240137ba32abb37820/test --guardian-filter=nominal --cache-dir=./.zig-cache --seed=0x76fdce2f --listen=-
+
+Build Summary: 10/10 steps succeeded; 97/97 tests passed
+test-units success
++- run test 97 pass (97 total) 15s MaxRSS:583M
+   +- compile test debug native success 2s MaxRSS:519M
+   |  +- run exe qbe-build-assets (qbe_build_assets) cached
+   |  |  +- compile exe qbe-build-assets debug native cached 5ms MaxRSS:37M
+   |  +- options cached
+   |     +- compile exe qbe fast native cached 10ms MaxRSS:37M
+   +- install generated to qbe cached
+   |  +- compile exe qbe fast native (reused)
+   +- install generated to mylang cached
+      +- compile exe mylang debug native cached 6ms MaxRSS:38M
+         +- run exe qbe-build-assets (qbe_build_assets) (+1 more reused dependencies)
+

@@ -1,0 +1,102 @@
+build-slot: all 1 gate slot(s) busy; waiting (0s so far)
+build-slot: all 1 gate slot(s) busy; waiting (60s so far)
+build-slot: all 1 gate slot(s) busy; waiting (120s so far)
+build-slot: all 1 gate slot(s) busy; waiting (181s so far)
+build-slot: all 1 gate slot(s) busy; waiting (241s so far)
+build-slot: all 1 gate slot(s) busy; waiting (301s so far)
+build-slot: all 1 gate slot(s) busy; waiting (361s so far)
+build-slot: all 1 gate slot(s) busy; waiting (421s so far)
+build-slot: all 1 gate slot(s) busy; waiting (481s so far)
+build-slot: all 1 gate slot(s) busy; waiting (541s so far)
+build-slot: all 1 gate slot(s) busy; waiting (601s so far)
+build-slot: all 1 gate slot(s) busy; waiting (661s so far)
+build-slot: all 1 gate slot(s) busy; waiting (722s so far)
+build-slot: all 1 gate slot(s) busy; waiting (782s so far)
+build-slot: all 1 gate slot(s) busy; waiting (842s so far)
+build-slot: all 1 gate slot(s) busy; waiting (902s so far)
+build-slot: all 1 gate slot(s) busy; waiting (962s so far)
+build-slot: all 1 gate slot(s) busy; waiting (1022s so far)
+build-slot: all 1 gate slot(s) busy; waiting (1082s so far)
+build-slot: all 1 gate slot(s) busy; waiting (1142s so far)
+build-slot: all 1 gate slot(s) busy; waiting (1203s so far)
+build-slot: all 1 gate slot(s) busy; waiting (1263s so far)
+build-slot: all 1 gate slot(s) busy; waiting (1323s so far)
+build-slot: all 1 gate slot(s) busy; waiting (1383s so far)
+build-slot: all 1 gate slot(s) busy; waiting (1443s so far)
+build-slot: all 1 gate slot(s) busy; waiting (1503s so far)
+build-slot: all 1 gate slot(s) busy; waiting (1563s so far)
+build-slot: all 1 gate slot(s) busy; waiting (1623s so far)
+build-slot: all 1 gate slot(s) busy; waiting (1683s so far)
+build-slot: all 1 gate slot(s) busy; waiting (1744s so far)
+build-slot: all 1 gate slot(s) busy; waiting (1804s so far)
+build-slot: gate slot 1 after 1809s (all 1 gate slot(s) busy)
+guardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source 1b6c13222675)
+guardian: diff-scoped vs 1fd1d566793dcae92449d937aca595c55ee318c8: 213/835 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 16 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 4311 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 1 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed — diff-scoped vs 1fd1d566793dcae92449d937aca595c55ee318c8, 213 file(s) in scope
+guardian: diff-scoped vs 1fd1d566793dcae92449d937aca595c55ee318c8: 213/835 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 16 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 4311 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 1 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed — diff-scoped vs 1fd1d566793dcae92449d937aca595c55ee318c8, 213 file(s) in scope
+Build Summary: 29/29 steps succeeded
+test-qbe-build success
++- run test cached
+|  +- compile test debug native cached 7ms MaxRSS:38M
+|  |  +- options cached
+|  |  |  +- compile exe qbe fast native cached 16ms MaxRSS:36M
+|  |  +- run exe qbe-build-assets (qbe_build_assets) cached
+|  |     +- compile exe qbe-build-assets debug native cached 9ms MaxRSS:37M
+|  +- install success
+|  |  +- install mylang cached
+|  |  |  +- compile exe mylang debug native cached 9ms MaxRSS:38M
+|  |  |  |  +- run exe qbe-build-assets (qbe_build_assets) (+1 more reused dependencies)
+|  |  |  +- run ../guardian-zig/zig-out/bin/guardian-check success 1s
+|  |  |     +- guardian-selfcheck success
+|  |  |        +- run ../guardian-zig/zig-out/bin/guardian-check success 4ms
+|  |  +- install qbe cached
+|  |  |  +- compile exe qbe fast native (reused)
+|  |  |  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+|  |  +- install generated/ cached
+|  |  |  +- run exe mylang (mylang-runtime) cached
+|  |  |     +- compile exe mylang debug native (+1 more reused dependencies)
+|  |  |     +- install mylang (+2 more reused dependencies)
+|  |  |     +- compile exe qbe fast native (reused)
+|  |  +- install board-trial cached
+|  |  |  +- compile exe board-trial debug native cached 9ms MaxRSS:38M
+|  |  |  |  +- options (+1 more reused dependencies)
+|  |  |  |  +- run exe qbe-build-assets (qbe_build_assets) (+1 more reused dependencies)
+|  |  |  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+|  |  +- install schematic-svg cached
+|  |  |  +- compile exe schematic-svg debug native cached 5ms MaxRSS:38M
+|  |  |  |  +- options (+1 more reused dependencies)
+|  |  |  |  +- run exe qbe-build-assets (qbe_build_assets) (+1 more reused dependencies)
+|  |  |  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+|  |  +- install mylang-io cached
+|  |  |  +- compile exe mylang-io debug native cached 6ms MaxRSS:38M
+|  |  |  |  +- options (+1 more reused dependencies)
+|  |  |  |  +- run exe qbe-build-assets (qbe_build_assets) (+1 more reused dependencies)
+|  |  |  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+|  |  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+|  +- hash declared test inputs success 432ms
+|  +- record the test environment success 9ms
+|  +- compile exe qbe fast native (reused)
+|  +- compile exe mylang debug native (+1 more reused dependencies)
++- run test cached
+|  +- compile test debug native cached 6ms MaxRSS:37M
+|  |  +- run exe qbe-build-assets (qbe_build_assets) (+1 more reused dependencies)
+|  +- install (+7 more reused dependencies)
+|  +- hash declared test inputs (reused)
+|  +- record the test environment (reused)
+|  +- compile exe qbe fast native (reused)
+|  +- compile exe mylang debug native (+1 more reused dependencies)
++- run exe host-bridge-test cached
+|  +- compile exe host-bridge-test debug native cached 17ms MaxRSS:36M
+|  +- install (+7 more reused dependencies)
++- run ../guardian-zig/zig-out/bin/guardian-check success 1s
+   +- guardian-selfcheck (+1 more reused dependencies)
+

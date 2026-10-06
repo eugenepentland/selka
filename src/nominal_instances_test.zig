@@ -214,6 +214,78 @@ test "nominal display names are budgeted by the program's size, not a fixed 1 Mi
     try compilation.check();
     try t.expect(compilation.program.?.records.len >= 2000);
 }
+/// `count` record types, each used through `list[R<i>]` and `list[i64]` in its own function.
+fn listUses(allocator: std.mem.Allocator, count: usize) ![]u8 {
+    var text: std.Io.Writer.Allocating = .init(allocator);
+    defer text.deinit();
+    for (0..count) |i| try text.writer.print(
+        \\record R{d}:
+        \\    v: i64
+        \\
+        \\def f{d}(n: i64) -> i64:
+        \\    xs: list[R{d}] = []
+        \\    ys: list[i64] = []
+        \\    for j in range(n):
+        \\        xs.append(R{d}(j))
+        \\        ys.append(j)
+        \\    return len(xs) + len(ys)
+        \\
+        \\
+    , .{ i, i, i, i });
+    try text.writer.writeAll("def main() -> i64:\n    total = 0\n");
+    for (0..count) |i| try text.writer.print("    total += f{d}(3)\n", .{i});
+    try text.writer.writeAll("    return total\n");
+    return text.toOwnedSlice();
+}
+/// How many list types of the program hold `element`, or any record when `element` is null.
+fn listsOf(records: []const typed.Record, element: ?typed.Type) usize {
+    var count: usize = 0;
+    for (records) |record| if (record.isCollection() and !std.mem.eql(u8, record.name, "str")) {
+        const held = record.shape.buffer.?;
+        if (if (element) |wanted| held == wanted else held.isAggregate()) count += 1;
+    };
+    return count;
+}
+// spec: CATALOG-INTERN-1
+test "nominal catalog interns each list type once however often the checker asks for it" {
+    const text = try listUses(t.allocator, 40);
+    defer t.allocator.free(text);
+    var compilation = try language.Compilation.init(t.allocator, "interned.my", text);
+    defer compilation.deinit();
+    try compilation.check();
+    const records = compilation.program.?.records;
+    try t.expectEqual(@as(usize, 1), listsOf(records, .i64));
+    try t.expectEqual(@as(usize, 40), listsOf(records, null));
+    const output = try native.run(&compilation);
+    try t.expectEqual(@as(i64, 240), output.value);
+}
+// spec-case: CATALOG-INTERN-1
+test "nominal catalog reuses nested generic instances whose arguments complete later" {
+    try run(t.allocator, definitions ++
+        \\def boxes(n: i64) -> list[Box[list[i64]]]:
+        \\    out: list[Box[list[i64]]] = []
+        \\    for j in range(n):
+        \\        out.append(Box[list[i64]](value=[j, j + 1]))
+        \\    return out
+        \\
+        \\def total(items: list[Box[list[i64]]]) -> i64:
+        \\    sum = 0
+        \\    for item in items:
+        \\        inner: list[i64] = item.value
+        \\        sum += inner[0] + inner[1]
+        \\    return sum
+        \\
+        \\def main() -> i64:
+        \\    slot: Slot[Box[list[i64]]] = Slot.some(Box[list[i64]](value=[5]))
+        \\    extra = 0
+        \\    match slot:
+        \\        case Slot.some(box):
+        \\            extra = box.value[0]
+        \\        case Slot.none:
+        \\            extra = 0
+        \\    return total(boxes(4)) + total(boxes(2)) + extra
+    , 16 + 4 + 5);
+}
 fn largeNames(allocator: std.mem.Allocator) ![]u8 {
     var text: std.Io.Writer.Allocating = .init(allocator);
     defer text.deinit();
