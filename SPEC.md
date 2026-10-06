@@ -1904,3 +1904,6 @@ The separate `mylang-core` executable (`zig build core`, `docs/design/new-core-i
 - [NEW-CORE-S3-IR-2] Pending mutable-byte and numeric operations emit valid LLVM and fail with E_CORE_UNSUPPORTED before any result is observed; source admission remains refused until their runtime implementations qualify.
 - [NEW-CORE-S3-ABI-1] Runtime-C helper calls pass declared capability tokens and pointers in the C ABI; source extern capability parameters retain their erasure rule.
 - [NEW-CORE-S3-OWN-1] Mutable-byte updates consume their receiver, copy borrowed or shared values and assert static uniqueness in verify builds; record phis remain owned.
+
+- [NEW-CORE-TEXT-S3-1] Remaining text and immutable-byte methods match the old core: scalar search bounds, non-overlapping count/replace, Unicode charset trims and repr, ASCII case/classification, line splitting, validated chr/ord, packed text layout, UTF-8 decode/count and immutable byte ranges. Inputs borrow and results own independent counted blocks; failed index and scalar operations retain located traps.
+- [NEW-CORE-LIST-S3-1] List extend and reverse use value-functional updates over a captured source; self-extension and nested/shared snapshots preserve their old values, with ordinary ownership COW and verify assertions.

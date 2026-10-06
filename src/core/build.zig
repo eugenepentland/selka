@@ -16,6 +16,7 @@ const flags = @import("flags.zig");
 const fuse_dict = @import("fuse_dict.zig");
 const build_dict = @import("build_dict.zig");
 const build_text = @import("build_text.zig");
+const build_list_methods = @import("build_list_methods.zig");
 const fuse_text = @import("fuse_text.zig");
 const build_cap = @import("build_cap.zig");
 const build_bytes = @import("build_bytes.zig");
@@ -1816,6 +1817,7 @@ const FnBuilder = struct {
         const receiver_type = self.ssa.types.items[self.local(owner)];
         if (kind == .iteration_check) return self.iterationCheck(operation, span);
         if (receiver_type == .str or receiver_type == .bytes) return build_text.operation(@TypeOf(self), self, operation, ty, span);
+        if (self.mb.module.kind(receiver_type) == .list and (kind == .extend or kind == .reverse)) return build_list_methods.operation(@TypeOf(self), self, operation, span);
         if (self.mb.module.kind(receiver_type) == .dict and kind != .iteration_check) {
             return build_dict.operation(@TypeOf(self), self, operation, ty, span, out);
         }
