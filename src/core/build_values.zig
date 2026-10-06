@@ -59,34 +59,38 @@ fn append(comptime Context: type, b: Context, initial: ir.Ref, source: ir.Ref, s
 
 /// List membership uses element equality, including IEEE unordered NaNs.
 pub fn contains(comptime Context: type, b: Context, source: ir.Ref, needle: ir.Ref, span: u32) Error!ir.Ref {
+    const index = try firstIndex(Context, b, source, needle, span);
+    const count = try b.emit(.{ .op = .list_len, .ty = .u64, .a = source, .span = span });
+    return b.emit(.{ .op = .cmp, .ty = .bool, .a = index, .b = count, .data = @backingInt(ir.Predicate.lt), .span = span });
+}
+
+/// The first structurally equal element, or the list length when absent.
+pub fn firstIndex(comptime Context: type, b: Context, source: ir.Ref, needle: ir.Ref, span: u32) Error!ir.Ref {
     const element = b.module().compound(b.typeOfRef(source)).list;
-    const result = try b.synthetic(.bool);
+    const count = try b.emit(.{ .op = .list_len, .ty = .u64, .a = source, .span = span });
     const counter = try b.synthetic(.u64);
-    const length = try b.emit(.{ .op = .list_len, .ty = .u64, .a = source, .span = span });
-    try b.write(result, b.current.?, try b.constant(.bool, 0));
     try b.write(counter, b.current.?, try b.constant(.u64, 0));
     const header = try b.newBlock();
     const body = try b.newBlock();
     const next = try b.newBlock();
-    const exit = try b.newBlock();
+    const end = try b.newBlock();
     try b.jump(header);
     b.enter(header);
     const index = try b.read(counter, header);
-    const more = try b.emit(.{ .op = .cmp, .ty = .bool, .a = index, .b = length, .data = @backingInt(ir.Predicate.lt), .span = span });
-    try b.branch(more, body, exit, span);
+    const more = try b.emit(.{ .op = .cmp, .ty = .bool, .a = index, .b = count, .data = @backingInt(ir.Predicate.lt), .span = span });
+    try b.branch(more, body, end, span);
     try b.seal(body);
     b.enter(body);
     const same = if (needle == .none or element == .void) try b.constant(.bool, 1) else try b.equal(try b.emit(.{ .op = .list_get, .ty = element, .a = source, .b = index, .check = .exact, .span = span }), needle, span);
-    try b.write(result, b.current.?, same);
-    try b.branch(same, exit, next, span);
+    try b.branch(same, end, next, span);
     try b.seal(next);
     b.enter(next);
     try b.write(counter, next, try b.emit(.{ .op = .add, .ty = .u64, .a = index, .b = try b.constant(.u64, 1), .span = span }));
     try b.jump(header);
     try b.seal(header);
-    try b.seal(exit);
-    b.enter(exit);
-    return b.read(result, exit);
+    try b.seal(end);
+    b.enter(end);
+    return b.read(counter, end);
 }
 
 /// Repeat a text, byte string or list with the original operand evaluation order.
@@ -134,7 +138,8 @@ pub fn equal(comptime Context: type, b: Context, left: ir.Ref, right: ir.Ref, sp
     const l = try b.emit(.{ .op = .box_make, .ty = box, .a = left, .span = span });
     const r = try b.emit(.{ .op = .box_make, .ty = box, .a = right, .span = span });
     const symbol = try std.fmt.allocPrint(b.allocator(), "myl_core_equal_{d}", .{@backingInt(ty)});
-    return b.runtimeCall(symbol, &.{ box, box }, .bool, &.{ l, r }, span);
+    const callee = try b.mb.runtimeFunction(symbol, &.{ box, box }, .bool, .runtime_c);
+    return b.emit(.{ .op = .call, .ty = .bool, .a = @fromBackingInt(callee), .data = try b.extraSlice(&.{ l, r }), .span = span });
 }
 
 /// Render with the checked source schema, including information erased by the value IR.

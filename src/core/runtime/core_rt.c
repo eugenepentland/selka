@@ -459,7 +459,7 @@ typedef struct {
 extern const myl_core_site myl_core_sites[];
 extern const char myl_core_source_path[];
 
-enum { TRAP_OVERFLOW, TRAP_DIVISION_BY_ZERO, TRAP_LIST_BOUNDS, TRAP_FLOAT_CONVERSION, TRAP_CAST, TRAP_FACT, TRAP_LIST_EMPTY, TRAP_MISSING_KEY = 9, TRAP_ITERATION_MUTATION = 10, TRAP_TEXT_BOUNDS = 11, TRAP_TEXT_SEPARATOR = 12, TRAP_TEXT_STEP = 13, TRAP_BYTE_RANGE = 14, TRAP_TEXT_SCALAR = 15, TRAP_TEXT_SUBSTRING = 16, TRAP_INVALID_SHIFT = 17 };
+enum { TRAP_OVERFLOW, TRAP_DIVISION_BY_ZERO, TRAP_LIST_BOUNDS, TRAP_FLOAT_CONVERSION, TRAP_CAST, TRAP_FACT, TRAP_LIST_EMPTY, TRAP_MISSING_KEY = 9, TRAP_ITERATION_MUTATION = 10, TRAP_TEXT_BOUNDS = 11, TRAP_TEXT_SEPARATOR = 12, TRAP_TEXT_STEP = 13, TRAP_BYTE_RANGE = 14, TRAP_TEXT_SCALAR = 15, TRAP_TEXT_SUBSTRING = 16, TRAP_INVALID_SHIFT = 17, TRAP_LIST_VALUE = 18, TRAP_LIST_POP_INDEX = 19 };
 
 
 
@@ -839,6 +839,13 @@ void myl_core_trap(int32_t index, int64_t a, int64_t b) {
         snprintf(detail, sizeof detail, " (length %lld)", (long long)b);
         snprintf(record, sizeof record, "\036MYLANG-TRAP {\"version\":1,\"operation\":\"pop\",\"length\":%lld}\n", (long long)b);
         break;
+    case TRAP_LIST_POP_INDEX:
+        /* myl_qbe_fail_pop_at_bounds: an indexed pop retains its pop operation. */
+        code = "R_LIST_BOUNDS";
+        snprintf(detail, sizeof detail, " (index %lld, length %lld)", (long long)a, (long long)b);
+        snprintf(record, sizeof record, "\036MYLANG-TRAP {\"version\":1,\"operation\":\"pop\",\"index\":%lld,\"length\":%lld}\n", (long long)a, (long long)b);
+        break;
+    case TRAP_LIST_VALUE: code = "R_LIST_VALUE"; break;
     case TRAP_ITERATION_MUTATION:
         code = "R_LIST_ITERATION_MUTATION";
         break;

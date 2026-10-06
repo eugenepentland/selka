@@ -1915,9 +1915,12 @@ const FnBuilder = struct {
                     const result = try build_values.contains(@TypeOf(self), self, try self.receiverOf(operation.owner), needle, span);
                     return result;
                 }
-                if (operation.kind == .extend or operation.kind == .reverse) {
-                    const result = try build_list_methods.operation(@TypeOf(self), self, operation, span);
-                    return result;
+                switch (operation.kind) {
+                    .extend, .reverse, .index_of, .insert, .pop_at, .remove, .slice_step, .clear => {
+                        const result = try build_list_methods.operation(@TypeOf(self), self, operation, ty, span);
+                        return result;
+                    },
+                    else => {},
                 }
             },
             .dict => {
