@@ -1167,34 +1167,37 @@ static int core_io_environment_read(myl_block *cap,myl_block *name,unsigned char
 }
 myl_block *myl_core_environment_text(myl_block *cap,myl_block *name){unsigned char output[16384];size_t length;int present;int status=core_io_environment_read(cap,name,output,sizeof output,&length,&present);if(status)core_io_fail("R_CAPABILITY");if(!present)return NULL;if(!core_io_utf8(output,length))core_io_fail("R_ENVIRONMENT");return core_io_string(output,length,1);}
 
-static int core_io_name_order(const void *left,const void *right){const myl_block *a=*(myl_block *const *)left,*b=*(myl_block *const *)right;size_t width=(size_t)(a->len<b->len?a->len:b->len);int order=memcmp((const unsigned char *)a+32,(const unsigned char *)b+32,width);return order?order:a->len<b->len?-1:a->len>b->len;}
-/* The old environment boundary publishes at most 64 distinct, sorted names. */
-static void core_io_name_add(myl_block **list,const unsigned char *name,size_t width){
-    if(!width||width>128||(*list)->len==64)return;
-    myl_block **items=(myl_block **)block_data(*list);
-    for(size_t i=0;i<(size_t)(*list)->len;++i)if((size_t)items[i]->len==width&&!memcmp(block_data(items[i]),name,width))return;
-    core_io_list_add(list,core_io_string(name,width,1));
+typedef struct { const unsigned char *bytes;size_t length; } CoreIoName;
+static int core_io_name_order(const void *left,const void *right){const CoreIoName *a=left,*b=right;size_t width=a->length<b->length?a->length:b->length;int order=memcmp(a->bytes,b->bytes,width);return order?order:a->length<b->length?-1:a->length>b->length;}
+/* Collect at most 64 raw names before filtering UTF-8, matching the old boundary. */
+static void core_io_name_add(CoreIoName *names,unsigned *count,const unsigned char *name,size_t width){
+    if(!width||width>128||*count==64)return;
+    for(unsigned i=0;i<*count;++i)if(names[i].length==width&&!memcmp(names[i].bytes,name,width))return;
+    names[(*count)++]=(CoreIoName){name,width};
 }
 myl_block *myl_core_environment_names(myl_block *cap){
     CoreIoAuthority *a=core_io_authority(cap);CoreIoState *state=core_io_state(cap);
     if(a->family!=4)core_io_fail("InvalidCapability");
     myl_block *list=core_io_list_new(0),*blob=a->scope?a->scope:state->pairs;
+    CoreIoName names[64];unsigned count=0;
     if(blob){
         for(size_t at=0;at<(size_t)blob->len;){
             size_t width=core_io_memory_field(block_data(blob),(size_t)blob->len,at);
-            if(state->test||core_io_allowed(core_io_enumerated_names,block_data(blob)+at,width))core_io_name_add(&list,block_data(blob)+at,width);
+            if(state->test||core_io_allowed(core_io_enumerated_names,block_data(blob)+at,width))core_io_name_add(names,&count,block_data(blob)+at,width);
             at+=width+1;if(!a->scope)at+=core_io_memory_field(block_data(blob),(size_t)blob->len,at)+1;
         }
     }else if(!state->test){
         if(*core_io_enumerated_names){
             const char *name=core_io_enumerated_names;
-            while(*name){const char *comma=strchr(name,',');size_t width=comma?(size_t)(comma-name):strlen(name);core_io_name_add(&list,(const unsigned char *)name,width);if(!comma)break;name=comma+1;}
+            while(*name){const char *comma=strchr(name,',');size_t width=comma?(size_t)(comma-name):strlen(name);core_io_name_add(names,&count,(const unsigned char *)name,width);if(!comma)break;name=comma+1;}
         }else{
             extern char **environ;
-            for(char **entry=environ;entry&&*entry;++entry){char *equal=strchr(*entry,'=');size_t width=equal?(size_t)(equal-*entry):strlen(*entry);core_io_name_add(&list,(const unsigned char *)*entry,width);}
+            for(char **entry=environ;entry&&*entry;++entry){char *equal=strchr(*entry,'=');size_t width=equal?(size_t)(equal-*entry):strlen(*entry);core_io_name_add(names,&count,(const unsigned char *)*entry,width);}
         }
     }
-    qsort(block_data(list),(size_t)list->len,sizeof(myl_block *),core_io_name_order);return list;
+    qsort(names,count,sizeof(CoreIoName),core_io_name_order);
+    for(unsigned i=0;i<count;++i)if(core_io_utf8(names[i].bytes,names[i].length))core_io_list_add(&list,core_io_string(names[i].bytes,names[i].length,1));
+    return list;
 }
 void myl_core_stream_write(int64_t fd,myl_block *text){myl_core_print_str(fd,text);}
 int64_t myl_core_s3_token_roundtrip(int64_t token){return token;}
