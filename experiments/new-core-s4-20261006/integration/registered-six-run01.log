@@ -1,0 +1,87 @@
+build tree_build_walk old: status=0
+build tree_build_walk new: status=0
+build record_pass old: status=0
+build record_pass new: status=0
+build grid_dp old: status=0
+build grid_dp new: status=0
+build union_find old: status=0
+build union_find new: status=0
+build float_format old: status=0
+build float_format new: status=0
+build buffer_write old: status=0
+build buffer_write new: status=0
+
+### tree_build_walk (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 289.810 | 286.788 | same |
+| new core release | 68.957 | 67.396 | same |
+| Rust | 94.636 | 88.950 | same |
+| Zig ReleaseSafe | 99.062 | 98.228 | same |
+| Go | 77.477 | 69.732 | same |
+| new / old | 0.238 | 0.235 | same |
+| new / Zig | 0.696 | 0.686 | same |
+| new / Rust | 0.729 | 0.758 | same |
+
+### record_pass (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 23.835 | 24.868 | same |
+| new core release | 12.107 | 13.230 | same |
+| Rust | 11.538 | 12.156 | same |
+| Zig ReleaseSafe | 18.012 | 18.696 | same |
+| Go | 45.969 | 47.066 | same |
+| new / old | 0.508 | 0.532 | same |
+| new / Zig | 0.672 | 0.708 | same |
+| new / Rust | 1.049 | 1.088 | same |
+
+### grid_dp (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 21.098 | 71.473 | same |
+| new core release | 51.470 | 59.272 | same |
+| Rust | 12.680 | 15.010 | same |
+| Zig ReleaseSafe | 15.007 | 16.122 | same |
+| Go | 18.969 | 30.263 | same |
+| new / old | 2.440 | 0.829 | same |
+| new / Zig | 3.430 | 3.677 | same |
+| new / Rust | 4.059 | 3.949 | same |
+
+### union_find (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 84.693 | 75.571 | same |
+| new core release | 86.496 | 64.569 | same |
+| Rust | 42.041 | 25.444 | same |
+| Zig ReleaseSafe | 42.477 | 28.554 | same |
+| Go | 49.839 | 38.498 | same |
+| new / old | 1.021 | 0.854 | same |
+| new / Zig | 2.036 | 2.261 | same |
+| new / Rust | 2.057 | 2.538 | same |
+
+### float_format (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 484.975 | 482.053 | same |
+| new core release | 276.085 | 272.938 | same |
+| Rust | 374.460 | 346.723 | same |
+| Zig ReleaseSafe | 375.613 | 368.953 | same |
+| Go | 238.834 | 235.329 | same |
+| new / old | 0.569 | 0.566 | same |
+| new / Zig | 0.735 | 0.740 | same |
+| new / Rust | 0.737 | 0.787 | same |
+
+### buffer_write (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 144.362 | 134.286 | same |
+| new core release | 149.335 | 140.168 | same |
+| Rust | 147.049 | 139.268 | same |
+| Zig ReleaseSafe | 168.504 | 155.286 | same |
+| Go | 137.473 | 125.675 | same |
+| new / old | 1.034 | 1.044 | same |
+| new / Zig | 0.886 | 0.903 | same |
+| new / Rust | 1.016 | 1.006 | same |
+
+valid rows: 6; speed gate misses: ['grid_dp/4096', 'grid_dp/64', 'union_find/4096', 'union_find/64']
+Both new/old and new/Zig must be at most 1.10. binary_search misses require the plan's identical-code/layout-noise review; all other misses require repair.

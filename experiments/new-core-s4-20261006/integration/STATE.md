@@ -15,5 +15,14 @@ real-function totals and explained in BASELINE.md.
 
 S4-R moves the six fixtures to test/core, updates their module headers to match
 the new filenames, and keeps all Rust, Zig, Go references and Python oracles.
-Post-registration qualification is pending. Wave A, Wave B and S4-X remain pending.
+Post-registration qualification on source `25803a396` passed the full old gate:
+3004 tests, 520 QBE tests, 29 QBE build steps, and formatting. Every registered
+row agrees across both cores, Rust, Zig ReleaseSafe and Go, including 210
+comparisons against independent Python oracles. Its timing cells reproduce only
+the four documented S4-V misses. Compiler/test sources and binary hashes are
+unchanged from the qualified base; the inherited forty fixture files are unchanged.
+
+S4-0/R is complete. Wave A starts from this source plus this evidence receipt;
+V integrates first to clear the known row misses, then F/E/M qualify against that
+performance base. Wave B and S4-X remain pending.
 No pushes; no merge into main. `src/core/ir.zig` is frozen.

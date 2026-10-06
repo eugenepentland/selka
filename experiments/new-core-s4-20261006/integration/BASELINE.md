@@ -60,3 +60,16 @@ Raw samples, commands and ratios: `base-all46-run01.json`; build command logs: `
 The four inherited corpora reproduce S3: 3,633/3,639 functions accepted. All modules of each pinned port were checked from private copies, including test-only modules. Lox: **279/462 real functions**; EDA: **1,755/1,756 real functions**. Adding the 25 and 118 generated `main` stubs reproduces the plan's 304/487 and 1,873/1,874. The stubs are excluded from the real-function totals. The only port refusals are 183 capability-field functions and one dynamic assert message.
 
 Authoritative coverage: `base-coverage-run04/summary.json` and six retained stdout/stderr pairs. Earlier entry-only and synthetic aggregate-entry experiments are retained as preflight runs 01–03.
+
+## Registered-row qualification
+
+Source `25803a396`: `registered-six-run01.json` includes Go as the fifth arm.
+All twelve checksum cells agree and the same four grid/union timing cells miss.
+`registered-six-oracles-run01/summary.json` records 210 successful comparisons
+against the independent Python oracles, including all contract probes and the
+small/large checksum probes used by the existing row-test convention.
+`rows-old-run02/summary.json` qualifies all four old gate steps after registration.
+The nine propagation tests already match the old oracle on this base;
+`base-propagation-comparison-run01.json` records that additional check. S4-M will
+remove the obsolete conformance-harness exclusion and force full qualification
+in every required mode.
