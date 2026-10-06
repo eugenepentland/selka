@@ -21,6 +21,11 @@ static void release(void *context,uint64_t handle){
 }
 static MylangResourceRead read_bytes(void *context,uint64_t handle,uint8_t *bytes,size_t capacity){
     (void)context;if(handle!=1||capacity!=4)return (MylangResourceRead){MYLANG_PROVIDER_FAILED,0,0};
+    const char *bad=getenv("MYL_FIXTURE_BAD_READ");
+    if(bad&&!strcmp(bad,"oversize"))return (MylangResourceRead){MYLANG_PROVIDER_OK,capacity+1,0};
+    if(bad&&!strcmp(bad,"eof"))return (MylangResourceRead){MYLANG_PROVIDER_OK,0,2};
+    if(bad&&!strcmp(bad,"error-fields"))return (MylangResourceRead){MYLANG_PROVIDER_FAILED,(size_t)-1,99};
+    if(bad&&!strcmp(bad,"status"))return (MylangResourceRead){(MylangProviderStatus)99,0,0};
     memcpy(bytes,"ab",2);return (MylangResourceRead){MYLANG_PROVIDER_OK,2,1};
 }
 static MylangResourceWrite write_bytes(void *context,uint64_t handle,const uint8_t *bytes,size_t length){
