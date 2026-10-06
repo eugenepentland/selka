@@ -1,0 +1,44 @@
+module text_0160
+
+def number(text: str) -> int:
+    match int(text):
+        case Some(value):
+            return value
+        case None:
+            return 0
+
+def tally(text: str, seed: int) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for word in text.split():
+        text = "rebound"
+        counts[word] = counts[word] + 1 if word in counts else 1
+        if len(counts) == seed % 7:
+            continue
+        if len(counts) > seed % 31 + 2:
+            break
+    return counts
+
+def score(counts: dict[str, int]) -> int:
+    value = len(counts)
+    for key in counts:
+        value += len(key) * counts[key]
+        for octet in key.encode():
+            value += octet
+    return value
+
+def main(args: list[str], out: Stream) -> int:
+    seed = number(args[0])
+    original = "long10éabcdefghijklmnop café\tlong07éabcdefghijklmnop\x0blong07éabcdefghijklmnop\x0bnaïve long07éabcdefghijklmnop  long01éabcdefghijklmnop\tlong06éabcdefghijklmnop  long06éabcdefghijklmnop\ncafé\rlong02éabcdefghijklmnop\x0blong09éabcdefghijklmnop\tlong05éabcdefghijklmnop\x0blong04éabcdefghijklmnop\rlong04éabcdefghijklmnop\rcafé\x0blong07éabcdefghijklmnop long03éabcdefghijklmnop\nlong03éabcdefghijklmnop collision005a0e\tlong03éabcdefghijklmnop long05éabcdefghijklmnop\x0blong06éabcdefghijklmnop Ω\x0ccollision002553 long09éabcdefghijklmnop\x0bcafé  a\t😀\rlong02éabcdefghijklmnop\tlong04éabcdefghijklmnop\tlong04éabcdefghijklmnop\t😀\x0ba\ra  collision005a0e\rlong06éabcdefghijklmnop  naïve\x0cΩ long00éabcdefghijklmnop long00éabcdefghijklmnop\x0clong06éabcdefghijklmnop\rtail"
+    owned = "".join([original, " ", original])
+    counts = tally(owned, seed)
+    snapshot = counts
+    counts["post"] = seed + 1
+    _ = counts.pop("post")
+    for word in "post fresh café collision005a0e".split():
+        counts[word] = counts[word] + 1 if word in counts else 1
+    escaped: list[str] = []
+    for word in original.split():
+        escaped.append(word)
+    value = score(counts) + score(snapshot) + len(escaped)
+    out.print(value)
+    return 0

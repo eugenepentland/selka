@@ -1,0 +1,44 @@
+module text_0021
+
+def number(text: str) -> int:
+    match int(text):
+        case Some(value):
+            return value
+        case None:
+            return 0
+
+def tally(text: str, seed: int) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for word in text.split():
+        text = "rebound"
+        counts[word] = counts[word] + 1 if word in counts else 1
+        if len(counts) == seed % 7:
+            continue
+        if len(counts) > seed % 31 + 2:
+            break
+    return counts
+
+def score(counts: dict[str, int]) -> int:
+    value = len(counts)
+    for key in counts:
+        value += len(key) * counts[key]
+        for octet in key.encode():
+            value += octet
+    return value
+
+def main(args: list[str], out: Stream) -> int:
+    seed = number(args[0])
+    original = "naïve x y\x0ccafé\x0blong04éabcdefghijklmnop\ncafé\n😀\x0blong02éabcdefghijklmnop\x0cx y\tΩ\x0clong09éabcdefghijklmnop\nlong07éabcdefghijklmnop  collision002553  long01éabcdefghijklmnop\nlong02éabcdefghijklmnop\x0ccafé  a\x0ccollision005a0e\nlong03éabcdefghijklmnop 😀\tlong03éabcdefghijklmnop\tnaïve\x0clong03éabcdefghijklmnop\rnaïve collision002553\x0clong00éabcdefghijklmnop\rlong07éabcdefghijklmnop\rcollision005a0e\nlong07éabcdefghijklmnop\nlong01éabcdefghijklmnop\rΩ long08éabcdefghijklmnop  long00éabcdefghijklmnop\tlong06éabcdefghijklmnop  naïve Ω\x0bcollision002553\x0b😀\rlong09éabcdefghijklmnop\x0bx y long00éabcdefghijklmnop\tlong06éabcdefghijklmnop\ncollision002553\x0ccollision005a0e long01éabcdefghijklmnop\nlong02éabcdefghijklmnop naïve  a\x0clong06éabcdefghijklmnop\x0blong03éabcdefghijklmnop\nlong02éabcdefghijklmnop\x0clong08éabcdefghijklmnop long03éabcdefghijklmnop\t"
+    owned = "".join([original, " ", original])
+    counts = tally(owned, seed)
+    snapshot = counts
+    counts["post"] = seed + 1
+    _ = counts.pop("post")
+    for word in "post fresh café collision005a0e".split():
+        counts[word] = counts[word] + 1 if word in counts else 1
+    escaped: list[str] = []
+    for word in original.split():
+        escaped.append(word)
+    value = score(counts) + score(snapshot) + len(escaped)
+    out.print(value)
+    return 0
