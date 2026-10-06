@@ -1,0 +1,9 @@
+{
+  "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/fuzz-split-cursor-50-02/debug",
+    "7"
+  ],
+  "status": 0,
+  "stdout": "37866\n",
+  "stderr": ""
+}

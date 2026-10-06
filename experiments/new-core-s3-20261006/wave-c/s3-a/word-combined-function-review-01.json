@@ -1,0 +1,7 @@
+{
+  "previous": ".mylang-cache/s3-a/word-dict-store-04/llvm/row_word_count.ll",
+  "current": ".mylang-cache/s3-a/all40-combined-final-01/llvm/row_word_count.ll",
+  "function_sets_equal": true,
+  "normalized_changed_functions": [],
+  "method": "semantic metadata and SSA only; no instruction, trap or CFG removal"
+}

@@ -1,0 +1,16 @@
+test-core
++- run test w
+guardian/test: 3 test(s) selected
+guardian/test: test wall 3.33s; slowest over 50ms:
+guardian/test:   3.31s  text_test.test.private split dictionary keys preserve whitespace, UTF8, source snapshots, insertion ownership and captured dictionaries
+guardian/test: PASS — 3 passed
+guardian/test: RESULT {"passed":3,"failed":0,"skipped":0}
+failed command: ./.zig-cache/o/552a42727c10d622d7268822e79427fa/test --cache-dir=./.zig-cache --seed=0xfa82a8d0 --listen=-
+
+Build Summary: 5/5 steps succeeded; 3/3 tests passed
+test-core success
++- run test 3 pass (3 total) 3s MaxRSS:220M
+   +- compile test debug native success 1s MaxRSS:326M
+      +- options cached
+         +- compile exe mylang-core debug native cached 9ms MaxRSS:38M
+

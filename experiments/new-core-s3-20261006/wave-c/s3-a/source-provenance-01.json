@@ -1,0 +1,62 @@
+{
+  "source": "0a5dd8794faaf330ab411900d1eaf4e2a00ba0e8",
+  "base": "f1319a774d638c664de9f02bb27098650a13249b",
+  "source_inputs_sha256": {
+    "SPEC.md": "4f8b1890b82cd2abbecf71ec084c18227103110ae43c4400dfe1fec3c120f16c",
+    "src/core/build.zig": "f54e2129644f0204fbbb3fd875a3b907c6fab94816a12723dd72d185a481a236",
+    "src/core/build_text.zig": "45837cdaeb5b1b3771c61a206cf38cdb3a87cc9be507af9e541b8b533a3d91ae",
+    "src/core/byte_index.zig": "29d635202323712f364d4e10cc1f7b0a57d983dcc201712f4836d8f3ce70d9a9",
+    "src/core/byte_index_test.zig": "2dab5a0cb0a9869d87f0dc4776a4a1010567a5c9e6f666497fb40d4d359551bf",
+    "src/core/dict_scalar_store_test.zig": "178d4409e978e32b96c3e0d5a812cd26ea250e93d5b7fc3ed0f85d7facb0a58b",
+    "src/core/emit_bytes.zig": "55b02df999d2061d40605dfde30f3b06eabfafb20e4a8cbd6203b98ab6c42af6",
+    "src/core/emit_dict.zig": "f465fb0d6552d26f63c665f214a7ec082193a38d210672ec3d9ec45e471e8bec",
+    "src/core/emit_dict_span.zig": "95ed4ad25640b73cfb01dbcbae16499581bab26e6591e5798ffd9a382819b689",
+    "src/core/emit_llvm.zig": "4882a1d9b542d212288f8db924f1ecc7e8d54389498c2314f590b5adf81f7fef",
+    "src/core/emit_text.zig": "9c9853c0b7830b822d07d7617939db627fa7a8b1560622735eb45f0fba6a6528",
+    "src/core/flags.zig": "6ad70d43a44908888cc4c73edc6abe9eb2e04713640ec14228e1f36be644ca5a",
+    "src/core/fuse_text.zig": "2af6f1fbfd2be44825941b9a29cef13a5c1f6a55f1ef4b72c0d033a2c1ba79c4",
+    "src/core/fuse_text_scalar.zig": "d33fc64fc3f7648b87ddce2662de1f71c8a04c71d2ff12813f7224b3e092e083",
+    "src/core/fuse_text_scalar_test.zig": "8fe9a5d570ec4b0eff64b12f6cb0d513432bbdfaf6f0e96115cc0f2447379ad7",
+    "src/core/fuse_text_split.zig": "a266c1fe2d182556aac4b59db9696fd57498310cfd324c0b64816d8d97f387ff",
+    "src/core/passes.zig": "e50205261082ab853ab09336a073fa8f08cb4ce02660ccef2672bb7ffa5a83a7",
+    "src/core/root_test.zig": "b21d0fe040b1b59e8153ec595ba73b95cef9ca7c82770321b6d7466cc19f357e",
+    "src/core/runtime/core_rt.c": "8af1064f266f54736575e8d1c118cb0b0987befbf66cfc79dd13abacd2f389ad",
+    "src/core/runtime/core_text.c": "4044655b47a947950ab96f4ac32a1a5ca56e6cbd6408530a2767c4231f8b12df",
+    "src/core/test_support.zig": "fdc2379a04d0407232d307e4966dfc8c2f05c9e7f011341157da4a861da75f67",
+    "src/core/text_test.zig": "36af0942a3874fe6822943996c0ed9004a521cf23e472e0a8d5ced5cc8aa4d83",
+    "src/core/value_build_test.zig": "4e03444ae7bf0dbf62a192f33ec0291716bd1f72748ca8c2d7b1983e205905e7",
+    "test/core/d_scalar_stores.my": "aedc0a6c452ef18c86d5f30ab5f882f0639d369ad461a0ed223362d00e99607d",
+    "test/core/row_csv_aggregate.my": "38ec1d6a777ed9b21d3ddd6ffdf5786945a83d3c9a1779355eca5e5a7b455c99",
+    "test/core/row_json_transform.my": "4c6dcff1e82508f9870c1331f4f6fe97b3842709a00a36866c86b09a4797dd79",
+    "test/core/row_lox_eval.my": "8f094f5cdcc6de88de2d859dcb366585cf94ec63bb5d5fa36e34eadf008ca1a2",
+    "test/core/row_packet_decode.my": "355d3c171613a2d75dbc13d3c65e1f3d62b7ef856962ef8861eade188814b2cc",
+    "test/core/row_word_count.my": "9522af956c3e65925480f3bc97bf8b0d8fd3966c6add8cb8d77838e935b69bf6",
+    "test/core/t_scalar_fusion.my": "59317e5c185a1e564028426a98ddb133fff8a3bb0b175c2400a748ad046bfeda"
+  },
+  "compiler_sha256": "d01ae9efe8ec99f93bc56bf55715862fd99851beb206375f260d40a000e48c65",
+  "oracle_sha256": {
+    "mylang": "d36658dbfb78d29213224532a13fd5ad8b7c0e290dbfb87613d9815678305c79",
+    "qbe": "b6139650a99b39131cd791fa1fdc84c09472dc303930bbadd3f8a5348487af4c"
+  },
+  "protected_paths_unchanged": [
+    "src/core/ir.zig",
+    "src/core/own.zig",
+    "tests/lang"
+  ],
+  "gate_inputs_clean": true,
+  "reference_worktree": "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003",
+  "reference_source": "9e126b553353148b955add3ac1eb5b710a9b8e7f",
+  "reference_workload_sources_sha256": {
+    "benchmarks/runtime/expanded/text/main.rs": "cdd8d7bba9d2d7590d6786ca1912bdba65ed6c36c6789f8f16252d14a1d7673c",
+    "benchmarks/runtime/expanded/text/main.zig": "94dd771cf7c78deef2a1f81aabfa63cad5515ab5ceb811d2a249659457547ddd",
+    "benchmarks/runtime/expanded/compute/main.rs": "ce9e8859065748e930a7d4adb69d7ba791dee188fa49ddd19e026272deea92c2",
+    "benchmarks/runtime/expanded/compute/main.zig": "376d889076a6ebab6c832782960cbc63011e393305a2e768bc8a072b2ef66b3f",
+    "benchmarks/runtime/expanded/collections/main.rs": "f439c5f20b2419e47a8b9883cb0d305fa68d102ffa64ec6083d55c09af0dc575",
+    "benchmarks/runtime/expanded/collections/main.zig": "0113e9958e2742371ea4c33ce716a49d46784a1c4ad4c190db3ca9938e354277"
+  },
+  "qualified_sibling_heads": {
+    "packet": "d8921b419c2bf3aa0932a728bc7a3f9cf0344f3c",
+    "character": "0ecd89913b6ab4ce8490f280647906cc316804fd"
+  },
+  "installation_seconds": 2.63
+}

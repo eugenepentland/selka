@@ -1,0 +1,21 @@
+build-slot: all 1 gate slot(s) busy; waiting (0s so far)
+build-slot: all 1 gate slot(s) busy; waiting (60s so far)
+build-slot: gate slot 1 after 65s (all 1 gate slot(s) busy)
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 28 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 10294 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 11 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed
+[codex/new-core-s3-applications 958e988a2] evidence: qualify combined S3 word and byte application repairs
+ 10 files changed, 3582 insertions(+)
+ create mode 100644 experiments/new-core-s3-20261006/wave-c/s3-a/logs/core-packet-combined-07.time
+ create mode 100644 experiments/new-core-s3-20261006/wave-c/s3-a/logs/core-packet-combined-07.txt
+ create mode 100644 experiments/new-core-s3-20261006/wave-c/s3-a/logs/packet-combined-full-conformance-03.time
+ create mode 100644 experiments/new-core-s3-20261006/wave-c/s3-a/logs/packet-combined-full-conformance-03.txt
+ create mode 100644 experiments/new-core-s3-20261006/wave-c/s3-a/logs/packet-combined-test-core32-03.time
+ create mode 100644 experiments/new-core-s3-20261006/wave-c/s3-a/logs/packet-combined-test-core32-03.txt
+ create mode 100644 experiments/new-core-s3-20261006/wave-c/s3-a/logs/packet-merge-01.txt
+ create mode 100644 experiments/new-core-s3-20261006/wave-c/s3-a/logs/word-commit-03.txt
+ create mode 100644 experiments/new-core-s3-20261006/wave-c/s3-a/packet-combined-review-01.json
+ create mode 100644 experiments/new-core-s3-20261006/wave-c/s3-a/performance_table.py

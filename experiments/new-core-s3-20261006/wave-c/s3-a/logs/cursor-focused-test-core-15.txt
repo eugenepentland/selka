@@ -1,0 +1,22 @@
+test-core
++- run test
+   +- compile test debug native 1 errors
+src/core/emit_text_split_test.zig:72:22: error: no field named 'function' in struct 'emit_llvm.Main'
+        options.main.function = 2;
+                     ^~~~~~~~
+src/core/emit_llvm.zig:60:18: note: struct declared here
+pub const Main = struct {
+                 ^~~~~~
+referenced by:
+    test.private whitespace cursor LLVM guards negative empty Unicode and past-end inputs in every mode: src/core/emit_text_split_test.zig:87:25
+    comptime: src/core/root_test.zig:45:17
+error: 1 compilation errors
+failed command: /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig test -ODebug --dep mylang --dep core_test_options -Mroot=src/core/root_test.zig -ODebug --dep runtime_contract -Mmylang=src/compiler.zig -Mcore_test_options=.zig-cache/o/c4b7ae2427cbfb96114a5aa6a2f5f191/options.zig -ODebug -Mruntime_contract=src/runtime_contract.zig --test-filter "whitespace cursor" --test-runner ../guardian-zig/src/test_runner.zig --cache-dir .zig-cache --global-cache-dir /home/epentland/.cache/zig --name test --zig-lib-dir /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/ --listen=-
+
+Build Summary: 2/5 steps succeeded (1 failed)
+test-core transitive failure
++- run test transitive failure
+   +- compile test debug native 1 errors
+      +- options cached
+         +- compile exe mylang-core debug native cached 10ms MaxRSS:38M
+

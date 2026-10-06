@@ -1,0 +1,22 @@
+{
+  "packet_function_sets_equal": true,
+  "packet_normalized_changed_functions": [],
+  "assemblies": {
+    "word_count": {
+      "prior_binary": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/word-dict-store-04/row_word_count_new",
+      "current_binary": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_word_count_new",
+      "before_instructions": 742,
+      "after_instructions": 742,
+      "address_display_only_identical": false,
+      "limit": "No instructions removed; relative branch/call displacements and symbol offsets retained."
+    },
+    "packet_decode": {
+      "prior_binary": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/rows-02/row_packet_decode_new",
+      "current_binary": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_packet_decode_new",
+      "before_instructions": 955,
+      "after_instructions": 955,
+      "address_display_only_identical": false,
+      "limit": "No instructions removed; relative branch/call displacements and symbol offsets retained."
+    }
+  }
+}

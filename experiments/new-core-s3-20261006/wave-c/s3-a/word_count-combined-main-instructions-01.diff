@@ -1,0 +1,20 @@
+--- before-address-display-only
++++ after-address-display-only
+@@ -252,7 +252,7 @@
+ blsr   %r13d,%r13d
+ jne    <main+0x400>
+ vmovdqa 0x50(%rsp),%xmm0
+-vpcmpeqb -0x2f366(%rip),%xmm0,%xmm0        # <core_io_raw_layout+0x2a0>
++vpcmpeqb -0x2f526(%rip),%xmm0,%xmm0        # <core_io_raw_layout+0x2a0>
+ vpmovmskb %xmm0,%eax
+ test   %eax,%eax
+ je     <main+0x1bb>
+@@ -474,7 +474,7 @@
+ blsr   %r14d,%r14d
+ jne    <main+0x840>
+ vmovdqa 0x60(%rsp),%xmm0
+-vpcmpeqb -0x2f7a3(%rip),%xmm0,%xmm0        # <core_io_raw_layout+0x2a0>
++vpcmpeqb -0x2f963(%rip),%xmm0,%xmm0        # <core_io_raw_layout+0x2a0>
+ vpmovmskb %xmm0,%eax
+ test   %eax,%eax
+ je     <main+0x897>

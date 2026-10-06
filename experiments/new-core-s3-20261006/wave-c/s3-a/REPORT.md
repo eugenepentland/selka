@@ -224,3 +224,65 @@ corrected source is freshly installed in 1.78 s, then passes Core32 258/258 in
 zero mismatch/unsupported and verify/leakcheck. The uniquely named
 `word-style-test-core32-02` and `word-style-full-conformance-02` logs retain the
 refresh. Final combined all40 timing will use a fresh compiler source build.
+
+
+## Combined-source gate failures and cursor follow-up
+
+The first complete combination, `0a5dd8794faaf330ab411900d1eaf4e2a00ba0e8`,
+passes own-source exclusive installation in 2.63 s, Core32 272/272 in 115.61 s
+(maximum shard 75.71 s, exactly 32 verdicts, maximum test RSS 251 MiB), and full
+1518/1518 strict conformance in both modes in 56.25 s with leak/fact checks.
+`char-combined-core32-review-02.json` retains the complete RSS/verdict inspection.
+
+Its fresh `all40-combined-final-01.json` is valid but **fails** two size-64 cells:
+word_count new/Zig 1.103086 and packet_decode new/old 1.101765. A single authorized
+paired seven-round repeat, `word-packet-combined-paired-02.json`, confirms the
+misses at 1.103926 and 1.106961. Neither run is waived or overwritten. All other
+cells of the first full run pass both gates, including CSV 1.070/1.081 and JSON
+1.006/1.048 versus Zig. These receipts do not qualify the final all40 gate.
+
+Zero-loss size-64 profiles retain word main 39.20%, span hash 18.11%, whitespace
+end 11.37% and start 6.32%; packet main 86.54% and error-trace recording 13.46%.
+Complete normalized LLVM function definitions match the previous qualified
+word/packet versions. Optimized main bodies keep 742/955 instructions respectively;
+full retained assembly diffs contain only two/three rodata RIP displacements.
+The assembly already contains the guarded six-octet whitespace bitmask, so a
+cosmetic predicate rewrite was discarded before any source edit.
+
+The approved generic cursor follow-up is committed at
+`8d1e135a885b6d19eb68a71313dc5a89dd35c557`. Exact compiler-runtime start/end calls
+with `(str, i64) -> i64`, zero ownership/view masks and matching actual operands
+emit bounded byte loops directly. Each byte access follows signed lower and
+upper guards, and emission updates the current block label for surrounding phis.
+Untrusted declarations retain their C call. Both private C helpers now safely
+return negative offsets unchanged, matching their existing past-end behavior.
+No IR or fact representation changes and no ownership edits are involved.
+
+Three new Core tests compare the trusted-inline and extern-C paths in debug,
+release and verify with empty/all-six-ASCII/UTF8/NBSP/negative/extreme/past-end
+cases, 168 exact result integers and empty leak stderr. The existing three
+managed split tests also pass, including source rebinding, temporary inputs,
+container overwrites, break/continue, collisions, indexed/deleted dictionaries,
+COW snapshots and all unfused boundary cases. Release LLVM explicitly has no
+cursor calls. The initial test fixture selected a runtime declaration as its
+entry; run14 retains UnsupportedEntry, run15 retains a mistaken test-option
+correction, and run16 uses the proper module.entry and passes 3/3. Run17 passes
+all three existing split tests. The compiler implementation was unchanged by
+these fixture corrections.
+
+`word-cursor-inline-06.json` then passes both gates with new cycles 32.998/47.089,
+new/old .113/.125 and new/Zig .695/.924. The original and paired failed receipts
+remain the qualification history; a fresh full sweep after the trace repair is
+still required. All subsequent profiles/timings acquire the independent EDA
+CPU10 lock first and the required S2 CPU10 lock second. The first cursor install
+waited 310.274 s for external build-slot admission before its actual 2.18 s build;
+the committed-source install took 2.92 s after separate gate/slot waits. These
+admission waits do not count as Core compilation time.
+
+The normal cursor commit hook initially found a 251-character tuple and a
+repeated temporary-name literal. Mechanical formatting and a file-scope constant
+made the normal whole-tree Guardian gate pass all 88 checks. Both hook receipts
+are retained. Full committed-source Core/conformance, renewed split50/raw35 and
+the final combined trace-package qualification are pending at this checkpoint.
+
+The committed cursor follow-up now qualifies: Core275/275 in124.24s/max75.76s/exact32/RSS250MiB; full1518each0/0 with leak/fact checks in57.59s; fresh split50 completes750 exact comparisons/zero mismatches in145.83s. Fresh `word35-cursor-diffs-02` and `exact-store-review-03.json` prove31 unchanged rows and exactly six scalar-store replacements in four functions, with zero other changes. `cursor-qualification-01.json` records the proof; final A remains pending the qualified trace merge and final combined checks.

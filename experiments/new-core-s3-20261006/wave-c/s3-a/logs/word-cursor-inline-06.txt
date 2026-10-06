@@ -1,0 +1,18 @@
+build-slot: all 1 gate slot(s) busy; waiting (0s so far)
+build-slot: gate slot 1 after 50s (all 1 gate slot(s) busy)
+build word_count old: status=0
+build word_count new: status=0
+
+### word_count (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 291.080 | 376.687 | same |
+| new core release | 32.998 | 47.089 | same |
+| Rust | 59.224 | 66.034 | same |
+| Zig ReleaseSafe | 47.447 | 50.969 | same |
+| new / old | 0.113 | 0.125 | same |
+| new / Zig | 0.695 | 0.924 | same |
+| new / Rust | 0.557 | 0.713 | same |
+
+valid rows: 1; speed gate misses: []
+Both new/old and new/Zig must be at most 1.10. binary_search misses require the plan's identical-code/layout-noise review; all other misses require repair.
