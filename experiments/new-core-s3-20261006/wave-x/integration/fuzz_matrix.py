@@ -20,6 +20,9 @@ import uuid
 ROOT = Path(__file__).resolve().parents[4]
 HERE = Path(__file__).resolve().parent
 KINDS = ("s0", "s1", "rc", "rebinding", "iteration", "dict", "text", "number", "functions")
+# Float-runtime builds are the longest package sweep. Start that worker first;
+# keep the registry and its per-kind seeds fixed so scheduling changes no cases.
+EXECUTION_ORDER = ("number",) + tuple(kind for kind in KINDS if kind != "number")
 TEXT_HARNESS = ROOT / "experiments/new-core-s3-20261006/wave-b/s3-t1/fuzz_text.py"
 NUMBER_HARNESS = ROOT / "experiments/new-core-s2-20261005/wave-b/s2-t2/fuzz_number.py"
 
@@ -62,7 +65,8 @@ def main():
     print(f"evidence={area}\nsource_commit={commit}", flush=True)
     manifest = {"source_commit": commit, "qualified_head_requested": args.qualified_head,
                 "oracles": oracles, "cases_per_kind": 200, "maximum_parallel_jobs": args.jobs,
-                "kinds": list(KINDS), "cache_root": str(cache), "run_id": run_id}
+                "kinds": list(KINDS), "execution_order": list(EXECUTION_ORDER),
+                "cache_root": str(cache), "run_id": run_id}
     (area / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
 
     def run(kind):
@@ -93,7 +97,8 @@ def main():
         return kind, passed, summary
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=args.jobs) as pool:
-        results = list(pool.map(run, KINDS))
+        completed = {kind: (passed, summary) for kind, passed, summary in pool.map(run, EXECUTION_ORDER)}
+    results = [(kind, *completed[kind]) for kind in KINDS]
     try:
         oracles_unchanged = all(identity(Path(item["path"])) == item for item in oracles.values())
     except (OSError, ValueError):

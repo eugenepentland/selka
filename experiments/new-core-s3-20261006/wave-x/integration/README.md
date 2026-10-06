@@ -19,6 +19,8 @@ The matrix holds the gate slot through this command. Each heavy worker also
 uses `scripts/build-slot.sh build`; `--jobs` allows one or two workers (default
 two). It runs all nine kinds with 200 fresh cases each, without evidence reuse:
 `s0`, `s1`, `rc`, `rebinding`, `iteration`, `dict`, `text`, `number`, `functions`.
+The longer number worker starts first; registry order and per-kind seeds remain
+fixed. The manifest records the execution order separately.
 Text explicitly uses the extended S3-T1 harness. Number uses the updated original
 `wave-b/s2-t2/fuzz_number.py`, which now includes S3 float parsing, formatting and
 byte-buffer checks. Other generators and their argument sets remain unchanged.
