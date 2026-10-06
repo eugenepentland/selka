@@ -20,7 +20,7 @@ fn qualified(a: std.mem.Allocator) !void {
         try std.testing.expect(result.term == .exited and result.term.exited == 0);
         try std.testing.expectEqualStrings("", result.stderr);
         const parsed = try std.json.parseFromSlice(std.json.Value, a, result.stdout, .{});
-        try std.testing.expectEqual(@as(i64, 6), parsed.value.object.get("passed").?.integer);
+        try std.testing.expectEqual(@as(i64, 9), parsed.value.object.get("passed").?.integer);
         try std.testing.expectEqual(@as(i64, 0), parsed.value.object.get("failed").?.integer);
         try std.testing.expectEqual(@as(i64, 0), parsed.value.object.get("unsupported").?.integer);
     }
@@ -57,4 +57,43 @@ test "S3 value adapter names in source extern declarations confer no compiler au
     try module.functions.append(a, .{ .name = "myl_core_render_shape_0_77", .signature = .{ .params = &.{}, .ret = .void, .linkage = .runtime_c } });
     var descriptors: std.ArrayList(u8) = .empty;
     try std.testing.expectError(error.UnsupportedInstruction, @import("emit_render.zig").descriptors(a, &module, &descriptors));
+}
+
+// spec-case: NEW-CORE-MUT-1
+test "S3 mut places refuse unmodeled selection and interior ancestor pin cases with locations" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const selection =
+        \\def replace_index(rows: mut list[list[int]]) -> int:
+        \\    rows = [[8]]
+        \\    return 0
+        \\def add(row: mut list[int], ignored: int) -> None:
+        \\    row.append(9)
+        \\def main() -> int:
+        \\    rows = [[1]]
+        \\    add(mut rows[replace_index(mut rows)], 0)
+        \\    return len(rows)
+    ;
+    const interior =
+        \\def tick(parent: mut list[list[int]]) -> int:
+        \\    parent.append([7])
+        \\    return 0
+        \\def add(row: mut list[int], ignored: int) -> None:
+        \\    row.append(9)
+        \\def main() -> int:
+        \\    rows = [[[1]], [[2]]]
+        \\    add(mut rows[1][0], tick(mut rows[1]))
+        \\    return len(rows)
+    ;
+    const cases = [_]struct { source: []const u8, reason: []const u8 }{
+        .{ .source = selection, .reason = "interior mut place changed while its index or key was evaluated" },
+        .{ .source = interior, .reason = "interior mut argument ancestor changed by a later interior write" },
+    };
+    for (cases) |case| {
+        var refusal: @import("build.zig").Refusal = .{};
+        try std.testing.expectError(error.Unsupported, @import("test_support.zig").buildSource(a, case.source, &refusal));
+        try std.testing.expectEqualStrings(case.reason, refusal.reason);
+        try std.testing.expect(refusal.span > 0);
+    }
 }
