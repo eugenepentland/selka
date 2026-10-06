@@ -254,7 +254,7 @@ pub fn printOptions(comptime Context: type, c: Context, print: typed.Print, span
     const terminator = if (print.terminator) |source| try c.expression(source) else try literal(Context, c, "\n");
     for (arguments, 0..) |argument, index| {
         if (index != 0) _ = try c.effectCall(stream_write_symbol, &.{ .cap, .str }, .void, &.{ stream, separator }, span);
-        const text = try c.textOf(argument, span);
+        const text = try c.textOf(argument, c.nodeOf(print.arguments[index]).ty, span);
         _ = try c.effectCall(stream_write_symbol, &.{ .cap, .str }, .void, &.{ stream, text }, span);
     }
     return c.effectCall(stream_write_symbol, &.{ .cap, .str }, .void, &.{ stream, terminator }, span);

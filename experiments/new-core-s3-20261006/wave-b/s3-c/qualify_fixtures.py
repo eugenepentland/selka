@@ -39,8 +39,10 @@ def main():
     core = ROOT / "zig-out/bin/mylang-core"
     old = ROOT / ".mylang-cache/s3/d2-oracle/mylang"
     binaries = {}
-    for fixture in ("host", "raw", "trap_handles", "stack_handles", "grants"):
+    for fixture in ("host", "raw", "trap_handles", "stack_handles", "grants", "environment_context"):
         provider = None if fixture == "grants" else BASE / ("c_host_provider.c" if fixture == "host" else "c_raw_provider.c")
+        if fixture == "environment_context":
+            provider = ROOT / "test/core/c_environment_context_provider.c"
         for mode in ("old", "debug", "release"):
             key = f"{fixture}-{mode}"
             binary = cache / key
@@ -61,6 +63,19 @@ def main():
             assert result["status"] == 0, result
             binaries[fixture, mode] = binary
     checks = []
+    for scenario, options, output in (
+        ("process", None, "3\nMYL_CORE_LEAKCHECK\nONLY_VISIBLE\nPATH\n"),
+        ("allowlist", "--allow-env=B,A", "2\nA\nB\n"),
+        ("restricted", "--restrict --allow-env=B,A", "2\nA\nB\n"),
+    ):
+        environment = dict(PATH="context-probe", ONLY_VISIBLE="ok", MYL_CORE_LEAKCHECK="1")
+        if options is not None:
+            environment["MYLANG_OPTIONS"] = options
+        for mode in ("old", "debug", "release"):
+            result = execute([binaries["environment_context", mode]],
+                             evidence / f"environment-context-{scenario}-{mode}.json", env=environment)
+            assert grade(result) == (0, output, ""), result
+            checks.append(f"environment-context-{scenario}-{mode}: sorted grant names; opaque provider context")
     for fixture in ("host", "raw", "stack_handles"):
         for mode in ("old", "debug", "release"):
             result = execute([binaries[fixture, mode]], evidence / f"{fixture}-{mode}-run.json",

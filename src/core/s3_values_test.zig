@@ -20,14 +20,14 @@ fn qualified(a: std.mem.Allocator) !void {
         try std.testing.expect(result.term == .exited and result.term.exited == 0);
         try std.testing.expectEqualStrings("", result.stderr);
         const parsed = try std.json.parseFromSlice(std.json.Value, a, result.stdout, .{});
-        try std.testing.expectEqual(@as(i64, 3), parsed.value.object.get("passed").?.integer);
+        try std.testing.expectEqual(@as(i64, 6), parsed.value.object.get("passed").?.integer);
         try std.testing.expectEqual(@as(i64, 0), parsed.value.object.get("failed").?.integer);
         try std.testing.expectEqual(@as(i64, 0), parsed.value.object.get("unsupported").?.integer);
     }
 }
 
 // spec: NEW-CORE-S3-VALUES-1
-test "S3 deep graphs preserve NaN signed zero nominal rendering and independent repeat snapshots" {
+test "S3 values preserve source shapes unit payloads marker data and ancestor supersession" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     try qualified(arena.allocator());
