@@ -356,16 +356,16 @@ test "MUT-REBIND-CALLER-1 a conditional parameter replacement checks its capture
     try std.testing.expectEqualStrings("mut_param", try role(parsed.value, "xs"));
 }
 
-// spec-case: LIVE-VIEW-SNAPSHOT-1
-test "live view mapping projection is a copy even on its owner's last read" {
+// spec-case: D2-VIEW-STORAGE-1
+test "explicit view snapshot keeps a separate mapping copy" {
     const source =
         \\record Envelope:
-        \\    live: DictValues[int, int]
+        \\    live: list[int]
         \\
         \\def main() -> int:
         \\    mapping = {1: 7}
-        \\    owner = Envelope(mapping.values())
-        \\    snapshot = owner.live.mapping
+        \\    owner = Envelope(list(mapping.values()))
+        \\    snapshot = mapping
         \\    snapshot[1] = 11
         \\    return mapping[1] + snapshot[1]
     ;

@@ -87,6 +87,7 @@ const Checker = struct {
     field_arena: std.heap.ArenaAllocator,
     src: source.Source,
     program: ast.Program,
+    view_consumers: dictionary_views.Consumers,
     catalog: Catalog,
     cleanup_masks: []const effect_set.Mask,
     effect_masks: []effect_set.Mask,
@@ -1776,6 +1777,7 @@ const Checker = struct {
         defer self.expression_depth -= 1;
         errdefer self.temporary_results = before;
         const result = try self.expressionValue(id);
+        if (dictionary_views.symbolicKind(self.catalog, result)) |kind| try dictionary_views.validateKind(Checker, self, id, kind);
         self.temporary_results = before;
         if (self.expression_depth > 1 and (try self.requiresHandling(result))) self.temporary_results += 1;
         return result;
@@ -2747,7 +2749,11 @@ pub fn checkWithCatalog(allocator: std.mem.Allocator, src: source.Source, progra
 /// retained direct results, and (MODULE-INTERFACE-1) for a module checked
 /// against imported interfaces, the transitive effect mask the interface
 /// declares for a function whose body the program does not have, by function.
-pub const Reuse = struct { symbolic: ?*generic_cache.Session = null, declared: []const ?effect_set.Mask = &.{} };
+pub const Reuse = struct { symbolic: ?*generic_cache.Session = null, declared: []const ?effect_set.Mask = &.{}, view_consumers: ?dictionary_views.Consumers = null };
+
+fn deinitOwnedConsumers(allocator: std.mem.Allocator, reuse: Reuse, consumers: dictionary_views.Consumers) void {
+    if (reuse.view_consumers == null) consumers.deinit(allocator);
+}
 /// Check symbolic bodies, reusing unchanged direct results from `symbolic`.
 /// The whole-graph `effects.checkAbstract` pass always runs from the combined
 /// fresh and replayed masks, so a changed callee body is re-derived even when a
@@ -2761,6 +2767,8 @@ pub fn checkWithCatalogCached(allocator: std.mem.Allocator, src: source.Source, 
         break;
     };
     if (!has_work) return;
+    const view_consumers = reuse_with.view_consumers orelse try dictionary_views.Consumers.init(allocator, src, program);
+    defer deinitOwnedConsumers(allocator, reuse_with, view_consumers);
     const cleanup_masks = try effects.cleanupMasks(allocator, catalog.records);
     defer allocator.free(cleanup_masks);
     const effect_masks = try allocator.alloc(effect_set.Mask, program.functions.len);
@@ -2817,6 +2825,7 @@ pub fn checkWithCatalogCached(allocator: std.mem.Allocator, src: source.Source, 
             .field_arena = std.heap.ArenaAllocator.init(allocator),
             .src = src,
             .program = program,
+            .view_consumers = view_consumers,
             .catalog = catalog,
             .cleanup_masks = cleanup_masks,
             .effect_masks = effect_masks,
@@ -2890,6 +2899,7 @@ pub fn checkWithCatalogCached(allocator: std.mem.Allocator, src: source.Source, 
             .field_arena = std.heap.ArenaAllocator.init(allocator),
             .src = src,
             .program = program,
+            .view_consumers = view_consumers,
             .catalog = catalog,
             .cleanup_masks = cleanup_masks,
             .effect_masks = effect_masks,

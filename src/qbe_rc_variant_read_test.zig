@@ -32,17 +32,6 @@ const source =
     \\            return payload
     \\        case _:
     \\            return Payload([], [])
-    \\record Held:
-    \\    view: DictValues[int, int]
-    \\union HeldItem:
-    \\    empty,
-    \\    value: Held
-    \\def held(rows: list[HeldItem]) -> int:
-    \\    match rows[0]:
-    \\        case HeldItem.value(payload):
-    \\            return len(payload.view)
-    \\        case _:
-    \\            return 0
     \\record CallbackPayload:
     \\    run: def(int) -> int
     \\    items: list[int]
@@ -99,10 +88,10 @@ test "RC adjacent variant read has a concrete guard and complete slow fallback" 
 }
 
 // spec-case: RC-ADJACENT-VARIANT-READ-1
-test "RC adjacent variant read refuses escaped variants held fields and scoped callbacks" {
+test "RC adjacent variant read refuses escaped variants and scoped callbacks" {
     var result = try emitted(.rc, false);
     defer result.deinit();
-    for ([_][]const u8{ "escaped", "held", "callback", "callback_payload" }) |name|
+    for ([_][]const u8{ "escaped", "callback", "callback_payload" }) |name|
         try t.expect(std.mem.indexOf(u8, try body(result.value, name), marker) == null);
 }
 

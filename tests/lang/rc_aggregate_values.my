@@ -173,19 +173,19 @@ public def test_reordered_constructor_fields_preserve_aliased_input_snapshots() 
 
 
 record HeldFields:
-    live: DictValues[int, int]
+    live: list[int]
     snapshot: dict[int, int]
 
 
 # spec-case: RC-AGGREGATE-1
 public def test_constructor_publishes_nested_holds_and_converts_held_mapping_inputs() -> bool:
     mapping = {1: 7}
-    live = mapping.values()
+    live = list(mapping.values())
     mapping[1] = 13
-    prior = live.mapping
-    result = HeldFields(live=live, snapshot=live.mapping)
+    prior = mapping
+    result = HeldFields(live=live, snapshot=mapping)
     result.snapshot[1] = 11
-    return list(result.live) == [13] and result.snapshot[1] == 11 and prior[1] == 13
+    return list(result.live) == [7] and result.snapshot[1] == 11 and prior[1] == 13
 
 
 def pinned_pair(items: mut list[int]) -> Pair:

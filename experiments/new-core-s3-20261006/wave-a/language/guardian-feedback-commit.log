@@ -1,0 +1,18 @@
+build-slot: all 1 gate slot(s) busy; waiting (0s so far)
+build-slot: all 1 gate slot(s) busy; waiting (60s so far)
+build-slot: all 1 gate slot(s) busy; waiting (120s so far)
+build-slot: all 1 gate slot(s) busy; waiting (180s so far)
+build-slot: all 1 gate slot(s) busy; waiting (240s so far)
+build-slot: all 1 gate slot(s) busy; waiting (300s so far)
+build-slot: all 1 gate slot(s) busy; waiting (360s so far)
+build-slot: all 1 gate slot(s) busy; waiting (420s so far)
+build-slot: gate slot 1 after 430s (all 1 gate slot(s) busy)
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: file-size: 4 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 2 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 128 finding(s) — report-only (--verbose for detail)
+guardian: repeated-string-literal: 2 finding(s) — report-only (--verbose for detail)
+guardian: try-in-return: 2 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 checks — 0 blocking, 4 report-only
+[main c147da6] feedback: mylang — S3 Wave A rebuild-stop checkpoint
+ 1 file changed, 3 insertions(+)

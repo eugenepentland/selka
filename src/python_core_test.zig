@@ -33,9 +33,9 @@ const Modules = struct {
             \\    return Some(1)
             \\public def items() -> list[int] effects(managed_allocation):
             \\    return [1, 2]
-            \\public def live_values[T: copy + storable](mapping: dict[str, T]) -> DictValues[str, T] noalloc:
-            \\    return mapping.values()
-            \\public def item_total(entries: DictItems[str, list[int]]) -> int noalloc:
+            \\public def live_values[T: copy + storable](mapping: dict[str, T]) -> list[T]:
+            \\    return list(mapping.values())
+            \\public def item_total(entries: list[DictItem[str, list[int]]]) -> int noalloc:
             \\    total = 0
             \\    for key, value in entries:
             \\        total += len(key) + value[0]
@@ -61,16 +61,16 @@ const Modules = struct {
             \\    mapping = {"a": [10], "bb": [20]}
             \\    live = values.live_values(mapping)
             \\    snapshot = list(live)
-            \\    items = mapping.items()
+            \\    items = list(mapping.items())
             \\    alias = mapping
             \\    alias["a"] = [1]
             \\    for index in range(200):
             \\        garbage = [index, index + 1]
             \\        if len(garbage) != 2:
             \\            return 4
-            \\    if snapshot[0][0] != 10 or list(live)[0][0] != 1:
+            \\    if snapshot[0][0] != 10 or list(live)[0][0] != 10:
             \\        return 5
-            \\    if values.item_total(items) != 24:
+            \\    if values.item_total(items) != 33:
             \\        return 6
             \\    match values.answer():
             \\        case Result.ok(n):

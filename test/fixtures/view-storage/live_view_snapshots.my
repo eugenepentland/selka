@@ -1,0 +1,118 @@
+module live_view_snapshots
+
+record HeldFields:
+    live: DictValues[int, int]
+    snapshot: dict[int, int]
+
+record Envelope:
+    live: DictValues[int, int]
+
+union Held:
+    values: DictValues[int, int],
+    empty
+
+# spec-case: LIVE-VIEW-SNAPSHOT-1
+public def test_last_view_read_does_not_move_its_mapping() -> bool:
+    mapping = {1: 7}
+    live = mapping.values()
+    result = HeldFields(live, live.mapping)
+    result.snapshot[1] = 11
+    if list(result.live) != [7]:
+        return False
+    mapping[1] = 13
+    return result.snapshot[1] == 11 and mapping[1] == 13
+
+# spec-case: LIVE-VIEW-SNAPSHOT-1
+public def test_nested_record_projection_keeps_view_live_and_mapping_independent() -> bool:
+    mapping = {1: 7}
+    owner = Envelope(mapping.values())
+    result = HeldFields(owner.live, owner.live.mapping)
+    result.snapshot[1] = 11
+    if list(result.live) != [7]:
+        return False
+    mapping[1] = 13
+    return result.snapshot[1] == 11 and mapping[1] == 13
+
+# spec-case: LIVE-VIEW-SNAPSHOT-1
+public def test_fixed_array_projection_preserves_external_mapping_owner() -> bool:
+    mapping = {1: 7}
+    owners: [1]Envelope = [Envelope(mapping.values())]
+    result = HeldFields(owners[0].live, owners[0].live.mapping)
+    result.snapshot[1] = 11
+    if list(result.live) != [7]:
+        return False
+    mapping[1] = 13
+    return result.snapshot[1] == 11 and mapping[1] == 13
+
+# spec-case: LIVE-VIEW-SNAPSHOT-1
+public def test_list_projection_preserves_external_mapping_owner() -> bool:
+    mapping = {1: 7}
+    owners = [Envelope(mapping.values())]
+    result = HeldFields(owners[0].live, owners[0].live.mapping)
+    result.snapshot[1] = 11
+    if list(result.live) != [7]:
+        return False
+    mapping[1] = 13
+    return result.snapshot[1] == 11 and mapping[1] == 13
+
+# spec-case: LIVE-VIEW-SNAPSHOT-1
+public def test_variant_payload_projection_preserves_external_mapping_owner() -> bool:
+    mapping = {1: 7}
+    owner = Held.values(mapping.values())
+    match owner:
+        case Held.values(live):
+            result = HeldFields(live, live.mapping)
+            result.snapshot[1] = 11
+            if list(result.live) != [7]:
+                return False
+            mapping[1] = 13
+            return result.snapshot[1] == 11 and mapping[1] == 13
+        case Held.empty:
+            return False
+
+# spec-case: LIVE-VIEW-SNAPSHOT-1
+public def test_fresh_view_mapping_projection_still_creates_a_snapshot() -> bool:
+    mapping = {1: 7}
+    snapshot = mapping.values().mapping
+    snapshot[1] = 11
+    return mapping[1] == 7 and snapshot[1] == 11
+
+def replace_mapping(live: mut DictValues[int, int]):
+    fields = live.mapping
+    fields[1] = 11
+    live.mapping = fields
+
+# spec-case: LIVE-VIEW-SNAPSHOT-1
+public def test_field_extract_mutate_and_return_cannot_mutate_external_mapping() -> bool:
+    mapping = {1: 7}
+    live = mapping.values()
+    replace_mapping(mut live)
+    return mapping[1] == 7 and list(live) == [11]
+
+def replace_payload(items: mut list[Held], index: int):
+    match items[index]:
+        case Held.values(old):
+            fields = old.mapping
+            fields[1] = 11
+            items[index] = Held.values(fields.values())
+        case Held.empty:
+            pass
+
+# spec-case: LIVE-VIEW-SNAPSHOT-1
+public def test_indexed_payload_return_cannot_elide_mapping_snapshot() -> bool:
+    mapping = {1: 7}
+    items = [Held.values(mapping.values())]
+    replace_payload(mut items, 0)
+    match items[0]:
+        case Held.values(live):
+            return mapping[1] == 7 and list(live) == [11]
+        case Held.empty:
+            return False
+
+# spec-case: LIVE-VIEW-SNAPSHOT-1
+public def test_copying_the_view_itself_keeps_external_identity() -> bool:
+    mapping = {1: 7}
+    live = mapping.values()
+    owners: [2]Envelope = [Envelope(live), Envelope(live)]
+    mapping[1] = 13
+    return list(owners[0].live) == [13] and list(owners[1].live) == [13]

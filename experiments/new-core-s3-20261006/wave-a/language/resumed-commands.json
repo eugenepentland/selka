@@ -1,0 +1,185 @@
+{
+  "branch": "codex/new-core-s3-language",
+  "base": "92590700",
+  "package_revision": "the commit containing this evidence",
+  "timing": "Command times exclude wrapper admission. These are build/gate wall times; no CPU10 performance-row measurements were made.",
+  "build_wrapper": "scripts/build-slot.sh build -- /usr/bin/time -f elapsed_s=%e\\ max_rss_kb=%M\\ exit=%x -o TIME ARGV",
+  "gate_wrapper": "scripts/build-slot.sh gate -- bash -c 'exec 7>&9; exec scripts/build-slot.sh build -- /usr/bin/time -f \"elapsed_s=%e max_rss_kb=%M exit=%x\" -o TIME ARGV'",
+  "exclusive_core_helper": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/experiments/new-core-s3-20261006/wave-a/exclusive_core.py -- TIMED_ARGV (inside retained gate + build wrappers; owns remaining build locks)",
+  "checks": [
+    {
+      "check": "core build",
+      "argv": [
+        "zig",
+        "build",
+        "core",
+        "--summary",
+        "all"
+      ],
+      "locks": "exclusive",
+      "stdout_stderr": "experiments/new-core-s3-20261006/wave-a/language/resume-11-core-build.log",
+      "time_file": "experiments/new-core-s3-20261006/wave-a/language/resume-11-core-build.time",
+      "elapsed_s": 1.58,
+      "max_rss_kb": 317664,
+      "exit": 0
+    },
+    {
+      "check": "test-core",
+      "argv": [
+        "zig",
+        "build",
+        "test-core",
+        "-Dcore-shards=8",
+        "--summary",
+        "all"
+      ],
+      "locks": "gate+build",
+      "stdout_stderr": "experiments/new-core-s3-20261006/wave-a/language/resume-15-test-core.log",
+      "time_file": "experiments/new-core-s3-20261006/wave-a/language/resume-15-test-core.time",
+      "elapsed_s": 74.17,
+      "max_rss_kb": 329664,
+      "exit": 0
+    },
+    {
+      "check": "old test",
+      "argv": [
+        "zig",
+        "build",
+        "test",
+        "--summary",
+        "all"
+      ],
+      "locks": "gate+build",
+      "stdout_stderr": "experiments/new-core-s3-20261006/wave-a/language/resume-13-old-test.log",
+      "time_file": "experiments/new-core-s3-20261006/wave-a/language/resume-13-old-test.time",
+      "elapsed_s": 951.61,
+      "max_rss_kb": 2418236,
+      "exit": 0
+    },
+    {
+      "check": "old QBE",
+      "argv": [
+        "zig",
+        "build",
+        "test-qbe",
+        "--summary",
+        "all"
+      ],
+      "locks": "gate+build",
+      "stdout_stderr": "experiments/new-core-s3-20261006/wave-a/language/resume-19-old-qbe.log",
+      "time_file": "experiments/new-core-s3-20261006/wave-a/language/resume-19-old-qbe.time",
+      "elapsed_s": 84.14,
+      "max_rss_kb": 608548,
+      "exit": 0
+    },
+    {
+      "check": "old QBE build",
+      "argv": [
+        "zig",
+        "build",
+        "test-qbe-build",
+        "--summary",
+        "all"
+      ],
+      "locks": "gate+build",
+      "stdout_stderr": "experiments/new-core-s3-20261006/wave-a/language/resume-21-old-qbe-build.log",
+      "time_file": "experiments/new-core-s3-20261006/wave-a/language/resume-21-old-qbe-build.time",
+      "elapsed_s": 3.0,
+      "max_rss_kb": 608572,
+      "exit": 0
+    },
+    {
+      "check": "format",
+      "argv": [
+        "zig",
+        "build",
+        "fmt-check",
+        "--summary",
+        "all"
+      ],
+      "locks": "gate+build",
+      "stdout_stderr": "experiments/new-core-s3-20261006/wave-a/language/resume-22-old-fmt.log",
+      "time_file": "experiments/new-core-s3-20261006/wave-a/language/resume-22-old-fmt.time",
+      "elapsed_s": 0.23,
+      "max_rss_kb": 46892,
+      "exit": 0
+    },
+    {
+      "check": "strict conformance",
+      "argv": [
+        "python3",
+        "experiments/new-core-s2-20261005/wave-b/integration/conformance_checked.py",
+        "--set",
+        "all",
+        "--modes",
+        "debug,release",
+        "--jobs",
+        "3",
+        "--why",
+        "--leakcheck",
+        "--verify",
+        "--mylang",
+        "zig-out/bin/mylang",
+        "--core",
+        "zig-out/bin/mylang-core",
+        "--cache-dir",
+        ".mylang-cache/s3/resume-conformance"
+      ],
+      "locks": "build",
+      "stdout_stderr": "experiments/new-core-s3-20261006/wave-a/language/resume-16-conformance.log",
+      "time_file": "experiments/new-core-s3-20261006/wave-a/language/resume-16-conformance.time",
+      "elapsed_s": 757.88,
+      "max_rss_kb": 363524,
+      "exit": 0
+    },
+    {
+      "check": "coverage",
+      "argv": [
+        "env",
+        "TMPDIR=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-language/.mylang-cache/s3/resume-coverage-tmp",
+        "python3",
+        "experiments/new-core-s2-20261005/wave-a/qualify_coverage.py",
+        "--evidence",
+        "experiments/new-core-s3-20261006/wave-a/language/resume-17-coverage"
+      ],
+      "locks": "build",
+      "stdout_stderr": "experiments/new-core-s3-20261006/wave-a/language/resume-17-coverage.log",
+      "time_file": "experiments/new-core-s3-20261006/wave-a/language/resume-17-coverage.time",
+      "elapsed_s": 17.15,
+      "max_rss_kb": 39004,
+      "exit": 0
+    },
+    {
+      "check": "strict dictionary fuzz",
+      "argv": [
+        "python3",
+        "experiments/new-core-s2-20261005/wave-a/integration/fuzz_qualification.py",
+        "--kind",
+        "dict",
+        "--cases",
+        "50",
+        "--seed",
+        "20261006",
+        "--mylang",
+        "zig-out/bin/mylang",
+        "--core",
+        "zig-out/bin/mylang-core",
+        "--evidence",
+        "experiments/new-core-s3-20261006/wave-a/language/resume-18-fuzz-dict",
+        "--cache-root",
+        ".mylang-cache/s3/resume-fuzz-dict"
+      ],
+      "locks": "build",
+      "stdout_stderr": "experiments/new-core-s3-20261006/wave-a/language/resume-18-fuzz-dict.log",
+      "time_file": "experiments/new-core-s3-20261006/wave-a/language/resume-18-fuzz-dict.time",
+      "elapsed_s": 785.81,
+      "max_rss_kb": 244148,
+      "exit": 0
+    }
+  ],
+  "guardian": [
+    "guardian-check all . --full (resume-09:88 checks passed)",
+    "guardian-check spec . (resume-20:1435/1435 covered)"
+  ],
+  "guardian_feedback_commit": "af909ac"
+}

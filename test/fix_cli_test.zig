@@ -378,3 +378,48 @@ test "CLI warm imported direct and callback ABIs follow producer rebinding chang
     defer testing.allocator.free(consumer);
     try testing.expectEqualStrings(abi_consumer, consumer);
 }
+
+// spec-case: FIX-MIGRATION-1
+// spec-case: D2-VIEW-STORAGE-1
+test "D2 CLI fix materializes stored dictionary projections with contextual list snapshots" {
+    const original = @embedFile("fixtures/fix-migration/dictionary-views.my");
+    var project = try Project.init(&.{.{ .path = "main.my", .data = original }});
+    defer project.deinit();
+    const preview = try project.run("fix", "main.my", &.{"--check"});
+    defer preview.deinit();
+    try testing.expectEqual(@as(u8, 1), preview.status);
+    try testing.expect(contains(preview.stdout, "E_VIEW_STORED"));
+    const fixed = try project.run("fix", "main.my", &.{});
+    defer fixed.deinit();
+    try testing.expectEqual(@as(u8, 0), fixed.status);
+    const after = try project.read("main.my");
+    defer testing.allocator.free(after);
+    try testing.expect(contains(after, "keys = list(mapping.keys())"));
+    try testing.expect(contains(after, "values = list(mapping.values())"));
+    try testing.expect(contains(after, "items = list(mapping.items())"));
+    try testing.expect(contains(after, "nested = [list(mapping.values())]"));
+    try testing.expect(contains(after, "interior = list(rows[0].values())"));
+    const checked = try project.run("check", "main.my", &.{});
+    defer checked.deinit();
+    try testing.expectEqual(@as(u8, 0), checked.status);
+    const again = try project.run("fix", "main.my", &.{"--check"});
+    defer again.deinit();
+    try testing.expectEqual(@as(u8, 0), again.status);
+}
+
+fn storedViewCorpus(path: []const u8, text: []const u8) !void {
+    var project = try Project.init(&.{.{ .path = path, .data = text }});
+    defer project.deinit();
+    const checked = try project.run("check", path, &.{"--diagnostics=json"});
+    defer checked.deinit();
+    try testing.expectEqual(@as(u8, 1), checked.status);
+    try testing.expect(contains(checked.stderr, "E_VIEW_STORED"));
+}
+
+// spec-case: D2-VIEW-STORAGE-1
+test "D2 rejects the former held receiver snapshot history and aggregate view corpora" {
+    try storedViewCorpus("rc_dictionary_views.my", @embedFile("fixtures/view-storage/rc_dictionary_views.my"));
+    try storedViewCorpus("rc_view_receivers.my", @embedFile("fixtures/view-storage/rc_view_receivers.my"));
+    try storedViewCorpus("live_view_snapshots.my", @embedFile("fixtures/view-storage/live_view_snapshots.my"));
+    try storedViewCorpus("rc_semantic_history.my", @embedFile("fixtures/view-storage/rc_semantic_history.my"));
+}

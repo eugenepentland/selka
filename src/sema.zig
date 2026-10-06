@@ -25,6 +25,7 @@ const eShadowing = diagnostic.shadowing;
 const eConversionBody = "E_CONVERSION_BODY";
 const sem_copy = @import("semantic_copy.zig");
 const generic_specializations = @import("generic_specializations.zig");
+const generic_bodies = @import("generic_bodies.zig");
 const semantic_key = @import("semantic_key.zig");
 const sem_entry = @import("semantic_entry.zig");
 
@@ -150,6 +151,7 @@ const Checker = struct {
     allocator: std.mem.Allocator,
     src: source.Source,
     syntax: ast.Program,
+    view_consumers: dictionary_views.Consumers,
     sink: *diagnostic.Sink,
     nodes: std.ArrayList(typed.Node) = .empty,
     statements: std.ArrayList(typed.Statement) = .empty,
@@ -374,7 +376,7 @@ const Checker = struct {
     fn checkLambdaFunction(self: *Checker, index: usize) Error!typed.Function {
         const lambda = self.syntax.lambdas[index];
         const lambda_type = self.lambda_types[index] orelse {
-            if (self.inGenericBody(lambda.span)) return self.sink.fail("E_GENERIC_BODY_UNSUPPORTED", lambda.span, @import("generic_bodies.zig").lambda_in_generic_body);
+            if (self.inGenericBody(lambda.span)) return self.sink.fail("E_GENERIC_BODY_UNSUPPORTED", lambda.span, generic_bodies.lambda_in_generic_body);
             return self.sink.fail(lambda_context_code, lambda.span, "lambda requires an expected callback type");
         };
         if (lambda_type == uninferred_lambda) return error.SourceError;
@@ -1482,9 +1484,18 @@ const presize_threshold = 1 << 14;
 pub fn check(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink) Error!typed.Program {
     return checkWithNames(allocator, src, program, sink, null);
 }
-fn checkGenericContracts(src: source.Source, program: ast.Program, sink: *diagnostic.Sink, catalog: records.Catalog, symbolic: *?generic_cache.Session, declared: []const ?effect_set.Mask) Error!void {
-    const session: ?*generic_cache.Session = if (symbolic.*) |*reuse| reuse else null;
-    try @import("generic_bodies.zig").checkWithCatalogCached(sink.allocator, src, program, sink, catalog, .{ .symbolic = session, .declared = declared });
+fn checkGenericContracts(
+    src: source.Source,
+    program: ast.Program,
+    sink: *diagnostic.Sink,
+    catalog: records.Catalog,
+    symbolic: *?generic_cache.Session,
+    reuse: generic_bodies.Reuse,
+) Error!void {
+    const session: ?*generic_cache.Session = if (symbolic.*) |*retained| retained else null;
+    var options = reuse;
+    options.symbolic = session;
+    try generic_bodies.checkWithCatalogCached(sink.allocator, src, program, sink, catalog, options);
 }
 /// MODULE-INTERFACE-1: per AST function, the transitive effect mask an
 /// imported interface declares for a body this compilation does not have, or
@@ -1829,9 +1840,11 @@ fn checkCore(allocator: std.mem.Allocator, src: source.Source, program: ast.Prog
     defer deinitSymbolic(&symbolic);
     var spec_session = try openSpecializationSession(cache, &session);
     defer deinitSpecialization(&spec_session);
+    const view_consumers = try dictionary_views.Consumers.init(allocator, src, program);
+    defer view_consumers.deinit(allocator);
     var failed = false;
     const symbolic_start = timingStart(timing);
-    checkGenericContracts(src, program, sink, catalog, &symbolic, try declaredMasks(allocator, cache, &session)) catch |err| switch (err) {
+    checkGenericContracts(src, program, sink, catalog, &symbolic, .{ .declared = try declaredMasks(allocator, cache, &session), .view_consumers = view_consumers }) catch |err| switch (err) {
         error.SourceError => failed = true,
         else => return err,
     };
@@ -1849,6 +1862,7 @@ fn checkCore(allocator: std.mem.Allocator, src: source.Source, program: ast.Prog
         .allocator = allocator,
         .src = src,
         .syntax = program,
+        .view_consumers = view_consumers,
         .sink = sink,
         .resolved = resolved,
         .catalog = catalog,

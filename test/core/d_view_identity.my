@@ -15,13 +15,13 @@ def fresh_mapping() -> dict[int, int]:
 public def test_record_alias_before_view() -> bool:
     d = {1: 7}
     holder = Holder(d)
-    view = d.values()
+    view = list(d.values())
     d[1] = 9
     return list(view) == [7] and holder.mapping[1] == 7 and d[1] == 9
 
 public def test_record_alias_after_view() -> bool:
     d = {1: 7}
-    view = d.values()
+    view = list(d.values())
     holder = Holder(d)
     d[1] = 9
     return list(view) == [7] and holder.mapping[1] == 7
@@ -30,7 +30,7 @@ public def test_tuple_and_aggregate_copy_before_view() -> bool:
     d = {1: 7}
     holder = (d, 11)
     saved = holder
-    view = d.values()
+    view = list(d.values())
     d[1] = 9
     selected, marker = saved
     return list(view) == [7] and selected[1] == 7 and marker == 11
@@ -38,7 +38,7 @@ public def test_tuple_and_aggregate_copy_before_view() -> bool:
 public def test_union_payload_before_view() -> bool:
     d = {1: 7}
     holder = Captured.Mapping(d)
-    view = d.values()
+    view = list(d.values())
     d[1] = 9
     match holder:
         case Captured.Mapping(saved):
@@ -47,39 +47,39 @@ public def test_union_payload_before_view() -> bool:
 public def test_list_alias_before_view() -> bool:
     d = {1: 7}
     holders = [d]
-    view = d.values()
+    view = list(d.values())
     d[1] = 9
     return list(view) == [7] and holders[0][1] == 7
 
 public def test_nested_dictionary_alias_before_view() -> bool:
     d = {1: 7}
     holders = {2: d}
-    view = d.values()
+    view = list(d.values())
     d[1] = 9
     return list(view) == [7] and holders[2][1] == 7
 
 public def test_returned_alias_before_view() -> bool:
     d = {1: 7}
     holder = retain_mapping(d)
-    view = d.values()
+    view = list(d.values())
     d[1] = 9
     return list(view) == [7] and holder.mapping[1] == 7
 
 public def test_fixed_array_alias_before_view() -> bool:
     d = {1: 7}
     holders: [1]dict[int, int] = [d]
-    view = d.values()
+    view = list(d.values())
     d[1] = 9
     return list(view) == [7] and holders[0][1] == 7
 
-public def test_returned_dictionary_view_has_unknown_origin() -> bool:
+public def test_returned_dictionary_snapshot_is_independent() -> bool:
     d = fresh_mapping()
-    view = d.values()
+    view = list(d.values())
     d[1] = 9
-    return list(view) == [9]
+    return list(view) == [7]
 
-public def test_fixed_array_stored_live_view() -> bool:
+public def test_fixed_array_stored_snapshot() -> bool:
     d = {1: 7}
-    views: [1]DictValues[int, int] = [d.values()]
+    views: [1]list[int] = [list(d.values())]
     d[1] = 9
-    return list(views[0]) == [9]
+    return list(views[0]) == [7]

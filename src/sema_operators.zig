@@ -5,6 +5,7 @@
 //! `Checks` exposes the ones the rest of the checker calls as `self.name(...)`.
 const sema_shared = @import("sema_shared.zig");
 const collections = @import("collection_lower.zig");
+const dictionary_views = @import("dictionary_views.zig");
 const option_flow = @import("option_flow.zig");
 const eResultOperation = diagnostic.result_operation;
 const eResultPath = diagnostic.result_path;
@@ -382,6 +383,13 @@ fn checkMembership(comptime Checker: type, self: *Checker, node: ast.Node, membe
     const needle = try self.expressionWithTemporaries(membership.needle, temporaries);
     const container = try self.expressionWithTemporaries(membership.container, temporaries);
     const container_type = self.nodes.items[@backingInt(container)].ty;
+    if (dictionary_views.identify(self.catalog, container_type)) |kind| if (kind != .item) {
+        const mapping = try dictionary_views.owner(Checker, self, node.span, container);
+        const expected = try dictionary_views.element(&self.catalog, self.nodes.items[@backingInt(mapping)].ty, kind, node.span);
+        try self.require(self.nodes.items[@backingInt(needle)].ty, expected, node.span);
+        if (self.requiresCellEquality(expected)) return self.sink.fail(eCellEquality, node.span, "membership over Cell-bearing values requires equality, which Cell does not define");
+        return dictionary_views.contains(Checker, self, node.span, needle, mapping, kind, membership.negate);
+    };
     if (!container_type.isAggregate() or !self.catalog.records[container_type.recordIndex()].isCollection()) return self.sink.fail("E_MEMBERSHIP", node.span, "membership requires a list, dictionary, or str");
     const schema = self.catalog.records[container_type.recordIndex()];
     const compared = switch (schema.collection.kind) {

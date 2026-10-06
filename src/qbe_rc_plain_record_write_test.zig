@@ -19,11 +19,6 @@ const source =
     \\    return state
     \\def managed_field(state: mut State, values: list[int]):
     \\    state.items = values
-    \\record Held:
-    \\    view: DictValues[int, int]
-    \\    count: int
-    \\def held_field(state: mut Held):
-    \\    state.count = state.count + 1
     \\record ResourceState:
     \\    file: TextFile
     \\    count: int
@@ -40,11 +35,6 @@ const source =
     \\        if i == 2:
     \\            state = State([13], 6)
     \\        i += 1
-    \\    return state.count
-    \\def named_held() -> int:
-    \\    mapping = {1: 7}
-    \\    state = Held(mapping.values(), 0)
-    \\    state.count = state.count + 1
     \\    return state.count
     \\record CallbackState:
     \\    items: list[int]
@@ -83,7 +73,6 @@ test "RC named record home remains owning through rebind and typed mut call" {
     try t.expectEqual(@as(usize, 2), std.mem.count(u8, il, "# RC-GLUE-1 loan"));
     const publication = std.mem.indexOf(u8, il, marker) orelse return error.TestUnexpectedResult;
     try t.expect(std.mem.lastIndexOf(u8, il[0..publication], " =l copy %l") != null);
-    try t.expect(std.mem.indexOf(u8, try body(result.value, "named_held"), marker) == null);
     try t.expect(std.mem.indexOf(u8, try body(result.value, "named_callback"), marker) == null);
 }
 
@@ -123,7 +112,7 @@ test "RC-PLAIN-RECORD-WRITE-1 exact counter loop leaves managed siblings untouch
 }
 
 // spec-case: RC-PLAIN-RECORD-WRITE-1
-test "RC-PLAIN-RECORD-WRITE-1 owned copy managed update and live view keep general paths" {
+test "RC-PLAIN-RECORD-WRITE-1 owned copy managed update and unique resources keep general paths" {
     const saved = runtime.get();
     defer runtime.set(saved);
     runtime.set(.rc);
@@ -131,7 +120,6 @@ test "RC-PLAIN-RECORD-WRITE-1 owned copy managed update and live view keep gener
     defer result.deinit();
     try t.expect(std.mem.indexOf(u8, try body(result.value, "local_value"), marker) == null);
     try t.expect(std.mem.indexOf(u8, try body(result.value, "managed_field"), marker) == null);
-    try t.expect(std.mem.indexOf(u8, try body(result.value, "held_field"), marker) == null);
     try t.expect(std.mem.indexOf(u8, try body(result.value, "unique_field"), marker) == null);
 }
 

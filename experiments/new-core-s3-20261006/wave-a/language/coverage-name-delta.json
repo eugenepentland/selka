@@ -1,0 +1,330 @@
+{
+  "baseline": "experiments/new-core-s2-20261005/wave-b/integration/coverage-standard-after-fact",
+  "removed": [
+    {
+      "name": "3:dictionary_views::test_bound_views_are_live_and_snapshots_are_explicit",
+      "before": "aggregate or captured dictionary alias combined with a live view"
+    },
+    {
+      "name": "3:live_view_snapshots::replace_mapping",
+      "before": "ordinary dictionary snapshot combined with a live view"
+    },
+    {
+      "name": "3:live_view_snapshots::replace_payload",
+      "before": "aggregate storage of live dictionary views"
+    },
+    {
+      "name": "3:live_view_snapshots::test_copying_the_view_itself_keeps_external_identity",
+      "before": "aggregate storage of live dictionary views"
+    },
+    {
+      "name": "3:live_view_snapshots::test_field_extract_mutate_and_return_cannot_mutate_external_mapping",
+      "before": "mut live dictionary view argument"
+    },
+    {
+      "name": "3:live_view_snapshots::test_fixed_array_projection_preserves_external_mapping_owner",
+      "before": "aggregate storage of live dictionary views"
+    },
+    {
+      "name": "3:live_view_snapshots::test_fresh_view_mapping_projection_still_creates_a_snapshot",
+      "before": null
+    },
+    {
+      "name": "3:live_view_snapshots::test_indexed_payload_return_cannot_elide_mapping_snapshot",
+      "before": "aggregate storage of live dictionary views"
+    },
+    {
+      "name": "3:live_view_snapshots::test_last_view_read_does_not_move_its_mapping",
+      "before": "aggregate storage of live dictionary views"
+    },
+    {
+      "name": "3:live_view_snapshots::test_list_projection_preserves_external_mapping_owner",
+      "before": "aggregate storage of live dictionary views"
+    },
+    {
+      "name": "3:live_view_snapshots::test_nested_record_projection_keeps_view_live_and_mapping_independent",
+      "before": "aggregate storage of live dictionary views"
+    },
+    {
+      "name": "3:live_view_snapshots::test_variant_payload_projection_preserves_external_mapping_owner",
+      "before": "aggregate storage of live dictionary views"
+    },
+    {
+      "name": "3:rc_dictionary_views::escape_held_pair",
+      "before": "aggregate storage of live dictionary views"
+    },
+    {
+      "name": "3:rc_dictionary_views::held_through_arena",
+      "before": "aggregate storage of live dictionary views"
+    },
+    {
+      "name": "3:rc_dictionary_views::mapping_of",
+      "before": null
+    },
+    {
+      "name": "3:rc_dictionary_views::test_arena_escape_traverses_nested_held_edges_and_managed_values",
+      "before": "aggregate storage of live dictionary views"
+    },
+    {
+      "name": "3:rc_dictionary_views::test_escaping_an_older_held_mapping_preserves_its_live_identity",
+      "before": "aggregate storage of live dictionary views"
+    },
+    {
+      "name": "3:rc_dictionary_views::test_mapping_projection_creates_named_snapshots",
+      "before": "ordinary dictionary snapshot combined with a live view"
+    },
+    {
+      "name": "3:rc_dictionary_views::test_recursive_boxes_keep_live_held_edges_through_copy_and_drop",
+      "before": "aggregate storage of live dictionary views"
+    },
+    {
+      "name": "3:rc_dictionary_views::test_replacing_mapping_field_rebinds_live_identity",
+      "before": "rebinding a live dictionary view"
+    },
+    {
+      "name": "3:rc_dictionary_views::test_stored_and_returned_views_observe_growth_and_clear",
+      "before": "list storage of live dictionary views"
+    },
+    {
+      "name": "3:rc_semantic_history::test_arena_append_of_a_fresh_mapping_does_not_create_a_semantic_snapshot",
+      "before": "live dictionary view of an interior place"
+    },
+    {
+      "name": "3:rc_semantic_history::test_arena_read_only_projection_does_not_detach_a_live_mapping",
+      "before": null
+    },
+    {
+      "name": "3:rc_semantic_history::test_arena_snapshot_then_owner_mutation_keeps_the_shared_original",
+      "before": "aggregate storage of live dictionary views"
+    },
+    {
+      "name": "3:rc_semantic_history::test_boxed_variant_materialization_keeps_the_original_view",
+      "before": "aggregate storage of live dictionary views"
+    },
+    {
+      "name": "3:rc_semantic_history::test_copying_only_whole_views_keeps_the_mapping_live",
+      "before": null
+    },
+    {
+      "name": "3:rc_semantic_history::test_fixed_array_keeps_the_original_view_after_both_writes",
+      "before": "aggregate storage of live dictionary views"
+    },
+    {
+      "name": "3:rc_semantic_history::test_heap_read_only_projection_does_not_detach_a_live_mapping",
+      "before": null
+    },
+    {
+      "name": "3:rc_semantic_history::test_list_element_keeps_the_original_view_after_both_writes",
+      "before": "aggregate storage of live dictionary views"
+    },
+    {
+      "name": "3:rc_semantic_history::test_nested_record_keeps_the_original_view_after_both_writes",
+      "before": "aggregate storage of live dictionary views"
+    },
+    {
+      "name": "3:rc_semantic_history::test_owner_then_snapshot_mutation_preserves_the_same_original_view",
+      "before": "aggregate storage of live dictionary views"
+    },
+    {
+      "name": "3:rc_semantic_history::test_sharing_before_view_creation_still_affects_the_next_owner_mutation",
+      "before": "ordinary dictionary snapshot combined with a live view"
+    },
+    {
+      "name": "3:rc_semantic_history::test_snapshot_then_owner_mutation_preserves_the_view_of_the_shared_original",
+      "before": "aggregate storage of live dictionary views"
+    },
+    {
+      "name": "3:rc_semantic_history::test_view_created_after_both_detaches_follows_the_new_owner",
+      "before": "ordinary dictionary snapshot combined with a live view"
+    },
+    {
+      "name": "3:rc_view_receivers::capture_mapping",
+      "before": null
+    },
+    {
+      "name": "3:rc_view_receivers::only_view",
+      "before": "escaping live dictionary view"
+    },
+    {
+      "name": "3:rc_view_receivers::replace_mapping",
+      "before": "rebinding a live dictionary view"
+    },
+    {
+      "name": "3:rc_view_receivers::test_explicit_row_snapshot_survives_view_rebinding",
+      "before": "mut live dictionary view argument"
+    },
+    {
+      "name": "3:rc_view_receivers::test_held_only_mapping_remains_mutable",
+      "before": "escaping live dictionary view"
+    },
+    {
+      "name": "3:rc_view_receivers::test_list_of_views_preserves_ordinary_mapping_snapshots",
+      "before": "list storage of live dictionary views"
+    },
+    {
+      "name": "3:rc_view_receivers::test_nested_view_field_detaches_without_releasing_snapshot",
+      "before": "aggregate storage of live dictionary views"
+    },
+    {
+      "name": "3:rc_view_receivers::test_pending_nested_mapping_receiver_pins_snapshot_path",
+      "before": "aggregate or captured dictionary alias combined with a live view"
+    },
+    {
+      "name": "3:rc_view_receivers::test_shared_mapping_write_replaces_only_held_edge",
+      "before": "ordinary dictionary snapshot combined with a live view"
+    },
+    {
+      "name": "3:rc_view_receivers::test_unshared_mapping_write_preserves_live_identity",
+      "before": "live dictionary view with unproved source identity"
+    },
+    {
+      "name": "3:test_live_view_root_keeps_existing_transfer_rules",
+      "before": "aggregate storage of live dictionary views"
+    },
+    {
+      "name": "3:test_live_view_sibling_keeps_existing_holds",
+      "before": "aggregate storage of live dictionary views"
+    }
+  ],
+  "added": [
+    {
+      "name": "3:dictionary_views::test_bound_snapshots_stay_independent",
+      "after": null
+    },
+    {
+      "name": "3:dictionary_views::test_direct_projection_membership_and_snapshots",
+      "after": null
+    },
+    {
+      "name": "3:live_view_snapshots::test_explicit_snapshot_preserves_prior_values",
+      "after": null
+    },
+    {
+      "name": "3:live_view_snapshots::test_record_array_list_and_variant_store_independent_snapshots",
+      "after": null
+    },
+    {
+      "name": "3:rc_dictionary_views::collect",
+      "after": null
+    },
+    {
+      "name": "3:rc_dictionary_views::test_explicit_snapshot_preserves_prior_values",
+      "after": null
+    },
+    {
+      "name": "3:rc_dictionary_views::test_returned_nested_snapshots_keep_managed_values",
+      "after": null
+    },
+    {
+      "name": "3:rc_semantic_history::test_explicit_snapshot_preserves_prior_values",
+      "after": null
+    },
+    {
+      "name": "3:rc_semantic_history::test_snapshots_before_and_after_replacement_capture_each_history",
+      "after": null
+    },
+    {
+      "name": "3:rc_view_receivers::replace",
+      "after": null
+    },
+    {
+      "name": "3:rc_view_receivers::test_explicit_snapshot_preserves_prior_values",
+      "after": null
+    },
+    {
+      "name": "3:rc_view_receivers::test_snapshot_mutation_and_rebinding_leave_mapping_independent",
+      "after": null
+    },
+    {
+      "name": "3:test_snapshot_root_keeps_existing_transfer_rules",
+      "after": null
+    },
+    {
+      "name": "3:test_snapshot_sibling_stays_independent",
+      "after": null
+    }
+  ],
+  "admitted": [
+    {
+      "name": "3:dictionary_views::generic_first[i64]",
+      "before": "live dictionary view with unproved source identity"
+    },
+    {
+      "name": "3:dictionary_views::generic_live_values[i64]",
+      "before": "escaping live dictionary view"
+    },
+    {
+      "name": "3:dictionary_views::generic_values[i64]",
+      "before": "live dictionary view with unproved source identity"
+    },
+    {
+      "name": "3:dictionary_views::test_views_keep_mapping_alive_and_empty_views_work",
+      "before": "live dictionary view with unproved source identity"
+    },
+    {
+      "name": "3:dictionary_views::test_views_support_comprehensions_and_generic_helpers",
+      "before": "escaping live dictionary view"
+    },
+    {
+      "name": "3:dictionary_views::test_views_work_inside_arena_and_snapshots_stay_independent",
+      "before": "live dictionary view with unproved source identity"
+    },
+    {
+      "name": "3:held",
+      "before": "aggregate storage of live dictionary views"
+    },
+    {
+      "name": "3:mut_dictionary_arguments::test_dictionary_element_argument_keeps_pinned_copy_independent",
+      "before": "live dictionary view of an interior place"
+    },
+    {
+      "name": "3:observed_root",
+      "before": "aggregate storage of live dictionary views"
+    },
+    {
+      "name": "3:rc_box_writeback::test_option_write_still_publishes_when_a_view_keeps_the_old_mapping_alive",
+      "before": "live dictionary view of an interior place"
+    },
+    {
+      "name": "3:rc_compact_journal::test_reused_operands_retain_ordinary_and_held_cleanup_roles",
+      "before": "ordinary dictionary snapshot combined with a live view"
+    },
+    {
+      "name": "3:rc_journal_types::escaped",
+      "before": "aggregate storage of live dictionary views"
+    },
+    {
+      "name": "3:rc_journal_types::rebuilt",
+      "before": "aggregate storage of live dictionary views"
+    },
+    {
+      "name": "3:rc_journal_types::test_reused_constructor_values_keep_their_current_cleanup_roles",
+      "before": "aggregate storage of live dictionary views"
+    },
+    {
+      "name": "3:rc_journal_types::test_reused_owners_and_held_values_escape_with_valid_storage",
+      "before": "aggregate storage of live dictionary views"
+    },
+    {
+      "name": "3:rc_semantic_publication::test_arena_setdefault_read_does_not_share_the_selected_mapping",
+      "before": "live dictionary view of an interior place"
+    },
+    {
+      "name": "3:rc_semantic_publication::test_fresh_dictionary_insertion_keeps_its_child_live_in_an_arena",
+      "before": "live dictionary view of an interior place"
+    },
+    {
+      "name": "3:rc_semantic_publication::test_shallow_copy_marks_reused_children_before_a_later_view",
+      "before": "live dictionary view of an interior place"
+    },
+    {
+      "name": "3:rc_semantic_publication::test_slice_marks_reused_children_before_a_later_view",
+      "before": "live dictionary view of an interior place"
+    },
+    {
+      "name": "3:test_constructor_publishes_nested_holds_and_converts_held_mapping_inputs",
+      "before": "ordinary dictionary snapshot combined with a live view"
+    }
+  ],
+  "regressed": []
+}

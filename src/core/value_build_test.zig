@@ -235,7 +235,7 @@ const capability_field =
     \\
 ;
 
-// spec-case: NEW-CORE-IR-2
+// spec: NEW-CORE-IR-2
 test "a record holding an unsupported type is refused with its reason, every time it is used" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();

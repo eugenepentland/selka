@@ -181,9 +181,13 @@ Dictionaries preserve insertion order and take any
 tuple, record, union, enum or `Option` built from those. Their values
 have a single inferred or annotated type. Updates through an alias are shared.
 Use `counts[key]`, `counts[key] = value`, `counts.get(key, fallback)`,
-`counts.keys()`, `counts.values()` and `counts.items()`. These return live typed
-views; `list(view)` creates an explicit snapshot. Items yield records with `key`
-and `value` fields and also support `for key, value in view`.
+`counts.keys()`, `counts.values()` and `counts.items()`. These return ephemeral typed
+views for direct loops and immediate `len`, `in`, `list`, `set` and `sorted`.
+Use `kept = list(counts.values())` to store an independent snapshot; storing
+a view itself is `E_VIEW_STORED`. View types are also rejected in parameter,
+return, field and collection element annotations, including unused generic
+declarations; use a list type for a snapshot. Items yield records with `key` and `value`
+fields and support `for key, value in counts.items()`.
 `key in counts`, `value in items`, and `substring in text` support `not in` too.
 Iterating a dictionary visits keys in insertion order; changing its size during
 iteration traps. The [word-count example](../examples/python-word-count/main.my)

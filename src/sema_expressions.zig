@@ -1019,6 +1019,7 @@ fn expressionWithTemporaries(comptime Checker: type, self: *Checker, root: ast.N
             if (try queueExpression(Checker, self, &work, task.id)) continue;
         }
         const out = try checkedExpression(Checker, self, node, minimum_literal, temporaries.items);
+        try dictionary_views.validateUse(Checker, self, task.id, out.ty);
         const consumed = try consumedTemporaries(Checker, self, node, out);
         std.debug.assert(temporaries.items.len >= consumed);
         temporaries.shrinkRetainingCapacity(temporaries.items.len - consumed);

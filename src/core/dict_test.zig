@@ -123,8 +123,7 @@ test "persistent view identity refuses an ordinary aggregate alias of its mappin
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     var refusal: build.Refusal = .{};
-    try std.testing.expectError(error.Unsupported, support.buildSource(arena.allocator(), exposed_view, &refusal));
-    try std.testing.expectEqualStrings("aggregate or captured dictionary alias combined with a live view", refusal.reason);
+    try std.testing.expectError(error.SourceError, support.buildSource(arena.allocator(), exposed_view, &refusal));
 }
 
 // spec-case: NEW-CORE-DICT-1
@@ -133,8 +132,7 @@ test "fixed arrays refuse stored live dictionary views precisely" {
     defer arena.deinit();
     var refusal: build.Refusal = .{};
     const stored_view = "def main() -> int:\n    d = {1: 7}\n    views: [1]DictValues[int, int] = [d.values()]\n    d[1] = 9\n    return list(views[0])[0]\n";
-    try std.testing.expectError(error.Unsupported, support.buildSource(arena.allocator(), stored_view, &refusal));
-    try std.testing.expectEqualStrings("fixed array storage of live dictionary views", refusal.reason);
+    try std.testing.expectError(error.SourceError, support.buildSource(arena.allocator(), stored_view, &refusal));
 }
 
 const small_tables =

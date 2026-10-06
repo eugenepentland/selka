@@ -265,19 +265,26 @@ pub const Index = struct {
         if (self.names.get(text)) |id| {
             if (self.declarations.items[id].builtin_name != null) {
                 if (ctx.names == null or !try ctx.names.?.topLevel(span)) {
-                    try self.rejectRetiredCell(id, span);
+                    try self.rejectRetiredType(id, span);
                     return id;
                 }
             }
         }
         const key = if (ctx.names) |names| try names.reference(span, .type, null, null, ctx.sink) else text;
         const id = self.names.get(key) orelse return ctx.sink.fail("E_UNKNOWN_TYPE", span, "type is not declared");
-        try self.rejectRetiredCell(id, span);
+        try self.rejectRetiredType(id, span);
         return id;
     }
-    fn rejectRetiredCell(self: *Index, id: usize, span: Span) Error!void {
-        if (!value_semantics.enabled()) return;
+    fn rejectRetiredType(self: *Index, id: usize, span: Span) Error!void {
         const builtin = self.declarations.items[id].builtin_name orelse return;
+        // D2: explicit view types would make storage/call boundaries possible.
+        // Inferred immediate projections instantiate the prelude internally.
+        inline for (.{ "DictKeys", "DictValues", "DictItems" }) |view| if (std.mem.eql(u8, builtin, view)) return self.context.sink.fail(
+            "E_VIEW_STORED",
+            span,
+            "dictionary views cannot appear in type declarations or annotations; use list snapshots instead",
+        );
+        if (!value_semantics.enabled()) return;
         if (std.mem.eql(u8, builtin, "Cell")) return self.context.sink.fail(
             "E_VALUE_CELL",
             span,

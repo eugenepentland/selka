@@ -15,9 +15,6 @@ fn exercise() !bool {
         \\record Pair:
         \\    left: list[int]
         \\    right: list[int]
-        \\record Tokens:
-        \\    owner: list[int]
-        \\    held: DictValues[int, int]
         \\union Choice:
         \\    none,
         \\    pair: Pair
@@ -33,13 +30,6 @@ fn exercise() !bool {
         \\    label: bytes
         \\record Raw:
         \\    file: File
-        \\record Held:
-        \\    values: DictValues[int, int]
-        \\    tail: Option[Held]
-        \\union HeldChoice:
-        \\    none,
-        \\    held: DictValues[int, int],
-        \\    owned: list[int]
         \\def main() -> int:
         \\    pair = Pair([1], [2])
         \\    return len(pair.left)
@@ -59,7 +49,7 @@ fn exercise() !bool {
         for (replacements.items) |replacement| t.allocator.free(replacement);
         replacements.deinit(t.allocator);
     }
-    inline for (.{ "Pair", "Tokens", "Choice" }, .{ "PAIR_SYMBOL", "TOKENS_SYMBOL", "CHOICE_SYMBOL" }) |record, marker| {
+    inline for (.{ "Pair", "Choice" }, .{ "PAIR_SYMBOL", "CHOICE_SYMBOL" }) |record, marker| {
         const symbol = try recordSymbol(&catalog, record);
         defer t.allocator.free(symbol);
         harness = try std.mem.replaceOwned(u8, t.allocator, harness, marker, symbol);

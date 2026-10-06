@@ -1,0 +1,6 @@
+Provenance: exec session 84956, terminated by the S3-L agent before its timed command started.
+The naive gate -> build nesting reused fd9 and released the gate lock.
+The exclusive helper was still blocked waiting for another build slot.
+Its process (1391314) received SIGTERM; the outer command returned exit 143.
+No resume-10-core-build.time was created and no compiler build ran.
+The resume-11 launch retained the gate fd separately and is the qualified measurement.

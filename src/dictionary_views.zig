@@ -1,4 +1,4 @@
-//! Typed dictionary views retain a mapping by value and materialize only explicitly.
+//! Ephemeral dictionary projections support immediate reads and explicit snapshots.
 const std = @import("std");
 const typed = @import("typed.zig");
 const Catalog = @import("type_catalog.zig").Catalog;
@@ -155,4 +155,131 @@ pub fn snapshot(comptime Checker: type, checker: *Checker, span: Span, view: typ
             .step = try b.stmt(.{ .assign = .{ .slot = cursor, .value = try b.binary(.add, i, try b.integer(1), .i64) } }),
         } }),
     }, try b.read(output));
+}
+
+/// Test membership in a directly consumed projection without allocating a snapshot.
+pub fn contains(comptime Checker: type, checker: *Checker, span: Span, needle: typed.NodeId, mapping: typed.NodeId, kind: Kind, negate: bool) Error!typed.Node {
+    const b: collections.Builder(Checker) = .{ .checker = checker, .span = span };
+    if (kind == .keys) {
+        const member = try b.local(checker.nodes.items[@backingInt(needle)].ty);
+        const input = try b.local(checker.nodes.items[@backingInt(mapping)].ty);
+        var result = try b.operation(input, .contains, &.{try b.read(member)});
+        if (negate) result = try b.node(.bool, .{ .unary = .{ .op = .not, .operand = result, .op_span = span } });
+        return b.block(&.{
+            try b.stmt(.{ .initialize = .{ .slot = member, .value = needle } }),
+            try b.stmt(.{ .initialize = .{ .slot = input, .value = mapping } }),
+        }, result);
+    }
+    const member = try b.local(checker.nodes.items[@backingInt(needle)].ty);
+    const input = try b.local(checker.nodes.items[@backingInt(mapping)].ty);
+    const count = try b.local(.i64);
+    const cursor = try b.local(.i64);
+    const found = try b.local(.bool);
+    const i = try b.read(cursor);
+    const value = try at(Checker, checker, span, input, i, kind);
+    const equal = try b.binary(.eq, try b.read(member), value, .bool);
+    const loop_id = checker.loops.next;
+    checker.loops.next += 1;
+    const matched = try b.stmt(.{ .block = try checker.allocator.dupe(typed.StatementId, &.{
+        try b.stmt(.{ .assign = .{ .slot = found, .value = try b.node(.bool, .{ .boolean = true }) } }),
+        try b.stmt(.{ .loop_exit = .{ .target = loop_id, .continuing = false } }),
+    }) });
+    var result = try b.read(found);
+    if (negate) result = try b.node(.bool, .{ .unary = .{ .op = .not, .operand = result, .op_span = span } });
+    return b.block(&.{
+        try b.stmt(.{ .initialize = .{ .slot = member, .value = needle } }),
+        try b.stmt(.{ .initialize = .{ .slot = input, .value = mapping } }),
+        try b.stmt(.{ .initialize = .{ .slot = count, .value = try b.length(input) } }),
+        try b.stmt(.{ .initialize = .{ .slot = cursor, .value = try b.integer(0) } }),
+        try b.stmt(.{ .initialize = .{ .slot = found, .value = try b.node(.bool, .{ .boolean = false }) } }),
+        try b.stmt(.{ .loop = .{
+            .id = loop_id,
+            .condition = try b.binary(.lt, i, try b.read(count), .bool),
+            .body = try b.stmt(.{ .branch = .{ .condition = equal, .then_body = matched, .else_body = null } }),
+            .step = try b.stmt(.{ .assign = .{ .slot = cursor, .value = try b.binary(.add, i, try b.integer(1), .i64) } }),
+        } }),
+    }, result);
+}
+
+/// One parsed expression's immediate consumer and certain snapshot target.
+const Use = struct { direct: bool = false, snapshot: ?Span = null, inferred: ?Span = null };
+/// Per-check projection context, shared by concrete and symbolic bodies.
+pub const Consumers = struct {
+    entries: []Use,
+
+    /// Index immediate consumers and inferred bindings in one syntax pass.
+    pub fn init(allocator: std.mem.Allocator, src: @import("source.zig").Source, program: @import("ast.zig").Program) Error!Consumers {
+        const entries = try allocator.alloc(Use, program.nodes.items.len);
+        @memset(entries, .{});
+        for (program.statements.items) |statement| switch (statement.data) {
+            .for_each => |each| entries[@backingInt(each.iterable)].direct = true,
+            .binding => |binding| if (binding.annotation == null) inferred(entries, program, binding.value, binding.name),
+            .assignment => |assignment| if (assignment.op == .set) inferred(entries, program, assignment.value, assignment.name),
+            else => {},
+        };
+        for (program.nodes.items) |node| switch (node.data) {
+            .length => |input| entries[@backingInt(input)].direct = true,
+            .membership => |membership| entries[@backingInt(membership.container)].direct = true,
+            .comprehension => |each| if (each.source == .iterable) {
+                entries[@backingInt(each.source.iterable)].direct = true;
+            },
+            .call => |call| if (call.owner == null and call.arguments.len != 0) {
+                const name = src.text(call.name);
+                inline for (.{ "list", "set", "sorted" }) |consumer| if (std.mem.eql(u8, name, consumer)) {
+                    entries[@backingInt(call.arguments[0])].snapshot = call.name;
+                };
+            },
+            else => {},
+        };
+        return .{ .entries = entries };
+    }
+
+    /// Release this check's syntax index after both checking passes finish.
+    pub fn deinit(self: Consumers, allocator: std.mem.Allocator) void {
+        allocator.free(self.entries);
+    }
+};
+fn inferred(entries: []Use, program: @import("ast.zig").Program, id: @import("ast.zig").NodeId, name: Span) void {
+    entries[@backingInt(id)].inferred = name;
+    const value = program.nodes.items[@backingInt(id)];
+    if (value.data == .list_literal) for (value.data.list_literal) |element_id| {
+        entries[@backingInt(element_id)].inferred = name;
+    };
+}
+
+/// Reject a dictionary view outside a direct iteration or immediate consumer.
+pub fn validateUse(comptime Checker: type, checker: *Checker, id: @import("ast.zig").NodeId, ty: typed.Type) Error!void {
+    const kind = identify(checker.catalog, ty) orelse return;
+    return validateKind(Checker, checker, id, kind);
+}
+
+/// Apply the same ephemeral-view boundary in ordinary and symbolic checking.
+pub fn validateKind(comptime Checker: type, checker: *Checker, id: @import("ast.zig").NodeId, kind: Kind) Error!void {
+    if (kind == .item or try immediateUse(Checker, checker, id)) return;
+    const syntax = if (@hasField(Checker, "syntax")) checker.syntax else checker.program;
+    const span = syntax.nodes.items[@backingInt(id)].span;
+    const replacement = try std.fmt.allocPrint(checker.allocator, "list({s})", .{checker.src.text(span)});
+    const message = try std.fmt.allocPrint(checker.allocator, "dictionary views cannot be stored or passed to functions; use {s} for an independent snapshot", .{replacement});
+    if (!snapshotFixCertain(Checker, checker, id)) return checker.sink.fail("E_VIEW_STORED", span, message);
+    return checker.sink.failFix("E_VIEW_STORED", span, message, .{ .span = span, .text = replacement });
+}
+
+fn immediateUse(comptime Checker: type, checker: *Checker, id: @import("ast.zig").NodeId) Error!bool {
+    const use = checker.view_consumers.entries[@backingInt(id)];
+    if (use.direct) return true;
+    const call = use.snapshot orelse return false;
+    const name = checker.src.text(call);
+    if (checker.active.contains(name)) return false;
+    if (checker.catalog.module_names) |names| {
+        const kind = try names.symbolKind(call);
+        return kind == null;
+    }
+    return !checker.functions.contains(name) and !checker.catalog.names.contains(name);
+}
+
+// Annotated fields/returns need a declaration migration. Only inferred locals
+// and their list literals have a certain source-only materialization edit.
+fn snapshotFixCertain(comptime Checker: type, checker: *Checker, id: @import("ast.zig").NodeId) bool {
+    const name = checker.view_consumers.entries[@backingInt(id)].inferred orelse return false;
+    return !checker.active.contains(checker.src.text(name));
 }

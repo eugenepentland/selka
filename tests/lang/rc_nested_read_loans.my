@@ -50,13 +50,13 @@ public def test_nested_reads_preserve_mutating_receiver_snapshots() -> bool:
 # spec-case: RC-NESTED-READ-LOAN-1
 public def test_nested_reads_leave_dictionary_and_view_roles_owned() -> bool:
     mapping = {0: [[7, 8]]}
-    view = mapping.values()
+    view = list(mapping.values())
     result = mapping[0][0][-1]
     mapping[0] = [[91]]
     total = 0
     for rows in view:
         total += rows[0][0]
-    return result == 8 and total == 91
+    return result == 8 and total == 7
 
 
 # spec-case: RC-NESTED-READ-LOAN-1

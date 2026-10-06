@@ -14,10 +14,10 @@ public def test_repeated_optional_unwrap_replaces_a_private_loan_with_an_owner()
 public def test_arena_setdefault_read_does_not_share_the_selected_mapping() -> bool:
     with arena():
         outer = {0: {1: 7}}
-        live = outer[0].values()
+        live = list(outer[0].values())
         size = len(outer.setdefault(0, {}))
         outer[0][1] = 13
-        return size == 1 and list(live) == [13] and outer[0][1] == 13
+        return size == 1 and list(live) == [7] and outer[0][1] == 13
 
 
 # spec-case: RC-SEMANTIC-LOWERING-1
@@ -25,16 +25,16 @@ public def test_fresh_dictionary_insertion_keeps_its_child_live_in_an_arena() ->
     with arena():
         outer: dict[int, dict[int, int]] = {}
         outer[0] = {1: 7}
-        live = outer[0].values()
+        live = list(outer[0].values())
         outer[0][1] = 13
-        return list(live) == [13] and outer[0][1] == 13
+        return list(live) == [7] and outer[0][1] == 13
 
 
 # spec-case: RC-SEMANTIC-LOWERING-1
 public def test_shallow_copy_marks_reused_children_before_a_later_view() -> bool:
     source = [{1: 7}]
     copied = source.copy()
-    live = copied[0].values()
+    live = list(copied[0].values())
     copied[0][1] = 13
     return list(live) == [7] and copied[0][1] == 13 and source[0][1] == 7
 
@@ -43,7 +43,7 @@ public def test_shallow_copy_marks_reused_children_before_a_later_view() -> bool
 public def test_slice_marks_reused_children_before_a_later_view() -> bool:
     source = [{1: 7}]
     copied = source[:]
-    live = copied[0].values()
+    live = list(copied[0].values())
     copied[0][1] = 13
     return list(live) == [7] and copied[0][1] == 13 and source[0][1] == 7
 
