@@ -40,6 +40,8 @@ the old provider and its `get` semantics are unchanged.
 | `fee296958` | New built-in `get` preserves actual old unrestricted allowlists |
 | `2e9a8f5bd`, `ab8169708`, `12bfafc67` | Combined M source-aware rendering, list/value adapters and compile fixes |
 | `18cfe1cf5` | Exact context fixture entries in both cache input manifests |
+| `d1b9b094e`, `da61d2973`, `d63257bd8` | Frozen M capture/None-key source and complete authority-test fixtures |
+| `3e607848a` | Verified IR resource-owner/reverse-close assertions, replacing stale void-print syntax |
 
 Each normal source commit passed all 88 Guardian checks. The Core IR diff against
 `dc1a5831` is empty. Persisted formats remain `module-interface-v5`,
@@ -64,6 +66,41 @@ atomically from that pair; its previous pair is archived in the same private cac
 Final combined Core/runner checks will be recorded below after their source freeze.
 Command logs are unique per invocation; failed runs remain available. Later runner
 SPEC, fixture and cache-manifest additions require the final integrated old gate.
+
+| Check | Result | Evidence |
+|---|---|---|
+| Exclusive Core rebuild at `d1b9b094e` | `3/3` steps, `1.69 s`; all three build slots and gate held | `resume-core-exclusive-01.log`, `.time` |
+| Native provider/Host/grants/handles | `37/37` strict checks, old/debug/release-verify, clean leaks/facts | `resume-fixtures-02/summary.json` and each command's JSON |
+| Core context regression | `1/1`, `5/5` steps, all four debug/release/verify modes | `resume-context-core-test-04.log` |
+| Scope cleanup structure | `1/1`, `5/5` steps; matching owners close in reverse order before return | `resume-scope-order-test-01.log` |
+
+The fixture suite compares process status, stdout and error codes explicitly.
+Malformed-provider and assertion exits record `release=1 live=0` for all three
+compiler modes. The 300-deep deterministic resource fixture also completes and
+closes every handle. Grant files have a fresh private directory per scenario and
+mode, and read/write permissions are checked against actual file state.
+
+## Code identity and the authorized Host changes
+
+The original raw comparison records changed definitions for all 35 rows. Every raw
+diff is retained in `resume-identity-audit-02`. The audit's `summary.json` names every
+affected function, the two timing-call blocks, the baseline/emitted hashes and any
+remaining difference. All 35 have zero remaining instruction differences after
+only the following proved changes are normalized:
+
+- Native `main` now obtains its Host token from `myl_core_host_grant`.
+- Source `main` has `myl_core_io_at` and `myl_core_host_check` immediately before
+  each of its two existing `runtime_bench_now` calls. CFG reachability proves both
+  blocks are outside cycles; no check is inserted into a measured inner loop.
+- Inserted calls renumber instruction-defined SSA values and debug/site IDs.
+  Parameters, labels, types, instructions and flags are preserved. Debug and
+  trap/error site IDs resolve to the same semantic metadata. Removing precisely
+  the two Host site entries makes each complete site table equal to its baseline.
+
+`identity_audit.py` rejects additional or non-adjacent Host/I/O calls, changed sites,
+loop-contained timing checks and any residual instruction change. The final timer
+check adds constant overhead before stopping the timer. This audit does not stand
+in for the final 40-row operation-count and performance checks against both gates.
 
 The current focused built-in Environment regression passes (`5/5` build steps,
 `1/1` test, `2.92 s` test wall in `resume-context-core-test-03.log`). This verifies

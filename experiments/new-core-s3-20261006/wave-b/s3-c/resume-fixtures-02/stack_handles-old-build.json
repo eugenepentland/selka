@@ -1,0 +1,17 @@
+{
+  "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-capabilities/.mylang-cache/s3/d2-oracle/mylang",
+    "build",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-capabilities/test/core/c_stack_handles.my",
+    "-o",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-capabilities/.mylang-cache/s3/resume-fixtures-02/stack_handles-old",
+    "--qbe",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-capabilities/.mylang-cache/s3/d2-oracle/qbe",
+    "--cache-dir=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-capabilities/.mylang-cache/s3/resume-fixtures-02/old-cache",
+    "--provider",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-capabilities/experiments/new-core-s3-20261006/wave-b/s3-c/c_raw_provider.c"
+  ],
+  "status": 0,
+  "stdout": "",
+  "stderr": ""
+}
