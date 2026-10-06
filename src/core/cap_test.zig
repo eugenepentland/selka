@@ -4,6 +4,7 @@ const support = @import("test_support.zig");
 const language = @import("mylang");
 const build = @import("build.zig");
 const print = @import("print.zig");
+const ir = @import("ir.zig");
 const options = @import("core_test_options");
 
 const raw_environment =
@@ -88,20 +89,51 @@ test "Core literal network narrowing copies fixed octets into a verified pointer
     try std.testing.expectEqual(@as(usize, 14), std.mem.count(u8, text, "array_get"));
 }
 
-// spec-case: NEW-CORE-S3-ABI-1
-test "Core nested file scopes close in reverse order before return" {
-    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
-    defer arena.deinit();
-    const text = try support.irText(arena.allocator(),
+fn nestedScopeOrder(a: std.mem.Allocator) !void {
+    var refusal: build.Refusal = .{};
+    const module = try support.buildSource(a,
         \\def main(fs: Filesystem) -> int:
         \\    with fs.open("first", "r") as first:
         \\        with fs.open("second", "r") as second:
         \\            return 0
-    );
-    try std.testing.expectEqual(@as(usize, 2), std.mem.count(u8, text, "call void myl_core_file_scope_close"));
-    const close = std.mem.lastIndexOf(u8, text, "call void myl_core_file_scope_close").?;
-    const ret = std.mem.indexOfPos(u8, text, close, "ret 0:i64").?;
-    try std.testing.expect(close < ret);
+    , &refusal);
+    var opened: std.ArrayList(ir.Ref) = .empty;
+    var closed: std.ArrayList(ir.Ref) = .empty;
+    var returns: usize = 0;
+    for (module.functions.items) |function| {
+        if (function.signature.linkage != .internal) continue;
+        for (function.blocks.items) |block| {
+            for (block.insts.items) |ref| {
+                const instruction = function.inst(ref);
+                if (instruction.op == .ret) {
+                    try std.testing.expectEqual(@as(usize, 2), closed.items.len);
+                    returns += 1;
+                }
+                if (instruction.op != .call) continue;
+                const callee = module.functions.items[instruction.a.index()];
+                if (std.mem.eql(u8, callee.name, "myl_core_file_access") and instruction.ty == .resource) try opened.append(a, ref);
+                if (!std.mem.eql(u8, callee.name, "myl_core_file_scope_close")) continue;
+                try std.testing.expectEqual(@as(usize, 0), returns);
+                try std.testing.expectEqual(.runtime_c, callee.signature.linkage);
+                try std.testing.expectEqual(.void, callee.signature.ret);
+                const arguments = function.operands(instruction.data);
+                try std.testing.expectEqual(@as(usize, 1), arguments.len);
+                try closed.append(a, function.resolve(arguments[0]));
+            }
+        }
+    }
+    try std.testing.expectEqual(@as(usize, 2), opened.items.len);
+    try std.testing.expectEqual(@as(usize, 2), closed.items.len);
+    try std.testing.expectEqual(@as(usize, 1), returns);
+    try std.testing.expectEqual(opened.items[1], closed.items[0]);
+    try std.testing.expectEqual(opened.items[0], closed.items[1]);
+}
+
+// spec-case: NEW-CORE-S3-ABI-1
+test "Core nested file scopes close in reverse order before return" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    try nestedScopeOrder(arena.allocator());
 }
 
 fn builtinEnvironmentDenial(a: std.mem.Allocator) !void {
