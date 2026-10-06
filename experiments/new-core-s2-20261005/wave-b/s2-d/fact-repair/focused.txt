@@ -1,0 +1,21 @@
+source_base=090dabd5a6932a7c3beaec68248f9a35d4c637d7
+$ scripts/build-slot.sh build -- /usr/bin/time -f '%e %M %x' -o /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-dictionaries/.mylang-cache/wave-b/s2-d/fact-repair/focused-time.txt python3 experiments/new-core-s2-20261005/wave-b/s2-d/conformance_checked.py dictionary_hashing test/core/d_fact_inputs.my --jobs 1 --why --leakcheck --verify --mylang /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/wave-b/baseline/mylang --core zig-out/bin/mylang-core --cache-dir .mylang-cache/wave-b/s2-d/fact-repair/focused
+file                     tests | debug   match misma unsup | release match misma unsup
+--------------------------------------------------------------------------------------
+dictionary_hashing          11 |             8     0     3 |             8     0     3
+d_fact_inputs                6 |             6     0     0 |             6     0     0
+--------------------------------------------------------------------------------------
+TOTAL                       17
+  debug    matching 14, mismatching 0, unsupported 3 (of 17 tests; 14 supported)
+  release  matching 14, mismatching 0, unsupported 3 (of 17 tests; 14 supported)
+
+blocking features of the unsupported tests (tests / files):
+     2 /  1  text_chr
+     1 /  1  text of a non-integer value
+
+blocking features per file (file: tests unsupported of tests; the features, most common first):
+  dictionary_hashing               3 of  11: text_chr x2, text of a non-integer value x1
+
+exit=0 time_rss_exit=6.85 213676 0 wall_including_admission=6.89
+qualified_source_commit=0c6029d7
+tested_source_tree=69bd18dfbbf741cfb5cee7af40e11d4540278643

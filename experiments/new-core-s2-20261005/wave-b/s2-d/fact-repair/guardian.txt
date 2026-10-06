@@ -1,0 +1,14 @@
+source_base=090dabd5a6932a7c3beaec68248f9a35d4c637d7
+$ scripts/build-slot.sh build -- /usr/bin/time -f '%e %M %x' -o /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-dictionaries/.mylang-cache/wave-b/s2-d/fact-repair/guardian-time.txt /home/epentland/ai/canopy/guardian-zig/zig-out/bin/guardian-check all . --full
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: build slot 2 after 40s (all 3 build slot(s) busy)
+guardian: run-all: whole-tree run — --full was requested
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 27 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 9735 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 9 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed
+
+exit=0 time_rss_exit=1.75 633964 0 wall_including_admission=41.88
+qualified_source_commit=0c6029d7
+tested_source_tree=69bd18dfbbf741cfb5cee7af40e11d4540278643
