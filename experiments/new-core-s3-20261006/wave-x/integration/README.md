@@ -8,19 +8,23 @@ From the final integration worktree, pass explicit qualified oracle paths and
 the full final source commit:
 
 ```bash
-scripts/build-slot.sh gate -- python3 \
+python3 \
   experiments/new-core-s3-20261006/wave-x/integration/fuzz_matrix.py \
   --old /absolute/path/to/qualified-old/mylang \
   --new /absolute/path/to/qualified-new/mylang-core \
   --qualified-head FULL_FINAL_INTEGRATED_COMMIT
 ```
 
-The matrix holds the gate slot through this command. Each heavy worker also
+The parent reserves no gate slot. Each heavy worker
 uses `scripts/build-slot.sh build`; `--jobs` allows one to three workers (default
 three), matching the three build slots. It runs all nine kinds with 200 fresh cases each, without evidence reuse:
 `s0`, `s1`, `rc`, `rebinding`, `iteration`, `dict`, `text`, `number`, `functions`.
 The longer number worker starts first; registry order and per-kind seeds remain
 fixed. The manifest records the execution order separately.
+Complete the uncontended Core install and measured Core tests before starting
+the matrix. The full old gate and ordinary conformance may then overlap it,
+holding their own gate and build slots. The same three-slot admission bounds
+all concurrent guest compiles; no extra build slots or timing CPUs are enabled.
 Text explicitly uses the S3-A character extension of the complete S3-T1 harness,
 including literal comparisons, multiple append branches, UTF-8 widths, NUL,
 capacity growth and output snapshots. Number uses the updated original
@@ -93,8 +97,7 @@ run the same explicit old/debug/release/verify comparisons; this adds 3,000
 comparisons without replacing any of the nine matrix kinds:
 
 ```bash
-scripts/build-slot.sh gate -- bash -c '"$@"; result=$?; exit "$result"' -- \
-  scripts/build-slot.sh build -- python3 \
+scripts/build-slot.sh build -- python3 \
   experiments/new-core-s3-20261006/wave-x/integration/fuzz_qualification.py \
   --kind text --cases 200 --seed 3340 \
   --harness experiments/new-core-s3-20261006/wave-x/integration/fuzz_split_harness.py \

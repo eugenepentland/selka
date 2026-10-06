@@ -2,8 +2,8 @@
 """Run S3-X's fresh strict nine-kind x 200-case matrix with up to three workers.
 
 Run only after qualification of the final integrated source and both explicit
-oracles. Launch the matrix through scripts/build-slot.sh gate; every worker
-also obtains a build slot. This driver never builds the compiler or runs gates.
+oracles. Every worker obtains a build slot; the parent needs no gate slot.
+This driver never builds the compiler or runs gates.
 """
 import argparse
 import concurrent.futures
