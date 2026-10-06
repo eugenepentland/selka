@@ -92,6 +92,8 @@ pub const TrapKind = enum(u8) {
     text_scalar = 15,
     text_substring = 16,
     invalid_shift = 17,
+    list_value = 18,
+    list_pop_index = 19,
 };
 
 const Site = struct { kind: TrapKind, location: Location, width: u16, operation: []const u8, function: []const u8 };
@@ -1579,6 +1581,14 @@ const FunctionEmitter = struct {
         try out.print(self.a(), "  {s} = icmp uge i64 {s}, {s}\n", .{ outside, index, len });
         // The read a `pop` starts with fails exactly when the list is empty, which is the pop trap.
         if (inst.op == .list_get and inst.data == flags.pop_read) return self.trapIf(out, outside, try self.site(.list_empty, inst, "pop"), "0", len);
+        if (inst.op == .list_get and inst.data == flags.pop_index_read) {
+            // Only a too-negative original index can remain negative after normalization.
+            const negative = try self.fresh("%popnegative");
+            const before = try self.fresh("%popbefore");
+            const original = try self.fresh("%popindex");
+            try out.print(self.a(), "  {s} = icmp slt i64 {s}, 0\n  {s} = sub i64 {s}, {s}\n  {s} = select i1 {s}, i64 {s}, i64 {s}\n", .{ negative, index, before, index, len, original, negative, before, index });
+            return self.trapIf(out, outside, try self.site(.list_pop_index, inst, "pop"), original, len);
+        }
         try self.trapIf(out, outside, try self.site(.list_bounds, inst, "index"), index, len);
     }
 

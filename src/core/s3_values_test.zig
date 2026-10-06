@@ -32,3 +32,25 @@ test "S3 values preserve source shapes unit payloads marker data and ancestor su
     defer arena.deinit();
     try qualified(arena.allocator());
 }
+
+// spec-case: NEW-CORE-S3-VALUES-1
+test "S3 value adapter names in source extern declarations confer no compiler authority" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const ir = @import("ir.zig");
+    const emit = @import("emit_llvm.zig");
+    const support = @import("test_support.zig");
+    var module: ir.Module = .{};
+    for ([_][]const u8{ "myl_core_equal_77", "myl_core_show_77", "myl_core_render_shape_0_77" }) |name| {
+        try module.functions.append(a, .{ .name = name, .signature = .{ .params = &.{.i64}, .ret = .i64, .linkage = .extern_c } });
+    }
+    var hand = try support.Hand.init(a, &module, "main", .{ .params = &.{}, .ret = .i64 });
+    _ = try hand.emit(.{ .op = .ret, .ty = .void, .a = try hand.int(.i64, 7) });
+    _ = try hand.finish();
+    try support.verified(a, &module, &.{});
+    const llvm = try emit.emitModule(a, &module, .{ .main = .{ .parameters = &.{} } });
+    try std.testing.expect(std.mem.indexOf(u8, llvm, "declare i64 @myl_core_equal_77(i64)") != null);
+    try std.testing.expect(std.mem.indexOf(u8, llvm, "declare i64 @myl_core_show_77(i64)") != null);
+    try std.testing.expect(std.mem.indexOf(u8, llvm, "declare i64 @myl_core_render_shape_0_77(i64)") != null);
+}

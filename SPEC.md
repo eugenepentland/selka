@@ -1915,6 +1915,7 @@ The separate `mylang-core` executable (`zig build core`, `docs/design/new-core-i
 
 - [NEW-CORE-TEXT-S3-1] Remaining text and immutable-byte methods match the old core: scalar search bounds, non-overlapping count/replace, Unicode charset trims and repr, ASCII case/classification, line splitting, validated chr/ord, packed text layout, UTF-8 decode/count and immutable byte ranges. Inputs borrow and results own independent counted blocks; failed index and scalar operations retain located traps.
 - [NEW-CORE-LIST-S3-1] List extend and reverse use value-functional updates over a captured source; self-extension and nested/shared snapshots preserve their old values, with ordinary ownership COW and verify assertions.
+- [NEW-CORE-LIST-S3-2] List index, insertion, removal, indexed pop and step slices retain source evaluation order, Python bounds normalization, structural equality and independent snapshots. Missing-value and indexed-pop traps retain their distinct runtime diagnostics; unit elements retain their source meaning despite erased physical placeholders.
 
 - [NEW-CORE-S3-NUMBER-1] The new core's float/text runtime ports the canonical Zig grammar and exact number formatting, and caches its separate object by every helper content hash, executing Zig version and target/build options. Mutable bytes preserve independent snapshots and updates under the frozen buffer IR and verified ownership rules; embedded assets resolve by checked digest and length.
 
