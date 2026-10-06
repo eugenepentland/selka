@@ -22,4 +22,6 @@ int mylang_qbe_run_grants(uint64_t (*entry)(void *), int argc, char **argv, cons
    command line did not grant it. The entry shim calls this for a `Host` entry
    parameter before the guest body runs. */
 uint64_t myl_qbe_grant_host_checked(void *context, const char *flag);
+/* Enumeration uses parsed runtime grants, never an opaque provider context. */
+const char *myl_qbe_environment_allowlist(void);
 #endif

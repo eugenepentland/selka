@@ -1999,7 +1999,7 @@ const FnBuilder = struct {
     }
 
     /// Shared readonly text/octet dispatch used by mutable-byte lowering.
-    pub fn textOperation(self: *FnBuilder, operation: @FieldType(@FieldType(typed.Node, "data"), "buffer_operation"), ty: ir.Type, span: u32) Error!ir.Ref {
+    pub fn textOperation(self: *FnBuilder, operation: BufferOperation, ty: ir.Type, span: u32) Error!ir.Ref {
         return build_text.operation(@TypeOf(self), self, operation, ty, span);
     }
 

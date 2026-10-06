@@ -1,6 +1,7 @@
 #include "qbe_runtime.h"
 #include "native_providers.h"
 #include "native_text.h"
+#include "qbe_grants.h"
 #include <string.h>
 /* Bounded host copy for the Python `env.get` surface. A value wider than this
    reports `InvalidProvider` rather than truncating; the raw `environment_get`
@@ -201,9 +202,7 @@ void *myl_qbe_environment_names(void *context,uint64_t authority) {
     if (MYL_QBE_IS_STAND_IN(authority)) return myl_qbe_stand_in_environment_names(context,authority);
     const unsigned char *scope;size_t scope_length;
     if (!environment_scope(context,authority,&scope,&scope_length)) { myl_qbe_fail_capability(context);return NULL; }
-    const MylangNativeProviders *p=providers(context);
-    const char *allow=(const char *)p->environment_context;
-    if (!allow) allow="";
+    const char *allow=myl_qbe_environment_allowlist();
     MylEnvironmentName names[MYLANG_ENVIRONMENT_NAMES_LIMIT];
     unsigned count=0;
     if (scope) {
