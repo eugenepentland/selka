@@ -239,6 +239,11 @@ Each stage has an exit check. The user decides go or stop at S0 and S2.
   - D1 holds regardless of sharing.
   - Both go into S2 packages S2-La/S2-Lb (old core first) and S2-I (new core).
 
+**Status, 2026-10-06.** S2 is complete (Codex, `codex/new-core-s2-integration` `26cd1b1d`).
+- **Review fixes** (`6121ed2d`, `c18d869c`, `9d6fa976`): three old-core text regressions closed, `test-core` sharded, small-dictionary probes inlined.
+- **S3 plan for Codex:** `docs/audits/new-core-s3-implementation-plan-2026-10-06.md` on that branch (`92590700`).
+- **New S3 rule:** no row may be slower than 1.10× the old core. **D2** (views cannot be stored) is applied by S3-L.
+
 **Overfitting guard.** Benchmark-first growth admitted 0 of 143 real loops in the spike. From
 S1 on, every stage reports the coverage sweep over `examples/`, `bench/`, the Lox port and
 EDA sources (functions accepted, refusal reasons), next to the benchmark rows. Grow the
