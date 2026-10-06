@@ -282,6 +282,28 @@ S0/S1/S2 emitted-definition identity and the full old-core gate for S3-L/shared
 changes. The coordinator runs cheap checks after both package merges and then
 stops for review. No Wave B feature is implemented before that review go.
 
+**Wave A completed.** The approved foundation source is `dc1a5831`, with
+qualification in `643858e3`; D2 source and qualification are `225bee07`.
+Integration merges are `e39ad11d` (S3-0) and `f5ba28e5` (S3-L). `ir.zig` is
+unchanged from the foundation through both merges. D2 rejects source view
+annotations at their declarations, indexes immediate consumers once per check,
+and uses dictionary hash membership for keys; values/items membership scans.
+Impossible held-view tests are retired or replaced by explicit snapshots and
+rejection checks. The full old-core gate is green.
+
+The final source merge rebuilds uncontended in 1.67 seconds. Its held
+eight-shard core suite passes all 219 tests in 68.31 seconds, with the longest
+shard at 66.81 seconds and maximum reported shard RSS `201M`. Debug and release
+each give 1243 matching, zero mismatching and 275 unsupported tests of 1518;
+the package's strict leak/fact-verify sweep is clean. All 35 existing benchmark
+function definitions match `92590700`. The S0 and dictionary packages each pass
+50-case strict fuzz (750 comparisons each). Checked coverage moves from
+3185/3627 to 3213/3595, with no accepted-name regression; the changed denominator
+is documented by name. Commands, exact commits, all remaining refusals and
+historical failures are in
+`experiments/new-core-s3-20261006/wave-a/REPORT.md`. Wave A stops for review;
+Wave B and the §11 exit record remain pending the user's go.
+
 ## 11. Later S3 exit record (pending)
 
 After the user's Wave B go, record package commits, all 40 rows at both sizes

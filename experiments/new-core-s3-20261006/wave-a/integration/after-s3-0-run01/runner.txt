@@ -1,0 +1,6 @@
+after-s3-0-run01: core-build waiting/running; source=e39ad11d3b2d95d537b1526f7e4abfb4b0feeb76
+after-s3-0-run01: core-build pass, command=2.91s
+after-s3-0-run01: test-core waiting/running; source=e39ad11d3b2d95d537b1526f7e4abfb4b0feeb76
+after-s3-0-run01: test-core pass, command=76.94s
+after-s3-0-run01: conformance waiting/running; source=e39ad11d3b2d95d537b1526f7e4abfb4b0feeb76
+after-s3-0-run01: conformance pass, command=139.14s

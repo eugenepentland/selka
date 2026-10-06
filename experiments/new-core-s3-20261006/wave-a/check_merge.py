@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 """Run S3's cheap gates on a committed merge, retaining one log per command.
 
-The coordinator runs this with other build-heavy work idle for the core rebuild
-measurement. The gate lock also excludes gate execution during that measurement.
+The core rebuild holds every build slot plus the gate lock to exclude contention.
 Output directories must be new; a failed run's evidence is never overwritten.
 """
 import argparse
@@ -59,8 +58,11 @@ def main():
         for label, command in commands:
             old_gate.source_unchanged(root, commit)
             duration = area / f'{label}-seconds.txt'
-            wrapped = ['scripts/build-slot.sh', 'build', '--', '/usr/bin/time',
-                       '-f', '%e', '-o', str(duration), *command]
+            timed = ['/usr/bin/time', '-f', '%e', '-o', str(duration), *command]
+            if label == 'core-build':
+                timed = ['python3', str(root / 'experiments/new-core-s3-20261006/wave-a/exclusive_core.py'),
+                         '--', *timed]
+            wrapped = ['scripts/build-slot.sh', 'build', '--', *timed]
             if label in ('core-build', 'test-core'):
                 wrapped = ['scripts/build-slot.sh', 'gate', '--', 'bash', '-c',
                            RETAIN_GATE, '--', *wrapped]
@@ -82,7 +84,7 @@ def main():
             if result.returncode or measured is None:
                 raise RuntimeError(f'{label} failed; inspect {log}')
             if label == 'core-build' and measured > 10:
-                raise RuntimeError('core rebuild >10 s: check contention and remeasure uncontended before applying the stop')
+                raise RuntimeError('uncontended core rebuild exceeded 10 s')
             if label == 'test-core' and measured > 300:
                 raise RuntimeError('held test-core exceeded 300 s')
             report = log.read_text()

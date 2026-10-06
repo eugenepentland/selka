@@ -1,0 +1,192 @@
+{
+  "source_commit": "f5ba28e585a7c06cb80dc6c81b96fa946c55ad2a",
+  "root": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration",
+  "core_shards": 8,
+  "results": [
+    {
+      "label": "core-build",
+      "command": [
+        "scripts/build-slot.sh",
+        "gate",
+        "--",
+        "bash",
+        "-c",
+        "\"$@\"; result=$?; exit \"$result\"",
+        "--",
+        "scripts/build-slot.sh",
+        "build",
+        "--",
+        "python3",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/experiments/new-core-s3-20261006/wave-a/exclusive_core.py",
+        "--",
+        "/usr/bin/time",
+        "-f",
+        "%e",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/experiments/new-core-s3-20261006/wave-a/integration/after-s3-l-run01/core-build-seconds.txt",
+        "zig",
+        "build",
+        "core",
+        "--summary",
+        "all"
+      ],
+      "exit": 0,
+      "command_seconds": 1.67,
+      "wall_seconds": 6.75340266386047,
+      "log": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/experiments/new-core-s3-20261006/wave-a/integration/after-s3-l-run01/core-build.txt",
+      "build_validation": {
+        "build_summaries": [
+          "3/3 steps succeeded"
+        ],
+        "maxrss": [
+          {
+            "line": "   +- compile exe mylang-core debug native success 1s MaxRSS:330M",
+            "display": "330M",
+            "bytes": 346030080.0,
+            "test_run": false
+          }
+        ],
+        "rss_overrun_notices": [],
+        "reported_admission_seconds": {
+          "gate": 0,
+          "build": 0
+        },
+        "errors": []
+      }
+    },
+    {
+      "label": "test-core",
+      "command": [
+        "scripts/build-slot.sh",
+        "gate",
+        "--",
+        "bash",
+        "-c",
+        "\"$@\"; result=$?; exit \"$result\"",
+        "--",
+        "scripts/build-slot.sh",
+        "build",
+        "--",
+        "/usr/bin/time",
+        "-f",
+        "%e",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/experiments/new-core-s3-20261006/wave-a/integration/after-s3-l-run01/test-core-seconds.txt",
+        "zig",
+        "build",
+        "test-core",
+        "-Dcore-shards=8",
+        "--summary",
+        "all"
+      ],
+      "exit": 0,
+      "command_seconds": 68.31,
+      "wall_seconds": 76.5544406438712,
+      "log": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/experiments/new-core-s3-20261006/wave-a/integration/after-s3-l-run01/test-core.txt",
+      "build_validation": {
+        "build_summaries": [
+          "12/12 steps succeeded; 219/1752 tests passed (1533 skipped)"
+        ],
+        "maxrss": [
+          {
+            "line": "+- run test 28 pass, 191 skip (219 total) 52s MaxRSS:199M",
+            "display": "199M",
+            "bytes": 208666624.0,
+            "test_run": true
+          },
+          {
+            "line": "|  +- compile test debug native success 1s MaxRSS:336M",
+            "display": "336M",
+            "bytes": 352321536.0,
+            "test_run": false
+          },
+          {
+            "line": "|        +- compile exe mylang-core debug native cached 5ms MaxRSS:41M",
+            "display": "41M",
+            "bytes": 42991616.0,
+            "test_run": false
+          },
+          {
+            "line": "+- run test 28 pass, 191 skip (219 total) 1m MaxRSS:201M",
+            "display": "201M",
+            "bytes": 210763776.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 28 pass, 191 skip (219 total) 42s MaxRSS:200M",
+            "display": "200M",
+            "bytes": 209715200.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 27 pass, 192 skip (219 total) 49s MaxRSS:200M",
+            "display": "200M",
+            "bytes": 209715200.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 27 pass, 192 skip (219 total) 59s MaxRSS:199M",
+            "display": "199M",
+            "bytes": 208666624.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 27 pass, 192 skip (219 total) 59s MaxRSS:201M",
+            "display": "201M",
+            "bytes": 210763776.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 27 pass, 192 skip (219 total) 39s MaxRSS:200M",
+            "display": "200M",
+            "bytes": 209715200.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 27 pass, 192 skip (219 total) 39s MaxRSS:199M",
+            "display": "199M",
+            "bytes": 208666624.0,
+            "test_run": true
+          }
+        ],
+        "rss_overrun_notices": [],
+        "reported_admission_seconds": {
+          "gate": 0,
+          "build": 0
+        },
+        "errors": []
+      }
+    },
+    {
+      "label": "conformance",
+      "command": [
+        "scripts/build-slot.sh",
+        "build",
+        "--",
+        "/usr/bin/time",
+        "-f",
+        "%e",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/experiments/new-core-s3-20261006/wave-a/integration/after-s3-l-run01/conformance-seconds.txt",
+        "python3",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/experiments/new-core-s2-20261005/wave-b/integration/conformance_checked.py",
+        "--set",
+        "all",
+        "--jobs",
+        "4",
+        "--why",
+        "--mylang",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/s3/d2-oracle/mylang",
+        "--core",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/zig-out/bin/mylang-core",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.zig-cache/s3-wave-a/after-s3-l-run01/conformance"
+      ],
+      "exit": 0,
+      "command_seconds": 132.77,
+      "wall_seconds": 132.82317067799158,
+      "log": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/experiments/new-core-s3-20261006/wave-a/integration/after-s3-l-run01/conformance.txt"
+    }
+  ],
+  "qualified": true
+}

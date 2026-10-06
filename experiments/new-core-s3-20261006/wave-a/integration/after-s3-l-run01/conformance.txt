@@ -1,0 +1,486 @@
+source_commit=f5ba28e585a7c06cb80dc6c81b96fa946c55ad2a
+$ scripts/build-slot.sh build -- /usr/bin/time -f %e -o /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/experiments/new-core-s3-20261006/wave-a/integration/after-s3-l-run01/conformance-seconds.txt python3 /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/experiments/new-core-s2-20261005/wave-b/integration/conformance_checked.py --set all --jobs 4 --why --mylang /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/s3/d2-oracle/mylang --core /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/zig-out/bin/mylang-core --cache-dir /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.zig-cache/s3-wave-a/after-s3-l-run01/conformance
+file                                                                    tests | debug   match misma unsup | release match misma unsup
+-------------------------------------------------------------------------------------------------------------------------------------
+aggregate_refs                                                             12 |            12     0     0 |            12     0     0
+aggregate_refs_probe                                                        0 |             0     0     0 |             0     0     0
+argument_evaluation_order                                                   3 |             3     0     0 |             3     0     0
+array_negative_index                                                       20 |            20     0     0 |            20     0     0
+array_places                                                               22 |            22     0     0 |            22     0     0
+array_writes                                                               10 |            10     0     0 |            10     0     0
+backlog/compiler___precedence_grouping_left_associativity_and_o             1 |             1     0     0 |             1     0     0
+backlog/compiler___precedence_grouping_left_associativity_and_o_2           1 |             1     0     0 |             1     0     0
+backlog/compiler___precedence_grouping_left_associativity_and_o_3           1 |             1     0     0 |             1     0     0
+backlog/compiler___precedence_grouping_left_associativity_and_o_4           1 |             1     0     0 |             1     0     0
+backlog/compiler___precedence_grouping_left_associativity_and_o_5           1 |             1     0     0 |             1     0     0
+backlog/compiler___signed_division_and_remainder_implement_trun             1 |             1     0     0 |             1     0     0
+backlog/compiler___signed_division_and_remainder_implement_trun_2           1 |             1     0     0 |             1     0     0
+backlog/compiler___signed_division_and_remainder_implement_trun_3           1 |             1     0     0 |             1     0     0
+backlog/compiler___signed_division_and_remainder_implement_trun_4           1 |             1     0     0 |             1     0     0
+backlog/compiler___signed_division_and_remainder_implement_trun_5           1 |             1     0     0 |             1     0     0
+backlog/compiler___signed_division_and_remainder_implement_trun_6           1 |             1     0     0 |             1     0     0
+backlog/compiler___signed_division_and_remainder_implement_trun_7           1 |             1     0     0 |             1     0     0
+backlog/compiler___signed_division_and_remainder_implement_trun_8           1 |             1     0     0 |             1     0     0
+backlog/const_lengths___const_length_function_parameters_specialize         1 |             1     0     0 |             1     0     0
+backlog/const_lengths___one_helper_serves_distinct_nominal_element_t        1 |             1     0     0 |             1     0     0
+backlog/float_operations___ordinary_float_values_reach_the_same_binary6     1 |             1     0     0 |             1     0     0
+backlog/python_syntax___match_merges_definite_assignment_across_cont        1 |             1     0     0 |             1     0     0
+backlog/python_syntax___match_merges_definite_assignment_across_cont_2      1 |             1     0     0 |             1     0     0
+backlog/python_syntax___py_scope_1_predeclared_loop_state_and_comple        1 |             1     0     0 |             1     0     0
+backlog/python_syntax___py_scope_1_predeclared_loop_state_and_comple_2      1 |             1     0     0 |             1     0     0
+backlog/python_syntax___py_scope_1_predeclared_loop_state_and_comple_3      1 |             1     0     0 |             1     0     0
+backlog/python_syntax___py_scope_1_predeclared_loop_state_and_comple_4      1 |             1     0     0 |             1     0     0
+backlog/python_syntax___py_scope_1_predeclared_loop_state_and_comple_5      1 |             1     0     0 |             1     0     0
+backlog/python_syntax___py_scope_1_predeclared_loop_state_and_comple_6      1 |             1     0     0 |             1     0     0
+backlog/python_syntax___python_generic_value_records_use_square_cons        1 |             1     0     0 |             1     0     0
+backlog/python_syntax___python_generics_default_to_copy_and_none_mea        1 |             1     0     0 |             1     0     0
+backlog/python_syntax___record_is_the_canonical_declaration_head_wit        1 |             1     0     0 |             1     0     0
+backlog/python_syntax___record_is_the_canonical_declaration_head_wit_2      1 |             1     0     0 |             1     0     0
+backlog/unit___unit_fallthrough_and_early_return_release_ma                 1 |             1     0     0 |             1     0     0
+borrowed_roots                                                              7 |             7     0     0 |             7     0     0
+bounded_loop_ranges                                                         4 |             4     0     0 |             4     0     0
+builtin_context                                                             5 |             5     0     0 |             5     0     0
+byte_buffer                                                                 8 |             0     0     8 |             0     0     8
+byte_buffer_from_list                                                      10 |             0     0    10 |             0     0    10
+byte_iteration_reductions                                                   2 |             1     0     1 |             1     0     1
+byte_range_fusion                                                           2 |             0     0     2 |             0     0     2
+byte_ranges_llvm                                                            1 |             0     0     1 |             0     0     1
+byte_views                                                                  6 |             0     0     6 |             0     0     6
+callback_slots                                                              3 |             3     0     0 |             3     0     0
+callbacks                                                                   8 |             8     0     0 |             8     0     0
+capability_fields                                                           6 |             0     0     6 |             0     0     6
+checked_arithmetic                                                          6 |             4     0     2 |             4     0     2
+closed_record_inout                                                         1 |             1     0     0 |             1     0     0
+collection_read_callbacks                                                  10 |            10     0     0 |            10     0     0
+conditional_expression                                                     10 |            10     0     0 |            10     0     0
+constant_divisors                                                          58 |            58     0     0 |            58     0     0
+constant_list_image                                                         4 |             1     0     3 |             1     0     3
+constant_methods                                                            9 |             1     0     8 |             1     0     8
+constant_methods_support                                                    0 |             0     0     0 |             0     0     0
+contracts                                                                  11 |            10     0     1 |            10     0     1
+dict_comprehensions                                                        10 |            10     0     0 |            10     0     0
+dictionary_hash_index                                                       6 |             5     0     1 |             5     0     1
+dictionary_hashing                                                         11 |             8     0     3 |             8     0     3
+dictionary_range_keys                                                       8 |             8     0     0 |             8     0     0
+dictionary_views                                                            6 |             6     0     0 |             6     0     0
+discard_names                                                               9 |             9     0     0 |             9     0     0
+element_access                                                             13 |            13     0     0 |            13     0     0
+element_borrows                                                             2 |             2     0     0 |             2     0     0
+embed                                                                       8 |             0     0     8 |             0     0     8
+embed_support                                                               0 |             0     0     0 |             0     0     0
+error_traces                                                                5 |             3     0     2 |             3     0     2
+exclusive_ownership                                                         3 |             3     0     0 |             3     0     0
+expected_type_inference                                                     5 |             5     0     0 |             5     0     0
+field_augmented                                                             6 |             3     0     3 |             3     0     3
+float_constants                                                            14 |            13     0     1 |            13     0     1
+float_constants_support                                                     0 |             0     0     0 |             0     0     0
+float_environment                                                           1 |             0     0     1 |             0     0     1
+float_integer_casts                                                         8 |             5     0     3 |             5     0     3
+float_nan                                                                   4 |             0     0     4 |             0     0     4
+format_specs                                                                6 |             0     0     6 |             0     0     6
+gc_arena_root_lifetimes                                                     0 |             0     0     0 |             0     0     0
+gc_footprint                                                                6 |             6     0     0 |             6     0     0
+gc_generations                                                              6 |             6     0     0 |             6     0     0
+gc_mut_argument_roots                                                       1 |             1     0     0 |             1     0     0
+generator_arguments                                                         8 |             6     0     2 |             6     0     2
+immutable_equal                                                             3 |             2     0     1 |             2     0     1
+integer_float_rounding                                                      3 |             2     0     1 |             2     0     1
+integer_text                                                                2 |             2     0     0 |             2     0     0
+iteration_identity                                                          8 |             8     0     0 |             8     0     0
+keyed_sorting                                                              18 |            17     0     1 |            17     0     1
+keyword_only                                                                6 |             6     0     0 |             6     0     0
+lambda_sort_keys                                                            5 |             4     0     1 |             4     0     1
+live_place_iteration                                                       37 |            36     0     1 |            36     0     1
+live_view_snapshots                                                         2 |             2     0     0 |             2     0     0
+local_stack_list                                                            1 |             1     0     0 |             1     0     0
+loop_rebinding                                                             14 |            14     0     0 |            14     0     0
+math_trig                                                                   4 |             0     0     4 |             0     0     4
+migrated/compiler                                                          16 |            16     0     0 |            16     0     0
+migrated/compiler_case_1                                                    0 |             0     0     0 |             0     0     0
+migrated/compiler_case_10                                                   0 |             0     0     0 |             0     0     0
+migrated/compiler_case_11                                                   0 |             0     0     0 |             0     0     0
+migrated/compiler_case_12                                                   0 |             0     0     0 |             0     0     0
+migrated/compiler_case_13                                                   0 |             0     0     0 |             0     0     0
+migrated/compiler_case_14                                                   0 |             0     0     0 |             0     0     0
+migrated/compiler_case_15                                                   0 |             0     0     0 |             0     0     0
+migrated/compiler_case_16                                                   0 |             0     0     0 |             0     0     0
+migrated/compiler_case_2                                                    0 |             0     0     0 |             0     0     0
+migrated/compiler_case_3                                                    0 |             0     0     0 |             0     0     0
+migrated/compiler_case_4                                                    0 |             0     0     0 |             0     0     0
+migrated/compiler_case_5                                                    0 |             0     0     0 |             0     0     0
+migrated/compiler_case_6                                                    0 |             0     0     0 |             0     0     0
+migrated/compiler_case_7                                                    0 |             0     0     0 |             0     0     0
+migrated/compiler_case_8                                                    0 |             0     0     0 |             0     0     0
+migrated/compiler_case_9                                                    0 |             0     0     0 |             0     0     0
+migrated/domain_equality                                                    1 |             1     0     0 |             1     0     0
+migrated/domain_equality_case_1                                             0 |             0     0     0 |             0     0     0
+migrated/effects                                                            5 |             5     0     0 |             5     0     0
+migrated/effects_case_1                                                     0 |             0     0     0 |             0     0     0
+migrated/effects_case_2                                                     0 |             0     0     0 |             0     0     0
+migrated/effects_case_3                                                     0 |             0     0     0 |             0     0     0
+migrated/effects_case_4                                                     0 |             0     0     0 |             0     0     0
+migrated/effects_case_5                                                     0 |             0     0     0 |             0     0     0
+migrated/generic_arrays                                                     3 |             3     0     0 |             3     0     0
+migrated/generic_arrays_case_1                                              0 |             0     0     0 |             0     0     0
+migrated/generic_arrays_case_2                                              0 |             0     0     0 |             0     0     0
+migrated/generic_arrays_case_3                                              0 |             0     0     0 |             0     0     0
+migrated/generic_inference                                                  4 |             4     0     0 |             4     0     0
+migrated/generic_inference_case_1                                           0 |             0     0     0 |             0     0     0
+migrated/generic_inference_case_2                                           0 |             0     0     0 |             0     0     0
+migrated/generic_inference_case_3                                           0 |             0     0     0 |             0     0     0
+migrated/generic_inference_case_4                                           0 |             0     0     0 |             0     0     0
+migrated/generic_results                                                    1 |             1     0     0 |             1     0     0
+migrated/generic_results_case_1                                             0 |             0     0     0 |             0     0     0
+migrated/managed_values                                                    11 |             9     0     2 |             9     0     2
+migrated/managed_values_case_1                                              0 |             0     0     0 |             0     0     0
+migrated/managed_values_case_10                                             0 |             0     0     0 |             0     0     0
+migrated/managed_values_case_11                                             0 |             0     0     0 |             0     0     0
+migrated/managed_values_case_2                                              0 |             0     0     0 |             0     0     0
+migrated/managed_values_case_3                                              0 |             0     0     0 |             0     0     0
+migrated/managed_values_case_4                                              0 |             0     0     0 |             0     0     0
+migrated/managed_values_case_5                                              0 |             0     0     0 |             0     0     0
+migrated/managed_values_case_6                                              0 |             0     0     0 |             0     0     0
+migrated/managed_values_case_7                                              0 |             0     0     0 |             0     0     0
+migrated/managed_values_case_8                                              0 |             0     0     0 |             0     0     0
+migrated/managed_values_case_9                                              0 |             0     0     0 |             0     0     0
+migrated/prelude_builtins                                                   4 |             4     0     0 |             4     0     0
+migrated/prelude_builtins_case_1                                            0 |             0     0     0 |             0     0     0
+migrated/prelude_builtins_case_2                                            0 |             0     0     0 |             0     0     0
+migrated/prelude_builtins_case_3                                            0 |             0     0     0 |             0     0     0
+migrated/prelude_builtins_case_4                                            0 |             0     0     0 |             0     0     0
+migrated/propagation                                                        9 |             9     0     0 |             9     0     0
+migrated/propagation_case_1                                                 0 |             0     0     0 |             0     0     0
+migrated/propagation_case_2                                                 0 |             0     0     0 |             0     0     0
+migrated/propagation_case_3                                                 0 |             0     0     0 |             0     0     0
+migrated/propagation_case_4                                                 0 |             0     0     0 |             0     0     0
+migrated/propagation_case_5                                                 0 |             0     0     0 |             0     0     0
+migrated/propagation_case_6                                                 0 |             0     0     0 |             0     0     0
+migrated/propagation_case_7                                                 0 |             0     0     0 |             0     0     0
+migrated/propagation_case_8                                                 0 |             0     0     0 |             0     0     0
+migrated/propagation_case_9                                                 0 |             0     0     0 |             0     0     0
+migrated/python_format                                                      3 |             2     0     1 |             2     0     1
+migrated/python_format_case_1                                               0 |             0     0     0 |             0     0     0
+migrated/python_format_case_2                                               0 |             0     0     0 |             0     0     0
+migrated/python_format_case_3                                               0 |             0     0     0 |             0     0     0
+migrated/python_generics                                                    2 |             2     0     0 |             2     0     0
+migrated/python_generics_case_1                                             0 |             0     0     0 |             0     0     0
+migrated/python_generics_case_2                                             0 |             0     0     0 |             0     0     0
+migrated/python_surface                                                     3 |             3     0     0 |             3     0     0
+migrated/python_surface_case_1                                              0 |             0     0     0 |             0     0     0
+migrated/python_surface_case_2                                              0 |             0     0     0 |             0     0     0
+migrated/python_surface_case_3                                              0 |             0     0     0 |             0     0     0
+migrated/records                                                            4 |             4     0     0 |             4     0     0
+migrated/records_case_1                                                     0 |             0     0     0 |             0     0     0
+migrated/records_case_2                                                     0 |             0     0     0 |             0     0     0
+migrated/records_case_3                                                     0 |             0     0     0 |             0     0     0
+migrated/records_case_4                                                     0 |             0     0     0 |             0     0     0
+migrated/structural_constraints                                            10 |            10     0     0 |            10     0     0
+migrated/structural_constraints_case_1                                      0 |             0     0     0 |             0     0     0
+migrated/structural_constraints_case_10                                     0 |             0     0     0 |             0     0     0
+migrated/structural_constraints_case_2                                      0 |             0     0     0 |             0     0     0
+migrated/structural_constraints_case_3                                      0 |             0     0     0 |             0     0     0
+migrated/structural_constraints_case_4                                      0 |             0     0     0 |             0     0     0
+migrated/structural_constraints_case_5                                      0 |             0     0     0 |             0     0     0
+migrated/structural_constraints_case_6                                      0 |             0     0     0 |             0     0     0
+migrated/structural_constraints_case_7                                      0 |             0     0     0 |             0     0     0
+migrated/structural_constraints_case_8                                      0 |             0     0     0 |             0     0     0
+migrated/structural_constraints_case_9                                      0 |             0     0     0 |             0     0     0
+migrated/surface_collections                                                3 |             3     0     0 |             3     0     0
+migrated/surface_collections_case_1                                         0 |             0     0     0 |             0     0     0
+migrated/surface_collections_case_2                                         0 |             0     0     0 |             0     0     0
+migrated/surface_collections_case_3                                         0 |             0     0     0 |             0     0     0
+migrated/surface_statements                                                 8 |             8     0     0 |             8     0     0
+migrated/surface_statements_case_1                                          0 |             0     0     0 |             0     0     0
+migrated/surface_statements_case_2                                          0 |             0     0     0 |             0     0     0
+migrated/surface_statements_case_3                                          0 |             0     0     0 |             0     0     0
+migrated/surface_statements_case_4                                          0 |             0     0     0 |             0     0     0
+migrated/surface_statements_case_5                                          0 |             0     0     0 |             0     0     0
+migrated/surface_statements_case_6                                          0 |             0     0     0 |             0     0     0
+migrated/surface_statements_case_7                                          0 |             0     0     0 |             0     0     0
+migrated/surface_statements_case_8                                          0 |             0     0     0 |             0     0     0
+move_elision                                                                7 |             7     0     0 |             7     0     0
+mut_argument_places                                                        14 |            11     0     3 |            11     0     3
+mut_collection_call_window                                                  6 |             6     0     0 |             6     0     0
+mut_dictionary_arguments                                                    1 |             1     0     0 |             1     0     0
+mut_rebind_caller                                                          27 |            20     0     7 |            20     0     7
+mut_rebind_helpers                                                          0 |             0     0     0 |             0     0     0
+mut_rebind_modules                                                          2 |             2     0     0 |             2     0     0
+mut_rebinding                                                               4 |             4     0     0 |             4     0     0
+mut_record_call_window                                                     11 |            11     0     0 |            11     0     0
+mut_reference_roots                                                         4 |             4     0     0 |             4     0     0
+nominal_bodies                                                              2 |             2     0     0 |             2     0     0
+nominal_instances                                                           3 |             3     0     0 |             3     0     0
+number_literal_helpers                                                      0 |             0     0     0 |             0     0     0
+number_literals                                                            10 |            10     0     0 |            10     0     0
+operand_snapshot_helpers                                                    0 |             0     0     0 |             0     0     0
+operand_snapshots                                                          55 |            50     0     5 |            50     0     5
+option_equality                                                            11 |            10     0     1 |            10     0     1
+option_methods                                                              7 |             7     0     0 |             7     0     0
+option_narrowing                                                           13 |            13     0     0 |            13     0     0
+option_niche                                                               12 |             9     0     3 |             9     0     3
+option_propagation                                                          4 |             4     0     0 |             4     0     0
+positive_list_index                                                         2 |             2     0     0 |             2     0     0
+print_rendering                                                             2 |             0     0     2 |             0     0     2
+properties                                                                 16 |             0     0    16 |             0     0    16
+python_arrays                                                               5 |             5     0     0 |             5     0     0
+python_bytes                                                               13 |             6     0     7 |             6     0     7
+python_calls                                                                6 |             6     0     0 |             6     0     0
+python_collections                                                         22 |            17     0     5 |            17     0     5
+python_comprehension                                                        4 |             4     0     0 |             4     0     0
+python_core                                                                10 |             8     0     2 |             8     0     2
+python_expressions                                                         17 |            12     0     5 |            12     0     5
+python_split_scalar                                                         4 |             3     0     1 |             3     0     1
+python_strings                                                              3 |             0     0     3 |             0     0     3
+python_text_surface                                                        21 |             6     0    15 |             6     0    15
+python_values                                                               8 |             7     0     1 |             7     0     1
+python_variants                                                             6 |             6     0     0 |             6     0     0
+rc_aggregate_values                                                        14 |            14     0     0 |            14     0     0
+rc_anchored_shares                                                          2 |             2     0     0 |             2     0     0
+rc_append_loops                                                             5 |             5     0     0 |             5     0     0
+rc_borrowed_calls                                                           4 |             4     0     0 |             4     0     0
+rc_borrowed_loops                                                           4 |             4     0     0 |             4     0     0
+rc_borrowed_readonly_entries                                                2 |             2     0     0 |             2     0     0
+rc_borrowed_results                                                         4 |             4     0     0 |             4     0     0
+rc_box_writeback                                                            3 |             3     0     0 |             3     0     0
+rc_buffer_loops                                                             5 |             0     0     5 |             0     0     5
+rc_byte_loop_versions                                                       4 |             2     0     2 |             2     0     2
+rc_byte_receivers                                                           4 |             0     0     4 |             0     0     4
+rc_call_lifetimes                                                           3 |             3     0     0 |             3     0     0
+rc_caller_field_reads                                                       7 |             7     0     0 |             7     0     0
+rc_capability_values                                                       14 |             0     0    14 |             0     0    14
+rc_collection_builtins                                                      6 |             3     0     3 |             3     0     3
+rc_compact_journal                                                          2 |             2     0     0 |             2     0     0
+rc_contract_results                                                         3 |             2     0     1 |             2     0     1
+rc_counted_receivers                                                        6 |             6     0     0 |             6     0     0
+rc_dictionary_keys                                                         10 |            10     0     0 |            10     0     0
+rc_dictionary_loops                                                         6 |             6     0     0 |             6     0     0
+rc_dictionary_tails                                                         6 |             6     0     0 |             6     0     0
+rc_dictionary_text_loops                                                    2 |             2     0     0 |             2     0     0
+rc_dictionary_views                                                         2 |             2     0     0 |             2     0     0
+rc_element_moves                                                           15 |            15     0     0 |            15     0     0
+rc_empty_frames                                                             2 |             2     0     0 |             2     0     0
+rc_field_transfers                                                          8 |             8     0     0 |             8     0     0
+rc_fresh_constructors                                                       4 |             4     0     0 |             4     0     0
+rc_fresh_loop_roots                                                         8 |             8     0     0 |             8     0     0
+rc_fresh_returns                                                            2 |             2     0     0 |             2     0     0
+rc_fresh_spans                                                              3 |             3     0     0 |             3     0     0
+rc_glue_values                                                              6 |             6     0     0 |             6     0     0
+rc_inert_receivers                                                          7 |             7     0     0 |             7     0     0
+rc_inert_returns                                                            7 |             6     0     1 |             6     0     1
+rc_inline_glue                                                              4 |             4     0     0 |             4     0     0
+rc_interval_anchors                                                         5 |             5     0     0 |             5     0     0
+rc_journal_types                                                            2 |             2     0     0 |             2     0     0
+rc_loop_guard_context                                                       1 |             1     0     0 |             1     0     0
+rc_loop_operand_isolation                                                   2 |             2     0     0 |             2     0     0
+rc_loop_uniqueness                                                          4 |             4     0     0 |             4     0     0
+rc_loop_versions                                                            3 |             3     0     0 |             3     0     0
+rc_match_scalars                                                            4 |             4     0     0 |             4     0     0
+rc_mut_aliases                                                              2 |             2     0     0 |             2     0     0
+rc_mut_list_aliases                                                         4 |             4     0     0 |             4     0     0
+rc_mut_payload_snapshots                                                    4 |             4     0     0 |             4     0     0
+rc_mut_uniqueness                                                           2 |             2     0     0 |             2     0     0
+rc_named_record_writes                                                      5 |             5     0     0 |             5     0     0
+rc_named_releases                                                           4 |             4     0     0 |             4     0     0
+rc_nested_read_loans                                                        6 |             6     0     0 |             6     0     0
+rc_nonheld_captures                                                         6 |             6     0     0 |             6     0     0
+rc_owned_values                                                             9 |             9     0     0 |             9     0     0
+rc_owning_element_borrows                                                   8 |             8     0     0 |             8     0     0
+rc_pin_elide                                                               26 |            26     0     0 |            26     0     0
+rc_plain_aggregates                                                         6 |             6     0     0 |             6     0     0
+rc_plain_appends                                                            7 |             7     0     0 |             7     0     0
+rc_plain_field_loans                                                        5 |             5     0     0 |             5     0     0
+rc_plain_list_writes                                                        2 |             2     0     0 |             2     0     0
+rc_plain_projection                                                         2 |             2     0     0 |             2     0     0
+rc_plain_record_writes                                                      4 |             4     0     0 |             4     0     0
+rc_plain_replacements                                                       2 |             2     0     0 |             2     0     0
+rc_plain_retains                                                            4 |             4     0     0 |             4     0     0
+rc_plain_update_paths                                                       3 |             3     0     0 |             3     0     0
+rc_range_key_anchors                                                        5 |             5     0     0 |             5     0     0
+rc_read_list_versions                                                       7 |             7     0     0 |             7     0     0
+rc_read_loans                                                               7 |             7     0     0 |             7     0     0
+rc_readonly_body                                                            3 |             3     0     0 |             3     0     0
+rc_readonly_bytes                                                           2 |             2     0     0 |             2     0     0
+rc_readonly_calls                                                           5 |             5     0     0 |             5     0     0
+rc_readonly_managed_calls                                                   2 |             2     0     0 |             2     0     0
+rc_record_field_reads                                                       8 |             7     0     1 |             7     0     1
+rc_scalar_loops                                                             3 |             3     0     0 |             3     0     0
+rc_scalar_replacements                                                      3 |             2     0     1 |             2     0     1
+rc_scope_inline                                                             2 |             2     0     0 |             2     0     0
+rc_semantic_history                                                         2 |             2     0     0 |             2     0     0
+rc_semantic_publication                                                     6 |             5     0     1 |             5     0     1
+rc_site_eliminations                                                       27 |            27     0     0 |            27     0     0
+rc_temporary_lifetimes                                                      7 |             6     0     1 |             6     0     1
+rc_tree_drains                                                              3 |             3     0     0 |             3     0     0
+rc_variant_reads                                                            6 |             6     0     0 |             6     0     0
+rc_view_receivers                                                           2 |             2     0     0 |             2     0     0
+rc_writeback_moves                                                         18 |            18     0     0 |            18     0     0
+record_field_snapshots                                                     11 |            10     0     1 |            10     0     1
+recursive_values                                                           10 |             2     0     8 |             2     0     8
+repr_shadowing                                                              1 |             1     0     0 |             1     0     0
+root_liveness                                                               9 |             8     0     1 |             8     0     1
+rounding                                                                    4 |             0     0     4 |             0     0     4
+scalable_sorting                                                            4 |             3     0     1 |             3     0     1
+scalar_dictionary_publication                                               3 |             3     0     0 |             3     0     0
+sets                                                                       18 |            11     0     7 |            11     0     7
+sorted_keys                                                                 8 |             8     0     0 |             8     0     0
+stable_sorting                                                             13 |             3     0    10 |             3     0    10
+standard_json                                                               4 |             0     0     4 |             0     0     4
+standard_strings                                                            5 |             2     0     3 |             2     0     3
+test_capabilities                                                          13 |             0     0    13 |             0     0    13
+text_index                                                                 13 |             9     0     4 |             9     0     4
+text_literal_index                                                          1 |             0     0     1 |             0     0     1
+text_scanning                                                               8 |             3     0     5 |             3     0     5
+text_views                                                                  8 |             3     0     5 |             3     0     5
+tuples                                                                      5 |             4     0     1 |             4     0     1
+value_equality                                                              7 |             4     0     3 |             4     0     3
+wide_signatures                                                             4 |             4     0     0 |             4     0     0
+-------------------------------------------------------------------------------------------------------------------------------------
+TOTAL                                                                    1518
+  debug    matching 1243, mismatching 0, unsupported 275 (of 1518 tests; 1243 supported)
+  release  matching 1243, mismatching 0, unsupported 275 (of 1518 tests; 1243 supported)
+
+blocking features of the unsupported tests (tests / files):
+    38 / 11  byte_buffer type
+    31 /  5  capability type
+    22 /  5  test parameters other than Stream (property test or capability stand-in; out of S1 scope)
+    19 / 11  text of a non-integer value
+    10 /  1  shift_right
+     9 /  3  equality of a recursive value
+     8 /  2  blob
+     8 /  2  interior mut argument ancestor changed during later argument evaluation
+     8 /  4  count
+     7 /  2  upper
+     7 /  4  extend
+     6 /  3  view
+     6 /  3  operator on an aggregate value
+     5 /  4  decode
+     5 /  4  contains
+     5 /  2  number_format
+     5 /  1  find_any
+     4 /  3  replace
+     4 /  4  f64_sqrt
+     4 /  4  strip
+     4 /  1  text_repr
+     4 /  1  f64_trunc
+     3 /  2  parse_int_range
+     3 /  1  array
+     3 /  2  text_chr
+     3 /  1  f64_to_u64
+     3 /  2  index_of
+     3 /  2  find_range
+     2 /  1  saturating_add
+     2 /  2  lower
+     2 /  1  f64_sin
+     2 /  2  keyword call with a mut argument that is not a local
+     2 /  2  parse_float
+     2 /  2  reverse
+     2 /  1  f64_floor
+     2 /  2  text_ord
+     2 /  1  strip_chars
+     2 /  2  rfind_range
+     2 /  1  find_start
+     2 /  1  dictionary key type
+     1 /  1  parse_int receiver
+     1 /  1  scalar_count
+     1 /  1  print options
+     1 /  1  the runner's entry cannot read this test's result type yet (Result[bool, E])
+     1 /  1  float_round
+     1 /  1  text_format
+     1 /  1  f64_from_u64
+     1 /  1  f64_cos
+     1 /  1  hex
+     1 /  1  slice_step
+     1 /  1  splitlines
+     1 /  1  rfind
+     1 /  1  pop_at
+     1 /  1  record field type
+
+blocking features per file (file: tests unsupported of tests; the features, most common first):
+  byte_buffer                      8 of   8: byte_buffer type x8
+  byte_buffer_from_list           10 of  10: byte_buffer type x10
+  byte_iteration_reductions        1 of   2: byte_buffer type x1
+  byte_range_fusion                2 of   2: parse_int_range x2
+  byte_ranges_llvm                 1 of   1: parse_int_range x1
+  byte_views                       6 of   6: view x4, parse_int receiver x1, scalar_count x1
+  capability_fields                6 of   6: capability type x6
+  checked_arithmetic               2 of   6: saturating_add x2
+  constant_list_image              3 of   4: array x3
+  constant_methods                 8 of   9: upper x6, replace x1, blob x1
+  contracts                        1 of  11: print options x1
+  dictionary_hash_index            1 of   6: text_chr x1
+  dictionary_hashing               3 of  11: text_chr x2, text of a non-integer value x1
+  embed                            8 of   8: blob x7, decode x1
+  error_traces                     2 of   5: the runner's entry cannot read this test's result type yet (Result[bool, E]) x1, test parameters other than Stream (property test or capability stand-in; out of S1 scope) x1
+  field_augmented                  3 of   6: extend x3
+  float_constants                  1 of  14: f64_sqrt x1
+  float_environment                1 of   1: f64_sqrt x1
+  float_integer_casts              3 of   8: f64_to_u64 x3
+  float_nan                        4 of   4: text of a non-integer value x2, f64_sqrt x1, contains x1
+  format_specs                     6 of   6: number_format x4, float_round x1, text_format x1
+  generator_arguments              2 of   8: upper x1, operator on an aggregate value x1
+  immutable_equal                  1 of   3: byte_buffer type x1
+  integer_float_rounding           1 of   3: f64_from_u64 x1
+  keyed_sorting                    1 of  18: text of a non-integer value x1
+  lambda_sort_keys                 1 of   5: lower x1
+  live_place_iteration             1 of  37: byte_buffer type x1
+  math_trig                        4 of   4: f64_sin x2, f64_cos x1, text of a non-integer value x1
+  migrated/managed_values          2 of  11: contains x2
+  migrated/python_format           1 of   3: text of a non-integer value x1
+  mut_argument_places              3 of  14: interior mut argument ancestor changed during later argument evaluation x2, keyword call with a mut argument that is not a local x1
+  mut_rebind_caller                7 of  27: interior mut argument ancestor changed during later argument evaluation x6, keyword call with a mut argument that is not a local x1
+  operand_snapshots                5 of  55: index_of x2, byte_buffer type x1, text of a non-integer value x1, contains x1
+  option_equality                  1 of  11: parse_float x1
+  option_niche                     3 of  12: equality of a recursive value x2, text of a non-integer value x1
+  print_rendering                  2 of   2: text of a non-integer value x2
+  properties                      16 of  16: test parameters other than Stream (property test or capability stand-in; out of S1 scope) x16
+  python_bytes                     7 of  13: find_any x5, decode x1, hex x1
+  python_collections               5 of  22: extend x2, index_of x1, reverse x1, slice_step x1
+  python_core                      2 of  10: f64_floor x2
+  python_expressions               5 of  17: operator on an aggregate value x4, extend x1
+  python_split_scalar              1 of   4: text_ord x1
+  python_strings                   3 of   3: replace x1, splitlines x1, strip x1
+  python_text_surface             15 of  21: text_repr x4, strip_chars x2, find_range x2, find_start x2, view x1, rfind_range x1, rfind x1, number_format x1, strip x1
+  python_values                    1 of   8: contains x1
+  rc_buffer_loops                  5 of   5: byte_buffer type x5
+  rc_byte_loop_versions            2 of   4: byte_buffer type x2
+  rc_byte_receivers                4 of   4: byte_buffer type x4
+  rc_capability_values            14 of  14: capability type x12, test parameters other than Stream (property test or capability stand-in; out of S1 scope) x2
+  rc_collection_builtins           3 of   6: view x1, lower x1, pop_at x1
+  rc_contract_results              1 of   3: capability type x1
+  rc_inert_returns                 1 of   7: capability type x1
+  rc_record_field_reads            1 of   8: f64_sqrt x1
+  rc_scalar_replacements           1 of   3: record field type x1
+  rc_semantic_publication          1 of   6: extend x1
+  rc_temporary_lifetimes           1 of   7: reverse x1
+  record_field_snapshots           1 of  11: byte_buffer type x1
+  recursive_values                 8 of  10: equality of a recursive value x4, dictionary key type x2, test parameters other than Stream (property test or capability stand-in; out of S1 scope) x1, text of a non-integer value x1
+  root_liveness                    1 of   9: decode x1
+  rounding                         4 of   4: f64_trunc x4
+  scalable_sorting                 1 of   4: operator on an aggregate value x1
+  sets                             7 of  18: text of a non-integer value x7
+  stable_sorting                  10 of  13: shift_right x10
+  standard_json                    4 of   4: byte_buffer type x4
+  standard_strings                 3 of   5: decode x2, count x1
+  test_capabilities               13 of  13: capability type x11, test parameters other than Stream (property test or capability stand-in; out of S1 scope) x2
+  text_index                       4 of  13: count x2, text_ord x1, strip x1
+  text_literal_index               1 of   1: find_range x1
+  text_scanning                    5 of   8: count x3, replace x2
+  text_views                       5 of   8: count x2, parse_float x1, strip x1, rfind_range x1
+  tuples                           1 of   5: text of a non-integer value x1
+  value_equality                   3 of   7: equality of a recursive value x3
+  excluded error_traces                 a capability (Filesystem)
+  excluded migrated/generic_results     generics
+  excluded migrated/propagation         imports (R-3; a split single-module copy goes in test/core)
+  excluded option_equality              generics
+  excluded option_methods               generics
+  excluded option_narrowing             generics
+  excluded option_niche                 generics
+  excluded option_propagation           generics
+  excluded python_variants              generics
+  excluded rc_append_loops              other list methods, tuples or fixed arrays
+  excluded rc_match_scalars             other list methods, tuples or fixed arrays
+  excluded rc_plain_aggregates          other list methods, tuples or fixed arrays
+  excluded rc_plain_appends             other list methods, tuples or fixed arrays
+  excluded rc_plain_retains             other list methods, tuples or fixed arrays
+
+exit=0 command_seconds=132.77 wall_including_admission=132.823

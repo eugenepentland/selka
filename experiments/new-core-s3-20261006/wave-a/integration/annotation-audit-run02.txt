@@ -1,0 +1,21 @@
+Supersedes run01: run01 accidentally searched literal backslashes before b.
+corpus=examples
+command=['rg', '-n', '\\bDict(Keys|Values|Items)\\b', 'examples', '-g', '*.my']
+exit=1
+no explicit dictionary-view type names
+corpus=bench
+command=['rg', '-n', '\\bDict(Keys|Values|Items)\\b', 'bench', '-g', '*.my']
+exit=1
+no explicit dictionary-view type names
+corpus=benchmarks
+command=['rg', '-n', '\\bDict(Keys|Values|Items)\\b', 'benchmarks', '-g', '*.my']
+exit=1
+no explicit dictionary-view type names
+corpus=/home/epentland/ai/canopy/mylang/.tmp/lox-bench/wt-mylang/benchmarks/lox/ports/mylang
+command=['rg', '-n', '\\bDict(Keys|Values|Items)\\b', '/home/epentland/ai/canopy/mylang/.tmp/lox-bench/wt-mylang/benchmarks/lox/ports/mylang', '-g', '*.my']
+exit=1
+no explicit dictionary-view type names
+corpus=/home/epentland/ai/canopy/mylang/.tmp/lox-fixes/tree/benchmarks/lox/ports/mylang
+unavailable now; historical audit only
+
+Correction to the opening metadata: run01 also used the valid word-boundary regex. Its doubled backslashes are Python repr escaping. Both audit runs found no view-type names; this second run was redundant.
