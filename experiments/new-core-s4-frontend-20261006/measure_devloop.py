@@ -22,6 +22,7 @@ import os
 from pathlib import Path
 import re
 import shlex
+import signal
 import statistics
 import subprocess
 import sys
@@ -90,8 +91,18 @@ class Runner:
             if cpu10:
                 fcntl.flock(timing_lock, fcntl.LOCK_EX)
             started = time.perf_counter()
-            result = subprocess.run(argv, capture_output=True, text=True,
-                                    env=environment, timeout=self.timeout, cwd=ROOT)
+            with subprocess.Popen(argv, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                  text=True, env=environment, cwd=ROOT,
+                                  start_new_session=True) as child:
+                try:
+                    stdout, stderr = child.communicate(timeout=self.timeout)
+                    status = child.returncode
+                except subprocess.TimeoutExpired:
+                    os.killpg(child.pid, signal.SIGKILL)
+                    stdout, stderr = child.communicate()
+                    stderr += f"\ndevloop: command exceeded {self.timeout} seconds\n"
+                    status = 124
+            result = subprocess.CompletedProcess(argv, status, stdout, stderr)
             seconds = time.perf_counter() - started
         log = stem.with_suffix(".log")
         with log.open("x") as stream:
