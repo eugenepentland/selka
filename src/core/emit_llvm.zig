@@ -375,7 +375,8 @@ const ModuleState = struct {
             \\declare void @myl_core_print_sep(i64) nounwind
             \\declare void @myl_core_print_end(i64) nounwind
             \\declare ptr @myl_core_box_new(i64) nounwind
-            \\declare preserve_mostcc void @myl_core_err_trace_preserve_most(i32, i32) nounwind cold
+            \\declare preserve_mostcc void @myl_core_err_trace_origin_preserve_most(i32) nounwind cold
+            \\declare preserve_mostcc void @myl_core_err_trace_append_preserve_most(i32) nounwind cold
             \\declare void @myl_core_assert_fail(i32) noreturn nounwind cold
             \\declare void @llvm.memcpy.p0.p0.i64(ptr noalias nocapture writeonly, ptr noalias nocapture readonly, i64, i1 immarg)
             \\declare void @llvm.memmove.p0.p0.i64(ptr nocapture writeonly, ptr nocapture readonly, i64, i1 immarg)
@@ -2095,10 +2096,10 @@ const FunctionEmitter = struct {
             4 => "returned",
             else => "? propagated",
         };
-        const restarts: u8 = if (inst.data == 0 or inst.data == 2) 0 else 1;
+        const action_symbol: []const u8 = if (inst.data == 0 or inst.data == 2) "origin" else "append";
         const index = try self.state.site(.{ .kind = .trace, .location = location, .width = 0, .operation = action, .function = self.function.name });
         // ERROR-TRACE-5/6: zero inline cost and the compiler-owned preserving ABI.
-        try out.print(self.a(), "  call preserve_mostcc void @myl_core_err_trace_preserve_most(i32 {d}, i32 {d}) #1\n", .{ index, restarts });
+        try out.print(self.a(), "  call preserve_mostcc void @myl_core_err_trace_{s}_preserve_most(i32 {d}) #1\n", .{ action_symbol, index });
     }
 
     /// The text of string constant `raw` (a converting `?`'s `Union.case`), or "?".

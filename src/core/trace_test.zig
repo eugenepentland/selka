@@ -127,7 +127,8 @@ test "main returning Err prints error: VALUE and the aligned trace, origin first
         const passed = try support.runOwned(arena.allocator(), &passing, resultOptions(mode));
         try std.testing.expectEqual(@as(u8, 7), passed.status);
         try std.testing.expectEqualStrings("", passed.stderr);
-        try std.testing.expect(contains(failed.llvm, "call preserve_mostcc void @myl_core_err_trace_preserve_most(i32 ") and contains(failed.llvm, "#1\n"));
+        try std.testing.expect(contains(failed.llvm, "call preserve_mostcc void @myl_core_err_trace_origin_preserve_most(i32 ") and contains(failed.llvm, "#1\n"));
+        try std.testing.expect(contains(failed.llvm, "call preserve_mostcc void @myl_core_err_trace_append_preserve_most(i32 "));
         try std.testing.expect(contains(failed.llvm, "attributes #1 = { \"call-inline-cost\"=\"0\" }"));
     }
 }
@@ -210,7 +211,7 @@ test "the explicit trace operation preserves registers while an ordinary extern 
         try std.testing.expectEqualStrings("", run.stderr);
         try std.testing.expect(contains(run.llvm, "declare void @myl_core_err_trace(i32, i32) nounwind\n"));
         try std.testing.expect(contains(run.llvm, "call void @myl_core_err_trace(i32 0, i32 0)"));
-        try std.testing.expect(contains(run.llvm, "call preserve_mostcc void @myl_core_err_trace_preserve_most(i32 0, i32 0)"));
+        try std.testing.expect(contains(run.llvm, "call preserve_mostcc void @myl_core_err_trace_origin_preserve_most(i32 0)"));
         try std.testing.expect(contains(run.llvm, "call i64 @\"my.unrelated\"(i64 7)"));
     }
 }

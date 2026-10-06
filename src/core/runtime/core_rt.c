@@ -444,8 +444,13 @@ __attribute__((cold, noinline)) void myl_core_err_trace(int32_t site, int32_t mo
 }
 
 __attribute__((cold, noinline, preserve_most))
-void myl_core_err_trace_preserve_most(int32_t site, int32_t mode) {
-    core_err_trace_record(site, mode);
+void myl_core_err_trace_origin_preserve_most(int32_t site) {
+    core_err_trace_record(site, 0);
+}
+
+__attribute__((cold, noinline, preserve_most))
+void myl_core_err_trace_append_preserve_most(int32_t site) {
+    core_err_trace_record(site, 1);
 }
 
 /* `main`'s `args`: every command-line argument after the program name. */
