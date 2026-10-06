@@ -21,7 +21,7 @@ fn assertNames(a: std.mem.Allocator, binary: []const u8) !void {
     }
 }
 
-fn qualify(a: std.mem.Allocator) !void {
+fn qualify(a: std.mem.Allocator, mode: []const u8) !void {
     var directory = std.testing.tmpDir(.{});
     defer directory.cleanup();
     const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", a);
@@ -29,7 +29,10 @@ fn qualify(a: std.mem.Allocator) !void {
     const tool_dir = std.fs.path.dirname(qbe) orelse return error.ToolNotFound;
     const compiler = try std.fs.path.join(a, &.{ tool_dir, "mylang" });
     const binary = try std.fs.path.join(a, &.{ root, "probe" });
-    const argv = &.{ compiler, "build", "test/core/c_environment_context.my", "-o", binary, "--qbe", qbe, "--provider", "test/core/c_environment_context_provider.c", "--cache-dir", root };
+    const argv: []const []const u8 = &.{
+        compiler,     "build",                                      "test/core/c_environment_context.my", "-o", binary,   "--qbe", qbe,
+        "--provider", "test/core/c_environment_context_provider.c", "--cache-dir",                        root, "--mode", mode,
+    };
     const built = try std.process.run(a, std.testing.io, .{ .argv = argv });
     if (built.term != .exited or built.term.exited != 0) report("environment context build: {s}{s}\n", .{ built.stdout, built.stderr });
     try std.testing.expect(built.term == .exited and built.term.exited == 0);
@@ -41,5 +44,5 @@ fn qualify(a: std.mem.Allocator) !void {
 test "QBE Environment names come from grants rather than the linked provider context" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
-    try qualify(arena.allocator());
+    for ([_][]const u8{ "Debug", "ReleaseSafe" }) |mode| try qualify(arena.allocator(), mode);
 }
