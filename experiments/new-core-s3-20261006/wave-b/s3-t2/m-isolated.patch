@@ -1,0 +1,133 @@
+diff --git a/src/core/emit_number.zig b/src/core/emit_number.zig
+index fa5de7e0..016bda0e 100644
+--- a/src/core/emit_number.zig
++++ b/src/core/emit_number.zig
+@@ -159,7 +159,27 @@ pub fn prelude(allocator: std.mem.Allocator, out: *std.ArrayList(u8)) std.mem.Al
+     );
+ }
+ 
+-/// Emit a fail-closed placeholder for S3-M's pending scalar operation.
++/// Emit checked integer shifts, saturating addition and strict binary64 intrinsics.
+ pub fn instruction(context: anytype, out: anytype, name: []const u8, inst: @import("ir.zig").Inst) error{ OutOfMemory, UnsupportedEntry, UnsupportedInstruction }!void {
+-    return context.unsupported(out, name, inst);
++    const ir = @import("ir.zig");
++    if (inst.op == .float_unary) {
++        const selector: ir.FloatUnary = @fromBackingInt(@intCast(inst.data));
++        const spelling: []const u8 = if (selector == .abs) "fabs" else @tagName(selector);
++        try out.print(context.a(), "  {s} = call double @llvm.{s}.f64(double {s})\n", .{ name, spelling, try context.value(inst.a) });
++        return;
++    }
++    const info = inst.ty.integer() orelse return error.UnsupportedInstruction;
++    const ty = try context.ty(inst.ty);
++    if (inst.op == .saturating_add) {
++        try out.print(context.a(), "  {s} = call {s} @llvm.{s}add.sat.{s}({s}, {s})\n", .{ name, ty, if (info.signed) "s" else "u", ty, try context.typedValue(inst.a), try context.typedValue(inst.b) });
++        return;
++    }
++    if (context.checkOf(inst) == .exact) {
++        const failed = try context.fresh("%shiftbad");
++        // Unsigned comparison rejects negative signed counts as well as counts >= width.
++        try out.print(context.a(), "  {s} = icmp uge {s} {s}, {d}\n", .{ failed, ty, try context.value(inst.b), info.bits });
++        try context.trapIf(out, failed, try context.site(.invalid_shift, inst, @tagName(inst.op)), try context.widened(out, inst.a), try context.widened(out, inst.b));
++    }
++    const spelling: []const u8 = if (inst.op == .shift_left) "shl" else if (info.signed) "ashr" else "lshr";
++    try out.print(context.a(), "  {s} = {s} {s}, {s}\n", .{ name, spelling, try context.typedValue(inst.a), try context.value(inst.b) });
+ }
+diff --git a/src/core/facts.zig b/src/core/facts.zig
+index 5dcc5c17..1ec30504 100644
+--- a/src/core/facts.zig
++++ b/src/core/facts.zig
+@@ -756,6 +756,21 @@ fn transfer(a: *Analysis, ref: ir.Ref, block: ir.BlockId) ?Interval {
+             // A checked operation traps instead of leaving its type; a wrapping one can be anything.
+             break :blk if (i.check == .none) limits else exact.meet(limits);
+         },
++        .saturating_add => blk: {
++            const x = a.rangeAt(i.a, block) orelse break :blk full;
++            const y = a.rangeAt(i.b, block) orelse break :blk full;
++            const limits = full orelse break :blk null;
++            break :blk .{ .lo = std.math.clamp(x.lo + y.lo, limits.lo, limits.hi), .hi = std.math.clamp(x.hi + y.hi, limits.lo, limits.hi) };
++        },
++        .shift_right => blk: {
++            const x = a.rangeAt(i.a, block) orelse break :blk full;
++            const count = a.rangeAt(i.b, block) orelse break :blk full;
++            const info = i.ty.integer() orelse break :blk full;
++            if (count.lo < 0 or count.hi >= info.bits) break :blk full;
++            const lo: u7 = @intCast(count.lo);
++            const hi: u7 = @intCast(count.hi);
++            break :blk .{ .lo = @min(x.lo >> lo, x.lo >> hi), .hi = @max(x.hi >> lo, x.hi >> hi) };
++        },
+         .floor_div, .div => blk: {
+             const x = a.rangeAt(i.a, block) orelse break :blk full;
+             const d = a.rangeAt(i.b, block) orelse break :blk full;
+@@ -1403,6 +1418,10 @@ fn provable(a: *Analysis, i: ir.Inst, block: ir.BlockId) bool {
+             // `proven` emits `nsw`/`nuw`, so the operands must also respect the signedness flag.
+             return exact.within(limits) and (limits.lo < 0 or (x.lo >= 0 and y.lo >= 0));
+         },
++        .shift_left, .shift_right => {
++            const count = a.rangeAt(i.b, block) orelse return false;
++            return count.lo >= 0 and count.hi < i.ty.integer().?.bits;
++        },
+         .neg => {
+             const x = a.rangeAt(i.a, block) orelse return false;
+             return x.lo > limits.lo;
+diff --git a/src/core/runtime/core_rt.c b/src/core/runtime/core_rt.c
+index 37ffacd3..e70633e7 100644
+--- a/src/core/runtime/core_rt.c
++++ b/src/core/runtime/core_rt.c
+@@ -459,7 +459,7 @@ typedef struct {
+ extern const myl_core_site myl_core_sites[];
+ extern const char myl_core_source_path[];
+ 
+-enum { TRAP_OVERFLOW, TRAP_DIVISION_BY_ZERO, TRAP_LIST_BOUNDS, TRAP_FLOAT_CONVERSION, TRAP_CAST, TRAP_FACT, TRAP_LIST_EMPTY, TRAP_MISSING_KEY = 9, TRAP_ITERATION_MUTATION = 10, TRAP_TEXT_BOUNDS = 11, TRAP_TEXT_SEPARATOR = 12, TRAP_TEXT_STEP = 13, TRAP_BYTE_RANGE = 14, TRAP_TEXT_SCALAR = 15 };
++enum { TRAP_OVERFLOW, TRAP_DIVISION_BY_ZERO, TRAP_LIST_BOUNDS, TRAP_FLOAT_CONVERSION, TRAP_CAST, TRAP_FACT, TRAP_LIST_EMPTY, TRAP_MISSING_KEY = 9, TRAP_ITERATION_MUTATION = 10, TRAP_TEXT_BOUNDS = 11, TRAP_TEXT_SEPARATOR = 12, TRAP_TEXT_STEP = 13, TRAP_BYTE_RANGE = 14, TRAP_TEXT_SCALAR = 15, TRAP_INVALID_SHIFT = 17 };
+ 
+ 
+ 
+@@ -852,6 +852,7 @@ void myl_core_trap(int32_t index, int64_t a, int64_t b) {
+     case TRAP_TEXT_STEP: code = "R_SLICE_STEP"; break;
+     case TRAP_BYTE_RANGE: code = "R_BYTE_RANGE"; break;
+     case TRAP_TEXT_SCALAR: code = "R_TEXT_SCALAR"; break;
++    case TRAP_INVALID_SHIFT: code = "R_INVALID_SHIFT"; break;
+     case TRAP_FACT:
+         /* Verify builds only: a fact the compiler relied on does not hold. */
+         code = "R_CORE_FACT";
+diff --git a/src/core/s3_numeric_test.zig b/src/core/s3_numeric_test.zig
+new file mode 100644
+index 00000000..8075afa6
+--- /dev/null
++++ b/src/core/s3_numeric_test.zig
+@@ -0,0 +1,35 @@
++//! S3 scalar emission and verification premises.
++const std = @import("std");
++const support = @import("test_support.zig");
++
++const numeric_source =
++    \\def shifted(x: u8, count: u8) -> u8:
++    \\    return shift_right(x, count)
++    \\def saturated(x: i8) -> i8:
++    \\    return saturating_add(x, 100i8)
++    \\def transformed(x: float) -> float:
++    \\    return sqrt(abs(x)) + trunc(x) + floor(x) + ceil(x)
++    \\def main() -> int:
++    \\    return int(transformed(float(shifted(200u8, 2u8)))) + int(saturated(40i8))
++;
++
++// spec: NEW-CORE-S3-NUMERIC-1
++test "S3 numeric operations emit checked shifts saturating width and strict float intrinsics" {
++    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
++    defer arena.deinit();
++    const llvm = try support.llvmText(arena.allocator(), numeric_source);
++    try std.testing.expect(std.mem.indexOf(u8, llvm, "icmp uge i8") != null);
++    try std.testing.expect(std.mem.indexOf(u8, llvm, "lshr i8") != null);
++    try std.testing.expect(std.mem.indexOf(u8, llvm, "llvm.sadd.sat.i8") != null);
++    try std.testing.expect(std.mem.indexOf(u8, llvm, "llvm.sqrt.f64") != null);
++    try std.testing.expect(std.mem.indexOf(u8, llvm, "llvm.fabs.f64") != null);
++}
++
++// spec-case: NEW-CORE-S3-NUMERIC-1
++test "S3 verify mode retains checks for inferred shift count premises" {
++    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
++    defer arena.deinit();
++    const llvm = try support.verifyLlvmText(arena.allocator(), numeric_source);
++    try std.testing.expect(std.mem.indexOf(u8, llvm, "shiftbad") != null);
++    try std.testing.expect(std.mem.indexOf(u8, llvm, "range [") != null);
++}

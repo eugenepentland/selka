@@ -1,0 +1,21 @@
+file                     tests | debug   match misma unsup | release match misma unsup
+--------------------------------------------------------------------------------------
+byte_buffer                  8 |             7     1     0 |             7     1     0
+byte_buffer_from_list       10 |            10     0     0 |            10     0     0
+python_bytes                13 |            13     0     0 |            12     1     0
+byte_ranges_llvm             1 |             1     0     0 |             1     0     0
+integer_text                 2 |             2     0     0 |             2     0     0
+float_constants             14 |            14     0     0 |            14     0     0
+float_nan                    4 |             3     0     1 |             3     0     1
+format_specs                 6 |             5     1     0 |             5     1     0
+b_buffer_values              2 |             2     0     0 |             2     0     0
+n_float_text                 3 |             3     0     0 |             3     0     0
+--------------------------------------------------------------------------------------
+TOTAL                       63
+  debug    matching 60, mismatching 2, unsupported 1 (of 63 tests; 62 supported)
+  release  matching 59, mismatching 3, unsupported 1 (of 63 tests; 62 supported)
+PROBLEM byte_buffer: debug: byte_buffer::test_byte_kinds_share_reads_and_compare_by_content: old pass, new error build error (InvalidIr): internal error[E_CORE_INVALID_IR]: invalid Core IR in byte_buffer::test_byte_kinds_share_reads_and_compare_by_content b8 %44: call does not match its signature
+PROBLEM byte_buffer: release: byte_buffer::test_byte_kinds_share_reads_and_compare_by_content: old pass, new error build error (InvalidIr): internal error[E_CORE_INVALID_IR]: invalid Core IR in byte_buffer::test_byte_kinds_share_reads_and_compare_by_content b8 %44: call does not match its signature
+PROBLEM python_bytes: release: python_bytes::test_find_any_walks_an_input_missing_one_octet_in_linear_time: old pass, new error terminated by signal 11
+PROBLEM format_specs: debug: format_specs::test_round_to_digits_rounds_the_exact_value_with_halves_away_from_zero: old pass, new error build error (InvalidIr): internal error[E_CORE_INVALID_IR]: invalid Core IR in format_specs::test_round_to_digits_rounds_the_exact_value_with_halves_away_from_zero b1 %11: union_make does not match its signature
+PROBLEM format_specs: release: format_specs::test_round_to_digits_rounds_the_exact_value_with_halves_away_from_zero: old pass, new error build error (InvalidIr): internal error[E_CORE_INVALID_IR]: invalid Core IR in format_specs::test_round_to_digits_rounds_the_exact_value_with_halves_away_from_zero b1 %11: union_make does not match its signature

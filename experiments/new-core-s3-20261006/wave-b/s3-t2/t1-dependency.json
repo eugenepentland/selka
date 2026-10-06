@@ -1,0 +1,7 @@
+{
+  "src/core/build_text.zig": "cd010cdd7bfb828d16d30b12a619be86ae8efa7fe5a86a85e71c81603f87245c",
+  "src/core/build_text_more.zig": "3a8ecccd4ce4eb0bde088011f5b84edd27573d728a7c0535ed71c3ecc6298382",
+  "src/core/text_checks.zig": "cb9602d03cb50547d9413e1392838c508dc57ae0324f1df4352b9916fb10091b",
+  "src/core/runtime/core_text.c": "259c0b9059ca426e716010109e47f67d41e4e9d6b9fa6528b40a26d743911419",
+  "src/core/runtime/core_unicode_data.h": "668ed92a73281c3d22138b64719b4a30f2cd7472e31db9b6162f2e272292aeea"
+}

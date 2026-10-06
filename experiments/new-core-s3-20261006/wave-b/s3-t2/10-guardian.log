@@ -1,0 +1,23 @@
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: cold gate — no prior green stamp on this tree; a re-run after a green will skip via the cache and confirm
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 27 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 9898 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 10 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 4/88 failed (catch-discipline, unwrap-discipline, error-discipline, anytype-budget)
+guardian: failures grouped by check (4):
+  catch-discipline (2 findings)
+    - src/core/runtime/core_number_text.zig:48: catch unreachable in production code
+      fix: handle the error explicitly with a switch or named return — when the finding names a shape the file already uses, copy that one.
+    - src/core/runtime/core_number_text.zig:79: catch unreachable in production code
+  unwrap-discipline (2 findings)
+    - src/core/runtime/core_number_text.zig:63: orelse unreachable crashes on null
+      fix: handle the null case — `orelse <fallback>`, `if (x) |v| …`, or `orelse return error.X`.
+    - src/core/runtime/core_number_text.zig:77: orelse unreachable crashes on null
+  error-discipline (1 finding)
+    - src/core/emit_llvm.zig: pub fn boundsCheck uses inferred error set `!T` (use `MyErr!T`)
+      fix: declare an explicit error set — `pub const MyError = error{ Foo, Bar };` — and return `MyError!void`.
+  anytype-budget (1 finding)
+    - src/core/build.zig: 3 `anytype` parameters (limit: 2)
+      fix: replace anytype with comptime-typed generics where possible.
+  caution: zig-out binaries predate this failed run (installs are gated on green) — rebuild green before running them

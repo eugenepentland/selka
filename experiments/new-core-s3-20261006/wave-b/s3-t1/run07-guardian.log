@@ -1,0 +1,19 @@
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: cold gate — no prior green stamp on this tree; a re-run after a green will skip via the cache and confirm
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 27 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 9 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 3/88 failed (spec, imports, line-length)
+guardian: failures grouped by check (3):
+  spec (2 findings)
+    - unverified: New core S3 foundation - [NEW-CORE-TEXT-S3-1] Remaining text and immutable-byte methods match the old core: scalar search bounds, non-overlapping count/replace, Unicode charset trims and repr, ASCII case/classification, line splitting, validated chr/ord, packed text layout, UTF-8 decode/count and immutable byte ranges. Inputs borrow and results own independent counted blocks; failed index and scalar operations retain located traps.
+    - unverified: New core S3 foundation - [NEW-CORE-LIST-S3-1] List extend and reverse use value-functional updates over a captured source; self-extension and nested/shared snapshots preserve their old values, with ordinary ownership COW and verify assertions.
+  imports (3 findings)
+    - → src/core/build_text.zig
+      fix: extract shared types into a third module, or invert one direction.
+    - → src/core/build_text_more.zig
+    - → src/core/build_text.zig
+  line-length (1 finding)
+    - src/core/build_text_more.zig:74: line is 284 chars (hard limit 240)
+      fix: split the expression when doing so improves readability
+  caution: zig-out binaries predate this failed run (installs are gated on green) — rebuild green before running them

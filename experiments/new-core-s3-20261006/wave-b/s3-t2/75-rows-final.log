@@ -1,0 +1,41 @@
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: build slot 2 after 5s (all 3 build slot(s) busy)
+build int_parse old: status=0
+build int_parse new: status=0
+build int_format old: status=0
+build int_format new: status=0
+build bytes_scan old: status=0
+build bytes_scan new: status=0
+
+### int_parse (cycles per iteration, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 46.101 | 41.508 | same |
+| new core release | 28.446 | 26.589 | same |
+| Rust | 21.996 | 19.229 | same |
+| Zig ReleaseSafe | 29.099 | 24.419 | same |
+| new / Zig | 0.978 | 1.089 | same |
+| new / Rust | 1.293 | 1.383 | same |
+
+### int_format (cycles per iteration, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 221.067 | 217.001 | same |
+| new core release | 68.535 | 62.785 | same |
+| Rust | 66.577 | 60.746 | same |
+| Zig ReleaseSafe | 214.869 | 197.978 | same |
+| new / Zig | 0.319 | 0.317 | same |
+| new / Rust | 1.029 | 1.034 | same |
+
+### bytes_scan (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 0.083 | 0.245 | same |
+| new core release | 0.052 | 0.241 | same |
+| Rust | 1.138 | 1.202 | same |
+| Zig ReleaseSafe | 1.366 | 1.778 | same |
+| new / Zig | 0.038 | 0.136 | same |
+| new / Rust | 0.046 | 0.201 | same |
+
+valid rows: 3; speed gate misses: []
+binary_search misses require the plan's identical-code/layout-noise review; all other misses require repair.

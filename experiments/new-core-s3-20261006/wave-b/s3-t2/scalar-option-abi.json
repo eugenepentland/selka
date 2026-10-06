@@ -1,0 +1,12 @@
+{
+  "source_test": "test/core/n_scalar_parse_abi.my",
+  "prototype_llvm_sha256": "7d2c4b7a6679857f099e00f1fc74e3ec2c682e966bca4ed454ac21281d52041b",
+  "parser_function_count": 2,
+  "calls": [
+    "{ i8, double } @myl_core_parse_float_range(ptr, i64, i64)",
+    "{ i8, i64 } @myl_core_parse_int_range(ptr, i64, i64)"
+  ],
+  "sret_or_heap_output_slot": false,
+  "contract": "runtime_c only: SysV integer tag low byte and payload in rdx or xmm0, 16-byte C structs; source extern aggregate signatures remain refused",
+  "implementation_size_assertion": "sizeof(myl_core_parsed_int)==16 and offsetof(value)==8"
+}
