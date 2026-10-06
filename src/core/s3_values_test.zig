@@ -53,4 +53,8 @@ test "S3 value adapter names in source extern declarations confer no compiler au
     try std.testing.expect(std.mem.indexOf(u8, llvm, "declare i64 @myl_core_equal_77(i64)") != null);
     try std.testing.expect(std.mem.indexOf(u8, llvm, "declare i64 @myl_core_show_77(i64)") != null);
     try std.testing.expect(std.mem.indexOf(u8, llvm, "declare i64 @myl_core_render_shape_0_77(i64)") != null);
+    try module.strings.append(a, "\x00myl.core.render.source.77|not-json");
+    try module.functions.append(a, .{ .name = "myl_core_render_shape_0_77", .signature = .{ .params = &.{}, .ret = .void, .linkage = .runtime_c } });
+    var descriptors: std.ArrayList(u8) = .empty;
+    try std.testing.expectError(error.UnsupportedInstruction, @import("emit_render.zig").descriptors(a, &module, &descriptors));
 }
