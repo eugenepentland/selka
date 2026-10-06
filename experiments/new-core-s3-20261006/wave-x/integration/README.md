@@ -21,7 +21,9 @@ two). It runs all nine kinds with 200 fresh cases each, without evidence reuse:
 `s0`, `s1`, `rc`, `rebinding`, `iteration`, `dict`, `text`, `number`, `functions`.
 The longer number worker starts first; registry order and per-kind seeds remain
 fixed. The manifest records the execution order separately.
-Text explicitly uses the extended S3-T1 harness. Number uses the updated original
+Text explicitly uses the S3-A character extension of the complete S3-T1 harness,
+including literal comparisons, multiple append branches, UTF-8 widths, NUL,
+capacity growth and output snapshots. Number uses the updated original
 `wave-b/s2-t2/fuzz_number.py`, which now includes S3 float parsing, formatting and
 byte-buffer checks. Other generators and their argument sets remain unchanged.
 
@@ -47,6 +49,12 @@ are additionally recorded in the kind summary and `failures/` directory.
 
 Only Python syntax and `--help` checks were used while preparing these tools.
 Preparation is not evidence that the S3-X matrix passed.
+
+The integration merge qualifier also inspects the complete core-test build
+summary and every reported test-run RSS through the inherited old-gate parser.
+A green command status cannot hide a declared memory overrun or missing shard
+verdict. The retained C/M receipts pass that retrospective inspection; final
+source still requires its own fresh merge checks.
 
 S3-A's private split-key fusion also has a supplementary 200-source text sweep.
 Its generator exercises borrowed key lifetimes, managed dictionary returns,

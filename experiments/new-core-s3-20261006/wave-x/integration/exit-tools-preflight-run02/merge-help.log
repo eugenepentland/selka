@@ -1,0 +1,8 @@
+usage: qualify_merge.py [-h] --evidence EVIDENCE [--shards SHARDS]
+
+Hold S3's install, test-core and strict full-conformance gates after a merge.
+
+options:
+  -h, --help           show this help message and exit
+  --evidence EVIDENCE
+  --shards SHARDS

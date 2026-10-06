@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """Hold S3's install, test-core and strict full-conformance gates after a merge."""
-import argparse,hashlib,json,os,re,shlex,subprocess,time
+import argparse,hashlib,importlib.util,json,os,re,shlex,subprocess,time
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[4]
 RETAIN='"$@"; result=$?; exit "$result"'
+spec=importlib.util.spec_from_file_location('old_gate_tools',ROOT/'experiments/new-core-s2-20261005/wave-b/integration/full_old_gate.py')
+gate_tools=importlib.util.module_from_spec(spec); spec.loader.exec_module(gate_tools)
 
 def main():
  p=argparse.ArgumentParser(description=__doc__)
@@ -37,10 +39,13 @@ def main():
   summary['core_sha256']=hashlib.sha256(core.read_bytes()).hexdigest()
   if install['seconds']>10: raise RuntimeError('exclusive core rebuild exceeds10seconds')
   report,test=run('test-core',['zig','build','test-core',f'-Dcore-shards={a.shards}','--summary','all'])
+  test['build_inspection']=gate_tools.inspect(report)
+  if test['build_inspection']['errors']: raise RuntimeError('test-core summary/RSS failed: '+ '; '.join(test['build_inspection']['errors']))
   walls=[float(x) for x in re.findall(r'guardian/test: test wall ([0-9.]+)s',report)]
   test['longest_shard_seconds']=max(walls) if walls else None
   verdicts=[json.loads(x) for x in re.findall(r'guardian/test: RESULT (\{[^\n]+\})',report)]
   test['tests']={k:sum(x[k] for x in verdicts) for k in ('passed','failed','skipped')}
+  if len(verdicts)!=a.shards or test['tests']['failed']: raise RuntimeError('test-core shard verdicts are missing or failed')
   if test['seconds']>300 or not walls or max(walls)>90: raise RuntimeError('test-core time requires resharding')
   run('full-conformance',['python3','experiments/new-core-s2-20261005/wave-b/integration/conformance_checked.py','--set','all','--mylang',str(old),'--core',str(core),'--cache-dir',str(temporary.parent/'conformance'),'--jobs','4','--why','--leakcheck','--verify'])
   summary['qualified']=True

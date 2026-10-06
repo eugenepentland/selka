@@ -23,7 +23,7 @@ KINDS = ("s0", "s1", "rc", "rebinding", "iteration", "dict", "text", "number", "
 # Float-runtime builds are the longest package sweep. Start that worker first;
 # keep the registry and its per-kind seeds fixed so scheduling changes no cases.
 EXECUTION_ORDER = ("number",) + tuple(kind for kind in KINDS if kind != "number")
-TEXT_HARNESS = ROOT / "experiments/new-core-s3-20261006/wave-b/s3-t1/fuzz_text.py"
+TEXT_HARNESS = ROOT / "experiments/new-core-s3-20261006/wave-c/s3-char/fuzz_char.py"
 NUMBER_HARNESS = ROOT / "experiments/new-core-s2-20261005/wave-b/s2-t2/fuzz_number.py"
 
 
