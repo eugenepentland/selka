@@ -1,0 +1,66 @@
+{
+  "kind": "rebinding",
+  "cases_requested": 200,
+  "seed": 3304,
+  "cases_seen": 200,
+  "accepted": 200,
+  "old_rejected": 0,
+  "core_refused": 0,
+  "core_build_failed": 0,
+  "comparisons_expected": 3000,
+  "native_runs": 4000,
+  "harness": {
+    "cases": 200,
+    "old_rejected": 0,
+    "refused": 0,
+    "compared": 3000,
+    "mismatch": 0,
+    "fact": 0,
+    "traps": 151,
+    "caught": 0
+  },
+  "harness_status": 0,
+  "complete": true,
+  "qualified": true,
+  "error": null,
+  "failures": [],
+  "elapsed_seconds": 673.6529162258375,
+  "cache_root": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/wave-x/s3-x/20261006T201856Z-a00f722632af/rebinding",
+  "tmpdir": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/wave-x/s3-x/20261006T201856Z-a00f722632af/rebinding/tmp",
+  "saved_sources": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/experiments/new-core-s3-20261006/wave-x/integration/matrix-final-run02/rebinding/sources",
+  "zig_local_cache": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/wave-x/s3-x/20261006T201856Z-a00f722632af/rebinding/zig",
+  "affinity": [
+    0,
+    1,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "oracles": {
+    "old": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/s3/oracle/mylang",
+      "sha256": "d36658dbfb78d29213224532a13fd5ad8b7c0e290dbfb87613d9815678305c79"
+    },
+    "new": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/zig-out/bin/mylang-core",
+      "sha256": "09f90c02e19b649407af4f1017b148449d7c175f8ceee5b8a5cc6a484250e5f0"
+    }
+  },
+  "oracle_unchanged": true,
+  "harness_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/experiments/new-core-s2-20261005/wave-a/fuzz_rebinding.py",
+  "harness_sha256": "c3b97fa56f4a4c608875c42b81938bc99613c1b84f8bd6c13084ea591dbbaba6",
+  "native_comparisons": 3000,
+  "native_complete": true,
+  "command_count": 4800
+}
