@@ -1,0 +1,73 @@
+{
+  "source": "9bebd05b768fe102f649bac51b5dedb2aa47a216",
+  "source_inputs_sha256": {
+    "src/core/build_text.zig": "e2721895a360c22d6036415313836bb31eec6f2b7195d5d057ca9892b4e94a06",
+    "src/core/byte_index.zig": "29d635202323712f364d4e10cc1f7b0a57d983dcc201712f4836d8f3ce70d9a9",
+    "src/core/byte_index_test.zig": "2dab5a0cb0a9869d87f0dc4776a4a1010567a5c9e6f666497fb40d4d359551bf",
+    "src/core/dict_scalar_store_test.zig": "178d4409e978e32b96c3e0d5a812cd26ea250e93d5b7fc3ed0f85d7facb0a58b",
+    "src/core/emit_bytes.zig": "55b02df999d2061d40605dfde30f3b06eabfafb20e4a8cbd6203b98ab6c42af6",
+    "src/core/emit_dict.zig": "f465fb0d6552d26f63c665f214a7ec082193a38d210672ec3d9ec45e471e8bec",
+    "src/core/emit_dict_span.zig": "95ed4ad25640b73cfb01dbcbae16499581bab26e6591e5798ffd9a382819b689",
+    "src/core/emit_llvm.zig": "b38137d3f9785e0c098384866139da7f34e8997a26c8277746eca309d505330d",
+    "src/core/fuse_text.zig": "a0f73976c457860862e11b318107870260cec325d46cd875a39c3174b5e28d83",
+    "src/core/fuse_text_split.zig": "a266c1fe2d182556aac4b59db9696fd57498310cfd324c0b64816d8d97f387ff",
+    "src/core/passes.zig": "e50205261082ab853ab09336a073fa8f08cb4ce02660ccef2672bb7ffa5a83a7",
+    "src/core/root_test.zig": "ee744ef41a4ab49ac81e2c9dd6ff35920400a17330f0c5d3fdab09b1a92940bc",
+    "src/core/runtime/core_text.c": "5bc2ff4e884e5681e9c1cef2c16f84e30d5a109fb0e237b2c0a2eb2e5c2cb67f",
+    "src/core/test_support.zig": "fdc2379a04d0407232d307e4966dfc8c2f05c9e7f011341157da4a861da75f67",
+    "src/core/text_test.zig": "36af0942a3874fe6822943996c0ed9004a521cf23e472e0a8d5ced5cc8aa4d83",
+    "test/core/d_scalar_stores.my": "aedc0a6c452ef18c86d5f30ab5f882f0639d369ad461a0ed223362d00e99607d",
+    "test/core/row_csv_aggregate.my": "38ec1d6a777ed9b21d3ddd6ffdf5786945a83d3c9a1779355eca5e5a7b455c99",
+    "test/core/row_json_transform.my": "4c6dcff1e82508f9870c1331f4f6fe97b3842709a00a36866c86b09a4797dd79",
+    "test/core/row_lox_eval.my": "8f094f5cdcc6de88de2d859dcb366585cf94ec63bb5d5fa36e34eadf008ca1a2",
+    "test/core/row_packet_decode.my": "355d3c171613a2d75dbc13d3c65e1f3d62b7ef856962ef8861eade188814b2cc",
+    "test/core/row_word_count.my": "9522af956c3e65925480f3bc97bf8b0d8fd3966c6add8cb8d77838e935b69bf6"
+  },
+  "compiler_sha256": "dbe6e8e0ebc06542e19cd654ed8d151e3099db33c370f25c2d323006c553f666",
+  "oracle_sha256": {
+    "mylang": "d36658dbfb78d29213224532a13fd5ad8b7c0e290dbfb87613d9815678305c79",
+    "qbe": "b6139650a99b39131cd791fa1fdc84c09472dc303930bbadd3f8a5348487af4c"
+  },
+  "source_unchanged": true,
+  "untracked_gate_inputs": [],
+  "frozen_ir_diff_empty": true,
+  "ownership_source_diff_empty": true,
+  "core_install_seconds": 2.48,
+  "core32": {
+    "passed": 265,
+    "failed": 0,
+    "seconds": 112.43,
+    "max_shard_seconds": 65.16
+  },
+  "strict_conformance": {
+    "debug_matching": 1518,
+    "release_matching": 1518,
+    "mismatching": 0,
+    "unsupported": 0,
+    "leakcheck": true,
+    "verify_facts": true,
+    "seconds": 66.93
+  },
+  "hook_review": {
+    "whitespace_before_result_allocation": true,
+    "byte_forward_after_facts_trusted_only": true,
+    "split_predicate_exact_signature_and_zero_owned_view_masks": true,
+    "byte_predicate_exact_signature_and_zero_owned_view_masks": true,
+    "generated_cursor_helpers_compiler_only_zero_masks": true
+  },
+  "final_old_gate": {
+    "pending": "qualified character package and final combined source freeze",
+    "tool": "experiments/new-core-s2-20261005/wave-b/integration/full_old_gate.py",
+    "evidence": "experiments/new-core-s3-20261006/wave-c/s3-a/old-gate-combined-final-01",
+    "steps": [
+      "test",
+      "test-qbe",
+      "test-qbe-build",
+      "fmt-check"
+    ],
+    "wrappers": "tool internally holds both gate and build; do not outer-wrap",
+    "core_threshold_applies": false
+  },
+  "qualified_packet_combination": true,
+  "final_A_qualification": false
+}
