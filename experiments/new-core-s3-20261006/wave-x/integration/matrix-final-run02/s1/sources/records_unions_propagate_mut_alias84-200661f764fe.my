@@ -1,0 +1,186 @@
+def number(text: str, fallback: int) -> int:
+    match int(text):
+        case Some(value):
+            return value
+        case None:
+            return fallback
+
+
+def fold(values: list[int]) -> int:
+    total = 0
+    for value in values:
+        total = (total * 31 + value) % 1000003
+    return total
+
+
+record Bucket:
+    count: int
+    items: list[int]
+
+
+def bucket_total(b: Bucket) -> int:
+    t = b.count
+    for x in b.items:
+        t = (t * 7 + x) % 1000003
+    return t
+
+
+def grow(b: Bucket, v: int) -> Bucket:
+    items = b.items
+    items.append(v)
+    return Bucket(b.count + 1, items)
+
+
+record Pair:
+    a: int
+    b: int
+
+
+union Item:
+    empty,
+    num: int,
+    pair: Pair,
+    bag: Bucket
+
+
+def weigh(item: Item) -> int:
+    match item:
+        case Item.num(v):
+            return v
+        case Item.pair(p):
+            return p.a * 3 + p.b
+        case Item.bag(g):
+            return len(g.items) + g.count
+        case _:
+            return 1
+
+
+def sum_items(items: list[Item]) -> int:
+    t = 0
+    for i in range(len(items)):
+        t = (t * 5 + weigh(items[i])) % 1000003
+    return t
+
+
+def bump(xs: mut list[int], k: int):
+    xs.append(k)
+    xs[0] = (xs[0] + k) % 1009
+
+
+def fill(xs: mut list[int], k: int):
+    for j in range(k % 4):
+        xs.append(j * 3 + k)
+
+
+def swap_ends(xs: mut list[int]):
+    last = len(xs) - 1
+    first = xs[0]
+    xs[0] = xs[last]
+    xs[last] = first
+
+
+def twice(xs: mut list[int], k: int):
+    bump(mut xs, k)
+    bump(mut xs, k + 1)
+
+
+def touch(b: mut Bucket, v: int):
+    b.items[0] = v
+    b.count = b.count + 1
+    b.items.append(v)
+
+
+def touch_items(b: mut Bucket, v: int):
+    bump(mut b.items, v)
+    b.count = b.count + 2
+
+
+def rebuild(b: mut Bucket, v: int):
+    b = Bucket(v % 5, [v, v + 1])
+
+
+def both(xs: list[int], ys: list[int]) -> int:
+    return len(xs) * 100 + len(ys) + xs[0] + ys[0]
+
+
+def step0(x: int) -> Result[int, int]:
+    if x % 3 == 1:
+        return Err(7)
+    return Ok((x * 3 + 6) % 1009)
+
+
+def step1(x: int) -> Result[int, int]:
+    if x % 3 == 1:
+        return Err(7)
+    return Ok((x * 2 + 5) % 1009)
+
+
+def step2(x: int) -> Result[int, int]:
+    if x % 11 == 1:
+        return Err(7)
+    return Ok((x * 6 + 4) % 1009)
+
+
+def chain0(x: int) -> Result[int, int]:
+    v0 = step1(x)?
+    if v0 > 187:
+        return Ok(v0)
+    v1 = step0(v0 + 1)?
+    return Ok(v0 + v1)
+
+
+def chain1(x: int) -> Result[int, int]:
+    v0 = step1(x)?
+    v1 = step2(v0 + 1)?
+    if v1 > 207:
+        return Ok(v1)
+    v2 = step1(v1 + 1)?
+    return Ok(v0 + v1 + v2)
+
+
+def sum_checked(xs: list[int]) -> Result[int, int]:
+    t = 0
+    for x in xs:
+        t = (t + step2(x)?) % 1000003
+    return Ok(t)
+
+
+def main(args: list[str], out: Stream) -> int:
+    if len(args) != 3:
+        return 2
+    n = number(args[0], 3)
+    rounds = number(args[1], 2)
+    seed = number(args[2], 7)
+    if n < 1 or n > 100 or rounds < 0 or rounds > 5:
+        return 3
+    acc = 0
+    xs = [(j * 25 + seed) % 1009 for j in range(n)]
+    ys = [(j * 15 + 1) % 997 for j in range(n)]
+    b = Bucket(n, xs)
+    c = Bucket(1, [seed])
+    items: list[Item] = []
+    items.append(Item.num(seed))
+    if len(items) > 0:
+        items[(((seed * (acc * seed))) % 1009) % len(items)] = Item.pair(Pair((((acc // 1) + (acc * n))) % 1009, (((acc % seed) + (n + n))) % 1009))
+    acc = (acc + bucket_total(b)) % 1000003
+    b.items.append((((acc * acc) - (n - 101))) % 1009)
+    c.count = c.count + (((3037000500 % 2) + acc)) % 1009
+    items.append(Item.bag(Bucket(((17 * ((0 - 22) % 16))) % 1009, [(((4611686018427387904 - seed) + (seed + acc))) % 1009, (((n % 17) - (seed % 1))) % 1009])))
+    xs.append((((acc % 32) % ((0 - 8) * 9223372036854775807))) % 1009)
+    if len(items) > 0:
+        items[(((n - (acc + 17))) % 1009) % len(items)] = Item.bag(Bucket((((n * seed) + 41)) % 1009, [(((15 * acc) // 3)) % 1009, (((seed * 101) % 17)) % 1009]))
+    snap = b
+    b.items.append((((seed + seed) * (n * 26))) % 1009)
+    acc = (acc + len(snap.items) * 5 + len(b.items)) % 1000003
+    if len(items) > 0:
+        match items[((seed) % 1009) % (len(items) + 1)]:
+            case Item.bag(g):
+                acc = (acc + len(g.items) + g.count) % 1000003
+            case _:
+                acc = (acc + 2) % 1000003
+    touch_items(mut b, (((seed % 17) // 16)) % 1009)
+    fill(mut xs, ((4611686018427387904 // (n * 3037000500))) % 1009)
+    items.append(Item.bag(Bucket(((seed + (3037000500 - 11))) % 1009, [(((n - 35) * (23 % n))) % 1009, (((seed % seed) + (n * n))) % 1009])))
+    out.print(acc, fold(xs), fold(ys), b.count, fold(b.items), c.count, fold(c.items), sum_items(items), len(items))
+    return acc % 7
+
