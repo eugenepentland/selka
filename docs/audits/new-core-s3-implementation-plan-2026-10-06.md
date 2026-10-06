@@ -163,6 +163,48 @@ argument (`len`, `in`, `list`, `set`, `sorted`).
 is an implementation accident (as S1 found for `mut` rebinding and D1), it stops and
 reports. It does not decide.
 
+**Decided at the Wave B hold (2026-10-06, the review of `58fdb5b9b`):**
+- **`ENV-NAMES-GRANT-1`: `env.names()` comes from the runtime's grants, never from a
+  provider's callback context.** The old runtime's `myl_qbe_environment_names`
+  (`src/qbe_providers.c`) reads `environment_context` as the `--allow-env` allowlist.
+  That works only because the built-in provider (`qbe_grants.c`) stores the allowlist
+  there. For a linked native provider that context is opaque adapter state, so the old
+  core publishes it as names, and reads arbitrary memory if it is not a C string. This
+  is an old-core accident. The documented rule (`ENVIRONMENT-NAMES-1`, `docs/io.md`,
+  `docs/audits/phase2-env-notes.md`) already says what to do, and the new core already
+  does it:
+  - with `env.only(...)`: the scope names that the allowlist admits;
+  - otherwise, the `--allow-env` allowlist when one is set;
+  - otherwise, the process environment's names;
+  - whatever provider serves `get`. ABI 7 has no enumeration callback, so a linked
+    provider does not change `names()`.
+
+  **S3-C fixes the old core:** `names()` reads the grant state's allowlist (the string
+  `qbe_grants.c` already parses), not `p->environment_context`. The built-in provider
+  keeps using its own context privately for `get`. S3-C also:
+  - amends `ENVIRONMENT-NAMES-1` with one sentence saying a provider's context never
+    contributes names;
+  - adds an old-core regression test from `context-probe.my`/`context-provider.c`
+    (expect 3 names under the three-variable environment, and the allowlist's names
+    under `--allow-env=A,B`);
+  - adds the same expectations under the new core.
+
+  The change is outside `src/core/`, so S3-C runs the full old gate. ABI 7 does not
+  change. The probe's old answer (1) is not a qualification target.
+- **No decision was needed for the S3-M captured-place probe.** The old answer is the
+  established rule, not an accident. `COW-MUT-ARGUMENT-1`, as `mut_argument_places`
+  and `mut_rebind_caller` test it, says a later `mut` argument that writes an ancestor
+  supersedes an earlier interior `mut` argument's place. The interior argument's write
+  goes to the old parent and is not published.
+  - A whole-root `mut cursor` counts as an ancestor write even when the callee changes
+    only a scalar field. Semantics must not depend on what the callee's body happens to
+    write.
+  - So `add(mut cursor.rows[-1], tick(mut cursor))` leaves `rows` at `[[1], [2]]` with
+    `ticks == 1`. Correct the probe's expectation and make the new core match it. The 8
+    refused tests in those two files are the qualification.
+  - (A later language cleanup could reject this overlap statically, as
+    `MUT-OVERLAP-RECEIVER-1` does for receivers. That is not S3 work.)
+
 ## 3. Work packages
 
 Estimates are agent-hours. For calibration: S2 Wave B was about 15–17 agent-hours over
