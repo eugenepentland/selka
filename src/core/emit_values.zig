@@ -27,6 +27,7 @@ pub fn dynamic(module: ir.Module, ty: ir.Type) bool {
 /// Replace a typed recursive adapter declaration with its LLVM definition.
 pub fn adapter(a: std.mem.Allocator, out: *Out, function: *const ir.Function) Error!bool {
     if (try emit_render.adapter(a, out, function)) return true;
+    if (function.signature.linkage != .runtime_c) return false;
     const prefix = "myl_core_equal_";
     if (!std.mem.startsWith(u8, function.name, prefix)) return false;
     const number = function.name[prefix.len..];
@@ -46,7 +47,7 @@ pub fn key(comptime Context: type, c: Context, out: *Out, ty: ir.Type, symbol: [
 
 fn needed(m: *const ir.Module) bool {
     for (m.functions.items) |f| {
-        if (std.mem.startsWith(u8, f.name, "myl_core_equal_")) return true;
+        if (f.signature.linkage == .runtime_c and std.mem.startsWith(u8, f.name, "myl_core_equal_")) return true;
         if (f.signature.linkage == .runtime_c and std.mem.startsWith(u8, f.name, "myl_core_show_")) return true;
     }
     for (m.compounds.items) |shape| if (shape == .dict and dynamic(m.*, shape.dict.key)) return true;

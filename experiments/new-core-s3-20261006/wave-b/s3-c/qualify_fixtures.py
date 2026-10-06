@@ -65,10 +65,13 @@ def main():
     checks = []
     for scenario, options, output in (
         ("process", None, "3\nMYL_CORE_LEAKCHECK\nONLY_VISIBLE\nPATH\n"),
+        ("malformed", None, "3\nMYL_CORE_LEAKCHECK\nONLY_VISIBLE\nPATH\n"),
         ("allowlist", "--allow-env=B,A", "2\nA\nB\n"),
         ("restricted", "--restrict --allow-env=B,A", "2\nA\nB\n"),
     ):
         environment = dict(PATH="context-probe", ONLY_VISIBLE="ok", MYL_CORE_LEAKCHECK="1")
+        if scenario == "malformed":
+            environment["INVALID_\udcff"] = "ignored"
         if options is not None:
             environment["MYLANG_OPTIONS"] = options
         for mode in ("old", "debug", "release"):
@@ -132,7 +135,7 @@ def main():
                     assert (root / "output.txt").read_text() == "saved", result
                 records.append(grade(result))
         assert records[0] == records[1] == records[2], records
-        assert records[0][0] == (0 if scenario in ("read", "write", "default") else 2), records
+        assert records[0][0] == (0 if scenario in ("read", "write") else 1 if scenario == "default" else 2), records
         checks.append(f"{scenario}: identical status, stdout and stderr; grants and private files checked")
     (evidence / "summary.json").write_text(json.dumps(dict(source=subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip(), checks=checks), indent=2) + "\n")
     print(f"{len(checks)} strict fixture checks passed", flush=True)

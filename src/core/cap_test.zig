@@ -4,6 +4,7 @@ const support = @import("test_support.zig");
 const language = @import("mylang");
 const build = @import("build.zig");
 const print = @import("print.zig");
+const options = @import("core_test_options");
 
 const raw_environment =
     \\record Entry:
@@ -101,4 +102,37 @@ test "Core nested file scopes close in reverse order before return" {
     const close = std.mem.lastIndexOf(u8, text, "call void myl_core_file_scope_close").?;
     const ret = std.mem.indexOfPos(u8, text, close, "ret 0:i64").?;
     try std.testing.expect(close < ret);
+}
+
+fn builtinEnvironmentDenial(a: std.mem.Allocator) !void {
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    try directory.dir.writeFile(std.testing.io, .{ .sub_path = "input.txt", .data = "inside" });
+    const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", a);
+    const source = try std.fmt.allocPrint(a, "{s}/c_grants.my", .{options.fixtures});
+    const binary = try std.fs.path.join(a, &.{ root, "grants" });
+    var environment = std.process.Environ.Map.init(a);
+    try environment.put("MYLANG_OPTIONS", "--allow-env=IGNORED --allow-random=7");
+    try environment.put("MYL_CORE_LEAKCHECK", "1");
+    try environment.put("KEEP", "visible");
+    for ([_][]const []const u8{ &.{}, &.{ "--release", "--verify-facts" } }) |mode| {
+        var argv: std.ArrayList([]const u8) = .empty;
+        try argv.appendSlice(a, &.{ options.core_path, "build", source, "-o", binary, "--cache-dir", root });
+        try argv.appendSlice(a, mode);
+        const built = try std.process.run(a, std.testing.io, .{ .argv = argv.items });
+        try std.testing.expect(built.term == .exited and built.term.exited == 0);
+        const result = try std.process.run(a, std.testing.io, .{ .argv = &.{binary}, .cwd = .{ .path = root }, .environ_map = &environment });
+        try std.testing.expect(result.term == .exited and result.term.exited == 1);
+        try std.testing.expect(std.mem.indexOf(u8, result.stdout, "inside\n") != null);
+        try std.testing.expect(std.mem.indexOf(u8, result.stdout, "visible") == null);
+        try std.testing.expect(std.mem.indexOf(u8, result.stderr, "error[R_CAPABILITY]") != null);
+        try std.testing.expect(std.mem.indexOf(u8, result.stderr, "leakcheck:") == null);
+    }
+}
+
+// spec-case: NEW-CORE-S3-ABI-1
+test "Core built-in Environment reads preserve explicit allowlists without restrict" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    try builtinEnvironmentDenial(arena.allocator());
 }
