@@ -1,7 +1,7 @@
 # New compiler core, stage S4: projects — implementation plan, 2026-10-06
 
-Status: **Wave 0 (S4-L, S4-D) runs now. The rest is ready for Codex at the user's S4
-go, except the parts marked _finalize at the S3 exit_.** The design for the emission and cache packages is
+Status: **Wave 0 is complete (S4-L, S4-D; §3.5). The rest is ready for Codex at the
+user's S4 go, except the parts marked _finalize at the S3 exit_.** The design for the emission and cache packages is
 `docs/design/new-core-s4.md`. The measurements behind it are §3, with evidence in
 `experiments/new-core-s4-20261006/`.
 
@@ -202,24 +202,45 @@ unit plus the units that inlined from it.
   semantic cache into `frontend.Session` (S4-2) is enough; the new core does not need
   per-module checking.
 
-### 3.5 The S4 exit programs today (`baselines.md`)
+### 3.5 The S4 exit programs after Wave 0 (2026-10-06)
 
-- **The Lox port does not compile under the current language.** The benchmark checkout
-  (`.tmp/lox-bench/tree/benchmarks/lox/ports/mylang`, about 5,100 lines, pinned
-  2026-09-23) declares 16 `class` types, which value semantics rejects
-  (`E_VALUE_CLASS`). 24 of its 26 files fail the front end, so it has neither an
-  old-core baseline nor a new-core coverage number. It needs migrating to records,
-  recursive unions and pool handles first (package S4-L).
-- **The EDA port is a 5,169-line pilot** (`eda-bench/mylang/src`, 16 files, 30 tests),
-  not the planned Stage 1 slice (26,430 Zig lines).
-  - New-core coverage with S3's integration build (`e50e508a`): 117 of 120 functions.
-    The refusals are `stream_write`, float text and one `array` construct, all S3
-    areas.
-  - Old core (S3 base, CPU 10, one job): build 0.41 s cold; tests 5.5 s cold, 0.07 s
-    unchanged, 0.29 s after a one-function edit.
-- **S3's coverage sweep checks neither port.** The four corpora are `examples`,
-  `bench/parity`, `tests/lang` and the runtime benchmarks; the S0 tool's `--lox` option
-  was never used. S4 adds both ports to the sweep.
+Both were ported under the pinned old compiler (`a16a324e`) by Codex in Wave 0, with
+no language blocker.
+
+**The ports:**
+- **Lox:** `codex/s4-lox-value-semantics` at `f44302d8`. The 16 classes became
+  records over the existing object-handle heap. Conformance passes 974/974 (both
+  engines, normal and gc-stress), and all 65 tests pass (the 63 originals plus 2
+  regressions). Evidence: `experiments/new-core-s4-lox-20261006/REPORT.md` on that
+  branch.
+- **EDA Stage 1:** `eda-bench` branch `codex/s4-eda-stage1` at `510c2e2`. The port is
+  121 files and 17,965 non-blank lines, and covers layers L1–L13. 310 tests pass,
+  279/279 Zig counterparts are present, and **34/34 golden outputs are
+  byte-identical**. Evidence: `experiments/new-core-s4-eda-20261006/README.md` on
+  that branch.
+
+**Old-core baselines** (pinned compiler, CPU 10, empty caches, one test worker; these
+are the S4 exit targets):
+
+| Program | Build cold | Build unchanged | Build after a one-function edit | Tests cold | Tests unchanged | Tests after the edit |
+|---|---:|---:|---:|---:|---:|---:|
+| Lox port | 7.66 s | 0.007 s | 0.195 s | 22.0 s | 0.145 s | 0.648 s |
+| EDA Stage 1 | 81.1 s | 0.017 s | 1.15 s | 234.5 s | 1.65 s | 1.67 s |
+
+The old core's cold EDA build peaks at about 6.0 GiB (6.4 GiB for cold tests),
+against its 8 GiB self-imposed ceiling, at 18k lines.
+
+**New-core coverage today** (S3 integration build `2f041d14`, before S4):
+- **EDA Stage 1:** 1,873 of 1,874 functions accepted. The refusal is `assert` with
+  a message value.
+- **Lox:** 304 of 487 functions accepted. All 183 refusals have one reason, `record
+  field type`: `build.zig`'s `stored()` refuses a capability token (`Type.cap`) as a
+  record field, and the port's `Output` record holds `out: Stream` and
+  `err: Stream`. No `tests/lang` test stores a capability in a record, so S3 did not
+  need it.
+
+**S3's coverage sweep checked neither port.** The four corpora are `examples`,
+`bench/parity`, `tests/lang` and the runtime benchmarks. S4-0 adds both ports.
 
 ## 4. Work packages
 
@@ -379,6 +400,12 @@ files mean the full old gate.
 design §7.
 
 #### S4-P. Projects under the new core (one agent; after S4-C and S4-M)
+
+**Known items from Wave 0 (§3.5):**
+- capability tokens (`Stream`, `Host`, `Type.cap`) as record fields and payloads. A
+  token is an `i64`; ownership and authority rules are unchanged. This blocks 183
+  Lox functions.
+- `assert` with a message value (1 EDA function).
 
 **What:**
 - build and test the Lox port and the EDA slice under the new core;
