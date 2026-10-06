@@ -336,6 +336,7 @@ const ModuleState = struct {
             \\declare ptr @myl_core_ir_str_append_char(ptr, ptr, i64) nounwind
             \\declare ptr @myl_core_ir_str_slice(ptr, i64, i64) nounwind
             \\declare ptr @myl_core_ir_str_from_view(ptr, i64) nounwind
+            \\declare ptr @myl_core_s2_sort_in_place(ptr, i64, i1) nounwind
             \\declare ptr @myl_core_list_copy(ptr, i64) nounwind
             \\declare zeroext i1 @myl_core_str_parse_int(ptr, ptr) nounwind
             \\declare void @myl_core_print_i64(i64, i64) nounwind

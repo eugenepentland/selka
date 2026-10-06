@@ -1,0 +1,99 @@
+file                                                                 tests | debug   match misma unsup | release match misma unsup
+----------------------------------------------------------------------------------------------------------------------------------
+callback_slots                                                           3 |             3     0     0 |             3     0     0
+callbacks                                                                8 |             8     0     0 |             8     0     0
+keyed_sorting                                                           18 |            17     0     1 |            17     0     1
+lambda_sort_keys                                                         5 |             3     0     2 |             3     0     2
+sorted_keys                                                              8 |             8     0     0 |             8     0     0
+option_niche                                                            12 |             8     0     4 |             8     0     4
+rc_borrowed_calls                                                        4 |             0     0     4 |             0     0     4
+rc_borrowed_loops                                                        4 |             0     0     4 |             0     0     4
+rc_borrowed_readonly_entries                                             2 |             0     0     2 |             0     0     2
+rc_call_lifetimes                                                        3 |             3     0     0 |             3     0     0
+rc_collection_builtins                                                   6 |             0     0     6 |             0     0     6
+migrated/structural_constraints                                         10 |            10     0     0 |            10     0     0
+aggregate_refs                                                          12 |            12     0     0 |            12     0     0
+array_negative_index                                                    20 |            19     0     1 |            19     0     1
+array_places                                                            22 |            22     0     0 |            22     0     0
+array_writes                                                            10 |            10     0     0 |            10     0     0
+backlog/const_lengths___one_helper_serves_distinct_nominal_element_t     1 |             1     0     0 |             1     0     0
+backlog/const_lengths___const_length_function_parameters_specialize      1 |             1     0     0 |             1     0     0
+dictionary_range_keys                                                    8 |             0     0     8 |             0     0     8
+expected_type_inference                                                  5 |             5     0     0 |             5     0     0
+loop_rebinding                                                          14 |            12     0     2 |            12     0     2
+migrated/generic_arrays                                                  3 |             3     0     0 |             3     0     0
+migrated/surface_statements                                              8 |             8     0     0 |             8     0     0
+mut_argument_places                                                     14 |             2     0    12 |             2     0    12
+mut_reference_roots                                                      4 |             4     0     0 |             4     0     0
+nominal_bodies                                                           2 |             2     0     0 |             2     0     0
+nominal_instances                                                        3 |             3     0     0 |             3     0     0
+number_literals                                                         10 |            10     0     0 |            10     0     0
+python_arrays                                                            5 |             5     0     0 |             5     0     0
+rc_aggregate_values                                                     14 |            13     0     1 |            13     0     1
+rc_glue_values                                                           6 |             2     0     4 |             2     0     4
+rc_match_scalars                                                         4 |             3     0     1 |             3     0     1
+rc_plain_aggregates                                                      6 |             6     0     0 |             6     0     0
+rc_plain_retains                                                         4 |             4     0     0 |             4     0     0
+rc_read_loans                                                            7 |             6     0     1 |             6     0     1
+rc_readonly_managed_calls                                                2 |             0     0     2 |             0     0     2
+rc_scalar_replacements                                                   3 |             2     0     1 |             2     0     1
+value_equality                                                           7 |             3     0     4 |             3     0     4
+migrated/generic_inference                                               4 |             4     0     0 |             4     0     0
+operand_snapshots                                                       55 |            45     0    10 |            45     0    10
+rc_fresh_loop_roots                                                      8 |             8     0     0 |             8     0     0
+rc_temporary_lifetimes                                                   7 |             6     0     1 |             6     0     1
+scalable_sorting                                                         4 |             3     0     1 |             3     0     1
+generator_arguments                                                      8 |             5     0     3 |             5     0     3
+f_features                                                               0 |             0     0     0 |             0     0     0
+----------------------------------------------------------------------------------------------------------------------------------
+TOTAL                                                                  364
+  debug    matching 289, mismatching 0, unsupported 75 (of 364 tests; 289 supported)
+  release  matching 289, mismatching 0, unsupported 75 (of 364 tests; 289 supported)
+PROBLEM f_features: old core: no report (exit 1): f_features.my:57:9: error[E_CALLBACK_TYPE]: a function with a `mut` fixed-array or record parameter writes the caller's own variable and cannot be used as a value; call it directly
+      f = replace_word if len(words[0]) > 0 else replace_first
+          ^
+
+blocking features of the unsupported tests (tests / files):
+    30 /  9  dict type
+    20 /  9  bytes type
+     5 /  2  equality of a recursive value
+     3 /  3  text of a non-integer value
+     3 /  3  set type
+     2 /  2  lower
+     2 /  2  split
+     2 /  1  index_of
+     2 /  2  operator on an aggregate value
+     1 /  1  text_tail
+     1 /  1  pop_at
+     1 /  1  string index
+     1 /  1  record field type
+     1 /  1  contains
+     1 /  1  upper
+
+blocking features per file (file: tests unsupported of tests; the features, most common first):
+  keyed_sorting                    1 of  18: text of a non-integer value x1
+  lambda_sort_keys                 2 of   5: lower x1, text_tail x1
+  option_niche                     4 of  12: equality of a recursive value x2, dict type x1, text of a non-integer value x1
+  rc_borrowed_calls                4 of   4: bytes type x4
+  rc_borrowed_loops                4 of   4: bytes type x4
+  rc_borrowed_readonly_entries     2 of   2: bytes type x2
+  rc_collection_builtins           6 of   6: bytes type x1, dict type x1, split x1, lower x1, pop_at x1, set type x1
+  array_negative_index             1 of  20: dict type x1
+  dictionary_range_keys            8 of   8: dict type x8
+  loop_rebinding                   2 of  14: dict type x1, string index x1
+  mut_argument_places             12 of  14: dict type x12
+  rc_aggregate_values              1 of  14: dict type x1
+  rc_glue_values                   4 of   6: bytes type x4
+  rc_match_scalars                 1 of   4: bytes type x1
+  rc_read_loans                    1 of   7: bytes type x1
+  rc_readonly_managed_calls        2 of   2: bytes type x2
+  rc_scalar_replacements           1 of   3: record field type x1
+  value_equality                   4 of   7: equality of a recursive value x3, dict type x1
+  operand_snapshots               10 of  55: dict type x4, index_of x2, bytes type x1, set type x1, text of a non-integer value x1, contains x1
+  rc_temporary_lifetimes           1 of   7: split x1
+  scalable_sorting                 1 of   4: operator on an aggregate value x1
+  generator_arguments              3 of   8: upper x1, operator on an aggregate value x1, set type x1
+  excluded option_niche                 generics
+  excluded rc_match_scalars             other list methods, tuples or fixed arrays
+  excluded rc_plain_aggregates          other list methods, tuples or fixed arrays
+  excluded rc_plain_retains             other list methods, tuples or fixed arrays

@@ -62,6 +62,7 @@ pub fn buildRoots(allocator: std.mem.Allocator, program: typed.Program, roots: [
         if (function.signature.linkage == .internal) {
             _ = try fuse.projections(allocator, function, &mb.module);
             _ = try fuse_text.cursors(allocator, &mb.module, function);
+            _ = try build_fn.specialize(allocator, function);
         }
     }
     // Ownership (copies before shared updates, counting) is `own.zig`'s, after the release passes.
@@ -177,7 +178,7 @@ const ModuleBuilder = struct {
     }
 
     /// The Core IR type of a checked type, or a refusal.
-    fn mapType(self: *ModuleBuilder, ty: typed.Type, span: u32) Error!ir.Type {
+    pub fn mapType(self: *ModuleBuilder, ty: typed.Type, span: u32) Error!ir.Type {
         return switch (ty) {
             .i64 => .i64,
             .bool => .bool,
@@ -212,8 +213,13 @@ const ModuleBuilder = struct {
         };
         if (record.shape.domain != null and std.mem.eql(u8, record.name, "float")) return .f64;
         if (record.shape.variants) |variants| return self.mapUnion(ty, variants, span);
-        if (record.contract.callback != null) return self.refuse(build_fn.typeRefusal(false), span);
-        if (record.shape.array != null) return self.refuse(build_fn.typeRefusal(true), span);
+        if (record.contract.callback) |callback| return build_fn.mapCallable(self, callback, span);
+        if (record.shape.array) |array| {
+            const elem = try self.mapType(array.element, span);
+            if (elem == .void or elem == .cap) return self.refuse("fixed array element type", span);
+            const n = std.math.cast(u32, array.length) orelse return self.refuse("fixed array length", span);
+            return self.module.intern(self.allocator, .{ .array = .{ .elem = elem, .n = n } });
+        }
         if (record.shape.resource != null) return self.refuse("resource type", span);
         // A domain is its wire type: `wrap` and `unwrap` change nothing at run time.
         if (record.shape.domain) |wire| {
@@ -556,7 +562,10 @@ const FnBuilder = struct {
                 for (items) |item| try self.statement(item);
             },
             .initialize, .assign => |store| {
-                if (store.element) return self.mb.refuse("element store", span);
+                if (store.element) {
+                    const kind = self.mb.module.kind(self.ssa.types.items[self.local(store.slot)]);
+                    if (kind != .array and kind != .record) return self.mb.refuse("element store", span);
+                }
                 var place: ?Place = null;
                 const value = try self.expressionPlace(store.value, &place);
                 const block = self.current orelse return;
@@ -857,6 +866,11 @@ const FnBuilder = struct {
     /// Field `index` of record `base`, out of its box when the field is boxed.
     fn fieldGet(self: *FnBuilder, base: ir.Ref, index: usize, span: u32) Error!ir.Ref {
         const record_type = self.typeOfRef(base);
+        if (self.mb.module.kind(record_type) == .array) {
+            const array = self.mb.module.compound(record_type).array;
+            if (index >= array.n) return self.mb.refuse(refuse_field_index, span);
+            return self.emit(.{ .op = .array_get, .ty = array.elem, .a = base, .b = try self.constant(.u64, index), .check = .exact, .span = span });
+        }
         const fields = switch (self.mb.module.kind(record_type) orelse return self.mb.refuse(refuse_non_record, span)) {
             .record => self.mb.module.compound(record_type).record,
             else => return self.mb.refuse(refuse_non_record, span),
@@ -869,6 +883,7 @@ const FnBuilder = struct {
     /// Record `base` with field `index` replaced by `value` (boxed again when the field is boxed).
     fn fieldSet(self: *FnBuilder, base: ir.Ref, index: usize, value: ir.Ref, span: u32) Error!ir.Ref {
         const record_type = self.typeOfRef(base);
+        if (self.mb.module.kind(record_type) == .array) return self.arraySet(base, try self.constant(.u64, index), value, span);
         const fields = switch (self.mb.module.kind(record_type) orelse return self.mb.refuse(refuse_non_record, span)) {
             .record => self.mb.module.compound(record_type).record,
             else => return self.mb.refuse(refuse_non_record, span),
@@ -884,6 +899,7 @@ const FnBuilder = struct {
             .field => |index| return self.fieldGet(base, index, span),
             .element => |index| {
                 const list_type = self.typeOfRef(base);
+                if (self.mb.module.kind(list_type) == .array) return self.emit(.{ .op = .array_get, .ty = self.mb.module.compound(list_type).array.elem, .a = base, .b = index, .check = .exact, .span = span });
                 if (self.mb.module.kind(list_type) != .list) return self.mb.refuse("element of a non-list value", span);
                 return self.emit(.{ .op = .list_get, .ty = self.mb.module.compound(list_type).list, .a = base, .b = index, .check = .exact, .span = span });
             },
@@ -895,7 +911,7 @@ const FnBuilder = struct {
     fn stepSet(self: *FnBuilder, base: ir.Ref, step: Step, value: ir.Ref, span: u32) Error!ir.Ref {
         switch (step) {
             .field => |index| return self.fieldSet(base, index, value, span),
-            .element => |index| return self.listSet(base, index, value, span),
+            .element => |index| return if (self.mb.module.kind(self.typeOfRef(base)) == .array) self.arraySet(base, index, value, span) else self.listSet(base, index, value, span),
             .payload => |tag| return self.payloadSet(base, tag, value, span),
         }
     }
@@ -1004,7 +1020,11 @@ const FnBuilder = struct {
                 const capacity = try self.expression(acquire.capacity);
                 return self.emit(.{ .op = .list_new, .ty = try self.typeOf(id), .a = capacity, .span = span });
             },
-            .index => |index| return build_text.indexed(@TypeOf(self), self, index.base, index.index, span, try self.typeOf(id)),
+            .index => |index| {
+                const base_type = try self.typeOf(index.base);
+                if (base_type == .str or base_type == .bytes) return build_text.indexed(@TypeOf(self), self, index.base, index.index, span, try self.typeOf(id));
+                return self.arrayGet(index, span, out);
+            },
             .arena_escape => |value| return self.expression(value),
             .length => |operand| return self.stringLength(operand, span),
             .variant => |case| return self.variantMake(id, case.tag, case.value, span),
@@ -1020,17 +1040,80 @@ const FnBuilder = struct {
                 };
                 return value;
             },
-            .function_value => return self.mb.refuse(build_fn.valueRefusal(), span),
+            .function_value => |callee| {
+                const index = try self.mb.functionIndex(callee);
+                return self.detached(.{ .op = .func_ref, .ty = try self.typeOf(id), .data = index, .span = span });
+            },
+            .invoke => |invocation| return self.invoke(invocation.callee, invocation.arguments, span),
+            .replace => |replacement| return self.arrayReplace(replacement, span),
             .propagate => |try_value| return self.tryValue(try_value.value, try_value.output, span),
             .print => |print| return self.printNode(print, span),
             .array => |items| {
                 const ty = try self.typeOf(id);
                 if (ty == .bytes) return build_text.literal(@TypeOf(self), self, items, span);
-                if (ty != .str) return self.mb.refuse("array", span);
-                return self.stringConstant(items, span);
+                if (ty == .str) return self.stringConstant(items, span);
+                if (self.mb.module.kind(ty) != .array) return self.mb.refuse("array", span);
+                const values = try self.allocator().alloc(ir.Ref, items.len);
+                for (items, values) |item, *value| value.* = try self.expression(item);
+                if (self.current == null) return .none;
+                return self.emit(.{ .op = .record_make, .ty = ty, .data = try self.extraSlice(values), .span = span });
             },
             else => return self.mb.refuse(@tagName(n.data), span),
         }
+    }
+
+    /// Normalize a signed negative fixed-array index once, before its place is captured.
+    fn arrayIndex(self: *FnBuilder, base: ir.Ref, index: ir.Ref, from_end: bool, span: u32) Error!ir.Ref {
+        if (self.mb.module.kind(self.typeOfRef(index)) == .@"union") return self.emit(.{ .op = .union_tag, .ty = .u32, .a = index, .span = span });
+        if (!from_end) return index;
+        const ty = self.typeOfRef(index);
+        const info = ty.integer() orelse return self.mb.refuse("array index type", span);
+        if (!info.signed) return index;
+        const wide = if (ty == .i64) index else try self.emit(.{ .op = .convert, .ty = .i64, .a = index, .span = span });
+        const negative = try self.emit(.{ .op = .cmp, .ty = .bool, .a = wide, .b = try self.constant(.i64, 0), .data = @backingInt(ir.Predicate.lt), .span = span });
+        const variable = try self.synthetic(.i64);
+        try self.write(variable, self.current.?, wide);
+        const adjust = try self.newBlock();
+        const join = try self.newBlock();
+        try self.branch(negative, adjust, join, span);
+        try self.seal(adjust);
+        self.current = adjust;
+        const fixed = try self.emit(.{ .op = .add, .ty = .i64, .a = wide, .b = try self.constant(.i64, self.mb.module.compound(self.typeOfRef(base)).array.n), .span = span });
+        try self.write(variable, adjust, fixed);
+        try self.jump(join);
+        try self.seal(join);
+        self.current = join;
+        return self.read(variable, join);
+    }
+
+    /// Read an array element and remember its normalized place for mut write-back.
+    fn arrayGet(self: *FnBuilder, index: @FieldType(@FieldType(typed.Node, "data"), "index"), span: u32, out: ?*?Place) Error!ir.Ref {
+        var base_place: ?Place = null;
+        const base = try self.expressionPlace(index.base, if (out != null) &base_place else null);
+        const raw = try self.expression(index.index);
+        if (self.current == null) return .none;
+        const ty = self.typeOfRef(base);
+        if (self.mb.module.kind(ty) != .array) return self.mb.refuse("index of a non-array", span);
+        const at = try self.arrayIndex(base, raw, index.from_end, span);
+        if (out) |place| if (base_place) |found| {
+            place.* = try self.extendPlace(found, .{ .element = at });
+        };
+        return self.emit(.{ .op = .array_get, .ty = self.mb.module.compound(ty).array.elem, .a = base, .b = at, .check = .exact, .span = span });
+    }
+
+    /// A fixed-array replacement is a value update; whole mut rebinding stays checker-refused.
+    fn arrayReplace(self: *FnBuilder, replacement: @FieldType(@FieldType(typed.Node, "data"), "replace"), span: u32) Error!ir.Ref {
+        const base = try self.expression(replacement.base);
+        const raw = try self.expression(replacement.index);
+        const value = try self.expression(replacement.value);
+        if (self.current == null) return .none;
+        if (self.mb.module.kind(self.typeOfRef(base)) != .array) return self.mb.refuse("replace of a non-array", span);
+        return self.arraySet(base, try self.arrayIndex(base, raw, replacement.from_end, span), value, span);
+    }
+
+    /// Replace one normalized array element, preserving aggregate ownership semantics.
+    fn arraySet(self: *FnBuilder, base: ir.Ref, index: ir.Ref, value: ir.Ref, span: u32) Error!ir.Ref {
+        return self.emit(.{ .op = .array_set, .ty = self.typeOfRef(base), .a = base, .b = index, .data = try self.extraSlice(&.{value}), .check = .exact, .span = span });
     }
 
     /// `Name(...)` or `Union.case(...)`: a union value, boxing a recursive payload. Building an
@@ -1060,6 +1143,12 @@ const FnBuilder = struct {
         const ty = try self.typeOf(id);
         const stored = switch (self.mb.module.kind(ty) orelse return self.mb.refuse("record type", span)) {
             .record => self.mb.module.compound(ty).record,
+            .array => blk: {
+                const array = self.mb.module.compound(ty).array;
+                const slots = try self.allocator().alloc(ir.Type, array.n);
+                @memset(slots, array.elem);
+                break :blk slots;
+            },
             else => return self.mb.refuse("record type", span),
         };
         const values = try self.allocator().alloc(ir.Ref, stored.len);
@@ -1270,7 +1359,8 @@ const FnBuilder = struct {
         switch (kind) {
             .box => return true,
             .list => return self.recursive(m.compound(ty).list, depth + 1),
-            .dict, .array, .@"fn" => return false,
+            .dict, .@"fn" => return false,
+            .array => return self.recursive(m.compound(ty).array.elem, depth + 1),
             .record => for (m.compound(ty).record) |field| if (self.recursive(field, depth + 1)) return true,
             .@"union" => for (m.compound(ty).@"union") |case| if (self.recursive(case, depth + 1)) return true,
         }
@@ -1300,7 +1390,15 @@ const FnBuilder = struct {
             },
             .@"union" => return self.unionEqual(a, b, span),
             .list => return self.listEqual(a, b, span),
-            .box, .dict, .array, .@"fn" => return self.mb.refuse(refuse_equality, span),
+            .array => {
+                var all = try self.constant(.bool, 1);
+                for (0..m.compound(ty).array.n) |i| {
+                    const here = try self.equal(try self.fieldGet(a, i, span), try self.fieldGet(b, i, span), span);
+                    all = try self.emit(.{ .op = .bit_and, .ty = .bool, .a = all, .b = here, .span = span });
+                }
+                return all;
+            },
+            .box, .dict, .@"fn" => return self.mb.refuse(refuse_equality, span),
         }
     }
 
@@ -1467,8 +1565,30 @@ const FnBuilder = struct {
     /// to temporaries in source order; it runs first and the arguments read the temporaries.
     fn call(self: *FnBuilder, callee: typed.FunctionId, argument_nodes: []const typed.NodeId, evaluation: ?typed.StatementId, span: u32) Error!ir.Ref {
         const index = try self.mb.functionIndex(callee);
-        const mutated = self.mb.program.functions[@backingInt(callee)].signature.declared_mutates;
-        if (evaluation) |body| {
+        const declared = self.mb.program.functions[@backingInt(callee)].signature;
+        const target: ir.Inst = .{ .op = .call, .a = @fromBackingInt(index), .ty = self.mb.module.functions.items[index].signature.ret };
+        const contract: CallContract = .{ .evaluation = evaluation, .mutated = declared.declared_mutates, .declared = declared.return_type };
+        return self.callTarget(target, argument_nodes, contract, span);
+    }
+
+    /// Invoke a top-level function value with the same copy-in/copy-out mut ABI.
+    fn invoke(self: *FnBuilder, callee: typed.NodeId, arguments: []const typed.NodeId, span: u32) Error!ir.Ref {
+        const target = try self.expression(callee);
+        if (self.current == null) return .none;
+        const checked_ty = self.nodeOf(callee).ty;
+        const callback = self.mb.program.records[checked_ty.recordIndex()].contract.callback orelse return self.mb.refuse("invoke of a non-function", span);
+        const signature = self.mb.module.compound(self.typeOfRef(target)).@"fn";
+        var inst: ir.Inst = .{ .op = .call_indirect, .a = target, .ty = signature.ret };
+        build_fn.directTarget(&self.function, &inst);
+        return self.callTarget(inst, arguments, .{ .mutated = callback.mutates, .declared = callback.return_type }, span);
+    }
+
+    const CallContract = struct { evaluation: ?typed.StatementId = null, mutated: []const u16, declared: typed.Type };
+
+    /// Lower arguments in source order and write mut results back to their captured places.
+    fn callTarget(self: *FnBuilder, target: ir.Inst, argument_nodes: []const typed.NodeId, contract: CallContract, span: u32) Error!ir.Ref {
+        const mutated = contract.mutated;
+        if (contract.evaluation) |body| {
             // A `mut` argument the checker could not leave as the caller's variable is a temporary,
             // which the callee's final value would be written back to instead of the place.
             for (mutated) |position| {
@@ -1498,11 +1618,12 @@ const FnBuilder = struct {
         }
         // A `unit` argument is evaluated for its effects and not passed.
         for (values) |value| if (value != .none and self.typeOfRef(value) != .void) try arguments.append(self.allocator(), value);
-        const ret = self.mb.module.functions.items[index].signature.ret;
-        const data = try self.extraSlice(arguments.items);
-        const result = try self.emit(.{ .op = .call, .ty = ret, .a = @fromBackingInt(@intCast(index)), .data = data, .span = span });
-        if (mutated.len == 0) return if (ret == .void) .none else result;
-        const declared = try self.mb.mapType(self.mb.program.functions[@backingInt(callee)].signature.return_type, span);
+        var inst = target;
+        inst.data = try self.extraSlice(arguments.items);
+        inst.span = span;
+        const result = try self.emit(inst);
+        if (mutated.len == 0) return if (inst.ty == .void) .none else result;
+        const declared = try self.mb.mapType(contract.declared, span);
         return self.writeBack(result, declared != .void, places, span);
     }
 
@@ -1593,12 +1714,13 @@ const FnBuilder = struct {
             .sort => {
                 if (self.mb.module.kind(receiver_type) != .list) return self.mb.refuse("sort of a non-list", span);
                 const element = self.mb.module.compound(receiver_type).list;
-                const code = sortKind(self.mb.module, element) orelse return self.mb.refuse("sort of this element type", span);
+                _ = build_fn.sortKind(self.mb.module, element) orelse return self.mb.refuse("sort of this element type", span);
                 const list = try self.writableReceiverOf(owner, span);
-                const sorted = try self.runtimeCall(flags.list_sort_symbol, &.{ receiver_type, .i64 }, receiver_type, &.{ list, try self.constant(.i64, code) }, span);
+                const sorted = try self.emit(.{ .op = .list_sort, .ty = receiver_type, .a = list, .b = try self.constant(.bool, 0), .span = span });
                 try self.writeOwner(owner, sorted, span);
                 return .none;
             },
+            .sort_keyed => return self.sortKeyed(owner, argument_nodes, span),
             // `separator.join(parts)`: the runtime builds one string from a list of strings.
             .join => {
                 if (receiver_type != .str) return self.mb.refuse("join on a non-string", span);
@@ -1616,10 +1738,28 @@ const FnBuilder = struct {
         }
     }
 
+    /// Gather one owning sorted copy from the checker-built keys and exact strides.
+    fn sortKeyed(self: *FnBuilder, owner: typed.LocalId, argument_nodes: []const typed.NodeId, span: u32) Error!ir.Ref {
+        const source = try self.expression(argument_nodes[0]);
+        const keys = try self.expression(argument_nodes[1]);
+        const reverse = try self.expression(argument_nodes[2]);
+        if (self.current == null) return .none;
+        const source_type = self.typeOfRef(source);
+        const keys_type = self.typeOfRef(keys);
+        if (self.mb.module.kind(source_type) != .list or self.mb.module.kind(keys_type) != .list) return self.mb.refuse("keyed sort of a non-list", span);
+        const shape = build_fn.keyShape(self.mb.module, self.mb.module.compound(keys_type).list) orelse return self.mb.refuse("sort key type", span);
+        const strides = @as(u64, self.mb.module.size(self.mb.module.compound(source_type).list)) | (@as(u64, self.mb.module.size(self.mb.module.compound(keys_type).list)) << 32);
+        const sorts: []const ir.Ref = &.{ source, keys, try self.constant(.u64, shape.shape), try self.constant(.u64, shape.offsets), reverse, try self.constant(.u64, strides) };
+        const sorted = try self.runtimeCall("myl_core_s2_sort_keyed", &.{ source_type, keys_type, .u64, .u64, .bool, .u64 }, source_type, sorts, span);
+        try self.writeOwner(owner, sorted, span);
+        return .none;
+    }
+
     /// `len(text)` of a string that is not a local (a field, an element, a call result).
     fn stringLength(self: *FnBuilder, operand: typed.NodeId, span: u32) Error!ir.Ref {
         const value = try self.expression(operand);
         if (self.current == null) return .none;
+        if (self.mb.module.kind(self.typeOfRef(value)) == .array) return self.constant(.i64, self.mb.module.compound(self.typeOfRef(value)).array.n);
         const value_type = self.typeOfRef(value);
         if (value_type != .str and value_type != .bytes) return self.mb.refuse("length of a non-string", span);
         const chars = if (value_type == .bytes) try self.emit(.{ .op = .list_len, .ty = .u64, .a = value, .span = span }) else try self.stringChars(value, span);
@@ -1690,16 +1830,6 @@ const FnBuilder = struct {
         return .none;
     }
 };
-
-/// The runtime's code for sorting a list of `element`s (`myl_core_list_sort`): 0 signed integer,
-/// 1 unsigned integer or boolean, 2 `float`, 3 text, with the element size above the low byte.
-fn sortKind(module: ir.Module, element: ir.Type) ?i128 {
-    if (element == .str) return 3 | (8 << 8);
-    if (element == .f64) return 2 | (8 << 8);
-    if (element == .bool) return 1 | (1 << 8);
-    const info = element.integer() orelse return null;
-    return @as(i128, @intFromBool(!info.signed)) | (@as(i128, module.size(element)) << 8);
-}
 
 /// The tag of `None` when `ty` is an `Option` (a two-case union whose first case has no payload).
 fn optionNoneTag(records: []const typed.Record, ty: typed.Type) ?usize {

@@ -35,8 +35,8 @@ pub const str_from_i64_symbol = "myl_core_str_from_i64";
 pub const str_from_u64_symbol = "myl_core_str_from_u64";
 pub const str_from_bool_symbol = "myl_core_str_from_bool";
 
-/// The runtime's sort: a sorted copy of a list of integers, booleans, floats or strings.
-pub const list_sort_symbol = "myl_core_list_sort";
+/// The runtime's consuming stable sort of a unique numeric, text or bytes list.
+pub const list_sort_symbol = "myl_core_s2_sort_in_place";
 
 /// Whether `symbol` names a runtime function that only reads the blocks it is passed.
 pub fn readsOnly(symbol: []const u8) bool {

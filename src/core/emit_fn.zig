@@ -1,14 +1,19 @@
-//! Function, array and sort operation dispatch; S2-F fills the source lowering and sort.
+//! Function, fixed-array and stable-sort operation emission.
 const ir = @import("ir.zig");
 
 /// Allocation or an unsupported IR representation can stop operation emission.
 pub const Error = error{ OutOfMemory, UnsupportedEntry, UnsupportedInstruction };
 
-/// Emit indirect calls and fixed-array accesses; unfinished sort traps precisely.
+/// Emit indirect calls, checked fixed-array accesses and consuming stable sorts.
 pub fn instruction(context: anytype, out: anytype, name: []const u8, inst: ir.Inst) Error!void {
     switch (inst.op) {
         .call_indirect => try context.call(out, name, inst),
         .array_get, .array_set => try arrayAccess(context, out, name, inst),
+        .list_sort => {
+            const module = context.state.module;
+            const kind = @import("build_fn.zig").sortKind(module.*, module.compound(inst.ty).list) orelse return error.UnsupportedInstruction;
+            try out.print(context.a(), "  {s} = call ptr @{s}(ptr {s}, i64 {d}, i1 {s})\n", .{ name, @import("flags.zig").list_sort_symbol, try context.value(inst.a), kind, try context.value(inst.b) });
+        },
         else => try context.unsupported(out, name, inst),
     }
 }

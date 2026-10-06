@@ -1,0 +1,9 @@
+build-slot: all 1 gate slot(s) busy; waiting (0s so far)
+build-slot: all 1 gate slot(s) busy; waiting (60s so far)
+build-slot: gate slot 1 after 90s (all 1 gate slot(s) busy)
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 26 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 9555 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 9 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed

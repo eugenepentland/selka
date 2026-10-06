@@ -1,0 +1,52 @@
+test-core
++- run test 186 pass, 3 fail (189 total)
+error: 'value_build_test.test.a record holding an unsupported type is refused with its reason, every time it is used' failed:
+       expected error.Unsupported, found .{ .compounds = .{ .items = { .{ ... }, .{ ... } }, .capacity = 3 }, .functions = .{ .items = { .{ ... }, .{ ... }, .{ ... } }, .capacity = 5 }, .strings = .{ .items = { { ... }, { ... } }, .capacity = 9 }, .entry = 0 }
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:57:9: 0x1eb9636 in expectError__anon_133338 (std.zig)
+               return error.TestExpectedError;
+               ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-functions/src/core/value_build_test.zig:244:5: 0x20e36e3 in test.a record holding an unsupported type is refused with its reason, every time it is used (root_test.zig)
+           try std.testing.expectError(error.Unsupported, support.buildSource(arena.allocator(), array_field, &refusal));
+           ^
+error: 's2_ir_test.test.S2 IR list_sort emits valid LLVM and verifies its result type' failed:
+       no_such_file_in_tests_lang (debug): mylang-core test did not finish cleanly:
+       error: cannot read /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-functions/tests/lang/no_such_file_in_tests_lang.my: FileNotFound
+
+       no_such_row: the new core failed to build the row:
+       error: cannot read /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-functions/test/core/row_no_such_row.my: FileNotFound
+
+       expected 0, found 255
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:111:17: 0x1edd6a4 in expectEqualInner__anon_135187 (std.zig)
+                       return error.TestExpectedEqual;
+                       ^
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:75:5: 0x202ee5e in expectEqual (root_test.zig)
+           return expectEqualInner(T, expected, actual);
+           ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-functions/src/core/s2_ir_test.zig:149:9: 0x202eee9 in exercise (root_test.zig)
+               try std.testing.expectEqual(@as(u8, 0), ran.status);
+               ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-functions/src/core/s2_ir_test.zig:292:5: 0x203079b in test.S2 IR list_sort emits valid LLVM and verifies its result type (root_test.zig)
+           try exercise(.list_sort, std.testing.allocator);
+           ^
+error: 's2_ir_test.test.S2 builder dispatch stubs keep precise source refusals until Wave B' failed:
+       expected error.Unsupported, found .{ .compounds = .{ .items = { .{ ... } }, .capacity = 3 }, .functions = .{ .items = { .{ ... } }, .capacity = 2 }, .strings = .{ .items = {  }, .capacity = 0 }, .entry = 0 }
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:57:9: 0x1eb9636 in expectError__anon_133338 (std.zig)
+               return error.TestExpectedError;
+               ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-functions/src/core/s2_ir_test.zig:626:5: 0x1eb9ba6 in refuseSource (root_test.zig)
+           try std.testing.expectError(error.Unsupported, support.buildSource(a, source, &refusal));
+           ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-functions/src/core/s2_ir_test.zig:637:5: 0x1eb9f7d in test.S2 builder dispatch stubs keep precise source refusals until Wave B (root_test.zig)
+           try refuseSource(a, "def main() -> int:\n    xs: [2]int = [1, 2]\n    return xs[0]\n", "fixed array type");
+           ^
+failed command: ./.zig-cache/o/7fcc1e8d350b65022c495d37bf52c131/test --cache-dir=./.zig-cache --seed=0xd76361e6 --listen=-
+
+Build Summary: 3/5 steps succeeded (1 failed); 186/189 tests passed (3 failed)
+test-core transitive failure
++- run test 186 pass, 3 fail (189 total)
+   +- compile test debug native cached 7ms MaxRSS:38M
+      +- options cached
+         +- compile exe mylang-core debug native cached 7ms MaxRSS:38M
+
+Command exited with non-zero status 1
+command_seconds=252.95

@@ -219,9 +219,9 @@ test "a recursive union stores the payload that closes the cycle in a box and re
     try std.testing.expect(contains(text, "box_get record{union{"));
 }
 
-const array_field =
+const capability_field =
     \\record Grid:
-    \\    cells: [4]int
+    \\    port: Stream
     \\    label: str
     \\
     \\
@@ -230,7 +230,7 @@ const array_field =
     \\
     \\
     \\def main(out: Stream) -> int:
-    \\    out.print(use(Grid(cells=[1, 2, 3, 4], label="a"), Grid(cells=[1, 2, 3, 4], label="b")))
+    \\    out.print(use(Grid(port=out, label="a"), Grid(port=out, label="b")))
     \\    return 0
     \\
 ;
@@ -241,8 +241,8 @@ test "a record holding an unsupported type is refused with its reason, every tim
     defer arena.deinit();
     var refusal: build.Refusal = .{};
     // A type that failed to map stays unmapped: the second use is refused for the same reason.
-    try std.testing.expectError(error.Unsupported, support.buildSource(arena.allocator(), array_field, &refusal));
-    try std.testing.expectEqualStrings("fixed array type", refusal.reason);
+    try std.testing.expectError(error.Unsupported, support.buildSource(arena.allocator(), capability_field, &refusal));
+    try std.testing.expectEqualStrings("record field type", refusal.reason);
 }
 
 const projections =

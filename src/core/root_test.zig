@@ -22,4 +22,5 @@ comptime {
     _ = @import("s2_ir_test.zig");
     _ = @import("iteration_test.zig");
     _ = @import("text_test.zig");
+    _ = @import("function_build_test.zig");
 }

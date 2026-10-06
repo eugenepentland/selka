@@ -1,0 +1,27 @@
+core
++- install mylang-core
+   +- compile exe mylang-core debug native 1 errors
+src/core/build.zig:1557:56: error: expected type 'build.FnBuilder.callTarget__struct_70035', found 'build.FnBuilder.call__struct_70396'
+        return self.callTarget(target, argument_nodes, contract, span);
+                                                       ^~~~~~~~
+src/core/build.zig:1556:27: note: struct declared here
+        const contract = .{ .evaluation = evaluation, .mutated = declared.declared_mutates, .declared = declared.return_type };
+                         ~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/core/build.zig:1573:102: note: struct declared here
+    fn callTarget(self: *FnBuilder, target: ir.Inst, argument_nodes: []const typed.NodeId, contract: struct { evaluation: ?typed.StatementId = null, mutated: []const u16, declared: typed.Type }, span: u32) Error!ir.Ref {
+                                                                                                     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/core/build.zig:1573:102: note: parameter type declared here
+referenced by:
+    expressionPlace: src/core/build.zig:1013:42
+    statement: src/core/build.zig:570:55
+    9 reference(s) hidden; use '-freference-trace=11' to see all references
+error: 1 compilation errors
+failed command: /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig build-exe -ODebug --dep mylang -Mroot=src/core/main.zig -ODebug --dep runtime_contract -Mmylang=src/compiler.zig -ODebug -Mruntime_contract=src/runtime_contract.zig --cache-dir .zig-cache --global-cache-dir /home/epentland/ai/canopy/.zig-global-cache --name mylang-core --zig-lib-dir /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/ --listen=-
+
+Build Summary: 0/3 steps succeeded (1 failed)
+core transitive failure
++- install mylang-core transitive failure
+   +- compile exe mylang-core debug native 1 errors
+
+Command exited with non-zero status 1
+command_seconds=2.04
