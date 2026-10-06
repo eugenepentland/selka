@@ -51,7 +51,7 @@ test "S3 value adapter names in source extern declarations confer no compiler au
     }
     var hand = try support.Hand.init(a, &module, "main", .{ .params = &.{}, .ret = .i64 });
     _ = try hand.emit(.{ .op = .ret, .ty = .void, .a = try hand.int(.i64, 7) });
-    _ = try hand.finish();
+    module.entry = try hand.finish();
     try support.verified(a, &module, &.{});
     const context: u8 = 0;
     const llvm = try emit.emitModule(a, &module, .{ .locator = .{ .context = &context, .locate = location }, .source_path = "authority.my", .main = .{ .parameters = &.{} } });
