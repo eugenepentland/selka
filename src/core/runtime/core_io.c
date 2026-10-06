@@ -1044,7 +1044,11 @@ static myl_block *core_io_result(int status,uint64_t value,myl_block *error,int 
 }
 typedef struct {const char *path;int writable;} CoreIoGrant;
 static CoreIoGrant core_io_grants[8];static size_t core_io_grant_count;
-static void core_io_grant_request(const char *path,int writable){if(!*path||core_io_grant_count==8)core_io_fail("InvalidOptions");for(size_t i=0;i<core_io_grant_count;++i)if(core_io_grants[i].writable==writable&&!strcmp(core_io_grants[i].path,path))core_io_fail("InvalidOptions");core_io_grants[core_io_grant_count++]=(CoreIoGrant){path,writable};}
+static const char *core_io_option_argument;
+static void core_io_option_error(const char *format,const char *argument){char text[1024];int length=snprintf(text,sizeof text,format,argument);flush_all();os_write(2,(const unsigned char *)text,(size_t)(length<(int)sizeof text?length:(int)sizeof text-1));os_exit(2);}
+static void core_io_bad_grant(void){core_io_option_error("mylang: the option %s is not a usable capability grant\n",core_io_option_argument);}
+static void core_io_missing_grant(const char *flag){core_io_option_error("mylang: --restrict is active and this command line did not grant a capability the entry point requests; pass %s, or drop --restrict to grant every capability\n",flag);}
+static void core_io_grant_request(const char *path,int writable){if(!*path||core_io_grant_count==8)core_io_bad_grant();for(size_t i=0;i<core_io_grant_count;++i)if(core_io_grants[i].writable==writable&&!strcmp(core_io_grants[i].path,path))core_io_bad_grant();core_io_grants[core_io_grant_count++]=(CoreIoGrant){path,writable};}
 /* Core entry uses the same MYLANG_OPTIONS grant grammar as qbe_grants.c. */
 static void core_io_initialize(void) {
     if(core_io_initialized)return;
@@ -1057,39 +1061,40 @@ static void core_io_initialize(void) {
         while(*read&&strchr(" \t\n\r",*read))++read;if(!*read)break;
         char *arg=write;int quoted=0;
         while(*read&&(quoted||!strchr(" \t\n\r",*read))){if(*read=='"'){quoted=!quoted;++read;}else if(quoted&&*read=='\\'&&read[1]){++read;*write++=*read++;}else *write++=*read++;}
-        if(quoted)core_io_fail("InvalidOptions");if(*read)++read;*write++=0;
-        if(!strcmp(arg,"--restrict")){if(core_io_restricted)core_io_fail("InvalidOptions");core_io_restricted=1;}
+        if(quoted)core_io_option_error("mylang: MYLANG_OPTIONS has an unterminated quote\n%s","");if(*read)++read;*write++=0;core_io_option_argument=arg;
+        if(!strcmp(arg,"--restrict")){if(core_io_restricted)core_io_bad_grant();core_io_restricted=1;}
         else if(!strncmp(arg,"--allow-read=",13)){core_io_grant_request(arg+13,0);}
         else if(!strncmp(arg,"--allow-write=",14)){core_io_grant_request(arg+14,1);}
-        else if(!strncmp(arg,"--allow-endpoint=",17)){if(!core_io_scoped_endpoint(&core_io_real,arg+17))core_io_fail("InvalidOptions");}
-        else if(!strcmp(arg,"--allow-clock")){if(core_io_clock)core_io_fail("InvalidOptions");core_io_clock=1;}
-        else if(!strcmp(arg,"--allow-host")){if(core_io_host)core_io_fail("InvalidOptions");core_io_host=1;}
-        else if(!strncmp(arg,"--allow-random",14)&&(arg[14]==0||arg[14]=='=')){if(core_io_entropy||(arg[14]&&!arg[15]))core_io_fail("InvalidOptions");core_io_entropy=1;core_io_seed=arg[14]?strtoull(arg+15,NULL,10):0;}
-        else if(!strncmp(arg,"--allow-env",11)&&(arg[11]==0||arg[11]=='=')){if(core_io_environment||(arg[11]&&!arg[12]))core_io_fail("InvalidOptions");core_io_environment=1;core_io_names=arg[11]?arg+12:"";}
-        else if(!strcmp(arg,"--allow-all")){if(core_io_clock||core_io_entropy||core_io_environment||core_io_host||core_io_grant_count||core_io_real.endpoint_count)core_io_fail("InvalidOptions");core_io_clock=core_io_entropy=core_io_environment=core_io_host=1;core_io_grant_request(".",1);core_io_scoped_endpoint(&core_io_real,"*");}
-        else core_io_fail("InvalidOptions");
+        else if(!strncmp(arg,"--allow-endpoint=",17)){if(!core_io_scoped_endpoint(&core_io_real,arg+17))core_io_bad_grant();}
+        else if(!strcmp(arg,"--allow-clock")){if(core_io_clock)core_io_bad_grant();core_io_clock=1;}
+        else if(!strcmp(arg,"--allow-host")){if(core_io_host)core_io_bad_grant();core_io_host=1;}
+        else if(!strncmp(arg,"--allow-random",14)&&(arg[14]==0||arg[14]=='=')){if(core_io_entropy||(arg[14]&&!arg[15]))core_io_bad_grant();core_io_entropy=1;core_io_seed=arg[14]?strtoull(arg+15,NULL,10):0;}
+        else if(!strncmp(arg,"--allow-env",11)&&(arg[11]==0||arg[11]=='=')){if(core_io_environment||(arg[11]&&!arg[12]))core_io_bad_grant();core_io_environment=1;core_io_names=arg[11]?arg+12:"";}
+        else if(!strcmp(arg,"--allow-all")){if(core_io_clock||core_io_entropy||core_io_environment||core_io_host||core_io_grant_count||core_io_real.endpoint_count)core_io_bad_grant();core_io_clock=core_io_entropy=core_io_environment=core_io_host=1;core_io_grant_request(".",1);core_io_scoped_endpoint(&core_io_real,"*");}
+        else if(!strncmp(arg,"--allow-",8)||!strncmp(arg,"--restrict",10))core_io_bad_grant();
+        else core_io_option_error("mylang: MYLANG_OPTIONS names %s, which is not a runtime option\n",arg);
     }
-    if(core_io_restricted){core_io_embedding=0;for(size_t i=0;i<core_io_grant_count;++i)if(!core_io_scoped_grant(&core_io_real,core_io_grants[i].path,core_io_grants[i].writable))core_io_fail("InvalidOptions");}
-    if(!core_io_restricted){core_io_scoped_close(&core_io_real);core_io_scoped_init(&core_io_real);if(!core_io_scoped_working_directory(&core_io_real))core_io_fail("InvalidOptions");core_io_scoped_endpoint(&core_io_real,"*");core_io_clock=core_io_environment=core_io_host=1;if(!core_io_entropy){struct timespec now;clock_gettime(CLOCK_REALTIME,&now);core_io_seed=(uint64_t)now.tv_sec*1000000000+(uint64_t)now.tv_nsec;}core_io_entropy=1;core_io_names="";}
+    if(core_io_restricted){core_io_embedding=0;for(size_t i=0;i<core_io_grant_count;++i)if(!core_io_scoped_grant(&core_io_real,core_io_grants[i].path,core_io_grants[i].writable))core_io_option_error("mylang: a requested directory grant could not be opened\n%s","");}
+    if(!core_io_restricted){core_io_scoped_close(&core_io_real);core_io_scoped_init(&core_io_real);if(!core_io_embedding){if(!core_io_scoped_working_directory(&core_io_real))core_io_option_error("mylang: a requested directory grant could not be opened\n%s","");core_io_scoped_endpoint(&core_io_real,"*");}core_io_clock=core_io_environment=core_io_host=1;if(!core_io_entropy&&!core_io_embedding){struct timespec now={0};clock_gettime(CLOCK_REALTIME,&now);core_io_seed=(uint64_t)now.tv_sec*1000000000+(uint64_t)now.tv_nsec;}core_io_entropy=1;core_io_names="";}
 }
 myl_block *myl_core_cap_grant(uint32_t family) {
     core_io_initialize();
     int available=core_io_embedding?(family==0?core_io_native.clock_now!=NULL:family==1?core_io_native.random_u64!=NULL:family==2?(core_io_native.filesystem.acquire&&core_io_native.filesystem.complete&&core_io_native.filesystem.release):family==3?(core_io_native.network.acquire&&core_io_native.network.complete&&core_io_native.network.release):core_io_native.environment_get!=NULL):family==0?core_io_clock:family==1?core_io_entropy:family==2?core_io_real.count!=0:family==3?core_io_real.endpoint_count!=0:core_io_environment;
-    if(!available){const char *flag=family==0?"--allow-clock":family==1?"--allow-random":family==2?"--allow-read":family==3?"--allow-endpoint":"--allow-env";flush_all();char msg[256];int n=snprintf(msg,sizeof msg,"error[R_CAPABILITY]: missing capability; grant it with %s\n",flag);os_write(2,(unsigned char *)msg,(size_t)n);os_exit(1);}
+    if(!available){const char *flag=family==0?"--allow-clock":family==1?"--allow-random":family==2?"--allow-read=DIR":family==3?"--allow-endpoint=IP:PORT":"--allow-env";core_io_missing_grant(flag);}
     unsigned rights=7;if(family==2&&core_io_restricted){rights=5;for(size_t i=0;i<core_io_real.count;++i)if(core_io_real.roots[i].writable)rights=7;}
     myl_block *provider=core_io_provider(family,0,(int64_t)core_io_seed,NULL);if(family==2||family==3){unsigned permissions=((CoreIoState *)block_data(provider))->adapter.permissions;if(permissions&~7u)core_io_fail("InvalidCapability");rights&=permissions;}myl_block *cap=core_io_cap(family,rights,provider,NULL,NULL);myl_core_release(provider);return cap;
 }
-int64_t myl_core_host_grant(void){core_io_initialize();if(!core_io_host)core_io_fail("R_CAPABILITY");return -6;}
+int64_t myl_core_host_grant(void){core_io_initialize();if(!core_io_host)core_io_missing_grant("--allow-host");return -6;}
 void myl_core_host_check(int64_t token){core_io_initialize();if(token!=-6||!core_io_host)core_io_fail("R_CAPABILITY");}
 myl_block *myl_core_stand_in(uint32_t family,int64_t value){myl_block *state=core_io_provider(family,1,value,NULL);myl_block *cap=core_io_cap(family,7,state,NULL,NULL);myl_core_release(state);return cap;}
 myl_block *myl_core_environment_fixed(myl_block *pairs){if(!core_io_memory_valid_pairs(block_data(pairs),(size_t)pairs->len))core_io_fail("R_ENVIRONMENT");myl_block *state=core_io_provider(4,1,0,pairs);myl_block *cap=core_io_cap(4,7,state,NULL,NULL);myl_core_release(state);return cap;}
 int64_t myl_core_clock_advance(myl_block *clock,int64_t delta){CoreIoState *state=core_io_state(clock);if(state->family!=0)core_io_fail("InvalidCapability");if(!state->test)return 1;if((delta>0&&state->value>INT64_MAX-delta)||(delta<0&&state->value<INT64_MIN-delta))return 2;state->value+=delta;return 0;}
-myl_block *myl_core_external_read(myl_block *cap,uint32_t family){CoreIoState *state=core_io_state(cap);if(state->family!=family||family>1)core_io_fail("InvalidCapability");uint64_t value=0;int status=0;if(family==0){if(state->test)value=(uint64_t)state->value;else if(core_io_embedding){CoreIoClockResult result=core_io_native.clock_now(core_io_native.clock_context);status=(int)result.status;value=(uint64_t)result.value;}else{struct timespec now;status=clock_gettime(CLOCK_REALTIME,&now)?3:0;value=(uint64_t)now.tv_sec*1000000000+(uint64_t)now.tv_nsec;}}else if(!state->test&&core_io_embedding){CoreIoRandomResult result=core_io_native.random_u64(core_io_native.random_context);status=(int)result.status;value=result.value;}else{state->value=(int64_t)((uint64_t)state->value+UINT64_C(0x9e3779b97f4a7c15));value=(uint64_t)state->value;value=(value^(value>>30))*UINT64_C(0xbf58476d1ce4e5b9);value=(value^(value>>27))*UINT64_C(0x94d049bb133111eb);value^=value>>31;}if(status==4)out_of_memory();if(status<0||status>3)core_io_fail("InvalidProvider");return core_io_result(status,status?0:value,NULL,0);}
+myl_block *myl_core_external_read(myl_block *cap,uint32_t family){CoreIoState *state=core_io_state(cap);if(state->family!=family||family>1)core_io_fail("InvalidCapability");uint64_t value=0;int status=0;if(family==0){if(state->test)value=(uint64_t)state->value;else if(core_io_embedding){CoreIoClockResult result=core_io_native.clock_now(core_io_native.clock_context);status=(int)result.status;value=(uint64_t)result.value;}else{struct timespec now={0};status=clock_gettime(CLOCK_REALTIME,&now)?3:0;value=(uint64_t)now.tv_sec*1000000000+(uint64_t)now.tv_nsec;}}else if(!state->test&&core_io_embedding){CoreIoRandomResult result=core_io_native.random_u64(core_io_native.random_context);status=(int)result.status;value=result.value;}else{state->value=(int64_t)((uint64_t)state->value+UINT64_C(0x9e3779b97f4a7c15));value=(uint64_t)state->value;value=(value^(value>>30))*UINT64_C(0xbf58476d1ce4e5b9);value=(value^(value>>27))*UINT64_C(0x94d049bb133111eb);value^=value>>31;}if(status==4)out_of_memory();if(status<0||status>3)core_io_fail("InvalidProviderResult");return core_io_result(status,status?0:value,NULL,0);}
 myl_block *myl_core_cap_restrict(myl_block *cap,uint32_t rights){CoreIoAuthority *a=core_io_authority(cap);return core_io_cap(a->family,a->rights&rights,a->provider,cap,a->scope);}
 static myl_block *core_io_scope(myl_block *cap,myl_block *scope,unsigned family,int append){CoreIoAuthority *a=core_io_authority(cap);if(a->family!=family)core_io_fail("InvalidCapability");myl_block *joined=scope;if(append&&a->scope&&a->scope->len){size_t length=(size_t)(a->scope->len+scope->len+(scope->len!=0));unsigned char *bytes=malloc(length);if(!bytes)out_of_memory();memcpy(bytes,block_data(a->scope),(size_t)a->scope->len);if(scope->len){bytes[a->scope->len]='/';memcpy(bytes+a->scope->len+1,block_data(scope),(size_t)scope->len);}joined=core_io_string(bytes,length,1);free(bytes);}else core_io_retain(joined);myl_block *out=core_io_cap(family,a->rights,a->provider,cap,joined);myl_core_release(joined);return out;}
 myl_block *myl_core_cap_dir(myl_block *cap,myl_block *path){if(path->len&&!core_io_memory_valid_path(block_data(path),(size_t)path->len,'m'))core_io_fail("InvalidCapability");return core_io_scope(cap,path,2,1);}
-myl_block *myl_core_cap_host(myl_block *cap,myl_block *name){CoreIoAuthority *a=core_io_authority(cap);if(a->scope&&!myl_core_str_eq(a->scope,name))core_io_fail("InvalidCapability");return core_io_scope(cap,name,3,0);}
-myl_block *myl_core_environment_only(myl_block *cap,myl_block *names){CoreIoAuthority *a=core_io_authority(cap);if(a->family!=4||a->scope||!names->len||block_data(names)[names->len-1]!=0)core_io_fail("InvalidCapability");return core_io_scope(cap,names,4,0);}
+myl_block *myl_core_cap_host(myl_block *cap,myl_block *name){CoreIoAuthority *a=core_io_authority(cap);if(!name->len||name->len>4096||memchr(block_data(name),0,(size_t)name->len))core_io_fail("InvalidCapability");if(a->scope&&!myl_core_str_eq(a->scope,name))core_io_fail("InvalidCapability");return core_io_scope(cap,name,3,0);}
+myl_block *myl_core_environment_only(myl_block *cap,myl_block *names){CoreIoAuthority *a=core_io_authority(cap);if(a->family!=4||a->scope)core_io_fail("R_CAPABILITY");if(!names->len||block_data(names)[names->len-1]!=0)core_io_fail("InvalidCapability");return core_io_scope(cap,names,4,0);}
 
 static int core_io_resource_acquire(myl_block *cap,const unsigned char *request,size_t length,myl_block **output) {
     CoreIoAuthority *authority=core_io_authority(cap);CoreIoState *state=core_io_state(cap);
@@ -1139,7 +1144,7 @@ static void core_io_list_add(myl_block **list,myl_block *item){*list=myl_core_li
 static myl_block *core_io_listing(CoreIoBytes *raw,int *status){myl_block *list=core_io_list_new(0);if(!raw->length||raw->bytes[0]!=1){*status=3;return list;}size_t at=1;while(at<raw->length){if(at+3>raw->length){*status=3;break;}size_t width=(size_t)raw->bytes[at+1]|((size_t)raw->bytes[at+2]<<8);at+=3;if(at+width>raw->length||!core_io_utf8(raw->bytes+at,width)){*status=5;break;}core_io_list_add(&list,core_io_string(raw->bytes+at,width,1));at+=width;}return list;}
 /* request packs Access, open mode and text bit, as qbe_files.c. */
 myl_block *myl_core_file_access(myl_block *cap,uint32_t request,myl_block *path,myl_block *input){unsigned kind=request&255,mode=(request>>8)&255;int text=(request>>16)&1;static const unsigned char letters[]={0,'r','r','w','w','m','l','k','x'};if(kind>8)core_io_fail("R_FILE");unsigned char frame[4096];int status=0;myl_block *owner=NULL;uint64_t value=0;if(path->len>4094)status=2;else{frame[0]=kind?letters[kind]:(unsigned char)mode;frame[1]=':';if(path->len)memcpy(frame+2,block_data(path),(size_t)path->len);if(frame[0]=='w'){frame[0]='c';status=core_io_resource_acquire(cap,frame,(size_t)path->len+2,&owner);if(status>0){frame[0]='t';status=core_io_resource_acquire(cap,frame,(size_t)path->len+2,&owner);}}else status=core_io_resource_acquire(cap,frame,(size_t)path->len+2,&owner);}
-    if(!status){CoreIoBytes raw={0};if(kind==0){core_io_resource(owner)->text=(unsigned)text;return (request&(1u<<17))?owner:core_io_result(0,(uint64_t)(uintptr_t)owner,NULL,1);}if(kind==1||kind==2||kind==5||kind==6){status=core_io_read_all(owner,64u*1024u*1024u,0,&raw);if(!status){if(kind==5)value=1;else if(kind==6)value=(uint64_t)(uintptr_t)core_io_listing(&raw,&status);else value=(uint64_t)(uintptr_t)core_io_sequence(&raw,kind==2,&status);}}else if(kind==3||kind==4){size_t written;status=core_io_write_all(owner,input,&written);}if(!status)status=core_io_complete(owner);free(raw.bytes);myl_core_release(owner);}
+    if(!status){CoreIoBytes raw={0};if(kind==0){core_io_resource(owner)->text=(unsigned)text;return (request&(1u<<17))?owner:core_io_result(0,(uint64_t)(uintptr_t)owner,NULL,1);}if(kind==1||kind==2||kind==5||kind==6){status=core_io_read_all(owner,64u*1024u*1024u,0,&raw);if(!status){if(kind==5)value=1;else if(kind==6)value=(uint64_t)(uintptr_t)core_io_listing(&raw,&status);else value=(uint64_t)(uintptr_t)core_io_sequence(&raw,kind==2,&status);}}else if(kind==3||kind==4){size_t written;status=core_io_write_all(owner,input,&written);}(void)core_io_complete(owner);free(raw.bytes);myl_core_release(owner);}
     if(kind==0&&(request&(1u<<17)))core_io_fail("R_FILE");
     if(kind==5)return core_io_result(0,status?0:value,NULL,0);
     int pointer=kind==0||kind==1||kind==2||kind==6;if(status&&pointer&&value){myl_core_release((myl_block *)(uintptr_t)value);value=0;}
@@ -1149,18 +1154,46 @@ myl_block *myl_core_file_method(myl_block *owner,uint32_t request,int64_t count,
 static int core_io_allowed(const char *names,const unsigned char *name,size_t length){if(!*names)return 1;for(const char *p=names;*p;){const char *comma=strchr(p,',');size_t width=comma?(size_t)(comma-p):strlen(p);if(width==length&&!memcmp(p,name,length))return 1;if(!comma)break;p=comma+1;}return 0;}
 static int core_io_environment_read(myl_block *cap,myl_block *name,unsigned char *output,size_t capacity,size_t *written,int *present){
     CoreIoAuthority *a=core_io_authority(cap);CoreIoState *state=core_io_state(cap);*written=0;*present=0;
-    if(a->family!=4||!core_io_memory_valid_name(block_data(name),(size_t)name->len))core_io_fail("InvalidCapability");
-    if(a->scope&&!core_io_memory_blob_has(block_data(a->scope),(size_t)a->scope->len,block_data(name),(size_t)name->len))core_io_fail("InvalidCapability");
+    if(a->family!=4)core_io_fail("R_CAPABILITY");
+    if(a->scope&&!core_io_memory_blob_has(block_data(a->scope),(size_t)a->scope->len,block_data(name),(size_t)name->len))core_io_fail("R_CAPABILITY");
     if(state->test){myl_block *pairs=state->pairs;if(!pairs)return 0;for(size_t at=0;at<(size_t)pairs->len;){size_t key=core_io_memory_field(block_data(pairs),(size_t)pairs->len,at),value=at+key+1,width=core_io_memory_field(block_data(pairs),(size_t)pairs->len,value);if(key==(size_t)name->len&&!memcmp(block_data(pairs)+at,block_data(name),key)){if(width>capacity)return 4;if(width)memcpy(output,block_data(pairs)+value,width);*written=width;*present=1;break;}at=value+width+1;}return 0;}
-    if(core_io_embedding){unsigned char key_copy[129];memcpy(key_copy,block_data(name),(size_t)name->len);unsigned char *copy=core_io_copy(NULL,capacity);CoreIoEnvironmentResult result=core_io_native.environment_get(core_io_native.environment_context,key_copy,(size_t)name->len,copy,capacity);if(result.status==4)out_of_memory();if(result.status){if(result.status>5)core_io_fail("InvalidProvider");core_io_copy_free(copy);return result.status==5?4:(int)result.status;}if((result.present!=0&&result.present!=1)||(result.present&&result.length>capacity))core_io_fail("InvalidProvider");*written=result.present?result.length:0;*present=result.present;if(*written)memcpy(output,copy,*written);core_io_copy_free(copy);return 0;}
+    if(core_io_embedding){unsigned char *key_copy=core_io_copy(block_data(name),(size_t)name->len),*copy=core_io_copy(NULL,capacity);CoreIoEnvironmentResult result=core_io_native.environment_get(core_io_native.environment_context,key_copy,(size_t)name->len,copy,capacity);core_io_copy_free(key_copy);if(result.status==4)out_of_memory();if(result.status){if(result.status>5)core_io_fail("InvalidProvider");core_io_copy_free(copy);return result.status==5?4:(int)result.status;}if((result.present!=0&&result.present!=1)||(result.present&&result.length>capacity))core_io_fail("InvalidProvider");*written=result.present?result.length:0;*present=result.present;if(*written)memcpy(output,copy,*written);core_io_copy_free(copy);return 0;}
     if(!core_io_allowed(core_io_names,block_data(name),(size_t)name->len))return 2;
-    char key[129];memcpy(key,block_data(name),(size_t)name->len);key[name->len]=0;const char *value=getenv(key);if(!value)return 0;
+    if((size_t)name->len>255)return 2;
+    char key[256];memcpy(key,block_data(name),(size_t)name->len);key[name->len]=0;const char *value=getenv(key);if(!value)return 0;
     size_t length=strlen(value);if(length>capacity)return 4;if(length)memcpy(output,value,length);*written=length;*present=1;return 0;
 }
 myl_block *myl_core_environment_text(myl_block *cap,myl_block *name){unsigned char output[16384];size_t length;int present;int status=core_io_environment_read(cap,name,output,sizeof output,&length,&present);if(status)core_io_fail("R_CAPABILITY");if(!present)return NULL;if(!core_io_utf8(output,length))core_io_fail("R_ENVIRONMENT");return core_io_string(output,length,1);}
 
 static int core_io_name_order(const void *left,const void *right){const myl_block *a=*(myl_block *const *)left,*b=*(myl_block *const *)right;size_t width=(size_t)(a->len<b->len?a->len:b->len);int order=memcmp((const unsigned char *)a+32,(const unsigned char *)b+32,width);return order?order:a->len<b->len?-1:a->len>b->len;}
-myl_block *myl_core_environment_names(myl_block *cap){CoreIoAuthority *a=core_io_authority(cap);CoreIoState *state=core_io_state(cap);myl_block *list=core_io_list_new(0);if(a->family!=4)core_io_fail("InvalidCapability");myl_block *blob=a->scope?a->scope:state->pairs;if(blob){for(size_t at=0;at<(size_t)blob->len;){size_t width=core_io_memory_field(block_data(blob),(size_t)blob->len,at);if(width)core_io_list_add(&list,core_io_string(block_data(blob)+at,width,1));at+=width+1;if(!a->scope)at+=core_io_memory_field(block_data(blob),(size_t)blob->len,at)+1;}}else if(!state->test){if(*core_io_names){const char *p=core_io_names;while(*p){const char *comma=strchr(p,',');size_t width=comma?(size_t)(comma-p):strlen(p);if(width)core_io_list_add(&list,core_io_string(p,width,1));if(!comma)break;p=comma+1;}}else{extern char **environ;for(char **p=environ;*p;++p){char *eq=strchr(*p,'=');if(eq&&eq>*p&&eq-*p<=128)core_io_list_add(&list,core_io_string(*p,(size_t)(eq-*p),1));}}}qsort(block_data(list),(size_t)list->len,sizeof(myl_block *),core_io_name_order);return list;}
+/* The old environment boundary publishes at most 64 distinct, sorted names. */
+static void core_io_name_add(myl_block **list,const unsigned char *name,size_t width){
+    if(!width||width>128||(*list)->len==64)return;
+    myl_block **items=(myl_block **)block_data(*list);
+    for(size_t i=0;i<(size_t)(*list)->len;++i)if((size_t)items[i]->len==width&&!memcmp(block_data(items[i]),name,width))return;
+    core_io_list_add(list,core_io_string(name,width,1));
+}
+myl_block *myl_core_environment_names(myl_block *cap){
+    CoreIoAuthority *a=core_io_authority(cap);CoreIoState *state=core_io_state(cap);
+    if(a->family!=4)core_io_fail("InvalidCapability");
+    myl_block *list=core_io_list_new(0),*blob=a->scope?a->scope:state->pairs;
+    if(blob){
+        for(size_t at=0;at<(size_t)blob->len;){
+            size_t width=core_io_memory_field(block_data(blob),(size_t)blob->len,at);
+            if(state->test||core_io_allowed(core_io_names,block_data(blob)+at,width))core_io_name_add(&list,block_data(blob)+at,width);
+            at+=width+1;if(!a->scope)at+=core_io_memory_field(block_data(blob),(size_t)blob->len,at)+1;
+        }
+    }else if(!state->test){
+        if(*core_io_names){
+            const char *name=core_io_names;
+            while(*name){const char *comma=strchr(name,',');size_t width=comma?(size_t)(comma-name):strlen(name);core_io_name_add(&list,(const unsigned char *)name,width);if(!comma)break;name=comma+1;}
+        }else{
+            extern char **environ;
+            for(char **entry=environ;entry&&*entry;++entry){char *equal=strchr(*entry,'=');size_t width=equal?(size_t)(equal-*entry):strlen(*entry);core_io_name_add(&list,(const unsigned char *)*entry,width);}
+        }
+    }
+    qsort(block_data(list),(size_t)list->len,sizeof(myl_block *),core_io_name_order);return list;
+}
 void myl_core_stream_write(int64_t fd,myl_block *text){myl_core_print_str(fd,text);}
 int64_t myl_core_s3_token_roundtrip(int64_t token){return token;}
 

@@ -159,6 +159,10 @@ const ModuleBuilder = struct {
         const span: u32 = @intCast(function.declaration.start);
         const linkage: ir.Linkage = if (function.policy.c_abi) .extern_c else if (function.policy.host != null) return self.refuse("host function", span) else .internal;
         const declared = try self.mapType(function.signature.return_type, span);
+        if (linkage == .extern_c) {
+            for (params) |param| if (param != .cap and param.integer() == null and param != .bool and param != .f64) return self.refuse("source extern aggregate ABI", span);
+            if (declared != .void and declared.integer() == null and declared != .bool and declared != .f64) return self.refuse("source extern aggregate ABI", span);
+        }
         if (linkage == .extern_c and function.signature.declared_mutates.len != 0) return self.refuse("mut parameter of an extern function", span);
         const ret = try self.returnType(function, declared, all, span);
         const index: u32 = @intCast(self.module.functions.items.len);
@@ -668,11 +672,10 @@ const FnBuilder = struct {
                     const owner = try self.expression(source);
                     const variable = self.local(scope.slot);
                     try self.write(variable, self.current.?, owner);
-                    try self.ssa.resources.append(self.allocator(), .{ .variable = variable, .depth = self.loops.items.len });
+                    try self.ssa.resources.append(self.allocator(), .{ .owner = owner, .depth = self.loops.items.len });
                     try self.statement(scope.body);
                     if (self.current != null) {
-                        const live = try self.read(variable, self.current.?);
-                        _ = try self.effectCall("myl_core_file_scope_close", &.{.resource}, .void, &.{live}, span);
+                        _ = try self.effectCall("myl_core_file_scope_close", &.{.resource}, .void, &.{owner}, span);
                     }
                     _ = self.ssa.resources.pop();
                 } else try self.statement(scope.body);
