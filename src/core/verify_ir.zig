@@ -415,7 +415,7 @@ const Verifier = struct {
         };
         try self.viewUses(b, ref, shape);
         if (inst.op == .dict_insert and !self.insertProbe(shape)) return self.fail(b, ref, "dict_insert probe must come from dict_find of the same dictionary and key", .{});
-        const ok = self.s2Signature(shape) orelse self.scalarSignature(shape) orelse self.aggregateSignature(shape) orelse self.controlSignature(shape);
+        const ok = self.s3Signature(shape) orelse self.s2Signature(shape) orelse self.scalarSignature(shape) orelse self.aggregateSignature(shape) orelse self.controlSignature(shape);
         if (!ok) return self.fail(b, ref, "{s} does not match its signature", .{@tagName(inst.op)});
     }
 
@@ -435,7 +435,7 @@ const Verifier = struct {
     }
 
     fn admittedView(sig: ir.Signature, index: usize) bool {
-        return sig.linkage == .extern_c and index < sig.params.len and index < 64 and sig.params[index] == .str and sig.views & (@as(u64, 1) << @intCast(index)) != 0 and sig.owned & (@as(u64, 1) << @intCast(index)) == 0;
+        return sig.linkage != .internal and index < sig.params.len and index < 64 and sig.params[index] == .str and sig.views & (@as(u64, 1) << @intCast(index)) != 0 and sig.owned & (@as(u64, 1) << @intCast(index)) == 0;
     }
 
     fn insertProbe(self: *Verifier, s: Shape) bool {
@@ -470,6 +470,19 @@ const Verifier = struct {
             .array_set => if (self.compoundOf(s.a, .array)) |array| inst.ty == s.a and isInteger(s.b) and self.typesMatch(s.extra, &.{array.elem}) else false,
             .func_ref => if (self.compoundOf(inst.ty, .@"fn")) |sig| inst.data < self.module.functions.items.len and sameSignature(sig, self.module.functions.items[@intCast(inst.data)].signature) and sig.linkage == .internal else false,
             .call_indirect => if (self.compoundOf(s.a, .@"fn")) |sig| sig.linkage == .internal and inst.ty == sig.ret and self.typesMatch(s.extra, sig.params) else false,
+            else => null,
+        };
+    }
+
+    fn s3Signature(self: *Verifier, s: Shape) ?bool {
+        const inst = s.inst;
+        return switch (inst.op) {
+            .buffer_new => inst.ty == .byte_buffer and s.a == .u64,
+            .buffer_copy, .buffer_pop => inst.ty == .byte_buffer and s.a == .byte_buffer,
+            .buffer_push => inst.ty == .byte_buffer and s.a == .byte_buffer and s.b == .u8,
+            .buffer_set => inst.ty == .byte_buffer and s.a == .byte_buffer and isInteger(s.b) and self.typesMatch(s.extra, &.{.u8}),
+            .shift_left, .shift_right, .saturating_add => isInteger(inst.ty) and s.a == inst.ty and s.b == inst.ty,
+            .float_unary => inst.ty == .f64 and s.a == .f64 and inst.data < std.meta.tags(ir.FloatUnary).len,
             else => null,
         };
     }
@@ -509,8 +522,8 @@ const Verifier = struct {
         const inst = s.inst;
         return switch (inst.op) {
             .list_new => self.compoundOf(inst.ty, .list) != null and isInteger(s.a),
-            .list_len => isInteger(inst.ty) and (self.compoundOf(s.a, .list) != null or s.a == .bytes),
-            .list_get => if (s.a == .bytes) inst.ty == .u8 and isInteger(s.b) else if (self.compoundOf(s.a, .list)) |element| element == inst.ty and isInteger(s.b) else false,
+            .list_len => isInteger(inst.ty) and (self.compoundOf(s.a, .list) != null or s.a == .bytes or s.a == .byte_buffer),
+            .list_get => if (s.a == .bytes or s.a == .byte_buffer) inst.ty == .u8 and isInteger(s.b) else if (self.compoundOf(s.a, .list)) |element| element == inst.ty and isInteger(s.b) else false,
             .list_push => if (self.compoundOf(s.a, .list)) |element| inst.ty == s.a and s.b == element else false,
             .list_copy, .list_pop => self.compoundOf(s.a, .list) != null and inst.ty == s.a,
             .list_set => if (self.compoundOf(s.a, .list)) |element| inst.ty == s.a and isInteger(s.b) and s.extra.len == 1 and self.typeOf(s.extra[0]) == element else false,

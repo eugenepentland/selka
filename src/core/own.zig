@@ -543,7 +543,7 @@ fn staticallyUnique(a: *const Analysis, value: ir.Ref, site: ir.Ref) Error!bool 
         if (a.class[current.index()] != .owned or web.items.len > 64) return false;
         const instruction = a.inst(current);
         switch (instruction.op) {
-            .list_new, .list_copy, .dict_new, .dict_copy, .str_from_view => {},
+            .list_new, .list_copy, .dict_new, .dict_copy, .str_from_view, .buffer_new, .buffer_copy => {},
             .phi => for (a.f.operands(instruction.data)) |operand| {
                 const source = a.f.resolve(operand);
                 if (std.mem.indexOfScalar(ir.Ref, web.items, source) == null) try web.append(a.arena, source);
@@ -737,7 +737,7 @@ fn testUnique(e: Editor, module: *const ir.Module, update: ir.Ref) Error!void {
 fn copyBefore(e: Editor, module: *const ir.Module, before: ir.Ref, value: ir.Ref) Error!ir.Ref {
     const ty = e.f.inst(e.f.resolve(value)).ty;
     const span = e.f.inst(before).span;
-    if (ty != .str) return e.insertBefore(before, .{ .op = if (module.kind(ty) == .dict) .dict_copy else .list_copy, .ty = ty, .a = value, .span = span });
+    if (ty != .str) return e.insertBefore(before, .{ .op = if (ty == .byte_buffer) .buffer_copy else if (module.kind(ty) == .dict) .dict_copy else .list_copy, .ty = ty, .a = value, .span = span });
     const zero = try e.newInst(.{ .op = .iconst, .ty = .u64 });
     const len = try e.insertBefore(before, .{ .op = .str_len, .ty = .u64, .a = value, .span = span });
     const view = try e.insertBefore(before, .{ .op = .str_view_of, .ty = .str_view, .a = value, .b = zero, .data = try e.extraOf(&.{len}), .span = span });

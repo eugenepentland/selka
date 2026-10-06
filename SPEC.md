@@ -1899,3 +1899,10 @@ The separate `mylang-core` executable (`zig build core`, `docs/design/new-core-i
 - [NEW-CORE-DICT-SMALL-1] A dictionary or set probe on a table of at most eight entries (which has no index) scans the cached entry hashes inline and compares a key only on a hash match, with no runtime call; a table that ever lost an entry, and so carries a deletion bitmap, asks `myl_core_dict_find` instead. A miss answers -1 either way.
 
 - [NEW-CORE-NUMBER-1] Integer text parsing reads plain decimal inputs of at most sixteen digits in safe one-to-eight-byte SWAR words; whitespace, separators, long numbers and invalid inputs use the full pinned grammar. Signed and unsigned decimal formatting and printing write two digits per division with exact zero, sign and 64-bit edge results.
+
+## New core S3 foundation
+
+- [NEW-CORE-S3-IR-1] Mutable bytes, capability authorities and external resources have counted pointer layouts; all new operation operands and results are verified before emission.
+- [NEW-CORE-S3-IR-2] Pending mutable-byte and numeric operations emit valid LLVM and fail with E_CORE_UNSUPPORTED before any result is observed; source admission remains refused until their runtime implementations qualify.
+- [NEW-CORE-S3-ABI-1] Runtime-C helper calls pass declared capability tokens and pointers in the C ABI; source extern capability parameters retain their erasure rule.
+- [NEW-CORE-S3-OWN-1] Mutable-byte updates consume their receiver, copy borrowed or shared values and assert static uniqueness in verify builds; record phis remain owned.

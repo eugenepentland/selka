@@ -17,6 +17,7 @@ const vector = @import("vector.zig");
 const c_abi = @import("c_abi.zig");
 const flags = @import("flags.zig");
 const emit_dict = @import("emit_dict.zig");
+const emit_bytes = @import("emit_bytes.zig");
 const emit_text = @import("emit_text.zig");
 const text_builder = @import("build_text.zig");
 const emit_fn = @import("emit_fn.zig");
@@ -177,7 +178,7 @@ pub fn emitModule(allocator: std.mem.Allocator, module: *const ir.Module, option
     var state: ModuleState = .{ .allocator = allocator, .module = module, .options = options };
     var body: Out = .empty;
     for (module.functions.items, 0..) |*function, index| {
-        if (function.signature.linkage == .extern_c) {
+        if (function.signature.linkage != .internal) {
             try state.declareExtern(function);
             continue;
         }
@@ -239,7 +240,7 @@ const ModuleState = struct {
         try self.externs.print(self.allocator, "declare {s}{s} @{s}(", .{ if (function.signature.ret == .bool) "zeroext " else "", returns, c_abi.symbol(function.name) });
         var first = true;
         for (function.signature.params, 0..) |param, i| {
-            if (!c_abi.passes(param)) continue;
+            if (function.signature.linkage == .extern_c and !c_abi.passes(param)) continue;
             const span = i < 64 and function.signature.views & (@as(u64, 1) << @intCast(i)) != 0;
             try self.externs.print(self.allocator, "{s}{s}", .{ if (first) "" else ", ", if (span) "ptr, i64" else try self.llvmType(param) });
             first = false;
@@ -288,7 +289,7 @@ const ModuleState = struct {
             .i32, .u32 => "i32",
             .i64, .u64, .cap => "i64",
             .f64 => "double",
-            .str, .bytes => "ptr",
+            .str, .bytes, .byte_buffer, .capability, .resource => "ptr",
             .str_view => "{ ptr, i64 }",
             _ => switch (self.module.compound(ty)) {
                 .list, .box, .dict, .@"fn" => "ptr",
@@ -1125,6 +1126,8 @@ const FunctionEmitter = struct {
             .dict_insert, .dict_remove, .dict_entries, .dict_entry_live, .dict_copy, .dict_clear => try emit_dict.instruction(@TypeOf(self), self, out, name, inst),
             .str_char, .str_width, .str_code, .str_append, .str_append_char, .str_slice, .str_view_of, .str_from_view => try emit_text.instruction(self, out, name, inst),
             .list_sort, .array_get, .array_set, .call_indirect => try emit_fn.instruction(self, out, name, inst),
+            .buffer_new, .buffer_copy, .buffer_set, .buffer_push, .buffer_pop => try emit_bytes.instruction(self, out, name, inst),
+            .shift_left, .shift_right, .saturating_add, .float_unary => try emit_number.instruction(self, out, name, inst),
             .add, .sub, .mul => try self.arithmetic(out, name, inst),
             .div, .rem, .floor_div, .floor_rem => try self.division(out, name, inst),
             .neg => {
@@ -2221,7 +2224,7 @@ const FunctionEmitter = struct {
     pub fn call(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) Error!void {
         const m = self.state.module;
         const signature = if (inst.op == .call_indirect) m.compound(self.typeOf(inst.a)).@"fn" else m.functions.items[inst.a.index()].signature;
-        const external = signature.linkage == .extern_c;
+        const external = signature.linkage != .internal;
         const borrowed_bytes = external and signature.ret == .bytes and signature.owned == 0;
         const text_parameter = signature.params.len == 1 and signature.params[0] == .str;
         if (inst.op == .call and borrowed_bytes and text_parameter and
@@ -2240,7 +2243,7 @@ const FunctionEmitter = struct {
             first = false;
         }
         for (self.function.operands(inst.data), signature.params, 0..) |argument, param, i| {
-            if (external and !c_abi.passes(param)) continue;
+            if (signature.linkage == .extern_c and !c_abi.passes(param)) continue;
             const separator = if (first) "" else ", ";
             first = false;
             if (external and i < 64 and signature.views & (@as(u64, 1) << @intCast(i)) != 0) {
@@ -2323,7 +2326,7 @@ fn storageType(ty: ir.Type) []const u8 {
         .i16, .u16 => "i16",
         .i32, .u32 => "i32",
         .f64 => "double",
-        .str, .bytes => "ptr",
+        .str, .bytes, .byte_buffer, .capability, .resource => "ptr",
         else => if (ty.isCompound()) "ptr" else "i64",
     };
 }

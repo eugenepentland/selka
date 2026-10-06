@@ -17,6 +17,8 @@ const fuse_dict = @import("fuse_dict.zig");
 const build_dict = @import("build_dict.zig");
 const build_text = @import("build_text.zig");
 const fuse_text = @import("fuse_text.zig");
+const build_cap = @import("build_cap.zig");
+const build_bytes = @import("build_bytes.zig");
 const build_fn = @import("build_fn.zig");
 
 /// Refusal reasons several constructs share.
@@ -221,7 +223,7 @@ const ModuleBuilder = struct {
                 const value = if (record.collection.set) .void else try self.mapType(record.shape.buffer.?, span);
                 return self.module.intern(self.allocator, .{ .dict = .{ .key = key, .value = value } });
             },
-            .bytes => return if (std.mem.eql(u8, record.name, "byte_buffer")) self.refuse("byte_buffer type", span) else .bytes,
+            .bytes => return if (std.mem.eql(u8, record.name, "byte_buffer")) build_bytes.bufferType(self, span) else .bytes,
         };
         if (record.shape.domain != null and std.mem.eql(u8, record.name, "float")) return .f64;
         if (record.shape.variants) |variants| return self.mapUnion(ty, variants, span);
@@ -244,17 +246,16 @@ const ModuleBuilder = struct {
         return self.mapRecord(ty, record, span);
     }
 
-    /// The IR index of the runtime function `symbol`, declared in the module as an `extern_c`
-    /// function with these parameters and result on first use.
-    fn runtimeFunction(self: *ModuleBuilder, symbol: []const u8, params: []const ir.Type, ret: ir.Type) Error!u32 {
+    /// The IR index of runtime `symbol`, declared with this linkage and signature on first use.
+    fn runtimeFunction(self: *ModuleBuilder, symbol: []const u8, params: []const ir.Type, ret: ir.Type, linkage: ir.Linkage) Error!u32 {
         // One declaration per symbol and signature: a runtime function over lists of several element
         // types has a Core IR signature for each, which are one `ptr` function to LLVM.
         for (self.module.functions.items, 0..) |function, index| {
-            if (function.signature.linkage != .extern_c or !std.mem.eql(u8, function.name, symbol)) continue;
+            if (function.signature.linkage != linkage or !std.mem.eql(u8, function.name, symbol)) continue;
             if (function.signature.ret == ret and std.mem.eql(ir.Type, function.signature.params, params)) return @intCast(index);
         }
         const index: u32 = @intCast(self.module.functions.items.len);
-        try self.module.functions.append(self.allocator, .{ .name = symbol, .signature = .{ .params = try self.allocator.dupe(ir.Type, params), .ret = ret, .linkage = .extern_c } });
+        try self.module.functions.append(self.allocator, .{ .name = symbol, .signature = .{ .params = try self.allocator.dupe(ir.Type, params), .ret = ret, .linkage = linkage } });
         return index;
     }
 
@@ -1197,7 +1198,22 @@ const FnBuilder = struct {
                 if (self.current == null) return .none;
                 return self.emit(.{ .op = .record_make, .ty = ty, .data = try self.extraSlice(values), .span = span });
             },
-            else => return self.mb.refuse(@tagName(n.data), span),
+            .blob => return build_bytes.blob(self, span),
+            .acquire_resource,
+            .complete_resource,
+            .resource_io,
+            .restrict_resource,
+            .dir_resource,
+            .host_resource,
+            .environment_get,
+            .environment_only,
+            .environment_names,
+            .external_read,
+            .stand_in,
+            .stream_write,
+            .file_access,
+            .file_method,
+            => return build_cap.expression(self, n, span),
         }
     }
 
@@ -1922,7 +1938,7 @@ const FnBuilder = struct {
     /// A call of the runtime function `symbol` (declared in the module on first use) with `arguments`.
     /// Invoke an extern helper for a feature builder.
     pub fn runtimeCall(self: *FnBuilder, symbol: []const u8, params: []const ir.Type, ret: ir.Type, arguments: []const ir.Ref, span: u32) Error!ir.Ref {
-        const callee = try self.mb.runtimeFunction(symbol, params, ret);
+        const callee = try self.mb.runtimeFunction(symbol, params, ret, .extern_c);
         return self.emit(.{ .op = .call, .ty = ret, .a = @fromBackingInt(@intCast(callee)), .data = try self.extraSlice(arguments), .span = span });
     }
 

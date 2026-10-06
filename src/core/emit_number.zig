@@ -158,3 +158,8 @@ pub fn prelude(allocator: std.mem.Allocator, out: *std.ArrayList(u8)) std.mem.Al
         \\
     );
 }
+
+/// Emit a fail-closed placeholder for S3-M's pending scalar operation.
+pub fn instruction(context: anytype, out: anytype, name: []const u8, inst: @import("ir.zig").Inst) error{ OutOfMemory, UnsupportedEntry, UnsupportedInstruction }!void {
+    return context.unsupported(out, name, inst);
+}
