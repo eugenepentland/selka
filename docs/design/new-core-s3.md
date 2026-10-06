@@ -265,6 +265,14 @@ including a whole-root mut call that changes only a scalar field. Narrowing the 
 requires differential proof; an old implementation accident is reported for a
 user decision rather than given invented semantics.
 
+Captured places carry a scoped SSA publication guard while later arguments evaluate.
+Executed writes invalidate only strict ancestor paths; sibling updates keep the place
+live, and a same-place update is read from the current binding before the call.
+Dynamic indices and dictionary keys are compared without repeating their source
+expressions. Guards join across conditional arguments, so an untaken mutation has
+no effect. Reordered keyword arguments start their guards when the checker-generated
+source-order temporaries select their places. An orphaned path is never reread.
+
 ## 10. Wave A qualification and as built in S3-0
 
 S3-0 adds three leaf pointer types, nine operations (five buffer updates and

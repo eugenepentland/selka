@@ -32,6 +32,27 @@ def tick(cursor: mut Cursor) -> int:
 def add(row: mut list[int], ignored: int) -> None:
     row.append(9)
 
+def add_reverse(ignored: int, row: mut list[int]) -> None:
+    row.append(9)
+
+def tick_row(row: mut list[int]) -> int:
+    row.append(7)
+    return 0
+
+def tick_parent(parent: mut list[list[int]]) -> int:
+    parent.append([7])
+    return 0
+
+def dynamic_ancestor(selected: int) -> list[list[list[int]]]:
+    rows = [[[1]], [[2]]]
+    add(mut rows[1][0], tick_parent(mut rows[selected]))
+    return rows
+
+def conditional_ancestor(flag: bool) -> Cursor:
+    cursor = Cursor([[1], [2]], 0)
+    add(mut cursor.rows[-1], tick(mut cursor) if flag else 0)
+    return cursor
+
 def chain(n: int) -> Option[Link]:
     result: Option[Link] = None
     for i in range(n):
@@ -94,6 +115,34 @@ public def test_negative_index_capture_is_superseded_by_scalar_ancestor_write() 
     cursor = Cursor([[1], [2]], 0)
     add(mut cursor.rows[-1], tick(mut cursor))
     return cursor.rows == [[1], [2]] and cursor.ticks == 1
+
+# spec-case: NEW-CORE-MUT-1
+public def test_sibling_write_preserves_capture_and_same_place_reads_current_value() -> bool:
+    rows = [[1], [2]]
+    add(mut rows[-1], tick_row(mut rows[0]))
+    same = [[1], [2]]
+    add(mut same[-1], tick_row(mut same[-1]))
+    mapping = {10: [1], 20: [2]}
+    add(mut mapping[20], tick_row(mut mapping[10]))
+    return rows == [[1, 7], [2, 9]] and same == [[1], [2, 7, 9]] and mapping == {10: [1, 7], 20: [2, 9]}
+
+# spec-case: NEW-CORE-MUT-1
+public def test_dynamic_ancestor_path_compares_the_captured_indices() -> bool:
+    return dynamic_ancestor(0) == [[[1], [7]], [[2, 9]]] and dynamic_ancestor(1) == [[[1]], [[2], [7]]]
+
+# spec-case: NEW-CORE-MUT-1
+public def test_untaken_ancestor_write_keeps_publication_live() -> bool:
+    untouched = conditional_ancestor(False)
+    changed = conditional_ancestor(True)
+    return untouched.rows == [[1], [2, 9]] and untouched.ticks == 0 and changed.rows == [[1], [2]] and changed.ticks == 1
+
+# spec-case: NEW-CORE-MUT-1
+public def test_keyword_temporaries_capture_in_source_order() -> bool:
+    rows = [[1], [2]]
+    add_reverse(row=mut rows[-1], ignored=tick_row(mut rows[0]))
+    cursor = Cursor([[1], [2]], 0)
+    add_reverse(row=mut cursor.rows[-1], ignored=tick(mut cursor))
+    return rows == [[1, 7], [2, 9]] and cursor.rows == [[1], [2]] and cursor.ticks == 1
 
 # spec-case: NEW-CORE-S3-NUMERIC-1
 public def test_subtraction_and_multiplication_saturate_at_each_width() -> bool:

@@ -24,6 +24,7 @@ const build_cap = @import("build_cap.zig");
 const build_bytes = @import("build_bytes.zig");
 const build_fn = @import("build_fn.zig");
 const build_values = @import("build_values.zig");
+const build_capture = @import("build_capture.zig");
 
 /// Refusal reasons several constructs share.
 const refuse_payload = "match payload";
@@ -352,7 +353,7 @@ const Step = union(enum) { field: u32, element: ir.Ref, payload: u32, mapping: i
 /// been written when the place was named. A write to a hidden receiver (`s.items.append(v)`,
 /// `xs[i][j] = v`) rebuilds the path and stores the new root back, unless the root was written
 /// since (`writableReceiverOf`).
-const Place = struct { root: u32, steps: []const Step, root_version: u32 = 0, through_view: bool = false, snapshot: ir.Ref = .none, publish: ir.Ref = .none };
+const Place = struct { root: u32, steps: []const Step, root_version: u32 = 0, through_view: bool = false, snapshot: ir.Ref = .none, publish: ir.Ref = .none, live: ?u32 = null };
 
 const FnBuilder = struct {
     /// Source-place provenance shared with feature builders; no runtime view object.
@@ -368,6 +369,10 @@ const FnBuilder = struct {
     places: std.AutoHashMapUnmanaged(u32, Place) = .empty,
     /// How many times each local has been assigned so far (the builder's own count of writes).
     versions: std.AutoHashMapUnmanaged(u32, u32) = .empty,
+    /// Interior arguments watched only while their enclosing call evaluates operands.
+    captures: std.ArrayList(struct { place: Place, live: u32 }) = .empty,
+    /// Source-order keyword temporaries whose mut place must be captured at initialization.
+    capture_slots: std.ArrayList(u32) = .empty,
     /// The type the function declares it returns; `function.signature.ret` is a record
     /// of it and the `mut` parameters' final values when there are any.
     declared_ret: ir.Type = .void,
@@ -601,10 +606,11 @@ const FnBuilder = struct {
             return;
         }
         const variable = self.local(slot);
-        const found = place orelse {
+        var found = place orelse {
             _ = self.places.remove(variable);
             return;
         };
+        if (std.mem.indexOfScalar(u32, self.capture_slots.items, variable) != null) try build_capture.watch(@TypeOf(self), self, &found);
         try self.places.put(self.allocator(), variable, found);
     }
 
@@ -655,6 +661,7 @@ const FnBuilder = struct {
                 const block = self.current orelse return;
                 try self.write(self.local(store.slot), block, value);
                 try self.assigned(self.local(store.slot));
+                if (s.data == .assign) try build_capture.invalidate(@TypeOf(self), self, .{ .root = self.local(store.slot), .steps = &.{} }, span);
                 try self.noteAlias(store.slot, place);
             },
             .discard => |value| _ = try self.expression(value),
@@ -1038,7 +1045,7 @@ const FnBuilder = struct {
     }
 
     /// The value at `place` as its root stands now.
-    fn readPlace(self: *FnBuilder, place: Place, span: u32) Error!ir.Ref {
+    pub fn readPlace(self: *FnBuilder, place: Place, span: u32) Error!ir.Ref {
         var value = try self.read(place.root, self.current.?);
         for (place.steps) |step| value = try self.stepGet(value, step, span);
         return value;
@@ -1051,6 +1058,7 @@ const FnBuilder = struct {
         const rebuilt = try self.storeInto(root, place.steps, value, span);
         try self.write(place.root, self.current.?, rebuilt);
         try self.assigned(place.root);
+        try build_capture.invalidate(@TypeOf(self), self, place, span);
         return rebuilt;
     }
 
@@ -1061,7 +1069,7 @@ const FnBuilder = struct {
         if (self.places.getPtr(self.local(owner))) |place| {
             _ = try self.storePlace(place.*, value, span);
             place.root_version = self.version(place.root);
-        }
+        } else try build_capture.invalidate(@TypeOf(self), self, .{ .root = self.local(owner), .steps = &.{} }, span);
     }
 
     // ---- expressions --------------------------------------------------------------
@@ -1834,6 +1842,13 @@ const FnBuilder = struct {
     /// Lower arguments in source order and write mut results back to their captured places.
     fn callTarget(self: *FnBuilder, target: ir.Inst, argument_nodes: []const typed.NodeId, contract: CallContract, span: u32) Error!ir.Ref {
         const mutated = contract.mutated;
+        const first_capture = self.captures.items.len;
+        const first_slot = self.capture_slots.items.len;
+        defer self.captures.items.len = first_capture;
+        defer self.capture_slots.items.len = first_slot;
+        for (mutated) |position| if (self.nodeOf(argument_nodes[position]).data == .local) {
+            try self.capture_slots.append(self.allocator(), self.local(self.nodeOf(argument_nodes[position]).data.local));
+        };
         if (contract.evaluation) |body| {
             try self.statement(body);
             if (self.current == null) return .none;
@@ -1852,15 +1867,18 @@ const FnBuilder = struct {
             value.* = try self.expressionPlace(argument, if (slot != null) &place else null);
             if (slot) |at| {
                 places[at] = place orelse return self.mb.refuse("mut argument that is not a place", span);
+                try build_capture.watch(@TypeOf(self), self, &places[at]);
                 if (places[at].snapshot == .none) places[at].snapshot = try self.read(places[at].root, self.current.?);
             }
         }
         if (self.current == null) return .none;
         for (mutated, places) |position, *place| {
             if (place.steps.len > 0 and self.version(place.root) != place.root_version) {
-                place.publish = try self.constant(.bool, 0);
+                values[position] = try build_capture.refresh(@TypeOf(self), self, place, values[position], span);
             } else values[position] = try self.readPlace(place.*, span);
         }
+        self.captures.items.len = first_capture;
+        self.capture_slots.items.len = first_slot;
         // A `unit` argument is evaluated for its effects and not passed.
         for (values) |value| if (value != .none and self.typeOfRef(value) != .void) try arguments.append(self.allocator(), value);
         if (self.mb.module.kind(target.ty) == .dict) for (argument_nodes) |argument| {
@@ -2163,6 +2181,8 @@ fn buildFunction(mb: *ModuleBuilder, checked: typed.Function, declared: ir.Funct
     b.declared_ret = try mb.mapType(checked.signature.return_type, declared.span);
     defer b.places.deinit(mb.allocator);
     defer b.versions.deinit(mb.allocator);
+    defer b.captures.deinit(mb.allocator);
+    defer b.capture_slots.deinit(mb.allocator);
     defer b.ssa.defs.deinit(mb.allocator);
     defer b.ssa.incomplete.deinit(mb.allocator);
     defer b.ssa.sealed.deinit(mb.allocator);

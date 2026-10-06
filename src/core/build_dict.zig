@@ -152,7 +152,7 @@ pub fn operation(comptime Context: type, b: Context, op: Operation, ty: ir.Type,
             if (op.kind == .contains) return present(Context, b, probe, span);
             if (op.kind == .get) return selectValue(Context, b, dict, probe, fallback, span);
             try requirePresent(Context, b, probe, span);
-            if (out) |place| place.* = try b.extendPlace(try b.placeOfLocal(owner), .{ .element = probe });
+            if (out) |place| place.* = try b.extendPlace(try b.placeOfLocal(owner), .{ .mapping = key });
             return valueAt(Context, b, dict, probe, span);
         },
         .write => {

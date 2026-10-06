@@ -20,7 +20,7 @@ fn qualified(a: std.mem.Allocator) !void {
         try std.testing.expect(result.term == .exited and result.term.exited == 0);
         try std.testing.expectEqualStrings("", result.stderr);
         const parsed = try std.json.parseFromSlice(std.json.Value, a, result.stdout, .{});
-        try std.testing.expectEqual(@as(i64, 6), parsed.value.object.get("passed").?.integer);
+        try std.testing.expectEqual(@as(i64, 10), parsed.value.object.get("passed").?.integer);
         try std.testing.expectEqual(@as(i64, 0), parsed.value.object.get("failed").?.integer);
         try std.testing.expectEqual(@as(i64, 0), parsed.value.object.get("unsupported").?.integer);
     }
