@@ -1,0 +1,49 @@
+{
+  "qualified": true,
+  "scope": "M package 50-case s0/s1/functions; not the final S3-X 200-case matrix",
+  "compiler_runtime_checkpoint": "99b2a6e7a",
+  "final_test_head": "c10e040c31c00b68bd2545eb73bbd6a78cf185a9",
+  "old_sha256": "d36658dbfb78d29213224532a13fd5ad8b7c0e290dbfb87613d9815678305c79",
+  "new_sha256": "10e28d7eeba6d6a46ef8402bbb856447f50259cb2d32f5c29c884490554f578c",
+  "maximum_build_heavy_workers": 1,
+  "accepted_total": 150,
+  "comparisons_total": 2250,
+  "native_runs_total": 3000,
+  "retained_commands_total": 3600,
+  "retained_sources_total": 150,
+  "results": {
+    "s0": {
+      "summary": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-values/experiments/new-core-s3-20261006/wave-b/s3-m/resume-fuzz-s0-run01/summary.json",
+      "log": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-values/experiments/new-core-s3-20261006/wave-b/s3-m/resume-fuzz-s0-run01.command.log",
+      "accepted": 50,
+      "comparisons": 750,
+      "native_runs": 1000,
+      "elapsed_seconds": 188.92903392692097,
+      "source_files": 50,
+      "retained_commands": 1200,
+      "builds": 200
+    },
+    "s1": {
+      "summary": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-values/experiments/new-core-s3-20261006/wave-b/s3-m/resume-fuzz-s1-run01/summary.json",
+      "log": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-values/experiments/new-core-s3-20261006/wave-b/s3-m/resume-fuzz-s1-run01.command.log",
+      "accepted": 50,
+      "comparisons": 750,
+      "native_runs": 1000,
+      "elapsed_seconds": 159.32006961898878,
+      "source_files": 50,
+      "retained_commands": 1200,
+      "builds": 200
+    },
+    "functions": {
+      "summary": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-values/experiments/new-core-s3-20261006/wave-b/s3-m/resume-fuzz-functions-run01/summary.json",
+      "log": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-values/experiments/new-core-s3-20261006/wave-b/s3-m/resume-fuzz-functions-run01.command.log",
+      "accepted": 50,
+      "comparisons": 750,
+      "native_runs": 1000,
+      "elapsed_seconds": 131.68606646405533,
+      "source_files": 50,
+      "retained_commands": 1200,
+      "builds": 200
+    }
+  }
+}

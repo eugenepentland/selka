@@ -1,0 +1,13 @@
+module selection_probe
+
+def replace_index(rows: mut list[list[int]]) -> int:
+    rows = [[8]]
+    return 0
+
+def add(row: mut list[int], ignored: int) -> None:
+    row.append(9)
+
+public def test_selection_after_ancestor_change() -> bool:
+    rows = [[1]]
+    add(mut rows[replace_index(mut rows)], 0)
+    return rows == [[8]]

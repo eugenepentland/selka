@@ -1,0 +1,96 @@
+{
+  "source_commit": "9637eb9a1aa4af8ee0ecd88838ceed09b228d812",
+  "core_sha256": "b966a329e8516ab6b2f875e085d0af6f230ba1ddb1b328079c95ee5bcf77700e",
+  "old_sha256": "d36658dbfb78d29213224532a13fd5ad8b7c0e290dbfb87613d9815678305c79",
+  "core_rebuild": {
+    "exit": 0,
+    "exclusive_seconds": 3.3,
+    "all_build_slots_and_gate_held": true
+  },
+  "core_suite": {
+    "exit": 0,
+    "seconds": 127.03,
+    "shards": 32,
+    "longest_shard_seconds": 68.26,
+    "unique_passed": 254,
+    "failed": 0
+  },
+  "strict_conformance": {
+    "exit": 0,
+    "modes": {
+      "debug": {
+        "matching": 1518,
+        "mismatching": 0,
+        "unsupported": 0
+      },
+      "release": {
+        "matching": 1518,
+        "mismatching": 0,
+        "unsupported": 0
+      }
+    },
+    "leakcheck": true,
+    "release_verify_facts": true
+  },
+  "provider_fixtures": {
+    "exit": 0,
+    "checks": 37,
+    "modes": [
+      "old",
+      "debug",
+      "release-verify"
+    ]
+  },
+  "coverage": {
+    "exit": 0,
+    "complete_children": 4,
+    "accepted_language_functions": 3124,
+    "total_language_functions": 3124,
+    "accepted_parity_functions": 123,
+    "total_parity_functions": 123,
+    "accepted_all": 3589,
+    "total_all": 3595
+  },
+  "identity": {
+    "raw_comparison_exit": 1,
+    "raw_changed_rows": 35,
+    "audit_exit": 0,
+    "residual_changed_rows": 0,
+    "note": "Only proved Host grant/adjacent timer guards and semantic debug/site/instruction SSA numbering normalized. All raw diffs retained. Final40 performance/count gates required."
+  },
+  "evidence_sha256": {
+    "experiments/new-core-s3-20261006/wave-b/s3-c/resume-combined-core-exclusive-01.log": "12aba98a3bb5bb5bf819d703073de4ab2b059def1eb60830fad14dd8d8aa29d1",
+    "experiments/new-core-s3-20261006/wave-b/s3-c/resume-combined-core-exclusive-01.time": "9bf0758bf1e04852bde0c186b0dcca754fed09349e8d30fe5d9dd8da08eaf92a",
+    "experiments/new-core-s3-20261006/wave-b/s3-c/resume-combined-test-core32-01.log": "f2a0b548dab6da65a299444ff26586fab55d18394b5feb734a2288e55cabf116",
+    "experiments/new-core-s3-20261006/wave-b/s3-c/resume-combined-test-core32-01.time": "05b1681e54a38d01e29c9b38f090a35f81834194492883a7ccd8c1defc47a3c3",
+    "experiments/new-core-s3-20261006/wave-b/s3-c/resume-combined-conformance-01.log": "53d2fb905a19668464065b62ee3164d90a0259c251eacaf7c293cc4b31c2e17c",
+    "experiments/new-core-s3-20261006/wave-b/s3-c/resume-combined-fixtures-01/summary.json": "55f65a4f69855af4ba567a70dbf096900e0a3679b05bed1ee2b4da4040845f04",
+    "experiments/new-core-s3-20261006/wave-b/s3-c/resume-combined-coverage-01/summary.json": "dfa64022b76ac9ef4f411697aa9f8de4837a36cd83664b4c7c81a15ed0cde20c",
+    "experiments/new-core-s3-20261006/wave-b/s3-c/resume-combined-code-identity-01.log": "d83bed45409349255587e16c061aba378254633d605a5d22681494767416edb2",
+    "experiments/new-core-s3-20261006/wave-b/s3-c/resume-combined-identity-audit-01/summary.json": "d2fe4f52003cb075a3a61d1e6af4022111a6fa9028552872ba6b9224044c5d1d",
+    "experiments/new-core-s3-20261006/wave-b/s3-runner/final-03-comparison.json": "dad6195e367ed5970f718439b08005b6e88da1855e6dddf87565412df25c5ded",
+    "experiments/new-core-s3-20261006/wave-b/s3-runner/final-03-commands.json": "6f47c3db2dc95fed0c23f3b00bb2dd149e37ec520d767cc695b0a86b652d9b97",
+    "experiments/new-core-s3-20261006/wave-b/s3-c/resume-combined-source-contract.json": "5a6fde586cf5f3b84d8cc2f362e594efe3c92da2b99be7ae6ad8af96c072ac07"
+  },
+  "stage_exit_owed": [
+    "Final integrated full old gate including runner SPEC/manifests",
+    "S3-A five applications",
+    "40-row performance and counts against both gates",
+    "S3-X 200 fuzz cases per kind",
+    "Final integrated coverage and exit report"
+  ],
+  "runner_exact_reports": {
+    "evidence_commit": "e69c9f9855ff0d00877f3f279c640a1d3551aa64",
+    "source_commit": "9637eb9a1aa4af8ee0ecd88838ceed09b228d812",
+    "runner_source_checkpoint": "d54e3dae0b477255841a23d3207f2d458aa42057",
+    "reports": 24,
+    "mismatches": 0,
+    "unsupported": 0,
+    "actual_commands": 14,
+    "all_statuses_expected": true,
+    "compiler_hashes": {
+      "old": "d36658dbfb78d29213224532a13fd5ad8b7c0e290dbfb87613d9815678305c79",
+      "core": "fbfb9263efa8fd406df4505ccf5a79800590582b9df8f3722ce7550c6603e287"
+    }
+  }
+}

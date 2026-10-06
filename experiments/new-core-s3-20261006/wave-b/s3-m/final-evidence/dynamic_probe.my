@@ -1,0 +1,38 @@
+module dynamic_probe
+record Cursor:
+    rows: list[list[int]]
+    ticks: int
+
+def tick(cursor: mut Cursor) -> int:
+    cursor.ticks += 1
+    return 0
+
+def add(row: mut list[int], ignored: int) -> None:
+    row.append(9)
+
+def add_reverse(ignored: int, row: mut list[int]) -> None:
+    row.append(9)
+
+def tick_row(row: mut list[int]) -> int:
+    row.append(7)
+    return 0
+
+def tick_parent(parent: mut list[list[int]]) -> int:
+    parent.append([7])
+    return 0
+
+def dynamic_ancestor(selected: int) -> list[list[list[int]]]:
+    rows = [[[1]], [[2]]]
+    add(mut rows[1][0], tick_parent(mut rows[selected]))
+    return rows
+
+def conditional_ancestor(flag: bool) -> Cursor:
+    cursor = Cursor([[1], [2]], 0)
+    add(mut cursor.rows[-1], tick(mut cursor) if flag else 0)
+    return cursor
+
+
+public def main(out: Stream) -> int:
+    out.print(dynamic_ancestor(0))
+    out.print(dynamic_ancestor(1))
+    return 0

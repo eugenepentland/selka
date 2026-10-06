@@ -1,0 +1,542 @@
+fn test_plain_and_owning_fields_alternate_without_losing_pending_tokens #4 params=0 ret=bool cabi=false host=false
+  local %0 row: [2]i64 mut
+  local %1 <collection>: List<i64> mut
+  local %2 <collection>: List<Mixed> mut
+  local %3 values: List<Mixed> mut
+  local %4 before: List<Mixed> mut
+  local %5 <collection>: List<Mixed> mut
+  local %6 <collection>: i64 mut
+  local %7 <collection>: i64 mut
+  local %8 <collection>: Mixed mut
+  local %9 <collection>: i64 mut
+  local %10 <collection>: List<Mixed> mut
+  local %11 <collection>: i64 mut
+  local %12 <collection>: i64 mut
+  local %13 <collection>: Mixed mut
+  local %14 <collection>: List<i64> mut
+  local %15 <collection>: List<i64> mut
+  local %16 <collection>: List<Mixed> mut
+  local %17 <collection>: i64 mut
+  local %18 <collection>: i64 mut
+  local %19 <collection>: Mixed mut
+  local %20 <collection>: List<Mixed> mut
+  local %21 <collection>: i64 mut
+  local %22 <collection>: i64 mut
+  local %23 <collection>: List<Mixed> mut
+  local %24 <collection>: i64 mut
+  local %25 <collection>: i64 mut
+  local %26 <collection>: Mixed mut
+  local %27 <collection>: [2]i64 mut
+  local %28 <collection>: List<Mixed> mut
+  local %29 <collection>: i64 mut
+  local %30 <collection>: i64 mut
+  local %31 <collection>: Mixed mut
+  local %32 <collection>: unit mut
+  local %33 <collection>: List<Mixed> mut
+  local %34 <collection>: i64 mut
+  local %35 <collection>: i64 mut
+  local %36 <collection>: Mixed mut
+  local %37 <collection>: List<i64> mut
+  local %38 <collection>: List<i64> mut
+  local %39 <collection>: List<Mixed> mut
+  local %40 <collection>: i64 mut
+  local %41 <collection>: i64 mut
+  local %42 <collection>: Mixed mut
+  local %43 <collection>: i64 mut
+  local %44 <collection>: List<Mixed> mut
+  local %45 <collection>: i64 mut
+  local %46 <collection>: List<Mixed> mut
+  local %47 <collection>: i64 mut
+  local %48 <collection>: List<i64> mut
+  local %49 <collection>: List<Mixed> mut
+  local %50 <collection>: i64 mut
+  local %51 <collection>: List<Mixed> mut
+  local %52 <collection>: i64 mut
+  local %53 <collection>: List<Mixed> mut
+  local %54 <collection>: i64 mut
+  local %55 <collection>: List<i64> mut
+  local %56 <collection>: List<Mixed> mut
+  local %57 <collection>: i64 mut
+  block
+    initialize %0
+      array : [2]i64
+        integer : i64 2
+        integer : i64 3
+    initialize %3
+      block_value : List<Mixed>
+        block
+          initialize %2
+            acquire_buffer : List<Mixed>
+              integer : i64 1
+          discard
+            buffer_operation : unit append owner=%2
+              record : Mixed
+                field .0
+                  integer : i64 1
+                field .1
+                  block_value : List<i64>
+                    block
+                      initialize %1
+                        acquire_buffer : List<i64>
+                          integer : i64 1
+                      discard
+                        buffer_operation : unit append owner=%1
+                          integer : i64 4
+                    local : List<i64> %1
+                field .2
+                  local : [2]i64 %0
+                field .3
+                  unit : unit ...
+        local : List<Mixed> %2
+    initialize %4
+      local : List<Mixed> %3
+    discard
+      block_value : unit
+        block
+          initialize %9
+            integer : i64 7
+          initialize %5
+            local : List<Mixed> %3
+          initialize %6
+            block_value : i64
+              block
+                initialize %7
+                  integer : i64 0
+                branch
+                  binary : bool lt
+                    local : i64 %7
+                    integer : i64 0
+                  assign %7
+                    binary : i64 add
+                      cast : i64
+                        buffer_operation : u64 length owner=%5
+                      local : i64 %7
+              local : i64 %7
+          initialize %8
+            buffer_operation : Mixed read owner=%5
+              local : i64 %6
+          initialize %8
+            buffer_operation : Mixed read owner=%5
+              local : i64 %6
+          discard
+            buffer_operation : unit write owner=%5
+              local : i64 %6
+              update : Mixed
+                local : Mixed %8
+                field .0
+                  local : i64 %9
+        unit : unit ...
+    discard
+      block_value : unit
+        block
+          initialize %15
+            block_value : List<i64>
+              block
+                initialize %14
+                  acquire_buffer : List<i64>
+                    integer : i64 2
+                discard
+                  buffer_operation : unit append owner=%14
+                    integer : i64 8
+                discard
+                  buffer_operation : unit append owner=%14
+                    integer : i64 9
+              local : List<i64> %14
+          initialize %10
+            local : List<Mixed> %3
+          initialize %11
+            block_value : i64
+              block
+                initialize %12
+                  integer : i64 0
+                branch
+                  binary : bool lt
+                    local : i64 %12
+                    integer : i64 0
+                  assign %12
+                    binary : i64 add
+                      cast : i64
+                        buffer_operation : u64 length owner=%10
+                      local : i64 %12
+              local : i64 %12
+          initialize %13
+            buffer_operation : Mixed read owner=%10
+              local : i64 %11
+          initialize %13
+            buffer_operation : Mixed read owner=%10
+              local : i64 %11
+          discard
+            buffer_operation : unit write owner=%10
+              local : i64 %11
+              update : Mixed
+                local : Mixed %13
+                field .1
+                  local : List<i64> %15
+        unit : unit ...
+    discard
+      block_value : unit
+        block
+          initialize %22
+            field : i64 .0
+              block_value : Mixed
+                block
+                  initialize %20
+                    local : List<Mixed> %3
+                buffer_operation : Mixed read owner=%20
+                  block_value : i64
+                    block
+                      initialize %21
+                        integer : i64 0
+                      branch
+                        binary : bool lt
+                          local : i64 %21
+                          integer : i64 0
+                        assign %21
+                          binary : i64 add
+                            cast : i64
+                              buffer_operation : u64 length owner=%20
+                            local : i64 %21
+                    local : i64 %21
+          initialize %16
+            local : List<Mixed> %3
+          initialize %17
+            block_value : i64
+              block
+                initialize %18
+                  integer : i64 0
+                branch
+                  binary : bool lt
+                    local : i64 %18
+                    integer : i64 0
+                  assign %18
+                    binary : i64 add
+                      cast : i64
+                        buffer_operation : u64 length owner=%16
+                      local : i64 %18
+              local : i64 %18
+          initialize %19
+            buffer_operation : Mixed read owner=%16
+              local : i64 %17
+          initialize %19
+            buffer_operation : Mixed read owner=%16
+              local : i64 %17
+          discard
+            buffer_operation : unit write owner=%16
+              local : i64 %17
+              update : Mixed
+                local : Mixed %19
+                field .0
+                  local : i64 %22
+        unit : unit ...
+    discard
+      block_value : unit
+        block
+          initialize %27
+            array : [2]i64
+              integer : i64 10
+              integer : i64 11
+          initialize %23
+            local : List<Mixed> %3
+          initialize %24
+            block_value : i64
+              block
+                initialize %25
+                  integer : i64 0
+                branch
+                  binary : bool lt
+                    local : i64 %25
+                    integer : i64 0
+                  assign %25
+                    binary : i64 add
+                      cast : i64
+                        buffer_operation : u64 length owner=%23
+                      local : i64 %25
+              local : i64 %25
+          initialize %26
+            buffer_operation : Mixed read owner=%23
+              local : i64 %24
+          initialize %26
+            buffer_operation : Mixed read owner=%23
+              local : i64 %24
+          discard
+            buffer_operation : unit write owner=%23
+              local : i64 %24
+              update : Mixed
+                local : Mixed %26
+                field .2
+                  local : [2]i64 %27
+        unit : unit ...
+    discard
+      block_value : unit
+        block
+          initialize %32
+            unit : unit ...
+          initialize %28
+            local : List<Mixed> %3
+          initialize %29
+            block_value : i64
+              block
+                initialize %30
+                  integer : i64 0
+                branch
+                  binary : bool lt
+                    local : i64 %30
+                    integer : i64 0
+                  assign %30
+                    binary : i64 add
+                      cast : i64
+                        buffer_operation : u64 length owner=%28
+                      local : i64 %30
+              local : i64 %30
+          initialize %31
+            buffer_operation : Mixed read owner=%28
+              local : i64 %29
+          initialize %31
+            buffer_operation : Mixed read owner=%28
+              local : i64 %29
+          discard
+            buffer_operation : unit write owner=%28
+              local : i64 %29
+              update : Mixed
+                local : Mixed %31
+                field .3
+                  local : unit %32
+        unit : unit ...
+    discard
+      block_value : unit
+        block
+          initialize %38
+            block_value : List<i64>
+              block
+                initialize %37
+                  acquire_buffer : List<i64>
+                    integer : i64 1
+                discard
+                  buffer_operation : unit append owner=%37
+                    integer : i64 12
+              local : List<i64> %37
+          initialize %33
+            local : List<Mixed> %3
+          initialize %34
+            block_value : i64
+              block
+                initialize %35
+                  integer : i64 0
+                branch
+                  binary : bool lt
+                    local : i64 %35
+                    integer : i64 0
+                  assign %35
+                    binary : i64 add
+                      cast : i64
+                        buffer_operation : u64 length owner=%33
+                      local : i64 %35
+              local : i64 %35
+          initialize %36
+            buffer_operation : Mixed read owner=%33
+              local : i64 %34
+          initialize %36
+            buffer_operation : Mixed read owner=%33
+              local : i64 %34
+          discard
+            buffer_operation : unit write owner=%33
+              local : i64 %34
+              update : Mixed
+                local : Mixed %36
+                field .1
+                  local : List<i64> %38
+        unit : unit ...
+    discard
+      block_value : unit
+        block
+          initialize %43
+            integer : i64 13
+          initialize %39
+            local : List<Mixed> %3
+          initialize %40
+            block_value : i64
+              block
+                initialize %41
+                  integer : i64 0
+                branch
+                  binary : bool lt
+                    local : i64 %41
+                    integer : i64 0
+                  assign %41
+                    binary : i64 add
+                      cast : i64
+                        buffer_operation : u64 length owner=%39
+                      local : i64 %41
+              local : i64 %41
+          initialize %42
+            buffer_operation : Mixed read owner=%39
+              local : i64 %40
+          initialize %42
+            buffer_operation : Mixed read owner=%39
+              local : i64 %40
+          discard
+            buffer_operation : unit write owner=%39
+              local : i64 %40
+              update : Mixed
+                local : Mixed %42
+                field .0
+                  local : i64 %43
+        unit : unit ...
+    ret
+      binary : bool logical_and
+        binary : bool logical_and
+          binary : bool logical_and
+            binary : bool logical_and
+              binary : bool logical_and
+                binary : bool eq
+                  field : i64 .0
+                    block_value : Mixed
+                      block
+                        initialize %44
+                          local : List<Mixed> %3
+                      buffer_operation : Mixed read owner=%44
+                        block_value : i64
+                          block
+                            initialize %45
+                              integer : i64 0
+                            branch
+                              binary : bool lt
+                                local : i64 %45
+                                integer : i64 0
+                              assign %45
+                                binary : i64 add
+                                  cast : i64
+                                    buffer_operation : u64 length owner=%44
+                                  local : i64 %45
+                          local : i64 %45
+                  integer : i64 13
+                binary : bool eq
+                  field : List<i64> .1
+                    block_value : Mixed
+                      block
+                        initialize %46
+                          local : List<Mixed> %3
+                      buffer_operation : Mixed read owner=%46
+                        block_value : i64
+                          block
+                            initialize %47
+                              integer : i64 0
+                            branch
+                              binary : bool lt
+                                local : i64 %47
+                                integer : i64 0
+                              assign %47
+                                binary : i64 add
+                                  cast : i64
+                                    buffer_operation : u64 length owner=%46
+                                  local : i64 %47
+                          local : i64 %47
+                  block_value : List<i64>
+                    block
+                      initialize %48
+                        acquire_buffer : List<i64>
+                          integer : i64 1
+                      discard
+                        buffer_operation : unit append owner=%48
+                          integer : i64 12
+                    local : List<i64> %48
+              binary : bool eq
+                index : i64 from_end=false
+                  field : [2]i64 .2
+                    block_value : Mixed
+                      block
+                        initialize %49
+                          local : List<Mixed> %3
+                      buffer_operation : Mixed read owner=%49
+                        block_value : i64
+                          block
+                            initialize %50
+                              integer : i64 0
+                            branch
+                              binary : bool lt
+                                local : i64 %50
+                                integer : i64 0
+                              assign %50
+                                binary : i64 add
+                                  cast : i64
+                                    buffer_operation : u64 length owner=%49
+                                  local : i64 %50
+                          local : i64 %50
+                  integer : i64 1
+                integer : i64 11
+            binary : bool eq
+              field : i64 .0
+                block_value : Mixed
+                  block
+                    initialize %51
+                      local : List<Mixed> %4
+                  buffer_operation : Mixed read owner=%51
+                    block_value : i64
+                      block
+                        initialize %52
+                          integer : i64 0
+                        branch
+                          binary : bool lt
+                            local : i64 %52
+                            integer : i64 0
+                          assign %52
+                            binary : i64 add
+                              cast : i64
+                                buffer_operation : u64 length owner=%51
+                              local : i64 %52
+                      local : i64 %52
+              integer : i64 1
+          binary : bool eq
+            field : List<i64> .1
+              block_value : Mixed
+                block
+                  initialize %53
+                    local : List<Mixed> %4
+                buffer_operation : Mixed read owner=%53
+                  block_value : i64
+                    block
+                      initialize %54
+                        integer : i64 0
+                      branch
+                        binary : bool lt
+                          local : i64 %54
+                          integer : i64 0
+                        assign %54
+                          binary : i64 add
+                            cast : i64
+                              buffer_operation : u64 length owner=%53
+                            local : i64 %54
+                    local : i64 %54
+            block_value : List<i64>
+              block
+                initialize %55
+                  acquire_buffer : List<i64>
+                    integer : i64 1
+                discard
+                  buffer_operation : unit append owner=%55
+                    integer : i64 4
+              local : List<i64> %55
+        binary : bool eq
+          index : i64 from_end=false
+            field : [2]i64 .2
+              block_value : Mixed
+                block
+                  initialize %56
+                    local : List<Mixed> %4
+                buffer_operation : Mixed read owner=%56
+                  block_value : i64
+                    block
+                      initialize %57
+                        integer : i64 0
+                      branch
+                        binary : bool lt
+                          local : i64 %57
+                          integer : i64 0
+                        assign %57
+                          binary : i64 add
+                            cast : i64
+                              buffer_operation : u64 length owner=%56
+                            local : i64 %57
+                    local : i64 %57
+            integer : i64 1
+          integer : i64 3

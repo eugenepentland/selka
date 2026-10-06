@@ -1,0 +1,27 @@
+{"source_commit": "93030b84e1538abc35aefa6984e3b00cc7dcc958", "old_sha256": "d36658dbfb78d29213224532a13fd5ad8b7c0e290dbfb87613d9815678305c79", "new_sha256": "65aa3175e6c6ce4277b12ac66ca96f46583dd98f20a8ea62366db6a0465c2400", "leakcheck": true, "release_verify_facts": true}
+$ /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-values/scripts/build-slot.sh build -- nice -n 10 /usr/bin/python3 -c 'import importlib.util,json,subprocess,sys,time
+from pathlib import Path
+root=Path.cwd();area=root/'"'"'experiments/new-core-s3-20261006/wave-b/s3-m'"'"';original=subprocess.run
+with (area/'"'"'final-scalar-replacements-run01.commands.jsonl'"'"').open('"'"'x'"'"') as journal:
+ def run(*args,**kwargs):
+  started=time.monotonic();done=original(*args,**kwargs)
+  record={'"'"'command'"'"':args[0] if args else kwargs['"'"'args'"'"'],'"'"'exit_status'"'"':done.returncode,'"'"'stdout'"'"':done.stdout,'"'"'stderr'"'"':done.stderr,'"'"'elapsed_seconds'"'"':time.monotonic()-started,'"'"'leakcheck'"'"':(kwargs.get('"'"'env'"'"') or {}).get('"'"'MYL_CORE_LEAKCHECK'"'"')}
+  journal.write(json.dumps(record)+'"'"'\n'"'"');journal.flush();return done
+ subprocess.run=run
+ spec=importlib.util.spec_from_file_location('"'"'checked'"'"',root/'"'"'experiments/new-core-s2-20261005/wave-b/integration/conformance_checked.py'"'"');module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+ sys.argv=[str(spec.origin),'"'"'rc_scalar_replacements'"'"','"'"'--mylang'"'"',str(root/'"'"'.mylang-cache/s3/oracle/mylang'"'"'),'"'"'--core'"'"',str(root/'"'"'zig-out/bin/mylang-core'"'"'),'"'"'--jobs'"'"','"'"'1'"'"','"'"'--modes'"'"','"'"'debug,release'"'"','"'"'--leakcheck'"'"','"'"'--verify'"'"','"'"'--why'"'"','"'"'--cache-dir'"'"',str(root/'"'"'.mylang-cache/s3/final-scalar-replacements-run01'"'"')]
+ raise SystemExit(module.main())'
+file                     tests | debug   match misma unsup | release match misma unsup
+--------------------------------------------------------------------------------------
+rc_scalar_replacements       3 |             3     0     0 |             3     0     0
+--------------------------------------------------------------------------------------
+TOTAL                        3
+  debug    matching 3, mismatching 0, unsupported 0 (of 3 tests; 3 supported)
+  release  matching 3, mismatching 0, unsupported 0 (of 3 tests; 3 supported)
+
+blocking features of the unsupported tests (tests / files):
+
+blocking features per file (file: tests unsupported of tests; the features, most common first):
+
+exit_status=0
+elapsed_seconds=2.328716
