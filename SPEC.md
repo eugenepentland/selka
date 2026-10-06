@@ -1911,3 +1911,6 @@ The separate `mylang-core` executable (`zig build core`, `docs/design/new-core-i
   and asserts saturation and right-shift intervals.
 
 - [NEW-CORE-S3-VALUES-1] Recursive equality and dictionary-key hashing use explicit worklists and shared-node memo tables; padding and inactive union payloads do not participate, and identical pointers do not bypass NaN inequality. Aggregate text preserves nominal record and variant names, tuple positions, insertion order and the existing depth-24 ellipsis rule. List repetition creates independent values under one-count ownership.
+
+- [NEW-CORE-TEXT-S3-1] Remaining text and immutable-byte methods match the old core: scalar search bounds, non-overlapping count/replace, Unicode charset trims and repr, ASCII case/classification, line splitting, validated chr/ord, packed text layout, UTF-8 decode/count and immutable byte ranges. Inputs borrow and results own independent counted blocks; failed index and scalar operations retain located traps.
+- [NEW-CORE-LIST-S3-1] List extend and reverse use value-functional updates over a captured source; self-extension and nested/shared snapshots preserve their old values, with ordinary ownership COW and verify assertions.

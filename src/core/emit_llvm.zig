@@ -87,6 +87,7 @@ pub const TrapKind = enum(u8) {
     text_step = 13,
     byte_range = 14,
     text_scalar = 15,
+    text_substring = 16,
     invalid_shift = 17,
 };
 
@@ -577,6 +578,8 @@ const MemoryState = struct {
     /// Per instruction: a `record_make` or `union_make` that is never materialized, because its
     /// only use stores it into its destination field by field.
     fused: []bool = &.{},
+    /// Verify-only length snapshots, taken before ordinary ownership can release a bound's block.
+    bound_lengths: []bool = &.{},
     /// Per block: the phis whose type lives in memory.
     phis: []const []const ir.Ref = &.{},
     /// Every instruction that reads a value living in memory, by the value's instruction index.
@@ -717,6 +720,7 @@ const FunctionEmitter = struct {
             } else try out.print(self.a(), "{s}{s} %p{d}", .{ separator, try self.ty(param), i });
         }
         try self.analyzeMemory(&entry);
+        try self.collectBoundLengths();
         // `uwtable`: a trap walks the stack through `.eh_frame`, which needs every frame's CFI.
         try out.print(self.a(), ") nounwind uwtable{s} {{\n", .{try self.functionScope()});
         const bodies = try self.a().alloc(Out, f.blocks.items.len);
@@ -728,18 +732,19 @@ const FunctionEmitter = struct {
             self.label = self.exit_labels.items[b];
             self.vectors.block = @intCast(b);
             try self.assertReachable(&bodies[b], @intCast(b));
-            // Verify mode: a caller-derived parameter interval holds on entry (NEW-CORE-FACTS-10).
-            if (b == 0) for (f.insts.items, 0..) |inst, index| {
-                if (inst.op == .param) try self.assertRange(&bodies[b], @fromBackingInt(@as(u32, @intCast(index))), inst);
-            };
+            if (b == 0) try self.assertEntryFacts(&bodies[b]);
             for (block.insts.items) |ref| {
                 const inst = f.inst(ref);
-                if (inst.op == .phi) try self.assertFacts(&bodies[b], ref, inst);
+                if (inst.op == .phi) {
+                    try self.captureBoundLength(&bodies[b], ref);
+                    try self.assertFacts(&bodies[b], ref, inst);
+                }
             }
             for (block.insts.items) |ref| {
                 const inst = f.inst(ref);
                 if (inst.op == .phi or inst.op == .copy) continue;
                 try self.instruction(&bodies[b], ref, inst);
+                if (inst.op != .param and inst.op != .str_const) try self.captureBoundLength(&bodies[b], ref);
                 // A construction stored straight into its consumer never exists as a value to assert about.
                 if (!inst.op.terminates() and !self.memory.fused[ref.index()]) try self.assertFacts(&bodies[b], ref, inst);
             }
@@ -994,6 +999,38 @@ const FunctionEmitter = struct {
         try self.assertAggregate(out, ref, inst);
     }
 
+    /// Entry values precede block instructions; caller-derived ranges remain asserted here.
+    fn assertEntryFacts(self: *FunctionEmitter, out: *Out) !void {
+        for (self.function.insts.items, 0..) |inst, index| {
+            if (inst.op == .param or inst.op == .str_const)
+                try self.captureBoundLength(out, @fromBackingInt(@as(u32, @intCast(index))));
+        }
+        for (self.function.insts.items, 0..) |inst, index| {
+            if (inst.op == .param) try self.assertRange(out, @fromBackingInt(@as(u32, @intCast(index))), inst);
+        }
+    }
+
+    /// Collect hidden length dependencies once; they must not extend ordinary RC liveness.
+    fn collectBoundLengths(self: *FunctionEmitter) !void {
+        const known = self.knownFacts() orelse return;
+        self.memory.bound_lengths = try self.a().alloc(bool, self.function.insts.items.len);
+        @memset(self.memory.bound_lengths, false);
+        for (known.bounds) |maybe| {
+            const bound = maybe orelse continue;
+            if (bound.list == .none) continue;
+            const source = self.function.resolve(bound.list);
+            self.memory.bound_lengths[source.index()] = true;
+        }
+    }
+
+    /// Snapshot the SSA block's byte/list length while the block still exists.
+    fn captureBoundLength(self: *FunctionEmitter, out: *Out, ref: ir.Ref) !void {
+        if (self.memory.bound_lengths.len == 0 or !self.memory.bound_lengths[ref.index()]) return;
+        const at = try self.fresh("%bound.header");
+        const len = try std.fmt.allocPrint(self.a(), "%bound.len.{d}", .{ref.index()});
+        try out.print(self.a(), header_load_line, .{ at, try self.value(ref), len_offset, len, at });
+    }
+
     /// Verify mode: a list's length lies in the interval the facts gave it, and every field of
     /// a record with a field interval lies in it.
     fn assertAggregate(self: *FunctionEmitter, out: *Out, ref: ir.Ref, inst: ir.Inst) !void {
@@ -1052,12 +1089,11 @@ const FunctionEmitter = struct {
         if (inst.op == .iconst or known.bounds.len == 0) return;
         const bound = known.bounds[ref.index()] orelse return;
         if (bound.list == .none) return;
-        const at = try self.fresh("%bh");
-        const len = try self.fresh("%bl");
+        const source = self.function.resolve(bound.list);
+        const len = try std.fmt.allocPrint(self.a(), "%bound.len.{d}", .{source.index()});
         const failed = try self.fresh("%bf");
         const name = try self.widened(out, ref);
         const predicate = if (bound.strict) (if (info.signed) "sge" else "uge") else (if (info.signed) "sgt" else "ugt");
-        try out.print(self.a(), header_load_line, .{ at, try self.value(bound.list), len_offset, len, at });
         try out.print(self.a(), "  {s} = icmp {s} i64 {s}, {s}\n", .{ failed, predicate, name, len });
         const operation: []const u8 = if (bound.strict) "below the list length" else "at most the list length";
         const index = try self.state.site(.{ .kind = .fact, .location = self.state.options.locator.locate(self.state.options.locator.context, inst.span), .width = info.bits, .operation = operation, .function = self.function.name });

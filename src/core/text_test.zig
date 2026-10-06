@@ -2,6 +2,7 @@
 const std = @import("std");
 const options = @import("core_test_options");
 const report = std.debug.print;
+const cache_argument = "--cache-dir";
 
 fn qualified(arena: std.mem.Allocator) !bool {
     var directory = std.testing.tmpDir(.{});
@@ -11,7 +12,7 @@ fn qualified(arena: std.mem.Allocator) !bool {
     const cache = try std.fmt.allocPrint(arena, "{s}/cache", .{root});
     for ([_][]const []const u8{ &.{}, &.{"--release"}, &.{ "--release", "--verify-facts" } }) |mode| {
         var argv: std.ArrayList([]const u8) = .empty;
-        try argv.appendSlice(arena, &.{ options.core_path, "test", source, "--json", "--cache-dir", cache });
+        try argv.appendSlice(arena, &.{ options.core_path, "test", source, "--json", cache_argument, cache });
         try argv.appendSlice(arena, mode);
         const result = try std.process.run(arena, std.testing.io, .{ .argv = argv.items });
         if (result.term != .exited or result.term.exited != 1) {
@@ -80,7 +81,7 @@ fn fastPathsOutput(arena: std.mem.Allocator, root: []const u8, mode: []const []c
     const output = try std.fmt.allocPrint(arena, "{s}/fast-{d}", .{ root, mode.len });
     const cache = try std.fmt.allocPrint(arena, "{s}/cache", .{root});
     var argv: std.ArrayList([]const u8) = .empty;
-    try argv.appendSlice(arena, &.{ options.core_path, "build", source, "-o", output, "--cache-dir", cache });
+    try argv.appendSlice(arena, &.{ options.core_path, "build", source, "-o", output, cache_argument, cache });
     try argv.appendSlice(arena, mode);
     const built = try std.process.run(arena, std.testing.io, .{ .argv = argv.items });
     try std.testing.expect(built.term == .exited and built.term.exited == 0);
@@ -103,4 +104,54 @@ test "equality checks the ends of long equal-length texts first and find counts 
     try std.testing.expectEqualStrings(expected, try fastPathsOutput(arena, root, &.{}));
     try std.testing.expectEqualStrings(expected, try fastPathsOutput(arena, root, &.{"--release"}));
     try std.testing.expectEqualStrings(expected, try fastPathsOutput(arena, root, &.{ "--release", "--verify-facts" }));
+}
+
+fn methodsRun(allocator: std.mem.Allocator, mode: []const []const u8) !void {
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", allocator);
+    var environment = try std.testing.environ.createMap(allocator);
+    try environment.put("MYL_CORE_LEAKCHECK", "1");
+    const source = try std.fs.path.join(allocator, &.{ options.fixtures, "t_methods.my" });
+    var argv: std.ArrayList([]const u8) = .empty;
+    try argv.appendSlice(allocator, &.{ options.core_path, "test", source, "--json", cache_argument, root });
+    try argv.appendSlice(allocator, mode);
+    const result = try std.process.run(allocator, std.testing.io, .{ .argv = argv.items, .environ_map = &environment });
+    try std.testing.expect(result.term == .exited and result.term.exited == 1);
+    try std.testing.expectEqualStrings("", result.stderr);
+    const parsed = try std.json.parseFromSlice(std.json.Value, allocator, result.stdout, .{});
+    try std.testing.expectEqual(@as(i64, 7), parsed.value.object.get("passed").?.integer);
+    try std.testing.expectEqual(@as(i64, 2), parsed.value.object.get("failed").?.integer);
+    try std.testing.expectEqual(@as(i64, 0), parsed.value.object.get("unsupported").?.integer);
+    try std.testing.expect(std.mem.indexOf(u8, result.stdout, "R_SUBSTRING_NOT_FOUND") != null);
+    try std.testing.expect(std.mem.indexOf(u8, result.stdout, "R_TEXT_SCALAR") != null);
+}
+
+// spec: NEW-CORE-TEXT-S3-1
+test "remaining text methods preserve exact scalar and octet semantics with checked failures in every mode" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    try methodsRun(arena.allocator(), &.{});
+    try methodsRun(arena.allocator(), &.{"--release"});
+    try methodsRun(arena.allocator(), &.{ "--release", "--verify-facts" });
+}
+
+const extended_list =
+    \\def main() -> int:
+    \\    xs = ["a", "é"]
+    \\    saved = xs
+    \\    xs.extend(xs)
+    \\    xs.reverse()
+    \\    return len(saved) + len(xs)
+    \\
+;
+
+// spec: NEW-CORE-LIST-S3-1
+test "self extension and reverse build list updates whose ownership preserves the captured source" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const text = try @import("test_support.zig").irText(arena.allocator(), extended_list);
+    try std.testing.expect(std.mem.indexOf(u8, text, "list_push") != null);
+    try std.testing.expect(std.mem.indexOf(u8, text, "list_get") != null);
+    try std.testing.expect(std.mem.indexOf(u8, text, "phi list[str]") != null);
 }

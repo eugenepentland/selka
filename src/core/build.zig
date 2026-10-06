@@ -10,12 +10,14 @@
 const std = @import("std");
 const typed = @import("mylang").typed;
 const Field = @FieldType(@FieldType(typed.Node, "data"), "field");
+const BufferOperation = @FieldType(@FieldType(typed.Node, "data"), "buffer_operation");
 const ir = @import("ir.zig");
 const fuse = @import("fuse.zig");
 const flags = @import("flags.zig");
 const fuse_dict = @import("fuse_dict.zig");
 const build_dict = @import("build_dict.zig");
 const build_text = @import("build_text.zig");
+const build_list_methods = @import("build_list_methods.zig");
 const fuse_text = @import("fuse_text.zig");
 const build_cap = @import("build_cap.zig");
 const build_bytes = @import("build_bytes.zig");
@@ -1927,6 +1929,23 @@ const FnBuilder = struct {
         return if (has_value) value else .none;
     }
 
+    fn collectionOperation(self: *FnBuilder, operation: BufferOperation, ty: ir.Type, span: u32, out: ?*?Place) Error!?ir.Ref {
+        const receiver_type = self.ssa.types.items[self.local(operation.owner)];
+        const collection = self.mb.module.kind(receiver_type) orelse return null;
+        switch (collection) {
+            .list => if (operation.kind == .extend or operation.kind == .reverse) {
+                const result = try build_list_methods.operation(@TypeOf(self), self, operation, span);
+                return result;
+            },
+            .dict => {
+                const result = try build_dict.operation(@TypeOf(self), self, operation, ty, span, out);
+                return result;
+            },
+            else => {},
+        }
+        return null;
+    }
+
     fn bufferOperation(self: *FnBuilder, operation: anytype, ty: ir.Type, span: u32, out: ?*?Place) Error!ir.Ref {
         const kind = operation.kind;
         const owner = operation.owner;
@@ -1939,9 +1958,7 @@ const FnBuilder = struct {
         }
         if (kind == .iteration_check) return self.iterationCheck(operation, span);
         if (receiver_type == .str or receiver_type == .bytes) return build_text.operation(@TypeOf(self), self, operation, ty, span);
-        if (self.mb.module.kind(receiver_type) == .dict and kind != .iteration_check) {
-            return build_dict.operation(@TypeOf(self), self, operation, ty, span, out);
-        }
+        if (try self.collectionOperation(operation, ty, span, out)) |result| return result;
         switch (kind) {
             .length => {
                 const receiver = try self.receiverOf(owner);
