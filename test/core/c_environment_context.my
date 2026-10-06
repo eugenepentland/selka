@@ -1,0 +1,11 @@
+def main(env: Environment, out: Stream) -> int:
+    match env.get("A"):
+        case Some(value):
+            return 1
+        case None:
+            pass
+    names = env.names()
+    out.print(len(names))
+    for name in names:
+        out.print(name)
+    return 0

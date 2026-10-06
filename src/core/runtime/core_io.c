@@ -988,6 +988,7 @@ static CoreIoScoped core_io_real;
 static int core_io_initialized,core_io_restricted,core_io_clock,core_io_entropy,core_io_environment,core_io_host;
 static char *core_io_options;
 static const char *core_io_names="";
+static const char *core_io_enumerated_names="";
 static uint64_t core_io_seed;
 static CoreIoAuthority *core_io_authority(myl_block *block) { return (CoreIoAuthority *)block_data(block); }
 static CoreIoState *core_io_state(myl_block *authority) { return (CoreIoState *)block_data(core_io_authority(authority)->provider); }
@@ -1074,6 +1075,7 @@ static void core_io_initialize(void) {
         else if(!strncmp(arg,"--allow-",8)||!strncmp(arg,"--restrict",10))core_io_bad_grant();
         else core_io_option_error("mylang: MYLANG_OPTIONS names %s, which is not a runtime option\n",arg);
     }
+    core_io_enumerated_names=core_io_names;
     if(core_io_restricted){core_io_embedding=0;for(size_t i=0;i<core_io_grant_count;++i)if(!core_io_scoped_grant(&core_io_real,core_io_grants[i].path,core_io_grants[i].writable))core_io_option_error("mylang: a requested directory grant could not be opened\n%s","");}
     if(!core_io_restricted){core_io_scoped_close(&core_io_real);core_io_scoped_init(&core_io_real);if(!core_io_embedding){if(!core_io_scoped_working_directory(&core_io_real))core_io_option_error("mylang: a requested directory grant could not be opened\n%s","");core_io_scoped_endpoint(&core_io_real,"*");}core_io_clock=core_io_environment=core_io_host=1;if(!core_io_entropy&&!core_io_embedding){struct timespec now={0};clock_gettime(CLOCK_REALTIME,&now);core_io_seed=(uint64_t)now.tv_sec*1000000000+(uint64_t)now.tv_nsec;}core_io_entropy=1;core_io_names="";}
 }
@@ -1180,12 +1182,12 @@ myl_block *myl_core_environment_names(myl_block *cap){
     if(blob){
         for(size_t at=0;at<(size_t)blob->len;){
             size_t width=core_io_memory_field(block_data(blob),(size_t)blob->len,at);
-            if(state->test||core_io_allowed(core_io_names,block_data(blob)+at,width))core_io_name_add(&list,block_data(blob)+at,width);
+            if(state->test||core_io_allowed(core_io_enumerated_names,block_data(blob)+at,width))core_io_name_add(&list,block_data(blob)+at,width);
             at+=width+1;if(!a->scope)at+=core_io_memory_field(block_data(blob),(size_t)blob->len,at)+1;
         }
     }else if(!state->test){
-        if(*core_io_names){
-            const char *name=core_io_names;
+        if(*core_io_enumerated_names){
+            const char *name=core_io_enumerated_names;
             while(*name){const char *comma=strchr(name,',');size_t width=comma?(size_t)(comma-name):strlen(name);core_io_name_add(&list,(const unsigned char *)name,width);if(!comma)break;name=comma+1;}
         }else{
             extern char **environ;

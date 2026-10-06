@@ -25,6 +25,7 @@ test {
     _ = @import("qbe_build_link.zig");
     _ = @import("qbe_zero_branch_test.zig");
     _ = @import("qbe_sub_address_test.zig");
+    _ = @import("qbe_environment_names_test.zig");
 }
 
 // The two scenarios below spawn the installed compiler end to end, the way the
