@@ -49,6 +49,8 @@ pub const unit = [_][]const u8{
     "tests/fixtures/qbe-zero-branch/",
     "tests/fixtures/qbe-sub-address/",
     "test/fixtures/",
+    "test/core/c_environment_context.my",
+    "test/core/c_environment_context_provider.c",
     "docs/reference.md",
     "docs/standard-library.md",
     "velocity/friction/",
@@ -82,7 +84,7 @@ pub const golden = [_][]const u8{ "src/", "tests/goldens/", "examples/", "test/f
 
 /// The native-test, C FFI and native-build roots under `test-qbe` and
 /// `test-qbe-build`: their guests are written by the tests themselves.
-pub const native_roots = [_][]const u8{ "src/", "tests/" };
+pub const native_roots = [_][]const u8{ "src/", "tests/", "test/core/c_environment_context.my", "test/core/c_environment_context_provider.c" };
 
 /// `tests/idiom_probes.py --compiler`: the probe corpus and its manifest.
 pub const idioms = [_][]const u8{ "tests/idiom_probes.py", "tests/fixtures/idioms/" };
