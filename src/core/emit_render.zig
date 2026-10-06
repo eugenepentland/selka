@@ -33,7 +33,10 @@ pub fn descriptors(a: std.mem.Allocator, m: *const ir.Module, out: *Out) Error!v
         const marker = try std.fmt.allocPrint(a, "{s}{s}|", .{ metadata.prefix, id });
         const text = m.strings.items[index];
         if (!std.mem.startsWith(u8, text, marker)) return error.UnsupportedInstruction;
-        const parsed = std.json.parseFromSlice(metadata.Shape, a, text[marker.len..], .{}) catch |err| return if (err == error.OutOfMemory) err else error.UnsupportedInstruction;
+        const parsed = std.json.parseFromSlice(metadata.Shape, a, text[marker.len..], .{}) catch |err| {
+            if (err == error.OutOfMemory) return error.OutOfMemory;
+            return error.UnsupportedInstruction;
+        };
         defer parsed.deinit();
         try descriptor(a, out, id, parsed.value);
     }
