@@ -19,8 +19,17 @@ ROOT = Path(__file__).resolve().parents[4]
 
 
 def functions(text):
-    return {re.search(r'@("[^"]+"|\w+)\(', f)[1]: f
-            for f in re.findall(r'^define .*?^\}', text, re.M | re.S)}
+    definitions = re.findall(r'^define .*?^\}', text, re.M | re.S)
+    assert len(definitions) == len(re.findall(r'^define ', text, re.M)), 'uncovered LLVM definition'
+    result = {}
+    for definition in definitions:
+        header = definition.splitlines()[0]
+        match = re.match(r'^define [^\n]*?@("(?:[^"\\]|\\.)+"|[-A-Za-z$._0-9]+)\(', header)
+        assert match, ('unrecognized LLVM definition header', header)
+        symbol = match[1]
+        assert symbol not in result, ('duplicate LLVM definition', symbol)
+        result[symbol] = definition
+    return result
 
 
 def sites(text):

@@ -105,21 +105,32 @@ fn resultProgram(arena: std.mem.Allocator, n: i64) !ir.Module {
 }
 
 const result_main: support.RunOptions = .{ .main = .{ .result = .{ .ok_tag = 0, .error_tag = 1 } } };
+const trace_modes = [_]support.RunOptions{ .{}, .{ .release = true }, .{ .release = true, .verify = true } };
+
+fn resultOptions(mode: support.RunOptions) support.RunOptions {
+    var result = mode;
+    result.main = result_main.main;
+    return result;
+}
 
 // spec: NEW-CORE-ERRTRACE-1
 test "main returning Err prints error: VALUE and the aligned trace, origin first, and exits 1; Ok(code) exits with code" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
-    var failing = try resultProgram(arena.allocator(), 5);
-    const failed = try support.runOwned(arena.allocator(), &failing, result_main);
-    try std.testing.expectEqual(@as(u8, 1), failed.status);
-    try std.testing.expectEqualStrings("error: too big\n  hand.my:1:11    inner  Err(...) created\n  hand.my:1:2001  main   ? propagated\n", failed.stderr);
-    var passing = try resultProgram(arena.allocator(), 1);
-    const passed = try support.runOwned(arena.allocator(), &passing, result_main);
-    try std.testing.expectEqual(@as(u8, 7), passed.status);
-    try std.testing.expectEqualStrings("", passed.stderr);
-    try std.testing.expect(contains(failed.llvm, "call void @myl_core_err_trace(i32 ") and contains(failed.llvm, "#1\n"));
-    try std.testing.expect(contains(failed.llvm, "attributes #1 = { \"call-inline-cost\"=\"0\" }"));
+    for (trace_modes) |mode| {
+        var failing = try resultProgram(arena.allocator(), 5);
+        const failed = try support.runOwned(arena.allocator(), &failing, resultOptions(mode));
+        try std.testing.expectEqual(@as(u8, 1), failed.status);
+        try std.testing.expectEqualStrings("", failed.stdout);
+        try std.testing.expectEqualStrings("error: too big\n  hand.my:1:11    inner  Err(...) created\n  hand.my:1:2001  main   ? propagated\n", failed.stderr);
+        var passing = try resultProgram(arena.allocator(), 1);
+        const passed = try support.runOwned(arena.allocator(), &passing, resultOptions(mode));
+        try std.testing.expectEqual(@as(u8, 7), passed.status);
+        try std.testing.expectEqualStrings("", passed.stderr);
+        try std.testing.expect(contains(failed.llvm, "call preserve_mostcc void @myl_core_err_trace_origin_preserve_most(i32 ") and contains(failed.llvm, "#1\n"));
+        try std.testing.expect(contains(failed.llvm, "call preserve_mostcc void @myl_core_err_trace_append_preserve_most(i32 "));
+        try std.testing.expect(contains(failed.llvm, "attributes #1 = { \"call-inline-cost\"=\"0\" }"));
+    }
 }
 
 /// `main() -> Result[int, str]` returning `Err("bad")`, after recording: its origin, a
@@ -142,24 +153,65 @@ fn kindsProgram(arena: std.mem.Allocator, propagated: usize) !ir.Module {
     return m;
 }
 
-fn kindsReport(arena: std.mem.Allocator, propagated: usize) ![]const u8 {
+fn kindsReport(arena: std.mem.Allocator, propagated: usize, mode: support.RunOptions) ![]const u8 {
     var module = try kindsProgram(arena, propagated);
-    const run = try support.runOwned(arena, &module, result_main);
+    const run = try support.runOwned(arena, &module, resultOptions(mode));
     try std.testing.expectEqual(@as(u8, 1), run.status);
+    try std.testing.expectEqualStrings("", run.stdout);
     return run.stderr;
+}
+
+fn longReport(arena: std.mem.Allocator) ![]const u8 {
+    var expected: std.ArrayList(u8) = .empty;
+    try expected.appendSlice(arena, "error: bad\n  hand.my:1:11    main  Err(...) created\n  ... 10 more entries dropped ...\n");
+    for (4010..4042) |column| try expected.print(arena, "  hand.my:1:{d}  main  ? propagated\n", .{column});
+    return expected.items;
 }
 
 // spec: NEW-CORE-ERRTRACE-2
 test "trace modes: a returned site on its origin's line folds, a conversion names its case, and the ring drops the oldest appends" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
-    try std.testing.expectEqualStrings(
-        "error: bad\n  hand.my:1:11    main  Err(...) created\n  hand.my:1:3001  main  ? converted to Wrapped.bad\n" ++
-            "  hand.my:1:4002  main  ? propagated\n  hand.my:1:4003  main  ? propagated\n",
-        try kindsReport(arena.allocator(), 2),
-    );
-    // 42 appends: the ring keeps the last 32 (propagations 9 to 40).
-    const long = try kindsReport(arena.allocator(), 40);
-    try std.testing.expect(std.mem.startsWith(u8, long, "error: bad\n  hand.my:1:11    main  Err(...) created\n  ... 10 more entries dropped ...\n  hand.my:1:4010  main  ? propagated\n"));
-    try std.testing.expect(std.mem.endsWith(u8, long, "  hand.my:1:4041  main  ? propagated\n"));
+    const expected = try longReport(arena.allocator());
+    for (trace_modes) |mode| {
+        try std.testing.expectEqualStrings(
+            "error: bad\n  hand.my:1:11    main  Err(...) created\n  hand.my:1:3001  main  ? converted to Wrapped.bad\n" ++
+                "  hand.my:1:4002  main  ? propagated\n  hand.my:1:4003  main  ? propagated\n",
+            try kindsReport(arena.allocator(), 2, mode),
+        );
+        // 42 appends: the ring keeps the last 32 (propagations 9 to 40).
+        try std.testing.expectEqualStrings(expected, try kindsReport(arena.allocator(), 40, mode));
+    }
+}
+
+fn foreignProgram(arena: std.mem.Allocator) !ir.Module {
+    var module: ir.Module = .{};
+    try module.functions.append(arena, .{ .name = "myl_core_err_trace", .signature = .{ .params = &.{ .i32, .i32 }, .ret = .void, .linkage = .extern_c } });
+    var unrelated = try Hand.init(arena, &module, "unrelated", .{ .params = &.{.i64}, .ret = .i64 });
+    _ = try unrelated.emit(.{ .op = .ret, .ty = .void, .a = try unrelated.param(0) });
+    const unrelated_id = try unrelated.finish();
+    var main = try Hand.init(arena, &module, "main", .{ .params = &.{}, .ret = .i64 });
+    _ = try main.emit(.{ .op = .err_trace, .ty = .void, .data = 0, .span = 10 });
+    _ = try main.emit(.{ .op = .call, .ty = .void, .a = @fromBackingInt(0), .data = try main.extra(&.{ try main.int(.i32, 0), try main.int(.i32, 0) }) });
+    const value = try main.emit(.{ .op = .call, .ty = .i64, .a = @fromBackingInt(unrelated_id), .data = try main.extra(&.{try main.int(.i64, 7)}) });
+    _ = try main.emit(.{ .op = .ret, .ty = .void, .a = value });
+    module.entry = try main.finish();
+    return module;
+}
+
+// spec-case: NEW-CORE-ERRTRACE-1
+test "the explicit trace operation preserves registers while an ordinary extern trace call and unrelated call keep their ABI" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    for (trace_modes) |mode| {
+        var module = try foreignProgram(arena.allocator());
+        const run = try support.runOwned(arena.allocator(), &module, mode);
+        try std.testing.expectEqual(@as(u8, 7), run.status);
+        try std.testing.expectEqualStrings("", run.stdout);
+        try std.testing.expectEqualStrings("", run.stderr);
+        try std.testing.expect(contains(run.llvm, "declare void @myl_core_err_trace(i32, i32) nounwind\n"));
+        try std.testing.expect(contains(run.llvm, "call void @myl_core_err_trace(i32 0, i32 0)"));
+        try std.testing.expect(contains(run.llvm, "call preserve_mostcc void @myl_core_err_trace_origin_preserve_most(i32 0)"));
+        try std.testing.expect(contains(run.llvm, "call i64 @\"my.unrelated\"(i64 7)"));
+    }
 }

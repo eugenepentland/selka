@@ -1,0 +1,4 @@
+guardian: run-all: cached — 0 blocking (inputs unchanged since last green run)
+[codex/new-core-s3-packet-performance 68323c6f1] core: inline authorized byte index normalization
+ 5 files changed, 186 insertions(+), 2 deletions(-)
+ create mode 100644 src/core/byte_index_test.zig

@@ -18,6 +18,7 @@ const c_abi = @import("c_abi.zig");
 const flags = @import("flags.zig");
 const emit_dict = @import("emit_dict.zig");
 const emit_bytes = @import("emit_bytes.zig");
+const emit_text_split = @import("emit_text_split.zig");
 const emit_text = @import("emit_text.zig");
 const text_builder = @import("build_text.zig");
 const emit_fn = @import("emit_fn.zig");
@@ -375,7 +376,8 @@ const ModuleState = struct {
             \\declare void @myl_core_print_sep(i64) nounwind
             \\declare void @myl_core_print_end(i64) nounwind
             \\declare ptr @myl_core_box_new(i64) nounwind
-            \\declare void @myl_core_err_trace(i32, i32) nounwind cold
+            \\declare preserve_mostcc void @myl_core_err_trace_origin_preserve_most(i32) nounwind cold
+            \\declare preserve_mostcc void @myl_core_err_trace_append_preserve_most(i32) nounwind cold
             \\declare void @myl_core_assert_fail(i32) noreturn nounwind cold
             \\declare void @llvm.memcpy.p0.p0.i64(ptr noalias nocapture writeonly, ptr noalias nocapture readonly, i64, i1 immarg)
             \\declare void @llvm.memmove.p0.p0.i64(ptr nocapture writeonly, ptr nocapture readonly, i64, i1 immarg)
@@ -1162,11 +1164,35 @@ const FunctionEmitter = struct {
     /// Branch to a cold trap when `failed` (an `i1` operand) holds, and continue in a new label.
     /// Emit a conditional trap and continue in a fresh LLVM block.
     pub fn trapIf(self: *FunctionEmitter, out: *Out, failed: []const u8, site_index: u32, left: []const u8, right: []const u8) Error!void {
+        const branch = try self.trapBegin(out, failed, site_index);
+        try self.trapEnd(out, branch, .{ .left = left, .right = right });
+    }
+
+    /// A split conditional trap permits diagnostic work only on its cold path.
+    pub const TrapBranch = struct { next: []const u8, site: u32, location: []const u8 };
+
+    /// Start the cold trap block; complete it with trapEnd before emitting valid-path work.
+    pub fn trapBegin(self: *FunctionEmitter, out: *Out, failed: []const u8, site_index: u32) Error!TrapBranch {
         const trap = try self.fresh("trap");
         const next = try self.fresh(self.label);
         const at = try self.trapLocation(site_index);
-        try out.print(self.a(), "  br i1 {s}, label %{s}, label %{s}, !prof !0\n{s}:\n  call void @myl_core_trap(i32 {d}, i64 {s}, i64 {s}){s}\n  unreachable\n{s}:\n", .{ failed, trap, next, trap, site_index, left, right, at, next });
-        self.label = next;
+        try out.print(self.a(), "  br i1 {s}, label %{s}, label %{s}, !prof !0\n{s}:\n", .{ failed, trap, next, trap });
+        return .{ .next = next, .site = site_index, .location = at };
+    }
+
+    /// Emit the located trap and resume in the valid-path block.
+    pub fn trapEnd(self: *FunctionEmitter, out: *Out, branch: TrapBranch, detail: struct { left: []const u8, right: []const u8 }) Error!void {
+        try out.print(self.a(), "  call void @myl_core_trap(i32 {d}, i64 {s}, i64 {s}){s}\n  unreachable\n{s}:\n", .{ branch.site, detail.left, detail.right, branch.location, branch.next });
+        self.label = branch.next;
+    }
+
+    /// Count Unicode scalars for a cold diagnostic, declaring the existing helper on demand.
+    pub fn textScalars(self: *FunctionEmitter, out: *Out, receiver: ir.Ref) Error![]const u8 {
+        const helper: ir.Function = .{ .name = flags.str_chars_symbol, .signature = .{ .params = &.{.str}, .ret = .u64, .linkage = .runtime_c } };
+        try self.state.declareExtern(&helper);
+        const result = try self.fresh("%textscalars");
+        try out.print(self.a(), "  {s} = call i64 @{s}(ptr {s})\n", .{ result, flags.str_chars_symbol, try self.value(receiver) });
+        return result;
     }
 
     /// Sign- or zero-extend an integer operand to `i64` for a trap report.
@@ -1589,7 +1615,9 @@ const FunctionEmitter = struct {
             try out.print(self.a(), "  {s} = icmp slt i64 {s}, 0\n  {s} = sub i64 {s}, {s}\n  {s} = select i1 {s}, i64 {s}, i64 {s}\n", .{ negative, index, before, index, len, original, negative, before, index });
             return self.trapIf(out, outside, try self.site(.list_pop_index, inst, "pop"), original, len);
         }
-        try self.trapIf(out, outside, try self.site(.list_bounds, inst, "index"), index, len);
+        const source_index = emit_bytes.sourceIndex(@TypeOf(self), self, inst.b);
+        const reported = if (source_index) |raw| try self.value(raw) else index;
+        try self.trapIf(out, outside, try self.site(.list_bounds, inst, "index"), reported, len);
     }
 
     /// The address of element `index` of `list`: a typed `getelementptr` for scalars and
@@ -2069,10 +2097,10 @@ const FunctionEmitter = struct {
             4 => "returned",
             else => "? propagated",
         };
-        const restarts: u8 = if (inst.data == 0 or inst.data == 2) 0 else 1;
+        const action_symbol: []const u8 = if (inst.data == 0 or inst.data == 2) "origin" else "append";
         const index = try self.state.site(.{ .kind = .trace, .location = location, .width = 0, .operation = action, .function = self.function.name });
-        // ERROR-TRACE-5: the recorder never counts against inlining.
-        try out.print(self.a(), "  call void @myl_core_err_trace(i32 {d}, i32 {d}) #1\n", .{ index, restarts });
+        // ERROR-TRACE-5/6: zero inline cost and the compiler-owned preserving ABI.
+        try out.print(self.a(), "  call preserve_mostcc void @myl_core_err_trace_{s}_preserve_most(i32 {d}) #1\n", .{ action_symbol, index });
     }
 
     /// The text of string constant `raw` (a converting `?`'s `Union.case`), or "?".
@@ -2296,6 +2324,8 @@ const FunctionEmitter = struct {
         const signature = if (inst.op == .call_indirect) m.compound(self.typeOf(inst.a)).@"fn" else m.functions.items[inst.a.index()].signature;
         const external = signature.linkage != .internal;
         if (inst.op == .call) try emit_cap.beforeCall(@TypeOf(self), self, out, inst);
+        if (try emit_bytes.runtimeCall(@TypeOf(self), @TypeOf(out), self, out, name, inst)) return;
+        if (try emit_text_split.runtimeCall(@TypeOf(self), @TypeOf(out), self, out, name, inst)) return;
         const borrowed_bytes = external and signature.ret == .bytes and signature.owned == 0;
         const text_parameter = signature.params.len == 1 and signature.params[0] == .str;
         if (inst.op == .call and borrowed_bytes and text_parameter and

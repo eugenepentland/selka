@@ -1,0 +1,48 @@
+test-core
++- run test 1 pass, 1 fail (2 total)
+guardian/test: test wall 3.26s; slowest over 50ms:
+guardian/test:   3.03s  text_test.test.private split dictionary keys preserve whitespace, UTF8, source snapshots, insertion ownership and captured dictionaries
+guardian/test:   0.22s  text_test.test.private split fusion refuses observable lists, indices, ordinary calls and escaping words or phis
+guardian/test: FAIL — 1 failed of 2
+guardian/test: RESULT {"passed":1,"failed":1,"skipped":0}
+error: 'text_test.test.private split fusion refuses observable lists, indices, ordinary calls and escaping words or phis' failed:
+       guardian/test: 2 test(s) selected
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/src/diagnostic.zig:189:9: 0x1b01feb in fail (compiler.zig)
+               return error.SourceError;
+               ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/src/parser.zig:996:114: 0x1d26e0f in function (compiler.zig)
+                   if (self.current().tag != .ident or !std.mem.eql(u8, self.src.text(self.current().span), "effects")) return self.sink.fail("E_HOST_EFFECTS", span, "host declarations require an explicit effects(host, ...) contract");
+                                                                                                                        ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/src/parser.zig:948:39: 0x1d0f0ca in parse (compiler.zig)
+                   const declared_function = try self.function(null);
+                                             ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/src/compiler.zig:169:23: 0x1d06f61 in parseCached (compiler.zig)
+               self.syntax = try p.parse();
+                             ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/src/compiler.zig:153:9: 0x1d03ba6 in parse (compiler.zig)
+               return self.parseCached(null);
+               ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/src/compiler.zig:219:9: 0x13ccc7e in checkWithCache (compiler.zig)
+               try self.parse();
+               ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/src/compiler.zig:202:9: 0x13cb516 in check (compiler.zig)
+               return self.checkWithCache(null);
+               ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/src/core/test_support.zig:25:5: 0x138494e in buildSource (root_test.zig)
+           try unit.check();
+           ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/src/core/test_support.zig:80:18: 0x13845d2 in optimizedText (root_test.zig)
+           var module = try buildSource(arena, source, &refusal);
+                        ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/src/core/text_test.zig:295:22: 0x13841c4 in test.private split fusion refuses observable lists, indices, ordinary calls and escaping words or phis (root_test.zig)
+               const text = try @import("test_support.zig").optimizedText(arena.allocator(), source);
+                            ^
+failed command: ./.zig-cache/o/28305f0e857ce5ec4f1589eed8b6b042/test --cache-dir=./.zig-cache --seed=0x5aa25e1e --listen=-
+
+Build Summary: 3/5 steps succeeded (1 failed); 1/2 tests passed (1 failed)
+test-core transitive failure
++- run test 1 pass, 1 fail (2 total)
+   +- compile test debug native success 997ms MaxRSS:300M
+      +- options success
+         +- compile exe mylang-core debug native success 1s MaxRSS:343M
+

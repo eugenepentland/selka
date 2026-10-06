@@ -28,8 +28,10 @@ comptime {
     _ = @import("s2_ir_test.zig");
     _ = @import("iteration_test.zig");
     _ = @import("text_test.zig");
+    _ = @import("byte_index_test.zig");
     _ = @import("function_build_test.zig");
     _ = @import("dict_test.zig");
+    _ = @import("dict_scalar_store_test.zig");
     _ = @import("number_test.zig");
     _ = @import("s3_ir_test.zig");
     _ = @import("s3_numeric_test.zig");
@@ -39,4 +41,6 @@ comptime {
     _ = @import("s3_none_keys_test.zig");
     _ = @import("s3_list_methods_test.zig");
     _ = @import("s3_number_test.zig");
+    _ = @import("fuse_text_scalar_test.zig");
+    _ = @import("emit_text_split_test.zig");
 }

@@ -1,0 +1,480 @@
+--- 0a5
++++ trace-twins
+@@ -36,7 +36,8 @@
+ declare void @myl_core_print_sep(i64) nounwind
+ declare void @myl_core_print_end(i64) nounwind
+ declare ptr @myl_core_box_new(i64) nounwind
+-declare void @myl_core_err_trace(i32, i32) nounwind cold
++declare preserve_mostcc void @myl_core_err_trace_origin_preserve_most(i32) nounwind cold
++declare preserve_mostcc void @myl_core_err_trace_append_preserve_most(i32) nounwind cold
+ declare void @myl_core_assert_fail(i32) noreturn nounwind cold
+ declare void @llvm.memcpy.p0.p0.i64(ptr noalias nocapture writeonly, ptr noalias nocapture readonly, i64, i1 immarg)
+ declare void @llvm.memmove.p0.p0.i64(ptr nocapture writeonly, ptr nocapture readonly, i64, i1 immarg)
+@@ -1291,7 +1292,7 @@
+   %v16 = call ptr @myl_core_bytes_utf8_error(), !dbg !1000059
+   %u.34 = insertvalue { i8, ptr } poison, i8 1, 0
+   %v17 = insertvalue { i8, ptr } %u.34, ptr %v16, 1
+-  call void @myl_core_err_trace(i32 28, i32 0) #1
++  call preserve_mostcc void @myl_core_err_trace_origin_preserve_most(i32 28) #1
+   br label %b5
+ b5:
+   %v20 = phi { i8, ptr } [ %v14, %b3.20 ], [ %v17, %b4.29 ]
+@@ -2958,7 +2959,7 @@
+   call void @myl_core_free(ptr %cf.22)
+   br label %b1.26
+ b1.26:
+-  call void @myl_core_err_trace(i32 40, i32 1) #1
++  call preserve_mostcc void @myl_core_err_trace_append_preserve_most(i32 40) #1
+   %pw.32 = extractvalue { i8, [2 x i64] } %v5, 1, 0
+   store i64 %pw.32, ptr %stack.31, align 8, !tbaa !7
+   %pw.33 = extractvalue { i8, [2 x i64] } %v5, 1, 1
+@@ -3259,7 +3260,7 @@
+   %fp.226 = getelementptr inbounds i8, ptr %stack.218, i64 8
+   %uw.225 = load i64, ptr %fp.226, align 8, !tbaa !7
+   %v24 = insertvalue { i8, [2 x i64] } %u.224, i64 %uw.225, 1, 1
+-  call void @myl_core_err_trace(i32 41, i32 0) #1
++  call preserve_mostcc void @myl_core_err_trace_origin_preserve_most(i32 41) #1
+   ret { i8, [2 x i64] } %v24
+ b4:
+   %cf.227 = extractvalue { ptr, i64 } %v18, 0
+@@ -4323,7 +4324,7 @@
+   br i1 %v3, label %b1, label %b2
+ b1:
+   %v6 = call ptr @"my.json::fail"({ ptr, i64 } %p0, ptr @myl.str.22), !dbg !1000117
+-  call void @myl_core_err_trace(i32 46, i32 0) #1
++  call preserve_mostcc void @myl_core_err_trace_origin_preserve_most(i32 46) #1
+   store i64 1, ptr %ret, align 8, !tbaa !7
+   %fp.1 = getelementptr inbounds i8, ptr %ret, i64 8
+   store ptr %v6, ptr %fp.1, align 8, !tbaa !7
+@@ -4365,7 +4366,7 @@
+   %v29 = icmp eq i64 %v12, 91
+   br i1 %v29, label %b7, label %b8
+ b5:
+-  call void @myl_core_err_trace(i32 47, i32 1) #1
++  call preserve_mostcc void @myl_core_err_trace_append_preserve_most(i32 47) #1
+   br label %b6
+ b6:
+   %st.21 = extractvalue { i8, [2 x i64] } %v17, 0
+@@ -4410,7 +4411,7 @@
+   %v44 = icmp eq i64 %v12, 34
+   br i1 %v44, label %b11, label %b12
+ b9:
+-  call void @myl_core_err_trace(i32 48, i32 1) #1
++  call preserve_mostcc void @myl_core_err_trace_append_preserve_most(i32 48) #1
+   br label %b10
+ b10:
+   %st.46 = extractvalue { i8, [2 x i64] } %v32, 0
+@@ -4441,7 +4442,7 @@
+   %v64 = icmp eq i64 %v12, 116
+   br i1 %v64, label %b15, label %b16
+ b13:
+-  call void @myl_core_err_trace(i32 49, i32 1) #1
++  call preserve_mostcc void @myl_core_err_trace_append_preserve_most(i32 49) #1
+   %v54 = extractvalue { i8, ptr } %v47, 1
+   %rc.57 = load i32, ptr %v54, align 8, !tbaa !3, !range !8
+   %rs.58 = icmp eq i32 %rc.57, -1
+@@ -4665,7 +4666,7 @@
+   %v83 = icmp eq i64 %v12, 102
+   br i1 %v83, label %b19, label %b20
+ b17:
+-  call void @myl_core_err_trace(i32 50, i32 1) #1
++  call preserve_mostcc void @myl_core_err_trace_append_preserve_most(i32 50) #1
+   br label %b18
+ b18:
+   %st.190 = extractvalue { i8, [2 x i64] } %v71, 0
+@@ -4784,7 +4785,7 @@
+   %v102 = icmp eq i64 %v12, 110
+   br i1 %v102, label %b23, label %b24
+ b21:
+-  call void @myl_core_err_trace(i32 51, i32 1) #1
++  call preserve_mostcc void @myl_core_err_trace_append_preserve_most(i32 51) #1
+   br label %b22
+ b22:
+   %st.262 = extractvalue { i8, [2 x i64] } %v90, 0
+@@ -4901,7 +4902,7 @@
+   %v120 = icmp eq i64 %v12, 45
+   br i1 %v120, label %b27, label %b29
+ b25:
+-  call void @myl_core_err_trace(i32 52, i32 1) #1
++  call preserve_mostcc void @myl_core_err_trace_append_preserve_most(i32 52) #1
+   br label %b26
+ b26:
+   %st.333 = extractvalue { i8, [2 x i64] } %v108, 0
+@@ -4949,7 +4950,7 @@
+   %v122 = call i1 @"my.json::is_digit_byte"(i64 %v12), !dbg !1000127
+   br i1 %v122, label %b27, label %b28
+ b30:
+-  call void @myl_core_err_trace(i32 53, i32 1) #1
++  call preserve_mostcc void @myl_core_err_trace_append_preserve_most(i32 53) #1
+   br label %b31
+ b31:
+   %st.358 = extractvalue { i8, [2 x i64] } %v126, 0
+@@ -4970,7 +4971,7 @@
+   ret void
+ b32:
+   %v141 = call ptr @"my.json::fail"({ ptr, i64 } %v11, ptr @myl.str.26), !dbg !1000128
+-  call void @myl_core_err_trace(i32 54, i32 0) #1
++  call preserve_mostcc void @myl_core_err_trace_origin_preserve_most(i32 54) #1
+   store i64 1, ptr %ret, align 8, !tbaa !7
+   %fp.368 = getelementptr inbounds i8, ptr %ret, i64 8
+   store ptr %v141, ptr %fp.368, align 8, !tbaa !7
+@@ -4983,7 +4984,7 @@
+   ret void
+ b33:
+   %v147 = call ptr @"my.json::fail"({ ptr, i64 } %v11, ptr @myl.str.27), !dbg !1000129
+-  call void @myl_core_err_trace(i32 55, i32 0) #1
++  call preserve_mostcc void @myl_core_err_trace_origin_preserve_most(i32 55) #1
+   store i64 1, ptr %ret, align 8, !tbaa !7
+   %fp.373 = getelementptr inbounds i8, ptr %ret, i64 8
+   store ptr %v147, ptr %fp.373, align 8, !tbaa !7
+@@ -5971,7 +5972,7 @@
+   br label %b6.32
+ b6.32:
+   %v58 = call ptr @"my.json::fail"({ ptr, i64 } %v16, ptr @myl.str.37), !dbg !1000162
+-  call void @myl_core_err_trace(i32 68, i32 0) #1
++  call preserve_mostcc void @myl_core_err_trace_origin_preserve_most(i32 68) #1
+   store i64 1, ptr %ret, align 8, !tbaa !7
+   %fp.37 = getelementptr inbounds i8, ptr %ret, i64 8
+   store ptr %v58, ptr %fp.37, align 8, !tbaa !7
+@@ -5997,7 +5998,7 @@
+   call void @myl_core_free(ptr %v24)
+   br label %b7.45
+ b7.45:
+-  call void @myl_core_err_trace(i32 69, i32 1) #1
++  call preserve_mostcc void @myl_core_err_trace_append_preserve_most(i32 69) #1
+   %pw.51 = extractvalue { i8, [1 x i64] } %v22, 1, 0
+   store i64 %pw.51, ptr %stack.50, align 8, !tbaa !7
+   %v30 = load ptr, ptr %stack.50, align 8, !tbaa !7
+@@ -6116,7 +6117,7 @@
+   br label %b11.108
+ b11.108:
+   %v49 = call ptr @"my.json::fail"({ ptr, i64 } %v35, ptr @myl.str.36), !dbg !1000166
+-  call void @myl_core_err_trace(i32 71, i32 0) #1
++  call preserve_mostcc void @myl_core_err_trace_origin_preserve_most(i32 71) #1
+   store i64 1, ptr %ret, align 8, !tbaa !7
+   %fp.113 = getelementptr inbounds i8, ptr %ret, i64 8
+   store ptr %v49, ptr %fp.113, align 8, !tbaa !7
+@@ -6248,7 +6249,7 @@
+ b6:
+   call void @myl_core_free(ptr %v35)
+   %v60 = call ptr @"my.json::fail"({ ptr, i64 } %v16, ptr @myl.str.39), !dbg !1000175
+-  call void @myl_core_err_trace(i32 76, i32 0) #1
++  call preserve_mostcc void @myl_core_err_trace_origin_preserve_most(i32 76) #1
+   store i64 1, ptr %ret, align 8, !tbaa !7
+   %fp.36 = getelementptr inbounds i8, ptr %ret, i64 8
+   store ptr %v60, ptr %fp.36, align 8, !tbaa !7
+@@ -6261,7 +6262,7 @@
+   ret void
+ b7:
+   call void @myl_core_free(ptr %v35)
+-  call void @myl_core_err_trace(i32 77, i32 1) #1
++  call preserve_mostcc void @myl_core_err_trace_append_preserve_most(i32 77) #1
+   %pw.42 = extractvalue { i8, [2 x i64] } %v23, 1, 0
+   store i64 %pw.42, ptr %stack.41, align 8, !tbaa !7
+   %pw.43 = extractvalue { i8, [2 x i64] } %v23, 1, 1
+@@ -6611,7 +6612,7 @@
+ b11:
+   call void @myl_core_free(ptr %v36)
+   %v51 = call ptr @"my.json::fail"({ ptr, i64 } %v37, ptr @myl.str.38), !dbg !1000179
+-  call void @myl_core_err_trace(i32 79, i32 0) #1
++  call preserve_mostcc void @myl_core_err_trace_origin_preserve_most(i32 79) #1
+   store i64 1, ptr %ret, align 8, !tbaa !7
+   %fp.263 = getelementptr inbounds i8, ptr %ret, i64 8
+   store ptr %v51, ptr %fp.263, align 8, !tbaa !7
+@@ -6733,7 +6734,7 @@
+   %v115 = call ptr @"my.json::fail"({ ptr, i64 } %v113, ptr @myl.str.41), !dbg !1000187
+   %u.33 = insertvalue { i8, ptr } poison, i8 1, 0
+   %v116 = insertvalue { i8, ptr } %u.33, ptr %v115, 1
+-  call void @myl_core_err_trace(i32 84, i32 0) #1
++  call preserve_mostcc void @myl_core_err_trace_origin_preserve_most(i32 84) #1
+   %rm.34 = insertvalue { { i8, ptr }, { ptr, i64 } } poison, { i8, ptr } %v116, 0
+   %v118 = insertvalue { { i8, ptr }, { ptr, i64 } } %rm.34, { ptr, i64 } %v113, 1
+   ret { { i8, ptr }, { ptr, i64 } } %v118
+@@ -6792,7 +6793,7 @@
+ b13:
+   br label %b10
+ b14:
+-  call void @myl_core_err_trace(i32 86, i32 1) #1
++  call preserve_mostcc void @myl_core_err_trace_append_preserve_most(i32 86) #1
+   br label %b15
+ b15:
+   %rm.52 = insertvalue { { i8, ptr }, { ptr, i64 } } poison, { i8, ptr } %v46, 0
+@@ -6817,7 +6818,7 @@
+   %v63 = call ptr @"my.json::fail"({ ptr, i64 } %v61, ptr @myl.str.40), !dbg !1000191
+   %u.61 = insertvalue { i8, ptr } poison, i8 1, 0
+   %v64 = insertvalue { i8, ptr } %u.61, ptr %v63, 1
+-  call void @myl_core_err_trace(i32 87, i32 0) #1
++  call preserve_mostcc void @myl_core_err_trace_origin_preserve_most(i32 87) #1
+   %rm.62 = insertvalue { { i8, ptr }, { ptr, i64 } } poison, { i8, ptr } %v64, 0
+   %v66 = insertvalue { { i8, ptr }, { ptr, i64 } } %rm.62, { ptr, i64 } %v61, 1
+   ret { { i8, ptr }, { ptr, i64 } } %v66
+@@ -6897,7 +6898,7 @@
+   call void @myl_core_free(ptr %v94)
+   br label %b25.87
+ b25.87:
+-  call void @myl_core_err_trace(i32 89, i32 1) #1
++  call preserve_mostcc void @myl_core_err_trace_append_preserve_most(i32 89) #1
+   %pw.93 = extractvalue { i8, [1 x i64] } %v92, 1, 0
+   store i64 %pw.93, ptr %stack.92, align 8, !tbaa !7
+   %v100 = load ptr, ptr %stack.92, align 8, !tbaa !7
+@@ -7040,7 +7041,7 @@
+   br i1 %v10, label %b1, label %b2
+ b1:
+   %v13 = call ptr @"my.json::fail"({ ptr, i64 } %p0, ptr @myl.str.42), !dbg !1000197
+-  call void @myl_core_err_trace(i32 91, i32 0) #1
++  call preserve_mostcc void @myl_core_err_trace_origin_preserve_most(i32 91) #1
+   store i64 1, ptr %ret, align 8, !tbaa !7
+   %fp.7 = getelementptr inbounds i8, ptr %ret, i64 8
+   store ptr %v13, ptr %fp.7, align 8, !tbaa !7
+@@ -7084,7 +7085,7 @@
+   br i1 %v24, label %b3, label %b4
+ b3:
+   %v27 = call ptr @"my.json::fail"({ ptr, i64 } %p0, ptr @myl.str.43), !dbg !1000201
+-  call void @myl_core_err_trace(i32 93, i32 0) #1
++  call preserve_mostcc void @myl_core_err_trace_origin_preserve_most(i32 93) #1
+   store i64 1, ptr %ret, align 8, !tbaa !7
+   %fp.25 = getelementptr inbounds i8, ptr %ret, i64 8
+   store ptr %v27, ptr %fp.25, align 8, !tbaa !7
+@@ -7225,7 +7226,7 @@
+   %v7 = icmp eq i32 %v5, 1
+   br i1 %v7, label %b1, label %b2
+ b1:
+-  call void @myl_core_err_trace(i32 95, i32 1) #1
++  call preserve_mostcc void @myl_core_err_trace_append_preserve_most(i32 95) #1
+   %pw.3 = extractvalue { i8, [1 x i64] } %v3, 1, 0
+   store i64 %pw.3, ptr %stack.2, align 8, !tbaa !7
+   %v10 = load ptr, ptr %stack.2, align 8, !tbaa !7
+@@ -7306,7 +7307,7 @@
+   %v20 = icmp eq i32 %v18, 1
+   br i1 %v20, label %b3, label %b4
+ b3:
+-  call void @myl_core_err_trace(i32 96, i32 1) #1
++  call preserve_mostcc void @myl_core_err_trace_append_preserve_most(i32 96) #1
+   %pw.49 = extractvalue { i8, [1 x i64] } %v16, 1, 0
+   store i64 %pw.49, ptr %stack.48, align 8, !tbaa !7
+   %v23 = load ptr, ptr %stack.48, align 8, !tbaa !7
+@@ -7387,7 +7388,7 @@
+   %v33 = icmp eq i32 %v31, 1
+   br i1 %v33, label %b5, label %b6
+ b5:
+-  call void @myl_core_err_trace(i32 97, i32 1) #1
++  call preserve_mostcc void @myl_core_err_trace_append_preserve_most(i32 97) #1
+   %pw.95 = extractvalue { i8, [1 x i64] } %v29, 1, 0
+   store i64 %pw.95, ptr %stack.94, align 8, !tbaa !7
+   %v36 = load ptr, ptr %stack.94, align 8, !tbaa !7
+@@ -7520,7 +7521,7 @@
+   br label %b18
+ b18:
+   %v80 = call ptr @"my.json::fail"({ ptr, i64 } %v30, ptr @myl.str.44), !dbg !1000211
+-  call void @myl_core_err_trace(i32 98, i32 0) #1
++  call preserve_mostcc void @myl_core_err_trace_origin_preserve_most(i32 98) #1
+   store i64 1, ptr %ret, align 8, !tbaa !7
+   %fp.153 = getelementptr inbounds i8, ptr %ret, i64 8
+   store ptr %v80, ptr %fp.153, align 8, !tbaa !7
+@@ -7575,7 +7576,7 @@
+   %fp.11 = getelementptr inbounds i8, ptr %stack.3, i64 8
+   %uw.10 = load i64, ptr %fp.11, align 8, !tbaa !7
+   %v10 = insertvalue { i8, [2 x i64] } %u.9, i64 %uw.10, 1, 1
+-  call void @myl_core_err_trace(i32 100, i32 0) #1
++  call preserve_mostcc void @myl_core_err_trace_origin_preserve_most(i32 100) #1
+   ret { i8, [2 x i64] } %v10
+ b2:
+   %v14 = icmp eq i64 %p0, 0
+@@ -7764,7 +7765,7 @@
+   br i1 %v6, label %b1, label %b2
+ b1:
+   %v9 = call ptr @"my.json::fail"({ ptr, i64 } %v3, ptr @myl.str.49), !dbg !1000220
+-  call void @myl_core_err_trace(i32 102, i32 0) #1
++  call preserve_mostcc void @myl_core_err_trace_origin_preserve_most(i32 102) #1
+   store i64 1, ptr %ret, align 8, !tbaa !7
+   %fp.1 = getelementptr inbounds i8, ptr %ret, i64 8
+   store ptr %v9, ptr %fp.1, align 8, !tbaa !7
+@@ -7786,7 +7787,7 @@
+   %v19 = icmp eq i32 %v17, 1
+   br i1 %v19, label %b3, label %b4
+ b3:
+-  call void @myl_core_err_trace(i32 103, i32 1) #1
++  call preserve_mostcc void @myl_core_err_trace_append_preserve_most(i32 103) #1
+   %v22 = extractvalue { i8, ptr } %v15, 1
+   %rc.8 = load i32, ptr %v22, align 8, !tbaa !3, !range !8
+   %rs.9 = icmp eq i32 %rc.8, -1
+@@ -7899,7 +7900,7 @@
+   br label %b5.49.61
+ b5.49.61:
+   %v32 = call ptr @"my.json::fail"({ ptr, i64 } %v16, ptr @myl.str.50), !dbg !1000222
+-  call void @myl_core_err_trace(i32 104, i32 0) #1
++  call preserve_mostcc void @myl_core_err_trace_origin_preserve_most(i32 104) #1
+   store i64 1, ptr %ret, align 8, !tbaa !7
+   %fp.71 = getelementptr inbounds i8, ptr %ret, i64 8
+   store ptr %v32, ptr %fp.71, align 8, !tbaa !7
+@@ -7960,7 +7961,7 @@
+   br label %b7.80.92
+ b7.80.92:
+   %v43 = call ptr @"my.json::fail"({ ptr, i64 } %v37, ptr @myl.str.51), !dbg !1000225
+-  call void @myl_core_err_trace(i32 105, i32 0) #1
++  call preserve_mostcc void @myl_core_err_trace_origin_preserve_most(i32 105) #1
+   store i64 1, ptr %ret, align 8, !tbaa !7
+   %fp.102 = getelementptr inbounds i8, ptr %ret, i64 8
+   store ptr %v43, ptr %fp.102, align 8, !tbaa !7
+@@ -8055,7 +8056,7 @@
+ rc.then.145.151:
+   br label %b9.134.146
+ b9.134.146:
+-  call void @myl_core_err_trace(i32 108, i32 1) #1
++  call preserve_mostcc void @myl_core_err_trace_append_preserve_most(i32 108) #1
+   %pw.157 = extractvalue { i8, [2 x i64] } %v52, 1, 0
+   store i64 %pw.157, ptr %stack.156, align 8, !tbaa !7
+   %pw.158 = extractvalue { i8, [2 x i64] } %v52, 1, 1
+@@ -8738,7 +8739,7 @@
+   %v9 = call ptr @myl_core_bytes_utf8_error(), !dbg !1000233
+   %u.18 = insertvalue { i8, ptr } poison, i8 1, 0
+   %v10 = insertvalue { i8, ptr } %u.18, ptr %v9, 1
+-  call void @myl_core_err_trace(i32 109, i32 0) #1
++  call preserve_mostcc void @myl_core_err_trace_origin_preserve_most(i32 109) #1
+   br label %b3
+ b3:
+   %v13 = phi { i8, ptr } [ %v7, %b1.4 ], [ %v10, %b2.13 ]
+@@ -8846,7 +8847,7 @@
+ b7:
+   %u.76 = insertvalue { i8, ptr } poison, i8 1, 0
+   %v23 = insertvalue { i8, ptr } %u.76, ptr @myl.str.52, 1
+-  call void @myl_core_err_trace(i32 110, i32 0) #1
++  call preserve_mostcc void @myl_core_err_trace_origin_preserve_most(i32 110) #1
+   ret { i8, ptr } %v23
+ }
+ define internal void @"my.json::read_escape"(ptr noalias sret([40 x i8]) align 8 %ret, { ptr, i64 } %p0, ptr %p1) nounwind uwtable !dbg !1000234 {
+@@ -8864,7 +8865,7 @@
+   br i1 %v161, label %b1, label %b2
+ b1:
+   %v5 = call ptr @"my.json::fail"({ ptr, i64 } %p0, ptr @myl.str.53), !dbg !1000235
+-  call void @myl_core_err_trace(i32 111, i32 0) #1
++  call preserve_mostcc void @myl_core_err_trace_origin_preserve_most(i32 111) #1
+   store i64 1, ptr %ret, align 8, !tbaa !7
+   %fp.2 = getelementptr inbounds i8, ptr %ret, i64 8
+   store ptr %v5, ptr %fp.2, align 8, !tbaa !7
+@@ -9057,7 +9058,7 @@
+   ret void
+ b29:
+   %v138 = call ptr @"my.json::fail"({ ptr, i64 } %v165, ptr @myl.str.54), !dbg !1000238
+-  call void @myl_core_err_trace(i32 113, i32 0) #1
++  call preserve_mostcc void @myl_core_err_trace_origin_preserve_most(i32 113) #1
+   store i64 1, ptr %ret, align 8, !tbaa !7
+   %fp.60 = getelementptr inbounds i8, ptr %ret, i64 8
+   store ptr %v138, ptr %fp.60, align 8, !tbaa !7
+@@ -9092,7 +9093,7 @@
+   %v149 = icmp eq i32 %v147, 1
+   br i1 %v149, label %b31, label %b32
+ b31:
+-  call void @myl_core_err_trace(i32 114, i32 1) #1
++  call preserve_mostcc void @myl_core_err_trace_append_preserve_most(i32 114) #1
+   br label %b32
+ b32:
+   %st.79 = extractvalue { i8, [1 x i64] } %v144, 0
+@@ -9277,7 +9278,7 @@
+   store ptr %v15, ptr %stack.7, align 8, !tbaa !7
+   %uw.8 = load i64, ptr %stack.7, align 8, !tbaa !7
+   %v16 = insertvalue { i8, [1 x i64] } %u.6, i64 %uw.8, 1, 0
+-  call void @myl_core_err_trace(i32 116, i32 0) #1
++  call preserve_mostcc void @myl_core_err_trace_origin_preserve_most(i32 116) #1
+   %rm.9 = insertvalue { { i8, [1 x i64] }, { ptr, i64 } } poison, { i8, [1 x i64] } %v16, 0
+   %v18 = insertvalue { { i8, [1 x i64] }, { ptr, i64 } } %rm.9, { ptr, i64 } %v7, 1
+   ret { { i8, [1 x i64] }, { ptr, i64 } } %v18
+@@ -9325,7 +9326,7 @@
+   store ptr %v36, ptr %stack.21, align 8, !tbaa !7
+   %uw.22 = load i64, ptr %stack.21, align 8, !tbaa !7
+   %v37 = insertvalue { i8, [1 x i64] } %u.20, i64 %uw.22, 1, 0
+-  call void @myl_core_err_trace(i32 118, i32 0) #1
++  call preserve_mostcc void @myl_core_err_trace_origin_preserve_most(i32 118) #1
+   %rm.23 = insertvalue { { i8, [1 x i64] }, { ptr, i64 } } poison, { i8, [1 x i64] } %v37, 0
+   %v39 = insertvalue { { i8, [1 x i64] }, { ptr, i64 } } %rm.23, { ptr, i64 } %v58, 1
+   ret { { i8, [1 x i64] }, { ptr, i64 } } %v39
+@@ -9398,7 +9399,7 @@
+   store ptr %v20, ptr %stack.13, align 8, !tbaa !7
+   %uw.14 = load i64, ptr %stack.13, align 8, !tbaa !7
+   %v21 = insertvalue { i8, [1 x i64] } %u.12, i64 %uw.14, 1, 0
+-  call void @myl_core_err_trace(i32 120, i32 0) #1
++  call preserve_mostcc void @myl_core_err_trace_origin_preserve_most(i32 120) #1
+   %rm.15 = insertvalue { { i8, [1 x i64] }, { ptr, i64 } } poison, { i8, [1 x i64] } %v21, 0
+   %v23 = insertvalue { { i8, [1 x i64] }, { ptr, i64 } } %rm.15, { ptr, i64 } %v38, 1
+   ret { { i8, [1 x i64] }, { ptr, i64 } } %v23
+@@ -9508,7 +9509,7 @@
+   store ptr %v40, ptr %stack.22, align 8, !tbaa !7
+   %uw.23 = load i64, ptr %stack.22, align 8, !tbaa !7
+   %v41 = insertvalue { i8, [1 x i64] } %u.21, i64 %uw.23, 1, 0
+-  call void @myl_core_err_trace(i32 123, i32 0) #1
++  call preserve_mostcc void @myl_core_err_trace_origin_preserve_most(i32 123) #1
+   %rm.24 = insertvalue { { i8, [1 x i64] }, { ptr, i64 } } poison, { i8, [1 x i64] } %v41, 0
+   %v43 = insertvalue { { i8, [1 x i64] }, { ptr, i64 } } %rm.24, { ptr, i64 } %v32, 1
+   ret { { i8, [1 x i64] }, { ptr, i64 } } %v43
+@@ -9569,7 +9570,7 @@
+   %v7 = icmp eq i32 %v5, 1
+   br i1 %v7, label %b1, label %b2
+ b1:
+-  call void @myl_core_err_trace(i32 124, i32 1) #1
++  call preserve_mostcc void @myl_core_err_trace_append_preserve_most(i32 124) #1
+   %pw.3 = extractvalue { i8, [1 x i64] } %v3, 1, 0
+   store i64 %pw.3, ptr %stack.2, align 8, !tbaa !7
+   %v10 = load ptr, ptr %stack.2, align 8, !tbaa !7
+@@ -9647,7 +9648,7 @@
+   br i1 %v16, label %b5, label %b4
+ b3:
+   %v22 = call ptr @"my.json::fail"({ ptr, i64 } %v4, ptr @myl.str.60), !dbg !1000274
+-  call void @myl_core_err_trace(i32 125, i32 0) #1
++  call preserve_mostcc void @myl_core_err_trace_origin_preserve_most(i32 125) #1
+   store i64 1, ptr %ret, align 8, !tbaa !7
+   %fp.47 = getelementptr inbounds i8, ptr %ret, i64 8
+   store ptr %v22, ptr %fp.47, align 8, !tbaa !7
+@@ -9690,7 +9691,7 @@
+   br i1 %v32, label %b6, label %b7
+ b9:
+   %v49 = call ptr @"my.json::fail"({ ptr, i64 } %v4, ptr @myl.str.61), !dbg !1000277
+-  call void @myl_core_err_trace(i32 126, i32 0) #1
++  call preserve_mostcc void @myl_core_err_trace_origin_preserve_most(i32 126) #1
+   store i64 1, ptr %ret, align 8, !tbaa !7
+   %fp.60 = getelementptr inbounds i8, ptr %ret, i64 8
+   store ptr %v49, ptr %fp.60, align 8, !tbaa !7
+@@ -9719,7 +9720,7 @@
+   br i1 %v57, label %b11, label %b12
+ b11:
+   %v60 = call ptr @"my.json::fail"({ ptr, i64 } %v110, ptr @myl.str.62), !dbg !1000280
+-  call void @myl_core_err_trace(i32 128, i32 0) #1
++  call preserve_mostcc void @myl_core_err_trace_origin_preserve_most(i32 128) #1
+   store i64 1, ptr %ret, align 8, !tbaa !7
+   %fp.70 = getelementptr inbounds i8, ptr %ret, i64 8
+   store ptr %v60, ptr %fp.70, align 8, !tbaa !7
+@@ -9751,7 +9752,7 @@
+   %v71 = icmp eq i32 %v69, 1
+   br i1 %v71, label %b13, label %b14
+ b13:
+-  call void @myl_core_err_trace(i32 130, i32 1) #1
++  call preserve_mostcc void @myl_core_err_trace_append_preserve_most(i32 130) #1
+   %pw.82 = extractvalue { i8, [1 x i64] } %v67, 1, 0
+   store i64 %pw.82, ptr %stack.81, align 8, !tbaa !7
+   %v74 = load ptr, ptr %stack.81, align 8, !tbaa !7
+@@ -9829,7 +9830,7 @@
+   br i1 %v80, label %b15, label %b17
+ b15:
+   %v87 = call ptr @"my.json::fail"({ ptr, i64 } %v68, ptr @myl.str.63), !dbg !1000283
+-  call void @myl_core_err_trace(i32 131, i32 0) #1
++  call preserve_mostcc void @myl_core_err_trace_origin_preserve_most(i32 131) #1
+   store i64 1, ptr %ret, align 8, !tbaa !7
+   %fp.126 = getelementptr inbounds i8, ptr %ret, i64 8
+   store ptr %v87, ptr %fp.126, align 8, !tbaa !7
+@@ -9943,7 +9944,7 @@
+   store ptr %v12, ptr %stack.7, align 8, !tbaa !7
+   %uw.8 = load i64, ptr %stack.7, align 8, !tbaa !7
+   %v13 = insertvalue { i8, [1 x i64] } %u.6, i64 %uw.8, 1, 0
+-  call void @myl_core_err_trace(i32 133, i32 0) #1
++  call preserve_mostcc void @myl_core_err_trace_origin_preserve_most(i32 133) #1
+   %rm.9 = insertvalue { { i8, [1 x i64] }, { ptr, i64 } } poison, { i8, [1 x i64] } %v13, 0
+   %v15 = insertvalue { { i8, [1 x i64] }, { ptr, i64 } } %rm.9, { ptr, i64 } %v8, 1
+   ret { { i8, [1 x i64] }, { ptr, i64 } } %v15
+@@ -9959,7 +9960,7 @@
+   store ptr %v23, ptr %stack.11, align 8, !tbaa !7
+   %uw.12 = load i64, ptr %stack.11, align 8, !tbaa !7
+   %v24 = insertvalue { i8, [1 x i64] } %u.10, i64 %uw.12, 1, 0
+-  call void @myl_core_err_trace(i32 134, i32 0) #1
++  call preserve_mostcc void @myl_core_err_trace_origin_preserve_most(i32 134) #1
+   %rm.13 = insertvalue { { i8, [1 x i64] }, { ptr, i64 } } poison, { i8, [1 x i64] } %v24, 0
+   %v26 = insertvalue { { i8, [1 x i64] }, { ptr, i64 } } %rm.13, { ptr, i64 } %v8, 1
+   ret { { i8, [1 x i64] }, { ptr, i64 } } %v26

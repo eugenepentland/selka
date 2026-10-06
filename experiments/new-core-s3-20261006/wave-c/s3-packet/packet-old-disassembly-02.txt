@@ -1,0 +1,248 @@
+
+.mylang-cache/s3-packet/rows-01/row_packet_decode_old:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+0000000001022480 <.text+0xb0b0>:
+ 1022480:	1c 99                	sbb    $0x99,%al
+ 1022482:	00 00                	add    %al,(%rax)
+ 1022484:	85 c0                	test   %eax,%eax
+ 1022486:	74 22                	je     10224aa <memcpy@plt-0x19de6>
+ 1022488:	48 8b 45 20          	mov    0x20(%rbp),%rax
+ 102248c:	4a 89 1c f8          	mov    %rbx,(%rax,%r15,8)
+ 1022490:	49 ff c7             	inc    %r15
+ 1022493:	4c 89 7d 00          	mov    %r15,0x0(%rbp)
+ 1022497:	49 ff c4             	inc    %r12
+ 102249a:	4c 89 65 10          	mov    %r12,0x10(%rbp)
+ 102249e:	31 c9                	xor    %ecx,%ecx
+ 10224a0:	45 31 ed             	xor    %r13d,%r13d
+ 10224a3:	c4 41 21 ef db       	vpxor  %xmm11,%xmm11,%xmm11
+ 10224a8:	eb 30                	jmp    10224da <memcpy@plt-0x19db6>
+ 10224aa:	48 89 5c 24 18       	mov    %rbx,0x18(%rsp)
+ 10224af:	48 8b 55 00          	mov    0x0(%rbp),%rdx
+ 10224b3:	48 8b 7c 24 08       	mov    0x8(%rsp),%rdi
+ 10224b8:	48 89 ee             	mov    %rbp,%rsi
+ 10224bb:	48 8d 4c 24 18       	lea    0x18(%rsp),%rcx
+ 10224c0:	e8 fb 92 00 00       	call   102b7c0 <memcpy@plt-0x10ad0>
+ 10224c5:	b1 01                	mov    $0x1,%cl
+ 10224c7:	85 c0                	test   %eax,%eax
+ 10224c9:	41 bd 00 00 00 00    	mov    $0x0,%r13d
+ 10224cf:	c4 41 21 ef db       	vpxor  %xmm11,%xmm11,%xmm11
+ 10224d4:	0f 84 17 17 00 00    	je     1023bf1 <memcpy@plt-0x1869f>
+ 10224da:	4c 89 f0             	mov    %r14,%rax
+ 10224dd:	48 83 c0 07          	add    $0x7,%rax
+ 10224e1:	0f 80 66 17 00 00    	jo     1023c4d <memcpy@plt-0x18643>
+ 10224e7:	0f b6 d8             	movzbl %al,%ebx
+ 10224ea:	4c 8b 7d 00          	mov    0x0(%rbp),%r15
+ 10224ee:	4c 3b 7d 08          	cmp    0x8(%rbp),%r15
+ 10224f2:	73 3b                	jae    102252f <memcpy@plt-0x19d61>
+ 10224f4:	4c 8b 65 10          	mov    0x10(%rbp),%r12
+ 10224f8:	84 c9                	test   %cl,%cl
+ 10224fa:	74 19                	je     1022515 <memcpy@plt-0x19d7b>
+ 10224fc:	48 8b 7c 24 08       	mov    0x8(%rsp),%rdi
+ 1022501:	48 89 ee             	mov    %rbp,%rsi
+ 1022504:	c5 f8 77             	vzeroupper
+ 1022507:	e8 94 98 00 00       	call   102bda0 <memcpy@plt-0x104f0>
+ 102250c:	c4 41 21 ef db       	vpxor  %xmm11,%xmm11,%xmm11
+ 1022511:	85 c0                	test   %eax,%eax
+ 1022513:	74 1a                	je     102252f <memcpy@plt-0x19d61>
+ 1022515:	48 8b 45 20          	mov    0x20(%rbp),%rax
+ 1022519:	4a 89 1c f8          	mov    %rbx,(%rax,%r15,8)
+ 102251d:	49 ff c7             	inc    %r15
+ 1022520:	4c 89 7d 00          	mov    %r15,0x0(%rbp)
+ 1022524:	49 ff c4             	inc    %r12
+ 1022527:	4c 89 65 10          	mov    %r12,0x10(%rbp)
+ 102252b:	31 c9                	xor    %ecx,%ecx
+ 102252d:	eb 2d                	jmp    102255c <memcpy@plt-0x19d34>
+ 102252f:	48 89 5c 24 18       	mov    %rbx,0x18(%rsp)
+ 1022534:	48 8b 55 00          	mov    0x0(%rbp),%rdx
+ 1022538:	48 8b 7c 24 08       	mov    0x8(%rsp),%rdi
+ 102253d:	48 89 ee             	mov    %rbp,%rsi
+ 1022540:	48 8d 4c 24 18       	lea    0x18(%rsp),%rcx
+ 1022545:	c5 f8 77             	vzeroupper
+ 1022548:	e8 73 92 00 00       	call   102b7c0 <memcpy@plt-0x10ad0>
+ 102254d:	c4 41 21 ef db       	vpxor  %xmm11,%xmm11,%xmm11
+ 1022552:	b1 01                	mov    $0x1,%cl
+ 1022554:	85 c0                	test   %eax,%eax
+ 1022556:	0f 84 95 16 00 00    	je     1023bf1 <memcpy@plt-0x1869f>
+ 102255c:	4c 89 f0             	mov    %r14,%rax
+ 102255f:	48 83 c0 0e          	add    $0xe,%rax
+ 1022563:	0f 80 fb 16 00 00    	jo     1023c64 <memcpy@plt-0x1862c>
+ 1022569:	0f b6 d8             	movzbl %al,%ebx
+ 102256c:	4c 8b 7d 00          	mov    0x0(%rbp),%r15
+ 1022570:	4c 3b 7d 08          	cmp    0x8(%rbp),%r15
+ 1022574:	73 3b                	jae    10225b1 <memcpy@plt-0x19cdf>
+ 1022576:	4c 8b 65 10          	mov    0x10(%rbp),%r12
+ 102257a:	84 c9                	test   %cl,%cl
+ 102257c:	74 19                	je     1022597 <memcpy@plt-0x19cf9>
+ 102257e:	48 8b 7c 24 08       	mov    0x8(%rsp),%rdi
+ 1022583:	48 89 ee             	mov    %rbp,%rsi
+ 1022586:	c5 f8 77             	vzeroupper
+ 1022589:	e8 12 98 00 00       	call   102bda0 <memcpy@plt-0x104f0>
+ 102258e:	c4 41 21 ef db       	vpxor  %xmm11,%xmm11,%xmm11
+ 1022593:	85 c0                	test   %eax,%eax
+ 1022595:	74 1a                	je     10225b1 <memcpy@plt-0x19cdf>
+ 1022597:	48 8b 45 20          	mov    0x20(%rbp),%rax
+ 102259b:	4a 89 1c f8          	mov    %rbx,(%rax,%r15,8)
+ 102259f:	49 ff c7             	inc    %r15
+ 10225a2:	4c 89 7d 00          	mov    %r15,0x0(%rbp)
+ 10225a6:	49 ff c4             	inc    %r12
+ 10225a9:	4c 89 65 10          	mov    %r12,0x10(%rbp)
+ 10225ad:	31 c9                	xor    %ecx,%ecx
+ 10225af:	eb 2d                	jmp    10225de <memcpy@plt-0x19cb2>
+ 10225b1:	48 89 5c 24 18       	mov    %rbx,0x18(%rsp)
+ 10225b6:	48 8b 55 00          	mov    0x0(%rbp),%rdx
+ 10225ba:	48 8b 7c 24 08       	mov    0x8(%rsp),%rdi
+ 10225bf:	48 89 ee             	mov    %rbp,%rsi
+ 10225c2:	48 8d 4c 24 18       	lea    0x18(%rsp),%rcx
+ 10225c7:	c5 f8 77             	vzeroupper
+ 10225ca:	e8 f1 91 00 00       	call   102b7c0 <memcpy@plt-0x10ad0>
+ 10225cf:	c4 41 21 ef db       	vpxor  %xmm11,%xmm11,%xmm11
+ 10225d4:	b1 01                	mov    $0x1,%cl
+ 10225d6:	85 c0                	test   %eax,%eax
+ 10225d8:	0f 84 13 16 00 00    	je     1023bf1 <memcpy@plt-0x1869f>
+ 10225de:	4c 89 f0             	mov    %r14,%rax
+ 10225e1:	48 83 c0 15          	add    $0x15,%rax
+ 10225e5:	0f 80 90 16 00 00    	jo     1023c7b <memcpy@plt-0x18615>
+ 10225eb:	0f b6 d8             	movzbl %al,%ebx
+ 10225ee:	4c 8b 75 00          	mov    0x0(%rbp),%r14
+ 10225f2:	4c 3b 75 08          	cmp    0x8(%rbp),%r14
+ 10225f6:	73 39                	jae    1022631 <memcpy@plt-0x19c5f>
+ 10225f8:	4c 8b 7d 10          	mov    0x10(%rbp),%r15
+ 10225fc:	84 c9                	test   %cl,%cl
+ 10225fe:	74 19                	je     1022619 <memcpy@plt-0x19c77>
+ 1022600:	48 8b 7c 24 08       	mov    0x8(%rsp),%rdi
+ 1022605:	48 89 ee             	mov    %rbp,%rsi
+ 1022608:	c5 f8 77             	vzeroupper
+ 102260b:	e8 90 97 00 00       	call   102bda0 <memcpy@plt-0x104f0>
+ 1022610:	c4 41 21 ef db       	vpxor  %xmm11,%xmm11,%xmm11
+ 1022615:	85 c0                	test   %eax,%eax
+ 1022617:	74 18                	je     1022631 <memcpy@plt-0x19c5f>
+ 1022619:	48 8b 45 20          	mov    0x20(%rbp),%rax
+ 102261d:	4a 89 1c f0          	mov    %rbx,(%rax,%r14,8)
+ 1022621:	49 ff c6             	inc    %r14
+ 1022624:	4c 89 75 00          	mov    %r14,0x0(%rbp)
+ 1022628:	49 ff c7             	inc    %r15
+ 102262b:	4c 89 7d 10          	mov    %r15,0x10(%rbp)
+ 102262f:	eb 2b                	jmp    102265c <memcpy@plt-0x19c34>
+ 1022631:	48 89 5c 24 18       	mov    %rbx,0x18(%rsp)
+ 1022636:	48 8b 55 00          	mov    0x0(%rbp),%rdx
+ 102263a:	48 8b 7c 24 08       	mov    0x8(%rsp),%rdi
+ 102263f:	48 89 ee             	mov    %rbp,%rsi
+ 1022642:	48 8d 4c 24 18       	lea    0x18(%rsp),%rcx
+ 1022647:	c5 f8 77             	vzeroupper
+ 102264a:	e8 71 91 00 00       	call   102b7c0 <memcpy@plt-0x10ad0>
+ 102264f:	c4 41 21 ef db       	vpxor  %xmm11,%xmm11,%xmm11
+ 1022654:	85 c0                	test   %eax,%eax
+ 1022656:	0f 84 95 15 00 00    	je     1023bf1 <memcpy@plt-0x1869f>
+ 102265c:	48 8b 45 f0          	mov    -0x10(%rbp),%rax
+ 1022660:	48 b9 02 00 00 00 00 	movabs $0x4000000000000002,%rcx
+ 1022667:	00 00 40 
+ 102266a:	48 85 c8             	test   %rcx,%rax
+ 102266d:	4c 8b 7c 24 10       	mov    0x10(%rsp),%r15
+ 1022672:	4c 8b a4 24 d0 00 00 	mov    0xd0(%rsp),%r12
+ 1022679:	00 
+ 102267a:	75 11                	jne    102268d <memcpy@plt-0x19c03>
+ 102267c:	48 8b 4d e8          	mov    -0x18(%rbp),%rcx
+ 1022680:	48 ff c1             	inc    %rcx
+ 1022683:	0f 84 cc 08 00 00    	je     1022f55 <memcpy@plt-0x1933b>
+ 1022689:	48 89 4d e8          	mov    %rcx,-0x18(%rbp)
+ 102268d:	48 89 6c 24 28       	mov    %rbp,0x28(%rsp)
+ 1022692:	48 89 ac 24 e8 00 00 	mov    %rbp,0xe8(%rsp)
+ 1022699:	00 
+ 102269a:	4c 8b 75 00          	mov    0x0(%rbp),%r14
+ 102269e:	4d 85 f6             	test   %r14,%r14
+ 10226a1:	0f 88 f5 15 00 00    	js     1023c9c <memcpy@plt-0x185f4>
+ 10226a7:	49 8d 4e f0          	lea    -0x10(%r14),%rcx
+ 10226ab:	48 ba f1 ff ff ff ff 	movabs $0xffffffffffffff1,%rdx
+ 10226b2:	ff ff 0f 
+ 10226b5:	48 39 d1             	cmp    %rdx,%rcx
+ 10226b8:	0f 83 4f 01 00 00    	jae    102280d <memcpy@plt-0x19a83>
+ 10226be:	48 8b 75 20          	mov    0x20(%rbp),%rsi
+ 10226c2:	4c 89 f1             	mov    %r14,%rcx
+ 10226c5:	48 ba f8 ff ff ff ff 	movabs $0x1ffffffffffffff8,%rdx
+ 10226cc:	ff ff 1f 
+ 10226cf:	48 21 d1             	and    %rdx,%rcx
+ 10226d2:	c5 d9 ef e4          	vpxor  %xmm4,%xmm4,%xmm4
+ 10226d6:	31 d2                	xor    %edx,%edx
+ 10226d8:	c5 d1 ef ed          	vpxor  %xmm5,%xmm5,%xmm5
+ 10226dc:	c5 e9 ef d2          	vpxor  %xmm2,%xmm2,%xmm2
+ 10226e0:	c5 e1 ef db          	vpxor  %xmm3,%xmm3,%xmm3
+ 10226e4:	c5 f9 ef c0          	vpxor  %xmm0,%xmm0,%xmm0
+ 10226e8:	c5 f1 ef c9          	vpxor  %xmm1,%xmm1,%xmm1
+ 10226ec:	0f 1f 40 00          	nopl   0x0(%rax)
+ 10226f0:	c5 fe 6f 34 d6       	vmovdqu (%rsi,%rdx,8),%ymm6
+ 10226f5:	c5 fe 6f 7c d6 20    	vmovdqu 0x20(%rsi,%rdx,8),%ymm7
+ 10226fb:	c5 cd d4 c0          	vpaddq %ymm0,%ymm6,%ymm0
+ 10226ff:	c5 c5 d4 c9          	vpaddq %ymm1,%ymm7,%ymm1
+ 1022703:	c5 25 fb c6          	vpsubq %ymm6,%ymm11,%ymm8
+ 1022707:	c4 c3 4d 4b f0 60    	vblendvpd %ymm6,%ymm8,%ymm6,%ymm6
+ 102270d:	c5 25 fb c7          	vpsubq %ymm7,%ymm11,%ymm8
+ 1022711:	c4 c3 45 4b f8 70    	vblendvpd %ymm7,%ymm8,%ymm7,%ymm7
+ 1022717:	c5 bd 73 d6 20       	vpsrlq $0x20,%ymm6,%ymm8
+ 102271c:	c5 bd d4 e4          	vpaddq %ymm4,%ymm8,%ymm4
+ 1022720:	c5 bd 73 d7 20       	vpsrlq $0x20,%ymm7,%ymm8
+ 1022725:	c5 bd d4 ed          	vpaddq %ymm5,%ymm8,%ymm5
+ 1022729:	c4 c3 4d 02 f3 aa    	vpblendd $0xaa,%ymm11,%ymm6,%ymm6
+ 102272f:	c5 cd d4 d2          	vpaddq %ymm2,%ymm6,%ymm2
+ 1022733:	c4 c3 45 02 f3 aa    	vpblendd $0xaa,%ymm11,%ymm7,%ymm6
+ 1022739:	c5 cd d4 db          	vpaddq %ymm3,%ymm6,%ymm3
+ 102273d:	48 83 c2 08          	add    $0x8,%rdx
+ 1022741:	48 39 d1             	cmp    %rdx,%rcx
+ 1022744:	75 aa                	jne    10226f0 <memcpy@plt-0x19ba0>
+ 1022746:	c5 d5 d4 e4          	vpaddq %ymm4,%ymm5,%ymm4
+ 102274a:	c4 e3 7d 39 e5 01    	vextracti128 $0x1,%ymm4,%xmm5
+ 1022750:	c5 d9 d4 e5          	vpaddq %xmm5,%xmm4,%xmm4
+ 1022754:	c5 f9 70 ec ee       	vpshufd $0xee,%xmm4,%xmm5
+ 1022759:	c5 d9 d4 e5          	vpaddq %xmm5,%xmm4,%xmm4
+ 102275d:	c4 e1 f9 7e e2       	vmovq  %xmm4,%rdx
+ 1022762:	c5 e5 d4 d2          	vpaddq %ymm2,%ymm3,%ymm2
+ 1022766:	c4 e3 7d 39 d3 01    	vextracti128 $0x1,%ymm2,%xmm3
+ 102276c:	c5 e9 d4 d3          	vpaddq %xmm3,%xmm2,%xmm2
+ 1022770:	c5 f9 70 da ee       	vpshufd $0xee,%xmm2,%xmm3
+ 1022775:	c5 e9 d4 d3          	vpaddq %xmm3,%xmm2,%xmm2
+ 1022779:	c4 e1 f9 7e d7       	vmovq  %xmm2,%rdi
+ 102277e:	c5 f5 d4 c0          	vpaddq %ymm0,%ymm1,%ymm0
+ 1022782:	c4 e3 7d 39 c1 01    	vextracti128 $0x1,%ymm0,%xmm1
+ 1022788:	c5 f9 d4 c1          	vpaddq %xmm1,%xmm0,%xmm0
+ 102278c:	c5 f9 70 c8 ee       	vpshufd $0xee,%xmm0,%xmm1
+ 1022791:	c5 f9 d4 c1          	vpaddq %xmm1,%xmm0,%xmm0
+ 1022795:	c4 e1 f9 7e c3       	vmovq  %xmm0,%rbx
+ 102279a:	49 39 ce             	cmp    %rcx,%r14
+ 102279d:	74 27                	je     10227c6 <memcpy@plt-0x19aca>
+ 102279f:	90                   	nop
+ 10227a0:	4c 8b 04 ce          	mov    (%rsi,%rcx,8),%r8
+ 10227a4:	4c 01 c3             	add    %r8,%rbx
+ 10227a7:	4d 89 c1             	mov    %r8,%r9
+ 10227aa:	49 f7 d9             	neg    %r9
+ 10227ad:	4d 0f 48 c8          	cmovs  %r8,%r9
+ 10227b1:	45 89 c8             	mov    %r9d,%r8d
+ 10227b4:	49 c1 e9 20          	shr    $0x20,%r9
+ 10227b8:	4c 01 ca             	add    %r9,%rdx
+ 10227bb:	4c 01 c7             	add    %r8,%rdi
+ 10227be:	48 ff c1             	inc    %rcx
+ 10227c1:	49 39 ce             	cmp    %rcx,%r14
+ 10227c4:	75 da                	jne    10227a0 <memcpy@plt-0x19af0>
+ 10227c6:	b9 00 00 00 80       	mov    $0x80000000,%ecx
+ 10227cb:	48 39 ca             	cmp    %rcx,%rdx
+ 10227ce:	73 1a                	jae    10227ea <memcpy@plt-0x19aa6>
+ 10227d0:	b9 fe ff ff ff       	mov    $0xfffffffe,%ecx
+ 10227d5:	49 39 ce             	cmp    %rcx,%r14
+ 10227d8:	77 10                	ja     10227ea <memcpy@plt-0x19aa6>
+ 10227da:	48 c1 e2 20          	shl    $0x20,%rdx
+ 10227de:	48 01 fa             	add    %rdi,%rdx
+ 10227e1:	48 09 fa             	or     %rdi,%rdx
+ 10227e4:	0f 89 2e 02 00 00    	jns    1022a18 <memcpy@plt-0x19878>
+ 10227ea:	31 ff                	xor    %edi,%edi
+ 10227ec:	31 d2                	xor    %edx,%edx
+ 10227ee:	31 db                	xor    %ebx,%ebx
+ 10227f0:	48 8b 0c fe          	mov    (%rsi,%rdi,8),%rcx
+ 10227f4:	48 01 cb             	add    %rcx,%rbx
+ 10227f7:	0f 80 80 13 00 00    	jo     1023b7d <memcpy@plt-0x18713>
+ 10227fd:	48 ff c7             	inc    %rdi
+ 1022800:	48 89 da             	mov    %rbx,%rdx
+ 1022803:	49 39 fe             	cmp    %rdi,%r14
+ 1022806:	75 e8                	jne    10227f0 <memcpy@plt-0x19aa0>
+ 1022808:	e9 0b 02 00 00       	jmp    1022a18 <memcpy@plt-0x19878>
+ 102280d:	4d 85 f6             	test   %r14,%r14

@@ -1,0 +1,7 @@
+build-slot: all 1 gate slot(s) busy; waiting (0s so far)
+build-slot: all 1 gate slot(s) busy; waiting (60s so far)
+build-slot: gate slot 1 after 90s (all 1 gate slot(s) busy)
+old: exact output, zero exit, empty stderr
+debug: exact output, zero exit, empty stderr
+release: exact output, zero exit, empty stderr
+verify: exact output, zero exit, empty stderr

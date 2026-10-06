@@ -1,0 +1,33 @@
+build-slot: all 1 gate slot(s) busy; waiting (0s so far)
+build-slot: gate slot 1 after 10s (all 1 gate slot(s) busy)
+test-core
++- run test 3 pass, 1 fail (4 total)
+guardian/test: test wall 3.47s; slowest over 50ms:
+guardian/test:   3.19s  text_test.test.private split dictionary keys preserve whitespace, UTF8, source snapshots, insertion ownership and captured dictionaries
+guardian/test:   0.26s  dict_scalar_store_test.test.scalar dictionary stores preserve snapshots, indexed tombstones, bool, unit, narrow integers and float NaNs in every mode
+guardian/test: FAIL — 1 failed of 4
+guardian/test: RESULT {"passed":3,"failed":1,"skipped":0}
+error: 'dict_scalar_store_test.test.scalar dictionary stores preserve snapshots, indexed tombstones, bool, unit, narrow integers and float NaNs in every mode' failed:
+       guardian/test: 4 test(s) selected
+       scalar store fixture: d_scalar_stores.my:26:68: error[E_TYPE]: aggregate equality is not defined; compare the relevant elements explicitly
+             return len(snapshot) == 2 and len(values) == 1 and snapshot[2] == None and values[1] == None
+                                                                            ^
+       
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:614:14: 0x1376079 in expect (std.zig)
+           if (!ok) return error.TestUnexpectedResult;
+                    ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/src/core/dict_scalar_store_test.zig:18:9: 0x1376d9a in qualified (root_test.zig)
+               try std.testing.expect(result.term == .exited and result.term.exited == 0);
+               ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/src/core/dict_scalar_store_test.zig:31:5: 0x1377ce7 in test.scalar dictionary stores preserve snapshots, indexed tombstones, bool, unit, narrow integers and float NaNs in every mode (root_test.zig)
+           try qualified(arena.allocator());
+           ^
+failed command: ./.zig-cache/o/e30213fcccdb5211a0dedcfa9d44e514/test --cache-dir=./.zig-cache --seed=0x2c86120a --listen=-
+
+Build Summary: 3/5 steps succeeded (1 failed); 3/4 tests passed (1 failed)
+test-core transitive failure
++- run test 3 pass, 1 fail (4 total)
+   +- compile test debug native success 989ms MaxRSS:298M
+      +- options cached
+         +- compile exe mylang-core debug native cached 7ms MaxRSS:38M
+

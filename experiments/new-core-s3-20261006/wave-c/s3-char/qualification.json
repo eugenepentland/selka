@@ -1,0 +1,78 @@
+{
+  "compiler_runtime_source": "3f47456ce70a4d2365fe1107123bf59a894fd859",
+  "test_only_source": "c7673da2fd7819242e4c86fe973f05c8a1d18486",
+  "base": "ac81831bd9e6100bf8d31cc07ca97bcff9f82d6c",
+  "new_sha256": "751087df7f064dd9a759e724ddff1edd1512d56e722beb4ef1c606d38b9ca924",
+  "old_sha256": "d36658dbfb78d29213224532a13fd5ad8b7c0e290dbfb87613d9815678305c79",
+  "old_qbe_sha256": "b6139650a99b39131cd791fa1fdc84c09472dc303930bbadd3f8a5348487af4c",
+  "core": {
+    "total_passed": 261,
+    "command_seconds": 124.82,
+    "max_shard_wall": 65.42,
+    "max_test_run_rss_bytes": 264241152.0,
+    "errors": [],
+    "functional_qualified": true,
+    "timing_qualified": true
+  },
+  "exclusive_core_seconds": 1.72,
+  "full_conformance": {
+    "debug_match": 1518,
+    "release_match": 1518,
+    "mismatch": 0,
+    "unsupported": 0,
+    "verify": true,
+    "leakcheck": true,
+    "seconds": 153.89
+  },
+  "strict_fixture": {
+    "qualified": true,
+    "verdicts": 17,
+    "raw_native_runs": 24,
+    "commands": 32,
+    "established_legacy_report_fields_preserved": true
+  },
+  "text50": {
+    "qualified": true,
+    "accepted": 50,
+    "native_comparisons": 750,
+    "command_count": 1200,
+    "native_complete": true,
+    "oracle_unchanged": true,
+    "elapsed_seconds": 241.30988237308338,
+    "harness_sha256": "83d322042b9d2a32c2898a5eb018cf30f4bdd7e5a3bc799e7bc8e9d51cd60959"
+  },
+  "original35": {
+    "exact_qualified_C_definitions": true,
+    "ascii_labels": 0,
+    "qualified_C_source": "9637eb9a1aa4af8ee0ecd88838ceed09b228d812",
+    "authority_residuals": 0
+  },
+  "performance": {
+    "measurement_valid": true,
+    "csv_and_original_t1_both_gates": true,
+    "standalone_json_both_gates": false,
+    "retained_speed_misses": [
+      "json_transform/4096",
+      "json_transform/64"
+    ]
+  },
+  "dependency_json": {
+    "source": "9bebd05b768fe102f649bac51b5dedb2aa47a216",
+    "new_old": [
+      0.203925,
+      0.2112
+    ],
+    "new_zig": [
+      0.985734,
+      1.036705
+    ],
+    "evidence": "dependencies/packet-combined-json-05.json"
+  },
+  "correctness_qualified": true,
+  "integrated_exit_owed": [
+    "combined Core/conformance",
+    "all40 timing/native audit",
+    "full old gate",
+    "9x200 and supplementary split-key200"
+  ]
+}

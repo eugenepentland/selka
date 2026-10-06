@@ -1,0 +1,10 @@
+Traceback (most recent call last):
+  File "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/experiments/new-core-s3-20261006/wave-c/s3-a/fuzz_split.py", line 118, in <module>
+    main()
+    ~~~~^^
+  File "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/experiments/new-core-s3-20261006/wave-c/s3-a/fuzz_split.py", line 97, in main
+    invoke([ROOT / ".mylang-cache/s3-a/oracle/mylang", "build", source, "-o", binary, "--release", "--cache-dir", cache / "old-cache"], directory / "build-old.json")
+    ~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/experiments/new-core-s3-20261006/wave-c/s3-a/fuzz_split.py", line 72, in invoke
+    raise RuntimeError(f"nonzero command: {record}")
+RuntimeError: nonzero command: {'command': ['/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/oracle/mylang', 'build', '/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/experiments/new-core-s3-20261006/wave-c/s3-a/fuzz-split-probe-01/0000/split_0000.my', '-o', '/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/fuzz-split-probe-01/old', '--release', '--cache-dir', '/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/fuzz-split-probe-01/old-cache'], 'status': 1, 'stdout': '', 'stderr': 'split_0000.my:31:16: error[E_BYTE_ESCAPE]: unknown byte escape\n      original = "long00éabcdefghijklmnop\\nlong07éabcdefghijklmnop\\tlong08éabcdefghijklmnop\\tlong07éabcdefghijklmnop\\flong07éabcdefghijklmnop\\f"\n                 ^\n'}

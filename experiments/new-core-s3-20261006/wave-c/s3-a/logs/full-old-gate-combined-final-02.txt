@@ -1,0 +1,16 @@
+S2-X test: waiting/running; source=203c0ca6100344304cbd9fd20d22cc7f9448a145; log=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/experiments/new-core-s3-20261006/wave-c/s3-a/old-gate-combined-final-02/test.log
+S2-X test: elapsed including admission=60s
+S2-X test: elapsed including admission=120s
+S2-X test: elapsed including admission=180s
+S2-X test: elapsed including admission=240s
+S2-X test: elapsed including admission=300s
+S2-X test: elapsed including admission=360s
+S2-X test: elapsed including admission=420s
+S2-X test: elapsed including admission=480s
+S2-X test: elapsed including admission=540s
+S2-X test: elapsed including admission=600s
+S2-X test: elapsed including admission=660s
+S2-X test: elapsed including admission=720s
+S2-X test: elapsed including admission=780s
+S2-X test: exit=1, command=820.59s, wall=825.66s, qualified=False
+RuntimeError: test did not qualify: missing or unsuccessful Build Summary; command exited 1

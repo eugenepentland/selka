@@ -1,0 +1,683 @@
+{
+  "qualified": true,
+  "rows": [
+    {
+      "row": "row_dict_lookup",
+      "functions": [
+        {
+          "function": "\"my.row_dict_lookup::main\"",
+          "exact": true,
+          "stores": [
+            {
+              "value": "%v148",
+              "dictionary": "%v150",
+              "index": "%v152",
+              "removed_private_slot": "%stack.104",
+              "stride": 16,
+              "value_offset_from_block": 40,
+              "value_type": "i64",
+              "alignment": 8
+            }
+          ],
+          "block_count": 120,
+          "renamed_blocks": [
+            {
+              "before": "rc.dec.109",
+              "after": "rc.dec.111"
+            },
+            {
+              "before": "rc.keep.113",
+              "after": "rc.keep.115"
+            },
+            {
+              "before": "rc.free.114",
+              "after": "rc.free.116"
+            },
+            {
+              "before": "b38.110",
+              "after": "b38.112"
+            },
+            {
+              "before": "rc.dec.117",
+              "after": "rc.dec.119"
+            },
+            {
+              "before": "rc.keep.121",
+              "after": "rc.keep.123"
+            },
+            {
+              "before": "rc.free.122",
+              "after": "rc.free.124"
+            },
+            {
+              "before": "b38.110.118",
+              "after": "b38.112.120"
+            },
+            {
+              "before": "rc.dec.125",
+              "after": "rc.dec.127"
+            },
+            {
+              "before": "rc.keep.129",
+              "after": "rc.keep.131"
+            },
+            {
+              "before": "rc.free.130",
+              "after": "rc.free.132"
+            },
+            {
+              "before": "b38.110.118.126",
+              "after": "b38.112.120.128"
+            },
+            {
+              "before": "rc.dec.133",
+              "after": "rc.dec.135"
+            },
+            {
+              "before": "rc.keep.137",
+              "after": "rc.keep.139"
+            },
+            {
+              "before": "rc.free.138",
+              "after": "rc.free.140"
+            },
+            {
+              "before": "b38.110.118.126.134",
+              "after": "b38.112.120.128.136"
+            },
+            {
+              "before": "trap.141",
+              "after": "trap.143"
+            },
+            {
+              "before": "b38.110.118.126.134.142",
+              "after": "b38.112.120.128.136.144"
+            },
+            {
+              "before": "rc.dec.145",
+              "after": "rc.dec.147"
+            },
+            {
+              "before": "rc.keep.149",
+              "after": "rc.keep.151"
+            },
+            {
+              "before": "rc.free.150",
+              "after": "rc.free.152"
+            },
+            {
+              "before": "b39.146",
+              "after": "b39.148"
+            },
+            {
+              "before": "rc.dec.153",
+              "after": "rc.dec.155"
+            },
+            {
+              "before": "rc.keep.157",
+              "after": "rc.keep.159"
+            },
+            {
+              "before": "rc.free.158",
+              "after": "rc.free.160"
+            },
+            {
+              "before": "b39.146.154",
+              "after": "b39.148.156"
+            },
+            {
+              "before": "rc.dec.161",
+              "after": "rc.dec.163"
+            },
+            {
+              "before": "rc.keep.165",
+              "after": "rc.keep.167"
+            },
+            {
+              "before": "rc.free.166",
+              "after": "rc.free.168"
+            },
+            {
+              "before": "b39.146.154.162",
+              "after": "b39.148.156.164"
+            },
+            {
+              "before": "rc.dec.169",
+              "after": "rc.dec.171"
+            },
+            {
+              "before": "rc.keep.173",
+              "after": "rc.keep.175"
+            },
+            {
+              "before": "rc.free.174",
+              "after": "rc.free.176"
+            },
+            {
+              "before": "b39.146.154.162.170",
+              "after": "b39.148.156.164.172"
+            },
+            {
+              "before": "trap.177",
+              "after": "trap.179"
+            },
+            {
+              "before": "b40.178",
+              "after": "b40.180"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "row": "row_dict_lookup_str",
+      "functions": [
+        {
+          "function": "\"my.row_dict_lookup_str::main\"",
+          "exact": true,
+          "stores": [
+            {
+              "value": "%v203",
+              "dictionary": "%v205",
+              "index": "%v221",
+              "removed_private_slot": "%stack.152",
+              "stride": 16,
+              "value_offset_from_block": 40,
+              "value_type": "i64",
+              "alignment": 8
+            }
+          ],
+          "block_count": 158,
+          "renamed_blocks": [
+            {
+              "before": "rc.inc.155",
+              "after": "rc.inc.157"
+            },
+            {
+              "before": "b47.156",
+              "after": "b47.158"
+            },
+            {
+              "before": "rc.dec.162",
+              "after": "rc.dec.164"
+            },
+            {
+              "before": "rc.keep.166",
+              "after": "rc.keep.168"
+            },
+            {
+              "before": "rc.free.167",
+              "after": "rc.free.169"
+            },
+            {
+              "before": "b52.163",
+              "after": "b52.165"
+            },
+            {
+              "before": "rc.dec.170",
+              "after": "rc.dec.172"
+            },
+            {
+              "before": "rc.keep.174",
+              "after": "rc.keep.176"
+            },
+            {
+              "before": "rc.free.175",
+              "after": "rc.free.177"
+            },
+            {
+              "before": "b52.163.171",
+              "after": "b52.165.173"
+            },
+            {
+              "before": "rc.dec.178",
+              "after": "rc.dec.180"
+            },
+            {
+              "before": "rc.keep.182",
+              "after": "rc.keep.184"
+            },
+            {
+              "before": "rc.free.183",
+              "after": "rc.free.185"
+            },
+            {
+              "before": "b52.163.171.179",
+              "after": "b52.165.173.181"
+            },
+            {
+              "before": "rc.dec.186",
+              "after": "rc.dec.188"
+            },
+            {
+              "before": "rc.keep.190",
+              "after": "rc.keep.192"
+            },
+            {
+              "before": "rc.free.191",
+              "after": "rc.free.193"
+            },
+            {
+              "before": "b52.163.171.179.187",
+              "after": "b52.165.173.181.189"
+            },
+            {
+              "before": "trap.194",
+              "after": "trap.196"
+            },
+            {
+              "before": "b52.163.171.179.187.195",
+              "after": "b52.165.173.181.189.197"
+            },
+            {
+              "before": "rc.dec.198",
+              "after": "rc.dec.200"
+            },
+            {
+              "before": "rc.keep.202",
+              "after": "rc.keep.204"
+            },
+            {
+              "before": "rc.free.203",
+              "after": "rc.free.205"
+            },
+            {
+              "before": "b53.199",
+              "after": "b53.201"
+            },
+            {
+              "before": "rc.dec.206",
+              "after": "rc.dec.208"
+            },
+            {
+              "before": "rc.keep.210",
+              "after": "rc.keep.212"
+            },
+            {
+              "before": "rc.free.211",
+              "after": "rc.free.213"
+            },
+            {
+              "before": "b53.199.207",
+              "after": "b53.201.209"
+            },
+            {
+              "before": "rc.dec.214",
+              "after": "rc.dec.216"
+            },
+            {
+              "before": "rc.keep.218",
+              "after": "rc.keep.220"
+            },
+            {
+              "before": "rc.free.219",
+              "after": "rc.free.221"
+            },
+            {
+              "before": "b53.199.207.215",
+              "after": "b53.201.209.217"
+            },
+            {
+              "before": "rc.dec.222",
+              "after": "rc.dec.224"
+            },
+            {
+              "before": "rc.keep.226",
+              "after": "rc.keep.228"
+            },
+            {
+              "before": "rc.free.227",
+              "after": "rc.free.229"
+            },
+            {
+              "before": "b53.199.207.215.223",
+              "after": "b53.201.209.217.225"
+            },
+            {
+              "before": "trap.230",
+              "after": "trap.232"
+            },
+            {
+              "before": "b54.231",
+              "after": "b54.233"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "row": "row_dict_update",
+      "functions": [
+        {
+          "function": "\"my.row_dict_update::batch_result\"",
+          "exact": true,
+          "stores": [
+            {
+              "value": "%v26",
+              "dictionary": "%v28",
+              "index": "%v30",
+              "removed_private_slot": "%stack.24",
+              "stride": 16,
+              "value_offset_from_block": 40,
+              "value_type": "i64",
+              "alignment": 8
+            },
+            {
+              "value": "%v87",
+              "dictionary": "%v70",
+              "index": "%v72",
+              "removed_private_slot": "%stack.82",
+              "stride": 16,
+              "value_offset_from_block": 40,
+              "value_type": "i64",
+              "alignment": 8
+            }
+          ],
+          "block_count": 57,
+          "renamed_blocks": [
+            {
+              "before": "trap.29",
+              "after": "trap.31"
+            },
+            {
+              "before": "b11.30",
+              "after": "b11.32"
+            },
+            {
+              "before": "trap.33",
+              "after": "trap.35"
+            },
+            {
+              "before": "b11.30.34",
+              "after": "b11.32.36"
+            },
+            {
+              "before": "trap.37",
+              "after": "trap.39"
+            },
+            {
+              "before": "b11.30.34.38",
+              "after": "b11.32.36.40"
+            },
+            {
+              "before": "trap.41",
+              "after": "trap.43"
+            },
+            {
+              "before": "b11.30.34.38.42",
+              "after": "b11.32.36.40.44"
+            },
+            {
+              "before": "trap.44",
+              "after": "trap.46"
+            },
+            {
+              "before": "b11.30.34.38.42.45",
+              "after": "b11.32.36.40.44.47"
+            },
+            {
+              "before": "trap.65",
+              "after": "trap.67"
+            },
+            {
+              "before": "b16.66",
+              "after": "b16.68"
+            },
+            {
+              "before": "trap.69",
+              "after": "trap.71"
+            },
+            {
+              "before": "b16.66.70",
+              "after": "b16.68.72"
+            },
+            {
+              "before": "trap.73",
+              "after": "trap.75"
+            },
+            {
+              "before": "b16.66.70.74",
+              "after": "b16.68.72.76"
+            },
+            {
+              "before": "trap.94",
+              "after": "trap.98"
+            },
+            {
+              "before": "b21.95",
+              "after": "b21.99"
+            },
+            {
+              "before": "trap.98",
+              "after": "trap.102"
+            },
+            {
+              "before": "b21.95.99",
+              "after": "b21.99.103"
+            },
+            {
+              "before": "rc.dec.102",
+              "after": "rc.dec.106"
+            },
+            {
+              "before": "rc.keep.106",
+              "after": "rc.keep.110"
+            },
+            {
+              "before": "rc.free.107",
+              "after": "rc.free.111"
+            },
+            {
+              "before": "b23.103",
+              "after": "b23.107"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "row": "row_dict_update_str",
+      "functions": [
+        {
+          "function": "\"my.row_dict_update_str::batch_result\"",
+          "exact": true,
+          "stores": [
+            {
+              "value": "%v26",
+              "dictionary": "%v28",
+              "index": "%v44",
+              "removed_private_slot": "%stack.37",
+              "stride": 16,
+              "value_offset_from_block": 40,
+              "value_type": "i64",
+              "alignment": 8
+            },
+            {
+              "value": "%v121",
+              "dictionary": "%v91",
+              "index": "%v140",
+              "removed_private_slot": "%stack.119",
+              "stride": 16,
+              "value_offset_from_block": 40,
+              "value_type": "i64",
+              "alignment": 8
+            }
+          ],
+          "block_count": 95,
+          "renamed_blocks": [
+            {
+              "before": "rc.inc.40",
+              "after": "rc.inc.42"
+            },
+            {
+              "before": "b10.41",
+              "after": "b10.43"
+            },
+            {
+              "before": "trap.47",
+              "after": "trap.49"
+            },
+            {
+              "before": "b13.48",
+              "after": "b13.50"
+            },
+            {
+              "before": "trap.51",
+              "after": "trap.53"
+            },
+            {
+              "before": "b13.48.52",
+              "after": "b13.50.54"
+            },
+            {
+              "before": "trap.55",
+              "after": "trap.57"
+            },
+            {
+              "before": "b13.48.52.56",
+              "after": "b13.50.54.58"
+            },
+            {
+              "before": "trap.59",
+              "after": "trap.61"
+            },
+            {
+              "before": "b13.48.52.56.60",
+              "after": "b13.50.54.58.62"
+            },
+            {
+              "before": "trap.62",
+              "after": "trap.64"
+            },
+            {
+              "before": "b13.48.52.56.60.63",
+              "after": "b13.50.54.58.62.65"
+            },
+            {
+              "before": "trap.75",
+              "after": "trap.77"
+            },
+            {
+              "before": "b15.76",
+              "after": "b15.78"
+            },
+            {
+              "before": "trap.81",
+              "after": "trap.83"
+            },
+            {
+              "before": "b17.82",
+              "after": "b17.84"
+            },
+            {
+              "before": "trap.92",
+              "after": "trap.94"
+            },
+            {
+              "before": "b20.93",
+              "after": "b20.95"
+            },
+            {
+              "before": "trap.96",
+              "after": "trap.98"
+            },
+            {
+              "before": "b20.93.97",
+              "after": "b20.95.99"
+            },
+            {
+              "before": "trap.100",
+              "after": "trap.102"
+            },
+            {
+              "before": "b20.93.97.101",
+              "after": "b20.95.99.103"
+            },
+            {
+              "before": "trap.113",
+              "after": "trap.115"
+            },
+            {
+              "before": "b22.114",
+              "after": "b22.116"
+            },
+            {
+              "before": "rc.inc.122",
+              "after": "rc.inc.126"
+            },
+            {
+              "before": "b24.123",
+              "after": "b24.127"
+            },
+            {
+              "before": "trap.129",
+              "after": "trap.133"
+            },
+            {
+              "before": "b30.130",
+              "after": "b30.134"
+            },
+            {
+              "before": "trap.133",
+              "after": "trap.137"
+            },
+            {
+              "before": "b30.130.134",
+              "after": "b30.134.138"
+            },
+            {
+              "before": "trap.138",
+              "after": "trap.142"
+            },
+            {
+              "before": "b31.139",
+              "after": "b31.143"
+            },
+            {
+              "before": "trap.146",
+              "after": "trap.150"
+            },
+            {
+              "before": "b34.147",
+              "after": "b34.151"
+            },
+            {
+              "before": "trap.150",
+              "after": "trap.154"
+            },
+            {
+              "before": "b34.147.151",
+              "after": "b34.151.155"
+            },
+            {
+              "before": "trap.155",
+              "after": "trap.159"
+            },
+            {
+              "before": "b35.156",
+              "after": "b35.160"
+            },
+            {
+              "before": "trap.166",
+              "after": "trap.170"
+            },
+            {
+              "before": "b36.167",
+              "after": "b36.171"
+            },
+            {
+              "before": "trap.170",
+              "after": "trap.174"
+            },
+            {
+              "before": "b36.167.171",
+              "after": "b36.171.175"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "error": null,
+  "method": "Exact approved six scalar-store expansion, private spill removal, semantic metadata and bijective SSA/block names only; every remaining instruction/operand/branch/phi/trap compared; raw diffs remain unchanged."
+}

@@ -1,0 +1,779 @@
+ Percent |	Source code & Disassembly of row_packet_decode_new for cpu_core/cycles/u (2782 samples, percent: local period)
+------------------------------------------------------------------------------------------------------------------------------
+         : 0       0x1032900 <main>:
+    0.00 :   1032900:        pushq   %rbp
+    0.00 :   1032901:        pushq   %r15
+    0.00 :   1032903:        pushq   %r14
+    0.00 :   1032905:        pushq   %r13
+    0.00 :   1032907:        pushq   %r12
+    0.00 :   1032909:        pushq   %rbx
+    0.00 :   103290a:        subq    $0x38, %rsp
+    0.00 :   103290e:        callq   0x1009c30 <myl_core_args>
+    0.00 :   1032913:        movq    %rax, %r14
+    0.00 :   1032916:        callq   0x1022540 <myl_core_host_grant>
+    0.00 :   103291b:        movl    $0x2, %ebx
+    0.00 :   1032920:        cmpq    $0x3, 0x8(%r14)
+    0.00 :   1032925:        jne     0x103343e <main+0xb3e>
+    0.00 :   103292b:        movq    %rax, %r12
+    0.00 :   103292e:        movq    0x20(%r14), %rdi
+    0.00 :   1032932:        callq   0x1032700 <my.row_packet_decode::parse_number>
+    0.00 :   1032937:        movq    0x8(%r14), %rdx
+    0.00 :   103293b:        cmpq    $0x1, %rdx
+    0.00 :   103293f:        jbe     0x10335d3 <main+0xcd3>
+    0.00 :   1032945:        movq    %rax, %r15
+    0.00 :   1032948:        movq    0x28(%r14), %rdi
+    0.00 :   103294c:        callq   0x1032700 <my.row_packet_decode::parse_number>
+    0.00 :   1032951:        movq    0x8(%r14), %rdx
+    0.00 :   1032955:        cmpq    $0x2, %rdx
+    0.00 :   1032959:        jbe     0x10335e2 <main+0xce2>
+    0.00 :   103295f:        movq    %rax, %r13
+    0.00 :   1032962:        movq    0x30(%r14), %rdi
+    0.00 :   1032966:        callq   0x1032700 <my.row_packet_decode::parse_number>
+    0.00 :   103296b:        movq    %rax, %r11
+    0.00 :   103296e:        cmpq    $0x2, %r15
+    0.00 :   1032972:        setl    %al
+    0.00 :   1032975:        testq   %r13, %r13
+    0.00 :   1032978:        setle   %cl
+    0.00 :   103297b:        orb     %al, %cl
+    0.00 :   103297d:        leaq    -0xf4241(%r11), %rax
+    0.00 :   1032984:        cmpq    $-0xf4240, %rax
+    0.00 :   103298a:        setb    %al
+    0.00 :   103298d:        orb     %cl, %al
+    0.00 :   103298f:        jne     0x103343e <main+0xb3e>
+    0.00 :   1032995:        cmpq    $0x401, %r15
+    0.00 :   103299c:        setae   %al
+    0.00 :   103299f:        leaq    0x3f(,%r15,8), %r8
+    0.00 :   10329a7:        movq    %r8, %r9
+    0.00 :   10329aa:        shrq    $0x5, %r9
+    0.00 :   10329ae:        cmpq    $0x420, %r8
+    0.00 :   10329b5:        setae   %r10b
+    0.00 :   10329b9:        orb     %al, %r10b
+    0.00 :   10329bc:        movq    %r11, 0x8(%rsp)
+    0.00 :   10329c1:        movq    %r14, 0x28(%rsp)
+    0.00 :   10329c6:        movq    %r12, 0x20(%rsp)
+    0.00 :   10329cb:        movq    %r13, 0x30(%rsp)
+    0.00 :   10329d0:        jne     0x103345c <main+0xb5c>
+    0.00 :   10329d6:        leaq    0x26983(%rip), %rax  # 0x1059360 <myl_core_free_lists>
+    0.00 :   10329dd:        movq    (%rax,%r9,8), %rdi
+    0.00 :   10329e1:        testq   %rdi, %rdi
+    0.00 :   10329e4:        je      0x103345c <main+0xb5c>
+    0.00 :   10329ea:        movq    (%rdi), %rcx
+    0.00 :   10329ed:        movq    %rcx, (%rax,%r9,8)
+    0.00 :   10329f1:        movl    $0x1, (%rdi)
+    0.00 :   10329f7:        movl    %r9d, %eax
+    0.00 :   10329fa:        shll    $0x18, %eax
+    0.00 :   10329fd:        movl    %eax, 0x4(%rdi)
+    0.00 :   1032a00:        movq    $0x0, 0x8(%rdi)
+    0.00 :   1032a08:        movl    %r8d, %eax
+    0.00 :   1032a0b:        andl    $0x7e0, %eax
+    0.00 :   1032a10:        addq    $-0x20, %rax
+    0.00 :   1032a14:        shrq    $0x3, %rax
+    0.00 :   1032a18:        movq    %rax, 0x10(%rdi)
+    0.00 :   1032a1c:        movq    $0x0, 0x18(%rdi)
+    0.00 :   1032a24:        movabsq $0x3759f22983759f3, %rsi
+    0.00 :   1032a2e:        xorl    %r14d, %r14d
+    0.00 :   1032a31:        movabsq $-0x7e18dd3da732ff3d, %r13
+    0.00 :   1032a3b:        xorl    %r12d, %r12d
+    0.00 :   1032a3e:        nop
+    0.00 :   1032a40:        cmpq    %r12, %rsi
+    0.00 :   1032a43:        je      0x1033532 <main+0xc32>
+    0.00 :   1032a49:        movq    %r11, %rbp
+    0.00 :   1032a4c:        addq    %r14, %rbp
+    0.00 :   1032a4f:        jo      0x1033541 <main+0xc41>
+    0.00 :   1032a55:        movq    %rbp, %rdx
+    0.00 :   1032a58:        mulxq   %r13, %rbx, %rbx
+    0.00 :   1032a5d:        movq    0x8(%rdi), %rax
+    0.00 :   1032a61:        cmpq    0x10(%rdi), %rax
+    0.00 :   1032a65:        jae     0x1032a8f <main+0x18f>
+    0.00 :   1032a67:        shrq    $0x9, %rbx
+    0.00 :   1032a6b:        imulq   $0x3f1, %rbx, %rcx
+    0.00 :   1032a72:        subq    %rcx, %rbp
+    0.00 :   1032a75:        movq    %rbp, 0x20(%rdi,%rax,8)
+    0.00 :   1032a7a:        incq    %rax
+    0.00 :   1032a7d:        movq    %rax, 0x8(%rdi)
+    0.00 :   1032a81:        incq    %r12
+    0.00 :   1032a84:        addq    $0x25, %r14
+    0.00 :   1032a88:        cmpq    %r12, %r15
+    0.00 :   1032a8b:        jne     0x1032a40 <main+0x140>
+    0.00 :   1032a8d:        jmp     0x1032ace <main+0x1ce>
+    0.00 :   1032a8f:        movl    $0x8, %esi
+    0.00 :   1032a94:        movq    %r9, 0x18(%rsp)
+    0.00 :   1032a99:        movb    %r10b, 0x17(%rsp)
+    0.00 :   1032a9e:        callq   0x1009730 <myl_core_list_grow>
+    0.00 :   1032aa3:        movabsq $0x3759f22983759f3, %rsi
+    0.00 :   1032aad:        movzbl  0x17(%rsp), %r10d
+    0.00 :   1032ab3:        movq    0x18(%rsp), %r9
+    0.00 :   1032ab8:        leaq    0x3f(,%r15,8), %r8
+    0.00 :   1032ac0:        movq    0x8(%rsp), %r11
+    0.00 :   1032ac5:        movq    %rax, %rdi
+    0.00 :   1032ac8:        movq    0x8(%rax), %rax
+    0.00 :   1032acc:        jmp     0x1032a67 <main+0x167>
+    0.00 :   1032ace:        testb   %r10b, %r10b
+    0.00 :   1032ad1:        movq    %rdi, 0x18(%rsp)
+    0.00 :   1032ad6:        jne     0x1033488 <main+0xb88>
+    0.00 :   1032adc:        leaq    0x2687d(%rip), %rax  # 0x1059360 <myl_core_free_lists>
+    0.00 :   1032ae3:        movq    (%rax,%r9,8), %rbp
+    0.00 :   1032ae7:        testq   %rbp, %rbp
+    0.00 :   1032aea:        je      0x1033488 <main+0xb88>
+    0.00 :   1032af0:        movq    (%rbp), %rcx
+    0.00 :   1032af4:        movq    %rcx, (%rax,%r9,8)
+    0.00 :   1032af8:        movl    $0x1, (%rbp)
+    0.00 :   1032aff:        shll    $0x18, %r9d
+    0.00 :   1032b03:        movl    %r9d, 0x4(%rbp)
+    0.00 :   1032b07:        movq    $0x0, 0x8(%rbp)
+    0.00 :   1032b0f:        andl    $0x7e0, %r8d
+    0.00 :   1032b16:        addq    $-0x20, %r8
+    0.00 :   1032b1a:        shrq    $0x3, %r8
+    0.00 :   1032b1e:        movq    %r8, 0x10(%rbp)
+    0.00 :   1032b22:        movq    $0x0, 0x18(%rbp)
+    0.00 :   1032b2a:        leaq    -0x2da51(%rip), %rax  # 0x10050e0
+    0.00 :   1032b31:        movq    %rax, 0x18(%rbp)
+    0.00 :   1032b35:        xorl    %r13d, %r13d
+    0.00 :   1032b38:        leaq    0x26821(%rip), %r12  # 0x1059360 <myl_core_free_lists>
+    0.00 :   1032b3f:        nop
+    0.00 :   1032b40:        movq    %r13, %rdx
+    0.00 :   1032b43:        shlq    $0x4, %rdx
+    0.00 :   1032b47:        addq    %r13, %rdx
+    0.00 :   1032b4a:        movq    %r11, %rax
+    0.00 :   1032b4d:        addq    %rdx, %rax
+    0.00 :   1032b50:        jo      0x1033551 <main+0xc51>
+    0.00 :   1032b56:        movq    %rax, %r14
+    0.00 :   1032b59:        movq    0x18(%r12), %rbx
+    0.00 :   1032b5e:        testq   %rbx, %rbx
+    0.00 :   1032b61:        je      0x1032dde <main+0x4de>
+    0.00 :   1032b67:        movq    (%rbx), %rax
+    0.00 :   1032b6a:        movq    %rax, 0x18(%r12)
+    0.00 :   1032b6f:        vmovdqa -0x2f4d7(%rip), %ymm0  # 0x10036a0
+    0.00 :   1032b77:        vmovdqu %ymm0, (%rbx)
+    0.00 :   1032b7b:        movl    $0x8, %ecx
+    0.00 :   1032b80:        xorl    %eax, %eax
+    0.00 :   1032b82:        movq    $0xa5, 0x20(%rbx,%rax,8)
+    0.00 :   1032b8b:        incq    %rax
+    0.00 :   1032b8e:        movq    %rax, 0x8(%rbx)
+    0.00 :   1032b92:        cmpq    %rcx, %rax
+    0.00 :   1032b95:        jae     0x1032e1f <main+0x51f>
+    0.00 :   1032b9b:        movq    $0x1, 0x20(%rbx,%rax,8)
+    0.00 :   1032ba4:        incq    %rax
+    0.00 :   1032ba7:        movq    %rax, 0x8(%rbx)
+    0.00 :   1032bab:        cmpq    %rcx, %rax
+    0.00 :   1032bae:        jae     0x1032e44 <main+0x544>
+    0.00 :   1032bb4:        movq    %r14, %rdx
+    0.00 :   1032bb7:        movzbl  %dh, %edx
+    0.00 :   1032bba:        movq    %rdx, 0x20(%rbx,%rax,8)
+    0.00 :   1032bbf:        incq    %rax
+    0.00 :   1032bc2:        movq    %rax, 0x8(%rbx)
+    0.00 :   1032bc6:        cmpq    %rcx, %rax
+    0.00 :   1032bc9:        jae     0x1032e69 <main+0x569>
+    0.00 :   1032bcf:        movzbl  %r14b, %edx
+    0.00 :   1032bd3:        movq    %rdx, 0x20(%rbx,%rax,8)
+    0.00 :   1032bd8:        incq    %rax
+    0.00 :   1032bdb:        movq    %rax, 0x8(%rbx)
+    0.00 :   1032bdf:        cmpq    %rcx, %rax
+    0.00 :   1032be2:        jae     0x1032e8e <main+0x58e>
+    0.00 :   1032be8:        movq    $0x4, 0x20(%rbx,%rax,8)
+    0.00 :   1032bf1:        incq    %rax
+    0.00 :   1032bf4:        movq    %rax, 0x8(%rbx)
+    0.00 :   1032bf8:        leaq    (,%r13,2), %rcx
+    0.00 :   1032c00:        addq    %r13, %rcx
+    0.00 :   1032c03:        leaq    (,%rcx,4), %rdx
+    0.00 :   1032c0b:        addq    %r13, %rdx
+    0.00 :   1032c0e:        movq    %r11, %r14
+    0.00 :   1032c11:        addq    %rdx, %r14
+    0.00 :   1032c14:        jo      0x103355e <main+0xc5e>
+    0.00 :   1032c1a:        cmpq    0x10(%rbx), %rax
+    0.00 :   1032c1e:        jae     0x1032eaf <main+0x5af>
+    0.00 :   1032c24:        movzbl  %r14b, %ecx
+    0.00 :   1032c28:        movq    %rcx, 0x20(%rbx,%rax,8)
+    0.00 :   1032c2d:        incq    %rax
+    0.00 :   1032c30:        movq    %rax, 0x8(%rbx)
+    0.00 :   1032c34:        movq    %r14, %r12
+    0.00 :   1032c37:        addq    $0x7, %r12
+    0.00 :   1032c3b:        jo      0x103356e <main+0xc6e>
+    0.00 :   1032c41:        cmpq    0x10(%rbx), %rax
+    0.00 :   1032c45:        jae     0x1032ecb <main+0x5cb>
+    0.00 :   1032c4b:        movzbl  %r12b, %ecx
+    0.00 :   1032c4f:        movq    %rcx, 0x20(%rbx,%rax,8)
+    0.00 :   1032c54:        incq    %rax
+    0.00 :   1032c57:        movq    %rax, 0x8(%rbx)
+    0.00 :   1032c5b:        movq    %r14, %r12
+    0.00 :   1032c5e:        addq    $0xe, %r12
+    0.00 :   1032c62:        jo      0x1033575 <main+0xc75>
+    0.00 :   1032c68:        cmpq    0x10(%rbx), %rax
+    0.00 :   1032c6c:        jae     0x1032ee7 <main+0x5e7>
+    0.00 :   1032c72:        movzbl  %r12b, %ecx
+    0.00 :   1032c76:        movq    %rcx, 0x20(%rbx,%rax,8)
+    0.00 :   1032c7b:        incq    %rax
+    0.00 :   1032c7e:        movq    %rax, 0x8(%rbx)
+    0.00 :   1032c82:        movq    %r14, %r12
+    0.00 :   1032c85:        addq    $0x15, %r12
+    0.00 :   1032c89:        jo      0x103357c <main+0xc7c>
+    0.00 :   1032c8f:        cmpq    0x10(%rbx), %rax
+    0.00 :   1032c93:        jae     0x1032f03 <main+0x603>
+    0.00 :   1032c99:        movzbl  %r12b, %ecx
+    0.00 :   1032c9d:        movq    %rcx, 0x20(%rbx,%rax,8)
+    0.00 :   1032ca2:        leaq    0x1(%rax), %rcx
+    0.00 :   1032ca6:        movq    %rcx, 0x8(%rbx)
+    0.00 :   1032caa:        movq    $-0x1, %rdi
+    0.00 :   1032cb1:        xorl    %esi, %esi
+    0.00 :   1032cb3:        movq    %rsi, %r14
+    0.00 :   1032cb6:        leaq    0x266a3(%rip), %r12  # 0x1059360 <myl_core_free_lists>
+    0.00 :   1032cbd:        nopl    (%rax)
+    0.00 :   1032cc0:        movq    0x28(%rbx,%rdi,8), %rdx
+    0.00 :   1032cc5:        addq    %rdx, %r14
+    0.00 :   1032cc8:        jo      0x10334a2 <main+0xba2>
+    0.00 :   1032cce:        incq    %rdi
+    0.00 :   1032cd1:        movq    %r14, %rsi
+    0.00 :   1032cd4:        cmpq    %rdi, %rax
+    0.00 :   1032cd7:        jne     0x1032cc0 <main+0x3c0>
+    0.00 :   1032cd9:        cmpq    0x10(%rbx), %rcx
+    0.00 :   1032cdd:        jae     0x1032f1f <main+0x61f>
+    0.00 :   1032ce3:        movzbl  %r14b, %eax
+    0.00 :   1032ce7:        movq    %rax, 0x20(%rbx,%rcx,8)
+    0.00 :   1032cec:        leaq    0x1(%rcx), %rdx
+    0.00 :   1032cf0:        movq    %rdx, 0x8(%rbx)
+    0.00 :   1032cf4:        movl    %r13d, %eax
+    0.00 :   1032cf7:        andl    $0x3, %eax
+    0.00 :   1032cfa:        leaq    -0x2e711(%rip), %rsi  # 0x10045f0
+    0.00 :   1032d01:        movslq  (%rsi,%rax,4), %rax
+    0.00 :   1032d05:        addq    %rsi, %rax
+    0.00 :   1032d08:        jmpq    *%rax
+    0.00 :   1032d0a:        movq    $0xa4, 0x20(%rbx)
+    0.00 :   1032d12:        jmp     0x1032d52 <main+0x452>
+    0.00 :   1032d14:        nopw    %cs:(%rax,%rax)
+    0.00 :   1032d20:        cmpq    $0x8, %rcx
+    0.00 :   1032d24:        jbe     0x10335c1 <main+0xcc1>
+    0.00 :   1032d2a:        movl    0x68(%rbx), %eax
+    0.00 :   1032d2d:        incl    %eax
+    0.00 :   1032d2f:        movzbl  %al, %eax
+    0.00 :   1032d32:        movq    %rax, 0x68(%rbx)
+    0.00 :   1032d36:        jmp     0x1032d52 <main+0x452>
+    0.00 :   1032d38:        nopl    (%rax,%rax)
+    0.00 :   1032d40:        cmpq    $0x3, %rcx
+    0.00 :   1032d44:        jbe     0x10335af <main+0xcaf>
+    0.00 :   1032d4a:        movq    $0x5, 0x40(%rbx)
+    0.00 :   1032d52:        movq    %rbx, %rdi
+    0.00 :   1032d55:        vzeroupper
+    0.00 :   1032d58:        callq   0x1013200 <myl_core_bytes_valid_list>
+    0.00 :   1032d5d:        testb   %al, %al
+    0.00 :   1032d5f:        je      0x1033591 <main+0xc91>
+    0.00 :   1032d65:        movq    %rbx, %rdi
+    0.00 :   1032d68:        callq   0x1013260 <myl_core_bytes_from_list>
+    0.00 :   1032d6d:        movl    (%rbx), %ecx
+    0.00 :   1032d6f:        cmpl    $-0x1, %ecx
+    0.00 :   1032d72:        movq    0x8(%rsp), %r11
+    0.00 :   1032d77:        je      0x1032db3 <main+0x4b3>
+    0.00 :   1032d79:        decl    %ecx
+    0.00 :   1032d7b:        je      0x1032d90 <main+0x490>
+    0.00 :   1032d7d:        movl    %ecx, (%rbx)
+    0.00 :   1032d7f:        jmp     0x1032db3 <main+0x4b3>
+    0.00 :   1032d81:        nopw    %cs:(%rax,%rax)
+    0.00 :   1032d90:        movzbl  0x7(%rbx), %ecx
+    0.00 :   1032d94:        testq   %rcx, %rcx
+    0.00 :   1032d97:        je      0x1032f5f <main+0x65f>
+    0.00 :   1032d9d:        cmpq    $0x0, 0x18(%rbx)
+    0.00 :   1032da2:        jne     0x1032f5f <main+0x65f>
+    0.00 :   1032da8:        movq    (%r12,%rcx,8), %rdx
+    0.00 :   1032dac:        movq    %rdx, (%rbx)
+    0.00 :   1032daf:        movq    %rbx, (%r12,%rcx,8)
+    0.00 :   1032db3:        movq    0x8(%rbp), %rcx
+    0.00 :   1032db7:        cmpq    0x10(%rbp), %rcx
+    0.00 :   1032dbb:        jae     0x1032f3b <main+0x63b>
+    0.00 :   1032dc1:        movq    %rax, 0x20(%rbp,%rcx,8)
+    0.00 :   1032dc6:        incq    %rcx
+    0.00 :   1032dc9:        movq    %rcx, 0x8(%rbp)
+    0.00 :   1032dcd:        incq    %r13
+    0.00 :   1032dd0:        cmpq    %r15, %r13
+    0.00 :   1032dd3:        jne     0x1032b40 <main+0x240>
+    0.00 :   1032dd9:        jmp     0x1032f77 <main+0x677>
+    0.00 :   1032dde:        movl    $0x5, %edi
+    0.00 :   1032de3:        movl    $0x8, %esi
+    0.00 :   1032de8:        callq   0x10096c0 <myl_core_list_new_slow>
+    0.00 :   1032ded:        movq    %rax, %rbx
+    0.00 :   1032df0:        movq    0x8(%rax), %rax
+    0.00 :   1032df4:        movq    0x10(%rbx), %rcx
+    0.00 :   1032df8:        cmpq    %rcx, %rax
+    0.00 :   1032dfb:        jb      0x1032e15 <main+0x515>
+    0.00 :   1032dfd:        movl    $0x8, %esi
+    0.00 :   1032e02:        movq    %rbx, %rdi
+    0.00 :   1032e05:        callq   0x1009730 <myl_core_list_grow>
+    0.00 :   1032e0a:        movq    %rax, %rbx
+    0.00 :   1032e0d:        movq    0x8(%rax), %rax
+    0.00 :   1032e11:        movq    0x10(%rbx), %rcx
+    0.00 :   1032e15:        movq    0x8(%rsp), %r11
+    0.00 :   1032e1a:        jmp     0x1032b82 <main+0x282>
+    0.00 :   1032e1f:        movl    $0x8, %esi
+    0.00 :   1032e24:        movq    %rbx, %rdi
+    0.00 :   1032e27:        vzeroupper
+    0.00 :   1032e2a:        callq   0x1009730 <myl_core_list_grow>
+    0.00 :   1032e2f:        movq    0x8(%rsp), %r11
+    0.00 :   1032e34:        movq    %rax, %rbx
+    0.00 :   1032e37:        movq    0x8(%rax), %rax
+    0.00 :   1032e3b:        movq    0x10(%rbx), %rcx
+    0.00 :   1032e3f:        jmp     0x1032b9b <main+0x29b>
+    0.00 :   1032e44:        movl    $0x8, %esi
+    0.00 :   1032e49:        movq    %rbx, %rdi
+    0.00 :   1032e4c:        vzeroupper
+    0.00 :   1032e4f:        callq   0x1009730 <myl_core_list_grow>
+    0.00 :   1032e54:        movq    0x8(%rsp), %r11
+    0.00 :   1032e59:        movq    %rax, %rbx
+    0.00 :   1032e5c:        movq    0x8(%rax), %rax
+    0.00 :   1032e60:        movq    0x10(%rbx), %rcx
+    0.00 :   1032e64:        jmp     0x1032bb4 <main+0x2b4>
+    0.00 :   1032e69:        movl    $0x8, %esi
+    0.00 :   1032e6e:        movq    %rbx, %rdi
+    0.00 :   1032e71:        vzeroupper
+    0.00 :   1032e74:        callq   0x1009730 <myl_core_list_grow>
+    0.00 :   1032e79:        movq    0x8(%rsp), %r11
+    0.00 :   1032e7e:        movq    %rax, %rbx
+    0.00 :   1032e81:        movq    0x8(%rax), %rax
+    0.00 :   1032e85:        movq    0x10(%rbx), %rcx
+    0.00 :   1032e89:        jmp     0x1032bcf <main+0x2cf>
+    0.00 :   1032e8e:        movl    $0x8, %esi
+    0.00 :   1032e93:        movq    %rbx, %rdi
+    0.00 :   1032e96:        vzeroupper
+    0.00 :   1032e99:        callq   0x1009730 <myl_core_list_grow>
+    0.00 :   1032e9e:        movq    0x8(%rsp), %r11
+    0.00 :   1032ea3:        movq    %rax, %rbx
+    0.00 :   1032ea6:        movq    0x8(%rax), %rax
+    0.00 :   1032eaa:        jmp     0x1032be8 <main+0x2e8>
+    0.00 :   1032eaf:        movl    $0x8, %esi
+    0.00 :   1032eb4:        movq    %rbx, %rdi
+    0.00 :   1032eb7:        vzeroupper
+    0.00 :   1032eba:        callq   0x1009730 <myl_core_list_grow>
+    0.00 :   1032ebf:        movq    %rax, %rbx
+    0.00 :   1032ec2:        movq    0x8(%rax), %rax
+    0.00 :   1032ec6:        jmp     0x1032c24 <main+0x324>
+    0.00 :   1032ecb:        movl    $0x8, %esi
+    0.00 :   1032ed0:        movq    %rbx, %rdi
+    0.00 :   1032ed3:        vzeroupper
+    0.00 :   1032ed6:        callq   0x1009730 <myl_core_list_grow>
+    0.00 :   1032edb:        movq    %rax, %rbx
+    0.00 :   1032ede:        movq    0x8(%rax), %rax
+    0.00 :   1032ee2:        jmp     0x1032c4b <main+0x34b>
+    0.00 :   1032ee7:        movl    $0x8, %esi
+    0.00 :   1032eec:        movq    %rbx, %rdi
+    0.00 :   1032eef:        vzeroupper
+    0.00 :   1032ef2:        callq   0x1009730 <myl_core_list_grow>
+    0.00 :   1032ef7:        movq    %rax, %rbx
+    0.00 :   1032efa:        movq    0x8(%rax), %rax
+    0.00 :   1032efe:        jmp     0x1032c72 <main+0x372>
+    0.00 :   1032f03:        movl    $0x8, %esi
+    0.00 :   1032f08:        movq    %rbx, %rdi
+    0.00 :   1032f0b:        vzeroupper
+    0.00 :   1032f0e:        callq   0x1009730 <myl_core_list_grow>
+    0.00 :   1032f13:        movq    %rax, %rbx
+    0.00 :   1032f16:        movq    0x8(%rax), %rax
+    0.00 :   1032f1a:        jmp     0x1032c99 <main+0x399>
+    0.00 :   1032f1f:        movl    $0x8, %esi
+    0.00 :   1032f24:        movq    %rbx, %rdi
+    0.00 :   1032f27:        vzeroupper
+    0.00 :   1032f2a:        callq   0x1009730 <myl_core_list_grow>
+    0.00 :   1032f2f:        movq    %rax, %rbx
+    0.00 :   1032f32:        movq    0x8(%rax), %rcx
+    0.00 :   1032f36:        jmp     0x1032ce3 <main+0x3e3>
+    0.00 :   1032f3b:        movl    $0x8, %esi
+    0.00 :   1032f40:        movq    %rbp, %rdi
+    0.00 :   1032f43:        movq    %rax, %rbx
+    0.00 :   1032f46:        callq   0x1009730 <myl_core_list_grow>
+    0.00 :   1032f4b:        movq    0x8(%rsp), %r11
+    0.00 :   1032f50:        movq    %rax, %rbp
+    0.00 :   1032f53:        movq    %rbx, %rax
+    0.00 :   1032f56:        movq    0x8(%rbp), %rcx
+    0.00 :   1032f5a:        jmp     0x1032dc1 <main+0x4c1>
+    0.00 :   1032f5f:        movq    %rbx, %rdi
+    0.00 :   1032f62:        movq    %rax, %rbx
+    0.00 :   1032f65:        callq   0x1032110 <myl_core_free_block>
+    0.00 :   1032f6a:        movq    0x8(%rsp), %r11
+    0.00 :   1032f6f:        movq    %rbx, %rax
+    0.00 :   1032f72:        jmp     0x1032db3 <main+0x4b3>
+    0.00 :   1032f77:        movl    $0x1b, %edi
+    0.00 :   1032f7c:        callq   0x100a540 <myl_core_io_at>
+    0.00 :   1032f81:        movq    0x20(%rsp), %rdi
+    0.00 :   1032f86:        callq   0x1022570 <myl_core_host_check>
+    0.00 :   1032f8b:        xorl    %r14d, %r14d
+    0.00 :   1032f8e:        callq   0x1033610 <runtime_bench_now>
+    0.00 :   1032f93:        movq    %rax, 0x8(%rsp)
+    0.00 :   1032f98:        xorl    %r13d, %r13d
+    0.00 :   1032f9b:        nopl    (%rax,%rax)
+    0.00 :   1032fa0:        xorl    %ebx, %ebx
+    0.00 :   1032fa2:        xorl    %r12d, %r12d
+    0.00 :   1032fa5:        nopw    %cs:(%rax,%rax)
+    2.99 :   1032fb0:        movq    0x20(%rbp,%r12,8), %rax
+    4.61 :   1032fb5:        movq    0x8(%rax), %rdi
+   13.82 :   1032fb9:        cmpq    $0x5, %rdi
+    0.00 :   1032fbd:        jbe     0x10330e6 <main+0x7e6>
+    2.82 :   1032fc3:        cmpb    $-0x5b, 0x20(%rax)
+    0.32 :   1032fc7:        jne     0x10330ed <main+0x7ed>
+    4.78 :   1032fcd:        cmpb    $0x1, 0x21(%rax)
+    0.06 :   1032fd1:        jne     0x1033103 <main+0x803>
+    2.18 :   1032fd7:        movzbl  0x24(%rax), %edx
+    0.59 :   1032fdb:        leaq    0x6(%rdx), %rcx
+    0.00 :   1032fdf:        cmpq    %rcx, %rdi
+    0.00 :   1032fe2:        jne     0x1033119 <main+0x819>
+    1.78 :   1032fe8:        leaq    -0x1(%rdi), %rcx
+    0.00 :   1032fec:        cmpq    $0x9, %rdi
+    0.00 :   1032ff0:        jae     0x1033000 <main+0x700>
+    0.00 :   1032ff2:        xorl    %r8d, %r8d
+    0.00 :   1032ff5:        xorl    %esi, %esi
+    0.00 :   1032ff7:        jmp     0x1033170 <main+0x870>
+    0.00 :   1032ffc:        nopl    (%rax)
+    0.88 :   1033000:        cmpq    $0x81, %rdi
+    0.00 :   1033007:        jae     0x1033013 <main+0x713>
+    1.51 :   1033009:        xorl    %esi, %esi
+    0.00 :   103300b:        xorl    %r8d, %r8d
+    0.12 :   103300e:        jmp     0x10330a6 <main+0x7a6>
+    0.00 :   1033013:        movq    %rcx, %rsi
+    0.00 :   1033016:        andq    $-0x80, %rsi
+    0.00 :   103301a:        vpxor   %xmm0, %xmm0, %xmm0
+    0.00 :   103301e:        xorl    %r8d, %r8d
+    0.00 :   1033021:        vpxor   %xmm1, %xmm1, %xmm1
+    0.00 :   1033025:        vpxor   %xmm2, %xmm2, %xmm2
+    0.00 :   1033029:        vpxor   %xmm3, %xmm3, %xmm3
+    0.00 :   103302d:        nopw    %cs:(%rax,%rax)
+    0.00 :   103303c:        nopl    (%rax)
+    0.00 :   1033040:        vpaddb  0x20(%rax,%r8), %ymm0, %ymm0
+    0.00 :   1033047:        vpaddb  0x40(%rax,%r8), %ymm1, %ymm1
+    0.00 :   103304e:        vpaddb  0x60(%rax,%r8), %ymm2, %ymm2
+    0.00 :   1033055:        vpaddb  0x80(%rax,%r8), %ymm3, %ymm3
+    0.00 :   103305f:        subq    $-0x80, %r8
+    0.00 :   1033063:        cmpq    %r8, %rsi
+    0.00 :   1033066:        jne     0x1033040 <main+0x740>
+    0.00 :   1033068:        vpaddb  %ymm0, %ymm1, %ymm0
+    0.00 :   103306c:        vpaddb  %ymm2, %ymm3, %ymm1
+    0.00 :   1033070:        vpaddb  %ymm0, %ymm1, %ymm0
+    0.00 :   1033074:        vextracti128    $0x1, %ymm0, %xmm1
+    0.00 :   103307a:        vpaddb  %xmm1, %xmm0, %xmm0
+    0.00 :   103307e:        vpshufd $0xee, %xmm0, %xmm1
+    0.00 :   1033083:        vpaddb  %xmm1, %xmm0, %xmm0
+    0.00 :   1033087:        vpxor   %xmm1, %xmm1, %xmm1
+    0.00 :   103308b:        vpsadbw %xmm1, %xmm0, %xmm0
+    0.00 :   103308f:        vmovd   %xmm0, %r8d
+    0.00 :   1033094:        cmpq    %rsi, %rcx
+    0.00 :   1033097:        je      0x103317d <main+0x87d>
+    0.00 :   103309d:        testb   $0x78, %cl
+    0.00 :   10330a0:        je      0x1033170 <main+0x870>
+    0.32 :   10330a6:        movq    %rsi, %r9
+    0.00 :   10330a9:        movq    %rcx, %rsi
+    0.97 :   10330ac:        andq    $-0x8, %rsi
+    0.00 :   10330b0:        movzbl  %r8b, %r8d
+    0.37 :   10330b4:        vmovd   %r8d, %xmm0
+    2.24 :   10330b9:        nopl    (%rax)
+    0.00 :   10330c0:        vmovq   0x20(%rax,%r9), %xmm1
+    0.22 :   10330c7:        vpaddb  %xmm0, %xmm1, %xmm0
+    2.52 :   10330cb:        addq    $0x8, %r9
+    0.00 :   10330cf:        cmpq    %r9, %rsi
+    0.00 :   10330d2:        jne     0x10330c0 <main+0x7c0>
+    0.60 :   10330d4:        vpxor   %xmm1, %xmm1, %xmm1
+    0.00 :   10330d8:        vpsadbw %xmm1, %xmm0, %xmm0
+    2.64 :   10330dc:        vmovd   %xmm0, %r8d
+    4.95 :   10330e1:        jmp     0x1033178 <main+0x878>
+    0.00 :   10330e6:        movl    $0x3b, %edi
+    0.00 :   10330eb:        jmp     0x103311e <main+0x81e>
+    1.32 :   10330ed:        movl    $0x3d, %edi
+    0.00 :   10330f2:        xorl    %esi, %esi
+    0.05 :   10330f4:        vzeroupper
+    0.00 :   10330f7:        callq   0x10324bc <myl_core_err_trace>
+    0.00 :   10330fc:        movl    $0x1, %eax
+    0.00 :   1033101:        jmp     0x103312d <main+0x82d>
+    0.00 :   1033103:        movl    $0x3f, %edi
+    0.00 :   1033108:        xorl    %esi, %esi
+    0.00 :   103310a:        vzeroupper
+    0.00 :   103310d:        callq   0x10324bc <myl_core_err_trace>
+    0.00 :   1033112:        movl    $0x2, %eax
+    0.00 :   1033117:        jmp     0x103312d <main+0x82d>
+    0.92 :   1033119:        movl    $0x41, %edi
+    0.00 :   103311e:        xorl    %esi, %esi
+    0.00 :   1033120:        vzeroupper
+    0.70 :   1033123:        callq   0x10324bc <myl_core_err_trace>
+    0.25 :   1033128:        movl    $0x3, %eax
+    0.00 :   103312d:        movb    $0x1, %cl
+    0.00 :   103312f:        xorl    %esi, %esi
+    0.00 :   1033131:        xorl    %edx, %edx
+    0.00 :   1033133:        testb   %cl, %cl
+    0.00 :   1033135:        jne     0x10332e4 <main+0x9e4>
+    1.04 :   103313b:        imulq   $0x3, %rsi, %rcx
+    2.78 :   103313f:        jo      0x103350d <main+0xc0d>
+    1.70 :   1033145:        movq    %rax, %rsi
+    0.00 :   1033148:        addq    %rcx, %rsi
+    0.00 :   103314b:        jo      0x103351f <main+0xc1f>
+    2.14 :   1033151:        movq    %rsi, %rcx
+    0.00 :   1033154:        addq    %rdx, %rcx
+    0.05 :   1033157:        jno     0x10332ee <main+0x9ee>
+    0.00 :   103315d:        jmp     0x1033500 <main+0xc00>
+    0.00 :   1033162:        nopw    %cs:(%rax,%rax)
+    0.00 :   1033170:        addb    0x20(%rax,%rsi), %r8b
+    3.78 :   1033175:        incq    %rsi
+    0.00 :   1033178:        cmpq    %rsi, %rcx
+    0.00 :   103317b:        jne     0x1033170 <main+0x870>
+    0.00 :   103317d:        cmpb    %r8b, 0x20(%rax,%rcx)
+    0.00 :   1033182:        jne     0x103330b <main+0xa0b>
+    1.95 :   1033188:        cmpq    $0x6, %rdi
+    0.00 :   103318c:        jne     0x10331a0 <main+0x8a0>
+    0.00 :   103318e:        xorl    %esi, %esi
+    0.00 :   1033190:        jmp     0x10332d1 <main+0x9d1>
+    0.00 :   1033195:        nopw    %cs:(%rax,%rax)
+    0.00 :   10331a0:        addq    $-0x6, %rdi
+    0.00 :   10331a4:        cmpq    $0x4, %rdi
+    0.00 :   10331a8:        jae     0x10331b7 <main+0x8b7>
+    0.00 :   10331aa:        movl    $0x5, %r9d
+    0.00 :   10331b0:        xorl    %esi, %esi
+    0.00 :   10331b2:        jmp     0x10332c0 <main+0x9c0>
+    0.00 :   10331b7:        cmpq    $0x10, %rdi
+    0.00 :   10331bb:        jae     0x10331c7 <main+0x8c7>
+    0.00 :   10331bd:        xorl    %r8d, %r8d
+    0.00 :   10331c0:        xorl    %esi, %esi
+    0.00 :   10331c2:        jmp     0x1033268 <main+0x968>
+    0.00 :   10331c7:        movq    %rdi, %r8
+    0.00 :   10331ca:        andq    $-0x10, %r8
+    0.00 :   10331ce:        vpxor   %xmm0, %xmm0, %xmm0
+    0.00 :   10331d2:        xorl    %esi, %esi
+    0.00 :   10331d4:        vpxor   %xmm1, %xmm1, %xmm1
+    0.00 :   10331d8:        vpxor   %xmm2, %xmm2, %xmm2
+    0.00 :   10331dc:        vpxor   %xmm3, %xmm3, %xmm3
+    0.00 :   10331e0:        nopw    %cs:(%rax,%rax)
+    0.00 :   10331ef:        nopw    %cs:(%rax,%rax)
+    0.00 :   10331fe:        nop
+    0.00 :   1033200:        vpmovzxbq       0x25(%rax,%rsi), %ymm4
+    0.00 :   1033207:        vpaddq  %ymm4, %ymm0, %ymm0
+    0.00 :   103320b:        vpmovzxbq       0x29(%rax,%rsi), %ymm4
+    0.00 :   1033212:        vpaddq  %ymm4, %ymm1, %ymm1
+    0.00 :   1033216:        vpmovzxbq       0x2d(%rax,%rsi), %ymm4
+    0.00 :   103321d:        vpaddq  %ymm4, %ymm2, %ymm2
+    0.00 :   1033221:        vpmovzxbq       0x31(%rax,%rsi), %ymm4
+    0.00 :   1033228:        vpaddq  %ymm4, %ymm3, %ymm3
+    0.00 :   103322c:        addq    $0x10, %rsi
+    0.00 :   1033230:        cmpq    %rsi, %r8
+    0.00 :   1033233:        jne     0x1033200 <main+0x900>
+    0.00 :   1033235:        vpaddq  %ymm0, %ymm1, %ymm0
+    0.00 :   1033239:        vpaddq  %ymm0, %ymm2, %ymm0
+    0.00 :   103323d:        vpaddq  %ymm0, %ymm3, %ymm0
+    0.00 :   1033241:        vextracti128    $0x1, %ymm0, %xmm1
+    0.00 :   1033247:        vpaddq  %xmm1, %xmm0, %xmm0
+    0.00 :   103324b:        vpshufd $0xee, %xmm0, %xmm1
+    0.00 :   1033250:        vpaddq  %xmm1, %xmm0, %xmm0
+    0.00 :   1033254:        vmovq   %xmm0, %rsi
+    0.00 :   1033259:        cmpq    %r8, %rdi
+    0.00 :   103325c:        je      0x10332d1 <main+0x9d1>
+    0.00 :   103325e:        testb   $0xc, %dil
+    0.00 :   1033262:        je      0x1033324 <main+0xa24>
+    0.00 :   1033268:        movq    %rdi, %r10
+    1.94 :   103326b:        andq    $-0x4, %r10
+    0.00 :   103326f:        leaq    0x5(%r10), %r9
+    0.00 :   1033273:        vmovq   %rsi, %xmm0
+    0.00 :   1033278:        nopl    (%rax,%rax)
+    0.00 :   1033280:        vpmovzxbq       0x25(%rax,%r8), %ymm1
+    2.05 :   1033287:        vpaddq  %ymm1, %ymm0, %ymm0
+    5.24 :   103328b:        addq    $0x4, %r8
+    0.02 :   103328f:        cmpq    %r8, %r10
+    0.00 :   1033292:        jne     0x1033280 <main+0x980>
+    0.00 :   1033294:        vextracti128    $0x1, %ymm0, %xmm1
+    1.28 :   103329a:        vpaddq  %xmm1, %xmm0, %xmm0
+    2.85 :   103329e:        vpshufd $0xee, %xmm0, %xmm1
+    5.79 :   10332a3:        vpaddq  %xmm1, %xmm0, %xmm0
+    1.14 :   10332a7:        vmovq   %xmm0, %rsi
+    0.06 :   10332ac:        cmpq    %r10, %rdi
+    0.00 :   10332af:        je      0x10332d1 <main+0x9d1>
+    0.00 :   10332b1:        nopw    %cs:(%rax,%rax)
+    0.00 :   10332c0:        movzbl  0x20(%rax,%r9), %edi
+    0.00 :   10332c6:        addq    %rdi, %rsi
+    0.00 :   10332c9:        incq    %r9
+    0.00 :   10332cc:        cmpq    %r9, %rcx
+    0.00 :   10332cf:        jne     0x10332c0 <main+0x9c0>
+    0.00 :   10332d1:        movbew  0x22(%rax), %ax
+    0.00 :   10332d7:        movzwl  %ax, %eax
+    0.00 :   10332da:        xorl    %ecx, %ecx
+    0.58 :   10332dc:        testb   %cl, %cl
+    0.00 :   10332de:        je      0x103313b <main+0x83b>
+    3.02 :   10332e4:        imulq   $0x65, %rax, %rcx
+    1.22 :   10332e8:        jo      0x10334c2 <main+0xbc2>
+    2.04 :   10332ee:        movq    %rbx, %rdx
+    0.00 :   10332f1:        addq    %rcx, %rdx
+    0.08 :   10332f4:        jo      0x10334af <main+0xbaf>
+    2.92 :   10332fa:        incq    %r12
+    0.00 :   10332fd:        movq    %rdx, %rbx
+    0.00 :   1033300:        cmpq    %r15, %r12
+    0.00 :   1033303:        jne     0x1032fb0 <main+0x6b0>
+    0.00 :   1033309:        jmp     0x1033330 <main+0xa30>
+    1.58 :   103330b:        movl    $0x44, %edi
+    0.00 :   1033310:        xorl    %esi, %esi
+    0.00 :   1033312:        vzeroupper
+    0.00 :   1033315:        callq   0x10324bc <myl_core_err_trace>
+    0.06 :   103331a:        movl    $0x4, %eax
+    0.00 :   103331f:        jmp     0x103312d <main+0x82d>
+    0.00 :   1033324:        orq     $0x5, %r8
+    0.00 :   1033328:        movq    %r8, %r9
+    0.00 :   103332b:        jmp     0x10332c0 <main+0x9c0>
+    0.00 :   103332d:        nopl    (%rax)
+    0.00 :   1033330:        movq    %rdx, %rcx
+    0.00 :   1033333:        addq    %r14, %rcx
+    0.00 :   1033336:        jo      0x103359f <main+0xc9f>
+    0.00 :   103333c:        movq    %rcx, %rax
+    0.00 :   103333f:        movabsq $-0x768fa0ceed5d701b, %rdx
+    0.00 :   1033349:        imulq   %rdx
+    0.06 :   103334c:        addq    %rcx, %rdx
+    0.00 :   103334f:        movq    %rdx, %rax
+    0.00 :   1033352:        shrq    $0x3f, %rax
+    0.00 :   1033356:        sarq    $0x1d, %rdx
+    0.00 :   103335a:        addq    %rax, %rdx
+    0.00 :   103335d:        imulq   $0x3b9aca07, %rdx, %rax
+    0.06 :   1033364:        subq    %rax, %rcx
+    0.00 :   1033367:        movq    %rcx, %r14
+    0.00 :   103336a:        sarq    $0x3f, %r14
+    0.00 :   103336e:        andl    $0x3b9aca07, %r14d
+    0.05 :   1033375:        addq    %rcx, %r14
+    0.00 :   1033378:        incq    %r13
+    0.00 :   103337b:        cmpq    0x30(%rsp), %r13
+    0.00 :   1033380:        jne     0x1032fa0 <main+0x6a0>
+    0.00 :   1033386:        movq    0x18(%rsp), %rdi
+    0.00 :   103338b:        movzbl  0x7(%rdi), %eax
+    0.00 :   103338f:        testq   %rax, %rax
+    0.00 :   1033392:        je      0x10334d7 <main+0xbd7>
+    0.00 :   1033398:        cmpq    $0x0, 0x18(%rdi)
+    0.00 :   103339d:        jne     0x10334d7 <main+0xbd7>
+    0.00 :   10333a3:        leaq    0x25fb6(%rip), %rdx  # 0x1059360 <myl_core_free_lists>
+    0.00 :   10333aa:        movq    (%rdx,%rax,8), %rcx
+    0.00 :   10333ae:        movq    %rcx, (%rdi)
+    0.00 :   10333b1:        movq    %rdi, (%rdx,%rax,8)
+    0.00 :   10333b5:        movq    0x20(%rsp), %rbx
+    0.00 :   10333ba:        movq    0x8(%rsp), %r15
+    0.00 :   10333bf:        movzbl  0x7(%rbp), %eax
+    0.00 :   10333c3:        testq   %rax, %rax
+    0.00 :   10333c6:        je      0x10334f0 <main+0xbf0>
+    0.00 :   10333cc:        cmpq    $0x0, 0x18(%rbp)
+    0.00 :   10333d1:        jne     0x10334f0 <main+0xbf0>
+    0.00 :   10333d7:        movq    (%rdx,%rax,8), %rcx
+    0.00 :   10333db:        movq    %rcx, (%rbp)
+    0.00 :   10333df:        movq    %rbp, (%rdx,%rax,8)
+    0.00 :   10333e3:        movl    $0x1c, %edi
+    0.00 :   10333e8:        vzeroupper
+    0.00 :   10333eb:        callq   0x100a540 <myl_core_io_at>
+    0.00 :   10333f0:        movq    %rbx, %rdi
+    0.00 :   10333f3:        callq   0x1022570 <myl_core_host_check>
+    0.00 :   10333f8:        callq   0x1033610 <runtime_bench_now>
+    0.00 :   10333fd:        movq    %rax, %rbx
+    0.00 :   1033400:        subq    %r15, %rbx
+    0.00 :   1033403:        jo      0x10335f1 <main+0xcf1>
+    0.00 :   1033409:        movl    $0x1, %edi
+    0.00 :   103340e:        movq    %r14, %rsi
+    0.00 :   1033411:        callq   0x100ac40 <myl_core_print_i64>
+    0.00 :   1033416:        movl    $0x1, %edi
+    0.00 :   103341b:        callq   0x1009440 <myl_core_print_sep>
+    0.00 :   1033420:        movl    $0x1, %edi
+    0.00 :   1033425:        movq    %rbx, %rsi
+    0.00 :   1033428:        callq   0x100ac40 <myl_core_print_i64>
+    0.00 :   103342d:        movl    $0x1, %edi
+    0.00 :   1033432:        callq   0x1009500 <myl_core_print_end>
+    0.00 :   1033437:        xorl    %ebx, %ebx
+    0.00 :   1033439:        movq    0x28(%rsp), %r14
+    0.00 :   103343e:        movq    %r14, %rdi
+    0.00 :   1033441:        callq   0x1009c00 <myl_core_release>
+    0.00 :   1033446:        movq    %rbx, %rdi
+    0.00 :   1033449:        addq    $0x38, %rsp
+    0.00 :   103344d:        popq    %rbx
+    0.00 :   103344e:        popq    %r12
+    0.00 :   1033450:        popq    %r13
+    0.00 :   1033452:        popq    %r14
+    0.00 :   1033454:        popq    %r15
+    0.00 :   1033456:        popq    %rbp
+    0.00 :   1033457:        jmp     0x100a550 <myl_core_exit>
+    0.00 :   103345c:        movl    $0x8, %esi
+    0.00 :   1033461:        movq    %r15, %rdi
+    0.00 :   1033464:        movq    %r8, %rbx
+    0.00 :   1033467:        movq    %r9, %r14
+    0.00 :   103346a:        movl    %r10d, %ebp
+    0.00 :   103346d:        callq   0x10096c0 <myl_core_list_new_slow>
+    0.00 :   1033472:        movl    %ebp, %r10d
+    0.00 :   1033475:        movq    %r14, %r9
+    0.00 :   1033478:        movq    %rbx, %r8
+    0.00 :   103347b:        movq    0x8(%rsp), %r11
+    0.00 :   1033480:        movq    %rax, %rdi
+    0.00 :   1033483:        jmp     0x1032a24 <main+0x124>
+    0.00 :   1033488:        movl    $0x8, %esi
+    0.00 :   103348d:        movq    %r15, %rdi
+    0.00 :   1033490:        callq   0x10096c0 <myl_core_list_new_slow>
+    0.00 :   1033495:        movq    0x8(%rsp), %r11
+    0.00 :   103349a:        movq    %rax, %rbp
+    0.00 :   103349d:        jmp     0x1032b2a <main+0x22a>
+    0.00 :   10334a2:        movl    $0x3a, %edi
+    0.00 :   10334a7:        vzeroupper
+    0.00 :   10334aa:        callq   0x1009dc0 <myl_core_trap>
+    0.00 :   10334af:        movl    $0x23, %edi
+    0.00 :   10334b4:        movq    %rbx, %rsi
+    0.00 :   10334b7:        movq    %rcx, %rdx
+    0.00 :   10334ba:        vzeroupper
+    0.00 :   10334bd:        callq   0x1009dc0 <myl_core_trap>
+    0.00 :   10334c2:        movl    $0x65, %edx
+    0.00 :   10334c7:        movl    $0x27, %edi
+    0.00 :   10334cc:        movq    %rax, %rsi
+    0.00 :   10334cf:        vzeroupper
+    0.00 :   10334d2:        callq   0x1009dc0 <myl_core_trap>
+    0.00 :   10334d7:        vzeroupper
+    0.00 :   10334da:        callq   0x1032110 <myl_core_free_block>
+    0.00 :   10334df:        movq    0x20(%rsp), %rbx
+    0.00 :   10334e4:        leaq    0x25e75(%rip), %rdx  # 0x1059360 <myl_core_free_lists>
+    0.00 :   10334eb:        jmp     0x10333ba <main+0xaba>
+    0.00 :   10334f0:        movq    %rbp, %rdi
+    0.00 :   10334f3:        vzeroupper
+    0.00 :   10334f6:        callq   0x1032110 <myl_core_free_block>
+    0.00 :   10334fb:        jmp     0x10333e3 <main+0xae3>
+    0.00 :   1033500:        movl    $0x26, %edi
+    0.00 :   1033505:        vzeroupper
+    0.00 :   1033508:        callq   0x1009dc0 <myl_core_trap>
+    0.00 :   103350d:        movl    $0x3, %edx
+    0.00 :   1033512:        movl    $0x24, %edi
+    0.00 :   1033517:        vzeroupper
+    0.00 :   103351a:        callq   0x1009dc0 <myl_core_trap>
+    0.00 :   103351f:        movl    $0x25, %edi
+    0.00 :   1033524:        movq    %rax, %rsi
+    0.00 :   1033527:        movq    %rcx, %rdx
+    0.00 :   103352a:        vzeroupper
+    0.00 :   103352d:        callq   0x1009dc0 <myl_core_trap>
+    0.00 :   1033532:        movl    $0x25, %edx
+    0.00 :   1033537:        movl    $0x11, %edi
+    0.00 :   103353c:        callq   0x1009dc0 <myl_core_trap>
+    0.00 :   1033541:        movl    $0x12, %edi
+    0.00 :   1033546:        movq    %r11, %rsi
+    0.00 :   1033549:        movq    %r14, %rdx
+    0.00 :   103354c:        callq   0x1009dc0 <myl_core_trap>
+    0.00 :   1033551:        movl    $0x28, %edi
+    0.00 :   1033556:        movq    %r11, %rsi
+    0.00 :   1033559:        callq   0x1009dc0 <myl_core_trap>
+    0.00 :   103355e:        movl    $0x29, %edi
+    0.00 :   1033563:        movq    %r11, %rsi
+    0.00 :   1033566:        vzeroupper
+    0.00 :   1033569:        callq   0x1009dc0 <myl_core_trap>
+    0.00 :   103356e:        movl    $0x7, %edx
+    0.00 :   1033573:        jmp     0x1033581 <main+0xc81>
+    0.00 :   1033575:        movl    $0xe, %edx
+    0.00 :   103357a:        jmp     0x1033581 <main+0xc81>
+    0.00 :   103357c:        movl    $0x15, %edx
+    0.00 :   1033581:        movl    $0x2a, %edi
+    0.00 :   1033586:        movq    %r14, %rsi
+    0.00 :   1033589:        vzeroupper
+    0.00 :   103358c:        callq   0x1009dc0 <myl_core_trap>
+    0.00 :   1033591:        movl    $0x38, %edi
+    0.00 :   1033596:        xorl    %esi, %esi
+    0.00 :   1033598:        xorl    %edx, %edx
+    0.00 :   103359a:        callq   0x1009dc0 <myl_core_trap>
+    0.00 :   103359f:        movl    $0x1e, %edi
+    0.00 :   10335a4:        movq    %r14, %rsi
+    0.00 :   10335a7:        vzeroupper
+    0.00 :   10335aa:        callq   0x1009dc0 <myl_core_trap>
+    0.00 :   10335af:        movl    $0x4, %esi
+    0.00 :   10335b4:        movl    $0x37, %edi
+    0.00 :   10335b9:        vzeroupper
+    0.00 :   10335bc:        callq   0x1009dc0 <myl_core_trap>
+    0.00 :   10335c1:        movl    $0x9, %esi
+    0.00 :   10335c6:        movl    $0x31, %edi
+    0.00 :   10335cb:        vzeroupper
+    0.00 :   10335ce:        callq   0x1009dc0 <myl_core_trap>
+    0.00 :   10335d3:        movl    $0x1, %esi
+    0.00 :   10335d8:        movl    $0x5, %edi
+    0.00 :   10335dd:        callq   0x1009dc0 <myl_core_trap>
+    0.00 :   10335e2:        movl    $0x2, %esi
+    0.00 :   10335e7:        movl    $0x8, %edi
+    0.00 :   10335ec:        callq   0x1009dc0 <myl_core_trap>
+    0.00 :   10335f1:        movl    $0x1d, %edi
+    0.00 :   10335f6:        movq    %rax, %rsi
+    0.00 :   10335f9:        movq    %r15, %rdx
+    0.00 :   10335fc:        callq   0x1009dc0 <myl_core_trap>

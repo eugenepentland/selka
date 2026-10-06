@@ -1,0 +1,29 @@
+build packet_decode old: status=0
+build packet_decode new: status=0
+build json_transform old: status=0
+build json_transform new: status=0
+
+### packet_decode (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 15.163 | 15.023 | same |
+| new core release | 15.977 | 15.922 | same |
+| Rust | 10.094 | 10.646 | same |
+| Zig ReleaseSafe | 18.958 | 19.431 | same |
+| new / old | 1.054 | 1.060 | same |
+| new / Zig | 0.843 | 0.819 | same |
+| new / Rust | 1.583 | 1.496 | same |
+
+### json_transform (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 13721.899 | 13998.965 | same |
+| new core release | 2839.926 | 2964.085 | same |
+| Rust | 1770.468 | 1975.876 | same |
+| Zig ReleaseSafe | 2837.948 | 2848.539 | same |
+| new / old | 0.207 | 0.212 | same |
+| new / Zig | 1.001 | 1.041 | same |
+| new / Rust | 1.604 | 1.500 | same |
+
+valid rows: 2; speed gate misses: []
+Both new/old and new/Zig must be at most 1.10. binary_search misses require the plan's identical-code/layout-noise review; all other misses require repair.

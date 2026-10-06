@@ -84,9 +84,13 @@ fn fastPathsOutput(arena: std.mem.Allocator, root: []const u8, mode: []const []c
     try argv.appendSlice(arena, &.{ options.core_path, "build", source, "-o", output, cache_argument, cache });
     try argv.appendSlice(arena, mode);
     const built = try std.process.run(arena, std.testing.io, .{ .argv = argv.items });
+    if (built.term != .exited or built.term.exited != 0) report("text build failed: {s}{s}\n", .{ built.stdout, built.stderr });
     try std.testing.expect(built.term == .exited and built.term.exited == 0);
-    const ran = try std.process.run(arena, std.testing.io, .{ .argv = &.{output} });
+    var environment = try std.testing.environ.createMap(arena);
+    try environment.put("MYL_CORE_LEAKCHECK", "1");
+    const ran = try std.process.run(arena, std.testing.io, .{ .argv = &.{output}, .environ_map = &environment });
     try std.testing.expect(ran.term == .exited and ran.term.exited == 0);
+    try std.testing.expectEqualStrings("", ran.stderr);
     return ran.stdout;
 }
 
@@ -154,4 +158,161 @@ test "self extension and reverse build list updates whose ownership preserves th
     try std.testing.expect(std.mem.indexOf(u8, text, "list_push") != null);
     try std.testing.expect(std.mem.indexOf(u8, text, "list_get") != null);
     try std.testing.expect(std.mem.indexOf(u8, text, "phi list[str]") != null);
+}
+
+const split_keys =
+    \\def counts(text: str) -> dict[str, int]:
+    \\    result: dict[str, int] = {}
+    \\    for word in text.split():
+    \\        result[word] = result[word] + 1 if word in result else 1
+    \\    return result
+    \\
+    \\def rebound(text: str) -> dict[str, int]:
+    \\    result: dict[str, int] = {}
+    \\    for word in text.split():
+    \\        text = "changed"
+    \\        result[word] = 1
+    \\        if len(result) == 2:
+    \\            continue
+    \\        if len(result) == 3:
+    \\            break
+    \\    return result
+    \\
+    \\def main(out: Stream) -> int:
+    \\    empty = counts(" \t\n\r\x0b\x0c")
+    \\    unicode = counts("é\t😀\né\rnaïve\x0bcafé\x0cx\u00a0y")
+    \\    many = counts(" ".join(["alpha", "beta", "gamma", "delta", "epsilon", "zeta", "eta", "theta", "iota", "kappa", "lambda", "mu", "alpha", "abcdefghijklmnopabcdefghijklmnop", "abcdefghijklmnopabcdefghijklmnop"]))
+    \\    saved = many
+    \\    many["alpha"] = 9
+    \\    snapshot = rebound(" ".join(["a", "b", "c", "d"]))
+    \\    deleted = counts("a b c")
+    \\    _ = deleted.pop("b")
+    \\    for word in "a b d".split():
+    \\        deleted[word] = 2
+    \\    collided = counts("collision002553 collision005a0e collision002553")
+    \\    sources = [" ".join(["a", "b", "c"])]
+    \\    from_list: dict[str, int] = {}
+    \\    for word in sources[0].split():
+    \\        sources[0] = "changed"
+    \\        from_list[word] = 1
+    \\    source_dict: dict[str, str] = {"input": " ".join(["a", "b", "c"])}
+    \\    from_dict: dict[str, int] = {}
+    \\    for word in source_dict["input"].split():
+    \\        source_dict["input"] = "changed"
+    \\        from_dict[word] = 1
+    \\    out.print(len(empty), len(unicode), unicode["é"], unicode["x\u00a0y"], unicode["😀"])
+    \\    out.print(len(saved), saved["alpha"], many["alpha"], saved["abcdefghijklmnopabcdefghijklmnop"])
+    \\    out.print(len(snapshot), snapshot["a"], snapshot["b"], snapshot["c"])
+    \\    out.print(len(deleted), deleted["a"], deleted["b"], deleted["c"], deleted["d"])
+    \\    out.print(len(collided), collided["collision002553"], collided["collision005a0e"])
+    \\    out.print(len(from_list), from_list["a"], from_list["b"], from_list["c"])
+    \\    out.print(len(from_dict), from_dict["a"], from_dict["b"], from_dict["c"])
+    \\    return 0
+    \\
+;
+
+// spec-case: NEW-CORE-TEXT-BYTES-1
+test "private split dictionary keys preserve whitespace, UTF8, source snapshots, insertion ownership and captured dictionaries" {
+    var state = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer state.deinit();
+    const arena = state.allocator();
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", arena);
+    try directory.dir.writeFile(std.testing.io, .{ .sub_path = "fast.my", .data = split_keys });
+    const expected = "0 5 2 1 1\n13 2 9 2\n3 1 1 1\n4 2 2 1 2\n2 2 1\n3 1 1 1\n3 1 1 1\n";
+    for ([_][]const []const u8{ &.{}, &.{"--release"}, &.{ "--release", "--verify-facts" } }) |mode| {
+        try std.testing.expectEqualStrings(expected, try fastPathsOutput(arena, root, mode));
+    }
+    const text = try @import("test_support.zig").optimizedText(arena, split_keys);
+    try std.testing.expect(std.mem.indexOf(u8, text, "str_view_of") != null);
+    try std.testing.expect(std.mem.indexOf(u8, text, "str_from_view") != null);
+    const llvm = try @import("test_support.zig").releaseLlvmText(arena, split_keys);
+    try std.testing.expect(std.mem.indexOf(u8, llvm, "call i64 @myl_core_split_ws_start") == null);
+    try std.testing.expect(std.mem.indexOf(u8, llvm, "call i64 @myl_core_split_ws_end") == null);
+    try std.testing.expect(std.mem.indexOf(u8, llvm, "%splitnonnegative") != null);
+}
+
+const escaped_split =
+    \\def main(out: Stream) -> int:
+    \\    words = "one two".split()
+    \\    keys: dict[str, int] = {}
+    \\    for word in words:
+    \\        keys[word] = 1
+    \\    out.print(len(words), words[0])
+    \\    return 0
+    \\
+;
+
+const escaped_word =
+    \\def main(out: Stream) -> int:
+    \\    keys: dict[str, int] = {}
+    \\    words: list[str] = []
+    \\    for word in "one two".split():
+    \\        keys[word] = 1
+    \\        words.append(word)
+    \\    out.print(words)
+    \\    return 0
+    \\
+;
+
+const indexed_word =
+    \\def main(out: Stream) -> int:
+    \\    keys: dict[str, int] = {}
+    \\    for index, word in enumerate("one two".split()):
+    \\        keys[word] = index
+    \\    out.print(keys["two"])
+    \\    return 0
+    \\
+;
+
+const called_word =
+    \\def inspect(word: str) -> int:
+    \\    return len(word)
+    \\
+    \\def main(out: Stream) -> int:
+    \\    keys: dict[str, int] = {}
+    \\    for word in "one two".split():
+    \\        keys[word] = inspect(word)
+    \\    out.print(keys["two"])
+    \\    return 0
+    \\
+;
+
+const phi_word =
+    \\def main(out: Stream) -> int:
+    \\    keys: dict[str, int] = {}
+    \\    saved = ""
+    \\    for word in "one two".split():
+    \\        keys[word] = 1
+    \\        saved = word
+    \\    out.print(saved)
+    \\    return 0
+    \\
+;
+
+// spec-case: NEW-CORE-TEXT-BYTES-1
+test "private split fusion refuses observable lists, indices, ordinary calls and escaping words or phis" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    for ([_][]const u8{ escaped_split, escaped_word, indexed_word, called_word, phi_word }) |source| {
+        const text = try @import("test_support.zig").optimizedText(arena.allocator(), source);
+        try std.testing.expect(std.mem.indexOf(u8, text, "call list[str] myl_core_str_split_whitespace") != null);
+        try std.testing.expect(std.mem.indexOf(u8, text, "myl_core_split_ws_start") == null);
+    }
+}
+
+// spec-case: NEW-CORE-TEXT-BYTES-1
+test "private split fusion requires the authorized runtime declaration even with an identical extern name and signature" {
+    var state = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer state.deinit();
+    const arena = state.allocator();
+    var refusal: @import("build.zig").Refusal = .{};
+    var module = try @import("test_support.zig").buildSource(arena, split_keys, &refusal);
+    for (module.functions.items) |*function| {
+        if (std.mem.eql(u8, function.name, "myl_core_str_split_whitespace")) function.signature.linkage = .extern_c;
+    }
+    _ = try @import("test_support.zig").runPasses(arena, &module, .trusted);
+    const text = try @import("print.zig").module(arena, &module);
+    try std.testing.expect(std.mem.indexOf(u8, text, "myl_core_split_ws_start") == null);
 }

@@ -1,0 +1,21 @@
+{
+  "old_sha256": "d36658dbfb78d29213224532a13fd5ad8b7c0e290dbfb87613d9815678305c79",
+  "new_source": "ac81831bd9e6100bf8d31cc07ca97bcff9f82d6c plus initial scalar WIP, before cold diagnostic and marker repairs",
+  "differences": [
+    {
+      "name": "t_scalar_fusion::test_large_negative_index_traps",
+      "old_reason": "R_TEXT_BOUNDS (index -9223372036854775807, length 2)\n  in t_scalar_fusion::compares at t_scalar_fusion.my:20:10\n  in t_scalar_fusion::test_large_negative_index_traps at t_scalar_fusion.my:136:12\n",
+      "new_reason": "R_TEXT_BOUNDS (index 3, length 3)\n  in t_scalar_fusion::compares at t_scalar_fusion.my:20:10\n  in t_scalar_fusion::test_large_negative_index_traps at t_scalar_fusion.my:136:12\n"
+    },
+    {
+      "name": "t_scalar_fusion::test_large_positive_index_traps",
+      "old_reason": "R_TEXT_BOUNDS (index 9223372036854775807, length 2)\n  in t_scalar_fusion::compares at t_scalar_fusion.my:20:10\n  in t_scalar_fusion::test_large_positive_index_traps at t_scalar_fusion.my:132:12\n",
+      "new_reason": "R_TEXT_BOUNDS (index 3, length 3)\n  in t_scalar_fusion::compares at t_scalar_fusion.my:20:10\n  in t_scalar_fusion::test_large_positive_index_traps at t_scalar_fusion.my:132:12\n"
+    },
+    {
+      "name": "t_scalar_fusion::test_surrogate_construction_traps_before_scalar_uses",
+      "old_reason": "R_TEXT_SCALAR\n  in t_scalar_fusion::test_surrogate_construction_traps_before_scalar_uses at t_scalar_fusion.my:140:21\n",
+      "new_reason": "NativeTestProcessFailed: .{ .exited = 1 }\n/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-char-performance/test/core/t_scalar_fusion.my:140:21: error[R_TEXT_SCALAR]: native execution failed\n  in t_scalar_fusion::test_surrogate_construction_traps_before_scalar_uses at /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-char-performance/test/core/t_scalar_fusion.my:140:21\n  in __test_trial_11 at /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-char-performance/test/core/t_scalar_fusion.my:1:1\n"
+    }
+  ]
+}

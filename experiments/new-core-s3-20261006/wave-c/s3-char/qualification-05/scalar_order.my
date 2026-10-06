@@ -1,0 +1,17 @@
+module scalar_order
+
+def select(text: str, out: Stream) -> str:
+    out.print("before")
+    ch = text[0]
+    out.print("after")
+    selected = ""
+    if ch == "é":
+        selected += ch
+    elif ch != "x":
+        selected += ch
+    return selected
+
+def main(args: list[str], out: Stream) -> int:
+    text = "\0" if args[0] == "nul" else args[0]
+    out.print(select(text, out))
+    return 0

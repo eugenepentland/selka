@@ -1,0 +1,17 @@
+test-core
++- run test w
+guardian/test: 4 test(s) selected
+guardian/test: test wall 7.32s; slowest over 50ms:
+guardian/test:   4.08s  dict_scalar_store_test.test.scalar dictionary stores preserve snapshots, indexed tombstones, bool, unit, narrow integers and float NaNs in every mode
+guardian/test:   3.21s  text_test.test.private split dictionary keys preserve whitespace, UTF8, source snapshots, insertion ownership and captured dictionaries
+guardian/test: PASS — 4 passed
+guardian/test: RESULT {"passed":4,"failed":0,"skipped":0}
+failed command: ./.zig-cache/o/e30213fcccdb5211a0dedcfa9d44e514/test --cache-dir=./.zig-cache --seed=0x6082136f --listen=-
+
+Build Summary: 5/5 steps succeeded; 4/4 tests passed
+test-core success
++- run test 4 pass (4 total) 7s MaxRSS:247M
+   +- compile test debug native cached 7ms MaxRSS:38M
+      +- options cached
+         +- compile exe mylang-core debug native cached 11ms MaxRSS:38M
+

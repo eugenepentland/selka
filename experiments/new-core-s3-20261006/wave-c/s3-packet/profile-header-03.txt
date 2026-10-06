@@ -1,0 +1,39 @@
+# ========
+# captured on    : Tue Oct  6 16:02:07 2026
+# header version : 1
+# data offset    : 680
+# data size      : 755576
+# feat offset    : 756256
+# hostname : linuxserver
+# os release : 7.0.0-31-generic
+# perf version : 7.0.14
+# arch : x86_64
+# nrcpus online : 20
+# nrcpus avail : 20
+# cpudesc : 12th Gen Intel(R) Core(TM) i7-12700H
+# cpuid : GenuineIntel,6,154,3
+# total memory : 32098692 kB
+# cmdline : /usr/bin/perf 
+# event : name = cpu_core/cycles/u, , id = { 1524311, 1524312, 1524313, 1524314, 1524315, 1524316, 1524317, 1524318, 1524319, 1524320, 1524321, 1524322 }, type = 0 (PERF_TYPE_HARDWARE), size = 144, config = 0x400000000 (cpu_core/PERF_COUNT_HW_CPU_CYCLES/), { sample_period, sample_freq } = 997, sample_type = IP|TID|TIME|CALLCHAIN|PERIOD|IDENTIFIER, read_format = ID|LOST, disabled = 1, inherit = 1, exclude_kernel = 1, exclude_hv = 1, freq = 1, enable_on_exec = 1, sample_id_all = 1
+# event : name = dummy:u, , id = { 1524323, 1524324, 1524325, 1524326, 1524327, 1524328, 1524329, 1524330, 1524331, 1524332, 1524333, 1524334, 1524335, 1524336, 1524337, 1524338, 1524339, 1524340, 1524341, 1524342 }, type = 1 (PERF_TYPE_SOFTWARE), size = 144, config = 0x9 (PERF_COUNT_SW_DUMMY), { sample_period, sample_freq } = 997, sample_type = IP|TID|TIME|PERIOD|IDENTIFIER, read_format = ID|LOST, inherit = 1, exclude_kernel = 1, exclude_hv = 1, mmap = 1, comm = 1, freq = 1, task = 1, sample_id_all = 1, exclude_guest = 1, mmap2 = 1, comm_exec = 1, ksymbol = 1, bpf_event = 1, build_id = 1
+# CPU_TOPOLOGY info available, use -I to display
+# NUMA_TOPOLOGY info available, use -I to display
+# pmu mappings: cpu_atom = 10, cpu_core = 4, breakpoint = 5, cstate_core = 29, cstate_pkg = 30, hwmon_acpitz = 4294901760, hwmon_coretemp = 4294901763, hwmon_iwlwifi_1 = 4294901764, hwmon_nvme = 4294901762, hwmon_nvme = 4294901761, i915 = 32, intel_bts = 11, intel_pt = 12, kprobe = 8, msr = 13, power = 31, software = 1, tool = 4294967294, tracepoint = 2, uncore_arb_0 = 22, uncore_arb_1 = 23, uncore_cbox_0 = 14, uncore_cbox_1 = 15, uncore_cbox_2 = 16, uncore_cbox_3 = 17, uncore_cbox_4 = 18, uncore_cbox_5 = 19, uncore_cbox_6 = 20, uncore_cbox_7 = 21, uncore_clock = 24, uncore_imc_free_running_0 = 27, uncore_imc_free_running_1 = 28, uncore_imc_0 = 25, uncore_imc_1 = 26, uprobe = 9
+# CACHE info available, use -I to display
+# time of first sample : 1355069.360506
+# time of last sample : 1355073.455374
+# sample duration :   4094.868 ms
+# MEM_TOPOLOGY info available, use -I to display
+# bpf_prog_info empty
+# btf info empty
+# cpu pmu capabilities: branches=32, max_precise=3, pmu_name=alderlake_hybrid
+# HYBRID_TOPOLOGY info available, use -I to display
+# cpu_atom pmu capabilities: branches=32, max_precise=3, pmu_name=alderlake_hybrid
+# cpu_core pmu capabilities: branches=32, max_precise=3, pmu_name=alderlake_hybrid
+# intel_pt pmu capabilities: topa_multiple_entries=1, psb_cyc=1, single_range_output=1, mtc_periods=249, ip_filtering=1, output_subsys=0, cr3_filtering=1, psb_periods=3f, event_trace=0, cycle_thresholds=3f, power_event_trace=0, mtc=1, payloads_lip=0, ptwrite=1, num_address_ranges=2, max_subleaf=1, topa_output=1, tnt_disable=0
+# CPU_DOMAIN_INFO info available, use -I to display
+# e_machine : 62
+#   e_flags : 0
+# missing features: TRACING_DATA BUILD_ID BRANCH_STACK GROUP_DESC AUXTRACE STAT CLOCKID DIR_FORMAT COMPRESSED CLOCK_DATA 
+# ========
+#

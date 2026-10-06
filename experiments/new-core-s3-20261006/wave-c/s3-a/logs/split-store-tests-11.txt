@@ -1,0 +1,17 @@
+test-core
++- run test w
+guardian/test: 4 test(s) selected
+guardian/test: test wall 5.74s; slowest over 50ms:
+guardian/test:   3.18s  text_test.test.private split dictionary keys preserve whitespace, UTF8, source snapshots, insertion ownership and captured dictionaries
+guardian/test:   2.54s  s2_ir_test.test.S2 IR dict_set_value emits valid LLVM and verifies its result type
+guardian/test: PASS — 4 passed
+guardian/test: RESULT {"passed":4,"failed":0,"skipped":0}
+failed command: ./.zig-cache/o/71e01ed6257200074c5920de6ce2cc16/test --cache-dir=./.zig-cache --seed=0x4896e831 --listen=-
+
+Build Summary: 5/5 steps succeeded; 4/4 tests passed
+test-core success
++- run test 4 pass (4 total) 5s MaxRSS:239M
+   +- compile test debug native success 1s MaxRSS:331M
+      +- options success
+         +- compile exe mylang-core debug native success 1s MaxRSS:345M
+

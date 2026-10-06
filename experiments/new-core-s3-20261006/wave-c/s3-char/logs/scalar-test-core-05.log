@@ -1,0 +1,18 @@
+test-core
++- run test w
+guardian/test: 5 test(s) selected
+guardian/test: SLOW  57.62s  fuse_text_scalar_test.test.scalar fusion emitter guards manual width and code reads before ASCII and retains Unicode and invalid offset fallback
+guardian/test: test wall 60.77s; slowest over 50ms:
+guardian/test:   57.62s  fuse_text_scalar_test.test.scalar fusion emitter guards manual width and code reads before ASCII and retains Unicode and invalid offset fallback
+guardian/test:   3.13s  fuse_text_scalar_test.test.scalar fusion native modes preserve Unicode bounds aliases escaping uses and exact failures
+guardian/test: PASS — 5 passed
+guardian/test: RESULT {"passed":5,"failed":0,"skipped":0}
+failed command: ./.zig-cache/o/4cd5945860667e176a4c0b200357aa9f/test --cache-dir=./.zig-cache --seed=0x1c314315 --listen=-
+
+Build Summary: 5/5 steps succeeded; 5/5 tests passed
+test-core success
++- run test 5 pass (5 total) 1m MaxRSS:249M
+   +- compile test debug native success 1s MaxRSS:334M
+      +- options cached
+         +- compile exe mylang-core debug native cached 5ms MaxRSS:38M
+

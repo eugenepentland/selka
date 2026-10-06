@@ -428,13 +428,29 @@ static struct {
     int32_t ring[TRACE_RING];
 } error_trace = {.origin = -1};
 
-__attribute__((cold, noinline)) void myl_core_err_trace(int32_t site, int32_t mode) {
+static inline void core_err_trace_record(int32_t site, int32_t mode) {
     if (mode == 0) {
         error_trace.origin = site;
         error_trace.count = 0;
         return;
     }
     error_trace.ring[error_trace.count++ % TRACE_RING] = site;
+}
+
+/* Ordinary C callers keep their ABI. Compiler-owned err_trace operations use
+ * the register-preserving twin (ERROR-TRACE-6), with the same recording leaf. */
+__attribute__((cold, noinline)) void myl_core_err_trace(int32_t site, int32_t mode) {
+    core_err_trace_record(site, mode);
+}
+
+__attribute__((cold, noinline, preserve_most))
+void myl_core_err_trace_origin_preserve_most(int32_t site) {
+    core_err_trace_record(site, 0);
+}
+
+__attribute__((cold, noinline, preserve_most))
+void myl_core_err_trace_append_preserve_most(int32_t site) {
+    core_err_trace_record(site, 1);
 }
 
 /* `main`'s `args`: every command-line argument after the program name. */
@@ -814,6 +830,18 @@ __attribute__((noinline)) static void trap_frames(void) {
     }
 }
 
+/* The version-1 operation marker, shared by plain traps and contract messages. */
+static size_t core_operation_record(char *record, size_t capacity, const char *operation) {
+    size_t used = (size_t)snprintf(record, capacity, "\036MYLANG-TRAP {\"version\":1,\"operation\":\"");
+    for (const unsigned char *byte = (const unsigned char *)operation; *byte && used + 8 < capacity; ++byte) {
+        if (*byte == '"' || *byte == '\\') used += (size_t)snprintf(record + used, capacity - used, "\\%c", *byte);
+        else if (*byte < 0x20) used += (size_t)snprintf(record + used, capacity - used, "\\u%04x", *byte);
+        else record[used++] = (char)*byte;
+    }
+    used += (size_t)snprintf(record + used, capacity - used, "\"}\n");
+    return used < capacity ? used : capacity - 1;
+}
+
 /* Report a failed check the way the old core does (code, detail, one `in f at …`
    line per frame and the `MYLANG-TRAP` record on stderr) and exit 1. The trapping
    frame comes from the site table, its callers from `trap_frames`. */
@@ -876,6 +904,7 @@ void myl_core_trap(int32_t index, int64_t a, int64_t b) {
         snprintf(record, sizeof record, "\036MYLANG-TRAP {\"version\":1,\"operation\":\"cast\",\"left\":%lld,\"width\":%d}\n", (long long)a, site->width);
         break;
     }
+    if (record[0] == 0 && site->kind != TRAP_FACT) core_operation_record(record, sizeof record, site->operation);
     stream_flush(&streams[0]);
     char text[1024];
     int len = snprintf(text, sizeof text, "%s:%d:%d: error[%s]: native execution failed%s\n  in %s at %s:%d:%d\n",
@@ -1127,14 +1156,8 @@ void myl_core_assert_fail(int32_t index) {
     trap_frames();
     /* The record: {"version":1,"operation":"MESSAGE"} with the message JSON-escaped. */
     char record[2048];
-    size_t used = (size_t)snprintf(record, sizeof record, "\036MYLANG-TRAP {\"version\":1,\"operation\":\"");
-    for (const unsigned char *byte = (const unsigned char *)site->operation; *byte && used + 8 < sizeof record; ++byte) {
-        if (*byte == '"' || *byte == '\\') used += (size_t)snprintf(record + used, sizeof record - used, "\\%c", *byte);
-        else if (*byte < 0x20) used += (size_t)snprintf(record + used, sizeof record - used, "\\u%04x", *byte);
-        else record[used++] = (char)*byte;
-    }
-    used += (size_t)snprintf(record + used, sizeof record - used, "\"}\n");
-    stream_write(&streams[1], record, used < sizeof record ? used : sizeof record - 1);
+    size_t used = core_operation_record(record, sizeof record, site->operation);
+    stream_write(&streams[1], record, used);
     flush_all();
     os_exit(1);
 }

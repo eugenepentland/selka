@@ -1,0 +1,724 @@
+{
+  "qualified": true,
+  "error": null,
+  "reports": {
+    "old": {
+      "t_scalar_fusion::test_comparison_only_reads_cover_nul_and_scalar_extremes": {
+        "name": "t_scalar_fusion::test_comparison_only_reads_cover_nul_and_scalar_extremes",
+        "status": "passed",
+        "reason": "",
+        "output": ""
+      },
+      "t_scalar_fusion::test_comparisons_and_appends_preserve_all_unicode_scalars": {
+        "name": "t_scalar_fusion::test_comparisons_and_appends_preserve_all_unicode_scalars",
+        "status": "passed",
+        "reason": "",
+        "output": ""
+      },
+      "t_scalar_fusion::test_distinct_branches_and_repeated_appends_keep_the_selected_character": {
+        "name": "t_scalar_fusion::test_distinct_branches_and_repeated_appends_keep_the_selected_character",
+        "status": "passed",
+        "reason": "",
+        "output": ""
+      },
+      "t_scalar_fusion::test_distinct_ssa_aliases_share_input_but_copy_the_append_destination": {
+        "name": "t_scalar_fusion::test_distinct_ssa_aliases_share_input_but_copy_the_append_destination",
+        "status": "passed",
+        "reason": "",
+        "output": ""
+      },
+      "t_scalar_fusion::test_empty_comparison_only_read_traps": {
+        "name": "t_scalar_fusion::test_empty_comparison_only_read_traps",
+        "status": "failed",
+        "reason": "R_TEXT_BOUNDS (index 0, length 0)\n  in t_scalar_fusion::compares at t_scalar_fusion.my:20:10\n  in t_scalar_fusion::test_empty_comparison_only_read_traps at t_scalar_fusion.my:142:12\n",
+        "output": ""
+      },
+      "t_scalar_fusion::test_empty_iteration_does_not_read_past_the_text": {
+        "name": "t_scalar_fusion::test_empty_iteration_does_not_read_past_the_text",
+        "status": "passed",
+        "reason": "",
+        "output": ""
+      },
+      "t_scalar_fusion::test_empty_separator_is_a_structured_native_trap": {
+        "name": "t_scalar_fusion::test_empty_separator_is_a_structured_native_trap",
+        "status": "failed",
+        "reason": "R_EMPTY_SEPARATOR\n  in t_scalar_fusion::test_empty_separator_is_a_structured_native_trap at t_scalar_fusion.my:167:16\n",
+        "output": ""
+      },
+      "t_scalar_fusion::test_escaping_and_multiscalar_consumers_remain_strings": {
+        "name": "t_scalar_fusion::test_escaping_and_multiscalar_consumers_remain_strings",
+        "status": "passed",
+        "reason": "",
+        "output": ""
+      },
+      "t_scalar_fusion::test_large_negative_index_traps": {
+        "name": "t_scalar_fusion::test_large_negative_index_traps",
+        "status": "failed",
+        "reason": "R_TEXT_BOUNDS (index -9223372036854775807, length 2)\n  in t_scalar_fusion::compares at t_scalar_fusion.my:20:10\n  in t_scalar_fusion::test_large_negative_index_traps at t_scalar_fusion.my:150:12\n",
+        "output": ""
+      },
+      "t_scalar_fusion::test_large_positive_index_traps": {
+        "name": "t_scalar_fusion::test_large_positive_index_traps",
+        "status": "failed",
+        "reason": "R_TEXT_BOUNDS (index 9223372036854775807, length 2)\n  in t_scalar_fusion::compares at t_scalar_fusion.my:20:10\n  in t_scalar_fusion::test_large_positive_index_traps at t_scalar_fusion.my:146:12\n",
+        "output": ""
+      },
+      "t_scalar_fusion::test_minimum_signed_index_reports_its_original_value": {
+        "name": "t_scalar_fusion::test_minimum_signed_index_reports_its_original_value",
+        "status": "failed",
+        "reason": "R_TEXT_BOUNDS (index -9223372036854775808, length 2)\n  in t_scalar_fusion::compares at t_scalar_fusion.my:20:10\n  in t_scalar_fusion::test_minimum_signed_index_reports_its_original_value at t_scalar_fusion.my:163:12\n",
+        "output": ""
+      },
+      "t_scalar_fusion::test_missing_list_value_is_a_structured_native_trap": {
+        "name": "t_scalar_fusion::test_missing_list_value_is_a_structured_native_trap",
+        "status": "failed",
+        "reason": "R_LIST_VALUE\n  in t_scalar_fusion::test_missing_list_value_is_a_structured_native_trap at t_scalar_fusion.my:176:5\n",
+        "output": ""
+      },
+      "t_scalar_fusion::test_nonplace_unicode_index_reports_source_index_and_scalar_length": {
+        "name": "t_scalar_fusion::test_nonplace_unicode_index_reports_source_index_and_scalar_length",
+        "status": "failed",
+        "reason": "R_TEXT_BOUNDS (index 99, length 2)\n  in t_scalar_fusion::test_nonplace_unicode_index_reports_source_index_and_scalar_length at t_scalar_fusion.my:158:10\n",
+        "output": ""
+      },
+      "t_scalar_fusion::test_out_of_range_byte_is_a_structured_native_trap": {
+        "name": "t_scalar_fusion::test_out_of_range_byte_is_a_structured_native_trap",
+        "status": "failed",
+        "reason": "R_BYTE_RANGE\n  in t_scalar_fusion::test_out_of_range_byte_is_a_structured_native_trap at t_scalar_fusion.my:171:16\n",
+        "output": ""
+      },
+      "t_scalar_fusion::test_rebinding_the_receiver_does_not_change_the_selected_bytes": {
+        "name": "t_scalar_fusion::test_rebinding_the_receiver_does_not_change_the_selected_bytes",
+        "status": "passed",
+        "reason": "",
+        "output": ""
+      },
+      "t_scalar_fusion::test_same_source_destination_keeps_the_ordinary_path_and_snapshot": {
+        "name": "t_scalar_fusion::test_same_source_destination_keeps_the_ordinary_path_and_snapshot",
+        "status": "passed",
+        "reason": "",
+        "output": ""
+      },
+      "t_scalar_fusion::test_surrogate_construction_traps_before_scalar_uses": {
+        "name": "t_scalar_fusion::test_surrogate_construction_traps_before_scalar_uses",
+        "status": "failed",
+        "reason": "R_TEXT_SCALAR\n  in t_scalar_fusion::test_surrogate_construction_traps_before_scalar_uses at t_scalar_fusion.my:154:21\n",
+        "output": ""
+      }
+    },
+    "debug": {
+      "t_scalar_fusion::test_comparison_only_reads_cover_nul_and_scalar_extremes": {
+        "name": "t_scalar_fusion::test_comparison_only_reads_cover_nul_and_scalar_extremes",
+        "status": "passed",
+        "reason": "",
+        "output": ""
+      },
+      "t_scalar_fusion::test_comparisons_and_appends_preserve_all_unicode_scalars": {
+        "name": "t_scalar_fusion::test_comparisons_and_appends_preserve_all_unicode_scalars",
+        "status": "passed",
+        "reason": "",
+        "output": ""
+      },
+      "t_scalar_fusion::test_distinct_branches_and_repeated_appends_keep_the_selected_character": {
+        "name": "t_scalar_fusion::test_distinct_branches_and_repeated_appends_keep_the_selected_character",
+        "status": "passed",
+        "reason": "",
+        "output": ""
+      },
+      "t_scalar_fusion::test_distinct_ssa_aliases_share_input_but_copy_the_append_destination": {
+        "name": "t_scalar_fusion::test_distinct_ssa_aliases_share_input_but_copy_the_append_destination",
+        "status": "passed",
+        "reason": "",
+        "output": ""
+      },
+      "t_scalar_fusion::test_empty_comparison_only_read_traps": {
+        "name": "t_scalar_fusion::test_empty_comparison_only_read_traps",
+        "status": "failed",
+        "reason": "R_TEXT_BOUNDS (index 0, length 0)\n  in t_scalar_fusion::compares at t_scalar_fusion.my:20:10\n  in t_scalar_fusion::test_empty_comparison_only_read_traps at t_scalar_fusion.my:142:12\n",
+        "output": ""
+      },
+      "t_scalar_fusion::test_empty_iteration_does_not_read_past_the_text": {
+        "name": "t_scalar_fusion::test_empty_iteration_does_not_read_past_the_text",
+        "status": "passed",
+        "reason": "",
+        "output": ""
+      },
+      "t_scalar_fusion::test_empty_separator_is_a_structured_native_trap": {
+        "name": "t_scalar_fusion::test_empty_separator_is_a_structured_native_trap",
+        "status": "failed",
+        "reason": "R_EMPTY_SEPARATOR\n  in t_scalar_fusion::test_empty_separator_is_a_structured_native_trap at t_scalar_fusion.my:167:16\n",
+        "output": ""
+      },
+      "t_scalar_fusion::test_escaping_and_multiscalar_consumers_remain_strings": {
+        "name": "t_scalar_fusion::test_escaping_and_multiscalar_consumers_remain_strings",
+        "status": "passed",
+        "reason": "",
+        "output": ""
+      },
+      "t_scalar_fusion::test_large_negative_index_traps": {
+        "name": "t_scalar_fusion::test_large_negative_index_traps",
+        "status": "failed",
+        "reason": "R_TEXT_BOUNDS (index -9223372036854775807, length 2)\n  in t_scalar_fusion::compares at t_scalar_fusion.my:20:10\n  in t_scalar_fusion::test_large_negative_index_traps at t_scalar_fusion.my:150:12\n",
+        "output": ""
+      },
+      "t_scalar_fusion::test_large_positive_index_traps": {
+        "name": "t_scalar_fusion::test_large_positive_index_traps",
+        "status": "failed",
+        "reason": "R_TEXT_BOUNDS (index 9223372036854775807, length 2)\n  in t_scalar_fusion::compares at t_scalar_fusion.my:20:10\n  in t_scalar_fusion::test_large_positive_index_traps at t_scalar_fusion.my:146:12\n",
+        "output": ""
+      },
+      "t_scalar_fusion::test_minimum_signed_index_reports_its_original_value": {
+        "name": "t_scalar_fusion::test_minimum_signed_index_reports_its_original_value",
+        "status": "failed",
+        "reason": "R_TEXT_BOUNDS (index -9223372036854775808, length 2)\n  in t_scalar_fusion::compares at t_scalar_fusion.my:20:10\n  in t_scalar_fusion::test_minimum_signed_index_reports_its_original_value at t_scalar_fusion.my:163:12\n",
+        "output": ""
+      },
+      "t_scalar_fusion::test_missing_list_value_is_a_structured_native_trap": {
+        "name": "t_scalar_fusion::test_missing_list_value_is_a_structured_native_trap",
+        "status": "failed",
+        "reason": "R_LIST_VALUE\n  in t_scalar_fusion::test_missing_list_value_is_a_structured_native_trap at t_scalar_fusion.my:176:5\n",
+        "output": ""
+      },
+      "t_scalar_fusion::test_nonplace_unicode_index_reports_source_index_and_scalar_length": {
+        "name": "t_scalar_fusion::test_nonplace_unicode_index_reports_source_index_and_scalar_length",
+        "status": "failed",
+        "reason": "R_TEXT_BOUNDS (index 99, length 2)\n  in t_scalar_fusion::test_nonplace_unicode_index_reports_source_index_and_scalar_length at t_scalar_fusion.my:158:10\n",
+        "output": ""
+      },
+      "t_scalar_fusion::test_out_of_range_byte_is_a_structured_native_trap": {
+        "name": "t_scalar_fusion::test_out_of_range_byte_is_a_structured_native_trap",
+        "status": "failed",
+        "reason": "R_BYTE_RANGE\n  in t_scalar_fusion::test_out_of_range_byte_is_a_structured_native_trap at t_scalar_fusion.my:171:16\n",
+        "output": ""
+      },
+      "t_scalar_fusion::test_rebinding_the_receiver_does_not_change_the_selected_bytes": {
+        "name": "t_scalar_fusion::test_rebinding_the_receiver_does_not_change_the_selected_bytes",
+        "status": "passed",
+        "reason": "",
+        "output": ""
+      },
+      "t_scalar_fusion::test_same_source_destination_keeps_the_ordinary_path_and_snapshot": {
+        "name": "t_scalar_fusion::test_same_source_destination_keeps_the_ordinary_path_and_snapshot",
+        "status": "passed",
+        "reason": "",
+        "output": ""
+      },
+      "t_scalar_fusion::test_surrogate_construction_traps_before_scalar_uses": {
+        "name": "t_scalar_fusion::test_surrogate_construction_traps_before_scalar_uses",
+        "status": "failed",
+        "reason": "R_TEXT_SCALAR\n  in t_scalar_fusion::test_surrogate_construction_traps_before_scalar_uses at t_scalar_fusion.my:154:21\n",
+        "output": ""
+      }
+    },
+    "release": {
+      "t_scalar_fusion::test_comparison_only_reads_cover_nul_and_scalar_extremes": {
+        "name": "t_scalar_fusion::test_comparison_only_reads_cover_nul_and_scalar_extremes",
+        "status": "passed",
+        "reason": "",
+        "output": ""
+      },
+      "t_scalar_fusion::test_comparisons_and_appends_preserve_all_unicode_scalars": {
+        "name": "t_scalar_fusion::test_comparisons_and_appends_preserve_all_unicode_scalars",
+        "status": "passed",
+        "reason": "",
+        "output": ""
+      },
+      "t_scalar_fusion::test_distinct_branches_and_repeated_appends_keep_the_selected_character": {
+        "name": "t_scalar_fusion::test_distinct_branches_and_repeated_appends_keep_the_selected_character",
+        "status": "passed",
+        "reason": "",
+        "output": ""
+      },
+      "t_scalar_fusion::test_distinct_ssa_aliases_share_input_but_copy_the_append_destination": {
+        "name": "t_scalar_fusion::test_distinct_ssa_aliases_share_input_but_copy_the_append_destination",
+        "status": "passed",
+        "reason": "",
+        "output": ""
+      },
+      "t_scalar_fusion::test_empty_comparison_only_read_traps": {
+        "name": "t_scalar_fusion::test_empty_comparison_only_read_traps",
+        "status": "failed",
+        "reason": "R_TEXT_BOUNDS (index 0, length 0)\n  in t_scalar_fusion::compares at t_scalar_fusion.my:20:10\n  in t_scalar_fusion::test_empty_comparison_only_read_traps at t_scalar_fusion.my:142:12\n",
+        "output": ""
+      },
+      "t_scalar_fusion::test_empty_iteration_does_not_read_past_the_text": {
+        "name": "t_scalar_fusion::test_empty_iteration_does_not_read_past_the_text",
+        "status": "passed",
+        "reason": "",
+        "output": ""
+      },
+      "t_scalar_fusion::test_empty_separator_is_a_structured_native_trap": {
+        "name": "t_scalar_fusion::test_empty_separator_is_a_structured_native_trap",
+        "status": "failed",
+        "reason": "R_EMPTY_SEPARATOR\n  in t_scalar_fusion::test_empty_separator_is_a_structured_native_trap at t_scalar_fusion.my:167:16\n",
+        "output": ""
+      },
+      "t_scalar_fusion::test_escaping_and_multiscalar_consumers_remain_strings": {
+        "name": "t_scalar_fusion::test_escaping_and_multiscalar_consumers_remain_strings",
+        "status": "passed",
+        "reason": "",
+        "output": ""
+      },
+      "t_scalar_fusion::test_large_negative_index_traps": {
+        "name": "t_scalar_fusion::test_large_negative_index_traps",
+        "status": "failed",
+        "reason": "R_TEXT_BOUNDS (index -9223372036854775807, length 2)\n  in t_scalar_fusion::compares at t_scalar_fusion.my:20:10\n  in t_scalar_fusion::test_large_negative_index_traps at t_scalar_fusion.my:150:12\n",
+        "output": ""
+      },
+      "t_scalar_fusion::test_large_positive_index_traps": {
+        "name": "t_scalar_fusion::test_large_positive_index_traps",
+        "status": "failed",
+        "reason": "R_TEXT_BOUNDS (index 9223372036854775807, length 2)\n  in t_scalar_fusion::compares at t_scalar_fusion.my:20:10\n  in t_scalar_fusion::test_large_positive_index_traps at t_scalar_fusion.my:146:12\n",
+        "output": ""
+      },
+      "t_scalar_fusion::test_minimum_signed_index_reports_its_original_value": {
+        "name": "t_scalar_fusion::test_minimum_signed_index_reports_its_original_value",
+        "status": "failed",
+        "reason": "R_TEXT_BOUNDS (index -9223372036854775808, length 2)\n  in t_scalar_fusion::compares at t_scalar_fusion.my:20:10\n  in t_scalar_fusion::test_minimum_signed_index_reports_its_original_value at t_scalar_fusion.my:163:12\n",
+        "output": ""
+      },
+      "t_scalar_fusion::test_missing_list_value_is_a_structured_native_trap": {
+        "name": "t_scalar_fusion::test_missing_list_value_is_a_structured_native_trap",
+        "status": "failed",
+        "reason": "R_LIST_VALUE\n  in t_scalar_fusion::test_missing_list_value_is_a_structured_native_trap at t_scalar_fusion.my:176:5\n",
+        "output": ""
+      },
+      "t_scalar_fusion::test_nonplace_unicode_index_reports_source_index_and_scalar_length": {
+        "name": "t_scalar_fusion::test_nonplace_unicode_index_reports_source_index_and_scalar_length",
+        "status": "failed",
+        "reason": "R_TEXT_BOUNDS (index 99, length 2)\n  in t_scalar_fusion::test_nonplace_unicode_index_reports_source_index_and_scalar_length at t_scalar_fusion.my:158:10\n",
+        "output": ""
+      },
+      "t_scalar_fusion::test_out_of_range_byte_is_a_structured_native_trap": {
+        "name": "t_scalar_fusion::test_out_of_range_byte_is_a_structured_native_trap",
+        "status": "failed",
+        "reason": "R_BYTE_RANGE\n  in t_scalar_fusion::test_out_of_range_byte_is_a_structured_native_trap at t_scalar_fusion.my:171:16\n",
+        "output": ""
+      },
+      "t_scalar_fusion::test_rebinding_the_receiver_does_not_change_the_selected_bytes": {
+        "name": "t_scalar_fusion::test_rebinding_the_receiver_does_not_change_the_selected_bytes",
+        "status": "passed",
+        "reason": "",
+        "output": ""
+      },
+      "t_scalar_fusion::test_same_source_destination_keeps_the_ordinary_path_and_snapshot": {
+        "name": "t_scalar_fusion::test_same_source_destination_keeps_the_ordinary_path_and_snapshot",
+        "status": "passed",
+        "reason": "",
+        "output": ""
+      },
+      "t_scalar_fusion::test_surrogate_construction_traps_before_scalar_uses": {
+        "name": "t_scalar_fusion::test_surrogate_construction_traps_before_scalar_uses",
+        "status": "failed",
+        "reason": "R_TEXT_SCALAR\n  in t_scalar_fusion::test_surrogate_construction_traps_before_scalar_uses at t_scalar_fusion.my:154:21\n",
+        "output": ""
+      }
+    },
+    "verify": {
+      "t_scalar_fusion::test_comparison_only_reads_cover_nul_and_scalar_extremes": {
+        "name": "t_scalar_fusion::test_comparison_only_reads_cover_nul_and_scalar_extremes",
+        "status": "passed",
+        "reason": "",
+        "output": ""
+      },
+      "t_scalar_fusion::test_comparisons_and_appends_preserve_all_unicode_scalars": {
+        "name": "t_scalar_fusion::test_comparisons_and_appends_preserve_all_unicode_scalars",
+        "status": "passed",
+        "reason": "",
+        "output": ""
+      },
+      "t_scalar_fusion::test_distinct_branches_and_repeated_appends_keep_the_selected_character": {
+        "name": "t_scalar_fusion::test_distinct_branches_and_repeated_appends_keep_the_selected_character",
+        "status": "passed",
+        "reason": "",
+        "output": ""
+      },
+      "t_scalar_fusion::test_distinct_ssa_aliases_share_input_but_copy_the_append_destination": {
+        "name": "t_scalar_fusion::test_distinct_ssa_aliases_share_input_but_copy_the_append_destination",
+        "status": "passed",
+        "reason": "",
+        "output": ""
+      },
+      "t_scalar_fusion::test_empty_comparison_only_read_traps": {
+        "name": "t_scalar_fusion::test_empty_comparison_only_read_traps",
+        "status": "failed",
+        "reason": "R_TEXT_BOUNDS (index 0, length 0)\n  in t_scalar_fusion::compares at t_scalar_fusion.my:20:10\n  in t_scalar_fusion::test_empty_comparison_only_read_traps at t_scalar_fusion.my:142:12\n",
+        "output": ""
+      },
+      "t_scalar_fusion::test_empty_iteration_does_not_read_past_the_text": {
+        "name": "t_scalar_fusion::test_empty_iteration_does_not_read_past_the_text",
+        "status": "passed",
+        "reason": "",
+        "output": ""
+      },
+      "t_scalar_fusion::test_empty_separator_is_a_structured_native_trap": {
+        "name": "t_scalar_fusion::test_empty_separator_is_a_structured_native_trap",
+        "status": "failed",
+        "reason": "R_EMPTY_SEPARATOR\n  in t_scalar_fusion::test_empty_separator_is_a_structured_native_trap at t_scalar_fusion.my:167:16\n",
+        "output": ""
+      },
+      "t_scalar_fusion::test_escaping_and_multiscalar_consumers_remain_strings": {
+        "name": "t_scalar_fusion::test_escaping_and_multiscalar_consumers_remain_strings",
+        "status": "passed",
+        "reason": "",
+        "output": ""
+      },
+      "t_scalar_fusion::test_large_negative_index_traps": {
+        "name": "t_scalar_fusion::test_large_negative_index_traps",
+        "status": "failed",
+        "reason": "R_TEXT_BOUNDS (index -9223372036854775807, length 2)\n  in t_scalar_fusion::compares at t_scalar_fusion.my:20:10\n  in t_scalar_fusion::test_large_negative_index_traps at t_scalar_fusion.my:150:12\n",
+        "output": ""
+      },
+      "t_scalar_fusion::test_large_positive_index_traps": {
+        "name": "t_scalar_fusion::test_large_positive_index_traps",
+        "status": "failed",
+        "reason": "R_TEXT_BOUNDS (index 9223372036854775807, length 2)\n  in t_scalar_fusion::compares at t_scalar_fusion.my:20:10\n  in t_scalar_fusion::test_large_positive_index_traps at t_scalar_fusion.my:146:12\n",
+        "output": ""
+      },
+      "t_scalar_fusion::test_minimum_signed_index_reports_its_original_value": {
+        "name": "t_scalar_fusion::test_minimum_signed_index_reports_its_original_value",
+        "status": "failed",
+        "reason": "R_TEXT_BOUNDS (index -9223372036854775808, length 2)\n  in t_scalar_fusion::compares at t_scalar_fusion.my:20:10\n  in t_scalar_fusion::test_minimum_signed_index_reports_its_original_value at t_scalar_fusion.my:163:12\n",
+        "output": ""
+      },
+      "t_scalar_fusion::test_missing_list_value_is_a_structured_native_trap": {
+        "name": "t_scalar_fusion::test_missing_list_value_is_a_structured_native_trap",
+        "status": "failed",
+        "reason": "R_LIST_VALUE\n  in t_scalar_fusion::test_missing_list_value_is_a_structured_native_trap at t_scalar_fusion.my:176:5\n",
+        "output": ""
+      },
+      "t_scalar_fusion::test_nonplace_unicode_index_reports_source_index_and_scalar_length": {
+        "name": "t_scalar_fusion::test_nonplace_unicode_index_reports_source_index_and_scalar_length",
+        "status": "failed",
+        "reason": "R_TEXT_BOUNDS (index 99, length 2)\n  in t_scalar_fusion::test_nonplace_unicode_index_reports_source_index_and_scalar_length at t_scalar_fusion.my:158:10\n",
+        "output": ""
+      },
+      "t_scalar_fusion::test_out_of_range_byte_is_a_structured_native_trap": {
+        "name": "t_scalar_fusion::test_out_of_range_byte_is_a_structured_native_trap",
+        "status": "failed",
+        "reason": "R_BYTE_RANGE\n  in t_scalar_fusion::test_out_of_range_byte_is_a_structured_native_trap at t_scalar_fusion.my:171:16\n",
+        "output": ""
+      },
+      "t_scalar_fusion::test_rebinding_the_receiver_does_not_change_the_selected_bytes": {
+        "name": "t_scalar_fusion::test_rebinding_the_receiver_does_not_change_the_selected_bytes",
+        "status": "passed",
+        "reason": "",
+        "output": ""
+      },
+      "t_scalar_fusion::test_same_source_destination_keeps_the_ordinary_path_and_snapshot": {
+        "name": "t_scalar_fusion::test_same_source_destination_keeps_the_ordinary_path_and_snapshot",
+        "status": "passed",
+        "reason": "",
+        "output": ""
+      },
+      "t_scalar_fusion::test_surrogate_construction_traps_before_scalar_uses": {
+        "name": "t_scalar_fusion::test_surrogate_construction_traps_before_scalar_uses",
+        "status": "failed",
+        "reason": "R_TEXT_SCALAR\n  in t_scalar_fusion::test_surrogate_construction_traps_before_scalar_uses at t_scalar_fusion.my:154:21\n",
+        "output": ""
+      }
+    }
+  },
+  "order_runs": [
+    {
+      "sequence": 6,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-char-performance/.mylang-cache/s3-char/qualification-05/order-old",
+        ""
+      ],
+      "status": 1,
+      "seconds": 0.0016735249664634466,
+      "stdout": "before\n",
+      "stderr": "scalar_order.my:5:10: error[R_TEXT_BOUNDS]: native execution failed (index 0, length 0)\n  in scalar_order::select at scalar_order.my:5:10\n  in scalar_order::main at scalar_order.my:16:15\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":0,\"length\":0}\n",
+      "leakcheck": false
+    },
+    {
+      "sequence": 7,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-char-performance/.mylang-cache/s3-char/qualification-05/order-old",
+        "\u00e9"
+      ],
+      "status": 0,
+      "seconds": 0.0015909350477159023,
+      "stdout": "before\nafter\n\u00e9\n",
+      "stderr": "",
+      "leakcheck": false
+    },
+    {
+      "sequence": 8,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-char-performance/.mylang-cache/s3-char/qualification-05/order-old",
+        "a"
+      ],
+      "status": 0,
+      "seconds": 0.0016167110297828913,
+      "stdout": "before\nafter\na\n",
+      "stderr": "",
+      "leakcheck": false
+    },
+    {
+      "sequence": 9,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-char-performance/.mylang-cache/s3-char/qualification-05/order-old",
+        "x"
+      ],
+      "status": 0,
+      "seconds": 0.0014461618848145008,
+      "stdout": "before\nafter\n\n",
+      "stderr": "",
+      "leakcheck": false
+    },
+    {
+      "sequence": 10,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-char-performance/.mylang-cache/s3-char/qualification-05/order-old",
+        "nul"
+      ],
+      "status": 0,
+      "seconds": 0.0016524288803339005,
+      "stdout": "before\nafter\n\u0000\n",
+      "stderr": "",
+      "leakcheck": false
+    },
+    {
+      "sequence": 11,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-char-performance/.mylang-cache/s3-char/qualification-05/order-old",
+        "\ud83d\ude42"
+      ],
+      "status": 0,
+      "seconds": 0.0015140001196414232,
+      "stdout": "before\nafter\n\ud83d\ude42\n",
+      "stderr": "",
+      "leakcheck": false
+    },
+    {
+      "sequence": 13,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-char-performance/.mylang-cache/s3-char/qualification-05/order-debug",
+        ""
+      ],
+      "status": 1,
+      "seconds": 0.0012034419924020767,
+      "stdout": "before\n",
+      "stderr": "scalar_order.my:5:10: error[R_TEXT_BOUNDS]: native execution failed (index 0, length 0)\n  in scalar_order::select at scalar_order.my:5:10\n  in scalar_order::main at scalar_order.my:16:15\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":0,\"length\":0}\n",
+      "leakcheck": true
+    },
+    {
+      "sequence": 14,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-char-performance/.mylang-cache/s3-char/qualification-05/order-debug",
+        "\u00e9"
+      ],
+      "status": 0,
+      "seconds": 0.0009077480062842369,
+      "stdout": "before\nafter\n\u00e9\n",
+      "stderr": "",
+      "leakcheck": true
+    },
+    {
+      "sequence": 15,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-char-performance/.mylang-cache/s3-char/qualification-05/order-debug",
+        "a"
+      ],
+      "status": 0,
+      "seconds": 0.0008352540899068117,
+      "stdout": "before\nafter\na\n",
+      "stderr": "",
+      "leakcheck": true
+    },
+    {
+      "sequence": 16,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-char-performance/.mylang-cache/s3-char/qualification-05/order-debug",
+        "x"
+      ],
+      "status": 0,
+      "seconds": 0.0008069369941949844,
+      "stdout": "before\nafter\n\n",
+      "stderr": "",
+      "leakcheck": true
+    },
+    {
+      "sequence": 17,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-char-performance/.mylang-cache/s3-char/qualification-05/order-debug",
+        "nul"
+      ],
+      "status": 0,
+      "seconds": 0.0007898339536041021,
+      "stdout": "before\nafter\n\u0000\n",
+      "stderr": "",
+      "leakcheck": true
+    },
+    {
+      "sequence": 18,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-char-performance/.mylang-cache/s3-char/qualification-05/order-debug",
+        "\ud83d\ude42"
+      ],
+      "status": 0,
+      "seconds": 0.0008107312023639679,
+      "stdout": "before\nafter\n\ud83d\ude42\n",
+      "stderr": "",
+      "leakcheck": true
+    },
+    {
+      "sequence": 20,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-char-performance/.mylang-cache/s3-char/qualification-05/order-release",
+        ""
+      ],
+      "status": 1,
+      "seconds": 0.0010159141384065151,
+      "stdout": "before\n",
+      "stderr": "scalar_order.my:5:10: error[R_TEXT_BOUNDS]: native execution failed (index 0, length 0)\n  in scalar_order::select at scalar_order.my:5:10\n  in scalar_order::main at scalar_order.my:16:15\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":0,\"length\":0}\n",
+      "leakcheck": true
+    },
+    {
+      "sequence": 21,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-char-performance/.mylang-cache/s3-char/qualification-05/order-release",
+        "\u00e9"
+      ],
+      "status": 0,
+      "seconds": 0.0006792668718844652,
+      "stdout": "before\nafter\n\u00e9\n",
+      "stderr": "",
+      "leakcheck": true
+    },
+    {
+      "sequence": 22,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-char-performance/.mylang-cache/s3-char/qualification-05/order-release",
+        "a"
+      ],
+      "status": 0,
+      "seconds": 0.0005846880376338959,
+      "stdout": "before\nafter\na\n",
+      "stderr": "",
+      "leakcheck": true
+    },
+    {
+      "sequence": 23,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-char-performance/.mylang-cache/s3-char/qualification-05/order-release",
+        "x"
+      ],
+      "status": 0,
+      "seconds": 0.0006414670497179031,
+      "stdout": "before\nafter\n\n",
+      "stderr": "",
+      "leakcheck": true
+    },
+    {
+      "sequence": 24,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-char-performance/.mylang-cache/s3-char/qualification-05/order-release",
+        "nul"
+      ],
+      "status": 0,
+      "seconds": 0.0006715899799019098,
+      "stdout": "before\nafter\n\u0000\n",
+      "stderr": "",
+      "leakcheck": true
+    },
+    {
+      "sequence": 25,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-char-performance/.mylang-cache/s3-char/qualification-05/order-release",
+        "\ud83d\ude42"
+      ],
+      "status": 0,
+      "seconds": 0.0007302211597561836,
+      "stdout": "before\nafter\n\ud83d\ude42\n",
+      "stderr": "",
+      "leakcheck": true
+    },
+    {
+      "sequence": 27,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-char-performance/.mylang-cache/s3-char/qualification-05/order-verify",
+        ""
+      ],
+      "status": 1,
+      "seconds": 0.0009626450482755899,
+      "stdout": "before\n",
+      "stderr": "scalar_order.my:5:10: error[R_TEXT_BOUNDS]: native execution failed (index 0, length 0)\n  in scalar_order::select at scalar_order.my:5:10\n  in scalar_order::main at scalar_order.my:16:15\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":0,\"length\":0}\n",
+      "leakcheck": true
+    },
+    {
+      "sequence": 28,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-char-performance/.mylang-cache/s3-char/qualification-05/order-verify",
+        "\u00e9"
+      ],
+      "status": 0,
+      "seconds": 0.0007989699952304363,
+      "stdout": "before\nafter\n\u00e9\n",
+      "stderr": "",
+      "leakcheck": true
+    },
+    {
+      "sequence": 29,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-char-performance/.mylang-cache/s3-char/qualification-05/order-verify",
+        "a"
+      ],
+      "status": 0,
+      "seconds": 0.0006298299413174391,
+      "stdout": "before\nafter\na\n",
+      "stderr": "",
+      "leakcheck": true
+    },
+    {
+      "sequence": 30,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-char-performance/.mylang-cache/s3-char/qualification-05/order-verify",
+        "x"
+      ],
+      "status": 0,
+      "seconds": 0.0006515509448945522,
+      "stdout": "before\nafter\n\n",
+      "stderr": "",
+      "leakcheck": true
+    },
+    {
+      "sequence": 31,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-char-performance/.mylang-cache/s3-char/qualification-05/order-verify",
+        "nul"
+      ],
+      "status": 0,
+      "seconds": 0.0006529651582241058,
+      "stdout": "before\nafter\n\u0000\n",
+      "stderr": "",
+      "leakcheck": true
+    },
+    {
+      "sequence": 32,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-char-performance/.mylang-cache/s3-char/qualification-05/order-verify",
+        "\ud83d\ude42"
+      ],
+      "status": 0,
+      "seconds": 0.0006990937981754541,
+      "stdout": "before\nafter\n\ud83d\ude42\n",
+      "stderr": "",
+      "leakcheck": true
+    }
+  ],
+  "source_head": "c6de705e7fff1cedfe208f02abd7a86654fce25c",
+  "oracles": {
+    "old": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-char-performance/.mylang-cache/s3-char/oracle/mylang",
+      "sha256": "d36658dbfb78d29213224532a13fd5ad8b7c0e290dbfb87613d9815678305c79"
+    },
+    "new": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-char-performance/zig-out/bin/mylang-core",
+      "sha256": "6dee2ee961772b8b87fda8565e4bffc997cb23313411e53c1ba818c860d81637"
+    }
+  },
+  "commands": 32
+}

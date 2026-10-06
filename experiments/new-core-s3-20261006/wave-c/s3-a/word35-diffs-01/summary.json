@@ -1,0 +1,281 @@
+{
+  "qualified": true,
+  "baseline": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-capabilities/.mylang-cache/s3/identity",
+  "rows": [
+    {
+      "row": "record_reads",
+      "before_sha256": "8b5e4673043717ebc67421f6e4c17a16f8e0de8aa46ee0eea1c3cf1e6139299c",
+      "after_sha256": "8b5e4673043717ebc67421f6e4c17a16f8e0de8aa46ee0eea1c3cf1e6139299c",
+      "changed_functions": [],
+      "unexpected_functions": []
+    },
+    {
+      "row": "tagged_stack",
+      "before_sha256": "25a5d35b907b1abda2f6a46557709212f94cdd912c68bfe5a33e5fa36aa48c95",
+      "after_sha256": "25a5d35b907b1abda2f6a46557709212f94cdd912c68bfe5a33e5fa36aa48c95",
+      "changed_functions": [],
+      "unexpected_functions": []
+    },
+    {
+      "row": "mutate_unique",
+      "before_sha256": "c2f1fa5a413fc8a9e5e90b35b2f7cdb42404f461eb8d66dbe596e5d6965b19bc",
+      "after_sha256": "c2f1fa5a413fc8a9e5e90b35b2f7cdb42404f461eb8d66dbe596e5d6965b19bc",
+      "changed_functions": [],
+      "unexpected_functions": []
+    },
+    {
+      "row": "mutate_shared",
+      "before_sha256": "7b7984a9014cf7e039c219d612c33783cb1ab8d7ba9fc4df5750d13bf8fc09b9",
+      "after_sha256": "7b7984a9014cf7e039c219d612c33783cb1ab8d7ba9fc4df5750d13bf8fc09b9",
+      "changed_functions": [],
+      "unexpected_functions": []
+    },
+    {
+      "row": "record_construct",
+      "before_sha256": "4036fec07493e838443700457ae8b671adc70e86ede7e9d311617bd180f78ca8",
+      "after_sha256": "4036fec07493e838443700457ae8b671adc70e86ede7e9d311617bd180f78ca8",
+      "changed_functions": [],
+      "unexpected_functions": []
+    },
+    {
+      "row": "record_update",
+      "before_sha256": "8b4c1d9096ef634459d54a6687c5b4908ffe197f4bc7d849f470e6b5cc80d7a0",
+      "after_sha256": "8b4c1d9096ef634459d54a6687c5b4908ffe197f4bc7d849f470e6b5cc80d7a0",
+      "changed_functions": [],
+      "unexpected_functions": []
+    },
+    {
+      "row": "option_handle",
+      "before_sha256": "2062f09c2d3d301c9449f54c5482890274998629b5c76ec1433d464629fff449",
+      "after_sha256": "2062f09c2d3d301c9449f54c5482890274998629b5c76ec1433d464629fff449",
+      "changed_functions": [],
+      "unexpected_functions": []
+    },
+    {
+      "row": "result_propagate",
+      "before_sha256": "c61a363c50e359055ca881069f5b1d8a9c6cedafa14c2321e33de67d7712f3b8",
+      "after_sha256": "c61a363c50e359055ca881069f5b1d8a9c6cedafa14c2321e33de67d7712f3b8",
+      "changed_functions": [],
+      "unexpected_functions": []
+    },
+    {
+      "row": "list_scan",
+      "before_sha256": "2ae96a037cf2d86eb061e1e9b4071293db875af109a61d012ce3dfeb1e0f6b53",
+      "after_sha256": "2ae96a037cf2d86eb061e1e9b4071293db875af109a61d012ce3dfeb1e0f6b53",
+      "changed_functions": [],
+      "unexpected_functions": []
+    },
+    {
+      "row": "list_append",
+      "before_sha256": "73680cc014e430d9a3e81902fdd9db345437cb91e8eb33d8b2c3a118f2bc4185",
+      "after_sha256": "73680cc014e430d9a3e81902fdd9db345437cb91e8eb33d8b2c3a118f2bc4185",
+      "changed_functions": [],
+      "unexpected_functions": []
+    },
+    {
+      "row": "list_filter",
+      "before_sha256": "6ec559e000e084f01f31f25841fe653bfa9eddd5952adcc00a291176305fbec5",
+      "after_sha256": "6ec559e000e084f01f31f25841fe653bfa9eddd5952adcc00a291176305fbec5",
+      "changed_functions": [],
+      "unexpected_functions": []
+    },
+    {
+      "row": "alloc_short",
+      "before_sha256": "5371094b7e8efe92b1e56a7fd4494b626d3da1add3169061cf4855b863331932",
+      "after_sha256": "5371094b7e8efe92b1e56a7fd4494b626d3da1add3169061cf4855b863331932",
+      "changed_functions": [],
+      "unexpected_functions": []
+    },
+    {
+      "row": "alloc_retained",
+      "before_sha256": "9ebb58d8547985177f7935373221c87a6f61cbbd2e2635bb02d3140740d0596c",
+      "after_sha256": "9ebb58d8547985177f7935373221c87a6f61cbbd2e2635bb02d3140740d0596c",
+      "changed_functions": [],
+      "unexpected_functions": []
+    },
+    {
+      "row": "mutate_nested",
+      "before_sha256": "160c17df0625f4b1227a9c96f5f2fb0c9dc1c35dd0ed9f67f26ab10d39d5d780",
+      "after_sha256": "160c17df0625f4b1227a9c96f5f2fb0c9dc1c35dd0ed9f67f26ab10d39d5d780",
+      "changed_functions": [],
+      "unexpected_functions": []
+    },
+    {
+      "row": "bytes_scan",
+      "before_sha256": "c518a073fcf33ee334093bdf07ef5392a16a0a7d91b1f81db7f1e4ace4a50bfe",
+      "after_sha256": "c518a073fcf33ee334093bdf07ef5392a16a0a7d91b1f81db7f1e4ace4a50bfe",
+      "changed_functions": [],
+      "unexpected_functions": []
+    },
+    {
+      "row": "string_equal",
+      "before_sha256": "3e531d3b62118cf5870e9406b7f1df11614bacfa1f6ddb4bb3c97454101cf300",
+      "after_sha256": "3e531d3b62118cf5870e9406b7f1df11614bacfa1f6ddb4bb3c97454101cf300",
+      "changed_functions": [],
+      "unexpected_functions": []
+    },
+    {
+      "row": "string_search",
+      "before_sha256": "6c06efd5afce420b4500c6e2c97112564d80a8e0f3918739af5f113841264ad7",
+      "after_sha256": "6c06efd5afce420b4500c6e2c97112564d80a8e0f3918739af5f113841264ad7",
+      "changed_functions": [],
+      "unexpected_functions": []
+    },
+    {
+      "row": "string_split",
+      "before_sha256": "63d618dc026ae84c69788105a75998648a218beb7c260d75ff89bd1f7b244b3d",
+      "after_sha256": "63d618dc026ae84c69788105a75998648a218beb7c260d75ff89bd1f7b244b3d",
+      "changed_functions": [],
+      "unexpected_functions": []
+    },
+    {
+      "row": "string_join",
+      "before_sha256": "705ae3a2e499007af39ce3dd09f584e47328f057858291b3c891e6248a63c00a",
+      "after_sha256": "705ae3a2e499007af39ce3dd09f584e47328f057858291b3c891e6248a63c00a",
+      "changed_functions": [],
+      "unexpected_functions": []
+    },
+    {
+      "row": "dict_lookup",
+      "before_sha256": "39a77aa6fd87d286f4bc11f63ab19db84771e3f162edf49301aa4daa1a3b3e46",
+      "after_sha256": "72bd4451aa5de8ffc749e2089574664b79b2a847a1ed1fc6a0d419dc976175e6",
+      "changed_functions": [
+        {
+          "function": "\"my.row_dict_lookup::main\"",
+          "removed_scalar_set_calls": 1,
+          "other_call_counts_unchanged": true,
+          "classification": "authorized scalar dictionary update emission"
+        }
+      ],
+      "unexpected_functions": []
+    },
+    {
+      "row": "dict_lookup_str",
+      "before_sha256": "6230533a1f02392ea19092e860f6d3e7244833ee87e8b657ace1a5a62c115874",
+      "after_sha256": "e099624ed727f6948a34b0a806463602d50819b0c2fedd53c31045bbb2e3bdea",
+      "changed_functions": [
+        {
+          "function": "\"my.row_dict_lookup_str::main\"",
+          "removed_scalar_set_calls": 1,
+          "other_call_counts_unchanged": true,
+          "classification": "authorized scalar dictionary update emission"
+        }
+      ],
+      "unexpected_functions": []
+    },
+    {
+      "row": "dict_update",
+      "before_sha256": "20aa2d76e4efa6048ccd9adfa4efc48f9e2750c0a56c0a8f28f755e43a5ca128",
+      "after_sha256": "733b417d9cc6b3bcf81a81c8ddd0a5f8ffb547752c1f9519b04a7d9d221c4e3e",
+      "changed_functions": [
+        {
+          "function": "\"my.row_dict_update::batch_result\"",
+          "removed_scalar_set_calls": 2,
+          "other_call_counts_unchanged": true,
+          "classification": "authorized scalar dictionary update emission"
+        }
+      ],
+      "unexpected_functions": []
+    },
+    {
+      "row": "dict_update_str",
+      "before_sha256": "bae11084341e13e231fa1f9ed6f89fa69e75a6bb89af694fdb95fe7087fabc6b",
+      "after_sha256": "4f79bb1d21994f20ecc07cd0902ab6927699ea7300ed7ee9fa43dae28242bae6",
+      "changed_functions": [
+        {
+          "function": "\"my.row_dict_update_str::batch_result\"",
+          "removed_scalar_set_calls": 2,
+          "other_call_counts_unchanged": true,
+          "classification": "authorized scalar dictionary update emission"
+        }
+      ],
+      "unexpected_functions": []
+    },
+    {
+      "row": "set_dedup",
+      "before_sha256": "a6373e1ca6342453b95bce50f201b982c22963692da4963ca1de98a322ec75ac",
+      "after_sha256": "a6373e1ca6342453b95bce50f201b982c22963692da4963ca1de98a322ec75ac",
+      "changed_functions": [],
+      "unexpected_functions": []
+    },
+    {
+      "row": "int_parse",
+      "before_sha256": "c77494702efaae76a1bc4d5d5f50899810b2334bfd49edadf9dc85ba3a055d07",
+      "after_sha256": "c77494702efaae76a1bc4d5d5f50899810b2334bfd49edadf9dc85ba3a055d07",
+      "changed_functions": [],
+      "unexpected_functions": []
+    },
+    {
+      "row": "int_format",
+      "before_sha256": "9ae1caa80cdbaa9a1bcd3f3a4a96d5d70f9962886a2dbef12d838bf2b3ddb470",
+      "after_sha256": "9ae1caa80cdbaa9a1bcd3f3a4a96d5d70f9962886a2dbef12d838bf2b3ddb470",
+      "changed_functions": [],
+      "unexpected_functions": []
+    },
+    {
+      "row": "call_indirect",
+      "before_sha256": "1defba76b3545a58a28a637e38ae1fc3c4ab8e7fba0215e5711bcbdf0f6be429",
+      "after_sha256": "1defba76b3545a58a28a637e38ae1fc3c4ab8e7fba0215e5711bcbdf0f6be429",
+      "changed_functions": [],
+      "unexpected_functions": []
+    },
+    {
+      "row": "sort_int",
+      "before_sha256": "20e0d448d771018db93f03ef4f314d4e2fb00125cd9913902432f48ce09218de",
+      "after_sha256": "20e0d448d771018db93f03ef4f314d4e2fb00125cd9913902432f48ce09218de",
+      "changed_functions": [],
+      "unexpected_functions": []
+    },
+    {
+      "row": "sort_records",
+      "before_sha256": "14d1fa578afebc8032e2eb32217470b1d04731fc429666fdf67d147db0543509",
+      "after_sha256": "14d1fa578afebc8032e2eb32217470b1d04731fc429666fdf67d147db0543509",
+      "changed_functions": [],
+      "unexpected_functions": []
+    },
+    {
+      "row": "int_math",
+      "before_sha256": "f521925ae8caa357954cbd18c597ff5d06388c8a73d6d9ece12147b7cb22a2a5",
+      "after_sha256": "f521925ae8caa357954cbd18c597ff5d06388c8a73d6d9ece12147b7cb22a2a5",
+      "changed_functions": [],
+      "unexpected_functions": []
+    },
+    {
+      "row": "float_math",
+      "before_sha256": "3c86a72eaddff01aca9589aba0b4d5d09d6581f6d06863d92c6dbb5c41b545ce",
+      "after_sha256": "3c86a72eaddff01aca9589aba0b4d5d09d6581f6d06863d92c6dbb5c41b545ce",
+      "changed_functions": [],
+      "unexpected_functions": []
+    },
+    {
+      "row": "call_direct",
+      "before_sha256": "2dc4bb302ab5604158d226b197075fe3362ef72ba16b0d7885cd7c9148bafa9d",
+      "after_sha256": "2dc4bb302ab5604158d226b197075fe3362ef72ba16b0d7885cd7c9148bafa9d",
+      "changed_functions": [],
+      "unexpected_functions": []
+    },
+    {
+      "row": "branch_predictable",
+      "before_sha256": "eacd66257fdf69288fd05eeb04afe7d84f67cafdf26f8dda155a35e42424801a",
+      "after_sha256": "eacd66257fdf69288fd05eeb04afe7d84f67cafdf26f8dda155a35e42424801a",
+      "changed_functions": [],
+      "unexpected_functions": []
+    },
+    {
+      "row": "branch_mixed",
+      "before_sha256": "a6b8c7ec884637a55b2ee25309775655216fd3c68996c26e6843dd86b1f1f7b1",
+      "after_sha256": "a6b8c7ec884637a55b2ee25309775655216fd3c68996c26e6843dd86b1f1f7b1",
+      "changed_functions": [],
+      "unexpected_functions": []
+    },
+    {
+      "row": "binary_search",
+      "before_sha256": "29eab26eac11be3957a737eef0e3056dc9411c70f5a156a2ce672eec28293627",
+      "after_sha256": "29eab26eac11be3957a737eef0e3056dc9411c70f5a156a2ce672eec28293627",
+      "changed_functions": [],
+      "unexpected_functions": []
+    }
+  ],
+  "error": null,
+  "limit": "Raw/SSA-and-semantic-metadata-only diffs retained. Call classification bounds affected functions; exact address/store changes still require review. No instructions, traps, CFG labels or general runtime calls are removed by normalization."
+}

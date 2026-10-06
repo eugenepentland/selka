@@ -1,0 +1,55 @@
+build csv_aggregate old: status=0
+build csv_aggregate new: status=0
+build json_transform old: status=0
+build json_transform new: status=0
+build packet_decode old: status=0
+build packet_decode new: status=0
+build lox_eval old: status=0
+build lox_eval new: status=0
+
+### csv_aggregate (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 4891.612 | 4151.454 | same |
+| new core release | 2006.595 | 1806.958 | same |
+| Rust | 1169.335 | 1058.373 | same |
+| Zig ReleaseSafe | 1043.786 | 985.930 | same |
+| new / old | 0.410 | 0.435 | same |
+| new / Zig | 1.922 | 1.833 | same |
+| new / Rust | 1.716 | 1.707 | same |
+
+### json_transform (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 13655.770 | 14018.850 | same |
+| new core release | 3160.786 | 3378.116 | same |
+| Rust | 1780.526 | 1976.507 | same |
+| Zig ReleaseSafe | 2817.246 | 2846.019 | same |
+| new / old | 0.231 | 0.241 | same |
+| new / Zig | 1.122 | 1.187 | same |
+| new / Rust | 1.775 | 1.709 | same |
+
+### packet_decode (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 15.529 | 15.074 | same |
+| new core release | 48.339 | 48.973 | same |
+| Rust | 10.277 | 10.667 | same |
+| Zig ReleaseSafe | 18.937 | 19.452 | same |
+| new / old | 3.113 | 3.249 | same |
+| new / Zig | 2.553 | 2.518 | same |
+| new / Rust | 4.703 | 4.591 | same |
+
+### lox_eval (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 629.947 | 659.469 | same |
+| new core release | 206.056 | 214.010 | same |
+| Rust | 165.150 | 171.446 | same |
+| Zig ReleaseSafe | 504.490 | 521.745 | same |
+| new / old | 0.327 | 0.325 | same |
+| new / Zig | 0.408 | 0.410 | same |
+| new / Rust | 1.248 | 1.248 | same |
+
+valid rows: 4; speed gate misses: ['csv_aggregate/4096', 'csv_aggregate/64', 'json_transform/4096', 'json_transform/64', 'packet_decode/4096', 'packet_decode/64']
+Both new/old and new/Zig must be at most 1.10. binary_search misses require the plan's identical-code/layout-noise review; all other misses require repair.

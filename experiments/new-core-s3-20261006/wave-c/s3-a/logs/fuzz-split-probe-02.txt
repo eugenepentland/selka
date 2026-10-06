@@ -1,0 +1,3 @@
+case=0000 matched debug/release/verify with leakcheck
+case=0001 matched debug/release/verify with leakcheck
+case=0002 matched debug/release/verify with leakcheck

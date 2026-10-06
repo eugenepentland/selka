@@ -1,0 +1,267 @@
+fn main(cap) -> i64
+b0:
+  %2 = call dict[str, i64] counts(str0)
+  %4 = call dict[str, i64] counts(str1)
+  %7 = list_new list[str] 15:i64
+  %9 = list_push list[str] %7, str3
+  %11 = list_push list[str] %9, str4
+  %13 = list_push list[str] %11, str5
+  %15 = list_push list[str] %13, str6
+  %17 = list_push list[str] %15, str7
+  %19 = list_push list[str] %17, str8
+  %21 = list_push list[str] %19, str9
+  %23 = list_push list[str] %21, str10
+  %25 = list_push list[str] %23, str11
+  %27 = list_push list[str] %25, str12
+  %29 = list_push list[str] %27, str13
+  %31 = list_push list[str] %29, str14
+  %33 = list_push list[str] %31, str15
+  %35 = list_push list[str] %33, str16
+  %37 = list_push list[str] %35, str17
+  %38 = call str myl_core_str_join(str2, %37)
+  release %37
+  %39 = call dict[str, i64] counts(%38)
+  release %38
+  %42 = dict_find i64 %39, str18
+  %44 = cmp.ge bool %42, 0:i64
+  branch %44, b1, b2
+b1: ; preds b0
+  %145 = dict_copy dict[str, i64] %39
+  %46 = dict_set_value dict[str, i64] %145, %42, 9:i64
+  jump b3
+b2: ; preds b0
+  %146 = dict_copy dict[str, i64] %39
+  %147 = dict_find i64 %146, str18
+  %48 = dict_insert dict[str, i64] %146, %147, str18, 9:i64
+  jump b3
+b3: ; preds b1 b2
+  %50 = phi dict[str, i64] %46, %48
+  %54 = list_new list[str] 4:i64
+  %56 = list_push list[str] %54, str20
+  %58 = list_push list[str] %56, str21
+  %60 = list_push list[str] %58, str22
+  %62 = list_push list[str] %60, str23
+  %63 = call str myl_core_str_join(str19, %62)
+  release %62
+  %64 = call dict[str, i64] rebound(%63)
+  release %63
+  %67 = dict_len u64 %2
+  release %2
+  %68 = convert.proven i64 %67
+  %70 = dict_len u64 %4
+  %71 = convert.proven i64 %70
+  %73 = dict_find i64 %4, str24
+  %75 = cmp.ge bool %73, 0:i64
+  branch %75, b4, b5
+b4: ; preds b3
+  %78 = dict_entry_value i64 %4, %73
+  %80 = dict_find i64 %4, str25
+  %82 = cmp.ge bool %80, 0:i64
+  branch %82, b6, b7
+b5: ; preds b3
+  unreachable
+b6: ; preds b4
+  %85 = dict_entry_value i64 %4, %80
+  %87 = dict_find i64 %4, str26
+  %89 = cmp.ge bool %87, 0:i64
+  branch %89, b8, b9
+b7: ; preds b4
+  unreachable
+b8: ; preds b6
+  %92 = dict_entry_value i64 %4, %87
+  release %4
+  print param0, %68, %71, %78, %85, %92
+  %95 = dict_len u64 %39
+  %96 = convert.proven i64 %95
+  %98 = dict_find i64 %39, str27
+  %100 = cmp.ge bool %98, 0:i64
+  branch %100, b10, b11
+b9: ; preds b6
+  unreachable
+b10: ; preds b8
+  %103 = dict_entry_value i64 %39, %98
+  %105 = dict_find i64 %50, str28
+  %107 = cmp.ge bool %105, 0:i64
+  branch %107, b12, b13
+b11: ; preds b8
+  unreachable
+b12: ; preds b10
+  %110 = dict_entry_value i64 %50, %105
+  release %50
+  %112 = dict_find i64 %39, str29
+  %114 = cmp.ge bool %112, 0:i64
+  branch %114, b14, b15
+b13: ; preds b10
+  unreachable
+b14: ; preds b12
+  %117 = dict_entry_value i64 %39, %112
+  release %39
+  print param0, %96, %103, %110, %117
+  %119 = dict_len u64 %64
+  %120 = convert.proven i64 %119
+  %122 = dict_find i64 %64, str30
+  %124 = cmp.ge bool %122, 0:i64
+  branch %124, b16, b17
+b15: ; preds b12
+  unreachable
+b16: ; preds b14
+  %127 = dict_entry_value i64 %64, %122
+  %129 = dict_find i64 %64, str31
+  %131 = cmp.ge bool %129, 0:i64
+  branch %131, b18, b19
+b17: ; preds b14
+  unreachable
+b18: ; preds b16
+  %134 = dict_entry_value i64 %64, %129
+  %136 = dict_find i64 %64, str32
+  %138 = cmp.ge bool %136, 0:i64
+  branch %138, b20, b21
+b19: ; preds b16
+  unreachable
+b20: ; preds b18
+  %141 = dict_entry_value i64 %64, %136
+  release %64
+  print param0, %120, %127, %134, %141
+  ret 0:i64
+b21: ; preds b18
+  unreachable
+fn counts(str) -> dict[str, i64]
+b0:
+  %2 = dict_new dict[str, i64] 0:u64
+  %3 = call i64 myl_core_split_ws_start(param0, 0:i64)
+  %5 = str_len u64 param0
+  %6 = convert.proven i64 %5
+  jump b1
+b1: ; preds b0 b3
+  %8 = phi i64 %3, %47
+  %12 = undef list[str]
+  %14 = phi dict[str, i64] %2, %41
+  %10 = cmp.lt bool %8, %6
+  branch %10, b2, b4
+b2: ; preds b1
+  %55 = call i64 myl_core_split_ws_end(param0, %8)
+  %56 = convert.exact u64 %8
+  %57 = sub.exact i64 %55, %8
+  %58 = convert.exact u64 %57
+  %13 = str_view_of str_view param0, %56, %58
+  %15 = dict_find i64 %14, %13
+  %17 = cmp.ge bool %15, 0:i64
+  branch %17, b5, b7
+b3: ; preds b12
+  %47 = call i64 myl_core_split_ws_start(param0, %55)
+  jump b1
+b4: ; preds b1
+  ret %14
+b5: ; preds b2
+  %21 = iconst bool 1
+  branch 1:bool, b8, b9
+b6: ; preds b8 b7
+  %30 = phi i64 %26, 1:i64
+  %35 = cmp.ge bool %15, 0:i64
+  branch %35, b10, b11
+b7: ; preds b2
+  jump b6
+b8: ; preds b5
+  %24 = dict_entry_value i64 %14, %15
+  %26 = add.exact i64 %24, 1:i64
+  jump b6
+b9: ; preds b5
+  unreachable
+b10: ; preds b6
+  %37 = dict_set_value dict[str, i64] %14, %15, %30
+  jump b12
+b11: ; preds b6
+  %59 = str_from_view str %13
+  %60 = dict_find i64 %14, %59
+  %39 = dict_insert dict[str, i64] %14, %60, %59, %30
+  jump b12
+b12: ; preds b10 b11
+  %41 = phi dict[str, i64] %37, %39
+  jump b3
+fn myl_core_str_join(str, list[str]) -> str extern
+fn rebound(str) -> dict[str, i64]
+b0:
+  %2 = dict_new dict[str, i64] 0:u64
+  %3 = call i64 myl_core_split_ws_start(param0, 0:i64)
+  %5 = str_len u64 param0
+  %6 = convert.proven i64 %5
+  jump b1
+b1: ; preds b0 b3
+  %8 = phi i64 %3, %43
+  %12 = undef list[str]
+  %16 = phi dict[str, i64] %2, %25
+  %10 = cmp.lt bool %8, %6
+  branch %10, b2, b4
+b2: ; preds b1
+  %53 = call i64 myl_core_split_ws_end(param0, %8)
+  %54 = convert.exact u64 %8
+  %55 = sub.exact i64 %53, %8
+  %56 = convert.exact u64 %55
+  %13 = str_view_of str_view param0, %54, %56
+  %17 = dict_find i64 %16, %13
+  %19 = cmp.ge bool %17, 0:i64
+  branch %19, b5, b6
+b3: ; preds b8 b11
+  %43 = call i64 myl_core_split_ws_start(param0, %53)
+  jump b1
+b4: ; preds b1 b10
+  %50 = phi dict[str, i64] %16, %25
+  ret %50
+b5: ; preds b2
+  %21 = dict_set_value dict[str, i64] %16, %17, 1:i64
+  jump b7
+b6: ; preds b2
+  %57 = str_from_view str %13
+  %58 = dict_find i64 %16, %57
+  %23 = dict_insert dict[str, i64] %16, %58, %57, 1:i64
+  jump b7
+b7: ; preds b5 b6
+  %25 = phi dict[str, i64] %21, %23
+  %27 = dict_len u64 %25
+  %28 = convert.proven i64 %27
+  %30 = cmp.eq bool %28, 2:i64
+  branch %30, b8, b9
+b8: ; preds b7
+  jump b3
+b9: ; preds b7
+  %33 = dict_len u64 %25
+  %34 = convert.proven i64 %33
+  %36 = cmp.eq bool %34, 3:i64
+  branch %36, b10, b11
+b10: ; preds b9
+  jump b4
+b11: ; preds b9
+  jump b3
+fn myl_core_str_split_whitespace(str) -> list[str] extern
+fn myl_core_split_ws_start(str, i64) -> i64 extern
+fn myl_core_split_ws_end(str, i64) -> i64 extern
+facts main: %42=[-9223372036854775808,9223372036854775807] %44=[0,1] %67=[0,140737488355328] %68=[0,140737488355328] %70=[0,140737488355328] %71=[0,140737488355328] %73=[-9223372036854775808,9223372036854775807] %75=[0,1] %78=[-9223372036854775808,9223372036854775807] %80=[-9223372036854775808,9223372036854775807] %82=[0,1] %85=[-9223372036854775808,9223372036854775807] %87=[-9223372036854775808,9223372036854775807] %89=[0,1] %92=[-9223372036854775808,9223372036854775807] %95=[0,140737488355328] %96=[0,140737488355328] %98=[-9223372036854775808,9223372036854775807] %100=[0,1] %103=[-9223372036854775808,9223372036854775807] %105=[-9223372036854775808,9223372036854775807] %107=[0,1] %110=[-9223372036854775808,9223372036854775807] %112=[-9223372036854775808,9223372036854775807] %114=[0,1] %117=[-9223372036854775808,9223372036854775807] %119=[0,140737488355328] %120=[0,140737488355328] %122=[-9223372036854775808,9223372036854775807] %124=[0,1] %127=[-9223372036854775808,9223372036854775807] %129=[-9223372036854775808,9223372036854775807] %131=[0,1] %134=[-9223372036854775808,9223372036854775807] %136=[-9223372036854775808,9223372036854775807] %138=[0,1] %141=[-9223372036854775808,9223372036854775807]
+list main %7: settled=true length=%-1 len=[0,0]
+list main %9: settled=true length=%-1 len=[1,1]
+list main %11: settled=true length=%-1 len=[2,2]
+list main %13: settled=true length=%-1 len=[3,3]
+list main %15: settled=true length=%-1 len=[4,4]
+list main %17: settled=true length=%-1 len=[5,5]
+list main %19: settled=true length=%-1 len=[6,6]
+list main %21: settled=true length=%-1 len=[7,7]
+list main %23: settled=true length=%-1 len=[8,8]
+list main %25: settled=true length=%-1 len=[9,9]
+list main %27: settled=true length=%-1 len=[10,10]
+list main %29: settled=true length=%-1 len=[11,11]
+list main %31: settled=true length=%-1 len=[12,12]
+list main %33: settled=true length=%-1 len=[13,13]
+list main %35: settled=true length=%-1 len=[14,14]
+list main %37: settled=true length=%-1 len=[15,15]
+list main %50: settled=true length=%-1
+list main %54: settled=true length=%-1 len=[0,0]
+list main %56: settled=true length=%-1 len=[1,1]
+list main %58: settled=true length=%-1 len=[2,2]
+list main %60: settled=true length=%-1 len=[3,3]
+list main %62: settled=true length=%-1 len=[4,4]
+facts counts: %3=[-9223372036854775808,9223372036854775807] %5=[0,140737488355328] %6=[0,140737488355328] %8=[-9223372036854775808,9223372036854775807] %9=[-9223372036854775808,9223372036854775807] %10=[0,1] %15=[-9223372036854775808,9223372036854775807] %17=[0,1] %19=[-9223372036854775808,9223372036854775807] %21=[1,1] %24=[-9223372036854775807,9223372036854775807] %26=[-9223372036854775806,9223372036854775807] %30=[-9223372036854775806,9223372036854775807] %33=[-9223372036854775808,9223372036854775807] %35=[0,1] %44=[-9223372036854775808,9223372036854775807] %45=[-9223372036854775808,9223372036854775807] %47=[-9223372036854775808,9223372036854775807] %49=[-9223372036854775808,9223372036854775807] %50=[-9223372036854775808,9223372036854775807] %55=[-9223372036854775808,9223372036854775807] %56=[0,140737488355327] %57=[-9223372036854775808,9223372036854775807] %58=[0,9223372036854775807] %60=[-9223372036854775808,9223372036854775807]
+list counts %14: settled=true length=%-1
+list counts %41: settled=true length=%-1
+facts rebound: %3=[-9223372036854775808,9223372036854775807] %5=[0,140737488355328] %6=[0,140737488355328] %8=[-9223372036854775808,9223372036854775807] %9=[-9223372036854775808,9223372036854775807] %10=[0,1] %17=[-9223372036854775808,9223372036854775807] %19=[0,1] %27=[0,140737488355328] %28=[0,140737488355328] %30=[0,1] %33=[0,140737488355328] %34=[0,140737488355328] %36=[0,1] %40=[-9223372036854775808,9223372036854775807] %41=[-9223372036854775808,9223372036854775807] %43=[-9223372036854775808,9223372036854775807] %45=[-9223372036854775808,9223372036854775807] %46=[-9223372036854775808,9223372036854775807] %53=[-9223372036854775808,9223372036854775807] %54=[0,140737488355327] %55=[-9223372036854775808,9223372036854775807] %56=[0,9223372036854775807] %58=[-9223372036854775808,9223372036854775807]
+list rebound %16: settled=true length=%-1
+list rebound %25: settled=true length=%-1
+list rebound %50: settled=true length=%-1

@@ -1,0 +1,1 @@
+Full dotted/quoted LLVM headers retained independently of body calls; duplicate and uncovered definition headers rejected.

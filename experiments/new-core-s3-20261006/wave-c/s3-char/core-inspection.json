@@ -1,0 +1,1102 @@
+{
+  "checker": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/experiments/new-core-s2-20261005/wave-b/integration/full_old_gate.py",
+  "checker_sha256": "94ec042ee252c67f368751fba5e96277029ed6572deb040a95b8000861f8e0ff",
+  "results": [
+    {
+      "build_summaries": [
+        "36/36 steps succeeded; 259/8288 tests passed (8029 skipped)"
+      ],
+      "maxrss": [
+        {
+          "line": "+- run test 9 pass, 250 skip (259 total) 42s MaxRSS:243M",
+          "display": "243M",
+          "bytes": 254803968.0,
+          "test_run": true
+        },
+        {
+          "line": "|  +- compile test debug native success 1s MaxRSS:348M",
+          "display": "348M",
+          "bytes": 364904448.0,
+          "test_run": false
+        },
+        {
+          "line": "|        +- compile exe mylang-core debug native cached 7ms MaxRSS:38M",
+          "display": "38M",
+          "bytes": 39845888.0,
+          "test_run": false
+        },
+        {
+          "line": "+- run test 9 pass, 250 skip (259 total) 2m MaxRSS:248M",
+          "display": "248M",
+          "bytes": 260046848.0,
+          "test_run": true
+        },
+        {
+          "line": "+- run test 9 pass, 250 skip (259 total) 26s MaxRSS:244M",
+          "display": "244M",
+          "bytes": 255852544.0,
+          "test_run": true
+        },
+        {
+          "line": "+- run test 8 pass, 251 skip (259 total) 18s MaxRSS:250M",
+          "display": "250M",
+          "bytes": 262144000.0,
+          "test_run": true
+        },
+        {
+          "line": "+- run test 8 pass, 251 skip (259 total) 31s MaxRSS:242M",
+          "display": "242M",
+          "bytes": 253755392.0,
+          "test_run": true
+        },
+        {
+          "line": "+- run test 8 pass, 251 skip (259 total) 23s MaxRSS:247M",
+          "display": "247M",
+          "bytes": 258998272.0,
+          "test_run": true
+        },
+        {
+          "line": "+- run test 8 pass, 251 skip (259 total) 33s MaxRSS:245M",
+          "display": "245M",
+          "bytes": 256901120.0,
+          "test_run": true
+        },
+        {
+          "line": "+- run test 8 pass, 251 skip (259 total) 26s MaxRSS:246M",
+          "display": "246M",
+          "bytes": 257949696.0,
+          "test_run": true
+        },
+        {
+          "line": "+- run test 8 pass, 251 skip (259 total) 19s MaxRSS:240M",
+          "display": "240M",
+          "bytes": 251658240.0,
+          "test_run": true
+        },
+        {
+          "line": "+- run test 8 pass, 251 skip (259 total) 49s MaxRSS:250M",
+          "display": "250M",
+          "bytes": 262144000.0,
+          "test_run": true
+        },
+        {
+          "line": "+- run test 8 pass, 251 skip (259 total) 21s MaxRSS:244M",
+          "display": "244M",
+          "bytes": 255852544.0,
+          "test_run": true
+        },
+        {
+          "line": "+- run test 8 pass, 251 skip (259 total) 37s MaxRSS:243M",
+          "display": "243M",
+          "bytes": 254803968.0,
+          "test_run": true
+        },
+        {
+          "line": "+- run test 8 pass, 251 skip (259 total) 29s MaxRSS:236M",
+          "display": "236M",
+          "bytes": 247463936.0,
+          "test_run": true
+        },
+        {
+          "line": "+- run test 8 pass, 251 skip (259 total) 13s MaxRSS:241M",
+          "display": "241M",
+          "bytes": 252706816.0,
+          "test_run": true
+        },
+        {
+          "line": "+- run test 8 pass, 251 skip (259 total) 13s MaxRSS:236M",
+          "display": "236M",
+          "bytes": 247463936.0,
+          "test_run": true
+        },
+        {
+          "line": "+- run test 8 pass, 251 skip (259 total) 41s MaxRSS:245M",
+          "display": "245M",
+          "bytes": 256901120.0,
+          "test_run": true
+        },
+        {
+          "line": "+- run test 8 pass, 251 skip (259 total) 26s MaxRSS:242M",
+          "display": "242M",
+          "bytes": 253755392.0,
+          "test_run": true
+        },
+        {
+          "line": "+- run test 8 pass, 251 skip (259 total) 34s MaxRSS:247M",
+          "display": "247M",
+          "bytes": 258998272.0,
+          "test_run": true
+        },
+        {
+          "line": "+- run test 8 pass, 251 skip (259 total) 46s MaxRSS:244M",
+          "display": "244M",
+          "bytes": 255852544.0,
+          "test_run": true
+        },
+        {
+          "line": "+- run test 8 pass, 251 skip (259 total) 28s MaxRSS:242M",
+          "display": "242M",
+          "bytes": 253755392.0,
+          "test_run": true
+        },
+        {
+          "line": "+- run test 8 pass, 251 skip (259 total) 31s MaxRSS:244M",
+          "display": "244M",
+          "bytes": 255852544.0,
+          "test_run": true
+        },
+        {
+          "line": "+- run test 8 pass, 251 skip (259 total) 20s MaxRSS:248M",
+          "display": "248M",
+          "bytes": 260046848.0,
+          "test_run": true
+        },
+        {
+          "line": "+- run test 8 pass, 251 skip (259 total) 15s MaxRSS:234M",
+          "display": "234M",
+          "bytes": 245366784.0,
+          "test_run": true
+        },
+        {
+          "line": "+- run test 8 pass, 251 skip (259 total) 22s MaxRSS:239M",
+          "display": "239M",
+          "bytes": 250609664.0,
+          "test_run": true
+        },
+        {
+          "line": "+- run test 8 pass, 251 skip (259 total) 43s MaxRSS:244M",
+          "display": "244M",
+          "bytes": 255852544.0,
+          "test_run": true
+        },
+        {
+          "line": "+- run test 8 pass, 251 skip (259 total) 53s MaxRSS:249M",
+          "display": "249M",
+          "bytes": 261095424.0,
+          "test_run": true
+        },
+        {
+          "line": "+- run test 8 pass, 251 skip (259 total) 34s MaxRSS:251M",
+          "display": "251M",
+          "bytes": 263192576.0,
+          "test_run": true
+        },
+        {
+          "line": "+- run test 8 pass, 251 skip (259 total) 24s MaxRSS:248M",
+          "display": "248M",
+          "bytes": 260046848.0,
+          "test_run": true
+        },
+        {
+          "line": "+- run test 8 pass, 251 skip (259 total) 51s MaxRSS:251M",
+          "display": "251M",
+          "bytes": 263192576.0,
+          "test_run": true
+        },
+        {
+          "line": "+- run test 8 pass, 251 skip (259 total) 49s MaxRSS:244M",
+          "display": "244M",
+          "bytes": 255852544.0,
+          "test_run": true
+        },
+        {
+          "line": "+- run test 8 pass, 251 skip (259 total) 36s MaxRSS:241M",
+          "display": "241M",
+          "bytes": 252706816.0,
+          "test_run": true
+        },
+        {
+          "line": "+- run test 8 pass, 251 skip (259 total) 41s MaxRSS:250M",
+          "display": "250M",
+          "bytes": 262144000.0,
+          "test_run": true
+        }
+      ],
+      "rss_overrun_notices": [],
+      "reported_admission_seconds": {
+        "gate": 0,
+        "build": 0
+      },
+      "errors": [],
+      "run": 1,
+      "source": "3f47456ce70a4d2365fe1107123bf59a894fd859",
+      "command_seconds": 122.83,
+      "shards": [
+        {
+          "shard": 13,
+          "selected": 8,
+          "verdict": {
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0
+          },
+          "wall_seconds": 13.23
+        },
+        {
+          "shard": 14,
+          "selected": 8,
+          "verdict": {
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0
+          },
+          "wall_seconds": 13.84
+        },
+        {
+          "shard": 3,
+          "selected": 8,
+          "verdict": {
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0
+          },
+          "wall_seconds": 18.35
+        },
+        {
+          "shard": 10,
+          "selected": 8,
+          "verdict": {
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0
+          },
+          "wall_seconds": 21.19
+        },
+        {
+          "shard": 2,
+          "selected": 9,
+          "verdict": {
+            "passed": 9,
+            "failed": 0,
+            "skipped": 0
+          },
+          "wall_seconds": 26.17
+        },
+        {
+          "shard": 19,
+          "selected": 8,
+          "verdict": {
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0
+          },
+          "wall_seconds": 28.48
+        },
+        {
+          "shard": 4,
+          "selected": 8,
+          "verdict": {
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0
+          },
+          "wall_seconds": 31.63
+        },
+        {
+          "shard": 6,
+          "selected": 8,
+          "verdict": {
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0
+          },
+          "wall_seconds": 33.64
+        },
+        {
+          "shard": 17,
+          "selected": 8,
+          "verdict": {
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0
+          },
+          "wall_seconds": 34.79
+        },
+        {
+          "shard": 11,
+          "selected": 8,
+          "verdict": {
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0
+          },
+          "wall_seconds": 36.95
+        },
+        {
+          "shard": 15,
+          "selected": 8,
+          "verdict": {
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0
+          },
+          "wall_seconds": 41.57
+        },
+        {
+          "shard": 31,
+          "selected": 8,
+          "verdict": {
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0
+          },
+          "wall_seconds": 41.87
+        },
+        {
+          "shard": 29,
+          "selected": 8,
+          "verdict": {
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0
+          },
+          "wall_seconds": 49.29
+        },
+        {
+          "shard": 25,
+          "selected": 8,
+          "verdict": {
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0
+          },
+          "wall_seconds": 52.95
+        },
+        {
+          "shard": 22,
+          "selected": 8,
+          "verdict": {
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0
+          },
+          "wall_seconds": 15.18
+        },
+        {
+          "shard": 8,
+          "selected": 8,
+          "verdict": {
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0
+          },
+          "wall_seconds": 19.57
+        },
+        {
+          "shard": 27,
+          "selected": 8,
+          "verdict": {
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0
+          },
+          "wall_seconds": 24.77
+        },
+        {
+          "shard": 16,
+          "selected": 8,
+          "verdict": {
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0
+          },
+          "wall_seconds": 25.98
+        },
+        {
+          "shard": 7,
+          "selected": 8,
+          "verdict": {
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0
+          },
+          "wall_seconds": 26.14
+        },
+        {
+          "shard": 12,
+          "selected": 8,
+          "verdict": {
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0
+          },
+          "wall_seconds": 29.86
+        },
+        {
+          "shard": 20,
+          "selected": 8,
+          "verdict": {
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0
+          },
+          "wall_seconds": 31.05
+        },
+        {
+          "shard": 26,
+          "selected": 8,
+          "verdict": {
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0
+          },
+          "wall_seconds": 34.78
+        },
+        {
+          "shard": 30,
+          "selected": 8,
+          "verdict": {
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0
+          },
+          "wall_seconds": 36.7
+        },
+        {
+          "shard": 23,
+          "selected": 8,
+          "verdict": {
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0
+          },
+          "wall_seconds": 21.94
+        },
+        {
+          "shard": 0,
+          "selected": 9,
+          "verdict": {
+            "passed": 9,
+            "failed": 0,
+            "skipped": 0
+          },
+          "wall_seconds": 42.29
+        },
+        {
+          "shard": 24,
+          "selected": 8,
+          "verdict": {
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0
+          },
+          "wall_seconds": 43.08
+        },
+        {
+          "shard": 18,
+          "selected": 8,
+          "verdict": {
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0
+          },
+          "wall_seconds": 45.96
+        },
+        {
+          "shard": 9,
+          "selected": 8,
+          "verdict": {
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0
+          },
+          "wall_seconds": 49.61
+        },
+        {
+          "shard": 28,
+          "selected": 8,
+          "verdict": {
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0
+          },
+          "wall_seconds": 51.03
+        },
+        {
+          "shard": 21,
+          "selected": 8,
+          "verdict": {
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0
+          },
+          "wall_seconds": 20.23
+        },
+        {
+          "shard": 5,
+          "selected": 8,
+          "verdict": {
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0
+          },
+          "wall_seconds": 23.37
+        },
+        {
+          "shard": 1,
+          "selected": 9,
+          "verdict": {
+            "passed": 9,
+            "failed": 0,
+            "skipped": 0
+          },
+          "wall_seconds": 120.64
+        }
+      ],
+      "total_passed": 259,
+      "max_shard_wall": 120.64,
+      "max_test_run_rss_bytes": 263192576.0,
+      "functional_qualified": true,
+      "timing_qualified": false,
+      "log_sha256": "956175c928d8be2069f89ca7a42eb4262f7655103b11af4d6b42bed1d006c5f6"
+    },
+    {
+      "build_summaries": [
+        "36/36 steps succeeded; 261/8352 tests passed (8091 skipped)"
+      ],
+      "maxrss": [
+        {
+          "line": "+- run test 9 pass, 252 skip (261 total) 37s MaxRSS:248M",
+          "display": "248M",
+          "bytes": 260046848.0,
+          "test_run": true
+        },
+        {
+          "line": "|  +- compile test debug native success 1s MaxRSS:351M",
+          "display": "351M",
+          "bytes": 368050176.0,
+          "test_run": false
+        },
+        {
+          "line": "|        +- compile exe mylang-core debug native cached 5ms MaxRSS:37M",
+          "display": "37M",
+          "bytes": 38797312.0,
+          "test_run": false
+        },
+        {
+          "line": "+- run test 9 pass, 252 skip (261 total) 41s MaxRSS:248M",
+          "display": "248M",
+          "bytes": 260046848.0,
+          "test_run": true
+        },
+        {
+          "line": "+- run test 9 pass, 252 skip (261 total) 56s MaxRSS:249M",
+          "display": "249M",
+          "bytes": 261095424.0,
+          "test_run": true
+        },
+        {
+          "line": "+- run test 9 pass, 252 skip (261 total) 1m MaxRSS:247M",
+          "display": "247M",
+          "bytes": 258998272.0,
+          "test_run": true
+        },
+        {
+          "line": "+- run test 9 pass, 252 skip (261 total) 29s MaxRSS:249M",
+          "display": "249M",
+          "bytes": 261095424.0,
+          "test_run": true
+        },
+        {
+          "line": "+- run test 8 pass, 253 skip (261 total) 21s MaxRSS:252M",
+          "display": "252M",
+          "bytes": 264241152.0,
+          "test_run": true
+        },
+        {
+          "line": "+- run test 8 pass, 253 skip (261 total) 33s MaxRSS:247M",
+          "display": "247M",
+          "bytes": 258998272.0,
+          "test_run": true
+        },
+        {
+          "line": "+- run test 8 pass, 253 skip (261 total) 16s MaxRSS:240M",
+          "display": "240M",
+          "bytes": 251658240.0,
+          "test_run": true
+        },
+        {
+          "line": "+- run test 8 pass, 253 skip (261 total) 19s MaxRSS:252M",
+          "display": "252M",
+          "bytes": 264241152.0,
+          "test_run": true
+        },
+        {
+          "line": "+- run test 8 pass, 253 skip (261 total) 42s MaxRSS:241M",
+          "display": "241M",
+          "bytes": 252706816.0,
+          "test_run": true
+        },
+        {
+          "line": "+- run test 8 pass, 253 skip (261 total) 18s MaxRSS:252M",
+          "display": "252M",
+          "bytes": 264241152.0,
+          "test_run": true
+        },
+        {
+          "line": "+- run test 8 pass, 253 skip (261 total) 30s MaxRSS:246M",
+          "display": "246M",
+          "bytes": 257949696.0,
+          "test_run": true
+        },
+        {
+          "line": "+- run test 8 pass, 253 skip (261 total) 28s MaxRSS:244M",
+          "display": "244M",
+          "bytes": 255852544.0,
+          "test_run": true
+        },
+        {
+          "line": "+- run test 8 pass, 253 skip (261 total) 11s MaxRSS:238M",
+          "display": "238M",
+          "bytes": 249561088.0,
+          "test_run": true
+        },
+        {
+          "line": "+- run test 8 pass, 253 skip (261 total) 8s MaxRSS:239M",
+          "display": "239M",
+          "bytes": 250609664.0,
+          "test_run": true
+        },
+        {
+          "line": "+- run test 8 pass, 253 skip (261 total) 43s MaxRSS:249M",
+          "display": "249M",
+          "bytes": 261095424.0,
+          "test_run": true
+        },
+        {
+          "line": "+- run test 8 pass, 253 skip (261 total) 25s MaxRSS:247M",
+          "display": "247M",
+          "bytes": 258998272.0,
+          "test_run": true
+        },
+        {
+          "line": "+- run test 8 pass, 253 skip (261 total) 38s MaxRSS:244M",
+          "display": "244M",
+          "bytes": 255852544.0,
+          "test_run": true
+        },
+        {
+          "line": "+- run test 8 pass, 253 skip (261 total) 45s MaxRSS:241M",
+          "display": "241M",
+          "bytes": 252706816.0,
+          "test_run": true
+        },
+        {
+          "line": "+- run test 8 pass, 253 skip (261 total) 27s MaxRSS:245M",
+          "display": "245M",
+          "bytes": 256901120.0,
+          "test_run": true
+        },
+        {
+          "line": "+- run test 8 pass, 253 skip (261 total) 27s MaxRSS:247M",
+          "display": "247M",
+          "bytes": 258998272.0,
+          "test_run": true
+        },
+        {
+          "line": "+- run test 8 pass, 253 skip (261 total) 31s MaxRSS:244M",
+          "display": "244M",
+          "bytes": 255852544.0,
+          "test_run": true
+        },
+        {
+          "line": "+- run test 8 pass, 253 skip (261 total) 14s MaxRSS:238M",
+          "display": "238M",
+          "bytes": 249561088.0,
+          "test_run": true
+        },
+        {
+          "line": "+- run test 8 pass, 253 skip (261 total) 21s MaxRSS:240M",
+          "display": "240M",
+          "bytes": 251658240.0,
+          "test_run": true
+        },
+        {
+          "line": "+- run test 8 pass, 253 skip (261 total) 43s MaxRSS:244M",
+          "display": "244M",
+          "bytes": 255852544.0,
+          "test_run": true
+        },
+        {
+          "line": "+- run test 8 pass, 253 skip (261 total) 57s MaxRSS:248M",
+          "display": "248M",
+          "bytes": 260046848.0,
+          "test_run": true
+        },
+        {
+          "line": "+- run test 8 pass, 253 skip (261 total) 38s MaxRSS:244M",
+          "display": "244M",
+          "bytes": 255852544.0,
+          "test_run": true
+        },
+        {
+          "line": "+- run test 8 pass, 253 skip (261 total) 26s MaxRSS:244M",
+          "display": "244M",
+          "bytes": 255852544.0,
+          "test_run": true
+        },
+        {
+          "line": "+- run test 8 pass, 253 skip (261 total) 54s MaxRSS:250M",
+          "display": "250M",
+          "bytes": 262144000.0,
+          "test_run": true
+        },
+        {
+          "line": "+- run test 8 pass, 253 skip (261 total) 51s MaxRSS:251M",
+          "display": "251M",
+          "bytes": 263192576.0,
+          "test_run": true
+        },
+        {
+          "line": "+- run test 8 pass, 253 skip (261 total) 36s MaxRSS:242M",
+          "display": "242M",
+          "bytes": 253755392.0,
+          "test_run": true
+        },
+        {
+          "line": "+- run test 8 pass, 253 skip (261 total) 29s MaxRSS:247M",
+          "display": "247M",
+          "bytes": 258998272.0,
+          "test_run": true
+        }
+      ],
+      "rss_overrun_notices": [],
+      "reported_admission_seconds": {
+        "gate": 5,
+        "build": 0
+      },
+      "errors": [],
+      "run": 2,
+      "source": "c7673da2fd7819242e4c86fe973f05c8a1d18486",
+      "command_seconds": 124.82,
+      "shards": [
+        {
+          "shard": 23,
+          "selected": 8,
+          "verdict": {
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0
+          },
+          "wall_seconds": 21.83
+        },
+        {
+          "shard": 16,
+          "selected": 8,
+          "verdict": {
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0
+          },
+          "wall_seconds": 25.52
+        },
+        {
+          "shard": 27,
+          "selected": 8,
+          "verdict": {
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0
+          },
+          "wall_seconds": 26.35
+        },
+        {
+          "shard": 19,
+          "selected": 8,
+          "verdict": {
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0
+          },
+          "wall_seconds": 27.46
+        },
+        {
+          "shard": 12,
+          "selected": 8,
+          "verdict": {
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0
+          },
+          "wall_seconds": 28.9
+        },
+        {
+          "shard": 30,
+          "selected": 8,
+          "verdict": {
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0
+          },
+          "wall_seconds": 36.15
+        },
+        {
+          "shard": 26,
+          "selected": 8,
+          "verdict": {
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0
+          },
+          "wall_seconds": 38.43
+        },
+        {
+          "shard": 17,
+          "selected": 8,
+          "verdict": {
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0
+          },
+          "wall_seconds": 38.72
+        },
+        {
+          "shard": 15,
+          "selected": 8,
+          "verdict": {
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0
+          },
+          "wall_seconds": 43.1
+        },
+        {
+          "shard": 24,
+          "selected": 8,
+          "verdict": {
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0
+          },
+          "wall_seconds": 43.21
+        },
+        {
+          "shard": 18,
+          "selected": 8,
+          "verdict": {
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0
+          },
+          "wall_seconds": 45.85
+        },
+        {
+          "shard": 29,
+          "selected": 8,
+          "verdict": {
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0
+          },
+          "wall_seconds": 51.14
+        },
+        {
+          "shard": 20,
+          "selected": 8,
+          "verdict": {
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0
+          },
+          "wall_seconds": 27.2
+        },
+        {
+          "shard": 28,
+          "selected": 8,
+          "verdict": {
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0
+          },
+          "wall_seconds": 54.76
+        },
+        {
+          "shard": 25,
+          "selected": 8,
+          "verdict": {
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0
+          },
+          "wall_seconds": 57.81
+        },
+        {
+          "shard": 6,
+          "selected": 8,
+          "verdict": {
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0
+          },
+          "wall_seconds": 33.3
+        },
+        {
+          "shard": 13,
+          "selected": 8,
+          "verdict": {
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0
+          },
+          "wall_seconds": 11.47
+        },
+        {
+          "shard": 3,
+          "selected": 9,
+          "verdict": {
+            "passed": 9,
+            "failed": 0,
+            "skipped": 0
+          },
+          "wall_seconds": 65.42
+        },
+        {
+          "shard": 22,
+          "selected": 8,
+          "verdict": {
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0
+          },
+          "wall_seconds": 14.64
+        },
+        {
+          "shard": 10,
+          "selected": 8,
+          "verdict": {
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0
+          },
+          "wall_seconds": 18.22
+        },
+        {
+          "shard": 8,
+          "selected": 8,
+          "verdict": {
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0
+          },
+          "wall_seconds": 18.97
+        },
+        {
+          "shard": 4,
+          "selected": 9,
+          "verdict": {
+            "passed": 9,
+            "failed": 0,
+            "skipped": 0
+          },
+          "wall_seconds": 29.4
+        },
+        {
+          "shard": 11,
+          "selected": 8,
+          "verdict": {
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0
+          },
+          "wall_seconds": 30.42
+        },
+        {
+          "shard": 21,
+          "selected": 8,
+          "verdict": {
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0
+          },
+          "wall_seconds": 31.78
+        },
+        {
+          "shard": 0,
+          "selected": 9,
+          "verdict": {
+            "passed": 9,
+            "failed": 0,
+            "skipped": 0
+          },
+          "wall_seconds": 37.36
+        },
+        {
+          "shard": 1,
+          "selected": 9,
+          "verdict": {
+            "passed": 9,
+            "failed": 0,
+            "skipped": 0
+          },
+          "wall_seconds": 41.0
+        },
+        {
+          "shard": 9,
+          "selected": 8,
+          "verdict": {
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0
+          },
+          "wall_seconds": 42.34
+        },
+        {
+          "shard": 14,
+          "selected": 8,
+          "verdict": {
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0
+          },
+          "wall_seconds": 8.79
+        },
+        {
+          "shard": 2,
+          "selected": 9,
+          "verdict": {
+            "passed": 9,
+            "failed": 0,
+            "skipped": 0
+          },
+          "wall_seconds": 56.02
+        },
+        {
+          "shard": 7,
+          "selected": 8,
+          "verdict": {
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0
+          },
+          "wall_seconds": 16.87
+        },
+        {
+          "shard": 5,
+          "selected": 8,
+          "verdict": {
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0
+          },
+          "wall_seconds": 21.92
+        },
+        {
+          "shard": 31,
+          "selected": 8,
+          "verdict": {
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0
+          },
+          "wall_seconds": 29.04
+        }
+      ],
+      "total_passed": 261,
+      "max_shard_wall": 65.42,
+      "max_test_run_rss_bytes": 264241152.0,
+      "functional_qualified": true,
+      "timing_qualified": true,
+      "log_sha256": "dbf5db8a37df694a7e1a704e1e42350f38056fec8e1f361c0a7bae8918d2dc73"
+    }
+  ]
+}

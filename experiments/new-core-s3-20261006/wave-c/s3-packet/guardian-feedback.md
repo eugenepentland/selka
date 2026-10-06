@@ -1,0 +1,2 @@
+## 2026-10-06 · codex · mylang — S3-A byte-index normalization and fact forwarding
+- **good:** The 88-check gate caught new `anytype-budget`, `debug-print-ban` and `bool-ops-per-condition` violations in the initial byte-index emitter/test helper. Its fixes were concrete: explicitly type the generic parameters, use a file-scope print alias and split the signature condition. One correction pass produced a green whole-tree gate and normal source commits; the Core32 test gate then passed all 261 unique tests without changing baselines.

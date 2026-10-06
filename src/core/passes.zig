@@ -44,6 +44,7 @@ pub fn ownership(arena: std.mem.Allocator, module: *ir.Module) Error!own.Stats {
 
 /// Run the release passes over `module`.
 pub fn run(arena: std.mem.Allocator, module: *ir.Module, mode: Mode) Error!Result {
+    try @import("fuse_text.zig").whitespace(arena, module);
     var result: Result = .{
         .known = try arena.alloc(?facts.Facts, module.functions.items.len),
         .plans = try arena.alloc([]const vector.Plan, module.functions.items.len),
@@ -77,6 +78,10 @@ pub fn run(arena: std.mem.Allocator, module: *ir.Module, mode: Mode) Error!Resul
         if (function.signature.linkage != .internal) continue;
         const options: facts.Options = .{ .fold = !verify, .sabotage = sabotage, .params = params };
         var known = try facts.analyze(arena, function, options);
+        if (!verify and @import("byte_index.zig").forward(module, function, &known) != 0) {
+            // The existing fact and vector rules now see the original counted index.
+            known = try facts.analyze(arena, function, options);
+        }
         result.counts.proven += known.proven;
         // A reduction proven only under a trip bound gets a guarded copy; the facts then run again.
         const guarded = try version.versionReductions(arena, function, known);

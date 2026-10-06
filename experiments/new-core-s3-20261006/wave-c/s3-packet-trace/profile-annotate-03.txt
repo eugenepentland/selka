@@ -1,0 +1,9 @@
+ Percent |	Source code & Disassembly of row_packet_decode_new for cpu_core/cycles/u (526 samples, percent: local period)
+-----------------------------------------------------------------------------------------------------------------------------
+         : 0       0x10327f0 <myl_core_err_trace_origin_preserve_most>:
+   87.45 :   10327f0:        pushq   %rbp
+    0.00 :   10327f1:        movq    %rsp, %rbp
+    0.00 :   10327f4:        movl    %edi, 0x47c6(%rip)  # 0x1036fc0 <error_trace>
+    0.19 :   10327fa:        movq    $0x0, 0x47c3(%rip)  # 0x1036fc8 <error_trace+0x8>
+    0.00 :   1032805:        popq    %rbp
+   12.36 :   1032806:        retq

@@ -1,0 +1,29 @@
+--- before-address-display-only
++++ after-address-display-only
+@@ -129,7 +129,7 @@
+ shr    $0x3,%rsi
+ mov    %rsi,0x10(%r15)
+ movq   $0x0,0x18(%r15)
+-lea    -0x2da8b(%rip),%rax        # <myl_core_site_count+0x4>
++lea    -0x2dd4b(%rip),%rax        # <myl_core_site_count+0x4>
+ mov    %rax,0x18(%r15)
+ xor    %r13d,%r13d
+ lea    0x26b97(%rip),%rsi        # <myl_core_free_lists>
+@@ -145,7 +145,7 @@
+ je     <main+0x51f>
+ mov    (%r14),%rax
+ mov    %rax,0x18(%rsi)
+-vmovdqa -0x2f4d2(%rip),%ymm0        # <core_io_raw_layout+0x120>
++vmovdqa -0x2f792(%rip),%ymm0        # <core_io_raw_layout+0x120>
+ vmovdqu %ymm0,(%r14)
+ mov    $0x8,%ecx
+ xor    %eax,%eax
+@@ -235,7 +235,7 @@
+ mov    %rdx,0x8(%r14)
+ mov    %r13d,%eax
+ and    $0x3,%eax
+-lea    -0x2e710(%rip),%rsi        # <core_number_pairs+0xe0>
++lea    -0x2e9d0(%rip),%rsi        # <core_number_pairs+0xe0>
+ movslq (%rsi,%rax,4),%rax
+ add    %rsi,%rax
+ jmp    *%rax

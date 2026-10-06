@@ -1,0 +1,19 @@
+{
+  "command": [
+    "zig-out/bin/mylang-core",
+    "build",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/test/core/call_direct.my",
+    "-o",
+    ".mylang-cache/s3-packet/audit-01/call_direct-after",
+    "--release",
+    "--emit-llvm",
+    ".mylang-cache/s3-packet/audit-01/call_direct-after.ll",
+    "--cache-dir",
+    ".mylang-cache/s3-packet/audit-01/cache-after",
+    "--link",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/benchmarks/runtime/ports/native_clock.c"
+  ],
+  "status": 0,
+  "stdout": "",
+  "stderr": ""
+}

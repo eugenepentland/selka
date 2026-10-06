@@ -1,0 +1,1 @@
+index comparisons=54 mismatches=12

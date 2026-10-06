@@ -1,0 +1,3 @@
+996752281 4095203575
+[ perf record: Woken up 3 times to write data ]
+[ perf record: Captured and wrote 0.721 MB .mylang-cache/s3-packet/profile-03.data (4086 samples) ]

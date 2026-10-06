@@ -1,0 +1,64 @@
+{
+  "kind": "text",
+  "cases_requested": 50,
+  "seed": 61006231,
+  "cases_seen": 50,
+  "accepted": 50,
+  "old_rejected": 0,
+  "core_refused": 0,
+  "core_build_failed": 0,
+  "comparisons_expected": 750,
+  "native_runs": 1000,
+  "harness": {
+    "cases": 50,
+    "compared": 750,
+    "mismatch": 0,
+    "fact": 0,
+    "old_rejected": 0,
+    "new_refused": 0
+  },
+  "harness_status": 0,
+  "complete": true,
+  "qualified": true,
+  "error": null,
+  "failures": [],
+  "elapsed_seconds": 241.30988237308338,
+  "cache_root": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-char-performance/.mylang-cache/s3-char/text50-01",
+  "tmpdir": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-char-performance/.mylang-cache/s3-char/text50-01/tmp",
+  "saved_sources": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-char-performance/experiments/new-core-s3-20261006/wave-c/s3-char/text50-01/sources",
+  "zig_local_cache": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-char-performance/.mylang-cache/s3-char/text50-01/zig",
+  "affinity": [
+    0,
+    1,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "oracles": {
+    "old": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-char-performance/.mylang-cache/s3-char/oracle/mylang",
+      "sha256": "d36658dbfb78d29213224532a13fd5ad8b7c0e290dbfb87613d9815678305c79"
+    },
+    "new": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-char-performance/zig-out/bin/mylang-core",
+      "sha256": "751087df7f064dd9a759e724ddff1edd1512d56e722beb4ef1c606d38b9ca924"
+    }
+  },
+  "oracle_unchanged": true,
+  "harness_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-char-performance/experiments/new-core-s3-20261006/wave-c/s3-char/fuzz_char.py",
+  "harness_sha256": "83d322042b9d2a32c2898a5eb018cf30f4bdd7e5a3bc799e7bc8e9d51cd60959",
+  "native_comparisons": 750,
+  "native_complete": true,
+  "command_count": 1200
+}
