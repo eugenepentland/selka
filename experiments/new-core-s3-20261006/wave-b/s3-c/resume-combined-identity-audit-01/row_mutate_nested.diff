@@ -1,0 +1,546 @@
+--- 92590700
++++ S3-Wave-A
+@@ -447,7 +447,9 @@
+   %v173 = add nuw nsw i64 %v97, 1
+   br label %b22
+ b25:
+-  %v200 = call i64 @runtime_bench_now(), !dbg !1000024
++  call void @myl_core_io_at(i32 17)
++  call void @myl_core_host_check(i64 %p1), !dbg !1000024
++  %v201 = call i64 @runtime_bench_now(), !dbg !1000025
+   br label %b38
+ b26:
+   br i1 false, label %b28, label %b30
+@@ -471,13 +473,13 @@
+   %o.78 = extractvalue { i64, i1 } %p.77, 1
+   br i1 %o.78, label %trap.79, label %b31.80, !prof !0
+ trap.79:
+-  call void @myl_core_trap(i32 17, i64 4, i64 0), !dbg !1000025
++  call void @myl_core_trap(i32 18, i64 4, i64 0), !dbg !1000026
+   unreachable
+ b31.80:
+   %lo.81 = icmp slt i64 %v112, 0
+   br i1 %lo.81, label %trap.82, label %b31.80.83, !prof !0
+ trap.82:
+-  call void @myl_core_trap(i32 18, i64 %v112, i64 0), !dbg !1000026
++  call void @myl_core_trap(i32 19, i64 %v112, i64 0), !dbg !1000027
+   unreachable
+ b31.80.83:
+   %v113 = add i64 %v112, 0
+@@ -489,7 +491,7 @@
+   %lo.84 = icmp slt i64 4, 0
+   br i1 %lo.84, label %trap.85, label %b33.86, !prof !0
+ trap.85:
+-  call void @myl_core_trap(i32 19, i64 4, i64 0), !dbg !1000027
++  call void @myl_core_trap(i32 20, i64 4, i64 0), !dbg !1000028
+   unreachable
+ b33.86:
+   %v115 = add i64 4, 0
+@@ -498,7 +500,7 @@
+   %o.88 = extractvalue { i64, i1 } %p.87, 1
+   br i1 %o.88, label %trap.89, label %b33.86.90, !prof !0
+ trap.89:
+-  call void @myl_core_trap(i32 20, i64 0, i64 1), !dbg !1000028
++  call void @myl_core_trap(i32 21, i64 0, i64 1), !dbg !1000029
+   unreachable
+ b33.86.90:
+   %n.91 = call { i64, i1 } @llvm.ssub.with.overflow.i64(i64 0, i64 %v117)
+@@ -506,13 +508,13 @@
+   %o.92 = extractvalue { i64, i1 } %n.91, 1
+   br i1 %o.92, label %trap.93, label %b33.86.90.94, !prof !0
+ trap.93:
+-  call void @myl_core_trap(i32 21, i64 %v117, i64 0), !dbg !1000029
++  call void @myl_core_trap(i32 22, i64 %v117, i64 0), !dbg !1000030
+   unreachable
+ b33.86.90.94:
+   %lo.95 = icmp slt i64 %v118, 0
+   br i1 %lo.95, label %trap.96, label %b33.86.90.94.97, !prof !0
+ trap.96:
+-  call void @myl_core_trap(i32 22, i64 %v118, i64 0), !dbg !1000030
++  call void @myl_core_trap(i32 23, i64 %v118, i64 0), !dbg !1000031
+   unreachable
+ b33.86.90.94.97:
+   %v119 = add i64 %v118, 0
+@@ -521,7 +523,7 @@
+   %o.99 = extractvalue { i64, i1 } %p.98, 1
+   br i1 %o.99, label %trap.100, label %b33.86.90.94.97.101, !prof !0
+ trap.100:
+-  call void @myl_core_trap(i32 23, i64 %v115, i64 %v119), !dbg !1000031
++  call void @myl_core_trap(i32 24, i64 %v115, i64 %v119), !dbg !1000032
+   unreachable
+ b33.86.90.94.97.101:
+   %p.102 = call { i64, i1 } @llvm.uadd.with.overflow.i64(i64 %v120, i64 1)
+@@ -529,7 +531,7 @@
+   %o.103 = extractvalue { i64, i1 } %p.102, 1
+   br i1 %o.103, label %trap.104, label %b33.86.90.94.97.101.105, !prof !0
+ trap.104:
+-  call void @myl_core_trap(i32 24, i64 %v120, i64 1), !dbg !1000032
++  call void @myl_core_trap(i32 25, i64 %v120, i64 1), !dbg !1000033
+   unreachable
+ b33.86.90.94.97.101.105:
+   br label %b32
+@@ -544,7 +546,7 @@
+   %o.107 = extractvalue { i64, i1 } %p.106, 1
+   br i1 %o.107, label %trap.108, label %b35.109, !prof !0
+ trap.108:
+-  call void @myl_core_trap(i32 25, i64 %v97, i64 13), !dbg !1000033
++  call void @myl_core_trap(i32 26, i64 %v97, i64 13), !dbg !1000034
+   unreachable
+ b35.109:
+   %p.110 = call { i64, i1 } @llvm.sadd.with.overflow.i64(i64 %v47, i64 %v141)
+@@ -552,7 +554,7 @@
+   %o.111 = extractvalue { i64, i1 } %p.110, 1
+   br i1 %o.111, label %trap.112, label %b35.109.113, !prof !0
+ trap.112:
+-  call void @myl_core_trap(i32 26, i64 %v47, i64 %v141), !dbg !1000034
++  call void @myl_core_trap(i32 27, i64 %v47, i64 %v141), !dbg !1000035
+   unreachable
+ b35.109.113:
+   %p.114 = call { i64, i1 } @llvm.sadd.with.overflow.i64(i64 %v142, i64 %v134)
+@@ -560,7 +562,7 @@
+   %o.115 = extractvalue { i64, i1 } %p.114, 1
+   br i1 %o.115, label %trap.116, label %b35.109.113.117, !prof !0
+ trap.116:
+-  call void @myl_core_trap(i32 27, i64 %v142, i64 %v134), !dbg !1000035
++  call void @myl_core_trap(i32 28, i64 %v142, i64 %v134), !dbg !1000036
+   unreachable
+ b35.109.113.117:
+   %v145 = urem i64 %v143, 1009
+@@ -587,36 +589,38 @@
+   store i64 %pn.125, ptr %pl.123, align 8, !tbaa !5
+   br label %b24
+ b38:
+-  %v211 = phi i64 [ 0, %b25 ], [ %v232, %b40 ]
+-  %v217 = phi ptr [ %v167, %b25 ], [ %v220, %b40 ]
+-  %v226 = phi i64 [ 0, %b25 ], [ %v229, %b40 ]
+-  %v213 = icmp slt i64 %v211, %v34
+-  br i1 %v213, label %b39, label %b41
++  %v212 = phi i64 [ 0, %b25 ], [ %v233, %b40 ]
++  %v218 = phi ptr [ %v167, %b25 ], [ %v221, %b40 ]
++  %v227 = phi i64 [ 0, %b25 ], [ %v230, %b40 ]
++  %v214 = icmp slt i64 %v212, %v34
++  br i1 %v214, label %b39, label %b41
+ b39:
+-  %v218 = call { i64, ptr } @"my.row_mutate_nested::batch_result"(i64 %v21, i64 %v211, i64 %v47, ptr %v217), !dbg !1000036
+-  %v219 = extractvalue { i64, ptr } %v218, 0
+-  %v220 = extractvalue { i64, ptr } %v218, 1
+-  %v222 = icmp slt i64 %v219, 0
+-  br i1 %v222, label %b42, label %b43
++  %v219 = call { i64, ptr } @"my.row_mutate_nested::batch_result"(i64 %v21, i64 %v212, i64 %v47, ptr %v218), !dbg !1000037
++  %v220 = extractvalue { i64, ptr } %v219, 0
++  %v221 = extractvalue { i64, ptr } %v219, 1
++  %v223 = icmp slt i64 %v220, 0
++  br i1 %v223, label %b42, label %b43
+ b40:
+-  %v232 = add nuw nsw i64 %v211, 1
++  %v233 = add nuw nsw i64 %v212, 1
+   br label %b38
+ b41:
+-  %v243 = call i64 @runtime_bench_now(), !dbg !1000037
+-  %p.128 = call { i64, i1 } @llvm.ssub.with.overflow.i64(i64 %v243, i64 %v200)
+-  %v245 = extractvalue { i64, i1 } %p.128, 0
++  call void @myl_core_io_at(i32 29)
++  call void @myl_core_host_check(i64 %p1), !dbg !1000038
++  %v245 = call i64 @runtime_bench_now(), !dbg !1000039
++  %p.128 = call { i64, i1 } @llvm.ssub.with.overflow.i64(i64 %v245, i64 %v201)
++  %v247 = extractvalue { i64, i1 } %p.128, 0
+   %o.129 = extractvalue { i64, i1 } %p.128, 1
+   br i1 %o.129, label %trap.130, label %b41.131, !prof !0
+ trap.130:
+-  call void @myl_core_trap(i32 28, i64 %v243, i64 %v200), !dbg !1000038
++  call void @myl_core_trap(i32 30, i64 %v245, i64 %v201), !dbg !1000040
+   unreachable
+ b41.131:
+-  %h.132 = getelementptr inbounds i8, ptr %v217, i64 8
+-  %v247 = load i64, ptr %h.132, align 8, !tbaa !5
+-  %v248 = add i64 %v247, 0
++  %h.132 = getelementptr inbounds i8, ptr %v218, i64 8
++  %v249 = load i64, ptr %h.132, align 8, !tbaa !5
++  %v250 = add i64 %v249, 0
+   br label %b44
+ b42:
+-  %rc.133 = load i32, ptr %v220, align 8, !tbaa !3, !range !8
++  %rc.133 = load i32, ptr %v221, align 8, !tbaa !3, !range !8
+   %rs.134 = icmp eq i32 %rc.133, -1
+   br i1 %rs.134, label %b42.136, label %rc.dec.135
+ rc.dec.135:
+@@ -624,50 +628,50 @@
+   %rz.138 = icmp eq i32 %rn.137, 0
+   br i1 %rz.138, label %rc.free.140, label %rc.keep.139
+ rc.keep.139:
+-  store i32 %rn.137, ptr %v220, align 8, !tbaa !3
++  store i32 %rn.137, ptr %v221, align 8, !tbaa !3
+   br label %b42.136
+ rc.free.140:
+-  call void @myl_core_free(ptr %v220)
++  call void @myl_core_free(ptr %v221)
+   br label %b42.136
+ b42.136:
+   ret i64 2
+ b43:
+-  %p.141 = call { i64, i1 } @llvm.sadd.with.overflow.i64(i64 %v226, i64 %v219)
+-  %v227 = extractvalue { i64, i1 } %p.141, 0
++  %p.141 = call { i64, i1 } @llvm.sadd.with.overflow.i64(i64 %v227, i64 %v220)
++  %v228 = extractvalue { i64, i1 } %p.141, 0
+   %o.142 = extractvalue { i64, i1 } %p.141, 1
+   br i1 %o.142, label %trap.143, label %b43.144, !prof !0
+ trap.143:
+-  call void @myl_core_trap(i32 29, i64 %v226, i64 %v219), !dbg !1000039
++  call void @myl_core_trap(i32 31, i64 %v227, i64 %v220), !dbg !1000041
+   unreachable
+ b43.144:
+-  %v229 = urem i64 %v227, 1000000007
++  %v230 = urem i64 %v228, 1000000007
+   br label %b40
+ b44:
+-  %v250 = phi i64 [ 0, %b41.131 ], [ %v278, %b46 ]
+-  %v274 = phi i64 [ %v226, %b41.131 ], [ %v266, %b46 ]
+-  %v252 = icmp ult i64 %v250, %v248
+-  br i1 %v252, label %b45, label %b47
++  %v252 = phi i64 [ 0, %b41.131 ], [ %v280, %b46 ]
++  %v276 = phi i64 [ %v227, %b41.131 ], [ %v268, %b46 ]
++  %v254 = icmp ult i64 %v252, %v250
++  br i1 %v254, label %b45, label %b47
+ b45:
+-  %lh.145 = getelementptr inbounds i8, ptr %v217, i64 8
++  %lh.145 = getelementptr inbounds i8, ptr %v218, i64 8
+   %len.146 = load i64, ptr %lh.145, align 8, !tbaa !5
+-  %oob.147 = icmp uge i64 %v250, %len.146
++  %oob.147 = icmp uge i64 %v252, %len.146
+   br i1 %oob.147, label %trap.148, label %b45.149, !prof !0
+ trap.148:
+-  call void @myl_core_trap(i32 30, i64 %v250, i64 %len.146), !dbg !1000040
++  call void @myl_core_trap(i32 32, i64 %v252, i64 %len.146), !dbg !1000042
+   unreachable
+ b45.149:
+-  %data.150 = getelementptr inbounds i8, ptr %v217, i64 32
+-  %elt.151 = getelementptr inbounds ptr, ptr %data.150, i64 %v250
+-  %v255 = load ptr, ptr %elt.151, align 8, !tbaa !7
+-  %h.152 = getelementptr inbounds i8, ptr %v255, i64 8
+-  %v257 = load i64, ptr %h.152, align 8, !tbaa !5
+-  %v258 = add i64 %v257, 0
++  %data.150 = getelementptr inbounds i8, ptr %v218, i64 32
++  %elt.151 = getelementptr inbounds ptr, ptr %data.150, i64 %v252
++  %v257 = load ptr, ptr %elt.151, align 8, !tbaa !7
++  %h.152 = getelementptr inbounds i8, ptr %v257, i64 8
++  %v259 = load i64, ptr %h.152, align 8, !tbaa !5
++  %v260 = add i64 %v259, 0
+   br label %b48
+ b46:
+-  %v278 = add nuw nsw i64 %v250, 1
++  %v280 = add nuw nsw i64 %v252, 1
+   br label %b44
+ b47:
+-  %rc.153 = load i32, ptr %v217, align 8, !tbaa !3, !range !8
++  %rc.153 = load i32, ptr %v218, align 8, !tbaa !3, !range !8
+   %rs.154 = icmp eq i32 %rc.153, -1
+   br i1 %rs.154, label %b47.156, label %rc.dec.155
+ rc.dec.155:
+@@ -675,58 +679,58 @@
+   %rz.158 = icmp eq i32 %rn.157, 0
+   br i1 %rz.158, label %rc.free.160, label %rc.keep.159
+ rc.keep.159:
+-  store i32 %rn.157, ptr %v217, align 8, !tbaa !3
++  store i32 %rn.157, ptr %v218, align 8, !tbaa !3
+   br label %b47.156
+ rc.free.160:
+-  call void @myl_core_free(ptr %v217)
++  call void @myl_core_free(ptr %v218)
+   br label %b47.156
+ b47.156:
+-  call void @myl_core_print_i64(i64 %p2, i64 %v274)
++  call void @myl_core_print_i64(i64 %p2, i64 %v276)
+   call void @myl_core_print_sep(i64 %p2)
+-  call void @myl_core_print_i64(i64 %p2, i64 %v245)
++  call void @myl_core_print_i64(i64 %p2, i64 %v247)
+   call void @myl_core_print_end(i64 %p2)
+   ret i64 0
+ b48:
+-  %v260 = phi i64 [ 0, %b45.149 ], [ %v272, %b50 ]
+-  %v266 = phi i64 [ %v274, %b45.149 ], [ %v269, %b50 ]
+-  %v262 = icmp ult i64 %v260, %v258
+-  br i1 %v262, label %b49, label %b51
++  %v262 = phi i64 [ 0, %b45.149 ], [ %v274, %b50 ]
++  %v268 = phi i64 [ %v276, %b45.149 ], [ %v271, %b50 ]
++  %v264 = icmp ult i64 %v262, %v260
++  br i1 %v264, label %b49, label %b51
+ b49:
+-  %lh.161 = getelementptr inbounds i8, ptr %v255, i64 8
++  %lh.161 = getelementptr inbounds i8, ptr %v257, i64 8
+   %len.162 = load i64, ptr %lh.161, align 8, !tbaa !5
+-  %oob.163 = icmp uge i64 %v260, %len.162
++  %oob.163 = icmp uge i64 %v262, %len.162
+   br i1 %oob.163, label %trap.164, label %b49.165, !prof !0
+ trap.164:
+-  call void @myl_core_trap(i32 31, i64 %v260, i64 %len.162), !dbg !1000041
++  call void @myl_core_trap(i32 33, i64 %v262, i64 %len.162), !dbg !1000043
+   unreachable
+ b49.165:
+-  %data.166 = getelementptr inbounds i8, ptr %v255, i64 32
+-  %elt.167 = getelementptr inbounds i64, ptr %data.166, i64 %v260
+-  %v265 = load i64, ptr %elt.167, align 8, !tbaa !7
+-  %p.168 = call { i64, i1 } @llvm.sadd.with.overflow.i64(i64 %v266, i64 %v265)
+-  %v267 = extractvalue { i64, i1 } %p.168, 0
++  %data.166 = getelementptr inbounds i8, ptr %v257, i64 32
++  %elt.167 = getelementptr inbounds i64, ptr %data.166, i64 %v262
++  %v267 = load i64, ptr %elt.167, align 8, !tbaa !7
++  %p.168 = call { i64, i1 } @llvm.sadd.with.overflow.i64(i64 %v268, i64 %v267)
++  %v269 = extractvalue { i64, i1 } %p.168, 0
+   %o.169 = extractvalue { i64, i1 } %p.168, 1
+   br i1 %o.169, label %trap.170, label %b49.165.171, !prof !0
+ trap.170:
+-  call void @myl_core_trap(i32 32, i64 %v266, i64 %v265), !dbg !1000042
++  call void @myl_core_trap(i32 34, i64 %v268, i64 %v267), !dbg !1000044
+   unreachable
+ b49.165.171:
+-  %q.172 = sdiv i64 %v267, 1000000007
+-  %r.173 = srem i64 %v267, 1000000007
++  %q.172 = sdiv i64 %v269, 1000000007
++  %r.173 = srem i64 %v269, 1000000007
+   %rnz.174 = icmp ne i64 %r.173, 0
+   %x.175 = xor i64 %r.173, 1000000007
+   %neg.176 = icmp slt i64 %x.175, 0
+   %fix.177 = and i1 %rnz.174, %neg.176
+   %ra.178 = select i1 %fix.177, i64 1000000007, i64 0
+-  %v269 = add i64 %r.173, %ra.178
++  %v271 = add i64 %r.173, %ra.178
+   br label %b50
+ b50:
+-  %v272 = add nuw nsw i64 %v260, 1
++  %v274 = add nuw nsw i64 %v262, 1
+   br label %b48
+ b51:
+   br label %b46
+ }
+-define internal i64 @"my.row_mutate_nested::parse_number"(ptr %p0) nounwind uwtable !dbg !1000043 {
++define internal i64 @"my.row_mutate_nested::parse_number"(ptr %p0) nounwind uwtable !dbg !1000045 {
+ entry:
+   %slot = alloca i64, align 8
+   br label %b0
+@@ -748,7 +752,7 @@
+ b4:
+   ret i64 0
+ }
+-define internal { i64, ptr } @"my.row_mutate_nested::batch_result"(i64 %p0, i64 %p1, i64 %p2, ptr %p3) nounwind uwtable !dbg !1000044 {
++define internal { i64, ptr } @"my.row_mutate_nested::batch_result"(i64 %p0, i64 %p1, i64 %p2, ptr %p3) nounwind uwtable !dbg !1000046 {
+ entry:
+   %slot = alloca i64, align 8
+   br label %b0
+@@ -758,7 +762,7 @@
+   %o.2 = extractvalue { i64, i1 } %p.1, 1
+   br i1 %o.2, label %trap.3, label %b0.4, !prof !0
+ trap.3:
+-  call void @myl_core_trap(i32 33, i64 %p1, i64 17), !dbg !1000045
++  call void @myl_core_trap(i32 35, i64 %p1, i64 17), !dbg !1000047
+   unreachable
+ b0.4:
+   %p.5 = call { i64, i1 } @llvm.sadd.with.overflow.i64(i64 %p2, i64 %v5)
+@@ -766,13 +770,13 @@
+   %o.6 = extractvalue { i64, i1 } %p.5, 1
+   br i1 %o.6, label %trap.7, label %b0.4.8, !prof !0
+ trap.7:
+-  call void @myl_core_trap(i32 34, i64 %p2, i64 %v5), !dbg !1000046
++  call void @myl_core_trap(i32 36, i64 %p2, i64 %v5), !dbg !1000048
+   unreachable
+ b0.4.8:
+   %z.9 = icmp eq i64 %p0, 0
+   br i1 %z.9, label %trap.10, label %b0.4.8.11, !prof !0
+ trap.10:
+-  call void @myl_core_trap(i32 35, i64 %v6, i64 %p0), !dbg !1000047
++  call void @myl_core_trap(i32 37, i64 %v6, i64 %p0), !dbg !1000049
+   unreachable
+ b0.4.8.11:
+   %m.12 = icmp eq i64 %p0, -1
+@@ -800,7 +804,7 @@
+   %oob.24 = icmp uge i64 %v15, %len.23
+   br i1 %oob.24, label %trap.25, label %b2.26, !prof !0
+ trap.25:
+-  call void @myl_core_trap(i32 36, i64 %v15, i64 %len.23), !dbg !1000048
++  call void @myl_core_trap(i32 38, i64 %v15, i64 %len.23), !dbg !1000050
+   unreachable
+ b2.26:
+   %data.27 = getelementptr inbounds i8, ptr %p3, i64 32
+@@ -813,7 +817,7 @@
+   %hi.30 = icmp ugt i64 %v22, 9223372036854775807
+   br i1 %hi.30, label %trap.31, label %b3.32, !prof !0
+ trap.31:
+-  call void @myl_core_trap(i32 37, i64 %v22, i64 0), !dbg !1000049
++  call void @myl_core_trap(i32 39, i64 %v22, i64 0), !dbg !1000051
+   unreachable
+ b3.32:
+   %v23 = add i64 %v22, 0
+@@ -822,7 +826,7 @@
+   %o.34 = extractvalue { i64, i1 } %p.33, 1
+   br i1 %o.34, label %trap.35, label %b3.32.36, !prof !0
+ trap.35:
+-  call void @myl_core_trap(i32 38, i64 %v23, i64 1), !dbg !1000050
++  call void @myl_core_trap(i32 40, i64 %v23, i64 1), !dbg !1000052
+   unreachable
+ b3.32.36:
+   br label %b4
+@@ -833,7 +837,7 @@
+   %oob.39 = icmp uge i64 %v26, %len.38
+   br i1 %oob.39, label %trap.40, label %b4.41, !prof !0
+ trap.40:
+-  call void @myl_core_trap(i32 39, i64 %v26, i64 %len.38), !dbg !1000051
++  call void @myl_core_trap(i32 41, i64 %v26, i64 %len.38), !dbg !1000053
+   unreachable
+ b4.41:
+   %data.42 = getelementptr inbounds i8, ptr %v17, i64 32
+@@ -844,7 +848,7 @@
+   %o.45 = extractvalue { i64, i1 } %p.44, 1
+   br i1 %o.45, label %trap.46, label %b4.41.47, !prof !0
+ trap.46:
+-  call void @myl_core_trap(i32 40, i64 %v28, i64 %p1), !dbg !1000052
++  call void @myl_core_trap(i32 42, i64 %v28, i64 %p1), !dbg !1000054
+   unreachable
+ b4.41.47:
+   %p.48 = call { i64, i1 } @llvm.sadd.with.overflow.i64(i64 %v31, i64 1)
+@@ -852,7 +856,7 @@
+   %o.49 = extractvalue { i64, i1 } %p.48, 1
+   br i1 %o.49, label %trap.50, label %b4.41.47.51, !prof !0
+ trap.50:
+-  call void @myl_core_trap(i32 41, i64 %v31, i64 1), !dbg !1000053
++  call void @myl_core_trap(i32 43, i64 %v31, i64 1), !dbg !1000055
+   unreachable
+ b4.41.47.51:
+   %q.52 = sdiv i64 %v33, 1000003
+@@ -878,7 +882,7 @@
+   %oob.62 = icmp uge i64 %v47, %len.61
+   br i1 %oob.62, label %trap.63, label %b6.64, !prof !0
+ trap.63:
+-  call void @myl_core_trap(i32 42, i64 %v47, i64 %len.61), !dbg !1000054
++  call void @myl_core_trap(i32 44, i64 %v47, i64 %len.61), !dbg !1000056
+   unreachable
+ b6.64:
+   %data.65 = getelementptr inbounds i8, ptr %p3, i64 32
+@@ -891,7 +895,7 @@
+   %hi.68 = icmp ugt i64 %v54, 9223372036854775807
+   br i1 %hi.68, label %trap.69, label %b7.70, !prof !0
+ trap.69:
+-  call void @myl_core_trap(i32 43, i64 %v54, i64 0), !dbg !1000055
++  call void @myl_core_trap(i32 45, i64 %v54, i64 0), !dbg !1000057
+   unreachable
+ b7.70:
+   %v55 = add i64 %v54, 0
+@@ -900,7 +904,7 @@
+   %o.72 = extractvalue { i64, i1 } %p.71, 1
+   br i1 %o.72, label %trap.73, label %b7.70.74, !prof !0
+ trap.73:
+-  call void @myl_core_trap(i32 44, i64 %v55, i64 1), !dbg !1000056
++  call void @myl_core_trap(i32 46, i64 %v55, i64 1), !dbg !1000058
+   unreachable
+ b7.70.74:
+   br label %b8
+@@ -912,7 +916,7 @@
+   %oob.77 = icmp uge i64 %v58, %len.76
+   br i1 %oob.77, label %trap.78, label %b8.79, !prof !0
+ trap.78:
+-  call void @myl_core_trap(i32 45, i64 %v58, i64 %len.76), !dbg !1000057
++  call void @myl_core_trap(i32 47, i64 %v58, i64 %len.76), !dbg !1000059
+   unreachable
+ b8.79:
+   %data.80 = getelementptr inbounds i8, ptr %v123, i64 32
+@@ -925,7 +929,7 @@
+   %oob.84 = icmp uge i64 %v47, %len.83
+   br i1 %oob.84, label %trap.85, label %b8.79.86, !prof !0
+ trap.85:
+-  call void @myl_core_trap(i32 46, i64 %v47, i64 %len.83), !dbg !1000058
++  call void @myl_core_trap(i32 48, i64 %v47, i64 %len.83), !dbg !1000060
+   unreachable
+ b8.79.86:
+   %data.87 = getelementptr inbounds i8, ptr %v124, i64 32
+@@ -962,7 +966,7 @@
+   %oob.101 = icmp uge i64 %v79, %len.100
+   br i1 %oob.101, label %trap.102, label %b10.103, !prof !0
+ trap.102:
+-  call void @myl_core_trap(i32 47, i64 %v79, i64 %len.100), !dbg !1000059
++  call void @myl_core_trap(i32 49, i64 %v79, i64 %len.100), !dbg !1000061
+   unreachable
+ b10.103:
+   %data.104 = getelementptr inbounds i8, ptr %p3, i64 32
+@@ -975,7 +979,7 @@
+   %hi.107 = icmp ugt i64 %v86, 9223372036854775807
+   br i1 %hi.107, label %trap.108, label %b11.109, !prof !0
+ trap.108:
+-  call void @myl_core_trap(i32 48, i64 %v86, i64 0), !dbg !1000060
++  call void @myl_core_trap(i32 50, i64 %v86, i64 0), !dbg !1000062
+   unreachable
+ b11.109:
+   %v87 = add i64 %v86, 0
+@@ -984,7 +988,7 @@
+   %o.111 = extractvalue { i64, i1 } %p.110, 1
+   br i1 %o.111, label %trap.112, label %b11.109.113, !prof !0
+ trap.112:
+-  call void @myl_core_trap(i32 49, i64 %v87, i64 1), !dbg !1000061
++  call void @myl_core_trap(i32 51, i64 %v87, i64 1), !dbg !1000063
+   unreachable
+ b11.109.113:
+   br label %b12
+@@ -995,7 +999,7 @@
+   %oob.116 = icmp uge i64 %v90, %len.115
+   br i1 %oob.116, label %trap.117, label %b12.118, !prof !0
+ trap.117:
+-  call void @myl_core_trap(i32 50, i64 %v90, i64 %len.115), !dbg !1000062
++  call void @myl_core_trap(i32 52, i64 %v90, i64 %len.115), !dbg !1000064
+   unreachable
+ b12.118:
+   %data.119 = getelementptr inbounds i8, ptr %v81, i64 32
+@@ -1030,7 +1034,7 @@
+   %oob.132 = icmp uge i64 %v104, %len.131
+   br i1 %oob.132, label %trap.133, label %b14.134, !prof !0
+ trap.133:
+-  call void @myl_core_trap(i32 51, i64 %v104, i64 %len.131), !dbg !1000063
++  call void @myl_core_trap(i32 53, i64 %v104, i64 %len.131), !dbg !1000065
+   unreachable
+ b14.134:
+   %data.135 = getelementptr inbounds i8, ptr %v65, i64 32
+@@ -1043,7 +1047,7 @@
+   %hi.138 = icmp ugt i64 %v111, 9223372036854775807
+   br i1 %hi.138, label %trap.139, label %b15.140, !prof !0
+ trap.139:
+-  call void @myl_core_trap(i32 52, i64 %v111, i64 0), !dbg !1000064
++  call void @myl_core_trap(i32 54, i64 %v111, i64 0), !dbg !1000066
+   unreachable
+ b15.140:
+   %v112 = add i64 %v111, 0
+@@ -1052,7 +1056,7 @@
+   %o.142 = extractvalue { i64, i1 } %p.141, 1
+   br i1 %o.142, label %trap.143, label %b15.140.144, !prof !0
+ trap.143:
+-  call void @myl_core_trap(i32 53, i64 %v112, i64 1), !dbg !1000065
++  call void @myl_core_trap(i32 55, i64 %v112, i64 1), !dbg !1000067
+   unreachable
+ b15.140.144:
+   br label %b16
+@@ -1063,7 +1067,7 @@
+   %oob.147 = icmp uge i64 %v115, %len.146
+   br i1 %oob.147, label %trap.148, label %b16.149, !prof !0
+ trap.148:
+-  call void @myl_core_trap(i32 54, i64 %v115, i64 %len.146), !dbg !1000066
++  call void @myl_core_trap(i32 56, i64 %v115, i64 %len.146), !dbg !1000068
+   unreachable
+ b16.149:
+   %data.150 = getelementptr inbounds i8, ptr %v106, i64 32
+@@ -1074,17 +1078,18 @@
+   %o.153 = extractvalue { i64, i1 } %p.152, 1
+   br i1 %o.153, label %trap.154, label %b16.149.155, !prof !0
+ trap.154:
+-  call void @myl_core_trap(i32 55, i64 %v92, i64 %v117), !dbg !1000067
++  call void @myl_core_trap(i32 57, i64 %v92, i64 %v117), !dbg !1000069
+   unreachable
+ b16.149.155:
+   %rm.156 = insertvalue { i64, ptr } poison, i64 %v118, 0
+   %v121 = insertvalue { i64, ptr } %rm.156, ptr %v65, 1
+   ret { i64, ptr } %v121
+ }
+-define i32 @main(i32 %argc, ptr %argv) uwtable !dbg !1000068 {
++define i32 @main(i32 %argc, ptr %argv) uwtable !dbg !1000070 {
+ entry:
+   %args = call ptr @myl_core_args(i32 %argc, ptr %argv)
+-  %r = call i64 @"my.row_mutate_nested::main"(ptr %args, i64 1, i64 1), !dbg !1000069
++  %host1 = call i64 @myl_core_host_grant()
++  %r = call i64 @"my.row_mutate_nested::main"(ptr %args, i64 %host1, i64 1), !dbg !1000071
+   call void @myl_core_release(ptr %args)
+   %s = call i32 @myl_core_exit(i64 %r)
+   ret i32 %s

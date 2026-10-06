@@ -1,6 +1,8 @@
 # S3-C capability and runner qualification
 
-Status: source checkpoints are committed; combined final qualification is in progress.
+Status: combined C/M/property-runner compiler and runtime source `9637eb9a1`
+passes all Core, strict full conformance, provider-fixture, exact runner-report,
+coverage and instruction audit checks. S3-C is qualified for integration.
 This is a package record, not the S3 exit report or permission to start S4.
 
 ## Behavior
@@ -42,6 +44,9 @@ the old provider and its `get` semantics are unchanged.
 | `18cfe1cf5` | Exact context fixture entries in both cache input manifests |
 | `d1b9b094e`, `da61d2973`, `d63257bd8` | Frozen M capture/None-key source and complete authority-test fixtures |
 | `3e607848a` | Verified IR resource-owner/reverse-close assertions, replacing stale void-print syntax |
+| `c340e2880` | Combined independent generator/shrinker, exact reports, native faults and private stand-ins |
+| `9637eb9a1` | M canonical Unit locals across mutable place joins; combined source freeze |
+| `e69c9f985` | Evidence-only final 24-report refresh on the identical combined source |
 
 Each normal source commit passed all 88 Guardian checks. The Core IR diff against
 `dc1a5831` is empty. Persisted formats remain `module-interface-v5`,
@@ -63,7 +68,14 @@ atomically from that pair; its previous pair is archived in the same private cac
 - compiler: `d36658dbfb78d29213224532a13fd5ad8b7c0e290dbfb87613d9815678305c79`;
 - QBE: `b6139650a99b39131cd791fa1fdc84c09472dc303930bbadd3f8a5348487af4c`.
 
-Final combined Core/runner checks will be recorded below after their source freeze.
+The combined freeze is `9637eb9a1aa4af8ee0ecd88838ceed09b228d812`. Its installed
+Core SHA-256 is `b966a329e8516ab6b2f875e085d0af6f230ba1ddb1b328079c95ee5bcf77700e`.
+`resume-combined-qualification.json` validates all final C result counts and limits
+and records SHA-256 hashes of the installed Core, corrected old compiler and each
+aggregate evidence file. `resume-combined-source-contract.json` verifies the frozen
+IR, public provider header and untouched language corpus. Runner refresh commit
+`e69c9f9855ff0d00877f3f279c640a1d3551aa64` changes only evidence. Its independent
+installed compiler hash is also recorded; both builds use source freeze `9637eb9a1`.
 Command logs are unique per invocation; failed runs remain available. Later runner
 SPEC, fixture and cache-manifest additions require the final integrated old gate.
 
@@ -73,6 +85,13 @@ SPEC, fixture and cache-manifest additions require the final integrated old gate
 | Native provider/Host/grants/handles | `37/37` strict checks, old/debug/release-verify, clean leaks/facts | `resume-fixtures-02/summary.json` and each command's JSON |
 | Core context regression | `1/1`, `5/5` steps, all four debug/release/verify modes | `resume-context-core-test-04.log` |
 | Scope cleanup structure | `1/1`, `5/5` steps; matching owners close in reverse order before return | `resume-scope-order-test-01.log` |
+| Combined exclusive Core rebuild | `3/3` steps, `3.30 s`; all three build slots and gate held | `resume-combined-core-exclusive-01.log`, `.time` |
+| Combined full Core suite, 32 shards | `36/36` steps, 254 unique tests, `127.03 s`; longest shard `68.26 s`, zero failures | `resume-combined-test-core32-01.log`, `.time` |
+| Combined native provider/Host/grants/handles | `37/37` strict checks, old/debug/release-verify, clean leaks/facts | `resume-combined-fixtures-01/summary.json` |
+| Combined strict full conformance | Debug and release each `1518` matching, `0` mismatching, `0` unsupported; clean leaks and verified release facts | `resume-combined-conformance-01.log` |
+| Refreshed exact runner reports | `24` full test-report matches, `0` mismatches, `0` unsupported; all 14 actual compiler invocations return their expected status | `../s3-runner/final-03-comparison.json`, `final-03-commands.json` |
+| Combined checked coverage | Four complete child reports, all status 0; 3124/3124 language-test and 123/123 parity functions accepted | `resume-combined-coverage-01/summary.json` |
+| Combined 35-row instruction audit | All raw diffs retained; zero residual changes after only proved Host scaffolding and semantic IDs | `resume-combined-identity-audit-01/summary.json` |
 
 The fixture suite compares process status, stdout and error codes explicitly.
 Malformed-provider and assertion exits record `release=1 live=0` for all three
@@ -83,7 +102,8 @@ mode, and read/write permissions are checked against actual file state.
 ## Code identity and the authorized Host changes
 
 The original raw comparison records changed definitions for all 35 rows. Every raw
-diff is retained in `resume-identity-audit-02`. The audit's `summary.json` names every
+diff is retained in `resume-identity-audit-02` and the final combined
+`resume-combined-identity-audit-01`. The audit's `summary.json` names every
 affected function, the two timing-call blocks, the baseline/emitted hashes and any
 remaining difference. All 35 have zero remaining instruction differences after
 only the following proved changes are normalized:
@@ -124,6 +144,20 @@ bounds and a 4094-byte path bound. The wrapper's external-resource limit remains
 value, depth and payload contracts. User modules, persisted interfaces and
 incremental module compilation remain S4 work.
 
-The strict fixture, runner-report, conformance, leak/fact, coverage, identity and
-developer-loop results remain to be filled after combined qualification. C adds
-no I/O fuzz kind: deterministic provider fixtures are its qualification.
+Checked coverage reports 3589/3595 accepted functions over all four corpora.
+The six remaining function refusals are declarations: extern `abs`, `floor`,
+`main::runtime_bench_now`; Host `io::length`, `io::byte`, `io::put`. Repeated imports
+produce eleven raw declaration refusals. Native declarations have no standalone
+body to compile; their actual linked calls are qualified by C fixtures and the
+benchmark row builds. Seven example module-name failures and four test embed
+failures need their original source/module context and remain explicit front-end
+coverage caveats. This is function coverage, not an execution or performance claim.
+
+The runner refresh uses the same combined source freeze and corrected old SHA-256.
+It compares complete property evidence and reasons, including integer/list
+shrinking, discard exhaustion, helper contracts, Result verdicts, buffered output,
+stand-in reset, name-derived seeds and native signals/silent exit 17. The runner
+source checkpoint remains `d54e3dae0`; only dependency source and evidence changed.
+C adds no I/O fuzz kind: deterministic provider fixtures are its qualification.
+Final integrated old gate, five applications, 40-row performance/count checks and
+200-case fuzz belong to the coordinator's stage exit.

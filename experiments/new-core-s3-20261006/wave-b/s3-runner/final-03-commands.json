@@ -1,0 +1,320 @@
+{
+  "compilers": {
+    "old": "d36658dbfb78d29213224532a13fd5ad8b7c0e290dbfb87613d9815678305c79",
+    "core": "fbfb9263efa8fd406df4505ccf5a79800590582b9df8f3722ce7550c6603e287"
+  },
+  "commands": [
+    {
+      "case": "properties",
+      "compiler": "old",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-capabilities/.mylang-cache/s3/env-grants-oracle/mylang",
+        "test",
+        "test/core/c_runner_properties.my",
+        "--json",
+        "--property-runs",
+        "12",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-runner/.mylang-cache/s3-runner/final-03-properties-old",
+        "--seed",
+        "7",
+        "--mode",
+        "ReleaseFast"
+      ],
+      "status": 0,
+      "expected_status": 0,
+      "seconds": 1.5691303159110248,
+      "log": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-runner/experiments/new-core-s3-20261006/wave-b/s3-runner/logs/final-03-properties-old.txt"
+    },
+    {
+      "case": "properties",
+      "compiler": "core",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-runner/zig-out/bin/mylang-core",
+        "test",
+        "test/core/c_runner_properties.my",
+        "--json",
+        "--property-runs",
+        "12",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-runner/.mylang-cache/s3-runner/final-03-properties-core",
+        "--seed",
+        "7",
+        "--release",
+        "--verify-facts"
+      ],
+      "status": 0,
+      "expected_status": 0,
+      "seconds": 2.825688862008974,
+      "log": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-runner/experiments/new-core-s3-20261006/wave-b/s3-runner/logs/final-03-properties-core.txt"
+    },
+    {
+      "case": "failures",
+      "compiler": "old",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-capabilities/.mylang-cache/s3/env-grants-oracle/mylang",
+        "test",
+        "test/core/c_runner_failures.my",
+        "--json",
+        "--property-runs",
+        "12",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-runner/.mylang-cache/s3-runner/final-03-failures-old",
+        "--seed",
+        "7",
+        "--mode",
+        "ReleaseFast"
+      ],
+      "status": 1,
+      "expected_status": 1,
+      "seconds": 1.8197666290216148,
+      "log": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-runner/experiments/new-core-s3-20261006/wave-b/s3-runner/logs/final-03-failures-old.txt"
+    },
+    {
+      "case": "failures",
+      "compiler": "core",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-runner/zig-out/bin/mylang-core",
+        "test",
+        "test/core/c_runner_failures.my",
+        "--json",
+        "--property-runs",
+        "12",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-runner/.mylang-cache/s3-runner/final-03-failures-core",
+        "--seed",
+        "7",
+        "--release",
+        "--verify-facts"
+      ],
+      "status": 1,
+      "expected_status": 1,
+      "seconds": 3.0757138000335544,
+      "log": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-runner/experiments/new-core-s3-20261006/wave-b/s3-runner/logs/final-03-failures-core.txt"
+    },
+    {
+      "case": "standins",
+      "compiler": "old",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-capabilities/.mylang-cache/s3/env-grants-oracle/mylang",
+        "test",
+        "test/core/c_runner_standins.my",
+        "--json",
+        "--property-runs",
+        "12",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-runner/.mylang-cache/s3-runner/final-03-standins-old",
+        "--seed",
+        "7",
+        "--mode",
+        "ReleaseFast"
+      ],
+      "status": 0,
+      "expected_status": 0,
+      "seconds": 1.6702864859253168,
+      "log": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-runner/experiments/new-core-s3-20261006/wave-b/s3-runner/logs/final-03-standins-old.txt"
+    },
+    {
+      "case": "standins",
+      "compiler": "core",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-runner/zig-out/bin/mylang-core",
+        "test",
+        "test/core/c_runner_standins.my",
+        "--json",
+        "--property-runs",
+        "12",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-runner/.mylang-cache/s3-runner/final-03-standins-core",
+        "--seed",
+        "7",
+        "--release",
+        "--verify-facts"
+      ],
+      "status": 0,
+      "expected_status": 0,
+      "seconds": 2.8242509949486703,
+      "log": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-runner/experiments/new-core-s3-20261006/wave-b/s3-runner/logs/final-03-standins-core.txt"
+    },
+    {
+      "case": "state",
+      "compiler": "old",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-capabilities/.mylang-cache/s3/env-grants-oracle/mylang",
+        "test",
+        "test/core/c_runner_state_capture.my",
+        "--json",
+        "--property-runs",
+        "12",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-runner/.mylang-cache/s3-runner/final-03-state-old",
+        "--seed",
+        "7",
+        "--mode",
+        "ReleaseFast"
+      ],
+      "status": 1,
+      "expected_status": 1,
+      "seconds": 1.8210902609862387,
+      "log": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-runner/experiments/new-core-s3-20261006/wave-b/s3-runner/logs/final-03-state-old.txt"
+    },
+    {
+      "case": "state",
+      "compiler": "core",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-runner/zig-out/bin/mylang-core",
+        "test",
+        "test/core/c_runner_state_capture.my",
+        "--json",
+        "--property-runs",
+        "12",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-runner/.mylang-cache/s3-runner/final-03-state-core",
+        "--seed",
+        "7",
+        "--release",
+        "--verify-facts"
+      ],
+      "status": 1,
+      "expected_status": 1,
+      "seconds": 2.8241780509706587,
+      "log": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-runner/experiments/new-core-s3-20261006/wave-b/s3-runner/logs/final-03-state-core.txt"
+    },
+    {
+      "case": "signal",
+      "compiler": "old",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-capabilities/.mylang-cache/s3/env-grants-oracle/mylang",
+        "test",
+        "test/core/c_runner_signal.my",
+        "--json",
+        "--property-runs",
+        "12",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-runner/.mylang-cache/s3-runner/final-03-signal-old",
+        "--seed",
+        "7",
+        "--mode",
+        "ReleaseFast",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-runner/.mylang-cache/s3-runner/c-signal-pic.o"
+      ],
+      "status": 1,
+      "expected_status": 1,
+      "seconds": 6.046042097033933,
+      "log": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-runner/experiments/new-core-s3-20261006/wave-b/s3-runner/logs/final-03-signal-old.txt"
+    },
+    {
+      "case": "signal",
+      "compiler": "core",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-runner/zig-out/bin/mylang-core",
+        "test",
+        "test/core/c_runner_signal.my",
+        "--json",
+        "--property-runs",
+        "12",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-runner/.mylang-cache/s3-runner/final-03-signal-core",
+        "--seed",
+        "7",
+        "--release",
+        "--verify-facts",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-runner/experiments/new-core-s3-20261006/wave-b/s3-runner/c_runner_signal.c"
+      ],
+      "status": 1,
+      "expected_status": 1,
+      "seconds": 11.423918355023488,
+      "log": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-runner/experiments/new-core-s3-20261006/wave-b/s3-runner/logs/final-03-signal-core.txt"
+    },
+    {
+      "case": "exit",
+      "compiler": "old",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-capabilities/.mylang-cache/s3/env-grants-oracle/mylang",
+        "test",
+        "test/core/c_runner_signal.my",
+        "--json",
+        "--property-runs",
+        "12",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-runner/.mylang-cache/s3-runner/final-03-exit-old",
+        "--seed",
+        "7",
+        "--mode",
+        "ReleaseFast",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-runner/.mylang-cache/s3-runner/c-exit-pic.o"
+      ],
+      "status": 1,
+      "expected_status": 1,
+      "seconds": 1.7213365831412375,
+      "log": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-runner/experiments/new-core-s3-20261006/wave-b/s3-runner/logs/final-03-exit-old.txt"
+    },
+    {
+      "case": "exit",
+      "compiler": "core",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-runner/zig-out/bin/mylang-core",
+        "test",
+        "test/core/c_runner_signal.my",
+        "--json",
+        "--property-runs",
+        "12",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-runner/.mylang-cache/s3-runner/final-03-exit-core",
+        "--seed",
+        "7",
+        "--release",
+        "--verify-facts",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-runner/experiments/new-core-s3-20261006/wave-b/s3-runner/c_runner_exit.c"
+      ],
+      "status": 1,
+      "expected_status": 1,
+      "seconds": 2.726259890012443,
+      "log": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-runner/experiments/new-core-s3-20261006/wave-b/s3-runner/logs/final-03-exit-core.txt"
+    },
+    {
+      "case": "name-seed",
+      "compiler": "old",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-capabilities/.mylang-cache/s3/env-grants-oracle/mylang",
+        "test",
+        "test/core/c_runner_state_capture.my",
+        "--json",
+        "--property-runs",
+        "12",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-runner/.mylang-cache/s3-runner/final-03-name-seed-old",
+        "--mode",
+        "ReleaseFast"
+      ],
+      "status": 1,
+      "expected_status": 1,
+      "seconds": 1.8204465759918094,
+      "log": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-runner/experiments/new-core-s3-20261006/wave-b/s3-runner/logs/final-03-name-seed-old.txt"
+    },
+    {
+      "case": "name-seed",
+      "compiler": "core",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-runner/zig-out/bin/mylang-core",
+        "test",
+        "test/core/c_runner_state_capture.my",
+        "--json",
+        "--property-runs",
+        "12",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-runner/.mylang-cache/s3-runner/final-03-name-seed-core",
+        "--release",
+        "--verify-facts"
+      ],
+      "status": 1,
+      "expected_status": 1,
+      "seconds": 2.8251388159114867,
+      "log": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-runner/experiments/new-core-s3-20261006/wave-b/s3-runner/logs/final-03-name-seed-core.txt"
+    }
+  ]
+}
