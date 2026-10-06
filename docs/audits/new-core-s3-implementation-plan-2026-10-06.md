@@ -400,6 +400,16 @@ are the ones worth restating, plus the rules new in S3:
   - Clock and entropy go through the test runner's stand-ins.
   - No test reads the network.
 - **New in S3: the no-regression gate against the old core** (§2).
+- **The rebuild stop (amended 2026-10-06).** The S2 rule "a rebuild takes over 10 s"
+  means a `mylang-core` rebuild (`zig build core`), measured with the build slot held
+  and no gate running. It is the new core's edit-loop budget.
+  - Rebuilds of the old `mylang` compiler are not gated. It took 20–31 s on 2026-10-05.
+  - A rebuild timed while a gate or another build runs is not evidence. Remeasure it
+    under those conditions before stopping.
+  - Wave A stopped on a 12 s old-compiler rebuild timed during the full old gate. That
+    was not a stop.
+- **One log file per command run.** Never redirect a later run into an earlier run's
+  log; evidence must survive.
 - **Machine rules:**
   - build slots for builds and the gate slot for gate steps;
   - timing only on CPU 10, never CPUs 2, 3 or 11;
