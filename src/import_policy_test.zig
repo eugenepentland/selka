@@ -149,7 +149,7 @@ test "policy parsing rejects invalid actions and byte and rule budgets" {
     try t.expectError(error.TooManyPolicyRules, policy.Policy.parse(t.allocator, bytes));
 }
 
-const project_config = @import("project_config.zig");
+const project_config = @import("compiler.zig").project_config;
 const valid_policy = "{\"version\":1,\"default_action\":\"allow\",\"rules\":[]}";
 
 fn writeTmp(dir: *std.testing.TmpDir, path: []const u8, data: []const u8) !void {

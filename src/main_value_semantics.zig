@@ -4,7 +4,7 @@
 //! child compilers as `MYLANG_VALUE_SEMANTICS=0|1`, including test-cache keys.
 const std = @import("std");
 const language = @import("mylang");
-const project_config = @import("project_config.zig");
+const project_config = @import("mylang").project_config;
 
 const values = language.value_semantics;
 const legacy_option = "--legacy-sharing";

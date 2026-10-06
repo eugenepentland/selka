@@ -204,7 +204,7 @@ pub fn main(init: std.process.Init) void {
 }
 
 const grants = @import("cli_grants.zig");
-const project_config = @import("project_config.zig");
+const project_config = @import("mylang").project_config;
 const module_build = @import("module_build.zig");
 const module_syntax = @import("module_syntax.zig");
 const native_run = @import("native_run.zig");

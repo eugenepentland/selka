@@ -5,7 +5,7 @@
 //! asserts, module by module, that such a check equals the whole program's.
 const std = @import("std");
 const language = @import("mylang");
-const project_config = @import("project_config.zig");
+const project_config = @import("mylang").project_config;
 const iface = language.module_interface;
 const builder = language.module_interface_build;
 const oracle = language.module_interface_oracle;
