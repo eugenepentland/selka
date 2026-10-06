@@ -1,6 +1,7 @@
 //! Type graph descriptors for iterative recursive equality and hashing.
 const std = @import("std");
 const ir = @import("ir.zig");
+const emit_render = @import("emit_render.zig");
 const Out = std.ArrayList(u8);
 /// Allocation or an unsupported representation stops this stage.
 pub const Error = error{ OutOfMemory, UnsupportedEntry, UnsupportedInstruction };
@@ -25,14 +26,7 @@ pub fn dynamic(module: ir.Module, ty: ir.Type) bool {
 
 /// Replace a typed recursive adapter declaration with its LLVM definition.
 pub fn adapter(a: std.mem.Allocator, out: *Out, function: *const ir.Function) Error!bool {
-    const render_prefix = "myl_core_render_";
-    if (std.mem.startsWith(u8, function.name, render_prefix)) {
-        const number = function.name[render_prefix.len..];
-        try out.print(a, "define internal ptr @{s}(ptr %value) nounwind {{\nentry:\n" ++
-            "  %at = getelementptr inbounds i8, ptr %value, i64 32\n" ++
-            "  %text = call ptr @myl_core_values_render(ptr @myl.value.{s}, ptr %at)\n  ret ptr %text\n}}\n", .{ function.name, number });
-        return true;
-    }
+    if (try emit_render.adapter(a, out, function)) return true;
     const prefix = "myl_core_equal_";
     if (!std.mem.startsWith(u8, function.name, prefix)) return false;
     const number = function.name[prefix.len..];
@@ -51,7 +45,10 @@ pub fn key(comptime Context: type, c: Context, out: *Out, ty: ir.Type, symbol: [
 }
 
 fn needed(m: *const ir.Module) bool {
-    for (m.functions.items) |f| if (std.mem.startsWith(u8, f.name, "myl_core_equal_") or std.mem.startsWith(u8, f.name, "myl_core_render_")) return true;
+    for (m.functions.items) |f| {
+        if (std.mem.startsWith(u8, f.name, "myl_core_equal_")) return true;
+        if (f.signature.linkage == .runtime_c and std.mem.startsWith(u8, f.name, "myl_core_show_")) return true;
+    }
     for (m.compounds.items) |shape| if (shape == .dict and dynamic(m.*, shape.dict.key)) return true;
     return false;
 }
@@ -66,6 +63,7 @@ pub fn descriptors(a: std.mem.Allocator, m: *const ir.Module, out: *Out) Error!v
     for (0..ir.Type.first_compound) |index| try descriptor(a, m, out, @fromBackingInt(@as(u32, @intCast(index))));
     for (0..m.compounds.items.len) |index| try descriptor(a, m, out, @fromBackingInt(ir.Type.first_compound + @as(u32, @intCast(index))));
     for ([_]ir.Type{ .byte_buffer, .capability, .resource }) |ty| try descriptor(a, m, out, ty);
+    try emit_render.descriptors(a, m, out);
 }
 
 fn descriptor(a: std.mem.Allocator, m: *const ir.Module, out: *Out, ty: ir.Type) Error!void {
@@ -121,8 +119,6 @@ fn descriptor(a: std.mem.Allocator, m: *const ir.Module, out: *Out, ty: ir.Type)
         .@"fn" => kind = 10,
     };
     const number = @backingInt(ty);
-    const names = try emitNames(a, m, out, ty);
-    if (kind == 4 and names.tuple) aux = 1;
     if (children.len != 0) {
         try out.print(a, "@myl.value.children.{d} = private constant [{d} x ptr] [", .{ number, children.len });
         for (children, 0..) |child, i| try out.print(a, "{s}ptr @myl.value.{d}", .{ if (i == 0) "" else ", ", @backingInt(child) });
@@ -136,31 +132,6 @@ fn descriptor(a: std.mem.Allocator, m: *const ir.Module, out: *Out, ty: ir.Type)
     try out.print(a, "@myl.value.{d} = private constant %myl.value {{ i32 {d}, i32 {d}, i32 {d}, i32 {d}, ", .{ number, kind, if (ty == .str_view) 0 else m.size(ty), count, aux });
     if (children.len == 0) try out.appendSlice(a, "ptr null, ") else try out.print(a, "ptr @myl.value.children.{d}, ", .{number});
     if (kind == 4 and children.len != 0) try out.print(a, "ptr @myl.value.offsets.{d}", .{number}) else try out.appendSlice(a, "ptr null");
-    if (names.present) try out.print(a, ", ptr @myl.value.names.{d}", .{number}) else try out.appendSlice(a, ", ptr null");
-    try out.appendSlice(a, " }\n");
-}
-
-fn emitNames(a: std.mem.Allocator, m: *const ir.Module, out: *Out, ty: ir.Type) Error!struct { present: bool = false, tuple: bool = false } {
-    const prefix = try std.fmt.allocPrint(a, "\x00myl.core.render.{d}|", .{@backingInt(ty)});
-    for (m.strings.items) |text| {
-        if (!std.mem.startsWith(u8, text, prefix)) continue;
-        var parts = std.mem.splitScalar(u8, text[prefix.len..], '|');
-        const form = parts.next().?;
-        var names: std.ArrayList([]const u8) = .empty;
-        defer names.deinit(a);
-        while (parts.next()) |name| if (name.len != 0) {
-            try names.append(a, name);
-        };
-        const number = @backingInt(ty);
-        for (names.items, 0..) |name, i| {
-            try out.print(a, "@myl.value.name.{d}.{d} = private constant [{d} x i8] c\"", .{ number, i, name.len + 1 });
-            for (name) |byte| try out.print(a, "\\{X:0>2}", .{byte});
-            try out.appendSlice(a, "\\00\"\n");
-        }
-        try out.print(a, "@myl.value.names.{d} = private constant [{d} x ptr] [", .{ number, names.items.len });
-        for (names.items, 0..) |_, i| try out.print(a, "{s}ptr @myl.value.name.{d}.{d}", .{ if (i == 0) "" else ", ", number, i });
-        try out.appendSlice(a, "]\n");
-        return .{ .present = true, .tuple = std.mem.eql(u8, form, "T") };
-    }
-    return .{};
+    // Rendering uses its checked-source graph, never names inferred from strings.
+    try out.appendSlice(a, ", ptr null }\n");
 }

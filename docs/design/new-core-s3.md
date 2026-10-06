@@ -259,8 +259,9 @@ Resource/capability equality, if checked, follows the old identity contract,
 not the bytes of its authority block. Unsupported cases remain located refusals.
 Aggregate operators follow the checked form: collection concatenation/repetition
 and set compositions lower to existing updates/calls; no blanket bitwise operator
-on record memory is introduced. Keyword/interior mut refinements preserve captured
-leaf identity and current whole-root reload. Narrowing the conservative refusal
+on record memory is introduced. Keyword/interior mut refinements preserve the value selected before later arguments
+and current whole-root reload. Later ancestor writes supersede interior publication,
+including a whole-root mut call that changes only a scalar field. Narrowing the conservative refusal
 requires differential proof; an old implementation accident is reported for a
 user decision rather than given invented semantics.
 
