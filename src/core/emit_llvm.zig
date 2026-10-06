@@ -1589,7 +1589,9 @@ const FunctionEmitter = struct {
             try out.print(self.a(), "  {s} = icmp slt i64 {s}, 0\n  {s} = sub i64 {s}, {s}\n  {s} = select i1 {s}, i64 {s}, i64 {s}\n", .{ negative, index, before, index, len, original, negative, before, index });
             return self.trapIf(out, outside, try self.site(.list_pop_index, inst, "pop"), original, len);
         }
-        try self.trapIf(out, outside, try self.site(.list_bounds, inst, "index"), index, len);
+        const source_index = emit_bytes.sourceIndex(@TypeOf(self), self, inst.b);
+        const reported = if (source_index) |raw| try self.value(raw) else index;
+        try self.trapIf(out, outside, try self.site(.list_bounds, inst, "index"), reported, len);
     }
 
     /// The address of element `index` of `list`: a typed `getelementptr` for scalars and
@@ -2296,6 +2298,7 @@ const FunctionEmitter = struct {
         const signature = if (inst.op == .call_indirect) m.compound(self.typeOf(inst.a)).@"fn" else m.functions.items[inst.a.index()].signature;
         const external = signature.linkage != .internal;
         if (inst.op == .call) try emit_cap.beforeCall(@TypeOf(self), self, out, inst);
+        if (try emit_bytes.runtimeCall(@TypeOf(self), @TypeOf(out), self, out, name, inst)) return;
         const borrowed_bytes = external and signature.ret == .bytes and signature.owned == 0;
         const text_parameter = signature.params.len == 1 and signature.params[0] == .str;
         if (inst.op == .call and borrowed_bytes and text_parameter and
