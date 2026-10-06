@@ -1,0 +1,53 @@
+{
+  "source": "203c0ca6100344304cbd9fd20d22cc7f9448a145",
+  "scratch": "/var/tmp/mylang-a-old-preflight-oktp5c3j",
+  "results": [
+    {
+      "name": "incremental-120",
+      "command": [
+        "scripts/build-slot.sh",
+        "gate",
+        "--",
+        "bash",
+        "-c",
+        "\"$@\"; result=$?; exit \"$result\"",
+        "--",
+        "scripts/build-slot.sh",
+        "build",
+        "--",
+        "python3",
+        "tests/incremental_diff.py",
+        "--steps",
+        "120",
+        "./zig-out/bin/mylang"
+      ],
+      "exit": 0,
+      "seconds_including_admission": 63.662731806980446
+    },
+    {
+      "name": "incremental-project-60",
+      "command": [
+        "scripts/build-slot.sh",
+        "gate",
+        "--",
+        "bash",
+        "-c",
+        "\"$@\"; result=$?; exit \"$result\"",
+        "--",
+        "scripts/build-slot.sh",
+        "build",
+        "--",
+        "python3",
+        "tests/incremental_diff.py",
+        "--steps",
+        "60",
+        "--project",
+        "tests/fixtures/module_projects",
+        "./zig-out/bin/mylang"
+      ],
+      "exit": 0,
+      "seconds_including_admission": 31.031176736811176
+    }
+  ],
+  "qualified": true
+}

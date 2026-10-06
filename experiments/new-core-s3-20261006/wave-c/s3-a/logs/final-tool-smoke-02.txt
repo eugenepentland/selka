@@ -1,0 +1,1 @@
+measure_all40 Python smoke: registry40, S0 names/units, strict stdout/counter/error parsers pass; no native runs

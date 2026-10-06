@@ -1,0 +1,4 @@
+old: exact output, zero exit, empty stderr
+debug: exact output, zero exit, empty stderr
+release: exact output, zero exit, empty stderr
+verify: exact output, zero exit, empty stderr

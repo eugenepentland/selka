@@ -1,0 +1,33 @@
+build original-text: pass (16.220s)
+build original-compute: pass (2.700s)
+build original-collections: pass (8.979s)
+build original-text-new-debug: pass (3.728s)
+build original-text-new-release: pass (0.908s)
+build original-text-new-verify: pass (1.019s)
+unchanged text entry: import strings and import json match old with strict leaks in all three modes
+build word_count-old: pass (2.621s)
+build word_count-debug: pass (0.082s)
+build word_count-release: pass (0.158s)
+build word_count-verify: pass (0.202s)
+word_count: original/split old and debug/release/verify agree; strict leak/status/stdout checks pass
+build csv_aggregate-old: pass (3.172s)
+build csv_aggregate-debug: pass (0.097s)
+build csv_aggregate-release: pass (0.285s)
+build csv_aggregate-verify: pass (0.334s)
+csv_aggregate: original/split old and debug/release/verify agree; strict leak/status/stdout checks pass
+build json_transform-old: pass (7.517s)
+build json_transform-debug: pass (0.181s)
+build json_transform-release: pass (0.574s)
+build json_transform-verify: pass (0.615s)
+json_transform: original/split old and debug/release/verify agree; strict leak/status/stdout checks pass
+build packet_decode-old: pass (1.707s)
+build packet_decode-debug: pass (0.075s)
+build packet_decode-release: pass (0.137s)
+build packet_decode-verify: pass (0.156s)
+packet_decode: original/split old and debug/release/verify agree; strict leak/status/stdout checks pass
+build lox_eval-old: pass (2.046s)
+build lox_eval-debug: pass (0.086s)
+build lox_eval-release: pass (0.151s)
+build lox_eval-verify: pass (0.211s)
+lox_eval: original/split old and debug/release/verify agree; strict leak/status/stdout checks pass
+qualified 5 apps; 137 native executions

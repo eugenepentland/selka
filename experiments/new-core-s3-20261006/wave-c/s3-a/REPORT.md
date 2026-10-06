@@ -1,4 +1,150 @@
-# S3-A: application admission and measurement foundation
+# S3-A: qualified standard library and applications
+
+The combined application package qualifies on frozen source
+`203c0ca6100344304cbd9fd20d22cc7f9448a145`. All 40 rows pass both new/old and new/Zig ReleaseSafe
+limits at 4096 and 64, with zero misses. Standard-library imports, literal split
+fidelity, strict native semantics, Core, conformance and the full old-core gate
+also pass. This is the A handoff; the coordinator still owns final integrated
+S3-X qualification and the section 7/S4 decision.
+
+`qualification-final-01.json` checks the receipts and records SHA-256 provenance
+for the source inputs, fresh compiler, corrected oracle/QBE, reference workload
+sources/binaries, all 80 measured old/new binaries and all 40 fresh LLVM modules.
+The installed new compiler SHA-256 is `c3aaee87434f185a21970f76e94b655503c1e69561884a15098787ee46cca1bc`. It was built from this
+worktree's source; guests link their independent Core runtime and the benchmark
+clock port. No copied new compiler or old-runtime object link is used.
+
+| Final combined check | Result | Evidence |
+|---|---|---|
+| Exclusive own-source install | 2.33 s actual command; all three build slots held; no other-build wait | `logs/core-trace-combined-11.*` |
+| Core64 | 276/276; exactly 64 verdicts; 125.95 s; maximum shard 52.87 s; maximum test RSS 249 MiB; no overrun | `trace-combined-core64-review-04.json`, `logs/trace-combined-test-core64-06.*` |
+| Full strict conformance | 1518 matching in each debug/release mode; zero mismatch/refusal; leak/fact verification; 52.00 s | `logs/trace-combined-full-conformance-06.*` |
+| All40 performance | 80 size cells pass both ratios; strict four-program checks; 283.10 s after admission | `all40-combined-final-03.json`, `logs/all40-combined-final-03.*` |
+| Imports/original/split native | 137 exact native executions; old/debug/release/verify; zero leaks, nonzero statuses or unexpected output; 54.58 s | `qualification-combined-final-02/summary.json` and per-build/native records |
+| Pinned managed split | Seven exact lines in all four modes; zero exit and empty leak stderr; 15.26 s | `split-qualification-combined-final-03/summary.json` |
+| Split-key transformation sweep | Fresh cursor source: 50 sources, 750 exact comparisons, zero mismatches; 145.83 s | `fuzz-split-cursor-50-02/summary.json`, `cursor-qualification-01.json` |
+| Original35 instructions | All 343 actual definitions; exactly six approved scalar stores plus two trace calls; all remaining instructions/operands/CFG/phis/traps and site metadata match; full module remainder exact after trace declaration replacement | `combined35-final-04/summary.json`, all complete before/after LLVM and raw diffs |
+| Fixture fidelity/tool checks | All five literal extractions unchanged; parser/registry smoke passes; Python syntax and diff checks pass | `split_apps.py --check`, `logs/final-tool-smoke-02.txt`, `logs/llvm-parser-smoke-01.txt` |
+
+The combined old gate is required by the character package's SPEC update. The
+final four-step run held both gate/build slots for each step on this frozen source:
+
+| Old gate | Actual command time | Result |
+|---|---:|---|
+| `test` | 808.42 s | Pass; exit 0, successful summary, RSS inspection |
+| `test-qbe` | 75.43 s | Pass; exit 0, successful summary, RSS inspection |
+| `test-qbe-build` | 3.01 s | Pass; exit 0, successful summary, RSS inspection |
+| `fmt-check` | 0.24 s | Pass; exit 0, successful summary, RSS inspection |
+
+`old-gate-combined-final-03/summary.json` retains each exact command, source,
+exit status, wall/admission time, successful summary, shard RSS and overrun
+inspection. Its old-unit/QBE times are separate from the Core compiler/test
+limits. Default Core sharding remains eight; explicit 64-shard qualification
+keeps the native fixture work below the 90-second shard limit. The trace
+package's functional-but-over-time Core32 receipt is retained alongside its
+qualified Core64 replacement.
+
+The first combined old run failed NATIVE-ZIG-CACHE-4 because the inherited gate
+tool placed TMPDIR inside the project's .zig-cache; the unit assertion requires
+private scratch outside it. That 945.07-second failed run is retained as
+`old-gate-combined-final-01`. A second tool-only correction put scratch under
+.mylang-cache, which made two incremental-test harnesses exclude every copied
+source by an absolute-path cache filter; that 820.59-second failed run02 is also
+retained, with all 3002 unit tests passed. The final tool uses unique private
+/var/tmp scratch, avoiding both cache ancestors; both exact failed incremental
+commands pass their focused scratch preflight. Fresh four-step
+run03 above qualifies. No compiler/runtime/test changes were made for these
+scratch corrections.
+The original combined35 checker also miskeyed dotted LLVM helper names by
+searching the whole function body. Its incomplete run03 is retained; the corrected
+header-anchored parser accepts full LLVM symbols, rejects duplicate headers,
+and proves all 343 definitions in run04. Neither tool correction changed
+the compiler/runtime or required a repeat of already valid performance samples.
+
+The generic repairs are whitespace cursor fusion with borrowed lookup and owned
+insertion keys, exact small-dictionary span probing and scalar value stores,
+trusted byte-index normalization, complete scalar-use fusion with checked text
+diagnostics/direct short append/guarded ASCII decoding, bounded trusted cursor
+emission, and compiler-owned preserving error-trace twins. Reference algorithms,
+input distributions, timed work and checksums remain unchanged. The frozen IR,
+ownership implementation and tests/lang are unchanged from the qualified base;
+module-interface-v5, check-summaries-v6, mutation-v2 and first-64 aggregate masks
+remain intact. The sibling reports under `s3-packet`, `s3-char` and
+`s3-packet-trace` retain their focused authority, diagnostics, ownership and
+native sweeps. These packages were qualified before their A merges; combined
+Core/conformance and fresh all40/native receipts establish the final composition.
+
+Every performance pair below is 4096/64, in cycles per unit. Units and iteration
+counts are the inherited S1/S2 registry; application units are dataset elements.
+Timing uses CPU10 only, seven shuffled interleaved rounds, and subtraction of
+three one-iteration startup medians. Every sample requires zero exit, exactly
+two integer stdout fields, matching four-program checksums and one positive
+finite cycle counter. Both CPU locks are acquired external EDA first, S2 second.
+Neither size nor either ratio is averaged away.
+
+| Row | Old | New | Rust | Zig ReleaseSafe | New/old | New/Zig | Both gates |
+|---|---:|---:|---:|---:|---:|---:|---|
+| record_reads | 25.434 / 24.476 | 17.960 / 17.363 | 17.683 / 17.248 | 24.221 / 23.910 | 0.706 / 0.709 | 0.741 / 0.726 | Pass |
+| tagged_stack | 63.279 / 63.263 | 33.304 / 33.300 | 25.922 / 25.892 | 47.856 / 47.759 | 0.526 / 0.526 | 0.696 / 0.697 | Pass |
+| mutate_unique | 17.360 / 17.086 | 14.559 / 14.557 | 13.195 / 13.155 | 16.949 / 16.963 | 0.839 / 0.852 | 0.859 / 0.858 | Pass |
+| mutate_shared | 0.963 / 6.994 | 0.633 / 0.640 | 0.625 / 0.641 | 0.977 / 1.002 | 0.657 / 0.092 | 0.648 / 0.639 | Pass |
+| record_construct | 11.599 / 11.754 | 2.301 / 2.398 | 6.896 / 7.329 | 10.494 / 11.034 | 0.198 / 0.204 | 0.219 / 0.217 | Pass |
+| record_update | 11.703 / 11.777 | 6.176 / 6.284 | 6.892 / 7.328 | 11.155 / 11.635 | 0.528 / 0.534 | 0.554 / 0.540 | Pass |
+| option_handle | 4.065 / 4.033 | 2.007 / 2.490 | 2.412 / 3.155 | 6.553 / 7.383 | 0.494 / 0.617 | 0.306 / 0.337 | Pass |
+| result_propagate | 6.117 / 5.589 | 3.625 / 3.497 | 3.509 / 4.120 | 7.225 / 7.283 | 0.593 / 0.626 | 0.502 / 0.480 | Pass |
+| list_scan | 3.845 / 3.984 | 3.973 / 4.043 | 2.698 / 2.792 | 4.564 / 4.657 | 1.033 / 1.015 | 0.870 / 0.868 | Pass |
+| list_append | 7.195 / 14.201 | 7.044 / 9.554 | 6.192 / 10.260 | 12.283 / 16.785 | 0.979 / 0.673 | 0.573 / 0.569 | Pass |
+| list_filter | 9.298 / 17.741 | 8.215 / 10.484 | 5.735 / 9.998 | 10.592 / 13.847 | 0.884 / 0.591 | 0.776 / 0.757 | Pass |
+| alloc_short | 242.390 / 245.913 | 4.811 / 5.097 | 5.017 / 5.499 | 21.805 / 22.233 | 0.020 / 0.021 | 0.221 / 0.229 | Pass |
+| alloc_retained | 144.168 / 157.264 | 38.169 / 38.965 | 80.241 / 82.265 | 80.894 / 78.585 | 0.265 / 0.248 | 0.472 / 0.496 | Pass |
+| mutate_nested | 28.911 / 45.751 | 12.987 / 14.411 | 81.511 / 72.422 | 76.247 / 74.107 | 0.449 / 0.315 | 0.170 / 0.194 | Pass |
+| bytes_scan | 0.086 / 0.245 | 0.052 / 0.244 | 1.135 / 1.193 | 1.381 / 1.761 | 0.598 / 0.995 | 0.037 / 0.138 | Pass |
+| string_equal | 53.644 / 16.670 | 50.503 / 15.273 | 134.764 / 12.722 | 277.495 / 16.887 | 0.941 / 0.916 | 0.182 / 0.904 | Pass |
+| string_search | 423.613 / 79.956 | 433.713 / 68.420 | 5584.951 / 181.374 | 12922.396 / 385.098 | 1.024 / 0.856 | 0.034 / 0.178 | Pass |
+| string_split | 201.731 / 210.625 | 61.004 / 64.419 | 27.865 / 35.716 | 65.658 / 68.997 | 0.302 / 0.306 | 0.929 / 0.934 | Pass |
+| string_join | 6.178 / 10.138 | 4.593 / 6.159 | 13.836 / 14.516 | 17.995 / 20.374 | 0.743 / 0.608 | 0.255 / 0.302 | Pass |
+| dict_lookup | 31.004 / 16.967 | 15.456 / 15.237 | 41.987 / 40.796 | 52.151 / 31.017 | 0.499 / 0.898 | 0.296 / 0.491 | Pass |
+| dict_lookup_str | 61.643 / 28.608 | 23.956 / 19.783 | 61.178 / 57.247 | 62.468 / 31.890 | 0.389 / 0.692 | 0.383 / 0.620 | Pass |
+| dict_update | 827.559 / 731.664 | 191.017 / 182.219 | 415.905 / 408.703 | 549.574 / 308.612 | 0.231 / 0.249 | 0.348 / 0.590 | Pass |
+| dict_update_str | 1026.782 / 882.992 | 273.475 / 250.873 | 920.092 / 871.296 | 730.235 / 404.666 | 0.266 / 0.284 | 0.375 / 0.620 | Pass |
+| set_dedup | 175.472 / 168.279 | 24.733 / 28.699 | 62.497 / 62.562 | 81.143 / 37.637 | 0.141 / 0.171 | 0.305 / 0.763 | Pass |
+| int_parse | 46.392 / 41.419 | 28.927 / 26.517 | 24.661 / 19.219 | 30.798 / 24.324 | 0.624 / 0.640 | 0.939 / 1.090 | Pass |
+| int_format | 213.023 / 209.331 | 68.450 / 62.736 | 63.449 / 60.691 | 214.227 / 198.020 | 0.321 / 0.300 | 0.320 / 0.317 | Pass |
+| call_indirect | 5.016 / 5.081 | 0.302 / 0.314 | 7.203 / 7.691 | 9.008 / 9.502 | 0.060 / 0.062 | 0.034 / 0.033 | Pass |
+| sort_int | 45.513 / 11.747 | 46.779 / 9.401 | 69.983 / 15.403 | 67.401 / 17.703 | 1.028 / 0.800 | 0.694 / 0.531 | Pass |
+| sort_records | 54.517 / 66.317 | 38.750 / 40.106 | 41.709 / 44.826 | 117.300 / 50.655 | 0.711 / 0.605 | 0.330 / 0.792 | Pass |
+| int_math | 8.687 / 9.065 | 0.355 / 0.495 | 5.695 / 6.178 | 7.801 / 8.312 | 0.041 / 0.055 | 0.046 / 0.060 | Pass |
+| float_math | 8.288 / 8.427 | 1.568 / 1.705 | 6.965 / 7.322 | 6.512 / 7.027 | 0.189 / 0.202 | 0.241 / 0.243 | Pass |
+| call_direct | 3.037 / 3.150 | 0.301 / 0.321 | 2.015 / 2.933 | 3.017 / 4.113 | 0.099 / 0.102 | 0.100 / 0.078 | Pass |
+| branch_predictable | 4.026 / 4.150 | 0.396 / 0.498 | 3.195 / 3.252 | 7.723 / 7.929 | 0.098 / 0.120 | 0.051 / 0.063 | Pass |
+| branch_mixed | 4.124 / 4.130 | 0.396 / 0.497 | 4.868 / 4.517 | 9.257 / 8.985 | 0.096 / 0.120 | 0.043 / 0.055 | Pass |
+| binary_search | 143.824 / 33.045 | 33.186 / 17.869 | 36.634 / 19.494 | 136.943 / 27.894 | 0.231 / 0.541 | 0.242 / 0.641 | Pass |
+| word_count | 291.178 / 376.324 | 35.469 / 49.768 | 59.163 / 66.211 | 47.230 / 50.783 | 0.122 / 0.132 | 0.751 / 0.980 | Pass |
+| csv_aggregate | 4887.611 / 4155.417 | 1120.384 / 1051.270 | 1168.258 / 1063.193 | 1042.986 / 986.319 | 0.229 / 0.253 | 1.074 / 1.066 | Pass |
+| json_transform | 13686.549 / 13992.007 | 2848.031 / 2959.839 | 1787.953 / 1967.209 | 2827.447 / 2853.505 | 0.208 / 0.212 | 1.007 / 1.037 | Pass |
+| packet_decode | 15.623 / 15.083 | 15.922 / 15.942 | 10.345 / 10.737 | 18.968 / 19.671 | 1.019 / 1.057 | 0.839 / 0.810 | Pass |
+| lox_eval | 629.831 / 659.055 | 206.007 / 214.136 | 165.422 / 171.686 | 503.969 / 521.546 | 0.327 / 0.325 | 0.409 / 0.411 | Pass |
+
+
+The first combined full sweep and its paired repeat remain failed evidence:
+word64/Zig 1.103086/1.103926 and packet64/old 1.101765/1.106961. Profiles and exact
+LLVM/assembly comparisons guided the cursor and trace repairs; neither failure
+was waived or overwritten. The final independent full sweep above passes.
+
+Normal commits use the whole-tree Guardian gate. Its source/evidence receipts
+and local feedback candidate are retained; the coordinator owns the required
+shared FEEDBACK.md append/commit. No pushes or integration/main merge are made
+by this package owner. Final integrated operation-count auditing, coverage,
+nine-kind 200-source matrix, separate split-key 200 sweep, full conformance,
+all40 and old gates remain the coordinator's S3-X work.
+
+## Retained qualification history
+
+The following checkpoints preserve admission receipts, real failures, profiles,
+approved repairs and their package-level qualifications. Pending statements
+describe those earlier checkpoints; the combined qualification above is final.
+
+## Application admission and measurement foundation
 
 Source dependency: `f1319a774d638c664de9f02bb27098650a13249b` (qualified S3-C,
 S3-T1 and S3-T2 integration). This checkpoint qualifies application admission,

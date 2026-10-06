@@ -1,0 +1,3 @@
+TMPDIR=/var/tmp/mylang-a-old-preflight-oktp5c3j
+['scripts/build-slot.sh', 'gate', '--', 'bash', '-c', '"$@"; result=$?; exit "$result"', '--', 'scripts/build-slot.sh', 'build', '--', 'python3', 'tests/incremental_diff.py', '--steps', '120', './zig-out/bin/mylang']
+incremental-diff: 120 steps (seed 1), 0 mismatches; cold check clean 44, rejected 76

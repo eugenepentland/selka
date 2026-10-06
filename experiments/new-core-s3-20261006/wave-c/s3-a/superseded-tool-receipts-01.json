@@ -1,0 +1,21 @@
+{
+  "superseded": {
+    "combined35-final-03/summary.json": {
+      "qualified_for_handoff": false,
+      "reason": "Inherited definition parser searched bodies, miskeyed dotted helpers, and dropped one set_dedup helper; not a complete definition proof",
+      "replacement": "combined35-final-04/summary.json"
+    },
+    "old-gate-combined-final-01/summary.json": {
+      "qualified_for_handoff": false,
+      "reason": "Harness TMPDIR inside project .zig-cache violated NATIVE-ZIG-CACHE-4; first step failed",
+      "replacement": "old-gate-combined-final-03/summary.json"
+    },
+    "old-gate-combined-final-02/summary.json": {
+      "qualified_for_handoff": false,
+      "reason": "Harness TMPDIR inside .mylang-cache made the incremental-test absolute-path cache filter exclude every copied source; all 3002 unit tests passed, but two incremental checks failed",
+      "replacement": "old-gate-combined-final-03/summary.json"
+    }
+  },
+  "compiler_source_change": false,
+  "measurement_repeat_required": false
+}

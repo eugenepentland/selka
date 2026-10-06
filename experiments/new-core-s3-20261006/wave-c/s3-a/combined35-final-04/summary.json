@@ -1,0 +1,978 @@
+{
+  "source": "203c0ca6100344304cbd9fd20d22cc7f9448a145",
+  "qualified": true,
+  "rows": [
+    {
+      "row": "record_reads",
+      "before_sha256": "8b5e4673043717ebc67421f6e4c17a16f8e0de8aa46ee0eea1c3cf1e6139299c",
+      "after_sha256": "0200e3f730b2b3efeeb668e084f26b2cb67473b30c457c25f210a8065f81d9a7",
+      "changed_functions": [],
+      "definitions": 9,
+      "module_delta": "exact trace declarations only"
+    },
+    {
+      "row": "tagged_stack",
+      "before_sha256": "25a5d35b907b1abda2f6a46557709212f94cdd912c68bfe5a33e5fa36aa48c95",
+      "after_sha256": "33b01038b1cf6bfdc9088ff1ad432e26efca2389f3e821b43f95f434e82d2b23",
+      "changed_functions": [],
+      "definitions": 9,
+      "module_delta": "exact trace declarations only"
+    },
+    {
+      "row": "mutate_unique",
+      "before_sha256": "c2f1fa5a413fc8a9e5e90b35b2f7cdb42404f461eb8d66dbe596e5d6965b19bc",
+      "after_sha256": "26350c4bff75f73b8303b45a7c98c147d6a48add13c12de2d700f49d32c01cbe",
+      "changed_functions": [],
+      "definitions": 8,
+      "module_delta": "exact trace declarations only"
+    },
+    {
+      "row": "mutate_shared",
+      "before_sha256": "7b7984a9014cf7e039c219d612c33783cb1ab8d7ba9fc4df5750d13bf8fc09b9",
+      "after_sha256": "887a614cb6c15a27b521cc1851e2b4257ee7b7e5ca418de1bd3240275f416a42",
+      "changed_functions": [],
+      "definitions": 8,
+      "module_delta": "exact trace declarations only"
+    },
+    {
+      "row": "record_construct",
+      "before_sha256": "4036fec07493e838443700457ae8b671adc70e86ede7e9d311617bd180f78ca8",
+      "after_sha256": "38fb2a6704a61ad26b9ad0903d5380432f603653fbe16ee65169e33a40c8c8c9",
+      "changed_functions": [],
+      "definitions": 9,
+      "module_delta": "exact trace declarations only"
+    },
+    {
+      "row": "record_update",
+      "before_sha256": "8b4c1d9096ef634459d54a6687c5b4908ffe197f4bc7d849f470e6b5cc80d7a0",
+      "after_sha256": "e592435d13e139b1b57cbef4a3b9d0c019f90e83855333be5d391e5d5b276707",
+      "changed_functions": [],
+      "definitions": 9,
+      "module_delta": "exact trace declarations only"
+    },
+    {
+      "row": "option_handle",
+      "before_sha256": "2062f09c2d3d301c9449f54c5482890274998629b5c76ec1433d464629fff449",
+      "after_sha256": "afa26c940fff4dc2c118d7516fe2c3682cbaa6d9e9a99452c1c28eccf8632300",
+      "changed_functions": [],
+      "definitions": 9,
+      "module_delta": "exact trace declarations only"
+    },
+    {
+      "row": "result_propagate",
+      "before_sha256": "c61a363c50e359055ca881069f5b1d8a9c6cedafa14c2321e33de67d7712f3b8",
+      "after_sha256": "ff460b29a1f06e699d8a2a3df8d460c4404b61e3038e94f370ecd11598876879",
+      "changed_functions": [
+        {
+          "function": "\"my.row_result_propagate::forwarded\"",
+          "scalar_stores": [],
+          "trace_calls": [
+            {
+              "site": 27,
+              "mode": 1,
+              "action": "append"
+            }
+          ],
+          "renamed_blocks": [],
+          "every_remaining_instruction_exact": true
+        },
+        {
+          "function": "\"my.row_result_propagate::checked\"",
+          "scalar_stores": [],
+          "trace_calls": [
+            {
+              "site": 30,
+              "mode": 0,
+              "action": "origin"
+            }
+          ],
+          "renamed_blocks": [],
+          "every_remaining_instruction_exact": true
+        }
+      ],
+      "definitions": 10,
+      "module_delta": "exact trace declarations only"
+    },
+    {
+      "row": "list_scan",
+      "before_sha256": "2ae96a037cf2d86eb061e1e9b4071293db875af109a61d012ce3dfeb1e0f6b53",
+      "after_sha256": "9ee9b2429622f7cedb2f4100fca480522a8a3f0a4016894a0a9975f1a786813f",
+      "changed_functions": [],
+      "definitions": 9,
+      "module_delta": "exact trace declarations only"
+    },
+    {
+      "row": "list_append",
+      "before_sha256": "73680cc014e430d9a3e81902fdd9db345437cb91e8eb33d8b2c3a118f2bc4185",
+      "after_sha256": "44b0956eaefb250e981d431ef39257588ff4f7eaf000044f434adca2f7936ea5",
+      "changed_functions": [],
+      "definitions": 10,
+      "module_delta": "exact trace declarations only"
+    },
+    {
+      "row": "list_filter",
+      "before_sha256": "6ec559e000e084f01f31f25841fe653bfa9eddd5952adcc00a291176305fbec5",
+      "after_sha256": "9c3d66d6ece75c1c7b3e1fc28fb4885a8b1ac42aaeec6f9de8cb886b184a48d2",
+      "changed_functions": [],
+      "definitions": 10,
+      "module_delta": "exact trace declarations only"
+    },
+    {
+      "row": "alloc_short",
+      "before_sha256": "5371094b7e8efe92b1e56a7fd4494b626d3da1add3169061cf4855b863331932",
+      "after_sha256": "a80c75aad5ddd6009df8945f34291c92341c319dcf805f4e006257f412b936cd",
+      "changed_functions": [],
+      "definitions": 9,
+      "module_delta": "exact trace declarations only"
+    },
+    {
+      "row": "alloc_retained",
+      "before_sha256": "9ebb58d8547985177f7935373221c87a6f61cbbd2e2635bb02d3140740d0596c",
+      "after_sha256": "13b2895214567faae6a944a01131fce78b204b265a829a51361b8ccc54c6e4ad",
+      "changed_functions": [],
+      "definitions": 9,
+      "module_delta": "exact trace declarations only"
+    },
+    {
+      "row": "mutate_nested",
+      "before_sha256": "160c17df0625f4b1227a9c96f5f2fb0c9dc1c35dd0ed9f67f26ab10d39d5d780",
+      "after_sha256": "f33148ef365a3a7f2be9108024a5deb8b4a64dca64ce25fa272bfe21bec85708",
+      "changed_functions": [],
+      "definitions": 9,
+      "module_delta": "exact trace declarations only"
+    },
+    {
+      "row": "bytes_scan",
+      "before_sha256": "c518a073fcf33ee334093bdf07ef5392a16a0a7d91b1f81db7f1e4ace4a50bfe",
+      "after_sha256": "827559e99239925e38cf973c598d313878345654e1c569919b74f90ef989787f",
+      "changed_functions": [],
+      "definitions": 11,
+      "module_delta": "exact trace declarations only"
+    },
+    {
+      "row": "string_equal",
+      "before_sha256": "3e531d3b62118cf5870e9406b7f1df11614bacfa1f6ddb4bb3c97454101cf300",
+      "after_sha256": "f91c65a853cc9603977f2fa6fff4885cdf7f708f64cab01dbee98c03bc8469dc",
+      "changed_functions": [],
+      "definitions": 11,
+      "module_delta": "exact trace declarations only"
+    },
+    {
+      "row": "string_search",
+      "before_sha256": "6c06efd5afce420b4500c6e2c97112564d80a8e0f3918739af5f113841264ad7",
+      "after_sha256": "ecd07bb891b1ff5715ebe56c5cb4f4a115654d437a373de28a06c8c392c1b580",
+      "changed_functions": [],
+      "definitions": 11,
+      "module_delta": "exact trace declarations only"
+    },
+    {
+      "row": "string_split",
+      "before_sha256": "63d618dc026ae84c69788105a75998648a218beb7c260d75ff89bd1f7b244b3d",
+      "after_sha256": "6f4ad6e932a23162b37a2a796d22309a4af76dfa320e2b1ded2c9a306b7a0dfa",
+      "changed_functions": [],
+      "definitions": 12,
+      "module_delta": "exact trace declarations only"
+    },
+    {
+      "row": "string_join",
+      "before_sha256": "705ae3a2e499007af39ce3dd09f584e47328f057858291b3c891e6248a63c00a",
+      "after_sha256": "b8d998a640b320c6d4051c78ea0ac84945d5c08f4a05fc08bf679ac2696bfb73",
+      "changed_functions": [],
+      "definitions": 11,
+      "module_delta": "exact trace declarations only"
+    },
+    {
+      "row": "dict_lookup",
+      "before_sha256": "39a77aa6fd87d286f4bc11f63ab19db84771e3f162edf49301aa4daa1a3b3e46",
+      "after_sha256": "8e0977b43c42f9e1cdf6315a157996763552d0ba07ebb7d22fdf422318b646b4",
+      "changed_functions": [
+        {
+          "function": "\"my.row_dict_lookup::main\"",
+          "scalar_stores": [
+            {
+              "value": "%v148",
+              "dictionary": "%v150",
+              "index": "%v152",
+              "removed_private_slot": "%stack.104",
+              "stride": 16,
+              "value_offset_from_block": 40,
+              "value_type": "i64",
+              "alignment": 8
+            }
+          ],
+          "trace_calls": [],
+          "renamed_blocks": [
+            {
+              "before": "rc.dec.109",
+              "after": "rc.dec.111"
+            },
+            {
+              "before": "rc.keep.113",
+              "after": "rc.keep.115"
+            },
+            {
+              "before": "rc.free.114",
+              "after": "rc.free.116"
+            },
+            {
+              "before": "b38.110",
+              "after": "b38.112"
+            },
+            {
+              "before": "rc.dec.117",
+              "after": "rc.dec.119"
+            },
+            {
+              "before": "rc.keep.121",
+              "after": "rc.keep.123"
+            },
+            {
+              "before": "rc.free.122",
+              "after": "rc.free.124"
+            },
+            {
+              "before": "b38.110.118",
+              "after": "b38.112.120"
+            },
+            {
+              "before": "rc.dec.125",
+              "after": "rc.dec.127"
+            },
+            {
+              "before": "rc.keep.129",
+              "after": "rc.keep.131"
+            },
+            {
+              "before": "rc.free.130",
+              "after": "rc.free.132"
+            },
+            {
+              "before": "b38.110.118.126",
+              "after": "b38.112.120.128"
+            },
+            {
+              "before": "rc.dec.133",
+              "after": "rc.dec.135"
+            },
+            {
+              "before": "rc.keep.137",
+              "after": "rc.keep.139"
+            },
+            {
+              "before": "rc.free.138",
+              "after": "rc.free.140"
+            },
+            {
+              "before": "b38.110.118.126.134",
+              "after": "b38.112.120.128.136"
+            },
+            {
+              "before": "trap.141",
+              "after": "trap.143"
+            },
+            {
+              "before": "b38.110.118.126.134.142",
+              "after": "b38.112.120.128.136.144"
+            },
+            {
+              "before": "rc.dec.145",
+              "after": "rc.dec.147"
+            },
+            {
+              "before": "rc.keep.149",
+              "after": "rc.keep.151"
+            },
+            {
+              "before": "rc.free.150",
+              "after": "rc.free.152"
+            },
+            {
+              "before": "b39.146",
+              "after": "b39.148"
+            },
+            {
+              "before": "rc.dec.153",
+              "after": "rc.dec.155"
+            },
+            {
+              "before": "rc.keep.157",
+              "after": "rc.keep.159"
+            },
+            {
+              "before": "rc.free.158",
+              "after": "rc.free.160"
+            },
+            {
+              "before": "b39.146.154",
+              "after": "b39.148.156"
+            },
+            {
+              "before": "rc.dec.161",
+              "after": "rc.dec.163"
+            },
+            {
+              "before": "rc.keep.165",
+              "after": "rc.keep.167"
+            },
+            {
+              "before": "rc.free.166",
+              "after": "rc.free.168"
+            },
+            {
+              "before": "b39.146.154.162",
+              "after": "b39.148.156.164"
+            },
+            {
+              "before": "rc.dec.169",
+              "after": "rc.dec.171"
+            },
+            {
+              "before": "rc.keep.173",
+              "after": "rc.keep.175"
+            },
+            {
+              "before": "rc.free.174",
+              "after": "rc.free.176"
+            },
+            {
+              "before": "b39.146.154.162.170",
+              "after": "b39.148.156.164.172"
+            },
+            {
+              "before": "trap.177",
+              "after": "trap.179"
+            },
+            {
+              "before": "b40.178",
+              "after": "b40.180"
+            }
+          ],
+          "every_remaining_instruction_exact": true
+        }
+      ],
+      "definitions": 12,
+      "module_delta": "exact trace declarations only"
+    },
+    {
+      "row": "dict_lookup_str",
+      "before_sha256": "6230533a1f02392ea19092e860f6d3e7244833ee87e8b657ace1a5a62c115874",
+      "after_sha256": "3967565e3d854b5eae1b14557a457dc3a41f2f7aa369d5cea07c6f2f3f592ac7",
+      "changed_functions": [
+        {
+          "function": "\"my.row_dict_lookup_str::main\"",
+          "scalar_stores": [
+            {
+              "value": "%v203",
+              "dictionary": "%v205",
+              "index": "%v221",
+              "removed_private_slot": "%stack.152",
+              "stride": 16,
+              "value_offset_from_block": 40,
+              "value_type": "i64",
+              "alignment": 8
+            }
+          ],
+          "trace_calls": [],
+          "renamed_blocks": [
+            {
+              "before": "rc.inc.155",
+              "after": "rc.inc.157"
+            },
+            {
+              "before": "b47.156",
+              "after": "b47.158"
+            },
+            {
+              "before": "rc.dec.162",
+              "after": "rc.dec.164"
+            },
+            {
+              "before": "rc.keep.166",
+              "after": "rc.keep.168"
+            },
+            {
+              "before": "rc.free.167",
+              "after": "rc.free.169"
+            },
+            {
+              "before": "b52.163",
+              "after": "b52.165"
+            },
+            {
+              "before": "rc.dec.170",
+              "after": "rc.dec.172"
+            },
+            {
+              "before": "rc.keep.174",
+              "after": "rc.keep.176"
+            },
+            {
+              "before": "rc.free.175",
+              "after": "rc.free.177"
+            },
+            {
+              "before": "b52.163.171",
+              "after": "b52.165.173"
+            },
+            {
+              "before": "rc.dec.178",
+              "after": "rc.dec.180"
+            },
+            {
+              "before": "rc.keep.182",
+              "after": "rc.keep.184"
+            },
+            {
+              "before": "rc.free.183",
+              "after": "rc.free.185"
+            },
+            {
+              "before": "b52.163.171.179",
+              "after": "b52.165.173.181"
+            },
+            {
+              "before": "rc.dec.186",
+              "after": "rc.dec.188"
+            },
+            {
+              "before": "rc.keep.190",
+              "after": "rc.keep.192"
+            },
+            {
+              "before": "rc.free.191",
+              "after": "rc.free.193"
+            },
+            {
+              "before": "b52.163.171.179.187",
+              "after": "b52.165.173.181.189"
+            },
+            {
+              "before": "trap.194",
+              "after": "trap.196"
+            },
+            {
+              "before": "b52.163.171.179.187.195",
+              "after": "b52.165.173.181.189.197"
+            },
+            {
+              "before": "rc.dec.198",
+              "after": "rc.dec.200"
+            },
+            {
+              "before": "rc.keep.202",
+              "after": "rc.keep.204"
+            },
+            {
+              "before": "rc.free.203",
+              "after": "rc.free.205"
+            },
+            {
+              "before": "b53.199",
+              "after": "b53.201"
+            },
+            {
+              "before": "rc.dec.206",
+              "after": "rc.dec.208"
+            },
+            {
+              "before": "rc.keep.210",
+              "after": "rc.keep.212"
+            },
+            {
+              "before": "rc.free.211",
+              "after": "rc.free.213"
+            },
+            {
+              "before": "b53.199.207",
+              "after": "b53.201.209"
+            },
+            {
+              "before": "rc.dec.214",
+              "after": "rc.dec.216"
+            },
+            {
+              "before": "rc.keep.218",
+              "after": "rc.keep.220"
+            },
+            {
+              "before": "rc.free.219",
+              "after": "rc.free.221"
+            },
+            {
+              "before": "b53.199.207.215",
+              "after": "b53.201.209.217"
+            },
+            {
+              "before": "rc.dec.222",
+              "after": "rc.dec.224"
+            },
+            {
+              "before": "rc.keep.226",
+              "after": "rc.keep.228"
+            },
+            {
+              "before": "rc.free.227",
+              "after": "rc.free.229"
+            },
+            {
+              "before": "b53.199.207.215.223",
+              "after": "b53.201.209.217.225"
+            },
+            {
+              "before": "trap.230",
+              "after": "trap.232"
+            },
+            {
+              "before": "b54.231",
+              "after": "b54.233"
+            }
+          ],
+          "every_remaining_instruction_exact": true
+        }
+      ],
+      "definitions": 12,
+      "module_delta": "exact trace declarations only"
+    },
+    {
+      "row": "dict_update",
+      "before_sha256": "20aa2d76e4efa6048ccd9adfa4efc48f9e2750c0a56c0a8f28f755e43a5ca128",
+      "after_sha256": "de8106e6cbe1600da10233e878232da09e23e84e8be19e2f463a1bb9de5fd440",
+      "changed_functions": [
+        {
+          "function": "\"my.row_dict_update::batch_result\"",
+          "scalar_stores": [
+            {
+              "value": "%v26",
+              "dictionary": "%v28",
+              "index": "%v30",
+              "removed_private_slot": "%stack.24",
+              "stride": 16,
+              "value_offset_from_block": 40,
+              "value_type": "i64",
+              "alignment": 8
+            },
+            {
+              "value": "%v87",
+              "dictionary": "%v70",
+              "index": "%v72",
+              "removed_private_slot": "%stack.82",
+              "stride": 16,
+              "value_offset_from_block": 40,
+              "value_type": "i64",
+              "alignment": 8
+            }
+          ],
+          "trace_calls": [],
+          "renamed_blocks": [
+            {
+              "before": "trap.29",
+              "after": "trap.31"
+            },
+            {
+              "before": "b11.30",
+              "after": "b11.32"
+            },
+            {
+              "before": "trap.33",
+              "after": "trap.35"
+            },
+            {
+              "before": "b11.30.34",
+              "after": "b11.32.36"
+            },
+            {
+              "before": "trap.37",
+              "after": "trap.39"
+            },
+            {
+              "before": "b11.30.34.38",
+              "after": "b11.32.36.40"
+            },
+            {
+              "before": "trap.41",
+              "after": "trap.43"
+            },
+            {
+              "before": "b11.30.34.38.42",
+              "after": "b11.32.36.40.44"
+            },
+            {
+              "before": "trap.44",
+              "after": "trap.46"
+            },
+            {
+              "before": "b11.30.34.38.42.45",
+              "after": "b11.32.36.40.44.47"
+            },
+            {
+              "before": "trap.65",
+              "after": "trap.67"
+            },
+            {
+              "before": "b16.66",
+              "after": "b16.68"
+            },
+            {
+              "before": "trap.69",
+              "after": "trap.71"
+            },
+            {
+              "before": "b16.66.70",
+              "after": "b16.68.72"
+            },
+            {
+              "before": "trap.73",
+              "after": "trap.75"
+            },
+            {
+              "before": "b16.66.70.74",
+              "after": "b16.68.72.76"
+            },
+            {
+              "before": "trap.94",
+              "after": "trap.98"
+            },
+            {
+              "before": "b21.95",
+              "after": "b21.99"
+            },
+            {
+              "before": "trap.98",
+              "after": "trap.102"
+            },
+            {
+              "before": "b21.95.99",
+              "after": "b21.99.103"
+            },
+            {
+              "before": "rc.dec.102",
+              "after": "rc.dec.106"
+            },
+            {
+              "before": "rc.keep.106",
+              "after": "rc.keep.110"
+            },
+            {
+              "before": "rc.free.107",
+              "after": "rc.free.111"
+            },
+            {
+              "before": "b23.103",
+              "after": "b23.107"
+            }
+          ],
+          "every_remaining_instruction_exact": true
+        }
+      ],
+      "definitions": 12,
+      "module_delta": "exact trace declarations only"
+    },
+    {
+      "row": "dict_update_str",
+      "before_sha256": "bae11084341e13e231fa1f9ed6f89fa69e75a6bb89af694fdb95fe7087fabc6b",
+      "after_sha256": "dc267eb66e7576ccba56ed976f18bdd96915c42b201a6cde018e9035f61a97f2",
+      "changed_functions": [
+        {
+          "function": "\"my.row_dict_update_str::batch_result\"",
+          "scalar_stores": [
+            {
+              "value": "%v26",
+              "dictionary": "%v28",
+              "index": "%v44",
+              "removed_private_slot": "%stack.37",
+              "stride": 16,
+              "value_offset_from_block": 40,
+              "value_type": "i64",
+              "alignment": 8
+            },
+            {
+              "value": "%v121",
+              "dictionary": "%v91",
+              "index": "%v140",
+              "removed_private_slot": "%stack.119",
+              "stride": 16,
+              "value_offset_from_block": 40,
+              "value_type": "i64",
+              "alignment": 8
+            }
+          ],
+          "trace_calls": [],
+          "renamed_blocks": [
+            {
+              "before": "rc.inc.40",
+              "after": "rc.inc.42"
+            },
+            {
+              "before": "b10.41",
+              "after": "b10.43"
+            },
+            {
+              "before": "trap.47",
+              "after": "trap.49"
+            },
+            {
+              "before": "b13.48",
+              "after": "b13.50"
+            },
+            {
+              "before": "trap.51",
+              "after": "trap.53"
+            },
+            {
+              "before": "b13.48.52",
+              "after": "b13.50.54"
+            },
+            {
+              "before": "trap.55",
+              "after": "trap.57"
+            },
+            {
+              "before": "b13.48.52.56",
+              "after": "b13.50.54.58"
+            },
+            {
+              "before": "trap.59",
+              "after": "trap.61"
+            },
+            {
+              "before": "b13.48.52.56.60",
+              "after": "b13.50.54.58.62"
+            },
+            {
+              "before": "trap.62",
+              "after": "trap.64"
+            },
+            {
+              "before": "b13.48.52.56.60.63",
+              "after": "b13.50.54.58.62.65"
+            },
+            {
+              "before": "trap.75",
+              "after": "trap.77"
+            },
+            {
+              "before": "b15.76",
+              "after": "b15.78"
+            },
+            {
+              "before": "trap.81",
+              "after": "trap.83"
+            },
+            {
+              "before": "b17.82",
+              "after": "b17.84"
+            },
+            {
+              "before": "trap.92",
+              "after": "trap.94"
+            },
+            {
+              "before": "b20.93",
+              "after": "b20.95"
+            },
+            {
+              "before": "trap.96",
+              "after": "trap.98"
+            },
+            {
+              "before": "b20.93.97",
+              "after": "b20.95.99"
+            },
+            {
+              "before": "trap.100",
+              "after": "trap.102"
+            },
+            {
+              "before": "b20.93.97.101",
+              "after": "b20.95.99.103"
+            },
+            {
+              "before": "trap.113",
+              "after": "trap.115"
+            },
+            {
+              "before": "b22.114",
+              "after": "b22.116"
+            },
+            {
+              "before": "rc.inc.122",
+              "after": "rc.inc.126"
+            },
+            {
+              "before": "b24.123",
+              "after": "b24.127"
+            },
+            {
+              "before": "trap.129",
+              "after": "trap.133"
+            },
+            {
+              "before": "b30.130",
+              "after": "b30.134"
+            },
+            {
+              "before": "trap.133",
+              "after": "trap.137"
+            },
+            {
+              "before": "b30.130.134",
+              "after": "b30.134.138"
+            },
+            {
+              "before": "trap.138",
+              "after": "trap.142"
+            },
+            {
+              "before": "b31.139",
+              "after": "b31.143"
+            },
+            {
+              "before": "trap.146",
+              "after": "trap.150"
+            },
+            {
+              "before": "b34.147",
+              "after": "b34.151"
+            },
+            {
+              "before": "trap.150",
+              "after": "trap.154"
+            },
+            {
+              "before": "b34.147.151",
+              "after": "b34.151.155"
+            },
+            {
+              "before": "trap.155",
+              "after": "trap.159"
+            },
+            {
+              "before": "b35.156",
+              "after": "b35.160"
+            },
+            {
+              "before": "trap.166",
+              "after": "trap.170"
+            },
+            {
+              "before": "b36.167",
+              "after": "b36.171"
+            },
+            {
+              "before": "trap.170",
+              "after": "trap.174"
+            },
+            {
+              "before": "b36.167.171",
+              "after": "b36.171.175"
+            }
+          ],
+          "every_remaining_instruction_exact": true
+        }
+      ],
+      "definitions": 12,
+      "module_delta": "exact trace declarations only"
+    },
+    {
+      "row": "set_dedup",
+      "before_sha256": "a6373e1ca6342453b95bce50f201b982c22963692da4963ca1de98a322ec75ac",
+      "after_sha256": "b11f877241ffede04f7c10f8239e916f2c66050320c27a2d89976ce6327b3a47",
+      "changed_functions": [],
+      "definitions": 13,
+      "module_delta": "exact trace declarations only"
+    },
+    {
+      "row": "int_parse",
+      "before_sha256": "c77494702efaae76a1bc4d5d5f50899810b2334bfd49edadf9dc85ba3a055d07",
+      "after_sha256": "2280ee82db45b7fe1200edc6ae0b36d2d61a7b39e1f3ee80d4a2d4618acc0d8e",
+      "changed_functions": [],
+      "definitions": 11,
+      "module_delta": "exact trace declarations only"
+    },
+    {
+      "row": "int_format",
+      "before_sha256": "9ae1caa80cdbaa9a1bcd3f3a4a96d5d70f9962886a2dbef12d838bf2b3ddb470",
+      "after_sha256": "734223ef3b6cbe8ba233eae79d1ffb3b01a90ba4beac1e3d329d03c97ed61315",
+      "changed_functions": [],
+      "definitions": 11,
+      "module_delta": "exact trace declarations only"
+    },
+    {
+      "row": "call_indirect",
+      "before_sha256": "1defba76b3545a58a28a637e38ae1fc3c4ab8e7fba0215e5711bcbdf0f6be429",
+      "after_sha256": "347f47faf34618430b9418fe98ed3faffbfd4d88909bdad638674405878adbce",
+      "changed_functions": [],
+      "definitions": 10,
+      "module_delta": "exact trace declarations only"
+    },
+    {
+      "row": "sort_int",
+      "before_sha256": "20e0d448d771018db93f03ef4f314d4e2fb00125cd9913902432f48ce09218de",
+      "after_sha256": "06d6ee6780136619b6f29e58d21fbc7ddbc71a286e96d87b70eebb9cf94c13ed",
+      "changed_functions": [],
+      "definitions": 8,
+      "module_delta": "exact trace declarations only"
+    },
+    {
+      "row": "sort_records",
+      "before_sha256": "14d1fa578afebc8032e2eb32217470b1d04731fc429666fdf67d147db0543509",
+      "after_sha256": "b4e248ac0db43379e51de0484bd5405daf136e4d4ba302238e0afdc7a8d967ca",
+      "changed_functions": [],
+      "definitions": 9,
+      "module_delta": "exact trace declarations only"
+    },
+    {
+      "row": "int_math",
+      "before_sha256": "f521925ae8caa357954cbd18c597ff5d06388c8a73d6d9ece12147b7cb22a2a5",
+      "after_sha256": "3b40a3672f9eb9494fc733ea700ccb7f3af61b02bb8362baa84510c0dcd2ad06",
+      "changed_functions": [],
+      "definitions": 8,
+      "module_delta": "exact trace declarations only"
+    },
+    {
+      "row": "float_math",
+      "before_sha256": "3c86a72eaddff01aca9589aba0b4d5d09d6581f6d06863d92c6dbb5c41b545ce",
+      "after_sha256": "a491510b65718eb6f65b430f190460d259bdbbd90a917353f961549b2c0ab3c2",
+      "changed_functions": [],
+      "definitions": 8,
+      "module_delta": "exact trace declarations only"
+    },
+    {
+      "row": "call_direct",
+      "before_sha256": "2dc4bb302ab5604158d226b197075fe3362ef72ba16b0d7885cd7c9148bafa9d",
+      "after_sha256": "bf1e2e27e98c487744338248fb397a1787a7bbccdee39507079a376fc25a46a2",
+      "changed_functions": [],
+      "definitions": 9,
+      "module_delta": "exact trace declarations only"
+    },
+    {
+      "row": "branch_predictable",
+      "before_sha256": "eacd66257fdf69288fd05eeb04afe7d84f67cafdf26f8dda155a35e42424801a",
+      "after_sha256": "cbb3e91028ba0beea8dedc7e028924fc18f7724f6aa4ced151fc86aab1191102",
+      "changed_functions": [],
+      "definitions": 8,
+      "module_delta": "exact trace declarations only"
+    },
+    {
+      "row": "branch_mixed",
+      "before_sha256": "a6b8c7ec884637a55b2ee25309775655216fd3c68996c26e6843dd86b1f1f7b1",
+      "after_sha256": "f902b4eedfd37060309df0f5e66b4d1bb80d89108013712fe4930638e2fae521",
+      "changed_functions": [],
+      "definitions": 8,
+      "module_delta": "exact trace declarations only"
+    },
+    {
+      "row": "binary_search",
+      "before_sha256": "29eab26eac11be3957a737eef0e3056dc9411c70f5a156a2ce672eec28293627",
+      "after_sha256": "6f83a9a15520ef357a8350e510105feaffc85457c266520c603030ddfec51da6",
+      "changed_functions": [],
+      "definitions": 9,
+      "module_delta": "exact trace declarations only"
+    }
+  ],
+  "definitions": 343,
+  "exact_scalar_stores": 6,
+  "exact_trace_calls": 2,
+  "error": null,
+  "method": "Prove the combined package's exact approved deltas against qualified C LLVM.\n\nKeep complete before/after LLVM and raw diffs. Apply only the six private i64\ndictionary-store replacements and the exact constant-mode trace ABI changes.\nCompare every remaining instruction, operand, CFG edge, phi and trap using\nbijective SSA/block names and semantic site/debug metadata. Compare all module\ncontent outside function definitions byte-for-byte after the two trace\ndeclarations replace the original declaration.\n"
+}
