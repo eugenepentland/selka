@@ -1,0 +1,3 @@
+passed n_scalar_parse_abi::test_float_option_c_abi_keeps_signed_zero_nonfinite_and_none_tags
+passed n_scalar_parse_abi::test_integer_option_c_abi_keeps_signed_limits_and_none_tags
+2 passed, 0 cached, 0 failed, 0 skipped

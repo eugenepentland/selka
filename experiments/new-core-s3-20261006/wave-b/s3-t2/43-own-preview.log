@@ -1,0 +1,15 @@
+file                     tests | debug   match misma unsup | release match misma unsup
+--------------------------------------------------------------------------------------
+byte_buffer                  8 |             7     1     0 |             7     1     0
+byte_buffer_from_list       10 |            10     0     0 |            10     0     0
+format_specs                 6 |             5     1     0 |             5     1     0
+b_buffer_values              2 |             2     0     0 |             2     0     0
+n_float_text                 3 |             3     0     0 |             3     0     0
+--------------------------------------------------------------------------------------
+TOTAL                       29
+  debug    matching 27, mismatching 2, unsupported 0 (of 29 tests; 29 supported)
+  release  matching 27, mismatching 2, unsupported 0 (of 29 tests; 29 supported)
+PROBLEM byte_buffer: debug: byte_buffer::test_byte_kinds_share_reads_and_compare_by_content: old pass, new error build error (InvalidIr): internal error[E_CORE_INVALID_IR]: invalid Core IR in byte_buffer::test_byte_kinds_share_reads_and_compare_by_content b8 %44: call does not match its signature
+PROBLEM byte_buffer: release: byte_buffer::test_byte_kinds_share_reads_and_compare_by_content: old pass, new error build error (InvalidIr): internal error[E_CORE_INVALID_IR]: invalid Core IR in byte_buffer::test_byte_kinds_share_reads_and_compare_by_content b8 %44: call does not match its signature
+PROBLEM format_specs: debug: format_specs::test_round_to_digits_rounds_the_exact_value_with_halves_away_from_zero: old pass, new error build error (InvalidIr): internal error[E_CORE_INVALID_IR]: invalid Core IR in format_specs::test_round_to_digits_rounds_the_exact_value_with_halves_away_from_zero b0 %4: call does not match its signature
+PROBLEM format_specs: release: format_specs::test_round_to_digits_rounds_the_exact_value_with_halves_away_from_zero: old pass, new error build error (InvalidIr): internal error[E_CORE_INVALID_IR]: invalid Core IR in format_specs::test_round_to_digits_rounds_the_exact_value_with_halves_away_from_zero b0 %4: call does not match its signature

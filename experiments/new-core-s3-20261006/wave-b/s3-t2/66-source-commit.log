@@ -1,0 +1,27 @@
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 27 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 9923 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 11 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed
+[codex/new-core-s3-numbers 71cfa45ae] core: implement S3 mutable bytes and exact number text
+ 39 files changed, 3564 insertions(+), 93 deletions(-)
+ create mode 100644 experiments/new-core-s3-20261006/wave-b/s3-t2/measure_float_runtime.py
+ create mode 100644 src/core/build_text_more.zig
+ create mode 100644 src/core/number_runtime.zig
+ create mode 100644 src/core/runtime/core_number_format.zig
+ create mode 100644 src/core/runtime/core_number_parse.zig
+ create mode 100644 src/core/runtime/core_number_text.zig
+ create mode 100644 src/core/runtime/core_unicode_data.h
+ create mode 100644 src/core/s3_number_test.zig
+ create mode 100644 src/core/s3_numeric_test.zig
+ create mode 100644 src/core/text_checks.zig
+ create mode 100644 test/core/b_blob_data/binary.bin
+ create mode 100644 test/core/b_blob_data/empty.bin
+ create mode 100644 test/core/b_blob_data/multi.txt
+ create mode 100644 test/core/b_blob_data/nul.bin
+ create mode 100644 test/core/b_buffer_values.my
+ create mode 100644 test/core/b_embedded_assets.my
+ create mode 100644 test/core/b_packet_decode.my
+ create mode 100644 test/core/n_float_text.my
+ create mode 100644 test/core/n_scalar_parse_abi.my

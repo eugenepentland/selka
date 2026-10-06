@@ -1,0 +1,231 @@
+fn b_buffer_values::test_byte_buffer_snapshots_copies_and_places #0 params=0 ret=bool cabi=false host=false
+  local %0 <collection>: List<i64> mut
+  local %1 source: List<i64> mut
+  local %2 buffer: byte_buffer mut
+  local %3 copy: byte_buffer mut
+  local %4 snapshot: bytes mut
+  local %5 <collection>: List<i64> mut
+  local %6 <collection>: List<i64> mut
+  local %7 <collection>: i64 mut
+  local %8 <collection>: List<i64> mut
+  local %9 <collection>: i64 mut
+  local %10 <collection>: List<i64> mut
+  local %11 <collection>: i64 mut
+  local %12 packet: b_buffer_values::Packet mut
+  local %13 <collection>: byte_buffer mut
+  block
+    initialize %1
+      block_value : List<i64>
+        block
+          initialize %0
+            acquire_buffer : List<i64>
+              integer : i64 3
+          discard
+            buffer_operation : unit append owner=%0
+              integer : i64 1
+          discard
+            buffer_operation : unit append owner=%0
+              integer : i64 2
+          discard
+            buffer_operation : unit append owner=%0
+              integer : i64 3
+        local : List<i64> %0
+    initialize %2
+      cast : byte_buffer
+        local : List<i64> %1
+    initialize %3
+      local : byte_buffer %2
+    initialize %4
+      cast : bytes
+        local : byte_buffer %2
+    branch
+      unary : bool not
+        buffer_operation : bool buffer_append_byte owner=%2
+          integer : i64 4
+      block
+        ret
+          boolean : bool false
+    branch
+      binary : bool logical_or
+        binary : bool logical_or
+          binary : bool logical_or
+            binary : bool logical_or
+              binary : bool logical_or
+                binary : bool ne
+                  local : byte_buffer %3
+                  array : byte_buffer
+                    integer : u8 1
+                    integer : u8 2
+                    integer : u8 3
+                binary : bool ne
+                  local : bytes %4
+                  local : byte_buffer %3
+              binary : bool ne
+                block_value : i64
+                  block
+                    initialize %5
+                      local : List<i64> %1
+                  cast : i64
+                    buffer_operation : u64 length owner=%5
+                integer : i64 3
+            binary : bool ne
+              block_value : i64
+                block
+                  initialize %6
+                    local : List<i64> %1
+                buffer_operation : i64 read owner=%6
+                  block_value : i64
+                    block
+                      initialize %7
+                        integer : i64 0
+                      branch
+                        binary : bool lt
+                          local : i64 %7
+                          integer : i64 0
+                        assign %7
+                          binary : i64 add
+                            cast : i64
+                              buffer_operation : u64 length owner=%6
+                            local : i64 %7
+                    local : i64 %7
+              integer : i64 1
+          binary : bool ne
+            block_value : i64
+              block
+                initialize %8
+                  local : List<i64> %1
+              buffer_operation : i64 read owner=%8
+                block_value : i64
+                  block
+                    initialize %9
+                      integer : i64 1
+                    branch
+                      binary : bool lt
+                        local : i64 %9
+                        integer : i64 0
+                      assign %9
+                        binary : i64 add
+                          cast : i64
+                            buffer_operation : u64 length owner=%8
+                          local : i64 %9
+                  local : i64 %9
+            integer : i64 2
+        binary : bool ne
+          block_value : i64
+            block
+              initialize %10
+                local : List<i64> %1
+            buffer_operation : i64 read owner=%10
+              block_value : i64
+                block
+                  initialize %11
+                    integer : i64 2
+                  branch
+                    binary : bool lt
+                      local : i64 %11
+                      integer : i64 0
+                    assign %11
+                      binary : i64 add
+                        cast : i64
+                          buffer_operation : u64 length owner=%10
+                        local : i64 %11
+                local : i64 %11
+          integer : i64 3
+      block
+        ret
+          boolean : bool false
+    initialize %12
+      record : b_buffer_values::Packet
+        field .0
+          local : byte_buffer %2
+    branch
+      unary : bool not
+        block_value : bool
+          block
+            initialize %13
+              field : byte_buffer .0
+                local : b_buffer_values::Packet %12
+          buffer_operation : bool buffer_append_byte owner=%13
+            integer : i64 5
+      block
+        ret
+          boolean : bool false
+    ret
+      binary : bool logical_and
+        binary : bool eq
+          field : byte_buffer .0
+            local : b_buffer_values::Packet %12
+          array : byte_buffer
+            integer : u8 1
+            integer : u8 2
+            integer : u8 3
+            integer : u8 4
+            integer : u8 5
+        binary : bool eq
+          local : byte_buffer %2
+          array : byte_buffer
+            integer : u8 1
+            integer : u8 2
+            integer : u8 3
+            integer : u8 4
+fn b_buffer_values::test_buffer_append_range_utf8_and_float_preserve_inputs #1 params=0 ret=bool cabi=false host=false
+  local %0 <collection>: List<i64> mut
+  local %1 buffer: byte_buffer mut
+  block
+    initialize %1
+      cast : byte_buffer
+        block_value : List<i64>
+          block
+            initialize %0
+              acquire_buffer : List<i64>
+                integer : i64 0
+          local : List<i64> %0
+    branch
+      binary : bool logical_or
+        binary : bool logical_or
+          unary : bool not
+            buffer_operation : bool buffer_reserve owner=%1
+              integer : i64 32
+          unary : bool not
+            buffer_operation : bool buffer_append_utf8 owner=%1
+              array : str
+                integer : u32 955
+        unary : bool not
+          buffer_operation : bool buffer_append_float owner=%1
+            wrap : float
+              unary : u64 f64_neg
+                unwrap : u64
+                  wrap : float
+                    integer : u64 0
+      block
+        ret
+          boolean : bool false
+    branch
+      binary : bool logical_or
+        buffer_operation : bool buffer_append_byte owner=%1
+          integer : i64 256
+        buffer_operation : bool buffer_append_range owner=%1
+          array : bytes
+            integer : u8 97
+            integer : u8 98
+            integer : u8 99
+          integer : i64 2
+          integer : i64 1
+      block
+        ret
+          boolean : bool false
+    ret
+      binary : bool eq
+        cast : bytes
+          local : byte_buffer %1
+        array : bytes
+          integer : u8 206
+          integer : u8 187
+          integer : u8 45
+          integer : u8 48
+          integer : u8 46
+          integer : u8 48
+fn b_buffer_values::main #2 params=0 ret=i64 cabi=false host=false
+  block
+    ret
+      integer : i64 0

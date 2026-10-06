@@ -1,0 +1,18 @@
+build-slot: all 1 gate slot(s) busy; waiting (0s so far)
+build-slot: all 1 gate slot(s) busy; waiting (60s so far)
+build-slot: gate slot 1 after 95s (all 1 gate slot(s) busy)
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 27 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 9929 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 10 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 2/88 failed (cognitive-complexity, bool-ops-per-condition)
+guardian: failures grouped by check (2):
+  cognitive-complexity (2 findings)
+    - src/core/emit_llvm.zig: fn emitFunction cognitive complexity 27 (limit: 25)
+      fix: extract helpers; reduce nested control flow.
+    - src/core/build.zig: fn bufferOperation cognitive complexity 26 (limit: 25)
+  bool-ops-per-condition (1 finding)
+    - src/core/build_text.zig:19: condition has 4 boolean ops (cap 3)
+      fix: split into nested/sequential ifs, or extract into a named bool.
+  caution: zig-out binaries predate this failed run (installs are gated on green) — rebuild green before running them

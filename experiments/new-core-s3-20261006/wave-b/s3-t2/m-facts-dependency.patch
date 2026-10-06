@@ -1,0 +1,39 @@
+diff --git a/src/core/facts.zig b/src/core/facts.zig
+index 1ec30504..326f6150 100644
+--- a/src/core/facts.zig
++++ b/src/core/facts.zig
+@@ -801,6 +801,9 @@ fn transfer(a: *Analysis, ref: ir.Ref, block: ir.BlockId) ?Interval {
+         },
+         .convert => blk: {
+             const x = a.rangeAt(i.a, block) orelse break :blk full;
++            // Unchecked conversion can truncate or reinterpret signed bits. Intersection
++            // describes checked conversion, but cannot describe a wrapping bit pattern.
++            if (i.check == .none and !x.within(full.?)) break :blk full;
+             break :blk x.meet(full.?);
+         },
+         .list_len => blk: {
+diff --git a/src/core/s3_numeric_test.zig b/src/core/s3_numeric_test.zig
+index 8075afa6..d0486c80 100644
+--- a/src/core/s3_numeric_test.zig
++++ b/src/core/s3_numeric_test.zig
+@@ -33,3 +33,20 @@ test "S3 verify mode retains checks for inferred shift count premises" {
+     try std.testing.expect(std.mem.indexOf(u8, llvm, "shiftbad") != null);
+     try std.testing.expect(std.mem.indexOf(u8, llvm, "range [") != null);
+ }
++
++// spec-case: NEW-CORE-S3-NUMERIC-1
++test "S3 unchecked signed bits converted to unsigned retain a sound fact interval" {
++    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
++    defer arena.deinit();
++    const a = arena.allocator();
++    const ir = @import("ir.zig");
++    const facts = @import("facts.zig");
++    var module: ir.Module = .{};
++    var hand = try support.Hand.init(a, &module, "main", .{ .params = &.{}, .ret = .u64 });
++    const converted = try hand.emit(.{ .op = .convert, .ty = .u64, .a = try hand.int(.i64, -12) });
++    _ = try hand.emit(.{ .op = .ret, .ty = .void, .a = converted });
++    _ = try hand.finish();
++    const known = try facts.analyze(a, &module.functions.items[0], .{ .mark = false });
++    try std.testing.expectEqual(facts.typeRange(.u64).?, known.ranges[converted.index()].?);
++    try std.testing.expect(known.ranges[converted.index()].?.hi >= (@as(i128, 1) << 64) - 12);
++}

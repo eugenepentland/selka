@@ -1,0 +1,6 @@
+src/core/build_number.zig
+ot(s) busy; waiting (0s so far)
+build-slot: all 3 build slot(s) busy; waiting (60s so far)
+build-slot: all 3 build slot(s) busy; waiting (120s so far)
+build-slot: all 3 build slot(s) busy; waiting (180s so far)
+build-slot: build slot 3 after 235s (all 3 build slot(s) busy)

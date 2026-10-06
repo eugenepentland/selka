@@ -1,0 +1,2 @@
+records,unions,propagate,mut,alias cases=2 old_rejected=0 refused=0 compared=30 mismatch=0 fact=0 traps=0 caught=0
+qualification {"kind": "number", "qualified": true, "accepted": 2, "old_rejected": 0, "core_refused": 0, "core_build_failed": 0, "elapsed_seconds": 16.829216561978683}

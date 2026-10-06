@@ -1,0 +1,5 @@
+S3-T2 feedback for the coordinator's serialized mylang entry:
+
+- good: Guardian's 88-check whole-tree gate and ordinary commit hooks passed the frozen S3-T2 source. Its inferred-error-set, third-anytype, unsafe-unwrap and unreachable-in-catch checks caught avoidable adapter shortcuts before qualification; explicit helper errors, typed Context and a deliberate internal-invalid adapter resolved them.
+- friction: Adding verify-only bound-length capture took emitFunction to cognitive complexity 27 (limit 25), while byte-buffer dispatch took bufferOperation to 26 and numeric dispatch reached 4 boolean operations. Extracting the unchanged entry assertions and using switches restored all 88 checks; these were two extra small edit/rebuild cycles, with no LLVM behavior change.
+- wish: Guardian's sharded test summary could report the longest shard directly. S3-T2's first 8-shard run had a 92.44-second shard; finding that required inspecting each test-wall line before the plan-mandated 16-shard rerun (67.45 seconds total,65.81 seconds longest).

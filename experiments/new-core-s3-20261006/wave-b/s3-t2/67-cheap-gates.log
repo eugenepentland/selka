@@ -1,0 +1,4 @@
+s3-t2-qualified: core-build waiting/running; source=71cfa45aecf9a81027494989d0c4bdb17a613b00
+s3-t2-qualified: core-build pass, command=2.60s
+s3-t2-qualified: test-core waiting/running; source=71cfa45aecf9a81027494989d0c4bdb17a613b00
+RuntimeError: test-core failed; inspect /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-numbers/experiments/new-core-s3-20261006/wave-a/integration/s3-t2-qualified/test-core.txt
