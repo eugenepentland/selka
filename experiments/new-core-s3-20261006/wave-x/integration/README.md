@@ -16,8 +16,8 @@ scripts/build-slot.sh gate -- python3 \
 ```
 
 The matrix holds the gate slot through this command. Each heavy worker also
-uses `scripts/build-slot.sh build`; `--jobs` allows one or two workers (default
-two). It runs all nine kinds with 200 fresh cases each, without evidence reuse:
+uses `scripts/build-slot.sh build`; `--jobs` allows one to three workers (default
+three), matching the three build slots. It runs all nine kinds with 200 fresh cases each, without evidence reuse:
 `s0`, `s1`, `rc`, `rebinding`, `iteration`, `dict`, `text`, `number`, `functions`.
 The longer number worker starts first; registry order and per-kind seeds remain
 fixed. The manifest records the execution order separately.

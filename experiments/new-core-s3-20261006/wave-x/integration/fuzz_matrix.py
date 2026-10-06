@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run S3-X's fresh strict nine-kind x 200-case matrix with at most two workers.
+"""Run S3-X's fresh strict nine-kind x 200-case matrix with up to three workers.
 
 Run only after qualification of the final integrated source and both explicit
 oracles. Launch the matrix through scripts/build-slot.sh gate; every worker
@@ -41,7 +41,7 @@ def main():
     parser.add_argument("--new", type=Path, required=True, help="Explicit qualified final integrated new oracle")
     parser.add_argument("--qualified-head", help="Require this full qualified source commit to remain HEAD")
     parser.add_argument("--evidence", type=Path, help="Fresh directory below experiments; default is a unique UTC/UUID run")
-    parser.add_argument("--jobs", type=int, choices=(1, 2), default=2)
+    parser.add_argument("--jobs", type=int, choices=(1, 2, 3), default=3)
     args = parser.parse_args()
     try:
         oracles = {"old": identity(args.old), "new": identity(args.new)}
