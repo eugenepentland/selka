@@ -1,0 +1,51 @@
+module c_runner_properties
+
+@invariant(self.low <= self.high, "ordered generated interval")
+public record Interval:
+    low: int
+    high: int
+
+public union Tree:
+    leaf: int,
+    branch: Tree
+
+public enum Tone:
+    red,
+    green,
+    blue
+
+public def test_enum_table_set_boolean_and_float(tone: Tone, grid: [Tone]i8, flags: set[int], bit: bool, scalar: float) -> bool:
+    for value in flags:
+        if value not in flags:
+            return False
+    return tone == tone and grid[Tone.red] <= 127i8 and (bit or not bit) and (scalar == scalar or scalar != scalar)
+
+public def test_integer_identity(x: int, width: u8) -> bool:
+    return x == x and width <= 255u8
+
+@requires(n >= 0, "nonnegative input")
+public def test_own_precondition_discards(n: int) -> bool:
+    return n // 2 <= n
+
+public def test_record_invariant_discards(span: Interval) -> bool:
+    return span.low <= span.high
+
+public def test_list_and_dictionary(xs: list[int], d: dict[str, int]) -> bool:
+    return xs == xs and len(d) >= 0
+
+public def test_text_and_bytes(text: str, octets: bytes) -> bool:
+    return text == text and octets == octets
+
+public def test_option_and_array(value: Option[int], fixed: [4]u8) -> bool:
+    return value == value and len(fixed) == 4
+
+public def test_recursive_generated_value(tree: Tree) -> bool:
+    return tree == tree
+
+public def test_result_true(value: int) -> Result[bool, str]:
+    return Ok(value == value)
+
+public def test_stdout_and_stderr_are_trial_local(value: int, out: Stream, err: Stream) -> bool:
+    out.print(value)
+    err.print(value)
+    return True

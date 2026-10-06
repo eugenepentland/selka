@@ -21,15 +21,18 @@ const discover = @import("test_runner_discover.zig");
 const entry = @import("test_runner_entry.zig");
 const report = @import("test_runner_report.zig");
 const typed = @import("mylang").typed;
+const property = @import("test_runner_property.zig");
+const property_types = @import("property_types.zig");
+const property_schema = @import("property_schema.zig");
+const property_execute = @import("property_execute.zig");
+const batch_entry = @import("test_runner_batch.zig");
+const v = @import("property_value.zig");
 
 /// The old runner's stub, appended to a file that defines no `main` of its own.
 pub const check_stub = "\n\ndef main() -> int:\n    return 0\n";
 
-/// Seconds a single test may run before it is reported failed.
-const test_timeout_seconds = 30;
-
 /// What stops a run: memory, or an output stream that cannot be written.
-pub const Error = error{ OutOfMemory, WriteFailed };
+pub const Error = property.Error;
 
 /// What the command line asked for.
 pub const Options = struct {
@@ -39,6 +42,10 @@ pub const Options = struct {
     json: bool = false,
     /// The build flags of the test executable (release, facts mode, `zig`, cache directory).
     build: pipeline.Options,
+    /// Explicit entropy/property seed; null derives it from the qualified name.
+    seed: ?u64 = null,
+    /// Generated inputs every property must pass.
+    property_runs: u32 = property.default_runs,
 };
 
 /// One selected test and its place in the report. `ready` tests have no verdict yet:
@@ -88,12 +95,25 @@ fn writeAll(init: std.process.Init, file: std.Io.File, text: []const u8) Error!v
 
 /// The `unsupported` verdict of a test the builder cannot build, or null when it can be built and run.
 fn classify(gpa: std.mem.Allocator, keep: std.mem.Allocator, checked: frontend.Checked, case: discover.Case) Error!?report.Verdict {
-    if (case.other_parameters != 0) return refusal(case, "test parameters other than Stream (property test or capability stand-in; out of S1 scope)", "");
+    if (case.other_parameters != 0) {
+        const function = checked.program.functions[@backingInt(case.function)];
+        const definitions = try property_schema.definitions(keep, checked.program);
+        const schema = try property_types.Schema.init(keep, definitions);
+        for (function.scope.locals[0..function.signature.parameter_count], case.parameters) |parameter, family| {
+            if (family != 255 and family <= 5) continue;
+            const name = typed.typeName(parameter.ty, checked.program.records);
+            if (try property_types.refused(schema, name)) |found| {
+                const reason = try std.fmt.allocPrint(keep, "property test parameter `{s}: {s}` cannot be generated: {s}", .{ parameter.name, name, found.reason });
+                return .{ .name = case.name, .status = .failed, .reason = reason };
+            }
+        }
+    }
     if (case.shape == .other) return refusal(case, "test result type is not bool", "");
     var scratch = std.heap.ArenaAllocator.init(gpa);
     defer scratch.deinit();
     var why: build.Refusal = .{};
-    const module = build.buildRootsSource(scratch.allocator(), checked.program, &.{case.function}, checked.src, &why) catch |err| switch (err) {
+    const selected_roots = try rootsFor(scratch.allocator(), checked.program, &.{case});
+    const module = build.buildRootsSource(scratch.allocator(), checked.program, selected_roots, checked.src, &why) catch |err| switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
         error.Unsupported => {
             const at = frontend.position(checked.src, .{ .start = why.span, .end = why.span });
@@ -170,7 +190,7 @@ fn execute(init: std.process.Init, options: Options, checked: frontend.Checked, 
             chosen[position].verdict = .{ .name = chosen[position].case.name, .status = failure.status, .reason = failure.reason };
         },
         .built => |executable| for (live.items, 0..) |position, table_index| {
-            chosen[position].verdict = try runTest(init, executable, table_index, chosen[position].case.name);
+            chosen[position].verdict = try runSelected(init, options, checked.program, executable, table_index, chosen[position].case);
         },
     }
 }
@@ -181,8 +201,9 @@ const Built = union(enum) { built: []const u8, failed: report.Verdict };
 fn buildExecutable(init: std.process.Init, options: Options, checked: frontend.Checked, chosen: []const Selected, positions: []const usize, tag: []const u8) Error!Built {
     const allocator = init.arena.allocator();
     const name = chosen[positions[0]].case.name;
-    const roots = try allocator.alloc(typed.FunctionId, positions.len);
-    for (positions, roots) |position, *root| root.* = chosen[position].case.function;
+    const cases = try allocator.alloc(discover.Case, positions.len);
+    for (positions, cases) |position, *case| case.* = chosen[position].case;
+    const roots = try rootsFor(allocator, checked.program, cases);
     var why: build.Refusal = .{};
     var module = build.buildRootsSource(allocator, checked.program, roots, checked.src, &why) catch |err| switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
@@ -193,17 +214,22 @@ fn buildExecutable(init: std.process.Init, options: Options, checked: frontend.C
         const case = chosen[position].case;
         const function = checked.program.functions[@backingInt(case.function)];
         const result = typed.resultShape(function.signature.return_type, checked.program.records);
-        var seed: [32]u8 = undefined;
-        std.crypto.hash.sha2.Sha256.hash(case.name, &seed, .{});
+        const parameters = try allocator.alloc([]const u8, function.signature.parameter_count);
+        for (parameters, function.scope.locals[0..function.signature.parameter_count]) |*name_slot, parameter| name_slot.* = typed.typeName(parameter.ty, checked.program.records);
         target.* = .{
             .function = @intCast(table_index),
             .streams = case.streams,
             .parameters = case.parameters,
-            .seed = std.mem.readInt(u64, seed[0..8], .little),
+            .seed = entropySeed(options.seed, case.name),
+            .data = .{ .parameters = parameters, .result = typed.typeName(function.signature.return_type, checked.program.records) },
             .result = if (result) |shape| .{ .ok_tag = @intCast(shape.ok_tag), .error_tag = @intCast(shape.error_tag) } else null,
         };
     }
-    try entry.addEntry(allocator, &module, targets);
+    const schema = try property_types.Schema.init(allocator, try property_schema.definitions(allocator, checked.program));
+    batch_entry.add(allocator, &module, targets, schema) catch |err| switch (err) {
+        error.OutOfMemory => return error.OutOfMemory,
+        else => return .{ .failed = .{ .name = name, .status = .unsupported, .reason = "property copied-value adapter type" } },
+    };
     const flavor = if (options.build.release) "release" else "debug";
     const absolute = std.Io.Dir.cwd().realPathFileAlloc(init.io, options.path, allocator) catch options.path;
     var digest: [8]u8 = undefined;
@@ -226,57 +252,117 @@ fn firstLine(allocator: std.mem.Allocator, text: []const u8) std.mem.Allocator.E
     return allocator.dupe(u8, std.mem.sliceTo(std.mem.trim(u8, text, "\n"), '\n'));
 }
 
-/// Run test number `table_index` of `executable` as its own process and read the verdict
-/// from its exit status and stderr.
-fn runTest(init: std.process.Init, executable: []const u8, table_index: usize, name: []const u8) std.mem.Allocator.Error!report.Verdict {
-    const allocator = init.arena.allocator();
-    const argument = try std.fmt.allocPrint(allocator, "{d}", .{table_index});
-    const timeout: std.Io.Timeout = .{ .duration = .{ .raw = .fromSeconds(test_timeout_seconds), .clock = .awake } };
-    const result = std.process.run(init.gpa, init.io, .{ .argv = &.{ executable, argument }, .timeout = timeout }) catch |err| {
-        const reason = if (err == error.Timeout) try std.fmt.allocPrint(allocator, "timed out after {d} s", .{test_timeout_seconds}) else try std.fmt.allocPrint(allocator, "cannot run the test: {s}", .{@errorName(err)});
-        return .{ .name = name, .status = .failed, .reason = reason };
-    };
-    defer init.gpa.free(result.stdout);
-    defer init.gpa.free(result.stderr);
-    // Under MYL_CORE_LEAKCHECK=1 a test that ends with blocks live says so: it fails.
-    if (std.mem.indexOf(u8, result.stderr, leak_marker)) |at| {
-        const line = std.mem.sliceTo(result.stderr[at..], '\n');
-        return .{ .name = name, .status = .failed, .reason = try std.fmt.allocPrint(allocator, "leak: {s}", .{line[leak_marker.len..]}) };
-    }
-    return .{ .name = name, .status = if (result.term == .exited and result.term.exited == entry.status_pass) .passed else .failed, .reason = try failureReason(allocator, result.term, result.stderr) };
+/// Stable stand-in/property seed, identical to native_test_wire.entropySeed.
+fn entropySeed(explicit: ?u64, name: []const u8) u64 {
+    if (explicit) |seed| return seed;
+    var digest: [32]u8 = undefined;
+    std.crypto.hash.sha2.Sha256.hash(name, &digest, .{});
+    return std.mem.readInt(u64, digest[0..8], .little);
 }
 
-/// The start of the runtime's leak report (`runtime/core_rt.c`, `leak_report`).
-const leak_marker = "myl-core leakcheck: ";
-
-/// Why a run did not pass, in the old runner's words: `expected true, got false`, or a
-/// trap's `R_CODE (detail)` followed by its `  in …` frames. Empty for a pass.
-fn failureReason(allocator: std.mem.Allocator, term: std.process.Child.Term, stderr: []const u8) std.mem.Allocator.Error![]const u8 {
-    switch (term) {
-        .exited => |code| {
-            if (code == entry.status_pass) return "";
-            if (code == entry.status_false) return "expected true, got false";
-            if (code == 1) if (try trapReason(allocator, stderr)) |reason| return reason;
-            return std.fmt.allocPrint(allocator, "exited with status {d}", .{code});
-        },
-        .signal => |signal| return std.fmt.allocPrint(allocator, "terminated by signal {d}", .{@backingInt(signal)}),
-        else => return "abnormal termination",
+fn rootsFor(a: std.mem.Allocator, program: typed.Program, cases: []const discover.Case) Error![]const typed.FunctionId {
+    var roots: std.ArrayList(typed.FunctionId) = .empty;
+    for (cases) |case| try roots.append(a, case.function);
+    const schema = try property_types.Schema.init(a, try property_schema.definitions(a, program));
+    for (program.functions) |candidate| {
+        const prefix = "@invariant:";
+        if (!std.mem.startsWith(u8, candidate.name, prefix)) continue;
+        var needed = false;
+        for (cases) |case| {
+            const f = program.functions[@backingInt(case.function)];
+            for (f.scope.locals[0..f.signature.parameter_count], case.parameters) |parameter, family| {
+                if (family != 255) continue;
+                needed = needed or try property_types.reaches(schema, typed.typeName(parameter.ty, program.records), candidate.name[prefix.len..]);
+            }
+        }
+        if (needed) try roots.append(a, candidate.id);
     }
+    return roots.toOwnedSlice(a);
 }
 
-/// `R_CODE (detail)` and the `  in …` frame lines of a trap report on stderr.
-fn trapReason(allocator: std.mem.Allocator, stderr: []const u8) std.mem.Allocator.Error!?[]const u8 {
-    const marker = "error[";
-    const start = std.mem.indexOf(u8, stderr, marker) orelse return null;
-    const close = std.mem.indexOfScalarPos(u8, stderr, start, ']') orelse return null;
-    const code = stderr[start + marker.len .. close];
-    const head_end = std.mem.indexOfScalarPos(u8, stderr, close, '\n') orelse stderr.len;
-    const failed = "native execution failed";
-    const detail = if (std.mem.indexOf(u8, stderr[close..head_end], failed)) |at| std.mem.trim(u8, stderr[close + at + failed.len .. head_end], " ") else "";
-    var out: std.ArrayList(u8) = .empty;
-    try out.print(allocator, "{s}{s}{s}", .{ code, if (detail.len != 0) " " else "", detail });
-    var lines = std.mem.splitScalar(u8, stderr[head_end..], '\n');
-    while (lines.next()) |line| if (std.mem.startsWith(u8, line, "  in ")) try out.print(allocator, "\n{s}", .{line});
-    const reason = try out.toOwnedSlice(allocator);
+fn functionValue(a: std.mem.Allocator, program: typed.Program, case: discover.Case) Error!std.json.Value {
+    const f = program.functions[@backingInt(case.function)];
+    var out: std.json.ObjectMap = .empty;
+    try out.put(a, "name", .{ .string = case.name });
+    try out.put(a, "result", .{ .string = typed.typeName(f.signature.return_type, program.records) });
+    var parameters: std.json.Array = .init(a);
+    for (f.scope.locals[0..f.signature.parameter_count]) |parameter| {
+        var item: std.json.ObjectMap = .empty;
+        try item.put(a, "name", .{ .string = parameter.name });
+        try item.put(a, "type", .{ .string = typed.typeName(parameter.ty, program.records) });
+        try item.put(a, "mode", .{ .string = "value" });
+        try parameters.append(.{ .object = item });
+    }
+    try out.put(a, "parameters", .{ .array = parameters });
+    return .{ .object = out };
+}
+
+fn runSelected(init: std.process.Init, options: Options, program: typed.Program, executable: []const u8, table_index: usize, case: discover.Case) Error!report.Verdict {
+    const a = init.arena.allocator();
+    const function = try functionValue(a, program, case);
+    var nonce: [16]u8 = undefined;
+    std.Io.random(init.io, &nonce);
+    const directory = try std.fmt.allocPrint(a, "{s}/tests/private-{s}", .{ options.build.cache, std.fmt.bytesToHex(nonce, .lower) });
+    std.Io.Dir.cwd().createDirPath(init.io, directory) catch return error.WriteFailed;
+    defer removePrivate(init.io, directory);
+    const context: property_execute.Context = .{ .arena = a, .backing = init.gpa, .io = init.io };
+    const source_path = std.Io.Dir.cwd().realPathFileAlloc(init.io, options.path, a) catch options.path;
+    const executor: property_execute.Executor = .{ .context = context, .types = try property_schema.definitions(a, program), .executable = executable, .table_index = table_index, .directory = directory, .source_path = source_path };
+    if (case.other_parameters != 0) {
+        const setup = try property.Property.bind(context, &executor, function, .{}, .{ .seed = entropySeed(options.seed, case.name), .runs = options.property_runs, .entry = options.path });
+        var bound = switch (setup) {
+            .invalid => |reason| return .{ .name = case.name, .status = .failed, .reason = reason },
+            .ready => |ready| ready,
+        };
+        var search: property.Search = .{};
+        const first = try bound.first(&search);
+        const answers = try property_execute.executeBatches(context, &.{first}, .{}, 1);
+        const verdict = try bound.finish(&search, answers[0]);
+        return .{ .name = case.name, .status = if (verdict.passed) .passed else .failed, .reason = verdict.reason, .property = verdict.evidence };
+    }
+    const answered = try property_execute.executeBatches(context, &.{.{ .executor = &executor, .function = function, .inputs = &.{&.{}} }}, .{}, 1);
+    if (answered[0].outcomes.len != 1) return .{ .name = case.name, .status = .failed, .reason = if (answered[0].timed_out) "timed out after 60 s" else answered[0].ending };
+    const outcome = answered[0].outcomes[0];
+    const passed = outcome.status.len != 0 and std.mem.eql(u8, outcome.status, "value") and truth(outcome.actual);
+    return .{ .name = case.name, .status = if (passed) .passed else .failed, .reason = if (passed) "" else try ordinaryReason(a, outcome) };
+}
+fn truth(value: std.json.Value) bool {
+    if (value == .bool) return value.bool;
+    return std.mem.eql(u8, v.text(v.get(value, "case")), "ok") and v.get(value, "value") == .bool and v.get(value, "value").bool;
+}
+
+/// Best-effort retirement only touches the selected test's owned directory.
+fn removePrivate(io: std.Io, directory: []const u8) void {
+    std.Io.Dir.cwd().deleteTree(io, directory) catch return;
+}
+
+// spec-case: NEW-CORE-S3-RUNNER-1
+test "removePrivate retires trial files and accepts an already absent directory" {
+    var temp = std.testing.tmpDir(.{});
+    defer temp.cleanup();
+    const a = std.testing.allocator;
+    const root = try temp.dir.realPathFileAlloc(std.testing.io, ".", a);
+    defer a.free(root);
+    const directory = try std.fs.path.join(a, &.{ root, "private" });
+    defer a.free(directory);
+    const file = try std.fs.path.join(a, &.{ directory, "trial.input" });
+    defer a.free(file);
+    const cwd = std.Io.Dir.cwd();
+    try cwd.createDirPath(std.testing.io, directory);
+    try cwd.writeFile(std.testing.io, .{ .sub_path = file, .data = "owned trial" });
+    removePrivate(std.testing.io, directory);
+    try std.testing.expectError(error.FileNotFound, cwd.openDir(std.testing.io, directory, .{}));
+    removePrivate(std.testing.io, directory);
+}
+fn ordinaryReason(a: std.mem.Allocator, outcome: property_execute.Outcome) Error![]const u8 {
+    var reason = outcome.diagnostics;
+    if (std.mem.eql(u8, outcome.status, "value")) {
+        const actual = outcome.actual;
+        const text = if (actual == .bool) (if (actual.bool) "true" else "false") else try std.json.Stringify.valueAlloc(a, actual, .{});
+        const expected = if (actual == .bool) "true" else "{\"case\":\"ok\",\"value\":true}";
+        reason = try std.fmt.allocPrint(a, "expected {s}, got {s}", .{ expected, text });
+        if (outcome.trace.len != 0) reason = try std.fmt.allocPrint(a, "{s}\n{s}", .{ reason, std.mem.trimEnd(u8, outcome.trace, "\n") });
+    }
+    if (outcome.output.len != 0) reason = try std.fmt.allocPrint(a, "{s}\n{s}", .{ reason, outcome.output });
     return reason;
 }

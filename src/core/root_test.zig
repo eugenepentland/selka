@@ -15,6 +15,12 @@ comptime {
     _ = @import("value_facts_test.zig");
     _ = @import("value_emit_test.zig");
     _ = @import("test_runner_test.zig");
+    _ = @import("runner_property_test.zig");
+    _ = @import("property_codec.zig");
+    _ = @import("property_types.zig");
+    _ = @import("property_generate.zig");
+    _ = @import("property_shrink.zig");
+    _ = @import("property_render.zig");
     _ = @import("conformance_test.zig");
     _ = @import("rows_test.zig");
     _ = @import("own_test.zig");

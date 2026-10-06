@@ -1,0 +1,4 @@
+module c_runner_signal
+# The explicitly linked negative-test helper faults the native trial process.
+public def test_signal_is_a_failure(value: int) -> bool:
+    return value == value

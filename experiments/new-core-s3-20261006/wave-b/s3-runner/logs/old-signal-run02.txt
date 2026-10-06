@@ -1,0 +1,3 @@
+c_runner_signal.my:2:12: error[E_HOST_CAPABILITY]: an extern or host declaration must take `host: Host` as its first parameter
+  extern def c_runner_signal() -> int effects(host)
+             ^

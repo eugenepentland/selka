@@ -1919,3 +1919,5 @@ The separate `mylang-core` executable (`zig build core`, `docs/design/new-core-i
 
 - [NEW-CORE-S3-NUMBER-1] The new core's float/text runtime ports the canonical Zig grammar and exact number formatting, and caches its separate object by every helper content hash, executing Zig version and target/build options. Mutable bytes preserve independent snapshots and updates under the frozen buffer IR and verified ownership rules; embedded assets resolve by checked digest and length.
 
+
+- [NEW-CORE-S3-RUNNER-1] Core property trials preserve the old name-derived seed, generated type shapes, 100-run default, precondition/invariant discard rule and greedy shrink order. Copied trial inputs do not share capability or filesystem state, completed outcomes survive a later fatal trap, and only True or Ok(True) passes. Counterexamples retain the original and minimal inputs, shrink/discard counts and reproduction command.

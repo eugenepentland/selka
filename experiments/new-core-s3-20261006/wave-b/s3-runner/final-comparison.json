@@ -1,0 +1,55 @@
+{
+  "tests": 24,
+  "mismatches": 0,
+  "pairs": [
+    {
+      "old": "experiments/new-core-s3-20261006/wave-b/s3-runner/logs/final-01-properties-old.txt",
+      "core": "experiments/new-core-s3-20261006/wave-b/s3-runner/logs/final-01-properties-core.txt",
+      "tests": 10,
+      "matching": 10,
+      "mismatches": []
+    },
+    {
+      "old": "experiments/new-core-s3-20261006/wave-b/s3-runner/logs/final-01-failures-old.txt",
+      "core": "experiments/new-core-s3-20261006/wave-b/s3-runner/logs/final-01-failures-core.txt",
+      "tests": 9,
+      "matching": 9,
+      "mismatches": []
+    },
+    {
+      "old": "experiments/new-core-s3-20261006/wave-b/s3-runner/logs/final-01-standins-old.txt",
+      "core": "experiments/new-core-s3-20261006/wave-b/s3-runner/logs/final-01-standins-core.txt",
+      "tests": 1,
+      "matching": 1,
+      "mismatches": []
+    },
+    {
+      "old": "experiments/new-core-s3-20261006/wave-b/s3-runner/logs/final-01-state-old.txt",
+      "core": "experiments/new-core-s3-20261006/wave-b/s3-runner/logs/final-01-state-core.txt",
+      "tests": 1,
+      "matching": 1,
+      "mismatches": []
+    },
+    {
+      "old": "experiments/new-core-s3-20261006/wave-b/s3-runner/logs/final-01-name-seed-old.txt",
+      "core": "experiments/new-core-s3-20261006/wave-b/s3-runner/logs/final-01-name-seed-core.txt",
+      "tests": 1,
+      "matching": 1,
+      "mismatches": []
+    },
+    {
+      "old": "experiments/new-core-s3-20261006/wave-b/s3-runner/logs/final-02-signal-old.txt",
+      "core": "experiments/new-core-s3-20261006/wave-b/s3-runner/logs/final-02-signal-core.txt",
+      "tests": 1,
+      "matching": 1,
+      "mismatches": []
+    },
+    {
+      "old": "experiments/new-core-s3-20261006/wave-b/s3-runner/logs/final-02-exit-old.txt",
+      "core": "experiments/new-core-s3-20261006/wave-b/s3-runner/logs/final-02-exit-core.txt",
+      "tests": 1,
+      "matching": 1,
+      "mismatches": []
+    }
+  ]
+}

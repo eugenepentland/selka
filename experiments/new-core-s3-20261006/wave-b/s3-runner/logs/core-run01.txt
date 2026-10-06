@@ -1,0 +1,53 @@
+build-slot: all 1 gate slot(s) busy; waiting (0s so far)
+build-slot: all 1 gate slot(s) busy; waiting (60s so far)
+build-slot: gate slot 1 after 65s (all 1 gate slot(s) busy)
+core-exclusive: all 3 build slots held; other-build wait=16.478s; gate wrapper excludes gate execution
+core
++- install mylang-core
+   +- compile exe mylang-core debug native 6 errors
+src/core/property_codec.zig:46:27: error: capture shadows declaration of 'sequence'
+            .sequence => |sequence| {
+                          ^~~~~~~~
+src/core/property_codec.zig:135:5: note: declared here
+    fn sequence(self: *Codec, element: []const u8, count: u64) Error!Value {
+    ^~
+src/core/property_codec.zig:115:27: error: capture shadows declaration of 'sequence'
+            .sequence => |sequence| self.sequence(sequence.element, count),
+                          ^~~~~~~~
+src/core/property_codec.zig:135:5: note: declared here
+    fn sequence(self: *Codec, element: []const u8, count: u64) Error!Value {
+    ^~
+src/core/property_ir.zig:40:19: error: local constant shadows declaration of 'value'
+            const value = if (request.encode) try b.detached(.{ .op = .param, .ty = request.ty }) else .none;
+                  ^~~~~
+src/core/property_ir.zig:66:5: note: declared here
+    fn value(self: *Context, b: *Builder, at: *ir.BlockId, request: Request, source: ir.Ref) Error!ir.Ref {
+    ^~
+src/core/property_ir.zig:61:104: error: function parameter shadows declaration of 'value'
+    fn child(self: *Context, b: *Builder, at: ir.BlockId, name: []const u8, ty: ir.Type, encode: bool, value: ir.Ref) Error!ir.Ref {
+                                                                                                       ^~~~~
+src/core/property_ir.zig:66:5: note: declared here
+    fn value(self: *Context, b: *Builder, at: *ir.BlockId, request: Request, source: ir.Ref) Error!ir.Ref {
+    ^~
+src/core/property_ir.zig:104:24: error: capture shadows declaration of 'array'
+            .array => |array| self.array(b, at, request, shape, array, source),
+                       ^~~~~
+src/core/property_ir.zig:124:5: note: declared here
+    fn array(self: *Context, b: *Builder, at: *ir.BlockId, request: Request, shape: types.Shape, array_type: @FieldType(ir.Compound, "array"), source: ir.Ref) Error!ir.Ref {
+    ^~
+src/core/property_schema.zig:37:50: error: expected type 'i64', found 'usize'
+            try out.put(a, "length", .{ .integer = array.length });
+                                        ~~~~~~~~~^~~~~~~~~~~~~~
+src/core/property_schema.zig:37:50: note: signed 64-bit int cannot represent all possible unsigned 64-bit values
+referenced by:
+    definitions: src/core/property_schema.zig:12:41
+    classify: src/core/test_runner.zig:100:60
+    8 reference(s) hidden; use '-freference-trace=10' to see all references
+error: 6 compilation errors
+failed command: /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig build-exe -ODebug --dep mylang -Mroot=src/core/main.zig -ODebug --dep runtime_contract -Mmylang=src/compiler.zig -ODebug -Mruntime_contract=src/runtime_contract.zig --cache-dir .zig-cache --global-cache-dir /home/epentland/.cache/zig --name mylang-core --zig-lib-dir /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/ --listen=-
+
+Build Summary: 0/3 steps succeeded (1 failed)
+core transitive failure
++- install mylang-core transitive failure
+   +- compile exe mylang-core debug native 6 errors
+

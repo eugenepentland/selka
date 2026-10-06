@@ -1,0 +1,20 @@
+{
+  "tests": 2,
+  "mismatches": 0,
+  "pairs": [
+    {
+      "old": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-runner/experiments/new-core-s3-20261006/wave-b/s3-runner/logs/final-02-signal-old.txt",
+      "core": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-runner/experiments/new-core-s3-20261006/wave-b/s3-runner/logs/final-02-signal-core.txt",
+      "tests": 1,
+      "matching": 1,
+      "mismatches": []
+    },
+    {
+      "old": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-runner/experiments/new-core-s3-20261006/wave-b/s3-runner/logs/final-02-exit-old.txt",
+      "core": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-runner/experiments/new-core-s3-20261006/wave-b/s3-runner/logs/final-02-exit-core.txt",
+      "tests": 1,
+      "matching": 1,
+      "mismatches": []
+    }
+  ]
+}
