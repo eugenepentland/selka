@@ -1,0 +1,28 @@
+source_base=090dabd5a6932a7c3beaec68248f9a35d4c637d7
+$ scripts/build-slot.sh build -- /usr/bin/time -f '%e %M %x' -o /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-dictionaries/.mylang-cache/wave-b/s2-d/fact-repair/code-inspection-time.txt python3 experiments/new-core-s2-20261005/wave-b/s2-d/inspect_fact_repair.py
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: build slot 2 after 5s (all 3 build slot(s) busy)
+binary_search all function definitions identical to090
+branch_mixed all function definitions identical to090
+branch_predictable all function definitions identical to090
+call_direct all function definitions identical to090
+float_math all function definitions identical to090
+int_math all function definitions identical to090
+row_alloc_retained all function definitions identical to090
+row_alloc_short all function definitions identical to090
+row_list_append all function definitions identical to090
+row_list_filter all function definitions identical to090
+row_list_scan all function definitions identical to090
+row_mutate_nested all function definitions identical to090
+row_mutate_shared all function definitions identical to090
+row_mutate_unique all function definitions identical to090
+row_option_handle all function definitions identical to090
+row_record_construct all function definitions identical to090
+row_record_reads all function definitions identical to090
+row_record_update all function definitions identical to090
+row_result_propagate all function definitions identical to090
+row_tagged_stack all function definitions identical to090
+
+exit=0 time_rss_exit=0.05 16300 0 wall_including_admission=5.11
+qualified_source_commit=0c6029d7
+tested_source_tree=69bd18dfbbf741cfb5cee7af40e11d4540278643

@@ -1,0 +1,23 @@
+source_base=090dabd5a6932a7c3beaec68248f9a35d4c637d7
+$ scripts/build-slot.sh gate -- bash -c '"$@"; result=$?; exit "$result"' -- scripts/build-slot.sh build -- /usr/bin/time -f '%e %M %x' -o /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-dictionaries/.mylang-cache/wave-b/s2-d/fact-repair/test-core-time.txt zig build test-core --summary all
+test-core
++- run test w
+no_such_file_in_tests_lang (debug): mylang-core test did not finish cleanly:
+error: cannot read /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-dictionaries/tests/lang/no_such_file_in_tests_lang.my: FileNotFound
+
+no_such_row: the new core failed to build the row:
+error: cannot read /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-dictionaries/test/core/row_no_such_row.my: FileNotFound
+
+failed command: ./.zig-cache/o/e8ae48e04291ce2145badc9e054debb5/test --cache-dir=./.zig-cache --seed=0x96d43406 --listen=-
+
+Build Summary: 5/5 steps succeeded; 200/200 tests passed
+test-core success
++- run test 200 pass (200 total) 4m MaxRSS:205M
+   +- compile test debug native success 2s MaxRSS:334M
+      +- options cached
+         +- compile exe mylang-core debug native cached 4ms MaxRSS:41M
+
+
+exit=0 time_rss_exit=293.07 327020 0 wall_including_admission=298.11
+qualified_source_commit=0c6029d7
+tested_source_tree=69bd18dfbbf741cfb5cee7af40e11d4540278643

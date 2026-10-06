@@ -2,6 +2,8 @@
 const std = @import("std");
 const support = @import("test_support.zig");
 const build = @import("build.zig");
+const ir = @import("ir.zig");
+const facts = @import("facts.zig");
 const options = @import("core_test_options");
 const report = std.debug.print;
 
@@ -24,11 +26,40 @@ const exposed_view =
     \\    return list(view)[0] + holder.mapping[1]
 ;
 
-fn fixturesAgree(arena: std.mem.Allocator) !bool {
+// Source-level dict.copy is a value alias; exercise the actual IR copy transfer.
+fn unknownCopyLength(arena: std.mem.Allocator) !facts.Interval {
+    var module: ir.Module = .{};
+    const dictionary = try module.intern(arena, .{ .dict = .{ .key = .i64, .value = .i64 } });
+    var hand = try support.Hand.init(arena, &module, "copy_loop", .{ .params = &.{ dictionary, .bool }, .ret = .u64 });
+    const input = try hand.param(0);
+    const condition = try hand.param(1);
+    const empty = try hand.emit(.{ .op = .dict_new, .ty = dictionary, .a = try hand.int(.u64, 0) });
+    const header = try hand.newBlock();
+    const body = try hand.newBlock();
+    const exit = try hand.newBlock();
+    try hand.jump(header);
+    hand.block = header;
+    const incoming = try hand.extra(&.{ empty, .none });
+    const joined = try hand.emit(.{ .op = .phi, .ty = dictionary, .data = incoming });
+    try hand.branch(condition, body, exit);
+    hand.block = body;
+    const copied = try hand.emit(.{ .op = .dict_copy, .ty = dictionary, .a = input });
+    try hand.jump(header);
+    hand.function.extra.items[ir.ExtraSlice.unpack(incoming).start + 1] = copied;
+    hand.block = exit;
+    const length = try hand.emit(.{ .op = .dict_len, .ty = .u64, .a = joined });
+    _ = try hand.emit(.{ .op = .ret, .ty = .void, .a = length });
+    _ = try hand.finish();
+    try support.verified(arena, &module, &.{});
+    const known = try facts.analyze(arena, &module.functions.items[0], .{});
+    return known.ranges[length.index()].?;
+}
+
+fn fixturesAgree(arena: std.mem.Allocator, fixture: []const u8, expected_exit: u8) !bool {
     var dir = std.testing.tmpDir(.{});
     defer dir.cleanup();
     const root = try dir.dir.realPathFileAlloc(std.testing.io, ".", arena);
-    const source_path = try std.fmt.allocPrint(arena, "{s}/d_collections.my", .{options.fixtures});
+    const source_path = try std.fmt.allocPrint(arena, "{s}/{s}", .{ options.fixtures, fixture });
     for ([_][]const []const u8{ &.{}, &.{"--release"}, &.{ "--release", "--verify-facts" } }) |mode| {
         var argv: std.ArrayList([]const u8) = .empty;
         try argv.appendSlice(arena, &.{ options.core_path, "test", source_path, "--json", "--cache-dir", root });
@@ -37,7 +68,7 @@ fn fixturesAgree(arena: std.mem.Allocator) !bool {
         defer environment.deinit();
         try environment.put("MYL_CORE_LEAKCHECK", "1");
         const result = try std.process.run(arena, std.testing.io, .{ .argv = argv.items, .environ_map = &environment });
-        if (result.term != .exited or result.term.exited != 1) {
+        if (result.term != .exited or result.term.exited != expected_exit) {
             report("dict fixture unexpected exit: {s}{s}\n", .{ result.stdout, result.stderr });
             return false;
         }
@@ -70,7 +101,21 @@ test "dictionary lowering uses pure find and consuming insertion or value replac
 test "dictionary and set fixtures preserve COW, order, tombstones, nested managed places and missing-key traps" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
-    try std.testing.expect(try fixturesAgree(arena.allocator()));
+    try std.testing.expect(try fixturesAgree(arena.allocator(), "d_collections.my", 1));
+}
+
+// spec-case: NEW-CORE-DICT-1
+test "unknown dictionary inputs settle through copy and updates before loop joins" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    try std.testing.expect(try fixturesAgree(arena.allocator(), "d_fact_inputs.my", 0));
+}
+
+// spec-case: NEW-CORE-DICT-1
+test "a dictionary copy of an unknown parameter weakens an empty loop entry" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    try std.testing.expectEqual(facts.Interval{ .lo = 0, .hi = facts.max_list_length }, try unknownCopyLength(arena.allocator()));
 }
 
 // spec-case: NEW-CORE-DICT-1

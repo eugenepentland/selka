@@ -978,9 +978,13 @@ fn recomputeDict(a: *Analysis, ref: ir.Ref, block: ir.BlockId, changes: []u8) bo
     var next: DictFact = .{};
     switch (i.op) {
         .dict_new, .dict_clear => next = .{ .len = Interval.point(0), .settled = true },
-        .dict_copy => next = a.facts.aggregates.dicts[a.f.resolve(i.a).index()],
+        .dict_copy => {
+            next = a.facts.aggregates.dicts[a.f.resolve(i.a).index()];
+            next.settled = !pendingDict(a, i.a);
+        },
         .dict_insert, .dict_remove, .dict_set_value => {
             next = a.facts.aggregates.dicts[a.f.resolve(i.a).index()];
+            next.settled = !pendingDict(a, i.a);
             if (i.op == .dict_insert) {
                 const operands = a.f.operands(i.data);
                 const key = scalarRange(a, operands[0], block);
@@ -999,13 +1003,8 @@ fn recomputeDict(a: *Analysis, ref: ir.Ref, block: ir.BlockId, changes: []u8) bo
             for (a.f.operands(i.data), a.f.blocks.items[block.index()].preds.items) |operand, pred| {
                 if (!a.edgeLive(pred, block)) continue;
                 const source = a.f.resolve(operand);
-                const source_op = a.f.inst(source).op;
                 const held = a.facts.aggregates.dicts[source.index()];
-                const pending = switch (source_op) {
-                    .dict_new, .dict_clear, .dict_copy, .dict_insert, .dict_remove, .dict_set_value, .phi => !held.settled,
-                    else => false,
-                };
-                if (pending) continue;
+                if (pendingDict(a, source)) continue;
                 if (!seen) next = held else {
                     const empty_before = if (next.len) |len| len.hi == 0 else false;
                     const empty_other = if (held.len) |len| len.hi == 0 else false;
@@ -1040,6 +1039,16 @@ fn recomputeDict(a: *Analysis, ref: ir.Ref, block: ir.BlockId, changes: []u8) bo
     if (std.meta.eql(old, next)) return false;
     a.facts.aggregates.dicts[ref.index()] = next;
     return true;
+}
+
+/// A dictionary producer still waiting for transfer is pending; an unknown
+/// call or parameter already contributes unknown facts to its consumers.
+fn pendingDict(a: *Analysis, operand: ir.Ref) bool {
+    const ref = a.f.resolve(operand);
+    return switch (a.f.inst(ref).op) {
+        .dict_new, .dict_clear, .dict_copy, .dict_insert, .dict_remove, .dict_set_value, .phi => !a.facts.aggregates.dicts[ref.index()].settled,
+        else => false,
+    };
 }
 
 /// Whether `operand`'s list fact is still to be computed: it is a list operation or a phi the

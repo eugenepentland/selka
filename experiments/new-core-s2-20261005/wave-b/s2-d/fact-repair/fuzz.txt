@@ -1,0 +1,12 @@
+source_base=090dabd5a6932a7c3beaec68248f9a35d4c637d7
+$ scripts/build-slot.sh build -- /usr/bin/time -f '%e %M %x' -o /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-dictionaries/.mylang-cache/wave-b/s2-d/fact-repair/fuzz-time.txt nice -n 10 python3 experiments/new-core-s2-20261005/wave-a/integration/fuzz_qualification.py --kind dict --cases 50 --seed 202610052 --mylang /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/wave-b/baseline/mylang --core zig-out/bin/mylang-core --evidence experiments/new-core-s2-20261005/wave-b/s2-d/fact-repair/fuzz --cache-root .mylang-cache/wave-b/s2-d/fact-repair/fuzz
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: build slot 3 after 25s (all 3 build slot(s) busy)
+qualification progress: dict: seen=25 elapsed=168.72s
+qualification progress: dict: seen=50 elapsed=312.10s
+records,unions,propagate,mut,alias cases=50 old_rejected=0 refused=0 compared=750 mismatch=0 fact=0 traps=14 caught=0
+qualification {"kind": "dict", "qualified": true, "accepted": 50, "old_rejected": 0, "core_refused": 0, "core_build_failed": 0, "elapsed_seconds": 317.4736111210659}
+
+exit=0 time_rss_exit=317.51 236480 0 wall_including_admission=342.62
+qualified_source_commit=0c6029d7
+tested_source_tree=69bd18dfbbf741cfb5cee7af40e11d4540278643

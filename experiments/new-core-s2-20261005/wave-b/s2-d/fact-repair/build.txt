@@ -1,0 +1,11 @@
+source_base=090dabd5a6932a7c3beaec68248f9a35d4c637d7
+$ scripts/build-slot.sh build -- /usr/bin/time -f '%e %M %x' -o /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-dictionaries/.mylang-cache/wave-b/s2-d/fact-repair/build-time.txt zig build core --summary all
+Build Summary: 3/3 steps succeeded
+core success
++- install mylang-core success
+   +- compile exe mylang-core debug native success 1s MaxRSS:326M
+
+
+exit=0 time_rss_exit=1.57 318528 0 wall_including_admission=1.60
+qualified_source_commit=0c6029d7
+tested_source_tree=69bd18dfbbf741cfb5cee7af40e11d4540278643
