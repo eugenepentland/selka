@@ -33,3 +33,20 @@ test "S3 verify mode retains checks for inferred shift count premises" {
     try std.testing.expect(std.mem.indexOf(u8, llvm, "shiftbad") != null);
     try std.testing.expect(std.mem.indexOf(u8, llvm, "range [") != null);
 }
+
+// spec-case: NEW-CORE-S3-NUMERIC-1
+test "S3 unchecked signed bits converted to unsigned retain a sound fact interval" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const ir = @import("ir.zig");
+    const facts = @import("facts.zig");
+    var module: ir.Module = .{};
+    var hand = try support.Hand.init(a, &module, "main", .{ .params = &.{}, .ret = .u64 });
+    const converted = try hand.emit(.{ .op = .convert, .ty = .u64, .a = try hand.int(.i64, -12) });
+    _ = try hand.emit(.{ .op = .ret, .ty = .void, .a = converted });
+    _ = try hand.finish();
+    const known = try facts.analyze(a, &module.functions.items[0], .{ .mark = false });
+    try std.testing.expectEqual(facts.typeRange(.u64).?, known.ranges[converted.index()].?);
+    try std.testing.expect(known.ranges[converted.index()].?.hi >= (@as(i128, 1) << 64) - 12);
+}
