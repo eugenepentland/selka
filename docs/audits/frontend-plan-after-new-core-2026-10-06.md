@@ -89,7 +89,7 @@ Counts are lines in three application corpora: the EDA stage-1 port (`eda-bench`
 | # | Today | One way | EDA | Lox | stdlib | Deletes in the compiler |
 |---|---|---|---:|---:|---:|---|
 | A1 | `replace(r, f=v)` and `r.f = v` | field assignment | 6 vs 282 | 7 vs 183 | 1 vs 6 | `replace` builtin and its checks |
-| A2 | Named and positional record construction | named only (Go's keyed literals) | 391 vs 7 | 48 vs 0 | 16 vs 0 | positional-constructor matching |
+| A2 | Named and positional record construction | **dropped 2026-10-06; both stay** (§7) | 391 vs 7 | 48 vs 0 | 16 vs 0 | nothing |
 | A3 | `& \| ^` operators and `bit_and`/`bit_or`/`bit_xor`/`shift_left`/`shift_right`; `<<`/`>>` rejected | operators, adding `<<` and `>>` | 0 vs 52 | 0 vs 9 | 0 vs 6 | five prelude functions |
 | A4 | `effects(...)`, `noio` clauses and the derived ceiling | derived ceiling only | 0 | 0 | 69 + 4 | clause parsing, `W_DERIVED_EFFECTS`/`E_DERIVED_EFFECTS` |
 | A5 | `noalloc` | keep, as the one "this allocates nothing" assertion (§3.2) | 0 | 0 | 4 | nothing |
@@ -379,7 +379,7 @@ As with S2–S4, Codex implements and the plan stops for the user at each wave.
 
 | # | Decision | Recommendation | Decided |
 |---|---|---|---|
-| **FE1** | Adopt the Part A rows (A1–A15), row by row | Adopt all; A14 needs a choice of file-access spelling | **Adopted.** A14: keep the `fs.method(...)` spelling and `with fs.open(...)`; delete the free-function forms. **A2 is held:** the idiom suite constructs records positionally 20 times against 3 (implementation plan §2). |
+| **FE1** | Adopt the Part A rows (A1–A15), row by row | Adopt all; A14 needs a choice of file-access spelling | **Adopted.** A14: keep the `fs.method(...)` spelling and `with fs.open(...)`; delete the free-function forms. **A2 is dropped:** positional and named construction both stay, because the idiom suite constructs records positionally 20 times against 3 (implementation plan §2). |
 | **FE2** | Keep comprehensions, conditional expressions, `lambda` and keyword arguments | Keep, with the two narrowings; A/B test removal later if wanted | **Keep, with the `lambda` narrowing only.** Multi-`for` comprehensions stay; the idiom suite uses one. |
 | **FE3** | Gate `.my` formatting canonically | Yes | **Yes** |
 | **FE4** | B1 cost report in F1; B2 as a warning in F5; the `.copy()` error decided on Lox/EDA data | Yes | **Yes;** B1 moves earlier, alongside S5 |

@@ -86,7 +86,7 @@ agents write Python first.
 | Row | Removed | The one way | Fix rule |
 |---|---|---|---|
 | **A1** | the `replace` builtin, both its record form `replace(r, f=v)` and its list form `replace(xs, i, v)` | `r.f = v`, `xs[i] = v` | `y = replace(r, f=v)` becomes `y = r` then `y.f = v`. Elsewhere, a fresh local is assigned before the statement. `s.replace(a, b)` on text is a different method and is untouched. |
-| **A2** | positional record construction | **held, see below** | — |
+| **A2** | **dropped:** positional and named record construction both stay (see below) | | |
 | **A3** | `bit_and`, `bit_or`, `bit_xor`, `shift_left`, `shift_right` | `&`, `\|`, `^`, and new `<<`, `>>`, `<<=`, `>>=` | Rewrite to the operator, parenthesized. The new operators take Python's precedence (looser than `+`, tighter than `&`) and today's function semantics: the count has the operand's type, `<<` discards high bits, `>>` is arithmetic for signed and logical for unsigned, and a negative or too-large count traps `R_INVALID_SHIFT` (`E_CONSTANT_ARITHMETIC` for a constant). |
 | **A4** | `effects(...)` and `noio` clauses, on declarations, on `extern def` and on callback types; `W_DERIVED_EFFECTS` and `E_DERIVED_EFFECTS` | `noalloc` is the only effect annotation. Every other ceiling derives from parameter types, **including a callback type's from its own parameter types** | A clause that excludes `managed_allocation` from the derived ceiling becomes `noalloc`. Any other clause, and every `noio`, is deleted. |
 | **A5** | nothing; `noalloc` stays | | |
@@ -101,16 +101,15 @@ agents write Python first.
 | **A14** | the free-function form of a capability operation that also has a method form: `read_text(fs, p)`, `open(fs, p, mode)` and the rest of `docs/io.md`'s table, and the same duplicates on other capabilities | the method, `fs.read_text(p)`; `with fs.open(...)` stays, because streaming is a different operation (Go keeps both `os.ReadFile` and `os.Open`) | Rewrite to the method. |
 | **A15** | named `constraint` declarations | inline requirements; the builtin requirements and const lengths stay | Inline the constraint's requirements at each use. |
 
-**A2 is held.** The user accepted it on 2026-10-06, but a check made while writing this
-plan contradicts the evidence behind it:
+**A2 is dropped (the user, 2026-10-06).** Positional and named construction both stay,
+as Python dataclasses allow. The evidence, found while writing this plan:
 - The idiom suite `velocity/suites/idioms` records what agents write first. Its 16 probes
   that declare records construct them positionally 20 times and by name 3 times, for
   example `P("a", 3)`, `Counter(0)` and `Pair(a // b, a % b)`.
 - The ports' 455 named against 7 positional constructions followed the porting guide.
 - Under the proposal's own rule, that the one way is the spelling a Python-trained agent
-  writes first, the evidence points the other way.
-
-F1 does not implement A2 unless the user reconfirms it. If reconfirmed, it joins F1-S.
+  writes first, named-only construction would cost a repair round on most first
+  attempts.
 
 ### FE2. What stays
 
@@ -247,7 +246,7 @@ for the command.
 
 | Package | Rows | Owns | Estimate |
 |---|---|---|---|
-| **F1-S** syntax and expressions | A1, A3, A6, A9, A10, A11, A15, the `lambda` narrowing (and A2 if reconfirmed) | `parser.zig`, `lexer.zig`, the sema files for those builtins and operators, contract and invariant checking, alias resolution, `constraint_lookup` | 6–8 h |
+| **F1-S** syntax and expressions | A1, A3, A6, A9, A10, A11, A15, the `lambda` narrowing | `parser.zig`, `lexer.zig`, the sema files for those builtins and operators, contract and invariant checking, alias resolution, `constraint_lookup` | 6–8 h |
 | **F1-M** modules | A7 | project loading and import resolution, `mylang run`'s project detection, the header rule in the parser (coordinated with F1-S) | 5–7 h |
 | **F1-E** effects | A4 | effect-clause parsing and checking in `effects.zig`, callback-type ceilings, `docs/effects.md`, `docs/functions.md`, the `effects(output)` line in `CLAUDE.md` | 4–6 h |
 | **F1-L** library | A12, A13, A14 | `src/stdlib/strings.my` and `sort.my`, the capability free-function builtins, `docs/io.md`, `docs/standard-library.md` | 3–5 h |
