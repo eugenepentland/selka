@@ -176,6 +176,24 @@ test "S4 a float renderer outside entry carries the formatter link dependency on
 }
 
 // spec-case: NEW-CORE-S4-UNITS-1
+test "S4 identical record renderers in separate modules share one native helper unit" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const caller = "module app\nimport leaf\nimport other\ndef main(out: Stream) -> int:\n    out.print(leaf.render(1), other.render(2))\n    return 0\n";
+    const left = "module leaf\npublic record Cell:\n    value: int\npublic def render(x: int) -> str:\n    return f\"{Cell(x)}\"\n";
+    const right = "module other\npublic record Cell:\n    value: int\npublic def render(x: int) -> str:\n    return f\"{Cell(x)}\"\n";
+    const emitted = try snapshot(a, .{ caller, left, right }, false);
+    const result = try native(a, emitted);
+    try std.testing.expect(result.term == .exited and result.term.exited == 0);
+    try std.testing.expectEqualStrings("Cell(value=1) Cell(value=2)\n", result.stdout);
+    try std.testing.expectEqualStrings("", result.stderr);
+    for (emitted, 0..) |unit, index| {
+        for (emitted[index + 1 ..]) |next| try std.testing.expect(!std.mem.eql(u8, unit.name, next.name));
+    }
+}
+
+// spec-case: NEW-CORE-S4-UNITS-1
 test "S4 direct and indirect cross-unit fastcc calls preserve the aggregate sret ABI" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();

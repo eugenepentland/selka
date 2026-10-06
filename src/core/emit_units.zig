@@ -75,14 +75,29 @@ pub fn emit(a: std.mem.Allocator, module: *const ir.Module, options: llvm.Option
         symbols[index] = try std.fmt.allocPrint(a, "myl.helper.{s}", .{try digest(a, seed)});
     }
     var units: std.ArrayList(Unit) = .empty;
+    var names: std.StringHashMapUnmanaged(usize) = .empty;
+    defer names.deinit(a);
     for (groups.items) |group| {
         const text = try llvm.emitUnit(a, module, options, .{ .functions = group.functions.items, .exported = exported, .symbols = symbols, .source_path = group.path, .constants = &catalog });
         const name = if (group.kind == .module) try std.fmt.allocPrint(a, "module-{s}", .{try digest(a, group.path)}) else try std.fmt.allocPrint(a, "{s}-{s}", .{ @tagName(group.kind), try digest(a, text) });
-        try units.append(a, unit(name, group.path, group.kind, text));
+        try append(a, &units, &names, unit(name, group.path, group.kind, text));
     }
     const entry = try llvm.emitUnit(a, module, options, .{ .functions = &.{}, .exported = exported, .symbols = symbols, .entry = true, .source_path = options.source_path, .constants = &catalog });
     try units.append(a, unit("entry", options.source_path, .entry, entry));
     return units.toOwnedSlice(a);
+}
+
+fn append(a: std.mem.Allocator, units: *std.ArrayList(Unit), names: *std.StringHashMapUnmanaged(usize), next: Unit) llvm.Error!void {
+    const entry = try names.getOrPut(a, next.name);
+    if (entry.found_existing) {
+        const previous = units.items[entry.value_ptr.*];
+        // Equal closed adapters may arise from separate nominal source types.
+        // Their callers already share the canonical symbol; emit its body once.
+        if (previous.kind != next.kind or !std.mem.eql(u8, previous.llvm, next.llvm)) return error.UnsupportedInstruction;
+        return;
+    }
+    entry.value_ptr.* = units.items.len;
+    try units.append(a, next);
 }
 
 fn moduleGroup(groups: []const Group, path: []const u8) ?u32 {

@@ -1,0 +1,7 @@
+module app
+import leaf
+import other
+
+def main(out: Stream) -> int:
+    out.print(leaf.render(1), other.render(2))
+    return 0
