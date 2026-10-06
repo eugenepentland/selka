@@ -1,0 +1,12 @@
+file                     tests | debug   match misma unsup | release match misma unsup
+--------------------------------------------------------------------------------------
+mut_argument_places         14 |            14     0     0 |            14     0     0
+mut_rebind_caller           27 |            27     0     0 |            27     0     0
+--------------------------------------------------------------------------------------
+TOTAL                       41
+  debug    matching 41, mismatching 0, unsupported 0 (of 41 tests; 41 supported)
+  release  matching 41, mismatching 0, unsupported 0 (of 41 tests; 41 supported)
+
+blocking features of the unsupported tests (tests / files):
+
+blocking features per file (file: tests unsupported of tests; the features, most common first):

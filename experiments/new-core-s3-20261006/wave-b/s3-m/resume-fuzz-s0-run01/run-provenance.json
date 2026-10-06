@@ -1,0 +1,24 @@
+{
+  "source_commit": "8604ccc37f14774f02017195270a1ca3e0fd747a",
+  "compiler_runtime_checkpoint": "99b2a6e7a",
+  "tooling_checkpoint": "404ba3c531846a76104467643b75d92680489648",
+  "kind": "s0",
+  "cases": 50,
+  "seed": 3301,
+  "old": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-values/.mylang-cache/s3/oracle/mylang",
+    "sha256": "d36658dbfb78d29213224532a13fd5ad8b7c0e290dbfb87613d9815678305c79"
+  },
+  "new": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-values/zig-out/bin/mylang-core",
+    "sha256": "10e28d7eeba6d6a46ef8402bbb856447f50259cb2d32f5c29c884490554f578c"
+  },
+  "harness": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-values/experiments/new-core-s0-20261005/fuzz.py",
+    "sha256": "6b570d3ac66f829c3e7f45e4f9591ecee1cceb8158f7b4eb9803be548fcc24e2"
+  },
+  "wrapper": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-exit-tools/experiments/new-core-s3-20261006/wave-x/integration/fuzz_qualification.py",
+    "sha256": "ed1d46e6a9741a66ff2a0137a8410e413eabb31a63295a1bc380eeba1c3ff70d"
+  }
+}

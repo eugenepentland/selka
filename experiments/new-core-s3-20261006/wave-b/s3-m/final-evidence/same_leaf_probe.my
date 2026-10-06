@@ -1,0 +1,13 @@
+module same_leaf_probe
+
+def tick_row(row: mut list[int]) -> int:
+    row.append(7)
+    return 0
+
+def add(row: mut list[int], ignored: int) -> None:
+    row.append(9)
+
+public def test_same_list_element() -> bool:
+    rows = [[1], [2]]
+    add(mut rows[-1], tick_row(mut rows[-1]))
+    return rows == [[1], [2, 7, 9]]

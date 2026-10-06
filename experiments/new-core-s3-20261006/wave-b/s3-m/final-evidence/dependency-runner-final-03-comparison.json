@@ -1,0 +1,55 @@
+{
+  "tests": 24,
+  "mismatches": 0,
+  "pairs": [
+    {
+      "old": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-runner/experiments/new-core-s3-20261006/wave-b/s3-runner/logs/final-03-properties-old.txt",
+      "core": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-runner/experiments/new-core-s3-20261006/wave-b/s3-runner/logs/final-03-properties-core.txt",
+      "tests": 10,
+      "matching": 10,
+      "mismatches": []
+    },
+    {
+      "old": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-runner/experiments/new-core-s3-20261006/wave-b/s3-runner/logs/final-03-failures-old.txt",
+      "core": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-runner/experiments/new-core-s3-20261006/wave-b/s3-runner/logs/final-03-failures-core.txt",
+      "tests": 9,
+      "matching": 9,
+      "mismatches": []
+    },
+    {
+      "old": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-runner/experiments/new-core-s3-20261006/wave-b/s3-runner/logs/final-03-standins-old.txt",
+      "core": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-runner/experiments/new-core-s3-20261006/wave-b/s3-runner/logs/final-03-standins-core.txt",
+      "tests": 1,
+      "matching": 1,
+      "mismatches": []
+    },
+    {
+      "old": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-runner/experiments/new-core-s3-20261006/wave-b/s3-runner/logs/final-03-state-old.txt",
+      "core": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-runner/experiments/new-core-s3-20261006/wave-b/s3-runner/logs/final-03-state-core.txt",
+      "tests": 1,
+      "matching": 1,
+      "mismatches": []
+    },
+    {
+      "old": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-runner/experiments/new-core-s3-20261006/wave-b/s3-runner/logs/final-03-signal-old.txt",
+      "core": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-runner/experiments/new-core-s3-20261006/wave-b/s3-runner/logs/final-03-signal-core.txt",
+      "tests": 1,
+      "matching": 1,
+      "mismatches": []
+    },
+    {
+      "old": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-runner/experiments/new-core-s3-20261006/wave-b/s3-runner/logs/final-03-exit-old.txt",
+      "core": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-runner/experiments/new-core-s3-20261006/wave-b/s3-runner/logs/final-03-exit-core.txt",
+      "tests": 1,
+      "matching": 1,
+      "mismatches": []
+    },
+    {
+      "old": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-runner/experiments/new-core-s3-20261006/wave-b/s3-runner/logs/final-03-name-seed-old.txt",
+      "core": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-runner/experiments/new-core-s3-20261006/wave-b/s3-runner/logs/final-03-name-seed-core.txt",
+      "tests": 1,
+      "matching": 1,
+      "mismatches": []
+    }
+  ]
+}

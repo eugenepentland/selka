@@ -1,0 +1,53 @@
+{"source_commit": "93030b84e1538abc35aefa6984e3b00cc7dcc958", "script": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-values/experiments/new-core-s3-20261006/wave-a/compare_all35.py", "capture": false, "baseline": "92590700", "new_sha256": "65aa3175e6c6ce4277b12ac66ca96f46583dd98f20a8ea62366db6a0465c2400"}
+$ /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-values/scripts/build-slot.sh build -- nice -n 10 /usr/bin/python3 -c 'import importlib.util,json,subprocess,time,sys
+from pathlib import Path
+root=Path.cwd();area=root/'"'"'experiments/new-core-s3-20261006/wave-b/s3-m'"'"'
+original=subprocess.run
+with (area/'"'"'final-identity35-run01.commands.jsonl'"'"').open('"'"'x'"'"') as journal:
+ def run(*args,**kwargs):
+  started=time.monotonic();done=original(*args,**kwargs)
+  record={'"'"'command'"'"':args[0] if args else kwargs['"'"'args'"'"'],'"'"'exit_status'"'"':done.returncode,'"'"'stdout'"'"':done.stdout,'"'"'stderr'"'"':done.stderr,'"'"'elapsed_seconds'"'"':time.monotonic()-started}
+  journal.write(json.dumps(record)+'"'"'\n'"'"');journal.flush();return done
+ subprocess.run=run
+ spec=importlib.util.spec_from_file_location('"'"'compare'"'"',root/'"'"'experiments/new-core-s3-20261006/wave-a/compare_all35.py'"'"');module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+ sys.argv=[str(spec.origin),'"'"'--core'"'"',str(root/'"'"'zig-out/bin/mylang-core'"'"')]
+ raise SystemExit(module.main())'
+record_reads: identical definitions
+tagged_stack: identical definitions
+mutate_unique: identical definitions
+mutate_shared: identical definitions
+record_construct: identical definitions
+record_update: identical definitions
+option_handle: identical definitions
+result_propagate: identical definitions
+list_scan: identical definitions
+list_append: identical definitions
+list_filter: identical definitions
+alloc_short: identical definitions
+alloc_retained: identical definitions
+mutate_nested: identical definitions
+bytes_scan: identical definitions
+string_equal: identical definitions
+string_search: identical definitions
+string_split: identical definitions
+string_join: identical definitions
+dict_lookup: identical definitions
+dict_lookup_str: identical definitions
+dict_update: identical definitions
+dict_update_str: identical definitions
+set_dedup: identical definitions
+int_parse: identical definitions
+int_format: identical definitions
+call_indirect: identical definitions
+sort_int: identical definitions
+sort_records: identical definitions
+int_math: identical definitions
+float_math: identical definitions
+call_direct: identical definitions
+branch_predictable: identical definitions
+branch_mixed: identical definitions
+binary_search: identical definitions
+35 rows; 0 changed definitions
+
+exit_status=0
+elapsed_seconds=5.534603

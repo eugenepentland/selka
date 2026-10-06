@@ -1,0 +1,8 @@
+dynamic_probe.my:10:29: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def add(row: mut list[int], ignored: int) -> None:
+                              ^
+dynamic_probe.my:13:17: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def add_reverse(ignored: int, row: mut list[int]) -> None:
+                  ^
+[[[1], [7]], [[2, 9]]]
+[[[1]], [[2, 9], [7]]]

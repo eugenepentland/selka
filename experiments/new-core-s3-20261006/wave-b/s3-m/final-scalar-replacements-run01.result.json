@@ -1,0 +1,9 @@
+{
+  "source_commit": "93030b84e1538abc35aefa6984e3b00cc7dcc958",
+  "old_sha256": "d36658dbfb78d29213224532a13fd5ad8b7c0e290dbfb87613d9815678305c79",
+  "new_sha256": "65aa3175e6c6ce4277b12ac66ca96f46583dd98f20a8ea62366db6a0465c2400",
+  "leakcheck": true,
+  "release_verify_facts": true,
+  "exit_status": 0,
+  "elapsed_seconds": 2.3287160468753427
+}

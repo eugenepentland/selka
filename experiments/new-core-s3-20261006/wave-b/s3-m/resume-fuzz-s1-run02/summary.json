@@ -1,0 +1,66 @@
+{
+  "kind": "s1",
+  "cases_requested": 50,
+  "seed": 3302,
+  "cases_seen": 50,
+  "accepted": 50,
+  "old_rejected": 0,
+  "core_refused": 0,
+  "core_build_failed": 0,
+  "comparisons_expected": 750,
+  "native_runs": 1000,
+  "harness": {
+    "cases": 50,
+    "old_rejected": 0,
+    "refused": 0,
+    "compared": 750,
+    "mismatch": 0,
+    "fact": 0,
+    "traps": 57,
+    "caught": 0
+  },
+  "harness_status": 0,
+  "complete": true,
+  "qualified": true,
+  "error": null,
+  "failures": [],
+  "elapsed_seconds": 145.47821817011572,
+  "cache_root": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-values/.mylang-cache/s3/resume-fuzz-s1-run02",
+  "tmpdir": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-values/.mylang-cache/s3/resume-fuzz-s1-run02/tmp",
+  "saved_sources": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-values/experiments/new-core-s3-20261006/wave-b/s3-m/resume-fuzz-s1-run02/sources",
+  "zig_local_cache": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-values/.mylang-cache/s3/resume-fuzz-s1-run02/zig",
+  "affinity": [
+    0,
+    1,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "oracles": {
+    "old": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-values/.mylang-cache/s3/oracle/mylang",
+      "sha256": "d36658dbfb78d29213224532a13fd5ad8b7c0e290dbfb87613d9815678305c79"
+    },
+    "new": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-values/zig-out/bin/mylang-core",
+      "sha256": "65aa3175e6c6ce4277b12ac66ca96f46583dd98f20a8ea62366db6a0465c2400"
+    }
+  },
+  "oracle_unchanged": true,
+  "harness_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-values/experiments/new-core-s1-20261005/fuzz.py",
+  "harness_sha256": "7ac171d986a15e3be23547ef6d3c10442e4b4538c25ff69bb690cdc97caf6dc1",
+  "native_comparisons": 750,
+  "native_complete": true,
+  "command_count": 1200
+}

@@ -1,0 +1,152 @@
+[
+  {
+    "file": "core-install-run02.txt",
+    "original_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-values/.mylang-cache/s3-m/resume/core-install-run02.txt",
+    "sha256": "133ece80fa451ef53815c5d9af549f6073a8e63eeb479b1297c091ad9deefa6e",
+    "provenance": "99b2a6e7a installed compiler/runtime; superseded by Unit-local fix930"
+  },
+  {
+    "file": "core-install-run02.time",
+    "original_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-values/.mylang-cache/s3-m/resume/core-install-run02.time",
+    "sha256": "0ea745643ec040a33894fee9ccdd2fb270d2f4a6537b3cf297b727b2fcdbe34e",
+    "provenance": "99b2a6e7a installed compiler/runtime; exclusive2.14seconds"
+  },
+  {
+    "file": "core-install-run03.txt",
+    "original_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-values/.mylang-cache/s3-m/resume/core-install-run03.txt",
+    "sha256": "1eb28bfe7858501ace3f4fb8ea673b262c5394fdc1e7c2e8ff431e600bb10ff3",
+    "provenance": "93030b84e final installed compiler/runtime; exclusivebuild"
+  },
+  {
+    "file": "core-install-run03.time",
+    "original_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-values/.mylang-cache/s3-m/resume/core-install-run03.time",
+    "sha256": "7684525dbbb1cd9578bffca55f612b2badaff5d62c3866d6438c38a5aad57357",
+    "provenance": "93030b84e exclusive1.79seconds"
+  },
+  {
+    "file": "places-conformance-run01.txt",
+    "original_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-values/.mylang-cache/s3-m/resume/places-conformance-run01.txt",
+    "sha256": "7c58a2d930b61768cec0ed0b269e63590dbb65287adee96a5e86720f266cc320",
+    "provenance": "99b2a6e7a compiler/runtime:41 existingcases debug/releaseverify with leakcheck; Unit-local fix930 followed"
+  },
+  {
+    "file": "full-conformance-run01.txt",
+    "original_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-values/.mylang-cache/s3-m/resume/full-conformance-run01.txt",
+    "sha256": "f8ea4cf3e3e7cadd705350cb92710c865dfb504415fe396453d6117779d17b8c",
+    "provenance": "99b2a6e7a compiler/runtime:1462matching1Unit-local mismatch55dependency refusals; superseded focused930 and combined9637 evidence"
+  },
+  {
+    "file": "full-conformance-run01.time",
+    "original_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-values/.mylang-cache/s3-m/resume/full-conformance-run01.time",
+    "sha256": "bda30a822af2b61f2581f75667a2f73f76ff17c13252a85fc0e28c19815c4014",
+    "provenance": "99b2a6e7a strict full sweep175.59seconds; retained failure evidence, nofinaltimingclaim"
+  },
+  {
+    "file": "test-core-run02.txt",
+    "original_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-values/.mylang-cache/s3-m/resume/test-core-run02.txt",
+    "sha256": "1047e3d04580420d3b5b00c8b13aca1168ee20d9cd3d1b304708271c2c482304",
+    "provenance": "pre930 Core suite232/233; authoritytest entry failure later fixedc10; retained failure evidence"
+  },
+  {
+    "file": "test-core-run02.time",
+    "original_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-values/.mylang-cache/s3-m/resume/test-core-run02.time",
+    "sha256": "60dbf2e977d4e3de4836cc268b090ae682e7770ed464e019b86c73762919e931",
+    "provenance": "pre930 Core suite81.15seconds; retained failure evidence"
+  },
+  {
+    "file": "old-dynamic-probe-run03.txt",
+    "original_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-values/.mylang-cache/s3-m/resume/old-dynamic-probe-run03.txt",
+    "sha256": "c9d274706493ee68ebd1d0ef86784e25df591fc4acb00edeb3cd4c1b41f356ea",
+    "provenance": "corrected d366 old oracle:later interior ancestor append preserves publication; S3locatedrefusal"
+  },
+  {
+    "file": "old-selection-probe-run01.txt",
+    "original_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-values/.mylang-cache/s3-m/resume/old-selection-probe-run01.txt",
+    "sha256": "afb8e29a57ed642cbf3098ef38ead208dbe9fd36697d539635308be2afb2bc67",
+    "provenance": "old oracle:first index evaluation replaces root; S3locatedrefusal"
+  },
+  {
+    "file": "old-sibling-probe-run02.txt",
+    "original_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-values/.mylang-cache/s3-m/resume/old-sibling-probe-run02.txt",
+    "sha256": "6ef34c2c8ff563af2398cefc1d1b42924293b8be6eacc11cee759382d4639793",
+    "provenance": "old oracle:sibling capture proof"
+  },
+  {
+    "file": "old-same-leaf-probe-run01.txt",
+    "original_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-values/.mylang-cache/s3-m/resume/old-same-leaf-probe-run01.txt",
+    "sha256": "057b2652339941985baf0eea2b33018773eb154a40bd7a9b56ae8d153ba34c8e",
+    "provenance": "old oracle:same-place capture proof"
+  },
+  {
+    "file": "dynamic_probe.my",
+    "original_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-values/.mylang-cache/s3-m/resume/dynamic_probe.my",
+    "sha256": "c95a3a32171462ebc89fa82050b726182cfd8ef996490832706f55df5bbbbbc4",
+    "provenance": "original source for old interior ancestor pin protocol proof"
+  },
+  {
+    "file": "selection_probe.my",
+    "original_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-values/.mylang-cache/s3-m/resume/selection_probe.my",
+    "sha256": "84c5417f69bf8367b1f4a26458b76c45d1b7a59a4a712f7df73606030090f3b6",
+    "provenance": "original source for initial index root-replacement proof"
+  },
+  {
+    "file": "sibling_probe.my",
+    "original_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-values/.mylang-cache/s3-m/resume/sibling_probe.my",
+    "sha256": "daa9fce24d53db5b054045cd0423e48593a3ac2b20ff91dc57f00697ba617d87",
+    "provenance": "original source for sibling capture proof"
+  },
+  {
+    "file": "same_leaf_probe.my",
+    "original_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-values/.mylang-cache/s3-m/resume/same_leaf_probe.my",
+    "sha256": "5048dfea00e5773bd997d00aaeb2b78ef9cf35bb1c59745acb94d662b114a414",
+    "provenance": "original source for same-leaf capture proof"
+  },
+  {
+    "file": "scalar-replacements-ir-run01.txt",
+    "original_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-values/.mylang-cache/s3-m/resume/scalar-replacements-ir-run01.txt",
+    "sha256": "e895dc9394a9b76c6ec9020fcd69074e0aced725a7e677252a977660e76927da",
+    "provenance": "original invalid record_set diagnostic IR retained from pre930 Unit-local failure"
+  },
+  {
+    "file": "scalar-replacements-typed-run01.txt",
+    "original_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-values/.mylang-cache/s3-m/resume/scalar-replacements-typed-run01.txt",
+    "sha256": "216279ffd9324f62a69e5f98074857ec2b31e076a1d0a89d5b386af23dad830f",
+    "provenance": "original typed source view retained from pre930 Unit-local failure"
+  },
+  {
+    "file": "unit-local-commit-run03.txt",
+    "original_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-values/.mylang-cache/s3-m/resume/unit-local-commit-run03.txt",
+    "sha256": "e709705422a7c5b390546b4aa909bb9318a3d2b28ee41bf1b8c2bd87309410b3",
+    "provenance": "normal Guardian source commit for canonicalUnitlocals930"
+  },
+  {
+    "file": "authority-entry-commit-run01.txt",
+    "original_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-values/.mylang-cache/s3-m/resume/authority-entry-commit-run01.txt",
+    "sha256": "1692a2d12c8f10a0880cc4742a95977e0ca8a41597c6098d50beb8b35252751c",
+    "provenance": "normal Guardian test-only entry selection fixc10"
+  },
+  {
+    "file": "locator-commit-run01.txt",
+    "original_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-values/.mylang-cache/s3-m/resume/locator-commit-run01.txt",
+    "sha256": "84e83fd488fc5c13ea659c7115652d8cdf034e6c5bc98d0884db227fc6b9688b",
+    "provenance": "normal Guardian test-only emitter locator fix8604"
+  },
+  {
+    "file": "new-values-run01.txt",
+    "original_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-values/.mylang-cache/s3-m/resume/new-values-run01.txt",
+    "sha256": "53ab925d31335d30a890a8355f6a9335a467870293791b23cd1b2f85b0c99a89",
+    "provenance": "pre930 primary fixture9passed; superseded finalprimary10 in Core suite"
+  },
+  {
+    "file": "old-values-run02.txt",
+    "original_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-values/.mylang-cache/s3-m/resume/old-values-run02.txt",
+    "sha256": "e35efa19fd7dcf14fc52ec11853394695fee87c02fa50e910597d33cc60dec57",
+    "provenance": "old corrected oracle primaryfixture9passed; final10 includes Unit-local regression"
+  },
+  {
+    "file": "old-lists-run02.txt",
+    "original_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-values/.mylang-cache/s3-m/resume/old-lists-run02.txt",
+    "sha256": "9f2d13cfc68fb6a6ebb16d8076c7a83ca9ff8d6300a0815cc0b0397952d180b8",
+    "provenance": "corrected old oracle listfixture4pass4intendedtraps"
+  }
+]
