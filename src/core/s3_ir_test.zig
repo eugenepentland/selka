@@ -12,7 +12,10 @@ const Program = struct { module: ir.Module, operation: ir.Ref };
 fn pendingProgram(a: std.mem.Allocator, op: ir.Op) !Program {
     var m: ir.Module = .{};
     var h = try Hand.init(a, &m, "main", .{ .params = &.{.cap}, .ret = .i64 });
-    const buffer = try h.loose(.{ .op = .undef, .ty = .byte_buffer });
+    const buffer = if (op == .buffer_new) try h.loose(.{ .op = .undef, .ty = .byte_buffer }) else if (op == .buffer_copy or op == .buffer_set or op == .buffer_pop or op == .buffer_push) blk: {
+        const fresh = try h.emit(.{ .op = .buffer_new, .ty = .byte_buffer, .a = try h.int(.u64, 8) });
+        break :blk try h.emit(.{ .op = .buffer_push, .ty = .byte_buffer, .a = fresh, .b = try h.int(.u8, 1) });
+    } else try h.loose(.{ .op = .undef, .ty = .byte_buffer });
     const value = try h.int(.u8, 42);
     const index = try h.int(.i64, 0);
     var inst: ir.Inst = .{ .op = op, .ty = .byte_buffer, .a = buffer };
@@ -54,9 +57,9 @@ fn exercise(op: ir.Op, allocator: std.mem.Allocator) !void {
     const text = try print.module(a, &program.module);
     try std.testing.expect(std.mem.indexOf(u8, text, @tagName(op)) != null);
     const ran = try support.runModule(a, &program.module, false);
-    try std.testing.expectEqual(@as(u8, 1), ran.status);
+    try std.testing.expectEqual(@as(u8, 0), ran.status);
     try std.testing.expectEqualStrings("", ran.stdout);
-    try std.testing.expect(std.mem.indexOf(u8, ran.stderr, "E_CORE_UNSUPPORTED") != null);
+    try std.testing.expectEqualStrings("", ran.stderr);
     const f = &program.module.functions.items[0];
     const original = f.inst(program.operation);
     f.insts.items[program.operation.index()].ty = .cap;
@@ -69,7 +72,7 @@ fn exercise(op: ir.Op, allocator: std.mem.Allocator) !void {
 }
 
 // spec: NEW-CORE-S3-IR-2
-test "S3 IR buffer_new compiles and refuses before returning a value" {
+test "S3 IR buffer_new compiles and executes a fresh mutable value" {
     try exercise(.buffer_new, std.testing.allocator);
     try std.testing.expect(true);
 }
@@ -242,7 +245,7 @@ test "S3 fresh mutable bytes assert uniqueness before update and admit byte read
     try std.testing.expect(std.mem.indexOf(u8, text, "is_unique bool") != null);
     try std.testing.expect(std.mem.indexOf(u8, text, "buffer_copy") == null);
     const ran = try support.runModule(arena.allocator(), &m, false);
-    try std.testing.expectEqual(@as(u8, 1), ran.status);
+    try std.testing.expectEqual(@as(u8, 0), ran.status);
     try std.testing.expectEqualStrings("", ran.stdout);
-    try std.testing.expect(std.mem.indexOf(u8, ran.stderr, "E_CORE_UNSUPPORTED") != null);
+    try std.testing.expectEqualStrings("", ran.stderr);
 }

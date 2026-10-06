@@ -1,3 +1,106 @@
-/* S3-T2 owns mutable bytes and embedded blobs. The layout is the existing
-   32-byte myl_block header plus raw octets; source admission remains refused.
-   The S3-0 emitter uses the fail-closed IR placeholder until implementation. */
+/* S3 port of native_bytes.c: octet algorithms adapted to the Core leaf header.
+   kind 5 is mutable bytes, reserved=0; immutable snapshots own independent data. */
+#define MYL_KIND_BUFFER 5u
+
+myl_block *myl_core_buffer_new(uint64_t capacity) {
+    if (capacity > INT64_MAX) out_of_memory();
+    return block_new(MYL_KIND_BUFFER, (int64_t)capacity, 1);
+}
+myl_block *myl_core_buffer_copy(myl_block *source) {
+    myl_block *out = myl_core_buffer_new((uint64_t)source->cap);
+    out->len = source->len;
+    memcpy(block_data(out), block_data(source), (size_t)source->len);
+    return out;
+}
+static myl_block *core_buffer_grow(myl_block *buffer, int64_t needed) {
+    if (needed <= buffer->cap) return buffer;
+    int64_t capacity = buffer->cap < 8 ? 8 : buffer->cap;
+    while (capacity < needed) {
+        if (capacity > INT64_MAX / 2) { capacity = needed; break; }
+        capacity *= 2;
+    }
+    myl_block *out = myl_core_buffer_new((uint64_t)capacity);
+    out->len = buffer->len;
+    memcpy(block_data(out), block_data(buffer), (size_t)buffer->len);
+    block_free(buffer);
+    return out;
+}
+myl_block *myl_core_buffer_push(myl_block *buffer, uint8_t value) {
+    if (buffer->len == INT64_MAX) out_of_memory();
+    buffer = core_buffer_grow(buffer, buffer->len + 1);
+    block_data(buffer)[buffer->len++] = value;
+    return buffer;
+}
+myl_block *myl_core_buffer_set(myl_block *buffer, uint64_t index, uint8_t value) {
+    block_data(buffer)[index] = value;
+    return buffer;
+}
+myl_block *myl_core_buffer_pop(myl_block *buffer) { --buffer->len; return buffer; }
+uint64_t myl_core_buffer_capacity(myl_block *buffer) { return (uint64_t)buffer->cap; }
+myl_block *myl_core_buffer_from_bytes(myl_block *source) {
+    myl_block *out = myl_core_buffer_new((uint64_t)source->len);
+    out->len = source->len;
+    memcpy(block_data(out), block_data(source), (size_t)source->len);
+    return out;
+}
+myl_block *myl_core_buffer_from_list(myl_block *source) {
+    myl_block *out = myl_core_buffer_new((uint64_t)source->len);
+    const int64_t *values = (const int64_t *)block_data(source);
+    for (int64_t i = 0; i < source->len; ++i) block_data(out)[i] = (uint8_t)values[i];
+    out->len = source->len;
+    return out;
+}
+myl_block *myl_core_buffer_snapshot(myl_block *source) {
+    myl_block *out = str_new(source->len);
+    out->kind = (out->kind & ~MYL_KIND_MASK) | MYL_KIND_BYTES;
+    memcpy(block_data(out), block_data(source), (size_t)source->len);
+    return out;
+}
+bool myl_core_buffer_range_valid(myl_block *source, int64_t start, int64_t end) {
+    return start >= 0 && end >= start && end <= source->len;
+}
+bool myl_core_buffer_reserve_valid(myl_block *source, int64_t extra) {
+    return extra >= 0 && extra <= INT64_MAX - source->len;
+}
+myl_block *myl_core_buffer_reserved(myl_block *source, int64_t extra) {
+    myl_block *out = myl_core_buffer_copy(source);
+    return core_buffer_grow(out, out->len + extra);
+}
+myl_block *myl_core_buffer_reverse(myl_block *source) {
+    myl_block *out = myl_core_buffer_copy(source);
+    for (int64_t i = 0; i < out->len / 2; ++i) {
+        unsigned char c = block_data(out)[i];
+        block_data(out)[i] = block_data(out)[out->len - 1 - i];
+        block_data(out)[out->len - 1 - i] = c;
+    }
+    return out;
+}
+/* Port of myl_native_bytes_hex: two lowercase ASCII digits per octet. */
+myl_block *myl_core_bytes_hex(myl_block *source) {
+    static const unsigned char digits[] = "0123456789abcdef";
+    if (source->len > INT64_MAX / 2) out_of_memory();
+    myl_block *out = str_new(source->len * 2);
+    out->kind |= 1u << 8;
+    for (int64_t i = 0; i < source->len; ++i) {
+        block_data(out)[i * 2] = digits[block_data(source)[i] >> 4];
+        block_data(out)[i * 2 + 1] = digits[block_data(source)[i] & 15];
+    }
+    return out;
+}
+static int core_hex_digit(unsigned char value) {
+    if (value >= '0' && value <= '9') return value - '0';
+    if (value >= 'a' && value <= 'f') return value - 'a' + 10;
+    if (value >= 'A' && value <= 'F') return value - 'A' + 10;
+    return -1;
+}
+bool myl_core_from_hex_valid(myl_block *source) {
+    if (source->len % 2) return false;
+    for (int64_t i = 0; i < source->len; ++i) if (core_hex_digit(block_data(source)[i]) < 0) return false;
+    return true;
+}
+myl_block *myl_core_from_hex(myl_block *source) {
+    myl_block *out = str_new(source->len / 2);
+    out->kind = (out->kind & ~MYL_KIND_MASK) | MYL_KIND_BYTES;
+    for (int64_t i = 0; i < out->len; ++i) block_data(out)[i] = (unsigned char)(core_hex_digit(block_data(source)[i * 2]) * 16 + core_hex_digit(block_data(source)[i * 2 + 1]));
+    return out;
+}

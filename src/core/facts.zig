@@ -756,6 +756,21 @@ fn transfer(a: *Analysis, ref: ir.Ref, block: ir.BlockId) ?Interval {
             // A checked operation traps instead of leaving its type; a wrapping one can be anything.
             break :blk if (i.check == .none) limits else exact.meet(limits);
         },
+        .saturating_add => blk: {
+            const x = a.rangeAt(i.a, block) orelse break :blk full;
+            const y = a.rangeAt(i.b, block) orelse break :blk full;
+            const limits = full orelse break :blk null;
+            break :blk .{ .lo = std.math.clamp(x.lo + y.lo, limits.lo, limits.hi), .hi = std.math.clamp(x.hi + y.hi, limits.lo, limits.hi) };
+        },
+        .shift_right => blk: {
+            const x = a.rangeAt(i.a, block) orelse break :blk full;
+            const count = a.rangeAt(i.b, block) orelse break :blk full;
+            const info = i.ty.integer() orelse break :blk full;
+            if (count.lo < 0 or count.hi >= info.bits) break :blk full;
+            const lo: u7 = @intCast(count.lo);
+            const hi: u7 = @intCast(count.hi);
+            break :blk .{ .lo = @min(x.lo >> lo, x.lo >> hi), .hi = @max(x.hi >> lo, x.hi >> hi) };
+        },
         .floor_div, .div => blk: {
             const x = a.rangeAt(i.a, block) orelse break :blk full;
             const d = a.rangeAt(i.b, block) orelse break :blk full;
@@ -786,6 +801,9 @@ fn transfer(a: *Analysis, ref: ir.Ref, block: ir.BlockId) ?Interval {
         },
         .convert => blk: {
             const x = a.rangeAt(i.a, block) orelse break :blk full;
+            // Unchecked conversion can truncate or reinterpret signed bits. Intersection
+            // describes checked conversion, but cannot describe a wrapping bit pattern.
+            if (i.check == .none and !x.within(full.?)) break :blk full;
             break :blk x.meet(full.?);
         },
         .list_len => blk: {
@@ -1402,6 +1420,10 @@ fn provable(a: *Analysis, i: ir.Inst, block: ir.BlockId) bool {
             const exact = arithmetic(i.op, x, y);
             // `proven` emits `nsw`/`nuw`, so the operands must also respect the signedness flag.
             return exact.within(limits) and (limits.lo < 0 or (x.lo >= 0 and y.lo >= 0));
+        },
+        .shift_left, .shift_right => {
+            const count = a.rangeAt(i.b, block) orelse return false;
+            return count.lo >= 0 and count.hi < i.ty.integer().?.bits;
         },
         .neg => {
             const x = a.rangeAt(i.a, block) orelse return false;

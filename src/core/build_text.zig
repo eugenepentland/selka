@@ -1,9 +1,9 @@
 //! Text and immutable octet lowering; all storage remains one counted leaf block.
 const ir = @import("ir.zig");
 const std = @import("std");
-const flags = @import("flags.zig");
 const typed = @import("mylang").typed;
 const Operation = @FieldType(@FieldType(typed.Node, "data"), "buffer_operation");
+const more = @import("build_text_more.zig");
 
 /// Allocation and precise feature refusals are the builder's only failures.
 pub const Error = error{ OutOfMemory, Unsupported };
@@ -15,6 +15,12 @@ pub fn number(comptime Context: type, context: Context, operation_node: Operatio
 
 /// Lower one checked text or bytes operation with the original evaluation order.
 pub fn operation(comptime Context: type, context: Context, node: Operation, ty: ir.Type, span: u32) Error!ir.Ref {
+    if (node.kind == .hex or node.kind == .from_hex) return @import("build_bytes.zig").octet(Context, context, node, ty, span);
+    switch (node.kind) {
+        .parse_int, .parse_int_range, .parse_float, .parse_float_range, .number_format => return number(Context, context, node, ty, span),
+        else => {},
+    }
+    if (more.handles(node.kind)) return more.operation(Context, context, node, ty, span);
     const receiver = try context.receiverOf(node.owner);
     const receiver_type = context.typeOfRef(receiver);
     const text = receiver_type == .str;
@@ -41,14 +47,14 @@ pub fn operation(comptime Context: type, context: Context, node: Operation, ty: 
         .slice, .text_tail => {
             const start = try context.expression(node.arguments[0]);
             const end = try context.expression(node.arguments[1]);
-            if (!text) return context.runtimeCall("myl_core_bytes_slice", &.{ .bytes, .i64, .i64 }, .bytes, &.{ receiver, start, end }, span);
+            if (!text) return context.runtimeCall("myl_core_bytes_slice", &.{ receiver_type, .i64, .i64 }, .bytes, &.{ receiver, start, end }, span);
             return context.emit(.{ .op = .str_slice, .ty = .str, .a = receiver, .b = start, .data = try context.extraSlice(&.{end}), .span = span });
         },
         .find, .contains, .starts_with, .ends_with => {
             const needle = try context.expression(node.arguments[0]);
             if (!text and node.kind == .contains and context.typeOfRef(needle).integer() != null) {
                 const value = if (context.typeOfRef(needle) == .i64) needle else try context.emit(.{ .op = .convert, .ty = .i64, .a = needle, .span = span });
-                return context.runtimeCall("myl_core_bytes_contains_value", &.{ .bytes, .i64 }, .bool, &.{ receiver, value }, span);
+                return context.runtimeCall("myl_core_bytes_contains_value", &.{ receiver_type, .i64 }, .bool, &.{ receiver, value }, span);
             }
             const symbol: []const u8 = switch (node.kind) {
                 .find => if (text) "myl_core_str_find" else "myl_core_bytes_find",
@@ -56,7 +62,7 @@ pub fn operation(comptime Context: type, context: Context, node: Operation, ty: 
                 .starts_with => "myl_core_str_starts",
                 else => "myl_core_str_ends",
             };
-            return context.runtimeCall(symbol, &.{ receiver_type, receiver_type }, ty, &.{ receiver, needle }, span);
+            return context.runtimeCall(symbol, &.{ receiver_type, context.typeOfRef(needle) }, ty, &.{ receiver, needle }, span);
         },
         .join, .split => {
             const argument = try context.expression(node.arguments[0]);
@@ -67,9 +73,9 @@ pub fn operation(comptime Context: type, context: Context, node: Operation, ty: 
             }
             return context.runtimeCall(if (node.kind == .join) "myl_core_str_join" else "myl_core_str_split", &.{ receiver_type, context.typeOfRef(argument) }, ty, &.{ receiver, argument }, span);
         },
-        .parse_int => return number(Context, context, node, ty, span),
+        .parse_int, .parse_float, .parse_int_range, .parse_float_range, .number_format, .hex, .from_hex, .float_round => return number(Context, context, node, ty, span),
         .split_whitespace => return context.runtimeCall("myl_core_str_split_whitespace", &.{receiver_type}, ty, &.{receiver}, span),
-        .to_list => return context.runtimeCall("myl_core_bytes_to_list", &.{.bytes}, ty, &.{receiver}, span),
+        .to_list => return context.runtimeCall("myl_core_bytes_to_list", &.{receiver_type}, ty, &.{receiver}, span),
         .copy => return receiver,
         else => return context.mb.refuse(@tagName(node.kind), span),
     }
@@ -100,23 +106,16 @@ pub fn literal(comptime Context: type, context: Context, items: []const typed.No
 pub fn indexed(comptime Context: type, context: Context, base: typed.NodeId, index_node: typed.NodeId, span: u32, result_type: ir.Type) Error!ir.Ref {
     const receiver = try context.expression(base);
     const receiver_type = context.typeOfRef(receiver);
-    if (receiver_type != .str and receiver_type != .bytes) return context.mb.refuse("index receiver", span);
+    if (receiver_type != .str and receiver_type != .bytes and receiver_type != .byte_buffer) return context.mb.refuse("index receiver", span);
     const selected = try context.expression(index_node);
     const offset = try context.runtimeCall(if (receiver_type == .str) "myl_core_str_index_offset" else "myl_core_bytes_index_offset", &.{ receiver_type, .i64 }, .u64, &.{ receiver, selected }, span);
     const value = try context.emit(.{ .op = if (receiver_type == .str) .str_char else .list_get, .ty = if (receiver_type == .str) .str else .u8, .a = receiver, .b = offset, .check = .exact, .span = span });
-    return if (receiver_type == .bytes and result_type != .u8) context.emit(.{ .op = .convert, .ty = result_type, .a = value, .span = span }) else value;
+    return if (receiver_type != .str and result_type != .u8) context.emit(.{ .op = .convert, .ty = result_type, .a = value, .span = span }) else value;
 }
 
 /// Branch to a located text trap unless the checked runtime condition holds.
 pub fn require(comptime Context: type, context: Context, condition: ir.Ref, kind: u8, span: u32) Error!void {
-    const good = try context.newBlock();
-    const bad = try context.newBlock();
-    try context.branch(condition, good, bad, span);
-    try context.seal(bad);
-    context.current = bad;
-    _ = try context.emit(.{ .op = .@"unreachable", .ty = .void, .data = flags.text_trap | kind, .span = span });
-    try context.seal(good);
-    context.current = good;
+    return @import("text_checks.zig").require(Context, context, condition, kind, span);
 }
 
 /// Compile-time cache words for an immortal string literal; malformed raw byte constants omit scalars.

@@ -57,7 +57,7 @@ pub fn build(init: std.process.Init, path: []const u8, options: Options, report:
         else => return error.SourceError,
     };
     var refusal: build_ir.Refusal = .{};
-    var module = build_ir.buildModule(allocator, checked.program, &refusal) catch |err| switch (err) {
+    var module = build_ir.buildModuleSource(allocator, checked.program, checked.src, &refusal) catch |err| switch (err) {
         error.Unsupported => {
             const at = frontend.position(checked.src, .{ .start = refusal.span, .end = refusal.span });
             try report.print(allocator, "{s}:{d}:{d}: error[E_CORE_UNSUPPORTED]: the new core does not support {s} yet\n", .{ at.path, at.line, at.column, refusal.reason });
