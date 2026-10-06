@@ -1,0 +1,14 @@
+file                     tests | debug   match misma unsup | release match misma unsup
+--------------------------------------------------------------------------------------
+properties                  16 |            16     0     0 |            16     0     0
+test_capabilities           13 |            13     0     0 |            13     0     0
+recursive_values            10 |            10     0     0 |            10     0     0
+error_traces                 5 |             5     0     0 |             5     0     0
+--------------------------------------------------------------------------------------
+TOTAL                       44
+  debug    matching 44, mismatching 0, unsupported 0 (of 44 tests; 44 supported)
+  release  matching 44, mismatching 0, unsupported 0 (of 44 tests; 44 supported)
+
+blocking features of the unsupported tests (tests / files):
+
+blocking features per file (file: tests unsupported of tests; the features, most common first):

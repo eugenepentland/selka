@@ -1,0 +1,6 @@
+[codex/new-core-s3-runner a663bd42b] core: preserve S3 capability scope owners and copied I/O contracts
+ Date: Tue Oct 6 12:38:07 2026 +0000
+ 9 files changed, 211 insertions(+), 36 deletions(-)
+ create mode 100644 experiments/new-core-s3-20261006/wave-b/s3-c/c_raw_provider.c
+ create mode 100644 test/core/c_grants.my
+ create mode 100644 test/core/c_trap_handles.my

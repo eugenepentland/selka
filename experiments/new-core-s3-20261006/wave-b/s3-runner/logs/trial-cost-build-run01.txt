@@ -1,0 +1,3 @@
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: build slot 2 after 30s (all 3 build slot(s) busy)
+{"version":"native-tests-v1","tests":[{"name":"c_runner_signal::test_signal_is_a_failure","status":"passed","reason":"","at":"","property":{"seed":7,"counts":{"runs":12,"passed":12,"discarded":0,"processes":1,"shrinks":0,"attempts":0},"failure":null}}],"passed":1,"failed":0,"skipped":0,"cached":0,"unsupported":0}

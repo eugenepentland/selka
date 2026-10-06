@@ -1,0 +1,34 @@
+module c_runner_standins
+import time
+import random
+
+# Every generated trial gets fresh stand-ins, even after the previous trial
+# advances a clock, consumes entropy, writes a file and emits buffered output.
+public def test_trial_state_is_fresh(value: u8, out: Stream, clock: Clock, entropy: Entropy, fs: Filesystem, env: Environment) -> bool:
+    match time.now(clock):
+        case Ok(start):
+            if start.unix_nanoseconds != 946684800000000000:
+                return False
+        case Err(_):
+            return False
+    if fs.exists("trial.txt") or len(env.names()) != 0:
+        return False
+    match fs.write_text("trial.txt", "written"):
+        case Ok(_):
+            pass
+        case Err(_):
+            return False
+    match time.advance(clock, time.nanoseconds(1)):
+        case Ok(_):
+            pass
+        case Err(_):
+            return False
+    match random.from_entropy(entropy):
+        case Ok(sampled):
+            generator = sampled
+            first = random.next_word(mut generator)
+            second = random.next_word(mut generator)
+            out.print(value, first)
+            return first != second
+        case Err(_):
+            return False

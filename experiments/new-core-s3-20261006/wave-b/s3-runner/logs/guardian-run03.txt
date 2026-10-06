@@ -1,0 +1,19 @@
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 28 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 10190 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 11 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 2/88 failed (dead-pub, twin-drift)
+guardian: failures grouped by check (2):
+  dead-pub (1 finding)
+    - src/core/property_generate.zig: src/core/property_generate.zig::core_generator_version: unused public declaration
+      fix: remove, demote to private (drop `pub`), or reference from a test.
+  twin-drift (9 findings)
+    - src/core/test_runner_property.zig:95: twin-drift: fn bind (13 lines) and src/native_test_property.zig:95 (13 lines) share 92% of their body and differ in 2 line(s) — reconcile the two copies or lift the shared part into one fn (// twin-drift-ok: <why> if the divergence is deliberate)
+      fix: reconcile the two copies, or lift the shared part into one fn both call. If the divergence is deliberate, say so above either copy: `// twin-drift-ok: <why>`. what drifted: only in src/core/test_runner_property.zig: `const a = context.arena;`; only in src/native_test_property.zig: `const a = context.allocator;`;
+    - src/core/test_runner_property.zig:171: twin-drift: fn generated (10 lines) and src/native_test_property.zig:170 (10 lines) share 90% of their body and differ in 2 line(s) — reconcile the two copies or lift the shared part into one fn (// twin-drift-ok: <why> if the divergence is deliberate)
+      fix: reconcile the two copies, or lift the shared part into one fn both call. If the divergence is deliberate, say so above either copy: `// twin-drift-ok: <why>`. what drifted: only in src/core/test_runner_property.zig: `const a = self.context.arena;`; only in src/native_test_property.zig: `const a = self.context.allocator;`;
+    - src/core/test_runner_property.zig:223: twin-drift: fn count (18 lines) and src/native_test_property.zig:222 (18 lines) share 94% of their body and differ in 2 line(s) — reconcile the two copies or lift the shared part into one fn (// twin-drift-ok: <why> if the divergence is deliberate)
+      fix: reconcile the two copies, or lift the shared part into one fn both call. If the divergence is deliberate, say so above either copy: `// twin-drift-ok: <why>`. what drifted: only in src/core/test_runner_property.zig: `try search.discard(self.context.arena, clause);`; only in src/native_test_property.zig: `try search.discard(self.context.allocator, clause);`;
+    - +6 more — use --verbose for full detail
+  caution: zig-out binaries predate this failed run (installs are gated on green) — rebuild green before running them

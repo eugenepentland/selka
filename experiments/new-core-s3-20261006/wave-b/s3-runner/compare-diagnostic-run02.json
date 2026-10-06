@@ -1,0 +1,20 @@
+{
+  "tests": 10,
+  "mismatches": 0,
+  "pairs": [
+    {
+      "old": "experiments/new-core-s3-20261006/wave-b/s3-runner/logs/old-failures-run02.txt",
+      "core": "experiments/new-core-s3-20261006/wave-b/s3-runner/logs/failures-run04.txt",
+      "tests": 9,
+      "matching": 9,
+      "mismatches": []
+    },
+    {
+      "old": "experiments/new-core-s3-20261006/wave-b/s3-runner/logs/old-signal-run07.txt",
+      "core": "experiments/new-core-s3-20261006/wave-b/s3-runner/logs/signal-run04.txt",
+      "tests": 1,
+      "matching": 1,
+      "mismatches": []
+    }
+  ]
+}

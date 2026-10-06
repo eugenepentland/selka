@@ -20,6 +20,8 @@ pub const Verdict = struct {
     reason: []const u8 = "",
     /// `line:column` of the refused construct, for an unsupported test.
     at: []const u8 = "",
+    /// Exact property trial and counterexample evidence when this is a property.
+    property: ?@import("test_runner_property.zig").Evidence = null,
 };
 
 /// The process exit status for a run: 1 when any test failed, 3 when none was selected, else 0.
@@ -68,6 +70,10 @@ pub fn json(allocator: std.mem.Allocator, verdicts: []const Verdict) std.mem.All
         try quoted(allocator, &out, verdict.reason);
         try out.appendSlice(allocator, ",\"at\":");
         try quoted(allocator, &out, verdict.at);
+        if (verdict.property) |evidence| {
+            try out.appendSlice(allocator, ",\"property\":");
+            try out.appendSlice(allocator, try std.json.Stringify.valueAlloc(allocator, evidence, .{}));
+        }
         try out.appendSlice(allocator, "}");
     }
     try out.print(allocator, "],\"passed\":{d},\"failed\":{d},\"skipped\":0,\"cached\":0,\"unsupported\":{d}}}\n", .{ count(verdicts, .passed), count(verdicts, .failed), count(verdicts, .unsupported) });

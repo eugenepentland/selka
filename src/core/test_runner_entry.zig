@@ -40,6 +40,8 @@ pub const Target = struct {
     seed: u64 = 0,
     /// Result case tags for Result[bool,E].
     result: ?@import("emit_llvm.zig").MainResult = null,
+    /// Checked source type names for generated input and result adapters.
+    data: ?struct { parameters: []const []const u8, result: []const u8 } = null,
 };
 
 /// Append the dispatching entry to `module` and make it the module's entry. `tests` are
@@ -47,7 +49,7 @@ pub const Target = struct {
 pub fn addEntry(allocator: std.mem.Allocator, module: *ir.Module, tests: []const Target) std.mem.Allocator.Error!void {
     const list_of_str = try module.intern(allocator, .{ .list = .str });
     const parsed_type = try module.option(allocator, .i64);
-    var b: Builder = .{ .allocator = allocator, .function = .{ .name = entry_name, .signature = .{ .params = try allocator.dupe(ir.Type, &.{list_of_str}), .ret = .i64 } } };
+    var b: Builder = .{ .arena = allocator, .function = .{ .name = entry_name, .signature = .{ .params = try allocator.dupe(ir.Type, &.{list_of_str}), .ret = .i64 } } };
     const start = try b.block();
     const parse = try b.block();
     const select = try b.block();
@@ -100,61 +102,11 @@ pub fn addEntry(allocator: std.mem.Allocator, module: *ir.Module, tests: []const
     try module.functions.append(allocator, b.function);
 }
 
-const Builder = struct {
-    allocator: std.mem.Allocator,
-    function: ir.Function,
-
-    fn block(self: *Builder) std.mem.Allocator.Error!ir.BlockId {
-        const id: ir.BlockId = @fromBackingInt(@intCast(self.function.blocks.items.len));
-        try self.function.blocks.append(self.allocator, .{});
-        return id;
-    }
-
-    /// An instruction that belongs to no block (a parameter or a constant).
-    fn detached(self: *Builder, inst: ir.Inst) std.mem.Allocator.Error!ir.Ref {
-        const ref: ir.Ref = @fromBackingInt(@intCast(self.function.insts.items.len));
-        try self.function.insts.append(self.allocator, inst);
-        return ref;
-    }
-
-    fn constant(self: *Builder, ty: ir.Type, value: i64) std.mem.Allocator.Error!ir.Ref {
-        return self.detached(.{ .op = .iconst, .ty = ty, .data = @bitCast(value) });
-    }
-
-    /// Append `inst` to `in`.
-    fn put(self: *Builder, in: ir.BlockId, inst: ir.Inst) std.mem.Allocator.Error!ir.Ref {
-        const ref = try self.detached(inst);
-        try self.function.blocks.items[in.index()].insts.append(self.allocator, ref);
-        return ref;
-    }
-
-    fn extra(self: *Builder, refs: []const ir.Ref) std.mem.Allocator.Error!u64 {
-        const start: u32 = @intCast(self.function.extra.items.len);
-        try self.function.extra.appendSlice(self.allocator, refs);
-        return (ir.ExtraSlice{ .start = start, .len = @intCast(refs.len) }).pack();
-    }
-
-    fn jump(self: *Builder, from: ir.BlockId, to: ir.BlockId) std.mem.Allocator.Error!void {
-        _ = try self.put(from, .{ .op = .jump, .ty = .void, .data = @backingInt(to) });
-        try self.function.blocks.items[to.index()].preds.append(self.allocator, from);
-    }
-
-    fn branch(self: *Builder, from: ir.BlockId, condition: ir.Ref, then: ir.BlockId, otherwise: ir.BlockId) std.mem.Allocator.Error!void {
-        _ = try self.put(from, .{ .op = .branch, .ty = .void, .a = condition, .data = ir.packTargets(then, otherwise) });
-        try self.function.blocks.items[then.index()].preds.append(self.allocator, from);
-        try self.function.blocks.items[otherwise.index()].preds.append(self.allocator, from);
-    }
-};
-
-fn helper(allocator: std.mem.Allocator, module: *ir.Module, name: []const u8, params: []const ir.Type, ret: ir.Type) !u32 {
-    for (module.functions.items, 0..) |function, index| if (std.mem.eql(u8, function.name, name)) return @intCast(index);
-    const index: u32 = @intCast(module.functions.items.len);
-    try module.functions.append(allocator, .{ .name = name, .signature = .{ .params = try allocator.dupe(ir.Type, params), .ret = ret, .linkage = .runtime_c } });
-    return index;
-}
+const Builder = @import("test_builder.zig").Builder;
+const helper = @import("test_builder.zig").helper;
 fn inject(b: *Builder, module: *ir.Module, target: Target, at: ir.BlockId) ![]const ir.Ref {
     const count = if (target.parameters.len == 0) target.streams.len else target.parameters.len;
-    const arguments = try b.allocator.alloc(ir.Ref, count);
+    const arguments = try b.arena.alloc(ir.Ref, count);
     var stream_index: usize = 0;
     for (arguments, 0..) |*argument, index| {
         const family = if (target.parameters.len == 0) @as(u8, 5) else target.parameters[index];
@@ -163,7 +115,7 @@ fn inject(b: *Builder, module: *ir.Module, target: Target, at: ir.BlockId) ![]co
             stream_index += 1;
             continue;
         }
-        const callee = try helper(b.allocator, module, "myl_core_stand_in", &.{ .u32, .i64 }, .capability);
+        const callee = try helper(b.arena, module, "myl_core_stand_in", &.{ .u32, .i64 }, .capability);
         const operand: i64 = if (family == 0) 946684800000000000 else if (family == 1) @bitCast(target.seed) else 0;
         argument.* = try b.put(at, .{ .op = .call, .ty = .capability, .a = @fromBackingInt(callee), .data = try b.extra(&.{ try b.constant(.u32, family), try b.constant(.i64, operand) }) });
     }
