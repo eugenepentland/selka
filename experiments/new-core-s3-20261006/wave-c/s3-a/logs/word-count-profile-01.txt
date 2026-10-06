@@ -1,0 +1,6 @@
+build-slot: all 1 gate slot(s) busy; waiting (0s so far)
+build-slot: all 1 gate slot(s) busy; waiting (60s so far)
+build-slot: gate slot 1 after 120s (all 1 gate slot(s) busy)
+385351400 738936786
+[ perf record: Woken up 1 times to write data ]
+[ perf record: Captured and wrote 0.150 MB .mylang-cache/s3-a/word-count-profile-01.data (741 samples) ]

@@ -1,0 +1,18 @@
+{
+  "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/oracle/mylang",
+    "build",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/test/core/row_csv_aggregate.my",
+    "-o",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/csv_aggregate-old",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/cache-old",
+    "--link",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/benchmarks/runtime/ports/native_clock.c",
+    "--release"
+  ],
+  "status": 0,
+  "seconds": 3.1978099721018225,
+  "stdout": "",
+  "stderr": "row_csv_aggregate.my:88:12: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n  def inputs(kind: str, size: int, seed: int) -> Inputs:\n             ^\nrow_csv_aggregate.my:103:12: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n  def kernel(kind: str, data: Inputs, iterations: int, seed: int) -> int:\n             ^\nrow_csv_aggregate.my:106:9: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n          cursor = seed + step\n          ^\n"
+}

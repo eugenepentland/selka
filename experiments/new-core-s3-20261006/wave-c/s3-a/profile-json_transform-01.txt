@@ -1,0 +1,40 @@
+# To display the perf.data header info, please use --header/--header-only options.
+#
+#
+# Total Lost Samples: 0
+#
+# Samples: 1K of event 'cpu_core/cycles/u'
+# Event count (approx.): 3848634405
+#
+# Overhead  Symbol                           IPC   [IPC Coverage]
+# ........  ...............................  ....................
+#
+    15.31%  [.] block_alloc                  -      -            
+    14.08%  [.] myl_core_buffer_push         -      -            
+     7.81%  [.] my.json::read_value          -      -            
+     7.61%  [.] myl_core_free_block          -      -            
+     7.50%  [.] my.json::read_string         -      -            
+     6.02%  [.] myl_core_bytes_index_offset  -      -            
+     4.04%  [.] my.json::write_quoted        -      -            
+     3.88%  [.] myl_core_str_hash            -      -            
+     3.33%  [.] myl_core_span_utf8_count     -      -            
+     2.92%  [.] myl_core_dict_insert         -      -            
+     2.08%  [.] myl_core_bytes_decode_text   -      -            
+     2.03%  [.] 0x0000000000197a66           -      -            
+     1.73%  [.] my.json::write_value         -      -            
+     1.71%  [.] myl_core_str_eq              -      -            
+     1.45%  [.] main                         -      -            
+     1.41%  [.] myl_core_parse_int_range     -      -            
+     1.29%  [.] memcpy@plt                   -      -            
+     1.03%  [.] myl_core_buffer_range_valid  -      -            
+     1.01%  [.] block_free                   -      -            
+     0.92%  [.] 0x000000000019759d           -      -            
+     0.77%  [.] 0x0000000000197a70           -      -            
+     0.72%  [.] myl_core_str_from_i64        -      -            
+     0.63%  [.] cfree                        -      -            
+     0.56%  [.] reference_at                 -      -            
+
+
+#
+# (Cannot load tips.txt file, please install perf!)
+#

@@ -1,0 +1,2644 @@
+{
+  "qualified": true,
+  "source_head": "f1319a774d638c664de9f02bb27098650a13249b",
+  "builds": {
+    "original-text": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/oracle/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/benchmarks/runtime/expanded/text/main.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/original-text",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/cache-old",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/benchmarks/runtime/ports/native_clock.c",
+        "--release"
+      ],
+      "status": 0,
+      "seconds": 16.30499004619196,
+      "stdout": "",
+      "stderr": ""
+    },
+    "original-compute": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/oracle/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/benchmarks/runtime/expanded/compute/main.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/original-compute",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/cache-old",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/benchmarks/runtime/ports/native_clock.c",
+        "--release"
+      ],
+      "status": 0,
+      "seconds": 2.690214935922995,
+      "stdout": "",
+      "stderr": ""
+    },
+    "original-collections": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/oracle/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/benchmarks/runtime/expanded/collections/main.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/original-collections",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/cache-old",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/benchmarks/runtime/ports/native_clock.c",
+        "--release"
+      ],
+      "status": 0,
+      "seconds": 9.05841249320656,
+      "stdout": "",
+      "stderr": ""
+    },
+    "original-text-new-debug": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/zig-out/bin/mylang-core",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/benchmarks/runtime/expanded/text/main.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/original-text-new-debug",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/cache-new",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/benchmarks/runtime/ports/native_clock.c"
+      ],
+      "status": 0,
+      "seconds": 3.7077240368817,
+      "stdout": "",
+      "stderr": ""
+    },
+    "original-text-new-release": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/zig-out/bin/mylang-core",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/benchmarks/runtime/expanded/text/main.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/original-text-new-release",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/cache-new",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/benchmarks/runtime/ports/native_clock.c",
+        "--release"
+      ],
+      "status": 0,
+      "seconds": 0.9068992340471596,
+      "stdout": "",
+      "stderr": ""
+    },
+    "original-text-new-verify": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/zig-out/bin/mylang-core",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/benchmarks/runtime/expanded/text/main.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/original-text-new-verify",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/cache-new",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/benchmarks/runtime/ports/native_clock.c",
+        "--release",
+        "--verify-facts"
+      ],
+      "status": 0,
+      "seconds": 1.0378184451255947,
+      "stdout": "",
+      "stderr": ""
+    },
+    "word_count-old": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/oracle/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/test/core/row_word_count.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/word_count-old",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/cache-old",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/benchmarks/runtime/ports/native_clock.c",
+        "--release"
+      ],
+      "status": 0,
+      "seconds": 2.636326029896736,
+      "stdout": "",
+      "stderr": "row_word_count.my:40:12: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n  def inputs(kind: str, size: int, seed: int) -> Inputs:\n             ^\nrow_word_count.my:53:12: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n  def kernel(kind: str, data: Inputs, iterations: int, seed: int) -> int:\n             ^\n"
+    },
+    "word_count-debug": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/zig-out/bin/mylang-core",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/test/core/row_word_count.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/word_count-debug",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/cache-new",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/benchmarks/runtime/ports/native_clock.c"
+      ],
+      "status": 0,
+      "seconds": 0.07333548599854112,
+      "stdout": "",
+      "stderr": ""
+    },
+    "word_count-release": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/zig-out/bin/mylang-core",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/test/core/row_word_count.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/word_count-release",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/cache-new",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/benchmarks/runtime/ports/native_clock.c",
+        "--release"
+      ],
+      "status": 0,
+      "seconds": 0.14746212190948427,
+      "stdout": "",
+      "stderr": ""
+    },
+    "word_count-verify": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/zig-out/bin/mylang-core",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/test/core/row_word_count.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/word_count-verify",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/cache-new",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/benchmarks/runtime/ports/native_clock.c",
+        "--release",
+        "--verify-facts"
+      ],
+      "status": 0,
+      "seconds": 0.1813398681115359,
+      "stdout": "",
+      "stderr": ""
+    },
+    "csv_aggregate-old": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/oracle/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/test/core/row_csv_aggregate.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/csv_aggregate-old",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/cache-old",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/benchmarks/runtime/ports/native_clock.c",
+        "--release"
+      ],
+      "status": 0,
+      "seconds": 3.1978099721018225,
+      "stdout": "",
+      "stderr": "row_csv_aggregate.my:88:12: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n  def inputs(kind: str, size: int, seed: int) -> Inputs:\n             ^\nrow_csv_aggregate.my:103:12: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n  def kernel(kind: str, data: Inputs, iterations: int, seed: int) -> int:\n             ^\nrow_csv_aggregate.my:106:9: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n          cursor = seed + step\n          ^\n"
+    },
+    "csv_aggregate-debug": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/zig-out/bin/mylang-core",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/test/core/row_csv_aggregate.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/csv_aggregate-debug",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/cache-new",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/benchmarks/runtime/ports/native_clock.c"
+      ],
+      "status": 0,
+      "seconds": 0.09360900288447738,
+      "stdout": "",
+      "stderr": ""
+    },
+    "csv_aggregate-release": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/zig-out/bin/mylang-core",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/test/core/row_csv_aggregate.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/csv_aggregate-release",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/cache-new",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/benchmarks/runtime/ports/native_clock.c",
+        "--release"
+      ],
+      "status": 0,
+      "seconds": 0.3014384869020432,
+      "stdout": "",
+      "stderr": ""
+    },
+    "csv_aggregate-verify": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/zig-out/bin/mylang-core",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/test/core/row_csv_aggregate.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/csv_aggregate-verify",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/cache-new",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/benchmarks/runtime/ports/native_clock.c",
+        "--release",
+        "--verify-facts"
+      ],
+      "status": 0,
+      "seconds": 0.3538521211594343,
+      "stdout": "",
+      "stderr": ""
+    },
+    "json_transform-old": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/oracle/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/test/core/row_json_transform.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/json_transform-old",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/cache-old",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/benchmarks/runtime/ports/native_clock.c",
+        "--release"
+      ],
+      "status": 0,
+      "seconds": 7.507302741985768,
+      "stdout": "",
+      "stderr": "row_json_transform.my:66:12: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n  def inputs(kind: str, size: int, seed: int) -> Inputs:\n             ^\nrow_json_transform.my:79:12: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n  def kernel(kind: str, data: Inputs, iterations: int, seed: int) -> int:\n             ^\n"
+    },
+    "json_transform-debug": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/zig-out/bin/mylang-core",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/test/core/row_json_transform.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/json_transform-debug",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/cache-new",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/benchmarks/runtime/ports/native_clock.c"
+      ],
+      "status": 0,
+      "seconds": 0.18542602681554854,
+      "stdout": "",
+      "stderr": ""
+    },
+    "json_transform-release": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/zig-out/bin/mylang-core",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/test/core/row_json_transform.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/json_transform-release",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/cache-new",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/benchmarks/runtime/ports/native_clock.c",
+        "--release"
+      ],
+      "status": 0,
+      "seconds": 0.5541280459146947,
+      "stdout": "",
+      "stderr": ""
+    },
+    "json_transform-verify": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/zig-out/bin/mylang-core",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/test/core/row_json_transform.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/json_transform-verify",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/cache-new",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/benchmarks/runtime/ports/native_clock.c",
+        "--release",
+        "--verify-facts"
+      ],
+      "status": 0,
+      "seconds": 0.6036812600214034,
+      "stdout": "",
+      "stderr": ""
+    },
+    "packet_decode-old": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/oracle/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/test/core/row_packet_decode.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/packet_decode-old",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/cache-old",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/benchmarks/runtime/ports/native_clock.c",
+        "--release"
+      ],
+      "status": 0,
+      "seconds": 1.7066105911508203,
+      "stdout": "",
+      "stderr": "row_packet_decode.my:69:9: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n          phase = batch % 17\n          ^\nrow_packet_decode.my:72:13: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n              x = values[j]\n              ^\n"
+    },
+    "packet_decode-debug": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/zig-out/bin/mylang-core",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/test/core/row_packet_decode.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/packet_decode-debug",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/cache-new",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/benchmarks/runtime/ports/native_clock.c"
+      ],
+      "status": 0,
+      "seconds": 0.09882363909855485,
+      "stdout": "",
+      "stderr": ""
+    },
+    "packet_decode-release": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/zig-out/bin/mylang-core",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/test/core/row_packet_decode.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/packet_decode-release",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/cache-new",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/benchmarks/runtime/ports/native_clock.c",
+        "--release"
+      ],
+      "status": 0,
+      "seconds": 0.12188038113527,
+      "stdout": "",
+      "stderr": ""
+    },
+    "packet_decode-verify": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/zig-out/bin/mylang-core",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/test/core/row_packet_decode.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/packet_decode-verify",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/cache-new",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/benchmarks/runtime/ports/native_clock.c",
+        "--release",
+        "--verify-facts"
+      ],
+      "status": 0,
+      "seconds": 0.15617846813984215,
+      "stdout": "",
+      "stderr": ""
+    },
+    "lox_eval-old": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/oracle/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/test/core/row_lox_eval.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/lox_eval-old",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/cache-old",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/benchmarks/runtime/ports/native_clock.c",
+        "--release"
+      ],
+      "status": 0,
+      "seconds": 2.0451188879087567,
+      "stdout": "",
+      "stderr": ""
+    },
+    "lox_eval-debug": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/zig-out/bin/mylang-core",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/test/core/row_lox_eval.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/lox_eval-debug",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/cache-new",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/benchmarks/runtime/ports/native_clock.c"
+      ],
+      "status": 0,
+      "seconds": 0.08149996097199619,
+      "stdout": "",
+      "stderr": ""
+    },
+    "lox_eval-release": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/zig-out/bin/mylang-core",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/test/core/row_lox_eval.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/lox_eval-release",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/cache-new",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/benchmarks/runtime/ports/native_clock.c",
+        "--release"
+      ],
+      "status": 0,
+      "seconds": 0.14593415893614292,
+      "stdout": "",
+      "stderr": ""
+    },
+    "lox_eval-verify": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/zig-out/bin/mylang-core",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/test/core/row_lox_eval.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/lox_eval-verify",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/cache-new",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/benchmarks/runtime/ports/native_clock.c",
+        "--release",
+        "--verify-facts"
+      ],
+      "status": 0,
+      "seconds": 0.20103097008541226,
+      "stdout": "",
+      "stderr": ""
+    }
+  },
+  "rows": {
+    "word_count": [
+      {
+        "size": 2,
+        "iterations": 1,
+        "seed": 7,
+        "runs": {
+          "original-old": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/original-text",
+              "word_count",
+              "2",
+              "1",
+              "7"
+            ],
+            "status": 0,
+            "stdout": "1700 16214\n",
+            "stderr": "",
+            "leakcheck": false,
+            "checksum": 1700,
+            "elapsed_ns": 16214
+          },
+          "old": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/word_count-old",
+              "2",
+              "1",
+              "7"
+            ],
+            "status": 0,
+            "stdout": "1700 14192\n",
+            "stderr": "",
+            "leakcheck": false,
+            "checksum": 1700,
+            "elapsed_ns": 14192
+          },
+          "debug": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/word_count-debug",
+              "2",
+              "1",
+              "7"
+            ],
+            "status": 0,
+            "stdout": "1700 2868\n",
+            "stderr": "",
+            "leakcheck": true,
+            "checksum": 1700,
+            "elapsed_ns": 2868
+          },
+          "release": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/word_count-release",
+              "2",
+              "1",
+              "7"
+            ],
+            "status": 0,
+            "stdout": "1700 2764\n",
+            "stderr": "",
+            "leakcheck": true,
+            "checksum": 1700,
+            "elapsed_ns": 2764
+          },
+          "verify": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/word_count-verify",
+              "2",
+              "1",
+              "7"
+            ],
+            "status": 0,
+            "stdout": "1700 2125\n",
+            "stderr": "",
+            "leakcheck": true,
+            "checksum": 1700,
+            "elapsed_ns": 2125
+          }
+        }
+      },
+      {
+        "size": 64,
+        "iterations": 3,
+        "seed": 7,
+        "runs": {
+          "original-old": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/original-text",
+              "word_count",
+              "64",
+              "3",
+              "7"
+            ],
+            "status": 0,
+            "stdout": "1306614 60911\n",
+            "stderr": "",
+            "leakcheck": false,
+            "checksum": 1306614,
+            "elapsed_ns": 60911
+          },
+          "old": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/word_count-old",
+              "64",
+              "3",
+              "7"
+            ],
+            "status": 0,
+            "stdout": "1306614 54501\n",
+            "stderr": "",
+            "leakcheck": false,
+            "checksum": 1306614,
+            "elapsed_ns": 54501
+          },
+          "debug": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/word_count-debug",
+              "64",
+              "3",
+              "7"
+            ],
+            "status": 0,
+            "stdout": "1306614 14889\n",
+            "stderr": "",
+            "leakcheck": true,
+            "checksum": 1306614,
+            "elapsed_ns": 14889
+          },
+          "release": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/word_count-release",
+              "64",
+              "3",
+              "7"
+            ],
+            "status": 0,
+            "stdout": "1306614 12844\n",
+            "stderr": "",
+            "leakcheck": true,
+            "checksum": 1306614,
+            "elapsed_ns": 12844
+          },
+          "verify": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/word_count-verify",
+              "64",
+              "3",
+              "7"
+            ],
+            "status": 0,
+            "stdout": "1306614 13394\n",
+            "stderr": "",
+            "leakcheck": true,
+            "checksum": 1306614,
+            "elapsed_ns": 13394
+          }
+        }
+      },
+      {
+        "size": 65,
+        "iterations": 1,
+        "seed": 17,
+        "runs": {
+          "original-old": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/original-text",
+              "word_count",
+              "65",
+              "1",
+              "17"
+            ],
+            "status": 0,
+            "stdout": "450032 29344\n",
+            "stderr": "",
+            "leakcheck": false,
+            "checksum": 450032,
+            "elapsed_ns": 29344
+          },
+          "old": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/word_count-old",
+              "65",
+              "1",
+              "17"
+            ],
+            "status": 0,
+            "stdout": "450032 30142\n",
+            "stderr": "",
+            "leakcheck": false,
+            "checksum": 450032,
+            "elapsed_ns": 30142
+          },
+          "debug": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/word_count-debug",
+              "65",
+              "1",
+              "17"
+            ],
+            "status": 0,
+            "stdout": "450032 8771\n",
+            "stderr": "",
+            "leakcheck": true,
+            "checksum": 450032,
+            "elapsed_ns": 8771
+          },
+          "release": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/word_count-release",
+              "65",
+              "1",
+              "17"
+            ],
+            "status": 0,
+            "stdout": "450032 7653\n",
+            "stderr": "",
+            "leakcheck": true,
+            "checksum": 450032,
+            "elapsed_ns": 7653
+          },
+          "verify": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/word_count-verify",
+              "65",
+              "1",
+              "17"
+            ],
+            "status": 0,
+            "stdout": "450032 7123\n",
+            "stderr": "",
+            "leakcheck": true,
+            "checksum": 450032,
+            "elapsed_ns": 7123
+          }
+        }
+      },
+      {
+        "size": 4096,
+        "iterations": 1,
+        "seed": 7,
+        "runs": {
+          "original-old": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/original-text",
+              "word_count",
+              "4096",
+              "1",
+              "7"
+            ],
+            "status": 0,
+            "stdout": "724998053 654099\n",
+            "stderr": "",
+            "leakcheck": false,
+            "checksum": 724998053,
+            "elapsed_ns": 654099
+          },
+          "old": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/word_count-old",
+              "4096",
+              "1",
+              "7"
+            ],
+            "status": 0,
+            "stdout": "724998053 731918\n",
+            "stderr": "",
+            "leakcheck": false,
+            "checksum": 724998053,
+            "elapsed_ns": 731918
+          },
+          "debug": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/word_count-debug",
+              "4096",
+              "1",
+              "7"
+            ],
+            "status": 0,
+            "stdout": "724998053 307966\n",
+            "stderr": "",
+            "leakcheck": true,
+            "checksum": 724998053,
+            "elapsed_ns": 307966
+          },
+          "release": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/word_count-release",
+              "4096",
+              "1",
+              "7"
+            ],
+            "status": 0,
+            "stdout": "724998053 315468\n",
+            "stderr": "",
+            "leakcheck": true,
+            "checksum": 724998053,
+            "elapsed_ns": 315468
+          },
+          "verify": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/word_count-verify",
+              "4096",
+              "1",
+              "7"
+            ],
+            "status": 0,
+            "stdout": "724998053 342362\n",
+            "stderr": "",
+            "leakcheck": true,
+            "checksum": 724998053,
+            "elapsed_ns": 342362
+          }
+        }
+      },
+      {
+        "size": 4100,
+        "iterations": 3,
+        "seed": 17,
+        "runs": {
+          "original-old": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/original-text",
+              "word_count",
+              "4100",
+              "3",
+              "17"
+            ],
+            "status": 0,
+            "stdout": "184352368 3357299\n",
+            "stderr": "",
+            "leakcheck": false,
+            "checksum": 184352368,
+            "elapsed_ns": 3357299
+          },
+          "old": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/word_count-old",
+              "4100",
+              "3",
+              "17"
+            ],
+            "status": 0,
+            "stdout": "184352368 3363133\n",
+            "stderr": "",
+            "leakcheck": false,
+            "checksum": 184352368,
+            "elapsed_ns": 3363133
+          },
+          "debug": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/word_count-debug",
+              "4100",
+              "3",
+              "17"
+            ],
+            "status": 0,
+            "stdout": "184352368 1133185\n",
+            "stderr": "",
+            "leakcheck": true,
+            "checksum": 184352368,
+            "elapsed_ns": 1133185
+          },
+          "release": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/word_count-release",
+              "4100",
+              "3",
+              "17"
+            ],
+            "status": 0,
+            "stdout": "184352368 599716\n",
+            "stderr": "",
+            "leakcheck": true,
+            "checksum": 184352368,
+            "elapsed_ns": 599716
+          },
+          "verify": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/word_count-verify",
+              "4100",
+              "3",
+              "17"
+            ],
+            "status": 0,
+            "stdout": "184352368 932041\n",
+            "stderr": "",
+            "leakcheck": true,
+            "checksum": 184352368,
+            "elapsed_ns": 932041
+          }
+        }
+      }
+    ],
+    "csv_aggregate": [
+      {
+        "size": 2,
+        "iterations": 1,
+        "seed": 7,
+        "runs": {
+          "original-old": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/original-text",
+              "csv_aggregate",
+              "2",
+              "1",
+              "7"
+            ],
+            "status": 0,
+            "stdout": "1528 29174\n",
+            "stderr": "",
+            "leakcheck": false,
+            "checksum": 1528,
+            "elapsed_ns": 29174
+          },
+          "old": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/csv_aggregate-old",
+              "2",
+              "1",
+              "7"
+            ],
+            "status": 0,
+            "stdout": "1528 27365\n",
+            "stderr": "",
+            "leakcheck": false,
+            "checksum": 1528,
+            "elapsed_ns": 27365
+          },
+          "debug": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/csv_aggregate-debug",
+              "2",
+              "1",
+              "7"
+            ],
+            "status": 0,
+            "stdout": "1528 11834\n",
+            "stderr": "",
+            "leakcheck": true,
+            "checksum": 1528,
+            "elapsed_ns": 11834
+          },
+          "release": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/csv_aggregate-release",
+              "2",
+              "1",
+              "7"
+            ],
+            "status": 0,
+            "stdout": "1528 9573\n",
+            "stderr": "",
+            "leakcheck": true,
+            "checksum": 1528,
+            "elapsed_ns": 9573
+          },
+          "verify": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/csv_aggregate-verify",
+              "2",
+              "1",
+              "7"
+            ],
+            "status": 0,
+            "stdout": "1528 7406\n",
+            "stderr": "",
+            "leakcheck": true,
+            "checksum": 1528,
+            "elapsed_ns": 7406
+          }
+        }
+      },
+      {
+        "size": 64,
+        "iterations": 3,
+        "seed": 7,
+        "runs": {
+          "original-old": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/original-text",
+              "csv_aggregate",
+              "64",
+              "3",
+              "7"
+            ],
+            "status": 0,
+            "stdout": "336951 338362\n",
+            "stderr": "",
+            "leakcheck": false,
+            "checksum": 336951,
+            "elapsed_ns": 338362
+          },
+          "old": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/csv_aggregate-old",
+              "64",
+              "3",
+              "7"
+            ],
+            "status": 0,
+            "stdout": "336951 334535\n",
+            "stderr": "",
+            "leakcheck": false,
+            "checksum": 336951,
+            "elapsed_ns": 334535
+          },
+          "debug": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/csv_aggregate-debug",
+              "64",
+              "3",
+              "7"
+            ],
+            "status": 0,
+            "stdout": "336951 188516\n",
+            "stderr": "",
+            "leakcheck": true,
+            "checksum": 336951,
+            "elapsed_ns": 188516
+          },
+          "release": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/csv_aggregate-release",
+              "64",
+              "3",
+              "7"
+            ],
+            "status": 0,
+            "stdout": "336951 142267\n",
+            "stderr": "",
+            "leakcheck": true,
+            "checksum": 336951,
+            "elapsed_ns": 142267
+          },
+          "verify": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/csv_aggregate-verify",
+              "64",
+              "3",
+              "7"
+            ],
+            "status": 0,
+            "stdout": "336951 155311\n",
+            "stderr": "",
+            "leakcheck": true,
+            "checksum": 336951,
+            "elapsed_ns": 155311
+          }
+        }
+      },
+      {
+        "size": 65,
+        "iterations": 1,
+        "seed": 17,
+        "runs": {
+          "original-old": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/original-text",
+              "csv_aggregate",
+              "65",
+              "1",
+              "17"
+            ],
+            "status": 0,
+            "stdout": "116514 147353\n",
+            "stderr": "",
+            "leakcheck": false,
+            "checksum": 116514,
+            "elapsed_ns": 147353
+          },
+          "old": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/csv_aggregate-old",
+              "65",
+              "1",
+              "17"
+            ],
+            "status": 0,
+            "stdout": "116514 154744\n",
+            "stderr": "",
+            "leakcheck": false,
+            "checksum": 116514,
+            "elapsed_ns": 154744
+          },
+          "debug": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/csv_aggregate-debug",
+              "65",
+              "1",
+              "17"
+            ],
+            "status": 0,
+            "stdout": "116514 101356\n",
+            "stderr": "",
+            "leakcheck": true,
+            "checksum": 116514,
+            "elapsed_ns": 101356
+          },
+          "release": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/csv_aggregate-release",
+              "65",
+              "1",
+              "17"
+            ],
+            "status": 0,
+            "stdout": "116514 81381\n",
+            "stderr": "",
+            "leakcheck": true,
+            "checksum": 116514,
+            "elapsed_ns": 81381
+          },
+          "verify": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/csv_aggregate-verify",
+              "65",
+              "1",
+              "17"
+            ],
+            "status": 0,
+            "stdout": "116514 85028\n",
+            "stderr": "",
+            "leakcheck": true,
+            "checksum": 116514,
+            "elapsed_ns": 85028
+          }
+        }
+      },
+      {
+        "size": 4096,
+        "iterations": 1,
+        "seed": 7,
+        "runs": {
+          "original-old": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/original-text",
+              "csv_aggregate",
+              "4096",
+              "1",
+              "7"
+            ],
+            "status": 0,
+            "stdout": "245045203 8977159\n",
+            "stderr": "",
+            "leakcheck": false,
+            "checksum": 245045203,
+            "elapsed_ns": 8977159
+          },
+          "old": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/csv_aggregate-old",
+              "4096",
+              "1",
+              "7"
+            ],
+            "status": 0,
+            "stdout": "245045203 8829553\n",
+            "stderr": "",
+            "leakcheck": false,
+            "checksum": 245045203,
+            "elapsed_ns": 8829553
+          },
+          "debug": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/csv_aggregate-debug",
+              "4096",
+              "1",
+              "7"
+            ],
+            "status": 0,
+            "stdout": "245045203 5075394\n",
+            "stderr": "",
+            "leakcheck": true,
+            "checksum": 245045203,
+            "elapsed_ns": 5075394
+          },
+          "release": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/csv_aggregate-release",
+              "4096",
+              "1",
+              "7"
+            ],
+            "status": 0,
+            "stdout": "245045203 2328317\n",
+            "stderr": "",
+            "leakcheck": true,
+            "checksum": 245045203,
+            "elapsed_ns": 2328317
+          },
+          "verify": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/csv_aggregate-verify",
+              "4096",
+              "1",
+              "7"
+            ],
+            "status": 0,
+            "stdout": "245045203 2707800\n",
+            "stderr": "",
+            "leakcheck": true,
+            "checksum": 245045203,
+            "elapsed_ns": 2707800
+          }
+        }
+      },
+      {
+        "size": 4100,
+        "iterations": 3,
+        "seed": 17,
+        "runs": {
+          "original-old": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/original-text",
+              "csv_aggregate",
+              "4100",
+              "3",
+              "17"
+            ],
+            "status": 0,
+            "stdout": "736887642 21112790\n",
+            "stderr": "",
+            "leakcheck": false,
+            "checksum": 736887642,
+            "elapsed_ns": 21112790
+          },
+          "old": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/csv_aggregate-old",
+              "4100",
+              "3",
+              "17"
+            ],
+            "status": 0,
+            "stdout": "736887642 21862411\n",
+            "stderr": "",
+            "leakcheck": false,
+            "checksum": 736887642,
+            "elapsed_ns": 21862411
+          },
+          "debug": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/csv_aggregate-debug",
+              "4100",
+              "3",
+              "17"
+            ],
+            "status": 0,
+            "stdout": "736887642 7969909\n",
+            "stderr": "",
+            "leakcheck": true,
+            "checksum": 736887642,
+            "elapsed_ns": 7969909
+          },
+          "release": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/csv_aggregate-release",
+              "4100",
+              "3",
+              "17"
+            ],
+            "status": 0,
+            "stdout": "736887642 10891986\n",
+            "stderr": "",
+            "leakcheck": true,
+            "checksum": 736887642,
+            "elapsed_ns": 10891986
+          },
+          "verify": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/csv_aggregate-verify",
+              "4100",
+              "3",
+              "17"
+            ],
+            "status": 0,
+            "stdout": "736887642 6336028\n",
+            "stderr": "",
+            "leakcheck": true,
+            "checksum": 736887642,
+            "elapsed_ns": 6336028
+          }
+        }
+      }
+    ],
+    "json_transform": [
+      {
+        "size": 2,
+        "iterations": 1,
+        "seed": 7,
+        "runs": {
+          "original-old": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/original-text",
+              "json_transform",
+              "2",
+              "1",
+              "7"
+            ],
+            "status": 0,
+            "stdout": "7517 34899\n",
+            "stderr": "",
+            "leakcheck": false,
+            "checksum": 7517,
+            "elapsed_ns": 34899
+          },
+          "old": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/json_transform-old",
+              "2",
+              "1",
+              "7"
+            ],
+            "status": 0,
+            "stdout": "7517 33679\n",
+            "stderr": "",
+            "leakcheck": false,
+            "checksum": 7517,
+            "elapsed_ns": 33679
+          },
+          "debug": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/json_transform-debug",
+              "2",
+              "1",
+              "7"
+            ],
+            "status": 0,
+            "stdout": "7517 18913\n",
+            "stderr": "",
+            "leakcheck": true,
+            "checksum": 7517,
+            "elapsed_ns": 18913
+          },
+          "release": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/json_transform-release",
+              "2",
+              "1",
+              "7"
+            ],
+            "status": 0,
+            "stdout": "7517 8397\n",
+            "stderr": "",
+            "leakcheck": true,
+            "checksum": 7517,
+            "elapsed_ns": 8397
+          },
+          "verify": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/json_transform-verify",
+              "2",
+              "1",
+              "7"
+            ],
+            "status": 0,
+            "stdout": "7517 8187\n",
+            "stderr": "",
+            "leakcheck": true,
+            "checksum": 7517,
+            "elapsed_ns": 8187
+          }
+        }
+      },
+      {
+        "size": 64,
+        "iterations": 3,
+        "seed": 7,
+        "runs": {
+          "original-old": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/original-text",
+              "json_transform",
+              "64",
+              "3",
+              "7"
+            ],
+            "status": 0,
+            "stdout": "496047 1043400\n",
+            "stderr": "",
+            "leakcheck": false,
+            "checksum": 496047,
+            "elapsed_ns": 1043400
+          },
+          "old": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/json_transform-old",
+              "64",
+              "3",
+              "7"
+            ],
+            "status": 0,
+            "stdout": "496047 1025347\n",
+            "stderr": "",
+            "leakcheck": false,
+            "checksum": 496047,
+            "elapsed_ns": 1025347
+          },
+          "debug": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/json_transform-debug",
+              "64",
+              "3",
+              "7"
+            ],
+            "status": 0,
+            "stdout": "496047 514851\n",
+            "stderr": "",
+            "leakcheck": true,
+            "checksum": 496047,
+            "elapsed_ns": 514851
+          },
+          "release": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/json_transform-release",
+              "64",
+              "3",
+              "7"
+            ],
+            "status": 0,
+            "stdout": "496047 269912\n",
+            "stderr": "",
+            "leakcheck": true,
+            "checksum": 496047,
+            "elapsed_ns": 269912
+          },
+          "verify": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/json_transform-verify",
+              "64",
+              "3",
+              "7"
+            ],
+            "status": 0,
+            "stdout": "496047 317774\n",
+            "stderr": "",
+            "leakcheck": true,
+            "checksum": 496047,
+            "elapsed_ns": 317774
+          }
+        }
+      },
+      {
+        "size": 65,
+        "iterations": 1,
+        "seed": 17,
+        "runs": {
+          "original-old": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/original-text",
+              "json_transform",
+              "65",
+              "1",
+              "17"
+            ],
+            "status": 0,
+            "stdout": "165674 455173\n",
+            "stderr": "",
+            "leakcheck": false,
+            "checksum": 165674,
+            "elapsed_ns": 455173
+          },
+          "old": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/json_transform-old",
+              "65",
+              "1",
+              "17"
+            ],
+            "status": 0,
+            "stdout": "165674 510629\n",
+            "stderr": "",
+            "leakcheck": false,
+            "checksum": 165674,
+            "elapsed_ns": 510629
+          },
+          "debug": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/json_transform-debug",
+              "65",
+              "1",
+              "17"
+            ],
+            "status": 0,
+            "stdout": "165674 333013\n",
+            "stderr": "",
+            "leakcheck": true,
+            "checksum": 165674,
+            "elapsed_ns": 333013
+          },
+          "release": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/json_transform-release",
+              "65",
+              "1",
+              "17"
+            ],
+            "status": 0,
+            "stdout": "165674 151889\n",
+            "stderr": "",
+            "leakcheck": true,
+            "checksum": 165674,
+            "elapsed_ns": 151889
+          },
+          "verify": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/json_transform-verify",
+              "65",
+              "1",
+              "17"
+            ],
+            "status": 0,
+            "stdout": "165674 187478\n",
+            "stderr": "",
+            "leakcheck": true,
+            "checksum": 165674,
+            "elapsed_ns": 187478
+          }
+        }
+      },
+      {
+        "size": 4096,
+        "iterations": 1,
+        "seed": 7,
+        "runs": {
+          "original-old": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/original-text",
+              "json_transform",
+              "4096",
+              "1",
+              "7"
+            ],
+            "status": 0,
+            "stdout": "11288327 15734534\n",
+            "stderr": "",
+            "leakcheck": false,
+            "checksum": 11288327,
+            "elapsed_ns": 15734534
+          },
+          "old": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/json_transform-old",
+              "4096",
+              "1",
+              "7"
+            ],
+            "status": 0,
+            "stdout": "11288327 15493977\n",
+            "stderr": "",
+            "leakcheck": false,
+            "checksum": 11288327,
+            "elapsed_ns": 15493977
+          },
+          "debug": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/json_transform-debug",
+              "4096",
+              "1",
+              "7"
+            ],
+            "status": 0,
+            "stdout": "11288327 7422255\n",
+            "stderr": "",
+            "leakcheck": true,
+            "checksum": 11288327,
+            "elapsed_ns": 7422255
+          },
+          "release": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/json_transform-release",
+              "4096",
+              "1",
+              "7"
+            ],
+            "status": 0,
+            "stdout": "11288327 6859229\n",
+            "stderr": "",
+            "leakcheck": true,
+            "checksum": 11288327,
+            "elapsed_ns": 6859229
+          },
+          "verify": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/json_transform-verify",
+              "4096",
+              "1",
+              "7"
+            ],
+            "status": 0,
+            "stdout": "11288327 7545114\n",
+            "stderr": "",
+            "leakcheck": true,
+            "checksum": 11288327,
+            "elapsed_ns": 7545114
+          }
+        }
+      },
+      {
+        "size": 4100,
+        "iterations": 3,
+        "seed": 17,
+        "runs": {
+          "original-old": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/original-text",
+              "json_transform",
+              "4100",
+              "3",
+              "17"
+            ],
+            "status": 0,
+            "stdout": "33893085 43600670\n",
+            "stderr": "",
+            "leakcheck": false,
+            "checksum": 33893085,
+            "elapsed_ns": 43600670
+          },
+          "old": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/json_transform-old",
+              "4100",
+              "3",
+              "17"
+            ],
+            "status": 0,
+            "stdout": "33893085 41937225\n",
+            "stderr": "",
+            "leakcheck": false,
+            "checksum": 33893085,
+            "elapsed_ns": 41937225
+          },
+          "debug": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/json_transform-debug",
+              "4100",
+              "3",
+              "17"
+            ],
+            "status": 0,
+            "stdout": "33893085 22415025\n",
+            "stderr": "",
+            "leakcheck": true,
+            "checksum": 33893085,
+            "elapsed_ns": 22415025
+          },
+          "release": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/json_transform-release",
+              "4100",
+              "3",
+              "17"
+            ],
+            "status": 0,
+            "stdout": "33893085 19907564\n",
+            "stderr": "",
+            "leakcheck": true,
+            "checksum": 33893085,
+            "elapsed_ns": 19907564
+          },
+          "verify": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/json_transform-verify",
+              "4100",
+              "3",
+              "17"
+            ],
+            "status": 0,
+            "stdout": "33893085 10936432\n",
+            "stderr": "",
+            "leakcheck": true,
+            "checksum": 33893085,
+            "elapsed_ns": 10936432
+          }
+        }
+      }
+    ],
+    "packet_decode": [
+      {
+        "size": 2,
+        "iterations": 1,
+        "seed": 7,
+        "runs": {
+          "original-old": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/original-compute",
+              "packet_decode",
+              "2",
+              "1",
+              "7"
+            ],
+            "status": 0,
+            "stdout": "322 695\n",
+            "stderr": "",
+            "leakcheck": false,
+            "checksum": 322,
+            "elapsed_ns": 695
+          },
+          "old": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/packet_decode-old",
+              "2",
+              "1",
+              "7"
+            ],
+            "status": 0,
+            "stdout": "322 747\n",
+            "stderr": "",
+            "leakcheck": false,
+            "checksum": 322,
+            "elapsed_ns": 747
+          },
+          "debug": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/packet_decode-debug",
+              "2",
+              "1",
+              "7"
+            ],
+            "status": 0,
+            "stdout": "322 1687\n",
+            "stderr": "",
+            "leakcheck": true,
+            "checksum": 322,
+            "elapsed_ns": 1687
+          },
+          "release": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/packet_decode-release",
+              "2",
+              "1",
+              "7"
+            ],
+            "status": 0,
+            "stdout": "322 731\n",
+            "stderr": "",
+            "leakcheck": true,
+            "checksum": 322,
+            "elapsed_ns": 731
+          },
+          "verify": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/packet_decode-verify",
+              "2",
+              "1",
+              "7"
+            ],
+            "status": 0,
+            "stdout": "322 700\n",
+            "stderr": "",
+            "leakcheck": true,
+            "checksum": 322,
+            "elapsed_ns": 700
+          }
+        }
+      },
+      {
+        "size": 64,
+        "iterations": 3,
+        "seed": 7,
+        "runs": {
+          "original-old": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/original-compute",
+              "packet_decode",
+              "64",
+              "3",
+              "7"
+            ],
+            "status": 0,
+            "stdout": "132624 2619\n",
+            "stderr": "",
+            "leakcheck": false,
+            "checksum": 132624,
+            "elapsed_ns": 2619
+          },
+          "old": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/packet_decode-old",
+              "64",
+              "3",
+              "7"
+            ],
+            "status": 0,
+            "stdout": "132624 2014\n",
+            "stderr": "",
+            "leakcheck": false,
+            "checksum": 132624,
+            "elapsed_ns": 2014
+          },
+          "debug": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/packet_decode-debug",
+              "64",
+              "3",
+              "7"
+            ],
+            "status": 0,
+            "stdout": "132624 12465\n",
+            "stderr": "",
+            "leakcheck": true,
+            "checksum": 132624,
+            "elapsed_ns": 12465
+          },
+          "release": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/packet_decode-release",
+              "64",
+              "3",
+              "7"
+            ],
+            "status": 0,
+            "stdout": "132624 4447\n",
+            "stderr": "",
+            "leakcheck": true,
+            "checksum": 132624,
+            "elapsed_ns": 4447
+          },
+          "verify": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/packet_decode-verify",
+              "64",
+              "3",
+              "7"
+            ],
+            "status": 0,
+            "stdout": "132624 4346\n",
+            "stderr": "",
+            "leakcheck": true,
+            "checksum": 132624,
+            "elapsed_ns": 4346
+          }
+        }
+      },
+      {
+        "size": 65,
+        "iterations": 1,
+        "seed": 17,
+        "runs": {
+          "original-old": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/original-compute",
+              "packet_decode",
+              "65",
+              "1",
+              "17"
+            ],
+            "status": 0,
+            "stdout": "48495 1210\n",
+            "stderr": "",
+            "leakcheck": false,
+            "checksum": 48495,
+            "elapsed_ns": 1210
+          },
+          "old": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/packet_decode-old",
+              "65",
+              "1",
+              "17"
+            ],
+            "status": 0,
+            "stdout": "48495 988\n",
+            "stderr": "",
+            "leakcheck": false,
+            "checksum": 48495,
+            "elapsed_ns": 988
+          },
+          "debug": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/packet_decode-debug",
+              "65",
+              "1",
+              "17"
+            ],
+            "status": 0,
+            "stdout": "48495 5839\n",
+            "stderr": "",
+            "leakcheck": true,
+            "checksum": 48495,
+            "elapsed_ns": 5839
+          },
+          "release": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/packet_decode-release",
+              "65",
+              "1",
+              "17"
+            ],
+            "status": 0,
+            "stdout": "48495 2276\n",
+            "stderr": "",
+            "leakcheck": true,
+            "checksum": 48495,
+            "elapsed_ns": 2276
+          },
+          "verify": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/packet_decode-verify",
+              "65",
+              "1",
+              "17"
+            ],
+            "status": 0,
+            "stdout": "48495 2614\n",
+            "stderr": "",
+            "leakcheck": true,
+            "checksum": 48495,
+            "elapsed_ns": 2614
+          }
+        }
+      },
+      {
+        "size": 4096,
+        "iterations": 1,
+        "seed": 7,
+        "runs": {
+          "original-old": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/original-compute",
+              "packet_decode",
+              "4096",
+              "1",
+              "7"
+            ],
+            "status": 0,
+            "stdout": "34089984 47859\n",
+            "stderr": "",
+            "leakcheck": false,
+            "checksum": 34089984,
+            "elapsed_ns": 47859
+          },
+          "old": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/packet_decode-old",
+              "4096",
+              "1",
+              "7"
+            ],
+            "status": 0,
+            "stdout": "34089984 134702\n",
+            "stderr": "",
+            "leakcheck": false,
+            "checksum": 34089984,
+            "elapsed_ns": 134702
+          },
+          "debug": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/packet_decode-debug",
+              "4096",
+              "1",
+              "7"
+            ],
+            "status": 0,
+            "stdout": "34089984 401963\n",
+            "stderr": "",
+            "leakcheck": true,
+            "checksum": 34089984,
+            "elapsed_ns": 401963
+          },
+          "release": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/packet_decode-release",
+              "4096",
+              "1",
+              "7"
+            ],
+            "status": 0,
+            "stdout": "34089984 148306\n",
+            "stderr": "",
+            "leakcheck": true,
+            "checksum": 34089984,
+            "elapsed_ns": 148306
+          },
+          "verify": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/packet_decode-verify",
+              "4096",
+              "1",
+              "7"
+            ],
+            "status": 0,
+            "stdout": "34089984 197357\n",
+            "stderr": "",
+            "leakcheck": true,
+            "checksum": 34089984,
+            "elapsed_ns": 197357
+          }
+        }
+      },
+      {
+        "size": 4100,
+        "iterations": 3,
+        "seed": 17,
+        "runs": {
+          "original-old": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/original-compute",
+              "packet_decode",
+              "4100",
+              "3",
+              "17"
+            ],
+            "status": 0,
+            "stdout": "102316437 176132\n",
+            "stderr": "",
+            "leakcheck": false,
+            "checksum": 102316437,
+            "elapsed_ns": 176132
+          },
+          "old": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/packet_decode-old",
+              "4100",
+              "3",
+              "17"
+            ],
+            "status": 0,
+            "stdout": "102316437 133648\n",
+            "stderr": "",
+            "leakcheck": false,
+            "checksum": 102316437,
+            "elapsed_ns": 133648
+          },
+          "debug": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/packet_decode-debug",
+              "4100",
+              "3",
+              "17"
+            ],
+            "status": 0,
+            "stdout": "102316437 1313602\n",
+            "stderr": "",
+            "leakcheck": true,
+            "checksum": 102316437,
+            "elapsed_ns": 1313602
+          },
+          "release": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/packet_decode-release",
+              "4100",
+              "3",
+              "17"
+            ],
+            "status": 0,
+            "stdout": "102316437 435352\n",
+            "stderr": "",
+            "leakcheck": true,
+            "checksum": 102316437,
+            "elapsed_ns": 435352
+          },
+          "verify": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/packet_decode-verify",
+              "4100",
+              "3",
+              "17"
+            ],
+            "status": 0,
+            "stdout": "102316437 478540\n",
+            "stderr": "",
+            "leakcheck": true,
+            "checksum": 102316437,
+            "elapsed_ns": 478540
+          }
+        }
+      }
+    ],
+    "lox_eval": [
+      {
+        "size": 2,
+        "iterations": 1,
+        "seed": 7,
+        "runs": {
+          "original-old": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/original-collections",
+              "lox_eval",
+              "2",
+              "1",
+              "7"
+            ],
+            "status": 0,
+            "stdout": "29 10788\n",
+            "stderr": "",
+            "leakcheck": false,
+            "checksum": 29,
+            "elapsed_ns": 10788
+          },
+          "old": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/lox_eval-old",
+              "2",
+              "1",
+              "7"
+            ],
+            "status": 0,
+            "stdout": "29 8035\n",
+            "stderr": "",
+            "leakcheck": false,
+            "checksum": 29,
+            "elapsed_ns": 8035
+          },
+          "debug": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/lox_eval-debug",
+              "2",
+              "1",
+              "7"
+            ],
+            "status": 0,
+            "stdout": "29 2649\n",
+            "stderr": "",
+            "leakcheck": true,
+            "checksum": 29,
+            "elapsed_ns": 2649
+          },
+          "release": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/lox_eval-release",
+              "2",
+              "1",
+              "7"
+            ],
+            "status": 0,
+            "stdout": "29 1361\n",
+            "stderr": "",
+            "leakcheck": true,
+            "checksum": 29,
+            "elapsed_ns": 1361
+          },
+          "verify": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/lox_eval-verify",
+              "2",
+              "1",
+              "7"
+            ],
+            "status": 0,
+            "stdout": "29 1474\n",
+            "stderr": "",
+            "leakcheck": true,
+            "checksum": 29,
+            "elapsed_ns": 1474
+          }
+        }
+      },
+      {
+        "size": 64,
+        "iterations": 3,
+        "seed": 7,
+        "runs": {
+          "original-old": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/original-collections",
+              "lox_eval",
+              "64",
+              "3",
+              "7"
+            ],
+            "status": 0,
+            "stdout": "1798080 53876\n",
+            "stderr": "",
+            "leakcheck": false,
+            "checksum": 1798080,
+            "elapsed_ns": 53876
+          },
+          "old": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/lox_eval-old",
+              "64",
+              "3",
+              "7"
+            ],
+            "status": 0,
+            "stdout": "1798080 51650\n",
+            "stderr": "",
+            "leakcheck": false,
+            "checksum": 1798080,
+            "elapsed_ns": 51650
+          },
+          "debug": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/lox_eval-debug",
+              "64",
+              "3",
+              "7"
+            ],
+            "status": 0,
+            "stdout": "1798080 77115\n",
+            "stderr": "",
+            "leakcheck": true,
+            "checksum": 1798080,
+            "elapsed_ns": 77115
+          },
+          "release": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/lox_eval-release",
+              "64",
+              "3",
+              "7"
+            ],
+            "status": 0,
+            "stdout": "1798080 17043\n",
+            "stderr": "",
+            "leakcheck": true,
+            "checksum": 1798080,
+            "elapsed_ns": 17043
+          },
+          "verify": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/lox_eval-verify",
+              "64",
+              "3",
+              "7"
+            ],
+            "status": 0,
+            "stdout": "1798080 12981\n",
+            "stderr": "",
+            "leakcheck": true,
+            "checksum": 1798080,
+            "elapsed_ns": 12981
+          }
+        }
+      },
+      {
+        "size": 65,
+        "iterations": 1,
+        "seed": 17,
+        "runs": {
+          "original-old": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/original-collections",
+              "lox_eval",
+              "65",
+              "1",
+              "17"
+            ],
+            "status": 0,
+            "stdout": "612776 25907\n",
+            "stderr": "",
+            "leakcheck": false,
+            "checksum": 612776,
+            "elapsed_ns": 25907
+          },
+          "old": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/lox_eval-old",
+              "65",
+              "1",
+              "17"
+            ],
+            "status": 0,
+            "stdout": "612776 23361\n",
+            "stderr": "",
+            "leakcheck": false,
+            "checksum": 612776,
+            "elapsed_ns": 23361
+          },
+          "debug": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/lox_eval-debug",
+              "65",
+              "1",
+              "17"
+            ],
+            "status": 0,
+            "stdout": "612776 34430\n",
+            "stderr": "",
+            "leakcheck": true,
+            "checksum": 612776,
+            "elapsed_ns": 34430
+          },
+          "release": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/lox_eval-release",
+              "65",
+              "1",
+              "17"
+            ],
+            "status": 0,
+            "stdout": "612776 7755\n",
+            "stderr": "",
+            "leakcheck": true,
+            "checksum": 612776,
+            "elapsed_ns": 7755
+          },
+          "verify": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/lox_eval-verify",
+              "65",
+              "1",
+              "17"
+            ],
+            "status": 0,
+            "stdout": "612776 11598\n",
+            "stderr": "",
+            "leakcheck": true,
+            "checksum": 612776,
+            "elapsed_ns": 11598
+          }
+        }
+      },
+      {
+        "size": 4096,
+        "iterations": 1,
+        "seed": 7,
+        "runs": {
+          "original-old": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/original-collections",
+              "lox_eval",
+              "4096",
+              "1",
+              "7"
+            ],
+            "status": 0,
+            "stdout": "295073 989016\n",
+            "stderr": "",
+            "leakcheck": false,
+            "checksum": 295073,
+            "elapsed_ns": 989016
+          },
+          "old": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/lox_eval-old",
+              "4096",
+              "1",
+              "7"
+            ],
+            "status": 0,
+            "stdout": "295073 1044044\n",
+            "stderr": "",
+            "leakcheck": false,
+            "checksum": 295073,
+            "elapsed_ns": 1044044
+          },
+          "debug": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/lox_eval-debug",
+              "4096",
+              "1",
+              "7"
+            ],
+            "status": 0,
+            "stdout": "295073 2003026\n",
+            "stderr": "",
+            "leakcheck": true,
+            "checksum": 295073,
+            "elapsed_ns": 2003026
+          },
+          "release": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/lox_eval-release",
+              "4096",
+              "1",
+              "7"
+            ],
+            "status": 0,
+            "stdout": "295073 326119\n",
+            "stderr": "",
+            "leakcheck": true,
+            "checksum": 295073,
+            "elapsed_ns": 326119
+          },
+          "verify": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/lox_eval-verify",
+              "4096",
+              "1",
+              "7"
+            ],
+            "status": 0,
+            "stdout": "295073 478280\n",
+            "stderr": "",
+            "leakcheck": true,
+            "checksum": 295073,
+            "elapsed_ns": 478280
+          }
+        }
+      },
+      {
+        "size": 4100,
+        "iterations": 3,
+        "seed": 17,
+        "runs": {
+          "original-old": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/original-collections",
+              "lox_eval",
+              "4100",
+              "3",
+              "17"
+            ],
+            "status": 0,
+            "stdout": "1689772 2301090\n",
+            "stderr": "",
+            "leakcheck": false,
+            "checksum": 1689772,
+            "elapsed_ns": 2301090
+          },
+          "old": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/lox_eval-old",
+              "4100",
+              "3",
+              "17"
+            ],
+            "status": 0,
+            "stdout": "1689772 3381364\n",
+            "stderr": "",
+            "leakcheck": false,
+            "checksum": 1689772,
+            "elapsed_ns": 3381364
+          },
+          "debug": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/lox_eval-debug",
+              "4100",
+              "3",
+              "17"
+            ],
+            "status": 0,
+            "stdout": "1689772 5458949\n",
+            "stderr": "",
+            "leakcheck": true,
+            "checksum": 1689772,
+            "elapsed_ns": 5458949
+          },
+          "release": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/lox_eval-release",
+              "4100",
+              "3",
+              "17"
+            ],
+            "status": 0,
+            "stdout": "1689772 927518\n",
+            "stderr": "",
+            "leakcheck": true,
+            "checksum": 1689772,
+            "elapsed_ns": 927518
+          },
+          "verify": {
+            "command": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/lox_eval-verify",
+              "4100",
+              "3",
+              "17"
+            ],
+            "status": 0,
+            "stdout": "1689772 1377194\n",
+            "stderr": "",
+            "leakcheck": true,
+            "checksum": 1689772,
+            "elapsed_ns": 1377194
+          }
+        }
+      }
+    ]
+  },
+  "stdlib": [
+    {
+      "row": "string_equal",
+      "mode": "debug",
+      "old": {
+        "command": [
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/original-text",
+          "string_equal",
+          "64",
+          "3",
+          "7"
+        ],
+        "status": 0,
+        "stdout": "2 1121\n",
+        "stderr": "",
+        "leakcheck": false,
+        "checksum": 2,
+        "elapsed_ns": 1121
+      },
+      "new": {
+        "command": [
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/original-text-new-debug",
+          "string_equal",
+          "64",
+          "3",
+          "7"
+        ],
+        "status": 0,
+        "stdout": "2 1031\n",
+        "stderr": "",
+        "leakcheck": true,
+        "checksum": 2,
+        "elapsed_ns": 1031
+      }
+    },
+    {
+      "row": "json_transform",
+      "mode": "debug",
+      "old": {
+        "command": [
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/original-text",
+          "json_transform",
+          "64",
+          "3",
+          "7"
+        ],
+        "status": 0,
+        "stdout": "496047 1085663\n",
+        "stderr": "",
+        "leakcheck": false,
+        "checksum": 496047,
+        "elapsed_ns": 1085663
+      },
+      "new": {
+        "command": [
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/original-text-new-debug",
+          "json_transform",
+          "64",
+          "3",
+          "7"
+        ],
+        "status": 0,
+        "stdout": "496047 535346\n",
+        "stderr": "",
+        "leakcheck": true,
+        "checksum": 496047,
+        "elapsed_ns": 535346
+      }
+    },
+    {
+      "row": "string_equal",
+      "mode": "release",
+      "old": {
+        "command": [
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/original-text",
+          "string_equal",
+          "64",
+          "3",
+          "7"
+        ],
+        "status": 0,
+        "stdout": "2 983\n",
+        "stderr": "",
+        "leakcheck": false,
+        "checksum": 2,
+        "elapsed_ns": 983
+      },
+      "new": {
+        "command": [
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/original-text-new-release",
+          "string_equal",
+          "64",
+          "3",
+          "7"
+        ],
+        "status": 0,
+        "stdout": "2 505\n",
+        "stderr": "",
+        "leakcheck": true,
+        "checksum": 2,
+        "elapsed_ns": 505
+      }
+    },
+    {
+      "row": "json_transform",
+      "mode": "release",
+      "old": {
+        "command": [
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/original-text",
+          "json_transform",
+          "64",
+          "3",
+          "7"
+        ],
+        "status": 0,
+        "stdout": "496047 1031545\n",
+        "stderr": "",
+        "leakcheck": false,
+        "checksum": 496047,
+        "elapsed_ns": 1031545
+      },
+      "new": {
+        "command": [
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/original-text-new-release",
+          "json_transform",
+          "64",
+          "3",
+          "7"
+        ],
+        "status": 0,
+        "stdout": "496047 251068\n",
+        "stderr": "",
+        "leakcheck": true,
+        "checksum": 496047,
+        "elapsed_ns": 251068
+      }
+    },
+    {
+      "row": "string_equal",
+      "mode": "verify",
+      "old": {
+        "command": [
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/original-text",
+          "string_equal",
+          "64",
+          "3",
+          "7"
+        ],
+        "status": 0,
+        "stdout": "2 1304\n",
+        "stderr": "",
+        "leakcheck": false,
+        "checksum": 2,
+        "elapsed_ns": 1304
+      },
+      "new": {
+        "command": [
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/original-text-new-verify",
+          "string_equal",
+          "64",
+          "3",
+          "7"
+        ],
+        "status": 0,
+        "stdout": "2 583\n",
+        "stderr": "",
+        "leakcheck": true,
+        "checksum": 2,
+        "elapsed_ns": 583
+      }
+    },
+    {
+      "row": "json_transform",
+      "mode": "verify",
+      "old": {
+        "command": [
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/original-text",
+          "json_transform",
+          "64",
+          "3",
+          "7"
+        ],
+        "status": 0,
+        "stdout": "496047 653629\n",
+        "stderr": "",
+        "leakcheck": false,
+        "checksum": 496047,
+        "elapsed_ns": 653629
+      },
+      "new": {
+        "command": [
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/original-text-new-verify",
+          "json_transform",
+          "64",
+          "3",
+          "7"
+        ],
+        "status": 0,
+        "stdout": "496047 274959\n",
+        "stderr": "",
+        "leakcheck": true,
+        "checksum": 496047,
+        "elapsed_ns": 274959
+      }
+    }
+  ],
+  "native_executions": 137,
+  "error": null
+}
