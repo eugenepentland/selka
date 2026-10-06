@@ -45,3 +45,26 @@ are additionally recorded in the kind summary and `failures/` directory.
 
 Only Python syntax and `--help` checks were used while preparing these tools.
 Preparation is not evidence that the S3-X matrix passed.
+
+S3-A's private split-key fusion also has a supplementary 200-source text sweep.
+Its generator exercises borrowed key lifetimes, managed dictionary returns,
+rebound source text, break/continue, collisions, indexed/deleted dictionaries and
+materialized escape fallbacks. The existing strict S3 monitor and text transport
+run the same explicit old/debug/release/verify comparisons; this adds 3,000
+comparisons without replacing any of the nine matrix kinds:
+
+```bash
+scripts/build-slot.sh gate -- bash -c '"$@"; result=$?; exit "$result"' -- \
+  scripts/build-slot.sh build -- python3 \
+  experiments/new-core-s3-20261006/wave-x/integration/fuzz_qualification.py \
+  --kind text --cases 200 --seed 3340 \
+  --harness experiments/new-core-s3-20261006/wave-x/integration/fuzz_split_harness.py \
+  --old /absolute/path/to/qualified-old/mylang \
+  --new /absolute/path/to/qualified-new/mylang-core \
+  --evidence experiments/new-core-s3-20261006/wave-x/integration/split-200-NEW-RUN \
+  --cache-root .mylang-cache/wave-x/split-200-NEW-RUN
+```
+
+Run only after A is integrated and on the same frozen source/oracle pair as the
+matrix. Both output paths must be fresh. The adapter only renames the generated
+module to the text transport's filename; it does not change the generated work.
