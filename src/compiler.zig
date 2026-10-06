@@ -67,6 +67,8 @@ pub const syntax_cache = @import("syntax_cache.zig");
 /// Persistent content-addressed frontend reuse for ordinary one-shot commands.
 pub const frontend_cache = @import("frontend_cache.zig");
 pub const project = @import("project.zig");
+/// Strict project configuration, budgets, import policies and interface files.
+pub const project_config = @import("project_config.zig");
 pub const source = @import("source.zig");
 pub const diagnostic = @import("diagnostic.zig");
 /// Versioned diagnostic rendering for CLI and tool consumers.

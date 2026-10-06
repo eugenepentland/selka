@@ -334,7 +334,8 @@ pub const Cache = struct {
         const prepared = try key.prepare(allocator, src, syntax, .{ .build = self.context.contract, .mutation = self.context.mutation_contract }, self.resolution, recall);
         if (profile) |p| p.addSince("dependency_key_preparation", prepare_start, false);
         if (self.context.persistent) |persistent| {
-            if (self.entries.len == 0 and self.context.summaries == null) {
+            const needs_trees = if (self.context.summaries) |request| request.facts_only else true;
+            if (self.entries.len == 0 and needs_trees) {
                 const io_start = if (profile) |p| p.now() else std.Io.Timestamp.zero;
                 try self.loadPersistent(persistent, prepared);
                 if (profile) |p| p.addSince("retention_store_io", io_start, false);
@@ -595,10 +596,10 @@ pub const Session = struct {
     pub fn remember(self: *Session, program: typed.Program) error{ OutOfMemory, InternalError }!void {
         const cache = self.cache;
         if (cache.reuse.max_bytes == 0) return;
-        // A request served by check summaries neither reads nor publishes
-        // retained checked trees: checking a body fresh costs no more than
-        // decoding and relocating its tree.
-        if (cache.context.summaries != null) return;
+        // Validation-only summary requests have no complete trees to retain.
+        // Lowering requests keep their trees and may reuse them independently
+        // of the unchanged pass facts their summaries stand in for.
+        if (cache.context.summaries) |request| if (!request.facts_only) return;
         const generic_bytes = cache.reuse.symbolic.retainedBytes() + cache.reuse.specializations.retainedBytes();
         const ordinary_budget = cache.reuse.max_bytes -| generic_bytes;
         const ordinary_count = self.prepared.ordinary_ast.len;

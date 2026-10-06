@@ -52,6 +52,7 @@ pub fn build(init: std.process.Init, path: []const u8, options: Options, report:
     const entry = frontend.entryOf(path);
     var session = frontend.Session.init(init.gpa, init.io, entry.root);
     defer session.deinit();
+    try session.enableCache(init.gpa, options.cache);
     const checked = session.checkFile(allocator, path, report) catch |err| switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
         else => return error.SourceError,
