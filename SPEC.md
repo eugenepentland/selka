@@ -1901,6 +1901,11 @@ The separate `mylang-core` executable (`zig build core`, `docs/design/new-core-i
 ## New core S3 foundation
 
 - [NEW-CORE-S3-IR-1] Mutable bytes, capability authorities and external resources have counted pointer layouts; all new operation operands and results are verified before emission.
-- [NEW-CORE-S3-IR-2] Pending mutable-byte and numeric operations emit valid LLVM and fail with E_CORE_UNSUPPORTED before any result is observed; source admission remains refused until their runtime implementations qualify.
+- [NEW-CORE-S3-IR-2] Pending mutable-byte operations emit valid LLVM and fail with E_CORE_UNSUPPORTED before any result is observed; source admission remains refused until their runtime implementations qualify.
 - [NEW-CORE-S3-ABI-1] Runtime-C helper calls pass declared capability tokens and pointers in the C ABI; source extern capability parameters retain their erasure rule.
 - [NEW-CORE-S3-OWN-1] Mutable-byte updates consume their receiver, copy borrowed or shared values and assert static uniqueness in verify builds; record phis remain owned.
+
+- [NEW-CORE-S3-NUMERIC-1] the core lowers integer shifts with an exact width check,
+  saturating addition at the operand width, and strict binary64 unary intrinsics.
+  Unsigned conversion retains its full width; verify mode rechecks proven shift counts
+  and asserts saturation and right-shift intervals.
