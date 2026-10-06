@@ -1,0 +1,129 @@
+def number(text: str, fallback: int) -> int:
+    match int(text):
+        case Some(value):
+            return value
+        case None:
+            return fallback
+
+
+def fold(values: list[int]) -> int:
+    total = 0
+    for value in values:
+        total = (total * 31 + value) % 1000003
+    return total
+
+
+record Bucket:
+    count: int
+    items: list[int]
+
+
+def bucket_total(b: Bucket) -> int:
+    t = b.count
+    for x in b.items:
+        t = (t * 7 + x) % 1000003
+    return t
+
+
+def grow(b: Bucket, v: int) -> Bucket:
+    items = b.items
+    items.append(v)
+    return Bucket(b.count + 1, items)
+
+
+def bump(xs: mut list[int], k: int):
+    xs.append(k)
+    xs[0] = (xs[0] + k) % 1009
+
+
+def fill(xs: mut list[int], k: int):
+    for j in range(k % 4):
+        xs.append(j * 3 + k)
+
+
+def swap_ends(xs: mut list[int]):
+    last = len(xs) - 1
+    first = xs[0]
+    xs[0] = xs[last]
+    xs[last] = first
+
+
+def twice(xs: mut list[int], k: int):
+    bump(mut xs, k)
+    bump(mut xs, k + 1)
+
+
+def touch(b: mut Bucket, v: int):
+    b.items[0] = v
+    b.count = b.count + 1
+    b.items.append(v)
+
+
+def touch_items(b: mut Bucket, v: int):
+    bump(mut b.items, v)
+    b.count = b.count + 2
+
+
+def rebuild(b: mut Bucket, v: int):
+    b = Bucket(v % 5, [v, v + 1])
+
+
+def both(xs: list[int], ys: list[int]) -> int:
+    return len(xs) * 100 + len(ys) + xs[0] + ys[0]
+
+
+def main(args: list[str], out: Stream) -> int:
+    if len(args) != 3:
+        return 2
+    n = number(args[0], 3)
+    rounds = number(args[1], 2)
+    seed = number(args[2], 7)
+    if n < 1 or n > 100 or rounds < 0 or rounds > 5:
+        return 3
+    acc = 0
+    xs = [(j * 17 + seed) % 1009 for j in range(n)]
+    ys = [(j * 22 + 1) % 997 for j in range(n)]
+    b = Bucket(n, xs)
+    c = Bucket(1, [seed])
+    b.items = c.items
+    bump(mut ys, (((acc % n) - (26 * seed))) % 1009)
+    acc = (acc + bucket_total(c)) % 1000003
+    c.items[((((n + n) % 17)) % 1009) % len(c.items)] = (n) % 1009
+    touch_items(mut c, (((49 * 101) * (5 + n))) % 1009)
+    acc = (acc + bucket_total(b)) % 1000003
+    b.items[((101) % 1009) % len(b.items)] = (n) % 1009
+    b = grow(c, (((n * n) + (46 // 17))) % 1009)
+    b = grow(c, (((acc + 9223372036854775807) * acc)) % 1009)
+    acc = (acc + bucket_total(b)) % 1000003
+
+    live = [1, seed % 997 + 2]
+    saved_live = live
+    for at, value in enumerate(live):
+        acc = (acc + value * 53) % 1000003
+        live[1] = seed % 991 + 3
+        if at == 0:
+            live.append(53)
+            continue
+    acc = (acc + fold(saved_live) * 3 + fold(live) * 5) % 1000003
+    live = [1, 2]
+    saved_live = live
+    for value in live:
+        bump(mut live, 53)
+        acc = (acc + value + live[0]) % 1000003
+        if len(live) >= 4:
+            break
+    acc = (acc + fold(saved_live) * 7 + fold(live)) % 1000003
+    box = Bucket(0, [1, 2])
+    saved_box = box
+    for value in box.items:
+        box.items[1] = 53
+        acc = (acc + value) % 1000003
+    acc = (acc + fold(saved_box.items) * 11) % 1000003
+    live = [1, 2]
+    for value in live:
+        live[1] = 53
+        live = [7, 8]
+        acc = (acc + value) % 1000003
+    out.print(acc, fold(xs), fold(ys), b.count, fold(b.items), c.count, fold(c.items))
+    return acc % 7
+
