@@ -132,7 +132,7 @@ def main():
                     assert (root / "output.txt").read_text() == "saved", result
                 records.append(grade(result))
         assert records[0] == records[1] == records[2], records
-        assert records[0][0] == (0 if scenario in ("read", "write", "default") else 2), records
+        assert records[0][0] == (0 if scenario in ("read", "write") else 1 if scenario == "default" else 2), records
         checks.append(f"{scenario}: identical status, stdout and stderr; grants and private files checked")
     (evidence / "summary.json").write_text(json.dumps(dict(source=subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip(), checks=checks), indent=2) + "\n")
     print(f"{len(checks)} strict fixture checks passed", flush=True)

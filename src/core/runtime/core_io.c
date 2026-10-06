@@ -1077,7 +1077,7 @@ static void core_io_initialize(void) {
     }
     core_io_enumerated_names=core_io_names;
     if(core_io_restricted){core_io_embedding=0;for(size_t i=0;i<core_io_grant_count;++i)if(!core_io_scoped_grant(&core_io_real,core_io_grants[i].path,core_io_grants[i].writable))core_io_option_error("mylang: a requested directory grant could not be opened\n%s","");}
-    if(!core_io_restricted){core_io_scoped_close(&core_io_real);core_io_scoped_init(&core_io_real);if(!core_io_embedding){if(!core_io_scoped_working_directory(&core_io_real))core_io_option_error("mylang: a requested directory grant could not be opened\n%s","");core_io_scoped_endpoint(&core_io_real,"*");}core_io_clock=core_io_environment=core_io_host=1;if(!core_io_entropy&&!core_io_embedding){struct timespec now={0};clock_gettime(CLOCK_REALTIME,&now);core_io_seed=(uint64_t)now.tv_sec*1000000000+(uint64_t)now.tv_nsec;}core_io_entropy=1;core_io_names="";}
+    if(!core_io_restricted){core_io_scoped_close(&core_io_real);core_io_scoped_init(&core_io_real);if(!core_io_embedding){if(!core_io_scoped_working_directory(&core_io_real))core_io_option_error("mylang: a requested directory grant could not be opened\n%s","");core_io_scoped_endpoint(&core_io_real,"*");}core_io_clock=core_io_environment=core_io_host=1;if(!core_io_entropy&&!core_io_embedding){struct timespec now={0};clock_gettime(CLOCK_REALTIME,&now);core_io_seed=(uint64_t)now.tv_sec*1000000000+(uint64_t)now.tv_nsec;}core_io_entropy=1;}
 }
 myl_block *myl_core_cap_grant(uint32_t family) {
     core_io_initialize();
