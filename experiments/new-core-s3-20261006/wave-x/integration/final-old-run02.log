@@ -1,0 +1,27 @@
+S2-X test: waiting/running; source=d4994214579adb8d1897a40fc65de1462b000939; log=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/experiments/new-core-s3-20261006/wave-x/integration/final-old-run02/test.log
+S2-X test: elapsed including admission=60s
+S2-X test: elapsed including admission=120s
+S2-X test: elapsed including admission=180s
+S2-X test: elapsed including admission=240s
+S2-X test: elapsed including admission=300s
+S2-X test: elapsed including admission=360s
+S2-X test: elapsed including admission=420s
+S2-X test: elapsed including admission=480s
+S2-X test: elapsed including admission=540s
+S2-X test: elapsed including admission=600s
+S2-X test: elapsed including admission=660s
+S2-X test: elapsed including admission=720s
+S2-X test: elapsed including admission=780s
+S2-X test: elapsed including admission=840s
+S2-X test: elapsed including admission=900s
+S2-X test: elapsed including admission=960s
+S2-X test: elapsed including admission=1020s
+S2-X test: exit=0, command=1049.24s, wall=1064.16s, qualified=True
+S2-X test-qbe: waiting/running; source=d4994214579adb8d1897a40fc65de1462b000939; log=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/experiments/new-core-s3-20261006/wave-x/integration/final-old-run02/test-qbe.log
+S2-X test-qbe: elapsed including admission=60s
+S2-X test-qbe: exit=0, command=93.25s, wall=98.33s, qualified=True
+S2-X test-qbe-build: waiting/running; source=d4994214579adb8d1897a40fc65de1462b000939; log=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/experiments/new-core-s3-20261006/wave-x/integration/final-old-run02/test-qbe-build.log
+S2-X test-qbe-build: exit=0, command=3.55s, wall=8.64s, qualified=True
+S2-X fmt-check: waiting/running; source=d4994214579adb8d1897a40fc65de1462b000939; log=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/experiments/new-core-s3-20261006/wave-x/integration/final-old-run02/fmt-check.log
+S2-X fmt-check: exit=0, command=0.23s, wall=6.58s, qualified=True
+exit 0

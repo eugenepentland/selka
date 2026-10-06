@@ -1,0 +1,34 @@
+evidence=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/experiments/new-core-s3-20261006/wave-x/integration/matrix-final-run02-rerun01
+source_commit=d4994214579adb8d1897a40fc65de1462b000939
+rerun=['iteration', 'dict', 'text', 'functions']
+text: PASS; 898.9418446030468s
+iteration: PASS; 1025.4561324550305s
+dict: PASS; 1398.6073921970092s
+functions: PASS; 554.5644476290327s
+{
+ "source_commit": "d4994214579adb8d1897a40fc65de1462b000939",
+ "oracles": {
+  "old": {
+   "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/s3/oracle/mylang",
+   "sha256": "d36658dbfb78d29213224532a13fd5ad8b7c0e290dbfb87613d9815678305c79"
+  },
+  "new": {
+   "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/zig-out/bin/mylang-core",
+   "sha256": "09f90c02e19b649407af4f1017b148449d7c175f8ceee5b8a5cc6a484250e5f0"
+  }
+ },
+ "original_matrix": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/experiments/new-core-s3-20261006/wave-x/integration/matrix-final-run02",
+ "rerun": [
+  "iteration",
+  "dict",
+  "text",
+  "functions"
+ ],
+ "rerun_reason": "old-oracle compile_timeout (60 s) only, under machine load",
+ "source_unchanged": true,
+ "oracles_unchanged": true,
+ "accepted_total": 1800,
+ "native_comparisons_total": 25800,
+ "qualified": true
+}
+exit 0

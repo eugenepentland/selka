@@ -318,10 +318,44 @@ historical failures are in
 `experiments/new-core-s3-20261006/wave-a/REPORT.md`. Wave A stops for review;
 Wave B and the §11 exit record remain pending the user's go.
 
-## 11. Later S3 exit record (pending)
+## 11. S3 as built and exit record
 
-After the user's Wave B go, record package commits, all 40 rows at both sizes
-against both 1.10 gates, inner-loop count sites, full conformance and named S4
-exclusions, strict 200-case matrix, full leak/verify sweeps, the old gate,
-coverage before/after and every refusal, rebuild/test-core times and every
-remaining limit. Then stop for the user's S4 go/stop decision.
+S3 exited on 2026-10-06 at `d4994214579adb8d1897a40fc65de1462b000939`. The exit
+report is `experiments/new-core-s3-20261006/wave-x/REPORT.md`. The package history
+and the remaining-limits inventory are under `wave-x/report-preparation/`.
+
+**As built.**
+- **S3-0** froze the capability, resource and byte-buffer pointer types, nine
+  operations and runtime-C linkage. `ir.zig` is unchanged since.
+- **D2:** dictionary views are immediate-use only (`E_VIEW_STORED`). Key membership is
+  a hash probe.
+- **T1** keeps the old scalar and octet text semantics.
+- **T2** adds byte-buffer copy-on-write, embedded assets, and the old Zig float
+  formatter and parser in an independently cached runtime unit. Its first build costs
+  0.97 s; later programs reuse it in 0.11 s.
+- **M** adds exact numeric operations, descriptor equality and hashing, and
+  source-aware rendering. Captured `mut` places follow `COW-MUT-ARGUMENT-1`.
+- **C** owns counted authorities and resources and the property runner.
+  `ENV-NAMES-GRANT-1` corrected both cores.
+- **A** adds `strings`/`json` imports and the five applications, with generic,
+  profile-driven repairs.
+
+**S3-X found one wrong answer**, fixed by `NEW-CORE-RC-13`. A field read after its
+record was already consumed by an earlier update had been promoted to its own count,
+and a later in-place push then corrupted a live snapshot. `liveAfter` now returns
+false before a value's definition.
+
+**Exit receipts** (all on the final source):
+- uncontended rebuild 1.80 s;
+- 277/277 core tests in 146 s, longest shard 51 s;
+- conformance 1518/0/0 per mode, ordinary and with leak and fact verification;
+- the full old gate in four steps;
+- 9 × 200 fuzz with 25,800 comparisons, plus the 200-source split sweep with 3,000;
+- all 40 rows within 1.10× Zig ReleaseSafe and 1.10× the old core at 4096 and 64
+  (worst: 1.089× Zig, 1.060× old);
+- the count audit;
+- coverage 3,633/3,639;
+- exclusions: 9 S4 tests and 118 retired arena tests.
+
+**Remaining by design for S4:** user modules, persisted interfaces and incremental
+per-module builds. The old core stays the default until S5.
