@@ -16,7 +16,7 @@ iteration has a different cost than a steady-state one, which the calibrate step
 
 | arm | tree | allocation and release |
 |---|---|---|
-| mylang `row.my` | `union Tree: leaf, node(left: Tree, value: int, right: Tree)`, built with `Tree.leaf` / `Tree.node(...)`, read with `match` | the compiler boxes the recursive edges; the tree is freed when `batch_result` returns (reference counts) |
+| mylang `test/core/row_tree_build_walk.my` | `union Tree: leaf, node(left: Tree, value: int, right: Tree)`, built with `Tree.leaf` / `Tree.node(...)`, read with `match` | the compiler boxes the recursive edges; the tree is freed when `batch_result` returns (reference counts) |
 | Rust | `enum Tree { Leaf, Node(Box<Node>) }` with `struct Node { left: Tree, value: i64, right: Tree }` | one `Box` per internal node; dropped at the end of the batch iteration |
 | Zig | `struct Node { left: ?*Node, value: i64, right: ?*Node }`, null is Leaf | `std.heap.c_allocator.create`, explicit recursive `destroy` after each batch; `errdefer destroy` on the build path |
 | Go | `type node struct { left *node; value int64; right *node }`, nil is Leaf | the garbage collector (no `GOMAXPROCS` call in the program; the harness pins to one CPU so Go runs with one P) |
@@ -54,8 +54,8 @@ through `(seed + batch) % 1009` (that is the only way `base` enters), so each di
 walked once and reused; this keeps `(17, 999983, 31)` at 0.1 s instead of minutes. It is a cache over the
 contract formula, not a different formula.
 
-**mylang header.** `module row` (the file is `row.my`; same convention as `module row_list_append`).
-`row.my` is not `mylang fmt --check` clean, and neither is the template `test/core/row_list_append.my`
+**mylang header.** `module row_tree_build_walk` (the file is `test/core/row_tree_build_walk.my`; same convention as `module row_list_append`).
+`test/core/row_tree_build_walk.my` is not `mylang fmt --check` clean, and neither is the template `test/core/row_list_append.my`
 (the formatter wants one blank line after the extern and one between defs instead of two); I kept the
 template's spacing.
 
@@ -64,7 +64,7 @@ template's spacing.
 - New core: no refusal. `mylang-core coverage` reports every row function `ok`; `new-core-refusal.txt` is not
   written.
 - No wrong answer in any arm.
-- Old core: accepts `row.my` without changes (`mylang check` clean). Nothing awkward or unnatural was needed:
+- Old core: accepts `test/core/row_tree_build_walk.my` without changes (`mylang check` clean). Nothing awkward or unnatural was needed:
   the recursive union is written the way `tests/lang/recursive_values.my` writes `Expr`. Observation only
   (not investigated): the old core `--release` binary is about 3.5x slower than the new core here.
 - Rows.py: no bug blocked this case. The calibrate step overshoots for this case as described above.

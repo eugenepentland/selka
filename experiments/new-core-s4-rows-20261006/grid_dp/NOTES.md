@@ -11,7 +11,7 @@ so no port reallocates a row while building it.
 
 | arm | cost grid | dp grid | release |
 |---|---|---|---|
-| mylang (`row.my`) | `[[expr for j in range(w)] for i in range(h)]` | `[[0 for j in range(w)] for i in range(h)]`, then `dp[i][j] = ...` | reference count, at function exit |
+| mylang (`test/core/row_grid_dp.my`) | `[[expr for j in range(w)] for i in range(h)]` | `[[0 for j in range(w)] for i in range(h)]`, then `dp[i][j] = ...` | reference count, at function exit |
 | Rust | `(0..h).map(\|i\| (0..w).map(..).collect()).collect()` -> `Vec<Vec<i64>>` | `(0..h).map(\|_\| vec![0; w]).collect()`, then `dp[i][j] = ...` (bounds-checked) | drop at function exit |
 | Zig | `c_allocator.alloc([]i64, h)` + one `alloc(i64, w)` per row (`allocGrid`), filled in place | same helper; rows are not zeroed (every cell is written before it is read) | `defer freeGrid` (frees every row, then the outer slice) |
 | Go | `make([][]int64, h)` + `make([]int64, w)` per row | same, rows zeroed by `make` | garbage collector (`runtime.GOMAXPROCS(1)` is set in `main`) |
@@ -35,14 +35,14 @@ so no port reallocates a row while building it.
   does not say.
 - **Validation:** SIZE >= 2, ITERATIONS >= 1, 1 <= SEED <= 1000000, exactly the right argument count. References
   exit 2 on a wrong case name, a non-numeric or out-of-range argument, a negative number, or a number that overflows 64
-  bits. `row.my` returns 2 from `main` (a non-numeric or overflowing argument parses as 0, which fails the `size < 2` /
+  bits. `test/core/row_grid_dp.my` returns 2 from `main` (a non-numeric or overflowing argument parses as 0, which fails the `size < 2` /
   `iterations < 1` / `seed < 1` check). I ran each of: wrong case, 1 1 7, 64 0 7, 64 1 0, 64 1 1000001, abc 1 7,
   -4 1 7, a missing argument, 99999999999999999999 1 7 against every arm: all exit 2 with empty stdout and stderr.
-- **`part < 0` guard** in `row.my` is the template's (`row_list_append.my`); the part is never negative.
+- **`part < 0` guard** in `test/core/row_grid_dp.my` is the template's (`row_list_append.my`); the part is never negative.
 
 ## Findings
 
-1. **No refusal, no wrong answer.** Both mylang compilers build `row.my`; the new core accepts every function
+1. **No refusal, no wrong answer.** Both mylang compilers build `test/core/row_grid_dp.my`; the new core accepts every function
    (`mylang-core coverage`: `ok` for `isqrt`, `batch_result`, `parse_number`, `main`; only the extern
    `runtime_bench_now` is "refused extern", exactly as for the `row_list_append.my` template). All five arms agree
    with the oracle, so there is no `new-core-refusal.txt`.

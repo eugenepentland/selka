@@ -2,7 +2,7 @@
 
 Verified 2026-10-06 with `rows.py verify buffer_write`: PASS for all five arms (old core
 --release, new core release, Rust, Zig ReleaseSafe, Go) at all five probes, each equal to
-`oracle.py`. The new core accepted `row.my`; there is no `new-core-refusal.txt`.
+`oracle.py`. The new core accepted `test/core/row_buffer_write.my`; there is no `new-core-refusal.txt`.
 Calibrated (`rows.py calibrate`, CPU 12, machine load average ~25 at the time, so +-3% noise):
 `{"4096": 115, "64": 8794}`.
 

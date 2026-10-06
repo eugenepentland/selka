@@ -1,4 +1,4 @@
-module row
+module row_grid_dp
 
 extern def runtime_bench_now(host: Host) -> i64 effects(host)
 

@@ -1,25 +1,34 @@
-module row
+module row_tree_build_walk
 
 extern def runtime_bench_now(host: Host) -> i64 effects(host)
 
+# Row `tree_build_walk` (S4 CONTRACT.md): build a balanced binary tree of SIZE nodes as a recursive
+# union, walk it with a depth-weighted sum, and release it with the batch. Arguments `size iterations
+# seed`, output `checksum elapsed`.
 
-# Row `float_format` of the S4 contract: every value becomes a fresh text with
-# `str(x)`, is folded byte by byte and released inside the batch.
-def fold(text: str) -> int:
-    h = 0
-    for c in text.encode():
-        h = (h * 131 + c) % 1000000007
-    return h
+
+union Tree:
+    leaf,
+    node(left: Tree, value: int, right: Tree)
+
+
+def build(lo: int, hi: int, base: int) -> Tree:
+    if lo >= hi:
+        return Tree.leaf
+    mid = (lo + hi) // 2
+    return Tree.node(build(lo, mid, base), (base + 13 * mid) % 1009, build(mid + 1, hi, base))
+
+
+def walk(tree: Tree, depth: int) -> int:
+    match tree:
+        case Tree.leaf:
+            return 0
+        case Tree.node(left, value, right):
+            return (depth + 1) * value + walk(left, depth + 1) + walk(right, depth + 1)
 
 
 def batch_result(size: int, batch: int, seed: int) -> int:
-    part = 0
-    for j in range(size):
-        k = (seed + batch + 13 * j) % 100003
-        x = k + 0.125 * (1 + j % 7)
-        text = str(x)
-        part = (part + fold(text) + len(text)) % 1000000007
-    return part
+    return walk(build(0, size, seed + batch), 0) % 1000000007
 
 
 def parse_number(text: str) -> int:

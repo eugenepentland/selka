@@ -1,0 +1,17 @@
+Traceback (most recent call last):
+  File "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-integration/experiments/new-core-s2-20261005/wave-b/integration/full_old_gate.py", line 156, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-integration/experiments/new-core-s2-20261005/wave-b/integration/full_old_gate.py", line 127, in main
+    source_unchanged(root, commit)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-integration/experiments/new-core-s2-20261005/wave-b/integration/full_old_gate.py", line 37, in source_unchanged
+    raise RuntimeError("gate inputs differ from the frozen source commit:\n" + changed + "\n" + added)
+RuntimeError: gate inputs differ from the frozen source commit:
+
+test/core/row_buffer_write.my
+test/core/row_float_format.my
+test/core/row_grid_dp.my
+test/core/row_record_pass.my
+test/core/row_tree_build_walk.my
+test/core/row_union_find.my

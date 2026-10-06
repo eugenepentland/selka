@@ -13,7 +13,7 @@ components pass (increasing `j`, one `find(j)` each), then the rootsum pass (a s
 
 | arm | `parent` | `find` | release |
 |---|---|---|---|
-| mylang (`row.my`) | `list(range(size))` | `def find(parent: mut list[int], x: int) -> int`; call sites write `find(mut parent, a)`; `x` is reassigned in the body | reference count, at function exit |
+| mylang (`test/core/row_union_find.my`) | `list(range(size))` | `def find(parent: mut list[int], x: int) -> int`; call sites write `find(mut parent, a)`; `x` is reassigned in the body | reference count, at function exit |
 | Rust | `(0..size).collect::<Vec<usize>>()` | `fn find(parent: &mut [usize], mut x: usize) -> usize`, called as `find(&mut parent, a)` | drop at function exit |
 | Zig | `c_allocator.alloc(usize, size)` filled with the identity | `fn find(parent: []usize, start: usize) usize` | `defer a.free(parent)` |
 | Go | `make([]int, size)` filled with the identity | `func find(parent []int, x int) int` | garbage collector (`runtime.GOMAXPROCS(1)` in `main`) |
@@ -33,7 +33,7 @@ Nothing material. `parent` is never grown: every port creates it with all `N` el
 
 ## Findings
 
-1. **No refusal, no wrong answer.** Both mylang compilers build `row.my`; the new core accepts `find`, `batch_result`,
+1. **No refusal, no wrong answer.** Both mylang compilers build `test/core/row_union_find.my`; the new core accepts `find`, `batch_result`,
    `parse_number` and `main` (`mylang-core coverage`; only the extern `runtime_bench_now` is "refused extern", as for the
    template). All five arms agree with the oracle. No `new-core-refusal.txt`.
 

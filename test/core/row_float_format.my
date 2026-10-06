@@ -1,24 +1,25 @@
-module row
+module row_float_format
 
 extern def runtime_bench_now(host: Host) -> i64 effects(host)
 
 
-# Row `buffer_write` of the S4 contract: each batch appends the decimal digits of SIZE
-# values, a comma after each and a newline after every sixteenth, to a fresh
-# `byte_buffer` with its own `append_int` and `append_byte`, then folds the finished
-# buffer's octets and releases it.
-def batch_result(size: int, batch: int, seed: int) -> int:
-    buffer = byte_buffer([])
-    for j in range(size):
-        v = (seed + batch + 13 * j) % 100003
-        _ = buffer.append_int(v)
-        _ = buffer.append_byte(44)
-        if j % 16 == 15:
-            _ = buffer.append_byte(10)
+# Row `float_format` of the S4 contract: every value becomes a fresh text with
+# `str(x)`, is folded byte by byte and released inside the batch.
+def fold(text: str) -> int:
     h = 0
-    for c in buffer:
+    for c in text.encode():
         h = (h * 131 + c) % 1000000007
-    return (len(buffer) + h) % 1000000007
+    return h
+
+
+def batch_result(size: int, batch: int, seed: int) -> int:
+    part = 0
+    for j in range(size):
+        k = (seed + batch + 13 * j) % 100003
+        x = k + 0.125 * (1 + j % 7)
+        text = str(x)
+        part = (part + fold(text) + len(text)) % 1000000007
+    return part
 
 
 def parse_number(text: str) -> int:

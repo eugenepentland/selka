@@ -1,34 +1,24 @@
-module row
+module row_buffer_write
 
 extern def runtime_bench_now(host: Host) -> i64 effects(host)
 
-# Row `tree_build_walk` (S4 CONTRACT.md): build a balanced binary tree of SIZE nodes as a recursive
-# union, walk it with a depth-weighted sum, and release it with the batch. Arguments `size iterations
-# seed`, output `checksum elapsed`.
 
-
-union Tree:
-    leaf,
-    node(left: Tree, value: int, right: Tree)
-
-
-def build(lo: int, hi: int, base: int) -> Tree:
-    if lo >= hi:
-        return Tree.leaf
-    mid = (lo + hi) // 2
-    return Tree.node(build(lo, mid, base), (base + 13 * mid) % 1009, build(mid + 1, hi, base))
-
-
-def walk(tree: Tree, depth: int) -> int:
-    match tree:
-        case Tree.leaf:
-            return 0
-        case Tree.node(left, value, right):
-            return (depth + 1) * value + walk(left, depth + 1) + walk(right, depth + 1)
-
-
+# Row `buffer_write` of the S4 contract: each batch appends the decimal digits of SIZE
+# values, a comma after each and a newline after every sixteenth, to a fresh
+# `byte_buffer` with its own `append_int` and `append_byte`, then folds the finished
+# buffer's octets and releases it.
 def batch_result(size: int, batch: int, seed: int) -> int:
-    return walk(build(0, size, seed + batch), 0) % 1000000007
+    buffer = byte_buffer([])
+    for j in range(size):
+        v = (seed + batch + 13 * j) % 100003
+        _ = buffer.append_int(v)
+        _ = buffer.append_byte(44)
+        if j % 16 == 15:
+            _ = buffer.append_byte(10)
+    h = 0
+    for c in buffer:
+        h = (h * 131 + c) % 1000000007
+    return (len(buffer) + h) % 1000000007
 
 
 def parse_number(text: str) -> int:

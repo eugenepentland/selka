@@ -1,4 +1,4 @@
-module row
+module row_union_find
 
 extern def runtime_bench_now(host: Host) -> i64 effects(host)
 

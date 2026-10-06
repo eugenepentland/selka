@@ -2,7 +2,7 @@
 """S4 benchmark rows: build, verify, calibrate and measure the six new rows.
 
 Each case lives in CASE/ beside this file:
-  row.my     one program for both mylang compilers: args `SIZE ITERATIONS SEED`
+  test/core/row_CASE.my (in the repository) takes `SIZE ITERATIONS SEED`
   main.rs    Rust reference:  args `CASE SIZE ITERATIONS SEED`
   main.zig   Zig reference (ReleaseSafe), same arguments
   main.go    Go reference, same arguments
@@ -74,9 +74,9 @@ def build(case):
     refusal.unlink(missing_ok=True)
     go_env = {**os.environ, "GOMAXPROCS": "1", "GOTOOLCHAIN": "local", "GOFLAGS": "", "GOAMD64": "v1"}
     commands = {
-        "old": [str(OLD), "build", str(source / "row.my"), "-o", str(out / "old"), "--release",
+        "old": [str(OLD), "build", str(ROOT / "test/core" / f"row_{case}.my"), "-o", str(out / "old"), "--release",
                 "--cache-dir", str(CACHE / "cache/old"), "--link", str(CLOCK)],
-        "new": [str(CORE), "build", str(source / "row.my"), "-o", str(out / "new"), "--release",
+        "new": [str(CORE), "build", str(ROOT / "test/core" / f"row_{case}.my"), "-o", str(out / "new"), "--release",
                 "--cache-dir", str(CACHE / "cache/new"), "--link", str(CLOCK), "--emit-llvm", str(out / "new.ll")],
         "rust": ["rustc", "-O", "--edition", "2021", str(source / "main.rs"), "-o", str(out / "rust")],
         "zig-safe": ["zig", "build-exe", str(source / "main.zig"), "-lc", "-O", "ReleaseSafe",

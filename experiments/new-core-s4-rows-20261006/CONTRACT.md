@@ -13,7 +13,7 @@ mechanisms the existing rows do not:
 ## Common rules (as `benchmarks/runtime/expanded/collections/CONTRACT.md`)
 
 **Interface.**
-- **mylang** (`row.my`, built by both mylang compilers) takes `SIZE ITERATIONS SEED`;
+- **mylang** (`test/core/row_<case>.my`, built by both mylang compilers) takes `SIZE ITERATIONS SEED`;
   the references take `CASE SIZE ITERATIONS SEED`.
 - **Validation:** SIZE >= 2, ITERATIONS >= 1, 1 <= SEED <= 1000000. Anything else
   exits with status 2.

@@ -21,7 +21,7 @@ loops or arrays, since the point is a 12-field aggregate crossing a call).
 
 | arm | state | call |
 |---|---|---|
-| mylang `row.my` | `record State:` with `f0: int` ... `f11: int`; built with keyword construction `State(f0=..., ...)` | `def advance(s: State, x: int) -> State`; `f3 = mix(s.f4, x) if x % 3 == 0 else s.f4` |
+| mylang `test/core/row_record_pass.my` | `record State:` with `f0: int` ... `f11: int`; built with keyword construction `State(f0=..., ...)` | `def advance(s: State, x: int) -> State`; `f3 = mix(s.f4, x) if x % 3 == 0 else s.f4` |
 | Rust | `struct State { f0: i64, ... f11: i64 }`, no `Copy`/`Clone` derive | `fn advance(s: State, x: i64) -> State`; `s = advance(s, ...)` moves it in and a new value out |
 | Zig | `const State = struct { f0: i64, ... }` | `fn advance(s: State, x: i64) State`, returns an anonymous struct literal; `@mod` for `%` |
 | Go | `type state struct { f0, ..., f11 int64 }` | `func advance(s state, x int64) state`, returns an unkeyed literal in field order |
@@ -45,7 +45,7 @@ and a loop-carried variable.
 - **Oracle.** `oracle.py` is the literal contract formula over a list of twelve ints. A batch depends on its number
   only through `(seed + batch) % 1009` (every initial field and every `x` is `(base + c) % 1009`), so each distinct
   residue is computed once and reused. A cache over the contract formula, not a different formula.
-- **mylang header.** `module row`. `row.my` is not `mylang fmt --check` clean, and neither is the template
+- **mylang header.** `module row_record_pass`. `test/core/row_record_pass.my` is not `mylang fmt --check` clean, and neither is the template
   `test/core/row_list_append.my`; the formatter would also collapse the keyword constructions onto one 200-column
   line each, which I kept expanded for readability (it parses the same).
 
@@ -54,6 +54,6 @@ and a loop-carried variable.
 - New core: no refusal. `mylang-core coverage` reports every row function `ok` (`new-core-refusal.txt` is not
   written).
 - No wrong answer in any arm.
-- Old core: accepts `row.my` unchanged (`mylang check` clean); a 12-field record, keyword construction, a
+- Old core: accepts `test/core/row_record_pass.my` unchanged (`mylang check` clean); a 12-field record, keyword construction, a
   conditional expression and a multi-line parenthesized return all work with no contortion.
 - Rows.py: no bug blocked this case.
