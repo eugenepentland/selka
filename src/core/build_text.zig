@@ -108,7 +108,10 @@ pub fn indexed(comptime Context: type, context: Context, base: typed.NodeId, ind
     const receiver_type = context.typeOfRef(receiver);
     if (receiver_type != .str and receiver_type != .bytes and receiver_type != .byte_buffer) return context.mb.refuse("index receiver", span);
     const selected = try context.expression(index_node);
-    const offset = try context.runtimeCall(if (receiver_type == .str) "myl_core_str_index_offset" else "myl_core_bytes_index_offset", &.{ receiver_type, .i64 }, .u64, &.{ receiver, selected }, span);
+    const offset = if (receiver_type == .str)
+        try context.runtimeCall("myl_core_str_index_offset", &.{ receiver_type, .i64 }, .u64, &.{ receiver, selected }, span)
+    else
+        try context.effectCall("myl_core_bytes_index_offset", &.{ receiver_type, .i64 }, .u64, &.{ receiver, selected }, span);
     const value = try context.emit(.{ .op = if (receiver_type == .str) .str_char else .list_get, .ty = if (receiver_type == .str) .str else .u8, .a = receiver, .b = offset, .check = .exact, .span = span });
     return if (receiver_type != .str and result_type != .u8) context.emit(.{ .op = .convert, .ty = result_type, .a = value, .span = span }) else value;
 }

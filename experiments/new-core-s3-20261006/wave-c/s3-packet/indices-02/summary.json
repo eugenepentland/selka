@@ -1,0 +1,13 @@
+{
+  "qualified": true,
+  "binaries": {
+    "old-debug": "aa703fa3bec2852700765e27d3cdeb27ecddfdb4b047f529b3532f0ed00534a9",
+    "old-release": "1739198aabf826e329b9b89cfc1c6f8f41bb523809c205752eb75591bafc73cb",
+    "debug": "bd494213f0888e58c329d235b3c9cf561bd601136863f968b8fc3e0bd67ef5e5",
+    "release": "6c762360696ab62c1966e4813a1295e57cf0903452fbb91eb54b1972273431f0",
+    "verify": "3be5f6be05c4697ddc523e914c921ef7d4735faaea947a75b68329d9324e66cc"
+  },
+  "comparisons": 54,
+  "mismatches": [],
+  "error": null
+}

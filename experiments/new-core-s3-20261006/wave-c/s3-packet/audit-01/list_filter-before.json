@@ -1,0 +1,19 @@
+{
+  "command": [
+    ".mylang-cache/s3-packet/before-core",
+    "build",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/test/core/row_list_filter.my",
+    "-o",
+    ".mylang-cache/s3-packet/audit-01/row_list_filter-before",
+    "--release",
+    "--emit-llvm",
+    ".mylang-cache/s3-packet/audit-01/row_list_filter-before.ll",
+    "--cache-dir",
+    ".mylang-cache/s3-packet/audit-01/cache-before",
+    "--link",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/benchmarks/runtime/ports/native_clock.c"
+  ],
+  "status": 0,
+  "stdout": "",
+  "stderr": ""
+}

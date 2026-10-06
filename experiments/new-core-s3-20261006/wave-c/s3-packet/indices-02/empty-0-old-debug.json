@@ -1,0 +1,10 @@
+{
+  "command": [
+    ".mylang-cache/s3-packet/indices-02/old-debug",
+    "0",
+    "empty"
+  ],
+  "status": 1,
+  "stdout": "",
+  "stderr": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/indices-02/index.my:2:12: error[R_LIST_BOUNDS]: native execution failed (index 0, length 0)\n  in indexed at /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/indices-02/index.my:2:12\n  in main at /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/indices-02/index.my:17:19\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":0,\"length\":0}\n"
+}

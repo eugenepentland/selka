@@ -1,0 +1,30 @@
+fn main(cap) -> i64
+b0:
+  %2 = call bytes myl_core_text_encode(str0)
+  %3 = call i64 total(%2)
+  print param0, %3
+  ret 0:i64
+fn total(bytes) -> i64
+b0:
+  %3 = list_len u64 param0
+  %4 = convert.proven i64 %3
+  jump b1
+b1: ; preds b0 b3
+  %6 = phi i64 0:i64, %18
+  %10 = phi i64 0:i64, %15
+  %8 = cmp.lt bool %6, %4
+  branch %8, b2, b4
+b2: ; preds b1
+  %13 = list_get.proven u8 param0, %6
+  %14 = convert i64 %13
+  %15 = add.proven i64 %10, %14
+  jump b3
+b3: ; preds b2
+  %18 = add.proven i64 %6, 1:i64
+  jump b1
+b4: ; preds b1
+  ret %10
+fn myl_core_text_encode(str) -> bytes extern
+fn myl_core_bytes_index_offset(bytes, i64) -> u64 runtime
+facts main: %3=[-9223372036854775808,9223372036854775807]
+facts total: %3=[0,140737488355328] %4=[0,140737488355328] %6=[0,140737488355328] %7=[-9223372036854775808,9223372036854775807] %8=[0,1] %10=[0,35888059530608640] %12=[-9223372036854775808,9223372036854775807] %13=[0,255] %14=[0,255] %15=[0,35888059530608895] %18=[1,140737488355328]

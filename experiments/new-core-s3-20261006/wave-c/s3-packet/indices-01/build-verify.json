@@ -1,0 +1,16 @@
+{
+  "command": [
+    "zig-out/bin/mylang-core",
+    "build",
+    ".mylang-cache/s3-packet/indices-01/index.my",
+    "-o",
+    ".mylang-cache/s3-packet/indices-01/verify",
+    "--cache-dir",
+    ".mylang-cache/s3-packet/indices-01/cache-verify",
+    "--release",
+    "--verify-facts"
+  ],
+  "status": 0,
+  "stdout": "",
+  "stderr": ""
+}

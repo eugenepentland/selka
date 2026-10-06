@@ -1,0 +1,7 @@
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: all 3 build slot(s) busy; waiting (60s so far)
+build-slot: build slot 2 after 90s (all 3 build slot(s) busy)
+qualification progress: text: seen=25 elapsed=92.72s
+qualification progress: text: seen=50 elapsed=176.98s
+cases=50 compared=750 mismatch=0 fact=0 old_rejected=0 new_refused=0
+qualification {"kind": "text", "qualified": true, "accepted": 50, "old_rejected": 0, "core_refused": 0, "core_build_failed": 0, "elapsed_seconds": 180.82153160800226}

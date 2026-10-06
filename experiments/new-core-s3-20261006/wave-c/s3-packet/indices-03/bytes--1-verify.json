@@ -1,0 +1,10 @@
+{
+  "command": [
+    ".mylang-cache/s3-packet/indices-03/verify",
+    "-1",
+    "bytes"
+  ],
+  "status": 0,
+  "stdout": "99\n",
+  "stderr": ""
+}

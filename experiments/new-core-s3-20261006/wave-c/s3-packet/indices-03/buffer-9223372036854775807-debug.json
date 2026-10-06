@@ -1,0 +1,10 @@
+{
+  "command": [
+    ".mylang-cache/s3-packet/indices-03/debug",
+    "9223372036854775807",
+    "buffer"
+  ],
+  "status": 1,
+  "stdout": "",
+  "stderr": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/indices-03/index.my:4:12: error[R_LIST_BOUNDS]: native execution failed (index 9223372036854775807, length 3)\n  in mutable_indexed at /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/indices-03/index.my:4:12\n  in main at /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/indices-03/index.my:15:19\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":9223372036854775807,\"length\":3}\n"
+}

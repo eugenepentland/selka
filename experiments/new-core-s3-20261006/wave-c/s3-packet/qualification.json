@@ -1,0 +1,230 @@
+{
+  "source": "1c3e53fd40c0ca4c16d67d09048e6ec5afbd349c",
+  "foundation": "ac81831bd9e6100bf8d31cc07ca97bcff9f82d6c",
+  "compiler_sha256": "31168db0bf090f053fad74f4fcbc3155fec92ecce4d15290c38eaebbc8b9b068",
+  "oracle_sha256": {
+    "qbe": "b6139650a99b39131cd791fa1fdc84c09472dc303930bbadd3f8a5348487af4c",
+    "mylang": "d36658dbfb78d29213224532a13fd5ad8b7c0e290dbfb87613d9815678305c79"
+  },
+  "source_inputs_sha256": {
+    "src/core/build_text.zig": "8be30cfa85d326c2f15ff6fad440a23bfa24db28787635c190986d3107754e93",
+    "src/core/emit_bytes.zig": "55b02df999d2061d40605dfde30f3b06eabfafb20e4a8cbd6203b98ab6c42af6",
+    "src/core/emit_llvm.zig": "b38137d3f9785e0c098384866139da7f34e8997a26c8277746eca309d505330d",
+    "src/core/byte_index.zig": "29d635202323712f364d4e10cc1f7b0a57d983dcc201712f4836d8f3ce70d9a9",
+    "src/core/byte_index_test.zig": "2dab5a0cb0a9869d87f0dc4776a4a1010567a5c9e6f666497fb40d4d359551bf",
+    "src/core/passes.zig": "0838b7433601cb4d52794e10ab86c89685300f41a4dfb5f5687eb251cc6900f8",
+    "src/core/root_test.zig": "c5db6fcb7f4cc244fcfc2df29b4d9278eef76264d8e4e6c5285ab62cf15ed369",
+    "src/core/test_support.zig": "fdc2379a04d0407232d307e4966dfc8c2f05c9e7f011341157da4a861da75f67",
+    "src/core/ir.zig": "7232a25ca00d51c16b3cd552ae86859769a3ffb48d7a4f20ed4323708b651d5d",
+    "experiments/new-core-s3-20261006/wave-b/s3-t1/fuzz_text.py": "b8ace42260252c42edd6f4374d27187e141782604bfe81cc95774c1542d5917a",
+    "experiments/new-core-s2-20261005/wave-b/s2-t2/fuzz_number.py": "ac061245708125e9f79bb2893759ae453005ad401f62588dce5664bfe74b95f5"
+  },
+  "core_rebuild_seconds": 3.65,
+  "frozen_ir_diff_empty": true,
+  "complete": true,
+  "core_test": {
+    "shards": 32,
+    "unique_tests_passed": 261,
+    "steps": 36,
+    "reported_total": 8352,
+    "intentional_shard_skips": 8091,
+    "elapsed_seconds": 141.2,
+    "max_shard_seconds": 79.77,
+    "qualified": true,
+    "gate_and_build_slots": true
+  },
+  "strict_conformance": {
+    "debug_matching": 1518,
+    "release_matching": 1518,
+    "mismatching": 0,
+    "unsupported": 0,
+    "leakcheck": true,
+    "verify_facts": true,
+    "qualified": true
+  },
+  "index_report": {
+    "comparisons": 54,
+    "mismatches": 0,
+    "qualified": true,
+    "evidence": "indices-03/summary.json"
+  },
+  "llvm_audit": {
+    "rows": 35,
+    "identical": 35,
+    "changed": 0,
+    "evidence": "audit-02/summary.json"
+  },
+  "performance": {
+    "rows-02.json": {
+      "valid": true,
+      "cpu": 10,
+      "rounds": 7,
+      "rows": {
+        "packet_decode": {
+          "4096": {
+            "new_cycles_per_unit": 15.985684814453125,
+            "new_over_old": 1.0583824540024365,
+            "new_over_zig": 0.8424075479048514,
+            "checksums_equal": true,
+            "both_gates_pass": true
+          },
+          "64": {
+            "new_cycles_per_unit": 15.921964375,
+            "new_over_old": 1.0563857173306,
+            "new_over_zig": 0.8131593955516105,
+            "checksums_equal": true,
+            "both_gates_pass": true
+          }
+        },
+        "json_transform": {
+          "4096": {
+            "new_cycles_per_unit": 2825.9504638671874,
+            "new_over_old": 0.2072149647492586,
+            "new_over_zig": 1.0020303829010375,
+            "checksums_equal": true,
+            "both_gates_pass": true
+          },
+          "64": {
+            "new_cycles_per_unit": 2971.2288625,
+            "new_over_old": 0.21196055252119078,
+            "new_over_zig": 1.0376882723487557,
+            "checksums_equal": true,
+            "both_gates_pass": true
+          }
+        }
+      }
+    },
+    "micro-01.json": {
+      "valid": true,
+      "cpu": 10,
+      "rounds": 7,
+      "rows": {
+        "bytes_scan": {
+          "4096": {
+            "new_cycles_per_unit": 0.051269287109375,
+            "new_over_old": 0.6252756995119104,
+            "new_over_zig": 0.03660656247227257,
+            "checksums_equal": true,
+            "both_gates_pass": true
+          },
+          "64": {
+            "new_cycles_per_unit": 0.2476271875,
+            "new_over_old": 1.0101609257296067,
+            "new_over_zig": 0.1451706454503951,
+            "checksums_equal": true,
+            "both_gates_pass": true
+          }
+        },
+        "int_parse": {
+          "4096": {
+            "new_cycles_per_unit": 29.2564325,
+            "new_over_old": 0.6356610702714435,
+            "new_over_zig": 1.0168204645995544,
+            "checksums_equal": true,
+            "both_gates_pass": true
+          },
+          "64": {
+            "new_cycles_per_unit": 26.53927,
+            "new_over_old": 0.6400867551240728,
+            "new_over_zig": 1.0901266568755894,
+            "checksums_equal": true,
+            "both_gates_pass": true
+          }
+        },
+        "int_format": {
+          "4096": {
+            "new_cycles_per_unit": 68.379369,
+            "new_over_old": 0.32103447916418704,
+            "new_over_zig": 0.31826411268002397,
+            "checksums_equal": true,
+            "both_gates_pass": true
+          },
+          "64": {
+            "new_cycles_per_unit": 62.6945325,
+            "new_over_old": 0.2995211439575317,
+            "new_over_zig": 0.31684878492253393,
+            "checksums_equal": true,
+            "both_gates_pass": true
+          }
+        }
+      }
+    }
+  },
+  "measured_binaries_sha256": {
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/rows-02/row_packet_decode_old": "5d7aa62a55b2ab803278886a181474da872dee3de276ad49e824f622144ba7b7",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/rows-02/row_packet_decode_new": "7dfaac91464af00707b0979c0a38d3668771e580f7d2de6e01c9e6a0cec0eec4",
+    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/compute-rust": "342de880685aeee869ada3a39ad109b59795221d944b5e0b2089a7eaebc83655",
+    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/compute-zig-safe": "807a12c75a50a9e59590e710a84ed874132e3d2e273b83a23475b04f1c8eec2a",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/rows-02/row_json_transform_old": "9d489e5dc5999d1cc4f88bc32009a61b6e5e56267766759d9e7e9bec6c410ba4",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/rows-02/row_json_transform_new": "4e6428c81e38c15ff9ab9485ab2cd60ebf1a649ec1c195477d7727dab23e8068",
+    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/text-rust": "230ff4317181142193c29c7ee5f260fa6866d527fb59caf512aefe33c1a0b7d4",
+    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/text-zig-safe": "6ae0410adb082a0a657a5b23ddc24751a9cfbe31763f082b84f7376a01835649",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/micro-01/row_bytes_scan_old": "98d634b8d066d19f67b0abcdcb42dff23cf3c2ca0412f2e775686263c9b26335",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/micro-01/row_bytes_scan_new": "1d7e0ef9a25c6c1ccadbad216945bbabefacda28b90f23b28ac6b382fde09d9e",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/micro-01/row_int_parse_old": "c262ce3f52c98b681a8784011471a5b5f667b18a33eb52d03c747b7ea6d251df",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/micro-01/row_int_parse_new": "b7b47f76c8b96c36025570baf35ea92ad3911347fe1930ba4e5b11ec95af2d72",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/micro-01/row_int_format_old": "498d8be63c9207c35309bc5adc37ffcfd5aea7d8451f888fbb005041ac9ba251",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/micro-01/row_int_format_new": "bcab2f117363b2d83dce1d346200f1095c6040127b5c9ca1fd492a24930f2104"
+  },
+  "qualified": true,
+  "fuzz": {
+    "text": {
+      "qualified": true,
+      "accepted": 50,
+      "comparisons": 750,
+      "mismatches": 0,
+      "refusals": 0,
+      "fact_failures": 0,
+      "elapsed_seconds": 180.82153160800226,
+      "seed": 733,
+      "generator": "experiments/new-core-s3-20261006/wave-b/s3-t1/fuzz_text.py",
+      "generator_sha256": "b8ace42260252c42edd6f4374d27187e141782604bfe81cc95774c1542d5917a",
+      "evidence": "fuzz-text-02/summary.json"
+    },
+    "number": {
+      "qualified": true,
+      "accepted": 50,
+      "comparisons": 750,
+      "mismatches": 0,
+      "refusals": 0,
+      "fact_failures": 0,
+      "elapsed_seconds": 500.6653148671612,
+      "seed": 731,
+      "generator": "experiments/new-core-s2-20261005/wave-b/s2-t2/fuzz_number.py",
+      "generator_sha256": "ac061245708125e9f79bb2893759ae453005ad401f62588dce5664bfe74b95f5",
+      "evidence": "fuzz-number-01/summary.json"
+    }
+  },
+  "profile": {
+    "samples": 4086,
+    "lost_samples": 0,
+    "main_percent": 88.02,
+    "trace_percent": 11.95,
+    "byte_index_helper_samples": 0,
+    "evidence": "profile-03.txt"
+  },
+  "verification_premise": {
+    "exact_raw_phi_interval_asserted": true,
+    "injected_invalid_interval": "R_CORE_FACT",
+    "successful_verification_reduction": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/reduction-verify"
+      ],
+      "status": 0,
+      "stdout": "5387\n",
+      "stderr": "",
+      "expected": 5387
+    },
+    "evidence": [
+      "reduction-trusted.ir",
+      "reduction-verify.ll",
+      "logs/focused-07.txt"
+    ]
+  },
+  "guardian": {
+    "checks": 88,
+    "blocking_failures": 0,
+    "source_commit_checks": "normal",
+    "evidence_commit": "normal pre-commit Guardian gate required"
+  }
+}
