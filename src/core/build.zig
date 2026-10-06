@@ -1076,6 +1076,8 @@ const FnBuilder = struct {
     // ---- expressions --------------------------------------------------------------
 
     fn localExpression(self: *FnBuilder, slot: typed.LocalId, ty: typed.Type, out: ?*?Place, span: u32) Error!ir.Ref {
+        // Unit has no SSA payload; crossing a join must not manufacture a void phi/undef.
+        if (ty == .unit) return .none;
         if (self.isView(ty)) if (self.places.get(self.local(slot))) |source| {
             if (out) |place| place.* = source;
             const dict = try self.readPlace(source, span);

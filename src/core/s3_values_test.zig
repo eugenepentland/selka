@@ -24,7 +24,7 @@ fn qualified(a: std.mem.Allocator) !void {
         try std.testing.expect(result.term == .exited and result.term.exited == 0);
         try std.testing.expectEqualStrings("", result.stderr);
         const parsed = try std.json.parseFromSlice(std.json.Value, a, result.stdout, .{});
-        try std.testing.expectEqual(@as(i64, 9), parsed.value.object.get("passed").?.integer);
+        try std.testing.expectEqual(@as(i64, 10), parsed.value.object.get("passed").?.integer);
         try std.testing.expectEqual(@as(i64, 0), parsed.value.object.get("failed").?.integer);
         try std.testing.expectEqual(@as(i64, 0), parsed.value.object.get("unsupported").?.integer);
     }
@@ -35,6 +35,29 @@ test "S3 values preserve source shapes unit payloads marker data and ancestor su
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     try qualified(arena.allocator());
+}
+
+// spec-case: NEW-CORE-S3-VALUES-1
+test "a named unit used after an indexed-place join remains a valid record replacement" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const source =
+        \\record Holder:
+        \\    value: None
+        \\def main() -> int:
+        \\    empty: None = None
+        \\    values = [Holder(empty)]
+        \\    values[0].value = empty
+        \\    return len(values)
+    ;
+    var refusal: @import("build.zig").Refusal = .{};
+    const module = try @import("test_support.zig").buildSource(arena.allocator(), source, &refusal);
+    var replaced = false;
+    for (module.functions.items[module.entry].insts.items) |inst| {
+        if (inst.op == .phi) try std.testing.expect(inst.ty != .void);
+        replaced = replaced or inst.op == .record_set;
+    }
+    try std.testing.expect(replaced);
 }
 
 // spec-case: NEW-CORE-S3-VALUES-1

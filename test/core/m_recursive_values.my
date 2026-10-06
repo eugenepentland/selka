@@ -25,6 +25,12 @@ record Cursor:
     rows: list[list[int]]
     ticks: int
 
+record MixedUnits:
+    scalar: int
+    values: list[int]
+    row: [2]int
+    empty: None
+
 def tick(cursor: mut Cursor) -> int:
     cursor.ticks += 1
     return 0
@@ -130,6 +136,25 @@ public def test_keyword_temporaries_capture_in_source_order() -> bool:
     cursor = Cursor([[1], [2]], 0)
     add_reverse(row=mut cursor.rows[-1], ignored=tick(mut cursor))
     return rows == [[1, 7], [2, 9]] and cursor.rows == [[1], [2]] and cursor.ticks == 1
+
+# spec-case: NEW-CORE-S3-VALUES-1
+# spec-case: RC-SCALAR-REPLACE-1
+public def test_unit_assignment_through_nested_list_places_survives_control_flow() -> bool:
+    row: [2]int = [2, 3]
+    empty: None = None
+    values = [MixedUnits(1, [4], row, empty)]
+    before = values
+    values[0].scalar = 7
+    values[0].values = [8, 9]
+    values[0].scalar = values[0].scalar
+    values[0].row = [10, 11]
+    for i in range(2):
+        if i == 0:
+            empty = None
+        values[i - i].empty = empty
+    values[0].values = [12]
+    values[0].scalar = 13
+    return values[0].scalar == 13 and values[0].values == [12] and values[0].row[1] == 11 and before[0].scalar == 1 and before[0].values == [4] and before[0].row[1] == 3 and f"{values[0].empty}" == "None"
 
 # spec-case: NEW-CORE-S3-NUMERIC-1
 public def test_subtraction_and_multiplication_saturate_at_each_width() -> bool:
