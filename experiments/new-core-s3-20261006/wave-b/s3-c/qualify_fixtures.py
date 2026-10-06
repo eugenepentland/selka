@@ -65,10 +65,13 @@ def main():
     checks = []
     for scenario, options, output in (
         ("process", None, "3\nMYL_CORE_LEAKCHECK\nONLY_VISIBLE\nPATH\n"),
+        ("malformed", None, "3\nMYL_CORE_LEAKCHECK\nONLY_VISIBLE\nPATH\n"),
         ("allowlist", "--allow-env=B,A", "2\nA\nB\n"),
         ("restricted", "--restrict --allow-env=B,A", "2\nA\nB\n"),
     ):
         environment = dict(PATH="context-probe", ONLY_VISIBLE="ok", MYL_CORE_LEAKCHECK="1")
+        if scenario == "malformed":
+            environment["INVALID_\udcff"] = "ignored"
         if options is not None:
             environment["MYLANG_OPTIONS"] = options
         for mode in ("old", "debug", "release"):
