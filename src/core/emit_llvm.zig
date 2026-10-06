@@ -22,6 +22,7 @@ const emit_text = @import("emit_text.zig");
 const text_builder = @import("build_text.zig");
 const emit_fn = @import("emit_fn.zig");
 const emit_number = @import("emit_number.zig");
+const emit_cap = @import("emit_cap.zig");
 
 /// A source line and column for a span start.
 pub const Location = struct { line: u32, column: u32 };
@@ -60,6 +61,8 @@ pub const Main = struct {
     /// When `main` returns a `Result`, the tags of its `Ok` and `Err` cases (the
     /// checker's order): the entry reports an `Err` (RESULT-MAIN-1/2).
     result: ?MainResult = null,
+    /// Checked capability family per parameter; 255 means ordinary data.
+    capabilities: []const u8 = &.{},
 };
 
 /// The case tags of `main`'s `Result` return type.
@@ -431,9 +434,16 @@ const ModuleState = struct {
         try out.print(self.allocator, "define i32 @main(i32 %argc, ptr %argv) uwtable{s} {{\nentry:\n", .{scope});
         var arguments: Out = .empty;
         var owns_args = false;
+        var cleanup: Out = .empty;
         for (entry.signature.params, 0..) |param, i| {
             if (i != 0) try arguments.appendSlice(self.allocator, ", ");
-            if (param == .cap) {
+            if (param == .capability) {
+                try arguments.appendSlice(self.allocator, try emit_cap.entry(self, out, &cleanup, i));
+            } else if (param == .cap) {
+                if (try emit_cap.token(self, out, i)) |token| {
+                    try arguments.appendSlice(self.allocator, token);
+                    continue;
+                }
                 const name = if (i < self.options.main.parameters.len) self.options.main.parameters[i] else "";
                 try arguments.print(self.allocator, "i64 {d}", .{@as(u8, if (std.mem.eql(u8, name, "err")) 2 else 1)});
             } else if (param.isCompound() and self.module.compound(param) == .list and self.module.compound(param).list == .str) {
@@ -442,7 +452,8 @@ const ModuleState = struct {
                 owns_args = true;
             } else return error.UnsupportedEntry;
         }
-        const release_args = if (owns_args) "  call void @myl_core_release(ptr %args)\n" else "";
+        if (owns_args) try cleanup.appendSlice(self.allocator, "  call void @myl_core_release(ptr %args)\n");
+        const release_args = cleanup.items;
         const ret = entry.signature.ret;
         const callee = try symbol(self.allocator, entry.name);
         if (ret == .void) {
@@ -2227,6 +2238,7 @@ const FunctionEmitter = struct {
         const m = self.state.module;
         const signature = if (inst.op == .call_indirect) m.compound(self.typeOf(inst.a)).@"fn" else m.functions.items[inst.a.index()].signature;
         const external = signature.linkage != .internal;
+        if (inst.op == .call) try emit_cap.beforeCall(@TypeOf(self), self, out, inst);
         const borrowed_bytes = external and signature.ret == .bytes and signature.owned == 0;
         const text_parameter = signature.params.len == 1 and signature.params[0] == .str;
         if (inst.op == .call and borrowed_bytes and text_parameter and

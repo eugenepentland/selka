@@ -198,6 +198,8 @@ const ModuleBuilder = struct {
             .u64 => .u64,
             .unit => .void,
             .host_cap, .stream_cap => .cap,
+            .clock_cap, .random_cap, .filesystem_cap, .network_cap, .environment_cap => .capability,
+            .file, .text_file => .resource,
             else => self.mapAggregate(ty, span),
         };
     }
@@ -235,7 +237,7 @@ const ModuleBuilder = struct {
             const n = std.math.cast(u32, array.length) orelse return self.refuse("fixed array length", span);
             return self.module.intern(self.allocator, .{ .array = .{ .elem = elem, .n = n } });
         }
-        if (record.shape.resource != null) return self.refuse("resource type", span);
+        if (record.shape.resource != null) return .resource;
         // A domain is its wire type: `wrap` and `unwrap` change nothing at run time.
         if (record.shape.domain) |wire| {
             const underlying = try self.mapType(wire, span);
@@ -320,6 +322,7 @@ const Ssa = struct {
     sealed: std.ArrayList(bool) = .empty,
     /// The IR type of each variable: checked locals first, then synthetic joins.
     types: std.ArrayList(ir.Type) = .empty,
+    resources: std.ArrayList(build_cap.Scope) = .empty,
 };
 
 /// Where `break` and `continue` of one checked loop go.
@@ -617,7 +620,8 @@ const FnBuilder = struct {
 
     // ---- statements ---------------------------------------------------------------
 
-    fn statement(self: *FnBuilder, id: typed.StatementId) Error!void {
+    /// Lower a checked statement and preserve lexical cleanup on every exit.
+    pub fn statement(self: *FnBuilder, id: typed.StatementId) Error!void {
         if (self.current == null) return;
         const s = self.statementOf(id);
         const span: u32 = @intCast(s.span.start);
@@ -648,7 +652,8 @@ const FnBuilder = struct {
             .branch => |b| try self.branchStatement(b.condition, b.then_body, b.else_body),
             .loop => |loop| try self.loopStatement(loop.id, loop.condition, loop.body, loop.step),
             .loop_exit => |exit| {
-                for (self.loops.items) |targets| if (targets.id == exit.target) {
+                for (self.loops.items, 0..) |targets, depth| if (targets.id == exit.target) {
+                    try build_cap.closeScopes(*FnBuilder, self, depth + 1, span);
                     return self.jump(if (exit.continuing) targets.latch else targets.exit);
                 };
                 return self.mb.refuse("loop exit target", span);
@@ -659,8 +664,18 @@ const FnBuilder = struct {
             // block, and `n.escape(v)` is `v`; reference counting frees at last use. The checker has
             // already rejected every program that lets an arena value outlive its block.
             .with_scope => |scope| {
-                if (scope.resource != null) return self.mb.refuse("with scope over a resource", span);
-                try self.statement(scope.body);
+                if (scope.resource) |source| {
+                    const owner = try self.expression(source);
+                    const variable = self.local(scope.slot);
+                    try self.write(variable, self.current.?, owner);
+                    try self.ssa.resources.append(self.allocator(), .{ .variable = variable, .depth = self.loops.items.len });
+                    try self.statement(scope.body);
+                    if (self.current != null) {
+                        const live = try self.read(variable, self.current.?);
+                        _ = try self.effectCall("myl_core_file_scope_close", &.{.resource}, .void, &.{live}, span);
+                    }
+                    _ = self.ssa.resources.pop();
+                } else try self.statement(scope.body);
             },
         }
     }
@@ -1213,7 +1228,7 @@ const FnBuilder = struct {
             .stream_write,
             .file_access,
             .file_method,
-            => return build_cap.expression(self, n, span),
+            => return build_cap.Lower(*FnBuilder).expression(self, n, span),
         }
     }
 
@@ -1414,6 +1429,7 @@ const FnBuilder = struct {
     /// End the function with `result`. A function with `mut` parameters returns a record of its
     /// result (unless `unit`) and the final value of each `mut` parameter.
     fn returnValue(self: *FnBuilder, result: ir.Ref, span: u32) Error!void {
+        try build_cap.closeScopes(*FnBuilder, self, 0, span);
         const mutated = self.checked.signature.declared_mutates;
         var value = result;
         if (mutated.len != 0) {
@@ -1741,6 +1757,8 @@ const FnBuilder = struct {
     /// A call. `evaluation` is the checker's block that binds the arguments of a keyword call
     /// to temporaries in source order; it runs first and the arguments read the temporaries.
     fn call(self: *FnBuilder, callee: typed.FunctionId, argument_nodes: []const typed.NodeId, evaluation: ?typed.StatementId, span: u32) Error!ir.Ref {
+        const checked_function = self.mb.program.functions[@backingInt(callee)];
+        if (checked_function.policy.host != null and !checked_function.policy.c_abi) return @import("build_host.zig").call(self, checked_function, argument_nodes, evaluation, span);
         const index = try self.mb.functionIndex(callee);
         const declared = self.mb.program.functions[@backingInt(callee)].signature;
         const target: ir.Inst = .{ .op = .call, .a = @fromBackingInt(index), .ty = self.mb.module.functions.items[index].signature.ret };
@@ -1790,6 +1808,9 @@ const FnBuilder = struct {
             if (slot) |at| places[at] = place orelse return self.mb.refuse("mut argument that is not a place", span);
         }
         if (self.current == null) return .none;
+        if (target.op == .call and self.mb.module.functions.items[target.a.index()].signature.linkage == .extern_c and values.len != 0 and self.typeOfRef(values[0]) == .cap) {
+            _ = try self.effectCall("myl_core_host_check", &.{.cap}, .void, &.{values[0]}, span);
+        }
         for (mutated, places) |position, place| {
             if (place.steps.len > 0 and self.version(place.root) != place.root_version) return self.mb.refuse("interior mut argument ancestor changed during later argument evaluation", span);
             values[position] = try self.readPlace(place, span);
@@ -1958,9 +1979,15 @@ const FnBuilder = struct {
         return self.emit(.{ .op = .call, .ty = ret, .a = @fromBackingInt(@intCast(callee)), .data = try self.extraSlice(arguments), .span = span });
     }
 
+    /// Ordered runtime call that passes every capability token to its adapter.
+    pub fn effectCall(self: *FnBuilder, name: []const u8, params: []const ir.Type, ret: ir.Type, arguments: []const ir.Ref, span: u32) Error!ir.Ref {
+        const callee = try self.mb.runtimeFunction(name, params, ret, .runtime_c);
+        return self.emit(.{ .op = .call, .ty = ret, .a = @fromBackingInt(callee), .data = try self.extraSlice(arguments), .span = span });
+    }
+
     /// The text of `value`, as `str(value)` and an f-string part spell it: a string as it is, an
     /// integer in decimal, a boolean as `True` or `False`.
-    fn textOf(self: *FnBuilder, value: ir.Ref, span: u32) Error!ir.Ref {
+    pub fn textOf(self: *FnBuilder, value: ir.Ref, span: u32) Error!ir.Ref {
         const ty = self.typeOfRef(value);
         if (ty == .str) return value;
         if (ty == .bool) return self.runtimeCall(flags.str_from_bool_symbol, &.{.bool}, .str, &.{value}, span);
@@ -1995,7 +2022,7 @@ const FnBuilder = struct {
     }
 
     fn printNode(self: *FnBuilder, print: typed.Print, span: u32) Error!ir.Ref {
-        if (print.debug or print.separator != null or print.terminator != null) return self.mb.refuse("print options", span);
+        if (print.debug or print.separator != null or print.terminator != null) return build_cap.printOptions(*FnBuilder, self, print, span);
         var operands: std.ArrayList(ir.Ref) = .empty;
         defer operands.deinit(self.allocator());
         const stream = if (print.stream) |stream_node| try self.expression(stream_node) else try self.constant(.cap, switch (print.sink) {
@@ -2036,6 +2063,7 @@ fn buildFunction(mb: *ModuleBuilder, checked: typed.Function, declared: ir.Funct
     defer b.ssa.incomplete.deinit(mb.allocator);
     defer b.ssa.sealed.deinit(mb.allocator);
     defer b.ssa.types.deinit(mb.allocator);
+    defer b.ssa.resources.deinit(mb.allocator);
     defer b.loops.deinit(mb.allocator);
     for (checked.scope.locals) |local| {
         const ty = mb.mapType(local.ty, @intCast(local.declaration.start)) catch .void;

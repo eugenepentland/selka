@@ -100,7 +100,7 @@ fn classify(gpa: std.mem.Allocator, keep: std.mem.Allocator, checked: frontend.C
             return refusal(case, try keep.dupe(u8, why.reason), try std.fmt.allocPrint(keep, "{d}:{d}", .{ at.line, at.column }));
         },
     };
-    if (!entry.readable(module.functions.items[0].signature.ret)) return refusal(case, "the runner's entry cannot read this test's result type yet (Result[bool, E])", "");
+    if (!entry.readable(&module, module.functions.items[0].signature.ret)) return refusal(case, "the runner's entry cannot read this test's result type yet (Result[bool, E])", "");
     return null;
 }
 
@@ -189,7 +189,20 @@ fn buildExecutable(init: std.process.Init, options: Options, checked: frontend.C
         error.Unsupported => return .{ .failed = .{ .name = name, .status = .unsupported, .reason = why.reason } },
     };
     const targets = try allocator.alloc(entry.Target, positions.len);
-    for (targets, positions, 0..) |*target, position, table_index| target.* = .{ .function = @intCast(table_index), .streams = chosen[position].case.streams };
+    for (targets, positions, 0..) |*target, position, table_index| {
+        const case = chosen[position].case;
+        const function = checked.program.functions[@backingInt(case.function)];
+        const result = typed.resultShape(function.signature.return_type, checked.program.records);
+        var seed: [32]u8 = undefined;
+        std.crypto.hash.sha2.Sha256.hash(case.name, &seed, .{});
+        target.* = .{
+            .function = @intCast(table_index),
+            .streams = case.streams,
+            .parameters = case.parameters,
+            .seed = std.mem.readInt(u64, seed[0..8], .little),
+            .result = if (result) |shape| .{ .ok_tag = @intCast(shape.ok_tag), .error_tag = @intCast(shape.error_tag) } else null,
+        };
+    }
     try entry.addEntry(allocator, &module, targets);
     const flavor = if (options.build.release) "release" else "debug";
     const absolute = std.Io.Dir.cwd().realPathFileAlloc(init.io, options.path, allocator) catch options.path;

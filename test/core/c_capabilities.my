@@ -1,0 +1,29 @@
+module c_capabilities
+import filesystem
+import environment
+import time
+
+public def test_clock() -> bool:
+    clock = time.simulated_clock(time.from_unix_nanoseconds(42))
+    match time.now(clock):
+        case Ok(value):
+            return value.unix_nanoseconds == 42
+        case Err(_):
+            return False
+
+public def test_environment() -> bool:
+    env = environment.fixed({"LANG": "C", "HOME": "/home/test"})
+    return env.names() == ["HOME", "LANG"] and env.get("PATH") is None
+
+public def test_files() -> bool:
+    fs = filesystem.memory()
+    match fs.write_text("data.txt", "hello"):
+        case Ok(_):
+            pass
+        case Err(_):
+            return False
+    with fs.open("data.txt", "r") as f:
+        return f.read() == "hello"
+
+def main() -> int:
+    return 0

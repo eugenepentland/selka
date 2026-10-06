@@ -53,7 +53,6 @@ EXCLUDED = {
     "rc_plain_aggregates": "other list methods, tuples or fixed arrays",
     "rc_match_scalars": "other list methods, tuples or fixed arrays",
     "migrated/propagation": "imports (R-3; a split single-module copy goes in test/core)",
-    "error_traces": "a capability (Filesystem)",
     "arena_managed": "arena feature (§11)", "arena_scopes": "arena feature (§11)",
     "arena_class_escape": "arena feature (§11)", "arena_regions": "arena feature (§11)",
     "rc_arena_values": "arena feature (§11)",

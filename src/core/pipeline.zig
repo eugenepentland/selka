@@ -68,7 +68,16 @@ pub fn build(init: std.process.Init, path: []const u8, options: Options, report:
     // A header-less file is checked alone; the old core shows its absolute path.
     const absolute = std.Io.Dir.cwd().realPathFileAlloc(init.io, path, allocator) catch path;
     const shown = if (session.single != null) absolute else shownPath(checked.src, checked.program);
-    return finish(init, &module, .{ .src = checked.src, .source_path = shown, .main = .{ .parameters = try mainParameters(allocator, checked.program), .result = mainResult(checked.program) } }, options, report);
+    const unit: Unit = .{
+        .src = checked.src,
+        .source_path = shown,
+        .main = .{
+            .parameters = try mainParameters(allocator, checked.program),
+            .result = mainResult(checked.program),
+            .capabilities = try mainCapabilities(allocator, checked.program),
+        },
+    };
+    return finish(init, &module, unit, options, report);
 }
 
 /// What the back half of a build needs to know about the checked source.
@@ -175,4 +184,12 @@ pub fn shownPath(src: language.source.Source, program: language.typed.Program) [
     const main = program.functions[@backingInt(program.main)];
     const start: u32 = @intCast(main.declaration.start);
     return frontend.position(src, .{ .start = start, .end = start }).path;
+}
+
+/// Checked entry capability families distinguish Host from Stream and provider tokens.
+fn mainCapabilities(allocator: std.mem.Allocator, program: language.typed.Program) std.mem.Allocator.Error![]const u8 {
+    const main = program.functions[@backingInt(program.main)];
+    const families = try allocator.alloc(u8, main.signature.parameter_count);
+    for (families, main.scope.locals[0..families.len]) |*family, local| family.* = if (local.ty.capabilityIndex()) |index| @as(u8, index) else 255;
+    return families;
 }
