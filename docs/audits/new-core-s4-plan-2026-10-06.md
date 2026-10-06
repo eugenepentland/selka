@@ -1,8 +1,10 @@
-# New compiler core, stage S4: projects — plan, 2026-10-06
+# New compiler core, stage S4: projects — implementation plan, 2026-10-06
 
-Status: **draft.** Decisions recorded as the user makes them. S4 implementation starts
-after the S3 exit report and the user's S4 go. Design work and measurements run now, in
-parallel with S3, on `claude/new-core-s4-design`, and touch nothing S3's packages own.
+Status: **ready for Codex at the user's S4 go, except the parts marked _finalize at
+the S3 exit_.** Two packages (S4-L, and S4-D if the user chooses it) touch no compiler
+file and can start before S3 exits. The design for the emission and cache packages is
+`docs/design/new-core-s4.md`. The measurements behind it are §3, with evidence in
+`experiments/new-core-s4-20261006/`.
 
 The stage, from the new-core plan (`docs/audits/new-core-plan-2026-10-05.md` §6):
 
@@ -10,39 +12,55 @@ The stage, from the new-core plan (`docs/audits/new-core-plan-2026-10-05.md` §6
 |---|---|
 | Modules and `.myi` interfaces, incremental per-module builds, `mylang test` on projects, the Lox port, an EDA slice. | The Lox port and the EDA slice pass their tests under the new core, with build and test times at or below the old core's. |
 
+## Launch instruction (for Codex)
+
+> Implement stage S4 of mylang's new compiler core following
+> `docs/audits/new-core-s4-plan-2026-10-06.md` and `docs/design/new-core-s4.md`.
+> Create `codex/new-core-s4-integration` from the S3 exit commit on
+> `codex/new-core-s3-integration`, merge `claude/new-core-s4-design` into it (S4-0),
+> and integrate there. Run Wave A, then Wave B, then S4-X, holding every gate in §6
+> and the rules in §7. Never merge into `main` and never push. Finish with the §8 exit
+> report and stop for the user's go/stop decision on S5.
+
 ## 1. Where the new core starts
 
-- **Front end.** `src/core/frontend.zig` loads a module graph through
-  `project_compile.Compilation` and checks the merged program with `check()`, which is
-  `checkWithCache(null)`. **The new core uses none of the old core's per-function
-  check caches today**: every build rechecks every module. The old core's `mylang build`
-  passes a `semantic_cache.Cache` (function bodies, symbolic generics, specializations,
-  module interfaces `module-interface-v5`, `check-summaries-v6`, `mutation-v2`).
-- **Back end.** `src/core/pipeline.zig` builds one Core IR module for the whole program,
-  runs the release passes over it, emits one `.ll` and compiles it with one `zig cc`
-  call. Only the runtime object is cached (by content). Nothing of the program is
-  reused between builds.
-- **Whole-program optimizations the back end relies on:** the leaf inliner
-  (`inline.zig`), caller-derived parameter intervals (`NEW-CORE-FACTS-10`, which
-  needs every call site), the ownership pass's callee summaries, and the merged
-  standard library (S3-A).
+- **Front end.**
+  - `src/core/frontend.zig` loads a module graph through `project_compile.Compilation`
+    and checks the merged program with `check()`, which is `checkWithCache(null)`.
+  - **The new core uses none of the old core's per-function check caches**: every
+    build rechecks every module.
+  - The old core's `mylang build` passes a `semantic_cache.Cache` (function bodies,
+    symbolic generics, specializations; formats `module-interface-v5`,
+    `check-summaries-v6`, `mutation-v2`).
+- **Back end.**
+  - `src/core/pipeline.zig` builds one Core IR module for the whole program, runs the
+    release passes, emits one `.ll` and compiles it with one `zig cc` call.
+  - Only the runtime object is cached. Nothing of the program is reused between
+    builds.
+- **Whole-program optimizations the back end relies on:**
+  - the leaf inliner (`inline.zig`);
+  - caller-derived parameter intervals (`NEW-CORE-FACTS-10`, which need every call
+    site);
+  - the ownership pass's callee summaries;
+  - the merged standard library (S3-A).
 - **Old-core reference numbers** (scale probe, 53k-line project, 2026-09-17): per-edit
-  check 3–4 s, cold build 746 s, warm build 70 s. S4's exit compares against the old
-  core's numbers on the Lox port and the EDA slice, remeasured at S4 start.
+  check 3–4 s, cold build 746 s, warm build 70 s.
 
 ## 2. Decisions
 
 ### S4-1. Caching: whole-program analysis, per-module codegen units keyed by their text (accepted 2026-10-06)
 
-**The rule.** Every build runs the new core's own pipeline over the whole program
-(Core IR, facts, inlining, ownership, emission). Emission then splits the program into
-**codegen units, one per source module** (generic instances and the entry wrapper in
-units of their own, below). Each unit is cached by the hash of **its emitted LLVM text**
-plus the target, optimization level, LLVM/Zig version and runtime ABI version. A unit
-whose text hash is cached reuses its object; only changed units go to LLVM. The link
-step takes every unit's object plus the runtime object.
+**Every build runs the new core's own pipeline over the whole program:** Core IR,
+facts, inlining, ownership and emission. Emission then splits the program into
+**codegen units, one per source module**. Generic instances and the entry wrapper get
+units of their own.
 
-**Why this and not the two plain schemes** (the comparison, 2026-10-06):
+**Each unit is cached by the hash of its emitted LLVM text,** plus the target,
+optimization level, Zig version and runtime ABI version. Only changed units go to
+LLVM, in parallel, and the link takes every unit's object. The design, including the
+runtime ABI change for trap sites, is `docs/design/new-core-s4.md`.
+
+**Why this and not the two plain schemes:**
 
 | | Per function | Per module (separate compilation) | **Hybrid (S4-1)** |
 |---|---|---|---|
@@ -53,51 +71,40 @@ step takes every unit's object plus the runtime object.
 | LLVM invocations | many tiny units unless grouped | one per module | one per changed module |
 | Generic instances | natural | needs an owning module or deduplication | identical text, identical key |
 
-The concrete cost of separate compilation: `bytes_scan`'s vector loop exists only
+**What separate compilation would cost:** `bytes_scan`'s vector loop exists only
 because `NEW-CORE-FACTS-10` sees every call to `score`. Were `score` public in another
-module, the overflow check would stay and the loop would stay scalar. The hybrid keeps
-that, and an edit still recompiles only its own unit plus any unit that inlined the
-edited function or took ranges from its calls.
+module, the overflow check would stay and the loop would stay scalar.
 
-**Requirements this puts on emission** (S4 must meet all of them; the spike in §3
-measures where today's emitter falls short):
-1. **Stable, content-derived names.** A unit's text must not depend on anything outside
-   the unit except the declarations it uses. Global counters (string-literal numbering,
-   type-descriptor ids, metadata numbering, trap-site tables, label counters that span
-   functions) must become unit-local or content-hashed, or one added literal in one
-   module changes every later unit's text and nothing is reused.
-2. **Cross-unit linkage.** Functions called across units become `hidden` external
-   definitions with deterministic mangled names; everything else stays `internal`.
-   Shared constants (literal blocks, descriptors) are either emitted per unit as
-   `linkonce_odr`/COMDAT or owned by one unit and declared elsewhere.
-3. **Generic instances** go into units keyed by their own text (one per instance or
-   grouped by the generic's defining module), so two modules using `sort[Record]`
-   share one object.
-4. **Debug information and trap locations** carry file/line per unit without a global
-   numbering pass.
-5. **Determinism:** the same program emits byte-identical units on every build and on
-   every machine with the same toolchain.
+**Fallbacks, if S4's measurements miss the §6 targets:**
+- **The whole-program pipeline is too slow at scale.** Cache Core IR per module as
+  well, keyed by the module's checked source and the interfaces it imports, with the
+  whole-program passes reading cached IR.
+- **The edit loop is still too slow.** Debug builds use plain per-module separate
+  compilation, and release builds keep S4-1.
 
-**Correctness guard.** A clean build and an incremental build must produce the same
-objects. S4 adds a check (in the test suite and as a hidden `--verify-cache` mode)
-that rebuilds every reused unit from scratch and compares object hashes.
-
-**Fallbacks, if the spike or S4 measurements say so:**
-- **The whole-program pipeline is too slow at EDA scale.** Cache the front half per
-  module as well: Core IR per module, keyed by the module's checked source and the
-  interfaces it imports (that half is the per-module scheme), with the whole-program
-  passes reading cached IR.
-- **Still too slow in the edit loop.** Debug builds (where cross-module optimization
-  matters least) use plain per-module separate compilation; release builds keep S4-1.
-
-### S4-2. Front-end caching (proposed, for the user)
+### S4-2. Front-end caching (recommended; the user confirms at the S4 go)
 
 Wire the old core's `semantic_cache` into `frontend.Session` (`checkWithCache`), so an
-edit rechecks only changed functions, as `mylang build` does. Reuse, not reimplement:
-the cache formats stay `module-interface-v5`, `check-summaries-v6` and `mutation-v2`
-unless S4 changes them (then bump).
+edit rechecks only the changed functions, as the old core's builds do.
+- **Reuse it, don't reimplement it.** The formats stay `module-interface-v5`,
+  `check-summaries-v6` and `mutation-v2` unless S4 changes one, which then bumps its
+  version.
+- **This is enough.** With `CATALOG-INTERN-1` the merged check costs 0.45 s after an
+  edit at 96k lines (§3.4), so the new core does not need per-module checking.
 
-## 3. The parallel spike: results (2026-10-06)
+### S4-3. The S4 exit programs (the user decides at the S4 go)
+
+- **The Lox port must be migrated first (package S4-L).** It does not compile under
+  value semantics (§3.5). The migration is mylang code in the benchmark tree, not
+  compiler work, so it can start before S3 exits.
+- **The EDA slice is the user's choice:**
+  - **(a) the existing 5,169-line pilot.** It already passes the old core, and the
+    new core accepts 117 of its 120 functions. It is too small to test what S4 is for.
+  - **(b) Recommended: port the benchmark's Stage 1 (26,430 Zig lines) first,** as
+    package S4-D, in parallel from now. The synthetic 192k-line project (§3) covers raw
+    scale either way.
+
+## 3. The spike: results (2026-10-06)
 
 Run on `claude/new-core-s4-design` from S3's Wave B base (`8918de74`), touching no S3
 file. Evidence, scripts and logs: `experiments/new-core-s4-20261006/`.
@@ -153,15 +160,15 @@ workers (the old core took 746 s cold for 53k lines).
 | A small public helper another file's caller inlines, release | 2 | 2 (its unit and the caller's) |
 | The same helper, debug (no inlining) | 2 | 1 |
 
-**Today's emitter numbers three things globally, so one added checked operation
-changes every unit** (requirement 1 of S4-1):
-- private constants `@myl.op.N`, `@myl.fn.N`, `@myl.str.N`, `@myl.dict.N`;
-- trap sites: `myl_core_trap(i32 N, …)` indexes one program-wide `@myl_core_sites`
-  table;
-- debug metadata ids `!N`.
+**Today's emitter numbers things across the whole program, so one added checked
+operation changes every unit:**
+- private constants;
+- trap sites, indexed in one program-wide table;
+- metadata.
 
-With unit-local numbering and a site table per unit (simulated by `--normalize`), an
-edit changes exactly its own unit plus the units that inlined from it.
+`docs/design/new-core-s4.md` §3 lists all seven numberings. With unit-local numbering
+and per-unit site records (simulated by `--normalize`), an edit changes exactly its own
+unit plus the units that inlined from it.
 
 ### 3.4 The front end (`gen_program.py`, `perf`)
 
@@ -175,8 +182,11 @@ edit changes exactly its own unit plus the units that inlined from it.
   returns early when no record was added, and `identify` indexes only the identities
   it resolves (highest node wins, as before). Same CPU (12), before → after:
   48k lines 1.50 → 0.36 s; 96k 5.58 → 0.79 s; 192k 25.3 → 1.78 s. Now close to linear.
-  Focused tests: nominal 96, generic 176, record 187, callback 86, array 77, tuple 31,
-  all passing; `test-core` 219/219. The full old gate is still owed before it merges.
+  A follow-up (`e86ac0bc`) returns an already-held type before any graph pass when
+  no graph node was added. Focused tests (nominal 97, generic 177, record 187, callback
+  86, array 77, tuple 31) and `test-core` 219/219 pass, and **the full old gate is
+  green** on `e86ac0bc`: `zig build test` 115/115 steps with 3,003 tests,
+  `test-qbe` 519/519, `test-qbe-build` 29/29, `fmt-check` 2/2 (`gate/`).
 - **The old core's checks on the 96k-line project** (24 files), CPU 12, before the fix:
   per-module `mylang check` cold 1.65 s, unchanged 0.03 s, after one edit 0.10 s;
   merged `mylang check-project` (the path the new core uses) cold 5.01 s, unchanged
@@ -188,36 +198,242 @@ edit changes exactly its own unit plus the units that inlined from it.
   semantic cache into `frontend.Session` (S4-2) is enough; the new core does not need
   per-module checking.
 
-## 4. What the spike means for S4 (draft)
+### 3.5 The S4 exit programs today (`baselines.md`)
 
-**S4-1 holds.** The whole-program pipeline is cheap enough to rerun every build, LLVM
-is where the time goes, and per-file units both cache and parallelize it. The build:
-1. **Check** the merged program with the semantic cache (S4-2) and `CATALOG-INTERN-1`.
-2. **Build, analyze and emit** the whole program (0.3 s at 50k lines).
-3. **Emit one unit per source file.** Generic instances go into units keyed by their
-   own text, so files sharing an instance share its object.
-4. **Look up each unit** by the hash of its text, target flags, optimization level,
-   Zig version and runtime ABI, in `.mylang-cache/core/units/`.
-5. **Compile the changed units in parallel,** as build slots allow, then link.
+- **The Lox port does not compile under the current language.** The benchmark checkout
+  (`.tmp/lox-bench/tree/benchmarks/lox/ports/mylang`, about 5,100 lines, pinned
+  2026-09-23) declares 16 `class` types, which value semantics rejects
+  (`E_VALUE_CLASS`). 24 of its 26 files fail the front end, so it has neither an
+  old-core baseline nor a new-core coverage number. It needs migrating to records,
+  recursive unions and pool handles first (package S4-L).
+- **The EDA port is a 5,169-line pilot** (`eda-bench/mylang/src`, 16 files, 30 tests),
+  not the planned Stage 1 slice (26,430 Zig lines).
+  - New-core coverage with S3's integration build (`e50e508a`): 117 of 120 functions.
+    The refusals are `stream_write`, float text and one `array` construct, all S3
+    areas.
+  - Old core (S3 base, CPU 10, one job): build 0.41 s cold; tests 5.5 s cold, 0.07 s
+    unchanged, 0.29 s after a one-function edit.
+- **S3's coverage sweep checks neither port.** The four corpora are `examples`,
+  `bench/parity`, `tests/lang` and the runtime benchmarks; the S0 tool's `--lox` option
+  was never used. S4 adds both ports to the sweep.
 
-**Expected edit loop at 50k lines, debug:** about 1 s (incremental check, 0.3 s of
-our own work, one unit at `-O0` ~0.3 s, link 0.03 s). Release adds one unit at `-O3`,
-about 4 s for a 4k-line file. **Cold release build at 200k lines:** about 15 s of LLVM
-on 16 workers instead of 218 s.
+## 4. Work packages
 
-**Work packages (to be finalized after S3 exits, since S3-A changes the driver and
-the standard-library import path):**
-- **S4-F, front end:** `CATALOG-INTERN-1` (done here; needs the full old gate);
-  `identify`'s remaining scan over every graph node per call; the semantic cache in
-  `frontend.Session` (target: the merged check after an edit at or below the old
-  core's 0.45 s at 96k lines).
-- **S4-E, emission:** unit-local constant and metadata numbering, a site table per
-  unit (`myl_core_trap` takes the unit's table or a site pointer), cross-unit `hidden`
-  linkage, deterministic output, and `--verify-cache` (rebuild reused units and
-  compare objects).
-- **S4-C, cache and driver:** the unit cache, parallel `zig cc` under the build
-  slots, the link step, cache eviction with `scripts/prune-caches.sh`.
-- **S4-M, modules:** user modules and `.myi` interfaces admitted by the new core;
-  `mylang test` on projects; the S4-only `tests/lang` exclusions from S3.
-- **S4-P, projects:** the Lox port and an EDA slice under the new core; build and test
-  times against the old core's, remeasured at S4 start.
+Each package runs in its own locked worktree from the S4 integration branch, commits
+with Guardian's 88 checks, and records evidence under `experiments/new-core-s4-*/`,
+one log file per command run.
+
+### Wave 0 (can start now, before S3 exits; no compiler files)
+
+#### S4-L. Migrate the Lox port to value semantics (one agent; about 3–5 h)
+
+**Where:** a new branch from the benchmark tree's port
+(`benchmarks/lox/ports/mylang`), in its own worktree. Never edit the existing
+`.tmp/lox-bench` checkouts.
+
+**What:**
+- Replace the 16 `class` types with records, recursive unions and pool handles. Use
+  pool handles where identity is shared, as the VM's frames, upvalues and heap objects
+  need.
+- Keep the port's structure and its tests (`*_test.my`, `driver_cases.json`).
+
+**Exit:**
+- the port's own tests and the harness's golden outputs (`bench/expected`) pass under
+  the old core at S3's base;
+- the old-core build and test times recorded as S4's Lox baseline: cold, unchanged,
+  after a one-function edit, and tests with one job, pinned to CPU 10;
+- no compiler file touched.
+
+#### S4-D. Port EDA Stage 1 (only if the user chooses S4-3 option (b))
+
+**What:** follow `eda-bench/STAGES.md` and `eda-bench/mylang/PORTING-MYLANG.md`. Stage 1
+(dumped model to `.kicad_sch` set and `.net`, 34 golden cases) becomes the mylang EDA
+slice.
+
+**Exit:** the 34 golden cases pass under the old core, with the old-core baseline
+recorded as for S4-L. This is likely the largest package. Its size and owner are the
+user's call.
+
+### Wave A (after the S3 exit and the user's S4 go)
+
+#### S4-0. Base (coordinator)
+
+- Create `codex/new-core-s4-integration` from the S3 exit commit and merge
+  `claude/new-core-s4-design`. That branch brings:
+  - `CATALOG-INTERN-1`, whose full old gate is green on `e86ac0bc`;
+  - this plan, the design note and the spike tools.
+- Rerun `test-core`, full conformance and the 40 rows.
+- Add the Lox port (after S4-L) and the EDA slice to the coverage sweep.
+- _Finalize at the S3 exit:_
+  - the S3 exit commit;
+  - the list of `tests/lang` files S3 left for S4 (user modules);
+  - what S3-A changed in `driver.zig` and `frontend.zig`.
+
+#### S4-F. Front-end caching (one agent; about 3–4 h)
+
+**What:**
+- S4-2: the semantic cache in `frontend.Session` for both `build` and `test`.
+- Any remaining superlinear front-end cost found by profiling the synthetic projects
+  (`gen_program.py`).
+
+**Owns:** `src/core/frontend.zig` and the shared front-end files it must touch. Shared
+files mean the full old gate.
+
+**Exit:**
+- on the synthetic projects, the check after a one-function edit is at or below the
+  old core's `check-project` at every size (0.45 s at 96k lines);
+- cold check close to linear in size;
+- the full old gate green.
+
+#### S4-E. Codegen units (one agent; about 5–6 h)
+
+**What:** `docs/design/new-core-s4.md` §2–§5 and §7:
+- units per module, per generic instance and for the entry;
+- unit-local names and metadata;
+- `fastcc` program functions with `hidden` cross-unit linkage;
+- per-unit site records, and the runtime taking site pointers in `myl_core_trap`,
+  `myl_core_assert_fail`, `myl_core_err_trace` and the trace ring;
+- per-unit debug information;
+- deterministic output;
+- the stability tests.
+
+**Owns:** `src/core/emit_*.zig` (a new `emit_units.zig`) and `src/core/runtime/core_rt.c`
+(sites and traces only).
+
+**Exit:**
+- every §7 stability test passes;
+- conformance at 0 mismatches, debug and release, with the leak and verify sweeps;
+- trap and trace output identical;
+- the 40 rows unchanged within noise as single-module programs;
+- the five applications, split one module per file, within noise of their single-unit
+  build.
+
+#### S4-M. Module projects and project tests (one agent; about 3–4 h; parallel with S4-E)
+
+**What:**
+- **Projects:** module projects through the new core (`mylang.json`, import policy,
+  interface files where the front end uses them).
+- **Tests:** `mylang-core test` over a project directory, with the old runner's
+  per-test reuse (a test reruns only when its program changed) and parallel workers.
+- **Exclusions:** the `tests/lang` files S3 left for S4.
+
+**Owns:** `src/core/test_runner*.zig` and `src/core/pipeline.zig`'s project entry.
+
+**Exit:**
+- every `tests/lang` file at 0 mismatches except the retired arena tests;
+- `mylang-core test` on the Lox port (after S4-L) and the EDA slice runs every test;
+- an unchanged rerun executes nothing.
+
+### Wave B
+
+#### S4-C. Unit cache and parallel driver (one agent; about 3–4 h; after S4-E merges)
+
+**What:** `docs/design/new-core-s4.md` §6:
+- the key and store;
+- hits without a process;
+- batched and parallel misses;
+- the link;
+- `--verify-cache`;
+- eviction in `scripts/prune-caches.sh`.
+
+**Owns:** `src/core/driver.zig` and a new `src/core/unit_cache.zig`.
+
+**Exit:** the §6 dev-loop targets on the synthetic projects, and the cache tests of
+design §7.
+
+#### S4-P. Projects under the new core (one agent; after S4-C and S4-M)
+
+**What:**
+- build and test the Lox port and the EDA slice under the new core;
+- measure against the old-core baselines from S4-L and S4-D, with the same commands
+  and CPUs;
+- fix what they expose.
+
+**Exit:**
+- both pass their tests under the new core;
+- build and test times at or below the old core's: cold, unchanged, and after a
+  one-function edit.
+
+### S4-X. Integration and exit (coordinator)
+
+The full bar once:
+- the full old gate;
+- strict 200 fuzz cases of every kind;
+- full leak and verify sweeps;
+- all 40 rows against both 1.10 gates;
+- coverage including both ports;
+- `--verify-cache` over the Lox port and the EDA slice;
+- the dev-loop table (§6).
+
+## 5. Order
+
+| Wave | Packages | Notes |
+|---|---|---|
+| 0 | S4-L (and S4-D if chosen) | now; no compiler files |
+| A | S4-0, then S4-F, S4-E, S4-M in parallel | after the S3 exit and the user's go; at most three build-heavy agents alongside Wave 0 |
+| B | S4-C after S4-E; S4-P after S4-C and S4-M | |
+| X | S4-X | after all packages |
+
+## 6. Gates
+
+S3's gates apply unchanged:
+- `test-core` (8 shards, under 5 min);
+- conformance at 0 mismatches;
+- 50 strict fuzz cases of each package's kinds;
+- every row within 1.10× Zig ReleaseSafe and within 1.10× the old core;
+- a `mylang-core` rebuild of at most 10 s, measured uncontended;
+- the full old gate for any package that touches files outside `src/core/`.
+
+**New in S4, the dev-loop targets.** Measured on the synthetic projects
+(`gen_program.py`) and on both exit programs. Timings use CPU 10 for single-process
+steps and the build CPUs for parallel compilation, reported separately.
+
+| Measure | Target |
+|---|---|
+| Debug rebuild after a one-function edit, 48k lines | ≤ 2 s |
+| Release rebuild after a one-function edit, 48k lines | ≤ 1.5× the edited unit's `-O3` time plus 1 s |
+| Unchanged rebuild, any size | no `zig cc` process |
+| Cold release build, 192k lines, 16 workers | ≤ 60 s |
+| Check after a one-function edit, 96k lines | ≤ 0.45 s |
+
+## 7. Rules
+
+S3's §6 rules still apply:
+- a wrong answer is never acceptable;
+- machine rules;
+- one log per command run;
+- persisted formats bump their version when they change;
+- no pushes and nothing merged into `main`.
+
+**New in S4:**
+- **`ir.zig` stays frozen.** S4 needs no IR change. A package that thinks it needs one
+  stops and reports.
+- **The runtime ABI change is S4-E's only.** Site pointers replace site indexes, and
+  nothing else in the runtime ABI moves.
+- **The unit cache is never trusted over correctness.** Any doubt about a key's
+  completeness is a bug to fix, not a test to skip. `--verify-cache` runs in
+  `test-core`.
+- **External checkouts:** S4-L and S4-D work on their own branches. Nothing edits
+  `.tmp/lox-bench` or `eda-bench` in place.
+- **Old-core changes:** S4-F's shared front-end changes are allowed, with the full old
+  gate. Any other old-core change stops and reports.
+
+## 8. S4 exit check and report
+
+**Exit:**
+- the Lox port and the EDA slice pass their tests under the new core;
+- build and test times at or below the old core's (§6);
+- every §6 dev-loop target met;
+- every `tests/lang` file at 0 mismatches except the retired arena tests;
+- the S4-X bar green.
+
+**The report:**
+- package commits;
+- the dev-loop table against the old core;
+- the 40 rows;
+- conformance and coverage, both ports included;
+- fuzz, leak and verify;
+- every remaining limit.
+
+It then stops for the user's go/stop on S5: making the new core the default and
+deleting the old core.
