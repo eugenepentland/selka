@@ -422,7 +422,7 @@ const CoreInputs = struct {
 /// install graph (decision N2):
 /// - `zig build core` installs `zig-out/bin/mylang-core`;
 /// - `zig build test-core` runs its unit tests and the end-to-end slice, split into
-///   `-Dcore-shards=N` concurrent shards of one test binary (default 4; a
+///   `-Dcore-shards=N` concurrent shards of one test binary (default 8; a
 ///   `-Dtest-filter` run is one process);
 /// - `-Dcore-diff=true` also builds each slice program with the old compiler
 ///   and requires the same stdout and exit status (it builds the old compiler).
@@ -453,7 +453,7 @@ fn addCore(b: *std.Build, inputs: CoreInputs) void {
     const step = b.step("test-core", "Run the new core's unit tests and its end-to-end slice (not part of test)");
     // Most of the root's time is end-to-end builds of guest programs, so shards
     // of the one binary run concurrently; each test uses its own temporary tree.
-    const requested = b.option(usize, "core-shards", "test-core: concurrent shards of the core test root (default 4)") orelse 4;
+    const requested = b.option(usize, "core-shards", "test-core: concurrent shards of the core test root (default 8)") orelse 8;
     const shards = if (inputs.filters.len == 0) @max(1, requested) else 1;
     for (0..shards) |index| {
         const run = b.addRunArtifact(unit);

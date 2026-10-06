@@ -13,7 +13,8 @@ Its exit check, from the new-core plan's §6:
   modules (S4) and the retired arena tests.
 
 S3 runs on the same rules that worked in S2: one locked worktree per package, the Wave B
-pace rules, and a review stop between waves.
+pace rules, the Wave A review stop and the final S4 go/stop decision. The user's
+2026-10-06 Wave B go authorizes B, C and X without intermediate review stops.
 
 ## Launch instruction
 
@@ -359,7 +360,7 @@ Same as S2-X, with the S2 "Wave B pace" rules:
 
 The table in the S2 plan §5 applies unchanged, with three changes.
 
-**1. `test-core` runs as 4 shards by default.**
+**1. `test-core` runs as 8 shards by default** (user amendment, 2026-10-06).
 - Keep it under 5 minutes. If S3's new tests push a shard past about 90 s, raise
   `-Dcore-shards`, or move end-to-end fixtures into the conformance pins instead of
   `test-core`.

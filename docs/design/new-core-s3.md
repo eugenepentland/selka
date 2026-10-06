@@ -1,7 +1,8 @@
 # New compiler core, stage S3: applications and runtime effects
 
-Status: Wave A design and IR foundation, starting at `92590700` on
-`codex/new-core-s3-integration`. Wave B requires the user's review go.
+Status: Wave A approved; Waves B/C/X authorized from `3d0bfd23` on
+`codex/new-core-s3-integration` by the user's 2026-10-06 go. The next review
+stop is the final S3 exit report and S4 go/stop decision.
 The implementation plan is `docs/audits/new-core-s3-implementation-plan-2026-10-06.md`.
 The S0/S1/S2 as-built rules, N1–N6, R1, D1–D4 and L1–L4 remain binding.
 This note specifies the shapes frozen by S3-0; later sections will record
