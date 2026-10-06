@@ -1,0 +1,5 @@
+check-project cold: 1.09 s
+check-project warm: 0.03 s
+check-project after one edit: 0.45 s
+check (per module) cold: 1.58 s
+check (per module) after one edit: 0.10 s

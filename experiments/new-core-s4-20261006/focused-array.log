@@ -1,0 +1,33 @@
+test-units
++- run test w
+guardian/test: 77 test(s) selected by filter: "array" — 65 match by name, 12 unnamed test block(s) run regardless
+guardian/test: SLOW  17.30s  qbe_test.test.a [4096]int parameter keeps the native frame while the local that holds the array is heap-backed
+guardian/test: test wall 30.11s; slowest over 50ms:
+guardian/test:   17.30s  qbe_test.test.a [4096]int parameter keeps the native frame while the local that holds the array is heap-backed
+guardian/test:   2.33s  qbe_test.test.a callee that only reads a large array parameter keeps a native frame
+guardian/test:   1.61s  native_test_wire.test.a record, an array, a nested record, a zero-length and a large argument round-trip through mylang test
+guardian/test:   1.55s  native_execute.test.native execution reports original bounds indexes for read write pop array text and bytes
+guardian/test:   1.53s  generic_arrays_test.test.generic array specialization and execution clean up under allocation failure
+guardian/test:   0.94s  generic_concrete_test.test.generic record updates and array replacement preserve snapshots under allocation failures
+guardian/test:   0.80s  arrays_test.test.fixed arrays have structural types preserve copies and support every integer index width
+guardian/test:   0.47s  generic_arrays_test.test.expanding generic array recursion stops at the specialization budget
+guardian/test:   0.42s  iteration_place_test.test.D1 managed ancestor of a fixed array still guards length
+guardian/test:   0.34s  array_places_test.test.an element write out of range traps like a fixed-array read
+guardian/test: PASS — 77 passed
+guardian/test: RESULT {"passed":77,"failed":0,"skipped":0}
+failed command: sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_QBE=/home/epentland/ai/canopy/mylang-worktrees/claude-new-core-s4-design/zig-out/focus/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./.zig-cache/o/108fd8410fdf1c497bd498ef69ea079c/test --guardian-filter=array --cache-dir=./.zig-cache --seed=0x17971003 --listen=-
+
+Build Summary: 10/10 steps succeeded; 77/77 tests passed
+test-units success
++- run test 77 pass (77 total) 30s MaxRSS:352M
+   +- compile test debug native success 14s MaxRSS:774M
+   |  +- run exe qbe-build-assets (qbe_build_assets) cached
+   |  |  +- compile exe qbe-build-assets debug native cached 5ms MaxRSS:34M
+   |  +- options cached
+   |     +- compile exe qbe fast native cached 12ms MaxRSS:34M
+   +- install generated to qbe cached
+   |  +- compile exe qbe fast native (reused)
+   +- install generated to mylang cached
+      +- compile exe mylang debug native cached 10ms MaxRSS:38M
+         +- run exe qbe-build-assets (qbe_build_assets) (+1 more reused dependencies)
+

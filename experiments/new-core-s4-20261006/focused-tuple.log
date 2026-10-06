@@ -1,0 +1,24 @@
+test-units
++- run test w
+guardian/test: 31 test(s) selected by filter: "tuple" — 19 match by name, 12 unnamed test block(s) run regardless
+guardian/test: test wall 0.78s; slowest over 50ms:
+guardian/test:   0.61s  tuples_test.test.a tuple prints as its bracketed elements and compares structurally
+guardian/test:   0.15s  tuples_test.test.a generic function takes, destructures and returns tuple[T, int]
+guardian/test: PASS — 31 passed
+guardian/test: RESULT {"passed":31,"failed":0,"skipped":0}
+failed command: sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_QBE=/home/epentland/ai/canopy/mylang-worktrees/claude-new-core-s4-design/zig-out/focus/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./.zig-cache/o/9ce4f1dcbdc6db0c817008fa6d4e12b5/test --guardian-filter=tuple --cache-dir=./.zig-cache --seed=0xa90475a --listen=-
+
+Build Summary: 10/10 steps succeeded; 31/31 tests passed
+test-units success
++- run test 31 pass (31 total) 812ms MaxRSS:73M
+   +- compile test debug native success 4s MaxRSS:491M
+   |  +- run exe qbe-build-assets (qbe_build_assets) cached
+   |  |  +- compile exe qbe-build-assets debug native cached 7ms MaxRSS:35M
+   |  +- options cached
+   |     +- compile exe qbe fast native cached 16ms MaxRSS:34M
+   +- install generated to qbe cached
+   |  +- compile exe qbe fast native (reused)
+   +- install generated to mylang cached
+      +- compile exe mylang debug native cached 10ms MaxRSS:38M
+         +- run exe qbe-build-assets (qbe_build_assets) (+1 more reused dependencies)
+

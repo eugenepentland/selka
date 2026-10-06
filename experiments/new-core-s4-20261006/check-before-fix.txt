@@ -1,0 +1,3 @@
+before the fix (CPU 12, 96k lines, 24 files):
+check cold 1.65 s, unchanged 0.03 s, after one edit 0.10 s
+check-project cold 5.01 s, unchanged 0.03 s, after one edit 3.30 s
