@@ -375,7 +375,7 @@ const ModuleState = struct {
             \\declare void @myl_core_print_sep(i64) nounwind
             \\declare void @myl_core_print_end(i64) nounwind
             \\declare ptr @myl_core_box_new(i64) nounwind
-            \\declare void @myl_core_err_trace(i32, i32) nounwind cold
+            \\declare preserve_mostcc void @myl_core_err_trace_preserve_most(i32, i32) nounwind cold
             \\declare void @myl_core_assert_fail(i32) noreturn nounwind cold
             \\declare void @llvm.memcpy.p0.p0.i64(ptr noalias nocapture writeonly, ptr noalias nocapture readonly, i64, i1 immarg)
             \\declare void @llvm.memmove.p0.p0.i64(ptr nocapture writeonly, ptr nocapture readonly, i64, i1 immarg)
@@ -2097,8 +2097,8 @@ const FunctionEmitter = struct {
         };
         const restarts: u8 = if (inst.data == 0 or inst.data == 2) 0 else 1;
         const index = try self.state.site(.{ .kind = .trace, .location = location, .width = 0, .operation = action, .function = self.function.name });
-        // ERROR-TRACE-5: the recorder never counts against inlining.
-        try out.print(self.a(), "  call void @myl_core_err_trace(i32 {d}, i32 {d}) #1\n", .{ index, restarts });
+        // ERROR-TRACE-5/6: zero inline cost and the compiler-owned preserving ABI.
+        try out.print(self.a(), "  call preserve_mostcc void @myl_core_err_trace_preserve_most(i32 {d}, i32 {d}) #1\n", .{ index, restarts });
     }
 
     /// The text of string constant `raw` (a converting `?`'s `Union.case`), or "?".

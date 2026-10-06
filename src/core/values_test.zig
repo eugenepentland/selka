@@ -126,7 +126,7 @@ test "records: make, get and set in registers, inline list elements read by fiel
     // The nested field is one GEP at its offset from the element slot, stride 24.
     try std.testing.expect(contains(run.llvm, "getelementptr inbounds [24 x i8]"));
     try std.testing.expect(contains(run.llvm, ", i64 20\n"));
-    try std.testing.expect(contains(run.llvm, "call void @myl_core_err_trace(i32 "));
+    try std.testing.expect(contains(run.llvm, "call preserve_mostcc void @myl_core_err_trace_preserve_most(i32 "));
 }
 
 // spec-case: NEW-CORE-RECORD-1
