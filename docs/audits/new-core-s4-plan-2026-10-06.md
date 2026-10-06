@@ -1,8 +1,7 @@
 # New compiler core, stage S4: projects — implementation plan, 2026-10-06
 
-Status: **ready for Codex at the user's S4 go, except the parts marked _finalize at
-the S3 exit_.** Two packages (S4-L, and S4-D if the user chooses it) touch no compiler
-file and can start before S3 exits. The design for the emission and cache packages is
+Status: **Wave 0 (S4-L, S4-D) runs now. The rest is ready for Codex at the user's S4
+go, except the parts marked _finalize at the S3 exit_.** The design for the emission and cache packages is
 `docs/design/new-core-s4.md`. The measurements behind it are §3, with evidence in
 `experiments/new-core-s4-20261006/`.
 
@@ -82,7 +81,7 @@ module, the overflow check would stay and the loop would stay scalar.
 - **The edit loop is still too slow.** Debug builds use plain per-module separate
   compilation, and release builds keep S4-1.
 
-### S4-2. Front-end caching (recommended; the user confirms at the S4 go)
+### S4-2. Front-end caching (accepted 2026-10-06)
 
 Wire the old core's `semantic_cache` into `frontend.Session` (`checkWithCache`), so an
 edit rechecks only the changed functions, as the old core's builds do.
@@ -92,17 +91,22 @@ edit rechecks only the changed functions, as the old core's builds do.
 - **This is enough.** With `CATALOG-INTERN-1` the merged check costs 0.45 s after an
   edit at 96k lines (§3.4), so the new core does not need per-module checking.
 
-### S4-3. The S4 exit programs (the user decides at the S4 go)
+### S4-3. The S4 exit programs (accepted 2026-10-06)
 
-- **The Lox port must be migrated first (package S4-L).** It does not compile under
-  value semantics (§3.5). The migration is mylang code in the benchmark tree, not
-  compiler work, so it can start before S3 exits.
-- **The EDA slice is the user's choice:**
-  - **(a) the existing 5,169-line pilot.** It already passes the old core, and the
-    new core accepts 117 of its 120 functions. It is too small to test what S4 is for.
-  - **(b) Recommended: port the benchmark's Stage 1 (26,430 Zig lines) first,** as
-    package S4-D, in parallel from now. The synthetic 192k-line project (§3) covers raw
-    scale either way.
+Codex runs both now, in parallel with S3, as Wave 0. Neither touches the compiler.
+- **S4-L migrates the Lox port** to value semantics.
+- **S4-D ports EDA Stage 1** (26,430 Zig lines), following `eda-bench/mylang/PLAN.md`.
+  It becomes S4's EDA slice; the 5,169-line pilot is its first layer.
+
+**Neither needs design work:**
+- **The Lox port's objects already live in a handle-indexed heap.** Its 16 classes are
+  compiler and VM state (parsers, the runtime, chunks, frames, scopes). The care goes
+  into the roughly 50 places the value-semantics audit (P1, 2026-09-24) found relying
+  on shared references.
+- **The EDA port has a lane plan, a 1,400-line guide and a gap list with no blocker.**
+
+**Both stop and report** if the current language cannot express something, rather
+than changing the compiler.
 
 ## 3. The spike: results (2026-10-06)
 
@@ -223,36 +227,69 @@ Each package runs in its own locked worktree from the S4 integration branch, com
 with Guardian's 88 checks, and records evidence under `experiments/new-core-s4-*/`,
 one log file per command run.
 
-### Wave 0 (can start now, before S3 exits; no compiler files)
+### Wave 0 (now, in parallel with S3; no compiler files)
+
+**The pinned compiler for both packages.**
+- Build it once from `claude/new-core-s4-design` at `a16a324e`:
+  `zig build -Doptimize=ReleaseFast --prefix <cache>/mylang-s4-pin`, through
+  `scripts/build-slot.sh build`.
+- That commit is S3's Wave B base, so it has D2, `MUT-OVERLAP-RECEIVER-1` and
+  `MUT-REBIND-CALLER-1`, plus `CATALOG-INTERN-1`. Its language is what the new core
+  compiles.
+- Record the compiler's hash in each package's evidence.
+
+**Machine:**
+- S3's Wave B holds up to four build-heavy agents, and guest builds and tests compete
+  for the same cores.
+- Run S4-L as one agent, and S4-D's lanes A and B, with `mylang test --jobs 4`.
+- Start lanes C and D when S3 exits or when A and B finish, whichever is first.
+- Never time on CPUs 2, 3 or 11; baselines are timed on CPU 10.
 
 #### S4-L. Migrate the Lox port to value semantics (one agent; about 3–5 h)
 
-**Where:** a new branch from the benchmark tree's port
-(`benchmarks/lox/ports/mylang`), in its own worktree. Never edit the existing
-`.tmp/lox-bench` checkouts.
+**Where:**
+- branch `codex/s4-lox-value-semantics`, created from the benchmark tree's commit
+  `4e48a0922` (worktree `.tmp/lox-bench/tree`, path `benchmarks/lox/ports/mylang`);
+- in a new worktree. Never edit the existing `.tmp/lox-bench` checkouts.
 
 **What:**
-- Replace the 16 `class` types with records, recursive unions and pool handles. Use
-  pool handles where identity is shared, as the VM's frames, upvalues and heap objects
-  need.
-- Keep the port's structure and its tests (`*_test.my`, `driver_cases.json`).
+- Replace the 16 `class` types with records and recursive unions, threading `mut`
+  parameters. Use the port's existing heap handles, or new pool handles, where two
+  places must see one mutable object.
+- Keep the port's structure, its tests (`*_test.my`, `driver_tests.my`,
+  `driver_cases.json`) and `bench.json`'s build commands.
+- Fix anything D2 or the `mut` rules now reject the same way.
 
 **Exit:**
-- the port's own tests and the harness's golden outputs (`bench/expected`) pass under
-  the old core at S3's base;
-- the old-core build and test times recorded as S4's Lox baseline: cold, unchanged,
-  after a one-function edit, and tests with one job, pinned to CPU 10;
-- no compiler file touched.
+- conformance through the benchmark harness (`harness/lox_bench.py`, both engines,
+  normal and gc-stress) at the oracle's output, and all 63 unit tests passing;
+- old-core baselines recorded, pinned to CPU 10: build cold, unchanged and after a
+  one-function edit on `main`'s path; tests with `--jobs 1` cold, unchanged and after
+  that edit;
+- `NOTES.md` updated, and no compiler file touched.
 
-#### S4-D. Port EDA Stage 1 (only if the user chooses S4-3 option (b))
+#### S4-D. Port EDA Stage 1 (lanes A–D; `eda-bench/mylang/PLAN.md`)
 
-**What:** follow `eda-bench/STAGES.md` and `eda-bench/mylang/PORTING-MYLANG.md`. Stage 1
-(dumped model to `.kicad_sch` set and `.net`, 34 golden cases) becomes the mylang EDA
-slice.
+**Where:**
+- `eda-bench` repository, a branch `codex/s4-eda-stage1` and lane branches as
+  `PLAN.md` describes;
+- each lane in its own worktree.
 
-**Exit:** the 34 golden cases pass under the old core, with the old-core baseline
-recorded as for S4-L. This is likely the largest package. Its size and owner are the
-user's call.
+**First:**
+- re-pin `harness/langs.toml`'s mylang compiler to the S4 pin above;
+- rerun the pilot (support modules and `main`);
+- update `PORTING-MYLANG.md` and `GAPS.md` for any rule that changed since its pin
+  `c523da46` (D2, `MUT-OVERLAP-RECEIVER-1`, `MUT-REBIND-CALLER-1`, and so on).
+
+**What:** port layers L1–L13 by the lane plan.
+- Record new gaps in `GAPS.md` with their classification: blocker, workaround or
+  friction.
+- Stop and report a blocker; don't change the compiler.
+
+**Exit:**
+- `bench.py equiv mylang` passes all 34 golden cases;
+- the Zig tests' counterparts pass (`tools/check_tests.py`);
+- old-core baselines recorded as for S4-L.
 
 ### Wave A (after the S3 exit and the user's S4 go)
 
@@ -369,7 +406,7 @@ The full bar once:
 
 | Wave | Packages | Notes |
 |---|---|---|
-| 0 | S4-L (and S4-D if chosen) | now; no compiler files |
+| 0 | S4-L, S4-D | now, in parallel with S3; no compiler files |
 | A | S4-0, then S4-F, S4-E, S4-M in parallel | after the S3 exit and the user's go; at most three build-heavy agents alongside Wave 0 |
 | B | S4-C after S4-E; S4-P after S4-C and S4-M | |
 | X | S4-X | after all packages |
