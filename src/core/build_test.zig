@@ -100,7 +100,9 @@ test "a match on an option tests the tag and binds the payload in its arm" {
 const unsupported =
     \\def main(out: Stream) -> int:
     \\    table = {"a": 1}
-    \\    out.print(table["a"])
+    \\    holder = [table]
+    \\    view = holder[0].values()
+    \\    out.print(len(view))
     \\    return 0
     \\
 ;

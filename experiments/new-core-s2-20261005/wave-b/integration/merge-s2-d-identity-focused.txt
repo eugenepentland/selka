@@ -1,0 +1,18 @@
+tested_resolved_merge_tree=eccf30e9e09383072937547bbee1ff4d2ae08b29
+merge_package=62656609
+file                     tests | debug   match misma unsup | release match misma unsup
+--------------------------------------------------------------------------------------
+d_collections                8 |             8     0     0 |             8     0     0
+d_view_identity             10 |             0     0    10 |             0     0    10
+--------------------------------------------------------------------------------------
+TOTAL                       18
+  debug    matching 8, mismatching 0, unsupported 10 (of 18 tests; 8 supported)
+  release  matching 8, mismatching 0, unsupported 10 (of 18 tests; 8 supported)
+
+blocking features of the unsupported tests (tests / files):
+     8 /  1  aggregate or captured dictionary alias combined with a live view
+     1 /  1  fixed array storage of live dictionary views
+     1 /  1  live dictionary view with unproved source identity
+
+blocking features per file (file: tests unsupported of tests; the features, most common first):
+  d_view_identity                 10 of  10: aggregate or captured dictionary alias combined with a live view x8, fixed array storage of live dictionary views x1, live dictionary view with unproved source identity x1

@@ -45,3 +45,5 @@ pub fn readsOnly(symbol: []const u8) bool {
 
 /// Located text traps pack their explicit TrapKind in the low byte.
 pub const text_trap: u64 = 1 << 58;
+/// A failed dictionary read or pop reports the located missing-key trap.
+pub const dict_missing_trap: u64 = 1 << 62;

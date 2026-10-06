@@ -1,0 +1,5 @@
+dict_lookup identical .text; measured row remains valid
+dict_lookup_str identical .text; measured row remains valid
+dict_update identical .text; measured row remains valid
+dict_update_str identical .text; measured row remains valid
+set_dedup identical .text; measured row remains valid

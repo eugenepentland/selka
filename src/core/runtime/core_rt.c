@@ -71,7 +71,7 @@ typedef struct {
     int64_t reserved;
 } myl_block;
 
-enum { MYL_KIND_LIST = 0, MYL_KIND_STR = 1, MYL_KIND_BOX = 2, MYL_KIND_BYTES = 3 };
+enum { MYL_KIND_LIST = 0, MYL_KIND_STR = 1, MYL_KIND_BOX = 2, MYL_KIND_BYTES = 3, MYL_KIND_DICT = 4 };
 enum { MYL_HEADER = 32, MYL_ALIGN = 32 };
 /* A saturated count (D4): the block is immortal, never written and never freed. */
 #define MYL_SATURATED UINT32_MAX
@@ -383,6 +383,8 @@ myl_block *myl_core_box_new(int64_t size) {
  * and `reserved`), so freeing a list of lists nested a million deep uses no
  * stack. The emitted release does not store the final 0, so a dying block is
  * recognized by the caller, never by its count. */
+static void core_dict_free_pending(myl_block *dict, myl_block **pending);
+
 __attribute__((cold)) void myl_core_free_block(myl_block *block) {
     block->cap = 0;
     myl_block *pending = block;
@@ -390,7 +392,9 @@ __attribute__((cold)) void myl_core_free_block(myl_block *block) {
         myl_block *dying = pending;
         pending = (myl_block *)(intptr_t)dying->cap;
         myl_layout *layout = layout_of(dying);
-        if (layout && kind_of(dying) != MYL_KIND_STR && kind_of(dying) != MYL_KIND_BYTES) {
+        if (kind_of(dying) == MYL_KIND_DICT) {
+            core_dict_free_pending(dying, &pending);
+        } else if (layout && kind_of(dying) != MYL_KIND_STR && kind_of(dying) != MYL_KIND_BYTES) {
             int64_t count = element_count(dying);
             for (int64_t i = 0; i < count; ++i) {
                 const unsigned char *element = block_data(dying) + i * (int64_t)layout[0];
@@ -501,7 +505,7 @@ typedef struct {
 extern const myl_core_site myl_core_sites[];
 extern const char myl_core_source_path[];
 
-enum { TRAP_OVERFLOW, TRAP_DIVISION_BY_ZERO, TRAP_LIST_BOUNDS, TRAP_FLOAT_CONVERSION, TRAP_CAST, TRAP_FACT, TRAP_LIST_EMPTY, TRAP_ITERATION_MUTATION = 10, TRAP_TEXT_BOUNDS = 11, TRAP_TEXT_SEPARATOR = 12, TRAP_TEXT_STEP = 13, TRAP_BYTE_RANGE = 14, TRAP_TEXT_SCALAR = 15 };
+enum { TRAP_OVERFLOW, TRAP_DIVISION_BY_ZERO, TRAP_LIST_BOUNDS, TRAP_FLOAT_CONVERSION, TRAP_CAST, TRAP_FACT, TRAP_LIST_EMPTY, TRAP_MISSING_KEY = 9, TRAP_ITERATION_MUTATION = 10, TRAP_TEXT_BOUNDS = 11, TRAP_TEXT_SEPARATOR = 12, TRAP_TEXT_STEP = 13, TRAP_BYTE_RANGE = 14, TRAP_TEXT_SCALAR = 15 };
 
 
 
@@ -883,6 +887,9 @@ void myl_core_trap(int32_t index, int64_t a, int64_t b) {
         break;
     case TRAP_ITERATION_MUTATION:
         code = "R_LIST_ITERATION_MUTATION";
+        break;
+    case TRAP_MISSING_KEY:
+        code = "R_MISSING_KEY";
         break;
     case TRAP_FLOAT_CONVERSION:
         code = "R_FLOAT_CONVERSION";

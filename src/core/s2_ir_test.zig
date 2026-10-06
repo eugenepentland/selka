@@ -10,6 +10,36 @@ const Hand = support.Hand;
 
 const Program = struct { module: ir.Module, operation: ir.Ref };
 
+fn dictOperation(op: ir.Op) bool {
+    return switch (op) {
+        .dict_new, .dict_len, .dict_find, .dict_entry_key, .dict_entry_value, .dict_set_value => true,
+        .dict_insert, .dict_remove, .dict_entries, .dict_entry_live, .dict_copy, .dict_clear => true,
+        else => false,
+    };
+}
+
+fn dictionaryOperand(h: *Hand, ty: ir.Type, op: ir.Op) !ir.Ref {
+    if (!dictOperation(op) or op == .dict_new) return h.loose(.{ .op = .undef, .ty = ty });
+    const d = try h.emit(.{ .op = .dict_new, .ty = ty, .a = try h.int(.u64, 2) });
+    const value = try h.int(.i64, 42);
+    const probe = try h.emit(.{ .op = .dict_find, .ty = .i64, .a = d, .b = value });
+    return h.emit(.{ .op = .dict_insert, .ty = ty, .a = d, .b = probe, .data = try h.extra(&.{ value, value }) });
+}
+
+fn dictionaryResult(h: *Hand, op: ir.Op, ref: ir.Ref) !void {
+    if (!dictOperation(op)) return;
+    var value = ref;
+    if (h.function.inst(ref).ty.isCompound()) {
+        value = if (op == .dict_set_value)
+            try h.emit(.{ .op = .dict_entry_value, .ty = .i64, .a = ref, .b = try h.int(.i64, 0) })
+        else
+            try h.emit(.{ .op = .dict_len, .ty = .u64, .a = ref });
+    }
+    const ty = h.function.inst(value).ty;
+    if (ty != .i64 and ty != .bool) value = try h.emit(.{ .op = .convert, .ty = .i64, .a = value, .check = .exact });
+    try h.printValues(try h.param(0), &.{value});
+}
+
 fn operationProgram(a: std.mem.Allocator, op: ir.Op) !Program {
     var m: ir.Module = .{};
     const dict = try m.intern(a, .{ .dict = .{ .key = .i64, .value = .i64 } });
@@ -22,7 +52,7 @@ fn operationProgram(a: std.mem.Allocator, op: ir.Op) !Program {
     m.entry = 1;
     try m.strings.append(a, "Aé💩");
     var h = try Hand.init(a, &m, "main", .{ .params = &.{.cap}, .ret = .i64 });
-    const d = try h.loose(.{ .op = .undef, .ty = dict });
+    const d = try dictionaryOperand(&h, dict, op);
     const ar = try h.emit(.{ .op = .record_make, .ty = array, .data = try h.extra(&.{ try h.int(.i64, 0), try h.int(.i64, 0) }) });
     const text = try h.loose(.{ .op = .str_const, .ty = .str });
     const offset = try h.int(.u64, 0);
@@ -43,11 +73,12 @@ fn operationProgram(a: std.mem.Allocator, op: ir.Op) !Program {
         },
         .dict_set_value => {
             inst.b = entry;
-            inst.data = try h.extra(&.{value});
+            inst.data = try h.extra(&.{try h.int(.i64, 99)});
         },
         .dict_insert => {
-            inst.b = try h.emit(.{ .op = .dict_find, .ty = .i64, .a = d, .b = value });
-            inst.data = try h.extra(&.{ value, value });
+            const key = try h.int(.i64, 99);
+            inst.b = try h.emit(.{ .op = .dict_find, .ty = .i64, .a = d, .b = key });
+            inst.data = try h.extra(&.{ key, value });
         },
         .dict_remove => inst.b = entry,
         .dict_entry_live => {
@@ -117,6 +148,7 @@ fn operationProgram(a: std.mem.Allocator, op: ir.Op) !Program {
         else => unreachable,
     }
     const ref = try h.emit(inst);
+    try dictionaryResult(&h, op, ref);
     if (op == .str_char or op == .str_from_view or op == .call_indirect or op == .array_get) try h.printValues(try h.param(0), &.{ref});
     if (op == .array_set) {
         const read = try h.emit(.{ .op = .array_get, .ty = .i64, .a = ref, .b = entry, .check = .exact });
@@ -138,6 +170,12 @@ fn exercise(op: ir.Op, allocator: std.mem.Allocator) !void {
     try std.testing.expect(std.mem.indexOf(u8, text, @tagName(op)) != null);
     const ran = if (op == .str_append or op == .str_append_char) try support.runOwned(a, &program.module, .{ .leakcheck = false }) else try support.runModule(a, &program.module, false);
     const expected: ?[]const u8 = switch (op) {
+        .dict_new, .dict_find, .dict_remove, .dict_clear => "0\n",
+        .dict_len, .dict_entries, .dict_copy => "1\n",
+        .dict_entry_live => "True\n",
+        .dict_entry_key, .dict_entry_value => "42\n",
+        .dict_set_value => "99\n",
+        .dict_insert => "2\n",
         .str_char, .str_from_view => "A\n",
         .array_get => "0\n",
         .array_set, .call_indirect => "42\n",
@@ -338,7 +376,7 @@ test "S2 foundations intern types, preserve layout and print complete operand sh
     try std.testing.expectEqual(@as(u32, 4), m.pathTarget(array, ir.FieldPath.init(&.{2}).?).?.offset);
     try std.testing.expectEqual(ir.UnionForm.niche, m.unionLayout(try m.option(a, dict)).form);
     const program = try operationProgram(a, .dict_insert);
-    try std.testing.expect(std.mem.indexOf(u8, try print.module(a, &program.module), "dict_insert dict[i64, i64] undef, %") != null);
+    try std.testing.expect(std.mem.indexOf(u8, try print.module(a, &program.module), "dict_insert dict[i64, i64] %") != null);
     try std.testing.expect(ir.Op.dict_insert.consumesOperand0() and ir.Op.str_append.consumesOperand0() and ir.Op.list_sort.consumesOperand0());
     try std.testing.expect(!ir.Op.dict_find.consumesOperand0());
 }
@@ -627,10 +665,10 @@ fn refuseSource(a: std.mem.Allocator, source: []const u8, reason: []const u8) !v
 }
 
 // spec-case: NEW-CORE-S2-IR-1
-test "remaining S2 builder dispatch stubs keep precise source refusals" {
+test "S2 builder dictionary dispatch lowers an empty dictionary" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const a = arena.allocator();
-    try refuseSource(a, "def main() -> int:\n    d: dict[int, int] = {}\n    return len(d)\n", "dict type");
+    try std.testing.expect(std.mem.indexOf(u8, try support.irText(a, "def main() -> int:\n    d: dict[int, int] = {}\n    return len(d)\n"), "dict_new") != null);
     try std.testing.expect(true);
 }

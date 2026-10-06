@@ -1891,3 +1891,5 @@ The separate `mylang-core` executable (`zig build core`, `docs/design/new-core-i
 - [NEW-CORE-TEXT-BYTES-1] The new core shares counted str/bytes leaf storage, preserves UTF-8 scalar indexing and slices, maintains value semantics through consuming appends, and lowers split, join, search, encode and byte XOR without linking the old runtime.
 
 - [NEW-CORE-TEXT-BYTES-2] An immutable byte reduction may widen u8 loads to bounded integer lanes, including XOR of nonnegative bounded operands; the scalar tail and verify assertions preserve the scalar result.
+
+- [NEW-CORE-DICT-1] The new core lowers insertion-ordered dictionaries and unit-valued sets through pure SSA probes, consuming COW updates, borrowed entry reads, deletion tombstones and order-independent equality. Hybrid 16-slot control probes and cached hashes preserve key equality; missing required keys report R_MISSING_KEY. Immutable dictionary lengths and scalar key/value hulls are asserted by fact-verification builds. Persistent views require provable mapping identity; unproved origins, aggregate aliases and captured aliases are refused precisely.

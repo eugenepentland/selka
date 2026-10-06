@@ -1,0 +1,11 @@
+source_commit=746d3b8b0cd5a731399cb3ec7068d1efcc8741f8
+tested_resolved_merge_tree=eccf30e9e09383072937547bbee1ff4d2ae08b29
+merge_package=62656609
+$ scripts/build-slot.sh build -- /usr/bin/time -f %e -o /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/wave-b/merge-s2-d/build-seconds.txt zig build core --summary all
+Build Summary: 3/3 steps succeeded
+core success
++- install mylang-core cached
+   +- compile exe mylang-core debug native cached 5ms MaxRSS:41M
+
+
+exit=0 command_seconds=0.01 wall_including_admission=0.05

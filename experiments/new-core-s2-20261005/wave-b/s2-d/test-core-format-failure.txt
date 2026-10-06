@@ -1,0 +1,33 @@
+build-slot: all 1 gate slot(s) busy; waiting (0s so far)
+build-slot: all 1 gate slot(s) busy; waiting (60s so far)
+build-slot: all 1 gate slot(s) busy; waiting (120s so far)
+build-slot: all 1 gate slot(s) busy; waiting (180s so far)
+build-slot: all 1 gate slot(s) busy; waiting (240s so far)
+build-slot: all 1 gate slot(s) busy; waiting (300s so far)
+build-slot: gate slot 1 after 311s (all 1 gate slot(s) busy)
+test-core
++- run test 190 pass, 1 fail (191 total)
+error: 's2_ir_test.test.S2 foundations intern types, preserve layout and print complete operand shapes' failed:
+       no_such_file_in_tests_lang (debug): mylang-core test did not finish cleanly:
+       error: cannot read /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-dictionaries/tests/lang/no_such_file_in_tests_lang.my: FileNotFound
+
+       no_such_row: the new core failed to build the row:
+       error: cannot read /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-dictionaries/test/core/row_no_such_row.my: FileNotFound
+
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:614:14: 0x1358b69 in expect (std.zig)
+           if (!ok) return error.TestUnexpectedResult;
+                    ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-dictionaries/src/core/s2_ir_test.zig:380:5: 0x206d16b in test.S2 foundations intern types, preserve layout and print complete operand shapes (root_test.zig)
+           try std.testing.expect(std.mem.indexOf(u8, try print.module(a, &program.module), "dict_insert dict[i64, i64] undef, %") != null);
+           ^
+failed command: ./.zig-cache/o/a7f0419159c3adcfbaf78dc330a869d4/test --cache-dir=./.zig-cache --seed=0x7093b388 --listen=-
+
+Build Summary: 3/5 steps succeeded (1 failed); 190/191 tests passed (1 failed)
+test-core transitive failure
++- run test 190 pass, 1 fail (191 total)
+   +- compile test debug native success 1s MaxRSS:326M
+      +- options cached
+         +- compile exe mylang-core debug native cached 7ms MaxRSS:38M
+
+Command exited with non-zero status 1
+elapsed=167.64 rss_kib=318376

@@ -192,7 +192,7 @@ fn expectEveryVerdict(parsed: std.json.Value) !void {
     try expectVerdict(parsed, "runner_cases::test_bounds_trap", "failed", "R_LIST_BOUNDS (index 7, length 3)");
     try expectVerdict(parsed, "runner_cases::test_overflow_trap", "failed", "R_OVERFLOW (add: left 9223372036854775807, right 1, width 64)");
     try expectVerdict(parsed, "runner_cases::test_division_trap", "failed", "R_DIVISION_BY_ZERO");
-    try expectVerdict(parsed, "runner_cases::test_reaches_a_dict", "unsupported", "dict type");
+    try expectVerdict(parsed, "runner_cases::test_reaches_a_dict", "passed", "");
     try expectVerdict(parsed, "runner_cases::test_property", "unsupported", "test parameters other than Stream");
 }
 
@@ -209,9 +209,9 @@ test "every verdict is graded per test function at debug and release, and the fi
     try expectEveryVerdict(release.parsed.value);
     try std.testing.expectEqual(@as(u8, 1), debug.status);
     try std.testing.expectEqual(@as(u8, 1), release.status);
-    try std.testing.expectEqual(@as(i64, 4), debug.parsed.value.object.get("passed").?.integer);
+    try std.testing.expectEqual(@as(i64, 5), debug.parsed.value.object.get("passed").?.integer);
     try std.testing.expectEqual(@as(i64, 4), debug.parsed.value.object.get("failed").?.integer);
-    try std.testing.expectEqual(@as(i64, 2), debug.parsed.value.object.get("unsupported").?.integer);
+    try std.testing.expectEqual(@as(i64, 1), debug.parsed.value.object.get("unsupported").?.integer);
 }
 
 // spec-case: NEW-CORE-TEST-4
