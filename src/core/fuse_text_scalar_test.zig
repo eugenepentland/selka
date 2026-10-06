@@ -145,3 +145,49 @@ test "scalar fusion native modes preserve Unicode bounds aliases escaping uses a
     defer arena.deinit();
     try fixture(arena.allocator());
 }
+
+const scalar_invalid = "error[E_CORE_UNSUPPORTED]: S2 IR operation -1 is not implemented\n";
+const ScalarCase = struct { bytes: []const u8, offsets: []const u64, op: ?ir.Op = null, stdout: []const u8 = "", status: u8 = 1, stderr: []const u8 = scalar_invalid };
+
+fn scalarHand(a: std.mem.Allocator, case: ScalarCase) !ir.Module {
+    var module: ir.Module = .{};
+    try module.strings.append(a, case.bytes);
+    var h = try support.Hand.init(a, &module, "main", .{ .params = &.{.cap}, .ret = .i64 });
+    const text = try h.loose(.{ .op = .str_const, .ty = .str });
+    for (case.offsets) |offset| {
+        const at = try h.int(.u64, @bitCast(offset));
+        for ([_]ir.Op{ .str_width, .str_code }) |op| {
+            if (case.op != null and case.op.? != op) continue;
+            const value = try h.emit(.{ .op = op, .ty = if (op == .str_width) .u64 else .u32, .a = text, .b = at });
+            try h.printValues(try h.param(0), &.{value});
+        }
+    }
+    _ = try h.emit(.{ .op = .ret, .ty = .void, .a = try h.int(.i64, 0) });
+    _ = try h.finish();
+    return module;
+}
+
+// spec-case: NEW-CORE-TEXT-BYTES-1
+test "scalar fusion emitter guards manual width and code reads before ASCII and retains Unicode and invalid offset fallback" {
+    var state = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer state.deinit();
+    const a = state.allocator();
+    const text = "L\x00é€🙂";
+    for ([_]ScalarCase{
+        .{ .bytes = text, .offsets = &.{ 0, 1, 2, 4, 7 }, .stdout = "1\n76\n1\n0\n2\n233\n3\n8364\n4\n128578\n", .status = 0, .stderr = "" },
+        .{ .bytes = "", .offsets = &.{0}, .op = .str_width },
+        .{ .bytes = "", .offsets = &.{0}, .op = .str_code },
+        .{ .bytes = text, .offsets = &.{text.len}, .op = .str_width },
+        .{ .bytes = text, .offsets = &.{text.len}, .op = .str_code },
+        .{ .bytes = text, .offsets = &.{std.math.maxInt(u64)}, .op = .str_width },
+        .{ .bytes = text, .offsets = &.{std.math.maxInt(u64)}, .op = .str_code },
+    }) |case| {
+        for ([_]support.RunOptions{ .{}, .{ .release = true }, .{ .release = true, .verify = true } }) |mode| {
+            var module = try scalarHand(a, case);
+            const result = try support.runOwned(a, &module, mode);
+            try std.testing.expectEqual(case.status, result.status);
+            try std.testing.expectEqualStrings(case.stdout, result.stdout);
+            try std.testing.expectEqualStrings(case.stderr, result.stderr);
+        }
+    }
+}

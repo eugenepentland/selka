@@ -47,6 +47,17 @@ def append_distinct_alias(values: list[str]) -> str:
         out += ch
     return out
 
+def append_capacity_alias(values: list[str]) -> str:
+    source = values[0]
+    out = values[1]
+    for repeat in range(3):
+        for ch in source:
+            if ch != "?":
+                out += ch
+            else:
+                out += ch
+    return out
+
 def replaced(text: str) -> str:
     ch = text[-1]
     matched = ch == "é"
@@ -87,8 +98,8 @@ def wider_comparison(text: str) -> bool:
 
 # spec-case: NEW-CORE-STR-1
 public def test_comparisons_and_appends_preserve_all_unicode_scalars() -> bool:
-    text = "aé\0🙂\U0010ffff"
-    return select(text, True) == text and select(text, False) == ".é\0🙂\U0010ffff"
+    text = "aé€\0🙂\U0010ffff"
+    return select(text, True) == text and select(text, False) == ".é.\0🙂\U0010ffff"
 
 # spec-case: NEW-CORE-STR-1
 public def test_comparison_only_reads_cover_nul_and_scalar_extremes() -> bool:
@@ -109,7 +120,10 @@ public def test_distinct_ssa_aliases_share_input_but_copy_the_append_destination
     source = "".join(["é", "z"])
     values = [source, source]
     result = append_distinct_alias(values)
-    return result == "ézé" and source == "éz" and values == ["éz", "éz"]
+    wide = "".join(["123456789012345", "é€🙂\0"])
+    aliases = [wide, wide]
+    expanded = append_capacity_alias(aliases)
+    return result == "ézé" and source == "éz" and values == ["éz", "éz"] and expanded == wide + wide + wide + wide and aliases == [wide, wide] and wide == "123456789012345é€🙂\0"
 
 # spec-case: NEW-CORE-TEXT-BYTES-1
 public def test_rebinding_the_receiver_does_not_change_the_selected_bytes() -> bool:

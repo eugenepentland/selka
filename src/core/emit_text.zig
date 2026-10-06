@@ -1,6 +1,7 @@
 //! Text operation dispatch; S2-T extends the minimal hand-built IR support.
 const ir = @import("ir.zig");
 const flags = @import("flags.zig");
+const length_name = "%textlen";
 
 /// Allocation or an unsupported IR representation can stop operation emission.
 pub const Error = error{ OutOfMemory, UnsupportedEntry, UnsupportedInstruction };
@@ -15,9 +16,7 @@ pub fn instruction(context: anytype, out: anytype, name: []const u8, inst: ir.In
         },
         .str_width, .str_code => {
             if (inst.op == .str_code and inst.check == .exact) try bounds(@TypeOf(context), @TypeOf(out), context, out, inst, .{ .receiver = inst.a, .offset = inst.b });
-            const result = if (inst.op == .str_width) "i64" else "i32";
-            const symbol = if (inst.op == .str_width) "myl_core_ir_str_width" else "myl_core_ir_str_code";
-            try out.print(a, "  {s} = call {s} @{s}(ptr {s}, i64 {s})\n", .{ name, result, symbol, try context.value(inst.a), try context.value(inst.b) });
+            try scalar(@TypeOf(context), @TypeOf(out), context, out, name, inst);
         },
         .str_append => try out.print(a, "  {s} = call ptr @myl_core_ir_str_append(ptr {s}, ptr {s})\n", .{ name, try context.value(inst.a), try context.value(inst.b) }),
         .str_append_char => {
@@ -44,11 +43,50 @@ pub fn instruction(context: anytype, out: anytype, name: []const u8, inst: ir.In
     }
 }
 
+// The runtime still handles Unicode and invalid offsets. Read the first byte
+// only after this explicit guard, including unproven/manual width operations.
+fn scalar(comptime Context: type, comptime Output: type, context: Context, out: Output, name: []const u8, inst: ir.Inst) Error!void {
+    const a = context.a();
+    const receiver = try context.value(inst.a);
+    const offset = try context.value(inst.b);
+    const length_ptr = try context.fresh(length_name);
+    const length = try context.fresh(length_name);
+    const valid = try context.fresh("%textvalid");
+    const read = try context.fresh("textread");
+    const ascii = try context.fresh("textascii");
+    const slow = try context.fresh("textscalar");
+    const join = try context.fresh("textjoin");
+    const guard = "  {s} = getelementptr inbounds i8, ptr {s}, i64 8\n" ++
+        "  {s} = load i64, ptr {s}, align 8\n  {s} = icmp ult i64 {s}, {s}\n" ++
+        "  br i1 {s}, label %{s}, label %{s}\n{s}:\n";
+    try out.print(a, guard, .{ length_ptr, receiver, length, length_ptr, valid, offset, length, valid, read, slow, read });
+    const data = try context.fresh("%textdata");
+    const pointer = try context.fresh("%textbyte");
+    const byte = try context.fresh("%textbyte");
+    const single = try context.fresh("%textsingle");
+    const first_byte = "  {s} = getelementptr inbounds i8, ptr {s}, i64 32\n" ++
+        "  {s} = getelementptr inbounds i8, ptr {s}, i64 {s}\n  {s} = load i8, ptr {s}, align 1\n" ++
+        "  {s} = icmp ult i8 {s}, 128\n  br i1 {s}, label %{s}, label %{s}\n{s}:\n";
+    try out.print(a, first_byte, .{ data, receiver, pointer, data, offset, byte, pointer, single, byte, single, ascii, slow, ascii });
+    const result = if (inst.op == .str_width) "i64" else "i32";
+    const symbol = if (inst.op == .str_width) "myl_core_ir_str_width" else "myl_core_ir_str_code";
+    var fast_value: []const u8 = "1";
+    if (inst.op == .str_code) {
+        fast_value = try context.fresh("%textcode");
+        try out.print(a, "  {s} = zext i8 {s} to i32\n", .{ fast_value, byte });
+    }
+    const slow_value = try context.fresh("%textscalar");
+    const finish = "  br label %{s}\n{s}:\n  {s} = call {s} @{s}(ptr {s}, i64 {s})\n" ++
+        "  br label %{s}\n{s}:\n  {s} = phi {s} [ {s}, %{s} ], [ {s}, %{s} ]\n";
+    try out.print(a, finish, .{ join, slow, slow_value, result, symbol, receiver, offset, join, join, name, result, fast_value, ascii, slow_value, slow });
+    context.label = join;
+}
+
 const Access = struct { receiver: ir.Ref, offset: ir.Ref };
 
 fn bounds(comptime Context: type, comptime Output: type, context: Context, out: Output, inst: ir.Inst, access: Access) Error!void {
-    const length = try context.fresh("%textlen");
-    const pointer = try context.fresh("%textlen");
+    const length = try context.fresh(length_name);
+    const pointer = try context.fresh(length_name);
     const outside = try context.fresh("%textoob");
     const check = "  {s} = getelementptr inbounds i8, ptr {s}, i64 8\n" ++
         "  {s} = load i64, ptr {s}, align 8\n" ++
