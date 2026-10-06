@@ -1,0 +1,48 @@
+def make_ints(n: int) -> list[int]:
+    out: list[int] = []
+    for i in range(n):
+        out.append(i)
+    return out
+
+def grow_int(xs: list[int], n: int) -> list[int]:
+    ys = xs
+    if n > 1:
+        return xs
+    ys.append(4)
+    return ys
+
+def grow_str(xs: list[str], n: int) -> list[str]:
+    ys = xs
+    if n > 1:
+        return xs
+    ys.append("bc")
+    return ys
+
+def grow_row(xs: list[list[int]], n: int) -> list[list[int]]:
+    ys = xs
+    if n > 1:
+        return xs
+    ys.append(make_ints(n))
+    return ys
+
+def body(seed: int, out: Stream) -> int:
+    acc = 0
+    il1: list[int] = []
+    il1.append(9)
+    sl2: list[str] = []
+    sl2.append("bc")
+    rl3: list[list[int]] = []
+    rl3.append(make_ints(seed))
+    sl2.append("xyz")
+    acc = acc + len(il1)
+    acc = acc + len(rl3)
+    acc = acc + len(il1)
+    if len(sl2) > 0:
+        out.print(sl2[len(sl2) - 1])
+    acc = acc + len(sl2)
+    acc = acc + len(rl3)
+    return acc
+
+def main(args: list[str], out: Stream) -> int:
+    out.print(body(len(args), out))
+    return 0

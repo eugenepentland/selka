@@ -1,0 +1,80 @@
+def make_ints(n: int) -> list[int]:
+    out: list[int] = []
+    for i in range(n):
+        out.append(i)
+    return out
+
+def grow_int(xs: list[int], n: int) -> list[int]:
+    ys = xs
+    if n > 1:
+        return xs
+    ys.append(3)
+    return ys
+
+def grow_str(xs: list[str], n: int) -> list[str]:
+    ys = xs
+    if n > 1:
+        return xs
+    ys.append("a")
+    return ys
+
+def grow_row(xs: list[list[int]], n: int) -> list[list[int]]:
+    ys = xs
+    if n > 1:
+        return xs
+    ys.append(make_ints(2))
+    return ys
+
+def body(seed: int, out: Stream) -> int:
+    acc = 0
+    il1: list[int] = []
+    il1.append(1)
+    sl2: list[str] = []
+    sl2.append("xyz")
+    rl3: list[list[int]] = []
+    rl3.append(make_ints(2))
+    sl2.append("a")
+    sl2.append("xyz")
+    if len(sl2) > 2:
+        for i1 in range(0):
+            acc = acc + len(il1)
+            rg4 = grow_row(rl3, 1)
+            acc = acc + len(rl3)
+            ia5 = il1
+            ra6 = rl3
+            ia7 = ia5
+        il1.append(seed)
+        ia8 = il1
+        if len(rl3) > 1:
+            acc = acc + len(sl2)
+            ia9 = ia8
+            ia10 = ia9
+            acc = acc + len(il1)
+            ig11 = grow_int(ia9, 1)
+            ia10.append(3)
+        rg12 = grow_row(rl3, 1)
+        for i1 in range(2):
+            acc = acc + len(ia8)
+            acc = acc + len(rl3)
+            if len(rg12) > 0:
+                inner13 = rg12[0]
+                inner13.append(5)
+                acc = acc + len(inner13) + len(rg12[0])
+            if len(rg12) > 0:
+                inner14 = rg12[0]
+                inner14.append(5)
+                acc = acc + len(inner14) + len(rg12[0])
+        return acc + len(sl2)
+    for i2 in range(2):
+        ia15 = il1
+        sl2.append("xyz")
+    acc = acc + len(il1)
+    if len(sl2) > 0:
+        out.print(sl2[len(sl2) - 1])
+    acc = acc + len(sl2)
+    acc = acc + len(rl3)
+    return acc
+
+def main(args: list[str], out: Stream) -> int:
+    out.print(body(len(args), out))
+    return 0
