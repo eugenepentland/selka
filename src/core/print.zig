@@ -50,7 +50,11 @@ fn typeList(allocator: std.mem.Allocator, m: *const ir.Module, name: []const u8,
 pub fn function(allocator: std.mem.Allocator, out: *std.ArrayList(u8), m: *const ir.Module, f: *const ir.Function) std.mem.Allocator.Error!void {
     try out.print(allocator, "fn {s}(", .{f.name});
     for (f.signature.params, 0..) |param, i| try out.print(allocator, "{s}{s}", .{ if (i == 0) "" else ", ", try typeName(allocator, m, param) });
-    try out.print(allocator, ") -> {s}{s}\n", .{ try typeName(allocator, m, f.signature.ret), if (f.signature.linkage == .extern_c) " extern" else "" });
+    try out.print(allocator, ") -> {s}{s}\n", .{ try typeName(allocator, m, f.signature.ret), switch (f.signature.linkage) {
+        .internal => "",
+        .extern_c => " extern",
+        .runtime_c => " runtime",
+    } });
     for (f.blocks.items, 0..) |block, b| {
         try out.print(allocator, "b{d}:", .{b});
         if (block.preds.items.len != 0) {
@@ -90,6 +94,7 @@ fn instruction(allocator: std.mem.Allocator, out: *std.ArrayList(u8), m: *const 
     try out.appendSlice(allocator, @tagName(inst.op));
     switch (inst.op) {
         .cmp, .fcmp => try out.print(allocator, ".{s}", .{@tagName(@as(ir.Predicate, @fromBackingInt(@intCast(inst.data))))}),
+        .float_unary => try out.print(allocator, ".{s}", .{@tagName(@as(ir.FloatUnary, @fromBackingInt(@as(u8, @intCast(inst.data)))))}),
         else => {},
     }
     if (inst.check != .none) try out.print(allocator, ".{s}", .{@tagName(inst.check)});
@@ -143,7 +148,7 @@ fn instruction(allocator: std.mem.Allocator, out: *std.ArrayList(u8), m: *const 
             for (path.slice(), 0..) |step, i| try out.print(allocator, "{s}{d}", .{ if (i == 0) " " else ".", step });
         },
         .err_trace => try out.print(allocator, " {s}", .{@tagName(@as(ir.TraceMode, @fromBackingInt(@intCast(@min(inst.data, 4)))))}),
-        .record_make, .list_set, .dict_set_value, .dict_insert, .str_append_char, .str_slice, .str_view_of, .array_set, .call_indirect => {
+        .record_make, .list_set, .dict_set_value, .dict_insert, .str_append_char, .str_slice, .str_view_of, .array_set, .call_indirect, .buffer_set => {
             const operands = f.valueOperands(inst);
             for (0..operands.len()) |i| {
                 try out.appendSlice(allocator, if (i == 0) " " else ", ");

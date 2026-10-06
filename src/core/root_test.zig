@@ -25,4 +25,5 @@ comptime {
     _ = @import("function_build_test.zig");
     _ = @import("dict_test.zig");
     _ = @import("number_test.zig");
+    _ = @import("s3_ir_test.zig");
 }

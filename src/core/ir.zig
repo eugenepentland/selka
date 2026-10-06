@@ -29,8 +29,8 @@ pub const BlockId = enum(u32) {
     }
 };
 
-/// A Core IR type. The named members are scalars; members from `first_compound`
-/// on index `Module.compounds`.
+/// A Core IR type. Named members are leaves; unnamed members from
+/// `first_compound` index `Module.compounds`.
 pub const Type = enum(u32) {
     void,
     bool,
@@ -51,6 +51,12 @@ pub const Type = enum(u32) {
     bytes,
     /// A borrowed UTF-8 span in SSA only; it has no storable memory layout.
     str_view,
+    /// Mutable octets in a counted leaf block; source updates preserve value semantics.
+    byte_buffer = 0xfffffff0,
+    /// Counted immutable authority/provider scope for non-stream capabilities.
+    capability,
+    /// Counted external-handle identity; explicit completion is a runtime effect.
+    resource,
     _,
 
     /// The first index that names a compound type.
@@ -73,7 +79,10 @@ pub const Type = enum(u32) {
 
     /// Whether this names an entry of `Module.compounds`.
     pub fn isCompound(self: Type) bool {
-        return @backingInt(self) >= first_compound;
+        return switch (self) {
+            .byte_buffer, .capability, .resource => false,
+            else => @backingInt(self) >= first_compound,
+        };
     }
 };
 
@@ -185,6 +194,9 @@ pub const Check = enum(u8) {
 
 /// Comparison predicates; signedness comes from the operand type.
 pub const Predicate = enum(u8) { eq, ne, lt, le, gt, ge };
+
+/// Unary floating-point operations; `float_unary.data` is one of these tags.
+pub const FloatUnary = enum(u8) { sqrt, floor, ceil, trunc, abs, sin, cos };
 
 /// Instruction operations. Operand use is listed per operation.
 pub const Op = enum(u8) {
@@ -344,6 +356,24 @@ pub const Op = enum(u8) {
     ret,
     /// Control never reaches here.
     @"unreachable",
+    /// Fresh mutable bytes with capacity `a: u64`.
+    buffer_new,
+    /// Independent mutable-byte copy of `a`.
+    buffer_copy,
+    /// Replace byte `b` of `a` with `extra[0]: u8`; consumes `a`, checked bounds.
+    buffer_set,
+    /// Append `b: u8` to `a: byte_buffer`; consumes `a`.
+    buffer_push,
+    /// Remove the last byte of `a`; consumes `a`, checked nonempty.
+    buffer_pop,
+    /// Checked integer shift: `a << b`, with wrapping bits, count below width.
+    shift_left,
+    /// Checked arithmetic/logical integer shift `a >> b` by signedness.
+    shift_right,
+    /// Integer addition clamped to the result type's bounds.
+    saturating_add,
+    /// Unary f64 operation selected by `data: FloatUnary`.
+    float_unary,
 
     /// Whether this operation ends a block.
     pub fn terminates(self: Op) bool {
@@ -356,7 +386,7 @@ pub const Op = enum(u8) {
     /// Whether `data` packs an `extra` operand list (an `ExtraSlice`).
     pub fn hasExtra(self: Op) bool {
         return switch (self) {
-            .phi, .call, .call_indirect, .print, .record_make, .list_set, .dict_set_value, .dict_insert, .str_append_char, .str_slice, .str_view_of, .array_set => true,
+            .phi, .call, .call_indirect, .print, .record_make, .list_set, .dict_set_value, .dict_insert, .str_append_char, .str_slice, .str_view_of, .array_set, .buffer_set => true,
             else => false,
         };
     }
@@ -373,7 +403,7 @@ pub const Op = enum(u8) {
     /// Whether an update takes ownership of its first value operand.
     pub fn consumesOperand0(self: Op) bool {
         return switch (self) {
-            .list_push, .list_set, .list_pop, .record_set, .array_set, .dict_set_value, .dict_insert, .dict_remove, .dict_clear, .str_append, .str_append_char, .list_sort => true,
+            .list_push, .list_set, .list_pop, .record_set, .array_set, .dict_set_value, .dict_insert, .dict_remove, .dict_clear, .str_append, .str_append_char, .list_sort, .buffer_set, .buffer_push, .buffer_pop => true,
             else => false,
         };
     }
@@ -446,6 +476,8 @@ pub const Linkage = enum(u8) {
     internal,
     /// An `extern def`: a C function; capability arguments are dropped.
     extern_c,
+    /// A new-runtime C helper: scalar/pointer ABI, including declared capability tokens.
+    runtime_c,
 };
 
 /// Parameter and result types of a function, and its linkage.
@@ -570,9 +602,10 @@ pub const Module = struct {
         return std.meta.activeTag(self.compound(ty));
     }
 
-    /// Whether `ty` is a counted block pointer: string, bytes, list, box or dictionary.
+    /// Whether `ty` is a counted leaf, collection, authority, resource or box pointer.
     pub fn isBlock(self: *const Module, ty: Type) bool {
-        if (ty == .str or ty == .bytes) return true;
+        if (ty == .str or ty == .bytes or ty == .byte_buffer) return true;
+        if (ty == .capability or ty == .resource) return true;
         const k = self.kind(ty) orelse return false;
         return k == .list or k == .box or k == .dict;
     }
@@ -602,7 +635,7 @@ pub const Module = struct {
             .bool, .i8, .u8 => 1,
             .i16, .u16 => 2,
             .i32, .u32 => 4,
-            .i64, .u64, .f64, .cap, .str, .bytes => 8,
+            .i64, .u64, .f64, .cap, .str, .bytes, .byte_buffer, .capability, .resource => 8,
             .str_view => 0,
             _ => switch (self.compound(ty)) {
                 .list, .box, .dict, .@"fn" => 8,
