@@ -1,6 +1,6 @@
 def main(env: Environment, out: Stream) -> int:
     match env.get("A"):
-        case Some(value):
+        case Some(_):
             return 1
         case None:
             pass
