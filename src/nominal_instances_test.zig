@@ -259,6 +259,33 @@ test "nominal catalog interns each list type once however often the checker asks
     const output = try native.run(&compilation);
     try t.expectEqual(@as(i64, 240), output.value);
 }
+// spec-case: CATALOG-INTERN-1
+test "nominal catalog reuses nested generic instances whose arguments complete later" {
+    try run(t.allocator, definitions ++
+        \\def boxes(n: i64) -> list[Box[list[i64]]]:
+        \\    out: list[Box[list[i64]]] = []
+        \\    for j in range(n):
+        \\        out.append(Box[list[i64]](value=[j, j + 1]))
+        \\    return out
+        \\
+        \\def total(items: list[Box[list[i64]]]) -> i64:
+        \\    sum = 0
+        \\    for item in items:
+        \\        inner: list[i64] = item.value
+        \\        sum += inner[0] + inner[1]
+        \\    return sum
+        \\
+        \\def main() -> i64:
+        \\    slot: Slot[Box[list[i64]]] = Slot.some(Box[list[i64]](value=[5]))
+        \\    extra = 0
+        \\    match slot:
+        \\        case Slot.some(box):
+        \\            extra = box.value[0]
+        \\        case Slot.none:
+        \\            extra = 0
+        \\    return total(boxes(4)) + total(boxes(2)) + extra
+    , 16 + 4 + 5);
+}
 fn largeNames(allocator: std.mem.Allocator) ![]u8 {
     var text: std.Io.Writer.Allocating = .init(allocator);
     defer text.deinit();

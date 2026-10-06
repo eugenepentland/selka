@@ -445,6 +445,8 @@ pub fn instantiateLengths(catalog: *Catalog, declaration: usize, arguments: []co
         } else ids[i] = try state.typeArgument(catalog.records, argument, span, 0);
     }
     const id = try state.graph.materializeKey(.{ .base = .{ .named = declaration }, .arguments = ids[0..arguments.len] }, span);
+    // The common case, an already-interned type, needs no pass over the graph.
+    if (state.settled(id)) |ty| return ty;
     var builder: Builder = .{ .context = state.context, .index = state.index, .graph = state.graph, .catalog = catalog, .identities = &state.identities };
     try builder.complete();
     return builder.runtimeType(id);
