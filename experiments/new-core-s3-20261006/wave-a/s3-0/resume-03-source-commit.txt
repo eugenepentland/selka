@@ -1,0 +1,15 @@
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 27 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 9762 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 9 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed
+[codex/new-core-s3-ir dc1a5831] core: freeze S3 runtime and numeric IR foundation
+ 17 files changed, 689 insertions(+), 31 deletions(-)
+ create mode 100644 docs/design/new-core-s3.md
+ create mode 100644 src/core/build_bytes.zig
+ create mode 100644 src/core/build_cap.zig
+ create mode 100644 src/core/emit_bytes.zig
+ create mode 100644 src/core/runtime/core_bytes.c
+ create mode 100644 src/core/runtime/core_io.c
+ create mode 100644 src/core/s3_ir_test.zig
