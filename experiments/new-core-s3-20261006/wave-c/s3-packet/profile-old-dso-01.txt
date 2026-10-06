@@ -1,0 +1,30 @@
+# To display the perf.data header info, please use --header/--header-only options.
+#
+#
+# Total Lost Samples: 0
+#
+# Samples: 2K of event 'cpu_core/cycles/u'
+# Event count (approx.): 5211729353
+#
+# Overhead  Shared Object          Symbol                  IPC   [IPC Coverage]
+# ........  .....................  ......................  ....................
+#
+    25.44%  row_packet_decode_old  [.] 0x0000000000022781  -      -            
+     5.75%  row_packet_decode_old  [.] 0x00000000000227b3  -      -            
+     5.25%  row_packet_decode_old  [.] 0x0000000000022796  -      -            
+     5.22%  row_packet_decode_old  [.] 0x000000000002250d  -      -            
+     4.95%  row_packet_decode_old  [.] 0x00000000000222b3  -      -            
+     4.92%  row_packet_decode_old  [.] 0x00000000000227af  -      -            
+     4.69%  row_packet_decode_old  [.] 0x0000000000022284  -      -            
+     4.16%  row_packet_decode_old  [.] 0x00000000000222fc  -      -            
+     3.84%  row_packet_decode_old  [.] 0x0000000000027730  -      -            
+     3.69%  row_packet_decode_old  [.] 0x0000000000022442  -      -            
+     3.53%  row_packet_decode_old  [.] 0x000000000002245e  -      -            
+     3.32%  row_packet_decode_old  [.] 0x0000000000022401  -      -            
+     3.31%  row_packet_decode_old  [.] 0x00000000000222dc  -      -            
+     2.21%  row_packet_decode_old  [.] 0x0000000000022702  -      -            
+
+
+#
+# (Cannot load tips.txt file, please install perf!)
+#

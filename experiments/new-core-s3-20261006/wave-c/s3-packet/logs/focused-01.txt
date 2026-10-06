@@ -1,0 +1,62 @@
+test-core
++- run test 13 pass, 2 fail (15 total)
+e/byte_index_test.zig:49:18: 0x218a6b0 in test.a source extern byte index lookalike retains its ordinary foreign call (root_test.zig)
+    const llvm = try support.llvmText(state.allocator(), source);
+                 ^
+guardian/test: test wall 32.87s; slowest over 50ms:
+guardian/test:   21.26s  value_e2e_test.test.pop of an empty list and a list_set past the end trap R_LIST_BOUNDS like the old core, with its pop and index details
+guardian/test:   2.99s  byte_index_test.test.bytes and buffers normalize negative and extreme signed indices before their located bounds trap in every mode
+guardian/test:   2.95s  dict_test.test.a probe scans an index-less table's cached hashes inline, and a table that lost an entry asks the runtime, as the old core answers
+guardian/test:   2.67s  s3_ir_test.test.S3 IR buffer_set verifies its index and byte replacement
+guardian/test:   2.55s  values_test.test.a list write out of range traps R_LIST_BOUNDS with the index and length after flushing stdout
+guardian/test:   0.33s  byte_index_test.test.byte index runtime adapters inline modular negative normalization with the bounds check retained
+guardian/test:   0.08s  byte_index_test.test.a source extern byte index lookalike retains its ordinary foreign call
+guardian/test: FAIL — 2 failed of 15
+guardian/test: RESULT {"passed":13,"failed":2,"skipped":0}
+error: 'byte_index_test.test.byte index runtime adapters inline modular negative normalization with the bounds check retained' failed:
+       guardian/test: 15 test(s) selected
+       guardian/test: SLOW  21.26s  value_e2e_test.test.pop of an empty list and a list_set past the end trap R_LIST_BOUNDS like the old core, with its pop and index details
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:614:14: 0x13e3079 in expect (std.zig)
+           if (!ok) return error.TestUnexpectedResult;
+                    ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/src/core/byte_index_test.zig:32:5: 0x218ae39 in test.byte index runtime adapters inline modular negative normalization with the bounds check retained (root_test.zig)
+           try std.testing.expect(std.mem.indexOf(u8, llvm, "call i64 @myl_core_bytes_index_offset") == null);
+           ^
+error: 'byte_index_test.test.a source extern byte index lookalike retains its ordinary foreign call' failed:
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/src/diagnostic.zig:189:9: 0x1c5300b in fail (compiler.zig)
+               return error.SourceError;
+               ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/src/parser.zig:996:114: 0x1e6b46f in function (compiler.zig)
+                   if (self.current().tag != .ident or !std.mem.eql(u8, self.src.text(self.current().span), "effects")) return self.sink.fail("E_HOST_EFFECTS", span, "host declarations require an explicit effects(host, ...) contract");
+                                                                                                                        ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/src/parser.zig:948:39: 0x1e53dba in parse (compiler.zig)
+                   const declared_function = try self.function(null);
+                                             ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/src/compiler.zig:169:23: 0x151a611 in parseCached (compiler.zig)
+               self.syntax = try p.parse();
+                             ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/src/compiler.zig:153:9: 0x1519906 in parse (compiler.zig)
+               return self.parseCached(null);
+               ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/src/compiler.zig:219:9: 0x151915e in checkWithCache (compiler.zig)
+               try self.parse();
+               ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/src/compiler.zig:202:9: 0x1518f06 in check (compiler.zig)
+               return self.checkWithCache(null);
+               ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/src/core/test_support.zig:25:5: 0x13e385e in buildSource (root_test.zig)
+           try unit.check();
+           ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/src/core/test_support.zig:61:20: 0x218aa77 in llvmText (root_test.zig)
+           const module = try buildSource(arena, source, &refusal);
+                          ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/src/cor
+failed command: ./.zig-cache/o/4ac746a5baac1d3d461837664bf44a02/test --cache-dir=./.zig-cache --seed=0x714a749e --listen=-
+
+Build Summary: 3/5 steps succeeded (1 failed); 13/15 tests passed (2 failed)
+test-core transitive failure
++- run test 13 pass, 2 fail (15 total)
+   +- compile test debug native success 1s MaxRSS:343M
+      +- options success
+         +- compile exe mylang-core debug native cached 6ms MaxRSS:38M
+

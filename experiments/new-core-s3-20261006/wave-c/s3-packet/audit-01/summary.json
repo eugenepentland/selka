@@ -1,0 +1,112 @@
+{
+  "before_sha256": "0ae6485273394d7a2d365b8e029dcf781f1d6f4cd6581141db2517e00eb86a64",
+  "after_sha256": "0cfb8bcba48bfc47064fd3985ec9104a2e659548f9c3996f1308e6d43e9b955c",
+  "rows": {
+    "record_reads": {
+      "identical": true
+    },
+    "tagged_stack": {
+      "identical": true
+    },
+    "mutate_unique": {
+      "identical": true
+    },
+    "mutate_shared": {
+      "identical": true
+    },
+    "record_construct": {
+      "identical": true
+    },
+    "record_update": {
+      "identical": true
+    },
+    "option_handle": {
+      "identical": true
+    },
+    "result_propagate": {
+      "identical": true
+    },
+    "list_scan": {
+      "identical": true
+    },
+    "list_append": {
+      "identical": true
+    },
+    "list_filter": {
+      "identical": true
+    },
+    "alloc_short": {
+      "identical": true
+    },
+    "alloc_retained": {
+      "identical": true
+    },
+    "mutate_nested": {
+      "identical": true
+    },
+    "bytes_scan": {
+      "identical": true
+    },
+    "string_equal": {
+      "identical": true
+    },
+    "string_search": {
+      "identical": true
+    },
+    "string_split": {
+      "identical": true
+    },
+    "string_join": {
+      "identical": true
+    },
+    "dict_lookup": {
+      "identical": true
+    },
+    "dict_lookup_str": {
+      "identical": true
+    },
+    "dict_update": {
+      "identical": true
+    },
+    "dict_update_str": {
+      "identical": true
+    },
+    "set_dedup": {
+      "identical": true
+    },
+    "int_parse": {
+      "identical": true
+    },
+    "int_format": {
+      "identical": true
+    },
+    "call_indirect": {
+      "identical": true
+    },
+    "sort_int": {
+      "identical": true
+    },
+    "sort_records": {
+      "identical": true
+    },
+    "int_math": {
+      "identical": true
+    },
+    "float_math": {
+      "identical": true
+    },
+    "call_direct": {
+      "identical": true
+    },
+    "branch_predictable": {
+      "identical": true
+    },
+    "branch_mixed": {
+      "identical": true
+    },
+    "binary_search": {
+      "identical": true
+    }
+  },
+  "changed": []
+}

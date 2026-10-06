@@ -1,0 +1,17 @@
+test-core
++- run test w
+guardian/test: 7 test(s) selected
+guardian/test: test wall 5.31s; slowest over 50ms:
+guardian/test:   2.77s  byte_index_test.test.bytes and buffers normalize negative and extreme signed indices before their located bounds trap in every mode
+guardian/test:   2.53s  byte_index_test.test.the exact nonnegative byte index premise traps R_CORE_FACT when an injected interval excludes a valid negative input
+guardian/test: PASS — 7 passed
+guardian/test: RESULT {"passed":7,"failed":0,"skipped":0}
+failed command: ./.zig-cache/o/7a81008d9c028524b5d58d9fffacee6c/test --cache-dir=./.zig-cache --seed=0x5251f3b2 --listen=-
+
+Build Summary: 5/5 steps succeeded; 7/7 tests passed
+test-core success
++- run test 7 pass (7 total) 5s MaxRSS:241M
+   +- compile test debug native success 1s MaxRSS:333M
+      +- options cached
+         +- compile exe mylang-core debug native cached 11ms MaxRSS:38M
+

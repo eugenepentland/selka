@@ -1,0 +1,9 @@
+{
+  "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/reduction-verify"
+  ],
+  "status": 0,
+  "stdout": "5387\n",
+  "stderr": "",
+  "expected": 5387
+}

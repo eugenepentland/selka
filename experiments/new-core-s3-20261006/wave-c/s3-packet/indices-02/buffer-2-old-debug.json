@@ -1,0 +1,10 @@
+{
+  "command": [
+    ".mylang-cache/s3-packet/indices-02/old-debug",
+    "2",
+    "buffer"
+  ],
+  "status": 0,
+  "stdout": "99\n",
+  "stderr": ""
+}
