@@ -434,6 +434,10 @@ const Analysis = struct {
     /// Whether `ref` is still needed after instruction `pos` of `block`.
     fn liveAfter(self: *const Analysis, ref: ir.Ref, block: u32, pos: u32) bool {
         const live = self.live[ref.index()] orelse return false;
+        // Nothing is live before its definition: an owner consumed earlier in the block
+        // than a part is read does not promote that part (NEW-CORE-RC-13).
+        const def = self.where[ref.index()];
+        if (def.block == block and def.pos > pos) return false;
         if (live.out.isSet(block)) return true;
         for (live.uses) |use| {
             if (!use.onEdge() and use.block == block and use.pos > pos) return true;
