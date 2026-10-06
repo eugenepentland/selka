@@ -1,9 +1,10 @@
 # The front end after the new core — plan, 2026-10-06
 
-**Status: proposal. Nothing here is implemented.** It starts after new-core stage S5
-("switch and delete"), when `mylang-core` is the only back end. Every language change
-in §3 is a decision for the user. The codebase work in §5 needs no language decision.
-Once the user decides, Codex gets an implementation plan in the S2–S4 format.
+**Status: the user decided FE1–FE7 on 2026-10-06 (§7). Nothing here is implemented.**
+The implementation plan is `docs/audits/frontend-implementation-plan-2026-10-06.md`.
+This document stays the rationale and the record of facts. The work starts after
+new-core stage S5 ("switch and delete"), when `mylang-core` is the only back end, except
+for two early packages that touch only the new core or nothing.
 
 **The user's goal (2026-10-06).** The language should work like Go: one way to
 express each thing, so code is easy to read and performance is predictable. The
@@ -374,17 +375,17 @@ package reports its real count.
 
 As with S2–S4, Codex implements and the plan stops for the user at each wave.
 
-## 7. Decisions for the user
+## 7. Decisions (the user, 2026-10-06)
 
-| # | Decision | Recommendation |
-|---|---|---|
-| **FE1** | Adopt the Part A rows (A1–A15), row by row | Adopt all; A14 needs a choice of file-access spelling |
-| **FE2** | Keep comprehensions, conditional expressions, `lambda` and keyword arguments | Keep, with the two narrowings; A/B test removal later if wanted |
-| **FE3** | Gate `.my` formatting canonically | Yes |
-| **FE4** | B1 cost report in F1; B2 as a warning in F5; the `.copy()` error decided on Lox/EDA data | Yes |
-| **FE5** | B3 and B4 decided on the typed count (P2) | Yes |
-| **FE6** | Generics: check templates once, symbolically; instantiate by substitution | Yes (the alternative, checking only specializations, reports errors at use sites) |
-| **FE7** | Put C0's module-check replacement into the S5 plan | Yes; S5 cannot delete the old back end without it |
+| # | Decision | Recommendation | Decided |
+|---|---|---|---|
+| **FE1** | Adopt the Part A rows (A1–A15), row by row | Adopt all; A14 needs a choice of file-access spelling | **Adopted.** A14: keep the `fs.method(...)` spelling and `with fs.open(...)`; delete the free-function forms. **A2 is held:** the idiom suite constructs records positionally 20 times against 3 (implementation plan §2). |
+| **FE2** | Keep comprehensions, conditional expressions, `lambda` and keyword arguments | Keep, with the two narrowings; A/B test removal later if wanted | **Keep, with the `lambda` narrowing only.** Multi-`for` comprehensions stay; the idiom suite uses one. |
+| **FE3** | Gate `.my` formatting canonically | Yes | **Yes** |
+| **FE4** | B1 cost report in F1; B2 as a warning in F5; the `.copy()` error decided on Lox/EDA data | Yes | **Yes;** B1 moves earlier, alongside S5 |
+| **FE5** | B3 and B4 decided on the typed count (P2) | Yes | **Yes;** P2 may run now |
+| **FE6** | Generics: check templates once, symbolically; instantiate by substitution | Yes (the alternative, checking only specializations, reports errors at use sites) | **Yes** |
+| **FE7** | Put C0's module-check replacement into the S5 plan | Yes; S5 cannot delete the old back end without it | **Yes;** the new-core plan's S5 row now says so |
 
 C2's signature-only hashes need no decision: they make the code match `docs/effects.md`.
 
