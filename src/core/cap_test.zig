@@ -73,3 +73,32 @@ fn trustedIrText(arena: std.mem.Allocator, source: []const u8) ![]u8 {
     try support.verified(arena, &module, &.{});
     return print.module(arena, &module);
 }
+
+// spec-case: NEW-CORE-S3-ABI-1
+test "Core literal network narrowing copies fixed octets into a verified pointer call" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const text = try support.irText(arena.allocator(),
+        \\def main(net: Network) -> int:
+        \\    _ = net.host("127.0.0.1:1234")
+        \\    return 0
+    );
+    try std.testing.expect(std.mem.indexOf(u8, text, "fn myl_core_cap_host(capability, bytes)") != null);
+    try std.testing.expectEqual(@as(usize, 14), std.mem.count(u8, text, "array_get"));
+}
+
+// spec-case: NEW-CORE-S3-ABI-1
+test "Core nested file scopes close in reverse order before return" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const text = try support.irText(arena.allocator(),
+        \\def main(fs: Filesystem) -> int:
+        \\    with fs.open("first", "r") as first:
+        \\        with fs.open("second", "r") as second:
+        \\            return 0
+    );
+    try std.testing.expectEqual(@as(usize, 2), std.mem.count(u8, text, "call void myl_core_file_scope_close"));
+    const close = std.mem.lastIndexOf(u8, text, "call void myl_core_file_scope_close").?;
+    const ret = std.mem.indexOfPos(u8, text, close, "ret 0:i64").?;
+    try std.testing.expect(close < ret);
+}

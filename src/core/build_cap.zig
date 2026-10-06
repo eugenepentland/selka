@@ -5,7 +5,7 @@ const typed = @import("mylang").typed;
 /// Allocation and located source refusals from effect lowering.
 pub const Error = error{ OutOfMemory, Unsupported };
 /// A live lexical file scope and the loop depth at which it was opened.
-pub const Scope = struct { variable: u32, depth: usize };
+pub const Scope = struct { owner: ir.Ref, depth: usize };
 
 const file_access_symbol = "myl_core_file_access";
 const stream_write_symbol = "myl_core_stream_write";
@@ -20,8 +20,8 @@ pub fn Lower(comptime Context: type) type {
                 .stand_in => |stand| standIn(c, stand, ty, span),
                 .external_read => |read| externalRead(c, node.ty, read, span),
                 .restrict_resource => |restrict| c.effectCall("myl_core_cap_restrict", &.{ .capability, .u32 }, .capability, &.{ try c.expression(restrict.value), try c.constant(.u32, restrict.permissions) }, span),
-                .dir_resource => |dir| c.effectCall("myl_core_cap_dir", &.{ .capability, .str }, .capability, &.{ try c.expression(dir.capability), try c.expression(dir.path) }, span),
-                .host_resource => |host| c.effectCall("myl_core_cap_host", &.{ .capability, .str }, .capability, &.{ try c.expression(host.capability), try c.expression(host.name) }, span),
+                .dir_resource => |dir| narrow(c, "myl_core_cap_dir", dir.capability, dir.path, span),
+                .host_resource => |host| narrow(c, "myl_core_cap_host", host.capability, host.name, span),
                 .environment_only => |only| c.effectCall("myl_core_environment_only", &.{ .capability, .bytes }, .capability, &.{ try c.expression(only.capability), try byteRequest(c, only.names, span) }, span),
                 .environment_names => |cap| c.effectCall("myl_core_environment_names", &.{.capability}, ty, &.{try c.expression(cap)}, span),
                 .environment_get => |get| environmentGet(c, node, get, span),
@@ -33,6 +33,12 @@ pub fn Lower(comptime Context: type) type {
                 .resource_io => |io| resourceIo(c, node, io, span),
                 else => c.mb.refuse(@tagName(node.data), span),
             };
+        }
+
+        fn narrow(c: Context, symbol: []const u8, capability: typed.NodeId, name: typed.NodeId, span: u32) Error!ir.Ref {
+            const cap = try c.expression(capability);
+            const spelling = try byteRequest(c, name, span);
+            return c.effectCall(symbol, &.{ .capability, c.typeOfRef(spelling) }, .capability, &.{ cap, spelling }, span);
         }
 
         fn standIn(c: Context, stand: @FieldType(@FieldType(typed.Node, "data"), "stand_in"), ty: ir.Type, span: u32) Error!ir.Ref {
@@ -156,6 +162,7 @@ pub fn Lower(comptime Context: type) type {
             fields[shape.resource_field] = owner;
             fields[shape.code_field] = code;
             const payload = try c.emit(.{ .op = .record_make, .ty = bad_ty, .data = try c.extraSlice(fields), .span = span });
+            _ = try c.emit(.{ .op = .err_trace, .ty = .void, .data = @backingInt(ir.TraceMode.origin), .span = span });
             try c.write(variable, failure, try unionValue(c, ty, shape.result.error_tag, payload, span));
             try c.jump(done);
             try c.seal(done);
@@ -233,7 +240,7 @@ pub fn closeScopes(comptime Context: type, c: Context, depth: usize, span: u32) 
         left -= 1;
         const scope = c.ssa.resources.items[left];
         if (scope.depth < depth) continue;
-        const owner = try c.read(scope.variable, c.current.?);
+        const owner = scope.owner;
         _ = try c.effectCall("myl_core_file_scope_close", &.{.resource}, .void, &.{owner}, span);
     }
 }

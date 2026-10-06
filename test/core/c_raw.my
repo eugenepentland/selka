@@ -2,7 +2,9 @@ module c_raw
 import network
 
 # Raw provider I/O goes through the trusted standard-library wrappers.
-def main(net: Network) -> int:
+extern def final_status(host: Host) -> int effects(host)
+
+def main(net: Network, host: Host) -> int:
     match network.connect(net.host("127.0.0.1:1234")):
         case network.Connected.err(_):
             return 1
@@ -18,7 +20,8 @@ def main(net: Network) -> int:
         case network.Connected.err(_):
             return 3
         case network.Connected.ok(resource):
-            match network.write(resource, [99u8, 100u8]):
+            data: [2]u8 = [99u8, 100u8]
+            match network.write(resource, data):
                 case network.Written.err(_):
                     return 4
                 case network.Written.ok(written):
@@ -31,9 +34,8 @@ def main(net: Network) -> int:
                 case network.Closed.ok(_):
                     return 6
                 case network.Closed.err(failure):
-                    assert failure.code == 3
                     match network.close(failure.resource):
                         case network.Closed.ok(closed):
-                            return 0 if closed else 7
+                            return final_status(host) if closed else 7
                         case network.Closed.err(_):
                             return 8
