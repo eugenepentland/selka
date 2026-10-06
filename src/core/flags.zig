@@ -1,5 +1,6 @@
 //! Operand conventions the builder and the emitter share on top of `ir.zig`'s shapes.
 const std = @import("std");
+const ir = @import("ir.zig");
 
 /// `list_get.data` of the read a `pop` starts with: a failing index is reported as the pop
 /// of an empty list (`R_LIST_BOUNDS`, operation `pop`), as the old core does.
@@ -23,12 +24,24 @@ pub const iteration_trap: u64 = 1 << 61;
 /// Allocation-free text-to-bytes identity; ownership treats its result as a source borrow.
 pub const text_encode_symbol = "myl_core_text_encode";
 
-/// The runtime's string comparison, declared in a module as an `extern_c` function on first use
+/// The runtime's string comparison, declared in a module as a `runtime_c` function on first use
 /// (`build.zig`) and emitted with `memory(argmem: read)` attributes (`emit_llvm.zig`).
 pub const str_eq_symbol = "myl_core_str_eq";
 
-/// The runtime's count of a string's Unicode scalars (`len(text)`), declared like `str_eq_symbol`.
+/// The runtime's count of a string's Unicode scalars (`len(text)`).
 pub const str_chars_symbol = "myl_core_str_chars";
+
+/// Compiler-authorized scalar-index conversion, with a normalized or raw input.
+pub const TextOffset = enum { normalized, raw };
+
+/// Extern lookalikes have no authority to supply text cursor or diagnostic provenance.
+pub fn textOffset(signature: ir.Signature, symbol: []const u8) ?TextOffset {
+    if (signature.linkage != .runtime_c or signature.ret != .u64 or signature.owned != 0 or signature.views != 0) return null;
+    if (signature.params.len != 2 or signature.params[0] != .str) return null;
+    if (std.mem.eql(u8, symbol, "myl_core_str_offset") and (signature.params[1] == .i64 or signature.params[1] == .u64)) return .normalized;
+    if (std.mem.eql(u8, symbol, "myl_core_str_index_offset") and signature.params[1] == .i64) return .raw;
+    return null;
+}
 
 /// The runtime's string builders: concatenation, `separator.join(parts)`, and the text of an
 /// integer or a boolean (`str(x)`, the parts of an f-string).

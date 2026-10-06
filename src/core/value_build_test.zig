@@ -519,7 +519,7 @@ test "a mut collection rebinding through conditional paths and loops builds fina
 }
 
 // spec: NEW-CORE-STR-1
-test "str == and != call the runtime's byte comparison, an extern the module declares once" {
+test "str == and != call the authorized runtime byte comparison declared once" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const text = try support.irText(arena.allocator(), text_equality);
@@ -529,7 +529,7 @@ test "str == and != call the runtime's byte comparison, an extern the module dec
     try std.testing.expect(contains(differ, "call bool myl_core_str_eq(param0, param1)"));
     try std.testing.expect(contains(differ, "not bool"));
     // One declaration serves both.
-    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, text, "fn myl_core_str_eq(str, str) -> bool extern"));
+    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, text, "fn myl_core_str_eq(str, str) -> bool runtime"));
 }
 
 const arena_scopes =

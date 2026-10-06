@@ -1633,7 +1633,7 @@ const FnBuilder = struct {
         const m = self.mb.module;
         const ty = self.typeOfRef(a);
         if (ty == .str or ty == .bytes or ty == .byte_buffer) {
-            return self.runtimeCall(flags.str_eq_symbol, &.{ ty, self.typeOfRef(b) }, .bool, &.{ a, b }, span);
+            return self.effectCall(flags.str_eq_symbol, &.{ ty, self.typeOfRef(b) }, .bool, &.{ a, b }, span);
         }
         // A recursive value would need a function that calls itself, not an expansion in place.
         if (self.recursive(ty, 0)) return build_values.equal(@TypeOf(self), self, a, b, span);
