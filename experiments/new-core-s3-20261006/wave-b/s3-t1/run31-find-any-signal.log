@@ -1,0 +1,7 @@
+segv addr=0x7a218ce2f028 rip=41d2ec
+.mylang-cache/s3/t1-diagnostics/find-signal() [0x403611]
+/usr/lib/x86_64-linux-gnu/libc.so.6(+0x45cb0) [0x7a218d245cb0]
+.mylang-cache/s3/t1-diagnostics/find-signal(main+0x56c) [0x41d2ec]
+/usr/lib/x86_64-linux-gnu/libc.so.6(+0x2a601) [0x7a218d22a601]
+/usr/lib/x86_64-linux-gnu/libc.so.6(__libc_start_main+0x88) [0x7a218d22a718]
+.mylang-cache/s3/t1-diagnostics/find-signal(_start+0x25) [0x4034c5]

@@ -2003,6 +2003,23 @@ const FnBuilder = struct {
         return build_text.operation(@TypeOf(self), self, operation, ty, span);
     }
 
+    fn collectionOperation(self: *FnBuilder, operation: @FieldType(@FieldType(typed.Node, "data"), "buffer_operation"), ty: ir.Type, span: u32, out: ?*?Place) Error!?ir.Ref {
+        const receiver_type = self.ssa.types.items[self.local(operation.owner)];
+        const collection = self.mb.module.kind(receiver_type) orelse return null;
+        switch (collection) {
+            .list => if (operation.kind == .extend or operation.kind == .reverse) {
+                const result = try build_list_methods.operation(@TypeOf(self), self, operation, span);
+                return result;
+            },
+            .dict => {
+                const result = try build_dict.operation(@TypeOf(self), self, operation, ty, span, out);
+                return result;
+            },
+            else => {},
+        }
+        return null;
+    }
+
     fn bufferOperation(self: *FnBuilder, operation: anytype, ty: ir.Type, span: u32, out: ?*?Place) Error!ir.Ref {
         const kind = operation.kind;
         const owner = operation.owner;

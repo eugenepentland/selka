@@ -1,0 +1,39 @@
+build int_parse old: status=0
+build int_parse new: status=0
+build int_format old: status=0
+build int_format new: status=0
+build bytes_scan old: status=0
+build bytes_scan new: status=0
+
+### int_parse (cycles per iteration, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 46.055 | 41.454 | same |
+| new core release | 28.449 | 26.547 | same |
+| Rust | 21.943 | 19.219 | same |
+| Zig ReleaseSafe | 28.746 | 24.342 | same |
+| new / Zig | 0.990 | 1.091 | same |
+| new / Rust | 1.297 | 1.381 | same |
+
+### int_format (cycles per iteration, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 221.091 | 217.693 | same |
+| new core release | 68.499 | 62.770 | same |
+| Rust | 66.586 | 60.673 | same |
+| Zig ReleaseSafe | 214.668 | 198.771 | same |
+| new / Zig | 0.319 | 0.316 | same |
+| new / Rust | 1.029 | 1.035 | same |
+
+### bytes_scan (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 0.082 | 0.238 | same |
+| new core release | 0.050 | 0.240 | same |
+| Rust | 1.134 | 1.200 | same |
+| Zig ReleaseSafe | 1.396 | 1.676 | same |
+| new / Zig | 0.036 | 0.143 | same |
+| new / Rust | 0.044 | 0.200 | same |
+
+valid rows: 3; speed gate misses: []
+binary_search misses require the plan's identical-code/layout-noise review; all other misses require repair.

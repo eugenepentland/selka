@@ -1,0 +1,72 @@
+## examples: 93 files (7 not checkable alone), 207 functions, 183 accepted (88%)
+  checks in accepted functions (analysed alone): proven 112, still exact 149
+  front end: 4 x error[E_MODULE_NAME]: declared `module shop.money`, but this
+  front end: 1 x error[E_MODULE_NAME]: declared `module config.values`, but t
+  front end: 1 x error[E_MODULE_NAME]: declared `module shop.billing`, but th
+     11  capability type
+      5  resource type
+      3  host function
+      2  extern
+      2  shift_right
+      1  number text operation
+## bench/parity: 45 files (0 not checkable alone), 123 functions, 108 accepted (88%)
+  checks in accepted functions (analysed alone): proven 173, still exact 152
+      5  f64_sqrt
+      2  shift_right
+      2  shift_left
+      2  byte_buffer type
+      1  operator on an aggregate value
+      1  number text operation
+      1  f64_sin
+      1  f64_cos
+## tests/lang: 205 files (4 not checkable alone), 3124 functions, 2910 accepted (93%)
+  checks in accepted functions (analysed alone): proven 4825, still exact 3536
+  front end: 2 x error[E_EMBED_MISSING]: cannot embed "embed_fixtures/lines.t
+  front end: 1 x error[E_EMBED_MISSING]: cannot embed "embed_fixtures/nul.bin
+  front end: 1 x error[E_EMBED_MISSING]: cannot embed "embed_fixtures/support
+     63  byte_buffer type
+     41  capability type
+     20  number text operation
+     18  text of a non-integer value
+     11  equality of a recursive value
+      9  operator on an aggregate value
+      8  shift_right
+      8  interior mut argument ancestor changed during later argument evaluation
+      4  f64_sqrt
+      3  array
+      3  f64_to_u64
+      3  contains
+## benchmarks/runtime: 3 files (0 not checkable alone), 141 functions, 123 accepted (87%)
+  checks in accepted functions (analysed alone): proven 257, still exact 346
+     12  byte_buffer type
+      2  number text operation
+      1  extern
+      1  f64_sqrt
+      1  f64_sin
+      1  f64_cos
+## all corpora: checks proven 5183, still exact 4022 (in 3133 accepted functions)
+## all corpora: 3595 functions, 3324 accepted (92%)
+     77  byte_buffer type
+     52  capability type
+     24  number text operation
+     18  text of a non-integer value
+     12  shift_right
+     11  equality of a recursive value
+     10  f64_sqrt
+     10  operator on an aggregate value
+      8  interior mut argument ancestor changed during later argument evaluation
+      6  resource type
+      3  extern
+      3  host function
+      3  shift_left
+      3  f64_sin
+      3  f64_cos
+      3  array
+      3  f64_to_u64
+      3  contains
+      3  index_of
+      2  keyword call with a mut argument that is not a local
+      2  f64_floor
+      2  dictionary key type
+      1  parse_int receiver
+      1  saturating_add

@@ -1,0 +1,18 @@
+file                     tests | debug   match misma unsup | release match misma unsup
+--------------------------------------------------------------------------------------
+byte_buffer                  8 |             8     0     0 |             8     0     0
+byte_buffer_from_list       10 |            10     0     0 |            10     0     0
+python_bytes                13 |            13     0     0 |            13     0     0
+byte_ranges_llvm             1 |             1     0     0 |             1     0     0
+integer_text                 2 |             2     0     0 |             2     0     0
+float_constants             14 |            14     0     0 |            14     0     0
+float_nan                    4 |             3     0     1 |             3     0     1
+format_specs                 6 |             6     0     0 |             6     0     0
+n_float_text                 3 |             3     0     0 |             3     0     0
+n_scalar_parse_abi           2 |             2     0     0 |             2     0     0
+b_buffer_values              2 |             2     0     0 |             2     0     0
+b_packet_decode              1 |             1     0     0 |             1     0     0
+--------------------------------------------------------------------------------------
+TOTAL                       66
+  debug    matching 65, mismatching 0, unsupported 1 (of 66 tests; 65 supported)
+  release  matching 65, mismatching 0, unsupported 1 (of 66 tests; 65 supported)

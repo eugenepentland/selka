@@ -1,0 +1,54 @@
+{
+  "kind": "number",
+  "cases_requested": 2,
+  "seed": 731,
+  "cases_seen": 1,
+  "accepted": 1,
+  "old_rejected": 0,
+  "core_refused": 0,
+  "core_build_failed": 0,
+  "comparisons_expected": 30,
+  "native_runs": 16,
+  "harness": {},
+  "harness_status": 1,
+  "complete": false,
+  "qualified": false,
+  "error": "fact_failure: ['/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-numbers/.mylang-cache/s3/t2-fuzz-preview2/tmp/core-fuzz-s1.8w79kozj/records_unions_propagate_mut_alias0.verify', '1', '1', '-12']; retained source: /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-numbers/experiments/new-core-s3-20261006/wave-b/s3-t2/fuzz-preview2/failures/records_unions_propagate_mut_alias0-542a15301dd1.my",
+  "failures": [
+    {
+      "kind": "fact_failure",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-numbers/.mylang-cache/s3/t2-fuzz-preview2/tmp/core-fuzz-s1.8w79kozj/records_unions_propagate_mut_alias0.verify",
+        "1",
+        "1",
+        "-12"
+      ],
+      "returncode": 1,
+      "stderr": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-numbers/.mylang-cache/s3/t2-fuzz-preview2/tmp/core-fuzz-s1.8w79kozj/records_unions_propagate_mut_alias0.my:44:53: error[R_CORE_FACT]: native execution failed (range [0, 9223372036854775807]: value -12, other 0)\n  in main at /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-numbers/.mylang-cache/s3/t2-fuzz-preview2/tmp/core-fuzz-s1.8w79kozj/records_unions_propagate_mut_alias0.my:44:53\n",
+      "retained_source": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-numbers/experiments/new-core-s3-20261006/wave-b/s3-t2/fuzz-preview2/failures/records_unions_propagate_mut_alias0-542a15301dd1.my"
+    }
+  ],
+  "elapsed_seconds": 12.017703806050122,
+  "cache_root": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-numbers/.mylang-cache/s3/t2-fuzz-preview2",
+  "tmpdir": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-numbers/.mylang-cache/s3/t2-fuzz-preview2/tmp",
+  "saved_sources": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-numbers/.mylang-cache/s3/t2-fuzz-preview2/sources",
+  "zig_local_cache": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-numbers/.mylang-cache/s3/t2-fuzz-preview2/zig",
+  "affinity": [
+    0,
+    1,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ]
+}

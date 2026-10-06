@@ -1,0 +1,19 @@
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: build slot 1 after 10s (all 3 build slot(s) busy)
+file                     tests | debug   match misma unsup | release match misma unsup
+--------------------------------------------------------------------------------------
+python_strings               3 |             2     0     1 |             2     0     1
+python_text_surface         21 |            19     0     2 |            19     0     2
+text_index                  13 |            13     0     0 |            13     0     0
+text_views                   8 |             7     0     1 |             7     0     1
+text_literal_index           1 |             1     0     0 |             1     0     0
+python_bytes                13 |            12     0     1 |            12     0     1
+format_specs                 6 |             1     0     5 |             1     0     5
+text_scanning                8 |             8     0     0 |             8     0     0
+standard_strings             5 |             5     0     0 |             5     0     0
+python_collections          22 |            19     0     3 |            19     0     3
+rc_readonly_bytes            2 |             2     0     0 |             2     0     0
+--------------------------------------------------------------------------------------
+TOTAL                      102
+  debug    matching 89, mismatching 0, unsupported 13 (of 102 tests; 89 supported)
+  release  matching 89, mismatching 0, unsupported 13 (of 102 tests; 89 supported)

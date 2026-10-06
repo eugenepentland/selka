@@ -1,0 +1,1 @@
+bash: line 1: 2112816 Segmentation fault         (core dumped) env MYL_CORE_LEAKCHECK=1 .mylang-cache/s3/t1-diagnostics/long_find

@@ -1,0 +1,13 @@
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: build slot 3 after 10s (all 3 build slot(s) busy)
+file                     tests | debug   match misma unsup | release match misma unsup
+--------------------------------------------------------------------------------------
+byte_buffer                  8 |             8     0     0 |             8     0     0
+byte_buffer_from_list       10 |            10     0     0 |            10     0     0
+format_specs                 6 |             6     0     0 |             6     0     0
+b_buffer_values              2 |             2     0     0 |             2     0     0
+n_float_text                 3 |             3     0     0 |             3     0     0
+--------------------------------------------------------------------------------------
+TOTAL                       29
+  debug    matching 29, mismatching 0, unsupported 0 (of 29 tests; 29 supported)
+  release  matching 29, mismatching 0, unsupported 0 (of 29 tests; 29 supported)

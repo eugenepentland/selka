@@ -1,0 +1,80 @@
+diff --git a/src/core/build.zig b/src/core/build.zig
+index 7ad64353..7be33d15 100644
+--- a/src/core/build.zig
++++ b/src/core/build.zig
+@@ -1435,7 +1435,7 @@ const FnBuilder = struct {
+         var right = try self.expression(right_node);
+         if (self.current == null) return .none;
+         // The checker may type the literal of `i16 + 1` as `i64`: it takes the other operand's type.
+-        if (op != .shift_left and op != .shift_right) {
++        {
+             const left_type = self.typeOfRef(left);
+             const right_type = self.typeOfRef(right);
+             if (left_type != right_type) {
+@@ -1461,6 +1461,9 @@ const FnBuilder = struct {
+             .bit_and => .{ .op = .bit_and },
+             .bit_or => .{ .op = .bit_or },
+             .bit_xor => .{ .op = .bit_xor },
++            .shift_left => .{ .op = .shift_left, .check = .exact },
++            .shift_right => .{ .op = .shift_right, .check = .exact },
++            .saturating_add => .{ .op = .saturating_add },
+             .eq => .{ .op = if (is_float) .fcmp else .cmp, .predicate = .eq },
+             .ne => .{ .op = if (is_float) .fcmp else .cmp, .predicate = .ne },
+             .lt => .{ .op = .cmp, .predicate = .lt },
+@@ -1678,9 +1681,22 @@ const FnBuilder = struct {
+             .neg => self.emit(.{ .op = .neg, .ty = ty, .a = operand, .check = .exact, .span = span }),
+             .not => self.emit(.{ .op = .not, .ty = .bool, .a = operand, .span = span }),
+             .f64_neg => self.emit(.{ .op = .fneg, .ty = .f64, .a = operand, .span = span }),
+-            .f64_from_i64 => self.emit(.{ .op = .int_to_float, .ty = .f64, .a = operand, .span = span }),
+-            .f64_to_i64, .f64_to_i32, .f64_to_i16, .f64_to_i8, .f64_to_u8, .f64_to_u16, .f64_to_u32 => self.emit(.{ .op = .float_to_int, .ty = ty, .a = operand, .check = .exact, .span = span }),
+-            else => self.mb.refuse(@tagName(op), span),
++            .f64_from_i64, .f64_from_u64 => self.emit(.{ .op = .int_to_float, .ty = .f64, .a = operand, .span = span }),
++            .f64_to_i64, .f64_to_i32, .f64_to_i16, .f64_to_i8, .f64_to_u8, .f64_to_u16, .f64_to_u32, .f64_to_u64 => self.emit(.{ .op = .float_to_int, .ty = ty, .a = operand, .check = .exact, .span = span }),
++            .f64_sqrt, .f64_floor, .f64_ceil, .f64_trunc, .f64_abs, .f64_sin, .f64_cos => self.emit(.{ .op = .float_unary, .ty = .f64, .a = operand, .data = @backingInt(floatSelector(op)), .span = span }),
++        };
++    }
++
++    fn floatSelector(op: typed.UnaryOp) ir.FloatUnary {
++        return switch (op) {
++            .f64_sqrt => .sqrt,
++            .f64_floor => .floor,
++            .f64_ceil => .ceil,
++            .f64_trunc => .trunc,
++            .f64_abs => .abs,
++            .f64_sin => .sin,
++            .f64_cos => .cos,
++            else => unreachable,
+         };
+     }
+ 
+diff --git a/src/core/emit_llvm.zig b/src/core/emit_llvm.zig
+index 6afde268..0c60c0da 100644
+--- a/src/core/emit_llvm.zig
++++ b/src/core/emit_llvm.zig
+@@ -86,6 +86,7 @@ pub const TrapKind = enum(u8) {
+     text_step = 13,
+     byte_range = 14,
+     text_scalar = 15,
++    invalid_shift = 17,
+ };
+ 
+ const Site = struct { kind: TrapKind, location: Location, width: u16, operation: []const u8, function: []const u8 };
+@@ -684,7 +685,8 @@ const FunctionEmitter = struct {
+         };
+     }
+ 
+-    fn typedValue(self: *FunctionEmitter, raw: ir.Ref) ![]const u8 {
++    /// LLVM type and value pair for a scalar operation sub-emitter.
++    pub fn typedValue(self: *FunctionEmitter, raw: ir.Ref) Error![]const u8 {
+         const ref = self.function.resolve(raw);
+         return std.fmt.allocPrint(self.a(), "{s} {s}", .{ try self.ty(self.function.inst(ref).ty), try self.value(ref) });
+     }
+@@ -931,7 +933,7 @@ const FunctionEmitter = struct {
+     }
+ 
+     /// The check an instruction gets emitted with: verify mode emits proven checks as exact ones.
+-    fn checkOf(self: *FunctionEmitter, inst: ir.Inst) ir.Check {
++    pub fn checkOf(self: *FunctionEmitter, inst: ir.Inst) ir.Check {
+         return if (inst.check == .proven and self.state.options.verify) .exact else inst.check;
+     }
+ 
