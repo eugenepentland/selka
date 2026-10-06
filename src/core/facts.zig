@@ -801,6 +801,9 @@ fn transfer(a: *Analysis, ref: ir.Ref, block: ir.BlockId) ?Interval {
         },
         .convert => blk: {
             const x = a.rangeAt(i.a, block) orelse break :blk full;
+            // Unchecked conversion can truncate or reinterpret signed bits. Intersection
+            // describes checked conversion, but cannot describe a wrapping bit pattern.
+            if (i.check == .none and !x.within(full.?)) break :blk full;
             break :blk x.meet(full.?);
         },
         .list_len => blk: {
