@@ -15,6 +15,11 @@ pub fn number(comptime Context: type, context: Context, operation_node: Operatio
 
 /// Lower one checked text or bytes operation with the original evaluation order.
 pub fn operation(comptime Context: type, context: Context, node: Operation, ty: ir.Type, span: u32) Error!ir.Ref {
+    if (node.kind == .hex or node.kind == .from_hex) return @import("build_bytes.zig").octet(Context, context, node, ty, span);
+    switch (node.kind) {
+        .parse_int, .parse_int_range, .parse_float, .parse_float_range, .number_format => return number(Context, context, node, ty, span),
+        else => {},
+    }
     if (more.handles(node.kind)) return more.operation(Context, context, node, ty, span);
     const receiver = try context.receiverOf(node.owner);
     const receiver_type = context.typeOfRef(receiver);

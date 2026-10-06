@@ -1,0 +1,4 @@
+failed n_float_text::test_float_and_octet_parsing_keep_the_pinned_grammar: build error (ToolFailed): .mylang-cache/s3/option-abi-prototype/core_rt-4cd01be9ea515da2.c:4122:16: error: call to undeclared function 'offsetof'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]
+failed n_float_text::test_float_text_matches_exact_old_spellings: build error (ToolFailed): .mylang-cache/s3/option-abi-prototype/core_rt-4cd01be9ea515da2.c:4122:16: error: call to undeclared function 'offsetof'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]
+failed n_float_text::test_hex_keeps_nul_and_arbitrary_octets: build error (ToolFailed): .mylang-cache/s3/option-abi-prototype/core_rt-4cd01be9ea515da2.c:4122:16: error: call to undeclared function 'offsetof'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]
+0 passed, 0 cached, 3 failed, 0 skipped

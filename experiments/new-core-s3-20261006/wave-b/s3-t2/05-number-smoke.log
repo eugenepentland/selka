@@ -1,0 +1,4 @@
+passed n_float_text::test_float_and_octet_parsing_keep_the_pinned_grammar
+passed n_float_text::test_float_text_matches_exact_old_spellings
+passed n_float_text::test_hex_keeps_nul_and_arbitrary_octets
+3 passed, 0 cached, 0 failed, 0 skipped

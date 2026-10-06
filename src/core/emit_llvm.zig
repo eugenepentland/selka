@@ -87,6 +87,7 @@ pub const TrapKind = enum(u8) {
     byte_range = 14,
     text_scalar = 15,
     text_substring = 16,
+    invalid_shift = 17,
 };
 
 const Site = struct { kind: TrapKind, location: Location, width: u16, operation: []const u8, function: []const u8 };
@@ -380,6 +381,7 @@ const ModuleState = struct {
         try out.appendSlice(self.allocator, runtime_fast_paths);
         try out.appendSlice(self.allocator, self.externs.items);
         try emit_number.prelude(self.allocator, out);
+        try emit_bytes.prelude(self.allocator, out);
     }
 
     fn emitSites(self: *ModuleState, out: *Out) !void {
@@ -404,11 +406,18 @@ const ModuleState = struct {
 
     /// String constants are immortal blocks: the count is saturated (D4), so no release frees them.
     fn emitStrings(self: *ModuleState, out: *Out) !void {
+        const raw = try self.allocator.alloc(bool, self.module.strings.items.len);
+        @memset(raw, false);
+        for (self.module.functions.items) |function| {
+            for (function.insts.items) |inst| if (inst.op == .str_const and inst.ty == .bytes) {
+                raw[@intCast(inst.data)] = true;
+            };
+        }
         for (self.module.strings.items, 0..) |bytes, i| {
             const block_type = try std.fmt.allocPrint(self.allocator, "{{ i32, i32, i64, i64, i64, [{d} x i8] }}", .{bytes.len + 1});
             try out.print(self.allocator, "@myl.str.{d} = private unnamed_addr constant {s} ", .{ i, block_type });
             const cached = text_builder.metadata(bytes);
-            try out.print(self.allocator, "{{ i32 -1, i32 {d}, i64 {d}, i64 {d}, i64 {d}, [{d} x i8] c\"", .{ cached.kind, bytes.len, bytes.len, cached.meta, bytes.len + 1 });
+            try out.print(self.allocator, "{{ i32 -1, i32 {d}, i64 {d}, i64 {d}, i64 {d}, [{d} x i8] c\"", .{ if (raw[i]) (cached.kind & ~@as(u32, 255)) | 3 else cached.kind, bytes.len, bytes.len, cached.meta, bytes.len + 1 });
             try escaped(self.allocator, out, bytes);
             try out.appendSlice(self.allocator, "\\00\" }, align 32\n");
         }
@@ -687,7 +696,8 @@ const FunctionEmitter = struct {
         };
     }
 
-    fn typedValue(self: *FunctionEmitter, raw: ir.Ref) ![]const u8 {
+    /// LLVM type and value pair for a scalar operation sub-emitter.
+    pub fn typedValue(self: *FunctionEmitter, raw: ir.Ref) Error![]const u8 {
         const ref = self.function.resolve(raw);
         return std.fmt.allocPrint(self.a(), "{s} {s}", .{ try self.ty(self.function.inst(ref).ty), try self.value(ref) });
     }
@@ -936,7 +946,7 @@ const FunctionEmitter = struct {
     }
 
     /// The check an instruction gets emitted with: verify mode emits proven checks as exact ones.
-    fn checkOf(self: *FunctionEmitter, inst: ir.Inst) ir.Check {
+    pub fn checkOf(self: *FunctionEmitter, inst: ir.Inst) ir.Check {
         return if (inst.check == .proven and self.state.options.verify) .exact else inst.check;
     }
 
@@ -1546,7 +1556,7 @@ const FunctionEmitter = struct {
     }
 
     /// Trap unless `0 <= index < len(list)` (the index is unsigned here), for an exact check.
-    fn boundsCheck(self: *FunctionEmitter, out: *Out, inst: ir.Inst, list: []const u8, index: []const u8) !void {
+    pub fn boundsCheck(self: *FunctionEmitter, out: *Out, inst: ir.Inst, list: []const u8, index: []const u8) Error!void {
         if (self.checkOf(inst) != .exact) return;
         const at = try self.fresh("%lh");
         const len = try self.fresh("%len");

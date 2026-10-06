@@ -1,0 +1,12 @@
+b_embedded_assets.my:3:32: error[E_EMBED_ESCAPE]: embedded file "../../tests/lang/embed_fixtures/binary.bin" is outside the project root (through `..` or a symbolic link); keep embedded data inside the project
+  const RAW: bytes = embed_bytes("../../tests/lang/embed_fixtures/binary.bin")
+                                 ^
+b_embedded_assets.my:4:32: error[E_EMBED_ESCAPE]: embedded file "../../tests/lang/embed_fixtures/nul.bin" is outside the project root (through `..` or a symbolic link); keep embedded data inside the project
+  const NUL: bytes = embed_bytes("../../tests/lang/embed_fixtures/nul.bin")
+                                 ^
+b_embedded_assets.my:5:34: error[E_EMBED_ESCAPE]: embedded file "../../tests/lang/embed_fixtures/empty.bin" is outside the project root (through `..` or a symbolic link); keep embedded data inside the project
+  const EMPTY: bytes = embed_bytes("../../tests/lang/embed_fixtures/empty.bin")
+                                   ^
+b_embedded_assets.my:6:29: error[E_EMBED_ESCAPE]: embedded file "../../tests/lang/embed_fixtures/multi.txt" is outside the project root (through `..` or a symbolic link); keep embedded data inside the project
+  const TEXT: str = embed_str("../../tests/lang/embed_fixtures/multi.txt")
+                              ^

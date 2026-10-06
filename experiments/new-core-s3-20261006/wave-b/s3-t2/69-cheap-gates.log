@@ -1,0 +1,6 @@
+s3-t2-qualified-16: core-build waiting/running; source=52a9e1ef8ca00775a5d4ac1e24b6f920eacf9766
+s3-t2-qualified-16: core-build pass, command=0.01s
+s3-t2-qualified-16: test-core waiting/running; source=52a9e1ef8ca00775a5d4ac1e24b6f920eacf9766
+s3-t2-qualified-16: test-core pass, command=67.45s
+s3-t2-qualified-16: conformance waiting/running; source=52a9e1ef8ca00775a5d4ac1e24b6f920eacf9766
+s3-t2-qualified-16: conformance pass, command=155.94s

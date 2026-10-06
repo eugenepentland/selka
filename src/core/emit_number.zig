@@ -159,7 +159,27 @@ pub fn prelude(allocator: std.mem.Allocator, out: *std.ArrayList(u8)) std.mem.Al
     );
 }
 
-/// Emit a fail-closed placeholder for S3-M's pending scalar operation.
+/// Emit checked integer shifts, saturating addition and strict binary64 intrinsics.
 pub fn instruction(context: anytype, out: anytype, name: []const u8, inst: @import("ir.zig").Inst) error{ OutOfMemory, UnsupportedEntry, UnsupportedInstruction }!void {
-    return context.unsupported(out, name, inst);
+    const ir = @import("ir.zig");
+    if (inst.op == .float_unary) {
+        const selector: ir.FloatUnary = @fromBackingInt(@intCast(inst.data));
+        const spelling: []const u8 = if (selector == .abs) "fabs" else @tagName(selector);
+        try out.print(context.a(), "  {s} = call double @llvm.{s}.f64(double {s})\n", .{ name, spelling, try context.value(inst.a) });
+        return;
+    }
+    const info = inst.ty.integer() orelse return error.UnsupportedInstruction;
+    const ty = try context.ty(inst.ty);
+    if (inst.op == .saturating_add) {
+        try out.print(context.a(), "  {s} = call {s} @llvm.{s}add.sat.{s}({s}, {s})\n", .{ name, ty, if (info.signed) "s" else "u", ty, try context.typedValue(inst.a), try context.typedValue(inst.b) });
+        return;
+    }
+    if (context.checkOf(inst) == .exact) {
+        const failed = try context.fresh("%shiftbad");
+        // Unsigned comparison rejects negative signed counts as well as counts >= width.
+        try out.print(context.a(), "  {s} = icmp uge {s} {s}, {d}\n", .{ failed, ty, try context.value(inst.b), info.bits });
+        try context.trapIf(out, failed, try context.site(.invalid_shift, inst, @tagName(inst.op)), try context.widened(out, inst.a), try context.widened(out, inst.b));
+    }
+    const spelling: []const u8 = if (inst.op == .shift_left) "shl" else if (info.signed) "ashr" else "lshr";
+    try out.print(context.a(), "  {s} = {s} {s}, {s}\n", .{ name, spelling, try context.typedValue(inst.a), try context.value(inst.b) });
 }
