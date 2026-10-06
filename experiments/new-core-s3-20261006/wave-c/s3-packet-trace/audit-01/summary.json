@@ -1,0 +1,409 @@
+{
+  "source": "2880b5001d843ce7b277ab3c13f1190efccb5d69",
+  "foundation": "0a5dd8794faaf330ab411900d1eaf4e2a00ba0e8",
+  "core_sha256": "7377793a8e0dec21b0e42b0d1bec6b1552f640b527407328ce6966d3e748f205",
+  "rows": {
+    "record_reads": {
+      "identical_definitions": true,
+      "only_trace_call_delta": true,
+      "trace_calls_before": 0,
+      "trace_calls_after": 0,
+      "before_sha256": "8b5e4673043717ebc67421f6e4c17a16f8e0de8aa46ee0eea1c3cf1e6139299c",
+      "after_sha256": "0200e3f730b2b3efeeb668e084f26b2cb67473b30c457c25f210a8065f81d9a7",
+      "before_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/llvm/row_record_reads.ll",
+      "justification": "unchanged definitions"
+    },
+    "tagged_stack": {
+      "identical_definitions": true,
+      "only_trace_call_delta": true,
+      "trace_calls_before": 0,
+      "trace_calls_after": 0,
+      "before_sha256": "25a5d35b907b1abda2f6a46557709212f94cdd912c68bfe5a33e5fa36aa48c95",
+      "after_sha256": "33b01038b1cf6bfdc9088ff1ad432e26efca2389f3e821b43f95f434e82d2b23",
+      "before_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/llvm/row_tagged_stack.ll",
+      "justification": "unchanged definitions"
+    },
+    "mutate_unique": {
+      "identical_definitions": true,
+      "only_trace_call_delta": true,
+      "trace_calls_before": 0,
+      "trace_calls_after": 0,
+      "before_sha256": "c2f1fa5a413fc8a9e5e90b35b2f7cdb42404f461eb8d66dbe596e5d6965b19bc",
+      "after_sha256": "26350c4bff75f73b8303b45a7c98c147d6a48add13c12de2d700f49d32c01cbe",
+      "before_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/llvm/row_mutate_unique.ll",
+      "justification": "unchanged definitions"
+    },
+    "mutate_shared": {
+      "identical_definitions": true,
+      "only_trace_call_delta": true,
+      "trace_calls_before": 0,
+      "trace_calls_after": 0,
+      "before_sha256": "7b7984a9014cf7e039c219d612c33783cb1ab8d7ba9fc4df5750d13bf8fc09b9",
+      "after_sha256": "887a614cb6c15a27b521cc1851e2b4257ee7b7e5ca418de1bd3240275f416a42",
+      "before_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/llvm/row_mutate_shared.ll",
+      "justification": "unchanged definitions"
+    },
+    "record_construct": {
+      "identical_definitions": true,
+      "only_trace_call_delta": true,
+      "trace_calls_before": 0,
+      "trace_calls_after": 0,
+      "before_sha256": "4036fec07493e838443700457ae8b671adc70e86ede7e9d311617bd180f78ca8",
+      "after_sha256": "38fb2a6704a61ad26b9ad0903d5380432f603653fbe16ee65169e33a40c8c8c9",
+      "before_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/llvm/row_record_construct.ll",
+      "justification": "unchanged definitions"
+    },
+    "record_update": {
+      "identical_definitions": true,
+      "only_trace_call_delta": true,
+      "trace_calls_before": 0,
+      "trace_calls_after": 0,
+      "before_sha256": "8b4c1d9096ef634459d54a6687c5b4908ffe197f4bc7d849f470e6b5cc80d7a0",
+      "after_sha256": "e592435d13e139b1b57cbef4a3b9d0c019f90e83855333be5d391e5d5b276707",
+      "before_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/llvm/row_record_update.ll",
+      "justification": "unchanged definitions"
+    },
+    "option_handle": {
+      "identical_definitions": true,
+      "only_trace_call_delta": true,
+      "trace_calls_before": 0,
+      "trace_calls_after": 0,
+      "before_sha256": "2062f09c2d3d301c9449f54c5482890274998629b5c76ec1433d464629fff449",
+      "after_sha256": "afa26c940fff4dc2c118d7516fe2c3682cbaa6d9e9a99452c1c28eccf8632300",
+      "before_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/llvm/row_option_handle.ll",
+      "justification": "unchanged definitions"
+    },
+    "result_propagate": {
+      "identical_definitions": false,
+      "only_trace_call_delta": true,
+      "trace_calls_before": 2,
+      "trace_calls_after": 2,
+      "before_sha256": "c61a363c50e359055ca881069f5b1d8a9c6cedafa14c2321e33de67d7712f3b8",
+      "after_sha256": "ff460b29a1f06e699d8a2a3df8d460c4404b61e3038e94f370ecd11598876879",
+      "before_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/llvm/row_result_propagate.ll",
+      "justification": "explicit err_trace calls retain sites, arguments and inline-cost; only symbol and preserve_mostcc change"
+    },
+    "list_scan": {
+      "identical_definitions": true,
+      "only_trace_call_delta": true,
+      "trace_calls_before": 0,
+      "trace_calls_after": 0,
+      "before_sha256": "2ae96a037cf2d86eb061e1e9b4071293db875af109a61d012ce3dfeb1e0f6b53",
+      "after_sha256": "9ee9b2429622f7cedb2f4100fca480522a8a3f0a4016894a0a9975f1a786813f",
+      "before_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/llvm/row_list_scan.ll",
+      "justification": "unchanged definitions"
+    },
+    "list_append": {
+      "identical_definitions": true,
+      "only_trace_call_delta": true,
+      "trace_calls_before": 0,
+      "trace_calls_after": 0,
+      "before_sha256": "73680cc014e430d9a3e81902fdd9db345437cb91e8eb33d8b2c3a118f2bc4185",
+      "after_sha256": "44b0956eaefb250e981d431ef39257588ff4f7eaf000044f434adca2f7936ea5",
+      "before_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/llvm/row_list_append.ll",
+      "justification": "unchanged definitions"
+    },
+    "list_filter": {
+      "identical_definitions": true,
+      "only_trace_call_delta": true,
+      "trace_calls_before": 0,
+      "trace_calls_after": 0,
+      "before_sha256": "6ec559e000e084f01f31f25841fe653bfa9eddd5952adcc00a291176305fbec5",
+      "after_sha256": "9c3d66d6ece75c1c7b3e1fc28fb4885a8b1ac42aaeec6f9de8cb886b184a48d2",
+      "before_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/llvm/row_list_filter.ll",
+      "justification": "unchanged definitions"
+    },
+    "alloc_short": {
+      "identical_definitions": true,
+      "only_trace_call_delta": true,
+      "trace_calls_before": 0,
+      "trace_calls_after": 0,
+      "before_sha256": "5371094b7e8efe92b1e56a7fd4494b626d3da1add3169061cf4855b863331932",
+      "after_sha256": "a80c75aad5ddd6009df8945f34291c92341c319dcf805f4e006257f412b936cd",
+      "before_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/llvm/row_alloc_short.ll",
+      "justification": "unchanged definitions"
+    },
+    "alloc_retained": {
+      "identical_definitions": true,
+      "only_trace_call_delta": true,
+      "trace_calls_before": 0,
+      "trace_calls_after": 0,
+      "before_sha256": "9ebb58d8547985177f7935373221c87a6f61cbbd2e2635bb02d3140740d0596c",
+      "after_sha256": "13b2895214567faae6a944a01131fce78b204b265a829a51361b8ccc54c6e4ad",
+      "before_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/llvm/row_alloc_retained.ll",
+      "justification": "unchanged definitions"
+    },
+    "mutate_nested": {
+      "identical_definitions": true,
+      "only_trace_call_delta": true,
+      "trace_calls_before": 0,
+      "trace_calls_after": 0,
+      "before_sha256": "160c17df0625f4b1227a9c96f5f2fb0c9dc1c35dd0ed9f67f26ab10d39d5d780",
+      "after_sha256": "f33148ef365a3a7f2be9108024a5deb8b4a64dca64ce25fa272bfe21bec85708",
+      "before_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/llvm/row_mutate_nested.ll",
+      "justification": "unchanged definitions"
+    },
+    "bytes_scan": {
+      "identical_definitions": true,
+      "only_trace_call_delta": true,
+      "trace_calls_before": 0,
+      "trace_calls_after": 0,
+      "before_sha256": "c518a073fcf33ee334093bdf07ef5392a16a0a7d91b1f81db7f1e4ace4a50bfe",
+      "after_sha256": "827559e99239925e38cf973c598d313878345654e1c569919b74f90ef989787f",
+      "before_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/llvm/row_bytes_scan.ll",
+      "justification": "unchanged definitions"
+    },
+    "string_equal": {
+      "identical_definitions": true,
+      "only_trace_call_delta": true,
+      "trace_calls_before": 0,
+      "trace_calls_after": 0,
+      "before_sha256": "3e531d3b62118cf5870e9406b7f1df11614bacfa1f6ddb4bb3c97454101cf300",
+      "after_sha256": "f91c65a853cc9603977f2fa6fff4885cdf7f708f64cab01dbee98c03bc8469dc",
+      "before_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/llvm/row_string_equal.ll",
+      "justification": "unchanged definitions"
+    },
+    "string_search": {
+      "identical_definitions": true,
+      "only_trace_call_delta": true,
+      "trace_calls_before": 0,
+      "trace_calls_after": 0,
+      "before_sha256": "6c06efd5afce420b4500c6e2c97112564d80a8e0f3918739af5f113841264ad7",
+      "after_sha256": "ecd07bb891b1ff5715ebe56c5cb4f4a115654d437a373de28a06c8c392c1b580",
+      "before_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/llvm/row_string_search.ll",
+      "justification": "unchanged definitions"
+    },
+    "string_split": {
+      "identical_definitions": true,
+      "only_trace_call_delta": true,
+      "trace_calls_before": 0,
+      "trace_calls_after": 0,
+      "before_sha256": "63d618dc026ae84c69788105a75998648a218beb7c260d75ff89bd1f7b244b3d",
+      "after_sha256": "6f4ad6e932a23162b37a2a796d22309a4af76dfa320e2b1ded2c9a306b7a0dfa",
+      "before_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/llvm/row_string_split.ll",
+      "justification": "unchanged definitions"
+    },
+    "string_join": {
+      "identical_definitions": true,
+      "only_trace_call_delta": true,
+      "trace_calls_before": 0,
+      "trace_calls_after": 0,
+      "before_sha256": "705ae3a2e499007af39ce3dd09f584e47328f057858291b3c891e6248a63c00a",
+      "after_sha256": "b8d998a640b320c6d4051c78ea0ac84945d5c08f4a05fc08bf679ac2696bfb73",
+      "before_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/llvm/row_string_join.ll",
+      "justification": "unchanged definitions"
+    },
+    "dict_lookup": {
+      "identical_definitions": true,
+      "only_trace_call_delta": true,
+      "trace_calls_before": 0,
+      "trace_calls_after": 0,
+      "before_sha256": "72bd4451aa5de8ffc749e2089574664b79b2a847a1ed1fc6a0d419dc976175e6",
+      "after_sha256": "8e0977b43c42f9e1cdf6315a157996763552d0ba07ebb7d22fdf422318b646b4",
+      "before_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/llvm/row_dict_lookup.ll",
+      "justification": "unchanged definitions"
+    },
+    "dict_lookup_str": {
+      "identical_definitions": true,
+      "only_trace_call_delta": true,
+      "trace_calls_before": 0,
+      "trace_calls_after": 0,
+      "before_sha256": "e099624ed727f6948a34b0a806463602d50819b0c2fedd53c31045bbb2e3bdea",
+      "after_sha256": "3967565e3d854b5eae1b14557a457dc3a41f2f7aa369d5cea07c6f2f3f592ac7",
+      "before_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/llvm/row_dict_lookup_str.ll",
+      "justification": "unchanged definitions"
+    },
+    "dict_update": {
+      "identical_definitions": true,
+      "only_trace_call_delta": true,
+      "trace_calls_before": 0,
+      "trace_calls_after": 0,
+      "before_sha256": "733b417d9cc6b3bcf81a81c8ddd0a5f8ffb547752c1f9519b04a7d9d221c4e3e",
+      "after_sha256": "de8106e6cbe1600da10233e878232da09e23e84e8be19e2f463a1bb9de5fd440",
+      "before_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/llvm/row_dict_update.ll",
+      "justification": "unchanged definitions"
+    },
+    "dict_update_str": {
+      "identical_definitions": true,
+      "only_trace_call_delta": true,
+      "trace_calls_before": 0,
+      "trace_calls_after": 0,
+      "before_sha256": "4f79bb1d21994f20ecc07cd0902ab6927699ea7300ed7ee9fa43dae28242bae6",
+      "after_sha256": "dc267eb66e7576ccba56ed976f18bdd96915c42b201a6cde018e9035f61a97f2",
+      "before_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/llvm/row_dict_update_str.ll",
+      "justification": "unchanged definitions"
+    },
+    "set_dedup": {
+      "identical_definitions": true,
+      "only_trace_call_delta": true,
+      "trace_calls_before": 0,
+      "trace_calls_after": 0,
+      "before_sha256": "a6373e1ca6342453b95bce50f201b982c22963692da4963ca1de98a322ec75ac",
+      "after_sha256": "b11f877241ffede04f7c10f8239e916f2c66050320c27a2d89976ce6327b3a47",
+      "before_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/llvm/row_set_dedup.ll",
+      "justification": "unchanged definitions"
+    },
+    "int_parse": {
+      "identical_definitions": true,
+      "only_trace_call_delta": true,
+      "trace_calls_before": 0,
+      "trace_calls_after": 0,
+      "before_sha256": "c77494702efaae76a1bc4d5d5f50899810b2334bfd49edadf9dc85ba3a055d07",
+      "after_sha256": "2280ee82db45b7fe1200edc6ae0b36d2d61a7b39e1f3ee80d4a2d4618acc0d8e",
+      "before_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/llvm/row_int_parse.ll",
+      "justification": "unchanged definitions"
+    },
+    "int_format": {
+      "identical_definitions": true,
+      "only_trace_call_delta": true,
+      "trace_calls_before": 0,
+      "trace_calls_after": 0,
+      "before_sha256": "9ae1caa80cdbaa9a1bcd3f3a4a96d5d70f9962886a2dbef12d838bf2b3ddb470",
+      "after_sha256": "734223ef3b6cbe8ba233eae79d1ffb3b01a90ba4beac1e3d329d03c97ed61315",
+      "before_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/llvm/row_int_format.ll",
+      "justification": "unchanged definitions"
+    },
+    "call_indirect": {
+      "identical_definitions": true,
+      "only_trace_call_delta": true,
+      "trace_calls_before": 0,
+      "trace_calls_after": 0,
+      "before_sha256": "1defba76b3545a58a28a637e38ae1fc3c4ab8e7fba0215e5711bcbdf0f6be429",
+      "after_sha256": "347f47faf34618430b9418fe98ed3faffbfd4d88909bdad638674405878adbce",
+      "before_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/llvm/row_call_indirect.ll",
+      "justification": "unchanged definitions"
+    },
+    "sort_int": {
+      "identical_definitions": true,
+      "only_trace_call_delta": true,
+      "trace_calls_before": 0,
+      "trace_calls_after": 0,
+      "before_sha256": "20e0d448d771018db93f03ef4f314d4e2fb00125cd9913902432f48ce09218de",
+      "after_sha256": "06d6ee6780136619b6f29e58d21fbc7ddbc71a286e96d87b70eebb9cf94c13ed",
+      "before_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/llvm/row_sort_int.ll",
+      "justification": "unchanged definitions"
+    },
+    "sort_records": {
+      "identical_definitions": true,
+      "only_trace_call_delta": true,
+      "trace_calls_before": 0,
+      "trace_calls_after": 0,
+      "before_sha256": "14d1fa578afebc8032e2eb32217470b1d04731fc429666fdf67d147db0543509",
+      "after_sha256": "b4e248ac0db43379e51de0484bd5405daf136e4d4ba302238e0afdc7a8d967ca",
+      "before_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/llvm/row_sort_records.ll",
+      "justification": "unchanged definitions"
+    },
+    "int_math": {
+      "identical_definitions": true,
+      "only_trace_call_delta": true,
+      "trace_calls_before": 0,
+      "trace_calls_after": 0,
+      "before_sha256": "f521925ae8caa357954cbd18c597ff5d06388c8a73d6d9ece12147b7cb22a2a5",
+      "after_sha256": "3b40a3672f9eb9494fc733ea700ccb7f3af61b02bb8362baa84510c0dcd2ad06",
+      "before_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/llvm/int_math.ll",
+      "justification": "unchanged definitions"
+    },
+    "float_math": {
+      "identical_definitions": true,
+      "only_trace_call_delta": true,
+      "trace_calls_before": 0,
+      "trace_calls_after": 0,
+      "before_sha256": "3c86a72eaddff01aca9589aba0b4d5d09d6581f6d06863d92c6dbb5c41b545ce",
+      "after_sha256": "a491510b65718eb6f65b430f190460d259bdbbd90a917353f961549b2c0ab3c2",
+      "before_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/llvm/float_math.ll",
+      "justification": "unchanged definitions"
+    },
+    "call_direct": {
+      "identical_definitions": true,
+      "only_trace_call_delta": true,
+      "trace_calls_before": 0,
+      "trace_calls_after": 0,
+      "before_sha256": "2dc4bb302ab5604158d226b197075fe3362ef72ba16b0d7885cd7c9148bafa9d",
+      "after_sha256": "bf1e2e27e98c487744338248fb397a1787a7bbccdee39507079a376fc25a46a2",
+      "before_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/llvm/call_direct.ll",
+      "justification": "unchanged definitions"
+    },
+    "branch_predictable": {
+      "identical_definitions": true,
+      "only_trace_call_delta": true,
+      "trace_calls_before": 0,
+      "trace_calls_after": 0,
+      "before_sha256": "eacd66257fdf69288fd05eeb04afe7d84f67cafdf26f8dda155a35e42424801a",
+      "after_sha256": "cbb3e91028ba0beea8dedc7e028924fc18f7724f6aa4ced151fc86aab1191102",
+      "before_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/llvm/branch_predictable.ll",
+      "justification": "unchanged definitions"
+    },
+    "branch_mixed": {
+      "identical_definitions": true,
+      "only_trace_call_delta": true,
+      "trace_calls_before": 0,
+      "trace_calls_after": 0,
+      "before_sha256": "a6b8c7ec884637a55b2ee25309775655216fd3c68996c26e6843dd86b1f1f7b1",
+      "after_sha256": "f902b4eedfd37060309df0f5e66b4d1bb80d89108013712fe4930638e2fae521",
+      "before_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/llvm/branch_mixed.ll",
+      "justification": "unchanged definitions"
+    },
+    "binary_search": {
+      "identical_definitions": true,
+      "only_trace_call_delta": true,
+      "trace_calls_before": 0,
+      "trace_calls_after": 0,
+      "before_sha256": "29eab26eac11be3957a737eef0e3056dc9411c70f5a156a2ce672eec28293627",
+      "after_sha256": "6f83a9a15520ef357a8350e510105feaffc85457c266520c603030ddfec51da6",
+      "before_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/llvm/binary_search.ll",
+      "justification": "unchanged definitions"
+    },
+    "word_count": {
+      "identical_definitions": true,
+      "only_trace_call_delta": true,
+      "trace_calls_before": 0,
+      "trace_calls_after": 0,
+      "before_sha256": "fe5f382bd92cf038bf8fb4708c5fac7b56b822a3c7fd9bfd4863cab0491c0d8f",
+      "after_sha256": "b98a6f701ea6465734005245ae5c1f86e037e4e8cf12cabe607283e3f40509eb",
+      "before_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/llvm/row_word_count.ll",
+      "justification": "unchanged definitions"
+    },
+    "csv_aggregate": {
+      "identical_definitions": true,
+      "only_trace_call_delta": true,
+      "trace_calls_before": 0,
+      "trace_calls_after": 0,
+      "before_sha256": "6e6e9e670704767c42dfbd8eca8b2852d6cc508a4797b4e4fa4b69edd10c2d14",
+      "after_sha256": "374c082f52ca3f26b028ae8a7e9a738b23f089a06410f48d24e0e9db851f4aea",
+      "before_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/llvm/row_csv_aggregate.ll",
+      "justification": "unchanged definitions"
+    },
+    "json_transform": {
+      "identical_definitions": false,
+      "only_trace_call_delta": true,
+      "trace_calls_before": 52,
+      "trace_calls_after": 52,
+      "before_sha256": "d4160fb95e66c7db49645127219bcbf94d2333aa4dfba2617b8b8c1d505beff9",
+      "after_sha256": "66194f0d2167cba3ff5f6da1d363613a5e2b4828d1c53c46be1f3b619434f159",
+      "before_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/llvm/row_json_transform.ll",
+      "justification": "explicit err_trace calls retain sites, arguments and inline-cost; only symbol and preserve_mostcc change"
+    },
+    "packet_decode": {
+      "identical_definitions": false,
+      "only_trace_call_delta": true,
+      "trace_calls_before": 5,
+      "trace_calls_after": 5,
+      "before_sha256": "95f71e49e87ca067bf0397da6a556575528c8c209b7b7905c8f154c874f3ccc2",
+      "after_sha256": "07d5b91d5b9c88bdb62b6a5486b7ec37c72073e1090fd08830d5911c3db0f17a",
+      "before_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/llvm/row_packet_decode.ll",
+      "justification": "explicit err_trace calls retain sites, arguments and inline-cost; only symbol and preserve_mostcc change"
+    },
+    "lox_eval": {
+      "identical_definitions": true,
+      "only_trace_call_delta": true,
+      "trace_calls_before": 0,
+      "trace_calls_after": 0,
+      "before_sha256": "672217bf3ce329a3e0109a6ee1356ee6b630d1ee58d8e1032401e5bec4729ca8",
+      "after_sha256": "8c1d79c062df236fb68557f411bc86091b625e853bf95679a86b459d71df9eab",
+      "before_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/llvm/row_lox_eval.ll",
+      "justification": "unchanged definitions"
+    }
+  },
+  "qualified": true,
+  "old35_identical": 34
+}

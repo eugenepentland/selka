@@ -1,0 +1,21 @@
+# To display the perf.data header info, please use --header/--header-only options.
+#
+#
+# Total Lost Samples: 0
+#
+# Samples: 9K of event 'cpu_core/cycles/u'
+# Event count (approx.): 950428512
+#
+# Overhead  Command          Shared Object          Symbol                                     
+# ........  ...............  .....................  ...........................................
+#
+    94.42%  row_packet_deco  row_packet_decode_new  [.] main
+     5.53%  row_packet_deco  row_packet_decode_new  [.] myl_core_err_trace_origin_preserve_most
+     0.02%  row_packet_deco  [unknown]              [k] 0xffffffffbae00ff0
+     0.01%  row_packet_deco  ld-linux-x86-64.so.2   [.] 0x00000000000174a6
+     0.01%  taskset          ld-linux-x86-64.so.2   [.] 0x000000000001a921
+
+
+#
+# (Cannot load tips.txt file, please install perf!)
+#
