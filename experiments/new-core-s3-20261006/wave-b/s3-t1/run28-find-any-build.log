@@ -1,0 +1,4 @@
+long_find.my:340:5: error[E_DUPLICATE_SYMBOL]: module declaration name is already bound
+  def main(args: list[str], out: Stream) -> int:
+      ^
+long_find.my:338:5: note: related module/import declaration

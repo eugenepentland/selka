@@ -1,0 +1,3 @@
+fuzz_instrument.my:1:8: error[E_MODULE_NAME]: declared `module text_0000`, but this file is `fuzz_instrument.my`, so its module name is `fuzz_instrument`: a module's name is its path from the project root without `.my`; write `module fuzz_instrument`
+  module text_0000
+         ^
