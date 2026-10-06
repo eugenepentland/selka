@@ -24,8 +24,8 @@ def main():
     commands = [
         ('build', ['zig', 'build', 'core', '--summary', 'all']),
         ('test-core', ['zig', 'build', 'test-core', '--summary', 'all']),
-        ('conformance', ['python3', 'experiments/new-core-s1-20261005/conformance.py', '--set', 'all',
-                         '--jobs', '4', '--why', '--mylang', 'zig-out/bin/mylang', '--core',
+        ('conformance', ['python3', str(area / 'conformance_checked.py'), '--set', 'all',
+                         '--jobs', '4', '--why', '--mylang', str(ROOT / '.mylang-cache/wave-b/baseline/mylang'), '--core',
                          'zig-out/bin/mylang-core', '--cache-dir', str(cache / 'conformance')]),
     ]
     for label, command in commands:
@@ -52,6 +52,7 @@ def main():
         report = log.read_text()
         if label == 'test-core':
             assert re.search(r'\d+/\d+ tests passed', report), report
+            assert not re.search(r'error: memory usage peaked at .*exceeding the declared upper bound', report), report
             for amount, unit in re.findall(r'MaxRSS:(\d+)([KMG])', report):
                 assert int(amount) * {'K': 1024, 'M': 1024**2, 'G': 1024**3}[unit] <= 2.5 * 1024**3
         if label == 'conformance':

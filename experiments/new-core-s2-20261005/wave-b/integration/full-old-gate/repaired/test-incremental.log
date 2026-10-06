@@ -1,0 +1,78 @@
+source_commit=090dabd5a6932a7c3beaec68248f9a35d4c637d7
+root=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration
+$ scripts/build-slot.sh gate -- bash -c '"$@"; result=$?; exit "$result"' -- scripts/build-slot.sh build -- /usr/bin/time -f %e -o /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/experiments/new-core-s2-20261005/wave-b/integration/full-old-gate/repaired/test-incremental-seconds.txt zig build test-incremental --summary all
+TMPDIR=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.zig-cache/s2-x/full-gates/tmp
+ZIG_LOCAL_CACHE_DIR=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.zig-cache
+ZIG_GLOBAL_CACHE_DIR=/home/epentland/ai/canopy/.zig-global-cache
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: all 3 build slot(s) busy; waiting (60s so far)
+build-slot: all 3 build slot(s) busy; waiting (120s so far)
+build-slot: build slot 1 after 165s (all 3 build slot(s) busy)
+guardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source 1b6c13222675)
+guardian: diff-scoped vs 1fd1d566793dcae92449d937aca595c55ee318c8: 188/831 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 12 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 3588 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 1 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed — diff-scoped vs 1fd1d566793dcae92449d937aca595c55ee318c8, 188 file(s) in scope
+test-incremental
++- python3 tests/incremental_diff.py --project tests/fixtures/module_projects w
+incremental-diff: 60 steps (seed 1), 0 mismatches; cold check clean 11, rejected 49
+failed command: cd . && sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_QBE=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/zig-out/bin/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig sh -c "exec \"\$@\" 1>&2" driver python3 tests/incremental_diff.py --steps 60 --project tests/fixtures/module_projects ./zig-out/bin/mylang
+
+test-incremental
++- python3 tests/incremental_diff.py w
+incremental-diff: 120 steps (seed 1), 0 mismatches; cold check clean 44, rejected 76
+failed command: cd . && sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_QBE=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/zig-out/bin/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig sh -c "exec \"\$@\" 1>&2" driver python3 tests/incremental_diff.py --steps 120 ./zig-out/bin/mylang
+
+Build Summary: 24/24 steps succeeded
+test-incremental success
++- python3 tests/incremental_diff.py success 1m
+|  +- install success
+|  |  +- install mylang cached
+|  |  |  +- compile exe mylang debug native cached 10ms MaxRSS:41M
+|  |  |  |  +- run exe qbe-build-assets (qbe_build_assets) cached
+|  |  |  |     +- compile exe qbe-build-assets debug native cached 7ms MaxRSS:40M
+|  |  |  +- run ../guardian-zig/zig-out/bin/guardian-check success 1s
+|  |  |     +- guardian-selfcheck success
+|  |  |        +- run ../guardian-zig/zig-out/bin/guardian-check success 31ms
+|  |  +- install qbe cached
+|  |  |  +- compile exe qbe fast native cached 16ms MaxRSS:40M
+|  |  |  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+|  |  +- install generated/ cached
+|  |  |  +- run exe mylang (mylang-runtime) cached
+|  |  |     +- compile exe mylang debug native (+1 more reused dependencies)
+|  |  |     +- install mylang (+2 more reused dependencies)
+|  |  |     +- compile exe qbe fast native (reused)
+|  |  +- install board-trial cached
+|  |  |  +- compile exe board-trial debug native cached 11ms MaxRSS:41M
+|  |  |  |  +- options cached
+|  |  |  |  |  +- compile exe qbe fast native (reused)
+|  |  |  |  +- run exe qbe-build-assets (qbe_build_assets) (+1 more reused dependencies)
+|  |  |  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+|  |  +- install schematic-svg cached
+|  |  |  +- compile exe schematic-svg debug native cached 11ms MaxRSS:41M
+|  |  |  |  +- options (+1 more reused dependencies)
+|  |  |  |  +- run exe qbe-build-assets (qbe_build_assets) (+1 more reused dependencies)
+|  |  |  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+|  |  +- install mylang-io cached
+|  |  |  +- compile exe mylang-io debug native cached 9ms MaxRSS:41M
+|  |  |  |  +- options (+1 more reused dependencies)
+|  |  |  |  +- run exe qbe-build-assets (qbe_build_assets) (+1 more reused dependencies)
+|  |  |  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+|  |  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+|  +- hash declared test inputs success 378ms
+|  +- record the test environment success 4ms
+|  +- compile exe qbe fast native (reused)
+|  +- compile exe mylang debug native (+1 more reused dependencies)
+|  +- compile exe mylang debug native (+1 more reused dependencies)
++- python3 tests/incremental_diff.py --project tests/fixtures/module_projects success 36s
+   +- install (+7 more reused dependencies)
+   +- hash declared test inputs (reused)
+   +- record the test environment (reused)
+   +- compile exe qbe fast native (reused)
+   +- compile exe mylang debug native (+1 more reused dependencies)
+   +- compile exe mylang debug native (+1 more reused dependencies)
+
+
+exit=0 command_seconds=64.46 wall_including_admission_seconds=229.978

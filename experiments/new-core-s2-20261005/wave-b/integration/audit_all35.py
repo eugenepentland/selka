@@ -178,9 +178,8 @@ def block_metrics(lines, tags, immortals):
         if counted and re.search(r'\bload\b', line):
             pointer = re.search(r'\bptr\s+(' + REF + r')', line)
             result['saturated_count_reads' if pointer and pointer[1] in immortals else 'dynamic_count_reads'] += 1
-        if re.search(r'\b(?:call|invoke)\b', line):
-            symbol = re.search(r'@(' + TOKEN + r')\s*\(', line)
-            target = name(symbol[1]) if symbol else '<indirect>'
+        target = direct_call(line)
+        if target is not None:
             category = call_kind(target)
             if category != 'intrinsic':
                 calls[f'{category}:{target}'] += 1
@@ -220,7 +219,8 @@ def audit_ir(source):
 
 
 def direct_call(line):
-    if not re.search(r'\b(?:call|invoke)\b', line):
+    opcode = r'^\s*(?:%' + TOKEN + r'\s*=\s*)?(?:(?:tail|musttail|notail)\s+)?(?:call|invoke)\s'
+    if not re.match(opcode, line):
         return None
     target = re.search(r'@(' + TOKEN + r')\s*\(', line)
     return name(target[1]) if target else '<indirect>'
@@ -469,6 +469,18 @@ def compile_artifacts(args, selected):
 
 
 def smoke():
+    decoys = ('  br label %call.i',
+              '  br i1 %condition, label %invoke.i, label %call.i',
+              '  %result = phi ptr [ %made, %call.i ], [ %other, %invoke.i ]',
+              '  %call.i = add i64 %invoke.i, 1',
+              '  ; call i64 @commented_out()')
+    assert all(direct_call(line) is None for line in decoys)
+    assert not block_metrics(decoys, set(), set())['calls']
+    for prefix in ('', 'tail ', 'musttail ', 'notail '):
+        assert direct_call('  %result = ' + prefix + 'call i64 @worker()') == 'worker'
+        assert direct_call('  ' + prefix + 'call void @worker()') == 'worker'
+    assert direct_call('  %"quoted.result" = invoke i64 @"quoted.worker"() to label %call.i unwind label %invoke.i') == 'quoted.worker'
+    assert direct_call('  call void %function(ptr %object)') == '<indirect>'
     source = '''@myl.str.0 = private constant {i32, i32} {i32 -1, i32 1}
 define i32 @main() {
 entry:

@@ -1,0 +1,12 @@
+source_commit=090dabd5a6932a7c3beaec68248f9a35d4c637d7
+$ scripts/build-slot.sh build -- python3 experiments/new-core-s2-20261005/wave-a/integration/fuzz_qualification.py --kind rebinding --cases 200 --seed 2204 --mylang /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/wave-b/baseline/mylang --core /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/zig-out/bin/mylang-core --evidence /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/experiments/new-core-s2-20261005/wave-b/integration/fuzz-200/rebinding --cache-root /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/wave-b/s2-x/fuzz-200/rebinding
+qualification progress: rebinding: seen=25 elapsed=216.77s
+qualification progress: rebinding: seen=50 elapsed=515.44s
+qualification progress: rebinding: seen=75 elapsed=807.22s
+qualification progress: rebinding: seen=100 elapsed=964.09s
+qualification progress: rebinding: seen=125 elapsed=1079.00s
+qualification progress: rebinding: seen=150 elapsed=1173.60s
+qualification progress: rebinding: seen=175 elapsed=1258.41s
+qualification progress: rebinding: seen=200 elapsed=1348.11s
+mut,records,alias                  cases=200 old_rejected=0 refused=0 compared=3000 mismatch=0 fact=0 traps=187 caught=0
+qualification {"kind": "rebinding", "qualified": true, "accepted": 200, "old_rejected": 0, "core_refused": 0, "core_build_failed": 0, "elapsed_seconds": 1351.506808207836}

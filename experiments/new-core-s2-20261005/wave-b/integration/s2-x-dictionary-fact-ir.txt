@@ -1,0 +1,4 @@
+fn dictionary_hashing::main() -> i64
+b0:
+  ret 0:i64
+facts dictionary_hashing::main:

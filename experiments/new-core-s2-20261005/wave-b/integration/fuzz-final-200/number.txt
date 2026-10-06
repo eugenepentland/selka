@@ -1,0 +1,14 @@
+source_commit=996d9baad0e00ef98b4d3e7b59dc3616809fa013
+$ scripts/build-slot.sh build -- nice -n 10 python3 experiments/new-core-s2-20261005/wave-a/integration/fuzz_qualification.py --kind number --cases 200 --seed 2208 --mylang /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/wave-b/baseline/mylang --core /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/zig-out/bin/mylang-core --evidence /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/experiments/new-core-s2-20261005/wave-b/integration/fuzz-final-200/number --cache-root /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/wave-b/s2-x/fuzz-final-200/number
+qualification progress: number: seen=25 elapsed=63.39s
+qualification progress: number: seen=50 elapsed=122.72s
+qualification progress: number: seen=75 elapsed=182.08s
+qualification progress: number: seen=100 elapsed=241.19s
+qualification progress: number: seen=125 elapsed=300.09s
+qualification progress: number: seen=150 elapsed=358.94s
+qualification progress: number: seen=175 elapsed=417.71s
+qualification progress: number: seen=200 elapsed=476.80s
+records,unions,propagate,mut,alias cases=200 old_rejected=0 refused=0 compared=3000 mismatch=0 fact=0 traps=0 caught=0
+qualification {"kind": "number", "qualified": true, "accepted": 200, "old_rejected": 0, "core_refused": 0, "core_build_failed": 0, "elapsed_seconds": 479.2492282751482}
+
+exit=0

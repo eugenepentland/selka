@@ -125,7 +125,7 @@ def main():
     commit = git(root, "rev-parse", "HEAD")
     source_unchanged(root, commit)
     evidence.mkdir(parents=True, exist_ok=True)
-    cache = root / ".mylang-cache/s2-x/full-gates"
+    cache = root / ".zig-cache/s2-x/full-gates"
     (cache / "tmp").mkdir(parents=True, exist_ok=True)
     env = os.environ.copy()
     env.update(TMPDIR=str(cache / "tmp"), ZIG_LOCAL_CACHE_DIR=str(root / ".zig-cache"),
