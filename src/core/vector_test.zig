@@ -2,6 +2,9 @@
 const std = @import("std");
 const support = @import("test_support.zig");
 const vector = @import("vector.zig");
+const ir = @import("ir.zig");
+const facts = @import("facts.zig");
+const passes = @import("passes.zig");
 
 const affine =
     \\def affine(x: int) -> int:
@@ -203,4 +206,87 @@ test "a select arm that is the loop counter keeps the loop scalar instead of spl
     const text = try support.releaseLlvmText(arena.allocator(), counter_arm);
     try std.testing.expect(std.mem.indexOf(u8, text, "%vexit1") == null);
     try std.testing.expect(std.mem.indexOf(u8, text, "select <") == null);
+}
+
+const byte_helper =
+    \\def score(raw: bytes, mask: int) -> int:
+    \\    total = 0
+    \\    for value in raw:
+    \\        total += value ^ mask
+    \\    return total
+    \\
+    \\
+    \\def main(args: list[str], out: Stream) -> int:
+    \\    raw = bytes([(j * 37) % 256 for j in range(len(args) + 100)])
+    \\    out.print(score(raw, 3) + score(raw, 200))
+    \\    return 0
+    \\
+;
+
+/// The text of `name`'s definition in LLVM module `text`.
+fn definition(text: []const u8, name: []const u8) []const u8 {
+    const start = std.mem.indexOf(u8, text, name).?;
+    const end = std.mem.indexOf(u8, text[start..], "\n}\n").?;
+    return text[start..][0..end];
+}
+
+// spec: NEW-CORE-VECTOR-3
+test "a byte reduction that only converts and XORs runs in 8-bit lanes summed by psadbw, and widens on a generic target" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const x86 = definition(try support.releaseLlvmText(arena.allocator(), byte_helper), "define internal i64 @\"my.score\"(");
+    try std.testing.expect(std.mem.indexOf(u8, x86, "load <32 x i8>") != null);
+    try std.testing.expect(std.mem.indexOf(u8, x86, "xor <32 x i8>") != null);
+    try std.testing.expect(std.mem.indexOf(u8, x86, "@llvm.x86.avx2.psad.bw") != null);
+    const generic = definition(try support.releaseLlvmTextFor(arena.allocator(), byte_helper, @import("target.zig").generic_256), "define internal i64 @\"my.score\"(");
+    try std.testing.expect(std.mem.indexOf(u8, generic, "psad") == null);
+    try std.testing.expect(std.mem.indexOf(u8, generic, "zext <32 x i8>") != null);
+}
+
+// spec: NEW-CORE-FACTS-10
+test "a parameter takes the hull of every call's argument, so a helper's byte sum needs no overflow check, and verify builds assert it on entry" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const released = definition(try support.releaseLlvmText(a, byte_helper), "define internal i64 @\"my.score\"(");
+    try std.testing.expect(std.mem.indexOf(u8, released, "with.overflow") == null);
+    try std.testing.expect(std.mem.indexOf(u8, try support.verifyLlvmText(a, byte_helper), "range [3, 200]") != null);
+}
+
+/// The index of the function called `name`, or null.
+fn functionIndex(module: *const ir.Module, name: []const u8) ?u32 {
+    for (module.functions.items, 0..) |function, index| {
+        if (std.mem.eql(u8, function.name, name)) return @intCast(index);
+    }
+    return null;
+}
+
+/// The caller-derived interval of `score`'s mask in `module`, or null.
+fn maskRange(arena: std.mem.Allocator, module: *ir.Module) !?facts.Interval {
+    const first = try arena.alloc(?facts.Facts, module.functions.items.len);
+    for (module.functions.items, first) |*function, *slot| {
+        slot.* = if (function.signature.linkage == .internal) try facts.analyze(arena, function, .{ .mark = false }) else null;
+    }
+    const ranges = try passes.parameterRanges(arena, module, first);
+    for (module.functions.items, ranges) |function, params| {
+        if (std.mem.eql(u8, function.name, "score")) return if (params.len == 2) params[1] else null;
+    }
+    return null;
+}
+
+// spec-case: NEW-CORE-FACTS-10
+test "a function a function value names gets no caller-derived parameter intervals" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var refusal: @import("build.zig").Refusal = .{};
+    var module = try support.buildSource(a, byte_helper, &refusal);
+    const direct = (try maskRange(a, &module)).?;
+    try std.testing.expectEqual(@as(i128, 3), direct.lo);
+    try std.testing.expectEqual(@as(i128, 200), direct.hi);
+    // Naming `score` as a value anywhere means some call may come from elsewhere.
+    const score = functionIndex(&module, "score").?;
+    const main = &module.functions.items[functionIndex(&module, "main").?];
+    try main.insts.append(a, .{ .op = .func_ref, .ty = .i64, .data = score });
+    try std.testing.expectEqual(@as(?facts.Interval, null), try maskRange(a, &module));
 }

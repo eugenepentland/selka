@@ -136,3 +136,56 @@ test "fixed arrays refuse stored live dictionary views precisely" {
     try std.testing.expectError(error.Unsupported, support.buildSource(arena.allocator(), stored_view, &refusal));
     try std.testing.expectEqualStrings("fixed array storage of live dictionary views", refusal.reason);
 }
+
+const small_tables =
+    \\def main(out: Stream) -> int:
+    \\    counts: dict[str, int] = {}
+    \\    for word in "the cat and the hat and the bat".split(" "):
+    \\        if word in counts:
+    \\            counts[word] = counts[word] + 1
+    \\        else:
+    \\            counts[word] = 1
+    \\    numbers: dict[int, int] = {}
+    \\    for j in range(6):
+    \\        numbers[j * 7] = j
+    \\    _ = numbers.pop(14)
+    \\    numbers[100] = 9
+    \\    out.print(counts["the"], counts["and"], counts.get("dog", -1), len(counts))
+    \\    out.print(numbers.get(14, -1), numbers.get(21, -1), numbers.get(100, -1), numbers.get(5, -1), len(numbers))
+    \\    return 0
+    \\
+;
+
+/// Build `small_tables` with the new core in `mode` and run it; its standard output.
+fn smallTablesOutput(arena: std.mem.Allocator, root: []const u8, mode: []const []const u8) ![]const u8 {
+    const program = try std.fmt.allocPrint(arena, "{s}/small.my", .{root});
+    const output = try std.fmt.allocPrint(arena, "{s}/small-{d}", .{ root, mode.len });
+    const cache = try std.fmt.allocPrint(arena, "{s}/cache", .{root});
+    var argv: std.ArrayList([]const u8) = .empty;
+    try argv.appendSlice(arena, &.{ options.core_path, "build", program, "-o", output, "--cache-dir", cache });
+    try argv.appendSlice(arena, mode);
+    const built = try std.process.run(arena, std.testing.io, .{ .argv = argv.items });
+    try std.testing.expect(built.term == .exited and built.term.exited == 0);
+    const ran = try std.process.run(arena, std.testing.io, .{ .argv = &.{output} });
+    try std.testing.expect(ran.term == .exited and ran.term.exited == 0);
+    return ran.stdout;
+}
+
+// spec: NEW-CORE-DICT-SMALL-1
+test "a probe scans an index-less table's cached hashes inline, and a table that lost an entry asks the runtime, as the old core answers" {
+    var state = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer state.deinit();
+    const arena = state.allocator();
+    const llvm = try support.releaseLlvmText(arena, small_tables);
+    try std.testing.expect(std.mem.indexOf(u8, llvm, "%sh_hit = icmp eq i64 %sh, %hash") != null);
+    try std.testing.expect(std.mem.indexOf(u8, llvm, "br i1 %clean, label %scan, label %slow") != null);
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", arena);
+    try directory.dir.writeFile(std.testing.io, .{ .sub_path = "small.my", .data = small_tables });
+    // The old core's output for the same program.
+    const expected = "3 2 -1 5\n-1 3 9 -1 6\n";
+    try std.testing.expectEqualStrings(expected, try smallTablesOutput(arena, root, &.{}));
+    try std.testing.expectEqualStrings(expected, try smallTablesOutput(arena, root, &.{"--release"}));
+    try std.testing.expectEqualStrings(expected, try smallTablesOutput(arena, root, &.{ "--release", "--verify-facts" }));
+}

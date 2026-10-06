@@ -300,7 +300,8 @@ const Analysis = struct {
         const i = self.f.inst(ref);
         return switch (i.op) {
             .iconst => if (typeRange(i.ty) != null) Interval.point(constantValue(i)) else null,
-            .param, .undef, .call, .union_payload => typeRange(i.ty),
+            .param => self.facts.ranges[ref.index()] orelse typeRange(i.ty),
+            .undef, .call, .union_payload => typeRange(i.ty),
             else => self.facts.ranges[ref.index()],
         };
     }
@@ -445,6 +446,12 @@ pub const Options = struct {
     fold: bool = true,
     /// Deliberately wrong rule for testing the verify mode and the fuzz.
     sabotage: Sabotage = .none,
+    /// Per parameter position, the interval every caller's argument lies in
+    /// (`passes.parameterRanges`); null or missing is the parameter type's range.
+    params: []const ?Interval = &.{},
+    /// Turn the checks the facts rule out into `proven` and fold decided
+    /// comparisons; false computes the facts without changing the function.
+    mark: bool = true,
 };
 
 /// The deliberately wrong rules (`--sabotage-facts`, `--sabotage-facts=widening`, `=length`).
@@ -540,6 +547,18 @@ fn recompute(a: *Analysis, ref: ir.Ref, block: ir.BlockId, changes: []u8) bool {
     return changed;
 }
 
+/// The interval `raw` lies in by `known`, the facts of `f`: a constant's point, a
+/// computed value's interval, or the type's range; null when not an integer or unknown.
+pub fn valueRange(known: *const Facts, f: *const ir.Function, raw: ir.Ref) ?Interval {
+    const ref = f.resolve(raw);
+    const i = f.inst(ref);
+    if (i.op == .iconst) return if (typeRange(i.ty) != null) Interval.point(constantValue(i)) else null;
+    if (ref.index() < known.ranges.len) {
+        if (known.ranges[ref.index()]) |range| return range;
+    }
+    return null;
+}
+
 /// Compute the facts of `f` and mark every check they rule out as `proven`.
 pub fn analyze(arena: std.mem.Allocator, f: *ir.Function, options: Options) Error!Facts {
     var a: Analysis = .{
@@ -565,6 +584,10 @@ pub fn analyze(arena: std.mem.Allocator, f: *ir.Function, options: Options) Erro
     @memset(a.facts.floats, null);
     @memset(a.facts.aggregates.lists, .{});
     @memset(a.facts.aggregates.dicts, .{});
+    // Caller-derived parameter intervals seed the parameters; `base` reads them.
+    for (f.insts.items, 0..) |inst, index| {
+        if (inst.op == .param and inst.data < options.params.len) a.facts.ranges[index] = options.params[@intCast(inst.data)];
+    }
     try findCounted(&a);
     const changes = try arena.alloc(u8, f.insts.items.len);
     @memset(changes, 0);
@@ -599,7 +622,9 @@ pub fn analyze(arena: std.mem.Allocator, f: *ir.Function, options: Options) Erro
     }
     // Ranges short of a fixed point are not facts: prove nothing, and leave the
     // emitter no interval to turn into `!range`, `nuw` or a narrowed conversion.
-    if (converged) mark(&a, options.fold) else {
+    if (converged) {
+        if (options.mark) mark(&a, options.fold);
+    } else {
         @memset(a.facts.ranges, null);
         @memset(a.facts.floats, null);
         @memset(a.facts.aggregates.lists, .{});

@@ -48,7 +48,7 @@ pub const Plan = struct {
     /// Both arms of an if/else run on every lane; they are proven pure and trap-free.
     body: []const ir.Ref,
     selects: []const Select,
-    /// Lane width in bits: 16 or 32.
+    /// Lane width in bits: 8, 16 or 32.
     bits: u16,
 };
 
@@ -246,9 +246,25 @@ fn laneShaped(f: *const ir.Function, known: facts.Facts, body: *const Body, ref:
     return f.resolve(inst.a) != counter and f.resolve(inst.b) != counter;
 }
 
-/// The lane width every value of the body fits (16 or 32), or null.
+/// Whether the body may run in 8-bit lanes (NEW-CORE-VECTOR-3): it reads only
+/// byte storage and only converts and `^`s, so every lane value it makes is one of
+/// its proven byte-sized inputs; no add, multiply or division can need a wider lane.
+fn byteLanes(f: *const ir.Function, body: *const Body) bool {
+    if (body.selects.items.len != 0) return false;
+    for (body.refs.items) |ref| {
+        const inst = f.inst(ref);
+        switch (inst.op) {
+            .list_get => if (inst.ty != .u8) return false,
+            .convert, .bit_xor, .phi => {},
+            else => return false,
+        }
+    }
+    return true;
+}
+
+/// The lane width every value of the body fits (8, 16 or 32), or null.
 fn laneWidth(f: *const ir.Function, known: facts.Facts, body: *const Body) ?u16 {
-    var widest: u16 = 16;
+    var widest: u16 = if (byteLanes(f, body)) 8 else 16;
     for (body.refs.items) |ref| {
         const inst = f.inst(ref);
         if (inst.op == .phi) continue;
@@ -397,6 +413,7 @@ fn rangeOf(f: *const ir.Function, known: facts.Facts, raw: ir.Ref) ?facts.Interv
 fn width(maybe: ?facts.Interval) ?u16 {
     const range = maybe orelse return null;
     if (range.lo < 0) return null;
+    if (range.hi < 0x100) return 8;
     if (range.hi < 0x10000) return 16;
     if (range.hi < 0x1_0000_0000) return 32;
     return 64;
@@ -556,16 +573,21 @@ const Writer = struct {
         const summand_range = self.e.known.ranges[p.carried.summand.index()].?;
         // `pmaddwd` is x86; elsewhere the summands widen to 64-bit lanes (generic, slower).
         const madd = self.e.target.x86_avx2 and p.bits == 16 and summand_range.hi <= 0x7fff;
+        // Byte lanes sum eight at a time into 64-bit lanes with `psadbw` (x86; elsewhere they widen).
+        const sad = self.e.target.x86_avx2 and p.bits == 8;
+        const reduce_lanes: u32 = if (sad) count / 8 else count;
         const block_elements = blockElements(summand_range.hi, count, madd);
         try self.put("vblock{d}:\n  %vb{d} = phi i64 [ 0, %{s} ], [ %vlim{d}, %vbend{d} ]\n  %vtot{d} = phi i64 [ {s}, %{s} ], [ %vtot2{d}, %vbend{d} ]\n", .{ n, n, from, n, n, n, acc0, from, n, n });
         try self.put("  %vcap{d} = add nuw i64 %vb{d}, {d}\n  %vover{d} = icmp ult i64 %vcap{d}, %vnv{d}\n", .{ n, n, block_elements, n, n, n });
         try self.put("  %vlim{d} = select i1 %vover{d}, i64 %vcap{d}, i64 %vnv{d}\n  br label %vloop{d}\n", .{ n, n, n, n, n });
-        const accumulator = if (madd) "<8 x i32>" else try std.fmt.allocPrint(self.arena, "<{d} x i64>", .{count});
+        const accumulator = if (madd) "<8 x i32>" else try std.fmt.allocPrint(self.arena, "<{d} x i64>", .{reduce_lanes});
         try self.put("vloop{d}:\n  %vj{d} = phi i64 [ %vb{d}, %vblock{d} ], [ %vj2{d}, %vloop{d} ]\n  %vacc{d} = phi {s} [ zeroinitializer, %vblock{d} ], [ %vacc2{d}, %vloop{d} ]\n", .{ n, n, n, n, n, n, n, accumulator, n, n, n });
         for (p.body) |ref| try self.laneInstruction(ref);
         const reduced = try self.lane(p.carried.summand);
         if (madd) {
             try self.put("  %vpm{d} = call <8 x i32> @llvm.x86.avx2.pmadd.wd({s} {s}, {s} {s})\n  %vacc2{d} = add <8 x i32> %vacc{d}, %vpm{d}\n", .{ n, v, reduced, v, try self.splatConstant(1), n, n, n });
+        } else if (sad) {
+            try self.put("  %vps{d} = call {s} @llvm.x86.avx2.psad.bw({s} {s}, {s} zeroinitializer)\n  %vacc2{d} = add {s} %vacc{d}, %vps{d}\n", .{ n, accumulator, v, reduced, v, n, accumulator, n, n });
         } else {
             try self.put("  %vwz{d} = zext {s} {s} to {s}\n  %vacc2{d} = add {s} %vacc{d}, %vwz{d}\n", .{ n, v, reduced, accumulator, n, accumulator, n, n });
         }
@@ -573,7 +595,7 @@ const Writer = struct {
         if (madd) {
             try self.put("vbend{d}:\n  %vr{d} = call i32 @llvm.vector.reduce.add.v8i32(<8 x i32> %vacc2{d})\n  %vr64{d} = zext i32 %vr{d} to i64\n", .{ n, n, n, n, n });
         } else {
-            try self.put("vbend{d}:\n  %vr64{d} = call i64 @llvm.vector.reduce.add.v{d}i64({s} %vacc2{d})\n", .{ n, n, count, accumulator, n });
+            try self.put("vbend{d}:\n  %vr64{d} = call i64 @llvm.vector.reduce.add.v{d}i64({s} %vacc2{d})\n", .{ n, n, reduce_lanes, accumulator, n });
         }
         try self.put("  %vtot2{d} = add nuw nsw i64 %vtot{d}, %vr64{d}\n  %vbm{d} = icmp ult i64 %vlim{d}, %vnv{d}\n  br i1 %vbm{d}, label %vblock{d}, label %vexit{d}\n", .{ n, n, n, n, n, n, n, n, n });
         try self.put("vexit{d}:\n  %vc{d} = phi i64 [ {s}, %{s} ], [ %vend{d}, %vbend{d} ]\n  %va{d} = phi i64 [ {s}, %{s} ], [ %vtot2{d}, %vbend{d} ]\n", .{ n, n, start, from, n, n, n, acc0, from, n, n });
@@ -666,7 +688,9 @@ const Writer = struct {
             try self.put("  {s}.s = shufflevector <16 x i8> {s}, <16 x i8> poison, <16 x i32> <i32 0, i32 1, i32 4, i32 5, i32 8, i32 9, i32 12, i32 13, i32 2, i32 3, i32 6, i32 7, i32 10, i32 11, i32 14, i32 15>\n", .{ name, bytes });
             bytes = try std.fmt.allocPrint(self.arena, "{s}.s", .{name});
         }
-        try self.put("  {s} = zext <{d} x i8> {s} to {s}\n", .{ name, self.lanes(), bytes, try self.vec() });
+        if (self.e.plan.bits == 8) {
+            try self.put("  {s} = add <{d} x i8> {s}, zeroinitializer\n", .{ name, self.lanes(), bytes });
+        } else try self.put("  {s} = zext <{d} x i8> {s} to {s}\n", .{ name, self.lanes(), bytes, try self.vec() });
     }
 
     fn load(self: *Writer, name: []const u8, list: ir.Ref) Error!void {

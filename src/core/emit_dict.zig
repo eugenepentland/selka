@@ -102,7 +102,7 @@ pub fn probeDefinition(comptime Context: type, c: Context, out: *@import("std").
         \\  %index_at = getelementptr inbounds i8, ptr %meta, i64 8
         \\  %index = load ptr, ptr %index_at, align 8
         \\  %small = icmp eq ptr %index, null
-        \\  br i1 %small, label %slow, label %group
+        \\  br i1 %small, label %small_table, label %group
         \\group:
         \\  %slots = load i32, ptr %index, align 4
         \\  %log = call i32 @llvm.cttz.i32(i32 %slots, i1 false)
@@ -167,10 +167,64 @@ pub fn probeDefinition(comptime Context: type, c: Context, out: *@import("std").
         \\  %empty_slot64 = zext i32 %empty_slot to i64
         \\  %probe = xor i64 %empty_slot64, -1
         \\  ret i64 %probe
+        \\
+    );
+    try smallScan(Context, c, out, .{ .stride = stride, .key_type = key_type, .key_align = m.alignment(shape.key), .text = shape.key == .str or shape.key == .bytes });
+    try out.appendSlice(a,
         \\slow:
         \\  %result = call i64 @myl_core_dict_find(ptr %dict, ptr %key, i64 %hash)
         \\  ret i64 %result
         \\}
+        \\
+    );
+}
+
+/// The entry layout and key comparison a small-table scan needs.
+const SmallKey = struct { stride: u32, key_type: []const u8, key_align: u32, text: bool };
+
+/// NEW-CORE-DICT-SMALL-1: a table of at most eight entries has no index, so the probe
+/// walks its cached hashes in place and compares a key only on a hash match, with no
+/// runtime call. A table that ever lost an entry (a deletion bitmap) still asks the
+/// runtime. A miss is -1, as `myl_core_dict_find` answers for an index-less table.
+fn smallScan(comptime Context: type, c: Context, out: *@import("std").ArrayList(u8), key: SmallKey) Error!void {
+    const a = c.a();
+    try out.appendSlice(a,
+        \\small_table:
+        \\  %hashes_at = getelementptr inbounds i8, ptr %meta, i64 16
+        \\  %hashes = load ptr, ptr %hashes_at, align 8
+        \\  %dead_at = getelementptr inbounds i8, ptr %meta, i64 24
+        \\  %dead = load ptr, ptr %dead_at, align 8
+        \\  %elen_at = getelementptr inbounds i8, ptr %meta, i64 32
+        \\  %elen = load i64, ptr %elen_at, align 8
+        \\  %clean = icmp eq ptr %dead, null
+        \\  br i1 %clean, label %scan, label %slow
+        \\scan:
+        \\  %si = phi i64 [ 0, %small_table ], [ %si_next, %scan_next ]
+        \\  %more = icmp ult i64 %si, %elen
+        \\  br i1 %more, label %scan_hash, label %scan_missing
+        \\scan_hash:
+        \\  %sh_at = getelementptr inbounds i64, ptr %hashes, i64 %si
+        \\  %sh = load i64, ptr %sh_at, align 8
+        \\  %sh_hit = icmp eq i64 %sh, %hash
+        \\  br i1 %sh_hit, label %scan_key, label %scan_next
+        \\scan_key:
+        \\
+    );
+    try out.print(a, "  %soffset = mul i64 %si, {d}\n  %sentry = add i64 %soffset, 32\n" ++
+        "  %sstored_at = getelementptr inbounds i8, ptr %dict, i64 %sentry\n  %sstored = load {s}, ptr %sstored_at, align {d}\n" ++
+        "  %squery = load {s}, ptr %key, align {d}\n", .{ key.stride, key.key_type, key.key_align, key.key_type, key.key_align });
+    if (key.text) {
+        try out.appendSlice(a, "  %ssame = call zeroext i1 @myl_core_str_eq(ptr %sstored, ptr %squery)\n");
+    } else try out.print(a, "  %ssame = icmp eq {s} %sstored, %squery\n", .{key.key_type});
+    try out.appendSlice(a,
+        \\  br i1 %ssame, label %scan_found, label %scan_next
+        \\scan_found:
+        \\  ret i64 %si
+        \\scan_next:
+        \\  %si_next = add nuw i64 %si, 1
+        \\  br label %scan
+        \\scan_missing:
+        \\  ret i64 -1
         \\
     );
 }

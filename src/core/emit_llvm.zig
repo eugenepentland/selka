@@ -722,6 +722,10 @@ const FunctionEmitter = struct {
             self.label = self.exit_labels.items[b];
             self.vectors.block = @intCast(b);
             try self.assertReachable(&bodies[b], @intCast(b));
+            // Verify mode: a caller-derived parameter interval holds on entry (NEW-CORE-FACTS-10).
+            if (b == 0) for (f.insts.items, 0..) |inst, index| {
+                if (inst.op == .param) try self.assertRange(&bodies[b], @fromBackingInt(@as(u32, @intCast(index))), inst);
+            };
             for (block.insts.items) |ref| {
                 const inst = f.inst(ref);
                 if (inst.op == .phi) try self.assertFacts(&bodies[b], ref, inst);

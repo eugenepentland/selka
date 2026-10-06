@@ -60,11 +60,48 @@ uint32_t myl_core_str_hash(const myl_block *text) {
     return folded;
 }
 
+/* Up to 16 bytes: two overlapping loads per side cover every byte without a call. */
+static bool core_text_short_equal(const unsigned char *a, const unsigned char *b, size_t count) {
+    if (count >= 8) {
+        uint64_t first_a, first_b, last_a, last_b;
+        memcpy(&first_a, a, 8); memcpy(&first_b, b, 8);
+        memcpy(&last_a, a + count - 8, 8); memcpy(&last_b, b + count - 8, 8);
+        return !((first_a ^ first_b) | (last_a ^ last_b));
+    }
+    if (count >= 4) {
+        uint32_t first_a, first_b, last_a, last_b;
+        memcpy(&first_a, a, 4); memcpy(&first_b, b, 4);
+        memcpy(&last_a, a + count - 4, 4); memcpy(&last_b, b + count - 4, 4);
+        return !((first_a ^ first_b) | (last_a ^ last_b));
+    }
+    if (count >= 2) {
+        uint16_t first_a, first_b, last_a, last_b;
+        memcpy(&first_a, a, 2); memcpy(&first_b, b, 2);
+        memcpy(&last_a, a + count - 2, 2); memcpy(&last_b, b + count - 2, 2);
+        return !((first_a ^ first_b) | (last_a ^ last_b));
+    }
+    return count == 0 || a[0] == b[0];
+}
+
+/* Equal lengths, then the bytes. Texts of one length that differ usually differ near
+   an end, so a long pair compares its first and last eight bytes before the bulk
+   compare, which a mismatch at the end would otherwise pay for in full (the old
+   runtime's `myl_native_text_equal`). */
 bool myl_core_str_eq(const myl_block *a, const myl_block *b) {
     if (a == b) return true;
     if (a->len != b->len) return false;
     if ((a->kind & b->kind & MYL_TEXT_HASHED) && (uint32_t)a->reserved != (uint32_t)b->reserved) return false;
-    return memcmp((const unsigned char *)a + MYL_HEADER, (const unsigned char *)b + MYL_HEADER, (size_t)a->len) == 0;
+    const size_t count = (size_t)a->len;
+    const unsigned char *left = (const unsigned char *)a + MYL_HEADER, *right = (const unsigned char *)b + MYL_HEADER;
+    if (count <= 16) return core_text_short_equal(left, right, count);
+    if (count > 256) {
+        uint64_t first_a, first_b, last_a, last_b;
+        memcpy(&first_a, left, 8); memcpy(&first_b, right, 8);
+        memcpy(&last_a, left + count - 8, 8); memcpy(&last_b, right + count - 8, 8);
+        if ((first_a ^ first_b) | (last_a ^ last_b)) return false;
+        return memcmp(left + 8, right + 8, count - 16) == 0;
+    }
+    return memcmp(left, right, count) == 0;
 }
 
 uint64_t myl_core_str_chars(const myl_block *text) {
@@ -290,7 +327,11 @@ static int64_t core_text_find_bytes(const myl_block *text, const myl_block *need
         const unsigned char *hit = memchr(data + start, wanted[0], (size_t)(text->len - needle->len - start + 1));
         if (!hit) return -1;
         start = hit - data;
-        if (memcmp(hit + 1, wanted + 1, (size_t)needle->len - 1) == 0) return start;
+        /* The rest of a candidate is short in every search here: a loop that stops at
+           the first difference costs less than a `memcmp` call per candidate. */
+        int64_t same = 1;
+        while (same < needle->len && hit[same] == wanted[same]) ++same;
+        if (same == needle->len) return start;
         ++start;
         if (start > text->len - needle->len) return -1;
     }
@@ -301,12 +342,23 @@ static int64_t core_text_find_bytes(const myl_block *text, const myl_block *need
     return -1;
 }
 
+/* Scalars that start in bytes [from, to): every byte that is not a UTF-8 continuation. */
+static uint64_t core_text_starts(const unsigned char *bytes, uint64_t from, uint64_t to) {
+    uint64_t count = 0;
+    for (uint64_t i = from; i < to; ++i) count += (bytes[i] & 0xc0) != 0x80;
+    return count;
+}
+
+/* The scalar index of a match is counted from the nearer end: a match near the end
+   of a long text is the cached scalar count less the few scalars after it (the old
+   runtime's `index_walk`). */
 int64_t myl_core_str_find(myl_block *text, myl_block *needle) {
     int64_t hit = core_text_find_bytes(text, needle, 0);
     if (hit < 0 || (text->kind & MYL_TEXT_ASCII)) return hit;
-    uint64_t scalars = 0;
-    for (int64_t i = 0; i < hit; ++i) scalars += (block_data(text)[i] & 0xc0) != 0x80;
-    return (int64_t)scalars;
+    const unsigned char *bytes = block_data(text);
+    const uint64_t at = (uint64_t)hit, length = (uint64_t)text->len;
+    if (at <= length - at) return (int64_t)core_text_starts(bytes, 0, at);
+    return (int64_t)(myl_core_str_chars(text) - core_text_starts(bytes, at, length));
 }
 
 bool myl_core_str_contains(myl_block *text, myl_block *needle) { return core_text_find_bytes(text, needle, 0) >= 0; }

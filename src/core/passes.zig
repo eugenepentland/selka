@@ -62,10 +62,20 @@ pub fn run(arena: std.mem.Allocator, module: *ir.Module, mode: Mode) Error!Resul
         .sabotage_length => .length,
         else => .none,
     };
-    const options: facts.Options = .{ .fold = !verify, .sabotage = sabotage };
-    for (module.functions.items, result.known, result.plans) |*function, *slot, *plan| {
+    // A first fact pass with every parameter unknown gives each call site's argument
+    // intervals; `parameterRanges` turns them into the parameter intervals the real
+    // pass starts from. It changes no function.
+    const first = try arena.alloc(?facts.Facts, module.functions.items.len);
+    for (module.functions.items, first) |*function, *slot| {
+        slot.* = null;
         if (function.signature.linkage != .internal) continue;
         result.counts.unswitched += try version.unswitch(arena, function);
+        slot.* = try facts.analyze(arena, function, .{ .fold = !verify, .sabotage = sabotage, .mark = false });
+    }
+    const parameters = try parameterRanges(arena, module, first);
+    for (module.functions.items, result.known, result.plans, parameters) |*function, *slot, *plan, params| {
+        if (function.signature.linkage != .internal) continue;
+        const options: facts.Options = .{ .fold = !verify, .sabotage = sabotage, .params = params };
         var known = try facts.analyze(arena, function, options);
         result.counts.proven += known.proven;
         // A reduction proven only under a trip bound gets a guarded copy; the facts then run again.
@@ -84,6 +94,73 @@ pub fn run(arena: std.mem.Allocator, module: *ir.Module, mode: Mode) Error!Resul
         result.counts.vectorized += @intCast(plan.len);
     }
     return result;
+}
+
+/// Per function, the interval of each parameter over every call that reaches it
+/// (NEW-CORE-FACTS-10), or no intervals (the parameter types' ranges).
+///
+/// A function qualifies when it is internal, no `func_ref` names it (a function value
+/// could be called from anywhere), and every reachable call is in a function the
+/// first pass analysed. Each argument's interval comes from facts computed with that
+/// caller's own parameters unknown, so it holds whatever the caller is passed, and a
+/// recursive call needs no fixed point. An argument with no interval makes its
+/// parameter unknown.
+pub fn parameterRanges(arena: std.mem.Allocator, module: *const ir.Module, first: []const ?facts.Facts) Error![]const []const ?facts.Interval {
+    const count = module.functions.items.len;
+    const out = try arena.alloc([]const ?facts.Interval, count);
+    @memset(out, &.{});
+    const usable = try arena.alloc(bool, count);
+    for (module.functions.items, usable) |function, *flag| flag.* = function.signature.linkage == .internal;
+    const merged = try arena.alloc(?[]?facts.Interval, count);
+    @memset(merged, null);
+    for (module.functions.items) |function| {
+        for (function.insts.items) |inst| {
+            if (inst.op == .func_ref and inst.data < count) usable[@intCast(inst.data)] = false;
+        }
+    }
+    for (module.functions.items, first) |*caller, known| {
+        for (caller.blocks.items, 0..) |block, b| {
+            if (known) |facts_of| if (b >= facts_of.reachable.len or !facts_of.reachable[b]) continue;
+            for (block.insts.items) |ref| {
+                const call = caller.inst(ref);
+                if (call.op != .call) continue;
+                const callee = call.a.index();
+                if (callee >= count or !usable[callee]) continue;
+                try mergeCall(arena, .{ .caller = caller, .known = known, .call = call }, &merged[callee], module.functions.items[callee].signature.params.len);
+            }
+        }
+    }
+    for (out, merged, usable) |*slot, ranges, flag| {
+        if (flag) if (ranges) |known| {
+            slot.* = known;
+        };
+    }
+    return out;
+}
+
+/// One call's contribution to its callee's parameter intervals.
+const CallSite = struct { caller: *const ir.Function, known: ?facts.Facts, call: ir.Inst };
+
+/// Join one call's argument intervals into `merged` (created at the first call seen).
+fn mergeCall(arena: std.mem.Allocator, site: CallSite, merged: *?[]?facts.Interval, arity: usize) Error!void {
+    const arguments = site.caller.operands(site.call.data);
+    if (merged.*) |ranges| {
+        for (ranges, 0..) |*slot, i| {
+            const now = slot.* orelse continue;
+            const next = if (i < arguments.len) argumentRange(site, arguments[i]) else null;
+            slot.* = if (next) |range| facts.Interval.hull(now, range) else null;
+        }
+        return;
+    }
+    const fresh = try arena.alloc(?facts.Interval, arity);
+    for (fresh, 0..) |*slot, i| slot.* = if (i < arguments.len) argumentRange(site, arguments[i]) else null;
+    merged.* = fresh;
+}
+
+/// An argument's interval in its caller, or null when the caller was not analysed.
+fn argumentRange(site: CallSite, argument: ir.Ref) ?facts.Interval {
+    const known = site.known orelse return null;
+    return facts.valueRange(&known, site.caller, argument);
 }
 
 /// Grow the fact tables over the instructions and blocks added since they were

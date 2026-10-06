@@ -52,7 +52,55 @@ test "bounded byte XOR reductions widen octets and preserve the scalar remainder
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const llvm = try @import("test_support.zig").releaseLlvmText(arena.allocator(), octet_reduction);
-    try std.testing.expect(std.mem.indexOf(u8, llvm, "load <16 x i8>") != null);
-    try std.testing.expect(std.mem.indexOf(u8, llvm, "xor <16 x i16>") != null);
+    try std.testing.expect(std.mem.indexOf(u8, llvm, "load <32 x i8>") != null);
+    try std.testing.expect(std.mem.indexOf(u8, llvm, "xor <32 x i8>") != null);
     try std.testing.expect(std.mem.indexOf(u8, llvm, "[ %vc") != null);
+}
+
+const fast_paths =
+    \\def main(out: Stream) -> int:
+    \\    long_a = "".join(["é" for j in range(200)])
+    \\    long_b = "".join(["é" for j in range(199)]) + "ê"
+    \\    long_c = "ê" + "".join(["é" for j in range(199)])
+    \\    long_d = "".join(["é" for j in range(200)])
+    \\    middle_a = "".join(["ab" for j in range(60)])
+    \\    middle_b = "".join(["ab" for j in range(59)]) + "aB"
+    \\    out.print(long_a == long_b, long_a == long_c, long_a == long_d, middle_a == middle_b, middle_a == "".join(["ab" for j in range(60)]))
+    \\    out.print("abcdefghij" == "abcdefghiJ", "abcdefghij" == "Abcdefghij", "abc" == "abc", "ab" == "aB", "é" == "é", "" == "")
+    \\    hay = "".join(["a" for j in range(300)]) + ";café;needle;"
+    \\    front = "né" + "".join(["a" for j in range(300)])
+    \\    out.print(hay.find("needle"), hay.find("é"), hay.find(";c"), hay.find("absent"), hay.find("aa"), front.find("é"), front.find("aaa"), hay.find("a;"))
+    \\    return 0
+    \\
+;
+
+/// Build `fast_paths` with the new core in `mode` and run it; its standard output.
+fn fastPathsOutput(arena: std.mem.Allocator, root: []const u8, mode: []const []const u8) ![]const u8 {
+    const source = try std.fmt.allocPrint(arena, "{s}/fast.my", .{root});
+    const output = try std.fmt.allocPrint(arena, "{s}/fast-{d}", .{ root, mode.len });
+    const cache = try std.fmt.allocPrint(arena, "{s}/cache", .{root});
+    var argv: std.ArrayList([]const u8) = .empty;
+    try argv.appendSlice(arena, &.{ options.core_path, "build", source, "-o", output, "--cache-dir", cache });
+    try argv.appendSlice(arena, mode);
+    const built = try std.process.run(arena, std.testing.io, .{ .argv = argv.items });
+    try std.testing.expect(built.term == .exited and built.term.exited == 0);
+    const ran = try std.process.run(arena, std.testing.io, .{ .argv = &.{output} });
+    try std.testing.expect(ran.term == .exited and ran.term.exited == 0);
+    return ran.stdout;
+}
+
+// spec: NEW-CORE-TEXT-2
+test "equality checks the ends of long equal-length texts first and find counts scalars from the nearer end, as the old core answers" {
+    var state = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer state.deinit();
+    const arena = state.allocator();
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", arena);
+    try directory.dir.writeFile(std.testing.io, .{ .sub_path = "fast.my", .data = fast_paths });
+    // The old core's output for the same program.
+    const expected = "False False True False True\nFalse False True False True True\n306 304 300 -1 0 1 2 299\n";
+    try std.testing.expectEqualStrings(expected, try fastPathsOutput(arena, root, &.{}));
+    try std.testing.expectEqualStrings(expected, try fastPathsOutput(arena, root, &.{"--release"}));
+    try std.testing.expectEqualStrings(expected, try fastPathsOutput(arena, root, &.{ "--release", "--verify-facts" }));
 }
