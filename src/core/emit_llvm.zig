@@ -22,6 +22,7 @@ const emit_text = @import("emit_text.zig");
 const text_builder = @import("build_text.zig");
 const emit_fn = @import("emit_fn.zig");
 const emit_number = @import("emit_number.zig");
+const emit_values = @import("emit_values.zig");
 
 /// A source line and column for a span start.
 pub const Location = struct { line: u32, column: u32 };
@@ -198,6 +199,7 @@ pub fn emitModule(allocator: std.mem.Allocator, module: *const ir.Module, option
     try out.appendSlice(allocator, tbaa_metadata);
     try out.appendSlice(allocator, state.meta.ranges.items);
     try out.appendSlice(allocator, state.layouts.text.items);
+    try emit_values.descriptors(allocator, module, &out);
     try out.appendSlice(allocator, trace_call_attributes);
     if (state.zeros != 0) try out.print(allocator, "@myl.zeros = private constant [{d} x i8] zeroinitializer, align 8\n", .{state.zeros});
     try state.debug.finish(allocator, &out);
@@ -231,6 +233,7 @@ const ModuleState = struct {
     zeros: u32 = 0,
 
     fn declareExtern(self: *ModuleState, function: *const ir.Function) !void {
+        if (try emit_values.adapter(self.allocator, &self.externs, function)) return;
         // Several signatures of one runtime function (`myl_core_list_sort` over lists of different
         // elements) are one declaration.
         const symbol_name = c_abi.symbol(function.name);

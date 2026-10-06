@@ -352,7 +352,7 @@ const callback_in_index =
 ;
 
 // spec-case: NEW-CORE-PLACE-1
-test "an append to a list element is a push onto the element and a list_set of it; a str ordering is refused, and a read through a place a callback rewrites is the captured receiver's" {
+test "nested append and text ordering build and a callback index reads its captured receiver" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const text = try support.irText(arena.allocator(), append_to_element);
@@ -360,8 +360,8 @@ test "an append to a list element is a push onto the element and a list_set of i
     try std.testing.expect(contains(text, "list_push list[i64]"));
     try std.testing.expect(contains(text, "list_set.exact list[list[i64]]"));
     var refusal: build.Refusal = .{};
-    try std.testing.expectError(error.Unsupported, support.buildSource(arena.allocator(), text_ordering, &refusal));
-    try std.testing.expectEqualStrings("operator on an aggregate value", refusal.reason);
+    _ = try support.buildSource(arena.allocator(), text_ordering, &refusal);
+    try std.testing.expectEqualStrings("", refusal.reason);
     // A read through a receiver a callback rewrites the place of sees the receiver as captured.
     const selected = try support.irText(arena.allocator(), callback_in_index);
     try std.testing.expect(contains(selected, "list_get.exact i64 %1"));
@@ -384,12 +384,12 @@ const recursive_equality =
 ;
 
 // spec-case: NEW-CORE-EQ-1
-test "equality of a recursive value is refused instead of expanding forever" {
+test "equality of a recursive value builds without recursively expanding its type" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     var refusal: build.Refusal = .{};
-    try std.testing.expectError(error.Unsupported, support.buildSource(arena.allocator(), recursive_equality, &refusal));
-    try std.testing.expectEqualStrings("equality of a recursive value", refusal.reason);
+    _ = try support.buildSource(arena.allocator(), recursive_equality, &refusal);
+    try std.testing.expectEqualStrings("", refusal.reason);
 }
 
 const converting =
@@ -631,14 +631,14 @@ const changed_mut_field =
 ;
 
 // spec-case: NEW-CORE-MUT-1
-test "interior mut arguments whose ancestors change during later evaluation are precisely refused" {
+test "interior mut arguments capture the leaf and guard publishing after ancestor replacement" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     var refusal: build.Refusal = .{};
-    try std.testing.expectError(error.Unsupported, support.buildSource(arena.allocator(), changed_mut_entry, &refusal));
-    try std.testing.expectEqualStrings("interior mut argument ancestor changed during later argument evaluation", refusal.reason);
-    try std.testing.expectError(error.Unsupported, support.buildSource(arena.allocator(), changed_mut_field, &refusal));
-    try std.testing.expectEqualStrings("interior mut argument ancestor changed during later argument evaluation", refusal.reason);
+    _ = try support.buildSource(arena.allocator(), changed_mut_entry, &refusal);
+    try std.testing.expectEqualStrings("", refusal.reason);
+    _ = try support.buildSource(arena.allocator(), changed_mut_field, &refusal);
+    try std.testing.expectEqualStrings("", refusal.reason);
 }
 
 const changed_mut_root =

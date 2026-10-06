@@ -233,6 +233,7 @@ fn smallScan(comptime Context: type, c: Context, out: *@import("std").ArrayList(
 pub fn keyDefinitions(comptime Context: type, c: Context, out: *@import("std").ArrayList(u8), ty: ir.Type, symbol: []const u8) Error!void {
     const m = c.module();
     const a = c.a();
+    if (@import("emit_values.zig").dynamic(m.*, ty)) return @import("emit_values.zig").key(Context, c, out, ty, symbol);
     switch (m.kind(ty) orelse .box) {
         .record => for (m.compound(ty).record, 0..) |field, i| try keyDefinitions(Context, c, out, field, try childSymbol(Context, c, symbol, i)),
         .@"union" => for (m.compound(ty).@"union", 0..) |field, i| try keyDefinitions(Context, c, out, field, try childSymbol(Context, c, symbol, i)),

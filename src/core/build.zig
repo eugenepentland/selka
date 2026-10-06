@@ -20,6 +20,7 @@ const fuse_text = @import("fuse_text.zig");
 const build_cap = @import("build_cap.zig");
 const build_bytes = @import("build_bytes.zig");
 const build_fn = @import("build_fn.zig");
+const build_values = @import("build_values.zig");
 
 /// Refusal reasons several constructs share.
 const refuse_payload = "match payload";
@@ -247,7 +248,7 @@ const ModuleBuilder = struct {
     }
 
     /// The IR index of runtime `symbol`, declared with this linkage and signature on first use.
-    fn runtimeFunction(self: *ModuleBuilder, symbol: []const u8, params: []const ir.Type, ret: ir.Type, linkage: ir.Linkage) Error!u32 {
+    pub fn runtimeFunction(self: *ModuleBuilder, symbol: []const u8, params: []const ir.Type, ret: ir.Type, linkage: ir.Linkage) Error!u32 {
         // One declaration per symbol and signature: a runtime function over lists of several element
         // types has a Core IR signature for each, which are one `ptr` function to LLVM.
         for (self.module.functions.items, 0..) |function, index| {
@@ -327,13 +328,13 @@ const LoopTargets = struct { id: usize, latch: ir.BlockId, exit: ir.BlockId };
 
 /// One step from a value to a part of it: a record field, a list element by index, or the payload
 /// of one case of a union (the narrowing `if x is None: ...` makes of an `Option`).
-const Step = union(enum) { field: u32, element: ir.Ref, payload: u32 };
+const Step = union(enum) { field: u32, element: ir.Ref, payload: u32, mapping: ir.Ref };
 
 /// Where a value lives: a local and a path of steps from it, and how many times the local had
 /// been written when the place was named. A write to a hidden receiver (`s.items.append(v)`,
 /// `xs[i][j] = v`) rebuilds the path and stores the new root back, unless the root was written
 /// since (`writableReceiverOf`).
-const Place = struct { root: u32, steps: []const Step, root_version: u32 = 0, through_view: bool = false };
+const Place = struct { root: u32, steps: []const Step, root_version: u32 = 0, through_view: bool = false, snapshot: ir.Ref = .none, publish: ir.Ref = .none };
 
 const FnBuilder = struct {
     /// Source-place provenance shared with feature builders; no runtime view object.
@@ -924,7 +925,7 @@ const FnBuilder = struct {
         const steps = try self.allocator().alloc(Step, place.steps.len + 1);
         @memcpy(steps[0..place.steps.len], place.steps);
         steps[place.steps.len] = step;
-        return .{ .root = place.root, .steps = steps, .root_version = place.root_version, .through_view = place.through_view };
+        return .{ .root = place.root, .steps = steps, .root_version = place.root_version, .through_view = place.through_view, .snapshot = place.snapshot };
     }
 
     /// Field `index` of record `base`, out of its box when the field is boxed.
@@ -969,6 +970,11 @@ const FnBuilder = struct {
                 return self.emit(.{ .op = .list_get, .ty = self.mb.module.compound(list_type).list, .a = base, .b = index, .check = .exact, .span = span });
             },
             .payload => |tag| return self.payloadOf(base, tag, span),
+            .mapping => |key_ref| {
+                const index = try build_dict.find(@TypeOf(self), self, base, key_ref, span);
+                try build_dict.requirePresent(@TypeOf(self), self, index, span);
+                return self.emit(.{ .op = .dict_entry_value, .ty = self.mb.module.compound(self.typeOfRef(base)).dict.value, .a = base, .b = index, .span = span });
+            },
         }
     }
 
@@ -978,6 +984,7 @@ const FnBuilder = struct {
             .field => |index| return self.fieldSet(base, index, value, span),
             .element => |index| return if (self.mb.module.kind(self.typeOfRef(base)) == .array) self.arraySet(base, index, value, span) else self.listSet(base, index, value, span),
             .payload => |tag| return self.payloadSet(base, tag, value, span),
+            .mapping => |key_ref| return build_dict.put(@TypeOf(self), self, base, key_ref, value, span),
         }
     }
 
@@ -1046,7 +1053,10 @@ const FnBuilder = struct {
             const dict = try self.readPlace(source, span);
             return self.viewValue(self.ssa.types.items[self.local(slot)], dict, span);
         };
-        if (out) |place| place.* = try self.placeOfLocal(slot);
+        if (out) |place| {
+            place.* = try self.placeOfLocal(slot);
+            if (place.*.?.snapshot == .none) place.*.?.snapshot = try self.read(place.*.?.root, self.current.?);
+        }
         return self.read(self.local(slot), self.current.?);
     }
 
@@ -1192,6 +1202,7 @@ const FnBuilder = struct {
                 if (self.mb.module.kind(ty) == .dict) return build_dict.literal(@TypeOf(self), self, ty, items, span);
                 if (ty == .bytes) return build_text.literal(@TypeOf(self), self, items, span);
                 if (ty == .str) return self.stringConstant(items, span);
+                if (self.mb.module.kind(ty) == .list) return build_values.literal(@TypeOf(self), self, ty, items, span);
                 if (self.mb.module.kind(ty) != .array) return self.mb.refuse("array", span);
                 const values = try self.allocator().alloc(ir.Ref, items.len);
                 for (items, values) |item, *value| value.* = try self.expression(item);
@@ -1444,6 +1455,7 @@ const FnBuilder = struct {
             }
         }
         const ty = self.typeOfRef(left);
+        if (op == .mul and (repeatable(ty) or repeatable(self.typeOfRef(right)))) return build_values.repeat(@TypeOf(self), self, left, right, span);
         if (ty == .str or ty == .bytes or ty.isCompound()) return self.aggregateCompare(op, left, right, span);
         const is_float = ty == .f64;
         const Shape = struct { op: ir.Op, check: ir.Check = .none, predicate: ?ir.Predicate = null };
@@ -1493,6 +1505,10 @@ const FnBuilder = struct {
         });
     }
 
+    fn repeatable(ty: ir.Type) bool {
+        return ty == .str or ty == .bytes or ty.isCompound();
+    }
+
     /// The integer literal `node` as a constant of integer type `ty`.
     fn literalAs(self: *FnBuilder, node: typed.NodeId, ty: ir.Type) Error!ir.Ref {
         if (ty.integer() == null) return self.expression(node);
@@ -1500,13 +1516,29 @@ const FnBuilder = struct {
     }
 
     /// `==` and `!=` of two records, unions (enums, `Option`, `Result`) or lists: structural,
-    /// never a pointer comparison. A `str` compares by bytes through the runtime; a recursive value is refused.
+    /// never a pointer comparison. Text compares through the runtime; recursive values use a worklist.
     fn aggregateCompare(self: *FnBuilder, op: typed.BinaryOp, left: ir.Ref, right: ir.Ref, span: u32) Error!ir.Ref {
         if (op == .add and self.typeOfRef(left) == .str) {
             if (self.function.resolve(left) == self.function.resolve(right)) return self.runtimeCall("myl_core_str_concat", &.{ .str, .str }, .str, &.{ left, right }, span);
             return self.emit(.{ .op = .str_append, .ty = .str, .a = left, .b = right, .span = span });
         }
         if (op == .add and self.typeOfRef(left) == .bytes) return self.runtimeCall("myl_core_bytes_concat", &.{ .bytes, .bytes }, .bytes, &.{ left, right }, span);
+        const ty = self.typeOfRef(left);
+        const ordering = switch (op) {
+            .lt, .le, .gt, .ge => true,
+            else => false,
+        };
+        if ((ty == .str or ty == .bytes) and ordering) {
+            const order = try self.runtimeCall("myl_core_octets_compare", &.{ ty, ty }, .i64, &.{ left, right }, span);
+            const predicate: ir.Predicate = switch (op) {
+                .lt => .lt,
+                .le => .le,
+                .gt => .gt,
+                else => .ge,
+            };
+            return self.emit(.{ .op = .cmp, .ty = .bool, .a = order, .b = try self.constant(.i64, 0), .data = @backingInt(predicate), .span = span });
+        }
+        if (op == .add and self.mb.module.kind(ty) == .list) return build_values.concat(@TypeOf(self), self, left, right, span);
         if (op != .eq and op != .ne) return self.mb.refuse(if (op == .add) "concatenation" else "operator on an aggregate value", span);
         const same = try self.equal(left, right, span);
         if (self.current == null or op == .eq) return same;
@@ -1539,7 +1571,7 @@ const FnBuilder = struct {
             return self.runtimeCall(flags.str_eq_symbol, &.{ ty, ty }, .bool, &.{ a, b }, span);
         }
         // A recursive value would need a function that calls itself, not an expansion in place.
-        if (self.recursive(ty, 0)) return self.mb.refuse("equality of a recursive value", span);
+        if (self.recursive(ty, 0)) return build_values.equal(@TypeOf(self), self, a, b, span);
         if (ty == .f64) return self.emit(.{ .op = .fcmp, .ty = .bool, .a = a, .b = b, .data = @backingInt(ir.Predicate.eq), .span = span });
         if (ty.integer() != null or ty == .bool) return self.emit(.{ .op = .cmp, .ty = .bool, .a = a, .b = b, .data = @backingInt(ir.Predicate.eq), .span = span });
         switch (m.kind(ty) orelse return self.mb.refuse(refuse_equality, span)) {
@@ -1766,12 +1798,6 @@ const FnBuilder = struct {
     fn callTarget(self: *FnBuilder, target: ir.Inst, argument_nodes: []const typed.NodeId, contract: CallContract, span: u32) Error!ir.Ref {
         const mutated = contract.mutated;
         if (contract.evaluation) |body| {
-            // A `mut` argument the checker could not leave as the caller's variable is a temporary,
-            // which the callee's final value would be written back to instead of the place.
-            for (mutated) |position| {
-                const argument = self.nodeOf(argument_nodes[position]);
-                if (argument.data == .local and std.mem.eql(u8, self.checked.scope.locals[@backingInt(argument.data.local)].name, "<argument>")) return self.mb.refuse("keyword call with a mut argument that is not a local", span);
-            }
             try self.statement(body);
             if (self.current == null) return .none;
         }
@@ -1787,12 +1813,17 @@ const FnBuilder = struct {
             if (slot != null and self.isView(self.nodeOf(argument).ty)) return self.mb.refuse("mut live dictionary view argument", span);
             var place: ?Place = null;
             value.* = try self.expressionPlace(argument, if (slot != null) &place else null);
-            if (slot) |at| places[at] = place orelse return self.mb.refuse("mut argument that is not a place", span);
+            if (slot) |at| {
+                places[at] = place orelse return self.mb.refuse("mut argument that is not a place", span);
+                if (places[at].snapshot == .none) places[at].snapshot = try self.read(places[at].root, self.current.?);
+            }
         }
         if (self.current == null) return .none;
-        for (mutated, places) |position, place| {
-            if (place.steps.len > 0 and self.version(place.root) != place.root_version) return self.mb.refuse("interior mut argument ancestor changed during later argument evaluation", span);
-            values[position] = try self.readPlace(place, span);
+        for (mutated, places) |position, *place| {
+            if (place.steps.len > 0 and self.version(place.root) != place.root_version) {
+                if (!self.mb.module.isBlock(self.typeOfRef(values[position]))) return self.mb.refuse("changed interior mut argument without a block identity", span);
+                place.* = try self.capturedPlace(place.*, values[position], span);
+            } else values[position] = try self.readPlace(place.*, span);
         }
         // A `unit` argument is evaluated for its effects and not passed.
         for (values) |value| if (value != .none and self.typeOfRef(value) != .void) try arguments.append(self.allocator(), value);
@@ -1808,6 +1839,65 @@ const FnBuilder = struct {
         return self.writeBack(result, declared != .void, places, span);
     }
 
+    /// A later argument changed an ancestor: pass the selected value, and publish its
+    /// final value only if the same leaf is still reachable. Missing paths are orphaned.
+    fn capturedPlace(self: *FnBuilder, place: Place, selected: ir.Ref, span: u32) Error!Place {
+        const result = try self.synthetic(.bool);
+        try self.write(result, self.current.?, try self.constant(.bool, 0));
+        const join = try self.newBlock();
+        const steps = try self.allocator().dupe(Step, place.steps);
+        var original = place.snapshot;
+        var current = try self.read(place.root, self.current.?);
+        for (steps) |*step| {
+            switch (step.*) {
+                .element => |index| {
+                    const kind = self.mb.module.kind(self.typeOfRef(current));
+                    if (kind == .dict) {
+                        const key_type = self.mb.module.compound(self.typeOfRef(original)).dict.key;
+                        const key_ref = try self.emit(.{ .op = .dict_entry_key, .ty = key_type, .a = original, .b = index, .span = span });
+                        const probe = try build_dict.find(@TypeOf(self), self, current, key_ref, span);
+                        const present = try self.emit(.{ .op = .cmp, .ty = .bool, .a = probe, .b = try self.constant(.i64, 0), .data = @backingInt(ir.Predicate.ge), .span = span });
+                        try self.requirePath(present, join, span);
+                        original = try self.stepGet(original, step.*, span);
+                        step.* = .{ .mapping = key_ref };
+                        current = try self.emit(.{ .op = .dict_entry_value, .ty = self.mb.module.compound(self.typeOfRef(current)).dict.value, .a = current, .b = probe, .span = span });
+                        continue;
+                    }
+                    if (kind == .list) {
+                        const length = try self.emit(.{ .op = .list_len, .ty = .u64, .a = current, .span = span });
+                        const unsigned = if (self.typeOfRef(index) == .u64) index else try self.emit(.{ .op = .convert, .ty = .u64, .a = index, .span = span });
+                        const present = try self.emit(.{ .op = .cmp, .ty = .bool, .a = unsigned, .b = length, .data = @backingInt(ir.Predicate.lt), .span = span });
+                        try self.requirePath(present, join, span);
+                    }
+                },
+                .payload => |tag| {
+                    const actual = try self.emit(.{ .op = .union_tag, .ty = .u32, .a = current, .span = span });
+                    const present = try self.emit(.{ .op = .cmp, .ty = .bool, .a = actual, .b = try self.constant(.u32, tag), .data = @backingInt(ir.Predicate.eq), .span = span });
+                    try self.requirePath(present, join, span);
+                },
+                .field, .mapping => {},
+            }
+            original = try self.stepGet(original, step.*, span);
+            current = try self.stepGet(current, step.*, span);
+        }
+        const same = try self.runtimeCall("myl_core_same_block", &.{ self.typeOfRef(selected), self.typeOfRef(current) }, .bool, &.{ selected, current }, span);
+        try self.write(result, self.current.?, same);
+        try self.jump(join);
+        try self.seal(join);
+        self.enter(join);
+        var captured = place;
+        captured.steps = steps;
+        captured.publish = try self.read(result, join);
+        return captured;
+    }
+
+    fn requirePath(self: *FnBuilder, present: ir.Ref, orphan: ir.BlockId, span: u32) Error!void {
+        const next = try self.newBlock();
+        try self.branch(present, next, orphan, span);
+        try self.seal(next);
+        self.current = next;
+    }
+
     /// A call to a function with `mut` parameters returned `result`: its own value (unless
     /// `unit`) and each `mut` parameter's final value. Store those into the caller's places.
     fn writeBack(self: *FnBuilder, result: ir.Ref, has_value: bool, places: []const Place, span: u32) Error!ir.Ref {
@@ -1820,7 +1910,19 @@ const FnBuilder = struct {
         const first: usize = if (has_value) 1 else 0;
         for (places, 0..) |place, k| {
             const part = if (wrapped) try self.emit(.{ .op = .record_get, .ty = parts[first + k], .a = result, .data = first + k, .span = span }) else result;
-            _ = try self.storePlace(place, part, span);
+            if (place.publish == .none) {
+                _ = try self.storePlace(place, part, span);
+            } else {
+                const write_block = try self.newBlock();
+                const join = try self.newBlock();
+                try self.branch(place.publish, write_block, join, span);
+                try self.seal(write_block);
+                self.current = write_block;
+                _ = try self.storePlace(place, part, span);
+                try self.jump(join);
+                try self.seal(join);
+                self.enter(join);
+            }
         }
         return if (has_value) value else .none;
     }
@@ -1830,6 +1932,11 @@ const FnBuilder = struct {
         const owner = operation.owner;
         const argument_nodes = operation.arguments;
         const receiver_type = self.ssa.types.items[self.local(owner)];
+        if (kind == .float_round) {
+            const value = try self.expression(argument_nodes[0]);
+            const digits = try self.expression(argument_nodes[1]);
+            return self.runtimeCall("myl_core_round_float", &.{ .f64, .i64 }, .f64, &.{ value, digits }, span);
+        }
         if (kind == .iteration_check) return self.iterationCheck(operation, span);
         if (receiver_type == .str or receiver_type == .bytes) return build_text.operation(@TypeOf(self), self, operation, ty, span);
         if (self.mb.module.kind(receiver_type) == .dict and kind != .iteration_check) {
@@ -1964,7 +2071,7 @@ const FnBuilder = struct {
         const ty = self.typeOfRef(value);
         if (ty == .str) return value;
         if (ty == .bool) return self.runtimeCall(flags.str_from_bool_symbol, &.{.bool}, .str, &.{value}, span);
-        const info = ty.integer() orelse return self.mb.refuse("text of a non-integer value", span);
+        const info = ty.integer() orelse return build_values.render(*FnBuilder, self, value, span);
         const wide: ir.Type = if (info.signed) .i64 else .u64;
         const operand = if (ty == wide) value else try self.emit(.{ .op = .convert, .ty = wide, .a = value, .span = span });
         return self.runtimeCall(if (info.signed) flags.str_from_i64_symbol else flags.str_from_u64_symbol, &.{wide}, .str, &.{operand}, span);
@@ -2007,8 +2114,8 @@ const FnBuilder = struct {
         for (print.arguments) |argument| {
             const value = try self.expression(argument);
             const ty = self.function.inst(value).ty;
-            if (ty.integer() == null and ty != .bool and ty != .str) return self.mb.refuse("print argument type", span);
-            try operands.append(self.allocator(), value);
+            const printable = if (ty.integer() == null and ty != .bool and ty != .str) try self.textOf(value, span) else value;
+            try operands.append(self.allocator(), printable);
         }
         if (self.current == null) return .none;
         _ = try self.emit(.{ .op = .print, .ty = .void, .data = try self.extraSlice(operands.items), .span = span });
