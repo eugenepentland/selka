@@ -234,7 +234,7 @@ fn sliceCopy(comptime Context: type, b: Context, source: ir.Ref, plan: Slice, sp
 fn compose(comptime Context: type, b: Context, target: ir.Ref, source: ir.Ref, reverse: bool, span: u32) Error!ir.Ref {
     const ty = b.typeOfRef(target);
     const element = b.module().compound(ty).list;
-    const length = try b.emit(.{ .op = .list_len, .ty = .u64, .a = source, .span = span });
+    const count = try b.emit(.{ .op = .list_len, .ty = .u64, .a = source, .span = span });
     const list_slot = try b.synthetic(ty);
     const index_slot = try b.synthetic(.u64);
     try b.write(list_slot, b.current.?, target);
@@ -245,11 +245,11 @@ fn compose(comptime Context: type, b: Context, target: ir.Ref, source: ir.Ref, r
     try b.jump(header);
     b.enter(header);
     const index = try b.read(index_slot, header);
-    const more = try b.emit(.{ .op = .cmp, .ty = .bool, .a = index, .b = length, .data = @backingInt(ir.Predicate.lt), .span = span });
+    const more = try b.emit(.{ .op = .cmp, .ty = .bool, .a = index, .b = count, .data = @backingInt(ir.Predicate.lt), .span = span });
     try b.branch(more, body, exit, span);
     try b.seal(body);
     b.enter(body);
-    const selected = if (reverse) try b.emit(.{ .op = .sub, .ty = .u64, .a = try b.emit(.{ .op = .sub, .ty = .u64, .a = length, .b = try b.constant(.u64, 1), .span = span }), .b = index, .span = span }) else index;
+    const selected = if (reverse) try b.emit(.{ .op = .sub, .ty = .u64, .a = try b.emit(.{ .op = .sub, .ty = .u64, .a = count, .b = try b.constant(.u64, 1), .span = span }), .b = index, .span = span }) else index;
     const value = if (element == .void) try b.emit(.{ .op = .undef, .ty = .void }) else try b.emit(.{ .op = .list_get, .ty = element, .a = source, .b = selected, .check = .exact, .span = span });
     const pushed = try b.emit(.{ .op = .list_push, .ty = ty, .a = try b.read(list_slot, body), .b = value, .span = span });
     try b.write(list_slot, body, pushed);
