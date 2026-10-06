@@ -258,7 +258,11 @@ uint64_t myl_core_values_hash(const core_value_shape *root, const void *at) {
 
 bool myl_core_same_block(const myl_block *left, const myl_block *right) { return left == right; }
 
-/* The old print/str spelling from io_render.zig. Depth is bounded at 24, and
+/* The old print/str spelling from io_render.zig and native_render.zig.
+ * Source rendering descriptors retain unit payload presence in union offsets,
+ * dictionary/set identity in aux and domain names in kind 11. Their child sizes
+ * remain physical strides, including one-byte unit placeholders.
+ * Depth is bounded at 24, and
  * transparent boxes do not consume depth. The graph traversal above remains
  * iterative for equality/hashing, where no rendering depth cap applies. */
 typedef struct { char *data; size_t count, capacity; } core_render_buffer;
@@ -348,7 +352,7 @@ static void value_render(core_render_buffer *output, const core_value_shape *sha
         uint64_t tag = value_tag(shape, at);
         if (tag >= shape->count || !shape->names) abort();
         value_render_text(output, shape->names[tag]);
-        if (shape->children[tag]->kind != 0) {
+        if (shape->offsets ? shape->offsets[tag] != 0 : shape->children[tag]->kind != 0) {
             value_render_text(output, "(");
             value_render(output, shape->children[tag], value_payload(shape, at), depth + 1);
             value_render_text(output, ")");
@@ -376,7 +380,7 @@ static void value_render(core_render_buffer *output, const core_value_shape *sha
     }
     case 9: {
         const myl_block *dict = value_block(at);
-        bool set = shape->children[1]->kind == 0;
+        bool set = shape->aux ? shape->aux == 1 : shape->children[1]->kind == 0;
         if (set && !dict->len) { value_render_text(output, "set()"); break; }
         core_dict_meta *meta = dict_meta(dict);
         value_render_text(output, "{");
@@ -395,6 +399,12 @@ static void value_render(core_render_buffer *output, const core_value_shape *sha
         value_render_text(output, "}");
         break;
     }
+    case 11:
+        value_render_text(output, shape->names[0]);
+        value_render_text(output, "(");
+        value_render(output, shape->children[0], at, depth + 1);
+        value_render_text(output, ")");
+        break;
     default: abort();
     }
 }

@@ -169,3 +169,19 @@ myl_core_parsed_int myl_core_parse_int_range(myl_block *source, int64_t start, i
     result.tag = core_parse_int_range(source, start, end, &result.value);
     return result;
 }
+
+/* Width-specific saturation uses a wider intermediate, including unsigned 64-bit
+   multiplication whose full product exceeds signed 128-bit range. */
+uint64_t myl_core_saturating_integer(uint64_t left, uint64_t right, uint32_t width, uint32_t mode) {
+    if (mode & 1) {
+        /* The caller sign-extends signed operands before the bit-preserving ABI. */
+        __int128 a = (int64_t)left, b = (int64_t)right;
+        __int128 value = (mode & 2) ? a * b : a - b;
+        __int128 upper = ((__int128)1 << (width - 1)) - 1, lower = -upper - 1;
+        return (uint64_t)(value > upper ? upper : value < lower ? lower : value);
+    }
+    uint64_t upper = width == 64 ? UINT64_MAX : (UINT64_C(1) << width) - 1;
+    if (!(mode & 2)) return left < right ? 0 : left - right;
+    __uint128_t product = (__uint128_t)left * right;
+    return product > upper ? upper : (uint64_t)product;
+}

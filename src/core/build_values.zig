@@ -2,6 +2,7 @@
 const std = @import("std");
 const ir = @import("ir.zig");
 const typed = @import("mylang").typed;
+const build_render = @import("build_render.zig");
 /// Allocation or an unsupported representation stops this stage.
 pub const Error = error{ OutOfMemory, Unsupported };
 
@@ -9,8 +10,9 @@ pub const Error = error{ OutOfMemory, Unsupported };
 pub fn literal(comptime Context: type, b: Context, ty: ir.Type, items: []const typed.NodeId, span: u32) Error!ir.Ref {
     var result = try b.emit(.{ .op = .list_new, .ty = ty, .a = try b.constant(.u64, @intCast(items.len)), .span = span });
     for (items) |item| {
-        const value = try b.expression(item);
+        var value = try b.expression(item);
         if (b.current == null) return .none;
+        if (value == .none) value = try b.constant(.bool, 0);
         result = try b.emit(.{ .op = .list_push, .ty = ty, .a = result, .b = value, .span = span });
     }
     return result;
@@ -74,7 +76,7 @@ pub fn contains(comptime Context: type, b: Context, source: ir.Ref, needle: ir.R
     try b.branch(more, body, exit, span);
     try b.seal(body);
     b.enter(body);
-    const same = if (element == .void) try b.constant(.bool, 1) else try b.equal(try b.emit(.{ .op = .list_get, .ty = element, .a = source, .b = index, .check = .exact, .span = span }), needle, span);
+    const same = if (needle == .none or element == .void) try b.constant(.bool, 1) else try b.equal(try b.emit(.{ .op = .list_get, .ty = element, .a = source, .b = index, .check = .exact, .span = span }), needle, span);
     try b.write(result, b.current.?, same);
     try b.branch(same, exit, next, span);
     try b.seal(next);
@@ -135,69 +137,7 @@ pub fn equal(comptime Context: type, b: Context, left: ir.Ref, right: ir.Ref, sp
     return b.runtimeCall(symbol, &.{ box, box }, .bool, &.{ l, r }, span);
 }
 
-/// Render an aggregate through its concrete descriptor, preserving nominal names.
-pub fn render(comptime Context: type, b: Context, value: ir.Ref, span: u32) Error!ir.Ref {
-    const ty = b.typeOfRef(value);
-    if (ty == .void) return b.runtimeCall("myl_core_none_text", &.{}, .str, &.{}, span);
-    if (ty == .f64) _ = try b.mb.runtimeFunction("myl_core_str_from_f64", &.{.f64}, .str, .extern_c);
-    const box = try b.mb.module.intern(b.allocator(), .{ .box = ty });
-    try renderNames(Context, b);
-    const held = try b.emit(.{ .op = .box_make, .ty = box, .a = value, .span = span });
-    const symbol = try std.fmt.allocPrint(b.allocator(), "myl_core_render_{d}", .{@backingInt(ty)});
-    // Nested float rendering links the exact Zig formatter. Its weak C reference
-    // lets programs with integer-only aggregates retain their existing cold build.
-    for (b.mb.module.compounds.items) |shape| {
-        const fields: []const ir.Type = switch (shape) {
-            .record => |fields| fields,
-            .@"union" => |fields| fields,
-            .list, .box => |field| &.{field},
-            .array => |array| &.{array.elem},
-            .dict => |dict| &.{ dict.key, dict.value },
-            else => &.{},
-        };
-        for (fields) |field| if (field == .f64) {
-            _ = try b.mb.runtimeFunction("myl_core_str_from_f64", &.{.f64}, .str, .extern_c);
-            break;
-        };
-    }
-    return b.runtimeCall(symbol, &.{box}, .str, &.{held}, span);
-}
-
-fn renderNames(comptime Context: type, b: Context) Error!void {
-    var types = b.mb.types.iterator();
-    while (types.next()) |entry| {
-        const record = b.mb.input.program.records[entry.key_ptr.recordIndex()];
-        const prefix = try std.fmt.allocPrint(b.allocator(), "\x00myl.core.render.{d}|", .{@backingInt(entry.value_ptr.*)});
-        var exists = false;
-        for (b.mb.module.strings.items) |text| if (std.mem.startsWith(u8, text, prefix)) {
-            exists = true;
-            break;
-        };
-        if (exists) continue;
-        var names: std.ArrayList(u8) = .empty;
-        try names.appendSlice(b.allocator(), prefix);
-        if (record.shape.variants) |variants| {
-            try names.appendSlice(b.allocator(), "U|");
-            for (variants.cases) |case| {
-                const prelude_case = variants.fallible or std.mem.eql(u8, case.name, "some") or std.mem.eql(u8, case.name, "none");
-                const spelling = if (prelude_case) canonical(case.name) else try std.fmt.allocPrint(b.allocator(), "{s}.{s}", .{ shortName(record.name), case.name });
-                try names.print(b.allocator(), "{s}|", .{spelling});
-            }
-        } else {
-            try names.print(b.allocator(), "{s}|{s}|", .{ if (record.shape.tuple) "T" else "R", shortName(record.name) });
-            for (record.fields) |field| try names.print(b.allocator(), "{s}|", .{field.name});
-        }
-        try b.mb.module.strings.append(b.allocator(), try names.toOwnedSlice(b.allocator()));
-    }
-}
-
-fn shortName(name: []const u8) []const u8 {
-    return if (std.mem.lastIndexOf(u8, name, "::")) |at| name[at + 2 ..] else name;
-}
-
-fn canonical(name: []const u8) []const u8 {
-    inline for (.{ "ok", "err", "some", "none" }, .{ "Ok", "Err", "Some", "None" }) |source, spelling| {
-        if (std.mem.eql(u8, name, source)) return spelling;
-    }
-    return name;
+/// Render with the checked source schema, including information erased by the value IR.
+pub fn render(comptime Context: type, b: Context, value: ir.Ref, source: typed.Type, span: u32) Error!ir.Ref {
+    return build_render.render(Context, b, value, source, span);
 }
