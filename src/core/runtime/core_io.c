@@ -983,7 +983,7 @@ typedef struct { unsigned family,rights;myl_block *provider,*parent,*scope; } Co
 typedef struct { unsigned family,test;int64_t value;MemoryFs *memory;myl_block *pairs;CoreIoResourceProvider adapter; } CoreIoState;
 typedef struct CoreIoResource { myl_block *authority;uint64_t handle;unsigned family,rights,open,text;struct CoreIoResource *previous,*next;myl_block *block; } CoreIoResource;
 static CoreIoResource *core_io_tail;
-static int64_t core_io_open_count;
+static int64_t core_io_open_count;static unsigned core_io_family_open[2];
 static CoreIoScoped core_io_real;
 static int core_io_initialized,core_io_restricted,core_io_clock,core_io_entropy,core_io_environment,core_io_host;
 static char *core_io_options;
@@ -1016,7 +1016,7 @@ static void core_io_copy_free(unsigned char *bytes){CoreIoScratch **at=&core_io_
 static void core_io_unlink(CoreIoResource *resource) {
     if(resource->previous)resource->previous->next=resource->next;
     if(resource->next)resource->next->previous=resource->previous;else core_io_tail=resource->previous;
-    resource->previous=resource->next=NULL;--core_io_open_count;
+    resource->previous=resource->next=NULL;--core_io_open_count;--core_io_family_open[resource->family-2];
 }
 static void core_io_close(CoreIoResource *resource) {
     if(!resource->open)return;
@@ -1025,7 +1025,7 @@ static void core_io_close(CoreIoResource *resource) {
 }
 static int64_t core_io_live_handles(void){return core_io_open_count;}
 static void core_io_cleanup(void) {
-    while(core_io_tail)core_io_close(core_io_tail);
+    for(unsigned family=3;family>=2;--family){CoreIoResource *resource=core_io_tail;while(resource){CoreIoResource *previous=resource->previous;if(resource->family==family)core_io_close(resource);resource=previous;}}
     while(core_io_scratch_head){CoreIoScratch *copy=core_io_scratch_head;core_io_scratch_head=copy->next;free(copy);}
     if(core_io_initialized){core_io_scoped_close(&core_io_real);core_io_initialized=0;}
     free(core_io_options);core_io_options=NULL;core_host_cleanup();
@@ -1089,7 +1089,7 @@ void myl_core_host_check(int64_t token){core_io_initialize();if(token!=-6||!core
 myl_block *myl_core_stand_in(uint32_t family,int64_t value){myl_block *state=core_io_provider(family,1,value,NULL);myl_block *cap=core_io_cap(family,7,state,NULL,NULL);myl_core_release(state);return cap;}
 myl_block *myl_core_environment_fixed(myl_block *pairs){if(!core_io_memory_valid_pairs(block_data(pairs),(size_t)pairs->len))core_io_fail("R_ENVIRONMENT");myl_block *state=core_io_provider(4,1,0,pairs);myl_block *cap=core_io_cap(4,7,state,NULL,NULL);myl_core_release(state);return cap;}
 int64_t myl_core_clock_advance(myl_block *clock,int64_t delta){CoreIoState *state=core_io_state(clock);if(state->family!=0)core_io_fail("InvalidCapability");if(!state->test)return 1;if((delta>0&&state->value>INT64_MAX-delta)||(delta<0&&state->value<INT64_MIN-delta))return 2;state->value+=delta;return 0;}
-myl_block *myl_core_external_read(myl_block *cap,uint32_t family){CoreIoState *state=core_io_state(cap);if(state->family!=family||family>1)core_io_fail("InvalidCapability");uint64_t value=0;int status=0;if(family==0){if(state->test)value=(uint64_t)state->value;else if(core_io_embedding){CoreIoClockResult result=core_io_native.clock_now(core_io_native.clock_context);status=(int)result.status;value=(uint64_t)result.value;}else{struct timespec now={0};status=clock_gettime(CLOCK_REALTIME,&now)?3:0;value=(uint64_t)now.tv_sec*1000000000+(uint64_t)now.tv_nsec;}}else if(!state->test&&core_io_embedding){CoreIoRandomResult result=core_io_native.random_u64(core_io_native.random_context);status=(int)result.status;value=result.value;}else{state->value=(int64_t)((uint64_t)state->value+UINT64_C(0x9e3779b97f4a7c15));value=(uint64_t)state->value;value=(value^(value>>30))*UINT64_C(0xbf58476d1ce4e5b9);value=(value^(value>>27))*UINT64_C(0x94d049bb133111eb);value^=value>>31;}if(status==4)out_of_memory();if(status<0||status>3)core_io_fail("InvalidProviderResult");return core_io_result(status,status?0:value,NULL,0);}
+myl_block *myl_core_external_read(myl_block *cap,uint32_t family){CoreIoState *state=core_io_state(cap);if(state->family!=family||family>1)core_io_fail("InvalidCapability");uint64_t value=0;int status=0;if(family==0){if(state->test)value=(uint64_t)state->value;else if(core_io_embedding){CoreIoClockResult result=core_io_native.clock_now(core_io_native.clock_context);status=(int)result.status;value=(uint64_t)result.value;}else{struct timespec now={0};status=clock_gettime(CLOCK_REALTIME,&now)||now.tv_sec>(INT64_MAX-now.tv_nsec)/1000000000?3:0;value=status?0:(uint64_t)now.tv_sec*1000000000+(uint64_t)now.tv_nsec;}}else if(!state->test&&core_io_embedding){CoreIoRandomResult result=core_io_native.random_u64(core_io_native.random_context);status=(int)result.status;value=result.value;}else{state->value=(int64_t)((uint64_t)state->value+UINT64_C(0x9e3779b97f4a7c15));value=(uint64_t)state->value;value=(value^(value>>30))*UINT64_C(0xbf58476d1ce4e5b9);value=(value^(value>>27))*UINT64_C(0x94d049bb133111eb);value^=value>>31;}if(status==4)out_of_memory();if(status<0||status>3)core_io_fail("InvalidProviderResult");return core_io_result(status,status?0:value,NULL,0);}
 myl_block *myl_core_cap_restrict(myl_block *cap,uint32_t rights){CoreIoAuthority *a=core_io_authority(cap);return core_io_cap(a->family,a->rights&rights,a->provider,cap,a->scope);}
 static myl_block *core_io_scope(myl_block *cap,myl_block *scope,unsigned family,int append){CoreIoAuthority *a=core_io_authority(cap);if(a->family!=family)core_io_fail("InvalidCapability");myl_block *joined=scope;if(append&&a->scope&&a->scope->len){size_t length=(size_t)(a->scope->len+scope->len+(scope->len!=0));unsigned char *bytes=malloc(length);if(!bytes)out_of_memory();memcpy(bytes,block_data(a->scope),(size_t)a->scope->len);if(scope->len){bytes[a->scope->len]='/';memcpy(bytes+a->scope->len+1,block_data(scope),(size_t)scope->len);}joined=core_io_string(bytes,length,1);free(bytes);}else core_io_retain(joined);myl_block *out=core_io_cap(family,a->rights,a->provider,cap,joined);myl_core_release(joined);return out;}
 myl_block *myl_core_cap_dir(myl_block *cap,myl_block *path){if(path->len&&!core_io_memory_valid_path(block_data(path),(size_t)path->len,'m'))core_io_fail("InvalidCapability");return core_io_scope(cap,path,2,1);}
@@ -1103,7 +1103,7 @@ static int core_io_resource_acquire(myl_block *cap,const unsigned char *request,
     unsigned char joined[8192];const unsigned char *input=request;size_t width=length;
     if(authority->scope){size_t scope=(size_t)authority->scope->len;if(authority->family==2){if(length<2||request[1]!=':'||!core_io_memory_valid_path(request+2,length-2,request[0]))return 2;if(scope+length+1>sizeof joined)return 2;joined[0]=request[0];joined[1]=':';memcpy(joined+2,block_data(authority->scope),scope);size_t at=scope+2;if(length>2){if(scope)joined[at++]='/';memcpy(joined+at,request+2,length-2);at+=length-2;}width=at;}else{if(scope>sizeof joined)return 2;memcpy(joined,block_data(authority->scope),scope);width=scope;}input=joined;}
     if(!state->adapter.acquire)return 1;
-    if(core_io_open_count==256)return 4;
+    if(core_io_family_open[authority->family-2]>=1024)return 4;
     /* Allocate bookkeeping before acquiring, so registration cannot fail. */
     myl_block *block=block_new(7,sizeof(CoreIoResource),1);block->len=1;block->reserved=(int64_t)(intptr_t)core_io_resource_layout;
     memset(block_data(block),0,sizeof(CoreIoResource));
@@ -1112,7 +1112,7 @@ static int core_io_resource_acquire(myl_block *cap,const unsigned char *request,
     if(result.status>3){block->reserved=0;block_free(block);core_io_fail("InvalidProvider");}
     if(result.status){block->reserved=0;block_free(block);return (int)result.status;}
     CoreIoResource *resource=(CoreIoResource *)block_data(block);*resource=(CoreIoResource){cap,result.handle,authority->family,authority->rights&state->adapter.permissions,1,0,core_io_tail,NULL,block};core_io_retain(cap);
-    if(core_io_tail)core_io_tail->next=resource;core_io_tail=resource;++core_io_open_count;*output=block;return 0;
+    if(core_io_tail)core_io_tail->next=resource;core_io_tail=resource;++core_io_open_count;++core_io_family_open[authority->family-2];*output=block;return 0;
 }
 static CoreIoResource *core_io_resource(myl_block *owner){if(!owner||kind_of(owner)!=7)core_io_fail("InvalidOwner");return (CoreIoResource *)block_data(owner);}
 static int core_io_complete(myl_block *owner){CoreIoResource *resource=core_io_resource(owner);if(!resource->open)return 3;if(!(resource->rights&4))return 2;CoreIoState *state=core_io_state(resource->authority);int status=(int)state->adapter.complete(state->adapter.context,resource->handle);if(status==4)out_of_memory();if(status<0||status>3)core_io_fail("InvalidProvider");if(!status){resource->open=0;core_io_unlink(resource);}return status;}

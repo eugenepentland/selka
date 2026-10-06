@@ -1,0 +1,21 @@
+module c_stack_handles
+import network
+
+extern def final_status(host: Host) -> int effects(host)
+
+def nested(net: Network, depth: int) -> bool:
+    match network.connect(net):
+        case network.Connected.err(_):
+            return False
+        case network.Connected.ok(owner):
+            good = True if depth == 0 else nested(net, depth - 1)
+            match network.close(owner):
+                case network.Closed.ok(closed):
+                    return good and closed
+                case network.Closed.err(_):
+                    return False
+
+def main(net: Network, host: Host) -> int:
+    if not nested(net.host("127.0.0.1:1234"), 300):
+        return 1
+    return final_status(host)

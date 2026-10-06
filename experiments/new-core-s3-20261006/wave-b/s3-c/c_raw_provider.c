@@ -11,6 +11,7 @@ static MylangResourceResult acquire(void *context,const uint8_t *request,size_t 
 }
 static MylangProviderStatus complete(void *context,uint64_t handle){
     (void)context;
+    if(getenv("MYL_FIXTURE_STACK")){++completed;--live;return MYLANG_PROVIDER_OK;}
     if(handle!=3)return MYLANG_PROVIDER_FAILED;
     if(++attempts==1)return MYLANG_PROVIDER_FAILED;
     ++completed;--live;return MYLANG_PROVIDER_OK;
@@ -33,7 +34,7 @@ static MylangResourceWrite write_bytes(void *context,uint64_t handle,const uint8
     return (MylangResourceWrite){MYLANG_PROVIDER_OK,2};
 }
 int64_t trap_flag(void){return 0;}
-int64_t final_status(void){return acquired==3&&completed==1&&released==2&&live==0&&attempts==2?0:9;}
+int64_t final_status(void){if(getenv("MYL_FIXTURE_STACK"))return acquired==301&&completed==301&&released==0&&live==0?0:9;return acquired==3&&completed==1&&released==2&&live==0&&attempts==2?0:9;}
 MylangNativeProviders mylang_native_providers_v7(void){
     MylangNativeProviders providers={0};
     providers.network=(MylangResourceProvider){NULL,7,acquire,complete,release,read_bytes,write_bytes};return providers;
