@@ -41,17 +41,8 @@ rc_tree_drains move_elision rc_inline_glue""".split()
 
 S1 = CLEAN13 + S1_MORE
 
-# Files left out of S1, with the feature that blocks them (§9, §11).
+# S3 lifts generic/list/tuple/array exclusions; user modules and arenas remain.
 EXCLUDED = {
-    "python_variants": "generics",
-    "option_equality": "generics", "option_methods": "generics", "option_narrowing": "generics",
-    "option_niche": "generics", "option_propagation": "generics",
-    "migrated/generic_results": "generics",
-    "rc_plain_appends": "other list methods, tuples or fixed arrays",
-    "rc_append_loops": "other list methods, tuples or fixed arrays",
-    "rc_plain_retains": "other list methods, tuples or fixed arrays",
-    "rc_plain_aggregates": "other list methods, tuples or fixed arrays",
-    "rc_match_scalars": "other list methods, tuples or fixed arrays",
     "migrated/propagation": "imports (R-3; a split single-module copy goes in test/core)",
     "arena_managed": "arena feature (§11)", "arena_scopes": "arena feature (§11)",
     "arena_class_escape": "arena feature (§11)", "arena_regions": "arena feature (§11)",

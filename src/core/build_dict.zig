@@ -11,7 +11,7 @@ pub const Error = error{ OutOfMemory, Unsupported };
 /// Hashable scalar and text keys supported by the dictionary runtime.
 pub fn keySupported(module: ir.Module, key: ir.Type) bool {
     if (key.integer() != null or key == .bool or key == .void) return true;
-    if (key == .str or key == .bytes) return true;
+    if (key == .str or key == .bytes or key == .f64) return true;
     return switch (module.kind(key) orelse return false) {
         .record => blk: {
             for (module.compound(key).record) |field| if (!keySupported(module, field)) break :blk false;
@@ -22,6 +22,7 @@ pub fn keySupported(module: ir.Module, key: ir.Type) bool {
             break :blk true;
         },
         .array => keySupported(module, module.compound(key).array.elem),
+        .box, .list => true,
         else => false,
     };
 }

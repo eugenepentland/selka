@@ -93,7 +93,7 @@ fn classify(gpa: std.mem.Allocator, keep: std.mem.Allocator, checked: frontend.C
     var scratch = std.heap.ArenaAllocator.init(gpa);
     defer scratch.deinit();
     var why: build.Refusal = .{};
-    const module = build.buildRoots(scratch.allocator(), checked.program, &.{case.function}, &why) catch |err| switch (err) {
+    const module = build.buildRootsSource(scratch.allocator(), checked.program, &.{case.function}, checked.src, &why) catch |err| switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
         error.Unsupported => {
             const at = frontend.position(checked.src, .{ .start = why.span, .end = why.span });
@@ -184,7 +184,7 @@ fn buildExecutable(init: std.process.Init, options: Options, checked: frontend.C
     const roots = try allocator.alloc(typed.FunctionId, positions.len);
     for (positions, roots) |position, *root| root.* = chosen[position].case.function;
     var why: build.Refusal = .{};
-    var module = build.buildRoots(allocator, checked.program, roots, &why) catch |err| switch (err) {
+    var module = build.buildRootsSource(allocator, checked.program, roots, checked.src, &why) catch |err| switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
         error.Unsupported => return .{ .failed = .{ .name = name, .status = .unsupported, .reason = why.reason } },
     };

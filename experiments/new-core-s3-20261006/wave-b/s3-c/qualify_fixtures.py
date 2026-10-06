@@ -81,7 +81,7 @@ def main():
                 assert "leak:" not in result["stderr"] and "R_CORE_FACT" not in result["stderr"], result
                 records.append(grade(result))
         assert records[0] == records[1] == records[2], records
-        expected = (2, "", "") if scenario == "error-fields" else (1, "", ["R_ASSERT" if scenario == "trap" else "InvalidProvider"])
+        expected = (2, "", "") if scenario == "error-fields" else (1 if scenario == "trap" else 2, "", ["R_ASSERT" if scenario == "trap" else "InvalidProvider"])
         assert records[0] == expected, records
         checks.append(f"{scenario}: identical verdict; resource released once, zero live")
     for scenario in ("read", "write", "default", "missing-fs", "missing-env", "missing-entropy", "missing-clock", "duplicate", "unknown", "quote", "missing-root"):

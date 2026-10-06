@@ -37,12 +37,12 @@ fn schema(c: anytype, function: typed.Function, input: ir.Type, span: u32) Error
     for (locals, params) |local, *parameter| parameter.* = try graph.add(local.ty);
     var output: std.ArrayList(u8) = .empty;
     var host_count: usize = 0;
-    for (c.mb.program.functions) |declaration| if (declaration.policy.host != null and !declaration.policy.c_abi) {
+    for (c.mb.input.program.functions) |declaration| if (declaration.policy.host != null and !declaration.policy.c_abi) {
         host_count += 1;
     };
     try output.print(c.allocator(), "{s}\n{d} {d} {d} {d} {d} {d}\n", .{ function.name, params.len, result, function.policy.effects, c.module().size(input), graph.definitions.items.len, host_count });
     for (params, 0..) |parameter, index| try output.print(c.allocator(), "{d} {d}\n", .{ parameter, c.module().fieldOffset(input, index) });
-    for (c.mb.program.functions) |declaration| if (declaration.policy.host != null and !declaration.policy.c_abi) try output.print(c.allocator(), "{s}\n", .{declaration.name});
+    for (c.mb.input.program.functions) |declaration| if (declaration.policy.host != null and !declaration.policy.c_abi) try output.print(c.allocator(), "{s}\n", .{declaration.name});
     for (graph.definitions.items) |definition| try output.appendSlice(c.allocator(), definition);
     return output.items;
 }
@@ -65,7 +65,7 @@ fn Graph(comptime Context: type) type {
         fn describe(self: *@This(), ty: typed.Type) Error![]const u8 {
             const c = self.context;
             const physical = try c.mb.mapType(ty, self.span);
-            const name = if (ty.isAggregate()) c.mb.program.records[ty.recordIndex()].name else @tagName(ty);
+            const name = if (ty.isAggregate()) c.mb.input.program.records[ty.recordIndex()].name else @tagName(ty);
             var shape: [6]u64 = .{ 1, c.module().size(physical), 0, 0, 1, 0 };
             var children: std.ArrayList(u64) = .empty;
             if (ty.integer()) |integer| {
@@ -74,7 +74,7 @@ fn Graph(comptime Context: type) type {
             } else if (ty == .bool) {} else if (ty == .unit) {
                 shape[0] = 2;
             } else if (ty.isAggregate()) {
-                const definition = c.mb.program.records[ty.recordIndex()];
+                const definition = c.mb.input.program.records[ty.recordIndex()];
                 if (physical == .bytes) {
                     shape[0] = 6;
                 } else if (definition.shape.domain) |wire| {

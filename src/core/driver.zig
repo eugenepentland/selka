@@ -8,13 +8,16 @@
 //! that one is bound to the QBE manifest, fragment store and object cache.
 const std = @import("std");
 const target = @import("target.zig").current;
+const number_runtime = @import("number_runtime.zig");
 
 /// The runtime C source, compiled into every program.
 pub const runtime_source = @embedFile("runtime/core_rt.c") ++ "\n" ++
     @embedFile("runtime/core_dict.c") ++ "\n" ++
+    @embedFile("runtime/core_unicode_data.h") ++ "\n" ++
     @embedFile("runtime/core_text.c") ++ "\n" ++
     @embedFile("runtime/core_sort.c") ++ "\n" ++ @embedFile("runtime/core_number.c") ++ "\n" ++
-    @embedFile("runtime/core_io.c") ++ "\n" ++ @embedFile("runtime/core_host.c") ++ "\n" ++ @embedFile("runtime/core_bytes.c");
+    @embedFile("runtime/core_io.c") ++ "\n" ++ @embedFile("runtime/core_host.c") ++ "\n" ++
+    @embedFile("runtime/core_bytes.c") ++ "\n" ++ @embedFile("runtime/core_values.c");
 
 /// One build: tools, directories, the program and how to optimize it.
 pub const Request = struct {
@@ -48,7 +51,9 @@ pub fn link(allocator: std.mem.Allocator, io: std.Io, environ: *const std.proces
     try argv.appendSlice(allocator, &.{ request.zig, "cc", if (request.release) "-O3" else "-O0" });
     try argv.appendSlice(allocator, target.cpu_flags);
     try argv.appendSlice(allocator, &.{ "-Wno-override-module", "-o", request.output, program, runtime_object });
+    if (number_runtime.needed(request.llvm)) try argv.append(allocator, try number_runtime.object(allocator, io, &environment, request, log));
     try argv.appendSlice(allocator, request.links);
+    if (std.mem.indexOf(u8, request.llvm, "llvm.sin.f64") != null or std.mem.indexOf(u8, request.llvm, "llvm.cos.f64") != null) try argv.append(allocator, "-lm");
     try run(allocator, io, &environment, argv.items, log);
 }
 
