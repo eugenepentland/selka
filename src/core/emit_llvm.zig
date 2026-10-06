@@ -86,6 +86,7 @@ pub const TrapKind = enum(u8) {
     text_step = 13,
     byte_range = 14,
     text_scalar = 15,
+    invalid_shift = 17,
 };
 
 const Site = struct { kind: TrapKind, location: Location, width: u16, operation: []const u8, function: []const u8 };
@@ -684,7 +685,8 @@ const FunctionEmitter = struct {
         };
     }
 
-    fn typedValue(self: *FunctionEmitter, raw: ir.Ref) ![]const u8 {
+    /// LLVM type and value pair for a scalar operation sub-emitter.
+    pub fn typedValue(self: *FunctionEmitter, raw: ir.Ref) Error![]const u8 {
         const ref = self.function.resolve(raw);
         return std.fmt.allocPrint(self.a(), "{s} {s}", .{ try self.ty(self.function.inst(ref).ty), try self.value(ref) });
     }
@@ -931,7 +933,7 @@ const FunctionEmitter = struct {
     }
 
     /// The check an instruction gets emitted with: verify mode emits proven checks as exact ones.
-    fn checkOf(self: *FunctionEmitter, inst: ir.Inst) ir.Check {
+    pub fn checkOf(self: *FunctionEmitter, inst: ir.Inst) ir.Check {
         return if (inst.check == .proven and self.state.options.verify) .exact else inst.check;
     }
 

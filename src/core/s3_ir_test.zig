@@ -54,9 +54,13 @@ fn exercise(op: ir.Op, allocator: std.mem.Allocator) !void {
     const text = try print.module(a, &program.module);
     try std.testing.expect(std.mem.indexOf(u8, text, @tagName(op)) != null);
     const ran = try support.runModule(a, &program.module, false);
-    try std.testing.expectEqual(@as(u8, 1), ran.status);
+    const pending = switch (op) {
+        .buffer_new, .buffer_copy, .buffer_set, .buffer_push, .buffer_pop => true,
+        else => false,
+    };
+    try std.testing.expectEqual(@as(u8, if (pending) 1 else 0), ran.status);
     try std.testing.expectEqualStrings("", ran.stdout);
-    try std.testing.expect(std.mem.indexOf(u8, ran.stderr, "E_CORE_UNSUPPORTED") != null);
+    if (pending) try std.testing.expect(std.mem.indexOf(u8, ran.stderr, "E_CORE_UNSUPPORTED") != null) else try std.testing.expectEqualStrings("", ran.stderr);
     const f = &program.module.functions.items[0];
     const original = f.inst(program.operation);
     f.insts.items[program.operation.index()].ty = .cap;

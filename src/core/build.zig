@@ -1435,7 +1435,7 @@ const FnBuilder = struct {
         var right = try self.expression(right_node);
         if (self.current == null) return .none;
         // The checker may type the literal of `i16 + 1` as `i64`: it takes the other operand's type.
-        if (op != .shift_left and op != .shift_right) {
+        {
             const left_type = self.typeOfRef(left);
             const right_type = self.typeOfRef(right);
             if (left_type != right_type) {
@@ -1461,6 +1461,9 @@ const FnBuilder = struct {
             .bit_and => .{ .op = .bit_and },
             .bit_or => .{ .op = .bit_or },
             .bit_xor => .{ .op = .bit_xor },
+            .shift_left => .{ .op = .shift_left, .check = .exact },
+            .shift_right => .{ .op = .shift_right, .check = .exact },
+            .saturating_add => .{ .op = .saturating_add },
             .eq => .{ .op = if (is_float) .fcmp else .cmp, .predicate = .eq },
             .ne => .{ .op = if (is_float) .fcmp else .cmp, .predicate = .ne },
             .lt => .{ .op = .cmp, .predicate = .lt },
@@ -1678,9 +1681,22 @@ const FnBuilder = struct {
             .neg => self.emit(.{ .op = .neg, .ty = ty, .a = operand, .check = .exact, .span = span }),
             .not => self.emit(.{ .op = .not, .ty = .bool, .a = operand, .span = span }),
             .f64_neg => self.emit(.{ .op = .fneg, .ty = .f64, .a = operand, .span = span }),
-            .f64_from_i64 => self.emit(.{ .op = .int_to_float, .ty = .f64, .a = operand, .span = span }),
-            .f64_to_i64, .f64_to_i32, .f64_to_i16, .f64_to_i8, .f64_to_u8, .f64_to_u16, .f64_to_u32 => self.emit(.{ .op = .float_to_int, .ty = ty, .a = operand, .check = .exact, .span = span }),
-            else => self.mb.refuse(@tagName(op), span),
+            .f64_from_i64, .f64_from_u64 => self.emit(.{ .op = .int_to_float, .ty = .f64, .a = operand, .span = span }),
+            .f64_to_i64, .f64_to_i32, .f64_to_i16, .f64_to_i8, .f64_to_u8, .f64_to_u16, .f64_to_u32, .f64_to_u64 => self.emit(.{ .op = .float_to_int, .ty = ty, .a = operand, .check = .exact, .span = span }),
+            .f64_sqrt, .f64_floor, .f64_ceil, .f64_trunc, .f64_abs, .f64_sin, .f64_cos => self.emit(.{ .op = .float_unary, .ty = .f64, .a = operand, .data = @backingInt(floatSelector(op)), .span = span }),
+        };
+    }
+
+    fn floatSelector(op: typed.UnaryOp) ir.FloatUnary {
+        return switch (op) {
+            .f64_sqrt => .sqrt,
+            .f64_floor => .floor,
+            .f64_ceil => .ceil,
+            .f64_trunc => .trunc,
+            .f64_abs => .abs,
+            .f64_sin => .sin,
+            .f64_cos => .cos,
+            else => unreachable,
         };
     }
 
