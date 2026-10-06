@@ -1,0 +1,23 @@
+{
+  "source_commit": "65036fe792ef540392d0eb00c41c9ec71c7b2c82",
+  "decision": "ENV-NAMES-GRANT-1",
+  "gate": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-capabilities/experiments/new-core-s3-20261006/wave-b/s3-c/resume-context-old-full-gate-04.log",
+  "gate_validation": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-capabilities/experiments/new-core-s3-20261006/wave-b/s3-c/resume-context-old-gate-validation.json",
+  "qualified": true,
+  "files": [
+    {
+      "name": "mylang",
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-capabilities/zig-out/bin/mylang",
+      "frozen_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-capabilities/.mylang-cache/s3/env-grants-oracle/mylang",
+      "d2_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-capabilities/.mylang-cache/s3/d2-oracle/mylang",
+      "sha256": "d36658dbfb78d29213224532a13fd5ad8b7c0e290dbfb87613d9815678305c79"
+    },
+    {
+      "name": "qbe",
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-capabilities/zig-out/bin/qbe",
+      "frozen_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-capabilities/.mylang-cache/s3/env-grants-oracle/qbe",
+      "d2_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-capabilities/.mylang-cache/s3/d2-oracle/qbe",
+      "sha256": "b6139650a99b39131cd791fa1fdc84c09472dc303930bbadd3f8a5348487af4c"
+    }
+  ]
+}

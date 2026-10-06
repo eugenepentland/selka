@@ -1,0 +1,12 @@
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 28 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 10042 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 11 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed
+[codex/new-core-s3-capabilities 4747ad071] fix: Environment names enumerate grants independently of provider context
+ 12 files changed, 135 insertions(+), 25 deletions(-)
+ create mode 100644 src/core/environment_names_test.zig
+ create mode 100644 src/qbe_environment_names_test.zig
+ create mode 100644 test/core/c_environment_context.my
+ create mode 100644 test/core/c_environment_context_provider.c
