@@ -434,12 +434,14 @@ myl_block *myl_core_bytes_slice_step(myl_block *text, int64_t start, int64_t end
 
 static bool core_text_space(unsigned char ch) { return ch == ' ' || (ch >= 9 && ch <= 13); }
 /* Private split-loop cursors use the same six whitespace octets as the list form.
-   Offsets remain within the immutable source; non-ASCII UTF-8 is never a separator. */
+   Out-of-range offsets return unchanged; non-ASCII UTF-8 is never a separator. */
 int64_t myl_core_split_ws_start(myl_block *text, int64_t at) {
+    if (at < 0) return at;
     while (at < text->len && core_text_space(block_data(text)[at])) ++at;
     return at;
 }
 int64_t myl_core_split_ws_end(myl_block *text, int64_t at) {
+    if (at < 0) return at;
     while (at < text->len && !core_text_space(block_data(text)[at])) ++at;
     return at;
 }

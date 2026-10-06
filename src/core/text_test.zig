@@ -227,6 +227,10 @@ test "private split dictionary keys preserve whitespace, UTF8, source snapshots,
     const text = try @import("test_support.zig").optimizedText(arena, split_keys);
     try std.testing.expect(std.mem.indexOf(u8, text, "str_view_of") != null);
     try std.testing.expect(std.mem.indexOf(u8, text, "str_from_view") != null);
+    const llvm = try @import("test_support.zig").releaseLlvmText(arena, split_keys);
+    try std.testing.expect(std.mem.indexOf(u8, llvm, "call i64 @myl_core_split_ws_start") == null);
+    try std.testing.expect(std.mem.indexOf(u8, llvm, "call i64 @myl_core_split_ws_end") == null);
+    try std.testing.expect(std.mem.indexOf(u8, llvm, "%splitnonnegative") != null);
 }
 
 const escaped_split =

@@ -18,6 +18,7 @@ const c_abi = @import("c_abi.zig");
 const flags = @import("flags.zig");
 const emit_dict = @import("emit_dict.zig");
 const emit_bytes = @import("emit_bytes.zig");
+const emit_text_split = @import("emit_text_split.zig");
 const emit_text = @import("emit_text.zig");
 const text_builder = @import("build_text.zig");
 const emit_fn = @import("emit_fn.zig");
@@ -2323,6 +2324,7 @@ const FunctionEmitter = struct {
         const external = signature.linkage != .internal;
         if (inst.op == .call) try emit_cap.beforeCall(@TypeOf(self), self, out, inst);
         if (try emit_bytes.runtimeCall(@TypeOf(self), @TypeOf(out), self, out, name, inst)) return;
+        if (try emit_text_split.runtimeCall(@TypeOf(self), @TypeOf(out), self, out, name, inst)) return;
         const borrowed_bytes = external and signature.ret == .bytes and signature.owned == 0;
         const text_parameter = signature.params.len == 1 and signature.params[0] == .str;
         if (inst.op == .call and borrowed_bytes and text_parameter and
