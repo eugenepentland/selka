@@ -60,7 +60,8 @@ pub fn instruction(comptime Context: type, c: Context, out: *@import("std").Arra
             try c.loadValue(out, inst.ty, pointer, name);
         },
         .dict_set_value => {
-            if (shape.value.integer() != null or shape.value == .bool or shape.value == .f64 or shape.value == .void) {
+            const scalar = shape.value.integer() != null or shape.value == .bool or shape.value == .f64 or shape.value == .void;
+            if (scalar or @import("flags.zig").transferredSlot(c.function, inst)) {
                 try scalarSet(c, out, name, inst, .{ .stride = stride, .offset = value_offset, .value = shape.value });
                 return;
             }

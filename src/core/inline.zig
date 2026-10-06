@@ -8,6 +8,7 @@
 //! Spans stay the callee's, so a trap still names the line inside the helper.
 const std = @import("std");
 const ir = @import("ir.zig");
+const cfg = @import("inline_cfg.zig");
 
 /// Inlining only allocates.
 pub const Error = std.mem.Allocator.Error;
@@ -17,17 +18,23 @@ pub fn inlineLeaves(arena: std.mem.Allocator, module: *ir.Module) Error!u32 {
     var count: u32 = 0;
     for (module.functions.items, 0..) |*caller, index| {
         if (caller.signature.linkage != .internal) continue;
-        for (caller.blocks.items) |*block| {
+        var b: usize = 0;
+        while (b < caller.blocks.items.len) : (b += 1) {
             var at: usize = 0;
-            while (at < block.insts.items.len) : (at += 1) {
-                const ref = block.insts.items[at];
+            while (at < caller.blocks.items[b].insts.items.len) : (at += 1) {
+                const ref = caller.blocks.items[b].insts.items[at];
                 var call = caller.insts.items[ref.index()];
                 @import("build_fn.zig").directTarget(caller, &call);
                 caller.insts.items[ref.index()] = call;
                 if (call.op != .call or call.a.index() == index) continue;
                 const callee = &module.functions.items[call.a.index()];
+                if (cfg.qualifies(callee)) {
+                    try cfg.splice(arena, caller, callee, b, at);
+                    count += 1;
+                    break;
+                }
                 const result = leaf(callee) orelse continue;
-                const cloned = try splice(arena, caller, callee, .{ .block = block, .at = at, .call = ref, .result = result });
+                const cloned = try splice(arena, caller, callee, .{ .block = &caller.blocks.items[b], .at = at, .call = ref, .result = result });
                 at += cloned;
                 count += 1;
             }

@@ -1,6 +1,7 @@
 //! Mutable-byte IR executes on the shared 32-byte counted-leaf layout.
 const std = @import("std");
 const ir = @import("ir.zig");
+const flags = @import("flags.zig");
 const byte_index = @import("byte_index.zig");
 
 /// Byte emission has the LLVM emitter's allocation/unsupported failures.
@@ -51,7 +52,19 @@ pub fn instruction(context: anytype, out: anytype, name: []const u8, inst: ir.In
     switch (inst.op) {
         .buffer_new => try out.print(a, "  {s} = call ptr @myl_core_buffer_new(i64 {s})\n", .{ name, try context.value(inst.a) }),
         .buffer_copy => try out.print(a, "  {s} = call ptr @myl_core_buffer_copy(ptr {s})\n", .{ name, try context.value(inst.a) }),
-        .buffer_push => try out.print(a, "  {s} = call ptr @myl_core_buffer_push(ptr {s}, i8 zeroext {s})\n", .{ name, try context.value(inst.a), try context.value(inst.b) }),
+        .buffer_push => {
+            const symbol = switch (inst.data) {
+                flags.buffer_append_int => flags.buffer_int_symbol,
+                flags.buffer_append_float => flags.buffer_float_symbol,
+                else => "myl_core_buffer_push",
+            };
+            const scalar = switch (inst.data) {
+                flags.buffer_append_int => "i64",
+                flags.buffer_append_float => "double",
+                else => "i8 zeroext",
+            };
+            try out.print(a, "  {s} = call ptr @{s}(ptr {s}, {s} {s})\n", .{ name, symbol, try context.value(inst.a), scalar, try context.value(inst.b) });
+        },
         .buffer_set => {
             const receiver = try context.value(inst.a);
             const index = try context.widened(out, inst.b);

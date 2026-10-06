@@ -62,3 +62,40 @@ pub fn readsOnly(symbol: []const u8) bool {
 pub const text_trap: u64 = 1 << 58;
 /// A failed dictionary read or pop reports the located missing-key trap.
 pub const dict_missing_trap: u64 = 1 << 62;
+
+/// Numeric buffer pushes format a bounded stack frame and append one fragment.
+pub const buffer_append_int: u64 = 1;
+/// Binary64 formatting preserves the ordinary `str(float)` spelling.
+pub const buffer_append_float: u64 = 2;
+/// Additive consuming buffer helper, signature `(byte_buffer, i64) -> byte_buffer`.
+pub const buffer_int_symbol = "myl_core_buffer_append_i64";
+/// Additive consuming buffer helper, signature `(byte_buffer, f64) -> byte_buffer`.
+pub const buffer_float_symbol = "myl_core_buffer_append_f64";
+
+/// A compiler place path detaches its parent before transferring a child slot.
+pub const place_copy: u64 = 1 << 60;
+/// Managed indexed reads in a nested assignment take the parent's slot owner.
+pub const place_read: u64 = 1 << 60;
+
+/// Whether an indexed read transfers its managed slot into a nested update.
+pub fn transferredRead(inst: ir.Inst) bool {
+    return switch (inst.op) {
+        .list_get, .dict_entry_value => inst.data == place_read,
+        else => false,
+    };
+}
+
+/// A replacement paired with a transferred read must not release its old slot.
+pub fn transferredSlot(function: *const ir.Function, inst: ir.Inst) bool {
+    if (inst.op != .list_set and inst.op != .dict_set_value) return false;
+    for (function.blocks.items) |block| for (block.insts.items) |ref| {
+        const read = function.inst(ref);
+        if (transferredRead(read) and function.resolve(read.a) == function.resolve(inst.a) and function.resolve(read.b) == function.resolve(inst.b)) return true;
+    };
+    return false;
+}
+
+/// Heap fill loops reserve a bounded prefix without changing their empty length.
+pub const fill_capacity: u64 = 1 << 59;
+/// Limit speculative initial room; longer fills continue ordinary geometric growth.
+pub const fill_capacity_limit: u64 = 4096;

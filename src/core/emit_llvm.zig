@@ -1295,8 +1295,9 @@ const FunctionEmitter = struct {
             .convert => try self.convert(out, name, inst),
             .list_new => {
                 const element = self.state.module.compound(inst.ty).list;
-                if (inst.data != 0) return self.stackList(out, name, inst.data - 1, element);
-                try out.print(self.a(), "  {s} = call ptr @myl_core_list_new(i64 {s}, i64 {d})\n", .{ name, try self.value(inst.a), self.state.stride(element) });
+                if (inst.data != 0 and inst.data != flags.fill_capacity) return self.stackList(out, name, inst.data - 1, element);
+                const capacity = if (inst.data == flags.fill_capacity) try self.fillCapacity(out, inst.a) else try self.value(inst.a);
+                try out.print(self.a(), "  {s} = call ptr @myl_core_list_new(i64 {s}, i64 {d})\n", .{ name, capacity, self.state.stride(element) });
                 try self.attachLayout(out, name, element);
             },
             .list_len, .str_len => try self.collectionLength(out, name, inst),
@@ -1979,6 +1980,20 @@ const FunctionEmitter = struct {
 
     /// Replace element `b` of list `a` in place with `extra[0]`; the element it
     /// replaces is released when the element type is managed.
+    fn fillCapacity(self: *FunctionEmitter, out: *Out, bound: ir.Ref) ![]const u8 {
+        const raw = try self.value(bound);
+        const positive = if (self.typeOf(bound) == .i64) blk: {
+            const negative = try self.fresh("%fillnegative");
+            const clamped = try self.fresh("%fillpositive");
+            try out.print(self.a(), "  {s} = icmp slt i64 {s}, 0\n  {s} = select i1 {s}, i64 0, i64 {s}\n", .{ negative, raw, clamped, negative, raw });
+            break :blk clamped;
+        } else raw;
+        const large = try self.fresh("%filllarge");
+        const capacity = try self.fresh("%fillcapacity");
+        try out.print(self.a(), "  {s} = icmp ugt i64 {s}, {d}\n  {s} = select i1 {s}, i64 {d}, i64 {s}\n", .{ large, positive, flags.fill_capacity_limit, capacity, large, flags.fill_capacity_limit, positive });
+        return capacity;
+    }
+
     fn listSet(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) !void {
         const m = self.state.module;
         const list = try self.value(inst.a);
@@ -1986,7 +2001,7 @@ const FunctionEmitter = struct {
         const element = m.compound(inst.ty).list;
         try self.boundsCheck(out, inst, list, index);
         const slot = try self.elementSlot(out, list, index, element);
-        const managed = m.managed(element);
+        const managed = m.managed(element) and !flags.transferredSlot(self.function, inst);
         const old = if (managed) try self.fresh("%old") else "";
         if (managed) try self.loadValue(out, element, slot, old);
         try self.storeOperand(out, element, self.function.operands(inst.data)[0], slot);
