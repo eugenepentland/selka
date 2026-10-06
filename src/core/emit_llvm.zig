@@ -140,6 +140,7 @@ const bound_line = "  {s} = icmp {s} {s} {s}, {d}\n";
 
 /// `  %at = getelementptr inbounds i8, ptr list, i64 offset` then `  %x = load i64, ptr %at`: one header field.
 const header_load_line = "  {s} = getelementptr inbounds i8, ptr {s}, i64 {d}\n  {s} = load i64, ptr {s}, align 8\n";
+const header_pointer_line = "  {s} = getelementptr inbounds i8, ptr {s}, i64 {d}\n";
 
 /// TBAA access tags and the count's `!range` (docs/design/new-core-s1.md §6, R-2):
 /// the reference count, the header's length and capacity, and element, field and
@@ -1061,6 +1062,7 @@ const FunctionEmitter = struct {
         const m = self.state.module;
         const kind = m.kind(inst.ty) orelse return;
         if (kind == .list) {
+            if (inst.op == .list_get) try self.assertChildLength(out, ref, inst);
             const len = known.aggregates.lists[ref.index()].len orelse return;
             const at = try self.fresh("%al");
             const length = try self.fresh("%an");
@@ -1102,6 +1104,31 @@ const FunctionEmitter = struct {
             const index = try self.state.site(.{ .kind = .fact, .location = self.state.options.locator.locate(self.state.options.locator.context, inst.span), .width = info.bits, .operation = operation, .function = self.function.name });
             try self.trapIf(out, outside, index, wide_value, "0");
         }
+    }
+
+    /// Uniform child lengths are symbolic facts. Assert the loaded child while
+    /// it is live, without extending its RC lifetime or reading its parent.
+    fn assertChildLength(self: *FunctionEmitter, out: *Out, ref: ir.Ref, inst: ir.Inst) !void {
+        const known = self.knownFacts() orelse return;
+        const bound = known.aggregates.lists[ref.index()].length;
+        if (bound == .none) return;
+        const producer = self.function.inst(bound);
+        if (producer.op != .param and producer.op != .iconst) return;
+        var expected = try self.value(bound);
+        if (producer.ty == .i64) {
+            const negative = try self.fresh("%child.negative");
+            const positive = try self.fresh("%child.length");
+            try out.print(self.a(), "  {s} = icmp slt i64 {s}, 0\n  {s} = select i1 {s}, i64 0, i64 {s}\n", .{ negative, expected, positive, negative, expected });
+            expected = positive;
+        }
+        const at = try self.fresh("%child.header");
+        const length = try self.fresh("%child.actual");
+        const outside = try self.fresh("%child.outside");
+        try out.print(self.a(), header_load_line, .{ at, try self.value(ref), len_offset, length, at });
+        try out.print(self.a(), "  {s} = icmp ne i64 {s}, {s}\n", .{ outside, length, expected });
+        const location = self.state.options.locator.locate(self.state.options.locator.context, inst.span);
+        const index = try self.state.site(.{ .kind = .fact, .location = location, .width = 64, .operation = "uniform child list length", .function = self.function.name });
+        try self.trapIf(out, outside, index, length, expected);
     }
 
     /// Verify mode: the value is at most (below, when strict) the length of the list
@@ -2305,13 +2332,19 @@ const FunctionEmitter = struct {
     fn listPush(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) !void {
         const element = self.state.module.compound(inst.ty).list;
         const len_at = try self.fresh("%pl");
-        const len = try self.fresh("%plen");
+        const counter = if (inst.data == flags.fill_push) self.fillCounter(inst.a) else null;
+        const len = if (counter) |ref| try self.value(ref) else try self.fresh("%plen");
         const next = try self.fresh("%pn");
         if (inst.data == stack_push) {
             // A promoted list's room is proven (`promote.zig`): no growth call.
             try out.print(self.a(), same_pointer, .{ name, try self.value(inst.a) });
+        } else if (counter != null) {
+            try out.print(self.a(), "  {s} = call ptr @myl_core_list_fill_reserve(ptr {s}, i64 {d}, i64 {s})\n", .{ name, try self.value(inst.a), self.state.stride(element), len });
         } else try out.print(self.a(), "  {s} = call ptr @myl_core_list_reserve(ptr {s}, i64 {d})\n", .{ name, try self.value(inst.a), self.state.stride(element) });
-        try out.print(self.a(), header_tagged_line, .{ len_at, name, len_offset, len, len_at });
+        if (counter != null) {
+            try out.print(self.a(), header_pointer_line, .{ len_at, name, len_offset });
+            if (self.state.options.verify) try self.assertFillRoom(out, name, len_at, len, inst);
+        } else try out.print(self.a(), header_tagged_line, .{ len_at, name, len_offset, len, len_at });
         const slot = try self.elementSlot(out, name, len, element);
         if (element == .bool or element.isCompound()) {
             try self.storeOperand(out, element, inst.b, slot);
@@ -2319,6 +2352,29 @@ const FunctionEmitter = struct {
             try out.print(self.a(), "  store {s}, ptr {s}, align {d}, " ++ tbaa_data ++ "\n", .{ try self.typedValue(inst.b), slot, elementSize(element) });
         }
         try out.print(self.a(), "  {s} = add nuw nsw i64 {s}, 1\n  store i64 {s}, ptr {s}, align 8, " ++ tbaa_header ++ "\n", .{ next, len, next, len_at });
+    }
+
+    fn fillCounter(self: *FunctionEmitter, list: ir.Ref) ?ir.Ref {
+        if (self.index >= self.state.options.facts.len) return null;
+        const known = self.state.options.facts[self.index] orelse return null;
+        const ref = self.function.resolve(list);
+        for (known.counted) |fill| for (self.function.blocks.items[fill.loop.header.index()].insts.items) |phi| {
+            if (phi == ref and known.aggregates.lists[ref.index()].pattern) return fill.counter;
+        };
+        return null;
+    }
+
+    fn assertFillRoom(self: *FunctionEmitter, out: *Out, list: []const u8, len_at: []const u8, index: []const u8, inst: ir.Inst) !void {
+        const actual = try self.fresh("%fill.actual");
+        const cap_at = try self.fresh("%fill.cap_at");
+        const cap = try self.fresh("%fill.cap");
+        const mismatch = try self.fresh("%fill.mismatch");
+        const full = try self.fresh("%fill.full");
+        const failed = try self.fresh("%fill.failed");
+        try out.print(self.a(), "  {s} = load i64, ptr {s}, align 8, " ++ tbaa_header ++ "\n", .{ actual, len_at });
+        try out.print(self.a(), header_load_line, .{ cap_at, list, cap_offset, cap, cap_at });
+        try out.print(self.a(), "  {s} = icmp ne i64 {s}, {s}\n  {s} = icmp uge i64 {s}, {s}\n  {s} = or i1 {s}, {s}\n", .{ mismatch, actual, index, full, index, cap, failed, mismatch, full });
+        try self.trapIf(out, failed, try self.site(.fact, inst, "counted fill capacity and index"), index, cap);
     }
 
     /// Emit a direct or indirect call under the internal aggregate ABI.
@@ -2555,6 +2611,16 @@ const runtime_fast_paths =
     \\grow:
     \\  %grown = call ptr @myl_core_list_grow(ptr %list, i64 %size)
     \\  ret ptr %grown
+    \\}
+    \\define internal ptr @myl_core_list_fill_reserve(ptr %list, i64 %size, i64 %index) alwaysinline nounwind {
+    \\entry:
+    \\  %prefix = icmp ult i64 %index, 4096
+    \\  br i1 %prefix, label %fits, label %check, !prof !10
+    \\fits:
+    \\  ret ptr %list
+    \\check:
+    \\  %room = call ptr @myl_core_list_reserve(ptr %list, i64 %size)
+    \\  ret ptr %room
     \\}
     \\define internal void @myl_core_free(ptr %block) alwaysinline nounwind {
     \\entry:

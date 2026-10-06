@@ -113,6 +113,9 @@ pub const ListFact = struct {
     settled: bool = false,
     /// `length` and `elements` come from a counted fill loop's pattern (`listFacts`), not from joining operands.
     pattern: bool = false,
+    /// Every child list has max(child_length, 0) elements. Only immutable
+    /// parameters/constants qualify; a varying loop-bound ref cannot name it.
+    child_length: ir.Ref = .none,
 };
 
 /// `value <= len(list)` (`<` when `strict`) for a list parameter. A parameter is one
@@ -724,7 +727,7 @@ fn listFacts(a: *Analysis) !bool {
             const push_block = a.shape.block_of[pushed_ref.index()] orelse continue;
             if (!onStraightChain(a, counted.loop, push_block)) continue;
             const elements = a.rangeAt(pushed.b, push_block);
-            var fact: ListFact = .{ .length = counted.bound, .elements = elements, .pattern = true };
+            var fact: ListFact = .{ .length = counted.bound, .elements = elements, .pattern = true, .child_length = childLength(a, pushed.b) };
             fact.len = a.facts.aggregates.lists[ref.index()].len;
             fact.settled = a.facts.aggregates.lists[ref.index()].settled;
             if (!std.meta.eql(a.facts.aggregates.lists[ref.index()], fact)) {
@@ -941,6 +944,7 @@ fn listFact(a: *Analysis, ref: ir.Ref, block: ir.BlockId) ListFact {
             copied.settled = !pendingList(a, i.a);
             return copied;
         },
+        .list_get => return .{ .length = a.facts.aggregates.lists[a.f.resolve(i.a).index()].child_length, .settled = !pendingList(a, i.a) },
         .list_push => {
             const old = a.facts.aggregates.lists[a.f.resolve(i.a).index()];
             const value = scalarRange(a, i.b, block);
@@ -951,11 +955,13 @@ fn listFact(a: *Analysis, ref: ir.Ref, block: ir.BlockId) ListFact {
                 if (len.lo == 0 and len.hi == 0) out.elements = value;
             }
             if (out.elements == null) out.elements = if (old.elements) |held| (if (value) |v| held.hull(v) else null) else null;
+            const child = childLength(a, i.b);
+            out.child_length = if (emptyList(old) or old.child_length == child) child else .none;
             return out;
         },
         .list_pop => {
             const old = a.facts.aggregates.lists[a.f.resolve(i.a).index()];
-            var out: ListFact = .{ .elements = old.elements, .settled = !pendingList(a, i.a) };
+            var out: ListFact = .{ .elements = old.elements, .settled = !pendingList(a, i.a), .child_length = old.child_length };
             if (old.len) |len| out.len = .{ .lo = @max(len.lo - 1, 0), .hi = @max(len.hi - 1, 0) };
             return out;
         },
@@ -963,11 +969,24 @@ fn listFact(a: *Analysis, ref: ir.Ref, block: ir.BlockId) ListFact {
             const old = a.facts.aggregates.lists[a.f.resolve(i.a).index()];
             const value = scalarRange(a, a.f.operands(i.data)[0], block);
             var out: ListFact = .{ .length = old.length, .len = old.len, .settled = !pendingList(a, i.a) };
+            if (old.child_length == childLength(a, a.f.operands(i.data)[0])) out.child_length = old.child_length;
             if (old.elements) |held| out.elements = if (value) |v| held.hull(v) else null;
             return out;
         },
         else => return none,
     }
+}
+
+fn emptyList(fact: ListFact) bool {
+    const len = fact.len orelse return false;
+    return len.lo == 0 and len.hi == 0;
+}
+
+fn childLength(a: *Analysis, raw: ir.Ref) ir.Ref {
+    const length = a.facts.aggregates.lists[a.f.resolve(raw).index()].length;
+    if (length == .none) return .none;
+    const producer = a.inst(length);
+    return if (producer.op == .param or producer.op == .iconst) length else .none;
 }
 
 /// Record field intervals and list lengths, element hulls: recompute them for `ref`, widening
@@ -998,7 +1017,7 @@ fn recomputeAggregates(a: *Analysis, ref: ir.Ref, block: ir.BlockId, changes: []
         else => {},
     }
     switch (i.op) {
-        .list_new, .list_copy, .list_push, .list_pop, .list_set => {
+        .list_new, .list_copy, .list_push, .list_pop, .list_set, .list_get => {
             const next = listFact(a, ref, block);
             if (!std.meta.eql(a.facts.aggregates.lists[ref.index()], next)) {
                 a.facts.aggregates.lists[ref.index()] = next;
@@ -1099,7 +1118,7 @@ fn pendingDict(a: *Analysis, operand: ir.Ref) bool {
 fn pendingList(a: *Analysis, operand: ir.Ref) bool {
     const ref = a.f.resolve(operand);
     return switch (a.f.inst(ref).op) {
-        .list_new, .list_copy, .list_push, .list_pop, .list_set, .phi => !a.facts.aggregates.lists[ref.index()].settled,
+        .list_new, .list_copy, .list_push, .list_pop, .list_set, .list_get, .phi => !a.facts.aggregates.lists[ref.index()].settled,
         else => false,
     };
 }
@@ -1122,12 +1141,18 @@ fn joinLengths(a: *Analysis, ref: ir.Ref, block: ir.BlockId, changes: []u8) bool
     var seen = false;
     var lengths_known = true;
     var elements_known = true;
+    var child_length: ?ir.Ref = null;
     for (a.f.operands(i.data), a.f.blocks.items[block.index()].preds.items) |operand, pred| {
         if (!a.edgeLive(pred, block)) continue;
         if (pendingList(a, operand)) continue;
         const fact = a.facts.aggregates.lists[a.f.resolve(operand).index()];
         if (fact.len) |len| joined = if (joined) |so_far| so_far.hull(len) else len else lengths_known = false;
         if (fact.elements) |held| hull = if (hull) |so_far| so_far.hull(held) else held else elements_known = false;
+        if (!emptyList(fact)) {
+            if (child_length) |held| {
+                if (held != fact.child_length) child_length = .none;
+            } else child_length = fact.child_length;
+        }
         if (!seen) length = fact.length else if (length != fact.length) length = .none;
         seen = true;
     }
@@ -1138,6 +1163,7 @@ fn joinLengths(a: *Analysis, ref: ir.Ref, block: ir.BlockId, changes: []u8) bool
     const old = next;
     next.len = joined;
     next.settled = true;
+    next.child_length = child_length orelse .none;
     // A counted fill loop's phi keeps what its pattern proved (`listFacts`).
     if (!old.pattern) {
         next.elements = hull;

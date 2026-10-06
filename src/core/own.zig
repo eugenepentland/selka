@@ -125,6 +125,7 @@ pub fn function(arena: std.mem.Allocator, module: *const ir.Module, f: *ir.Funct
     var phase_b = try Analysis.of(arena, module, f, &marks);
     try phase_b.analyze();
     try count(&phase_b, &stats);
+    if (options.facts) |known| markFillPushes(f, known);
     stats.elided = try elidePairs(arena, f);
     stats.retains -= stats.elided;
     stats.releases -= stats.elided;
@@ -146,11 +147,30 @@ fn reserveFills(f: *ir.Function, known: *const facts.Facts) void {
                 const entry = f.resolve(operand);
                 const inst = f.inst(entry);
                 if (inst.op != .list_new or inst.data != 0) continue;
-                const capacity = f.inst(f.resolve(inst.a));
-                if (capacity.op != .iconst or capacity.data != 0) continue;
                 f.insts.items[entry.index()].a = bound;
                 f.insts.items[entry.index()].data = flags.fill_capacity;
             }
+        }
+    }
+}
+
+/// COW may replace the receiver with a copy whose capacity is unknown. Only
+/// pushes still consuming the original unique loop phi use its reserved room.
+fn markFillPushes(f: *ir.Function, known: *const facts.Facts) void {
+    for (known.counted) |counted| {
+        for (f.blocks.items[counted.loop.header.index()].insts.items) |ref| {
+            const phi = f.inst(ref);
+            if (phi.op != .phi or !known.aggregates.lists[ref.index()].pattern) continue;
+            var reserved = false;
+            for (f.operands(phi.data)) |operand| {
+                const entry = f.inst(f.resolve(operand));
+                reserved = reserved or (entry.op == .list_new and entry.data == flags.fill_capacity);
+            }
+            if (!reserved) continue;
+            for (f.blocks.items) |block| for (block.insts.items) |push_ref| {
+                const push = f.inst(push_ref);
+                if (push.op == .list_push and push.data == 0 and f.resolve(push.a) == ref) f.insts.items[push_ref.index()].data = flags.fill_push;
+            };
         }
     }
 }

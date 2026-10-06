@@ -1,0 +1,18 @@
+module v_nested_lengths
+
+def changed(w: int) -> bool:
+    grid = [[j for j in range(w)], [j for j in range(w)]]
+    saved = grid
+    inner = grid[0]
+    inner.append(10)
+    _ = grid[1].pop()
+    grid[0].append(20)
+    grid[1] = [30]
+    return len(saved[0]) == w and len(saved[1]) == w and len(inner) == w + 1 and len(grid[0]) == w + 1 and grid[0][w] == 20 and grid[1][0] == 30
+
+# spec-case: NEW-CORE-NESTED-LENGTH-S4-1
+public def test_uniform_child_lengths_follow_each_list_value() -> bool:
+    return changed(1) and changed(3) and changed(8)
+
+def main() -> int:
+    return 0

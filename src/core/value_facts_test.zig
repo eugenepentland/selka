@@ -3,6 +3,42 @@
 const std = @import("std");
 const support = @import("test_support.zig");
 
+const nested_lengths =
+    \\def uniform(w: int, h: int) -> int:
+    \\    grid: list[list[int]] = []
+    \\    for i in range(h):
+    \\        grid.append([j for j in range(w)])
+    \\    total = 0
+    \\    for j in range(w):
+    \\        total += grid[0][j]
+    \\    return total
+    \\
+    \\def ragged(w: int) -> int:
+    \\    grid = [[j for j in range(w)], [j for j in range(w)]]
+    \\    _ = grid[1].pop()
+    \\    total = 0
+    \\    for j in range(w):
+    \\        total += grid[1][j]
+    \\    return total
+    \\
+    \\def main(out: Stream) -> int:
+    \\    out.print(uniform(3, 2))
+    \\    return 0
+;
+
+// spec: NEW-CORE-NESTED-LENGTH-S4-1
+test "uniform child lengths prove nested accesses but replacement and pop invalidate them" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const text = try support.factsText(arena.allocator(), nested_lengths);
+    const uniform = text[std.mem.indexOf(u8, text, "fn uniform").?..std.mem.indexOf(u8, text, "fn ragged").?];
+    try std.testing.expect(contains(uniform, "list_get.proven i64"));
+    const ragged = text[std.mem.indexOf(u8, text, "fn ragged").?..std.mem.indexOf(u8, text, "fn main").?];
+    try std.testing.expect(contains(ragged, "list_get.exact i64"));
+    const verified = try support.verifyLlvmText(arena.allocator(), nested_lengths);
+    try std.testing.expect(contains(verified, "uniform child list length"));
+}
+
 fn contains(text: []const u8, needle: []const u8) bool {
     return std.mem.indexOf(u8, text, needle) != null;
 }

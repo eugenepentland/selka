@@ -99,3 +99,5 @@ pub fn transferredSlot(function: *const ir.Function, inst: ir.Inst) bool {
 pub const fill_capacity: u64 = 1 << 59;
 /// Limit speculative initial room; longer fills continue ordinary geometric growth.
 pub const fill_capacity_limit: u64 = 4096;
+/// A unique counted fill uses its counter as the index within its reserved prefix.
+pub const fill_push: u64 = 1 << 59;
