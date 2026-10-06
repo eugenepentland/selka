@@ -237,7 +237,8 @@ const ModuleBuilder = struct {
                 return self.module.intern(self.allocator, .{ .list = if (element == .void) .bool else element });
             },
             .dictionary => {
-                const key = try self.mapType(record.collection.key.?, span);
+                const source_key = try self.mapType(record.collection.key.?, span);
+                const key: ir.Type = if (source_key == .void) .bool else source_key;
                 if (!build_dict.keySupported(self.module, key)) return self.refuse("dictionary key type", span);
                 if (!record.collection.set and self.viewType(record.shape.buffer.?)) return self.refuse("dictionary storage of live dictionary views", span);
                 const value = if (record.collection.set) .void else try self.mapType(record.shape.buffer.?, span);
@@ -610,7 +611,7 @@ const FnBuilder = struct {
             _ = self.places.remove(variable);
             return;
         };
-        if (std.mem.indexOfScalar(u32, self.capture_slots.items, variable) != null) try build_capture.watch(@TypeOf(self), self, &found);
+        if (std.mem.indexOfScalar(u32, self.capture_slots.items, variable) != null) try build_capture.watch(@TypeOf(self), self, &found, @intCast(local_info.declaration.start));
         try self.places.put(self.allocator(), variable, found);
     }
 
@@ -1867,7 +1868,7 @@ const FnBuilder = struct {
             value.* = try self.expressionPlace(argument, if (slot != null) &place else null);
             if (slot) |at| {
                 places[at] = place orelse return self.mb.refuse("mut argument that is not a place", span);
-                try build_capture.watch(@TypeOf(self), self, &places[at]);
+                try build_capture.watch(@TypeOf(self), self, &places[at], @intCast(self.nodeOf(argument).span.start));
                 if (places[at].snapshot == .none) places[at].snapshot = try self.read(places[at].root, self.current.?);
             }
         }

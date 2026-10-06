@@ -1,0 +1,103 @@
+module m_none_keys
+
+def selected_key(log: mut list[int]) -> None:
+    log.append(1)
+
+def selected_default(log: mut list[int]) -> int:
+    log.append(2)
+    return 99
+
+def grow(value: mut list[int]) -> None:
+    value.append(7)
+
+record UnitKey:
+    number: u64
+    small: i16
+    empty: None
+
+# spec: NEW-CORE-S3-VALUES-1
+# spec-case: HASH-KEYS-1
+public def test_none_keys_replace_lookup_and_evaluate_operands_once() -> bool:
+    mapping: dict[None, int] = {None: 3, None: 4}
+    log: list[int] = []
+    mapping[selected_key(mut log)] = 8
+    found = mapping.get(selected_key(mut log), selected_default(mut log))
+    existing = mapping.setdefault(None, 12)
+    saved = mapping
+    removed = mapping.pop(None)
+    absent = mapping.get(None, 17)
+    if len(mapping) != 0 or None in mapping or found != 8 or existing != 8:
+        return False
+    inserted = mapping.setdefault(None, 23)
+    return log == [1, 1, 2] and removed == 8 and absent == 17 and inserted == 23 and mapping[None] == 23 and saved == {None: 8} and None in saved
+
+# spec-case: NEW-CORE-S3-VALUES-1
+# spec-case: COW-MUT-ARGUMENT-1
+public def test_none_key_mut_values_preserve_parent_and_readonly_snapshots() -> bool:
+    mapping: dict[None, list[int]] = {None: [1]}
+    saved = mapping
+    grow(mut mapping[None])
+    mapping[None].append(9)
+    removed = mapping.pop(None)
+    grow(mut removed)
+    mapping[None] = removed
+    mapping.update({None: [4, 5]})
+    return saved == {None: [1]} and removed == [1, 7, 9, 7] and mapping == {None: [4, 5]}
+
+# spec-case: NEW-CORE-S3-VALUES-1
+# spec-case: HASH-KEYS-1
+public def test_none_key_and_value_collections_keep_source_unit_spelling() -> bool:
+    mapping: dict[None, None] = {None: None}
+    keys = list(mapping.keys())
+    values = list(mapping.values())
+    if f"{mapping}" != "{None: None}" or f"{keys}" != "[None]" or f"{values}" != "[None]":
+        return False
+    _ = mapping.pop(None)
+    mapping[None] = None
+    units: set[None] = {None, None}
+    saved = units
+    popped = units.pop()
+    if f"{popped}" != "None" or len(units) != 0 or None not in saved:
+        return False
+    units.add(None)
+    units.discard(None)
+    return len(mapping) == 1 and None in mapping and f"{mapping[None]}" == "None" and len(saved) == 1 and len(units) == 0
+
+# spec-case: NEW-CORE-S3-VALUES-1
+# spec-case: HASH-KEYS-1
+public def test_structural_unit_keys_hash_equal_without_padding() -> bool:
+    mapping: dict[UnitKey, int] = {}
+    for i in range(100):
+        mapping[UnitKey(u64(i), i16(i % 7), None)] = i + 1
+    total = 0
+    for i in range(100):
+        total += mapping[UnitKey(u64(i), i16(i % 7), None)]
+    some: Option[None] = Some(None)
+    absent: Option[None] = None
+    options: dict[Option[None], int] = {some: 11, absent: 13}
+    fixed: [2]None = [None, None]
+    arrays: dict[[2]None, int] = {fixed: 17}
+    other: [2]None = [None, None]
+    return len(mapping) == 100 and total == 5050 and len(options) == 2 and options[some] == 11 and options[absent] == 13 and arrays[other] == 17
+
+# spec-case: NEW-CORE-S3-VALUES-1
+# spec-case: HASH-KEYS-1
+public def test_none_key_remove_reinsert_tombstones_and_defaults() -> bool:
+    mapping: dict[None, list[int]] = {}
+    empty = mapping.pop(None, [0])
+    for i in range(100):
+        mapping[None] = [i]
+        if mapping.get(None, [999]) != [i]:
+            return False
+        removed = mapping.pop(None)
+        if removed != [i] or None in mapping:
+            return False
+    mapping[None] = [100]
+    saved = mapping
+    mapping.clear()
+    return empty == [0] and saved == {None: [100]} and len(mapping) == 0
+
+# spec-case: NEW-CORE-S3-VALUES-1
+public def test_missing_none_key_traps() -> bool:
+    mapping: dict[None, int] = {}
+    return mapping[None] == 0

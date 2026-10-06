@@ -1,32 +1,29 @@
 //! Scoped SSA guards preserve captured mut places across argument evaluation.
 const std = @import("std");
 const ir = @import("ir.zig");
-const values = @import("build_values.zig");
 pub const Error = error{ OutOfMemory, Unsupported };
 
 /// Start watching the ancestors of one fully selected interior argument.
-pub fn watch(comptime Context: type, b: Context, place: *std.meta.Child(Context).FeaturePlace) Error!void {
+pub fn watch(comptime Context: type, b: Context, place: *std.meta.Child(Context).FeaturePlace, span: u32) Error!void {
     if (place.steps.len == 0 or place.live != null) return;
+    if ((b.versions.get(place.root) orelse 0) != place.root_version) return b.refuse("interior mut place changed while its index or key was evaluated", span);
     const live = try b.synthetic(.bool);
     try b.write(live, b.current.?, try b.constant(.bool, 1));
     try b.captures.append(b.allocator(), .{ .place = place.*, .live = live });
     place.live = live;
 }
 
-/// Compare path components without repeating their source expressions.
-fn prefix(comptime Context: type, b: Context, written: std.meta.Child(Context).FeaturePlace, captured: std.meta.Child(Context).FeaturePlace, span: u32) Error!ir.Ref {
-    var same = try b.constant(.bool, 1);
+/// Distinct named fields or variants prove that two paths cannot be ancestors.
+fn disjoint(comptime Place: type, written: Place, captured: Place) bool {
     for (written.steps, captured.steps[0..written.steps.len]) |left, right| {
-        if (std.meta.activeTag(left) != std.meta.activeTag(right)) return b.constant(.bool, 0);
-        const component = switch (left) {
-            .field => |field| try b.constant(.bool, @intFromBool(field == right.field)),
-            .payload => |tag| try b.constant(.bool, @intFromBool(tag == right.payload)),
-            .element => |index| try b.emit(.{ .op = .cmp, .ty = .bool, .a = index, .b = right.element, .data = @backingInt(ir.Predicate.eq), .span = span }),
-            .mapping => |key| try values.equal(Context, b, key, right.mapping, span),
-        };
-        same = try b.emit(.{ .op = .bit_and, .ty = .bool, .a = same, .b = component, .span = span });
+        if (std.meta.activeTag(left) != std.meta.activeTag(right)) return false;
+        switch (left) {
+            .field => |field| if (field != right.field) return true,
+            .payload => |tag| if (tag != right.payload) return true,
+            else => {},
+        }
     }
-    return same;
+    return false;
 }
 
 /// An executed ancestor write invalidates publication; sibling writes preserve it.
@@ -34,10 +31,11 @@ fn prefix(comptime Context: type, b: Context, written: std.meta.Child(Context).F
 pub fn invalidate(comptime Context: type, b: Context, written: std.meta.Child(Context).FeaturePlace, span: u32) Error!void {
     for (b.captures.items) |capture| {
         if (written.root != capture.place.root or written.steps.len >= capture.place.steps.len) continue;
-        const ancestor = try prefix(Context, b, written, capture.place, span);
-        const different = try b.emit(.{ .op = .cmp, .ty = .bool, .a = ancestor, .b = try b.constant(.bool, 0), .data = @backingInt(ir.Predicate.eq), .span = span });
-        const live = try b.read(capture.live, b.current.?);
-        try b.write(capture.live, b.current.?, try b.emit(.{ .op = .bit_and, .ty = .bool, .a = live, .b = different, .span = span }));
+        if (written.steps.len != 0) {
+            if (disjoint(@TypeOf(written), written, capture.place)) continue;
+            return b.refuse("interior mut argument ancestor changed by a later interior write", span);
+        }
+        try b.write(capture.live, b.current.?, try b.constant(.bool, 0));
     }
 }
 
