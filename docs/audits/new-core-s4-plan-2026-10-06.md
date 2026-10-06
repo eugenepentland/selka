@@ -242,6 +242,51 @@ against its 8 GiB self-imposed ceiling, at 18k lines.
 **S3's coverage sweep checked neither port.** The four corpora are `examples`,
 `bench/parity`, `tests/lang` and the runtime benchmarks. S4-0 adds both ports.
 
+### 3.6 Six new benchmark rows (2026-10-06)
+
+Six rows cover mechanisms the 40 existing rows don't.
+- **Where:** branch `claude/new-core-s4-rows` (from S3 integration `02f796a8`),
+  `experiments/new-core-s4-rows-20261006/`. That holds `CONTRACT.md` and, per case,
+  `row.my` plus Rust, Zig and Go references and a Python oracle.
+- **Verified:** all five arms (old core, new core, Rust, Zig ReleaseSafe, Go) match the
+  oracle at every probe. There were no refusals and no wrong answers.
+- **Measured:** `rows.py measure`, CPU 10, 7 interleaved rounds. The rest of the
+  machine was loaded (load average about 33) while CPU 10 was idle. Each cell is new
+  core ÷ the reference, at sizes 4096 / 64:
+
+| Row | ÷ Zig ReleaseSafe | ÷ Rust | ÷ old core | Gate |
+|---|---:|---:|---:|---|
+| `tree_build_walk` | 0.69 / 0.68 | 0.73 / 0.75 | 0.23 / 0.23 | pass |
+| `record_pass` | 0.68 / 0.71 | 1.05 / 1.09 | 0.51 / 0.53 | pass |
+| `grid_dp` | **3.46 / 3.46** | 4.06 / 3.70 | **2.43** / 0.79 | **miss** |
+| `union_find` | **2.06 / 2.25** | 2.06 / 2.50 | 1.05 / 0.89 | **miss (Zig)** |
+| `float_format` | 0.73 / 0.75 | 0.75 / 0.79 | 0.57 / 0.57 | pass |
+| `buffer_write` | 0.89 / 0.87 | 1.02 / 0.97 | 1.04 / 1.02 | pass |
+
+**Findings, all for S4-V:**
+1. **`grid_dp`: a nested write copies the inner row every time.** For `dp[i][j] = v`,
+   the new core emits `myl_core_list_copy` of the row before every write, with no
+   uniqueness branch, then stores the row back and releases the old one. A direct
+   `xs[i] = v` does check uniqueness.
+   - The cost is linear in row width: 42 cycles per write at width 16, 58 at 64 and 550
+     at 512, against 4–8 in the old core.
+   - Repro: `grid_dp/repro-nested-write-copy.my`.
+2. **`union_find`: about 2× Zig.**
+   - `find` (a loop) is not inlined, and it returns `{i64, ptr}` (the possibly-copied
+     `mut` list) on every call.
+   - Multi-block inlining, or a cheaper `mut`-list return when the callee cannot
+     reallocate the list, is the lever.
+3. **`buffer_write`: `byte_buffer.append_int` and `append_float` allocate a temporary
+   `str` per value** (`build_bytes.zig:138–139`, `myl_core_str_from_i64`), then push
+   digit by digit with a copy-on-write check per byte. The old core formats into a
+   20-byte stack array. The row passes only because the per-byte checksum fold
+   dominates it.
+4. **Language, both cores:** `[0] * w` with a non-literal count is rejected with
+   `E_LIST_TYPE`, while `[0] * 3` checks fine. Repro: `grid_dp/repro-list-repeat.my`.
+5. **Friction:**
+   - `byte_buffer()` takes no zero-argument form; write `byte_buffer([])`.
+   - Discarding `append_*`'s result needs `_ =`.
+
 ## 4. Work packages
 
 Each package runs in its own locked worktree from the S4 integration branch, commits
@@ -317,7 +362,7 @@ one log file per command run.
 #### S4-0. Base (coordinator)
 
 - Create `codex/new-core-s4-integration` from the S3 exit commit and merge
-  `claude/new-core-s4-design`. That branch brings:
+  `claude/new-core-s4-design` and `claude/new-core-s4-rows` (S4-R). That branch brings:
   - `CATALOG-INTERN-1`, whose full old gate is green on `e86ac0bc`;
   - this plan, the design note and the spike tools.
 - Rerun `test-core`, full conformance and the 40 rows.
@@ -326,6 +371,45 @@ one log file per command run.
   - the S3 exit commit;
   - the list of `tests/lang` files S3 left for S4 (user modules);
   - what S3-A changed in `driver.zig` and `frontend.zig`.
+
+#### S4-R. The six new rows join the gate (coordinator, in S4-0)
+
+- Move each `row.my` to `test/core/row_<case>.my`.
+- Add the four-language references to the measured registry, so S3's `measure_all40`
+  becomes `measure_all46`. Their Rust and Zig binaries are built by the measurement
+  tool, because the frozen runtime baseline lacks them.
+- Keep `CONTRACT.md` and the oracles.
+
+From then on, every one of the 46 rows must be within 1.10× Zig ReleaseSafe and 1.10×
+the old core.
+
+#### S4-V. Value-path performance (one agent; about 4–5 h; parallel with S4-F)
+
+**Fix §3.6's findings 1–4:**
+1. **Nested writes:**
+   - `a[i][j] = v`, and any deeper nested place write, checks the inner collection's
+     uniqueness and writes in place when it is unique, as direct writes do.
+   - The copy happens only on the shared path.
+   - Every uniqueness claim gets a verify assert.
+2. **`union_find`:** reach 1.10× Zig, by inlining small loop functions (the S3-M
+   multi-block-inlining stretch) or by a `mut`-list return path that avoids the
+   aggregate return when the callee cannot replace the list. Measure both and keep what
+   meets the gate.
+3. **`byte_buffer.append_int` and `append_float`:** format into a stack buffer and
+   append in one reserve-and-copy, with no temporary `str` and no per-byte check.
+4. **`[0] * w` with a non-literal `int` count** type-checks (shared checker, spec
+   tagged) and lowers in both cores.
+
+**Owns:**
+- `src/core/own.zig`, `build*.zig` and `emit*.zig` for these paths;
+- `runtime/core_bytes.c`;
+- the checker file for list repetition, which is shared, so the full old gate runs.
+
+**Exit:**
+- `grid_dp`, `union_find` and `buffer_write` within both gates;
+- no other row regresses;
+- conformance at 0 mismatches;
+- leak and verify sweeps clean.
 
 #### S4-F. Front-end caching (one agent; about 3–4 h)
 
@@ -424,7 +508,7 @@ The full bar once:
 - the full old gate;
 - strict 200 fuzz cases of every kind;
 - full leak and verify sweeps;
-- all 40 rows against both 1.10 gates;
+- all 46 rows against both 1.10 gates;
 - coverage including both ports;
 - `--verify-cache` over the Lox port and the EDA slice;
 - the dev-loop table (§6).
@@ -434,7 +518,7 @@ The full bar once:
 | Wave | Packages | Notes |
 |---|---|---|
 | 0 | S4-L, S4-D | now, in parallel with S3; no compiler files |
-| A | S4-0, then S4-F, S4-E, S4-M in parallel | after the S3 exit and the user's go; at most three build-heavy agents alongside Wave 0 |
+| A | S4-0 (with S4-R), then S4-F, S4-V, S4-E, S4-M in parallel | after the S3 exit and the user's go; at most four build-heavy agents |
 | B | S4-C after S4-E; S4-P after S4-C and S4-M | |
 | X | S4-X | after all packages |
 
