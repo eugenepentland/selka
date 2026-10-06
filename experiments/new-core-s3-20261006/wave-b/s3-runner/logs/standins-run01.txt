@@ -1,0 +1,1 @@
+{"version":"native-tests-v1","tests":[{"name":"c_runner_standins::test_trial_state_is_fresh","status":"passed","reason":"","at":"","property":{"seed":7,"counts":{"runs":12,"passed":12,"discarded":0,"processes":1,"shrinks":0,"attempts":0},"failure":null}}],"passed":1,"failed":0,"skipped":0,"cached":0,"unsupported":0}

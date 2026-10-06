@@ -1,0 +1,62 @@
+build-slot: all 1 gate slot(s) busy; waiting (0s so far)
+build-slot: all 1 gate slot(s) busy; waiting (60s so far)
+build-slot: all 1 gate slot(s) busy; waiting (120s so far)
+build-slot: all 1 gate slot(s) busy; waiting (180s so far)
+build-slot: all 1 gate slot(s) busy; waiting (240s so far)
+build-slot: all 1 gate slot(s) busy; waiting (300s so far)
+build-slot: all 1 gate slot(s) busy; waiting (360s so far)
+build-slot: all 1 gate slot(s) busy; waiting (420s so far)
+build-slot: all 1 gate slot(s) busy; waiting (481s so far)
+build-slot: all 1 gate slot(s) busy; waiting (541s so far)
+build-slot: all 1 gate slot(s) busy; waiting (601s so far)
+build-slot: all 1 gate slot(s) busy; waiting (661s so far)
+build-slot: all 1 gate slot(s) busy; waiting (721s so far)
+build-slot: all 1 gate slot(s) busy; waiting (781s so far)
+build-slot: all 1 gate slot(s) busy; waiting (841s so far)
+build-slot: all 1 gate slot(s) busy; waiting (901s so far)
+build-slot: all 1 gate slot(s) busy; waiting (962s so far)
+build-slot: gate slot 1 after 972s (all 1 gate slot(s) busy)
+test-core
++- run test
+   +- compile test debug native
+      +- options
+         +- compile exe mylang-core debug native 2 errors
+src/core/build_list_methods.zig:237:11: error: local constant shadows declaration of 'length'
+    const length = try b.emit(.{ .op = .list_len, .ty = .u64, .a = source, .span = span });
+          ^~~~~~
+src/core/build_list_methods.zig:51:1: note: declared here
+fn length(comptime Context: type, b: Context, source: ir.Ref, span: u32) Error!ir.Ref {
+^~
+src/core/emit_render.zig:36:141: error: expected type 'error{OutOfMemory,UnsupportedInstruction}!void', found 'error{BufferUnderrun,DuplicateField,InvalidCharacter,InvalidEnumTag,InvalidNumber,LengthMismatch,MissingField,OutOfMemory,Overflow,SyntaxError,UnexpectedEndOfInput,UnexpectedToken,UnknownField,ValueTooLong}'
+        const parsed = std.json.parseFromSlice(metadata.Shape, a, text[marker.len..], .{}) catch |err| return if (err == error.OutOfMemory) err else error.UnsupportedInstruction;
+                                                                                                                                            ^~~
+src/core/emit_render.zig:36:141: note: 'error.Overflow' not a member of destination error set
+src/core/emit_render.zig:36:141: note: 'error.InvalidCharacter' not a member of destination error set
+src/core/emit_render.zig:36:141: note: 'error.UnexpectedToken' not a member of destination error set
+src/core/emit_render.zig:36:141: note: 'error.InvalidNumber' not a member of destination error set
+src/core/emit_render.zig:36:141: note: 'error.InvalidEnumTag' not a member of destination error set
+src/core/emit_render.zig:36:141: note: 'error.DuplicateField' not a member of destination error set
+src/core/emit_render.zig:36:141: note: 'error.UnknownField' not a member of destination error set
+src/core/emit_render.zig:36:141: note: 'error.MissingField' not a member of destination error set
+src/core/emit_render.zig:36:141: note: 'error.LengthMismatch' not a member of destination error set
+src/core/emit_render.zig:36:141: note: 'error.SyntaxError' not a member of destination error set
+src/core/emit_render.zig:36:141: note: 'error.UnexpectedEndOfInput' not a member of destination error set
+src/core/emit_render.zig:36:141: note: 'error.BufferUnderrun' not a member of destination error set
+src/core/emit_render.zig:36:141: note: 'error.ValueTooLong' not a member of destination error set
+src/core/emit_render.zig:24:79: note: function return type declared here
+pub fn descriptors(a: std.mem.Allocator, m: *const ir.Module, out: *Out) Error!void {
+                                                                         ~~~~~^~~~~
+referenced by:
+    descriptors: src/core/emit_values.zig:67:32
+    emitModule: src/core/emit_llvm.zig:208:32
+    9 reference(s) hidden; use '-freference-trace=11' to see all references
+error: 2 compilation errors
+failed command: /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig build-exe -ODebug --dep mylang -Mroot=src/core/main.zig -ODebug --dep runtime_contract -Mmylang=src/compiler.zig -ODebug -Mruntime_contract=src/runtime_contract.zig --cache-dir .zig-cache --global-cache-dir /home/epentland/.cache/zig --name mylang-core --zig-lib-dir /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/ --listen=-
+
+Build Summary: 0/5 steps succeeded (1 failed)
+test-core transitive failure
++- run test transitive failure
+   +- compile test debug native transitive failure
+      +- options transitive failure
+         +- compile exe mylang-core debug native 2 errors
+

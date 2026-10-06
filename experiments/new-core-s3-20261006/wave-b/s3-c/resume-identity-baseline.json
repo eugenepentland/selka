@@ -1,0 +1,147 @@
+{
+  "source": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-values/.mylang-cache/s3/baseline",
+  "target": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-capabilities/.mylang-cache/s3/baseline",
+  "baseline": "92590700cb0bf5e4dc19cc1f0c836c3a41693f64",
+  "rows": [
+    {
+      "file": "binary_search.ll",
+      "sha256": "fd4556723090b084cbd99760cfafa55b97fbc1198be65329b26f27a84d38c9de"
+    },
+    {
+      "file": "branch_mixed.ll",
+      "sha256": "4fc6664c48901089057ab2589df7d828f0760613c5e68c4267d0c0ba5f0bcd94"
+    },
+    {
+      "file": "branch_predictable.ll",
+      "sha256": "5eeadcdb50118d6863691bad7e2194ef9741618caf069402bbeb34faf91d6fad"
+    },
+    {
+      "file": "call_direct.ll",
+      "sha256": "58c2870c2e102a09a4922fa55654726420a1fe2bf8f742464fcd43dfe921445d"
+    },
+    {
+      "file": "float_math.ll",
+      "sha256": "871699a0e23132c6983d243fd993470e7edc82fdb1bf26cc210e81927e5b6336"
+    },
+    {
+      "file": "int_math.ll",
+      "sha256": "0a144e3fdbf23583ab3b5b62b45341c46b44bfb5db67665361dbb2ed97ed467b"
+    },
+    {
+      "file": "row_alloc_retained.ll",
+      "sha256": "f73ab99cc87884242d0999eb0d4af7426376f48c91260e68571d96ed7a8e8357"
+    },
+    {
+      "file": "row_alloc_short.ll",
+      "sha256": "3d092cf6088ab866f67a3f56c0153e8d77c4af3fe404b4506a8aeb90f3a5030b"
+    },
+    {
+      "file": "row_bytes_scan.ll",
+      "sha256": "857f8c4572a897f4256a13397e408f944bf2b02df0673fc8ce7e205bb0334551"
+    },
+    {
+      "file": "row_call_indirect.ll",
+      "sha256": "c83820df245badcbbd4089eb9503d133fbf8d5d018fc1335e2ac6c912d88c97c"
+    },
+    {
+      "file": "row_dict_lookup.ll",
+      "sha256": "1d46101b9d68a6bc7b8c6df6d189f5778f8e7eff2d9f28f07f672558262b21a8"
+    },
+    {
+      "file": "row_dict_lookup_str.ll",
+      "sha256": "e951b746b04b55f50796a2548076253cdbd231a1ded8395a14ad81794a402e5a"
+    },
+    {
+      "file": "row_dict_update.ll",
+      "sha256": "76f805036ac41a71bb102c9d1f3f2a8039bf6e9ff67d793c4994db8c8b115e07"
+    },
+    {
+      "file": "row_dict_update_str.ll",
+      "sha256": "7030ae53440ae14857c0bd4ea36e8aea2c303673d2d6d70ebd2299b42c65f051"
+    },
+    {
+      "file": "row_int_format.ll",
+      "sha256": "5df21e9e999dc17948bcff40b82559131c575c15b84741f11298c1461ddb70dd"
+    },
+    {
+      "file": "row_int_parse.ll",
+      "sha256": "10db6d78ac0e4e0d6aec445df0aaf7e1036b66b7fad623376ed15d1c701661f8"
+    },
+    {
+      "file": "row_list_append.ll",
+      "sha256": "4b4b905984abcadbc48bd4eae97b17cb04648f4df6a257043d22bfc7a53dcd46"
+    },
+    {
+      "file": "row_list_filter.ll",
+      "sha256": "269e5423e7831b2198fcb80065879e5994b37269a7dda90b9d62233d6bd08245"
+    },
+    {
+      "file": "row_list_scan.ll",
+      "sha256": "e9fca47c4ac62cee18ca21ea9d191af9fae3bcf80cf025da0ab598898ac1a426"
+    },
+    {
+      "file": "row_mutate_nested.ll",
+      "sha256": "640d2c5f918d84ab5be95c203fa95aa3ff8894d44b99c9c120da604585aeb3ce"
+    },
+    {
+      "file": "row_mutate_shared.ll",
+      "sha256": "5b9e4083e9d83041e6695a3d9d01bb4ab3700aa15ffd6252d19405f10fdfaa6a"
+    },
+    {
+      "file": "row_mutate_unique.ll",
+      "sha256": "0d9498f6858a63d73cef518de9d60873b6888916be1b9d564500806fda6aff16"
+    },
+    {
+      "file": "row_option_handle.ll",
+      "sha256": "97d1124856a8bce2be1f48e063fab88f635cc78f6c679bfe80d15e3a38c77390"
+    },
+    {
+      "file": "row_record_construct.ll",
+      "sha256": "90166046d12d14fcd2f5ba820ae64cc5f262fb61e4e154d6ec7537f99f7350ad"
+    },
+    {
+      "file": "row_record_reads.ll",
+      "sha256": "83db0d386b3e8673e272a882724db5adc611eac75f3b3bc5042fe9627b00600d"
+    },
+    {
+      "file": "row_record_update.ll",
+      "sha256": "404670cccfe82776975a2abd878d516e03398fae4fb0f99f878729e25c9e77f5"
+    },
+    {
+      "file": "row_result_propagate.ll",
+      "sha256": "fead3484502404c7a2077cb95c7fbbff6955b5a811ec84c2c7199e80d36cf8f7"
+    },
+    {
+      "file": "row_set_dedup.ll",
+      "sha256": "7af59486b2e3e782f8aeaf227db519b8077c8ae5dac7bad85e4a66bff9afa02b"
+    },
+    {
+      "file": "row_sort_int.ll",
+      "sha256": "973f31d4a480ec4e96cfd66faee76777888b0bec403c5f3bca000196c33e5a71"
+    },
+    {
+      "file": "row_sort_records.ll",
+      "sha256": "e045c2c59bb6c698c76bfcfa2c72561154ede2836a1c7e3ae1c7c2cb576c86e2"
+    },
+    {
+      "file": "row_string_equal.ll",
+      "sha256": "039e079a54f4377e8e3c9820ae227c7467ab07e3d86ae140b2f580181a1072f6"
+    },
+    {
+      "file": "row_string_join.ll",
+      "sha256": "9a7c813e2961338a39c3baa5cfd4bdb44d31629f72120b801e52a31ecd644426"
+    },
+    {
+      "file": "row_string_search.ll",
+      "sha256": "246b04597b72e7d484432b6c695d58cea7f1eb918f578117664d457a60dfe847"
+    },
+    {
+      "file": "row_string_split.ll",
+      "sha256": "cbe08eb6006ec62acfc7f1f257fed9da47c16c2680e0a5b6d9b153a6f6e7fbef"
+    },
+    {
+      "file": "row_tagged_stack.ll",
+      "sha256": "4424a8d477e2a4132d8a50890e46dfc3e3dcf6e73bb49a3cb9e881756dd4c97e"
+    }
+  ]
+}

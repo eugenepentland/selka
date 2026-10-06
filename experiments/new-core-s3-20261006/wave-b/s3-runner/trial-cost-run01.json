@@ -1,0 +1,42 @@
+{
+  "cpu": 10,
+  "includes": "process start, per-trial fork, capture files, copied-value decode/encode and cleanup; excludes compiler build",
+  "rows": [
+    {
+      "trials": 12,
+      "outer_batches": 1,
+      "trial_forks": 12,
+      "seconds": [
+        0.0029810259584337473,
+        0.002733919071033597,
+        0.00266425684094429
+      ],
+      "median_seconds": 0.002733919071033597,
+      "microseconds_per_trial": 227.82658925279975
+    },
+    {
+      "trials": 100,
+      "outer_batches": 1,
+      "trial_forks": 100,
+      "seconds": [
+        0.010935028083622456,
+        0.011813484830781817,
+        0.012193295173346996
+      ],
+      "median_seconds": 0.011813484830781817,
+      "microseconds_per_trial": 118.13484830781817
+    },
+    {
+      "trials": 1000,
+      "outer_batches": 1,
+      "trial_forks": 1000,
+      "seconds": [
+        0.10232915496453643,
+        0.10440133395604789,
+        0.10875289002433419
+      ],
+      "median_seconds": 0.10440133395604789,
+      "microseconds_per_trial": 104.40133395604789
+    }
+  ]
+}

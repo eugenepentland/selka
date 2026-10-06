@@ -7,20 +7,25 @@ const numeric_source =
     \\    return shift_right(x, count)
     \\def saturated(x: i8) -> i8:
     \\    return saturating_add(x, 100i8)
+    \\def multiplied(x: i8) -> i8:
+    \\    return saturating_mul(x, -100i8)
+    \\def subtracted(x: u64) -> u64:
+    \\    return saturating_sub(x, 100u64)
     \\def transformed(x: float) -> float:
     \\    return sqrt(abs(x)) + trunc(x) + floor(x) + ceil(x)
     \\def main() -> int:
-    \\    return int(transformed(float(shifted(200u8, 2u8)))) + int(saturated(40i8))
+    \\    return int(transformed(float(shifted(200u8, 2u8)))) + int(saturated(40i8)) + int(multiplied(2i8)) + int(subtracted(5u64))
 ;
 
 // spec: NEW-CORE-S3-NUMERIC-1
-test "S3 numeric operations emit checked shifts saturating width and strict float intrinsics" {
+test "S3 numeric operations emit width checked shifts saturation add sub mul and float intrinsics" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const llvm = try support.llvmText(arena.allocator(), numeric_source);
     try std.testing.expect(std.mem.indexOf(u8, llvm, "icmp uge i8") != null);
     try std.testing.expect(std.mem.indexOf(u8, llvm, "lshr i8") != null);
     try std.testing.expect(std.mem.indexOf(u8, llvm, "llvm.sadd.sat.i8") != null);
+    try std.testing.expect(std.mem.indexOf(u8, llvm, "myl_core_saturating_integer") != null);
     try std.testing.expect(std.mem.indexOf(u8, llvm, "llvm.sqrt.f64") != null);
     try std.testing.expect(std.mem.indexOf(u8, llvm, "llvm.fabs.f64") != null);
 }

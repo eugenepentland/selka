@@ -1,0 +1,4 @@
+src/core/property_codec.zig
+src/core/property_execute.zig
+src/core/property_ir.zig
+src/core/main.zig

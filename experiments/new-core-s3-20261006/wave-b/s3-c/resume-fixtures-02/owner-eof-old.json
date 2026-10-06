@@ -1,0 +1,8 @@
+{
+  "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-capabilities/.mylang-cache/s3/resume-fixtures-02/raw-old"
+  ],
+  "status": 2,
+  "stdout": "",
+  "stderr": "@stdlib/network.my:79:12: error[InvalidProvider]: QBE runtime failure\n  in network::read[4] at @stdlib/network.my:79:12\n  in c_raw::main at c_raw.my:12:19\n"
+}

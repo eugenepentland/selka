@@ -4,6 +4,8 @@ const std = @import("std");
 /// `list_get.data` of the read a `pop` starts with: a failing index is reported as the pop
 /// of an empty list (`R_LIST_BOUNDS`, operation `pop`), as the old core does.
 pub const pop_read: u64 = 1;
+/// An indexed pop's checked read reports its index and length with operation `pop`.
+pub const pop_index_read: u64 = 2;
 
 /// The stream token of the entry adapter's error report (`print` with the `error_report` sink): the
 /// emitter reports its one argument through the runtime's `myl_core_main_error_*`, which writes

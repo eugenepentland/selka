@@ -1,0 +1,15 @@
+{
+  "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-capabilities/.mylang-cache/s3/context-core"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-capabilities",
+  "env": {
+    "PATH": "/usr/bin:/bin",
+    "ONLY_VISIBLE": "ok",
+    "MYL_CORE_LEAKCHECK": "1"
+  },
+  "binary_sha256": "6022aabddfdb7157e522d84a4e7f844dd701c08918763f963fa8942d44c90796",
+  "status": 0,
+  "stdout": "3\n",
+  "stderr": ""
+}

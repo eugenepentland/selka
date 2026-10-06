@@ -23,6 +23,8 @@ typedef struct {
 /* Whether the command line granted the `Host` authority a foreign call needs.
    Set once per process by provision() before any entry grant is queried. */
 static int host_authority = 0;
+static const char *environment_allowlist = "";
+const char *myl_qbe_environment_allowlist(void) { return environment_allowlist; }
 static MylangClockResult clock_now(void *context) {
     (void)context;
     MylangClockResult result = {MYLANG_PROVIDER_FAILED, 0};
@@ -148,6 +150,7 @@ uint64_t myl_qbe_grant_host_checked(void *context, const char *flag) {
    read grant. */
 static int provision(MylangGrants *grants, MylangNativeProviders *providers, int linked) {
     (void)mylang_host_charge;
+    environment_allowlist = grants->names;
     host_authority = !grants->restricted || grants->host;
     if (linked && !grants->restricted) return 1;
     if (!roots(grants)) return 0;
@@ -240,6 +243,7 @@ int mylang_qbe_run_grants(uint64_t (*entry)(void *), int argc, char **argv, cons
     if (provision(&grants, &providers, base != NULL)) status = mylang_qbe_run_process(entry, &controls, argc > 0 ? argc - 1 : 0, argc > 0 ? argv + 1 : argv, &providers);
     else fputs("mylang: a requested directory grant could not be opened\n", stderr);
     mylang_scoped_close(&grants.scoped);
+    environment_allowlist = "";
     free(storage);
     return status;
 }

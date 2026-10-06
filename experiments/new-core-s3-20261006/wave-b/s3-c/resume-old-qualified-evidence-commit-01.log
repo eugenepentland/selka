@@ -1,0 +1,62 @@
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 28 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 10076 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 11 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed
+[codex/new-core-s3-capabilities 51e641fa3] test: qualify corrected old Environment runtime for S3 comparison
+ 54 files changed, 18741 insertions(+)
+ create mode 100644 experiments/new-core-s3-20261006/wave-b/s3-c/REPORT.md
+ create mode 100644 experiments/new-core-s3-20261006/wave-b/s3-c/resume-context-argv-commit-01.log
+ create mode 100644 experiments/new-core-s3-20261006/wave-b/s3-c/resume-context-argv-commit-02.log
+ create mode 100644 experiments/new-core-s3-20261006/wave-b/s3-c/resume-context-candidate-old-build-01.log
+ create mode 100644 experiments/new-core-s3-20261006/wave-b/s3-c/resume-context-candidate-old-build-02.log
+ create mode 100644 experiments/new-core-s3-20261006/wave-b/s3-c/resume-context-candidate-old-run-01.log
+ create mode 100644 experiments/new-core-s3-20261006/wave-b/s3-c/resume-context-core-test-01.log
+ create mode 100644 experiments/new-core-s3-20261006/wave-b/s3-c/resume-context-core-test-02.log
+ create mode 100644 experiments/new-core-s3-20261006/wave-b/s3-c/resume-context-core-test-03.log
+ create mode 100644 experiments/new-core-s3-20261006/wave-b/s3-c/resume-context-corrected-oracle.json
+ create mode 100644 experiments/new-core-s3-20261006/wave-b/s3-c/resume-context-diff-check-01.log
+ create mode 100644 experiments/new-core-s3-20261006/wave-b/s3-c/resume-context-fixture-script-check-01.log
+ create mode 100644 experiments/new-core-s3-20261006/wave-b/s3-c/resume-context-fixture-script-commit-01.log
+ create mode 100644 experiments/new-core-s3-20261006/wave-b/s3-c/resume-context-fixture-source-commit-01.log
+ create mode 100644 experiments/new-core-s3-20261006/wave-b/s3-c/resume-context-fmt-01.log
+ create mode 100644 experiments/new-core-s3-20261006/wave-b/s3-c/resume-context-fmt-02.log
+ create mode 100644 experiments/new-core-s3-20261006/wave-b/s3-c/resume-context-fmt-03.log
+ create mode 100644 experiments/new-core-s3-20261006/wave-b/s3-c/resume-context-fmt-04.log
+ create mode 100644 experiments/new-core-s3-20261006/wave-b/s3-c/resume-context-inputs-check-01.log
+ create mode 100644 experiments/new-core-s3-20261006/wave-b/s3-c/resume-context-inputs-commit-01.log
+ create mode 100644 experiments/new-core-s3-20261006/wave-b/s3-c/resume-context-inputs-fmt-01.log
+ create mode 100644 experiments/new-core-s3-20261006/wave-b/s3-c/resume-context-old-full-gate-01.log
+ create mode 100644 experiments/new-core-s3-20261006/wave-b/s3-c/resume-context-old-full-gate-02.log
+ create mode 100644 experiments/new-core-s3-20261006/wave-b/s3-c/resume-context-old-full-gate-03.log
+ create mode 100644 experiments/new-core-s3-20261006/wave-b/s3-c/resume-context-old-full-gate-04.log
+ create mode 100644 experiments/new-core-s3-20261006/wave-b/s3-c/resume-context-old-gate-validation-01.log
+ create mode 100644 experiments/new-core-s3-20261006/wave-b/s3-c/resume-context-old-gate-validation.json
+ create mode 100644 experiments/new-core-s3-20261006/wave-b/s3-c/resume-context-old-install-01.log
+ create mode 100644 experiments/new-core-s3-20261006/wave-b/s3-c/resume-context-old-modes-commit-01.log
+ create mode 100644 experiments/new-core-s3-20261006/wave-b/s3-c/resume-context-old-modes-fmt-01.log
+ create mode 100644 experiments/new-core-s3-20261006/wave-b/s3-c/resume-context-source-commit-01.log
+ create mode 100644 experiments/new-core-s3-20261006/wave-b/s3-c/resume-context-source-commit-02.log
+ create mode 100644 experiments/new-core-s3-20261006/wave-b/s3-c/resume-default-get-fmt-01.log
+ create mode 100644 experiments/new-core-s3-20261006/wave-b/s3-c/resume-default-get-source-commit-01.log
+ create mode 100644 experiments/new-core-s3-20261006/wave-b/s3-c/resume-default-grants-old-build-01.log
+ create mode 100644 experiments/new-core-s3-20261006/wave-b/s3-c/resume-default-grants-probe-01.log
+ create mode 100644 experiments/new-core-s3-20261006/wave-b/s3-c/resume-default-grants-probe-02.log
+ create mode 100644 experiments/new-core-s3-20261006/wave-b/s3-c/resume-diff-check-01.log
+ create mode 100644 experiments/new-core-s3-20261006/wave-b/s3-c/resume-identity-baseline-copy-01.log
+ create mode 100644 experiments/new-core-s3-20261006/wave-b/s3-c/resume-identity-baseline.json
+ create mode 100644 experiments/new-core-s3-20261006/wave-b/s3-c/resume-m-compile-fix-commit-01.log
+ create mode 100644 experiments/new-core-s3-20261006/wave-b/s3-c/resume-m-compile-fix-merge-01.log
+ create mode 100644 experiments/new-core-s3-20261006/wave-b/s3-c/resume-m-dependency-commit-01.log
+ create mode 100644 experiments/new-core-s3-20261006/wave-b/s3-c/resume-m-dependency-fmt-01.log
+ create mode 100644 experiments/new-core-s3-20261006/wave-b/s3-c/resume-m-dependency-merge-01.log
+ create mode 100644 experiments/new-core-s3-20261006/wave-b/s3-c/resume-m-list-dependency-commit-01.log
+ create mode 100644 experiments/new-core-s3-20261006/wave-b/s3-c/resume-m-list-dependency-merge-01.log
+ create mode 100644 experiments/new-core-s3-20261006/wave-b/s3-c/resume-malformed-fmt-01.log
+ create mode 100644 experiments/new-core-s3-20261006/wave-b/s3-c/resume-malformed-fmt-02.log
+ create mode 100644 experiments/new-core-s3-20261006/wave-b/s3-c/resume-malformed-name-probe-01.log
+ create mode 100644 experiments/new-core-s3-20261006/wave-b/s3-c/resume-malformed-script-commit-01.log
+ create mode 100644 experiments/new-core-s3-20261006/wave-b/s3-c/resume-malformed-source-commit-01.log
+ create mode 100644 experiments/new-core-s3-20261006/wave-b/s3-c/resume-malformed-source-commit-02.log
+ create mode 100644 experiments/new-core-s3-20261006/wave-b/s3-c/resume-plan-merge-01.log

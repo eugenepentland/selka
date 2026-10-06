@@ -22,6 +22,8 @@ const emit_text = @import("emit_text.zig");
 const text_builder = @import("build_text.zig");
 const emit_fn = @import("emit_fn.zig");
 const emit_number = @import("emit_number.zig");
+const emit_cap = @import("emit_cap.zig");
+const emit_values = @import("emit_values.zig");
 
 /// A source line and column for a span start.
 pub const Location = struct { line: u32, column: u32 };
@@ -60,6 +62,8 @@ pub const Main = struct {
     /// When `main` returns a `Result`, the tags of its `Ok` and `Err` cases (the
     /// checker's order): the entry reports an `Err` (RESULT-MAIN-1/2).
     result: ?MainResult = null,
+    /// Checked capability family per parameter; 255 means ordinary data.
+    capabilities: []const u8 = &.{},
 };
 
 /// The case tags of `main`'s `Result` return type.
@@ -88,6 +92,8 @@ pub const TrapKind = enum(u8) {
     text_scalar = 15,
     text_substring = 16,
     invalid_shift = 17,
+    list_value = 18,
+    list_pop_index = 19,
 };
 
 const Site = struct { kind: TrapKind, location: Location, width: u16, operation: []const u8, function: []const u8 };
@@ -199,6 +205,7 @@ pub fn emitModule(allocator: std.mem.Allocator, module: *const ir.Module, option
     try out.appendSlice(allocator, tbaa_metadata);
     try out.appendSlice(allocator, state.meta.ranges.items);
     try out.appendSlice(allocator, state.layouts.text.items);
+    try emit_values.descriptors(allocator, module, &out);
     try out.appendSlice(allocator, trace_call_attributes);
     if (state.zeros != 0) try out.print(allocator, "@myl.zeros = private constant [{d} x i8] zeroinitializer, align 8\n", .{state.zeros});
     try state.debug.finish(allocator, &out);
@@ -232,6 +239,7 @@ const ModuleState = struct {
     zeros: u32 = 0,
 
     fn declareExtern(self: *ModuleState, function: *const ir.Function) !void {
+        if (try emit_values.adapter(self.allocator, &self.externs, function)) return;
         // Several signatures of one runtime function (`myl_core_list_sort` over lists of different
         // elements) are one declaration.
         const symbol_name = c_abi.symbol(function.name);
@@ -440,9 +448,16 @@ const ModuleState = struct {
         try out.print(self.allocator, "define i32 @main(i32 %argc, ptr %argv) uwtable{s} {{\nentry:\n", .{scope});
         var arguments: Out = .empty;
         var owns_args = false;
+        var cleanup: Out = .empty;
         for (entry.signature.params, 0..) |param, i| {
             if (i != 0) try arguments.appendSlice(self.allocator, ", ");
-            if (param == .cap) {
+            if (param == .capability) {
+                try arguments.appendSlice(self.allocator, try emit_cap.entry(self, out, &cleanup, i));
+            } else if (param == .cap) {
+                if (try emit_cap.token(self, out, i)) |token| {
+                    try arguments.appendSlice(self.allocator, token);
+                    continue;
+                }
                 const name = if (i < self.options.main.parameters.len) self.options.main.parameters[i] else "";
                 try arguments.print(self.allocator, "i64 {d}", .{@as(u8, if (std.mem.eql(u8, name, "err")) 2 else 1)});
             } else if (param.isCompound() and self.module.compound(param) == .list and self.module.compound(param).list == .str) {
@@ -451,7 +466,8 @@ const ModuleState = struct {
                 owns_args = true;
             } else return error.UnsupportedEntry;
         }
-        const release_args = if (owns_args) "  call void @myl_core_release(ptr %args)\n" else "";
+        if (owns_args) try cleanup.appendSlice(self.allocator, "  call void @myl_core_release(ptr %args)\n");
+        const release_args = cleanup.items;
         const ret = entry.signature.ret;
         const callee = try symbol(self.allocator, entry.name);
         if (ret == .void) {
@@ -1565,6 +1581,14 @@ const FunctionEmitter = struct {
         try out.print(self.a(), "  {s} = icmp uge i64 {s}, {s}\n", .{ outside, index, len });
         // The read a `pop` starts with fails exactly when the list is empty, which is the pop trap.
         if (inst.op == .list_get and inst.data == flags.pop_read) return self.trapIf(out, outside, try self.site(.list_empty, inst, "pop"), "0", len);
+        if (inst.op == .list_get and inst.data == flags.pop_index_read) {
+            // Only a too-negative original index can remain negative after normalization.
+            const negative = try self.fresh("%popnegative");
+            const before = try self.fresh("%popbefore");
+            const original = try self.fresh("%popindex");
+            try out.print(self.a(), "  {s} = icmp slt i64 {s}, 0\n  {s} = sub i64 {s}, {s}\n  {s} = select i1 {s}, i64 {s}, i64 {s}\n", .{ negative, index, before, index, len, original, negative, before, index });
+            return self.trapIf(out, outside, try self.site(.list_pop_index, inst, "pop"), original, len);
+        }
         try self.trapIf(out, outside, try self.site(.list_bounds, inst, "index"), index, len);
     }
 
@@ -2271,6 +2295,7 @@ const FunctionEmitter = struct {
         const m = self.state.module;
         const signature = if (inst.op == .call_indirect) m.compound(self.typeOf(inst.a)).@"fn" else m.functions.items[inst.a.index()].signature;
         const external = signature.linkage != .internal;
+        if (inst.op == .call) try emit_cap.beforeCall(@TypeOf(self), self, out, inst);
         const borrowed_bytes = external and signature.ret == .bytes and signature.owned == 0;
         const text_parameter = signature.params.len == 1 and signature.params[0] == .str;
         if (inst.op == .call and borrowed_bytes and text_parameter and

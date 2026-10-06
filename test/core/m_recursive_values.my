@@ -1,0 +1,173 @@
+module m_recursive_values
+
+record Link:
+    value: int
+    next: Option[Link]
+
+union Tree[T]:
+    leaf: T,
+    branch(left: Tree[T], right: Tree[T])
+
+domain Distance: u16:
+    def make(value: u16) -> Distance:
+        return wrap[Distance](value)
+
+record UnitSlot:
+    value: Distance
+    empty: None
+
+union Unusual:
+    some,
+    none: int,
+    unit: None
+
+record Cursor:
+    rows: list[list[int]]
+    ticks: int
+
+record MixedUnits:
+    scalar: int
+    values: list[int]
+    row: [2]int
+    empty: None
+
+def tick(cursor: mut Cursor) -> int:
+    cursor.ticks += 1
+    return 0
+
+def add(row: mut list[int], ignored: int) -> None:
+    row.append(9)
+
+def add_reverse(ignored: int, row: mut list[int]) -> None:
+    row.append(9)
+
+def tick_row(row: mut list[int]) -> int:
+    row.append(7)
+    return 0
+
+def conditional_ancestor(flag: bool) -> Cursor:
+    cursor = Cursor([[1], [2]], 0)
+    add(mut cursor.rows[-1], tick(mut cursor) if flag else 0)
+    return cursor
+
+def chain(n: int) -> Option[Link]:
+    result: Option[Link] = None
+    for i in range(n):
+        result = Some(Link(i, result))
+    return result
+
+# spec: NEW-CORE-S3-VALUES-1
+public def test_deep_hashing_and_nominal_rendering() -> bool:
+    a = chain(3000)
+    b = chain(3000)
+    distinct = chain(2999)
+    values: set[Option[Link]] = {a, b, distinct}
+    return a == b and a != distinct and len(values) == 2 and f"{chain(1)}" == "Some(Link(value=0, next=None))"
+
+# spec-case: NEW-CORE-S3-VALUES-1
+public def test_shared_nan_is_not_reflexive() -> bool:
+    nan: Tree[float] = Tree.leaf(0.0 / 0.0)
+    zero: Tree[float] = Tree.leaf(-0.0)
+    plus: Tree[float] = Tree.leaf(0.0)
+    for _ in range(40):
+        nan = Tree.branch(nan, nan)
+        zero = Tree.branch(zero, zero)
+        plus = Tree.branch(plus, plus)
+    return nan != nan and zero == plus
+
+# spec-case: NEW-CORE-S3-VALUES-1
+public def test_repeated_list_snapshots_stay_independent() -> bool:
+    a = [1, 2]
+    joined = a * 1
+    repeated = 2 * a
+    joined[0] = 8
+    repeated[1] = 9
+    nan = 0.0 / 0.0
+    numbers = [nan, -0.0]
+    units: list[None] = [None]
+    return a == [1, 2] and joined == [8, 2] and repeated == [1, 9, 1, 2] and nan not in numbers and 0.0 in numbers and None in units
+
+# spec-case: NEW-CORE-S3-VALUES-1
+public def test_source_types_keep_unit_payloads_and_domain_names() -> bool:
+    marker = "\0myl.core.render.source.1|not-json"
+    legacy_marker = "\0myl.core.render.1|T|wrong"
+    if len(marker) != 34 or len(legacy_marker) != 26:
+        return False
+    units: list[None] = [None, None]
+    fixed: [2]None = [None, None]
+    fixed[1] = None
+    slot = UnitSlot(Distance.make(3u16), None)
+    slot.empty = None
+    some_unit: Option[None] = Some(None)
+    if f"{units}" != "[None, None]" or f"{fixed}" != "[None, None]" or f"{some_unit}" != "Some(None)":
+        return False
+    if f"{Unusual.some}" != "Unusual.some" or f"{Unusual.none(1)}" != "Unusual.none(1)" or f"{Unusual.unit(None)}" != "Unusual.unit(None)":
+        return False
+    distances = [Distance.make(3u16), Distance.make(4u16)]
+    dictionary: dict[int, None] = {1: None}
+    return f"{slot}" == "UnitSlot(value=Distance(3), empty=None)" and f"{distances}" == "[Distance(3), Distance(4)]" and f"{dictionary}" == "{1: None}" and f"{Distance.make(3u16)}" == "Distance(3)"
+
+# spec-case: NEW-CORE-S3-VALUES-1
+public def test_negative_index_capture_is_superseded_by_scalar_ancestor_write() -> bool:
+    cursor = Cursor([[1], [2]], 0)
+    add(mut cursor.rows[-1], tick(mut cursor))
+    return cursor.rows == [[1], [2]] and cursor.ticks == 1
+
+# spec-case: NEW-CORE-MUT-1
+public def test_sibling_write_preserves_capture_and_same_place_reads_current_value() -> bool:
+    rows = [[1], [2]]
+    add(mut rows[-1], tick_row(mut rows[0]))
+    same = [[1], [2]]
+    add(mut same[-1], tick_row(mut same[-1]))
+    mapping = {10: [1], 20: [2]}
+    add(mut mapping[20], tick_row(mut mapping[10]))
+    return rows == [[1, 7], [2, 9]] and same == [[1], [2, 7, 9]] and mapping == {10: [1, 7], 20: [2, 9]}
+
+# spec-case: NEW-CORE-MUT-1
+public def test_untaken_ancestor_write_keeps_publication_live() -> bool:
+    untouched = conditional_ancestor(False)
+    changed = conditional_ancestor(True)
+    return untouched.rows == [[1], [2, 9]] and untouched.ticks == 0 and changed.rows == [[1], [2]] and changed.ticks == 1
+
+# spec-case: NEW-CORE-MUT-1
+public def test_keyword_temporaries_capture_in_source_order() -> bool:
+    rows = [[1], [2]]
+    add_reverse(row=mut rows[-1], ignored=tick_row(mut rows[0]))
+    cursor = Cursor([[1], [2]], 0)
+    add_reverse(row=mut cursor.rows[-1], ignored=tick(mut cursor))
+    return rows == [[1, 7], [2, 9]] and cursor.rows == [[1], [2]] and cursor.ticks == 1
+
+# spec-case: NEW-CORE-S3-VALUES-1
+# spec-case: RC-SCALAR-REPLACE-1
+public def test_unit_assignment_through_nested_list_places_survives_control_flow() -> bool:
+    row: [2]int = [2, 3]
+    empty: None = None
+    values = [MixedUnits(1, [4], row, empty)]
+    before = values
+    values[0].scalar = 7
+    values[0].values = [8, 9]
+    values[0].scalar = values[0].scalar
+    values[0].row = [10, 11]
+    for i in range(2):
+        if i == 0:
+            empty = None
+        values[i - i].empty = empty
+    values[0].values = [12]
+    values[0].scalar = 13
+    return values[0].scalar == 13 and values[0].values == [12] and values[0].row[1] == 11 and before[0].scalar == 1 and before[0].values == [4] and before[0].row[1] == 3 and f"{values[0].empty}" == "None"
+
+# spec-case: NEW-CORE-S3-NUMERIC-1
+public def test_subtraction_and_multiplication_saturate_at_each_width() -> bool:
+    if saturating_sub(-128i8, 1i8) != -128i8 or saturating_sub(127i8, -128i8) != 127i8:
+        return False
+    if saturating_mul(-128i8, -1i8) != 127i8 or saturating_mul(-128i8, 2i8) != -128i8:
+        return False
+    if saturating_sub(0u8, 255u8) != 0u8 or saturating_mul(255u8, 255u8) != 255u8:
+        return False
+    if saturating_mul(65535u16, 65535u16) != 65535u16 or saturating_sub(-32768i16, 1i16) != -32768i16:
+        return False
+    if saturating_mul(2147483647i32, 2i32) != 2147483647i32 or saturating_mul(4294967295u32, 4294967295u32) != 4294967295u32:
+        return False
+    if saturating_mul(-9223372036854775808, -1) != 9223372036854775807 or saturating_sub(9223372036854775807, -1) != 9223372036854775807:
+        return False
+    return saturating_mul(18446744073709551615u64, 18446744073709551615u64) == 18446744073709551615u64 and saturating_sub(0u64, 1u64) == 0u64

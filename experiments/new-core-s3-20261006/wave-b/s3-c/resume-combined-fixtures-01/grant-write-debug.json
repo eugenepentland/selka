@@ -1,0 +1,8 @@
+{
+  "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-capabilities/.mylang-cache/s3/resume-combined-fixtures-01/grants-debug"
+  ],
+  "status": 0,
+  "stdout": "inside\nread '../outside.txt': denied: outside the granted directories, or the mode needs a write grant\nwritten\nKEEP\nvisible\n13309476754707697221\nonly a simulated clock can be advanced\nleft:7:right!\n",
+  "stderr": ""
+}

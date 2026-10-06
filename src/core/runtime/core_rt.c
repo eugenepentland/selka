@@ -41,7 +41,9 @@ static void os_write(int fd, const unsigned char *bytes, size_t len) {
 }
 
 /* End the process now, with no atexit handlers (a trap or a fatal error). */
-static void os_exit(int status) { _exit(status); }
+static void core_io_cleanup(void);
+static void core_host_cleanup(void);
+static void os_exit(int status) { core_io_cleanup(); _exit(status); }
 
 /* The return addresses on the stack, innermost first, walked through `.eh_frame`
    (glibc's `backtrace`, which is libgcc's `_Unwind_Backtrace`; no unwinder is
@@ -376,6 +378,8 @@ myl_block *myl_core_box_new(int64_t size) {
  * stack. The emitted release does not store the final 0, so a dying block is
  * recognized by the caller, never by its count. */
 static void core_dict_free_pending(myl_block *dict, myl_block **pending);
+static void core_io_finalize(myl_block *block);
+static int64_t core_io_live_handles(void);
 
 __attribute__((cold)) void myl_core_free_block(myl_block *block) {
     block->cap = 0;
@@ -383,6 +387,7 @@ __attribute__((cold)) void myl_core_free_block(myl_block *block) {
     while (pending) {
         myl_block *dying = pending;
         pending = (myl_block *)(intptr_t)dying->cap;
+        core_io_finalize(dying);
         myl_layout *layout = layout_of(dying);
         if (kind_of(dying) == MYL_KIND_DICT) {
             core_dict_free_pending(dying, &pending);
@@ -459,7 +464,7 @@ typedef struct {
 extern const myl_core_site myl_core_sites[];
 extern const char myl_core_source_path[];
 
-enum { TRAP_OVERFLOW, TRAP_DIVISION_BY_ZERO, TRAP_LIST_BOUNDS, TRAP_FLOAT_CONVERSION, TRAP_CAST, TRAP_FACT, TRAP_LIST_EMPTY, TRAP_MISSING_KEY = 9, TRAP_ITERATION_MUTATION = 10, TRAP_TEXT_BOUNDS = 11, TRAP_TEXT_SEPARATOR = 12, TRAP_TEXT_STEP = 13, TRAP_BYTE_RANGE = 14, TRAP_TEXT_SCALAR = 15, TRAP_TEXT_SUBSTRING = 16, TRAP_INVALID_SHIFT = 17 };
+enum { TRAP_OVERFLOW, TRAP_DIVISION_BY_ZERO, TRAP_LIST_BOUNDS, TRAP_FLOAT_CONVERSION, TRAP_CAST, TRAP_FACT, TRAP_LIST_EMPTY, TRAP_MISSING_KEY = 9, TRAP_ITERATION_MUTATION = 10, TRAP_TEXT_BOUNDS = 11, TRAP_TEXT_SEPARATOR = 12, TRAP_TEXT_STEP = 13, TRAP_BYTE_RANGE = 14, TRAP_TEXT_SCALAR = 15, TRAP_TEXT_SUBSTRING = 16, TRAP_INVALID_SHIFT = 17, TRAP_LIST_VALUE = 18, TRAP_LIST_POP_INDEX = 19 };
 
 
 
@@ -839,6 +844,13 @@ void myl_core_trap(int32_t index, int64_t a, int64_t b) {
         snprintf(detail, sizeof detail, " (length %lld)", (long long)b);
         snprintf(record, sizeof record, "\036MYLANG-TRAP {\"version\":1,\"operation\":\"pop\",\"length\":%lld}\n", (long long)b);
         break;
+    case TRAP_LIST_POP_INDEX:
+        /* myl_qbe_fail_pop_at_bounds: an indexed pop retains its pop operation. */
+        code = "R_LIST_BOUNDS";
+        snprintf(detail, sizeof detail, " (index %lld, length %lld)", (long long)a, (long long)b);
+        snprintf(record, sizeof record, "\036MYLANG-TRAP {\"version\":1,\"operation\":\"pop\",\"index\":%lld,\"length\":%lld}\n", (long long)a, (long long)b);
+        break;
+    case TRAP_LIST_VALUE: code = "R_LIST_VALUE"; break;
     case TRAP_ITERATION_MUTATION:
         code = "R_LIST_ITERATION_MUTATION";
         break;
@@ -875,6 +887,20 @@ void myl_core_trap(int32_t index, int64_t a, int64_t b) {
     os_exit(1);
 }
 
+static int32_t core_io_site=-1;
+void myl_core_io_at(int32_t site){core_io_site=site;}
+/* Runtime effects keep their checked call site; walk past C adapters before
+   printing the guest callers, just as a generated trap keeps its site frame. */
+__attribute__((cold,noinline)) static void core_io_failure(const char *code){
+    stream_flush(&streams[0]);char text[1024];int length;
+    if(core_io_site>=0){const myl_core_site *site=&myl_core_sites[core_io_site];length=snprintf(text,sizeof text,"%s:%d:%d: error[%s]: native execution failed\n  in %s at %s:%d:%d\n",myl_core_source_path,site->line,site->column,code,site->function,myl_core_source_path,site->line,site->column);}
+    else length=snprintf(text,sizeof text,"error[%s]: native execution failed\n",code);
+    stream_write(&streams[1],text,(size_t)(length<(int)sizeof text?length:(int)sizeof text-1));
+    void *pcs[128];int count=os_stack(pcs,128),found=0;
+    for(int i=2;i<count;++i){int frames=dwarf_frames((uintptr_t)pcs[i]-1,found?0:1);if(frames)found=1;else if(found)break;}
+    flush_all();os_exit(strncmp(code,"R_",2)?2:1);
+}
+
 /* With MYL_CORE_LEAKCHECK=1, a program that ends with blocks still allocated says
    how many on stderr (the exit status is unchanged). Every path that returns from
    `main` releases what it owns, so a nonzero count is an ownership bug; a trap
@@ -882,6 +908,12 @@ void myl_core_trap(int32_t index, int64_t a, int64_t b) {
 static void leak_report(void) {
     const char *flag = getenv("MYL_CORE_LEAKCHECK");
     if (!flag || strcmp(flag, "1") != 0) return;
+    int64_t handles = core_io_live_handles();
+    if (handles) {
+        char message[96];
+        int width = snprintf(message, sizeof message, "myl-core leakcheck: %lld handles live at exit\n", (long long)handles);
+        os_write(2, (const unsigned char *)message, (size_t)width);
+    }
     int64_t live = live_count();
     if (live == 0) return;
     char text[96];
@@ -893,6 +925,7 @@ static void leak_report(void) {
 int32_t myl_core_exit(int64_t status) {
     flush_all();
     leak_report();
+    core_io_cleanup();
     return (int32_t)(status & 0xFF);
 }
 

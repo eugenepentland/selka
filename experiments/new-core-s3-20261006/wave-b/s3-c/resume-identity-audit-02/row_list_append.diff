@@ -1,0 +1,183 @@
+--- 92590700
++++ S3-Wave-A
+@@ -340,7 +340,9 @@
+ b9:
+   ret i64 2
+ b10:
+-  %v69 = call i64 @runtime_bench_now(), !dbg !1000016
++  call void @myl_core_io_at(i32 9)
++  call void @myl_core_host_check(i64 %p1), !dbg !1000016
++  %v70 = call i64 @runtime_bench_now(), !dbg !1000017
+   br label %b14
+ b11:
+   %v61 = icmp sgt i64 %v47, 1000000
+@@ -352,47 +354,49 @@
+   %v55 = icmp slt i64 %v34, 1
+   br i1 %v55, label %b9, label %b12
+ b14:
+-  %v72 = phi i64 [ 0, %b10 ], [ %v90, %b16 ]
+-  %v84 = phi i64 [ 0, %b10 ], [ %v87, %b16 ]
+-  %v74 = icmp slt i64 %v72, %v34
+-  br i1 %v74, label %b15, label %b17
++  %v73 = phi i64 [ 0, %b10 ], [ %v91, %b16 ]
++  %v85 = phi i64 [ 0, %b10 ], [ %v88, %b16 ]
++  %v75 = icmp slt i64 %v73, %v34
++  br i1 %v75, label %b15, label %b17
+ b15:
+-  %v78 = call i64 @"my.row_list_append::batch_result"(i64 %v21, i64 %v72, i64 %v47), !dbg !1000017
+-  %v80 = icmp slt i64 %v78, 0
+-  br i1 %v80, label %b18, label %b19
++  %v79 = call i64 @"my.row_list_append::batch_result"(i64 %v21, i64 %v73, i64 %v47), !dbg !1000018
++  %v81 = icmp slt i64 %v79, 0
++  br i1 %v81, label %b18, label %b19
+ b16:
+-  %v90 = add nuw nsw i64 %v72, 1
++  %v91 = add nuw nsw i64 %v73, 1
+   br label %b14
+ b17:
+-  %v93 = call i64 @runtime_bench_now(), !dbg !1000018
+-  %p.47 = call { i64, i1 } @llvm.ssub.with.overflow.i64(i64 %v93, i64 %v69)
+-  %v95 = extractvalue { i64, i1 } %p.47, 0
++  call void @myl_core_io_at(i32 10)
++  call void @myl_core_host_check(i64 %p1), !dbg !1000019
++  %v95 = call i64 @runtime_bench_now(), !dbg !1000020
++  %p.47 = call { i64, i1 } @llvm.ssub.with.overflow.i64(i64 %v95, i64 %v70)
++  %v97 = extractvalue { i64, i1 } %p.47, 0
+   %o.48 = extractvalue { i64, i1 } %p.47, 1
+   br i1 %o.48, label %trap.49, label %b17.50, !prof !0
+ trap.49:
+-  call void @myl_core_trap(i32 9, i64 %v93, i64 %v69), !dbg !1000019
++  call void @myl_core_trap(i32 11, i64 %v95, i64 %v70), !dbg !1000021
+   unreachable
+ b17.50:
+-  call void @myl_core_print_i64(i64 %p2, i64 %v84)
++  call void @myl_core_print_i64(i64 %p2, i64 %v85)
+   call void @myl_core_print_sep(i64 %p2)
+-  call void @myl_core_print_i64(i64 %p2, i64 %v95)
++  call void @myl_core_print_i64(i64 %p2, i64 %v97)
+   call void @myl_core_print_end(i64 %p2)
+   ret i64 0
+ b18:
+   ret i64 2
+ b19:
+-  %p.51 = call { i64, i1 } @llvm.sadd.with.overflow.i64(i64 %v84, i64 %v78)
+-  %v85 = extractvalue { i64, i1 } %p.51, 0
++  %p.51 = call { i64, i1 } @llvm.sadd.with.overflow.i64(i64 %v85, i64 %v79)
++  %v86 = extractvalue { i64, i1 } %p.51, 0
+   %o.52 = extractvalue { i64, i1 } %p.51, 1
+   br i1 %o.52, label %trap.53, label %b19.54, !prof !0
+ trap.53:
+-  call void @myl_core_trap(i32 10, i64 %v84, i64 %v78), !dbg !1000020
++  call void @myl_core_trap(i32 12, i64 %v85, i64 %v79), !dbg !1000022
+   unreachable
+ b19.54:
+-  %v87 = urem i64 %v85, 1000000007
++  %v88 = urem i64 %v86, 1000000007
+   br label %b16
+ }
+-define internal i64 @"my.row_list_append::parse_number"(ptr %p0) nounwind uwtable !dbg !1000021 {
++define internal i64 @"my.row_list_append::parse_number"(ptr %p0) nounwind uwtable !dbg !1000023 {
+ entry:
+   %slot = alloca i64, align 8
+   br label %b0
+@@ -414,7 +418,7 @@
+ b4:
+   ret i64 0
+ }
+-define internal i64 @"my.row_list_append::batch_result"(i64 %p0, i64 %p1, i64 %p2) nounwind uwtable !dbg !1000022 {
++define internal i64 @"my.row_list_append::batch_result"(i64 %p0, i64 %p1, i64 %p2) nounwind uwtable !dbg !1000024 {
+ entry:
+   %slot = alloca i64, align 8
+   br label %b0
+@@ -432,7 +436,7 @@
+   %o.2 = extractvalue { i64, i1 } %p.1, 1
+   br i1 %o.2, label %trap.3, label %b2.4, !prof !0
+ trap.3:
+-  call void @myl_core_trap(i32 11, i64 %p2, i64 %p1), !dbg !1000023
++  call void @myl_core_trap(i32 13, i64 %p2, i64 %p1), !dbg !1000025
+   unreachable
+ b2.4:
+   %p.5 = call { i64, i1 } @llvm.smul.with.overflow.i64(i64 %v7, i64 13)
+@@ -440,7 +444,7 @@
+   %o.6 = extractvalue { i64, i1 } %p.5, 1
+   br i1 %o.6, label %trap.7, label %b2.4.8, !prof !0
+ trap.7:
+-  call void @myl_core_trap(i32 12, i64 %v7, i64 13), !dbg !1000024
++  call void @myl_core_trap(i32 14, i64 %v7, i64 13), !dbg !1000026
+   unreachable
+ b2.4.8:
+   %p.9 = call { i64, i1 } @llvm.sadd.with.overflow.i64(i64 %v13, i64 %v15)
+@@ -448,7 +452,7 @@
+   %o.10 = extractvalue { i64, i1 } %p.9, 1
+   br i1 %o.10, label %trap.11, label %b2.4.8.12, !prof !0
+ trap.11:
+-  call void @myl_core_trap(i32 13, i64 %v13, i64 %v15), !dbg !1000025
++  call void @myl_core_trap(i32 15, i64 %v13, i64 %v15), !dbg !1000027
+   unreachable
+ b2.4.8.12:
+   %q.13 = sdiv i64 %v16, 1009
+@@ -472,7 +476,7 @@
+   %v23 = add nuw nsw i64 %v7, 1
+   br label %b1
+ b4:
+-  %v25 = call i64 @"my.row_list_append::fold"(ptr %v19), !dbg !1000026
++  %v25 = call i64 @"my.row_list_append::fold"(ptr %v19), !dbg !1000028
+   %rc.25 = load i32, ptr %v19, align 8, !tbaa !3, !range !8
+   %rs.26 = icmp eq i32 %rc.25, -1
+   br i1 %rs.26, label %b4.28, label %rc.dec.27
+@@ -489,7 +493,7 @@
+ b4.28:
+   ret i64 %v25
+ }
+-define internal i64 @"my.row_list_append::fold"(ptr %p0) nounwind uwtable !dbg !1000027 {
++define internal i64 @"my.row_list_append::fold"(ptr %p0) nounwind uwtable !dbg !1000029 {
+ entry:
+   %slot = alloca i64, align 8
+   br label %b0
+@@ -517,7 +521,7 @@
+   %hi.3 = icmp ugt i64 %v17, 9223372036854775807
+   br i1 %hi.3, label %trap.4, label %b5.5, !prof !0
+ trap.4:
+-  call void @myl_core_trap(i32 14, i64 %v17, i64 0), !dbg !1000028
++  call void @myl_core_trap(i32 16, i64 %v17, i64 0), !dbg !1000030
+   unreachable
+ b5.5:
+   %v18 = add i64 %v17, 0
+@@ -526,7 +530,7 @@
+   %o.7 = extractvalue { i64, i1 } %p.6, 1
+   br i1 %o.7, label %trap.8, label %b5.5.9, !prof !0
+ trap.8:
+-  call void @myl_core_trap(i32 15, i64 %v18, i64 %v6), !dbg !1000029
++  call void @myl_core_trap(i32 17, i64 %v18, i64 %v6), !dbg !1000031
+   unreachable
+ b5.5.9:
+   br label %b6
+@@ -540,7 +544,7 @@
+   %o.13 = extractvalue { i64, i1 } %p.12, 1
+   br i1 %o.13, label %trap.14, label %b6.15, !prof !0
+ trap.14:
+-  call void @myl_core_trap(i32 16, i64 %v12, i64 %v23), !dbg !1000030
++  call void @myl_core_trap(i32 18, i64 %v12, i64 %v23), !dbg !1000032
+   unreachable
+ b6.15:
+   %p.16 = call { i64, i1 } @llvm.sadd.with.overflow.i64(i64 %v10, i64 %v24)
+@@ -548,15 +552,16 @@
+   %o.17 = extractvalue { i64, i1 } %p.16, 1
+   br i1 %o.17, label %trap.18, label %b6.15.19, !prof !0
+ trap.18:
+-  call void @myl_core_trap(i32 17, i64 %v10, i64 %v24), !dbg !1000031
++  call void @myl_core_trap(i32 19, i64 %v10, i64 %v24), !dbg !1000033
+   unreachable
+ b6.15.19:
+   br label %b3
+ }
+-define i32 @main(i32 %argc, ptr %argv) uwtable !dbg !1000032 {
++define i32 @main(i32 %argc, ptr %argv) uwtable !dbg !1000034 {
+ entry:
+   %args = call ptr @myl_core_args(i32 %argc, ptr %argv)
+-  %r = call i64 @"my.row_list_append::main"(ptr %args, i64 1, i64 1), !dbg !1000033
++  %host1 = call i64 @myl_core_host_grant()
++  %r = call i64 @"my.row_list_append::main"(ptr %args, i64 %host1, i64 1), !dbg !1000035
+   call void @myl_core_release(ptr %args)
+   %s = call i32 @myl_core_exit(i64 %r)
+   ret i32 %s

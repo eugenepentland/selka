@@ -11,6 +11,7 @@ const std = @import("std");
 const typed = @import("mylang").typed;
 const Source = @import("mylang").source.Source;
 const Field = @FieldType(@FieldType(typed.Node, "data"), "field");
+const BufferOperation = @FieldType(@FieldType(typed.Node, "data"), "buffer_operation");
 const ir = @import("ir.zig");
 const fuse = @import("fuse.zig");
 const flags = @import("flags.zig");
@@ -22,6 +23,8 @@ const fuse_text = @import("fuse_text.zig");
 const build_cap = @import("build_cap.zig");
 const build_bytes = @import("build_bytes.zig");
 const build_fn = @import("build_fn.zig");
+const build_values = @import("build_values.zig");
+const build_capture = @import("build_capture.zig");
 
 /// Refusal reasons several constructs share.
 const refuse_payload = "match payload";
@@ -176,6 +179,10 @@ const ModuleBuilder = struct {
         const span: u32 = @intCast(function.declaration.start);
         const linkage: ir.Linkage = if (function.policy.c_abi) .extern_c else if (function.policy.host != null) return self.refuse("host function", span) else .internal;
         const declared = try self.mapType(function.signature.return_type, span);
+        if (linkage == .extern_c) {
+            for (params) |param| if (param != .cap and param.integer() == null and param != .bool and param != .f64) return self.refuse("source extern aggregate ABI", span);
+            if (declared != .void and declared.integer() == null and declared != .bool and declared != .f64) return self.refuse("source extern aggregate ABI", span);
+        }
         if (linkage == .extern_c and function.signature.declared_mutates.len != 0) return self.refuse("mut parameter of an extern function", span);
         const ret = try self.returnType(function, declared, all, span);
         const index: u32 = @intCast(self.module.functions.items.len);
@@ -215,6 +222,8 @@ const ModuleBuilder = struct {
             .u64 => .u64,
             .unit => .void,
             .host_cap, .stream_cap => .cap,
+            .clock_cap, .random_cap, .filesystem_cap, .network_cap, .environment_cap => .capability,
+            .file, .text_file => .resource,
             else => self.mapAggregate(ty, span),
         };
     }
@@ -234,7 +243,8 @@ const ModuleBuilder = struct {
                 return self.module.intern(self.allocator, .{ .list = if (element == .void) .bool else element });
             },
             .dictionary => {
-                const key = try self.mapType(record.collection.key.?, span);
+                const source_key = try self.mapType(record.collection.key.?, span);
+                const key: ir.Type = if (source_key == .void) .bool else source_key;
                 if (!build_dict.keySupported(self.module, key)) return self.refuse("dictionary key type", span);
                 if (!record.collection.set and self.viewType(record.shape.buffer.?)) return self.refuse("dictionary storage of live dictionary views", span);
                 const value = if (record.collection.set) .void else try self.mapType(record.shape.buffer.?, span);
@@ -248,11 +258,11 @@ const ModuleBuilder = struct {
         if (record.shape.array) |array| {
             if (self.viewType(array.element)) return self.refuse("fixed array storage of live dictionary views", span);
             const elem = try self.mapType(array.element, span);
-            if (elem == .void or elem == .cap) return self.refuse("fixed array element type", span);
+            if (elem == .cap) return self.refuse("fixed array element type", span);
             const n = std.math.cast(u32, array.length) orelse return self.refuse("fixed array length", span);
-            return self.module.intern(self.allocator, .{ .array = .{ .elem = elem, .n = n } });
+            return self.module.intern(self.allocator, .{ .array = .{ .elem = if (elem == .void) .bool else elem, .n = n } });
         }
-        if (record.shape.resource != null) return self.refuse("resource type", span);
+        if (record.shape.resource != null) return .resource;
         // A domain is its wire type: `wrap` and `unwrap` change nothing at run time.
         if (record.shape.domain) |wire| {
             const underlying = try self.mapType(wire, span);
@@ -264,7 +274,7 @@ const ModuleBuilder = struct {
     }
 
     /// The IR index of runtime `symbol`, declared with this linkage and signature on first use.
-    fn runtimeFunction(self: *ModuleBuilder, symbol: []const u8, params: []const ir.Type, ret: ir.Type, linkage: ir.Linkage) Error!u32 {
+    pub fn runtimeFunction(self: *ModuleBuilder, symbol: []const u8, params: []const ir.Type, ret: ir.Type, linkage: ir.Linkage) Error!u32 {
         // One declaration per symbol and signature: a runtime function over lists of several element
         // types has a Core IR signature for each, which are one `ptr` function to LLVM.
         for (self.module.functions.items, 0..) |function, index| {
@@ -303,7 +313,7 @@ const ModuleBuilder = struct {
         const fields = try self.allocator.alloc(ir.Type, record.fields.len);
         for (record.fields, fields) |field, *out| {
             out.* = self.stored(field.ty, field.boxed, span) catch |err| return self.unreserve(ty, err);
-            if (out.* == .void) return self.unreserve(ty, self.refuse("record field type", span));
+            if (out.* == .void) out.* = .bool;
         }
         self.module.compounds.items[@backingInt(reserved) - ir.Type.first_compound] = .{ .record = fields };
         return reserved;
@@ -337,6 +347,7 @@ const Ssa = struct {
     sealed: std.ArrayList(bool) = .empty,
     /// The IR type of each variable: checked locals first, then synthetic joins.
     types: std.ArrayList(ir.Type) = .empty,
+    resources: std.ArrayList(build_cap.Scope) = .empty,
 };
 
 /// Where `break` and `continue` of one checked loop go.
@@ -344,13 +355,13 @@ const LoopTargets = struct { id: usize, latch: ir.BlockId, exit: ir.BlockId };
 
 /// One step from a value to a part of it: a record field, a list element by index, or the payload
 /// of one case of a union (the narrowing `if x is None: ...` makes of an `Option`).
-const Step = union(enum) { field: u32, element: ir.Ref, payload: u32 };
+const Step = union(enum) { field: u32, element: ir.Ref, payload: u32, mapping: ir.Ref };
 
 /// Where a value lives: a local and a path of steps from it, and how many times the local had
 /// been written when the place was named. A write to a hidden receiver (`s.items.append(v)`,
 /// `xs[i][j] = v`) rebuilds the path and stores the new root back, unless the root was written
 /// since (`writableReceiverOf`).
-const Place = struct { root: u32, steps: []const Step, root_version: u32 = 0, through_view: bool = false };
+const Place = struct { root: u32, steps: []const Step, root_version: u32 = 0, through_view: bool = false, snapshot: ir.Ref = .none, publish: ir.Ref = .none, live: ?u32 = null };
 
 const FnBuilder = struct {
     /// Source-place provenance shared with feature builders; no runtime view object.
@@ -366,6 +377,10 @@ const FnBuilder = struct {
     places: std.AutoHashMapUnmanaged(u32, Place) = .empty,
     /// How many times each local has been assigned so far (the builder's own count of writes).
     versions: std.AutoHashMapUnmanaged(u32, u32) = .empty,
+    /// Interior arguments watched only while their enclosing call evaluates operands.
+    captures: std.ArrayList(struct { place: Place, live: u32 }) = .empty,
+    /// Source-order keyword temporaries whose mut place must be captured at initialization.
+    capture_slots: std.ArrayList(u32) = .empty,
     /// The type the function declares it returns; `function.signature.ret` is a record
     /// of it and the `mut` parameters' final values when there are any.
     declared_ret: ir.Type = .void,
@@ -599,10 +614,11 @@ const FnBuilder = struct {
             return;
         }
         const variable = self.local(slot);
-        const found = place orelse {
+        var found = place orelse {
             _ = self.places.remove(variable);
             return;
         };
+        if (std.mem.indexOfScalar(u32, self.capture_slots.items, variable) != null) try build_capture.watch(@TypeOf(self), self, &found, @intCast(local_info.declaration.start));
         try self.places.put(self.allocator(), variable, found);
     }
 
@@ -634,7 +650,8 @@ const FnBuilder = struct {
 
     // ---- statements ---------------------------------------------------------------
 
-    fn statement(self: *FnBuilder, id: typed.StatementId) Error!void {
+    /// Lower a checked statement and preserve lexical cleanup on every exit.
+    pub fn statement(self: *FnBuilder, id: typed.StatementId) Error!void {
         if (self.current == null) return;
         const s = self.statementOf(id);
         const span: u32 = @intCast(s.span.start);
@@ -653,6 +670,7 @@ const FnBuilder = struct {
                 const block = self.current orelse return;
                 try self.write(self.local(store.slot), block, value);
                 try self.assigned(self.local(store.slot));
+                if (s.data == .assign) try build_capture.invalidate(@TypeOf(self), self, .{ .root = self.local(store.slot), .steps = &.{} }, span);
                 try self.noteAlias(store.slot, place);
             },
             .discard => |value| _ = try self.expression(value),
@@ -665,7 +683,8 @@ const FnBuilder = struct {
             .branch => |b| try self.branchStatement(b.condition, b.then_body, b.else_body),
             .loop => |loop| try self.loopStatement(loop.id, loop.condition, loop.body, loop.step),
             .loop_exit => |exit| {
-                for (self.loops.items) |targets| if (targets.id == exit.target) {
+                for (self.loops.items, 0..) |targets, depth| if (targets.id == exit.target) {
+                    try build_cap.closeScopes(*FnBuilder, self, depth + 1, span);
                     return self.jump(if (exit.continuing) targets.latch else targets.exit);
                 };
                 return self.mb.refuse("loop exit target", span);
@@ -676,8 +695,17 @@ const FnBuilder = struct {
             // block, and `n.escape(v)` is `v`; reference counting frees at last use. The checker has
             // already rejected every program that lets an arena value outlive its block.
             .with_scope => |scope| {
-                if (scope.resource != null) return self.mb.refuse("with scope over a resource", span);
-                try self.statement(scope.body);
+                if (scope.resource) |source| {
+                    const owner = try self.expression(source);
+                    const variable = self.local(scope.slot);
+                    try self.write(variable, self.current.?, owner);
+                    try self.ssa.resources.append(self.allocator(), .{ .owner = owner, .depth = self.loops.items.len });
+                    try self.statement(scope.body);
+                    if (self.current != null) {
+                        _ = try self.effectCall("myl_core_file_scope_close", &.{.resource}, .void, &.{owner}, span);
+                    }
+                    _ = self.ssa.resources.pop();
+                } else try self.statement(scope.body);
             },
         }
     }
@@ -892,6 +920,7 @@ const FnBuilder = struct {
 
     /// `value` as stored in a slot of type `stored`: boxed when the slot is a `box`.
     fn boxFor(self: *FnBuilder, stored: ir.Type, value: ir.Ref, span: u32) Error!ir.Ref {
+        if (value == .none and stored == .bool) return self.constant(.bool, 0);
         if (self.mb.module.kind(stored) != .box) return value;
         return self.emit(.{ .op = .box_make, .ty = stored, .a = value, .span = span });
     }
@@ -941,7 +970,7 @@ const FnBuilder = struct {
         const steps = try self.allocator().alloc(Step, place.steps.len + 1);
         @memcpy(steps[0..place.steps.len], place.steps);
         steps[place.steps.len] = step;
-        return .{ .root = place.root, .steps = steps, .root_version = place.root_version, .through_view = place.through_view };
+        return .{ .root = place.root, .steps = steps, .root_version = place.root_version, .through_view = place.through_view, .snapshot = place.snapshot };
     }
 
     /// Field `index` of record `base`, out of its box when the field is boxed.
@@ -986,6 +1015,11 @@ const FnBuilder = struct {
                 return self.emit(.{ .op = .list_get, .ty = self.mb.module.compound(list_type).list, .a = base, .b = index, .check = .exact, .span = span });
             },
             .payload => |tag| return self.payloadOf(base, tag, span),
+            .mapping => |key_ref| {
+                const index = try build_dict.find(@TypeOf(self), self, base, key_ref, span);
+                try build_dict.requirePresent(@TypeOf(self), self, index, span);
+                return self.emit(.{ .op = .dict_entry_value, .ty = self.mb.module.compound(self.typeOfRef(base)).dict.value, .a = base, .b = index, .span = span });
+            },
         }
     }
 
@@ -995,6 +1029,7 @@ const FnBuilder = struct {
             .field => |index| return self.fieldSet(base, index, value, span),
             .element => |index| return if (self.mb.module.kind(self.typeOfRef(base)) == .array) self.arraySet(base, index, value, span) else self.listSet(base, index, value, span),
             .payload => |tag| return self.payloadSet(base, tag, value, span),
+            .mapping => |key_ref| return build_dict.put(@TypeOf(self), self, base, key_ref, value, span),
         }
     }
 
@@ -1029,7 +1064,7 @@ const FnBuilder = struct {
     }
 
     /// The value at `place` as its root stands now.
-    fn readPlace(self: *FnBuilder, place: Place, span: u32) Error!ir.Ref {
+    pub fn readPlace(self: *FnBuilder, place: Place, span: u32) Error!ir.Ref {
         var value = try self.read(place.root, self.current.?);
         for (place.steps) |step| value = try self.stepGet(value, step, span);
         return value;
@@ -1042,6 +1077,7 @@ const FnBuilder = struct {
         const rebuilt = try self.storeInto(root, place.steps, value, span);
         try self.write(place.root, self.current.?, rebuilt);
         try self.assigned(place.root);
+        try build_capture.invalidate(@TypeOf(self), self, place, span);
         return rebuilt;
     }
 
@@ -1052,18 +1088,23 @@ const FnBuilder = struct {
         if (self.places.getPtr(self.local(owner))) |place| {
             _ = try self.storePlace(place.*, value, span);
             place.root_version = self.version(place.root);
-        }
+        } else try build_capture.invalidate(@TypeOf(self), self, .{ .root = self.local(owner), .steps = &.{} }, span);
     }
 
     // ---- expressions --------------------------------------------------------------
 
     fn localExpression(self: *FnBuilder, slot: typed.LocalId, ty: typed.Type, out: ?*?Place, span: u32) Error!ir.Ref {
+        // Unit has no SSA payload; crossing a join must not manufacture a void phi/undef.
+        if (ty == .unit) return .none;
         if (self.isView(ty)) if (self.places.get(self.local(slot))) |source| {
             if (out) |place| place.* = source;
             const dict = try self.readPlace(source, span);
             return self.viewValue(self.ssa.types.items[self.local(slot)], dict, span);
         };
-        if (out) |place| place.* = try self.placeOfLocal(slot);
+        if (out) |place| {
+            place.* = try self.placeOfLocal(slot);
+            if (place.*.?.snapshot == .none) place.*.?.snapshot = try self.read(place.*.?.root, self.current.?);
+        }
         return self.read(self.local(slot), self.current.?);
     }
 
@@ -1174,7 +1215,8 @@ const FnBuilder = struct {
             .index => |index| {
                 const base_type = try self.typeOf(index.base);
                 if (base_type == .str or base_type == .bytes or base_type == .byte_buffer) return build_text.indexed(@TypeOf(self), self, index.base, index.index, span, try self.typeOf(id));
-                return self.arrayGet(index, span, out);
+                const value = try self.arrayGet(index, span, out);
+                return if (n.ty == .unit) .none else value;
             },
             .arena_escape => |value| return self.expression(value),
             .length => |operand| return self.stringLength(operand, span),
@@ -1195,7 +1237,7 @@ const FnBuilder = struct {
                 if (out) |place| if (base_place) |found| {
                     place.* = try self.fieldPlace(field, found, span);
                 };
-                return value;
+                return if (n.ty == .unit) .none else value;
             },
             .function_value => |callee| {
                 const index = try self.mb.functionIndex(callee);
@@ -1211,9 +1253,10 @@ const FnBuilder = struct {
                 if (ty == .bytes) return build_text.literal(@TypeOf(self), self, items, span);
                 if (ty == .byte_buffer) return build_bytes.fromValue(@TypeOf(self), self, .bytes, try build_text.literal(@TypeOf(self), self, items, span), span);
                 if (ty == .str) return self.stringConstant(items, span);
+                if (self.mb.module.kind(ty) == .list) return build_values.literal(@TypeOf(self), self, ty, items, span);
                 if (self.mb.module.kind(ty) != .array) return self.mb.refuse("array", span);
                 const values = try self.allocator().alloc(ir.Ref, items.len);
-                for (items, values) |item, *value| value.* = try self.expression(item);
+                for (items, values) |item, *value| value.* = try self.boxFor(self.mb.module.compound(ty).array.elem, try self.expression(item), span);
                 if (self.current == null) return .none;
                 return self.emit(.{ .op = .record_make, .ty = ty, .data = try self.extraSlice(values), .span = span });
             },
@@ -1232,7 +1275,7 @@ const FnBuilder = struct {
             .stream_write,
             .file_access,
             .file_method,
-            => return build_cap.expression(self, n, span),
+            => return build_cap.Lower(*FnBuilder).expression(self, n, span),
         }
     }
 
@@ -1291,7 +1334,9 @@ const FnBuilder = struct {
 
     /// Replace one normalized array element, preserving aggregate ownership semantics.
     fn arraySet(self: *FnBuilder, base: ir.Ref, index: ir.Ref, value: ir.Ref, span: u32) Error!ir.Ref {
-        return self.emit(.{ .op = .array_set, .ty = self.typeOfRef(base), .a = base, .b = index, .data = try self.extraSlice(&.{value}), .check = .exact, .span = span });
+        const ty = self.typeOfRef(base);
+        const stored = try self.boxFor(self.mb.module.compound(ty).array.elem, value, span);
+        return self.emit(.{ .op = .array_set, .ty = ty, .a = base, .b = index, .data = try self.extraSlice(&.{stored}), .check = .exact, .span = span });
     }
 
     /// `Name(...)` or `Union.case(...)`: a union value, boxing a recursive payload. Building an
@@ -1433,6 +1478,7 @@ const FnBuilder = struct {
     /// End the function with `result`. A function with `mut` parameters returns a record of its
     /// result (unless `unit`) and the final value of each `mut` parameter.
     fn returnValue(self: *FnBuilder, result: ir.Ref, span: u32) Error!void {
+        try build_cap.closeScopes(*FnBuilder, self, 0, span);
         const mutated = self.checked.signature.declared_mutates;
         var value = result;
         if (mutated.len != 0) {
@@ -1463,8 +1509,10 @@ const FnBuilder = struct {
             }
         }
         const ty = self.typeOfRef(left);
+        if (op == .mul and (repeatable(ty) or repeatable(self.typeOfRef(right)))) return build_values.repeat(@TypeOf(self), self, left, right, span);
         if (ty == .str or ty == .bytes or ty == .byte_buffer or ty.isCompound()) return self.aggregateCompare(op, left, right, span);
         const is_float = ty == .f64;
+        if (op == .saturating_sub or op == .saturating_mul) return self.saturatingFallback(op, left, right, span);
         const Shape = struct { op: ir.Op, check: ir.Check = .none, predicate: ?ir.Predicate = null };
         const shape: Shape = switch (op) {
             .add => .{ .op = .add, .check = .exact },
@@ -1512,6 +1560,20 @@ const FnBuilder = struct {
         });
     }
 
+    fn saturatingFallback(self: *FnBuilder, op: typed.BinaryOp, left: ir.Ref, right: ir.Ref, span: u32) Error!ir.Ref {
+        const ty = self.typeOfRef(left);
+        const info = ty.integer() orelse return self.mb.refuse("saturating operand type", span);
+        const wide_left = if (ty == .u64) left else try self.emit(.{ .op = .convert, .ty = .u64, .a = left, .span = span });
+        const wide_right = if (ty == .u64) right else try self.emit(.{ .op = .convert, .ty = .u64, .a = right, .span = span });
+        const mode: i128 = @as(i128, @intFromBool(info.signed)) | (if (op == .saturating_mul) @as(i128, 2) else 0);
+        const result = try self.runtimeCall("myl_core_saturating_integer", &.{ .u64, .u64, .u32, .u32 }, .u64, &.{ wide_left, wide_right, try self.constant(.u32, info.bits), try self.constant(.u32, mode) }, span);
+        return if (ty == .u64) result else self.emit(.{ .op = .convert, .ty = ty, .a = result, .span = span });
+    }
+
+    fn repeatable(ty: ir.Type) bool {
+        return ty == .str or ty == .bytes or ty.isCompound();
+    }
+
     /// The integer literal `node` as a constant of integer type `ty`.
     fn literalAs(self: *FnBuilder, node: typed.NodeId, ty: ir.Type) Error!ir.Ref {
         if (ty.integer() == null) return self.expression(node);
@@ -1519,13 +1581,29 @@ const FnBuilder = struct {
     }
 
     /// `==` and `!=` of two records, unions (enums, `Option`, `Result`) or lists: structural,
-    /// never a pointer comparison. A `str` compares by bytes through the runtime; a recursive value is refused.
+    /// never a pointer comparison. Text compares through the runtime; recursive values use a worklist.
     fn aggregateCompare(self: *FnBuilder, op: typed.BinaryOp, left: ir.Ref, right: ir.Ref, span: u32) Error!ir.Ref {
         if (op == .add and self.typeOfRef(left) == .str) {
             if (self.function.resolve(left) == self.function.resolve(right)) return self.runtimeCall("myl_core_str_concat", &.{ .str, .str }, .str, &.{ left, right }, span);
             return self.emit(.{ .op = .str_append, .ty = .str, .a = left, .b = right, .span = span });
         }
         if (op == .add and self.typeOfRef(left) == .bytes) return self.runtimeCall("myl_core_bytes_concat", &.{ .bytes, .bytes }, .bytes, &.{ left, right }, span);
+        const ty = self.typeOfRef(left);
+        const ordering = switch (op) {
+            .lt, .le, .gt, .ge => true,
+            else => false,
+        };
+        if ((ty == .str or ty == .bytes) and ordering) {
+            const order = try self.runtimeCall("myl_core_octets_compare", &.{ ty, ty }, .i64, &.{ left, right }, span);
+            const predicate: ir.Predicate = switch (op) {
+                .lt => .lt,
+                .le => .le,
+                .gt => .gt,
+                else => .ge,
+            };
+            return self.emit(.{ .op = .cmp, .ty = .bool, .a = order, .b = try self.constant(.i64, 0), .data = @backingInt(predicate), .span = span });
+        }
+        if (op == .add and self.mb.module.kind(ty) == .list) return build_values.concat(@TypeOf(self), self, left, right, span);
         if (op != .eq and op != .ne) return self.mb.refuse(if (op == .add) "concatenation" else "operator on an aggregate value", span);
         const same = try self.equal(left, right, span);
         if (self.current == null or op == .eq) return same;
@@ -1558,7 +1636,7 @@ const FnBuilder = struct {
             return self.runtimeCall(flags.str_eq_symbol, &.{ ty, self.typeOfRef(b) }, .bool, &.{ a, b }, span);
         }
         // A recursive value would need a function that calls itself, not an expansion in place.
-        if (self.recursive(ty, 0)) return self.mb.refuse("equality of a recursive value", span);
+        if (self.recursive(ty, 0)) return build_values.equal(@TypeOf(self), self, a, b, span);
         if (ty == .f64) return self.emit(.{ .op = .fcmp, .ty = .bool, .a = a, .b = b, .data = @backingInt(ir.Predicate.eq), .span = span });
         if (ty.integer() != null or ty == .bool) return self.emit(.{ .op = .cmp, .ty = .bool, .a = a, .b = b, .data = @backingInt(ir.Predicate.eq), .span = span });
         switch (m.kind(ty) orelse return self.mb.refuse(refuse_equality, span)) {
@@ -1733,7 +1811,7 @@ const FnBuilder = struct {
         if (target == .byte_buffer) return build_bytes.fromValue(@TypeOf(self), self, source, operand, span);
         if (target == .bytes and source == .byte_buffer) return self.runtimeCall("myl_core_buffer_snapshot", &.{.byte_buffer}, .bytes, &.{operand}, span);
         if (target == .bytes and self.mb.module.kind(source) == .list) return build_text.fromList(@TypeOf(self), self, source, operand, span);
-        if (target == .str) return self.textOf(operand, span);
+        if (target == .str) return self.textOf(operand, self.nodeOf(operand_node).ty, span);
         if (source == target) return operand;
         const from = source.integer() orelse return self.mb.refuse("cast source", span);
         const to = target.integer() orelse return self.mb.refuse("cast target", span);
@@ -1762,6 +1840,8 @@ const FnBuilder = struct {
     /// A call. `evaluation` is the checker's block that binds the arguments of a keyword call
     /// to temporaries in source order; it runs first and the arguments read the temporaries.
     fn call(self: *FnBuilder, callee: typed.FunctionId, argument_nodes: []const typed.NodeId, evaluation: ?typed.StatementId, span: u32) Error!ir.Ref {
+        const checked_function = self.mb.input.program.functions[@backingInt(callee)];
+        if (checked_function.policy.host != null and !checked_function.policy.c_abi) return @import("build_host.zig").call(self, checked_function, argument_nodes, evaluation, span);
         const index = try self.mb.functionIndex(callee);
         const declared = self.mb.input.program.functions[@backingInt(callee)].signature;
         const target: ir.Inst = .{ .op = .call, .a = @fromBackingInt(index), .ty = self.mb.module.functions.items[index].signature.ret };
@@ -1786,13 +1866,14 @@ const FnBuilder = struct {
     /// Lower arguments in source order and write mut results back to their captured places.
     fn callTarget(self: *FnBuilder, target: ir.Inst, argument_nodes: []const typed.NodeId, contract: CallContract, span: u32) Error!ir.Ref {
         const mutated = contract.mutated;
+        const first_capture = self.captures.items.len;
+        const first_slot = self.capture_slots.items.len;
+        defer self.captures.items.len = first_capture;
+        defer self.capture_slots.items.len = first_slot;
+        for (mutated) |position| if (self.nodeOf(argument_nodes[position]).data == .local) {
+            try self.capture_slots.append(self.allocator(), self.local(self.nodeOf(argument_nodes[position]).data.local));
+        };
         if (contract.evaluation) |body| {
-            // A `mut` argument the checker could not leave as the caller's variable is a temporary,
-            // which the callee's final value would be written back to instead of the place.
-            for (mutated) |position| {
-                const argument = self.nodeOf(argument_nodes[position]);
-                if (argument.data == .local and std.mem.eql(u8, self.checked.scope.locals[@backingInt(argument.data.local)].name, "<argument>")) return self.mb.refuse("keyword call with a mut argument that is not a local", span);
-            }
             try self.statement(body);
             if (self.current == null) return .none;
         }
@@ -1800,7 +1881,7 @@ const FnBuilder = struct {
         defer arguments.deinit(self.allocator());
         // A whole `mut` argument names the current caller variable. Interior arguments select
         // a value before later arguments; an ancestor write can orphan that selected value.
-        // Until the IR can retain that identity, refuse the changed interior path precisely.
+        // A later whole-root mutation supersedes publication even if its body preserves the leaf.
         const places = try self.allocator().alloc(Place, mutated.len);
         const values = try self.allocator().alloc(ir.Ref, argument_nodes.len);
         for (argument_nodes, values, 0..) |argument, *value, position| {
@@ -1808,13 +1889,23 @@ const FnBuilder = struct {
             if (slot != null and self.isView(self.nodeOf(argument).ty)) return self.mb.refuse("mut live dictionary view argument", span);
             var place: ?Place = null;
             value.* = try self.expressionPlace(argument, if (slot != null) &place else null);
-            if (slot) |at| places[at] = place orelse return self.mb.refuse("mut argument that is not a place", span);
+            if (slot) |at| {
+                places[at] = place orelse return self.mb.refuse("mut argument that is not a place", span);
+                try build_capture.watch(@TypeOf(self), self, &places[at], @intCast(self.nodeOf(argument).span.start));
+                if (places[at].snapshot == .none) places[at].snapshot = try self.read(places[at].root, self.current.?);
+            }
         }
         if (self.current == null) return .none;
-        for (mutated, places) |position, place| {
-            if (place.steps.len > 0 and self.version(place.root) != place.root_version) return self.mb.refuse("interior mut argument ancestor changed during later argument evaluation", span);
-            values[position] = try self.readPlace(place, span);
+        if (target.op == .call and self.mb.module.functions.items[target.a.index()].signature.linkage == .extern_c and values.len != 0 and self.typeOfRef(values[0]) == .cap) {
+            _ = try self.effectCall("myl_core_host_check", &.{.cap}, .void, &.{values[0]}, span);
         }
+        for (mutated, places) |position, *place| {
+            if (place.steps.len > 0 and self.version(place.root) != place.root_version) {
+                values[position] = try build_capture.refresh(@TypeOf(self), self, place, values[position], span);
+            } else values[position] = try self.readPlace(place.*, span);
+        }
+        self.captures.items.len = first_capture;
+        self.capture_slots.items.len = first_slot;
         // A `unit` argument is evaluated for its effects and not passed.
         for (values) |value| if (value != .none and self.typeOfRef(value) != .void) try arguments.append(self.allocator(), value);
         if (self.mb.module.kind(target.ty) == .dict) for (argument_nodes) |argument| {
@@ -1841,23 +1932,41 @@ const FnBuilder = struct {
         const first: usize = if (has_value) 1 else 0;
         for (places, 0..) |place, k| {
             const part = if (wrapped) try self.emit(.{ .op = .record_get, .ty = parts[first + k], .a = result, .data = first + k, .span = span }) else result;
-            _ = try self.storePlace(place, part, span);
+            if (place.publish == .none) {
+                _ = try self.storePlace(place, part, span);
+            } else {
+                const write_block = try self.newBlock();
+                const join = try self.newBlock();
+                try self.branch(place.publish, write_block, join, span);
+                try self.seal(write_block);
+                self.current = write_block;
+                _ = try self.storePlace(place, part, span);
+                try self.jump(join);
+                try self.seal(join);
+                self.enter(join);
+            }
         }
         return if (has_value) value else .none;
     }
 
-    /// Shared readonly text/octet dispatch used by mutable-byte lowering.
-    pub fn textOperation(self: *FnBuilder, operation: @FieldType(@FieldType(typed.Node, "data"), "buffer_operation"), ty: ir.Type, span: u32) Error!ir.Ref {
-        return build_text.operation(@TypeOf(self), self, operation, ty, span);
-    }
-
-    fn collectionOperation(self: *FnBuilder, operation: @FieldType(@FieldType(typed.Node, "data"), "buffer_operation"), ty: ir.Type, span: u32, out: ?*?Place) Error!?ir.Ref {
+    fn collectionOperation(self: *FnBuilder, operation: BufferOperation, ty: ir.Type, span: u32, out: ?*?Place) Error!?ir.Ref {
         const receiver_type = self.ssa.types.items[self.local(operation.owner)];
         const collection = self.mb.module.kind(receiver_type) orelse return null;
         switch (collection) {
-            .list => if (operation.kind == .extend or operation.kind == .reverse) {
-                const result = try build_list_methods.operation(@TypeOf(self), self, operation, span);
-                return result;
+            .list => {
+                if (operation.kind == .contains) {
+                    const needle = try self.expression(operation.arguments[0]);
+                    if (self.current == null) return .none;
+                    const result = try build_values.contains(@TypeOf(self), self, try self.receiverOf(operation.owner), needle, span);
+                    return result;
+                }
+                switch (operation.kind) {
+                    .extend, .reverse, .index_of, .insert, .pop_at, .remove, .slice_step, .clear => {
+                        const result = try build_list_methods.operation(@TypeOf(self), self, operation, ty, span);
+                        return result;
+                    },
+                    else => {},
+                }
             },
             .dict => {
                 const result = try build_dict.operation(@TypeOf(self), self, operation, ty, span, out);
@@ -1866,6 +1975,11 @@ const FnBuilder = struct {
             else => {},
         }
         return null;
+    }
+
+    /// Shared readonly text/octet dispatch used by mutable-byte lowering.
+    pub fn textOperation(self: *FnBuilder, operation: BufferOperation, ty: ir.Type, span: u32) Error!ir.Ref {
+        return build_text.operation(@TypeOf(self), self, operation, ty, span);
     }
 
     fn bufferOperation(self: *FnBuilder, operation: anytype, ty: ir.Type, span: u32, out: ?*?Place) Error!ir.Ref {
@@ -2008,17 +2122,31 @@ const FnBuilder = struct {
         return self.emit(.{ .op = .call, .ty = ret, .a = @fromBackingInt(@intCast(callee)), .data = try self.extraSlice(arguments), .span = span });
     }
 
+    /// Ordered runtime call that passes every capability token to its adapter.
+    pub fn effectCall(self: *FnBuilder, name: []const u8, params: []const ir.Type, ret: ir.Type, arguments: []const ir.Ref, span: u32) Error!ir.Ref {
+        const callee = try self.mb.runtimeFunction(name, params, ret, .runtime_c);
+        return self.emit(.{ .op = .call, .ty = ret, .a = @fromBackingInt(callee), .data = try self.extraSlice(arguments), .span = span });
+    }
+
     /// The text of `value`, as `str(value)` and an f-string part spell it: a string as it is, an
     /// integer in decimal, a boolean as `True` or `False`.
-    fn textOf(self: *FnBuilder, value: ir.Ref, span: u32) Error!ir.Ref {
+    pub fn textOf(self: *FnBuilder, value: ir.Ref, source_ty: typed.Type, span: u32) Error!ir.Ref {
+        if (value == .none or source_ty == .unit) return self.runtimeCall("myl_core_none_text", &.{}, .str, &.{}, span);
         const ty = self.typeOfRef(value);
+        if (self.renderDomain(source_ty)) return build_values.render(*FnBuilder, self, value, source_ty, span);
         if (ty == .str) return value;
         if (ty == .f64) return self.runtimeCall("myl_core_str_from_f64", &.{.f64}, .str, &.{value}, span);
         if (ty == .bool) return self.runtimeCall(flags.str_from_bool_symbol, &.{.bool}, .str, &.{value}, span);
-        const info = ty.integer() orelse return self.mb.refuse("text of a non-integer value", span);
+        const info = ty.integer() orelse return build_values.render(*FnBuilder, self, value, source_ty, span);
         const wide: ir.Type = if (info.signed) .i64 else .u64;
         const operand = if (ty == wide) value else try self.emit(.{ .op = .convert, .ty = wide, .a = value, .span = span });
         return self.runtimeCall(if (info.signed) flags.str_from_i64_symbol else flags.str_from_u64_symbol, &.{wide}, .str, &.{operand}, span);
+    }
+
+    fn renderDomain(self: *FnBuilder, ty: typed.Type) bool {
+        if (!ty.isAggregate()) return false;
+        const record = self.mb.input.program.records[ty.recordIndex()];
+        return record.shape.domain != null and !std.mem.eql(u8, record.name, "float");
     }
 
     /// The length of string `value` in Unicode scalars, which is what `len` counts (not bytes):
@@ -2046,7 +2174,7 @@ const FnBuilder = struct {
     }
 
     fn printNode(self: *FnBuilder, print: typed.Print, span: u32) Error!ir.Ref {
-        if (print.debug or print.separator != null or print.terminator != null) return self.mb.refuse("print options", span);
+        if (print.debug or print.separator != null or print.terminator != null) return build_cap.printOptions(*FnBuilder, self, print, span);
         var operands: std.ArrayList(ir.Ref) = .empty;
         defer operands.deinit(self.allocator());
         const stream = if (print.stream) |stream_node| try self.expression(stream_node) else try self.constant(.cap, switch (print.sink) {
@@ -2056,11 +2184,13 @@ const FnBuilder = struct {
         });
         try operands.append(self.allocator(), stream);
         for (print.arguments) |argument| {
-            var value = try self.expression(argument);
-            if (self.typeOfRef(value) == .f64) value = try self.textOf(value, span);
-            const ty = self.function.inst(value).ty;
-            if (ty.integer() == null and ty != .bool and ty != .str) return self.mb.refuse("print argument type", span);
-            try operands.append(self.allocator(), value);
+            const value = try self.expression(argument);
+            if (self.current == null) return .none;
+            const source_ty = self.nodeOf(argument).ty;
+            const ty = if (value == .none) .void else self.typeOfRef(value);
+            const needs_render = ty.integer() == null and ty != .bool and ty != .str;
+            const printable = if (value == .none or self.renderDomain(source_ty) or needs_render) try self.textOf(value, source_ty, span) else value;
+            try operands.append(self.allocator(), printable);
         }
         if (self.current == null) return .none;
         _ = try self.emit(.{ .op = .print, .ty = .void, .data = try self.extraSlice(operands.items), .span = span });
@@ -2084,10 +2214,13 @@ fn buildFunction(mb: *ModuleBuilder, checked: typed.Function, declared: ir.Funct
     b.declared_ret = try mb.mapType(checked.signature.return_type, declared.span);
     defer b.places.deinit(mb.allocator);
     defer b.versions.deinit(mb.allocator);
+    defer b.captures.deinit(mb.allocator);
+    defer b.capture_slots.deinit(mb.allocator);
     defer b.ssa.defs.deinit(mb.allocator);
     defer b.ssa.incomplete.deinit(mb.allocator);
     defer b.ssa.sealed.deinit(mb.allocator);
     defer b.ssa.types.deinit(mb.allocator);
+    defer b.ssa.resources.deinit(mb.allocator);
     defer b.loops.deinit(mb.allocator);
     for (checked.scope.locals) |local| {
         const ty = mb.mapType(local.ty, @intCast(local.declaration.start)) catch .void;

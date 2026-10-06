@@ -1,0 +1,208 @@
+--- 92590700
++++ S3-Wave-A
+@@ -470,119 +470,123 @@
+   %v111 = add nuw nsw i64 %v97, 1
+   br label %b22
+ b25:
+-  %v130 = call i64 @runtime_bench_now(), !dbg !1000026
++  call void @myl_core_io_at(i32 19)
++  call void @myl_core_host_check(i64 %p1), !dbg !1000026
++  %v131 = call i64 @runtime_bench_now(), !dbg !1000027
+   br label %b26
+ b26:
+-  %v137 = phi i64 [ 0, %b25 ], [ %v208, %b28 ]
+-  %v197 = phi i64 [ 0, %b25 ], [ %v202, %b28 ]
+-  %v139 = icmp slt i64 %v137, %v34
+-  br i1 %v139, label %b27, label %b29
++  %v138 = phi i64 [ 0, %b25 ], [ %v209, %b28 ]
++  %v198 = phi i64 [ 0, %b25 ], [ %v203, %b28 ]
++  %v140 = icmp slt i64 %v138, %v34
++  br i1 %v140, label %b27, label %b29
+ b27:
+-  %v142 = urem i64 %v137, 17
++  %v143 = urem i64 %v138, 17
+   br label %b30
+ b28:
+-  %v208 = add nuw nsw i64 %v137, 1
++  %v209 = add nuw nsw i64 %v138, 1
+   br label %b26
+ b29:
+   call void @myl_core_free(ptr %v107)
+-  %v224 = call i64 @runtime_bench_now(), !dbg !1000027
+-  %p.89 = call { i64, i1 } @llvm.ssub.with.overflow.i64(i64 %v224, i64 %v130)
+-  %v229 = extractvalue { i64, i1 } %p.89, 0
++  call void @myl_core_io_at(i32 20)
++  call void @myl_core_host_check(i64 %p1), !dbg !1000028
++  %v226 = call i64 @runtime_bench_now(), !dbg !1000029
++  %p.89 = call { i64, i1 } @llvm.ssub.with.overflow.i64(i64 %v226, i64 %v131)
++  %v231 = extractvalue { i64, i1 } %p.89, 0
+   %o.90 = extractvalue { i64, i1 } %p.89, 1
+   br i1 %o.90, label %trap.91, label %b29.92, !prof !0
+ trap.91:
+-  call void @myl_core_trap(i32 19, i64 %v224, i64 %v130), !dbg !1000028
++  call void @myl_core_trap(i32 21, i64 %v226, i64 %v131), !dbg !1000030
+   unreachable
+ b29.92:
+-  call void @myl_core_print_i64(i64 %p2, i64 %v197)
++  call void @myl_core_print_i64(i64 %p2, i64 %v198)
+   call void @myl_core_print_sep(i64 %p2)
+-  call void @myl_core_print_i64(i64 %p2, i64 %v229)
++  call void @myl_core_print_i64(i64 %p2, i64 %v231)
+   call void @myl_core_print_end(i64 %p2)
+   ret i64 0
+ b30:
+-  %v147 = phi i64 [ 0, %b27 ], [ %v188, %b32 ]
+-  %v181 = phi i64 [ 0, %b27 ], [ %v183, %b32 ]
+-  %v149 = icmp slt i64 %v147, %v21
+-  br i1 %v149, label %b31, label %b33
++  %v148 = phi i64 [ 0, %b27 ], [ %v189, %b32 ]
++  %v182 = phi i64 [ 0, %b27 ], [ %v184, %b32 ]
++  %v150 = icmp slt i64 %v148, %v21
++  br i1 %v150, label %b31, label %b33
+ b31:
+   br i1 false, label %b34, label %b35
+ b32:
+-  %v188 = add nuw nsw i64 %v147, 1
++  %v189 = add nuw nsw i64 %v148, 1
+   br label %b30
+ b33:
+-  %p.93 = call { i64, i1 } @llvm.sadd.with.overflow.i64(i64 %v197, i64 %v181)
+-  %v200 = extractvalue { i64, i1 } %p.93, 0
++  %p.93 = call { i64, i1 } @llvm.sadd.with.overflow.i64(i64 %v198, i64 %v182)
++  %v201 = extractvalue { i64, i1 } %p.93, 0
+   %o.94 = extractvalue { i64, i1 } %p.93, 1
+   br i1 %o.94, label %trap.95, label %b33.96, !prof !0
+ trap.95:
+-  call void @myl_core_trap(i32 20, i64 %v197, i64 %v181), !dbg !1000029
++  call void @myl_core_trap(i32 22, i64 %v198, i64 %v182), !dbg !1000031
+   unreachable
+ b33.96:
+-  %q.97 = sdiv i64 %v200, 1000000007
+-  %r.98 = srem i64 %v200, 1000000007
++  %q.97 = sdiv i64 %v201, 1000000007
++  %r.98 = srem i64 %v201, 1000000007
+   %rnz.99 = icmp ne i64 %r.98, 0
+   %x.100 = xor i64 %r.98, 1000000007
+   %neg.101 = icmp slt i64 %x.100, 0
+   %fix.102 = and i1 %rnz.99, %neg.101
+   %ra.103 = select i1 %fix.102, i64 1000000007, i64 0
+-  %v202 = add i64 %r.98, %ra.103
++  %v203 = add i64 %r.98, %ra.103
+   br label %b28
+ b34:
+   %h.104 = getelementptr inbounds i8, ptr %v107, i64 8
+-  %v155 = load i64, ptr %h.104, align 8, !tbaa !5
+-  %hi.105 = icmp ugt i64 %v155, 9223372036854775807
++  %v156 = load i64, ptr %h.104, align 8, !tbaa !5
++  %hi.105 = icmp ugt i64 %v156, 9223372036854775807
+   br i1 %hi.105, label %trap.106, label %b34.107, !prof !0
+ trap.106:
+-  call void @myl_core_trap(i32 21, i64 %v155, i64 0), !dbg !1000030
++  call void @myl_core_trap(i32 23, i64 %v156, i64 0), !dbg !1000032
+   unreachable
+ b34.107:
+-  %v156 = add i64 %v155, 0
+-  %p.108 = call { i64, i1 } @llvm.sadd.with.overflow.i64(i64 %v156, i64 %v147)
+-  %v157 = extractvalue { i64, i1 } %p.108, 0
++  %v157 = add i64 %v156, 0
++  %p.108 = call { i64, i1 } @llvm.sadd.with.overflow.i64(i64 %v157, i64 %v148)
++  %v158 = extractvalue { i64, i1 } %p.108, 0
+   %o.109 = extractvalue { i64, i1 } %p.108, 1
+   br i1 %o.109, label %trap.110, label %b34.107.111, !prof !0
+ trap.110:
+-  call void @myl_core_trap(i32 22, i64 %v156, i64 %v147), !dbg !1000031
++  call void @myl_core_trap(i32 24, i64 %v157, i64 %v148), !dbg !1000033
+   unreachable
+ b34.107.111:
+   br label %b35
+ b35:
+-  %v159 = phi i64 [ %v147, %b31 ], [ %v157, %b34.107.111 ]
++  %v160 = phi i64 [ %v148, %b31 ], [ %v158, %b34.107.111 ]
+   %data.112 = getelementptr inbounds i8, ptr %v107, i64 32
+-  %elt.113 = getelementptr inbounds i64, ptr %data.112, i64 %v159
+-  %v161 = load i64, ptr %elt.113, align 8, !range !11, !tbaa !7
+-  %v165 = call { i8, i64 } @"my.row_option_handle::optional"(i64 %v161, i64 %v142), !dbg !1000032
+-  %t.114 = extractvalue { i8, i64 } %v165, 0
+-  %v166 = zext i8 %t.114 to i32
+-  %v168 = icmp eq i32 %v166, 1
+-  br i1 %v168, label %b37, label %b38
++  %elt.113 = getelementptr inbounds i64, ptr %data.112, i64 %v160
++  %v162 = load i64, ptr %elt.113, align 8, !range !11, !tbaa !7
++  %v166 = call { i8, i64 } @"my.row_option_handle::optional"(i64 %v162, i64 %v143), !dbg !1000034
++  %t.114 = extractvalue { i8, i64 } %v166, 0
++  %v167 = zext i8 %t.114 to i32
++  %v169 = icmp eq i32 %v167, 1
++  br i1 %v169, label %b37, label %b38
+ b36:
+-  %v182 = phi i64 [ %v174, %b37.122.126 ], [ 19, %b39 ]
+-  %p.115 = call { i64, i1 } @llvm.sadd.with.overflow.i64(i64 %v181, i64 %v182)
+-  %v183 = extractvalue { i64, i1 } %p.115, 0
++  %v183 = phi i64 [ %v175, %b37.122.126 ], [ 19, %b39 ]
++  %p.115 = call { i64, i1 } @llvm.sadd.with.overflow.i64(i64 %v182, i64 %v183)
++  %v184 = extractvalue { i64, i1 } %p.115, 0
+   %o.116 = extractvalue { i64, i1 } %p.115, 1
+   br i1 %o.116, label %trap.117, label %b36.118, !prof !0
+ trap.117:
+-  call void @myl_core_trap(i32 23, i64 %v181, i64 %v182), !dbg !1000033
++  call void @myl_core_trap(i32 25, i64 %v182, i64 %v183), !dbg !1000035
+   unreachable
+ b36.118:
+   br label %b32
+ b37:
+-  %v170 = extractvalue { i8, i64 } %v165, 1
+-  %p.119 = call { i64, i1 } @llvm.smul.with.overflow.i64(i64 %v170, i64 3)
+-  %v172 = extractvalue { i64, i1 } %p.119, 0
++  %v171 = extractvalue { i8, i64 } %v166, 1
++  %p.119 = call { i64, i1 } @llvm.smul.with.overflow.i64(i64 %v171, i64 3)
++  %v173 = extractvalue { i64, i1 } %p.119, 0
+   %o.120 = extractvalue { i64, i1 } %p.119, 1
+   br i1 %o.120, label %trap.121, label %b37.122, !prof !0
+ trap.121:
+-  call void @myl_core_trap(i32 24, i64 %v170, i64 3), !dbg !1000034
++  call void @myl_core_trap(i32 26, i64 %v171, i64 3), !dbg !1000036
+   unreachable
+ b37.122:
+-  %p.123 = call { i64, i1 } @llvm.sadd.with.overflow.i64(i64 %v172, i64 1)
+-  %v174 = extractvalue { i64, i1 } %p.123, 0
++  %p.123 = call { i64, i1 } @llvm.sadd.with.overflow.i64(i64 %v173, i64 1)
++  %v175 = extractvalue { i64, i1 } %p.123, 0
+   %o.124 = extractvalue { i64, i1 } %p.123, 1
+   br i1 %o.124, label %trap.125, label %b37.122.126, !prof !0
+ trap.125:
+-  call void @myl_core_trap(i32 25, i64 %v172, i64 1), !dbg !1000035
++  call void @myl_core_trap(i32 27, i64 %v173, i64 1), !dbg !1000037
+   unreachable
+ b37.122.126:
+   br label %b36
+@@ -591,7 +595,7 @@
+ b39:
+   br label %b36
+ }
+-define internal i64 @"my.row_option_handle::parse_number"(ptr %p0) nounwind uwtable !dbg !1000036 {
++define internal i64 @"my.row_option_handle::parse_number"(ptr %p0) nounwind uwtable !dbg !1000038 {
+ entry:
+   %slot = alloca i64, align 8
+   br label %b0
+@@ -613,7 +617,7 @@
+ b4:
+   ret i64 0
+ }
+-define internal { i8, i64 } @"my.row_option_handle::optional"(i64 %p0, i64 %p1) nounwind uwtable !dbg !1000037 {
++define internal { i8, i64 } @"my.row_option_handle::optional"(i64 %p0, i64 %p1) nounwind uwtable !dbg !1000039 {
+ entry:
+   %slot = alloca i64, align 8
+   br label %b0
+@@ -631,10 +635,11 @@
+   %v10 = insertvalue { i8, i64 } %u.2, i64 %v9, 1
+   ret { i8, i64 } %v10
+ }
+-define i32 @main(i32 %argc, ptr %argv) uwtable !dbg !1000038 {
++define i32 @main(i32 %argc, ptr %argv) uwtable !dbg !1000040 {
+ entry:
+   %args = call ptr @myl_core_args(i32 %argc, ptr %argv)
+-  %r = call i64 @"my.row_option_handle::main"(ptr %args, i64 1, i64 1), !dbg !1000039
++  %host1 = call i64 @myl_core_host_grant()
++  %r = call i64 @"my.row_option_handle::main"(ptr %args, i64 %host1, i64 1), !dbg !1000041
+   call void @myl_core_release(ptr %args)
+   %s = call i32 @myl_core_exit(i64 %r)
+   ret i32 %s

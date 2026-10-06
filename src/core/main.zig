@@ -170,6 +170,7 @@ fn buildCommand(init: std.process.Init, args: []const []const u8) !u8 {
 /// `mylang-core test`: the per-test conformance runner (`test_runner.zig`).
 fn testCommand(init: std.process.Init, args: []const []const u8) !u8 {
     var options: test_runner.Options = .{ .path = "", .build = .{ .zig = init.environ_map.get("ZIG") orelse "zig" } };
+    var links: std.ArrayList([]const u8) = .empty;
     var index: usize = 0;
     while (index < args.len) : (index += 1) {
         const arg = args[index];
@@ -182,6 +183,16 @@ fn testCommand(init: std.process.Init, args: []const []const u8) !u8 {
             options.build.facts = .off;
         } else if (std.mem.eql(u8, arg, "--verify-facts")) {
             options.build.facts = .verify;
+        } else if (std.mem.eql(u8, arg, "--link") and has_value) {
+            index += 1;
+            try links.append(init.arena.allocator(), args[index]);
+        } else if (std.mem.eql(u8, arg, "--seed") and has_value) {
+            index += 1;
+            options.seed = std.fmt.parseInt(u64, args[index], 10) catch return 2;
+        } else if (std.mem.eql(u8, arg, "--property-runs") and has_value) {
+            index += 1;
+            options.property_runs = std.fmt.parseInt(u32, args[index], 10) catch return 2;
+            if (options.property_runs == 0 or options.property_runs > 1000000) return 2;
         } else if (std.mem.eql(u8, arg, "--filter") and has_value) {
             index += 1;
             options.filter = args[index];
@@ -202,6 +213,7 @@ fn testCommand(init: std.process.Init, args: []const []const u8) !u8 {
         try std.Io.File.stderr().writeStreamingAll(init.io, usage);
         return 2;
     }
+    options.build.links = links.items;
     return test_runner.run(init, options);
 }
 

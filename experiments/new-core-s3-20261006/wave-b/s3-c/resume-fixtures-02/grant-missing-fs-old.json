@@ -1,0 +1,8 @@
+{
+  "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-capabilities/.mylang-cache/s3/resume-fixtures-02/grants-old"
+  ],
+  "status": 2,
+  "stdout": "",
+  "stderr": "mylang: --restrict is active and this command line did not grant a capability the entry point requests; pass --allow-read=DIR, or drop --restrict to grant every capability\n"
+}

@@ -1,0 +1,3 @@
+src/core/property_ir.zig:175:94: error: expected ',' after argument
+            const decoded = try self.child(b, hit, .{ .name = v.text(v.get(cases[index], .ty = "payload")), .encode = payload, .value = request.encode, value_ref });
+                                                                                             ^

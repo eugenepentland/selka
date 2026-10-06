@@ -1,0 +1,3 @@
+{"env": {"PATH": "context-probe", "ONLY_VISIBLE": "ok", "MYL_CORE_LEAKCHECK": "1"}, "status": 0, "stdout": "3\nMYL_CORE_LEAKCHECK\nONLY_VISIBLE\nPATH\n", "stderr": ""}
+{"env": {"PATH": "context-probe", "ONLY_VISIBLE": "ok", "MYL_CORE_LEAKCHECK": "1", "MYLANG_OPTIONS": "--allow-env=B,A"}, "status": 0, "stdout": "2\nA\nB\n", "stderr": ""}
+{"env": {"PATH": "context-probe", "ONLY_VISIBLE": "ok", "MYL_CORE_LEAKCHECK": "1", "MYLANG_OPTIONS": "--restrict --allow-env=B,A"}, "status": 0, "stdout": "2\nA\nB\n", "stderr": ""}

@@ -1,0 +1,8 @@
+{
+  "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-capabilities/.mylang-cache/s3/resume-fixtures-02/grants-debug"
+  ],
+  "status": 2,
+  "stdout": "",
+  "stderr": "mylang: a requested directory grant could not be opened\n"
+}

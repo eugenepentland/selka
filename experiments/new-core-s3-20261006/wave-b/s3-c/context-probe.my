@@ -1,0 +1,3 @@
+def main(env: Environment, out: Stream) -> int:
+    out.print(len(env.names()))
+    return 0

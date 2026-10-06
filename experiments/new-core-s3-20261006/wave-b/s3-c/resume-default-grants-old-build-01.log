@@ -1,0 +1,3 @@
+@stdlib/random.my:96:84: warning[W_DERIVED_EFFECTS]: `effects(mutation, managed_allocation)` is exactly what the parameters imply; remove it
+  public def randint(generator: mut Random, low: int, high: int) -> Result[int, str] effects(mutation, managed_allocation):
+                                                                                     ^

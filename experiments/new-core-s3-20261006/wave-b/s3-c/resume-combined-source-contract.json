@@ -1,0 +1,15 @@
+{
+  "source_commit": "9637eb9a1aa4af8ee0ecd88838ceed09b228d812",
+  "ir_frozen_commit": "dc1a5831",
+  "ir_unchanged": true,
+  "language_corpus_unchanged_since_reviewed_decisions": true,
+  "formats": {
+    "module-interface": "module-interface-v5",
+    "check-summaries": "check-summaries-v6",
+    "mutation": "mutation-v2"
+  },
+  "provider_abi": 7,
+  "provider_public_header_unchanged": true,
+  "qualified_old_source": "65036fe792ef540392d0eb00c41c9ec71c7b2c82",
+  "final_old_gate_owned_by_coordinator": true
+}

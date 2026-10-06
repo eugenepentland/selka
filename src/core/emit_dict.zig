@@ -19,7 +19,8 @@ pub fn instruction(comptime Context: type, c: Context, out: *@import("std").Arra
             try out.print(arena, "  {s} = getelementptr inbounds i8, ptr {s}, i64 8\n  {s} = load i64, ptr {s}, align 8, !tbaa !5\n", .{ pointer, try c.value(inst.a), name, pointer });
         },
         .dict_find => {
-            if (c.function.inst(c.function.resolve(inst.b)).ty == .str_view) {
+            if (shape.key != .void and inst.b == .none) return error.UnsupportedInstruction;
+            if (shape.key != .void and c.function.inst(c.function.resolve(inst.b)).ty == .str_view) {
                 const data = try c.fresh("%dictspan");
                 const length = try c.fresh("%dictspanlen");
                 try out.print(arena, "  {s} = extractvalue {{ ptr, i64 }} {s}, 0\n  {s} = extractvalue {{ ptr, i64 }} {s}, 1\n" ++
@@ -41,6 +42,7 @@ pub fn instruction(comptime Context: type, c: Context, out: *@import("std").Arra
             try out.print(arena, "  {s} = call i64 {s}.find(ptr {s}, ptr {s}, i64 {s})\n", .{ name, try c.dictDescriptor(dict_type), try c.value(inst.a), key, hash });
         },
         .dict_entry_key, .dict_entry_value => {
+            if (inst.ty == .void) return;
             const offset = try c.fresh("%dictoffset");
             const total = try c.fresh("%dictoffset");
             const pointer = try c.fresh("%dictentry");
@@ -76,6 +78,7 @@ pub fn instruction(comptime Context: type, c: Context, out: *@import("std").Arra
 }
 
 fn slot(comptime Context: type, c: Context, out: *@import("std").ArrayList(u8), ty: ir.Type, value: ir.Ref, size: u32) Error![]const u8 {
+    if (ty == .void) return "null";
     const pointer = try c.stackSlot(@max(1, size));
     if (size > c.module().size(ty)) try out.print(c.a(), "  call void @llvm.memset.p0.i64(ptr {s}, i8 0, i64 {d}, i1 false)\n", .{ pointer, size });
     try c.storeOperand(out, ty, value, pointer);
@@ -233,6 +236,7 @@ fn smallScan(comptime Context: type, c: Context, out: *@import("std").ArrayList(
 pub fn keyDefinitions(comptime Context: type, c: Context, out: *@import("std").ArrayList(u8), ty: ir.Type, symbol: []const u8) Error!void {
     const m = c.module();
     const a = c.a();
+    if (@import("emit_values.zig").dynamic(m.*, ty)) return @import("emit_values.zig").key(Context, c, out, ty, symbol);
     switch (m.kind(ty) orelse .box) {
         .record => for (m.compound(ty).record, 0..) |field, i| try keyDefinitions(Context, c, out, field, try childSymbol(Context, c, symbol, i)),
         .@"union" => for (m.compound(ty).@"union", 0..) |field, i| try keyDefinitions(Context, c, out, field, try childSymbol(Context, c, symbol, i)),

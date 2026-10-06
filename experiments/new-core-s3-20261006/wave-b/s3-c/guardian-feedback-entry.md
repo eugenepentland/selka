@@ -1,0 +1,12 @@
+## 2026-10-06 · codex · mylang — S3-C capability source and evidence checkpoints
+
+- good: Guardian passed all 88 checks on the S3-C source/dependency checkpoint commits and on the evidence-only stop report; public compiler helpers stayed explicitly typed, and capability/provider implementations remained in Core-owned modules. Ordinary commits exercised the hook once each without repeating a manual Guardian run.
+
+## 2026-10-06 · codex · mylang — S3-C Environment grant regression and package integration
+
+- **good:** Guardian's whole-tree commit hook passed all 88 checks for the approved Environment enumeration correction, old/new native-provider regressions, raw UTF-8 name filtering, and merges of the source-aware renderer and list adapters. Provider ABI 7 and the frozen Core IR stayed unchanged.
+- **friction:** `change-classification` treated a test helper's explicit `[]const []const u8` argv annotation as one new behavioral line while its existing tagged test body stayed unchanged. One commit attempt failed; a full old-gate run admitted during that staged change also failed its Guardian dependencies. Expanding the tagged test's build-mode iteration made the commit pass. Native testing subsequently rejected the unsupported old mode ReleaseSafe; the final regression uses the CLI's supported Debug and ReleaseFast modes. All attempted logs were retained.
+- **good:** `repeated-string-literal` exposed three expanded `buffer_operation` type-name strings in a dependency merge. Inspection also found a duplicate `collectionOperation`; the duplicate was removed while preserving list membership and the existing typed alias, and the next commit passed all 88 checks.
+
+- **good:** Final combined C/M/property-runner source passed the normal 88-check hooks. The corrected Core suite passed 254 tests in 32 shards in 127.03 seconds, with longest shard 68.26 seconds; the uncontended Core rebuild was 3.30 seconds. The stale scope-close textual assertion was replaced by verified IR checks for the two matching owners, reverse close order and closes before return. The 35-row audit retained raw diffs and proved that only approved Host prologue/timer guards and semantic ID renumbering changed.
+- **good:** The final strict old/Core comparison executes all 1,518 tests in debug and release with zero mismatches or unsupported tests and clean leak/fact checks. Refreshed runner qualification compares 24 complete reports, including native signal and silent-exit counts, rather than verdicts alone.

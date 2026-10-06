@@ -30,6 +30,8 @@ pub const Case = struct {
     other_parameters: usize,
     /// The capability value each leading `Stream` parameter takes: 1 for stdout, 2 for `err`.
     streams: []const i64,
+    /// Capability family in parameter order;255 is generated data.
+    parameters: []const u8 = &.{},
 };
 
 /// A module's name and source text, which says which of its functions are `public` or `@test`.
@@ -62,16 +64,18 @@ pub fn discover(allocator: std.mem.Allocator, program: typed.Program, entry: []c
             .other;
         var streams: std.ArrayList(i64) = .empty;
         var others: usize = 0;
-        for (function.scope.locals[0..function.signature.parameter_count]) |parameter| {
+        const parameters = try allocator.alloc(u8, function.signature.parameter_count);
+        for (function.scope.locals[0..function.signature.parameter_count], parameters) |parameter, *family| {
+            family.* = if (parameter.ty.capabilityIndex()) |kind| @as(u8, kind) else 255;
             if (parameter.ty == .stream_cap) {
                 try streams.append(allocator, if (std.mem.eql(u8, parameter.name, "err")) 2 else 1);
-            } else others += 1;
+            } else if (family.* > 4) others += 1;
         }
         const defaulting = function.signature.parameter_count == 0 and shape == .boolean;
         const always = declared.public or declared.marked;
         if (!always and !defaulting) continue;
         const name = try std.fmt.allocPrint(allocator, "{s}::{s}", .{ module, own });
-        try found.append(allocator, .{ .name = name, .function = function.id, .shape = shape, .other_parameters = others, .streams = try streams.toOwnedSlice(allocator) });
+        try found.append(allocator, .{ .name = name, .function = function.id, .shape = shape, .other_parameters = others, .streams = try streams.toOwnedSlice(allocator), .parameters = parameters });
     }
     std.mem.sort(Case, found.items, {}, lessByName);
     return found.toOwnedSlice(allocator);

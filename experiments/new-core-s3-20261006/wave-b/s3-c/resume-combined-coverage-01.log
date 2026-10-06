@@ -1,0 +1,21 @@
+## examples: 93 files (7 not checkable alone), 207 functions, 202 accepted (98%)
+  checks in accepted functions (analysed alone): proven 124, still exact 184
+  front end: 4 x error[E_MODULE_NAME]: declared `module shop.money`, but this
+  front end: 1 x error[E_MODULE_NAME]: declared `module config.values`, but t
+  front end: 1 x error[E_MODULE_NAME]: declared `module shop.billing`, but th
+      3  host function
+      2  extern
+## bench/parity: 45 files (0 not checkable alone), 123 functions, 123 accepted (100%)
+  checks in accepted functions (analysed alone): proven 240, still exact 244
+## tests/lang: 205 files (4 not checkable alone), 3124 functions, 3124 accepted (100%)
+  checks in accepted functions (analysed alone): proven 5349, still exact 3848
+  front end: 2 x error[E_EMBED_MISSING]: cannot embed "embed_fixtures/lines.t
+  front end: 1 x error[E_EMBED_MISSING]: cannot embed "embed_fixtures/nul.bin
+  front end: 1 x error[E_EMBED_MISSING]: cannot embed "embed_fixtures/support
+## benchmarks/runtime: 3 files (0 not checkable alone), 141 functions, 140 accepted (99%)
+  checks in accepted functions (analysed alone): proven 313, still exact 367
+      1  extern
+## all corpora: checks proven 5768, still exact 4404 (in 3366 accepted functions)
+## all corpora: 3595 functions, 3589 accepted (100%)
+      3  extern
+      3  host function
