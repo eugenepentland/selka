@@ -263,17 +263,9 @@ static void out_of_memory(void) {
     os_exit(1);
 }
 
-void myl_core_print_i64(int64_t fd, int64_t value) {
-    char text[32];
-    int len = snprintf(text, sizeof text, "%lld", (long long)value);
-    stream_write(stream_for(fd), text, (size_t)len);
-}
-
-void myl_core_print_u64(int64_t fd, uint64_t value) {
-    char text[32];
-    int len = snprintf(text, sizeof text, "%llu", (unsigned long long)value);
-    stream_write(stream_for(fd), text, (size_t)len);
-}
+/* Integer formatting is supplied by core_number.c after the text runtime. */
+void myl_core_print_i64(int64_t fd, int64_t value);
+void myl_core_print_u64(int64_t fd, uint64_t value);
 
 void myl_core_print_bool(int64_t fd, bool value) {
     if (value) stream_write(stream_for(fd), "True", 4);
@@ -451,44 +443,6 @@ myl_block *myl_core_args(int32_t argc, char **argv) {
     for (int64_t i = 0; i < count; ++i) ((myl_block **)block_data(list))[i] = str_from(argv[i + 1], strlen(argv[i + 1]));
     list->len = count;
     return list;
-}
-
-static bool ascii_space(unsigned char c) { return c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == '\f' || c == '\v'; }
-
-/* `int(text)` with the pinned grammar (docs/bytes.md): surrounding ASCII
-   whitespace, one optional sign, decimal digits with single `_` separators
-   between digits. An overflowing value is None. */
-bool myl_core_str_parse_int(myl_block *text, int64_t *out) {
-    const unsigned char *s = block_data(text);
-    size_t start = 0, end = (size_t)text->len;
-    while (start < end && ascii_space(s[start])) ++start;
-    while (end > start && ascii_space(s[end - 1])) --end;
-    bool negative = false;
-    if (start < end && (s[start] == '+' || s[start] == '-')) negative = s[start++] == '-';
-    if (start == end) return false;
-    uint64_t magnitude = 0;
-    bool previous_digit = false;
-    for (size_t i = start; i < end; ++i) {
-        unsigned char c = s[i];
-        if (c == '_') {
-            if (!previous_digit || i + 1 == end) return false;
-            previous_digit = false;
-            continue;
-        }
-        if (c < '0' || c > '9') return false;
-        if (magnitude > (UINT64_MAX - (uint64_t)(c - '0')) / 10) return false;
-        magnitude = magnitude * 10 + (uint64_t)(c - '0');
-        previous_digit = true;
-    }
-    if (!previous_digit) return false;
-    if (negative) {
-        if (magnitude > (uint64_t)INT64_MAX + 1) return false;
-        *out = magnitude == (uint64_t)INT64_MAX + 1 ? INT64_MIN : -(int64_t)magnitude;
-    } else {
-        if (magnitude > (uint64_t)INT64_MAX) return false;
-        *out = (int64_t)magnitude;
-    }
-    return true;
 }
 
 /* ---- traps and exit --------------------------------------------------------- */
@@ -1026,18 +980,6 @@ void myl_core_main_error_str(myl_block *text) {
 /* ---- lane V helpers (checkpoint V-2) ---------------------------------------------
  * Appended for the builder's `assert`, `str ==`, `len(str)` and the text builders; the rest of the file is lane O's. */
 
-/* `str(x)` of an integer, in decimal. */
-myl_block *myl_core_str_from_i64(int64_t value) {
-    char text[32];
-    int len = snprintf(text, sizeof text, "%lld", (long long)value);
-    return str_from(text, (size_t)len);
-}
-
-myl_block *myl_core_str_from_u64(uint64_t value) {
-    char text[32];
-    int len = snprintf(text, sizeof text, "%llu", (unsigned long long)value);
-    return str_from(text, (size_t)len);
-}
 
 /* `str(b)` of a boolean: `True` or `False`. */
 myl_block *myl_core_str_from_bool(bool value) {

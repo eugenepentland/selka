@@ -1,0 +1,11 @@
+$ scripts/build-slot.sh build -- /usr/bin/time -f %e -o /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-numbers/.mylang-cache/wave-b/s2-t2/rebuild-seconds.txt zig build core --summary all
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: all 3 build slot(s) busy; waiting (60s so far)
+build-slot: build slot 1 after 100s (all 3 build slot(s) busy)
+Build Summary: 3/3 steps succeeded
+core success
++- install mylang-core success
+   +- compile exe mylang-core debug native cached 8ms MaxRSS:38M
+
+
+exit=0 command_seconds=0.63

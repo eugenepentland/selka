@@ -1,0 +1,21 @@
+binary_search: 6/7 existing functions identical; only parser call substitution: "my.binary_search::parse_number"; two inline helpers added.
+branch_mixed: 5/6 existing functions identical; only parser call substitution: "my.branch_mixed::parse_number"; two inline helpers added.
+branch_predictable: 5/6 existing functions identical; only parser call substitution: "my.branch_predictable::parse_number"; two inline helpers added.
+call_direct: 6/7 existing functions identical; only parser call substitution: "my.call_direct::parse_number"; two inline helpers added.
+float_math: 5/6 existing functions identical; only parser call substitution: "my.float_math::parse_number"; two inline helpers added.
+int_math: 5/6 existing functions identical; only parser call substitution: "my.int_math::parse_number"; two inline helpers added.
+row_alloc_retained: 6/7 existing functions identical; only parser call substitution: "my.row_alloc_retained::parse_number"; two inline helpers added.
+row_alloc_short: 6/7 existing functions identical; only parser call substitution: "my.row_alloc_short::parse_number"; two inline helpers added.
+row_list_append: 7/8 existing functions identical; only parser call substitution: "my.row_list_append::parse_number"; two inline helpers added.
+row_list_filter: 7/8 existing functions identical; only parser call substitution: "my.row_list_filter::parse_number"; two inline helpers added.
+row_list_scan: 6/7 existing functions identical; only parser call substitution: "my.row_list_scan::parse_number"; two inline helpers added.
+row_mutate_nested: 6/7 existing functions identical; only parser call substitution: "my.row_mutate_nested::parse_number"; two inline helpers added.
+row_mutate_shared: 5/6 existing functions identical; only parser call substitution: "my.row_mutate_shared::parse_number"; two inline helpers added.
+row_mutate_unique: 5/6 existing functions identical; only parser call substitution: "my.row_mutate_unique::parse_number"; two inline helpers added.
+row_option_handle: 6/7 existing functions identical; only parser call substitution: "my.row_option_handle::parse_number"; two inline helpers added.
+row_record_construct: 6/7 existing functions identical; only parser call substitution: "my.row_record_construct::parse_number"; two inline helpers added.
+row_record_reads: 6/7 existing functions identical; only parser call substitution: "my.row_record_reads::parse_number"; two inline helpers added.
+row_record_update: 6/7 existing functions identical; only parser call substitution: "my.row_record_update::parse_number"; two inline helpers added.
+row_result_propagate: 7/8 existing functions identical; only parser call substitution: "my.row_result_propagate::parse_number"; two inline helpers added.
+row_tagged_stack: 6/7 existing functions identical; only parser call substitution: "my.row_tagged_stack::parse_number"; two inline helpers added.
+PASS: all 20 timed kernels and every other existing function are identical. Changed parsing occurs before the measured interval; formatting/printing occurs after it. Full original diffs remain in .mylang-cache/wave-a/s2-t2/.

@@ -1,0 +1,90 @@
+$ scripts/build-slot.sh build -- /usr/bin/time -f %e -o /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-numbers/.mylang-cache/wave-b/s2-t2/qualified/coverage-seconds.txt python3 experiments/new-core-s0-20261005/coverage.py
+## examples: 93 files (7 not checkable alone), 207 functions, 159 accepted (77%)
+  checks in accepted functions (analysed alone): proven 84, still exact 99
+  front end: 4 x error[E_MODULE_NAME]: declared `module shop.money`, but this
+  front end: 1 x error[E_MODULE_NAME]: declared `module config.values`, but t
+  front end: 1 x error[E_MODULE_NAME]: declared `module shop.billing`, but th
+     19  fixed array type
+     11  capability type
+      5  resource type
+      3  host function
+      2  extern
+      2  function value type
+      2  shift_right
+      1  text_chr
+      1  decode
+      1  hex
+      1  dict type
+## bench/parity: 45 files (0 not checkable alone), 123 functions, 87 accepted (71%)
+  checks in accepted functions (analysed alone): proven 127, still exact 123
+      5  dict type
+      5  f64_sqrt
+      2  find_any
+      2  shift_left
+      2  replace
+      2  byte_buffer type
+      1  fixed array type
+      1  reverse
+      1  shift_right
+      1  operator on an aggregate value
+      1  function value type
+      1  is_digit
+## tests/lang: 205 files (4 not checkable alone), 3156 functions, 2289 accepted (73%)
+  checks in accepted functions (analysed alone): proven 3184, still exact 2401
+  front end: 2 x error[E_EMBED_MISSING]: cannot embed "embed_fixtures/lines.t
+  front end: 1 x error[E_EMBED_MISSING]: cannot embed "embed_fixtures/nul.bin
+  front end: 1 x error[E_EMBED_MISSING]: cannot embed "embed_fixtures/support
+    336  dict type
+    135  fixed array type
+     62  byte_buffer type
+     51  function value type
+     39  function_value
+     38  capability type
+     33  set type
+     10  equality of a recursive value
+      9  view
+      9  operator on an aggregate value
+      9  text of a non-integer value
+      9  count
+## benchmarks/runtime: 3 files (0 not checkable alone), 141 functions, 81 accepted (57%)
+  checks in accepted functions (analysed alone): proven 111, still exact 160
+     31  dict type
+     11  byte_buffer type
+      2  replace
+      1  extern
+      1  contains
+      1  is_digit
+      1  is_alpha
+      1  is_space
+      1  count
+      1  lstrip
+      1  rstrip
+      1  strip
+## all corpora: checks proven 3370, still exact 2635 (in 2481 accepted functions)
+## all corpora: 3627 functions, 2616 accepted (72%)
+    373  dict type
+    155  fixed array type
+     75  byte_buffer type
+     54  function value type
+     49  capability type
+     39  function_value
+     33  set type
+     11  shift_right
+     11  count
+     10  f64_sqrt
+     10  operator on an aggregate value
+     10  equality of a recursive value
+      9  find_any
+      9  view
+      9  text of a non-integer value
+      8  replace
+      7  decode
+      7  strip
+      7  extend
+      6  resource type
+      6  number_format
+      5  lower
+      5  parse_float
+      5  text_repr
+
+exit=0 command_seconds=1.91 wall_including_admission=4.33s

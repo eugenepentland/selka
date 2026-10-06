@@ -10,9 +10,7 @@ pub const Error = error{ OutOfMemory, Unsupported };
 
 /// Number-conversion dispatch hook, replaced by S2-T2 without changing text dispatch.
 pub fn number(comptime Context: type, context: Context, operation_node: Operation, ty: ir.Type, span: u32) Error!ir.Ref {
-    if (context.typeOfRef(try context.receiverOf(operation_node.owner)) != .str) return context.mb.refuse("parse_int of bytes", span);
-    if (operation_node.kind != .parse_int) return context.mb.refuse("number text operation", span);
-    return context.emit(.{ .op = .str_parse_int, .ty = ty, .a = try context.receiverOf(operation_node.owner), .span = span });
+    return @import("build_number.zig").operation(Context, context, operation_node, ty, span);
 }
 
 /// Lower one checked text or bytes operation with the original evaluation order.

@@ -20,6 +20,7 @@ const emit_dict = @import("emit_dict.zig");
 const emit_text = @import("emit_text.zig");
 const text_builder = @import("build_text.zig");
 const emit_fn = @import("emit_fn.zig");
+const emit_number = @import("emit_number.zig");
 
 /// A source line and column for a span start.
 pub const Location = struct { line: u32, column: u32 };
@@ -376,6 +377,7 @@ const ModuleState = struct {
         );
         try out.appendSlice(self.allocator, runtime_fast_paths);
         try out.appendSlice(self.allocator, self.externs.items);
+        try emit_number.prelude(self.allocator, out);
     }
 
     fn emitSites(self: *ModuleState, out: *Out) !void {
@@ -1214,7 +1216,7 @@ const FunctionEmitter = struct {
                 const parsed = try self.fresh("%int");
                 const tag = try self.fresh("%tag");
                 const partial = try self.fresh("%opt");
-                try out.print(self.a(), "  {s} = call zeroext i1 @myl_core_str_parse_int(ptr {s}, ptr %slot)\n  {s} = load i64, ptr %slot, align 8\n  {s} = zext i1 {s} to i8\n", .{ ok, try self.value(inst.a), parsed, tag, ok });
+                try out.print(self.a(), "  {s} = call fastcc i1 @myl_core_parse_int_inline(ptr {s}, ptr %slot)\n  {s} = load i64, ptr %slot, align 8\n  {s} = zext i1 {s} to i8\n", .{ ok, try self.value(inst.a), parsed, tag, ok });
                 try out.print(self.a(), "  {s} = insertvalue {{ i8, i64 }} poison, i8 {s}, 0\n  {s} = insertvalue {{ i8, i64 }} {s}, i64 {s}, 1\n", .{ partial, tag, name, partial, parsed });
             },
             .union_make => if (!self.memory.fused[ref.index()]) try self.unionMake(out, name, inst),

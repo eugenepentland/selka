@@ -1299,3 +1299,57 @@ values remain available; their aliases are checked by the view identity analysis
 
 Package commands, qualification counts, implementation commit and complete
 evidence are recorded in `experiments/new-core-s2-20261005/wave-b/s2-d/README.md`.
+
+## 19. Text and bytes (S2-T1 as built in Wave B)
+
+The 32-byte leaf header is shared by strings and bytes: count/kind at offsets
+0/4, byte length/capacity at 8/16, cache metadata at 24 and bytes at 32.
+STR=1 and BYTES=3; ASCII/HASHED/SCALARS/CURSOR use kind bits 8–11. The low/high
+metadata words hold the deterministic 32-bit hash and scalar count. Saturated
+headers are never written. `myl_core_str_hash` and `myl_core_span_hash` provide
+the same unseeded hash for owned and borrowed dictionary keys.
+
+UTF-8 scalar iteration uses a byte-offset cursor when the receiver is immutable;
+a refreshed live place retains scalar lookup. ASCII characters are immortal.
+Indexing and slices preserve scalar semantics, negative bounds and steps; long
+non-ASCII lookup counts continuation bits in 32-byte groups with a cursor cache.
+Character append fusion avoids materialization when it adds no alias. Byte
+reductions load u8, widen safely and admit bounded integer XOR, with range
+verification. Encode borrows the same pointer and retains only when it escapes.
+
+Append consumes a unique receiver. Identical resolved operands use fresh
+concatenation to avoid creating count=2 after a uniqueness check. Join sizes once
+and uses the general short-copy path for pieces at most sixteen bytes. Split
+currently builds owned pieces and a list; the proposed fused split cursor was
+not implemented. The split row passes the existing ABI, so the conditional
+parameter-view ABI evaluation was not triggered. SSA views retain the frozen
+verifier's no-escape restrictions. These are measured implementation limits,
+documented alongside remaining precise feature refusals in the exit report.
+
+The package source is `ec44e2b6`, merged at `dd1ea75a`; its five rows, Unicode
+fixtures, 50-case strict fuzz, leak/fact sweeps and qualification commands are in
+`experiments/new-core-s2-20261005/wave-b/s2-t1/README.md`.
+
+## 20. Numbers in text (S2-T2 as built in Wave B)
+
+`build_text.number` dispatches through `build_number.zig`. Emitted LLVM supplies
+an always-inline eight-digit SWAR fast path. Loads cover only the actual bytes:
+1/2/3/4-byte loads for short words, overlapping four-byte loads for widths 5–7,
+and one eight-byte load for width eight. Short words use a 32-bit pair reduction;
+longer words use parallel pair weighting. An endpoint check avoids redundant
+fallback work on invalid text. Longer numbers, separators, surrounding ASCII
+whitespace and 19-digit overflow edges use the exact old-core grammar port in
+`core_number.c`. The path assumes the accepted x86-64 target.
+
+Decimal rendering and integer printing share a two-digit writer with an
+integer digit-count estimate and unsigned magnitude for INT64_MIN. Fresh text
+uses the T1 header and ASCII flag. Float text remains outside this implementation.
+No frozen IR, persisted format or language rule changed.
+
+Source `e5139598` was qualified after the T1 dependency merge `a7f2944a`.
+The initial parse row missed; endpoint classification and short-word reduction
+repaired it. The final package's seven-round new/Zig ratios at 4096/64 were
+0.987/1.090 for parsing and 0.319/0.316 for formatting, with identical checksums.
+All twenty S0/S1 timed kernels remain identical; only untimed `parse_number`
+calls change to the helper. Commands, results, refusals and retained diagnosis
+are in `experiments/new-core-s2-20261005/wave-b/s2-t2/README.md`.

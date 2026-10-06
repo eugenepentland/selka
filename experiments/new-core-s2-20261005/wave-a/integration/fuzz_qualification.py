@@ -28,6 +28,9 @@ HARNESSES = {
     "rebinding": "experiments/new-core-s2-20261005/wave-a/fuzz_rebinding.py",
     "iteration": "experiments/new-core-s2-20261005/wave-b/fuzz_iteration.py",
     "dict": "experiments/new-core-s2-20261005/wave-b/s2-d/fuzz_dict.py",
+    "number": "experiments/new-core-s2-20261005/wave-b/s2-t2/fuzz_number.py",
+    "text": "experiments/new-core-s2-20261005/wave-b/s2-t1/fuzz_text.py",
+    "functions": "experiments/new-core-s2-20261005/wave-b/s2-f/fuzz_functions.py",
 }
 
 
