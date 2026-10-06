@@ -9,7 +9,7 @@ record Row:
 
 
 record HeldRow:
-    view: DictValues[int, int]
+    view: list[int]
     number: int
 
 
@@ -83,13 +83,13 @@ public def test_escaped_record_keeps_ordinary_ownership() -> bool:
 
 
 # spec-case: RC-PLAIN-FIELD-LOAN-1
-public def test_live_view_sibling_keeps_existing_holds() -> bool:
+public def test_snapshot_sibling_stays_independent() -> bool:
     mapping = {1: 7}
-    rows = [HeldRow(mapping.values(), 3)]
+    rows = [HeldRow(list(mapping.values()), 3)]
     output: list[int] = []
     value = held(rows, mut output)
     mapping[1] = 9
-    return value == 3 and output == [3] and list(rows[0].view) == [9]
+    return value == 3 and output == [3] and list(rows[0].view) == [7]
 
 
 # spec-case: RC-PLAIN-FIELD-LOAN-1
@@ -107,6 +107,6 @@ def main(out: Stream) -> int:
     out.print(test_readonly_length_loop_keeps_managed_local_bits_borrowed())
     out.print(test_callback_keeps_the_receiver_snapshot())
     out.print(test_escaped_record_keeps_ordinary_ownership())
-    out.print(test_live_view_sibling_keeps_existing_holds())
+    out.print(test_snapshot_sibling_stays_independent())
     out.print(test_caller_arena_keeps_the_root_until_field_read())
     return 0

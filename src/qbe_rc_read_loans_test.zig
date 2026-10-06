@@ -145,7 +145,7 @@ const field_source =
     \\    left: Label
     \\    number: int
     \\record HeldRow:
-    \\    view: DictValues[int, int]
+    \\    view: list[int]
     \\    number: int
     \\def selected(rows: list[Row], at: int, output: mut list[int]) -> int:
     \\    number = rows[at].left.number
@@ -163,7 +163,7 @@ const field_source =
     \\    return rows[change(mut rows)].left.number
     \\def held(output: mut list[int]) -> int:
     \\    table = {1: 2}
-    \\    rows = [HeldRow(table.values(), 5)]
+    \\    rows = [HeldRow(list(table.values()), 5)]
     \\    number = rows[0].number
     \\    output.append(number)
     \\    return number

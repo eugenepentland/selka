@@ -1,0 +1,43 @@
+guardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source 1b6c13222675)
+guardian: diff-scoped vs 1fd1d566793dcae92449d937aca595c55ee318c8: 202/831 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 16 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 1 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 2/88 failed (spec, line-length) — diff-scoped vs 1fd1d566793dcae92449d937aca595c55ee318c8, 202 file(s) in scope
+guardian: failures grouped by check (2):
+  spec (13 findings)
+    - unverified: Surface syntax - [DICT-VIEWS-1] Dictionary keys, values and items produce nonallocating live typed views; binding or passing a view preserves insertion-order iteration, items always yield DictItem key/value records with optional two-name unpacking, and list(view) makes an independent shallow snapshot. Views retain their mapping, reflect value updates, and reject size changes during iteration; ordinary and generic checking preserve these contracts.
+    - unverified: Value semantics (default, D9) - [RC-HELD-RECEIVER-1] Mutating the public mapping field of a live dictionary view preserves its non-sharing lifetime-hold identity. Detachment replaces only that held edge, leaving ordinary dictionary snapshots owned and unchanged. A held-only dictionary remains mutable; nested receiver preparation handles held pointers and retains selected paths through callback rebinding and snapshot publication.
+    - unverified: Value semantics (default, D9) - [LIVE-VIEW-HISTORY-1] A live dictionary view preserves its original mapping identity when a semantic snapshot makes later owner mutations detach, regardless of mutation order or aggregate placement. A view of an already detached fresh mapping follows its owner; whole-view copies and read-only projections create no semantic sharing, including in arenas.
+    - +10 more — use --verbose for full detail
+  line-length (1 finding)
+    - src/dictionary_views_test.zig:75: line is 246 chars (hard limit 240)
+      fix: split the expression when doing so improves readability
+  caution: zig-out binaries predate this failed run (installs are gated on green) — rebuild green before running them
+install
++- install generated/
+   +- run exe mylang (mylang-runtime)
+      +- install mylang
+         +- run ../guardian-zig/zig-out/bin/guardian-check failure
+error: process exited with code 1
+failed command: ../guardian-zig/zig-out/bin/guardian-check all . --quiet
+
+Build Summary: 6/12 steps succeeded (1 failed)
+install transitive failure
++- install mylang transitive failure
+|  +- compile exe mylang debug native success 6s MaxRSS:566M
+|  |  +- run exe qbe-build-assets (qbe_build_assets) success 153ms
+|  |     +- compile exe qbe-build-assets debug native success 632ms MaxRSS:149M
+|  +- run ../guardian-zig/zig-out/bin/guardian-check failure
+|     +- guardian-selfcheck success
+|        +- run ../guardian-zig/zig-out/bin/guardian-check success 8ms
++- install qbe transitive failure
+|  +- compile exe qbe fast native success 1s MaxRSS:110M
+|  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
++- install generated/ transitive failure
+|  +- run exe mylang (mylang-runtime) transitive failure
+|     +- compile exe mylang debug native (+1 more reused dependencies)
+|     +- install mylang (+2 more reused dependencies)
+|     +- compile exe qbe fast native (reused)
++- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+

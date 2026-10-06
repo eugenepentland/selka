@@ -21,8 +21,6 @@ fn emitted() !std.json.Parsed(Manifest) {
         \\    with arena() as scratch:
         \\        value = made()
         \\        return scratch.escape(value)
-        \\def held(view: DictValues[int, int]) -> DictValues[int, int]:
-        \\    return view
         \\def main() -> int:
         \\    value = made()
         \\    return value.left[0]
@@ -52,7 +50,6 @@ test "RC-INLINE-TAKE-1 ordinary moves preflight headers and preserve fallible fa
     try t.expect(contains(made, "@rcmoveslow"));
     try t.expect(contains(made, "=w cnel"));
     try t.expect(contains(made, "# RC-GLUE-1 take"));
-    try t.expect(!contains(try named(manifest.value, "held"), "@rcmoveheader"));
 }
 
 // spec-case: RC-INLINE-TAKE-1
@@ -63,7 +60,6 @@ test "RC-INLINE-TAKE-1 counted artifacts share event-free token relocation" {
     var manifest = try emitted();
     defer manifest.deinit();
     try t.expect(contains(try named(manifest.value, "made"), "@rcmoveheader"));
-    try t.expect(!contains(try named(manifest.value, "held"), "@rcmoveheader"));
 }
 
 // spec: RC-PRODUCED-OWNER-1

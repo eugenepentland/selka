@@ -1,0 +1,24 @@
+test-cli
++- run test w
+guardian/test: 5 test(s) selected by filter: "D2" — 2 match by name, 3 unnamed test block(s) run regardless
+guardian/test: test wall 1.31s; slowest over 50ms:
+guardian/test:   0.85s  fix_cli_test.test.D2 CLI fix materializes stored dictionary projections with contextual list snapshots
+guardian/test:   0.45s  fix_cli_test.test.D2 rejects the former held receiver snapshot history and aggregate view corpora
+guardian/test: PASS — 5 passed
+guardian/test: RESULT {"passed":5,"failed":0,"skipped":0}
+failed command: sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_QBE=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-language/zig-out/focus/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./.zig-cache/o/b4c982205b30df1209dcb433c16af966/test --guardian-filter=D2 --cache-dir=./.zig-cache --seed=0x4db1622d --listen=-
+
+Build Summary: 10/10 steps succeeded; 5/5 tests passed
+test-cli success
++- run test 5 pass (5 total) 1s MaxRSS:28M
+   +- compile test debug native success 293ms MaxRSS:154M
+   |  +- options success
+   |     +- compile exe mylang debug native success 3s MaxRSS:566M
+   |     |  +- run exe qbe-build-assets (qbe_build_assets) success 48ms
+   |     |     +- compile exe qbe-build-assets debug native cached 5ms MaxRSS:40M
+   |     +- compile exe qbe fast native cached 13ms MaxRSS:39M
+   +- install generated to qbe cached
+   |  +- compile exe qbe fast native (reused)
+   +- install generated to mylang success
+      +- compile exe mylang debug native (+1 more reused dependencies)
+

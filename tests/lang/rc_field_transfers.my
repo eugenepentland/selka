@@ -106,19 +106,19 @@ public def test_closed_field_releases_the_previous_target_once() -> bool:
 
 record ObservedHolder:
     items: list[int]
-    view: DictValues[int, int]
+    view: list[int]
 
 def observed_root(holder: mut ObservedHolder):
     work = holder.items
     push(mut work, 2)
     holder.items = work
 
-public def test_live_view_root_keeps_existing_transfer_rules() -> bool:
+public def test_snapshot_root_keeps_existing_transfer_rules() -> bool:
     mapping = {0: 7}
-    holder = ObservedHolder([1], mapping.values())
+    holder = ObservedHolder([1], list(mapping.values()))
     observed_root(mut holder)
     mapping[0] = 9
-    return holder.items == [1, 2] and list(holder.view) == [9]
+    return holder.items == [1, 2] and list(holder.view) == [7]
 
 def main(out: Stream) -> int:
     out.print(test_closed_field_restores_empty_and_nonempty_source())
@@ -129,5 +129,5 @@ def main(out: Stream) -> int:
     out.print(test_closed_field_works_inside_caller_arena())
     out.print(test_nested_field_uses_existing_path_behavior())
     out.print(test_closed_field_releases_the_previous_target_once())
-    out.print(test_live_view_root_keeps_existing_transfer_rules())
+    out.print(test_snapshot_root_keeps_existing_transfer_rules())
     return 0

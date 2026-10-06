@@ -17,8 +17,7 @@ const schema =
     \\union Choice:
     \\    empty,
     \\    pair: Pair,
-    \\    number: int,
-    \\    held: DictValues[int, int]
+    \\    number: int
     \\def main() -> int:
     \\    return 0
 ;

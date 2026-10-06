@@ -64,7 +64,7 @@ const capture =
 const held =
     \\def make(depth: int) -> Node:
     \\    mapping = {1: 7}
-    \\    view = mapping.values()
+    \\    view = list(mapping.values())
     \\    return Node(None, None)
 ;
 

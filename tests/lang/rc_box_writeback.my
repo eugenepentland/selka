@@ -37,7 +37,7 @@ public def test_option_write_still_publishes_when_a_view_keeps_the_old_mapping_a
         saved = through(original)
         if original is None or saved is None:
             return False
-        live = original.mapping.values()
+        live = list(original.mapping.values())
         original.mapping[1] = 13
         return original.mapping[1] == 13 and saved.mapping[1] == 7 and len(list(live)) == 1
 

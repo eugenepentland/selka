@@ -80,7 +80,7 @@ class Gen:
                   '    for member in members_saved:', '        acc = (acc * 7 + member) % 1000003',
                   '    for key, value in d.items():',
                   '        acc = (acc + value) % 1000003', '        d[71] = 19',
-                  '    observed = {1: 3}', '    live = observed.values()',
+                  '    observed = {1: 3}', '    live = list(observed.values())',
                   '    frozen = list(live)', '    observed[1] = 7', '    observed[2] = 9',
                   '    for current_value in live:', '        acc = (acc + current_value) % 1000003',
                   '    acc = (acc + frozen[0]) % 1000003']

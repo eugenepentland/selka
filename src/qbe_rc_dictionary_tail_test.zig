@@ -28,7 +28,7 @@ const source =
     \\    return counts[key]
     \\def held() -> int:
     \\    counts = {1: 7}
-    \\    view = counts.values()
+    \\    view = list(counts.values())
     \\    key = 1
     \\    counts[key] = 13
     \\    return list(view)[0]

@@ -47,13 +47,6 @@ const source =
     \\    with arena():
     \\        push(mut items, 3)
     \\    holder.items = items
-    \\record ObservedHolder:
-    \\    items: list[int]
-    \\    view: DictValues[int, int]
-    \\def held_root(holder: mut ObservedHolder):
-    \\    items = holder.items
-    \\    push(mut items, 3)
-    \\    holder.items = items
     \\def initialized(holder: mut Holder):
     \\    items = [8, 9]
     \\    items = holder.items
@@ -113,7 +106,6 @@ test "RC closed field owner moves only with complete physical source and commit 
     try t.expect(!contains(try named(manifest.value, "early"), marker));
     try t.expect(!contains(try named(manifest.value, "borrowed"), marker));
     try t.expect(!contains(try named(manifest.value, "arena_change"), marker));
-    try t.expect(!contains(try named(manifest.value, "held_root"), marker));
     try t.expect(contains(try named(manifest.value, "initialized"), marker));
     try t.expect(!contains(try named(manifest.value, "authority"), marker));
     try t.expect(!contains(try named(manifest.value, "indirect"), marker));

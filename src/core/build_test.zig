@@ -97,7 +97,7 @@ test "a match on an option tests the tag and binds the payload in its arm" {
     try std.testing.expect(std.mem.indexOf(u8, text, "call i64 parse(str0)") != null);
 }
 
-const unsupported =
+const stored_view =
     \\def main(out: Stream) -> int:
     \\    table = {"a": 1}
     \\    holder = [table]
@@ -107,15 +107,15 @@ const unsupported =
     \\
 ;
 
-// spec: NEW-CORE-IR-2
-test "a construct the new core does not support stops the build with a reason and position" {
+// spec-case: NEW-CORE-DICT-1
+test "D2 rejects an interior stored dictionary view before core lowering" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     var refusal: build.Refusal = .{};
-    const outcome = support.buildSource(arena.allocator(), unsupported, &refusal);
-    try std.testing.expectError(error.Unsupported, outcome);
-    try std.testing.expect(refusal.reason.len != 0);
-    try std.testing.expect(refusal.span > 0);
+    const outcome = support.buildSource(arena.allocator(), stored_view, &refusal);
+    try std.testing.expectError(error.SourceError, outcome);
+    try std.testing.expectEqualStrings("", refusal.reason);
+    try std.testing.expectEqual(@as(u32, 0), refusal.span);
 }
 
 const iterate_and_grow =

@@ -1,0 +1,6 @@
+Command: scripts/build-slot.sh gate -- zig build test --summary all
+Process exit: 1
+Build Summary: 105/115 steps succeeded (9 failed); 2990/33550 tests passed (30552 skipped, 8 failed)
+Result: initial gate failed; no pass claimed and no rerun started after required stop.
+Complete original output: gate-test.log
+The skipped count includes the Guardian runner's unselected entries in each shard.

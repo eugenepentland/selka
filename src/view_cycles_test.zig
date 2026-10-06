@@ -20,7 +20,7 @@ fn rejected(text: []const u8) !void {
     var c = try language.Compilation.init(t.allocator, "view-cycle.my", text);
     defer c.deinit();
     try t.expectError(error.SourceError, c.check());
-    try t.expectEqualStrings("E_LIVE_VIEW_CYCLE", c.diagnostics.items[0].code);
+    try t.expectEqualStrings("E_VIEW_STORED", c.diagnostics.items[0].code);
     try t.expect(c.diagnostics.items[0].span.end > c.diagnostics.items[0].span.start);
 }
 fn accepted(text: []const u8) !void {
@@ -29,8 +29,8 @@ fn accepted(text: []const u8) !void {
     try c.check();
     try t.expect(c.program != null);
 }
-// spec: LIVE-VIEW-ACYCLIC-1
-test "live view cycle admission rejects direct mutual and generic stored cycles" {
+// spec-case: D2-VIEW-STORAGE-1
+test "D2 declarations reject direct mutual and generic view cycles" {
     const previous = values.enabled();
     values.setEnabled(true);
     defer values.setEnabled(previous);
@@ -71,9 +71,9 @@ test "live view cycle admission keeps ordinary views snapshots and recursion" {
         \\    children: list[Node]
         \\    next: Option[Node]
         \\record Saved:
-        \\    view: DictValues[int, int]
-        \\def retain(mapping: dict[int, int]) -> Saved noalloc:
-        \\    return Saved(view=mapping.values())
+        \\    view: list[int]
+        \\def retain(mapping: dict[int, int]) -> Saved:
+        \\    return Saved(view=list(mapping.values()))
         \\def main() -> int:
         \\    mapping = {1: 4}
         \\    snapshot = mapping
@@ -91,12 +91,12 @@ test "live view cycle admission keeps ordinary views snapshots and recursion" {
         \\    return len(mapping)
     );
 }
-// spec-case: LIVE-VIEW-ACYCLIC-1
-test "live view cycle admission follows storage not phantom names or zero arrays" {
+// spec-case: D2-VIEW-STORAGE-1
+test "D2 rejects phantom and empty array view annotations but permits user names" {
     const previous = values.enabled();
     values.setEnabled(true);
     defer values.setEnabled(previous);
-    try accepted(
+    try rejected(
         \\record Phantom[T]:
         \\    pass
         \\record Entry:
@@ -114,12 +114,15 @@ test "live view cycle admission follows storage not phantom names or zero arrays
         \\    return 0
     );
 }
-// spec-case: LIVE-VIEW-ACYCLIC-1
-test "live view cycle admission preserves legacy tracing compatibility" {
+// spec-case: D2-VIEW-STORAGE-1
+test "D2 rejects stored views in legacy tracing mode too" {
     const previous = values.enabled();
     values.setEnabled(false);
     defer values.setEnabled(previous);
-    try accepted(direct);
+    var c = try language.Compilation.init(t.allocator, "legacy-stored-view.my", direct);
+    defer c.deinit();
+    try t.expectError(error.SourceError, c.check());
+    try t.expectEqualStrings("E_VIEW_STORED", c.diagnostics.items[0].code);
 }
 
 fn graphRejection(allocator: std.mem.Allocator, records: []typed.Record) !void {
@@ -132,7 +135,7 @@ fn graphRejection(allocator: std.mem.Allocator, records: []typed.Record) !void {
     };
     return error.TestExpectedError;
 }
-// spec-case: LIVE-VIEW-ACYCLIC-1
+// spec: LIVE-VIEW-ACYCLIC-1
 test "live view cycle admission visits deep stored graphs and rolls back allocation refusal" {
     const previous = values.enabled();
     values.setEnabled(true);

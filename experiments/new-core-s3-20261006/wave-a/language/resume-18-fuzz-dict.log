@@ -1,0 +1,6 @@
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: build slot 3 after 5s (all 3 build slot(s) busy)
+qualification progress: dict: seen=25 elapsed=580.13s
+qualification progress: dict: seen=50 elapsed=779.17s
+records,unions,propagate,mut,alias cases=50 old_rejected=0 refused=0 compared=750 mismatch=0 fact=0 traps=24 caught=0
+qualification {"kind": "dict", "qualified": true, "accepted": 50, "old_rejected": 0, "core_refused": 0, "core_build_failed": 0, "elapsed_seconds": 785.6386525710113}

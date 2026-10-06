@@ -11,7 +11,7 @@ const nested_dictionary =
     \\def main(out: Stream) -> int:
     \\    original = {0:{1:7}}
     \\    copied = clone_during(mut original[0], original)
-    \\    live = copied[0].values()
+    \\    live = list(copied[0].values())
     \\    copied[0][1] = 13
     \\    out.print(list(live))
     \\    out.print(copied[0][1])

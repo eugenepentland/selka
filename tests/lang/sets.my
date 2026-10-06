@@ -293,7 +293,7 @@ public def test_list_sorted_and_the_folds_of_a_dictionary_read_its_keys() -> boo
     widths = {4: "a", 9: "b", 1: "c"}
     keys = list(ages)
     ordered = sorted(ages)
-    return keys == ["cy", "al", "bo"] and ordered == ["al", "bo", "cy"] and sum(widths) == 14 and max(widths) == 9 and min(ages.values()) == 1 and sorted(ages.values()) == [1, 2, 3]
+    return keys == ["cy", "al", "bo"] and ordered == ["al", "bo", "cy"] and sum(widths) == 14 and max(widths) == 9 and min(list(ages.values())) == 1 and sorted(ages.values()) == [1, 2, 3]
 
 
 # Benchmarks: one operation builds a set of `size` records, probes every one of

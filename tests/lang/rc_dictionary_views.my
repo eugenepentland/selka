@@ -1,98 +1,24 @@
 module rc_dictionary_views
 
-
-def mapping_of(view: DictValues[int, int]) -> dict[int, int]:
-    return view.mapping
-
-
-# spec-case: DICT-VIEWS-1
-public def test_mapping_projection_creates_named_snapshots() -> bool:
+# spec-case: D2-VIEW-STORAGE-1
+public def test_explicit_snapshot_preserves_prior_values() -> bool:
     mapping = {1: 7}
-    view = mapping.values()
-    snapshot = view.mapping
-    returned = mapping_of(view)
+    saved = list(mapping.values())
     mapping[1] = 9
-    return snapshot[1] == 7 and returned[1] == 7 and list(view) == [7] and mapping[1] == 9
+    mapping[2] = 11
+    return saved == [7] and list(mapping.values()) == [9, 11]
 
+record Saved:
+    values: list[list[int]]
+    items: list[DictItem[int, list[int]]]
 
-# spec-case: DICT-VIEWS-1
-public def test_replacing_mapping_field_rebinds_live_identity() -> bool:
-    first = {1: 7}
-    second = {2: 8}
-    view = first.values()
-    view.mapping = second
-    first.clear()
-    second[2] = 9
-    return list(view) == [9]
+def collect(mapping: dict[int, list[int]]) -> Saved:
+    return Saved(list(mapping.values()), list(mapping.items()))
 
-
-# spec-case: DICT-VIEWS-1
-public def test_stored_and_returned_views_observe_growth_and_clear() -> bool:
-    mapping = {1: 7}
-    views = [mapping.values(), mapping.values()]
-    for index in range(2, 100):
-        mapping[index] = index
-    if len(views[0]) != 99 or len(views[1]) != 99:
-        return False
-    mapping.clear()
-    mapping[100] = 42
-    return list(views[0]) == [42] and list(views[1]) == [42]
-
-
-record HeldPair:
-    values: DictValues[int, list[int]]
-    items: DictItems[int, list[int]]
-    saved: list[DictValues[int, list[int]]]
-
-
-def escape_held_pair() -> HeldPair:
-    with arena() as scratch:
-        mapping = {1: [7, 8]}
-        view = mapping.values()
-        result = HeldPair(values=view, items=mapping.items(), saved=[view, view])
-        return scratch.escape(result)
-
-
-# spec-case: DICT-VIEWS-1
-public def test_arena_escape_traverses_nested_held_edges_and_managed_values() -> bool:
-    escaped = escape_held_pair()
-    return list(escaped.values) == [[7, 8]] and list(escaped.items)[0].value == [7, 8] and list(escaped.saved[1]) == [[7, 8]]
-
-
-record HeldBranch:
-    view: DictValues[int, int]
-    tail: Option[HeldBranch]
-
-
-# spec-case: DICT-VIEWS-1
-public def test_recursive_boxes_keep_live_held_edges_through_copy_and_drop() -> bool:
-    mapping = {1: 7}
-    branch = HeldBranch(view=mapping.values(), tail=None)
-    for depth in range(256):
-        branch = HeldBranch(view=mapping.values(), tail=Some(branch))
-    mapping[1] = 9
-    cursor: Option[HeldBranch] = Some(branch)
-    result = 0
-    while cursor is not None:
-        node = cursor
-        result += list(node.view)[0]
-        cursor = node.tail
-    return result == 257 * 9
-
-
-record HeldOuter:
-    view: DictValues[int, int]
-
-
-def held_through_arena(mapping: dict[int, int]) -> HeldOuter:
-    with arena() as scratch:
-        result = HeldOuter(view=mapping.values())
-        return scratch.escape(result)
-
-
-# spec-case: DICT-VIEWS-1
-public def test_escaping_an_older_held_mapping_preserves_its_live_identity() -> bool:
-    mapping = {1: 7}
-    escaped = held_through_arena(mapping)
-    mapping[1] = 9
-    return list(escaped.view) == [9]
+# spec-case: D2-VIEW-STORAGE-1
+public def test_returned_nested_snapshots_keep_managed_values() -> bool:
+    mapping = {1: [7, 8]}
+    saved = collect(mapping)
+    mapping[1].append(9)
+    saved.values[0].append(11)
+    return saved.values == [[7, 8, 11]] and saved.items[0].value == [7, 8] and mapping[1] == [7, 8, 9]

@@ -13,8 +13,8 @@ const entry = "\n\ndef main() -> int:\n    return 0\n";
 // spec-case: DICT-VIEWS-1
 test "live dictionary view transfer policy follows builtin declaration identity" {
     const sources = [_][]const u8{
-        "def saved(value: DictValues[int, int]) -> DictValues[int, int]:\n    return value\n" ++ entry,
-        "record DictValues[K, V]:\n    values: list[V]\n\ndef saved(value: DictValues[int, int]) -> DictValues[int, int]:\n    return value\n" ++ entry,
+        "def saved(mapping: dict[int,int]) -> int:\n    for value in mapping.values():\n        return value\n    return 0\n" ++ entry,
+        "record DictValues[K, V]:\n    values: list[V]\n\ndef saved(value: DictValues[int, int]) -> int:\n    return 0\n" ++ entry,
     };
     for (sources, 0..) |source, index| {
         var compilation = try compiler.Compilation.init(t.allocator, "views.my", source);
@@ -635,29 +635,13 @@ test "rebinding a mut record parameter is a use that reaches the caller" {
     try t.expectEqual(@as(usize, 0), try countCode(reset, "E_MUTATION_MARKER", true));
 }
 
-// spec: LIVE-VIEW-SNAPSHOT-1
-test "live view reachability covers nested and recursive projections" {
-    const source =
-        \\record Plain:
-        \\    next: Option[Plain]
-        \\
-        \\record Viewed:
-        \\    next: Option[Viewed]
-        \\    views: [1]list[DictValues[int, int]]
-        \\
-    ++ entry;
+// spec-case: D2-VIEW-STORAGE-1
+test "D2 declarations reject nested recursive view projection storage" {
+    const source = "record Viewed:\n    next: Option[Viewed]\n    views: [1]list[DictValues[int,int]]\n" ++ entry;
     var compilation = try compiler.Compilation.init(t.allocator, "reach.my", source);
     defer compilation.deinit();
-    try compilation.check();
-    const records = compilation.program.?.records;
-    var found: usize = 0;
-    for (records) |record| {
-        if (!std.mem.eql(u8, record.name, "Plain") and !std.mem.eql(u8, record.name, "Viewed")) continue;
-        found += 1;
-        try t.expectEqual(std.mem.eql(u8, record.name, "Viewed"), values.containsLiveView(records, record.id));
-        try t.expectEqual(std.mem.eql(u8, record.name, "Plain"), values.copiesAll(records, record.id));
-    }
-    try t.expectEqual(@as(usize, 2), found);
+    try t.expectError(error.SourceError, compilation.check());
+    try t.expectEqualStrings("E_VIEW_STORED", compilation.diagnostics.items[0].code);
 }
 
 // spec-case: MUT-EXCLUSIVE-PROOFS-1

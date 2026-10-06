@@ -2,17 +2,17 @@ module rc_journal_types
 
 record Mixed:
     values: list[int]
-    view: DictValues[int, list[int]]
+    view: list[list[int]]
 
 
 def rebuilt(mapping: dict[int, list[int]], count: int) -> Mixed:
-    result = Mixed([0], mapping.values())
+    result = Mixed([0], list(mapping.values()))
     for index in range(count):
         if index % 2 == 0:
-            result = Mixed([index, index + 1], mapping.values())
+            result = Mixed([index, index + 1], list(mapping.values()))
         else:
             saved = result
-            result = Mixed(list(saved.view)[0], mapping.values())
+            result = Mixed(list(saved.view)[0], list(mapping.values()))
     return result
 
 
@@ -21,7 +21,7 @@ public def test_reused_constructor_values_keep_their_current_cleanup_roles() -> 
     mapping = {1: [7, 8]}
     result = rebuilt(mapping, 6)
     mapping[1] = [9]
-    return result.values == [7, 8] and list(result.view) == [[9]]
+    return result.values == [7, 8] and list(result.view) == [[7, 8]]
 
 
 def escaped() -> Mixed:

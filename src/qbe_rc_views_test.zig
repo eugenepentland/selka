@@ -46,24 +46,12 @@ test "iteration identity retains pinned list headers and checks continue steps" 
     try iterationHeld(iteration_list);
 }
 
-// spec-case: DICT-VIEWS-1
-test "RC live dictionary views use hold shapes and guarded receiver holds" {
-    const saved = runtime.get();
-    defer runtime.set(saved);
-    runtime.set(.rc);
-    var compilation = try compiler.Compilation.init(t.allocator, "rc_views.my",
-        \\def main() -> int:
-        \\    mapping = {1: 3}
-        \\    live = mapping.values()
-        \\    mapping[1] = 7
-        \\    return list(live)[0]
-    );
-    defer compilation.deinit();
-    const text = try compilation.emitQbe(t.allocator);
-    defer t.allocator.free(text);
-    try t.expect(std.mem.indexOf(u8, text, "MYL_RC_SHAPE_HOLD_POINTER") != null);
-    try t.expect(std.mem.indexOf(u8, text, "# RC-GLUE-1 hold") != null);
-    try t.expect(std.mem.indexOf(u8, text, "storew 8") != null);
+// spec-case: D2-VIEW-STORAGE-1
+test "RC stored dictionary views are rejected before hold lowering" {
+    var c = try compiler.Compilation.init(t.allocator, "stored-view.my", "def main() -> int:\n    d = {1:7}\n    live = d.values()\n    return 0\n");
+    defer c.deinit();
+    try t.expectError(error.SourceError, c.check());
+    try t.expectEqualStrings("E_VIEW_STORED", c.diagnostics.items[0].code);
 }
 
 // spec-case: DICT-VIEWS-1

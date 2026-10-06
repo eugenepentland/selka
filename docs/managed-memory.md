@@ -91,8 +91,9 @@ than running without the stress it asked for.
 RC keeps managed objects alive while an owner or a compiler-maintained lifetime
 hold still needs them. Releasing the last such reference retires the object and
 releases its child references. The runtime does not trace cycles. Ordinary value
-programs use independent values and pool ids for graphs, and cannot store a
-recursive live view that would create a retained cycle. These rules are checked
+programs use independent values and pool ids for graphs. Dictionary projections
+are ephemeral; stored snapshots use explicit `list(...)` materialization. View
+types cannot appear in parameter, return, field or element annotations. These rules are checked
 by the value model, independently of the runtime selector.
 
 Arenas remain available with RC: the same `with arena()` syntax groups managed
@@ -270,50 +271,35 @@ fallback; `counts.copy()` returns a fresh shallow dictionary; and
 `counts.clear()` empties it. `counts.pop(key)` without a fallback traps with
 `R_MISSING_KEY`. `counts.items()` yields `DictItem[K, V]` value records with `key`
 and `value` fields. A two-name loop `for name, value in counts.items()` unpacks
-those fields. The same behavior applies to a view held in a variable, returned
-from a helper, or passed as a parameter. Assignment copies a dictionary value;
-only a `mut` parameter and marked call write back to a caller.
+those fields. Assignment copies a dictionary value; only a `mut` parameter and marked call write back to a caller.
 
-The view types are `DictKeys[K, V]`, `DictValues[K, V]` and `DictItems[K, V]`.
-They retain their dictionary, report its current size through `len`, and iterate
-without snapshot allocation. `list(view)` copies the current keys, values or
-items in insertion order. Views support ordinary loops, comprehensions and
-`enumerate`; snapshot lists of `DictItem` also support two-name unpacking. Views
-are not indexable: use `list(view)[index]` for positional access.
+Dictionary views are ephemeral. Use `d.keys()`, `d.values()` and `d.items()`
+directly as loop or comprehension sources, or immediately with `len`, `in`,
+`list`, `set` or `sorted`. `enumerate(d.items())` is also a loop source.
+They allocate no snapshot and observe value replacements as iteration reaches
+each key. A size change during dictionary iteration traps.
 
-These prelude record types may appear in function signatures and generic return
-types. A view is managed-bearing because it retains its dictionary, so a view of
-a dictionary allocated inside `with arena()` cannot escape that arena without an
-arena copy of the reachable dictionary. Reading and iterating the view inside the
-arena remain nonallocating.
+Binding, returning, rebinding, storing or passing a view to a user function is
+`E_VIEW_STORED`. `mylang fix` wraps a stored projection in `list(...)` where
+that migration is certain. The resulting list is an independent snapshot of
+the current keys, values or `DictItem` records in insertion order:
+`kept = list(mapping.values())`. Store and pass these lists in records,
+collections and helper functions. `list(mapping.items())[index]` provides
+positional item access; the view itself is not indexable.
 
-Stored recursive types cannot contain a cycle through a live view. For example,
-`record Entry` with a field `view: DictValues[int, Entry]` is rejected with
-`E_LIVE_VIEW_CYCLE`: inserting an entry holding that view into its own dictionary
-would keep the dictionary alive through itself. The check follows stored fields,
-variant payloads, nonempty arrays, and collection keys and elements, including
-generic instantiations. It conservatively rejects the recursive type even when
-particular instances would refer to separate dictionaries. Store a `list(view)`
-snapshot instead, or represent graph links with pool ids. Nonrecursive records
-may retain and return live views, and recursive types without stored views remain
-valid. This restriction closes a case that the earlier tracing runtime accepted;
-the diagnostic `--legacy-sharing` mode retains that earlier behavior.
-
-Creating a view does not freeze contents or size. Value replacement is visible
-when iteration reaches that key; changing the size during a loop traps under the
-same rule as direct dictionary iteration. Code that previously used a snapshot
-from `keys()` or `values()` must now request it with `list(...)`. Code that used
-`items()` as a values-only list should use `list(mapping.values())`.
+The prelude names `DictKeys[K, V]`, `DictValues[K, V]` and `DictItems[K, V]`
+describe these transient projections. `DictItem[K, V]` remains an ordinary
+storable value record. A recursive structure should use ordinary snapshot
+lists or pool ids; the former retained-view identity protocol is retired.
 
 ```mylang
 # doc: expect 42
 def main() -> int:
     mapping = {"a": 10, "b": 20}
-    live = mapping.items()
     old_values = list(mapping.values())
     mapping["b"] = 31
     total = 0
-    for key, value in live:
+    for key, value in mapping.items():
         total += value
     return total + old_values[1] - 19
 ```

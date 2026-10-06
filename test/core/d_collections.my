@@ -90,9 +90,9 @@ public def test_structural_hashes_ignore_padding_and_inactive_payloads() -> bool
 
 public def test_bound_dictionary_views_refresh_values_and_explicit_snapshots() -> bool:
     mapping = {"a": 10, "b": 20}
-    values = mapping.values()
-    keys = mapping.keys()
-    items = mapping.items()
+    values = list(mapping.values())
+    keys = list(mapping.keys())
+    items = list(mapping.items())
     frozen = list(values)
     mapping["b"] = 30
     mapping["c"] = 2
@@ -102,4 +102,4 @@ public def test_bound_dictionary_views_refresh_values_and_explicit_snapshots() -
     paired = 0
     for key, value in items:
         paired += len(key) + value
-    return total == 42 and paired == 45 and len(keys) == 3 and frozen == [10, 20] and list(keys) == ["a", "b", "c"]
+    return total == 30 and paired == 32 and len(keys) == 2 and frozen == [10, 20] and list(keys) == ["a", "b"]
