@@ -1,0 +1,11 @@
+source_commit=d4994214579adb8d1897a40fc65de1462b000939
+$ /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/scripts/build-slot.sh build -- nice -n 10 /usr/bin/python3 /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/experiments/new-core-s3-20261006/wave-x/integration/fuzz_qualification.py --kind iteration --cases 200 --seed 3305 --old /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/s3/oracle/mylang --new /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/zig-out/bin/mylang-core --evidence /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/experiments/new-core-s3-20261006/wave-x/integration/matrix-final-run02/iteration --cache-root /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/wave-x/s3-x/20261006T201856Z-a00f722632af/iteration
+qualification progress: iteration: seen=25 elapsed=124.42s
+qualification progress: iteration: seen=50 elapsed=251.20s
+qualification progress: iteration: seen=75 elapsed=376.84s
+qualification progress: iteration: seen=100 elapsed=503.39s
+qualification progress: iteration: seen=125 elapsed=756.35s
+qualification failed: QualificationFailure: compile_timeout: ['/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/s3/oracle/mylang', 'build', '/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/wave-x/s3-x/20261006T201856Z-a00f722632af/iteration/tmp/core-fuzz-s1.t2_0s7f4/mut_records_alias128.my', '-o', '/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/wave-x/s3-x/20261006T201856Z-a00f722632af/iteration/tmp/core-fuzz-s1.t2_0s7f4/mut_records_alias128.old', '--release', '--cache-dir', '/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/wave-x/s3-x/20261006T201856Z-a00f722632af/iteration/tmp/core-fuzz-s1.t2_0s7f4/cache-old']; retained source: /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/experiments/new-core-s3-20261006/wave-x/integration/matrix-final-run02/iteration/failures/mut_records_alias128-e459ec45c63a.my
+qualification {"kind": "iteration", "qualified": false, "accepted": 128, "native_comparisons": 1920, "elapsed_seconds": 901.0612047261093}
+
+exit=1
