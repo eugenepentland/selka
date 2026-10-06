@@ -217,6 +217,8 @@ pub const RunOptions = struct {
     main: emit_llvm.Main = .{ .parameters = &.{"out"} },
     /// Verify the IR first; off only for operand forms the verifier does not admit yet.
     check_ir: bool = true,
+    /// Fact tables for tests that verify a deliberately injected bad premise.
+    known: []const ?facts.Facts = &.{},
 };
 
 /// Run the ownership pass over `module` (as a build would, after construction),
@@ -226,7 +228,7 @@ pub fn runOwned(arena: std.mem.Allocator, module: *ir.Module, options: RunOption
     if (options.own) _ = try @import("own.zig").run(arena, module, .{ .verify = options.verify });
     if (options.check_ir) try verified(arena, module, &.{});
     const context: u8 = 0;
-    const llvm = try emit_llvm.emitModule(arena, module, .{ .locator = .{ .context = &context, .locate = firstLine }, .source_path = "hand.my", .main = options.main, .verify = options.verify });
+    const llvm = try emit_llvm.emitModule(arena, module, .{ .locator = .{ .context = &context, .locate = firstLine }, .source_path = "hand.my", .main = options.main, .verify = options.verify, .facts = options.known });
     return runLlvm(arena, llvm, options);
 }
 

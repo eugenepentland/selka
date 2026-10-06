@@ -1,34 +1,21 @@
 //! Mutable-byte IR executes on the shared 32-byte counted-leaf layout.
 const std = @import("std");
 const ir = @import("ir.zig");
+const byte_index = @import("byte_index.zig");
 
 /// Byte emission has the LLVM emitter's allocation/unsupported failures.
 pub const Error = error{ OutOfMemory, UnsupportedEntry, UnsupportedInstruction };
 
-/// Inline the compiler's byte-index adapter so LLVM can see the offset and bounds.
-/// A source extern with the same symbol has no runtime authority.
-fn indexAdapter(module: *const ir.Module, inst: ir.Inst) bool {
-    if (inst.op != .call) return false;
-    const callee = module.functions.items[inst.a.index()];
-    const signature = callee.signature;
-    if (signature.linkage != .runtime_c or signature.ret != .u64) return false;
-    if (signature.params.len != 2 or signature.params[1] != .i64) return false;
-    if (signature.params[0] != .bytes and signature.params[0] != .byte_buffer) return false;
-    if (signature.owned != 0 or signature.views != 0) return false;
-    if (!std.mem.eql(u8, callee.name, "myl_core_bytes_index_offset")) return false;
-    return true;
-}
-
 /// Recover the source index for an authorized adapter's located failure report.
 pub fn sourceIndex(comptime Context: type, context: Context, offset: ir.Ref) ?ir.Ref {
     const inst = context.function.inst(context.function.resolve(offset));
-    if (!indexAdapter(context.state.module, inst)) return null;
+    if (!byte_index.adapter(context.state.module, inst)) return null;
     return context.function.operands(inst.data)[1];
 }
 
 /// Emit the authorized byte-index adapter without a foreign call.
 pub fn runtimeCall(comptime Context: type, comptime Output: type, context: Context, out: Output, name: []const u8, inst: ir.Inst) Error!bool {
-    if (!indexAdapter(context.state.module, inst)) return false;
+    if (!byte_index.adapter(context.state.module, inst)) return false;
     const operands = context.function.operands(inst.data);
     const receiver = try context.value(operands[0]);
     const index = try context.value(operands[1]);
