@@ -1,0 +1,2 @@
+[ perf record: Woken up 2 times to write data ]
+[ perf record: Captured and wrote 0.337 MB .mylang-cache/s3-char/profile-csv-01.data (1828 samples) ]

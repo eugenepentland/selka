@@ -1,6 +1,8 @@
 //! UTF-8 cursors and scalar-use fusion over immutable string SSA values.
 const std = @import("std");
 const ir = @import("ir.zig");
+const scalar = @import("fuse_text_scalar.zig");
+const flags = @import("flags.zig");
 
 /// Borrow dictionary keys in private whitespace-split loops before ownership.
 pub fn whitespace(arena: std.mem.Allocator, module: *ir.Module) std.mem.Allocator.Error!void {
@@ -68,48 +70,18 @@ pub fn cursors(arena: std.mem.Allocator, module: *ir.Module, f: *ir.Function) st
             }
         }
     }
-    changed += try scalarUses(arena, module, f);
+    changed += try scalar.run(arena, module, f);
     return changed;
 }
 
 fn offsetCall(module: *ir.Module, inst: ir.Inst) bool {
-    return inst.op == .call and inst.a.index() < module.functions.items.len and std.mem.eql(u8, module.functions.items[inst.a.index()].name, "myl_core_str_offset");
+    if (inst.op != .call or inst.a.index() >= module.functions.items.len) return false;
+    const callee = module.functions.items[inst.a.index()];
+    return flags.textOffset(callee.signature, callee.name) == .normalized;
 }
 
 fn append(arena: std.mem.Allocator, f: *ir.Function, inst: ir.Inst) std.mem.Allocator.Error!ir.Ref {
     const ref: ir.Ref = @fromBackingInt(@intCast(f.insts.items.len));
     try f.insts.append(arena, inst);
     return ref;
-}
-
-/// Eliminate a temporary scalar string when its only observable use appends that scalar.
-fn scalarUses(arena: std.mem.Allocator, module: *ir.Module, f: *ir.Function) std.mem.Allocator.Error!u32 {
-    _ = module;
-    var changed: u32 = 0;
-    const original_len = f.insts.items.len;
-    for (0..original_len) |index| {
-        const inst = f.insts.items[index];
-        if (inst.op != .str_append) continue;
-        const ref = f.resolve(inst.b);
-        const character = f.inst(ref);
-        if (character.op != .str_char or uses(f, ref) != 1 or f.resolve(inst.a) == f.resolve(character.a)) continue;
-        const extra: u32 = @intCast(f.extra.items.len);
-        try f.extra.append(arena, character.b);
-        f.insts.items[index] = .{ .op = .str_append_char, .ty = .str, .a = inst.a, .b = character.a, .data = (ir.ExtraSlice{ .start = extra, .len = 1 }).pack(), .check = character.check, .span = character.span };
-        f.insts.items[ref.index()] = .{ .op = .undef, .ty = .str };
-        changed += 1;
-    }
-    return changed;
-}
-
-fn uses(f: *const ir.Function, ref: ir.Ref) u32 {
-    var count: u32 = 0;
-    for (f.insts.items) |inst| {
-        if (inst.op == .copy) continue;
-        const operands = f.valueOperands(inst);
-        for (0..operands.len()) |index| if (f.resolve(operands.get(index)) == ref) {
-            count += 1;
-        };
-    }
-    return count;
 }

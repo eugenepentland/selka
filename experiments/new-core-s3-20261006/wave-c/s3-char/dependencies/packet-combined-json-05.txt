@@ -1,0 +1,16 @@
+build json_transform old: status=0
+build json_transform new: status=0
+
+### json_transform (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 13657.153 | 13993.695 | same |
+| new core release | 2785.031 | 2955.463 | same |
+| Rust | 1779.739 | 1983.874 | same |
+| Zig ReleaseSafe | 2825.336 | 2850.823 | same |
+| new / old | 0.204 | 0.211 | same |
+| new / Zig | 0.986 | 1.037 | same |
+| new / Rust | 1.565 | 1.490 | same |
+
+valid rows: 1; speed gate misses: []
+Both new/old and new/Zig must be at most 1.10. binary_search misses require the plan's identical-code/layout-noise review; all other misses require repair.

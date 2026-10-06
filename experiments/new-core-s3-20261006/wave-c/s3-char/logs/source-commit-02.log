@@ -1,0 +1,15 @@
+build-slot: all 1 gate slot(s) busy; waiting (0s so far)
+build-slot: all 1 gate slot(s) busy; waiting (60s so far)
+build-slot: gate slot 1 after 100s (all 1 gate slot(s) busy)
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: cold gate — no prior green stamp on this tree; a re-run after a green will skip via the cache and confirm
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 28 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 10277 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 11 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed
+[codex/new-core-s3-char-performance c6de705e7] Fuse checked scalar character consumers and preserve text trap diagnostics
+ 13 files changed, 491 insertions(+), 54 deletions(-)
+ create mode 100644 src/core/fuse_text_scalar.zig
+ create mode 100644 src/core/fuse_text_scalar_test.zig
+ create mode 100644 test/core/t_scalar_fusion.my

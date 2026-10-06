@@ -1,0 +1,22 @@
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: build slot 3 after 15s (all 3 build slot(s) busy)
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: cold gate — no prior green stamp on this tree; a re-run after a green will skip via the cache and confirm
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 28 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 10276 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 11 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 3/88 failed (debug-print-ban, test-no-conditional, bool-ops-per-condition)
+guardian: failures grouped by check (3):
+  debug-print-ban (1 finding)
+    - src/core/fuse_text_scalar_test.zig:111: std.debug.print reference outside allowed paths
+      fix: route through reporter.print/detail, or alias once at file scope and use the alias.
+  test-no-conditional (2 findings)
+    - src/core/fuse_text_scalar_test.zig:38: more than one top-level loop — a test may keep one; the loop at line 38 asserts nothing, so hoist that one into a named helper
+      fix: one top-level loop is fine; merge multiple loops into one table-driven loop, split a branch into two independent tests, or hoist the computation into a helper. A multi-loop finding names the loop to hoist — the assertion-free one when there is one, otherwise the extra loop itself.
+    - src/core/fuse_text_scalar_test.zig:71: more than one top-level loop — a test may keep one; hoist the loop at line 71 into a named helper, or merge the loops into one table-driven loop
+  bool-ops-per-condition (2 findings)
+    - src/core/flags.zig:39: condition has 5 boolean ops (cap 3)
+      fix: split into nested/sequential ifs, or extract into a named bool.
+    - src/core/fuse_text_scalar.zig:43: condition has 7 boolean ops (cap 3)
+  caution: zig-out binaries predate this failed run (installs are gated on green) — rebuild green before running them

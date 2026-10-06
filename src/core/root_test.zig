@@ -41,4 +41,5 @@ comptime {
     _ = @import("s3_none_keys_test.zig");
     _ = @import("s3_list_methods_test.zig");
     _ = @import("s3_number_test.zig");
+    _ = @import("fuse_text_scalar_test.zig");
 }
