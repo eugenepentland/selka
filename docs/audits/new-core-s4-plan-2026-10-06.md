@@ -1,7 +1,7 @@
 # New compiler core, stage S4: projects — implementation plan, 2026-10-06
 
-Status: **Wave 0 is complete (S4-L, S4-D; §3.5). The rest is ready for Codex at the
-user's S4 go, except the parts marked _finalize at the S3 exit_.** The design for the emission and cache packages is
+Status: **ready for Codex.** S3 exited on 2026-10-06 (§1), Wave 0 is complete (S4-L,
+S4-D; §3.5), and the S3-exit facts are filled in (S4-0). The design for the emission and cache packages is
 `docs/design/new-core-s4.md`. The measurements behind it are §3, with evidence in
 `experiments/new-core-s4-20261006/`.
 
@@ -15,8 +15,9 @@ The stage, from the new-core plan (`docs/audits/new-core-plan-2026-10-05.md` §6
 
 > Implement stage S4 of mylang's new compiler core following
 > `docs/audits/new-core-s4-plan-2026-10-06.md` and `docs/design/new-core-s4.md`.
-> Create `codex/new-core-s4-integration` from the S3 exit commit on
-> `codex/new-core-s3-integration`, merge `claude/new-core-s4-design` into it (S4-0),
+> Create `codex/new-core-s4-integration` from `codex/new-core-s3-integration` at
+> `82c125dd` (the S3 exit report; its source is `d4994214`). Merge
+> `claude/new-core-s4-design` and then `claude/new-core-s4-rows` into it (S4-0, S4-R),
 > and integrate there. Run Wave A, then Wave B, then S4-X, holding every gate in §6
 > and the rules in §7. Never merge into `main` and never push. Finish with the §8 exit
 > report and stop for the user's go/stop decision on S5.
@@ -44,6 +45,11 @@ The stage, from the new-core plan (`docs/audits/new-core-plan-2026-10-05.md` §6
   - the merged standard library (S3-A).
 - **Old-core reference numbers** (scale probe, 53k-line project, 2026-09-17): per-edit
   check 3–4 s, cold build 746 s, warm build 70 s.
+- **The S3 exit** (`experiments/new-core-s3-20261006/wave-x/REPORT.md`): every S3 exit
+  check green on `d4994214`. That includes 277/277 core tests, conformance
+  1518/0/0 per mode, the full old gate, 25,800 fuzz comparisons, 80/80 row cells within
+  both gates, and coverage 3,633/3,639. The new core accepts all of `tests/lang` except
+  user modules and the retired arenas.
 
 ## 2. Decisions
 
@@ -293,7 +299,7 @@ Each package runs in its own locked worktree from the S4 integration branch, com
 with Guardian's 88 checks, and records evidence under `experiments/new-core-s4-*/`,
 one log file per command run.
 
-### Wave 0 (now, in parallel with S3; no compiler files)
+### Wave 0 (done 2026-10-06; results in §3.5, kept here as the record)
 
 **The pinned compiler for both packages.**
 - Build it once from `claude/new-core-s4-design` at `a16a324e`:
@@ -361,16 +367,46 @@ one log file per command run.
 
 #### S4-0. Base (coordinator)
 
-- Create `codex/new-core-s4-integration` from the S3 exit commit and merge
-  `claude/new-core-s4-design` and `claude/new-core-s4-rows` (S4-R). That branch brings:
-  - `CATALOG-INTERN-1`, whose full old gate is green on `e86ac0bc`;
-  - this plan, the design note and the spike tools.
-- Rerun `test-core`, full conformance and the 40 rows.
-- Add the Lox port (after S4-L) and the EDA slice to the coverage sweep.
-- _Finalize at the S3 exit:_
-  - the S3 exit commit;
-  - the list of `tests/lang` files S3 left for S4 (user modules);
-  - what S3-A changed in `driver.zig` and `frontend.zig`.
+- Create `codex/new-core-s4-integration` from `codex/new-core-s3-integration` at
+  `82c125dd` (source `d4994214`). Merge `claude/new-core-s4-design`, then
+  `claude/new-core-s4-rows` (S4-R).
+  - Both merges are clean: a `git merge-tree` trial of both, in that order, on
+    2026-10-06 gave no conflict.
+  - The design branch brings `CATALOG-INTERN-1` (full old gate green on `e86ac0bc`),
+    this plan, the design note and the spike tools.
+  - **`CATALOG-INTERN-1` touches shared front-end files, so the merged base runs the
+    full old gate once.**
+- Rerun `test-core`, full conformance and, after S4-R, the 46 rows. This is the S4
+  baseline every package compares against.
+- **Add both ports to the coverage sweep**, which then has six corpora:
+  - the Lox port: branch `codex/s4-lox-value-semantics` at `f44302d8`;
+  - the EDA slice: `eda-bench` branch `codex/s4-eda-stage1` at `510c2e2`.
+  - Record their acceptance on the S4 base. Before S3's exit it was Lox 304/487 and
+    EDA 1,873/1,874 (§3.5).
+
+**Facts from the S3 exit, for the packages that own these files:**
+- **`tests/lang` left for S4:** one file, `tests/lang/migrated/propagation.my` (9
+  tests, user-module imports). The retired arena tests are 118 in five files
+  (`arena_class_escape`, `arena_managed`, `arena_regions`, `arena_scopes`,
+  `rc_arena_values`). The source is S3's `exceptions-final-run02.json`.
+- **`frontend.zig`** is unchanged since the design branch's base (`8918de74`).
+- **`driver.zig`** changed in 7 lines, which matter to S4-E and S4-C:
+  - the runtime source now also concatenates `core_host.c`, `core_values.c`,
+    `core_test.c` and the Unicode data;
+  - the driver links a separately cached float-text object (`number_runtime`) when
+    `number_runtime.needed(llvm)` says so, and adds `-lm` when the text contains
+    `llvm.sin.f64` or `llvm.cos.f64`.
+  - **Both decisions scan the one `.ll` text**, so with units they must cover every
+    unit, including units served from the cache.
+- **The emitter gained program-wide names** that the design's numbering table
+  (`new-core-s4.md` §3) now lists:
+  - `@myl.value.N` (recursive equality and hashing descriptors, by Core IR type id);
+  - `@myl.render.ID` (render descriptors);
+  - `@myl.zeros`, sized to the program's largest zeroed constant.
+  - `@myl_core_source_path` was already there. It is the one source path that trap
+    and trace text prints, and it moves into the site records (design §4).
+- **`test_runner*.zig`** gained the property runner (`test_runner_property.zig`) and
+  batched test programs (`test_runner_batch.zig`). S4-M builds on both.
 
 #### S4-R. The six new rows join the gate (coordinator, in S4-0)
 
@@ -437,16 +473,18 @@ files mean the full old gate.
   `myl_core_assert_fail`, `myl_core_err_trace` and the trace ring;
 - per-unit debug information;
 - deterministic output;
-- the stability tests.
+- the stability tests;
+- the runtime link decisions (`number_runtime`, `-lm`) taken over every unit, not one
+  `.ll` text (S4-0's facts).
 
-**Owns:** `src/core/emit_*.zig` (a new `emit_units.zig`) and `src/core/runtime/core_rt.c`
-(sites and traces only).
+**Owns:** `src/core/emit_*.zig` (a new `emit_units.zig`), `src/core/runtime/core_rt.c`
+(sites and traces only), and `driver.zig`'s link decisions until S4-C takes the driver.
 
 **Exit:**
 - every §7 stability test passes;
 - conformance at 0 mismatches, debug and release, with the leak and verify sweeps;
 - trap and trace output identical;
-- the 40 rows unchanged within noise as single-module programs;
+- the 46 rows unchanged within noise as single-module programs;
 - the five applications, split one module per file, within noise of their single-unit
   build.
 
@@ -515,17 +553,24 @@ The full bar once:
 
 ## 5. Order
 
-| Wave | Packages | Notes |
-|---|---|---|
-| 0 | S4-L, S4-D | now, in parallel with S3; no compiler files |
-| A | S4-0 (with S4-R), then S4-F, S4-V, S4-E, S4-M in parallel | after the S3 exit and the user's go; at most four build-heavy agents |
-| B | S4-C after S4-E; S4-P after S4-C and S4-M | |
-| X | S4-X | after all packages |
+| Wave | Packages | Notes | Expected wall time |
+|---|---|---|---|
+| 0 | S4-L, S4-D | done 2026-10-06 | — |
+| A | S4-0 (with S4-R), then S4-F, S4-V, S4-E, S4-M in parallel | at the user's go; at most four build-heavy agents | S4-0 about 2 h, then about 7–9 h, set by S4-E and four merge qualifications |
+| B | S4-C after S4-E; S4-P after S4-C and S4-M | | S4-C 3–4 h, then S4-P 4–8 h (the widest range: what the two ports expose) |
+| X | S4-X | after all packages | about 4–5 h |
+
+**Total: about 20–28 hours of continuous work.** For calibration, S3 took about 17 hours
+from S3-0 to the last package merge, plus about 3 for S3-X. Two outcomes would add a
+package:
+- the dev-loop targets miss, and a §2 fallback is needed;
+- S4-P finds new-core defects at the ports' scale.
 
 ## 6. Gates
 
 S3's gates apply unchanged:
-- `test-core` (8 shards, under 5 min);
+- `test-core` (8 shards by default, under 5 min; S3's qualification runs passed
+  `-Dcore-shards=64` and took 146 s);
 - conformance at 0 mismatches;
 - 50 strict fuzz cases of each package's kinds;
 - every row within 1.10× Zig ReleaseSafe and within 1.10× the old core;
@@ -566,6 +611,19 @@ S3's §6 rules still apply:
 - **Old-core changes:** S4-F's shared front-end changes are allowed, with the full old
   gate. Any other old-core change stops and reports.
 
+**Learned in S3-X:**
+- **Never run the full old gate while a fuzz matrix runs.**
+  - The matrix's workers run at `nice 10`. With the gate beside them, the old compiler
+    oracle hit its 60 s build timeout in four kinds, with no mismatch.
+  - Run them one after the other. A timeout-only stop is rerun with
+    `wave-x/integration/fuzz_matrix_rerun.py`, never by editing evidence.
+- **Commit large evidence in batches** of one directory each. Guardian's commit hook
+  fails with `GitSpawnFailed` on a commit of about 2,400 files.
+- **A fuzz mismatch is reduced to a regression fixture before it is fixed**, as
+  `NEW-CORE-RC-13` was (`wave-x/rebinding-repair/`).
+- **Only `ir.zig` is frozen.** The ownership pass (`own.zig`) and the rest of
+  `src/core/` change under the gates.
+
 ## 8. S4 exit check and report
 
 **Exit:**
@@ -578,7 +636,7 @@ S3's §6 rules still apply:
 **The report:**
 - package commits;
 - the dev-loop table against the old core;
-- the 40 rows;
+- the 46 rows;
 - conformance and coverage, both ports included;
 - fuzz, leak and verify;
 - every remaining limit.

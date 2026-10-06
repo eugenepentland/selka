@@ -2,7 +2,7 @@
 
 Status: design for S4's emission and cache packages (S4-E, S4-C), written during S3
 on `claude/new-core-s4-design`. Implementation starts after the S3 exit and the
-user's S4 go, against the S3 emitter. The decision it implements is S4-1 in
+user's S4 go, against the S3 exit's emitter (§3 lists what S3 added). The decision it implements is S4-1 in
 `docs/audits/new-core-s4-plan-2026-10-06.md`, and the measurements behind it are that
 plan's §3.
 
@@ -66,6 +66,23 @@ and all of them become unit-local:
 | `@myl.dict.N`: by Core IR compound type id | numbered per unit, by first use (a type id depends on what other functions created first) |
 | `!range`, loop and TBAA metadata: one counter | per unit |
 | debug metadata: one compile unit, one file `program.my` | one `DICompileUnit` and the module's real `DIFile` per unit |
+
+**S3 added four more** (checked at the S3 exit, `d4994214`). They follow the same
+rules:
+
+| Today | S4 |
+|---|---|
+| `@myl.value.N` with `.children.N` and `.offsets.N` (`emit_values.zig`): descriptors for recursive equality and hashing, by Core IR type id | numbered per unit, by first use |
+| `@myl.render.ID` with its `children`, `offsets`, `names` (`emit_render.zig`): render descriptors, by the lowering's metadata id | numbered per unit, by first use |
+| `@myl.zeros` (`emit_llvm.zig`): one zeroed constant sized to the program's largest use | per unit, sized to the unit's largest use |
+| `@myl_core_source_path`: one external constant that trap and trace text print | removed; each site record points at its module's path (§4) |
+
+**The driver also decides two links by scanning the one `.ll` text** (`driver.zig`):
+- the cached float-text object, when `number_runtime.needed(llvm)`;
+- `-lm`, when the text calls `llvm.sin.f64` or `llvm.cos.f64`.
+
+With units, each decision is the union over every unit in the program, cached or not.
+So a unit's cache entry records its own two answers.
 
 The spike's `--normalize` mode simulates exactly this renumbering. With it, a 48k-line
 project's units changed only where the edit was, or where the edited function was
@@ -151,5 +168,5 @@ once over the Lox port and the EDA slice.
   - full conformance, debug and release, at 0 mismatches, with the leak and verify
     sweeps;
   - trap and error-trace text identical across a multi-unit build;
-  - the 35 rows, all single-module programs, emit one unit plus the entry unit, and
+  - the 46 rows, all single-module programs, emit one unit plus the entry unit, and
     their timings stay unchanged.
