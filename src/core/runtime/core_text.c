@@ -60,46 +60,22 @@ uint32_t myl_core_str_hash(const myl_block *text) {
     return folded;
 }
 
-/* Up to 16 bytes: two overlapping loads per side cover every byte without a call. */
-static bool core_text_short_equal(const unsigned char *a, const unsigned char *b, size_t count) {
-    if (count >= 8) {
-        uint64_t first_a, first_b, last_a, last_b;
-        memcpy(&first_a, a, 8); memcpy(&first_b, b, 8);
-        memcpy(&last_a, a + count - 8, 8); memcpy(&last_b, b + count - 8, 8);
-        return !((first_a ^ first_b) | (last_a ^ last_b));
-    }
-    if (count >= 4) {
-        uint32_t first_a, first_b, last_a, last_b;
-        memcpy(&first_a, a, 4); memcpy(&first_b, b, 4);
-        memcpy(&last_a, a + count - 4, 4); memcpy(&last_b, b + count - 4, 4);
-        return !((first_a ^ first_b) | (last_a ^ last_b));
-    }
-    if (count >= 2) {
-        uint16_t first_a, first_b, last_a, last_b;
-        memcpy(&first_a, a, 2); memcpy(&first_b, b, 2);
-        memcpy(&last_a, a + count - 2, 2); memcpy(&last_b, b + count - 2, 2);
-        return !((first_a ^ first_b) | (last_a ^ last_b));
-    }
-    return count == 0 || a[0] == b[0];
-}
-
 /* Equal lengths, then the bytes. Texts of one length that differ usually differ near
-   an end, so a long pair compares its first and last eight bytes before the bulk
-   compare, which a mismatch at the end would otherwise pay for in full (the old
-   runtime's `myl_native_text_equal`). */
+   an end, so a pair past 256 bytes compares its first and last eight bytes before the
+   bulk compare, which a mismatch at the end would otherwise pay for in full (the old
+   runtime's `myl_native_text_equal`). Shorter pairs go straight to `memcmp`: an extra
+   path for them costs more than it saves. */
 bool myl_core_str_eq(const myl_block *a, const myl_block *b) {
     if (a == b) return true;
     if (a->len != b->len) return false;
     if ((a->kind & b->kind & MYL_TEXT_HASHED) && (uint32_t)a->reserved != (uint32_t)b->reserved) return false;
     const size_t count = (size_t)a->len;
     const unsigned char *left = (const unsigned char *)a + MYL_HEADER, *right = (const unsigned char *)b + MYL_HEADER;
-    if (count <= 16) return core_text_short_equal(left, right, count);
     if (count > 256) {
         uint64_t first_a, first_b, last_a, last_b;
         memcpy(&first_a, left, 8); memcpy(&first_b, right, 8);
         memcpy(&last_a, left + count - 8, 8); memcpy(&last_b, right + count - 8, 8);
         if ((first_a ^ first_b) | (last_a ^ last_b)) return false;
-        return memcmp(left + 8, right + 8, count - 16) == 0;
     }
     return memcmp(left, right, count) == 0;
 }
