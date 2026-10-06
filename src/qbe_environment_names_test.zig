@@ -14,7 +14,7 @@ fn assertNames(a: std.mem.Allocator, binary: []const u8) !void {
         .{ .options = "--allow-env=B,A", .output = "2\nA\nB\n" },
         .{ .options = "--restrict --allow-env=B,A", .output = "2\nA\nB\n" },
     }) |case| {
-        if (case.malformed) try environment.put("INVALID_\xff", "ignored") else _ = environment.remove("INVALID_\xff");
+        if (case.malformed) try environment.put("INVALID_\xff", "ignored") else _ = environment.swapRemove("INVALID_\xff");
         if (case.options) |value| try environment.put("MYLANG_OPTIONS", value);
         const result = try std.process.run(a, std.testing.io, .{ .argv = &.{binary}, .environ_map = &environment });
         try std.testing.expect(result.term == .exited and result.term.exited == 0);
@@ -46,5 +46,5 @@ fn qualify(a: std.mem.Allocator, mode: []const u8) !void {
 test "QBE Environment names come from grants rather than the linked provider context" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
-    for ([_][]const u8{ "Debug", "ReleaseSafe" }) |mode| try qualify(arena.allocator(), mode);
+    for ([_][]const u8{ "Debug", "ReleaseSafe", "ReleaseFast" }) |mode| try qualify(arena.allocator(), mode);
 }
