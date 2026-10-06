@@ -30,6 +30,7 @@ comptime {
     _ = @import("cap_test.zig");
     _ = @import("environment_names_test.zig");
     _ = @import("s3_values_test.zig");
+    _ = @import("s3_none_keys_test.zig");
     _ = @import("s3_list_methods_test.zig");
     _ = @import("s3_number_test.zig");
 }

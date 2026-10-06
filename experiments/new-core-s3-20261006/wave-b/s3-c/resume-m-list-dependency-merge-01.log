@@ -1,0 +1,6 @@
+Auto-merging SPEC.md
+Auto-merging src/core/build.zig
+Auto-merging src/core/emit_llvm.zig
+Auto-merging src/core/root_test.zig
+Auto-merging src/core/runtime/core_rt.c
+Automatic merge went well; stopped before committing as requested

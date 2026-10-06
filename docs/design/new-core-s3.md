@@ -265,6 +265,18 @@ including a whole-root mut call that changes only a scalar field. Narrowing the 
 requires differential proof; an old implementation accident is reported for a
 user decision rather than given invented semantics.
 
+Captured places carry a scoped SSA publication guard while later arguments evaluate.
+Executed whole-root writes invalidate publication; sibling updates keep the place
+live, and a same-place update is read from the current binding before the call.
+Dictionary paths retain evaluated keys instead of entry offsets. Guards join across
+conditional arguments, so an untaken root mutation has no effect. Reordered keyword
+arguments start their guards when the checker-generated source-order temporaries
+select their places. An orphaned path is never reread. Two narrower cases remain
+located refusals: an ancestor changes during the initial index/key evaluation, or a
+later interior write may name an ancestor. The old native pin protocol can preserve
+publication through an interior ancestor update; a root-version test cannot model
+that distinction, and S3 does not guess from a callee's body or leaf equality.
+
 ## 10. Wave A qualification and as built in S3-0
 
 S3-0 adds three leaf pointer types, nine operations (five buffer updates and

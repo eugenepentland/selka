@@ -29,7 +29,18 @@ pub fn keySupported(module: ir.Module, key: ir.Type) bool {
 
 /// Find a key without mutating the table or caching a mutable hint.
 pub fn find(comptime Context: type, b: Context, dict: ir.Ref, key: ir.Ref, span: u32) Error!ir.Ref {
-    return b.emit(.{ .op = .dict_find, .ty = .i64, .a = dict, .b = key, .span = span });
+    return b.emit(.{ .op = .dict_find, .ty = .i64, .a = dict, .b = try storedKey(Context, b, dict, key), .span = span });
+}
+
+/// Source unit keys occupy a canonical false byte in a physical bool slot.
+/// Keep one reference for both probing and insertion (the frozen IR verifies it).
+fn storedKey(comptime Context: type, b: Context, dict: ir.Ref, key: ir.Ref) Error!ir.Ref {
+    if (key != .none) return key;
+    return switch (b.module().compound(b.typeOfRef(dict)).dict.key) {
+        .bool => b.constant(.bool, 0),
+        .void => b.emit(.{ .op = .undef, .ty = .void }),
+        else => error.Unsupported,
+    };
 }
 
 /// Dictionary literals evaluate each key and value once, in source order.
@@ -68,8 +79,9 @@ pub fn requirePresent(comptime Context: type, b: Context, probe: ir.Ref, span: u
 
 /// Replace or append one entry, preserving the probe's SSA provenance.
 pub fn put(comptime Context: type, b: Context, dict: ir.Ref, key: ir.Ref, value: ir.Ref, span: u32) Error!ir.Ref {
+    const stored_key = try storedKey(Context, b, dict, key);
     const stored_value = if (value == .none) try b.emit(.{ .op = .undef, .ty = .void }) else value;
-    const probe = try find(Context, b, dict, key, span);
+    const probe = try find(Context, b, dict, stored_key, span);
     const found = try b.newBlock();
     const missing = try b.newBlock();
     const join = try b.newBlock();
@@ -83,7 +95,7 @@ pub fn put(comptime Context: type, b: Context, dict: ir.Ref, key: ir.Ref, value:
     try b.write(result, b.current.?, updated);
     try b.jump(join);
     b.current = missing;
-    const inserted = try b.emit(.{ .op = .dict_insert, .ty = ty, .a = dict, .b = probe, .data = try b.extraSlice(&.{ key, stored_value }), .span = span });
+    const inserted = try b.emit(.{ .op = .dict_insert, .ty = ty, .a = dict, .b = probe, .data = try b.extraSlice(&.{ stored_key, stored_value }), .span = span });
     try b.write(result, b.current.?, inserted);
     try b.jump(join);
     try b.seal(join);
@@ -138,7 +150,7 @@ pub fn operation(comptime Context: type, b: Context, op: Operation, ty: ir.Type,
             const index = try b.emit(.{ .op = .sub, .ty = .i64, .a = try b.emit(.{ .op = .convert, .ty = .i64, .a = length, .check = .exact }), .b = try b.constant(.i64, 1), .span = span });
             try requirePresent(Context, b, index, span);
             const entry = try b.runtimeCall(ordinal_symbol, &.{ b.typeOfRef(dict), .i64 }, .i64, &.{ dict, index }, span);
-            const value = try b.emit(.{ .op = .dict_entry_key, .ty = ty, .a = dict, .b = entry, .span = span });
+            const value = if (ty == .void) .none else try b.emit(.{ .op = .dict_entry_key, .ty = ty, .a = dict, .b = entry, .span = span });
             try b.writeOwner(owner, try b.emit(.{ .op = .dict_remove, .ty = b.typeOfRef(dict), .a = dict, .b = entry, .span = span }), span);
             return value;
         },
@@ -148,11 +160,12 @@ pub fn operation(comptime Context: type, b: Context, op: Operation, ty: ir.Type,
             if (b.current == null) return .none;
             const fallback = if (op.kind == .get) try b.expression(args[1]) else .none;
             if (b.current == null) return .none;
-            const probe = try find(Context, b, dict, key, span);
+            const stored_key = try storedKey(Context, b, dict, key);
+            const probe = try find(Context, b, dict, stored_key, span);
             if (op.kind == .contains) return present(Context, b, probe, span);
             if (op.kind == .get) return selectValue(Context, b, dict, probe, fallback, span);
             try requirePresent(Context, b, probe, span);
-            if (out) |place| place.* = try b.extendPlace(try b.placeOfLocal(owner), .{ .element = probe });
+            if (out) |place| place.* = try b.extendPlace(try b.placeOfLocal(owner), .{ .mapping = stored_key });
             return valueAt(Context, b, dict, probe, span);
         },
         .write => {
@@ -201,14 +214,15 @@ pub fn operation(comptime Context: type, b: Context, op: Operation, ty: ir.Type,
             const fallback = if (given == .none) try b.emit(.{ .op = .undef, .ty = .void }) else given;
             if (b.current == null) return .none;
             const dict = try b.writableReceiverOf(owner, span);
-            const probe = try find(Context, b, dict, key, span);
+            const stored_key = try storedKey(Context, b, dict, key);
+            const probe = try find(Context, b, dict, stored_key, span);
             const result = try selectValue(Context, b, dict, probe, fallback, span);
             const missing = try b.newBlock();
             const join = try b.newBlock();
             try b.branch(try present(Context, b, probe, span), join, missing, span);
             try b.seal(missing);
             b.current = missing;
-            const inserted = try b.emit(.{ .op = .dict_insert, .ty = b.typeOfRef(dict), .a = dict, .b = probe, .data = try b.extraSlice(&.{ key, fallback }), .span = span });
+            const inserted = try b.emit(.{ .op = .dict_insert, .ty = b.typeOfRef(dict), .a = dict, .b = probe, .data = try b.extraSlice(&.{ stored_key, fallback }), .span = span });
             try b.writeOwner(owner, inserted, span);
             try b.jump(join);
             try b.seal(join);
