@@ -1,0 +1,227 @@
+# To display the perf.data header info, please use --header/--header-only options.
+#
+#
+# Total Lost Samples: 0
+#
+# Samples: 2K of event 'cpu_core/cycles/u'
+# Event count (approx.): 4234178268
+#
+# Overhead  Command          Shared Object          Symbol                           IPC   [IPC Coverage]
+# ........  ...............  .....................  ...............................  ....................
+#
+    28.36%  row_csv_aggrega  row_csv_aggregate_new  [.] core_text_append_bytes       -      -            
+            |          
+            |--22.33%--core_text_append_bytes
+            |          |          
+            |          |--19.14%--myl_core_ir_str_append_char
+            |          |          row_csv_aggregate::csv_job (inlined)
+            |          |          row_csv_aggregate::kernel (inlined)
+            |          |          row_csv_aggregate::main (inlined)
+            |          |          myl.entry (inlined)
+            |          |          
+            |           --3.08%--row_csv_aggregate::csv_job (inlined)
+            |                     row_csv_aggregate::kernel (inlined)
+            |                     row_csv_aggregate::main (inlined)
+            |                     myl.entry (inlined)
+            |          
+            |--5.10%--core_text_copy_short (inlined)
+            |          core_text_append_bytes
+            |          |          
+            |          |--4.38%--myl_core_ir_str_append_char
+            |          |          row_csv_aggregate::csv_job (inlined)
+            |          |          row_csv_aggregate::kernel (inlined)
+            |          |          row_csv_aggregate::main (inlined)
+            |          |          myl.entry (inlined)
+            |          |          
+            |           --0.72%--row_csv_aggregate::csv_job (inlined)
+            |                     row_csv_aggregate::kernel (inlined)
+            |                     row_csv_aggregate::main (inlined)
+            |                     myl.entry (inlined)
+            |          
+             --0.94%--block_free (inlined)
+                       core_text_append_bytes
+                       myl_core_ir_str_append_char
+                       row_csv_aggregate::csv_job (inlined)
+                       row_csv_aggregate::kernel (inlined)
+                       row_csv_aggregate::main (inlined)
+                       myl.entry (inlined)
+
+    28.32%  row_csv_aggrega  row_csv_aggregate_new  [.] main                         -      -            
+            |
+            ---row_csv_aggregate::csv_job (inlined)
+               row_csv_aggregate::kernel (inlined)
+               row_csv_aggregate::main (inlined)
+               myl.entry (inlined)
+
+    17.39%  row_csv_aggrega  row_csv_aggregate_new  [.] block_alloc                  -      -            
+            |          
+            |--10.78%--small_alloc (inlined)
+            |          block_alloc
+            |          |          
+            |          |--6.19%--block_new (inlined)
+            |          |          |          
+            |          |          |--4.73%--str_from (inlined)
+            |          |          |          myl_core_ir_str_from_view
+            |          |          |          row_csv_aggregate::csv_job (inlined)
+            |          |          |          row_csv_aggregate::kernel (inlined)
+            |          |          |          row_csv_aggregate::main (inlined)
+            |          |          |          myl.entry (inlined)
+            |          |          |          
+            |          |           --1.47%--myl_core_list_grow
+            |          |                     row_csv_aggregate::csv_job (inlined)
+            |          |                     row_csv_aggregate::kernel (inlined)
+            |          |                     row_csv_aggregate::main (inlined)
+            |          |                     myl.entry (inlined)
+            |          |          
+            |           --4.58%--core_text_append_bytes
+            |                     |          
+            |                      --4.57%--myl_core_ir_str_append_char
+            |                                row_csv_aggregate::csv_job (inlined)
+            |                                row_csv_aggregate::kernel (inlined)
+            |                                row_csv_aggregate::main (inlined)
+            |                                myl.entry (inlined)
+            |          
+             --6.61%--block_alloc
+                       |          
+                       |--2.68%--block_new (inlined)
+                       |          |          
+                       |           --2.37%--str_from (inlined)
+                       |                     myl_core_ir_str_from_view
+                       |                     row_csv_aggregate::csv_job (inlined)
+                       |                     row_csv_aggregate::kernel (inlined)
+                       |                     row_csv_aggregate::main (inlined)
+                       |                     myl.entry (inlined)
+                       |          
+                       |--1.87%--core_text_append_bytes
+                       |          myl_core_ir_str_append_char
+                       |          row_csv_aggregate::csv_job (inlined)
+                       |          row_csv_aggregate::kernel (inlined)
+                       |          row_csv_aggregate::main (inlined)
+                       |          myl.entry (inlined)
+                       |          
+                       |--1.14%--row_csv_aggregate::csv_job (inlined)
+                       |          row_csv_aggregate::kernel (inlined)
+                       |          row_csv_aggregate::main (inlined)
+                       |          myl.entry (inlined)
+                       |          
+                        --0.93%--myl_core_ir_str_append_char
+                                  row_csv_aggregate::csv_job (inlined)
+                                  row_csv_aggregate::kernel (inlined)
+                                  row_csv_aggregate::main (inlined)
+                                  myl.entry (inlined)
+
+     6.34%  row_csv_aggrega  row_csv_aggregate_new  [.] myl_core_free_block          -      -            
+            |          
+            |--5.60%--myl_core_free_block
+            |          row_csv_aggregate::csv_job (inlined)
+            |          row_csv_aggregate::kernel (inlined)
+            |          row_csv_aggregate::main (inlined)
+            |          myl.entry (inlined)
+            |          
+             --0.56%--core_io_finalize (inlined)
+                       myl_core_free_block
+                       row_csv_aggregate::csv_job (inlined)
+                       row_csv_aggregate::kernel (inlined)
+                       row_csv_aggregate::main (inlined)
+                       myl.entry (inlined)
+
+     6.29%  row_csv_aggrega  row_csv_aggregate_new  [.] myl_core_ir_str_append_char  -      -            
+            |          
+            |--5.03%--myl_core_ir_str_append_char
+            |          |          
+            |           --3.06%--row_csv_aggregate::csv_job (inlined)
+            |                     row_csv_aggregate::kernel (inlined)
+            |                     row_csv_aggregate::main (inlined)
+            |                     myl.entry (inlined)
+            |          
+             --0.80%--myl_core_ir_str_width (inlined)
+                       myl_core_ir_str_append_char
+                       row_csv_aggregate::csv_job (inlined)
+                       row_csv_aggregate::kernel (inlined)
+                       row_csv_aggregate::main (inlined)
+                       myl.entry (inlined)
+
+     3.44%  row_csv_aggrega  row_csv_aggregate_new  [.] myl_core_ir_str_from_view    -      -            
+            |          
+            |--1.49%--myl_core_ir_str_from_view
+            |          |          
+            |           --0.79%--row_csv_aggregate::csv_job (inlined)
+            |                     row_csv_aggregate::kernel (inlined)
+            |                     row_csv_aggregate::main (inlined)
+            |                     myl.entry (inlined)
+            |          
+             --1.39%--core_text_publish (inlined)
+                       str_from (inlined)
+                       myl_core_ir_str_from_view
+                       row_csv_aggregate::csv_job (inlined)
+                       row_csv_aggregate::kernel (inlined)
+                       row_csv_aggregate::main (inlined)
+                       myl.entry (inlined)
+
+     1.75%  row_csv_aggrega  row_csv_aggregate_new  [.] myl_core_ir_str_code         -      -            
+            |          
+            |--1.07%--myl_core_ir_str_width (inlined)
+            |          myl_core_ir_str_code
+            |          
+             --0.69%--myl_core_ir_str_code
+
+     1.67%  row_csv_aggrega  row_csv_aggregate_new  [.] block_free                   -      -            
+            |
+            ---block_free
+               |          
+               |--0.86%--row_csv_aggregate::csv_job (inlined)
+               |          row_csv_aggregate::kernel (inlined)
+               |          row_csv_aggregate::main (inlined)
+               |          myl.entry (inlined)
+               |          
+                --0.81%--myl_core_free_block
+                          row_csv_aggregate::csv_job (inlined)
+                          row_csv_aggregate::kernel (inlined)
+                          row_csv_aggregate::main (inlined)
+                          myl.entry (inlined)
+
+     1.09%  row_csv_aggrega  row_csv_aggregate_new  [.] reference_at                 -      -            
+            |
+            ---reference_at
+               |          
+                --0.62%--row_csv_aggregate::csv_job (inlined)
+                          row_csv_aggregate::kernel (inlined)
+                          row_csv_aggregate::main (inlined)
+                          myl.entry (inlined)
+
+     1.06%  row_csv_aggrega  row_csv_aggregate_new  [.] memcpy@plt                   -      -            
+            |
+            ---_fini (inlined)
+               |          
+                --0.69%--row_csv_aggregate::csv_job (inlined)
+                          row_csv_aggregate::kernel (inlined)
+                          row_csv_aggregate::main (inlined)
+                          myl.entry (inlined)
+
+     0.93%  row_csv_aggrega  libc.so.6              [.] 0x0000000000197a3f           -      -            
+            |
+            ---0x7e2fd7397a3f
+
+     0.71%  row_csv_aggrega  row_csv_aggregate_new  [.] myl_core_list_grow           -      -            
+     0.51%  row_csv_aggrega  row_csv_aggregate_new  [.] myl_core_ir_str_append       -      -            
+            |
+            ---myl_core_ir_str_append
+
+     0.51%  row_csv_aggrega  row_csv_aggregate_new  [.] myl_core_str_hash            -      -            
+     0.44%  row_csv_aggrega  row_csv_aggregate_new  [.] myl_core_dict_set            -      -            
+     0.35%  row_csv_aggrega  row_csv_aggregate_new  [.] myl_core_str_eq              -      -            
+     0.13%  row_csv_aggrega  libc.so.6              [.] 0x000000000019758e           -      -            
+     0.12%  row_csv_aggrega  libc.so.6              [.] 0x0000000000197a85           -      -            
+     0.11%  row_csv_aggrega  libc.so.6              [.] 0x0000000000197d07           -      -            
+     0.11%  row_csv_aggrega  row_csv_aggregate_new  [.] myl_core_ir_str_width        -      -            
+     0.10%  row_csv_aggrega  libc.so.6              [.] 0x0000000000197a54           -      -            
+     0.10%  row_csv_aggrega  row_csv_aggregate_new  [.] bcmp@plt                     -      -            
+     0.06%  row_csv_aggrega  libc.so.6              [.] 0x00000000000b277a           -      -            
+     0.04%  row_csv_aggrega  row_csv_aggregate_new  [.] myl_core_dict_insert         -      -            
+     0.03%  row_csv_aggrega  libc.so.6              [.] 0x0000000000197608           -      -            
+     0.01%  row_csv_aggrega  libc.so.6              [.] 0x0000000000197a55           -      -            
+
+
+#
+# (Cannot load tips.txt file, please install perf!)
+#
