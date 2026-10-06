@@ -3,6 +3,10 @@ const std = @import("std");
 const options = @import("core_test_options");
 const report = std.debug.print;
 
+fn location(_: *const anyopaque, offset: u32) @import("emit_llvm.zig").Location {
+    return .{ .line = 1, .column = offset + 1 };
+}
+
 fn qualified(a: std.mem.Allocator) !void {
     var directory = std.testing.tmpDir(.{});
     defer directory.cleanup();
@@ -49,7 +53,8 @@ test "S3 value adapter names in source extern declarations confer no compiler au
     _ = try hand.emit(.{ .op = .ret, .ty = .void, .a = try hand.int(.i64, 7) });
     _ = try hand.finish();
     try support.verified(a, &module, &.{});
-    const llvm = try emit.emitModule(a, &module, .{ .main = .{ .parameters = &.{} } });
+    const context: u8 = 0;
+    const llvm = try emit.emitModule(a, &module, .{ .locator = .{ .context = &context, .locate = location }, .source_path = "authority.my", .main = .{ .parameters = &.{} } });
     try std.testing.expect(std.mem.indexOf(u8, llvm, "declare i64 @myl_core_equal_77(i64)") != null);
     try std.testing.expect(std.mem.indexOf(u8, llvm, "declare i64 @myl_core_show_77(i64)") != null);
     try std.testing.expect(std.mem.indexOf(u8, llvm, "declare i64 @myl_core_render_shape_0_77(i64)") != null);
