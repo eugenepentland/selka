@@ -1,3 +1,5 @@
+> Historical checkpoint: the user resolved this hold in plan §2 at `e50e508a4` and authorized resumption. C and the property runner are now qualified and integrated as `f1319a774`; its 254 core tests and all 1,518 conformance cases in each mode pass. M package qualification, Wave C applications and S3-X continue. The final §7 exit report will supersede the outstanding-work list below.
+
 # S3 checkpoint: held for the §2 old-answer decision
 
 Integration source is `fb9bff998fb1d31f056ad0fe0ace9230bd033391` on `codex/new-core-s3-integration`. Qualified text evidence `0b48e9217` merged as `2e4f0f512`; qualified number evidence `5d2849ff5` merged as `fb9bff998`. The requested default core-shards change from four to eight was committed first as `8918de747`. No push or mylang main merge occurred.
