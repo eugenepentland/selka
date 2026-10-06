@@ -1,0 +1,9 @@
+source_commit=5ee5b8d2e1d1c697a98dfa590cbeda704ed7ae55
+$ /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/scripts/build-slot.sh build -- nice -n 10 /usr/bin/python3 /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/experiments/new-core-s3-20261006/wave-x/integration/fuzz_qualification.py --kind rebinding --cases 200 --seed 3304 --old /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/s3/oracle/mylang --new /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/zig-out/bin/mylang-core --evidence /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/experiments/new-core-s3-20261006/wave-x/integration/matrix-final-run01/rebinding --cache-root /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/wave-x/s3-x/20261006T192232Z-f8eca06dbc02/rebinding
+qualification progress: rebinding: seen=25 elapsed=87.74s
+qualification progress: rebinding: seen=50 elapsed=170.51s
+qualification progress: rebinding: seen=75 elapsed=252.57s
+qualification failed: QualificationFailure: native_outcome_mismatch: ['/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/wave-x/s3-x/20261006T192232Z-f8eca06dbc02/rebinding/tmp/core-fuzz-s1.iblru98k/mut_records_alias81.debug', '64', '2', '42']; retained source: /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/experiments/new-core-s3-20261006/wave-x/integration/matrix-final-run01/rebinding/failures/mut_records_alias81-a595750f77b9.my
+qualification {"kind": "rebinding", "qualified": false, "accepted": 82, "native_comparisons": 1227, "elapsed_seconds": 279.48251037602313}
+
+exit=1

@@ -1,0 +1,14 @@
+{
+  "time_utc": "2026-10-06T19:40:59.890883+00:00",
+  "action": "qualification_hold_received",
+  "reason": "Final matrix rebinding case81 (82nd), args64 2 42, raw stdout/status mismatch; parent marks5ee frozen source unqualified",
+  "source_head": "5ee5b8d2e1d1c697a98dfa590cbeda704ed7ae55",
+  "exec_session": 40434,
+  "owned_process_group": 2477826,
+  "helper_pid": 2477905,
+  "retained_gate_bash_pid": 2477951,
+  "time_pid": 2477970,
+  "state_at_hold": "test step already admitted and executing; Guardian88 passed",
+  "ordinary_conformance_started": false,
+  "cancellation_performed": false
+}

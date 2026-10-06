@@ -1,0 +1,40 @@
+{
+  "source_commit": "5ee5b8d2e1d1c697a98dfa590cbeda704ed7ae55",
+  "qualified_head_requested": "5ee5b8d2e1d1c697a98dfa590cbeda704ed7ae55",
+  "oracles": {
+    "old": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/s3/oracle/mylang",
+      "sha256": "d36658dbfb78d29213224532a13fd5ad8b7c0e290dbfb87613d9815678305c79"
+    },
+    "new": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/zig-out/bin/mylang-core",
+      "sha256": "05e5206c53b853ff8855d547784cec0ae8c0587da3dbd5b0e02eb0eb2744721c"
+    }
+  },
+  "cases_per_kind": 200,
+  "maximum_parallel_jobs": 3,
+  "kinds": [
+    "s0",
+    "s1",
+    "rc",
+    "rebinding",
+    "iteration",
+    "dict",
+    "text",
+    "number",
+    "functions"
+  ],
+  "execution_order": [
+    "number",
+    "s0",
+    "s1",
+    "rc",
+    "rebinding",
+    "iteration",
+    "dict",
+    "text",
+    "functions"
+  ],
+  "cache_root": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/wave-x/s3-x/20261006T192232Z-f8eca06dbc02",
+  "run_id": "20261006T192232Z-f8eca06dbc02"
+}

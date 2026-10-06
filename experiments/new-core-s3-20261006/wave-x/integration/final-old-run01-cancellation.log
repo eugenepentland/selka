@@ -1,0 +1,27 @@
+Parent-authorized cancellation after real final matrix rebinding case81 (82nd) stdout/status mismatch on args64 2 42; source5ee is unqualified. Termination is ours, not an old test assertion failure.
+{
+  "signals": [
+    {
+      "signal": "SIGTERM",
+      "group": 2477826
+    }
+  ],
+  "remaining_active_owned_processes": [],
+  "source_after": {
+    "head": "5ee5b8d2e1d1c697a98dfa590cbeda704ed7ae55",
+    "tracked_status": ""
+  },
+  "oracles_after": {
+    "old": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/s3/oracle/mylang",
+      "sha256": "d36658dbfb78d29213224532a13fd5ad8b7c0e290dbfb87613d9815678305c79"
+    },
+    "new": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/zig-out/bin/mylang-core",
+      "sha256": "05e5206c53b853ff8855d547784cec0ae8c0587da3dbd5b0e02eb0eb2744721c"
+    }
+  },
+  "source_unchanged": true,
+  "oracles_unchanged": true,
+  "aggregate_summary_present": false
+}

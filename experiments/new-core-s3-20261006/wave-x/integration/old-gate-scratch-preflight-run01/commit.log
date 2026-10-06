@@ -1,0 +1,9 @@
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 28 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 10258 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 11 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed
+[codex/new-core-s3-integration 02f796a87] Keep old-gate subprocess scratch outside the project Zig cache
+ 2 files changed, 10 insertions(+), 1 deletion(-)
+ create mode 100644 experiments/new-core-s3-20261006/wave-x/integration/old-gate-scratch-preflight-run01/summary.json

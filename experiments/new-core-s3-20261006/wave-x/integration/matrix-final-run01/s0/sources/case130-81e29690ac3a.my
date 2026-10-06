@@ -1,0 +1,59 @@
+def probe(xs: list[int], key: int) -> int:
+    total = 0
+    i = key % 4
+    while i <= len(xs):
+        total += xs[i]
+        i += 3
+    return total
+
+
+def helper0(a: int, b: int) -> int:
+    if 1000003 != (42 - (0 - 7)):
+        return ((a * 32) + (b % 1000000007))
+    return ((a % 1000000007) - (a % 2))
+
+
+def helper1(a: int, b: int) -> int:
+    return (17 + (23 % 1009))
+
+
+def number(text: str, fallback: int) -> int:
+    match int(text):
+        case Some(value):
+            return value
+        case None:
+            return fallback
+
+
+def main(args: list[str], out: Stream) -> int:
+    if len(args) != 3:
+        return 2
+    n = number(args[0], 3)
+    rounds = number(args[1], 2)
+    seed = number(args[2], 7)
+    if n < 0 or n > 100 or rounds < 0 or rounds > 5:
+        return 3
+    values = [(((31 // 7) % 1009)) % 65536 for j in range(n)]
+    second = [(j * 39 + 3) % 7 for j in range(n)]
+    flags = [j % 3 != 0 for j in range(n)]
+    acc = 0
+    for b in range(rounds):
+        phase = b % 2
+        total = 0
+        for j in range(n + 2):
+            x = values[j + 1]
+            y = second[j % n]
+            v = (j % 16)
+            if flags[j % n]:
+                v = (j * (21 + seed))
+            else:
+                v = v + 19
+            v = helper1(v, (2 * j))
+            if (phase - x) >= j:
+                break
+            total += v
+        acc = acc + total
+    acc = acc + probe(values, (acc // 24))
+    out.print(acc, len(values))
+    return acc % 7
+

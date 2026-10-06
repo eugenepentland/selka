@@ -1,0 +1,27 @@
+{
+  "recorded_utc": "2026-10-06T19:23:33.603120+00:00",
+  "qualified_source_commit": "5ee5b8d2e1d1c697a98dfa590cbeda704ed7ae55",
+  "a_source_commit": "203c0ca6100344304cbd9fd20d22cc7f9448a145",
+  "source_difference_from_qualified_a": [],
+  "frozen_ir_and_ownership_difference": [],
+  "protected_refs": {
+    "main": "df55c52d7b4d319c02dfac66d7222701151825aa",
+    "codex/new-core-s2-integration": "92590700cb0bf5e4dc19cc1f0c836c3a41693f64"
+  },
+  "oracles": {
+    "old": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/s3/oracle/mylang",
+      "sha256": "d36658dbfb78d29213224532a13fd5ad8b7c0e290dbfb87613d9815678305c79"
+    },
+    "qbe": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/s3/oracle/qbe",
+      "sha256": "b6139650a99b39131cd791fa1fdc84c09472dc303930bbadd3f8a5348487af4c"
+    },
+    "new": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/zig-out/bin/mylang-core",
+      "sha256": "05e5206c53b853ff8855d547784cec0ae8c0587da3dbd5b0e02eb0eb2744721c"
+    }
+  },
+  "merge_qualification": "final-merge-run01/summary.json",
+  "freeze_rule": "No tracked edits or commits and no oracle replacement until matrix and supplementary split200 finish."
+}

@@ -1,0 +1,22 @@
+{
+  "s0": {
+    "evidence_relative_to_integration": "matrix-final-run01/s0",
+    "harness_capture": "authority/s0-harness.py",
+    "harness_sha256": "6b570d3ac66f829c3e7f45e4f9591ecee1cceb8158f7b4eb9803be548fcc24e2"
+  },
+  "s1": {
+    "evidence_relative_to_integration": "matrix-final-run01/s1",
+    "harness_capture": "authority/s1-harness.py",
+    "harness_sha256": "7ac171d986a15e3be23547ef6d3c10442e4b4538c25ff69bb690cdc97caf6dc1"
+  },
+  "rc": {
+    "evidence_relative_to_integration": "matrix-final-run01/rc",
+    "harness_capture": "authority/rc-harness.py",
+    "harness_sha256": "04b406c2208c812335b5ab2076968625a6064434c5bd61712e2819cf7aae7cf7"
+  },
+  "split": {
+    "evidence_relative_to_integration": "split-final-run01",
+    "harness_capture": "authority/split-harness.py",
+    "harness_sha256": "3d57804ab6f5f909eb445a92b3a21c5192b836114a673423e9fcc308b539423e"
+  }
+}

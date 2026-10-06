@@ -1,0 +1,10 @@
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 28 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 10258 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 11 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed
+[codex/new-core-s3-integration c7d594153] Use all three build slots for the S3 exit fuzz matrix
+ 4 files changed, 37 insertions(+), 4 deletions(-)
+ create mode 100644 experiments/new-core-s3-20261006/wave-x/integration/parallel-three-preflight-run01/help.log
+ create mode 100644 experiments/new-core-s3-20261006/wave-x/integration/parallel-three-preflight-run01/summary.json
