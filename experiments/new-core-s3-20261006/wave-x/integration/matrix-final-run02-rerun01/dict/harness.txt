@@ -1,0 +1,9 @@
+qualification progress: dict: seen=25 elapsed=195.50s
+qualification progress: dict: seen=50 elapsed=378.44s
+qualification progress: dict: seen=75 elapsed=559.37s
+qualification progress: dict: seen=100 elapsed=733.78s
+qualification progress: dict: seen=125 elapsed=913.05s
+qualification progress: dict: seen=150 elapsed=1083.05s
+qualification progress: dict: seen=175 elapsed=1237.70s
+qualification progress: dict: seen=200 elapsed=1392.54s
+records,unions,propagate,mut,alias cases=200 old_rejected=0 refused=0 compared=3000 mismatch=0 fact=0 traps=78 caught=0
