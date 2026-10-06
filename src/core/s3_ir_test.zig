@@ -246,6 +246,6 @@ test "S3 fresh mutable bytes assert uniqueness before update and admit byte read
     try std.testing.expect(std.mem.indexOf(u8, text, "buffer_copy") == null);
     const ran = try support.runModule(arena.allocator(), &m, false);
     try std.testing.expectEqual(@as(u8, 0), ran.status);
-    try std.testing.expectEqualStrings("", ran.stdout);
+    try std.testing.expectEqualStrings("42\n", ran.stdout);
     try std.testing.expectEqualStrings("", ran.stderr);
 }
