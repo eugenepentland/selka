@@ -1,0 +1,90 @@
+{
+  "source_commit": "71cfa45aecf9a81027494989d0c4bdb17a613b00",
+  "root": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-numbers",
+  "core_shards": 8,
+  "results": [
+    {
+      "label": "core-build",
+      "command": [
+        "scripts/build-slot.sh",
+        "gate",
+        "--",
+        "bash",
+        "-c",
+        "\"$@\"; result=$?; exit \"$result\"",
+        "--",
+        "scripts/build-slot.sh",
+        "build",
+        "--",
+        "python3",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-numbers/experiments/new-core-s3-20261006/wave-a/exclusive_core.py",
+        "--",
+        "/usr/bin/time",
+        "-f",
+        "%e",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-numbers/experiments/new-core-s3-20261006/wave-a/integration/s3-t2-qualified/core-build-seconds.txt",
+        "zig",
+        "build",
+        "core",
+        "--summary",
+        "all"
+      ],
+      "exit": 0,
+      "command_seconds": 2.6,
+      "wall_seconds": 7.672668642131612,
+      "log": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-numbers/experiments/new-core-s3-20261006/wave-a/integration/s3-t2-qualified/core-build.txt",
+      "build_validation": {
+        "build_summaries": [
+          "3/3 steps succeeded"
+        ],
+        "maxrss": [
+          {
+            "line": "   +- compile exe mylang-core debug native success 1s MaxRSS:322M",
+            "display": "322M",
+            "bytes": 337641472.0,
+            "test_run": false
+          }
+        ],
+        "rss_overrun_notices": [],
+        "reported_admission_seconds": {
+          "gate": 0,
+          "build": 0
+        },
+        "errors": []
+      }
+    },
+    {
+      "label": "test-core",
+      "command": [
+        "scripts/build-slot.sh",
+        "gate",
+        "--",
+        "bash",
+        "-c",
+        "\"$@\"; result=$?; exit \"$result\"",
+        "--",
+        "scripts/build-slot.sh",
+        "build",
+        "--",
+        "/usr/bin/time",
+        "-f",
+        "%e",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-numbers/experiments/new-core-s3-20261006/wave-a/integration/s3-t2-qualified/test-core-seconds.txt",
+        "zig",
+        "build",
+        "test-core",
+        "-Dcore-shards=8",
+        "--summary",
+        "all"
+      ],
+      "exit": 1,
+      "command_seconds": 94.83,
+      "wall_seconds": 102.13459284999408,
+      "log": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-numbers/experiments/new-core-s3-20261006/wave-a/integration/s3-t2-qualified/test-core.txt"
+    }
+  ],
+  "qualified": false,
+  "error": "RuntimeError: test-core failed; inspect /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-numbers/experiments/new-core-s3-20261006/wave-a/integration/s3-t2-qualified/test-core.txt"
+}

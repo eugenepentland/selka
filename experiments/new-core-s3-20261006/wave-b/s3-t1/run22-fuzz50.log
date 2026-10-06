@@ -1,0 +1,2 @@
+mismatch case=0 mode=debug seed=0: old=(0, '200434\n', '') new=(0, '200462\n', '')
+qualification {"kind": "text", "qualified": false, "accepted": 0, "old_rejected": 0, "core_refused": 0, "core_build_failed": 0, "elapsed_seconds": 23.966460453812033}

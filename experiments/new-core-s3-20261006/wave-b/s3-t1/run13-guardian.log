@@ -1,0 +1,16 @@
+build-slot: all 1 gate slot(s) busy; waiting (0s so far)
+build-slot: gate slot 1 after 10s (all 1 gate slot(s) busy)
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: cold gate — no prior green stamp on this tree; a re-run after a green will skip via the cache and confirm
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 27 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 9 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 2/88 failed (line-length, repeated-string-literal)
+guardian: failures grouped by check (2):
+  line-length (1 finding)
+    - src/core/build_text_more.zig:78: line is 284 chars (hard limit 240)
+      fix: split the expression when doing so improves readability
+  repeated-string-literal (1 finding)
+    - src/core/text_test.zig: string literal --cache-dir appears 3 times (lines 14, 83, 116) — extract a const
+      fix: extract the literal/const into a shared file-scope const and import it.
+  caution: zig-out binaries predate this failed run (installs are gated on green) — rebuild green before running them

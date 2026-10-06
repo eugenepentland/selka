@@ -1,0 +1,56 @@
+## examples: 93 files (7 not checkable alone), 207 functions, 186 accepted (90%)
+  checks in accepted functions (analysed alone): proven 124, still exact 159
+  front end: 4 x error[E_MODULE_NAME]: declared `module shop.money`, but this
+  front end: 1 x error[E_MODULE_NAME]: declared `module config.values`, but t
+  front end: 1 x error[E_MODULE_NAME]: declared `module shop.billing`, but th
+     11  capability type
+      5  resource type
+      3  host function
+      2  extern
+## bench/parity: 45 files (0 not checkable alone), 123 functions, 121 accepted (98%)
+  checks in accepted functions (analysed alone): proven 238, still exact 240
+      1  reverse
+      1  operator on an aggregate value
+## tests/lang: 205 files (4 not checkable alone), 3124 functions, 3009 accepted (96%)
+  checks in accepted functions (analysed alone): proven 5120, still exact 3689
+  front end: 2 x error[E_EMBED_MISSING]: cannot embed "embed_fixtures/lines.t
+  front end: 1 x error[E_EMBED_MISSING]: cannot embed "embed_fixtures/nul.bin
+  front end: 1 x error[E_EMBED_MISSING]: cannot embed "embed_fixtures/support
+     41  capability type
+     14  text of a non-integer value
+     11  equality of a recursive value
+      9  operator on an aggregate value
+      9  extend
+      8  interior mut argument ancestor changed during later argument evaluation
+      3  array
+      3  contains
+      3  index_of
+      3  reverse
+      2  keyword call with a mut argument that is not a local
+      2  dictionary key type
+## benchmarks/runtime: 3 files (0 not checkable alone), 141 functions, 140 accepted (99%)
+  checks in accepted functions (analysed alone): proven 313, still exact 367
+      1  extern
+## all corpora: checks proven 5538, still exact 4216 (in 3239 accepted functions)
+## all corpora: 3595 functions, 3456 accepted (96%)
+     52  capability type
+     14  text of a non-integer value
+     11  equality of a recursive value
+     10  operator on an aggregate value
+      9  extend
+      8  interior mut argument ancestor changed during later argument evaluation
+      6  resource type
+      4  reverse
+      3  extern
+      3  host function
+      3  array
+      3  contains
+      3  index_of
+      2  keyword call with a mut argument that is not a local
+      2  dictionary key type
+      1  saturating_sub
+      1  print options
+      1  slice_step
+      1  pop_at
+      1  file handle type
+      1  record field type

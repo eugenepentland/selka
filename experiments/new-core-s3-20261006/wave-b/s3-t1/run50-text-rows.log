@@ -1,0 +1,65 @@
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: build slot 3 after 10s (all 3 build slot(s) busy)
+build bytes_scan old: status=0
+build bytes_scan new: status=0
+build string_equal old: status=0
+build string_equal new: status=0
+build string_search old: status=0
+build string_search new: status=0
+build string_split old: status=0
+build string_split new: status=0
+build string_join old: status=0
+build string_join new: status=0
+
+### bytes_scan (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 0.086 | 0.241 | same |
+| new core release | 0.052 | 0.239 | same |
+| Rust | 1.136 | 1.201 | same |
+| Zig ReleaseSafe | 1.373 | 1.728 | same |
+| new / Zig | 0.038 | 0.138 | same |
+| new / Rust | 0.046 | 0.199 | same |
+
+### string_equal (cycles per iteration, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 53.795 | 16.651 | same |
+| new core release | 50.497 | 16.923 | same |
+| Rust | 135.953 | 12.722 | same |
+| Zig ReleaseSafe | 278.026 | 16.917 | same |
+| new / Zig | 0.182 | 1.000 | same |
+| new / Rust | 0.371 | 1.330 | same |
+
+### string_search (cycles per iteration, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 422.293 | 80.374 | same |
+| new core release | 423.999 | 68.040 | same |
+| Rust | 5587.361 | 182.389 | same |
+| Zig ReleaseSafe | 12934.371 | 385.189 | same |
+| new / Zig | 0.033 | 0.177 | same |
+| new / Rust | 0.076 | 0.373 | same |
+
+### string_split (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 202.087 | 210.707 | same |
+| new core release | 61.559 | 64.356 | same |
+| Rust | 28.179 | 35.458 | same |
+| Zig ReleaseSafe | 65.530 | 69.207 | same |
+| new / Zig | 0.939 | 0.930 | same |
+| new / Rust | 2.185 | 1.815 | same |
+
+### string_join (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 6.282 | 10.035 | same |
+| new core release | 4.608 | 5.451 | same |
+| Rust | 14.034 | 14.508 | same |
+| Zig ReleaseSafe | 18.125 | 20.355 | same |
+| new / Zig | 0.254 | 0.268 | same |
+| new / Rust | 0.328 | 0.376 | same |
+
+valid rows: 5; speed gate misses: []
+binary_search misses require the plan's identical-code/layout-noise review; all other misses require repair.

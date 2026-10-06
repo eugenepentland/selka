@@ -1,0 +1,16 @@
+build-slot: all 1 gate slot(s) busy; waiting (0s so far)
+build-slot: all 1 gate slot(s) busy; waiting (60s so far)
+build-slot: gate slot 1 after 90s (all 1 gate slot(s) busy)
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: build slot 2 after 40s (all 3 build slot(s) busy)
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 27 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 9822 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 9 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 1/88 failed (cognitive-complexity)
+guardian: failures grouped by check (1):
+  cognitive-complexity (1 finding)
+    - src/core/emit_llvm.zig: fn emitFunction cognitive complexity 27 (limit: 25)
+      fix: extract helpers; reduce nested control flow.
+  caution: zig-out binaries predate this failed run (installs are gated on green) — rebuild green before running them

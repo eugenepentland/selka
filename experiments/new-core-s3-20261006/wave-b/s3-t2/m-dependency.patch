@@ -1,0 +1,180 @@
+--- a/src/core/build.zig
++++ b/src/core/build.zig
+@@ -1435,7 +1435,7 @@
+         var right = try self.expression(right_node);
+         if (self.current == null) return .none;
+         // The checker may type the literal of `i16 + 1` as `i64`: it takes the other operand's type.
+-        if (op != .shift_left and op != .shift_right) {
++        {
+             const left_type = self.typeOfRef(left);
+             const right_type = self.typeOfRef(right);
+             if (left_type != right_type) {
+@@ -1461,6 +1461,9 @@
+             .bit_and => .{ .op = .bit_and },
+             .bit_or => .{ .op = .bit_or },
+             .bit_xor => .{ .op = .bit_xor },
++            .shift_left => .{ .op = .shift_left, .check = .exact },
++            .shift_right => .{ .op = .shift_right, .check = .exact },
++            .saturating_add => .{ .op = .saturating_add },
+             .eq => .{ .op = if (is_float) .fcmp else .cmp, .predicate = .eq },
+             .ne => .{ .op = if (is_float) .fcmp else .cmp, .predicate = .ne },
+             .lt => .{ .op = .cmp, .predicate = .lt },
+@@ -1678,9 +1681,22 @@
+             .neg => self.emit(.{ .op = .neg, .ty = ty, .a = operand, .check = .exact, .span = span }),
+             .not => self.emit(.{ .op = .not, .ty = .bool, .a = operand, .span = span }),
+             .f64_neg => self.emit(.{ .op = .fneg, .ty = .f64, .a = operand, .span = span }),
+-            .f64_from_i64 => self.emit(.{ .op = .int_to_float, .ty = .f64, .a = operand, .span = span }),
+-            .f64_to_i64, .f64_to_i32, .f64_to_i16, .f64_to_i8, .f64_to_u8, .f64_to_u16, .f64_to_u32 => self.emit(.{ .op = .float_to_int, .ty = ty, .a = operand, .check = .exact, .span = span }),
+-            else => self.mb.refuse(@tagName(op), span),
++            .f64_from_i64, .f64_from_u64 => self.emit(.{ .op = .int_to_float, .ty = .f64, .a = operand, .span = span }),
++            .f64_to_i64, .f64_to_i32, .f64_to_i16, .f64_to_i8, .f64_to_u8, .f64_to_u16, .f64_to_u32, .f64_to_u64 => self.emit(.{ .op = .float_to_int, .ty = ty, .a = operand, .check = .exact, .span = span }),
++            .f64_sqrt, .f64_floor, .f64_ceil, .f64_trunc, .f64_abs, .f64_sin, .f64_cos => self.emit(.{ .op = .float_unary, .ty = .f64, .a = operand, .data = @backingInt(floatSelector(op)), .span = span }),
++        };
++    }
++
++    fn floatSelector(op: typed.UnaryOp) ir.FloatUnary {
++        return switch (op) {
++            .f64_sqrt => .sqrt,
++            .f64_floor => .floor,
++            .f64_ceil => .ceil,
++            .f64_trunc => .trunc,
++            .f64_abs => .abs,
++            .f64_sin => .sin,
++            .f64_cos => .cos,
++            else => unreachable,
+         };
+     }
+ 
+--- a/src/core/emit_llvm.zig
++++ b/src/core/emit_llvm.zig
+@@ -86,6 +86,7 @@
+     text_step = 13,
+     byte_range = 14,
+     text_scalar = 15,
++    invalid_shift = 17,
+ };
+ 
+ const Site = struct { kind: TrapKind, location: Location, width: u16, operation: []const u8, function: []const u8 };
+@@ -684,7 +685,8 @@
+         };
+     }
+ 
+-    fn typedValue(self: *FunctionEmitter, raw: ir.Ref) ![]const u8 {
++    /// LLVM type and value pair for a scalar operation sub-emitter.
++    pub fn typedValue(self: *FunctionEmitter, raw: ir.Ref) ![]const u8 {
+         const ref = self.function.resolve(raw);
+         return std.fmt.allocPrint(self.a(), "{s} {s}", .{ try self.ty(self.function.inst(ref).ty), try self.value(ref) });
+     }
+@@ -931,7 +933,7 @@
+     }
+ 
+     /// The check an instruction gets emitted with: verify mode emits proven checks as exact ones.
+-    fn checkOf(self: *FunctionEmitter, inst: ir.Inst) ir.Check {
++    pub fn checkOf(self: *FunctionEmitter, inst: ir.Inst) ir.Check {
+         return if (inst.check == .proven and self.state.options.verify) .exact else inst.check;
+     }
+ 
+--- a/src/core/emit_number.zig
++++ b/src/core/emit_number.zig
+@@ -159,7 +159,27 @@
+     );
+ }
+ 
+-/// Emit a fail-closed placeholder for S3-M's pending scalar operation.
++/// Emit checked integer shifts, saturating addition and strict binary64 intrinsics.
+ pub fn instruction(context: anytype, out: anytype, name: []const u8, inst: @import("ir.zig").Inst) error{ OutOfMemory, UnsupportedEntry, UnsupportedInstruction }!void {
+-    return context.unsupported(out, name, inst);
++    const ir = @import("ir.zig");
++    if (inst.op == .float_unary) {
++        const selector: ir.FloatUnary = @fromBackingInt(@intCast(inst.data));
++        const spelling: []const u8 = if (selector == .abs) "fabs" else @tagName(selector);
++        try out.print(context.a(), "  {s} = call double @llvm.{s}.f64(double {s})\n", .{ name, spelling, try context.value(inst.a) });
++        return;
++    }
++    const info = inst.ty.integer() orelse return error.UnsupportedInstruction;
++    const ty = try context.ty(inst.ty);
++    if (inst.op == .saturating_add) {
++        try out.print(context.a(), "  {s} = call {s} @llvm.{s}add.sat.{s}({s}, {s})\n", .{ name, ty, if (info.signed) "s" else "u", ty, try context.typedValue(inst.a), try context.typedValue(inst.b) });
++        return;
++    }
++    if (context.checkOf(inst) == .exact) {
++        const failed = try context.fresh("%shiftbad");
++        // Unsigned comparison rejects negative signed counts as well as counts >= width.
++        try out.print(context.a(), "  {s} = icmp uge {s} {s}, {d}\n", .{ failed, ty, try context.value(inst.b), info.bits });
++        try context.trapIf(out, failed, try context.site(.invalid_shift, inst, @tagName(inst.op)), try context.widened(out, inst.a), try context.widened(out, inst.b));
++    }
++    const spelling: []const u8 = if (inst.op == .shift_left) "shl" else if (info.signed) "ashr" else "lshr";
++    try out.print(context.a(), "  {s} = {s} {s}, {s}\n", .{ name, spelling, try context.typedValue(inst.a), try context.value(inst.b) });
+ }
+--- a/src/core/runtime/core_rt.c
++++ b/src/core/runtime/core_rt.c
+@@ -459,7 +459,7 @@
+ extern const myl_core_site myl_core_sites[];
+ extern const char myl_core_source_path[];
+ 
+-enum { TRAP_OVERFLOW, TRAP_DIVISION_BY_ZERO, TRAP_LIST_BOUNDS, TRAP_FLOAT_CONVERSION, TRAP_CAST, TRAP_FACT, TRAP_LIST_EMPTY, TRAP_MISSING_KEY = 9, TRAP_ITERATION_MUTATION = 10, TRAP_TEXT_BOUNDS = 11, TRAP_TEXT_SEPARATOR = 12, TRAP_TEXT_STEP = 13, TRAP_BYTE_RANGE = 14, TRAP_TEXT_SCALAR = 15 };
++enum { TRAP_OVERFLOW, TRAP_DIVISION_BY_ZERO, TRAP_LIST_BOUNDS, TRAP_FLOAT_CONVERSION, TRAP_CAST, TRAP_FACT, TRAP_LIST_EMPTY, TRAP_MISSING_KEY = 9, TRAP_ITERATION_MUTATION = 10, TRAP_TEXT_BOUNDS = 11, TRAP_TEXT_SEPARATOR = 12, TRAP_TEXT_STEP = 13, TRAP_BYTE_RANGE = 14, TRAP_TEXT_SCALAR = 15, TRAP_INVALID_SHIFT = 17 };
+ 
+ 
+ 
+@@ -852,6 +852,7 @@
+     case TRAP_TEXT_STEP: code = "R_SLICE_STEP"; break;
+     case TRAP_BYTE_RANGE: code = "R_BYTE_RANGE"; break;
+     case TRAP_TEXT_SCALAR: code = "R_TEXT_SCALAR"; break;
++    case TRAP_INVALID_SHIFT: code = "R_INVALID_SHIFT"; break;
+     case TRAP_FACT:
+         /* Verify builds only: a fact the compiler relied on does not hold. */
+         code = "R_CORE_FACT";
+--- a/src/core/facts.zig
++++ b/src/core/facts.zig
+@@ -756,6 +756,21 @@
+             // A checked operation traps instead of leaving its type; a wrapping one can be anything.
+             break :blk if (i.check == .none) limits else exact.meet(limits);
+         },
++        .saturating_add => blk: {
++            const x = a.rangeAt(i.a, block) orelse break :blk full;
++            const y = a.rangeAt(i.b, block) orelse break :blk full;
++            const limits = full orelse break :blk null;
++            break :blk .{ .lo = std.math.clamp(x.lo + y.lo, limits.lo, limits.hi), .hi = std.math.clamp(x.hi + y.hi, limits.lo, limits.hi) };
++        },
++        .shift_right => blk: {
++            const x = a.rangeAt(i.a, block) orelse break :blk full;
++            const count = a.rangeAt(i.b, block) orelse break :blk full;
++            const info = i.ty.integer() orelse break :blk full;
++            if (count.lo < 0 or count.hi >= info.bits) break :blk full;
++            const lo: u7 = @intCast(count.lo);
++            const hi: u7 = @intCast(count.hi);
++            break :blk .{ .lo = @min(x.lo >> lo, x.lo >> hi), .hi = @max(x.hi >> lo, x.hi >> hi) };
++        },
+         .floor_div, .div => blk: {
+             const x = a.rangeAt(i.a, block) orelse break :blk full;
+             const d = a.rangeAt(i.b, block) orelse break :blk full;
+@@ -1403,6 +1418,10 @@
+             // `proven` emits `nsw`/`nuw`, so the operands must also respect the signedness flag.
+             return exact.within(limits) and (limits.lo < 0 or (x.lo >= 0 and y.lo >= 0));
+         },
++        .shift_left, .shift_right => {
++            const count = a.rangeAt(i.b, block) orelse return false;
++            return count.lo >= 0 and count.hi < i.ty.integer().?.bits;
++        },
+         .neg => {
+             const x = a.rangeAt(i.a, block) orelse return false;
+             return x.lo > limits.lo;
+--- a/src/core/s3_ir_test.zig
++++ b/src/core/s3_ir_test.zig
+@@ -54,9 +54,13 @@
+     const text = try print.module(a, &program.module);
+     try std.testing.expect(std.mem.indexOf(u8, text, @tagName(op)) != null);
+     const ran = try support.runModule(a, &program.module, false);
+-    try std.testing.expectEqual(@as(u8, 1), ran.status);
++    const pending = switch (op) {
++        .buffer_new, .buffer_copy, .buffer_set, .buffer_push, .buffer_pop => true,
++        else => false,
++    };
++    try std.testing.expectEqual(@as(u8, if (pending) 1 else 0), ran.status);
+     try std.testing.expectEqualStrings("", ran.stdout);
+-    try std.testing.expect(std.mem.indexOf(u8, ran.stderr, "E_CORE_UNSUPPORTED") != null);
++    if (pending) try std.testing.expect(std.mem.indexOf(u8, ran.stderr, "E_CORE_UNSUPPORTED") != null) else try std.testing.expectEqualStrings("", ran.stderr);
+     const f = &program.module.functions.items[0];
+     const original = f.inst(program.operation);
+     f.insts.items[program.operation.index()].ty = .cap;

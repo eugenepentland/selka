@@ -1,0 +1,35 @@
+{
+  "integration_source": "fb9bff998fb1d31f056ad0fe0ace9230bd033391",
+  "s3_t1_merge": "2e4f0f512",
+  "s3_t2_merge": "fb9bff998",
+  "s3_t1": {
+    "test_core_count": 221,
+    "test_core_seconds": 75.67,
+    "core_install_seconds": 0.87,
+    "conformance_per_mode": {
+      "matching": 1310,
+      "mismatching": 0,
+      "unsupported": 208,
+      "total": 1518
+    },
+    "longest_shard_seconds": 71.68
+  },
+  "s3_t2": {
+    "test_core_count": 228,
+    "test_core_seconds": 80.98,
+    "core_install_seconds": 3.42,
+    "conformance_per_mode": {
+      "matching": 1405,
+      "mismatching": 0,
+      "unsupported": 113,
+      "total": 1518
+    },
+    "retry": "Full run01 had old setup DiskQuota failures for array_places and mut_dictionary_arguments (23 tests). Run02 reran those exact files on unchanged source and passed 23/23 each mode. Totals combine the complete full sweep and replacement results.",
+    "longest_shard_seconds": 71.16
+  },
+  "qualification_notes": [
+    "T1 conformance run01 used obsolete installed binary and is not qualification; run02 uses newly installed source.",
+    "All test-core runs use 16 shards after packages measured eight-shard maxima above about90 seconds. Default core-shards remains8 from bootstrap.",
+    "Neither C nor M nor runner has package exit qualification; no S3 completion claim."
+  ]
+}

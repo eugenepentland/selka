@@ -1,0 +1,28 @@
+{
+  "actual_zig_version": "0.17.0-dev.1683+5ceec001b",
+  "first_unit_uses_fresh_global_cache": true,
+  "version_invalidation_uses_simulated_suffix": true,
+  "results": [
+    {
+      "phase": "cold",
+      "program_build_seconds": 2.7051963568665087,
+      "cache_report": "number-text cache miss: /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-numbers/.mylang-cache/s3/float-cold/runtime/core_number_text-8f03b4e2e2ff5ae06d1cccaa5878f0d8723cf5eb8381660c39811e4b71eaa521.o",
+      "formatter_compiles": 1,
+      "formatter_seconds": 0.9419032339937985
+    },
+    {
+      "phase": "reuse",
+      "program_build_seconds": 0.12210951000452042,
+      "cache_report": "number-text cache hit: /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-numbers/.mylang-cache/s3/float-cold/runtime/core_number_text-8f03b4e2e2ff5ae06d1cccaa5878f0d8723cf5eb8381660c39811e4b71eaa521.o",
+      "formatter_compiles": 0,
+      "formatter_seconds": 0
+    },
+    {
+      "phase": "version-invalidated",
+      "program_build_seconds": 0.9811381981708109,
+      "cache_report": "number-text cache miss: /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-numbers/.mylang-cache/s3/float-cold/runtime/core_number_text-69d5aa4af0524cb6fa7d4ba2188a0d419ad87f39dee3628720ed11d77414d840.o",
+      "formatter_compiles": 1,
+      "formatter_seconds": 0.8346533870790154
+    }
+  ]
+}

@@ -1,0 +1,608 @@
+diff --git a/src/core/build.zig b/src/core/build.zig
+index 341ba1fe8..3ddb42ed3 100644
+--- a/src/core/build.zig
++++ b/src/core/build.zig
+@@ -250,9 +250,9 @@ const ModuleBuilder = struct {
+         if (record.shape.array) |array| {
+             if (self.viewType(array.element)) return self.refuse("fixed array storage of live dictionary views", span);
+             const elem = try self.mapType(array.element, span);
+-            if (elem == .void or elem == .cap) return self.refuse("fixed array element type", span);
++            if (elem == .cap) return self.refuse("fixed array element type", span);
+             const n = std.math.cast(u32, array.length) orelse return self.refuse("fixed array length", span);
+-            return self.module.intern(self.allocator, .{ .array = .{ .elem = elem, .n = n } });
++            return self.module.intern(self.allocator, .{ .array = .{ .elem = if (elem == .void) .bool else elem, .n = n } });
+         }
+         if (record.shape.resource != null) return self.refuse("resource type", span);
+         // A domain is its wire type: `wrap` and `unwrap` change nothing at run time.
+@@ -305,7 +305,7 @@ const ModuleBuilder = struct {
+         const fields = try self.allocator.alloc(ir.Type, record.fields.len);
+         for (record.fields, fields) |field, *out| {
+             out.* = self.stored(field.ty, field.boxed, span) catch |err| return self.unreserve(ty, err);
+-            if (out.* == .void) return self.unreserve(ty, self.refuse("record field type", span));
++            if (out.* == .void) out.* = .bool;
+         }
+         self.module.compounds.items[@backingInt(reserved) - ir.Type.first_compound] = .{ .record = fields };
+         return reserved;
+@@ -894,6 +894,7 @@ const FnBuilder = struct {
+ 
+     /// `value` as stored in a slot of type `stored`: boxed when the slot is a `box`.
+     fn boxFor(self: *FnBuilder, stored: ir.Type, value: ir.Ref, span: u32) Error!ir.Ref {
++        if (value == .none and stored == .bool) return self.constant(.bool, 0);
+         if (self.mb.module.kind(stored) != .box) return value;
+         return self.emit(.{ .op = .box_make, .ty = stored, .a = value, .span = span });
+     }
+@@ -1185,7 +1186,8 @@ const FnBuilder = struct {
+             .index => |index| {
+                 const base_type = try self.typeOf(index.base);
+                 if (base_type == .str or base_type == .bytes or base_type == .byte_buffer) return build_text.indexed(@TypeOf(self), self, index.base, index.index, span, try self.typeOf(id));
+-                return self.arrayGet(index, span, out);
++                const value = try self.arrayGet(index, span, out);
++                return if (n.ty == .unit) .none else value;
+             },
+             .arena_escape => |value| return self.expression(value),
+             .length => |operand| return self.stringLength(operand, span),
+@@ -1206,7 +1208,7 @@ const FnBuilder = struct {
+                 if (out) |place| if (base_place) |found| {
+                     place.* = try self.fieldPlace(field, found, span);
+                 };
+-                return value;
++                return if (n.ty == .unit) .none else value;
+             },
+             .function_value => |callee| {
+                 const index = try self.mb.functionIndex(callee);
+@@ -1225,7 +1227,7 @@ const FnBuilder = struct {
+                 if (self.mb.module.kind(ty) == .list) return build_values.literal(@TypeOf(self), self, ty, items, span);
+                 if (self.mb.module.kind(ty) != .array) return self.mb.refuse("array", span);
+                 const values = try self.allocator().alloc(ir.Ref, items.len);
+-                for (items, values) |item, *value| value.* = try self.expression(item);
++                for (items, values) |item, *value| value.* = try self.boxFor(self.mb.module.compound(ty).array.elem, try self.expression(item), span);
+                 if (self.current == null) return .none;
+                 return self.emit(.{ .op = .record_make, .ty = ty, .data = try self.extraSlice(values), .span = span });
+             },
+@@ -1303,7 +1305,9 @@ const FnBuilder = struct {
+ 
+     /// Replace one normalized array element, preserving aggregate ownership semantics.
+     fn arraySet(self: *FnBuilder, base: ir.Ref, index: ir.Ref, value: ir.Ref, span: u32) Error!ir.Ref {
+-        return self.emit(.{ .op = .array_set, .ty = self.typeOfRef(base), .a = base, .b = index, .data = try self.extraSlice(&.{value}), .check = .exact, .span = span });
++        const ty = self.typeOfRef(base);
++        const stored = try self.boxFor(self.mb.module.compound(ty).array.elem, value, span);
++        return self.emit(.{ .op = .array_set, .ty = ty, .a = base, .b = index, .data = try self.extraSlice(&.{stored}), .check = .exact, .span = span });
+     }
+ 
+     /// `Name(...)` or `Union.case(...)`: a union value, boxing a recursive payload. Building an
+@@ -1766,7 +1770,7 @@ const FnBuilder = struct {
+         if (target == .byte_buffer) return build_bytes.fromValue(@TypeOf(self), self, source, operand, span);
+         if (target == .bytes and source == .byte_buffer) return self.runtimeCall("myl_core_buffer_snapshot", &.{.byte_buffer}, .bytes, &.{operand}, span);
+         if (target == .bytes and self.mb.module.kind(source) == .list) return build_text.fromList(@TypeOf(self), self, source, operand, span);
+-        if (target == .str) return self.textOf(operand, span);
++        if (target == .str) return self.textOf(operand, self.nodeOf(operand_node).ty, span);
+         if (source == target) return operand;
+         const from = source.integer() orelse return self.mb.refuse("cast source", span);
+         const to = target.integer() orelse return self.mb.refuse("cast target", span);
+@@ -2121,17 +2125,25 @@ const FnBuilder = struct {
+ 
+     /// The text of `value`, as `str(value)` and an f-string part spell it: a string as it is, an
+     /// integer in decimal, a boolean as `True` or `False`.
+-    fn textOf(self: *FnBuilder, value: ir.Ref, span: u32) Error!ir.Ref {
++    fn textOf(self: *FnBuilder, value: ir.Ref, source_ty: typed.Type, span: u32) Error!ir.Ref {
++        if (value == .none or source_ty == .unit) return self.runtimeCall("myl_core_none_text", &.{}, .str, &.{}, span);
+         const ty = self.typeOfRef(value);
++        if (self.renderDomain(source_ty)) return build_values.render(*FnBuilder, self, value, source_ty, span);
+         if (ty == .str) return value;
+         if (ty == .f64) return self.runtimeCall("myl_core_str_from_f64", &.{.f64}, .str, &.{value}, span);
+         if (ty == .bool) return self.runtimeCall(flags.str_from_bool_symbol, &.{.bool}, .str, &.{value}, span);
+-        const info = ty.integer() orelse return build_values.render(*FnBuilder, self, value, span);
++        const info = ty.integer() orelse return build_values.render(*FnBuilder, self, value, source_ty, span);
+         const wide: ir.Type = if (info.signed) .i64 else .u64;
+         const operand = if (ty == wide) value else try self.emit(.{ .op = .convert, .ty = wide, .a = value, .span = span });
+         return self.runtimeCall(if (info.signed) flags.str_from_i64_symbol else flags.str_from_u64_symbol, &.{wide}, .str, &.{operand}, span);
+     }
+ 
++    fn renderDomain(self: *FnBuilder, ty: typed.Type) bool {
++        if (!ty.isAggregate()) return false;
++        const record = self.mb.input.program.records[ty.recordIndex()];
++        return record.shape.domain != null and !std.mem.eql(u8, record.name, "float");
++    }
++
+     /// The length of string `value` in Unicode scalars, which is what `len` counts (not bytes):
+     /// the runtime counts the bytes that do not continue a scalar.
+     /// Builder operation available to the feature dispatch modules.
+@@ -2167,10 +2179,12 @@ const FnBuilder = struct {
+         });
+         try operands.append(self.allocator(), stream);
+         for (print.arguments) |argument| {
+-            var value = try self.expression(argument);
+-            if (self.typeOfRef(value) == .f64) value = try self.textOf(value, span);
+-            const ty = self.function.inst(value).ty;
+-            const printable = if (ty.integer() == null and ty != .bool and ty != .str) try self.textOf(value, span) else value;
++            const value = try self.expression(argument);
++            if (self.current == null) return .none;
++            const source_ty = self.nodeOf(argument).ty;
++            const ty = if (value == .none) .void else self.typeOfRef(value);
++            const needs_render = ty.integer() == null and ty != .bool and ty != .str;
++            const printable = if (value == .none or self.renderDomain(source_ty) or needs_render) try self.textOf(value, source_ty, span) else value;
+             try operands.append(self.allocator(), printable);
+         }
+         if (self.current == null) return .none;
+diff --git a/src/core/build_render.zig b/src/core/build_render.zig
+new file mode 100644
+index 000000000..a67c1f92d
+--- /dev/null
++++ b/src/core/build_render.zig
+@@ -0,0 +1,137 @@
++//! Source-aware rendering metadata; the value IR keeps its frozen physical types.
++const std = @import("std");
++const ir = @import("ir.zig");
++const typed = @import("mylang").typed;
++
++/// Allocation or a source type without a printable value stops lowering.
++pub const Error = error{ OutOfMemory, Unsupported };
++/// Ephemeral checked-source metadata, carried in the module's private strings.
++pub const prefix = "\x00myl.core.render.source.";
++/// The runtime descriptor's seven fields, with symbolic child references.
++pub const Shape = struct {
++    kind: u32 = 0,
++    size: u32 = 0,
++    count: u32 = 0,
++    aux: u32 = 0,
++    children: []const []const u8 = &.{},
++    offsets: []const u32 = &.{},
++    names: []const []const u8 = &.{},
++};
++
++/// Render one checked source type through a borrowed, managed physical box.
++pub fn render(comptime Context: type, b: Context, value: ir.Ref, source: typed.Type, span: u32) Error!ir.Ref {
++    if (value == .none) return b.runtimeCall("myl_core_none_text", &.{}, .str, &.{}, span);
++    const first = b.mb.module.strings.items.len;
++    errdefer b.mb.module.strings.shrinkRetainingCapacity(first);
++    const physical = b.typeOfRef(value);
++    _ = try descriptor(Context, b, source, physical, span);
++    const box = try b.mb.module.intern(b.allocator(), .{ .box = physical });
++    const held = try b.emit(.{ .op = .box_make, .ty = box, .a = value, .span = span });
++    const symbol = try std.fmt.allocPrint(b.allocator(), "myl_core_show_{d}", .{@backingInt(source)});
++    return b.runtimeCall(symbol, &.{box}, .str, &.{held}, span);
++}
++
++/// Reserve before visiting children, so boxed recursive schemas form a finite graph.
++fn descriptor(comptime Context: type, b: Context, source: typed.Type, physical: ir.Type, span: u32) Error![]const u8 {
++    const id = if (b.mb.module.kind(physical) == .box or (source == .unit and physical != .void))
++        try std.fmt.allocPrint(b.allocator(), "{d}_p{d}", .{ @backingInt(source), @backingInt(physical) })
++    else
++        try std.fmt.allocPrint(b.allocator(), "{d}", .{@backingInt(source)});
++    const marker = try std.fmt.allocPrint(b.allocator(), "{s}{s}|", .{ prefix, id });
++    for (b.mb.module.strings.items) |text| if (std.mem.startsWith(u8, text, marker)) return id;
++    const index = b.mb.module.strings.items.len;
++    try b.mb.module.strings.append(b.allocator(), marker);
++    const shape = try sourceShape(Context, b, source, physical, span);
++    const json = try std.json.Stringify.valueAlloc(b.allocator(), shape, .{});
++    b.mb.module.strings.items[index] = try std.fmt.allocPrint(b.allocator(), "{s}{s}", .{ marker, json });
++    return id;
++}
++
++fn sourceShape(comptime Context: type, b: Context, source: typed.Type, physical: ir.Type, span: u32) Error!Shape {
++    const size = b.mb.module.size(physical);
++    if (b.mb.module.kind(physical) == .box) {
++        const child = try descriptor(Context, b, source, b.mb.module.compound(physical).box, span);
++        return .{ .kind = 6, .size = size, .children = try b.allocator().dupe([]const u8, &.{child}) };
++    }
++    if (source == .unit) return .{ .size = size };
++    if (source == .bool) return .{ .kind = 1, .size = size, .aux = 1 };
++    if (source.integer()) |info| return .{ .kind = 1, .size = size, .aux = if (info.signed) 2 else 0 };
++    if (!source.isAggregate()) return b.mb.refuse("rendering a non-value source type", span);
++    const record = b.mb.input.program.records[source.recordIndex()];
++    if (record.isCollection()) return collectionShape(Context, b, record, physical, span);
++    if (record.shape.domain) |wire| {
++        if (physical == .f64 and std.mem.eql(u8, record.name, "float")) {
++            _ = try b.mb.runtimeFunction("myl_core_str_from_f64", &.{.f64}, .str, .extern_c);
++            return .{ .kind = 2, .size = size };
++        }
++        const child = try descriptor(Context, b, wire, physical, span);
++        return .{ .kind = 11, .size = size, .children = try b.allocator().dupe([]const u8, &.{child}), .names = try b.allocator().dupe([]const u8, &.{shortName(record.name)}) };
++    }
++    if (record.shape.variants) |variants| return variantShape(Context, b, record, variants, physical, span);
++    if (record.shape.array) |array| {
++        const fixed = b.mb.module.compound(physical).array;
++        const child = try descriptor(Context, b, array.element, fixed.elem, span);
++        return .{ .kind = 8, .size = size, .count = fixed.n, .children = try b.allocator().dupe([]const u8, &.{child}) };
++    }
++    return recordShape(Context, b, record, physical, span);
++}
++
++fn collectionShape(comptime Context: type, b: Context, record: typed.Record, physical: ir.Type, span: u32) Error!Shape {
++    const size = b.mb.module.size(physical);
++    switch (record.collection.kind) {
++        .string, .bytes => return .{ .kind = 3, .size = size, .aux = if (record.collection.kind == .string) 0 else 1 },
++        .list => {
++            const child = try descriptor(Context, b, record.shape.buffer.?, b.mb.module.compound(physical).list, span);
++            return .{ .kind = 7, .size = size, .children = try b.allocator().dupe([]const u8, &.{child}) };
++        },
++        .dictionary => {
++            const table = b.mb.module.compound(physical).dict;
++            const key = try descriptor(Context, b, record.collection.key.?, table.key, span);
++            const value = try descriptor(Context, b, if (record.collection.set) .unit else record.shape.buffer.?, table.value, span);
++            return .{ .kind = 9, .size = size, .aux = if (record.collection.set) 1 else 2, .children = try b.allocator().dupe([]const u8, &.{ key, value }) };
++        },
++    }
++}
++
++fn recordShape(comptime Context: type, b: Context, record: typed.Record, physical: ir.Type, span: u32) Error!Shape {
++    if (b.mb.module.kind(physical) != .record) return b.mb.refuse("rendering a source record representation", span);
++    const fields = b.mb.module.compound(physical).record;
++    if (fields.len != record.fields.len) return b.mb.refuse("rendering a source record layout", span);
++    const children = try b.allocator().alloc([]const u8, fields.len);
++    const offsets = try b.allocator().alloc(u32, fields.len);
++    const names = try b.allocator().alloc([]const u8, fields.len + 1);
++    names[0] = shortName(record.name);
++    for (record.fields, fields, 0..) |field, stored, i| {
++        children[i] = try descriptor(Context, b, field.ty, stored, span);
++        offsets[i] = b.mb.module.fieldOffset(physical, i);
++        names[i + 1] = field.name;
++    }
++    return .{ .kind = 4, .size = b.mb.module.size(physical), .count = @intCast(fields.len), .aux = @intFromBool(record.shape.tuple), .children = children, .offsets = offsets, .names = names };
++}
++
++fn variantShape(comptime Context: type, b: Context, record: typed.Record, variants: typed.Variants, physical: ir.Type, span: u32) Error!Shape {
++    const cases = b.mb.module.compound(physical).@"union";
++    const children = try b.allocator().alloc([]const u8, cases.len);
++    const present = try b.allocator().alloc(u32, cases.len);
++    const names = try b.allocator().alloc([]const u8, cases.len);
++    for (variants.cases, cases, 0..) |case, stored, i| {
++        children[i] = try descriptor(Context, b, case.payload orelse .unit, stored, span);
++        present[i] = @intFromBool(case.payload != null);
++        // Exact constructor spelling from native_render.caseName and io_render.variant.
++        const anonymous = std.mem.eql(u8, case.name, if (case.payload != null) "some" else "none");
++        names[i] = if (variants.fallible or anonymous) spelling(case.name) else try std.fmt.allocPrint(b.allocator(), "{s}.{s}", .{ shortName(record.name), case.name });
++    }
++    const layout = b.mb.module.unionLayout(physical);
++    return .{ .kind = 5, .size = b.mb.module.size(physical), .count = @intCast(cases.len), .aux = if (layout.form == .niche) layout.empty_case + 1 else 0, .children = children, .offsets = present, .names = names };
++}
++
++fn shortName(name: []const u8) []const u8 {
++    return if (std.mem.lastIndexOf(u8, name, "::")) |at| name[at + 2 ..] else name;
++}
++
++fn spelling(name: []const u8) []const u8 {
++    inline for (.{ "ok", "err", "some", "none" }, .{ "Ok", "Err", "Some", "None" }) |source, surface| {
++        if (std.mem.eql(u8, name, source)) return surface;
++    }
++    return name;
++}
+diff --git a/src/core/build_values.zig b/src/core/build_values.zig
+index a5d8992ea..592387cd8 100644
+--- a/src/core/build_values.zig
++++ b/src/core/build_values.zig
+@@ -2,6 +2,7 @@
+ const std = @import("std");
+ const ir = @import("ir.zig");
+ const typed = @import("mylang").typed;
++const build_render = @import("build_render.zig");
+ /// Allocation or an unsupported representation stops this stage.
+ pub const Error = error{ OutOfMemory, Unsupported };
+ 
+@@ -9,8 +10,9 @@ pub const Error = error{ OutOfMemory, Unsupported };
+ pub fn literal(comptime Context: type, b: Context, ty: ir.Type, items: []const typed.NodeId, span: u32) Error!ir.Ref {
+     var result = try b.emit(.{ .op = .list_new, .ty = ty, .a = try b.constant(.u64, @intCast(items.len)), .span = span });
+     for (items) |item| {
+-        const value = try b.expression(item);
++        var value = try b.expression(item);
+         if (b.current == null) return .none;
++        if (value == .none) value = try b.constant(.bool, 0);
+         result = try b.emit(.{ .op = .list_push, .ty = ty, .a = result, .b = value, .span = span });
+     }
+     return result;
+@@ -74,7 +76,7 @@ pub fn contains(comptime Context: type, b: Context, source: ir.Ref, needle: ir.R
+     try b.branch(more, body, exit, span);
+     try b.seal(body);
+     b.enter(body);
+-    const same = if (element == .void) try b.constant(.bool, 1) else try b.equal(try b.emit(.{ .op = .list_get, .ty = element, .a = source, .b = index, .check = .exact, .span = span }), needle, span);
++    const same = if (needle == .none or element == .void) try b.constant(.bool, 1) else try b.equal(try b.emit(.{ .op = .list_get, .ty = element, .a = source, .b = index, .check = .exact, .span = span }), needle, span);
+     try b.write(result, b.current.?, same);
+     try b.branch(same, exit, next, span);
+     try b.seal(next);
+@@ -135,69 +137,7 @@ pub fn equal(comptime Context: type, b: Context, left: ir.Ref, right: ir.Ref, sp
+     return b.runtimeCall(symbol, &.{ box, box }, .bool, &.{ l, r }, span);
+ }
+ 
+-/// Render an aggregate through its concrete descriptor, preserving nominal names.
+-pub fn render(comptime Context: type, b: Context, value: ir.Ref, span: u32) Error!ir.Ref {
+-    const ty = b.typeOfRef(value);
+-    if (ty == .void) return b.runtimeCall("myl_core_none_text", &.{}, .str, &.{}, span);
+-    if (ty == .f64) _ = try b.mb.runtimeFunction("myl_core_str_from_f64", &.{.f64}, .str, .extern_c);
+-    const box = try b.mb.module.intern(b.allocator(), .{ .box = ty });
+-    try renderNames(Context, b);
+-    const held = try b.emit(.{ .op = .box_make, .ty = box, .a = value, .span = span });
+-    const symbol = try std.fmt.allocPrint(b.allocator(), "myl_core_render_{d}", .{@backingInt(ty)});
+-    // Nested float rendering links the exact Zig formatter. Its weak C reference
+-    // lets programs with integer-only aggregates retain their existing cold build.
+-    for (b.mb.module.compounds.items) |shape| {
+-        const fields: []const ir.Type = switch (shape) {
+-            .record => |fields| fields,
+-            .@"union" => |fields| fields,
+-            .list, .box => |field| &.{field},
+-            .array => |array| &.{array.elem},
+-            .dict => |dict| &.{ dict.key, dict.value },
+-            else => &.{},
+-        };
+-        for (fields) |field| if (field == .f64) {
+-            _ = try b.mb.runtimeFunction("myl_core_str_from_f64", &.{.f64}, .str, .extern_c);
+-            break;
+-        };
+-    }
+-    return b.runtimeCall(symbol, &.{box}, .str, &.{held}, span);
+-}
+-
+-fn renderNames(comptime Context: type, b: Context) Error!void {
+-    var types = b.mb.types.iterator();
+-    while (types.next()) |entry| {
+-        const record = b.mb.input.program.records[entry.key_ptr.recordIndex()];
+-        const prefix = try std.fmt.allocPrint(b.allocator(), "\x00myl.core.render.{d}|", .{@backingInt(entry.value_ptr.*)});
+-        var exists = false;
+-        for (b.mb.module.strings.items) |text| if (std.mem.startsWith(u8, text, prefix)) {
+-            exists = true;
+-            break;
+-        };
+-        if (exists) continue;
+-        var names: std.ArrayList(u8) = .empty;
+-        try names.appendSlice(b.allocator(), prefix);
+-        if (record.shape.variants) |variants| {
+-            try names.appendSlice(b.allocator(), "U|");
+-            for (variants.cases) |case| {
+-                const prelude_case = variants.fallible or std.mem.eql(u8, case.name, "some") or std.mem.eql(u8, case.name, "none");
+-                const spelling = if (prelude_case) canonical(case.name) else try std.fmt.allocPrint(b.allocator(), "{s}.{s}", .{ shortName(record.name), case.name });
+-                try names.print(b.allocator(), "{s}|", .{spelling});
+-            }
+-        } else {
+-            try names.print(b.allocator(), "{s}|{s}|", .{ if (record.shape.tuple) "T" else "R", shortName(record.name) });
+-            for (record.fields) |field| try names.print(b.allocator(), "{s}|", .{field.name});
+-        }
+-        try b.mb.module.strings.append(b.allocator(), try names.toOwnedSlice(b.allocator()));
+-    }
+-}
+-
+-fn shortName(name: []const u8) []const u8 {
+-    return if (std.mem.lastIndexOf(u8, name, "::")) |at| name[at + 2 ..] else name;
+-}
+-
+-fn canonical(name: []const u8) []const u8 {
+-    inline for (.{ "ok", "err", "some", "none" }, .{ "Ok", "Err", "Some", "None" }) |source, spelling| {
+-        if (std.mem.eql(u8, name, source)) return spelling;
+-    }
+-    return name;
++/// Render with the checked source schema, including information erased by the value IR.
++pub fn render(comptime Context: type, b: Context, value: ir.Ref, source: typed.Type, span: u32) Error!ir.Ref {
++    return build_render.render(Context, b, value, source, span);
+ }
+diff --git a/src/core/emit_render.zig b/src/core/emit_render.zig
+new file mode 100644
+index 000000000..969edb8e4
+--- /dev/null
++++ b/src/core/emit_render.zig
+@@ -0,0 +1,69 @@
++//! Emit checked-source rendering descriptors from private lowering metadata.
++const std = @import("std");
++const ir = @import("ir.zig");
++const metadata = @import("build_render.zig");
++const Out = std.ArrayList(u8);
++/// Invalid private metadata or allocation stops emission.
++pub const Error = error{ OutOfMemory, UnsupportedInstruction };
++
++/// Source IDs name adapters independently of their erased physical IR type.
++pub fn adapter(a: std.mem.Allocator, out: *Out, function: *const ir.Function) Error!bool {
++    const prefix = "myl_core_show_";
++    if (!std.mem.startsWith(u8, function.name, prefix)) return false;
++    const number = function.name[prefix.len..];
++    try out.print(a, "define internal ptr @{s}(ptr %value) nounwind {{\nentry:\n" ++
++        "  %at = getelementptr inbounds i8, ptr %value, i64 32\n" ++
++        "  %text = call ptr @myl_core_values_render(ptr @myl.render.{s}, ptr %at)\n  ret ptr %text\n}}\n", .{ function.name, number });
++    return true;
++}
++
++/// Each marker is one finite graph node; child names may refer forward or backward.
++pub fn descriptors(a: std.mem.Allocator, m: *const ir.Module, out: *Out) Error!void {
++    for (m.strings.items) |text| {
++        if (!std.mem.startsWith(u8, text, metadata.prefix)) continue;
++        const rest = text[metadata.prefix.len..];
++        const split = std.mem.indexOfScalar(u8, rest, '|') orelse return error.UnsupportedInstruction;
++        const id = rest[0..split];
++        const parsed = std.json.parseFromSlice(metadata.Shape, a, rest[split + 1 ..], .{}) catch |err| return if (err == error.OutOfMemory) err else error.UnsupportedInstruction;
++        defer parsed.deinit();
++        try descriptor(a, out, id, parsed.value);
++    }
++}
++
++fn descriptor(a: std.mem.Allocator, out: *Out, id: []const u8, shape: metadata.Shape) Error!void {
++    if (shape.children.len != 0) {
++        try out.print(a, "@myl.render.children.{s} = private constant [{d} x ptr] [", .{ id, shape.children.len });
++        for (shape.children, 0..) |child, i| try out.print(a, "{s}ptr @myl.render.{s}", .{ if (i == 0) "" else ", ", child });
++        try out.appendSlice(a, "]\n");
++    }
++    if (shape.offsets.len != 0) {
++        try out.print(a, "@myl.render.offsets.{s} = private constant [{d} x i32] [", .{ id, shape.offsets.len });
++        for (shape.offsets, 0..) |offset, i| try out.print(a, "{s}i32 {d}", .{ if (i == 0) "" else ", ", offset });
++        try out.appendSlice(a, "]\n");
++    }
++    try names(a, out, id, shape.names);
++    try out.print(a, "@myl.render.{s} = private constant %myl.value {{ i32 {d}, i32 {d}, i32 {d}, i32 {d}, ", .{ id, shape.kind, shape.size, shape.count, shape.aux });
++    try reference(a, out, "children", id, shape.children.len);
++    try out.appendSlice(a, ", ");
++    try reference(a, out, "offsets", id, shape.offsets.len);
++    try out.appendSlice(a, ", ");
++    try reference(a, out, "names", id, shape.names.len);
++    try out.appendSlice(a, " }\n");
++}
++
++fn reference(a: std.mem.Allocator, out: *Out, part: []const u8, id: []const u8, count: usize) Error!void {
++    if (count == 0) return out.appendSlice(a, "ptr null");
++    try out.print(a, "ptr @myl.render.{s}.{s}", .{ part, id });
++}
++
++fn names(a: std.mem.Allocator, out: *Out, id: []const u8, labels: []const []const u8) Error!void {
++    if (labels.len == 0) return;
++    for (labels, 0..) |label, i| {
++        try out.print(a, "@myl.render.name.{s}.{d} = private constant [{d} x i8] c\"", .{ id, i, label.len + 1 });
++        for (label) |byte| try out.print(a, "\\{X:0>2}", .{byte});
++        try out.appendSlice(a, "\\00\"\n");
++    }
++    try out.print(a, "@myl.render.names.{s} = private constant [{d} x ptr] [", .{ id, labels.len });
++    for (labels, 0..) |_, i| try out.print(a, "{s}ptr @myl.render.name.{s}.{d}", .{ if (i == 0) "" else ", ", id, i });
++    try out.appendSlice(a, "]\n");
++}
+diff --git a/src/core/emit_values.zig b/src/core/emit_values.zig
+index 1af2cfd8b..68208378e 100644
+--- a/src/core/emit_values.zig
++++ b/src/core/emit_values.zig
+@@ -1,6 +1,7 @@
+ //! Type graph descriptors for iterative recursive equality and hashing.
+ const std = @import("std");
+ const ir = @import("ir.zig");
++const emit_render = @import("emit_render.zig");
+ const Out = std.ArrayList(u8);
+ /// Allocation or an unsupported representation stops this stage.
+ pub const Error = error{ OutOfMemory, UnsupportedEntry, UnsupportedInstruction };
+@@ -25,6 +26,7 @@ pub fn dynamic(module: ir.Module, ty: ir.Type) bool {
+ 
+ /// Replace a typed recursive adapter declaration with its LLVM definition.
+ pub fn adapter(a: std.mem.Allocator, out: *Out, function: *const ir.Function) Error!bool {
++    if (try emit_render.adapter(a, out, function)) return true;
+     const render_prefix = "myl_core_render_";
+     if (std.mem.startsWith(u8, function.name, render_prefix)) {
+         const number = function.name[render_prefix.len..];
+@@ -51,7 +53,7 @@ pub fn key(comptime Context: type, c: Context, out: *Out, ty: ir.Type, symbol: [
+ }
+ 
+ fn needed(m: *const ir.Module) bool {
+-    for (m.functions.items) |f| if (std.mem.startsWith(u8, f.name, "myl_core_equal_") or std.mem.startsWith(u8, f.name, "myl_core_render_")) return true;
++    for (m.functions.items) |f| if (std.mem.startsWith(u8, f.name, "myl_core_equal_") or std.mem.startsWith(u8, f.name, "myl_core_render_") or std.mem.startsWith(u8, f.name, "myl_core_show_")) return true;
+     for (m.compounds.items) |shape| if (shape == .dict and dynamic(m.*, shape.dict.key)) return true;
+     return false;
+ }
+@@ -66,6 +68,7 @@ pub fn descriptors(a: std.mem.Allocator, m: *const ir.Module, out: *Out) Error!v
+     for (0..ir.Type.first_compound) |index| try descriptor(a, m, out, @fromBackingInt(@as(u32, @intCast(index))));
+     for (0..m.compounds.items.len) |index| try descriptor(a, m, out, @fromBackingInt(ir.Type.first_compound + @as(u32, @intCast(index))));
+     for ([_]ir.Type{ .byte_buffer, .capability, .resource }) |ty| try descriptor(a, m, out, ty);
++    try emit_render.descriptors(a, m, out);
+ }
+ 
+ fn descriptor(a: std.mem.Allocator, m: *const ir.Module, out: *Out, ty: ir.Type) Error!void {
+diff --git a/src/core/runtime/core_values.c b/src/core/runtime/core_values.c
+index 3d754b278..7bbcf2075 100644
+--- a/src/core/runtime/core_values.c
++++ b/src/core/runtime/core_values.c
+@@ -258,7 +258,11 @@ uint64_t myl_core_values_hash(const core_value_shape *root, const void *at) {
+ 
+ bool myl_core_same_block(const myl_block *left, const myl_block *right) { return left == right; }
+ 
+-/* The old print/str spelling from io_render.zig. Depth is bounded at 24, and
++/* The old print/str spelling from io_render.zig and native_render.zig.
++ * Source rendering descriptors retain unit payload presence in union offsets,
++ * dictionary/set identity in aux and domain names in kind 11. Their child sizes
++ * remain physical strides, including one-byte unit placeholders.
++ * Depth is bounded at 24, and
+  * transparent boxes do not consume depth. The graph traversal above remains
+  * iterative for equality/hashing, where no rendering depth cap applies. */
+ typedef struct { char *data; size_t count, capacity; } core_render_buffer;
+@@ -348,7 +352,7 @@ static void value_render(core_render_buffer *output, const core_value_shape *sha
+         uint64_t tag = value_tag(shape, at);
+         if (tag >= shape->count || !shape->names) abort();
+         value_render_text(output, shape->names[tag]);
+-        if (shape->children[tag]->kind != 0) {
++        if (shape->offsets ? shape->offsets[tag] != 0 : shape->children[tag]->kind != 0) {
+             value_render_text(output, "(");
+             value_render(output, shape->children[tag], value_payload(shape, at), depth + 1);
+             value_render_text(output, ")");
+@@ -376,7 +380,7 @@ static void value_render(core_render_buffer *output, const core_value_shape *sha
+     }
+     case 9: {
+         const myl_block *dict = value_block(at);
+-        bool set = shape->children[1]->kind == 0;
++        bool set = shape->aux ? shape->aux == 1 : shape->children[1]->kind == 0;
+         if (set && !dict->len) { value_render_text(output, "set()"); break; }
+         core_dict_meta *meta = dict_meta(dict);
+         value_render_text(output, "{");
+@@ -395,6 +399,12 @@ static void value_render(core_render_buffer *output, const core_value_shape *sha
+         value_render_text(output, "}");
+         break;
+     }
++    case 11:
++        value_render_text(output, shape->names[0]);
++        value_render_text(output, "(");
++        value_render(output, shape->children[0], at, depth + 1);
++        value_render_text(output, ")");
++        break;
+     default: abort();
+     }
+ }
+diff --git a/src/core/s3_values_test.zig b/src/core/s3_values_test.zig
+index aacb25b20..12409dc70 100644
+--- a/src/core/s3_values_test.zig
++++ b/src/core/s3_values_test.zig
+@@ -20,7 +20,7 @@ fn qualified(a: std.mem.Allocator) !void {
+         try std.testing.expect(result.term == .exited and result.term.exited == 0);
+         try std.testing.expectEqualStrings("", result.stderr);
+         const parsed = try std.json.parseFromSlice(std.json.Value, a, result.stdout, .{});
+-        try std.testing.expectEqual(@as(i64, 3), parsed.value.object.get("passed").?.integer);
++        try std.testing.expectEqual(@as(i64, 5), parsed.value.object.get("passed").?.integer);
+         try std.testing.expectEqual(@as(i64, 0), parsed.value.object.get("failed").?.integer);
+         try std.testing.expectEqual(@as(i64, 0), parsed.value.object.get("unsupported").?.integer);
+     }
+diff --git a/test/core/m_recursive_values.my b/test/core/m_recursive_values.my
+index 5f4bd6dbc..dda27c4b2 100644
+--- a/test/core/m_recursive_values.my
++++ b/test/core/m_recursive_values.my
+@@ -8,6 +8,30 @@ union Tree[T]:
+     leaf: T,
+     branch(left: Tree[T], right: Tree[T])
+ 
++domain Distance: u16:
++    def make(value: u16) -> Distance:
++        return wrap[Distance](value)
++
++record UnitSlot:
++    value: Distance
++    empty: None
++
++union Unusual:
++    some,
++    none: int,
++    unit: None
++
++record Cursor:
++    rows: list[list[int]]
++    ticks: int
++
++def tick(cursor: mut Cursor) -> int:
++    cursor.ticks += 1
++    return 0
++
++def add(row: mut list[int], ignored: int) -> None:
++    row.append(9)
++
+ def chain(n: int) -> Option[Link]:
+     result: Option[Link] = None
+     for i in range(n):
+@@ -44,3 +68,25 @@ public def test_repeated_list_snapshots_stay_independent() -> bool:
+     numbers = [nan, -0.0]
+     units: list[None] = [None]
+     return a == [1, 2] and joined == [8, 2] and repeated == [1, 9, 1, 2] and nan not in numbers and 0.0 in numbers and None in units
++
++# spec-case: NEW-CORE-S3-VALUES-1
++public def test_source_types_keep_unit_payloads_and_domain_names() -> bool:
++    units: list[None] = [None, None]
++    fixed: [2]None = [None, None]
++    fixed[1] = None
++    slot = UnitSlot(Distance.make(3u16), None)
++    slot.empty = None
++    some_unit: Option[None] = Some(None)
++    if f"{units}" != "[None, None]" or f"{fixed}" != "[None, None]" or f"{some_unit}" != "Some(None)":
++        return False
++    if f"{Unusual.some}" != "Unusual.some" or f"{Unusual.none(1)}" != "Unusual.none(1)" or f"{Unusual.unit(None)}" != "Unusual.unit(None)":
++        return False
++    distances = [Distance.make(3u16), Distance.make(4u16)]
++    dictionary: dict[int, None] = {1: None}
++    return f"{slot}" == "UnitSlot(value=Distance(3), empty=None)" and f"{distances}" == "[Distance(3), Distance(4)]" and f"{dictionary}" == "{1: None}" and f"{Distance.make(3u16)}" == "Distance(3)"
++
++# spec-case: NEW-CORE-S3-VALUES-1
++public def test_negative_index_captured_before_ancestor_write_keeps_row() -> bool:
++    cursor = Cursor([[1], [2]], 0)
++    add(mut cursor.rows[-1], tick(mut cursor))
++    return cursor.rows == [[1], [2, 9]] and cursor.ticks == 1
