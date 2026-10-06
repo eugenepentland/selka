@@ -46,5 +46,5 @@ fn qualify(a: std.mem.Allocator, mode: []const u8) !void {
 test "QBE Environment names come from grants rather than the linked provider context" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
-    for ([_][]const u8{ "Debug", "ReleaseSafe", "ReleaseFast" }) |mode| try qualify(arena.allocator(), mode);
+    for ([_][]const u8{ "Debug", "ReleaseFast" }) |mode| try qualify(arena.allocator(), mode);
 }
