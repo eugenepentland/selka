@@ -41,6 +41,35 @@ refusals, build failures, crashes, timeouts, leaks, fact failures and unexpected
 native exits. There are 25,800 required native comparisons across the matrix.
 Existing harness-specific stderr comparisons remain authoritative too.
 
+Final performance and count qualification uses an explicitly fresh all40
+measurement directory. The count driver requires all 40 registry rows, an
+explicit `--bin`, fresh optimized LLVM/assembly and a fresh JSON receipt; it
+rejects partial `--rows` selections and `--reuse`. Its counts are static sites
+in the shared runtime-size binary, with the same static scope at 4096 and 64.
+Use `timing.totals.timed_innermost`, the exclusive parent and timed nonloop
+metrics for the final table. Setup loops and opaque callee/runtime/untagged
+header effects retain their separate or unknown scopes.
+
+Timing and profiles hold both observed CPU10 locks, in this order, throughout
+the command. The additional EDA lock coordinates an independent workspace;
+the required S2 lock remains held too:
+
+```bash
+scripts/build-slot.sh build -- flock -x \
+  /home/epentland/.cache/mylang/s4-wave0-20261006/cpu10.lock \
+  flock -x /run/user/1000/mylang-s2-cpu10.lock \
+  python3 experiments/new-core-s3-20261006/wave-c/s3-a/measure_all40.py \
+  --build --rounds 7 --bin .mylang-cache/wave-x/all40-NEW-RUN \
+  --mylang /absolute/path/to/qualified-old/mylang \
+  --core /absolute/path/to/qualified-new/mylang-core \
+  --json experiments/new-core-s3-20261006/wave-x/all40-NEW-RUN.json
+
+scripts/build-slot.sh build -- python3 \
+  experiments/new-core-s3-20261006/wave-x/integration/audit_all40.py \
+  --bin .mylang-cache/wave-x/all40-NEW-RUN \
+  --json experiments/new-core-s3-20261006/wave-x/count-audit-NEW-RUN.json
+```
+
 Each kind retains every generated source, `summary.json`, `harness.txt`, and an
 append-only `commands.jsonl` containing unique command numbers, statuses and raw
 stdout/stderr in base64. Matrix-level logs are separate `<kind>.txt` files;

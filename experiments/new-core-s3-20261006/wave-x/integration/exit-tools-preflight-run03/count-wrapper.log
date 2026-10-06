@@ -1,0 +1,32 @@
+audit_all35 Python smoke: nested/multiple loops, timed parent stores, pre-timing construction, shared clock block instruction positions, dominance/order, repeated/ambiguous clocks, opaque callee scopes and assembly placement pass; no native compilation
+{
+  "python_syntax": true,
+  "inherited_loop_smoke": true,
+  "rejected_invalid_invocations": [
+    {
+      "arguments": [],
+      "status": 2,
+      "reason": "-: error: pass --bin explicitly for the fresh final all40 artifacts"
+    },
+    {
+      "arguments": [
+        "--bin",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/count-preflight",
+        "--rows",
+        "word_count"
+      ],
+      "status": 2,
+      "reason": "-: error: the S3 exit audit requires every one of the 40 registry rows"
+    },
+    {
+      "arguments": [
+        "--bin",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/count-preflight",
+        "--reuse"
+      ],
+      "status": 2,
+      "reason": "-: error: the S3 exit audit must compile fresh optimized artifacts; omit --reuse"
+    }
+  ],
+  "scope": "Preparation only: imported A row registry because A is not integrated yet; no native build, measurement or exit qualification."
+}
