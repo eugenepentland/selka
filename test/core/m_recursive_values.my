@@ -40,4 +40,7 @@ public def test_repeated_list_snapshots_stay_independent() -> bool:
     repeated = 2 * a
     joined[0] = 8
     repeated[1] = 9
-    return a == [1, 2] and joined == [8, 2] and repeated == [1, 9, 1, 2]
+    nan = 0.0 / 0.0
+    numbers = [nan, -0.0]
+    units: list[None] = [None]
+    return a == [1, 2] and joined == [8, 2] and repeated == [1, 9, 1, 2] and nan not in numbers and 0.0 in numbers and None in units

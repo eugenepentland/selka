@@ -64,7 +64,7 @@ fn dumpIr(init: std.process.Init, path: []const u8, with_facts: bool) !u8 {
         else => return err,
     };
     var refusal: build.Refusal = .{};
-    var module = build.buildModule(allocator, checked.program, &refusal) catch |err| switch (err) {
+    var module = build.buildModuleSource(allocator, checked.program, checked.src, &refusal) catch |err| switch (err) {
         error.Unsupported => {
             const at = frontend.position(checked.src, .{ .start = refusal.span, .end = refusal.span });
             const text = try std.fmt.allocPrint(allocator, "{s}:{d}:{d}: error[E_CORE_UNSUPPORTED]: the new core does not support {s} yet\n", .{ at.path, at.line, at.column, refusal.reason });
@@ -228,7 +228,7 @@ fn coverageCommand(init: std.process.Init, arguments: []const []const u8) !u8 {
                 continue;
             },
         };
-        for (try build.coverage(allocator, checked.program)) |outcome| {
+        for (try build.coverageSource(allocator, checked.program, checked.src)) |outcome| {
             const keep = init.arena.allocator();
             if (outcome.refusal) |reason| {
                 try out.print(keep, "refused {s}\t{s}\n", .{ reason, outcome.name });

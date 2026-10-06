@@ -55,6 +55,38 @@ fn append(comptime Context: type, b: Context, initial: ir.Ref, source: ir.Ref, s
     return b.read(result, end);
 }
 
+/// List membership uses element equality, including IEEE unordered NaNs.
+pub fn contains(comptime Context: type, b: Context, source: ir.Ref, needle: ir.Ref, span: u32) Error!ir.Ref {
+    const element = b.module().compound(b.typeOfRef(source)).list;
+    const result = try b.synthetic(.bool);
+    const counter = try b.synthetic(.u64);
+    const length = try b.emit(.{ .op = .list_len, .ty = .u64, .a = source, .span = span });
+    try b.write(result, b.current.?, try b.constant(.bool, 0));
+    try b.write(counter, b.current.?, try b.constant(.u64, 0));
+    const header = try b.newBlock();
+    const body = try b.newBlock();
+    const next = try b.newBlock();
+    const exit = try b.newBlock();
+    try b.jump(header);
+    b.enter(header);
+    const index = try b.read(counter, header);
+    const more = try b.emit(.{ .op = .cmp, .ty = .bool, .a = index, .b = length, .data = @backingInt(ir.Predicate.lt), .span = span });
+    try b.branch(more, body, exit, span);
+    try b.seal(body);
+    b.enter(body);
+    const same = if (element == .void) try b.constant(.bool, 1) else try b.equal(try b.emit(.{ .op = .list_get, .ty = element, .a = source, .b = index, .check = .exact, .span = span }), needle, span);
+    try b.write(result, b.current.?, same);
+    try b.branch(same, exit, next, span);
+    try b.seal(next);
+    b.enter(next);
+    try b.write(counter, next, try b.emit(.{ .op = .add, .ty = .u64, .a = index, .b = try b.constant(.u64, 1), .span = span }));
+    try b.jump(header);
+    try b.seal(header);
+    try b.seal(exit);
+    b.enter(exit);
+    return b.read(result, exit);
+}
+
 /// Repeat a text, byte string or list with the original operand evaluation order.
 pub fn repeat(comptime Context: type, b: Context, left: ir.Ref, right: ir.Ref, span: u32) Error!ir.Ref {
     const reversed = b.typeOfRef(left).integer() != null;
@@ -134,7 +166,7 @@ pub fn render(comptime Context: type, b: Context, value: ir.Ref, span: u32) Erro
 fn renderNames(comptime Context: type, b: Context) Error!void {
     var types = b.mb.types.iterator();
     while (types.next()) |entry| {
-        const record = b.mb.program.records[entry.key_ptr.recordIndex()];
+        const record = b.mb.input.program.records[entry.key_ptr.recordIndex()];
         const prefix = try std.fmt.allocPrint(b.allocator(), "\x00myl.core.render.{d}|", .{@backingInt(entry.value_ptr.*)});
         var exists = false;
         for (b.mb.module.strings.items) |text| if (std.mem.startsWith(u8, text, prefix)) {
