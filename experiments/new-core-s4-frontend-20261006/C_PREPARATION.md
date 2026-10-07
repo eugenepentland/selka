@@ -158,8 +158,9 @@ prove stronger reuse, but ordinary permissions, directory mtime or an approved
 executable hash alone cannot. Do not change system state to manufacture proof.
 
 The actual C/P cold/warm phase profile on matched ReleaseFast hosts and fresh
-artifacts must decide the implementation. Keep the full scan as the correctness
-baseline and report a timing miss until a proved improvement passes.
+artifacts must decide the implementation. Preserve the full scan's current
+inputs, resolve its discovered closure gap before qualification, and report a
+timing miss until a proved improvement passes.
 
 Foreign-header counterexample: c-prep-foreign-header-01 retains successful
 approved Zig argv/artifacts before and after a same-size VALUE7->VALUE8 header
@@ -218,3 +219,54 @@ DWARF has no DW_AT_comp_dir, and no additional stable-directory flag is needed
 for this actual unit. Keep per-unit full-byte verification; this evidence does
 not prove stability of native C/Zig source objects. The probe serialized against
 CPU10 timing and is correctness evidence only.
+
+## Actual LLVM-only filesystem and link grouping preparation
+
+The prospective target 2.31 object action is traced in
+`c-prep-action-closure-01/README.md`, including successful reads, failed
+lookups, searched directories, symlinks and comparison with the 20,907-input
+current inventory. Explicit config/header controls preserve all object bytes
+but do not stop system GCC/distro discovery. An owned empty GCC toolchain
+removes GCC enumeration; both distro content reads remain outside the
+inventory. `-MD` writes no LLVM depfile and changes the full object bytes by
+selecting a direct-Clang path. These are observations and source-review
+requirements, not a reduced closure proof or a production flag decision.
+
+Root's retained E prebuilt-object replacement changes native C main layout
+(0x1032940→0x1008ac0) at the same high-level argv position. Pinned Zig ELF
+linker source appends explicit link objects before generated C/LLVM objects.
+C must capture the actual child linker input order and kind groups, bind that
+policy in executable keys, inspect complete ELF layout and repeat all app/row
+gates for its all-object link path. Printed driver argv order alone is
+insufficient. Source excerpts and unresolved closure requirements are retained
+with the action probe; no compiler implementation changed.
+
+## Full helper discovery gap and conservative correction
+
+`c-prep-full-closure-audit-01/GUARD_CORRECTION_PROPOSAL.md` preserves a real
+unchanged-helper RED: an approved actual Zig copy plus its approved adjacent
+library remains cacheable, unchanged and equal-keyed after a sibling Clang
+resource appears; the next fresh native compilation reads that file. Equal
+object bytes do not prove complete identity or absence of driver/link effects.
+Actual protected corrected M runtime-C and final compile/link descendants read
+the same unguarded distro files and perform GCC/resource selection outside the
+current full inventory. Bundled header lookups have direct file or directory
+membership guards. CWD/output/cache traversal is distinguished from discovery;
+our own output writes must not invalidate the tool generation.
+
+The proposed correction keeps every current input and native flag, captures a
+bounded reviewed distro/GCC/alias/absence selection state, and conservatively
+refuses unreviewed sibling resource roots, Gentoo/RHEL prefixes or new layouts.
+Inventory hint v4 and approval policy v3 must invalidate old fast hints. Primary
+official Clang tag sources explain the discovery branches, but their exact
+build relation to the pinned binary remains unestablished; fixed-layout refusal
+preserves that limitation. Final M/cache qualification is held for a reviewed
+repair and fresh source gates. This preparation contains no helper correction.
+
+Wave B action-cost optimization is separate. The conservative full scan stays
+intact; LLVM-object, runtime-C-object, numeric-object and final-link certificates
+must each prove their complete inputs/searches/aliases before reducing work.
+The observational full candidate+final cost around65ms already exceeds Lox's
+7ms unchanged-build bar. No trace, directory-mtime shortcut, approved-executable
+hash alone, equal object bytes or matching high-level link argv qualifies that
+performance or correctness gate.

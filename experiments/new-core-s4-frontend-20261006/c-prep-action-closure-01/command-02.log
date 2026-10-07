@@ -1,0 +1,12 @@
+empty-gcc 0 {'size': 3184, 'sha256': 'd8dd5741be1e8c641748d89dec8810ff602a9203e1b8afeaf4006e4cfe7a0b37'}
+Traceback (most recent call last):
+  File "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/c-prep-action-closure-01/search_controls.py", line 9, in <module>
+    probe.run('empty-sysroot', ['--sysroot=' + str(empty)]),
+    ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/c-prep-action-closure-01/probe.py", line 34, in run
+    private.mkdir(parents=True)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/pathlib/__init__.py", line 1012, in mkdir
+    os.mkdir(self, mode)
+    ~~~~~~~~^^^^^^^^^^^^
+FileExistsError: [Errno 17] File exists: '/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/empty-sysroot'

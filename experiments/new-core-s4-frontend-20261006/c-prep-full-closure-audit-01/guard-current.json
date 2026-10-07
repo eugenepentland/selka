@@ -1,0 +1,28 @@
+{
+  "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/guard-reducer/guard-probe",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/guard-reducer/tool/distribution/zig",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/guard-reducer/tool/lib/clang/22/share/ubsan_ignorelist.txt",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/guard-reducer/helper-cache"
+  ],
+  "status": 0,
+  "timed_out": false,
+  "affinity": [
+    0,
+    1,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ]
+}

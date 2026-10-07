@@ -1,0 +1,35 @@
+{
+  "command": [
+    "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "build-exe",
+    "-OReleaseFast",
+    "--dep",
+    "tool",
+    "-Mroot=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/c-prep-full-closure-audit-01/guard_probe.zig",
+    "--dep",
+    "core_tool_platform",
+    "-Mtool=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/src/core/tool_identity.zig",
+    "-Mcore_tool_platform=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/src/config_core_tool_platform.zig",
+    "-femit-bin=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/guard-reducer/guard-probe"
+  ],
+  "status": 0,
+  "timed_out": false,
+  "affinity": [
+    0,
+    1,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ]
+}

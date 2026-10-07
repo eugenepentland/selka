@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/c-prep-action-closure-01/analyze.py", line 153, in <module>
+    result = {name: summary(name) for name in names}
+                    ~~~~~~~^^^^^^
+  File "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/c-prep-action-closure-01/analyze.py", line 122, in summary
+    base = annotations[0] if call.endswith('at') or call in ('statx', 'newfstatat', 'faccessat2') else cwd
+           ~~~~~~~~~~~^^^
+IndexError: list index out of range

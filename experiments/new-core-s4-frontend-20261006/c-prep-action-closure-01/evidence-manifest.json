@@ -1,0 +1,330 @@
+{
+  "scope": "Observational native action preparation; no compiler implementation or timing qualification.",
+  "files": [
+    {
+      "path": "README.md",
+      "size": 9265,
+      "sha256": "23ec7a7ca353067ff67f253064c4397412ab6a8d8ac8ec1558d6c84dbb630bf0"
+    },
+    {
+      "path": "analysis-05.log",
+      "size": 650,
+      "sha256": "f716d4c91412f5fd3127e7c87f2893a250eccade74f29f4508ef69bb2cc45e35"
+    },
+    {
+      "path": "analysis-06.log",
+      "size": 829,
+      "sha256": "4edd060b456f53f6b231f2ab699b1cf67b467709c853c13141893876afd353c2"
+    },
+    {
+      "path": "analysis-07.log",
+      "size": 1679,
+      "sha256": "3a893491b72749c169ea5ed12761d8645b66edf478a3e7bfeedd1973be062c6f"
+    },
+    {
+      "path": "analysis-08.log",
+      "size": 1679,
+      "sha256": "3a893491b72749c169ea5ed12761d8645b66edf478a3e7bfeedd1973be062c6f"
+    },
+    {
+      "path": "analyze.py",
+      "size": 7760,
+      "sha256": "226184c3ba7c95bff203b5b7fa4fb76b101db5cb42f69f007227fd4c2a1e9281"
+    },
+    {
+      "path": "baseline-accesses.json",
+      "size": 55355,
+      "sha256": "fb9a2c08a7047bb6bfb4530385bdd6eaf2aca761bc4d07ea323ef1cc4aa2ca0d"
+    },
+    {
+      "path": "baseline.json",
+      "size": 2710,
+      "sha256": "64847198a5c02b2876d4cf4b53fa43301f2537f50ae75c6e34b8debc317e0402"
+    },
+    {
+      "path": "baseline.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "baseline.stdout",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "baseline.strace",
+      "size": 88682,
+      "sha256": "11885f14228d7c1d50ee5bf034ededba4db789bbbdffd2e32089f955a2d59add"
+    },
+    {
+      "path": "command-01.log",
+      "size": 451,
+      "sha256": "de4b5cb8caa56b417db3500090b58d0f117ed3d76ea6cfdf436e7367416987c4"
+    },
+    {
+      "path": "command-02.log",
+      "size": 981,
+      "sha256": "0d3f4c0696fb87ae7b2d8ba387064615ef41c29a6ab02f2837c0f3982eeda1be"
+    },
+    {
+      "path": "command-03.log",
+      "size": 219,
+      "sha256": "6613cefbfd970ba439b221a961ee5629e1e43f615b503183f0664bbf39d4c02d"
+    },
+    {
+      "path": "command-04.log",
+      "size": 113,
+      "sha256": "cd1e26a0b3580b02c2ebe4b8a2f49465bb9776fb8ec30c9e50d99f60e5b78222"
+    },
+    {
+      "path": "confined-search-accesses.json",
+      "size": 37442,
+      "sha256": "771affb3d443b6eba4580652a42ca010aec6027853fd84f03dfaa64116fa7b4e"
+    },
+    {
+      "path": "confined-search.json",
+      "size": 3484,
+      "sha256": "defdda6c944d496ec17f94c98332f5ac872984d8b5e446c997d6f5efe54f419a"
+    },
+    {
+      "path": "confined-search.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "confined-search.stdout",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "confined-search.strace",
+      "size": 81886,
+      "sha256": "4d5f6de971f450d10a5b5adbc0610a010d0c940cd860cbe0caf0827c0b7c6c86"
+    },
+    {
+      "path": "depfile-accesses.json",
+      "size": 40972,
+      "sha256": "fffc65e8021a78fdeeb34ea11ecef835f5a283fcb3b65118e24e1a39eae2a3aa"
+    },
+    {
+      "path": "depfile.json",
+      "size": 2778,
+      "sha256": "98bba329f854ea2286a7aed32a5b213f3f257185ab88dc5d2c868ea3f11fa8be"
+    },
+    {
+      "path": "depfile.stderr",
+      "size": 185,
+      "sha256": "c01aec5a1ce7fdf3bb8260505e3d5e4803138a8ec202663ad0f7c8901b9b3605"
+    },
+    {
+      "path": "depfile.stdout",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "depfile.strace",
+      "size": 58018,
+      "sha256": "4c69eecd16fd8fd4ebebd74848efafb60ba1282760bd185bf0c7c44ac9ed71d1"
+    },
+    {
+      "path": "driver-argv-accesses.json",
+      "size": 37100,
+      "sha256": "08d387a80d7e328224e8e222961bd41fbb33eb5a1ad72375e83bfaaf4a23c376"
+    },
+    {
+      "path": "driver-argv.json",
+      "size": 2646,
+      "sha256": "85327733a9f804ee7797a5f6b8b88581a7ec879ca14663cb07d0c0a341eb88d4"
+    },
+    {
+      "path": "driver-argv.stderr",
+      "size": 8543,
+      "sha256": "f6797d83097330ac3baadef6269ed149743a58ae7ddc5824e16ed6874fbd00f8"
+    },
+    {
+      "path": "driver-argv.stdout",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "driver-argv.strace",
+      "size": 47849,
+      "sha256": "763be3af069e28b0859d646d6c9dc938b24c310ba8defad77a77aecba08afbed"
+    },
+    {
+      "path": "empty-gcc-accesses.json",
+      "size": 37027,
+      "sha256": "5250d8c56c6fbb398980a1deaa39cfdcdba8f0aeb5f6879e1a2105c468b83f37"
+    },
+    {
+      "path": "empty-gcc.json",
+      "size": 3030,
+      "sha256": "dee9fbbfd9108558c6d757ba24c8d8e486062c48d1f0a30876216cb154917ed6"
+    },
+    {
+      "path": "empty-gcc.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "empty-gcc.stdout",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "empty-gcc.strace",
+      "size": 80854,
+      "sha256": "8bdcecb9a4b16706306ac5093cf7a117b54cb61d60acaecfc7d84ce47211ff9e"
+    },
+    {
+      "path": "inventory-comparison.json",
+      "size": 67883,
+      "sha256": "54e56ea1cc63a0f3006e9d82b445e24e596ff8cf65e78755e3622f9a55ab4004"
+    },
+    {
+      "path": "local-source-evidence.json",
+      "size": 15287,
+      "sha256": "78c621fbe57711e27230a1f9bc8ff287f26fec47c43b47313990a020bb89c2f5"
+    },
+    {
+      "path": "no-default-config-accesses.json",
+      "size": 55971,
+      "sha256": "8fc620e3f48a3bcc9cc9c40b6c58b9a2ac4ceea42ce602c186593a02da23381c"
+    },
+    {
+      "path": "no-default-config.json",
+      "size": 2800,
+      "sha256": "20938f6116cac34a44eafd5d3de81ac26b59ee1e2037e57319dd2395478aa410"
+    },
+    {
+      "path": "no-default-config.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "no-default-config.stdout",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "no-default-config.strace",
+      "size": 88890,
+      "sha256": "7b62fff9c5ae58e4acd2338e5dc33ff32fe60696b0066433c16f0aaaa9a85bf2"
+    },
+    {
+      "path": "no-header-search-accesses.json",
+      "size": 55907,
+      "sha256": "5436245836198b3ee40b1f719c654e247cc7e7fbe1f6dc36b366edc59656f45f"
+    },
+    {
+      "path": "no-header-search.json",
+      "size": 2814,
+      "sha256": "ebd08b1338b523997020a95820b1c6d661af5dfb30fe06f00b4fa7941449ebdd"
+    },
+    {
+      "path": "no-header-search.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "no-header-search.stdout",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "no-header-search.strace",
+      "size": 88623,
+      "sha256": "60cdfbfa6514fd110134d607cd114970b51194d7c9082232f716d4bc480e3072"
+    },
+    {
+      "path": "observed-host-inputs.json",
+      "size": 1100,
+      "sha256": "1cd574b4ff2fa64c9364a623f094db6651133ff1d1443e47bdd2f097f545481b"
+    },
+    {
+      "path": "probe.py",
+      "size": 3640,
+      "sha256": "df0cd59769c45dbeb7e5c2024cafbaa1cd0b8678e52e35edece95eb39d5dd1e5"
+    },
+    {
+      "path": "resource-confined-accesses.json",
+      "size": 37643,
+      "sha256": "8810af1114417eb8255ca2ad09e4a2fa4cde4ef7015f02fc61cfd956d50240fc"
+    },
+    {
+      "path": "resource-confined.json",
+      "size": 3656,
+      "sha256": "71309f7d3ab484333e908c8efb92b4ba4856c820b85815a67d1de49a513cc9ae"
+    },
+    {
+      "path": "resource-confined.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "resource-confined.stdout",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "resource-confined.strace",
+      "size": 82711,
+      "sha256": "93c761a32db52252f8e9248367746c0382f1e4d4f8214cb34f680fec56a54228"
+    },
+    {
+      "path": "resource-control.json",
+      "size": 3656,
+      "sha256": "71309f7d3ab484333e908c8efb92b4ba4856c820b85815a67d1de49a513cc9ae"
+    },
+    {
+      "path": "resource_control.py",
+      "size": 510,
+      "sha256": "b886d83754eb5b60df67e2d639f6c85f887848241c9cf06d8cd31e1fc06434d3"
+    },
+    {
+      "path": "search-controls.json",
+      "size": 6819,
+      "sha256": "91f0e8a1ab7d599db0397b1dfe87a42d7b2c0bd0bef1ab63a29988e1fe338ed8"
+    },
+    {
+      "path": "search_controls.py",
+      "size": 573,
+      "sha256": "15e3bbbf455346e789cc9e14c63b69b160ed74a3eb29d0262db73977cf605b36"
+    },
+    {
+      "path": "search_controls_remaining.py",
+      "size": 485,
+      "sha256": "d8a680460753ad22e91fbd3b65c3882be8559fed8b15b352325e3e0ade8df120"
+    },
+    {
+      "path": "summary.json",
+      "size": 14468,
+      "sha256": "a3588e28873fe88e5f8716c81553578dddff18a0af5106ba5d7bb06fd954a7ba"
+    },
+    {
+      "path": "sysroot-only-accesses.json",
+      "size": 55626,
+      "sha256": "6f1445e62965999902a544bc21818c8080f07c404b21acbeff6d4389894817fb"
+    },
+    {
+      "path": "sysroot-only.json",
+      "size": 3030,
+      "sha256": "ddbfd0b4c50ee2a660c61b5771b8798bd265f89189b5e62597552d9b640dd6e2"
+    },
+    {
+      "path": "sysroot-only.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "sysroot-only.stdout",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "sysroot-only.strace",
+      "size": 88994,
+      "sha256": "2932ee276b1a3d04701fb2cdab86ef9207ff539d495d73c95da3db8671fc359a"
+    }
+  ]
+}

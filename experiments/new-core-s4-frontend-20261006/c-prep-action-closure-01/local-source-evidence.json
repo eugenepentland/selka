@@ -1,0 +1,86 @@
+{
+  "repo": "/home/epentland/ai/canopy/zig-eda-private",
+  "commit": "5ceec001b5d0feb09f6f7c581b1bdc5d2436bfbe",
+  "note": "Read Git objects at the distribution-named Zig revision; no source/build mutation. Clang toolchain library implementation and binary build attestation are not present here.",
+  "files": [
+    {
+      "file": "src/Compilation.zig",
+      "sha256": "d476ce5ea93db219102f0bb00eb083fc4fa941dfed5eba4c022a306187fe8467",
+      "excerpts": [
+        {
+          "start": 5498,
+          "end": 5513,
+          "text": "5498: \n5499:         // When all these flags are true, it means that the entire purpose of\n5500:         // this compilation is to perform a single zig cc operation. This means\n5501:         // that we could \"tail call\" clang by doing an execve, and any use of\n5502:         // the caching system would actually be problematic since the user is\n5503:         // presumably doing their own caching by using dep file flags.\n5504:         if (std.process.can_replace and direct_o and\n5505:             comp.disable_c_depfile and comp.clang_passthrough_mode)\n5506:         {\n5507:             try comp.addCCArgs(arena, &argv, ext, null, c_object.src.owner);\n5508:             try argv.appendSlice(c_object.src.extra_flags);\n5509:             try argv.appendSlice(c_object.src.cache_exempt_flags);\n5510: \n5511:             const out_obj_path = if (comp.bin_file) |lf|\n5512:                 try lf.emit.root_dir.join(arena, &.{lf.emit.sub_path})\n5513:             else"
+        },
+        {
+          "start": 5547,
+          "end": 5560,
+          "text": "5547:         const out_diag_path = if (comp.clang_passthrough_mode or !ext.clangSupportsDiagnostics())\n5548:             null\n5549:         else\n5550:             try std.fmt.allocPrint(arena, \"{s}.diag\", .{out_obj_path});\n5551:         const out_dep_path = if (comp.disable_c_depfile or !ext.clangSupportsDepFile())\n5552:             null\n5553:         else\n5554:             try std.fmt.allocPrint(arena, \"{s}.d\", .{out_obj_path});\n5555: \n5556:         try comp.addCCArgs(arena, &argv, ext, out_dep_path, c_object.src.owner);\n5557:         try argv.appendSlice(c_object.src.extra_flags);\n5558:         try argv.appendSlice(c_object.src.cache_exempt_flags);\n5559: \n5560:         try argv.ensureUnusedCapacity(6);"
+        },
+        {
+          "start": 6187,
+          "end": 6220,
+          "text": "6187:     }\n6188: \n6189:     // This only works for preprocessed files. Guarded by `FileExt.clangSupportsDepFile`.\n6190:     if (out_dep_path) |p| {\n6191:         try argv.appendSlice(&[_][]const u8{ \"-MD\", \"-MV\", \"-MF\", p });\n6192:     }\n6193: \n6194:     // Non-preprocessed assembly files don't support these flags.\n6195:     if (ext != .assembly) {\n6196:         try argv.append(if (target.os.tag == .freestanding) \"-ffreestanding\" else \"-fhosted\");\n6197: \n6198:         try argv.append(\"-nostdinc\");\n6199: \n6200:         if (ext == .cpp or ext == .hpp) {\n6201:             try argv.append(\"-nostdinc++\");\n6202:         }\n6203: \n6204:         // LLVM IR files don't support these flags.\n6205:         if (ext != .ll and ext != .bc) {\n6206:             switch (mod.optimize_mode) {\n6207:                 .debug => {},\n6208:                 .safe => {\n6209:                     try argv.append(\"-D_FORTIFY_SOURCE=2\");\n6210:                 },\n6211:                 .fast, .small => {\n6212:                     try argv.append(\"-DNDEBUG\");\n6213:                 },\n6214:             }\n6215: \n6216:             switch (target.os.tag) {\n6217:                 // LLVM doesn't distinguish between Solaris and illumos, but the illumos GCC fork\n6218:                 // defines this macro.\n6219:                 .illumos => try argv.append(\"__illumos__\"),\n6220:                 // This macro has not yet been upstreamed by SerenityOS to Clang."
+        },
+        {
+          "start": 6470,
+          "end": 6495,
+          "text": "6470: pub fn addCCArgs(\n6471:     comp: *const Compilation,\n6472:     arena: Allocator,\n6473:     argv: *std.array_list.Managed([]const u8),\n6474:     ext: FileExt,\n6475:     out_dep_path: ?[]const u8,\n6476:     mod: *Module,\n6477: ) !void {\n6478:     const target = &mod.resolved_target.result;\n6479: \n6480:     // As of Clang 16.x, it will by default read extra flags from /etc/clang.\n6481:     // I'm sure the person who implemented this means well, but they have a lot\n6482:     // to learn about abstractions and where the appropriate boundaries between\n6483:     // them are. The road to hell is paved with good intentions. Fortunately it\n6484:     // can be disabled.\n6485:     try argv.append(\"--no-default-config\");\n6486: \n6487:     // We don't ever put `-fcolor-diagnostics` or `-fno-color-diagnostics` because in passthrough mode\n6488:     // we want Clang to infer it, and in normal mode we always want it off, which will be true since\n6489:     // clang will detect stderr as a pipe rather than a terminal.\n6490:     if (!comp.clang_passthrough_mode and ext.clangSupportsDiagnostics()) {\n6491:         // Make stderr more easily parseable.\n6492:         try argv.append(\"-fno-caret-diagnostics\");\n6493:     }\n6494: \n6495:     // We never want clang to invoke the system assembler for anything. So we would want"
+        },
+        {
+          "start": 6882,
+          "end": 6910,
+          "text": "6882:             => false,\n6883:         };\n6884:     }\n6885: \n6886:     pub fn clangSupportsDepFile(ext: FileExt) bool {\n6887:         return switch (ext) {\n6888:             .assembly_with_cpp, .c, .cpp, .h, .hpp, .hm, .hmm, .m, .mm => true,\n6889: \n6890:             .ll,\n6891:             .bc,\n6892:             .assembly,\n6893:             .shared_library,\n6894:             .object,\n6895:             .static_library,\n6896:             .zig,\n6897:             .def,\n6898:             .rc,\n6899:             .res,\n6900:             .manifest,\n6901:             .unknown,\n6902:             => false,\n6903:         };\n6904:     }\n6905: \n6906:     pub fn canonicalName(ext: FileExt, target: *const Target) [:0]const u8 {\n6907:         return switch (ext) {\n6908:             .c => \".c\",\n6909:             .cpp => \".cpp\",\n6910:             .h => \".h\","
+        },
+        {
+          "start": 5680,
+          "end": 5716,
+          "text": "5680:                 // Use the same file size limit as the cache code does for dependency files.\n5681:                 const dep_file_contents = try zig_cache_tmp_dir.readFileAlloc(io, dep_basename, gpa, .limited(Cache.manifest_file_size_max));\n5682:                 defer gpa.free(dep_file_contents);\n5683: \n5684:                 var str_buf: std.ArrayList(u8) = .empty;\n5685:                 defer str_buf.deinit(gpa);\n5686: \n5687:                 var it: std.Build.Cache.DepTokenizer = .{ .bytes = dep_file_contents };\n5688:                 while (it.next()) |token| {\n5689:                     const input_path: Compilation.Path = switch (token) {\n5690:                         .target, .target_must_resolve => continue,\n5691:                         .prereq => |file_path| try .fromUnresolved(arena, comp.dirs, &.{file_path}),\n5692:                         .prereq_must_resolve => p: {\n5693:                             try token.resolve(gpa, &str_buf);\n5694:                             break :p try .fromUnresolved(arena, comp.dirs, &.{str_buf.items});\n5695:                         },\n5696:                         else => |err| {\n5697:                             try err.printError(gpa, &str_buf);\n5698:                             log.err(\"failed parsing {s}: {s}\", .{ dep_basename, str_buf.items });\n5699:                             return error.InvalidDepFile;\n5700:                         },\n5701:                     };\n5702:                     try comp.appendFileSystemInput(input_path);\n5703:                 }\n5704:             }\n5705: \n5706:             // Add the files depended on to the cache system.\n5707:             try man.addDepFilePost(zig_cache_tmp_dir, dep_basename);\n5708:             switch (comp.cache_use) {\n5709:                 .whole => |whole| {\n5710:                     if (whole.cache_manifest) |whole_cache_manifest| {\n5711:                         try whole.cache_manifest_mutex.lock(io);\n5712:                         defer whole.cache_manifest_mutex.unlock(io);\n5713:                         try whole_cache_manifest.addDepFilePost(zig_cache_tmp_dir, dep_basename);\n5714:                     }\n5715:                 },\n5716:                 .incremental, .none => {},"
+        }
+      ]
+    },
+    {
+      "file": "src/zig_clang_driver.cpp",
+      "sha256": "0553796aae69e03535616019663ec034b1b297256d460deb4a0b29d057107aa0",
+      "excerpts": [
+        {
+          "start": 302,
+          "end": 315,
+          "text": "302: \n303:       // Insert at the end of the argument list to append.\n304:       Args.append(AppendedOpts.begin(), AppendedOpts.end());\n305:     }\n306:   }\n307: \n308:   llvm::StringSet<> SavedStrings;\n309:   // Handle CCC_OVERRIDE_OPTIONS, used for editing a command line behind the\n310:   // scenes.\n311:   if (const char *OverrideStr = ::getenv(\"CCC_OVERRIDE_OPTIONS\")) {\n312:     // FIXME: Driver shouldn't take extra initial argument.\n313:     driver::applyOverrideOptions(Args, OverrideStr, SavedStrings,\n314:                                  \"CCC_OVERRIDE_OPTIONS\", &llvm::errs());\n315:   }"
+        },
+        {
+          "start": 350,
+          "end": 380,
+          "text": "350:   ProcessWarningOptions(Diags, *DiagOpts, *VFS, /*ReportDiags=*/false);\n351: \n352:   Driver TheDriver(Path, llvm::sys::getDefaultTargetTriple(), Diags,\n353:                    /*Title=*/\"clang LLVM compiler\", VFS);\n354:   auto TargetAndMode = ToolChain::getTargetAndModeFromProgramName(ProgName);\n355:   TheDriver.setTargetAndMode(TargetAndMode);\n356:   // If -canonical-prefixes is set, GetExecutablePath will have resolved Path\n357:   // to the llvm driver binary, not clang. In this case, we need to use\n358:   // PrependArg which should be clang-*. Checking just CanonicalPrefixes is\n359:   // safe even in the normal case because PrependArg will be null so\n360:   // setPrependArg will be a no-op.\n361:   if (ToolContext.NeedsPrependArg || CanonicalPrefixes)\n362:     TheDriver.setPrependArg(ToolContext.PrependArg);\n363: \n364:   insertTargetAndModeArgs(TargetAndMode, Args, SavedStrings);\n365: \n366:   if (!SetBackdoorDriverOutputsFromEnvVars(TheDriver))\n367:     return 1;\n368: \n369:   auto ExecuteCC1WithContext = [&ToolContext,\n370:                                 &VFS](SmallVectorImpl<const char *> &ArgV) {\n371:     return ExecuteCC1Tool(ArgV, ToolContext, VFS);\n372:   };\n373:   if (!UseNewCC1Process) {\n374:     TheDriver.CC1Main = ExecuteCC1WithContext;\n375:     // Ensure the CC1Command actually catches cc1 crashes\n376:     llvm::CrashRecoveryContext::Enable();\n377:   }\n378: \n379:   std::unique_ptr<Compilation> C(TheDriver.BuildCompilation(Args));\n380: "
+        }
+      ]
+    },
+    {
+      "file": "src/link/Lld.zig",
+      "sha256": "4df2867b7ee22b51946430f572b5c8a63f4adf86b1d6f533c23747d51bee8ecf",
+      "excerpts": [
+        {
+          "start": 1087,
+          "end": 1121,
+          "text": "1087:             }\n1088:         }\n1089: \n1090:         // Positional arguments to the linker such as object files.\n1091:         var whole_archive = false;\n1092: \n1093:         for (base.comp.link_inputs) |link_input| switch (link_input) {\n1094:             .res => unreachable, // Windows-only\n1095:             .dso => continue,\n1096:             .object, .archive => |obj| {\n1097:                 if (obj.must_link and !whole_archive) {\n1098:                     try argv.append(\"--whole-archive\");\n1099:                     whole_archive = true;\n1100:                 } else if (!obj.must_link and whole_archive) {\n1101:                     try argv.append(\"--no-whole-archive\");\n1102:                     whole_archive = false;\n1103:                 }\n1104:                 try argv.append(try obj.path.toString(arena));\n1105:             },\n1106:             .dso_exact => |dso_exact| {\n1107:                 assert(dso_exact.name[0] == ':');\n1108:                 try argv.appendSlice(&.{ \"-l\", dso_exact.name });\n1109:             },\n1110:         };\n1111: \n1112:         if (whole_archive) {\n1113:             try argv.append(\"--no-whole-archive\");\n1114:             whole_archive = false;\n1115:         }\n1116: \n1117:         for (comp.c_objects.items) |c_object| {\n1118:             try argv.append(try c_object.status.success.object_path.toString(arena));\n1119:         }\n1120: \n1121:         if (zcu_obj_path) |p| {"
+        }
+      ]
+    },
+    {
+      "file": "lib/std/Build/Cache.zig",
+      "sha256": "e5323b6fa3657bbc1f72ee51bfc79135ad1b4b76f18a5607951794503dd1e616",
+      "excerpts": [
+        {
+          "start": 158,
+          "end": 177,
+          "text": "158:     stat: Stat,\n159:     bin_digest: BinDigest,\n160:     contents: ?[]const u8,\n161: \n162:     pub const Stat = struct {\n163:         inode: Io.File.INode,\n164:         size: u64,\n165:         mtime: Io.Timestamp,\n166: \n167:         pub fn fromFs(fs_stat: Io.File.Stat) Stat {\n168:             return .{\n169:                 .inode = fs_stat.inode,\n170:                 .size = fs_stat.size,\n171:                 .mtime = fs_stat.mtime,\n172:             };\n173:         }\n174:     };\n175: \n176:     pub fn deinit(self: *File, gpa: Allocator) void {\n177:         gpa.free(self.prefixed_path.sub_path);"
+        },
+        {
+          "start": 798,
+          "end": 824,
+          "text": "798:                 self.diagnostic = .{ .file_stat = .{\n799:                     .file_index = idx,\n800:                     .err = err,\n801:                 } };\n802:                 return error.CacheCheckFailed;\n803:             };\n804:             const size_match = actual_stat.size == cache_hash_file.stat.size;\n805:             const mtime_match = actual_stat.mtime.nanoseconds == cache_hash_file.stat.mtime.nanoseconds;\n806:             const inode_match = actual_stat.inode == cache_hash_file.stat.inode;\n807: \n808:             if (!size_match or !mtime_match or !inode_match) {\n809:                 cache_hash_file.stat = .{\n810:                     .size = actual_stat.size,\n811:                     .mtime = actual_stat.mtime,\n812:                     .inode = actual_stat.inode,\n813:                 };\n814: \n815:                 if (try self.isProblematicTimestamp(cache_hash_file.stat.mtime)) {\n816:                     // The actual file has an unreliable timestamp, force it to be hashed\n817:                     cache_hash_file.stat.mtime = .zero;\n818:                     cache_hash_file.stat.inode = 0;\n819:                 }\n820: \n821:                 var actual_digest: BinDigest = undefined;\n822:                 hashFile(io, this_file, &actual_digest) catch |err| {\n823:                     self.diagnostic = .{ .file_read = .{\n824:                         .file_index = idx,"
+        }
+      ]
+    }
+  ]
+}
