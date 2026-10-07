@@ -38,7 +38,11 @@ def main():
     summary["fresh_old_sha256"] = hashlib.sha256(fresh.read_bytes()).hexdigest()
     summary["core_sha256"] = core_hash
     try:
-        for index, kind in enumerate(("rc", "rebinding", "functions", "s1", "dict", "number", "iteration", "values")):
+        kinds = ("rc", "rebinding", "functions", "s1", "dict", "number", "iteration", "values")
+        # Exercise the new fact and dynamic-repeat paths first, preserving each
+        # kind's original seed and all eight mandatory strict matrices.
+        for kind in (kinds[-1], *kinds[:-1]):
+            index = kinds.index(kind)
             old = fresh if kind == "values" else pinned
             command = ["python3", "experiments/new-core-s3-20261006/wave-x/integration/fuzz_qualification.py", "--kind", "functions" if kind == "values" else kind,
                        "--old", str(old), "--new", str(core), "--cases", "50", "--seed", str(410600 + index),
