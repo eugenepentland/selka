@@ -219,6 +219,22 @@ test "a recursive union stores the payload that closes the cycle in a box and re
     try std.testing.expect(contains(text, "box_get record{union{"));
 }
 
+const capability_array_field =
+    \\record Grid:
+    \\    ports: [2]Stream
+    \\    label: str
+    \\
+    \\
+    \\def use(a: Grid, b: Grid) -> int:
+    \\    return len(a.label) + len(b.label)
+    \\
+    \\
+    \\def main(out: Stream) -> int:
+    \\    out.print(use(Grid(ports=[out, out], label="a"), Grid(ports=[out, out], label="b")))
+    \\    return 0
+    \\
+;
+
 const capability_field =
     \\record Grid:
     \\    port: Stream
@@ -241,8 +257,17 @@ test "a record holding an unsupported type is refused with its reason, every tim
     defer arena.deinit();
     var refusal: build.Refusal = .{};
     // A type that failed to map stays unmapped: the second use is refused for the same reason.
-    try std.testing.expectError(error.Unsupported, support.buildSource(arena.allocator(), capability_field, &refusal));
-    try std.testing.expectEqualStrings("record field type", refusal.reason);
+    try std.testing.expectError(error.Unsupported, support.buildSource(arena.allocator(), capability_array_field, &refusal));
+    try std.testing.expectEqualStrings("fixed array element type", refusal.reason);
+}
+
+// spec: NEW-CORE-S4-CAP-FIELD-1
+test "a record holding a capability token builds: the token is a plain i64 field" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    var refusal: build.Refusal = .{};
+    _ = try support.buildSource(arena.allocator(), capability_field, &refusal);
+    try std.testing.expectEqualStrings("", refusal.reason);
 }
 
 const projections =
