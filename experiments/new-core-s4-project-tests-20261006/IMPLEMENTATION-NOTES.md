@@ -1,7 +1,8 @@
 # S4-M implementation and qualification state
 
-The corrected pre-V implementation is frozen at `0ebc9c8f0`, after the managed
-undef-phi, typed-case and canonical-integer repairs below. Its preceding unwind-dependency checkpoint
+The corrected pre-V production checkpoint is `8cd19b82d`, after the managed
+undef-phi, typed-case, canonical-integer and native-cache repairs below. Qualification
+tool hardening is still in progress. Its preceding unwind-dependency checkpoint
 is `25d9e9531`; its initial production checkpoint is `7bc4a745f`, based on S4-F corrected
 production checkpoint `7877aa5d369f57aeb8fb850e8198c08c520b3a51`. Final combined
 package qualification is still pending. Negative runs remain evidence, never
@@ -151,6 +152,24 @@ round trips, unit shape/comparison checks and allocation failure. It takes
 56.481 command seconds; emitted compiler SHA256 is `591886dc`, and all nine
 source hashes match before and after. Whole-tree Guardian passes 88/88. Earlier
 focused successes remain historical; final combined package gates are pending.
+
+The actual linked-header reducer then exposes an inherited native-cache defect
+on protected compiler `591886dc`: both builds succeed, but changing a C header
+from VALUE 7 to VALUE 8 with restored mtime leaves the guest returning 7. The
+exact LLVM and executable bytes are unchanged despite changed header content and
+ctime. Separate fresh-local and fresh-local/global controls return 8 before any
+production correction. In `8cd19b82d`, external links and unproved tools receive
+fresh invocation-owned native caches for the final compilation/link action.
+The captured Guard environment and closed runtime/numeric object keys remain
+unchanged. Two focused tests pass in 34.98 seconds, exercising actual debug and
+release header edits plus unproved-tool reuse, failure cleanup and caller
+environment preservation. Corrected Debug compiler SHA256 `d6e4220a` returns 8
+against the retained original stale caches; the original stale object remains
+unchanged and private link directories are removed. Eight source/input hashes
+are stable and all 88 Guardian checks pass. The curated native RED, controls,
+corrected replay and focused receipts are retained under
+`driver-native-cache-20261007/`. Installed Core remains the earlier `2b79fc47`;
+these are focused checks, not final combined qualification.
 
 Copied propagation fixtures are byte-identical to tests/lang, which was not edited.
 The focused CLI cases cover directory/orphan accounting, changed dependency versus

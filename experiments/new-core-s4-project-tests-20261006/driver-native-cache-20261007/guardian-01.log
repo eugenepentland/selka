@@ -1,0 +1,14 @@
+guardian: run-all: whole-tree run — --full was requested
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 29 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 10556 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 11 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 2/88 failed (function-size, test-no-conditional)
+guardian: failures grouped by check (2):
+  function-size (1 finding)
+    - src/core/driver.zig:101: fn linkNative has 7 runtime params (+0 comptime; runtime limit: 6)
+      fix: bundle related runtime parameters into a struct; comptime specialization inputs are excluded.
+  test-no-conditional (1 finding)
+    - src/core/driver_native_cache_test.zig:126: more than one top-level loop — a test may keep one; the loop at line 113 asserts nothing, so hoist that one into a named helper
+      fix: one top-level loop is fine; merge multiple loops into one table-driven loop, split a branch into two independent tests, or hoist the computation into a helper. A multi-loop finding names the loop to hoist — the assertion-free one when there is one, otherwise the extra loop itself.
+  caution: zig-out binaries predate this failed run (installs are gated on green) — rebuild green before running them

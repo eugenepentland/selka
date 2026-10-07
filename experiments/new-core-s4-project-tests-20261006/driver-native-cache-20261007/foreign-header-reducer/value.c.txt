@@ -1,0 +1,2 @@
+#include "value.h"
+int linked_value(void) { return VALUE; }

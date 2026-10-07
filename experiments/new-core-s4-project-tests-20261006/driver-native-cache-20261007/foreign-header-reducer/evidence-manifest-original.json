@@ -1,0 +1,160 @@
+{
+  "files": [
+    {
+      "path": "README.md",
+      "size": 1825,
+      "sha256": "25d66fff62a74ffd11ded7baf6b1a179d8af68202a80bdc3c8a57cfc18398147"
+    },
+    {
+      "path": "app.my.txt",
+      "size": 134,
+      "sha256": "ab1371bfcd442c116b7bdc05df19d5c7dd1b31fe630dcfec0d3ab1621253ad4b"
+    },
+    {
+      "path": "command-01.log",
+      "size": 87,
+      "sha256": "a8274fd0070904032f89c14e9ba8ec32cb676ed8b8650aab2f7621b5bd2bf7d9"
+    },
+    {
+      "path": "compiler-identity.json",
+      "size": 517,
+      "sha256": "7ef309e260e940a1796c852fb22802f143b218d73ae1284cfae00cd726472c50"
+    },
+    {
+      "path": "edited-restored-mtime-build.json",
+      "size": 1520,
+      "sha256": "166416e52138b34d735bca460bda6ec0969b193ebd41f92eadd7c543a905554b"
+    },
+    {
+      "path": "edited-restored-mtime-build.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "edited-restored-mtime-build.stdout",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "edited-restored-mtime-execve.trace",
+      "size": 4102,
+      "sha256": "6cd5ab68e4b4cdec773f2bb0cadd663a7b5d38cf2d842be818bd92dc3abd9f19"
+    },
+    {
+      "path": "edited-restored-mtime-native.json",
+      "size": 371,
+      "sha256": "1acacf2817b26450dbe5c8bf1db3560911e6d40a84097e3681320302a93ee783"
+    },
+    {
+      "path": "edited-restored-mtime-native.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "edited-restored-mtime-native.stdout",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "edited-restored-mtime-program.ll",
+      "size": 14110,
+      "sha256": "4a663a0a90362a8e1d3f581740beacca8ab60135dd0baa89039bafe47eabe320"
+    },
+    {
+      "path": "edited-restored-mtime.json",
+      "size": 5935,
+      "sha256": "2b0ca4a9941eddfa40c19ac91321aec40a4595e0cb74a11ccd99838f9966fdaf"
+    },
+    {
+      "path": "edited-value.h.txt",
+      "size": 16,
+      "sha256": "030b953cd8488024bb0d840555074cd3f538a72bb806adfed74fb65cd5df2873"
+    },
+    {
+      "path": "invocation.json",
+      "size": 1545,
+      "sha256": "3901b639c676ed2d2701db9ab921f50a9806b0b0d167825b25e608aafa87a0ae"
+    },
+    {
+      "path": "native-actions.json",
+      "size": 27544,
+      "sha256": "a3ceaae750720491be7e8bfd6b7ac256fdb59905c576b09ff8e844ffae178a96"
+    },
+    {
+      "path": "original-build.json",
+      "size": 1507,
+      "sha256": "17f8ee9ed15c9dd0e8bfd4716d7e5a6135fcaefc3a6d33cb74b491e90b18aaa0"
+    },
+    {
+      "path": "original-build.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "original-build.stdout",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "original-execve.trace",
+      "size": 439174,
+      "sha256": "ae86f9701c686dbdfb8371a5da9eedb8a6c4d4e2619630da324fae7dd49f8496"
+    },
+    {
+      "path": "original-native.json",
+      "size": 372,
+      "sha256": "8d7e50edfa27f81f21cbfc127ce4ba8736f827ebb30a2e6c08edd9cc82906aaa"
+    },
+    {
+      "path": "original-native.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "original-native.stdout",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "original-program.ll",
+      "size": 14110,
+      "sha256": "4a663a0a90362a8e1d3f581740beacca8ab60135dd0baa89039bafe47eabe320"
+    },
+    {
+      "path": "original.json",
+      "size": 5909,
+      "sha256": "c9b98efa901ff4a19f76d3acd3c5eabdb838a6022b104b52e9c57b524712d431"
+    },
+    {
+      "path": "protected-compiler-source-identity.json",
+      "size": 594,
+      "sha256": "9638ff5187e1c8b51178899636b3f475e17143c2342ba7b6392c351eb956f793"
+    },
+    {
+      "path": "reproduce.py",
+      "size": 4796,
+      "sha256": "3e0ff6e78bca15342b00dc321d3e96baeb3e995e860d6127f495003376e011f9"
+    },
+    {
+      "path": "retained-object-manifest.json",
+      "size": 2064,
+      "sha256": "b600c77881fb0eec0a8243b2a792283aa666c9e6929a9d7bf3ec7f4e0e23c688"
+    },
+    {
+      "path": "summary.json",
+      "size": 12428,
+      "sha256": "a3bf5540b1faf148eee81814a2bc059a577a00066b71a28be8427209c507b460"
+    },
+    {
+      "path": "value.c.txt",
+      "size": 60,
+      "sha256": "376e2c0f6d1e35d157bd82371aceb476ff7aa6c6b96837a625acda09c960d3b8"
+    },
+    {
+      "path": "value.h.txt",
+      "size": 16,
+      "sha256": "b26369e647fb784e8d539541d1f5a281610c63341f0685c9d9072ec4c81b4ad9"
+    }
+  ],
+  "total_bytes": 538736
+}
