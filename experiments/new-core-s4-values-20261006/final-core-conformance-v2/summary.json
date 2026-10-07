@@ -1,0 +1,39 @@
+{
+  "source_commit": "d4d8c4e5639c6f6470883eca97ba160a3b4de627",
+  "old_sha256": "29a8662e86f113341f5f71c9c4fce5686481b4aa8fea223be47788f027797dbe",
+  "core_shards": 64,
+  "results": [
+    {
+      "command": [
+        "scripts/build-slot.sh",
+        "gate",
+        "--",
+        "bash",
+        "-c",
+        "\"$@\"; result=$?; exit \"$result\"",
+        "--",
+        "scripts/build-slot.sh",
+        "build",
+        "--",
+        "python3",
+        "experiments/new-core-s3-20261006/wave-a/exclusive_core.py",
+        "--",
+        "/usr/bin/time",
+        "-f",
+        "%e",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/experiments/new-core-s4-values-20261006/final-core-conformance-v2/install-core.seconds",
+        "zig",
+        "build",
+        "core",
+        "--summary",
+        "all"
+      ],
+      "log": "experiments/new-core-s4-values-20261006/final-core-conformance-v2/install-core.log",
+      "status": 0,
+      "seconds": 0.02,
+      "wall_including_admission": 519.2072155680507
+    }
+  ],
+  "qualified": false
+}
