@@ -1,0 +1,14 @@
+src/core/tool_identity.zig:99:5: error: value of type 'tool_identity.Input' ignored
+    try addInput(request, &inputs, path);
+    ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/core/tool_identity.zig:99:5: note: all non-void values must be used
+src/core/tool_identity.zig:99:5: note: to discard the value, assign it to '_'
+referenced by:
+    unchanged: src/core/tool_identity.zig:75:34
+    test.tool memo is reusable and corruption is a content rehash: src/core/tool_identity.zig:327:41
+src/core/tool_identity.zig:344:91: error: no field named 'timestamp' in union 'Io.File.SetTimestamp'
+    try fixture.temporary.dir.setTimestamps(request.io, "zig", .{ .modify_timestamp = .{ .timestamp = info.mtime } });
+                                                                                          ^~~~~~~~~
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/File.zig:431:26: note: union declared here
+pub const SetTimestamp = union(enum) {
+                         ^~~~~

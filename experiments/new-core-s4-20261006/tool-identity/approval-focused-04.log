@@ -1,0 +1,6 @@
+src/core/tool_identity.zig:1007:11: error: local constant shadows declaration of 'library'
+    const library = try std.fs.path.join(request.arena, &.{ std.fs.path.dirname(path).?, "lib" });
+          ^~~~~~~
+src/core/tool_identity.zig:221:1: note: declared here
+fn library(request: Request, inputs: *std.ArrayList(Input), visited: *std.StringHashMapUnmanaged(void), path: []const u8) Error!void {
+^~

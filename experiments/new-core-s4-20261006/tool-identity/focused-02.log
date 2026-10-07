@@ -1,0 +1,13 @@
+1/4 tool_identity.test.tool identity resolves executable PATH and propagates allocation failure...OK
+2/4 tool_identity.test.tool memo is reusable and corruption is a content rehash...FAIL (TestUnexpectedResult)
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:614:14: 0x1250949 in expect (std.zig)
+    if (!ok) return error.TestUnexpectedResult;
+             ^
+/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/src/core/tool_identity.zig:325:5: 0x1301a67 in test.tool memo is reusable and corruption is a content rehash (tool_identity.zig)
+    try std.testing.expect(warm.memo_hit);
+    ^
+3/4 tool_identity.test.same-size executable edit with restored mtime invalidates tool identity...OK
+4/4 tool_identity.test.library edits additions removals and an override invalidate tool identity...OK
+3 passed; 0 skipped; 1 failed.
+error: the following test command failed with exit code 1:
+.mylang-cache/s4-m/tool-identity-zig/o/89da45f25e911df5937e3e91678b8737/test --seed=0x51210d1

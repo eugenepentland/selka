@@ -1,0 +1,8 @@
+{
+  "probe": "timeout_partial_output_and_descendant_cleanup",
+  "passed": true,
+  "status": 124,
+  "stdout": "partial child=2793011\n",
+  "stderr": "stderr partial\n",
+  "descendant_state": "reaped"
+}

@@ -1,0 +1,1 @@
+Attempted wrong evidence directory experiments/new-core-s4-project-tests-20261006/tool-identity; command exited 1 FileNotFoundError before writing a receipt. No source or native input changed. Corrected path is experiments/new-core-s4-20261006/tool-identity.

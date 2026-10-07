@@ -1,0 +1,4 @@
+1 execve("/core", ["/core"], []) = 0
+2 execve("/core", ["/core"], []) = 0
+3 execve("/core", ["/core"], []) = 0
+4 execve("/guest", ["/guest"], []) = 0

@@ -1,0 +1,12 @@
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: all 3 build slot(s) busy; waiting (60s so far)
+build-slot: all 3 build slot(s) busy; waiting (121s so far)
+build-slot: build slot 1 after 126s (all 3 build slot(s) busy)
+guardian: run-all: whole-tree run — --full was requested
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 29 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 10532 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 11 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed
+
+{"qualified": false, "status": "NOT_RUNNING", "reason": "Waiter already exited; inspect retained original log."}

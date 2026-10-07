@@ -1,0 +1,10 @@
+1/9 tool_ticket.test.tool tickets require same compiler provenance and ignore missing internal hints...OK
+2/9 tool_ticket.test.tool tickets reject damaged foreign and uncacheable identities...OK
+3/9 tool_ticket.test.valid tool tickets bind the executable generation and native CPU...OK
+4/9 tool_identity.test.tool identity resolves executable PATH and propagates allocation failure...OK
+5/9 tool_identity.test.tool memo is reusable and corruption is a content rehash...OK
+6/9 tool_identity.test.same-size executable edit with restored mtime invalidates tool identity...OK
+7/9 tool_identity.test.library edits additions removals and an override invalidate tool identity...OK
+8/9 tool_identity.test.PATH selection and linked library content are command dependencies...OK
+9/9 tool_identity.test.damaged inventory hints rediscover libraries and invalid library roots refuse reuse...OK
+All 9 tests passed.

@@ -1,0 +1,123 @@
+{"label": "current-cold", "argv": ["/tmp/s4-tool-identity-probe-9fetav58/probe-08", "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig", "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/identity-project-probe-05"], "seconds": 0.9153280998580158, "exit": 0, "stdout": "{\"inputs\":20905,\"memo_hit\":false,\"cacheable\":true,\"digest\":\"a45e6c401630f77b515ee8425eb3f60b465d2283b1b22e134ef6760e2eefbced\",\"generation\":\"a6f9a86ddd149eb0da305ebedf0820335695e4eda9bee44dd581c8cdadec6489\"}\n", "stderr": ""}
+{"label": "candidate-plus-final-1", "argv": ["/tmp/s4-tool-identity-probe-9fetav58/probe-08", "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig", "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/identity-project-probe-05", "candidate"], "seconds": 0.10090019786730409, "exit": 0, "stdout": "{\"inputs\":20905,\"memo_hit\":true,\"cacheable\":true,\"digest\":\"a45e6c401630f77b515ee8425eb3f60b465d2283b1b22e134ef6760e2eefbced\",\"generation\":\"a6f9a86ddd149eb0da305ebedf0820335695e4eda9bee44dd581c8cdadec6489\"}\n", "stderr": ""}
+{"label": "parent-plus-final-1", "argv": ["/tmp/s4-tool-identity-probe-9fetav58/probe-08", "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig", "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/identity-project-probe-05", "parent"], "seconds": 0.1441572280600667, "exit": 0, "stdout": "{\"inputs\":20905,\"memo_hit\":true,\"cacheable\":true,\"digest\":\"a45e6c401630f77b515ee8425eb3f60b465d2283b1b22e134ef6760e2eefbced\",\"generation\":\"a6f9a86ddd149eb0da305ebedf0820335695e4eda9bee44dd581c8cdadec6489\"}\n", "stderr": ""}
+{"label": "parent-plus-final-2", "argv": ["/tmp/s4-tool-identity-probe-9fetav58/probe-08", "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig", "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/identity-project-probe-05", "parent"], "seconds": 0.12195702595636249, "exit": 0, "stdout": "{\"inputs\":20905,\"memo_hit\":true,\"cacheable\":true,\"digest\":\"a45e6c401630f77b515ee8425eb3f60b465d2283b1b22e134ef6760e2eefbced\",\"generation\":\"a6f9a86ddd149eb0da305ebedf0820335695e4eda9bee44dd581c8cdadec6489\"}\n", "stderr": ""}
+{"label": "candidate-plus-final-2", "argv": ["/tmp/s4-tool-identity-probe-9fetav58/probe-08", "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig", "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/identity-project-probe-05", "candidate"], "seconds": 0.06467027985490859, "exit": 0, "stdout": "{\"inputs\":20905,\"memo_hit\":true,\"cacheable\":true,\"digest\":\"a45e6c401630f77b515ee8425eb3f60b465d2283b1b22e134ef6760e2eefbced\",\"generation\":\"a6f9a86ddd149eb0da305ebedf0820335695e4eda9bee44dd581c8cdadec6489\"}\n", "stderr": ""}
+{"label": "candidate-plus-final-3", "argv": ["/tmp/s4-tool-identity-probe-9fetav58/probe-08", "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig", "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/identity-project-probe-05", "candidate"], "seconds": 0.06434448109939694, "exit": 0, "stdout": "{\"inputs\":20905,\"memo_hit\":true,\"cacheable\":true,\"digest\":\"a45e6c401630f77b515ee8425eb3f60b465d2283b1b22e134ef6760e2eefbced\",\"generation\":\"a6f9a86ddd149eb0da305ebedf0820335695e4eda9bee44dd581c8cdadec6489\"}\n", "stderr": ""}
+{"label": "parent-plus-final-3", "argv": ["/tmp/s4-tool-identity-probe-9fetav58/probe-08", "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig", "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/identity-project-probe-05", "parent"], "seconds": 0.08459467813372612, "exit": 0, "stdout": "{\"inputs\":20905,\"memo_hit\":true,\"cacheable\":true,\"digest\":\"a45e6c401630f77b515ee8425eb3f60b465d2283b1b22e134ef6760e2eefbced\",\"generation\":\"a6f9a86ddd149eb0da305ebedf0820335695e4eda9bee44dd581c8cdadec6489\"}\n", "stderr": ""}
+{"label": "unknown-static-delegate", "argv": ["/tmp/s4-tool-identity-probe-9fetav58/probe-08", "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/static-delegate-red-01/zig", "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/identity-project-probe-05"], "seconds": 0.06197519996203482, "exit": 0, "stdout": "{\"inputs\":9,\"memo_hit\":false,\"cacheable\":false,\"digest\":\"1764126c87738a40dac42871ccf770c3a1ee7f70ffab2de379e7985a8e31f781\",\"generation\":\"5d19f60e49d811d1fa4ffe6ea03b616eeed5b83c2d8f6e7c27f6ccd57f0a5b3a\"}\n", "stderr": ""}
+{
+  "mode": "ReleaseFast",
+  "cpu": 10,
+  "probe_sha256": "63159afb3996ba6db58a2a0d2a774b753f454d6c86eb55351341872fc3d5e8e4",
+  "zig_sha256": "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f",
+  "helper_sha256": "cafbb2bd8493045084f4bc26ece2523412dc6b9633f3393b6c49115235482a98",
+  "platform_sha256": "5efaeb5e342bcaf704e5b0c7334b21a359716be94989851f0106848f7462cda2",
+  "isolated_build_slots": false,
+  "runs": [
+    {
+      "label": "current-cold",
+      "argv": [
+        "/tmp/s4-tool-identity-probe-9fetav58/probe-08",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/identity-project-probe-05"
+      ],
+      "seconds": 0.9153280998580158,
+      "exit": 0,
+      "stdout": "{\"inputs\":20905,\"memo_hit\":false,\"cacheable\":true,\"digest\":\"a45e6c401630f77b515ee8425eb3f60b465d2283b1b22e134ef6760e2eefbced\",\"generation\":\"a6f9a86ddd149eb0da305ebedf0820335695e4eda9bee44dd581c8cdadec6489\"}\n",
+      "stderr": ""
+    },
+    {
+      "label": "candidate-plus-final-1",
+      "argv": [
+        "/tmp/s4-tool-identity-probe-9fetav58/probe-08",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/identity-project-probe-05",
+        "candidate"
+      ],
+      "seconds": 0.10090019786730409,
+      "exit": 0,
+      "stdout": "{\"inputs\":20905,\"memo_hit\":true,\"cacheable\":true,\"digest\":\"a45e6c401630f77b515ee8425eb3f60b465d2283b1b22e134ef6760e2eefbced\",\"generation\":\"a6f9a86ddd149eb0da305ebedf0820335695e4eda9bee44dd581c8cdadec6489\"}\n",
+      "stderr": ""
+    },
+    {
+      "label": "parent-plus-final-1",
+      "argv": [
+        "/tmp/s4-tool-identity-probe-9fetav58/probe-08",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/identity-project-probe-05",
+        "parent"
+      ],
+      "seconds": 0.1441572280600667,
+      "exit": 0,
+      "stdout": "{\"inputs\":20905,\"memo_hit\":true,\"cacheable\":true,\"digest\":\"a45e6c401630f77b515ee8425eb3f60b465d2283b1b22e134ef6760e2eefbced\",\"generation\":\"a6f9a86ddd149eb0da305ebedf0820335695e4eda9bee44dd581c8cdadec6489\"}\n",
+      "stderr": ""
+    },
+    {
+      "label": "parent-plus-final-2",
+      "argv": [
+        "/tmp/s4-tool-identity-probe-9fetav58/probe-08",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/identity-project-probe-05",
+        "parent"
+      ],
+      "seconds": 0.12195702595636249,
+      "exit": 0,
+      "stdout": "{\"inputs\":20905,\"memo_hit\":true,\"cacheable\":true,\"digest\":\"a45e6c401630f77b515ee8425eb3f60b465d2283b1b22e134ef6760e2eefbced\",\"generation\":\"a6f9a86ddd149eb0da305ebedf0820335695e4eda9bee44dd581c8cdadec6489\"}\n",
+      "stderr": ""
+    },
+    {
+      "label": "candidate-plus-final-2",
+      "argv": [
+        "/tmp/s4-tool-identity-probe-9fetav58/probe-08",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/identity-project-probe-05",
+        "candidate"
+      ],
+      "seconds": 0.06467027985490859,
+      "exit": 0,
+      "stdout": "{\"inputs\":20905,\"memo_hit\":true,\"cacheable\":true,\"digest\":\"a45e6c401630f77b515ee8425eb3f60b465d2283b1b22e134ef6760e2eefbced\",\"generation\":\"a6f9a86ddd149eb0da305ebedf0820335695e4eda9bee44dd581c8cdadec6489\"}\n",
+      "stderr": ""
+    },
+    {
+      "label": "candidate-plus-final-3",
+      "argv": [
+        "/tmp/s4-tool-identity-probe-9fetav58/probe-08",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/identity-project-probe-05",
+        "candidate"
+      ],
+      "seconds": 0.06434448109939694,
+      "exit": 0,
+      "stdout": "{\"inputs\":20905,\"memo_hit\":true,\"cacheable\":true,\"digest\":\"a45e6c401630f77b515ee8425eb3f60b465d2283b1b22e134ef6760e2eefbced\",\"generation\":\"a6f9a86ddd149eb0da305ebedf0820335695e4eda9bee44dd581c8cdadec6489\"}\n",
+      "stderr": ""
+    },
+    {
+      "label": "parent-plus-final-3",
+      "argv": [
+        "/tmp/s4-tool-identity-probe-9fetav58/probe-08",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/identity-project-probe-05",
+        "parent"
+      ],
+      "seconds": 0.08459467813372612,
+      "exit": 0,
+      "stdout": "{\"inputs\":20905,\"memo_hit\":true,\"cacheable\":true,\"digest\":\"a45e6c401630f77b515ee8425eb3f60b465d2283b1b22e134ef6760e2eefbced\",\"generation\":\"a6f9a86ddd149eb0da305ebedf0820335695e4eda9bee44dd581c8cdadec6489\"}\n",
+      "stderr": ""
+    },
+    {
+      "label": "unknown-static-delegate",
+      "argv": [
+        "/tmp/s4-tool-identity-probe-9fetav58/probe-08",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/static-delegate-red-01/zig",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/identity-project-probe-05"
+      ],
+      "seconds": 0.06197519996203482,
+      "exit": 0,
+      "stdout": "{\"inputs\":9,\"memo_hit\":false,\"cacheable\":false,\"digest\":\"1764126c87738a40dac42871ccf770c3a1ee7f70ffab2de379e7985a8e31f781\",\"generation\":\"5d19f60e49d811d1fa4ffe6ea03b616eeed5b83c2d8f6e7c27f6ccd57f0a5b3a\"}\n",
+      "stderr": ""
+    }
+  ],
+  "median_candidate_seconds": 0.06467027985490859,
+  "median_parent_seconds": 0.12195702595636249
+}

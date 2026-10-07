@@ -1,0 +1,19 @@
+src/core/tool_identity.zig:298:14: error: incompatible types: 'u16' and 'elf.ET'
+    if (kind != std.elf.ET.EXEC and kind != std.elf.ET.DYN) return false;
+        ~~~~~^~~~~~~~~~~~~~~~~~
+src/core/tool_identity.zig:298:9: note: type 'u16' here
+    if (kind != std.elf.ET.EXEC and kind != std.elf.ET.DYN) return false;
+        ^~~~
+src/core/tool_identity.zig:298:27: note: type 'elf.ET' here
+    if (kind != std.elf.ET.EXEC and kind != std.elf.ET.DYN) return false;
+                ~~~~~~~~~~^~~~~
+referenced by:
+    capture: src/core/tool_identity.zig:67:37
+    test.tool memo is reusable and corruption is a content rehash: src/core/tool_identity.zig:362:29
+    2 reference(s) hidden; use '-freference-trace=4' to see all references
+src/core/tool_ticket.zig:71:25: error: root source file struct 'fmt' has no member named 'bufPrintZ'
+    const name = std.fmt.bufPrintZ(&path, "/proc/{d}/exe", .{parent}) catch return false;
+                 ~~~~~~~^~~~~~~~~~
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/fmt.zig:1:1: note: struct declared here
+//! String formatting and parsing.
+^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
