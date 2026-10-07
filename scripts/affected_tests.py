@@ -50,9 +50,9 @@ LOG_DIR = ROOT / ".mylang-cache" / "affected-tests"
 UNIT_ROOT = "src/root_test.zig"
 CLI_ROOT = "test/integration.zig"
 LANG_CACHE = ".mylang-cache/lang-tests"
-# `test-lang` runs tests/lang twice: under the default RC runtime and under the
-# tracing collector with --gc-stress (RC-DEFAULT-1).
-LANG_GC_CACHE = ".mylang-cache/lang-tests-gc"
+# `test-lang` runs tests/lang twice: at debug, and at release with its facts
+# verified and the runtime's leak check on (MYL_CORE_LEAKCHECK=1), as the gate does.
+LANG_RELEASE_CACHE = ".mylang-cache/lang-tests-release"
 GUEST_CACHE = ".mylang-cache/guest-tests"
 LLVM_CACHE = ".mylang-cache/affected-llvm"
 GATE = (
@@ -89,7 +89,6 @@ HOST_STEPS = (
     ("src/native_test_cli", "test-native-tests"),
     ("test/golden_parity.zig", "test-golden"),
     ("tests/goldens/", "test-golden"),
-    ("tests/native_boundary_matrix.py", "test-native-boundary"),
     ("tests/idiom_probes.py", "test-idioms"),
     ("tests/fixtures/idioms/", "test-idioms"),
     ("tests/parser_hints.py", "test-agent-usefulness"),
@@ -108,8 +107,6 @@ HOST_STEPS = (
     ("tests/input_manifest.py", "test-inputs-coverage"),
     ("tests/native_heap_test.c", "test-native-heap"),
     ("tests/native_arena_chunks_test.c", "test-native-heap"),
-    ("tests/invoke/", "test-native-boundary"),
-    ("tests/native/", "test-native-boundary"),
     ("experiments/llvm-backend/", "test-llvm-adapter"),
     ("vendor/qbe/", "test-qbe"),
 )
@@ -507,8 +504,8 @@ def plan(sel: Selection, zig: str, shards: int = 8) -> tuple[list[Command], list
             guests.append(Command("mylang test " + entry, [compiler, "test", entry, "--cache-dir", GUEST_CACHE], env))
             continue
         guests.append(Command("mylang test " + entry, [compiler, "test", entry, "--cache-dir", LANG_CACHE], env))
-        stressed = [compiler, "test", entry, "--gc-runtime", "--cache-dir", LANG_GC_CACHE, "--gc-stress"]
-        guests.append(Command("mylang test {} (GC stress)".format(entry), stressed, env))
+        release = [compiler, "test", entry, "--release", "--verify-facts", "--cache-dir", LANG_RELEASE_CACHE]
+        guests.append(Command("mylang test {} (release, leak check)".format(entry), release, dict(env, MYL_CORE_LEAKCHECK="1")))
     for entry in sorted(sel.llvm):
         guests.append(Command("mylang test {} (LLVM)".format(entry), [compiler, "test", entry, "--release", "--cache-dir", LLVM_CACHE], env))
     for page in sorted(sel.doctest):
