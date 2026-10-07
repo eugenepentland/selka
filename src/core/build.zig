@@ -722,10 +722,10 @@ const FnBuilder = struct {
 
     /// `assert condition[, message]` (and the `@requires`, `@ensures` and `@invariant` clauses the
     /// checker places as assertions): a false condition traps with the clause's code and message at
-    /// the condition's position, as the old core does. A message computed from values is refused.
+    /// the condition's position, as the old core does. A message computed from values is evaluated
+    /// only on failure and written to stderr on its own line before a trap without a message.
     fn assertStatement(self: *FnBuilder, check: typed.Assertion) Error!void {
         const condition_span: u32 = @intCast(self.nodeOf(check.condition).span.start);
-        if (check.message_value != null) return self.mb.refuse("assertion with a message value", condition_span);
         // A condition known at build time (the checker's `assert false` after a narrowing) leaves no
         // branch: a true one is nothing, a false one ends the path.
         const literal: ?bool = switch (self.nodeOf(check.condition).data) {
@@ -749,8 +749,18 @@ const FnBuilder = struct {
             try self.seal(next);
         }
         self.current = failed;
+        if (check.message_value) |node| {
+            // The old core prints the rendered message and a newline to stderr, then traps with no message.
+            const text = try self.expression(node);
+            if (self.current == null) {
+                self.current = passed;
+                return;
+            }
+            const operands = [_]ir.Ref{ try self.constant(.cap, 2), try self.textOf(text, self.nodeOf(node).ty, condition_span) };
+            _ = try self.emit(.{ .op = .print, .ty = .void, .data = try self.extraSlice(&operands), .span = condition_span });
+        }
         const message = self.mb.module.strings.items.len;
-        try self.mb.module.strings.append(self.allocator(), check.message);
+        try self.mb.module.strings.append(self.allocator(), if (check.message_value != null) "" else check.message);
         const data = flags.assertion_trap | (@as(u64, @backingInt(check.kind)) << 32) | message;
         _ = try self.emit(.{ .op = .@"unreachable", .ty = .void, .data = data, .span = condition_span });
         self.current = passed;

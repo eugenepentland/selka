@@ -1,0 +1,32 @@
+module v_assert_message
+
+
+def describe(n: int) -> str:
+    return "bad \"n\"=" + str(n)
+
+
+def check(n: int) -> int:
+    assert n < 3, describe(n)
+    return n
+
+
+def failure(n: int) -> Result[int, str]:
+    if n > 2:
+        return Err("too big: " + str(n))
+    return Ok(n)
+
+
+def value_of(n: int) -> int:
+    match failure(n):
+        case Ok(value):
+            return value
+        case Err(e):
+            assert False, e
+    return 0
+
+
+def main(out: Stream) -> int:
+    out.print(check(1))
+    out.print(value_of(2))
+    out.print(check(7))
+    return 0
