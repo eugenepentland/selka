@@ -258,7 +258,6 @@ const ModuleBuilder = struct {
         if (record.shape.array) |array| {
             if (self.viewType(array.element)) return self.refuse("fixed array storage of live dictionary views", span);
             const elem = try self.mapType(array.element, span);
-            if (elem == .cap) return self.refuse("fixed array element type", span);
             const n = std.math.cast(u32, array.length) orelse return self.refuse("fixed array length", span);
             return self.module.intern(self.allocator, .{ .array = .{ .elem = if (elem == .void) .bool else elem, .n = n } });
         }

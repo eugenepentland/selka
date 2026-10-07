@@ -251,14 +251,38 @@ const capability_field =
     \\
 ;
 
+const rendered_capability =
+    \\record Grid:
+    \\    port: Stream
+    \\    label: str
+    \\
+    \\
+    \\def main(out: Stream) -> int:
+    \\    out.print(Grid(port=out, label="a"))
+    \\    return 0
+    \\
+;
+
 // spec: NEW-CORE-IR-2
-test "a record holding an unsupported type is refused with its reason, every time it is used" {
+test "a construct the core does not support is refused with its reason and source position" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     var refusal: build.Refusal = .{};
-    // A type that failed to map stays unmapped: the second use is refused for the same reason.
-    try std.testing.expectError(error.Unsupported, support.buildSource(arena.allocator(), capability_array_field, &refusal));
-    try std.testing.expectEqualStrings("fixed array element type", refusal.reason);
+    // Printing a record that holds a capability token: the old core failed at run time.
+    try std.testing.expectError(error.Unsupported, support.buildSource(arena.allocator(), rendered_capability, &refusal));
+    try std.testing.expectEqualStrings("rendering a non-value source type", refusal.reason);
+    try std.testing.expectEqual(@as(u32, @intCast(std.mem.indexOf(u8, rendered_capability, "out.print").?)), refusal.span);
+}
+
+// spec-case: NEW-CORE-S5-CAP-COLLECTIONS-1
+test "a record holding a fixed array of capability tokens builds: the array is a value of uncounted tokens" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    var refusal: build.Refusal = .{};
+    const text = try support.irText(arena.allocator(), capability_array_field);
+    try std.testing.expect(contains(text, "record_make record{[2]cap, str}"));
+    _ = try support.buildSource(arena.allocator(), capability_array_field, &refusal);
+    try std.testing.expectEqualStrings("", refusal.reason);
 }
 
 // spec: NEW-CORE-S4-CAP-FIELD-1

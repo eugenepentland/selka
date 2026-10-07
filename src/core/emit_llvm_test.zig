@@ -186,3 +186,25 @@ test "a verify build asserts each length bound and gives LLVM no unsigned promis
     try std.testing.expect(std.mem.indexOf(u8, search, "icmp uge i64") != null);
     try std.testing.expect(std.mem.indexOf(u8, search, "@llvm.sadd.with.overflow.i64") != null);
 }
+
+const narrow_extern =
+    \\extern def pack(host: Host, a: i8, b: u16, c: bool, d: i32) -> i64 effects(host)
+    \\
+    \\
+    \\def main(args: list[str], host: Host, out: Stream) -> int:
+    \\    flag = len(args) > 1
+    \\    out.print(pack(host, i8(len(args)), 7u16, flag, -1i32))
+    \\    return 0
+    \\
+;
+
+// spec: NEW-CORE-S5-EXTERN-ABI-1
+test "a source extern's i8, i16, u8, u16 and bool parameters carry their SysV extension; an i32 passes as it is" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const text = try support.llvmText(arena.allocator(), narrow_extern);
+    try std.testing.expect(std.mem.indexOf(u8, text, "declare i64 @pack(i8 signext, i16 zeroext, i1 zeroext, i32) nounwind\n") != null);
+    try std.testing.expect(std.mem.indexOf(u8, text, "call i64 @pack(i8 signext %") != null);
+    try std.testing.expect(std.mem.indexOf(u8, text, ", i16 zeroext 7, i1 zeroext %") != null);
+    try std.testing.expect(std.mem.indexOf(u8, text, ", i32 -1)") != null);
+}

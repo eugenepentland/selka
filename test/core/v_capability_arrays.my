@@ -1,0 +1,80 @@
+# Fixed arrays of capabilities (NEW-CORE-S5-CAP-COLLECTIONS-1): `[N]Stream`, `[N]Host` and
+# `[N]Filesystem` as locals, record fields, union payloads, `mut` parameters and results,
+# indexed, iterated, copied and rewritten. Stdout and stderr match the old core's.
+import filesystem
+
+
+record Grid:
+    ports: [2]Stream
+    label: str
+
+
+union Route:
+    one: Stream,
+    many: [2]Stream
+
+
+def shout(g: Grid, i: int) -> int effects(output):
+    g.ports[i].print(g.label, i)
+    return i
+
+
+def swap(ports: [2]Stream) -> [2]Stream:
+    return [ports[1], ports[0]]
+
+
+def fill(ports: mut [2]Stream, s: Stream) -> None:
+    ports[1] = s
+
+
+def send(r: Route, text: str) -> None effects(output):
+    match r:
+        case Route.one(s):
+            s.print(text)
+        case Route.many(ss):
+            for s in ss:
+                s.print(text)
+
+
+def read(fs: Filesystem, out: Stream) -> None:
+    match fs.read_text("x.txt"):
+        case Ok(t):
+            out.print(t)
+        case Err(e):
+            out.print(e)
+
+
+def files(out: Stream) -> int:
+    fss: [2]Filesystem = [filesystem.memory(), filesystem.memory()]
+    _ = fss[0].write_text("x.txt", "in a")
+    _ = fss[1].write_text("x.txt", "in b")
+    for fs in fss:
+        read(fs, out)
+    fss[1] = fss[0]
+    read(fss[1], out)
+    return len(fss)
+
+
+def main(host: Host, out: Stream, err: Stream) -> int:
+    ports: [2]Stream = [out, err]
+    ports[0].print("zero")
+    ports[1].print("one")
+    g = Grid(ports=ports, label="grid")
+    total = shout(g, 0) + shout(g, 1)
+    s = swap(g.ports)
+    s[0].print("swapped")
+    s[1] = s[0]
+    s[1].print("rewritten")
+    g.ports[0].print("the record keeps its copy")
+    fill(mut s, out)
+    for i, p in enumerate(s):
+        p.print("filled", i)
+    grid: [2][2]Stream = [[out, err], [err, out]]
+    grid[1][1].print("nested")
+    grid[0] = s
+    grid[0][0].print("row replaced")
+    send(Route.one(out), "one route")
+    send(Route.many([out, err]), "many routes")
+    hosts: [2]Host = [host, host]
+    _ = hosts[1]
+    return total + files(out) + len(grid)
