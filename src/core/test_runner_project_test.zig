@@ -8,6 +8,7 @@ const project_entry = @import("project_entry.zig");
 const v = @import("property_value.zig");
 const Outcome = struct { status: u8, report: std.json.Value, stderr: []const u8 };
 const command_cache = "--cache-dir";
+const InvalidCase = struct { name: []const u8, body: []const u8, settings: []const u8 };
 const diagnostic = std.debug.print;
 const Context = struct {
     arena: std.mem.Allocator,
@@ -376,4 +377,39 @@ test "reserved embedded module names cannot account for an untested disk source"
     const result = try context.run(".", &.{});
     try expectStatus(context, result, 1);
     try std.testing.expect(v.number(v.get(result.report, "failed")) != 0);
+}
+
+// spec-case: NEW-CORE-S4-TEST-4
+// spec-case: NEW-CORE-S4-TEST-3
+test "runSelected and expectedResult malformed typed cases fail individually and never become cached successes" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const a = arena.allocator();
+    const context: Context = .{ .arena = a, .root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", a) };
+    const fixtures = [_]InvalidCase{
+        .{ .name = "answer", .body = "public def test_answer() -> bool:\n    return True\n", .settings = "{\"arguments\":{\"unused\":\"x\"}}" },
+        .{ .name = "answer", .body = "public def test_answer() -> bool:\n    return True\n", .settings = "{\"expected\":\"true\"}" },
+        .{ .name = "zero", .body = "public def test_zero() -> int:\n    return 0\n", .settings = "{\"expected\":\"18446744073709551616\"}" },
+        .{ .name = "zero", .body = "public def test_zero() -> int:\n    return 0\n", .settings = "{\"expected\":\"00\"}" },
+        .{ .name = "text", .body = "public def test_text() -> str:\n    return \"\"\n", .settings = "{\"expected\":7}" },
+        .{ .name = "list", .body = "public def test_list() -> list[int]:\n    return []\n", .settings = "{\"expected\":null}" },
+        .{ .name = "dict", .body = "public def test_dict() -> dict[int, int]:\n    return {1: 2}\n", .settings = "{\"expected\":[[\"1\"]]}" },
+        .{ .name = "argument", .body = "public def test_argument(x: u8) -> bool:\n    return x == 0\n", .settings = "{\"arguments\":{\"x\":\"256\"}}" },
+    };
+    for (fixtures) |fixture| {
+        const source = try std.fmt.allocPrint(a, "module app\n\n{s}\npublic def test_z_survivor() -> bool:\n    return True\n", .{fixture.body});
+        const name = try std.fmt.allocPrint(a, "app::test_{s}", .{fixture.name});
+        try context.write("app.my", source);
+        try context.write("app.cases.json", try std.fmt.allocPrint(a, "{{\"{s}\":{s}}}", .{ name, fixture.settings }));
+        const cold = try context.run("app.my", &.{});
+        try expectStatus(context, cold, 1);
+        try verdict(cold.report, name, "failed");
+        try verdict(cold.report, "app::test_z_survivor", "passed");
+        const warm = try context.run("app.my", &.{});
+        try expectStatus(context, warm, 1);
+        try verdict(warm.report, name, "failed");
+        try verdict(warm.report, "app::test_z_survivor", "cached");
+    }
 }

@@ -25,6 +25,7 @@ comptime {
     _ = @import("tool_ticket.zig");
     _ = @import("runner_property_test.zig");
     _ = @import("property_codec.zig");
+    _ = @import("property_validate.zig");
     _ = @import("property_types.zig");
     _ = @import("property_generate.zig");
     _ = @import("property_shrink.zig");

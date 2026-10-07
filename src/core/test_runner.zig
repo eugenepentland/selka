@@ -611,7 +611,10 @@ fn runSelected(resources: ExecutionResources, options: Options, program: typed.P
         const verdict = try bound.finish(&search, answers[0]);
         return .{ .name = case.name, .status = if (verdict.passed) .passed else .failed, .reason = verdict.reason, .property = verdict.evidence };
     }
-    const words = if (fixed) executor.encode(function, arguments) catch return .{ .name = case.name, .status = .failed, .reason = "invalid cases-file arguments" } else &.{};
+    const words = if (fixed) executor.encode(function, arguments) catch |err| {
+        if (err == error.OutOfMemory) return error.OutOfMemory;
+        return .{ .name = case.name, .status = .failed, .reason = "invalid cases-file arguments" };
+    } else &.{};
     const answered = try property_execute.executeBatches(context, &.{.{ .executor = &executor, .function = function, .inputs = &.{words} }}, .{ .timeout_ms = options.controls.timeout_ms }, 1);
     if (answered[0].outcomes.len != 1) return .{ .name = case.name, .status = .failed, .reason = if (answered[0].timed_out) try std.fmt.allocPrint(a, "timed out after {d} ms", .{options.controls.timeout_ms}) else answered[0].ending };
     const outcome = answered[0].outcomes[0];
@@ -631,11 +634,16 @@ fn expectedResult(a: std.mem.Allocator, program: typed.Program, case: discover.C
     const schema = try property_types.Schema.init(a, try property_schema.definitions(a, program));
     const function = program.functions[@backingInt(case.function)];
     const name = typed.typeName(function.signature.return_type, program.records);
-    var wanted: @import("property_codec.zig").Codec = .{ .allocator = a, .schema = schema };
-    wanted.encode(name, expected) catch return false;
-    var observed: @import("property_codec.zig").Codec = .{ .allocator = a, .schema = schema };
-    observed.encode(name, actual) catch return false;
-    return std.mem.eql(u64, wanted.words.items, observed.words.items);
+    const validation = @import("property_validate.zig");
+    validation.validate(schema, name, expected, 0) catch |err| {
+        if (err == error.OutOfMemory) return error.OutOfMemory;
+        return false;
+    };
+    validation.validate(schema, name, actual, 0) catch |err| {
+        if (err == error.OutOfMemory) return error.OutOfMemory;
+        return false;
+    };
+    return validation.equivalent(expected, actual);
 }
 fn truth(value: std.json.Value) bool {
     if (value == .bool) return value.bool;

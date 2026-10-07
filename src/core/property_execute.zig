@@ -31,10 +31,17 @@ pub const Executor = struct {
     /// Encode only data parameters, in source declaration order.
     pub fn encode(self: *const Executor, function: Value, arguments: Value) Error![]const u64 {
         var encoder: codec.Codec = .{ .allocator = self.context.arena, .schema = try types.Schema.init(self.context.arena, self.types) };
-        for (v.array(v.get(function, "parameters"))) |parameter| {
+        const parameters = v.array(v.get(function, "parameters"));
+        var count: usize = 0;
+        for (parameters) |parameter| if (!injected(v.text(v.get(parameter, "type")))) {
+            count += 1;
+        };
+        if (arguments != .object or arguments.object.count() != count) return error.InvalidTestValue;
+        for (parameters) |parameter| {
             const name = v.text(v.get(parameter, "type"));
             if (injected(name)) continue;
-            try encoder.encode(name, v.get(arguments, v.text(v.get(parameter, "name"))));
+            const input = arguments.object.get(v.text(v.get(parameter, "name"))) orelse return error.InvalidTestValue;
+            try encoder.encode(name, input);
         }
         return encoder.words.items;
     }
