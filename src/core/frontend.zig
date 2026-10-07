@@ -174,11 +174,24 @@ pub const Session = struct {
     /// Load `entry` (a module name: the file stem) and check it. On a source error
     /// the rendered diagnostics are appended to `report` and `SourceError` returns.
     pub fn check(self: *Session, allocator: std.mem.Allocator, entry: []const u8, report: *std.ArrayList(u8)) Error!Checked {
+        try self.declare(allocator, entry, report);
+        return self.checkDeclared(allocator, report);
+    }
+
+    /// Load `entry`'s module graph and check its declarations alone: every module
+    /// parses and its exported interface resolves, no body is checked
+    /// (`interfaceIndex` is then valid). On a source error the rendered
+    /// diagnostics are appended to `report` and `SourceError` returns.
+    pub fn declare(self: *Session, allocator: std.mem.Allocator, entry: []const u8, report: *std.ArrayList(u8)) Error!void {
         if (self.entry_suffix.len != 0) self.entry_file = language.project.modulePath(allocator, entry) catch |err| return self.loadFailure(allocator, err, report);
         if (self.graph.profile) |profile| profile.begin("load", false);
         self.project.load(self.provider(), entry, self.graph.settings.options) catch |err| return self.loadFailure(allocator, err, report);
         if (self.graph.profile) |profile| profile.end();
         self.graph.index = language.interfaces.buildWithCacheTimed(&self.project, null, self.syntaxCache(), self.graph.profile) catch |err| return self.loadFailure(allocator, err, report);
+    }
+
+    /// Check the bodies of the graph `declare` loaded; diagnostics as `check`.
+    pub fn checkDeclared(self: *Session, allocator: std.mem.Allocator, report: *std.ArrayList(u8)) Error!Checked {
         if (self.graph.profile) |profile| profile.begin("merge", false);
         self.graph.compilation = language.project_compile.Compilation.init(&self.graph.index) catch |err| return self.loadFailure(allocator, err, report);
         if (self.graph.profile) |profile| profile.end();

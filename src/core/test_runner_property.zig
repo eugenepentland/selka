@@ -105,7 +105,7 @@ pub const Property = struct {
             try parameters.append(a, .{ .name = name, .type = type_name });
         }
         const result = v.text(v.get(function, "result"));
-        if (!types.verdict(schema, result)) return .{ .invalid = try std.fmt.allocPrint(a, "a property test returns bool or Result[bool, E], not {s}", .{result}) };
+        if (!types.verdict(schema, result)) return .{ .invalid = try std.fmt.allocPrint(a, non_bool_result, .{result}) };
         return .{ .ready = .{ .context = context, .executor = executor, .function = function, .limits = limits, .settings = settings, .schema = schema, .parameters = parameters.items } };
     }
     /// The first batch: the inputs of every requested run, which the command
@@ -492,7 +492,12 @@ fn injected(type_name: []const u8) bool {
     }
     return false;
 }
-fn refusedText(allocator: std.mem.Allocator, parameter: []const u8, type_name: []const u8, found: types.Refusal) Error![]const u8 {
+/// The refusal of a property test whose result is neither `bool` nor `Result[bool, E]`.
+pub const non_bool_result = "a property test returns bool or Result[bool, E], not {s}";
+
+/// Why property test parameter `parameter: type_name` cannot be generated, naming the
+/// type inside it that `found` refuses when that is not the parameter's own type.
+pub fn refusedText(allocator: std.mem.Allocator, parameter: []const u8, type_name: []const u8, found: types.Refusal) Error![]const u8 {
     const spelled = if (std.mem.eql(u8, type_name, "host_cap")) "Host" else type_name;
     if (std.mem.eql(u8, found.type, type_name)) {
         return std.fmt.allocPrint(allocator, "property test parameter `{s}: {s}` cannot be generated: {s}", .{ parameter, spelled, found.reason });

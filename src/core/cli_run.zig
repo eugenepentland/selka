@@ -8,6 +8,7 @@ const pipeline = @import("pipeline.zig");
 const cli_args = @import("cli_args.zig");
 const run_budget = @import("run_budget.zig");
 const memory_budget = @import("memory_budget");
+const trap_contract = @import("trap_contract.zig");
 
 /// The machine record line the runtime writes after a trap's text.
 const trap_marker = "\x1eMYLANG-TRAP ";
@@ -227,6 +228,7 @@ fn translate(a: std.mem.Allocator, text: []const u8) error{OutOfMemory}![]const 
                 .notes = &[_]u32{},
                 .stack = .{ .frames = frames.items, .omitted = 0 },
                 .trap_detail = detail,
+                .contract = contractOf(trap.code, detail, if (frames.items.len > 1) frames.items[1].location else null),
             },
         }, .{ .emit_null_optional_fields = false }) catch return error.OutOfMemory;
         return std.mem.concat(a, u8, &.{ text[0..consumed], record, "\n" });
@@ -234,7 +236,16 @@ fn translate(a: std.mem.Allocator, text: []const u8) error{OutOfMemory}![]const 
     return text;
 }
 
-const Location = struct { path: []const u8, start: struct { line: u64, column: u64 } };
+const Location = trap_contract.Location;
+
+/// CONTRACT-TRAP-1: the contract a trap's record names; `caller` is the trap's second frame.
+fn contractOf(code: []const u8, detail: ?std.json.Value, caller: ?Location) ?trap_contract.Contract {
+    const record = detail orelse return null;
+    if (record != .object) return null;
+    const operation = record.object.get("operation") orelse return null;
+    if (operation != .string) return null;
+    return trap_contract.parse(code, operation.string, caller);
+}
 const Trap = struct { code: []const u8, message: []const u8, location: Location };
 
 /// `PATH:LINE:COLUMN: error[CODE]: MESSAGE`, the first line of a trap's text, or
