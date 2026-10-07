@@ -1,0 +1,11 @@
+{
+  "compiler": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/zig-out/bin/mylang",
+  "sha256": "29a8662e86f113341f5f71c9c4fce5686481b4aa8fea223be47788f027797dbe",
+  "mode": "Debug",
+  "source_base": "491caf1c98e2aa647872064f23b3ae42b301c3b7",
+  "shared_checker_sha256": "6139f41ddc628a6d26427d76fa8f238779126a7c1baffb0e33428de2aae57e2f",
+  "build_log": "commands/command-00041.log",
+  "shared_checker_source_commit": "d4d8c4e5639c6f6470883eca97ba160a3b4de627",
+  "checker_sha256_now": "6139f41ddc628a6d26427d76fa8f238779126a7c1baffb0e33428de2aae57e2f",
+  "sha256_now": "29a8662e86f113341f5f71c9c4fce5686481b4aa8fea223be47788f027797dbe"
+}
