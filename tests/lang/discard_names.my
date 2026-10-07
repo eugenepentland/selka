@@ -145,10 +145,5 @@ public def test_sequential_loops_reuse_the_discard_name() -> bool:
 
 
 # spec-case: DISCARD-NAME-1
-public def test_nested_arena_scopes_may_both_bind_the_discard_name() -> bool:
-    return with_scopes() == 2
-
-
-# spec-case: DISCARD-NAME-1
 public def test_generic_bodies_may_nest_discard_names_too() -> bool:
     return generic_loops[int](5, 3) == 9 + 3

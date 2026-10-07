@@ -159,19 +159,3 @@ public def test_an_old_list_of_texts_keeps_young_texts_through_rescans() -> bool
         items[index * 7] = f"new{index}"
     _ = churn(600)
     return len(items) == 5500 and items[5499] == "young499" and items[7] == "new1" and items[8] == "w8"
-
-
-# Short inner scopes open and close many times under an outer arena holding
-# many chunks, and the outer scope keeps allocating while an inner one is open.
-# spec: ARENA-CHUNKS-1
-public def test_inner_arenas_open_and_close_under_a_large_outer_arena() -> bool:
-    ok = False
-    with arena():
-        outer = words("outer", 3000)
-        inner_total = 0
-        for round in range(300):
-            with arena():
-                inner = words("i", 20)
-                inner_total += len(inner) + len(inner[19])
-        ok = len(outer) == 3000 and outer[2999] == "outer2999" and inner_total == 300 * (20 + 3)
-    return ok

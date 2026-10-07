@@ -125,11 +125,12 @@ class Mapping(SyntheticRepo):
         self.assertTrue(any("affected-compiler" in c.argv for c in builds))
         lang = [c for c in guests if "tests/lang/python_core.my" in c.argv]
         self.assertEqual(len(lang), 2)
-        self.assertNotIn("--gc-stress", lang[0].argv)
+        self.assertNotIn("--release", lang[0].argv)
         self.assertIn(at.LANG_CACHE, lang[0].argv)
-        self.assertIn("--gc-runtime", lang[1].argv)
-        self.assertIn("--gc-stress", lang[1].argv)
-        self.assertIn(at.LANG_GC_CACHE, lang[1].argv)
+        self.assertIn("--release", lang[1].argv)
+        self.assertIn("--verify-facts", lang[1].argv)
+        self.assertIn(at.LANG_RELEASE_CACHE, lang[1].argv)
+        self.assertEqual(lang[1].env.get("MYL_CORE_LEAKCHECK"), "1")
 
 
 class Git(SyntheticRepo):

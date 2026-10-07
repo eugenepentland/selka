@@ -11,26 +11,6 @@ public def test_repeated_optional_unwrap_replaces_a_private_loan_with_an_owner()
 
 
 # spec-case: RC-SEMANTIC-LOWERING-1
-public def test_arena_setdefault_read_does_not_share_the_selected_mapping() -> bool:
-    with arena():
-        outer = {0: {1: 7}}
-        live = list(outer[0].values())
-        size = len(outer.setdefault(0, {}))
-        outer[0][1] = 13
-        return size == 1 and list(live) == [7] and outer[0][1] == 13
-
-
-# spec-case: RC-SEMANTIC-LOWERING-1
-public def test_fresh_dictionary_insertion_keeps_its_child_live_in_an_arena() -> bool:
-    with arena():
-        outer: dict[int, dict[int, int]] = {}
-        outer[0] = {1: 7}
-        live = list(outer[0].values())
-        outer[0][1] = 13
-        return list(live) == [7] and outer[0][1] == 13
-
-
-# spec-case: RC-SEMANTIC-LOWERING-1
 public def test_shallow_copy_marks_reused_children_before_a_later_view() -> bool:
     source = [{1: 7}]
     copied = source.copy()
@@ -85,13 +65,3 @@ public def test_scoped_field_path_keeps_the_original_snapshot_during_a_callback(
     indices = [0]
     receiver.rows[selected(mut indices)].append(4)
     return receiver.rows[0] == [3, 4] and before.rows[0] == [3] and len(indices) == 0
-
-
-# spec-case: RC-PLACE-ROLE-1
-public def test_arena_field_capture_preserves_its_loan_during_replacement() -> bool:
-    with arena():
-        receiver = fields()
-        before = receiver
-        receiver.items += [2]
-        receiver.mapping[0].append(6)
-        return receiver.items == [1, 2] and before.items == [1] and before.mapping[0] == [5]

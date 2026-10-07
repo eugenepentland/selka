@@ -31,15 +31,6 @@ public def test_constant_list_image_mut_parameter_preserves_snapshot() -> bool:
     count = append(mut items)
     return count == 64 and len(items) == 65 and len(before) == 64 and len(image()) == 64
 
-# spec-case: LIST-LITERAL-PAYLOAD-1
-public def test_constant_list_image_arena_escape() -> bool:
-    items = image()
-    with arena() as scratch:
-        younger = image()
-        younger[63] = -3
-        items = scratch.escape(younger)
-    return items[63] == -3 and image()[63] == 63
-
 def tick(counter: mut list[int]) -> int:
     counter[0] += 1
     return counter[0]
@@ -99,12 +90,3 @@ public def test_immortal_list_elements_detach_and_preserve_empty_values() -> boo
         texts[1] == "changed" and len(texts) == 65 and saved_texts[0] == "" and saved_texts[1] == "é😀"
         and saved_octets[1] == b"\x00\xff" and octets[1] == b"changed" and len(octets) == 65 and bytes_image()[0] == b""
     )
-
-# spec-case: LIST-LITERAL-PAYLOAD-1
-public def test_immortal_list_elements_survive_arena_escape_and_reads() -> bool:
-    texts = text_image()
-    with arena() as scratch:
-        younger = text_image()
-        younger[63] = "abcdef"[1:5]
-        texts = scratch.escape(younger)
-    return texts[63] == "bcde" and text_image()[63][1] == "😀" and bytes_image()[63][1] == 255

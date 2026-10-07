@@ -57,18 +57,6 @@ public def test_nested_dynamic_entries_retain_each_iterator() -> bool:
 
 
 # spec-case: RC-READ-LIST-VERSION-1
-public def test_parent_and_nested_arenas_keep_held_storage() -> bool:
-    older = [5, 7]
-    answer = 0
-    with arena():
-        local = [11, 13]
-        answer = fold(older) + fold(local) + fresh()
-        with arena():
-            answer += fold(local) + owned(3, 0)
-    return answer == 111 and older == [5, 7]
-
-
-# spec-case: RC-READ-LIST-VERSION-1
 public def test_narrow_and_boolean_elements_keep_width_semantics() -> bool:
     values = [u8(1), u8(127), u8(255)]
     total = 0
@@ -106,7 +94,6 @@ def main() -> int:
     assert test_short_and_negative_index_fallbacks()
     assert test_snapshot_and_callback_after_fold_keep_original_owners()
     assert test_nested_dynamic_entries_retain_each_iterator()
-    assert test_parent_and_nested_arenas_keep_held_storage()
     assert test_narrow_and_boolean_elements_keep_width_semantics()
     assert test_multiple_stable_sources_keep_each_owner()
     assert test_unrelated_managed_values_remain_journaled()

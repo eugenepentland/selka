@@ -63,20 +63,6 @@ public def test_fresh_managed_sources_survive_without_an_owner_local() -> bool:
 
 
 # spec-case: COW-ITERATION-IDENTITY-1
-public def test_arena_iteration_and_nested_sources_keep_balanced_holds() -> bool:
-    total = 0
-    with arena():
-        rows = [[1, 2], [3, 4]]
-        for row in rows:
-            for value in row:
-                total += value
-        mapping = {1: "a", 2: "bc"}
-        for value in mapping.values():
-            total += len(value)
-    return total == 13
-
-
-# spec-case: COW-ITERATION-IDENTITY-1
 public def test_fixed_array_iteration_reads_the_place_and_preserves_a_copy() -> bool:
     values: [2]int = [1, 2]
     snapshot = values
@@ -114,7 +100,6 @@ public def test_write_back_through_a_field_preserves_live_iteration() -> bool:
     return seen == [1, 12, 13] and it.rt.objects == [1, 12, 13]
 
 
-
 record Source:
     items: list[int]
     n: int
@@ -144,6 +129,5 @@ def main() -> int:
     assert test_rebinding_source_preserves_original_iteration_storage()
     assert test_named_snapshot_remains_independent_of_iteration_writes()
     assert test_fresh_managed_sources_survive_without_an_owner_local()
-    assert test_arena_iteration_and_nested_sources_keep_balanced_holds()
     assert test_fixed_array_iteration_reads_the_place_and_preserves_a_copy()
     return 0

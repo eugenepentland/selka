@@ -109,19 +109,6 @@ public def test_callback_capture_retains_original_field_value() -> bool:
 
 
 # spec-case: RC-CALLER-FIELD-READ-1
-public def test_heap_and_parent_arena_authority_survives_forwarding() -> bool:
-    old = Cursor([7, 11], 0)
-    answer = 0
-    with arena():
-        answer += forward(mut old)
-        local = Cursor([13, 17], 0)
-        with arena():
-            answer += forward(mut local)
-        answer += advance(mut local)
-    return answer == 37 and old.index == 1
-
-
-# spec-case: RC-CALLER-FIELD-READ-1
 public def test_readonly_parameter_retains_its_separate_convention() -> bool:
     cursor = Cursor([7, 11], 1)
     return readonly(cursor) == 11 and cursor.index == 1

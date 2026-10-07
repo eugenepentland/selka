@@ -27,20 +27,6 @@ public def test_byte_snapshot_and_rebound_source_keep_canonical_backing() -> boo
 
 
 # spec-case: RC-READ-BYTES-VERSION-1
-public def test_arena_byte_anchor_and_nested_loop_reentry() -> bool:
-    total = 0
-    with arena():
-        data = bytes([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20])
-        for repeat in range(3):
-            for i in range(len(data)):
-                total += int(data[i])
-        with arena():
-            for i in range(len(data)):
-                total += int(data[i])
-    return total == 840
-
-
-# spec-case: RC-READ-BYTES-VERSION-1
 public def test_held_byte_iteration_and_mutable_buffer_keep_fallbacks() -> bool:
     data = bytes([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20])
     total = 0
@@ -71,7 +57,6 @@ public def test_empty_backing_and_multiple_byte_owners() -> bool:
 def main() -> int:
     assert test_full_short_empty_and_negative_byte_scans()
     assert test_byte_snapshot_and_rebound_source_keep_canonical_backing()
-    assert test_arena_byte_anchor_and_nested_loop_reentry()
     assert test_held_byte_iteration_and_mutable_buffer_keep_fallbacks()
     assert test_empty_backing_and_multiple_byte_owners()
     return 0

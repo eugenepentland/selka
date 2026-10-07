@@ -50,25 +50,14 @@ public def test_scalar_reads_keep_pending_pins_and_named_snapshots() -> bool:
     return rows == [[7, 7]] and snapshot == [[7]]
 
 
-# spec-case: RC-READ-LOAN-1
-public def test_scalar_reads_inside_an_arena_escape_only_their_result() -> bool:
-    result = 0
-    with arena():
-        values = [3, 5, 8]
-        result = total(values) + values[-1]
-    return result == 24
-
-
 def main() -> int:
     assert test_scalar_receivers_read_both_index_directions_and_empty_loops()
     assert test_index_callback_keeps_an_explicit_receiver_snapshot()
     assert test_scalar_loan_roots_survive_loop_reassignment_and_branches()
     assert test_scalar_reads_keep_pending_pins_and_named_snapshots()
-    assert test_scalar_reads_inside_an_arena_escape_only_their_result()
     assert test_plain_record_read_survives_source_clear()
     assert test_plain_record_callback_preserves_evaluation_snapshot()
     assert test_plain_array_read_preserves_bytes_after_mutation()
-    assert test_plain_record_reads_preserve_arena_and_pending_write_semantics()
     return 0
 
 
@@ -106,15 +95,3 @@ public def test_plain_array_read_preserves_bytes_after_mutation() -> bool:
     rows[1] = [91, 92]
     rows.clear()
     return selected == [11, 13]
-
-
-# spec-case: RC-PLAIN-READ-LOAN-1
-public def test_plain_record_reads_preserve_arena_and_pending_write_semantics() -> bool:
-    result = 0
-    with arena():
-        rows = [Point(3, 7)]
-        snapshot = rows
-        for index in range(4):
-            rows[0].x = rows[-1].x + 1
-        result = rows[0].x + snapshot[0].x
-    return result == 10

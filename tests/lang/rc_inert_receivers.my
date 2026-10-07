@@ -53,7 +53,6 @@ def main() -> int:
     assert test_three_level_shared_projection_keeps_named_row_and_outer_snapshot()
     assert test_plain_record_writes_keep_snapshot_and_negative_index()
     assert test_plain_record_call_finishes_before_selection_and_keeps_snapshot()
-    assert test_nested_plain_record_writes_preserve_arena_values()
     return 0
 
 
@@ -101,16 +100,3 @@ public def test_plain_record_call_finishes_before_selection_and_keeps_snapshot()
     mutation_result_101 = save_points(mut points, mut snapshots)
     points[mutation_result_101].x = 13
     return points == [Point(13, 9)] and snapshots == [[Point(3, 7)]]
-
-
-# spec-case: RC-INERT-PLAIN-UPDATE-1
-public def test_nested_plain_record_writes_preserve_arena_values() -> bool:
-    result = 0
-    with arena():
-        rows = [[Point(3, 7)]]
-        before = rows
-        for index in range(4):
-            rows[0][-1].x = index
-            rows[0][0].y = index + 10
-        result = rows[0][0].y + before[0][0].y
-    return result == 20

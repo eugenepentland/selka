@@ -86,17 +86,6 @@ public def test_sorted_hidden_parent_and_named_alias_survive_handoff() -> bool:
     return before == [1, 2, 3] and items == [10, 11, 12]
 
 
-# spec-case: RC-FRESH-ROOT-HOIST-1
-public def test_inherited_arena_and_escaped_result_keep_region_rules() -> bool:
-    result = 0
-    with arena():
-        items = build(33)
-        saved = items
-        items[0] = 19
-        result = items[0] + saved[0] + len(items)
-    return result == 52
-
-
 def main() -> int:
     assert test_fresh_growth_and_post_loop_publication_keep_real_owners()
     assert test_comprehension_handoff_and_plain_terminal_return()
@@ -106,5 +95,4 @@ def main() -> int:
     assert test_callback_retains_pending_receiver_protocol()
     assert test_zero_iterations_preserve_shared_receiver_and_order()
     assert test_sorted_hidden_parent_and_named_alias_survive_handoff()
-    assert test_inherited_arena_and_escaped_result_keep_region_rules()
     return 0

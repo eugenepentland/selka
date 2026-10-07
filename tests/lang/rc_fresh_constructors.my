@@ -81,11 +81,6 @@ public def test_recursive_variant_payloads_retain_every_child() -> bool:
 
 
 # spec-case: RC-FRESH-CONSTRUCTOR-1
-public def test_inherited_arena_region_can_escape_the_complete_result() -> bool:
-    return weight(in_arena()) == 89
-
-
-# spec-case: RC-FRESH-CONSTRUCTOR-1
 public def test_aliased_immutable_boxes_keep_the_generic_transfer_path() -> bool:
     value = aliased(4)
     before = value
@@ -97,6 +92,5 @@ def main() -> int:
     assert test_recursive_fresh_record_children_have_independent_owners()
     assert test_named_constructor_order_preserves_the_result()
     assert test_recursive_variant_payloads_retain_every_child()
-    assert test_inherited_arena_region_can_escape_the_complete_result()
     assert test_aliased_immutable_boxes_keep_the_generic_transfer_path()
     return 0

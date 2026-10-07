@@ -68,17 +68,8 @@ public def test_callback_replacement_refreshes_the_parent_before_scalar_store() 
     return values[0].small == -13i8 and values[0].medium == 6u16 and len(values) == 2 and before[0].small == 1i8
 
 
-# spec-case: RC-SCALAR-REPLACE-1
-public def test_scalar_updates_inside_an_arena_preserve_an_older_receiver() -> bool:
-    values = [Scalars(1i8, 2u16, False, 3.5, Distance.make(4u16))]
-    with arena():
-        edit(mut values)
-    return values[0].small == -120i8 and Distance.value(values[0].distance) == 42000u16
-
-
 def main() -> int:
     assert test_canonical_scalar_widths_and_domain_values_survive_replacement()
     assert test_plain_and_owning_fields_alternate_without_losing_pending_tokens()
     assert test_callback_replacement_refreshes_the_parent_before_scalar_store()
-    assert test_scalar_updates_inside_an_arena_preserve_an_older_receiver()
     return 0

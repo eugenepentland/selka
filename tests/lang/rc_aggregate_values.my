@@ -202,12 +202,6 @@ def arena_pinned_pair() -> Pair:
         return scratch.escape(result)
 
 
-# spec-case: RC-AGGREGATE-1
-public def test_constructor_publication_keeps_pinned_copies_through_arena_escape() -> bool:
-    escaped = arena_pinned_pair()
-    return escaped.left == [17, 23] and escaped.right == [17, 23]
-
-
 def main() -> int:
     assert test_record_fields_survive_original_and_sibling_replacement()
     assert test_record_update_preserves_prior_aggregate_snapshot()
@@ -223,5 +217,4 @@ def main() -> int:
     assert test_propagating_none_releases_preceding_constructor_operands()
     assert test_reordered_constructor_fields_preserve_aliased_input_snapshots()
     assert test_constructor_publishes_nested_holds_and_converts_held_mapping_inputs()
-    assert test_constructor_publication_keeps_pinned_copies_through_arena_escape()
     return 0

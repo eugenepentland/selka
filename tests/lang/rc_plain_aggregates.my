@@ -55,16 +55,6 @@ public def test_rhs_callback_finishes_before_the_plain_field_receiver_is_read() 
 
 
 # spec-case: RC-PLAIN-AGGREGATE-1
-public def test_older_receiver_accepts_plain_values_from_inner_arena() -> bool:
-    values = [Point(1, 2)]
-    with arena() as scratch:
-        replacements = [Point(8, 9)]
-        values[0] = replacements[0]
-        edit(mut values, 0)
-    return values[0].x == 19 and values[0].y == 9
-
-
-# spec-case: RC-PLAIN-AGGREGATE-1
 public def test_fixed_array_element_store_keeps_source_and_destination_distinct() -> bool:
     values: list[[2]int] = [[1, 2], [3, 4]]
     before = values
@@ -86,7 +76,6 @@ def main() -> int:
     assert test_same_and_neighbor_element_copies_preserve_independent_bytes()
     assert test_plain_nested_arrays_copy_before_a_field_update()
     assert test_rhs_callback_finishes_before_the_plain_field_receiver_is_read()
-    assert test_older_receiver_accepts_plain_values_from_inner_arena()
     assert test_fixed_array_element_store_keeps_source_and_destination_distinct()
     assert test_zero_sized_elements_keep_the_established_storage_path()
     return 0

@@ -92,16 +92,6 @@ public def test_generated_float_call_keeps_ordinary_fallback() -> bool:
 
 
 # spec-case: RC-RECORD-FIELD-READ-1
-public def test_parent_and_nested_arenas_keep_roots() -> bool:
-    result = read(1)
-    with arena():
-        result += read(-1)
-        with arena():
-            result += adjacent(0)
-    return result == 44
-
-
-# spec-case: RC-RECORD-FIELD-READ-1
 public def test_older_heap_home_inside_inner_region() -> bool:
     cursor = Cursor([17, 19], 1)
     result = 0

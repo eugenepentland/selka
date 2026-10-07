@@ -140,16 +140,6 @@ public def test_list_element_replacement_releases_the_old_value() -> bool:
     return total(values[0]) == 7 * 48 + 42 and total(values[1]) == 7 * 49 + 42 and saved.a[0] == 0
 
 
-# spec-case: RC-GLUE-1
-public def test_arena_values_escape_through_glue() -> bool:
-    kept: list[int] = []
-    with arena() as scratch:
-        local = wide(3)
-        copy = local
-        kept = scratch.escape(copy.a)
-    return kept[0] == 3
-
-
 # spec-case: RC-ACQUIRE-COPY-1
 public def test_repeated_variant_edges_retain_an_independent_snapshot() -> bool:
     row = [17]

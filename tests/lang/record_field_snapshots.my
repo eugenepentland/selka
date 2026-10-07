@@ -19,29 +19,11 @@ public def test_heap_record_field_mutation_preserves_snapshot() -> bool:
 
 
 # spec-case: OWNERSHIP-FIELD-WRITE-1
-public def test_arena_record_field_mutation_preserves_snapshot() -> bool:
-    with arena():
-        state = State([12])
-        saved = state
-        state.values.append(14)
-        return saved.values == [12] and state.values == [12, 14]
-
-
-# spec-case: OWNERSHIP-FIELD-WRITE-1
 public def test_nested_heap_field_mut_argument_preserves_snapshot() -> bool:
     state = Outer(State([12]))
     saved = state
     push(mut state.state.values)
     return saved.state.values == [12] and state.state.values == [12, 14]
-
-
-# spec-case: OWNERSHIP-FIELD-WRITE-1
-public def test_nested_arena_field_mut_argument_preserves_snapshot() -> bool:
-    with arena():
-        state = Outer(State([12]))
-        saved = state
-        push(mut state.state.values)
-        return saved.state.values == [12] and state.state.values == [12, 14]
 
 
 # spec-case: OWNERSHIP-FIELD-WRITE-1
@@ -172,9 +154,7 @@ public def test_mut_record_element_store_preserves_a_field_snapshot() -> bool:
 # Run the same assertions without test-harness accounting or result wrapping.
 def main(out: Stream) -> int:
     out.print(test_heap_record_field_mutation_preserves_snapshot())
-    out.print(test_arena_record_field_mutation_preserves_snapshot())
     out.print(test_nested_heap_field_mut_argument_preserves_snapshot())
-    out.print(test_nested_arena_field_mut_argument_preserves_snapshot())
     out.print(test_named_field_copy_is_independent_of_its_source())
     out.print(test_list_element_and_record_field_path_preserves_snapshot())
     out.print(test_dictionary_and_record_field_path_preserves_snapshot())

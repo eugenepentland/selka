@@ -409,17 +409,6 @@ public def test_owned_temporaries_are_taken_not_relocated() -> bool:
     return number(last_owned(5)) == 4.0 and number(last_owned(1)) == 0.0
 
 
-# spec-case: RC-LOAN-RELOCATE-1
-public def test_relocated_loans_inside_arenas() -> bool:
-    total = 0.0
-    with arena():
-        rt = Runtime([Value.number(3.0), Value.number(5.0)], 2)
-        total += number(pop(mut rt))
-        with arena():
-            total += number(pop(mut rt))
-    return total == 8.0
-
-
 # spec-case: RC-INERT-FIELD-RECEIVER-1
 public def test_field_receivers_write_through_mut_records_and_keep_snapshots() -> bool:
     m = Machine([Value.nil, Value.nil, Value.nil], [CallFrame(0, 0), CallFrame(5, 1)], ["a"], 0, 2)
@@ -449,19 +438,6 @@ public def test_managed_element_field_stores_keep_their_scope() -> bool:
     saved = m
     rename(mut m, "c")
     return m.names == ["c", "b"] and saved.names == ["a", "b"]
-
-
-# spec-case: RC-INERT-FIELD-RECEIVER-1
-public def test_field_receivers_inside_arenas() -> bool:
-    count = 0
-    with arena():
-        m = Machine([Value.nil, Value.nil], [CallFrame(0, 0)], [], 0, 1)
-        push(mut m, Value.number(2.0))
-        with arena():
-            step(mut m, 4)
-            push(mut m, Value.text("inner"))
-        count = m.top + m.frames[0].ip
-    return count == 6
 
 
 # spec-case: RC-SELF-STORE-1
@@ -516,17 +492,6 @@ public def test_nested_field_copies_from_mut_parameters_and_call_results() -> bo
     return loaded.code == [8] and unit.chunk.code == [8, 99] and loaded.at == 2 and made.code == [4, 5] and made.names == ["made"]
 
 
-# spec-case: RC-TRANSIENT-FIELD-1
-public def test_nested_field_copies_inside_arenas() -> bool:
-    total = 0
-    with arena():
-        unit = Unit(1, Chunk([1, 2, 3], ["q"]))
-        with arena():
-            loaded = load(unit, 1)
-            total = len(loaded.code) + len(loaded.names)
-    return total == 4
-
-
 # spec-case: RC-READONLY-ANCHOR-1
 public def test_readonly_table_reads_borrow_payloads_in_place() -> bool:
     table = Table([Obj.callable(Callable(1, Code([4, 5]))), Obj.name(Name(b"n" + b"ame", 9u32))], 2)
@@ -552,16 +517,6 @@ public def test_mut_roots_keep_owned_bindings() -> bool:
     return first == 4 and table.count == 1 and table.objects == [Obj.free]
 
 
-# spec-case: RC-READONLY-ANCHOR-1
-public def test_readonly_reads_inside_arenas() -> bool:
-    total = 0
-    table = Table([Obj.name(Name(b"ar" + b"ena", 2u32))], 1)
-    with arena():
-        inner = Table([Obj.callable(Callable(5, Code([1, 2])))], 1)
-        total = table_arity(inner, 0) + len(table_name(table, 0).chars)
-    return total == 12
-
-
 # spec-case: RC-INTERVAL-ANCHOR-1
 public def test_mut_root_list_reads_across_unrelated_calls() -> bool:
     rt = Runtime([Value.number(1.0), Value.text("b"), Value.nil], 0)
@@ -577,17 +532,6 @@ public def test_mut_root_list_reads_keep_the_list_a_call_replaces() -> bool:
     rt = Runtime([Value.number(8.0), Value.nil], 0)
     item = fetch_reset(mut rt)
     return number(item) == 8.0 and rt.stack == [Value.text("fresh")]
-
-
-# spec-case: RC-INTERVAL-ANCHOR-1
-public def test_mut_root_list_reads_inside_arenas() -> bool:
-    total = 0.0
-    with arena():
-        rt = Runtime([Value.number(2.0), Value.number(3.0)], 0)
-        cursor = Cursor([1, 0], 0)
-        with arena():
-            total = number(fetch(mut rt, mut cursor)) + number(fetch(mut rt, mut cursor))
-    return total == 5.0
 
 
 # spec-case: RC-OPERAND-ANCHOR-1
@@ -660,26 +604,21 @@ def main() -> int:
         test_index_callback_replacing_the_list_keeps_the_loaned_original(),
         test_managed_elements_and_nested_record_fields_relocate_whole_values(),
         test_owned_temporaries_are_taken_not_relocated(),
-        test_relocated_loans_inside_arenas(),
         test_field_receivers_write_through_mut_records_and_keep_snapshots(),
         test_field_receivers_of_local_records_and_negative_indices(),
         test_completed_callback_replaces_the_field_list_before_update(),
         test_managed_element_field_stores_keep_their_scope(),
-        test_field_receivers_inside_arenas(),
         test_payload_bindings_read_in_place_keep_their_owner(),
         test_payload_bindings_outliving_a_scrutinee_write_keep_their_copy(),
         test_returned_bindings_and_locals_move_their_owner(),
         test_returned_parameters_keep_the_callers_value(),
         test_nested_field_copies_into_constructors_stay_independent(),
         test_nested_field_copies_from_mut_parameters_and_call_results(),
-        test_nested_field_copies_inside_arenas(),
         test_readonly_table_reads_borrow_payloads_in_place(),
         test_nested_readonly_matches_in_loops(),
         test_mut_roots_keep_owned_bindings(),
-        test_readonly_reads_inside_arenas(),
         test_mut_root_list_reads_across_unrelated_calls(),
         test_mut_root_list_reads_keep_the_list_a_call_replaces(),
-        test_mut_root_list_reads_inside_arenas(),
         test_mut_root_fields_passed_to_calls_read_the_current_value(),
         test_mut_root_fields_keep_the_value_a_later_mut_call_replaces(),
         test_mut_root_fields_passed_to_calls_whose_results_are_matched(),

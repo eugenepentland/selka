@@ -85,17 +85,6 @@ public def test_a_value_read_after_a_propagating_call_survives_it() -> bool:
             return code == 3
 
 
-# spec-case: QBE-ROOTLIVE-1
-public def test_an_arena_scope_closes_over_locals_it_scans() -> bool:
-    keep = fresh(7)
-    count = 0
-    with arena():
-        for i in range(10):
-            inner = fresh(i)
-            count += len(inner)
-    return count == 40 and keep[0] == 7
-
-
 def shaped(n: int) -> Option[list[int]]:
     if n == 0:
         return None

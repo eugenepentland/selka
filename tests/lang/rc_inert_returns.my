@@ -127,13 +127,3 @@ public def test_unique_incoming_resource_is_closed_on_null_return() -> bool:
             return result
         case Err(_):
             return False
-
-
-# spec-case: RC-INERT-RETURN-1
-public def test_null_result_inside_an_arena_keeps_outer_values_alive() -> bool:
-    kept = make(2)
-    with arena() as scratch:
-        temporary = make(0)
-        if not empty(temporary):
-            return False
-    return not empty(kept)

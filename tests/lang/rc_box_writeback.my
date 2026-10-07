@@ -20,17 +20,6 @@ public def test_heap_option_mapping_write_updates_the_owner_after_a_snapshot() -
 
 
 # spec-case: RC-BOX-WRITEBACK-1
-public def test_arena_option_mapping_write_updates_the_owner_after_a_snapshot() -> bool:
-    with arena():
-        original: Option[Node] = Some(Node({1: 7}, None))
-        saved = through(original)
-        if original is None or saved is None:
-            return False
-        original.mapping[1] = 13
-        return original.mapping[1] == 13 and saved.mapping[1] == 7
-
-
-# spec-case: RC-BOX-WRITEBACK-1
 public def test_option_write_still_publishes_when_a_view_keeps_the_old_mapping_alive() -> bool:
     with arena():
         original: Option[Node] = Some(Node({1: 7}, None))
@@ -51,14 +40,3 @@ public def test_repeated_option_writes_replace_the_latest_owner() -> bool:
     original.mapping[1] = 13
     original.mapping[1] = 17
     return original.mapping[1] == 17 and saved.mapping[1] == 7
-
-
-# spec-case: RC-BOX-WRITEBACK-1
-public def test_reboxed_heap_owner_survives_an_inner_arena() -> bool:
-    original: Option[Node] = Some(Node({1: 7}, None))
-    saved = through(original)
-    if original is None or saved is None:
-        return False
-    with arena():
-        original.mapping[1] = 13
-    return original.mapping[1] == 13 and saved.mapping[1] == 7

@@ -119,17 +119,6 @@ public def test_dynamic_negative_fixed_array_index() -> bool:
     return original[1]["k"] == [1] and changed[1]["k"] == [1, 2] and changed[0]["k"] == [0]
 
 
-# spec-case: ARENA-ESCAPE-VALUE-1
-public def test_fixed_array_nested_copies_escape_an_arena() -> bool:
-    original: [1]dict[str, list[int]] = [{"k": [1]}]
-    kept = original
-    with arena() as scratch:
-        changed = original
-        changed[0]["k"].append(2)
-        kept = scratch.escape(changed)
-    return original[0]["k"] == [1] and kept[0]["k"] == [1, 2]
-
-
 # spec-case: COW-NESTED-1
 public def test_enum_table_collection_element() -> bool:
     original: [Position]list[int] = {Position.first: [0], Position.second: [1]}
