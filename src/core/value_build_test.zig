@@ -219,18 +219,24 @@ test "a recursive union stores the payload that closes the cycle in a box and re
     try std.testing.expect(contains(text, "box_get record{union{"));
 }
 
-const capability_field =
+// Capability tokens became storable (S4-P), so the unsupported field is a dictionary whose key
+// is a dictionary: the record declaration checks, and an `Option` reaches it with no value.
+const unsupported_field =
     \\record Grid:
-    \\    port: Stream
+    \\    table: dict[dict[int, int], int]
     \\    label: str
     \\
     \\
-    \\def use(a: Grid, b: Grid) -> int:
-    \\    return len(a.label) + len(b.label)
+    \\def use(a: Option[Grid], b: Option[Grid]) -> int:
+    \\    match a:
+    \\        case None:
+    \\            return 0
+    \\        case Some(grid):
+    \\            return len(grid.label)
     \\
     \\
     \\def main(out: Stream) -> int:
-    \\    out.print(use(Grid(port=out, label="a"), Grid(port=out, label="b")))
+    \\    out.print(use(None, None))
     \\    return 0
     \\
 ;
@@ -241,8 +247,8 @@ test "a record holding an unsupported type is refused with its reason, every tim
     defer arena.deinit();
     var refusal: build.Refusal = .{};
     // A type that failed to map stays unmapped: the second use is refused for the same reason.
-    try std.testing.expectError(error.Unsupported, support.buildSource(arena.allocator(), capability_field, &refusal));
-    try std.testing.expectEqualStrings("record field type", refusal.reason);
+    try std.testing.expectError(error.Unsupported, support.buildSource(arena.allocator(), unsupported_field, &refusal));
+    try std.testing.expectEqualStrings("dictionary key type", refusal.reason);
 }
 
 const projections =
