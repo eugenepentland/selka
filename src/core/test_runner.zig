@@ -152,7 +152,7 @@ pub fn run(init: std.process.Init, requested: Options) Error!u8 {
             };
             const provider_modules = try moduleSources(allocator, &provider_session, entry_module);
             const discovered = try discover.discover(allocator, selected_program.program, entry_module, provider_modules);
-            case_settings.compatible(allocator, &session, &provider_session, checked, selected_program) catch |err| {
+            case_settings.compatible(allocator, &session, &provider_session, checked, selected_program, group) catch |err| {
                 if (err == error.OutOfMemory) return error.OutOfMemory;
                 try writeAll(init, std.Io.File.stderr(), "error: ProviderSignatureChanged: test providers changed the exported type graph\n");
                 return 1;

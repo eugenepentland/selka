@@ -325,6 +325,23 @@ test "providers preserve exported record layouts behind unchanged function signa
 }
 
 // spec-case: NEW-CORE-S4-TEST-4
+test "a provider may drop an import while its module keeps the same exports" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const a = arena.allocator();
+    const context: Context = .{ .arena = a, .root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", a) };
+    try context.write("app.my", "module app\nimport dep\n\npublic def test_answer() -> bool:\n    return dep.answer() == 3\n");
+    try context.write("dep.my", "module dep\nimport math\n\npublic def answer() -> int:\n    return math.clamp(9, 0, 3)\n");
+    const stub = "module dep\n\npublic def answer() -> int:\n    return 3\n";
+    try context.write("app.cases.json", try std.json.Stringify.valueAlloc(a, .{ .@"app::test_answer" = .{ .providers = .{ .@"dep.my" = stub } } }, .{}));
+    const accepted = try context.run("app.my", &.{});
+    try expectStatus(context, accepted, 0);
+    try verdict(accepted.report, "app::test_answer", "passed");
+}
+
+// spec-case: NEW-CORE-S4-TEST-4
 test "providers preserve private parameter layouts of marked property tests" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();

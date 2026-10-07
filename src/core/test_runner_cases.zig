@@ -5,6 +5,7 @@ const language = @import("mylang");
 const frontend = @import("frontend.zig");
 const discover = @import("test_runner_discover.zig");
 const v = @import("property_value.zig");
+const equivalent = @import("property_validate.zig").equivalent;
 const providers_key = "providers";
 pub const Error = error{ OutOfMemory, InvalidTestCases, UnknownTestCase, InvalidTestProviders, ProviderSignatureChanged, ReadFailed };
 /// Owned parsed document under the command arena.
@@ -109,14 +110,90 @@ pub fn available(providers: []const frontend.Provider, session: *const frontend.
     }
 }
 
-/// Provider bodies may change; their exported transitive type graph must retain
-/// its checked structure, including callbacks, aliases and union payloads.
-pub fn compatible(a: std.mem.Allocator, original: *frontend.Session, replacement: *frontend.Session, original_checked: frontend.Checked, replacement_checked: frontend.Checked) Error!void {
+/// Provider bodies may change; their interfaces may not. Each replaced module's
+/// own exported types and functions keep their checked structure, and so does
+/// each selected test's signature: its parameter and result types and every type
+/// they reach, including callbacks, aliases and union payloads. Other modules'
+/// exports (say, of a module the provider no longer imports) are not compared.
+pub fn compatible(a: std.mem.Allocator, original: *frontend.Session, replacement: *frontend.Session, original_checked: frontend.Checked, replacement_checked: frontend.Checked, group: Group) Error!void {
     const left = try publicSchema(a, original, original_checked);
     const right = try publicSchema(a, replacement, replacement_checked);
-    const left_types = try std.json.Stringify.valueAlloc(a, v.get(left, "types"), .{});
-    const right_types = try std.json.Stringify.valueAlloc(a, v.get(right, "types"), .{});
-    if (!std.mem.eql(u8, left_types, right_types)) return error.ProviderSignatureChanged;
+    for (group.providers) |provider| {
+        const prefix = try modulePrefix(a, provider.path);
+        if (!sameModuleItems(left, right, "types", prefix)) return error.ProviderSignatureChanged;
+        if (!sameModuleItems(left, right, "functions", prefix)) return error.ProviderSignatureChanged;
+    }
+    for (group.cases) |case| {
+        const old = schemaFunction(left, case.name) orelse return error.ProviderSignatureChanged;
+        const new = schemaFunction(right, case.name) orelse return error.ProviderSignatureChanged;
+        for (signature_fields) |field| if (!equivalent(v.get(old, field), v.get(new, field))) return error.ProviderSignatureChanged;
+        if (!try sameReachedTypes(a, left, right, old)) return error.ProviderSignatureChanged;
+    }
+}
+
+/// The schema fields of a function that make up a selected test's signature.
+const signature_fields = [_][]const u8{ "parameters", "result" };
+
+/// `dir/name.my` declares `dir.name::` items.
+fn modulePrefix(a: std.mem.Allocator, path: []const u8) Error![]const u8 {
+    const module = try a.dupe(u8, path[0 .. path.len - ".my".len]);
+    std.mem.replaceScalar(u8, module, '/', '.');
+    return std.fmt.allocPrint(a, "{s}::", .{module});
+}
+
+/// The items of one module under `key` match one to one, by name and structure.
+fn sameModuleItems(left: std.json.Value, right: std.json.Value, key: []const u8, prefix: []const u8) bool {
+    var count: usize = 0;
+    for (v.array(v.get(left, key))) |item| {
+        const name = v.text(v.get(item, "name"));
+        if (!std.mem.startsWith(u8, name, prefix)) continue;
+        count += 1;
+        const other = (if (std.mem.eql(u8, key, "types")) schemaType(right, name) else schemaFunction(right, name)) orelse return false;
+        if (!equivalent(item, other)) return false;
+    }
+    for (v.array(v.get(right, key))) |item| {
+        if (std.mem.startsWith(u8, v.text(v.get(item, "name")), prefix)) count -%= 1;
+    }
+    return count == 0;
+}
+
+fn schemaFunction(schema: std.json.Value, name: []const u8) ?std.json.Value {
+    for (v.array(v.get(schema, "functions"))) |item| if (std.mem.eql(u8, v.text(v.get(item, "name")), name)) return item;
+    return null;
+}
+
+fn schemaType(schema: std.json.Value, name: []const u8) ?std.json.Value {
+    for (v.array(v.get(schema, "types"))) |item| if (std.mem.eql(u8, v.text(v.get(item, "name")), name)) return item;
+    return null;
+}
+
+/// Every type name the signature reaches has an equivalent definition in both.
+fn sameReachedTypes(a: std.mem.Allocator, left: std.json.Value, right: std.json.Value, signature: std.json.Value) Error!bool {
+    var pending: std.ArrayList([]const u8) = .empty;
+    var seen: std.StringHashMapUnmanaged(void) = .empty;
+    for (signature_fields) |field| try names(a, &pending, v.get(signature, field));
+    while (pending.pop()) |name| {
+        if ((try seen.getOrPut(a, name)).found_existing) continue;
+        const old = schemaType(left, name);
+        const new = schemaType(right, name);
+        if (old == null and new == null) continue;
+        if (old == null or new == null or !equivalent(old.?, new.?)) return false;
+        try names(a, &pending, old.?);
+    }
+    return true;
+}
+
+/// Collect every string in `value`; those that name a schema type are followed.
+fn names(a: std.mem.Allocator, out: *std.ArrayList([]const u8), value: std.json.Value) Error!void {
+    switch (value) {
+        .string => |text| try out.append(a, text),
+        .array => |items| for (items.items) |item| try names(a, out, item),
+        .object => |fields| {
+            var entries = fields.iterator();
+            while (entries.next()) |entry| try names(a, out, entry.value_ptr.*);
+        },
+        else => {},
+    }
 }
 
 fn publicSchema(a: std.mem.Allocator, session: *frontend.Session, checked: frontend.Checked) Error!std.json.Value {
