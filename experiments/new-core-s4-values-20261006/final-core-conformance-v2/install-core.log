@@ -1,0 +1,15 @@
+source_commit=d4d8c4e5639c6f6470883eca97ba160a3b4de627
+$ scripts/build-slot.sh gate -- bash -c '"$@"; result=$?; exit "$result"' -- scripts/build-slot.sh build -- python3 experiments/new-core-s3-20261006/wave-a/exclusive_core.py -- /usr/bin/time -f %e -o /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/experiments/new-core-s4-values-20261006/final-core-conformance-v2/install-core.seconds zig build core --summary all
+build-slot: all 1 gate slot(s) busy; waiting (0s so far)
+build-slot: all 1 gate slot(s) busy; waiting (60s so far)
+build-slot: all 1 gate slot(s) busy; waiting (120s so far)
+build-slot: all 1 gate slot(s) busy; waiting (180s so far)
+build-slot: all 1 gate slot(s) busy; waiting (241s so far)
+build-slot: all 1 gate slot(s) busy; waiting (301s so far)
+build-slot: gate slot 1 after 311s (all 1 gate slot(s) busy)
+core-exclusive: all 3 build slots held; other-build wait=203.511s; gate wrapper excludes gate execution
+Build Summary: 3/3 steps succeeded
+core success
++- install mylang-core cached
+   +- compile exe mylang-core debug native cached 8ms MaxRSS:38M
+

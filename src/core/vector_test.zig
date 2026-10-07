@@ -301,3 +301,30 @@ test "a function a function value names gets no caller-derived parameter interva
     try main.insts.append(a, .{ .op = .func_ref, .ty = .i64, .data = score });
     try std.testing.expectEqual(@as(?facts.Interval, null), try maskRange(a, &module));
 }
+
+// spec: NEW-CORE-INLINE-S4-1
+test "loop helper inlining verifies cloned edges and projects mut return values" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const source =
+        \\def find(parent: mut list[int], x: int) -> int:
+        \\    while parent[x] != x:
+        \\        parent[x] = parent[parent[x]]
+        \\        x = parent[x]
+        \\    return x
+        \\def main(out: Stream) -> int:
+        \\    parent = [0, 0, 1]
+        \\    out.print(find(mut parent, 2), parent[2])
+        \\    return 0
+    ;
+    var refusal: @import("build.zig").Refusal = .{};
+    var module = try support.buildSource(arena.allocator(), source, &refusal);
+    try std.testing.expect(try @import("inline.zig").inlineLeaves(arena.allocator(), &module) > 0);
+    var failure: @import("verify_ir.zig").Failure = .{};
+    try @import("verify_ir.zig").verifyModule(arena.allocator(), &module, &failure);
+    const main = module.functions.items[functionIndex(&module, "main").?];
+    for (main.insts.items) |inst| try std.testing.expect(inst.op != .call);
+    const result = try support.runOwned(arena.allocator(), &module, .{});
+    try std.testing.expectEqualStrings("0 0\n", result.stdout);
+    try std.testing.expectEqualStrings("", result.stderr);
+}

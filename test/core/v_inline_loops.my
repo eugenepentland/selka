@@ -1,0 +1,29 @@
+module v_inline_loops
+
+def find(parent: mut list[int], x: int) -> int:
+    while parent[x] != x:
+        parent[x] = parent[parent[x]]
+        x = parent[x]
+    return x
+
+def pick(values: mut list[int], n: int) -> int:
+    if n < 1:
+        values[0] = 4
+        return 7
+    while n > 1:
+        values[0] += n
+        n -= 1
+    return values[0]
+
+# spec-case: NEW-CORE-INLINE-S4-1
+public def test_mut_loop_returns_and_shared_snapshots() -> bool:
+    parent = [0, 0, 1]
+    saved = parent
+    root = find(mut parent, 2)
+    values = [0]
+    empty_arm = pick(mut values, 0)
+    loop_arm = pick(mut values, 3)
+    return root == 0 and parent[2] == 0 and saved[2] == 1 and empty_arm == 7 and loop_arm == 9 and values[0] == 9
+
+def main() -> int:
+    return 0

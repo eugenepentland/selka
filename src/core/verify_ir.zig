@@ -479,7 +479,12 @@ const Verifier = struct {
         return switch (inst.op) {
             .buffer_new => inst.ty == .byte_buffer and s.a == .u64,
             .buffer_copy, .buffer_pop => inst.ty == .byte_buffer and s.a == .byte_buffer,
-            .buffer_push => inst.ty == .byte_buffer and s.a == .byte_buffer and s.b == .u8,
+            .buffer_push => inst.ty == .byte_buffer and s.a == .byte_buffer and s.b == switch (inst.data) {
+                0 => ir.Type.u8,
+                @import("flags.zig").buffer_append_int => ir.Type.i64,
+                @import("flags.zig").buffer_append_float => ir.Type.f64,
+                else => return false,
+            },
             .buffer_set => inst.ty == .byte_buffer and s.a == .byte_buffer and isInteger(s.b) and self.typesMatch(s.extra, &.{.u8}),
             .shift_left, .shift_right, .saturating_add => isInteger(inst.ty) and s.a == inst.ty and s.b == inst.ty,
             .float_unary => inst.ty == .f64 and s.a == .f64 and inst.data < std.meta.tags(ir.FloatUnary).len,

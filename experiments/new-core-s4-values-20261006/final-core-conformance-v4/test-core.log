@@ -1,0 +1,175 @@
+source_commit=be7978a37aa7ae9bbd97e273d86a42d054305dd0
+$ scripts/build-slot.sh gate -- bash -c '"$@"; result=$?; exit "$result"' -- scripts/build-slot.sh build -- /usr/bin/time -f %e -o /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/experiments/new-core-s4-values-20261006/final-core-conformance-v4/test-core.seconds zig build test-core -Dcore-shards=64 --summary all
+build-slot: all 1 gate slot(s) busy; waiting (0s so far)
+build-slot: all 1 gate slot(s) busy; waiting (60s so far)
+build-slot: all 1 gate slot(s) busy; waiting (120s so far)
+build-slot: all 1 gate slot(s) busy; waiting (180s so far)
+build-slot: all 1 gate slot(s) busy; waiting (240s so far)
+build-slot: all 1 gate slot(s) busy; waiting (300s so far)
+build-slot: all 1 gate slot(s) busy; waiting (360s so far)
+build-slot: all 1 gate slot(s) busy; waiting (420s so far)
+build-slot: all 1 gate slot(s) busy; waiting (481s so far)
+build-slot: all 1 gate slot(s) busy; waiting (541s so far)
+build-slot: all 1 gate slot(s) busy; waiting (601s so far)
+build-slot: all 1 gate slot(s) busy; waiting (661s so far)
+build-slot: all 1 gate slot(s) busy; waiting (721s so far)
+build-slot: all 1 gate slot(s) busy; waiting (781s so far)
+build-slot: all 1 gate slot(s) busy; waiting (841s so far)
+build-slot: all 1 gate slot(s) busy; waiting (901s so far)
+build-slot: all 1 gate slot(s) busy; waiting (962s so far)
+build-slot: all 1 gate slot(s) busy; waiting (1022s so far)
+build-slot: all 1 gate slot(s) busy; waiting (1082s so far)
+build-slot: all 1 gate slot(s) busy; waiting (1142s so far)
+build-slot: all 1 gate slot(s) busy; waiting (1202s so far)
+build-slot: gate slot 1 after 1222s (all 1 gate slot(s) busy)
+test-core
++- run test
+   +- compile test debug native 1 errors
+src/core/s3_number_test.zig:50:5: error: non-matching for loop lengths
+    for (fixtures, [_][]const u8{ "3 passed", "2 passed", one, "2 passed", one, one, one }) |fixture, expected| {
+    ^~~
+src/core/s3_number_test.zig:50:10: note: length 8 here
+    for (fixtures, [_][]const u8{ "3 passed", "2 passed", one, "2 passed", one, one, one }) |fixture, expected| {
+         ^~~~~~~~
+src/core/s3_number_test.zig:50:33: note: length 7 here
+    for (fixtures, [_][]const u8{ "3 passed", "2 passed", one, "2 passed", one, one, one }) |fixture, expected| {
+                   ~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+referenced by:
+    test.S3 native float text and mutable byte snapshots match at every core level: src/core/s3_number_test.zig:68:23
+    comptime: src/core/root_test.zig:43:17
+error: 1 compilation errors
+failed command: /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig test -ODebug --dep mylang --dep core_test_options -Mroot=src/core/root_test.zig -ODebug --dep runtime_contract -Mmylang=src/compiler.zig -Mcore_test_options=.zig-cache/o/3162da85d68acd4c96b1aa1499b50ed4/options.zig -ODebug -Mruntime_contract=src/runtime_contract.zig --test-runner ../guardian-zig/src/test_runner.zig --cache-dir .zig-cache --global-cache-dir /home/epentland/ai/canopy/.zig-global-cache --name test --zig-lib-dir /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/ --listen=-
+
+Build Summary: 2/68 steps succeeded (1 failed)
+test-core transitive failure
++- run test transitive failure
+|  +- compile test debug native 1 errors
+|     +- options cached
+|        +- compile exe mylang-core debug native cached 8ms MaxRSS:41M
++- run test transitive failure
+|  +- compile test debug native (+1 more reused dependencies)
++- run test transitive failure
+|  +- compile test debug native (+1 more reused dependencies)
++- run test transitive failure
+|  +- compile test debug native (+1 more reused dependencies)
++- run test transitive failure
+|  +- compile test debug native (+1 more reused dependencies)
++- run test transitive failure
+|  +- compile test debug native (+1 more reused dependencies)
++- run test transitive failure
+|  +- compile test debug native (+1 more reused dependencies)
++- run test transitive failure
+|  +- compile test debug native (+1 more reused dependencies)
++- run test transitive failure
+|  +- compile test debug native (+1 more reused dependencies)
++- run test transitive failure
+|  +- compile test debug native (+1 more reused dependencies)
++- run test transitive failure
+|  +- compile test debug native (+1 more reused dependencies)
++- run test transitive failure
+|  +- compile test debug native (+1 more reused dependencies)
++- run test transitive failure
+|  +- compile test debug native (+1 more reused dependencies)
++- run test transitive failure
+|  +- compile test debug native (+1 more reused dependencies)
++- run test transitive failure
+|  +- compile test debug native (+1 more reused dependencies)
++- run test transitive failure
+|  +- compile test debug native (+1 more reused dependencies)
++- run test transitive failure
+|  +- compile test debug native (+1 more reused dependencies)
++- run test transitive failure
+|  +- compile test debug native (+1 more reused dependencies)
++- run test transitive failure
+|  +- compile test debug native (+1 more reused dependencies)
++- run test transitive failure
+|  +- compile test debug native (+1 more reused dependencies)
++- run test transitive failure
+|  +- compile test debug native (+1 more reused dependencies)
++- run test transitive failure
+|  +- compile test debug native (+1 more reused dependencies)
++- run test transitive failure
+|  +- compile test debug native (+1 more reused dependencies)
++- run test transitive failure
+|  +- compile test debug native (+1 more reused dependencies)
++- run test transitive failure
+|  +- compile test debug native (+1 more reused dependencies)
++- run test transitive failure
+|  +- compile test debug native (+1 more reused dependencies)
++- run test transitive failure
+|  +- compile test debug native (+1 more reused dependencies)
++- run test transitive failure
+|  +- compile test debug native (+1 more reused dependencies)
++- run test transitive failure
+|  +- compile test debug native (+1 more reused dependencies)
++- run test transitive failure
+|  +- compile test debug native (+1 more reused dependencies)
++- run test transitive failure
+|  +- compile test debug native (+1 more reused dependencies)
++- run test transitive failure
+|  +- compile test debug native (+1 more reused dependencies)
++- run test transitive failure
+|  +- compile test debug native (+1 more reused dependencies)
++- run test transitive failure
+|  +- compile test debug native (+1 more reused dependencies)
++- run test transitive failure
+|  +- compile test debug native (+1 more reused dependencies)
++- run test transitive failure
+|  +- compile test debug native (+1 more reused dependencies)
++- run test transitive failure
+|  +- compile test debug native (+1 more reused dependencies)
++- run test transitive failure
+|  +- compile test debug native (+1 more reused dependencies)
++- run test transitive failure
+|  +- compile test debug native (+1 more reused dependencies)
++- run test transitive failure
+|  +- compile test debug native (+1 more reused dependencies)
++- run test transitive failure
+|  +- compile test debug native (+1 more reused dependencies)
++- run test transitive failure
+|  +- compile test debug native (+1 more reused dependencies)
++- run test transitive failure
+|  +- compile test debug native (+1 more reused dependencies)
++- run test transitive failure
+|  +- compile test debug native (+1 more reused dependencies)
++- run test transitive failure
+|  +- compile test debug native (+1 more reused dependencies)
++- run test transitive failure
+|  +- compile test debug native (+1 more reused dependencies)
++- run test transitive failure
+|  +- compile test debug native (+1 more reused dependencies)
++- run test transitive failure
+|  +- compile test debug native (+1 more reused dependencies)
++- run test transitive failure
+|  +- compile test debug native (+1 more reused dependencies)
++- run test transitive failure
+|  +- compile test debug native (+1 more reused dependencies)
++- run test transitive failure
+|  +- compile test debug native (+1 more reused dependencies)
++- run test transitive failure
+|  +- compile test debug native (+1 more reused dependencies)
++- run test transitive failure
+|  +- compile test debug native (+1 more reused dependencies)
++- run test transitive failure
+|  +- compile test debug native (+1 more reused dependencies)
++- run test transitive failure
+|  +- compile test debug native (+1 more reused dependencies)
++- run test transitive failure
+|  +- compile test debug native (+1 more reused dependencies)
++- run test transitive failure
+|  +- compile test debug native (+1 more reused dependencies)
++- run test transitive failure
+|  +- compile test debug native (+1 more reused dependencies)
++- run test transitive failure
+|  +- compile test debug native (+1 more reused dependencies)
++- run test transitive failure
+|  +- compile test debug native (+1 more reused dependencies)
++- run test transitive failure
+|  +- compile test debug native (+1 more reused dependencies)
++- run test transitive failure
+|  +- compile test debug native (+1 more reused dependencies)
++- run test transitive failure
+|  +- compile test debug native (+1 more reused dependencies)
++- run test transitive failure
+   +- compile test debug native (+1 more reused dependencies)
+

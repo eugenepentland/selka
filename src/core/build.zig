@@ -348,9 +348,13 @@ const Ssa = struct {
     /// The IR type of each variable: checked locals first, then synthetic joins.
     types: std.ArrayList(ir.Type) = .empty,
     resources: std.ArrayList(build_cap.Scope) = .empty,
+    /// Parents already detached for a hidden receiver's imminent write-back.
+    prepared: std.AutoHashMapUnmanaged(u32, PreparedPath) = .empty,
 };
 
 /// Where `break` and `continue` of one checked loop go.
+const PreparedPath = struct { parents: []const ir.Ref, children: []const ir.Ref };
+
 const LoopTargets = struct { id: usize, latch: ir.BlockId, exit: ir.BlockId };
 
 /// One step from a value to a part of it: a record field, a list element by index, or the payload
@@ -561,6 +565,13 @@ const FnBuilder = struct {
             for (pending.items) |item| _ = try self.completePhi(item.variable, item.phi, block);
         }
         self.ssa.sealed.items[block.index()] = true;
+    }
+
+    fn prepareParent(self: *FnBuilder, base: ir.Ref, span: u32) Error!ir.Ref {
+        const ty = self.typeOfRef(base);
+        const kind = self.mb.module.kind(ty);
+        if (kind == .list or kind == .dict) return self.emit(.{ .op = if (kind == .dict) .dict_copy else .list_copy, .ty = ty, .a = base, .data = flags.place_copy, .span = span });
+        return base;
     }
 
     /// Feature builders resolve a receiver place without evaluating it twice.
@@ -962,7 +973,22 @@ const FnBuilder = struct {
         const alias = try self.read(variable, self.current.?);
         const place = self.places.get(variable) orelse return alias;
         if (self.version(place.root) != place.root_version) return self.mb.refuse("write to a receiver's place while its arguments are evaluated", span);
-        return alias;
+        const root = try self.read(place.root, self.current.?);
+        const root_kind = self.mb.module.kind(self.typeOfRef(root));
+        if (root_kind != .list and root_kind != .dict) return alias;
+        const parents = try self.allocator().alloc(ir.Ref, place.steps.len);
+        const children = try self.allocator().alloc(ir.Ref, place.steps.len);
+        var value = root;
+        for (place.steps, 0..) |step, index| {
+            value = try self.prepareParent(value, span);
+            parents[index] = value;
+            value = try self.stepGet(value, step, span);
+            children[index] = value;
+            const kind = self.mb.module.kind(self.typeOfRef(parents[index]));
+            if ((kind == .list or kind == .dict) and self.mb.module.managed(self.typeOfRef(value))) self.function.insts.items[value.index()].data = flags.place_read;
+        }
+        try self.ssa.prepared.put(self.allocator(), variable, .{ .parents = parents, .children = children });
+        return value;
     }
 
     /// Feature builders resolve a receiver place without evaluating it twice.
@@ -1056,11 +1082,17 @@ const FnBuilder = struct {
 
     fn storeInto(self: *FnBuilder, base: ir.Ref, steps: []const Step, value: ir.Ref, span: u32) Error!ir.Ref {
         if (steps.len == 0) return value;
-        const inner = if (steps.len == 1) value else blk: {
-            const child = try self.stepGet(base, steps[0], span);
-            break :blk try self.storeInto(child, steps[1..], value, span);
-        };
-        return self.stepSet(base, steps[0], inner, span);
+        if (steps.len == 1) return self.stepSet(base, steps[0], value, span);
+        const kind = self.mb.module.kind(self.typeOfRef(base));
+        const indexed = kind == .list or kind == .dict;
+        // Ownership chooses identity, count-tested detach, or copy before the
+        // child read. The child can then take the slot's existing owner.
+        const parent = if (indexed) try self.emit(.{ .op = if (kind == .dict) .dict_copy else .list_copy, .ty = self.typeOfRef(base), .a = base, .data = flags.place_copy, .span = span }) else base;
+        const child = try self.stepGet(parent, steps[0], span);
+        if (indexed and self.mb.module.managed(self.typeOfRef(child))) self.function.insts.items[child.index()].data = flags.place_read;
+        const inner = try self.storeInto(child, steps[1..], value, span);
+        if (kind == .dict) return self.listSet(parent, self.function.inst(child).b, inner, span);
+        return self.stepSet(parent, steps[0], inner, span);
     }
 
     /// The value at `place` as its root stands now.
@@ -1086,7 +1118,21 @@ const FnBuilder = struct {
         try self.write(self.local(owner), self.current.?, value);
         try self.assigned(self.local(owner));
         if (self.places.getPtr(self.local(owner))) |place| {
-            _ = try self.storePlace(place.*, value, span);
+            if (self.ssa.prepared.fetchRemove(self.local(owner))) |entry| {
+                var rebuilt = value;
+                var index = place.steps.len;
+                while (index != 0) {
+                    index -= 1;
+                    const parent = entry.value.parents[index];
+                    rebuilt = if (self.mb.module.kind(self.typeOfRef(parent)) == .dict)
+                        try self.listSet(parent, self.function.inst(entry.value.children[index]).b, rebuilt, span)
+                    else
+                        try self.stepSet(parent, place.steps[index], rebuilt, span);
+                }
+                try self.write(place.root, self.current.?, rebuilt);
+                try self.assigned(place.root);
+                try build_capture.invalidate(@TypeOf(self), self, place.*, span);
+            } else _ = try self.storePlace(place.*, value, span);
             place.root_version = self.version(place.root);
         } else try build_capture.invalidate(@TypeOf(self), self, .{ .root = self.local(owner), .steps = &.{} }, span);
     }

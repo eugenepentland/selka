@@ -1,0 +1,4 @@
+$ /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/zig-out/bin/mylang-core test /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/test/core/v_nested_lengths.my --json --cache-dir /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/supplement/final-supplement-v4/new-debug
+stdout='{"version":"native-tests-v1","tests":[{"name":"v_nested_lengths::test_uniform_child_lengths_follow_each_list_value","status":"passed","reason":"","at":""}],"passed":1,"failed":0,"skipped":0,"cached":0,"unsupported":0}\n'
+stderr=''
+exit=0

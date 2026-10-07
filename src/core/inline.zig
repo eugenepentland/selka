@@ -13,13 +13,38 @@ const std = @import("std");
 const ir = @import("ir.zig");
 const facts = @import("facts.zig");
 const proof = @import("inline_proof.zig");
+const cfg = @import("inline_cfg.zig");
 
 /// Inlining only allocates.
 pub const Error = std.mem.Allocator.Error;
 
 /// Inline every qualifying call in `module`'s internal functions; returns how many.
 pub fn inlineLeaves(arena: std.mem.Allocator, module: *ir.Module) Error!u32 {
-    return withParameters(arena, module, &.{});
+    const leaves = try withParameters(arena, module, &.{});
+    const helpers = try inlineCfg(arena, module);
+    return leaves + helpers;
+}
+
+/// Apply bounded consuming CFG cloning once, before the caller parameter pass.
+fn inlineCfg(arena: std.mem.Allocator, module: *ir.Module) Error!u32 {
+    var count: u32 = 0;
+    for (module.functions.items, 0..) |*caller, index| {
+        if (caller.signature.linkage != .internal) continue;
+        var b: usize = 0;
+        while (b < caller.blocks.items.len) : (b += 1) {
+            var at: usize = 0;
+            while (at < caller.blocks.items[b].insts.items.len) : (at += 1) {
+                const call = caller.inst(caller.blocks.items[b].insts.items[at]);
+                if (call.op != .call or call.a.index() == index) continue;
+                const callee = &module.functions.items[call.a.index()];
+                if (!cfg.qualifies(callee)) continue;
+                try cfg.splice(arena, caller, callee, b, at);
+                count += 1;
+                break;
+            }
+        }
+    }
+    return count;
 }
 
 /// Revisit checked leaves with sound caller parameter intervals, retaining every

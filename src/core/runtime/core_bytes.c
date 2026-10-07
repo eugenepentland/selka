@@ -104,3 +104,21 @@ myl_block *myl_core_from_hex(myl_block *source) {
     for (int64_t i = 0; i < out->len; ++i) block_data(out)[i] = (unsigned char)(core_hex_digit(block_data(source)[i * 2]) * 16 + core_hex_digit(block_data(source)[i * 2 + 1]));
     return out;
 }
+
+/* S4 numeric append: one checked reserve and one fragment copy, no text block. */
+myl_block *myl_core_buffer_append_spelled(myl_block *buffer, const unsigned char *bytes, size_t length) {
+    if (length > (size_t)(INT64_MAX - buffer->len)) out_of_memory();
+    buffer = core_buffer_grow(buffer, buffer->len + (int64_t)length);
+    memcpy(block_data(buffer) + buffer->len, bytes, length);
+    buffer->len += (int64_t)length;
+    return buffer;
+}
+myl_block *myl_core_buffer_append_i64(myl_block *buffer, int64_t value) {
+    unsigned char bytes[20];
+    bool negative = value < 0;
+    uint64_t magnitude = negative ? -(uint64_t)value : (uint64_t)value;
+    unsigned length = core_number_length(magnitude) + negative;
+    core_number_write(bytes + length, magnitude);
+    if (negative) bytes[0] = '-';
+    return myl_core_buffer_append_spelled(buffer, bytes, length);
+}

@@ -6,10 +6,12 @@ const formatting = @import("core_number_format.zig");
 
 const Block = extern struct { count: u32, kind: u32, len: i64, cap: i64, reserved: u64 };
 extern fn myl_core_number_text_new(length: usize) *Block;
+extern fn myl_core_buffer_append_spelled(buffer: *Block, bytes: [*]const u8, length: usize) *Block;
 extern fn myl_core_number_text_invalid() noreturn;
 
 comptime {
     if (!builtin.is_test) {
+        @export(&appendFloat, .{ .name = "myl_core_buffer_append_f64" });
         @export(&floatText, .{ .name = "myl_core_str_from_f64" });
         @export(&formatNumber, .{ .name = "myl_core_format_number" });
         @export(&formatFloat, .{ .name = "myl_core_format_float" });
@@ -100,4 +102,10 @@ fn parseFloat(source: *const Block, start: i64, end: i64) callconv(.c) ParsedFlo
 
 fn roundFloat(value: f64, digits: i64) callconv(.c) f64 {
     return formatting.roundFloat(value, digits);
+}
+
+fn appendFloat(buffer: *Block, value: f64) callconv(.c) *Block {
+    var frame: [1024]u8 = undefined;
+    const bytes = spelledFloat(&frame, value) catch return myl_core_number_text_invalid();
+    return myl_core_buffer_append_spelled(buffer, bytes.ptr, bytes.len);
 }

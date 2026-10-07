@@ -19,7 +19,7 @@ pub const Error = error{ ToolFailed, OutOfMemory, WriteFailed };
 
 /// Whether emitted code actually calls a Zig number helper.
 pub fn needed(llvm: []const u8) bool {
-    const names = [_][]const u8{ "myl_core_str_from_f64", "myl_core_format_number", "myl_core_format_float", "myl_core_format_text", "myl_core_parse_float_range", "myl_core_round_float" };
+    const names = [_][]const u8{ "myl_core_str_from_f64", @import("flags.zig").buffer_float_symbol, "myl_core_format_number", "myl_core_format_float", "myl_core_format_text", "myl_core_parse_float_range", "myl_core_round_float" };
     for (names) |name| if (std.mem.indexOf(u8, llvm, name) != null) return true;
     return false;
 }

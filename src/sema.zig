@@ -1047,6 +1047,21 @@ const Checker = struct {
     /// Give each operand of one binary operator the numeric type the other side
     /// or the context makes obvious, so a literal adopts its partner's width.
     pub fn hintOperands(self: *Checker, binary: @FieldType(@FieldType(ast.Node, "data"), "binary"), context: ?typed.Type) Error!void {
+        // Sequence repetition has unlike operand types. A runtime count must
+        // not lend its integer type to a contextual list constructor.
+        if (binary.op == .mul) {
+            for ([_]ast.NodeId{ binary.left, binary.right }) |operand| {
+                switch (self.syntax.nodes.items[@backingInt(operand)].data) {
+                    .list_literal, .comprehension => {
+                        if (context) |expected| {
+                            if (expected.isAggregate() and self.catalog.records[expected.recordIndex()].collection.kind == .list) try self.hint(operand, expected);
+                        }
+                        return;
+                    },
+                    else => {},
+                }
+            }
+        }
         const expected = self.obviousType(binary.left) orelse self.obviousType(binary.right) orelse context orelse return;
         if (!expected.isInteger() and !numeric_surface.isFloat(expected, self.catalog.records)) {
             // `==`/`!=` operands share one aggregate type, so a typed side gives a

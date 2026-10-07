@@ -41,6 +41,7 @@
 const std = @import("std");
 const ir = @import("ir.zig");
 const facts = @import("facts.zig");
+const flags = @import("flags.zig");
 const promotion = @import("promote.zig");
 
 /// The pass only allocates.
@@ -109,9 +110,14 @@ pub fn function(arena: std.mem.Allocator, module: *const ir.Module, f: *ir.Funct
         const promoted = try promotion.promote(arena, module, f, known, options.verify);
         marks.stack = promoted.values;
         stats.promoted = promoted.lists;
+        reserveFills(f, known);
     }
     // Popped elements are found (or read) before anything moves.
     try markPops(.{ .arena = arena, .f = f }, module, &marks);
+    for (f.insts.items, 0..) |inst, index| {
+        if (flags.transferredRead(inst) and module.managed(inst.ty)) try marks.owned_get.put(arena, @intCast(index), {});
+        if (flags.transferredSlot(f, inst)) try marks.taken.put(arena, @intCast(index), {});
+    }
     try takeFields(arena, module, f, &marks);
     var phase_a = try Analysis.of(arena, module, f, &marks);
     try phase_a.analyze();
@@ -119,10 +125,66 @@ pub fn function(arena: std.mem.Allocator, module: *const ir.Module, f: *ir.Funct
     var phase_b = try Analysis.of(arena, module, f, &marks);
     try phase_b.analyze();
     try count(&phase_b, &stats);
+    if (options.facts) |known| markFillPushes(f, known);
     stats.elided = try elidePairs(arena, f);
     stats.retains -= stats.elided;
     stats.releases -= stats.elided;
     return stats;
+}
+
+/// Reserve known counted fills after stack promotion. Only detached i64/u64
+/// parameters qualify, so the bound always dominates the empty constructor.
+fn reserveFills(f: *ir.Function, known: *const facts.Facts) void {
+    for (known.counted) |counted| {
+        const bound = f.resolve(counted.bound);
+        const source = f.inst(bound);
+        if (source.op != .param or (source.ty != .i64 and source.ty != .u64)) continue;
+        for (f.blocks.items[counted.loop.header.index()].insts.items) |ref| {
+            const phi = f.inst(ref);
+            if (phi.op != .phi or !known.aggregates.lists[ref.index()].pattern) continue;
+            if (f.resolve(known.aggregates.lists[ref.index()].length) != bound) continue;
+            for (f.operands(phi.data)) |operand| {
+                const entry = f.resolve(operand);
+                const inst = f.inst(entry);
+                if (inst.op != .list_new or inst.data != 0) continue;
+                f.insts.items[entry.index()].a = bound;
+                f.insts.items[entry.index()].data = flags.fill_capacity;
+            }
+        }
+    }
+}
+
+/// COW may replace the receiver with a copy whose capacity is unknown. Only
+/// the counted body's backedge push, still consuming the original unique loop
+/// phi, uses its reserved room. Later appends must check capacity normally.
+fn markFillPushes(f: *ir.Function, known: *const facts.Facts) void {
+    for (known.counted) |counted| {
+        for (f.blocks.items[counted.loop.header.index()].insts.items) |ref| {
+            const phi = f.inst(ref);
+            if (phi.op != .phi or !known.aggregates.lists[ref.index()].pattern) continue;
+            var reserved = false;
+            for (f.operands(phi.data)) |operand| {
+                const entry = f.inst(f.resolve(operand));
+                reserved = reserved or (entry.op == .list_new and entry.data == flags.fill_capacity);
+            }
+            if (!reserved) continue;
+            const push_ref = fillBackedgePush(f, counted.loop.header, ref) orelse continue;
+            f.insts.items[push_ref.index()].data = flags.fill_push;
+        }
+    }
+}
+
+/// The facts proved this backedge value is the body's single push. Ownership
+/// can split that edge, so consult the current recorded latch and phi ordering.
+fn fillBackedgePush(f: *const ir.Function, header: ir.BlockId, phi: ir.Ref) ?ir.Ref {
+    for (f.loops.items) |loop| {
+        if (loop.header != header) continue;
+        const position = std.mem.indexOfScalar(ir.BlockId, f.blocks.items[header.index()].preds.items, loop.latch) orelse return null;
+        const ref = f.resolve(f.operands(f.inst(phi).data)[position]);
+        const push = f.inst(ref);
+        return if (push.op == .list_push and push.data == 0 and f.resolve(push.a) == phi) ref else null;
+    }
+    return null;
 }
 
 // ---- analysis -------------------------------------------------------------------
@@ -548,6 +610,9 @@ fn staticallyUnique(a: *const Analysis, value: ir.Ref, site: ir.Ref) Error!bool 
         const instruction = a.inst(current);
         switch (instruction.op) {
             .list_new, .list_copy, .dict_new, .dict_copy, .str_from_view, .buffer_new, .buffer_copy => {},
+            .list_get => if (flags.transferredRead(instruction)) {
+                if (!try exclusiveChildren(a, instruction.a)) return false;
+            } else return false,
             .phi => for (a.f.operands(instruction.data)) |operand| {
                 const source = a.f.resolve(operand);
                 if (std.mem.indexOfScalar(ir.Ref, web.items, source) == null) try web.append(a.arena, source);
@@ -560,6 +625,62 @@ fn staticallyUnique(a: *const Analysis, value: ir.Ref, site: ir.Ref) Error!bool 
         if (try shared(a, .{ .members = web.items, .index = &index }, member, site)) return false;
     }
     return true;
+}
+
+/// A fresh collection owns unique child blocks when all stores moved unique
+/// values and no ordinary child read was promoted, stored, returned or lent to a
+/// call. A real collection copy does not establish this claim: its children share.
+fn exclusiveChildren(a: *const Analysis, root: ir.Ref) Error!bool {
+    var values: std.ArrayList(ir.Ref) = .empty;
+    try values.append(a.arena, a.f.resolve(root));
+    var next: usize = 0;
+    while (next < values.items.len) : (next += 1) {
+        const ref = values.items[next];
+        const inst = a.inst(ref);
+        switch (inst.op) {
+            .list_new => {},
+            .list_copy => {
+                if (inst.data != flags.place_copy) return false;
+                const source = a.f.resolve(inst.a);
+                const at = location(a.f, ref);
+                if (!a.counted(source) or a.liveAfter(source, at.block, at.pos)) return false;
+                if (!try staticallyUnique(a, source, ref)) return false;
+                try addUnique(a.arena, &values, source);
+            },
+            .phi => for (a.f.operands(inst.data)) |operand| {
+                try addUnique(a.arena, &values, a.f.resolve(operand));
+            },
+            .list_push, .list_set => {
+                const child = a.f.resolve(if (inst.op == .list_push) inst.b else a.f.operands(inst.data)[0]);
+                const at = location(a.f, ref);
+                if (a.liveAfter(child, at.block, at.pos) or !try staticallyUnique(a, child, ref)) return false;
+                try addUnique(a.arena, &values, a.f.resolve(inst.a));
+            },
+            else => return false,
+        }
+    }
+    for (a.f.insts.items, 0..) |inst, index| {
+        if (inst.op != .list_get or !a.module.managed(inst.ty) or flags.transferredRead(inst)) continue;
+        if (std.mem.indexOfScalar(ir.Ref, values.items, a.f.resolve(inst.a)) == null) continue;
+        if (a.class[index] == .owned) return false;
+        for (a.uses[index].items) |use| {
+            if (use.consume != 0) return false;
+            const user = a.f.inst(a.f.blocks.items[use.block].insts.items[use.pos]);
+            if (user.op == .call or user.op == .call_indirect) return false;
+        }
+    }
+    return true;
+}
+
+fn addUnique(arena: std.mem.Allocator, values: *std.ArrayList(ir.Ref), ref: ir.Ref) Error!void {
+    if (std.mem.indexOfScalar(ir.Ref, values.items, ref) == null) try values.append(arena, ref);
+}
+
+fn location(f: *const ir.Function, ref: ir.Ref) struct { block: u32, pos: u32 } {
+    for (f.blocks.items, 0..) |block, b| {
+        if (std.mem.indexOfScalar(ir.Ref, block.insts.items, ref)) |pos| return .{ .block = @intCast(b), .pos = @intCast(pos) };
+    }
+    unreachable;
 }
 
 /// The values one block may pass through on its way to an update: the updated value
@@ -686,7 +807,9 @@ fn copyOnWrite(a: *Analysis, options: Options, stats: *Stats) Error!void {
         if (!a.present(b)) continue;
         for (block.insts.items, 0..) |ref, pos| {
             const instruction = f.inst(ref);
-            if (!isUpdate(instruction.op)) continue;
+            const detach = (instruction.op == .list_copy or instruction.op == .dict_copy) and instruction.data == flags.place_copy;
+            if (!isUpdate(instruction.op) and !detach) continue;
+            if (a.marks.taken.contains(@backingInt(ref))) continue;
             // A push into a promoted list: in place by construction (`promote.zig`).
             if (instruction.op == .list_push and instruction.data == promotion.stack_push) continue;
             const list = f.resolve(instruction.a);
@@ -697,22 +820,38 @@ fn copyOnWrite(a: *Analysis, options: Options, stats: *Stats) Error!void {
         }
     }
     const e: Editor = .{ .arena = a.arena, .f = f };
-    for (sites.items) |site| switch (site.form) {
-        .copied => {
-            stats.copied += 1;
-            const update = f.inst(site.update);
-            const copy = try copyBefore(e, a.module, site.update, update.a);
-            try useUpdatedOperand(e, site.update, copy);
-        },
-        .tested => {
-            stats.tested += 1;
-            try testUnique(e, a.module, site.update);
-        },
-        .in_place => {
-            stats.in_place += 1;
-            if (options.verify) try assertUnique(e, site.update);
-        },
-    };
+    for (sites.items) |site| {
+        const before = f.inst(site.update);
+        const detach = (before.op == .list_copy or before.op == .dict_copy) and before.data == flags.place_copy;
+        switch (site.form) {
+            .copied => {
+                stats.copied += 1;
+                if (detach) {
+                    f.insts.items[site.update.index()].data = 0;
+                } else {
+                    const copy = try copyBefore(e, a.module, site.update, before.a);
+                    try useUpdatedOperand(e, site.update, copy);
+                }
+            },
+            .tested => {
+                stats.tested += 1;
+                try testUnique(e, a.module, site.update);
+                if (detach) f.insts.items[site.update.index()].op = .copy;
+            },
+            .in_place => {
+                stats.in_place += 1;
+                if (options.verify) try assertUnique(e, site.update);
+                if (detach) f.insts.items[site.update.index()].op = .copy;
+            },
+        }
+    }
+    if (options.verify) {
+        var reads: std.ArrayList(ir.Ref) = .empty;
+        for (f.blocks.items) |block| for (block.insts.items) |ref| {
+            if (flags.transferredRead(f.inst(ref))) try reads.append(a.arena, ref);
+        };
+        for (reads.items) |ref| try assertUnique(e, ref);
+    }
     try extractDroppedFields(a);
 }
 
@@ -820,7 +959,7 @@ fn takeFields(arena: std.mem.Allocator, module: *const ir.Module, f: *const ir.F
     const graph = try UseGraph.of(arena, f);
     for (f.insts.items, 0..) |record, i| {
         if (module.kind(record.ty) != .record or !module.managed(record.ty)) continue;
-        if (!ownedRecord(f, record)) continue;
+        if (!ownedRecord(f, record) and !marks.owned_get.contains(@intCast(i))) continue;
         const ref: ir.Ref = @fromBackingInt(@intCast(i));
         var reads_only = true;
         var set: ?ir.Ref = null;

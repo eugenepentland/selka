@@ -134,9 +134,15 @@ fn appendByte(comptime Context: type, context: Context, node: Operation, span: u
 }
 
 fn appendFragment(comptime Context: type, context: Context, node: Operation, span: u32) Error!ir.Ref {
-    var source = try context.expression(node.arguments[0]);
-    if (node.kind == .buffer_append_int) source = try context.runtimeCall("myl_core_str_from_i64", &.{.i64}, .str, &.{source}, span);
-    if (node.kind == .buffer_append_float) source = try context.runtimeCall("myl_core_str_from_f64", &.{.f64}, .str, &.{source}, span);
+    const source = try context.expression(node.arguments[0]);
+    if (node.kind == .buffer_append_int or node.kind == .buffer_append_float) {
+        const integer = node.kind == .buffer_append_int;
+        _ = try context.mb.runtimeFunction(if (integer) flags.buffer_int_symbol else flags.buffer_float_symbol, &.{ .byte_buffer, if (integer) .i64 else .f64 }, .byte_buffer, .extern_c);
+        const receiver = try context.writableReceiverOf(node.owner, span);
+        const updated = try context.emit(.{ .op = .buffer_push, .ty = .byte_buffer, .a = receiver, .b = source, .data = if (integer) flags.buffer_append_int else flags.buffer_append_float, .span = span });
+        try context.writeOwner(node.owner, updated, span);
+        return context.constant(.bool, 1);
+    }
     const start = if (node.kind == .buffer_append_range) try context.expression(node.arguments[1]) else try context.constant(.i64, 0);
     const stop = if (node.kind == .buffer_append_range) try context.expression(node.arguments[2]) else try context.emit(.{ .op = if (context.typeOfRef(source) == .str) .str_len else .list_len, .ty = .u64, .a = source, .span = span });
     const end = if (context.typeOfRef(stop) == .i64) stop else try context.emit(.{ .op = .convert, .ty = .i64, .a = stop, .span = span });
