@@ -1,0 +1,125 @@
+{
+  "qualified": true,
+  "source_commit": "334a06df83c26f2c04581a4670a9e5af816e8c1a",
+  "compilers": {
+    "old": {
+      "path": ".mylang-cache/s4-emission/oracle/mylang",
+      "sha256": "d36658dbfb78d29213224532a13fd5ad8b7c0e290dbfb87613d9815678305c79"
+    },
+    "new": {
+      "path": ".mylang-cache/s4-emission/debug-cold-loop-01/bin/mylang-core",
+      "sha256": "f004e04b3680c93998d5b22e83b2bdafaa1b95244fbc9d1da447ea6eac4dc1fc"
+    }
+  },
+  "comparisons": [
+    {
+      "case": "cold_loop",
+      "mode": "debug",
+      "identical": true,
+      "stderr": "leaf.my:5:15: error[R_OVERFLOW]: native execution failed (add: left 9223372036854775807, right 9223372036854775807, width 64)\n  in leaf::origin at leaf.my:5:15\n  in app::main at app.my:4:12\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"add\",\"left\":9223372036854775807,\"right\":9223372036854775807,\"width\":64}\n",
+      "units": [
+        {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/import-cold-loop-01/cold_loop-debug/new/program-b980e34a1ad831ce/entry.ll",
+          "sha256": "318ee893f3f11191134e81b0fff0ac414be7ab7e7443b719622141c2bdf7ba0d",
+          "object": {
+            "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/import-cold-loop-01/cold_loop-debug/unit-0.o",
+            "sha256": "841a54c3618812ebfb039b2ddeebdb61104af8576158577c068f24878bcfdd28"
+          },
+          "imports": []
+        },
+        {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/import-cold-loop-01/cold_loop-debug/new/program-b980e34a1ad831ce/module-819b813edb0e06e8dfdd7ff60e54b591b15e01e8a00977de40701a326bcc3d4d.ll",
+          "sha256": "0ae9c22dbf43cd645f5417c809a978eabb1d4371fb7fd0f42535ccec9af7b29f",
+          "object": {
+            "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/import-cold-loop-01/cold_loop-debug/unit-1.o",
+            "sha256": "e9d93ae609d2ee691e38619185ee2be8ffbb0142a5a2f81bc267534bc04f9200"
+          },
+          "imports": []
+        },
+        {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/import-cold-loop-01/cold_loop-debug/new/program-b980e34a1ad831ce/module-bad08762e64845eed94704ae2cd0b6325e27fd286e93808089be7c1eed9fba4d.ll",
+          "sha256": "6397c84ed99d3d053d3c9a39a3e8613b66eaebf2512fbe64686da235619e8c65",
+          "object": {
+            "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/import-cold-loop-01/cold_loop-debug/unit-2.o",
+            "sha256": "9ebd89b5ce40adcbe97caada4d19e530bafacda9bb5786d4f138f11ae8aa2daf"
+          },
+          "imports": []
+        }
+      ]
+    },
+    {
+      "case": "cold_loop",
+      "mode": "release",
+      "identical": true,
+      "stderr": "leaf.my:5:15: error[R_OVERFLOW]: native execution failed (add: left 9223372036854775807, right 9223372036854775807, width 64)\n  in leaf::origin at leaf.my:5:15\n  in app::main at app.my:4:12\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"add\",\"left\":9223372036854775807,\"right\":9223372036854775807,\"width\":64}\n",
+      "units": [
+        {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/import-cold-loop-01/cold_loop-release/new/program-f52ff6e955e9ac1f/entry.ll",
+          "sha256": "318ee893f3f11191134e81b0fff0ac414be7ab7e7443b719622141c2bdf7ba0d",
+          "object": {
+            "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/import-cold-loop-01/cold_loop-release/unit-0.o",
+            "sha256": "138cd177ef375f391cac13fca11918724dc30de29790789625205d50dc957ea2"
+          },
+          "imports": []
+        },
+        {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/import-cold-loop-01/cold_loop-release/new/program-f52ff6e955e9ac1f/module-819b813edb0e06e8dfdd7ff60e54b591b15e01e8a00977de40701a326bcc3d4d.ll",
+          "sha256": "1f10991c7818b185516395f4f715b037a305267cae087fbe75c5410fb9e51bae",
+          "object": {
+            "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/import-cold-loop-01/cold_loop-release/unit-1.o",
+            "sha256": "500c632d7514353216057e5ca0f365856a27d7719129d8720af3cd380bd7b8fa"
+          },
+          "imports": [
+            "my.leaf::origin"
+          ]
+        },
+        {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/import-cold-loop-01/cold_loop-release/new/program-f52ff6e955e9ac1f/module-bad08762e64845eed94704ae2cd0b6325e27fd286e93808089be7c1eed9fba4d.ll",
+          "sha256": "2e076e076f57030f957f732c91784debe55ea97c195e5f73d2458a481ad10015",
+          "object": {
+            "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/import-cold-loop-01/cold_loop-release/unit-2.o",
+            "sha256": "348773100e8c1defb44d282008e707d45a8e7184f83c6b624813e134c2018fc2"
+          },
+          "imports": []
+        }
+      ]
+    },
+    {
+      "case": "cold_loop",
+      "mode": "verify",
+      "identical": true,
+      "stderr": "leaf.my:5:15: error[R_OVERFLOW]: native execution failed (add: left 9223372036854775807, right 9223372036854775807, width 64)\n  in leaf::origin at leaf.my:5:15\n  in app::main at app.my:4:12\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"add\",\"left\":9223372036854775807,\"right\":9223372036854775807,\"width\":64}\n",
+      "units": [
+        {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/import-cold-loop-01/cold_loop-verify/new/program-29703ebe5097c104/entry.ll",
+          "sha256": "318ee893f3f11191134e81b0fff0ac414be7ab7e7443b719622141c2bdf7ba0d",
+          "object": {
+            "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/import-cold-loop-01/cold_loop-verify/unit-0.o",
+            "sha256": "138cd177ef375f391cac13fca11918724dc30de29790789625205d50dc957ea2"
+          },
+          "imports": []
+        },
+        {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/import-cold-loop-01/cold_loop-verify/new/program-29703ebe5097c104/module-819b813edb0e06e8dfdd7ff60e54b591b15e01e8a00977de40701a326bcc3d4d.ll",
+          "sha256": "9867c16fdcb1b4d8f8e6551196bbf6fc20af85074b40e21145f5858ded5b1f72",
+          "object": {
+            "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/import-cold-loop-01/cold_loop-verify/unit-1.o",
+            "sha256": "500c632d7514353216057e5ca0f365856a27d7719129d8720af3cd380bd7b8fa"
+          },
+          "imports": [
+            "my.leaf::origin"
+          ]
+        },
+        {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/import-cold-loop-01/cold_loop-verify/new/program-29703ebe5097c104/module-bad08762e64845eed94704ae2cd0b6325e27fd286e93808089be7c1eed9fba4d.ll",
+          "sha256": "efd7186ad821ed1aaeb95a0f5eb1a7f3f81b41d73cb5833ab03e7447cc353c95",
+          "object": {
+            "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/import-cold-loop-01/cold_loop-verify/unit-2.o",
+            "sha256": "15586c75b35d00f979337dca4e9a59658a46ed1249bcebb341cf372fd584b7a7"
+          },
+          "imports": []
+        }
+      ]
+    }
+  ]
+}

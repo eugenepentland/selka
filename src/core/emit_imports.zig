@@ -12,20 +12,21 @@ const Selection = struct {
     instructions: usize = 0,
 };
 
-/// Import loop callees, then their bounded direct-call closure, in first-use order.
-/// Cold dispatch stays separate; recursion stops at an already visited function.
+/// Import calls inside loops and bounded loop bodies called from outside a loop,
+/// then their direct-call closure in first-use order. Large dispatch stays separate.
 pub fn select(a: std.mem.Allocator, module: *const ir.Module, owner: []const ?u32, owned: []const u32, group: u32) std.mem.Allocator.Error![]const u32 {
     var selected: Selection = .{ .visited = try a.alloc(bool, owner.len) };
     @memset(selected.visited, false);
     for (owned) |index| {
         const function = &module.functions.items[index];
-        if (function.loops.items.len == 0) continue;
-        const inside = try loopBlocks(a, function);
+        const inside = if (function.loops.items.len != 0) try loopBlocks(a, function) else null;
         for (function.blocks.items, 0..) |block, b| {
-            if (!inside[b] or (b != 0 and block.preds.items.len == 0)) continue;
+            if (b != 0 and block.preds.items.len == 0) continue;
             for (block.insts.items) |ref| {
                 const inst = function.inst(ref);
-                if (inst.op == .call) try admit(a, module, owner, group, &selected, @intCast(inst.a.index()));
+                if (inst.op != .call) continue;
+                const target: u32 = @intCast(inst.a.index());
+                if ((inside != null and inside.?[b]) or hasLoop(&module.functions.items[target])) try admit(a, module, owner, group, &selected, target);
             }
         }
     }
@@ -41,6 +42,11 @@ pub fn select(a: std.mem.Allocator, module: *const ir.Module, owner: []const ?u3
         }
     }
     return selected.functions.toOwnedSlice(a);
+}
+
+fn hasLoop(function: *const ir.Function) bool {
+    for (function.loops.items) |loop| if (loop.body.index() == 0 or function.blocks.items[loop.body.index()].preds.items.len != 0) return true;
+    return false;
 }
 
 fn admit(a: std.mem.Allocator, module: *const ir.Module, owner: []const ?u32, group: u32, selected: *Selection, index: u32) !void {

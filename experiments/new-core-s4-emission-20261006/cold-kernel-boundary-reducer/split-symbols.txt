@@ -1,0 +1,5 @@
+00000000010344b0 T main
+0000000001032ca0 t my.app::main
+0000000001033c80 t my.workload::inputs
+0000000001033180 t my.workload::kernel
+0000000001032f80 t my.workload::number

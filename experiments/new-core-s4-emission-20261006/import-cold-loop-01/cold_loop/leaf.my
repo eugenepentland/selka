@@ -1,0 +1,6 @@
+module leaf
+public def origin(x: int) -> int:
+    total = 0
+    for i in range(2):
+        total += x
+    return total

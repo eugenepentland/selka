@@ -1,0 +1,106 @@
+{
+  "source_commit": "a60752027",
+  "complete": true,
+  "programs": {
+    "split": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/paired-combined-01/split-word_count",
+      "sha256": "f9399635a250647423d2835865cd9dcf09459b9ed02a78aa1af50a434c7b9ead"
+    },
+    "whole": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/paired-combined-01-whole/row_word_count",
+      "sha256": "a12a243f83efb933f728abe3947f6fe64bfd0523d6bd49dcabe0dcd23f2d882d"
+    }
+  },
+  "commands": [
+    {
+      "command": [
+        "objdump",
+        "-d",
+        "--no-show-raw-insn",
+        "--disassemble=my.app::main",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/paired-combined-01/split-word_count"
+      ],
+      "status": 0,
+      "artifact": "split-my.app-main.txt"
+    },
+    {
+      "command": [
+        "objdump",
+        "-d",
+        "--no-show-raw-insn",
+        "--disassemble=my.workload::kernel",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/paired-combined-01/split-word_count"
+      ],
+      "status": 0,
+      "artifact": "split-my.workload-kernel.txt"
+    },
+    {
+      "command": [
+        "objdump",
+        "-d",
+        "--no-show-raw-insn",
+        "--disassemble=main",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/paired-combined-01/split-word_count"
+      ],
+      "status": 0,
+      "artifact": "split-main.txt"
+    },
+    {
+      "command": [
+        "nm",
+        "--defined-only",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/paired-combined-01/split-word_count"
+      ],
+      "status": 0,
+      "artifact": "split-symbols.txt",
+      "filter": "app/workload/main symbols"
+    },
+    {
+      "command": [
+        "objdump",
+        "-d",
+        "--no-show-raw-insn",
+        "--disassemble=my.app::main",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/paired-combined-01-whole/row_word_count"
+      ],
+      "status": 0,
+      "artifact": "whole-my.app-main.txt"
+    },
+    {
+      "command": [
+        "objdump",
+        "-d",
+        "--no-show-raw-insn",
+        "--disassemble=my.workload::kernel",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/paired-combined-01-whole/row_word_count"
+      ],
+      "status": 0,
+      "artifact": "whole-my.workload-kernel.txt"
+    },
+    {
+      "command": [
+        "objdump",
+        "-d",
+        "--no-show-raw-insn",
+        "--disassemble=main",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/paired-combined-01-whole/row_word_count"
+      ],
+      "status": 0,
+      "artifact": "whole-main.txt"
+    },
+    {
+      "command": [
+        "nm",
+        "--defined-only",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/paired-combined-01-whole/row_word_count"
+      ],
+      "status": 0,
+      "artifact": "whole-symbols.txt",
+      "filter": "app/workload/main symbols"
+    }
+  ],
+  "known_failure": "word4096 split/whole1.05974555 CI[1.05775792,1.06254444]; word64 1.03572145 CI[1.03392375,1.04234877]",
+  "reducer": "real two-module unchanged word-count workload vs same-program whole LLVM",
+  "whole_body": "kernel inlined into Cmain; no kernel symbol",
+  "split_body": "appmain calls hidden fastcc workloadkernel"
+}

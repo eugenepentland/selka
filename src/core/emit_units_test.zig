@@ -380,6 +380,26 @@ test "S4 release imports counted and conditional loop callees without cold-call 
 }
 
 // spec-case: NEW-CORE-S4-UNITS-1
+// spec-case: NEW-CORE-S4-SITES-1
+test "S4 a loop body called outside a caller loop imports with its source frame and stable ripple" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const caller = "module app\nimport leaf\ndef main() -> int:\n    return leaf.compute(9223372036854775807)\n";
+    const callee = "module leaf\npublic def compute(x: int) -> int:\n    total = 0\n    for i in range(2):\n        total += x\n    return total\n";
+    const first = try snapshot(a, .{ caller, callee, other }, true);
+    try std.testing.expect(std.mem.indexOf(u8, try textOf(first, "app.my"), "define available_externally hidden fastcc i64 @\"my.leaf::compute\"") != null);
+    try changed(first, try snapshot(a, .{ caller, callee, other }, true), &.{});
+    const changed_body = try std.mem.replaceOwned(u8, a, callee, "total += x", "total += x + 1");
+    try changed(first, try snapshot(a, .{ caller, changed_body, other }, true), &.{ "app.my", "leaf.my" });
+    const result = try native(a, first);
+    try std.testing.expect(result.term == .exited and result.term.exited == 1);
+    try std.testing.expectEqualStrings("leaf.my:5:15: error[R_OVERFLOW]: native execution failed (add: left 9223372036854775807, right 9223372036854775807, width 64)\n" ++
+        "  in leaf::compute at leaf.my:5:15\n  in app::main at app.my:4:12\n" ++
+        "\x1eMYLANG-TRAP {\"version\":1,\"operation\":\"add\",\"left\":9223372036854775807,\"right\":9223372036854775807,\"width\":64}\n", result.stderr);
+}
+
+// spec-case: NEW-CORE-S4-UNITS-1
 test "S4 imported aggregate bodies close rendering dependencies and export excluded private callees" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();

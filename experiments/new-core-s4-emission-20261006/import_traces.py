@@ -9,6 +9,10 @@ from pathlib import Path
 from trace_units import command, FLAGS, ROOT
 
 CASES = {
+    "cold_loop": (
+        "module app\nimport leaf\ndef main() -> int:\n    return leaf.origin(9223372036854775807)\n",
+        "module leaf\npublic def origin(x: int) -> int:\n    total = 0\n    for i in range(2):\n        total += x\n    return total\n",
+    ),
     "overflow": (
         "module app\nimport leaf\ndef main() -> int:\n    total = 0\n    for i in range(2):\n"
         "        total += leaf.origin(9223372036854775807)\n    return total\n",
