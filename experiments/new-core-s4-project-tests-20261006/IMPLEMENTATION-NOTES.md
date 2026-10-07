@@ -102,6 +102,14 @@ The actual CLI smoke passes three directory tests cold and reuses all three
 warm; strace observes only the parent and its two Core workers. Smoke elapsed
 times include slot admission and are not qualification measurements.
 
+Pre-V full-core run15 is a retained failed checkpoint, not qualification:
+330/331 actual tests pass, with 20,853 shard skips; command wall is 440.616
+seconds and the longest shard is 249.42 seconds. It ran beside other admitted
+builds and exceeds the five-minute command target. The sole behavior failure is
+the existing zero-trip list/record undef-phi fixture: expected exit zero, observed
+232. Independent raw native diagnosis precedes any production correction. Final
+combined qualification must resolve both this failure and the elapsed-time gate.
+
 Copied propagation fixtures are byte-identical to tests/lang, which was not edited.
 The focused CLI cases cover directory/orphan accounting, changed dependency versus
 unaffected receipts, provider-only imports and embeds, provider public/private type
