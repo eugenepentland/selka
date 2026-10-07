@@ -1,0 +1,46 @@
+$ scripts/build-slot.sh build env ZIG_GLOBAL_CACHE_DIR=/home/epentland/ai/canopy/.zig-global-cache zig build --summary all
+guardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source 1b6c13222675)
+guardian: diff-scoped vs 1fd1d566793dcae92449d937aca595c55ee318c8: 259/880 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 17 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 4927 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 3 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed — diff-scoped vs 1fd1d566793dcae92449d937aca595c55ee318c8, 259 file(s) in scope
+Build Summary: 19/19 steps succeeded
+install success
++- install mylang cached
+|  +- compile exe mylang debug native cached 31ms MaxRSS:41M
+|  |  +- run exe qbe-build-assets (qbe_build_assets) cached
+|  |     +- compile exe qbe-build-assets debug native cached 10ms MaxRSS:41M
+|  +- run ../guardian-zig/zig-out/bin/guardian-check success 2s
+|     +- guardian-selfcheck success
+|        +- run ../guardian-zig/zig-out/bin/guardian-check success 14ms
++- install qbe cached
+|  +- compile exe qbe fast native cached 38ms MaxRSS:40M
+|  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
++- install generated/ cached
+|  +- run exe mylang (mylang-runtime) cached
+|     +- compile exe mylang debug native (+1 more reused dependencies)
+|     +- install mylang (+2 more reused dependencies)
+|     +- compile exe qbe fast native (reused)
++- install board-trial cached
+|  +- compile exe board-trial debug native cached 20ms MaxRSS:40M
+|  |  +- options cached
+|  |  |  +- compile exe qbe fast native (reused)
+|  |  +- run exe qbe-build-assets (qbe_build_assets) (+1 more reused dependencies)
+|  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
++- install schematic-svg cached
+|  +- compile exe schematic-svg debug native cached 11ms MaxRSS:40M
+|  |  +- options (+1 more reused dependencies)
+|  |  +- run exe qbe-build-assets (qbe_build_assets) (+1 more reused dependencies)
+|  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
++- install mylang-io cached
+|  +- compile exe mylang-io debug native cached 28ms MaxRSS:41M
+|  |  +- options (+1 more reused dependencies)
+|  |  +- run exe qbe-build-assets (qbe_build_assets) (+1 more reused dependencies)
+|  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
++- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+
+
+exit=0
+elapsed_seconds=2.857528

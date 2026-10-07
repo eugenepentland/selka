@@ -1,0 +1,12 @@
+{
+  "command": [
+    "git",
+    "commit",
+    "-m",
+    "evidence(core): retain S4-V row leak and verify sweeps"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values",
+  "pid": 2038307,
+  "status": 0,
+  "elapsed_seconds": 3.893496918026358
+}

@@ -1,0 +1,23 @@
+$ git commit -m 'evidence: retain measured S4-V mut-return alternative'
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 28 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 10371 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 11 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed
+[codex/new-core-s4-values c5d240243] evidence: retain measured S4-V mut-return alternative
+ 11 files changed, 18551 insertions(+)
+ create mode 100644 experiments/new-core-s4-values-20261006/alternatives/cheaper-return-seven-v2.json
+ create mode 100644 experiments/new-core-s4-values-20261006/alternatives/cheaper-return-seven.json
+ create mode 100644 experiments/new-core-s4-values-20261006/alternatives/cheaper_mut_return.py
+ create mode 100644 experiments/new-core-s4-values-20261006/alternatives/check_return_alias.py
+ create mode 100644 experiments/new-core-s4-values-20261006/alternatives/grid_dp-first-function.ll
+ create mode 100644 experiments/new-core-s4-values-20261006/alternatives/grid_dp-second-function.ll
+ create mode 100644 experiments/new-core-s4-values-20261006/alternatives/measure_return.py
+ create mode 100644 experiments/new-core-s4-values-20261006/alternatives/union-find-baseline.ll
+ create mode 100644 experiments/new-core-s4-values-20261006/alternatives/union-find-cheaper-return-alias.ll
+ create mode 100644 experiments/new-core-s4-values-20261006/alternatives/union-find-cheaper-return.ll
+ create mode 100644 experiments/new-core-s4-values-20261006/alternatives/union_find-first-function.ll
+
+exit=0
+elapsed_seconds=3.778709

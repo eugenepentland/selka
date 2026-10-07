@@ -1,0 +1,16 @@
+{
+  "command": [
+    "flock",
+    "/run/user/1000/mylang-slots/core-qualification.lock",
+    "python3",
+    "experiments/new-core-s2-20261005/wave-b/integration/full_old_gate.py",
+    "--root",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values",
+    "--evidence",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/experiments/new-core-s4-values-20261006/final-full-old-v1"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values",
+  "pid": 868234,
+  "status": -15,
+  "elapsed_seconds": 130.78169085201807
+}

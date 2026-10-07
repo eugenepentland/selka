@@ -1,0 +1,25 @@
+$ git commit -m 'test: retain strict S4-V qualification tools and identities'
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 28 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 10371 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 11 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed
+[codex/new-core-s4-values cd85692d4] test: retain strict S4-V qualification tools and identities
+ 13 files changed, 508 insertions(+)
+ create mode 100644 experiments/new-core-s4-values-20261006/final-fresh-old-oracle.json
+ create mode 100644 experiments/new-core-s4-values-20261006/final-input-identity.json
+ create mode 100644 experiments/new-core-s4-values-20261006/fresh-old-oracle.json
+ create mode 100644 experiments/new-core-s4-values-20261006/frozen-oracle-identity.json
+ create mode 100644 experiments/new-core-s4-values-20261006/frozen-source-identity.json
+ create mode 100644 experiments/new-core-s4-values-20261006/fuzz_values.py
+ create mode 100644 experiments/new-core-s4-values-20261006/measure_grid.py
+ create mode 100644 experiments/new-core-s4-values-20261006/ports_recipe.md
+ create mode 100644 experiments/new-core-s4-values-20261006/qualify_correctness.py
+ create mode 100644 experiments/new-core-s4-values-20261006/qualify_fuzz_values.py
+ create mode 100644 experiments/new-core-s4-values-20261006/qualify_values.py
+ create mode 100644 experiments/new-core-s4-values-20261006/verify_rows.py
+ create mode 100644 experiments/new-core-s4-values-20261006/verify_values.py
+
+exit=0
+elapsed_seconds=1.666288

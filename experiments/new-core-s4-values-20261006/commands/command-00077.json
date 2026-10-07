@@ -1,0 +1,22 @@
+{
+  "command": [
+    "scripts/build-slot.sh",
+    "build",
+    "zig-out/bin/mylang-core",
+    "build",
+    "test/core/row_grid_dp.my",
+    "--release",
+    "--emit-llvm",
+    ".mylang-cache/s4-v/grid-seventh.ll",
+    "--link",
+    "benchmarks/runtime/ports/native_clock.c",
+    "-o",
+    ".mylang-cache/s4-v/grid-seventh",
+    "--cache-dir",
+    ".mylang-cache/s4-v/grid-seventh-cache"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values",
+  "pid": 1126793,
+  "status": 0,
+  "elapsed_seconds": 7.916364626958966
+}

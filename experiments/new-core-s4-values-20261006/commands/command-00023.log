@@ -1,0 +1,5 @@
+$ scripts/build-slot.sh build env MYL_CORE_LEAKCHECK=1 zig-out/bin/mylang-core test test/core/c_runner_standins.my --json --seed 7 --property-runs 12 --release --verify-facts --cache-dir .mylang-cache/s4-v/focused-standins-v1
+{"version":"native-tests-v1","tests":[{"name":"c_runner_standins::test_trial_state_is_fresh","status":"passed","reason":"","at":"","property":{"seed":7,"counts":{"runs":12,"passed":12,"discarded":0,"processes":1,"shrinks":0,"attempts":0},"failure":null}}],"passed":1,"failed":0,"skipped":0,"cached":0,"unsupported":0}
+
+exit=0
+elapsed_seconds=4.325072

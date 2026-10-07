@@ -1,0 +1,11 @@
+{
+  "command": [
+    "kill",
+    "-TERM",
+    "2185520"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values",
+  "pid": 2466861,
+  "status": 0,
+  "elapsed_seconds": 0.004722470184788108
+}

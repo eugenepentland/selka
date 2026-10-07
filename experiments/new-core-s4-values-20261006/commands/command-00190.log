@@ -1,0 +1,4 @@
+$ git add SPEC.md src/core/facts.zig test/core/v_nested_lengths.my experiments/new-core-s4-values-20261006/fuzz_values.py experiments/new-core-s4-values-20261006/snapshot-length-repair
+
+exit=0
+elapsed_seconds=0.056589

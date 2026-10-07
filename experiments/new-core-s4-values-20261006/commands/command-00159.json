@@ -1,0 +1,11 @@
+{
+  "command": [
+    "zig",
+    "fmt",
+    "src/core/own.zig"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values",
+  "pid": 2574322,
+  "status": 0,
+  "elapsed_seconds": 0.00702893384732306
+}

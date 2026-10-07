@@ -1,0 +1,21 @@
+{
+  "command": [
+    "env",
+    "MYLANG_QBE=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/immutable-a2da/qbe",
+    "MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "scripts/build-slot.sh",
+    "build",
+    ".mylang-cache/s4-v/immutable-a2da/mylang-core",
+    "test",
+    "tests/lang/rc_append_loops.my",
+    "--json",
+    "--release",
+    "--verify-facts",
+    "--cache-dir",
+    ".mylang-cache/s4-v/append-loop-failure-native"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values",
+  "pid": 2674249,
+  "status": 1,
+  "elapsed_seconds": 3.591203340096399
+}

@@ -1,0 +1,4 @@
+$ scripts/build-slot.sh build zig-out/bin/mylang-core build test/core/row_union_find.my -o .mylang-cache/s4-v/union_find --release --emit-llvm .mylang-cache/s4-v/union_find.ll --link benchmarks/runtime/ports/native_clock.c --cache-dir .mylang-cache/s4-v/union-build-v1
+
+exit=0
+elapsed_seconds=6.595043

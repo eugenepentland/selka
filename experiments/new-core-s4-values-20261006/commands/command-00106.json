@@ -1,0 +1,11 @@
+{
+  "command": [
+    "python3",
+    "-c",
+    "import hashlib,json,pathlib,shutil; src=pathlib.Path(\"zig-out/bin/mylang-core\"); expected=\"3c86ebb5ac9db377a2a2b7ae0cffd48cce09bee554aabfec856c9c5a2a6fc2bc\"; assert hashlib.sha256(src.read_bytes()).hexdigest()==expected; dst=pathlib.Path(\".mylang-cache/s4-v/immutable-d4/mylang-core\"); dst.parent.mkdir(parents=True,exist_ok=False); shutil.copyfile(src,dst); dst.chmod(0o555); manifest={\"path\":str(dst.resolve()),\"sha256\":expected,\"compiler_mode\":\"Debug\",\"implementation_source\":\"d4d8c4e5639c6f6470883eca97ba160a3b4de627\",\"test_only_source\":\"be7978a37\",\"usage\":\"immutable compiler copy; build outputs may use --release\"}; pathlib.Path(\"experiments/new-core-s4-values-20261006/immutable-core-d4.json\").write_text(json.dumps(manifest,indent=2)+\"\\n\"); print(json.dumps(manifest))"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values",
+  "pid": 1753171,
+  "status": 0,
+  "elapsed_seconds": 0.30410310602746904
+}

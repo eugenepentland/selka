@@ -1,0 +1,12 @@
+{
+  "command": [
+    "git",
+    "commit",
+    "-m",
+    "test(core): retain snapshot-length conformance failure"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values",
+  "pid": 2718008,
+  "status": 0,
+  "elapsed_seconds": 2.0404920170549303
+}

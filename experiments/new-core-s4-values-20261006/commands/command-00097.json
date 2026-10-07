@@ -1,0 +1,21 @@
+{
+  "command": [
+    "flock",
+    "/run/user/1000/mylang-slots/core-qualification.lock",
+    "scripts/build-slot.sh",
+    "build",
+    "nice",
+    "-n",
+    "10",
+    "python3",
+    "experiments/new-core-s4-values-20261006/qualify_fuzz_values.py",
+    "--evidence",
+    "experiments/new-core-s4-values-20261006/final-fuzz-v2",
+    "--cache",
+    ".mylang-cache/s4-v/final-fuzz-v2"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values",
+  "pid": 1431895,
+  "status": 1,
+  "elapsed_seconds": 1960.7212784839794
+}

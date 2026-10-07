@@ -1,0 +1,9 @@
+$ scripts/build-slot.sh build zig build core --summary all
+Build Summary: 3/3 steps succeeded
+core success
++- install mylang-core success
+   +- compile exe mylang-core debug native success 1s MaxRSS:351M
+
+
+exit=0
+elapsed_seconds=1.818454

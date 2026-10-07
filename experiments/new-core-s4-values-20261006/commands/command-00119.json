@@ -1,0 +1,13 @@
+{
+  "command": [
+    "git",
+    "commit",
+    "-q",
+    "-m",
+    "test(core): complete nested value fixture verdicts"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values",
+  "pid": 2120589,
+  "status": 0,
+  "elapsed_seconds": 0.18485020310617983
+}

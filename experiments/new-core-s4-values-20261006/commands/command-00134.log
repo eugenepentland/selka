@@ -1,0 +1,21 @@
+$ git commit -m 'evidence: preserve S4-V prior full old qualification'
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 28 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 10371 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 11 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed
+[codex/new-core-s4-values 2aa91eff4] evidence: preserve S4-V prior full old qualification
+ 9 files changed, 6282 insertions(+)
+ create mode 100644 experiments/new-core-s4-values-20261006/final-full-old-v2/fmt-check-seconds.txt
+ create mode 100644 experiments/new-core-s4-values-20261006/final-full-old-v2/fmt-check.log
+ create mode 100644 experiments/new-core-s4-values-20261006/final-full-old-v2/summary.json
+ create mode 100644 experiments/new-core-s4-values-20261006/final-full-old-v2/test-qbe-build-seconds.txt
+ create mode 100644 experiments/new-core-s4-values-20261006/final-full-old-v2/test-qbe-build.log
+ create mode 100644 experiments/new-core-s4-values-20261006/final-full-old-v2/test-qbe-seconds.txt
+ create mode 100644 experiments/new-core-s4-values-20261006/final-full-old-v2/test-qbe.log
+ create mode 100644 experiments/new-core-s4-values-20261006/final-full-old-v2/test-seconds.txt
+ create mode 100644 experiments/new-core-s4-values-20261006/final-full-old-v2/test.log
+
+exit=0
+elapsed_seconds=3.731187

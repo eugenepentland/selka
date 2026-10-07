@@ -1,0 +1,4 @@
+$ scripts/build-slot.sh build env MYL_CORE_LEAKCHECK=1 zig-out/bin/mylang-core build test/core/v_nested.my -o .mylang-cache/s4-v/v_nested --release --verify-facts --cache-dir .mylang-cache/s4-v/focus-nested-legacy-v1
+
+exit=0
+elapsed_seconds=8.828128

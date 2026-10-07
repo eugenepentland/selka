@@ -1,0 +1,6 @@
+$ scripts/build-slot.sh build zig cc -O3 -march=native -mllvm -x86-experimental-pref-innermost-loop-alignment=6 -Wno-override-module experiments/new-core-s4-values-20261006/alternatives/union-find-cheaper-return.ll /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-integration/.mylang-cache/s4/registered-six/cache/new/core_rt-08f627e9cf4cf913.o benchmarks/runtime/ports/native_clock.c -o .mylang-cache/s4-v/union-find-cheaper-return
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: build slot 1 after 45s (all 3 build slot(s) busy)
+
+exit=0
+elapsed_seconds=47.559497

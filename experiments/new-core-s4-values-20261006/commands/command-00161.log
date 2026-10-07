@@ -1,0 +1,21 @@
+$ scripts/build-slot.sh build zig build test-core '-Dtest-filter=a list a loop rewrites' --summary all
+test-core
++- run test w
+guardian/test: 1 test(s) selected
+guardian/test: SLOW  6.21s  value_e2e_test.test.a list a loop rewrites keeps the hull of what it was given and what is written: remainders and bounds are proven, a doubling loop still traps
+guardian/test: test wall 6.21s; slowest over 50ms:
+guardian/test:   6.21s  value_e2e_test.test.a list a loop rewrites keeps the hull of what it was given and what is written: remainders and bounds are proven, a doubling loop still traps
+guardian/test: PASS — 1 passed
+guardian/test: RESULT {"passed":1,"failed":0,"skipped":0}
+failed command: ./.zig-cache/o/6ec1fda2d7c0a0bbe3e2c9e8dc0f47c8/test --cache-dir=./.zig-cache --seed=0xed864fc0 --listen=-
+
+Build Summary: 5/5 steps succeeded; 1/1 tests passed
+test-core success
++- run test 1 pass (1 total) 6s MaxRSS:248M
+   +- compile test debug native success 271ms MaxRSS:178M
+      +- options success
+         +- compile exe mylang-core debug native cached 8ms MaxRSS:41M
+
+
+exit=0
+elapsed_seconds=6.988014

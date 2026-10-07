@@ -1,0 +1,15 @@
+$ git commit -m 'evidence: qualify every S4-V performance row'
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 28 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 10371 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 11 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed
+[codex/new-core-s4-values d5788c3bf] evidence: qualify every S4-V performance row
+ 3 files changed, 90690 insertions(+)
+ create mode 100644 experiments/new-core-s4-values-20261006/final-all46-v1.json
+ create mode 100644 experiments/new-core-s4-values-20261006/immutable-core-d4.json
+ create mode 100644 experiments/new-core-s4-values-20261006/performance_summary.json
+
+exit=0
+elapsed_seconds=3.534953

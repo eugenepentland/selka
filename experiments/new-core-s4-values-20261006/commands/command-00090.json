@@ -1,0 +1,20 @@
+{
+  "command": [
+    "scripts/build-slot.sh",
+    "build",
+    "env",
+    "MYL_CORE_LEAKCHECK=1",
+    "zig-out/bin/mylang-core",
+    "test",
+    "test/core/v_dynamic_repeat.my",
+    "--release",
+    "--verify-facts",
+    "--json",
+    "--cache-dir",
+    ".mylang-cache/s4-v/final-repeat-capacity"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values",
+  "pid": 1322733,
+  "status": 0,
+  "elapsed_seconds": 127.11336146993563
+}

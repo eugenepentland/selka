@@ -1,0 +1,17 @@
+$ env MYLANG_QBE=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/immutable-final-checker/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig scripts/build-slot.sh build python3 -c 'from pathlib import Path; import hashlib,json,os,shlex,subprocess; root=Path.cwd(); area=root/"experiments/new-core-s4-values-20261006/fill-boundary-repair"; source=area/"repro.my"; records=[]; modes=[("old-debug",root/".mylang-cache/s4-v/immutable-final-checker/mylang",[]),("old-release",root/".mylang-cache/s4-v/immutable-final-checker/mylang",["--release"]),("new-debug",root/".mylang-cache/s4-v/immutable-d4/mylang-core",[]),("new-release",root/".mylang-cache/s4-v/immutable-d4/mylang-core",["--release"]),("new-verify",root/".mylang-cache/s4-v/immutable-d4/mylang-core",["--release","--verify-facts"])]; env={**os.environ,"MYL_CORE_LEAKCHECK":"1"}; [(lambda role,compiler,flags: None)(*x) for x in []];
+for role,compiler,flags in modes:
+ argv=[str(compiler),"test",str(source),"--json","--cache-dir",str(root/".mylang-cache/s4-v/fill-boundary-red"/role),*flags]; done=subprocess.run(argv,text=True,capture_output=True,env=env,timeout=120); log=area/("red-"+role+".log"); log.write_text("$ "+shlex.join(argv)+"\nstdout="+repr(done.stdout)+"\nstderr="+repr(done.stderr)+"\nexit="+str(done.returncode)+"\n"); report=json.loads(done.stdout) if done.stdout else None; records.append({"role":role,"compiler_sha256":hashlib.sha256(compiler.read_bytes()).hexdigest(),"exit":done.returncode,"report":report,"stderr":done.stderr}); print(role+" exit="+str(done.returncode)+" passed="+str(report.get("passed") if report else None)+" failed="+str(report.get("failed") if report else None))
+assert all(x["exit"]==0 and x["report"]["passed"]==1 for x in records[:-1]); assert records[-1]["exit"]==1 and records[-1]["report"]["failed"]==1; (area/"red-summary.json").write_text(json.dumps({"source_sha256":hashlib.sha256(source.read_bytes()).hexdigest(),"reduced_before_fix":True,"records":records},indent=2)+"\n")'
+Traceback (most recent call last):
+  File "<string>", line 4, in <module>
+    assert all(x["exit"]==0 and x["report"]["passed"]==1 for x in records[:-1]); assert records[-1]["exit"]==1 and records[-1]["report"]["failed"]==1; (area/"red-summary.json").write_text(json.dumps({"source_sha256":hashlib.sha256(source.read_bytes()).hexdigest(),"reduced_before_fix":True,"records":records},indent=2)+"\n")
+           ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError
+old-debug exit=1 passed=None failed=None
+old-release exit=1 passed=None failed=None
+new-debug exit=1 passed=None failed=None
+new-release exit=1 passed=None failed=None
+new-verify exit=1 passed=None failed=None
+
+exit=1
+elapsed_seconds=1.368256

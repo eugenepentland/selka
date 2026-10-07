@@ -1,0 +1,14 @@
+{
+  "command": [
+    "git",
+    "add",
+    "SPEC.md",
+    "src/core/own.zig",
+    "test/core/v_nested_lengths.my",
+    "experiments/new-core-s4-values-20261006/fuzz_values.py"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values",
+  "pid": 2584804,
+  "status": 0,
+  "elapsed_seconds": 0.03303194418549538
+}

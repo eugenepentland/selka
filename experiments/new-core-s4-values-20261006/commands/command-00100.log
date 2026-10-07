@@ -1,0 +1,50 @@
+$ scripts/build-slot.sh build python3 experiments/new-core-s4-values-20261006/verify_rows.py --bin .mylang-cache/s4-v/final-all46-v1 --evidence experiments/new-core-s4-values-20261006/final-rows-leak-verify-v1 --cache .mylang-cache/s4-v/final-rows-leak-verify-v1
+record_reads: debug/release/verify checksums agree; leak stderr empty
+tagged_stack: debug/release/verify checksums agree; leak stderr empty
+mutate_unique: debug/release/verify checksums agree; leak stderr empty
+mutate_shared: debug/release/verify checksums agree; leak stderr empty
+record_construct: debug/release/verify checksums agree; leak stderr empty
+record_update: debug/release/verify checksums agree; leak stderr empty
+option_handle: debug/release/verify checksums agree; leak stderr empty
+result_propagate: debug/release/verify checksums agree; leak stderr empty
+list_scan: debug/release/verify checksums agree; leak stderr empty
+list_append: debug/release/verify checksums agree; leak stderr empty
+list_filter: debug/release/verify checksums agree; leak stderr empty
+alloc_short: debug/release/verify checksums agree; leak stderr empty
+alloc_retained: debug/release/verify checksums agree; leak stderr empty
+mutate_nested: debug/release/verify checksums agree; leak stderr empty
+bytes_scan: debug/release/verify checksums agree; leak stderr empty
+string_equal: debug/release/verify checksums agree; leak stderr empty
+string_search: debug/release/verify checksums agree; leak stderr empty
+string_split: debug/release/verify checksums agree; leak stderr empty
+string_join: debug/release/verify checksums agree; leak stderr empty
+dict_lookup: debug/release/verify checksums agree; leak stderr empty
+dict_lookup_str: debug/release/verify checksums agree; leak stderr empty
+dict_update: debug/release/verify checksums agree; leak stderr empty
+dict_update_str: debug/release/verify checksums agree; leak stderr empty
+set_dedup: debug/release/verify checksums agree; leak stderr empty
+int_parse: debug/release/verify checksums agree; leak stderr empty
+int_format: debug/release/verify checksums agree; leak stderr empty
+call_indirect: debug/release/verify checksums agree; leak stderr empty
+sort_int: debug/release/verify checksums agree; leak stderr empty
+sort_records: debug/release/verify checksums agree; leak stderr empty
+int_math: debug/release/verify checksums agree; leak stderr empty
+float_math: debug/release/verify checksums agree; leak stderr empty
+call_direct: debug/release/verify checksums agree; leak stderr empty
+branch_predictable: debug/release/verify checksums agree; leak stderr empty
+branch_mixed: debug/release/verify checksums agree; leak stderr empty
+binary_search: debug/release/verify checksums agree; leak stderr empty
+word_count: debug/release/verify checksums agree; leak stderr empty
+csv_aggregate: debug/release/verify checksums agree; leak stderr empty
+json_transform: debug/release/verify checksums agree; leak stderr empty
+packet_decode: debug/release/verify checksums agree; leak stderr empty
+lox_eval: debug/release/verify checksums agree; leak stderr empty
+tree_build_walk: debug/release/verify checksums agree; leak stderr empty
+record_pass: debug/release/verify checksums agree; leak stderr empty
+grid_dp: debug/release/verify checksums agree; leak stderr empty
+union_find: debug/release/verify checksums agree; leak stderr empty
+float_format: debug/release/verify checksums agree; leak stderr empty
+buffer_write: debug/release/verify checksums agree; leak stderr empty
+
+exit=0
+elapsed_seconds=23.310535

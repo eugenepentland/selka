@@ -1,0 +1,10 @@
+src/core/flags.zig
+src/core/emit_bytes.zig
+src/core/inline_cfg.zig
+ig src/core/build.zig src/core/build_bytes.zig src/core/own.zig src/core/emit_bytes.zig src/core/emit_dict.zig src/core/emit_llvm.zig src/core/inline.zig src/core/inline_cfg.zig src/core/verify_ir.zig src/core/number_runtime.zig src/core/runtime/core_number_text.zig src/core/vector_test.zig src/core/s3_number_test.zig
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: all 3 build slot(s) busy; waiting (60s so far)
+build-slot: build slot 3 after 80s (all 3 build slot(s) busy)
+
+exit=0
+elapsed_seconds=87.238490
