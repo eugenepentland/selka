@@ -1,0 +1,19 @@
+{
+  "source_commit": "a6075202794d5cdaba95c1480e20b929448252e8",
+  "qualified": true,
+  "scope": "core correctness gate; pending managed-memory-phi repair means earlier source checkpoint only",
+  "command": [
+    "zig",
+    "build",
+    "test-core",
+    "-Dcore-shards=64",
+    "--summary",
+    "all"
+  ],
+  "seconds": 215.22,
+  "passed": 306,
+  "failed": 0,
+  "total": 306,
+  "max_unit_rss_bytes": 270532608,
+  "source_ir_changed": false
+}

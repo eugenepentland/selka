@@ -1,0 +1,14 @@
+[
+  {
+    "path": "experiments/new-core-s4-emission-20261006/paired-combined-01/cache/lox_eval/program-5c321d7e888939fc/entry.ll",
+    "sha256": "eea80df9afc8936ec147b215c04a62d8ac51b431c511494edc3b22eb2a1e6fd2"
+  },
+  {
+    "path": "experiments/new-core-s4-emission-20261006/paired-combined-01/cache/lox_eval/program-5c321d7e888939fc/module-2ba6fe24c624a8200217cbaaa38092ee7becce804e727d55a01781aa0d2b482a.ll",
+    "sha256": "a5e6ec0b5d4c5da8f91468cb1108895b75a1e4d67261e38db25189ef6fe296f1"
+  },
+  {
+    "path": "experiments/new-core-s4-emission-20261006/paired-combined-01/cache/lox_eval/program-5c321d7e888939fc/module-819b813edb0e06e8dfdd7ff60e54b591b15e01e8a00977de40701a326bcc3d4d.ll",
+    "sha256": "3de3ed4254700e713519dd08517298542eef614fa7f496a8401f2e204f330996"
+  }
+]

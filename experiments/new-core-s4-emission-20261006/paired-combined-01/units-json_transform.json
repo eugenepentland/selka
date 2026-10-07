@@ -1,0 +1,22 @@
+[
+  {
+    "path": "experiments/new-core-s4-emission-20261006/paired-combined-01/cache/json_transform/program-126c3ab2e6fe7444/entry.ll",
+    "sha256": "eea80df9afc8936ec147b215c04a62d8ac51b431c511494edc3b22eb2a1e6fd2"
+  },
+  {
+    "path": "experiments/new-core-s4-emission-20261006/paired-combined-01/cache/json_transform/program-126c3ab2e6fe7444/module-2ba6fe24c624a8200217cbaaa38092ee7becce804e727d55a01781aa0d2b482a.ll",
+    "sha256": "9e4cd304389e3bf38770bab8fa4b645c897c2687cc714eef3123348bc1b8275d"
+  },
+  {
+    "path": "experiments/new-core-s4-emission-20261006/paired-combined-01/cache/json_transform/program-126c3ab2e6fe7444/module-413b9e4a7a9eeb5f65fa812fbbb1b7a3df7169322c27dbbe960b80a6f21a119f.ll",
+    "sha256": "13b0fdfa5e314ec5e00be68b2723e9392a3f948a1f9f58b317849a20b4c2251d"
+  },
+  {
+    "path": "experiments/new-core-s4-emission-20261006/paired-combined-01/cache/json_transform/program-126c3ab2e6fe7444/module-5f41cdcf7f237fd854a899758e509c383630ebad9a801445a7f875e8e01a1f2a.ll",
+    "sha256": "21d85622c660d161df80e5b79551cefb58b3ada9c38a18dd51f6115beddd634f"
+  },
+  {
+    "path": "experiments/new-core-s4-emission-20261006/paired-combined-01/cache/json_transform/program-126c3ab2e6fe7444/module-819b813edb0e06e8dfdd7ff60e54b591b15e01e8a00977de40701a326bcc3d4d.ll",
+    "sha256": "2c0e5cb84da3612bc668811a3d31949c9224397d9ee368eb23c47c8d53adaa8c"
+  }
+]

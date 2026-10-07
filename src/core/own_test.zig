@@ -772,6 +772,58 @@ test "a phi that may hold undef is released only when it holds a block: a zero-t
     }
 }
 
+/// Swap a populated record and undef through two memory phis on one loop iteration.
+/// Both incoming values must be staged before either phi's slot is overwritten.
+fn swappedUndefRecords(arena: std.mem.Allocator) !ir.Module {
+    var module: ir.Module = .{};
+    const ints = try module.intern(arena, .{ .list = .i64 });
+    const holder = try module.intern(arena, .{ .record = &.{ .i64, ints, ints, ints, ints } });
+    var h = try Hand.init(arena, &module, "main", .{ .params = &.{.cap}, .ret = .i64 });
+    const out = try h.param(0);
+    const header = try h.newBlock();
+    const latch = try h.newBlock();
+    const exit = try h.newBlock();
+    const undef = try h.loose(.{ .op = .undef, .ty = holder });
+    var fields: [5]ir.Ref = undefined;
+    fields[0] = try h.int(.i64, 7);
+    for (fields[1..], 1..) |*field, i| field.* = try pushed(&h, ints, &.{@intCast(i)});
+    const initial = try h.emit(.{ .op = .record_make, .ty = holder, .data = try h.extra(&fields) });
+    try h.jump(header);
+    h.block = header;
+    const i = try h.loose(.{ .op = .phi, .ty = .i64 });
+    const first = try h.loose(.{ .op = .phi, .ty = holder });
+    const second = try h.loose(.{ .op = .phi, .ty = holder });
+    try h.function.blocks.items[header.index()].insts.appendSlice(arena, &.{ i, first, second });
+    const more = try h.emit(.{ .op = .cmp, .ty = .bool, .a = i, .b = try h.int(.i64, 1), .data = @backingInt(ir.Predicate.lt) });
+    try h.branch(more, latch, exit);
+    h.block = latch;
+    const step = try h.emit(.{ .op = .add, .ty = .i64, .a = i, .b = try h.int(.i64, 1), .check = .exact });
+    try h.jump(header);
+    h.function.insts.items[i.index()].data = try h.extra(&.{ try h.int(.i64, 0), step });
+    h.function.insts.items[first.index()].data = try h.extra(&.{ undef, second });
+    h.function.insts.items[second.index()].data = try h.extra(&.{ initial, first });
+    h.block = exit;
+    const value = try h.emit(.{ .op = .record_get, .ty = .i64, .a = first, .data = 0 });
+    try h.printValues(out, &.{value});
+    _ = try h.emit(.{ .op = .ret, .ty = .void, .a = try h.int(.i64, 0) });
+    _ = try h.finish();
+    return module;
+}
+
+// spec-case: NEW-CORE-RC-11
+test "managed undef memory phis remain empty while parallel incoming records swap, debug and release" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    for ([_]bool{ false, true }) |release| {
+        var module = try swappedUndefRecords(arena.allocator());
+        const run = try support.runOwned(arena.allocator(), &module, .{ .release = release });
+        try std.testing.expectEqual(@as(u8, 0), run.status);
+        try std.testing.expectEqualStrings("7\n", run.stdout);
+        try std.testing.expectEqualStrings("", run.stderr);
+        try std.testing.expect(contains(run.llvm, "@myl.zeros = private constant [40 x i8] zeroinitializer"));
+    }
+}
+
 // spec: NEW-CORE-RC-12
 test "a record phi read only through its fields still takes its operands, so unswitched loop exits release nothing twice" {
     var arena_state = std.heap.ArenaAllocator.init(std.testing.allocator);

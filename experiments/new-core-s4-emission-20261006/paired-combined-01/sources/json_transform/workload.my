@@ -1,0 +1,90 @@
+module workload
+import json
+
+public record Inputs:
+    raw: bytes
+    texts: list[str]
+    other: list[str]
+    numbers: list[int]
+    fragments: list[str]
+
+
+public def number(text: str) -> int:
+    match int(text):
+        case Some(value):
+            return value
+        case None:
+            return 0
+
+
+public def row_name(j: int) -> str:
+    return ("café,\"item\"" if j % 2 == 0 else "naïve,item") + str(j)
+
+
+public def score(text: str) -> int:
+    raw = text.encode()
+    result = len(raw)
+    for value in raw:
+        result += value
+    return result
+
+
+public def json_integer(value: json.Json) -> int:
+    match json.as_int(value):
+        case Some(n):
+            return n
+        case None:
+            return 0
+
+
+public def json_active(value: json.Json) -> bool:
+    match json.as_bool(value):
+        case Some(flag):
+            return flag
+        case None:
+            return False
+
+
+public def json_job(text: str, bump: int) -> int:
+    output: list[json.Json] = []
+    match json.loads(text):
+        case Ok(value):
+            match value:
+                case json.Json.array(rows):
+                    for row in rows:
+                        match row:
+                            case json.Json.object(fields):
+                                if json_active(fields["active"]):
+                                    result: dict[str, json.Json] = {"id": fields["id"], "name": fields["name"], "amount": json.integer(json_integer(fields["amount"]) + bump)}
+                                    output.append(json.object(result))
+                            case _:
+                                return 0
+                case _:
+                    return 0
+        case Err(_):
+            return 0
+    return score(json.dumps(json.array(output)))
+
+
+public def inputs(kind: str, size: int, seed: int) -> Inputs:
+    raw = b""
+    texts: list[str] = []
+    other: list[str] = []
+    numbers: list[int] = []
+    fragments: list[str] = []
+    rows: list[json.Json] = []
+    for j in range(size):
+        fields: dict[str, json.Json] = {"id": json.integer(seed + j), "name": json.text(row_name(j)), "amount": json.integer((seed + j * 19) % 100003), "active": json.boolean((seed + j) % 3 != 0)}
+        rows.append(json.object(fields))
+    texts = [json.dumps(json.array(rows))]
+    return Inputs(raw=raw, texts=texts, other=other, numbers=numbers, fragments=fragments)
+
+
+public def kernel(kind: str, data: Inputs, iterations: int, seed: int) -> int:
+    checksum = 0
+    for step in range(iterations):
+        cursor = seed + step
+        value = json_job(data.texts[0], cursor % 17)
+        checksum = (checksum + value) % 1000000007
+    return checksum
+

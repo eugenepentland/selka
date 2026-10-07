@@ -1,0 +1,45 @@
+{
+  "source_commit": "a6075202794d5cdaba95c1480e20b929448252e8",
+  "compiler_optimize": "Debug",
+  "program_modes": [
+    "debug",
+    "release"
+  ],
+  "leakcheck": true,
+  "verify_facts": true,
+  "jobs": 4,
+  "identities": {
+    "old": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/oracle/mylang",
+      "sha256": "d36658dbfb78d29213224532a13fd5ad8b7c0e290dbfb87613d9815678305c79"
+    },
+    "new": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/debug-final-02/bin/mylang-core",
+      "sha256": "d0f0a9dc5b6c26766cadd265196d60b09b63a43ce220a61ac373e88a95491673"
+    },
+    "qbe": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/oracle/qbe",
+      "sha256": "b6139650a99b39131cd791fa1fdc84c09472dc303930bbadd3f8a5348487af4c"
+    }
+  },
+  "command": [
+    "python3",
+    "experiments/new-core-s1-20261005/conformance.py",
+    "--set",
+    "all",
+    "--jobs",
+    "4",
+    "--mylang",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/oracle/mylang",
+    "--core",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/debug-final-02/bin/mylang-core",
+    "--cache-dir",
+    ".mylang-cache/s4-emission/conformance-debug-06",
+    "--leakcheck",
+    "--verify",
+    "--why"
+  ],
+  "environment": {
+    "MYLANG_QBE": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/oracle/qbe"
+  }
+}

@@ -1,0 +1,3 @@
+$ .mylang-cache/s4-emission/debug-final-02/bin/mylang-core build experiments/new-core-s4-emission-20261006/paired-combined-01/sources/packet_decode/app.my --release -o experiments/new-core-s4-emission-20261006/paired-combined-01/split-packet_decode --cache-dir experiments/new-core-s4-emission-20261006/paired-combined-01/cache/packet_decode --emit-llvm experiments/new-core-s4-emission-20261006/paired-combined-01/whole-packet_decode.ll --link /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/benchmarks/runtime/ports/native_clock.c
+
+exit=0

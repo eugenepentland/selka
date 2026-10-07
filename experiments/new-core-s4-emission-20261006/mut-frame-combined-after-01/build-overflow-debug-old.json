@@ -1,0 +1,15 @@
+{
+  "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/oracle/mylang",
+    "build",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/mut-frame-combined-after-01/overflow/app.my",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/mut-frame-combined-after-01/overflow-debug-old/cache",
+    "-o",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/mut-frame-combined-after-01/overflow-debug-old/program"
+  ],
+  "status": 0,
+  "stdout": "",
+  "stderr": "",
+  "seconds": 2.2187722348608077
+}

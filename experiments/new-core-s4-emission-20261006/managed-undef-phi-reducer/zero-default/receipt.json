@@ -1,0 +1,48 @@
+[
+  {
+    "argv": [
+      "scripts/build-slot.sh",
+      "build",
+      "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "cc",
+      "-c",
+      "-O2",
+      "-march=native",
+      "-mllvm",
+      "-x86-experimental-pref-innermost-loop-alignment=6",
+      "-std=c11",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/undef-phi-initialization-02/zero-default/runtime.o",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/undef-phi-initialization-02/zero-default/runtime.c"
+    ],
+    "status": 0,
+    "seconds": 5.034654537914321
+  },
+  {
+    "argv": [
+      "scripts/build-slot.sh",
+      "build",
+      "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "cc",
+      "-O3",
+      "-march=native",
+      "-mllvm",
+      "-x86-experimental-pref-innermost-loop-alignment=6",
+      "-Wno-override-module",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/undef-phi-initialization-02/zero-default/hand",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/undef-phi-initialization-02/zero-default/hand.ll",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/undef-phi-initialization-02/zero-default/runtime.o"
+    ],
+    "status": 0,
+    "seconds": 5.033739637816325
+  },
+  {
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/undef-phi-initialization-02/zero-default/hand"
+    ],
+    "status": 0,
+    "stdout": "",
+    "stderr": ""
+  }
+]

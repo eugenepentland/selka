@@ -1,0 +1,37 @@
+{
+  "proof_origin": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/undef-phi-initialization-02",
+  "source_commit_before_fix": "a6075202794d5cdaba95c1480e20b929448252e8",
+  "artifacts": {
+    "raw-bundled": {
+      "runtime.c": "4f62516701c4d69ba0159ef3b3f008cb0573856568516b16c2116e8cc04d31ad",
+      "hand.ll": "84d9040c47026e0a46e3a9f99ad81b4d98647adf98fdc45844ab1bf6f08d9faf",
+      "hand": "554e4388aad468e0a75c0aa0a96617f9841b6091533d00a17332ef664955dc86",
+      "receipt.json": "16ef3daa9d0aa776a8eabef55a407c612ce98adb712408bb59bf91669681dafa",
+      "runtime.o": "053014e51eed302f0146541d2e71adc857deee6f4a36b4129a2eea247e8942ad"
+    },
+    "zero-bundled": {
+      "runtime.c": "4f62516701c4d69ba0159ef3b3f008cb0573856568516b16c2116e8cc04d31ad",
+      "hand.ll": "903fef10454f2232dad21c4d80d64e9c3f2c373c2783b676d032282a040d219b",
+      "hand": "e0a1eea84bcbcf0c8fbc4f1b5eddd4d525e5374a61fba05e72c74009141a7f9d",
+      "receipt.json": "63058ad4e4ae542b5fdacc14eac6b4536626e0fdb37cc4bac5fef2ec674e9b66",
+      "runtime.o": "097c524862fc837296bfd197a4c94dcf644cd24d8850b369075937569993b4ef"
+    },
+    "raw-default": {
+      "runtime.c": "4f62516701c4d69ba0159ef3b3f008cb0573856568516b16c2116e8cc04d31ad",
+      "hand.ll": "84d9040c47026e0a46e3a9f99ad81b4d98647adf98fdc45844ab1bf6f08d9faf",
+      "hand": "208bd09c8d1383763eefbbdc167917822c939280c951b4f7d9e334939856a83c",
+      "receipt.json": "33c0cd194e3338160bcf074b83ae8c2a75b4ebc06952741a0bc90ba5b9f4c8bc",
+      "runtime.o": "923d5a4f2956d1827077b6913b884a72fce1552d665a42bb8ce5c6bac16b6115"
+    },
+    "zero-default": {
+      "runtime.c": "4f62516701c4d69ba0159ef3b3f008cb0573856568516b16c2116e8cc04d31ad",
+      "hand.ll": "903fef10454f2232dad21c4d80d64e9c3f2c373c2783b676d032282a040d219b",
+      "hand": "561b599c97c28571d515cfdfd32306e27088de44cecb486f8c6baf4c6534d45f",
+      "receipt.json": "d5db2d702db1e14b78c3936843216b9787a702f24496669cf3269bc6be908f87",
+      "runtime.o": "3b63588a792fc6a49fbaa4181ed4c9e6efd0bca9b7c612068ae6bc2ef8a2bcb6"
+    }
+  },
+  "patch_sha256": "d7957d7408217a5a4a15824ed97a9a180507f79f2a5371b0aad9ddc19342a511",
+  "binaries_retained_in_origin": true,
+  "managed_undef_semantics_already_defined": "null block pointers or zero memory; unmanaged remains poison"
+}

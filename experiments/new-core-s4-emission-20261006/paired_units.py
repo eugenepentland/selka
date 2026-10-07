@@ -54,7 +54,7 @@ def compile_whole(args, case):
     output = args.whole / f"row_{case}"
     text = llvm.read_text()
     command = ["zig", "cc", "-O3", *rows.CPU_FLAGS, "-Wno-override-module", "-o", str(output), str(llvm), str(unique(cache, "core_rt-*.o"))]
-    needed = ("myl_core_str_from_f64", "myl_core_format_number", "myl_core_format_float", "myl_core_format_text", "myl_core_parse_float_range", "myl_core_round_float")
+    needed = ("myl_core_str_from_f64", "myl_core_buffer_append_f64", "myl_core_format_number", "myl_core_format_float", "myl_core_format_text", "myl_core_parse_float_range", "myl_core_round_float")
     if any(name in text for name in needed):
         command += [str(unique(cache, "core_number_text-*.o"))]
     command += [str(ROOT / "benchmarks/runtime/ports/native_clock.c")]

@@ -1,0 +1,5 @@
+module leaf
+public def origin(xs: mut list[int], x: int) -> int:
+    xs.append(2)
+    assert x == 0, "mut check"
+    return x

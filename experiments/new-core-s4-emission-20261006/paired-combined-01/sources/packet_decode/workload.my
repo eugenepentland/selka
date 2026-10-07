@@ -1,0 +1,55 @@
+module workload
+
+
+public record Packet:
+    identifier: int
+    payload_sum: int
+    length: int
+
+
+public def parse_number(text: str) -> int:
+    match int(text):
+        case Some(value):
+            return value
+        case None:
+            return 0
+
+
+public def make_frame(j: int, seed: int) -> bytes:
+    identifier = (seed + j * 17) % 65536
+    raw = [165, 1, identifier // 256, identifier % 256, 4]
+    for k in range(4):
+        raw.append((seed + j * 13 + k * 7) % 256)
+    check = 0
+    for byte in raw:
+        check += byte
+    raw.append(check % 256)
+    if j % 4 == 1:
+        raw[0] = 164
+    elif j % 4 == 2:
+        raw[9] = (raw[9] + 1) % 256
+    elif j % 4 == 3:
+        raw[4] = 5
+    return bytes(raw)
+
+
+public def decode(raw: bytes) -> Result[Packet, int]:
+    if len(raw) < 6:
+        return Err(3)
+    if raw[0] != 165:
+        return Err(1)
+    if raw[1] != 1:
+        return Err(2)
+    length = raw[4]
+    if len(raw) != length + 6:
+        return Err(3)
+    check = 0
+    for i in range(len(raw) - 1):
+        check += raw[i]
+    if check % 256 != raw[len(raw) - 1]:
+        return Err(4)
+    total = 0
+    for i in range(5, len(raw) - 1):
+        total += raw[i]
+    return Ok(Packet(identifier=raw[2] * 256 + raw[3], payload_sum=total, length=length))
+

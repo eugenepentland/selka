@@ -1015,7 +1015,9 @@ const FunctionEmitter = struct {
         var copies: std.ArrayList(struct { phi: ir.Ref, from: []const u8 }) = .empty;
         for (phis) |phi| {
             const incoming = f.resolve(f.operands(f.inst(phi).data)[position]);
-            if (f.inst(incoming).op == .undef) continue;
+            // Managed undef must initialize null block pointers before an empty release.
+            // An unmanaged undef remains unspecified; copying its poison address is invalid.
+            if (f.inst(incoming).op == .undef and !m.managed(f.inst(phi).ty)) continue;
             const size = m.size(f.inst(phi).ty);
             if (!staged) {
                 try self.copyBytes(out, try self.value(phi), try self.value(incoming), size, true);

@@ -73,6 +73,46 @@ fn emitHand(arena: std.mem.Allocator, module: *const ir.Module) emit_llvm.Error!
     return emit_llvm.emitModule(arena, module, .{ .locator = .{ .context = &context, .locate = noLocation }, .source_path = "hand.my", .main = .{} });
 }
 
+/// An unused unmanaged memory phi whose entry operand is undef.
+fn unmanagedUndefPhi(arena: std.mem.Allocator) !ir.Module {
+    var module: ir.Module = .{};
+    const holder = try module.intern(arena, .{ .record = &.{ .i64, .i64, .i64, .i64, .i64 } });
+    var h = try support.Hand.init(arena, &module, "main", .{ .params = &.{}, .ret = .i64 });
+    const header = try h.newBlock();
+    const latch = try h.newBlock();
+    const exit = try h.newBlock();
+    const undef = try h.loose(.{ .op = .undef, .ty = holder });
+    try h.jump(header);
+    h.block = header;
+    const phi = try h.loose(.{ .op = .phi, .ty = holder });
+    try h.function.blocks.items[header.index()].insts.append(arena, phi);
+    const condition = try h.int(.bool, 0);
+    try h.branch(condition, latch, exit);
+    h.block = latch;
+    const one = try h.int(.i64, 1);
+    const next = try h.emit(.{ .op = .record_make, .ty = holder, .data = try h.extra(&.{ one, one, one, one, one }) });
+    try h.jump(header);
+    h.function.insts.items[phi.index()].data = try h.extra(&.{ undef, next });
+    h.block = exit;
+    _ = try h.emit(.{ .op = .ret, .ty = .void, .a = try h.int(.i64, 0) });
+    _ = try h.finish();
+    return module;
+}
+
+// spec-case: NEW-CORE-RC-11
+test "unmanaged undef memory phis leave their undefined edge alone without copying from poison" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const module = try unmanagedUndefPhi(arena.allocator());
+    try support.verified(arena.allocator(), &module, &.{});
+    const text = try emitHand(arena.allocator(), &module);
+    try std.testing.expect(std.mem.indexOf(u8, text, "@myl.zeros") == null);
+    try std.testing.expect(std.mem.indexOf(u8, text, "ptr poison") == null);
+    const entry = std.mem.indexOf(u8, text, "b0:\n") orelse return error.TestUnexpectedResult;
+    try std.testing.expect(std.mem.startsWith(u8, text[entry..], "b0:\n  br label %b1\n"));
+    try std.testing.expect(std.mem.indexOf(u8, text, "call void @llvm.memmove.p0.p0.i64") != null);
+}
+
 // spec-case: NEW-CORE-LLVM-1
 test "an instruction or entry signature the emitter cannot lower is an error, not wrong code" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
