@@ -2,8 +2,8 @@
 
 Production source is commit `7877aa5d369f57aeb8fb850e8198c08c520b3a51`.
 Later commits own measurement tools only. This checkpoint is **not yet qualified**:
-the corrected real rebuild, strict450 fuzz matrix and final all46 rows remain
-pending. The 31-edit counterbalanced scale run is qualified. The row gate waits for the
+the strict450 fuzz matrix and final all46 rows remain pending. The corrected real
+rebuild and 31-edit counterbalanced scale run are qualified. The row gate waits for the
 qualified S4-V base. No main merge or push occurred; ir.zig remains unchanged.
 
 Changes: Session enables shared syntax/body/check-summary caching for builds and
@@ -37,10 +37,14 @@ Compiler hashes used for completed correctness gates (`final-guard-binaries.sha2
 - Old strict oracle: `d36658dbfb78d29213224532a13fd5ad8b7c0e290dbfb87613d9815678305c79`.
 - Old ReleaseFast timing pin: `eb354a1ad3763aa0c3851f6a96eb2bccf2ab0df94a2b983db46bdd0725c34eaf`.
 
-Rebuild02 installed a fresh source-identical Debug executable with hash
-`ded2870efe5284dc9958d41ceba11880ae5f5a4d3281a518ec0b0a237e3c507c`.
-Future strict fuzz must pin the executable produced by the final successful
-rebuild rather than reuse the earlier Debug hash.
+Rebuild03's successful complete command installed a fresh source-identical Debug
+executable with hash
+`3479cc1ba2a86244e8e0f006a0b2c596f947f67843f4e01ea84f52c08f105c36`.
+Future strict fuzz must pin this executable rather than reuse the earlier Debug
+hash. The uncontended real compilation and install took 2.968739 s, below 10 s;
+all three build slots and the gate shell were held, and the command exited zero
+after recovery cleanup. Its tool/source receipt is `dc9db7d9e`; frozen production
+source remained `7877aa5`.
 
 `scale-05/summary.json` is the retained unqualified seven-edit uncontended run
 on CPU10. Edited times are medians in seconds. Every source edit was fresh:
@@ -93,7 +97,7 @@ backup. Rebuild02 performed real compilation in 2.392 s but its command failed
 when Zig replaced the object directory containing the recovery backup. Its JSON
 was written before cleanup and says qualified; the whole-command receipt is
 explicitly unqualified. Recovery staging now lives outside Zig-managed object
-and manifest directories; rebuild03 is queued to qualify the complete command.
+and manifest directories; rebuild03 qualifies the complete command.
 The optional pre-C devloop smoke was canceled before admission and remains
 aborted. No failed or aborted receipt was overwritten or promoted to green.
 
