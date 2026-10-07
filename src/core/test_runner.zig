@@ -48,7 +48,9 @@ const options_module = @import("test_runner_options.zig");
 /// their `verdict` is filled in by building and running them.
 const Selected = struct { case: discover.Case, verdict: report.Verdict, ready: bool, identity: ?[32]u8 = null, settings: std.json.Value = .null };
 const case_expectation = "expected";
-const IdentityResources = struct { backing: std.mem.Allocator, io: std.Io };
+/// A test's identity work: `scratch` is an arena it may leave allocations in, and
+/// `prebuilt` the test's reachable functions when `classify` already built them.
+const IdentityResources = struct { scratch: std.mem.Allocator, io: std.Io, prebuilt: ?@import("ir.zig").Module = null };
 const ExecutionResources = struct { arena: std.mem.Allocator, backing: std.mem.Allocator, io: std.Io };
 const SelectionContext = struct { receipt: receipt.Context, base: [32]u8 };
 
@@ -272,11 +274,10 @@ fn programIdentity(resources: IdentityResources, options: Options, checked: fron
     const function = checked.program.functions[@backingInt(case.function)];
     const effects = @import("mylang").effect_set;
     if (function.policy.host != null or function.policy.effects & effects.bit(.host) != 0) return null;
-    var scratch = std.heap.ArenaAllocator.init(resources.backing);
-    defer scratch.deinit();
-    const a = scratch.allocator();
+    const a = resources.scratch;
     var why: build.Refusal = .{};
-    const module = programFor(a, options, checked, &.{case}, &why) catch |err| {
+    const built = if (resources.prebuilt) |prebuilt| withEntry(a, options, checked, &.{case}, prebuilt) else programFor(a, options, checked, &.{case}, &why);
+    const module = built catch |err| {
         if (err == error.OutOfMemory) return error.OutOfMemory;
         return null;
     };
@@ -290,12 +291,15 @@ fn select(init: std.process.Init, options: Options, checked: frontend.Checked, c
     const chosen = try a.alloc(Selected, cases.len);
     const context = selection.receipt;
     for (cases, chosen) |case, *item| {
+        var scratch = std.heap.ArenaAllocator.init(init.gpa);
+        defer scratch.deinit();
+        var built: ?@import("ir.zig").Module = null;
         const configured = v.get(settings.document, case.name);
         const skip = v.get(configured, "skip");
-        const refused = if (skip == .string and skip.string.len != 0) report.Verdict{ .name = case.name, .status = .skipped, .reason = skip.string } else try classify(init.gpa, a, checked, case, configured);
+        const refused = if (skip == .string and skip.string.len != 0) report.Verdict{ .name = case.name, .status = .skipped, .reason = skip.string } else try classify(scratch.allocator(), a, checked, case, configured, &built);
         item.* = .{ .case = case, .verdict = refused orelse .{ .name = case.name, .status = .failed, .reason = "not run" }, .ready = refused == null, .settings = configured };
         if (!item.ready) continue;
-        if (try programIdentity(.{ .backing = init.gpa, .io = init.io }, options, checked, case, selection.base)) |identity| {
+        if (try programIdentity(.{ .scratch = scratch.allocator(), .io = init.io, .prebuilt = built }, options, checked, case, selection.base)) |identity| {
             item.identity = receipt.configuredKey(identity, try std.json.Stringify.valueAlloc(a, configured, .{}));
             if (try receipt.hit(context, item.identity.?)) {
                 item.verdict = .{ .name = case.name, .status = .cached };
@@ -333,8 +337,9 @@ fn writeAll(init: std.process.Init, file: std.Io.File, text: []const u8) Error!v
     file.writeStreamingAll(init.io, text) catch return error.WriteFailed;
 }
 
-/// The `unsupported` verdict of a test the builder cannot build, or null when it can be built and run.
-fn classify(gpa: std.mem.Allocator, keep: std.mem.Allocator, checked: frontend.Checked, case: discover.Case, settings: std.json.Value) Error!?report.Verdict {
+/// The `unsupported` verdict of a test the builder cannot build, or null when it can be
+/// built and run; then `built` holds its reachable functions, allocated in `scratch`.
+fn classify(scratch: std.mem.Allocator, keep: std.mem.Allocator, checked: frontend.Checked, case: discover.Case, settings: std.json.Value, built: *?@import("ir.zig").Module) Error!?report.Verdict {
     const arguments = v.get(settings, "arguments");
     const fixed = arguments == .object and arguments.object.count() != 0;
     const expected = settings == .object and settings.object.contains(case_expectation);
@@ -353,11 +358,9 @@ fn classify(gpa: std.mem.Allocator, keep: std.mem.Allocator, checked: frontend.C
         }
     }
     if (case.shape == .other and !expected) return refusal(case, "test result type is not bool", "");
-    var scratch = std.heap.ArenaAllocator.init(gpa);
-    defer scratch.deinit();
     var why: build.Refusal = .{};
-    const selected_roots = try rootsFor(scratch.allocator(), checked.program, &.{case});
-    const module = build.buildRootsSource(scratch.allocator(), checked.program, selected_roots, checked.src, &why) catch |err| switch (err) {
+    const selected_roots = try rootsFor(scratch, checked.program, &.{case});
+    const module = build.buildRootsSource(scratch, checked.program, selected_roots, checked.src, &why) catch |err| switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
         error.Unsupported => {
             const at = frontend.position(checked.src, .{ .start = why.span, .end = why.span });
@@ -365,6 +368,7 @@ fn classify(gpa: std.mem.Allocator, keep: std.mem.Allocator, checked: frontend.C
         },
     };
     if (!expected and !entry.readable(&module, module.functions.items[0].signature.ret)) return refusal(case, "the runner's entry cannot read this test's result type yet (Result[bool, E])", "");
+    built.* = module;
     return null;
 }
 
@@ -524,7 +528,13 @@ fn buildExecutable(init: std.process.Init, options: Options, checked: frontend.C
 
 fn programFor(allocator: std.mem.Allocator, options: Options, checked: frontend.Checked, cases: []const discover.Case, why: *build.Refusal) (Error || build.Error || batch_entry.Error)!@import("ir.zig").Module {
     const roots = try rootsFor(allocator, checked.program, cases);
-    var module = try build.buildRootsSource(allocator, checked.program, roots, checked.src, why);
+    const reachable = try build.buildRootsSource(allocator, checked.program, roots, checked.src, why);
+    return withEntry(allocator, options, checked, cases, reachable);
+}
+
+/// `reachable` (the cases' functions) with the runner's entry and step budget added.
+fn withEntry(allocator: std.mem.Allocator, options: Options, checked: frontend.Checked, cases: []const discover.Case, reachable: @import("ir.zig").Module) (Error || batch_entry.Error)!@import("ir.zig").Module {
+    var module = reachable;
     const targets = try allocator.alloc(entry.Target, cases.len);
     for (targets, cases, 0..) |*target, case, table_index| {
         const function = checked.program.functions[@backingInt(case.function)];
@@ -699,7 +709,7 @@ fn ordinaryReason(a: std.mem.Allocator, outcome: property_execute.Outcome) Error
 
 // spec-case: NEW-CORE-S4-TEST-3
 test "programIdentity propagates allocation failure instead of inventing a reusable success" {
-    const resources: IdentityResources = .{ .backing = std.testing.failing_allocator, .io = std.testing.io };
+    const resources: IdentityResources = .{ .scratch = std.testing.failing_allocator, .io = std.testing.io };
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const a = arena.allocator();

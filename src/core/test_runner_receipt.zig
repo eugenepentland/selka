@@ -155,9 +155,9 @@ const Walker = struct {
         self.used = 0;
     }
 
-    fn integer(self: *Walker, wide: u64) void {
-        var encoded: [8]u8 = undefined;
-        std.mem.writeInt(u64, &encoded, wide, .little);
+    fn integer(self: *Walker, comptime Width: type, number: Width) void {
+        var encoded: [@sizeOf(Width)]u8 = undefined;
+        std.mem.writeInt(Width, &encoded, number, .little);
         self.bytes(&encoded);
     }
 
@@ -165,16 +165,20 @@ const Walker = struct {
         const T = @TypeOf(item);
         switch (@typeInfo(T)) {
             .void => {},
-            .bool => self.integer(@intFromBool(item)),
-            .int => |info| self.integer(if (info.signedness == .signed) @bitCast(@as(i64, item)) else item),
+            .bool => self.integer(u8, @intFromBool(item)),
+            .int => |info| {
+                const Width = @Int(.unsigned, @max(8, std.math.ceilPowerOfTwoAssert(u16, info.bits)));
+                const Wide = @Int(info.signedness, @bitSizeOf(Width));
+                self.integer(Width, @bitCast(@as(Wide, item)));
+            },
             .@"enum" => self.value(@backingInt(item)),
             .optional => if (item) |present| {
-                self.integer(1);
+                self.integer(u8, 1);
                 self.value(present);
-            } else self.integer(0),
+            } else self.integer(u8, 0),
             .pointer => |info| switch (info.size) {
                 .slice => {
-                    self.integer(item.len);
+                    self.integer(u64, item.len);
                     if (info.child == u8) self.bytes(item) else for (item) |element| self.value(element);
                 },
                 .one => self.value(item.*),
@@ -196,9 +200,9 @@ const Walker = struct {
     fn position(self: *Walker, span: u32) void {
         const at = if (self.last) |last| if (last.span == span) last.at else self.locator.locate(self.locator.context, span) else self.locator.locate(self.locator.context, span);
         self.last = .{ .span = span, .at = at };
-        self.integer(at.line);
-        self.integer(at.column);
-        self.integer(at.path.len);
+        self.integer(u32, at.line);
+        self.integer(u32, at.column);
+        self.integer(u64, at.path.len);
         self.bytes(at.path);
     }
 };
