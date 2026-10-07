@@ -12,6 +12,9 @@ pub const Request = struct {
     build: pipeline.Options,
     /// Null for `mylang build -o OUT`; set for `run`, `run-project` and `build --run`.
     run: ?Run = null,
+    /// `--no-cache`: build through a private cache that is removed afterwards, so the
+    /// command neither reads nor publishes a cached result (NEW-CORE-S5-NO-CACHE-1).
+    no_cache: bool = false,
 };
 
 /// How the built program runs.
@@ -22,6 +25,8 @@ pub const Run = struct {
     options: []const []const u8 = &.{},
     /// The program's own arguments, every value after `--`.
     arguments: []const []const u8 = &.{},
+    /// `--timings`: print the program's elapsed time once it exits (NEW-CORE-S5-TIMINGS-1).
+    timings: bool = false,
 };
 
 /// The budgets the command line named; null leaves one to the environment, the
@@ -56,7 +61,7 @@ pub fn parse(allocator: std.mem.Allocator, command: Command, args: []const []con
     while (index < args.len) : (index += 1) {
         const arg = args[index];
         if (std.mem.eql(u8, arg, "--")) {
-            parser.arguments = args[index + 1 ..];
+            parser.pending.arguments = args[index + 1 ..];
             if (!runs) return parser.usage();
             break;
         }
@@ -87,9 +92,12 @@ pub fn parse(allocator: std.mem.Allocator, command: Command, args: []const []con
     if (request.path.len == 0 or !validGrants(parser.options.items)) return parser.usage();
     if (runs) {
         if (request.build.output.len != 0 or request.build.show.llvm != null) return parser.usage();
-        request.run = .{ .limits = parser.limits, .options = parser.options.items, .arguments = parser.arguments };
+        request.run = parser.pending;
+        request.run.?.options = parser.options.items;
     } else {
-        if (request.build.output.len == 0 or parser.options.items.len != 0 or !parser.unlimited()) return parser.usage();
+        // Grants, budgets and `--timings` describe a run.
+        const runs_only = parser.options.items.len != 0 or !parser.unlimited() or parser.pending.timings;
+        if (request.build.output.len == 0 or runs_only) return parser.usage();
     }
     request.build.links = parser.links.items;
     return request;
@@ -104,10 +112,10 @@ const Parser = struct {
     allocator: std.mem.Allocator,
     request: *Request,
     failure: *Failure,
-    limits: Limits = .{},
+    /// The run settings collected so far; `options` joins them at the end.
+    pending: Run = .{},
     links: std.ArrayList([]const u8) = .empty,
     options: std.ArrayList([]const u8) = .empty,
-    arguments: []const []const u8 = &.{},
 
     fn usage(self: *Parser) error{Usage} {
         self.failure.* = .usage;
@@ -120,7 +128,7 @@ const Parser = struct {
     }
 
     fn unlimited(self: *const Parser) bool {
-        return self.limits.steps == null and self.limits.frames == null and self.limits.memory == null and self.limits.timeout == null;
+        return self.pending.limits.steps == null and self.pending.limits.frames == null and self.pending.limits.memory == null and self.pending.limits.timeout == null;
     }
 
     fn option(self: *Parser, name: []const u8, value: []const u8) error{ OutOfMemory, Usage }!void {
@@ -140,10 +148,10 @@ const Parser = struct {
         } else if (eql(name, "--mode")) {
             if (eql(value, "ReleaseFast")) build.release = true else if (eql(value, "Debug")) build.release = false else return self.usage();
         } else if (eql(name, "--max-memory")) {
-            if (self.limits.memory != null) return self.usage();
-            self.limits.memory = memory_budget.parse(value) catch return self.usage();
+            if (self.pending.limits.memory != null) return self.usage();
+            self.pending.limits.memory = memory_budget.parse(value) catch return self.usage();
         } else {
-            const slot = if (eql(name, "--max-steps")) &self.limits.steps else if (eql(name, "--max-frames")) &self.limits.frames else &self.limits.timeout;
+            const slot = if (eql(name, "--max-steps")) &self.pending.limits.steps else if (eql(name, "--max-frames")) &self.pending.limits.frames else &self.pending.limits.timeout;
             if (slot.* != null) return self.usage();
             slot.* = positive(value) orelse return self.usage();
         }
@@ -162,7 +170,15 @@ const Parser = struct {
         } else if (eql(arg, "--diagnostics=text")) {
             build.show.diagnostics = .text;
         } else if (eql(arg, "--cache-report")) {
-            build.show.cache_report = true;
+            build.show.cache_report = .text;
+        } else if (eql(arg, "--report")) {
+            // The old work report is retired; `--report` is the cache report as JSON (S5-D6).
+            build.show.cache_report = .json;
+        } else if (eql(arg, "--no-cache")) {
+            self.request.no_cache = true;
+        } else if (eql(arg, "--timings")) {
+            if (self.pending.timings) return self.usage();
+            self.pending.timings = true;
         } else if (eql(arg, "--verify-cache")) {
             build.show.verify_cache = true;
         } else if (eql(arg, "--stats")) {
@@ -180,16 +196,16 @@ const Parser = struct {
     }
 };
 
-/// The message for an option the old back end answered that the new core does not
-/// (yet), or null for any other argument.
+/// The message for an option of `build`, `run` and `test` that the old back end
+/// answered and the new core retired (NEW-CORE-S5-RETIRED-1), or null for any other argument.
 pub fn unported(arg: []const u8) ?[]const u8 {
     const name = arg[0 .. std.mem.indexOfScalar(u8, arg, '=') orelse arg.len];
     for ([_][]const u8{ "--backend", "--llvm-opt", "--lto", "--target", "--keep-symbols", "--step-accounting" }) |old| {
         if (eql(name, old)) return "the new core always builds with LLVM: a build is the debug build and --release the optimized one, so this QBE/LLVM build control was retired";
     }
-    for ([_][]const u8{ "--no-cache", "--report", "--timings", "--explain-invalidation", "--friction-log", "--affected", "--against" }) |later| {
-        if (eql(name, later)) return "this option is not supported by the new core yet (S5-B); run without it";
-    }
+    if (eql(name, "--explain-invalidation")) return "--explain-invalidation compared the old back end's nine stage fingerprints (retired, S5-B2); `--report` says what the new core's caches served";
+    if (eql(name, "--friction-log")) return "--friction-log is recorded by `mylang check` only (S5-B2): run `mylang check FILE.my --friction-log=PATH`";
+    if (eql(name, "--timings") and name.len != arg.len) return "--timings=json reported the old back end's phase profile (retired, S5-B2); `--timings` prints the program's run time";
     return null;
 }
 
@@ -299,6 +315,11 @@ test "build and run command lines parse in the old spellings into one new-core r
     try std.testing.expectError(error.Usage, parse(a, .run, &.{ "p.my", "--allow-env=PATH", "--allow-env" }, "zig", &failure));
     try std.testing.expectError(error.Usage, parse(a, .run, &.{ "p.my", "--allow-all", "--allow-clock" }, "zig", &failure));
     try std.testing.expectError(error.Usage, parse(a, .run, &.{ "p.my", "--backend", "qbe" }, "zig", &failure));
+    try std.testing.expect(failure == .retired);
+    const reported = try parse(a, .run, &.{ "p.my", "--report", "--no-cache", "--timings" }, "zig", &failure);
+    try std.testing.expect(reported.build.show.cache_report == .json and reported.no_cache and reported.run.?.timings);
+    try std.testing.expectError(error.Usage, parse(a, .build, &.{ "p.my", "-o", "out", "--timings" }, "zig", &failure));
+    try std.testing.expectError(error.Usage, parse(a, .run, &.{ "p.my", "--friction-log=f" }, "zig", &failure));
     try std.testing.expect(failure == .retired);
     try std.testing.expectEqualStrings("--x \"a b\" \"q\\\"\"", try encodeOptions(a, &.{ "--x", "a b", "q\"" }));
 }

@@ -48,8 +48,9 @@ pub const Show = struct {
     /// `--verify-cache`: recompile every unit the object store served and require
     /// identical object bytes; such a build never replays.
     verify_cache: bool = false,
-    /// `--cache-report`: say what the caches served and how many tools ran.
-    cache_report: bool = false,
+    /// `--cache-report` (`text`) or `--report` (`json`, NEW-CORE-S5-REPORT-1): say what
+    /// the caches served and how many tools ran.
+    cache_report: CacheReport = .off,
     /// How the front end's diagnostics reach the report: `errors` only, as text
     /// (`mylang-core`), or every diagnostic, warnings included, as the `mylang` CLI
     /// prints them in `text` or `json` (`--diagnostics=json`, NEW-CORE-S5-CLI-1).
@@ -58,6 +59,10 @@ pub const Show = struct {
 
 /// What `Show.diagnostics` selects.
 pub const Diagnostics = enum { errors, text, json };
+
+/// What `Show.cache_report` selects: no report, the `mylang-core: cache:` line, or one
+/// `cache-report-v1` JSON line.
+pub const CacheReport = enum { off, text, json };
 
 /// Why a build stopped after its report was written.
 pub const Error = error{ SourceError, Unsupported, ToolFailed, WriteFailed, OutOfMemory, InvalidIr, PolicyDenied, ConfigurationFailed };
@@ -85,7 +90,7 @@ fn buildWith(init: std.process.Init, path: []const u8, options: Options, budget:
     const replaying = options.show.llvm == null;
     const context: build_replay.Context = .{ .arena = allocator, .io = init.io, .environment = init.environ_map, .cache = options.cache, .zig = options.zig, .flags = try flags(init, options, budget), .entry = entry };
     if (replaying and !options.show.verify_cache) if (try build_replay.replay(context, options.output, report)) {
-        if (options.show.cache_report) try report.appendSlice(allocator, "mylang-core: cache: replayed the last identical build\n");
+        if (options.show.cache_report != .off) try cacheReport(allocator, options.show.cache_report, null, report);
         return 0;
     };
     var session = frontend.Session.init(init.gpa, init.io, entry.root);
@@ -127,7 +132,7 @@ fn buildWith(init: std.process.Init, path: []const u8, options: Options, budget:
         error.OutOfMemory => return error.OutOfMemory,
         error.WriteFailed => {},
     };
-    if (options.show.cache_report) try cacheReport(allocator, outcome, report);
+    if (options.show.cache_report != .off) try cacheReport(allocator, options.show.cache_report, outcome, report);
     return 0;
 }
 
@@ -161,10 +166,28 @@ fn flags(init: std.process.Init, options: Options, budget: ?run_budget.RunBudget
     }, .{}) catch return error.OutOfMemory;
 }
 
-fn cacheReport(allocator: std.mem.Allocator, outcome: driver.Outcome, report: *std.ArrayList(u8)) Error!void {
-    const c = outcome.counts;
+/// Say what the caches served: for a replayed build (`outcome` null) that it replayed,
+/// else the units linked, reused, compiled and verified, whether the program store
+/// served the executable, and the tool processes started.
+fn cacheReport(allocator: std.mem.Allocator, form: CacheReport, outcome: ?driver.Outcome, report: *std.ArrayList(u8)) Error!void {
+    const c = if (outcome) |built| built.counts else driver.Counts{};
+    const program = if (outcome) |built| (if (built.program_reused) "reused" else "linked") else "replayed";
+    if (form == .json) {
+        const record = std.json.Stringify.valueAlloc(allocator, .{
+            .version = "cache-report-v1",
+            .program = program,
+            .units = c.units,
+            .reused = c.reused,
+            .compiled = c.compiled,
+            .verified = c.verified,
+            .processes = c.processes,
+        }, .{}) catch return error.OutOfMemory;
+        try report.print(allocator, "{s}\n", .{record});
+        return;
+    }
+    if (outcome == null) return report.appendSlice(allocator, "mylang-core: cache: replayed the last identical build\n");
     const format = "mylang-core: cache: {d} units, {d} reused, {d} compiled, {d} verified; program {s}; {d} processes\n";
-    try report.print(allocator, format, .{ c.units, c.reused, c.compiled, c.verified, if (outcome.program_reused) "reused" else "linked", c.processes });
+    try report.print(allocator, format, .{ c.units, c.reused, c.compiled, c.verified, program, c.processes });
 }
 
 /// What the back half of a build needs to know about the checked source.

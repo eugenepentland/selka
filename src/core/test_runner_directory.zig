@@ -305,7 +305,7 @@ fn argv(a: std.mem.Allocator, fanout: Fanout, path: []const u8) Error![]const []
     var arguments: std.ArrayList([]const u8) = .empty;
     try arguments.appendSlice(a, &.{ fanout.compiler, "test", path, "--json", "--filter", opts.filter, "--cache-dir", opts.build.cache, "--zig", opts.build.zig, "--jobs", try std.fmt.allocPrint(a, "{d}", .{fanout.jobs}) });
     try arguments.appendSlice(a, &.{ "--timeout-ms", try std.fmt.allocPrint(a, "{d}", .{opts.controls.timeout_ms}) });
-    if (opts.controls.explicit_steps) try arguments.appendSlice(a, &.{ "--max-steps", try std.fmt.allocPrint(a, "{d}", .{opts.controls.max_steps}) });
+    if (opts.controls.ceilings.explicit_steps) try arguments.appendSlice(a, &.{ "--max-steps", try std.fmt.allocPrint(a, "{d}", .{opts.controls.max_steps}) });
     const ceilings = opts.controls.ceilings;
     if (ceilings.explicit_frames) try arguments.appendSlice(a, &.{ "--max-frames", try std.fmt.allocPrint(a, "{d}", .{ceilings.frames}) });
     if (ceilings.explicit_memory) try arguments.appendSlice(a, &.{ "--max-memory", try std.fmt.allocPrint(a, "{d}", .{ceilings.memory}) });
@@ -314,6 +314,7 @@ fn argv(a: std.mem.Allocator, fanout: Fanout, path: []const u8) Error![]const []
     if (opts.build.facts == .verify) try arguments.append(a, "--verify-facts");
     if (opts.build.facts == .off) try arguments.append(a, "--no-facts");
     if (opts.controls.force) try arguments.append(a, "--force");
+    if (opts.controls.against) |reference| try arguments.appendSlice(a, &.{ "--affected", "--against", reference });
     if (opts.seed) |seed| try arguments.appendSlice(a, &.{ "--seed", try std.fmt.allocPrint(a, "{d}", .{seed}) });
     for (opts.build.links) |link| try arguments.appendSlice(a, &.{ "--link", link });
     return arguments.items;

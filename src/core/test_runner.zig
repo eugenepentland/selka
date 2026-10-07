@@ -32,6 +32,7 @@ const receipt = @import("test_runner_receipt.zig");
 const tool_identity = @import("tool_identity.zig");
 const tool_ticket = @import("tool_ticket.zig");
 const case_settings = @import("test_runner_cases.zig");
+const affected = @import("test_runner_affected.zig");
 const v = @import("property_value.zig");
 
 /// The old runner's stub, appended to a file that defines no `main` of its own.
@@ -85,7 +86,7 @@ pub fn run(init: std.process.Init, requested: Options) Error!u8 {
     const context: receipt.Context = .{ .arena = allocator, .io = init.io, .environment = init.environ_map, .options = options, .entry = located, .case_bytes = configured_cases.bytes, .tool = guest };
     var native_inputs: std.ArrayList(receipt.Dependency) = .empty;
     const base = try receipt.settings(context, &native_inputs);
-    if (try receipt.replay(context, base)) |cached| {
+    if (try replayRun(context, base)) |cached| {
         try writeAll(init, std.Io.File.stdout(), cached);
         return 0;
     }
@@ -117,11 +118,11 @@ pub fn run(init: std.process.Init, requested: Options) Error!u8 {
         try writeAll(init, std.Io.File.stderr(), try std.fmt.allocPrint(allocator, "error: test cases: {s}\n", .{@errorName(err)}));
         return 1;
     };
-    var selected_cases: std.ArrayList(discover.Case) = .empty;
-    for (all_cases) |case| if (discover.matches(options.filter, case.name)) {
-        try selected_cases.append(allocator, case);
+    const selection = switch (try chooseCases(init, options, located, checked, all_cases)) {
+        .kept => |kept| kept,
+        .exit => |status| return status,
     };
-    const groups = case_settings.groups(allocator, configured_cases, selected_cases.items) catch |err| {
+    const groups = case_settings.groups(allocator, configured_cases, selection) catch |err| {
         if (err == error.OutOfMemory) return error.OutOfMemory;
         try writeAll(init, std.Io.File.stderr(), try std.fmt.allocPrint(allocator, "error: test providers: {s}\n", .{@errorName(err)}));
         return 1;
@@ -182,13 +183,34 @@ pub fn run(init: std.process.Init, requested: Options) Error!u8 {
         if (unchanged and item.verdict.status == .passed) if (item.identity) |identity| try receipt.save(context, identity);
     }
     const json = try report.jsonSources(allocator, verdicts, sources.items);
-    if (successful and unchanged) try receipt.remember(context, base, before.items, json);
+    if (successful and unchanged and options.controls.against == null) try receipt.remember(context, base, before.items, json);
     const out = if (options.json) json else try report.text(allocator, verdicts);
     try writeAll(init, std.Io.File.stdout(), out);
     return report.exitStatus(verdicts);
 }
 
+/// The cases `--filter` selects and, with `--against`, the ones `--affected` keeps of
+/// them (NEW-CORE-S5-AFFECTED-1), or the exit status of a reference git cannot resolve.
+fn chooseCases(init: std.process.Init, options: Options, located: project_entry.Entry, checked: frontend.Checked, all_cases: []const discover.Case) Error!affected.Narrowed {
+    const allocator = init.arena.allocator();
+    var filtered: std.ArrayList(discover.Case) = .empty;
+    for (all_cases) |case| if (discover.matches(options.filter, case.name)) {
+        try filtered.append(allocator, case);
+    };
+    const reference = options.controls.against orelse return .{ .kept = filtered.items };
+    const request: affected.Request = .{ .arena = allocator, .backing = init.gpa, .io = init.io, .root = located.root, .entry = located.path, .reference = reference };
+    return affected.narrow(request, checked, filtered.items);
+}
+
+/// The whole run's recorded report, unless `--affected` selects by git state that no
+/// record captures.
+fn replayRun(context: receipt.Context, base: [32]u8) Error!?[]const u8 {
+    if (context.options.controls.against != null) return null;
+    return receipt.replay(context, base);
+}
+
 fn cachedReplay(init: std.process.Init, options: Options, located: project_entry.Entry, case_bytes: []const u8) Error!?[]const u8 {
+    if (options.controls.against != null) return null;
     const borrowed = try borrowedReplay(init, options, located, case_bytes);
     // The private transport never reaches native guests or a persistent key.
     _ = init.environ_map.swapRemove(tool_ticket.hint);
@@ -250,7 +272,7 @@ fn applyLimits(init: std.process.Init, options: *Options, located: project_entry
     var memory: ?u64 = null;
     if (located.configuration) |configured| {
         const limits = configured.document.limits.tests;
-        if (!options.controls.explicit_steps) if (limits.max_steps) |steps| {
+        if (!options.controls.ceilings.explicit_steps) if (limits.max_steps) |steps| {
             options.controls.max_steps = steps;
         };
         frames = limits.max_frames;
