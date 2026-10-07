@@ -15,7 +15,7 @@ const check_command = @import("check_command.zig");
 const usage =
     \\usage: mylang-core build FILE.my -o OUT [--release] [--link FILE.c]... [--emit-llvm PATH] [--no-facts | --verify-facts] [--stats] [--zig PATH] [--cache-dir DIR]
     \\       mylang-core check FILE.my [--typed] [--stats] [--timings=json] [--cache-dir DIR] [--no-cache]
-    \\       mylang-core test FILE.my|DIR [--release] [--json] [--filter S] [--jobs N] [--force] [--cases PATH] [--max-steps N] [--timeout-ms N]
+    \\       mylang-core test FILE.my|DIR [--release] [--json] [--filter S] [--jobs N] [--force] [--cases PATH] [--max-steps N] [--max-frames N] [--max-memory SIZE] [--timeout-ms N]
     \\       mylang-core coverage FILE.my...   (one line per function: ok with its checks, or the refusal reason)
     \\       mylang-core dump-typed FILE.my [FUNCTION]
     \\       mylang-core dump-ir FILE.my [--facts]   (--facts: after the release passes, with intervals)
@@ -256,8 +256,25 @@ fn testControls(options: *test_runner.Options, args: []const []const u8, index: 
     } else if (std.mem.startsWith(u8, arg, "--max-steps=")) {
         options.controls.max_steps = std.fmt.parseInt(u64, arg[12..], 10) catch return error.Usage;
         options.controls.explicit_steps = true;
+    } else if (flagValue(args, index, "--max-frames")) |text| {
+        options.controls.ceilings.frames = std.fmt.parseInt(u32, text, 10) catch return error.Usage;
+        if (options.controls.ceilings.frames == 0) return error.Usage;
+        options.controls.ceilings.explicit_frames = true;
+    } else if (flagValue(args, index, "--max-memory")) |text| {
+        options.controls.ceilings.memory = @import("memory_budget").parse(text) catch return error.Usage;
+        options.controls.ceilings.explicit_memory = true;
     } else return false;
     return true;
+}
+
+/// The value of `--NAME VALUE` or `--NAME=VALUE` at `index` (advancing past a separate
+/// value), or null when the argument is another flag.
+fn flagValue(args: []const []const u8, index: *usize, comptime name: []const u8) ?[]const u8 {
+    const arg = args[index.*];
+    if (std.mem.startsWith(u8, arg, name ++ "=")) return arg[name.len + 1 ..];
+    if (!std.mem.eql(u8, arg, name) or index.* + 1 >= args.len) return null;
+    index.* += 1;
+    return args[index.*];
 }
 
 /// The coverage sweep: check each file and try to build each of its functions alone.

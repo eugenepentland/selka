@@ -2,8 +2,10 @@
  * algorithms stay in Zig. Fork gives a fatal Core trap a bounded copied-value
  * trial boundary without skipping reference-count cleanup on a longjmp. */
 #include <sys/wait.h>
+#include <sys/resource.h>
 #include <signal.h>
 #include <errno.h>
+#include <ucontext.h>
 #if defined(__linux__)
 #include <sys/prctl.h>
 #endif
@@ -21,6 +23,58 @@ void myl_core_test_tick(uint64_t cost) {
     if(!core_test_bounded)return;
     if(cost>core_test_steps)core_io_fail("R_STEP_LIMIT");
     core_test_steps-=cost;
+}
+/* Call-depth and byte ceilings (`--max-frames`, `--max-memory`), installed by the
+ * test entry before its first trial. Every call of an original function enters one
+ * frame and leaves it before returning; the trial runs on a stack mapped for the
+ * whole budget, 32 KiB per frame plus 8 MiB, as the old core maps it, so a budget
+ * that is honest about depth is never cut short by the native stack. */
+enum { CORE_TEST_FRAME_STACK = 32768, CORE_TEST_STACK_SLACK = 8 << 20 };
+static uint64_t core_test_frame_limit, core_test_depth;
+void myl_core_test_ceilings(uint32_t frames, uint64_t memory) {
+    core_test_frame_limit = frames;
+    if (!memory) return;
+    heap_ceiling = memory;
+    /* The kernel's backstop: the address space at the ceiling plus 256 MiB, never loosened. */
+    const uint64_t headroom = 256u << 20;
+    struct rlimit limit;
+    if (memory > UINT64_MAX - headroom || getrlimit(RLIMIT_AS, &limit)) return;
+    rlim_t wanted = (rlim_t)(memory + headroom);
+    if (limit.rlim_max != RLIM_INFINITY && wanted > limit.rlim_max) wanted = limit.rlim_max;
+    if (limit.rlim_cur != RLIM_INFINITY && limit.rlim_cur <= wanted) return;
+    limit.rlim_cur = wanted;
+    (void)setrlimit(RLIMIT_AS, &limit);
+}
+void myl_core_test_enter(void) {
+    if (++core_test_depth > core_test_frame_limit && core_test_frame_limit) core_io_fail("R_FRAME_LIMIT");
+}
+void myl_core_test_leave(void) { --core_test_depth; }
+static void (*core_test_body)(void);
+static void core_test_launch(void) { core_test_body(); }
+/* Run `trial` on the budget's stack, with one guard page below it. A mapping the
+ * address space cannot hold is refused the way the old runtime refuses it. */
+static void core_test_on_stack(void (*trial)(void)) {
+    if (!core_test_frame_limit) { trial(); return; }
+    long page_size = sysconf(_SC_PAGESIZE);
+    size_t page = page_size > 0 ? (size_t)page_size : 4096;
+    size_t usable = ((size_t)core_test_frame_limit * CORE_TEST_FRAME_STACK + CORE_TEST_STACK_SLACK + page - 1) / page * page;
+    unsigned char *mapping = aligned_alloc(page, usable + page);
+    ucontext_t caller, callee;
+    if (!mapping || mprotect(mapping, page, PROT_NONE) || getcontext(&callee)) {
+        flush_all();
+        fprintf(stderr, "mylang: a call-depth budget of %llu frames (--max-frames) reserves %.1f GiB of native stack (32 KiB per frame), "
+            "but the test's address space cannot hold it; raise --max-memory or lower --max-frames\n", (unsigned long long)core_test_frame_limit, (double)usable / 1073741824.0);
+        fflush(stderr);
+        _exit(1);
+    }
+    callee.uc_stack.ss_sp = mapping + page;
+    callee.uc_stack.ss_size = usable;
+    callee.uc_stack.ss_flags = 0;
+    callee.uc_link = &caller;
+    core_test_body = trial;
+    makecontext(&callee, core_test_launch, 0);
+    if (swapcontext(&caller, &callee)) _exit(70);
+    /* The child exits after its trial; the mapping is never reused or freed. */
 }
 static uint64_t core_test_word(FILE *file) {
     unsigned char bytes[8];
@@ -161,7 +215,7 @@ int64_t myl_core_test_run(void (*trial)(void)){
 #endif
             core_test_values=tmpfile();if(!core_test_values)_exit(70);
             core_test_capture(".out",1);core_test_capture(".err",2);
-            alarm(60);error_trace.origin=NULL;error_trace.count=0;trial();alarm(0);flush_all();
+            alarm(60);error_trace.origin=NULL;error_trace.count=0;core_test_on_stack(trial);alarm(0);flush_all();
             core_io_cleanup();
             const char *check=getenv("MYL_CORE_LEAKCHECK");
             if(check&&strcmp(check,"0")&&live_count()!=baseline){

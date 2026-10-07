@@ -32,7 +32,7 @@ const Envelope = struct { version: []const u8, payload: []const u8, checksum: Di
 pub fn settings(context: Context, inputs: *std.ArrayList(Dependency)) Error!Digest {
     const a = context.arena;
     var hash = std.crypto.hash.Blake3.init(.{});
-    field(&hash, "core-test-settings-v3");
+    field(&hash, "core-test-settings-v4");
     field(&hash, frontend.compiler_identity);
     field(&hash, context.entry.path);
     field(&hash, context.entry.root);
@@ -51,6 +51,8 @@ pub fn settings(context: Context, inputs: *std.ArrayList(Dependency)) Error!Dige
         .runs = context.options.property_runs,
         .timeout = context.options.controls.timeout_ms,
         .steps = context.options.controls.max_steps,
+        .call_frames = context.options.controls.ceilings.frames,
+        .memory = context.options.controls.ceilings.memory,
     }, .{}));
     if (context.entry.configuration) |configured| {
         field(&hash, configured.path);

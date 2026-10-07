@@ -267,6 +267,88 @@ test "the default step budget charges one step per executed block, like the old 
     try verdict(limited.report, "long::test_long", "failed");
 }
 
+/// The reason a named test's verdict gives, or an error when the report has no such test.
+fn reasonOf(value: std.json.Value, name: []const u8) ![]const u8 {
+    for (v.array(v.get(value, "tests"))) |item| {
+        if (std.mem.eql(u8, v.text(v.get(item, "name")), name)) return v.text(v.get(item, "reason"));
+    }
+    return error.MissingTestVerdict;
+}
+
+/// Run `mylang-core test` on `source` under a 1 MiB native stack limit, which a
+/// recursion 40,000 calls deep overflows unless the runtime maps the trial's stack.
+fn runSmallStack(context: Context, source: []const u8, extra: []const u8) !Outcome {
+    const path = try std.fs.path.join(context.arena, &.{ context.root, source });
+    const cache = try std.fs.path.join(context.arena, &.{ context.root, "cache" });
+    const command = try std.fmt.allocPrint(context.arena, "ulimit -s 1024 && exec \"$0\" test \"$1\" --json --cache-dir \"$2\" --max-steps 0 {s}", .{extra});
+    const result = try std.process.run(context.arena, std.testing.io, .{ .argv = &.{ "sh", "-c", command, tools.core_path, path, cache } });
+    const parsed = std.json.parseFromSliceLeaky(std.json.Value, context.arena, result.stdout, .{}) catch .null;
+    return .{ .status = switch (result.term) {
+        .exited => |code| code,
+        else => 255,
+    }, .report = parsed, .stderr = result.stderr };
+}
+
+const deep_source = "module deep\n\ndef down(n: int) -> int:\n    if n == 0:\n        return 0\n    return 1 + down(n - 1)\n\n" ++
+    "def test_deep() -> bool:\n    return down(40000) == 40000\n\ndef test_shallow() -> bool:\n    return down(10) == 10\n";
+
+// spec: NEW-CORE-S4-FRAMES-1
+test "a test's call depth is bounded by --max-frames, 1024 by default, on a stack mapped for the whole budget" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const a = arena.allocator();
+    const context: Context = .{ .arena = a, .root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", a) };
+    try context.write("deep.my", deep_source);
+    // The default budget traps the deep test and leaves the shallow one alone.
+    const default = try context.run("deep.my", &.{ "--max-steps", "0" });
+    try expectStatus(context, default, 1);
+    try verdict(default.report, "deep::test_shallow", "passed");
+    try std.testing.expect(std.mem.indexOf(u8, try reasonOf(default.report, "deep::test_deep"), "error[R_FRAME_LIMIT]") != null);
+    try std.testing.expect(std.mem.indexOf(u8, try reasonOf(default.report, "deep::test_deep"), "raise it with --max-frames=N") != null);
+    // 40,002 frames (the test and 40,001 calls of `down`) run on 1.2 GiB of mapped stack, not the 1 MiB native one.
+    try expectStatus(context, try runSmallStack(context, "deep.my", "--max-frames 40002 --max-memory 2G"), 0);
+    try expectStatus(context, try runSmallStack(context, "deep.my", "--max-frames=40002 --max-memory=2G --release"), 0);
+    const short = try runSmallStack(context, "deep.my", "--max-frames 40001 --max-memory 2G");
+    try expectStatus(context, short, 1);
+    try std.testing.expect(std.mem.indexOf(u8, try reasonOf(short.report, "deep::test_deep"), "error[R_FRAME_LIMIT]") != null);
+    // A budget whose stack the byte ceiling cannot back is refused before anything is built.
+    const refused = try context.run("deep.my", &.{ "--max-frames", "40002" });
+    try expectStatus(context, refused, 2);
+    try std.testing.expect(std.mem.indexOf(u8, refused.stderr, "raise --max-memory to at least 2G") != null);
+    try expectStatus(context, try context.run("deep.my", &.{ "--max-frames", "0" }), 2);
+    // The project's `limits.test` supplies both ceilings; a flag still wins.
+    try context.write("mylang.json", "{\"version\":1,\"limits\":{\"test\":{\"max_steps\":4000000000,\"max_frames\":40002,\"max_memory\":\"2G\"}}}");
+    try expectStatus(context, try context.run("deep.my", &.{}), 0);
+    try expectStatus(context, try context.run("deep.my", &.{ "--max-frames", "100" }), 1);
+}
+
+// spec: NEW-CORE-S4-MEMORY-1
+test "a test's managed heap is bounded by --max-memory and a runaway allocation traps R_MEMORY_BUDGET" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const a = arena.allocator();
+    const context: Context = .{ .arena = a, .root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", a) };
+    const source = "module grow\n\ndef fill(rounds: int) -> int:\n    values: list[int] = []\n    for r in range(rounds):\n        values.append(r)\n    return len(values)\n\n" ++
+        "def test_runaway() -> bool:\n    return fill(100000000) > 0\n\ndef test_modest() -> bool:\n    return fill(1000000) == 1000000\n\n" ++
+        "def test_words() -> bool:\n    words: list[str] = []\n    for i in range(200000):\n        words.append(str(i))\n    return len(words) == 200000\n";
+    try context.write("grow.my", source);
+    const bounded = try context.run("grow.my", &.{ "--max-steps", "0", "--max-memory", "64M" });
+    try expectStatus(context, bounded, 1);
+    try verdict(bounded.report, "grow::test_modest", "passed");
+    try verdict(bounded.report, "grow::test_words", "passed");
+    try std.testing.expect(std.mem.indexOf(u8, try reasonOf(bounded.report, "grow::test_runaway"), "error[R_MEMORY_BUDGET]") != null);
+    try std.testing.expect(std.mem.indexOf(u8, try reasonOf(bounded.report, "grow::test_runaway"), "memory budget exhausted; raise it with --max-memory=SIZE") != null);
+    // The ceiling is part of the receipt key: a lower one runs the passing tests again.
+    const lower = try context.run("grow.my", &.{ "--max-steps", "0", "--max-memory=4M", "--filter", "words" });
+    try expectStatus(context, lower, 1);
+    try std.testing.expect(std.mem.indexOf(u8, try reasonOf(lower.report, "grow::test_words"), "R_MEMORY_BUDGET") != null);
+    try expectStatus(context, try context.run("grow.my", &.{ "--max-memory", "12X" }), 2);
+}
+
 // spec-case: NEW-CORE-S4-TEST-2
 test "directory assertion detects an omitted test verdict" {
     try std.testing.expectError(error.MissingTestVerdict, verdict(.null, "missing", "passed"));

@@ -41,7 +41,8 @@ pub const check_stub = "\n\ndef main() -> int:\n    return 0\n";
 pub const Error = property.Error;
 
 /// What the command line asked for.
-pub const Options = @import("test_runner_options.zig").Options;
+pub const Options = options_module.Options;
+const options_module = @import("test_runner_options.zig");
 
 /// One selected test and its place in the report. `ready` tests have no verdict yet:
 /// their `verdict` is filled in by building and running them.
@@ -68,6 +69,8 @@ pub fn run(init: std.process.Init, requested: Options) Error!u8 {
         try writeAll(init, std.Io.File.stderr(), problems.items);
         return 1;
     };
+    // A malformed byte ceiling or a frame budget it cannot back is refused like a usage error.
+    if (!try applyLimits(init, &options, located)) return 2;
     const configured_cases = try configuredCases(init, &options, located) orelse return 1;
     options.controls.cases = configured_cases.path;
     if (try cachedReplay(init, options, located, configured_cases.bytes)) |cached| {
@@ -220,8 +223,7 @@ fn localReplay(init: std.process.Init, requested: Options, located: project_entr
     return receipt.replayProvisional(context, base);
 }
 
-fn configuredCases(init: std.process.Init, options: *Options, located: project_entry.Entry) Error!?case_settings.File {
-    if (!try applyLimits(init, options, located)) return null;
+fn configuredCases(init: std.process.Init, options: *const Options, located: project_entry.Entry) Error!?case_settings.File {
     return case_settings.load(init.arena.allocator(), init.io, located.path, options.controls.cases) catch |err| {
         if (err == error.OutOfMemory) return error.OutOfMemory;
         try writeAll(init, std.Io.File.stderr(), try std.fmt.allocPrint(init.arena.allocator(), "error: test cases: {s}\n", .{@errorName(err)}));
@@ -238,16 +240,28 @@ fn guestTool(init: std.process.Init, options: Options) Error!?tool_identity.Iden
     };
 }
 
+/// Settle the step, frame and byte ceilings: a flag, then (memory only) `MYLANG_MEMORY_LIMIT`,
+/// then the project's `limits.test`, then the defaults. A frame budget the byte ceiling
+/// cannot back is refused before anything is built, as the old core refuses it.
 fn applyLimits(init: std.process.Init, options: *Options, located: project_entry.Entry) Error!bool {
+    var frames: ?u64 = null;
+    var memory: ?u64 = null;
     if (located.configuration) |configured| {
         const limits = configured.document.limits.tests;
         if (!options.controls.explicit_steps) if (limits.max_steps) |steps| {
             options.controls.max_steps = steps;
         };
-        if (limits.max_frames != null or limits.max_memory != null) {
-            try writeAll(init, std.Io.File.stderr(), "error[E_CORE_UNSUPPORTED]: configured test frame and memory limits are not implemented in the new core\n");
-            return false;
-        }
+        frames = limits.max_frames;
+        memory = limits.max_memory;
+    }
+    const a = init.arena.allocator();
+    options.controls.ceilings = options_module.resolve(options.controls.ceilings, init.environ_map, frames, memory) catch {
+        try writeAll(init, std.Io.File.stderr(), "error: MYLANG_MEMORY_LIMIT is not a byte count with an optional K, M or G suffix\n");
+        return false;
+    };
+    if (try options_module.frameRefusal(a, init.environ_map, options.controls.ceilings)) |refused| {
+        try writeAll(init, std.Io.File.stderr(), refused);
+        return false;
     }
     return true;
 }
