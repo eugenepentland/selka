@@ -1,0 +1,103 @@
+{
+  "archive_sha256": "e66e0c0565eba32f3440dd2ae65ea0b27333917a7702b62d035e2e1e373a1048",
+  "directories": {
+    ".": [
+      66309,
+      118531773,
+      16893,
+      4096,
+      1791345739324625674,
+      1791345739324625674,
+      3
+    ],
+    "nested": [
+      66309,
+      118531774,
+      16893,
+      4096,
+      1791345739296624619,
+      1791345739296624619,
+      3
+    ],
+    "nested/empty-dir": [
+      66309,
+      118531775,
+      16893,
+      4096,
+      1791345739293572779,
+      1791345739293572779,
+      2
+    ]
+  },
+  "file_count": 5,
+  "files": {
+    "00001.stderr": {
+      "fingerprint": [
+        66309,
+        118531777,
+        33204,
+        0,
+        1791345739294063856,
+        1791345739294063856,
+        1
+      ],
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0
+    },
+    "00001.stdout": {
+      "fingerprint": [
+        66309,
+        118531776,
+        33204,
+        21,
+        1791345739294063856,
+        1791345739311061486,
+        1
+      ],
+      "sha256": "5785a59345acc4c2ee10a0f4f254312644f2f9bb52c729874c82933a3e8cd6c4",
+      "size": 21
+    },
+    "nested/00002.stderr": {
+      "fingerprint": [
+        66309,
+        118531779,
+        33204,
+        17,
+        1791345739297061440,
+        1791345739297061440,
+        1
+      ],
+      "sha256": "d04a075a76b562390b7d918a32bdc4667d928210424687289d386137ce7200aa",
+      "size": 17
+    },
+    "nested/00002.stdout": {
+      "fingerprint": [
+        66309,
+        118531778,
+        33204,
+        2097408,
+        1791345739294096532,
+        1791345739294096532,
+        1
+      ],
+      "sha256": "ad4707187ce2c9c3d16909bd20eb1c440fa9d2717bff5b836db2d32f997da4d2",
+      "size": 2097408
+    },
+    "new.stdout": {
+      "fingerprint": [
+        66309,
+        118531786,
+        33204,
+        3,
+        1791345739324625674,
+        1791345739324625674,
+        1
+      ],
+      "sha256": "11507a0e2f5e69d5dfa40a62a1bd7b6ee57e6bcd85c67c9b8431b36fff21c437",
+      "size": 3
+    }
+  },
+  "format": "mylang-s4-raw-process-archive-v1",
+  "raw_directory": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/raw-archive-selftest-01/test_byte_identical_rewrite_and_inventory_change_refused/processes",
+  "total_bytes": 2097449
+}

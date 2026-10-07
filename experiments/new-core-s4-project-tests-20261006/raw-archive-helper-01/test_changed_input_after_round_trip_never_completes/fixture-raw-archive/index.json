@@ -1,0 +1,90 @@
+{
+  "archive_sha256": "06c514bc8f835b85e6f30e9d341aaa0e0b098d959cb779c6dfa84fb49e863dfb",
+  "directories": {
+    ".": [
+      66309,
+      118531790,
+      16893,
+      4096,
+      1791345739326916127,
+      1791345739326916127,
+      3
+    ],
+    "nested": [
+      66309,
+      118531791,
+      16893,
+      4096,
+      1791345739329625862,
+      1791345739329625862,
+      3
+    ],
+    "nested/empty-dir": [
+      66309,
+      118531792,
+      16893,
+      4096,
+      1791345739326655297,
+      1791345739326655297,
+      2
+    ]
+  },
+  "file_count": 4,
+  "files": {
+    "00001.stderr": {
+      "fingerprint": [
+        66309,
+        118531794,
+        33204,
+        0,
+        1791345739326916127,
+        1791345739326916127,
+        1
+      ],
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0
+    },
+    "00001.stdout": {
+      "fingerprint": [
+        66309,
+        118531793,
+        33204,
+        21,
+        1791345739326916127,
+        1791345739345452352,
+        1
+      ],
+      "sha256": "aee0691a7d654d0bbcb6ec1098c26523451a7d2f5c7c86d299ed7617b4519978",
+      "size": 21
+    },
+    "nested/00002.stderr": {
+      "fingerprint": [
+        66309,
+        118531796,
+        33204,
+        17,
+        1791345739330722628,
+        1791345739330722628,
+        1
+      ],
+      "sha256": "d04a075a76b562390b7d918a32bdc4667d928210424687289d386137ce7200aa",
+      "size": 17
+    },
+    "nested/00002.stdout": {
+      "fingerprint": [
+        66309,
+        118531795,
+        33204,
+        2097408,
+        1791345739326942630,
+        1791345739326942630,
+        1
+      ],
+      "sha256": "ad4707187ce2c9c3d16909bd20eb1c440fa9d2717bff5b836db2d32f997da4d2",
+      "size": 2097408
+    }
+  },
+  "format": "mylang-s4-raw-process-archive-v1",
+  "raw_directory": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/raw-archive-selftest-01/test_changed_input_after_round_trip_never_completes/processes",
+  "total_bytes": 2097446
+}

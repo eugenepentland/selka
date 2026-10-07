@@ -1,0 +1,13 @@
+test_binary_nested_round_trip_preserves_readable_evidence (__main__.ArchiveChecks.test_binary_nested_round_trip_preserves_readable_evidence) ... ok
+test_byte_identical_rewrite_and_inventory_change_refused (__main__.ArchiveChecks.test_byte_identical_rewrite_and_inventory_change_refused) ... ok
+test_changed_input_after_round_trip_never_completes (__main__.ArchiveChecks.test_changed_input_after_round_trip_never_completes) ... ok
+test_changed_member_rejected_after_updated_archive_hash (__main__.ArchiveChecks.test_changed_member_rejected_after_updated_archive_hash) ... ok
+test_fresh_output_and_consistent_index_required (__main__.ArchiveChecks.test_fresh_output_and_consistent_index_required) ... ok
+test_output_and_verification_symlinks_refused (__main__.ArchiveChecks.test_output_and_verification_symlinks_refused) ... ok
+test_symlink_and_special_input_refused (__main__.ArchiveChecks.test_symlink_and_special_input_refused) ... ok
+test_unsafe_duplicate_missing_and_link_members_rejected (__main__.ArchiveChecks.test_unsafe_duplicate_missing_and_link_members_rejected) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 1.063s
+
+OK

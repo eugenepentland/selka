@@ -1,0 +1,90 @@
+{
+  "archive_sha256": "72bc8e79ad2d7009aae5cb76160276996c600bddb0385a8235ec0115d25ab81c",
+  "directories": {
+    ".": [
+      66309,
+      118531846,
+      16893,
+      4096,
+      1791345739579360555,
+      1791345739579360555,
+      3
+    ],
+    "nested": [
+      66309,
+      118531847,
+      16893,
+      4096,
+      1791345739582635392,
+      1791345739582635392,
+      3
+    ],
+    "nested/empty-dir": [
+      66309,
+      118531848,
+      16893,
+      4096,
+      1791345739578202349,
+      1791345739578202349,
+      2
+    ]
+  },
+  "file_count": 4,
+  "files": {
+    "00001.stderr": {
+      "fingerprint": [
+        66309,
+        118531850,
+        33204,
+        0,
+        1791345739579360555,
+        1791345739579360555,
+        1
+      ],
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0
+    },
+    "00001.stdout": {
+      "fingerprint": [
+        66309,
+        118531849,
+        33204,
+        21,
+        1791345739579360555,
+        1791345739579360555,
+        1
+      ],
+      "sha256": "5785a59345acc4c2ee10a0f4f254312644f2f9bb52c729874c82933a3e8cd6c4",
+      "size": 21
+    },
+    "nested/00002.stderr": {
+      "fingerprint": [
+        66309,
+        118531852,
+        33204,
+        17,
+        1791345739583641426,
+        1791345739583641426,
+        1
+      ],
+      "sha256": "d04a075a76b562390b7d918a32bdc4667d928210424687289d386137ce7200aa",
+      "size": 17
+    },
+    "nested/00002.stdout": {
+      "fingerprint": [
+        66309,
+        118531851,
+        33204,
+        2097408,
+        1791345739579389007,
+        1791345739579389007,
+        1
+      ],
+      "sha256": "ad4707187ce2c9c3d16909bd20eb1c440fa9d2717bff5b836db2d32f997da4d2",
+      "size": 2097408
+    }
+  },
+  "format": "mylang-s4-raw-process-archive-v1",
+  "raw_directory": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/raw-archive-selftest-01/test_output_and_verification_symlinks_refused/processes",
+  "total_bytes": 2097446
+}

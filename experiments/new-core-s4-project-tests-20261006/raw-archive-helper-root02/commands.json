@@ -1,0 +1,116 @@
+[
+  {
+    "argv": [
+      "python3",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/archive_raw_processes_test.py",
+      "--evidence",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/raw-archive-root02"
+    ],
+    "exit_status": 0,
+    "elapsed_seconds": 1.1389954881742597
+  },
+  {
+    "argv": [
+      "python3",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/archive_raw_processes.py",
+      "verify",
+      "--archive",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/raw-archive-helper-01/test_binary_nested_round_trip_preserves_readable_evidence/fixture-raw-archive/raw-processes.tar.gz",
+      "--index",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/raw-archive-helper-01/test_binary_nested_round_trip_preserves_readable_evidence/fixture-raw-archive/index.json"
+    ],
+    "exit_status": 0,
+    "elapsed_seconds": 0.03715624497272074
+  },
+  {
+    "argv": [
+      "python3",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/archive_raw_processes.py",
+      "verify",
+      "--archive",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/raw-archive-helper-01/test_byte_identical_rewrite_and_inventory_change_refused/fixture-raw-archive/raw-processes.tar.gz",
+      "--index",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/raw-archive-helper-01/test_byte_identical_rewrite_and_inventory_change_refused/fixture-raw-archive/index.json"
+    ],
+    "exit_status": 0,
+    "elapsed_seconds": 0.043767721857875586
+  },
+  {
+    "argv": [
+      "python3",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/archive_raw_processes.py",
+      "verify",
+      "--archive",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/raw-archive-helper-01/test_changed_input_after_round_trip_never_completes/fixture-raw-archive/raw-processes.tar.gz",
+      "--index",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/raw-archive-helper-01/test_changed_input_after_round_trip_never_completes/fixture-raw-archive/index.json"
+    ],
+    "exit_status": 0,
+    "elapsed_seconds": 0.049881323939189315
+  },
+  {
+    "argv": [
+      "python3",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/archive_raw_processes.py",
+      "verify",
+      "--archive",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/raw-archive-helper-01/test_changed_member_rejected_after_updated_archive_hash/fixture-raw-archive/raw-processes.tar.gz",
+      "--index",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/raw-archive-helper-01/test_changed_member_rejected_after_updated_archive_hash/fixture-raw-archive/index.json"
+    ],
+    "exit_status": 0,
+    "elapsed_seconds": 0.03918599407188594
+  },
+  {
+    "argv": [
+      "python3",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/archive_raw_processes.py",
+      "verify",
+      "--archive",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/raw-archive-helper-01/test_fresh_output_and_consistent_index_required/fixture-raw-archive/raw-processes.tar.gz",
+      "--index",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/raw-archive-helper-01/test_fresh_output_and_consistent_index_required/fixture-raw-archive/index.json"
+    ],
+    "exit_status": 0,
+    "elapsed_seconds": 0.038162175100296736
+  },
+  {
+    "argv": [
+      "python3",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/archive_raw_processes.py",
+      "verify",
+      "--archive",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/raw-archive-helper-01/test_output_and_verification_symlinks_refused/fixture-raw-archive/raw-processes.tar.gz",
+      "--index",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/raw-archive-helper-01/test_output_and_verification_symlinks_refused/fixture-raw-archive/index.json"
+    ],
+    "exit_status": 0,
+    "elapsed_seconds": 0.039178903913125396
+  },
+  {
+    "argv": [
+      "python3",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/archive_raw_processes.py",
+      "verify",
+      "--archive",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/raw-archive-helper-01/test_symlink_and_special_input_refused/fixture-raw-archive/raw-processes.tar.gz",
+      "--index",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/raw-archive-helper-01/test_symlink_and_special_input_refused/fixture-raw-archive/index.json"
+    ],
+    "exit_status": 0,
+    "elapsed_seconds": 0.04573469888418913
+  },
+  {
+    "argv": [
+      "python3",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/archive_raw_processes.py",
+      "verify",
+      "--archive",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/raw-archive-helper-01/test_unsafe_duplicate_missing_and_link_members_rejected/fixture-raw-archive/raw-processes.tar.gz",
+      "--index",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/raw-archive-helper-01/test_unsafe_duplicate_missing_and_link_members_rejected/fixture-raw-archive/index.json"
+    ],
+    "exit_status": 0,
+    "elapsed_seconds": 0.03639152296818793
+  }
+]

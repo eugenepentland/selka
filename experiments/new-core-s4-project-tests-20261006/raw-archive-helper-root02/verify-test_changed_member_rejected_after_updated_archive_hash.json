@@ -1,0 +1,13 @@
+{
+  "argv": [
+    "python3",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/archive_raw_processes.py",
+    "verify",
+    "--archive",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/raw-archive-helper-01/test_changed_member_rejected_after_updated_archive_hash/fixture-raw-archive/raw-processes.tar.gz",
+    "--index",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/raw-archive-helper-01/test_changed_member_rejected_after_updated_archive_hash/fixture-raw-archive/index.json"
+  ],
+  "exit_status": 0,
+  "elapsed_seconds": 0.03918599407188594
+}

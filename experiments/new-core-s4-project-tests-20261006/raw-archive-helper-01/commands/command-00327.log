@@ -1,0 +1,14 @@
+$ taskset -c 0,1,4-9,12-19 env PYTHONDONTWRITEBYTECODE=1 python3 .mylang-cache/s4-v/raw-archive-curate01.py
+{
+  "curated": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/raw-archive-helper-01",
+  "raw_directories_verified": 8,
+  "files": 139,
+  "frozen_five_unchanged": true,
+  "helper_sources": {
+    "archive_raw_processes.py": "9aaffe8ab9acb9d066ab6cf67c0f21b1771d900bc6797c83834788362f9efd87",
+    "archive_raw_processes_test.py": "a2a8ac6d4e78afcb337165de72d74166d42fbfe155b5c2e4ec65916353a8d741"
+  }
+}
+
+exit=0
+elapsed_seconds=0.216061
