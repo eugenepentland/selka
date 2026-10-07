@@ -1,0 +1,4 @@
+module case
+
+def main() -> int:
+    return 0

@@ -1,0 +1,9 @@
+{
+  "green": false,
+  "qualification_claim": false,
+  "tests_executed": 0,
+  "status": 2,
+  "error": "Root invocation omitted required --evidence; actual argparse stderr retained.",
+  "compiler_processes": 0,
+  "source_files_changed": false
+}

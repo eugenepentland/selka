@@ -1,0 +1,133 @@
+{
+  "fixture_kind": "actual recorded artifact, metadata-only reducer",
+  "compiler_processes": 0,
+  "wrong_label_accepted": true,
+  "wrong_label_unchanged": true,
+  "wrong": {
+    "source_commit": "0acc9d1a70316d8b9e5ee3218f62fcafaf26a5c9",
+    "oracles": {
+      "old": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/oracle/mylang",
+        "sha256": "d36658dbfb78d29213224532a13fd5ad8b7c0e290dbfb87613d9815678305c79"
+      },
+      "core": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/debug-private-02/bin/mylang-core",
+        "sha256": "b029d263018bc92ce56b138b82df1fa066ef22171af18613871b2b625df05339"
+      }
+    },
+    "compiler_sources": {
+      "old": "a16a324e629c1c68e0180017f6d2faf20364b13d",
+      "core": "2852f5e9f34196ca3e1b148eff25b9f98e1ad732"
+    },
+    "tools": {
+      "python": {
+        "path": "/usr/bin/python3.14",
+        "sha256": "52e0a13e60a981d8c4b6478be2ba5176f69da07948a056bf49cf6f077e30cb41"
+      },
+      "zig": {
+        "path": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "sha256": "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f"
+      },
+      "qbe": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/oracle/qbe",
+        "sha256": "b6139650a99b39131cd791fa1fdc84c09472dc303930bbadd3f8a5348487af4c"
+      }
+    },
+    "harnesses": [
+      {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s3-20261006/wave-x/integration/fuzz_qualification.py",
+        "sha256": "ed1d46e6a9741a66ff2a0137a8410e413eabb31a63295a1bc380eeba1c3ff70d"
+      },
+      {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/conformance_checked.py",
+        "sha256": "d1aecb451e0519e409d0eddf69399ee7fdbf21ed7d4bf5cd1948a83f9d397042"
+      },
+      {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/fuzz_matrix.py",
+        "sha256": "2d3bdf4cfdb1845f1e61d4ed0d8e12e877fde7b1ae408d0789776559efadcf58"
+      },
+      {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/project_matrix.py",
+        "sha256": "c47fcf0efd23eec1cb2f693afa5c012a02dae6d1a2cc1d1e80f48e0c91ac2b1a"
+      },
+      {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification_selftest.py",
+        "sha256": "b45ebf59e5dd42c795dc4c6a70225b0cd902fcfb5b2dd5ad066e956c8784e9e9"
+      },
+      {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification_support.py",
+        "sha256": "6f78a8ff7627b38c89aa4b5bd9e461aa1cdac214d78ab53297b3192da873f49f"
+      }
+    ],
+    "tool_environment": {
+      "MYLANG_ZIG": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "MYLANG_QBE": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/oracle/qbe"
+    }
+  },
+  "correct_label_control": {
+    "source_commit": "0acc9d1a70316d8b9e5ee3218f62fcafaf26a5c9",
+    "oracles": {
+      "old": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/oracle/mylang",
+        "sha256": "d36658dbfb78d29213224532a13fd5ad8b7c0e290dbfb87613d9815678305c79"
+      },
+      "core": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/debug-private-02/bin/mylang-core",
+        "sha256": "b029d263018bc92ce56b138b82df1fa066ef22171af18613871b2b625df05339"
+      }
+    },
+    "compiler_sources": {
+      "old": "65036fe792ef540392d0eb00c41c9ec71c7b2c82",
+      "core": "2852f5e9f34196ca3e1b148eff25b9f98e1ad732"
+    },
+    "tools": {
+      "python": {
+        "path": "/usr/bin/python3.14",
+        "sha256": "52e0a13e60a981d8c4b6478be2ba5176f69da07948a056bf49cf6f077e30cb41"
+      },
+      "zig": {
+        "path": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "sha256": "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f"
+      },
+      "qbe": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/oracle/qbe",
+        "sha256": "b6139650a99b39131cd791fa1fdc84c09472dc303930bbadd3f8a5348487af4c"
+      }
+    },
+    "harnesses": [
+      {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s3-20261006/wave-x/integration/fuzz_qualification.py",
+        "sha256": "ed1d46e6a9741a66ff2a0137a8410e413eabb31a63295a1bc380eeba1c3ff70d"
+      },
+      {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/conformance_checked.py",
+        "sha256": "d1aecb451e0519e409d0eddf69399ee7fdbf21ed7d4bf5cd1948a83f9d397042"
+      },
+      {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/fuzz_matrix.py",
+        "sha256": "2d3bdf4cfdb1845f1e61d4ed0d8e12e877fde7b1ae408d0789776559efadcf58"
+      },
+      {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/project_matrix.py",
+        "sha256": "c47fcf0efd23eec1cb2f693afa5c012a02dae6d1a2cc1d1e80f48e0c91ac2b1a"
+      },
+      {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification_selftest.py",
+        "sha256": "b45ebf59e5dd42c795dc4c6a70225b0cd902fcfb5b2dd5ad066e956c8784e9e9"
+      },
+      {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification_support.py",
+        "sha256": "6f78a8ff7627b38c89aa4b5bd9e461aa1cdac214d78ab53297b3192da873f49f"
+      }
+    ],
+    "tool_environment": {
+      "MYLANG_ZIG": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "MYLANG_QBE": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/oracle/qbe"
+    }
+  },
+  "original_source_receipt": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s3-20261006/wave-b/s3-c/resume-context-corrected-oracle.json",
+    "sha256": "c47616a8fa55b01c337ef9890cda337c06b4373f265315ccaf66d6a53a7802ce"
+  },
+  "original_source": "65036fe792ef540392d0eb00c41c9ec71c7b2c82"
+}

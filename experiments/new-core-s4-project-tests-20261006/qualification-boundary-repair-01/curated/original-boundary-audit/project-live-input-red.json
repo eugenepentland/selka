@@ -1,0 +1,26 @@
+{
+  "fixture_kind": "owned synthetic input; no compiler processes",
+  "snapshot": {
+    "directory": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/qualification-boundary-audit-01/project-before",
+    "files": {
+      "leaf.my": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/qualification-boundary-audit-01/project-before/leaf.my",
+        "sha256": "4f8df091da54f86b3ac0ab797634c1e0170b081633622edf4c7da09c082f3920"
+      }
+    }
+  },
+  "live_before": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/qualification-boundary-audit-01/fixtures/project/leaf.my",
+    "sha256": "4f8df091da54f86b3ac0ab797634c1e0170b081633622edf4c7da09c082f3920"
+  },
+  "live_after": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/qualification-boundary-audit-01/fixtures/project/leaf.my",
+    "sha256": "7fa6e3c99aed9f292643ef9c545e45d290dc6e5188ccd712c579d60f5b9e323a"
+  },
+  "new_uninventoried_input": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/qualification-boundary-audit-01/fixtures/project/app.cases.json",
+    "sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356"
+  },
+  "final_manifest_unchanged": true,
+  "conclusion": "snapshot path/hash describes retained copy; final guard excludes live project paths"
+}

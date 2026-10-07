@@ -1,0 +1,24 @@
+{
+  "codec": "reviewed-s3-c-legacy-v1",
+  "receipt": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s3-20261006/wave-b/s3-c/resume-context-corrected-oracle.json",
+    "sha256": "c47616a8fa55b01c337ef9890cda337c06b4373f265315ccaf66d6a53a7802ce"
+  },
+  "chain": [
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s3-20261006/wave-b/s3-c/resume-context-old-full-gate-04.log",
+      "sha256": "f8316b9c01b4a1eafda033f08c4718609e095638ae8aa4ea0062519226329ec3"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s3-20261006/wave-b/s3-c/resume-context-old-gate-validation.json",
+      "sha256": "bfb82cc8b0d7f4680f7607d678bf6a0db3b04b4da02eb4d4d835a32a76dc7185"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s3-20261006/wave-b/s3-c/resume-context-old-install-01.log",
+      "sha256": "45644eb6ce2ec8d6224833cb0ead86bb6464ba6427b7fdf4817a936dd248124e"
+    }
+  ],
+  "production_source_commit": "65036fe792ef540392d0eb00c41c9ec71c7b2c82",
+  "build_source_commit": null,
+  "artifact_sha256": "d36658dbfb78d29213224532a13fd5ad8b7c0e290dbfb87613d9815678305c79"
+}

@@ -1,0 +1,42 @@
+{
+  "test_fixtures_only": true,
+  "source_commit": "0acc9d1a70316d8b9e5ee3218f62fcafaf26a5c9",
+  "oracles": {
+    "old": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/old-fixture",
+      "sha256": "8936f8d4f26f330393d45a118efdab2cc581af8fd85bf73570563162b2b12fd6"
+    },
+    "core": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/core-fixture",
+      "sha256": "f8e792f3bb6cdd0e78b916704fec720041f7eeb644b80216939ed52e85fe0931"
+    }
+  },
+  "compiler_sources": {
+    "old": "0acc9d1a70316d8b9e5ee3218f62fcafaf26a5c9",
+    "core": "0acc9d1a70316d8b9e5ee3218f62fcafaf26a5c9"
+  },
+  "tools": {
+    "python": {
+      "path": "/usr/bin/python3.14",
+      "sha256": "52e0a13e60a981d8c4b6478be2ba5176f69da07948a056bf49cf6f077e30cb41"
+    },
+    "zig": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/zig-fixture",
+      "sha256": "15a880364d515521d79a76a388e46c59d9e086b4cf71120b464f3898a989092d"
+    },
+    "qbe": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/qbe-fixture",
+      "sha256": "d8cb542abf986c549bf389c3f7e6006b3b99104d53ae09992ec58f97e0f793df"
+    }
+  },
+  "harnesses": [
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification_selftest.py",
+      "sha256": "77c28360de86e0e0da99fadbedf824e9108b1e67c17b5126e62cfe7a7367877b"
+    }
+  ],
+  "tool_environment": {
+    "MYLANG_ZIG": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/zig-fixture",
+    "MYLANG_QBE": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/qbe-fixture"
+  }
+}

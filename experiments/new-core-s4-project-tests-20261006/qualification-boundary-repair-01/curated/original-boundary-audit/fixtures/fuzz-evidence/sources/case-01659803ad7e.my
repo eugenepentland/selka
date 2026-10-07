@@ -1,0 +1,6 @@
+module case
+
+def main() -> int:
+    for i in range(3):
+        pass
+    return 0

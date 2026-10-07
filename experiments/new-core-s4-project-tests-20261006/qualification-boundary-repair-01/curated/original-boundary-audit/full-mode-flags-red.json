@@ -1,0 +1,13 @@
+{
+  "fixture_kind": "pure selection and synthetic coverage rows",
+  "set": "all",
+  "modes": [
+    "debug",
+    "release"
+  ],
+  "tests_per_mode": 1518,
+  "leakcheck": false,
+  "verify": false,
+  "selection_and_coverage_accept": true,
+  "limit": "generic qualified currently also describes diagnostic selections; caller may enforce final flags"
+}

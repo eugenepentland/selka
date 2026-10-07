@@ -1,0 +1,65 @@
+{
+  "schema": "pure-tool-suite-command-v1",
+  "argv": [
+    "python3",
+    "experiments/new-core-s4-project-tests-20261006/qualification_selftest.py",
+    "--evidence",
+    "experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run04"
+  ],
+  "status": 0,
+  "seconds": 5.437879261095077,
+  "sources_before": [
+    {
+      "path": "experiments/new-core-s4-project-tests-20261006/qualification_support.py",
+      "sha256": "6f78a8ff7627b38c89aa4b5bd9e461aa1cdac214d78ab53297b3192da873f49f"
+    },
+    {
+      "path": "experiments/new-core-s4-project-tests-20261006/qualification_provenance.py",
+      "sha256": "4c4b7f044e3e2f121f08b50079d7692c57146beee4cf2662a7e6324d664010ed"
+    },
+    {
+      "path": "experiments/new-core-s4-project-tests-20261006/conformance_checked.py",
+      "sha256": "196b5fbffcabfca766459983f9d69e2360724531bbb9c288dda83f87cd41b344"
+    },
+    {
+      "path": "experiments/new-core-s4-project-tests-20261006/project_matrix.py",
+      "sha256": "74da144a80a6373860f6258c016bb87db69f67cc4741d72c956a2c7b0c7e8ccf"
+    },
+    {
+      "path": "experiments/new-core-s4-project-tests-20261006/fuzz_matrix.py",
+      "sha256": "c6df08604df2a4b91ec8c1220ee639e8d0d25f8a59836aa3a19e2973e135ce92"
+    },
+    {
+      "path": "experiments/new-core-s4-project-tests-20261006/qualification_selftest.py",
+      "sha256": "b68a4ec4a55983b487cafc2fc33472cf6c5cc95fc01afbb083856aeadfcde0e3"
+    }
+  ],
+  "sources_after": [
+    {
+      "path": "experiments/new-core-s4-project-tests-20261006/qualification_support.py",
+      "sha256": "6f78a8ff7627b38c89aa4b5bd9e461aa1cdac214d78ab53297b3192da873f49f"
+    },
+    {
+      "path": "experiments/new-core-s4-project-tests-20261006/qualification_provenance.py",
+      "sha256": "4c4b7f044e3e2f121f08b50079d7692c57146beee4cf2662a7e6324d664010ed"
+    },
+    {
+      "path": "experiments/new-core-s4-project-tests-20261006/conformance_checked.py",
+      "sha256": "196b5fbffcabfca766459983f9d69e2360724531bbb9c288dda83f87cd41b344"
+    },
+    {
+      "path": "experiments/new-core-s4-project-tests-20261006/project_matrix.py",
+      "sha256": "74da144a80a6373860f6258c016bb87db69f67cc4741d72c956a2c7b0c7e8ccf"
+    },
+    {
+      "path": "experiments/new-core-s4-project-tests-20261006/fuzz_matrix.py",
+      "sha256": "c6df08604df2a4b91ec8c1220ee639e8d0d25f8a59836aa3a19e2973e135ce92"
+    },
+    {
+      "path": "experiments/new-core-s4-project-tests-20261006/qualification_selftest.py",
+      "sha256": "b68a4ec4a55983b487cafc2fc33472cf6c5cc95fc01afbb083856aeadfcde0e3"
+    }
+  ],
+  "compiler_processes": 0,
+  "native_guest_processes": 0
+}

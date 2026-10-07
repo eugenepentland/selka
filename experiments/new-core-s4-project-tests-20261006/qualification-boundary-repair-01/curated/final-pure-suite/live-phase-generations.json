@@ -1,0 +1,100 @@
+{
+  "root": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/live-phase",
+  "inputs": {
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/live-phase": {
+      "directory": true,
+      "resolved": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/live-phase",
+      "identity": [
+        66309,
+        118936031,
+        16893
+      ]
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/live-phase/app.cases.json": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/live-phase/app.cases.json",
+      "resolved": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/live-phase/app.cases.json",
+      "sha256": "0e075f7d85486c5cda595d42ebe463f796fca5d3363b34d068fc5e8c1219d057",
+      "generation": [
+        66309,
+        118936034,
+        33204,
+        37,
+        1791352572656637380,
+        1791352572656637380
+      ],
+      "alias_generation": [
+        66309,
+        118936034,
+        33204,
+        37,
+        1791352572656637380,
+        1791352572656637380
+      ]
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/live-phase/dep.my": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/live-phase/dep.my",
+      "resolved": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/live-phase/dep.my",
+      "sha256": "11b3fd7a1cffadcab3a85a4f0a2da3439d500ae34cd7c6cf7fa757bc02275a24",
+      "generation": [
+        66309,
+        118936035,
+        33204,
+        46,
+        1791352572657244181,
+        1791352572657244181
+      ],
+      "alias_generation": [
+        66309,
+        118936035,
+        33204,
+        46,
+        1791352572657244181,
+        1791352572657244181
+      ]
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/live-phase/leaf.my": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/live-phase/leaf.my",
+      "resolved": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/live-phase/leaf.my",
+      "sha256": "11b3fd7a1cffadcab3a85a4f0a2da3439d500ae34cd7c6cf7fa757bc02275a24",
+      "generation": [
+        66309,
+        118936032,
+        33204,
+        46,
+        1791352572655837337,
+        1791352572656194258
+      ],
+      "alias_generation": [
+        66309,
+        118936032,
+        33204,
+        46,
+        1791352572655837337,
+        1791352572656194258
+      ]
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/live-phase/selected.api": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/live-phase/selected.api",
+      "resolved": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/live-phase/leaf.my",
+      "sha256": "11b3fd7a1cffadcab3a85a4f0a2da3439d500ae34cd7c6cf7fa757bc02275a24",
+      "generation": [
+        66309,
+        118936032,
+        33204,
+        46,
+        1791352572655837337,
+        1791352572656194258
+      ],
+      "alias_generation": [
+        66309,
+        118936033,
+        41471,
+        7,
+        1791352572657163195,
+        1791352572657163195
+      ]
+    }
+  },
+  "generated_paths": [],
+  "extra_paths": []
+}

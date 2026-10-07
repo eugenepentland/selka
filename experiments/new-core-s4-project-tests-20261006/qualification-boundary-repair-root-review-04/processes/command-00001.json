@@ -1,0 +1,37 @@
+{
+  "argv": [
+    "python3",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification_selftest.py",
+    "--evidence",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests",
+  "status": 0,
+  "timed_out": false,
+  "timeout": 120,
+  "seconds": 14.735320718958974,
+  "supervisor": [
+    "/usr/bin/python3",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification_support.py",
+    "--supervise",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/processes/command-00001.job.json"
+  ],
+  "supervisor_status": 0,
+  "supervisor_result": {
+    "status": 0,
+    "timed_out": false,
+    "error": null,
+    "seconds": 14.574160577962175,
+    "supervisor": 3991278,
+    "remaining_children": []
+  },
+  "environment": {},
+  "stdout": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/processes/command-00001.stdout",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "stderr": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/processes/command-00001.stderr",
+    "sha256": "8efa346bd8403e35f486c742c6b8f677b798bed4e7a5201957fa0c05a5bbefa5"
+  }
+}
