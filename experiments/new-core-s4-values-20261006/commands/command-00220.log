@@ -1,0 +1,4 @@
+$ python3 -m py_compile experiments/new-core-s4-values-20261006/qualify_fuzz_values.py experiments/new-core-s4-values-20261006/verify_rows.py
+
+exit=0
+elapsed_seconds=0.054799

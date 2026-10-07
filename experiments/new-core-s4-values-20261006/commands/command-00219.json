@@ -1,0 +1,12 @@
+{
+  "command": [
+    "git",
+    "commit",
+    "-m",
+    "test(core): qualify real S4-V rebuild and pin comparison binary"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values",
+  "pid": 2838859,
+  "status": 0,
+  "elapsed_seconds": 3.297523712972179
+}

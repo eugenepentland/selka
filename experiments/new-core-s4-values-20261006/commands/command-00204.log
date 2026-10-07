@@ -1,0 +1,5 @@
+$ python3 -c 'from pathlib import Path; import shutil; source=Path("/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/rebuild.py"); target=Path("experiments/new-core-s4-values-20261006/rebuild.py"); text=source.read_text().replace(".mylang-cache/s4-frontend", ".mylang-cache/s4-v"); target.write_text(text); print("copied corrected source-identical rebuild helper; private recovery in s4-v cache")'
+copied corrected source-identical rebuild helper; private recovery in s4-v cache
+
+exit=0
+elapsed_seconds=0.034518

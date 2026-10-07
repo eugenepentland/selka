@@ -1,0 +1,11 @@
+{
+  "command": [
+    "python3",
+    "-c",
+    "import json,pathlib; e=pathlib.Path(\"experiments/new-core-s4-values-20261006\"); d=json.loads((e/\"final-core-conformance-v7/summary.json\").read_text()); print(\"result count\",len(d[\"results\"])); print([(list(x),x.get(\"seconds\")) for x in d[\"results\"]]); print((e/\"final-core-conformance-v7/core-component.json\").read_text()); print((e/\"final-rebuild-v1.json\").read_text()[:2800]); print((e/\"supplement-v6/summary.json\").read_text()[:600]); print((e/\"final-fuzz-v3/s1.log\").read_text()[-900:])"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values",
+  "pid": 3252526,
+  "status": 0,
+  "elapsed_seconds": 0.020932543091475964
+}

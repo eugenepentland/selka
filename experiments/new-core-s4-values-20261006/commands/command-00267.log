@@ -1,0 +1,4 @@
+$ git diff --stat 3c86c3122 -- SPEC.md src/sema.zig src/core test/core
+
+exit=0
+elapsed_seconds=0.009850

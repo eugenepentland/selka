@@ -1,0 +1,11 @@
+{
+  "command": [
+    "python3",
+    "-c",
+    "import json,pathlib; p=pathlib.Path(\"/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/mut-frame-references-02/summary.json\"); d=json.loads(p.read_text()); print(\"keys\",list(d)); print(json.dumps(d)[:2400]); print(\"files\",[str(x) for x in p.parent.iterdir()]); print(\"cfg equality\"); import subprocess,hashlib; print(hashlib.sha256(subprocess.check_output([\"git\",\"show\",\"d4d8c4e56:src/core/inline_cfg.zig\"])).hexdigest()); print(hashlib.sha256(pathlib.Path(\"src/core/inline_cfg.zig\").read_bytes()).hexdigest())"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values",
+  "pid": 3237439,
+  "status": 0,
+  "elapsed_seconds": 0.033842261880636215
+}

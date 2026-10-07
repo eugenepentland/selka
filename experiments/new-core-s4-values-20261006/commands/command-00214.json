@@ -1,0 +1,11 @@
+{
+  "command": [
+    "python3",
+    "-c",
+    "from pathlib import Path; import hashlib,json,struct; paths=(Path(\".mylang-cache/s4-v/immutable-3c86c/mylang-core\"),Path(\"zig-out/bin/mylang-core\")); reports=[];\nfor exe in paths:\n b=exe.read_bytes(); shoff=struct.unpack_from(\"<Q\",b,40)[0]; entsize,num,strings=struct.unpack_from(\"<HHH\",b,58); headers=[struct.unpack_from(\"<IIQQQQIIQQ\",b,shoff+i*entsize) for i in range(num)]; names=b[headers[strings][4]:headers[strings][4]+headers[strings][5]]; result={\"path\":str(exe),\"sha256\":hashlib.sha256(b).hexdigest(),\"sections\":{}};\n for h in headers:\n  name=names[h[0]:].split(bytes((0,)),1)[0].decode(); data=b[h[4]:h[4]+h[5]]; result[\"sections\"][name]={\"size\":h[5],\"sha256\":hashlib.sha256(data).hexdigest(),\"address\":h[3]}\n reports.append(result)\np=Path(\"experiments/new-core-s4-values-20261006/rebuild-binary-difference-v2.json\"); report={\"old\":reports[0],\"new\":reports[1],\"equal_sections\":[n for n in reports[0][\"sections\"] if reports[0][\"sections\"][n]==reports[1][\"sections\"].get(n)]}; p.write_text(json.dumps(report,indent=2)+\"\\n\"); print({\"old_sha\":reports[0][\"sha256\"],\"new_sha\":reports[1][\"sha256\"],\"equal_sections\":report[\"equal_sections\"]})"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values",
+  "pid": 2798569,
+  "status": 0,
+  "elapsed_seconds": 0.2175617169123143
+}

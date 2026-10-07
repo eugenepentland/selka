@@ -1,0 +1,27 @@
+$ git commit -m 'test(core): retain S4-V trial artifacts and rebuild tooling'
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 28 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 10371 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 11 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed
+[codex/new-core-s4-values e26abb83b] test(core): retain S4-V trial artifacts and rebuild tooling
+ 15 files changed, 33675 insertions(+)
+ create mode 100644 experiments/new-core-s4-values-20261006/aborted-command98.json
+ create mode 100644 experiments/new-core-s4-values-20261006/commands/command-00098.stdout
+ create mode 100644 experiments/new-core-s4-values-20261006/eighth-grid.json
+ create mode 100644 experiments/new-core-s4-values-20261006/fifth-two.json
+ create mode 100644 experiments/new-core-s4-values-20261006/final-frozen-source-v2.json
+ create mode 100644 experiments/new-core-s4-values-20261006/final-oracle-tool-identity.json
+ create mode 100644 experiments/new-core-s4-values-20261006/first-four.json
+ create mode 100644 experiments/new-core-s4-values-20261006/fourth-two.json
+ create mode 100644 experiments/new-core-s4-values-20261006/main-before-probe.zig
+ create mode 100644 experiments/new-core-s4-values-20261006/rebuild.py
+ create mode 100644 experiments/new-core-s4-values-20261006/run.py
+ create mode 100644 experiments/new-core-s4-values-20261006/second-two.json
+ create mode 100644 experiments/new-core-s4-values-20261006/seventh-grid.json
+ create mode 100644 experiments/new-core-s4-values-20261006/sixth-grid.json
+ create mode 100644 experiments/new-core-s4-values-20261006/third-grid.json
+
+exit=0
+elapsed_seconds=2.194986

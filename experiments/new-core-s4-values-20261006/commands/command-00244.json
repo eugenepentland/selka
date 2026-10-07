@@ -1,0 +1,11 @@
+{
+  "command": [
+    "python3",
+    "-c",
+    "import json,pathlib; p=pathlib.Path(\"experiments/new-core-s4-values-20261006/final-fuzz-v3\"); print([(x.parent.name,json.loads(x.read_text()).get(\"accepted\")) for x in p.glob(\"*/summary.json\")]); print((p/\"functions.log\").read_text()[-1200:]); print(pathlib.Path(\"experiments/new-core-s4-values-20261006/final-independent-oracles-v2/summary.json\").read_text()[:1500])"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values",
+  "pid": 3231075,
+  "status": 0,
+  "elapsed_seconds": 0.03051846707239747
+}

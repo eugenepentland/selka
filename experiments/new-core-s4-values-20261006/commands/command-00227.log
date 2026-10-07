@@ -1,0 +1,13 @@
+$ git commit -m 'docs(core): preserve Lox test inventory and provider qualification plan'
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 28 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 10371 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 11 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed
+[codex/new-core-s4-values bd7a2ec78] docs(core): preserve Lox test inventory and provider qualification plan
+ 2 files changed, 55 insertions(+), 4 deletions(-)
+ create mode 100644 experiments/new-core-s4-values-20261006/ports-lox-inventory.json
+
+exit=0
+elapsed_seconds=2.307188

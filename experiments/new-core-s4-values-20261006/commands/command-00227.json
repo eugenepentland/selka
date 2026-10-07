@@ -1,0 +1,12 @@
+{
+  "command": [
+    "git",
+    "commit",
+    "-m",
+    "docs(core): preserve Lox test inventory and provider qualification plan"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values",
+  "pid": 3137214,
+  "status": 0,
+  "elapsed_seconds": 2.307187790982425
+}

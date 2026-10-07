@@ -1,0 +1,11 @@
+$ python3 -c 'from pathlib import Path; import hashlib,json,struct; paths=(Path(".mylang-cache/s4-v/immutable-3c86c/mylang-core"),Path("zig-out/bin/mylang-core")); reports=[];
+for exe in paths:
+ b=exe.read_bytes(); shoff=struct.unpack_from("<Q",b,40)[0]; entsize,num,strings=struct.unpack_from("<HHH",b,58); headers=[struct.unpack_from("<IIQQQQIIQQ",b,shoff+i*entsize) for i in range(num)]; names=b[headers[strings][4]:headers[strings][4]+headers[strings][5]]; result={"path":str(exe),"sha256":hashlib.sha256(b).hexdigest(),"sections":{}};
+ for h in headers:
+  name=names[h[0]:].split(bytes((0,)),1)[0].decode(); data=b[h[4]:h[4]+h[5]]; result["sections"][name]={"size":h[5],"sha256":hashlib.sha256(data).hexdigest(),"address":h[3]}
+ reports.append(result)
+p=Path("experiments/new-core-s4-values-20261006/rebuild-binary-difference-v2.json"); report={"old":reports[0],"new":reports[1],"equal_sections":[n for n in reports[0]["sections"] if reports[0]["sections"][n]==reports[1]["sections"].get(n)]}; p.write_text(json.dumps(report,indent=2)+"\n"); print({"old_sha":reports[0]["sha256"],"new_sha":reports[1]["sha256"],"equal_sections":report["equal_sections"]})'
+{'old_sha': 'db0fb54873a05c0a7203a6933510c762d260c8da09ab8bc8ee7fb4815165b3d1', 'new_sha': 'ac642b82320bd4ff017ae420d9efb5f8bdd83909eeb1a71bcfda455efe78f263', 'equal_sections': ['', '.rodata.cst', '.eh_frame', '.eh_frame_hdr', '.tdata', '.data', '.debug_line_str', '.debug_loc', '.debug_loclists', '.debug_ranges', '.debug_rnglists', '.comment']}
+
+exit=0
+elapsed_seconds=0.217562

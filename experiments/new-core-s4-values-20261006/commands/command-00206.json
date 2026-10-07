@@ -1,0 +1,11 @@
+{
+  "command": [
+    "python3",
+    "-c",
+    "from pathlib import Path; import hashlib,json; p=Path(\"experiments/new-core-s4-values-20261006/commands/command-00098.stdout\"); data={\"command_receipt\":\"commands/command-00098.json\",\"raw_stdout_receipt\":\"commands/command-00098.stdout\",\"status\":\"interrupted before completion receipt\",\"qualified\":False,\"bytes\":p.stat().st_size,\"sha256\":hashlib.sha256(p.read_bytes()).hexdigest(),\"related_evidence\":\"final-core-conformance-v3\",\"note\":\"Retained unfinished command staging from infrastructure interruption; no successful gate claimed.\"}; Path(\"experiments/new-core-s4-values-20261006/aborted-command98.json\").write_text(json.dumps(data,indent=2)+\"\\n\"); print(json.dumps(data,indent=2))"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values",
+  "pid": 2776885,
+  "status": 0,
+  "elapsed_seconds": 0.06848835595883429
+}

@@ -1,0 +1,12 @@
+$ git commit -m 'test(core): check new S4-V value paths first in strict matrix'
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 28 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 10371 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 11 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed
+[codex/new-core-s4-values 97916aca5] test(core): check new S4-V value paths first in strict matrix
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+exit=0
+elapsed_seconds=3.879219

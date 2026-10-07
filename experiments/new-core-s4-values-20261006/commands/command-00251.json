@@ -1,0 +1,12 @@
+{
+  "command": [
+    "git",
+    "commit",
+    "-m",
+    "S4-V record native trap provenance integration blocker"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values",
+  "pid": 3243022,
+  "status": 0,
+  "elapsed_seconds": 2.1124394019134343
+}

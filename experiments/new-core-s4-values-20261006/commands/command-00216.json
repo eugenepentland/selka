@@ -1,0 +1,11 @@
+{
+  "command": [
+    "python3",
+    "-c",
+    "from pathlib import Path; import hashlib,json,shutil; root=Path.cwd(); candidates=[];\nfor p in (root/\".zig-cache/o\").glob(\"*/mylang-core\"):\n if p.is_file(): candidates.append({\"path\":str(p),\"size\":p.stat().st_size,\"sha256\":hashlib.sha256(p.read_bytes()).hexdigest()})\nprint(json.dumps(candidates,indent=2)); wanted=\"47948b7a3b1f0d59077edbb7f3a6a474e2887cfdf45b1fdbde05496ca8c8c30c\"; matching=[p for p in candidates if p[\"sha256\"]==wanted]; assert len(matching)==1; area=root/\".mylang-cache/s4-v/immutable-rebuild\"; area.mkdir(exist_ok=False); target=area/\"mylang-core\"; shutil.copyfile(matching[0][\"path\"],target); target.chmod(0o555); previous=hashlib.sha256((root/\"zig-out/bin/mylang-core\").read_bytes()).hexdigest(); source=root/\".mylang-cache/s4-v/immutable-3c86c/mylang-core\"; shutil.copyfile(source,root/\"zig-out/bin/mylang-core\"); (root/\"zig-out/bin/mylang-core\").chmod(0o755); result={\"preserved_rebuild_compiler\":str(target),\"rebuild_sha256\":wanted,\"installed_inspection_artifact_sha256\":previous,\"restored_qualified_core_sha256\":hashlib.sha256((root/\"zig-out/bin/mylang-core\").read_bytes()).hexdigest(),\"note\":\"objcopy inspection rewrote only installed ELF; original qualified immutable and real rebuild private compile artifact were preserved. Final functional gates use restored correctness-qualified immutable compiler.\"}; assert result[\"restored_qualified_core_sha256\"]==\"db0fb54873a05c0a7203a6933510c762d260c8da09ab8bc8ee7fb4815165b3d1\"; (root/\"experiments/new-core-s4-values-20261006/rebuild-restore.json\").write_text(json.dumps(result,indent=2)+\"\\n\"); print(json.dumps(result,indent=2))"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values",
+  "pid": 2809151,
+  "status": 0,
+  "elapsed_seconds": 3.5755492949392647
+}

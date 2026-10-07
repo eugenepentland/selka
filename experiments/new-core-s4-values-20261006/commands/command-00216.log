@@ -1,0 +1,101 @@
+$ python3 -c 'from pathlib import Path; import hashlib,json,shutil; root=Path.cwd(); candidates=[];
+for p in (root/".zig-cache/o").glob("*/mylang-core"):
+ if p.is_file(): candidates.append({"path":str(p),"size":p.stat().st_size,"sha256":hashlib.sha256(p.read_bytes()).hexdigest()})
+print(json.dumps(candidates,indent=2)); wanted="47948b7a3b1f0d59077edbb7f3a6a474e2887cfdf45b1fdbde05496ca8c8c30c"; matching=[p for p in candidates if p["sha256"]==wanted]; assert len(matching)==1; area=root/".mylang-cache/s4-v/immutable-rebuild"; area.mkdir(exist_ok=False); target=area/"mylang-core"; shutil.copyfile(matching[0]["path"],target); target.chmod(0o555); previous=hashlib.sha256((root/"zig-out/bin/mylang-core").read_bytes()).hexdigest(); source=root/".mylang-cache/s4-v/immutable-3c86c/mylang-core"; shutil.copyfile(source,root/"zig-out/bin/mylang-core"); (root/"zig-out/bin/mylang-core").chmod(0o755); result={"preserved_rebuild_compiler":str(target),"rebuild_sha256":wanted,"installed_inspection_artifact_sha256":previous,"restored_qualified_core_sha256":hashlib.sha256((root/"zig-out/bin/mylang-core").read_bytes()).hexdigest(),"note":"objcopy inspection rewrote only installed ELF; original qualified immutable and real rebuild private compile artifact were preserved. Final functional gates use restored correctness-qualified immutable compiler."}; assert result["restored_qualified_core_sha256"]=="db0fb54873a05c0a7203a6933510c762d260c8da09ab8bc8ee7fb4815165b3d1"; (root/"experiments/new-core-s4-values-20261006/rebuild-restore.json").write_text(json.dumps(result,indent=2)+"\n"); print(json.dumps(result,indent=2))'
+[
+  {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.zig-cache/o/2971b3e2897a272440117bbc93584c92/mylang-core",
+    "size": 93901880,
+    "sha256": "26b085fcb7480365b507bb5ff765e6a657c38e3d898f6c6c5b1fbc73befedc73"
+  },
+  {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.zig-cache/o/b8872edb8040809b801a88908a5d9880/mylang-core",
+    "size": 94058914,
+    "sha256": "e83cab3664d0e39cb196f930242531d4a75008c32c121b62b5af40c3ca54c499"
+  },
+  {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.zig-cache/o/495d44093b8bda72d7ccba186216ebd5/mylang-core",
+    "size": 94024696,
+    "sha256": "97112fc86d7cf7b8886330f52a298e04edca0dc278304818cc8aba7c68693677"
+  },
+  {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.zig-cache/o/4eeb91b67ceedcc3b972cd033df14de9/mylang-core",
+    "size": 90842317,
+    "sha256": "9ebda812047e92ee1b85dbe31e1a09ff68a6122033ffa4e5a00eb22bfab77c52"
+  },
+  {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.zig-cache/o/553df65a86e908afcd4e35db7917be8b/mylang-core",
+    "size": 94191928,
+    "sha256": "5b4b08850dd5cd7e8aee8f76d719dfd7c519e94f163343177b6e13f7f8f8c3d4"
+  },
+  {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.zig-cache/o/16efbac450396c94d9caecdd44414b83/mylang-core",
+    "size": 93946104,
+    "sha256": "a7616d56c4f6c3413faa05c4872127d82ee8241d4910f42c5e828c95d6cb4a52"
+  },
+  {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.zig-cache/o/3f7f27f89a8494139aaf8146d9e2f568/mylang-core",
+    "size": 89108237,
+    "sha256": "d61de554be38b55be1003540829a8d3277226881a1aeb5d1a810aa5c43f9d4dd"
+  },
+  {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.zig-cache/o/a3bded60d4e9a379661009cd75334053/mylang-core",
+    "size": 89110989,
+    "sha256": "81089960399200ca51488874cd6059a6af72a5c8d72ab0b9312c508873850fb4"
+  },
+  {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.zig-cache/o/c95969de1cc0bde1e103676a2add07f7/mylang-core",
+    "size": 94034082,
+    "sha256": "d9fec0a17cd6721ea7090bf852e543a05a0b5cb3b377bf5f1bd7b50df3bdfe53"
+  },
+  {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.zig-cache/o/f6797062677eedde384ffdb72d76c0e8/mylang-core",
+    "size": 94066722,
+    "sha256": "d5fae852d124bbeaca03620a3bf995d1a77038f1dd03711045e5d90e6f9ca2dd"
+  },
+  {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.zig-cache/o/cc3b6390bf092f0560c3c62a7b1f0fc6/mylang-core",
+    "size": 89104482,
+    "sha256": "3c86ebb5ac9db377a2a2b7ae0cffd48cce09bee554aabfec856c9c5a2a6fc2bc"
+  },
+  {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.zig-cache/o/0e270edaf33c25346e5679d1f9c4e850/mylang-core",
+    "size": 89126114,
+    "sha256": "731b3c54cae2b9da250f4c9b66a69b1103bd22ab76f82d22fa0a196319de7204"
+  },
+  {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.zig-cache/o/a07bcdf0fe66bdb686e2ff9aa77b4a10/mylang-core",
+    "size": 94183330,
+    "sha256": "ca2eb2917b08ce337624c2dcb8319dc73204bf5adc19d0df9c41ee48b5904e96"
+  },
+  {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.zig-cache/o/3c9f1e6ddb42763401198e075f0b64ee/mylang-core",
+    "size": 89071608,
+    "sha256": "47948b7a3b1f0d59077edbb7f3a6a474e2887cfdf45b1fdbde05496ca8c8c30c"
+  },
+  {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.zig-cache/o/2d24674a0aa6e32effe851810dd049bf/mylang-core",
+    "size": 94020642,
+    "sha256": "3078f7b50736e0a6472a7fba24cc37e95ae4de7cc66ae221830f936f7c09d2ac"
+  },
+  {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.zig-cache/o/5f94df17ff84562470a3425bb723df07/mylang-core",
+    "size": 93946104,
+    "sha256": "dc270c146b1a404e5fa9cc24f8e8a1c73e79cad187b19238c67535810471f8c5"
+  },
+  {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.zig-cache/o/3b02733ebf1ddb8cf9af1fb8396423b0/mylang-core",
+    "size": 93893730,
+    "sha256": "b12e80d1f555be3aa8f4eb665c730389b4137e0ef75bad1812646f9b6084d33c"
+  }
+]
+{
+  "preserved_rebuild_compiler": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/immutable-rebuild/mylang-core",
+  "rebuild_sha256": "47948b7a3b1f0d59077edbb7f3a6a474e2887cfdf45b1fdbde05496ca8c8c30c",
+  "installed_inspection_artifact_sha256": "ac642b82320bd4ff017ae420d9efb5f8bdd83909eeb1a71bcfda455efe78f263",
+  "restored_qualified_core_sha256": "db0fb54873a05c0a7203a6933510c762d260c8da09ab8bc8ee7fb4815165b3d1",
+  "note": "objcopy inspection rewrote only installed ELF; original qualified immutable and real rebuild private compile artifact were preserved. Final functional gates use restored correctness-qualified immutable compiler."
+}
+
+exit=0
+elapsed_seconds=3.575549

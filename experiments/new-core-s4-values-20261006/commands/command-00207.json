@@ -1,0 +1,25 @@
+{
+  "command": [
+    "git",
+    "add",
+    "experiments/new-core-s4-values-20261006/commands/command-00098.stdout",
+    "experiments/new-core-s4-values-20261006/aborted-command98.json",
+    "experiments/new-core-s4-values-20261006/rebuild.py",
+    "experiments/new-core-s4-values-20261006/run.py",
+    "experiments/new-core-s4-values-20261006/final-frozen-source-v2.json",
+    "experiments/new-core-s4-values-20261006/final-oracle-tool-identity.json",
+    "experiments/new-core-s4-values-20261006/first-four.json",
+    "experiments/new-core-s4-values-20261006/second-two.json",
+    "experiments/new-core-s4-values-20261006/third-grid.json",
+    "experiments/new-core-s4-values-20261006/fourth-two.json",
+    "experiments/new-core-s4-values-20261006/fifth-two.json",
+    "experiments/new-core-s4-values-20261006/sixth-grid.json",
+    "experiments/new-core-s4-values-20261006/seventh-grid.json",
+    "experiments/new-core-s4-values-20261006/eighth-grid.json",
+    "experiments/new-core-s4-values-20261006/main-before-probe.zig"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values",
+  "pid": 2776974,
+  "status": 0,
+  "elapsed_seconds": 0.05266356887295842
+}

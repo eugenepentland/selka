@@ -1,0 +1,5 @@
+$ python3 -c 'from pathlib import Path; p=Path(".mylang-cache/s4-v/final-all46-v2"); print({n:{"files":sum(1 for x in (p/n).rglob("*") if x.is_file()),"bytes":sum(x.stat().st_size for x in (p/n).rglob("*") if x.is_file())} for n in ["build-logs","llvm"]})'
+{'build-logs': {'files': 110, 'bytes': 71305}, 'llvm': {'files': 46, 'bytes': 3327586}}
+
+exit=0
+elapsed_seconds=0.021267

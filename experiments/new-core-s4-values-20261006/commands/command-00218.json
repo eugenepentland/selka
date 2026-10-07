@@ -1,0 +1,16 @@
+{
+  "command": [
+    "git",
+    "add",
+    "experiments/new-core-s4-values-20261006/final-rebuild-v1.json",
+    "experiments/new-core-s4-values-20261006/rebuild-binary-difference.json",
+    "experiments/new-core-s4-values-20261006/rebuild-binary-difference-v2.json",
+    "experiments/new-core-s4-values-20261006/rebuild-restore.json",
+    "experiments/new-core-s4-values-20261006/qualify_fuzz_values.py",
+    "experiments/new-core-s4-values-20261006/verify_rows.py"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values",
+  "pid": 2838801,
+  "status": 0,
+  "elapsed_seconds": 0.033407323993742466
+}

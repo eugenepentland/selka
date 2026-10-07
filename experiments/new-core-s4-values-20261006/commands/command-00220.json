@@ -1,0 +1,13 @@
+{
+  "command": [
+    "python3",
+    "-m",
+    "py_compile",
+    "experiments/new-core-s4-values-20261006/qualify_fuzz_values.py",
+    "experiments/new-core-s4-values-20261006/verify_rows.py"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values",
+  "pid": 2853541,
+  "status": 0,
+  "elapsed_seconds": 0.05479929596185684
+}
