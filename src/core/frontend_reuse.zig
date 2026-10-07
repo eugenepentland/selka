@@ -59,6 +59,7 @@ pub const State = struct {
     /// Bind self-references only after the state reached its final address.
     pub fn bind(self: *State) void {
         self.semantic.context.persistent = &self.store;
+        self.semantic.context.retain_summary_trees = true;
         self.frontend.identity = &self.identity;
     }
 

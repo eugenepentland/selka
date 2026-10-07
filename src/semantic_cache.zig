@@ -144,8 +144,12 @@ pub const Context = struct {
     /// Per-function check summaries for a `check` that needs no checked trees:
     /// unchanged bodies are stood in by their stored summaries instead of being
     /// checked or copied, and the check's own summaries come back here. Such a
-    /// request never hydrates retained checked trees.
+    /// request never hydrates retained checked trees unless the host explicitly
+    /// enables complete-tree reuse for a lowering request below.
     summaries: ?*summary.Request = null,
+    /// Complete typed-tree reuse alongside facts-only summaries is opt-in.
+    /// Legacy native-test facts keep their existing check/retention policy.
+    retain_summary_trees: bool = false,
 };
 
 /// Retention budget and the symbolic-template table that shares it. Grouped
@@ -334,7 +338,10 @@ pub const Cache = struct {
         const prepared = try key.prepare(allocator, src, syntax, .{ .build = self.context.contract, .mutation = self.context.mutation_contract }, self.resolution, recall);
         if (profile) |p| p.addSince("dependency_key_preparation", prepare_start, false);
         if (self.context.persistent) |persistent| {
-            const needs_trees = if (self.context.summaries) |request| request.facts_only else true;
+            const needs_trees = if (self.context.summaries) |request|
+                request.facts_only and self.context.retain_summary_trees
+            else
+                true;
             if (self.entries.len == 0 and needs_trees) {
                 const io_start = if (profile) |p| p.now() else std.Io.Timestamp.zero;
                 try self.loadPersistent(persistent, prepared);
@@ -597,9 +604,9 @@ pub const Session = struct {
         const cache = self.cache;
         if (cache.reuse.max_bytes == 0) return;
         // Validation-only summary requests have no complete trees to retain.
-        // Lowering requests keep their trees and may reuse them independently
-        // of the unchanged pass facts their summaries stand in for.
-        if (cache.context.summaries) |request| if (!request.facts_only) return;
+        // Hosts may opt lowering requests into tree reuse independently of the
+        // unchanged pass facts their summaries stand in for.
+        if (cache.context.summaries) |request| if (!request.facts_only or !cache.context.retain_summary_trees) return;
         const generic_bytes = cache.reuse.symbolic.retainedBytes() + cache.reuse.specializations.retainedBytes();
         const ordinary_budget = cache.reuse.max_bytes -| generic_bytes;
         const ordinary_count = self.prepared.ordinary_ast.len;
