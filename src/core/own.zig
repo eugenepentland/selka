@@ -155,7 +155,8 @@ fn reserveFills(f: *ir.Function, known: *const facts.Facts) void {
 }
 
 /// COW may replace the receiver with a copy whose capacity is unknown. Only
-/// pushes still consuming the original unique loop phi use its reserved room.
+/// the counted body's backedge push, still consuming the original unique loop
+/// phi, uses its reserved room. Later appends must check capacity normally.
 fn markFillPushes(f: *ir.Function, known: *const facts.Facts) void {
     for (known.counted) |counted| {
         for (f.blocks.items[counted.loop.header.index()].insts.items) |ref| {
@@ -167,12 +168,23 @@ fn markFillPushes(f: *ir.Function, known: *const facts.Facts) void {
                 reserved = reserved or (entry.op == .list_new and entry.data == flags.fill_capacity);
             }
             if (!reserved) continue;
-            for (f.blocks.items) |block| for (block.insts.items) |push_ref| {
-                const push = f.inst(push_ref);
-                if (push.op == .list_push and push.data == 0 and f.resolve(push.a) == ref) f.insts.items[push_ref.index()].data = flags.fill_push;
-            };
+            const push_ref = fillBackedgePush(f, counted.loop.header, ref) orelse continue;
+            f.insts.items[push_ref.index()].data = flags.fill_push;
         }
     }
+}
+
+/// The facts proved this backedge value is the body's single push. Ownership
+/// can split that edge, so consult the current recorded latch and phi ordering.
+fn fillBackedgePush(f: *const ir.Function, header: ir.BlockId, phi: ir.Ref) ?ir.Ref {
+    for (f.loops.items) |loop| {
+        if (loop.header != header) continue;
+        const position = std.mem.indexOfScalar(ir.BlockId, f.blocks.items[header.index()].preds.items, loop.latch) orelse return null;
+        const ref = f.resolve(f.operands(f.inst(phi).data)[position]);
+        const push = f.inst(ref);
+        return if (push.op == .list_push and push.data == 0 and f.resolve(push.a) == phi) ref else null;
+    }
+    return null;
 }
 
 // ---- analysis -------------------------------------------------------------------

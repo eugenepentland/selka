@@ -12,7 +12,13 @@ def changed(w: int) -> bool:
 
 # spec-case: NEW-CORE-NESTED-LENGTH-S4-1
 public def test_uniform_child_lengths_follow_each_list_value() -> bool:
-    return changed(1) and changed(3) and changed(8)
+    return changed(1) and changed(3) and changed(8) and after_fill(0) and after_fill(1) and after_fill(64) and after_fill(4096) and after_fill(4097)
+
+# spec-case: NEW-CORE-FILL-S4-1
+def after_fill(size: int) -> bool:
+    values = [j for j in range(size)]
+    values.append(7)
+    return len(values) == size + 1 and values[size] == 7
 
 def main() -> int:
     return 0

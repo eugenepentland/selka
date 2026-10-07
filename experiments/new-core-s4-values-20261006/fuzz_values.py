@@ -43,6 +43,12 @@ def walk(xs: mut list[int], n: int) -> int:
     return xs[0]
 
 
+def after_fill(w: int) -> int:
+    xs = [j for j in range(w)]
+    xs.append({value})
+    return sum(xs) + len(xs)
+
+
 def main(args: list[str], out: Stream) -> int:
     width = {width} + (len(args[0]) % 3 if len(args) > 0 else 0)
     row = [0] * width
@@ -64,7 +70,7 @@ def main(args: list[str], out: Stream) -> int:
     _ = bytes_out.append_float({decimal})
     text = str({number}) + str({decimal})
     spelling = bytes(bytes_out) == text.encode()
-    out.print(sum(repeated[{rows - 1}]), sum(saved[{rows - 1}]), sum(saved_row), sum(unique[{rows - 1}]), cube[1][0][0], cube_saved[1][0][0], result, values_saved[0], spelling, len(bytes(bytes_saved)), changed(width, {rows}))
+    out.print(sum(repeated[{rows - 1}]), sum(saved[{rows - 1}]), sum(saved_row), sum(unique[{rows - 1}]), cube[1][0][0], cube_saved[1][0][0], result, values_saved[0], spelling, len(bytes(bytes_saved)), changed(width, {rows}), after_fill(width))
     return 0
 '''
 
