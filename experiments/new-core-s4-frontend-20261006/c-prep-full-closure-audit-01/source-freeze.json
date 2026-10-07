@@ -1,0 +1,39 @@
+{
+  "scope": "Read-only audit receipt; not final package qualification.",
+  "worktrees": [
+    {
+      "worktree": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend",
+      "head": "77cf0ea5e48702ba8419bb9c7e0c045903f02555",
+      "files": [
+        {
+          "path": "src/core/frontend.zig",
+          "sha256": "538a29607d3e8e71ac9bcb152fd4a647f682745c5320aa8c8912068c798fd11f"
+        },
+        {
+          "path": "src/core/ir.zig",
+          "sha256": "7232a25ca00d51c16b3cd552ae86859769a3ffb48d7a4f20ed4323708b651d5d"
+        }
+      ],
+      "tracked_source_diff": []
+    },
+    {
+      "worktree": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests",
+      "head": "df6e6ad8b6610d5cd53b70475a050a5d7751607f",
+      "files": [
+        {
+          "path": "src/core/tool_identity.zig",
+          "sha256": "e3f8f09bae559a843391b24f8c79aa9676adccd0511b78c11d2629b4bf20f8a7"
+        },
+        {
+          "path": "src/config_core_tool_platform.zig",
+          "sha256": "b9468ccefd4037fca68a2bb4ff53354e0da2006b1110860d66afa4cbc9f0d8c5"
+        },
+        {
+          "path": "src/core/driver.zig",
+          "sha256": "c1d38f8c7274bc1a64197723461f709ea9563d3bc37fd3a9bec883c9bd7c1248"
+        }
+      ],
+      "tracked_source_diff": []
+    }
+  ]
+}

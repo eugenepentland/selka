@@ -10,9 +10,11 @@ const pipeline = @import("pipeline.zig");
 const passes = @import("passes.zig");
 const facts = @import("facts.zig");
 const test_runner = @import("test_runner.zig");
+const check_command = @import("check_command.zig");
 
 const usage =
     \\usage: mylang-core build FILE.my -o OUT [--release] [--link FILE.c]... [--emit-llvm PATH] [--no-facts | --verify-facts] [--stats] [--zig PATH] [--cache-dir DIR]
+    \\       mylang-core check FILE.my [--typed] [--stats] [--timings=json] [--cache-dir DIR] [--no-cache]
     \\       mylang-core coverage FILE.my...   (one line per function: ok with its checks, or the refusal reason)
     \\       mylang-core dump-typed FILE.my [FUNCTION]
     \\       mylang-core dump-ir FILE.my [--facts]   (--facts: after the release passes, with intervals)
@@ -26,6 +28,7 @@ pub fn main(init: std.process.Init) !u8 {
     if (args.len >= 3 and std.mem.eql(u8, args[1], "dump-typed")) return dumpTyped(init, args[2], if (args.len >= 4) args[3] else null);
     if (args.len >= 3 and std.mem.eql(u8, args[1], "dump-ir")) return dumpIr(init, args[2], args.len == 4 and std.mem.eql(u8, args[3], "--facts"));
     if (args.len >= 2 and std.mem.eql(u8, args[1], "build")) return buildCommand(init, args[2..]);
+    if (args.len >= 2 and std.mem.eql(u8, args[1], "check")) return check_command.run(init, args[2..]);
     if (args.len >= 3 and std.mem.eql(u8, args[1], "coverage")) return coverageCommand(init, args[2..]);
     if (args.len >= 3 and std.mem.eql(u8, args[1], "test")) return testCommand(init, args[2..]);
     try std.Io.File.stderr().writeStreamingAll(init.io, usage);

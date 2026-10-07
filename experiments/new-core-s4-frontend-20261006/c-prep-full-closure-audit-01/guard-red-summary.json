@@ -1,0 +1,23 @@
+{
+  "classification": "RED: actual production helper accepts changed external compiler input.",
+  "helper_sha256": "e3f8f09bae559a843391b24f8c79aa9676adccd0511b78c11d2629b4bf20f8a7",
+  "platform_sha256": "b9468ccefd4037fca68a2bb4ff53354e0da2006b1110860d66afa4cbc9f0d8c5",
+  "tool_copy": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/guard-reducer/tool/distribution/zig",
+  "tool_sha256": "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f",
+  "resource": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/guard-reducer/tool/lib/clang/22/share/ubsan_ignorelist.txt",
+  "resource_sha256": "76802ff3c3a16102a0ecb3181cbd7fa7fa5b2f65b02dcc1c21f7a3d7055f2983",
+  "values": {
+    "cacheable_before": "true",
+    "cacheable_after": "true",
+    "inputs": "20907",
+    "unchanged": "true",
+    "before_digest": "116cba7a620c1e96cecbb86a33ef2bfca8cd24f475dd17264505d3c7b0dd8063",
+    "after_digest": "116cba7a620c1e96cecbb86a33ef2bfca8cd24f475dd17264505d3c7b0dd8063",
+    "before_generation": "a26906f9b113a89cc5e618dba598378ff31562c4428f911446320dd1e9f1c2bb",
+    "after_generation": "a26906f9b113a89cc5e618dba598378ff31562c4428f911446320dd1e9f1c2bb"
+  },
+  "object_sha256": "d8dd5741be1e8c641748d89dec8810ff602a9203e1b8afeaf4006e4cfe7a0b37",
+  "probe_sha256": "4b180fa03172a7b3e3b56df46193ccee9bfe93bff9ecf62813e575c860207953",
+  "probe_source_sha256": "c110bb02492bceb733fc8d1facf017f90660de7d5cc519d6ded2c4e68d4e89f8",
+  "scope": "No changed-output assertion: proves unchanged/digest/generation omission for a subsequently read external resource."
+}

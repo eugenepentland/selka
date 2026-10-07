@@ -416,6 +416,8 @@ const CoreInputs = struct {
     filters: []const []const u8,
     /// Guardian's test runner, which can run one shard of the root (`--guardian-shard`).
     test_runner: std.Build.Step.Compile.TestRunner,
+    /// Generated identity over every production compiler/runtime source.
+    build_assets: *std.Build.Module,
 };
 
 /// The new compiler core (docs/design/new-core-ir.md), kept off the default
@@ -433,6 +435,7 @@ fn addCore(b: *std.Build, inputs: CoreInputs) void {
         .optimize = inputs.optimize,
         .imports = &.{.{ .name = "mylang", .module = inputs.front_end }},
     }) });
+    exe.root_module.addImport("qbe_build_assets", inputs.build_assets);
     b.step("core", "Build and install the new compiler core, zig-out/bin/mylang-core").dependOn(&b.addInstallArtifact(exe, .{}).step);
     const differential = b.option(bool, "core-diff", "test-core: also compare each slice program with the old compiler's build of it") orelse false;
     const options = b.addOptions();
@@ -449,6 +452,7 @@ fn addCore(b: *std.Build, inputs: CoreInputs) void {
         .optimize = inputs.optimize,
         .imports = &.{.{ .name = "mylang", .module = inputs.front_end }},
     }) });
+    unit.root_module.addImport("qbe_build_assets", inputs.build_assets);
     unit.root_module.addOptions("core_test_options", options);
     const step = b.step("test-core", "Run the new core's unit tests and its end-to-end slice (not part of test)");
     // Most of the root's time is end-to-end builds of guest programs, so shards
@@ -522,6 +526,7 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
     core.addImport("runtime_contract", runtime_contract);
+    core.addImport("memory_budget", budget);
     const exe = b.addExecutable(.{
         .max_rss = if (optimize == .fast) rss.compiler_fast else rss.compile,
         .name = "mylang",
@@ -679,7 +684,7 @@ pub fn build(b: *std.Build) void {
     // The application tests under `tests/application_comparison` and
     // `tests/development_velocity` read the runners from `zig-out/bin`, so they
     // need the default install.
-    addCore(b, .{ .target = target, .optimize = optimize, .front_end = core, .old_compiler = exe, .filters = test_filters, .test_runner = guardian.testRunner(guardian_dep) });
+    addCore(b, .{ .target = target, .optimize = optimize, .front_end = core, .old_compiler = exe, .filters = test_filters, .test_runner = guardian.testRunner(guardian_dep), .build_assets = build_assets });
     const compiler_only = b.option(bool, "compiler-only", "Install only mylang, qbe and the runtime, not board-trial, schematic-svg or mylang-io (for measurement installs)") orelse false;
     const board_runner = b.addExecutable(.{ .max_rss = rss.compile, .name = "board-trial", .root_module = board_module });
     if (!compiler_only) b.installArtifact(board_runner);

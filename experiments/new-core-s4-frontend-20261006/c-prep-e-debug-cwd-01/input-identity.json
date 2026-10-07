@@ -1,0 +1,12 @@
+{
+  "source_artifact": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/import-loop-budget-01/cold_cfg-debug/new/program-62db3982c434183c/module-819b813edb0e06e8dfdd7ff60e54b591b15e01e8a00977de40701a326bcc3d4d.ll",
+  "input_sha256": "1c40b584bc71793ebd6e8a1d597b03c65677dd33857bed2370293efed1363e48",
+  "source_commit": "5994",
+  "original_receipt_commit": "0ab496dfc",
+  "core_compiler_sha256": "616ece995efec364e02fa592ecc883c0b10738a798b770571d72d8ceb6f89477",
+  "zig": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+  "zig_sha256": "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f",
+  "canonical_basename": "canonical-1c40b584bc71793ebd6e8a1d597b03c65677dd33857bed2370293efed1363e48.ll",
+  "native_flags_preserved_from": "original-e-compile-receipt.json",
+  "scope": "Full Debug object bytes, no performance qualification."
+}

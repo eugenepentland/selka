@@ -1,0 +1,33 @@
+test-core
++- run test
+   +- compile test debug native
+      +- options
+         +- compile exe mylang-core debug native 1 errors
+src/core/check_command.zig:32:37: error: expected type 'error{OutOfMemory,WriteFailed}!u8', found 'error{InternalError,OutOfMemory,ReadFailed,SourceError}'
+        error.OutOfMemory => return err,
+                                    ^~~
+src/core/check_command.zig:32:37: note: 'error.ReadFailed' not a member of destination error set
+src/core/check_command.zig:32:37: note: 'error.SourceError' not a member of destination error set
+src/core/check_command.zig:32:37: note: 'error.InternalError' not a member of destination error set
+src/core/check_command.zig:20:67: note: function return type declared here
+pub fn run(init: std.process.Init, args: []const []const u8) Error!u8 {
+                                                             ~~~~~^~~
+referenced by:
+    main: src/core/main.zig:31:86
+    callMain [inlined]: /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/start.zig:791:30
+    callMainWithArgs [inlined]: /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/start.zig:693:20
+    posixCallMainAndExit: /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/start.zig:645:38
+    2 reference(s) hidden; use '-freference-trace=6' to see all references
+error: 1 compilation errors
+failed command: /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig build-exe -ODebug --dep mylang --dep qbe_build_assets -Mroot=src/core/main.zig -ODebug --dep runtime_contract --dep memory_budget -Mmylang=src/compiler.zig -ODebug -Mqbe_build_assets=.zig-cache/o/add0af640f22648281d7dd9aa290b4d6/qbe_build_assets/assets.zig -ODebug -Mruntime_contract=src/runtime_contract.zig -ferror-tracing -ODebug -Mmemory_budget=src/memory_budget.zig --cache-dir .zig-cache --global-cache-dir /home/epentland/ai/canopy/.zig-global-cache --name mylang-core --zig-lib-dir /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/ --listen=-
+
+Build Summary: 2/7 steps succeeded (1 failed)
+test-core transitive failure
++- run test transitive failure
+   +- compile test debug native transitive failure
+      +- run exe qbe-build-assets (qbe_build_assets) success 96ms
+      |  +- compile exe qbe-build-assets debug native cached 8ms MaxRSS:38M
+      +- options transitive failure
+         +- compile exe mylang-core debug native 1 errors
+            +- run exe qbe-build-assets (qbe_build_assets) (+1 more reused dependencies)
+

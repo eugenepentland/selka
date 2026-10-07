@@ -1,0 +1,43 @@
+{
+  "source_commit": "d82e3cc5f511e7db65a67a30f78251cf04d2ad8e",
+  "command": [
+    "zig",
+    "build",
+    "core",
+    "--summary",
+    "all"
+  ],
+  "seconds": 2.3921818118542433,
+  "exit": 0,
+  "source_identical_rebuild": true,
+  "compile_artifact": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.zig-cache/o/b26e1d411e177a7ff54002bc183f70a8/mylang-core",
+  "invalidated_private_manifests": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.zig-cache/h/ba6582cc4363b0b964baecff20360cbd.txt",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.zig-cache/h/ad97637e9606555e1592233e5b46bb46.txt",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.zig-cache/h/a7fc87cdb21d94eba0a37dc7fb970a3d.txt",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.zig-cache/h/b286cd4bad6df9871aa34b173564e1d1.txt",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.zig-cache/h/1190e6626ac86437f2abf60a9d9b4877.txt",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.zig-cache/h/16e1bbb6b68efe2a81a7e36fac75f89e.txt"
+  ],
+  "original_sha256": "b1166c3c2bf1fb2cf3f359bb4c0bfd32d6de8acc47b5503d92826a6d9fd4076f",
+  "rebuilt_sha256": "ded2870efe5284dc9958d41ceba11880ae5f5a4d3281a518ec0b0a237e3c507c",
+  "affinity": [
+    0,
+    1,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "qualified": true
+}

@@ -37,7 +37,7 @@ const outputs = @import("qbe_build_outputs.zig");
 const budget = @import("memory_budget");
 const interface_command = @import("module_interface_command.zig");
 const compile_command = @import("module_compile_command.zig");
-const project_config = @import("project_config.zig");
+const project_config = language.project_config;
 const module_syntax = @import("module_syntax.zig");
 
 const native_test_contracts = @import("native_test_contracts.zig");

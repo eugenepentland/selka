@@ -1,0 +1,2 @@
+runtime-c pids 22 bytes 1162513 paths 420 outside reads ['/dev/urandom', '/etc/lsb-release', '/usr/lib/os-release']
+program-link pids 197 bytes 9612247 paths 2608 outside reads ['/dev/urandom', '/etc/lsb-release', '/tmp/abi-note-49dac5.s', '/tmp/start-2-93ef7e.s', '/usr/lib/os-release']

@@ -1,0 +1,166 @@
+{
+  "scope": "Actual descendants of protected M native final action.",
+  "rule": "Only successful exclusive creation and subsequent same-action producer/rename establish generated output; /tmp prefix alone is insufficient.",
+  "events": [
+    {
+      "line": 1793,
+      "syscall": "open(\"/tmp/abi-note-49dac5.s\", O_RDWR|O_CREAT|O_EXCL|O_LARGEFILE|O_CLOEXEC, 0666)             = 3</tmp/abi-note-49dac5.s>"
+    },
+    {
+      "line": 2936,
+      "syscall": "open(\"/tmp/start-2-93ef7e.s\", O_RDWR|O_CREAT|O_EXCL|O_LARGEFILE|O_CLOEXEC, 0666) = 3</tmp/start-2-93ef7e.s>"
+    },
+    {
+      "line": 3209,
+      "syscall": "open(\"/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/core-cache/zig-local/tmp/d8d880f270c8e09d-guest-9f7404e9ebf167f8-18c5d30b.o.tmp\", O_RDWR|O_CREAT|O_EXCL|O_LARGEFILE|O_CLOEXEC, 0666)             = 4</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/core-cache/zig-local/tmp/d8d880f270c8e09d-guest-9f7404e9ebf167f8-18c5d30b.o.tmp>"
+    },
+    {
+      "line": 3359,
+      "syscall": "open(\"/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/zig-global/tmp/351ec6a01c03ade6-init-54a803fd.o.tmp\", O_RDWR|O_CREAT|O_EXCL|O_LARGEFILE|O_CLOEXEC, 0666)             = 4</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/zig-global/tmp/351ec6a01c03ade6-init-54a803fd.o.tmp>"
+    },
+    {
+      "line": 3505,
+      "syscall": "open(\"/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/zig-global/tmp/da5046777c0bb586-atexit-068edd29.o.tmp\", O_RDWR|O_CREAT|O_EXCL|O_LARGEFILE|O_CLOEXEC, 0666)             = 4</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/zig-global/tmp/da5046777c0bb586-atexit-068edd29.o.tmp>"
+    },
+    {
+      "line": 4050,
+      "syscall": "rename(\"/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/core-cache/zig-local/tmp/d8d880f270c8e09d-guest-9f7404e9ebf167f8-18c5d30b.o.tmp\", \"/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/core-cache/zig-local/tmp/d8d880f270c8e09d-guest-9f7404e9ebf167f8.o\")           = 0"
+    },
+    {
+      "line": 4066,
+      "syscall": "open(\"/tmp/abi-note-49dac5-fc45b286.s.tmp\", O_RDWR|O_CREAT|O_EXCL|O_LARGEFILE|O_CLOEXEC, 0666)             = 4</tmp/abi-note-49dac5-fc45b286.s.tmp>"
+    },
+    {
+      "line": 4126,
+      "syscall": "rename(\"/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/zig-global/tmp/351ec6a01c03ade6-init-54a803fd.o.tmp\", \"/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/zig-global/tmp/351ec6a01c03ade6-init.o\")           = 0"
+    },
+    {
+      "line": 4155,
+      "syscall": "open(\"/tmp/start-2-93ef7e-bfa465e4.s.tmp\", O_RDWR|O_CREAT|O_EXCL|O_LARGEFILE|O_CLOEXEC, 0666)             = 4</tmp/start-2-93ef7e-bfa465e4.s.tmp>"
+    },
+    {
+      "line": 4305,
+      "syscall": "rename(\"/tmp/abi-note-49dac5-fc45b286.s.tmp\", \"/tmp/abi-note-49dac5.s\")           = 0"
+    },
+    {
+      "line": 4894,
+      "syscall": "rename(\"/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/zig-global/tmp/da5046777c0bb586-atexit-068edd29.o.tmp\", \"/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/zig-global/tmp/da5046777c0bb586-atexit.o\")           = 0"
+    },
+    {
+      "line": 7297,
+      "syscall": "rename(\"/tmp/start-2-93ef7e-bfa465e4.s.tmp\", \"/tmp/start-2-93ef7e.s\")           = 0"
+    },
+    {
+      "line": 7650,
+      "syscall": "open(\"/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/zig-global/tmp/7b997ec4a5c08cd1-at_quick_exit-c9803821.o.tmp\", O_RDWR|O_CREAT|O_EXCL|O_LARGEFILE|O_CLOEXEC, 0666)             = 4</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/zig-global/tmp/7b997ec4a5c08cd1-at_quick_exit-c9803821.o.tmp>"
+    },
+    {
+      "line": 7683,
+      "syscall": "open(\"/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/zig-global/tmp/533b8289074db297-pthread_atfork-8ee08960.o.tmp\", O_RDWR|O_CREAT|O_EXCL|O_LARGEFILE|O_CLOEXEC, 0666)             = 4</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/zig-global/tmp/533b8289074db297-pthread_atfork-8ee08960.o.tmp>"
+    },
+    {
+      "line": 8666,
+      "syscall": "rename(\"/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/zig-global/tmp/7b997ec4a5c08cd1-at_quick_exit-c9803821.o.tmp\", \"/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/zig-global/tmp/7b997ec4a5c08cd1-at_quick_exit.o\")           = 0"
+    },
+    {
+      "line": 8679,
+      "syscall": "rename(\"/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/zig-global/tmp/533b8289074db297-pthread_atfork-8ee08960.o.tmp\", \"/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/zig-global/tmp/533b8289074db297-pthread_atfork.o\") = 0"
+    },
+    {
+      "line": 10987,
+      "syscall": "open(\"/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/zig-global/tmp/8bcfd40e1734c872-stack_chk_fail_local-fb1882c2.o.tmp\", O_RDWR|O_CREAT|O_EXCL|O_LARGEFILE|O_CLOEXEC, 0666)             = 4</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/zig-global/tmp/8bcfd40e1734c872-stack_chk_fail_local-fb1882c2.o.tmp>"
+    },
+    {
+      "line": 13847,
+      "syscall": "rename(\"/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/zig-global/tmp/8bcfd40e1734c872-stack_chk_fail_local-fb1882c2.o.tmp\", \"/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/zig-global/tmp/8bcfd40e1734c872-stack_chk_fail_local.o\")           = 0"
+    },
+    {
+      "line": 17116,
+      "syscall": "open(\"/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/zig-global/tmp/76fc2c7172e8d48d-stat-2.32-be023a2c.o.tmp\", O_RDWR|O_CREAT|O_EXCL|O_LARGEFILE|O_CLOEXEC, 0666)             = 4</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/zig-global/tmp/76fc2c7172e8d48d-stat-2.32-be023a2c.o.tmp>"
+    },
+    {
+      "line": 21690,
+      "syscall": "rename(\"/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/zig-global/tmp/76fc2c7172e8d48d-stat-2.32-be023a2c.o.tmp\", \"/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/zig-global/tmp/76fc2c7172e8d48d-stat-2.32.o\")           = 0"
+    },
+    {
+      "line": 26834,
+      "syscall": "open(\"/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/zig-global/tmp/3ecf32a940f39563-fstat-2.32-572bdbe7.o.tmp\", O_RDWR|O_CREAT|O_EXCL|O_LARGEFILE|O_CLOEXEC, 0666) = 4</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/zig-global/tmp/3ecf32a940f39563-fstat-2.32-572bdbe7.o.tmp>"
+    },
+    {
+      "line": 29905,
+      "syscall": "rename(\"/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/zig-global/tmp/3ecf32a940f39563-fstat-2.32-572bdbe7.o.tmp\", \"/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/zig-global/tmp/3ecf32a940f39563-fstat-2.32.o\")           = 0"
+    },
+    {
+      "line": 32319,
+      "syscall": "open(\"/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/zig-global/tmp/5a5a9f0de5ff94c2-fstat64-2.32-850223f0.o.tmp\", O_RDWR|O_CREAT|O_EXCL|O_LARGEFILE|O_CLOEXEC, 0666)             = 4</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/zig-global/tmp/5a5a9f0de5ff94c2-fstat64-2.32-850223f0.o.tmp>"
+    },
+    {
+      "line": 32843,
+      "syscall": "open(\"/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/zig-global/tmp/87158e8a58b8aa3b-stat64-2.32-96bb1aad.o.tmp\", O_RDWR|O_CREAT|O_EXCL|O_LARGEFILE|O_CLOEXEC, 0666)             = 4</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/zig-global/tmp/87158e8a58b8aa3b-stat64-2.32-96bb1aad.o.tmp>"
+    },
+    {
+      "line": 33450,
+      "syscall": "open(\"/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/zig-global/tmp/87b6b7d7fc43fbb6-lstat-2.32-5bf78cab.o.tmp\", O_RDWR|O_CREAT|O_EXCL|O_LARGEFILE|O_CLOEXEC, 0666)             = 4</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/zig-global/tmp/87b6b7d7fc43fbb6-lstat-2.32-5bf78cab.o.tmp>"
+    },
+    {
+      "line": 35666,
+      "syscall": "rename(\"/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/zig-global/tmp/5a5a9f0de5ff94c2-fstat64-2.32-850223f0.o.tmp\", \"/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/zig-global/tmp/5a5a9f0de5ff94c2-fstat64-2.32.o\")           = 0"
+    },
+    {
+      "line": 36229,
+      "syscall": "rename(\"/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/zig-global/tmp/87158e8a58b8aa3b-stat64-2.32-96bb1aad.o.tmp\", \"/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/zig-global/tmp/87158e8a58b8aa3b-stat64-2.32.o\")           = 0"
+    },
+    {
+      "line": 36558,
+      "syscall": "rename(\"/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/zig-global/tmp/87b6b7d7fc43fbb6-lstat-2.32-5bf78cab.o.tmp\", \"/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/zig-global/tmp/87b6b7d7fc43fbb6-lstat-2.32.o\")           = 0"
+    },
+    {
+      "line": 38263,
+      "syscall": "open(\"/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/zig-global/tmp/d0ad9a4b82a34173-mknodat-2.32-053dee58.o.tmp\", O_RDWR|O_CREAT|O_EXCL|O_LARGEFILE|O_CLOEXEC, 0666)             = 4</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/zig-global/tmp/d0ad9a4b82a34173-mknodat-2.32-053dee58.o.tmp>"
+    },
+    {
+      "line": 38863,
+      "syscall": "open(\"/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/zig-global/tmp/44ea37b3c5fe3c5d-fstatat64-2.32-7b9ce01b.o.tmp\", O_RDWR|O_CREAT|O_EXCL|O_LARGEFILE|O_CLOEXEC, 0666)             = 4</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/zig-global/tmp/44ea37b3c5fe3c5d-fstatat64-2.32-7b9ce01b.o.tmp>"
+    },
+    {
+      "line": 39711,
+      "syscall": "open(\"/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/zig-global/tmp/1059f5bed2095b49-fstatat-2.32-faf95337.o.tmp\", O_RDWR|O_CREAT|O_EXCL|O_LARGEFILE|O_CLOEXEC, 0666)             = 4</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/zig-global/tmp/1059f5bed2095b49-fstatat-2.32-faf95337.o.tmp>"
+    },
+    {
+      "line": 40038,
+      "syscall": "open(\"/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/zig-global/tmp/df3b4db77f7f0db4-lstat64-2.32-ba370f85.o.tmp\", O_RDWR|O_CREAT|O_EXCL|O_LARGEFILE|O_CLOEXEC, 0666)             = 4</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/zig-global/tmp/df3b4db77f7f0db4-lstat64-2.32-ba370f85.o.tmp>"
+    },
+    {
+      "line": 44496,
+      "syscall": "rename(\"/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/zig-global/tmp/44ea37b3c5fe3c5d-fstatat64-2.32-7b9ce01b.o.tmp\", \"/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/zig-global/tmp/44ea37b3c5fe3c5d-fstatat64-2.32.o\")           = 0"
+    },
+    {
+      "line": 44528,
+      "syscall": "rename(\"/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/zig-global/tmp/d0ad9a4b82a34173-mknodat-2.32-053dee58.o.tmp\", \"/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/zig-global/tmp/d0ad9a4b82a34173-mknodat-2.32.o\")           = 0"
+    },
+    {
+      "line": 45011,
+      "syscall": "rename(\"/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/zig-global/tmp/df3b4db77f7f0db4-lstat64-2.32-ba370f85.o.tmp\", \"/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/zig-global/tmp/df3b4db77f7f0db4-lstat64-2.32.o\")           = 0"
+    },
+    {
+      "line": 45199,
+      "syscall": "rename(\"/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/zig-global/tmp/1059f5bed2095b49-fstatat-2.32-faf95337.o.tmp\", \"/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/zig-global/tmp/1059f5bed2095b49-fstatat-2.32.o\")           = 0"
+    },
+    {
+      "line": 47728,
+      "syscall": "open(\"/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/zig-global/tmp/d6b52a2755050212-mknod-2.32-b8c076d7.o.tmp\", O_RDWR|O_CREAT|O_EXCL|O_LARGEFILE|O_CLOEXEC, 0666)             = 4</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/zig-global/tmp/d6b52a2755050212-mknod-2.32-b8c076d7.o.tmp>"
+    },
+    {
+      "line": 48380,
+      "syscall": "open(\"/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/zig-global/tmp/41cbc69377f14533-elf-init-2.33-d3d12938.o.tmp\", O_RDWR|O_CREAT|O_EXCL|O_LARGEFILE|O_CLOEXEC, 0666)             = 4</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/zig-global/tmp/41cbc69377f14533-elf-init-2.33-d3d12938.o.tmp>"
+    },
+    {
+      "line": 50125,
+      "syscall": "rename(\"/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/zig-global/tmp/41cbc69377f14533-elf-init-2.33-d3d12938.o.tmp\", \"/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/zig-global/tmp/41cbc69377f14533-elf-init-2.33.o\")           = 0"
+    },
+    {
+      "line": 50607,
+      "syscall": "rename(\"/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/zig-global/tmp/d6b52a2755050212-mknod-2.32-b8c076d7.o.tmp\", \"/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/zig-global/tmp/d6b52a2755050212-mknod-2.32.o\")           = 0"
+    }
+  ]
+}

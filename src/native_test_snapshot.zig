@@ -2,9 +2,10 @@
 const std = @import("std");
 const fs = @import("qbe_build_io.zig");
 const v = @import("qbe_build_value.zig");
-const project_config = @import("project_config.zig");
-const project = @import("native_test_root").snapshot_project;
-const embed = @import("native_test_root").snapshot_embed;
+const test_root = @import("native_test_root");
+const project_config = test_root.compiler_language.project_config;
+const project = test_root.snapshot_project;
+const embed = test_root.snapshot_embed;
 /// Source races and invalid provider contracts discard test results.
 pub const Error = fs.Error || std.Io.Dir.OpenError || std.Io.Dir.SelectiveWalker.Error ||
     std.Io.File.StatError || std.Io.File.ReadPositionalError ||

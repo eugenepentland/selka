@@ -1,0 +1,22 @@
+guardian: run-all: whole-tree run — --full was requested
+guardian: cold gate — no prior green stamp on this tree; a re-run after a green will skip via the cache and confirm
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 28 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 10342 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 11 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 3/88 failed (spec, error-discipline, allocator-hygiene)
+guardian: failures grouped by check (3):
+  spec (3 findings)
+    - duplicate tag: id:new-core-frontend-cache-1
+    - in: src/core/frontend_test.zig
+    - in: src/core/frontend_test.zig
+  error-discipline (1 finding)
+    - src/core/check_command.zig: pub fn run uses inferred error set `!T` (use `MyErr!T`)
+      fix: declare an explicit error set — `pub const MyError = error{ Foo, Bar };` — and return `MyError!void`.
+  allocator-hygiene (5 findings)
+    - src/core/frontend_test.zig:55: hardcoded std.testing.allocator outside test block
+      fix: thread the allocator through as a parameter instead of hardcoding a global.
+    - src/core/frontend_test.zig:60: hardcoded std.testing.allocator outside test block
+    - src/core/frontend_test.zig:62: hardcoded std.testing.allocator outside test block
+    - +2 more — use --verbose for full detail
+  caution: zig-out binaries predate this failed run (installs are gated on green) — rebuild green before running them

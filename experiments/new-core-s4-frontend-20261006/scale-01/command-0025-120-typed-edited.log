@@ -1,0 +1,21 @@
+$ taskset -c 10 /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/rf/bin/mylang-core check /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/scale-01/synthetic-120/main.my --cache-dir /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/scale-01/cache-120-typed --stats --timings=json --typed
+{"version":"core-check-work-v1","typed":true,"functions":723,"work":{"checked":1,"reused":722,"summaries":721,"syntax_hits":3,"syntax_misses":0,"stored":1,"damaged":0}}
+{"version":"phase-timings-v1","kind":"timing","tool":"compiler","name":"load","duration_ns":1926101,"inclusive":false,"counts":{"modules":3,"source_bytes":113051,"typed_nodes":15387},"exit_code":0}
+{"version":"phase-timings-v1","kind":"timing","tool":"compiler","name":"syntax_replay","duration_ns":1649238,"inclusive":false,"counts":{"modules":3,"source_bytes":113051,"typed_nodes":15387},"exit_code":0}
+{"version":"phase-timings-v1","kind":"timing","tool":"compiler","name":"declarations_interfaces","duration_ns":312718,"inclusive":false,"counts":{"modules":3,"source_bytes":113051,"typed_nodes":15387},"exit_code":0}
+{"version":"phase-timings-v1","kind":"timing","tool":"compiler","name":"merge","duration_ns":1223945,"inclusive":false,"counts":{"modules":3,"source_bytes":113051,"typed_nodes":15387},"exit_code":0}
+{"version":"phase-timings-v1","kind":"timing","tool":"compiler","name":"dependency_key_preparation","duration_ns":3043885,"inclusive":false,"counts":{"modules":3,"source_bytes":113051,"typed_nodes":15387},"exit_code":0}
+{"version":"phase-timings-v1","kind":"timing","tool":"compiler","name":"retention_store_io","duration_ns":44913773,"inclusive":false,"counts":{"modules":3,"source_bytes":113051,"typed_nodes":15387},"exit_code":0}
+{"version":"phase-timings-v1","kind":"timing","tool":"compiler","name":"symbolic_templates","duration_ns":9263,"inclusive":false,"counts":{"modules":3,"source_bytes":113051,"typed_nodes":15387},"exit_code":0}
+{"version":"phase-timings-v1","kind":"timing","tool":"compiler","name":"stand_in_planning","duration_ns":451323,"inclusive":false,"counts":{"modules":3,"source_bytes":113051,"typed_nodes":15387},"exit_code":0}
+{"version":"phase-timings-v1","kind":"timing","tool":"compiler","name":"ordinary_body_replay","duration_ns":5046021,"inclusive":false,"counts":{"modules":3,"source_bytes":113051,"typed_nodes":15387},"exit_code":0}
+{"version":"phase-timings-v1","kind":"timing","tool":"compiler","name":"fresh_body_check","duration_ns":62201,"inclusive":false,"counts":{"modules":3,"source_bytes":113051,"typed_nodes":15387},"exit_code":0}
+{"version":"phase-timings-v1","kind":"timing","tool":"compiler","name":"entry_adaptation","duration_ns":155304,"inclusive":false,"counts":{"modules":3,"source_bytes":113051,"typed_nodes":15387},"exit_code":0}
+{"version":"phase-timings-v1","kind":"timing","tool":"compiler","name":"effect_origin_passes","duration_ns":1722189,"inclusive":false,"counts":{"modules":3,"source_bytes":113051,"typed_nodes":15387},"exit_code":0}
+{"version":"phase-timings-v1","kind":"timing","tool":"compiler","name":"domain_codec_validation","duration_ns":67,"inclusive":false,"counts":{"modules":3,"source_bytes":113051,"typed_nodes":15387},"exit_code":0}
+{"version":"phase-timings-v1","kind":"timing","tool":"compiler","name":"warning_derivation","duration_ns":6019,"inclusive":false,"counts":{"modules":3,"source_bytes":113051,"typed_nodes":15387},"exit_code":0}
+{"version":"phase-timings-v1","kind":"timing","tool":"compiler","name":"check_summaries","duration_ns":83505,"inclusive":false,"counts":{"modules":3,"source_bytes":113051,"typed_nodes":15387},"exit_code":0}
+{"version":"phase-timings-v1","kind":"timing","tool":"compiler","name":"check","duration_ns":57887099,"inclusive":true,"counts":{"modules":3,"source_bytes":113051,"typed_nodes":15387},"exit_code":0}
+{"version":"phase-timings-v1","kind":"timing","tool":"compiler","name":"total","duration_ns":63664233,"inclusive":true,"counts":{"modules":3,"source_bytes":113051,"typed_nodes":15387},"exit_code":0}
+
+exit=0 elapsed_seconds=0.066790570

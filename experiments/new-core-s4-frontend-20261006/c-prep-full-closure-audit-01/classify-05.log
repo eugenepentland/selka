@@ -1,0 +1,33 @@
+{
+  "runtime-c": {
+    "paths": 420,
+    "counts": {
+      "entropy for invocation staging; not a file-content certificate": 1,
+      "unguarded external discovery": 68,
+      "task-owned input/output; classify through argv/producer provenance": 18,
+      "direct existing snapshot": 178,
+      "existing directory snapshot guards lookup membership": 152,
+      "process-local kernel view; traced target needed": 3
+    },
+    "unguarded_content_reads": [
+      "/etc/lsb-release",
+      "/usr/lib/os-release"
+    ]
+  },
+  "program-link": {
+    "paths": 2608,
+    "counts": {
+      "entropy for invocation staging; not a file-content certificate": 1,
+      "unguarded external discovery": 69,
+      "task-owned input/output; classify through argv/producer provenance": 924,
+      "direct existing snapshot": 873,
+      "existing directory snapshot guards lookup membership": 734,
+      "process-local kernel view; traced target needed": 3,
+      "generated staging only if retained create/producer proves ownership": 4
+    },
+    "unguarded_content_reads": [
+      "/etc/lsb-release",
+      "/usr/lib/os-release"
+    ]
+  }
+}

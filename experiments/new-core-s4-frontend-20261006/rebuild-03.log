@@ -1,0 +1,14 @@
+build-slot: all 1 gate slot(s) busy; waiting (0s so far)
+build-slot: all 1 gate slot(s) busy; waiting (60s so far)
+build-slot: all 1 gate slot(s) busy; waiting (120s so far)
+build-slot: all 1 gate slot(s) busy; waiting (181s so far)
+build-slot: gate slot 1 after 211s (all 1 gate slot(s) busy)
+core-exclusive: all 3 build slots held; other-build wait=0.000s; gate wrapper excludes gate execution
+Build Summary: 5/5 steps succeeded
+core success
++- install mylang-core success
+   +- compile exe mylang-core debug native success 1s MaxRSS:345M
+      +- run exe qbe-build-assets (qbe_build_assets) success 50ms
+         +- compile exe qbe-build-assets debug native cached 5ms MaxRSS:41M
+
+{"source_commit": "dc9db7d9ec60ebd12ba65b39c01b12236a8e3f4c", "command": ["zig", "build", "core", "--summary", "all"], "seconds": 2.9687394970096648, "exit": 0, "source_identical_rebuild": true, "compile_artifact": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.zig-cache/o/b26e1d411e177a7ff54002bc183f70a8/mylang-core", "invalidated_private_manifests": ["/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.zig-cache/h/ba6582cc4363b0b964baecff20360cbd.txt", "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.zig-cache/h/1190e6626ac86437f2abf60a9d9b4877.txt"], "original_sha256": "ded2870efe5284dc9958d41ceba11880ae5f5a4d3281a518ec0b0a237e3c507c", "rebuilt_sha256": "3479cc1ba2a86244e8e0f006a0b2c596f947f67843f4e01ea84f52c08f105c36", "affinity": [0, 1, 4, 5, 6, 7, 8, 9, 12, 13, 14, 15, 16, 17, 18, 19], "qualified": true}

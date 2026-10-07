@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/c-prep-full-closure-audit-01/extract_native.py", line 51, in <module>
+    result=namespace['summary'](label)
+  File "<string>", line 155, in summary
+KeyError: 'object'

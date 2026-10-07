@@ -4,6 +4,26 @@
 //! QBE, the native build driver) is reached from here.
 const std = @import("std");
 const language = @import("mylang");
+const reuse = @import("frontend_reuse.zig");
+
+/// Identity of all production compiler/runtime/property sources and toolchain.
+pub const compiler_identity = reuse.compiler_identity;
+/// Actual front-end cache work observed during this session.
+pub const Statistics = reuse.Statistics;
+/// One module source supplied by the project test runner, borrowed until deinit.
+pub const Provider = struct { path: []const u8, text: []const u8 };
+
+const Settings = struct {
+    options: language.project.Options = .{},
+    entry: ?[]const u8 = null,
+    providers: []const Provider = &.{},
+};
+const Graph = struct {
+    index: language.interfaces.Index = undefined,
+    compilation: language.project_compile.Compilation = undefined,
+    settings: Settings = .{},
+    profile: ?*language.timings.Profile = null,
+};
 
 /// The checked program and the merged source its spans point into.
 pub const Checked = struct {
@@ -18,8 +38,7 @@ pub const Error = error{ SourceError, OutOfMemory, InternalError };
 /// IR builder reads the program, and release it with `deinit`.
 pub const Session = struct {
     project: language.project.Project,
-    index: language.interfaces.Index = undefined,
-    compilation: language.project_compile.Compilation = undefined,
+    graph: Graph = .{},
     files: language.project_files.Files,
     /// A file with no `module` header is checked alone, as `mylang build` does.
     single: ?language.Compilation = null,
@@ -28,6 +47,7 @@ pub const Session = struct {
     entry_suffix: []const u8 = "",
     /// The entry module's file name relative to the root, set by `check` while a suffix is in use.
     entry_file: []const u8 = "",
+    cache: ?reuse.State = null,
 
     /// Prepare to load the module graph rooted at `root` (the entry file's directory).
     pub fn init(allocator: std.mem.Allocator, io: std.Io, root: []const u8) Session {
@@ -36,8 +56,57 @@ pub const Session = struct {
 
     /// Release the project arena and everything checked from it.
     pub fn deinit(self: *Session) void {
+        if (self.cache) |*state| state.deinit();
         if (self.single) |*unit| unit.deinit();
         self.project.deinit();
+    }
+
+    /// Enable shared syntax/body/summary reuse under `root`. Keep the session at
+    /// its current address after this call, as its index and cache borrow it.
+    pub fn enableCache(self: *Session, allocator: std.mem.Allocator, root: []const u8) error{OutOfMemory}!void {
+        self.cache = try reuse.State.init(allocator, self.files.io, root);
+        self.cache.?.bind();
+    }
+
+    /// Configure loader budgets and the entry's module name for project paths.
+    pub fn configureProject(self: *Session, options: language.project.Options, entry: ?[]const u8) void {
+        self.graph.settings.options = options;
+        self.graph.settings.entry = entry;
+    }
+
+    /// Overlay exact relative module paths with explicit test-provider sources.
+    pub fn setProviders(self: *Session, providers: []const Provider) void {
+        self.graph.settings.providers = providers;
+    }
+
+    /// The fresh interface index, valid after a successful module check.
+    pub fn interfaceIndex(self: *Session) *language.interfaces.Index {
+        return &self.graph.index;
+    }
+
+    /// Validation-only commands can omit unchanged bodies; builds/tests retain
+    /// the default complete typed trees and use summaries for pass facts only.
+    pub fn validationOnly(self: *Session) void {
+        if (self.cache) |*state| state.request.facts_only = false;
+    }
+
+    /// Attach opt-in phase instrumentation without changing checking behavior.
+    pub fn setProfile(self: *Session, profile: *language.timings.Profile) void {
+        self.graph.profile = profile;
+        if (self.cache) |*state| state.semantic.context.timing = profile;
+    }
+
+    /// Actual cache counters for this invocation, or zero when reuse is off.
+    pub fn statistics(self: *const Session) Statistics {
+        return if (self.cache) |*state| state.statistics() else .{};
+    }
+
+    fn syntaxCache(self: *Session) ?*language.frontend_cache.Cache {
+        return if (self.cache) |*state| &state.frontend else null;
+    }
+
+    fn semanticCache(self: *Session) ?*language.semantic_cache.Cache {
+        return if (self.cache) |*state| &state.semantic else null;
     }
 
     /// Check `path` alone when it opens without a `module` header, else as the
@@ -50,11 +119,11 @@ pub const Session = struct {
                 return error.ReadFailed;
             },
         };
-        if (language.opensAsModule(bytes)) return self.check(allocator, entryOf(path).module, report);
+        if (language.opensAsModule(bytes)) return self.check(allocator, self.graph.settings.entry orelse entryOf(path).module, report);
         const full = if (self.entry_suffix.len == 0) bytes else try std.mem.concat(allocator, u8, &.{ bytes, self.entry_suffix });
         self.single = try language.Compilation.init(self.project.arena.child_allocator, std.fs.path.basename(path), full);
         const unit = &self.single.?;
-        unit.check() catch |err| switch (err) {
+        self.checkSingle(unit) catch |err| switch (err) {
             error.OutOfMemory => return error.OutOfMemory,
             else => {
                 for (unit.diagnostics.items) |item| {
@@ -68,40 +137,62 @@ pub const Session = struct {
         return .{ .program = unit.program.?, .src = unit.src };
     }
 
+    fn checkSingle(self: *Session, unit: *language.Compilation) language.diagnostic.Error!void {
+        try unit.parseCached(self.syntaxCache());
+        try unit.checkWithCache(self.semanticCache());
+    }
+
     /// Load `entry` (a module name: the file stem) and check it. On a source error
     /// the rendered diagnostics are appended to `report` and `SourceError` returns.
     pub fn check(self: *Session, allocator: std.mem.Allocator, entry: []const u8, report: *std.ArrayList(u8)) Error!Checked {
-        if (self.entry_suffix.len != 0) self.entry_file = try std.fmt.allocPrint(allocator, "{s}.my", .{entry});
-        self.project.load(self.provider(), entry, .{}) catch |err| return self.loadFailure(allocator, err, report);
-        self.index = language.interfaces.build(&self.project) catch |err| return self.loadFailure(allocator, err, report);
-        self.compilation = language.project_compile.Compilation.init(&self.index) catch |err| return self.loadFailure(allocator, err, report);
-        self.compilation.check() catch |err| switch (err) {
+        if (self.entry_suffix.len != 0) self.entry_file = language.project.modulePath(allocator, entry) catch |err| return self.loadFailure(allocator, err, report);
+        if (self.graph.profile) |profile| profile.begin("load", false);
+        self.project.load(self.provider(), entry, self.graph.settings.options) catch |err| return self.loadFailure(allocator, err, report);
+        if (self.graph.profile) |profile| profile.end();
+        self.graph.index = language.interfaces.buildWithCacheTimed(&self.project, null, self.syntaxCache(), self.graph.profile) catch |err| return self.loadFailure(allocator, err, report);
+        if (self.graph.profile) |profile| profile.begin("merge", false);
+        self.graph.compilation = language.project_compile.Compilation.init(&self.graph.index) catch |err| return self.loadFailure(allocator, err, report);
+        if (self.graph.profile) |profile| profile.end();
+        if (self.cache) |*state| try state.begin(&self.project, self.project.arena.allocator());
+        if (self.graph.profile) |profile| profile.begin("check", true);
+        self.graph.compilation.checkWithCache(self.semanticCache()) catch |err| switch (err) {
             error.OutOfMemory => return error.OutOfMemory,
             else => {
-                for (self.compilation.diagnostics.items.items) |item| {
-                    const text = try item.render(allocator, self.compilation.src);
+                for (self.graph.compilation.diagnostics.items.items) |item| {
+                    const text = try item.render(allocator, self.graph.compilation.src);
                     defer allocator.free(text);
                     try report.appendSlice(allocator, text);
                 }
                 return error.SourceError;
             },
         };
-        return .{ .program = self.compilation.program.?, .src = self.compilation.src };
+        if (self.graph.profile) |profile| profile.end();
+        if (self.cache) |*state| try state.finish(&self.project);
+        return .{ .program = self.graph.compilation.program.?, .src = self.graph.compilation.src };
     }
 
     /// The file provider: the disk, with `entry_suffix` appended to the entry file when set.
     fn provider(self: *Session) language.project.Provider {
-        if (self.entry_suffix.len == 0) return self.files.provider();
+        if (self.entry_suffix.len == 0 and self.graph.settings.providers.len == 0) return self.files.provider();
         return .{ .context = &self.files, .read = readEntry, .embed = language.project_files.Files.readEmbed };
     }
 
     fn readEntry(context: ?*anyopaque, allocator: std.mem.Allocator, relative: []const u8, limit: usize) language.project.ReadError![]u8 {
         const files: *language.project_files.Files = @ptrCast(@alignCast(context.?));
         const self: *Session = @fieldParentPtr("files", files);
-        const bytes = try language.project_files.Files.read(context, allocator, relative, limit);
+        const bytes = try self.readModule(context, allocator, relative, limit);
         if (!std.mem.eql(u8, relative, self.entry_file)) return bytes;
         defer allocator.free(bytes);
         return std.mem.concat(allocator, u8, &.{ bytes, self.entry_suffix }) catch error.OutOfMemory;
+    }
+
+    fn readModule(self: *Session, context: ?*anyopaque, allocator: std.mem.Allocator, relative: []const u8, limit: usize) language.project.ReadError![]u8 {
+        for (self.graph.settings.providers) |override| {
+            if (!std.mem.eql(u8, relative, override.path)) continue;
+            if (override.text.len > limit) return error.TooLarge;
+            return allocator.dupe(u8, override.text) catch error.OutOfMemory;
+        }
+        return language.project_files.Files.read(context, allocator, relative, limit);
     }
 
     fn loadFailure(self: *Session, allocator: std.mem.Allocator, err: anyerror, report: *std.ArrayList(u8)) Error {

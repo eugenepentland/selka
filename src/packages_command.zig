@@ -33,7 +33,7 @@ const source_suffix = ".my";
 /// Prefix reserved for the standard modules the compiler embeds.
 const reserved_prefix = "std_";
 /// The project configuration copied into the staged snapshot.
-const config_name = @import("project_config.zig").config_name;
+const config_name = @import("native_test_root").compiler_language.project_config.config_name;
 
 /// Usage text for `mylang packages --help` and a malformed command line.
 const usage =

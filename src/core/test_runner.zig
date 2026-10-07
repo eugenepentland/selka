@@ -64,6 +64,7 @@ pub fn run(init: std.process.Init, options: Options) Error!u8 {
     };
     var session = frontend.Session.init(init.gpa, init.io, located.root);
     defer session.deinit();
+    try session.enableCache(init.gpa, options.build.cache);
     if (!definesMain(bytes)) session.entry_suffix = check_stub;
     var problems: std.ArrayList(u8) = .empty;
     const checked = session.checkFile(allocator, options.path, &problems) catch |err| switch (err) {

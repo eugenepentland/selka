@@ -8,7 +8,7 @@
 //! collide with another fix's; a colliding fix is left for the next round,
 //! which sees the updated source. `--check` runs one round and writes nothing.
 const std = @import("std");
-const project_config = @import("project_config.zig");
+const project_config = @import("mylang").project_config;
 const fs = @import("qbe_build_io.zig");
 const snapshot = @import("native_test_snapshot.zig");
 const input_probe = @import("input_probe.zig");

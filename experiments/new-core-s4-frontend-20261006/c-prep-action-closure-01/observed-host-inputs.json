@@ -1,0 +1,39 @@
+{
+  "scope": "Post-probe metadata/content snapshot; no source-change qualification.",
+  "inputs": [
+    {
+      "logical": "/etc/os-release",
+      "resolved": "/usr/lib/os-release",
+      "sha256": "fb8b42d368e509d8b012d009dd626d0a1f860cccc105e8806da5c2ab9e59a237",
+      "stat": {
+        "inode": 1707369,
+        "size": 402,
+        "mtime_ns": 1776674791000000000,
+        "ctime_ns": 1787361025875928879
+      },
+      "logical_stat": {
+        "inode": 5767172,
+        "mtime_ns": 1776674791000000000,
+        "ctime_ns": 1787361022803067970
+      },
+      "symlink": "../usr/lib/os-release"
+    },
+    {
+      "logical": "/etc/lsb-release",
+      "resolved": "/etc/lsb-release",
+      "sha256": "ad1a36830722124b3ef37cc4106080422527cd98c583e43872fac4a5d4b4985f",
+      "stat": {
+        "inode": 5767907,
+        "size": 105,
+        "mtime_ns": 1776674791000000000,
+        "ctime_ns": 1787361023043906097
+      },
+      "logical_stat": {
+        "inode": 5767907,
+        "mtime_ns": 1776674791000000000,
+        "ctime_ns": 1787361023043906097
+      },
+      "symlink": null
+    }
+  ]
+}

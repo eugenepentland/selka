@@ -1,0 +1,536 @@
+3588076 execve("/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig", ["/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig", "cc", "-c", "-O0", "-target", "x86_64-linux-gnu.2.31", "-march=native", "-mllvm", "-x86-experimental-pref-innermost-loop-alignment=6", "-Wno-override-module", "-o", "fresh.o", "canonical-1c40b584bc71793ebd6e8a1d597b03c65677dd33857bed2370293efed1363e48.ll"], 0x7fffb08d9990 /* 40 vars */) = 0
+3588076 mmap(NULL, 263616, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fe4194d9000
+3588076 mmap(NULL, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fe4194ba000
+3588076 mmap(0x7fe4194a1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fe4194a1000
+3588076 mmap(0x7fe419491000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fe419491000
+3588076 mmap(0x7fe419481000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fe419481000
+3588076 mmap(0x7fe419471000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fe419471000
+3588076 mmap(0x7fe419461000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fe419461000
+3588076 mmap(0x7fe419451000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fe419451000
+3588076 mmap(0x7fe419441000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fe419441000
+3588076 mmap(0x7fe419431000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fe419431000
+3588076 mmap(0x7fe419421000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fe419421000
+3588076 mmap(0x7fe419411000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fe419411000
+3588076 mmap(0x7fe419401000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fe419401000
+3588076 mmap(0x7fe4193f1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fe4193f1000
+3588076 mmap(0x7fe4193e1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fe4193e1000
+3588076 mmap(0x7fe4193d1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fe4193d1000
+3588076 mmap(0x7fe4193c1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fe4193c1000
+3588076 mmap(0x7fe4193b1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fe4193b1000
+3588076 mmap(0x7fe4193a1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fe4193a1000
+3588076 mmap(0x7fe419391000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fe419391000
+3588076 mmap(0x7fe419381000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fe419381000
+3588076 mmap(0x7fe419371000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fe419371000
+3588076 mmap(0x7fe419361000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fe419361000
+3588076 mmap(0x7fe419351000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fe419351000
+3588076 mmap(0x7fe419341000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fe419341000
+3588076 mmap(0x7fe419331000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fe419331000
+3588076 mmap(0x7fe419321000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fe419321000
+3588076 mmap(0x7fe419311000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fe419311000
+3588076 mmap(0x7fe419301000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fe419301000
+3588076 mmap(0x7fe419303000, 53248, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fe419303000
+3588076 mmap(0x7fe4192e1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fe4192e1000
+3588076 mmap(0x7fe4192d1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fe4192d1000
+3588076 mmap(0x7fe4192c1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fe4192c1000
+3588076 mmap(0x7fe4192b1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fe4192b1000
+3588076 mmap(0x7fe4192a1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fe4192a1000
+3588076 mmap(0x7fe419291000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fe419291000
+3588076 mmap(0x7fe419281000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fe419281000
+3588076 mmap(0x7fe419271000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fe419271000
+3588076 mmap(0x7fe419261000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fe419261000
+3588076 mmap(0x7fe419251000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fe419251000
+3588076 mmap(0x7fe419241000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fe419241000
+3588076 mmap(0x7fe419231000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fe419231000
+3588076 mmap(0x7fe419227000, 102400, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fe419227000
+3588076 mmap(0x7fe419201000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fe419201000
+3588076 mmap(0x7fe4191f1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fe4191f1000
+3588076 mmap(0x7fe4191e1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fe4191e1000
+3588076 mmap(0x7fe4191d1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fe4191d1000
+3588076 mmap(0x7fe4191c1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fe4191c1000
+3588076 mmap(0x7fe4191b1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fe4191b1000
+3588076 mmap(0x7fe4191a1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fe4191a1000
+3588076 mmap(0x7fe419191000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fe419191000
+3588076 mmap(0x7fe419181000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fe419181000
+3588076 mmap(0x7fe419171000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fe419171000
+3588076 mmap(0x7fe419161000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fe419161000
+3588076 mmap(0x7fe419151000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fe419151000
+3588076 mmap(0x7fe419141000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fe419141000
+3588076 mmap(0x7fe419131000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fe419131000
+3588076 mmap(0x7fe419121000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fe419121000
+3588076 mmap(0x7fe419111000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fe419111000
+3588076 mmap(0x7fe419101000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fe419101000
+3588076 mmap(0x7fe4190f1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fe4190f1000
+3588076 mmap(0x7fe4190e1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fe4190e1000
+3588076 readlinkat(AT_FDCWD</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/baseline>, "/proc/self/exe", "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig", 4096) = 60
+3588076 getcwd("/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/baseline", 4096) = 130
+3588076 openat(AT_FDCWD</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/baseline>, "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_PATH|O_DIRECTORY) = 3</home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b>
+3588076 openat(3</home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b>, "lib/zig", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_PATH|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588076 openat(3</home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b>, "lib", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_PATH|O_DIRECTORY) = 4</home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib>
+3588076 openat(4</home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib>, "std/std.zig", O_RDONLY|O_NOCTTY|O_LARGEFILE|O_CLOEXEC) = 5</home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/std.zig>
+3588076 close(5</home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/std.zig>) = 0
+3588076 close(3</home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b>) = 0
+3588076 openat(AT_FDCWD</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/baseline>, "zig-global", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_PATH|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588076 mkdirat(AT_FDCWD</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/baseline>, "zig-global", 0777) = 0
+3588076 openat(AT_FDCWD</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/baseline>, "zig-global", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_PATH|O_DIRECTORY) = 3</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/baseline/zig-global>
+3588076 openat(AT_FDCWD</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/baseline>, "zig-local", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_PATH|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588076 mkdirat(AT_FDCWD</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/baseline>, "zig-local", 0777) = 0
+3588076 openat(AT_FDCWD</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/baseline>, "zig-local", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_PATH|O_DIRECTORY) = 5</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/baseline/zig-local>
+3588076 openat(5</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/baseline/zig-local>, "h", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_PATH|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588076 mkdirat(5</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/baseline/zig-local>, "h", 0777) = 0
+3588076 openat(5</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/baseline/zig-local>, "h", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_PATH|O_DIRECTORY) = 6</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/baseline/zig-local/h>
+3588076 mmap(0x7fe4190d1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fe4190d1000
+3588076 openat(5</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/baseline/zig-local>, "tmp/cdc3ae59e0552a8e", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_PATH|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588076 mkdirat(5</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/baseline/zig-local>, "tmp/cdc3ae59e0552a8e", 0777) = -1 ENOENT (No such file or directory)
+3588076 mkdirat(5</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/baseline/zig-local>, "tmp", 0777) = 0
+3588076 mkdirat(5</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/baseline/zig-local>, "tmp/cdc3ae59e0552a8e", 0777) = 0
+3588076 openat(5</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/baseline/zig-local>, "tmp/cdc3ae59e0552a8e", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_PATH|O_DIRECTORY) = 7</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/baseline/zig-local/tmp/cdc3ae59e0552a8e>
+3588076 mmap(0x7fe4190d5000, 45056, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fe4190d5000
+3588076 mmap(NULL, 63184896, PROT_NONE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fe415493000
+3588076 mmap(NULL, 63184896, PROT_NONE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fe411851000
+3588077 mmap(NULL, 63184896, PROT_NONE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fe40dc0f000
+3588078 openat(6</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/baseline/zig-local/h>, "1a1bea4a44d5662c4afa95b315b41660.txt", O_RDWR|O_CREAT|O_LARGEFILE|O_CLOEXEC, 0666) = 8</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/baseline/zig-local/h/1a1bea4a44d5662c4afa95b315b41660.txt>
+3588078 statx(8</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/baseline/zig-local/h/1a1bea4a44d5662c4afa95b315b41660.txt>, "", AT_STATX_SYNC_AS_STAT|AT_EMPTY_PATH, STATX_TYPE|STATX_MODE|STATX_NLINK|STATX_ATIME|STATX_MTIME|STATX_CTIME|STATX_INO|STATX_SIZE|STATX_BLOCKS, {stx_mask=STATX_BASIC_STATS|STATX_MNT_ID, stx_attributes=0, stx_mode=S_IFREG|0664, stx_size=0, ...}) = 0
+3588078 openat(AT_FDCWD</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/baseline>, "canonical-1c40b584bc71793ebd6e8a1d597b03c65677dd33857bed2370293efed1363e48.ll", O_RDONLY|O_NOCTTY|O_LARGEFILE|O_CLOEXEC) = 9</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/baseline/canonical-1c40b584bc71793ebd6e8a1d597b03c65677dd33857bed2370293efed1363e48.ll>
+3588078 statx(9</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/baseline/canonical-1c40b584bc71793ebd6e8a1d597b03c65677dd33857bed2370293efed1363e48.ll>, "", AT_STATX_SYNC_AS_STAT|AT_EMPTY_PATH, STATX_TYPE|STATX_MODE|STATX_NLINK|STATX_ATIME|STATX_MTIME|STATX_CTIME|STATX_INO|STATX_SIZE|STATX_BLOCKS, {stx_mask=STATX_BASIC_STATS|STATX_MNT_ID, stx_attributes=0, stx_mode=S_IFREG|0444, stx_size=5729, ...}) = 0
+3588078 openat(6</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/baseline/zig-local/h>, "timestamp", O_RDWR|O_CREAT|O_TRUNC|O_LARGEFILE|O_CLOEXEC, 0666) = 10</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/baseline/zig-local/h/timestamp>
+3588078 statx(10</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/baseline/zig-local/h/timestamp>, "", AT_STATX_SYNC_AS_STAT|AT_EMPTY_PATH, STATX_TYPE|STATX_MODE|STATX_NLINK|STATX_ATIME|STATX_MTIME|STATX_CTIME|STATX_INO|STATX_SIZE|STATX_BLOCKS, {stx_mask=STATX_BASIC_STATS|STATX_MNT_ID, stx_attributes=0, stx_mode=S_IFREG|0664, stx_size=0, ...}) = 0
+3588078 close(10</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/baseline/zig-local/h/timestamp>) = 0
+3588078 close(9</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/baseline/canonical-1c40b584bc71793ebd6e8a1d597b03c65677dd33857bed2370293efed1363e48.ll>) = 0
+3588078 openat(5</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/baseline/zig-local>, "tmp", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_PATH|O_DIRECTORY) = 9</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/baseline/zig-local/tmp>
+3588078 mmap(0x7fe4190b1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fe40dbf0000
+3588078 mmap(0x7fe40dbd1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fe40dbd1000
+3588078 close(11<pipe:[238261252]>)     = 0
+3588078 read(10<pipe:[238261252]> <unfinished ...>
+3588080 execve("/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig", ["/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig", "clang", "canonical-1c40b584bc71793ebd6e8a1d597b03c65677dd33857bed2370293efed1363e48.ll", "--no-default-config", "-target", "x86_64-unknown-linux5.10.0-gnu2.31.0", "-fno-PIE", "-fPIC", "-gdwarf-4", "-gdwarf32", "-fno-lto", "-fhosted", "-nostdinc", "-fsanitize=undefined", "-fno-sanitize=vptr", "-fno-sanitize=function", "-O0", "-mred-zone", "-fno-omit-frame-pointer", "-fstack-protector-strong", "--param", "ssp-buffer-size=4", "-fbuiltin", "-fno-function-sections", "-fno-data-sections", "-fasynchronous-unwind-tables", "-Xclang", "-target-cpu", "-Xclang", "alderlake", "-Xclang", "-target-feature", "-Xclang", "-16bit-mode", "-Xclang", "-target-feature", "-Xclang", "-32bit-mode", "-Xclang", "-target-feature", "-Xclang", "+64bit", "-Xclang", "-target-feature", "-Xclang", "+adx", "-Xclang", "-target-feature", "-Xclang", "+aes", "-Xclang", "-target-feature", "-Xclang", "+allow-light-256-bit", "-Xclang", "-target-feature", "-Xclang", "-amx-avx512", "-Xclang", "-target-feature", "-Xclang", "-amx-bf16", "-Xclang", "-target-feature", "-Xclang", "-amx-complex", "-Xclang", "-target-feature", "-Xclang", "-amx-fp16", "-Xclang", "-target-feature", "-Xclang", "-amx-fp8", "-Xclang", "-target-feature", "-Xclang", "-amx-int8", "-Xclang", "-target-feature", "-Xclang", "-amx-movrs", "-Xclang", "-target-feature", "-Xclang", "-amx-tf32", "-Xclang", "-target-feature", "-Xclang", "-amx-tile", "-Xclang", "-target-feature", "-Xclang", "+avx", "-Xclang", "-target-feature", "-Xclang", "-avx10.1", "-Xclang", "-target-feature", "-Xclang", "-avx10.2", "-Xclang", "-target-feature", "-Xclang", "+avx2", "-Xclang", "-target-feature", "-Xclang", "-avx512bf16", "-Xclang", "-target-feature", "-Xclang", "-avx512bitalg", "-Xclang", "-target-feature", "-Xclang", "-avx512bw", "-Xclang", "-target-feature", "-Xclang", "-avx512cd", "-Xclang", "-target-feature", "-Xclang", "-avx512dq", "-Xclang", "-target-feature", "-Xclang", "-avx512f", "-Xclang", "-target-feature", "-Xclang", "-avx512fp16", "-Xclang", "-target-feature", "-Xclang", "-avx512ifma", "-Xclang", "-target-feature", "-Xclang", "-avx512vbmi", "-Xclang", "-target-feature", "-Xclang", "-avx512vbmi2", "-Xclang", "-target-feature", "-Xclang", "-avx512vl", "-Xclang", "-target-feature", "-Xclang", "-avx512vnni", "-Xclang", "-target-feature", "-Xclang", "-avx512vp2intersect", "-Xclang", "-target-feature", "-Xclang", "-avx512vpopcntdq", "-Xclang", "-target-feature", "-Xclang", "-avxifma", "-Xclang", "-target-feature", "-Xclang", "-avxneconvert", "-Xclang", "-target-feature", "-Xclang", "+avxvnni", "-Xclang", "-target-feature", "-Xclang", "-avxvnniint16", "-Xclang", "-target-feature", "-Xclang", "-avxvnniint8", "-Xclang", "-target-feature", "-Xclang", "+bmi", "-Xclang", "-target-feature", "-Xclang", "+bmi2", "-Xclang", "-target-feature", "-Xclang", "-branch-hint", "-Xclang", "-target-feature", "-Xclang", "-branchfusion", "-Xclang", "-target-feature", "-Xclang", "-ccmp", "-Xclang", "-target-feature", "-Xclang", "-cf", "-Xclang", "-target-feature", "-Xclang", "-cldemote", "-Xclang", "-target-feature", "-Xclang", "+clflushopt", "-Xclang", "-target-feature", "-Xclang", "+clwb", "-Xclang", "-target-feature", "-Xclang", "-clzero", "-Xclang", "-target-feature", "-Xclang", "+cmov", "-Xclang", "-target-feature", "-Xclang", "-cmpccxadd", "-Xclang", "-target-feature", "-Xclang", "+crc32", "-Xclang", "-target-feature", "-Xclang", "+cx16", "-Xclang", "-target-feature", "-Xclang", "+cx8", "-Xclang", "-target-feature", "-Xclang", "-egpr", "-Xclang", "-target-feature", "-Xclang", "-enqcmd", "-Xclang", "-target-feature", "-Xclang", "-ermsb", "-Xclang", "-target-feature", "-Xclang", "+f16c", "-Xclang", "-target-feature", "-Xclang", "-false-deps-getmant", "-Xclang", "-target-feature", "-Xclang", "-false-deps-lzcnt-tzcnt", "-Xclang", "-target-feature", "-Xclang", "-false-deps-mulc", "-Xclang", "-target-feature", "-Xclang", "-false-deps-mullq", "-Xclang", "-target-feature", "-Xclang", "+false-deps-perm", "-Xclang", "-target-feature", "-Xclang", "-false-deps-popcnt", "-Xclang", "-target-feature", "-Xclang", "-false-deps-range", "-Xclang", "-target-feature", "-Xclang", "-fast-11bytenop", "-Xclang", "-target-feature", "-Xclang", "+fast-15bytenop", "-Xclang", "-target-feature", "-Xclang", "-fast-7bytenop", "-Xclang", "-target-feature", "-Xclang", "-fast-bextr", "-Xclang", "-target-feature", "-Xclang", "-fast-dpwssd", "-Xclang", "-target-feature", "-Xclang", "+fast-gather", "-Xclang", "-target-feature", "-Xclang", "-fast-hops", "-Xclang", "-target-feature", "-Xclang", "-fast-imm16", "-Xclang", "-target-feature", "-Xclang", "-fast-lzcnt", "-Xclang", "-target-feature", "-Xclang", "-fast-movbe", "-Xclang", "-target-feature", "-Xclang", "+fast-scalar-fsqrt", "-Xclang", "-target-feature", "-Xclang", "-fast-scalar-shift-masks", "-Xclang", "-target-feature", "-Xclang", "+fast-shld-rotate", "-Xclang", "-target-feature", "-Xclang", "+fast-variable-crosslane-shuffle", "-Xclang", "-target-feature", "-Xclang", "+fast-variable-perlane-shuffle", "-Xclang", "-target-feature", "-Xclang", "+fast-vector-fsqrt", "-Xclang", "-target-feature", "-Xclang", "-fast-vector-shift-masks", "-Xclang", "-target-feature", "-Xclang", "-faster-shift-than-shuffle", "-Xclang", "-target-feature", "-Xclang", "+fma", "-Xclang", "-target-feature", "-Xclang", "-fma4", "-Xclang", "-target-feature", "-Xclang", "+fsgsbase", "-Xclang", "-target-feature", "-Xclang", "-fsrm", "-Xclang", "-target-feature", "-Xclang", "+fxsr", "-Xclang", "-target-feature", "-Xclang", "+gfni", "-Xclang", "-target-feature", "-Xclang", "-harden-sls-ijmp", "-Xclang", "-target-feature", "-Xclang", "-harden-sls-ret", "-Xclang", "-target-feature", "-Xclang", "+hreset", "-Xclang", "-target-feature", "-Xclang", "-idivl-to-divb", "-Xclang", "-target-feature", "-Xclang", "+idivq-to-divl", "-Xclang", "-target-feature", "-Xclang", "-inline-asm-use-gpr32", "-Xclang", "-target-feature", "-Xclang", "+invpcid", "-Xclang", "-target-feature", "-Xclang", "+kl", "-Xclang", "-target-feature", "-Xclang", "-lea-sp", "-Xclang", "-target-feature", "-Xclang", "-lea-uses-ag", "-Xclang", "-target-feature", "-Xclang", "-lvi-cfi", "-Xclang", "-target-feature", "-Xclang", "-lvi-load-hardening", "-Xclang", "-target-feature", "-Xclang", "-lwp", "-Xclang", "-target-feature", "-Xclang", "+lzcnt", "-Xclang", "-target-feature", "-Xclang", "+macrofusion", "-Xclang", "-target-feature", "-Xclang", "+mmx", "-Xclang", "-target-feature", "-Xclang", "+movbe", "-Xclang", "-target-feature", "-Xclang", "+movdir64b", "-Xclang", "-target-feature", "-Xclang", "+movdiri", "-Xclang", "-target-feature", "-Xclang", "-movrs", "-Xclang", "-target-feature", "-Xclang", "-mwaitx", "-Xclang", "-target-feature", "-Xclang", "-ndd", "-Xclang", "-target-feature", "-Xclang", "-nf", "-Xclang", "-target-feature", "-Xclang", "-no-bypass-delay", "-Xclang", "-target-feature", "-Xclang", "+no-bypass-delay-blend", "-Xclang", "-target-feature", "-Xclang", "+no-bypass-delay-mov", "-Xclang", "-target-feature", "-Xclang", "+no-bypass-delay-shuffle", "-Xclang", "-target-feature", "-Xclang", "+nopl", "-Xclang", "-target-feature", "-Xclang", "-pad-short-functions", "-Xclang", "-target-feature", "-Xclang", "+pclmul", "-Xclang", "-target-feature", "-Xclang", "-pconfig", "-Xclang", "-target-feature", "-Xclang", "+pku", "-Xclang", "-target-feature", "-Xclang", "+popcnt", "-Xclang", "-target-feature", "-Xclang", "-ppx", "-Xclang", "-target-feature", "-Xclang", "-prefer-128-bit", "-Xclang", "-target-feature", "-Xclang", "-prefer-256-bit", "-Xclang", "-target-feature", "-Xclang", "-prefer-legacy-setcc", "-Xclang", "-target-feature", "-Xclang", "-prefer-mask-registers", "-Xclang", "-target-feature", "-Xclang", "+prefer-movmsk-over-vtest", "-Xclang", "-target-feature", "-Xclang", "-prefer-no-gather", "-Xclang", "-target-feature", "-Xclang", "-prefer-no-scatter", "-Xclang", "-target-feature", "-Xclang", "-prefetchi", "-Xclang", "-target-feature", "-Xclang", "+prfchw", "-Xclang", "-target-feature", "-Xclang", "+ptwrite", "-Xclang", "-target-feature", "-Xclang", "-push2pop2", "-Xclang", "-target-feature", "-Xclang", "-raoint", "-Xclang", "-target-feature", "-Xclang", "+rdpid", "-Xclang", "-target-feature", "-Xclang", "-rdpru", "-Xclang", "-target-feature", "-Xclang", "+rdrnd", "-Xclang", "-target-feature", "-Xclang", "+rdseed", "-Xclang", "-target-feature", "-Xclang", "-retpoline", "-Xclang", "-target-feature", "-Xclang", "-retpoline-external-thunk", "-Xclang", "-target-feature", "-Xclang", "-retpoline-indirect-branches", "-Xclang", "-target-feature", "-Xclang", "-retpoline-indirect-calls", "-Xclang", "-target-feature", "-Xclang", "-rtm", "-Xclang", "-target-feature", "-Xclang", "+sahf", "-Xclang", "-target-feature", "-Xclang", "-sbb-dep-breaking", "-Xclang", "-target-feature", "-Xclang", "+serialize", "-Xclang", "-target-feature", "-Xclang", "-seses", "-Xclang", "-target-feature", "-Xclang", "-sgx", "-Xclang", "-target-feature", "-Xclang", "+sha", "-Xclang", "-target-feature", "-Xclang", "-sha512", "-Xclang", "-target-feature", "-Xclang", "+shstk", "-Xclang", "-target-feature", "-Xclang", "+slow-3ops-lea", "-Xclang", "-target-feature", "-Xclang", "-slow-incdec", "-Xclang", "-target-feature", "-Xclang", "-slow-lea", "-Xclang", "-target-feature", "-Xclang", "-slow-pmaddwd", "-Xclang", "-target-feature", "-Xclang", "-slow-pmulld", "-Xclang", "-target-feature", "-Xclang", "+slow-pmullq", "-Xclang", "-target-feature", "-Xclang", "-slow-shld", "-Xclang", "-target-feature", "-Xclang", "-slow-two-mem-ops", "-Xclang", "-target-feature", "-Xclang", "-slow-unaligned-mem-16", "-Xclang", "-target-feature", "-Xclang", "-slow-unaligned-mem-32", "-Xclang", "-target-feature", "-Xclang", "-sm3", "-Xclang", "-target-feature", "-Xclang", "-sm4", "-Xclang", "-target-feature", "-Xclang", "+sse", "-Xclang", "-target-feature", "-Xclang", "+sse2", "-Xclang", "-target-feature", "-Xclang", "+sse3", "-Xclang", "-target-feature", "-Xclang", "+sse4.1", "-Xclang", "-target-feature", "-Xclang", "+sse4.2", "-Xclang", "-target-feature", "-Xclang", "-sse4a", "-Xclang", "-target-feature", "-Xclang", "-sse-unaligned-mem", "-Xclang", "-target-feature", "-Xclang", "+ssse3", "-Xclang", "-target-feature", "-Xclang", "-tagged-globals", "-Xclang", "-target-feature", "-Xclang", "-tbm", "-Xclang", "-target-feature", "-Xclang", "-tsxldtrk", "-Xclang", "-target-feature", "-Xclang", "+tuning-fast-imm-vector-shift", "-Xclang", "-target-feature", "-Xclang", "-uintr", "-Xclang", "-target-feature", "-Xclang", "-use-glm-div-sqrt-costs", "-Xclang", "-target-feature", "-Xclang", "-use-slm-arith-costs", "-Xclang", "-target-feature", "-Xclang", "-usermsr", "-Xclang", "-target-feature", "-Xclang", "+vaes", "-Xclang", "-target-feature", "-Xclang", "+vpclmulqdq", "-Xclang", "-target-feature", "-Xclang", "+vzeroupper", "-Xclang", "-target-feature", "-Xclang", "+waitpkg", "-Xclang", "-target-feature", "-Xclang", "-wbnoinvd", "-Xclang", "-target-feature", "-Xclang", "+widekl", "-Xclang", "-target-feature", "-Xclang", "+x87", "-Xclang", "-target-feature", "-Xclang", "-xop", "-Xclang", "-target-feature", "-Xclang", "+xsave", "-Xclang", "-target-feature", "-Xclang", "+xsavec", "-Xclang", "-target-feature", "-Xclang", "+xsaveopt", "-Xclang", "-target-feature", "-Xclang", "+xsaves", "-Xclang", "-target-feature", "-Xclang", "-zu", "-mllvm", "-x86-experimental-pref-innermost-loop-alignment=6", "-Wno-override-module", "-c", "-o", "zig-local/tmp/be752d878f11f2a5-canonical-1c40b584bc71793ebd6e8a1d597b03c65677dd33857bed2370293efed1363e48.o"], 0x7fe40dbe5738 /* 40 vars */ <unfinished ...>
+3588078 <... read resumed>, "", 8)      = 0
+3588080 <... execve resumed>)           = 0
+3588080 mmap(NULL, 263616, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0 <unfinished ...>
+3588078 close(10<pipe:[238261252]> <unfinished ...>
+3588080 <... mmap resumed>)             = 0x759b17dad000
+3588078 <... close resumed>)            = 0
+3588080 mmap(NULL, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17d8e000
+3588080 mmap(0x759b17d71000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17d71000
+3588080 mmap(0x759b17d61000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17d61000
+3588080 mmap(0x759b17d51000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17d51000
+3588080 mmap(0x759b17d41000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17d41000
+3588080 mmap(0x759b17d31000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17d31000
+3588080 mmap(0x759b17d21000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17d21000
+3588080 mmap(0x759b17d11000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17d11000
+3588080 mmap(0x759b17d01000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17d01000
+3588080 mmap(0x759b17cf1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17cf1000
+3588080 mmap(0x759b17ce1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17ce1000
+3588080 mmap(0x759b17cd1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17cd1000
+3588080 mmap(0x759b17cc1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17cc1000
+3588080 mmap(0x759b17cb1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17cb1000
+3588080 mmap(0x759b17ca1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17ca1000
+3588080 mmap(0x759b17c91000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17c91000
+3588080 mmap(0x759b17c81000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17c81000
+3588080 mmap(0x759b17c71000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17c71000
+3588080 mmap(0x759b17c61000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17c61000
+3588080 mmap(0x759b17c51000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17c51000
+3588080 mmap(0x759b17c41000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17c41000
+3588080 mmap(0x759b17c31000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17c31000
+3588080 mmap(0x759b17c21000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17c21000
+3588080 mmap(0x759b17c11000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17c11000
+3588080 mmap(0x759b17c01000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17c01000
+3588080 mmap(0x759b17bf1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17bf1000
+3588080 mmap(0x759b17be1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17be1000
+3588080 mmap(0x759b17bd1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17bd1000
+3588080 mmap(0x759b17bd3000, 53248, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17bd3000
+3588080 mmap(0x759b17bb1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17bb1000
+3588080 mmap(0x759b17ba1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17ba1000
+3588080 mmap(0x759b17b91000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17b91000
+3588080 mmap(0x759b17b81000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17b81000
+3588080 mmap(0x759b17b71000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17b71000
+3588080 mmap(0x759b17b61000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17b61000
+3588080 mmap(0x759b17b51000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17b51000
+3588080 mmap(0x759b17b41000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17b41000
+3588080 mmap(0x759b17b31000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17b31000
+3588080 mmap(0x759b17b21000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17b21000
+3588080 mmap(0x759b17b11000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17b11000
+3588080 mmap(0x759b17b01000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17b01000
+3588080 mmap(0x759b17af7000, 102400, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17af7000
+3588080 mmap(0x759b17ad1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17ad1000
+3588080 mmap(0x759b17ac1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17ac1000
+3588080 mmap(0x759b17ab1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17ab1000
+3588080 mmap(0x759b17aa1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17aa1000
+3588080 mmap(0x759b17a91000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17a91000
+3588080 mmap(0x759b17a81000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17a81000
+3588080 mmap(0x759b17a71000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17a71000
+3588080 mmap(0x759b17a61000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17a61000
+3588080 mmap(0x759b17a51000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17a51000
+3588080 mmap(0x759b17a41000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17a41000
+3588080 mmap(0x759b17a31000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17a31000
+3588080 mmap(0x759b17a21000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17a21000
+3588080 mmap(0x759b17a11000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17a11000
+3588080 mmap(0x759b17a01000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17a01000
+3588080 mmap(0x759b179f1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b179f1000
+3588080 mmap(0x759b179e1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b179e1000
+3588080 mmap(0x759b179d1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b179d1000
+3588080 mmap(0x759b179c1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b179c1000
+3588080 mmap(0x759b179b1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b179b1000
+3588080 mmap(0x759b179a1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b179a1000
+3588080 mmap(0x759b17991000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17991000
+3588080 mmap(0x759b17981000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17981000
+3588080 mmap(0x759b17971000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17971000
+3588080 mmap(0x759b17961000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17961000
+3588080 mmap(0x759b17951000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17951000
+3588080 mmap(0x759b17941000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17941000
+3588080 mmap(0x759b17931000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17931000
+3588080 mmap(0x759b17921000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17921000
+3588080 mmap(0x759b17911000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17911000
+3588080 mmap(0x759b17901000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17901000
+3588080 mmap(0x759b178f1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b178f1000
+3588080 mmap(0x759b178e1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b178e1000
+3588080 mmap(0x759b178d1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b178d1000
+3588080 mmap(0x759b178c1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b178c1000
+3588080 mmap(0x759b178b1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b178b1000
+3588080 access("/proc/self/exe", F_OK)  = 0
+3588080 readlink("/proc/self/exe", "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig", 4096) = 60
+3588080 readlink("/home", 0x7ffc07fae410, 4041) = -1 EINVAL (Invalid argument)
+3588080 readlink("/home/epentland", 0x7ffc07fae410, 4051) = -1 EINVAL (Invalid argument)
+3588080 readlink("/home/epentland/zig-toolchains", 0x7ffc07fae410, 4066) = -1 EINVAL (Invalid argument)
+3588080 readlink("/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b", 0x7ffc07fae410, 4092) = -1 EINVAL (Invalid argument)
+3588080 readlink("/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig", 0x7ffc07fae410, 4096) = -1 EINVAL (Invalid argument)
+3588080 mmap(0x759b178a1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b178a1000
+3588080 mmap(0x759b17891000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17891000
+3588080 mmap(0x759b17881000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17881000
+3588080 stat("/home/epentland/zig-toolchains/lib/clang/22/lib/x86_64-unknown-linux5.10.0-gnu2.31.0", 0x7ffc07fb1390) = -1 ENOENT (No such file or directory)
+3588080 stat("/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/../lib/x86_64-unknown-linux5.10.0-gnu2.31.0", 0x7ffc07fb1390) = -1 ENOENT (No such file or directory)
+3588080 stat("/home/epentland/zig-toolchains/lib/clang/22/lib/x86_64-unknown-linux5.10.0-gnu2.31.0", 0x7ffc07fb17b0) = -1 ENOENT (No such file or directory)
+3588080 stat("/home/epentland/zig-toolchains/lib/clang/22/lib/linux5.10.0/x86_64", 0x7ffc07fb17b0) = -1 ENOENT (No such file or directory)
+3588080 stat("/opt/rh", 0x7ffc07fb0d30) = -1 ENOENT (No such file or directory)
+3588080 stat("/etc/env.d/gcc", 0x7ffc07fb1250) = -1 ENOENT (No such file or directory)
+3588080 stat("/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/..", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+3588080 stat("/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/../lib64", 0x7ffc07fb1380) = -1 ENOENT (No such file or directory)
+3588080 stat("/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/../lib", 0x7ffc07fb1380) = -1 ENOENT (No such file or directory)
+3588080 stat("/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/../libx32", 0x7ffc07fb1380) = -1 ENOENT (No such file or directory)
+3588080 stat("/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/../lib", 0x7ffc07fb1380) = -1 ENOENT (No such file or directory)
+3588080 stat("/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/../lib32", 0x7ffc07fb1380) = -1 ENOENT (No such file or directory)
+3588080 stat("/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/../lib", 0x7ffc07fb1380) = -1 ENOENT (No such file or directory)
+3588080 stat("/usr", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+3588080 stat("/usr/lib64", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+3588080 stat("/usr/lib64/gcc", 0x7ffc07fb1380) = -1 ENOENT (No such file or directory)
+3588080 stat("/usr/lib64/gcc-cross", 0x7ffc07fb1380) = -1 ENOENT (No such file or directory)
+3588080 stat("/usr/lib", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+3588080 stat("/usr/lib/gcc", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+3588080 stat("/usr/lib/gcc-cross", 0x7ffc07fb1380) = -1 ENOENT (No such file or directory)
+3588080 open("/usr/lib/gcc/x86_64-unknown-linux5.10.0-gnu2.31.0", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588080 open("/usr/lib/gcc/x86_64-linux5.10.0-gnu2.31.0", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588080 open("/usr/lib/gcc/x86_64-linux-gnu", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_DIRECTORY) = 3</usr/lib/gcc/x86_64-linux-gnu>
+3588080 mmap(0x759b17871000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17871000
+3588080 getdents64(3</usr/lib/gcc/x86_64-linux-gnu>, 0x759b17880028 /* 3 entries */, 2048) = 72
+3588080 stat("/usr/lib/gcc/x86_64-linux-gnu/15/64/crtbegin.o", 0x7ffc07fb01b0) = -1 ENOENT (No such file or directory)
+3588080 stat("/usr/lib/gcc/x86_64-linux-gnu/15/sparcv8plus/crtbegin.o", 0x7ffc07fb01b0) = -1 ENOENT (No such file or directory)
+3588080 stat("/usr/lib/gcc/x86_64-linux-gnu/15/crtbegin.o", {st_mode=S_IFREG|0644, st_size=2440, ...}) = 0
+3588080 stat("/usr/lib/gcc/x86_64-linux-gnu/15/64/crtbegin.o", 0x7ffc07fb00f0) = -1 ENOENT (No such file or directory)
+3588080 stat("/usr/lib/gcc/x86_64-linux-gnu/15/32/crtbegin.o", 0x7ffc07fb00f0) = -1 ENOENT (No such file or directory)
+3588080 stat("/usr/lib/gcc/x86_64-linux-gnu/15/x32/crtbegin.o", 0x7ffc07fb00f0) = -1 ENOENT (No such file or directory)
+3588080 stat("/usr/lib/gcc/x86_64-linux-gnu/15/sparcv8plus/crtbegin.o", 0x7ffc07fb00f0) = -1 ENOENT (No such file or directory)
+3588080 getdents64(3</usr/lib/gcc/x86_64-linux-gnu>, 0x759b17880028 /* 0 entries */, 2048) = 0
+3588080 close(3</usr/lib/gcc/x86_64-linux-gnu>) = 0
+3588080 stat("/usr/lib/gcc/x86_64-linux-gnu/15/../../../../x86_64-linux-gnu/include/c++/15", 0x7ffc07fb04c0) = -1 ENOENT (No such file or directory)
+3588080 stat("/usr/lib/gcc/x86_64-linux-gnu/15/../../../gcc/x86_64-linux-gnu/15/include/c++/", 0x7ffc07fb04c0) = -1 ENOENT (No such file or directory)
+3588080 stat("/usr/lib/gcc/x86_64-linux-gnu/15/../../../../include/c++/15", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+3588080 stat("/usr/lib/gcc/x86_64-linux-gnu/15/../../../../include/x86_64-linux-gnu/c++/15", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+3588080 open("/usr/lib/gcc/x86_64-unknown-linux-gnu", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588080 open("/usr/lib/gcc/x86_64-pc-linux-gnu", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588080 open("/usr/lib/gcc/x86_64-redhat-linux6E", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588080 open("/usr/lib/gcc/x86_64-redhat-linux", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588080 open("/usr/lib/gcc/x86_64-suse-linux", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588080 open("/usr/lib/gcc/x86_64-manbo-linux-gnu", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588080 open("/usr/lib/gcc/x86_64-slackware-linux", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588080 open("/usr/lib/gcc/x86_64-unknown-linux", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588080 open("/usr/lib/gcc/x86_64-amazon-linux", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588080 stat("/usr/libx32", 0x7ffc07fb1380) = -1 ENOENT (No such file or directory)
+3588080 stat("/usr/lib", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+3588080 stat("/usr/lib/gcc", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+3588080 stat("/usr/lib/gcc-cross", 0x7ffc07fb1380) = -1 ENOENT (No such file or directory)
+3588080 open("/usr/lib/gcc/i386-linux5.10.0-gnu2.31.0", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588080 open("/usr/lib/gcc/x86_64-linux-gnux32", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588080 open("/usr/lib/gcc/x86_64-pc-linux-gnux32", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588080 open("/usr/lib/gcc/i586-linux-gnu", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588080 open("/usr/lib/gcc/i686-linux-gnu", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588080 open("/usr/lib/gcc/i686-pc-linux-gnu", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588080 open("/usr/lib/gcc/i386-redhat-linux6E", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588080 open("/usr/lib/gcc/i686-redhat-linux", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588080 open("/usr/lib/gcc/i386-redhat-linux", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588080 open("/usr/lib/gcc/i586-suse-linux", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588080 open("/usr/lib/gcc/i686-montavista-linux", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588080 open("/usr/lib/gcc/i386-unknown-linux5.10.0-gnu2.31.0", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588080 stat("/usr/lib32", 0x7ffc07fb1380) = -1 ENOENT (No such file or directory)
+3588080 stat("/usr/lib", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+3588080 stat("/usr/lib/gcc", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+3588080 stat("/usr/lib/gcc-cross", 0x7ffc07fb1380) = -1 ENOENT (No such file or directory)
+3588080 open("/usr/lib/gcc/i386-linux5.10.0-gnu2.31.0", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588080 open("/usr/lib/gcc/x86_64-linux-gnux32", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588080 open("/usr/lib/gcc/x86_64-pc-linux-gnux32", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588080 open("/usr/lib/gcc/i586-linux-gnu", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588080 open("/usr/lib/gcc/i686-linux-gnu", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588080 open("/usr/lib/gcc/i686-pc-linux-gnu", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588080 open("/usr/lib/gcc/i386-redhat-linux6E", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588080 open("/usr/lib/gcc/i686-redhat-linux", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588080 open("/usr/lib/gcc/i386-redhat-linux", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588080 open("/usr/lib/gcc/i586-suse-linux", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588080 open("/usr/lib/gcc/i686-montavista-linux", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588080 open("/usr/lib/gcc/i386-unknown-linux5.10.0-gnu2.31.0", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588080 mmap(0x759b17861000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17861000
+3588080 open("/etc/os-release", O_RDONLY|O_LARGEFILE|O_CLOEXEC) = 3</usr/lib/os-release>
+3588080 access("/proc/self/fd", R_OK)   = 0
+3588080 readlink("/proc/self/fd/3", "/usr/lib/os-release", 4096) = 19
+3588080 pread64(3</usr/lib/os-release>, "PRETTY_NAME=\"Ubuntu 26.04 LTS\"\nNAME=\"Ubuntu\"\nVERSION_ID=\"26.04\"\nVERSION=\"26.04 (Resolute Raccoon)\"\nVERSION_CODENAME=resolute\nID=ubuntu\nID_LIKE=debian\nHOME_URL=\"https://www.ubuntu.com/\"\nSUPPORT_URL=\"https://help.ubuntu.com/\"\nBUG_REPORT_URL=\"https://bugs.launchpad.net/ubuntu/\"\nPRIVACY_POLICY_URL=\"https://www.ubuntu.com/legal/terms-and-policies/privacy-policy\"\nUBUNTU_CODENAME=resolute\nLOGO=ubuntu-logo\n", 402, 0) = 402
+3588080 close(3</usr/lib/os-release>)   = 0
+3588080 open("/etc/lsb-release", O_RDONLY|O_LARGEFILE|O_CLOEXEC) = 3</etc/lsb-release>
+3588080 readlink("/proc/self/fd/3", "/etc/lsb-release", 4096) = 16
+3588080 pread64(3</etc/lsb-release>, "DISTRIB_ID=Ubuntu\nDISTRIB_RELEASE=26.04\nDISTRIB_CODENAME=resolute\nDISTRIB_DESCRIPTION=\"Ubuntu 26.04 LTS\"\n", 105, 0) = 105
+3588080 close(3</etc/lsb-release>)      = 0
+3588080 stat("/usr/lib/gcc/x86_64-linux-gnu/15", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+3588080 stat("/usr/lib/gcc/x86_64-linux-gnu/15/../lib64", 0x7ffc07fb1840) = -1 ENOENT (No such file or directory)
+3588080 stat("/usr/lib/gcc/x86_64-linux-gnu/15/../../../../x86_64-linux-gnu/lib/../lib64", 0x7ffc07fb1840) = -1 ENOENT (No such file or directory)
+3588080 stat("/usr/lib/gcc/x86_64-linux-gnu/15/../../../../lib64", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+3588080 stat("/lib/x86_64-linux-gnu", {st_mode=S_IFDIR|0755, st_size=61440, ...}) = 0
+3588080 stat("/lib/../lib64", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+3588080 stat("/usr/lib/x86_64-linux-gnu", {st_mode=S_IFDIR|0755, st_size=61440, ...}) = 0
+3588080 stat("/usr/lib64", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+3588080 stat("/usr/lib/gcc/x86_64-linux-gnu/15/../../../../x86_64-linux-gnu/lib", 0x7ffc07fb1890) = -1 ENOENT (No such file or directory)
+3588080 stat("/lib", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+3588080 stat("/usr/lib", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+3588080 mmap(0x759b17851000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17851000
+3588080 stat("canonical-1c40b584bc71793ebd6e8a1d597b03c65677dd33857bed2370293efed1363e48.ll", {st_mode=S_IFREG|0444, st_size=5729, ...}) = 0
+3588080 mmap(0x759b17841000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17841000
+3588080 mmap(0x759b17831000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17831000
+3588080 mmap(0x759b17821000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17821000
+3588080 stat("/home/epentland/zig-toolchains/lib/clang/22/share/ubsan_ignorelist.txt", 0x7ffc07fb0480) = -1 ENOENT (No such file or directory)
+3588080 stat("/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+3588080 stat(".", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+3588080 getcwd("/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/baseline", 4096) = 130
+3588080 stat("/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+3588080 stat(".", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+3588080 getcwd("/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/baseline", 4096) = 130
+3588080 mmap(0x759b17811000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17811000
+3588080 mmap(0x759b17801000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17801000
+3588080 mmap(0x759b177f1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b177f1000
+3588080 mmap(0x759b177e1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b177e1000
+3588080 mmap(0x759b177d1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b177d1000
+3588080 mmap(0x759b177c1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b177c1000
+3588080 mmap(0x759b177b1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b177b1000
+3588080 mmap(0x759b177a1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b177a1000
+3588080 mmap(0x759b17791000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17791000
+3588080 stat(".", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+3588080 open("canonical-1c40b584bc71793ebd6e8a1d597b03c65677dd33857bed2370293efed1363e48.ll", O_RDONLY|O_LARGEFILE|O_CLOEXEC) = 3</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/baseline/canonical-1c40b584bc71793ebd6e8a1d597b03c65677dd33857bed2370293efed1363e48.ll>
+3588080 readlink("/proc/self/fd/3", "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/baseline/canonical-1c40b584bc71793ebd6e8a1d597b03c65677dd33857bed2370293efed1363e48.ll", 4096) = 207
+3588080 stat("/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+3588080 stat(".", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+3588080 getcwd("/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/baseline", 4096) = 130
+3588080 mmap(0x759b17781000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17781000
+3588080 stat("/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/baseline/zig-local/tmp/be752d878f11f2a5-canonical-1c40b584bc71793ebd6e8a1d597b03c65677dd33857bed2370293efed1363e48.o", 0x7ffc07fad880) = -1 ENOENT (No such file or directory)
+3588080 open("/dev/urandom", O_RDONLY|O_LARGEFILE) = 4</dev/urandom<char 1:9>>
+3588080 read(4</dev/urandom<char 1:9>>, "\304\32}8", 4) = 4
+3588080 close(4</dev/urandom<char 1:9>>) = 0
+3588080 open("/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/baseline/zig-local/tmp/be752d878f11f2a5-canonical-1c40b584bc71793ebd6e8a1d597b03c65677dd33857bed2370293efed1363e48-0c8060d6.o.tmp", O_RDWR|O_CREAT|O_EXCL|O_LARGEFILE|O_CLOEXEC, 0666) = 4</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/baseline/zig-local/tmp/be752d878f11f2a5-canonical-1c40b584bc71793ebd6e8a1d597b03c65677dd33857bed2370293efed1363e48-0c8060d6.o.tmp>
+3588080 pread64(3</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/baseline/canonical-1c40b584bc71793ebd6e8a1d597b03c65677dd33857bed2370293efed1363e48.ll>, "; generated by mylang-core\nsource_filename = \"app.my\"\n%myl.site = type { i32, i32, i32, i32, ptr, ptr, ptr }\ndeclare void @myl_core_trap(ptr, i64, i64) noreturn nounwind cold\ndeclare ptr @myl_core_args(i32, ptr) nounwind\ndeclare i32 @myl_core_exit(i64) nounwind\ndeclare void @myl_core_s2_unsupported(i32) noreturn nounwind cold\ndeclare ptr @myl_core_dict_new(i64, ptr) nounwind\ndeclare i32 @llvm.cttz.i32(i32, i1 immarg) nounwind readnone\ndeclare zeroext i1 @myl_core_str_eq(ptr, ptr) nounwind\ndeclare i32 @myl_core_str_hash(ptr) nounwind\ndeclare void @llvm.memset.p0.i64(ptr, i8, i64, i1) nounwind\ndeclare i64 @myl_core_dict_hash(ptr, ptr) nounwind\ndeclare i64 @myl_core_dict_find_span(ptr, ptr, i64) nounwind\ndeclare i64 @myl_core_dict_find(ptr, ptr, i64) nounwind willreturn memory(argmem: read)\ndeclare ptr @myl_core_dict_set(ptr, i64, ptr) nounwind\ndeclare ptr @myl_core_dict_insert(ptr, i64, ptr, ptr, i1 zeroext) nounwind\ndeclare ptr @myl_core_dict_remove(ptr, i64) nounwind\ndeclare ptr @myl_core_dict_copy(ptr) nounwind\ndeclare ptr @myl_core_dict_clear(ptr) nounwind\ndeclare i64 @myl_core_dict_entries(ptr) nounwind willreturn memory(argmem: read)\ndeclare zeroext i1 @myl_core_dict_live(ptr, i64) nounwind willreturn memory(argmem: read)\ndeclare ptr @myl_core_ir_str_char(ptr, i64) nounwind\ndeclare i64 @myl_core_ir_str_width(ptr, i64) nounwind\ndeclare i32 @myl_core_ir_str_code(ptr, i64) nounwind\ndeclare ptr @myl_core_ir_str_append(ptr, ptr) nounwind\ndeclare ptr @myl_core_ir_str_append_char(ptr, ptr, i64) nounwind\ndeclare ptr @myl_core_ir_str_slice(ptr, i64, i64) nounwind\ndeclare ptr @myl_core_ir_str_from_view(ptr, i64) nounwind\ndeclare ptr @myl_core_s2_sort_in_place(ptr, i64, i1) nounwind\ndeclare ptr @myl_core_list_copy(ptr, i64) nounwind\ndeclare zeroext i1 @myl_core_str_parse_int(ptr, ptr) nounwind\ndeclare void @myl_core_print_i64(i64, i64) nounwind\ndeclare void @myl_core_print_u64(i64, i64) nounwind\ndeclare void @myl_core_print_bool(i64, i1 zeroext) nounwind\ndeclare void @myl_core_print_str(i64, ptr) nounwind\ndeclare void @myl_core_print_sep(i64) nounwind\ndeclare void @myl_core_print_end(i64) nounwind\ndeclare ptr @myl_core_box_new(i64) nounwind\ndeclare preserve_mostcc void @myl_core_err_trace_origin_preserve_most(ptr) nounwind cold\ndeclare preserve_mostcc void @myl_core_err_trace_append_preserve_most(ptr) nounwind cold\ndeclare void @myl_core_assert_fail(ptr) noreturn nounwind cold\ndeclare void @llvm.memcpy.p0.p0.i64(ptr noalias nocapture writeonly, ptr noalias nocapture readonly, i64, i1 immarg)\ndeclare void @llvm.memmove.p0.p0.i64(ptr nocapture writeonly, ptr nocapture readonly, i64, i1 immarg)\ndeclare void @myl_core_release(ptr) nounwind\ndeclare void @myl_core_main_error_i64(i64) nounwind cold\ndeclare void @myl_core_main_error_u64(i64) nounwind cold\ndeclare void @myl_core_main_error_bool(i1 zeroext) nounwind cold\ndeclare void @myl_core_main_error_str(ptr) nounwind cold\n@myl_core_free_lists = external global [33 x ptr]\ndeclare ptr @myl_core_list_new_slow(i64, i64) nounwind\ndeclare ptr @myl_core_list_grow(ptr, i64) nounwind\ndeclare void @myl_core_free_block(ptr) nounwind cold\ndeclare hidden fastcc i64 @\"my.leaf::origin\"(i64) nounwind\ndeclare ptr @myl_core_buffer_new(i64) nounwind\ndeclare ptr @myl_core_buffer_copy(ptr) nounwind\ndeclare ptr @myl_core_buffer_push(ptr, i8 zeroext) nounwind\ndeclare ptr @myl_core_buffer_set(ptr, i64, i8 zeroext) nounwind\ndeclare ptr @myl_core_buffer_pop(ptr) nounwind\ndefine hidden fastcc i64 @\"my.app::main\"(ptr %p0) nounwind uwtable !dbg !1000003 {\nentry:\n  %slot = alloca i64, align 8\n  br label %b0\nb0:\n  %h.1 = getelementptr inbounds i8, ptr %p0, i64 8\n  %v2 = load i64, ptr %h.1, align 8, !tbaa !5\n  %hi.2 = icmp ugt i64 %v2, 9223372036854775807\n  br i1 %hi.2, label %trap.3, label %b0.4, !prof !0\ntrap.3:\n  call void @myl_core_trap(ptr @myl.site.0, i64 %v2, i64 0) #2, !dbg !1000005\n  unreachable\nb0.4:\n  %v3 = add i64 %v2, 0\n  %v5 = icmp sgt i64 %v3, 0\n  br i1 %v5, label %b1, label %b2\nb1:\n  br label %b2\nb2:\n  %v9 = phi i64 [ 9223372036854775807, %b0.4 ], [ 0, %b1 ]\n  %v10 = notail call fastcc i64 @\"my.lea"..., 5729, 0) = 5729
+3588080 close(3</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/baseline/canonical-1c40b584bc71793ebd6e8a1d597b03c65677dd33857bed2370293efed1363e48.ll>) = 0
+3588080 mmap(0x759b17771000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17771000
+3588080 mmap(0x759b17761000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17761000
+3588080 mmap(0x759b17751000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17751000
+3588080 mmap(0x759b17741000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17741000
+3588080 mmap(0x759b17731000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17731000
+3588080 mmap(0x759b17721000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17721000
+3588080 mmap(0x759b17711000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17711000
+3588080 mmap(0x759b17701000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17701000
+3588080 mmap(0x759b176f1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b176f1000
+3588080 mmap(0x759b176e1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b176e1000
+3588080 mmap(0x759b176d1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b176d1000
+3588080 mmap(0x759b176c1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b176c1000
+3588080 mmap(0x759b17655000, 503808, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17655000
+3588080 mmap(0x759b17631000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17631000
+3588080 mmap(0x759b17621000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17621000
+3588080 mmap(0x759b17609000, 159744, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17609000
+3588080 mmap(0x759b175e1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b175e1000
+3588080 mmap(0x759b175bd000, 208896, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b175bd000
+3588080 mmap(0x759b17591000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17591000
+3588080 mmap(0x759b17581000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x759b17581000
+3588080 close(4</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/baseline/zig-local/tmp/be752d878f11f2a5-canonical-1c40b584bc71793ebd6e8a1d597b03c65677dd33857bed2370293efed1363e48-0c8060d6.o.tmp>) = 0
+3588080 rename("/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/baseline/zig-local/tmp/be752d878f11f2a5-canonical-1c40b584bc71793ebd6e8a1d597b03c65677dd33857bed2370293efed1363e48-0c8060d6.o.tmp", "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/baseline/zig-local/tmp/be752d878f11f2a5-canonical-1c40b584bc71793ebd6e8a1d597b03c65677dd33857bed2370293efed1363e48.o") = 0
+3588080 +++ exited with 0 +++
+3588078 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=3588080, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+3588078 openat(5</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/baseline/zig-local>, "o/39b6d923fb0590e126bd4bd2c2e7c343", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_PATH|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588078 mkdirat(5</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/baseline/zig-local>, "o/39b6d923fb0590e126bd4bd2c2e7c343", 0777) = -1 ENOENT (No such file or directory)
+3588078 mkdirat(5</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/baseline/zig-local>, "o", 0777) = 0
+3588078 mkdirat(5</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/baseline/zig-local>, "o/39b6d923fb0590e126bd4bd2c2e7c343", 0777) = 0
+3588078 openat(5</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/baseline/zig-local>, "o/39b6d923fb0590e126bd4bd2c2e7c343", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_PATH|O_DIRECTORY) = 10</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/baseline/zig-local/o/39b6d923fb0590e126bd4bd2c2e7c343>
+3588078 renameat(9</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/baseline/zig-local/tmp>, "be752d878f11f2a5-canonical-1c40b584bc71793ebd6e8a1d597b03c65677dd33857bed2370293efed1363e48.o", 10</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/baseline/zig-local/o/39b6d923fb0590e126bd4bd2c2e7c343>, "canonical-1c40b584bc71793ebd6e8a1d597b03c65677dd33857bed2370293efed1363e48.o") = 0
+3588078 close(10</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/baseline/zig-local/o/39b6d923fb0590e126bd4bd2c2e7c343>) = 0
+3588078 close(9</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/baseline/zig-local/tmp>) = 0
+3588076 mmap(0x7fe40dbc1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fe40dbc1000
+3588076 close(10<pipe:[238257596]>)     = 0
+3588076 read(9<pipe:[238257596]> <unfinished ...>
+3588081 execve("/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig", ["/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig", "ld.lld", "-r", "--error-limit=0", "-mllvm", "-float-abi=hard", "--build-id=none", "--image-base=16777216", "--eh-frame-hdr", "-znow", "-m", "elf_x86_64", "-static", "-o", "fresh.o", "zig-local/o/39b6d923fb0590e126bd4bd2c2e7c343/canonical-1c40b584bc71793ebd6e8a1d597b03c65677dd33857bed2370293efed1363e48.o"], 0x7fe40dbd0028 /* 40 vars */ <unfinished ...>
+3588076 <... read resumed>, "", 8)      = 0
+3588076 close(9<pipe:[238257596]> <unfinished ...>
+3588081 <... execve resumed>)           = 0
+3588076 <... close resumed>)            = 0
+3588081 mmap(NULL, 263616, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610c0206000
+3588081 mmap(NULL, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610c01e7000
+3588081 mmap(0x7610c01d1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610c01d1000
+3588081 mmap(0x7610c01c1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610c01c1000
+3588081 mmap(0x7610c01b1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610c01b1000
+3588081 mmap(0x7610c01a1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610c01a1000
+3588081 mmap(0x7610c0191000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610c0191000
+3588081 mmap(0x7610c0181000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610c0181000
+3588081 mmap(0x7610c0171000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610c0171000
+3588081 mmap(0x7610c0161000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610c0161000
+3588081 mmap(0x7610c0151000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610c0151000
+3588081 mmap(0x7610c0141000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610c0141000
+3588081 mmap(0x7610c0131000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610c0131000
+3588081 mmap(0x7610c0121000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610c0121000
+3588081 mmap(0x7610c0111000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610c0111000
+3588081 mmap(0x7610c0101000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610c0101000
+3588081 mmap(0x7610c00f1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610c00f1000
+3588081 mmap(0x7610c00e1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610c00e1000
+3588081 mmap(0x7610c00d1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610c00d1000
+3588081 mmap(0x7610c00c1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610c00c1000
+3588081 mmap(0x7610c00b1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610c00b1000
+3588081 mmap(0x7610c00a1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610c00a1000
+3588081 mmap(0x7610c0091000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610c0091000
+3588081 mmap(0x7610c0081000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610c0081000
+3588081 mmap(0x7610c0071000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610c0071000
+3588081 mmap(0x7610c0061000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610c0061000
+3588081 mmap(0x7610c0051000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610c0051000
+3588081 mmap(0x7610c0041000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610c0041000
+3588081 mmap(0x7610c0031000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610c0031000
+3588081 mmap(0x7610c0033000, 53248, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610c0033000
+3588081 mmap(0x7610c0011000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610c0011000
+3588081 mmap(0x7610c0001000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610c0001000
+3588081 mmap(0x7610bfff1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610bfff1000
+3588081 mmap(0x7610bffe1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610bffe1000
+3588081 mmap(0x7610bffd1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610bffd1000
+3588081 mmap(0x7610bffc1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610bffc1000
+3588081 mmap(0x7610bffb1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610bffb1000
+3588081 mmap(0x7610bffa1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610bffa1000
+3588081 mmap(0x7610bff91000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610bff91000
+3588081 mmap(0x7610bff81000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610bff81000
+3588081 mmap(0x7610bff71000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610bff71000
+3588081 mmap(0x7610bff61000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610bff61000
+3588081 mmap(0x7610bff57000, 102400, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610bff57000
+3588081 mmap(0x7610bff31000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610bff31000
+3588081 mmap(0x7610bff21000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610bff21000
+3588081 mmap(0x7610bff11000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610bff11000
+3588081 mmap(0x7610bff01000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610bff01000
+3588081 mmap(0x7610bfef1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610bfef1000
+3588081 mmap(0x7610bfee1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610bfee1000
+3588081 mmap(0x7610bfed1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610bfed1000
+3588081 mmap(0x7610bfec1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610bfec1000
+3588081 mmap(0x7610bfeb1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610bfeb1000
+3588081 mmap(0x7610bfea1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610bfea1000
+3588081 mmap(0x7610bfe91000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610bfe91000
+3588081 mmap(0x7610bfe81000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610bfe81000
+3588081 mmap(0x7610bfe71000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610bfe71000
+3588081 mmap(0x7610bfe61000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610bfe61000
+3588081 mmap(0x7610bfe51000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610bfe51000
+3588081 mmap(0x7610bfe41000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610bfe41000
+3588081 mmap(0x7610bfe31000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610bfe31000
+3588081 mmap(0x7610bfe21000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610bfe21000
+3588081 mmap(0x7610bfe11000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610bfe11000
+3588081 mmap(0x7610bfe01000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610bfe01000
+3588081 mmap(0x7610bfdf1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610bfdf1000
+3588081 mmap(0x7610bfde1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610bfde1000
+3588081 mmap(0x7610bfdd1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610bfdd1000
+3588081 mmap(0x7610bfdc1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610bfdc1000
+3588081 mmap(0x7610bfdb1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610bfdb1000
+3588081 mmap(0x7610bfda1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610bfda1000
+3588081 mmap(0x7610bfd91000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610bfd91000
+3588081 mmap(0x7610bfd81000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610bfd81000
+3588081 mmap(0x7610bfd71000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610bfd71000
+3588081 mmap(0x7610bfd61000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610bfd61000
+3588081 mmap(0x7610bfd51000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610bfd51000
+3588081 mmap(0x7610bfd41000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610bfd41000
+3588081 mmap(0x7610bfd31000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610bfd31000
+3588081 mmap(0x7610bfd21000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610bfd21000
+3588081 mmap(0x7610bfd11000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610bfd11000
+3588081 mmap(0x7610bfd01000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610bfd01000
+3588081 mmap(0x7610bfcf1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610bfcf1000
+3588081 mmap(0x7610bfce1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610bfce1000
+3588081 open("zig-local/o/39b6d923fb0590e126bd4bd2c2e7c343/canonical-1c40b584bc71793ebd6e8a1d597b03c65677dd33857bed2370293efed1363e48.o", O_RDONLY|O_LARGEFILE|O_CLOEXEC) = 3</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/baseline/zig-local/o/39b6d923fb0590e126bd4bd2c2e7c343/canonical-1c40b584bc71793ebd6e8a1d597b03c65677dd33857bed2370293efed1363e48.o>
+3588081 mmap(0x7610bfcd1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610bfcd1000
+3588081 pread64(3</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/baseline/zig-local/o/39b6d923fb0590e126bd4bd2c2e7c343/canonical-1c40b584bc71793ebd6e8a1d597b03c65677dd33857bed2370293efed1363e48.o>, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\1\0>\0\1\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\340\5\0\0\0\0\0\0\0\0\0\0@\0\0\0\0\0@\0\26\0\1\0H\203\354(H\211|$\30H\213D$\30H\213@\10H\211D$\20H\271\377\377\377\377\377\377\377\177H9\310v\25H\213t$\20H\215=\0\0\0\0001\300\211\302\350\0\0\0\0H\213L$\20H\203\301\0H\270\377\377\377\377\377\377\377\177H\203\371\0H\211D$\10~\t1\300H\211D$\10\353\0H\213|$\10\350\0\0\0\0H\203\304(\303app.my\0cast\0app::main\0\0\0\0\0\0\0\0\0\0\4\0\0\0\5\0\0\0\10\0\0\0@\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\1\21\1%\16\23\5\3\16\20\27\264B\31\21\1\22\6\0\0\2.\0\21\1\22\6@\30\3\16:\v;\v?\31\0\0\08\0\0\0\4\0\0\0\0\0\10\1\0\0\0\0\f\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0q\0\0\0\2\0\0\0\0\0\0\0\0q\0\0\0\1W\0\0\0\0\1\3\0mylang-core\0app.my\0app::main\0\34\0\0\0\2\0\0\0\0\0<\0\0\0&\0\0\0app::main\0\0\0\0\0\16\0\0\0\2\0\0\0\0\0<\0\0\0\0\0\0\0\0\0\0\0\0\24\0\0\0\0\0\0\0\1zR\0\1x\20\1\33\f\7\10\220\1\0\0\24\0\0\0\34\0\0\0\0\0\0\0q\0\0\0\0D\0160\2l\16\10D\0\0\0\4\0\36\0\0\0\1\1\1\373\16\r\0\1\1\1\1\0\0\0\1\0\0\1\0app.my\0\0\0\0\0\0\t\2\0\0\0\0\0\0\0\0\24\nJ\5\10\2'\24\6\355\5\f\6\2,\31\2\n\0\1\1\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\1\0\0\0\4\0\361\377\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\3\0\2\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\3\0\4\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\3\0\5\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\3\0\7\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\3\0\10\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\3\0\n\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\3\0\22\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\227\0\0\0\22\2\2\0\0\0\0\0\0\0\0\0q\0\0\0\0\0\0\0V\0\0\0\20\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\207\0\0\0\20\2\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0.\0\0\0\0\0\0\0\2\0\0\0\4\0\0\0\374\377\377\377\377\377\377\3777\0\0\0\0\0\0\0\4\0\0\0\n\0\0\0\374\377\377\377\377\377\377\377h\0\0\0\0\0\0\0\4\0\0\0\v\0\0\0\374\377\377\377\377\377\377\377\20\0\0\0\0\0\0\0\1\0\0\0\3\0\0\0\7\0\0\0\0\0\0\0\30\0\0\0\0\0\0\0\1\0\0\0\3\0\0\0\f\0\0\0\0\0\0\0 \0\0\0\0\0\0\0\1\0\0\0\3\0\0\0\0\0\0\0\0\0\0\0\6\0\0\0\0\0\0\0\n\0\0\0\5\0\0\0\0\0\0\0\0\0\0\0\f\0\0\0\0\0\0\0\n\0\0\0\7\0\0\0\0\0\0\0\0\0\0\0\22\0\0\0\0\0\0\0\n\0\0\0\7\0\0\0\f\0\0\0\0\0\0\0\26\0\0\0\0\0\0\0\n\0\0\0\10\0\0\0\0\0\0\0\0\0\0\0\32\0\0\0\0\0\0\0\1\0\0\0\2\0\0\0\0\0\0\0\0\0\0\0'\0\0\0\0\0\0\0\1\0\0\0\2\0\0\0\0\0\0\0\0\0\0\0005\0\0\0\0\0\0\0\n\0\0\0\7\0\0\0\23\0\0\0\0\0\0\0\6\0\0\0\0\0\0\0\n\0\0\0\6\0\0\0\0\0\0\0\0\0\0\0\6\0\0\0\0\0\0\0\n\0\0\0\6\0\0\0\0\0\0\0\0\0\0\0 \0\0\0\0\0\0\0\2\0\0\0\2\0\0\0\0\0\0\0\0\0\0\0+\0\0\0\0\0\0\0\1\0\0\0\2\0\0\0\0\0\0\0\0\0\0\0\n\v\3\3\3\4\0app.my\0.debug_abbrev\0.rela.text\0.rela.debug_pubtypes\0.rela.debug_pubnames\0.debug_str\0myl_core_trap\0.rela.data.rel.ro\0.rela.debug_info\0my.leaf::origin\0my.app::main\0.note.GNU-stack\0.llvm_addrsig\0.rela.debug_line\0.rela.eh_frame\0.strtab\0.symtab\0.rodata\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\342\0\0\0\3\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\346\4\0\0\0\0\0\0\372\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\1\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\33\0\0\0\1\0\0\0\6\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0@\0\0\0\0\0\0\0q\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\20\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\26\0\0\0\4\0\0\0@\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0H\3\0\0\0\0\0\0H\0\0\0\0\0\0\0\25\0\0\0\2\0\0\0\10\0\0\0\0\0\0\0\30\0\0\0\0\0\0\0\362\0\0\0\1\0\0\0\2\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\261\0\0\0\0\0\0\0\26\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\1\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0i\0\0\0\1\0\0\0\3\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\320\0\0\0\0\0\0\0(\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\20\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0d\0\0\0\4\0\0\0@\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\220\3\0\0\0\0\0\0H\0\0\0\0\0\0\0\25\0\0\0\5\0\0\0\10\0\0\0\0\0\0\0\30\0\0\0\0\0\0\0\10\0\0\0\1\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\370\0\0\0\0\0\0\0(\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\1\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0{\0\0\0\1\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0 \1\0\0\0\0\0\0<\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\1\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0v\0\0\0\4\0\0\0@\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\330\3\0\0\0\0\0\0\250\0\0\0\0\0\0\0\25\0\0\0\10\0\0\0\10\0\0\0\0\0\0\0\30\0\0\0\0\0\0\0K\0\0\0\1\0\0\0000\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\\\1\0\0\0\0\0\0\35\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\1\0\0\0\0\0\0\0\1\0\0\0\0\0\0\0;\0\0\0\1\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0y\1\0\0\0\0\0\0 \0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\1\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0006\0\0\0\4\0\0\0@\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\200\4\0\0\0\0\0\0\30\0\0\0\0\0\0\0\25\0\0\0\v\0\0\0\10\0\0\0\0\0\0\0\30\0\0\0\0\0\0\0&\0\0\0\1\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\231\1\0\0\0\0\0\0\22\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\1\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0!\0\0\0\4\0\0\0@\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\230\4\0\0\0\0\0\0\30\0\0\0\0\0\0\0\25\0\0\0\r\0\0\0\10\0\0\0\0\0\0\0\30\0\0\0\0\0\0\0\244\0\0\0\1\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\253\1\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\1\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\330\0\0\0\1\0\0p\2\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\260\1\0\0\0\0\0\0000\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\10\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\323\0\0\0\4\0\0\0@\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\260\4\0\0\0\0\0\0\30\0\0\0\0\0\0\0\25\0\0\0\20\0\0\0\10\0\0\0\0\0\0\0\30\0\0\0\0\0\0\0\307\0\0\0\1\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\340\1\0\0\0\0\0\0H\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\1\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\302\0\0\0\4\0\0\0@\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\310\4\0\0\0\0\0\0\30\0\0\0\0\0\0\0\25\0\0\0\22\0\0\0\10\0\0\0\0\0\0\0\30\0\0\0\0\0\0\0\264\0\0\0\3L\377o\0\0\0\200\0\0\0\0\0\0\0\0\0\0\0\0\340\4\0\0\0\0\0\0\6\0\0\0\0\0\0\0\25\0\0\0\0\0\0\0\1\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\352\0\0\0\2\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0(\2\0\0\0\0\0\0 \1\0\0\0\0\0\0\1\0\0\0\t\0\0\0\10\0\0\0\0\0\0\0\30\0\0\0\0\0\0\0", 2912, 0) = 2912
+3588081 close(3</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/baseline/zig-local/o/39b6d923fb0590e126bd4bd2c2e7c343/canonical-1c40b584bc71793ebd6e8a1d597b03c65677dd33857bed2370293efed1363e48.o>) = 0
+3588081 stat("fresh.o", 0x7ffd366dea40) = -1 ENOENT (No such file or directory)
+3588081 open("/dev/urandom", O_RDONLY|O_LARGEFILE) = 3</dev/urandom<char 1:9>>
+3588081 read(3</dev/urandom<char 1:9>>, "\214\227\255\325", 4) = 4
+3588081 close(3</dev/urandom<char 1:9>>) = 0
+3588081 open("fresh.o.tmp0ec4a28", O_RDWR|O_CREAT|O_EXCL|O_LARGEFILE|O_CLOEXEC, 0666) = 3</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/baseline/fresh.o.tmp0ec4a28>
+3588081 mmap(NULL, 1, PROT_READ|PROT_WRITE, MAP_SHARED|MAP_NORESERVE, 3</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/baseline/fresh.o.tmp0ec4a28>, 0) = 0x7610c0205000
+3588081 close(3</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/baseline/fresh.o.tmp0ec4a28>) = 0
+3588081 lstat("fresh.o.tmp0ec4a28", {st_mode=S_IFREG|0664, st_size=1, ...}) = 0
+3588081 unlink("fresh.o.tmp0ec4a28")    = 0
+3588081 mmap(0x7610bfcc1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610bfcc1000
+3588081 mmap(NULL, 8663040, PROT_NONE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610bf48d000
+3588082 mmap(NULL, 8663040, PROT_NONE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610bec4a000
+3588082 mmap(NULL, 8663040, PROT_NONE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0 <unfinished ...>
+3588083 mmap(0x7610bfcb1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0 <unfinished ...>
+3588082 <... mmap resumed>)             = 0x7610be407000
+3588083 <... mmap resumed>)             = 0x7610be3e8000
+3588083 mmap(0x7610be3d1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610be3d1000
+3588082 mmap(0x7610be3c1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610be3c1000
+3588082 mmap(NULL, 8663040, PROT_NONE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610bdb8d000
+3588081 mmap(0x7610be3b1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610bdb6e000
+3588082 mmap(NULL, 8663040, PROT_NONE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610bd32d000
+3588081 mmap(0x7610bdb51000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610bd30e000
+3588081 mmap(0x7610bd2f1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0 <unfinished ...>
+3588082 mmap(NULL, 8663040, PROT_NONE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0 <unfinished ...>
+3588081 <... mmap resumed>)             = 0x7610bd2f1000
+3588082 <... mmap resumed>)             = 0x7610bcaae000
+3588081 mmap(0x7610bd2e1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610bca8f000
+3588082 mmap(NULL, 8663040, PROT_NONE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610bc24c000
+3588081 mmap(0x7610bca71000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610bc22d000
+3588082 mmap(NULL, 8663040, PROT_NONE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0 <unfinished ...>
+3588081 mmap(0x7610bc211000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0 <unfinished ...>
+3588082 <... mmap resumed>)             = 0x7610bb9ed000
+3588081 <... mmap resumed>)             = 0x7610bb9ce000
+3588081 mmap(0x7610bb9b1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610bb9b1000
+3588082 mmap(NULL, 8663040, PROT_NONE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610bb17d000
+3588082 mmap(NULL, 8663040, PROT_NONE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610ba93a000
+3588082 mmap(NULL, 8663040, PROT_NONE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610ba0f7000
+3588082 mmap(NULL, 8663040, PROT_NONE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0 <unfinished ...>
+3588081 access("fresh.o", F_OK <unfinished ...>
+3588082 <... mmap resumed>)             = 0x7610b98b4000
+3588081 <... access resumed>)           = -1 ENOENT (No such file or directory)
+3588081 stat("fresh.o", 0x7ffd366de520) = -1 ENOENT (No such file or directory)
+3588081 open("fresh.o.tmp89b05b5", O_RDWR|O_CREAT|O_EXCL|O_LARGEFILE|O_CLOEXEC, 0666) = 3</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/baseline/fresh.o.tmp89b05b5>
+3588082 mmap(NULL, 8663040, PROT_NONE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610b9071000
+3588081 mmap(NULL, 3184, PROT_READ|PROT_WRITE, MAP_SHARED|MAP_NORESERVE, 3</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/baseline/fresh.o.tmp89b05b5>, 0) = 0x7610c0205000
+3588082 mmap(NULL, 8663040, PROT_NONE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610b882e000
+3588082 mmap(NULL, 8663040, PROT_NONE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610b7feb000
+3588082 mmap(NULL, 8663040, PROT_NONE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7610b77a8000
+3588081 rename("fresh.o.tmp89b05b5", "fresh.o") = 0
+3588081 close(3</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/baseline/fresh.o>) = 0
+3588092 +++ exited with 0 +++
+3588093 +++ exited with 0 +++
+3588094 +++ exited with 0 +++
+3588086 +++ exited with 0 +++
+3588096 +++ exited with 0 +++
+3588091 +++ exited with 0 +++
+3588090 +++ exited with 0 +++
+3588087 +++ exited with 0 +++
+3588088 +++ exited with 0 +++
+3588083 +++ exited with 0 +++
+3588095 +++ exited with 0 +++
+3588084 +++ exited with 0 +++
+3588085 +++ exited with 0 +++
+3588097 +++ exited with 0 +++
+3588089 +++ exited with 0 +++
+3588082 +++ exited with 0 +++
+3588081 +++ exited with 0 +++
+3588076 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=3588081, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+3588076 close(7</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/baseline/zig-local/tmp/cdc3ae59e0552a8e>) = 0
+3588076 unlinkat(5</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/baseline/zig-local>, "tmp/cdc3ae59e0552a8e", 0) = -1 EISDIR (Is a directory)
+3588076 openat(5</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/baseline/zig-local>, "tmp/cdc3ae59e0552a8e", O_RDONLY|O_LARGEFILE|O_NOFOLLOW|O_CLOEXEC|O_DIRECTORY) = 7</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/baseline/zig-local/tmp/cdc3ae59e0552a8e>
+3588076 getdents64(7</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/baseline/zig-local/tmp/cdc3ae59e0552a8e>, 0x7ffc7943a888 /* 2 entries */, 2048) = 48
+3588076 getdents64(7</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/baseline/zig-local/tmp/cdc3ae59e0552a8e>, 0x7ffc7943a888 /* 0 entries */, 2048) = 0
+3588076 close(7</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/baseline/zig-local/tmp/cdc3ae59e0552a8e>) = 0
+3588076 unlinkat(5</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/baseline/zig-local>, "tmp/cdc3ae59e0552a8e", AT_REMOVEDIR) = 0
+3588079 +++ exited with 0 +++
+3588078 +++ exited with 0 +++
+3588077 +++ exited with 0 +++
+3588076 +++ exited with 0 +++

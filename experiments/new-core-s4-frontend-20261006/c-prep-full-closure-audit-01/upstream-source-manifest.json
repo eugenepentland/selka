@@ -1,0 +1,37 @@
+[
+  {
+    "source": "https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-22.1.8/clang/lib/Driver/ToolChains/Linux.cpp",
+    "file": "Linux.cpp.txt",
+    "sha256": "fd4cce5a4c1051748b8363d61edad3c03005e4dc39440ec8c296cb0692765157",
+    "size": 36115,
+    "provenance": "Official upstream tag matches printed version; exact distribution build relation is not established."
+  },
+  {
+    "source": "https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-22.1.8/clang/lib/Driver/ToolChains/Gnu.cpp",
+    "file": "Gnu.cpp.txt",
+    "sha256": "f84df2336067b4101fc2303e8d675b14e751706c40cb3a6e3663c271a4c08284",
+    "size": 140988,
+    "provenance": "Official upstream tag matches printed version; exact distribution build relation is not established."
+  },
+  {
+    "source": "https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-22.1.8/clang/lib/Driver/Distro.cpp",
+    "file": "Distro.cpp.txt",
+    "sha256": "c6708ffd483dbc43de4f9f40428e30737fc2fbdfbcc034360164f03546242f5e",
+    "size": 9152,
+    "provenance": "Official upstream tag matches printed version; exact distribution build relation is not established."
+  },
+  {
+    "source": "https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-22.1.8/clang/lib/Driver/ToolChain.cpp",
+    "file": "ToolChain.cpp.txt",
+    "sha256": "6ac623254103f55f2635ad509ad784dddd637afb0cb64941c42038147ce55d48",
+    "size": 67162,
+    "provenance": "Official upstream tag matches printed version; exact distribution build relation is not established."
+  },
+  {
+    "source": "https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-22.1.8/clang/lib/Driver/SanitizerArgs.cpp",
+    "file": "SanitizerArgs.cpp.txt",
+    "sha256": "1065d01750c781d6a9fb0af696f2ae67434ab14abf2af04fb521a66f61b8d112",
+    "size": 76498,
+    "provenance": "Official upstream tag matches printed version; exact distribution build relation is not established."
+  }
+]

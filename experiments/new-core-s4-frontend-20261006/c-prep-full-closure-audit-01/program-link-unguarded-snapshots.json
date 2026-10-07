@@ -1,0 +1,516 @@
+[
+  {
+    "path": "/etc/env.d/gcc",
+    "role": "post-probe metadata; not race proof",
+    "absent": true
+  },
+  {
+    "path": "/etc/lsb-release",
+    "role": "post-probe metadata; not race proof",
+    "inode": 5767907,
+    "device": 64512,
+    "size": 105,
+    "mtime_ns": 1776674791000000000,
+    "ctime_ns": 1787361023043906097,
+    "mode": 33188,
+    "resolved": "/etc/lsb-release",
+    "link_target": null,
+    "sha256": "ad1a36830722124b3ef37cc4106080422527cd98c583e43872fac4a5d4b4985f"
+  },
+  {
+    "path": "/etc/os-release",
+    "role": "post-probe metadata; not race proof",
+    "inode": 5767172,
+    "device": 64512,
+    "size": 21,
+    "mtime_ns": 1776674791000000000,
+    "ctime_ns": 1787361022803067970,
+    "mode": 41471,
+    "resolved": "/usr/lib/os-release",
+    "link_target": "../usr/lib/os-release",
+    "sha256": "fb8b42d368e509d8b012d009dd626d0a1f860cccc105e8806da5c2ab9e59a237"
+  },
+  {
+    "path": "/home/epentland/zig-toolchains",
+    "role": "post-probe metadata; not race proof",
+    "inode": 5513500,
+    "device": 64512,
+    "size": 4096,
+    "mtime_ns": 1788400224689679750,
+    "ctime_ns": 1788400224689679750,
+    "mode": 16893,
+    "resolved": "/home/epentland/zig-toolchains",
+    "link_target": null
+  },
+  {
+    "path": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b",
+    "role": "post-probe metadata; not race proof",
+    "inode": 5513886,
+    "device": 64512,
+    "size": 4096,
+    "mtime_ns": 1786441757000000000,
+    "ctime_ns": 1787367094089296716,
+    "mode": 16877,
+    "resolved": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b",
+    "link_target": null
+  },
+  {
+    "path": "/home/epentland/zig-toolchains/lib",
+    "role": "post-probe metadata; not race proof",
+    "absent": true
+  },
+  {
+    "path": "/home/epentland/zig-toolchains/lib/clang/22/lib/linux5.10.0/x86_64",
+    "role": "post-probe metadata; not race proof",
+    "absent": true
+  },
+  {
+    "path": "/home/epentland/zig-toolchains/lib/clang/22/lib/x86_64-unknown-linux5.10.0-gnu2.31.0",
+    "role": "post-probe metadata; not race proof",
+    "absent": true
+  },
+  {
+    "path": "/home/epentland/zig-toolchains/lib/clang/22/share/ubsan_ignorelist.txt",
+    "role": "post-probe metadata; not race proof",
+    "absent": true
+  },
+  {
+    "path": "/home/epentland/zig-toolchains/lib/x86_64-unknown-linux5.10.0-gnu2.31.0",
+    "role": "post-probe metadata; not race proof",
+    "absent": true
+  },
+  {
+    "path": "/home/epentland/zig-toolchains/lib32",
+    "role": "post-probe metadata; not race proof",
+    "absent": true
+  },
+  {
+    "path": "/home/epentland/zig-toolchains/lib64",
+    "role": "post-probe metadata; not race proof",
+    "absent": true
+  },
+  {
+    "path": "/home/epentland/zig-toolchains/libx32",
+    "role": "post-probe metadata; not race proof",
+    "absent": true
+  },
+  {
+    "path": "/lib",
+    "role": "post-probe metadata; not race proof",
+    "inode": 14,
+    "device": 64512,
+    "size": 7,
+    "mtime_ns": 1776674791000000000,
+    "ctime_ns": 1787361022802563503,
+    "mode": 41471,
+    "resolved": "/usr/lib",
+    "link_target": "usr/lib"
+  },
+  {
+    "path": "/lib/x86_64-linux-gnu",
+    "role": "post-probe metadata; not race proof",
+    "inode": 1705409,
+    "device": 64512,
+    "size": 61440,
+    "mtime_ns": 1791009931800939974,
+    "ctime_ns": 1791009931800939974,
+    "mode": 16877,
+    "resolved": "/usr/lib/x86_64-linux-gnu",
+    "link_target": null
+  },
+  {
+    "path": "/lib64",
+    "role": "post-probe metadata; not race proof",
+    "inode": 15,
+    "device": 64512,
+    "size": 9,
+    "mtime_ns": 1776674791000000000,
+    "ctime_ns": 1787361022802567818,
+    "mode": 41471,
+    "resolved": "/usr/lib64",
+    "link_target": "usr/lib64"
+  },
+  {
+    "path": "/opt/rh",
+    "role": "post-probe metadata; not race proof",
+    "absent": true
+  },
+  {
+    "path": "/usr",
+    "role": "post-probe metadata; not race proof",
+    "inode": 1703937,
+    "device": 64512,
+    "size": 4096,
+    "mtime_ns": 1776708327000000000,
+    "ctime_ns": 1787361023120530606,
+    "mode": 16877,
+    "resolved": "/usr",
+    "link_target": null
+  },
+  {
+    "path": "/usr/include/c++/15",
+    "role": "post-probe metadata; not race proof",
+    "inode": 1748833,
+    "device": 64512,
+    "size": 4096,
+    "mtime_ns": 1789400529994802778,
+    "ctime_ns": 1789400529994802778,
+    "mode": 16877,
+    "resolved": "/usr/include/c++/15",
+    "link_target": null
+  },
+  {
+    "path": "/usr/include/x86_64-linux-gnu/c++/15",
+    "role": "post-probe metadata; not race proof",
+    "inode": 1749682,
+    "device": 64512,
+    "size": 4096,
+    "mtime_ns": 1789400529553786219,
+    "ctime_ns": 1789400529553786219,
+    "mode": 16877,
+    "resolved": "/usr/include/x86_64-linux-gnu/c++/15",
+    "link_target": null
+  },
+  {
+    "path": "/usr/lib",
+    "role": "post-probe metadata; not race proof",
+    "inode": 1703941,
+    "device": 64512,
+    "size": 4096,
+    "mtime_ns": 1790316392606537861,
+    "ctime_ns": 1790316392606537861,
+    "mode": 16877,
+    "resolved": "/usr/lib",
+    "link_target": null
+  },
+  {
+    "path": "/usr/lib/gcc",
+    "role": "post-probe metadata; not race proof",
+    "inode": 2118361,
+    "device": 64512,
+    "size": 4096,
+    "mtime_ns": 1787372124058418743,
+    "ctime_ns": 1787372124058418743,
+    "mode": 16877,
+    "resolved": "/usr/lib/gcc",
+    "link_target": null
+  },
+  {
+    "path": "/usr/lib/gcc-cross",
+    "role": "post-probe metadata; not race proof",
+    "absent": true
+  },
+  {
+    "path": "/usr/lib/gcc/i386-linux5.10.0-gnu2.31.0",
+    "role": "post-probe metadata; not race proof",
+    "absent": true
+  },
+  {
+    "path": "/usr/lib/gcc/i386-redhat-linux",
+    "role": "post-probe metadata; not race proof",
+    "absent": true
+  },
+  {
+    "path": "/usr/lib/gcc/i386-redhat-linux6E",
+    "role": "post-probe metadata; not race proof",
+    "absent": true
+  },
+  {
+    "path": "/usr/lib/gcc/i386-unknown-linux5.10.0-gnu2.31.0",
+    "role": "post-probe metadata; not race proof",
+    "absent": true
+  },
+  {
+    "path": "/usr/lib/gcc/i586-linux-gnu",
+    "role": "post-probe metadata; not race proof",
+    "absent": true
+  },
+  {
+    "path": "/usr/lib/gcc/i586-suse-linux",
+    "role": "post-probe metadata; not race proof",
+    "absent": true
+  },
+  {
+    "path": "/usr/lib/gcc/i686-linux-gnu",
+    "role": "post-probe metadata; not race proof",
+    "absent": true
+  },
+  {
+    "path": "/usr/lib/gcc/i686-montavista-linux",
+    "role": "post-probe metadata; not race proof",
+    "absent": true
+  },
+  {
+    "path": "/usr/lib/gcc/i686-pc-linux-gnu",
+    "role": "post-probe metadata; not race proof",
+    "absent": true
+  },
+  {
+    "path": "/usr/lib/gcc/i686-redhat-linux",
+    "role": "post-probe metadata; not race proof",
+    "absent": true
+  },
+  {
+    "path": "/usr/lib/gcc/x86_64-amazon-linux",
+    "role": "post-probe metadata; not race proof",
+    "absent": true
+  },
+  {
+    "path": "/usr/lib/gcc/x86_64-linux-gnu",
+    "role": "post-probe metadata; not race proof",
+    "inode": 2118362,
+    "device": 64512,
+    "size": 4096,
+    "mtime_ns": 1787372124058418743,
+    "ctime_ns": 1787372124058418743,
+    "mode": 16877,
+    "resolved": "/usr/lib/gcc/x86_64-linux-gnu",
+    "link_target": null,
+    "entries": [
+      "15"
+    ]
+  },
+  {
+    "path": "/usr/lib/gcc/x86_64-linux-gnu/15",
+    "role": "post-probe metadata; not race proof",
+    "inode": 2118363,
+    "device": 64512,
+    "size": 4096,
+    "mtime_ns": 1789400530009803341,
+    "ctime_ns": 1789400530009803341,
+    "mode": 16877,
+    "resolved": "/usr/lib/gcc/x86_64-linux-gnu/15",
+    "link_target": null,
+    "entries": [
+      "crtbegin.o",
+      "crtbeginS.o",
+      "crtbeginT.o",
+      "crtend.o",
+      "crtendS.o",
+      "crtfastmath.o",
+      "crtoffloadbegin.o",
+      "crtoffloadend.o",
+      "crtoffloadtable.o",
+      "crtoffloadtableS.o",
+      "crtprec32.o",
+      "crtprec64.o",
+      "crtprec80.o",
+      "include",
+      "libasan.a",
+      "libasan.so",
+      "libasan_preinit.o",
+      "libatomic.a",
+      "libatomic.so",
+      "libbacktrace.a",
+      "libcc1.so",
+      "libgcc.a",
+      "libgcc_eh.a",
+      "libgcc_s.so",
+      "libgcov.a",
+      "libgomp.a",
+      "libgomp.so",
+      "libgomp.spec",
+      "libhwasan.a",
+      "libhwasan.so",
+      "libhwasan_preinit.o",
+      "libitm.a",
+      "libitm.so",
+      "libitm.spec",
+      "liblsan.a",
+      "liblsan.so",
+      "liblsan_preinit.o",
+      "liblto_plugin.so",
+      "libquadmath.a",
+      "libquadmath.so",
+      "libsanitizer.spec",
+      "libssp_nonshared.a",
+      "libstdc++.a",
+      "libstdc++.modules.json",
+      "libstdc++.so",
+      "libstdc++exp.a",
+      "libstdc++fs.a",
+      "libsupc++.a",
+      "libtsan.a",
+      "libtsan.so",
+      "libtsan_preinit.o",
+      "libubsan.a",
+      "libubsan.so",
+      "plugin"
+    ]
+  },
+  {
+    "path": "/usr/lib/gcc/x86_64-linux-gnu/15/32/crtbegin.o",
+    "role": "post-probe metadata; not race proof",
+    "absent": true
+  },
+  {
+    "path": "/usr/lib/gcc/x86_64-linux-gnu/15/64/crtbegin.o",
+    "role": "post-probe metadata; not race proof",
+    "absent": true
+  },
+  {
+    "path": "/usr/lib/gcc/x86_64-linux-gnu/15/crtbegin.o",
+    "role": "post-probe metadata; not race proof",
+    "inode": 2118364,
+    "device": 64512,
+    "size": 2440,
+    "mtime_ns": 1774174097000000000,
+    "ctime_ns": 1787372124106420522,
+    "mode": 33188,
+    "resolved": "/usr/lib/gcc/x86_64-linux-gnu/15/crtbegin.o",
+    "link_target": null,
+    "sha256": "f179b9f114a7421f32f0de4a3e1a25790469047b34a621c5b9af652f14b04014"
+  },
+  {
+    "path": "/usr/lib/gcc/x86_64-linux-gnu/15/include/c++",
+    "role": "post-probe metadata; not race proof",
+    "absent": true
+  },
+  {
+    "path": "/usr/lib/gcc/x86_64-linux-gnu/15/sparcv8plus/crtbegin.o",
+    "role": "post-probe metadata; not race proof",
+    "absent": true
+  },
+  {
+    "path": "/usr/lib/gcc/x86_64-linux-gnu/15/x32/crtbegin.o",
+    "role": "post-probe metadata; not race proof",
+    "absent": true
+  },
+  {
+    "path": "/usr/lib/gcc/x86_64-linux-gnu/lib64",
+    "role": "post-probe metadata; not race proof",
+    "absent": true
+  },
+  {
+    "path": "/usr/lib/gcc/x86_64-linux-gnux32",
+    "role": "post-probe metadata; not race proof",
+    "absent": true
+  },
+  {
+    "path": "/usr/lib/gcc/x86_64-linux5.10.0-gnu2.31.0",
+    "role": "post-probe metadata; not race proof",
+    "absent": true
+  },
+  {
+    "path": "/usr/lib/gcc/x86_64-manbo-linux-gnu",
+    "role": "post-probe metadata; not race proof",
+    "absent": true
+  },
+  {
+    "path": "/usr/lib/gcc/x86_64-pc-linux-gnu",
+    "role": "post-probe metadata; not race proof",
+    "absent": true
+  },
+  {
+    "path": "/usr/lib/gcc/x86_64-pc-linux-gnux32",
+    "role": "post-probe metadata; not race proof",
+    "absent": true
+  },
+  {
+    "path": "/usr/lib/gcc/x86_64-redhat-linux",
+    "role": "post-probe metadata; not race proof",
+    "absent": true
+  },
+  {
+    "path": "/usr/lib/gcc/x86_64-redhat-linux6E",
+    "role": "post-probe metadata; not race proof",
+    "absent": true
+  },
+  {
+    "path": "/usr/lib/gcc/x86_64-slackware-linux",
+    "role": "post-probe metadata; not race proof",
+    "absent": true
+  },
+  {
+    "path": "/usr/lib/gcc/x86_64-suse-linux",
+    "role": "post-probe metadata; not race proof",
+    "absent": true
+  },
+  {
+    "path": "/usr/lib/gcc/x86_64-unknown-linux",
+    "role": "post-probe metadata; not race proof",
+    "absent": true
+  },
+  {
+    "path": "/usr/lib/gcc/x86_64-unknown-linux-gnu",
+    "role": "post-probe metadata; not race proof",
+    "absent": true
+  },
+  {
+    "path": "/usr/lib/gcc/x86_64-unknown-linux5.10.0-gnu2.31.0",
+    "role": "post-probe metadata; not race proof",
+    "absent": true
+  },
+  {
+    "path": "/usr/lib/os-release",
+    "role": "post-probe metadata; not race proof",
+    "inode": 1707369,
+    "device": 64512,
+    "size": 402,
+    "mtime_ns": 1776674791000000000,
+    "ctime_ns": 1787361025875928879,
+    "mode": 33188,
+    "resolved": "/usr/lib/os-release",
+    "link_target": null,
+    "sha256": "fb8b42d368e509d8b012d009dd626d0a1f860cccc105e8806da5c2ab9e59a237"
+  },
+  {
+    "path": "/usr/lib/x86_64-linux-gnu",
+    "role": "post-probe metadata; not race proof",
+    "inode": 1705409,
+    "device": 64512,
+    "size": 61440,
+    "mtime_ns": 1791009931800939974,
+    "ctime_ns": 1791009931800939974,
+    "mode": 16877,
+    "resolved": "/usr/lib/x86_64-linux-gnu",
+    "link_target": null
+  },
+  {
+    "path": "/usr/lib32",
+    "role": "post-probe metadata; not race proof",
+    "absent": true
+  },
+  {
+    "path": "/usr/lib64",
+    "role": "post-probe metadata; not race proof",
+    "inode": 1703942,
+    "device": 64512,
+    "size": 4096,
+    "mtime_ns": 1788935360282538852,
+    "ctime_ns": 1788935360282538852,
+    "mode": 16877,
+    "resolved": "/usr/lib64",
+    "link_target": null
+  },
+  {
+    "path": "/usr/lib64/gcc",
+    "role": "post-probe metadata; not race proof",
+    "absent": true
+  },
+  {
+    "path": "/usr/lib64/gcc-cross",
+    "role": "post-probe metadata; not race proof",
+    "absent": true
+  },
+  {
+    "path": "/usr/libx32",
+    "role": "post-probe metadata; not race proof",
+    "absent": true
+  },
+  {
+    "path": "/usr/x86_64-linux-gnu/include/c++/15",
+    "role": "post-probe metadata; not race proof",
+    "absent": true
+  },
+  {
+    "path": "/usr/x86_64-linux-gnu/lib",
+    "role": "post-probe metadata; not race proof",
+    "absent": true
+  },
+  {
+    "path": "/usr/x86_64-linux-gnu/lib64",
+    "role": "post-probe metadata; not race proof",
+    "absent": true
+  }
+]

@@ -1,0 +1,8 @@
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 28 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 10342 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 11 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed
+[codex/new-core-s4-frontend 7c0c5899f] S4-F: check generated dev-loop executables against old-core outputs
+ 2 files changed, 55 insertions(+), 1 deletion(-)

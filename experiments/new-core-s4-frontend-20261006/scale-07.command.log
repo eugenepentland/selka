@@ -1,0 +1,24 @@
+build-slot: all 1 gate slot(s) busy; waiting (0s so far)
+build-slot: all 1 gate slot(s) busy; waiting (60s so far)
+build-slot: all 1 gate slot(s) busy; waiting (121s so far)
+build-slot: all 1 gate slot(s) busy; waiting (181s so far)
+build-slot: all 1 gate slot(s) busy; waiting (241s so far)
+build-slot: all 1 gate slot(s) busy; waiting (301s so far)
+build-slot: all 1 gate slot(s) busy; waiting (361s so far)
+build-slot: all 1 gate slot(s) busy; waiting (421s so far)
+build-slot: all 1 gate slot(s) busy; waiting (481s so far)
+build-slot: all 1 gate slot(s) busy; waiting (541s so far)
+build-slot: all 1 gate slot(s) busy; waiting (602s so far)
+build-slot: all 1 gate slot(s) busy; waiting (662s so far)
+build-slot: all 1 gate slot(s) busy; waiting (722s so far)
+build-slot: all 1 gate slot(s) busy; waiting (782s so far)
+build-slot: all 1 gate slot(s) busy; waiting (842s so far)
+build-slot: all 1 gate slot(s) busy; waiting (902s so far)
+build-slot: all 1 gate slot(s) busy; waiting (962s so far)
+build-slot: all 1 gate slot(s) busy; waiting (1022s so far)
+build-slot: gate slot 1 after 1052s (all 1 gate slot(s) busy)
+core-exclusive: all 3 build slots held; other-build wait=106.787s; gate wrapper excludes gate execution
+{"lines": 4821, "old": {"cold_seconds": 0.031998, "warm_seconds": 0.00291, "edited_seconds": 0.014973}, "validation": {"cold_seconds": 0.030698, "warm_seconds": 0.011088, "edited_seconds": 0.013419}, "typed": {"cold_seconds": 0.112608, "warm_seconds": 0.02383, "edited_seconds": 0.033564}, "gate": true}
+{"lines": 48101, "old": {"cold_seconds": 0.325467, "warm_seconds": 0.012395, "edited_seconds": 0.111423}, "validation": {"cold_seconds": 0.320558, "warm_seconds": 0.103937, "edited_seconds": 0.106518}, "typed": {"cold_seconds": 0.395657, "warm_seconds": 0.177992, "edited_seconds": 0.180948}, "gate": true}
+{"lines": 96197, "old": {"cold_seconds": 0.616888, "warm_seconds": 0.023031, "edited_seconds": 0.228014}, "validation": {"cold_seconds": 0.618566, "warm_seconds": 0.222934, "edited_seconds": 0.217621}, "typed": {"cold_seconds": 2.078381, "warm_seconds": 0.35523, "edited_seconds": 0.358706}, "gate": true}
+{"lines": 192389, "old": {"cold_seconds": 1.259454, "warm_seconds": 0.044516, "edited_seconds": 0.462877}, "validation": {"cold_seconds": 1.261293, "warm_seconds": 0.450338, "edited_seconds": 0.447559}, "typed": {"cold_seconds": 3.278833, "warm_seconds": 0.714513, "edited_seconds": 0.718974}, "gate": true}

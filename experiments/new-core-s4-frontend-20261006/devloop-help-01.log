@@ -1,0 +1,36 @@
+usage: measure_devloop.py [-h] --core CORE --old OLD
+                          --host-mode {ReleaseFast,ReleaseSafe,Debug}
+                          --evidence EVIDENCE --work WORK
+                          [--sizes SIZES [SIZES ...]]
+                          [--roles {old,core} [{old,core} ...]]
+                          [--rounds ROUNDS] [--parallel-size PARALLEL_SIZE]
+                          [--parallel-workers PARALLEL_WORKERS]
+                          [--core-extra CORE_EXTRA] [--timeout TIMEOUT]
+
+S4-X synthetic dev-loop receipts. Launch through build-slot.sh build. CPU-10
+commands acquire the shared timing lock one at a time. Parallel cold release
+compilation keeps the build wrapper's affinity and is a separate row. Every
+source edit has a fresh, retained digest, so a prior whole-project verdict
+cannot turn an edited request into an unchanged request. Both compiler hosts
+must be built in the explicit --host-mode, normally ReleaseFast. Each command
+has its own log. Unchanged requests get an additional process trace to prove
+the absence of zig cc. A distinct fresh release edit is traced to capture the
+actual unit compile commands; the edited module's -O3 command is replayed with
+a fresh local Zig cache. A report identifying source_path and llvm_path is
+needed if more than one unit compiles. No unit is selected by its measured
+cost.
+
+options:
+  -h, --help            show this help message and exit
+  --core CORE
+  --old OLD
+  --host-mode {ReleaseFast,ReleaseSafe,Debug}
+  --evidence EVIDENCE
+  --work WORK
+  --sizes SIZES [SIZES ...]
+  --roles {old,core} [{old,core} ...]
+  --rounds ROUNDS
+  --parallel-size PARALLEL_SIZE
+  --parallel-workers PARALLEL_WORKERS
+  --core-extra CORE_EXTRA
+  --timeout TIMEOUT
