@@ -1,0 +1,11 @@
+{
+  "command": [
+    "nm",
+    "--defined-only",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/import-entry-import-01/result-verify/unit-1.o"
+  ],
+  "status": 0,
+  "stdout": "0000000000000000 T my.<entry>\n",
+  "stderr": "",
+  "seconds": 0.00202405103482306
+}

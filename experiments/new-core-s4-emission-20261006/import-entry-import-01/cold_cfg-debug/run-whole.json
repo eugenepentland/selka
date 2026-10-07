@@ -1,0 +1,9 @@
+{
+  "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/import-entry-import-01/cold_cfg-debug/whole"
+  ],
+  "status": 1,
+  "stdout": "",
+  "stderr": "leaf.my:37:15: error[R_OVERFLOW]: native execution failed (add: left 9223372036854775807, right 9223372036854775807, width 64)\n  in leaf::origin at leaf.my:37:15\n  in app::main at app.my:7:12\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"add\",\"left\":9223372036854775807,\"right\":9223372036854775807,\"width\":64}\n",
+  "seconds": 0.0008609008509665728
+}

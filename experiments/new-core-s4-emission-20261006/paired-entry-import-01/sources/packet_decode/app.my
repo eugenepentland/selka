@@ -1,0 +1,34 @@
+module app
+import workload
+
+
+extern def runtime_bench_now(host: Host) -> i64 effects(host)
+
+def main(args: list[str], host: Host, out: Stream) -> int:
+    if len(args) != 3:
+        return 2
+    size = workload.parse_number(args[0])
+    iterations = workload.parse_number(args[1])
+    seed = workload.parse_number(args[2])
+    if size < 2 or iterations < 1 or seed < 1 or seed > 1000000:
+        return 2
+    values = [(seed + j * 37) % 1009 for j in range(size)]
+    frames = [workload.make_frame(j, seed) for j in range(size)]
+    checksum = 0
+    start = runtime_bench_now(host)
+    for batch in range(iterations):
+        phase = batch % 17
+        pass_total = 0
+        for j in range(size):
+            x = values[j]
+            value = 0
+            match workload.decode(frames[j]):
+                case Ok(packet):
+                    value = packet.identifier + packet.payload_sum * 3 + packet.length
+                case Err(error):
+                    value = error * 101
+            pass_total += value
+        checksum = (checksum + pass_total) % 1000000007
+    elapsed = runtime_bench_now(host) - start
+    out.print(checksum, elapsed)
+    return 0

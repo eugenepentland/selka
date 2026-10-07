@@ -1,0 +1,2 @@
+0
+78618 118531580 1791344370285059360 2be8873869000fde5c4d929d4db946bd 0 experiments/new-core-s4-emission-20261006/paired-entry-import-01/cache/lox_eval/program-d19e2b42fed98897/module-819b813edb0e06e8dfdd7ff60e54b591b15e01e8a00977de40701a326bcc3d4d.ll

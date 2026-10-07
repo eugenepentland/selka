@@ -1,0 +1,7 @@
+module app
+import leaf
+def main() -> Result[int, str]:
+    for i in range(2):
+        value = leaf.origin[int](i)?
+        assert value >= 0
+    return Ok(0)
