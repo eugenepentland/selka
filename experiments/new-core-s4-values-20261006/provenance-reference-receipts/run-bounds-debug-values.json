@@ -1,0 +1,9 @@
+{
+  "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/mut-frame-references-02/bounds-debug-values/program"
+  ],
+  "status": 1,
+  "stdout": "",
+  "stderr": "app.my:4:12: error[R_LIST_BOUNDS]: native execution failed (index 2, length 2)\n  in leaf::origin at app.my:4:12\n  in app::main at app.my:5:12\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":2,\"length\":2}\n",
+  "seconds": 0.0011380629148334265
+}
