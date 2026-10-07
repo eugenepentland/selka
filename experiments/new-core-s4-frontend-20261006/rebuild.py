@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Force a real source-identical core rebuild while exclusive_core owns all slots.
 
-Only the private local compile artifact matching the installed core is moved.
+Only private manifests naming Core's main and the matching compile artifact move.
 The original executable is restored on failure; source and installed binaries
 are untouched before the normal successful installation replaces the latter.
 """
@@ -34,6 +34,21 @@ def main():
     if backup.exists():
         parser.error("a previous rebuild backup exists; retain it before proceeding")
     artifact.rename(backup)
+    manifests = [path for path in (root / ".zig-cache/h").glob("*.txt")
+                 if "src/core/main.zig" in path.read_text(errors="replace")]
+    if not manifests:
+        backup.replace(artifact)
+        parser.error("no private core compile manifests found")
+    moved = []
+    for manifest in manifests:
+        saved = manifest.with_name(manifest.name + ".s4-rebuild-backup")
+        if saved.exists():
+            for original_manifest, saved_manifest in moved:
+                saved_manifest.replace(original_manifest)
+            backup.replace(artifact)
+            parser.error("a previous manifest backup exists; retain it before proceeding")
+        manifest.rename(saved)
+        moved.append((manifest, saved))
     result = None
     started = time.perf_counter()
     try:
@@ -43,6 +58,7 @@ def main():
                   "command": ["zig", "build", "core", "--summary", "all"],
                   "seconds": seconds, "exit": result.returncode,
                   "source_identical_rebuild": True, "compile_artifact": str(artifact),
+                  "invalidated_private_manifests": [str(path) for path in manifests],
                   "original_sha256": original,
                   "rebuilt_sha256": digest(installed) if result.returncode == 0 else None,
                   "affinity": sorted(os.sched_getaffinity(0)),
@@ -54,8 +70,12 @@ def main():
     finally:
         if result is None or result.returncode:
             backup.replace(artifact)
+            for manifest, saved in moved:
+                saved.replace(manifest)
         else:
             backup.unlink()
+            for _, saved in moved:
+                saved.unlink()
 
 
 if __name__ == "__main__":
