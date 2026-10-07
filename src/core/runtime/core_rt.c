@@ -33,14 +33,16 @@
  * LLVM-emitted C `main`, and future clock, file, network and environment
  * access belongs here too. */
 
-/* Write all of `len` bytes to a standard stream (1 or 2), as far as the OS allows. */
-static void os_write(int fd, const unsigned char *bytes, size_t len) {
+/* Write all of `len` bytes to a standard stream (1 or 2), as far as the OS allows;
+   false when it refused some of them. */
+static bool os_write(int fd, const unsigned char *bytes, size_t len) {
     size_t done = 0;
     while (done < len) {
         ssize_t wrote = write(fd, bytes + done, len - done);
-        if (wrote <= 0) break;
+        if (wrote <= 0) return false;
         done += (size_t)wrote;
     }
+    return true;
 }
 
 /* End the process now, with no atexit handlers (a trap or a fatal error). */
@@ -266,9 +268,22 @@ static myl_stream streams[2];
 
 static myl_stream *stream_for(int64_t fd) { return &streams[fd == 2 ? 1 : 0]; }
 
+/* Standard output refused a write: the program's output is lost, so it fails with
+   `R_OUTPUT` and status 1, as the old core's did (STREAM-BYTES-1, IO-6), instead of
+   exiting with `main`'s status. Output is buffered, so the report has no location. */
+static void output_refused(void);
+
 static void stream_flush(myl_stream *stream) {
-    os_write(stream == &streams[1] ? 2 : 1, stream->bytes, stream->used);
+    size_t used = stream->used;
     stream->used = 0;
+    if (!os_write(stream == &streams[1] ? 2 : 1, stream->bytes, used) && stream == &streams[0]) output_refused();
+}
+
+static void output_refused(void) {
+    static const char text[] = "error[R_OUTPUT]: native execution failed\nstandard output refused a write\n";
+    stream_flush(&streams[1]);
+    os_write(2, (const unsigned char *)text, sizeof text - 1);
+    os_exit(1);
 }
 
 static void stream_write(myl_stream *stream, const void *data, size_t len) {
@@ -467,6 +482,10 @@ typedef struct {
     const char *function;
     const char *path;
 } myl_core_site;
+
+/* The bit of an overflow, division or cast site's `width` that marks unsigned operands
+   (`unsigned_site` in `emit_llvm.zig`). */
+#define MYL_CORE_SITE_UNSIGNED 0x100
 
 
 enum { TRACE_RING = 32 };
@@ -823,6 +842,21 @@ static const char *dw_file(const dw_unit *unit, uint64_t index, char *out, size_
 /* The frames of return address `pc` (already less one, inside the call), innermost
    first, written as `  in f at path:line:column` lines; `skip` drops that many inner
    frames. Returns how many frames the address stands for (0: not this program's code). */
+/* Where `dwarf_frames` writes its `  in f at …` lines: standard error, or, while a
+   contract report renders its first line from them, this buffer. */
+static struct { char *data; size_t used, capacity; } frame_capture;
+
+static void frame_write(const char *text, size_t len) {
+    if (!frame_capture.data) {
+        stream_write(&streams[1], text, len);
+        return;
+    }
+    size_t room = frame_capture.capacity - frame_capture.used;
+    size_t take = len < room ? len : room;
+    memcpy(frame_capture.data + frame_capture.used, text, take);
+    frame_capture.used += take;
+}
+
 static int dwarf_frames(uint64_t pc, int skip) {
     dwarf_load();
     if (dwarf.state != 1) return 0;
@@ -883,7 +917,7 @@ static int dwarf_frames(uint64_t pc, int skip) {
                 continue;
             }
             int len = snprintf(text, sizeof text, "  in %s at %s:%llu:%llu\n", dw_name(&unit, &chain[k]), dw_file(&unit, file, path, sizeof path), (unsigned long long)line, (unsigned long long)column);
-            stream_write(&streams[1], text, (size_t)(len < (int)sizeof text ? len : (int)sizeof text - 1));
+            frame_write(text, (size_t)(len < (int)sizeof text ? len : (int)sizeof text - 1));
             line = chain[k].call_line;
             column = chain[k].call_column;
                 file = chain[k].call_file;
@@ -922,13 +956,26 @@ void myl_core_trap(const myl_core_site *site, int64_t a, int64_t b) {
     char detail[256] = "";
     char record[256] = "";
     const char *code = "R_OVERFLOW";
+    /* TRAP-UNSIGNED-1: an unsigned operation's operands print unsigned, and its record says so. */
+    const int unsigned_operands = (site->width & MYL_CORE_SITE_UNSIGNED) != 0;
+    const int width = site->width & ~MYL_CORE_SITE_UNSIGNED;
     switch (site->kind) {
     case TRAP_OVERFLOW:
-        snprintf(detail, sizeof detail, " (%s: left %lld, right %lld, width %d)", site->operation, (long long)a, (long long)b, site->width);
-        snprintf(record, sizeof record, "\036MYLANG-TRAP {\"version\":1,\"operation\":\"%s\",\"left\":%lld,\"right\":%lld,\"width\":%d}\n", site->operation, (long long)a, (long long)b, site->width);
+        if (unsigned_operands) {
+            snprintf(detail, sizeof detail, " (%s: left %llu, right %llu, width %d)", site->operation, (unsigned long long)a, (unsigned long long)b, width);
+            snprintf(record, sizeof record, "\036MYLANG-TRAP {\"version\":1,\"operation\":\"%s\",\"unsigned\":true,\"left\":%llu,\"right\":%llu,\"width\":%d}\n", site->operation, (unsigned long long)a, (unsigned long long)b, width);
+            break;
+        }
+        snprintf(detail, sizeof detail, " (%s: left %lld, right %lld, width %d)", site->operation, (long long)a, (long long)b, width);
+        snprintf(record, sizeof record, "\036MYLANG-TRAP {\"version\":1,\"operation\":\"%s\",\"left\":%lld,\"right\":%lld,\"width\":%d}\n", site->operation, (long long)a, (long long)b, width);
         break;
     case TRAP_DIVISION_BY_ZERO:
         code = "R_DIVISION_BY_ZERO";
+        if (unsigned_operands) {
+            snprintf(detail, sizeof detail, " (%s: left %llu, right %llu)", site->operation, (unsigned long long)a, (unsigned long long)b);
+            snprintf(record, sizeof record, "\036MYLANG-TRAP {\"version\":1,\"operation\":\"%s\",\"unsigned\":true,\"left\":%llu,\"right\":%llu}\n", site->operation, (unsigned long long)a, (unsigned long long)b);
+            break;
+        }
         snprintf(detail, sizeof detail, " (%s: left %lld, right %lld)", site->operation, (long long)a, (long long)b);
         snprintf(record, sizeof record, "\036MYLANG-TRAP {\"version\":1,\"operation\":\"%s\",\"left\":%lld,\"right\":%lld}\n", site->operation, (long long)a, (long long)b);
         break;
@@ -972,8 +1019,13 @@ void myl_core_trap(const myl_core_site *site, int64_t a, int64_t b) {
         snprintf(detail, sizeof detail, " (%s: value %lld, other %lld)", site->operation, (long long)a, (long long)b);
         break;
     default:
-        snprintf(detail, sizeof detail, " (cast: left %lld, width %d)", (long long)a, site->width);
-        snprintf(record, sizeof record, "\036MYLANG-TRAP {\"version\":1,\"operation\":\"cast\",\"left\":%lld,\"width\":%d}\n", (long long)a, site->width);
+        if (unsigned_operands) {
+            snprintf(detail, sizeof detail, " (cast: left %llu, width %d)", (unsigned long long)a, width);
+            snprintf(record, sizeof record, "\036MYLANG-TRAP {\"version\":1,\"operation\":\"cast\",\"unsigned\":true,\"left\":%llu,\"width\":%d}\n", (unsigned long long)a, width);
+            break;
+        }
+        snprintf(detail, sizeof detail, " (cast: left %lld, width %d)", (long long)a, width);
+        snprintf(record, sizeof record, "\036MYLANG-TRAP {\"version\":1,\"operation\":\"cast\",\"left\":%lld,\"width\":%d}\n", (long long)a, width);
         break;
     }
     if (record[0] == 0 && site->kind != TRAP_FACT) core_operation_record(record, sizeof record, site->operation);
@@ -1253,12 +1305,29 @@ void myl_core_assert_fail(const myl_core_site *site) {
     const int kind = site->width >= 0 && site->width < 4 ? site->width : 0;
     const char *code = codes[kind];
     stream_flush(&streams[0]);
+    /* The callers first, so a broken precondition can name the one that broke it, as the
+       old core does: `; broken by the caller g at p.my:6:12` (NEW-CORE-S5-CONTRACT-1). */
+    char frames[4096];
+    frame_capture.data = frames;
+    frame_capture.used = 0;
+    frame_capture.capacity = sizeof frames;
+    trap_frames();
+    frame_capture.data = NULL;
+    const char *caller = "";
+    int caller_len = 0;
+    static const char in_prefix[] = "  in ";
+    if (kind == 1 && frame_capture.used > sizeof in_prefix - 1 && memcmp(frames, in_prefix, sizeof in_prefix - 1) == 0) {
+        const char *end = memchr(frames, '\n', frame_capture.used);
+        caller = frames + sizeof in_prefix - 1;
+        caller_len = end ? (int)(end - caller) : 0;
+    }
     char text[2048];
-    int len = snprintf(text, sizeof text, "%s:%d:%d: error[%s]: %s%s%s\n  in %s at %s:%d:%d\n",
+    int len = snprintf(text, sizeof text, "%s:%d:%d: error[%s]: %s%s%s%s%.*s\n  in %s at %s:%d:%d\n",
         site->path, site->line, site->column, code, described[kind], site->operation[0] ? ": " : "", site->operation,
+        caller_len ? "; broken by the caller " : "", caller_len, caller,
         site->function, site->path, site->line, site->column);
     stream_write(&streams[1], text, (size_t)(len < (int)sizeof text ? len : (int)sizeof text - 1));
-    trap_frames();
+    stream_write(&streams[1], frames, frame_capture.used);
     /* The record: {"version":1,"operation":"MESSAGE"} with the message JSON-escaped. */
     char record[2048];
     size_t used = core_operation_record(record, sizeof record, site->operation);

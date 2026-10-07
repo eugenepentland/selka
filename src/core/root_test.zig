@@ -63,4 +63,5 @@ comptime {
     _ = @import("s3_number_test.zig");
     _ = @import("fuse_text_scalar_test.zig");
     _ = @import("emit_text_split_test.zig");
+    _ = @import("s5_units_test.zig");
 }

@@ -139,7 +139,7 @@ fn decodeResult(comptime Context: type, b: Context, site: DecodeSite) Error!ir.R
     b.current = bad;
     const message = try b.runtimeCall("myl_core_bytes_utf8_error", &.{}, .str, &.{}, span);
     try b.write(slot, bad, try b.emit(.{ .op = .union_make, .ty = ty, .a = message, .data = 1, .span = span }));
-    _ = try b.emit(.{ .op = .err_trace, .ty = .void, .data = @backingInt(ir.TraceMode.origin), .span = span });
+    _ = try b.emit(.{ .op = .err_trace, .ty = .void, .data = @backingInt(ir.TraceMode.runtime), .span = span });
     try b.jump(join);
     try b.seal(join);
     b.enter(join);

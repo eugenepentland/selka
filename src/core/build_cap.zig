@@ -27,7 +27,7 @@ pub fn Lower(comptime Context: type) type {
                 .environment_only => |only| c.effectCall("myl_core_environment_only", &.{ .capability, .bytes }, .capability, &.{ try c.expression(only.capability), try byteRequest(c, only.names, span) }, span),
                 .environment_names => |cap| c.effectCall("myl_core_environment_names", &.{.capability}, ty, &.{try c.expression(cap)}, span),
                 .environment_get => |get| environmentGet(c, node, get, span),
-                .stream_write => |write| streamWrite(c, write, span),
+                .stream_write => |write| streamWrite(c, write, ty, span),
                 .file_access => |file| fileAccess(c, node, file, span),
                 .file_method => |file| fileMethod(c, node, file, span),
                 .acquire_resource => |acquire| acquireResource(c, node, acquire, span),
@@ -39,8 +39,9 @@ pub fn Lower(comptime Context: type) type {
 
         /// `Stream.write` takes `str`, `bytes` or `byte_buffer`; each gets a helper declared
         /// with its own type, since one program may write all three (each is one
-        /// length-prefixed block, written as is).
-        fn streamWrite(c: Context, write: typed.StreamWrite, span: u32) Error!ir.Ref {
+        /// length-prefixed block, written as is). It answers what it wrote, as `len` counts
+        /// it: a string's scalars, a byte value's bytes (NEW-CORE-S5-STREAM-WRITE-1).
+        fn streamWrite(c: Context, write: typed.StreamWrite, result: ir.Type, span: u32) Error!ir.Ref {
             const stream = try c.expression(write.stream);
             const text = try c.expression(write.text);
             const ty = try c.mb.mapType(c.nodeOf(write.text).ty, span);
@@ -50,7 +51,10 @@ pub fn Lower(comptime Context: type) type {
                 .byte_buffer => stream_write_buffer_symbol,
                 else => return c.mb.refuse("stream write argument", span),
             };
-            return c.effectCall(symbol, &.{ .cap, ty }, .void, &.{ stream, text }, span);
+            _ = try c.effectCall(symbol, &.{ .cap, ty }, .void, &.{ stream, text }, span);
+            if (result == .void) return .none;
+            const count = if (ty == .str) try c.stringChars(text, span) else try c.emit(.{ .op = .list_len, .ty = .u64, .a = text, .span = span });
+            return c.emit(.{ .op = .convert, .ty = result, .a = count, .span = span });
         }
 
         fn narrow(c: Context, symbol: []const u8, capability: typed.NodeId, name: typed.NodeId, span: u32) Error!ir.Ref {
@@ -97,7 +101,7 @@ pub fn Lower(comptime Context: type) type {
             c.enter(failure);
             const code = if (error_text) try slotField(c, box, 2, span) else try c.emit(.{ .op = .convert, .ty = .i64, .a = status, .span = span });
             const bad = try unionValue(c, ty, shape.error_tag, code, span);
-            _ = try c.emit(.{ .op = .err_trace, .ty = .void, .data = @backingInt(ir.TraceMode.origin), .span = span });
+            _ = try c.emit(.{ .op = .err_trace, .ty = .void, .data = @backingInt(ir.TraceMode.runtime), .span = span });
             try c.write(variable, failure, bad);
             try c.jump(done);
             try c.seal(done);
@@ -180,7 +184,7 @@ pub fn Lower(comptime Context: type) type {
             fields[shape.resource_field] = owner;
             fields[shape.code_field] = code;
             const payload = try c.emit(.{ .op = .record_make, .ty = bad_ty, .data = try c.extraSlice(fields), .span = span });
-            _ = try c.emit(.{ .op = .err_trace, .ty = .void, .data = @backingInt(ir.TraceMode.origin), .span = span });
+            _ = try c.emit(.{ .op = .err_trace, .ty = .void, .data = @backingInt(ir.TraceMode.runtime), .span = span });
             try c.write(variable, failure, try unionValue(c, ty, shape.result.error_tag, payload, span));
             try c.jump(done);
             try c.seal(done);

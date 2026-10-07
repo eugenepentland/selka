@@ -104,7 +104,25 @@ pub const TrapKind = enum(u8) {
     list_pop_index = 19,
 };
 
+/// `prefix` without the `.N` counters earlier `fresh` names appended: a block that
+/// continues after many checks is named from its base label, not from the chain of
+/// every label before it, which LLVM refuses past a length (NEW-CORE-S5-LABELS-1).
+fn freshBase(prefix: []const u8) []const u8 {
+    var base = prefix;
+    while (std.mem.lastIndexOfScalar(u8, base, '.')) |dot| {
+        const suffix = base[dot + 1 ..];
+        if (suffix.len == 0 or dot == 0) break;
+        for (suffix) |byte| if (!std.ascii.isDigit(byte)) return base;
+        base = base[0..dot];
+    }
+    return base;
+}
+
 const Site = struct { kind: TrapKind, location: Location, width: u16, operation: []const u8, function: []const u8 };
+
+/// The bit of a site's `width` that marks an unsigned overflow, division or cast, whose
+/// operands the runtime prints unsigned (`MYL_CORE_SITE_UNSIGNED` in `runtime/core_rt.c`).
+const unsigned_site: u16 = 0x100;
 
 /// `  %x = getelementptr inbounds i8, ptr p, i64 0`: a new name for the same block.
 const zero_trap_line = "  call void @myl_core_trap(ptr @myl.site.{d}, i64 0, i64 0) #2{s}\n  unreachable\n";
@@ -806,7 +824,7 @@ const FunctionEmitter = struct {
     /// A unique LLVM temporary or label for an operation sub-emitter.
     pub fn fresh(self: *FunctionEmitter, prefix: []const u8) Error![]const u8 {
         self.counter += 1;
-        return std.fmt.allocPrint(self.a(), "{s}.{d}", .{ prefix, self.counter });
+        return std.fmt.allocPrint(self.a(), "{s}.{d}", .{ freshBase(prefix), self.counter });
     }
 
     /// The LLVM spelling of a Core type for an operation sub-emitter.
@@ -1308,9 +1326,15 @@ const FunctionEmitter = struct {
 
     /// Register a trap site for operation sub-emitters.
     pub fn site(self: *FunctionEmitter, kind: TrapKind, inst: ir.Inst, operation: []const u8) Error!u32 {
-        const width: u16 = if (inst.ty.integer()) |info| info.bits else 64;
+        const bits: u16 = if (inst.ty.integer()) |info| info.bits else 64;
         // In verify mode a check the facts proved is still emitted, and its failure is the fact's.
         const effective: TrapKind = if (inst.check == .proven) .fact else kind;
+        // An unsigned operation's operands are reported unsigned (TRAP-UNSIGNED-1): a cast's
+        // operand is its source, any other's its result type.
+        const operand = if (kind == .cast) self.typeOf(inst.a) else inst.ty;
+        const reports_operands = effective == .overflow or effective == .division_by_zero or effective == .cast;
+        const unsigned = reports_operands and if (operand.integer()) |info| !info.signed else false;
+        const width = if (unsigned) bits | unsigned_site else bits;
         return self.state.site(.{ .kind = effective, .location = self.state.options.locator.locate(self.state.options.locator.context, inst.span), .width = width, .operation = operation, .function = self.sourceFunction().name });
     }
 
@@ -1770,8 +1794,34 @@ const FunctionEmitter = struct {
             return self.trapIf(out, outside, try self.site(.list_pop_index, inst, "pop"), original, len);
         }
         const source_index = emit_bytes.sourceIndex(@TypeOf(self), self, inst.b);
-        const reported = if (source_index) |raw| try self.value(raw) else index;
+        const reported = if (source_index) |raw| try self.value(raw) else if (self.countsFromEnd(inst.b)) try self.originalIndex(out, index, len) else index;
         try self.trapIf(out, outside, try self.site(.list_bounds, inst, "index"), reported, len);
+    }
+
+    /// Whether `index` is the join of a Python index normalization: a phi of the
+    /// original index and the length plus it, as `xs[i]` builds it for a signed `i`.
+    pub fn countsFromEnd(self: *FunctionEmitter, index: ir.Ref) bool {
+        const f = self.function;
+        const join = f.inst(f.resolve(index));
+        if (join.op != .phi) return false;
+        const incoming = f.operands(join.data);
+        if (incoming.len != 2) return false;
+        for ([_][2]ir.Ref{ .{ incoming[0], incoming[1] }, .{ incoming[1], incoming[0] } }) |pair| {
+            const original = f.resolve(pair[0]);
+            const sum = f.inst(f.resolve(pair[1]));
+            if (sum.op == .add and (f.resolve(sum.a) == original or f.resolve(sum.b) == original)) return true;
+        }
+        return false;
+    }
+
+    /// The index the program wrote, recovered from its normalization (NEW-CORE-S5-UNITS-1):
+    /// only a too-negative original stays negative, and it was the length less.
+    pub fn originalIndex(self: *FunctionEmitter, out: *Out, index: []const u8, len: []const u8) Error![]const u8 {
+        const negative = try self.fresh("%fromend");
+        const before = try self.fresh("%frombefore");
+        const original = try self.fresh("%fromindex");
+        try out.print(self.a(), "  {s} = icmp slt i64 {s}, 0\n  {s} = sub i64 {s}, {s}\n  {s} = select i1 {s}, i64 {s}, i64 {s}\n", .{ negative, index, before, index, len, original, negative, before, index });
+        return original;
     }
 
     /// The address of element `index` of `list`: a typed `getelementptr` for scalars and
