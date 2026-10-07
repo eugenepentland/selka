@@ -1,0 +1,170 @@
+{
+  "artifacts": [
+    {
+      "path": "experiments/new-core-s4-project-tests-20261006/undef-phi-initialization-02/raw-bundled/hand",
+      "sha256": "554e4388aad468e0a75c0aa0a96617f9841b6091533d00a17332ef664955dc86",
+      "size": 732640,
+      "inode": 118408700,
+      "mtime_ns": 1791340854433631113,
+      "ctime_ns": 1791340854434631151,
+      "mode": "0o100775",
+      "tracked": false
+    },
+    {
+      "path": "experiments/new-core-s4-project-tests-20261006/undef-phi-initialization-02/raw-bundled/hand.ll",
+      "sha256": "84d9040c47026e0a46e3a9f99ad81b4d98647adf98fdc45844ab1bf6f08d9faf",
+      "size": 26225,
+      "inode": 118405981,
+      "mtime_ns": 1791340750922960052,
+      "ctime_ns": 1791340750922960052,
+      "mode": "0o100664",
+      "tracked": true
+    },
+    {
+      "path": "experiments/new-core-s4-project-tests-20261006/undef-phi-initialization-02/raw-bundled/runtime.c",
+      "sha256": "4f62516701c4d69ba0159ef3b3f008cb0573856568516b16c2116e8cc04d31ad",
+      "size": 325623,
+      "inode": 118405982,
+      "mtime_ns": 1791340750923957052,
+      "ctime_ns": 1791340750923957052,
+      "mode": "0o100664",
+      "tracked": false
+    },
+    {
+      "path": "experiments/new-core-s4-project-tests-20261006/undef-phi-initialization-02/raw-bundled/runtime.o",
+      "sha256": "053014e51eed302f0146541d2e71adc857deee6f4a36b4129a2eea247e8942ad",
+      "size": 1513320,
+      "inode": 118407758,
+      "mtime_ns": 1791340849551447221,
+      "ctime_ns": 1791340849552447259,
+      "mode": "0o100664",
+      "tracked": false
+    },
+    {
+      "path": "experiments/new-core-s4-project-tests-20261006/undef-phi-initialization-02/zero-bundled/hand",
+      "sha256": "e0a1eea84bcbcf0c8fbc4f1b5eddd4d525e5374a61fba05e72c74009141a7f9d",
+      "size": 951960,
+      "inode": 118409536,
+      "mtime_ns": 1791340864126996224,
+      "ctime_ns": 1791340864126996224,
+      "mode": "0o100775",
+      "tracked": false
+    },
+    {
+      "path": "experiments/new-core-s4-project-tests-20261006/undef-phi-initialization-02/zero-bundled/hand.ll",
+      "sha256": "903fef10454f2232dad21c4d80d64e9c3f2c373c2783b676d032282a040d219b",
+      "size": 26368,
+      "inode": 118408708,
+      "mtime_ns": 1791340856243488668,
+      "ctime_ns": 1791340856243488668,
+      "mode": "0o100664",
+      "tracked": true
+    },
+    {
+      "path": "experiments/new-core-s4-project-tests-20261006/undef-phi-initialization-02/zero-bundled/runtime.c",
+      "sha256": "4f62516701c4d69ba0159ef3b3f008cb0573856568516b16c2116e8cc04d31ad",
+      "size": 325623,
+      "inode": 118408709,
+      "mtime_ns": 1791340856246837298,
+      "ctime_ns": 1791340856246837298,
+      "mode": "0o100664",
+      "tracked": false
+    },
+    {
+      "path": "experiments/new-core-s4-project-tests-20261006/undef-phi-initialization-02/zero-bundled/runtime.o",
+      "sha256": "097c524862fc837296bfd197a4c94dcf644cd24d8850b369075937569993b4ef",
+      "size": 1513320,
+      "inode": 118408719,
+      "mtime_ns": 1791340859173809657,
+      "ctime_ns": 1791340859174809695,
+      "mode": "0o100664",
+      "tracked": false
+    },
+    {
+      "path": "experiments/new-core-s4-project-tests-20261006/undef-phi-initialization-02/raw-default/hand",
+      "sha256": "208bd09c8d1383763eefbbdc167917822c939280c951b4f7d9e334939856a83c",
+      "size": 725144,
+      "inode": 118410316,
+      "mtime_ns": 1791340874014368642,
+      "ctime_ns": 1791340874015368680,
+      "mode": "0o100775",
+      "tracked": false
+    },
+    {
+      "path": "experiments/new-core-s4-project-tests-20261006/undef-phi-initialization-02/raw-default/hand.ll",
+      "sha256": "84d9040c47026e0a46e3a9f99ad81b4d98647adf98fdc45844ab1bf6f08d9faf",
+      "size": 26225,
+      "inode": 118409574,
+      "mtime_ns": 1791340866316218817,
+      "ctime_ns": 1791340866316218817,
+      "mode": "0o100664",
+      "tracked": true
+    },
+    {
+      "path": "experiments/new-core-s4-project-tests-20261006/undef-phi-initialization-02/raw-default/runtime.c",
+      "sha256": "4f62516701c4d69ba0159ef3b3f008cb0573856568516b16c2116e8cc04d31ad",
+      "size": 325623,
+      "inode": 118409575,
+      "mtime_ns": 1791340866316413338,
+      "ctime_ns": 1791340866316413338,
+      "mode": "0o100664",
+      "tracked": false
+    },
+    {
+      "path": "experiments/new-core-s4-project-tests-20261006/undef-phi-initialization-02/raw-default/runtime.o",
+      "sha256": "923d5a4f2956d1827077b6913b884a72fce1552d665a42bb8ce5c6bac16b6115",
+      "size": 1511128,
+      "inode": 118409584,
+      "mtime_ns": 1791340869231188479,
+      "ctime_ns": 1791340869231188479,
+      "mode": "0o100664",
+      "tracked": false
+    },
+    {
+      "path": "experiments/new-core-s4-project-tests-20261006/undef-phi-initialization-02/zero-default/hand",
+      "sha256": "561b599c97c28571d515cfdfd32306e27088de44cecb486f8c6baf4c6534d45f",
+      "size": 944120,
+      "inode": 118411109,
+      "mtime_ns": 1791340884099748519,
+      "ctime_ns": 1791340884099748519,
+      "mode": "0o100775",
+      "tracked": false
+    },
+    {
+      "path": "experiments/new-core-s4-project-tests-20261006/undef-phi-initialization-02/zero-default/hand.ll",
+      "sha256": "903fef10454f2232dad21c4d80d64e9c3f2c373c2783b676d032282a040d219b",
+      "size": 26368,
+      "inode": 118410322,
+      "mtime_ns": 1791340876384797112,
+      "ctime_ns": 1791340876384797112,
+      "mode": "0o100664",
+      "tracked": true
+    },
+    {
+      "path": "experiments/new-core-s4-project-tests-20261006/undef-phi-initialization-02/zero-default/runtime.c",
+      "sha256": "4f62516701c4d69ba0159ef3b3f008cb0573856568516b16c2116e8cc04d31ad",
+      "size": 325623,
+      "inode": 118410323,
+      "mtime_ns": 1791340876384996952,
+      "ctime_ns": 1791340876384996952,
+      "mode": "0o100664",
+      "tracked": false
+    },
+    {
+      "path": "experiments/new-core-s4-project-tests-20261006/undef-phi-initialization-02/zero-default/runtime.o",
+      "sha256": "3b63588a792fc6a49fbaa4181ed4c9e6efd0bca9b7c612068ae6bc2ef8a2bcb6",
+      "size": 1511128,
+      "inode": 118410363,
+      "mtime_ns": 1791340879331568920,
+      "ctime_ns": 1791340879331568920,
+      "mode": "0o100664",
+      "tracked": false
+    }
+  ],
+  "native_binaries_objects_and_cache_trees_retained_untracked": true,
+  "tool": {
+    "path": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "sha256": "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f"
+  },
+  "production_fix_commit": "ebb4cf2826f9148c591a3bb051a7fe15cacd1539"
+}

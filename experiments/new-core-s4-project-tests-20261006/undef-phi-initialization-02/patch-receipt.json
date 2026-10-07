@@ -1,0 +1,14 @@
+{
+  "paths": [
+    "src/core/emit_llvm.zig",
+    "src/core/emit_llvm_test.zig",
+    "src/core/own_test.zig"
+  ],
+  "sha256": "d7957d7408217a5a4a15824ed97a9a180507f79f2a5371b0aad9ddc19342a511",
+  "source_commit": "b1e49ce08a6bf2661b8b4f6f9ddb80f174daf837",
+  "compiler_sources_formatted": true,
+  "native_reducer": "raw-bundled232;zero-bundled0;raw-default0;zero-default0",
+  "focused_qualifying_tests": "pending combined source freeze with V",
+  "guardian": "pending combined source freeze with V",
+  "ir_changed": false
+}

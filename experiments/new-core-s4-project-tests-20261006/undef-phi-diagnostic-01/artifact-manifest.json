@@ -1,0 +1,170 @@
+{
+  "artifacts": [
+    {
+      "path": "experiments/new-core-s4-project-tests-20261006/undef-phi-diagnostic-01/natives/list-debug/core_rt-bd7ea5bfbf2d015ba494630c768db3e321ef76c27c56a8d61a7ba69536e3f590.c",
+      "sha256": "4f62516701c4d69ba0159ef3b3f008cb0573856568516b16c2116e8cc04d31ad",
+      "size": 325623,
+      "inode": 118276415,
+      "mtime_ns": 1791340518450975969,
+      "ctime_ns": 1791340518450975969,
+      "mode": "0o100664",
+      "tracked": false
+    },
+    {
+      "path": "experiments/new-core-s4-project-tests-20261006/undef-phi-diagnostic-01/natives/list-debug/core_rt-bd7ea5bfbf2d015ba494630c768db3e321ef76c27c56a8d61a7ba69536e3f590.o",
+      "sha256": "6a5ff7050e9df6a44540aabb8d0dfb01f454c0ebed56982908b34b471cab8c67",
+      "size": 1513512,
+      "inode": 118276423,
+      "mtime_ns": 1791340521303083397,
+      "ctime_ns": 1791340521569093417,
+      "mode": "0o100664",
+      "tracked": false
+    },
+    {
+      "path": "experiments/new-core-s4-project-tests-20261006/undef-phi-diagnostic-01/natives/list-debug/hand",
+      "sha256": "dc05d171d934120677e80db64ea6efe4fd7f58448e62c3c7afa6d7d3946f9770",
+      "size": 953848,
+      "inode": 118276429,
+      "mtime_ns": 1791340521591094245,
+      "ctime_ns": 1791340521592094283,
+      "mode": "0o100775",
+      "tracked": false
+    },
+    {
+      "path": "experiments/new-core-s4-project-tests-20261006/undef-phi-diagnostic-01/natives/list-debug/hand.ll",
+      "sha256": "2d173a12b007b40683900078c81244b70c28ec54c2edb97e38d6bc47c604b1b5",
+      "size": 17017,
+      "inode": 118276414,
+      "mtime_ns": 1791340521569093417,
+      "ctime_ns": 1791340521569093417,
+      "mode": "0o100664",
+      "tracked": true
+    },
+    {
+      "path": "experiments/new-core-s4-project-tests-20261006/undef-phi-diagnostic-01/natives/list-release/core_rt-bd7ea5bfbf2d015ba494630c768db3e321ef76c27c56a8d61a7ba69536e3f590.c",
+      "sha256": "4f62516701c4d69ba0159ef3b3f008cb0573856568516b16c2116e8cc04d31ad",
+      "size": 325623,
+      "inode": 118276435,
+      "mtime_ns": 1791340522307121215,
+      "ctime_ns": 1791340522307121215,
+      "mode": "0o100664",
+      "tracked": false
+    },
+    {
+      "path": "experiments/new-core-s4-project-tests-20261006/undef-phi-diagnostic-01/natives/list-release/core_rt-bd7ea5bfbf2d015ba494630c768db3e321ef76c27c56a8d61a7ba69536e3f590.o",
+      "sha256": "6a1709325eb9b4c5b5af6d1a1b1be753604e6b63516dff4bcd7b2f045dcfaedc",
+      "size": 1513520,
+      "inode": 118276443,
+      "mtime_ns": 1791340524935220206,
+      "ctime_ns": 1791340525199230150,
+      "mode": "0o100664",
+      "tracked": false
+    },
+    {
+      "path": "experiments/new-core-s4-project-tests-20261006/undef-phi-diagnostic-01/natives/list-release/hand",
+      "sha256": "6bcc716a2cc0efb5bcf29a9d775b02f312a699f628803e33f7169d9046e63c8c",
+      "size": 952160,
+      "inode": 118276449,
+      "mtime_ns": 1791340525225231129,
+      "ctime_ns": 1791340525226231167,
+      "mode": "0o100775",
+      "tracked": false
+    },
+    {
+      "path": "experiments/new-core-s4-project-tests-20261006/undef-phi-diagnostic-01/natives/list-release/hand.ll",
+      "sha256": "2d173a12b007b40683900078c81244b70c28ec54c2edb97e38d6bc47c604b1b5",
+      "size": 17017,
+      "inode": 118276434,
+      "mtime_ns": 1791340525199230150,
+      "ctime_ns": 1791340525199230150,
+      "mode": "0o100664",
+      "tracked": true
+    },
+    {
+      "path": "experiments/new-core-s4-project-tests-20261006/undef-phi-diagnostic-01/natives/record-debug/core_rt-bd7ea5bfbf2d015ba494630c768db3e321ef76c27c56a8d61a7ba69536e3f590.c",
+      "sha256": "4f62516701c4d69ba0159ef3b3f008cb0573856568516b16c2116e8cc04d31ad",
+      "size": 325623,
+      "inode": 118276455,
+      "mtime_ns": 1791340525944258212,
+      "ctime_ns": 1791340525944258212,
+      "mode": "0o100664",
+      "tracked": false
+    },
+    {
+      "path": "experiments/new-core-s4-project-tests-20261006/undef-phi-diagnostic-01/natives/record-debug/core_rt-bd7ea5bfbf2d015ba494630c768db3e321ef76c27c56a8d61a7ba69536e3f590.o",
+      "sha256": "a2a9e5b923e64e7dc3c329a1a2d5a49cb420763b875fb09ae62dcaad6b468c90",
+      "size": 1513520,
+      "inode": 118276463,
+      "mtime_ns": 1791340528564356901,
+      "ctime_ns": 1791340528831366958,
+      "mode": "0o100664",
+      "tracked": false
+    },
+    {
+      "path": "experiments/new-core-s4-project-tests-20261006/undef-phi-diagnostic-01/natives/record-debug/hand",
+      "sha256": "0b54b5db90ce7d1c31753fe02813f2f15873194ea3f99a1687ce968eb91cec81",
+      "size": 956552,
+      "inode": 118276469,
+      "mtime_ns": 1791340528860368050,
+      "ctime_ns": 1791340528861368088,
+      "mode": "0o100775",
+      "tracked": false
+    },
+    {
+      "path": "experiments/new-core-s4-project-tests-20261006/undef-phi-diagnostic-01/natives/record-debug/hand.ll",
+      "sha256": "84d9040c47026e0a46e3a9f99ad81b4d98647adf98fdc45844ab1bf6f08d9faf",
+      "size": 26225,
+      "inode": 118276454,
+      "mtime_ns": 1791340528831366958,
+      "ctime_ns": 1791340528831366958,
+      "mode": "0o100664",
+      "tracked": true
+    },
+    {
+      "path": "experiments/new-core-s4-project-tests-20261006/undef-phi-diagnostic-01/natives/record-release/core_rt-bd7ea5bfbf2d015ba494630c768db3e321ef76c27c56a8d61a7ba69536e3f590.c",
+      "sha256": "4f62516701c4d69ba0159ef3b3f008cb0573856568516b16c2116e8cc04d31ad",
+      "size": 325623,
+      "inode": 118276475,
+      "mtime_ns": 1791340529585395359,
+      "ctime_ns": 1791340529585395359,
+      "mode": "0o100664",
+      "tracked": false
+    },
+    {
+      "path": "experiments/new-core-s4-project-tests-20261006/undef-phi-diagnostic-01/natives/record-release/core_rt-bd7ea5bfbf2d015ba494630c768db3e321ef76c27c56a8d61a7ba69536e3f590.o",
+      "sha256": "a80f97b2211c49b8baaef3c23e042fda0c6b28748f6675745eeb2a619a183873",
+      "size": 1513528,
+      "inode": 118276483,
+      "mtime_ns": 1791340532232495065,
+      "ctime_ns": 1791340532501505198,
+      "mode": "0o100664",
+      "tracked": false
+    },
+    {
+      "path": "experiments/new-core-s4-project-tests-20261006/undef-phi-diagnostic-01/natives/record-release/hand",
+      "sha256": "5684ccd38868d51ddd1377c7aac05ea70d993cfc8f3f09be51b9eca798b396dd",
+      "size": 732848,
+      "inode": 118276489,
+      "mtime_ns": 1791340532528506215,
+      "ctime_ns": 1791340532529506252,
+      "mode": "0o100775",
+      "tracked": false
+    },
+    {
+      "path": "experiments/new-core-s4-project-tests-20261006/undef-phi-diagnostic-01/natives/record-release/hand.ll",
+      "sha256": "84d9040c47026e0a46e3a9f99ad81b4d98647adf98fdc45844ab1bf6f08d9faf",
+      "size": 26225,
+      "inode": 118276474,
+      "mtime_ns": 1791340532501505198,
+      "ctime_ns": 1791340532501505198,
+      "mode": "0o100664",
+      "tracked": true
+    }
+  ],
+  "native_binaries_objects_and_cache_trees_retained_untracked": true,
+  "tool": {
+    "path": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "sha256": "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f"
+  },
+  "production_fix_commit": "ebb4cf2826f9148c591a3bb051a7fe15cacd1539"
+}

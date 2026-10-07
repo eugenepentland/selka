@@ -1,0 +1,22 @@
+test-core
++- run test w
+guardian/test: 3 test(s) selected
+guardian/test: SLOW  14.31s  own_test.test.a phi that may hold undef is released only when it holds a block: a zero-trip loop does not crash, list and record
+guardian/test: SLOW  7.80s  own_test.test.managed undef memory phis remain empty while parallel incoming records swap, debug and release
+guardian/test: test wall 22.12s; slowest over 50ms:
+guardian/test:   14.31s  own_test.test.a phi that may hold undef is released only when it holds a block: a zero-trip loop does not crash, list and record
+guardian/test:   7.80s  own_test.test.managed undef memory phis remain empty while parallel incoming records swap, debug and release
+guardian/test: PASS — 3 passed
+guardian/test: RESULT {"passed":3,"failed":0,"skipped":0}
+failed command: ./.zig-cache/o/bbdc6e31015eee4c5d28f598ce0c8570/test --cache-dir=./.zig-cache --seed=0x2803ed4e --listen=-
+
+Build Summary: 7/7 steps succeeded; 3/3 tests passed
+test-core success
++- run test 3 pass (3 total) 22s MaxRSS:255M
+   +- compile test debug native success 1s MaxRSS:242M
+      +- run exe qbe-build-assets (qbe_build_assets) success 72ms
+      |  +- compile exe qbe-build-assets debug native cached 6ms MaxRSS:41M
+      +- options success
+         +- compile exe mylang-core debug native success 2s MaxRSS:383M
+            +- run exe qbe-build-assets (qbe_build_assets) (+1 more reused dependencies)
+

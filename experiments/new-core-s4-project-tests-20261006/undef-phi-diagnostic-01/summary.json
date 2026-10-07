@@ -1,0 +1,83 @@
+{
+  "source": "source.json",
+  "all_native_success": false,
+  "production_source_edited": false,
+  "cases": [
+    {
+      "case": "list-debug",
+      "llvm_sha256": "2d173a12b007b40683900078c81244b70c28ec54c2edb97e38d6bc47c604b1b5",
+      "executable_sha256": "dc05d171d934120677e80db64ea6efe4fd7f58448e62c3c7afa6d7d3946f9770",
+      "rerun_status": 0,
+      "rerun_stdout": "",
+      "rerun_stderr": "",
+      "initial": {
+        "case": "list-debug",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/undef-phi-diagnostic-01/natives/list-debug/hand"
+        ],
+        "status": 0,
+        "term": "exited",
+        "stdout": "",
+        "stderr": "",
+        "expected": true
+      }
+    },
+    {
+      "case": "list-release",
+      "llvm_sha256": "2d173a12b007b40683900078c81244b70c28ec54c2edb97e38d6bc47c604b1b5",
+      "executable_sha256": "6bcc716a2cc0efb5bcf29a9d775b02f312a699f628803e33f7169d9046e63c8c",
+      "rerun_status": 0,
+      "rerun_stdout": "",
+      "rerun_stderr": "",
+      "initial": {
+        "case": "list-release",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/undef-phi-diagnostic-01/natives/list-release/hand"
+        ],
+        "status": 0,
+        "term": "exited",
+        "stdout": "",
+        "stderr": "",
+        "expected": true
+      }
+    },
+    {
+      "case": "record-debug",
+      "llvm_sha256": "84d9040c47026e0a46e3a9f99ad81b4d98647adf98fdc45844ab1bf6f08d9faf",
+      "executable_sha256": "0b54b5db90ce7d1c31753fe02813f2f15873194ea3f99a1687ce968eb91cec81",
+      "rerun_status": 0,
+      "rerun_stdout": "",
+      "rerun_stderr": "",
+      "initial": {
+        "case": "record-debug",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/undef-phi-diagnostic-01/natives/record-debug/hand"
+        ],
+        "status": 0,
+        "term": "exited",
+        "stdout": "",
+        "stderr": "",
+        "expected": true
+      }
+    },
+    {
+      "case": "record-release",
+      "llvm_sha256": "84d9040c47026e0a46e3a9f99ad81b4d98647adf98fdc45844ab1bf6f08d9faf",
+      "executable_sha256": "5684ccd38868d51ddd1377c7aac05ea70d993cfc8f3f09be51b9eca798b396dd",
+      "rerun_status": 232,
+      "rerun_stdout": "",
+      "rerun_stderr": "",
+      "initial": {
+        "case": "record-release",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/undef-phi-diagnostic-01/natives/record-release/hand"
+        ],
+        "status": 232,
+        "term": "exited",
+        "stdout": "",
+        "stderr": "",
+        "expected": false
+      }
+    }
+  ]
+}

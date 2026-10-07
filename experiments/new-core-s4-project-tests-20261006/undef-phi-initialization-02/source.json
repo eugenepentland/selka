@@ -1,0 +1,5 @@
+{
+  "base_llvm_sha256": "84d9040c47026e0a46e3a9f99ad81b4d98647adf98fdc45844ab1bf6f08d9faf",
+  "zero_llvm_sha256": "903fef10454f2232dad21c4d80d64e9c3f2c373c2783b676d032282a040d219b",
+  "change": "one zeroed40byte copy on b0->b1, no compiler source edits"
+}
