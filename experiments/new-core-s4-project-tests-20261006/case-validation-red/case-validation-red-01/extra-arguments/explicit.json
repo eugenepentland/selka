@@ -1,0 +1,7 @@
+{
+  "app::test_answer": {
+    "arguments": {
+      "unused": "x"
+    }
+  }
+}

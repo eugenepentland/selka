@@ -1,0 +1,19 @@
+{
+  "scope": "focused WIP source, not final S4-M gate",
+  "core_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.zig-cache/o/a8dc6a99ca5967be3ab8af417d540a00/mylang-core",
+  "core_sha256": "c6944963c8749593fb6cabb5a85bf89ab7185aa94696a4032c23fd39575f2bc2",
+  "source_receipt": "source-final-focus.json",
+  "focused": {
+    "tests": 5,
+    "passed": 5,
+    "failed": 0,
+    "command_seconds": 40.294035,
+    "test_seconds": 37.13,
+    "command": "command-00199.json"
+  },
+  "retained_failures": [
+    "command-00177.log",
+    "command-00191.log"
+  ],
+  "note": "00177 capture-shadow compile red; 00191 u1 payload-count runtime red; both fixed before final focused five green. Existing protected installed Core untouched."
+}

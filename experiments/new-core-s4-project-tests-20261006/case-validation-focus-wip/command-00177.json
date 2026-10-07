@@ -1,0 +1,19 @@
+{
+  "command": [
+    "env",
+    "MYLANG_SLOT_DIR=/run/user/1000/mylang-slots",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/scripts/build-slot.sh",
+    "build",
+    "--",
+    "bash",
+    "-c",
+    "cd \"$1\" && exec \"$2\" build test-core -Dtest-filter=\"typed case values\" -Dtest-filter=\"case verdicts\" -Dtest-filter=\"malformed typed cases\" -j2",
+    "--",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests",
+    "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values",
+  "pid": 3497231,
+  "status": 1,
+  "elapsed_seconds": 2.3002047929912806
+}

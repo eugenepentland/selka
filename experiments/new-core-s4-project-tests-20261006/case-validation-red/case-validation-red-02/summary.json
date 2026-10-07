@@ -1,0 +1,201 @@
+{
+  "source": "25d9e95317bbf674ba948d6f4ad3081e0ea7faf2",
+  "scope": "isolated native case reducers; no source correction",
+  "tools": {
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/oracles/pre-v-run15/mylang-core": "2b79fc47b1c5c882d8fcc1c2b0b6fb0b909746b6f7752b4176f18ceac34328e0",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-integration/.mylang-cache/s3/oracle/mylang": "d36658dbfb78d29213224532a13fd5ad8b7c0e290dbfb87613d9815678305c79",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/immutable-3c86c/qbe": "f485cd7750ac153feed0be6ee14f4ca525ef5f50a61c44519a05813d3f5e461d",
+    "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig": "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f"
+  },
+  "environment": {
+    "MYLANG_ZIG": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "MYLANG_QBE": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/immutable-3c86c/qbe",
+    "XDG_CACHE_HOME": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/m-review-25d9/case-validation-red-02/xdg",
+    "MYLANG_FRONTEND_CACHE": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/m-review-25d9/case-validation-red-02/frontend",
+    "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/m-review-25d9/case-validation-red-02/zig-global",
+    "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/m-review-25d9/case-validation-red-02/zig-local",
+    "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/m-review-25d9/case-validation-red-02/tmp"
+  },
+  "cases": [
+    {
+      "name": "noncanonical-integer-expectation",
+      "source": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/m-review-25d9/case-validation-red-02/noncanonical-integer-expectation/app.my",
+      "source_sha256": "bebfb87a7921975288cdaa7859280bf1ec6f9fdf09844aaa16e80dc73dcf148f",
+      "cases": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/m-review-25d9/case-validation-red-02/noncanonical-integer-expectation/explicit.json",
+      "cases_sha256": "cf3f4c9595e94dd3530c43643f1654da753e7d89a676e98dda6dd22afd4fee5b",
+      "commands": [
+        {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/oracles/pre-v-run15/mylang-core",
+            "test",
+            "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/m-review-25d9/case-validation-red-02/noncanonical-integer-expectation/app.my",
+            "--cases",
+            "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/m-review-25d9/case-validation-red-02/noncanonical-integer-expectation/explicit.json",
+            "--cache-dir",
+            "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/m-review-25d9/case-validation-red-02/noncanonical-integer-expectation/core-cache",
+            "--json",
+            "--jobs",
+            "1",
+            "--zig",
+            "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig"
+          ],
+          "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/m-review-25d9/case-validation-red-02/noncanonical-integer-expectation",
+          "compiler_sha256": "2b79fc47b1c5c882d8fcc1c2b0b6fb0b909746b6f7752b4176f18ceac34328e0",
+          "status": 0,
+          "seconds": 52.439809975912794,
+          "stdout": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/m-review-25d9/case-validation-red-02/noncanonical-integer-expectation/core-cold.stdout",
+          "stderr": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/m-review-25d9/case-validation-red-02/noncanonical-integer-expectation/core-cold.stderr",
+          "stdout_sha256": "d8e03dc0c6d1681a2c8fec9e6d21f90d0174008f259fcfbfb315cad214b70c16",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "report": {
+            "version": "native-tests-v1",
+            "tests": [
+              {
+                "name": "app::test_z_survivor",
+                "status": "passed",
+                "reason": "",
+                "at": ""
+              },
+              {
+                "name": "app::test_zero",
+                "status": "passed",
+                "reason": "",
+                "at": ""
+              }
+            ],
+            "passed": 2,
+            "failed": 0,
+            "skipped": 0,
+            "cached": 0,
+            "unsupported": 0,
+            "sources": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/m-review-25d9/case-validation-red-02/noncanonical-integer-expectation/app.my"
+            ]
+          }
+        },
+        {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/oracles/pre-v-run15/mylang-core",
+            "test",
+            "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/m-review-25d9/case-validation-red-02/noncanonical-integer-expectation/app.my",
+            "--cases",
+            "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/m-review-25d9/case-validation-red-02/noncanonical-integer-expectation/explicit.json",
+            "--cache-dir",
+            "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/m-review-25d9/case-validation-red-02/noncanonical-integer-expectation/core-cache",
+            "--json",
+            "--jobs",
+            "1",
+            "--zig",
+            "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig"
+          ],
+          "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/m-review-25d9/case-validation-red-02/noncanonical-integer-expectation",
+          "compiler_sha256": "2b79fc47b1c5c882d8fcc1c2b0b6fb0b909746b6f7752b4176f18ceac34328e0",
+          "status": 0,
+          "seconds": 0.5047438109759241,
+          "stdout": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/m-review-25d9/case-validation-red-02/noncanonical-integer-expectation/core-warm.stdout",
+          "stderr": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/m-review-25d9/case-validation-red-02/noncanonical-integer-expectation/core-warm.stderr",
+          "stdout_sha256": "b55a18a52af28ca27875fce63113cdf8cc8997cd05cb3808fa0e094dfec710ed",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "report": {
+            "version": "native-tests-v1",
+            "tests": [
+              {
+                "name": "app::test_z_survivor",
+                "status": "cached",
+                "reason": "",
+                "at": ""
+              },
+              {
+                "name": "app::test_zero",
+                "status": "cached",
+                "reason": "",
+                "at": ""
+              }
+            ],
+            "passed": 0,
+            "failed": 0,
+            "skipped": 0,
+            "cached": 2,
+            "unsupported": 0,
+            "sources": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/m-review-25d9/case-validation-red-02/noncanonical-integer-expectation/app.my"
+            ]
+          }
+        },
+        {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-integration/.mylang-cache/s3/oracle/mylang",
+            "test",
+            "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/m-review-25d9/case-validation-red-02/noncanonical-integer-expectation/app.my",
+            "--cases",
+            "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/m-review-25d9/case-validation-red-02/noncanonical-integer-expectation/explicit.json",
+            "--cache-dir",
+            "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/m-review-25d9/case-validation-red-02/noncanonical-integer-expectation/old-cache",
+            "--json",
+            "--jobs",
+            "1",
+            "--zig",
+            "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig"
+          ],
+          "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/m-review-25d9/case-validation-red-02/noncanonical-integer-expectation",
+          "compiler_sha256": "d36658dbfb78d29213224532a13fd5ad8b7c0e290dbfb87613d9815678305c79",
+          "status": 1,
+          "seconds": 3.236115474952385,
+          "stdout": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/m-review-25d9/case-validation-red-02/noncanonical-integer-expectation/old-cold.stdout",
+          "stderr": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/m-review-25d9/case-validation-red-02/noncanonical-integer-expectation/old-cold.stderr",
+          "stdout_sha256": "a56446e4dc1c8bfb522e6d56698552a22520f19bfe3ad41c7390c3174913285a",
+          "stderr_sha256": "617927f3c763875f2950a584524c2cc96b9f4ce90f1b77c5885106a6ba270e4a",
+          "report": {
+            "version": "native-tests-v1",
+            "tests": [
+              {
+                "name": "app::test_z_survivor",
+                "status": "passed",
+                "actual": true,
+                "expected": true,
+                "reason": "",
+                "key": "0e9bb705ce26fc7005c04e280cbd0ddd915cc85affbb7b7f2d0b52b29e646e39",
+                "dependencies": [
+                  "myl_f_485e2c37e57fba5d83acbdf05749c2f06546e7bf7eb16044ab632f3347372345"
+                ],
+                "cacheable": true,
+                "reasons": [],
+                "steps": 2,
+                "contract": "3ebb4d80a35b2127040ba7a9fdb2f8526251c1b503f13999639ecdeba529b720",
+                "provider": "",
+                "source": "ab6e03ffca940d6a9ef12d2df775aa65bd57903f20035eaa84e45f601f8f7ec8"
+              },
+              {
+                "name": "app::test_zero",
+                "status": "failed",
+                "actual": "0",
+                "expected": "00",
+                "reason": "expected 00, got 0",
+                "key": "9dfd3748e40fc62829aeab01334daf21342bcc0d190df1b58c2dc5e846347762",
+                "dependencies": [
+                  "myl_f_583a3be94606b94df2a1df8620156cd989cc04a13426e9e0108ce2a5bc3a6abc"
+                ],
+                "cacheable": true,
+                "reasons": [],
+                "steps": 2,
+                "contract": "3ebb4d80a35b2127040ba7a9fdb2f8526251c1b503f13999639ecdeba529b720",
+                "provider": "",
+                "source": "ab6e03ffca940d6a9ef12d2df775aa65bd57903f20035eaa84e45f601f8f7ec8"
+              }
+            ],
+            "passed": 1,
+            "failed": 1,
+            "skipped": 0,
+            "cached": 0,
+            "executed": 2,
+            "modules": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/m-review-25d9/case-validation-red-02/noncanonical-integer-expectation/app.my"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "complete": true,
+  "all_tools_unchanged": true
+}

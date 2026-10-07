@@ -1,7 +1,8 @@
 # S4-M implementation and qualification state
 
-The pre-V implementation is frozen at `25d9e9531` after the bounded unwind
-dependency correction; its initial production checkpoint is `7bc4a745f`, based on S4-F corrected
+The corrected pre-V implementation is frozen at `68ff263b5`, after the managed
+undef-phi and typed-case repairs below. Its preceding unwind-dependency checkpoint
+is `25d9e9531`; its initial production checkpoint is `7bc4a745f`, based on S4-F corrected
 production checkpoint `7877aa5d369f57aeb8fb850e8198c08c520b3a51`. Final combined
 package qualification is still pending. Negative runs remain evidence, never
 successful gate receipts.
@@ -109,6 +110,33 @@ builds and exceeds the five-minute command target. The sole behavior failure is
 the existing zero-trip list/record undef-phi fixture: expected exit zero, observed
 232. Independent raw native diagnosis precedes any production correction. Final
 combined qualification must resolve both this failure and the elapsed-time gate.
+
+The native undef-phi reduction reproduces the record failure under the explicit
+bundled GNU 2.31 target: the unmodified LLVM exits 232, while initializing the
+managed undef incoming slot makes the same native fixture exit zero. Its list
+control passes. The correction in `ebb4cf2826` initializes only managed memory
+phis; unmanaged undef storage keeps its existing behavior. The fresh combined
+nine-file snapshot passes the three focused ownership/emission tests and all 88
+Guardian checks. Every source hash matches before and after the run; frozen IR
+is unchanged. Native diagnosis, both negative receipts, the native LLVM repair
+proof and the positive focused receipt remain retained. Full core elapsed time
+and final combined package qualification remain pending.
+
+Seven independent typed-case reducers on immutable compiler `2b79fc47` precede
+the correction in `68ff263b5`. They demonstrate invalid arguments, integer
+overflow, wrong JSON types, malformed dictionary members and scalar spelling
+normalization either becoming cached successes or aborting the selection. The
+corrected runner validates every typed value and exact argument names/counts
+before native transport. Expected-result comparison preserves scalar kinds and
+string bytes, ignoring only object order; allocation failure propagates. Invalid
+typed values fail their individual test and never publish successful receipts.
+The final focused run passes five tests in 40.294 command seconds: typed shape
+and comparison checks, explicit allocation failure, generated-shape transport
+round trips, and eight native invalid cases run both cold and warm with an
+independent surviving test. Its emitted compiler is `c6944963`; the installed
+compiler was unchanged. Source hashes match the same nine-file snapshot used by
+the ownership focus, and the production commit passes all 88 Guardian checks.
+These focused checks do not replace the final S4-M package gates.
 
 Copied propagation fixtures are byte-identical to tests/lang, which was not edited.
 The focused CLI cases cover directory/orphan accounting, changed dependency versus

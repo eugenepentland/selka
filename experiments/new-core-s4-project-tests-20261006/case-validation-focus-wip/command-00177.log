@@ -1,0 +1,25 @@
+$ env MYLANG_SLOT_DIR=/run/user/1000/mylang-slots /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/scripts/build-slot.sh build -- bash -c 'cd "$1" && exec "$2" build test-core -Dtest-filter="typed case values" -Dtest-filter="case verdicts" -Dtest-filter="malformed typed cases" -j2' -- /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig
+test-core
++- run test
+   +- compile test debug native
+      +- options
+         +- compile exe mylang-core debug native 1 errors
+src/core/property_validate.zig:55:27: error: capture shadows declaration of 'sequence'
+            .sequence => |sequence| try self.sequence(sequence, input, depth),
+                          ^~~~~~~~
+src/core/property_validate.zig:83:5: note: declared here
+    fn sequence(self: *Checker, sequence_type: types.Sequence, input: Value, depth: usize) Error!void {
+    ^~
+error: 1 compilation errors
+failed command: /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig build-exe -ODebug --dep mylang --dep core_tool_platform --dep qbe_build_assets -Mroot=src/core/main.zig -ODebug --dep runtime_contract --dep memory_budget -Mmylang=src/compiler.zig -Mcore_tool_platform=src/config_core_tool_platform.zig -ODebug -Mqbe_build_assets=.zig-cache/o/fd0a6ef1b674c61ef11aeea4fd323b5d/qbe_build_assets/assets.zig -ODebug -Mruntime_contract=src/runtime_contract.zig -ferror-tracing -ODebug -Mmemory_budget=src/memory_budget.zig --cache-dir .zig-cache --global-cache-dir /home/epentland/.cache/zig --name mylang-core --zig-lib-dir /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/ --listen=-
+
+Build Summary: 2/7 steps succeeded (1 failed)
+test-core transitive failure
++- run test transitive failure
+   +- compile test debug native transitive failure
+      +- options transitive failure
+         +- compile exe mylang-core debug native 1 errors
+
+
+exit=1
+elapsed_seconds=2.300205
