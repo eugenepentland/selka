@@ -1,0 +1,19 @@
+test-core
++- run test w
+guardian/test: 5 test(s) selected
+guardian/test: test wall 0.92s; slowest over 50ms:
+guardian/test:   0.85s  frontend_test.test.frontend durable typed body reuse with fact summaries preserves trees after one edit
+guardian/test: PASS — 5 passed
+guardian/test: RESULT {"passed":5,"failed":0,"skipped":0}
+failed command: ./.zig-cache/o/12d9dcd606df5104f67358801ed359cd/test --cache-dir=./.zig-cache --seed=0x97f37cca --listen=-
+
+Build Summary: 7/7 steps succeeded; 5/5 tests passed
+test-core success
++- run test 5 pass (5 total) 951ms MaxRSS:18M
+   +- compile test debug native success 1s MaxRSS:296M
+      +- run exe qbe-build-assets (qbe_build_assets) success 82ms
+      |  +- compile exe qbe-build-assets debug native cached 8ms MaxRSS:38M
+      +- options success
+         +- compile exe mylang-core debug native success 4s MaxRSS:343M
+            +- run exe qbe-build-assets (qbe_build_assets) (+1 more reused dependencies)
+

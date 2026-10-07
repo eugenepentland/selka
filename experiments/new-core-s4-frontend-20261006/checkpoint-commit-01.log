@@ -1,0 +1,5 @@
+guardian: run-all: cached — 0 blocking (inputs unchanged since last green run)
+[codex/new-core-s4-frontend b20cbfdc8] S4-F: share frontend semantic caches and project session APIs
+ 11 files changed, 488 insertions(+), 20 deletions(-)
+ create mode 100644 src/core/check_command.zig
+ create mode 100644 src/core/frontend_reuse.zig

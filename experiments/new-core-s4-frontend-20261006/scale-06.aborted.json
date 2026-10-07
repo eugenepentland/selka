@@ -1,0 +1,11 @@
+{
+  "status": "ABORTED",
+  "qualified": false,
+  "reason": "Parent requires one31-edit counterbalanced uncertainty run; canceled9-edit job while waiting gate, before timing.",
+  "pids": [
+    2133522,
+    2106364,
+    2106354
+  ],
+  "wall_clock": 1791333311.5556722
+}

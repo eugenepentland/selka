@@ -1,0 +1,6 @@
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: build slot 1 after 20s (all 3 build slot(s) busy)
+{"lines": 4821, "old": {"cold_seconds": 0.031845, "warm_seconds": 0.00305, "edited_seconds": 0.015}, "validation": {"cold_seconds": 0.030625, "warm_seconds": 0.011124, "edited_seconds": 0.013621}, "typed": {"cold_seconds": 0.081378, "warm_seconds": 0.023791, "edited_seconds": 0.034755}, "gate": true}
+{"lines": 48101, "old": {"cold_seconds": 0.310703, "warm_seconds": 0.012993, "edited_seconds": 0.137913}, "validation": {"cold_seconds": 0.303054, "warm_seconds": 0.105792, "edited_seconds": 0.123029}, "typed": {"cold_seconds": 0.405311, "warm_seconds": 0.191805, "edited_seconds": 0.220101}, "gate": true}
+{"lines": 96197, "old": {"cold_seconds": 0.706709, "warm_seconds": 0.024471, "edited_seconds": 0.233153}, "validation": {"cold_seconds": 0.708902, "warm_seconds": 0.238374, "edited_seconds": 0.222686}, "typed": {"cold_seconds": 0.808903, "warm_seconds": 0.373327, "edited_seconds": 0.367127}, "gate": true}
+{"lines": 192389, "old": {"cold_seconds": 1.29584, "warm_seconds": 0.04585, "edited_seconds": 0.569424}, "validation": {"cold_seconds": 1.283304, "warm_seconds": 0.460372, "edited_seconds": 0.457744}, "typed": {"cold_seconds": 1.85731, "warm_seconds": 0.735306, "edited_seconds": 0.723093}, "gate": true}

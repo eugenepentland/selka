@@ -1,0 +1,26 @@
+{
+  "source_commit": "1ea31e32fbe5cf3e4e925124163b7e0e8673f3f1",
+  "oracles": {
+    "old": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s3/oracle/mylang",
+      "sha256": "d36658dbfb78d29213224532a13fd5ad8b7c0e290dbfb87613d9815678305c79"
+    },
+    "new": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/zig-out/bin/mylang-core",
+      "sha256": "d6cc14eeab01778210c3312e2b605a59ff31282673b88b8ff3aaa4b96a952e4f"
+    }
+  },
+  "cases_per_kind": 50,
+  "kinds": [
+    "s0",
+    "s1",
+    "rc",
+    "rebinding",
+    "iteration",
+    "dict",
+    "text",
+    "number",
+    "functions"
+  ],
+  "jobs": 3
+}

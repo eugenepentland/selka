@@ -1,0 +1,29 @@
+build-slot: all 1 gate slot(s) busy; waiting (0s so far)
+build-slot: all 1 gate slot(s) busy; waiting (60s so far)
+build-slot: all 1 gate slot(s) busy; waiting (120s so far)
+build-slot: all 1 gate slot(s) busy; waiting (180s so far)
+build-slot: all 1 gate slot(s) busy; waiting (241s so far)
+build-slot: all 1 gate slot(s) busy; waiting (301s so far)
+build-slot: all 1 gate slot(s) busy; waiting (361s so far)
+build-slot: all 1 gate slot(s) busy; waiting (421s so far)
+build-slot: all 1 gate slot(s) busy; waiting (481s so far)
+build-slot: all 1 gate slot(s) busy; waiting (541s so far)
+build-slot: all 1 gate slot(s) busy; waiting (601s so far)
+build-slot: all 1 gate slot(s) busy; waiting (661s so far)
+build-slot: all 1 gate slot(s) busy; waiting (721s so far)
+build-slot: all 1 gate slot(s) busy; waiting (782s so far)
+build-slot: all 1 gate slot(s) busy; waiting (842s so far)
+build-slot: all 1 gate slot(s) busy; waiting (902s so far)
+build-slot: all 1 gate slot(s) busy; waiting (962s so far)
+build-slot: all 1 gate slot(s) busy; waiting (1022s so far)
+build-slot: all 1 gate slot(s) busy; waiting (1082s so far)
+build-slot: all 1 gate slot(s) busy; waiting (1142s so far)
+build-slot: all 1 gate slot(s) busy; waiting (1202s so far)
+build-slot: all 1 gate slot(s) busy; waiting (1263s so far)
+build-slot: all 1 gate slot(s) busy; waiting (1323s so far)
+build-slot: gate slot 1 after 1368s (all 1 gate slot(s) busy)
+core-exclusive: all 3 build slots held; other-build wait=0.000s; gate wrapper excludes gate execution
+{"lines": 4821, "old": {"cold_seconds": 0.032565, "warm_seconds": 0.003075, "edited_seconds": 0.014734}, "validation": {"cold_seconds": 0.029794, "warm_seconds": 0.010974, "edited_seconds": 0.013491}, "typed": {"cold_seconds": 0.062761, "warm_seconds": 0.023645, "edited_seconds": 0.033858}, "gate": true}
+{"lines": 48101, "old": {"cold_seconds": 0.31402, "warm_seconds": 0.014534, "edited_seconds": 0.11426}, "validation": {"cold_seconds": 0.30738, "warm_seconds": 0.111083, "edited_seconds": 0.114414}, "typed": {"cold_seconds": 0.404346, "warm_seconds": 0.178775, "edited_seconds": 0.185402}, "gate": false}
+{"lines": 96197, "old": {"cold_seconds": 0.628206, "warm_seconds": 0.023353, "edited_seconds": 0.231057}, "validation": {"cold_seconds": 0.626277, "warm_seconds": 0.242036, "edited_seconds": 0.22882}, "typed": {"cold_seconds": 1.004383, "warm_seconds": 0.358739, "edited_seconds": 0.357337}, "gate": true}
+{"lines": 192389, "old": {"cold_seconds": 1.264351, "warm_seconds": 0.045536, "edited_seconds": 0.467102}, "validation": {"cold_seconds": 1.244887, "warm_seconds": 0.457303, "edited_seconds": 0.458571}, "typed": {"cold_seconds": 2.636808, "warm_seconds": 0.720619, "edited_seconds": 0.726045}, "gate": true}

@@ -1,0 +1,147 @@
+{
+  "source_commit": "b20cbfdc83a6f289fba99d568fe23d40aaae974f",
+  "root": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend",
+  "expected_steps": [
+    "test",
+    "test-qbe",
+    "test-qbe-build",
+    "fmt-check"
+  ],
+  "unit_shard_rss_limit_bytes": 2684354560,
+  "results": [
+    {
+      "build_summaries": [
+        "31/115 steps succeeded (1 failed)"
+      ],
+      "maxrss": [
+        {
+          "line": "|  +- compile test debug native success 2s MaxRSS:149M",
+          "display": "149M",
+          "bytes": 156237824.0,
+          "test_run": false
+        },
+        {
+          "line": "|  |  |  |     +- compile exe qbe-build-assets debug native cached 7ms MaxRSS:37M",
+          "display": "37M",
+          "bytes": 38797312.0,
+          "test_run": false
+        },
+        {
+          "line": "|  |  |  +- compile exe qbe fast native success 2s MaxRSS:103M",
+          "display": "103M",
+          "bytes": 108003328.0,
+          "test_run": false
+        },
+        {
+          "line": "|  |  |  +- compile exe board-trial debug native success 9s MaxRSS:439M",
+          "display": "439M",
+          "bytes": 460324864.0,
+          "test_run": false
+        },
+        {
+          "line": "|  |  |  +- compile exe schematic-svg debug native success 9s MaxRSS:439M",
+          "display": "439M",
+          "bytes": 460324864.0,
+          "test_run": false
+        },
+        {
+          "line": "|  |  |  +- compile exe mylang-io debug native success 9s MaxRSS:438M",
+          "display": "438M",
+          "bytes": 459276288.0,
+          "test_run": false
+        },
+        {
+          "line": "|  +- compile test debug native success 54s MaxRSS:853M",
+          "display": "853M",
+          "bytes": 894435328.0,
+          "test_run": false
+        },
+        {
+          "line": "|  +- compile test debug native success 1s MaxRSS:177M",
+          "display": "177M",
+          "bytes": 185597952.0,
+          "test_run": false
+        },
+        {
+          "line": "|  +- compile test debug native success 1s MaxRSS:179M",
+          "display": "179M",
+          "bytes": 187695104.0,
+          "test_run": false
+        },
+        {
+          "line": "|  +- compile exe native-cow-test debug native success 2s MaxRSS:115M",
+          "display": "115M",
+          "bytes": 120586240.0,
+          "test_run": false
+        },
+        {
+          "line": "|  +- compile exe native-heap-test debug native success 2s MaxRSS:115M",
+          "display": "115M",
+          "bytes": 120586240.0,
+          "test_run": false
+        },
+        {
+          "line": "|  +- compile exe native-arena-chunks-test debug native success 2s MaxRSS:115M",
+          "display": "115M",
+          "bytes": 120586240.0,
+          "test_run": false
+        },
+        {
+          "line": "|  +- compile exe error-trace-abi-test debug native success 2s MaxRSS:119M",
+          "display": "119M",
+          "bytes": 124780544.0,
+          "test_run": false
+        }
+      ],
+      "rss_overrun_notices": [],
+      "reported_admission_seconds": {
+        "gate": 0,
+        "build": 15
+      },
+      "errors": [
+        "missing or unsuccessful Build Summary",
+        "command exited 1"
+      ],
+      "step": "test",
+      "source_commit": "b20cbfdc83a6f289fba99d568fe23d40aaae974f",
+      "command": [
+        "zig",
+        "build",
+        "test",
+        "--summary",
+        "all"
+      ],
+      "wrapped_command": [
+        "scripts/build-slot.sh",
+        "gate",
+        "--",
+        "bash",
+        "-c",
+        "\"$@\"; result=$?; exit \"$result\"",
+        "--",
+        "scripts/build-slot.sh",
+        "build",
+        "--",
+        "/usr/bin/time",
+        "-f",
+        "%e",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/full-old-01/test-seconds.txt",
+        "zig",
+        "build",
+        "test",
+        "--summary",
+        "all"
+      ],
+      "exit": 1,
+      "command_seconds": 56.84,
+      "wall_including_admission_seconds": 86.43562064692378,
+      "admission_and_wrapper_seconds": 29.595620646923777,
+      "log": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/full-old-01/test.log",
+      "qualified": false
+    }
+  ],
+  "complete": false,
+  "qualified": false,
+  "error": "RuntimeError: test did not qualify: missing or unsuccessful Build Summary; command exited 1"
+}
