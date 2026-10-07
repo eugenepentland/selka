@@ -1,8 +1,10 @@
 # The front end after the new core: implementation plan, 2026-10-06
 
-Status: **decisions accepted 2026-10-06 (§2). Ready for Codex in three launches (below);
-the main waves start at the S5 exit.** Parts marked _finalize at the S5 exit_ are filled
-in then. The rationale, the measurements and the file:line facts are in the proposal,
+Status: **decisions accepted 2026-10-06 (§2), amended 2026-10-07 by the values-and-keys
+plan's AM1–AM3 (§2, marked AM). Ready for Codex in three launches (below); the main waves
+start at the S5 exit.** Parts marked _finalize at the S5 exit_ are filled in then. The
+companion plan is `docs/audits/values-keys-trap-search-plan-2026-10-07.md` (branch
+`claude/values-keys-plan`). The rationale, the measurements and the file:line facts are in the proposal,
 `docs/audits/frontend-plan-after-new-core-2026-10-06.md` ("the proposal"), with evidence
 in `experiments/frontend-plan-20261006/`.
 
@@ -88,9 +90,9 @@ agents write Python first.
 | **A1** | the `replace` builtin, both its record form `replace(r, f=v)` and its list form `replace(xs, i, v)` | `r.f = v`, `xs[i] = v` | `y = replace(r, f=v)` becomes `y = r` then `y.f = v`. Elsewhere, a fresh local is assigned before the statement. `s.replace(a, b)` on text is a different method and is untouched. |
 | **A2** | **dropped:** positional and named record construction both stay (see below) | | |
 | **A3** | `bit_and`, `bit_or`, `bit_xor`, `shift_left`, `shift_right` | `&`, `\|`, `^`, and new `<<`, `>>`, `<<=`, `>>=` | Rewrite to the operator, parenthesized. The new operators take Python's precedence (looser than `+`, tighter than `&`) and today's function semantics: the count has the operand's type, `<<` discards high bits, `>>` is arithmetic for signed and logical for unsigned, and a negative or too-large count traps `R_INVALID_SHIFT` (`E_CONSTANT_ARITHMETIC` for a constant). |
-| **A4** | `effects(...)` and `noio` clauses, on declarations, on `extern def` and on callback types; `W_DERIVED_EFFECTS` and `E_DERIVED_EFFECTS` | `noalloc` is the only effect annotation. Every other ceiling derives from parameter types, **including a callback type's from its own parameter types** | A clause that excludes `managed_allocation` from the derived ceiling becomes `noalloc`. Any other clause, and every `noio`, is deleted. |
-| **A5** | nothing; `noalloc` stays | | |
-| **A6** | `@requires`, `@ensures`, `@invariant` | `assert` | `@requires(e)` becomes `assert e` as the body's first statement. `@ensures` and `@invariant` have no mechanical fix (0 uses outside tests); their error names `assert`. |
+| **A4** (with AM2) | `effects(...)` and `noio` clauses, on declarations, on `extern def` and on function types; the `noalloc` clause; `W_DERIVED_EFFECTS` and `E_DERIVED_EFFECTS` | **no effect annotations.** Authority reaches a body only through its parameters. The attribute `@noalloc` on a declaration is the one allocation promise. | On a declaration, a clause that excludes `managed_allocation` from the derived ceiling, and every `noalloc` clause, becomes `@noalloc`. Any other clause, every `noio`, and every clause on a function type is deleted. |
+| **A5** (with AM2) | the `noalloc` clause becomes `@noalloc` (A4) | `@noalloc`, checked by the new core at build time (F2-C2) | — |
+| **A6** | **dropped (AM1):** `@requires`, `@ensures` and `@invariant` stay | | Trap search reads them (values-and-keys plan §3.4–§3.5). |
 | **A7** | the `module NAME` header, `E_MODULE_NAME`, and the headerless-entry restriction (`E_MODULE_HEADER`) | **the path is the name:** a file's module name is its path from the project root, without `.my`, with `/` read as `.`. The project root is the directory holding `mylang.json`, else the entry's directory. | Delete the header line. |
 | **A8** | `class` (legacy sharing mode), `with arena()`, `escape()` | value records; arenas already retired (N6) | None; 0 uses. Code deleted in F0. |
 | **A9** | `type X = Y` aliases | the type itself | Substitute `Y` at every use in the project, then delete the alias. |
@@ -100,6 +102,26 @@ agents write Python first.
 | **A13** | `sort` functions duplicating `sorted`, `.sort`, `min` and `max` | those; the module keeps binary search and the deduplication helpers | Rewrite the call; same mapping rule as A12. |
 | **A14** | the free-function form of a capability operation that also has a method form: `read_text(fs, p)`, `open(fs, p, mode)` and the rest of `docs/io.md`'s table, and the same duplicates on other capabilities | the method, `fs.read_text(p)`; `with fs.open(...)` stays, because streaming is a different operation (Go keeps both `os.ReadFile` and `os.Open`) | Rewrite to the method. |
 | **A15** | named `constraint` declarations | inline requirements; the builtin requirements and const lengths stay | Inline the constraint's requirements at each use. |
+| **A16** (AM3) | `domain D: base:` declarations, `wrap[D](v)` and `unwrap(d)` | `record D: value: base`, with the validating member as `@invariant(...)`; members become top-level functions in the module, and `private def` members module-private | `wrap[D](v)` becomes `D(value=v)` and `unwrap(d)` becomes `d.value`. The declarations are migrated by hand. |
+
+**AM1–AM3 (the user, 2026-10-07)** come from the values-and-keys plan's VK7–VK9:
+- **AM1 keeps contracts.** Trap search uses `@requires` to discard inputs and blame
+  callers, `@invariant` to filter generated records, and `@ensures` as a property.
+  `docs/contracts.md` states the rule for `@requires`, `Result`/`Option` and `assert`.
+- **AM2 deletes effect checking.** Authority reaches a body only through its parameters,
+  so after A4 the per-body check enforces nothing the types don't.
+  - **`@noalloc` is checked by the new core at build time, not by trap search** (the
+    user's change to VK8).
+  - The check runs over the whole program before optimization, so debug and release
+    agree. It follows every path through callees, and callees need no annotation.
+  - A call through a function value whose target the core cannot resolve counts as
+    allocating.
+  - A violation is the warning `W_NOALLOC_ALLOCATES`, naming the allocation site and the
+    call chain. `mylang lint --gate` blocks on it, and `check` never rejects for it.
+    That keeps VK4 (no whole-program proof obligations in `check`) and C2 (no call-graph
+    inference in the checker).
+- **AM3 adds A16.** It needs AM1, because `@invariant` is what keeps a domain's values
+  valid.
 
 **A2 is dropped (the user, 2026-10-06).** Positional and named construction both stay,
 as Python dataclasses allow. The evidence, found while writing this plan:
@@ -179,8 +201,8 @@ is the data for FE5's B3 and B4 decisions.
   - inlined calls;
   - vectorized loops, read from LLVM's optimization remarks. Where `zig cc` cannot
     produce remarks, the loops are reported as unknown.
-- **B6:** `noalloc` and the report share one definition of "allocates", so the report
-  and the check cannot disagree.
+- **B6:** the report and `@noalloc`'s build-time check (F2-C2) share one definition of
+  "allocates", so they cannot disagree.
 
 **Owns:** `src/core/` (a new `cost.zig` and the stats plumbing it reads) and the docs
 for the command.
@@ -213,7 +235,7 @@ for the command.
   are now rejected;
 - line deltas per file group.
 
-### F1. Part A and the format gate (about 15–21 h)
+### F1. Part A and the format gate (about 17–24 h)
 
 #### F1-0. Shared tools and baselines (coordinator; about 3–4 h)
 
@@ -242,14 +264,15 @@ for the command.
   - every corpus program's output under the pinned S5 compiler, for the migration check
     in §5.
 
-#### F1-S, F1-M, F1-E, F1-L (four agents in parallel, after F1-0)
+#### F1-S, F1-M, F1-E, F1-L, then F1-D (four agents in parallel after F1-0; F1-D takes the first free slot)
 
 | Package | Rows | Owns | Estimate |
 |---|---|---|---|
-| **F1-S** syntax and expressions | A1, A3, A6, A9, A10, A11, A15, the `lambda` narrowing | `parser.zig`, `lexer.zig`, the sema files for those builtins and operators, contract and invariant checking, alias resolution, `constraint_lookup` | 6–8 h |
+| **F1-S** syntax and expressions | A1, A3, A9, A10, A11, A15, the `lambda` narrowing | `parser.zig`, `lexer.zig`, the sema files for those builtins and operators, alias resolution, `constraint_lookup` | 5–7 h |
 | **F1-M** modules | A7 | project loading and import resolution, `mylang run`'s project detection, the header rule in the parser (coordinated with F1-S) | 5–7 h |
-| **F1-E** effects | A4 | effect-clause parsing and checking in `effects.zig`, callback-type ceilings, `docs/effects.md`, `docs/functions.md`, the `effects(output)` line in `CLAUDE.md` | 4–6 h |
+| **F1-E** effects | A4, A5 | effect-clause parsing in the parser and `effects.zig`, function-type clauses, the `@noalloc` attribute (still checked by today's rule until F2-C2), `docs/effects.md`, `docs/functions.md`, the `effects(output)` line in `CLAUDE.md` | 4–6 h |
 | **F1-L** library | A12, A13, A14 | `src/stdlib/strings.my` and `sort.my`, the capability free-function builtins, `docs/io.md`, `docs/standard-library.md` | 3–5 h |
+| **F1-D** domains (AM3) | A16 | domain declarations in the parser and sema, `src/domain_codecs.zig`, `examples/domains.my`, `examples/domain-codecs/`, `docs/domains.md` | 4–6 h; starts when the first of the other four finishes, to hold the four-agent limit |
 
 **Common to the four:**
 - **Each migrates every live source with its fixes,** through `mylang fix` and the
@@ -268,6 +291,12 @@ for the command.
     module.
 - **F1-E:** if a fix makes an accepted program reject, stop and report. The rewrite
   only widens ceilings, so that must not happen.
+- **F1-D:**
+  - first inventory every domain declaration in the live sources, Lox and EDA, with
+    their members and codecs;
+  - a domain's one-field record must have the same layout and cost as its field in the
+    core: check it with FB1's report and `dump-ir` on the migrated examples;
+  - the removed spelling is `E_DOMAIN_REMOVED`, naming the record form.
 - **F1-L:** a function is removed only when a property test over random inputs shows the
   replacement gives the same result on every input. For text, that includes non-ASCII
   input; for floats, NaN and signed zero. Otherwise the function stays.
@@ -292,31 +321,48 @@ for the command.
   - C1 is reported against F1-0's baseline.
 - **The spelling counts:** 0 for every removed spelling in live sources.
 
-### F2. Local analyses and stable type identity (about 12–16 h)
+### F2. Local analyses and stable type identity (about 13–18 h)
 
-#### F2-C2. Signature-only analyses (one agent; about 8–10 h)
+#### F2-C2. Signature-only analyses, without effect checking (one agent; about 10–12 h)
 
-1. **P4 first.** Implement proposal §5 C2 behind a flag. Run it over `tests/lang`, the
-   rows, Lox, EDA and stdlib, and list every program whose verdict changes.
-   - **Stop and report** if any accepted program is rejected for a fact a signature
-     cannot state.
+1. **P4 first.** Implement proposal §5 C2 behind a flag, **with effect checking removed
+   (AM2)**. Run it over `tests/lang`, the rows, Lox, EDA and stdlib, and list every
+   program whose verdict changes.
+   - The only expected changes are programs that relied on `noalloc` being checked by
+     the checker. The build-time `@noalloc` check (step 3) covers them.
+   - **Stop and report** if any other accepted program changes verdict, or if a program
+     is rejected for a fact a signature cannot state.
    - The fallback, if the user takes it, keeps inferred facts as diagnostics only,
      never in hashes.
 2. **Then make it the default and delete:**
    - the call-graph passes;
+   - the per-body effect check (`E_EFFECT_BOUND`), the inferred effect sets and the
+     callback-type ceilings;
    - `return_origin`, `borrow_origin` and `caller_storage`;
    - the inferred fields in `module_interface.interfaceHash` and
-     `semantic_key.contractDigest`, which brings them in line with `docs/effects.md`;
+     `semantic_key.contractDigest`;
    - `core/build.zig:202`'s refusal when inferred and declared mutation sets differ.
      The core reads `declared_mutates` only.
-   - Contract purity went with A6.
+   - **`E_UNUSED_CAPABILITY` stays,** moved into sema's binding-usage check.
+   - **Contract purity** (`CONTRACT-PURE-1`, `effects.zig:805`) becomes a local rule:
+     a contract condition passes no capability and no `mut` argument.
+   - **`docs/effects.md`** is rewritten as the capability rules: authority through
+     parameters, `E_UNUSED_CAPABILITY` and `@noalloc`.
+3. **The build-time `@noalloc` check in the new core** (AM2, §2): whole-program, before
+   optimization, through every callee. It reports `W_NOALLOC_ALLOCATES` with the site and
+   the call chain, the lint gate blocks on it, and FB1's definition of "allocates" is
+   used.
 
-**Owns:** `effects.zig`, `origins.zig`, `module_interface.zig`'s hash,
-`semantic_key.zig`'s digest, and `core/build.zig`'s mutation read.
+**Owns:** `effects.zig`, `origins.zig`, sema's binding-usage check,
+`module_interface.zig`'s hash, `semantic_key.zig`'s digest, `core/build.zig`'s mutation
+read, the core's `@noalloc` check (a new `src/core/noalloc.zig`) and `docs/effects.md`.
 
 **Exit:**
 - P4's list reviewed;
-- an inferred-effect change in a body no longer changes its callers' keys (a test);
+- an effect change in a body no longer changes its callers' keys (a test);
+- `@noalloc` tests: an allocation directly, in a callee two calls down, on a cold error
+  path, and through an unresolved function value, each warned; an allocation-free
+  function, not warned;
 - the check budget held.
 
 #### F2-C5. Stable type identity (one agent; about 6–8 h; parallel with C2)
@@ -445,13 +491,13 @@ A follow-up plan implements those decisions.
 |---|---|---|---|
 | Early | FP2; FB1 with P1 | now; the S4 exit | 2–3 h; 4–6 h |
 | F0 | F0 | the S5 exit and the user's go | 4–6 h |
-| F1 | F1-0, then F1-S, F1-M, F1-E, F1-L in parallel, then F1-F and F1-X | F0 | 15–21 h |
-| F2 | F2-C2 and F2-C5 in parallel | F1 | 12–16 h |
+| F1 | F1-0, then F1-S, F1-M, F1-E, F1-L in parallel and F1-D in the first free slot, then F1-F and F1-X | F0 | 17–24 h |
+| F2 | F2-C2 and F2-C5 in parallel | F1 | 13–18 h |
 | F3 | F3-0, then F3-C1, then F3-C3 | F2 | 22–31 h |
 | F4 | F4-C4 and F4-C6 in parallel | F3 | 12–16 h |
 | F5 | B2, B5, B7; then the user's decisions | F4 and FP1 | 5–8 h |
 
-**Total, F0 to F5:** about 70–100 hours of Codex work, three to four times S4's
+**Total, F0 to F5:** about 75–105 hours of Codex work, three to four times S4's
 estimate, plus a stop at every wave. **F3-C1 is the widest range:** it touches every
 construct, and the `dump-ir` differential is what keeps it safe.
 

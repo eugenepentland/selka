@@ -92,8 +92,8 @@ Counts are lines in three application corpora: the EDA stage-1 port (`eda-bench`
 | A2 | Named and positional record construction | **dropped 2026-10-06; both stay** (§7) | 391 vs 7 | 48 vs 0 | 16 vs 0 | nothing |
 | A3 | `& \| ^` operators and `bit_and`/`bit_or`/`bit_xor`/`shift_left`/`shift_right`; `<<`/`>>` rejected | operators, adding `<<` and `>>` | 0 vs 52 | 0 vs 9 | 0 vs 6 | five prelude functions |
 | A4 | `effects(...)`, `noio` clauses and the derived ceiling | derived ceiling only | 0 | 0 | 69 + 4 | clause parsing, `W_DERIVED_EFFECTS`/`E_DERIVED_EFFECTS` |
-| A5 | `noalloc` | keep, as the one "this allocates nothing" assertion (§3.2) | 0 | 0 | 4 | nothing |
-| A6 | `@requires`, `@ensures`, `@invariant` and `assert` | `assert` | 0 | 0 | 0 | contract and invariant checking |
+| A5 | `noalloc` | **amended 2026-10-07 (AM2):** the attribute `@noalloc`, checked by the new core at build time | 0 | 0 | 4 | the checker's `noalloc` rule |
+| A6 | `@requires`, `@ensures`, `@invariant` and `assert` | **reversed 2026-10-07 (AM1):** contracts stay, because trap search reads them | 0 | 0 | 0 | nothing |
 | A7 | `module name` header that must equal the file name | the path is the name (lever L3) | 182 | 26 | 25 | header parsing, `E_MODULE_NAME` |
 | A8 | `class` (legacy sharing mode), `with arena()`, `escape()` | value records; arenas already retired (N6) | 0 | 0 | 0 | the legacy mode, arena syntax |
 | A9 | `type X = Y` aliases | none | 0 | 0 | 0 | alias resolution |
@@ -146,10 +146,15 @@ ones where the data says it is cheap to do.**
 
 - Python syntax, indentation, `def`, `record`, `union`, `match`, `Result` with `?`,
   `Option` with `is None` narrowing and `unwrap_or`, tuples, keyword-only parameters.
-- `mut` at the parameter and at the call site; capability parameters; effects derived
-  from the signature.
+- `mut` at the parameter and at the call site; capability parameters, which are the only
+  way authority reaches a body (effect checking is deleted, AM2).
 - Value semantics with one-count RC; no classes, closures, exceptions or methods.
-- `noalloc`, `assert`, `debug(...)`.
+- `@noalloc`, `assert`, `debug(...)`, and the contracts `@requires`, `@ensures` and
+  `@invariant` (AM1).
+
+_Amended 2026-10-07 by the values-and-keys plan (AM1–AM3,
+`docs/audits/values-keys-trap-search-plan-2026-10-07.md`); the implementation plan's §2
+has the details._
 
 ## 5. Part C: front-end structure
 
@@ -237,7 +242,8 @@ Lox and EDA.
 - **Effects.** A call contributes the callee's derived ceiling, not its inferred body
   set. The per-body check against the caller's ceiling (`E_EFFECT_BOUND`) and
   `E_UNUSED_CAPABILITY` stay. `noalloc` is checked the same way: callees must be
-  `noalloc`.
+  `noalloc`. _Amended 2026-10-07 (AM2):_ effect checking is deleted instead, and
+  `E_UNUSED_CAPABILITY` stays. `@noalloc` is checked by the new core at build time.
 - **CALLBACK-SLOT-1.** Slot ceilings (`effects.zig:862-869`) use the callback type's
   declared ceiling.
 - **Contract purity** (`effects.zig:810`) goes with A6.
