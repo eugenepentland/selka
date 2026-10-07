@@ -252,6 +252,21 @@ test "native test step and wall bounds are honored while force bypasses reuse" {
     try expectStatus(context, try context.run("loop.my", &.{ "--max-steps", "0", "--timeout-ms", "50" }), 1);
 }
 
+// spec: NEW-CORE-S4-STEPS-1
+test "the default step budget charges one step per executed block, like the old core's dispatch" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const a = arena.allocator();
+    const context: Context = .{ .arena = a, .root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", a) };
+    try context.write("long.my", "module long\n\ndef test_long() -> bool:\n    values: list[int] = []\n    for i in range(200000):\n        values.append(i * 3 + 1)\n    return len(values) == 200000\n");
+    try expectStatus(context, try context.run("long.my", &.{}), 0);
+    const limited = try context.run("long.my", &.{ "--max-steps", "1000" });
+    try expectStatus(context, limited, 1);
+    try verdict(limited.report, "long::test_long", "failed");
+}
+
 // spec-case: NEW-CORE-S4-TEST-2
 test "directory assertion detects an omitted test verdict" {
     try std.testing.expectError(error.MissingTestVerdict, verdict(.null, "missing", "passed"));

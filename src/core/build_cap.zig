@@ -9,6 +9,8 @@ pub const Scope = struct { owner: ir.Ref, depth: usize };
 
 const file_access_symbol = "myl_core_file_access";
 const stream_write_symbol = "myl_core_stream_write";
+const stream_write_bytes_symbol = "myl_core_stream_write_bytes";
+const stream_write_buffer_symbol = "myl_core_stream_write_buffer";
 
 /// Bind capability lowering to one concrete function builder.
 pub fn Lower(comptime Context: type) type {
@@ -25,7 +27,7 @@ pub fn Lower(comptime Context: type) type {
                 .environment_only => |only| c.effectCall("myl_core_environment_only", &.{ .capability, .bytes }, .capability, &.{ try c.expression(only.capability), try byteRequest(c, only.names, span) }, span),
                 .environment_names => |cap| c.effectCall("myl_core_environment_names", &.{.capability}, ty, &.{try c.expression(cap)}, span),
                 .environment_get => |get| environmentGet(c, node, get, span),
-                .stream_write => |write| c.effectCall(stream_write_symbol, &.{ .cap, .str }, .void, &.{ try c.expression(write.stream), try c.expression(write.text) }, span),
+                .stream_write => |write| streamWrite(c, write, span),
                 .file_access => |file| fileAccess(c, node, file, span),
                 .file_method => |file| fileMethod(c, node, file, span),
                 .acquire_resource => |acquire| acquireResource(c, node, acquire, span),
@@ -33,6 +35,22 @@ pub fn Lower(comptime Context: type) type {
                 .resource_io => |io| resourceIo(c, node, io, span),
                 else => c.mb.refuse(@tagName(node.data), span),
             };
+        }
+
+        /// `Stream.write` takes `str`, `bytes` or `byte_buffer`; each gets a helper declared
+        /// with its own type, since one program may write all three (each is one
+        /// length-prefixed block, written as is).
+        fn streamWrite(c: Context, write: typed.StreamWrite, span: u32) Error!ir.Ref {
+            const stream = try c.expression(write.stream);
+            const text = try c.expression(write.text);
+            const ty = try c.mb.mapType(c.nodeOf(write.text).ty, span);
+            const symbol = switch (ty) {
+                .str => stream_write_symbol,
+                .bytes => stream_write_bytes_symbol,
+                .byte_buffer => stream_write_buffer_symbol,
+                else => return c.mb.refuse("stream write argument", span),
+            };
+            return c.effectCall(symbol, &.{ .cap, ty }, .void, &.{ stream, text }, span);
         }
 
         fn narrow(c: Context, symbol: []const u8, capability: typed.NodeId, name: typed.NodeId, span: u32) Error!ir.Ref {

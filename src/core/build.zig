@@ -302,7 +302,6 @@ const ModuleBuilder = struct {
     fn stored(self: *ModuleBuilder, ty: typed.Type, boxed: bool, span: u32) Error!ir.Type {
         if (self.viewType(ty)) return self.refuse("aggregate storage of live dictionary views", span);
         const mapped = try self.mapType(ty, span);
-        if (mapped == .cap) return self.refuse("record field type", span);
         if (!boxed or mapped == .void) return mapped;
         return self.module.intern(self.allocator, .{ .box = mapped });
     }

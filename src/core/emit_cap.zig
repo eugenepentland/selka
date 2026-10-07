@@ -47,5 +47,7 @@ fn effectHelper(name: []const u8) bool {
     for ([_][]const u8{ "myl_core_cap_", "myl_core_file_", "myl_core_resource_", "myl_core_environment_", "myl_core_host_", "myl_core_clock_" }) |prefix| {
         if (std.mem.startsWith(u8, name, prefix)) return true;
     }
-    return std.mem.eql(u8, name, "myl_core_external_read") or std.mem.eql(u8, name, "myl_core_stand_in") or std.mem.eql(u8, name, "myl_core_stream_write");
+    const exact = [_][]const u8{ "myl_core_external_read", "myl_core_stand_in", "myl_core_stream_write", "myl_core_stream_write_bytes", "myl_core_stream_write_buffer" };
+    for (exact) |known| if (std.mem.eql(u8, name, known)) return true;
+    return false;
 }

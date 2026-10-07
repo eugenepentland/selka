@@ -1,5 +1,6 @@
-//! Native test step bounds use existing Core calls. A block charges the number
-//! of original Core instructions it executes; generated adapters are not charged.
+//! Native test step bounds use existing Core calls. Each executed block of an
+//! original function charges one step, as the old core charges one per dispatch
+//! (docs/tooling/runtime-budgets.md); generated adapters are not charged.
 const std = @import("std");
 const ir = @import("ir.zig");
 const tools = @import("test_builder.zig");
@@ -18,7 +19,7 @@ pub fn instrument(a: std.mem.Allocator, module: *ir.Module, originals: usize, co
         } else if (index < originals and tick != null) {
             for (b.function.blocks.items, 0..) |block, block_index| {
                 if (block.insts.items.len == 0) continue;
-                const cost = try b.constant(.u64, @intCast(block.insts.items.len));
+                const cost = try b.constant(.u64, 1);
                 try prepend(&b, @fromBackingInt(@intCast(block_index)), module, tick.?, &.{cost});
             }
         }

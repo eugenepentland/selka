@@ -1200,6 +1200,10 @@ myl_block *myl_core_environment_names(myl_block *cap){
     return list;
 }
 void myl_core_stream_write(int64_t fd,myl_block *text){myl_core_print_str(fd,text);}
+/* `Stream.write(bytes)`: the same length-prefixed block as `str`, declared with its own type. */
+void myl_core_stream_write_bytes(int64_t fd,myl_block *data){myl_core_print_str(fd,data);}
+/* `Stream.write(byte_buffer)`: the buffer's current octets. */
+void myl_core_stream_write_buffer(int64_t fd,myl_block *buffer){myl_core_print_str(fd,buffer);}
 int64_t myl_core_s3_token_roundtrip(int64_t token){return token;}
 
 myl_block *myl_core_io_bytes_from_u8_list(myl_block *list){return core_io_string(block_data(list),(size_t)list->len,0);}
