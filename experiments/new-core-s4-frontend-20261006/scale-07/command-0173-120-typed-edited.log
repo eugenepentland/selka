@@ -1,0 +1,22 @@
+$ taskset -c 10 /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/rf/bin/mylang-core check /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/scale-07/synthetic-120/main.my --cache-dir /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/scale-07/cache-120-typed --stats --timings=json --typed
+{"version":"core-check-work-v1","typed":true,"functions":723,"work":{"checked":1,"reused":722,"summaries":721,"syntax_hits":2,"syntax_misses":1,"stored":1,"damaged":0}}
+{"version":"phase-timings-v1","kind":"timing","tool":"compiler","name":"load","duration_ns":1318219,"inclusive":false,"counts":{"modules":3,"source_bytes":113052,"typed_nodes":15387},"exit_code":0}
+{"version":"phase-timings-v1","kind":"timing","tool":"compiler","name":"syntax_replay","duration_ns":220028,"inclusive":false,"counts":{"modules":3,"source_bytes":113052,"typed_nodes":15387},"exit_code":0}
+{"version":"phase-timings-v1","kind":"timing","tool":"compiler","name":"syntax_parse","duration_ns":3220929,"inclusive":false,"counts":{"modules":3,"source_bytes":113052,"typed_nodes":15387},"exit_code":0}
+{"version":"phase-timings-v1","kind":"timing","tool":"compiler","name":"declarations_interfaces","duration_ns":222898,"inclusive":false,"counts":{"modules":3,"source_bytes":113052,"typed_nodes":15387},"exit_code":0}
+{"version":"phase-timings-v1","kind":"timing","tool":"compiler","name":"merge","duration_ns":828442,"inclusive":false,"counts":{"modules":3,"source_bytes":113052,"typed_nodes":15387},"exit_code":0}
+{"version":"phase-timings-v1","kind":"timing","tool":"compiler","name":"dependency_key_preparation","duration_ns":2153355,"inclusive":false,"counts":{"modules":3,"source_bytes":113052,"typed_nodes":15387},"exit_code":0}
+{"version":"phase-timings-v1","kind":"timing","tool":"compiler","name":"retention_store_io","duration_ns":15926177,"inclusive":false,"counts":{"modules":3,"source_bytes":113052,"typed_nodes":15387},"exit_code":0}
+{"version":"phase-timings-v1","kind":"timing","tool":"compiler","name":"symbolic_templates","duration_ns":4567,"inclusive":false,"counts":{"modules":3,"source_bytes":113052,"typed_nodes":15387},"exit_code":0}
+{"version":"phase-timings-v1","kind":"timing","tool":"compiler","name":"stand_in_planning","duration_ns":296807,"inclusive":false,"counts":{"modules":3,"source_bytes":113052,"typed_nodes":15387},"exit_code":0}
+{"version":"phase-timings-v1","kind":"timing","tool":"compiler","name":"ordinary_body_replay","duration_ns":3711016,"inclusive":false,"counts":{"modules":3,"source_bytes":113052,"typed_nodes":15387},"exit_code":0}
+{"version":"phase-timings-v1","kind":"timing","tool":"compiler","name":"fresh_body_check","duration_ns":50310,"inclusive":false,"counts":{"modules":3,"source_bytes":113052,"typed_nodes":15387},"exit_code":0}
+{"version":"phase-timings-v1","kind":"timing","tool":"compiler","name":"entry_adaptation","duration_ns":98161,"inclusive":false,"counts":{"modules":3,"source_bytes":113052,"typed_nodes":15387},"exit_code":0}
+{"version":"phase-timings-v1","kind":"timing","tool":"compiler","name":"effect_origin_passes","duration_ns":1170977,"inclusive":false,"counts":{"modules":3,"source_bytes":113052,"typed_nodes":15387},"exit_code":0}
+{"version":"phase-timings-v1","kind":"timing","tool":"compiler","name":"domain_codec_validation","duration_ns":105,"inclusive":false,"counts":{"modules":3,"source_bytes":113052,"typed_nodes":15387},"exit_code":0}
+{"version":"phase-timings-v1","kind":"timing","tool":"compiler","name":"warning_derivation","duration_ns":3191,"inclusive":false,"counts":{"modules":3,"source_bytes":113052,"typed_nodes":15387},"exit_code":0}
+{"version":"phase-timings-v1","kind":"timing","tool":"compiler","name":"check_summaries","duration_ns":41933,"inclusive":false,"counts":{"modules":3,"source_bytes":113052,"typed_nodes":15387},"exit_code":0}
+{"version":"phase-timings-v1","kind":"timing","tool":"compiler","name":"check","duration_ns":25067759,"inclusive":true,"counts":{"modules":3,"source_bytes":113052,"typed_nodes":15387},"exit_code":0}
+{"version":"phase-timings-v1","kind":"timing","tool":"compiler","name":"total","duration_ns":31328864,"inclusive":true,"counts":{"modules":3,"source_bytes":113052,"typed_nodes":15387},"exit_code":0}
+
+exit=0 elapsed_seconds=0.034059414
