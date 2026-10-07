@@ -1,0 +1,3 @@
+$ .mylang-cache/s4-v/immutable-3c86c/mylang-core build /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/test/core/branch_mixed.my -o /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/branch_mixed_new --release --cache-dir /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/cache/new --link /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/benchmarks/runtime/ports/native_clock.c --emit-llvm /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/llvm/branch_mixed.ll
+
+exit=0
