@@ -2036,7 +2036,15 @@ const FnBuilder = struct {
         return build_text.operation(@TypeOf(self), self, operation, ty, span);
     }
 
-    fn bufferOperation(self: *FnBuilder, operation: anytype, ty: ir.Type, span: u32, out: ?*?Place) Error!ir.Ref {
+    fn bufferOperation(self: *FnBuilder, operation: BufferOperation, ty: ir.Type, span: u32, out: ?*?Place) Error!ir.Ref {
+        const result = try self.bufferOperationRaw(operation, ty, span, out);
+        // A length is `u64` in the IR; a `len()` of a view or buffer typed `int` converts it,
+        // as the plain `length` node does.
+        if (operation.kind != .length or result == .none or ty == .void or self.typeOfRef(result) == ty) return result;
+        return self.emit(.{ .op = .convert, .ty = ty, .a = result, .check = .exact, .span = span });
+    }
+
+    fn bufferOperationRaw(self: *FnBuilder, operation: BufferOperation, ty: ir.Type, span: u32, out: ?*?Place) Error!ir.Ref {
         const kind = operation.kind;
         const owner = operation.owner;
         const argument_nodes = operation.arguments;
