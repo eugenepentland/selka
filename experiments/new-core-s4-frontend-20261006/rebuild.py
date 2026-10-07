@@ -11,6 +11,7 @@ import json
 import os
 from pathlib import Path
 import subprocess
+import tempfile
 import time
 
 
@@ -30,9 +31,10 @@ def main():
     if len(candidates) != 1:
         parser.error(f"expected one matching private compile artifact, found {len(candidates)}")
     artifact = candidates[0]
-    backup = artifact.with_name("mylang-core.s4-rebuild-backup")
-    if backup.exists():
-        parser.error("a previous rebuild backup exists; retain it before proceeding")
+    # Zig owns and may replace complete o/h directories during recompilation.
+    # Recovery copies must live outside those managed namespaces.
+    staging = tempfile.TemporaryDirectory(prefix="s4-core-rebuild-", dir=root / ".mylang-cache/s4-frontend")
+    backup = Path(staging.name) / "mylang-core"
     artifact.rename(backup)
     manifests = [path for path in (root / ".zig-cache/h").glob("*.txt")
                  if "src/core/main.zig" in path.read_text(errors="replace")]
@@ -41,7 +43,7 @@ def main():
         parser.error("no private core compile manifests found")
     moved = []
     for manifest in manifests:
-        saved = manifest.with_name(manifest.name + ".s4-rebuild-backup")
+        saved = Path(staging.name) / manifest.name
         if saved.exists():
             for original_manifest, saved_manifest in moved:
                 saved_manifest.replace(original_manifest)
@@ -69,6 +71,7 @@ def main():
         return 0 if report["qualified"] else 1
     finally:
         if result is None or result.returncode:
+            artifact.parent.mkdir(parents=True, exist_ok=True)
             backup.replace(artifact)
             for manifest, saved in moved:
                 saved.replace(manifest)
@@ -76,6 +79,7 @@ def main():
             backup.unlink()
             for _, saved in moved:
                 saved.unlink()
+        staging.cleanup()
 
 
 if __name__ == "__main__":
