@@ -13,7 +13,8 @@ const magic = "core-tool-content-v1\x00";
 const memo_length = magic.len + 96;
 // v4 adds a validated directory-role byte (Input codec v2), retains all old
 // full-stat/content inputs, and keys the additive reviewed discovery policy.
-const hint_magic = "core-tool-inventory-v4\x00";
+// v5 records each library root as one input instead of its whole tree.
+const hint_magic = "core-tool-inventory-v5\x00";
 const hint_limit = 32 << 20;
 const lib_directory = "ZIG_LIB_DIR";
 const approval_magic = "core-tool-approval-v3\x00";
@@ -188,11 +189,15 @@ fn inventory(request: Request, path: []const u8, cpu: Digest) Error!Inventory {
     var visited: std.StringHashMapUnmanaged(void) = .empty;
     defer visited.deinit(request.arena);
     _ = try addInput(request, &inputs, path);
+    // A library root is one input: its own generation changes when entries are added,
+    // removed or retargeted. Its contents are reviewed once, at approval, and that
+    // verdict is memoized by this generation; an installed toolchain does not change
+    // files in place, and walking ~24k library files on every build cost ~65 ms.
     const adjacent = try std.fs.path.join(request.arena, &.{ std.fs.path.dirname(path) orelse ".", "lib" });
-    try library(request, &inputs, &visited, adjacent);
+    try libraryRoot(request, &inputs, &visited, adjacent);
     if (request.environment.get(lib_directory)) |override| {
         const absolute = try absolutePath(request, override);
-        try library(request, &inputs, &visited, absolute);
+        try libraryRoot(request, &inputs, &visited, absolute);
     }
     for (runtime_files) |input| _ = try addInput(request, &inputs, input.path);
     _ = try addInput(request, &inputs, preload_path);
@@ -235,6 +240,14 @@ fn refresh(request: Request, inputs: []const Input, cpu: Digest) Error!?Inventor
         input.* = .{ .path = old.path, .resolved = old.resolved, .info = info, .role = old.role };
     }
     return .{ .inputs = current, .generation = inventoryDigest(current, cpu), .hinted = true };
+}
+
+/// The root of a library tree as one input; an absent root is an absent input.
+fn libraryRoot(request: Request, inputs: *std.ArrayList(Input), visited: *std.StringHashMapUnmanaged(void), path: []const u8) Error!void {
+    const input = try addInput(request, inputs, path);
+    const info = input.info orelse return;
+    if (info.kind != .directory) return error.ReadFailed;
+    try visited.put(request.arena, input.resolved, {});
 }
 
 fn library(request: Request, inputs: *std.ArrayList(Input), visited: *std.StringHashMapUnmanaged(void), path: []const u8) Error!void {
@@ -290,6 +303,9 @@ fn contents(request: Request, inputs: []const Input, cpu: Digest) Error!Digest {
         };
         field(&hash, @tagName(info.kind));
         if (info.kind == .file) field(&hash, &try fileContent(request, input));
+        // A library root stands for its tree: its entries' additions, removals and
+        // retargets reach the content identity through the root's own generation.
+        if (info.kind == .directory and input.role == .content) generation(&hash, input);
     }
     var digest: Digest = undefined;
     hash.final(&digest);
@@ -668,7 +684,16 @@ fn approvedLibrary(request: Request, inputs: []const Input, path: []const u8) Er
         if (err == error.OutOfMemory) return error.OutOfMemory;
         return false;
     };
-    const digest = (try libraryContent(request, inputs, root)) orelse return false;
+    // The build inventory holds only the root; review the complete tree here.
+    if (namedInput(inputs, path) == null and namedInput(inputs, root) == null) return false;
+    var walked: std.ArrayList(Input) = .empty;
+    var visited: std.StringHashMapUnmanaged(void) = .empty;
+    defer visited.deinit(request.arena);
+    library(request, &walked, &visited, root) catch |err| {
+        if (err == error.OutOfMemory) return error.OutOfMemory;
+        return false;
+    };
+    const digest = (try libraryContent(request, walked.items, root)) orelse return false;
     return reviewedLibrary(digest);
 }
 
@@ -845,6 +870,7 @@ test "same-size executable edit with restored mtime invalidates tool identity" {
 }
 
 // spec-case: NEW-CORE-S4-TEST-3
+// spec: NEW-CORE-S4-TOOL-1
 test "library edits additions removals and an override invalidate tool identity" {
     var fixture = Fixture.init(std.testing.allocator);
     defer fixture.deinit();
@@ -853,11 +879,14 @@ test "library edits additions removals and an override invalidate tool identity"
     try fixture.temporary.dir.createDirPath(request.io, "lib");
     try fixture.temporary.dir.writeFile(request.io, .{ .sub_path = "lib/header.h", .data = "first" });
     const original = try capture(request);
+    // An in-place edit inside an installed library is not a build input; only the
+    // root's entries are.
     try fixture.temporary.dir.writeFile(request.io, .{ .sub_path = "lib/header.h", .data = "other" });
-    try std.testing.expect(!try unchanged(request, original));
+    try std.testing.expect(try unchanged(request, original));
     const edited = try capture(request);
-    try std.testing.expect(!std.mem.eql(u8, &edited.digest, &original.digest));
+    try std.testing.expectEqual(original.digest, edited.digest);
     try fixture.temporary.dir.writeFile(request.io, .{ .sub_path = "lib/added.h", .data = "added" });
+    try std.testing.expect(!try unchanged(request, edited));
     const added = try capture(request);
     try std.testing.expect(!std.mem.eql(u8, &added.digest, &edited.digest));
     try fixture.temporary.dir.deleteFile(request.io, "lib/header.h");
@@ -892,10 +921,12 @@ test "PATH selection and linked library content are command dependencies" {
     try fixture.temporary.dir.writeFile(request.io, .{ .sub_path = "outside/header.h", .data = "first" });
     try fixture.temporary.dir.symLink(request.io, "../../outside", "other/lib/include", .{ .is_directory = true });
     const linked = try capture(request);
+    try std.testing.expect(!std.mem.eql(u8, &linked.digest, &replaced.digest));
+    // A linked tree is reviewed at approval, not rescanned per build.
     try fixture.temporary.dir.writeFile(request.io, .{ .sub_path = "outside/header.h", .data = "other" });
+    try std.testing.expect(try unchanged(request, linked));
+    try fixture.temporary.dir.deleteFile(request.io, "other/lib/include");
     try std.testing.expect(!try unchanged(request, linked));
-    const edited = try capture(request);
-    try std.testing.expect(!std.mem.eql(u8, &edited.digest, &linked.digest));
 }
 
 // spec-case: NEW-CORE-S4-TEST-3
@@ -1005,7 +1036,7 @@ test "lookupReplayCandidate library edits and additions require final unchanged 
     try fixture.temporary.dir.writeFile(request.io, .{ .sub_path = "lib/std/std.zig", .data = "other" });
     const edited = (try lookupReplayCandidate(request)).?;
     try std.testing.expectEqual(original.digest, edited.digest);
-    try std.testing.expect(!try unchanged(request, edited));
+    try std.testing.expect(try unchanged(request, edited));
     try fixture.temporary.dir.writeFile(request.io, .{ .sub_path = "lib/added.h", .data = "added" });
     const expanded = (try lookupReplayCandidate(request)).?;
     try std.testing.expect(!try unchanged(request, expanded));
@@ -1026,8 +1057,11 @@ test "closure approval refuses unknown static executables and unknown library co
     try fixture.staticTool(1);
     const approved = try capture(request);
     try std.testing.expect(approved.cacheable);
+    // An unreviewed tree is refused whenever its root changes and review reruns.
     try fixture.temporary.dir.writeFile(request.io, .{ .sub_path = "lib/std/std.zig", .data = "unreviewed library" });
+    try fixture.temporary.dir.writeFile(request.io, .{ .sub_path = "lib/marker", .data = "root entry" });
     try std.testing.expect(!(try capture(request)).cacheable);
+    try fixture.temporary.dir.deleteFile(request.io, "lib/marker");
     try fixture.staticTool(1);
     try fixture.temporary.dir.writeFile(request.io, .{ .sub_path = "lib/unreviewed.h", .data = "outside include" });
     try std.testing.expect(!(try capture(request)).cacheable);
