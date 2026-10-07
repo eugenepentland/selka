@@ -647,16 +647,19 @@ cached integers::test_width_conversions
 
 `mylang test --affected --against REF` narrows a run to the tests that reach a
 declaration whose own source lines changed since `REF`. It reads the changed
-lines of every `.my` file from one `git diff` in the entry file's own
-repository (plus `git ls-files --others` for files not yet added, which count as
-changed throughout) and maps each changed line onto the top-level declaration
-that owns it, by indentation: a line inside a function or constant changes that
+lines of every `.my` file from one `git diff` under the project root (plus
+`git ls-files --others` for files not yet added, which count as changed
+throughout) and maps each changed line onto the top-level declaration that owns
+it, by indentation: a line inside a function or constant changes that
 declaration, and a line anywhere else — the module header, an import, a record,
 a domain — changes every declaration of the module. A test then runs only when
-a changed declaration is in the dependency closure the run already derives to
-key the test's receipt, so the selection costs a `git diff` and a line scan
-rather than a second check of the project: on the 50k-line scale tier it adds
-a few hundredths of a second to a cached run.
+a function its Core IR build reaches (the reachable set its receipt is keyed on)
+is a changed function, a specialization of one, or a function of a wholly
+changed module. A changed constant is folded into every reader, so it selects
+every test, as does a test the new core cannot build. The selection costs a
+`git diff`, a line scan and one IR build per test, never a second check of the
+project. Such a run replays and records no whole-run report, while each selected
+test still replays its own receipt.
 
 The derivation is a selection, never a verdict: the selected count and every
 skipped test are printed on stderr, so `--json`'s stdout report stays
