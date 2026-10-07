@@ -605,6 +605,61 @@ test "a mut argument is handed over: the callee updates it in place when unique,
     try std.testing.expect(!contains(grown, "retain"));
 }
 
+const branch_taken =
+    \\record Bag:
+    \\    name: str
+    \\    items: list[int]
+    \\
+    \\
+    \\record Sink:
+    \\    buffer: byte_buffer
+    \\
+    \\
+    \\def put(bag: mut Bag, v: int):
+    \\    if v >= 0:
+    \\        bag.items.append(v)
+    \\
+    \\
+    \\def put_byte(sink: mut Sink, v: int) -> bool:
+    \\    return sink.buffer.append_byte(v)
+    \\
+    \\
+    \\def put_range(sink: mut Sink, data: bytes, v: int):
+    \\    if v > 0:
+    \\        _ = sink.buffer.append_range(data, 0, v)
+    \\
+    \\
+    \\def main(out: Stream) -> int:
+    \\    bag = Bag(name="b", items=[])
+    \\    empty: list[int] = []
+    \\    sink = Sink(buffer=byte_buffer(empty))
+    \\    for i in range(4):
+    \\        put(mut bag, i)
+    \\        _ = put_byte(mut sink, i)
+    \\        put_range(mut sink, b"xyz", i)
+    \\    out.print(len(bag.items), len(sink.buffer))
+    \\    return 0
+    \\
+;
+
+// spec: NEW-CORE-S4-TAKE-1
+test "a mut record's field updated on one arm of a branch, or by a byte_buffer append, is taken over, not copied" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const debug = try support.ownedText(arena.allocator(), branch_taken);
+    // The arm's update takes the list from the record: its only copy is a count test's copy
+    // arm, and nothing is retained around it, so appends through `mut` stay linear.
+    const put = functionIr(debug, "put");
+    try std.testing.expect(contains(put, "is_unique"));
+    try std.testing.expectEqual(std.mem.count(u8, put, "is_unique"), std.mem.count(u8, put, "list_copy"));
+    try std.testing.expect(!contains(put, "retain"));
+    // A buffer append is one call that takes the buffer over; the runtime tests its count.
+    for ([_][]const u8{ "put_byte", "put_range" }) |name| {
+        const text = functionIr(debug, name);
+        try std.testing.expect(!contains(text, "retain") and !contains(text, "buffer_copy"));
+    }
+}
+
 // spec-case: NEW-CORE-MUT-OWN-1
 test "mut appends, mut records and aliases match the old core, linear and leak-free, debug and release" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);

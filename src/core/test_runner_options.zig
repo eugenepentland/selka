@@ -3,6 +3,7 @@
 const std = @import("std");
 const pipeline = @import("pipeline.zig");
 const property = @import("test_runner_property.zig");
+const budget = @import("memory_budget");
 
 /// Execution settings beyond one file's test selection.
 pub const Controls = struct {
@@ -12,7 +13,43 @@ pub const Controls = struct {
     timeout_ms: u32 = 60000,
     max_steps: u64 = 1000000,
     explicit_steps: bool = false,
+    ceilings: Ceilings = .{},
 };
+
+/// A test child's call-depth and byte ceilings, with the old core's defaults and
+/// meaning (docs/tooling/runtime-budgets.md). A command-line value is explicit and
+/// outranks `MYLANG_MEMORY_LIMIT` and the project's `limits.test`; `resolve` fills
+/// in the rest.
+pub const Ceilings = struct {
+    /// Nested calls of original program functions one trial may make (`--max-frames`).
+    frames: u32 = default_frames,
+    /// Bytes the trial's managed heap may hold (`--max-memory`); zero removes the ceiling.
+    memory: u64 = budget.test_default,
+    explicit_frames: bool = false,
+    explicit_memory: bool = false,
+};
+
+/// The old core's per-test call-depth default.
+pub const default_frames: u32 = 1024;
+
+/// Why ceilings cannot be resolved: malformed `MYLANG_MEMORY_LIMIT` text.
+pub const CeilingError = budget.Error;
+
+/// Fill in the ceilings the command line left open: frames from the project's
+/// `max_frames`, else the default; memory from `MYLANG_MEMORY_LIMIT`, else the
+/// project's `max_memory`, else the 512 MiB test default.
+pub fn resolve(ceilings: Ceilings, environment: *const std.process.Environ.Map, configured_frames: ?u64, configured_memory: ?u64) CeilingError!Ceilings {
+    var resolved = ceilings;
+    if (!ceilings.explicit_frames) resolved.frames = if (configured_frames) |frames| @intCast(@min(frames, std.math.maxInt(u32))) else default_frames;
+    if (!ceilings.explicit_memory) resolved.memory = try budget.resolve(null, environment, budget.variable, configured_memory orelse budget.test_default);
+    return resolved;
+}
+
+/// The refusal for a frame budget whose stack (32 KiB per frame plus 8 MiB) the
+/// byte ceiling cannot back, judged as the old core judges it, or null when it fits.
+pub fn frameRefusal(a: std.mem.Allocator, environment: *const std.process.Environ.Map, ceilings: Ceilings) std.mem.Allocator.Error!?[]u8 {
+    return budget.frameRefusalUnder(a, .{ .command = "test", .who = "a test" }, ceilings.frames, ceilings.memory, budget.guestAddressSpaceLimit(environment));
+}
 
 /// Command options; grouped execution settings keep the public type bounded.
 pub const Options = struct {

@@ -5,8 +5,9 @@
  * reference count of D4; every block starts with count 1, and the emitted code
  * counts inline and frees through `myl_core_free`. `reserved` holds the element
  * layout of a list or box whose elements hold blocks (null otherwise), so a free
- * releases the children. There is no collector and no memory budget (L3): an
- * allocation the OS refuses ends the process with one message.
+ * releases the children. There is no collector and no memory budget in a program
+ * (L3): an allocation the OS refuses ends the process with one message. A test
+ * child alone may carry a byte ceiling (`--max-memory`, `heap_ceiling` below).
  *
  * Output: one buffer per standard stream, flushed when full, at exit and before a
  * trap report, so stdout keeps program order relative to a trap. */
@@ -23,6 +24,7 @@
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
+#include <malloc.h>
 
 /* ---- platform layer (POSIX) ------------------------------------------------
  * Every operating-system call the runtime makes goes through these functions;
@@ -82,6 +84,31 @@ enum { MYL_HEADER = 32, MYL_ALIGN = 32 };
 static unsigned char *block_data(myl_block *block) { return (unsigned char *)block + MYL_HEADER; }
 
 static void out_of_memory(void);
+static void core_io_failure(const char *code);
+
+/* A test child's byte ceiling (`mylang-core test --max-memory`, set by
+   `myl_core_test_ceilings`; 0: none, the only state outside tests). Only the
+   allocator's slow paths touch it: the 64 KiB chunks small blocks are carved
+   from (never returned) and each large block's usable size while it lives, so
+   the inline fast paths and every program built without a ceiling pay nothing.
+   Exceeding it traps `R_MEMORY_BUDGET`, as the old core's managed heap does;
+   the process's `RLIMIT_AS` at the ceiling plus 256 MiB backs everything else. */
+static uint64_t heap_ceiling, heap_held;
+
+__attribute__((cold, noinline)) static void heap_exhausted(void) {
+    heap_ceiling = 0;
+    core_io_failure("R_MEMORY_BUDGET");
+}
+
+static void heap_charge(size_t bytes) {
+    if (!heap_ceiling) return;
+    heap_held += bytes;
+    if (heap_held > heap_ceiling) heap_exhausted();
+}
+
+static void heap_refund(size_t bytes) {
+    if (heap_ceiling) heap_held -= bytes < heap_held ? bytes : heap_held;
+}
 
 /* Blocks ever carved from chunks plus large blocks not yet freed. A small block is
    live exactly when it was carved and is not on a free list, so the
@@ -124,6 +151,7 @@ static void *small_alloc(uint32_t class) {
     if ((size_t)(chunk_end - chunk_next) < bytes) {
         chunk_next = aligned_alloc(MYL_ALIGN, MYL_CHUNK);
         if (!chunk_next) out_of_memory();
+        heap_charge(MYL_CHUNK);
         chunk_end = chunk_next + MYL_CHUNK;
     }
     block = chunk_next;
@@ -146,6 +174,7 @@ static myl_block *block_alloc(uint32_t kind, size_t data, size_t *room) {
            16-byte `malloc` alignment cost integer_math 4% and binary_search 10%). */
         block = aligned_alloc(MYL_ALIGN, (bytes + MYL_ALIGN - 1) & ~(size_t)(MYL_ALIGN - 1));
         if (!block) out_of_memory();
+        if (heap_ceiling) heap_charge(malloc_usable_size(block));
         *room = data;
         ++live_blocks;
     }
@@ -179,6 +208,7 @@ static void block_free(myl_block *block) {
     uint32_t class = class_of(block);
     if (class == 0) {
         --live_blocks;
+        if (heap_ceiling) heap_refund(malloc_usable_size(block));
         free(block);
         return;
     }
@@ -261,8 +291,12 @@ static void flush_all(void) {
 
 static void out_of_memory(void) {
     flush_all();
+    /* Under a test's byte ceiling the OS refusal is its `RLIMIT_AS` backstop: the same trap,
+       reported without the frame walk, which may itself need memory. */
+    static const char ceiling[] = "error[R_MEMORY_BUDGET]: native execution failed\nmemory budget exhausted; raise it with --max-memory=SIZE\n";
     static const char message[] = "fatal: out of memory\n";
-    os_write(2, (const unsigned char *)message, sizeof message - 1);
+    if (heap_ceiling) os_write(2, (const unsigned char *)ceiling, sizeof ceiling - 1);
+    else os_write(2, (const unsigned char *)message, sizeof message - 1);
     os_exit(1);
 }
 
@@ -303,6 +337,7 @@ myl_block *myl_core_list_grow(myl_block *list, int64_t element_size) {
         /* A large block grows in place where the allocator can (one block either
            way), and moves to a fresh aligned block when `realloc` loses the alignment. */
         size_t bytes = MYL_HEADER + (size_t)cap * (size_t)element_size;
+        if (heap_ceiling) heap_refund(malloc_usable_size(list));
         myl_block *moved = realloc(list, bytes);
         if (!moved) out_of_memory();
         if (((uintptr_t)moved & (MYL_ALIGN - 1)) != 0) {
@@ -312,6 +347,7 @@ myl_block *myl_core_list_grow(myl_block *list, int64_t element_size) {
             free(moved);
             moved = aligned;
         }
+        if (heap_ceiling) heap_charge(malloc_usable_size(moved));
         moved->cap = cap;
         return moved;
     }
@@ -952,6 +988,13 @@ void myl_core_trap(const myl_core_site *site, int64_t a, int64_t b) {
     os_exit(1);
 }
 
+/* The old core's advice after a test budget's trap (docs/tooling/runtime-budgets.md). */
+static const char *core_budget_hint(const char *code){
+    if(!strcmp(code,"R_STEP_LIMIT"))return "instruction budget exhausted; raise it with --max-steps=N\n";
+    if(!strcmp(code,"R_FRAME_LIMIT"))return "call-depth budget exhausted; raise it with --max-frames=N (each frame reserves 32 KiB of stack, so --max-memory must cover N x 32 KiB)\n";
+    if(!strcmp(code,"R_MEMORY_BUDGET"))return "memory budget exhausted; raise it with --max-memory=SIZE\n";
+    return NULL;
+}
 static const myl_core_site *core_io_site;
 void myl_core_io_at(const myl_core_site *site){core_io_site=site;}
 /* Runtime effects keep their checked call site; walk past C adapters before
@@ -963,6 +1006,8 @@ __attribute__((cold,noinline)) static void core_io_failure(const char *code){
     stream_write(&streams[1],text,(size_t)(length<(int)sizeof text?length:(int)sizeof text-1));
     void *pcs[128];int count=os_stack(pcs,128),found=0;
     for(int i=2;i<count;++i){int frames=dwarf_frames((uintptr_t)pcs[i]-1,found?0:1);if(frames)found=1;else if(found)break;}
+    const char *hint=core_budget_hint(code);
+    if(hint)stream_write(&streams[1],hint,strlen(hint));
     flush_all();os_exit(strncmp(code,"R_",2)?2:1);
 }
 

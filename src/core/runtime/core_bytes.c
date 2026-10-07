@@ -113,6 +113,29 @@ myl_block *myl_core_buffer_append_spelled(myl_block *buffer, const unsigned char
     buffer->len += (int64_t)length;
     return buffer;
 }
+/* A buffer handed over to an append (an owned argument, `Signature.owned` bit 0): it is
+   updated in place when it holds the only reference, else copied first and the caller's
+   reference released. The builder emits these as one call between the read of a `mut`
+   place's buffer and its write-back, so the ownership pass takes the field over. */
+static myl_block *core_buffer_owned(myl_block *buffer) {
+    if (buffer->count == 1) return buffer;
+    myl_block *copy = myl_core_buffer_copy(buffer);
+    myl_core_release(buffer);
+    return copy;
+}
+/* `buffer.append_range(source, start, end)`: the octets `source[start:end]` when the range
+   is valid, else nothing (the caller reports the validity it computed separately). */
+myl_block *myl_core_buffer_append_checked(myl_block *buffer, myl_block *source, int64_t start, int64_t end) {
+    if (start < 0 || end <= start || end > source->len) return buffer;
+    buffer = core_buffer_owned(buffer);
+    return myl_core_buffer_append_spelled(buffer, block_data(source) + start, (size_t)(end - start));
+}
+/* `buffer.append_byte(value)`: one octet when `value` is in 0..255, else nothing. */
+myl_block *myl_core_buffer_push_checked(myl_block *buffer, int64_t value) {
+    if (value < 0 || value > 255) return buffer;
+    buffer = core_buffer_owned(buffer);
+    return myl_core_buffer_push(buffer, (uint8_t)value);
+}
 myl_block *myl_core_buffer_append_i64(myl_block *buffer, int64_t value) {
     unsigned char bytes[20];
     bool negative = value < 0;

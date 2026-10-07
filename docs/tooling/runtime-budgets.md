@@ -90,6 +90,15 @@ instructions and **1,024** frames, because a test is the one place a tight guard
 is useful. `--max-steps` and `--max-frames` on `mylang test` bound each test
 process and may be lowered or raised.
 
+The new compiler core's `mylang-core test` takes the same three test budgets with
+the same defaults, codes and precedence (`--max-steps`, `--max-frames`,
+`--max-memory`, then `MYLANG_MEMORY_LIMIT` for memory, then `limits.test`). It
+counts a frame per call of a program function, runs each trial on a stack mapped
+for the whole frame budget, and bounds the heap by counting the allocator's chunks
+and large blocks, with `RLIMIT_AS` at the ceiling plus 256 MiB behind it
+(`NEW-CORE-S4-FRAMES-1`, `NEW-CORE-S4-MEMORY-1` in SPEC.md). Only test builds
+carry the counters.
+
 Once a ceiling is in force, `R_STEP_LIMIT` answers "instruction budget
 exhausted; raise it with --max-steps=N" and `R_FRAME_LIMIT` answers "call-depth
 budget exhausted; raise it with --max-frames=N (each frame reserves 32 KiB of

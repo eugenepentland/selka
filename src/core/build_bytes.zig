@@ -114,25 +114,26 @@ pub fn operation(comptime Context: type, context: Context, node: Operation, ty: 
     }
 }
 
+/// `buffer.append_byte(value)`: the receiver is read, handed to one runtime call that pushes the
+/// octet when it is in 0..255, and written back, all in the statement's block, so a `mut`
+/// place's buffer field is taken over and updated in place rather than copied per call.
 fn appendByte(comptime Context: type, context: Context, node: Operation, span: u32) Error!ir.Ref {
     const value = try context.expression(node.arguments[0]);
     const low = try context.emit(.{ .op = .cmp, .ty = .bool, .a = value, .b = try context.constant(context.typeOfRef(value), 0), .data = @backingInt(ir.Predicate.ge), .span = span });
     const high = try context.emit(.{ .op = .cmp, .ty = .bool, .a = value, .b = try context.constant(context.typeOfRef(value), 255), .data = @backingInt(ir.Predicate.le), .span = span });
     const valid = try context.emit(.{ .op = .bit_and, .ty = .bool, .a = low, .b = high, .span = span });
-    const yes = try context.newBlock();
-    const join = try context.newBlock();
-    try context.branch(valid, yes, join, span);
-    try context.seal(yes);
-    context.current = yes;
+    // The runtime pushes only an octet in 0..255; a wider value keeps its bits as an i64, so an
+    // out-of-range value stays out of range.
+    const wide = if (context.typeOfRef(value) == .i64) value else try context.emit(.{ .op = .convert, .ty = .i64, .a = value, .span = span });
     const receiver = try context.writableReceiverOf(node.owner, span);
-    const octet_value = if (context.typeOfRef(value) == .u8) value else try context.emit(.{ .op = .convert, .ty = .u8, .a = value, .span = span });
-    try context.writeOwner(node.owner, try context.emit(.{ .op = .buffer_push, .ty = .byte_buffer, .a = receiver, .b = octet_value, .span = span }), span);
-    try context.jump(join);
-    try context.seal(join);
-    context.enter(join);
+    try context.writeOwner(node.owner, try handedOver(Context, context, "myl_core_buffer_push_checked", &.{ .byte_buffer, .i64 }, &.{ receiver, wide }, span), span);
     return valid;
 }
 
+/// `append_range`, `append_utf8` (and the integer and float spellings): the receiver is read,
+/// updated by one call and written back in the statement's block, so a `mut` place's buffer
+/// field is taken over and the append is in place when the buffer is unique. A range the
+/// runtime finds invalid appends nothing, and the validity is the method's result.
 fn appendFragment(comptime Context: type, context: Context, node: Operation, span: u32) Error!ir.Ref {
     const source = try context.expression(node.arguments[0]);
     if (node.kind == .buffer_append_int or node.kind == .buffer_append_float) {
@@ -147,41 +148,21 @@ fn appendFragment(comptime Context: type, context: Context, node: Operation, spa
     const stop = if (node.kind == .buffer_append_range) try context.expression(node.arguments[2]) else try context.emit(.{ .op = if (context.typeOfRef(source) == .str) .str_len else .list_len, .ty = .u64, .a = source, .span = span });
     const end = if (context.typeOfRef(stop) == .i64) stop else try context.emit(.{ .op = .convert, .ty = .i64, .a = stop, .span = span });
     const valid = try context.runtimeCall("myl_core_buffer_range_valid", &.{ context.typeOfRef(source), .i64, .i64 }, .bool, &.{ source, start, end }, span);
-    const yes = try context.newBlock();
-    const join = try context.newBlock();
-    try context.branch(valid, yes, join, span);
-    try context.seal(yes);
-    context.current = yes;
-    try appendRange(Context, context, .{ .owner = node.owner, .source = source, .start = start, .end = end, .span = span });
-    try context.jump(join);
-    try context.seal(join);
-    context.enter(join);
+    // Text is encoded once; the encoding borrows the text's own octets.
+    const octets = if (context.typeOfRef(source) == .str) try context.runtimeCall("myl_core_text_encode", &.{.str}, .bytes, &.{source}, span) else source;
+    const receiver = try context.writableReceiverOf(node.owner, span);
+    const updated = try handedOver(Context, context, "myl_core_buffer_append_checked", &.{ .byte_buffer, context.typeOfRef(octets), .i64, .i64 }, &.{ receiver, octets, start, end }, span);
+    try context.writeOwner(node.owner, updated, span);
     return valid;
 }
 
-fn appendRange(comptime Context: type, context: Context, range: struct { owner: typed.LocalId, source: ir.Ref, start: ir.Ref, end: ir.Ref, span: u32 }) Error!void {
-    // Encode once before the loop; raw octet reads do not allocate per byte.
-    const source = if (context.typeOfRef(range.source) == .str) try context.runtimeCall("myl_core_text_encode", &.{.str}, .bytes, &.{range.source}, range.span) else range.source;
-    const index = try context.synthetic(.i64);
-    try context.write(index, context.current.?, range.start);
-    const header = try context.newBlock();
-    const body = try context.newBlock();
-    const exit = try context.newBlock();
-    try context.jump(header);
-    context.current = header;
-    const cursor = try context.read(index, header);
-    const more = try context.emit(.{ .op = .cmp, .ty = .bool, .a = cursor, .b = range.end, .data = @backingInt(ir.Predicate.lt), .span = range.span });
-    try context.branch(more, body, exit, range.span);
-    try context.seal(body);
-    context.current = body;
-    const value = try context.emit(.{ .op = .list_get, .ty = .u8, .a = source, .b = cursor, .check = .exact, .span = range.span });
-    const receiver = try context.writableReceiverOf(range.owner, range.span);
-    try context.writeOwner(range.owner, try context.emit(.{ .op = .buffer_push, .ty = .byte_buffer, .a = receiver, .b = value, .span = range.span }), range.span);
-    try context.write(index, context.current.?, try context.emit(.{ .op = .add, .ty = .i64, .a = cursor, .b = try context.constant(.i64, 1), .check = .exact, .span = range.span }));
-    try context.jump(header);
-    try context.seal(header);
-    try context.seal(exit);
-    context.enter(exit);
+/// Call runtime `symbol`, handing it the buffer in argument 0 (an owned parameter): the
+/// runtime updates the buffer in place when it holds the only reference and copies it
+/// otherwise, and returns the updated buffer.
+fn handedOver(comptime Context: type, context: Context, symbol: []const u8, params: []const ir.Type, arguments: []const ir.Ref, span: u32) Error!ir.Ref {
+    const callee = try context.mb.runtimeFunction(symbol, params, .byte_buffer, .extern_c);
+    context.mb.module.functions.items[callee].signature.owned = 1;
+    return context.emit(.{ .op = .call, .ty = .byte_buffer, .a = @fromBackingInt(callee), .data = try context.extraSlice(arguments), .span = span });
 }
 
 fn reserve(comptime Context: type, context: Context, node: Operation, span: u32) Error!ir.Ref {

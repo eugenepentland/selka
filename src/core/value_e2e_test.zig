@@ -415,6 +415,39 @@ test "a failed assert traps R_ASSERT with its message at the condition, flushing
     }
 }
 
+// spec: NEW-CORE-S4-ASSERT-MESSAGE-1
+test "an assert whose message is a computed str prints it on its own stderr line, then traps R_ASSERT without a message" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    try std.testing.expect(try matches(arena.allocator(), "v_assert_message", "1\n2\n", 1));
+    try std.testing.expect(try matches(arena.allocator(), "v_assert_message_err", "1\n2\n", 1));
+    for ([_]Mode{ .debug, .release }) |mode| {
+        const computed = try stderrOf(arena.allocator(), "v_assert_message", mode);
+        try std.testing.expect(std.mem.startsWith(u8, computed, "bad \"n\"=7\nv_assert_message.my:9:12: error[R_ASSERT]: native execution failed\n  in v_assert_message::check at "));
+        try std.testing.expect(std.mem.indexOf(u8, computed, "MYLANG-TRAP {\"version\":1,\"operation\":\"\"}") != null);
+        const literal_false = try stderrOf(arena.allocator(), "v_assert_message_err", mode);
+        try std.testing.expect(std.mem.startsWith(u8, literal_false, "too big: 5\nv_assert_message_err.my:24:20: error[R_ASSERT]: native execution failed\n"));
+    }
+}
+
+const v_buffer_mut_output =
+    \\True False False False True
+    \\True False False True
+    \\8:3132334100cebb78 2
+    \\8:3132334100cebb78 12:3132334100cebb7861626342
+    \\14:3132334100cebb78616263423132
+    \\1000000 137293856
+    \\
+;
+
+// spec-case: NEW-CORE-S4-TAKE-1
+test "byte_buffer appends through mut record fields print what the old core prints, in place and leak-free" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    // 600,000 appends through `mut` fields: a copy per append would take minutes.
+    try std.testing.expect(try matches(arena.allocator(), "v_buffer_mut", v_buffer_mut_output, 0));
+}
+
 const v_methods_output =
     \\7
     \\3 4

@@ -1053,6 +1053,10 @@ const Taking = struct {
             const inst = f.inst(user);
             if (user == get or user == update) continue;
             if (inst.op == .record_get and inst.data != field) continue;
+            if (inst.op == .phi) {
+                if (try phiAfter(self, record, get, user, def_block)) return;
+                continue;
+            }
             if (try runsAfter(self.arena, f, self.graph.block_of, get, user, def_block)) return;
         }
         try self.marks.owned_get.put(self.arena, @backingInt(get), {});
@@ -1086,6 +1090,44 @@ const Taking = struct {
         try self.marks.emptied.put(self.arena, @backingInt(record), {});
     }
 };
+
+/// Whether join `phi` can receive `record` on an edge taken after `get`: a phi reads each
+/// operand at the end of its predecessor, so only the edges carrying `record` from `get`'s
+/// block or a block reachable from it see the record once its field was taken. The record
+/// that an `if` leaves alone on its other edge (a `mut` record whose field one arm updates)
+/// keeps its field there.
+fn phiAfter(self: Taking, record: ir.Ref, get: ir.Ref, phi: ir.Ref, def: u32) Error!bool {
+    const f = self.f;
+    const from = self.graph.block_of[get.index()];
+    const home = self.graph.block_of[phi.index()];
+    if (home == no_block) return true;
+    const operands = f.operands(f.inst(phi).data);
+    const preds = f.blocks.items[home].preds.items;
+    if (operands.len != preds.len) return true;
+    for (operands, preds) |operand, pred| {
+        if (f.resolve(operand) != record) continue;
+        const source = @backingInt(pred);
+        if (source == from or try blockReachable(self.arena, f, from, source, def)) return true;
+    }
+    return false;
+}
+
+/// Whether block `target` can run after block `from` without passing block `def`.
+fn blockReachable(arena: std.mem.Allocator, f: *const ir.Function, from: u32, target: u32, def: u32) Error!bool {
+    const seen = try arena.alloc(bool, f.blocks.items.len);
+    @memset(seen, false);
+    var stack: std.ArrayList(u32) = .empty;
+    try stack.append(arena, from);
+    while (stack.pop()) |b| {
+        for (successors(f, b).slice()) |succ| {
+            if (succ == def or seen[succ]) continue;
+            if (succ == target) return true;
+            seen[succ] = true;
+            try stack.append(arena, succ);
+        }
+    }
+    return false;
+}
 
 /// Whether a record value is owned where it is defined: built, updated, joined,
 /// returned by a call, or a `mut` parameter.

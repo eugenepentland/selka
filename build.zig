@@ -438,6 +438,9 @@ fn addCore(b: *std.Build, inputs: CoreInputs) void {
     }) });
     exe.root_module.addImport("core_tool_platform", platform);
     exe.root_module.addImport("qbe_build_assets", inputs.build_assets);
+    // The test runner's frame and byte ceilings share the old core's budget rules.
+    const budget = b.modules.get("memory_budget") orelse @panic("memory_budget module");
+    exe.root_module.addImport("memory_budget", budget);
     b.step("core", "Build and install the new compiler core, zig-out/bin/mylang-core").dependOn(&b.addInstallArtifact(exe, .{}).step);
     const differential = b.option(bool, "core-diff", "test-core: also compare each slice program with the old compiler's build of it") orelse false;
     const options = b.addOptions();
@@ -456,6 +459,7 @@ fn addCore(b: *std.Build, inputs: CoreInputs) void {
     }) });
     unit.root_module.addImport("core_tool_platform", platform);
     unit.root_module.addImport("qbe_build_assets", inputs.build_assets);
+    unit.root_module.addImport("memory_budget", budget);
     unit.root_module.addOptions("core_test_options", options);
     const step = b.step("test-core", "Run the new core's unit tests and its end-to-end slice (not part of test)");
     // Most of the root's time is end-to-end builds of guest programs, so shards
