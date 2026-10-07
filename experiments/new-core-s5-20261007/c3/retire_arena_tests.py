@@ -13,6 +13,9 @@ bullet that still has `spec-case` tags in src/arena_managed_test.zig (lane C1) o
 test/integration.zig (lane C2), so the bullet and its last tests go together in S5-D.
 They pass on the new core, where `with arena():` is a plain block.
 
+KEPT tests stay for the same reason: a lane-C1 Zig test reads their file and
+asserts the old back end's code for it, which changes without them.
+
 usage: retire_arena_tests.py [--dry-run]
 """
 import fnmatch, json, re, sys
@@ -22,6 +25,11 @@ ROOT = Path(__file__).resolve().parents[3]
 FILES = ["arena_class_escape", "rc_arena_values"]
 DEFERRED = ["arena_managed", "arena_scopes", "arena_regions"]
 DIRS = ["tests/lang", "tests/value_semantics"]
+KEPT = {
+    # src/qbe_rc_dictionary_loop_test.zig asserts `frequencies`' QBE body, which loses
+    # its text-slice call once this, its only non-ASCII caller, is gone.
+    "rc_dictionary_text_loops::test_owned_text_keys_in_arena",
+}
 TEST = re.compile(r"^(?:public )?def (test_\w+)\(")
 TAG = re.compile(r"^#\s*(spec|spec-case):\s*(\S+)")
 
@@ -82,7 +90,7 @@ def main():
             if not dry:
                 path.unlink()
             continue
-        doomed = [(s, e, n) for s, e, n in blocks(lines) if fnmatch.fnmatchcase(f"{module}::{n}", "*arena*")]
+        doomed = [(s, e, n) for s, e, n in blocks(lines) if fnmatch.fnmatchcase(f"{module}::{n}", "*arena*") and f"{module}::{n}" not in KEPT]
         if not doomed:
             continue
         keep = []

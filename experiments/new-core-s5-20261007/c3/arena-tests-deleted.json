@@ -1,5 +1,5 @@
 {
- "count": 105,
+ "count": 104,
  "tests": [
   {
    "file": "tests/lang/arena_class_escape.my",
@@ -449,17 +449,6 @@
    "file": "tests/lang/rc_dictionary_tails.my",
    "test": "rc_dictionary_tails::test_arena_growth_and_heap_root_inside_arena",
    "tags": [],
-   "whole_file": false
-  },
-  {
-   "file": "tests/lang/rc_dictionary_text_loops.my",
-   "test": "rc_dictionary_text_loops::test_owned_text_keys_in_arena",
-   "tags": [
-    [
-     "spec-case",
-     "RC-DICTIONARY-TEXT-LOOP-1"
-    ]
-   ],
    "whole_file": false
   },
   {
