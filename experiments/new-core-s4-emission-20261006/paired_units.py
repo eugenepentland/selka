@@ -35,8 +35,8 @@ def identity(path):
 def compile_whole(args, case):
     llvm = args.bin / "llvm" / f"row_{case}.ll"
     cache = args.bin / "cache/new"
-    if args.core and case != "result_propagate":
-        source = generate(case, args.evidence / "sources" / case)
+    if args.core:
+        source = generate(case, args.evidence / "sources" / case) if case != "result_propagate" else ROOT / "test/core/row_result_propagate.my"
         llvm = args.evidence / f"whole-{case}.ll"
         cache = args.evidence / "cache" / case
         output = args.evidence / f"split-{case}"
@@ -46,9 +46,9 @@ def compile_whole(args, case):
         # Preserve all actual module inputs as proof of source ownership.
         paths = sorted(cache.glob("program-*/*.ll"))
         modules = [path for path in paths if path.name.startswith("module-")]
-        if sum(re.search(r'^define[^@\n]*@"my\.app::main"', path.read_text(), re.MULTILINE) is not None for path in modules) != 1:
+        if case != "result_propagate" and sum(re.search(r'^define[^@\n]*@"my\.app::main"', path.read_text(), re.MULTILINE) is not None for path in modules) != 1:
             raise ValueError(f"{case}: main source module absent or repeated: {paths}")
-        if sum('source_filename = "workload.my"' in path.read_text() for path in modules) != 1:
+        if case != "result_propagate" and sum('source_filename = "workload.my"' in path.read_text() for path in modules) != 1:
             raise ValueError(f"{case}: workload source module absent or repeated: {paths}")
         (args.evidence / f"units-{case}.json").write_text(json.dumps([identity(path) for path in paths], indent=2) + "\n")
     output = args.whole / f"row_{case}"
@@ -137,7 +137,7 @@ def main():
     try:
         for case in args.cases:
             whole = compile_whole(args, case)
-            split = args.evidence / f"split-{case}" if args.core and case != "result_propagate" else args.bin / f"row_{case}_new"
+            split = args.evidence / f"split-{case}" if args.core else args.bin / f"row_{case}_new"
             alternatives = {"whole": whole, "split": split}
             if args.core and case != "result_propagate":
                 alternatives["original_row"] = args.bin / f"row_{case}_new"

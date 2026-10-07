@@ -7,9 +7,12 @@
 //! Other instructions are cloned
 //! into the caller in front of the call, its parameters replaced by the call's
 //! arguments, and the call becomes a forwarding `copy` of the returned value.
-//! Spans stay the callee's, so a trap still names the line inside the helper.
+//! A checked body is copied only with proof that its checks cannot fail; unsafe
+//! or unproved bodies retain their source frames until LLVM inlining.
 const std = @import("std");
 const ir = @import("ir.zig");
+const facts = @import("facts.zig");
+const proof = @import("inline_proof.zig");
 
 /// Inlining only allocates.
 pub const Error = std.mem.Allocator.Error;
@@ -19,6 +22,7 @@ pub fn inlineLeaves(arena: std.mem.Allocator, module: *ir.Module) Error!u32 {
     var count: u32 = 0;
     for (module.functions.items, 0..) |*caller, index| {
         if (caller.signature.linkage != .internal) continue;
+        var known: ?facts.Facts = null;
         for (caller.blocks.items) |*block| {
             var at: usize = 0;
             while (at < block.insts.items.len) : (at += 1) {
@@ -29,6 +33,10 @@ pub fn inlineLeaves(arena: std.mem.Allocator, module: *ir.Module) Error!u32 {
                 if (call.op != .call or call.a.index() == index) continue;
                 const callee = &module.functions.items[call.a.index()];
                 const result = leaf(callee) orelse continue;
+                if (proof.needsProof(callee)) {
+                    if (known == null) known = try facts.analyze(arena, caller, .{ .fold = false, .mark = false });
+                    if (!try proof.trapFree(arena, caller, call, callee, known.?)) continue;
+                }
                 const cloned = try splice(arena, caller, callee, .{ .block = block, .at = at, .call = ref, .result = result });
                 at += cloned;
                 count += 1;

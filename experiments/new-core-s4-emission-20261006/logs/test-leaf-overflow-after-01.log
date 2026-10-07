@@ -1,0 +1,17 @@
+test-core
++- run test w
+guardian/test: 1 test(s) selected
+guardian/test: SLOW  5.60s  emit_units_test.test.S4 overflowing leaf arithmetic retains its source callee and caller
+guardian/test: test wall 5.60s; slowest over 50ms:
+guardian/test:   5.60s  emit_units_test.test.S4 overflowing leaf arithmetic retains its source callee and caller
+guardian/test: PASS — 1 passed
+guardian/test: RESULT {"passed":1,"failed":0,"skipped":0}
+failed command: ./.zig-cache/o/be2f6c9de34aa5fb8fc4799199dcd14e/test --cache-dir=./.zig-cache --seed=0x1d80e25b --listen=-
+
+Build Summary: 5/5 steps succeeded; 1/1 tests passed
+test-core success
++- run test 1 pass (1 total) 5s MaxRSS:245M
+   +- compile test debug native success 1s MaxRSS:343M
+      +- options success
+         +- compile exe mylang-core debug native success 1s MaxRSS:347M
+

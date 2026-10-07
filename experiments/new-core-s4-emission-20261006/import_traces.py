@@ -9,6 +9,11 @@ from pathlib import Path
 from trace_units import command, FLAGS, ROOT
 
 CASES = {
+    "overflow": (
+        "module app\nimport leaf\ndef main() -> int:\n    total = 0\n    for i in range(2):\n"
+        "        total += leaf.origin(9223372036854775807)\n    return total\n",
+        "module leaf\npublic def origin(x: int) -> int:\n    if x < 0:\n        return 0\n    return x + 1\n",
+    ),
     "assert": (
         "module app\nimport leaf\ndef main() -> int:\n    total = 0\n    for i in range(2):\n"
         "        total += leaf.origin(i + 1)\n    return total\n",
@@ -73,6 +78,7 @@ def main():
     parser.add_argument("--old", type=Path, required=True)
     parser.add_argument("--new", type=Path, required=True)
     parser.add_argument("--evidence", type=Path, required=True)
+    parser.add_argument("--cases", nargs="+", choices=CASES, default=CASES)
     args = parser.parse_args()
     area = args.evidence.resolve()
     area.relative_to(ROOT / "experiments")
@@ -83,7 +89,8 @@ def main():
     cache = ROOT / ".mylang-cache/s4-emission" / area.name
     cache.mkdir(parents=True, exist_ok=False)
     try:
-        for case, sources in CASES.items():
+        for case in args.cases:
+            sources = CASES[case]
             source = area / case
             source.mkdir()
             for name, text in zip(("app.my", "leaf.my"), sources):

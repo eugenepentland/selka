@@ -1,0 +1,11 @@
+{
+  "command": [
+    "nm",
+    "--defined-only",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/imported-overflow-before-01/overflow-debug/unit-0.o"
+  ],
+  "status": 0,
+  "stdout": "0000000000000000 T main\n",
+  "stderr": "",
+  "seconds": 0.001756099984049797
+}

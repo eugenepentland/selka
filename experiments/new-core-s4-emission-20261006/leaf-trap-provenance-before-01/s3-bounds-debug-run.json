@@ -1,0 +1,8 @@
+{
+  "argv": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/leaf-trap-provenance-before-01/s3-bounds-debug/program"
+  ],
+  "status": 1,
+  "stdout": "",
+  "stderr": "app.my:3:12: error[R_LIST_BOUNDS]: native execution failed (index 2, length 1)\n  in leaf::origin at app.my:3:12\n  in app::main at app.my:4:12\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":2,\"length\":1}\n"
+}

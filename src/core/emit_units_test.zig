@@ -382,3 +382,27 @@ test "S4 an imported Result origin retains its callee path and function inside a
     try std.testing.expect(result.term == .exited and result.term.exited == 1);
     try std.testing.expectEqualStrings("error: loop failure\n  leaf.my:3:12  leaf::origin  Err(...) created\n  app.my:5:17   app::main     ? propagated\n", result.stderr);
 }
+
+// spec-case: NEW-CORE-S4-SITES-1
+test "S4 unsafe leaf arithmetic retains its source callee and caller" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const failures = [_]struct { arguments: []const u8, parameters: []const u8, expression: []const u8 }{
+        .{ .arguments = "9223372036854775807", .parameters = "x: int", .expression = "x + 1" },
+        .{ .arguments = "7, 0", .parameters = "x: int, y: int", .expression = "x // y" },
+        .{ .arguments = "-9223372036854775808, -1", .parameters = "x: int, y: int", .expression = "x // y" },
+        .{ .arguments = "1, 64", .parameters = "x: int, y: int", .expression = "shift_left(x, y)" },
+        .{ .arguments = "256", .parameters = "x: int", .expression = "int(u8(x))" },
+    };
+    for (failures) |failure| {
+        const caller = try std.fmt.allocPrint(a, "module app\nimport leaf\ndef main() -> int:\n    return leaf.origin({s})\n", .{failure.arguments});
+        const failing = try std.fmt.allocPrint(a, "module leaf\npublic def origin({s}) -> int:\n    return {s}\n", .{ failure.parameters, failure.expression });
+        for ([_]bool{ false, true }) |release| {
+            const result = try native(a, try snapshot(a, .{ caller, failing, other }, release));
+            try std.testing.expect(result.term == .exited and result.term.exited == 1);
+            try std.testing.expect(std.mem.indexOf(u8, result.stderr, "in leaf::origin at leaf.my:3:") != null);
+            try std.testing.expect(std.mem.indexOf(u8, result.stderr, "in app::main at app.my:4:12") != null);
+        }
+    }
+}

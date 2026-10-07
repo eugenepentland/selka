@@ -1,0 +1,24 @@
+test-core
++- run test 0 pass, 1 fail (1 total)
+guardian/test: test wall 5.69s; slowest over 50ms:
+guardian/test:   5.69s  emit_units_test.test.S4 overflowing leaf arithmetic retains its source callee and caller
+guardian/test: FAIL — 1 failed of 1
+guardian/test: RESULT {"passed":0,"failed":1,"skipped":0}
+error: 'emit_units_test.test.S4 overflowing leaf arithmetic retains its source callee and caller' failed:
+       guardian/test: 1 test(s) selected
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:614:14: 0x133b5a9 in expect (std.zig)
+           if (!ok) return error.TestUnexpectedResult;
+                    ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/src/core/emit_units_test.zig:396:9: 0x133ba25 in test.S4 overflowing leaf arithmetic retains its source callee and caller (root_test.zig)
+               try std.testing.expect(std.mem.indexOf(u8, result.stderr, "in leaf::origin at leaf.my:3:14") != null);
+               ^
+       guardian/test: SLOW  5.69s  emit_units_test.test.S4 overflowing leaf arithmetic retains its source callee and caller
+failed command: ./.zig-cache/o/d8d5d6690967964fb3aeccc35012a1e5/test --cache-dir=./.zig-cache --seed=0xf38f3558 --listen=-
+
+Build Summary: 3/5 steps succeeded (1 failed); 0/1 tests passed (1 failed)
+test-core transitive failure
++- run test 0 pass, 1 fail (1 total)
+   +- compile test debug native success 1s MaxRSS:341M
+      +- options cached
+         +- compile exe mylang-core debug native cached 8ms MaxRSS:41M
+
