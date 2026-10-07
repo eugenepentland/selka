@@ -56,6 +56,8 @@ const Guard = struct {
     }
 };
 
+const NativeCache = struct { work: []const u8, isolate: bool };
+
 /// Compile and link `request.llvm` into `request.output`; failures append the tool's stderr to `log`.
 pub fn link(allocator: std.mem.Allocator, io: std.Io, environ: *const std.process.Environ.Map, request: Request, log: *std.ArrayList(u8)) Error!void {
     const cwd = std.Io.Dir.cwd();
@@ -94,8 +96,25 @@ pub fn link(allocator: std.mem.Allocator, io: std.Io, environ: *const std.proces
     }
     try argv.appendSlice(allocator, request.links);
     if (std.mem.indexOf(u8, request.llvm, "llvm.sin.f64") != null or std.mem.indexOf(u8, request.llvm, "llvm.cos.f64") != null) try argv.append(allocator, "-lm");
-    try run(allocator, io, &environment, argv.items, log);
+    try linkNative(allocator, io, &environment, .{ .work = resolved.work, .isolate = request.links.len != 0 or !guest.cacheable }, argv.items, log);
     try guard.check(log);
+}
+
+fn linkNative(allocator: std.mem.Allocator, io: std.Io, environment: *const std.process.Environ.Map, cache: NativeCache, argv: []const []const u8, log: *std.ArrayList(u8)) Error!void {
+    if (!cache.isolate) return run(allocator, io, environment, argv, log);
+    // Zig's foreign-source cache can miss same-size header edits with restored
+    // mtimes. Unproved inputs get fresh caches; the captured Guard environment
+    // stays unchanged, and closed runtime/numeric objects keep their own keys.
+    var linking = environment.clone(allocator) catch return error.OutOfMemory;
+    defer linking.deinit();
+    var nonce: [16]u8 = undefined;
+    std.Io.random(io, &nonce);
+    const private = try std.fs.path.join(allocator, &.{ cache.work, try std.fmt.allocPrint(allocator, "native-link-{s}", .{std.fmt.bytesToHex(nonce, .lower)}) });
+    std.Io.Dir.cwd().createDirPath(io, private) catch return error.WriteFailed;
+    defer removeDirectory(io, private);
+    linking.put("ZIG_LOCAL_CACHE_DIR", try std.fs.path.join(allocator, &.{ private, "local" })) catch return error.OutOfMemory;
+    linking.put("ZIG_GLOBAL_CACHE_DIR", try std.fs.path.join(allocator, &.{ private, "global" })) catch return error.OutOfMemory;
+    try run(allocator, io, &linking, argv, log);
 }
 
 /// The runtime object for this runtime source, compiled on first use.
