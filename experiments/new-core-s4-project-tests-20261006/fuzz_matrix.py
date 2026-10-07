@@ -16,6 +16,7 @@ import sys
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import qualification_support as support
+import qualification_provenance as provenance
 WRAPPER = ROOT / "experiments/new-core-s3-20261006/wave-x/integration/fuzz_qualification.py"
 KINDS = ("s0", "s1", "rc", "rebinding", "iteration", "dict", "text", "number", "functions")
 HARNESSES = {
@@ -38,23 +39,75 @@ def strict_wrapper():
     return module
 
 
-def worker(argv):
-    """Use the frozen strict monitor with a local process-group capture underneath."""
-    wrapper = strict_wrapper()
-    parent = wrapper.Monitor
-
+def guarded_monitor(parent):
     class OwnedMonitor(parent):
         def __init__(self, args, original_run):
             self.capture = support.Capture(args.evidence / "processes", ROOT)
+            self.inputs = provenance.FuzzInputs(args)
             super().__init__(args, self.capture.run)
 
-    wrapper.Monitor = OwnedMonitor
+        def run(self, argv, *arguments, **options):
+            argv = list(map(str, argv))
+            if len(argv) > 2 and argv[1] == "build" and str(Path(argv[2]).absolute()) not in self.inputs.sources:
+                expected_arguments = 3 if self.args.kind == "rc" else 5
+                for case, builds in self.cases.items():
+                    outcomes = [values for (source, _), values in self.outcomes.items() if source == case]
+                    if (not builds["old"] or builds["core"] != {"debug", "release", "verify"}
+                            or len(outcomes) != expected_arguments
+                            or any(set(values) != {"old", "debug", "release", "verify"} for values in outcomes)):
+                        raise ValueError("next fuzz input phase arrived before the prior case completed")
+            self.inputs.before(argv)
+            result = super().run(argv, *arguments, **options)
+            self.inputs.check()
+            return result
+
+    return OwnedMonitor
+
+
+def worker(argv):
+    """Use the frozen strict monitor with a local process-group capture underneath."""
+    wrapper = strict_wrapper()
+    monitor_type = guarded_monitor(wrapper.Monitor)
+    original_qualify = wrapper.s2.qualify
+    hooks = []
+
+    class HookedMonitor(monitor_type):
+        def __init__(self, args, original_run):
+            super().__init__(args, original_run)
+            producers = [ROOT / path for path in wrapper.HARNESSES.values()]
+            producers += list(HARNESSES.values())
+            if args.harness:
+                producers.append(args.harness)
+            hook = provenance.GeneratorCleanup(self.inputs, producers)
+            hook.__enter__()
+            hooks.append(hook)
+
+    def checked_qualification(args, monitor, status, output, error):
+        input_error = None
+        try:
+            monitor.inputs.finish()
+        except (OSError, ValueError) as failure:
+            input_error = str(failure)
+            monitor.failures.append({"kind": "input_changed", "reason": input_error})
+        result = original_qualify(args, monitor, status, output, error or input_error)
+        result.update(inputs_unchanged=input_error is None,
+                      input_inventory=support.identity(monitor.inputs.directory / "inventory.json"),
+                      intentional_cleanups=monitor.inputs.cleanup_proofs,
+                      schema="s4-fuzz-kind-v2", component="fuzz-kind-worker",
+                      scope=provenance.scope(args.cases, final=args.cases == 200),
+                      parent_origin_binding_required=True)
+        return result
+
+    wrapper.Monitor, wrapper.s2.qualify = HookedMonitor, checked_qualification
     original = sys.argv
     try:
         sys.argv = [str(WRAPPER), *argv]
         return wrapper.main()
     finally:
         sys.argv = original
+        wrapper.s2.qualify = original_qualify
+        for hook in reversed(hooks):
+            hook.__exit__(None, None, None)
 
 
 def qualified_kind(status, summary, kind, cases, oracles):
@@ -63,7 +116,7 @@ def qualified_kind(status, summary, kind, cases, oracles):
               "comparisons_expected": comparisons, "native_comparisons": comparisons,
               "old_rejected": 0, "core_refused": 0, "core_build_failed": 0, "harness_status": 0}
     return (status == 0 and isinstance(summary, dict) and summary.get("kind") == kind
-            and all(summary.get(key) is True for key in ("qualified", "complete", "native_complete", "oracle_unchanged"))
+            and all(summary.get(key) is True for key in ("qualified", "complete", "native_complete", "oracle_unchanged", "inputs_unchanged"))
             and all(type(summary.get(key)) is int and summary[key] == wanted for key, wanted in counts.items())
             and summary.get("failures") == [] and summary.get("error") is None
             and summary.get("oracles") == oracles)
@@ -78,6 +131,7 @@ def main():
     parser.add_argument("--jobs", type=int, choices=(1, 2, 3), default=3)
     parser.add_argument("--cases", type=int, choices=(50, 200), default=50)
     support.receipt_arguments(parser)
+    provenance.arguments(parser)
     args = parser.parse_args()
     if git("status", "--porcelain", "--untracked-files=no"):
         parser.error("tracked files must be clean for the whole matrix")
@@ -85,11 +139,12 @@ def main():
     if args.evidence.exists() or args.cache.exists():
         parser.error("fresh evidence and cache paths are required")
     wrapper = strict_wrapper()
-    sources = [Path(__file__), Path(support.__file__), WRAPPER, wrapper.S2_WRAPPER,
+    sources = [Path(__file__), Path(support.__file__), Path(provenance.__file__), WRAPPER, wrapper.S2_WRAPPER,
                ROOT / "scripts/build-slot.sh", *HARNESSES.values(),
                *(ROOT / path for path in wrapper.HARNESSES.values())]
     try:
-        receipt = support.manifest(ROOT, args.old, args.core, args, sources, ("nice", "taskset"))
+        receipt = provenance.manifest(ROOT, args.old, args.core, args, sources, ("nice", "taskset"))
+        provenance.bind_scope(receipt, provenance.scope(args.cases, final=args.cases == 200))
     except (ValueError, OSError, subprocess.SubprocessError) as error:
         parser.error(str(error))
     oracles = {"old": receipt["oracles"]["old"], "new": receipt["oracles"]["core"]}
@@ -97,8 +152,8 @@ def main():
     commit = receipt["source_commit"]
     args.evidence.mkdir(parents=True)
     args.cache.mkdir(parents=True)
-    manifest = {**receipt, "cases_per_kind": args.cases,
-                "kinds": list(KINDS), "jobs": args.jobs}
+    manifest = {**receipt, "cases_per_kind": args.cases, "scope": provenance.scope(args.cases, final=args.cases == 200),
+                "component": "fuzz-matrix", "kinds": list(KINDS), "jobs": args.jobs}
     (args.evidence / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
     capture = support.Capture(args.evidence / "matrix-processes", ROOT)
 
@@ -130,10 +185,16 @@ def main():
     order = ("number",) + tuple(kind for kind in KINDS if kind != "number")
     with concurrent.futures.ThreadPoolExecutor(max_workers=args.jobs) as workers:
         results = dict(workers.map(run, order))
-    unchanged = support.unchanged(ROOT, receipt)
+    unchanged = provenance.unchanged(ROOT, receipt)
     same_oracles = all(identity(Path(item["path"])) == item for item in oracles.values())
+    input_error = None
+    try:
+        same_inputs = all(item["passed"] and provenance.fuzz_unchanged(item["summary"]) for item in results.values())
+    except (OSError, ValueError, KeyError) as failure:
+        input_error, same_inputs = str(failure), False
     summary = {**manifest, "source_unchanged": unchanged, "oracles_unchanged": same_oracles,
-               "results": results, "qualified": unchanged and same_oracles and all(item["passed"] for item in results.values())}
+               "inputs_unchanged": same_inputs, "input_error": input_error,
+               "results": results, "qualified": unchanged and same_oracles and same_inputs and all(item["passed"] for item in results.values())}
     (args.evidence / "summary.json").write_text(json.dumps(summary, indent=2) + "\n")
     return 0 if summary["qualified"] else 1
 

@@ -20,6 +20,7 @@ import threading
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import qualification_support as support
+import qualification_provenance as provenance
 INTEGRATION = ROOT.parent / "codex-new-core-s4-integration"
 BASELINE = INTEGRATION / "experiments/new-core-s4-20261006/integration/base-core-run01/full-conformance.log"
 CROSSCHECK = INTEGRATION / "experiments/new-core-s3-20261006/wave-x/integration/final-merge-run02/full-conformance.log"
@@ -63,8 +64,11 @@ def validate_report(value, status, allow_cached=True, selected=lambda name: True
             raise ValueError(f"report total disagrees with {verdict} verdicts")
     if "executed" in value:
         executed = value["executed"]
-        if type(executed) is not int or not 0 <= executed <= counts["passed"] + counts["failed"]:
+        if type(executed) is not int or executed != counts["passed"] + counts["failed"]:
             raise ValueError("invalid executed total")
+    for field in ("dropped", "unloaded"):
+        if field in value and (type(value[field]) is not int or value[field] != 0):
+            raise ValueError(f"invalid or nonzero {field} total")
     expected = 1 if counts["failed"] else (0 if tests else 3)
     if status != expected:
         raise ValueError("compiler status disagrees with test report")
@@ -176,6 +180,8 @@ def selection(sweep, args, baseline, expected_total):
     modes = args.modes.split(",")
     if args.set == "all" and (total != 1518 or len(modes) != 2 or set(modes) != {"debug", "release"}):
         raise ValueError("full conformance requires debug/release and exactly 1518 comparisons each")
+    if args.set == "all" and not (args.leakcheck and args.verify):
+        raise ValueError("full conformance requires leakcheck and verify")
     return expected, total
 
 
@@ -187,6 +193,7 @@ def arguments(argv=None):
     parser.add_argument("--baseline-crosscheck", type=Path, default=CROSSCHECK)
     parser.add_argument("--expected-tests", type=int, help="Required for nonbaseline selections; otherwise baseline counts apply")
     support.receipt_arguments(parser)
+    provenance.arguments(parser)
     options, historical = parser.parse_known_args(argv)
     return parser, options, historical
 
@@ -234,14 +241,17 @@ def main():
             state["modes"] = args.modes.split(",")
             if not state["modes"] or len(set(state["modes"])) != len(state["modes"]) or set(state["modes"]) - {"debug", "release"}:
                 raise ValueError("modes must be distinct debug/release selections")
-            receipt.update(support.manifest(ROOT, args.mylang, args.core, options,
-                [Path(__file__), Path(support.__file__), Path(sweep.__file__), options.baseline, options.baseline_crosscheck], ("taskset",)))
+            receipt.update(provenance.manifest(ROOT, args.mylang, args.core, options,
+                [Path(__file__), Path(support.__file__), Path(provenance.__file__), Path(sweep.__file__), options.baseline, options.baseline_crosscheck], ("taskset",)))
+            provenance.bind_scope(receipt, "final" if args.set == "all" else "diagnostic")
+            provenance.bind_compilers(self, receipt)
             receipt.update(baseline=baseline, inputs=inputs, selected=state["expected"],
                            baseline_inputs=input_identities,
                            baseline_tests_tree=support.git(ROOT, "rev-parse", baseline["source_commit"] + ":tests/lang"),
                            current_tests_tree=support.git(ROOT, "rev-parse", "HEAD:tests/lang"),
                            expected_tests=state["total"], modes=state["modes"],
-                           leakcheck=args.leakcheck, verify=args.verify)
+                           leakcheck=args.leakcheck, verify=args.verify,
+                           scope="final" if args.set == "all" else "diagnostic", component="conformance")
             (options.evidence / "manifest.json").write_text(json.dumps(receipt, indent=2) + "\n")
             self.capture = support.Capture(options.evidence / "processes", ROOT)
 
@@ -264,7 +274,7 @@ def main():
         coverage(rows, state["expected"], state["modes"], state["total"])
         if baseline_inputs(ROOT, baseline["source_commit"]) != input_identities:
             raise ValueError("corpus identities changed during qualification")
-        if not support.unchanged(ROOT, receipt):
+        if not provenance.unchanged(ROOT, receipt):
             raise ValueError("compiler/source/tool/harness identities changed during qualification")
     except (OSError, ValueError, KeyError, subprocess.SubprocessError) as failure:
         error = str(failure)

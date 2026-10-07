@@ -21,6 +21,7 @@ import time
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import qualification_support as support
+import qualification_provenance as provenance
 spec = importlib.util.spec_from_file_location("s4_project_report", Path(__file__).with_name("conformance_checked.py"))
 reports = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(reports)
@@ -70,6 +71,7 @@ def main():
     parser.add_argument("--cases", type=int, default=50)
     parser.add_argument("--seed", type=int, default=4701)
     support.receipt_arguments(parser)
+    provenance.arguments(parser)
     args = parser.parse_args()
     if args.cases < 1 or git("status", "--porcelain", "--untracked-files=no"):
         parser.error("positive cases and clean frozen tracked source are required")
@@ -79,26 +81,39 @@ def main():
     area.mkdir(parents=True)
     cache.mkdir(parents=True)
     try:
-        receipt = support.manifest(ROOT, args.old, args.core, args,
-            [Path(__file__), Path(support.__file__), Path(reports.__file__)], ("strace",))
+        receipt = provenance.manifest(ROOT, args.old, args.core, args,
+            [Path(__file__), Path(support.__file__), Path(provenance.__file__), Path(reports.__file__)], ("strace",))
+        provenance.bind_scope(receipt, provenance.scope(args.cases, final=args.cases == 200))
     except (OSError, ValueError, subprocess.SubprocessError) as error:
         parser.error(str(error))
     oracles = receipt["oracles"]
     capture = support.Capture(area / "processes", ROOT)
     rng = random.Random(args.seed)
-    manifest = {**receipt, "cases": args.cases, "seed": args.seed,
-                "accepted": 0, "commands": [], "inputs": {}, "qualified": False}
+    manifest = {**receipt, "cases": args.cases, "seed": args.seed, "scope": provenance.scope(args.cases, final=args.cases == 200),
+                "component": "project-matrix", "accepted": 0, "commands": [], "inputs": {}, "qualified": False}
     (area / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
     command_lock = threading.Lock()
     next_command = [1]
     phases = {}
+    live = {}
 
-    def retain(folder, phase):
+    def retain(folder, phase, changed=()):
+        if folder.name in live:
+            live[folder.name].advance(changed)
+        else:
+            live[folder.name] = provenance.InputPhase(folder)
+        live[folder.name].check()
         value = support.snapshot(folder, area / "inputs" / folder.name / phase)
+        live[folder.name].check()
+        if any(item["sha256"] != live[folder.name].expected[str(folder / name)]["sha256"]
+               for name, item in value["files"].items()):
+            raise ValueError("retained project bytes differ from live phase")
         manifest["inputs"].setdefault(folder.name, {})[phase] = value
         phases[folder.name] = phase
+        value["live"] = live[folder.name].record()
 
     def run(folder, engine, target, flags=(), traced=False, required_statuses=None):
+        live[folder.name].check()
         with command_lock:
             number = next_command[0]
             next_command[0] += 1
@@ -119,6 +134,7 @@ def main():
         stem.with_suffix(".command").write_text(shlex.join(argv) + "\n" + json.dumps(item) + "\n")
         if timed_out:
             raise ValueError("command timed out; partial outputs retained and process group terminated")
+        live[folder.name].check()
         normalized, counts = verdicts(result, forced="--force" in flags)
         statuses = {test["name"]: test["status"] for test in json.loads(result.stdout)["tests"]}
         if required_statuses is not None and statuses != required_statuses:
@@ -160,34 +176,41 @@ def main():
             run(folder, "core", "app.my", traced=True,
                 required_statuses={"app::test_constant": "cached", "app::test_dependency": "cached"})
             # Changed dependency: one test fails, the unaffected constant remains reusable.
+            live[folder.name].check()
             (folder / "leaf.my").write_text(leaf.replace(str(value) + "\n", str(value + 1) + "\n"))
-            retain(folder, "changed-dependency")
+            retain(folder, "changed-dependency", (folder / "leaf.my",))
             changed = run(folder, "old", "app.my")
             if changed != run(folder, "core", "app.my", required_statuses={"app::test_constant": "cached", "app::test_dependency": "failed"}) or changed != [("app::test_constant", "passed"), ("app::test_dependency", "failed")]:
                 raise ValueError("changed dependency comparison differs")
             # Provider replacement restores the expected result with an unchanged signature.
+            live[folder.name].check()
             (folder / "app.cases.json").write_text(json.dumps({"app::test_dependency": {"providers": {"dep.my": dependency.replace(" + " + str(offset), " + " + str(offset - 1))}}}) + "\n")
-            retain(folder, "provider")
+            retain(folder, "provider", (folder / "app.cases.json",))
             provider = run(folder, "old", "app.my", ("--filter", "test_dependency"))
             if provider != run(folder, "core", "app.my", ("--filter", "test_dependency")) or provider != [("app::test_dependency", "passed")]:
                 raise ValueError("provider comparison differs")
             run(folder, "core", "app.my", ("--filter", "test_dependency"), traced=True,
                 required_statuses={"app::test_dependency": "cached"})
             if number % 5 == 0:
+                live[folder.name].check()
                 a = folder / "provider-a.json"
                 b = folder / "provider-b.json"
                 a.write_bytes((folder / "app.cases.json").read_bytes())
                 b.write_text(json.dumps({"app::test_dependency": {"providers": {"dep.my": "module dep\n\npublic def value() -> int:\n    return " + str(expected + 1) + "\n"}, "expected": False}}) + "\n")
-                retain(folder, "concurrent-providers")
+                retain(folder, "concurrent-providers", (a, b))
                 expected_results = [run(folder, "old", "app.my", ("--filter", "test_dependency", "--cases", str(cases))) for cases in (a, b)]
                 with ThreadPoolExecutor(max_workers=2) as workers:
                     results = list(workers.map(lambda cases: run(folder, "core", "app.my", ("--force", "--filter", "test_dependency", "--cases", str(cases))), (a, b)))
                 if results != expected_results or results != [[("app::test_dependency", "passed")]] * 2:
                     raise ValueError("concurrent provider selections shared an output or returned a wrong result")
+            live[folder.name].check()
             manifest["accepted"] += 1
             (area / "summary.json").write_text(json.dumps(manifest, indent=2) + "\n")
             print(f"project {number + 1}/{args.cases}: PASS", flush=True)
-        manifest["source_unchanged"] = support.unchanged(ROOT, receipt)
+        for phase in live.values():
+            phase.check()
+        manifest["inputs_unchanged"] = True
+        manifest["source_unchanged"] = provenance.unchanged(ROOT, receipt)
         manifest["oracles_unchanged"] = all(identity(Path(item["path"])) == item for item in oracles.values())
         manifest["qualified"] = manifest["source_unchanged"] and manifest["oracles_unchanged"] and manifest["accepted"] == args.cases
     except (ValueError, OSError, KeyError, subprocess.SubprocessError) as error:
