@@ -397,6 +397,10 @@ test "runSelected and expectedResult malformed typed cases fail individually and
         .{ .name = "list", .body = "public def test_list() -> list[int]:\n    return []\n", .settings = "{\"expected\":null}" },
         .{ .name = "dict", .body = "public def test_dict() -> dict[int, int]:\n    return {1: 2}\n", .settings = "{\"expected\":[[\"1\"]]}" },
         .{ .name = "argument", .body = "public def test_argument(x: u8) -> bool:\n    return x == 0\n", .settings = "{\"arguments\":{\"x\":\"256\"}}" },
+        .{ .name = "argument", .body = "public def test_argument(x: int) -> bool:\n    return True\n", .settings = "{\"arguments\":{\"x\":\"00\"}}" },
+        .{ .name = "argument", .body = "public def test_argument(x: int) -> bool:\n    return True\n", .settings = "{\"arguments\":{\"x\":\"+0\"}}" },
+        .{ .name = "argument", .body = "public def test_argument(x: int) -> bool:\n    return True\n", .settings = "{\"arguments\":{\"x\":\"-0\"}}" },
+        .{ .name = "argument", .body = "public def test_argument(x: int) -> bool:\n    return True\n", .settings = "{\"arguments\":{\"x\":\"1_0\"}}" },
     };
     for (fixtures) |fixture| {
         const source = try std.fmt.allocPrint(a, "module app\n\n{s}\npublic def test_z_survivor() -> bool:\n    return True\n", .{fixture.body});

@@ -61,7 +61,14 @@ const Checker = struct {
     }
     fn integer(range: types.Integer, input: Value) Error!void {
         if (input != .string) return error.InvalidTestValue;
-        const number = std.fmt.parseInt(i128, input.string, 10) catch return error.InvalidTestValue;
+        const text = input.string;
+        if (text.len == 0 or text.len > 20) return error.InvalidTestValue;
+        const negative = text[0] == '-';
+        const digits = text[@intFromBool(negative)..];
+        if (digits.len == 0) return error.InvalidTestValue;
+        if (digits[0] == '0' and (digits.len != 1 or negative)) return error.InvalidTestValue;
+        for (digits) |digit| if (!std.ascii.isDigit(digit)) return error.InvalidTestValue;
+        const number = std.fmt.parseInt(i128, text, 10) catch return error.InvalidTestValue;
         if (number < range.minimum or number > range.maximum) return error.InvalidTestValue;
     }
     fn atom(self: *Checker, kind: types.Atom, input: Value, depth: usize) Error!void {
@@ -143,6 +150,11 @@ test "typed case values reject wrong JSON shapes integer overflow and malformed 
         .{ .name = "bool", .json = "\"true\"" },
         .{ .name = "i64", .json = "\"18446744073709551616\"" },
         .{ .name = "i64", .json = "0" },
+        .{ .name = "i64", .json = "\"00\"" },
+        .{ .name = "i64", .json = "\"+0\"" },
+        .{ .name = "i64", .json = "\"-0\"" },
+        .{ .name = "i64", .json = "\"1_0\"" },
+        .{ .name = "i64", .json = "\"000000000000000000000\"" },
         .{ .name = "u64", .json = "\"18446744073709551616\"" },
         .{ .name = "u8", .json = "\"256\"" },
         .{ .name = "u8", .json = "\"-1\"" },
@@ -167,6 +179,7 @@ test "typed case values reject wrong JSON shapes integer overflow and malformed 
     }
     try validate(schema, "i64", .{ .string = "-9223372036854775808" }, 0);
     try validate(schema, "i64", .{ .string = "9223372036854775807" }, 0);
+    try validate(schema, "i64", .{ .string = "0" }, 0);
     try validate(schema, "u8", .{ .string = "255" }, 0);
     try validate(schema, "u64", .{ .string = "18446744073709551615" }, 0);
     try std.testing.expectError(error.InvalidTestValue, validate(schema, "str", .{ .string = "\xff" }, 0));
