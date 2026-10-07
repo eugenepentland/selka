@@ -1,0 +1,13 @@
+{
+  "argv": [
+    "taskset",
+    "-c",
+    "0-9",
+    "git",
+    "commit",
+    "-m",
+    "core: guard native tool discovery before persistent reuse"
+  ],
+  "status": 0,
+  "wall_s": 0.15113425604067743
+}

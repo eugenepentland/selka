@@ -1,0 +1,9 @@
+{
+  "classification": "RED evidence harness fixture, not production",
+  "source_snapshot": "source-notdir-23.json",
+  "first_case": "helper/native initially-absent GREEN",
+  "second_case": "helper/native preexisting-directory GREEN, actual Core app rejected invalid export def grammar before tool invocation",
+  "source": "native_replay_source27.py",
+  "repair": "replace export def main with existing language def main syntax; repeat all correctness cases on fresh work/cache/output paths",
+  "production_source_unchanged": true
+}

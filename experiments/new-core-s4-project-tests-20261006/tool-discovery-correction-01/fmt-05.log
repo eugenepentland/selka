@@ -1,0 +1,2 @@
+src/core/tool_discovery.zig
+src/core/tool_identity.zig

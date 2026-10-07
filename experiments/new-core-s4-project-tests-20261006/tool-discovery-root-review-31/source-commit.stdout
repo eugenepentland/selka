@@ -1,0 +1,3 @@
+[codex/new-core-s4-project-tests c53732049] core: guard native tool discovery before persistent reuse
+ 5 files changed, 515 insertions(+), 16 deletions(-)
+ create mode 100644 src/core/tool_discovery.zig

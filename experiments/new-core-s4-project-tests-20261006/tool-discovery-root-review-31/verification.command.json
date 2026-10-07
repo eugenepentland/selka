@@ -1,0 +1,11 @@
+{
+  "argv": [
+    "taskset",
+    "-c",
+    "0,1,4-9,12-19",
+    "python3",
+    "experiments/new-core-s4-project-tests-20261006/tool-discovery-root-review-31/verify_handoff.py"
+  ],
+  "status": 0,
+  "wall_s": 0.15424389904364944
+}

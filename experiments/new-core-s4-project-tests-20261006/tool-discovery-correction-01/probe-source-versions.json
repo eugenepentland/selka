@@ -1,0 +1,5 @@
+{
+  "guard_probe_source18_sha256": "ffcbdc5b0d6cffe3015ad3d929638b16487d084df5f05a626c8050856db9a8b3",
+  "guard_probe_source25_sha256": "fa3a7e04b3b6905d808bd4451ad9fcca93f5db040e0de17a36bcdc231fdb6aa0",
+  "note": "source18 retained separately; source25 adds only owned regular-file-parent mutation mode"
+}

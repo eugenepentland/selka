@@ -1,0 +1,17 @@
+guardian: run-all: whole-tree run — --full was requested
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 29 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 10564 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 11 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 2/88 failed (anytype-budget, ban-hardcoded-paths)
+guardian: failures grouped by check (2):
+  anytype-budget (1 finding)
+    - src/core/tool_discovery.zig: 4 `anytype` parameters (limit: 2)
+      fix: replace anytype with comptime-typed generics where possible.
+  ban-hardcoded-paths (11 findings)
+    - src/core/tool_discovery.zig:37: hardcoded literal (absolute /opt path)
+      fix: read the value from config or pass as a parameter; keep config under config/.
+    - src/core/tool_discovery.zig:37: hardcoded literal (absolute /etc path)
+    - src/core/tool_discovery.zig:38: hardcoded literal (absolute /usr path)
+    - +8 more — use --verbose for full detail
+  caution: zig-out binaries predate this failed run (installs are gated on green) — rebuild green before running them

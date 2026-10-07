@@ -1,0 +1,6 @@
+src/core/tool_identity.zig:1218:11: error: local constant shadows declaration of 'before'
+    const before = try capture(request);
+          ^~~~~~
+src/core/tool_identity.zig:514:1: note: declared here
+fn before(_: void, left: Input, right: Input) bool {
+^~
