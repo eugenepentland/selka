@@ -1,0 +1,23 @@
+S2-X test: waiting/running; source=34c739826ad88407c636bbf8b60455581ed19783; log=/home/epentland/ai/canopy/mylang-worktrees/claude-s4-finish/experiments/new-core-s4-20261006/finish/x-old-gate-02/test.log
+S2-X test: elapsed including admission=60s
+S2-X test: elapsed including admission=120s
+S2-X test: elapsed including admission=180s
+S2-X test: elapsed including admission=240s
+S2-X test: elapsed including admission=300s
+S2-X test: elapsed including admission=360s
+S2-X test: elapsed including admission=420s
+S2-X test: elapsed including admission=480s
+S2-X test: elapsed including admission=540s
+S2-X test: elapsed including admission=600s
+S2-X test: elapsed including admission=660s
+S2-X test: elapsed including admission=720s
+S2-X test: elapsed including admission=780s
+S2-X test: elapsed including admission=840s
+S2-X test: exit=0, command=877.58s, wall=882.63s, qualified=True
+S2-X test-qbe: waiting/running; source=34c739826ad88407c636bbf8b60455581ed19783; log=/home/epentland/ai/canopy/mylang-worktrees/claude-s4-finish/experiments/new-core-s4-20261006/finish/x-old-gate-02/test-qbe.log
+S2-X test-qbe: elapsed including admission=60s
+S2-X test-qbe: exit=0, command=67.26s, wall=72.36s, qualified=True
+S2-X test-qbe-build: waiting/running; source=34c739826ad88407c636bbf8b60455581ed19783; log=/home/epentland/ai/canopy/mylang-worktrees/claude-s4-finish/experiments/new-core-s4-20261006/finish/x-old-gate-02/test-qbe-build.log
+S2-X test-qbe-build: exit=0, command=4.18s, wall=9.26s, qualified=True
+S2-X fmt-check: waiting/running; source=34c739826ad88407c636bbf8b60455581ed19783; log=/home/epentland/ai/canopy/mylang-worktrees/claude-s4-finish/experiments/new-core-s4-20261006/finish/x-old-gate-02/fmt-check.log
+S2-X fmt-check: exit=0, command=0.24s, wall=6.00s, qualified=True

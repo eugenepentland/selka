@@ -1,0 +1,331 @@
+{
+ "cpu": 10,
+ "core": "/home/epentland/ai/canopy/mylang-worktrees/claude-s4-p/.mylang-cache/s4-fix/core-rf3/bin/mylang-core",
+ "lox": {
+  "build": {
+   "cold": 6.548665239941329,
+   "unchanged": 0.0017553679645061493,
+   "one-function-edit": 0.13623204897157848,
+   "ratio_to_old": {
+    "cold": 0.8552647665674308,
+    "unchanged": 0.2576224028371088,
+    "one-function-edit": 0.6977379690834635
+   }
+  },
+  "tests-directory": {
+   "cold": 3.908876641886309,
+   "unchanged": 0.05744707095436752,
+   "one-function-edit": 0.3862264980562031,
+   "ratio_to_old": {
+    "cold": 0.22888727056527694,
+    "unchanged": 0.5177986466850862,
+    "one-function-edit": 0.6351041295305841
+   }
+  },
+  "tests-driver": {
+   "cold": 0.42553259804844856,
+   "unchanged": 0.0018300681840628386,
+   "one-function-edit": 0.23713016300462186,
+   "ratio_to_old": {
+    "cold": 0.08652114215149667,
+    "unchanged": 0.05355362719111057,
+    "one-function-edit": 5.9378862031193105
+   }
+  }
+ },
+ "eda": {
+  "build": {
+   "cold": 6.8111404539085925,
+   "unchanged": 0.002773660933598876,
+   "one-function-edit": 0.6144124451093376,
+   "ratio_to_old": {
+    "cold": 0.08394006689320437,
+    "unchanged": 0.16810066264235612,
+    "one-function-edit": 0.5335293896399249
+   }
+  },
+  "test": {
+   "cold": 25.236760325031355,
+   "unchanged": 0.3407573439180851,
+   "one-function-edit": 0.563440612051636,
+   "ratio_to_old": {
+    "cold": 0.10759944131935963,
+    "unchanged": 0.20590811766154155,
+    "one-function-edit": 0.3382402521621059
+   }
+  }
+ },
+ "baselines": {
+  "lox": {
+   "build": [
+    7.65688649402,
+    0.006813724059611559,
+    0.19524815189652145
+   ],
+   "tests-directory": [
+    17.077737142099068,
+    0.11094480706378818,
+    0.6081309821456671
+   ],
+   "tests-driver": [
+    4.9182498920708895,
+    0.034172628074884415,
+    0.03993511409498751
+   ]
+  },
+  "eda": {
+   "build": [
+    81.1429,
+    0.0165,
+    1.1516
+   ],
+   "test": [
+    234.5436,
+    1.6549,
+    1.6658
+   ]
+  }
+ },
+ "commands": [
+  {
+   "argv": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-s4-p/.mylang-cache/s4-fix/core-rf3/bin/mylang-core",
+    "build",
+    "main.my",
+    "-o",
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-s4-p/.mylang-cache/s4-fix/ports-06-3/lox-cache/out/lox",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-s4-p/.mylang-cache/s4-fix/ports-06-3/lox-cache/build"
+   ],
+   "seconds": 6.548665239941329,
+   "status": 0,
+   "tail": ""
+  },
+  {
+   "argv": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-s4-p/.mylang-cache/s4-fix/core-rf3/bin/mylang-core",
+    "test",
+    ".",
+    "--max-steps=100000000",
+    "--jobs",
+    "1",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-s4-p/.mylang-cache/s4-fix/ports-06-3/lox-cache/tests"
+   ],
+   "seconds": 3.908876641886309,
+   "status": 0,
+   "tail": "add_all\npassed table_test::test_table_delete_leaves_tombstone\npassed table_test::test_table_grows_at_load_factor\npassed table_test::test_table_set_get\npassed table_test::test_table_set_reports_new_key\npassed table_test::test_table_tombstone_reuse\npassed value_test::test_format_fraction\npassed value_test::test_format_integer\npassed value_test::test_format_large\npassed value_test::test_format_small\npassed value_test::test_format_special\npassed value_test::test_format_zeros\npassed value_test::test_is_falsey_rules\npassed value_test::test_values_equal_rules\n65 passed, 0 cached, 0 failed, 0 skipped\n"
+  },
+  {
+   "argv": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-s4-p/.mylang-cache/s4-fix/core-rf3/bin/mylang-core",
+    "test",
+    "driver_tests.my",
+    "--cases",
+    "driver_cases.json",
+    "--max-steps=100000000",
+    "--jobs",
+    "1",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-s4-p/.mylang-cache/s4-fix/ports-06-3/lox-cache/tests"
+   ],
+   "seconds": 0.42553259804844856,
+   "status": 0,
+   "tail": "thod\npassed driver_tests::test_run_closure_counter\npassed driver_tests::test_run_compile_error_status\npassed driver_tests::test_run_gc_stress_same_output\npassed driver_tests::test_run_inheritance_super\npassed driver_tests::test_run_print_value_kinds\npassed driver_tests::test_run_runtime_error_trace\npassed driver_tests::test_run_set_rhs_keeps_original_receiver\npassed driver_tests::test_run_set_rhs_keeps_receiver_mutations\npassed driver_tests::test_run_shared_upvalue\npassed driver_tests::test_run_stack_overflow\npassed driver_tests::test_run_string_concat\n13 passed, 0 cached, 0 failed, 0 skipped\n"
+  },
+  {
+   "argv": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-s4-p/.mylang-cache/s4-fix/core-rf3/bin/mylang-core",
+    "build",
+    "main.my",
+    "-o",
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-s4-p/.mylang-cache/s4-fix/ports-06-3/lox-cache/out/lox",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-s4-p/.mylang-cache/s4-fix/ports-06-3/lox-cache/build"
+   ],
+   "seconds": 0.0017553679645061493,
+   "status": 0,
+   "tail": ""
+  },
+  {
+   "argv": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-s4-p/.mylang-cache/s4-fix/core-rf3/bin/mylang-core",
+    "test",
+    ".",
+    "--max-steps=100000000",
+    "--jobs",
+    "1",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-s4-p/.mylang-cache/s4-fix/ports-06-3/lox-cache/tests"
+   ],
+   "seconds": 0.05744707095436752,
+   "status": 0,
+   "tail": "add_all\ncached table_test::test_table_delete_leaves_tombstone\ncached table_test::test_table_grows_at_load_factor\ncached table_test::test_table_set_get\ncached table_test::test_table_set_reports_new_key\ncached table_test::test_table_tombstone_reuse\ncached value_test::test_format_fraction\ncached value_test::test_format_integer\ncached value_test::test_format_large\ncached value_test::test_format_small\ncached value_test::test_format_special\ncached value_test::test_format_zeros\ncached value_test::test_is_falsey_rules\ncached value_test::test_values_equal_rules\n0 passed, 65 cached, 0 failed, 0 skipped\n"
+  },
+  {
+   "argv": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-s4-p/.mylang-cache/s4-fix/core-rf3/bin/mylang-core",
+    "test",
+    "driver_tests.my",
+    "--cases",
+    "driver_cases.json",
+    "--max-steps=100000000",
+    "--jobs",
+    "1",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-s4-p/.mylang-cache/s4-fix/ports-06-3/lox-cache/tests"
+   ],
+   "seconds": 0.0018300681840628386,
+   "status": 0,
+   "tail": "thod\ncached driver_tests::test_run_closure_counter\ncached driver_tests::test_run_compile_error_status\ncached driver_tests::test_run_gc_stress_same_output\ncached driver_tests::test_run_inheritance_super\ncached driver_tests::test_run_print_value_kinds\ncached driver_tests::test_run_runtime_error_trace\ncached driver_tests::test_run_set_rhs_keeps_original_receiver\ncached driver_tests::test_run_set_rhs_keeps_receiver_mutations\ncached driver_tests::test_run_shared_upvalue\ncached driver_tests::test_run_stack_overflow\ncached driver_tests::test_run_string_concat\n0 passed, 13 cached, 0 failed, 0 skipped\n"
+  },
+  {
+   "argv": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-s4-p/.mylang-cache/s4-fix/core-rf3/bin/mylang-core",
+    "build",
+    "main.my",
+    "-o",
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-s4-p/.mylang-cache/s4-fix/ports-06-3/lox-cache/out/lox",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-s4-p/.mylang-cache/s4-fix/ports-06-3/lox-cache/build"
+   ],
+   "seconds": 0.13623204897157848,
+   "status": 0,
+   "tail": ""
+  },
+  {
+   "argv": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-s4-p/.mylang-cache/s4-fix/core-rf3/bin/mylang-core",
+    "test",
+    ".",
+    "--max-steps=100000000",
+    "--jobs",
+    "1",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-s4-p/.mylang-cache/s4-fix/ports-06-3/lox-cache/tests"
+   ],
+   "seconds": 0.3862264980562031,
+   "status": 0,
+   "tail": "dd_all\ncached table_test::test_table_delete_leaves_tombstone\ncached table_test::test_table_grows_at_load_factor\ncached table_test::test_table_set_get\ncached table_test::test_table_set_reports_new_key\ncached table_test::test_table_tombstone_reuse\ncached value_test::test_format_fraction\ncached value_test::test_format_integer\ncached value_test::test_format_large\ncached value_test::test_format_small\ncached value_test::test_format_special\ncached value_test::test_format_zeros\ncached value_test::test_is_falsey_rules\ncached value_test::test_values_equal_rules\n13 passed, 52 cached, 0 failed, 0 skipped\n"
+  },
+  {
+   "argv": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-s4-p/.mylang-cache/s4-fix/core-rf3/bin/mylang-core",
+    "test",
+    "driver_tests.my",
+    "--cases",
+    "driver_cases.json",
+    "--max-steps=100000000",
+    "--jobs",
+    "1",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-s4-p/.mylang-cache/s4-fix/ports-06-3/lox-cache/tests"
+   ],
+   "seconds": 0.23713016300462186,
+   "status": 0,
+   "tail": "thod\ncached driver_tests::test_run_closure_counter\ncached driver_tests::test_run_compile_error_status\ncached driver_tests::test_run_gc_stress_same_output\ncached driver_tests::test_run_inheritance_super\ncached driver_tests::test_run_print_value_kinds\ncached driver_tests::test_run_runtime_error_trace\ncached driver_tests::test_run_set_rhs_keeps_original_receiver\ncached driver_tests::test_run_set_rhs_keeps_receiver_mutations\ncached driver_tests::test_run_shared_upvalue\ncached driver_tests::test_run_stack_overflow\ncached driver_tests::test_run_string_concat\n0 passed, 13 cached, 0 failed, 0 skipped\n"
+  },
+  {
+   "argv": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-s4-p/.mylang-cache/s4-fix/core-rf3/bin/mylang-core",
+    "build",
+    "src/main.my",
+    "-o",
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-s4-p/.mylang-cache/s4-fix/ports-06-3/eda-cache/bin/eda-sch",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-s4-p/.mylang-cache/s4-fix/ports-06-3/eda-cache/build"
+   ],
+   "seconds": 6.8111404539085925,
+   "status": 0,
+   "tail": ""
+  },
+  {
+   "argv": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-s4-p/.mylang-cache/s4-fix/core-rf3/bin/mylang-core",
+    "build",
+    "src/main.my",
+    "-o",
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-s4-p/.mylang-cache/s4-fix/ports-06-3/eda-cache/bin/eda-sch",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-s4-p/.mylang-cache/s4-fix/ports-06-3/eda-cache/build"
+   ],
+   "seconds": 0.002773660933598876,
+   "status": 0,
+   "tail": ""
+  },
+  {
+   "argv": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-s4-p/.mylang-cache/s4-fix/core-rf3/bin/mylang-core",
+    "build",
+    "src/main.my",
+    "-o",
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-s4-p/.mylang-cache/s4-fix/ports-06-3/eda-cache/bin/eda-sch",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-s4-p/.mylang-cache/s4-fix/ports-06-3/eda-cache/build"
+   ],
+   "seconds": 0.6144124451093376,
+   "status": 0,
+   "tail": ""
+  },
+  {
+   "argv": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-s4-p/.mylang-cache/s4-fix/core-rf3/bin/mylang-core",
+    "test",
+    "src",
+    "--jobs",
+    "1",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-s4-p/.mylang-cache/s4-fix/ports-06-3/eda-cache/tests",
+    "--max-frames",
+    "30000",
+    "--max-steps",
+    "4000000000",
+    "--max-memory",
+    "2G"
+   ],
+   "seconds": 25.236760325031355,
+   "status": 0,
+   "tail": "sed support_strs_test::test_text_and_byte_len_count_bytes_not_scalars\npassed support_strs_test::test_trim_and_tokenize_take_a_byte_set\npassed uuid_test::test_format_stamps_version_and_variant_and_renders_the_canonical_shape\npassed zipfile_test::test_encoded_size_predicts_the_complete_archive_before_allocation\npassed zipfile_test::test_fuzz_write_emits_a_well_formed_archive_for_arbitrary_entry_bytes\npassed zipfile_test::test_write_produces_an_archive_std_zip_can_extract\npassed zipfile_test::test_write_rejects_zip32_field_overflow_before_producing_bytes\n310 passed, 0 cached, 0 failed, 0 skipped\n"
+  },
+  {
+   "argv": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-s4-p/.mylang-cache/s4-fix/core-rf3/bin/mylang-core",
+    "test",
+    "src",
+    "--jobs",
+    "1",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-s4-p/.mylang-cache/s4-fix/ports-06-3/eda-cache/tests",
+    "--max-frames",
+    "30000",
+    "--max-steps",
+    "4000000000",
+    "--max-memory",
+    "2G"
+   ],
+   "seconds": 0.3407573439180851,
+   "status": 0,
+   "tail": "hed support_strs_test::test_text_and_byte_len_count_bytes_not_scalars\ncached support_strs_test::test_trim_and_tokenize_take_a_byte_set\ncached uuid_test::test_format_stamps_version_and_variant_and_renders_the_canonical_shape\ncached zipfile_test::test_encoded_size_predicts_the_complete_archive_before_allocation\ncached zipfile_test::test_fuzz_write_emits_a_well_formed_archive_for_arbitrary_entry_bytes\ncached zipfile_test::test_write_produces_an_archive_std_zip_can_extract\ncached zipfile_test::test_write_rejects_zip32_field_overflow_before_producing_bytes\n0 passed, 310 cached, 0 failed, 0 skipped\n"
+  },
+  {
+   "argv": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-s4-p/.mylang-cache/s4-fix/core-rf3/bin/mylang-core",
+    "test",
+    "src",
+    "--jobs",
+    "1",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-s4-p/.mylang-cache/s4-fix/ports-06-3/eda-cache/tests",
+    "--max-frames",
+    "30000",
+    "--max-steps",
+    "4000000000",
+    "--max-memory",
+    "2G"
+   ],
+   "seconds": 0.563440612051636,
+   "status": 0,
+   "tail": "hed support_strs_test::test_text_and_byte_len_count_bytes_not_scalars\ncached support_strs_test::test_trim_and_tokenize_take_a_byte_set\ncached uuid_test::test_format_stamps_version_and_variant_and_renders_the_canonical_shape\ncached zipfile_test::test_encoded_size_predicts_the_complete_archive_before_allocation\ncached zipfile_test::test_fuzz_write_emits_a_well_formed_archive_for_arbitrary_entry_bytes\ncached zipfile_test::test_write_produces_an_archive_std_zip_can_extract\ncached zipfile_test::test_write_rejects_zip32_field_overflow_before_producing_bytes\n1 passed, 309 cached, 0 failed, 0 skipped\n"
+  }
+ ]
+}
