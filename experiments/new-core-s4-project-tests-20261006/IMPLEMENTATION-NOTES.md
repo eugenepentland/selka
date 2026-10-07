@@ -1,6 +1,7 @@
 # S4-M implementation and qualification state
 
-The pre-V implementation is frozen at `7bc4a745f`, based on S4-F corrected
+The pre-V implementation is frozen at `25d9e9531` after the bounded unwind
+dependency correction; its initial production checkpoint is `7bc4a745f`, based on S4-F corrected
 production checkpoint `7877aa5d369f57aeb8fb850e8198c08c520b3a51`. Final combined
 package qualification is still pending. Negative runs remain evidence, never
 successful gate receipts.
@@ -52,10 +53,12 @@ that ELF structural checks cannot prove a tool's dependency closure. Eligibility
 now requires the reviewed executable and complete normalized library content;
 unknown tools execute without persistent reuse. Native compilation explicitly
 uses the bundled `x86_64-linux-gnu.2.31` headers and link inputs. The reviewed
-default loader, libc, libm and loader-cache content also enter the captured tool
+default loader, libc, libm, libgcc, libpthread and loader-cache content also enter the captured tool
 generation; unsupported runtime or environment closures bypass reuse. No system
 input was modified. The inventory, generation, approval and CPU-policy domains
-are v2; the unchanged opaque content-memo codec remains v1.
+are v2 except inventory hints, now v3. The v3 hint key also includes every
+expected runtime descriptor, so an older inventory cannot omit a newly reviewed
+dependency. The opaque content-memo codec remains v1.
 
 Execution outputs use invocation-owned directories and stable semantic helper
 names. Focused run07 exposed the inherited fixed runtime-object partial race when
@@ -85,8 +88,19 @@ library into an owned fixture, changes an input during each real compilation,
 and observes refusal with no shared runtime or numeric object published under
 the previous key (71.34 and 78.82 seconds). Its installed compiler SHA256 is
 `67ad628f8743dd803c81bbd071f5c3e7816ff2977ad44bb10c52bb4e36672906`;
-the retained production source hashes match the source checkpoint. Earlier
+the retained production source hashes match initial checkpoint `7bc4a745f`. Earlier
 negative receipts remain untouched.
+
+Read-only bundled-target C and actual Core debug/release/numeric probes reveal
+glibc's dynamically loaded `libgcc_s.so.1` unwinder; the C debug probe also loads
+`libpthread.so.0`. Both exact files and their already captured ELF dependencies
+are now reviewed inputs. The corrected helper passes 20 focused checks and all
+88 Guardian checks, and its production probe inventories 20,907 inputs with
+stable strict/candidate identities. Fresh installed Core SHA256 is
+`2b79fc47b1c5c882d8fcc1c2b0b6fb0b909746b6f7752b4176f18ceac34328e0`.
+The actual CLI smoke passes three directory tests cold and reuses all three
+warm; strace observes only the parent and its two Core workers. Smoke elapsed
+times include slot admission and are not qualification measurements.
 
 Copied propagation fixtures are byte-identical to tests/lang, which was not edited.
 The focused CLI cases cover directory/orphan accounting, changed dependency versus

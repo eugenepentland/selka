@@ -1,0 +1,63 @@
+{
+  "core": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/zig-out/bin/mylang-core",
+  "sha256": "2b79fc47b1c5c882d8fcc1c2b0b6fb0b909746b6f7752b4176f18ceac34328e0",
+  "source_commit": "25d9e95317bbf674ba948d6f4ad3081e0ea7faf2",
+  "commands": [
+    {
+      "argv": [
+        "scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/zig-out/bin/mylang-core",
+        "test",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/runtime-closure-smoke-run15/project",
+        "--json",
+        "--jobs",
+        "2",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/runtime-closure-smoke-run15"
+      ],
+      "status": 0,
+      "seconds": 7.01681695622392,
+      "counts": {
+        "passed": 3,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      }
+    },
+    {
+      "argv": [
+        "scripts/build-slot.sh",
+        "build",
+        "strace",
+        "-f",
+        "-s",
+        "65535",
+        "-e",
+        "trace=execve",
+        "-o",
+        "experiments/new-core-s4-project-tests-20261006/runtime-closure-smoke-run15/warm.trace",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/zig-out/bin/mylang-core",
+        "test",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/runtime-closure-smoke-run15/project",
+        "--json",
+        "--jobs",
+        "2",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/runtime-closure-smoke-run15"
+      ],
+      "status": 0,
+      "seconds": 5.033188946777955,
+      "counts": {
+        "passed": 0,
+        "cached": 3,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      }
+    }
+  ],
+  "qualified": false,
+  "smoke_green": true
+}

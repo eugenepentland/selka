@@ -1,0 +1,14 @@
+$ scripts/build-slot.sh build zig build core --summary all --verbose
+info(verbose): /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig build-exe -ODebug -Mroot=build_qbe_assets.zig --cache-dir .zig-cache --global-cache-dir /home/epentland/.cache/zig --name qbe-build-assets --zig-lib-dir /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/ --listen=-
+info(verbose): ./.zig-cache/o/d2fc47eaff2764b12f85081ed6a427a2/qbe-build-assets /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/src 0.17.0-dev.1683+5ceec001b debug ./.zig-cache/tmp/b3932fb3b38acc2f/qbe_build_assets ./.zig-cache/tmp/b3932fb3b38acc2f/assets.d
+info(verbose): /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig build-exe -ODebug --dep mylang --dep core_tool_platform --dep qbe_build_assets -Mroot=src/core/main.zig -ODebug --dep runtime_contract --dep memory_budget -Mmylang=src/compiler.zig -Mcore_tool_platform=src/config_core_tool_platform.zig -ODebug -Mqbe_build_assets=.zig-cache/o/00e049f29cdd4039deea9e8d7937b03b/qbe_build_assets/assets.zig -ODebug -Mruntime_contract=src/runtime_contract.zig -ferror-tracing -ODebug -Mmemory_budget=src/memory_budget.zig --cache-dir .zig-cache --global-cache-dir /home/epentland/.cache/zig --name mylang-core --zig-lib-dir /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/ --listen=-
+info(verbose): install -C .zig-cache/o/115be775918d6a0c719a005649686df5/mylang-core zig-out/bin/mylang-core
+Build Summary: 5/5 steps succeeded
+core success
++- install mylang-core success
+   +- compile exe mylang-core debug native success 2s MaxRSS:383M
+      +- run exe qbe-build-assets (qbe_build_assets) success 56ms
+         +- compile exe qbe-build-assets debug native cached 6ms MaxRSS:41M
+
+
+{"argv": ["scripts/build-slot.sh", "build", "zig", "build", "core", "--summary", "all", "--verbose"], "status": 0, "wall_seconds": 2.731890390859917}

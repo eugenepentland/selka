@@ -1,0 +1,4 @@
+module orphan
+
+public def test_orphan() -> bool:
+    return True
