@@ -430,6 +430,24 @@ test "an assert whose message is a computed str prints it on its own stderr line
     }
 }
 
+const v_buffer_mut_output =
+    \\True False False False True
+    \\True False False True
+    \\8:3132334100cebb78 2
+    \\8:3132334100cebb78 12:3132334100cebb7861626342
+    \\14:3132334100cebb78616263423132
+    \\1000000 137293856
+    \\
+;
+
+// spec-case: NEW-CORE-S4-TAKE-1
+test "byte_buffer appends through mut record fields print what the old core prints, in place and leak-free" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    // 600,000 appends through `mut` fields: a copy per append would take minutes.
+    try std.testing.expect(try matches(arena.allocator(), "v_buffer_mut", v_buffer_mut_output, 0));
+}
+
 const v_methods_output =
     \\7
     \\3 4
