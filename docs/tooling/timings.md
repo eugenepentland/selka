@@ -15,17 +15,16 @@ $ mylang run prog.my --timings
 timings: native_ns=21234567
 ```
 
-`native_ns` is elapsed awake-clock nanoseconds around the spawned native process.
-It includes the program's own start-up and execution, and it includes the run
-identity check and any build or publish that check needed: a warm run reports
-roughly process start-up plus execution, while the first run after the program
-changes also pays the native build. It excludes frontend checking and emission,
-which finish before the timer starts. A trap still reports the timing and then
-exits with the trap status.
+`native_ns` is elapsed awake-clock nanoseconds from starting the program's process
+to its exit: its own start-up and execution, never the build, which finishes
+before the timer starts. `run-project` and `build --run` take the flag too, and
+it changes neither the exit status, the output nor a trap's report: a trap still
+reports the timing and then exits with the trap status. Given twice, or on
+`build -o`, it is a usage error.
 
-`--timings=json` reports the same interval as the `native_execution` record in
-phase-timings-v1 JSON Lines. To measure the program itself without the compiler in
-the loop, build once and time the binary with the system timer; the
+On the new core `run --timings=json` is refused: the old back end's phase profile
+it reported was retired (S5-B2). To measure the program itself without the
+compiler in the loop, build once and time the binary with the system timer; the
 [performance page](../performance.md) shows both.
 
 Each timing is one JSON object on stderr:
