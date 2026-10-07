@@ -20,10 +20,36 @@ COMPILER test . --max-steps=100000000 --jobs 1 --cache-dir PRIVATE_TEST_CACHE
 COMPILER test driver_tests.my --cases driver_cases.json --max-steps=100000000 --jobs 1 --cache-dir PRIVATE_TEST_CACHE
 ```
 
-The test total is the sum of both test invocations. Directory discovery also
-finds the driver tests; report the second invocation's cached verdicts explicitly.
-Cold tests must execute 65 directory tests and 13 explicit provider cases. Preserve
-the harness's two engines and normal/gc-stress corpus for the 974 comparisons.
+The test time is the sum of both preserved invocations. The frozen source has
+52 declarations in `_test.my` files and 13 in the orphan `driver_tests.my`;
+`driver_cases.json` supplies 13 explicit pure-clock provider cases. There is no
+tracked or currently present default `driver_tests.cases.json` in the protected
+port worktree. S4-P must execute all 65 distinct tests: the 52 ordinary tests and
+the 13 explicit driver cases. Retain per-command executed/cached/skipped/refused
+counts and every orphan test's named reason. A directory skip or refusal cannot
+replace an explicit provider-case pass.
+
+Historical Wave 0 evidence actually records 65 directory passes and 13 additional
+explicit cold passes; its REPORT also says the pin discovers the orphan file.
+This describes those receipts, not a default-provider file in the frozen source.
+`ports-lox-inventory.json` preserves the static 52+13 inventory and that historical
+discrepancy. Recheck actual discovery under the integrated C/M compiler before
+deciding the owned port's provider configuration. Do not silently drop orphan
+declarations to obtain an old filename count.
+
+For the first P run, use the untouched frozen sources and the commands above.
+M's directory discovery accounts for orphan declarations. If a Clock-reaching
+default test receives a reasoned skip/refusal, retain it and require that its
+explicit pure-provider invocation passes. Record cold, unchanged and edited
+directory outcomes independently: M currently treats skip-manifest replay
+conservatively, so a repeated skip may still require checking and jeopardize the
+warm timing target. Diagnose that from real port receipts after C/M integration.
+If declarative defaults are needed, materialize an exact-byte copy of
+`driver_cases.json` as `driver_tests.cases.json` only in the new owned P worktree,
+document its hash and before/after inventory, and rerun both preserved commands.
+Keep the explicit invocation and report any duplicate execution or cached verdict;
+never edit protected ports or a frozen compiler to prepare this adaptation.
+Preserve both engines and the normal/gc-stress corpus for all 974 comparisons.
 Cold/unchanged/edited build baselines are 7.6569/0.0068/0.1952 seconds; test totals
 are 21.9960/0.1451/0.6481 seconds. The one-function edit is `natives.clock_native`:
 
