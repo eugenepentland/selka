@@ -179,14 +179,20 @@ def selection(sweep, args, baseline, expected_total):
     return expected, total
 
 
-def main():
-    parser = argparse.ArgumentParser(add_help=False)
+def arguments(argv=None):
+    """Keep historical flags intact while parsing this adapter's receipt flags."""
+    parser = argparse.ArgumentParser(add_help=False, allow_abbrev=False)
     parser.add_argument("--evidence", type=Path, required=True)
     parser.add_argument("--baseline", type=Path, default=BASELINE)
     parser.add_argument("--baseline-crosscheck", type=Path, default=CROSSCHECK)
     parser.add_argument("--expected-tests", type=int, help="Required for nonbaseline selections; otherwise baseline counts apply")
     support.receipt_arguments(parser)
-    options, historical = parser.parse_known_args()
+    options, historical = parser.parse_known_args(argv)
+    return parser, options, historical
+
+
+def main():
+    parser, options, historical = arguments()
     if options.evidence.exists() or support.git(ROOT, "status", "--porcelain", "--untracked-files=no"):
         parser.error("fresh evidence and clean frozen tracked sources are required")
     try:

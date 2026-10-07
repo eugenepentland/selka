@@ -1,6 +1,7 @@
 # S4 qualification tools
 
-Tool source is frozen at `07cca6157`. These wrappers leave the inherited S1/S2/S3
+The initial corrected tool source is frozen at `07cca6157`. These wrappers leave
+the inherited S1/S2/S3
 harnesses unchanged. They prevent the independently reduced false passes and
 own all launched processes through one subreaper supervisor per command. The
 root independently reran all eleven local selftests: 11/11 pass in 1.778 seconds,
@@ -37,3 +38,16 @@ helper bytes, the initial reconstruction whitespace failure and all local
 selftest failures remain retained; no historical failure is rewritten as green.
 
 No full conformance, strict fuzz or full old gate is part of this tool repair.
+
+The follow-up argument-forwarding correction disables abbreviation in the
+conformance adapter's first parser. Previously historical `--core` overwrote
+the adapter's `--core-source` and disappeared from the forwarded command.
+`arguments()` is the actual parser used by `main`, and the permanent pure
+selftest covers separate/equals forms in both flag orders. The original parser
+RED and controls remain retained under `qualification-forwarding-root02`.
+Project/fuzz wrappers have their own exact `--core` option and do not need this
+repair. Capture and the historical harness stay unchanged.
+Root reproduces the original forwarding failure, then passes all twelve local
+selftests in 1.811 seconds on the corrected two tool files; all five helper
+hashes remain unchanged during that replay. The correction does not qualify
+any compiler or conformance sweep.

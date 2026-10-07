@@ -40,6 +40,21 @@ class QualificationTests(unittest.TestCase):
     def retained(self, name, value):
         (AREA / (name + ".json")).write_text(json.dumps(value, indent=2) + "\n")
 
+    def test_requested_core_and_source_revision_survive_historical_forwarding(self):
+        receipt = ["--evidence", "/owned/evidence", "--old-source", "a" * 40,
+                   "--core-source", "b" * 40]
+        records = []
+        for supplied in (["--core", "/oracles/core"], ["--core=/oracles/core"]):
+            historical = ["--mylang", "/oracles/old", *supplied, "--set", "all",
+                          "--modes", "debug,release", "--leakcheck", "--verify"]
+            for argv in (receipt + historical, historical + receipt):
+                _, options, forwarded = conformance.arguments(argv)
+                self.assertEqual(options.core_source, "b" * 40)
+                self.assertEqual(forwarded, historical)
+                records.append({"argv": argv, "core_source": options.core_source,
+                                "forwarded": forwarded})
+        self.retained("historical-core-forwarding", records)
+
     def test_force_cannot_normalize_cached_to_passed(self):
         value = report([("app::test_dependency", "cached")])
         self.retained("forced-cached-report", value)
