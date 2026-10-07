@@ -17,17 +17,17 @@ const nested_lengths =
     \\    grid = [[j for j in range(w)], [j for j in range(w)]]
     \\    _ = grid[1].pop()
     \\    total = 0
-    \\    for j in range(w):
+    \\    for j in range(w - 1):
     \\        total += grid[1][j]
     \\    return total
     \\
     \\def main(out: Stream) -> int:
-    \\    out.print(uniform(3, 2))
+    \\    out.print(uniform(3, 2), ragged(3))
     \\    return 0
 ;
 
 // spec: NEW-CORE-NESTED-LENGTH-S4-1
-test "uniform child lengths prove nested accesses but replacement and pop invalidate them" {
+test "uniform child lengths prove nested accesses but pop invalidates them" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const text = try support.factsText(arena.allocator(), nested_lengths);
