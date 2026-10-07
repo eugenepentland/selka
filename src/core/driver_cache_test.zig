@@ -2,6 +2,7 @@
 //! on a multi-module project (docs/design/new-core-s4.md §7, cache tests).
 const std = @import("std");
 const tools = @import("core_test_options");
+const number_runtime = @import("number_runtime.zig");
 const io = std.testing.io;
 const cwd = std.Io.Dir.cwd();
 const diagnostic = std.debug.print;
@@ -138,6 +139,48 @@ test "an unchanged build replays, a lost record reuses every object and the prog
     try std.testing.expectEqual(@as(u32, 2), edited.processes);
     try std.testing.expectEqualStrings(try std.fmt.allocPrint(arena.allocator(), "{s} 30 4\n", .{&directory.sub_path}), try project.output());
     try expectNoStaging(project);
+}
+
+// spec: NEW-CORE-S4-COLD-1
+test "a cold build compiles the runtime without debug info and links the prebuilt number object" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    var project = try Project.prepare(a, &directory, true);
+    try directory.dir.writeFile(io, .{ .sub_path = "app.my", .data = "module app\n\ndef main(out: Stream) -> int:\n    out.print(2.5)\n    return 0\n" });
+    const cold = try report(try project.build(&.{}));
+    // The units, the runtime object and the link: no number-tool process.
+    try std.testing.expectEqual(cold.compiled + 2, cold.processes);
+    try std.testing.expectEqualStrings("2.5\n", try project.output());
+    const number = try cwd.readFileAlloc(io, try std.fs.path.join(a, &.{ try project.path("store"), try std.fmt.allocPrint(a, "core_number_text-{x}.o", .{number_runtime.digest()}) }), a, .limited(64 << 20));
+    try std.testing.expectEqualSlices(u8, number_runtime.prebuilt, number);
+    var store = try cwd.openDir(io, try project.path("store"), .{ .iterate = true });
+    defer store.close(io);
+    var runtime_objects: usize = 0;
+    var iterator = store.iterate();
+    while (try iterator.next(io)) |entry| {
+        if (!std.mem.startsWith(u8, entry.name, "core_rt-") or !std.mem.endsWith(u8, entry.name, ".o")) continue;
+        const bytes = try store.readFileAlloc(io, entry.name, a, .limited(64 << 20));
+        try std.testing.expect(!hasSection(bytes, ".debug_info"));
+        try std.testing.expect(hasSection(bytes, ".text"));
+        runtime_objects += 1;
+    }
+    try std.testing.expectEqual(@as(usize, 1), runtime_objects);
+}
+
+/// Whether the ELF64 relocatable object `bytes` has a section named `name`.
+fn hasSection(bytes: []const u8, name: []const u8) bool {
+    const offset = std.mem.readInt(u64, bytes[0x28..][0..8], .little);
+    const count = std.mem.readInt(u16, bytes[0x3c..][0..2], .little);
+    const names_index = std.mem.readInt(u16, bytes[0x3e..][0..2], .little);
+    const names = std.mem.readInt(u64, bytes[offset + names_index * 64 + 0x18 ..][0..8], .little);
+    for (0..count) |index| {
+        const start = names + std.mem.readInt(u32, bytes[offset + index * 64 ..][0..4], .little);
+        if (std.mem.eql(u8, std.mem.sliceTo(bytes[start..], 0), name)) return true;
+    }
+    return false;
 }
 
 fn expectNoStaging(project: Project) !void {

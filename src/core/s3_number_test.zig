@@ -1,4 +1,4 @@
-//! S3 number-runtime ports and content/toolchain cache identity.
+//! S3 number-runtime ports and the prebuilt number-text object.
 const std = @import("std");
 const runtime = @import("number_runtime.zig");
 const formatting = @import("runtime/core_number_format.zig");
@@ -9,9 +9,9 @@ comptime {
 }
 
 // spec: NEW-CORE-S3-NUMBER-1
-test "S3 numeric runtime key includes Zig version and complete helper sources" {
-    try std.testing.expectEqual(@as(usize, 3), runtime.sources.len);
-    try std.testing.expect(!std.mem.eql(u8, &runtime.key("0.16.0-a"), &runtime.key("0.16.0-b")));
+test "S3 numeric runtime is a prebuilt object that only number helpers need" {
+    try std.testing.expect(std.mem.startsWith(u8, runtime.prebuilt, "\x7fELF"));
+    try std.testing.expect(std.mem.indexOf(u8, runtime.prebuilt, "myl_core_str_from_f64") != null);
     try std.testing.expect(runtime.needed("call ptr @myl_core_str_from_f64(double %value)"));
     try std.testing.expect(!runtime.needed("declare ptr @myl_core_str_from_i64(i64)"));
 }
@@ -27,13 +27,19 @@ test "S3 numeric grammar keeps special values signed zero and rounded subnormals
 }
 
 // spec-case: NEW-CORE-S3-NUMBER-1
-test "S3 numeric runtime cache invalidates changed helper bytes and build settings" {
-    const original = [_]runtime.SourceUnit{.{ .name = "helper.zig", .bytes = "const value = 1;" }};
-    const changed = [_]runtime.SourceUnit{.{ .name = "helper.zig", .bytes = "const value = 2;" }};
-    const base = runtime.fingerprint("zig-v1", &original, &.{ "ReleaseFast", "x86_64-linux-gnu" });
-    try std.testing.expect(!std.mem.eql(u8, &base, &runtime.fingerprint("zig-v1", &changed, &.{ "ReleaseFast", "x86_64-linux-gnu" })));
-    try std.testing.expect(!std.mem.eql(u8, &base, &runtime.fingerprint("zig-v1", &original, &.{ "ReleaseSafe", "x86_64-linux-gnu" })));
-    try std.testing.expect(!std.mem.eql(u8, &base, &runtime.fingerprint("zig-v1", &original, &.{ "ReleaseFast", "aarch64-linux-gnu" })));
+test "S3 numeric runtime object is published under its digest and a damaged copy is rewritten" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", a);
+    const path = try runtime.object(a, std.testing.io, root);
+    try std.testing.expect(std.mem.indexOf(u8, path, &std.fmt.bytesToHex(runtime.digest(), .lower)) != null);
+    try std.testing.expectEqualSlices(u8, runtime.prebuilt, try std.Io.Dir.cwd().readFileAlloc(std.testing.io, path, a, .limited(64 << 20)));
+    try std.Io.Dir.cwd().writeFile(std.testing.io, .{ .sub_path = path, .data = "damaged" });
+    try std.testing.expectEqualStrings(path, try runtime.object(a, std.testing.io, root));
+    try std.testing.expectEqualSlices(u8, runtime.prebuilt, try std.Io.Dir.cwd().readFileAlloc(std.testing.io, path, a, .limited(64 << 20)));
 }
 
 fn nativeFixtures(allocator: std.mem.Allocator, flags: []const []const u8) !void {

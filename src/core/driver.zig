@@ -164,11 +164,7 @@ pub fn link(allocator: std.mem.Allocator, io: std.Io, environ: *const std.proces
     var needs: Dependencies = .{};
     for (request.units) |unit| needs = .{ .number = needs.number or unit.number, .math = needs.math or unit.math };
     try unitObjects(native, places, settings, request, &objects);
-    if (needs.number) {
-        const directory = try std.fs.path.join(allocator, &.{ places.shared, try std.fmt.allocPrint(allocator, "number-tool-v2-{s}", .{std.fmt.bytesToHex(guest.digest, .lower)}) });
-        const path = try number_runtime.object(native, directory, guest.digest);
-        try objects.append(allocator, .{ .path = path, .digest = number_runtime.key(&guest.digest) });
-    }
+    if (needs.number) try objects.append(allocator, .{ .path = try number_runtime.object(allocator, io, places.shared), .digest = number_runtime.digest() });
     outcome.foreign = try foreignObjects(native, places, settings, request.links, &objects);
     const sanitizer = linkSanitizer(request.release, request.links.len);
     const program_key = programKey(settings, objects.items, needs.math, sanitizer);
@@ -529,7 +525,7 @@ fn runtimeObject(native: Native, directory: []const u8, abi: Digest) Error!Objec
     const io = native.io;
     var digest: Digest = undefined;
     var hash = std.crypto.hash.Blake3.init(.{});
-    hash.update("core-runtime-object-v2\x00-O2\x00-std=c11\x00");
+    hash.update("core-runtime-object-v3\x00-O2\x00-g0\x00-std=c11\x00");
     hash.update(target_policy.native_link_target);
     hash.update("\x00");
     hash.update(&abi);
@@ -549,7 +545,9 @@ fn runtimeObject(native: Native, directory: []const u8, abi: Digest) Error!Objec
     const partial = try std.fmt.allocPrint(allocator, "{s}.{x}.partial", .{ object, nonce });
     defer removeFile(io, partial);
     var argv: std.ArrayList([]const u8) = .empty;
-    try argv.appendSlice(allocator, &.{ native.zig, "cc", "-c", "-O2" });
+    // No debug info: the trap walker reads only `mylang-core` compile units, LLVM's
+    // machine code does not depend on it, and it cost a cold build 0.46 s.
+    try argv.appendSlice(allocator, &.{ native.zig, "cc", "-c", "-O2", "-g0" });
     try argv.appendSlice(allocator, &.{ "-target", target_policy.native_link_target });
     try argv.appendSlice(allocator, target.cpu_flags);
     try argv.appendSlice(allocator, &.{ "-std=c11", "-o", partial, source });

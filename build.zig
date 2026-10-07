@@ -461,6 +461,21 @@ fn addCore(b: *std.Build, inputs: CoreInputs) void {
     unit.root_module.addImport("qbe_build_assets", inputs.build_assets);
     unit.root_module.addImport("memory_budget", budget);
     unit.root_module.addOptions("core_test_options", options);
+    // The number-text helper's target and CPU are fixed (`-mcpu baseline`), so it is
+    // compiled once here and embedded, rather than by `zig build-obj` on a guest
+    // machine's first build that prints a number (NEW-CORE-S3-NUMBER-1).
+    const number_text = b.addObject(.{ .name = "core_number_text", .max_rss = rss.compile, .root_module = b.createModule(.{
+        .root_source_file = b.path("src/core/runtime/core_number_text.zig"),
+        .target = b.resolveTargetQuery(std.Target.Query.parse(.{ .arch_os_abi = "x86_64-linux-gnu.2.31", .cpu_features = "baseline" }) catch @panic("number-text target")),
+        .optimize = .ReleaseFast,
+        .pic = true,
+        .stack_check = false,
+        .stack_protector = false,
+        .link_libc = true,
+    }) });
+    for ([_]*std.Build.Module{ exe.root_module, unit.root_module }) |module| {
+        module.addAnonymousImport("core_number_text_object", .{ .root_source_file = number_text.getEmittedBin() });
+    }
     const step = b.step("test-core", "Run the new core's unit tests and its end-to-end slice (not part of test)");
     // Most of the root's time is end-to-end builds of guest programs, so shards
     // of the one binary run concurrently; each test uses its own temporary tree.
