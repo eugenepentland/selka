@@ -31,9 +31,11 @@ test "uniform child lengths prove nested accesses but pop invalidates them" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const text = try support.factsText(arena.allocator(), nested_lengths);
-    const uniform = text[std.mem.indexOf(u8, text, "fn uniform").?..std.mem.indexOf(u8, text, "fn ragged").?];
+    const uniform_tail = text[std.mem.indexOf(u8, text, "fn uniform").?..];
+    const uniform = uniform_tail[0..(std.mem.indexOf(u8, uniform_tail, "\nfn ") orelse uniform_tail.len)];
     try std.testing.expect(contains(uniform, "list_get.proven i64"));
-    const ragged = text[std.mem.indexOf(u8, text, "fn ragged").?..std.mem.indexOf(u8, text, "fn main").?];
+    const ragged_tail = text[std.mem.indexOf(u8, text, "fn ragged").?..];
+    const ragged = ragged_tail[0..(std.mem.indexOf(u8, ragged_tail, "\nfn ") orelse ragged_tail.len)];
     try std.testing.expect(contains(ragged, "list_get.exact i64"));
     const verified = try support.verifyLlvmText(arena.allocator(), nested_lengths);
     try std.testing.expect(contains(verified, "uniform child list length"));
