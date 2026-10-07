@@ -157,6 +157,36 @@ Zig's own local cache also reuses an identical `.ll`, but at a process start per
 bytes. The new core's test suite runs it on a multi-module fixture, and S4-X runs it
 once over the Lox port and the EDA slice.
 
+**As built (S4-C, 2026-10-07; `src/core/unit_cache.zig`, `driver.zig`, `build_replay.zig`):**
+- **Store location.** Unit objects live in the per-user runtime directory
+  (`MYLANG_CORE_RUNTIME_CACHE`, else `$XDG_CACHE_HOME/mylang/core-runtime`, else
+  `~/.cache/mylang/core-runtime`) under `units-v1/`, not in `.mylang-cache/core`: the
+  key is the object's complete input, so sharing is safe, and fresh worktrees and test
+  temporary directories reuse objects instead of recompiling them. Each `<key>.o` has a
+  `<key>.sum` (size and BLAKE3 digest); a hit rehashes the object, so a damaged entry
+  is a miss. A miss compiles beside its entry and is renamed into place (the store may be
+  on another file system than the work directory). The runtime ABI in the key is the
+  digest of the runtime source; the "emitter version" is `unit_cache.format`, since
+  the text itself carries every emitter decision.
+- **Batching** is not done: `zig cc -c a.ll b.ll` merges its inputs into one object,
+  which would lose per-unit objects, and a tiny unit's compile costs about 20 ms, which
+  parallel lanes absorb.
+- **Program store.** The linked executable is kept in the work directory's
+  `programs-v1/`, keyed by every linked object's bytes and the link settings, and copied
+  to the output; a build whose objects all match starts no process.
+- **Foreign C sources** (`--link`) compile with `-MMD` into `foreign-v1/`, keyed by
+  their path, spelling, working directory and bytes; a manifest lists the depfile's
+  headers with their digests, and the object is reused only while all keep their
+  bytes. A file whose status changed after a marker created before the compile is not
+  pinned, and nothing is cached for that build.
+- **Whole-build replay.** `replay-v1/<key>` holds, per entry and settings, every file the
+  build read with the digest of the bytes it used, the program entry and the report.
+  An unchanged build rereads and rehashes those files, revalidates the toolchain and
+  copies the program: no front end, no pipeline and no process (48k lines: 5 ms).
+- Every `zig` process gets a fresh local cache inside a staging directory removed at
+  the end of the build, so successful builds no longer retain `program-<nonce>`
+  directories and Zig's cache no longer keeps a second copy of every object.
+
 ## 7. Tests S4 adds
 
 - **Unit text stability:**

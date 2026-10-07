@@ -24,7 +24,7 @@ pub fn needed(llvm: []const u8) bool {
     return false;
 }
 
-/// Cache key contains named helper contents, executing Zig version and every compile option.
+/// Cache key contains named helper contents, the toolchain's identity and every compile option.
 pub fn key(version: []const u8) [32]u8 {
     return fingerprint(version, &sources, options);
 }
@@ -52,12 +52,16 @@ pub fn fingerprint(version: []const u8, units: []const SourceUnit, settings: []c
 }
 
 /// Compile the independent helper only on a cache miss; rename a unique partial atomically.
-pub fn object(allocator: std.mem.Allocator, io: std.Io, environment: *const std.process.Environ.Map, request: anytype, log: *std.ArrayList(u8), guard: anytype) Error![]const u8 {
-    const version = try execute(allocator, io, environment, &.{ request.zig, "version" }, log);
-    const stem = try std.fmt.allocPrint(allocator, "core_number_text-{x}", .{key(std.mem.trim(u8, version, " \t\r\n"))});
-    const path = try std.fs.path.join(allocator, &.{ request.work, try std.fmt.allocPrint(allocator, "{s}.o", .{stem}) });
+/// `native` is the driver's build context; `tool` is the toolchain's content identity,
+/// which keys the object in place of a `zig version` process.
+pub fn object(native: anytype, directory: []const u8, tool: [32]u8) Error![]const u8 {
+    const allocator = native.arena;
+    const io = native.io;
+    const log = native.log;
+    const stem = try std.fmt.allocPrint(allocator, "core_number_text-{x}", .{key(&tool)});
+    const path = try std.fs.path.join(allocator, &.{ directory, try std.fmt.allocPrint(allocator, "{s}.o", .{stem}) });
     const cwd = std.Io.Dir.cwd();
-    const report = environment.get("MYL_CORE_RUNTIME_REPORT") != null;
+    const report = native.environment.get("MYL_CORE_RUNTIME_REPORT") != null;
     if (cwd.access(io, path, .{})) |_| {
         if (report) try log.print(allocator, "number-text cache hit: {s}\n", .{path});
         return path;
@@ -65,22 +69,23 @@ pub fn object(allocator: std.mem.Allocator, io: std.Io, environment: *const std.
     // Keep both source staging and output private to each program during concurrent misses.
     var output_digest: [16]u8 = undefined;
     std.Io.random(io, &output_digest);
-    const directory = try std.fs.path.join(allocator, &.{ request.work, try std.fmt.allocPrint(allocator, "{s}-{x}", .{ stem, output_digest }) });
-    cwd.createDirPath(io, directory) catch return error.WriteFailed;
-    defer retireDirectory(io, directory);
+    const staging = try std.fs.path.join(allocator, &.{ directory, try std.fmt.allocPrint(allocator, "{s}-{x}", .{ stem, output_digest }) });
+    cwd.createDirPath(io, staging) catch return error.WriteFailed;
+    defer retireDirectory(io, staging);
     for (sources) |source| {
-        const file = try std.fs.path.join(allocator, &.{ directory, source.name });
+        const file = try std.fs.path.join(allocator, &.{ staging, source.name });
         cwd.writeFile(io, .{ .sub_path = file, .data = source.bytes }) catch return error.WriteFailed;
     }
     const partial = try std.fmt.allocPrint(allocator, "{s}.{x}.partial", .{ path, output_digest });
     defer retireFile(io, partial);
     var argv: std.ArrayList([]const u8) = .empty;
-    try argv.appendSlice(allocator, &.{ request.zig, "build-obj", try std.fs.path.join(allocator, &.{ directory, sources[0].name }) });
+    try argv.appendSlice(allocator, &.{ native.zig, "build-obj", try std.fs.path.join(allocator, &.{ staging, sources[0].name }) });
     try argv.appendSlice(allocator, options);
     try argv.append(allocator, try std.fmt.allocPrint(allocator, "-femit-bin={s}", .{partial}));
     if (report) try log.print(allocator, "number-text cache miss: {s}\n", .{path});
-    _ = try execute(allocator, io, environment, argv.items, log);
-    try guard.check(log);
+    native.counts.processes += 1;
+    _ = try execute(allocator, io, native.environment, argv.items, log);
+    try native.guard.check(log);
     cwd.rename(partial, cwd, path, io) catch return error.WriteFailed;
     return path;
 }

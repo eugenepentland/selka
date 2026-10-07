@@ -1,0 +1,25 @@
+{
+ "lines": 48101,
+ "mode": "release",
+ "core": "/home/epentland/ai/canopy/mylang-worktrees/claude-s4-c/.mylang-cache/s4c/core-rf/bin/mylang-core",
+ "cold_s": 60.439,
+ "cold_report": "mylang-core: cache: 1 units, 0 reused, 1 compiled, 0 verified; program linked; 2 processes",
+ "output": "614273",
+ "unchanged_s": {
+  "median": 0.0043,
+  "min": 0.0041,
+  "max": 0.005
+ },
+ "unchanged_processes": 0,
+ "unchanged_no_replay_s": 0.699,
+ "unchanged_no_replay_report": "mylang-core: cache: 1 units, 1 reused, 0 compiled, 0 verified; program reused; 0 processes",
+ "edits": [
+  {
+   "module": 600,
+   "pinned": true,
+   "s": 67.575,
+   "report": "mylang-core: cache: 1 units, 0 reused, 1 compiled, 0 verified; program linked; 2 processes"
+  }
+ ],
+ "unchanged_after_edit_s": 0.0047
+}
