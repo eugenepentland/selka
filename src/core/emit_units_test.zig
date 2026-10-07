@@ -57,6 +57,11 @@ fn textOf(emitted: []const units.Unit, path: []const u8) ![]const u8 {
     return error.MissingUnit;
 }
 
+fn entryText(emitted: []const units.Unit) ![]const u8 {
+    for (emitted) |unit| if (unit.kind == .entry) return unit.llvm;
+    return error.MissingUnit;
+}
+
 fn changed(before: []const units.Unit, after: []const units.Unit, expected: []const []const u8) !void {
     try std.testing.expectEqual(before.len, after.len);
     for (before) |unit| {
@@ -65,7 +70,9 @@ fn changed(before: []const units.Unit, after: []const units.Unit, expected: []co
             if (!std.mem.eql(u8, unit.name, next.name)) continue;
             const same = std.mem.eql(u8, unit.llvm, next.llvm);
             var should_change = false;
-            for (expected) |path| if (std.mem.eql(u8, unit.source_path, path) and unit.kind == .module) {
+            for (expected) |path| if ((std.mem.eql(u8, unit.source_path, path) and unit.kind == .module) or
+                (std.mem.eql(u8, path, "<entry>") and unit.kind == .entry))
+            {
                 should_change = true;
             };
             try std.testing.expectEqual(!should_change, same);
@@ -344,7 +351,7 @@ test "S4 direct and indirect cross-unit fastcc calls preserve the aggregate sret
 }
 
 // spec-case: NEW-CORE-S4-UNITS-1
-test "S4 release imports counted and conditional loop callees without cold-call or entry ripple" {
+test "S4 release loop imports include the bounded entry consumed closure and stable ripple" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const a = arena.allocator();
@@ -369,13 +376,19 @@ test "S4 release imports counted and conditional loop callees without cold-call 
     try std.testing.expect(std.mem.indexOf(u8, body, ") nounwind uwtable alwaysinline !dbg") != null);
     try std.testing.expect(std.mem.indexOf(u8, try textOf(first, "leaf.my"), ") nounwind uwtable alwaysinline !dbg") == null);
     try std.testing.expect(std.mem.indexOf(u8, body, "define available_externally hidden fastcc i64 @\"my.leaf::cold\"") == null);
+    const entry_body = try entryText(first);
+    try std.testing.expect(std.mem.indexOf(u8, entry_body, "define available_externally hidden fastcc i64 @\"my.app::main\"") != null);
+    try std.testing.expect(std.mem.indexOf(u8, entry_body, "define available_externally hidden fastcc i64 @\"my.leaf::cold\"") != null);
     try changed(first, try snapshot(a, .{ caller, source, other }, true), &.{});
     const hot = try std.mem.replaceOwned(u8, a, source, "total += i", "total += i * 2");
-    try changed(first, try snapshot(a, .{ caller, hot, other }, true), &.{ "app.my", "leaf.my" });
+    try changed(first, try snapshot(a, .{ caller, hot, other }, true), &.{ "app.my", "leaf.my", "<entry>" });
     const cold = try std.mem.replaceOwned(u8, a, source, "return x\n", "return x + 1\n");
-    try changed(first, try snapshot(a, .{ caller, cold, other }, true), &.{"leaf.my"});
+    try changed(first, try snapshot(a, .{ caller, cold, other }, true), &.{ "leaf.my", "<entry>" });
+    const changed_caller = try std.mem.replaceOwned(u8, a, caller, "total = leaf.cold(2)", "total = leaf.cold(3)");
+    try changed(first, try snapshot(a, .{ changed_caller, source, other }, true), &.{ "app.my", "<entry>" });
     const debug = try snapshot(a, .{ caller, source, other }, false);
     try std.testing.expect(std.mem.indexOf(u8, try textOf(debug, "app.my"), "available_externally") == null);
+    try std.testing.expect(std.mem.indexOf(u8, try entryText(debug), "available_externally") == null);
     try changed(debug, try snapshot(a, .{ caller, hot, other }, false), &.{"leaf.my"});
     // Native linking needs the entry, caller, imported closure and cold owner once each.
     for ([_][]const units.Unit{ first, debug }) |emitted| {
@@ -384,6 +397,24 @@ test "S4 release imports counted and conditional loop callees without cold-call 
         try std.testing.expectEqualStrings("5\n", result.stdout);
         try std.testing.expectEqualStrings("", result.stderr);
     }
+}
+
+// spec-case: NEW-CORE-S4-UNITS-1
+test "S4 entry imports refuse non-loop entries and over-budget loop dispatch" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const ordinary = try snapshot(a, .{ app, leaf, other }, true);
+    try std.testing.expect(std.mem.indexOf(u8, try entryText(ordinary), "available_externally") == null);
+    const large = try std.mem.replaceOwned(u8, a, try branchLoop(a, 36), "module leaf\npublic def compute(x: int) -> int:\n", "module app\nimport leaf\ndef main(args: list[str]) -> int:\n    x = len(args)\n");
+    const first = try snapshot(a, .{ large, leaf, other }, true);
+    try std.testing.expect(std.mem.indexOf(u8, try entryText(first), "available_externally") == null);
+    const updated = try std.mem.replaceOwned(u8, a, large, "return 36", "return 37");
+    try changed(first, try snapshot(a, .{ updated, leaf, other }, true), &.{"app.my"});
+    const result = try native(a, first);
+    try std.testing.expect(result.term == .exited and result.term.exited == 2);
+    try std.testing.expectEqualStrings("", result.stdout);
+    try std.testing.expectEqualStrings("", result.stderr);
 }
 
 // spec-case: NEW-CORE-S4-UNITS-1

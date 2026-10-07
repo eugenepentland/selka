@@ -11,6 +11,7 @@ const Selection = struct {
     functions: std.ArrayList(u32) = .empty,
     visited: []bool,
     instructions: usize = 0,
+    entry: bool = false,
 };
 
 /// Import calls inside loops and bounded loop bodies called from outside a loop,
@@ -31,6 +32,23 @@ pub fn select(a: std.mem.Allocator, module: *const ir.Module, owner: []const ?u3
             }
         }
     }
+    try closure(a, module, owner, group, &selected);
+    return selected.functions.toOwnedSlice(a);
+}
+
+/// Expose only a bounded loop-bearing entry and its consumed bodies to C main.
+/// Large dispatch entries remain a call; no entry arguments are specialized here.
+pub fn entry(a: std.mem.Allocator, module: *const ir.Module, owner: []const ?u32) std.mem.Allocator.Error![]const u32 {
+    if (!hasLoop(&module.functions.items[module.entry])) return &.{};
+    var selected: Selection = .{ .visited = try a.alloc(bool, owner.len), .entry = true };
+    @memset(selected.visited, false);
+    const group = std.math.maxInt(u32);
+    try admit(a, module, owner, group, &selected, module.entry);
+    try closure(a, module, owner, group, &selected);
+    return selected.functions.toOwnedSlice(a);
+}
+
+fn closure(a: std.mem.Allocator, module: *const ir.Module, owner: []const ?u32, group: u32, selected: *Selection) !void {
     var cursor: usize = 0;
     while (cursor < selected.functions.items.len) : (cursor += 1) {
         const function = &module.functions.items[selected.functions.items[cursor]];
@@ -38,11 +56,10 @@ pub fn select(a: std.mem.Allocator, module: *const ir.Module, owner: []const ?u3
             if (b != 0 and block.preds.items.len == 0) continue;
             for (block.insts.items) |ref| {
                 const inst = function.inst(ref);
-                if (inst.op == .call) try admit(a, module, owner, group, &selected, @intCast(inst.a.index()));
+                if (inst.op == .call) try admit(a, module, owner, group, selected, @intCast(inst.a.index()));
             }
         }
     }
-    return selected.functions.toOwnedSlice(a);
 }
 
 fn hasLoop(function: *const ir.Function) bool {
@@ -54,7 +71,8 @@ fn admit(a: std.mem.Allocator, module: *const ir.Module, owner: []const ?u32, gr
     if (selected.visited[index]) return;
     selected.visited[index] = true;
     const function = &module.functions.items[index];
-    if (owner[index] == null or owner[index] == group or index == module.entry or function.signature.linkage != .internal) return;
+    if (owner[index] == null or owner[index] == group or function.signature.linkage != .internal) return;
+    if (index == module.entry and !selected.entry) return;
     var instructions: usize = 0;
     var blocks: usize = 0;
     for (function.blocks.items, 0..) |block, b| {

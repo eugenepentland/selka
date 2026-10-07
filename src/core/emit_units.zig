@@ -65,21 +65,11 @@ pub fn emit(a: std.mem.Allocator, module: *const ir.Module, options: llvm.Option
         }
     }
     exported[module.entry] = true;
+    const entry_imports = if (options.analysis.facts.len != 0) try imports.entry(a, module, owner) else &.{};
+    exportImports(module, owner, exported, entry_imports);
     if (options.analysis.facts.len != 0) for (groups.items, 0..) |*group, index| {
         group.imports = try imports.select(a, module, owner, group.functions.items, @intCast(index));
-        for (group.imports) |imported| {
-            exported[imported] = true;
-            // An imported body can keep an out-of-line reference to a private
-            // function in its source unit, including a stored function value.
-            for (module.functions.items[imported].insts.items) |inst| {
-                const target: usize = switch (inst.op) {
-                    .call => inst.a.index(),
-                    .func_ref => @intCast(inst.data),
-                    else => continue,
-                };
-                if (owner[target] != null) exported[target] = true;
-            }
-        }
+        exportImports(module, owner, exported, group.imports);
     };
     const catalog = try constants.Catalog.init(a, module);
     // Hash an adapter's complete closed text with a fixed self-name. Neither an IR
@@ -100,9 +90,24 @@ pub fn emit(a: std.mem.Allocator, module: *const ir.Module, options: llvm.Option
         const name = if (group.kind == .module) try std.fmt.allocPrint(a, "module-{s}", .{try digest(a, group.path)}) else try std.fmt.allocPrint(a, "{s}-{s}", .{ @tagName(group.kind), try digest(a, text) });
         try append(a, &units, &names, unit(name, group.path, group.kind, text));
     }
-    const entry = try llvm.emitUnit(a, module, options, .{ .functions = &.{}, .exported = exported, .symbols = symbols, .entry = true, .source_path = options.source_path, .constants = &catalog });
+    const entry = try llvm.emitUnit(a, module, options, .{ .functions = &.{}, .imports = entry_imports, .exported = exported, .symbols = symbols, .entry = true, .source_path = options.source_path, .constants = &catalog });
     try units.append(a, unit("entry", options.source_path, .entry, entry));
     return units.toOwnedSlice(a);
+}
+
+fn exportImports(module: *const ir.Module, owner: []const ?u32, exported: []bool, selected: []const u32) void {
+    for (selected) |imported| {
+        exported[imported] = true;
+        // Imported bodies may retain a call or stored reference to a private owner.
+        for (module.functions.items[imported].insts.items) |inst| {
+            const target: usize = switch (inst.op) {
+                .call => inst.a.index(),
+                .func_ref => @intCast(inst.data),
+                else => continue,
+            };
+            if (owner[target] != null) exported[target] = true;
+        }
+    }
 }
 
 fn append(a: std.mem.Allocator, units: *std.ArrayList(Unit), names: *std.StringHashMapUnmanaged(usize), next: Unit) llvm.Error!void {

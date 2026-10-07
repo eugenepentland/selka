@@ -1,0 +1,19 @@
+test-core
++- run test w
+guardian/test: 3 test(s) selected
+guardian/test: SLOW  6.42s  emit_units_test.test.S4 release loop imports include the bounded entry consumed closure and stable ripple
+guardian/test: test wall 12.83s; slowest over 50ms:
+guardian/test:   6.42s  emit_units_test.test.S4 release loop imports include the bounded entry consumed closure and stable ripple
+guardian/test:   3.21s  emit_units_test.test.S4 branch-heavy non-loop callees retain their owner when called inside a loop
+guardian/test:   3.19s  emit_units_test.test.S4 entry imports refuse non-loop entries and over-budget loop dispatch
+guardian/test: PASS — 3 passed
+guardian/test: RESULT {"passed":3,"failed":0,"skipped":0}
+failed command: ./.zig-cache/o/ef6df5201f6237199b57673d2f5397bb/test --cache-dir=./.zig-cache --seed=0x676ac8b0 --listen=-
+
+Build Summary: 5/5 steps succeeded; 3/3 tests passed
+test-core success
++- run test 3 pass (3 total) 12s MaxRSS:251M
+   +- compile test debug native success 2s MaxRSS:347M
+      +- options cached
+         +- compile exe mylang-core debug native cached 7ms MaxRSS:41M
+
