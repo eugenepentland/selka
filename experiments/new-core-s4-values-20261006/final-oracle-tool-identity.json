@@ -1,0 +1,20 @@
+{
+  "tools": {
+    "qbe_source": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/zig-out/bin/qbe",
+      "sha256": "f485cd7750ac153feed0be6ee14f4ca525ef5f50a61c44519a05813d3f5e461d"
+    },
+    "qbe_immutable_sibling": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/immutable-final-checker/qbe",
+      "sha256": "f485cd7750ac153feed0be6ee14f4ca525ef5f50a61c44519a05813d3f5e461d"
+    },
+    "zig": {
+      "path": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "sha256": "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f"
+    }
+  },
+  "MYLANG_QBE": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/immutable-final-checker/qbe",
+  "MYLANG_ZIG": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+  "old_sha256": "5f9fd4599bb8de25c7db51de8191e5724026a5dcc49603dfd7221d41a0c6e460",
+  "core_sha256": "3c86ebb5ac9db377a2a2b7ae0cffd48cce09bee554aabfec856c9c5a2a6fc2bc"
+}
