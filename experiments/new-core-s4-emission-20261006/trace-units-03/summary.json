@@ -1,0 +1,43 @@
+{
+  "qualified": true,
+  "source_commit": "1bd168de6d0347441a0989d8c3606c2f6b22df10",
+  "compiler_sha256": "776bfac62fe865009963bcdf8ee63693643188250a816c657d107a7b6bab888d",
+  "comparisons": [
+    {
+      "case": "assert",
+      "mode": "debug",
+      "identical": true,
+      "stderr": "leaf.my:3:12: error[R_ASSERT]: native execution failed: leaf check\n  in leaf::origin at leaf.my:3:12\n  in app::main at app.my:4:12\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"leaf check\"}\n"
+    },
+    {
+      "case": "assert",
+      "mode": "release",
+      "identical": true,
+      "stderr": "leaf.my:3:12: error[R_ASSERT]: native execution failed: leaf check\n  in leaf::origin at leaf.my:3:12\n  in app::main at app.my:4:12\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"leaf check\"}\n"
+    },
+    {
+      "case": "assert",
+      "mode": "verify",
+      "identical": true,
+      "stderr": "leaf.my:3:12: error[R_ASSERT]: native execution failed: leaf check\n  in leaf::origin at leaf.my:3:12\n  in app::main at app.my:4:12\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"leaf check\"}\n"
+    },
+    {
+      "case": "result",
+      "mode": "debug",
+      "identical": true,
+      "stderr": "error: leaf failure\n  leaf.my:3:12  leaf::origin  Err(...) created\n  app.my:4:13   app::main     ? propagated\n"
+    },
+    {
+      "case": "result",
+      "mode": "release",
+      "identical": true,
+      "stderr": "error: leaf failure\n  leaf.my:3:12  app::main  Err(...) created\n  app.my:4:13   app::main  ? propagated\n"
+    },
+    {
+      "case": "result",
+      "mode": "verify",
+      "identical": true,
+      "stderr": "error: leaf failure\n  leaf.my:3:12  app::main  Err(...) created\n  app.my:4:13   app::main  ? propagated\n"
+    }
+  ]
+}

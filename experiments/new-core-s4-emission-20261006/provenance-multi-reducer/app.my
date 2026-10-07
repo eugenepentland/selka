@@ -1,0 +1,8 @@
+module app
+import leaf
+def main(args: list[str]) -> Result[int, str]:
+    if len(args) == 0:
+        integer = leaf.origin[int](1)?
+        return Ok(integer)
+    text = leaf.origin[str]("x")?
+    return Ok(len(text))

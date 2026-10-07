@@ -1,0 +1,13 @@
+{
+  "source_commit": "1bd168de6d0347441a0989d8c3606c2f6b22df10",
+  "qualified": false,
+  "state": "cancelled-before-admission",
+  "reason": "Reduced reference comparison proves inherited release Result origin mislabel; parent instructed to correct core emission before spending the full gate. Qualification lock and gate waiters only were stopped, with neither command timer admitted.",
+  "owned_pids": [
+    1728208,
+    1728210,
+    1728242,
+    1728247,
+    1931329
+  ]
+}

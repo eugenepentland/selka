@@ -1,0 +1,17 @@
+{
+  "build_command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/debug-tail/bin/mylang-core",
+    "build",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/provenance-generic-reducer/app.my",
+    "-o",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/provenance-generic-before/e",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/provenance-generic-before/cache"
+  ],
+  "build_exit": 0,
+  "build_stdout": "",
+  "build_stderr": "",
+  "exit": 1,
+  "stdout": "",
+  "stderr": "error: leaf failure\n  leaf.my:3:12  leaf::origin[i64]  Err(...) created\n  app.my:4:13   app::main          ? propagated\n"
+}

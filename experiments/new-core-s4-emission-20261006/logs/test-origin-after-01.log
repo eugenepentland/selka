@@ -1,0 +1,25 @@
+test-core
++- run test w
+guardian/test: 10 test(s) selected
+guardian/test: SLOW  9.24s  emit_units_test.test.S4 an inlined cross-module Result origin retains its source function
+guardian/test: SLOW  17.92s  emit_units_test.test.S4 Result origins distinguish specializations sharing one declaration and body span
+guardian/test: SLOW  6.30s  emit_units_test.test.S4 a float renderer outside entry carries the formatter link dependency on its helper unit
+guardian/test: test wall 50.52s; slowest over 50ms:
+guardian/test:   17.92s  emit_units_test.test.S4 Result origins distinguish specializations sharing one declaration and body span
+guardian/test:   9.24s  emit_units_test.test.S4 an inlined cross-module Result origin retains its source function
+guardian/test:   6.30s  emit_units_test.test.S4 a float renderer outside entry carries the formatter link dependency on its helper unit
+guardian/test:   4.56s  emit_units_test.test.S4 a release tail-position cross-unit trap retains its caller frame
+guardian/test:   4.39s  emit_units_test.test.S4 identical record renderers in separate modules share one native helper unit
+guardian/test:   4.26s  emit_units_test.test.S4 native cross-unit traps carry their source path and callers through all compile units
+guardian/test:   3.74s  emit_units_test.test.S4 direct and indirect cross-unit fastcc calls preserve the aggregate sret ABI
+guardian/test: PASS — 10 passed
+guardian/test: RESULT {"passed":10,"failed":0,"skipped":0}
+failed command: ./.zig-cache/o/0e502ec47939ab73b53cc06d4cc51050/test --cache-dir=./.zig-cache --seed=0xa3600da4 --listen=-
+
+Build Summary: 5/5 steps succeeded; 10/10 tests passed
+test-core success
++- run test 10 pass (10 total) 50s MaxRSS:255M
+   +- compile test debug native success 2s MaxRSS:343M
+      +- options success
+         +- compile exe mylang-core debug native success 3s MaxRSS:348M
+

@@ -1,0 +1,9 @@
+{
+  "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/trace-units-03/whole-assert-debug"
+  ],
+  "status": 1,
+  "stdout": "",
+  "stderr": "leaf.my:3:12: error[R_ASSERT]: native execution failed: leaf check\n  in leaf::origin at leaf.my:3:12\n  in app::main at app.my:4:12\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"leaf check\"}\n",
+  "seconds": 0.0008453819900751114
+}

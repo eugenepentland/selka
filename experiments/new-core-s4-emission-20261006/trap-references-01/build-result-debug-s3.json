@@ -1,0 +1,15 @@
+{
+  "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/oracle/mylang-core-s3-c8313207",
+    "build",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/trace-units-02/result/app.my",
+    "-o",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/trap-references-01/result-debug-s3/program",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/trap-references-01/result-debug-s3/cache"
+  ],
+  "exit": 0,
+  "stdout": "",
+  "stderr": "",
+  "seconds": 12.164469859097153
+}

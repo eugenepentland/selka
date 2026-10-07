@@ -1,0 +1,9 @@
+{
+  "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/trap-references-01/assert-debug-s3/program"
+  ],
+  "exit": 1,
+  "stdout": "",
+  "stderr": "app.my:3:12: error[R_ASSERT]: native execution failed: leaf check\n  in leaf::origin at app.my:3:12\n  in app::main at app.my:4:12\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"leaf check\"}\n",
+  "seconds": 0.002715438837185502
+}

@@ -36,7 +36,15 @@ fn snapshot(a: std.mem.Allocator, sources: [3][]const u8, release: bool) ![]unit
     var module = try build.buildModuleSource(a, checked.program, checked.src, &refusal);
     const result = if (release) try passes.run(a, &module, .trusted) else passes.Result{ .known = &.{}, .plans = &.{} };
     if (!release) _ = try passes.ownership(a, &module);
-    return units.emit(a, &module, .{ .locator = .{ .context = &checked.src, .locate = locate }, .source_path = "app.my", .main = .{ .parameters = &.{"out"} }, .facts = result.known, .vectors = result.plans });
+    const main = checked.program.functions[@backingInt(checked.program.main)];
+    const shape = language.typed.resultShape(main.signature.return_type, checked.program.records);
+    return units.emit(a, &module, .{
+        .locator = .{ .context = &checked.src, .locate = locate },
+        .source_path = "app.my",
+        .main = .{ .parameters = &.{"out"}, .result = if (shape) |s| .{ .ok_tag = @intCast(s.ok_tag), .error_tag = @intCast(s.error_tag) } else null },
+        .facts = result.known,
+        .vectors = result.plans,
+    });
 }
 
 fn textOf(emitted: []const units.Unit, path: []const u8) ![]const u8 {
@@ -93,6 +101,10 @@ test "S4 an inlined public helper changes its own unit and caller with no unrela
 }
 
 fn native(a: std.mem.Allocator, emitted: []const units.Unit) !std.process.RunResult {
+    return nativeArgs(a, emitted, &.{});
+}
+
+fn nativeArgs(a: std.mem.Allocator, emitted: []const units.Unit, arguments: []const []const u8) !std.process.RunResult {
     var dir = std.testing.tmpDir(.{});
     defer dir.cleanup();
     const root = try dir.dir.realPathFileAlloc(std.testing.io, ".", a);
@@ -104,7 +116,10 @@ fn native(a: std.mem.Allocator, emitted: []const units.Unit) !std.process.RunRes
         report("unit native build: {s}\n", .{log.items});
         return err;
     };
-    return std.process.run(a, std.testing.io, .{ .argv = &.{output}, .environ_map = &environment });
+    const argv = try a.alloc([]const u8, arguments.len + 1);
+    argv[0] = output;
+    @memcpy(argv[1..], arguments);
+    return std.process.run(a, std.testing.io, .{ .argv = argv, .environ_map = &environment });
 }
 
 // spec: NEW-CORE-S4-SITES-1
@@ -130,6 +145,42 @@ test "S4 a release tail-position cross-unit trap retains its caller frame" {
     try std.testing.expect(result.term == .exited and result.term.exited == 1);
     try std.testing.expect(std.mem.indexOf(u8, result.stderr, "leaf.my:3:12: error[R_ASSERT]") != null);
     try std.testing.expect(std.mem.indexOf(u8, result.stderr, "in app::main at app.my:4:12") != null);
+}
+
+// spec-case: NEW-CORE-S4-SITES-1
+test "S4 an inlined cross-module Result origin retains its source function" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const caller = "module app\nimport leaf\ndef main() -> Result[int, str]:\n    value = leaf.origin()?\n    return Ok(value)\n";
+    const failing = "module leaf\npublic def origin() -> Result[int, str]:\n    return Err(\"leaf failure\")\n";
+    for ([_]bool{ false, true }) |release| {
+        const result = try native(a, try snapshot(a, .{ caller, failing, other }, release));
+        try std.testing.expect(result.term == .exited and result.term.exited == 1);
+        try std.testing.expectEqualStrings("error: leaf failure\n  leaf.my:3:12  leaf::origin  Err(...) created\n  app.my:4:13   app::main     ? propagated\n", result.stderr);
+    }
+}
+
+// spec-case: NEW-CORE-S4-SITES-1
+test "S4 Result origins distinguish specializations sharing one declaration and body span" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const caller = "module app\nimport leaf\ndef main(args: list[str]) -> Result[int, str]:\n" ++
+        "    if len(args) == 0:\n        integer = leaf.origin[int](1)?\n        return Ok(integer)\n" ++
+        "    text = leaf.origin[str](\"x\")?\n    return Ok(len(text))\n";
+    const failing = "module leaf\npublic def origin[T](x: T) -> Result[T, str]:\n    return Err(\"leaf failure\")\n";
+    for ([_]bool{ false, true }) |release| {
+        const emitted = try snapshot(a, .{ caller, failing, other }, release);
+        for ([_][]const []const u8{ &.{}, &.{"string"} }, [_][]const u8{ "leaf::origin[i64]", "leaf::origin[str]" }) |arguments, function| {
+            const result = try nativeArgs(a, emitted, arguments);
+            try std.testing.expect(result.term == .exited and result.term.exited == 1);
+            if (std.mem.indexOf(u8, result.stderr, function) == null) report("specialization origin expected {s}: {s}", .{ function, result.stderr });
+            try std.testing.expect(std.mem.indexOf(u8, result.stderr, function) != null);
+            try std.testing.expect(std.mem.indexOf(u8, result.stderr, "leaf.my:3:12") != null);
+            try std.testing.expect(std.mem.indexOf(u8, result.stderr, "app::main") != null);
+        }
+    }
 }
 
 fn preserved(before: []const units.Unit, after: []const units.Unit, path: []const u8) !void {

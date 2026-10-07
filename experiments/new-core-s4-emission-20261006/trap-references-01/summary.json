@@ -1,0 +1,47 @@
+{
+  "source_commit": "1bd168de6d0347441a0989d8c3606c2f6b22df10",
+  "oracles": {
+    "old": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/oracle/mylang",
+      "sha256": "d36658dbfb78d29213224532a13fd5ad8b7c0e290dbfb87613d9815678305c79"
+    },
+    "s3": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/oracle/mylang-core-s3-c8313207",
+      "sha256": "c831320782bea20b63b7bf4d85362d8e813a89afa48f8feb0eb75df782522f59"
+    },
+    "v": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/immutable-d4/mylang-core",
+      "sha256": "3c86ebb5ac9db377a2a2b7ae0cffd48cce09bee554aabfec856c9c5a2a6fc2bc"
+    },
+    "e": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/debug-tail/bin/mylang-core",
+      "sha256": "776bfac62fe865009963bcdf8ee63693643188250a816c657d107a7b6bab888d"
+    }
+  },
+  "cases": {
+    "assert-debug": {
+      "old": "leaf.my:3:12: error[R_ASSERT]: native execution failed: leaf check\n  in leaf::origin at leaf.my:3:12\n  in app::main at app.my:4:12\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"leaf check\"}\n",
+      "s3": "app.my:3:12: error[R_ASSERT]: native execution failed: leaf check\n  in leaf::origin at app.my:3:12\n  in app::main at app.my:4:12\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"leaf check\"}\n",
+      "v": "app.my:3:12: error[R_ASSERT]: native execution failed: leaf check\n  in leaf::origin at app.my:3:12\n  in app::main at app.my:4:12\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"leaf check\"}\n",
+      "e": "leaf.my:3:12: error[R_ASSERT]: native execution failed: leaf check\n  in leaf::origin at leaf.my:3:12\n  in app::main at app.my:4:12\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"leaf check\"}\n"
+    },
+    "assert-release": {
+      "old": "leaf.my:3:12: error[R_ASSERT]: native execution failed: leaf check\n  in leaf::origin at leaf.my:3:12\n  in app::main at app.my:4:12\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"leaf check\"}\n",
+      "s3": "app.my:3:12: error[R_ASSERT]: native execution failed: leaf check\n  in leaf::origin at app.my:3:12\n  in app::main at app.my:4:12\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"leaf check\"}\n",
+      "v": "app.my:3:12: error[R_ASSERT]: native execution failed: leaf check\n  in leaf::origin at app.my:3:12\n  in app::main at app.my:4:12\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"leaf check\"}\n",
+      "e": "leaf.my:3:12: error[R_ASSERT]: native execution failed: leaf check\n  in leaf::origin at leaf.my:3:12\n  in app::main at app.my:4:12\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"leaf check\"}\n"
+    },
+    "result-debug": {
+      "old": "error: leaf failure\n  leaf.my:3:12  leaf::origin  Err(...) created\n  app.my:4:13   app::main     ? propagated\n",
+      "s3": "error: leaf failure\n  app.my:3:12  leaf::origin  Err(...) created\n  app.my:4:13  app::main     ? propagated\n",
+      "v": "error: leaf failure\n  app.my:3:12  leaf::origin  Err(...) created\n  app.my:4:13  app::main     ? propagated\n",
+      "e": "error: leaf failure\n  leaf.my:3:12  leaf::origin  Err(...) created\n  app.my:4:13   app::main     ? propagated\n"
+    },
+    "result-release": {
+      "old": "error: leaf failure\n  leaf.my:3:12  leaf::origin  Err(...) created\n  app.my:4:13   app::main     ? propagated\n",
+      "s3": "error: leaf failure\n  app.my:3:12  app::main  Err(...) created\n  app.my:4:13  app::main  ? propagated\n",
+      "v": "error: leaf failure\n  app.my:3:12  app::main  Err(...) created\n  app.my:4:13  app::main  ? propagated\n",
+      "e": "error: leaf failure\n  leaf.my:3:12  app::main  Err(...) created\n  app.my:4:13   app::main  ? propagated\n"
+    }
+  }
+}

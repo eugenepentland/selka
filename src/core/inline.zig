@@ -2,7 +2,9 @@
 //! (and the vector lowering) see through helpers such as `affine_a(x) = x*3+7`.
 //!
 //! A callee qualifies when it is internal, has exactly one block, ends in
-//! `ret value`, and contains no call, print or phi. Its instructions are cloned
+//! `ret value`, and contains no call, print, phi or error trace. Trace-bearing
+//! functions retain their specialized names and sites until LLVM inlining.
+//! Other instructions are cloned
 //! into the caller in front of the call, its parameters replaced by the call's
 //! arguments, and the call becomes a forwarding `copy` of the returned value.
 //! Spans stay the callee's, so a trap still names the line inside the helper.
@@ -44,7 +46,7 @@ fn leaf(callee: *const ir.Function) ?ir.Ref {
     const last = callee.inst(insts[insts.len - 1]);
     if (last.op != .ret or last.a == .none) return null;
     for (insts[0 .. insts.len - 1]) |ref| switch (callee.inst(ref).op) {
-        .call, .call_indirect, .print, .phi, .jump, .branch, .ret, .@"unreachable" => return null,
+        .call, .call_indirect, .print, .phi, .jump, .branch, .ret, .@"unreachable", .err_trace => return null,
         else => {},
     };
     return last.a;

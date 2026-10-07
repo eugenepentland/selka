@@ -1,0 +1,5 @@
+module app
+import leaf
+def main() -> Result[int, str]:
+    value = leaf.origin[int](1)?
+    return Ok(value)

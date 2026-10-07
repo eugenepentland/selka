@@ -1,0 +1,4 @@
+module app
+import leaf
+def main() -> int:
+    return leaf.origin(1)

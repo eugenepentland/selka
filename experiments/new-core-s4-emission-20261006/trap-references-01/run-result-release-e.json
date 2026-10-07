@@ -1,0 +1,9 @@
+{
+  "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/trap-references-01/result-release-e/program"
+  ],
+  "exit": 1,
+  "stdout": "",
+  "stderr": "error: leaf failure\n  leaf.my:3:12  app::main  Err(...) created\n  app.my:4:13   app::main  ? propagated\n",
+  "seconds": 0.0019635900389403105
+}
