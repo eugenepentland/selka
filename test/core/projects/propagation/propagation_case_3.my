@@ -1,0 +1,24 @@
+module propagation_case_3
+
+
+result R:
+    ok: i64,
+    err: i64
+
+
+result Outer:
+    ok: R,
+    err: i64
+
+
+def f(r: Outer) -> R:
+    _ = r?
+    return Ok(5)
+
+
+public def program() -> i64:
+    match f(Ok(Ok(1))):
+        case R.ok(n):
+            return n
+        case R.err(e):
+            return e

@@ -15,6 +15,7 @@ const check_command = @import("check_command.zig");
 const usage =
     \\usage: mylang-core build FILE.my -o OUT [--release] [--link FILE.c]... [--emit-llvm PATH] [--no-facts | --verify-facts] [--stats] [--zig PATH] [--cache-dir DIR]
     \\       mylang-core check FILE.my [--typed] [--stats] [--timings=json] [--cache-dir DIR] [--no-cache]
+    \\       mylang-core test FILE.my|DIR [--release] [--json] [--filter S] [--jobs N] [--force] [--cases PATH] [--max-steps N] [--timeout-ms N]
     \\       mylang-core coverage FILE.my...   (one line per function: ok with its checks, or the refusal reason)
     \\       mylang-core dump-typed FILE.my [FUNCTION]
     \\       mylang-core dump-ir FILE.my [--facts]   (--facts: after the release passes, with intervals)
@@ -114,6 +115,11 @@ fn buildCommand(init: std.process.Init, args: []const []const u8) !u8 {
         const has_value = index + 1 < args.len;
         if (std.mem.eql(u8, arg, "--release")) {
             options.release = true;
+        } else if (std.mem.eql(u8, arg, "--project")) {
+            // Project configuration and graph checks are always applied.
+        } else if (std.mem.eql(u8, arg, "--mode") and has_value) {
+            index += 1;
+            if (std.mem.eql(u8, args[index], "ReleaseFast")) options.release = true else if (std.mem.eql(u8, args[index], "Debug")) options.release = false else return 2;
         } else if (std.mem.eql(u8, arg, "--no-facts")) {
             options.facts = .off;
         } else if (std.mem.eql(u8, arg, "--generic-vectors")) {
@@ -176,6 +182,7 @@ fn testCommand(init: std.process.Init, args: []const []const u8) !u8 {
     var links: std.ArrayList([]const u8) = .empty;
     var index: usize = 0;
     while (index < args.len) : (index += 1) {
+        if (testControls(&options, args, &index) catch return 2) continue;
         const arg = args[index];
         const has_value = index + 1 < args.len;
         if (std.mem.eql(u8, arg, "--release")) {
@@ -218,6 +225,39 @@ fn testCommand(init: std.process.Init, args: []const []const u8) !u8 {
     }
     options.build.links = links.items;
     return test_runner.run(init, options);
+}
+
+fn testControls(options: *test_runner.Options, args: []const []const u8, index: *usize) error{Usage}!bool {
+    const arg = args[index.*];
+    const has_value = index.* + 1 < args.len;
+    if (std.mem.eql(u8, arg, "--mode") and has_value) {
+        index.* += 1;
+        if (std.mem.eql(u8, args[index.*], "ReleaseFast")) options.build.release = true else if (std.mem.eql(u8, args[index.*], "Debug")) options.build.release = false else return error.Usage;
+    } else if (std.mem.eql(u8, arg, "--force")) {
+        options.controls.force = true;
+    } else if (std.mem.eql(u8, arg, "--cases") and has_value) {
+        index.* += 1;
+        options.controls.cases = args[index.*];
+    } else if (std.mem.eql(u8, arg, "--jobs") and has_value) {
+        index.* += 1;
+        options.controls.jobs = std.fmt.parseInt(usize, args[index.*], 10) catch return error.Usage;
+        if (options.controls.jobs.? == 0) return error.Usage;
+    } else if (std.mem.startsWith(u8, arg, "--jobs=")) {
+        options.controls.jobs = std.fmt.parseInt(usize, arg[7..], 10) catch return error.Usage;
+        if (options.controls.jobs.? == 0) return error.Usage;
+    } else if (std.mem.eql(u8, arg, "--timeout-ms") and has_value) {
+        index.* += 1;
+        options.controls.timeout_ms = std.fmt.parseInt(u32, args[index.*], 10) catch return error.Usage;
+        if (options.controls.timeout_ms == 0) return error.Usage;
+    } else if (std.mem.eql(u8, arg, "--max-steps") and has_value) {
+        index.* += 1;
+        options.controls.max_steps = std.fmt.parseInt(u64, args[index.*], 10) catch return error.Usage;
+        options.controls.explicit_steps = true;
+    } else if (std.mem.startsWith(u8, arg, "--max-steps=")) {
+        options.controls.max_steps = std.fmt.parseInt(u64, arg[12..], 10) catch return error.Usage;
+        options.controls.explicit_steps = true;
+    } else return false;
+    return true;
 }
 
 /// The coverage sweep: check each file and try to build each of its functions alone.

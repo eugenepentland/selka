@@ -10,6 +10,18 @@
 static FILE *core_test_input, *core_test_output, *core_test_values;
 static char *core_test_path;
 static uint64_t core_test_trials;
+static uint64_t core_test_steps;
+static bool core_test_bounded;
+/* Compatible additive helpers; existing runtime signatures and layouts stay fixed. */
+void myl_core_test_limits(uint64_t steps, uint32_t timeout_ms) {
+    core_test_steps=steps;core_test_bounded=steps!=0;
+    alarm((unsigned)((uint64_t)timeout_ms+999)/1000);
+}
+void myl_core_test_tick(uint64_t cost) {
+    if(!core_test_bounded)return;
+    if(cost>core_test_steps)core_io_fail("R_STEP_LIMIT");
+    core_test_steps-=cost;
+}
 static uint64_t core_test_word(FILE *file) {
     unsigned char bytes[8];
     if (!file || fread(bytes, 1, 8, file) != 8) _exit(70);

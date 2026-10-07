@@ -57,6 +57,9 @@ pub const x86_64_linux_avx2: Target = .{
 /// The target every build uses (L4).
 pub const current = x86_64_linux_avx2;
 
+/// Bundled libc headers and versioned link inputs; the C ABI remains x86-64 SysV.
+pub const native_link_target = "x86_64-linux-gnu.2.31";
+
 /// A generic target description for tests of the portable fallbacks: same layout,
 /// no x86 intrinsics.
 pub const generic_256 = blk: {

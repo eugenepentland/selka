@@ -3,6 +3,7 @@
 const std = @import("std");
 const language = @import("mylang");
 const frontend = @import("frontend.zig");
+const project_entry = @import("project_entry.zig");
 const build_ir = @import("build.zig");
 const ir = @import("ir.zig");
 const emit_llvm = @import("emit_llvm.zig");
@@ -49,14 +50,16 @@ pub const Error = error{ SourceError, Unsupported, ToolFailed, WriteFailed, OutO
 /// Build `path` into `options.output`.
 pub fn build(init: std.process.Init, path: []const u8, options: Options, report: *std.ArrayList(u8)) Error!u8 {
     const allocator = init.arena.allocator();
-    const entry = frontend.entryOf(path);
+    const entry = try project_entry.resolve(allocator, init.io, path, report);
     var session = frontend.Session.init(init.gpa, init.io, entry.root);
     defer session.deinit();
+    entry.configure(&session);
     try session.enableCache(init.gpa, options.cache);
-    const checked = session.checkFile(allocator, path, report) catch |err| switch (err) {
+    const checked = session.checkFile(allocator, entry.path, report) catch |err| switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
         else => return error.SourceError,
     };
+    try entry.validate(allocator, &session, report);
     var refusal: build_ir.Refusal = .{};
     var module = build_ir.buildModuleSource(allocator, checked.program, checked.src, &refusal) catch |err| switch (err) {
         error.Unsupported => {
@@ -97,6 +100,26 @@ pub const Unit = struct {
 /// link the executable. `mylang-core test` reaches it with a module of its own making.
 pub fn finish(init: std.process.Init, module: *ir.Module, unit: Unit, options: Options, report: *std.ArrayList(u8)) Error!u8 {
     const allocator = init.arena.allocator();
+    const llvm = try emitted(allocator, module, unit, options, report);
+    if (options.show.llvm) |where| std.Io.Dir.cwd().writeFile(init.io, .{ .sub_path = where, .data = llvm }) catch return error.WriteFailed;
+    var digest: [8]u8 = undefined;
+    std.crypto.hash.Blake3.hash(options.output, &digest, .{});
+    const program = try std.fs.path.join(allocator, &.{ options.cache, try std.fmt.allocPrint(allocator, "{s}-{x}.ll", .{ std.fs.path.basename(options.output), digest }) });
+    driver.link(allocator, init.io, init.environ_map, .{
+        .zig = options.zig,
+        .work = options.cache,
+        .program = program,
+        .output = options.output,
+        .release = options.release,
+        .links = options.links,
+        .llvm = llvm,
+    }, report) catch |err| return err;
+    return 0;
+}
+
+/// Run the same passes and emission used for linking, without invoking a tool.
+/// Test receipts hash this exact reachable program.
+pub fn emitted(allocator: std.mem.Allocator, module: *ir.Module, unit: Unit, options: Options, report: *std.ArrayList(u8)) Error![]const u8 {
     // A debug build of the compiler checks the IR it built, and again after the release passes.
     if (verify_ir.enabled) try verify_ir.check(allocator, module, &.{}, report);
     // Release builds compute facts and drop the checks they rule out; debug builds keep every check.
@@ -134,20 +157,7 @@ pub fn finish(init: std.process.Init, module: *ir.Module, unit: Unit, options: O
             return error.Unsupported;
         },
     };
-    if (options.show.llvm) |where| std.Io.Dir.cwd().writeFile(init.io, .{ .sub_path = where, .data = llvm }) catch return error.WriteFailed;
-    var digest: [8]u8 = undefined;
-    std.crypto.hash.Blake3.hash(options.output, &digest, .{});
-    const program = try std.fs.path.join(allocator, &.{ options.cache, try std.fmt.allocPrint(allocator, "{s}-{x}.ll", .{ std.fs.path.basename(options.output), digest }) });
-    driver.link(allocator, init.io, init.environ_map, .{
-        .zig = options.zig,
-        .work = options.cache,
-        .program = program,
-        .output = options.output,
-        .release = options.release,
-        .links = options.links,
-        .llvm = llvm,
-    }, report) catch |err| return err;
-    return 0;
+    return llvm;
 }
 
 fn locate(context: *const anyopaque, offset: u32) emit_llvm.Location {

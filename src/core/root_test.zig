@@ -15,6 +15,14 @@ comptime {
     _ = @import("value_facts_test.zig");
     _ = @import("value_emit_test.zig");
     _ = @import("test_runner_test.zig");
+    _ = @import("project_entry.zig");
+    _ = @import("test_runner_options.zig");
+    _ = @import("test_runner_directory.zig");
+    _ = @import("test_runner_receipt.zig");
+    _ = @import("test_runner_cases.zig");
+    _ = @import("test_runner_project_test.zig");
+    _ = @import("tool_identity.zig");
+    _ = @import("tool_ticket.zig");
     _ = @import("runner_property_test.zig");
     _ = @import("property_codec.zig");
     _ = @import("property_types.zig");

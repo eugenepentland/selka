@@ -16,4 +16,4 @@ enabled = false
 roots = ["src/root_test.zig", "test/integration.zig", "test/golden_parity.zig", "src/board_trial/tests.zig", "src/schematic/tests.zig", "src/byte_io/tests.zig", "src/memory_budget.zig", "src/host_native.zig", "src/runtime_contract.zig", "src/core/root_test.zig"]
 
 [orphan_files]
-roots = ["src/compiler.zig", "src/main.zig", "src/root_test.zig", "src/board_trial/runner.zig", "src/schematic/runner.zig", "src/board_trial/tests.zig", "src/schematic/tests.zig", "src/byte_io/runner.zig", "src/byte_io/tests.zig", "src/host_native.zig", "src/memory_budget.zig", "src/runtime_contract.zig", "src/core/main.zig", "src/core/root_test.zig"]
+roots = ["src/compiler.zig", "src/main.zig", "src/root_test.zig", "src/board_trial/runner.zig", "src/schematic/runner.zig", "src/board_trial/tests.zig", "src/schematic/tests.zig", "src/byte_io/runner.zig", "src/byte_io/tests.zig", "src/host_native.zig", "src/memory_budget.zig", "src/runtime_contract.zig", "src/core/main.zig", "src/core/root_test.zig", "src/config_core_tool_platform.zig"]
