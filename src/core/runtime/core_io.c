@@ -1050,6 +1050,23 @@ static void core_io_option_error(const char *format,const char *argument){char t
 static void core_io_bad_grant(void){core_io_option_error("mylang: the option %s is not a usable capability grant\n",core_io_option_argument);}
 static void core_io_missing_grant(const char *flag){core_io_option_error("mylang: --restrict is active and this command line did not grant a capability the entry point requests; pass %s, or drop --restrict to grant every capability\n",flag);}
 static void core_io_grant_request(const char *path,int writable){if(!*path||core_io_grant_count==8)core_io_bad_grant();for(size_t i=0;i<core_io_grant_count;++i)if(core_io_grants[i].writable==writable&&!strcmp(core_io_grants[i].path,path))core_io_bad_grant();core_io_grants[core_io_grant_count++]=(CoreIoGrant){path,writable};}
+/* The next option of a writable `MYLANG_OPTIONS` copy, unquoted in place, or NULL at
+   its end. Options are separated by whitespace; a double quote groups whitespace into
+   one option and a backslash inside quotes escapes the next byte. An unterminated
+   quote ends the process with status 2. */
+static char *core_io_next_option(char **cursor) {
+    char *read=*cursor;
+    while(*read&&strchr(" \t\n\r",*read))++read;
+    if(!*read){*cursor=read;return NULL;}
+    char *arg=read,*write=read;int quoted=0;
+    while(*read&&(quoted||!strchr(" \t\n\r",*read))){if(*read=='"'){quoted=!quoted;++read;}else if(quoted&&*read=='\\'&&read[1]){++read;*write++=*read++;}else *write++=*read++;}
+    if(quoted)core_io_option_error("mylang: MYLANG_OPTIONS has an unterminated quote\n%s","");
+    if(*read)++read;
+    *write=0;*cursor=read;
+    return arg;
+}
+/* A runtime budget `myl_core_start` has already answered for the whole process. */
+static int core_io_budget_option(const char *arg){return !strncmp(arg,"--max-steps=",12)||!strncmp(arg,"--max-frames=",13)||!strncmp(arg,"--timeout=",10);}
 /* Core entry uses the same MYLANG_OPTIONS grant grammar as qbe_grants.c. */
 static void core_io_initialize(void) {
     if(core_io_initialized)return;
@@ -1057,12 +1074,9 @@ static void core_io_initialize(void) {
     if(mylang_native_providers_v7){core_io_native=mylang_native_providers_v7();core_io_embedding=1;}
     const char *options=getenv("MYLANG_OPTIONS");
     core_io_options=strdup(options?options:"");if(!core_io_options)out_of_memory();
-    char *read=core_io_options,*write=read;
-    while(*read){
-        while(*read&&strchr(" \t\n\r",*read))++read;if(!*read)break;
-        char *arg=write;int quoted=0;
-        while(*read&&(quoted||!strchr(" \t\n\r",*read))){if(*read=='"'){quoted=!quoted;++read;}else if(quoted&&*read=='\\'&&read[1]){++read;*write++=*read++;}else *write++=*read++;}
-        if(quoted)core_io_option_error("mylang: MYLANG_OPTIONS has an unterminated quote\n%s","");if(*read)++read;*write++=0;core_io_option_argument=arg;
+    char *cursor=core_io_options,*arg;
+    while((arg=core_io_next_option(&cursor))){
+        core_io_option_argument=arg;
         if(!strcmp(arg,"--restrict")){if(core_io_restricted)core_io_bad_grant();core_io_restricted=1;}
         else if(!strncmp(arg,"--allow-read=",13)){core_io_grant_request(arg+13,0);}
         else if(!strncmp(arg,"--allow-write=",14)){core_io_grant_request(arg+14,1);}
@@ -1072,7 +1086,7 @@ static void core_io_initialize(void) {
         else if(!strncmp(arg,"--allow-random",14)&&(arg[14]==0||arg[14]=='=')){if(core_io_entropy||(arg[14]&&!arg[15]))core_io_bad_grant();core_io_entropy=1;core_io_seed=arg[14]?strtoull(arg+15,NULL,10):0;}
         else if(!strncmp(arg,"--allow-env",11)&&(arg[11]==0||arg[11]=='=')){if(core_io_environment||(arg[11]&&!arg[12]))core_io_bad_grant();core_io_environment=1;core_io_names=arg[11]?arg+12:"";}
         else if(!strcmp(arg,"--allow-all")){if(core_io_clock||core_io_entropy||core_io_environment||core_io_host||core_io_grant_count||core_io_real.endpoint_count)core_io_bad_grant();core_io_clock=core_io_entropy=core_io_environment=core_io_host=1;core_io_grant_request(".",1);core_io_scoped_endpoint(&core_io_real,"*");}
-        else if(!strcmp(arg,"--print-result")){/* read by myl_core_exit */}
+        else if(!strcmp(arg,"--print-result")||core_io_budget_option(arg)){/* read by myl_core_exit and myl_core_start */}
         else if(!strncmp(arg,"--allow-",8)||!strncmp(arg,"--restrict",10))core_io_bad_grant();
         else core_io_option_error("mylang: MYLANG_OPTIONS names %s, which is not a runtime option\n",arg);
     }

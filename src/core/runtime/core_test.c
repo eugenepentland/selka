@@ -55,14 +55,7 @@ static void core_run_timed_out(int signal_number) {
     (void)ignored;
     _exit(1);
 }
-void myl_core_run_controls(uint64_t steps, uint32_t frames, uint64_t memory, uint32_t timeout_seconds) {
-    static bool installed;
-    if (installed) return;
-    installed = true;
-    core_test_steps = steps;
-    core_test_bounded = steps != 0;
-    myl_core_test_ceilings(frames, memory);
-    if (!timeout_seconds) return;
+static void core_run_arm(uint64_t timeout_seconds) {
     struct sigaction action;
     memset(&action, 0, sizeof action);
     action.sa_handler = core_run_timed_out;
@@ -73,7 +66,116 @@ void myl_core_run_controls(uint64_t steps, uint32_t frames, uint64_t memory, uin
         (void)ignored;
         _exit(2);
     }
-    alarm(timeout_seconds);
+    alarm((unsigned)(timeout_seconds > UINT32_MAX ? UINT32_MAX : timeout_seconds));
+}
+void myl_core_run_controls(uint64_t steps, uint32_t frames, uint64_t memory, uint32_t timeout_seconds) {
+    static bool installed;
+    if (installed) return;
+    installed = true;
+    core_test_steps = steps;
+    core_test_bounded = steps != 0;
+    myl_core_test_ceilings(frames, memory);
+    if (timeout_seconds) core_run_arm(timeout_seconds);
+}
+
+/* ---- A built program's runtime options (NATIVE-ARGV-1) -------------------------- */
+
+/* One positive decimal budget `prefix`VALUE into `slot`; zero, a non-number or a repeat
+   ends the process with status 2. Whether `arg` spells this budget at all. */
+static bool core_start_budget(const char *arg, const char *prefix, uint64_t *slot) {
+    size_t width = strlen(prefix);
+    if (strncmp(arg, prefix, width)) return false;
+    if (*slot) core_io_option_error("mylang: MYLANG_OPTIONS names %s twice\n", prefix);
+    uint64_t value = 0;
+    const char *digit = arg + width;
+    if (!*digit) core_io_option_error("mylang: MYLANG_OPTIONS names %s, which is not a positive budget\n", arg);
+    for (; *digit; ++digit) {
+        if (*digit < '0' || *digit > '9' || value > (UINT64_MAX - (uint64_t)(*digit - '0')) / 10)
+            core_io_option_error("mylang: MYLANG_OPTIONS names %s, which is not a positive budget\n", arg);
+        value = value * 10 + (uint64_t)(*digit - '0');
+    }
+    if (!value) core_io_option_error("mylang: MYLANG_OPTIONS names %s, which is not a positive budget\n", arg);
+    *slot = value;
+    return true;
+}
+/* `MYLANG_MEMORY_LIMIT` in bytes (digits and an optional K, M or G), or 0 when unset or unreadable. */
+static uint64_t core_start_memory_limit(void) {
+    const char *text = getenv("MYLANG_MEMORY_LIMIT");
+    uint64_t value = 0, scale = 1;
+    if (!text || !*text) return 0;
+    const char *at = text;
+    for (; *at >= '0' && *at <= '9'; ++at) {
+        if (value > (UINT64_MAX - (uint64_t)(*at - '0')) / 10) return 0;
+        value = value * 10 + (uint64_t)(*at - '0');
+    }
+    if (at == text) return 0;
+    if (*at == 'K' || *at == 'k') scale = 1u << 10;
+    else if (*at == 'M' || *at == 'm') scale = 1u << 20;
+    else if (*at == 'G' || *at == 'g') scale = 1u << 30;
+    else if (*at) return 0;
+    if (*at && at[1]) return 0;
+    return value > UINT64_MAX / scale ? 0 : value * scale;
+}
+/* A frame budget reserves 32 KiB of native stack per frame plus 8 MiB and two guard
+   pages, as the old core maps it. One the address space cannot back (the process's
+   `RLIMIT_AS`, or `MYLANG_MEMORY_LIMIT` plus 256 MiB of headroom) is reported with the
+   reservation and the limit, and ends the process with status 2 (RUN-FRAME-BUDGET-1). */
+static void core_start_frame_reservation(uint64_t frames) {
+    long page_size = sysconf(_SC_PAGESIZE);
+    uint64_t page = page_size > 0 ? (uint64_t)page_size : 4096;
+    uint64_t fixed = (uint64_t)CORE_TEST_STACK_SLACK + 3 * page;
+    bool addressable = frames <= (UINT64_MAX - fixed) / CORE_TEST_FRAME_STACK;
+    uint64_t need = addressable ? ((frames * CORE_TEST_FRAME_STACK + CORE_TEST_STACK_SLACK + page - 1) / page + 2) * page : UINT64_MAX;
+    uint64_t limit = UINT64_MAX;
+    struct rlimit current;
+    if (!getrlimit(RLIMIT_AS, &current) && current.rlim_cur != RLIM_INFINITY) limit = (uint64_t)current.rlim_cur;
+    uint64_t budget = core_start_memory_limit();
+    const uint64_t headroom = 256u << 20;
+    if (budget && budget <= UINT64_MAX - headroom && budget + headroom < limit) limit = budget + headroom;
+    if (limit == UINT64_MAX || need <= limit) return;
+    char reserved[64];
+    if (addressable) snprintf(reserved, sizeof reserved, "%.1f GiB of native stack", (double)need / 1073741824.0);
+    else snprintf(reserved, sizeof reserved, "more native stack than can be addressed");
+    flush_all();
+    fprintf(stderr, "mylang: a call-depth budget of %llu frames (--max-frames) reserves %s (32 KiB per frame), but this process may map only %.1f GiB; "
+        "raise --max-memory (and MYLANG_HOST_MEMORY_LIMIT, which a guest inherits) or lower --max-frames\n", (unsigned long long)frames, reserved, (double)limit / 1073741824.0);
+    fflush(stderr);
+    os_exit(2);
+}
+/* A budget this build cannot enforce: the old core's report and record, status 1. */
+static void core_start_refuse(const char *code, const char *description, const char *advice) {
+    char text[512];
+    int length = snprintf(text, sizeof text, "error[%s]: %s: %s\n", code, description, advice);
+    stream_write(&streams[1], text, (size_t)(length < (int)sizeof text ? length : (int)sizeof text - 1));
+    char record[512];
+    stream_write(&streams[1], record, core_operation_record(record, sizeof record, advice));
+    flush_all();
+    os_exit(1);
+}
+/* Read a built program's runtime options before `main` runs, as the old core read them
+   (NATIVE-ARGV-1): grants and `--print-result` are their readers' (`core_io_initialize`,
+   `myl_core_exit`), `--timeout=SECONDS` arms the wall-clock guard, and an unknown option
+   or an unterminated quote ends the process with status 2. A built program carries no
+   step or frame accounting (`mylang run` compiles a budget in instead), so
+   `--max-steps`/`--max-frames` are refused rather than ignored: `R_NO_STEP_ACCOUNTING`,
+   `R_NO_FRAME_ACCOUNTING`, after a frame reservation the address space cannot back. */
+void myl_core_start(void) {
+    const char *options = getenv("MYLANG_OPTIONS");
+    if (!options || !*options) return;
+    char *copy = strdup(options);
+    if (!copy) out_of_memory();
+    char *cursor = copy, *arg;
+    uint64_t steps = 0, frames = 0, timeout = 0;
+    while ((arg = core_io_next_option(&cursor))) {
+        if (!strcmp(arg, "--print-result") || !strcmp(arg, "--restrict") || !strncmp(arg, "--allow-", 8)) continue;
+        if (core_start_budget(arg, "--max-steps=", &steps) || core_start_budget(arg, "--max-frames=", &frames) || core_start_budget(arg, "--timeout=", &timeout)) continue;
+        core_io_option_error("mylang: MYLANG_OPTIONS names %s, which is not a runtime option\n", arg);
+    }
+    free(copy);
+    if (frames) core_start_frame_reservation(frames);
+    if (steps) core_start_refuse("R_NO_STEP_ACCOUNTING", "this build omits instruction-budget accounting", "run it under `mylang run --max-steps=N`");
+    if (frames) core_start_refuse("R_NO_FRAME_ACCOUNTING", "this build omits call-depth accounting", "run it under `mylang run --max-frames=N`");
+    if (timeout) core_run_arm(timeout);
 }
 void myl_core_test_enter(void) {
     if (++core_test_depth > core_test_frame_limit && core_test_frame_limit) core_io_fail("R_FRAME_LIMIT");

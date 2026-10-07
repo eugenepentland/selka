@@ -17,6 +17,20 @@ pub fn symbol(name: []const u8) []const u8 {
     return name[at..];
 }
 
+/// Whether an argument of this type crosses into C as the canonical quiet NaN when it is
+/// any NaN (FLOAT-NAN-OBSERVED-3): foreign code can read a double's sign and payload
+/// (`copysign`, `signbit`, a byte copy), which no guest operation observes.
+pub fn canonicalizesNan(ty: ir.Type) bool {
+    return ty == .f64;
+}
+
+/// The bits of a double with the sign cleared: a NaN's exceed `infinity_bits`.
+pub const magnitude_mask = "9223372036854775807";
+/// The bits of positive infinity.
+pub const infinity_bits = "9218868437227405312";
+/// The canonical quiet NaN, `0x7ff8000000000000`.
+pub const canonical_nan_bits = "9221120237041090560";
+
 /// The LLVM parameter attribute (empty for none) that an argument of this type carries in a
 /// call to any C function, a source `extern def` or a runtime helper: SysV x86-64 C callers widen `int8_t`/`int16_t` by sign and `uint8_t`,
 /// `uint16_t` and `bool` by zero to 32 bits, and Clang-compiled callees read the widened
